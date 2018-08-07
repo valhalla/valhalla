@@ -1006,7 +1006,8 @@ TripPathBuilder::Build(const AttributesController& controller,
         AddTripEdge(controller, edge, trip_id, block_id, mode, travel_type, directededge, trip_node,
                     graphtile, current_time, length_pct);
 
-    trip_edge->set_unique_roundabout_edge(directededge->roundabout() && IsValidRoundaboutEdge(node, graphtile));
+    trip_edge->set_unique_roundabout_edge(directededge->roundabout() &&
+                                          IsValidRoundaboutEdge(node, graphtile));
 
     // Verifying whether a directededge is a roundabout
     // and it is not within the vector of roundabout_edges_id
@@ -1032,7 +1033,8 @@ TripPathBuilder::Build(const AttributesController& controller,
       uint32_t current_index = edge.id();
       const DirectedEdge* current_directed_edge = graphtile->directededge(current_index);
       GraphId endnode = current_directed_edge->endnode(); // Getting the end node
-      auto nodeinfo = graphreader.nodeinfo(endnode); // Which contains the nodeinfo, which contains information about other edges within the node
+      auto nodeinfo = graphreader.nodeinfo(endnode); // Which contains the nodeinfo, which contains
+                                                     // information about other edges within the node
       bool found_all_roundabout_exits = false;
       uint32_t length = 0;
       auto valid_roundabout_exit = true;
@@ -1057,7 +1059,7 @@ TripPathBuilder::Build(const AttributesController& controller,
           auto edge_index = nodeinfo->edge_index() + i;
           auto edge = graphtile->directededge(edge_index); // Getting the edge based on index
 
-          // If the edge is a roundabout and if it is unique then 
+          // If the edge is a roundabout and if it is unique then
           // we would set that edge as the roundabout edge and leave the for loop
           // The reason to only find the roundabout edge is because its endnode
           // is how it would be possible to get the next roundabout edge
@@ -1069,15 +1071,15 @@ TripPathBuilder::Build(const AttributesController& controller,
 
           // This indicates that you have reached the end of the roundabout
           // and found all edges
-          if (roundabout_edges_id.size() > 1 && (directededge->endnode().id() == edge->endnode().id())) {
+          if (roundabout_edges_id.size() > 1 &&
+              (directededge->endnode().id() == edge->endnode().id())) {
             found_all_roundabout_exits = true;
             break;
           }
         }
 
-
-        // If it haven't found all the roundabout 
-        // exit edges then it would add this edge to the 
+        // If it haven't found all the roundabout
+        // exit edges then it would add this edge to the
         // roundabout_edges_length vector
         if (!found_all_roundabout_exits) {
           // If it not a valid edge and the previous roundabout_edges_length is not zero
@@ -1107,11 +1109,11 @@ TripPathBuilder::Build(const AttributesController& controller,
       uint32_t accumulated_length = 0;
 
       // Creating the angles for all the edges within a roundabout
-      for (auto exit_length: roundabout_edges_length) {
+      for (auto exit_length : roundabout_edges_length) {
         accumulated_length += exit_length;
 
-        if (accumulated_length/total_length != 1) {
-          trip_edge->add_roundabout_exit_angles((accumulated_length/total_length) * 360);
+        if (accumulated_length / total_length != 1) {
+          trip_edge->add_roundabout_exit_angles((accumulated_length / total_length) * 360);
         }
       }
 
@@ -1859,8 +1861,10 @@ bool TripPathBuilder::IsValidRoundaboutEdge(const NodeInfo* nodeinfo, const Grap
   return true;
 }
 
-bool TripPathBuilder::IsEdgeUnique(std::vector<uint32_t> roundabout_edges_id, const DirectedEdge* directededge) {
-  return !(std::find(roundabout_edges_id.begin(), roundabout_edges_id.end(), directededge->endnode().id()) != roundabout_edges_id.end());
+bool TripPathBuilder::IsEdgeUnique(std::vector<uint32_t> roundabout_edges_id,
+                                   const DirectedEdge* directededge) {
+  return !(std::find(roundabout_edges_id.begin(), roundabout_edges_id.end(),
+                     directededge->endnode().id()) != roundabout_edges_id.end());
 }
 
 } // namespace thor

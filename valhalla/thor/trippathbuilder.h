@@ -95,9 +95,11 @@ public:
                                       odin::TripPath_Node* trip_node,
                                       const baldr::DirectedEdge* intersecting_de);
 
-  static bool IsValidRoundaboutEdge(const baldr::NodeInfo* nodeinfo, const baldr::GraphTile* graphtile);
+  static bool IsValidRoundaboutEdge(const baldr::NodeInfo* nodeinfo,
+                                    const baldr::GraphTile* graphtile);
 
-  static bool IsEdgeUnique(std::vector<uint32_t> roundabout_edges_id, const baldr::DirectedEdge* directededge);
+  static bool IsEdgeUnique(std::vector<uint32_t> roundabout_edges_id,
+                           const baldr::DirectedEdge* directededge);
 };
 
 } // namespace thor

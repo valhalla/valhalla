@@ -966,7 +966,7 @@ void ManeuversBuilder::UpdateManeuver(Maneuver& maneuver, int node_index) {
     if (prev_edge->roundabout_exit_angles_size() > 0) {
       std::vector<uint32_t> roundabout_exit_angles;
 
-      for (auto roundabout_exit_angle: prev_edge->roundabout_exit_angles()) {
+      for (auto roundabout_exit_angle : prev_edge->roundabout_exit_angles()) {
         roundabout_exit_angles.push_back(roundabout_exit_angle);
       }
 

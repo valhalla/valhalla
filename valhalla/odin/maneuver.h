@@ -351,7 +351,7 @@ protected:
   // TODO notes
 
   static const std::unordered_map<int, std::string> relative_direction_string_;
-  std::vector<uint32_t> roundabout_exit_angles_; 
+  std::vector<uint32_t> roundabout_exit_angles_;
 };
 
 } // namespace odin

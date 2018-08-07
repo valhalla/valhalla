@@ -314,7 +314,7 @@ std::vector<uint32_t> Maneuver::roundabout_exit_angles() const {
 }
 
 void Maneuver::set_roundabout_exit_angles(std::vector<uint32_t> roundabout_exit_angles) {
-  roundabout_exit_angles_ = roundabout_exit_angles;  
+  roundabout_exit_angles_ = roundabout_exit_angles;
 }
 
 bool Maneuver::portions_toll() const {
