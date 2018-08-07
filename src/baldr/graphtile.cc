@@ -31,6 +31,7 @@ protected:
 };
 const std::locale dir_locale(std::locale("C"), new dir_facet());
 const AABB2<PointLL> world_box(PointLL(-180, -90), PointLL(180, 90));
+constexpr float COMPRESSION_HINT = 3.5f;
 } // namespace
 
 namespace valhalla {
@@ -88,17 +89,18 @@ GraphTile::GraphTile(const std::string& tile_dir, const GraphId& graphid) : head
       // for setting where to write the uncompressed data to
       graphtile_.reset(new std::vector<char>(0, 0));
       auto dst_func = [this, &compressed](z_stream& s) -> int {
+        // if the whole buffer wasn't used we are done
+        auto size = graphtile_->size();
+        if (s.total_out < size)
+          graphtile_->resize(s.total_out);
         // we need more space
-        if (s.avail_in > 0) {
+        else {
           // assume we need 3.5x the space
-          auto size = graphtile_->size();
-          graphtile_->resize(size + (compressed.size() * 3.5));
+          graphtile_->resize(size + (compressed.size() * COMPRESSION_HINT));
           // set the pointer to the next spot
           s.next_out = static_cast<Byte*>(static_cast<void*>(graphtile_->data() + size));
-          s.avail_out = compressed.size() * 4;
-        } // we are done
-        else
-          graphtile_->resize(s.total_out);
+          s.avail_out = compressed.size() * COMPRESSION_HINT;
+        }
         return Z_NO_FLUSH;
       };
 
