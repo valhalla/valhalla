@@ -52,7 +52,7 @@ protected:
    */
   const int16_t* source(uint16_t index) const;
 
-  enum class format_t { UNKNOWN = 0, GZIP = 1, LZ4HC = 2, RAW = 3 };
+  enum class format_t { UNKNOWN = 0, GZIP = 1, RAW = 3 };
   /**
    * maps a new source, used at start up and called periodically
    * for lazily loaded sources

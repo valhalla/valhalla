@@ -12,9 +12,9 @@ file(GLOB headers ${VALHALLA_SOURCE_DIR}/valhalla/baldr/*.h)
 valhalla_module(NAME baldr
   SOURCES
     ${CMAKE_CURRENT_BINARY_DIR}/date_time_zonespec.h
-
     accessrestriction.cc
     admin.cc
+    compression_utils.cc
     connectivity_map.cc
     datetime.cc
     directededge.cc
@@ -62,4 +62,5 @@ valhalla_module(NAME baldr
     Boost::filesystem
     Boost::iostreams
     Boost::system
-    CURL::CURL)
+    CURL::CURL
+    ZLIB::ZLIB)
