@@ -13,11 +13,9 @@
 #include <sys/stat.h>
 #include <zlib.h>
 
-#include <boost/filesystem.hpp>
 #include <boost/optional.hpp>
 
-#include "baldr/filesystem_utils.h"
-
+#include "filesystem.h"
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
 
@@ -39,16 +37,16 @@ constexpr size_t TILE_COUNT = 180 * 360;
 
 std::list<std::string> get_files(const std::string& root_dir) {
   std::list<std::string> files;
-  try {
-    for (boost::filesystem::recursive_directory_iterator i(root_dir), end; i != end; ++i) {
-      if (!is_directory(i->path())) {
+  if (filesystem::exists(root_dir) && filesystem::is_directory(root_dir)) {
+    for (filesystem::recursive_directory_iterator i(root_dir), end; i != end; ++i) {
+      if (i->is_regular_file() || i->is_symlink()) {
         files.push_back(i->path().string());
       }
     }
-  } // couldn't get data
-  catch (...) {
+  }
+  // couldn't get data
+  if (files.empty()) {
     LOG_WARN(root_dir + " currently has no elevation tiles");
-    files.clear();
   }
   return files;
 }
@@ -145,7 +143,7 @@ namespace skadi {
       data_source(data_source) {
   // messy but needed
   while (this->data_source.size() &&
-         this->data_source.back() == ::valhalla::baldr::filesystem::path_separator) {
+         this->data_source.back() == filesystem::path::preferred_separator) {
     this->data_source.pop_back();
   }
 

@@ -10,12 +10,12 @@
 #include <utility>
 #include <vector>
 
-#include "baldr/filesystem_utils.h"
 #include "baldr/graphconstants.h"
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
 #include "baldr/graphtile.h"
 #include "baldr/tilehierarchy.h"
+#include "filesystem.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
@@ -546,8 +546,8 @@ void RemoveUnusedLocalTiles(const std::string& tile_dir) {
     if (!itr->second) {
       // Remove the file
       GraphId empty_tile = itr->first;
-      std::string file_location =
-          tile_dir + filesystem::path_separator + GraphTile::FileSuffix(empty_tile.Tile_Base());
+      std::string file_location = tile_dir + filesystem::path::preferred_separator +
+                                  GraphTile::FileSuffix(empty_tile.Tile_Base());
       remove(file_location.c_str());
       LOG_DEBUG("Remove file: " + file_location);
     }
