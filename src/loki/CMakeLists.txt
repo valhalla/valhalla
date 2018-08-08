@@ -24,6 +24,6 @@ valhalla_module(NAME loki
       ${CMAKE_BINARY_DIR}
   DEPENDS
     valhalla::skadi
-    valhalla::baldr
+    valhalla::sif
     valhalla::proto
     libprime_server)

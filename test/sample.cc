@@ -2,15 +2,13 @@
 #include "pixels.h"
 #include "test.h"
 
+#include "baldr/compression_utils.h"
 #include "midgard/sequence.h"
 #include "midgard/util.h"
 
 #include <cmath>
 #include <fstream>
 #include <list>
-#include <lz4.h>
-#include <lz4hc.h>
-#include <zlib.h>
 
 using namespace valhalla;
 
@@ -27,46 +25,6 @@ void no_data() {
 
   if (s.get(std::make_pair(200.0, 200.0)) != skadi::sample::get_no_data_value())
     throw std::logic_error("Asked for point outside of valid range");
-}
-
-std::vector<Byte> gzip(std::vector<int16_t>& in) {
-  auto in_size = static_cast<unsigned int>(in.size() * sizeof(int16_t));
-  size_t max_compressed_size = in_size + ((5 * in_size + 16383) / 16384) + 6;
-  std::vector<Byte> out(max_compressed_size);
-
-  z_stream stream{static_cast<Byte*>(static_cast<void*>(&in[0])),
-                  in_size,
-                  in_size,
-                  &out[0],
-                  static_cast<unsigned int>(out.size()),
-                  static_cast<unsigned int>(out.size())};
-
-  // use gzip standard headers (15 | 16)
-  int err = deflateInit2(&stream, Z_BEST_COMPRESSION, Z_DEFLATED, 15 | 16, 8, Z_DEFAULT_STRATEGY);
-  if (err != Z_OK)
-    throw std::runtime_error("Couldn't compress the file");
-  err = deflate(&stream, Z_FINISH);
-  if (err != Z_STREAM_END)
-    throw std::runtime_error("Didn't reach end of compression input stream");
-  out.resize(stream.total_out);
-  deflateEnd(&stream);
-
-  return out;
-}
-
-std::vector<char> lzip(const std::vector<int16_t>& in) {
-  int in_size = static_cast<int>(in.size() * sizeof(int16_t));
-  int max_compressed_size = LZ4_compressBound(in_size);
-  std::vector<char> out(max_compressed_size);
-
-  auto compressed_size =
-      LZ4_compress_HC(static_cast<const char*>(static_cast<const void*>(in.data())), out.data(),
-                      in_size, max_compressed_size, 9);
-  if (compressed_size <= 0)
-    throw std::runtime_error("Couldn't compress the file");
-  out.resize(compressed_size);
-
-  return out;
 }
 
 void create_tile() {
@@ -86,15 +44,30 @@ void create_tile() {
   file.write(static_cast<const char*>(static_cast<void*>(tile.data())),
              sizeof(int16_t) * tile.size());
 
-  // write it again but this time gzipped
-  auto gzipped = gzip(tile);
-  std::ofstream gzfile("test/data/samplegz/N40/N40W077.hgt.gz", std::ios::binary | std::ios::trunc);
-  gzfile.write(static_cast<const char*>(static_cast<void*>(gzipped.data())), gzipped.size());
+  // input for gzip
+  auto src_func = [&tile](z_stream& s) -> int {
+    s.next_in = static_cast<Byte*>(static_cast<void*>(tile.data()));
+    s.avail_in = static_cast<unsigned int>(tile.size() * sizeof(decltype(tile)::value_type));
+    return Z_FINISH;
+  };
 
-  // write it again but this time lzipped
-  auto lzipped = lzip(tile);
-  std::ofstream lzfile("test/data/samplelz/N40/N40W077.hgt.lz4", std::ios::binary | std::ios::trunc);
-  lzfile.write(lzipped.data(), lzipped.size());
+  // output for gzip
+  std::vector<char> dst_buffer(13000, 0);
+  std::ofstream gzfile("test/data/samplegz/N40/N40W077.hgt.gz", std::ios::binary | std::ios::trunc);
+  auto dst_func = [&dst_buffer, &gzfile](z_stream& s) -> void {
+    // move these bytes to their final resting place
+    auto chunk = s.total_out - gzfile.tellp();
+    gzfile.write(static_cast<const char*>(static_cast<void*>(dst_buffer.data())), chunk);
+    // if more input is coming
+    if (s.avail_in > 0) {
+      s.next_out = static_cast<Byte*>(static_cast<void*>(dst_buffer.data()));
+      s.avail_out = dst_buffer.size();
+    }
+  };
+
+  // gzip it
+  if (!baldr::deflate(src_func, dst_func))
+    throw std::logic_error("Can't write gzipped elevation tile");
 }
 
 void _get(const std::string& location) {
@@ -132,9 +105,6 @@ void get() {
 };
 void getgz() {
   _get("test/data/samplegz");
-};
-void getlz() {
-  _get("test/data/samplelz");
 };
 
 struct testable_sample_t : public skadi::sample {
@@ -209,8 +179,6 @@ int main() {
   suite.test(TEST_CASE(edges));
 
   suite.test(TEST_CASE(getgz));
-
-  suite.test(TEST_CASE(getlz));
 
   suite.test(TEST_CASE(lazy_load));
 

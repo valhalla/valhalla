@@ -15,6 +15,12 @@
 
 using namespace valhalla;
 
+// NOTE: this test relies on pregenerated data. If you change the data format
+// you need to update the tiles. The data itself is checked in:
+// test/traffic_matcher_tiles/map.osm.gz
+// simply gunzip it, create the tiles with it using osmconvert and valhalla_build_tiles
+// then individually gzip the tiles using some combination of find xargs and gzip
+
 namespace {
 
 // here we hijack a couple of methods and save off some state while we're at it
