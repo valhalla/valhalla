@@ -76,7 +76,7 @@ void TestMapMatcherFactory() {
 
     // Test configuration priority
     {
-     odin::DirectionsOptions options;
+      odin::DirectionsOptions options;
       create_costing_options(options);
       auto config = root;
       config.put<std::string>("meili.default.hello", "default world");

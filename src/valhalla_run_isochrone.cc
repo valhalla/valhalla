@@ -205,7 +205,6 @@ int main(int argc, char* argv[]) {
   valhalla::baldr::GraphReader reader(pt.get_child("mjolnir"));
 
   // Grab the directions options, if they exist
-  valhalla::valhalla_request_t request;
   request.parse(json, valhalla::odin::DirectionsOptions::route);
 
   // Construct costing

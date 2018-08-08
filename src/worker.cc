@@ -721,6 +721,12 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
     options.set_turn_penalty_factor(*turn_penalty_factor);
   }
 
+  // if specified, get the breakage_distance value in there
+  auto breakage_distance = rapidjson::get_optional<float>(doc, "/trace_options/breakage_distance");
+  if (breakage_distance) {
+    options.set_breakage_distance(*breakage_distance);
+  }
+
   // if specified, get the filter_action value in there
   auto filter_action_str = rapidjson::get_optional<std::string>(doc, "/filters/action");
   odin::FilterAction filter_action;
