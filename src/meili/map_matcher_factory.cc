@@ -39,8 +39,8 @@ MapMatcherFactory::~MapMatcherFactory() {
 
 MapMatcher* MapMatcherFactory::Create(const odin::Costing costing,
                                       const odin::DirectionsOptions& options) {
-  // TODO figure out how we want to handle
-  //  const auto& config = MergeConfig(costing, preferences);
+  // Merge any customizable options with the config defaults
+  const auto& config = MergeConfig(options);
 
   valhalla::sif::cost_ptr_t cost = cost_factory_.Create(costing, options);
   valhalla::sif::TravelMode mode = cost->travel_mode();
@@ -48,51 +48,35 @@ MapMatcher* MapMatcherFactory::Create(const odin::Costing costing,
   mode_costing_[static_cast<uint32_t>(mode)] = cost;
 
   // TODO investigate exception safety
-  //  return new MapMatcher(config, graphreader_, candidatequery_, mode_costing_, mode);
-  return new MapMatcher(config_.get_child("default"), graphreader_, candidatequery_, mode_costing_,
-                        mode);
+  return new MapMatcher(config, graphreader_, candidatequery_, mode_costing_, mode);
 }
 
 MapMatcher* MapMatcherFactory::Create(const odin::DirectionsOptions& options) {
   return Create(options.costing(), options);
 }
 
-boost::property_tree::ptree
-MapMatcherFactory::MergeConfig(const std::string& name,
-                               const boost::property_tree::ptree& preferences) {
+boost::property_tree::ptree MapMatcherFactory::MergeConfig(const odin::DirectionsOptions& options) {
   // Copy the default child config
   auto config = config_.get_child("default");
 
-  // The mode-specific config overwrites defaults
-  const auto mode_config = config_.get_child_optional(name);
-  if (mode_config) {
-    for (const auto& child : *mode_config) {
-      config.put_child(child.first, child.second);
-    }
-  }
-
+  // Get a list of customizable options
   std::unordered_set<std::string> customizable;
   for (const auto& item : config_.get_child("customizable")) {
     customizable.insert(item.second.get_value<std::string>());
   }
 
-  // Preferences overwrites defaults
-  const auto trace_options = preferences.get_child_optional("trace_options");
-  if (trace_options) {
-    for (const auto& child : *trace_options) {
-      const auto& name = child.first;
-      const auto& values = child.second.data();
-      if (customizable.find(name) != customizable.end() && !values.empty()) {
-        try {
-          // Possibly throw std::invalid_argument or std::out_of_range
-          config.put<float>(name, std::stof(values));
-        } catch (const std::invalid_argument& ex) {
-          throw std::invalid_argument("Invalid argument: unable to parse " + name + " to float");
-        } catch (const std::out_of_range& ex) {
-          throw std::out_of_range("Invalid argument: " + name + " is out of float range");
-        }
-      }
-    }
+  // Check for overrides of matcher related directions options. Override these values in config.
+  // TODO - there are several options listed as customizable that are not documented
+  // in the interface...either add them and document or remove them from config?
+  if (options.search_radius() && customizable.find("search_radius") != customizable.end()) {
+    config.put<float>("search_radius", options.search_radius());
+  }
+  if (options.turn_penalty_factor() &&
+      customizable.find("turn_penalty_factor") != customizable.end()) {
+    config.put<float>("turn_penalty_factor", options.turn_penalty_factor());
+  }
+  if (options.gps_accuracy() && customizable.find("gps_accuracy") != customizable.end()) {
+    config.put<float>("gps_accuracy", options.gps_accuracy());
   }
 
   // Give it back

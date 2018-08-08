@@ -199,12 +199,13 @@ void write_config(const std::string& filename) {
 }
 
 void create_costing_options(vo::DirectionsOptions& directions_options) {
-  for (const auto costing : {vo::auto_, vo::auto_shorter, vo::bicycle, vo::bus, vo::hov,
-                              vo::motor_scooter, vo::multimodal, vo::pedestrian, vo::transit,
-                              vo::truck, vo::motorcycle, vo::auto_data_fix}) {
+  for (const auto costing :
+       {vo::auto_, vo::auto_shorter, vo::bicycle, vo::bus, vo::hov, vo::motor_scooter, vo::multimodal,
+        vo::pedestrian, vo::transit, vo::truck, vo::motorcycle, vo::auto_data_fix}) {
     if (costing == vo::pedestrian) {
       const rapidjson::Document doc;
-      vs::ParsePedestrianCostOptions(doc, "/costing_options/pedestrian", directions_options.add_costing_options());
+      vs::ParsePedestrianCostOptions(doc, "/costing_options/pedestrian",
+                                     directions_options.add_costing_options());
     } else {
       directions_options.add_costing_options();
     }

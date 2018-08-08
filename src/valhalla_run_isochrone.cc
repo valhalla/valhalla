@@ -41,28 +41,6 @@ using namespace valhalla::thor;
 
 namespace bpo = boost::program_options;
 
-void create_costing_options(valhalla::odin::DirectionsOptions& directions_options) {
-  // Add options in the order specified
-//  for (const auto costing : {auto_, auto_shorter, bicycle, bus, hov,
-//                              motor_scooter, multimodal, pedestrian, transit,
-//                              truck, motorcycle, auto_data_fix}) {
-  // TODO - accept RapidJSON as argument.
-  const rapidjson::Document doc;
-  ParseAutoCostOptions(doc, "/costing_options/auto", directions_options.add_costing_options());
-  ParseAutoShorterCostOptions(doc, "/costing_options/auto_shorter", directions_options.add_costing_options());
-  ParseBicycleCostOptions(doc, "/costing_options/bicycle", directions_options.add_costing_options());
-  ParseBusCostOptions(doc, "/costing_options/bus", directions_options.add_costing_options());
-  ParseHOVCostOptions(doc, "/costing_options/hov", directions_options.add_costing_options());
-  ParseMotorScooterCostOptions(doc, "/costing_options/motor_scooter", directions_options.add_costing_options());
-  directions_options.add_costing_options();
-  ParsePedestrianCostOptions(doc, "/costing_options/pedestrian", directions_options.add_costing_options());
-  ParseTransitCostOptions(doc, "/costing_options/transit", directions_options.add_costing_options());
-  ParseTruckCostOptions(doc, "/costing_options/truck", directions_options.add_costing_options());
-  ParseMotorcycleCostOptions(doc, "/costing_options/motorcycle", directions_options.add_costing_options());
-  ParseAutoShorterCostOptions(doc, "/costing_options/auto_shorter", directions_options.add_costing_options());
-  ParseAutoDataFixCostOptions(doc, "/costing_options/auto_data_fix", directions_options.add_costing_options());
-}
-
 // Main method for testing a single path
 int main(int argc, char* argv[]) {
   bpo::options_description options(
@@ -89,8 +67,9 @@ int main(int argc, char* argv[]) {
       "'{\"locations\":[{\"lat\":40.748174,\"lon\":-73.984984}],\"costing\":"
       "\"auto\",\"contours\":[{\"time\":15,\"color\":\"ff0000\"}]}'")
       // positional arguments
-      ("config", bpo::value<std::string>(&config), "Valhalla configuration file")
-      ("file,f", bpo::value<std::string>(&filename), "Geojson output file name.");
+      ("config", bpo::value<std::string>(&config),
+       "Valhalla configuration file")("file,f", bpo::value<std::string>(&filename),
+                                      "Geojson output file name.");
 
   bpo::positional_options_description pos_options;
   pos_options.add("config", 1);
@@ -119,7 +98,8 @@ int main(int argc, char* argv[]) {
   // Verify JSON request exists.
   boost::property_tree::ptree json_ptree;
   if (vm.count("json") == 0) {
-    std::cerr << "A JSON format request must be present." << "\n";
+    std::cerr << "A JSON format request must be present."
+              << "\n";
     return EXIT_FAILURE;
   }
 
@@ -203,7 +183,9 @@ int main(int argc, char* argv[]) {
       contour_times.push_back(contour.second.get<float>("time"));
       colors[contour_times.back()] = contour.second.get<std::string>("color", "");
     }
-  } catch (...) { throw std::runtime_error("Contours failed to parse. JSON requires a contours object"); }
+  } catch (...) {
+    throw std::runtime_error("Contours failed to parse. JSON requires a contours object");
+  }
 
   // parse the config
   boost::property_tree::ptree pt;
@@ -222,8 +204,9 @@ int main(int argc, char* argv[]) {
   // Get something we can use to fetch tiles
   valhalla::baldr::GraphReader reader(pt.get_child("mjolnir"));
 
-  // Create costing options. TODO - add add request JSON as RapidJSON doc
-  create_costing_options(request.options);
+  // Grab the directions options, if they exist
+  valhalla::valhalla_request_t request;
+  request.parse(json, valhalla::odin::DirectionsOptions::route);
 
   // Construct costing
   CostFactory<DynamicCost> factory;

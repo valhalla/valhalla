@@ -477,7 +477,8 @@ int main(int argc, char* argv[]) {
   // Verify JSON request exists.
   boost::property_tree::ptree json_ptree;
   if (vm.count("json") == 0) {
-    std::cerr << "A JSON format request must be present." << "\n";
+    std::cerr << "A JSON format request must be present."
+              << "\n";
     return EXIT_FAILURE;
   }
 

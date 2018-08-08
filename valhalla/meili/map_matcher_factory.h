@@ -40,8 +40,7 @@ public:
 
   MapMatcher* Create(const odin::DirectionsOptions& options);
 
-  boost::property_tree::ptree MergeConfig(const std::string&,
-                                          const boost::property_tree::ptree& preferences);
+  boost::property_tree::ptree MergeConfig(const odin::DirectionsOptions& options);
 
   void ClearFullCache();
 
