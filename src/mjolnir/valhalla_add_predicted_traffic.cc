@@ -112,32 +112,38 @@ void ParseTrafficFile(const std::string& directory,
               // our key in tile_speeds is the tileID.
               traffic.id = tmp.id();
             } catch (std::exception& e) {
-              LOG_WARN("Invalid GraphId in file: " + full_filename + " line number " + std::to_string(line_num));
+              LOG_WARN("Invalid GraphId in file: " + full_filename + " line number " +
+                       std::to_string(line_num));
               has_error = true;
             }
           } break;
           case 1: {
-            if (has_error) break;
+            if (has_error)
+              break;
             try {
               traffic.free_flow_speed = std::stoi(t);
               stat.free_flow_count++;
             } catch (std::exception& e) {
-              LOG_WARN("Invalid free flow speed in file: " + full_filename + " line number " + std::to_string(line_num));
+              LOG_WARN("Invalid free flow speed in file: " + full_filename + " line number " +
+                       std::to_string(line_num));
               has_error = true;
             }
           } break;
           case 2: {
-            if (has_error) break;
+            if (has_error)
+              break;
             try {
               traffic.constrained_flow_speed = std::stoi(t);
               stat.constrained_count++;
             } catch (std::exception& e) {
-              LOG_WARN("Invalid constrained flow speed in file: " + full_filename + " line number " + std::to_string(line_num));
+              LOG_WARN("Invalid constrained flow speed in file: " + full_filename + " line number " +
+                       std::to_string(line_num));
               has_error = true;
             }
           } break;
           case 3: {
-            if (has_error) break;
+            if (has_error)
+              break;
             if (t.size()) {
               // Decode the base64 predicted speeds
               // Decode the base64 string and cast the data to a raw string of signed bytes
