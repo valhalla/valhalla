@@ -15,13 +15,14 @@ include(GNUInstallDirs)
 set(VALHALLA_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 list(INSERT CMAKE_MODULE_PATH 0 ${VALHALLA_SOURCE_DIR}/cmake)
 
-option(ENABLE_CCACHE "Speed up incremental rebuilds via ccache" ON)
+option(ENABLE_TOOLS "Enable Valhalla tools" ON)
 option(ENABLE_DATA_TOOLS "Enable Valhalla data tools" ON)
 option(ENABLE_SERVICES "Enable Valhalla services" ON)
 option(ENABLE_PYTHON_BINDINGS "Enable Python bindings" ON)
+option(ENABLE_NODE_BINDINGS "Build NodeJs bindings" ON)
+option(ENABLE_CCACHE "Speed up incremental rebuilds via ccache" ON)
 option(ENABLE_COVERAGE "Build with coverage instrumentalisation" OFF)
 option(ENABLE_SANITIZER "Use memory sanitizer for Debug build" OFF)
-option(ENABLE_NODE_BINDINGS "Build NodeJs bindings" ON)
 set(LOGGING_LEVEL "" CACHE STRING "Logging level, default is INFO")
 set_property(CACHE LOGGING_LEVEL PROPERTY STRINGS "NONE;ALL;ERROR;WARN;INFO;DEBUG;TRACE")
 
@@ -86,8 +87,10 @@ add_subdirectory(src)
 
 
 ## Executable targets
-find_package(Boost 1.51 REQUIRED COMPONENTS program_options)
-find_package(Threads REQUIRED)
+if(ENABLE_TOOLS OR ENABLE_DATA_TOOLS OR ENABLE_SERVICES)
+  find_package(Boost 1.51 REQUIRED COMPONENTS program_options)
+  find_package(Threads REQUIRED)
+endif()
 
 function(get_source_path PATH NAME)
   if(EXISTS ${VALHALLA_SOURCE_DIR}/src/${NAME}.cc)
@@ -104,7 +107,7 @@ endfunction()
 ## Valhalla programs
 set(valhalla_programs valhalla_run_map_match valhalla_benchmark_loki valhalla_benchmark_skadi
   valhalla_run_isochrone valhalla_run_route valhalla_benchmark_adjacency_list valhalla_run_matrix
-  valhalla_path_comparison valhalla_export_edges valhalla_pack_elevation)
+  valhalla_path_comparison valhalla_export_edges)
 
 ## Valhalla data tools
 set(valhalla_data_tools valhalla_build_statistics valhalla_ways_to_edges valhalla_validate_transit
@@ -115,12 +118,14 @@ set(valhalla_data_tools valhalla_build_statistics valhalla_ways_to_edges valhall
 ## Valhalla services
 set(valhalla_services	valhalla_service valhalla_loki_worker	valhalla_odin_worker valhalla_thor_worker)
 
-foreach(program ${valhalla_programs})
-  get_source_path(path ${program})
-  add_executable(${program} ${path})
-  target_link_libraries(${program} Boost::program_options valhalla Threads::Threads)
-  install(TARGETS ${program} DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT runtime)
-endforeach()
+if(ENABLE_DATA_TOOLS)
+  foreach(program ${valhalla_programs})
+    get_source_path(path ${program})
+    add_executable(${program} ${path})
+    target_link_libraries(${program} Boost::program_options valhalla Threads::Threads)
+    install(TARGETS ${program} DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT runtime)
+  endforeach()
+endif()
 
 if(ENABLE_DATA_TOOLS)
   foreach(program ${valhalla_data_tools})
