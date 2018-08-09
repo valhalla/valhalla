@@ -90,7 +90,9 @@ void ParseTrafficFile(const std::string& directory,
 
   // Open file
   std::string line;
-  std::ifstream file(directory + "/" + filename + "." + "csv");
+  const std::string& full_filename = directory + "/" + filename + "." + "csv";
+  std::ifstream file(full_filename);
+  uint32_t line_num = 1;
   if (file.is_open()) {
     GraphId last_tile_id;
     std::vector<TrafficSpeeds> ts;
@@ -99,24 +101,43 @@ void ParseTrafficFile(const std::string& directory,
       tokenizer tok{line, sep};
       uint32_t field_num = 0;
       GraphId tile_id;
+      bool has_error = false;
       for (const auto& t : tok) {
         switch (field_num) {
           case 0: {
-            GraphId tmp(std::stoull(t));
-            tile_id = tmp.Tile_Base();
-            // only need to save the unique id in the tile as
-            // our key in tile_speeds is the tileID.
-            traffic.id = tmp.id();
+            try {
+              GraphId tmp(std::stoull(t));
+              tile_id = tmp.Tile_Base();
+              // only need to save the unique id in the tile as
+              // our key in tile_speeds is the tileID.
+              traffic.id = tmp.id();
+            } catch (std::exception& e) {
+              LOG_WARN("Invalid GraphId in file: " + full_filename + " line number " + std::to_string(line_num));
+              has_error = true;
+            }
           } break;
           case 1: {
-            traffic.free_flow_speed = std::stoi(t);
-            stat.free_flow_count++;
+            if (has_error) break;
+            try {
+              traffic.free_flow_speed = std::stoi(t);
+              stat.free_flow_count++;
+            } catch (std::exception& e) {
+              LOG_WARN("Invalid free flow speed in file: " + full_filename + " line number " + std::to_string(line_num));
+              has_error = true;
+            }
           } break;
           case 2: {
-            traffic.constrained_flow_speed = std::stoi(t);
-            stat.constrained_count++;
+            if (has_error) break;
+            try {
+              traffic.constrained_flow_speed = std::stoi(t);
+              stat.constrained_count++;
+            } catch (std::exception& e) {
+              LOG_WARN("Invalid constrained flow speed in file: " + full_filename + " line number " + std::to_string(line_num));
+              has_error = true;
+            }
           } break;
           case 3: {
+            if (has_error) break;
             if (t.size()) {
               // Decode the base64 predicted speeds
               // Decode the base64 string and cast the data to a raw string of signed bytes
@@ -165,6 +186,7 @@ void ParseTrafficFile(const std::string& directory,
         last_tile_id = tile_id;
         ts.emplace_back(traffic);
       }
+      line_num++;
     }
     if (last_tile_id != kInvalidGraphId) {
       lock.lock();
