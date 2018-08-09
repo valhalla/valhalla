@@ -435,11 +435,14 @@ public:
   uint32_t
   GetSpeed(const DirectedEdge* de, const GraphId& edgeid, const uint32_t seconds_of_week) const {
     if (de->predicted_speed()) {
-      return predictedspeeds_.speed(edgeid.id(), seconds_of_week);
-    } else {
-      // Fallback if no predicted speed
-      return GetSpeed(de, seconds_of_week % kSecondsPerDay);
+      float spd = predictedspeeds_.speed(edgeid.id(), seconds_of_week);
+      if (spd > 0.0f && spd < kMaxSpeedKph) {
+        return static_cast<uint32_t>(spd);
+      }
     }
+
+    // Fallback if no predicted speed
+    return  GetSpeed(de, seconds_of_week % kSecondsPerDay);
   }
 
   /**
