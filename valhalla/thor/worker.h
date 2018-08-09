@@ -60,8 +60,8 @@ protected:
                                        odin::Location& destination,
                                        const std::string& costing);
   void log_admin(const odin::TripPath&);
-  valhalla::sif::cost_ptr_t get_costing(const rapidjson::Document& request,
-                                        const std::string& costing);
+  valhalla::sif::cost_ptr_t get_costing(const odin::Costing costing,
+                                        const odin::DirectionsOptions& options);
   thor::PathAlgorithm* get_path_algorithm(const std::string& routetype,
                                           const odin::Location& origin,
                                           const odin::Location& destination);

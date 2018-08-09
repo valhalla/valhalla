@@ -40,7 +40,7 @@ struct EdgeAndDirection {
 bool ParseArguments(int argc, char* argv[]) {
 
   bpo::options_description options(
-      "ways_to_edges " VERSION "\n"
+      "ways_to_edges " VALHALLA_VERSION "\n"
       "\n"
       " Usage: ways_to_edges [options]\n"
       "\n"
@@ -79,7 +79,7 @@ bool ParseArguments(int argc, char* argv[]) {
   }
 
   if (vm.count("version")) {
-    std::cout << "ways_to_edges " << VERSION << "\n";
+    std::cout << "ways_to_edges " << VALHALLA_VERSION << "\n";
     return true;
   }
 

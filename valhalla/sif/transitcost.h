@@ -22,9 +22,10 @@ void ParseTransitCostOptions(const rapidjson::Document& doc,
 
 /**
  * Create a transit cost object.
- * @param  config  Property tree with configuration / options.
+ * @param  costing specified costing type.
+ * @param  options pbf with request options.
  */
-cost_ptr_t CreateTransitCost(const boost::property_tree::ptree& config);
+cost_ptr_t CreateTransitCost(const odin::Costing costing, const odin::DirectionsOptions& options);
 
 } // namespace sif
 } // namespace valhalla

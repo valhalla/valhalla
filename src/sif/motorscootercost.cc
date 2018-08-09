@@ -6,6 +6,7 @@
 #include "baldr/nodeinfo.h"
 #include "midgard/constants.h"
 #include "midgard/util.h"
+#include "worker.h"
 #include <iostream>
 
 #ifdef INLINE_TEST
@@ -157,10 +158,11 @@ constexpr float kSurfaceSpeedFactors[] = {1.0f, 1.0f, 0.9f, 0.6f, 0.1f, 0.0f, 0.
 class MotorScooterCost : public DynamicCost {
 public:
   /**
-   * Construct motor_scooter costing. Pass in configuration using property tree.
-   * @param  config  Property tree with configuration/options.
+   * Construct motor scooter costing. Pass in cost type and options using protocol buffer(pbf).
+   * @param  costing specified costing type.
+   * @param  options pbf with request options.
    */
-  MotorScooterCost(const boost::property_tree::ptree& config);
+  MotorScooterCost(const odin::Costing costing, const odin::DirectionsOptions& options);
 
   // virtual destructor
   virtual ~MotorScooterCost() {
@@ -359,29 +361,30 @@ public:
 };
 
 // Constructor
-MotorScooterCost::MotorScooterCost(const boost::property_tree::ptree& pt)
-    : DynamicCost(pt, TravelMode::kDrive), trans_density_factor_{1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.1f,
-                                                                 1.2f, 1.3f, 1.4f, 1.6f, 1.9f, 2.2f,
-                                                                 2.5f, 2.8f, 3.1f, 3.5f} {
-  maneuver_penalty_ =
-      kManeuverPenaltyRange(pt.get<float>("maneuver_penalty", kDefaultManeuverPenalty));
-  destination_only_penalty_ = kDestinationOnlyPenaltyRange(
-      pt.get<float>("destination_only_penalty", kDefaultDestinationOnlyPenalty));
-  gate_cost_ = kGateCostRange(pt.get<float>("gate_cost", kDefaultGateCost));
-  gate_penalty_ = kGatePenaltyRange(pt.get<float>("gate_penalty", kDefaultGatePenalty));
-  alley_penalty_ = kAlleyPenaltyRange(pt.get<float>("alley_penalty", kDefaultAlleyPenalty));
-  country_crossing_cost_ =
-      kCountryCrossingCostRange(pt.get<float>("country_crossing_cost", kDefaultCountryCrossingCost));
-  country_crossing_penalty_ = kCountryCrossingPenaltyRange(
-      pt.get<float>("country_crossing_penalty", kDefaultCountryCrossingPenalty));
+MotorScooterCost::MotorScooterCost(const odin::Costing costing,
+                                   const odin::DirectionsOptions& options)
+    : DynamicCost(options, TravelMode::kDrive), trans_density_factor_{1.0f, 1.0f, 1.0f, 1.0f,
+                                                                      1.0f, 1.1f, 1.2f, 1.3f,
+                                                                      1.4f, 1.6f, 1.9f, 2.2f,
+                                                                      2.5f, 2.8f, 3.1f, 3.5f} {
+  // Grab the costing options based on the specified costing type
+  const odin::CostingOptions& costing_options = options.costing_options(static_cast<int>(costing));
+
+  maneuver_penalty_ = costing_options.maneuver_penalty();
+  destination_only_penalty_ = costing_options.destination_only_penalty();
+  gate_cost_ = costing_options.gate_cost();
+  gate_penalty_ = costing_options.gate_penalty();
+  alley_penalty_ = costing_options.alley_penalty();
+  country_crossing_cost_ = costing_options.country_crossing_cost();
+  country_crossing_penalty_ = costing_options.country_crossing_penalty();
 
   // Set the cost (seconds) to enter a ferry (only apply entering since
   // a route must exit a ferry (except artificial test routes ending on
   // a ferry!)
-  ferry_cost_ = kFerryCostRange(pt.get<float>("ferry_cost", kDefaultFerryCost));
+  ferry_cost_ = costing_options.ferry_cost();
 
   // Modify ferry penalty and edge weighting based on use_ferry factor
-  use_ferry_ = kUseFerryRange(pt.get<float>("use_ferry", kDefaultUseFerry));
+  use_ferry_ = costing_options.use_ferry();
   if (use_ferry_ < 0.5f) {
     // Penalty goes from max at use_ferry_ = 0 to 0 at use_ferry_ = 0.5
     ferry_penalty_ = static_cast<uint32_t>(kMaxFerryPenalty * (1.0f - use_ferry_ * 2.0f));
@@ -407,16 +410,16 @@ MotorScooterCost::MotorScooterCost(const boost::property_tree::ptree& pt)
     density_factor_[d] = 0.85f + (d * 0.018f);
   }
 
-  top_speed_ = kTopSpeedRange(pt.get<float>("top_speed", kDefaultTopSpeed));
+  top_speed_ = costing_options.top_speed();
 
-  use_hills_ = kUseHillsRange(pt.get<float>("use_hills", kDefaultUseHills));
+  use_hills_ = costing_options.use_hills();
 
   float avoid_hills = (1.0f - use_hills_);
   for (uint32_t i = 0; i <= kMaxGradeFactor; ++i) {
     grade_penalty_[i] = avoid_hills * kAvoidHillsStrength[i];
   }
 
-  use_primary_ = kUsePrimaryRange(pt.get<float>("use_primary", kDefaultUsePrimary));
+  use_primary_ = costing_options.use_primary();
 
   // Set the road classification factor. use_roads factors above 0.5 start to
   // reduce the weight difference between road classes while factors below 0.5
@@ -717,8 +720,9 @@ void ParseMotorScooterCostOptions(const rapidjson::Document& doc,
   }
 }
 
-cost_ptr_t CreateMotorScooterCost(const boost::property_tree::ptree& config) {
-  return std::make_shared<MotorScooterCost>(config);
+cost_ptr_t CreateMotorScooterCost(const odin::Costing costing,
+                                  const odin::DirectionsOptions& options) {
+  return std::make_shared<MotorScooterCost>(costing, options);
 }
 
 } // namespace sif
@@ -735,10 +739,10 @@ namespace {
 
 MotorScooterCost* make_motorscootercost_from_json(const std::string& property, float testVal) {
   std::stringstream ss;
-  ss << R"({")" << property << R"(":)" << testVal << "}";
-  boost::property_tree::ptree costing_ptree;
-  boost::property_tree::read_json(ss, costing_ptree);
-  return new MotorScooterCost(costing_ptree);
+  ss << R"({"costing_options":{"motor_scooter":{")" << property << R"(":)" << testVal << "}}}";
+  valhalla::valhalla_request_t request;
+  request.parse(ss.str(), valhalla::odin::DirectionsOptions::route);
+  return new MotorScooterCost(valhalla::odin::Costing::motor_scooter, request.options);
 }
 
 template <typename T>

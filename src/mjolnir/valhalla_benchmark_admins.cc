@@ -222,7 +222,7 @@ void Benchmark(const boost::property_tree::ptree& pt) {
 
 bool ParseArguments(int argc, char* argv[]) {
   std::vector<std::string> input_files;
-  bpo::options_description options("adminbenchmark " VERSION "\n"
+  bpo::options_description options("adminbenchmark " VALHALLA_VERSION "\n"
                                    "\n"
                                    " Usage: adminbenchmark [options] \n"
                                    "\n"
@@ -255,7 +255,7 @@ bool ParseArguments(int argc, char* argv[]) {
   }
 
   if (vm.count("version")) {
-    std::cout << "adminbenchmark " << VERSION << "\n";
+    std::cout << "adminbenchmark " << VALHALLA_VERSION << "\n";
     return true;
   }
 

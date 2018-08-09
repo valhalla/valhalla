@@ -264,7 +264,7 @@ int main(int argc, char** argv) {
 
   unsigned int num_threads = 1;
 
-  bpo::options_description options("valhalla_add_predicted_traffic " VERSION "\n"
+  bpo::options_description options("valhalla_add_predicted_traffic " VALHALLA_VERSION "\n"
                                    "\n"
                                    " Usage: valhalla_add_predicted_traffice [options]\n"
                                    "\n"
@@ -305,7 +305,7 @@ int main(int argc, char** argv) {
   }
 
   if (vm.count("version")) {
-    std::cout << "valhalla_add_predicted_traffic " << VERSION << "\n";
+    std::cout << "valhalla_add_predicted_traffic " << VALHALLA_VERSION << "\n";
     return EXIT_SUCCESS;
   }
 

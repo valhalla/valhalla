@@ -28,7 +28,7 @@ std::vector<std::string> input_files;
 bool ParseArguments(int argc, char* argv[]) {
 
   bpo::options_description options(
-      "valhalla_validate_transit " VERSION "\n"
+      "valhalla_validate_transit " VALHALLA_VERSION "\n"
       "\n"
       " Usage: valhalla_validate_transit [options] <protocolbuffer_input_file>\n"
       "\n"
@@ -68,7 +68,7 @@ bool ParseArguments(int argc, char* argv[]) {
   }
 
   if (vm.count("version")) {
-    std::cout << "valhalla_validate_transit " << VERSION << "\n";
+    std::cout << "valhalla_validate_transit " << VALHALLA_VERSION << "\n";
     return true;
   }
 

@@ -121,11 +121,10 @@ void try_path(GraphReader& reader,
   request.parse(test_request, valhalla::odin::DirectionsOptions::route);
   loki_worker.route(request);
   adjust_scores(request);
-  auto request_pt = json_to_pt(test_request);
 
   // For now this just tests auto costing - could extend to other
   TravelMode mode = TravelMode::kDrive;
-  cost_ptr_t costing = CreateAutoCost(request_pt);
+  cost_ptr_t costing = CreateAutoCost(valhalla::odin::Costing::auto_, request.options);
   std::shared_ptr<DynamicCost> mode_costing[4];
   mode_costing[static_cast<uint32_t>(mode)] = costing;
 
