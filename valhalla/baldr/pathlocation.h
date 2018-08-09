@@ -90,8 +90,8 @@ public:
   static void toPBF(const PathLocation& pl, odin::Location* l, baldr::GraphReader& reader) {
     l->mutable_ll()->set_lng(pl.latlng_.first);
     l->mutable_ll()->set_lat(pl.latlng_.second);
-    l->set_type(pl.stoptype_ == Location::StopType::BREAK ? odin::Location::kBreak
-                                                          : odin::Location::kThrough);
+    l->set_type(pl.stoptype_ == Location::StopType::THROUGH ? odin::Location::kThrough
+                                                            : odin::Location::kBreak);
     if (!pl.name_.empty()) {
       l->set_name(pl.name_);
     }
@@ -167,7 +167,7 @@ public:
 
   static Location fromPBF(const odin::Location& loc) {
     Location l({loc.ll().lng(), loc.ll().lat()},
-               odin::Location::kBreak ? Location::StopType::BREAK : Location::StopType::THROUGH,
+               loc.type() == odin::Location::kThrough ? Location::StopType::THROUGH : Location::StopType::BREAK,
                loc.minimum_reachability(), loc.radius());
     if (loc.has_name()) {
       l.name_ = loc.name();
