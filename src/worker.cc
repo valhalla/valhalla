@@ -493,6 +493,11 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
     }
   } else {
     parse_locations(doc, options.mutable_shape(), "shape", 134, false);
+
+    // if no shape then try 'trace'
+    if (options.shape().empty()) {
+      parse_locations(doc, options.mutable_trace(), "trace", 135, false);
+    }
   }
 
   // TODO: remove this?
@@ -714,6 +719,12 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
       rapidjson::get_optional<float>(doc, "/trace_options/turn_penalty_factor");
   if (turn_penalty_factor) {
     options.set_turn_penalty_factor(*turn_penalty_factor);
+  }
+
+  // if specified, get the breakage_distance value in there
+  auto breakage_distance = rapidjson::get_optional<float>(doc, "/trace_options/breakage_distance");
+  if (breakage_distance) {
+    options.set_breakage_distance(*breakage_distance);
   }
 
   // if specified, get the filter_action value in there

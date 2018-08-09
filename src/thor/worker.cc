@@ -198,40 +198,36 @@ void run_service(const boost::property_tree::ptree& config) {
 
 // Get the costing options if in the config or get the empty default.
 // Creates the cost in the cost factory
-valhalla::sif::cost_ptr_t thor_worker_t::get_costing(const rapidjson::Document& request,
-                                                     const std::string& costing) {
-  auto costing_options =
-      rapidjson::get_child_optional(request, ("/costing_options/" + costing).c_str());
-  if (costing_options) {
-    return factory.Create(costing, *costing_options);
-  }
-  return factory.Create(costing, boost::property_tree::ptree{});
+valhalla::sif::cost_ptr_t thor_worker_t::get_costing(const odin::Costing costing,
+                                                     const odin::DirectionsOptions& options) {
+  return factory.Create(costing, options);
 }
 
 std::string thor_worker_t::parse_costing(const valhalla_request_t& request) {
   // Parse out the type of route - this provides the costing method to use
-  auto costing = odin::Costing_Name(request.options.costing());
-  if (costing.back() == '_') {
-    costing.pop_back();
+  auto costing = request.options.costing();
+  auto costing_str = odin::Costing_Name(costing);
+  if (costing_str.back() == '_') {
+    costing_str.pop_back();
   }
 
   // Set travel mode and construct costing
-  if (costing == "multimodal" || costing == "transit") {
+  if (costing == odin::Costing::multimodal || costing == odin::Costing::transit) {
     // For multi-modal we construct costing for all modes and set the
     // initial mode to pedestrian. (TODO - allow other initial modes)
-    mode_costing[0] = get_costing(request.document, "auto");
-    mode_costing[1] = get_costing(request.document, "pedestrian");
-    mode_costing[2] = get_costing(request.document, "bicycle");
-    mode_costing[3] = get_costing(request.document, "transit");
+    mode_costing[0] = get_costing(odin::Costing::auto_, request.options);
+    mode_costing[1] = get_costing(odin::Costing::pedestrian, request.options);
+    mode_costing[2] = get_costing(odin::Costing::bicycle, request.options);
+    mode_costing[3] = get_costing(odin::Costing::transit, request.options);
     mode = valhalla::sif::TravelMode::kPedestrian;
   } else {
-    valhalla::sif::cost_ptr_t cost = get_costing(request.document, costing);
+    valhalla::sif::cost_ptr_t cost = get_costing(costing, request.options);
     mode = cost->travel_mode();
     mode_costing[static_cast<uint32_t>(mode)] = cost;
   }
   valhalla::midgard::logging::Log("travel_mode::" + std::to_string(static_cast<uint32_t>(mode)),
                                   " [ANALYTICS] ");
-  return costing;
+  return costing_str;
 }
 
 void thor_worker_t::parse_locations(valhalla_request_t& request) {
@@ -273,7 +269,7 @@ void thor_worker_t::parse_locations(valhalla_request_t& request) {
 void thor_worker_t::parse_measurements(const valhalla_request_t& request) {
   // Create a matcher
   try {
-    matcher.reset(matcher_factory.Create(request.document));
+    matcher.reset(matcher_factory.Create(request.options));
   } catch (const std::invalid_argument& ex) { throw std::runtime_error(std::string(ex.what())); }
 
   // we require locations

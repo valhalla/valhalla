@@ -1,6 +1,8 @@
 #include "test.h"
 #include <cstdint>
 
+#include <valhalla/baldr/rapidjson_utils.h>
+
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
 #include "baldr/location.h"
@@ -196,6 +198,19 @@ void write_config(const std::string& filename) {
   file.close();
 }
 
+void create_costing_options(vo::DirectionsOptions& directions_options) {
+  for (const auto costing :
+       {vo::auto_, vo::auto_shorter, vo::bicycle, vo::bus, vo::hov, vo::motor_scooter, vo::multimodal,
+        vo::pedestrian, vo::transit, vo::truck, vo::motorcycle, vo::auto_data_fix}) {
+    if (costing == vo::pedestrian) {
+      const rapidjson::Document doc;
+      vs::ParsePedestrianCostOptions(doc, "/costing_options/pedestrian",
+                                     directions_options.add_costing_options());
+    } else {
+      directions_options.add_costing_options();
+    }
+  }
+}
 // check that a path from origin to dest goes along the edge with expected_edge_index
 void assert_is_trivial_path(vo::Location& origin, vo::Location& dest, uint32_t expected_edge_index) {
 
@@ -212,9 +227,11 @@ void assert_is_trivial_path(vo::Location& origin, vo::Location& dest, uint32_t e
                              "file about generating the test tiles.");
   }
 
+  vo::DirectionsOptions directions_options;
+  create_costing_options(directions_options);
   auto mode = vs::TravelMode::kPedestrian;
   vs::cost_ptr_t costs[int(vs::TravelMode::kMaxTravelMode)];
-  auto pedestrian = vs::CreatePedestrianCost(bpt::ptree());
+  auto pedestrian = vs::CreatePedestrianCost(valhalla::odin::Costing::pedestrian, directions_options);
   costs[int(mode)] = pedestrian;
   assert(bool(costs[int(mode)]));
 
@@ -335,18 +352,18 @@ void trivial_path_no_uturns(const std::string& config_file) {
   Location dest(valhalla::midgard::PointLL(5.114506f, 52.096141f), Location::StopType::BREAK);
   locations.push_back(dest);
 
-  std::string method_options = "costing_options.pedestrian";
-  auto costing_options = conf.get_child(method_options, {});
-
+  vo::DirectionsOptions directions_options;
+  create_costing_options(directions_options);
   std::shared_ptr<vs::DynamicCost> mode_costing[4];
-  std::shared_ptr<vs::DynamicCost> cost = vs::CreatePedestrianCost(costing_options);
+  std::shared_ptr<vs::DynamicCost> cost =
+      vs::CreatePedestrianCost(valhalla::odin::Costing::pedestrian, directions_options);
   auto mode = cost->travel_mode();
   mode_costing[static_cast<uint32_t>(mode)] = cost;
 
   const auto projections =
       vk::Search(locations, graph_reader, cost->GetEdgeFilter(), cost->GetNodeFilter());
   std::vector<PathLocation> path_location;
-  vo::DirectionsOptions directions_options;
+
   for (auto loc : locations) {
     try {
       path_location.push_back(projections.at(loc));

@@ -50,25 +50,27 @@ void loki_worker_t::parse_costing(valhalla_request_t& request) {
   // using the costing we can determine what type of edge filtering to use
   if (!request.options.has_costing()) {
     throw valhalla_exception_t{124};
-  };
+  }
 
-  auto costing = odin::Costing_Name(request.options.costing());
-  if (costing.back() == '_') {
-    costing.pop_back();
+  auto costing = request.options.costing();
+  auto costing_str = odin::Costing_Name(costing);
+  if (costing_str.back() == '_') {
+    costing_str.pop_back();
   }
 
   if (!request.options.do_not_track()) {
-    valhalla::midgard::logging::Log("costing_type::" + costing, " [ANALYTICS] ");
+    valhalla::midgard::logging::Log("costing_type::" + costing_str, " [ANALYTICS] ");
   }
 
   // TODO - have a way of specifying mode at the location
-  if (costing == "multimodal") {
-    costing = "pedestrian";
+  if (costing == odin::Costing::multimodal) {
+    costing = odin::Costing::pedestrian;
   }
 
   // Get the costing options if in the config or make a blank one.
   // Creates the cost in the cost factory
-  auto* method_options_ptr = rapidjson::Pointer{"/costing_options/" + costing}.Get(request.document);
+  auto* method_options_ptr =
+      rapidjson::Pointer{"/costing_options/" + costing_str}.Get(request.document);
   auto& allocator = request.document.GetAllocator();
   if (!method_options_ptr) {
     auto* costing_options = rapidjson::Pointer{"/costing_options"}.Get(request.document);
@@ -77,17 +79,16 @@ void loki_worker_t::parse_costing(valhalla_request_t& request) {
                                  rapidjson::Value(rapidjson::kObjectType), allocator);
       costing_options = rapidjson::Pointer{"/costing_options"}.Get(request.document);
     }
-    costing_options->AddMember(rapidjson::Value(costing, allocator),
+    costing_options->AddMember(rapidjson::Value(costing_str, allocator),
                                rapidjson::Value{rapidjson::kObjectType}, allocator);
-    method_options_ptr = rapidjson::Pointer{"/costing_options/" + costing}.Get(request.document);
+    method_options_ptr = rapidjson::Pointer{"/costing_options/" + costing_str}.Get(request.document);
   }
 
   try {
-    cost_ptr_t c;
-    c = factory.Create(costing, *method_options_ptr);
+    cost_ptr_t c = factory.Create(costing, request.options);
     edge_filter = c->GetEdgeFilter();
     node_filter = c->GetNodeFilter();
-  } catch (const std::runtime_error&) { throw valhalla_exception_t{125, "'" + costing + "'"}; }
+  } catch (const std::runtime_error&) { throw valhalla_exception_t{125, "'" + costing_str + "'"}; }
 
   // See if we have avoids and take care of them
   if (request.options.avoid_locations_size() > max_avoid_locations) {
@@ -108,13 +109,9 @@ void loki_worker_t::parse_costing(valhalla_request_t& request) {
           }
         }
       }
-      // TODO remove the json assignment after we use values in the pbf
-      rapidjson::Value avoid_edges{rapidjson::kArrayType};
       for (auto avoid : avoids) {
-        avoid_edges.PushBack(rapidjson::Value(avoid), allocator);
         request.options.add_avoid_edges(avoid);
       }
-      method_options_ptr->AddMember("avoid_edges", avoid_edges, allocator);
     } // swallow all failures on optional avoids
     catch (...) {
       LOG_WARN("Failed to find avoid_locations");

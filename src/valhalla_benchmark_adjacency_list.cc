@@ -109,7 +109,7 @@ int Benchmark(const uint32_t n, const float maxcost, const float bucketsize) {
 int main(int argc, char* argv[]) {
 
   bpo::options_description options(
-      "valhalla " VERSION "\n"
+      "valhalla " VALHALLA_VERSION "\n"
       "\n"
       " Usage: adjlistbenchmark [options]\n"
       "\n"
@@ -138,7 +138,7 @@ int main(int argc, char* argv[]) {
   }
 
   if (vm.count("version")) {
-    std::cout << "AdjacencyListBenchmark " << VERSION << "\n";
+    std::cout << "AdjacencyListBenchmark " << VALHALLA_VERSION << "\n";
     return EXIT_SUCCESS;
   }
 

@@ -19,10 +19,10 @@
 #include "odin/directionsbuilder.h"
 #include "odin/util.h"
 #include "sif/costfactory.h"
-
 #include "thor/costmatrix.h"
 #include "thor/optimizer.h"
 #include "thor/timedistancematrix.h"
+#include "worker.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -41,17 +41,6 @@ std::string GetFormattedTime(uint32_t secs) {
   uint32_t minutes = (secs / 60) % 60;
   uint32_t seconds = secs % 60;
   return std::to_string(hours) + ":" + std::to_string(minutes) + ":" + std::to_string(seconds);
-}
-
-// Returns the costing method (created from the dynamic cost factory).
-// Get the costing options. Merge in any request costing options that
-// override those in the config.
-valhalla::sif::cost_ptr_t get_costing(const CostFactory<DynamicCost>& factory,
-                                      boost::property_tree::ptree& request,
-                                      const std::string& costing) {
-  std::string method_options = "costing_options." + costing;
-  auto costing_options = request.get_child(method_options, {});
-  return factory.Create(costing, costing_options);
 }
 
 float random_unit_float() {
@@ -117,7 +106,7 @@ void LogResults(const std::string& matrixtype,
 // Main method for testing time and distance matrix methods
 int main(int argc, char* argv[]) {
   bpo::options_description options(
-      "timedistance_test " VERSION "\n"
+      "timedistance_test " VALHALLA_VERSION "\n"
       "\n"
       " Usage: timedistance_test [options]\n"
       "\n"
@@ -169,9 +158,12 @@ int main(int argc, char* argv[]) {
     return EXIT_SUCCESS;
   }
   if (vm.count("version")) {
-    std::cout << "timedistance_test " << VERSION << "\n";
+    std::cout << "timedistance_test " << VALHALLA_VERSION << "\n";
     return EXIT_SUCCESS;
   }
+
+  valhalla::valhalla_request_t request;
+  request.parse(json, valhalla::odin::DirectionsOptions::sources_to_targets);
 
   // We require JSON input of locations (unlike pathtest). The first location
   // is the origin.
@@ -226,14 +218,14 @@ int main(int argc, char* argv[]) {
   if (routetype == "multimodal") {
     // Create array of costing methods per mode and set initial mode to
     // pedestrian
-    mode_costing[0] = get_costing(factory, json_ptree, "auto");
-    mode_costing[1] = get_costing(factory, json_ptree, "pedestrian");
-    mode_costing[2] = get_costing(factory, json_ptree, "bicycle");
-    mode_costing[3] = get_costing(factory, json_ptree, "transit");
+    mode_costing[0] = factory.Create(valhalla::odin::Costing::auto_, request.options);
+    mode_costing[1] = factory.Create(valhalla::odin::Costing::pedestrian, request.options);
+    mode_costing[2] = factory.Create(valhalla::odin::Costing::bicycle, request.options);
+    mode_costing[3] = factory.Create(valhalla::odin::Costing::transit, request.options);
     mode = TravelMode::kPedestrian;
   } else {
     // Assign costing method
-    std::shared_ptr<DynamicCost> cost = get_costing(factory, json_ptree, routetype);
+    std::shared_ptr<DynamicCost> cost = factory.Create(request.options.costing(), request.options);
     mode = cost->travel_mode();
     mode_costing[static_cast<uint32_t>(mode)] = cost;
   }

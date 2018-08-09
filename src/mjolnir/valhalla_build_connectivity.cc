@@ -33,7 +33,7 @@ struct PPMObject {
 bool ParseArguments(int argc, char* argv[]) {
 
   bpo::options_description options(
-      "connectivitymap " VERSION "\n"
+      "connectivitymap " VALHALLA_VERSION "\n"
       "\n"
       " Usage: connectivitymap [options]\n"
       "\n"
@@ -72,7 +72,7 @@ bool ParseArguments(int argc, char* argv[]) {
   }
 
   if (vm.count("version")) {
-    std::cout << "connectivitymap " << VERSION << "\n";
+    std::cout << "connectivitymap " << VALHALLA_VERSION << "\n";
     return true;
   }
 
