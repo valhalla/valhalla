@@ -1,4 +1,4 @@
--j '{"locations":[{"lon":-106.093895,"lat":39.583698},{"lon":-106.078835,"lat":39.646495}],"costing":"motorcycle","costing_options":{"motorcycle":{"use_highways":0,"use_tolls":0,"use_trails":1}}}'
+-j '{"locations":[{"lon":-106.093895,"lat":39.583698},{"lon":-106.078835,"lat":39.646495}],"costing":"motorcycle","costing_options":{"motorcycle":{"use_highways":0,"use_tolls":0,"use_trails":0.5}}}'
 -j '{"locations":[{"lon":-106.093895,"lat":39.583698},{"lon":-106.078835,"lat":39.646495}],"costing":"motorcycle","costing_options":{"motorcycle":{"use_highways":0.25,"use_tolls":0,"use_trails":0.1}}}'
 -j '{"locations":[{"lon":-106.093895,"lat":39.583698},{"lon":-106.078835,"lat":39.646495}],"costing":"motorcycle","costing_options":{"motorcycle":{"use_highways":0.75,"use_tolls":0,"use_trails":0.3}}}'
 -j '{"locations":[{"lon":-106.093895,"lat":39.583698},{"lon":-106.078835,"lat":39.646495}],"costing":"motorcycle","costing_options":{"motorcycle":{"use_highways":1,"use_tolls":0,"use_trails":1}}}'
