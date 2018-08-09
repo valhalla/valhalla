@@ -330,10 +330,10 @@ void trivial_path_no_uturns(const std::string& config_file) {
 
   // Locations
   std::vector<valhalla::baldr::Location> locations;
-  locations.push_back(
-      valhalla::baldr::Location::FromCsv("52.09595728238367,5.114587247480813,break"));
-  locations.push_back(
-      valhalla::baldr::Location::FromCsv("52.096141834552945,5.114506781210365,break"));
+  Location origin(valhalla::midgard::PointLL(5.114587f, 52.095957f), Location::StopType::BREAK);
+  locations.push_back(origin);
+  Location dest(valhalla::midgard::PointLL(5.114506f, 52.096141f), Location::StopType::BREAK);
+  locations.push_back(dest);
 
   std::string method_options = "costing_options.pedestrian";
   auto costing_options = conf.get_child(method_options, {});

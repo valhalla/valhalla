@@ -42,11 +42,6 @@ public:
            unsigned long radius = 0);
 
   /**
-   * Serializes this object to ptree
-   * @return ptree
-   */
-  boost::property_tree::ptree ToPtree() const;
-  /**
    * Serializes this object to rapidjson::Value
    * @return rapidjson::Value
    */
@@ -71,12 +66,6 @@ public:
    * @param  method use ptree or rapidjson, ptree by default
    */
   static Location FromJson(const std::string& json, const ParseMethod& method = ParseMethod::PTREE);
-
-  /**
-   * conversion.
-   * @param  csv  a csv representation of the location
-   */
-  static Location FromCsv(const std::string& csv);
 
   /**
    * equality.
