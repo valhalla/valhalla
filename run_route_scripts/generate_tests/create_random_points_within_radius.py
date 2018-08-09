@@ -17,8 +17,8 @@ randlocs = []
 def get_random_locs(inputloc_x, inputloc_y):
   for i in range(0,int(sys.argv[3])):  # Choose number of lat/lngs to be generated
     # creates a more uniform range around the center point 
-    a = float(random.uniform(-1.0, 1.0))
-    b = float(random.uniform(-1.0, 1.0))
+    a = float(random.uniform(0.0, 1.0))
+    b = float(random.uniform(0.0, 1.0))
     r = RADIUS_IN_DEGREES * math.sqrt(a)
     c = 2 * math.pi * b
     x = r * math.cos(c) 
