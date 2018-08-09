@@ -1,5 +1,10 @@
 #!/bin/bash
 
+### This script is CA-specific but it can be used
+### as a template in generating other location files
+
+
+
 rm loc_seed_*.txt
 rm CA_*.txt
 
