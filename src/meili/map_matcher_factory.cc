@@ -79,7 +79,7 @@ boost::property_tree::ptree MapMatcherFactory::MergeConfig(const odin::Direction
     config.put<float>("gps_accuracy", options.gps_accuracy());
   }
   if (options.breakage_distance() && customizable.find("breakage_distance") != customizable.end()) {
-    config.put<float>("breakage_distance", options.gps_accuracy());
+    config.put<float>("breakage_distance", options.breakage_distance());
   }
 
   // Give it back
