@@ -201,8 +201,12 @@ int main(int argc, char* argv[]) {
   CostFactory<DynamicCost> factory;
   factory.RegisterStandardCostingModels();
 
-  // Get the route type
+  // Get type of route - this provides the costing method to use. // Remove the trailing '_'
+  // from 'auto_' - this is a work around since 'auto' is a keyword
   std::string routetype = valhalla::odin::Costing_Name(request.options.costing());
+  if (routetype.back() == '_') {
+    routetype.pop_back();
+  }
   LOG_INFO("routetype: " + routetype);
 
   // Get the costing method - pass the JSON configuration

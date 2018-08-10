@@ -230,8 +230,8 @@ int main(int argc, char* argv[]) {
           float lon = valhalla::midgard::circular_range_clamp<float>(pt.get<float>("lon"), -180, 180);
 
           Location loc({lon, lat}, (pt.get<std::string>("type", "break") == "through"
-                                             ? Location::StopType::THROUGH
-                                             : Location::StopType::BREAK));
+                                        ? Location::StopType::THROUGH
+                                        : Location::StopType::BREAK));
 
           loc.name_ = pt.get<std::string>("name", "");
           loc.street_ = pt.get<std::string>("street", "");
