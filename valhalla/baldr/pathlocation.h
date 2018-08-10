@@ -167,7 +167,8 @@ public:
 
   static Location fromPBF(const odin::Location& loc) {
     Location l({loc.ll().lng(), loc.ll().lat()},
-               loc.type() == odin::Location::kThrough ? Location::StopType::THROUGH : Location::StopType::BREAK,
+               loc.type() == odin::Location::kThrough ? Location::StopType::THROUGH
+                                                      : Location::StopType::BREAK,
                loc.minimum_reachability(), loc.radius());
     if (loc.has_name()) {
       l.name_ = loc.name();
