@@ -440,13 +440,13 @@ public:
         LOG_INFO("Valid speed: " + std::to_string(static_cast<uint32_t>(spd)));
         return static_cast<uint32_t>(spd);
       } else if (spd < 0) {
-        LOG_ERROR("Predicted speed = " + std::to_string(spd) + " for edge Id: " +
-            std::to_string(edgeid.value));
+        LOG_ERROR("Predicted speed = " + std::to_string(spd) +
+                  " for edge Id: " + std::to_string(edgeid.value));
       }
     }
 
     // Fallback if no predicted speed
-    return  GetSpeed(de, seconds_of_week % kSecondsPerDay);
+    return GetSpeed(de, seconds_of_week % kSecondsPerDay);
   }
 
   /**
