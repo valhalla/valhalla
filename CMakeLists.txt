@@ -47,9 +47,11 @@ endif()
 # Explicitly set the build type to Release if no other type is specified
 # on the command line.  Without this, cmake defaults to an unoptimized,
 # non-debug build, which almost nobody wants.
-if(NOT CMAKE_BUILD_TYPE)
-  message(STATUS "No build type specified, defaulting to Release")
-  set(CMAKE_BUILD_TYPE Release)
+if(NOT MSVC_IDE) # TODO: May need to be extended for Xcode, CLion, etc.
+  if(NOT CMAKE_BUILD_TYPE)
+    message(STATUS "No build type specified, defaulting to Release")
+    set(CMAKE_BUILD_TYPE Release)
+  endif()
 endif()
 
 if(CMAKE_BUILD_TYPE MATCHES Debug)
