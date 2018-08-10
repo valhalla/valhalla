@@ -1,6 +1,8 @@
 ## Release Date: UNRELEASED Valhalla 3.0
 * **Enhancement**
    * UPDATED: Refactor to use the pbf options instead of the ptree config [#1428](https://github.com/valhalla/valhalla/pull/1428) This completes [1357](https://github.com/valhalla/valhalla/issues/1357)
+* **Request Parsing**
+   * FIXED: Fixed through locations weren't honored [#1449](https://github.com/valhalla/valhalla/pull/1449)
 
 ## Release Date: 2018-08-02 Valhalla 3.0.0-rc.3
 * **Node Bindings**

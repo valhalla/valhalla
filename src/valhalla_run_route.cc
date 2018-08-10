@@ -1,7 +1,6 @@
 #include <boost/format.hpp>
 #include <boost/optional.hpp>
 #include <boost/program_options.hpp>
-#include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <cmath>
 #include <cstdint>
@@ -474,56 +473,33 @@ int main(int argc, char* argv[]) {
     multi_run = true;
   }
 
-  // Verify JSON request exists.
-  boost::property_tree::ptree json_ptree;
-  if (vm.count("json") == 0) {
-    std::cerr << "A JSON format request must be present."
-              << "\n";
-    return EXIT_FAILURE;
-  }
-
-  // Process json input
-  std::stringstream stream;
-  stream << json;
-  boost::property_tree::read_json(stream, json_ptree);
-
-  // Locations
-  std::vector<valhalla::baldr::Location> locations;
-  try {
-    for (const auto& location : json_ptree.get_child("locations")) {
-      locations.emplace_back(std::move(valhalla::baldr::Location::FromPtree(location.second)));
-    }
-    if (locations.size() < 2) {
-      throw;
-    }
-  } catch (...) {
-    throw std::runtime_error("insufficiently specified required parameter 'locations'");
-  }
-
-  // Parse out the type of route - this provides the costing method to use
-  std::string routetype;
-  try {
-    routetype = json_ptree.get<std::string>("costing");
-  } catch (...) { throw std::runtime_error("No edge/node costing provided"); }
-
   // Grab the directions options, if they exist
   valhalla::valhalla_request_t request;
   request.parse(json, valhalla::odin::DirectionsOptions::route);
-  DirectionsOptions directions_options = request.options;
+  const auto& directions_options = request.options;
 
-  // Grab the date_time, if is exists
-  auto date_time_ptr = json_ptree.get_child_optional("date_time");
-  if (date_time_ptr) {
-    auto date_time_type = (*date_time_ptr).get<int>("type");
-    auto date_time_value = (*date_time_ptr).get_optional<std::string>("value");
+  // Get type of route - this provides the costing method to use. // Remove the trailing '_'
+  // from 'auto_' - this is a work around since 'auto' is a keyword
+  std::string routetype = valhalla::odin::Costing_Name(request.options.costing());
+  if (routetype.back() == '_') {
+    routetype.pop_back();
+  }
+  LOG_INFO("routetype: " + routetype);
 
-    if (date_time_type == 0) { // current
-      locations.front().date_time_ = "current";
-    } else if (date_time_type == 1) { // depart at
-      locations.front().date_time_ = date_time_value;
-    } else if (date_time_type == 2) { // arrive by
-      locations.back().date_time_ = date_time_value;
-    }
+  // Locations
+  auto locations = valhalla::baldr::PathLocation::fromPBF(directions_options.locations());
+  ;
+  if (locations.size() < 2) {
+    throw;
+  }
+
+  // Add date time settings to the locations
+  if (directions_options.date_time_type() == DirectionsOptions_DateTimeType_current) {
+    locations.front().date_time_ = "current";
+  } else if (directions_options.date_time_type() == DirectionsOptions_DateTimeType_depart_at) {
+    locations.front().date_time_ = directions_options.date_time();
+  } else if (directions_options.date_time_type() == DirectionsOptions_DateTimeType_arrive_by) {
+    locations.back().date_time_ = directions_options.date_time();
   }
 
   // parse the config
@@ -559,12 +535,6 @@ int main(int argc, char* argv[]) {
   // Construct costing
   CostFactory<DynamicCost> factory;
   factory.RegisterStandardCostingModels();
-
-  // Figure out the route type
-  for (auto& c : routetype) {
-    c = std::tolower(c);
-  }
-  LOG_INFO("routetype: " + routetype);
 
   // Get the costing method - pass the JSON configuration
   TripPath trip_path;

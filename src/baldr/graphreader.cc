@@ -1,6 +1,5 @@
 #include "baldr/graphreader.h"
 
-#include <boost/filesystem.hpp>
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -10,7 +9,7 @@
 #include "midgard/sequence.h"
 
 #include "baldr/connectivity_map.h"
-#include "baldr/filesystem_utils.h"
+#include "filesystem.h"
 
 using namespace valhalla::baldr;
 
@@ -182,7 +181,7 @@ bool GraphReader::DoesTileExist(const GraphId& graphid) const {
     return true;
   }
   std::string file_location =
-      tile_dir_ + filesystem::path_separator + GraphTile::FileSuffix(graphid.Tile_Base());
+      tile_dir_ + filesystem::path::preferred_separator + GraphTile::FileSuffix(graphid.Tile_Base());
   struct stat buffer;
   return stat(file_location.c_str(), &buffer) == 0 ||
          stat((file_location + ".gz").c_str(), &buffer) == 0;
@@ -198,7 +197,8 @@ bool GraphReader::DoesTileExist(const boost::property_tree::ptree& pt, const Gra
     return extract->tiles.find(graphid) != extract->tiles.cend();
   }
   // otherwise check the disk
-  std::string file_location = pt.get<std::string>("tile_dir") + filesystem::path_separator +
+  std::string file_location = pt.get<std::string>("tile_dir") +
+                              filesystem::path::preferred_separator +
                               GraphTile::FileSuffix(graphid.Tile_Base());
   struct stat buffer;
   return stat(file_location.c_str(), &buffer) == 0 ||
@@ -472,12 +472,12 @@ std::unordered_set<GraphId> GraphReader::GetTileSet() const {
     // for each level
     for (uint8_t level = 0; level <= TileHierarchy::levels().rbegin()->first + 1; ++level) {
       // crack open this level of tiles directory
-      boost::filesystem::path root_dir(tile_dir_ + filesystem::path_separator +
-                                       std::to_string(level) + filesystem::path_separator);
-      if (boost::filesystem::exists(root_dir) && boost::filesystem::is_directory(root_dir)) {
+      filesystem::path root_dir(tile_dir_ + filesystem::path::preferred_separator +
+                                std::to_string(level) + filesystem::path::preferred_separator);
+      if (filesystem::exists(root_dir) && filesystem::is_directory(root_dir)) {
         // iterate over all the files in there
-        for (boost::filesystem::recursive_directory_iterator i(root_dir), end; i != end; ++i) {
-          if (!boost::filesystem::is_directory(i->path())) {
+        for (filesystem::recursive_directory_iterator i(root_dir), end; i != end; ++i) {
+          if (i->is_regular_file() || i->is_symlink()) {
             // add it if it can be parsed as a valid tile file name
             try {
               tiles.emplace(GraphTile::GetTileId(i->path().string()));
@@ -504,12 +504,12 @@ std::unordered_set<GraphId> GraphReader::GetTileSet(const uint8_t level) const {
     } // or individually on disk
   } else {
     // crack open this level of tiles directory
-    boost::filesystem::path root_dir(tile_dir_ + filesystem::path_separator + std::to_string(level) +
-                                     filesystem::path_separator);
-    if (boost::filesystem::exists(root_dir) && boost::filesystem::is_directory(root_dir)) {
+    filesystem::path root_dir(tile_dir_ + filesystem::path::preferred_separator +
+                              std::to_string(level) + filesystem::path::preferred_separator);
+    if (filesystem::exists(root_dir) && filesystem::is_directory(root_dir)) {
       // iterate over all the files in the directory and turn into GraphIds
-      for (boost::filesystem::recursive_directory_iterator i(root_dir), end; i != end; ++i) {
-        if (!boost::filesystem::is_directory(i->path())) {
+      for (filesystem::recursive_directory_iterator i(root_dir), end; i != end; ++i) {
+        if (i->is_regular_file() || i->is_symlink()) {
           // add it if it can be parsed as a valid tile file name
           try {
             tiles.emplace(GraphTile::GetTileId(i->path().string()));
