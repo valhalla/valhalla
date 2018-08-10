@@ -9,6 +9,7 @@
 #include "sif/autocost.h"
 #include "thor/timedep.h"
 #include "thor/worker.h"
+#include "worker.h"
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 
@@ -27,6 +28,12 @@ boost::property_tree::ptree json_to_pt(const std::string& json) {
   boost::property_tree::ptree pt;
   boost::property_tree::read_json(ss, pt);
   return pt;
+}
+
+valhalla::odin::DirectionsOptions json_to_pbf(const std::string& json) {
+  valhalla::valhalla_request_t request;
+  request.parse(json, valhalla::odin::DirectionsOptions::route);
+  return request.options;
 }
 
 rapidjson::Document to_document(const std::string& request) {
@@ -122,11 +129,11 @@ void try_path(GraphReader& reader,
   request.parse(test_request, valhalla::odin::DirectionsOptions::route);
   loki_worker.route(request);
   adjust_scores(request);
-  auto request_pt = json_to_pt(test_request);
+  auto options = json_to_pbf(test_request);
 
   // For now this just tests auto costing - could extend to other
   TravelMode mode = TravelMode::kDrive;
-  cost_ptr_t costing = CreateAutoCost(request_pt);
+  cost_ptr_t costing = CreateAutoCost(options.costing(), options);
   std::shared_ptr<DynamicCost> mode_costing[4];
   mode_costing[static_cast<uint32_t>(mode)] = costing;
 

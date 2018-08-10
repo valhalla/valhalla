@@ -155,7 +155,7 @@ void extend(GraphReader& reader,
 
 // program entry point
 int main(int argc, char* argv[]) {
-  bpo::options_description options("valhalla_export_edges " VERSION "\n"
+  bpo::options_description options("valhalla_export_edges " VALHALLA_VERSION "\n"
                                    "\n"
                                    " Usage: valhalla_export_edges [options]\n"
                                    "\n"
@@ -194,7 +194,7 @@ int main(int argc, char* argv[]) {
   }
 
   if (vm.count("version")) {
-    std::cout << "valhalla_export_edges " << VERSION << "\n";
+    std::cout << "valhalla_export_edges " << VALHALLA_VERSION << "\n";
     return EXIT_SUCCESS;
   }
 

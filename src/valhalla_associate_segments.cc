@@ -290,7 +290,7 @@ public:
 };
 
 DistanceOnlyCost::DistanceOnlyCost(vs::TravelMode travel_mode)
-    : DynamicCost(bpt::ptree(), travel_mode) {
+    : DynamicCost(valhalla::odin::DirectionsOptions(), travel_mode) {
 }
 
 DistanceOnlyCost::~DistanceOnlyCost() {
@@ -953,7 +953,7 @@ int main(int argc, char** argv) {
   unsigned int num_threads = 1;
 
   bpo::options_description options(
-      "valhalla_associate_segments " VERSION "\n"
+      "valhalla_associate_segments " VALHALLA_VERSION "\n"
       "\n"
       " Usage: valhalla_associate_segments [options]\n"
       "\n"
@@ -988,7 +988,7 @@ int main(int argc, char** argv) {
   }
 
   if (vm.count("version")) {
-    std::cout << "valhalla_associate_segments " << VERSION << "\n";
+    std::cout << "valhalla_associate_segments " << VALHALLA_VERSION << "\n";
     return EXIT_SUCCESS;
   }
 

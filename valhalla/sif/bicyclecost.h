@@ -22,9 +22,10 @@ void ParseBicycleCostOptions(const rapidjson::Document& doc,
 
 /**
  * Create a bicyclecost
- * @param  config  Property tree with configuration / options.
+ * @param  costing specified costing type.
+ * @param  options pbf with request options.
  */
-cost_ptr_t CreateBicycleCost(const boost::property_tree::ptree& config);
+cost_ptr_t CreateBicycleCost(const odin::Costing costing, const odin::DirectionsOptions& options);
 
 } // namespace sif
 } // namespace valhalla

@@ -60,7 +60,7 @@ std::vector<std::string> input_files;
 bool ParseArguments(int argc, char* argv[]) {
 
   bpo::options_description options(
-      "pbfadminbuilder " VERSION "\n"
+      "pbfadminbuilder " VALHALLA_VERSION "\n"
       "\n"
       " Usage: pbfadminbuilder [options] <protocolbuffer_input_file>\n"
       "\n"
@@ -101,7 +101,7 @@ bool ParseArguments(int argc, char* argv[]) {
   }
 
   if (vm.count("version")) {
-    std::cout << "pbfadminbuilder " << VERSION << "\n";
+    std::cout << "pbfadminbuilder " << VALHALLA_VERSION << "\n";
     return true;
   }
 

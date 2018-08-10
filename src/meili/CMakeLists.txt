@@ -1,7 +1,6 @@
 file(GLOB headers ${VALHALLA_SOURCE_DIR}/valhalla/meili/*.h)
 
 set(sources
-  universal_cost.cc
   viterbi_search.cc
   topk_search.cc
   routing.cc
