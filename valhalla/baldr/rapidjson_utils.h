@@ -1,6 +1,7 @@
 #ifndef VALHALLA_BALDR_RAPIDJSON_UTILS_H_
 #define VALHALLA_BALDR_RAPIDJSON_UTILS_H_
 
+#include <locale>
 #include <stdexcept>
 #include <type_traits>
 
@@ -146,6 +147,72 @@ inline boost::optional<rapidjson::Value&> get_child_optional(V&& v, const char* 
     c.reset(*ptr);
   }
   return c;
+}
+
+template <class Ptree> void add_value(const Value& v, Ptree& pt) {
+  switch (v.GetType()) {
+    case kObjectType:
+      add_object(v.GetObject(), pt);
+      break;
+    case kArrayType:
+      add_array(v.GetArray(), pt);
+      break;
+    case kNullType:
+      pt.put("", "null");
+      break;
+    case kFalseType:
+      pt.put("", false);
+      break;
+    case kTrueType:
+      pt.put("", true);
+      break;
+    case kStringType:
+      pt.put("", v.GetString());
+      break;
+    case kNumberType:
+      if (v.IsInt64())
+        pt.put("", v.GetInt64());
+      else if (v.IsUint64())
+        pt.put("", v.GetUint64());
+      else if (v.IsDouble())
+        pt.put("", v.GetDouble());
+      else
+        throw std::runtime_error("unhandled number");
+      break;
+  }
+}
+
+template <class Ptree> void add_object(const GenericObject<true, Value::ValueType>& o, Ptree& pt) {
+  for (const auto& e : o)
+    add_value(e.value, pt.add_child(e.name.GetString(), Ptree{}));
+}
+
+template <class Ptree> void add_array(const GenericArray<true, Value::ValueType>& a, Ptree& pt) {
+  for (const auto& e : a)
+    add_value(e, pt.push_back(std::make_pair("", Ptree{}))->second);
+}
+
+template <class Ptree> void read_json(std::stringstream& stream, Ptree& pt) {
+  Document d;
+  d.Parse(stream.str());
+  if (d.HasParseError())
+    throw std::runtime_error("Could not parse json, error at offset: " +
+                             std::to_string(d.GetErrorOffset()));
+  if (d.IsObject())
+    add_object(const_cast<const Document*>(&d)->GetObject(), pt);
+  else if (d.IsArray())
+    add_array(const_cast<const Document*>(&d)->GetArray(), pt);
+  else
+    throw std::runtime_error("Json is not an object or array");
+}
+
+template <class Ptree>
+void read_json(const std::string& filename, Ptree& pt, const std::locale& loc = std::locale()) {
+  std::basic_ifstream<typename Ptree::key_type::value_type> stream(filename.c_str());
+  if (!stream)
+    throw std::runtime_error("Cannot open file " + filename);
+  stream.imbue(loc);
+  read_json(stream, pt);
 }
 
 } // namespace rapidjson
