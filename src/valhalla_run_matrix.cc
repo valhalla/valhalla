@@ -14,7 +14,7 @@
 
 #include "baldr/graphreader.h"
 #include "baldr/pathlocation.h"
-#include "loki/search.h"
+#include "loki/worker.h"
 #include "midgard/logging.h"
 #include "odin/directionsbuilder.h"
 #include "odin/util.h"
@@ -43,38 +43,25 @@ std::string GetFormattedTime(uint32_t secs) {
   return std::to_string(hours) + ":" + std::to_string(minutes) + ":" + std::to_string(seconds);
 }
 
-float random_unit_float() {
-  // Create a random integer between -1000 - +1000,
-  // then scale to be between -1 and 1
-  int r = rand() % 2000 - 1000;
-  return static_cast<float>(r) * 0.001f;
-}
-
-// Jitter lat,lng by up to about 1km
-PointLL JitterLatLng(const PointLL& latlng, const float delta) {
-  return {latlng.lng() + random_unit_float() * delta, latlng.lat() + random_unit_float() * delta};
-}
-
 // Log results
-void LogResults(const std::string& matrixtype,
-                const std::vector<PathLocation>& path_locations,
+void LogResults(const bool optimize,
+                const valhalla::valhalla_request_t& request,
                 const std::vector<TimeDistance>& res) {
   LOG_INFO("Results:");
-  if (matrixtype == "many_to_many") {
-    uint32_t idx1 = 0;
-    uint32_t idx2 = 0;
-    uint32_t nlocs = path_locations.size();
-    for (auto& td : res) {
-      LOG_INFO(std::to_string(idx1) + "," + std::to_string(idx2) +
-               ": Distance= " + std::to_string(td.dist) + " Time= " + GetFormattedTime(td.time) +
-               " secs = " + std::to_string(td.time));
-      idx2++;
-      if (idx2 == nlocs) {
-        idx2 = 0;
-        idx1++;
-      }
+  uint32_t idx1 = 0;
+  uint32_t idx2 = 0;
+  uint32_t nlocs = request.options.sources_size();
+  for (auto& td : res) {
+    LOG_INFO(std::to_string(idx1) + "," + std::to_string(idx2) +
+             ": Distance= " + std::to_string(td.dist) + " Time= " + GetFormattedTime(td.time) +
+             " secs = " + std::to_string(td.time));
+    idx2++;
+    if (idx2 == nlocs) {
+      idx2 = 0;
+      idx1++;
     }
-
+  }
+  if (optimize) {
     // Optimize the path
     auto t10 = std::chrono::high_resolution_clock::now();
     std::vector<float> costs;
@@ -92,40 +79,27 @@ void LogResults(const std::string& matrixtype,
     auto t11 = std::chrono::high_resolution_clock::now();
     uint32_t ms1 = std::chrono::duration_cast<std::chrono::milliseconds>(t11 - t10).count();
     LOG_INFO("Optimization took " + std::to_string(ms1) + " ms");
-
-  } else {
-    uint32_t idx = 0;
-    for (auto& td : res) {
-      LOG_INFO(std::to_string(idx) + ": Distance= " + std::to_string(td.dist) +
-               " Time= " + GetFormattedTime(td.time) + " secs = " + std::to_string(td.time));
-      idx++;
-    }
   }
 }
 
 // Main method for testing time and distance matrix methods
 int main(int argc, char* argv[]) {
   bpo::options_description options(
-      "timedistance_test " VALHALLA_VERSION "\n"
+      "valhalla_run_matrix " VALHALLA_VERSION "\n"
       "\n"
-      " Usage: timedistance_test [options]\n"
+      " Usage: valhalla_run_matrix [options]\n"
       "\n"
-      "timedistance_test is a command line test tool for time+distance matrix routing. "
+      "valhalla_run_matrix is a command line test tool for time+distance matrix routing. "
       "\n"
-      "Use the -j option for specifying the locations. "
+      "Use the -j option for specifying source to target locations."
       "\n"
       "\n");
 
-  std::string routetype, json, config;
-  std::string matrixtype = "one_to_many";
+  std::string json, config;
   uint32_t iterations = 1;
-
   options.add_options()("help,h", "Print this help message.")("version,v",
                                                               "Print the version of this software.")(
-      "type,t", boost::program_options::value<std::string>(&routetype),
-      "Route Type: auto|bicycle|pedestrian|auto-shorter")(
-      "matrixtype,m", boost::program_options::value<std::string>(&matrixtype),
-      "Matrix Type: one_to_many|many_to_many|many_to_one")(
+      // TODO - update example
       "json,j", boost::program_options::value<std::string>(&json),
       "JSON Example: "
       "'{\"locations\":[{\"lat\":40.748174,\"lon\":-73.984984,\"type\":\"break\",\"heading\":200,"
@@ -165,26 +139,6 @@ int main(int argc, char* argv[]) {
   valhalla::valhalla_request_t request;
   request.parse(json, valhalla::odin::DirectionsOptions::sources_to_targets);
 
-  // We require JSON input of locations (unlike pathtest). The first location
-  // is the origin.
-  std::stringstream stream;
-  stream << json;
-  boost::property_tree::ptree json_ptree;
-  boost::property_tree::read_json(stream, json_ptree);
-  std::vector<Location> locations;
-  try {
-    for (const auto& location : json_ptree.get_child("locations")) {
-      locations.emplace_back(std::move(Location::FromPtree(location.second)));
-    }
-  } catch (...) {
-    throw std::runtime_error("insufficiently specified required parameter 'locations'");
-  }
-
-  // Parse out the type of route - this provides the costing method to use
-  try {
-    routetype = json_ptree.get<std::string>("costing");
-  } catch (...) { throw std::runtime_error("No edge/node costing provided"); }
-
   // parse the config
   boost::property_tree::ptree pt;
   boost::property_tree::read_json(config.c_str(), pt);
@@ -206,9 +160,11 @@ int main(int argc, char* argv[]) {
   CostFactory<DynamicCost> factory;
   factory.RegisterStandardCostingModels();
 
-  // Figure out the route type
-  for (auto& c : routetype) {
-    c = std::tolower(c);
+  // Get type of route - this provides the costing method to use. // Remove the trailing '_'
+  // from 'auto_' - this is a work around since 'auto' is a keyword
+  std::string routetype = valhalla::odin::Costing_Name(request.options.costing());
+  if (routetype.back() == '_') {
+    routetype.pop_back();
   }
   LOG_INFO("routetype: " + routetype);
 
@@ -230,49 +186,10 @@ int main(int argc, char* argv[]) {
     mode_costing[static_cast<uint32_t>(mode)] = cost;
   }
 
-  // If only one location is provided we create a set of random locations
-  // around this location
-  if (locations.size() == 1) {
-    LOG_INFO("Create random locations");
-    PointLL ll = locations.front().latlng_;
-    LOG_INFO("Location 0 = " + std::to_string(ll.lat()) + "," + std::to_string(ll.lng()));
-    uint32_t n = 50;
-    float delta = 0.15f; // Should keep all locations inside a 35 mile radius
-    for (uint32_t i = 0; i < n; i++) {
-      PointLL ll2 = JitterLatLng(ll, delta);
-      locations.push_back(Location(ll2));
-      LOG_INFO("Location " + std::to_string(i + 1) + " = " + std::to_string(ll2.lat()) + "," +
-               std::to_string(ll2.lng()));
-    }
-  } else if (locations.size() == 0) {
-    LOG_ERROR("No locations provided");
-    exit(EXIT_FAILURE);
-  }
-
-  // Get path locations (Loki) for all locations.
+  // Find path locations (loki) for sources and targets
   auto t0 = std::chrono::high_resolution_clock::now();
-  std::shared_ptr<DynamicCost> cost = mode_costing[static_cast<uint32_t>(mode)];
-  const auto projections = Search(locations, reader, cost->GetEdgeFilter(), cost->GetNodeFilter());
-  std::vector<PathLocation> path_locations;
-  valhalla::odin::DirectionsOptions directions_options;
-  for (auto& loc : locations) {
-    try {
-      path_locations.push_back(projections.at(loc));
-      PathLocation::toPBF(path_locations.back(), directions_options.mutable_locations()->Add(),
-                          reader);
-    } catch (...) { exit(EXIT_FAILURE); }
-  }
-  if (matrixtype == "one_to_many") {
-    directions_options.mutable_sources()->Add()->CopyFrom(*directions_options.locations().begin());
-    directions_options.mutable_targets()->CopyFrom(directions_options.locations());
-  } else if (matrixtype == "many_to_many") {
-    directions_options.mutable_sources()->CopyFrom(directions_options.locations());
-    directions_options.mutable_targets()->CopyFrom(directions_options.locations());
-  } else {
-    directions_options.mutable_sources()->CopyFrom(directions_options.locations());
-    directions_options.mutable_targets()->Add()->CopyFrom(*directions_options.locations().rbegin());
-  }
-
+  loki_worker_t lw(pt);
+  lw.matrix(request);
   auto t1 = std::chrono::high_resolution_clock::now();
   uint32_t ms = std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count();
   LOG_INFO("Location Processing took " + std::to_string(ms) + " ms");
@@ -293,44 +210,59 @@ int main(int argc, char* argv[]) {
   if (max_matrix_distance.empty()) {
     throw std::runtime_error("Missing max_matrix_distance configuration");
   }
+  auto m = max_matrix_distance.find(routetype);
+  float max_distance;
+  if (m == max_matrix_distance.end()) {
+    LOG_ERROR("Could not find max_matrix_distance for " + routetype);
+    max_distance = 4000000.0f;
+  } else {
+    max_distance = m->second;
+  }
 
-  // Compute the cost matrix
-  t0 = std::chrono::high_resolution_clock::now();
+  // If the sources and targets are equal we can run optimize
+  bool optimize = true;
+  if (request.options.sources_size() == request.options.targets_size()) {
+    for (uint32_t i = 0; i < request.options.sources_size(); ++i) {
+      if (request.options.sources(i).ll().lat() != request.options.targets(i).ll().lat() ||
+          request.options.sources(i).ll().lng() != request.options.targets(i).ll().lng()) {
+        optimize = false;
+        break;
+      }
+    }
+  } else {
+    optimize = false;
+  }
+  if (optimize) {
+    LOG_INFO("Find the optimal path");
+  }
 
   // Timing with CostMatrix
   std::vector<TimeDistance> res;
+  t0 = std::chrono::high_resolution_clock::now();
   for (uint32_t n = 0; n < iterations; n++) {
     res.clear();
     CostMatrix matrix;
-    res = matrix.SourceToTarget(directions_options.sources(), directions_options.targets(), reader,
-                                mode_costing, mode, max_matrix_distance.find(routetype)->second);
+    res = matrix.SourceToTarget(request.options.sources(), request.options.targets(), reader,
+                                mode_costing, mode, max_distance);
   }
   t1 = std::chrono::high_resolution_clock::now();
   ms = std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count();
   float avg = (static_cast<float>(ms) / static_cast<float>(iterations)) * 0.001f;
   LOG_INFO("CostMatrix average time to compute: " + std::to_string(avg) + " sec");
-  LogResults(matrixtype, path_locations, res);
+  LogResults(optimize, request, res);
 
   // Run with TimeDistanceMatrix
   for (uint32_t n = 0; n < iterations; n++) {
     res.clear();
     TimeDistanceMatrix tdm;
-    if (matrixtype == "one_to_many") {
-      res = tdm.OneToMany(*directions_options.locations().begin(), directions_options.locations(),
-                          reader, mode_costing, mode, max_matrix_distance.find(routetype)->second);
-    } else if (matrixtype == "many_to_many") {
-      res = tdm.ManyToOne(*directions_options.locations().rbegin(), directions_options.locations(),
-                          reader, mode_costing, mode, max_matrix_distance.find(routetype)->second);
-    } else {
-      res = tdm.ManyToMany(directions_options.locations(), reader, mode_costing, mode,
-                           max_matrix_distance.find(routetype)->second);
-    }
+    res = tdm.SourceToTarget(request.options.sources(), request.options.targets(), reader,
+                             mode_costing, mode, max_distance);
   }
   t1 = std::chrono::high_resolution_clock::now();
   ms = std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count();
   avg = (static_cast<float>(ms) / static_cast<float>(iterations)) * 0.001f;
   LOG_INFO("TimeDistanceMatrix average time to compute: " + std::to_string(avg) + " sec");
-  LogResults(matrixtype, path_locations, res);
+  LogResults(optimize, request, res);
 
   return EXIT_SUCCESS;
 }
