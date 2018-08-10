@@ -220,7 +220,35 @@ int main(int argc, char* argv[]) {
         paths.push_back({});
         std::vector<valhalla::baldr::Location>& locations = paths.back();
         for (const auto& location : path.second) {
-          ; // TODOlocations.emplace_back(std::move(valhalla::baldr::Location::FromPtree(location.second)));
+          // Get the location from the ptree
+          // TODO - this was copied from the defunct Location::FromPtree
+          const auto& pt = path.second;
+          float lat = pt.get<float>("lat");
+          if (lat < -90.0f || lat > 90.0f) {
+            throw std::runtime_error("Latitude must be in the range [-90, 90] degrees");
+          }
+          float lon = valhalla::midgard::circular_range_clamp<float>(pt.get<float>("lon"), -180, 180);
+
+          Location loc({lon, lat}, (pt.get<std::string>("type", "break") == "through"
+                                             ? Location::StopType::THROUGH
+                                             : Location::StopType::BREAK));
+
+          loc.name_ = pt.get<std::string>("name", "");
+          loc.street_ = pt.get<std::string>("street", "");
+          loc.city_ = pt.get<std::string>("city", "");
+          loc.state_ = pt.get<std::string>("state", "");
+          loc.zip_ = pt.get<std::string>("postal_code", "");
+          loc.country_ = pt.get<std::string>("country", "");
+
+          loc.date_time_ = pt.get_optional<std::string>("date_time");
+          loc.heading_ = pt.get_optional<float>("heading");
+          loc.heading_tolerance_ = pt.get_optional<float>("heading_tolerance");
+          loc.node_snap_tolerance_ = pt.get_optional<float>("node_snap_tolerance");
+          loc.way_id_ = pt.get_optional<long double>("way_id");
+
+          loc.minimum_reachability_ = pt.get<unsigned int>("minimum_reachability", 50);
+          loc.radius_ = pt.get<unsigned long>("radius", 0);
+          locations.emplace_back(std::move(loc));
         }
       }
     } catch (...) { throw std::runtime_error("insufficiently specified required parameter 'paths'"); }

@@ -172,15 +172,15 @@ int main(int argc, char* argv[]) {
   // Get something we can use to fetch tiles
   valhalla::baldr::GraphReader reader(pt.get_child("mjolnir"));
 
+  // Grab the directions options, if they exist
+  request.parse(json, valhalla::odin::DirectionsOptions::route);
+
   // Process locations
   auto locations = PathLocation::fromPBF(request.options.locations());
   if (locations.size() == 1) {
     // TODO - for now just 1 location - maybe later allow multiple?
     throw std::runtime_error("Requires a single location");
   }
-
-  // Grab the directions options, if they exist
-  request.parse(json, valhalla::odin::DirectionsOptions::route);
 
   // Process avoid locations
   auto avoid_locations = PathLocation::fromPBF(request.options.avoid_locations());
