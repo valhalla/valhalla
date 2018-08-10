@@ -441,8 +441,7 @@ public:
         return static_cast<uint32_t>(spd);
       } else if (spd < 0) {
         LOG_ERROR("Predicted speed = " + std::to_string(spd) + " for edge Id: " +
-            std::to_string(edgeid.tileid()) + "," + std::to_string(edgeid.level()) + "," +
-            std::to_string(edgeid.id()));
+            std::to_string(edgeid.value));
       }
     }
 
