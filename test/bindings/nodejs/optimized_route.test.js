@@ -9,8 +9,10 @@ test('optimizedRoute: can return info for locations', function(assert) {
     var optimizedRoute = JSON.parse(result);
     assert.ok(optimizedRoute);
     assert.equal(optimizedRoute.trip.status_message, 'Found route between points', 'has successful status message');
-    assert.equal(optimizedRoute.trip.legs.length, 1, 'returns one leg');
-    assert.equal(optimizedRoute.trip.legs[0].maneuvers.length, 6, 'returns 6 maneuvers');
+    assert.equal(optimizedRoute.trip.legs.length, 3, 'returns 3 legs');
+    assert.equal(optimizedRoute.trip.legs[0].maneuvers.length, 2, 'returns 2 maneuvers');
+    assert.equal(optimizedRoute.trip.legs[1].maneuvers.length, 2, 'returns 2 maneuvers');
+    assert.equal(optimizedRoute.trip.legs[2].maneuvers.length, 2, 'returns 2 maneuvers');
     assert.equal(optimizedRoute.trip.locations.length, 4, 'returns back the 4 input locations');
     assert.end();
   });
