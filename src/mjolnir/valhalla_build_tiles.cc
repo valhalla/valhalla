@@ -24,7 +24,7 @@ int main(int argc, char** argv) {
   std::string inline_config;
   std::vector<std::string> input_files;
   bpo::options_description options(
-      "valhalla_build_tiles " VERSION "\n\n"
+      "valhalla_build_tiles " VALHALLA_VERSION "\n\n"
       "Usage: valhalla_build_tiles [options] <protocolbuffer_input_file>\n\n"
       "valhalla_build_tiles is a program that creates the route graph from an osm.pbf "
       "extract. Sample json configs are located in ../conf directory.\n\n");
@@ -59,7 +59,7 @@ int main(int argc, char** argv) {
     return EXIT_SUCCESS;
   }
   if (vm.count("version")) {
-    std::cout << "valhalla_build_tiles " << VERSION << "\n";
+    std::cout << "valhalla_build_tiles " << VALHALLA_VERSION << "\n";
     return EXIT_SUCCESS;
   }
   if (input_files.size() == 0) {

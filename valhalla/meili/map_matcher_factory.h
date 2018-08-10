@@ -20,7 +20,7 @@ namespace meili {
 
 class MapMatcherFactory final {
 public:
-  MapMatcherFactory(const boost::property_tree::ptree&);
+  MapMatcherFactory(const boost::property_tree::ptree& root);
 
   ~MapMatcherFactory();
 
@@ -32,17 +32,15 @@ public:
     return candidatequery_;
   }
 
-  MapMatcher* Create(const std::string& name) {
-    return Create(name, boost::property_tree::ptree());
+  MapMatcher* Create(const odin::Costing costing, const odin::DirectionsOptions& options);
+
+  MapMatcher* Create(const odin::Costing costing) {
+    return Create(costing, odin::DirectionsOptions());
   }
 
-  MapMatcher* Create(const std::string& name, const boost::property_tree::ptree& preferences);
+  MapMatcher* Create(const odin::DirectionsOptions& options);
 
-  MapMatcher* Create(const boost::property_tree::ptree&);
-
-  MapMatcher* Create(const rapidjson::Value&);
-
-  boost::property_tree::ptree MergeConfig(const std::string&, const boost::property_tree::ptree&);
+  boost::property_tree::ptree MergeConfig(const odin::DirectionsOptions& options);
 
   void ClearFullCache();
 
@@ -64,8 +62,6 @@ private:
   CandidateGridQuery candidatequery_;
 
   float max_grid_cache_size_;
-
-  sif::cost_ptr_t get_costing(const boost::property_tree::ptree& request, const std::string& costing);
 };
 
 } // namespace meili

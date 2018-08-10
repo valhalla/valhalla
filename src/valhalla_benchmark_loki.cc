@@ -78,7 +78,7 @@ using results_t = std::set<result_t>;
 bool ParseArguments(int argc, char* argv[]) {
 
   bpo::options_description options(
-      "search " VERSION "\n"
+      "search " VALHALLA_VERSION "\n"
       "\n"
       " Usage: loki_benchmark [options] <location_input_file> ...\n"
       "\n"
@@ -127,7 +127,7 @@ bool ParseArguments(int argc, char* argv[]) {
   }
 
   if (vm.count("version")) {
-    std::cout << "loki_benchmark " << VERSION << "\n";
+    std::cout << "loki_benchmark " << VALHALLA_VERSION << "\n";
     return true;
   }
 

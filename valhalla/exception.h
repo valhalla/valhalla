@@ -34,6 +34,7 @@ const std::unordered_map<unsigned, std::string>
                 {132, "Failed to parse target"},
                 {133, "Failed to parse avoid"},
                 {134, "Failed to parse shape"},
+                {135, "Failed to parse trace"},
 
                 {140, "Action does not support multimodal costing"},
                 {141, "Arrive by for multimodal not implemented yet"},
