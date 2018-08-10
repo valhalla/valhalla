@@ -437,7 +437,12 @@ public:
     if (de->predicted_speed()) {
       float spd = predictedspeeds_.speed(edgeid.id(), seconds_of_week);
       if (spd > 0.0f && spd < kMaxSpeedKph) {
+        LOG_INFO("Valid speed: " + std::to_string(static_cast<uint32_t>(spd)));
         return static_cast<uint32_t>(spd);
+      } else if (spd < 0) {
+        LOG_ERROR("Predicted speed = " + std::to_string(spd) + " for edge Id: " +
+            std::to_string(edgeid.tileid()) + "," + std::to_string(edgeid.level()) + "," +
+            std::to_string(edgeid.id()));
       }
     }
 
