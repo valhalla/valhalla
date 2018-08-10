@@ -123,28 +123,6 @@ int main(int argc, char* argv[]) {
     LOG_WARN("ncontours parameter is being overwritten by JSON contours");
   }
 
-  // Process locations
-  std::vector<Location> locations;
-  try {
-    for (const auto& location : json_ptree.get_child("locations")) {
-      locations.emplace_back(std::move(Location::FromPtree(location.second)));
-    }
-  } catch (...) { throw std::runtime_error("Requires a single location"); }
-
-  // Process avoid locations
-  std::vector<Location> avoid_locations;
-  try {
-    for (const auto& location : json_ptree.get_child("avoid_locations")) {
-      avoid_locations.emplace_back(std::move(Location::FromPtree(location.second)));
-    }
-  } catch (...) { LOG_INFO("No avoid locations"); }
-
-  // Parse out the type of route - this provides the costing method to use
-  std::string routetype;
-  try {
-    routetype = json_ptree.get<std::string>("costing");
-  } catch (...) { throw std::runtime_error("No edge/node costing provided"); }
-
   // Get denoise parameter
   try {
     denoise = json_ptree.get<float>("denoise");
@@ -177,16 +155,6 @@ int main(int argc, char* argv[]) {
     }
   } catch (...) {}
 
-  // Get Contours
-  try {
-    for (const auto& contour : json_ptree.get_child("contours")) {
-      contour_times.push_back(contour.second.get<float>("time"));
-      colors[contour_times.back()] = contour.second.get<std::string>("color", "");
-    }
-  } catch (...) {
-    throw std::runtime_error("Contours failed to parse. JSON requires a contours object");
-  }
-
   // parse the config
   boost::property_tree::ptree pt;
   boost::property_tree::read_json(config.c_str(), pt);
@@ -204,17 +172,37 @@ int main(int argc, char* argv[]) {
   // Get something we can use to fetch tiles
   valhalla::baldr::GraphReader reader(pt.get_child("mjolnir"));
 
+  // Process locations
+  auto locations = PathLocation::fromPBF(request.options.locations());
+  if (locations.size() == 1) {
+    // TODO - for now just 1 location - maybe later allow multiple?
+    throw std::runtime_error("Requires a single location");
+  }
+
   // Grab the directions options, if they exist
   request.parse(json, valhalla::odin::DirectionsOptions::route);
+
+  // Process avoid locations
+  auto avoid_locations = PathLocation::fromPBF(request.options.avoid_locations());
+  if (avoid_locations.size() == 0) {
+    LOG_INFO("No avoid locations");
+  }
+
+  // Get Contours
+  if (request.options.contours_size() == 0) {
+    throw std::runtime_error("Contours failed to parse. JSON requires a contours object");
+  }
+  for (const auto& contour : request.options.contours()) {
+    contour_times.push_back(contour.time());
+    colors[contour_times.back()] = contour.color();
+  }
 
   // Construct costing
   CostFactory<DynamicCost> factory;
   factory.RegisterStandardCostingModels();
 
-  // Figure out the route type
-  for (auto& c : routetype) {
-    c = std::tolower(c);
-  }
+  // Get the route type
+  std::string routetype = valhalla::odin::Costing_Name(request.options.costing());
   LOG_INFO("routetype: " + routetype);
 
   // Get the costing method - pass the JSON configuration

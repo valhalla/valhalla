@@ -165,24 +165,21 @@ int main(int argc, char* argv[]) {
   valhalla::valhalla_request_t request;
   request.parse(json, valhalla::odin::DirectionsOptions::sources_to_targets);
 
-  // We require JSON input of locations (unlike pathtest). The first location
-  // is the origin.
-  std::stringstream stream;
-  stream << json;
-  boost::property_tree::ptree json_ptree;
-  boost::property_tree::read_json(stream, json_ptree);
-  std::vector<Location> locations;
-  try {
-    for (const auto& location : json_ptree.get_child("locations")) {
-      locations.emplace_back(std::move(Location::FromPtree(location.second)));
-    }
-  } catch (...) {
-    throw std::runtime_error("insufficiently specified required parameter 'locations'");
+  auto locations = PathLocation::fromPBF(request.options.locations());
+  if (locations.size() == 0) {
+    throw std::runtime_error("Request requires 1 or more locations");
   }
 
-  // Parse out the type of route - this provides the costing method to use
+  // We require JSON input of locations (unlike pathtest). The first location
+  // is the origin.
+  // std::stringstream stream;
+  // stream << json;
+  // boost::property_tree::ptree json_ptree;
+  // boost::property_tree::read_json(stream, json_ptree);
+
+  // Get type of route - this provides the costing method to use
   try {
-    routetype = json_ptree.get<std::string>("costing");
+    routetype = valhalla::odin::Costing_Name(request.options.costing());
   } catch (...) { throw std::runtime_error("No edge/node costing provided"); }
 
   // parse the config

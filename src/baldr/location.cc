@@ -1,6 +1,6 @@
-#include <boost/algorithm/string/classification.hpp>
-#include <boost/algorithm/string/split.hpp>
-#include <boost/property_tree/json_parser.hpp>
+//#include <boost/algorithm/string/classification.hpp>
+//#include <boost/algorithm/string/split.hpp>
+//#include <boost/property_tree/json_parser.hpp>
 #include <stdexcept>
 
 #include "baldr/location.h"
@@ -67,37 +67,6 @@ rapidjson::Value Location::ToRapidJson(rapidjson::Document::AllocatorType& a) co
 
   location.AddMember("minimum_reachability", minimum_reachability_, a);
   location.AddMember("radius", static_cast<unsigned int>(radius_), a);
-  return location;
-}
-
-Location Location::FromPtree(const boost::property_tree::ptree& pt) {
-
-  float lat = pt.get<float>("lat");
-  if (lat < -90.0f || lat > 90.0f) {
-    throw std::runtime_error("Latitude must be in the range [-90, 90] degrees");
-  }
-  float lon = midgard::circular_range_clamp<float>(pt.get<float>("lon"), -180, 180);
-
-  Location location({lon, lat},
-                    (pt.get<std::string>("type", "break") == "through" ? StopType::THROUGH
-                                                                       : StopType::BREAK));
-
-  location.name_ = pt.get<std::string>("name", "");
-  location.street_ = pt.get<std::string>("street", "");
-  location.city_ = pt.get<std::string>("city", "");
-  location.state_ = pt.get<std::string>("state", "");
-  location.zip_ = pt.get<std::string>("postal_code", "");
-  location.country_ = pt.get<std::string>("country", "");
-
-  location.date_time_ = pt.get_optional<std::string>("date_time");
-  location.heading_ = pt.get_optional<float>("heading");
-  location.heading_tolerance_ = pt.get_optional<float>("heading_tolerance");
-  location.node_snap_tolerance_ = pt.get_optional<float>("node_snap_tolerance");
-  location.way_id_ = pt.get_optional<long double>("way_id");
-
-  location.minimum_reachability_ = pt.get<unsigned int>("minimum_reachability", 50);
-  location.radius_ = pt.get<unsigned long>("radius", 0);
-
   return location;
 }
 

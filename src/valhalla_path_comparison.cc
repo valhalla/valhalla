@@ -220,7 +220,7 @@ int main(int argc, char* argv[]) {
         paths.push_back({});
         std::vector<valhalla::baldr::Location>& locations = paths.back();
         for (const auto& location : path.second) {
-          locations.emplace_back(std::move(valhalla::baldr::Location::FromPtree(location.second)));
+          ; // TODOlocations.emplace_back(std::move(valhalla::baldr::Location::FromPtree(location.second)));
         }
       }
     } catch (...) { throw std::runtime_error("insufficiently specified required parameter 'paths'"); }

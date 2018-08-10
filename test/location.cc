@@ -4,7 +4,6 @@
 #include "baldr/location.h"
 #include "midgard/logging.h"
 #include "midgard/util.h"
-#include <boost/property_tree/json_parser.hpp>
 
 #include <unordered_map>
 
@@ -55,26 +54,13 @@ std::string make_json(float lat,
   // LOG_INFO("json=" + json);
   return json;
 }
-enum class ParseMethod : int { PTREE, RAPIDJSON };
-Location from_json(const std::string& json, const ParseMethod& method = ParseMethod::PTREE) {
-  switch (method) {
-    case ParseMethod::PTREE: {
-      std::stringstream stream;
-      stream << json;
-      boost::property_tree::ptree pt;
-      boost::property_tree::read_json(stream, pt);
-      return Location::FromPtree(pt);
-    }
-    case ParseMethod::RAPIDJSON: {
-      rapidjson::Document d;
-      d.Parse(json.c_str());
-      if (d.HasParseError())
-        throw std::runtime_error("Parse Error");
-      return Location::FromRapidJson(d);
-    }
-    default:
-      throw std::runtime_error("Bad parse method");
-  }
+
+Location from_json(const std::string& json) {
+  rapidjson::Document d;
+  d.Parse(json.c_str());
+  if (d.HasParseError())
+    throw std::runtime_error("Parse Error");
+  return Location::FromRapidJson(d);
 }
 
 void test_from_json() {
@@ -93,112 +79,105 @@ void test_from_json() {
   uint64_t way_id = 12987234107;
   std::string date_time = "2015-05-06T08:00";
 
-  std::vector<ParseMethod> methods{ParseMethod::PTREE, ParseMethod::RAPIDJSON};
+  bool exception_caught = false;
+  try {
+    Location loc = from_json("something");
+  } catch (...) { exception_caught = true; }
+  if (!exception_caught)
+    throw std::runtime_error("This should have been malformed json");
 
-  for (const auto& m : methods) {
-    bool exception_caught = false;
-    try {
-      Location loc = from_json("something", m);
-    } catch (...) { exception_caught = true; }
-    if (!exception_caught)
-      throw std::runtime_error("This should have been malformed json");
+  // Test Lat/Lng and default type
+  Location loc = from_json(make_json(lat, lng));
+  if (!valhalla::midgard::equal<float>(loc.latlng_.lat(), lat) ||
+      !valhalla::midgard::equal<float>(loc.latlng_.lng(), lng) ||
+      (loc.stoptype_ != Location::StopType::BREAK))
+    throw std::runtime_error("Json location parsing failed: Test Lat/Lng and default type");
 
-    // Test Lat/Lng and default type
-    Location loc = from_json(make_json(lat, lng), m);
-    if (!valhalla::midgard::equal<float>(loc.latlng_.lat(), lat) ||
-        !valhalla::midgard::equal<float>(loc.latlng_.lng(), lng) ||
-        (loc.stoptype_ != Location::StopType::BREAK))
-      throw std::runtime_error("Json location parsing failed: Test Lat/Lng and default type");
+  // Test Lat/Lng and specified type
+  loc = from_json(make_json(lat, lng, type_specified));
+  if (!valhalla::midgard::equal<float>(loc.latlng_.lat(), lat) ||
+      !valhalla::midgard::equal<float>(loc.latlng_.lng(), lng) ||
+      (loc.stoptype_ != Location::StopType::THROUGH))
+    throw std::runtime_error("Json location parsing failed: Test Lat/Lng and specified type");
 
-    // Test Lat/Lng and specified type
-    loc = from_json(make_json(lat, lng, type_specified), m);
-    if (!valhalla::midgard::equal<float>(loc.latlng_.lat(), lat) ||
-        !valhalla::midgard::equal<float>(loc.latlng_.lng(), lng) ||
-        (loc.stoptype_ != Location::StopType::THROUGH))
-      throw std::runtime_error("Json location parsing failed: Test Lat/Lng and specified type");
+  // Test Lat/Lng, specified type, and heading
+  loc = from_json(make_json(lat, lng, type_default, heading));
+  if (!valhalla::midgard::equal<float>(loc.latlng_.lat(), lat) ||
+      !valhalla::midgard::equal<float>(loc.latlng_.lng(), lng) ||
+      (loc.stoptype_ != Location::StopType::BREAK) || (*loc.heading_ != heading))
+    throw std::runtime_error(
+        "Json location parsing failed: Test Lat/Lng, specified type, and heading");
 
-    // Test Lat/Lng, specified type, and heading
-    loc = from_json(make_json(lat, lng, type_default, heading), m);
-    if (!valhalla::midgard::equal<float>(loc.latlng_.lat(), lat) ||
-        !valhalla::midgard::equal<float>(loc.latlng_.lng(), lng) ||
-        (loc.stoptype_ != Location::StopType::BREAK) || (*loc.heading_ != heading))
-      throw std::runtime_error(
-          "Json location parsing failed: Test Lat/Lng, specified type, and heading");
+  // Test name
+  loc = from_json(make_json(lat, lng, type_default, boost::none, name));
+  if ((loc.name_ != name))
+    throw std::runtime_error("Json location parsing failed: Test name name_");
+  if (loc.heading_)
+    throw std::runtime_error("Json location parsing failed: Test name heading_");
 
-    // Test name
-    loc = from_json(make_json(lat, lng, type_default, boost::none, name), m);
-    if ((loc.name_ != name))
-      throw std::runtime_error("Json location parsing failed: Test name name_");
-    if (loc.heading_)
-      throw std::runtime_error("Json location parsing failed: Test name heading_");
+  // Test street
+  loc = from_json(make_json(lat, lng, type_default, boost::none, name, street));
+  if ((loc.street_ != street))
+    throw std::runtime_error("Json location parsing failed: Test street");
 
-    // Test street
-    loc = from_json(make_json(lat, lng, type_default, boost::none, name, street), m);
-    if ((loc.street_ != street))
-      throw std::runtime_error("Json location parsing failed: Test street");
+  // Test city
+  loc = from_json(make_json(lat, lng, type_default, boost::none, name, street, city));
+  if ((loc.city_ != city))
+    throw std::runtime_error("Json location parsing failed: Test city");
 
-    // Test city
-    loc = from_json(make_json(lat, lng, type_default, boost::none, name, street, city), m);
-    if ((loc.city_ != city))
-      throw std::runtime_error("Json location parsing failed: Test city");
+  // Test state
+  loc = from_json(make_json(lat, lng, type_default, boost::none, name, street, city, state));
+  if ((loc.state_ != state))
+    throw std::runtime_error("Json location parsing failed: Test state");
 
-    // Test state
-    loc = from_json(make_json(lat, lng, type_default, boost::none, name, street, city, state), m);
-    if ((loc.state_ != state))
-      throw std::runtime_error("Json location parsing failed: Test state");
+  // Test postal code
+  loc = from_json(
+      make_json(lat, lng, type_default, boost::none, name, street, city, state, postal_code));
+  if ((loc.zip_ != postal_code))
+    throw std::runtime_error("Json location parsing failed: Test postal code postal_code");
+  if (loc.way_id_)
+    throw std::runtime_error("Json location parsing failed: Test postal code way_id");
+  if (loc.date_time_)
+    throw std::runtime_error("Json location parsing failed: Test postal code date_time");
 
-    // Test postal code
-    loc = from_json(make_json(lat, lng, type_default, boost::none, name, street, city, state,
-                              postal_code),
-                    m);
-    if ((loc.zip_ != postal_code))
-      throw std::runtime_error("Json location parsing failed: Test postal code postal_code");
-    if (loc.way_id_)
-      throw std::runtime_error("Json location parsing failed: Test postal code way_id");
-    if (loc.date_time_)
-      throw std::runtime_error("Json location parsing failed: Test postal code date_time");
+  // Test country, way_id, and date_time.
+  loc = from_json(make_json(lat, lng, type_default, boost::none, name, street, city, state,
+                            postal_code, country, way_id, date_time));
+  if ((loc.country_ != country))
+    throw std::runtime_error(
+        "Json location parsing failed: Test country, way_id, and date_time country");
+  if (*loc.way_id_ != way_id)
+    throw std::runtime_error(
+        "Json location parsing failed: Test country, way_id, and date_time way_id");
+  if (*loc.date_time_ != date_time)
+    throw std::runtime_error(
+        "Json location parsing failed: Test country, way_id, and date_time date_time");
 
-    // Test country, way_id, and date_time.
-    loc = from_json(make_json(lat, lng, type_default, boost::none, name, street, city, state,
-                              postal_code, country, way_id, date_time),
-                    m);
-    if ((loc.country_ != country))
-      throw std::runtime_error(
-          "Json location parsing failed: Test country, way_id, and date_time country");
-    if (*loc.way_id_ != way_id)
-      throw std::runtime_error(
-          "Json location parsing failed: Test country, way_id, and date_time way_id");
-    if (*loc.date_time_ != date_time)
-      throw std::runtime_error(
-          "Json location parsing failed: Test country, way_id, and date_time date_time");
+  // Test wrong thing is always break
+  loc = from_json(make_json(lat, lng, "this isnt valid"));
+  if ((loc.stoptype_ != Location::StopType::BREAK))
+    throw std::runtime_error("Json location parsing failed: Test wrong thing is always break");
 
-    // Test wrong thing is always break
-    loc = from_json(make_json(lat, lng, "this isnt valid"), m);
-    if ((loc.stoptype_ != Location::StopType::BREAK))
-      throw std::runtime_error("Json location parsing failed: Test wrong thing is always break");
+  // Test everything
+  loc = from_json(make_json(lat, lng, type_default, heading, name, street, city, state, postal_code,
+                            country, boost::none, date_time));
+  if (!valhalla::midgard::equal<float>(loc.latlng_.lat(), lat) ||
+      !valhalla::midgard::equal<float>(loc.latlng_.lng(), lng) ||
+      (loc.stoptype_ != Location::StopType::BREAK) || (*loc.heading_ != heading) ||
+      (loc.name_ != name) || (loc.street_ != street) || (loc.city_ != city) ||
+      (loc.state_ != state) || (loc.zip_ != postal_code) || (loc.country_ != country) ||
+      (loc.date_time_ != date_time))
+    throw std::runtime_error("Json location parsing failed: Test everything");
 
-    // Test everything
-    loc = from_json(make_json(lat, lng, type_default, heading, name, street, city, state, postal_code,
-                              country, boost::none, date_time),
-                    m);
-    if (!valhalla::midgard::equal<float>(loc.latlng_.lat(), lat) ||
-        !valhalla::midgard::equal<float>(loc.latlng_.lng(), lng) ||
-        (loc.stoptype_ != Location::StopType::BREAK) || (*loc.heading_ != heading) ||
-        (loc.name_ != name) || (loc.street_ != street) || (loc.city_ != city) ||
-        (loc.state_ != state) || (loc.zip_ != postal_code) || (loc.country_ != country) ||
-        (loc.date_time_ != date_time))
-      throw std::runtime_error("Json location parsing failed: Test everything");
+  // Test large way_id
+  loc = from_json(R"({"lat":0,"lon":0,"way_id":18446744073709551614})");
+  if (*loc.way_id_ != 18446744073709551614ULL)
+    throw std::runtime_error("Wrong way id");
 
-    // Test large way_id
-    loc = from_json(R"({"lat":0,"lon":0,"way_id":18446744073709551614})", m);
-    if (*loc.way_id_ != 18446744073709551614ULL)
-      throw std::runtime_error("Wrong way id");
-
-    // Test floating point heading
-    loc = from_json(R"({"lat":0,"lon":0,"heading":37.1})", m);
-    if (*loc.heading_ != 37)
-      throw std::runtime_error("Wrong heading");
-  }
+  // Test floating point heading
+  loc = from_json(R"({"lat":0,"lon":0,"heading":37.1})");
+  if (*loc.heading_ != 37)
+    throw std::runtime_error("Wrong heading");
 }
 
 void test_hashing() {
