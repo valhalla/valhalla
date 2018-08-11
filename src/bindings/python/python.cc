@@ -2,10 +2,10 @@
 // FreeBSD/macOS
 #include <boost/python.hpp>
 
+#include "baldr/rapidjson_utils.h"
 #include <boost/make_shared.hpp>
 #include <boost/noncopyable.hpp>
 #include <boost/optional.hpp>
-#include "baldr/rapidjson_utils.h"
 #include <boost/property_tree/ptree.hpp>
 #include <boost/shared_ptr.hpp>
 #include <sstream>

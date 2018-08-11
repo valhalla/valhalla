@@ -6,7 +6,6 @@
 #include "thor/worker.h"
 #include "tyr/serializers.h"
 
-
 using namespace valhalla;
 using namespace valhalla::loki;
 using namespace valhalla::thor;

@@ -9,8 +9,8 @@
 #include <iostream>
 
 #ifdef INLINE_TEST
-#include "test/test.h"
 #include "baldr/rapidjson_utils.h"
+#include "test/test.h"
 #include <random>
 #endif
 

@@ -7,8 +7,8 @@
 #include "test.h"
 #include <cstdint>
 
-#include <boost/filesystem.hpp>
 #include "baldr/rapidjson_utils.h"
+#include <boost/filesystem.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <fstream>
 

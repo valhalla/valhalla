@@ -1,7 +1,7 @@
+#include "baldr/rapidjson_utils.h"
 #include <boost/format.hpp>
 #include <boost/optional.hpp>
 #include <boost/program_options.hpp>
-#include "baldr/rapidjson_utils.h"
 #include <boost/property_tree/ptree.hpp>
 #include <boost/tokenizer.hpp>
 #include <cstdint>

@@ -1,9 +1,9 @@
+#include "baldr/rapidjson_utils.h"
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/date_time/local_time/local_time.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
-#include "baldr/rapidjson_utils.h"
 
 #include "locales.h"
 #include "midgard/logging.h"

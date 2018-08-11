@@ -13,6 +13,7 @@
 
 #include "config.h"
 
+#include "baldr/rapidjson_utils.h"
 #include <boost/filesystem/operations.hpp>
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/point_xy.hpp>
@@ -21,7 +22,6 @@
 #include <boost/geometry/multi/geometries/multi_polygon.hpp>
 #include <boost/optional.hpp>
 #include <boost/program_options.hpp>
-#include "baldr/rapidjson_utils.h"
 #include <boost/property_tree/ptree.hpp>
 
 // sqlite must be included before spatialite

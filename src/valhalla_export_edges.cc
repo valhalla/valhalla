@@ -1,5 +1,5 @@
-#include <boost/program_options.hpp>
 #include "baldr/rapidjson_utils.h"
+#include <boost/program_options.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <cstdint>
 
