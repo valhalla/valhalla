@@ -52,7 +52,7 @@ public:
    * @param  idx  Directed edge index.
    * @param  seconds_of_week  Seconds from start of the week (local time).
    */
-  uint32_t speed(const uint32_t idx, const uint32_t seconds_of_week) const {
+  float speed(const uint32_t idx, const uint32_t seconds_of_week) const {
     // Get a pointer to the compressed speed profile for this edge. Assume the edge Id is valid
     // (otherwise an exception would be thrown when getting the directed edge) and the profile
     // index is valid. If there is no predicted speed profile this method will not be called due
