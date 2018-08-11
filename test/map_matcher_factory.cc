@@ -1,7 +1,7 @@
 // -*- mode: c++ -*-
 #include <string>
 
-#include <boost/property_tree/json_parser.hpp>
+#include "baldr/rapidjson_utils.h"
 #include <boost/property_tree/ptree.hpp>
 
 #include "sif/costconstants.h"
@@ -51,7 +51,7 @@ void create_costing_options(valhalla::odin::DirectionsOptions& directions_option
 
 void TestMapMatcherFactory() {
   ptree root;
-  boost::property_tree::read_json(VALHALLA_SOURCE_DIR "test/valhalla.json", root);
+  rapidjson::read_json(VALHALLA_SOURCE_DIR "test/valhalla.json", root);
 
   // Do it thousand times to check memory leak
   for (size_t i = 0; i < 3000; i++) {
@@ -177,7 +177,7 @@ void TestMapMatcherFactory() {
 
 void TestMapMatcher() {
   ptree root;
-  boost::property_tree::read_json(VALHALLA_SOURCE_DIR "test/valhalla.json", root);
+  rapidjson::read_json(VALHALLA_SOURCE_DIR "test/valhalla.json", root);
 
   // Nothing special to test for the moment
 

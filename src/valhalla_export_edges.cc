@@ -1,5 +1,5 @@
 #include <boost/program_options.hpp>
-#include <boost/property_tree/json_parser.hpp>
+#include "baldr/rapidjson_utils.h"
 #include <boost/property_tree/ptree.hpp>
 #include <cstdint>
 
@@ -203,7 +203,7 @@ int main(int argc, char* argv[]) {
 
   // parse the config
   boost::property_tree::ptree pt;
-  boost::property_tree::read_json(config.c_str(), pt);
+  rapidjson::read_json(config.c_str(), pt);
 
   // configure logging
   valhalla::midgard::logging::Configure({{"type", "std_err"}, {"color", "true"}});

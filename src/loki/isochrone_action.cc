@@ -3,7 +3,6 @@
 #include "loki/search.h"
 #include "loki/worker.h"
 #include "midgard/logging.h"
-#include <boost/property_tree/json_parser.hpp>
 
 using namespace valhalla;
 using namespace valhalla::baldr;

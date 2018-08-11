@@ -5,8 +5,8 @@
 #include <utility>
 #include <vector>
 
+#include "baldr/rapidjson_utils.h"
 #include <boost/optional/optional.hpp>
-#include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 
 #include "baldr/json.h"
@@ -69,7 +69,7 @@ boost::property_tree::ptree json_to_pt(const std::string& json) {
   std::stringstream ss;
   ss << json;
   boost::property_tree::ptree pt;
-  boost::property_tree::read_json(ss, pt);
+  rapidjson::read_json(ss, pt);
   return pt;
 }
 

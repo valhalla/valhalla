@@ -10,7 +10,6 @@
 #include "exception.h"
 #include "midgard/constants.h"
 #include "midgard/logging.h"
-#include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 
 #include "thor/isochrone.h"

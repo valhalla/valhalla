@@ -9,7 +9,7 @@
 #include <thread>
 #include <unordered_set>
 
-#include <boost/property_tree/json_parser.hpp>
+#include "baldr/rapidjson_utils.h"
 #include <boost/property_tree/ptree.hpp>
 
 #include <prime_server/http_protocol.hpp>
@@ -33,7 +33,7 @@ int main(int argc, char** argv) {
   // TODO: validate the config
   std::string config_file(argv[1]);
   boost::property_tree::ptree config;
-  boost::property_tree::read_json(config_file, config);
+  rapidjson::read_json(config_file, config);
 
   // grab the endpoints
   std::string listen = config.get<std::string>("httpd.service.listen");

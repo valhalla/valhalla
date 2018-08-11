@@ -504,7 +504,7 @@ int main(int argc, char* argv[]) {
 
   // parse the config
   boost::property_tree::ptree pt;
-  boost::property_tree::read_json(config.c_str(), pt);
+  rapidjson::read_json(config.c_str(), pt);
 
   // configure logging
   boost::optional<boost::property_tree::ptree&> logging_subtree =

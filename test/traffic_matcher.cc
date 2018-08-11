@@ -2,7 +2,7 @@
 
 #include <stdexcept>
 
-#include <boost/property_tree/json_parser.hpp>
+#include "baldr/rapidjson_utils.h"
 #include <boost/property_tree/ptree.hpp>
 
 #include "baldr/graphid.h"
@@ -115,7 +115,7 @@ void test_matcher() {
                "search_radius":50,"sigma_z":4.07,"turn_penalty_factor":200}}
     })";
   boost::property_tree::ptree conf;
-  boost::property_tree::read_json(conf_json, conf);
+  rapidjson::read_json(conf_json, conf);
   conf.get_child("mjolnir").put("tile_dir", VALHALLA_SOURCE_DIR "test/traffic_matcher_tiles");
 
   // find me a find, catch me a catch
@@ -127,7 +127,7 @@ void test_matcher() {
     std::stringstream json_ss;
     json_ss << json;
     boost::property_tree::ptree answer;
-    boost::property_tree::read_json(json_ss, answer);
+    rapidjson::read_json(json_ss, answer);
 
     const auto& a_segs = test_case.second;
     auto& b_segs = matcher.segments;

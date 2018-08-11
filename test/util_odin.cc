@@ -1,7 +1,7 @@
 #include "midgard/logging.h"
 #include "odin/util.h"
 #include "test.h"
-#include <boost/property_tree/json_parser.hpp>
+#include "baldr/rapidjson_utils.h"
 #include <boost/regex.hpp>
 #include <locale>
 #include <set>
@@ -136,7 +136,7 @@ void test_supported_locales() {
   boost::property_tree::ptree en_us;
   std::stringstream ss;
   ss << en_us_json->second;
-  boost::property_tree::read_json(ss, en_us);
+  rapidjson::read_json(ss, en_us);
 
   // look at each one
   for (const auto& locale : jsons) {
@@ -145,7 +145,7 @@ void test_supported_locales() {
     boost::property_tree::ptree other;
     std::stringstream other_ss;
     other_ss << locale.second;
-    boost::property_tree::read_json(other_ss, other);
+    rapidjson::read_json(other_ss, other);
 
     // check the locale is supported
     std::string posix_locale = other.get<std::string>("posix_locale");

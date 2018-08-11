@@ -6,7 +6,6 @@
 #include "midgard/pointll.h"
 #include "midgard/util.h"
 #include "worker.h"
-#include <boost/property_tree/json_parser.hpp>
 
 namespace {
 

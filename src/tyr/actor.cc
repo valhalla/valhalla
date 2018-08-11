@@ -6,7 +6,6 @@
 #include "thor/worker.h"
 #include "tyr/serializers.h"
 
-#include <boost/property_tree/json_parser.hpp>
 
 using namespace valhalla;
 using namespace valhalla::loki;

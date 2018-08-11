@@ -1,8 +1,11 @@
 #ifndef VALHALLA_BALDR_RAPIDJSON_UTILS_H_
 #define VALHALLA_BALDR_RAPIDJSON_UTILS_H_
 
+#include <fstream>
+#include <istream>
 #include <locale>
 #include <stdexcept>
+#include <string>
 #include <type_traits>
 
 #include <boost/lexical_cast.hpp>
@@ -16,6 +19,7 @@
 
 #include <rapidjson/document.h>
 #include <rapidjson/error/en.h>
+#include <rapidjson/istreamwrapper.h>
 #include <rapidjson/pointer.h>
 #include <rapidjson/prettywriter.h>
 #include <rapidjson/rapidjson.h>
@@ -192,9 +196,11 @@ template <class Ptree> void add_array(const GenericArray<true, Value::ValueType>
     add_value(e, pt.push_back(std::make_pair("", Ptree{}))->second);
 }
 
-template <class Ptree> void read_json(std::stringstream& stream, Ptree& pt) {
+template <class Ptree>
+void read_json(std::basic_istream<typename Ptree::key_type::value_type>& stream, Ptree& pt) {
   Document d;
-  d.Parse(stream.str());
+  IStreamWrapper wrapper(stream);
+  d.ParseStream(wrapper);
   if (d.HasParseError())
     throw std::runtime_error("Could not parse json, error at offset: " +
                              std::to_string(d.GetErrorOffset()));
@@ -208,7 +214,7 @@ template <class Ptree> void read_json(std::stringstream& stream, Ptree& pt) {
 
 template <class Ptree>
 void read_json(const std::string& filename, Ptree& pt, const std::locale& loc = std::locale()) {
-  std::basic_ifstream<typename Ptree::key_type::value_type> stream(filename.c_str());
+  std::basic_ifstream<typename Ptree::key_type::value_type> stream(filename);
   if (!stream)
     throw std::runtime_error("Cannot open file " + filename);
   stream.imbue(loc);

@@ -11,7 +11,7 @@
 #include <boost/archive/iterators/transform_width.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
-#include <boost/property_tree/json_parser.hpp>
+#include "baldr/rapidjson_utils.h"
 #include <boost/property_tree/ptree.hpp>
 #include <boost/tokenizer.hpp>
 
@@ -362,9 +362,9 @@ int main(int argc, char** argv) {
   if (vm.count("inline-config")) {
     std::stringstream ss;
     ss << inline_config;
-    boost::property_tree::read_json(ss, pt);
+    rapidjson::read_json(ss, pt);
   } else if (vm.count("config") && boost::filesystem::is_regular_file(config_file_path)) {
-    boost::property_tree::read_json(config_file_path.string(), pt);
+    rapidjson::read_json(config_file_path.string(), pt);
   } else {
     std::cerr << "Configuration is required\n\n" << options << "\n\n";
     return EXIT_FAILURE;

@@ -10,7 +10,7 @@
 
 #ifdef INLINE_TEST
 #include "test/test.h"
-#include <boost/property_tree/json_parser.hpp>
+#include "baldr/rapidjson_utils.h"
 #include <random>
 #endif
 
@@ -746,7 +746,7 @@ MotorcycleCost* make_motorcyclecost_from_json(const std::string& property, float
   std::stringstream ss;
   ss << R"({")" << property << R"(":)" << testVal << "}";
   boost::property_tree::ptree costing_ptree;
-  boost::property_tree::read_json(ss, costing_ptree);
+  rapidjson::read_json(ss, costing_ptree);
   return new MotorcycleCost(costing_ptree);
 }
 
