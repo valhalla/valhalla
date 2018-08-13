@@ -4,6 +4,11 @@
 * **Request Parsing**
    * FIXED: Fixed through locations weren't honored [#1449](https://github.com/valhalla/valhalla/pull/1449)
 
+## Release Date: 2018-08-02 Valhalla 3.0.0-rc.4
+* **Node Bindings**
+   * UPDATED: add some worker pool handling
+   [#1467](https://github.com/valhalla/valhalla/pull/1467)
+
 ## Release Date: 2018-08-02 Valhalla 3.0.0-rc.3
 * **Node Bindings**
    * UPDATED: replaced N-API with node-addon-api wrapper and made the actor
