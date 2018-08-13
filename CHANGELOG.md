@@ -1,4 +1,20 @@
 ## Release Date: UNRELEASED Valhalla 3.0
+## Release Date: 2018-08-02 Valhalla 3.0.0-rc.4
+* **Node Bindings**
+   * UPDATED: add some worker pool handling
+   [#1467](https://github.com/valhalla/valhalla/pull/1467)
+
+## Release Date: 2018-08-02 Valhalla 3.0.0-rc.3
+* **Node Bindings**
+   * UPDATED: replaced N-API with node-addon-api wrapper and made the actor
+   functions asynchronous
+   [#1457](https://github.com/valhalla/valhalla/pull/1457)
+
+## Release Date: 2018-07-24 Valhalla 3.0.0-rc.2
+* **Node Bindings**
+   * FIXED: turn on the autocleanup functionality for the actor object.
+   [#1439](https://github.com/valhalla/valhalla/pull/1439)
+>>>>>>> ffcfb19b... handle work pool with node (#1467)
 
 ## Release Date: 2018-07-16 Valhalla 3.0.0-rc.1
 * **Enhancement**
