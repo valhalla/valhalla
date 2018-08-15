@@ -27,6 +27,7 @@
 #include "thor/bidirectional_astar.h"
 #include "thor/multimodal.h"
 #include "thor/route_matcher.h"
+#include "thor/timedep.h"
 #include "thor/trippathbuilder.h"
 #include "worker.h"
 
@@ -624,18 +625,29 @@ int main(int argc, char* argv[]) {
   AStarPathAlgorithm astar;
   BidirectionalAStar bd;
   MultiModalPathAlgorithm mm;
+  TimeDepForward timedep_forward;
+  TimeDepReverse timedep_reverse;
   for (uint32_t i = 0; i < n; i++) {
     // Choose path algorithm
     PathAlgorithm* pathalgorithm;
     if (routetype == "multimodal") {
       pathalgorithm = &mm;
     } else {
-      // Use bidirectional except for possible trivial cases
-      pathalgorithm = &bd;
-      for (auto& edge1 : path_location[i].edges) {
-        for (auto& edge2 : path_location[i + 1].edges) {
-          if (edge1.id == edge2.id) {
-            pathalgorithm = &astar;
+      // Use time dependent algorithms if date time is present
+      // TODO - this isn't really correct for multipoint routes but should allow
+      // simple testing.
+      if (directions_options.date_time_type() == DirectionsOptions_DateTimeType_depart_at) {
+        pathalgorithm = &timedep_forward;
+      } else if (directions_options.date_time_type() == DirectionsOptions_DateTimeType_arrive_by) {
+        pathalgorithm = &timedep_reverse;
+      } else {
+        // Use bidirectional except for possible trivial cases
+        pathalgorithm = &bd;
+        for (auto& edge1 : path_location[i].edges) {
+          for (auto& edge2 : path_location[i + 1].edges) {
+            if (edge1.id == edge2.id) {
+              pathalgorithm = &astar;
+            }
           }
         }
       }
