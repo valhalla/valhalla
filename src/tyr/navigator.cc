@@ -10,7 +10,6 @@
 
 #include "baldr/json.h"
 #include "baldr/location.h"
-#include "exception.h"
 #include "midgard/constants.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"

@@ -2,7 +2,6 @@
 #include <cmath>
 #include <vector>
 
-#include "exception.h"
 #include "midgard/logging.h"
 #include "thor/costmatrix.h"
 #include "worker.h"

@@ -21,6 +21,7 @@ option(ENABLE_SERVICES "Enable Valhalla services" ON)
 option(ENABLE_PYTHON_BINDINGS "Enable Python bindings" ON)
 option(ENABLE_COVERAGE "Build with coverage instrumentalisation" OFF)
 option(ENABLE_SANITIZER "Use memory sanitizer for Debug build" OFF)
+option(ENABLE_NODE_BINDINGS "Build NodeJs bindings" ON)
 option(USE_STD_REGEX "Use std::regex instead of boost::regex" OFF)
 set(LOGGING_LEVEL "" CACHE STRING "Logging level, default is INFO")
 set_property(CACHE LOGGING_LEVEL PROPERTY STRINGS "NONE;ALL;ERROR;WARN;INFO;DEBUG;TRACE")
@@ -28,7 +29,6 @@ set_property(CACHE LOGGING_LEVEL PROPERTY STRINGS "NONE;ALL;ERROR;WARN;INFO;DEBU
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
-set(CMAKE_DISABLE_SOURCE_CHANGES ON)
 
 add_definitions(-DBOOST_SPIRIT_THREADSAFE -DBOOST_NO_CXX11_SCOPED_ENUMS)
 
@@ -157,36 +157,16 @@ add_subdirectory(test)
 
 ## Python bindings
 if(ENABLE_PYTHON_BINDINGS)
-  find_package(PythonInterp)
-  find_package(PythonLibs)
-  if(${PYTHON_VERSION_MAJOR} EQUAL 3)
-    set(Boost_Python_lib "Boost::python${PYTHON_VERSION_MAJOR}")
-    set(_Boost_PYTHON${PYTHON_VERSION_MAJOR}_HEADERS "boost/python.hpp")
-    find_package(Boost COMPONENTS python${PYTHON_VERSION_MAJOR})
-  else()
-    set(Boost_Python_lib "Boost::python")
-    find_package(Boost COMPONENTS python)
-  endif()
-  python_add_module(python_valhalla src/bindings/python/python.cc)
-  set_target_properties(python_valhalla PROPERTIES
-    OUTPUT_NAME valhalla
-    LINK_LIBRARIES "${PYTHON_LIBRARIES}"
-    INCLUDE_DIRECTORIES "${PYTHON_INCLUDE_DIRS}")
-  target_link_libraries(python_valhalla valhalla ${Boost_Python_lib})
-  set_target_properties(valhalla PROPERTIES POSITION_INDEPENDENT_CODE ON)
+  add_subdirectory(src/bindings/python)
 
-  execute_process(
-    COMMAND "${PYTHON_EXECUTABLE}" -c "
-from distutils import sysconfig as sc
-print(sc.get_python_lib(prefix='', plat_specific=True))"
-    OUTPUT_VARIABLE PYTHON_SITE_PACKAGES
-    OUTPUT_STRIP_TRAILING_WHITESPACE)
-  install(TARGETS python_valhalla
-    DESTINATION "${PYTHON_SITE_PACKAGES}"
-    COMPONENT python)
   install(FILES COPYING ChangeLog
     DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/doc/python-valhalla"
     COMPONENT python)
+endif()
+
+# NodeJS Bindings
+if (ENABLE_NODE_BINDINGS)
+  add_subdirectory(src/bindings/node)
 endif()
 
 

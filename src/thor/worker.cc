@@ -7,7 +7,6 @@
 #include <vector>
 
 #include "baldr/json.h"
-#include "exception.h"
 #include "midgard/constants.h"
 #include "midgard/logging.h"
 #include <boost/property_tree/json_parser.hpp>

@@ -6,7 +6,6 @@
 #include <utility>
 #include <vector>
 
-#include "exception.h"
 #include "meili/map_matcher.h"
 
 #include "thor/attributes_controller.h"
