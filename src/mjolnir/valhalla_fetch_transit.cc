@@ -11,10 +11,10 @@
 #include <thread>
 #include <unordered_set>
 
+#include "baldr/rapidjson_utils.h"
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem/operations.hpp>
 #include <boost/format.hpp>
-#include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/tokenizer.hpp>
 #include <curl/curl.h>
@@ -25,6 +25,7 @@
 #include "baldr/graphconstants.h"
 #include "baldr/graphid.h"
 #include "baldr/graphtile.h"
+#include "baldr/rapidjson_utils.h"
 #include "baldr/tilehierarchy.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
@@ -96,7 +97,7 @@ struct pt_curler_t {
         if (http_code == 200) {
           bool threw = false;
           try {
-            read_json(result, pt);
+            rapidjson::read_json(result, pt);
           } catch (...) { threw = true; }
           // has to parse and have required info
           if (!threw && (retry_if_no.empty() || pt.get_child_optional(retry_if_no))) {
@@ -1042,7 +1043,7 @@ int main(int argc, char** argv) {
 
   // args and config file loading
   ptree pt;
-  boost::property_tree::read_json(std::string(argv[1]), pt);
+  rapidjson::read_json(std::string(argv[1]), pt);
   pt.erase("base_url");
   pt.add("base_url", std::string(argv[2]));
   pt.erase("per_page");

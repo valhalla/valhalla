@@ -1,6 +1,6 @@
+#include "baldr/rapidjson_utils.h"
 #include <boost/optional.hpp>
 #include <boost/program_options.hpp>
-#include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <cstdint>
 #include <iostream>
@@ -214,7 +214,7 @@ int main(int argc, char* argv[]) {
   if (vm.count("json")) {
     request.parse(json, valhalla::odin::DirectionsOptions::trace_route);
     std::stringstream stream(json);
-    boost::property_tree::read_json(stream, json_ptree);
+    rapidjson::read_json(stream, json_ptree);
     try {
       for (const auto& path : json_ptree.get_child("paths")) {
         paths.push_back({});
@@ -266,7 +266,7 @@ int main(int argc, char* argv[]) {
 
   // parse the config
   boost::property_tree::ptree pt;
-  boost::property_tree::read_json(config.c_str(), pt);
+  rapidjson::read_json(config.c_str(), pt);
 
   // Get something we can use to fetch tiles
   valhalla::baldr::GraphReader reader(pt.get_child("mjolnir"));

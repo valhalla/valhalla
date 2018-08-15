@@ -32,6 +32,7 @@ jobs:
             echo '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> $BASH_ENV
             echo 'nvm install v8.11.2' >> $BASH_ENV
             echo 'nvm alias default v8.11.2' >> $BASH_ENV
+      - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
       - run: git submodule sync && git submodule update --init
       - restore_cache:
           keys:
@@ -72,6 +73,7 @@ jobs:
             echo '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> $BASH_ENV
             echo 'nvm install v8.11.2' >> $BASH_ENV
             echo 'nvm alias default v8.11.2' >> $BASH_ENV
+      - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
       - run: git submodule sync && git submodule update --init
       - restore_cache:
           keys:
@@ -101,6 +103,7 @@ jobs:
       - image: valhalla/docker:build-2.6.1
     steps:
       - checkout
+      - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
       - run: git submodule sync && git submodule update --init
       - restore_cache:
           keys:
@@ -125,6 +128,7 @@ jobs:
       - image: valhalla/docker:build-2.6.1
     steps:
       - checkout
+      - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
       - run: git submodule sync && git submodule update --init
       - restore_cache:
           keys:
@@ -163,6 +167,7 @@ jobs:
             echo 'nvm install v8.11.2' >> $BASH_ENV
             echo 'nvm alias default v8.11.2' >> $BASH_ENV
       - checkout
+      - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
       - run: git submodule sync && git submodule update --init
       # - restore_cache:
       #     keys:
@@ -199,6 +204,7 @@ jobs:
             echo 'nvm install v8.11.2' >> $BASH_ENV
             echo 'nvm alias default v8.11.2' >> $BASH_ENV
       - checkout
+      - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
       - run: git submodule sync && git submodule update --init
       - run: npm install --ignore-scripts
       - run: mkdir -p build
@@ -231,6 +237,7 @@ jobs:
             echo 'nvm install v8.11.2' >> $BASH_ENV
             echo 'nvm alias default v8.11.2' >> $BASH_ENV
       - checkout
+      - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
       - run: git submodule sync && git submodule update --init
       - run: npm install --ignore-scripts
       - run: mkdir -p build

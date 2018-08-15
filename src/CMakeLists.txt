@@ -37,10 +37,6 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
   list(APPEND boost_components zlib)
 endif()
 find_package(Boost 1.51 REQUIRED COMPONENTS ${boost_components})
-if(${Boost_MAJOR_VERSION}.${Boost_MINOR_VERSION} VERSION_LESS 1.59)
-  set(REQUIRES_SPIRIT_THREADSAFE 1)
-  find_package(Boost 1.51 REQUIRED COMPONENTS thread)
-endif()
 
 find_package(CURL REQUIRED)
 add_library(CURL::CURL INTERFACE IMPORTED)
@@ -116,7 +112,6 @@ function(valhalla_module)
   target_compile_definitions(${library}
     PUBLIC
       RAPIDJSON_HAS_STDSTRING
-      $<$<BOOL:${REQUIRES_SPIRIT_THREADSAFE}>:BOOST_SPIRIT_THREADSAFE>
     PRIVATE
       $<$<BOOL:${LOGGING_LEVEL}>:LOGGING_LEVEL_${LOGGING_LEVEL}>)
   target_include_directories(${library} ${MODULE_INCLUDE_DIRECTORIES}
@@ -192,7 +187,6 @@ add_library(valhalla worker.cc ${CMAKE_CURRENT_BINARY_DIR}/valhalla/config.h ${v
 target_compile_definitions(valhalla
   PUBLIC
     $<$<BOOL:${MSVC}>:"VC_EXTRALEAN;WIN32_LEAN_AND_MEAN;NOMINMAX;NOGDI">
-    $<$<BOOL:${REQUIRES_SPIRIT_THREADSAFE}>:BOOST_SPIRIT_THREADSAFE>
     RAPIDJSON_HAS_STDSTRING  # this is a part of the workaround for OBJECT libraries,
                              # because ${libvalhalla_compile_definitions} must be private.
                              # To be removed with ${libvalhalla_compile_definitions} below
@@ -217,7 +211,6 @@ target_include_directories(valhalla
 target_link_libraries(valhalla
   PUBLIC
     ${libvalhalla_link_libraries}
-    $<$<BOOL:${REQUIRES_SPIRIT_THREADSAFE}>:Boost::thread>
   PRIVATE
     $<$<BOOL:${ENABLE_COVERAGE}>:gcov>
     Threads::Threads)

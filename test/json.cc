@@ -1,7 +1,7 @@
 #include "baldr/json.h"
+#include "baldr/rapidjson_utils.h"
 #include "test.h"
-#include <boost/property_tree/json_parser.hpp>
-#include <boost/property_tree/ptree.hpp>
+
 #include <cstdint>
 #include <set>
 
@@ -64,28 +64,9 @@ void TestJsonSerialize() {
             "geometry\":\"ozyulA~p_clCfc@ywApTar@li@ybBqe@c[ue@e[ue@i[ci@dcB}^rkA\",\"status_"
             "message\":\"Found route between points\",\"via_indices\":[0,9],\"status\":0}";
 
-  boost::property_tree::ptree res, ans;
-  boost::property_tree::read_json(result, res);
-  boost::property_tree::read_json(answer, ans);
-  res.sort();
-  ans.sort();
-
-  stringstream res_formatted, ans_formatted;
-  boost::property_tree::write_json(res_formatted, res);
-  boost::property_tree::write_json(ans_formatted, ans);
-
-  multiset<string> res_set, ans_set;
-  for (string line; getline(res_formatted, line);)
-    res_set.insert(line);
-  for (string line; getline(ans_formatted, line);)
-    ans_set.insert(line);
-  if (res_set.size() != ans_set.size())
-    throw std::logic_error("Wrong json!");
-
-  auto res_itr = res_set.cbegin(), ans_itr = ans_set.cbegin();
-  for (; res_itr != res_set.cend() && ans_itr != ans_set.cend(); ++res_itr, ++ans_itr)
-    if (*res_itr != *ans_itr)
-      throw std::runtime_error("Wrong json!");
+  rapidjson::Document res, ans;
+  if (res != ans)
+    throw std::logic_error("Wrong json");
 }
 
 } // namespace

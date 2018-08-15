@@ -6,7 +6,6 @@
 #include <unordered_map>
 #include <vector>
 
-#include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 
 #include "baldr/json.h"

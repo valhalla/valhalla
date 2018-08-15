@@ -8,7 +8,6 @@
 
 #ifdef INLINE_TEST
 #include "test/test.h"
-#include <boost/property_tree/json_parser.hpp>
 #include <random>
 #endif
 

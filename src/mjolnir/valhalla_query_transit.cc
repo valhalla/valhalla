@@ -3,13 +3,13 @@
 //#include "mjolnir/graphtilebuilder.h"
 #include <valhalla/proto/transit.pb.h>
 
+#include "baldr/rapidjson_utils.h"
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem/operations.hpp>
 #include <boost/foreach.hpp>
 #include <boost/format.hpp>
 #include <boost/optional.hpp>
 #include <boost/program_options.hpp>
-#include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <fstream>
 #include <iostream>
@@ -418,7 +418,7 @@ int main(int argc, char* argv[]) {
 
   // Read config
   boost::property_tree::ptree pt;
-  boost::property_tree::read_json(config.c_str(), pt);
+  rapidjson::read_json(config, pt);
 
   LOG_INFO("Read config");
 

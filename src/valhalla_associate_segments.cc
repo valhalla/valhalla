@@ -9,12 +9,12 @@
 #include <cmath>
 #include <cstdint>
 
+#include "baldr/rapidjson_utils.h"
 #include <boost/algorithm/cxx11/all_of.hpp>
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/iterator/reverse_iterator.hpp>
 #include <boost/program_options.hpp>
-#include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 
 #include <algorithm>
@@ -1020,7 +1020,7 @@ int main(int argc, char** argv) {
 
   // parse the config
   bpt::ptree pt;
-  bpt::read_json(config.c_str(), pt);
+  rapidjson::read_json(config, pt);
 
   // fire off some threads to do the work
   LOG_INFO("Associating local traffic segments with " + std::to_string(num_threads) + " threads");

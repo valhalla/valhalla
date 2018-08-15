@@ -1,4 +1,4 @@
-#include <boost/property_tree/json_parser.hpp>
+#include "baldr/rapidjson_utils.h"
 #include <boost/property_tree/ptree.hpp>
 
 #include "meili/map_matcher_factory.h"
@@ -41,7 +41,7 @@ int main(int argc, char* argv[]) {
   }
 
   boost::property_tree::ptree config;
-  boost::property_tree::read_json(argv[1], config);
+  rapidjson::read_json(argv[1], config);
   const std::string modename = config.get<std::string>("meili.mode");
   valhalla::odin::Costing costing;
   if (!valhalla::odin::Costing_Parse(modename, &costing)) {

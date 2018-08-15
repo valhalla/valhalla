@@ -1,9 +1,9 @@
+#include "baldr/rapidjson_utils.h"
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/date_time/local_time/local_time.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/property_tree/json_parser.hpp>
 
 #include "locales.h"
 #include "midgard/logging.h"
@@ -22,7 +22,7 @@ valhalla::odin::locales_singleton_t load_narrative_locals() {
     boost::property_tree::ptree narrative_pt;
     std::stringstream ss;
     ss << json.second;
-    boost::property_tree::read_json(ss, narrative_pt);
+    rapidjson::read_json(ss, narrative_pt);
     LOG_TRACE("JSON read");
     // parse it into an object and add it to the map
     auto narrative_dictionary =

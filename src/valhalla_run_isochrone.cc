@@ -1,7 +1,7 @@
+#include "baldr/rapidjson_utils.h"
 #include <boost/format.hpp>
 #include <boost/optional.hpp>
 #include <boost/program_options.hpp>
-#include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <cmath>
 #include <cstdint>
@@ -113,7 +113,7 @@ int main(int argc, char* argv[]) {
 
   std::stringstream stream;
   stream << json;
-  boost::property_tree::read_json(stream, json_ptree);
+  rapidjson::read_json(stream, json_ptree);
 
   if (vm.count("minutes")) {
     LOG_WARN("minutes parameter is being overwritten by JSON contours");
@@ -157,7 +157,7 @@ int main(int argc, char* argv[]) {
 
   // parse the config
   boost::property_tree::ptree pt;
-  boost::property_tree::read_json(config.c_str(), pt);
+  rapidjson::read_json(config.c_str(), pt);
 
   // configure logging
   boost::optional<boost::property_tree::ptree&> logging_subtree =

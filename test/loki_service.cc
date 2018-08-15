@@ -1,8 +1,8 @@
 #include "test.h"
 #include <cstdint>
 
+#include "baldr/rapidjson_utils.h"
 #include "midgard/logging.h"
-#include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <prime_server/http_protocol.hpp>
 #include <prime_server/prime_server.hpp>
@@ -368,7 +368,7 @@ void start_service() {
       },
       "costing_options": { "auto": {}, "pedestrian": {} }
     })";
-  boost::property_tree::json_parser::read_json(json, config);
+  rapidjson::read_json(json, config);
 
   // service worker
   std::thread worker(valhalla::loki::run_service, config);

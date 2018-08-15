@@ -4,8 +4,8 @@
 #include "test.h"
 #include <cstdint>
 
+#include "baldr/rapidjson_utils.h"
 #include <boost/filesystem.hpp>
-#include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <fstream>
 
@@ -46,7 +46,7 @@ OSMWay GetWay(uint64_t way_id, sequence<OSMWay>& ways) {
 
 void BollardsGatesAndAccess(const std::string& config_file) {
   boost::property_tree::ptree conf;
-  boost::property_tree::json_parser::read_json(config_file, conf);
+  rapidjson::read_json(config_file, conf);
 
   std::string ways_file = "test_ways.bin";
   std::string way_nodes_file = "test_way_nodes.bin";
@@ -182,7 +182,7 @@ void BollardsGatesAndAccess(const std::string& config_file) {
 
 void RemovableBollards(const std::string& config_file) {
   boost::property_tree::ptree conf;
-  boost::property_tree::json_parser::read_json(config_file, conf);
+  rapidjson::read_json(config_file, conf);
 
   std::string ways_file = "test_ways.bin";
   std::string way_nodes_file = "test_way_nodes.bin";
@@ -210,7 +210,7 @@ void RemovableBollards(const std::string& config_file) {
 
 void Exits(const std::string& config_file) {
   boost::property_tree::ptree conf;
-  boost::property_tree::json_parser::read_json(config_file, conf);
+  rapidjson::read_json(config_file, conf);
 
   std::string ways_file = "test_ways.bin";
   std::string way_nodes_file = "test_way_nodes.bin";
@@ -245,7 +245,7 @@ void Exits(const std::string& config_file) {
 
 void Baltimore(const std::string& config_file) {
   boost::property_tree::ptree conf;
-  boost::property_tree::json_parser::read_json(config_file, conf);
+  rapidjson::read_json(config_file, conf);
 
   std::string ways_file = "test_ways.bin";
   std::string way_nodes_file = "test_way_nodes.bin";
@@ -328,7 +328,7 @@ void Baltimore(const std::string& config_file) {
 
 void Bike(const std::string& config_file) {
   boost::property_tree::ptree conf;
-  boost::property_tree::json_parser::read_json(config_file, conf);
+  rapidjson::read_json(config_file, conf);
 
   std::string ways_file = "test_ways.bin";
   std::string way_nodes_file = "test_way_nodes.bin";
@@ -385,7 +385,7 @@ void Bike(const std::string& config_file) {
 
 void Bus(const std::string& config_file) {
   boost::property_tree::ptree conf;
-  boost::property_tree::json_parser::read_json(config_file, conf);
+  rapidjson::read_json(config_file, conf);
 
   std::string ways_file = "test_ways.bin";
   std::string way_nodes_file = "test_way_nodes.bin";
@@ -433,7 +433,7 @@ void Bus(const std::string& config_file) {
 
 void BicycleTrafficSignals(const std::string& config_file) {
   boost::property_tree::ptree conf;
-  boost::property_tree::json_parser::read_json(config_file, conf);
+  rapidjson::read_json(config_file, conf);
 
   std::string ways_file = "test_ways.bin";
   std::string way_nodes_file = "test_way_nodes.bin";

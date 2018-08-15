@@ -217,7 +217,7 @@ void start_service(zmq::context_t& context) {
       },
       "costing_options": { "auto": {}, "pedestrian": {} }
     })";
-  boost::property_tree::json_parser::read_json(json, config);
+  rapidjson::read_json(json, config);
 
   std::thread worker(valhalla::loki::run_service, config);
   worker.detach();

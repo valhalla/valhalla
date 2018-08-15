@@ -27,9 +27,9 @@
 #include <valhalla/proto/tripdirections.pb.h>
 #include <valhalla/proto/trippath.pb.h>
 
+#include "baldr/rapidjson_utils.h"
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
-#include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <fstream>
 
@@ -218,7 +218,7 @@ void assert_is_trivial_path(vo::Location& origin, vo::Location& dest, uint32_t e
   std::stringstream json;
   json << "{ \"tile_dir\": \"" VALHALLA_SOURCE_DIR "test/fake_tiles_astar\" }";
   bpt::ptree conf;
-  bpt::json_parser::read_json(json, conf);
+  rapidjson::read_json(json, conf);
 
   vb::GraphReader reader(conf);
   auto* tile = reader.GetGraphTile(tile_id);
@@ -315,7 +315,7 @@ void TestTrivialPathTriangle() {
 
 void trivial_path_no_uturns(const std::string& config_file) {
   boost::property_tree::ptree conf;
-  boost::property_tree::json_parser::read_json(config_file, conf);
+  rapidjson::read_json(config_file, conf);
 
   // setup and purge
   vb::GraphReader graph_reader(conf.get_child("mjolnir"));

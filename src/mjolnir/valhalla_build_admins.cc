@@ -42,10 +42,10 @@ using namespace geos::operation::linemerge;
 using namespace valhalla::mjolnir;
 using namespace valhalla::baldr;
 
+#include "baldr/rapidjson_utils.h"
 #include <boost/filesystem/operations.hpp>
 #include <boost/optional.hpp>
 #include <boost/program_options.hpp>
-#include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <ostream>
 
@@ -659,7 +659,7 @@ int main(int argc, char** argv) {
 
   // check what type of input we are getting
   boost::property_tree::ptree pt;
-  boost::property_tree::read_json(config_file_path.c_str(), pt);
+  rapidjson::read_json(config_file_path.c_str(), pt);
 
   // configure logging
   boost::optional<boost::property_tree::ptree&> logging_subtree =

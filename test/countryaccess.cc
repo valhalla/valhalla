@@ -7,8 +7,8 @@
 #include "test.h"
 #include <cstdint>
 
+#include "baldr/rapidjson_utils.h"
 #include <boost/filesystem.hpp>
-#include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <fstream>
 
@@ -68,7 +68,7 @@ OSMWay GetWay(uint64_t way_id, sequence<OSMWay>& ways) {
 
 void CountryAccess(const std::string& config_file) {
   boost::property_tree::ptree conf;
-  boost::property_tree::json_parser::read_json(config_file, conf);
+  rapidjson::read_json(config_file, conf);
 
   // setup and purge
   GraphReader graph_reader(conf.get_child("mjolnir"));
