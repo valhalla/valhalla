@@ -15,7 +15,7 @@
 #include "baldr/verbal_text_formatter.h"
 #include "baldr/verbal_text_formatter_factory.h"
 #include "baldr/verbal_text_formatter_us.h"
-#include "exception.h"
+#include "worker.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
 #include "midgard/pointll.h"

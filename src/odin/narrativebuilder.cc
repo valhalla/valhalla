@@ -8,7 +8,7 @@
 #include <boost/format.hpp>
 
 #include "baldr/verbal_text_formatter.h"
-#include "exception.h"
+#include "worker.h"
 #include "midgard/logging.h"
 
 #include "config.h"
