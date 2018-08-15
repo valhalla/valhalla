@@ -1082,12 +1082,13 @@ void GraphTileBuilder::AddTurnLanes(const uint32_t idx, const std::string& str) 
 void GraphTileBuilder::AddPredictedSpeed(const uint32_t idx, const std::vector<int16_t>& profile) {
   // Create the index builder on the first profile added. Resize to equal the count of
   // directed edges
-  if (speed_profile_index_builder_.size() == 0) {
-    speed_profile_index_builder_.resize(header_->directededgecount());
+  if (speed_profile_offset_builder_.size() == 0) {
+    speed_profile_offset_builder_.resize(header_->directededgecount());
   }
 
   if (idx < header_->directededgecount()) {
-    speed_profile_index_builder_[idx] = speed_profile_builder_.size() / kCoefficientCount;
+    // Set the offset to the predicted speed profile for this directed edge
+    speed_profile_offset_builder_[idx] = speed_profile_builder_.size();
 
     // Append the profile
     if (profile.size() == kCoefficientCount) {
@@ -1107,6 +1108,11 @@ void GraphTileBuilder::AddPredictedSpeed(const uint32_t idx, const std::vector<i
 // predicted traffic is written after turn lane data.
 void GraphTileBuilder::UpdatePredictedSpeeds(const std::vector<DirectedEdge>& directededges) {
 
+  // No work to do if not predicted speed were added
+  if (speed_profile_offset_builder_.size() == 0) {
+    return;
+  }
+
   // Get the name of the file
   boost::filesystem::path filename = tile_dir_ + filesystem::path::preferred_separator +
                                      GraphTile::FileSuffix(header_builder_.graphid());
@@ -1121,7 +1127,7 @@ void GraphTileBuilder::UpdatePredictedSpeeds(const std::vector<DirectedEdge>& di
     // Write a new header - add the offset to predicted speed data and the profile count.
     // Update the end offset (shift by the amount of predicted speed data added).
     header_builder_.set_end_offset(header_->end_offset() +
-                                   (speed_profile_index_builder_.size() * sizeof(uint32_t)) +
+                                   (speed_profile_offset_builder_.size() * sizeof(uint32_t)) +
                                    (speed_profile_builder_.size() * sizeof(int16_t)));
     size_t offset = header_->turnlane_offset() + header_->turnlane_count() * sizeof(TurnLanes);
     header_builder_.set_predictedspeeds_offset(offset);
@@ -1144,8 +1150,8 @@ void GraphTileBuilder::UpdatePredictedSpeeds(const std::vector<DirectedEdge>& di
     file.write(begin, end - begin);
 
     // Append the speed profile indexes and profiles.
-    file.write(reinterpret_cast<const char*>(speed_profile_index_builder_.data()),
-               speed_profile_index_builder_.size() * sizeof(uint32_t));
+    file.write(reinterpret_cast<const char*>(speed_profile_offset_builder_.data()),
+               speed_profile_offset_builder_.size() * sizeof(uint32_t));
     file.write(reinterpret_cast<const char*>(speed_profile_builder_.data()),
                speed_profile_builder_.size() * sizeof(int16_t));
 
