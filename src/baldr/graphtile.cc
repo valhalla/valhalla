@@ -246,7 +246,7 @@ void GraphTile::Initialize(const GraphId& graphid, char* tile_ptr, const size_t 
   if (header_->predictedspeeds_count() > 0) {
     char* ptr1 = tile_ptr + header_->predictedspeeds_offset();
     char* ptr2 = ptr1 + (header_->directededgecount() * sizeof(int32_t));
-    predictedspeeds_.set_index(reinterpret_cast<uint32_t*>(ptr1));
+    predictedspeeds_.set_offset(reinterpret_cast<uint32_t*>(ptr1));
     predictedspeeds_.set_profiles(reinterpret_cast<int16_t*>(ptr2));
   }
 

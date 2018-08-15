@@ -170,12 +170,65 @@ void test_decoding() {
   }
 }
 
+/**
+ * Test to check for negative speeds in an encoded predicted speed string. If we find cases
+ * where we see a negative speed we should trace it back to a particular entry in the
+ * csv input file and change the encoded speed string here to see if the issue is valid.
+ */
+void test_negative_speeds() {
+  // base64 encoded string
+  std::string encoded_speed_string =
+      "AQRu//UAEAAC/+4AA//6//gAAwAFAA//9wAHAAH/4AAd/+wACwAH//0AGQAYAA7//wANAAL/9//mAAUACgATAAb/8v/2//8AC//1ABMAAAAGABX/9//0//0AAAAQAAIAAv/6////9gAJAAcACf/zAAQAAwAC//oACf/2//sADQAVABD/+QADAAcACf/2//gABwAHAAAABv/9AAf/+QAM//kAEAAE//r//wAMAAD/9AAN//D/7QAK//EAE//7AAkAAQAF//f/+AAB//z/6f/y//MAAP/6ABL//AATABX//wAFAAMAGv/2AAf//wAI//sACv/5AAb/8gAOAAYADv/5AAMACP////T/7gAH//P/+f/9//n/9f/0//0AAwAP//3/8gAA//8ACv////gAAgAHAAP//QALAAcAFAAA//8ABP/vAAIAEAAM/+3/9QAC//j//v/tABj/+wAA//sAC//6//0ABwAAAAoABgAMAAb/+P/3AAX/9//7//0ADP/sAAwAB//v/+3//wAMABAACgAF//o=";
+
+  std::cout << "Encoded string size = " << std::to_string(encoded_speed_string.size()) << std::endl;
+
+  // Decode the base64 string and cast the data to a raw string of signed bytes
+  auto decoded_str = decode64(encoded_speed_string);
+  if (decoded_str.size() != 402) {
+    throw std::runtime_error("Decoded speed string size should be 402 but is " +
+                             std::to_string(decoded_str.size()));
+  }
+  auto raw = reinterpret_cast<const int8_t*>(decoded_str.data());
+
+  // Check that the first value pair == 1
+  if (static_cast<std::int8_t>(raw[0]) != 1) {
+    throw std::runtime_error("First value should be 1");
+  }
+
+  // Create the coefficients. Each group of 2 bytes represents a signed, int16 number (big endian).
+  // Convert to little endian.
+  int idx = 1;
+  int16_t coefficients[200];
+  for (uint32_t i = 0; i < 200; ++i, idx += 2) {
+    coefficients[i] = to_little_endian(*(reinterpret_cast<const int16_t*>(&raw[idx])));
+  }
+
+  // Set data pointers within the PredictedSpeeds class (mimic how this might look for a single
+  // directed edge)
+  uint32_t indexes[] = {0};
+  PredictedSpeeds pred_speeds;
+  pred_speeds.set_index(indexes);
+  pred_speeds.set_profiles(coefficients);
+
+  // Test against 5 minute bucket values
+  std::cout << std::endl;
+  for (int i = 0; i < 2016; ++i) {
+    uint32_t secs = i * 5 * 60;
+    float s = pred_speeds.speed(0, secs);
+    if (s < 0.0f) {
+      throw std::runtime_error("Negative speed");
+    }
+  }
+}
+
 } // namespace
 
 int main(void) {
   test::suite suite("predictedspeeds");
 
   suite.test(TEST_CASE(test_decoding));
+
+  suite.test(TEST_CASE(test_negative_speeds));
 
   return suite.tear_down();
 }
