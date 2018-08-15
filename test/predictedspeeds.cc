@@ -50,7 +50,7 @@ void try_free_flow_speed(const std::string encoded_str,
                              " but is " + std::to_string(free_flow));
   }
   uint32_t constrained_flow = static_cast<std::uint32_t>(raw[index++] & 0xff);
-  if (constrained_flow != 158) {
+  if (constrained_flow != exp_constrained_flow) {
     throw std::runtime_error("constrained flow speed should be " +
                              std::to_string(exp_constrained_flow) + " but is " +
                              std::to_string(constrained_flow));
@@ -61,6 +61,7 @@ void test_free_flow_speed() {
   try_free_flow_speed("AAie", 8, 158);
 
   // Add additional cases below
+  try_free_flow_speed("AACe", 0, 158);
 }
 
 void test_decoding() {
