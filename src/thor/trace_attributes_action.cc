@@ -8,7 +8,6 @@
 #include "baldr/edge_elevation.h"
 #include "baldr/graphconstants.h"
 #include "baldr/json.h"
-#include "exception.h"
 #include "midgard/constants.h"
 #include "midgard/logging.h"
 #include "odin/enhancedtrippath.h"

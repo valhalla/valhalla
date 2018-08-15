@@ -185,7 +185,6 @@ configure_file(../valhalla/config.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/valhalla/c
 set(valhalla_hdrs
   ${CMAKE_CURRENT_BINARY_DIR}/valhalla/valhalla.h
 
-  ${VALHALLA_SOURCE_DIR}/valhalla/exception.h
   ${VALHALLA_SOURCE_DIR}/valhalla/worker.h)
 
 add_library(valhalla worker.cc ${CMAKE_CURRENT_BINARY_DIR}/valhalla/config.h ${valhalla_hdrs} ${libvalhalla_link_objects})

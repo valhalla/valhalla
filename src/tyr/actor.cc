@@ -1,6 +1,5 @@
 #include "tyr/actor.h"
 #include "baldr/rapidjson_utils.h"
-#include "exception.h"
 #include "loki/worker.h"
 #include "odin/worker.h"
 #include "thor/worker.h"

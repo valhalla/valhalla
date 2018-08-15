@@ -2,10 +2,10 @@
 #include <cstdlib>
 #include <iostream>
 
-#include "exception.h"
 #include "midgard/constants.h"
 #include "midgard/logging.h"
 #include "midgard/util.h"
+#include "worker.h"
 
 #include "odin/enhancedtrippath.h"
 #include "odin/util.h"
