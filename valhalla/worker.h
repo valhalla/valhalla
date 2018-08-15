@@ -133,7 +133,7 @@ const std::unordered_map<unsigned, std::string>
 
 struct valhalla_exception_t : public std::runtime_error {
   valhalla_exception_t(unsigned code, const boost::optional<std::string>& extra = boost::none);
- 
+
   const char* what() const noexcept override {
     return message.c_str();
   }

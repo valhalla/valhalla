@@ -1,9 +1,9 @@
 #include "thor/multimodal.h"
 #include "baldr/datetime.h"
 #include "midgard/logging.h"
+#include "worker.h"
 #include <algorithm>
 #include <map>
-#include "worker.h"
 
 using namespace valhalla::baldr;
 using namespace valhalla::sif;

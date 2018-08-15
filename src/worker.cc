@@ -263,7 +263,6 @@ const std::unordered_map<unsigned, std::string> OSRM_ERRORS_CODES{
 
     {599, R"({"code":"InvalidUrl","message":"URL string is invalid."})"}};
 
-
 rapidjson::Document from_string(const std::string& json, const valhalla_exception_t& e) {
   rapidjson::Document d;
   d.Parse(json.c_str());
@@ -558,7 +557,7 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
 namespace valhalla {
 
 valhalla_exception_t::valhalla_exception_t(unsigned code, const boost::optional<std::string>& extra)
-      : std::runtime_error(""), code(code), extra(extra) {
+    : std::runtime_error(""), code(code), extra(extra) {
   auto code_iter = error_codes.find(code);
   message = (code_iter == error_codes.cend() ? "" : code_iter->second);
   message += (extra ? ":" + *extra : "");

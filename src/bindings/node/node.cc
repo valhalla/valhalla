@@ -12,8 +12,8 @@
 #include <sstream>
 #include <string>
 
-#include "valhalla/worker.h"
 #include "valhalla/tyr/actor.h"
+#include "valhalla/worker.h"
 #include "valhalla/midgard/logging.h"
 #include "valhalla/midgard/util.h"
 
@@ -220,4 +220,3 @@ Napi::Object InitAll(Napi::Env env, Napi::Object exports) {
 };
 
 NODE_API_MODULE(node, InitAll)
-
