@@ -33,12 +33,40 @@ inline bool within_threshold(const uint32_t v1, const uint32_t v2) {
   return (v2 > v1) ? (v2 - v1) < kSpeedErrorThreshold : (v1 - v2) < kSpeedErrorThreshold;
 }
 
+void try_free_flow_speed(const std::string encoded_str,
+                         const uint32_t exp_free_flow,
+                         const uint32_t exp_constrained_flow) {
+  auto decoded_data = decode64(encoded_str);
+  const auto raw = reinterpret_cast<const unsigned char*>(decoded_data.data());
+  std::size_t index = 0;
+  uint32_t t = static_cast<std::uint32_t>(raw[index++] & 0x1f);
+  if (t != 0) {
+    throw std::runtime_error("type should be 0 but is " + std::to_string(t));
+  }
+
+  uint32_t free_flow = static_cast<std::uint32_t>(raw[index++] & 0xff);
+  if (free_flow != exp_free_flow) {
+    throw std::runtime_error("free flow speed should be " + std::to_string(exp_free_flow) +
+                             " but is " + std::to_string(free_flow));
+  }
+  uint32_t constrained_flow = static_cast<std::uint32_t>(raw[index++] & 0xff);
+  if (constrained_flow != 158) {
+    throw std::runtime_error("constrained flow speed should be " +
+                             std::to_string(exp_constrained_flow) + " but is " +
+                             std::to_string(constrained_flow));
+  }
+}
+
+void test_free_flow_speed() {
+  try_free_flow_speed("AAie", 8, 158);
+
+  // Add additional cases below
+}
+
 void test_decoding() {
   // base64 encoded string
   std::string encoded_speed_string =
       "AQXFAAkABAAhAAz/+//bABn/3wAMABsAEQAF//gAAAAdABQAEv/wABf//gAsAAkAKgAAACj/+gBDAAQAbAALAQQAKv63AAD/mwAM/87/7P/TAAX/2P/1//P//f/sAAn/z//xAA7//P/y//z/8v/x////+wAMABX/+f/6AA4AGQAEABX/9//vAAf/8gAfAAb/9AAFABH//P/0ABQABv/2////4//7//0AE//+//n/5AATAAcAAQAL/+v//P/3ABMAAAAU//L/+v/8AAAAEP/3AAsABQAE/9f/7AABAAwAAQAGABP//QAJ/+4AB//gABUAAf/+AAv/6P/oABP//gAAABX/5f/5AAT//v/5AAgABv/3AB7/6gAdAAL/+P/r//sACwADAAT/9wAE//MACAAK//cACv/4//sABAAA//j//P/7//H/9v/y//wACwAHAAYABv/4AAL/+QAKAB7//wAHABX/8wAQ/+wAFAAL/+7//AAIAAgADf/9AAz/4gAQ//X/9//+//j/9wAEAAz//wADAAc=";
-
-  std::cout << "Encoded string size = " << std::to_string(encoded_speed_string.size()) << std::endl;
 
   // Decode the base64 string and cast the data to a raw string of signed bytes
   auto decoded_str = decode64(encoded_speed_string);
@@ -180,8 +208,6 @@ void test_negative_speeds() {
   std::string encoded_speed_string =
       "AQRu//UAEAAC/+4AA//6//gAAwAFAA//9wAHAAH/4AAd/+wACwAH//0AGQAYAA7//wANAAL/9//mAAUACgATAAb/8v/2//8AC//1ABMAAAAGABX/9//0//0AAAAQAAIAAv/6////9gAJAAcACf/zAAQAAwAC//oACf/2//sADQAVABD/+QADAAcACf/2//gABwAHAAAABv/9AAf/+QAM//kAEAAE//r//wAMAAD/9AAN//D/7QAK//EAE//7AAkAAQAF//f/+AAB//z/6f/y//MAAP/6ABL//AATABX//wAFAAMAGv/2AAf//wAI//sACv/5AAb/8gAOAAYADv/5AAMACP////T/7gAH//P/+f/9//n/9f/0//0AAwAP//3/8gAA//8ACv////gAAgAHAAP//QALAAcAFAAA//8ABP/vAAIAEAAM/+3/9QAC//j//v/tABj/+wAA//sAC//6//0ABwAAAAoABgAMAAb/+P/3AAX/9//7//0ADP/sAAwAB//v/+3//wAMABAACgAF//o=";
 
-  std::cout << "Encoded string size = " << std::to_string(encoded_speed_string.size()) << std::endl;
-
   // Decode the base64 string and cast the data to a raw string of signed bytes
   auto decoded_str = decode64(encoded_speed_string);
   if (decoded_str.size() != 402) {
@@ -225,6 +251,8 @@ void test_negative_speeds() {
 
 int main(void) {
   test::suite suite("predictedspeeds");
+
+  suite.test(TEST_CASE(test_free_flow_speed));
 
   suite.test(TEST_CASE(test_decoding));
 
