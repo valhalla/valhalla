@@ -156,7 +156,7 @@ void test_decoding() {
   // directed edge)
   uint32_t indexes[] = {0};
   PredictedSpeeds pred_speeds;
-  pred_speeds.set_index(indexes);
+  pred_speeds.set_offset(indexes);
   pred_speeds.set_profiles(coefficients);
 
   // Test against 5 minute bucket values
@@ -207,7 +207,7 @@ void test_negative_speeds() {
   // directed edge)
   uint32_t indexes[] = {0};
   PredictedSpeeds pred_speeds;
-  pred_speeds.set_index(indexes);
+  pred_speeds.set_offset(indexes);
   pred_speeds.set_profiles(coefficients);
 
   // Test against 5 minute bucket values
