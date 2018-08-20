@@ -1030,6 +1030,7 @@ TripPathBuilder::Build(const AttributesController& controller,
       // This will be done by going through each edge and finding its
       // end node, which will then be used to find the adjacent edge,
       // and repeat until you have found all the edges
+      const GraphTile* graphtile = graphreader.GetGraphTile(edge);
       uint32_t current_index = edge.id();
       const DirectedEdge* current_directed_edge = graphtile->directededge(current_index);
       GraphId endnode = current_directed_edge->endnode(); // Getting the end node
