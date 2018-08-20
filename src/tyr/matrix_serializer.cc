@@ -123,7 +123,7 @@ json::MapPtr serialize(const valhalla_request_t& request,
   }
   auto json = json::map({
       {"sources_to_targets", matrix},
-      {"units", odin::DirectionsOptions::Units_Name(request.options.units())},
+      {"units", odin::DirectionsOptions_Units_Name(request.options.units())},
   });
   json->emplace("targets", json::array({locations(request.options.targets())}));
   json->emplace("sources", json::array({locations(request.options.sources())}));

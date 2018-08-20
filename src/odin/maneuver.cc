@@ -855,7 +855,7 @@ std::string Maneuver::ToParameterString() const {
   man_str.reserve(256);
 
   man_str += "TripDirections_Maneuver_Type_";
-  man_str += TripDirections_Maneuver_Type_descriptor()->FindValueByNumber(type_)->name();
+  man_str += std::to_string(type_);
 
   man_str += delim;
   man_str += street_names_->ToParameterString();
@@ -886,9 +886,7 @@ std::string Maneuver::ToParameterString() const {
 
   man_str += delim;
   man_str += "TripDirections_Maneuver_CardinalDirection_";
-  man_str += TripDirections_Maneuver_CardinalDirection_descriptor()
-                 ->FindValueByNumber(begin_cardinal_direction_)
-                 ->name();
+  man_str += std::to_string(begin_cardinal_direction_);
 
   man_str += delim;
   man_str += std::to_string(begin_heading_);

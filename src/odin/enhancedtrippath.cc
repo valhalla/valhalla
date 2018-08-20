@@ -483,7 +483,7 @@ std::string EnhancedTripPath_Edge::ToParameterString() const {
 
   str += delim;
   str += "TripPath_RoadClass_";
-  str += TripPath_RoadClass_descriptor()->FindValueByNumber(road_class())->name();
+  str += std::to_string(road_class());
 
   str += delim;
   str += std::to_string(begin_heading());
@@ -499,11 +499,11 @@ std::string EnhancedTripPath_Edge::ToParameterString() const {
 
   str += delim;
   str += "TripPath_Traversability_";
-  str += TripPath_Traversability_descriptor()->FindValueByNumber(traversability())->name();
+  str += std::to_string(traversability());
 
   str += delim;
   str += "TripPath_Use_";
-  str += TripPath_Use_descriptor()->FindValueByNumber(use())->name();
+  str += std::to_string(use());
 
   str += delim;
   str += std::to_string(toll());
@@ -538,7 +538,7 @@ std::string EnhancedTripPath_Edge::ToParameterString() const {
   str += delim;
   if (this->has_travel_mode()) {
     str += "TripPath_TravelMode_";
-    str += TripPath_TravelMode_descriptor()->FindValueByNumber(travel_mode())->name();
+    str += std::to_string(travel_mode());
   }
 
   // NOTE: Current PopulateEdge implementation
@@ -546,25 +546,25 @@ std::string EnhancedTripPath_Edge::ToParameterString() const {
   str += delim;
   if (this->has_vehicle_type()) {
     str += "TripPath_VehicleType_";
-    str += TripPath_VehicleType_descriptor()->FindValueByNumber(vehicle_type())->name();
+    str += std::to_string(vehicle_type());
   }
 
   str += delim;
   if (this->has_pedestrian_type()) {
     str += "TripPath_PedestrianType_";
-    str += TripPath_PedestrianType_descriptor()->FindValueByNumber(pedestrian_type())->name();
+    str += std::to_string(pedestrian_type());
   }
 
   str += delim;
   if (this->has_bicycle_type()) {
     str += "TripPath_BicycleType_";
-    str += TripPath_BicycleType_descriptor()->FindValueByNumber(bicycle_type())->name();
+    str += std::to_string(bicycle_type());
   }
 
   str += delim;
   if (this->has_transit_type()) {
     str += "TripPath_TransitType_";
-    str += TripPath_TransitType_descriptor()->FindValueByNumber(transit_type())->name();
+    str += std::to_string(transit_type());
   }
 
   str += delim;
@@ -640,14 +640,14 @@ std::string EnhancedTripPath_Edge::ToParameterString() const {
 
   str += delim;
   str += "TripPath_CycleLane_";
-  str += TripPath_CycleLane_descriptor()->FindValueByNumber(cycle_lane())->name();
+  str += std::to_string(cycle_lane());
 
   str += delim;
   str += std::to_string(bicycle_network());
 
   str += delim;
   str += "TripPath_Sidewalk_";
-  str += TripPath_Sidewalk_descriptor()->FindValueByNumber(sidewalk())->name();
+  str += std::to_string(sidewalk());
 
   str += delim;
   str += std::to_string(density());
