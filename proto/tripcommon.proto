@@ -93,3 +93,4 @@ message TransitPlatformInfo {
   optional string station_onestop_id = 8;  // Unique transitland station ID
   optional string station_name = 9;        // The station name of the platform
 }
+
