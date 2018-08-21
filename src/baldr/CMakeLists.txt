@@ -31,6 +31,7 @@ valhalla_module(NAME baldr
     pathlocation.cc
     tilehierarchy.cc
     turn.cc
+    tz.cc
     streetname.cc
     streetnames.cc
     streetnames_factory.cc
