@@ -18,18 +18,21 @@
 
 #include <valhalla/baldr/graphconstants.h>
 #include <valhalla/midgard/constants.h>
+#include <valhalla/baldr/date.h>
+#include <valhalla/baldr/tz.h>
 
 namespace valhalla {
 namespace baldr {
 namespace DateTime {
 
-struct tz_db_t : public boost::local_time::tz_database {
+//get_tzdb_list
+struct tz_db_t : date::tzdb {
   tz_db_t();
-  size_t to_index(const std::string& region) const;
-  boost::shared_ptr<time_zone_base_type> from_index(size_t index) const;
+  size_t to_index(const std::string& zone) const;
+  std::shared_ptr<date::time_zone> from_index(size_t index) const;
 
 protected:
-  std::vector<std::string> regions;
+  std::vector<std::string> names;
 };
 
 /**

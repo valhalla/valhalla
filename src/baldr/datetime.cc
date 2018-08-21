@@ -28,27 +28,26 @@ namespace DateTime {
 
 tz_db_t::tz_db_t() {
   // load up the tz data
-  std::string tz_data(date_time_zonespec_csv, date_time_zonespec_csv + date_time_zonespec_csv_len);
-  std::stringstream ss(tz_data);
-  load_from_stream(ss);
-  // unfortunately boosts object has its map marked as private... so we have to keep our own
-  regions = region_list();
+  const auto& db = date::get_tzdb();
+  zones = db.zones;
+  for (const auto& z : zones) {
+    names.push_back(z.name());
+  }
 }
 
-size_t tz_db_t::to_index(const std::string& region) const {
-  auto it = std::find(regions.cbegin(), regions.cend(), region);
-  if (it == regions.cend()) {
+size_t tz_db_t::to_index(const std::string& zone) const {
+  auto it = std::find(names.cbegin(), names.cend(), zone);
+  if (it == names.cend()) {
     return 0;
   }
-  return (it - regions.cbegin()) + 1;
+  return (it - names.cbegin()) + 1;
 }
 
-boost::shared_ptr<boost::local_time::tz_database::time_zone_base_type>
-tz_db_t::from_index(size_t index) const {
-  if (index < 1 || index > regions.size()) {
+std::shared_ptr<date::time_zone> tz_db_t::from_index(size_t index) const {
+  if (index < 1 || index > zones.size()) {
     return {};
-  };
-  return time_zone_from_region(regions[index - 1]);
+  }
+  return std::make_shared<date::time_zone>(&zones[index - 1]);
 }
 
 const tz_db_t& get_tz_db() {
