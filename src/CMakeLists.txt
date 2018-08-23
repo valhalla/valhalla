@@ -47,25 +47,25 @@ set_target_properties(CURL::CURL PROPERTIES
 
 find_package(Protobuf REQUIRED)
 # TODO: remove after switching to CMake >= 3.7
-if(NOT TARGET protobuf::libprotobuf)
+if(NOT TARGET protobuf::libprotobuf-lite)
   if(PROTOBUF_LIBRARY)
-    add_library(protobuf::libprotobuf UNKNOWN IMPORTED)
-    set_target_properties(protobuf::libprotobuf PROPERTIES
+    add_library(protobuf::libprotobuf-lite UNKNOWN IMPORTED)
+    set_target_properties(protobuf::libprotobuf-lite PROPERTIES
       INTERFACE_INCLUDE_DIRECTORIES "${PROTOBUF_INCLUDE_DIR}")
     if(EXISTS "${PROTOBUF_LIBRARY}")
-      set_target_properties(protobuf::libprotobuf PROPERTIES
+      set_target_properties(protobuf::libprotobuf-lite PROPERTIES
         IMPORTED_LOCATION "${PROTOBUF_LIBRARY}")
     endif()
     if(EXISTS "${PROTOBUF_LIBRARY_RELEASE}")
-      set_property(TARGET protobuf::libprotobuf APPEND PROPERTY
+      set_property(TARGET protobuf::libprotobuf-lite APPEND PROPERTY
         IMPORTED_CONFIGURATIONS RELEASE)
-      set_target_properties(protobuf::libprotobuf PROPERTIES
+      set_target_properties(protobuf::libprotobuf-lite PROPERTIES
         IMPORTED_LOCATION_RELEASE "${PROTOBUF_LIBRARY_RELEASE}")
     endif()
     if(EXISTS "${PROTOBUF_LIBRARY_DEBUG}")
-      set_property(TARGET protobuf::libprotobuf APPEND PROPERTY
+      set_property(TARGET protobuf::libprotobuf-lite APPEND PROPERTY
         IMPORTED_CONFIGURATIONS DEBUG)
-      set_target_properties(protobuf::libprotobuf PROPERTIES
+      set_target_properties(protobuf::libprotobuf-lite PROPERTIES
         IMPORTED_LOCATION_DEBUG "${PROTOBUF_LIBRARY_DEBUG}")
     endif()
   endif()
@@ -178,8 +178,6 @@ configure_file(../valhalla/config.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/valhalla/c
 
 set(valhalla_hdrs
   ${CMAKE_CURRENT_BINARY_DIR}/valhalla/valhalla.h
-
-  ${VALHALLA_SOURCE_DIR}/valhalla/exception.h
   ${VALHALLA_SOURCE_DIR}/valhalla/worker.h)
 
 add_library(valhalla worker.cc ${CMAKE_CURRENT_BINARY_DIR}/valhalla/config.h ${valhalla_hdrs} ${libvalhalla_link_objects})

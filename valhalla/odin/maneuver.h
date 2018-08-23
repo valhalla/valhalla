@@ -262,9 +262,11 @@ public:
   const VerbalTextFormatter* verbal_formatter() const;
   void set_verbal_formatter(std::unique_ptr<VerbalTextFormatter>&& verbal_formatter);
 
+#ifdef LOGGING_LEVEL_TRACE
   std::string ToString() const;
 
   std::string ToParameterString() const;
+#endif
 
 protected:
   TripDirections_Maneuver_Type type_;
@@ -340,10 +342,6 @@ protected:
   TripPath_TransitType transit_type_;
 
   std::unique_ptr<VerbalTextFormatter> verbal_formatter_;
-
-  // TODO notes
-
-  static const std::unordered_map<int, std::string> relative_direction_string_;
 };
 
 } // namespace odin

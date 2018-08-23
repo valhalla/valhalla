@@ -107,14 +107,18 @@ public:
 
   std::string ToString() const;
 
+#ifdef LOGGING_LEVEL_TRACE
   std::string ToParameterString() const;
+#endif
 
 protected:
+#ifdef LOGGING_LEVEL_TRACE
   std::string
   ListToString(const ::google::protobuf::RepeatedPtrField<::std::string>& string_list) const;
 
   std::string
   ListToParameterString(const ::google::protobuf::RepeatedPtrField<::std::string>& string_list) const;
+#endif
 };
 
 class EnhancedTripPath_IntersectingEdge : public TripPath_IntersectingEdge {

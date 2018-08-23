@@ -1,7 +1,7 @@
 #include "thor/multimodal.h"
 #include "baldr/datetime.h"
-#include "exception.h"
 #include "midgard/logging.h"
+#include "worker.h"
 #include <algorithm>
 #include <map>
 
