@@ -17,6 +17,7 @@ valhalla_module(NAME baldr
     compression_utils.cc
     connectivity_map.cc
     datetime.cc
+    datetime2.cc
     directededge.cc
     edge_elevation.cc
     edgeinfo.cc
