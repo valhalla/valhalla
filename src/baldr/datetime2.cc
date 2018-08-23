@@ -21,7 +21,7 @@ using namespace valhalla::baldr;
 
 namespace {
 
-const date::local_seconds pivot_date_ = DateTime::get_formatted_date(kPivotDate2);
+const date::local_seconds pivot_date_ = DateTime2::get_formatted_date(kPivotDate2);
 }
 
 namespace valhalla {

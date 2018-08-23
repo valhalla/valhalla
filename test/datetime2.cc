@@ -145,8 +145,8 @@ void TryTestTimeZoneAtt() {
 }
 
 void TryGetDaysFromPivotDate(const std::string& date_time, uint32_t expected_days) {
-  if (DateTime::days_from_pivot_date(DateTime::get_formatted_date(date_time)) != expected_days) {
-    throw std::runtime_error(std::string("Incorrect number of days from ") + date_time + " " + std::to_string(DateTime::days_from_pivot_date(DateTime::get_formatted_date(date_time))));
+  if (DateTime2::days_from_pivot_date(DateTime2::get_formatted_date(date_time)) != expected_days) {
+    throw std::runtime_error(std::string("Incorrect number of days from ") + date_time + " " + std::to_string(DateTime2::days_from_pivot_date(DateTime2::get_formatted_date(date_time))));
   }
 }
 /*
