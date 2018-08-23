@@ -60,7 +60,9 @@ public:
 
   std::string ToString() const;
 
+#ifdef LOGGING_LEVEL_TRACE
   std::string ToParameterString() const;
+#endif
 
   bool operator==(const Signs& rhs) const;
 
@@ -71,7 +73,9 @@ protected:
                                  const std::string& delim = "/",
                                  const VerbalTextFormatter* verbal_formatter = nullptr) const;
 
+#ifdef LOGGING_LEVEL_TRACE
   const std::string ListToParameterString(const std::vector<Sign>& signs) const;
+#endif
 
   std::vector<Sign> exit_number_list_;
   std::vector<Sign> exit_branch_list_;

@@ -902,6 +902,17 @@ const std::string& FilterAction_Name(const odin::FilterAction action) {
 }
 } // namespace odin
 
+valhalla_exception_t::valhalla_exception_t(unsigned code, const boost::optional<std::string>& extra)
+      : std::runtime_error(""), code(code), extra(extra) {
+  auto code_iter = error_codes.find(code);
+  message = (code_iter == error_codes.cend() ? "" : code_iter->second);
+  message += (extra ? ":" + *extra : "");
+  auto http_code_iter = ERROR_TO_STATUS.find(code);
+  http_code = (http_code_iter == ERROR_TO_STATUS.cend() ? 0 : http_code_iter->second);
+  auto http_message_iter = HTTP_STATUS_CODES.find(http_code);
+  http_message = (http_message_iter == HTTP_STATUS_CODES.cend() ? "" : http_message_iter->second);
+}
+
 valhalla_request_t::valhalla_request_t() {
   document.SetObject();
 }
@@ -990,8 +1001,6 @@ worker_t::result_t jsonify_error(const valhalla_exception_t& exception,
                                  http_request_info_t& request_info,
                                  const valhalla_request_t& request) {
   // get the http status
-  auto status = ERROR_TO_STATUS.find(exception.code)->second;
-  auto message = HTTP_STATUS_CODES.find(status)->second;
   std::stringstream body;
 
   // overwrite with osrm error response
@@ -1006,8 +1015,8 @@ worker_t::result_t jsonify_error(const valhalla_exception_t& exception,
   else {
     // build up the json map
     auto json_error = baldr::json::map({});
-    json_error->emplace("status", message);
-    json_error->emplace("status_code", static_cast<uint64_t>(status));
+    json_error->emplace("status", exception.http_message);
+    json_error->emplace("status_code", static_cast<uint64_t>(exception.http_code));
     json_error->emplace("error", std::string(exception.message));
     json_error->emplace("error_code", static_cast<uint64_t>(exception.code));
     body << (request.options.has_jsonp() ? request.options.jsonp() + "(" : "") << *json_error
@@ -1015,7 +1024,7 @@ worker_t::result_t jsonify_error(const valhalla_exception_t& exception,
   }
 
   worker_t::result_t result{false};
-  http_response_t response(status, message, body.str(),
+  http_response_t response(exception.http_code, exception.http_message, body.str(),
                            headers_t{CORS, request.options.has_jsonp() ? JS_MIME : JSON_MIME});
   response.from_info(request_info);
   result.messages.emplace_back(response.to_string());

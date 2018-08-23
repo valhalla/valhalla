@@ -264,7 +264,9 @@ public:
 
   std::string ToString() const;
 
+#ifdef LOGGING_LEVEL_TRACE
   std::string ToParameterString() const;
+#endif
 
 protected:
   TripDirections_Maneuver_Type type_;

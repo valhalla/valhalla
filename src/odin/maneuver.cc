@@ -848,6 +848,7 @@ std::string Maneuver::ToString() const {
   return man_str;
 }
 
+#ifdef LOGGING_LEVEL_TRACE
 // Used by ManeuverBuilder unit tests - therefore, order is important
 std::string Maneuver::ToParameterString() const {
   const std::string delim = ", ";
@@ -1010,6 +1011,7 @@ std::string Maneuver::ToParameterString() const {
 
   return man_str;
 }
+#endif
 
 } // namespace odin
 } // namespace valhalla

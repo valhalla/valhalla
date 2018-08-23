@@ -8,6 +8,7 @@
 
 #include <boost/format.hpp>
 
+#include "worker.h"
 #include "baldr/streetnames.h"
 #include "baldr/streetnames_factory.h"
 #include "baldr/streetnames_us.h"
@@ -15,7 +16,6 @@
 #include "baldr/verbal_text_formatter.h"
 #include "baldr/verbal_text_formatter_factory.h"
 #include "baldr/verbal_text_formatter_us.h"
-#include "exception.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
 #include "midgard/pointll.h"

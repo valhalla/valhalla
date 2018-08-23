@@ -8,10 +8,8 @@
 #include <boost/format.hpp>
 
 #include "baldr/verbal_text_formatter.h"
-#include "exception.h"
-#include "midgard/logging.h"
 
-#include "config.h"
+#include "worker.h"
 #include "odin/enhancedtrippath.h"
 #include "odin/maneuver.h"
 #include "odin/narrative_dictionary.h"

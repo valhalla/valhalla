@@ -1,6 +1,6 @@
+#include "worker.h"
 #include "thor/multimodal.h"
 #include "baldr/datetime.h"
-#include "exception.h"
 #include "midgard/logging.h"
 #include <algorithm>
 #include <map>

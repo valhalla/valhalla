@@ -1,4 +1,3 @@
-#include "baldr/rapidjson_utils.h"
 #include <boost/make_shared.hpp>
 #include <boost/noncopyable.hpp>
 #include <boost/optional.hpp>
@@ -12,11 +11,11 @@
 #include <sstream>
 #include <string>
 
-#include "src/worker.cc"
-#include "valhalla/exception.h"
-#include "valhalla/tyr/actor.h"
-#include "valhalla/midgard/logging.h"
-#include "valhalla/midgard/util.h"
+#include "baldr/rapidjson_utils.h"
+#include "worker.h"
+#include "tyr/actor.h"
+#include "midgard/logging.h"
+#include "midgard/util.h"
 
 boost::property_tree::ptree json_to_pt(const char* json) {
   std::stringstream ss;
@@ -46,7 +45,6 @@ public:
     try {
       response = func(actor, request);
     } catch (const valhalla::valhalla_exception_t& e) {
-      auto http_code = ERROR_TO_STATUS.find(e.code)->second;
       rapidjson::StringBuffer err_message;
       rapidjson::Writer<rapidjson::StringBuffer> writer(err_message);
 
@@ -54,7 +52,7 @@ public:
       writer.Key("error_code");
       writer.Uint(e.code);
       writer.Key("http_code");
-      writer.Uint(http_code);
+      writer.Uint(e.http_code);
       writer.Key("message");
       writer.String(e.message);
       writer.EndObject();

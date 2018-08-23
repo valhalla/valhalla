@@ -2,10 +2,9 @@
 #include <cstdlib>
 #include <iostream>
 
-#include "exception.h"
 #include "midgard/constants.h"
-#include "midgard/logging.h"
 #include "midgard/util.h"
+#include "worker.h"
 
 #include "odin/enhancedtrippath.h"
 #include "odin/util.h"
@@ -468,6 +467,7 @@ std::string EnhancedTripPath_Edge::ToString() const {
   return str;
 }
 
+#ifdef LOGGING_LEVEL_TRACE
 std::string EnhancedTripPath_Edge::ToParameterString() const {
   const std::string delim = ", ";
   std::string str;
@@ -663,6 +663,7 @@ std::string EnhancedTripPath_Edge::ToParameterString() const {
 
   return str;
 }
+#endif
 
 std::string EnhancedTripPath_Edge::ListToString(
     const ::google::protobuf::RepeatedPtrField<::std::string>& string_list) const {
@@ -680,6 +681,7 @@ std::string EnhancedTripPath_Edge::ListToString(
   return str;
 }
 
+#ifdef LOGGING_LEVEL_TRACE
 std::string EnhancedTripPath_Edge::ListToParameterString(
     const ::google::protobuf::RepeatedPtrField<::std::string>& string_list) const {
   std::string str;
@@ -700,6 +702,7 @@ std::string EnhancedTripPath_Edge::ListToParameterString(
 
   return str;
 }
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 // EnhancedTripPath_IntersectingEdge

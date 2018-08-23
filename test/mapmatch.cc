@@ -10,7 +10,7 @@
 #include <boost/property_tree/ptree.hpp>
 
 #include "baldr/json.h"
-#include "exception.h"
+#include "worker.h"
 #include "meili/map_matcher.h"
 #include "meili/map_matcher_factory.h"
 #include "midgard/distanceapproximator.h"
