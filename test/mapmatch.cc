@@ -10,7 +10,6 @@
 #include <boost/property_tree/ptree.hpp>
 
 #include "baldr/json.h"
-#include "worker.h"
 #include "meili/map_matcher.h"
 #include "meili/map_matcher_factory.h"
 #include "midgard/distanceapproximator.h"
@@ -19,6 +18,7 @@
 #include "midgard/util.h"
 #include "mjolnir/util.h"
 #include "tyr/actor.h"
+#include "worker.h"
 
 using namespace valhalla;
 

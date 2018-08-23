@@ -31,8 +31,8 @@ bool FilterAction_Parse(const std::string& action, odin::FilterAction* a);
 const std::string& FilterAction_Name(const odin::FilterAction action);
 } // namespace odin
 
-const std::unordered_map<unsigned, std::string> error_codes{
-                // loki project 1xx
+const std::unordered_map<unsigned, std::string>
+    error_codes{// loki project 1xx
                 {100, "Failed to parse json request"},
                 {101, "Try a POST or GET request instead"},
                 {106, "Try any of"},
@@ -142,8 +142,7 @@ const std::unordered_map<unsigned, std::string> error_codes{
                 {501, "Failed to parse TripDirections"},
                 {502, "Maneuver index not found for specified shape index"},
 
-                {599, "Unknown"}
-};
+                {599, "Unknown"}};
 
 struct valhalla_exception_t : public std::runtime_error {
   valhalla_exception_t(unsigned code, const boost::optional<std::string>& extra = boost::none);

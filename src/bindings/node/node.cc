@@ -12,10 +12,10 @@
 #include <string>
 
 #include "baldr/rapidjson_utils.h"
-#include "worker.h"
-#include "tyr/actor.h"
 #include "midgard/logging.h"
 #include "midgard/util.h"
+#include "tyr/actor.h"
+#include "worker.h"
 
 boost::property_tree::ptree json_to_pt(const char* json) {
   std::stringstream ss;

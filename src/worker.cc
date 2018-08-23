@@ -903,7 +903,7 @@ const std::string& FilterAction_Name(const odin::FilterAction action) {
 } // namespace odin
 
 valhalla_exception_t::valhalla_exception_t(unsigned code, const boost::optional<std::string>& extra)
-      : std::runtime_error(""), code(code), extra(extra) {
+    : std::runtime_error(""), code(code), extra(extra) {
   auto code_iter = error_codes.find(code);
   message = (code_iter == error_codes.cend() ? "" : code_iter->second);
   message += (extra ? ":" + *extra : "");

@@ -8,7 +8,6 @@
 
 #include <boost/format.hpp>
 
-#include "worker.h"
 #include "baldr/streetnames.h"
 #include "baldr/streetnames_factory.h"
 #include "baldr/streetnames_us.h"
@@ -20,6 +19,7 @@
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
 #include "midgard/util.h"
+#include "worker.h"
 
 #include "odin/maneuversbuilder.h"
 #include "odin/sign.h"
