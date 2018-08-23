@@ -12,8 +12,6 @@
 #include "baldr/graphconstants.h"
 #include "baldr/timedomain.h"
 #include "midgard/logging.h"
-#include "midgard/util.h"
-
 
 #include "date_time_zonespec.h"
 
@@ -30,24 +28,27 @@ namespace DateTime {
 
 tz_db_t::tz_db_t() {
   // load up the tz data
-  for (const auto& z : db.zones) {
-    names.push_back(z.name());
-  }
+  std::string tz_data(date_time_zonespec_csv, date_time_zonespec_csv + date_time_zonespec_csv_len);
+  std::stringstream ss(tz_data);
+  load_from_stream(ss);
+  // unfortunately boosts object has its map marked as private... so we have to keep our own
+  regions = region_list();
 }
 
-size_t tz_db_t::to_index(const std::string& zone) const {
-  auto it = std::find(names.cbegin(), names.cend(), zone);
-  if (it == names.cend()) {
+size_t tz_db_t::to_index(const std::string& region) const {
+  auto it = std::find(regions.cbegin(), regions.cend(), region);
+  if (it == regions.cend()) {
     return 0;
   }
-  return (it - names.cbegin()) + 1;
+  return (it - regions.cbegin()) + 1;
 }
 
-const date::time_zone* tz_db_t::from_index(size_t index) const {
-  if (index < 1 || index > names.size()) {
-    return nullptr;
-  }
-  return &db.zones[index - 1];
+boost::shared_ptr<boost::local_time::tz_database::time_zone_base_type>
+tz_db_t::from_index(size_t index) const {
+  if (index < 1 || index > regions.size()) {
+    return {};
+  };
+  return time_zone_from_region(regions[index - 1]);
 }
 
 const tz_db_t& get_tz_db() {
@@ -78,14 +79,14 @@ boost::gregorian::date get_formatted_date(const std::string& date) {
 // 2016-11-06T02:00 ---> 2016-11-06T01:00
 boost::local_time::local_date_time get_ldt(const boost::gregorian::date& date,
                                            const boost::posix_time::time_duration& time_duration,
-                                           const date::time_zone& time_zone) {
+                                           const boost::local_time::time_zone_ptr& time_zone) {
 
   boost::posix_time::time_duration td = time_duration;
   boost::local_time::local_date_time
       in_local_time(date, td, time_zone, boost::local_time::local_date_time::NOT_DATE_TIME_ON_ERROR);
 
   // create not-a-date-time if invalid (eg: in dst transition)
-  /*if (in_local_time.is_not_a_date_time()) {
+  if (in_local_time.is_not_a_date_time()) {
 
     if (time_zone->dst_local_start_time(date.year()).date() == date) {
       td += time_zone->dst_offset(); // clocks ahead.
@@ -101,7 +102,7 @@ boost::local_time::local_date_time get_ldt(const boost::gregorian::date& date,
                           boost::local_time::local_date_time::NOT_DATE_TIME_ON_ERROR);
       in_local_time -= time_dur;
     }
-  }*/
+  }
   return in_local_time;
 }
 
@@ -116,9 +117,9 @@ uint32_t days_from_pivot_date(const boost::gregorian::date& date_time) {
 }
 
 // Get the current iso date and time.
-std::string iso_date_time(const date::time_zone& time_zone) {
+std::string iso_date_time(const boost::local_time::time_zone_ptr& time_zone) {
   std::string iso_date_time;
-  /*if (!time_zone) {
+  if (!time_zone) {
     return iso_date_time;
   }
 
@@ -140,14 +141,13 @@ std::string iso_date_time(const date::time_zone& time_zone) {
 
     iso_date_time = to_iso_extended_string(date) + "T" + time;
   } catch (std::exception& e) {}
-  */
   return iso_date_time;
 }
 
 // Get the seconds since epoch time is already adjusted based on TZ
 uint64_t seconds_since_epoch(const std::string& date_time,
-                             const date::time_zone& time_zone) {
- /* if (date_time.empty()) {
+                             const boost::local_time::time_zone_ptr& time_zone) {
+  if (date_time.empty()) {
     return 0;
   }
 
@@ -183,7 +183,7 @@ uint64_t seconds_since_epoch(const std::string& date_time,
 
     return diff.total_seconds();
 
-  } catch (std::exception& e) {}*/
+  } catch (std::exception& e) {}
   return 0;
 }
 
@@ -191,13 +191,13 @@ uint64_t seconds_since_epoch(const std::string& date_time,
 // so that DST can be take into account). Returns the difference in seconds.
 int timezone_diff(const bool is_depart_at,
                   const uint64_t seconds,
-                  const date::time_zone& origin_tz,
-                  const date::time_zone& dest_tz) {
+                  const boost::local_time::time_zone_ptr& origin_tz,
+                  const boost::local_time::time_zone_ptr& dest_tz) {
 
   if (!origin_tz || !dest_tz || origin_tz == dest_tz) {
     return 0;
   }
-/*
+
   try {
     std::string tz_string;
     const boost::posix_time::ptime time_epoch(boost::gregorian::date(1970, 1, 1));
@@ -276,15 +276,14 @@ int timezone_diff(const bool is_depart_at,
       return -1 * abs(td.total_seconds());
     }
   } catch (std::exception& e) {}
-  */
 }
 
 // Get the date from seconds and timezone.
 void seconds_to_date(const bool is_depart_at,
                      const uint64_t origin_seconds,
                      const uint64_t dest_seconds,
-                     const date::time_zone& origin_tz,
-                     const date::time_zone& dest_tz,
+                     const boost::local_time::time_zone_ptr& origin_tz,
+                     const boost::local_time::time_zone_ptr& dest_tz,
                      std::string& iso_origin,
                      std::string& iso_dest) {
 
@@ -294,7 +293,7 @@ void seconds_to_date(const bool is_depart_at,
   if (!origin_tz || !dest_tz) {
     return;
   }
-/*
+
   try {
     std::string tz_string;
     const boost::posix_time::ptime time_epoch(boost::gregorian::date(1970, 1, 1));
@@ -426,7 +425,6 @@ void seconds_to_date(const bool is_depart_at,
     }
 
   } catch (std::exception& e) {}
-  */
 }
 
 // Get the dow mask
@@ -471,9 +469,8 @@ uint32_t day_of_week_mask(const std::string& date_time) {
 // date_time is in the format of 20150516 or 2015-05-06T08:00
 std::string get_duration(const std::string& date_time,
                          const uint32_t seconds,
-                         const date::time_zone& tz) {
+                         const boost::local_time::time_zone_ptr& tz) {
   std::string formatted_date_time;
-  /*
   boost::posix_time::ptime start;
   boost::gregorian::date date;
   if (date_time.find('T') != std::string::npos) {
@@ -535,7 +532,7 @@ std::string get_duration(const std::string& date_time,
   }
 
   formatted_date_time += " " + tz_abbrev;
-*/
+
   return formatted_date_time;
 }
 
@@ -553,10 +550,10 @@ bool is_restricted(const bool type,
                    const uint8_t end_month,
                    const uint8_t end_day_dow,
                    const uint64_t current_time,
-                   const date::time_zone& time_zone) {
+                   const boost::local_time::time_zone_ptr& time_zone) {
   bool dow_in_range = true;
   bool dt_in_range = false;
-/*
+
   try {
     boost::gregorian::date begin_date, end_date;
     boost::posix_time::time_duration b_td = boost::posix_time::hours(0),
@@ -731,7 +728,7 @@ bool is_restricted(const bool type,
     }
 
     dt_in_range = (dt_in_range && time_in_range);
-  } catch (std::exception& e) {}*/
+  } catch (std::exception& e) {}
   return (dow_in_range && dt_in_range);
 }
 

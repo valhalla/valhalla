@@ -18,22 +18,18 @@
 
 #include <valhalla/baldr/graphconstants.h>
 #include <valhalla/midgard/constants.h>
-#include <valhalla/baldr/tz.h>
-#include <valhalla/baldr/date.h>
 
 namespace valhalla {
 namespace baldr {
 namespace DateTime {
 
-//get_tzdb_list
-struct tz_db_t {
+struct tz_db_t : public boost::local_time::tz_database {
   tz_db_t();
-  size_t to_index(const std::string& zone) const;
-  const date::time_zone* from_index(size_t index) const;
+  size_t to_index(const std::string& region) const;
+  boost::shared_ptr<time_zone_base_type> from_index(size_t index) const;
 
 protected:
-  std::vector<std::string> names;
-  const date::tzdb& db = date::get_tzdb();
+  std::vector<std::string> regions;
 };
 
 /**
@@ -58,7 +54,7 @@ boost::gregorian::date get_formatted_date(const std::string& date);
  */
 boost::local_time::local_date_time get_ldt(const boost::gregorian::date& date,
                                            const boost::posix_time::time_duration& time_duration,
-                                           const date::time_zone& time_zone);
+                                           const boost::local_time::time_zone_ptr& time_zone);
 
 /**
  * Get the number of days elapsed from the pivot date until the input date.
@@ -72,7 +68,7 @@ uint32_t days_from_pivot_date(const boost::gregorian::date& date_time);
  * @param   time_zone        Timezone.
  * @return  Returns the formated date 2015-05-06.
  */
-std::string iso_date_time(const date::time_zone& time_zone);
+std::string iso_date_time(const boost::local_time::time_zone_ptr& time_zone);
 
 /**
  * Get the seconds from epoch for a date_time string
@@ -81,7 +77,7 @@ std::string iso_date_time(const date::time_zone& time_zone);
  * @return  Returns the seconds from epoch.
  */
 uint64_t seconds_since_epoch(const std::string& date_time,
-                             const date::time_zone& time_zone);
+                             const boost::local_time::time_zone_ptr& time_zone);
 
 /**
  * Get the difference between two timezones using the current time (seconds from epoch
@@ -94,8 +90,8 @@ uint64_t seconds_since_epoch(const std::string& date_time,
  */
 int timezone_diff(const bool is_depart_at,
                   const uint64_t seconds,
-                  const date::time_zone& origin_tz,
-                  const date::time_zone& dest_tz);
+                  const boost::local_time::time_zone_ptr& origin_tz,
+                  const boost::local_time::time_zone_ptr& dest_tz);
 
 /**
  * Get the iso date time from seconds since epoch and timezone.
@@ -110,8 +106,8 @@ int timezone_diff(const bool is_depart_at,
 void seconds_to_date(const bool is_depart_at,
                      const uint64_t origin_seconds,
                      const uint64_t dest_seconds,
-                     const date::time_zone& origin_tz,
-                     const date::time_zone& dest_tz,
+                     const boost::local_time::time_zone_ptr& origin_tz,
+                     const boost::local_time::time_zone_ptr& dest_tz,
                      std::string& iso_origin,
                      std::string& iso_dest);
 
@@ -131,7 +127,7 @@ uint32_t day_of_week_mask(const std::string& date_time);
  */
 std::string get_duration(const std::string& date_time,
                          const uint32_t seconds,
-                         const date::time_zone& tz);
+                         const boost::local_time::time_zone_ptr& tz);
 
 /**
  * Checks if a date is restricted within a begin and end range.
@@ -166,7 +162,7 @@ bool is_restricted(const bool type,
                    const uint8_t end_month,
                    const uint8_t end_day_dow,
                    const uint64_t current_time,
-                   const date::time_zone& time_zone);
+                   const boost::local_time::time_zone_ptr& time_zone);
 
 /**
  * Convert ISO 8601 time into std::tm.
