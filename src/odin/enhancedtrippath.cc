@@ -21,7 +21,7 @@ const std::string& TripPath_RoadClass_Name(int v) {
   };
   auto f = values.find(v);
   if (f == values.cend())
-    return "UNKNOWN";
+    throw std::runtime_error("Missing value in protobuf enum to string");
   return f->second;
 }
 
@@ -34,7 +34,7 @@ const std::string& TripPath_Traversability_Name(int v) {
   };
   auto f = values.find(v);
   if (f == values.cend())
-    return "UNKNOWN";
+    throw std::runtime_error("Missing value in protobuf enum to string");
   return f->second;
 }
 
@@ -69,7 +69,7 @@ const std::string& TripPath_Use_Name(int v) {
   };
   auto f = values.find(v);
   if (f == values.cend())
-    return "UNKNOWN";
+    throw std::runtime_error("Missing value in protobuf enum to string");
   return f->second;
 }
 
@@ -82,7 +82,7 @@ const std::string& TripPath_TravelMode_Name(int v) {
   };
   auto f = values.find(v);
   if (f == values.cend())
-    return "UNKNOWN";
+    throw std::runtime_error("Missing value in protobuf enum to string");
   return f->second;
 }
 
@@ -92,7 +92,7 @@ const std::string& TripPath_VehicleType_Name(int v) {
   };
   auto f = values.find(v);
   if (f == values.cend())
-    return "UNKNOWN";
+    throw std::runtime_error("Missing value in protobuf enum to string");
   return f->second;
 }
 
@@ -104,7 +104,7 @@ const std::string& TripPath_PedestrianType_Name(int v) {
   };
   auto f = values.find(v);
   if (f == values.cend())
-    return "UNKNOWN";
+    throw std::runtime_error("Missing value in protobuf enum to string");
   return f->second;
 }
 
@@ -117,7 +117,7 @@ const std::string& TripPath_BicycleType_Name(int v) {
   };
   auto f = values.find(v);
   if (f == values.cend())
-    return "UNKNOWN";
+    throw std::runtime_error("Missing value in protobuf enum to string");
   return f->second;
 }
 
@@ -128,7 +128,7 @@ const std::string& TripPath_TransitType_Name(int v) {
   };
   auto f = values.find(v);
   if (f == values.cend())
-    return "UNKNOWN";
+    throw std::runtime_error("Missing value in protobuf enum to string");
   return f->second;
 }
 
@@ -141,7 +141,7 @@ const std::string& TripPath_CycleLane_Name(int v) {
   };
   auto f = values.find(v);
   if (f == values.cend())
-    return "UNKNOWN";
+    throw std::runtime_error("Missing value in protobuf enum to string");
   return f->second;
 }
 
@@ -154,7 +154,7 @@ const std::string& TripPath_Sidewalk_Name(int v) {
   };
   auto f = values.find(v);
   if (f == values.cend())
-    return "UNKNOWN";
+    throw std::runtime_error("Missing value in protobuf enum to string");
   return f->second;
 }
 

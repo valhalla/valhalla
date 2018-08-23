@@ -76,7 +76,7 @@ const std::string& TripDirections_Maneuver_Type_Name(int v) {
   };
   auto f = values.find(v);
   if (f == values.cend())
-    return "UNKNOWN";
+    throw std::runtime_error("Missing value in protobuf enum to string");
   return f->second;
 }
 
@@ -87,7 +87,7 @@ const std::string& TripDirections_Maneuver_CardinalDirection_Name(int v) {
   };
   auto f = values.find(v);
   if (f == values.cend())
-    return "UNKNOWN";
+    throw std::runtime_error("Missing value in protobuf enum to string");
   return f->second;
 }
 
