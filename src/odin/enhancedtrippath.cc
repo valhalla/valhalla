@@ -810,7 +810,6 @@ std::string EnhancedTripPath_Edge::ToParameterString() const {
 
   return str;
 }
-#endif
 
 std::string EnhancedTripPath_Edge::ListToString(
     const ::google::protobuf::RepeatedPtrField<::std::string>& string_list) const {
@@ -828,7 +827,6 @@ std::string EnhancedTripPath_Edge::ListToString(
   return str;
 }
 
-#ifdef LOGGING_LEVEL_TRACE
 std::string EnhancedTripPath_Edge::ListToParameterString(
     const ::google::protobuf::RepeatedPtrField<::std::string>& string_list) const {
   std::string str;
