@@ -85,156 +85,47 @@ uint32_t days_from_pivot_date(const date::local_seconds& date_time) {
 // Get the current iso date and time.
 std::string iso_date_time(const date::time_zone* time_zone) {
   std::ostringstream iso_date_time;
-  auto date = date::make_zoned(time_zone,std::chrono::system_clock::now());
-  iso_date_time << date::format("%FT%R", date);
-  return iso_date_time.str();
+  const auto date = date::make_zoned(time_zone,std::chrono::system_clock::now());
+  iso_date_time << date::format("%FT%R%z", date);
+  std::string iso_date = iso_date_time.str();
+  iso_date.insert(19,1,':');
+  return iso_date;
 }
 
 // Get the seconds since epoch time is already adjusted based on TZ
 uint64_t seconds_since_epoch(const std::string& date_time,
-                             const date::time_zone& time_zone) {
-
-  /*  //if (date_time.empty()) {
-    return 0;
-  //}
-
-  //auto d = get_formatted_date(date_time);
-  //return date::sys_seconds(get_ldt(d,time_zone).time_since_epoch());
-   *
-   */
-
-
- /* if (date_time.empty()) {
+                             const date::time_zone* time_zone) {
+  if (date_time.empty()) {
     return 0;
   }
-
-  try {
-    boost::gregorian::date date;
-    boost::posix_time::time_duration td;
-
-    std::size_t found = date_time.find('T'); // YYYY-MM-DDTHH:MM
-    if (found != std::string::npos) {
-      std::string dt = date_time;
-      dt.erase(std::remove_if(dt.begin(), dt.end(),
-                              [](char x) { return x == '-' || x == ',' || x == ':'; }));
-      date = boost::gregorian::date_from_iso_string(dt);
-      td = boost::posix_time::duration_from_string(date_time.substr(found + 1));
-    } else if (date_time.find('-') != std::string::npos) { // YYYY-MM-DD
-      std::string dt = date_time;
-      dt.erase(std::remove_if(dt.begin(), dt.end(), [](char x) { return x == '-'; }));
-      date = boost::gregorian::date_from_iso_string(dt);
-      td = boost::posix_time::duration_from_string("0000");
-
-    } else { // YYYYMMDD
-      // No time on date.  Make it midnight.
-      date = boost::gregorian::date_from_iso_string(date_time);
-      td = boost::posix_time::duration_from_string("0000");
-    }
-
-    boost::local_time::local_date_time in_local_time = get_ldt(date, td, time_zone);
-
-    boost::local_time::time_zone_ptr tz_utc(new boost::local_time::posix_time_zone("UTC"));
-    boost::local_time::local_date_time local_date_time = in_local_time.local_time_in(tz_utc);
-    boost::posix_time::ptime const time_epoch(boost::gregorian::date(1970, 1, 1));
-    boost::posix_time::time_duration diff = local_date_time.utc_time() - time_epoch;
-
-    return diff.total_seconds();
-
-  } catch (std::exception& e) {}*/
-  return 0;
+  const auto d = get_formatted_date(date_time);
+  const auto utc = date::to_utc_time(get_ldt(d,time_zone).get_sys_time());//supports leap sec.
+  return static_cast<uint64_t>(utc.time_since_epoch().count());
 }
 
 // Get the difference between two timezones using the current time (seconds from epoch
 // so that DST can be take into account). Returns the difference in seconds.
 int timezone_diff(const bool is_depart_at,
                   const uint64_t seconds,
-                  const date::time_zone& origin_tz,
-                  const date::time_zone& dest_tz) {
+                  const date::time_zone* origin_tz,
+                  const date::time_zone* dest_tz) {
 
-  return 0;
-/*  if (!origin_tz || !dest_tz || origin_tz == dest_tz) {
+  if (!origin_tz || !dest_tz || origin_tz == dest_tz) {
     return 0;
   }
+  std::chrono::seconds dur(seconds);
+  std::chrono::time_point<std::chrono::system_clock> tp(dur);
 
-  try {
-    std::string tz_string;
-    const boost::posix_time::ptime time_epoch(boost::gregorian::date(1970, 1, 1));
-    boost::posix_time::ptime origin_pt = time_epoch + boost::posix_time::seconds(seconds);
-    boost::local_time::local_date_time origin_date_time(origin_pt, origin_tz);
+  const auto origin = date::make_zoned(origin_tz, tp);
+  const auto dest = date::make_zoned(dest_tz, tp);
+  std::cout << date::format("%T\n", origin.get_local_time() - dest.get_local_time());
 
-    boost::posix_time::ptime dest_pt = time_epoch + boost::posix_time::seconds(seconds);
-    boost::local_time::local_date_time dest_date_time(dest_pt, dest_tz);
-
-    boost::gregorian::date o_date = origin_date_time.local_time().date();
-    boost::gregorian::date d_date = dest_date_time.local_time().date();
-
-    if (is_depart_at && dest_date_time.is_dst()) {
-      boost::gregorian::date dst_date = dest_tz->dst_local_end_time(d_date.year()).date();
-      bool in_range = (o_date <= dst_date && dst_date <= d_date);
-
-      if (in_range) { // in range meaning via the dates.
-        if (o_date == dst_date) {
-          // must start before dst end time - the offset otherwise the time is ambiguous
-          in_range =
-              origin_date_time.local_time().time_of_day() <
-              (dest_tz->dst_local_end_time(d_date.year()).time_of_day() - dest_tz->dst_offset());
-
-          if (in_range) {
-            // starts and ends on the same day.
-            if (o_date == d_date) {
-              in_range = dest_tz->dst_local_end_time(d_date.year()).time_of_day() <=
-                         dest_date_time.local_time().time_of_day();
-            }
-          }
-        } else if (dst_date == d_date) {
-          in_range = dest_tz->dst_local_end_time(d_date.year()).time_of_day() <=
-                     dest_date_time.local_time().time_of_day();
-        }
-      }
-      if (in_range) {
-        dest_date_time -= dest_tz->dst_offset();
-      }
-    }
-
-    if (!is_depart_at) {
-      boost::gregorian::date dst_date = origin_tz->dst_local_end_time(o_date.year()).date();
-      bool in_range = (o_date <= dst_date && dst_date <= d_date);
-
-      if (in_range) { // in range meaning via the dates.
-        if (o_date == dst_date) {
-          // must start before dst end time
-          in_range = origin_date_time.local_time().time_of_day() <=
-                     (origin_tz->dst_local_end_time(o_date.year()).time_of_day());
-
-          if (in_range) {
-            // starts and ends on the same day.
-            if (o_date == d_date) {
-              in_range = origin_tz->dst_local_end_time(o_date.year()).time_of_day() >
-                         dest_date_time.local_time().time_of_day();
-            }
-          }
-        } else if (dst_date == d_date) {
-          in_range = origin_tz->dst_local_end_time(o_date.year()).time_of_day() >
-                     dest_date_time.local_time().time_of_day();
-        }
-      }
-
-      if (in_range) {
-        origin_date_time -= origin_tz->dst_offset();
-      }
-    }
-
-    origin_pt = origin_date_time.local_time();
-    dest_pt = dest_date_time.local_time();
-
-    boost::posix_time::time_duration td = origin_pt - dest_pt;
-    if (origin_tz->base_utc_offset() < dest_tz->base_utc_offset()) {
-      return abs(td.total_seconds());
-    } else {
-      return -1 * abs(td.total_seconds());
-    }
-  } catch (std::exception& e) {}
-  */
+  auto duration = std::chrono::duration_cast<std::chrono::seconds>(origin.get_local_time() - dest.get_local_time());
+  if (origin.get_info().offset < dest.get_info().offset) {
+    return abs(duration.count());
+  } else {
+    return -1 * abs(duration.count());
+  }
 }
 
 // Get the date from seconds and timezone.
@@ -388,7 +279,7 @@ void seconds_to_date(const bool is_depart_at,
 }
 
 // Get the dow mask
-// date_time is in the format of 20150516 or 2015-05-06T08:00
+// date_time is in the format of 2015-05-06T08:00
 uint32_t day_of_week_mask(const std::string& date_time) {
  return 0;
  /*boost::gregorian::date date;

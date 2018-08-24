@@ -33,7 +33,6 @@ struct tz_db_t {
 
 protected:
   std::vector<std::string> names;
-public:
   const date::tzdb& db = date::get_tzdb();
 };
 
@@ -81,7 +80,7 @@ std::string iso_date_time(const date::time_zone* time_zone);
  * @return  Returns the seconds from epoch.
  */
 uint64_t seconds_since_epoch(const std::string& date_time,
-                             const date::time_zone& time_zone);
+                             const date::time_zone* time_zone);
 
 /**
  * Get the difference between two timezones using the current time (seconds from epoch
@@ -94,8 +93,8 @@ uint64_t seconds_since_epoch(const std::string& date_time,
  */
 int timezone_diff(const bool is_depart_at,
                   const uint64_t seconds,
-                  const date::time_zone& origin_tz,
-                  const date::time_zone& dest_tz);
+                  const date::time_zone* origin_tz,
+                  const date::time_zone* dest_tz);
 
 /**
  * Get the iso date time from seconds since epoch and timezone.
