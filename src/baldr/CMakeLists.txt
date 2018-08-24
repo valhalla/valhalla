@@ -7,11 +7,38 @@ add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/date_time_zonespec.h
   COMMENT "Compiling date_time/zonespec.csv to date_time_zonespec.h"
   DEPENDS ${VALHALLA_SOURCE_DIR}/date_time/zonespec.csv)
 
+## iana Time Zone Database files
+set(tz_db_files africa antarctica asia australasia backward etcetera europe
+  pacificnew northamerica southamerica systemv leapseconds)
+
+foreach(tz_db_file ${tz_db_files})
+  add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/date_time_${tz_db_file}.h
+    COMMAND ${CMAKE_COMMAND} -P ${VALHALLA_SOURCE_DIR}/cmake/Binary2Header.cmake
+        ${VALHALLA_SOURCE_DIR}/date_time/${tz_db_file}
+        ${CMAKE_CURRENT_BINARY_DIR}/date_time_${tz_db_file}.h
+        --variable-name date_time_${tz_db_file} --skip 1 --raw
+    WORKING_DIRECTORY ${VALHALLA_SOURCE_DIR}
+    COMMENT "Compiling date_time/${tz_db_file} to date_time_${tz_db_file}.h"
+    DEPENDS ${VALHALLA_SOURCE_DIR}/date_time/${tz_db_file})
+endforeach()
+
 file(GLOB headers ${VALHALLA_SOURCE_DIR}/valhalla/baldr/*.h)
 
 valhalla_module(NAME baldr
   SOURCES
     ${CMAKE_CURRENT_BINARY_DIR}/date_time_zonespec.h
+    ${CMAKE_CURRENT_BINARY_DIR}/date_time_africa.h
+    ${CMAKE_CURRENT_BINARY_DIR}/date_time_antarctica.h
+    ${CMAKE_CURRENT_BINARY_DIR}/date_time_asia.h
+    ${CMAKE_CURRENT_BINARY_DIR}/date_time_australasia.h
+    ${CMAKE_CURRENT_BINARY_DIR}/date_time_backward.h
+    ${CMAKE_CURRENT_BINARY_DIR}/date_time_etcetera.h
+    ${CMAKE_CURRENT_BINARY_DIR}/date_time_europe.h
+    ${CMAKE_CURRENT_BINARY_DIR}/date_time_leapseconds.h
+    ${CMAKE_CURRENT_BINARY_DIR}/date_time_northamerica.h
+    ${CMAKE_CURRENT_BINARY_DIR}/date_time_pacificnew.h
+    ${CMAKE_CURRENT_BINARY_DIR}/date_time_southamerica.h
+    ${CMAKE_CURRENT_BINARY_DIR}/date_time_systemv.h
     accessrestriction.cc
     admin.cc
     compression_utils.cc
