@@ -99,6 +99,13 @@ std::vector<std::string> GetTagTokens(const std::string& tag_value, char delim) 
 */
 void TryTestTimeZoneAtt() {
 
+  //uint32_t index = DateTime2::get_tz_db().to_index("America/New_York");
+  //cout << DateTime2::seconds_since_epoch("2018-08-24T13:00",DateTime2::get_tz_db().from_index(index)) << std::endl;
+
+ // auto& db = DateTime::get_tz_db().db;
+
+
+
   //2016-03-13T01:00
 /*
   auto& db = DateTime::get_tz_db().db;
@@ -257,55 +264,26 @@ void TryIsRestricted(const TimeDomain td, const std::string& date, const bool ex
                              " test failed.  Expected: " + std::to_string(expected_value));
   }
 }
-
+*/
 // Convert seconds to a date string (for test evaluation only). DateTime holds a more general
 // method.
-std::string seconds_to_date(const uint64_t seconds, const boost::local_time::time_zone_ptr& tz) {
+std::string seconds_to_date(const uint64_t seconds, const date::time_zone* tz) {
 
   std::string iso_date;
   if (seconds == 0 || !tz) {
     return iso_date;
   }
 
-  try {
-    std::string tz_string;
-    const boost::posix_time::ptime time_epoch(boost::gregorian::date(1970, 1, 1));
-    boost::posix_time::ptime pt = time_epoch + boost::posix_time::seconds(seconds);
-    boost::local_time::local_date_time date_time(pt, tz);
-    pt = date_time.local_time();
+  std::chrono::seconds dur(seconds);
+  std::chrono::time_point<std::chrono::system_clock> tp(dur);
+  std::ostringstream iso_date_time;
 
-    boost::gregorian::date date = pt.date();
-    std::stringstream ss_time;
-    ss_time << pt.time_of_day();
-    std::string time = ss_time.str();
-
-    std::size_t found = time.find_last_of(':'); // remove seconds.
-    if (found != std::string::npos) {
-      time = time.substr(0, found);
-    }
-
-    ss_time.str("");
-    if (date_time.is_dst()) {
-      ss_time << tz->dst_offset() + tz->base_utc_offset();
-    } else {
-      ss_time << tz->base_utc_offset();
-    }
-
-    // positive tz
-    if (ss_time.str().find('+') == std::string::npos &&
-        ss_time.str().find('-') == std::string::npos) {
-      iso_date = to_iso_extended_string(date) + "T" + time + "+" + ss_time.str();
-    } else {
-      iso_date = to_iso_extended_string(date) + "T" + time + ss_time.str();
-    }
-
-    found = iso_date.find_last_of(':'); // remove seconds.
-    if (found != std::string::npos) {
-      iso_date = iso_date.substr(0, found);
-    }
-
-  } catch (std::exception& e) {}
+  const auto origin = date::make_zoned(tz, tp);
+  iso_date_time << date::format("%FT%R%z", origin);
+  iso_date = iso_date_time.str();
+  iso_date.insert(19,1,':');
   return iso_date;
+
 }
 
 void TryTestTimezoneDiff(const bool is_depart,
@@ -317,12 +295,12 @@ void TryTestTimezoneDiff(const bool is_depart,
 
   uint64_t dt = date_time;
 
-  auto tz1 = DateTime::get_tz_db().from_index(DateTime::get_tz_db().to_index(time_zone1));
-  auto tz2 = DateTime::get_tz_db().from_index(DateTime::get_tz_db().to_index(time_zone2));
+  auto tz1 = DateTime2::get_tz_db().from_index(DateTime2::get_tz_db().to_index(time_zone1));
+  auto tz2 = DateTime2::get_tz_db().from_index(DateTime2::get_tz_db().to_index(time_zone2));
 
   std::cout << seconds_to_date(dt, tz1) << std::endl;
 
-  dt += DateTime::timezone_diff(is_depart, dt, tz1, tz2);
+  dt += DateTime2::timezone_diff(is_depart, dt, tz1, tz2);
   if (seconds_to_date(dt, tz1) != expected1)
     throw std::runtime_error("Timezone Diff test #1: " + std::to_string(date_time) +
                              " test failed.  Expected: " + expected1 + " but got " +
@@ -333,7 +311,7 @@ void TryTestTimezoneDiff(const bool is_depart,
                              " test failed.  Expected: " + expected2 + " but got " +
                              seconds_to_date(dt, tz2));
 }
-*/
+
 } // namespace
 
 void TestTimeZoneAtt() {
@@ -594,7 +572,7 @@ void TestIsRestricted() {
   TryIsRestricted(td, "2019-03-02T08:30", true);
   TryIsRestricted(td, "2019-03-03T08:30", false);
 }
-
+*/
 void TestTimezoneDiff() {
 
   // dst tests
@@ -659,7 +637,7 @@ void TestTimezoneDiff() {
   TryTestTimezoneDiff(false, 1524712192, "2018-04-25T23:09+02:00", "2018-04-25T17:09-04:00",
                       "Europe/Berlin", "America/New_York");
 }
-
+/*
 void TestDayOfWeek() {
   std::string date = "2018-07-22T10:00";
   uint32_t dow = DateTime::day_of_week(date);
@@ -701,6 +679,9 @@ int main(void) {
   test::suite suite("datetime");
 
   suite.test(TEST_CASE(TestGetDaysFromPivotDate));
+  suite.test(TEST_CASE(TestTimezoneDiff));
+ // suite.test(TEST_CASE(TestDST));
+
   /*
   suite.test(TEST_CASE(TestGetSecondsFromMidnight));
   suite.test(TEST_CASE(TestDOW));
