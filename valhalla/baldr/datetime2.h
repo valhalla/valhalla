@@ -98,6 +98,14 @@ int timezone_diff(const bool is_depart_at,
 
 /**
  * Get the iso date time from seconds since epoch and timezone.
+ * @param   seconds      seconds since epoch
+ * @param   tz           timezone
+ */
+std::string seconds_to_date(const uint64_t seconds,
+                            const date::time_zone* tz);
+
+/**
+ * Get the iso date time from seconds since epoch and timezone.
  * @param   is_depart_at        is this a depart at or arrive by
  * @param   origin_seconds      seconds since epoch for origin
  * @param   dest_seconds        seconds since epoch for dest
@@ -109,8 +117,8 @@ int timezone_diff(const bool is_depart_at,
 void seconds_to_date(const bool is_depart_at,
                      const uint64_t origin_seconds,
                      const uint64_t dest_seconds,
-                     const date::time_zone& origin_tz,
-                     const date::time_zone& dest_tz,
+                     const date::time_zone* origin_tz,
+                     const date::time_zone* dest_tz,
                      std::string& iso_origin,
                      std::string& iso_dest);
 
@@ -130,7 +138,7 @@ uint32_t day_of_week_mask(const std::string& date_time);
  */
 std::string get_duration(const std::string& date_time,
                          const uint32_t seconds,
-                         const date::time_zone& tz);
+                         const date::time_zone* tz);
 
 /**
  * Checks if a date is restricted within a begin and end range.

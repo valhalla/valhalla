@@ -156,10 +156,10 @@ void TryGetDaysFromPivotDate(const std::string& date_time, uint32_t expected_day
     throw std::runtime_error(std::string("Incorrect number of days from ") + date_time + " " + std::to_string(DateTime2::days_from_pivot_date(DateTime2::get_formatted_date(date_time))));
   }
 }
-/*
+
 void TryGetDOW(const std::string& date_time, uint32_t expected_dow) {
 
-  if (DateTime::day_of_week_mask(date_time) != expected_dow) {
+  if (DateTime2::day_of_week_mask(date_time) != expected_dow) {
     throw std::runtime_error(std::string("Incorrect dow ") + date_time);
   }
 }
@@ -168,15 +168,15 @@ void TryGetDuration(const std::string& date_time,
                     uint32_t seconds,
                     const std::string& expected_date_time) {
 
-  auto tz = DateTime::get_tz_db().from_index(DateTime::get_tz_db().to_index("America/New_York"));
+  auto tz = DateTime2::get_tz_db().from_index(DateTime2::get_tz_db().to_index("America/New_York"));
 
-  if (DateTime::get_duration(date_time, seconds, tz) != expected_date_time) {
+  if (DateTime2::get_duration(date_time, seconds, tz) != expected_date_time) {
     throw std::runtime_error(std::string("Incorrect duration ") +
-                             DateTime::get_duration(date_time, seconds, tz) + std::string(" ") +
+                             DateTime2::get_duration(date_time, seconds, tz) + std::string(" ") +
                              expected_date_time);
   }
 }
-
+/*
 void TryGetSecondsFromMidnight(const std::string& date_time, uint32_t expected_seconds) {
   auto secs = DateTime::seconds_from_midnight(date_time);
   if (secs != expected_seconds) {
@@ -230,17 +230,17 @@ void TryTestIsValid(const std::string& date, bool return_value) {
     throw std::runtime_error("Test is_iso_valid failed: " + date +
                              " locale = " + std::locale("").name());
 }
-
+*/
 void TryTestDST(const bool is_depart_at,
                 const uint64_t origin_seconds,
                 const uint64_t dest_seconds,
                 const std::string& o_value,
                 const std::string& d_value) {
 
-  auto tz = DateTime::get_tz_db().from_index(DateTime::get_tz_db().to_index("America/New_York"));
+  auto tz = DateTime2::get_tz_db().from_index(DateTime2::get_tz_db().to_index("America/New_York"));
 
   std::string iso_origin, iso_dest;
-  DateTime::seconds_to_date(is_depart_at, origin_seconds, dest_seconds, tz, tz, iso_origin, iso_dest);
+  DateTime2::seconds_to_date(is_depart_at, origin_seconds, dest_seconds, tz, tz, iso_origin, iso_dest);
 
   if (iso_origin != o_value)
     throw std::runtime_error("Test origin DST failed.  Expected: " + o_value + " but received " +
@@ -250,7 +250,7 @@ void TryTestDST(const bool is_depart_at,
     throw std::runtime_error("Test destination DST failed.  Expected: " + d_value + " but received " +
                              iso_dest);
 }
-
+/*
 void TryIsRestricted(const TimeDomain td, const std::string& date, const bool expected_value) {
 
   auto tz = DateTime::get_tz_db().from_index(DateTime::get_tz_db().to_index("America/New_York"));
@@ -265,26 +265,6 @@ void TryIsRestricted(const TimeDomain td, const std::string& date, const bool ex
   }
 }
 */
-// Convert seconds to a date string (for test evaluation only). DateTime holds a more general
-// method.
-std::string seconds_to_date(const uint64_t seconds, const date::time_zone* tz) {
-
-  std::string iso_date;
-  if (seconds == 0 || !tz) {
-    return iso_date;
-  }
-
-  std::chrono::seconds dur(seconds);
-  std::chrono::time_point<std::chrono::system_clock> tp(dur);
-  std::ostringstream iso_date_time;
-
-  const auto origin = date::make_zoned(tz, tp);
-  iso_date_time << date::format("%FT%R%z", origin);
-  iso_date = iso_date_time.str();
-  iso_date.insert(19,1,':');
-  return iso_date;
-
-}
 
 void TryTestTimezoneDiff(const bool is_depart,
                          const uint64_t date_time,
@@ -298,18 +278,16 @@ void TryTestTimezoneDiff(const bool is_depart,
   auto tz1 = DateTime2::get_tz_db().from_index(DateTime2::get_tz_db().to_index(time_zone1));
   auto tz2 = DateTime2::get_tz_db().from_index(DateTime2::get_tz_db().to_index(time_zone2));
 
-  std::cout << seconds_to_date(dt, tz1) << std::endl;
-
   dt += DateTime2::timezone_diff(is_depart, dt, tz1, tz2);
-  if (seconds_to_date(dt, tz1) != expected1)
+  if (DateTime2::seconds_to_date(dt, tz1) != expected1)
     throw std::runtime_error("Timezone Diff test #1: " + std::to_string(date_time) +
                              " test failed.  Expected: " + expected1 + " but got " +
-                             seconds_to_date(dt, tz1));
+                             DateTime2::seconds_to_date(dt, tz1));
 
-  if (seconds_to_date(dt, tz2) != expected2)
+  if (DateTime2::seconds_to_date(dt, tz2) != expected2)
     throw std::runtime_error("Timezone Diff test #2: " + std::to_string(date_time) +
                              " test failed.  Expected: " + expected2 + " but got " +
-                             seconds_to_date(dt, tz2));
+                             DateTime2::seconds_to_date(dt, tz2));
 }
 
 } // namespace
@@ -324,7 +302,7 @@ void TestGetDaysFromPivotDate() {
   TryGetDaysFromPivotDate("1999-01-01-T:00:00", 0);
   TryGetDaysFromPivotDate("2015-05-06T08:00", 490);
 }
-/*
+
 void TestDOW() {
 
   TryGetDOW("20140101", kWednesday);
@@ -341,16 +319,15 @@ void TestDOW() {
 
 void TestDuration() {
 
-  TryGetDuration("20140101", 30, "2014-01-01T00:00-05:00 EST");
-  TryGetDuration("20140102", 60, "2014-01-02T00:01-05:00 EST");
-  TryGetDuration("2014-01-02", 60, "2014-01-02T00:01-05:00 EST");
-  TryGetDuration("19990101", 89, "");
-  TryGetDuration("20140101T07:01", 61, "2014-01-01T07:02-05:00 EST");
-  TryGetDuration("20140102T15:00", 61, "2014-01-02T15:01-05:00 EST");
-  TryGetDuration("20140102T15:00", 86400, "2014-01-03T15:00-05:00 EST");
-  TryGetDuration("20160714", 60, "2016-07-14T00:01-04:00 EDT");
+  TryGetDuration("2014-01-01T00:00", 30, "2014-01-01T00:00-05:00 EST");
+  TryGetDuration("2014-01-02T00:00", 60, "2014-01-02T00:01-05:00 EST");
+  TryGetDuration("1999-01-01T00:00", 89, "");
+  TryGetDuration("2014-01-01T07:01", 61, "2014-01-01T07:02-05:00 EST");
+  TryGetDuration("2014-01-02T15:00", 61, "2014-01-02T15:01-05:00 EST");
+  TryGetDuration("2014-01-02T15:00", 86400, "2014-01-03T15:00-05:00 EST");
+  TryGetDuration("2016-07-14T00:00", 60, "2016-07-14T00:01-04:00 EDT");
 }
-
+/*
 void TestIsoDateTime() {
   TryIsoDateTime();
 }
@@ -637,21 +614,21 @@ void TestTimezoneDiff() {
   TryTestTimezoneDiff(false, 1524712192, "2018-04-25T23:09+02:00", "2018-04-25T17:09-04:00",
                       "Europe/Berlin", "America/New_York");
 }
-/*
+
 void TestDayOfWeek() {
   std::string date = "2018-07-22T10:00";
-  uint32_t dow = DateTime::day_of_week(date);
+  uint32_t dow = DateTime2::day_of_week(date);
   if (dow != 0) {
     throw std::runtime_error("DateTime::day_of_week failed: 0 expected");
   }
 
   date = "2018-07-26T10:00";
-  dow = DateTime::day_of_week(date);
+  dow = DateTime2::day_of_week(date);
   if (dow != 4) {
     throw std::runtime_error("DateTime::day_of_week failed: 4 expected");
   }
 }
-
+/*
 void TestISOToTm() {
   std::string date = "2018-07-22T10:09";
   std::tm t = DateTime::iso_to_tm(date);
@@ -680,17 +657,17 @@ int main(void) {
 
   suite.test(TEST_CASE(TestGetDaysFromPivotDate));
   suite.test(TEST_CASE(TestTimezoneDiff));
- // suite.test(TEST_CASE(TestDST));
+  suite.test(TEST_CASE(TestDayOfWeek));
+  suite.test(TEST_CASE(TestDuration));
+  //suite.test(TEST_CASE(TestDOW));
+  //suite.test(TEST_CASE(TestDST));
 
   /*
   suite.test(TEST_CASE(TestGetSecondsFromMidnight));
   suite.test(TEST_CASE(TestDOW));
-  suite.test(TEST_CASE(TestDuration));
   suite.test(TEST_CASE(TestIsoDateTime));
   suite.test(TEST_CASE(TestIsValid));
   suite.test(TEST_CASE(TestIsRestricted));
-  suite.test(TEST_CASE(TestDST));
-  suite.test(TEST_CASE(TestTimezoneDiff));
   suite.test(TEST_CASE(TestDayOfWeek));
 
   suite.test(TEST_CASE(TestISOToTm));*/
