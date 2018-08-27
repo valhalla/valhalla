@@ -15,6 +15,7 @@
 #include "midgard/logging.h"
 #include "midgard/util.h"
 
+#include "date_time_europe.h"
 #include "date_time_northamerica.h"
 #include "date_time_zonespec.h"
 
@@ -95,41 +96,44 @@ static std::unique_ptr<date::tzdb> init_tzdb() {
   bool continue_zone = false;
   std::unique_ptr<date::tzdb> db(new date::tzdb);
 
+  std::vector<std::string> tz_data_list;
+  tz_data_list.emplace_back(date_time_northamerica,
+                            date_time_northamerica + date_time_northamerica_len);
+  tz_data_list.emplace_back(date_time_europe, date_time_europe + date_time_europe_len);
   std::string tz_data(date_time_northamerica, date_time_northamerica + date_time_northamerica_len);
-  std::stringstream ss(tz_data);
 
   //  CONSTDATA char* const files[] = {"africa",       "antarctica",   "asia",    "australasia",
   //                                   "backward",     "etcetera",     "europe",  "pacificnew",
   //                                   "northamerica", "southamerica", "systemv", "leapseconds"};
 
-  //  for (const auto& filename : files) {
-  //  std::ifstream infile(path + filename);
-  //  while (infile) {
-  while (std::getline(ss, line)) {
-    if (!line.empty() && line[0] != '#') {
-      std::istringstream in(line);
-      std::string word;
-      in >> word;
-      if (word == "Rule") {
-        db->rules.push_back(date::detail::Rule(line));
-        continue_zone = false;
-      } else if (word == "Link") {
-        db->links.push_back(date::link(line));
-        continue_zone = false;
-      } else if (word == "Leap") {
-        db->leaps.push_back(date::leap(line, date::detail::undocumented{}));
-        continue_zone = false;
-      } else if (word == "Zone") {
-        db->zones.push_back(date::time_zone(line, date::detail::undocumented{}));
-        continue_zone = true;
-      } else if (line[0] == '\t' && continue_zone) {
-        db->zones.back().add(line);
-      } else {
-        std::cerr << line << '\n';
+  for (const auto& tz_data : tz_data_list) {
+    std::stringstream ss(tz_data);
+    while (std::getline(ss, line)) {
+      if (!line.empty() && line[0] != '#') {
+        std::istringstream in(line);
+        std::string word;
+        in >> word;
+        if (word == "Rule") {
+          db->rules.push_back(date::detail::Rule(line));
+          continue_zone = false;
+        } else if (word == "Link") {
+          db->links.push_back(date::link(line));
+          continue_zone = false;
+        } else if (word == "Leap") {
+          db->leaps.push_back(date::leap(line, date::detail::undocumented{}));
+          continue_zone = false;
+        } else if (word == "Zone") {
+          db->zones.push_back(date::time_zone(line, date::detail::undocumented{}));
+          continue_zone = true;
+        } else if (line[0] == '\t' && continue_zone) {
+          db->zones.back().add(line);
+        } else {
+          std::cerr << line << '\n';
+        }
       }
     }
   }
-  //  }
+
   std::sort(db->rules.begin(), db->rules.end());
   //  date::detail::Rule::split_overlaps(db->rules);
   std::sort(db->zones.begin(), db->zones.end());

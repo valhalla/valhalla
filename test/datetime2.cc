@@ -603,20 +603,19 @@ void TestTimezoneDiff() {
   TryTestTimezoneDiff(false, 1524712192, "2018-04-25T23:09-07:00", "2018-04-26T02:09-04:00",
                       "America/Los_Angeles", "America/New_York");
 
-  // TODO - fix when adding other timezones
   // 2018-04-25T23:09-04:00 = 1524712192
-  //  TryTestTimezoneDiff(true, 1524712192, "2018-04-26T05:09-04:00", "2018-04-26T11:09+02:00",
-  //                      "America/New_York", "Europe/Berlin");
+  TryTestTimezoneDiff(true, 1524712192, "2018-04-26T05:09-04:00", "2018-04-26T11:09+02:00",
+                      "America/New_York", "Europe/Berlin");
   // 2018-04-26T05:09+02:00 = 1524712192
-  //  TryTestTimezoneDiff(true, 1524712192, "2018-04-25T23:09+02:00", "2018-04-25T17:09-04:00",
-  //                      "Europe/Berlin", "America/New_York");
+  TryTestTimezoneDiff(true, 1524712192, "2018-04-25T23:09+02:00", "2018-04-25T17:09-04:00",
+                      "Europe/Berlin", "America/New_York");
 
   // 2018-04-25T23:09-04:00 = 1524712192
-  //  TryTestTimezoneDiff(false, 1524712192, "2018-04-26T05:09-04:00", "2018-04-26T11:09+02:00",
-  //                      "America/New_York", "Europe/Berlin");
+  TryTestTimezoneDiff(false, 1524712192, "2018-04-26T05:09-04:00", "2018-04-26T11:09+02:00",
+                      "America/New_York", "Europe/Berlin");
   // 2018-04-26T05:09+02:00 = 1524712192
-  //  TryTestTimezoneDiff(false, 1524712192, "2018-04-25T23:09+02:00", "2018-04-25T17:09-04:00",
-  //                      "Europe/Berlin", "America/New_York");
+  TryTestTimezoneDiff(false, 1524712192, "2018-04-25T23:09+02:00", "2018-04-25T17:09-04:00",
+                      "Europe/Berlin", "America/New_York");
 }
 
 void TestDayOfWeek() {
