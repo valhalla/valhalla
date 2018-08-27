@@ -15,8 +15,18 @@
 #include "midgard/logging.h"
 #include "midgard/util.h"
 
+#include "date_time_africa.h"
+#include "date_time_antarctica.h"
+#include "date_time_asia.h"
+#include "date_time_australasia.h"
+#include "date_time_backward.h"
+#include "date_time_etcetera.h"
 #include "date_time_europe.h"
+#include "date_time_leapseconds.h"
 #include "date_time_northamerica.h"
+#include "date_time_pacificnew.h"
+#include "date_time_southamerica.h"
+#include "date_time_systemv.h"
 #include "date_time_zonespec.h"
 
 using namespace valhalla::baldr;
@@ -91,23 +101,38 @@ const tz_db_t& get_tz_db() {
   return tz_db;
 }
 
+static std::vector<std::string> get_tz_data_file_list() {
+  std::vector<std::string> tz_data_file_list;
+  tz_data_file_list.emplace_back(date_time_africa, date_time_africa + date_time_africa_len);
+  tz_data_file_list.emplace_back(date_time_antarctica,
+                                 date_time_antarctica + date_time_antarctica_len);
+  tz_data_file_list.emplace_back(date_time_asia, date_time_asia + date_time_asia_len);
+  tz_data_file_list.emplace_back(date_time_australasia,
+                                 date_time_australasia + date_time_australasia_len);
+  tz_data_file_list.emplace_back(date_time_backward, date_time_backward + date_time_backward_len);
+  tz_data_file_list.emplace_back(date_time_etcetera, date_time_etcetera + date_time_etcetera_len);
+  tz_data_file_list.emplace_back(date_time_europe, date_time_europe + date_time_europe_len);
+  tz_data_file_list.emplace_back(date_time_pacificnew,
+                                 date_time_pacificnew + date_time_pacificnew_len);
+  tz_data_file_list.emplace_back(date_time_northamerica,
+                                 date_time_northamerica + date_time_northamerica_len);
+  tz_data_file_list.emplace_back(date_time_southamerica,
+                                 date_time_southamerica + date_time_southamerica_len);
+  tz_data_file_list.emplace_back(date_time_systemv, date_time_systemv + date_time_systemv_len);
+  tz_data_file_list.emplace_back(date_time_leapseconds,
+                                 date_time_leapseconds + date_time_leapseconds_len);
+  return tz_data_file_list;
+}
+
 static std::unique_ptr<date::tzdb> init_tzdb() {
   std::string line;
   bool continue_zone = false;
   std::unique_ptr<date::tzdb> db(new date::tzdb);
 
-  std::vector<std::string> tz_data_list;
-  tz_data_list.emplace_back(date_time_northamerica,
-                            date_time_northamerica + date_time_northamerica_len);
-  tz_data_list.emplace_back(date_time_europe, date_time_europe + date_time_europe_len);
-  std::string tz_data(date_time_northamerica, date_time_northamerica + date_time_northamerica_len);
+  std::vector<std::string> tz_data_file_list = get_tz_data_file_list();
 
-  //  CONSTDATA char* const files[] = {"africa",       "antarctica",   "asia",    "australasia",
-  //                                   "backward",     "etcetera",     "europe",  "pacificnew",
-  //                                   "northamerica", "southamerica", "systemv", "leapseconds"};
-
-  for (const auto& tz_data : tz_data_list) {
-    std::stringstream ss(tz_data);
+  for (const auto& tz_data_file : tz_data_file_list) {
+    std::stringstream ss(tz_data_file);
     while (std::getline(ss, line)) {
       if (!line.empty() && line[0] != '#') {
         std::istringstream in(line);
