@@ -383,7 +383,7 @@ void TestIsValid() {
   TryTestIsValid("2018-1-26T:00", false);
   TryTestIsValid("2018-07-22T10:89", false);
 }
-
+*/
 void TestDST() {
 
   // bunch of tests for the start and end of dst using startat and arriveby
@@ -432,14 +432,14 @@ void TestDST() {
   TryTestDST(false, 1478493206, 1478505600, "2016-11-06T23:33-05:00", "2016-11-07T03:00-05:00");
   TryTestDST(false, 1478403206, 1478415600, "2016-11-05T23:33-04:00", "2016-11-06T02:00-05:00");
   TryTestDST(false, 1478489606, 1478502000, "2016-11-06T22:33-05:00", "2016-11-07T02:00-05:00");
-  TryTestDST(false, 1478399606, 1478412000, "2016-11-05T21:33-04:00", "2016-11-06T01:00-05:00");
+  TryTestDST(false, 1478399606, 1478412000, "2016-11-05T22:33-04:00", "2016-11-06T01:00-05:00");
   TryTestDST(false, 1478486006, 1478498400, "2016-11-06T21:33-05:00", "2016-11-07T01:00-05:00");
-  TryTestDST(false, 1478409968, 1478412000, "2016-11-06T00:26-04:00", "2016-11-06T01:00-05:00");
-  TryTestDST(false, 1478410268, 1478412300, "2016-11-06T00:31-04:00", "2016-11-06T01:05-05:00");
+  TryTestDST(false, 1478409968, 1478412000, "2016-11-06T01:26-04:00", "2016-11-06T01:00-05:00");
+  TryTestDST(false, 1478410268, 1478412300, "2016-11-06T01:31-04:00", "2016-11-06T01:05-05:00");
   TryTestDST(false, 1478413868, 1478415900, "2016-11-06T01:31-05:00", "2016-11-06T02:05-05:00");
   TryTestDST(false, 1478417468, 1478419500, "2016-11-06T02:31-05:00", "2016-11-06T03:05-05:00");
 }
-
+/*
 void TestIsRestricted() {
 
   TimeDomain td = TimeDomain(23622321788); // Mo-Fr 06:00-11:00
@@ -660,7 +660,7 @@ int main(void) {
   suite.test(TEST_CASE(TestDayOfWeek));
   suite.test(TEST_CASE(TestDuration));
   //suite.test(TEST_CASE(TestDOW));
-  //suite.test(TEST_CASE(TestDST));
+  suite.test(TEST_CASE(TestDST));
 
   /*
   suite.test(TEST_CASE(TestGetSecondsFromMidnight));
