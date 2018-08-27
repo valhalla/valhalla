@@ -139,8 +139,8 @@ std::string seconds_to_date(const uint64_t seconds, const date::time_zone* tz) {
   std::chrono::time_point<std::chrono::system_clock> tp(dur);
   std::ostringstream iso_date_time;
 
-  const auto origin = date::make_zoned(tz, tp);
-  iso_date_time << date::format("%FT%R%z", origin);
+  const auto date = date::make_zoned(tz, tp);
+  iso_date_time << date::format("%FT%R%z", date);
   iso_date = iso_date_time.str();
   iso_date.insert(19,1,':');
   return iso_date;
@@ -155,23 +155,8 @@ void seconds_to_date(const bool is_depart_at,
                      const date::time_zone* dest_tz,
                      std::string& iso_origin,
                      std::string& iso_dest) {
-
-  if (is_depart_at) {
-    iso_origin = seconds_to_date(origin_seconds, origin_tz);
-    iso_dest = seconds_to_date(dest_seconds, dest_tz);
-  } else {
-
-    // Todo
-    iso_origin = seconds_to_date(origin_seconds, origin_tz);
-    iso_dest = seconds_to_date(dest_seconds, dest_tz);
-    /*std::chrono::seconds dur(origin_seconds);
-    std::chrono::time_point<std::chrono::system_clock> tp(dur);
-    date::zoned_time<std::chrono::seconds> zt = date::make_zoned(origin_tz,tp,date::choose::earliest);
-
-    iso_origin = seconds_to_date(origin_seconds, origin_tz);
-    iso_dest = seconds_to_date(dest_seconds, dest_tz);
-    */
-  }
+  iso_origin = seconds_to_date(origin_seconds, origin_tz);
+  iso_dest = seconds_to_date(dest_seconds, dest_tz);
 }
 
 // Get the dow mask
@@ -247,46 +232,53 @@ bool is_restricted(const bool type,
                    const uint8_t end_month,
                    const uint8_t end_day_dow,
                    const uint64_t current_time,
-                   const date::time_zone& time_zone) {
+                   const date::time_zone* time_zone) {
   bool dow_in_range = true;
   bool dt_in_range = false;
-/*
-  try {
-    boost::gregorian::date begin_date, end_date;
-    boost::posix_time::time_duration b_td = boost::posix_time::hours(0),
-                                     e_td = boost::posix_time::hours(23) +
-                                            boost::posix_time::minutes(59);
 
-    const boost::posix_time::ptime time_epoch(boost::gregorian::date(1970, 1, 1));
-    boost::posix_time::ptime origin_pt = time_epoch + boost::posix_time::seconds(current_time);
-    boost::local_time::local_date_time in_local_time(origin_pt, time_zone);
-    boost::gregorian::date d = in_local_time.date();
-    boost::posix_time::time_duration td = in_local_time.local_time().time_of_day();
+  //auto begin_date = date::year_month_day(date::year(2002),date::month(3),date::day(2));
+
+
+  //date::time_of_day()
+  std::chrono::minutes b_td = std::chrono::hours(0);
+  std::chrono::minutes e_td = std::chrono::hours(23) + std::chrono::minutes(59);
+
+  std::chrono::seconds dur(current_time);
+  std::chrono::time_point<std::chrono::system_clock> tp(dur);
+
+  const auto in_local_time = date::make_zoned(time_zone, tp);
+  auto date = date::floor<date::days>(tp);
+  auto d = date::year_month_day(date);
+  std::chrono::minutes td = date::make_time(tp - date).minutes(); // Yields time_of_day type
+
+ // try {
+    boost::gregorian::date begin_date, end_date;
 
     // we have dow
     if (dow) {
 
+      uint8_t wd = (date::weekday{date} - date::Sunday).count();
       uint8_t local_dow = 0;
-      switch (d.day_of_week()) {
-        case boost::date_time::Sunday:
+      switch (wd) {
+        case 0:
           local_dow = kSunday;
           break;
-        case boost::date_time::Monday:
+        case 1:
           local_dow = kMonday;
           break;
-        case boost::date_time::Tuesday:
+        case 2:
           local_dow = kTuesday;
           break;
-        case boost::date_time::Wednesday:
+        case 3:
           local_dow = kWednesday;
           break;
-        case boost::date_time::Thursday:
+        case 4:
           local_dow = kThursday;
           break;
-        case boost::date_time::Friday:
+        case 5:
           local_dow = kFriday;
           break;
-        case boost::date_time::Saturday:
+        case 6:
           local_dow = kSaturday;
           break;
         default:
@@ -304,10 +296,10 @@ bool is_restricted(const bool type,
     uint8_t e_week = end_week;
 
     if (type == kNthDow && begin_week && !begin_day_dow && !begin_month) { // Su[-1]
-      b_month = d.month().as_enum();
+      b_month = unsigned(d.month());
     }
     if (type == kNthDow && end_week && !end_day_dow && !end_month) { // Su[-1]
-      e_month = d.month().as_enum();
+      e_month = unsigned(d.month());
     }
 
     if (type == kNthDow && begin_week && !begin_day_dow && !begin_month && !end_week &&
@@ -320,24 +312,25 @@ bool is_restricted(const bool type,
                (!b_day_dow && !e_day_dow)) { // Sep-Jun We 08:15-08:45
 
       b_day_dow = 1;
-      boost::gregorian::date e_d = boost::gregorian::date(d.year(), e_month, 1);
-      e_day_dow = e_d.end_of_month().day();
+      date::year_month_day e_d = date::year_month_day(d.year(), date::month(e_month), date::day(1));
+      e_day_dow = unsigned((date::year_month(e_d.year(),e_d.month())/date::last).day());
     }
 
     // month only
     if (type == kYMD && (b_month && e_month) && (!b_day_dow && !e_day_dow && !b_week && !b_week) &&
         b_month == e_month) {
 
-      dt_in_range = (b_month <= d.month().as_enum() && d.month().as_enum() <= e_month);
+      dt_in_range = (b_month <= unsigned(d.month()) && unsigned(d.month()) <= e_month);
 
       if (begin_hrs || begin_mins || end_hrs || end_mins) {
-        b_td = boost::posix_time::hours(begin_hrs) + boost::posix_time::minutes(begin_mins);
-        e_td = boost::posix_time::hours(end_hrs) + boost::posix_time::minutes(end_mins);
+        b_td = std::chrono::hours(begin_hrs) + std::chrono::minutes(begin_mins);
+        e_td = std::chrono::hours(end_hrs) + std::chrono::minutes(end_mins);
       }
 
       dt_in_range = (dt_in_range && (b_td <= td && td <= e_td));
       return (dow_in_range && dt_in_range);
-
+    }
+/*
     } else if (type == kYMD && b_month && b_day_dow) {
 
       uint32_t e_year = d.year(), b_year = d.year();
@@ -346,15 +339,15 @@ bool is_restricted(const bool type,
           e_year = d.year() + 1;
         }
       } else if (b_month > e_month) { // Oct 10 - Mar 3
-        if (b_month > d.month().as_enum()) {
+        if (b_month > unsigned(d.month())) {
           b_year = d.year() - 1;
         } else {
           e_year = d.year() + 1;
         }
       }
 
-      begin_date = boost::gregorian::date(b_year, b_month, b_day_dow);
-      end_date = boost::gregorian::date(e_year, e_month, e_day_dow);
+      begin_date = date::year_month_day(b_year, b_month, b_day_dow);
+      end_date = date::year_month_day(e_year, e_month, e_day_dow);
 
     } else if (type == kNthDow && b_month && b_day_dow && e_month &&
                e_day_dow) { // kNthDow types can have a mix of ymd and nthdow. (e.g. Dec Su[-1]-Mar
@@ -366,7 +359,7 @@ bool is_restricted(const bool type,
           e_year = d.year() + 1;
         }
       } else if (b_month > e_month) { // Oct 10 - Mar 3
-        if (b_month > d.month().as_enum()) {
+        if (b_month > unsigned(d.month())) {
           b_year = d.year() - 1;
         } else {
           e_year = d.year() + 1;
@@ -379,7 +372,7 @@ bool is_restricted(const bool type,
                    b_day_dow - 1, b_month);
         begin_date = nthdow.get_date(b_year);
       } else { // YMD
-        begin_date = boost::gregorian::date(b_year, b_month, b_day_dow);
+        begin_date = date::year_month_day(b_year, b_month, b_day_dow);
       }
 
       if (e_week && e_week <= 5) { // kNthDow
@@ -388,13 +381,13 @@ bool is_restricted(const bool type,
                    e_day_dow - 1, e_month);
         end_date = nthdow.get_date(e_year);
       } else {                                                         // YMD
-        end_date = boost::gregorian::date(e_year, e_month, e_day_dow); // Dec 5 to Mar 3
+        end_date = date::year_month_day(e_year, e_month, e_day_dow); // Dec 5 to Mar 3
       }
     } else { // do we have just time?
 
       if (begin_hrs || begin_mins || end_hrs || end_mins) {
-        b_td = boost::posix_time::hours(begin_hrs) + boost::posix_time::minutes(begin_mins);
-        e_td = boost::posix_time::hours(end_hrs) + boost::posix_time::minutes(end_mins);
+        b_td = std::chrono::hours(begin_hrs) + std::chrono::minutes(begin_mins);
+        e_td = std::chrono::hours(end_hrs) + std::chrono::minutes(end_mins);
 
         if (begin_hrs > end_hrs) { // 19:00 - 06:00
           dt_in_range = !(e_td <= td && td <= b_td);
@@ -406,15 +399,17 @@ bool is_restricted(const bool type,
     }
 
     if (begin_hrs || begin_mins || end_hrs || end_mins) {
-      b_td = boost::posix_time::hours(begin_hrs) + boost::posix_time::minutes(begin_mins);
-      e_td = boost::posix_time::hours(end_hrs) + boost::posix_time::minutes(end_mins);
+      b_td = std::chrono::hours(begin_hrs) + std::chrono::minutes(begin_mins);
+      e_td = std::chrono::hours(end_hrs) + std::chrono::minutes(end_mins);
     }
 
-    boost::local_time::local_date_time b_in_local_time = get_ldt(begin_date, b_td, time_zone);
-    boost::local_time::local_date_time e_in_local_time = get_ldt(end_date, e_td, time_zone);
+    ///date::local_days{date::mar/13/2016} + std::chrono::hours{2} + b_td.
 
-    dt_in_range = (b_in_local_time.date() <= in_local_time.date() &&
-                   in_local_time.date() <= e_in_local_time.date());
+    auto b_in_local_time = date::make_zoned(time_zone,date::local_days(begin_date.year_month_day()) + b_td);
+    auto e_in_local_time = date::make_zoned(time_zone,date::local_days(end_date.year_month_day()) + e_td);
+
+    dt_in_range = (b_in_local_time <= in_local_time &&
+                   in_local_time <= e_in_local_time);
 
     bool time_in_range = false;
 
@@ -425,7 +420,8 @@ bool is_restricted(const bool type,
     }
 
     dt_in_range = (dt_in_range && time_in_range);
-  } catch (std::exception& e) {}*/
+ // } catch (std::exception& e) {}
+*/
   return (dow_in_range && dt_in_range);
 }
 
