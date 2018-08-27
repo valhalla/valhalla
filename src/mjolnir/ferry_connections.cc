@@ -3,6 +3,7 @@
 #include <queue>
 #include <unordered_map>
 
+#include "baldr/graphconstants.h"
 #include "midgard/util.h"
 
 namespace valhalla {
@@ -116,8 +117,15 @@ uint32_t ShortestPath(const uint32_t start_node_idx,
         continue;
       }
 
-      // Skip non-driveable edges (based on inbound flag)
+      // Skip destination only and uses other than road / other (service?)
       const OSMWay w = *ways[edge.wayindex_];
+      if (w.destination_only() ||
+          (w.use() != baldr::Use::kOther &&
+           static_cast<int>(w.use()) > static_cast<int>(baldr::Use::kTurnChannel))) {
+        continue;
+      }
+
+      // Skip non-driveable edges (based on inbound flag)
       bool forward = (edge.sourcenode_ == node_index);
       if (forward) {
         if ((inbound && !edge.attributes.driveablereverse) ||
