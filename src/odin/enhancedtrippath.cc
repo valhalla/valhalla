@@ -2,10 +2,9 @@
 #include <cstdlib>
 #include <iostream>
 
-#include "exception.h"
 #include "midgard/constants.h"
-#include "midgard/logging.h"
 #include "midgard/util.h"
+#include "worker.h"
 
 #include "odin/enhancedtrippath.h"
 #include "odin/util.h"
@@ -13,6 +12,153 @@
 #include <valhalla/proto/trippath.pb.h>
 
 using namespace valhalla::midgard;
+
+namespace {
+const std::string& TripPath_RoadClass_Name(int v) {
+  static const std::unordered_map<int, std::string> values{
+      {0, "kMotorway"}, {1, "kTrunk"},        {2, "kPrimary"},     {3, "kSecondary"},
+      {4, "kTertiary"}, {5, "kUnclassified"}, {6, "kResidential"}, {7, "kServiceOther"},
+  };
+  auto f = values.find(v);
+  if (f == values.cend())
+    throw std::runtime_error("Missing value in protobuf enum to string");
+  return f->second;
+}
+
+const std::string& TripPath_Traversability_Name(int v) {
+  static const std::unordered_map<int, std::string> values{
+      {0, "kNone"},
+      {1, "kForward"},
+      {2, "kward"},
+      {3, "kBoth"},
+  };
+  auto f = values.find(v);
+  if (f == values.cend())
+    throw std::runtime_error("Missing value in protobuf enum to string");
+  return f->second;
+}
+
+const std::string& TripPath_Use_Name(int v) {
+  static const std::unordered_map<int, std::string> values{
+      {0, "kRoadUse"},
+      {1, "kRampUse"},
+      {2, "kTurnChannelUse"},
+      {3, "kUse"},
+      {4, "kDrivewayUse"},
+      {5, "kAlleyUse"},
+      {6, "kingAisleUse"},
+      {7, "kEmergencyAccessUse"},
+      {8, "kDriveThruUse"},
+      {9, "kCuldesacUse"},
+      {20, "kCyclewayUse"},
+      {21, "keUse"},
+      {24, "kUse"},
+      {25, "kFootwayUse"},
+      {26, "kStepsUse"},
+      {27, "kPathUse"},
+      {28, "kPedestrianUse"},
+      {29, "kBridlewayUse"},
+      {40, "kOtherUse"},
+      {41, "kFerryUse"},
+      {42, "kRailFerryUse"},
+      {50, "kRailUse"},
+      {51, "kBusUse"},
+      {52, "kEgressConnectionUse"},
+      {53, "kPlatformConnectionUse"},
+      {54, "kTransitConnectionUse"},
+  };
+  auto f = values.find(v);
+  if (f == values.cend())
+    throw std::runtime_error("Missing value in protobuf enum to string");
+  return f->second;
+}
+
+const std::string& TripPath_TravelMode_Name(int v) {
+  static const std::unordered_map<int, std::string> values{
+      {0, "kDrive"},
+      {1, "kPedestrian"},
+      {2, "kBicycle"},
+      {3, "kTransit"},
+  };
+  auto f = values.find(v);
+  if (f == values.cend())
+    throw std::runtime_error("Missing value in protobuf enum to string");
+  return f->second;
+}
+
+const std::string& TripPath_VehicleType_Name(int v) {
+  static const std::unordered_map<int, std::string> values{
+      {0, "kCar"}, {1, "kMotorcycle"}, {2, "kAutoBus"}, {3, "kTractorTrailer"}, {4, "kMotorScooter"},
+  };
+  auto f = values.find(v);
+  if (f == values.cend())
+    throw std::runtime_error("Missing value in protobuf enum to string");
+  return f->second;
+}
+
+const std::string& TripPath_PedestrianType_Name(int v) {
+  static const std::unordered_map<int, std::string> values{
+      {0, "kFoot"},
+      {1, "kWheelchair"},
+      {2, "kSegway"},
+  };
+  auto f = values.find(v);
+  if (f == values.cend())
+    throw std::runtime_error("Missing value in protobuf enum to string");
+  return f->second;
+}
+
+const std::string& TripPath_BicycleType_Name(int v) {
+  static const std::unordered_map<int, std::string> values{
+      {0, "kRoad"},
+      {1, "kCross"},
+      {2, "kHybrid"},
+      {3, "kMountain"},
+  };
+  auto f = values.find(v);
+  if (f == values.cend())
+    throw std::runtime_error("Missing value in protobuf enum to string");
+  return f->second;
+}
+
+const std::string& TripPath_TransitType_Name(int v) {
+  static const std::unordered_map<int, std::string> values{
+      {0, "kTram"},  {1, "kMetro"},    {2, "kRail"},    {3, "kBus"},
+      {4, "kFerry"}, {5, "kCableCar"}, {6, "kGondola"}, {7, "kFunicular"},
+  };
+  auto f = values.find(v);
+  if (f == values.cend())
+    throw std::runtime_error("Missing value in protobuf enum to string");
+  return f->second;
+}
+
+const std::string& TripPath_CycleLane_Name(int v) {
+  static const std::unordered_map<int, std::string> values{
+      {0, "kNoCycleLane"},
+      {1, "kShared"},
+      {2, "kDedicated"},
+      {3, "kSeparated"},
+  };
+  auto f = values.find(v);
+  if (f == values.cend())
+    throw std::runtime_error("Missing value in protobuf enum to string");
+  return f->second;
+}
+
+const std::string& TripPath_Sidewalk_Name(int v) {
+  static const std::unordered_map<int, std::string> values{
+      {0, "kNoSidewalk"},
+      {1, "kLeft"},
+      {2, "kRight"},
+      {3, "kBothSides"},
+  };
+  auto f = values.find(v);
+  if (f == values.cend())
+    throw std::runtime_error("Missing value in protobuf enum to string");
+  return f->second;
+}
+
+} // namespace
 
 namespace valhalla {
 namespace odin {
@@ -293,6 +439,7 @@ float EnhancedTripPath_Edge::GetLength(const DirectionsOptions::Units& units) {
   return length();
 }
 
+#ifdef LOGGING_LEVEL_TRACE
 std::string EnhancedTripPath_Edge::ToString() const {
   std::string str;
   str.reserve(256);
@@ -483,7 +630,7 @@ std::string EnhancedTripPath_Edge::ToParameterString() const {
 
   str += delim;
   str += "TripPath_RoadClass_";
-  str += TripPath_RoadClass_descriptor()->FindValueByNumber(road_class())->name();
+  str += TripPath_RoadClass_Name(road_class());
 
   str += delim;
   str += std::to_string(begin_heading());
@@ -499,11 +646,11 @@ std::string EnhancedTripPath_Edge::ToParameterString() const {
 
   str += delim;
   str += "TripPath_Traversability_";
-  str += TripPath_Traversability_descriptor()->FindValueByNumber(traversability())->name();
+  str += TripPath_Traversability_Name(traversability());
 
   str += delim;
   str += "TripPath_Use_";
-  str += TripPath_Use_descriptor()->FindValueByNumber(use())->name();
+  str += TripPath_Use_Name(use());
 
   str += delim;
   str += std::to_string(toll());
@@ -538,7 +685,7 @@ std::string EnhancedTripPath_Edge::ToParameterString() const {
   str += delim;
   if (this->has_travel_mode()) {
     str += "TripPath_TravelMode_";
-    str += TripPath_TravelMode_descriptor()->FindValueByNumber(travel_mode())->name();
+    str += TripPath_TravelMode_Name(travel_mode());
   }
 
   // NOTE: Current PopulateEdge implementation
@@ -546,25 +693,25 @@ std::string EnhancedTripPath_Edge::ToParameterString() const {
   str += delim;
   if (this->has_vehicle_type()) {
     str += "TripPath_VehicleType_";
-    str += TripPath_VehicleType_descriptor()->FindValueByNumber(vehicle_type())->name();
+    str += TripPath_VehicleType_Name(vehicle_type());
   }
 
   str += delim;
   if (this->has_pedestrian_type()) {
     str += "TripPath_PedestrianType_";
-    str += TripPath_PedestrianType_descriptor()->FindValueByNumber(pedestrian_type())->name();
+    str += TripPath_PedestrianType_Name(pedestrian_type());
   }
 
   str += delim;
   if (this->has_bicycle_type()) {
     str += "TripPath_BicycleType_";
-    str += TripPath_BicycleType_descriptor()->FindValueByNumber(bicycle_type())->name();
+    str += TripPath_BicycleType_Name(bicycle_type());
   }
 
   str += delim;
   if (this->has_transit_type()) {
     str += "TripPath_TransitType_";
-    str += TripPath_TransitType_descriptor()->FindValueByNumber(transit_type())->name();
+    str += TripPath_TransitType_Name(transit_type());
   }
 
   str += delim;
@@ -640,14 +787,14 @@ std::string EnhancedTripPath_Edge::ToParameterString() const {
 
   str += delim;
   str += "TripPath_CycleLane_";
-  str += TripPath_CycleLane_descriptor()->FindValueByNumber(cycle_lane())->name();
+  str += TripPath_CycleLane_Name(cycle_lane());
 
   str += delim;
   str += std::to_string(bicycle_network());
 
   str += delim;
   str += "TripPath_Sidewalk_";
-  str += TripPath_Sidewalk_descriptor()->FindValueByNumber(sidewalk())->name();
+  str += TripPath_Sidewalk_Name(sidewalk());
 
   str += delim;
   str += std::to_string(density());
@@ -700,6 +847,7 @@ std::string EnhancedTripPath_Edge::ListToParameterString(
 
   return str;
 }
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 // EnhancedTripPath_IntersectingEdge

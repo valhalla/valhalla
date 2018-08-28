@@ -1,12 +1,12 @@
 #include <iostream>
 #include <unordered_map>
 
-#include "exception.h"
 #include "odin/directionsbuilder.h"
 #include "odin/enhancedtrippath.h"
 #include "odin/maneuversbuilder.h"
 #include "odin/narrative_builder_factory.h"
 #include "odin/narrativebuilder.h"
+#include "worker.h"
 
 #include <valhalla/proto/directions_options.pb.h>
 #include <valhalla/proto/tripdirections.pb.h>

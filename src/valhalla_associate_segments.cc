@@ -3,6 +3,7 @@
 #include "loki/node_search.h"
 #include "loki/search.h"
 #include "midgard/logging.h"
+#include "midgard/sequence.h"
 #include "mjolnir/graphtilebuilder.h"
 #include "thor/astar.h"
 #include "thor/pathalgorithm.h"
@@ -814,8 +815,10 @@ void edge_association::add_tile(const std::string& file_name) {
   // Read the OSMLR tile
   pbf::Tile tile;
   {
-    std::ifstream in(file_name);
-    if (!tile.ParseFromIstream(&in)) {
+    struct stat s;
+    stat(file_name.c_str(), &s);
+    valhalla::midgard::mem_map<char> buffer(file_name, s.st_size);
+    if (!tile.ParseFromArray(buffer.get(), s.st_size)) {
       throw std::runtime_error("Unable to parse traffic segment file.");
     }
   }

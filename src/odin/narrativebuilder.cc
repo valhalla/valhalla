@@ -8,15 +8,13 @@
 #include <boost/format.hpp>
 
 #include "baldr/verbal_text_formatter.h"
-#include "exception.h"
-#include "midgard/logging.h"
 
-#include "config.h"
 #include "odin/enhancedtrippath.h"
 #include "odin/maneuver.h"
 #include "odin/narrative_dictionary.h"
 #include "odin/narrativebuilder.h"
 #include "odin/util.h"
+#include "worker.h"
 
 namespace {
 // Text instruction initial capacity

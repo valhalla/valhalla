@@ -1,4 +1,3 @@
-#include "exception.h"
 #include "midgard/logging.h"
 #include <algorithm>
 #include <exception>

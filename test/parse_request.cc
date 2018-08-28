@@ -398,10 +398,6 @@ valhalla::valhalla_request_t get_request(const std::string& request_str,
 std::string get_costing_str(valhalla::odin::Costing costing) {
   // Create the costing string
   auto costing_str = valhalla::odin::Costing_Name(costing);
-  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
-  if (costing_str.back() == '_') {
-    costing_str.pop_back();
-  }
   return costing_str;
 }
 

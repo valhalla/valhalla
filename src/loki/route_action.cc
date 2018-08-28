@@ -55,9 +55,6 @@ void loki_worker_t::init_route(valhalla_request_t& request) {
 void loki_worker_t::route(valhalla_request_t& request) {
   init_route(request);
   auto costing = odin::Costing_Name(request.options.costing());
-  if (costing.back() == '_') {
-    costing.pop_back();
-  }
   check_locations(request.options.locations_size(), max_locations.find(costing)->second);
   check_distance(reader, request.options.locations(), max_distance.find(costing)->second);
 

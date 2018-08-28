@@ -156,11 +156,8 @@ void loki_worker_t::init_trace(valhalla_request_t& request) {
 void loki_worker_t::trace(valhalla_request_t& request) {
   init_trace(request);
   auto costing = odin::Costing_Name(request.options.costing());
-  if (costing.back() == '_') {
-    costing.pop_back();
-  }
   if (costing == "multimodal") {
-    throw valhalla_exception_t{140, odin::DirectionsOptions::Action_Name(request.options.action())};
+    throw valhalla_exception_t{140, odin::DirectionsOptions_Action_Name(request.options.action())};
   };
 }
 

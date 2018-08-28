@@ -488,12 +488,8 @@ int main(int argc, char* argv[]) {
   request.parse(json, valhalla::odin::DirectionsOptions::route);
   const auto& directions_options = request.options;
 
-  // Get type of route - this provides the costing method to use. // Remove the trailing '_'
-  // from 'auto_' - this is a work around since 'auto' is a keyword
+  // Get type of route - this provides the costing method to use.
   std::string routetype = valhalla::odin::Costing_Name(request.options.costing());
-  if (routetype.back() == '_') {
-    routetype.pop_back();
-  }
   LOG_INFO("routetype: " + routetype);
 
   // Locations

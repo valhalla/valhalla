@@ -98,6 +98,7 @@ valhalla_module(NAME baldr
     PRIVATE
       ${CMAKE_CURRENT_BINARY_DIR}
   DEPENDS
+    valhalla::proto
     valhalla::midgard
     Boost::date_time
     Boost::filesystem

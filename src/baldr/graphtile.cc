@@ -111,9 +111,6 @@ GraphTile::GraphTile(const std::string& tile_dir, const GraphId& graphid) : head
         graphtile_.reset();
         return;
       }
-      std::ofstream foo(file_location + ".foobar", std::ios::binary | std::ios::trunc);
-      foo.write(graphtile_->data(), graphtile_->size());
-      foo.close();
 
       // Set pointers to internal data structures
       Initialize(graphid, graphtile_->data(), graphtile_->size());
