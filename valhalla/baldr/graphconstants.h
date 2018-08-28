@@ -444,7 +444,7 @@ enum class TransitType : uint8_t {
 };
 
 // This is our pivot date for transit.  No dates will be older than this date.
-const std::string kPivotDate = "20140101"; // January 1, 2014
+const std::string kPivotDate = "20140101";          // January 1, 2014
 const std::string kPivotDate2 = "2014-01-01T00:00"; // January 1, 2014
 
 // Used for day of week mask.

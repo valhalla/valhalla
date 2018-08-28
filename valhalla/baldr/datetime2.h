@@ -11,16 +11,16 @@
 #include <string>
 #include <vector>
 
-#include <valhalla/baldr/graphconstants.h>
-#include <valhalla/midgard/constants.h>
-#include <valhalla/baldr/tz.h>
 #include <valhalla/baldr/date.h>
+#include <valhalla/baldr/graphconstants.h>
+#include <valhalla/baldr/tz.h>
+#include <valhalla/midgard/constants.h>
 
 namespace valhalla {
 namespace baldr {
 namespace DateTime2 {
 
-//get_tzdb_list
+// get_tzdb_list
 struct tz_db_t {
   tz_db_t();
   size_t to_index(const std::string& zone) const;
@@ -28,8 +28,12 @@ struct tz_db_t {
 
 protected:
   std::vector<std::string> names;
-  const date::tzdb& db = date::get_tzdb();
+  const date::tzdb& db;
 };
+
+DATE_API const date::tzdb& get_tzdb();
+
+DATE_API date::tzdb_list& get_tzdb_list();
 
 /**
  * Get the timezone database singleton
@@ -51,8 +55,7 @@ date::local_seconds get_formatted_date(const std::string& date);
  * @param time_zone       Timezone
  * @return Returns local date time.
  */
-date::zoned_seconds get_ldt(const date::local_seconds& date,
-                            const date::time_zone* time_zone);
+date::zoned_seconds get_ldt(const date::local_seconds& date, const date::time_zone* time_zone);
 
 /**
  * Get the number of days elapsed from the pivot date until the input date.
@@ -74,8 +77,7 @@ std::string iso_date_time(const date::time_zone* time_zone);
  * @param   time_zone   Timezone.
  * @return  Returns the seconds from epoch.
  */
-uint64_t seconds_since_epoch(const std::string& date_time,
-                             const date::time_zone* time_zone);
+uint64_t seconds_since_epoch(const std::string& date_time, const date::time_zone* time_zone);
 
 /**
  * Get the difference between two timezones using the current time (seconds from epoch
@@ -96,8 +98,7 @@ int timezone_diff(const bool is_depart_at,
  * @param   seconds      seconds since epoch
  * @param   tz           timezone
  */
-std::string seconds_to_date(const uint64_t seconds,
-                            const date::time_zone* tz);
+std::string seconds_to_date(const uint64_t seconds, const date::time_zone* tz);
 
 /**
  * Get the iso date time from seconds since epoch and timezone.
@@ -131,9 +132,8 @@ uint32_t day_of_week_mask(const std::string& date_time);
  * @param   tz          timezone
  * @return  Returns ISO formatted string
  */
-std::string get_duration(const std::string& date_time,
-                         const uint32_t seconds,
-                         const date::time_zone* tz);
+std::string
+get_duration(const std::string& date_time, const uint32_t seconds, const date::time_zone* tz);
 
 /**
  * Checks if a date is restricted within a begin and end range.
@@ -264,7 +264,7 @@ static int32_t normalize_seconds_of_week(const int32_t secs) {
   }
 }
 
-} // namespace DateTime
+} // namespace DateTime2
 } // namespace baldr
 } // namespace valhalla
 #endif // VALHALLA_BALDR_DATETIME_H_
