@@ -29,6 +29,7 @@
 #include "baldr/tilehierarchy.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
+#include "midgard/sequence.h"
 #include "mjolnir/admin.h"
 
 #include <valhalla/proto/transit_fetch.pb.h>
@@ -611,10 +612,11 @@ void write_pbf(const Transit_Fetch& tile, const boost::filesystem::path& transit
   if (!boost::filesystem::exists(transit_tile.parent_path())) {
     boost::filesystem::create_directories(transit_tile.parent_path());
   }
-  std::fstream stream(transit_tile.string(), std::ios::out | std::ios::trunc | std::ios::binary);
-  if (!tile.SerializeToOstream(&stream)) {
+  auto size = tile.ByteSize();
+  valhalla::midgard::mem_map<char> buffer(transit_tile.string(), size);
+  if (!tile.SerializeToArray(buffer.get(), size)) {
     LOG_ERROR("Couldn't write: " + transit_tile.string() + " it would have been " +
-              std::to_string(tile.ByteSize()));
+              std::to_string(size));
   }
 
   if (tile.routes_size() && tile.stops_size() && tile.stop_pairs_size() && tile.shapes_size()) {
@@ -991,8 +993,9 @@ void stitch_tiles(const ptree& pt,
         }
       }
       lock.lock();
-      std::fstream stream(file_name, std::ios::out | std::ios::trunc | std::ios::binary);
-      tile.SerializeToOstream(&stream);
+      auto size = tile.ByteSize();
+      valhalla::midgard::mem_map<char> buffer(file_name, size);
+      tile.SerializeToArray(buffer.get(), size);
       lock.unlock();
       LOG_INFO(file_name + " stitched " + std::to_string(found) + " of " +
                std::to_string(needed.size()) + " stops");

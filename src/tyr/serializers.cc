@@ -10,7 +10,6 @@
 #include "baldr/json.h"
 #include "baldr/rapidjson_utils.h"
 #include "baldr/turn.h"
-#include "exception.h"
 #include "midgard/aabb2.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"

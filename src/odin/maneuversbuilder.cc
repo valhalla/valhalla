@@ -15,11 +15,11 @@
 #include "baldr/verbal_text_formatter.h"
 #include "baldr/verbal_text_formatter_factory.h"
 #include "baldr/verbal_text_formatter_us.h"
-#include "exception.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
 #include "midgard/util.h"
+#include "worker.h"
 
 #include "odin/maneuversbuilder.h"
 #include "odin/sign.h"
