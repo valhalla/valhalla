@@ -33,11 +33,17 @@ void loki_worker_t::parse_locations(google::protobuf::RepeatedPtrField<odin::Loc
                                     boost::optional<valhalla_exception_t> required_exception) {
   if (locations->size()) {
     for (auto& location : *locations) {
-      if (location.minimum_reachability() > max_reachability) {
+      if (!location.has_minimum_reachability()) {
+        location.set_minimum_reachability(default_reachability);
+      } else if (location.minimum_reachability() > max_reachability) {
         location.set_minimum_reachability(max_reachability);
       }
-      if (location.radius() > max_radius) {
-        location.set_radius(max_radius);
+      if (!location.has_radius()) {
+        location.set_radius(default_radius);
+      } else {
+        if (location.radius() > max_radius) {
+          location.set_radius(max_radius);
+        }
       }
     }
   } else if (required_exception) {
