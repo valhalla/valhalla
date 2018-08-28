@@ -11,11 +11,6 @@
 #include <string>
 #include <vector>
 
-#include <boost/date_time/gregorian/gregorian.hpp>
-#include <boost/date_time/local_time/local_time.hpp>
-#include <boost/date_time/local_time/local_time_io.hpp>
-#include <boost/date_time/local_time/tz_database.hpp>
-
 #include <valhalla/baldr/graphconstants.h>
 #include <valhalla/midgard/constants.h>
 #include <valhalla/baldr/tz.h>
@@ -173,7 +168,7 @@ bool is_restricted(const bool type,
                    const uint8_t end_month,
                    const uint8_t end_day_dow,
                    const uint64_t current_time,
-                   const date::time_zone& time_zone);
+                   const date::time_zone* time_zone);
 
 /**
  * Convert ISO 8601 time into std::tm.
