@@ -27,6 +27,7 @@
 #include "date_time_pacificnew.h"
 #include "date_time_southamerica.h"
 #include "date_time_systemv.h"
+#include "date_time_windows_zones.h"
 #include "date_time_zonespec.h"
 
 using namespace valhalla::baldr;
@@ -101,6 +102,164 @@ const tz_db_t& get_tz_db() {
   return tz_db;
 }
 
+#ifdef _WIN32
+// Parse this XML file:
+// http://unicode.org/repos/cldr/trunk/common/supplemental/windowsZones.xml
+// The parsing method is designed to be simple and quick. It is not overly
+// forgiving of change but it should diagnose basic format issues.
+// See timezone_mapping structure for more info.
+static std::vector<date::detail::timezone_mapping>
+load_timezone_mappings_from_xml_file(const std::string& input_path) {
+  std::size_t line_num = 0;
+  std::vector<date::detail::timezone_mapping> mappings;
+  std::string line;
+
+  std::string tz_data(date_time_windows_zones_xml,
+                      date_time_windows_zones_xml + date_time_windows_zones_xml_len);
+  std::stringstream ss(tz_data);
+
+  auto error = [&input_path, &line_num](const char* info) {
+    std::string msg = "Error loading time zone mapping file \"";
+    msg += input_path;
+    msg += "\" at line ";
+    msg += std::to_string(line_num);
+    msg += ": ";
+    msg += info;
+    throw std::runtime_error(msg);
+  };
+  // [optional space]a="b"
+  auto read_attribute = [&line, &error](const char* name, std::string& value,
+                                        std::size_t startPos) -> std::size_t {
+    value.clear();
+    // Skip leading space before attribute name.
+    std::size_t spos = line.find_first_not_of(' ', startPos);
+    if (spos == std::string::npos)
+      spos = startPos;
+    // Assume everything up to next = is the attribute name
+    // and that an = will always delimit that.
+    std::size_t epos = line.find('=', spos);
+    if (epos == std::string::npos)
+      error("Expected \'=\' right after attribute name.");
+    std::size_t name_len = epos - spos;
+    // Expect the name we find matches the name we expect.
+    if (line.compare(spos, name_len, name) != 0) {
+      std::string msg;
+      msg = "Expected attribute name \'";
+      msg += name;
+      msg += "\' around position ";
+      msg += std::to_string(spos);
+      msg += " but found something else.";
+      error(msg.c_str());
+    }
+    ++epos; // Skip the '=' that is after the attribute name.
+    spos = epos;
+    if (spos < line.length() && line[spos] == '\"')
+      ++spos; // Skip the quote that is before the attribute value.
+    else {
+      std::string msg = "Expected '\"' to begin value of attribute \'";
+      msg += name;
+      msg += "\'.";
+      error(msg.c_str());
+    }
+    epos = line.find('\"', spos);
+    if (epos == std::string::npos) {
+      std::string msg = "Expected '\"' to end value of attribute \'";
+      msg += name;
+      msg += "\'.";
+      error(msg.c_str());
+    }
+    // Extract everything in between the quotes. Note no escaping is done.
+    std::size_t value_len = epos - spos;
+    value.assign(line, spos, value_len);
+    ++epos; // Skip the quote that is after the attribute value;
+    return epos;
+  };
+
+  // Quick but not overly forgiving XML mapping file processing.
+  bool mapTimezonesOpenTagFound = false;
+  bool mapTimezonesCloseTagFound = false;
+  std::size_t mapZonePos = std::string::npos;
+  std::size_t mapTimezonesPos = std::string::npos;
+  CONSTDATA char mapTimeZonesOpeningTag[] = {"<mapTimezones "};
+  CONSTDATA char mapZoneOpeningTag[] = {"<mapZone "};
+  CONSTDATA std::size_t mapZoneOpeningTagLen =
+      sizeof(mapZoneOpeningTag) / sizeof(mapZoneOpeningTag[0]) - 1;
+  while (!mapTimezonesOpenTagFound) {
+    std::getline(ss, line);
+    ++line_num;
+    if (ss.eof()) {
+      // If there is no mapTimezones tag is it an error?
+      // Perhaps if there are no mapZone mappings it might be ok for
+      // its parent mapTimezones element to be missing?
+      // We treat this as an error though on the assumption that if there
+      // really are no mappings we should still get a mapTimezones parent
+      // element but no mapZone elements inside. Assuming we must
+      // find something will hopefully at least catch more drastic formatting
+      // changes or errors than if we don't do this and assume nothing found.
+      error("Expected a mapTimezones opening tag.");
+    }
+    mapTimezonesPos = line.find(mapTimeZonesOpeningTag);
+    mapTimezonesOpenTagFound = (mapTimezonesPos != std::string::npos);
+  }
+
+  // NOTE: We could extract the version info that follows the opening
+  // mapTimezones tag and compare that to the version of other data we have.
+  // I would have expected them to be kept in synch but testing has shown
+  // it typically does not match anyway. So what's the point?
+  while (!mapTimezonesCloseTagFound) {
+    std::ws(ss);
+    std::getline(ss, line);
+    ++line_num;
+    if (ss.eof())
+      error("Expected a mapTimezones closing tag.");
+    if (line.empty())
+      continue;
+    mapZonePos = line.find(mapZoneOpeningTag);
+    if (mapZonePos != std::string::npos) {
+      mapZonePos += mapZoneOpeningTagLen;
+      date::detail::timezone_mapping zm{};
+      std::size_t pos = read_attribute("other", zm.other, mapZonePos);
+      pos = read_attribute("territory", zm.territory, pos);
+      read_attribute("type", zm.type, pos);
+      mappings.push_back(std::move(zm));
+
+      continue;
+    }
+    mapTimezonesPos = line.find("</mapTimezones>");
+    mapTimezonesCloseTagFound = (mapTimezonesPos != std::string::npos);
+    if (!mapTimezonesCloseTagFound) {
+      std::size_t commentPos = line.find("<!--");
+      if (commentPos == std::string::npos)
+        error("Unexpected mapping record found. A xml mapZone or comment "
+              "attribute or mapTimezones closing tag was expected.");
+    }
+  }
+
+  return mappings;
+}
+
+static void sort_zone_mappings(std::vector<date::detail::timezone_mapping>& mappings) {
+  std::sort(mappings.begin(), mappings.end(),
+            [](const date::detail::timezone_mapping& lhs,
+               const date::detail::timezone_mapping& rhs) -> bool {
+              auto other_result = lhs.other.compare(rhs.other);
+              if (other_result < 0)
+                return true;
+              else if (other_result == 0) {
+                auto territory_result = lhs.territory.compare(rhs.territory);
+                if (territory_result < 0)
+                  return true;
+                else if (territory_result == 0) {
+                  if (lhs.type < rhs.type)
+                    return true;
+                }
+              }
+              return false;
+            });
+}
+
+#endif // _WIN32
+
 static std::vector<std::string> get_tz_data_file_list() {
   std::vector<std::string> tz_data_file_list;
   tz_data_file_list.emplace_back(date_time_africa, date_time_africa + date_time_africa_len);
@@ -168,11 +327,10 @@ static std::unique_ptr<date::tzdb> init_tzdb() {
   std::sort(db->leaps.begin(), db->leaps.end());
   db->leaps.shrink_to_fit();
 
-  //#ifdef _WIN32
-  //  std::string mapping_file = get_install() + folder_delimiter + "windowsZones.xml";
-  //  db->mappings = load_timezone_mappings_from_xml_file(mapping_file);
-  //  sort_zone_mappings(db->mappings);
-  //#endif // _WIN32
+#ifdef _WIN32
+  db->mappings = load_timezone_mappings_from_xml_file("date_time_windows_zones_xml");
+  sort_zone_mappings(db->mappings);
+#endif // _WIN32
 
   return db;
 }
