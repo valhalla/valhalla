@@ -55,19 +55,20 @@ std::string test_iso_date_time(const uint8_t dow_mask,
       break;
   }
 
-  auto now = date::make_zoned(time_zone,std::chrono::system_clock::now());
+  auto now = date::make_zoned(time_zone, std::chrono::system_clock::now());
   auto date = date::floor<date::days>(now.get_local_time());
   auto d = date::year_month_day(date);
-  auto t = date::make_time(now.get_local_time() - date); // Yields time_of_day type
+  auto t = date::make_time(now.get_local_time() - date);      // Yields time_of_day type
   std::chrono::minutes current_tod = t.hours() + t.minutes(); // Yields time_of_day type
   std::chrono::minutes desired_tod;
 
   std::size_t found = time.find(':'); // HH:MM
   if (found != std::string::npos) {
-    std::chrono::hours h = std::chrono::hours(std::stoi(time.substr(0,2)));
-    std::chrono::minutes m = std::chrono::minutes(std::stoi(time.substr(3,2)));
+    std::chrono::hours h = std::chrono::hours(std::stoi(time.substr(0, 2)));
+    std::chrono::minutes m = std::chrono::minutes(std::stoi(time.substr(3, 2)));
     desired_tod = h + m;
-  } else return "";
+  } else
+    return "";
 
   // will today work?
   if ((date::weekday(date) - date::Sunday).count() == dow) {
@@ -90,7 +91,9 @@ std::string test_iso_date_time(const uint8_t dow_mask,
 
 void TryGetDaysFromPivotDate(const std::string& date_time, uint32_t expected_days) {
   if (DateTime2::days_from_pivot_date(DateTime2::get_formatted_date(date_time)) != expected_days) {
-    throw std::runtime_error(std::string("Incorrect number of days from ") + date_time + " " + std::to_string(DateTime2::days_from_pivot_date(DateTime2::get_formatted_date(date_time))));
+    throw std::runtime_error(
+        std::string("Incorrect number of days from ") + date_time + " " +
+        std::to_string(DateTime2::days_from_pivot_date(DateTime2::get_formatted_date(date_time))));
   }
 }
 
@@ -121,7 +124,6 @@ void TryGetSecondsFromMidnight(const std::string& date_time, uint32_t expected_s
                              " got: " + std::to_string(secs));
   }
 }
-
 
 void TryIsoDateTime() {
 
@@ -178,7 +180,8 @@ void TryTestDST(const bool is_depart_at,
   auto tz = DateTime2::get_tz_db().from_index(DateTime2::get_tz_db().to_index("America/New_York"));
 
   std::string iso_origin, iso_dest;
-  DateTime2::seconds_to_date(is_depart_at, origin_seconds, dest_seconds, tz, tz, iso_origin, iso_dest);
+  DateTime2::seconds_to_date(is_depart_at, origin_seconds, dest_seconds, tz, tz, iso_origin,
+                             iso_dest);
 
   if (iso_origin != o_value)
     throw std::runtime_error("Test origin DST failed.  Expected: " + o_value + " but received " +
@@ -193,10 +196,10 @@ void TryIsRestricted(const TimeDomain td, const std::string& date, const bool ex
 
   auto tz = DateTime2::get_tz_db().from_index(DateTime2::get_tz_db().to_index("America/New_York"));
 
-  if (DateTime2::is_restricted(td.type(), td.begin_hrs(), td.begin_mins(), td.end_hrs(), td.end_mins(),
-                              td.dow(), td.begin_week(), td.begin_month(), td.begin_day_dow(),
-                              td.end_week(), td.end_month(), td.end_day_dow(),
-                              DateTime2::seconds_since_epoch(date, tz), tz) != expected_value) {
+  if (DateTime2::is_restricted(td.type(), td.begin_hrs(), td.begin_mins(), td.end_hrs(),
+                               td.end_mins(), td.dow(), td.begin_week(), td.begin_month(),
+                               td.begin_day_dow(), td.end_week(), td.end_month(), td.end_day_dow(),
+                               DateTime2::seconds_since_epoch(date, tz), tz) != expected_value) {
 
     throw std::runtime_error("Is Restricted " + date +
                              " test failed.  Expected: " + std::to_string(expected_value));

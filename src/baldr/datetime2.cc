@@ -345,11 +345,10 @@ date::local_seconds get_formatted_date(const std::string& date) {
 // get a local_date_time with support for dst.  Assumes that we are moving
 // forward in time.  e.g. depart at
 // 2016-11-06T02:00 ---> 2016-11-06T01:00
-date::zoned_seconds get_ldt(const date::local_seconds& d,
-                            const date::time_zone* time_zone) {
+date::zoned_seconds get_ldt(const date::local_seconds& d, const date::time_zone* time_zone) {
   if (!time_zone)
     return date::zoned_seconds(0);
-  date::zoned_time<std::chrono::seconds> zt = date::make_zoned(time_zone,d,date::choose::latest);
+  date::zoned_time<std::chrono::seconds> zt = date::make_zoned(time_zone, d, date::choose::latest);
   return zt;
 }
 
@@ -359,7 +358,7 @@ uint32_t days_from_pivot_date(const date::local_seconds& date_time) {
   if (date_time <= pivot_date_) {
     return 0;
   }
-  return static_cast<uint32_t>(date::floor<date::days>(date_time-pivot_date_).count());
+  return static_cast<uint32_t>(date::floor<date::days>(date_time - pivot_date_).count());
 }
 
 // Get the current iso date and time.
@@ -367,21 +366,20 @@ std::string iso_date_time(const date::time_zone* time_zone) {
   if (!time_zone)
     return "";
   std::ostringstream iso_date_time;
-  const auto date = date::make_zoned(time_zone,std::chrono::system_clock::now());
+  const auto date = date::make_zoned(time_zone, std::chrono::system_clock::now());
   iso_date_time << date::format("%FT%R%z", date);
   std::string iso_date = iso_date_time.str();
-  iso_date.insert(19,1,':');
+  iso_date.insert(19, 1, ':');
   return iso_date;
 }
 
 // Get the seconds since epoch time is already adjusted based on TZ
-uint64_t seconds_since_epoch(const std::string& date_time,
-                             const date::time_zone* time_zone) {
+uint64_t seconds_since_epoch(const std::string& date_time, const date::time_zone* time_zone) {
   if (date_time.empty() || !time_zone) {
     return 0;
   }
   const auto d = get_formatted_date(date_time);
-  const auto utc = date::to_utc_time(get_ldt(d,time_zone).get_sys_time());//supports leap sec.
+  const auto utc = date::to_utc_time(get_ldt(d, time_zone).get_sys_time()); // supports leap sec.
   return static_cast<uint64_t>(utc.time_since_epoch().count());
 }
 
@@ -401,7 +399,8 @@ int timezone_diff(const bool is_depart_at,
   const auto origin = date::make_zoned(origin_tz, tp);
   const auto dest = date::make_zoned(dest_tz, tp);
 
-  auto duration = std::chrono::duration_cast<std::chrono::seconds>(origin.get_local_time() - dest.get_local_time());
+  auto duration = std::chrono::duration_cast<std::chrono::seconds>(origin.get_local_time() -
+                                                                   dest.get_local_time());
   if (origin.get_info().offset < dest.get_info().offset) {
     return abs(duration.count());
   } else {
@@ -423,9 +422,8 @@ std::string seconds_to_date(const uint64_t seconds, const date::time_zone* time_
   const auto date = date::make_zoned(time_zone, tp);
   iso_date_time << date::format("%FT%R%z", date);
   iso_date = iso_date_time.str();
-  iso_date.insert(19,1,':');
+  iso_date.insert(19, 1, ':');
   return iso_date;
-
 }
 
 // Get the date from seconds and timezone.
@@ -483,23 +481,22 @@ uint32_t day_of_week_mask(const std::string& date_time) {
 
 // add x seconds to a date_time and return a ISO date_time string.
 // date_time is in the format of 2015-05-06T08:00
-std::string get_duration(const std::string& date_time,
-                         const uint32_t seconds,
-                         const date::time_zone* time_zone) {
+std::string
+get_duration(const std::string& date_time, const uint32_t seconds, const date::time_zone* time_zone) {
 
   date::local_seconds date;
   date = get_formatted_date(date_time);
   if (date < pivot_date_)
     return "";
 
-  std::chrono::seconds dur(seconds_since_epoch(date_time,time_zone) + seconds);
+  std::chrono::seconds dur(seconds_since_epoch(date_time, time_zone) + seconds);
   std::chrono::time_point<std::chrono::system_clock> tp(dur);
   std::ostringstream iso_date_time;
 
   const auto origin = date::make_zoned(time_zone, tp);
   iso_date_time << date::format("%FT%R%z %Z", origin);
   std::string iso_date = iso_date_time.str();
-  iso_date.insert(19,1,':');
+  iso_date.insert(19, 1, ':');
   return iso_date;
 }
 
@@ -525,7 +522,7 @@ bool is_restricted(const bool type,
   bool dow_in_range = true;
   bool dt_in_range = false;
 
-  //date::time_of_day()
+  // date::time_of_day()
   std::chrono::minutes b_td = std::chrono::hours(0);
   std::chrono::minutes e_td = std::chrono::hours(23) + std::chrono::minutes(59);
 
@@ -536,7 +533,7 @@ bool is_restricted(const bool type,
   auto date = date::floor<date::days>(in_local_time.get_local_time());
   auto d = date::year_month_day(date);
   auto t = date::make_time(in_local_time.get_local_time() - date); // Yields time_of_day type
-  std::chrono::minutes td = t.hours() + t.minutes(); // Yields time_of_day type
+  std::chrono::minutes td = t.hours() + t.minutes();               // Yields time_of_day type
 
   try {
     date::year_month_day begin_date, end_date;
@@ -600,7 +597,7 @@ bool is_restricted(const bool type,
 
       b_day_dow = 1;
       date::year_month_day e_d = date::year_month_day(d.year(), date::month(e_month), date::day(1));
-      e_day_dow = unsigned((date::year_month(e_d.year(),e_d.month())/date::last).day());
+      e_day_dow = unsigned((date::year_month(e_d.year(), e_d.month()) / date::last).day());
     }
 
     // month only
@@ -631,7 +628,8 @@ bool is_restricted(const bool type,
         }
       }
 
-      begin_date = date::year_month_day(date::year(b_year), date::month(b_month), date::day(b_day_dow));
+      begin_date =
+          date::year_month_day(date::year(b_year), date::month(b_month), date::day(b_day_dow));
       end_date = date::year_month_day(date::year(e_year), date::month(e_month), date::day(e_day_dow));
 
     } else if (type == kNthDow && b_month && b_day_dow && e_month &&
@@ -652,28 +650,39 @@ bool is_restricted(const bool type,
       }
 
       if (b_week && b_week <= 5) { // kNthDow
-        auto ymwd = date::year_month_weekday(date::year(b_year), date::month(b_month), date::weekday_indexed(date::weekday(b_day_dow - 1),b_week));
+        auto ymwd =
+            date::year_month_weekday(date::year(b_year), date::month(b_month),
+                                     date::weekday_indexed(date::weekday(b_day_dow - 1), b_week));
 
-        if (b_week == 5 && !ymwd.ok()) {//we tried to get the 5th x(e.g., Friday) of some month and there are only 4
+        if (b_week == 5 && !ymwd.ok()) { // we tried to get the 5th x(e.g., Friday) of some month and
+                                         // there are only 4
           b_week--;
-          ymwd = date::year_month_weekday(date::year(b_year), date::month(b_month), date::weekday_indexed(date::weekday(b_day_dow - 1),b_week));
+          ymwd =
+              date::year_month_weekday(date::year(b_year), date::month(b_month),
+                                       date::weekday_indexed(date::weekday(b_day_dow - 1), b_week));
         }
 
         begin_date = date::year_month_day(ymwd);
       } else { // YMD
-        begin_date = date::year_month_day(date::year(b_year), date::month(b_month), date::day(b_day_dow));
+        begin_date =
+            date::year_month_day(date::year(b_year), date::month(b_month), date::day(b_day_dow));
       }
 
       if (e_week && e_week <= 5) { // kNthDow
-        auto ymwd = date::year_month_weekday(date::year(e_year), date::month(e_month), date::weekday_indexed(date::weekday(e_day_dow - 1),e_week));
-        if (e_week == 5 && !ymwd.ok()) {//we tried to get the 5th x(e.g., Friday) of some month and there are only 4
+        auto ymwd =
+            date::year_month_weekday(date::year(e_year), date::month(e_month),
+                                     date::weekday_indexed(date::weekday(e_day_dow - 1), e_week));
+        if (e_week == 5 && !ymwd.ok()) { // we tried to get the 5th x(e.g., Friday) of some month and
+                                         // there are only 4
           e_week--;
-          date::year_month_weekday(date::year(e_year), date::month(e_month), date::weekday_indexed(date::weekday(e_day_dow - 1),e_week));
+          date::year_month_weekday(date::year(e_year), date::month(e_month),
+                                   date::weekday_indexed(date::weekday(e_day_dow - 1), e_week));
         }
 
         end_date = date::year_month_day(ymwd);
-      } else {                                                         // YMD
-        end_date = date::year_month_day(date::year(e_year), date::month(e_month), date::day(e_day_dow)); // Dec 5 to Mar 3
+      } else { // YMD
+        end_date = date::year_month_day(date::year(e_year), date::month(e_month),
+                                        date::day(e_day_dow)); // Dec 5 to Mar 3
       }
     } else { // do we have just time?
 
@@ -698,12 +707,12 @@ bool is_restricted(const bool type,
     date::sys_seconds sec = date::sys_days(begin_date);
     date::utc_seconds utc = date::to_utc_time(sec);
     auto leap_s = utc.time_since_epoch() - sec.time_since_epoch();
-    auto b_in_local_time = date::make_zoned(time_zone,date::local_days(begin_date) + b_td + leap_s);
+    auto b_in_local_time = date::make_zoned(time_zone, date::local_days(begin_date) + b_td + leap_s);
 
     sec = date::sys_days(end_date);
     utc = date::to_utc_time(sec);
     leap_s = utc.time_since_epoch() - sec.time_since_epoch();
-    auto e_in_local_time = date::make_zoned(time_zone,date::local_days(end_date) + e_td + leap_s);
+    auto e_in_local_time = date::make_zoned(time_zone, date::local_days(end_date) + e_td + leap_s);
 
     dt_in_range = (b_in_local_time.get_local_time() <= in_local_time.get_local_time() &&
                    in_local_time.get_local_time() <= e_in_local_time.get_local_time());
@@ -721,6 +730,6 @@ bool is_restricted(const bool type,
   return (dow_in_range && dt_in_range);
 }
 
-} // namespace DateTime
+} // namespace DateTime2
 } // namespace baldr
 } // namespace valhalla
