@@ -16,9 +16,10 @@
 #include <boost/date_time/local_time/local_time_io.hpp>
 #include <boost/date_time/local_time/tz_database.hpp>
 
-#include <valhalla/baldr/date.h>
+#include <date/date.h>
+#include <date/tz.h>
+
 #include <valhalla/baldr/graphconstants.h>
-#include <valhalla/baldr/tz.h>
 #include <valhalla/midgard/constants.h>
 
 namespace valhalla {

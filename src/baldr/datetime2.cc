@@ -8,10 +8,11 @@
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
+#include <date/tz_private.h>
+
 #include "baldr/datetime2.h"
 #include "baldr/graphconstants.h"
 #include "baldr/timedomain.h"
-#include "baldr/tz_private.h"
 #include "midgard/logging.h"
 #include "midgard/util.h"
 

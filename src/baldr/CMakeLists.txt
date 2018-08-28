@@ -70,7 +70,6 @@ valhalla_module(NAME baldr
     pathlocation.cc
     tilehierarchy.cc
     turn.cc
-    tz.cc
     streetname.cc
     streetnames.cc
     streetnames_factory.cc
@@ -80,6 +79,7 @@ valhalla_module(NAME baldr
     transitroute.cc
     transitschedule.cc
     transittransfer.cc
+    ${VALHALLA_SOURCE_DIR}/third_party/date/src/tz.cpp
     laneconnectivity.cc
     verbal_text_formatter.cc
     verbal_text_formatter_us.cc
@@ -94,6 +94,7 @@ valhalla_module(NAME baldr
       ${VALHALLA_SOURCE_DIR}
       ${VALHALLA_SOURCE_DIR}/valhalla
       ${VALHALLA_SOURCE_DIR}/third_party/rapidjson/include
+      ${VALHALLA_SOURCE_DIR}/third_party/date/include
     PRIVATE
       ${CMAKE_CURRENT_BINARY_DIR}
   DEPENDS
