@@ -680,8 +680,8 @@ bool get_stop_pairs(Transit& tile,
 
     pair->set_origin_departure_time(DateTime::seconds_from_midnight(origin_time));
     pair->set_destination_arrival_time(DateTime::seconds_from_midnight(dest_time));
-    pair->set_service_start_date(DateTime::get_formatted_date(start_date).julian_day());
-    pair->set_service_end_date(DateTime::get_formatted_date(end_date).julian_day());
+    pair->set_service_start_date(get_formatted_date(start_date).julian_day());
+    pair->set_service_end_date(get_formatted_date(end_date).julian_day());
     for (const auto& service_days : pair_pt.second.get_child("service_days_of_week")) {
       pair->add_service_days_of_week(service_days.second.get_value<bool>());
     }
@@ -719,7 +719,7 @@ bool get_stop_pairs(Transit& tile,
     const auto& except_dates = pair_pt.second.get_child_optional("service_except_dates");
     if (except_dates && !except_dates->empty()) {
       for (const auto& service_except_dates : pair_pt.second.get_child("service_except_dates")) {
-        auto d = DateTime::get_formatted_date(service_except_dates.second.get_value<std::string>());
+        auto d = get_formatted_date(service_except_dates.second.get_value<std::string>());
         pair->add_service_except_dates(d.julian_day());
       }
     }
@@ -727,7 +727,7 @@ bool get_stop_pairs(Transit& tile,
     const auto& added_dates = pair_pt.second.get_child_optional("service_added_dates");
     if (added_dates && !added_dates->empty()) {
       for (const auto& service_added_dates : pair_pt.second.get_child("service_added_dates")) {
-        auto d = DateTime::get_formatted_date(service_added_dates.second.get_value<std::string>());
+        auto d = get_formatted_date(service_added_dates.second.get_value<std::string>());
         pair->add_service_added_dates(d.julian_day());
       }
     }
@@ -1330,7 +1330,7 @@ ProcessStopPairs(GraphTileBuilder& transit_tilebuilder,
           }
 
           dep.headsign_offset = transit_tilebuilder.AddName(sp.trip_headsign());
-          uint32_t end_day = (DateTime::days_from_pivot_date(end_date) - tile_date);
+          uint32_t end_day = (days_from_pivot_date(end_date) - tile_date);
 
           if (end_day > kScheduleEndDay) {
             end_day = kScheduleEndDay;
@@ -1678,7 +1678,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
       const std::string& tz = station.has_timezone() ? station.timezone() : "";
       uint32_t timezone = 0;
       if (!tz.empty()) {
-        timezone = DateTime::get_tz_db().to_index(tz);
+        timezone = get_tz_db().to_index(tz);
       }
 
       if (timezone == 0) {
@@ -1724,7 +1724,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
         const std::string& tz = egress.has_timezone() ? egress.timezone() : "";
         uint32_t timezone = 0;
         if (!tz.empty()) {
-          timezone = DateTime::get_tz_db().to_index(tz);
+          timezone = get_tz_db().to_index(tz);
         }
 
         if (timezone == 0) {
@@ -1902,7 +1902,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
     const std::string& tz = platform.has_timezone() ? platform.timezone() : "";
     uint32_t timezone = 0;
     if (!tz.empty()) {
-      timezone = DateTime::get_tz_db().to_index(tz);
+      timezone = get_tz_db().to_index(tz);
     }
 
     if (timezone == 0) {
@@ -2118,9 +2118,9 @@ void build_tiles(const boost::property_tree::ptree& pt,
     const GraphTile* transit_tile = reader_transit_level.GetGraphTile(transit_tile_id);
     GraphTileBuilder tilebuilder_transit(reader_transit_level.tile_dir(), transit_tile_id, false);
 
-    auto tz = DateTime::get_tz_db().from_index(DateTime::get_tz_db().to_index("America/New_York"));
+    auto tz = get_tz_db().from_index(get_tz_db().to_index("America/New_York"));
     uint32_t tile_creation_date =
-        DateTime::days_from_pivot_date(DateTime::get_formatted_date(DateTime::iso_date_time(tz)));
+        days_from_pivot_date(get_formatted_date(iso_date_time(tz)));
     tilebuilder_transit.AddTileCreationDate(tile_creation_date);
 
     lock.unlock();
