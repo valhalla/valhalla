@@ -21,7 +21,6 @@
 #include <google/protobuf/io/coded_stream.h>
 #include <google/protobuf/io/zero_copy_stream_impl_lite.h>
 
-#include "mjolnir/servicedays.h"
 #include "baldr/graphconstants.h"
 #include "baldr/graphid.h"
 #include "baldr/graphtile.h"
@@ -31,6 +30,7 @@
 #include "midgard/logging.h"
 #include "midgard/sequence.h"
 #include "mjolnir/admin.h"
+#include "mjolnir/servicedays.h"
 
 #include <valhalla/proto/transit_fetch.pb.h>
 

@@ -19,11 +19,11 @@
 #include <google/protobuf/io/coded_stream.h>
 #include <google/protobuf/io/zero_copy_stream_impl_lite.h>
 
-#include "mjolnir/servicedays.h"
 #include "baldr/graphreader.h"
 #include "baldr/tilehierarchy.h"
 #include "midgard/logging.h"
 #include "midgard/util.h"
+#include "mjolnir/servicedays.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;

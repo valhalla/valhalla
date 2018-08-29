@@ -40,7 +40,7 @@ json::MapPtr admin_json(const AdminInfo& admin, uint16_t tz_index) {
     // m->emplace("time_zone_posix", tz->to_posix_string());
     m->emplace("time_zone_name", tz->name());
     // TODO: need to include ptz.h from HowardHinnant
-    //if (tz->has_dst())
+    // if (tz->has_dst())
     //  m->emplace("daylight_savings_time_zone_name", tz->dst_zone_name());
   }
 

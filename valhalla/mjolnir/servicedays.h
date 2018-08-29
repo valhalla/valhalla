@@ -18,14 +18,15 @@
 #include <valhalla/baldr/graphconstants.h>
 
 namespace {
-const boost::gregorian::date sv_pivot_date_ = boost::gregorian::from_undelimited_string(valhalla::baldr::kPivotDate);
+const boost::gregorian::date sv_pivot_date_ =
+    boost::gregorian::from_undelimited_string(valhalla::baldr::kPivotDate);
 }
 
 namespace valhalla {
 namespace mjolnir {
 
-struct tz_db_t : public boost::local_time::tz_database {
-  tz_db_t();
+struct boost_tz_db_t : public boost::local_time::tz_database {
+  boost_tz_db_t();
   size_t to_index(const std::string& region) const;
   boost::shared_ptr<time_zone_base_type> from_index(size_t index) const;
 
@@ -37,7 +38,7 @@ protected:
  * Get the timezone database singleton
  * @return  timezone database
  */
-const tz_db_t& get_tz_db();
+const boost_tz_db_t& get_tz_db();
 
 /**
  * Get a formatted date from a string.

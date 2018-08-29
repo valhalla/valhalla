@@ -3,7 +3,6 @@
 #include <cstdint>
 #include <string>
 
-#include "baldr/datetime.h"
 #include "baldr/graphconstants.h"
 #include "mjolnir/servicedays.h"
 
@@ -18,9 +17,9 @@ void TryGetServiceDays(const std::string& begin_date,
                        uint32_t dow_mask,
                        uint64_t value) {
 
-  auto b = DateTime::get_formatted_date(begin_date);
-  auto e = DateTime::get_formatted_date(end_date);
-  uint64_t days = get_service_days(b, e, DateTime::days_from_pivot_date(b), dow_mask);
+  auto b = get_formatted_date(begin_date);
+  auto e = get_formatted_date(end_date);
+  uint64_t days = get_service_days(b, e, days_from_pivot_date(b), dow_mask);
 
   if (value != days)
     throw std::runtime_error("Invalid bits set for service days. " + begin_date + " " + end_date +
@@ -33,10 +32,10 @@ void TryGetServiceDays(const std::string& tile_date,
                        uint32_t dow_mask,
                        uint64_t value) {
 
-  auto t = DateTime::get_formatted_date(tile_date);
-  auto b = DateTime::get_formatted_date(begin_date);
-  auto e = DateTime::get_formatted_date(end_date);
-  uint64_t days = get_service_days(b, e, DateTime::days_from_pivot_date(t), dow_mask);
+  auto t = get_formatted_date(tile_date);
+  auto b = get_formatted_date(begin_date);
+  auto e = get_formatted_date(end_date);
+  uint64_t days = get_service_days(b, e, days_from_pivot_date(t), dow_mask);
 
   if (value != days)
     throw std::runtime_error("Invalid bits set for service days. " + begin_date + " " + end_date +
@@ -49,9 +48,9 @@ void TryIsServiceDaysUsingShift(const std::string& begin_date,
                                 uint64_t days,
                                 bool value) {
 
-  uint32_t b = DateTime::days_from_pivot_date(DateTime::get_formatted_date(begin_date));
-  uint32_t d = DateTime::days_from_pivot_date(DateTime::get_formatted_date(date));
-  uint32_t e = DateTime::days_from_pivot_date(DateTime::get_formatted_date(end_date));
+  uint32_t b = days_from_pivot_date(get_formatted_date(begin_date));
+  uint32_t d = days_from_pivot_date(get_formatted_date(date));
+  uint32_t e = days_from_pivot_date(get_formatted_date(end_date));
   uint64_t day = d - b;
 
   bool answer = false;
@@ -77,11 +76,10 @@ void TryGetServiceDays(bool check_b_date,
 
   std::string edate = end_date;
   std::string bdate = begin_date;
-  auto b = DateTime::get_formatted_date(begin_date);
-  auto e = DateTime::get_formatted_date(end_date);
-  auto tz = DateTime::get_tz_db().from_index(DateTime::get_tz_db().to_index("America/New_York"));
-  auto tile_date =
-      DateTime::days_from_pivot_date(DateTime::get_formatted_date(DateTime::iso_date_time(tz)));
+  auto b = get_formatted_date(begin_date);
+  auto e = get_formatted_date(end_date);
+  auto tz = get_tz_db().from_index(get_tz_db().to_index("America/New_York"));
+  auto tile_date = days_from_pivot_date(get_formatted_date(iso_date_time(tz)));
 
   uint64_t days = get_service_days(b, e, tile_date, dow_mask);
 
@@ -101,12 +99,11 @@ void TryRejectFeed(const std::string& begin_date,
                    uint32_t dow_mask,
                    uint64_t value) {
 
-  auto b = DateTime::get_formatted_date(begin_date);
-  auto e = DateTime::get_formatted_date(end_date);
-  auto tz = DateTime::get_tz_db().from_index(DateTime::get_tz_db().to_index("America/New_York"));
+  auto b = get_formatted_date(begin_date);
+  auto e = get_formatted_date(end_date);
+  auto tz = get_tz_db().from_index(get_tz_db().to_index("America/New_York"));
 
-  auto tile_date =
-      DateTime::days_from_pivot_date(DateTime::get_formatted_date(DateTime::iso_date_time(tz)));
+  auto tile_date = days_from_pivot_date(get_formatted_date(iso_date_time(tz)));
 
   uint64_t days = get_service_days(b, e, tile_date, dow_mask);
 
@@ -121,10 +118,10 @@ void TryAddServiceDays(uint64_t days,
                        const std::string& added_date,
                        uint64_t value) {
 
-  auto b = DateTime::get_formatted_date(begin_date);
-  auto e = DateTime::get_formatted_date(end_date);
-  auto a = DateTime::get_formatted_date(added_date);
-  uint64_t result = add_service_day(days, e, DateTime::days_from_pivot_date(b), a);
+  auto b = get_formatted_date(begin_date);
+  auto e = get_formatted_date(end_date);
+  auto a = get_formatted_date(added_date);
+  uint64_t result = add_service_day(days, e, days_from_pivot_date(b), a);
   if (value != result)
     throw std::runtime_error("Invalid bits set for added service day. " + added_date);
 }
@@ -135,10 +132,10 @@ void TryRemoveServiceDays(uint64_t days,
                           const std::string& removed_date,
                           uint64_t value) {
 
-  auto b = DateTime::get_formatted_date(begin_date);
-  auto e = DateTime::get_formatted_date(end_date);
-  auto r = DateTime::get_formatted_date(removed_date);
-  uint64_t result = remove_service_day(days, e, DateTime::days_from_pivot_date(b), r);
+  auto b = get_formatted_date(begin_date);
+  auto e = get_formatted_date(end_date);
+  auto r = get_formatted_date(removed_date);
+  uint64_t result = remove_service_day(days, e, days_from_pivot_date(b), r);
   if (value != result)
     throw std::runtime_error("Invalid bits set for added service day. " + removed_date);
 }
@@ -148,11 +145,11 @@ void TryTestServiceEndDate(const std::string& begin_date,
                            const std::string& new_end_date,
                            uint32_t dow_mask) {
 
-  auto b = DateTime::get_formatted_date(begin_date);
-  auto e = DateTime::get_formatted_date(end_date);
-  auto n = DateTime::get_formatted_date(new_end_date);
+  auto b = get_formatted_date(begin_date);
+  auto e = get_formatted_date(end_date);
+  auto n = get_formatted_date(new_end_date);
 
-  auto tile_date = DateTime::days_from_pivot_date(b);
+  auto tile_date = days_from_pivot_date(b);
 
   get_service_days(b, e, tile_date, dow_mask);
 
@@ -195,9 +192,9 @@ void TestServiceDays() {
 
   // Test using a date far in the past.  Feed will be rejected.
   TryRejectFeed("2014-09-25", "2014-09-28", dow_mask, 0);
-  auto tz = DateTime::get_tz_db().from_index(DateTime::get_tz_db().to_index("America/New_York"));
+  auto tz = get_tz_db().from_index(get_tz_db().to_index("America/New_York"));
 
-  boost::gregorian::date today = DateTime::get_formatted_date(DateTime::iso_date_time(tz));
+  boost::gregorian::date today = get_formatted_date(iso_date_time(tz));
 
   boost::gregorian::date startdate = today - boost::gregorian::days(30);
   boost::gregorian::date enddate = today + boost::gregorian::days(59);

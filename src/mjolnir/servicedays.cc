@@ -1,8 +1,8 @@
 #include <boost/date_time/gregorian/gregorian.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
-#include "mjolnir/servicedays.h"
 #include "date_time_zonespec.h"
+#include "mjolnir/servicedays.h"
 
 using namespace valhalla::baldr;
 using namespace valhalla::mjolnir;
@@ -10,7 +10,7 @@ using namespace valhalla::mjolnir;
 namespace valhalla {
 namespace mjolnir {
 
-tz_db_t::tz_db_t() {
+boost_tz_db_t::boost_tz_db_t() {
   // load up the tz data
   std::string tz_data(date_time_zonespec_csv, date_time_zonespec_csv + date_time_zonespec_csv_len);
   std::stringstream ss(tz_data);
@@ -19,7 +19,7 @@ tz_db_t::tz_db_t() {
   regions = region_list();
 }
 
-size_t tz_db_t::to_index(const std::string& region) const {
+size_t boost_tz_db_t::to_index(const std::string& region) const {
   auto it = std::find(regions.cbegin(), regions.cend(), region);
   if (it == regions.cend()) {
     return 0;
@@ -28,16 +28,16 @@ size_t tz_db_t::to_index(const std::string& region) const {
 }
 
 boost::shared_ptr<boost::local_time::tz_database::time_zone_base_type>
-tz_db_t::from_index(size_t index) const {
+boost_tz_db_t::from_index(size_t index) const {
   if (index < 1 || index > regions.size()) {
     return {};
   };
   return time_zone_from_region(regions[index - 1]);
 }
 
-const tz_db_t& get_tz_db() {
+const boost_tz_db_t& get_tz_db() {
   // thread safe static initialization of global singleton
-  static const tz_db_t tz_db;
+  static const boost_tz_db_t tz_db;
   return tz_db;
 }
 

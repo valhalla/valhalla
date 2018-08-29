@@ -179,8 +179,7 @@ void TryTestDST(const uint64_t origin_seconds,
   auto tz = DateTime::get_tz_db().from_index(DateTime::get_tz_db().to_index("America/New_York"));
 
   std::string iso_origin, iso_dest;
-  DateTime::seconds_to_date(origin_seconds, dest_seconds, tz, tz, iso_origin,
-                             iso_dest);
+  DateTime::seconds_to_date(origin_seconds, dest_seconds, tz, tz, iso_origin, iso_dest);
 
   if (iso_origin != o_value)
     throw std::runtime_error("Test origin DST failed.  Expected: " + o_value + " but received " +
@@ -195,10 +194,10 @@ void TryIsRestricted(const TimeDomain td, const std::string& date, const bool ex
 
   auto tz = DateTime::get_tz_db().from_index(DateTime::get_tz_db().to_index("America/New_York"));
 
-  if (DateTime::is_restricted(td.type(), td.begin_hrs(), td.begin_mins(), td.end_hrs(),
-                               td.end_mins(), td.dow(), td.begin_week(), td.begin_month(),
-                               td.begin_day_dow(), td.end_week(), td.end_month(), td.end_day_dow(),
-                               DateTime::seconds_since_epoch(date, tz), tz) != expected_value) {
+  if (DateTime::is_restricted(td.type(), td.begin_hrs(), td.begin_mins(), td.end_hrs(), td.end_mins(),
+                              td.dow(), td.begin_week(), td.begin_month(), td.begin_day_dow(),
+                              td.end_week(), td.end_month(), td.end_day_dow(),
+                              DateTime::seconds_since_epoch(date, tz), tz) != expected_value) {
 
     throw std::runtime_error("Is Restricted " + date +
                              " test failed.  Expected: " + std::to_string(expected_value));
@@ -532,15 +531,15 @@ void TestTimezoneDiff() {
   TryTestTimezoneDiff(1524712192, "2018-04-26T05:09-04:00", "2018-04-26T11:09+02:00",
                       "America/New_York", "Europe/Berlin");
   // 2018-04-26T05:09+02:00 = 1524712192
-  TryTestTimezoneDiff(1524712192, "2018-04-25T23:09+02:00", "2018-04-25T17:09-04:00",
-                      "Europe/Berlin", "America/New_York");
+  TryTestTimezoneDiff(1524712192, "2018-04-25T23:09+02:00", "2018-04-25T17:09-04:00", "Europe/Berlin",
+                      "America/New_York");
 
   // 2018-04-25T23:09-04:00 = 1524712192
   TryTestTimezoneDiff(1524712192, "2018-04-26T05:09-04:00", "2018-04-26T11:09+02:00",
                       "America/New_York", "Europe/Berlin");
   // 2018-04-26T05:09+02:00 = 1524712192
-  TryTestTimezoneDiff(1524712192, "2018-04-25T23:09+02:00", "2018-04-25T17:09-04:00",
-                      "Europe/Berlin", "America/New_York");
+  TryTestTimezoneDiff(1524712192, "2018-04-25T23:09+02:00", "2018-04-25T17:09-04:00", "Europe/Berlin",
+                      "America/New_York");
 }
 
 void TestDayOfWeek() {
