@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <iostream> // TODO remove if not needed
 #include <map>
+#include <fstream>
 
 using namespace valhalla::baldr;
 using namespace valhalla::sif;
