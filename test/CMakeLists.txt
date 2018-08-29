@@ -1,5 +1,5 @@
 ## Lists tests
-set(tests aabb2 access_restriction actor admin attributes_controller complexrestriction datetime datetime2 directededge
+set(tests aabb2 access_restriction actor admin attributes_controller complexrestriction datetime directededge
   distanceapproximator double_bucket_queue edgecollapser edge_elevation edgestatus ellipse encode
   enhancedtrippath factory graphid graphreader graphtile graphtileheader gridded_data grid_range_query grid_traversal
   json laneconnectivity linesegment2 location logging maneuversbuilder map_matcher_factory
