@@ -64,7 +64,8 @@ valhalla_module(NAME mjolnir
     PUBLIC
       ${VALHALLA_SOURCE_DIR}
       ${VALHALLA_SOURCE_DIR}/valhalla
-    PRIVATE
+      ${VALHALLA_SOURCE_DIR}/third_party/date/include
+   PRIVATE
       ${CMAKE_CURRENT_BINARY_DIR}
       ${CMAKE_CURRENT_BINARY_DIR}/valhalla
   DEPENDS
