@@ -18,8 +18,7 @@
 #include <valhalla/baldr/graphconstants.h>
 
 namespace {
-const boost::gregorian::date pivot_date_ =
-    boost::gregorian::from_undelimited_string(valhalla::baldr::kPivotDate);
+const boost::gregorian::date sv_pivot_date_ = boost::gregorian::from_undelimited_string(valhalla::baldr::kPivotDate);
 }
 
 namespace valhalla {

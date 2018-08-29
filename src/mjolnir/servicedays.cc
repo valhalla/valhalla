@@ -62,10 +62,10 @@ boost::gregorian::date get_formatted_date(const std::string& date) {
 // Get the number of days that have elapsed from the pivot date for the inputed date.
 // date_time is in the format of 20150516 or 2015-05-06T08:00
 uint32_t days_from_pivot_date(const boost::gregorian::date& date_time) {
-  if (date_time <= pivot_date_) {
+  if (date_time <= sv_pivot_date_) {
     return 0;
   }
-  boost::gregorian::date_period range(pivot_date_, date_time);
+  boost::gregorian::date_period range(sv_pivot_date_, date_time);
   return static_cast<uint32_t>(range.length().days());
 }
 
@@ -115,7 +115,7 @@ uint64_t get_service_days(boost::gregorian::date& start_date,
                           const uint32_t tile_date,
                           const uint32_t dow_mask) {
 
-  boost::gregorian::date tile_header_date = pivot_date_ + boost::gregorian::days(tile_date);
+  boost::gregorian::date tile_header_date = sv_pivot_date_ + boost::gregorian::days(tile_date);
 
   // if our start date is more than 60 days out, reject.
   if (start_date > (tile_header_date + boost::gregorian::days(59))) {
@@ -191,7 +191,7 @@ uint64_t add_service_day(const uint64_t& days,
                          const boost::gregorian::date& added_date) {
 
   // adding a service day must start at the tile header date.
-  boost::gregorian::date start_date = pivot_date_ + boost::gregorian::days(tile_date);
+  boost::gregorian::date start_date = sv_pivot_date_ + boost::gregorian::days(tile_date);
   boost::gregorian::date enddate = start_date + boost::gregorian::days(59);
 
   if (enddate > end_date) {
@@ -212,7 +212,7 @@ uint64_t remove_service_day(const uint64_t& days,
                             const uint32_t tile_date,
                             const boost::gregorian::date& removed_date) {
   // removing a service day must start at the tile header date.
-  boost::gregorian::date start_date = pivot_date_ + boost::gregorian::days(tile_date);
+  boost::gregorian::date start_date = sv_pivot_date_ + boost::gregorian::days(tile_date);
   boost::gregorian::date enddate = start_date + boost::gregorian::days(59);
 
   if (enddate > end_date) {
