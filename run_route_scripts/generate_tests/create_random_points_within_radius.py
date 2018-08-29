@@ -25,7 +25,7 @@ def get_random_locs(inputloc_x, inputloc_y):
     y = r * math.sin(c)
     xLat  = x + inputloc_x
     yLong = y + inputloc_y
-    randlocs.append([round(xLat, 5), round(yLong, 5)]);
+    randlocs.append([round(xLat, 5),round(yLong, 5)]);
   return randlocs
 
 

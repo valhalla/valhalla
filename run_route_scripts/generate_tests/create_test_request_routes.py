@@ -29,9 +29,9 @@ def create_routes(lls):
       from_ll = re.split(',',str(lls[c]))
       to_ll = re.split(',',str(lls[i]))
       if sys.argv[3:] and sys.argv[4:]:
-        print '-j \'' + json.dumps({'costing': sys.argv[2], 'locations': [{'lat': from_ll[0], 'lon': from_ll[1]}, {'lat': to_ll[0], 'lon': to_ll[1]}], 'date_time': {'type': int(sys.argv[3]), 'value': sys.argv[4]}}, sort_keys=True, separators=(',',':')) + '\''
+        print '-j \'' + json.dumps({'costing': sys.argv[2], 'locations': [{'lat': from_ll[0], 'lon': from_ll[1]}, {'lat': to_ll[0], 'lon': to_ll[1]}], 'date_time': {'type': int(sys.argv[3]), 'value': sys.argv[4]}}, sort_keys=True, separators=(',',':'))
       else:
-        print '-j \'' + json.dumps({'costing': sys.argv[2], 'locations': [{'lat': from_ll[0], 'lon': from_ll[1]}, {'lat': to_ll[0], 'lon': to_ll[1]}]}, sort_keys=True, separators=(',',':')) + '\''
+        print '-j \'' + json.dumps({'costing': sys.argv[2], 'locations': [{'lat': from_ll[0], 'lon': from_ll[1]}, {'lat': to_ll[0], 'lon': to_ll[1]}]}, sort_keys=True, separators=(',',':'))
       
 
 lls = read_locations()
