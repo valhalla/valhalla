@@ -43,7 +43,6 @@ public:
 private:
   // Construct the cos table
   BucketCosTable() {
-printf("Construct cos table\n");
     // Fill out the table in bucket order.
     uint32_t index = 0;
     float* t = &table_[0];
