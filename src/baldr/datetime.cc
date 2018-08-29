@@ -33,7 +33,7 @@ using namespace valhalla::baldr;
 
 namespace {
 
-const date::local_seconds pivot_date_ = DateTime::get_formatted_date(kPivotDate);
+const date::local_seconds pivot_date_ = DateTime::get_formatted_date(kPivotDate + "T00:00");
 }
 
 namespace date {
