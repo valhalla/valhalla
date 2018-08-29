@@ -89,7 +89,6 @@ valhalla_module(NAME baldr
   DEPENDS
     valhalla::proto
     valhalla::midgard
-    Boost::date_time
     Boost::filesystem
     Boost::iostreams
     Boost::system
