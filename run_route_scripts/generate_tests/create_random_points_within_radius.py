@@ -8,9 +8,9 @@ import json
 ### Continue to use a similar process to generate a smaller number near surrounding urban areas
 ### until you get the number of locations you need. Next, these locations are used to generate approx. 10K routes
 
-
+## input radius in km
 RADIUS = int(sys.argv[4])
-RADIUS_IN_DEGREES = RADIUS / 111300.0
+RADIUS_IN_DEGREES = RADIUS / 111.0
 inputloc = (float(sys.argv[1]), float(sys.argv[2]))
 randlocs = []
 
