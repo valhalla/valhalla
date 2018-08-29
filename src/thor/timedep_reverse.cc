@@ -101,7 +101,7 @@ void TimeDepReverse::ExpandReverse(GraphReader& graphreader,
   // Adjust for time zone (if different from timezone at the destination).
   if (nodeinfo->timezone() != dest_tz_index_) {
     // Get the difference in seconds between the destination tz and current tz
-    int tz_diff = DateTime::timezone_diff(false, localtime,
+    int tz_diff = DateTime::timezone_diff(localtime,
                                           DateTime::get_tz_db().from_index(nodeinfo->timezone()),
                                           DateTime::get_tz_db().from_index(dest_tz_index_));
     localtime += tz_diff;
