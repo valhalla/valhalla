@@ -14,7 +14,7 @@ rm CA_*.txt
 ./create_random_points_within_radius.py 33.837541 -117.913470 20 10000 > loc_seed_3.txt  #Anaheim 10km
 ./create_random_points_within_radius.py 35.372965 -119.019924 10 10000 > loc_seed_4.txt  #Bakersfield 10km
 ./create_random_points_within_radius.py 36.735042 -119.785714 10 10000 > loc_seed_5.txt  #Fresno 10km
-./create_random_points_within_radius.py 38.587161 -121.488578 30 10000 > loc_seed_6.txt  #Sacramento 10km
+#./create_random_points_within_radius.py 38.587161 -121.488578 30 10000 > loc_seed_6.txt  #Sacramento 10km
 
 
 #merge into 1 CA location file
@@ -27,7 +27,7 @@ done
 #Generates the CA routes from above generated locations
 #Create routes with datetime or without
 
-./create_test_request_routes.py CA auto > CA_routes.txt 
-#./create_test_request_routes.py CA auto 1 "2018-08-01T07:30"> CA_routes.txt 
-head -n-1 CA_routes.txt  > ../requests/predicted_traffic/CA_routes_no_datetime.txt   #removes the last line so that we dont have a the final location routing to itself
-#head -n-1 CA_routes.txt  > ../requests/predicted_traffic/CA_routes_datetime.txt     #removes the last line so that we dont have a the final location routing to itself
+#./create_test_request_routes.py CA auto > CA_routes.txt
+#head -n-1 CA_routes.txt  > ../requests/predicted_traffic/CA_routes_no_datetime.txt   #removes the last line so that we dont have a the final location routing to itself
+./create_test_request_routes.py CA auto 1 "2018-09-02T08:30"> CA_routes.txt
+head -n-1 CA_routes.txt  > ../requests/predicted_traffic/CA_routes_datetime.txt     #removes the last line so that we dont have a the final location routing to itself
