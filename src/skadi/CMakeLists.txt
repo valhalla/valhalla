@@ -11,5 +11,4 @@ valhalla_module(NAME skadi
       ${VALHALLA_SOURCE_DIR}
       ${VALHALLA_SOURCE_DIR}/valhalla
   DEPENDS
-    valhalla::baldr
-    Boost::filesystem)
+    valhalla::baldr)

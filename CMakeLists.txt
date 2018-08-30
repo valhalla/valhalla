@@ -90,7 +90,7 @@ add_subdirectory(src)
 
 ## Executable targets
 if(ENABLE_TOOLS OR ENABLE_DATA_TOOLS OR ENABLE_SERVICES)
-  find_package(Boost 1.51 REQUIRED COMPONENTS program_options)
+  find_package(Boost 1.51 REQUIRED COMPONENTS program_options filesystem system)
   find_package(Threads REQUIRED)
 endif()
 
@@ -120,11 +120,11 @@ set(valhalla_data_tools valhalla_build_statistics valhalla_ways_to_edges valhall
 ## Valhalla services
 set(valhalla_services	valhalla_service valhalla_loki_worker	valhalla_odin_worker valhalla_thor_worker)
 
-if(ENABLE_DATA_TOOLS)
+if(ENABLE_TOOLS)
   foreach(program ${valhalla_programs})
     get_source_path(path ${program})
     add_executable(${program} ${path})
-    target_link_libraries(${program} Boost::program_options valhalla Threads::Threads)
+    target_link_libraries(${program} Boost::program_options valhalla Threads::Threads Boost::filesystem Boost::system)
     install(TARGETS ${program} DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT runtime)
   endforeach()
 endif()
@@ -133,7 +133,7 @@ if(ENABLE_DATA_TOOLS)
   foreach(program ${valhalla_data_tools})
     get_source_path(path ${program})
     add_executable(${program} ${path})
-    target_link_libraries(${program} valhalla Boost::program_options Threads::Threads)
+    target_link_libraries(${program} valhalla Boost::program_options Threads::Threads Boost::filesystem Boost::system)
     install(TARGETS ${program} DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT runtime)
   endforeach()
 

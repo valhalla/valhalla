@@ -89,8 +89,5 @@ valhalla_module(NAME baldr
   DEPENDS
     valhalla::proto
     valhalla::midgard
-    Boost::filesystem
-    Boost::iostreams
-    Boost::system
     CURL::CURL
     ZLIB::ZLIB)

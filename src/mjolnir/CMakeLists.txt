@@ -81,6 +81,8 @@ valhalla_module(NAME mjolnir
   DEPENDS
     valhalla::proto
     valhalla::baldr
+    Boost::filesystem
+    Boost::system
     Boost::date_time
     Spatialite::Spatialite
     SQLite3::SQLite3
