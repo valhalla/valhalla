@@ -70,7 +70,7 @@ void TimeDepForward::ExpandForward(GraphReader& graphreader,
   if (nodeinfo->timezone() != origin_tz_index_) {
     // Get the difference in seconds between the origin tz and current tz
     int tz_diff =
-        DateTime::timezone_diff(true, localtime, DateTime::get_tz_db().from_index(origin_tz_index_),
+        DateTime::timezone_diff(localtime, DateTime::get_tz_db().from_index(origin_tz_index_),
                                 DateTime::get_tz_db().from_index(nodeinfo->timezone()));
     localtime += tz_diff;
     seconds_of_week = DateTime::normalize_seconds_of_week(seconds_of_week + tz_diff);

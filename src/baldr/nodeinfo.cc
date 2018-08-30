@@ -36,11 +36,12 @@ json::MapPtr admin_json(const AdminInfo& admin, uint16_t tz_index) {
   auto tz = DateTime::get_tz_db().from_index(tz_index);
   if (tz) {
     // TODO: so much to do but posix tz has pretty much all the info
-    m->emplace("time_zone_posix", tz->to_posix_string());
-    m->emplace("standard_time_zone_name", tz->std_zone_name());
-    if (tz->has_dst()) {
-      m->emplace("daylight_savings_time_zone_name", tz->dst_zone_name());
-    }
+    // TODO: need to include ptz.h from HowardHinnant
+    // m->emplace("time_zone_posix", tz->to_posix_string());
+    m->emplace("time_zone_name", tz->name());
+    // TODO: need to include ptz.h from HowardHinnant
+    // if (tz->has_dst())
+    //  m->emplace("daylight_savings_time_zone_name", tz->dst_zone_name());
   }
 
   return m;
