@@ -10,7 +10,7 @@ import json
 
 ## input radius in km
 RADIUS = int(sys.argv[4])
-RADIUS_IN_DEGREES = RADIUS / 111.0
+RADIUS_IN_DEGREES = RADIUS / 110567.0
 inputloc = (float(sys.argv[1]), float(sys.argv[2]))
 randlocs = []
 
