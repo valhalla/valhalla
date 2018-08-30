@@ -270,11 +270,10 @@ You can use certain parameters to tune the response. Unless otherwise noted, eac
 * Use `turn_penalty_factor` to penalize turns from one road segment to next. For a pedestrian `trace_route`, you may see a back-and-forth motion along the streets of your path. Try increasing the turn penalty factor to 500 to smooth out jittering of points. Note that if GPS accuracy is already good, increasing this will have a negative affect on your results.
 * Set the `gps_accuracy` to indicate the accuracy in meters.
 * Apply a `search_radius` to specify the search radius (in meters) within which to search road candidates for each measurement. The maximum search radius is 100 meters. Note that performance may decrease with a higher search radius value.
-* Add a `time` component to your GPS data to inform the map matching algorithm about when the point was measured. `time` is specified in seconds and can be a UNIX epoch time or any increasing sequence:
+* Add a `time` component to your GPS data to inform the map matching algorithm about when the point was measured. Providing a `time` attribute is not available for `encoded_polyline` data and can only be specified with GPS data provided by the `shape` attribute. `time` is specified in seconds and can be a UNIX epoch time or any increasing sequence:
 ```
 {"shape":[{"lat":39.983841,"lon":-76.735741,"time":0},{"lat":39.983704,"lon":-76.735298,"time":2},{"lat":39.983578,"lon":-76.734848,"time":6},...]}
 ```
-`time` is not available for `encoded_polyline` data and can only be specified with GPS data provided by the `shape` attribute.
 
 
 ## Example Map Matching requests
