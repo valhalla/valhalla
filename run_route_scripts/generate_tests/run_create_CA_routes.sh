@@ -9,6 +9,7 @@ rm loc_seed_*.txt
 rm CA_*.txt
 
 #Manually collect city points in CA and generate a random number of points within a radius
+# lat | lon | # of random generated pts | radius in meters
 ./create_random_points_within_radius.py 34.052025 -118.244225 30 10000 > loc_seed_1.txt  #LA 10km 
 ./create_random_points_within_radius.py 34.107766 -117.289439 20 10000 > loc_seed_2.txt  #SanBernardino 10km
 ./create_random_points_within_radius.py 33.837541 -117.913470 20 10000 > loc_seed_3.txt  #Anaheim 10km
@@ -28,7 +29,7 @@ done
 #Create routes with datetime or without
 
 mkdir -p ../requests/predicted_traffic/
-#./create_test_request_routes.py CA auto > CA_routes.txt
-#head -n-1 CA_routes.txt  > ../requests/predicted_traffic/CA_routes_no_datetime.txt   #removes the last line so that we dont have a the final location routing to itself
-./create_test_request_routes.py CA auto 1 "2018-09-02T08:30"> CA_routes.txt
-head -n-1 CA_routes.txt  > ../requests/predicted_traffic/CA_routes_datetime.txt     #removes the last line so that we dont have a the final location routing to itself
+./create_test_request_routes.py CA auto > CA_routes.txt
+head -n-1 CA_routes.txt  > ../requests/predicted_traffic/CA_routes_no_datetime_remote.txt   #removes the last line so that we dont have a the final location routing to itself
+#./create_test_request_routes.py CA auto 1 "2018-09-03T08:30"> CA_routes.txt
+#head -n-1 CA_routes.txt  > ../requests/predicted_traffic/CA_routes_datetime_remote.txt     #removes the last line so that we dont have a the final location routing to itself
