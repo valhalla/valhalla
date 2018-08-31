@@ -5,11 +5,10 @@
 #include "baldr/nodeinfo.h"
 #include "midgard/constants.h"
 #include "midgard/util.h"
-#include "worker.h"
-#include <iostream>
 
 #ifdef INLINE_TEST
 #include "test/test.h"
+#include "worker.h"
 #include <random>
 #endif
 
