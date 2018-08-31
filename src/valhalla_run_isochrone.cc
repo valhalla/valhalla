@@ -292,26 +292,32 @@ int main(int argc, char* argv[]) {
       }
     }
   }
-  LOG_INFO("Marked " + std::to_string(nv) + " cells in the isotile" +
-           " size= " + std::to_string(iso_data.size()));
-  LOG_INFO("Rows = " + std::to_string(isotile->nrows()) + " min = " + std::to_string(min_row) +
-           " max = " + std::to_string(max_row));
-  LOG_INFO("Cols = " + std::to_string(isotile->ncolumns()) + " min = " + std::to_string(min_col) +
-           " max = " + std::to_string(max_col));
+  LOG_DEBUG("Marked " + std::to_string(nv) + " cells in the isotile" +
+            " size= " + std::to_string(iso_data.size()));
+  LOG_DEBUG("Rows = " + std::to_string(isotile->nrows()) + " min = " + std::to_string(min_row) +
+            " max = " + std::to_string(max_row));
+  LOG_DEBUG("Cols = " + std::to_string(isotile->ncolumns()) + " min = " + std::to_string(min_col) +
+            " max = " + std::to_string(max_col));
 
+  // Generate contours
   if (denoise < 0.f || denoise > 1.f) {
     denoise = std::max(std::min(denoise, 1.f), 0.f);
     LOG_WARN("denoise parameter was out of range. Being clamped to " + std::to_string(denoise));
   }
   auto contours = isotile->GenerateContours(contour_times, polygons, denoise, generalize);
 
-  std::string geojson = valhalla::tyr::serializeIsochrones<PointLL>(request, contours, polygons,
-                                                                    colors, show_locations);
-
   auto t3 = std::chrono::high_resolution_clock::now();
   msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t3 - t2).count();
   LOG_INFO("Contour Generation took " + std::to_string(msecs) + " ms");
-  msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t3 - t1).count();
+
+  // Serialize to GeoJSON
+  std::string geojson = valhalla::tyr::serializeIsochrones<PointLL>(request, contours, polygons,
+                                                                    colors, show_locations);
+
+  auto t4 = std::chrono::high_resolution_clock::now();
+  msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t4 - t3).count();
+  LOG_INFO("GeoJSON serialization took " + std::to_string(msecs) + " ms");
+  msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t4 - t1).count();
   LOG_INFO("Isochrone took " + std::to_string(msecs) + " ms");
 
   std::cout << std::endl;
