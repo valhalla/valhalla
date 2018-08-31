@@ -14,6 +14,9 @@ namespace thor {
 
 constexpr uint64_t kInitialEdgeLabelCount = 500000;
 
+// Number of iterations to allow with no convergence to the destination
+constexpr uint32_t kMaxIterationsWithoutConvergence = 200000;
+
 // Default constructor
 TimeDepForward::TimeDepForward() : AStarPathAlgorithm() {
   mode_ = TravelMode::kDrive;
@@ -279,12 +282,14 @@ std::vector<PathInfo> TimeDepForward::GetBestPath(odin::Location& origin,
     }
 
     // Check that distance is converging towards the destination. Return route
-    // failure if no convergence for TODO iterations
+    // failure if no convergence for TODO iterations. NOTE: due to somewhat high
+    // penalty for entering a destination only (private) road this value needs to
+    // be high.
     float dist2dest = pred.distance();
     if (dist2dest < mindist) {
       mindist = dist2dest;
       nc = 0;
-    } else if (nc++ > 50000) {
+    } else if (nc++ > kMaxIterationsWithoutConvergence) {
       if (best_path.first >= 0) {
         return FormPath(best_path.first);
       } else {
