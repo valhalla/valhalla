@@ -33,7 +33,9 @@ constexpr float kDefaultDestinationOnlyPenalty = 120.0f; // Seconds
 
 constexpr float kDefaultUseHills = 0.5f;   // Factor between 0 and 1
 constexpr float kDefaultUsePrimary = 0.5f; // Factor between 0 and 1
+constexpr uint32_t kMinimumTopSpeed = 20;  // Kilometers per hour
 constexpr uint32_t kDefaultTopSpeed = 45;  // Kilometers per hour
+constexpr uint32_t kMaximumTopSpeed = 120; // Kilometers per hour
 
 constexpr Surface kMinimumScooterSurface = Surface::kDirt;
 
@@ -76,7 +78,8 @@ constexpr ranged_default_t<float> kCountryCrossingPenaltyRange{0, kDefaultCountr
 constexpr ranged_default_t<float> kUseFerryRange{0, kDefaultUseFerry, 1.0f};
 constexpr ranged_default_t<float> kUseHillsRange{0, kDefaultUseHills, 1.0f};
 constexpr ranged_default_t<float> kUsePrimaryRange{0, kDefaultUsePrimary, 1.0f};
-constexpr ranged_default_t<uint32_t> kTopSpeedRange{0, kDefaultTopSpeed, kMaxSpeedKph};
+constexpr ranged_default_t<uint32_t> kTopSpeedRange{kMinimumTopSpeed, kDefaultTopSpeed,
+                                                    kMaximumTopSpeed};
 constexpr ranged_default_t<float> kDestinationOnlyPenaltyRange{0, kDefaultDestinationOnlyPenalty,
                                                                kMaxSeconds};
 
