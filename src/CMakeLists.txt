@@ -1,4 +1,3 @@
-include(FindPkgConfig)
 include(GNUInstallDirs)
 
 ## Set relative to the current source and binary paths
@@ -26,67 +25,6 @@ if(DEFINED VALHALLA_VERSION_MAJOR)
 else()
   message(FATAL_ERROR "No Valhalla major version")
 endif()
-
-## Configure imported libraries
-set(boost_components
-  date_time
-  filesystem
-  iostreams
-  system)
-if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-  list(APPEND boost_components zlib)
-endif()
-find_package(Boost 1.51 REQUIRED COMPONENTS ${boost_components})
-
-find_package(CURL REQUIRED)
-add_library(CURL::CURL INTERFACE IMPORTED)
-set_target_properties(CURL::CURL PROPERTIES
-  INTERFACE_LINK_LIBRARIES "${CURL_LIBRARIES}"
-  INTERFACE_INCLUDE_DIRECTORIES "${CURL_INCLUDE_DIR}"
-  INTERFACE_COMPILE_DEFINITIONS CURL_STATICLIB)
-
-find_package(Protobuf REQUIRED)
-# TODO: remove after switching to CMake >= 3.7
-if(NOT TARGET protobuf::libprotobuf-lite)
-  if(PROTOBUF_LIBRARY)
-    add_library(protobuf::libprotobuf-lite UNKNOWN IMPORTED)
-    set_target_properties(protobuf::libprotobuf-lite PROPERTIES
-      INTERFACE_INCLUDE_DIRECTORIES "${PROTOBUF_INCLUDE_DIR}")
-    if(EXISTS "${PROTOBUF_LIBRARY}")
-      set_target_properties(protobuf::libprotobuf-lite PROPERTIES
-        IMPORTED_LOCATION "${PROTOBUF_LIBRARY}")
-    endif()
-    if(EXISTS "${PROTOBUF_LIBRARY_RELEASE}")
-      set_property(TARGET protobuf::libprotobuf-lite APPEND PROPERTY
-        IMPORTED_CONFIGURATIONS RELEASE)
-      set_target_properties(protobuf::libprotobuf-lite PROPERTIES
-        IMPORTED_LOCATION_RELEASE "${PROTOBUF_LIBRARY_RELEASE}")
-    endif()
-    if(EXISTS "${PROTOBUF_LIBRARY_DEBUG}")
-      set_property(TARGET protobuf::libprotobuf-lite APPEND PROPERTY
-        IMPORTED_CONFIGURATIONS DEBUG)
-      set_target_properties(protobuf::libprotobuf-lite PROPERTIES
-        IMPORTED_LOCATION_DEBUG "${PROTOBUF_LIBRARY_DEBUG}")
-    endif()
-  endif()
-endif()
-
-find_package(ZLIB REQUIRED)
-find_package(Threads REQUIRED)
-
-add_library(libprime_server INTERFACE IMPORTED)
-if(ENABLE_SERVICES)
-  pkg_check_modules(libprime_server REQUIRED libprime_server>=0.6.3)
-  # workaround for https://gitlab.kitware.com/cmake/cmake/issues/15804
-  find_library(libprime_server_LIBRARY
-    NAME ${libprime_server_LIBRARIES}
-    HINTS ${libprime_server_LIBRARY_DIRS})
-  set_target_properties(libprime_server PROPERTIES
-    INTERFACE_LINK_LIBRARIES "${libprime_server_LIBRARY}"
-    INTERFACE_INCLUDE_DIRECTORIES "${libprime_server_INCLUDE_DIRS}"
-    INTERFACE_COMPILE_DEFINITIONS HAVE_HTTP)
-endif()
-
 
 ## Define libvalhalla sub-modules as OBJECT libraries
 
@@ -160,15 +98,7 @@ add_subdirectory(sif)
 add_subdirectory(skadi)
 add_subdirectory(thor)
 add_subdirectory(tyr)
-
 if(ENABLE_DATA_TOOLS)
-  find_package(SQLite3 REQUIRED)
-  find_package(SpatiaLite REQUIRED)
-  find_package(Lua REQUIRED)
-  add_library(Lua::Lua INTERFACE IMPORTED)
-  set_target_properties(Lua::Lua PROPERTIES
-    INTERFACE_LINK_LIBRARIES "${LUA_LIBRARIES}"
-    INTERFACE_INCLUDE_DIRECTORIES "${LUA_INCLUDE_DIR}")
   add_subdirectory(mjolnir)
 endif()
 
