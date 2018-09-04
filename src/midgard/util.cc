@@ -282,16 +282,12 @@ std::vector<PointLL> resample_polyline(const std::vector<PointLL>& polyline, flo
   auto p0 = polyline.cbegin();
   for (auto p1 = std::next(polyline.cbegin()); p1 != polyline.cend(); ++p0, ++p1) {
     // Find distance (meters) between the 2 points of the input polyline.
-    // Use floating point for speed (less worried about precision)
-    float dlon = p1->first - p0->first;
-    float a = p0->second * kRadPerDeg;
-    float c = p1->second * kRadPerDeg;
-    float d =
-        acosf((sinf(a) * sinf(c)) + (cosf(a) * cosf(c) * cosf(dlon * kRadPerDeg))) * kRadEarthMeters;
+    float d = p0->Distance(*p1);
 
     // Interpolate between the prior polyline point if we exceed the resolution
     // (including distance accumulated so far)
     if (d + accumulated_d > resolution) {
+      float dlon = p1->first - p0->first;
       float dlat = p1->second - p0->second;
 
       // Form the first interpolated point
