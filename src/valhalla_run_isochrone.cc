@@ -76,7 +76,8 @@ int main(int argc, char* argv[]) {
     return EXIT_SUCCESS;
   }
   if (vm.count("json") == 0) {
-    std::cerr << "A JSON format request must be present." << "\n";
+    std::cerr << "A JSON format request must be present."
+              << "\n";
     return EXIT_FAILURE;
   }
 
@@ -139,8 +140,8 @@ int main(int argc, char* argv[]) {
       pt.get_child_optional("thor.logging");
   if (logging_subtree) {
     auto logging_config =
-     valhalla::midgard::ToMap<const boost::property_tree::ptree&,
-                              std::unordered_map<std::string, std::string>>(logging_subtree.get());
+        valhalla::midgard::ToMap<const boost::property_tree::ptree&,
+                                 std::unordered_map<std::string, std::string>>(logging_subtree.get());
     valhalla::midgard::logging::Configure(logging_config);
   }
 
@@ -244,11 +245,11 @@ int main(int argc, char* argv[]) {
     }
   }
   LOG_INFO("Marked " + std::to_string(nv) + " cells in the isotile" +
-            " size= " + std::to_string(iso_data.size()));
+           " size= " + std::to_string(iso_data.size()));
   LOG_INFO("Rows = " + std::to_string(isotile->nrows()) + " min = " + std::to_string(min_row) +
-            " max = " + std::to_string(max_row));
+           " max = " + std::to_string(max_row));
   LOG_INFO("Cols = " + std::to_string(isotile->ncolumns()) + " min = " + std::to_string(min_col) +
-            " max = " + std::to_string(max_col));
+           " max = " + std::to_string(max_col));
 
   // Generate contours
   t2 = std::chrono::high_resolution_clock::now();
