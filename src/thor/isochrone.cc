@@ -833,15 +833,26 @@ void Isochrone::UpdateIsoTile(const EdgeLabel& pred,
 
   // For short edges just mark the segment between the 2 nodes of the edge. This
   // avoid getting the shape for short edges.
-  if (edge->length() < shape_interval_) {
-    // Mark cells that intersect the segment (use a bounding box approximation)
-    const auto* de = t2->directededge(opp);
-    PointLL ll0 = tile->node(de->endnode())->latlng();
-    AABB2<PointLL> bbox(std::min(ll0.first, ll.first), std::min(ll0.second, ll.second),
-                        std::max(ll0.first, ll.first), std::max(ll0.second, ll.second));
-    auto tiles = isotile_->TileList(bbox);
-    for (auto t : tiles) {
-      isotile_->SetIfLessThan(t, secs1 * kMinPerSec);
+  if (edge->length() < shape_interval_ * 1.25f) {
+    // Mark tiles that intersect the segment. Optimize this to avoid calling the Intersect
+    // method unless more than 2 tiles are crossed by the segment.
+    PointLL ll0 = tile->node(t2->directededge(opp)->endnode())->latlng();
+    auto tile1 = isotile_->TileId(ll0);
+    auto tile2 = isotile_->TileId(ll);
+    if (tile1 == tile2) {
+      isotile_->SetIfLessThan(tile1, secs1 * kMinPerSec);
+    } else if (tile2 == isotile_->LeftNeighbor(tile1) || tile2 == isotile_->RightNeighbor(tile1) ||
+               tile2 == isotile_->BottomNeighbor(tile1) || tile2 == isotile_->TopNeighbor(tile1)) {
+      // If tile 2 is directly east, west, north, or south of tile 1 then the
+      // segment will not intersect any other tiles other than tile1 and tile2.
+      isotile_->SetIfLessThan(tile1, secs1 * kMinPerSec);
+      isotile_->SetIfLessThan(tile2, secs1 * kMinPerSec);
+    } else {
+      // Find intersecting tiles (using a Bresenham method)
+      auto tiles = isotile_->Intersect(std::list<PointLL>{ll0, ll});
+      for (auto t : tiles) {
+        isotile_->SetIfLessThan(t.first, secs1 * kMinPerSec);
+      }
     }
     return;
   }
