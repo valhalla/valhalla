@@ -831,47 +831,45 @@ void Isochrone::UpdateIsoTile(const EdgeLabel& pred,
   // TODO - do we need partial shape from origin location to end of edge?
   float secs1 = pred.cost().secs;
 
-  // Avoid getting the shape for short edges
+  // For short edges just mark the segment between the 2 nodes of the edge. This
+  // avoid getting the shape for short edges.
   if (edge->length() < shape_interval_) {
-    // Mark the cell at the begin node
+    // Mark cells that intersect the segment (use a bounding box approximation)
     const auto* de = t2->directededge(opp);
-    const auto* node = tile->node(de->endnode());
-    isotile_->SetIfLessThan(node->latlng(), secs0 * kMinPerSec);
-
-    // Mark the cell at the end node (and any intervening cells)
-    auto tiles = isotile_->Intersect(std::list<PointLL>{node->latlng(), ll});
+    PointLL ll0 = tile->node(de->endnode())->latlng();
+    AABB2<PointLL> bbox(std::min(ll0.first, ll.first), std::min(ll0.second, ll.second),
+                        std::max(ll0.first, ll.first), std::max(ll0.second, ll.second));
+    auto tiles = isotile_->TileList(bbox);
     for (auto t : tiles) {
-      isotile_->SetIfLessThan(t.first, secs1 * kMinPerSec);
+      isotile_->SetIfLessThan(t, secs1 * kMinPerSec);
     }
     return;
   }
 
   // Get the shape and make sure shape is forward direction. Resample it to
-  // the shape interval.
+  // the shape interval to get regular spacing. Use the faster resample method.
+  // This does not use spherical interpolation - so it is not as accurate but
+  // interpolation is over short distances so accuracy should be fine.
   auto shape = tile->edgeinfo(edge->edgeinfo_offset()).shape();
   if (!edge->forward()) {
     std::reverse(shape.begin(), shape.end());
   }
-  auto resampled = resample_spherical_polyline(shape, shape_interval_);
-
-  // Mark the initial grid cell and iterate through the shape pairs
-  float secs = secs0;
-  isotile_->SetIfLessThan(shape.front(), secs * kMinPerSec);
-  auto tiles = isotile_->Intersect(std::list<PointLL>{shape.front(), shape.back()});
-  for (auto t : tiles) {
-    isotile_->SetIfLessThan(t.first, secs * kMinPerSec);
-  }
+  auto resampled = resample_polyline(shape, shape_interval_);
 
   // Mark grid cells along the shape if time is less than what is
   // already populated. Get intersection of tiles along each segment
-  // so this doesn't miss shape that crosses tile corners
+  // (just use a bounding box around the segment) so this doesn't miss
+  // shape that crosses tile corners
+  float secs = secs0;
   float delta = (shape_interval_ * (secs1 - secs0)) / edge->length();
   auto itr1 = resampled.begin();
   for (auto itr2 = itr1 + 1; itr2 < resampled.end(); itr1++, itr2++) {
     secs += delta;
-    auto tiles = isotile_->Intersect(std::list<PointLL>{*itr1, *itr2});
+    AABB2<PointLL> bbox(std::min(itr1->first, itr2->first), std::min(itr1->second, itr2->second),
+                        std::max(itr1->first, itr2->first), std::max(itr1->second, itr2->second));
+    auto tiles = isotile_->TileList(bbox);
     for (auto t : tiles) {
-      isotile_->SetIfLessThan(t.first, secs * kMinPerSec);
+      isotile_->SetIfLessThan(t, secs * kMinPerSec);
     }
   }
 }
