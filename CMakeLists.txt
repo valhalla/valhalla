@@ -143,8 +143,8 @@ if(NOT TARGET protobuf::libprotobuf-lite)
   endif()
 endif()
 
+add_library(libprime_server INTERFACE IMPORTED)
 if(ENABLE_SERVICES)
-  add_library(libprime_server INTERFACE IMPORTED)
   pkg_check_modules(libprime_server REQUIRED libprime_server>=0.6.3)
   # workaround for https://gitlab.kitware.com/cmake/cmake/issues/15804
   find_library(libprime_server_LIBRARY
