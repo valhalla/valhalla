@@ -861,7 +861,7 @@ void Isochrone::UpdateIsoTile(const EdgeLabel& pred,
   // (just use a bounding box around the segment) so this doesn't miss
   // shape that crosses tile corners
   float minutes = secs0 * kMinPerSec;
-  float delta = ((shape_interval_ * (secs1 - secs0)) / edge->length()) * kMinPerSec;
+  float delta = ((secs1 - secs0) / (resampled.size() - 1)) * kMinPerSec;
   auto itr1 = resampled.begin();
   for (auto itr2 = itr1 + 1; itr2 < resampled.end(); itr1++, itr2++) {
     minutes += delta;
