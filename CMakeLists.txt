@@ -117,29 +117,29 @@ set_target_properties(CURL::CURL PROPERTIES
   INTERFACE_INCLUDE_DIRECTORIES "${CURL_INCLUDE_DIR}"
   INTERFACE_COMPILE_DEFINITIONS CURL_STATICLIB)
 
-find_package(Protobuf REQUIRED)
+if(NOT PROTOBUF_LIBRARY)
+  find_package(Protobuf REQUIRED)
+endif()
 # TODO: remove after switching to CMake >= 3.7
 if(NOT TARGET protobuf::libprotobuf-lite)
-  if(PROTOBUF_LIBRARY)
-    add_library(protobuf::libprotobuf-lite UNKNOWN IMPORTED)
+  add_library(protobuf::libprotobuf-lite UNKNOWN IMPORTED)
+  set_target_properties(protobuf::libprotobuf-lite PROPERTIES
+    INTERFACE_INCLUDE_DIRECTORIES "${PROTOBUF_INCLUDE_DIR}")
+  if(EXISTS "${PROTOBUF_LIBRARY}")
     set_target_properties(protobuf::libprotobuf-lite PROPERTIES
-      INTERFACE_INCLUDE_DIRECTORIES "${PROTOBUF_INCLUDE_DIR}")
-    if(EXISTS "${PROTOBUF_LIBRARY}")
-      set_target_properties(protobuf::libprotobuf-lite PROPERTIES
-        IMPORTED_LOCATION "${PROTOBUF_LIBRARY}")
-    endif()
-    if(EXISTS "${PROTOBUF_LIBRARY_RELEASE}")
-      set_property(TARGET protobuf::libprotobuf-lite APPEND PROPERTY
-        IMPORTED_CONFIGURATIONS RELEASE)
-      set_target_properties(protobuf::libprotobuf-lite PROPERTIES
-        IMPORTED_LOCATION_RELEASE "${PROTOBUF_LIBRARY_RELEASE}")
-    endif()
-    if(EXISTS "${PROTOBUF_LIBRARY_DEBUG}")
-      set_property(TARGET protobuf::libprotobuf-lite APPEND PROPERTY
-        IMPORTED_CONFIGURATIONS DEBUG)
-      set_target_properties(protobuf::libprotobuf-lite PROPERTIES
-        IMPORTED_LOCATION_DEBUG "${PROTOBUF_LIBRARY_DEBUG}")
-    endif()
+      IMPORTED_LOCATION "${PROTOBUF_LIBRARY}")
+  endif()
+  if(EXISTS "${PROTOBUF_LIBRARY_RELEASE}")
+    set_property(TARGET protobuf::libprotobuf-lite APPEND PROPERTY
+      IMPORTED_CONFIGURATIONS RELEASE)
+    set_target_properties(protobuf::libprotobuf-lite PROPERTIES
+      IMPORTED_LOCATION_RELEASE "${PROTOBUF_LIBRARY_RELEASE}")
+  endif()
+  if(EXISTS "${PROTOBUF_LIBRARY_DEBUG}")
+    set_property(TARGET protobuf::libprotobuf-lite APPEND PROPERTY
+      IMPORTED_CONFIGURATIONS DEBUG)
+    set_target_properties(protobuf::libprotobuf-lite PROPERTIES
+      IMPORTED_LOCATION_DEBUG "${PROTOBUF_LIBRARY_DEBUG}")
   endif()
 endif()
 
@@ -170,7 +170,7 @@ if(ENABLE_DATA_TOOLS)
 elseif(ENABLE_TOOLS)
   find_package(Boost 1.51 REQUIRED COMPONENTS filesystem system program_options)
 ## Header only boost for the library without mjolnir
-else()
+elseif(NOT Boost_INCLUDE_DIRS)
   find_package(Boost 1.51 REQUIRED)
 endif()
 
