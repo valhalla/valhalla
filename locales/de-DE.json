@@ -142,13 +142,13 @@
         "Fußweg", 
         "Radweg", 
         "Mountainbike Strecke"
-      ], 
+      ],
       "metric_lengths": [
-        "<KILOMETERS> kilometers", 
-        "1 kilometer", 
-        "a half kilometer", 
-        "<METERS> meters", 
-        "less than 10 meters"
+        "<KILOMETERS> Kilometer",
+        "einen Kilometer",
+        "einen halben Kilometer",
+        "<METERS> Meter",
+        "weniger als 10 Meter"
       ], 
       "us_customary_lengths": [
         "<MILES> miles", 
