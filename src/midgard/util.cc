@@ -267,6 +267,58 @@ resample_spherical_polyline<std::list<PointLL>>(const std::list<PointLL>&, doubl
 template std::list<Point2>
 resample_spherical_polyline<std::list<Point2>>(const std::list<Point2>&, double, bool);
 
+// Resample the polyline to the specified resolution. This is a faster and less precise
+// method than resample_spherical_polyline.
+std::vector<PointLL> resample_polyline(const std::vector<PointLL>& polyline, float resolution) {
+  if (polyline.size() == 0) {
+    return {};
+  }
+
+  // Add the first point
+  std::vector<PointLL> resampled = {polyline.front()};
+
+  // Iterate through line segments of the polyline
+  float accumulated_d = 0.0f;
+  auto p0 = polyline.cbegin();
+  for (auto p1 = std::next(polyline.cbegin()); p1 != polyline.cend(); ++p0, ++p1) {
+    // Find distance (meters) between the 2 points of the input polyline.
+    float d = p0->Distance(*p1);
+
+    // Interpolate between the prior polyline point if we exceed the resolution
+    // (including distance accumulated so far)
+    if (d + accumulated_d > resolution) {
+      float dlon = p1->first - p0->first;
+      float dlat = p1->second - p0->second;
+
+      // Form the first interpolated point
+      float p = (resolution - accumulated_d) / d;
+      resampled.emplace_back(p0->first + p * dlon, p0->second + p * dlat);
+
+      // Continue to interpolate along the segment while accumulated distance is less than resolution
+      float dp = resolution / d;
+      while (p + dp < 1.0f) {
+        resampled.emplace_back(p0->first + p * dlon, p0->second + p * dlat);
+        p += dp;
+      }
+
+      // Set the accumulated distance to the distance remaining on this segment
+      accumulated_d = d * (1.0f - p);
+
+    } else {
+      // Have not accumulated enough distance. Add d to the accumulated distance
+      accumulated_d += d;
+    }
+  }
+
+  // Replace the last resampled point with the last point in the polyline if distance
+  // remaining is within tolerance (TBD), else add the last polyline point
+  if (resampled.size() > 1 && accumulated_d < (resolution * 0.25f)) {
+    resampled.pop_back();
+  }
+  resampled.push_back(std::move(polyline.back()));
+  return resampled;
+}
+
 // Return the intersection of two infinite lines if any
 template <class coord_t>
 bool intersect(const coord_t& u, const coord_t& v, const coord_t& a, const coord_t& b, coord_t& i) {
