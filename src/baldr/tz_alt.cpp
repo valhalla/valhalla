@@ -30,6 +30,8 @@
 // been invented (that would involve another several millennia of evolution).
 // We did not mean to shout.
 
+// clang-format off
+
 #ifdef _WIN32
    // windows.h will be included directly and indirectly (e.g. by curl).
    // We need to define these macros to prevent windows.h bringing in
@@ -4023,3 +4025,4 @@ static std::unique_ptr<tzdb> init_tzdb_strings() {
 # pragma GCC diagnostic pop
 #endif
 
+// clang-format on
