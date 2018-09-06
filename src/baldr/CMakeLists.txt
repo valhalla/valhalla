@@ -44,6 +44,7 @@ valhalla_module(NAME baldr
     admin.cc
     compression_utils.cc
     connectivity_map.cc
+    curler.cc
     datetime.cc
     directededge.cc
     edge_elevation.cc

@@ -50,6 +50,7 @@ function(valhalla_module)
   target_compile_definitions(${library}
     PUBLIC
       RAPIDJSON_HAS_STDSTRING
+      HAS_REMOTE_API=0
     PRIVATE
       $<$<BOOL:${LOGGING_LEVEL}>:LOGGING_LEVEL_${LOGGING_LEVEL}>)
   target_include_directories(${library} ${MODULE_INCLUDE_DIRECTORIES}
@@ -118,6 +119,7 @@ target_compile_definitions(valhalla
     RAPIDJSON_HAS_STDSTRING  # this is a part of the workaround for OBJECT libraries,
                              # because ${libvalhalla_compile_definitions} must be private.
                              # To be removed with ${libvalhalla_compile_definitions} below
+    HAS_REMOTE_API=0
   PRIVATE
     ${libvalhalla_compile_definitions})
 
