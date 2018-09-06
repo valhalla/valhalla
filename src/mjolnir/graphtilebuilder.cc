@@ -1108,10 +1108,8 @@ void GraphTileBuilder::AddPredictedSpeed(const uint32_t idx, const std::vector<i
 // predicted traffic is written after turn lane data.
 void GraphTileBuilder::UpdatePredictedSpeeds(const std::vector<DirectedEdge>& directededges) {
 
-  // No work to do if not predicted speed were added
-  if (speed_profile_offset_builder_.size() == 0) {
-    return;
-  }
+  // Even if there are no predicted speeds there still may be updated directed edges
+  // with free flow or constrained flow speeds - so don't return if no speed profiles
 
   // Get the name of the file
   boost::filesystem::path filename = tile_dir_ + filesystem::path::preferred_separator +
