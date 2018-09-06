@@ -4,7 +4,6 @@
 #include "baldr/tilehierarchy.h"
 #include "filesystem.h"
 #include "midgard/aabb2.h"
-#include "midgard/logging.h"
 #include "midgard/pointll.h"
 #include "midgard/tiles.h"
 

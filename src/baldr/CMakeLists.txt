@@ -44,6 +44,7 @@ valhalla_module(NAME baldr
     admin.cc
     compression_utils.cc
     connectivity_map.cc
+    curler.cc
     datetime.cc
     directededge.cc
     edge_elevation.cc
@@ -68,7 +69,7 @@ valhalla_module(NAME baldr
     transitroute.cc
     transitschedule.cc
     transittransfer.cc
-    ${VALHALLA_SOURCE_DIR}/third_party/date/src/tz.cpp
+    tz_alt.cpp
     laneconnectivity.cc
     verbal_text_formatter.cc
     verbal_text_formatter_us.cc
