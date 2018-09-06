@@ -115,6 +115,7 @@ namespace baldr {
 curler_t::curler_t() {
 }
 std::vector<char> curler_t::operator()(const std::string&, long&, bool allow_compression) {
+  LOG_ERROR("This version of libvalhalla was not built with CURL support");
   throw std::runtime_error("This version of libvalhalla was not built with CURL support");
 }
 } // namespace baldr
