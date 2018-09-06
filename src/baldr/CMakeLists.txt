@@ -69,7 +69,7 @@ valhalla_module(NAME baldr
     transitroute.cc
     transitschedule.cc
     transittransfer.cc
-    ${VALHALLA_SOURCE_DIR}/third_party/date/src/tz.cpp
+    tz_alt.cpp
     laneconnectivity.cc
     verbal_text_formatter.cc
     verbal_text_formatter_us.cc
