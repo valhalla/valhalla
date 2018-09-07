@@ -19,6 +19,7 @@ list(INSERT CMAKE_MODULE_PATH 0 ${VALHALLA_SOURCE_DIR}/cmake)
 option(ENABLE_TOOLS "Enable Valhalla tools" ON)
 option(ENABLE_DATA_TOOLS "Enable Valhalla data tools" ON)
 option(ENABLE_SERVICES "Enable Valhalla services" ON)
+option(ENABLE_HTTP "Enable the use of CURL" ON)
 option(ENABLE_PYTHON_BINDINGS "Enable Python bindings" ON)
 option(ENABLE_NODE_BINDINGS "Build NodeJs bindings" ON)
 option(ENABLE_CCACHE "Speed up incremental rebuilds via ccache" ON)
@@ -67,7 +68,6 @@ else()
   message(STATUS "Unrecognized build type - will use cmake defaults")
 endif()
 
-
 if(ENABLE_CCACHE AND (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU"))
   find_program(CCACHE_FOUND ccache)
   if(CCACHE_FOUND)
@@ -110,14 +110,18 @@ endif()
 find_package(Threads REQUIRED)
 find_package(ZLIB REQUIRED)
 
-find_package(CURL REQUIRED)
 add_library(CURL::CURL INTERFACE IMPORTED)
-set_target_properties(CURL::CURL PROPERTIES
-  INTERFACE_LINK_LIBRARIES "${CURL_LIBRARIES}"
-  INTERFACE_INCLUDE_DIRECTORIES "${CURL_INCLUDE_DIR}"
-  INTERFACE_COMPILE_DEFINITIONS CURL_STATICLIB)
+if(ENABLE_HTTP OR ENABLE_DATA_TOOLS)
+  if(NOT CURL_FOUND)
+    find_package(CURL REQUIRED)
+  endif()
+  set_target_properties(CURL::CURL PROPERTIES
+    INTERFACE_LINK_LIBRARIES "${CURL_LIBRARIES}"
+    INTERFACE_INCLUDE_DIRECTORIES "${CURL_INCLUDE_DIR}"
+    INTERFACE_COMPILE_DEFINITIONS CURL_STATICLIB)
+endif()
 
-if(NOT PROTOBUF_LIBRARY)
+if(NOT Protobuf_FOUND)
   find_package(Protobuf REQUIRED)
 endif()
 # TODO: remove after switching to CMake >= 3.7
@@ -170,7 +174,7 @@ if(ENABLE_DATA_TOOLS)
 elseif(ENABLE_TOOLS)
   find_package(Boost 1.51 REQUIRED COMPONENTS filesystem system program_options)
 ## Header only boost for the library without mjolnir
-elseif(NOT Boost_INCLUDE_DIRS)
+elseif(NOT Boost_FOUND)
   find_package(Boost 1.51 REQUIRED)
 endif()
 
@@ -189,8 +193,6 @@ endif()
 if (ENABLE_NODE_BINDINGS)
   add_subdirectory(src/bindings/node)
 endif()
-
-
 
 ## Executable targets
 function(get_source_path PATH NAME)

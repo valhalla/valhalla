@@ -21,7 +21,7 @@ namespace valhalla {
 namespace baldr {
 namespace DateTime {
 
-// get_tzdb_list
+// tz db
 struct tz_db_t {
   tz_db_t();
   size_t to_index(const std::string& zone) const;
@@ -31,10 +31,6 @@ protected:
   std::vector<std::string> names;
   const date::tzdb& db;
 };
-
-DATE_API const date::tzdb& get_tzdb();
-
-DATE_API date::tzdb_list& get_tzdb_list();
 
 /**
  * Get the timezone database singleton
