@@ -40,6 +40,7 @@ struct stats {
   uint32_t free_flow_count;
   uint32_t compressed_count;
   uint32_t updated_count;
+  uint32_t dup_count;
 
   // Accumulate counts from all threads
   void operator()(const stats& other) {
@@ -47,6 +48,7 @@ struct stats {
     free_flow_count += other.free_flow_count;
     compressed_count += other.compressed_count;
     updated_count += other.updated_count;
+    dup_count += other.dup_count;
   }
 };
 
@@ -254,6 +256,12 @@ void update_valhalla_tiles(
       DirectedEdge& directededge = tile_builder.directededge(idx);
       for (const auto& speeds : tile_start->second) {
         if (speeds.id == idx) {
+
+          if (directededge.constrained_flow_speed() || directededge.free_flow_speed() ||
+              directededge.predicted_speed()) {
+            duplicates++;
+          }
+
           if (speeds.constrained_flow_speed) {
             directededge.set_constrained_flow_speed(speeds.constrained_flow_speed);
           }
@@ -272,10 +280,7 @@ void update_valhalla_tiles(
       directededges.emplace_back(std::move(directededge));
     }
     stat.updated_count += count;
-
-    if (duplicates) {
-      LOG_INFO("Duplicate count = " + std::to_string(duplicates));
-    }
+    stat.dup_count += duplicates;
 
     // Write the new tile with updated directed edges and the predicted speeds
     tile_builder.UpdatePredictedSpeeds(directededges);
@@ -439,6 +444,8 @@ int main(int argc, char** argv) {
   std::unordered_map<vb::GraphId, std::vector<TrafficSpeeds>>::const_iterator t_start,
       t_end = unique_data.tile_speeds.cbegin();
   uint32_t updated_count = 0;
+  uint32_t duplicate_count = 0;
+
   // A place to hold the results of those threads (exceptions, stats)
   results.clear();
   // Atomically pass around stats info
@@ -463,6 +470,7 @@ int main(int argc, char** argv) {
     try {
       auto thread_stats = result.get_future().get();
       updated_count += thread_stats.updated_count;
+      duplicate_count += thread_stats.dup_count;
 
     } catch (std::exception& e) {
       // TODO: throw further up the chain?
@@ -470,6 +478,8 @@ int main(int argc, char** argv) {
   }
 
   LOG_INFO("Updated " + std::to_string(updated_count) + " directed edges.");
+  LOG_INFO("Duplicate count " + std::to_string(duplicate_count) + ".");
+
   LOG_INFO("Finished");
 
   return EXIT_SUCCESS;
