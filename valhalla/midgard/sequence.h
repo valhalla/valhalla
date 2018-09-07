@@ -30,6 +30,22 @@
 #endif // _MSC_VER
 #include <fcntl.h>
 
+// if we are on android
+#ifdef __ANDROID__
+// we didnt get a posix alias until 23
+#if __ANDROID_API__ < 23
+#define posix_madvise madvise
+#endif
+// we didnt get these posix aliases until M
+#if __ANDROID_API__ < __ANDROID_API_M__
+#define POSIX_MADV_NORMAL MADV_NORMAL
+#define POSIX_MADV_RANDOM MADV_RANDOM
+#define POSIX_MADV_SEQUENTIAL MADV_SEQUENTIAL
+#define POSIX_MADV_WILLNEED MADV_WILLNEED
+#define POSIX_MADV_DONTNEED MADV_DONTNEED
+#endif
+#endif
+
 #ifdef _MSC_VER
 #define WIN32_LEAN_AND_MEAN 1
 #define VC_EXTRALEAN 1

@@ -156,7 +156,7 @@
 #else   // !_WIN32
 #  include <unistd.h>
 #  if !USE_OS_TZDB
-#    include <wordexp.h>
+//#    include <wordexp.h>
 #  endif
 #  include <limits.h>
 #  include <string.h>
@@ -249,12 +249,12 @@ expand_path(std::string path)
 #      if TARGET_OS_IPHONE
     return date::iOSUtils::get_tzdata_path();
 #      else  // !TARGET_OS_IPHONE
-    ::wordexp_t w{};
+/*    ::wordexp_t w{};
     std::unique_ptr<::wordexp_t, void(*)(::wordexp_t*)> hold{&w, ::wordfree};
     ::wordexp(path.c_str(), &w, 0);
     if (w.we_wordc != 1)
         throw std::runtime_error("Cannot expand path: " + path);
-    path = w.we_wordv[0];
+    path = w.we_wordv[0];*/
     return path;
 #      endif  // !TARGET_OS_IPHONE
 }
