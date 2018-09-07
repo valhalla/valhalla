@@ -543,9 +543,10 @@ int main(int argc, char** argv) {
     std::stringstream ss_pct1, ss_pct2;
     ss_pct1 << std::setprecision(1) << std::fixed << pct1;
     ss_pct2 << std::setprecision(1) << std::fixed << pct2;
-    LOG_INFO("RC " + std::to_string(i) + ": driveable edges " + std::to_string(dr_road_class_edges[i]) +
-             " predtraffic " + std::to_string(pred_road_class_edges[i]) +
-             " pct " + ss_pct1.str() + " ff " + std::to_string(ff_road_class_edges[i]) + " pct " + ss_pct2.str());
+    LOG_INFO("RC " + std::to_string(i) + ": driveable edges " +
+             std::to_string(dr_road_class_edges[i]) + " predtraffic " +
+             std::to_string(pred_road_class_edges[i]) + " pct " + ss_pct1.str() + " ff " +
+             std::to_string(ff_road_class_edges[i]) + " pct " + ss_pct2.str());
     totaldriveable += dr_road_class_edges[i];
     totalpt += pred_road_class_edges[i];
     totalff += ff_road_class_edges[i];
