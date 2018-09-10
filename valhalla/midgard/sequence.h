@@ -21,6 +21,8 @@
 #include <utility>
 #include <vector>
 
+#include <valhalla/midgard/logging.h>
+
 #ifdef _MSC_VER
 #include <io.h>
 #else
@@ -555,12 +557,18 @@ struct tar {
       : tar_file(tar_file), corrupt_blocks(0) {
     // map the file
     struct stat s;
-    if (stat(tar_file.c_str(), &s) || s.st_size == 0 || (s.st_size % sizeof(header_t)) != 0) {
+    int x = stat(tar_file.c_str(), &s);
+    if (x || s.st_size == 0 || (s.st_size % sizeof(header_t)) != 0) {
+      LOG_ERROR("stat failed: " + tar_file + " " + std::to_string(x) + " " +
+                std::to_string(s.st_size) + " " + std::to_string(sizeof(header_t)));
       return;
     }
     try {
       mm.map(tar_file, s.st_size);
-    } catch (...) { return; }
+    } catch (const std::runtime_error& e) {
+      LOG_ERROR("mem map failed: " + tar_file + " " + e.what());
+      return;
+    }
     // rip through the tar to see whats in it noting that most tars end with 2 empty blocks
     // but we can concatenate tars and get empty blocks in between so we'll just be pretty
     // lax about it and we'll count the ones we cant make sense of
