@@ -9,7 +9,7 @@
 #include <sstream>
 #include <stdexcept>
 
-#ifdef ___ANDROID__
+#ifdef __ANDROID__
 #include <android/log.h>
 #endif
 
