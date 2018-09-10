@@ -62,7 +62,7 @@ const std::unordered_map<valhalla::midgard::logging::LogLevel, std::string, Enum
             {valhalla::midgard::logging::LogLevel::INFO, " \x1b[32;1m[INFO]\x1b[0m "},
             {valhalla::midgard::logging::LogLevel::DEBUG, " \x1b[34;1m[DEBUG]\x1b[0m "},
             {valhalla::midgard::logging::LogLevel::TRACE, " \x1b[37;1m[TRACE]\x1b[0m "}};
-#ifdef ___ANDROID__
+#ifdef __ANDROID__
 const std::unordered_map<valhalla::midgard::logging::LogLevel, android_LogPriority, EnumHasher>
     android_levels{{valhalla::midgard::logging::LogLevel::ERROR, ANDROID_LOG_ERROR},
                    {valhalla::midgard::logging::LogLevel::WARN, ANDROID_LOG_WARN},
@@ -128,14 +128,14 @@ public:
                    : uncolored) {
   }
   virtual void Log(const std::string& message, const LogLevel level) {
-#ifdef ___ANDROID__
+#ifdef __ANDROID__
     __android_log_print(android_levels.find(level)->second, "valhalla", message.cstr());
 #else
     Log(message, levels.find(level)->second);
 #endif
   }
   virtual void Log(const std::string& message, const std::string& custom_directive = " [TRACE] ") {
-#ifdef ___ANDROID__
+#ifdef __ANDROID__
     __android_log_print(ANDROID_LOG_INFO, "valhalla", message.cstr());
 #else
     std::string output;
@@ -164,7 +164,7 @@ bool std_out_logger_registered = RegisterLogger("std_out", [](const LoggingConfi
 class StdErrLogger : public StdOutLogger {
   using StdOutLogger::StdOutLogger;
   virtual void Log(const std::string& message, const std::string& custom_directive = " [TRACE] ") {
-#ifdef ___ANDROID__
+#ifdef __ANDROID__
     __android_log_print(ANDROID_LOG_ERROR, "valhalla", message.cstr());
 #else
     std::string output;
