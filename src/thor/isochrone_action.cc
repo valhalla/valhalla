@@ -32,9 +32,9 @@ std::string thor_worker_t::isochrones(valhalla_request_t& request) {
   // where there has been a higher cost that might still be marked in the isochrone
   auto grid = (costing == "multimodal" || costing == "transit")
                   ? isochrone_gen.ComputeMultiModal(*request.options.mutable_locations(),
-                                                    contours.back() + 10, reader, mode_costing, mode)
+                                                    contours.back() + 10, *reader, mode_costing, mode)
                   : isochrone_gen.Compute(*request.options.mutable_locations(), contours.back() + 10,
-                                          reader, mode_costing, mode);
+                                          *reader, mode_costing, mode);
 
   // turn it into geojson
   auto isolines = grid->GenerateContours(contours, request.options.polygons(),

@@ -100,7 +100,7 @@ std::vector<thor::PathInfo> thor_worker_t::get_path(PathAlgorithm* path_algorith
     cost->set_allow_destination_only(false);
   }
   cost->set_pass(0);
-  auto path = path_algorithm->GetBestPath(origin, destination, reader, mode_costing, mode);
+  auto path = path_algorithm->GetBestPath(origin, destination, *reader, mode_costing, mode);
 
   // If path is not found try again with relaxed limits (if allowed)
   if (path.empty() || (costing == "pedestrian" && path_algorithm->has_ferry())) {
@@ -119,7 +119,7 @@ std::vector<thor::PathInfo> thor_worker_t::get_path(PathAlgorithm* path_algorith
       float expansion_within_factor = using_astar ? 4.0f : 2.0f;
       cost->RelaxHierarchyLimits(relax_factor, expansion_within_factor);
       cost->set_allow_destination_only(true);
-      path = path_algorithm->GetBestPath(origin, destination, reader, mode_costing, mode);
+      path = path_algorithm->GetBestPath(origin, destination, *reader, mode_costing, mode);
     }
   }
 
@@ -184,7 +184,7 @@ std::list<valhalla::odin::TripPath> thor_worker_t::path_arrive_by(
       AttributesController controller;
 
       // Form output information based on path edges
-      auto trip_path = thor::TripPathBuilder::Build(controller, reader, mode_costing, path, *origin,
+      auto trip_path = thor::TripPathBuilder::Build(controller, *reader, mode_costing, path, *origin,
                                                     *destination, throughs, interrupt);
       path.clear();
 
@@ -253,7 +253,7 @@ std::list<valhalla::odin::TripPath> thor_worker_t::path_depart_at(
       AttributesController controller;
 
       // Form output information based on path edges
-      auto trip_path = thor::TripPathBuilder::Build(controller, reader, mode_costing, path, *origin,
+      auto trip_path = thor::TripPathBuilder::Build(controller, *reader, mode_costing, path, *origin,
                                                     *destination, throughs, interrupt);
       path.clear();
 

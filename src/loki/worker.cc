@@ -100,13 +100,13 @@ void loki_worker_t::parse_costing(valhalla_request_t& request) {
   if (request.options.avoid_locations_size()) {
     try {
       auto avoid_locations = PathLocation::fromPBF(request.options.avoid_locations());
-      auto results = loki::Search(avoid_locations, reader, edge_filter, node_filter);
+      auto results = loki::Search(avoid_locations, *reader, edge_filter, node_filter);
       std::unordered_set<uint64_t> avoids;
       for (const auto& result : results) {
         for (const auto& edge : result.second.edges) {
           auto inserted = avoids.insert(edge.id);
           GraphId shortcut;
-          if (inserted.second && (shortcut = reader.GetShortcut(edge.id)).Is_Valid()) {
+          if (inserted.second && (shortcut = reader->GetShortcut(edge.id)).Is_Valid()) {
             avoids.insert(shortcut);
           }
         }
@@ -121,8 +121,9 @@ void loki_worker_t::parse_costing(valhalla_request_t& request) {
   }
 }
 
-loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config)
-    : config(config), reader(config.get_child("mjolnir")),
+loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
+                             const std::shared_ptr<baldr::GraphReader>& graph_reader)
+    : config(config), reader(graph_reader),
       connectivity_map(config.get<bool>("loki.use_connectivity", true)
                            ? new connectivity_map_t(config.get_child("mjolnir"))
                            : nullptr),
@@ -133,6 +134,9 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config)
       sample(config.get<std::string>("additional_data.elevation", "test/data/")),
       max_elevation_shape(config.get<size_t>("service_limits.skadi.max_shape")),
       min_resample(config.get<float>("service_limits.skadi.min_resample")) {
+  // If we weren't provided with a graph reader make our own
+  if (!reader)
+    reader.reset(new baldr::GraphReader(config.get_child("mjolnir")));
 
   // Keep a string noting which actions we support, throw if one isnt supported
   odin::DirectionsOptions::Action action;
@@ -206,8 +210,8 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config)
 }
 
 void loki_worker_t::cleanup() {
-  if (reader.OverCommitted()) {
-    reader.Clear();
+  if (reader->OverCommitted()) {
+    reader->Clear();
   }
 }
 
