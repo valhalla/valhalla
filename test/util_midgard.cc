@@ -1,6 +1,7 @@
 #include "midgard/constants.h"
 #include "midgard/distanceapproximator.h"
 #include "midgard/encoded.h"
+#include "midgard/polyline2.h"
 #include "midgard/util.h"
 #include "test.h"
 #include <cmath>
@@ -233,6 +234,17 @@ void TestResample() {
     }
     if (current + 1 != resampled.cend())
       throw std::runtime_error("Last found point should be last point in resampled polyline");
+
+    // Test resample_polyline
+    Polyline2<PointLL> pl(input_shape);
+    float resolution = 100.0f;
+    auto length = pl.Length();
+    resampled = resample_polyline(input_shape, length, resolution);
+    size_t n = std::round(length / resolution);
+    float sample_distance = length / n;
+    if (resampled.size() != n + 1) {
+      throw std::runtime_error("resample_polyline - Sampled polyline is not the expected length");
+    }
   }
 }
 
