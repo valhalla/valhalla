@@ -841,8 +841,7 @@ void Isochrone::UpdateIsoTile(const EdgeLabel& pred,
     auto tile2 = isotile_->TileId(ll);
     if (tile1 == tile2) {
       isotile_->SetIfLessThan(tile1, secs1 * kMinPerSec);
-    } else if (tile2 == isotile_->LeftNeighbor(tile1) || tile2 == isotile_->RightNeighbor(tile1) ||
-               tile2 == isotile_->BottomNeighbor(tile1) || tile2 == isotile_->TopNeighbor(tile1)) {
+    } else if (isotile_->AreNeighbors(tile1, tile2)) {
       // If tile 2 is directly east, west, north, or south of tile 1 then the
       // segment will not intersect any other tiles other than tile1 and tile2.
       isotile_->SetIfLessThan(tile1, secs1 * kMinPerSec);
@@ -883,8 +882,7 @@ void Isochrone::UpdateIsoTile(const EdgeLabel& pred,
     auto tile2 = isotile_->TileId(*itr2);
     if (tile1 == tile2) {
       isotile_->SetIfLessThan(tile1, minutes);
-    } else if (tile2 == isotile_->LeftNeighbor(tile1) || tile2 == isotile_->RightNeighbor(tile1) ||
-               tile2 == isotile_->BottomNeighbor(tile1) || tile2 == isotile_->TopNeighbor(tile1)) {
+    } else if (isotile_->AreNeighbors(tile1, tile2)) {
       // If tile 2 is directly east, west, north, or south of tile 1 then the
       // segment will not intersect any other tiles other than tile1 and tile2.
       isotile_->SetIfLessThan(tile1, minutes);
