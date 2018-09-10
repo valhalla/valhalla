@@ -269,7 +269,8 @@ resample_spherical_polyline<std::list<Point2>>(const std::list<Point2>&, double,
 
 // Resample the polyline to the specified resolution. This is a faster and less precise
 // method than resample_spherical_polyline.
-std::vector<PointLL> resample_polyline(const std::vector<PointLL>& polyline, float resolution) {
+std::vector<PointLL>
+resample_polyline(const std::vector<PointLL>& polyline, const float length, const float resolution) {
   if (polyline.size() == 0) {
     return {};
   }
@@ -277,28 +278,37 @@ std::vector<PointLL> resample_polyline(const std::vector<PointLL>& polyline, flo
   // Add the first point
   std::vector<PointLL> resampled = {polyline.front()};
 
+  // Compute sample distance that is near the resolution but splits the polyline equally
+  size_t n = std::round(length / resolution);
+  float sample_distance = length / n;
+
   // Iterate through line segments of the polyline
   float accumulated_d = 0.0f;
   auto p0 = polyline.cbegin();
   for (auto p1 = std::next(polyline.cbegin()); p1 != polyline.cend(); ++p0, ++p1) {
+    // break if we have sampled enough
+    if (resampled.size() == n) {
+      break;
+    }
+
     // Find distance (meters) between the 2 points of the input polyline.
     float d = p0->Distance(*p1);
 
     // Interpolate between the prior polyline point if we exceed the resolution
     // (including distance accumulated so far)
-    if (d + accumulated_d > resolution) {
+    if (d + accumulated_d > sample_distance) {
       float dlon = p1->first - p0->first;
       float dlat = p1->second - p0->second;
 
       // Form the first interpolated point
-      float p = (resolution - accumulated_d) / d;
+      float p = (sample_distance - accumulated_d) / d;
       resampled.emplace_back(p0->first + p * dlon, p0->second + p * dlat);
 
       // Continue to interpolate along the segment while accumulated distance is less than resolution
-      float dp = resolution / d;
-      while (p + dp < 1.0f) {
-        resampled.emplace_back(p0->first + p * dlon, p0->second + p * dlat);
+      float dp = sample_distance / d;
+      while (p + dp < 1.0f && resampled.size() < n) {
         p += dp;
+        resampled.emplace_back(p0->first + p * dlon, p0->second + p * dlat);
       }
 
       // Set the accumulated distance to the distance remaining on this segment
@@ -310,12 +320,9 @@ std::vector<PointLL> resample_polyline(const std::vector<PointLL>& polyline, flo
     }
   }
 
-  // Replace the last resampled point with the last point in the polyline if distance
-  // remaining is within tolerance (TBD), else add the last polyline point
-  if (resampled.size() > 1 && accumulated_d < (resolution * 0.25f)) {
-    resampled.pop_back();
-  }
+  // Append the last polyline point
   resampled.push_back(std::move(polyline.back()));
+
   return resampled;
 }
 
