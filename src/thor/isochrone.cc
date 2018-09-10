@@ -833,7 +833,7 @@ void Isochrone::UpdateIsoTile(const EdgeLabel& pred,
 
   // For short edges just mark the segment between the 2 nodes of the edge. This
   // avoid getting the shape for short edges.
-  if (edge->length() < shape_interval_ * 1.25f) {
+  if (edge->length() < shape_interval_ * 1.5f) {
     // Mark tiles that intersect the segment. Optimize this to avoid calling the Intersect
     // method unless more than 2 tiles are crossed by the segment.
     PointLL ll0 = tile->node(t2->directededge(opp)->endnode())->latlng();
@@ -841,8 +841,7 @@ void Isochrone::UpdateIsoTile(const EdgeLabel& pred,
     auto tile2 = isotile_->TileId(ll);
     if (tile1 == tile2) {
       isotile_->SetIfLessThan(tile1, secs1 * kMinPerSec);
-    } else if (tile2 == isotile_->LeftNeighbor(tile1) || tile2 == isotile_->RightNeighbor(tile1) ||
-               tile2 == isotile_->BottomNeighbor(tile1) || tile2 == isotile_->TopNeighbor(tile1)) {
+    } else if (isotile_->AreNeighbors(tile1, tile2)) {
       // If tile 2 is directly east, west, north, or south of tile 1 then the
       // segment will not intersect any other tiles other than tile1 and tile2.
       isotile_->SetIfLessThan(tile1, secs1 * kMinPerSec);
@@ -862,10 +861,10 @@ void Isochrone::UpdateIsoTile(const EdgeLabel& pred,
   // This does not use spherical interpolation - so it is not as accurate but
   // interpolation is over short distances so accuracy should be fine.
   auto shape = tile->edgeinfo(edge->edgeinfo_offset()).shape();
+  auto resampled = resample_polyline(shape, edge->length(), shape_interval_);
   if (!edge->forward()) {
-    std::reverse(shape.begin(), shape.end());
+    std::reverse(resampled.begin(), resampled.end());
   }
-  auto resampled = resample_polyline(shape, shape_interval_);
 
   // Mark grid cells along the shape if time is less than what is
   // already populated. Get intersection of tiles along each segment
@@ -883,8 +882,7 @@ void Isochrone::UpdateIsoTile(const EdgeLabel& pred,
     auto tile2 = isotile_->TileId(*itr2);
     if (tile1 == tile2) {
       isotile_->SetIfLessThan(tile1, minutes);
-    } else if (tile2 == isotile_->LeftNeighbor(tile1) || tile2 == isotile_->RightNeighbor(tile1) ||
-               tile2 == isotile_->BottomNeighbor(tile1) || tile2 == isotile_->TopNeighbor(tile1)) {
+    } else if (isotile_->AreNeighbors(tile1, tile2)) {
       // If tile 2 is directly east, west, north, or south of tile 1 then the
       // segment will not intersect any other tiles other than tile1 and tile2.
       isotile_->SetIfLessThan(tile1, minutes);

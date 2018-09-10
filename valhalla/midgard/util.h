@@ -386,10 +386,13 @@ resample_spherical_polyline(const container_t& polyline, double resolution, bool
  * Resample a polyline to the specified resolution. This is less precise than the spherical
  * resampling.
  * @param polyline     vector of points in the line
- * @param resolution   maximum distance (meters) between any two points in the resampled line
+ * @param length       length of the polyline
+ * @param resolution   desired resolution(meters) between any two points in the resampled line.
+ *                     The polyline is sampled equally at a spacing that is close to the resolution.
  * @return Returns a vector of resampled points.
  */
-std::vector<PointLL> resample_polyline(const std::vector<PointLL>& polyline, float resolution);
+std::vector<PointLL>
+resample_polyline(const std::vector<PointLL>& polyline, const float length, const float resolution);
 
 /**
  * A class to wrap a primitive array in something iterable which is useful for loops mostly

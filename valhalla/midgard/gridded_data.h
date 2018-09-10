@@ -35,16 +35,26 @@ public:
    * @param  value  Value to set at the tile/grid location.
    * @return whether or not the value was set
    */
-  bool Set(const coord_t& pt, const float value);
+  bool Set(const coord_t& pt, const float value) {
+    auto cell_id = this->TileId(pt);
+    if (cell_id >= 0 && cell_id < data_.size()) {
+      data_[cell_id] = value;
+      return true;
+    }
+    return false;
+  }
 
   /**
    * Set the value at a specified tile Id if the value is less than the current
    * value set at the grid location. Verifies that the tile is valid.
    * @param  tile_id     Tile Id to set value for.
    * @param  value  Value to set at the tile/grid location.
-   * @return whether or not the value was set
    */
-  bool SetIfLessThan(const int tile_id, const float value);
+  void SetIfLessThan(const int tile_id, const float value) {
+    if (tile_id >= 0 && tile_id < data_.size() && value < data_[tile_id]) {
+      data_[tile_id] = value;
+    }
+  }
 
   /**
    * Set the value at a specified point if the value is less than the current
@@ -52,15 +62,21 @@ public:
    * tiles.
    * @param  pt     Coordinate to set within the tiles.
    * @param  value  Value to set at the tile/grid location.
-   * @return whether or not the value was set
    */
-  bool SetIfLessThan(const coord_t& pt, const float value);
+  void SetIfLessThan(const coord_t& pt, const float value) {
+    int32_t cell_id = this->TileId(pt);
+    if (cell_id >= 0 && cell_id < data_.size() && value < data_[cell_id]) {
+      data_[cell_id] = value;
+    }
+  }
 
   /**
    * Get the array of data.
    * @return  Returns the data associated with the tiles.
    */
-  const std::vector<float>& data() const;
+  const std::vector<float>& data() const {
+    return data_;
+  }
 
   using contour_t = std::list<coord_t>;
   using feature_t = std::list<contour_t>;
