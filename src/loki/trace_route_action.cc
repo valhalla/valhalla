@@ -171,12 +171,12 @@ void loki_worker_t::locations_from_shape(valhalla_request_t& request) {
 
   // Add first and last correlated locations to request
   try {
-    auto projections = loki::Search(locations, reader, edge_filter, node_filter);
+    auto projections = loki::Search(locations, *reader, edge_filter, node_filter);
     request.options.clear_locations();
     PathLocation::toPBF(projections.at(locations.front()), request.options.mutable_locations()->Add(),
-                        reader);
+                        *reader);
     PathLocation::toPBF(projections.at(locations.back()), request.options.mutable_locations()->Add(),
-                        reader);
+                        *reader);
   } catch (const std::exception&) { throw valhalla_exception_t{171}; }
 }
 

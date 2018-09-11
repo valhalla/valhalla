@@ -27,7 +27,8 @@ void run_service(const boost::property_tree::ptree& config);
 
 class loki_worker_t : public service_worker_t {
 public:
-  loki_worker_t(const boost::property_tree::ptree& config);
+  loki_worker_t(const boost::property_tree::ptree& config,
+                const std::shared_ptr<baldr::GraphReader>& graph_reader = {});
 #ifdef HAVE_HTTP
   virtual worker_t::result_t work(const std::list<zmq::message_t>& job,
                                   void* request_info,
@@ -64,8 +65,8 @@ protected:
   sif::CostFactory<sif::DynamicCost> factory;
   sif::EdgeFilter edge_filter;
   sif::NodeFilter node_filter;
-  valhalla::baldr::GraphReader reader;
-  std::shared_ptr<valhalla::baldr::connectivity_map_t> connectivity_map;
+  std::shared_ptr<baldr::GraphReader> reader;
+  std::shared_ptr<baldr::connectivity_map_t> connectivity_map;
   std::string action_str;
   std::unordered_map<std::string, size_t> max_locations;
   std::unordered_map<std::string, float> max_distance;

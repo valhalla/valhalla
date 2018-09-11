@@ -9,6 +9,10 @@
 #include <sstream>
 #include <stdexcept>
 
+#ifdef __ANDROID__
+#include <android/log.h>
+#endif
+
 namespace {
 
 inline std::tm* get_gmtime(const std::time_t* time, std::tm* tm) {
@@ -39,6 +43,33 @@ std::string TimeStamp() {
           gmt.tm_mday, gmt.tm_hour, gmt.tm_min, fractional_seconds.count());
   return buffer;
 }
+
+// the Log levels we support
+struct EnumHasher {
+  template <typename T> std::size_t operator()(T t) const {
+    return static_cast<std::size_t>(t);
+  }
+};
+const std::unordered_map<valhalla::midgard::logging::LogLevel, std::string, EnumHasher>
+    uncolored{{valhalla::midgard::logging::LogLevel::ERROR, " [ERROR] "},
+              {valhalla::midgard::logging::LogLevel::WARN, " [WARN] "},
+              {valhalla::midgard::logging::LogLevel::INFO, " [INFO] "},
+              {valhalla::midgard::logging::LogLevel::DEBUG, " [DEBUG] "},
+              {valhalla::midgard::logging::LogLevel::TRACE, " [TRACE] "}};
+const std::unordered_map<valhalla::midgard::logging::LogLevel, std::string, EnumHasher>
+    colored{{valhalla::midgard::logging::LogLevel::ERROR, " \x1b[31;1m[ERROR]\x1b[0m "},
+            {valhalla::midgard::logging::LogLevel::WARN, " \x1b[33;1m[WARN]\x1b[0m "},
+            {valhalla::midgard::logging::LogLevel::INFO, " \x1b[32;1m[INFO]\x1b[0m "},
+            {valhalla::midgard::logging::LogLevel::DEBUG, " \x1b[34;1m[DEBUG]\x1b[0m "},
+            {valhalla::midgard::logging::LogLevel::TRACE, " \x1b[37;1m[TRACE]\x1b[0m "}};
+#ifdef __ANDROID__
+const std::unordered_map<valhalla::midgard::logging::LogLevel, android_LogPriority, EnumHasher>
+    android_levels{{valhalla::midgard::logging::LogLevel::ERROR, ANDROID_LOG_ERROR},
+                   {valhalla::midgard::logging::LogLevel::WARN, ANDROID_LOG_WARN},
+                   {valhalla::midgard::logging::LogLevel::INFO, ANDROID_LOG_INFO},
+                   {valhalla::midgard::logging::LogLevel::DEBUG, ANDROID_LOG_DEBUG},
+                   {valhalla::midgard::logging::LogLevel::TRACE, ANDROID_LOG_VERBOSE}};
+#endif
 
 } // namespace
 
@@ -76,24 +107,6 @@ bool RegisterLogger(const std::string& name, LoggerCreator function_ptr) {
   return success.second;
 }
 
-// the Log levels we support
-struct EnumHasher {
-  template <typename T> std::size_t operator()(T t) const {
-    return static_cast<std::size_t>(t);
-  }
-};
-const std::unordered_map<LogLevel, std::string, EnumHasher> uncolored{{LogLevel::ERROR, " [ERROR] "},
-                                                                      {LogLevel::WARN, " [WARN] "},
-                                                                      {LogLevel::INFO, " [INFO] "},
-                                                                      {LogLevel::DEBUG, " [DEBUG] "},
-                                                                      {LogLevel::TRACE, " [TRACE] "}};
-const std::unordered_map<LogLevel, std::string, EnumHasher>
-    colored{{LogLevel::ERROR, " \x1b[31;1m[ERROR]\x1b[0m "},
-            {LogLevel::WARN, " \x1b[33;1m[WARN]\x1b[0m "},
-            {LogLevel::INFO, " \x1b[32;1m[INFO]\x1b[0m "},
-            {LogLevel::DEBUG, " \x1b[34;1m[DEBUG]\x1b[0m "},
-            {LogLevel::TRACE, " \x1b[37;1m[TRACE]\x1b[0m "}};
-
 // logger base class, not pure virtual so you can use as a null logger if you want
 Logger::Logger(const LoggingConfig& config){};
 Logger::~Logger(){};
@@ -115,9 +128,16 @@ public:
                    : uncolored) {
   }
   virtual void Log(const std::string& message, const LogLevel level) {
+#ifdef __ANDROID__
+    __android_log_print(android_levels.find(level)->second, "valhalla", "%s", message.c_str());
+#else
     Log(message, levels.find(level)->second);
+#endif
   }
   virtual void Log(const std::string& message, const std::string& custom_directive = " [TRACE] ") {
+#ifdef __ANDROID__
+    __android_log_print(ANDROID_LOG_INFO, "valhalla", "%s", message.c_str());
+#else
     std::string output;
     output.reserve(message.length() + 64);
     output.append(TimeStamp());
@@ -130,6 +150,7 @@ public:
     // obviously we dont care if flushes interleave
     std::cout << output;
     std::cout.flush();
+#endif
   }
 
 protected:
@@ -143,6 +164,9 @@ bool std_out_logger_registered = RegisterLogger("std_out", [](const LoggingConfi
 class StdErrLogger : public StdOutLogger {
   using StdOutLogger::StdOutLogger;
   virtual void Log(const std::string& message, const std::string& custom_directive = " [TRACE] ") {
+#ifdef __ANDROID__
+    __android_log_print(ANDROID_LOG_ERROR, "valhalla", "%s", message.c_str());
+#else
     std::string output;
     output.reserve(message.length() + 64);
     output.append(TimeStamp());
@@ -151,6 +175,7 @@ class StdErrLogger : public StdOutLogger {
     output.push_back('\n');
     std::cerr << output;
     std::cerr.flush();
+#endif
   }
 };
 bool std_err_logger_registered = RegisterLogger("std_err", [](const LoggingConfig& config) {
