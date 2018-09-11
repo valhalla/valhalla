@@ -3,6 +3,7 @@
    * UPDATED: Refactor to use the pbf options instead of the ptree config [#1428](https://github.com/valhalla/valhalla/pull/1428) This completes [1357](https://github.com/valhalla/valhalla/issues/1357)
    * UPDATED: Removed the boost/date_time dependency from baldr and odin. We added the Howard Hinnant date and time library as a submodule. [#1494](https://github.com/valhalla/valhalla/pull/1494)
    * UPDATED: Fixed 'Drvie' typo [#1505](https://github.com/valhalla/valhalla/pull/1505) This completes [1504](https://github.com/valhalla/valhalla/issues/1504)
+   * UPDATED: Do not run a second pass on long pedestrian routes that include a ferry (but succeed on first pass). This is a performance fix. Long pedestrian routes with A star factor based on ferry speed end up being very inefficient.
 * **Request Parsing**
    * FIXED: Fixed through locations weren't honored [#1449](https://github.com/valhalla/valhalla/pull/1449)
 
