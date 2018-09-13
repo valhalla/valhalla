@@ -10,13 +10,13 @@
 #include <valhalla/baldr/nodeinfo.h>
 #include <valhalla/baldr/timedomain.h>
 #include <valhalla/baldr/transitdeparture.h>
-
-#include <memory>
-#include <unordered_set>
-
+#include <valhalla/proto/directions_options.pb.h>
 #include <valhalla/sif/costconstants.h>
 #include <valhalla/sif/edgelabel.h>
 #include <valhalla/sif/hierarchylimits.h>
+
+#include <memory>
+#include <unordered_set>
 
 namespace valhalla {
 namespace sif {
@@ -57,10 +57,10 @@ class DynamicCost {
 public:
   /**
    * Constructor.
-   * @param  pt   Property tree with (optional) costing configuration.
+   * @param  options Request options in a pbf
    * @param  mode Travel mode
    */
-  DynamicCost(const boost::property_tree::ptree& pt, const TravelMode mode);
+  DynamicCost(const odin::DirectionsOptions& options, const TravelMode mode);
 
   virtual ~DynamicCost();
 

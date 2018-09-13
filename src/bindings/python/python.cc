@@ -2,10 +2,10 @@
 // FreeBSD/macOS
 #include <boost/python.hpp>
 
+#include "baldr/rapidjson_utils.h"
 #include <boost/make_shared.hpp>
 #include <boost/noncopyable.hpp>
 #include <boost/optional.hpp>
-#include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/shared_ptr.hpp>
 #include <sstream>
@@ -28,7 +28,7 @@ configure(const boost::optional<std::string>& config = boost::none) {
     try {
       // parse the config
       boost::property_tree::ptree temp_pt;
-      boost::property_tree::read_json(config.get(), temp_pt);
+      rapidjson::read_json(config.get(), temp_pt);
       pt = temp_pt;
 
       // configure logging

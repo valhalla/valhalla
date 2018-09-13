@@ -1,3 +1,12 @@
+add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/date_time_zonespec.h
+  COMMAND ${CMAKE_COMMAND} -P ${VALHALLA_SOURCE_DIR}/cmake/Binary2Header.cmake
+      ${VALHALLA_SOURCE_DIR}/date_time/zonespec.csv
+      ${CMAKE_CURRENT_BINARY_DIR}/date_time_zonespec.h
+      --variable-name date_time_zonespec_csv --skip 1 --raw
+  WORKING_DIRECTORY ${VALHALLA_SOURCE_DIR}
+  COMMENT "Compiling date_time/zonespec.csv to date_time_zonespec.h"
+  DEPENDS ${VALHALLA_SOURCE_DIR}/date_time/zonespec.csv)
+
 add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/admin_lua_proc.h
   COMMAND ${CMAKE_COMMAND} -P ${VALHALLA_SOURCE_DIR}/cmake/Binary2Header.cmake
       ${VALHALLA_SOURCE_DIR}/lua/admin.lua
@@ -21,6 +30,7 @@ add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/graph_lua_proc.h
 file(GLOB headers ${VALHALLA_SOURCE_DIR}/valhalla/mjolnir/*.h)
 
 set(sources
+  ${CMAKE_CURRENT_BINARY_DIR}/date_time_zonespec.h
   ${CMAKE_CURRENT_BINARY_DIR}/graph_lua_proc.h
   ${CMAKE_CURRENT_BINARY_DIR}/admin_lua_proc.h
 
@@ -64,12 +74,16 @@ valhalla_module(NAME mjolnir
     PUBLIC
       ${VALHALLA_SOURCE_DIR}
       ${VALHALLA_SOURCE_DIR}/valhalla
-    PRIVATE
+      ${VALHALLA_SOURCE_DIR}/third_party/date/include
+   PRIVATE
       ${CMAKE_CURRENT_BINARY_DIR}
       ${CMAKE_CURRENT_BINARY_DIR}/valhalla
   DEPENDS
     valhalla::proto
     valhalla::baldr
+    Boost::filesystem
+    Boost::system
+    Boost::date_time
     Spatialite::Spatialite
     SQLite3::SQLite3
     Lua::Lua

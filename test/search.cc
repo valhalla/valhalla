@@ -3,7 +3,6 @@
 #include <cstdint>
 
 #include <boost/filesystem.hpp>
-#include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <unordered_set>
 
@@ -170,7 +169,7 @@ void search(const valhalla::baldr::Location& location,
   }
   // note that this just checks that p has the edges that answer has
   // p can have more edges than answer has and that wont fail this check!
-  if (!(answer == p))
+  if (!answer.shares_edges(p))
     throw std::runtime_error("Did not find expected edges");
   // if you want to enforce that the result didnt have more then expected
   if (exact && answer.edges.size() != p.edges.size())

@@ -1,16 +1,16 @@
 ## Lists tests
 set(tests aabb2 access_restriction actor admin attributes_controller complexrestriction datetime directededge
   distanceapproximator double_bucket_queue edgecollapser edge_elevation edgestatus ellipse encode
-  enhancedtrippath factory graphid graphreader graphtile graphtileheader gridded_data grid_range_query grid_traversal
+  enhancedtrippath factory graphid graphtile graphtileheader gridded_data grid_range_query grid_traversal
   json laneconnectivity linesegment2 location logging maneuversbuilder map_matcher_factory
-  narrative_dictionary nodeinfo obb2 openlr optimizer parse_request point2 pointll
+  narrative_dictionary nodeinfo obb2 openlr optimizer pathlocation_serialization parse_request point2 pointll
   polyline2 predictedspeeds queue routing sample sequence sign signs streetname streetnames streetnames_factory
   streetnames_us streetname_us tilehierarchy tiles traffic_matcher transitdeparture transitroute transitschedule
   transitstop turn turnlanes util_midgard util_skadi vector2 verbal_text_formatter verbal_text_formatter_us
   verbal_text_formatter_us_co verbal_text_formatter_us_tx viterbi_search compression)
 
 if(ENABLE_DATA_TOOLS)
-  list(APPEND tests astar edgeinfobuilder graphbuilder graphparser graphtilebuilder predictive_traffic
+  list(APPEND tests astar edgeinfobuilder graphbuilder graphparser graphtilebuilder graphreader predictive_traffic
     idtable matrix names node_search refs search servicedays signinfo timedep_paths timeparsing trivial_paths uniquenames utrecht)
 endif()
 
@@ -36,7 +36,7 @@ foreach(test ${tests})
   target_link_libraries(${test} valhalla)
 endforeach()
 
-set(cost_tests autocost bicyclecost motorscootercost pedestriancost transitcost truckcost)
+set(cost_tests autocost bicyclecost motorcyclecost motorscootercost pedestriancost transitcost truckcost)
 foreach(test ${cost_tests})
   add_executable(${test} EXCLUDE_FROM_ALL	${VALHALLA_SOURCE_DIR}/src/sif/${test}.cc test.cc)
   set_target_properties(${test} PROPERTIES
@@ -165,6 +165,11 @@ if(ENABLE_NODE_BINDINGS)
 endif()
 
 ## High-level targets
-string(REGEX REPLACE "([^;]+)" "run-\\1" test_targets "${tests};${cost_tests};${python_tests};node_valhalla")
+if(ENABLE_NODE_BINDINGS)
+  string(REGEX REPLACE "([^;]+)" "run-\\1" test_targets "${tests};${cost_tests};${python_tests};node_valhalla")
+else()
+  string(REGEX REPLACE "([^;]+)" "run-\\1" test_targets "${tests};${cost_tests};${python_tests}")
+endif()
+
 add_custom_target(check DEPENDS ${test_targets})
 add_custom_target(tests DEPENDS ${tests} ${cost_tests})

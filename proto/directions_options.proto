@@ -1,3 +1,5 @@
+syntax = "proto2";
+option optimize_for = LITE_RUNTIME;
 package valhalla.odin;
 import public "tripcommon.proto";
 
@@ -146,12 +148,14 @@ message DirectionsOptions {
   optional float denoise = 24 [default = 1.0];                   // A floating point value from 0 to 1 which can be used to remove smaller contours
   optional float generalize = 25;                                // Meters used as the tolerance for Douglas-Peucker generalization
   optional bool show_locations = 26;                             // Add original locations to the isochrone geojson response
-  optional ShapeMatch shape_match = 27 [default = walk_or_snap]; // The matching algorithm based on the type of input
-  optional uint32 best_paths = 28 [default = 1];                 // The number of top k paths
-  optional float gps_accuracy = 29;                              // The gps accuracy associated with the suppplied trace points
-  optional float search_radius = 30;                             // The search radius associated with the suppplied trace points
-  optional float turn_penalty_factor = 31;                       // The turn penalty factor associated with the suppplied trace points
-  optional FilterAction filter_action = 32;                      // The trace filter action - either exclude or include
-  repeated string filter_attributes = 33;                        // The filter list for trace attributes
-  repeated uint64 avoid_edges = 34;                              // Avoid edges for any costing - derived from avoid_locations
+  repeated Location trace = 27;                                  // Trace points for map matching
+  optional ShapeMatch shape_match = 28 [default = walk_or_snap]; // The matching algorithm based on the type of input
+  optional uint32 best_paths = 29 [default = 1];                 // The number of top k paths
+  optional float gps_accuracy = 30;                              // The gps accuracy associated with the suppplied trace points
+  optional float search_radius = 31;                             // The search radius associated with the suppplied trace points
+  optional float turn_penalty_factor = 32;                       // The turn penalty factor associated with the suppplied trace points
+  optional FilterAction filter_action = 33;                      // The trace filter action - either exclude or include
+  repeated string filter_attributes = 34;                        // The filter list for trace attributes
+  repeated uint64 avoid_edges = 35;                              // Avoid edges for any costing - derived from avoid_locations
+  optional float breakage_distance = 36;                         // Map-matching breaking distance (distance between GPS trace points)
 }

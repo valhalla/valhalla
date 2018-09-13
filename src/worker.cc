@@ -8,13 +8,7 @@
 #include "midgard/logging.h"
 #include "midgard/util.h"
 #include "odin/util.h"
-#include "sif/autocost.h"
-#include "sif/bicyclecost.h"
-#include "sif/motorcyclecost.h"
-#include "sif/motorscootercost.h"
-#include "sif/pedestriancost.h"
-#include "sif/transitcost.h"
-#include "sif/truckcost.h"
+#include "sif/costfactory.h"
 #include "worker.h"
 
 using namespace valhalla;
@@ -449,7 +443,7 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
 
   auto fmt = rapidjson::get_optional<std::string>(doc, "/format");
   odin::DirectionsOptions::Format format;
-  if (fmt && odin::DirectionsOptions::Format_Parse(*fmt, &format)) {
+  if (fmt && odin::DirectionsOptions_Format_Parse(*fmt, &format)) {
     options.set_format(format);
   }
 
@@ -493,6 +487,11 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
     }
   } else {
     parse_locations(doc, options.mutable_shape(), "shape", 134, false);
+
+    // if no shape then try 'trace'
+    if (options.shape().empty()) {
+      parse_locations(doc, options.mutable_trace(), "trace", 135, false);
+    }
   }
 
   // TODO: remove this?
@@ -507,9 +506,7 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
   if (costing_str) {
     // try the string directly, some strings are keywords so add an underscore
     odin::Costing costing;
-    if (odin::Costing_Parse(*costing_str, &costing)) {
-      options.set_costing(costing);
-    } else if (odin::Costing_Parse(*costing_str + '_', &costing)) {
+    if (valhalla::odin::Costing_Parse(*costing_str, &costing)) {
       options.set_costing(costing);
     } else {
       throw valhalla_exception_t{125, "'" + *costing_str + "'"};
@@ -522,11 +519,7 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
                              odin::motor_scooter, odin::multimodal, odin::pedestrian, odin::transit,
                              odin::truck, odin::motorcycle, odin::auto_data_fix}) {
     // Create the costing string
-    auto costing_str = odin::Costing_Name(costing);
-    // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
-    if (costing_str.back() == '_') {
-      costing_str.pop_back();
-    }
+    auto costing_str = valhalla::odin::Costing_Name(costing);
     // Create the costing options key
     const auto costing_options_key = "/costing_options/" + costing_str;
 
@@ -684,7 +677,7 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
   auto shape_match_str = rapidjson::get_optional<std::string>(doc, "/shape_match");
   odin::ShapeMatch shape_match;
   if (shape_match_str) {
-    if (odin::ShapeMatch_Parse(*shape_match_str, &shape_match)) {
+    if (valhalla::odin::ShapeMatch_Parse(*shape_match_str, &shape_match)) {
       options.set_shape_match(shape_match);
     } else {
       throw valhalla_exception_t{445};
@@ -716,10 +709,16 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
     options.set_turn_penalty_factor(*turn_penalty_factor);
   }
 
+  // if specified, get the breakage_distance value in there
+  auto breakage_distance = rapidjson::get_optional<float>(doc, "/trace_options/breakage_distance");
+  if (breakage_distance) {
+    options.set_breakage_distance(*breakage_distance);
+  }
+
   // if specified, get the filter_action value in there
   auto filter_action_str = rapidjson::get_optional<std::string>(doc, "/filters/action");
   odin::FilterAction filter_action;
-  if (filter_action_str && odin::FilterAction_Parse(*filter_action_str, &filter_action)) {
+  if (filter_action_str && valhalla::odin::FilterAction_Parse(*filter_action_str, &filter_action)) {
     options.set_filter_action(filter_action);
   }
 
@@ -735,12 +734,184 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
   // force these into the output so its obvious what we did to the user
   doc.AddMember({"language", allocator}, {options.language(), allocator}, allocator);
   doc.AddMember({"format", allocator},
-                {odin::DirectionsOptions::Format_Name(options.format()), allocator}, allocator);
+                {valhalla::odin::DirectionsOptions_Format_Name(options.format()), allocator},
+                allocator);
 }
 
 } // namespace
 
 namespace valhalla {
+
+namespace odin {
+bool DirectionsOptions_Action_Parse(const std::string& action, odin::DirectionsOptions::Action* a) {
+  static const std::unordered_map<std::string, odin::DirectionsOptions::Action> actions{
+      {"route", odin::DirectionsOptions::route},
+      {"locate", odin::DirectionsOptions::locate},
+      {"sources_to_targets", odin::DirectionsOptions::sources_to_targets},
+      {"optimized_route", odin::DirectionsOptions::optimized_route},
+      {"isochrone", odin::DirectionsOptions::isochrone},
+      {"trace_route", odin::DirectionsOptions::trace_route},
+      {"trace_attributes", odin::DirectionsOptions::trace_attributes},
+      {"height", odin::DirectionsOptions::height},
+      {"transit_available", odin::DirectionsOptions::transit_available},
+  };
+  auto i = actions.find(action);
+  if (i == actions.cend())
+    return false;
+  *a = i->second;
+  return true;
+}
+
+const std::string& DirectionsOptions_Action_Name(const odin::DirectionsOptions::Action action) {
+  static const std::string empty;
+  static const std::unordered_map<int, std::string> actions{
+      {odin::DirectionsOptions::route, "route"},
+      {odin::DirectionsOptions::locate, "locate"},
+      {odin::DirectionsOptions::sources_to_targets, "sources_to_targets"},
+      {odin::DirectionsOptions::optimized_route, "optimized_route"},
+      {odin::DirectionsOptions::isochrone, "isochrone"},
+      {odin::DirectionsOptions::trace_route, "trace_route"},
+      {odin::DirectionsOptions::trace_attributes, "trace_attributes"},
+      {odin::DirectionsOptions::height, "height"},
+      {odin::DirectionsOptions::transit_available, "transit_available"},
+  };
+  auto i = actions.find(action);
+  return i == actions.cend() ? empty : i->second;
+}
+
+bool Costing_Parse(const std::string& costing, odin::Costing* c) {
+  static const std::unordered_map<std::string, odin::Costing> costings{
+      {"auto", odin::Costing::auto_},
+      {"auto_shorter", odin::Costing::auto_shorter},
+      {"bicycle", odin::Costing::bicycle},
+      {"bus", odin::Costing::bus},
+      {"hov", odin::Costing::hov},
+      {"motor_scooter", odin::Costing::motor_scooter},
+      {"multimodal", odin::Costing::multimodal},
+      {"pedestrian", odin::Costing::pedestrian},
+      {"transit", odin::Costing::transit},
+      {"truck", odin::Costing::truck},
+      {"motorcycle", odin::Costing::motorcycle},
+      {"auto_data_fix", odin::Costing::auto_data_fix},
+  };
+  auto i = costings.find(costing);
+  if (i == costings.cend())
+    return false;
+  *c = i->second;
+  return true;
+}
+
+const std::string& Costing_Name(const odin::Costing costing) {
+  static const std::string empty;
+  static const std::unordered_map<int, std::string> costings{
+      {odin::Costing::auto_, "auto"},
+      {odin::Costing::auto_shorter, "auto_shorter"},
+      {odin::Costing::bicycle, "bicycle"},
+      {odin::Costing::bus, "bus"},
+      {odin::Costing::hov, "hov"},
+      {odin::Costing::motor_scooter, "motor_scooter"},
+      {odin::Costing::multimodal, "multimodal"},
+      {odin::Costing::pedestrian, "pedestrian"},
+      {odin::Costing::transit, "transit"},
+      {odin::Costing::truck, "truck"},
+      {odin::Costing::motorcycle, "motorcycle"},
+      {odin::Costing::auto_data_fix, "auto_data_fix"},
+  };
+  auto i = costings.find(costing);
+  return i == costings.cend() ? empty : i->second;
+}
+
+bool ShapeMatch_Parse(const std::string& match, odin::ShapeMatch* s) {
+  static const std::unordered_map<std::string, odin::ShapeMatch> matches{
+      {"edge_walk", odin::ShapeMatch::edge_walk},
+      {"map_snap", odin::ShapeMatch::map_snap},
+      {"walk_or_snap", odin::ShapeMatch::walk_or_snap},
+  };
+  auto i = matches.find(match);
+  if (i == matches.cend())
+    return false;
+  *s = i->second;
+  return true;
+}
+
+const std::string& ShapeMatch_Name(const odin::ShapeMatch match) {
+  static const std::string empty;
+  static const std::unordered_map<int, std::string> matches{
+      {odin::ShapeMatch::edge_walk, "edge_walk"},
+      {odin::ShapeMatch::map_snap, "map_snap"},
+      {odin::ShapeMatch::walk_or_snap, "walk_or_snap"},
+  };
+  auto i = matches.find(match);
+  return i == matches.cend() ? empty : i->second;
+}
+
+bool DirectionsOptions_Format_Parse(const std::string& format, odin::DirectionsOptions::Format* f) {
+  static const std::unordered_map<std::string, odin::DirectionsOptions::Format> formats{
+      {"json", odin::DirectionsOptions::json},
+      {"gpx", odin::DirectionsOptions::gpx},
+      {"osrm", odin::DirectionsOptions::osrm},
+  };
+  auto i = formats.find(format);
+  if (i == formats.cend())
+    return false;
+  *f = i->second;
+  return true;
+}
+
+const std::string& DirectionsOptions_Format_Name(const odin::DirectionsOptions::Format match) {
+  static const std::string empty;
+  static const std::unordered_map<int, std::string> formats{
+      {odin::DirectionsOptions::json, "json"},
+      {odin::DirectionsOptions::gpx, "gpx"},
+      {odin::DirectionsOptions::osrm, "osrm"},
+  };
+  auto i = formats.find(match);
+  return i == formats.cend() ? empty : i->second;
+}
+
+const std::string& DirectionsOptions_Units_Name(const odin::DirectionsOptions::Units unit) {
+  static const std::string empty;
+  static const std::unordered_map<int, std::string> units{
+      {odin::DirectionsOptions::kilometers, "kilometers"},
+      {odin::DirectionsOptions::miles, "miles"},
+  };
+  auto i = units.find(unit);
+  return i == units.cend() ? empty : i->second;
+}
+
+bool FilterAction_Parse(const std::string& action, odin::FilterAction* a) {
+  static const std::unordered_map<std::string, odin::FilterAction> actions{
+      {"exclude", odin::FilterAction::exclude},
+      {"include", odin::FilterAction::include},
+  };
+  auto i = actions.find(action);
+  if (i == actions.cend())
+    return false;
+  *a = i->second;
+  return true;
+}
+
+const std::string& FilterAction_Name(const odin::FilterAction action) {
+  static const std::string empty;
+  static const std::unordered_map<int, std::string> actions{
+      {odin::FilterAction::exclude, "exclude"},
+      {odin::FilterAction::include, "include"},
+  };
+  auto i = actions.find(action);
+  return i == actions.cend() ? empty : i->second;
+}
+} // namespace odin
+
+valhalla_exception_t::valhalla_exception_t(unsigned code, const boost::optional<std::string>& extra)
+    : std::runtime_error(""), code(code), extra(extra) {
+  auto code_iter = error_codes.find(code);
+  message = (code_iter == error_codes.cend() ? "" : code_iter->second);
+  message += (extra ? ":" + *extra : "");
+  auto http_code_iter = ERROR_TO_STATUS.find(code);
+  http_code = (http_code_iter == ERROR_TO_STATUS.cend() ? 0 : http_code_iter->second);
+  auto http_message_iter = HTTP_STATUS_CODES.find(http_code);
+  http_message = (http_message_iter == HTTP_STATUS_CODES.cend() ? "" : http_message_iter->second);
+}
 
 valhalla_request_t::valhalla_request_t() {
   document.SetObject();
@@ -806,7 +977,7 @@ void valhalla_request_t::parse(const http_request_t& request) {
   // set the action
   odin::DirectionsOptions::Action action;
   if (!request.path.empty() &&
-      odin::DirectionsOptions::Action_Parse(request.path.substr(1), &action)) {
+      odin::DirectionsOptions_Action_Parse(request.path.substr(1), &action)) {
     options.set_action(action);
   }
 
@@ -830,8 +1001,6 @@ worker_t::result_t jsonify_error(const valhalla_exception_t& exception,
                                  http_request_info_t& request_info,
                                  const valhalla_request_t& request) {
   // get the http status
-  auto status = ERROR_TO_STATUS.find(exception.code)->second;
-  auto message = HTTP_STATUS_CODES.find(status)->second;
   std::stringstream body;
 
   // overwrite with osrm error response
@@ -846,8 +1015,8 @@ worker_t::result_t jsonify_error(const valhalla_exception_t& exception,
   else {
     // build up the json map
     auto json_error = baldr::json::map({});
-    json_error->emplace("status", message);
-    json_error->emplace("status_code", static_cast<uint64_t>(status));
+    json_error->emplace("status", exception.http_message);
+    json_error->emplace("status_code", static_cast<uint64_t>(exception.http_code));
     json_error->emplace("error", std::string(exception.message));
     json_error->emplace("error_code", static_cast<uint64_t>(exception.code));
     body << (request.options.has_jsonp() ? request.options.jsonp() + "(" : "") << *json_error
@@ -855,7 +1024,7 @@ worker_t::result_t jsonify_error(const valhalla_exception_t& exception,
   }
 
   worker_t::result_t result{false};
-  http_response_t response(status, message, body.str(),
+  http_response_t response(exception.http_code, exception.http_message, body.str(),
                            headers_t{CORS, request.options.has_jsonp() ? JS_MIME : JSON_MIME});
   response.from_info(request_info);
   result.messages.emplace_back(response.to_string());

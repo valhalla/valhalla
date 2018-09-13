@@ -20,29 +20,28 @@ namespace meili {
 
 class MapMatcherFactory final {
 public:
-  MapMatcherFactory(const boost::property_tree::ptree&);
+  MapMatcherFactory(const boost::property_tree::ptree& root,
+                    const std::shared_ptr<baldr::GraphReader>& graph_reader = {});
 
   ~MapMatcherFactory();
 
-  baldr::GraphReader& graphreader() {
+  std::shared_ptr<baldr::GraphReader>& graphreader() {
     return graphreader_;
   }
 
   CandidateQuery& candidatequery() {
-    return candidatequery_;
+    return *candidatequery_;
   }
 
-  MapMatcher* Create(const std::string& name) {
-    return Create(name, boost::property_tree::ptree());
+  MapMatcher* Create(const odin::Costing costing, const odin::DirectionsOptions& options);
+
+  MapMatcher* Create(const odin::Costing costing) {
+    return Create(costing, odin::DirectionsOptions());
   }
 
-  MapMatcher* Create(const std::string& name, const boost::property_tree::ptree& preferences);
+  MapMatcher* Create(const odin::DirectionsOptions& options);
 
-  MapMatcher* Create(const boost::property_tree::ptree&);
-
-  MapMatcher* Create(const rapidjson::Value&);
-
-  boost::property_tree::ptree MergeConfig(const std::string&, const boost::property_tree::ptree&);
+  boost::property_tree::ptree MergeConfig(const odin::DirectionsOptions& options);
 
   void ClearFullCache();
 
@@ -55,17 +54,15 @@ private:
 
   boost::property_tree::ptree config_;
 
-  baldr::GraphReader graphreader_;
+  std::shared_ptr<baldr::GraphReader> graphreader_;
 
   valhalla::sif::cost_ptr_t mode_costing_[kModeCostingCount];
 
   sif::CostFactory<sif::DynamicCost> cost_factory_;
 
-  CandidateGridQuery candidatequery_;
+  std::shared_ptr<CandidateGridQuery> candidatequery_;
 
   float max_grid_cache_size_;
-
-  sif::cost_ptr_t get_costing(const boost::property_tree::ptree& request, const std::string& costing);
 };
 
 } // namespace meili

@@ -17,21 +17,84 @@
 using namespace valhalla::odin;
 using namespace valhalla::baldr;
 
+namespace {
+const std::unordered_map<int, std::string>
+    relative_direction_string{{static_cast<int>(Maneuver::RelativeDirection::kNone),
+                               "Maneuver::RelativeDirection::kNone"},
+                              {static_cast<int>(Maneuver::RelativeDirection::kKeepStraight),
+                               "Maneuver::RelativeDirection::kKeepStraight"},
+                              {static_cast<int>(Maneuver::RelativeDirection::kKeepRight),
+                               "Maneuver::RelativeDirection::kKeepRight"},
+                              {static_cast<int>(Maneuver::RelativeDirection::kRight),
+                               "Maneuver::RelativeDirection::kRight"},
+                              {static_cast<int>(Maneuver::RelativeDirection::KReverse),
+                               "Maneuver::RelativeDirection::KReverse"},
+                              {static_cast<int>(Maneuver::RelativeDirection::kLeft),
+                               "Maneuver::RelativeDirection::kLeft"},
+                              {static_cast<int>(Maneuver::RelativeDirection::kKeepLeft),
+                               "Maneuver::RelativeDirection::kKeepLeft"}};
+
+const std::string& TripDirections_Maneuver_Type_Name(int v) {
+  static const std::unordered_map<int, std::string> values{
+      {0, "kNone"},
+      {1, "kStart"},
+      {2, "kStartRight"},
+      {3, "kStartLeft"},
+      {4, "kDestination"},
+      {5, "kDestinationRight"},
+      {6, "kDestinationLeft"},
+      {7, "kBecomes"},
+      {8, "kContinue"},
+      {9, "kSlightRight"},
+      {10, "kRight"},
+      {11, "kSharpRight"},
+      {12, "kUturnRight"},
+      {13, "kUturnLeft"},
+      {14, "kSharpLeft"},
+      {15, "kLeft"},
+      {16, "kSlightLeft"},
+      {17, "kRampStraight"},
+      {18, "kRampRight"},
+      {19, "kRampLeft"},
+      {20, "kExitRight"},
+      {21, "kExitLeft"},
+      {22, "kStayStraight"},
+      {23, "kStayRight"},
+      {24, "kStayLeft"},
+      {25, "kMerge"},
+      {26, "kRoundaboutEnter"},
+      {27, "kRoundaboutExit"},
+      {28, "kFerryEnter"},
+      {29, "kFerryExit"},
+      {30, "kTransit"},
+      {31, "kTransitTransfer"},
+      {32, "kTransitRemainOn"},
+      {33, "kTransitConnectionStart"},
+      {34, "kTransitConnectionTransfer"},
+      {35, "kTransitConnectionDestination"},
+      {36, "kPostTransitConnectionDestination"},
+  };
+  auto f = values.find(v);
+  if (f == values.cend())
+    throw std::runtime_error("Missing value in protobuf enum to string");
+  return f->second;
+}
+
+const std::string& TripDirections_Maneuver_CardinalDirection_Name(int v) {
+  static const std::unordered_map<int, std::string> values{
+      {0, "kNorth"}, {1, "kNorthEast"}, {2, "kEast"}, {3, "kSouthEast"},
+      {4, "kSouth"}, {5, "kSouthWest"}, {6, "kWest"}, {7, "kNorthWest"},
+  };
+  auto f = values.find(v);
+  if (f == values.cend())
+    throw std::runtime_error("Missing value in protobuf enum to string");
+  return f->second;
+}
+
+} // namespace
+
 namespace valhalla {
 namespace odin {
-
-const std::unordered_map<int, std::string> Maneuver::relative_direction_string_ =
-    {{static_cast<int>(Maneuver::RelativeDirection::kNone), "Maneuver::RelativeDirection::kNone"},
-     {static_cast<int>(Maneuver::RelativeDirection::kKeepStraight),
-      "Maneuver::RelativeDirection::kKeepStraight"},
-     {static_cast<int>(Maneuver::RelativeDirection::kKeepRight),
-      "Maneuver::RelativeDirection::kKeepRight"},
-     {static_cast<int>(Maneuver::RelativeDirection::kRight), "Maneuver::RelativeDirection::kRight"},
-     {static_cast<int>(Maneuver::RelativeDirection::KReverse),
-      "Maneuver::RelativeDirection::KReverse"},
-     {static_cast<int>(Maneuver::RelativeDirection::kLeft), "Maneuver::RelativeDirection::kLeft"},
-     {static_cast<int>(Maneuver::RelativeDirection::kKeepLeft),
-      "Maneuver::RelativeDirection::kKeepLeft"}};
 
 Maneuver::Maneuver()
     : type_(TripDirections_Maneuver_Type_kNone), length_(0.0f), time_(0), basic_time_(0),
@@ -696,6 +759,7 @@ void Maneuver::set_verbal_formatter(std::unique_ptr<VerbalTextFormatter>&& verba
   verbal_formatter_ = std::move(verbal_formatter);
 }
 
+#ifdef LOGGING_LEVEL_TRACE
 std::string Maneuver::ToString() const {
   std::string man_str;
   man_str.reserve(256);
@@ -855,7 +919,7 @@ std::string Maneuver::ToParameterString() const {
   man_str.reserve(256);
 
   man_str += "TripDirections_Maneuver_Type_";
-  man_str += TripDirections_Maneuver_Type_descriptor()->FindValueByNumber(type_)->name();
+  man_str += TripDirections_Maneuver_Type_Name(type_);
 
   man_str += delim;
   man_str += street_names_->ToParameterString();
@@ -881,14 +945,11 @@ std::string Maneuver::ToParameterString() const {
   man_str += std::to_string(turn_degree_);
 
   man_str += delim;
-  man_str +=
-      Maneuver::relative_direction_string_.find(static_cast<int>(begin_relative_direction_))->second;
+  man_str += relative_direction_string.find(static_cast<int>(begin_relative_direction_))->second;
 
   man_str += delim;
   man_str += "TripDirections_Maneuver_CardinalDirection_";
-  man_str += TripDirections_Maneuver_CardinalDirection_descriptor()
-                 ->FindValueByNumber(begin_cardinal_direction_)
-                 ->name();
+  man_str += TripDirections_Maneuver_CardinalDirection_Name(begin_cardinal_direction_);
 
   man_str += delim;
   man_str += std::to_string(begin_heading_);
@@ -1012,6 +1073,7 @@ std::string Maneuver::ToParameterString() const {
 
   return man_str;
 }
+#endif
 
 } // namespace odin
 } // namespace valhalla

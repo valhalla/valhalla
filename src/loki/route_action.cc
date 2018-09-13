@@ -55,11 +55,8 @@ void loki_worker_t::init_route(valhalla_request_t& request) {
 void loki_worker_t::route(valhalla_request_t& request) {
   init_route(request);
   auto costing = odin::Costing_Name(request.options.costing());
-  if (costing.back() == '_') {
-    costing.pop_back();
-  }
   check_locations(request.options.locations_size(), max_locations.find(costing)->second);
-  check_distance(reader, request.options.locations(), max_distance.find(costing)->second);
+  check_distance(*reader, request.options.locations(), max_distance.find(costing)->second);
 
   // Validate walking distances (make sure they are in the accepted range)
   if (costing == "multimodal" || costing == "transit") {
@@ -88,10 +85,10 @@ void loki_worker_t::route(valhalla_request_t& request) {
   std::unordered_map<size_t, size_t> color_counts;
   try {
     auto locations = PathLocation::fromPBF(request.options.locations());
-    const auto projections = loki::Search(locations, reader, edge_filter, node_filter);
+    const auto projections = loki::Search(locations, *reader, edge_filter, node_filter);
     for (size_t i = 0; i < locations.size(); ++i) {
       const auto& correlated = projections.at(locations[i]);
-      PathLocation::toPBF(correlated, request.options.mutable_locations(i), reader);
+      PathLocation::toPBF(correlated, request.options.mutable_locations(i), *reader);
       // TODO: get transit level for transit costing
       // TODO: if transit send a non zero radius
       if (!connectivity_map) {

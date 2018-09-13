@@ -116,6 +116,7 @@ std::string Signs::ToString() const {
   return signs_string;
 }
 
+#ifdef LOGGING_LEVEL_TRACE
 std::string Signs::ToParameterString() const {
   const std::string delim = ", ";
   std::string signs_string;
@@ -133,6 +134,7 @@ std::string Signs::ToParameterString() const {
 
   return signs_string;
 }
+#endif
 
 const std::string Signs::ListToString(const std::vector<Sign>& signs,
                                       uint32_t max_count,
@@ -177,6 +179,7 @@ const std::string Signs::ListToString(const std::vector<Sign>& signs,
   return sign_string;
 }
 
+#ifdef LOGGING_LEVEL_TRACE
 const std::string Signs::ListToParameterString(const std::vector<Sign>& signs) const {
   const std::string delim = ", ";
   std::string sign_string;
@@ -194,6 +197,7 @@ const std::string Signs::ListToParameterString(const std::vector<Sign>& signs) c
 
   return sign_string;
 }
+#endif
 
 bool Signs::operator==(const Signs& rhs) const {
   return ((exit_number_list_ == rhs.exit_number_list_) &&

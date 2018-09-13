@@ -156,11 +156,8 @@ void loki_worker_t::init_trace(valhalla_request_t& request) {
 void loki_worker_t::trace(valhalla_request_t& request) {
   init_trace(request);
   auto costing = odin::Costing_Name(request.options.costing());
-  if (costing.back() == '_') {
-    costing.pop_back();
-  }
   if (costing == "multimodal") {
-    throw valhalla_exception_t{140, odin::DirectionsOptions::Action_Name(request.options.action())};
+    throw valhalla_exception_t{140, odin::DirectionsOptions_Action_Name(request.options.action())};
   };
 }
 
@@ -174,12 +171,12 @@ void loki_worker_t::locations_from_shape(valhalla_request_t& request) {
 
   // Add first and last correlated locations to request
   try {
-    auto projections = loki::Search(locations, reader, edge_filter, node_filter);
+    auto projections = loki::Search(locations, *reader, edge_filter, node_filter);
     request.options.clear_locations();
     PathLocation::toPBF(projections.at(locations.front()), request.options.mutable_locations()->Add(),
-                        reader);
+                        *reader);
     PathLocation::toPBF(projections.at(locations.back()), request.options.mutable_locations()->Add(),
-                        reader);
+                        *reader);
   } catch (const std::exception&) { throw valhalla_exception_t{171}; }
 }
 

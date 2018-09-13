@@ -6,7 +6,6 @@
 #include <utility>
 #include <vector>
 
-#include "exception.h"
 #include "meili/map_matcher.h"
 
 #include "thor/attributes_controller.h"
@@ -121,10 +120,10 @@ odin::TripPath thor_worker_t::route_match(valhalla_request_t& request,
                                           const AttributesController& controller) {
   odin::TripPath trip_path;
   std::vector<PathInfo> path_infos;
-  if (RouteMatcher::FormPath(mode_costing, mode, reader, trace, request.options.locations(),
+  if (RouteMatcher::FormPath(mode_costing, mode, *reader, trace, request.options.locations(),
                              path_infos)) {
     // Form the trip path based on mode costing, origin, destination, and path edges
-    trip_path = thor::TripPathBuilder::Build(controller, reader, mode_costing, path_infos,
+    trip_path = thor::TripPathBuilder::Build(controller, *reader, mode_costing, path_infos,
                                              *request.options.mutable_locations()->begin(),
                                              *request.options.mutable_locations()->rbegin(),
                                              std::list<odin::Location>{}, interrupt);
@@ -186,11 +185,11 @@ thor_worker_t::map_match(valhalla_request_t& request,
         }
 
         // Make one path edge from it
-        reader.GetGraphTile(match.edgeid, tile);
+        reader->GetGraphTile(match.edgeid, tile);
         auto* pe = request.options.mutable_shape(i)->mutable_path_edges()->Add();
         pe->mutable_ll()->set_lat(match.lnglat.lat());
         pe->mutable_ll()->set_lng(match.lnglat.lng());
-        for (const auto& n : reader.edgeinfo(match.edgeid).GetNames()) {
+        for (const auto& n : reader->edgeinfo(match.edgeid).GetNames()) {
           pe->mutable_names()->Add()->assign(n);
         }
 
@@ -396,12 +395,12 @@ thor_worker_t::map_match(valhalla_request_t& request,
       PathLocation::toPBF(matcher->state_container()
                               .state(first_result_with_state->stateid)
                               .candidate(),
-                          &origin, reader);
+                          &origin, *reader);
       odin::Location destination;
       PathLocation::toPBF(matcher->state_container()
                               .state(last_result_with_state->stateid)
                               .candidate(),
-                          &destination, reader);
+                          &destination, *reader);
 
       bool found_origin = false;
       for (const auto& e : origin.path_edges()) {

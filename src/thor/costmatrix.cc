@@ -2,7 +2,6 @@
 #include <cmath>
 #include <vector>
 
-#include "exception.h"
 #include "midgard/logging.h"
 #include "thor/costmatrix.h"
 #include "worker.h"
@@ -108,7 +107,6 @@ std::vector<TimeDistance> CostMatrix::SourceToTarget(
     const TravelMode mode,
     const float max_matrix_distance) {
   LOG_INFO("SourceToTarget");
-
   // Set the mode and costing
   mode_ = mode;
   costing_ = mode_costing[static_cast<uint32_t>(mode_)];
@@ -125,7 +123,7 @@ std::vector<TimeDistance> CostMatrix::SourceToTarget(
   // same get set to 0 time, distance and are not added to the remaining
   // location set.
   Initialize(source_location_list, target_location_list);
-  LOG_INFO("Done initialize");
+  LOG_TRACE("Done initialize");
 
   // Perform backward search from all target locations. Perform forward
   // search from all source locations. Connections between the 2 search

@@ -1,10 +1,9 @@
 #include "baldr/graphtile.h"
 #include "baldr/compression_utils.h"
 #include "baldr/datetime.h"
-#include "baldr/filesystem_utils.h"
 #include "baldr/tilehierarchy.h"
+#include "filesystem.h"
 #include "midgard/aabb2.h"
-#include "midgard/logging.h"
 #include "midgard/pointll.h"
 #include "midgard/tiles.h"
 
@@ -59,7 +58,8 @@ GraphTile::GraphTile(const std::string& tile_dir, const GraphId& graphid) : head
   }
 
   // Open to the end of the file so we can immediately get size;
-  std::string file_location = tile_dir + filesystem::path_separator + FileSuffix(graphid.Tile_Base());
+  std::string file_location =
+      tile_dir + filesystem::path::preferred_separator + FileSuffix(graphid.Tile_Base());
   std::ifstream file(file_location, std::ios::in | std::ios::binary | std::ios::ate);
   if (file.is_open()) {
     // Read binary file into memory. TODO - protect against failure to
@@ -110,9 +110,6 @@ GraphTile::GraphTile(const std::string& tile_dir, const GraphId& graphid) : head
         graphtile_.reset();
         return;
       }
-      std::ofstream foo(file_location + ".foobar", std::ios::binary | std::ios::trunc);
-      foo.write(graphtile_->data(), graphtile_->size());
-      foo.close();
 
       // Set pointers to internal data structures
       Initialize(graphid, graphtile_->data(), graphtile_->size());
@@ -135,7 +132,8 @@ GraphTile::GraphTile(const std::string& tile_url, const GraphId& graphid, curler
   }
 
   // Get the response returned from curl
-  std::string uri = tile_url + filesystem::path_separator + FileSuffix(graphid.Tile_Base());
+  std::string uri =
+      tile_url + filesystem::path::preferred_separator + FileSuffix(graphid.Tile_Base());
   long http_code;
   auto tile_data = curler(uri, http_code);
 
@@ -243,8 +241,8 @@ void GraphTile::Initialize(const GraphId& graphid, char* tile_ptr, const size_t 
   // Start of predicted speed data.
   if (header_->predictedspeeds_count() > 0) {
     char* ptr1 = tile_ptr + header_->predictedspeeds_offset();
-    char* ptr2 = ptr1 + (header_->directededgecount() * sizeof(int16_t));
-    predictedspeeds_.set_index(reinterpret_cast<uint32_t*>(ptr1));
+    char* ptr2 = ptr1 + (header_->directededgecount() * sizeof(int32_t));
+    predictedspeeds_.set_offset(reinterpret_cast<uint32_t*>(ptr1));
     predictedspeeds_.set_profiles(reinterpret_cast<int16_t*>(ptr2));
   }
 
@@ -351,10 +349,19 @@ std::string GraphTile::FileSuffix(const GraphId& graphid) {
 
 // Get the tile Id given the full path to the file.
 GraphId GraphTile::GetTileId(const std::string& fname) {
-  const std::unordered_set<std::string::value_type>
-      allowed{filesystem::path_separator, '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
+  const std::unordered_set<std::string::value_type> allowed{filesystem::path::preferred_separator,
+                                                            '0',
+                                                            '1',
+                                                            '2',
+                                                            '3',
+                                                            '4',
+                                                            '5',
+                                                            '6',
+                                                            '7',
+                                                            '8',
+                                                            '9'};
   // we require slashes
-  auto pos = fname.find_last_of(filesystem::path_separator);
+  auto pos = fname.find_last_of(filesystem::path::preferred_separator);
   if (pos == fname.npos) {
     throw std::runtime_error("Invalid tile path: " + fname);
   }
@@ -381,7 +388,7 @@ GraphId GraphTile::GetTileId(const std::string& fname) {
       throw std::runtime_error("Invalid tile path: " + fname);
     }
     // if its a slash thats another digit
-    if (c == filesystem::path_separator) {
+    if (c == filesystem::path::preferred_separator) {
       // this is not 3 or 1 digits so its wrong
       auto dist = last - pos;
       if (dist != 4 && dist != 2) {

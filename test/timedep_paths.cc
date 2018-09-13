@@ -4,12 +4,13 @@
 #include <string>
 #include <vector>
 
+#include "baldr/rapidjson_utils.h"
 #include "loki/worker.h"
 #include "midgard/logging.h"
 #include "sif/autocost.h"
 #include "thor/timedep.h"
 #include "thor/worker.h"
-#include <boost/property_tree/json_parser.hpp>
+#include "worker.h"
 #include <boost/property_tree/ptree.hpp>
 
 using namespace valhalla::thor;
@@ -25,8 +26,14 @@ boost::property_tree::ptree json_to_pt(const std::string& json) {
   std::stringstream ss;
   ss << json;
   boost::property_tree::ptree pt;
-  boost::property_tree::read_json(ss, pt);
+  rapidjson::read_json(ss, pt);
   return pt;
+}
+
+valhalla::odin::DirectionsOptions json_to_pbf(const std::string& json) {
+  valhalla::valhalla_request_t request;
+  request.parse(json, valhalla::odin::DirectionsOptions::route);
+  return request.options;
 }
 
 rapidjson::Document to_document(const std::string& request) {
@@ -46,7 +53,7 @@ rapidjson::Document to_document(const std::string& request) {
 // may want to do this in loki. At this point in thor the costing method
 // has not yet been constructed.
 const std::unordered_map<std::string, float> kMaxDistances = {
-    {"auto_", 43200.0f},     {"auto_shorter", 43200.0f}, {"bicycle", 7200.0f},
+    {"auto", 43200.0f},      {"auto_shorter", 43200.0f}, {"bicycle", 7200.0f},
     {"bus", 43200.0f},       {"hov", 43200.0f},          {"motor_scooter", 14400.0f},
     {"multimodal", 7200.0f}, {"pedestrian", 7200.0f},    {"transit", 14400.0f},
     {"truck", 43200.0f},
@@ -122,11 +129,11 @@ void try_path(GraphReader& reader,
   request.parse(test_request, valhalla::odin::DirectionsOptions::route);
   loki_worker.route(request);
   adjust_scores(request);
-  auto request_pt = json_to_pt(test_request);
+  auto options = json_to_pbf(test_request);
 
   // For now this just tests auto costing - could extend to other
   TravelMode mode = TravelMode::kDrive;
-  cost_ptr_t costing = CreateAutoCost(request_pt);
+  cost_ptr_t costing = CreateAutoCost(options.costing(), options);
   std::shared_ptr<DynamicCost> mode_costing[4];
   mode_costing[static_cast<uint32_t>(mode)] = costing;
 

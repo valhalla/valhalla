@@ -5,18 +5,9 @@
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
 #include "midgard/util.h"
-#include <boost/property_tree/json_parser.hpp>
+#include "worker.h"
 
 namespace {
-
-boost::property_tree::ptree parse_json(const std::string& json) {
-  boost::property_tree::ptree request;
-  try {
-    std::stringstream stream(json);
-    boost::property_tree::read_json(stream, request);
-  } catch (...) { throw std::runtime_error("Couldn't parse json input"); }
-  return request;
-}
 
 void clean_edges(std::vector<valhalla::meili::EdgeSegment>& edges) {
   // merging the edges that are the same into the final edges record
@@ -135,20 +126,20 @@ TrafficSegmentMatcher::TrafficSegmentMatcher(const boost::property_tree::ptree& 
 
 std::string TrafficSegmentMatcher::match(const std::string& json) {
   // Try to parse json
-  boost::property_tree::ptree match_config;
-  auto request = parse_json(json);
+  valhalla::valhalla_request_t request;
+  request.parse(json, valhalla::odin::DirectionsOptions::trace_route);
 
   // Create a matcher
   std::shared_ptr<MapMatcher> matcher;
   float default_accuracy, default_search_radius;
   try {
-    matcher.reset(matcher_factory.Create(request));
+    matcher.reset(matcher_factory.Create(request.options.costing(), request.options));
     default_accuracy = matcher->config().get<float>("gps_accuracy");
     default_search_radius = matcher->config().get<float>("search_radius");
   } catch (...) { throw std::runtime_error("Couldn't create traffic matcher using configuration."); }
 
   // Populate a measurement measurements to pass to the map matcher
-  auto measurements = parse_measurements(request, default_accuracy, default_search_radius);
+  auto measurements = parse_measurements(request.options, default_accuracy, default_search_radius);
   if (measurements.empty()) {
     return R"({"segments":[]})";
   }
@@ -431,24 +422,30 @@ TrafficSegmentMatcher::form_segments(const std::list<std::vector<interpolation_t
 }
 
 std::vector<meili::Measurement>
-TrafficSegmentMatcher::parse_measurements(const boost::property_tree::ptree& request,
+TrafficSegmentMatcher::parse_measurements(const odin::DirectionsOptions& options,
                                           float default_accuracy,
                                           float default_search_radius) {
-  // check for required parameters
-  auto trace_pts = request.get_child_optional("trace");
-  if (!trace_pts) {
-    throw std::runtime_error("Missing required json array 'trace'.");
+  // check for required trace points
+  if (options.trace().empty()) {
+    throw std::runtime_error("Missing required 'trace' points.");
   }
 
   // Populate a measurement sequence to pass to the map matcher
   std::vector<Measurement> measurements;
   try {
-    for (const auto& pt : *trace_pts) {
-      double lat = pt.second.get<double>("lat");
-      double lon = pt.second.get<double>("lon");
-      double epoch_time = pt.second.get<double>("time");
-      double accuracy = pt.second.get<double>("accuracy", default_accuracy);
-      measurements.emplace_back(PointLL{lon, lat}, accuracy, default_search_radius, epoch_time);
+    for (const auto& trace_point : options.trace()) {
+      double lat = trace_point.ll().lat();
+      double lon = trace_point.ll().lng();
+      double epoch_time = trace_point.time();
+      double accuracy = default_accuracy;
+      if (trace_point.has_accuracy()) {
+        accuracy = trace_point.accuracy();
+      }
+      double search_radius = default_search_radius;
+      if (trace_point.has_radius()) {
+        search_radius = trace_point.radius();
+      }
+      measurements.emplace_back(PointLL{lon, lat}, accuracy, search_radius, epoch_time);
     }
   } catch (...) {
     throw std::runtime_error("Missing parameters, trace points require lat, lon and time.");

@@ -19,7 +19,7 @@ namespace {
 // Get the iso date and time from a DOW mask and time.
 std::string test_iso_date_time(const uint8_t dow_mask,
                                const std::string& time,
-                               const boost::local_time::time_zone_ptr& time_zone) {
+                               const date::time_zone* time_zone) {
 
   std::string iso_date_time;
   std::stringstream ss("");
@@ -30,76 +30,70 @@ std::string test_iso_date_time(const uint8_t dow_mask,
   uint8_t dow;
   switch (dow_mask) {
     case kSunday:
-      dow = boost::date_time::Sunday;
+      dow = 0;
       break;
     case kMonday:
-      dow = boost::date_time::Monday;
+      dow = 1;
       break;
     case kTuesday:
-      dow = boost::date_time::Tuesday;
+      dow = 2;
       break;
     case kWednesday:
-      dow = boost::date_time::Wednesday;
+      dow = 3;
       break;
     case kThursday:
-      dow = boost::date_time::Thursday;
+      dow = 4;
       break;
     case kFriday:
-      dow = boost::date_time::Friday;
+      dow = 5;
       break;
     case kSaturday:
-      dow = boost::date_time::Saturday;
+      dow = 6;
       break;
     default:
       return iso_date_time;
       break;
   }
 
-  try {
-    boost::local_time::local_time_input_facet* input_facet =
-        new boost::local_time::local_time_input_facet();
-    input_facet->format("%H:%M");
-    ss.imbue(std::locale(ss.getloc(), input_facet));
+  auto now = date::make_zoned(time_zone, std::chrono::system_clock::now());
+  auto date = date::floor<date::days>(now.get_local_time());
+  auto d = date::year_month_day(date);
+  auto t = date::make_time(now.get_local_time() - date);      // Yields time_of_day type
+  std::chrono::minutes current_tod = t.hours() + t.minutes(); // Yields time_of_day type
+  std::chrono::minutes desired_tod;
 
-    boost::local_time::local_date_time desired_time(boost::local_time::not_a_date_time);
-    ss.str(time);
-    ss >> desired_time;
+  std::size_t found = time.find(':'); // HH:MM
+  if (found != std::string::npos) {
+    std::chrono::hours h = std::chrono::hours(std::stoi(time.substr(0, 2)));
+    std::chrono::minutes m = std::chrono::minutes(std::stoi(time.substr(3, 2)));
+    desired_tod = h + m;
+  } else
+    return "";
 
-    boost::posix_time::ptime pt = boost::posix_time::second_clock::universal_time();
-    boost::local_time::local_date_time local_date_time(pt, time_zone);
-
-    pt = local_date_time.local_time();
-    boost::gregorian::date date = pt.date();
-    uint8_t desired_tod =
-        (3600 * desired_time.time_of_day().hours()) + (60 * desired_time.time_of_day().minutes());
-    uint8_t current_tod = (3600 * pt.time_of_day().hours()) + (60 * pt.time_of_day().minutes());
-
-    // will today work?
-    if (date.day_of_week().as_enum() == dow) {
-      // is the desired time in the past?
-      if (desired_tod < current_tod) {
-        date += boost::gregorian::days(7);
-      }
-    } else {
-      while (date.day_of_week().as_enum() != dow) {
-        date += boost::gregorian::days(1);
-      }
+  // will today work?
+  if ((date::weekday(date) - date::Sunday).count() == dow) {
+    // is the desired time in the past?
+    if (desired_tod < current_tod) {
+      now = now.get_local_time() + date::days(7);
     }
-    iso_date_time = to_iso_extended_string(date) + "T" + time;
-  } catch (std::exception& e) {}
-  return iso_date_time;
-}
+  } else {
+    while ((date::weekday(date) - date::Sunday).count() == dow) {
+      now = now.get_local_time() + date::days(1);
+      date = date::floor<date::days>(now.get_local_time());
+    }
+  }
 
-std::vector<std::string> GetTagTokens(const std::string& tag_value, char delim) {
-  std::vector<std::string> tokens;
-  boost::algorithm::split(tokens, tag_value, std::bind1st(std::equal_to<char>(), delim),
-                          boost::algorithm::token_compress_on);
-  return tokens;
+  ss << date::format("%F", now);
+  iso_date_time = ss.str();
+  iso_date_time += "T" + time;
+  return iso_date_time;
 }
 
 void TryGetDaysFromPivotDate(const std::string& date_time, uint32_t expected_days) {
   if (DateTime::days_from_pivot_date(DateTime::get_formatted_date(date_time)) != expected_days) {
-    throw std::runtime_error(std::string("Incorrect number of days from ") + date_time);
+    throw std::runtime_error(
+        std::string("Incorrect number of days from ") + date_time + " " +
+        std::to_string(DateTime::days_from_pivot_date(DateTime::get_formatted_date(date_time))));
   }
 }
 
@@ -177,8 +171,7 @@ void TryTestIsValid(const std::string& date, bool return_value) {
                              " locale = " + std::locale("").name());
 }
 
-void TryTestDST(const bool is_depart_at,
-                const uint64_t origin_seconds,
+void TryTestDST(const uint64_t origin_seconds,
                 const uint64_t dest_seconds,
                 const std::string& o_value,
                 const std::string& d_value) {
@@ -186,7 +179,7 @@ void TryTestDST(const bool is_depart_at,
   auto tz = DateTime::get_tz_db().from_index(DateTime::get_tz_db().to_index("America/New_York"));
 
   std::string iso_origin, iso_dest;
-  DateTime::seconds_to_date(is_depart_at, origin_seconds, dest_seconds, tz, tz, iso_origin, iso_dest);
+  DateTime::seconds_to_date(origin_seconds, dest_seconds, tz, tz, iso_origin, iso_dest);
 
   if (iso_origin != o_value)
     throw std::runtime_error("Test origin DST failed.  Expected: " + o_value + " but received " +
@@ -211,58 +204,7 @@ void TryIsRestricted(const TimeDomain td, const std::string& date, const bool ex
   }
 }
 
-// Convert seconds to a date string (for test evaluation only). DateTime holds a more general
-// method.
-std::string seconds_to_date(const uint64_t seconds, const boost::local_time::time_zone_ptr& tz) {
-
-  std::string iso_date;
-  if (seconds == 0 || !tz) {
-    return iso_date;
-  }
-
-  try {
-    std::string tz_string;
-    const boost::posix_time::ptime time_epoch(boost::gregorian::date(1970, 1, 1));
-    boost::posix_time::ptime pt = time_epoch + boost::posix_time::seconds(seconds);
-    boost::local_time::local_date_time date_time(pt, tz);
-    pt = date_time.local_time();
-
-    boost::gregorian::date date = pt.date();
-    std::stringstream ss_time;
-    ss_time << pt.time_of_day();
-    std::string time = ss_time.str();
-
-    std::size_t found = time.find_last_of(':'); // remove seconds.
-    if (found != std::string::npos) {
-      time = time.substr(0, found);
-    }
-
-    ss_time.str("");
-    if (date_time.is_dst()) {
-      ss_time << tz->dst_offset() + tz->base_utc_offset();
-    } else {
-      ss_time << tz->base_utc_offset();
-    }
-
-    // positive tz
-    if (ss_time.str().find('+') == std::string::npos &&
-        ss_time.str().find('-') == std::string::npos) {
-      iso_date = to_iso_extended_string(date) + "T" + time + "+" + ss_time.str();
-    } else {
-      iso_date = to_iso_extended_string(date) + "T" + time + ss_time.str();
-    }
-
-    found = iso_date.find_last_of(':'); // remove seconds.
-    if (found != std::string::npos) {
-      iso_date = iso_date.substr(0, found);
-    }
-
-  } catch (std::exception& e) {}
-  return iso_date;
-}
-
-void TryTestTimezoneDiff(const bool is_depart,
-                         const uint64_t date_time,
+void TryTestTimezoneDiff(const uint64_t date_time,
                          const std::string& expected1,
                          const std::string& expected2,
                          const std::string& time_zone1,
@@ -273,59 +215,44 @@ void TryTestTimezoneDiff(const bool is_depart,
   auto tz1 = DateTime::get_tz_db().from_index(DateTime::get_tz_db().to_index(time_zone1));
   auto tz2 = DateTime::get_tz_db().from_index(DateTime::get_tz_db().to_index(time_zone2));
 
-  std::cout << seconds_to_date(dt, tz1) << std::endl;
-
-  dt += DateTime::timezone_diff(is_depart, dt, tz1, tz2);
-  if (seconds_to_date(dt, tz1) != expected1)
+  dt += DateTime::timezone_diff(dt, tz1, tz2);
+  if (DateTime::seconds_to_date(dt, tz1) != expected1)
     throw std::runtime_error("Timezone Diff test #1: " + std::to_string(date_time) +
                              " test failed.  Expected: " + expected1 + " but got " +
-                             seconds_to_date(dt, tz1));
+                             DateTime::seconds_to_date(dt, tz1));
 
-  if (seconds_to_date(dt, tz2) != expected2)
+  if (DateTime::seconds_to_date(dt, tz2) != expected2)
     throw std::runtime_error("Timezone Diff test #2: " + std::to_string(date_time) +
                              " test failed.  Expected: " + expected2 + " but got " +
-                             seconds_to_date(dt, tz2));
+                             DateTime::seconds_to_date(dt, tz2));
 }
 
 } // namespace
 
 void TestGetDaysFromPivotDate() {
-  TryGetDaysFromPivotDate("20140101", 0);
-  TryGetDaysFromPivotDate("20140102", 1);
-  TryGetDaysFromPivotDate("19990101", 0);
-  TryGetDaysFromPivotDate("20150506", 490);
-  TryGetDaysFromPivotDate("2015-05-06", 490);
-
-  TryGetDaysFromPivotDate("20140101T07:01", 0);
-  TryGetDaysFromPivotDate("20140102T15:00", 1);
-  TryGetDaysFromPivotDate("19990101T:00:00", 0);
+  TryGetDaysFromPivotDate("2014-01-01T07:01", 0);
+  TryGetDaysFromPivotDate("2014-01-02T15:00", 1);
+  TryGetDaysFromPivotDate("1999-01-01-T:00:00", 0);
   TryGetDaysFromPivotDate("2015-05-06T08:00", 490);
 }
 
 void TestDOW() {
 
-  TryGetDOW("20140101", kWednesday);
-  TryGetDOW("20140102", kThursday);
-  TryGetDOW("19990101", kDOWNone);
-  TryGetDOW("20150508", kFriday);
-  TryGetDOW("2015-05-08", kFriday);
-
-  TryGetDOW("20140101T07:01", kWednesday);
-  TryGetDOW("20140102T15:00", kThursday);
-  TryGetDOW("19990101T:00:00", kDOWNone);
+  TryGetDOW("2014-01-01T07:01", kWednesday);
+  TryGetDOW("2014-01-02T15:00", kThursday);
+  TryGetDOW("1999-01-01T:00:00", kDOWNone);
   TryGetDOW("2015-05-09T08:00", kSaturday);
 }
 
 void TestDuration() {
 
-  TryGetDuration("20140101", 30, "2014-01-01T00:00-05:00 EST");
-  TryGetDuration("20140102", 60, "2014-01-02T00:01-05:00 EST");
-  TryGetDuration("2014-01-02", 60, "2014-01-02T00:01-05:00 EST");
-  TryGetDuration("19990101", 89, "");
-  TryGetDuration("20140101T07:01", 61, "2014-01-01T07:02-05:00 EST");
-  TryGetDuration("20140102T15:00", 61, "2014-01-02T15:01-05:00 EST");
-  TryGetDuration("20140102T15:00", 86400, "2014-01-03T15:00-05:00 EST");
-  TryGetDuration("20160714", 60, "2016-07-14T00:01-04:00 EDT");
+  TryGetDuration("2014-01-01T00:00", 30, "2014-01-01T00:00-05:00 EST");
+  TryGetDuration("2014-01-02T00:00", 60, "2014-01-02T00:01-05:00 EST");
+  TryGetDuration("1999-01-01T00:00", 89, "");
+  TryGetDuration("2014-01-01T07:01", 61, "2014-01-01T07:02-05:00 EST");
+  TryGetDuration("2014-01-02T15:00", 61, "2014-01-02T15:01-05:00 EST");
+  TryGetDuration("2014-01-02T15:00", 86400, "2014-01-03T15:00-05:00 EST");
+  TryGetDuration("2016-07-14T00:00", 60, "2016-07-14T00:01-04:00 EDT");
 }
 
 void TestIsoDateTime() {
@@ -388,56 +315,56 @@ void TestDST() {
 
   // bunch of tests for the start and end of dst using startat and arriveby
 
-  TryTestDST(true, 1457845200, 1457858104, "2016-03-13T00:00-05:00", "2016-03-13T04:35-04:00");
-  TryTestDST(true, 1457848800, 1457860508, "2016-03-13T01:00-05:00", "2016-03-13T05:15-04:00");
-  TryTestDST(true, 1457852100, 1457853188, "2016-03-13T01:55-05:00", "2016-03-13T03:13-04:00");
-  TryTestDST(true, 1457852400, 1457853488, "2016-03-13T03:00-04:00", "2016-03-13T03:18-04:00");
-  TryTestDST(true, 1457854200, 1457859493, "2016-03-13T03:30-04:00", "2016-03-13T04:58-04:00");
-  TryTestDST(true, 1457855700, 1457856788, "2016-03-13T03:55-04:00", "2016-03-13T04:13-04:00");
-  TryTestDST(true, 1457852400, 1457853488, "2016-03-13T03:00-04:00", "2016-03-13T03:18-04:00");
-  TryTestDST(true, 1457853300, 1457854388, "2016-03-13T03:15-04:00", "2016-03-13T03:33-04:00");
+  TryTestDST(1457845200, 1457858104, "2016-03-13T00:00-05:00", "2016-03-13T04:35-04:00");
+  TryTestDST(1457848800, 1457860508, "2016-03-13T01:00-05:00", "2016-03-13T05:15-04:00");
+  TryTestDST(1457852100, 1457853188, "2016-03-13T01:55-05:00", "2016-03-13T03:13-04:00");
+  TryTestDST(1457852400, 1457853488, "2016-03-13T03:00-04:00", "2016-03-13T03:18-04:00");
+  TryTestDST(1457854200, 1457859493, "2016-03-13T03:30-04:00", "2016-03-13T04:58-04:00");
+  TryTestDST(1457855700, 1457856788, "2016-03-13T03:55-04:00", "2016-03-13T04:13-04:00");
+  TryTestDST(1457852400, 1457853488, "2016-03-13T03:00-04:00", "2016-03-13T03:18-04:00");
+  TryTestDST(1457853300, 1457854388, "2016-03-13T03:15-04:00", "2016-03-13T03:33-04:00");
 
-  TryTestDST(true, 1478406600, 1478407484, "2016-11-06T00:30-04:00", "2016-11-06T00:44-04:00");
-  TryTestDST(true, 1478408340, 1478409215, "2016-11-06T00:59-04:00", "2016-11-06T01:13-04:00");
-  TryTestDST(true, 1478408340, 1478413633, "2016-11-06T00:59-04:00", "2016-11-06T01:27-05:00");
-  TryTestDST(true, 1478413800, 1478414684, "2016-11-06T01:30-05:00", "2016-11-06T01:44-05:00");
-  TryTestDST(true, 1478413800, 1478418104, "2016-11-06T01:30-05:00", "2016-11-06T02:41-05:00");
-  TryTestDST(true, 1478415600, 1478420893, "2016-11-06T02:00-05:00", "2016-11-06T03:28-05:00");
-  TryTestDST(true, 1478412000, 1478417293, "2016-11-06T01:00-05:00", "2016-11-06T02:28-05:00");
-  TryTestDST(true, 1478419200, 1478424493, "2016-11-06T03:00-05:00", "2016-11-06T04:28-05:00");
-  TryTestDST(true, 1478408340, 1478420602, "2016-11-06T00:59-04:00", "2016-11-06T03:23-05:00");
-  TryTestDST(true, 1479016740, 1479029002, "2016-11-13T00:59-05:00", "2016-11-13T04:23-05:00");
+  TryTestDST(1478406600, 1478407484, "2016-11-06T00:30-04:00", "2016-11-06T00:44-04:00");
+  TryTestDST(1478408340, 1478409215, "2016-11-06T00:59-04:00", "2016-11-06T01:13-04:00");
+  TryTestDST(1478408340, 1478413633, "2016-11-06T00:59-04:00", "2016-11-06T01:27-05:00");
+  TryTestDST(1478413800, 1478414684, "2016-11-06T01:30-05:00", "2016-11-06T01:44-05:00");
+  TryTestDST(1478413800, 1478418104, "2016-11-06T01:30-05:00", "2016-11-06T02:41-05:00");
+  TryTestDST(1478415600, 1478420893, "2016-11-06T02:00-05:00", "2016-11-06T03:28-05:00");
+  TryTestDST(1478412000, 1478417293, "2016-11-06T01:00-05:00", "2016-11-06T02:28-05:00");
+  TryTestDST(1478419200, 1478424493, "2016-11-06T03:00-05:00", "2016-11-06T04:28-05:00");
+  TryTestDST(1478408340, 1478420602, "2016-11-06T00:59-04:00", "2016-11-06T03:23-05:00");
+  TryTestDST(1479016740, 1479029002, "2016-11-13T00:59-05:00", "2016-11-13T04:23-05:00");
 
-  TryTestDST(false, 1457847695, 1457848800, "2016-03-13T00:41-05:00", "2016-03-13T01:00-05:00");
-  TryTestDST(false, 1457851295, 1457852400, "2016-03-13T01:41-05:00", "2016-03-13T03:00-04:00");
-  TryTestDST(false, 1457853095, 1457854200, "2016-03-13T03:11-04:00", "2016-03-13T03:30-04:00");
-  TryTestDST(false, 1457851595, 1457852700, "2016-03-13T01:46-05:00", "2016-03-13T03:05-04:00");
-  TryTestDST(false, 1457851595, 1457852700, "2016-03-13T01:46-05:00", "2016-03-13T03:05-04:00");
-  TryTestDST(false, 1457846553, 1457852400, "2016-03-13T00:22-05:00", "2016-03-13T03:00-04:00");
-  TryTestDST(false, 1457847453, 1457852700, "2016-03-13T00:37-05:00", "2016-03-13T03:05-04:00");
-  TryTestDST(false, 1457933853, 1457939100, "2016-03-14T01:37-04:00", "2016-03-14T03:05-04:00");
-  TryTestDST(false, 1457848559, 1457856300, "2016-03-13T00:55-05:00", "2016-03-13T04:05-04:00");
-  TryTestDST(false, 1457847978, 1457856000, "2016-03-13T00:46-05:00", "2016-03-13T04:00-04:00");
-  TryTestDST(false, 1457934378, 1457942400, "2016-03-14T01:46-04:00", "2016-03-14T04:00-04:00");
+  TryTestDST(1457847695, 1457848800, "2016-03-13T00:41-05:00", "2016-03-13T01:00-05:00");
+  TryTestDST(1457851295, 1457852400, "2016-03-13T01:41-05:00", "2016-03-13T03:00-04:00");
+  TryTestDST(1457853095, 1457854200, "2016-03-13T03:11-04:00", "2016-03-13T03:30-04:00");
+  TryTestDST(1457851595, 1457852700, "2016-03-13T01:46-05:00", "2016-03-13T03:05-04:00");
+  TryTestDST(1457851595, 1457852700, "2016-03-13T01:46-05:00", "2016-03-13T03:05-04:00");
+  TryTestDST(1457846553, 1457852400, "2016-03-13T00:22-05:00", "2016-03-13T03:00-04:00");
+  TryTestDST(1457847453, 1457852700, "2016-03-13T00:37-05:00", "2016-03-13T03:05-04:00");
+  TryTestDST(1457933853, 1457939100, "2016-03-14T01:37-04:00", "2016-03-14T03:05-04:00");
+  TryTestDST(1457848559, 1457856300, "2016-03-13T00:55-05:00", "2016-03-13T04:05-04:00");
+  TryTestDST(1457847978, 1457856000, "2016-03-13T00:46-05:00", "2016-03-13T04:00-04:00");
+  TryTestDST(1457934378, 1457942400, "2016-03-14T01:46-04:00", "2016-03-14T04:00-04:00");
 
-  TryTestDST(false, 1478406871, 1478415600, "2016-11-06T00:34-04:00", "2016-11-06T02:00-05:00");
-  TryTestDST(false, 1478493271, 1478502000, "2016-11-06T23:34-05:00", "2016-11-07T02:00-05:00");
-  TryTestDST(false, 1478410471, 1478419200, "2016-11-06T01:34-04:00", "2016-11-06T03:00-05:00");
-  TryTestDST(false, 1478496871, 1478505600, "2016-11-07T00:34-05:00", "2016-11-07T03:00-05:00");
-  TryTestDST(false, 1478414071, 1478422800, "2016-11-06T01:34-05:00", "2016-11-06T04:00-05:00");
-  TryTestDST(false, 1478500471, 1478509200, "2016-11-07T01:34-05:00", "2016-11-07T04:00-05:00");
-  TryTestDST(false, 1478410406, 1478422800, "2016-11-06T01:33-04:00", "2016-11-06T04:00-05:00");
-  TryTestDST(false, 1478496806, 1478509200, "2016-11-07T00:33-05:00", "2016-11-07T04:00-05:00");
-  TryTestDST(false, 1478406806, 1478419200, "2016-11-06T00:33-04:00", "2016-11-06T03:00-05:00");
-  TryTestDST(false, 1478493206, 1478505600, "2016-11-06T23:33-05:00", "2016-11-07T03:00-05:00");
-  TryTestDST(false, 1478403206, 1478415600, "2016-11-05T23:33-04:00", "2016-11-06T02:00-05:00");
-  TryTestDST(false, 1478489606, 1478502000, "2016-11-06T22:33-05:00", "2016-11-07T02:00-05:00");
-  TryTestDST(false, 1478399606, 1478412000, "2016-11-05T21:33-04:00", "2016-11-06T01:00-05:00");
-  TryTestDST(false, 1478486006, 1478498400, "2016-11-06T21:33-05:00", "2016-11-07T01:00-05:00");
-  TryTestDST(false, 1478409968, 1478412000, "2016-11-06T00:26-04:00", "2016-11-06T01:00-05:00");
-  TryTestDST(false, 1478410268, 1478412300, "2016-11-06T00:31-04:00", "2016-11-06T01:05-05:00");
-  TryTestDST(false, 1478413868, 1478415900, "2016-11-06T01:31-05:00", "2016-11-06T02:05-05:00");
-  TryTestDST(false, 1478417468, 1478419500, "2016-11-06T02:31-05:00", "2016-11-06T03:05-05:00");
+  TryTestDST(1478406871, 1478415600, "2016-11-06T00:34-04:00", "2016-11-06T02:00-05:00");
+  TryTestDST(1478493271, 1478502000, "2016-11-06T23:34-05:00", "2016-11-07T02:00-05:00");
+  TryTestDST(1478410471, 1478419200, "2016-11-06T01:34-04:00", "2016-11-06T03:00-05:00");
+  TryTestDST(1478496871, 1478505600, "2016-11-07T00:34-05:00", "2016-11-07T03:00-05:00");
+  TryTestDST(1478414071, 1478422800, "2016-11-06T01:34-05:00", "2016-11-06T04:00-05:00");
+  TryTestDST(1478500471, 1478509200, "2016-11-07T01:34-05:00", "2016-11-07T04:00-05:00");
+  TryTestDST(1478410406, 1478422800, "2016-11-06T01:33-04:00", "2016-11-06T04:00-05:00");
+  TryTestDST(1478496806, 1478509200, "2016-11-07T00:33-05:00", "2016-11-07T04:00-05:00");
+  TryTestDST(1478406806, 1478419200, "2016-11-06T00:33-04:00", "2016-11-06T03:00-05:00");
+  TryTestDST(1478493206, 1478505600, "2016-11-06T23:33-05:00", "2016-11-07T03:00-05:00");
+  TryTestDST(1478403206, 1478415600, "2016-11-05T23:33-04:00", "2016-11-06T02:00-05:00");
+  TryTestDST(1478489606, 1478502000, "2016-11-06T22:33-05:00", "2016-11-07T02:00-05:00");
+  TryTestDST(1478399606, 1478412000, "2016-11-05T22:33-04:00", "2016-11-06T01:00-05:00");
+  TryTestDST(1478486006, 1478498400, "2016-11-06T21:33-05:00", "2016-11-07T01:00-05:00");
+  TryTestDST(1478409968, 1478412000, "2016-11-06T01:26-04:00", "2016-11-06T01:00-05:00");
+  TryTestDST(1478410268, 1478412300, "2016-11-06T01:31-04:00", "2016-11-06T01:05-05:00");
+  TryTestDST(1478413868, 1478415900, "2016-11-06T01:31-05:00", "2016-11-06T02:05-05:00");
+  TryTestDST(1478417468, 1478419500, "2016-11-06T02:31-05:00", "2016-11-06T03:05-05:00");
 }
 
 void TestIsRestricted() {
@@ -553,66 +480,66 @@ void TestIsRestricted() {
 void TestTimezoneDiff() {
 
   // dst tests
-  TryTestTimezoneDiff(true, 1478493271, "2016-11-06T23:34-05:00", "2016-11-06T23:34-05:00",
+  TryTestTimezoneDiff(1478493271, "2016-11-06T23:34-05:00", "2016-11-06T23:34-05:00",
                       "America/New_York", "America/New_York");
-  TryTestTimezoneDiff(true, 1478410471, "2016-11-06T01:34-04:00", "2016-11-06T01:34-04:00",
+  TryTestTimezoneDiff(1478410471, "2016-11-06T01:34-04:00", "2016-11-06T01:34-04:00",
                       "America/New_York", "America/New_York");
-  TryTestTimezoneDiff(true, 1478419200, "2016-11-06T03:00-05:00", "2016-11-06T03:00-05:00",
+  TryTestTimezoneDiff(1478419200, "2016-11-06T03:00-05:00", "2016-11-06T03:00-05:00",
                       "America/New_York", "America/New_York");
-  TryTestTimezoneDiff(true, 1457847695, "2016-03-13T00:41-05:00", "2016-03-13T00:41-05:00",
+  TryTestTimezoneDiff(1457847695, "2016-03-13T00:41-05:00", "2016-03-13T00:41-05:00",
                       "America/New_York", "America/New_York");
-  TryTestTimezoneDiff(true, 1457848800, "2016-03-13T01:00-05:00", "2016-03-13T01:00-05:00",
+  TryTestTimezoneDiff(1457848800, "2016-03-13T01:00-05:00", "2016-03-13T01:00-05:00",
                       "America/New_York", "America/New_York");
-  TryTestTimezoneDiff(true, 1457851295, "2016-03-13T01:41-05:00", "2016-03-13T01:41-05:00",
+  TryTestTimezoneDiff(1457851295, "2016-03-13T01:41-05:00", "2016-03-13T01:41-05:00",
                       "America/New_York", "America/New_York");
-  TryTestTimezoneDiff(true, 1457852400, "2016-03-13T03:00-04:00", "2016-03-13T03:00-04:00",
+  TryTestTimezoneDiff(1457852400, "2016-03-13T03:00-04:00", "2016-03-13T03:00-04:00",
                       "America/New_York", "America/New_York");
 
   // crossing tz
   // 2018-04-25T21:09-06:00 = 1524712192
   // if you are in mtn tz and go to la tz, subtract one hour
-  TryTestTimezoneDiff(true, 1524712192, "2018-04-25T20:09-06:00", "2018-04-25T19:09-07:00",
+  TryTestTimezoneDiff(1524712192, "2018-04-25T20:09-06:00", "2018-04-25T19:09-07:00",
                       "America/Denver", "America/Los_Angeles");
   // 2018-04-25T20:09-07:00 = 1524712192
   // if you are in la tz and go to mtn tz, add one hour
-  TryTestTimezoneDiff(true, 1524712192, "2018-04-25T21:09-07:00", "2018-04-25T22:09-06:00",
+  TryTestTimezoneDiff(1524712192, "2018-04-25T21:09-07:00", "2018-04-25T22:09-06:00",
                       "America/Los_Angeles", "America/Denver");
 
   // 2018-04-25T21:09-06:00 = 1524712192
-  TryTestTimezoneDiff(false, 1524712192, "2018-04-25T20:09-06:00", "2018-04-25T19:09-07:00",
+  TryTestTimezoneDiff(1524712192, "2018-04-25T20:09-06:00", "2018-04-25T19:09-07:00",
                       "America/Denver", "America/Los_Angeles");
   // 2018-04-25T20:09-07:00 = 1524712192
   // if you are in la tz and go to mtn tz, add one hour
-  TryTestTimezoneDiff(false, 1524712192, "2018-04-25T21:09-07:00", "2018-04-25T22:09-06:00",
+  TryTestTimezoneDiff(1524712192, "2018-04-25T21:09-07:00", "2018-04-25T22:09-06:00",
                       "America/Los_Angeles", "America/Denver");
 
   // 2018-04-25T23:09-04:00 = 1524712192
-  TryTestTimezoneDiff(true, 1524712192, "2018-04-25T20:09-04:00", "2018-04-25T17:09-07:00",
+  TryTestTimezoneDiff(1524712192, "2018-04-25T20:09-04:00", "2018-04-25T17:09-07:00",
                       "America/New_York", "America/Los_Angeles");
   // 2018-04-25T20:09-07:00 = 1524712192
-  TryTestTimezoneDiff(true, 1524712192, "2018-04-25T23:09-07:00", "2018-04-26T02:09-04:00",
+  TryTestTimezoneDiff(1524712192, "2018-04-25T23:09-07:00", "2018-04-26T02:09-04:00",
                       "America/Los_Angeles", "America/New_York");
 
   // 2018-04-25T23:09-04:00 = 1524712192
-  TryTestTimezoneDiff(false, 1524712192, "2018-04-25T20:09-04:00", "2018-04-25T17:09-07:00",
+  TryTestTimezoneDiff(1524712192, "2018-04-25T20:09-04:00", "2018-04-25T17:09-07:00",
                       "America/New_York", "America/Los_Angeles");
   // 2018-04-25T20:09-07:00 = 1524712192
-  TryTestTimezoneDiff(false, 1524712192, "2018-04-25T23:09-07:00", "2018-04-26T02:09-04:00",
+  TryTestTimezoneDiff(1524712192, "2018-04-25T23:09-07:00", "2018-04-26T02:09-04:00",
                       "America/Los_Angeles", "America/New_York");
 
   // 2018-04-25T23:09-04:00 = 1524712192
-  TryTestTimezoneDiff(true, 1524712192, "2018-04-26T05:09-04:00", "2018-04-26T11:09+02:00",
+  TryTestTimezoneDiff(1524712192, "2018-04-26T05:09-04:00", "2018-04-26T11:09+02:00",
                       "America/New_York", "Europe/Berlin");
   // 2018-04-26T05:09+02:00 = 1524712192
-  TryTestTimezoneDiff(true, 1524712192, "2018-04-25T23:09+02:00", "2018-04-25T17:09-04:00",
-                      "Europe/Berlin", "America/New_York");
+  TryTestTimezoneDiff(1524712192, "2018-04-25T23:09+02:00", "2018-04-25T17:09-04:00", "Europe/Berlin",
+                      "America/New_York");
 
   // 2018-04-25T23:09-04:00 = 1524712192
-  TryTestTimezoneDiff(false, 1524712192, "2018-04-26T05:09-04:00", "2018-04-26T11:09+02:00",
+  TryTestTimezoneDiff(1524712192, "2018-04-26T05:09-04:00", "2018-04-26T11:09+02:00",
                       "America/New_York", "Europe/Berlin");
   // 2018-04-26T05:09+02:00 = 1524712192
-  TryTestTimezoneDiff(false, 1524712192, "2018-04-25T23:09+02:00", "2018-04-25T17:09-04:00",
-                      "Europe/Berlin", "America/New_York");
+  TryTestTimezoneDiff(1524712192, "2018-04-25T23:09+02:00", "2018-04-25T17:09-04:00", "Europe/Berlin",
+                      "America/New_York");
 }
 
 void TestDayOfWeek() {
@@ -629,29 +556,6 @@ void TestDayOfWeek() {
   }
 }
 
-void TestISOToTm() {
-  std::string date = "2018-07-22T10:09";
-  std::tm t = DateTime::iso_to_tm(date);
-  if (t.tm_year != 118) {
-    throw std::runtime_error("DateTime::iso_to_tm year: 118 expected");
-  }
-  // Remember, tm_mon is 0 based
-  if (t.tm_mon != 6) {
-    throw std::runtime_error("DateTime::iso_to_tm month: 6 expected, got: " +
-                             std::to_string(t.tm_mon));
-  }
-  if (t.tm_mday != 22) {
-    throw std::runtime_error("DateTime::iso_to_tm month: 22 expected");
-  }
-  if (t.tm_hour != 10) {
-    throw std::runtime_error("DateTime::iso_to_tm hour: 10 expected, got: " +
-                             std::to_string(t.tm_hour));
-  }
-  if (t.tm_min != 9) {
-    throw std::runtime_error("DateTime::iso_to_tm min: 9 expected");
-  }
-}
-
 int main(void) {
   test::suite suite("datetime");
 
@@ -665,8 +569,6 @@ int main(void) {
   suite.test(TEST_CASE(TestDST));
   suite.test(TEST_CASE(TestTimezoneDiff));
   suite.test(TEST_CASE(TestDayOfWeek));
-
-  suite.test(TEST_CASE(TestISOToTm));
 
   return suite.tear_down();
 }

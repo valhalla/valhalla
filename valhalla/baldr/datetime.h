@@ -11,10 +11,8 @@
 #include <string>
 #include <vector>
 
-#include <boost/date_time/gregorian/gregorian.hpp>
-#include <boost/date_time/local_time/local_time.hpp>
-#include <boost/date_time/local_time/local_time_io.hpp>
-#include <boost/date_time/local_time/tz_database.hpp>
+#include <date/date.h>
+#include <date/tz.h>
 
 #include <valhalla/baldr/graphconstants.h>
 #include <valhalla/midgard/constants.h>
@@ -23,13 +21,15 @@ namespace valhalla {
 namespace baldr {
 namespace DateTime {
 
-struct tz_db_t : public boost::local_time::tz_database {
+// tz db
+struct tz_db_t {
   tz_db_t();
-  size_t to_index(const std::string& region) const;
-  boost::shared_ptr<time_zone_base_type> from_index(size_t index) const;
+  size_t to_index(const std::string& zone) const;
+  const date::time_zone* from_index(size_t index) const;
 
 protected:
-  std::vector<std::string> regions;
+  std::vector<std::string> names;
+  const date::tzdb& db;
 };
 
 /**
@@ -40,10 +40,10 @@ const tz_db_t& get_tz_db();
 
 /**
  * Get a formatted date from a string.
- * @param date in the format of 20150516 or 2015-05-06T08:00
+ * @param date in the format of 2015-05-06T08:00
  * @return  Returns the formatted date.
  */
-boost::gregorian::date get_formatted_date(const std::string& date);
+date::local_seconds get_formatted_date(const std::string& date);
 
 /**
  * Get a local_date_time with support for dst.
@@ -52,23 +52,21 @@ boost::gregorian::date get_formatted_date(const std::string& date);
  * @param time_zone       Timezone
  * @return Returns local date time.
  */
-boost::local_time::local_date_time get_ldt(const boost::gregorian::date& date,
-                                           const boost::posix_time::time_duration& time_duration,
-                                           const boost::local_time::time_zone_ptr& time_zone);
+date::zoned_seconds get_ldt(const date::local_seconds& date, const date::time_zone* time_zone);
 
 /**
  * Get the number of days elapsed from the pivot date until the input date.
  * @param   date_time date
  * @return  Returns the number of days.
  */
-uint32_t days_from_pivot_date(const boost::gregorian::date& date_time);
+uint32_t days_from_pivot_date(const date::local_seconds& seconds);
 
 /**
  * Get the iso date and time from the current date and time.
  * @param   time_zone        Timezone.
  * @return  Returns the formated date 2015-05-06.
  */
-std::string iso_date_time(const boost::local_time::time_zone_ptr& time_zone);
+std::string iso_date_time(const date::time_zone* time_zone);
 
 /**
  * Get the seconds from epoch for a date_time string
@@ -76,26 +74,29 @@ std::string iso_date_time(const boost::local_time::time_zone_ptr& time_zone);
  * @param   time_zone   Timezone.
  * @return  Returns the seconds from epoch.
  */
-uint64_t seconds_since_epoch(const std::string& date_time,
-                             const boost::local_time::time_zone_ptr& time_zone);
+uint64_t seconds_since_epoch(const std::string& date_time, const date::time_zone* time_zone);
 
 /**
  * Get the difference between two timezones using the current time (seconds from epoch
  * so that DST can be take into account).
- * @param   is_depart_at  is this a depart at or arrive by
  * @param   seconds       seconds since epoch
  * @param   origin_tz     timezone for origin
  * @param   dest_tz       timezone for dest
  * @return Returns the seconds difference between the 2 timezones.
  */
-int timezone_diff(const bool is_depart_at,
-                  const uint64_t seconds,
-                  const boost::local_time::time_zone_ptr& origin_tz,
-                  const boost::local_time::time_zone_ptr& dest_tz);
+int timezone_diff(const uint64_t seconds,
+                  const date::time_zone* origin_tz,
+                  const date::time_zone* dest_tz);
 
 /**
  * Get the iso date time from seconds since epoch and timezone.
- * @param   is_depart_at        is this a depart at or arrive by
+ * @param   seconds      seconds since epoch
+ * @param   tz           timezone
+ */
+std::string seconds_to_date(const uint64_t seconds, const date::time_zone* tz);
+
+/**
+ * Get the iso date time from seconds since epoch and timezone.
  * @param   origin_seconds      seconds since epoch for origin
  * @param   dest_seconds        seconds since epoch for dest
  * @param   origin_tz           timezone for origin
@@ -103,11 +104,10 @@ int timezone_diff(const bool is_depart_at,
  * @param   iso_origin          origin string that will be updated
  * @param   iso_dest            dest string that will be updated
  */
-void seconds_to_date(const bool is_depart_at,
-                     const uint64_t origin_seconds,
+void seconds_to_date(const uint64_t origin_seconds,
                      const uint64_t dest_seconds,
-                     const boost::local_time::time_zone_ptr& origin_tz,
-                     const boost::local_time::time_zone_ptr& dest_tz,
+                     const date::time_zone* origin_tz,
+                     const date::time_zone* dest_tz,
                      std::string& iso_origin,
                      std::string& iso_dest);
 
@@ -125,9 +125,8 @@ uint32_t day_of_week_mask(const std::string& date_time);
  * @param   tz          timezone
  * @return  Returns ISO formatted string
  */
-std::string get_duration(const std::string& date_time,
-                         const uint32_t seconds,
-                         const boost::local_time::time_zone_ptr& tz);
+std::string
+get_duration(const std::string& date_time, const uint32_t seconds, const date::time_zone* tz);
 
 /**
  * Checks if a date is restricted within a begin and end range.
@@ -162,7 +161,7 @@ bool is_restricted(const bool type,
                    const uint8_t end_month,
                    const uint8_t end_day_dow,
                    const uint64_t current_time,
-                   const boost::local_time::time_zone_ptr& time_zone);
+                   const date::time_zone* time_zone);
 
 /**
  * Convert ISO 8601 time into std::tm.
@@ -181,8 +180,7 @@ static std::tm iso_to_tm(const std::string& iso) {
   }
 
   std::istringstream ss(iso);
-  std::locale::global(std::locale(""));
-  ss.imbue(std::locale(std::locale()));
+  ss.imbue(std::locale("C"));
   ss >> std::get_time(&t, "%Y-%m-%dT%H:%M");
 
   // Validate fields. Set tm_year to 0 if any of the year,month,day,hour,minute are invalid.

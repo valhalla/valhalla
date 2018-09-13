@@ -11,10 +11,10 @@
 #include <thread>
 #include <unordered_set>
 
+#include "baldr/rapidjson_utils.h"
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem/operations.hpp>
 #include <boost/format.hpp>
-#include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/tokenizer.hpp>
 #include <curl/curl.h>
@@ -22,14 +22,15 @@
 #include <google/protobuf/io/zero_copy_stream_impl_lite.h>
 
 #include "baldr/datetime.h"
-#include "baldr/filesystem_utils.h"
 #include "baldr/graphconstants.h"
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
 #include "baldr/graphtile.h"
 #include "baldr/tilehierarchy.h"
+#include "filesystem.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
+#include "midgard/sequence.h"
 
 #include "mjolnir/admin.h"
 #include "mjolnir/graphtilebuilder.h"
@@ -157,7 +158,7 @@ struct pt_curler_t {
         if (http_code == 200) {
           bool threw = false;
           try {
-            read_json(result, pt);
+            rapidjson::read_json(result, pt);
           } catch (...) { threw = true; }
           // has to parse and have required info
           if (!threw && (retry_if_no.empty() || pt.get_child_optional(retry_if_no))) {
@@ -679,8 +680,8 @@ bool get_stop_pairs(Transit& tile,
 
     pair->set_origin_departure_time(DateTime::seconds_from_midnight(origin_time));
     pair->set_destination_arrival_time(DateTime::seconds_from_midnight(dest_time));
-    pair->set_service_start_date(DateTime::get_formatted_date(start_date).julian_day());
-    pair->set_service_end_date(DateTime::get_formatted_date(end_date).julian_day());
+    pair->set_service_start_date(get_formatted_date(start_date).julian_day());
+    pair->set_service_end_date(get_formatted_date(end_date).julian_day());
     for (const auto& service_days : pair_pt.second.get_child("service_days_of_week")) {
       pair->add_service_days_of_week(service_days.second.get_value<bool>());
     }
@@ -718,7 +719,7 @@ bool get_stop_pairs(Transit& tile,
     const auto& except_dates = pair_pt.second.get_child_optional("service_except_dates");
     if (except_dates && !except_dates->empty()) {
       for (const auto& service_except_dates : pair_pt.second.get_child("service_except_dates")) {
-        auto d = DateTime::get_formatted_date(service_except_dates.second.get_value<std::string>());
+        auto d = get_formatted_date(service_except_dates.second.get_value<std::string>());
         pair->add_service_except_dates(d.julian_day());
       }
     }
@@ -726,7 +727,7 @@ bool get_stop_pairs(Transit& tile,
     const auto& added_dates = pair_pt.second.get_child_optional("service_added_dates");
     if (added_dates && !added_dates->empty()) {
       for (const auto& service_added_dates : pair_pt.second.get_child("service_added_dates")) {
-        auto d = DateTime::get_formatted_date(service_added_dates.second.get_value<std::string>());
+        auto d = get_formatted_date(service_added_dates.second.get_value<std::string>());
         pair->add_service_added_dates(d.julian_day());
       }
     }
@@ -774,10 +775,11 @@ void write_pbf(const Transit& tile, const boost::filesystem::path& transit_tile)
   if (!boost::filesystem::exists(transit_tile.parent_path())) {
     boost::filesystem::create_directories(transit_tile.parent_path());
   }
-  std::fstream stream(transit_tile.string(), std::ios::out | std::ios::trunc | std::ios::binary);
-  if (!tile.SerializeToOstream(&stream)) {
+  auto size = tile.ByteSize();
+  valhalla::midgard::mem_map<char> buffer(transit_tile.string(), size);
+  if (!tile.SerializeToArray(buffer.get(), size)) {
     LOG_ERROR("Couldn't write: " + transit_tile.string() + " it would have been " +
-              std::to_string(tile.ByteSize()));
+              std::to_string(size));
   }
 
   if (tile.routes_size() && tile.nodes_size() && tile.stop_pairs_size() && tile.shapes_size()) {
@@ -832,8 +834,8 @@ void fetch_tiles(const ptree& pt,
     Transit tile;
     auto file_name = GraphTile::FileSuffix(current);
     file_name = file_name.substr(0, file_name.size() - 3) + "pbf";
-    boost::filesystem::path transit_tile =
-        pt.get<std::string>("mjolnir.transit_dir") + filesystem::path_separator + file_name;
+    boost::filesystem::path transit_tile = pt.get<std::string>("mjolnir.transit_dir") +
+                                           filesystem::path::preferred_separator + file_name;
 
     // tiles are wrote out with .pbf or .pbf.n ext
     uint32_t ext = 0;
@@ -1060,7 +1062,8 @@ void stitch_tiles(const ptree& pt,
   auto tile_name = [&pt](const GraphId& id) {
     auto file_name = GraphTile::FileSuffix(id);
     file_name = file_name.substr(0, file_name.size() - 3) + "pbf";
-    return pt.get<std::string>("mjolnir.transit_dir") + filesystem::path_separator + file_name;
+    return pt.get<std::string>("mjolnir.transit_dir") + filesystem::path::preferred_separator +
+           file_name;
   };
 
   // for each tile
@@ -1139,8 +1142,9 @@ void stitch_tiles(const ptree& pt,
         }
       }
       lock.lock();
-      std::fstream stream(file_name, std::ios::out | std::ios::trunc | std::ios::binary);
-      tile.SerializeToOstream(&stream);
+      auto size = tile.ByteSize();
+      valhalla::midgard::mem_map<char> buffer(file_name, size);
+      tile.SerializeToArray(buffer.get(), size);
       lock.unlock();
       LOG_INFO(file_name + " stitched " + std::to_string(found) + " of " +
                std::to_string(needed.size()) + " stops");
@@ -1326,7 +1330,7 @@ ProcessStopPairs(GraphTileBuilder& transit_tilebuilder,
           }
 
           dep.headsign_offset = transit_tilebuilder.AddName(sp.trip_headsign());
-          uint32_t end_day = (DateTime::days_from_pivot_date(end_date) - tile_date);
+          uint32_t end_day = (days_from_pivot_date(end_date) - tile_date);
 
           if (end_day > kScheduleEndDay) {
             end_day = kScheduleEndDay;
@@ -1674,7 +1678,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
       const std::string& tz = station.has_timezone() ? station.timezone() : "";
       uint32_t timezone = 0;
       if (!tz.empty()) {
-        timezone = DateTime::get_tz_db().to_index(tz);
+        timezone = get_tz_db().to_index(tz);
       }
 
       if (timezone == 0) {
@@ -1720,7 +1724,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
         const std::string& tz = egress.has_timezone() ? egress.timezone() : "";
         uint32_t timezone = 0;
         if (!tz.empty()) {
-          timezone = DateTime::get_tz_db().to_index(tz);
+          timezone = get_tz_db().to_index(tz);
         }
 
         if (timezone == 0) {
@@ -1898,7 +1902,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
     const std::string& tz = platform.has_timezone() ? platform.timezone() : "";
     uint32_t timezone = 0;
     if (!tz.empty()) {
-      timezone = DateTime::get_tz_db().to_index(tz);
+      timezone = get_tz_db().to_index(tz);
     }
 
     if (timezone == 0) {
@@ -1977,7 +1981,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
             GraphId(end_platform_graphid.tileid(), end_platform_graphid.level(), 0));
         boost::algorithm::trim_if(file_name, boost::is_any_of(".gph"));
         file_name += ".pbf";
-        const std::string file = transit_dir + filesystem::path_separator + file_name;
+        const std::string file = transit_dir + filesystem::path::preferred_separator + file_name;
         Transit endtransit = read_pbf(file, lock);
         const Transit_Node& endplatform = endtransit.nodes(end_platform_graphid.id());
         endstopname = endplatform.name();
@@ -2097,7 +2101,7 @@ void build_tiles(const boost::property_tree::ptree& pt,
     std::string file_name = GraphTile::FileSuffix(GraphId(tile_id.tileid(), tile_id.level(), 0));
     boost::algorithm::trim_if(file_name, boost::is_any_of(".gph"));
     file_name += ".pbf";
-    const std::string file = transit_dir + filesystem::path_separator + file_name;
+    const std::string file = transit_dir + filesystem::path::preferred_separator + file_name;
 
     // Make sure it exists
     if (!boost::filesystem::exists(file)) {
@@ -2114,9 +2118,8 @@ void build_tiles(const boost::property_tree::ptree& pt,
     const GraphTile* transit_tile = reader_transit_level.GetGraphTile(transit_tile_id);
     GraphTileBuilder tilebuilder_transit(reader_transit_level.tile_dir(), transit_tile_id, false);
 
-    auto tz = DateTime::get_tz_db().from_index(DateTime::get_tz_db().to_index("America/New_York"));
-    uint32_t tile_creation_date =
-        DateTime::days_from_pivot_date(DateTime::get_formatted_date(DateTime::iso_date_time(tz)));
+    auto tz = get_tz_db().from_index(get_tz_db().to_index("America/New_York"));
+    uint32_t tile_creation_date = days_from_pivot_date(get_formatted_date(iso_date_time(tz)));
     tilebuilder_transit.AddTileCreationDate(tile_creation_date);
 
     lock.unlock();
@@ -2386,7 +2389,7 @@ int main(int argc, char** argv) {
 
   // args and config file loading
   ptree pt;
-  boost::property_tree::read_json(std::string(argv[1]), pt);
+  rapidjson::read_json(std::string(argv[1]), pt);
   pt.erase("base_url");
   pt.add("base_url", std::string(argv[2]));
   pt.erase("per_page");
@@ -2433,7 +2436,7 @@ int main(int argc, char** argv) {
 
   // figure out which transit tiles even exist
   boost::filesystem::recursive_directory_iterator transit_file_itr(
-      pt.get<std::string>("mjolnir.transit_dir") + filesystem::path_separator +
+      pt.get<std::string>("mjolnir.transit_dir") + filesystem::path::preferred_separator +
       std::to_string(TileHierarchy::levels().rbegin()->first));
   boost::filesystem::recursive_directory_iterator end_file_itr;
   std::unordered_set<GraphId> all_tiles;

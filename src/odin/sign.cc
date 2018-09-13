@@ -20,6 +20,7 @@ void Sign::set_consecutive_count(uint32_t consecutive_count) {
   consecutive_count_ = consecutive_count;
 }
 
+#ifdef LOGGING_LEVEL_TRACE
 std::string Sign::ToParameterString() const {
   const std::string delim = ", ";
   std::string str;
@@ -31,6 +32,7 @@ std::string Sign::ToParameterString() const {
 
   return str;
 }
+#endif
 
 bool Sign::operator==(const Sign& rhs) const {
   return ((consecutive_count_ == rhs.consecutive_count_) && (text_ == rhs.text_));

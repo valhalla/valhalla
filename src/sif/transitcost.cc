@@ -3,10 +3,10 @@
 #include "baldr/accessrestriction.h"
 #include "midgard/constants.h"
 #include "midgard/logging.h"
+#include "worker.h"
 
 #ifdef INLINE_TEST
 #include "test/test.h"
-#include <boost/property_tree/json_parser.hpp>
 #include <random>
 #endif
 
@@ -61,11 +61,11 @@ constexpr ranged_default_t<float> kTransferPenaltyRange{0, kDefaultTransferPenal
 class TransitCost : public DynamicCost {
 public:
   /**
-   * Constructor. Configuration / options for pedestrian costing are provided
-   * via a property tree (JSON).
-   * @param  pt  Property tree with configuration/options.
+   * Construct transit costing. Pass in cost type and options using protocol buffer(pbf).
+   * @param  costing specified costing type.
+   * @param  options pbf with request options.
    */
-  TransitCost(const boost::property_tree::ptree& pt);
+  TransitCost(const odin::Costing costing, const odin::DirectionsOptions& options);
 
   virtual ~TransitCost();
 
@@ -295,10 +295,10 @@ public:
   std::unordered_set<std::string> stop_include_onestops_;
 
   // operator exclude list
-  std::unordered_set<std::string> oper_exclude_onestops_;
+  std::unordered_set<std::string> operator_exclude_onestops_;
 
   // operator include list
-  std::unordered_set<std::string> oper_include_onestops_;
+  std::unordered_set<std::string> operator_include_onestops_;
 
   // route excluded list
   std::unordered_set<std::string> route_exclude_onestops_;
@@ -315,25 +315,28 @@ public:
 
 // Constructor. Parse pedestrian options from property tree. If option is
 // not present, set the default.
-TransitCost::TransitCost(const boost::property_tree::ptree& pt)
-    : DynamicCost(pt, TravelMode::kPublicTransit) {
+TransitCost::TransitCost(const odin::Costing costing, const odin::DirectionsOptions& options)
+    : DynamicCost(options, TravelMode::kPublicTransit) {
 
-  mode_factor_ = kModeFactorRange(pt.get<float>("mode_factor", kModeFactor));
+  // Grab the costing options based on the specified costing type
+  const odin::CostingOptions& costing_options = options.costing_options(static_cast<int>(costing));
 
-  wheelchair_ = pt.get<bool>("wheelchair", false);
-  bicycle_ = pt.get<bool>("bicycle", false);
+  mode_factor_ = costing_options.mode_factor();
+
+  wheelchair_ = costing_options.wheelchair();
+  bicycle_ = costing_options.bicycle();
 
   // Willingness to use buses. Make sure this is within range [0, 1]
   // Otherwise it will default
-  use_bus_ = kUseBusRange(pt.get<float>("use_bus", kDefaultUseBus));
+  use_bus_ = costing_options.use_bus();
 
   // Willingness to use rail. Make sure this is within range [0, 1].
   // Otherwise it will default
-  use_rail_ = kUseRailRange(pt.get<float>("use_rail", kDefaultUseRail));
+  use_rail_ = costing_options.use_rail();
 
   // Willingness to make transfers. Make sure this is within range [0, 1].
   // Otherwise it will default
-  use_transfers_ = kUseTransfersRange(pt.get<float>("use_transfers", kDefaultUseTransfers));
+  use_transfers_ = costing_options.use_transfers();
 
   // Set the factors. The factors above 0.5 start to reduce the weight
   // for this mode while factors below 0.5 start to increase the weight for
@@ -344,39 +347,41 @@ TransitCost::TransitCost(const boost::property_tree::ptree& pt)
 
   transfer_factor_ = (use_transfers_ >= 0.5f) ? 1.5f - use_transfers_ : 5.0f - use_transfers_ * 8.0f;
 
-  transfer_cost_ = kTransferCostRange(pt.get<float>("transfer_cost", kDefaultTransferCost));
-  transfer_penalty_ =
-      kTransferPenaltyRange(pt.get<float>("transfer_penalty", kDefaultTransferPenalty));
+  transfer_cost_ = costing_options.transfer_cost();
+  transfer_penalty_ = costing_options.transfer_penalty();
 
-  std::string stop_action = pt.get("filters.stops.action", "");
-  if (stop_action.size()) {
-    for (const auto& kv : pt.get_child("filters.stops.ids")) {
-      if (stop_action == "exclude") {
-        stop_exclude_onestops_.emplace(kv.second.get_value<std::string>());
-      } else if (stop_action == "include") {
-        stop_include_onestops_.emplace(kv.second.get_value<std::string>());
+  // Process stop filters
+  if (costing_options.has_filter_stop_action()) {
+    auto stop_action = costing_options.filter_stop_action();
+    for (const auto& id : costing_options.filter_stop_ids()) {
+      if (stop_action == odin::FilterAction::exclude) {
+        stop_exclude_onestops_.emplace(id);
+      } else if (stop_action == odin::FilterAction::include) {
+        stop_include_onestops_.emplace(id);
       }
     }
   }
 
-  std::string operator_action = pt.get("filters.operators.action", "");
-  if (operator_action.size()) {
-    for (const auto& kv : pt.get_child("filters.operators.ids")) {
-      if (operator_action == "exclude") {
-        oper_exclude_onestops_.emplace(kv.second.get_value<std::string>());
-      } else if (operator_action == "include") {
-        oper_include_onestops_.emplace(kv.second.get_value<std::string>());
+  // Process operator filters
+  if (costing_options.has_filter_operator_action()) {
+    auto operator_action = costing_options.filter_operator_action();
+    for (const auto& id : costing_options.filter_operator_ids()) {
+      if (operator_action == odin::FilterAction::exclude) {
+        operator_exclude_onestops_.emplace(id);
+      } else if (operator_action == odin::FilterAction::include) {
+        operator_include_onestops_.emplace(id);
       }
     }
   }
 
-  std::string routes_action = pt.get("filters.routes.action", "");
-  if (routes_action.size()) {
-    for (const auto& kv : pt.get_child("filters.routes.ids")) {
-      if (routes_action == "exclude") {
-        route_exclude_onestops_.emplace(kv.second.get_value<std::string>());
-      } else if (routes_action == "include") {
-        route_include_onestops_.emplace(kv.second.get_value<std::string>());
+  // Process route filters
+  if (costing_options.has_filter_route_action()) {
+    auto route_action = costing_options.filter_route_action();
+    for (const auto& id : costing_options.filter_route_ids()) {
+      if (route_action == odin::FilterAction::exclude) {
+        route_exclude_onestops_.emplace(id);
+      } else if (route_action == odin::FilterAction::include) {
+        route_include_onestops_.emplace(id);
       }
     }
   }
@@ -443,13 +448,13 @@ void TransitCost::AddToExcludeList(const baldr::GraphTile*& tile) {
   }
 
   // do we have operator work to do?
-  if (oper_exclude_onestops_.size() || oper_include_onestops_.size()) {
+  if (operator_exclude_onestops_.size() || operator_include_onestops_.size()) {
     const std::unordered_map<std::string, std::list<GraphId>>& oper_onestops =
         tile->GetOperatorOneStops();
 
     // avoid these operators
     if (oper_onestops.size()) {
-      for (const auto& e : oper_exclude_onestops_) {
+      for (const auto& e : operator_exclude_onestops_) {
         const auto& one_stop = oper_onestops.find(e);
         if (one_stop != oper_onestops.end()) {
           for (const auto& tls : one_stop->second) {
@@ -459,9 +464,9 @@ void TransitCost::AddToExcludeList(const baldr::GraphTile*& tile) {
       }
 
       // exclude all operators but the ones the users wants to use
-      if (oper_include_onestops_.size()) {
+      if (operator_include_onestops_.size()) {
         for (auto const& onestop : oper_onestops) {
-          if (oper_include_onestops_.find(onestop.first) == oper_include_onestops_.end()) {
+          if (operator_include_onestops_.find(onestop.first) == operator_include_onestops_.end()) {
             for (const auto& tls : onestop.second) {
               exclude_routes_.emplace(tls);
             }
@@ -750,8 +755,8 @@ void ParseTransitCostOptions(const rapidjson::Document& doc,
   }
 }
 
-cost_ptr_t CreateTransitCost(const boost::property_tree::ptree& config) {
-  return std::make_shared<TransitCost>(config);
+cost_ptr_t CreateTransitCost(const odin::Costing costing, const odin::DirectionsOptions& options) {
+  return std::make_shared<TransitCost>(costing, options);
 }
 
 } // namespace sif
@@ -768,10 +773,10 @@ namespace {
 
 TransitCost* make_transitcost_from_json(const std::string& property, float testVal) {
   std::stringstream ss;
-  ss << R"({")" << property << R"(":)" << testVal << "}";
-  boost::property_tree::ptree costing_ptree;
-  boost::property_tree::read_json(ss, costing_ptree);
-  return new TransitCost(costing_ptree);
+  ss << R"({"costing_options":{"transit":{")" << property << R"(":)" << testVal << "}}}";
+  valhalla::valhalla_request_t request;
+  request.parse(ss.str(), valhalla::odin::DirectionsOptions::route);
+  return new TransitCost(valhalla::odin::Costing::transit, request.options);
 }
 
 std::uniform_real_distribution<float>*

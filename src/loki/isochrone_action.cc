@@ -3,7 +3,6 @@
 #include "loki/search.h"
 #include "loki/worker.h"
 #include "midgard/logging.h"
-#include <boost/property_tree/json_parser.hpp>
 
 using namespace valhalla;
 using namespace valhalla::baldr;
@@ -82,10 +81,10 @@ void loki_worker_t::isochrones(valhalla_request_t& request) {
   try {
     // correlate the various locations to the underlying graph
     auto locations = PathLocation::fromPBF(request.options.locations());
-    const auto projections = loki::Search(locations, reader, edge_filter, node_filter);
+    const auto projections = loki::Search(locations, *reader, edge_filter, node_filter);
     for (size_t i = 0; i < locations.size(); ++i) {
       const auto& projection = projections.at(locations[i]);
-      PathLocation::toPBF(projection, request.options.mutable_locations(i), reader);
+      PathLocation::toPBF(projection, request.options.mutable_locations(i), *reader);
     }
   } catch (const std::exception&) { throw valhalla_exception_t{171}; }
 }

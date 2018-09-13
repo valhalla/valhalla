@@ -88,12 +88,9 @@ void loki_worker_t::init_matrix(valhalla_request_t& request) {
 void loki_worker_t::matrix(valhalla_request_t& request) {
   init_matrix(request);
   auto costing = odin::Costing_Name(request.options.costing());
-  if (costing.back() == '_') {
-    costing.pop_back();
-  }
 
   if (costing == "multimodal") {
-    throw valhalla_exception_t{140, odin::DirectionsOptions::Action_Name(request.options.action())};
+    throw valhalla_exception_t{140, odin::DirectionsOptions_Action_Name(request.options.action())};
   };
 
   // check that location size does not exceed max.
@@ -116,7 +113,7 @@ void loki_worker_t::matrix(valhalla_request_t& request) {
   // correlate the various locations to the underlying graph
   std::unordered_map<size_t, size_t> color_counts;
   try {
-    const auto searched = loki::Search(sources_targets, reader, edge_filter, node_filter);
+    const auto searched = loki::Search(sources_targets, *reader, edge_filter, node_filter);
     for (size_t i = 0; i < sources_targets.size(); ++i) {
       const auto& l = sources_targets[i];
       const auto& projection = searched.at(l);
@@ -124,7 +121,7 @@ void loki_worker_t::matrix(valhalla_request_t& request) {
                           i < request.options.sources_size()
                               ? request.options.mutable_sources(i)
                               : request.options.mutable_targets(i - request.options.sources_size()),
-                          reader);
+                          *reader);
       // TODO: get transit level for transit costing
       // TODO: if transit send a non zero radius
       if (!connectivity_map) {

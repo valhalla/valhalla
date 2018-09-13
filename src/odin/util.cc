@@ -1,9 +1,14 @@
+#include "baldr/rapidjson_utils.h"
+
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/replace.hpp>
-#include <boost/date_time/local_time/local_time.hpp>
-#include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/property_tree/json_parser.hpp>
+
+#include <chrono>
+#include <sstream>
+
+#include <date/date.h>
+#include <date/tz.h>
 
 #include "locales.h"
 #include "midgard/logging.h"
@@ -22,7 +27,7 @@ valhalla::odin::locales_singleton_t load_narrative_locals() {
     boost::property_tree::ptree narrative_pt;
     std::stringstream ss;
     ss << json.second;
-    boost::property_tree::read_json(ss, narrative_pt);
+    rapidjson::read_json(ss, narrative_pt);
     LOG_TRACE("JSON read");
     // parse it into an object and add it to the map
     auto narrative_dictionary =
@@ -79,57 +84,28 @@ std::string get_localized_time(const std::string& date_time, const std::locale& 
     return "";
   }
 
-  std::string datetime;
-  std::size_t found = date_time.find_last_of('+'); // remove tz offset
-  if (found != std::string::npos) {
-    datetime = date_time.substr(0, found);
-  } else {
-    found = date_time.find_last_of('-'); // remove tz offset
+  date::local_time<std::chrono::minutes> local_tp;
+  std::istringstream in(date_time);
+  in >> date::parse("%FT%R%z", local_tp);
+  std::string time = date::format(locale, "%X", local_tp);
+
+  // seconds is too granular so we try to remove
+  if (time.find("PM") == std::string::npos && time.find("AM") == std::string::npos) {
+    size_t found = time.find_last_of(':');
     if (found != std::string::npos) {
-      datetime = date_time.substr(0, found);
+      time = time.substr(0, found);
     } else {
-      return "";
+      found = time.find_last_of("00");
+      if (found != std::string::npos) {
+        time = time.substr(0, found - 1);
+      }
+    }
+  } else {
+    boost::replace_all(time, ":00 ", " ");
+    if (time.substr(0, 1) == "0") {
+      time = time.substr(1, time.size());
     }
   }
-
-  std::string time = datetime;
-  try {
-    // formatting for in and output
-    std::locale in_locale(std::locale::classic(),
-                          new boost::local_time::local_time_input_facet("%Y-%m-%dT%H:%M"));
-    std::stringstream in_stream;
-    in_stream.imbue(in_locale);
-    std::locale out_locale(locale, new boost::posix_time::time_facet("%X"));
-    std::stringstream out_stream;
-    out_stream.imbue(out_locale);
-
-    // parse the input
-    boost::posix_time::ptime pt;
-    in_stream.str(datetime);
-    in_stream >> pt;
-
-    // format the output
-    out_stream << pt;
-    time = out_stream.str();
-
-    // seconds is too granular so we try to remove
-    if (time.find("PM") == std::string::npos && time.find("AM") == std::string::npos) {
-      size_t found = time.find_last_of(':');
-      if (found != std::string::npos) {
-        time = time.substr(0, found);
-      } else {
-        found = time.find_last_of("00");
-        if (found != std::string::npos) {
-          time = time.substr(0, found - 1);
-        }
-      }
-    } else {
-      boost::replace_all(time, ":00 ", " ");
-      if (time.substr(0, 1) == "0") {
-        time = time.substr(1, time.size());
-      }
-    }
-  } catch (std::exception&) { return ""; }
 
   boost::algorithm::trim(time);
   return time;
@@ -142,43 +118,10 @@ std::string get_localized_date(const std::string& date_time, const std::locale& 
     return "";
   }
 
-  std::string datetime;
-  std::size_t found = date_time.find_last_of('+'); // remove tz offset
-  if (found != std::string::npos) {
-    datetime = date_time.substr(0, found);
-  } else {
-    found = date_time.find_last_of('-'); // remove tz offset
-    if (found != std::string::npos) {
-      datetime = date_time.substr(0, found);
-    } else {
-      return "";
-    }
-  }
-
-  std::string date = datetime;
-  try {
-
-    // formatting for in and output
-    std::locale in_locale(std::locale::classic(),
-                          new boost::local_time::local_time_input_facet("%Y-%m-%dT%H:%M"));
-    std::stringstream in_stream;
-    in_stream.imbue(in_locale);
-    std::locale out_locale(locale, new boost::posix_time::time_facet("%x"));
-    std::stringstream out_stream;
-    out_stream.imbue(out_locale);
-
-    // parse the input
-    boost::posix_time::ptime pt;
-    in_stream.str(datetime);
-    in_stream >> pt;
-
-    // format the output
-    out_stream << pt;
-    date = out_stream.str();
-  } catch (std::exception& e) { return ""; }
-
-  boost::algorithm::trim(date);
-  return date;
+  date::local_time<std::chrono::minutes> local_tp;
+  std::istringstream in(date_time);
+  in >> date::parse("%FT%R%z", local_tp);
+  return date::format(locale, "%x", local_tp);
 }
 
 const locales_singleton_t& get_locales() {

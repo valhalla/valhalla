@@ -13,12 +13,12 @@
 #include <boost/filesystem/operations.hpp>
 
 #include "baldr/datetime.h"
-#include "baldr/filesystem_utils.h"
 #include "baldr/graphconstants.h"
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
 #include "baldr/graphtile.h"
 #include "baldr/tilehierarchy.h"
+#include "filesystem.h"
 #include "midgard/logging.h"
 #include "midgard/sequence.h"
 
@@ -477,13 +477,13 @@ bool ValidateTransit::Validate(const boost::property_tree::ptree& pt,
       return false;
     }
     // Also bail if nothing inside
-    transit_dir->push_back(filesystem::path_separator);
+    transit_dir->push_back(filesystem::path::preferred_separator);
     GraphReader reader(hierarchy_properties);
     auto local_level = TileHierarchy::levels().rbegin()->first;
     if (boost::filesystem::is_directory(*transit_dir + std::to_string(local_level + 1) +
-                                        filesystem::path_separator)) {
+                                        filesystem::path::preferred_separator)) {
       boost::filesystem::recursive_directory_iterator transit_file_itr(
-          *transit_dir + std::to_string(local_level + 1) + filesystem::path_separator),
+          *transit_dir + std::to_string(local_level + 1) + filesystem::path::preferred_separator),
           end_file_itr;
       for (; transit_file_itr != end_file_itr; ++transit_file_itr) {
         if (boost::filesystem::is_regular(transit_file_itr->path()) &&

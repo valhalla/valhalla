@@ -1,6 +1,6 @@
+#include "baldr/rapidjson_utils.h"
 #include <boost/optional.hpp>
 #include <boost/program_options.hpp>
-#include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <cstdint>
 #include <iostream>
@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "config.h"
+#include "worker.h"
 
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
@@ -79,20 +80,10 @@ void print_edge(GraphReader& reader,
   std::cout << "------------------------\n\n";
 }
 
-void walk_edges(const std::string& shape,
-                GraphReader& reader,
-                const std::string& routetype,
-                boost::property_tree::ptree& pt) {
-  // Register edge/node costing methods
-  CostFactory<DynamicCost> factory;
-  factory.RegisterStandardCostingModels();
-
-  std::string method_options = "costing_options." + routetype;
-  auto costing_options = pt.get_child(method_options, {});
-  cost_ptr_t cost = factory.Create(routetype, costing_options);
-  TravelMode mode = cost->travel_mode();
+void walk_edges(const std::string& shape, GraphReader& reader, cost_ptr_t cost_ptr) {
+  TravelMode mode = cost_ptr->travel_mode();
   cost_ptr_t mode_costing[10];
-  mode_costing[static_cast<uint32_t>(mode)] = cost;
+  mode_costing[static_cast<uint32_t>(mode)] = cost_ptr;
 
   // Decode the shape
   std::vector<PointLL> shape_pts = decode<std::vector<PointLL>>(shape);
@@ -111,7 +102,8 @@ void walk_edges(const std::string& shape,
   std::vector<Location> locations;
   locations.push_back({shape_pts.front()});
   locations.push_back({shape_pts.back()});
-  const auto projections = Search(locations, reader, cost->GetEdgeFilter(), cost->GetNodeFilter());
+  const auto projections =
+      Search(locations, reader, cost_ptr->GetEdgeFilter(), cost_ptr->GetNodeFilter());
   std::vector<PathLocation> path_location;
   valhalla::odin::DirectionsOptions directions_options;
   for (const auto& loc : locations) {
@@ -141,7 +133,7 @@ void walk_edges(const std::string& shape,
     }
 
     current_id = path_info.edgeid;
-    print_edge(reader, cost, current_id, pred_id, edge_total, trans_total, current_osmid);
+    print_edge(reader, cost_ptr, current_id, pred_id, edge_total, trans_total, current_osmid);
   }
 
   std::cout << "+------------------------------------------------------------------------+\n";
@@ -159,7 +151,7 @@ void walk_edges(const std::string& shape,
 // Main method for testing a single path
 int main(int argc, char* argv[]) {
   bpo::options_description options(
-      "valhalla_path_comparison " VERSION "\n"
+      "valhalla_path_comparison " VALHALLA_VERSION "\n"
       "\n"
       " Usage: valhalla_path_comparison [options]\n"
       "\n"
@@ -206,7 +198,7 @@ int main(int argc, char* argv[]) {
   }
 
   if (vm.count("version")) {
-    std::cout << "valhalla_path_comparison " << VERSION << "\n";
+    std::cout << "valhalla_path_comparison " << VALHALLA_VERSION << "\n";
     return EXIT_SUCCESS;
   }
 
@@ -215,18 +207,48 @@ int main(int argc, char* argv[]) {
 
   // argument checking and verification
   boost::property_tree::ptree json_ptree;
+  valhalla::valhalla_request_t request;
   ////////////////////////////////////////////////////////////////////////////
   // Process json input
   bool map_match = true;
   if (vm.count("json")) {
+    request.parse(json, valhalla::odin::DirectionsOptions::trace_route);
     std::stringstream stream(json);
-    boost::property_tree::read_json(stream, json_ptree);
+    rapidjson::read_json(stream, json_ptree);
     try {
       for (const auto& path : json_ptree.get_child("paths")) {
         paths.push_back({});
         std::vector<valhalla::baldr::Location>& locations = paths.back();
         for (const auto& location : path.second) {
-          locations.emplace_back(std::move(valhalla::baldr::Location::FromPtree(location.second)));
+          // Get the location from the ptree
+          // TODO - this was copied from the defunct Location::FromPtree
+          const auto& pt = path.second;
+          float lat = pt.get<float>("lat");
+          if (lat < -90.0f || lat > 90.0f) {
+            throw std::runtime_error("Latitude must be in the range [-90, 90] degrees");
+          }
+          float lon = valhalla::midgard::circular_range_clamp<float>(pt.get<float>("lon"), -180, 180);
+
+          Location loc({lon, lat}, (pt.get<std::string>("type", "break") == "through"
+                                        ? Location::StopType::THROUGH
+                                        : Location::StopType::BREAK));
+
+          loc.name_ = pt.get<std::string>("name", "");
+          loc.street_ = pt.get<std::string>("street", "");
+          loc.city_ = pt.get<std::string>("city", "");
+          loc.state_ = pt.get<std::string>("state", "");
+          loc.zip_ = pt.get<std::string>("postal_code", "");
+          loc.country_ = pt.get<std::string>("country", "");
+
+          loc.date_time_ = pt.get_optional<std::string>("date_time");
+          loc.heading_ = pt.get_optional<float>("heading");
+          loc.heading_tolerance_ = pt.get_optional<float>("heading_tolerance");
+          loc.node_snap_tolerance_ = pt.get_optional<float>("node_snap_tolerance");
+          loc.way_id_ = pt.get_optional<long double>("way_id");
+
+          loc.minimum_reachability_ = pt.get<unsigned int>("minimum_reachability", 50);
+          loc.radius_ = pt.get<unsigned long>("radius", 0);
+          locations.emplace_back(std::move(loc));
         }
       }
     } catch (...) { throw std::runtime_error("insufficiently specified required parameter 'paths'"); }
@@ -244,27 +266,32 @@ int main(int argc, char* argv[]) {
 
   // parse the config
   boost::property_tree::ptree pt;
-  boost::property_tree::read_json(config.c_str(), pt);
+  rapidjson::read_json(config.c_str(), pt);
 
   // Get something we can use to fetch tiles
   valhalla::baldr::GraphReader reader(pt.get_child("mjolnir"));
 
-  // If a shape is entered use edge walking
-  if (!map_match) {
-    walk_edges(shape, reader, routetype, pt);
-    return EXIT_SUCCESS;
-  }
-
   // Construct costing
   CostFactory<DynamicCost> factory;
   factory.RegisterStandardCostingModels();
-  std::string method_options = "costing_options." + routetype;
-  auto costing_options = json_ptree.get_child(method_options, {});
-  cost_ptr_t costing = factory.Create(routetype, costing_options);
+  valhalla::odin::Costing costing;
+  if (valhalla::odin::Costing_Parse(routetype, &costing)) {
+    request.options.set_costing(costing);
+  } else {
+    throw std::runtime_error("No costing method found");
+  }
+  cost_ptr_t cost_ptr = factory.Create(costing, request.options);
+
+  // If a shape is entered use edge walking
+  if (!map_match) {
+    walk_edges(shape, reader, cost_ptr);
+    return EXIT_SUCCESS;
+  }
 
   // If JSON is entered we do map matching
   MapMatcherFactory map_matcher_factory(pt);
-  std::shared_ptr<valhalla::meili::MapMatcher> matcher(map_matcher_factory.Create(routetype, pt));
+  std::shared_ptr<valhalla::meili::MapMatcher> matcher(
+      map_matcher_factory.Create(costing, request.options));
 
   uint32_t i = 0;
   for (const auto& path : paths) {
@@ -294,7 +321,7 @@ int main(int argc, char* argv[]) {
       }
 
       current_id = result.edgeid;
-      print_edge(reader, costing, current_id, pred_id, edge_total, trans_total, current_osmid);
+      print_edge(reader, cost_ptr, current_id, pred_id, edge_total, trans_total, current_osmid);
     }
     std::cout << "+------------------------------------------------------------------------+\n";
     std::cout << "| Total Edge Cost       : " << std::setw(10) << edge_total.cost

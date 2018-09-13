@@ -3344,7 +3344,7 @@ void TestBuildTurnInstructions_1_miles_de_DE() {
   PopulateTurnManeuverList_1(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(expected_maneuvers, "Links auf Middletown Road abbiegen.",
                                   "Links auf Middletown Road abbiegen.",
-                                  "Links auf Middletown Road abbiegen.", "1,2 Milen weiter.");
+                                  "Links auf Middletown Road abbiegen.", "1,2 Meilen weiter.");
 
   TryBuild(directions_options, maneuvers, expected_maneuvers);
 }

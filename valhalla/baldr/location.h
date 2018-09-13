@@ -4,8 +4,6 @@
 #include <cstdint>
 #include <string>
 
-#include <boost/property_tree/ptree.hpp>
-
 #include <valhalla/baldr/rapidjson_utils.h>
 #include <valhalla/midgard/pointll.h>
 
@@ -42,20 +40,11 @@ public:
            unsigned long radius = 0);
 
   /**
-   * Serializes this object to ptree
-   * @return ptree
-   */
-  boost::property_tree::ptree ToPtree() const;
-  /**
    * Serializes this object to rapidjson::Value
    * @return rapidjson::Value
    */
   rapidjson::Value ToRapidJson(rapidjson::Document::AllocatorType& a) const;
-  /**
-   * conversion.
-   * @param  pt  a property tree representation of the location
-   */
-  static Location FromPtree(const boost::property_tree::ptree& pt);
+
   /**
    * conversion.
    * @param  d a rapidjson representation of the location
@@ -63,20 +52,6 @@ public:
   static Location FromRapidJson(const rapidjson::Value& d,
                                 unsigned int default_reachability = 0,
                                 unsigned long default_radius = 0);
-
-  enum class ParseMethod : int { PTREE, RAPIDJSON };
-  /**
-   * conversion.
-   * @param  json  a json representation of the location
-   * @param  method use ptree or rapidjson, ptree by default
-   */
-  static Location FromJson(const std::string& json, const ParseMethod& method = ParseMethod::PTREE);
-
-  /**
-   * conversion.
-   * @param  csv  a csv representation of the location
-   */
-  static Location FromCsv(const std::string& csv);
 
   /**
    * equality.

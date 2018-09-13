@@ -528,8 +528,8 @@ protected:
   // List of turn lanes.
   std::vector<TurnLanes> turnlanes_builder_;
 
-  // Indexes into predicted speed profiles for each directed edge.
-  std::vector<uint32_t> speed_profile_index_builder_;
+  // Offsets into predicted speed profiles for each directed edge.
+  std::vector<uint32_t> speed_profile_offset_builder_;
 
   // Predicted speed profiles. 200 short int for each directed edge which has predicted speed.
   std::vector<int16_t> speed_profile_builder_;

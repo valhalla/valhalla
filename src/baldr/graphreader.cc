@@ -1,6 +1,5 @@
 #include "baldr/graphreader.h"
 
-#include <boost/filesystem.hpp>
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -10,7 +9,7 @@
 #include "midgard/sequence.h"
 
 #include "baldr/connectivity_map.h"
-#include "baldr/filesystem_utils.h"
+#include "filesystem.h"
 
 using namespace valhalla::baldr;
 
@@ -23,32 +22,43 @@ constexpr size_t AVERAGE_MM_TILE_SIZE = 1024;         // 1k
 namespace valhalla {
 namespace baldr {
 
-struct GraphReader::tile_extract_t : public midgard::tar {
-  tile_extract_t(const boost::property_tree::ptree& pt)
-      : tar(pt.get<std::string>("tile_extract", "")) {
+struct GraphReader::tile_extract_t {
+  tile_extract_t(const boost::property_tree::ptree& pt) {
     // if you really meant to load it
     if (pt.get_optional<std::string>("tile_extract")) {
-      // map files to graph ids
-      for (auto& c : contents) {
-        try {
-          auto id = GraphTile::GetTileId(c.first);
-          tiles[id] = std::make_pair(const_cast<char*>(c.second.first), c.second.second);
-        } catch (...) {}
-      }
-      // couldn't load it
-      if (tiles.empty()) {
-        LOG_WARN("Tile extract could not be loaded");
-      } // loaded ok but with possibly bad blocks
-      else {
-        LOG_INFO("Tile extract successfully loaded");
-        if (corrupt_blocks) {
-          LOG_WARN("Tile extract had " + std::to_string(corrupt_blocks) + " corrupt blocks");
+      try {
+        // load the tar
+        archive.reset(new midgard::tar(pt.get<std::string>("tile_extract")));
+        // map files to graph ids
+        for (auto& c : archive->contents) {
+          try {
+            auto id = GraphTile::GetTileId(c.first);
+            tiles[id] = std::make_pair(const_cast<char*>(c.second.first), c.second.second);
+          } catch (...) {
+            // skip files we dont understand
+          }
         }
+        // couldn't load it
+        if (tiles.empty()) {
+          LOG_WARN("Tile extract contained no usuable tiles");
+        } // loaded ok but with possibly bad blocks
+        else {
+          LOG_INFO("Tile extract successfully loaded with tile count: " +
+                   std::to_string(tiles.size()));
+          if (archive->corrupt_blocks) {
+            LOG_WARN("Tile extract had " + std::to_string(archive->corrupt_blocks) +
+                     " corrupt blocks");
+          }
+        }
+      } catch (const std::exception& e) {
+        LOG_ERROR(e.what());
+        LOG_WARN("Tile extract could not be loaded");
       }
     }
   }
   // TODO: dont remove constness, and actually make graphtile read only?
   std::unordered_map<uint64_t, std::pair<char*, size_t>> tiles;
+  std::shared_ptr<midgard::tar> archive;
 };
 
 std::shared_ptr<const GraphReader::tile_extract_t>
@@ -182,7 +192,7 @@ bool GraphReader::DoesTileExist(const GraphId& graphid) const {
     return true;
   }
   std::string file_location =
-      tile_dir_ + filesystem::path_separator + GraphTile::FileSuffix(graphid.Tile_Base());
+      tile_dir_ + filesystem::path::preferred_separator + GraphTile::FileSuffix(graphid.Tile_Base());
   struct stat buffer;
   return stat(file_location.c_str(), &buffer) == 0 ||
          stat((file_location + ".gz").c_str(), &buffer) == 0;
@@ -198,7 +208,8 @@ bool GraphReader::DoesTileExist(const boost::property_tree::ptree& pt, const Gra
     return extract->tiles.find(graphid) != extract->tiles.cend();
   }
   // otherwise check the disk
-  std::string file_location = pt.get<std::string>("tile_dir") + filesystem::path_separator +
+  std::string file_location = pt.get<std::string>("tile_dir") +
+                              filesystem::path::preferred_separator +
                               GraphTile::FileSuffix(graphid.Tile_Base());
   struct stat buffer;
   return stat(file_location.c_str(), &buffer) == 0 ||
@@ -472,12 +483,12 @@ std::unordered_set<GraphId> GraphReader::GetTileSet() const {
     // for each level
     for (uint8_t level = 0; level <= TileHierarchy::levels().rbegin()->first + 1; ++level) {
       // crack open this level of tiles directory
-      boost::filesystem::path root_dir(tile_dir_ + filesystem::path_separator +
-                                       std::to_string(level) + filesystem::path_separator);
-      if (boost::filesystem::exists(root_dir) && boost::filesystem::is_directory(root_dir)) {
+      filesystem::path root_dir(tile_dir_ + filesystem::path::preferred_separator +
+                                std::to_string(level) + filesystem::path::preferred_separator);
+      if (filesystem::exists(root_dir) && filesystem::is_directory(root_dir)) {
         // iterate over all the files in there
-        for (boost::filesystem::recursive_directory_iterator i(root_dir), end; i != end; ++i) {
-          if (!boost::filesystem::is_directory(i->path())) {
+        for (filesystem::recursive_directory_iterator i(root_dir), end; i != end; ++i) {
+          if (i->is_regular_file() || i->is_symlink()) {
             // add it if it can be parsed as a valid tile file name
             try {
               tiles.emplace(GraphTile::GetTileId(i->path().string()));
@@ -504,12 +515,12 @@ std::unordered_set<GraphId> GraphReader::GetTileSet(const uint8_t level) const {
     } // or individually on disk
   } else {
     // crack open this level of tiles directory
-    boost::filesystem::path root_dir(tile_dir_ + filesystem::path_separator + std::to_string(level) +
-                                     filesystem::path_separator);
-    if (boost::filesystem::exists(root_dir) && boost::filesystem::is_directory(root_dir)) {
+    filesystem::path root_dir(tile_dir_ + filesystem::path::preferred_separator +
+                              std::to_string(level) + filesystem::path::preferred_separator);
+    if (filesystem::exists(root_dir) && filesystem::is_directory(root_dir)) {
       // iterate over all the files in the directory and turn into GraphIds
-      for (boost::filesystem::recursive_directory_iterator i(root_dir), end; i != end; ++i) {
-        if (!boost::filesystem::is_directory(i->path())) {
+      for (filesystem::recursive_directory_iterator i(root_dir), end; i != end; ++i) {
+        if (i->is_regular_file() || i->is_symlink()) {
           // add it if it can be parsed as a valid tile file name
           try {
             tiles.emplace(GraphTile::GetTileId(i->path().string()));

@@ -1,4 +1,24 @@
-## Release Date: UNRELEASED Valhalla 3.0
+## Release Date: 2018-09-13 Valhalla 2.7.0
+* **Enhancement**
+   * UPDATED: Refactor to use the pbf options instead of the ptree config [#1428](https://github.com/valhalla/valhalla/pull/1428) This completes [1357](https://github.com/valhalla/valhalla/issues/1357)
+   * UPDATED: Removed the boost/date_time dependency from baldr and odin. We added the Howard Hinnant date and time library as a submodule. [#1494](https://github.com/valhalla/valhalla/pull/1494)
+   * UPDATED: Fixed 'Drvie' typo [#1505](https://github.com/valhalla/valhalla/pull/1505) This completes [1504](https://github.com/valhalla/valhalla/issues/1504)
+   * UPDATED: Optimizations of GetSpeed for predicted speeds [1490](https://github.com/valhalla/valhalla/issues/1490)
+   * UPDATED: Isotile optimizations
+   * UPDATED: Added stats to predictive traffic logging
+   * UPDATED: resample_polyline - Breaks the polyline into equal length segments at a sample distance near the resolution. Break out of the loop through polyline points once we reach the specified number of samplesthen append the last
+polyline point.
+   * UPDATED: added android logging and uses a shared graph reader
+   * UPDATED: Do not run a second pass on long pedestrian routes that include a ferry (but succeed on first pass). This is a performance fix. Long pedestrian routes with A star factor based on ferry speed end up being very inefficient.
+* **Bug Fix**
+   * FIXED: A* destination only
+   * FIXED: Fixed through locations weren't honored [#1449](https://github.com/valhalla/valhalla/pull/1449)
+
+
+## Release Date: 2018-08-02 Valhalla 3.0.0-rc.4
+* **Node Bindings**
+   * UPDATED: add some worker pool handling
+   [#1467](https://github.com/valhalla/valhalla/pull/1467)
 
 ## Release Date: 2018-08-02 Valhalla 3.0.0-rc.3
 * **Node Bindings**

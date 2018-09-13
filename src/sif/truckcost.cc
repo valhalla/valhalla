@@ -5,11 +5,10 @@
 #include "baldr/nodeinfo.h"
 #include "midgard/constants.h"
 #include "midgard/util.h"
-#include <iostream>
 
 #ifdef INLINE_TEST
 #include "test/test.h"
-#include <boost/property_tree/json_parser.hpp>
+#include "worker.h"
 #include <random>
 #endif
 
@@ -104,10 +103,11 @@ constexpr ranged_default_t<float> kTruckLengthRange{0, kDefaultTruckLength, 50.0
 class TruckCost : public DynamicCost {
 public:
   /**
-   * Construct truck costing. Pass in configuration using property tree.
-   * @param  config  Property tree with configuration/options.
+   * Construct truck costing. Pass in cost type and options using protocol buffer(pbf).
+   * @param  costing specified costing type.
+   * @param  options pbf with request options.
    */
-  TruckCost(const boost::property_tree::ptree& config);
+  TruckCost(const odin::Costing costing, const odin::DirectionsOptions& options);
 
   virtual ~TruckCost();
 
@@ -296,36 +296,36 @@ public:
 };
 
 // Constructor
-TruckCost::TruckCost(const boost::property_tree::ptree& pt)
-    : DynamicCost(pt, TravelMode::kDrive), trans_density_factor_{1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.1f,
-                                                                 1.2f, 1.3f, 1.4f, 1.6f, 1.9f, 2.2f,
-                                                                 2.5f, 2.8f, 3.1f, 3.5f} {
-  type_ = VehicleType::kTractorTrailer;
-  maneuver_penalty_ =
-      kManeuverPenaltyRange(pt.get<float>("maneuver_penalty", kDefaultManeuverPenalty));
-  destination_only_penalty_ = kDestinationOnlyPenaltyRange(
-      pt.get<float>("destination_only_penalty", kDefaultDestinationOnlyPenalty));
-  alley_penalty_ = kAlleyPenaltyRange(pt.get<float>("alley_penalty", kDefaultAlleyPenalty));
-  gate_cost_ = kGateCostRange(pt.get<float>("gate_cost", kDefaultGateCost));
-  gate_penalty_ = kGatePenaltyRange(pt.get<float>("gate_penalty", kDefaultGatePenalty));
-  tollbooth_cost_ = kTollBoothCostRange(pt.get<float>("toll_booth_cost", kDefaultTollBoothCost));
-  tollbooth_penalty_ =
-      kTollBoothPenaltyRange(pt.get<float>("toll_booth_penalty", kDefaultTollBoothPenalty));
-  country_crossing_cost_ =
-      kCountryCrossingCostRange(pt.get<float>("country_crossing_cost", kDefaultCountryCrossingCost));
-  country_crossing_penalty_ = kCountryCrossingPenaltyRange(
-      pt.get<float>("country_crossing_penalty", kDefaultCountryCrossingPenalty));
+TruckCost::TruckCost(const odin::Costing costing, const odin::DirectionsOptions& options)
+    : DynamicCost(options, TravelMode::kDrive), trans_density_factor_{1.0f, 1.0f, 1.0f, 1.0f,
+                                                                      1.0f, 1.1f, 1.2f, 1.3f,
+                                                                      1.4f, 1.6f, 1.9f, 2.2f,
+                                                                      2.5f, 2.8f, 3.1f, 3.5f} {
 
-  low_class_penalty_ =
-      kLowClassPenaltyRange(pt.get<float>("low_class_penalty", kDefaultLowClassPenalty));
+  // Grab the costing options based on the specified costing type
+  const odin::CostingOptions& costing_options = options.costing_options(static_cast<int>(costing));
+
+  type_ = VehicleType::kTractorTrailer;
+
+  maneuver_penalty_ = costing_options.maneuver_penalty();
+  destination_only_penalty_ = costing_options.destination_only_penalty();
+  alley_penalty_ = costing_options.alley_penalty();
+  gate_cost_ = costing_options.gate_cost();
+  gate_penalty_ = costing_options.gate_penalty();
+  tollbooth_cost_ = costing_options.toll_booth_cost();
+  tollbooth_penalty_ = costing_options.toll_booth_penalty();
+  country_crossing_cost_ = costing_options.country_crossing_cost();
+  country_crossing_penalty_ = costing_options.country_crossing_penalty();
+
+  low_class_penalty_ = costing_options.low_class_penalty();
 
   // Get the vehicle attributes
-  hazmat_ = pt.get<bool>("hazmat", false);
-  weight_ = kTruckWeightRange(pt.get<float>("weight", kDefaultTruckWeight));
-  axle_load_ = kTruckAxleLoadRange(pt.get<float>("axle_load", kDefaultTruckAxleLoad));
-  height_ = kTruckHeightRange(pt.get<float>("height", kDefaultTruckHeight));
-  width_ = kTruckWidthRange(pt.get<float>("width", kDefaultTruckWidth));
-  length_ = kTruckLengthRange(pt.get<float>("length", kDefaultTruckLength));
+  hazmat_ = costing_options.hazmat();
+  weight_ = costing_options.weight();
+  axle_load_ = costing_options.axle_load();
+  height_ = costing_options.height();
+  width_ = costing_options.width();
+  length_ = costing_options.length();
 
   // Create speed cost table
   speedfactor_[0] = kSecPerHour; // TODO - what to make speed=0?
@@ -762,8 +762,8 @@ void ParseTruckCostOptions(const rapidjson::Document& doc,
   }
 }
 
-cost_ptr_t CreateTruckCost(const boost::property_tree::ptree& config) {
-  return std::make_shared<TruckCost>(config);
+cost_ptr_t CreateTruckCost(const odin::Costing costing, const odin::DirectionsOptions& options) {
+  return std::make_shared<TruckCost>(costing, options);
 }
 
 } // namespace sif
@@ -780,10 +780,10 @@ namespace {
 
 TruckCost* make_truckcost_from_json(const std::string& property, float testVal) {
   std::stringstream ss;
-  ss << R"({")" << property << R"(":)" << testVal << "}";
-  boost::property_tree::ptree costing_ptree;
-  boost::property_tree::read_json(ss, costing_ptree);
-  return new TruckCost(costing_ptree);
+  ss << R"({"costing_options":{"truck":{")" << property << R"(":)" << testVal << "}}}";
+  valhalla::valhalla_request_t request;
+  request.parse(ss.str(), valhalla::odin::DirectionsOptions::route);
+  return new TruckCost(valhalla::odin::Costing::truck, request.options);
 }
 
 std::uniform_real_distribution<float>*

@@ -23,7 +23,7 @@
 #include "midgard/polyline2.h"
 #include "midgard/sequence.h"
 #include "midgard/tiles.h"
-#include "mjolnir/servicedays.h"
+#include "mjolnir/timeparsing.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -34,7 +34,7 @@ namespace {
 // This value controls the initial size of the Id table. If this is exceeded
 // the table will be resized and a warning is generated (indicating we should
 // increase this value).
-constexpr uint64_t kMaxOSMNodeId = 5800000000;
+constexpr uint64_t kMaxOSMNodeId = 6500000000;
 
 // Absurd classification.
 constexpr uint32_t kAbsurdRoadClass = 777777;
@@ -1077,7 +1077,7 @@ public:
     }
 
     // Infer cul-de-sac if a road edge is a loop and is low classification.
-    if (loop_nodes_.size() != nodes.size() && w.use() == Use::kRoad &&
+    if (!w.roundabout() && loop_nodes_.size() != nodes.size() && w.use() == Use::kRoad &&
         w.road_class() > RoadClass::kTertiary) {
       w.set_use(Use::kCuldesac);
     }

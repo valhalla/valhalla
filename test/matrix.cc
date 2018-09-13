@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 
-#include <boost/property_tree/json_parser.hpp>
+#include "baldr/rapidjson_utils.h"
 #include <boost/property_tree/ptree.hpp>
 
 #include "loki/worker.h"
@@ -28,7 +28,12 @@ namespace {
 // copy pasted from AutoCost as it stands when this test was written.
 class SimpleCost final : public DynamicCost {
 public:
-  SimpleCost(const boost::property_tree::ptree& pt) : DynamicCost(pt, TravelMode::kDrive) {
+  /**
+   * Constructor.
+   * @param  options Request options in a pbf
+   */
+  SimpleCost(const valhalla::odin::DirectionsOptions& options)
+      : DynamicCost(options, TravelMode::kDrive) {
   }
 
   ~SimpleCost() {
@@ -110,15 +115,15 @@ public:
   }
 };
 
-cost_ptr_t CreateSimpleCost(const boost::property_tree::ptree& pt) {
-  return std::make_shared<SimpleCost>(pt);
+cost_ptr_t CreateSimpleCost(const valhalla::odin::DirectionsOptions& options) {
+  return std::make_shared<SimpleCost>(options);
 }
 
 boost::property_tree::ptree json_to_pt(const std::string& json) {
   std::stringstream ss;
   ss << json;
   boost::property_tree::ptree pt;
-  boost::property_tree::read_json(ss, pt);
+  rapidjson::read_json(ss, pt);
   return pt;
 }
 
@@ -139,7 +144,7 @@ rapidjson::Document to_document(const std::string& request) {
 // may want to do this in loki. At this point in thor the costing method
 // has not yet been constructed.
 const std::unordered_map<std::string, float> kMaxDistances = {
-    {"auto_", 43200.0f},     {"auto_shorter", 43200.0f}, {"bicycle", 7200.0f},
+    {"auto", 43200.0f},      {"auto_shorter", 43200.0f}, {"bicycle", 7200.0f},
     {"bus", 43200.0f},       {"hov", 43200.0f},          {"motor_scooter", 14400.0f},
     {"multimodal", 7200.0f}, {"pedestrian", 7200.0f},    {"transit", 14400.0f},
     {"truck", 43200.0f},
@@ -264,11 +269,9 @@ void test_matrix() {
   loki_worker.matrix(request);
   adjust_scores(request);
 
-  auto request_pt = json_to_pt(test_request);
-
   GraphReader reader(config.get_child("mjolnir"));
 
-  cost_ptr_t costing = CreateSimpleCost(request_pt);
+  cost_ptr_t costing = CreateSimpleCost(request.options);
 
   CostMatrix cost_matrix;
   std::vector<TimeDistance> results;
@@ -320,11 +323,10 @@ void test_matrix_osrm() {
 
   loki_worker.matrix(request);
   adjust_scores(request);
-  auto request_pt = json_to_pt(test_request_osrm);
 
   GraphReader reader(config.get_child("mjolnir"));
 
-  cost_ptr_t costing = CreateSimpleCost(request_pt);
+  cost_ptr_t costing = CreateSimpleCost(request.options);
 
   CostMatrix cost_matrix;
   std::vector<TimeDistance> results;

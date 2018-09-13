@@ -1,11 +1,5 @@
-#ifndef __VALHALLA_VERSION_H__
-#define __VALHALLA_VERSION_H__
+#pragma once
 
 #define VALHALLA_VERSION_MAJOR 2
-#define VALHALLA_VERSION_MINOR 6
-#define VALHALLA_VERSION_PATCH 1
-
-//whether the API was configured with http service support or not
-@HAVE_HTTP_DEFINE@
-
-#endif
+#define VALHALLA_VERSION_MINOR 7
+#define VALHALLA_VERSION_PATCH 0

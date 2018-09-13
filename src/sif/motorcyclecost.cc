@@ -6,11 +6,10 @@
 #include "baldr/nodeinfo.h"
 #include "midgard/constants.h"
 #include "midgard/util.h"
-#include <iostream>
 
 #ifdef INLINE_TEST
 #include "test/test.h"
-#include <boost/property_tree/json_parser.hpp>
+#include "worker.h"
 #include <random>
 #endif
 
@@ -121,10 +120,11 @@ constexpr float kSurfaceFactor[] = {
 class MotorcycleCost : public DynamicCost {
 public:
   /**
-   * Construct motorcycle costing. Pass in configuration using property tree.
-   * @param  config  Property tree with configuration/options.
+   * Construct motorcycle costing. Pass in cost type and options using protocol buffer(pbf).
+   * @param  costing specified costing type.
+   * @param  options pbf with request options.
    */
-  MotorcycleCost(const boost::property_tree::ptree& config);
+  MotorcycleCost(const odin::Costing costing, const odin::DirectionsOptions& options);
 
   virtual ~MotorcycleCost();
 
@@ -320,35 +320,35 @@ public:
 };
 
 // Constructor
-MotorcycleCost::MotorcycleCost(const boost::property_tree::ptree& pt)
-    : DynamicCost(pt, TravelMode::kDrive), trans_density_factor_{1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.1f,
-                                                                 1.2f, 1.3f, 1.4f, 1.6f, 1.9f, 2.2f,
-                                                                 2.5f, 2.8f, 3.1f, 3.5f} {
+MotorcycleCost::MotorcycleCost(const odin::Costing costing, const odin::DirectionsOptions& options)
+    : DynamicCost(options, TravelMode::kDrive), trans_density_factor_{1.0f, 1.0f, 1.0f, 1.0f,
+                                                                      1.0f, 1.1f, 1.2f, 1.3f,
+                                                                      1.4f, 1.6f, 1.9f, 2.2f,
+                                                                      2.5f, 2.8f, 3.1f, 3.5f} {
+
+  // Grab the costing options based on the specified costing type
+  const odin::CostingOptions& costing_options = options.costing_options(static_cast<int>(costing));
+
   // Vehicle type is motorcycle
   type_ = VehicleType::kMotorcycle;
 
-  maneuver_penalty_ =
-      kManeuverPenaltyRange(pt.get<float>("maneuver_penalty", kDefaultManeuverPenalty));
-  destination_only_penalty_ = kDestinationOnlyPenaltyRange(
-      pt.get<float>("destination_only_penalty", kDefaultDestinationOnlyPenalty));
-  gate_cost_ = kGateCostRange(pt.get<float>("gate_cost", kDefaultGateCost));
-  gate_penalty_ = kGatePenaltyRange(pt.get<float>("gate_penalty", kDefaultGatePenalty));
-  tollbooth_cost_ = kTollBoothCostRange(pt.get<float>("toll_booth_cost", kDefaultTollBoothCost));
-  tollbooth_penalty_ =
-      kTollBoothPenaltyRange(pt.get<float>("toll_booth_penalty", kDefaultTollBoothPenalty));
-  alley_penalty_ = kAlleyPenaltyRange(pt.get<float>("alley_penalty", kDefaultAlleyPenalty));
-  country_crossing_cost_ =
-      kCountryCrossingCostRange(pt.get<float>("country_crossing_cost", kDefaultCountryCrossingCost));
-  country_crossing_penalty_ = kCountryCrossingPenaltyRange(
-      pt.get<float>("country_crossing_penalty", kDefaultCountryCrossingPenalty));
+  maneuver_penalty_ = costing_options.maneuver_penalty();
+  destination_only_penalty_ = costing_options.destination_only_penalty();
+  gate_cost_ = costing_options.gate_cost();
+  gate_penalty_ = costing_options.gate_penalty();
+  tollbooth_cost_ = costing_options.toll_booth_cost();
+  tollbooth_penalty_ = costing_options.toll_booth_penalty();
+  alley_penalty_ = costing_options.alley_penalty();
+  country_crossing_cost_ = costing_options.country_crossing_cost();
+  country_crossing_penalty_ = costing_options.country_crossing_penalty();
 
   // Set the cost (seconds) to enter a ferry (only apply entering since
   // a route must exit a ferry (except artificial test routes ending on
   // a ferry!)
-  ferry_cost_ = kFerryCostRange(pt.get<float>("ferry_cost", kDefaultFerryCost));
+  ferry_cost_ = costing_options.ferry_cost();
 
   // Modify ferry penalty and edge weighting based on use_ferry factor
-  use_ferry_ = kUseFerryRange(pt.get<float>("use_ferry", kDefaultUseFerry));
+  use_ferry_ = costing_options.use_ferry();
   if (use_ferry_ < 0.5f) {
     // Penalty goes from max at use_ferry_ = 0 to 0 at use_ferry_ = 0.5
     ferry_penalty_ = static_cast<uint32_t>(kMaxFerryPenalty * (1.0f - use_ferry_ * 2.0f));
@@ -367,7 +367,7 @@ MotorcycleCost::MotorcycleCost(const boost::property_tree::ptree& pt)
   // of 0). Values between 0.5 and 1 slowly decrease to a maximum of -0.125 (to slightly prefer
   // highways) while values between 0.5 to 0 slowly increase to a maximum of kMaxHighwayBiasFactor
   // to avoid/penalize highways.
-  use_highways_ = kUseHighwaysRange(pt.get<float>("use_highways", kDefaultUseHighways));
+  use_highways_ = costing_options.use_highways();
   if (use_highways_ >= 0.5f) {
     float f = (0.5f - use_highways_);
     highway_factor_ = f * f * f;
@@ -379,12 +379,12 @@ MotorcycleCost::MotorcycleCost(const boost::property_tree::ptree& pt)
   // Toll factor of 0 would indicate no adjustment to weighting for toll roads.
   // use_tolls = 1 would reduce weighting slightly (a negative delta) while
   // use_tolls = 0 would penalize (positive delta to weighting factor).
-  use_tolls_ = kUseTollsRange(pt.get<float>("use_tolls", kDefaultUseTolls));
+  use_tolls_ = costing_options.use_tolls();
   toll_factor_ = use_tolls_ < 0.5f ? (2.0f - 4 * use_tolls_) : // ranges from 2 to 0
                      (0.5f - use_tolls_) * 0.03f;              // ranges from 0 to -0.15
 
   // Set the surface factor based on the use trails value
-  use_trails_ = kUseTrailsRange(pt.get<float>("use_trails", kDefaultUseTrails));
+  use_trails_ = costing_options.use_trails();
 
   // Factor for trail use - use a non-linear factor with values at 0.5 being neutral (factor
   // of 0). Values between 0.5 and 1 slowly decrease to a maximum of -0.125 (to slightly prefer
@@ -725,8 +725,8 @@ void ParseMotorcycleCostOptions(const rapidjson::Document& doc,
   }
 }
 
-cost_ptr_t CreateMotorcycleCost(const boost::property_tree::ptree& config) {
-  return std::make_shared<MotorcycleCost>(config);
+cost_ptr_t CreateMotorcycleCost(const odin::Costing costing, const odin::DirectionsOptions& options) {
+  return std::make_shared<MotorcycleCost>(costing, options);
 }
 
 } // namespace sif
@@ -743,37 +743,29 @@ namespace {
 
 MotorcycleCost* make_motorcyclecost_from_json(const std::string& property, float testVal) {
   std::stringstream ss;
-  ss << R"({")" << property << R"(":)" << testVal << "}";
-  boost::property_tree::ptree costing_ptree;
-  boost::property_tree::read_json(ss, costing_ptree);
-  return new MotorcycleCost(costing_ptree);
+  ss << R"({"costing_options":{"motorcycle":{")" << property << R"(":)" << testVal << "}}}";
+  valhalla::valhalla_request_t request;
+  request.parse(ss.str(), valhalla::odin::DirectionsOptions::route);
+  return new MotorcycleCost(valhalla::odin::Costing::auto_, request.options);
 }
 
 template <typename T>
-std::uniform_real_distribution<T>*
-make_real_distributor_from_range(const ranged_default_t<T>& range) {
+std::uniform_real_distribution<T>* make_distributor_from_range(const ranged_default_t<T>& range) {
   T rangeLength = range.max - range.min;
   return new std::uniform_real_distribution<T>(range.min - rangeLength, range.max + rangeLength);
-}
-
-template <typename T>
-std::uniform_int_distribution<T>* make_int_distributor_from_range(const ranged_default_t<T>& range) {
-  T rangeLength = range.max - range.min;
-  return new std::uniform_int_distribution<T>(range.min - rangeLength, range.max + rangeLength);
 }
 
 void testMotorcycleCostParams() {
   constexpr unsigned testIterations = 250;
   constexpr unsigned seed = 0;
   std::default_random_engine generator(seed);
-  std::shared_ptr<std::uniform_real_distribution<float>> fDistributor;
-  std::shared_ptr<std::uniform_int_distribution<uint32_t>> iDistributor;
+  std::shared_ptr<std::uniform_real_distribution<float>> distributor;
   std::shared_ptr<MotorcycleCost> ctorTester;
 
   // maneuver_penalty_
-  fDistributor.reset(make_real_distributor_from_range(kManeuverPenaltyRange));
+  distributor.reset(make_distributor_from_range(kManeuverPenaltyRange));
   for (unsigned i = 0; i < testIterations; ++i) {
-    ctorTester.reset(make_motorcyclecost_from_json("maneuver_penalty", (*fDistributor)(generator)));
+    ctorTester.reset(make_motorcyclecost_from_json("maneuver_penalty", (*distributor)(generator)));
     if (ctorTester->maneuver_penalty_ < kManeuverPenaltyRange.min ||
         ctorTester->maneuver_penalty_ > kManeuverPenaltyRange.max) {
       throw std::runtime_error("maneuver_penalty_ is not within it's range");
@@ -781,18 +773,18 @@ void testMotorcycleCostParams() {
   }
 
   // gate_cost_
-  fDistributor.reset(make_real_distributor_from_range(kGateCostRange));
+  distributor.reset(make_distributor_from_range(kGateCostRange));
   for (unsigned i = 0; i < testIterations; ++i) {
-    ctorTester.reset(make_motorcyclecost_from_json("gate_cost", (*fDistributor)(generator)));
+    ctorTester.reset(make_motorcyclecost_from_json("gate_cost", (*distributor)(generator)));
     if (ctorTester->gate_cost_ < kGateCostRange.min || ctorTester->gate_cost_ > kGateCostRange.max) {
       throw std::runtime_error("gate_cost_ is not within it's range");
     }
   }
 
   // gate_penalty_
-  fDistributor.reset(make_real_distributor_from_range(kGatePenaltyRange));
+  distributor.reset(make_distributor_from_range(kGatePenaltyRange));
   for (unsigned i = 0; i < testIterations; ++i) {
-    ctorTester.reset(make_motorcyclecost_from_json("gate_penalty", (*fDistributor)(generator)));
+    ctorTester.reset(make_motorcyclecost_from_json("gate_penalty", (*distributor)(generator)));
     if (ctorTester->gate_penalty_ < kGatePenaltyRange.min ||
         ctorTester->gate_penalty_ > kGatePenaltyRange.max) {
       throw std::runtime_error("gate_penalty_ is not within it's range");
@@ -802,7 +794,7 @@ void testMotorcycleCostParams() {
   // tollbooth_cost_
   distributor.reset(make_distributor_from_range(kTollBoothCostRange));
   for (unsigned i = 0; i < testIterations; ++i) {
-    ctorTester.reset(make_autocost_from_json("toll_booth_cost", (*distributor)(generator)));
+    ctorTester.reset(make_motorcyclecost_from_json("toll_booth_cost", (*distributor)(generator)));
     if (ctorTester->tollbooth_cost_ < kTollBoothCostRange.min ||
         ctorTester->tollbooth_cost_ > kTollBoothCostRange.max) {
       throw std::runtime_error("tollbooth_cost_ is not within it's range");
@@ -812,7 +804,7 @@ void testMotorcycleCostParams() {
   // tollbooth_penalty_
   distributor.reset(make_distributor_from_range(kTollBoothPenaltyRange));
   for (unsigned i = 0; i < testIterations; ++i) {
-    ctorTester.reset(make_autocost_from_json("toll_booth_penalty", (*distributor)(generator)));
+    ctorTester.reset(make_motorcyclecost_from_json("toll_booth_penalty", (*distributor)(generator)));
     if (ctorTester->tollbooth_penalty_ < kTollBoothPenaltyRange.min ||
         ctorTester->tollbooth_penalty_ > kTollBoothPenaltyRange.max) {
       throw std::runtime_error("tollbooth_penalty_ is not within it's range");
@@ -820,9 +812,9 @@ void testMotorcycleCostParams() {
   }
 
   // alley_penalty_
-  fDistributor.reset(make_real_distributor_from_range(kAlleyPenaltyRange));
+  distributor.reset(make_distributor_from_range(kAlleyPenaltyRange));
   for (unsigned i = 0; i < testIterations; ++i) {
-    ctorTester.reset(make_motorcyclecost_from_json("alley_penalty", (*fDistributor)(generator)));
+    ctorTester.reset(make_motorcyclecost_from_json("alley_penalty", (*distributor)(generator)));
     if (ctorTester->alley_penalty_ < kAlleyPenaltyRange.min ||
         ctorTester->alley_penalty_ > kAlleyPenaltyRange.max) {
       throw std::runtime_error("alley_penalty_ is not within it's range");
@@ -830,10 +822,10 @@ void testMotorcycleCostParams() {
   }
 
   // country_crossing_cost_
-  fDistributor.reset(make_real_distributor_from_range(kCountryCrossingCostRange));
+  distributor.reset(make_distributor_from_range(kCountryCrossingCostRange));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(
-        make_motorcyclecost_from_json("country_crossing_cost", (*fDistributor)(generator)));
+        make_motorcyclecost_from_json("country_crossing_cost", (*distributor)(generator)));
     if (ctorTester->country_crossing_cost_ < kCountryCrossingCostRange.min ||
         ctorTester->country_crossing_cost_ > kCountryCrossingCostRange.max) {
       throw std::runtime_error("country_crossing_cost_ is not within it's range");
@@ -841,10 +833,10 @@ void testMotorcycleCostParams() {
   }
 
   // country_crossing_penalty_
-  fDistributor.reset(make_real_distributor_from_range(kCountryCrossingPenaltyRange));
+  distributor.reset(make_distributor_from_range(kCountryCrossingPenaltyRange));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(
-        make_motorcyclecost_from_json("country_crossing_penalty", (*fDistributor)(generator)));
+        make_motorcyclecost_from_json("country_crossing_penalty", (*distributor)(generator)));
     if (ctorTester->country_crossing_penalty_ < kCountryCrossingPenaltyRange.min ||
         ctorTester->country_crossing_penalty_ > kCountryCrossingPenaltyRange.max) {
       throw std::runtime_error("country_crossing_penalty_ is not within it's range");
@@ -852,9 +844,9 @@ void testMotorcycleCostParams() {
   }
 
   // ferry_cost_
-  fDistributor.reset(make_real_distributor_from_range(kFerryCostRange));
+  distributor.reset(make_distributor_from_range(kFerryCostRange));
   for (unsigned i = 0; i < testIterations; ++i) {
-    ctorTester.reset(make_motorcyclecost_from_json("ferry_cost", (*fDistributor)(generator)));
+    ctorTester.reset(make_motorcyclecost_from_json("ferry_cost", (*distributor)(generator)));
     if (ctorTester->ferry_cost_ < kFerryCostRange.min ||
         ctorTester->ferry_cost_ > kFerryCostRange.max) {
       throw std::runtime_error("ferry_cost_ is not within it's range");
@@ -862,18 +854,18 @@ void testMotorcycleCostParams() {
   }
 
   // use_ferry_
-  fDistributor.reset(make_real_distributor_from_range(kUseFerryRange));
+  distributor.reset(make_distributor_from_range(kUseFerryRange));
   for (unsigned i = 0; i < testIterations; ++i) {
-    ctorTester.reset(make_motorcyclecost_from_json("use_ferry", (*fDistributor)(generator)));
+    ctorTester.reset(make_motorcyclecost_from_json("use_ferry", (*distributor)(generator)));
     if (ctorTester->use_ferry_ < kUseFerryRange.min || ctorTester->use_ferry_ > kUseFerryRange.max) {
       throw std::runtime_error("use_ferry_ is not within it's range");
     }
   }
 
   // use_highways_
-  fDistributor.reset(make_real_distributor_from_range(kUseHighwaysRange));
+  distributor.reset(make_distributor_from_range(kUseHighwaysRange));
   for (unsigned i = 0; i < testIterations; ++i) {
-    ctorTester.reset(make_motorcyclecost_from_json("use_highways", (*fDistributor)(generator)));
+    ctorTester.reset(make_motorcyclecost_from_json("use_highways", (*distributor)(generator)));
     if (ctorTester->use_highways_ < kUseHighwaysRange.min ||
         ctorTester->use_highways_ > kUseHighwaysRange.max) {
       throw std::runtime_error("use_highways_ is not within it's range");
@@ -881,9 +873,9 @@ void testMotorcycleCostParams() {
   }
 
   // use_trails_
-  fDistributor.reset(make_real_distributor_from_range(kUseTrailsRange));
+  distributor.reset(make_distributor_from_range(kUseTrailsRange));
   for (unsigned i = 0; i < testIterations; ++i) {
-    ctorTester.reset(make_motorcyclecost_from_json("use_trails", (*fDistributor)(generator)));
+    ctorTester.reset(make_motorcyclecost_from_json("use_trails", (*distributor)(generator)));
     if (ctorTester->use_trails_ < kUseTrailsRange.min ||
         ctorTester->use_trails_ > kUseTrailsRange.max) {
       throw std::runtime_error("use_trails_ is not within it's range");
@@ -891,9 +883,9 @@ void testMotorcycleCostParams() {
   }
 
   // use_tolls_
-  fDistributor.reset(make_real_distributor_from_range(kUseTollsRange));
+  distributor.reset(make_distributor_from_range(kUseTollsRange));
   for (unsigned i = 0; i < testIterations; ++i) {
-    ctorTester.reset(make_motorcyclecost_from_json("use_tolls", (*fDistributor)(generator)));
+    ctorTester.reset(make_motorcyclecost_from_json("use_tolls", (*distributor)(generator)));
     if (ctorTester->use_tolls_ < kUseTollsRange.min || ctorTester->use_tolls_ > kUseTollsRange.max) {
       throw std::runtime_error("use_tolls_ is not within it's range");
     }

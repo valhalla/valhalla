@@ -30,6 +30,22 @@
 #endif // _MSC_VER
 #include <fcntl.h>
 
+// if we are on android
+#ifdef __ANDROID__
+// we didnt get a posix alias until 23
+#if __ANDROID_API__ < 23
+#define posix_madvise madvise
+#endif
+// we didnt get these posix aliases until M
+#if __ANDROID_API__ < __ANDROID_API_M__
+#define POSIX_MADV_NORMAL MADV_NORMAL
+#define POSIX_MADV_RANDOM MADV_RANDOM
+#define POSIX_MADV_SEQUENTIAL MADV_SEQUENTIAL
+#define POSIX_MADV_WILLNEED MADV_WILLNEED
+#define POSIX_MADV_DONTNEED MADV_DONTNEED
+#endif
+#endif
+
 #ifdef _MSC_VER
 #define WIN32_LEAN_AND_MEAN 1
 #define VC_EXTRALEAN 1
@@ -537,14 +553,20 @@ struct tar {
 
   tar(const std::string& tar_file, bool regular_files_only = true)
       : tar_file(tar_file), corrupt_blocks(0) {
-    // map the file
+    // get the file size
     struct stat s;
-    if (stat(tar_file.c_str(), &s) || s.st_size == 0 || (s.st_size % sizeof(header_t)) != 0) {
+    if (stat(tar_file.c_str(), &s))
+      throw std::runtime_error("(stat): " + tar_file + strerror(errno));
+    if (s.st_size == 0 || (s.st_size % sizeof(header_t)) != 0) {
+      throw std::runtime_error(tar_file + "(stat): invalid archive size " +
+                               std::to_string(s.st_size) + " with header size " +
+                               std::to_string(sizeof(header_t)));
       return;
     }
-    try {
-      mm.map(tar_file, s.st_size);
-    } catch (...) { return; }
+
+    // map the file
+    mm.map(tar_file, s.st_size);
+
     // rip through the tar to see whats in it noting that most tars end with 2 empty blocks
     // but we can concatenate tars and get empty blocks in between so we'll just be pretty
     // lax about it and we'll count the ones we cant make sense of

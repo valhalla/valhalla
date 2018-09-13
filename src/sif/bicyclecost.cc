@@ -9,7 +9,7 @@
 
 #ifdef INLINE_TEST
 #include "test/test.h"
-#include <boost/property_tree/json_parser.hpp>
+#include "worker.h"
 #include <random>
 #endif
 
@@ -218,11 +218,11 @@ constexpr ranged_default_t<float> kAvoidBadSurfacesRange{0.0f, kDefaultAvoidBadS
 class BicycleCost : public DynamicCost {
 public:
   /**
-   * Constructor. Configuration / options for bicycle costing are provided
-   * via a property tree.
-   * @param  config  Property tree with configuration/options.
+   * Construct bicycle costing. Pass in cost type and options using protocol buffer(pbf).
+   * @param  costing specified costing type.
+   * @param  options pbf with request options.
    */
-  BicycleCost(const boost::property_tree::ptree& config);
+  BicycleCost(const odin::Costing costing, const odin::DirectionsOptions& options);
 
   // virtual destructor
   virtual ~BicycleCost() {
@@ -432,27 +432,27 @@ protected:
 // is modulated based on surface type and grade factors.
 
 // Constructor
-BicycleCost::BicycleCost(const boost::property_tree::ptree& pt)
-    : DynamicCost(pt, TravelMode::kBicycle) {
+BicycleCost::BicycleCost(const odin::Costing costing, const odin::DirectionsOptions& options)
+    : DynamicCost(options, TravelMode::kBicycle) {
+  // Grab the costing options based on the specified costing type
+  const odin::CostingOptions& costing_options = options.costing_options(static_cast<int>(costing));
+
   // Set hierarchy to allow unlimited transitions
   for (auto& h : hierarchy_limits_) {
     h.max_up_transitions = kUnlimitedTransitions;
   }
 
   // Transition penalties (similar to auto)
-  maneuver_penalty_ =
-      kManeuverPenaltyRange(pt.get<float>("maneuver_penalty", kDefaultManeuverPenalty));
-  driveway_penalty_ = kDrivewayPenaltyRange(pt.get<float>("driveway", kDefaultDrivewayPenalty));
-  gate_cost_ = kGateCostRange(pt.get<float>("gate_cost", kDefaultGateCost));
-  gate_penalty_ = kGatePenaltyRange(pt.get<float>("gate_penalty", kDefaultGatePenalty));
-  alley_penalty_ = kAlleyPenaltyRange(pt.get<float>("alley_penalty", kDefaultAlleyPenalty));
-  country_crossing_cost_ =
-      kCountryCrossingCostRange(pt.get<float>("country_crossing_cost", kDefaultCountryCrossingCost));
-  country_crossing_penalty_ = kCountryCrossingPenaltyRange(
-      pt.get<float>("country_crossing_penalty", kDefaultCountryCrossingPenalty));
+  maneuver_penalty_ = costing_options.maneuver_penalty();
+  driveway_penalty_ = costing_options.destination_only_penalty();
+  gate_cost_ = costing_options.gate_cost();
+  gate_penalty_ = costing_options.gate_penalty();
+  alley_penalty_ = costing_options.alley_penalty();
+  country_crossing_cost_ = costing_options.country_crossing_cost();
+  country_crossing_penalty_ = costing_options.country_crossing_penalty();
 
   // Get the bicycle type - enter as string and convert to enum
-  std::string bicycle_type = pt.get("bicycle_type", kDefaultBicycleType);
+  std::string bicycle_type = costing_options.transport_type();
   if (bicycle_type == "Cross") {
     type_ = BicycleType::kCross;
   } else if (bicycle_type == "Road") {
@@ -463,20 +463,9 @@ BicycleCost::BicycleCost(const boost::property_tree::ptree& pt)
     type_ = BicycleType::kHybrid;
   }
 
-  // Get default speed from the config. This is the average speed on smooth,
-  // flat roads. If not present or outside the valid range use a default speed
-  // based on the bicycle type.
-  uint32_t t = static_cast<uint32_t>(type_);
-  ranged_default_t<float> kCycleSpeedRange{kMinCyclingSpeed, kDefaultCyclingSpeed[t],
-                                           kMaxCyclingSpeed};
-
-  speed_ = kCycleSpeedRange(pt.get<float>("cycling_speed", kDefaultCyclingSpeed[t]));
-
-  avoid_bad_surfaces_ =
-      kAvoidBadSurfacesRange(pt.get<float>("avoid_bad_surfaces", kDefaultAvoidBadSurfaces));
-
+  speed_ = costing_options.cycling_speed();
+  avoid_bad_surfaces_ = costing_options.avoid_bad_surfaces();
   minimal_surface_penalized_ = kWorstAllowedSurface[static_cast<uint32_t>(type_)];
-
   worst_allowed_surface_ = avoid_bad_surfaces_ == 1.0f ? minimal_surface_penalized_ : Surface::kPath;
 
   // Set the surface speed factors for the bicycle type.
@@ -491,7 +480,7 @@ BicycleCost::BicycleCost(const boost::property_tree::ptree& pt)
   }
 
   // Willingness to use roads. Make sure this is within range [0, 1].
-  use_roads_ = kUseRoadRange(pt.get<float>("use_roads", kDefaultUseRoad));
+  use_roads_ = costing_options.use_roads();
 
   // Set the road classification factor. use_roads factors above 0.5 start to
   // reduce the weight difference between road classes while factors below 0.5
@@ -501,10 +490,10 @@ BicycleCost::BicycleCost(const boost::property_tree::ptree& pt)
   // Set the cost (seconds) to enter a ferry (only apply entering since
   // a route must exit a ferry (except artificial test routes ending on
   // a ferry!)
-  ferry_cost_ = kFerryCostRange(pt.get<float>("ferry_cost", kDefaultFerryCost));
+  ferry_cost_ = costing_options.ferry_cost();
 
   // Modify ferry penalty and edge weighting based on use_ferry_ factor
-  use_ferry_ = kUseFerryRange(pt.get<float>("use_ferry", 0.5f));
+  use_ferry_ = costing_options.use_ferry();
   if (use_ferry_ < 0.5f) {
     // Penalty goes from max at use_ferry_ = 0 to 0 at use_ferry_ = 0.5
     ferry_penalty_ = static_cast<uint32_t>(kMaxFerryPenalty * (1.0f - use_ferry_ * 2.0f));
@@ -542,7 +531,7 @@ BicycleCost::BicycleCost(const boost::property_tree::ptree& pt)
   }
 
   // Populate the grade penalties (based on use_hills factor).
-  use_hills_ = kUseHillsRange(pt.get<float>("use_hills", kDefaultUseHills));
+  use_hills_ = costing_options.use_hills();
   float avoid_hills = (1.0f - use_hills_);
   for (uint32_t i = 0; i <= kMaxGradeFactor; i++) {
     grade_penalty[i] = avoid_hills * kAvoidHillsStrength[i];
@@ -1042,6 +1031,8 @@ void ParseBicycleCostOptions(const rapidjson::Document& doc,
       type = BicycleType::kHybrid;
     }
 
+    // This is the average speed on smooth, flat roads. If not present or outside the
+    // valid range use a default speed based on the bicycle type.
     uint32_t t = static_cast<uint32_t>(type);
     ranged_default_t<float> kCycleSpeedRange{kMinCyclingSpeed, kDefaultCyclingSpeed[t],
                                              kMaxCyclingSpeed};
@@ -1072,8 +1063,8 @@ void ParseBicycleCostOptions(const rapidjson::Document& doc,
   }
 }
 
-cost_ptr_t CreateBicycleCost(const boost::property_tree::ptree& config) {
-  return std::make_shared<BicycleCost>(config);
+cost_ptr_t CreateBicycleCost(const odin::Costing costing, const odin::DirectionsOptions& options) {
+  return std::make_shared<BicycleCost>(costing, options);
 }
 
 } // namespace sif
@@ -1090,10 +1081,10 @@ namespace {
 
 BicycleCost* make_bicyclecost_from_json(const std::string& property, float testVal) {
   std::stringstream ss;
-  ss << R"({")" << property << R"(":)" << testVal << "}";
-  boost::property_tree::ptree costing_ptree;
-  boost::property_tree::read_json(ss, costing_ptree);
-  return new BicycleCost(costing_ptree);
+  ss << R"({"costing_options":{"bicycle":{")" << property << R"(":)" << testVal << "}}}";
+  valhalla::valhalla_request_t request;
+  request.parse(ss.str(), valhalla::odin::DirectionsOptions::route);
+  return new BicycleCost(valhalla::odin::Costing::bicycle, request.options);
 }
 
 std::uniform_real_distribution<float>*

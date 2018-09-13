@@ -32,6 +32,7 @@ jobs:
             echo '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> $BASH_ENV
             echo 'nvm install v8.11.2' >> $BASH_ENV
             echo 'nvm alias default v8.11.2' >> $BASH_ENV
+      - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
       - run: git submodule sync && git submodule update --init
       - restore_cache:
           keys:
@@ -72,6 +73,7 @@ jobs:
             echo '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> $BASH_ENV
             echo 'nvm install v8.11.2' >> $BASH_ENV
             echo 'nvm alias default v8.11.2' >> $BASH_ENV
+      - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
       - run: git submodule sync && git submodule update --init
       - restore_cache:
           keys:
@@ -101,6 +103,7 @@ jobs:
       - image: valhalla/docker:build-2.6.1
     steps:
       - checkout
+      - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
       - run: git submodule sync && git submodule update --init
       - restore_cache:
           keys:
@@ -109,7 +112,7 @@ jobs:
       - run: mkdir build
       - run: cd build && cmake .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_COVERAGE=On -DCPACK_GENERATOR=DEB
       - run: make -C build -j4
-      - run: make -C build -j2 tests
+      - run: make -C build -j4 tests
       - run: make -C build -j2 check
       - run: make -C build install
       - run: make -C build package
@@ -125,6 +128,7 @@ jobs:
       - image: valhalla/docker:build-2.6.1
     steps:
       - checkout
+      - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
       - run: git submodule sync && git submodule update --init
       - restore_cache:
           keys:
@@ -135,7 +139,7 @@ jobs:
           cd build && cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=On -DENABLE_PYTHON_BINDINGS=On \
           -DCPACK_GENERATOR=DEB -DCPACK_PACKAGE_VERSION_SUFFIX="-0ubuntu1-$(lsb_release -sc)"
       - run: make -C build -j4
-      - run: make -C build -j2 tests
+      - run: make -C build -j4 tests
       - run: make -C build -j2 check
       - run: make -C build install
       - run: make -C build package
@@ -163,6 +167,7 @@ jobs:
             echo 'nvm install v8.11.2' >> $BASH_ENV
             echo 'nvm alias default v8.11.2' >> $BASH_ENV
       - checkout
+      - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
       - run: git submodule sync && git submodule update --init
       # - restore_cache:
       #     keys:
@@ -173,7 +178,7 @@ jobs:
       - run: mkdir -p build
       - run: cd build && cmake .. -DENABLE_PYTHON_BINDINGS=Off
       - run: make -C build -j4
-      - run: make -C build -j2 tests
+      - run: make -C build -j4 tests
       - run: make -C build -j2 check
       - save_cache:
           key: ccache
@@ -199,6 +204,7 @@ jobs:
             echo 'nvm install v8.11.2' >> $BASH_ENV
             echo 'nvm alias default v8.11.2' >> $BASH_ENV
       - checkout
+      - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
       - run: git submodule sync && git submodule update --init
       - run: npm install --ignore-scripts
       - run: mkdir -p build
@@ -231,6 +237,7 @@ jobs:
             echo 'nvm install v8.11.2' >> $BASH_ENV
             echo 'nvm alias default v8.11.2' >> $BASH_ENV
       - checkout
+      - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
       - run: git submodule sync && git submodule update --init
       - run: npm install --ignore-scripts
       - run: mkdir -p build

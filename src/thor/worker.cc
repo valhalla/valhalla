@@ -7,10 +7,8 @@
 #include <vector>
 
 #include "baldr/json.h"
-#include "exception.h"
 #include "midgard/constants.h"
 #include "midgard/logging.h"
-#include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 
 #include "thor/isochrone.h"
@@ -34,7 +32,7 @@ namespace {
 // may want to do this in loki. At this point in thor the costing method
 // has not yet been constructed.
 const std::unordered_map<std::string, float> kMaxDistances = {
-    {"auto_", 43200.0f},         {"auto_data_fix", 43200.0f}, {"auto_shorter", 43200.0f},
+    {"auto", 43200.0f},          {"auto_data_fix", 43200.0f}, {"auto_shorter", 43200.0f},
     {"bicycle", 7200.0f},        {"bus", 43200.0f},           {"hov", 43200.0f},
     {"motor_scooter", 14400.0f}, {"motorcycle", 14400.0f},    {"multimodal", 7200.0f},
     {"pedestrian", 7200.0f},     {"transit", 14400.0f},       {"truck", 43200.0f},
@@ -48,10 +46,14 @@ constexpr double kMilePerMeter = 0.000621371;
 namespace valhalla {
 namespace thor {
 
-thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config)
-    : mode(valhalla::sif::TravelMode::kPedestrian), matcher_factory(config),
-      reader(matcher_factory.graphreader()),
-      long_request(config.get<float>("thor.logging.long_request")) {
+thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config,
+                             const std::shared_ptr<baldr::GraphReader>& graph_reader)
+    : mode(valhalla::sif::TravelMode::kPedestrian), matcher_factory(config, graph_reader),
+      reader(graph_reader), long_request(config.get<float>("thor.logging.long_request")) {
+  // If we weren't provided with a graph reader make our own
+  if (!reader)
+    reader = matcher_factory.graphreader();
+
   // Register standard edge/node costing methods
   factory.RegisterStandardCostingModels();
 
@@ -153,12 +155,12 @@ worker_t::result_t thor_worker_t::work(const std::list<zmq::message_t>& job,
     double elapsed_time =
         std::chrono::duration<float, std::milli>(std::chrono::system_clock::now() - s).count();
     if (!request.options.do_not_track() && elapsed_time / denominator > long_request) {
-      LOG_WARN("thor::" + odin::DirectionsOptions::Action_Name(request.options.action()) +
+      LOG_WARN("thor::" + odin::DirectionsOptions_Action_Name(request.options.action()) +
                " request elapsed time (ms)::" + std::to_string(elapsed_time));
-      LOG_WARN("thor::" + odin::DirectionsOptions::Action_Name(request.options.action()) +
+      LOG_WARN("thor::" + odin::DirectionsOptions_Action_Name(request.options.action()) +
                " request exceeded threshold::" + request_str);
       midgard::logging::Log("valhalla_thor_long_request_" +
-                                odin::DirectionsOptions::Action_Name(request.options.action()),
+                                odin::DirectionsOptions_Action_Name(request.options.action()),
                             " [ANALYTICS] ");
     }
 
@@ -198,40 +200,33 @@ void run_service(const boost::property_tree::ptree& config) {
 
 // Get the costing options if in the config or get the empty default.
 // Creates the cost in the cost factory
-valhalla::sif::cost_ptr_t thor_worker_t::get_costing(const rapidjson::Document& request,
-                                                     const std::string& costing) {
-  auto costing_options =
-      rapidjson::get_child_optional(request, ("/costing_options/" + costing).c_str());
-  if (costing_options) {
-    return factory.Create(costing, *costing_options);
-  }
-  return factory.Create(costing, boost::property_tree::ptree{});
+valhalla::sif::cost_ptr_t thor_worker_t::get_costing(const odin::Costing costing,
+                                                     const odin::DirectionsOptions& options) {
+  return factory.Create(costing, options);
 }
 
 std::string thor_worker_t::parse_costing(const valhalla_request_t& request) {
   // Parse out the type of route - this provides the costing method to use
-  auto costing = odin::Costing_Name(request.options.costing());
-  if (costing.back() == '_') {
-    costing.pop_back();
-  }
+  auto costing = request.options.costing();
+  auto costing_str = odin::Costing_Name(costing);
 
   // Set travel mode and construct costing
-  if (costing == "multimodal" || costing == "transit") {
+  if (costing == odin::Costing::multimodal || costing == odin::Costing::transit) {
     // For multi-modal we construct costing for all modes and set the
     // initial mode to pedestrian. (TODO - allow other initial modes)
-    mode_costing[0] = get_costing(request.document, "auto");
-    mode_costing[1] = get_costing(request.document, "pedestrian");
-    mode_costing[2] = get_costing(request.document, "bicycle");
-    mode_costing[3] = get_costing(request.document, "transit");
+    mode_costing[0] = get_costing(odin::Costing::auto_, request.options);
+    mode_costing[1] = get_costing(odin::Costing::pedestrian, request.options);
+    mode_costing[2] = get_costing(odin::Costing::bicycle, request.options);
+    mode_costing[3] = get_costing(odin::Costing::transit, request.options);
     mode = valhalla::sif::TravelMode::kPedestrian;
   } else {
-    valhalla::sif::cost_ptr_t cost = get_costing(request.document, costing);
+    valhalla::sif::cost_ptr_t cost = get_costing(costing, request.options);
     mode = cost->travel_mode();
     mode_costing[static_cast<uint32_t>(mode)] = cost;
   }
   valhalla::midgard::logging::Log("travel_mode::" + std::to_string(static_cast<uint32_t>(mode)),
                                   " [ANALYTICS] ");
-  return costing;
+  return costing_str;
 }
 
 void thor_worker_t::parse_locations(valhalla_request_t& request) {
@@ -273,7 +268,7 @@ void thor_worker_t::parse_locations(valhalla_request_t& request) {
 void thor_worker_t::parse_measurements(const valhalla_request_t& request) {
   // Create a matcher
   try {
-    matcher.reset(matcher_factory.Create(request.document));
+    matcher.reset(matcher_factory.Create(request.options));
   } catch (const std::invalid_argument& ex) { throw std::runtime_error(std::string(ex.what())); }
 
   // we require locations
@@ -324,8 +319,8 @@ void thor_worker_t::cleanup() {
   trace.clear();
   isochrone_gen.Clear();
   matcher_factory.ClearFullCache();
-  if (reader.OverCommitted()) {
-    reader.Clear();
+  if (reader->OverCommitted()) {
+    reader->Clear();
   }
 }
 
