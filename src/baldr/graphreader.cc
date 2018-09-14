@@ -57,8 +57,6 @@ struct GraphReader::tile_extract_t {
     }
   }
 
-  std::string file_name;
-  midgard::tar tar;
   // TODO: dont remove constness, and actually make graphtile read only?
   std::unordered_map<uint64_t, std::pair<char*, size_t>> tiles;
   std::shared_ptr<midgard::tar> archive;
