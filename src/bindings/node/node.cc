@@ -71,13 +71,7 @@ public:
 
   void OnError(const Napi::Error& e) {
     Napi::Env env = Env();
-     Callback().MakeCallback(
-      Receiver().Value(),
-      {
-        e.Value(),
-        env.Undefined()
-      }
-    );
+    Callback().MakeCallback(Receiver().Value(), {e.Value(), env.Undefined()});
   }
 
   valhalla::tyr::actor_t actor;
