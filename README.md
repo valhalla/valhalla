@@ -1,9 +1,3 @@
-## :rotating_light: UNDER CONSTRUCTION - MASTER NOT STABLE :rotating_light:
-While Valhalla on v3.0 is under development, we recommend that you use the last stable release, [2.6.1](https://github.com/valhalla/valhalla/releases/tag/2.6.1) until further notice.
-
-Pull requests against master are still welcome, though one may need to pay extra attention to the breaking changes in progress.
-
----
 
 
 
