@@ -1,4 +1,5 @@
 #include "baldr/datetime.h"
+#include "midgard/constants.h"
 #include "midgard/logging.h"
 #include "thor/timedep.h"
 #include <algorithm>
@@ -21,6 +22,7 @@ TimeDepReverse::TimeDepReverse() : AStarPathAlgorithm() {
   adjacencylist_ = nullptr;
   max_label_count_ = std::numeric_limits<uint32_t>::max();
   dest_tz_index_ = 0;
+  seconds_of_week_ = 0;
   access_mode_ = kAutoAccess;
 }
 
@@ -44,11 +46,12 @@ int TimeDepReverse::GetDestinationTimezone(GraphReader& graphreader) {
 
 // Initialize prior to finding best path
 void TimeDepReverse::Init(const PointLL& origll, const PointLL& destll) {
-  // Set the destination and cost factor in the A* heuristic
-  astarheuristic_.Init(destll, costing_->AStarCostFactor());
+  // Set the origin lat,lon (since this is reverse path) and cost factor
+  // in the A* heuristic
+  astarheuristic_.Init(origll, costing_->AStarCostFactor());
 
-  // Get the initial cost based on A* heuristic from origin
-  float mincost = astarheuristic_.Get(origll);
+  // Get the initial cost based on A* heuristic from destination
+  float mincost = astarheuristic_.Get(destll);
 
   // Reserve size for edge labels - do this here rather than in constructor so
   // to limit how much extra memory is used for persistent objects.
@@ -81,6 +84,7 @@ void TimeDepReverse::ExpandReverse(GraphReader& graphreader,
                                    const DirectedEdge* opp_pred_edge,
                                    const bool from_transition,
                                    uint64_t localtime,
+                                   int32_t seconds_of_week,
                                    const odin::Location& destination,
                                    std::pair<int32_t, float>& best_path) {
   // Get the tile and the node info. Skip if tile is null (can happen
@@ -96,8 +100,12 @@ void TimeDepReverse::ExpandReverse(GraphReader& graphreader,
 
   // Adjust for time zone (if different from timezone at the destination).
   if (nodeinfo->timezone() != dest_tz_index_) {
-    DateTime::timezone_diff(false, localtime, DateTime::get_tz_db().from_index(nodeinfo->timezone()),
-                            DateTime::get_tz_db().from_index(dest_tz_index_));
+    // Get the difference in seconds between the destination tz and current tz
+    int tz_diff =
+        DateTime::timezone_diff(localtime, DateTime::get_tz_db().from_index(nodeinfo->timezone()),
+                                DateTime::get_tz_db().from_index(dest_tz_index_));
+    localtime += tz_diff;
+    seconds_of_week = DateTime::normalize_seconds_of_week(seconds_of_week + tz_diff);
   }
 
   // Expand from end node.
@@ -112,14 +120,14 @@ void TimeDepReverse::ExpandReverse(GraphReader& graphreader,
       if (!from_transition) {
         hierarchy_limits_[node.level()].up_transition_count++;
         ExpandReverse(graphreader, directededge->endnode(), pred, pred_idx, opp_pred_edge, true,
-                      localtime, destination, best_path);
+                      seconds_of_week, localtime, destination, best_path);
       }
       continue;
     } else if (directededge->trans_down()) {
       if (!from_transition &&
           !hierarchy_limits_[directededge->endnode().level()].StopExpanding(pred.distance())) {
         ExpandReverse(graphreader, directededge->endnode(), pred, pred_idx, opp_pred_edge, true,
-                      localtime, destination, best_path);
+                      seconds_of_week, localtime, destination, best_path);
       }
       continue;
     }
@@ -155,7 +163,8 @@ void TimeDepReverse::ExpandReverse(GraphReader& graphreader,
 
     Cost tc = costing_->TransitionCostReverse(directededge->localedgeidx(), nodeinfo, opp_edge,
                                               opp_pred_edge);
-    Cost newcost = pred.cost() + costing_->EdgeCost(opp_edge, t2->GetSpeed(opp_edge));
+    Cost newcost = pred.cost() +
+                   costing_->EdgeCost(opp_edge, t2->GetSpeed(directededge, edgeid, seconds_of_week));
     newcost.cost += tc.cost;
 
     // If this edge is a destination, subtract the partial/remainder cost
@@ -263,6 +272,11 @@ std::vector<PathInfo> TimeDepReverse::GetBestPath(odin::Location& origin,
   uint64_t start_time =
       DateTime::seconds_since_epoch(destination.date_time(),
                                     DateTime::get_tz_db().from_index(dest_tz_index_));
+
+  // Set seconds from beginning of the week
+  seconds_of_week_ = DateTime::day_of_week(destination.date_time()) * kSecondsPerDay +
+                     DateTime::seconds_from_midnight(destination.date_time());
+
   // Find shortest path
   uint32_t nc = 0; // Count of iterations with no convergence
                    // towards destination
@@ -295,10 +309,11 @@ std::vector<PathInfo> TimeDepReverse::GetBestPath(odin::Location& origin,
     // edge and potentially complete the path.
     BDEdgeLabel pred = edgelabels_rev_[predindex];
     if (destinations_.find(pred.edgeid()) != destinations_.end()) {
-      // Check if a trivial path. Skip if no predecessor and not
+      // Check if a trivial path using opposing edge. Skip if no predecessor and not
       // trivial (cannot reach destination along this one edge).
       if (pred.predecessor() == kInvalidLabel) {
-        if (IsTrivial(pred.edgeid(), origin, destination)) {
+        // Use opposing edge.
+        if (IsTrivial(pred.opp_edgeid(), origin, destination)) {
           return FormPath(graphreader, predindex);
         }
       } else {
@@ -333,9 +348,10 @@ std::vector<PathInfo> TimeDepReverse::GetBestPath(odin::Location& origin,
       continue;
     }
 
-    // Set local time (subtract elapsed time along the path from the start
-    // time). TODO: adjust for time zone if different than starting tz
-    uint64_t localtime = start_time - (double)pred.cost().secs;
+    // Set local time and seconds of the week.
+    uint32_t secs = static_cast<uint32_t>(pred.cost().secs);
+    uint64_t localtime = start_time - secs;
+    int32_t seconds_of_week = DateTime::normalize_seconds_of_week(seconds_of_week_ - secs);
 
     // Get the opposing predecessor directed edge. Need to make sure we get
     // the correct one if a transition occurred
@@ -343,8 +359,8 @@ std::vector<PathInfo> TimeDepReverse::GetBestPath(odin::Location& origin,
         graphreader.GetGraphTile(pred.opp_edgeid())->directededge(pred.opp_edgeid());
 
     // Expand forward from the end node of the predecessor edge.
-    ExpandReverse(graphreader, pred.endnode(), pred, predindex, opp_pred_edge, false, localtime,
-                  destination, best_path);
+    ExpandReverse(graphreader, pred.endnode(), pred, predindex, opp_pred_edge, false, seconds_of_week,
+                  localtime, destination, best_path);
   }
   return {}; // Should never get here
 }
@@ -413,9 +429,10 @@ void TimeDepReverse::SetOrigin(GraphReader& graphreader,
     // destination is in a forward direction along the edge. Add back in
     // the edge score/penalty to account for destination edges farther from
     // the input location lat,lon.
-    auto p = destinations_.find(edgeid);
+    auto p = destinations_.find(opp_edge_id);
     if (p != destinations_.end()) {
-      if (IsTrivial(edgeid, origin, destination)) {
+      // Reverse the origin and destination in the IsTrivial call.
+      if (IsTrivial(edgeid, destination, origin)) {
         // Find the destination edge and update cost.
         for (const auto& destination_edge : destination.path_edges()) {
           if (destination_edge.graph_id() == edgeid) {

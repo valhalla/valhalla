@@ -16,7 +16,6 @@ valhalla_build_statistics
 valhalla_benchmark_adjacency_list
 valhalla_benchmark_loki
 valhalla_benchmark_skadi
-valhalla_elevation_service
 valhalla_export_edges
 valhalla_loki_worker
 valhalla_odin_worker
@@ -32,8 +31,6 @@ valhalla_tyr_worker
 valhalla_associate_segments
 valhalla_fetch_transit
 valhalla_pack_elevation
-valhalla/proto
-src/proto
 genfiles/
 locales/*.UTF-8
 py-compile
@@ -45,7 +42,6 @@ py-compile
 .libs/
 libvalhalla.la
 date_time_zonespec.csv
-valhalla/valhalla.h
 mason/
 mason_packages/
 
@@ -60,3 +56,9 @@ scripts/gdal-2.0.0.tar.gz
 /.vs*/
 /*build*/
 /CMakeSettings.json
+
+# nodejs
+node_modules
+lib/binding/node_valhalla.node
+
+.DS_Store

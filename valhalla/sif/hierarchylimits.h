@@ -49,19 +49,12 @@ struct HierarchyLimits {
    * @param  pt     Property tree
    * @param  level  Hierarchy level
    */
-  HierarchyLimits(const boost::property_tree::ptree& pt, const uint32_t level)
-      : up_transition_count(0) {
-
-    // Construct string to identify the level of the hierarchy
-    std::string hl = "hierarchy_limits." + std::to_string(level);
-
+  HierarchyLimits(const uint32_t level) : up_transition_count(0) {
     // Set maximum number of upward transitions
-    max_up_transitions =
-        pt.get<uint32_t>(hl + ".max_up_transitions", kDefaultMaxUpTransitions[level]);
+    max_up_transitions = kDefaultMaxUpTransitions[level];
 
     // Set distance within which expansion is always allowed for this level
-    expansion_within_dist =
-        pt.get<float>(hl + ".expansion_within_dist", kDefaultExpansionWithinDist[level]);
+    expansion_within_dist = kDefaultExpansionWithinDist[level];
   }
 
   /**

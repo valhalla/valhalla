@@ -12,7 +12,10 @@ constexpr float kSecPerMinute = 60.0f;
 constexpr float kMinPerSec = 1.0f / 60.0f;
 constexpr float kSecPerHour = 3600.0f;
 constexpr float kHourPerSec = 1.0f / 3600.0f;
+constexpr uint32_t kSecondsPerMinute = 60;
+constexpr uint32_t kSecondsPerHour = 3600;
 constexpr uint32_t kSecondsPerDay = 86400;
+constexpr uint32_t kSecondsPerWeek = 604800;
 
 // Distance constants
 constexpr float kFeetPerMeter = 3.2808399f;

@@ -6,10 +6,10 @@
 
 using namespace valhalla::mjolnir;
 
+#include "baldr/rapidjson_utils.h"
 #include <boost/filesystem/operations.hpp>
 #include <boost/optional.hpp>
 #include <boost/program_options.hpp>
-#include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <iostream>
 
@@ -24,7 +24,7 @@ int main(int argc, char** argv) {
   std::string inline_config;
   std::vector<std::string> input_files;
   bpo::options_description options(
-      "valhalla_build_tiles " VERSION "\n\n"
+      "valhalla_build_tiles " VALHALLA_VERSION "\n\n"
       "Usage: valhalla_build_tiles [options] <protocolbuffer_input_file>\n\n"
       "valhalla_build_tiles is a program that creates the route graph from an osm.pbf "
       "extract. Sample json configs are located in ../conf directory.\n\n");
@@ -59,7 +59,7 @@ int main(int argc, char** argv) {
     return EXIT_SUCCESS;
   }
   if (vm.count("version")) {
-    std::cout << "valhalla_build_tiles " << VERSION << "\n";
+    std::cout << "valhalla_build_tiles " << VALHALLA_VERSION << "\n";
     return EXIT_SUCCESS;
   }
   if (input_files.size() == 0) {
@@ -72,9 +72,9 @@ int main(int argc, char** argv) {
   if (vm.count("inline-config")) {
     std::stringstream ss;
     ss << inline_config;
-    boost::property_tree::read_json(ss, pt);
+    rapidjson::read_json(ss, pt);
   } else if (vm.count("config") && boost::filesystem::is_regular_file(config_file_path)) {
-    boost::property_tree::read_json(config_file_path.string(), pt);
+    rapidjson::read_json(config_file_path.string(), pt);
   } else {
     std::cerr << "Configuration is required\n\n" << options << "\n\n";
     return EXIT_FAILURE;

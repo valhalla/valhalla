@@ -4,16 +4,30 @@
 #include <cstdint>
 #include <valhalla/baldr/directededge.h>
 #include <valhalla/baldr/nodeinfo.h>
+#include <valhalla/baldr/rapidjson_utils.h>
+#include <valhalla/proto/directions_options.pb.h>
 #include <valhalla/sif/dynamiccost.h>
 
 namespace valhalla {
 namespace sif {
 
 /**
- * Create a pedestriancost
- *
+ * Parses the pedestrian cost options from json and stores values in pbf.
+ * @param doc The json request represented as a DOM tree.
+ * @param costing_options_key A string representing the location in the DOM tree where the costing
+ *                            options are stored.
+ * @param pbf_costing_options A mutable protocol buffer where the parsed json values will be stored.
  */
-cost_ptr_t CreatePedestrianCost(const boost::property_tree::ptree& config);
+void ParsePedestrianCostOptions(const rapidjson::Document& doc,
+                                const std::string& costing_options_key,
+                                odin::CostingOptions* pbf_costing_options);
+
+/**
+ * Create a pedestriancost
+ * @param  costing specified costing type.
+ * @param  options pbf with request options.
+ */
+cost_ptr_t CreatePedestrianCost(const odin::Costing costing, const odin::DirectionsOptions& options);
 
 } // namespace sif
 } // namespace valhalla

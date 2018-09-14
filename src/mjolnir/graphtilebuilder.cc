@@ -2,8 +2,8 @@
 
 #include "baldr/datetime.h"
 #include "baldr/edgeinfo.h"
-#include "baldr/filesystem_utils.h"
 #include "baldr/tilehierarchy.h"
+#include "filesystem.h"
 #include "midgard/logging.h"
 #include <algorithm>
 #include <boost/filesystem/operations.hpp>
@@ -93,6 +93,12 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
                                 signs_[i].text_offset());
   }
 
+  // Create turn lane builders
+  for (uint32_t i = 0; i < header_->turnlane_count(); i++) {
+    name_info.insert({turnlanes_[i].text_offset()});
+    turnlanes_builder_.emplace_back(turnlanes_[i].edgeindex(), turnlanes_[i].text_offset());
+  }
+
   // Create admin builders
   for (uint32_t i = 0; i < header_->admincount(); i++) {
     admins_builder_.emplace_back(admins_[i].country_offset(), admins_[i].state_offset(),
@@ -172,7 +178,7 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
 // Output the tile to file. Stores as binary data.
 void GraphTileBuilder::StoreTileData() {
   // Get the name of the file
-  boost::filesystem::path filename(tile_dir_ + filesystem::path_separator +
+  boost::filesystem::path filename(tile_dir_ + filesystem::path::preferred_separator +
                                    GraphTile::FileSuffix(header_builder_.graphid()));
 
   // Make sure the directory exists on the system
@@ -309,9 +315,16 @@ void GraphTileBuilder::StoreTileData() {
                    edge_elevation_builder_.size() * sizeof(EdgeElevation));
     }
 
+    // Write turn lanes
+    header_builder_.set_turnlane_offset(header_builder_.edge_elevation_offset() +
+                                        edge_elevation_builder_.size() * sizeof(EdgeElevation));
+    header_builder_.set_turnlane_count(turnlanes_builder_.size());
+    in_mem.write(reinterpret_cast<const char*>(turnlanes_builder_.data()),
+                 turnlanes_builder_.size() * sizeof(TurnLanes));
+
     // Set the end offset
-    header_builder_.set_end_offset(header_builder_.edge_elevation_offset() +
-                                   (edge_elevation_builder_.size() * sizeof(EdgeElevation)));
+    header_builder_.set_end_offset(header_builder_.turnlane_offset() +
+                                   turnlanes_builder_.size() * sizeof(TurnLanes));
 
     // Sanity check for the end offset
     uint32_t curr =
@@ -349,7 +362,7 @@ void GraphTileBuilder::Update(const std::vector<NodeInfo>& nodes,
 
   // Get the name of the file
   boost::filesystem::path filename =
-      tile_dir_ + filesystem::path_separator + GraphTile::FileSuffix(header_->graphid());
+      tile_dir_ + filesystem::path::preferred_separator + GraphTile::FileSuffix(header_->graphid());
 
   // Make sure the directory exists on the system
   if (!boost::filesystem::exists(filename.parent_path())) {
@@ -853,10 +866,11 @@ void GraphTileBuilder::AddBins(const std::string& tile_dir,
   header.set_traffic_chunk_offset(header.traffic_chunk_offset() + shift);
   header.set_lane_connectivity_offset(header.lane_connectivity_offset() + shift);
   header.set_edge_elevation_offset(header.edge_elevation_offset() + shift);
+  header.set_turnlane_offset(header.turnlane_offset() + shift);
   header.set_end_offset(header.end_offset() + shift);
   // rewrite the tile
   boost::filesystem::path filename =
-      tile_dir + filesystem::path_separator + GraphTile::FileSuffix(header.graphid());
+      tile_dir + filesystem::path::preferred_separator + GraphTile::FileSuffix(header.graphid());
   if (!boost::filesystem::exists(filename.parent_path())) {
     boost::filesystem::create_directories(filename.parent_path());
   }
@@ -983,8 +997,8 @@ void GraphTileBuilder::UpdateTrafficSegments(const bool update_dir_edges) {
   header_builder_.set_end_offset(header_builder_.end_offset() + shift);
 
   // Get the name of the file
-  boost::filesystem::path filename =
-      tile_dir_ + filesystem::path_separator + GraphTile::FileSuffix(header_builder_.graphid());
+  boost::filesystem::path filename = tile_dir_ + filesystem::path::preferred_separator +
+                                     GraphTile::FileSuffix(header_builder_.graphid());
 
   // Make sure the directory exists on the system
   if (!boost::filesystem::exists(filename.parent_path())) {
@@ -992,7 +1006,6 @@ void GraphTileBuilder::UpdateTrafficSegments(const bool update_dir_edges) {
   }
 
   // Open file and truncate
-  std::stringstream in_mem;
   std::ofstream file(filename.c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
   if (file.is_open()) {
     // Write a new header
@@ -1011,7 +1024,7 @@ void GraphTileBuilder::UpdateTrafficSegments(const bool update_dir_edges) {
                traffic_chunk_builder_.size() * sizeof(TrafficChunk));
 
     // Write rest of the stuff after traffic chunks (includes lane connectivity
-    // and edge elevation...so far).
+    // and edge elevation, turn lanes, ...so far).
     const auto* begin = reinterpret_cast<const char*>(header_) + header_->lane_connectivity_offset();
     const auto* end = reinterpret_cast<const char*>(header_) + header_->end_offset();
     file.write(begin, end - begin);
@@ -1047,6 +1060,105 @@ void GraphTileBuilder::UpdateTrafficSegments(const bool update_dir_edges) {
 // Gets the current list of directed edge (builders).
 std::vector<EdgeElevation>& GraphTileBuilder::edge_elevations() {
   return edge_elevation_builder_;
+}
+
+// Gets a sign builder at the specified index.
+TurnLanes& GraphTileBuilder::turnlane_builder(const size_t idx) {
+  if (idx < header_->turnlane_count()) {
+    return turnlanes_[idx];
+  }
+  throw std::runtime_error("GraphTileBuilder turn lane index is out of bounds");
+}
+
+// Add turn lanes for a directed edge
+void GraphTileBuilder::AddTurnLanes(const uint32_t idx, const std::string& str) {
+  if (!str.empty()) {
+    uint32_t offset = AddName(str);
+    turnlanes_builder_.emplace_back(idx, offset);
+  }
+}
+
+// Add a predicted speed profile for a directed edge.
+void GraphTileBuilder::AddPredictedSpeed(const uint32_t idx, const std::vector<int16_t>& profile) {
+  // Create the index builder on the first profile added. Resize to equal the count of
+  // directed edges
+  if (speed_profile_offset_builder_.size() == 0) {
+    speed_profile_offset_builder_.resize(header_->directededgecount());
+  }
+
+  if (idx < header_->directededgecount()) {
+    // Set the offset to the predicted speed profile for this directed edge
+    speed_profile_offset_builder_[idx] = speed_profile_builder_.size();
+
+    // Append the profile
+    if (profile.size() == kCoefficientCount) {
+      speed_profile_builder_.reserve(speed_profile_builder_.size() + kCoefficientCount);
+      speed_profile_builder_.insert(speed_profile_builder_.end(), profile.begin(), profile.end());
+    } else {
+      throw std::runtime_error("GraphTileBuilder AddPredictedSpeed profile is not correct size: " +
+                               std::to_string(profile.size()));
+    }
+  } else {
+    throw std::runtime_error("GraphTileBuilder AddPredictedSpeed index is out of bounds");
+  }
+}
+
+// Updates a tile with predictive speed data. Also updates directed edges with
+// free flow and constrained flow speeds and the predicted traffic flag. The
+// predicted traffic is written after turn lane data.
+void GraphTileBuilder::UpdatePredictedSpeeds(const std::vector<DirectedEdge>& directededges) {
+
+  // Even if there are no predicted speeds there still may be updated directed edges
+  // with free flow or constrained flow speeds - so don't return if no speed profiles
+
+  // Get the name of the file
+  boost::filesystem::path filename = tile_dir_ + filesystem::path::preferred_separator +
+                                     GraphTile::FileSuffix(header_builder_.graphid());
+
+  // Make sure the directory exists on the system
+  if (!boost::filesystem::exists(filename.parent_path()))
+    boost::filesystem::create_directories(filename.parent_path());
+
+  // Open file and truncate
+  std::ofstream file(filename.c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
+  if (file.is_open()) {
+    // Write a new header - add the offset to predicted speed data and the profile count.
+    // Update the end offset (shift by the amount of predicted speed data added).
+    header_builder_.set_end_offset(header_->end_offset() +
+                                   (speed_profile_offset_builder_.size() * sizeof(uint32_t)) +
+                                   (speed_profile_builder_.size() * sizeof(int16_t)));
+    size_t offset = header_->turnlane_offset() + header_->turnlane_count() * sizeof(TurnLanes);
+    header_builder_.set_predictedspeeds_offset(offset);
+    header_builder_.set_predictedspeeds_count(speed_profile_builder_.size() / kCoefficientCount);
+    file.write(reinterpret_cast<const char*>(&header_builder_), sizeof(GraphTileHeader));
+
+    // Copy the nodes (they are unchanged when adding predicted speeds).
+    file.write(reinterpret_cast<const char*>(nodes_), header_->nodecount() * sizeof(NodeInfo));
+
+    // Write the updated directed edges. Make sure edge count matches.
+    if (directededges.size() != header_->directededgecount()) {
+      throw std::runtime_error("GraphTileBuilder::Update - directed edge count has changed");
+    }
+    file.write(reinterpret_cast<const char*>(directededges.data()),
+               directededges.size() * sizeof(DirectedEdge));
+
+    // Write out data from access restrictions to the end of turn lane data
+    auto begin = reinterpret_cast<const char*>(&access_restrictions_[0]);
+    auto end = reinterpret_cast<const char*>(header()) + offset;
+    file.write(begin, end - begin);
+
+    // Append the speed profile indexes and profiles.
+    file.write(reinterpret_cast<const char*>(speed_profile_offset_builder_.data()),
+               speed_profile_offset_builder_.size() * sizeof(uint32_t));
+    file.write(reinterpret_cast<const char*>(speed_profile_builder_.data()),
+               speed_profile_builder_.size() * sizeof(int16_t));
+
+    // Write the rest of the tiles. TBD (if anything is added after the speed profiles
+    // then this will need to be updated)
+
+    // Close the file
+    file.close();
+  }
 }
 
 } // namespace mjolnir

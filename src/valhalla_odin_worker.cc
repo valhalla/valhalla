@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include <boost/property_tree/json_parser.hpp>
+#include "baldr/rapidjson_utils.h"
 #include <boost/property_tree/ptree.hpp>
 
 #include "odin/worker.h"
@@ -15,7 +15,7 @@ int main(int argc, char** argv) {
   // config file
   std::string config_file(argv[1]);
   boost::property_tree::ptree config;
-  boost::property_tree::read_json(config_file, config);
+  rapidjson::read_json(config_file, config);
 
   // run the service worker
   valhalla::odin::run_service(config);

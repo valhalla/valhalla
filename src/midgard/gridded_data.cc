@@ -24,42 +24,6 @@ GriddedData<coord_t>::GriddedData(const AABB2<coord_t>& bounds,
   std::fill(data_.begin(), data_.end(), value);
 }
 
-// Set the value at a specified coordinate.
-template <class coord_t> bool GriddedData<coord_t>::Set(const coord_t& pt, const float value) {
-  auto cell_id = this->TileId(pt);
-  if (cell_id >= 0 && cell_id < data_.size()) {
-    data_[cell_id] = value;
-    return true;
-  }
-  return false;
-}
-
-// Set the value at a specified coordinate if less than the current value
-template <class coord_t>
-bool GriddedData<coord_t>::SetIfLessThan(const coord_t& pt, const float value) {
-  int32_t cell_id = this->TileId(pt);
-  if (cell_id >= 0 && cell_id < data_.size() && value < data_[cell_id]) {
-    data_[cell_id] = value;
-    return true;
-  }
-  return false;
-}
-
-// Set the value at a specified tile Id if less than the current value
-template <class coord_t>
-bool GriddedData<coord_t>::SetIfLessThan(const int tile_id, const float value) {
-  if (tile_id >= 0 && tile_id < data_.size() && value < data_[tile_id]) {
-    data_[tile_id] = value;
-    return true;
-  }
-  return false;
-}
-
-// Get the array of times
-template <class coord_t> const std::vector<float>& GriddedData<coord_t>::data() const {
-  return data_;
-}
-
 // Generate contour lines from the isotile data.
 // contours is an ordered list of contour interval values
 // Derivation from the C code version of CONREC by Paul Bourke:
@@ -304,7 +268,7 @@ GriddedData<coord_t>::GenerateContours(const std::vector<float>& contour_interva
   // the generalization factor to 1/4 of the grid size
   float gen_factor = generalize;
   if (generalize == kOptimalGeneralization) {
-    gen_factor = this->tilesize_ * 0.125f * kMetersPerDegreeLat;
+    gen_factor = this->tilesize_ * 0.25f * kMetersPerDegreeLat;
   }
 
   // some info about the area the image covers

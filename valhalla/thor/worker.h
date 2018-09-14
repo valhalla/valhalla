@@ -37,10 +37,9 @@ void run_service(const boost::property_tree::ptree& config);
 
 class thor_worker_t : public service_worker_t {
 public:
-  enum SHAPE_MATCH { EDGE_WALK = 0, MAP_SNAP = 1, WALK_OR_SNAP = 2 };
   enum SOURCE_TO_TARGET_ALGORITHM { SELECT_OPTIMAL = 0, COST_MATRIX = 1, TIME_DISTANCE_MATRIX = 2 };
-  static const std::unordered_map<std::string, SHAPE_MATCH> STRING_TO_MATCH;
-  thor_worker_t(const boost::property_tree::ptree& config);
+  thor_worker_t(const boost::property_tree::ptree& config,
+                const std::shared_ptr<baldr::GraphReader>& graph_reader = {});
   virtual ~thor_worker_t();
 #ifdef HAVE_HTTP
   virtual worker_t::result_t work(const std::list<zmq::message_t>& job,
@@ -62,8 +61,8 @@ protected:
                                        odin::Location& destination,
                                        const std::string& costing);
   void log_admin(const odin::TripPath&);
-  valhalla::sif::cost_ptr_t get_costing(const rapidjson::Document& request,
-                                        const std::string& costing);
+  valhalla::sif::cost_ptr_t get_costing(const odin::Costing costing,
+                                        const odin::DirectionsOptions& options);
   thor::PathAlgorithm* get_path_algorithm(const std::string& routetype,
                                           const odin::Location& origin,
                                           const odin::Location& destination);
@@ -85,10 +84,10 @@ protected:
   std::string parse_costing(const valhalla_request_t& request);
   void filter_attributes(const valhalla_request_t& request, AttributesController& controller);
 
-  valhalla::sif::TravelMode mode;
+  sif::TravelMode mode;
   std::vector<meili::Measurement> trace;
   sif::CostFactory<sif::DynamicCost> factory;
-  valhalla::sif::cost_ptr_t mode_costing[static_cast<int>(sif::TravelMode::kMaxTravelMode)];
+  sif::cost_ptr_t mode_costing[static_cast<int>(sif::TravelMode::kMaxTravelMode)];
   // Path algorithms (TODO - perhaps use a map?))
   AStarPathAlgorithm astar;
   BidirectionalAStar bidir_astar;
@@ -100,8 +99,8 @@ protected:
   float long_request;
   std::unordered_map<std::string, float> max_matrix_distance;
   SOURCE_TO_TARGET_ALGORITHM source_to_target_algorithm;
-  valhalla::meili::MapMatcherFactory matcher_factory;
-  valhalla::baldr::GraphReader& reader;
+  meili::MapMatcherFactory matcher_factory;
+  std::shared_ptr<baldr::GraphReader> reader;
 };
 
 } // namespace thor

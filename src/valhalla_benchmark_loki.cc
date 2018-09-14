@@ -2,13 +2,14 @@
 
 #include "loki/search.h"
 #include "midgard/logging.h"
+#include "midgard/pointll.h"
 
+#include "baldr/rapidjson_utils.h"
 #include <algorithm>
 #include <atomic>
 #include <boost/filesystem/operations.hpp>
 #include <boost/optional.hpp>
 #include <boost/program_options.hpp>
-#include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <fstream>
 #include <future>
@@ -78,7 +79,7 @@ using results_t = std::set<result_t>;
 bool ParseArguments(int argc, char* argv[]) {
 
   bpo::options_description options(
-      "search " VERSION "\n"
+      "search " VALHALLA_VERSION "\n"
       "\n"
       " Usage: loki_benchmark [options] <location_input_file> ...\n"
       "\n"
@@ -127,7 +128,7 @@ bool ParseArguments(int argc, char* argv[]) {
   }
 
   if (vm.count("version")) {
-    std::cout << "loki_benchmark " << VERSION << "\n";
+    std::cout << "loki_benchmark " << VALHALLA_VERSION << "\n";
     return true;
   }
 
@@ -192,7 +193,7 @@ int main(int argc, char** argv) {
 
   // check what type of input we are getting
   boost::property_tree::ptree pt;
-  boost::property_tree::read_json(config_file_path.c_str(), pt);
+  rapidjson::read_json(config_file_path.c_str(), pt);
 
   // configure logging
   boost::optional<boost::property_tree::ptree&> logging_subtree =
@@ -210,7 +211,20 @@ int main(int argc, char** argv) {
     std::ifstream stream(file);
     std::string line;
     while (std::getline(stream, line)) {
-      auto loc = valhalla::baldr::Location::FromCsv(line);
+      // Parse line to get lat,lon
+      std::stringstream ss(line);
+      std::string item;
+      std::vector<std::string> parts;
+      while (std::getline(ss, item, ',')) {
+        parts.push_back(std::move(item));
+      }
+      float lat = std::stof(parts[0]);
+      if (lat < -90.0f || lat > 90.0f) {
+        throw std::runtime_error("Latitude must be in the range [-90, 90] degrees");
+      }
+      float lon = valhalla::midgard::circular_range_clamp<float>(std::stof(parts[1]), -180, 180);
+      valhalla::midgard::PointLL ll(lat, lon);
+      valhalla::baldr::Location loc(ll);
       loc.minimum_reachability_ = isolated;
       loc.radius_ = radius;
       job.emplace_back(std::move(loc));

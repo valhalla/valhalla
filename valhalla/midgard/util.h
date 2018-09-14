@@ -242,6 +242,23 @@ trim_polyline(const iterator_t& begin, const iterator_t& end, float source, floa
  */
 template <class container_t> container_t trim_front(container_t& pts, const float dist);
 
+/**
+ * Estimate the angle of the tangent at a point along a discretised curve. We attempt
+ * to mostly use the shape coming into the point on the curve but if there
+ * isn't enough there we will use the shape coming out of the it.
+ * @param index Index into the shape.
+ * @param point Point to test for tangent along the curve.
+ * @param shape  Shape / polyline geometry.
+ * @param sample_distance Distance to sample when computing heading.
+ * @param forward Boolean value whether to test in forward or reverse direction.
+ * @return Returns the angle in degrees relative to N.
+ */
+float tangent_angle(size_t index,
+                    const PointLL& point,
+                    const std::vector<PointLL>& shape,
+                    const float sample_distance,
+                    bool forward);
+
 // useful in converting from one iteratable map to another
 // for example: ToMap<boost::property_tree::ptree, std::unordered_map<std::string, std::string>
 // >(some_ptree)
@@ -364,6 +381,18 @@ template <class T> T clamp(T value, T lower, T upper) {
 template <class container_t>
 container_t
 resample_spherical_polyline(const container_t& polyline, double resolution, bool preserve = false);
+
+/**
+ * Resample a polyline to the specified resolution. This is less precise than the spherical
+ * resampling.
+ * @param polyline     vector of points in the line
+ * @param length       length of the polyline
+ * @param resolution   desired resolution(meters) between any two points in the resampled line.
+ *                     The polyline is sampled equally at a spacing that is close to the resolution.
+ * @return Returns a vector of resampled points.
+ */
+std::vector<PointLL>
+resample_polyline(const std::vector<PointLL>& polyline, const float length, const float resolution);
 
 /**
  * A class to wrap a primitive array in something iterable which is useful for loops mostly

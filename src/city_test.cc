@@ -1,7 +1,7 @@
+#include "baldr/rapidjson_utils.h"
 #include <boost/format.hpp>
 #include <boost/optional.hpp>
 #include <boost/program_options.hpp>
-#include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/tokenizer.hpp>
 #include <cstdint>
@@ -174,7 +174,7 @@ int main(int argc, char* argv[]) {
 
   // Parse the config
   boost::property_tree::ptree pt;
-  boost::property_tree::read_json(config.c_str(), pt);
+  rapidjson::read_json(config.c_str(), pt);
 
   // Configure logging
   boost::optional<boost::property_tree::ptree&> logging_subtree =
@@ -220,84 +220,5 @@ int main(int argc, char* argv[]) {
   }
 
   // Exit here or continue and run routes?
-  //  return EXIT_SUCCESS;
-
-  CostFactory<DynamicCost> factory;
-  factory.RegisterStandardCostingModels();
-
-  // Figure out the route type
-  std::string routetype = "auto";
-  for (auto& c : routetype)
-    c = std::tolower(c);
-
-  LOG_INFO("routetype: " + routetype);
-
-  // Get something we can use to fetch tiles
-  valhalla::baldr::GraphReader reader(pt.get_child("mjolnir.hierarchy"));
-
-  // Run routes
-  uint32_t error_count = 0;
-  uint32_t success_count = 0;
-  uint32_t npasses[3] = {};
-  auto t1 = std::chrono::high_resolution_clock::now();
-  for (uint32_t l0 = 0; l0 < cities.size() - 1; l0++) {
-    for (uint32_t l1 = l0 + 1; l1 < cities.size(); l1++) {
-      // Get the costing method. We do this each time since prior route may
-      // have changed hierarchy_limits. Also, this simulates how the service
-      // works
-      cost_ptr_t mode_costing[4];
-      cost_ptr_t cost = factory.Create(routetype, pt.get_child("costing_options." + routetype));
-      TravelMode mode = cost->travelmode();
-      mode_costing[static_cast<uint32_t>(mode)] = cost;
-
-      Location originloc(cities[l0].latlng);
-      Location destloc(cities[l1].latlng);
-
-      // Use Loki to get location information
-      PathLocation origin = Search(originloc, reader, cost->GetEdgeFilter(), cost->GetNodeFilter());
-      PathLocation dest = Search(destloc, reader, cost->GetEdgeFilter(), cost->GetNodeFilter());
-
-      // TODO - maybe later use different path algorithms
-      uint32_t np = 0;
-      PathAlgorithm pathalgorithm;
-      std::vector<PathInfo> pathedges =
-          pathalgorithm.GetBestPath(origin, dest, reader, mode_costing, mode);
-      if (pathedges.size() == 0) {
-        // 2nd pass - increase hierarchy limits, 3rd pass disable highway
-        // transitions
-        if (cost->AllowMultiPass()) {
-          pathalgorithm.Clear();
-          cost->RelaxHierarchyLimits(16.0f, 4.0f);
-          pathedges = pathalgorithm.GetBestPath(origin, dest, reader, mode_costing, mode);
-          np++;
-          if (pathedges.size() == 0) {
-            pathalgorithm.Clear();
-            cost->DisableHighwayTransitions();
-            pathedges = pathalgorithm.GetBestPath(origin, dest, reader, mode_costing, mode);
-            np++;
-          }
-        }
-      }
-
-      if (pathedges.size() == 0) {
-        error_count++;
-      } else {
-        success_count++;
-        npasses[np]++;
-      }
-
-      // TODO - perhaps walk the edges to find total length?
-    }
-  }
-  LOG_INFO(std::to_string(success_count) + " out of " + std::to_string(success_count + error_count) +
-           " succeeded");
-  LOG_INFO("Success on first pass: " + std::to_string(npasses[0]));
-  LOG_INFO("Success on second pass: " + std::to_string(npasses[1]));
-  LOG_INFO("Success on third pass: " + std::to_string(npasses[2]));
-  auto t2 = std::chrono::high_resolution_clock::now();
-  uint32_t msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
-  float secs = msecs * 0.001f;
-  LOG_INFO("Time = " + std::to_string(secs) + " secs");
-
   return EXIT_SUCCESS;
 }

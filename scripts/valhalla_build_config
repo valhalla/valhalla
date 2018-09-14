@@ -421,6 +421,14 @@ help_text = {
 def comma_separated_list(arg):
   return arg.split(',')
 
+def parse_bool(arg):
+  if arg.lower() in ('yes', 'true', 't', 'y', '1'):
+    return True
+  elif arg.lower() in ('no', 'false', 'f', 'n', '0'):
+    return False
+  else:
+    raise argparse.ArgumentTypeError('Boolean value expected.')
+
 #returns a list of leaves of the tree, `\0` separated, stops at non dicts
 #while doing so it also adds arguments to the parser
 def add_leaf_args(path, tree, leaves, parser):
@@ -437,7 +445,7 @@ def add_leaf_args(path, tree, leaves, parser):
       h = h[k]
     t = comma_separated_list if type(tree) == type([]) else type(tree)
     arg = '--' + path.replace('_', '-').replace('\0', '-')
-    parser.add_argument(arg, type=t, help=h, default=tree)
+    parser.add_argument(arg, type = t if t != type(False) else parse_bool, help=h, default=tree)
     leaves.append(path)
 
 #entry point to program

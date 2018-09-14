@@ -24,8 +24,9 @@ public:
   std::string ToString(uint32_t max_count = 0,
                        const std::string& delim = "/",
                        const VerbalTextFormatter* verbal_formatter = nullptr) const;
-
+#ifdef LOGGING_LEVEL_TRACE
   std::string ToParameterString() const;
+#endif
 
   virtual std::unique_ptr<StreetNames> clone() const;
 

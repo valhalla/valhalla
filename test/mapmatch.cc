@@ -5,12 +5,11 @@
 #include <utility>
 #include <vector>
 
+#include "baldr/rapidjson_utils.h"
 #include <boost/optional/optional.hpp>
-#include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 
 #include "baldr/json.h"
-#include "exception.h"
 #include "meili/map_matcher.h"
 #include "meili/map_matcher_factory.h"
 #include "midgard/distanceapproximator.h"
@@ -19,6 +18,7 @@
 #include "midgard/util.h"
 #include "mjolnir/util.h"
 #include "tyr/actor.h"
+#include "worker.h"
 
 using namespace valhalla;
 
@@ -69,7 +69,7 @@ boost::property_tree::ptree json_to_pt(const std::string& json) {
   std::stringstream ss;
   ss << json;
   boost::property_tree::ptree pt;
-  boost::property_tree::read_json(ss, pt);
+  rapidjson::read_json(ss, pt);
   return pt;
 }
 

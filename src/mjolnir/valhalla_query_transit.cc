@@ -3,13 +3,13 @@
 //#include "mjolnir/graphtilebuilder.h"
 #include <valhalla/proto/transit.pb.h>
 
+#include "baldr/rapidjson_utils.h"
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem/operations.hpp>
 #include <boost/foreach.hpp>
 #include <boost/format.hpp>
 #include <boost/optional.hpp>
 #include <boost/program_options.hpp>
-#include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <fstream>
 #include <iostream>
@@ -19,15 +19,14 @@
 #include <google/protobuf/io/coded_stream.h>
 #include <google/protobuf/io/zero_copy_stream_impl_lite.h>
 
-#include "baldr/datetime.h"
 #include "baldr/graphreader.h"
 #include "baldr/tilehierarchy.h"
 #include "midgard/logging.h"
 #include "midgard/util.h"
+#include "mjolnir/servicedays.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
-using namespace valhalla::baldr::DateTime;
 using namespace valhalla::mjolnir;
 
 namespace bpo = boost::program_options;
@@ -418,7 +417,7 @@ int main(int argc, char* argv[]) {
 
   // Read config
   boost::property_tree::ptree pt;
-  boost::property_tree::read_json(config.c_str(), pt);
+  rapidjson::read_json(config, pt);
 
   LOG_INFO("Read config");
 

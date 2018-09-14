@@ -10,12 +10,12 @@
 #include <utility>
 #include <vector>
 
-#include "baldr/filesystem_utils.h"
 #include "baldr/graphconstants.h"
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
 #include "baldr/graphtile.h"
 #include "baldr/tilehierarchy.h"
+#include "filesystem.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
@@ -266,6 +266,12 @@ void FormTilesInNewLevel(GraphReader& reader, bool has_elevation) {
           LOG_ERROR("Base edge should have signs, but none found");
         }
         tilebuilder->AddSigns(tilebuilder->directededges().size(), signs);
+      }
+
+      // Get turn lanes from the base directed edge
+      if (directededge->turnlanes()) {
+        uint32_t offset = tile->turnlanes_offset(base_edge_id.id());
+        tilebuilder->AddTurnLanes(tilebuilder->directededges().size(), tile->GetName(offset));
       }
 
       // Get access restrictions from the base directed edge. Add these to
@@ -540,8 +546,8 @@ void RemoveUnusedLocalTiles(const std::string& tile_dir) {
     if (!itr->second) {
       // Remove the file
       GraphId empty_tile = itr->first;
-      std::string file_location =
-          tile_dir + filesystem::path_separator + GraphTile::FileSuffix(empty_tile.Tile_Base());
+      std::string file_location = tile_dir + filesystem::path::preferred_separator +
+                                  GraphTile::FileSuffix(empty_tile.Tile_Base());
       remove(file_location.c_str());
       LOG_DEBUG("Remove file: " + file_location);
     }

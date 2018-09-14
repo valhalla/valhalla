@@ -18,10 +18,10 @@
 #include <boost/foreach.hpp>
 
 #include "baldr/datetime.h"
-#include "baldr/filesystem_utils.h"
 #include "baldr/graphreader.h"
 #include "baldr/graphtile.h"
 #include "baldr/tilehierarchy.h"
+#include "filesystem.h"
 #include "midgard/distanceapproximator.h"
 #include "midgard/logging.h"
 #include "midgard/util.h"
@@ -687,13 +687,13 @@ void TransitBuilder::Build(const boost::property_tree::ptree& pt) {
   }
 
   // Get a list of tiles that are on both level 2 (local) and level 3 (transit)
-  transit_dir->push_back(filesystem::path_separator);
+  transit_dir->push_back(filesystem::path::preferred_separator);
   GraphReader reader(hierarchy_properties);
   auto local_level = TileHierarchy::levels().rbegin()->first;
   if (boost::filesystem::is_directory(*transit_dir + std::to_string(local_level + 1) +
-                                      filesystem::path_separator)) {
+                                      filesystem::path::preferred_separator)) {
     boost::filesystem::recursive_directory_iterator transit_file_itr(
-        *transit_dir + std::to_string(local_level + 1) + filesystem::path_separator),
+        *transit_dir + std::to_string(local_level + 1) + filesystem::path::preferred_separator),
         end_file_itr;
     for (; transit_file_itr != end_file_itr; ++transit_file_itr) {
       if (boost::filesystem::is_regular(transit_file_itr->path()) &&
@@ -704,7 +704,7 @@ void TransitBuilder::Build(const boost::property_tree::ptree& pt) {
           const GraphTile* tile = reader.GetGraphTile(local_graph_id);
           tiles.emplace(local_graph_id);
           const std::string destination_path = pt.get<std::string>("mjolnir.tile_dir") +
-                                               filesystem::path_separator +
+                                               filesystem::path::preferred_separator +
                                                GraphTile::FileSuffix(graph_id);
           boost::filesystem::path filename = destination_path;
           // Make sure the directory exists on the system and copy to the tile_dir

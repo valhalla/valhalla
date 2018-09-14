@@ -28,8 +28,8 @@ std::string thor_worker_t::matrix(valhalla_request_t& request) {
   auto costing = parse_costing(request);
 
   if (!request.options.do_not_track()) {
-    valhalla::midgard::logging::Log("matrix_type::" + odin::DirectionsOptions::Action_Name(
-                                                          request.options.action()),
+    valhalla::midgard::logging::Log("matrix_type::" +
+                                        odin::DirectionsOptions_Action_Name(request.options.action()),
                                     " [ANALYTICS] ");
   }
 
@@ -44,12 +44,12 @@ std::string thor_worker_t::matrix(valhalla_request_t& request) {
   std::vector<TimeDistance> time_distances;
   auto costmatrix = [&]() {
     thor::CostMatrix matrix;
-    return matrix.SourceToTarget(request.options.sources(), request.options.targets(), reader,
+    return matrix.SourceToTarget(request.options.sources(), request.options.targets(), *reader,
                                  mode_costing, mode, max_matrix_distance.find(costing)->second);
   };
   auto timedistancematrix = [&]() {
     thor::TimeDistanceMatrix matrix;
-    return matrix.SourceToTarget(request.options.sources(), request.options.targets(), reader,
+    return matrix.SourceToTarget(request.options.sources(), request.options.targets(), *reader,
                                  mode_costing, mode, max_matrix_distance.find(costing)->second);
   };
   switch (source_to_target_algorithm) {

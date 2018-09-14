@@ -1,5 +1,5 @@
+#include "baldr/rapidjson_utils.h"
 #include <boost/program_options.hpp>
-#include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <cstdint>
 
@@ -155,7 +155,7 @@ void extend(GraphReader& reader,
 
 // program entry point
 int main(int argc, char* argv[]) {
-  bpo::options_description options("valhalla_export_edges " VERSION "\n"
+  bpo::options_description options("valhalla_export_edges " VALHALLA_VERSION "\n"
                                    "\n"
                                    " Usage: valhalla_export_edges [options]\n"
                                    "\n"
@@ -194,7 +194,7 @@ int main(int argc, char* argv[]) {
   }
 
   if (vm.count("version")) {
-    std::cout << "valhalla_export_edges " << VERSION << "\n";
+    std::cout << "valhalla_export_edges " << VALHALLA_VERSION << "\n";
     return EXIT_SUCCESS;
   }
 
@@ -203,7 +203,7 @@ int main(int argc, char* argv[]) {
 
   // parse the config
   boost::property_tree::ptree pt;
-  boost::property_tree::read_json(config.c_str(), pt);
+  rapidjson::read_json(config.c_str(), pt);
 
   // configure logging
   valhalla::midgard::logging::Configure({{"type", "std_err"}, {"color", "true"}});

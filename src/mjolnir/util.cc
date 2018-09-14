@@ -1,7 +1,7 @@
 #include "mjolnir/util.h"
 
-#include "baldr/filesystem_utils.h"
 #include "baldr/tilehierarchy.h"
+#include "filesystem.h"
 #include "midgard/aabb2.h"
 #include "midgard/logging.h"
 #include "midgard/point2.h"
@@ -89,7 +89,7 @@ void build_tile_set(const boost::property_tree::ptree& config,
   // set up the directories and purge old tiles
   auto tile_dir = config.get<std::string>("mjolnir.tile_dir");
   for (const auto& level : valhalla::baldr::TileHierarchy::levels()) {
-    auto level_dir = tile_dir + baldr::filesystem::path_separator + std::to_string(level.first);
+    auto level_dir = tile_dir + filesystem::path::preferred_separator + std::to_string(level.first);
     if (boost::filesystem::exists(level_dir) && !boost::filesystem::is_empty(level_dir)) {
       LOG_WARN("Non-empty " + level_dir + " will be purged of tiles");
       boost::filesystem::remove_all(level_dir);
@@ -98,7 +98,7 @@ void build_tile_set(const boost::property_tree::ptree& config,
 
   // check for transit level.
   auto level_dir =
-      tile_dir + baldr::filesystem::path_separator +
+      tile_dir + filesystem::path::preferred_separator +
       std::to_string(valhalla::baldr::TileHierarchy::levels().rbegin()->second.level + 1);
   if (boost::filesystem::exists(level_dir) && !boost::filesystem::is_empty(level_dir)) {
     LOG_WARN("Non-empty " + level_dir + " will be purged of tiles");

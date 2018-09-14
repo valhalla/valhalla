@@ -5,19 +5,15 @@
 #include <fstream>
 #include <limits>
 #include <list>
-#include <lz4.h>
-#include <lz4hc.h>
+#include <regex>
 #include <stdexcept>
 #include <string>
 #include <sys/stat.h>
-#include <zlib.h>
 
-#include <boost/filesystem.hpp>
 #include <boost/optional.hpp>
 
-#include "baldr/filesystem_utils.h"
-#include "baldr/reutil.h"
-
+#include "baldr/compression_utils.h"
+#include "filesystem.h"
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
 
@@ -39,16 +35,16 @@ constexpr size_t TILE_COUNT = 180 * 360;
 
 std::list<std::string> get_files(const std::string& root_dir) {
   std::list<std::string> files;
-  try {
-    for (boost::filesystem::recursive_directory_iterator i(root_dir), end; i != end; ++i) {
-      if (!is_directory(i->path())) {
+  if (filesystem::exists(root_dir) && filesystem::is_directory(root_dir)) {
+    for (filesystem::recursive_directory_iterator i(root_dir), end; i != end; ++i) {
+      if (i->is_regular_file() || i->is_symlink()) {
         files.push_back(i->path().string());
       }
     }
-  } // couldn't get data
-  catch (...) {
+  }
+  // couldn't get data
+  if (files.empty()) {
     LOG_WARN(root_dir + " currently has no elevation tiles");
-    files.clear();
   }
   return files;
 }
@@ -80,11 +76,11 @@ std::string name_hgt(int16_t index) {
 }
 
 template <typename fmt_t> uint16_t is_hgt(const std::string& name, fmt_t& fmt) {
-  valhalla::baldr::re::smatch m;
-  valhalla::baldr::re::regex e(".*/([NS])([0-9]{2})([WE])([0-9]{3})\\.hgt(\\.gz|\\.lz4)?$");
-  if (valhalla::baldr::re::regex_search(name, m, e)) {
-    // enum class format_t{ UNKNOWN = 0, GZIP = 1, LZ4 = 2, RAW = 3 };
-    fmt = static_cast<fmt_t>(m[5].length() ? (m[5] == ".lz4" ? 2 : (m[5] == ".gz" ? 1 : 0)) : 3);
+  std::smatch m;
+  std::regex e(".*/([NS])([0-9]{2})([WE])([0-9]{3})\\.hgt(\\.gz)?$");
+  if (std::regex_search(name, m, e)) {
+    // enum class format_t{ UNKNOWN = 0, GZIP = 1, RAW = 3 };
+    fmt = static_cast<fmt_t>(m[5].length() ? (m[5] == ".gz" ? 1 : 0) : 3);
     auto lon = std::stoi(m[4]) * (m[3] == "E" ? 1 : -1) + 180;
     auto lat = std::stoi(m[2]) * (m[1] == "N" ? 1 : -1) + 90;
     if (lon >= 0 && lon < 360 && lat >= 0 && lat < 180) {
@@ -105,36 +101,6 @@ uint64_t file_size(const std::string& file_name) {
   return rc == 0 ? s.st_size : -1;
 }
 
-void gunzip(const valhalla::midgard::mem_map<char>& in, int16_t* tile) {
-  // make a zstream with in and out
-  z_stream stream = {
-      static_cast<Byte*>(static_cast<void*>(in.get())),
-      static_cast<unsigned int>(in.size()),
-      static_cast<unsigned int>(in.size()), // the input stream
-      static_cast<Byte*>(static_cast<void*>(tile)),
-      HGT_BYTES,
-      HGT_BYTES // the output stream
-  };
-
-  // decompress the file
-  if (inflateInit2(&stream, 16 + MAX_WBITS) != Z_OK) {
-    throw std::runtime_error("gzip decompression init failed");
-  }
-  auto e = inflate(&stream, Z_FINISH);
-  if (e != Z_STREAM_END || stream.total_out != HGT_BYTES) {
-    throw std::runtime_error("Corrupt gzip elevation data");
-  }
-  inflateEnd(&stream);
-}
-
-void lunzip(const valhalla::midgard::mem_map<char>& in, int16_t* tile) {
-  auto compressed_size =
-      LZ4_decompress_fast(in.get(), static_cast<char*>(static_cast<void*>(tile)), HGT_BYTES);
-  if (compressed_size != in.size()) {
-    throw std::runtime_error("Corrupt lz4 elevation data");
-  }
-}
-
 } // namespace
 
 namespace valhalla {
@@ -145,7 +111,7 @@ namespace skadi {
       data_source(data_source) {
   // messy but needed
   while (this->data_source.size() &&
-         this->data_source.back() == ::valhalla::baldr::filesystem::path_separator) {
+         this->data_source.back() == filesystem::path::preferred_separator) {
     this->data_source.pop_back();
   }
 
@@ -195,15 +161,21 @@ const int16_t* sample::source(uint16_t index) const {
     return unzipped_cache.second.data();
   }
 
+  // for setting where to read compressed data from
+  auto src_func = [&mapped](z_stream& s) -> void {
+    s.next_in = static_cast<Byte*>(static_cast<void*>(mapped.second.get()));
+    s.avail_in = static_cast<unsigned int>(mapped.second.size());
+  };
+
+  // for setting where to write the uncompressed data to
+  auto dst_func = [this](z_stream& s) -> int {
+    s.next_out = static_cast<Byte*>(static_cast<void*>(unzipped_cache.second.data()));
+    s.avail_out = HGT_BYTES;
+    return Z_FINISH; // we know the output will hold all the input
+  };
+
   // we have to unzip it
-  try {
-    if (mapped.first == format_t::LZ4HC) {
-      lunzip(mapped.second, unzipped_cache.second.data());
-    } else {
-      gunzip(mapped.second, unzipped_cache.second.data());
-    }
-  } // failed to unzip
-  catch (...) {
+  if (!baldr::inflate(src_func, dst_func)) {
     LOG_WARN("Corrupt compressed elevation data");
     unzipped_cache.first = -1;
     return nullptr;

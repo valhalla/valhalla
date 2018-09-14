@@ -13,6 +13,7 @@
 
 #include "config.h"
 
+#include "baldr/rapidjson_utils.h"
 #include <boost/filesystem/operations.hpp>
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/point_xy.hpp>
@@ -21,7 +22,6 @@
 #include <boost/geometry/multi/geometries/multi_polygon.hpp>
 #include <boost/optional.hpp>
 #include <boost/program_options.hpp>
-#include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 
 // sqlite must be included before spatialite
@@ -222,7 +222,7 @@ void Benchmark(const boost::property_tree::ptree& pt) {
 
 bool ParseArguments(int argc, char* argv[]) {
   std::vector<std::string> input_files;
-  bpo::options_description options("adminbenchmark " VERSION "\n"
+  bpo::options_description options("adminbenchmark " VALHALLA_VERSION "\n"
                                    "\n"
                                    " Usage: adminbenchmark [options] \n"
                                    "\n"
@@ -255,7 +255,7 @@ bool ParseArguments(int argc, char* argv[]) {
   }
 
   if (vm.count("version")) {
-    std::cout << "adminbenchmark " << VERSION << "\n";
+    std::cout << "adminbenchmark " << VALHALLA_VERSION << "\n";
     return true;
   }
 
@@ -276,7 +276,7 @@ int main(int argc, char** argv) {
 
   // Ccheck what type of input we are getting
   boost::property_tree::ptree pt;
-  boost::property_tree::read_json(config_file_path.c_str(), pt);
+  rapidjson::read_json(config_file_path.c_str(), pt);
 
   // Configure logging
   boost::optional<boost::property_tree::ptree&> logging_subtree =

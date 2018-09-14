@@ -1,4 +1,5 @@
 #include "baldr/datetime.h"
+#include "midgard/constants.h"
 #include "midgard/logging.h"
 #include "thor/timedep.h"
 #include <algorithm>
@@ -13,6 +14,9 @@ namespace thor {
 
 constexpr uint64_t kInitialEdgeLabelCount = 500000;
 
+// Number of iterations to allow with no convergence to the destination
+constexpr uint32_t kMaxIterationsWithoutConvergence = 200000;
+
 // Default constructor
 TimeDepForward::TimeDepForward() : AStarPathAlgorithm() {
   mode_ = TravelMode::kDrive;
@@ -20,6 +24,7 @@ TimeDepForward::TimeDepForward() : AStarPathAlgorithm() {
   adjacencylist_ = nullptr;
   max_label_count_ = std::numeric_limits<uint32_t>::max();
   origin_tz_index_ = 0;
+  seconds_of_week_ = 0;
 }
 
 // Destructor
@@ -50,6 +55,7 @@ void TimeDepForward::ExpandForward(GraphReader& graphreader,
                                    const uint32_t pred_idx,
                                    const bool from_transition,
                                    uint64_t localtime,
+                                   int32_t seconds_of_week,
                                    const odin::Location& destination,
                                    std::pair<int32_t, float>& best_path) {
   // Get the tile and the node info. Skip if tile is null (can happen
@@ -65,8 +71,12 @@ void TimeDepForward::ExpandForward(GraphReader& graphreader,
 
   // Adjust for time zone (if different from timezone at the start).
   if (nodeinfo->timezone() != origin_tz_index_) {
-    DateTime::timezone_diff(true, localtime, DateTime::get_tz_db().from_index(origin_tz_index_),
-                            DateTime::get_tz_db().from_index(nodeinfo->timezone()));
+    // Get the difference in seconds between the origin tz and current tz
+    int tz_diff =
+        DateTime::timezone_diff(localtime, DateTime::get_tz_db().from_index(origin_tz_index_),
+                                DateTime::get_tz_db().from_index(nodeinfo->timezone()));
+    localtime += tz_diff;
+    seconds_of_week = DateTime::normalize_seconds_of_week(seconds_of_week + tz_diff);
   }
 
   // Expand from end node.
@@ -81,14 +91,14 @@ void TimeDepForward::ExpandForward(GraphReader& graphreader,
       if (!from_transition) {
         hierarchy_limits_[node.level()].up_transition_count++;
         ExpandForward(graphreader, directededge->endnode(), pred, pred_idx, true, localtime,
-                      destination, best_path);
+                      seconds_of_week, destination, best_path);
       }
       continue;
     } else if (directededge->trans_down()) {
       if (!from_transition &&
           !hierarchy_limits_[directededge->endnode().level()].StopExpanding(pred.distance())) {
         ExpandForward(graphreader, directededge->endnode(), pred, pred_idx, true, localtime,
-                      destination, best_path);
+                      seconds_of_week, destination, best_path);
       }
       continue;
     }
@@ -109,8 +119,10 @@ void TimeDepForward::ExpandForward(GraphReader& graphreader,
     }
 
     // Compute the cost to the end of this edge
-    Cost newcost = pred.cost() + costing_->EdgeCost(directededge, tile->GetSpeed(directededge)) +
-                   costing_->TransitionCost(directededge, nodeinfo, pred);
+    Cost newcost =
+        pred.cost() +
+        costing_->EdgeCost(directededge, tile->GetSpeed(directededge, edgeid, seconds_of_week)) +
+        costing_->TransitionCost(directededge, nodeinfo, pred);
 
     // If this edge is a destination, subtract the partial/remainder cost
     // (cost from the dest. location to the end of the edge).
@@ -212,6 +224,11 @@ std::vector<PathInfo> TimeDepForward::GetBestPath(odin::Location& origin,
   uint64_t start_time =
       DateTime::seconds_since_epoch(origin.date_time(),
                                     DateTime::get_tz_db().from_index(origin_tz_index_));
+
+  // Set seconds from beginning of the week
+  seconds_of_week_ = DateTime::day_of_week(origin.date_time()) * kSecondsPerDay +
+                     DateTime::seconds_from_midnight(origin.date_time());
+
   // Update hierarchy limits
   ModifyHierarchyLimits(mindist, density);
 
@@ -265,12 +282,14 @@ std::vector<PathInfo> TimeDepForward::GetBestPath(odin::Location& origin,
     }
 
     // Check that distance is converging towards the destination. Return route
-    // failure if no convergence for TODO iterations
+    // failure if no convergence for TODO iterations. NOTE: due to somewhat high
+    // penalty for entering a destination only (private) road this value needs to
+    // be high.
     float dist2dest = pred.distance();
     if (dist2dest < mindist) {
       mindist = dist2dest;
       nc = 0;
-    } else if (nc++ > 50000) {
+    } else if (nc++ > kMaxIterationsWithoutConvergence) {
       if (best_path.first >= 0) {
         return FormPath(best_path.first);
       } else {
@@ -285,12 +304,16 @@ std::vector<PathInfo> TimeDepForward::GetBestPath(odin::Location& origin,
       continue;
     }
 
-    // Set local time.
-    uint64_t localtime = start_time + (double)pred.cost().secs;
+    // Set local time and seconds of the week.
+    uint64_t localtime = start_time + static_cast<uint32_t>(pred.cost().secs);
+    int32_t seconds_of_week = seconds_of_week_ + static_cast<uint32_t>(pred.cost().secs);
+    if (seconds_of_week > midgard::kSecondsPerWeek) {
+      seconds_of_week -= midgard::kSecondsPerWeek;
+    }
 
     // Expand forward from the end node of the predecessor edge.
-    ExpandForward(graphreader, pred.endnode(), pred, predindex, false, localtime, destination,
-                  best_path);
+    ExpandForward(graphreader, pred.endnode(), pred, predindex, false, localtime, seconds_of_week,
+                  destination, best_path);
   }
   return {}; // Should never get here
 }

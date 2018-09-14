@@ -1,12 +1,9 @@
 #include "tyr/actor.h"
 #include "baldr/rapidjson_utils.h"
-#include "exception.h"
 #include "loki/worker.h"
 #include "odin/worker.h"
 #include "thor/worker.h"
 #include "tyr/serializers.h"
-
-#include <boost/property_tree/json_parser.hpp>
 
 using namespace valhalla;
 using namespace valhalla::loki;
@@ -18,7 +15,8 @@ namespace tyr {
 
 struct actor_t::pimpl_t {
   pimpl_t(const boost::property_tree::ptree& config)
-      : loki_worker(config), thor_worker(config), odin_worker(config) {
+      : reader(new baldr::GraphReader(config.get_child("mjolnir"))), loki_worker(config, reader),
+        thor_worker(config, reader), odin_worker(config) {
   }
   void set_interrupts(const std::function<void()>& interrupt_function) {
     loki_worker.set_interrupt(interrupt_function);
@@ -30,6 +28,7 @@ struct actor_t::pimpl_t {
     thor_worker.cleanup();
     odin_worker.cleanup();
   }
+  std::shared_ptr<baldr::GraphReader> reader;
   loki::loki_worker_t loki_worker;
   thor::thor_worker_t thor_worker;
   odin::odin_worker_t odin_worker;

@@ -44,6 +44,7 @@ std::string StreetNames::ToString(uint32_t max_count,
   return name_string;
 }
 
+#ifdef LOGGING_LEVEL_TRACE
 std::string StreetNames::ToParameterString() const {
   std::string name_string;
   bool is_first = true;
@@ -61,6 +62,7 @@ std::string StreetNames::ToParameterString() const {
   name_string += " }";
   return name_string;
 }
+#endif
 
 std::unique_ptr<StreetNames> StreetNames::clone() const {
   std::unique_ptr<StreetNames> clone_street_names = midgard::make_unique<StreetNames>();

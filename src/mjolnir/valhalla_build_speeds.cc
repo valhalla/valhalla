@@ -9,10 +9,10 @@
 
 #include "config.h"
 
+#include "baldr/rapidjson_utils.h"
 #include <boost/filesystem/operations.hpp>
 #include <boost/optional.hpp>
 #include <boost/program_options.hpp>
-#include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <ostream>
 
@@ -54,7 +54,7 @@ struct EdgeAndDirection {
 bool ParseArguments(int argc, char* argv[]) {
 
   bpo::options_description options(
-      "valhalla_build_speeds " VERSION "\n"
+      "valhalla_build_speeds " VALHALLA_VERSION "\n"
       "\n"
       " Usage: valhalla_build_speeds [options]\n"
       "\n"
@@ -93,7 +93,7 @@ bool ParseArguments(int argc, char* argv[]) {
   }
 
   if (vm.count("version")) {
-    std::cout << "valhalla_build_speeds " << VERSION << "\n";
+    std::cout << "valhalla_build_speeds " << VALHALLA_VERSION << "\n";
     return true;
   }
 
@@ -201,7 +201,7 @@ int main(int argc, char** argv) {
 
   // Get the config to see which coverage we are using
   boost::property_tree::ptree pt;
-  boost::property_tree::read_json(config_file_path.c_str(), pt);
+  rapidjson::read_json(config_file_path.string(), pt);
 
   // Get the tile directory from the config
   std::string tile_dir = pt.get<std::string>("mjolnir.tile_dir");

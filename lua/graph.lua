@@ -1465,6 +1465,9 @@ function filter_tags_generic(kv)
   kv["destination:street"] = kv["destination:street"]
   kv["destination:street:to"] = kv["destination:street:to"]
   kv["junction:ref"] = kv["junction:ref"]
+  kv["turn:lanes"] = kv["turn:lanes"]
+  kv["turn:lanes:forward"] = kv["turn:lanes:forward"]
+  kv["turn:lanes:backward"] = kv["turn:lanes:backward"]
 
   --truck goodies
   kv["maxheight"] = normalize_measurement(kv["maxheight"]) or normalize_measurement(kv["maxheight:physical"])

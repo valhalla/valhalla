@@ -123,11 +123,7 @@ void loki_worker_t::init_trace(valhalla_request_t& request) {
   // Determine max factor, defaults to 1. This factor is used to increase
   // the max value when an edge_walk shape match is requested
   float max_factor = 1.0f;
-  // If shape_match was not specified then set to default of "walk_or_snap"
-  if (!request.options.has_shape_match()) {
-    request.options.set_shape_match("walk_or_snap");
-  }
-  if (request.options.shape_match() == "edge_walk") {
+  if (request.options.shape_match() == odin::ShapeMatch::edge_walk) {
     max_factor = 5.0f;
   }
 
@@ -136,7 +132,7 @@ void loki_worker_t::init_trace(valhalla_request_t& request) {
   check_distance(request.options.shape(), max_distance.find("trace")->second, max_factor);
 
   // Validate best paths and best paths shape for `map_snap` requests
-  if (request.options.shape_match() == "map_snap") {
+  if (request.options.shape_match() == odin::ShapeMatch::map_snap) {
     check_best_paths(request.options.best_paths(), max_best_paths);
     check_best_paths_shape(request.options.best_paths(), request.options.shape(),
                            max_best_paths_shape);
@@ -159,12 +155,9 @@ void loki_worker_t::init_trace(valhalla_request_t& request) {
 
 void loki_worker_t::trace(valhalla_request_t& request) {
   init_trace(request);
-  auto costing = odin::DirectionsOptions::Costing_Name(request.options.costing());
-  if (costing.back() == '_') {
-    costing.pop_back();
-  }
+  auto costing = odin::Costing_Name(request.options.costing());
   if (costing == "multimodal") {
-    throw valhalla_exception_t{140, odin::DirectionsOptions::Action_Name(request.options.action())};
+    throw valhalla_exception_t{140, odin::DirectionsOptions_Action_Name(request.options.action())};
   };
 }
 
@@ -178,12 +171,12 @@ void loki_worker_t::locations_from_shape(valhalla_request_t& request) {
 
   // Add first and last correlated locations to request
   try {
-    auto projections = loki::Search(locations, reader, edge_filter, node_filter);
+    auto projections = loki::Search(locations, *reader, edge_filter, node_filter);
     request.options.clear_locations();
     PathLocation::toPBF(projections.at(locations.front()), request.options.mutable_locations()->Add(),
-                        reader);
+                        *reader);
     PathLocation::toPBF(projections.at(locations.back()), request.options.mutable_locations()->Add(),
-                        reader);
+                        *reader);
   } catch (const std::exception&) { throw valhalla_exception_t{171}; }
 }
 

@@ -456,7 +456,7 @@ std::string serializeTraceAttributes(
 
   // Add units, if specified
   if (request.options.has_units()) {
-    json->emplace("units", valhalla::odin::DirectionsOptions::Units_Name(request.options.units()));
+    json->emplace("units", valhalla::odin::DirectionsOptions_Units_Name(request.options.units()));
   }
 
   // Loop over all results to process the best path

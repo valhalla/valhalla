@@ -7,3 +7,9 @@
 [submodule "proto"]
 	path = third_party/OSMLR
 	url = https://github.com/valhalla/osmlr-tile-spec.git
+[submodule "third_party/dirent"]
+	path = third_party/dirent
+	url = https://github.com/tronkko/dirent
+[submodule "third_party/date"]
+	path = third_party/date
+	url = https://github.com/HowardHinnant/date.git

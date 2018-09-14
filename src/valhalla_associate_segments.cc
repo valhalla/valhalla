@@ -3,18 +3,19 @@
 #include "loki/node_search.h"
 #include "loki/search.h"
 #include "midgard/logging.h"
+#include "midgard/sequence.h"
 #include "mjolnir/graphtilebuilder.h"
 #include "thor/astar.h"
 #include "thor/pathalgorithm.h"
 #include <cmath>
 #include <cstdint>
 
+#include "baldr/rapidjson_utils.h"
 #include <boost/algorithm/cxx11/all_of.hpp>
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/iterator/reverse_iterator.hpp>
 #include <boost/program_options.hpp>
-#include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 
 #include <algorithm>
@@ -290,7 +291,7 @@ public:
 };
 
 DistanceOnlyCost::DistanceOnlyCost(vs::TravelMode travel_mode)
-    : DynamicCost(bpt::ptree(), travel_mode) {
+    : DynamicCost(valhalla::odin::DirectionsOptions(), travel_mode) {
 }
 
 DistanceOnlyCost::~DistanceOnlyCost() {
@@ -814,8 +815,10 @@ void edge_association::add_tile(const std::string& file_name) {
   // Read the OSMLR tile
   pbf::Tile tile;
   {
-    std::ifstream in(file_name);
-    if (!tile.ParseFromIstream(&in)) {
+    struct stat s;
+    stat(file_name.c_str(), &s);
+    valhalla::midgard::mem_map<char> buffer(file_name, s.st_size);
+    if (!tile.ParseFromArray(buffer.get(), s.st_size)) {
       throw std::runtime_error("Unable to parse traffic segment file.");
     }
   }
@@ -953,7 +956,7 @@ int main(int argc, char** argv) {
   unsigned int num_threads = 1;
 
   bpo::options_description options(
-      "valhalla_associate_segments " VERSION "\n"
+      "valhalla_associate_segments " VALHALLA_VERSION "\n"
       "\n"
       " Usage: valhalla_associate_segments [options]\n"
       "\n"
@@ -988,7 +991,7 @@ int main(int argc, char** argv) {
   }
 
   if (vm.count("version")) {
-    std::cout << "valhalla_associate_segments " << VERSION << "\n";
+    std::cout << "valhalla_associate_segments " << VALHALLA_VERSION << "\n";
     return EXIT_SUCCESS;
   }
 
@@ -1020,7 +1023,7 @@ int main(int argc, char** argv) {
 
   // parse the config
   bpt::ptree pt;
-  bpt::read_json(config.c_str(), pt);
+  rapidjson::read_json(config, pt);
 
   // fire off some threads to do the work
   LOG_INFO("Associating local traffic segments with " + std::to_string(num_threads) + " threads");

@@ -33,7 +33,9 @@ public:
    */
   void set_consecutive_count(uint32_t consecutive_count);
 
+#ifdef LOGGING_LEVEL_TRACE
   std::string ToParameterString() const;
+#endif
 
   bool operator==(const Sign& rhs) const;
 

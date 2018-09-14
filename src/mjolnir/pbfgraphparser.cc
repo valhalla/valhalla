@@ -23,6 +23,7 @@
 #include "midgard/polyline2.h"
 #include "midgard/sequence.h"
 #include "midgard/tiles.h"
+#include "mjolnir/timeparsing.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -33,7 +34,7 @@ namespace {
 // This value controls the initial size of the Id table. If this is exceeded
 // the table will be resized and a warning is generated (indicating we should
 // increase this value).
-constexpr uint64_t kMaxOSMNodeId = 5800000000;
+constexpr uint64_t kMaxOSMNodeId = 6500000000;
 
 // Absurd classification.
 constexpr uint32_t kAbsurdRoadClass = 777777;
@@ -669,7 +670,7 @@ public:
           std::vector<std::string> conditions = GetTagTokens(tmp, ';');
 
           for (const auto& condition : conditions) {
-            std::vector<uint64_t> values = DateTime::get_time_range(condition);
+            std::vector<uint64_t> values = get_time_range(condition);
 
             for (const auto& v : values) {
               OSMAccessRestriction restriction;
@@ -946,6 +947,12 @@ public:
       } else if (tag.first == "junction:ref" && !tag.second.empty()) {
         w.set_junction_ref_index(osmdata_.ref_offset_map.index(tag.second));
         w.set_exit(true);
+      } else if (tag.first == "turn:lanes" || tag.first == "turn:lanes:forward") {
+        // Turn lanes in the forward direction
+        w.set_fwd_turn_lanes_index(osmdata_.fwd_turn_lanes_map.index(tag.second));
+      } else if (tag.first == "turn:lanes:backward") {
+        // Turn lanes in the reverse direction
+        w.set_bwd_turn_lanes_index(osmdata_.bwd_turn_lanes_map.index(tag.second));
       }
     }
 
@@ -1070,7 +1077,7 @@ public:
     }
 
     // Infer cul-de-sac if a road edge is a loop and is low classification.
-    if (loop_nodes_.size() != nodes.size() && w.use() == Use::kRoad &&
+    if (!w.roundabout() && loop_nodes_.size() != nodes.size() && w.use() == Use::kRoad &&
         w.road_class() > RoadClass::kTertiary) {
       w.set_use(Use::kCuldesac);
     }
@@ -1434,7 +1441,7 @@ public:
             }
 
             for (const auto& c : conditions) {
-              std::vector<uint64_t> values = DateTime::get_time_range(c);
+              std::vector<uint64_t> values = get_time_range(c);
               for (const auto& v : values) { // could have multiple time domains
                 restriction.set_time_domain(v);
                 complex_restrictions_->push_back(restriction);

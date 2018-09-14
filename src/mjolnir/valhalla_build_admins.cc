@@ -42,10 +42,10 @@ using namespace geos::operation::linemerge;
 using namespace valhalla::mjolnir;
 using namespace valhalla::baldr;
 
+#include "baldr/rapidjson_utils.h"
 #include <boost/filesystem/operations.hpp>
 #include <boost/optional.hpp>
 #include <boost/program_options.hpp>
-#include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <ostream>
 
@@ -60,7 +60,7 @@ std::vector<std::string> input_files;
 bool ParseArguments(int argc, char* argv[]) {
 
   bpo::options_description options(
-      "pbfadminbuilder " VERSION "\n"
+      "pbfadminbuilder " VALHALLA_VERSION "\n"
       "\n"
       " Usage: pbfadminbuilder [options] <protocolbuffer_input_file>\n"
       "\n"
@@ -101,7 +101,7 @@ bool ParseArguments(int argc, char* argv[]) {
   }
 
   if (vm.count("version")) {
-    std::cout << "pbfadminbuilder " << VERSION << "\n";
+    std::cout << "pbfadminbuilder " << VALHALLA_VERSION << "\n";
     return true;
   }
 
@@ -659,7 +659,7 @@ int main(int argc, char** argv) {
 
   // check what type of input we are getting
   boost::property_tree::ptree pt;
-  boost::property_tree::read_json(config_file_path.c_str(), pt);
+  rapidjson::read_json(config_file_path.c_str(), pt);
 
   // configure logging
   boost::optional<boost::property_tree::ptree&> logging_subtree =

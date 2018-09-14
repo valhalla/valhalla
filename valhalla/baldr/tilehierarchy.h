@@ -1,8 +1,6 @@
 #ifndef VALHALLA_MIDGARD_TILEHIERARCHY_H
 #define VALHALLA_MIDGARD_TILEHIERARCHY_H
 
-#include <boost/property_tree/json_parser.hpp>
-#include <boost/property_tree/ptree.hpp>
 #include <cstdint>
 #include <map>
 #include <string>
@@ -16,7 +14,7 @@ namespace valhalla {
 namespace baldr {
 
 /**
- * TileLevel: Define a level in the hierarchy of the tiles. Includes:
+ * TileLevel: Defines a level in the hierarchy of the tiles. Includes:
  *          Hierarchy level.
  *          Minimum (largest value) road class in this level.
  *          Name for the level.

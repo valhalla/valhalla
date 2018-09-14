@@ -1,4 +1,3 @@
-#include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <cstdint>
 #include <functional>
@@ -11,7 +10,6 @@
 #include "baldr/json.h"
 #include "baldr/rapidjson_utils.h"
 #include "baldr/turn.h"
-#include "exception.h"
 #include "midgard/aabb2.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"

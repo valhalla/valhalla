@@ -19,11 +19,12 @@ valhalla_module(NAME loki
     PUBLIC
       ${VALHALLA_SOURCE_DIR}
       ${VALHALLA_SOURCE_DIR}/valhalla
+      ${VALHALLA_SOURCE_DIR}/third_party/date/include
     PRIVATE
       ${VALHALLA_SOURCE_DIR}/third_party/rapidjson/include
       ${CMAKE_BINARY_DIR}
   DEPENDS
     valhalla::skadi
-    valhalla::baldr
+    valhalla::sif
     valhalla::proto
     libprime_server)

@@ -2,7 +2,7 @@
 #include "test.h"
 #include <cstdint>
 
-#include <boost/property_tree/json_parser.hpp>
+#include "baldr/rapidjson_utils.h"
 #include <boost/property_tree/ptree.hpp>
 #include <unordered_set>
 
@@ -314,7 +314,7 @@ void make_tile() {
   json << ", \"concurrency\": 1";
   json << " }";
   boost::property_tree::ptree conf;
-  boost::property_tree::json_parser::read_json(json, conf);
+  rapidjson::read_json(json, conf);
 
   vj::GraphValidator::Validate(conf);
 }
@@ -324,7 +324,7 @@ void test_single_node() {
   std::stringstream json;
   json << "{ \"tile_dir\": \"" << test_tile_dir << "\" }";
   boost::property_tree::ptree conf;
-  boost::property_tree::json_parser::read_json(json, conf);
+  rapidjson::read_json(json, conf);
 
   vb::GraphReader reader(conf);
   // this should only find the node a 0,0
@@ -342,7 +342,7 @@ void test_small_node_block() {
   std::stringstream json;
   json << "{ \"tile_dir\": \"" << test_tile_dir << "\" }";
   boost::property_tree::ptree conf;
-  boost::property_tree::json_parser::read_json(json, conf);
+  rapidjson::read_json(json, conf);
 
   vb::GraphReader reader(conf);
   // this should find the four nodes which form a square at the lower left of
@@ -362,7 +362,7 @@ void test_node_at_tile_boundary() {
   std::stringstream json;
   json << "{ \"tile_dir\": \"" << test_tile_dir << "\" }";
   boost::property_tree::ptree conf;
-  boost::property_tree::json_parser::read_json(json, conf);
+  rapidjson::read_json(json, conf);
 
   vb::GraphReader reader(conf);
   // this should find node which is at the tile boundary
@@ -402,7 +402,7 @@ void test_opposite_in_another_tile() {
   std::stringstream json;
   json << "{ \"tile_dir\": \"" << test_tile_dir << "\" }";
   boost::property_tree::ptree conf;
-  boost::property_tree::json_parser::read_json(json, conf);
+  rapidjson::read_json(json, conf);
 
   vb::GraphReader reader(conf);
   // this should find the four nodes which form a square at the lower left of

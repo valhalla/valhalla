@@ -5,6 +5,9 @@
 #include <unordered_map>
 #include <vector>
 
+#include "baldr/rapidjson_utils.h"
+#include <boost/property_tree/ptree.hpp>
+
 #include "baldr/directededge.h"
 #include "baldr/graphreader.h"
 #include "baldr/merge.h"
@@ -66,7 +69,7 @@ struct graph_tile_builder {
 boost::property_tree::ptree read_json(const std::string& json) {
   boost::property_tree::ptree p;
   std::istringstream istr(json);
-  boost::property_tree::json_parser::read_json(istr, p);
+  rapidjson::read_json(istr, p);
   return p;
 }
 

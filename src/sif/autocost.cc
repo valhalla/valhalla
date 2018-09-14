@@ -6,11 +6,10 @@
 #include "baldr/nodeinfo.h"
 #include "midgard/constants.h"
 #include "midgard/util.h"
-#include <iostream>
 
 #ifdef INLINE_TEST
 #include "test/test.h"
-#include <boost/property_tree/json_parser.hpp>
+#include "worker.h"
 #include <random>
 #endif
 
@@ -115,10 +114,11 @@ constexpr float kSurfaceFactor[] = {
 class AutoCost : public DynamicCost {
 public:
   /**
-   * Construct auto costing. Pass in configuration using property tree.
-   * @param  config  Property tree with configuration/options.
+   * Construct auto costing. Pass in cost type and options using protocol buffer(pbf).
+   * @param  costing specified costing type.
+   * @param  options pbf with request options.
    */
-  AutoCost(const boost::property_tree::ptree& config);
+  AutoCost(const odin::Costing costing, const odin::DirectionsOptions& options);
 
   virtual ~AutoCost() {
   }
@@ -313,13 +313,19 @@ public:
 };
 
 // Constructor
-AutoCost::AutoCost(const boost::property_tree::ptree& pt)
-    : DynamicCost(pt, TravelMode::kDrive), trans_density_factor_{1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.1f,
-                                                                 1.2f, 1.3f, 1.4f, 1.6f, 1.9f, 2.2f,
-                                                                 2.5f, 2.8f, 3.1f, 3.5f} {
+AutoCost::AutoCost(const odin::Costing costing, const odin::DirectionsOptions& options)
+    : DynamicCost(options, TravelMode::kDrive), trans_density_factor_{1.0f, 1.0f, 1.0f, 1.0f,
+                                                                      1.0f, 1.1f, 1.2f, 1.3f,
+                                                                      1.4f, 1.6f, 1.9f, 2.2f,
+                                                                      2.5f, 2.8f, 3.1f, 3.5f} {
+
+  // Grab the costing options based on the specified costing type
+  const odin::CostingOptions& costing_options = options.costing_options(static_cast<int>(costing));
+
   surface_factor_ = 0.5f;
+
   // Get the vehicle type - enter as string and convert to enum
-  std::string type = pt.get<std::string>("type", "car");
+  std::string type = costing_options.transport_type();
   if (type == "motorcycle") {
     type_ = VehicleType::kMotorcycle;
     surface_factor_ = 1.0f;
@@ -334,28 +340,23 @@ AutoCost::AutoCost(const boost::property_tree::ptree& pt)
     type_ = VehicleType::kCar;
   }
 
-  maneuver_penalty_ =
-      kManeuverPenaltyRange(pt.get<float>("maneuver_penalty", kDefaultManeuverPenalty));
-  destination_only_penalty_ = kDestinationOnlyPenaltyRange(
-      pt.get<float>("destination_only_penalty", kDefaultDestinationOnlyPenalty));
-  gate_cost_ = kGateCostRange(pt.get<float>("gate_cost", kDefaultGateCost));
-  gate_penalty_ = kGatePenaltyRange(pt.get<float>("gate_penalty", kDefaultGatePenalty));
-  tollbooth_cost_ = kTollBoothCostRange(pt.get<float>("toll_booth_cost", kDefaultTollBoothCost));
-  tollbooth_penalty_ =
-      kTollBoothPenaltyRange(pt.get<float>("toll_booth_penalty", kDefaultTollBoothPenalty));
-  alley_penalty_ = kAlleyPenaltyRange(pt.get<float>("alley_penalty", kDefaultAlleyPenalty));
-  country_crossing_cost_ =
-      kCountryCrossingCostRange(pt.get<float>("country_crossing_cost", kDefaultCountryCrossingCost));
-  country_crossing_penalty_ = kCountryCrossingPenaltyRange(
-      pt.get<float>("country_crossing_penalty", kDefaultCountryCrossingPenalty));
+  maneuver_penalty_ = costing_options.maneuver_penalty();
+  destination_only_penalty_ = costing_options.destination_only_penalty();
+  gate_cost_ = costing_options.gate_cost();
+  gate_penalty_ = costing_options.gate_penalty();
+  tollbooth_cost_ = costing_options.toll_booth_cost();
+  tollbooth_penalty_ = costing_options.toll_booth_penalty();
+  alley_penalty_ = costing_options.alley_penalty();
+  country_crossing_cost_ = costing_options.country_crossing_cost();
+  country_crossing_penalty_ = costing_options.country_crossing_penalty();
 
   // Set the cost (seconds) to enter a ferry (only apply entering since
   // a route must exit a ferry (except artificial test routes ending on
   // a ferry!)
-  ferry_cost_ = kFerryCostRange(pt.get<float>("ferry_cost", kDefaultFerryCost));
+  ferry_cost_ = costing_options.ferry_cost();
 
   // Modify ferry penalty and edge weighting based on use_ferry factor
-  use_ferry_ = kUseFerryRange(pt.get<float>("use_ferry", kDefaultUseFerry));
+  use_ferry_ = costing_options.use_ferry();
   if (use_ferry_ < 0.5f) {
     // Penalty goes from max at use_ferry_ = 0 to 0 at use_ferry_ = 0.5
     ferry_penalty_ = static_cast<uint32_t>(kMaxFerryPenalty * (1.0f - use_ferry_ * 2.0f));
@@ -370,13 +371,13 @@ AutoCost::AutoCost(const boost::property_tree::ptree& pt)
     ferry_factor_ = 1.5f - use_ferry_;
   }
 
-  use_highways_ = kUseHighwaysRange(pt.get<float>("use_highways", kDefaultUseHighways));
+  use_highways_ = costing_options.use_highways();
 
   highway_factor_ = 1.0f - use_highways_;
 
-  use_tolls_ = kUseTollsRange(pt.get<float>("use_tolls", kDefaultUseTolls));
+  use_tolls_ = costing_options.use_tolls();
 
-  // Tool factor of 0 would indicate no adjustment to weighting for toll roads.
+  // Toll factor of 0 would indicate no adjustment to weighting for toll roads.
   // use_tolls = 1 would reduce weighting slightly (a negative delta) while
   // use_tolls = 0 would penalize (positive delta to weighting factor).
   toll_factor_ = use_tolls_ < 0.5f ? (2.0f - 4 * use_tolls_) : // ranges from 2 to 0
@@ -603,8 +604,104 @@ Cost AutoCost::TransitionCostReverse(const uint32_t idx,
   return {seconds + penalty, seconds};
 }
 
-cost_ptr_t CreateAutoCost(const boost::property_tree::ptree& config) {
-  return std::make_shared<AutoCost>(config);
+void ParseAutoCostOptions(const rapidjson::Document& doc,
+                          const std::string& costing_options_key,
+                          odin::CostingOptions* pbf_costing_options) {
+  auto json_costing_options = rapidjson::get_child_optional(doc, costing_options_key.c_str());
+
+  if (json_costing_options) {
+    // If specified, parse json and set pbf values
+
+    // type (transport_type)
+    pbf_costing_options->set_transport_type(
+        rapidjson::get_optional<std::string>(*json_costing_options, "/type").get_value_or("car"));
+
+    // maneuver_penalty
+    pbf_costing_options->set_maneuver_penalty(kManeuverPenaltyRange(
+        rapidjson::get_optional<float>(*json_costing_options, "/maneuver_penalty")
+            .get_value_or(kDefaultManeuverPenalty)));
+
+    // destination_only_penalty
+    pbf_costing_options->set_destination_only_penalty(kDestinationOnlyPenaltyRange(
+        rapidjson::get_optional<float>(*json_costing_options, "/destination_only_penalty")
+            .get_value_or(kDefaultDestinationOnlyPenalty)));
+
+    // gate_cost
+    pbf_costing_options->set_gate_cost(
+        kGateCostRange(rapidjson::get_optional<float>(*json_costing_options, "/gate_cost")
+                           .get_value_or(kDefaultGateCost)));
+
+    // gate_penalty
+    pbf_costing_options->set_gate_penalty(
+        kGatePenaltyRange(rapidjson::get_optional<float>(*json_costing_options, "/gate_penalty")
+                              .get_value_or(kDefaultGatePenalty)));
+
+    // toll_booth_cost
+    pbf_costing_options->set_toll_booth_cost(
+        kTollBoothCostRange(rapidjson::get_optional<float>(*json_costing_options, "/toll_booth_cost")
+                                .get_value_or(kDefaultTollBoothCost)));
+
+    // toll_booth_penalty
+    pbf_costing_options->set_toll_booth_penalty(kTollBoothPenaltyRange(
+        rapidjson::get_optional<float>(*json_costing_options, "/toll_booth_penalty")
+            .get_value_or(kDefaultTollBoothPenalty)));
+
+    // alley_penalty
+    pbf_costing_options->set_alley_penalty(
+        kAlleyPenaltyRange(rapidjson::get_optional<float>(*json_costing_options, "/alley_penalty")
+                               .get_value_or(kDefaultAlleyPenalty)));
+
+    // country_crossing_cost
+    pbf_costing_options->set_country_crossing_cost(kCountryCrossingCostRange(
+        rapidjson::get_optional<float>(*json_costing_options, "/country_crossing_cost")
+            .get_value_or(kDefaultCountryCrossingCost)));
+
+    // country_crossing_penalty
+    pbf_costing_options->set_country_crossing_penalty(kCountryCrossingPenaltyRange(
+        rapidjson::get_optional<float>(*json_costing_options, "/country_crossing_penalty")
+            .get_value_or(kDefaultCountryCrossingPenalty)));
+
+    // ferry_cost
+    pbf_costing_options->set_ferry_cost(
+        kFerryCostRange(rapidjson::get_optional<float>(*json_costing_options, "/ferry_cost")
+                            .get_value_or(kDefaultFerryCost)));
+
+    // use_ferry
+    pbf_costing_options->set_use_ferry(
+        kUseFerryRange(rapidjson::get_optional<float>(*json_costing_options, "/use_ferry")
+                           .get_value_or(kDefaultUseFerry)));
+
+    // use_highways
+    pbf_costing_options->set_use_highways(
+        kUseHighwaysRange(rapidjson::get_optional<float>(*json_costing_options, "/use_highways")
+                              .get_value_or(kDefaultUseHighways)));
+
+    // use_tolls
+    pbf_costing_options->set_use_tolls(
+        kUseTollsRange(rapidjson::get_optional<float>(*json_costing_options, "/use_tolls")
+                           .get_value_or(kDefaultUseTolls)));
+
+  } else {
+    // Set pbf values to defaults
+    pbf_costing_options->set_transport_type("car");
+    pbf_costing_options->set_maneuver_penalty(kDefaultManeuverPenalty);
+    pbf_costing_options->set_destination_only_penalty(kDefaultDestinationOnlyPenalty);
+    pbf_costing_options->set_gate_cost(kDefaultGateCost);
+    pbf_costing_options->set_gate_penalty(kDefaultGatePenalty);
+    pbf_costing_options->set_toll_booth_cost(kDefaultTollBoothCost);
+    pbf_costing_options->set_toll_booth_penalty(kDefaultTollBoothPenalty);
+    pbf_costing_options->set_alley_penalty(kDefaultAlleyPenalty);
+    pbf_costing_options->set_country_crossing_cost(kDefaultCountryCrossingCost);
+    pbf_costing_options->set_country_crossing_penalty(kDefaultCountryCrossingPenalty);
+    pbf_costing_options->set_ferry_cost(kDefaultFerryCost);
+    pbf_costing_options->set_use_ferry(kDefaultUseFerry);
+    pbf_costing_options->set_use_highways(kDefaultUseHighways);
+    pbf_costing_options->set_use_tolls(kDefaultUseTolls);
+  }
+}
+
+cost_ptr_t CreateAutoCost(const odin::Costing costing, const odin::DirectionsOptions& options) {
+  return std::make_shared<AutoCost>(costing, options);
 }
 
 /**
@@ -615,10 +712,11 @@ class AutoShorterCost : public AutoCost {
 public:
   /**
    * Construct auto costing for shorter (not absolute shortest) path.
-   * Pass in configuration using property tree.
-   * @param  pt  Property tree with configuration/options.
+   * Pass in options with protocol buffer(pbf).
+   * @param  options  pbf with options.
    */
-  AutoShorterCost(const boost::property_tree::ptree& pt) : AutoCost(pt) {
+  AutoShorterCost(const odin::Costing costing, const odin::DirectionsOptions& options)
+      : AutoCost(costing, options) {
     // Create speed cost table that reduces the impact of speed
     adjspeedfactor_[0] = kSecPerHour; // TODO - what to make speed=0?
     for (uint32_t s = 1; s <= kMaxSpeedKph; s++) {
@@ -659,8 +757,15 @@ protected:
   float adjspeedfactor_[kMaxSpeedKph + 1];
 };
 
-cost_ptr_t CreateAutoShorterCost(const boost::property_tree::ptree& config) {
-  return std::make_shared<AutoShorterCost>(config);
+void ParseAutoShorterCostOptions(const rapidjson::Document& doc,
+                                 const std::string& costing_options_key,
+                                 odin::CostingOptions* pbf_costing_options) {
+  ParseAutoCostOptions(doc, costing_options_key, pbf_costing_options);
+}
+
+cost_ptr_t CreateAutoShorterCost(const odin::Costing costing,
+                                 const odin::DirectionsOptions& options) {
+  return std::make_shared<AutoShorterCost>(costing, options);
 }
 
 /**
@@ -673,7 +778,8 @@ public:
    * Pass in configuration using property tree.
    * @param  pt  Property tree with configuration/options.
    */
-  BusCost(const boost::property_tree::ptree& pt) : AutoCost(pt) {
+  BusCost(const odin::Costing costing, const odin::DirectionsOptions& options)
+      : AutoCost(costing, options) {
     type_ = VehicleType::kBus;
   }
 
@@ -856,8 +962,14 @@ bool BusCost::AllowedReverse(const baldr::DirectedEdge* edge,
   return true;
 }
 
-cost_ptr_t CreateBusCost(const boost::property_tree::ptree& config) {
-  return std::make_shared<BusCost>(config);
+void ParseBusCostOptions(const rapidjson::Document& doc,
+                         const std::string& costing_options_key,
+                         odin::CostingOptions* pbf_costing_options) {
+  ParseAutoCostOptions(doc, costing_options_key, pbf_costing_options);
+}
+
+cost_ptr_t CreateBusCost(const odin::Costing costing, const odin::DirectionsOptions& options) {
+  return std::make_shared<BusCost>(costing, options);
 }
 
 /**
@@ -868,10 +980,11 @@ class HOVCost : public AutoCost {
 public:
   /**
    * Construct hov costing.
-   * Pass in configuration using property tree.
-   * @param  pt  Property tree with configuration/options.
+   * Pass in options using protocol buffer(pbf).
+   * @param  options  pbf with options.
    */
-  HOVCost(const boost::property_tree::ptree& pt) : AutoCost(pt) {
+  HOVCost(const odin::Costing costing, const odin::DirectionsOptions& options)
+      : AutoCost(costing, options) {
   }
 
   virtual ~HOVCost() {
@@ -1069,8 +1182,14 @@ bool HOVCost::AllowedReverse(const baldr::DirectedEdge* edge,
   return true;
 }
 
-cost_ptr_t CreateHOVCost(const boost::property_tree::ptree& config) {
-  return std::make_shared<HOVCost>(config);
+void ParseHOVCostOptions(const rapidjson::Document& doc,
+                         const std::string& costing_options_key,
+                         odin::CostingOptions* pbf_costing_options) {
+  ParseAutoCostOptions(doc, costing_options_key, pbf_costing_options);
+}
+
+cost_ptr_t CreateHOVCost(const odin::Costing costing, const odin::DirectionsOptions& options) {
+  return std::make_shared<HOVCost>(costing, options);
 }
 
 /**
@@ -1085,7 +1204,8 @@ public:
    * Pass in configuration using property tree.
    * @param  pt  Property tree with configuration/options.
    */
-  AutoDataFix(const boost::property_tree::ptree& pt) : AutoCost(pt) {
+  AutoDataFix(const odin::Costing costing, const odin::DirectionsOptions& options)
+      : AutoCost(costing, options) {
   }
 
   virtual ~AutoDataFix() {
@@ -1144,8 +1264,15 @@ public:
   }
 };
 
-cost_ptr_t CreateAutoDataFixCost(const boost::property_tree::ptree& config) {
-  return std::make_shared<AutoDataFix>(config);
+void ParseAutoDataFixCostOptions(const rapidjson::Document& doc,
+                                 const std::string& costing_options_key,
+                                 odin::CostingOptions* pbf_costing_options) {
+  ParseAutoCostOptions(doc, costing_options_key, pbf_costing_options);
+}
+
+cost_ptr_t CreateAutoDataFixCost(const odin::Costing costing,
+                                 const odin::DirectionsOptions& options) {
+  return std::make_shared<AutoDataFix>(costing, options);
 }
 
 } // namespace sif
@@ -1162,10 +1289,10 @@ namespace {
 
 AutoCost* make_autocost_from_json(const std::string& property, float testVal) {
   std::stringstream ss;
-  ss << R"({")" << property << R"(":)" << testVal << "}";
-  boost::property_tree::ptree costing_ptree;
-  boost::property_tree::read_json(ss, costing_ptree);
-  return new AutoCost(costing_ptree);
+  ss << R"({"costing_options":{"auto":{")" << property << R"(":)" << testVal << "}}}";
+  valhalla::valhalla_request_t request;
+  request.parse(ss.str(), valhalla::odin::DirectionsOptions::route);
+  return new AutoCost(valhalla::odin::Costing::auto_, request.options);
 }
 
 std::uniform_real_distribution<float>*

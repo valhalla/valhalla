@@ -1,7 +1,6 @@
 file(GLOB headers ${VALHALLA_SOURCE_DIR}/valhalla/meili/*.h)
 
 set(sources
-  universal_cost.cc
   viterbi_search.cc
   topk_search.cc
   routing.cc
@@ -19,8 +18,9 @@ valhalla_module(NAME meili
     PUBLIC
       ${VALHALLA_SOURCE_DIR}
       ${VALHALLA_SOURCE_DIR}/valhalla
+      ${VALHALLA_SOURCE_DIR}/third_party/date/include
     PRIVATE
       ${VALHALLA_SOURCE_DIR}/third_party/rapidjson/include
       ${CMAKE_BINARY_DIR}
   DEPENDS
-    valhalla::baldr)
+    valhalla::sif)

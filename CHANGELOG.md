@@ -1,16 +1,75 @@
-## Release Date: UNRELEASED Valhalla 3.0
+## Release Date: 2018-09-13 Valhalla 2.7.0
+* **Enhancement**
+   * UPDATED: Refactor to use the pbf options instead of the ptree config [#1428](https://github.com/valhalla/valhalla/pull/1428) This completes [1357](https://github.com/valhalla/valhalla/issues/1357)
+   * UPDATED: Removed the boost/date_time dependency from baldr and odin. We added the Howard Hinnant date and time library as a submodule. [#1494](https://github.com/valhalla/valhalla/pull/1494)
+   * UPDATED: Fixed 'Drvie' typo [#1505](https://github.com/valhalla/valhalla/pull/1505) This completes [1504](https://github.com/valhalla/valhalla/issues/1504)
+   * UPDATED: Optimizations of GetSpeed for predicted speeds [1490](https://github.com/valhalla/valhalla/issues/1490)
+   * UPDATED: Isotile optimizations
+   * UPDATED: Added stats to predictive traffic logging
+   * UPDATED: resample_polyline - Breaks the polyline into equal length segments at a sample distance near the resolution. Break out of the loop through polyline points once we reach the specified number of samplesthen append the last
+polyline point.
+   * UPDATED: added android logging and uses a shared graph reader
+   * UPDATED: Do not run a second pass on long pedestrian routes that include a ferry (but succeed on first pass). This is a performance fix. Long pedestrian routes with A star factor based on ferry speed end up being very inefficient.
+* **Bug Fix**
+   * FIXED: A* destination only
+   * FIXED: Fixed through locations weren't honored [#1449](https://github.com/valhalla/valhalla/pull/1449)
+
+
+## Release Date: 2018-08-02 Valhalla 3.0.0-rc.4
+* **Node Bindings**
+   * UPDATED: add some worker pool handling
+   [#1467](https://github.com/valhalla/valhalla/pull/1467)
+
+## Release Date: 2018-08-02 Valhalla 3.0.0-rc.3
+* **Node Bindings**
+   * UPDATED: replaced N-API with node-addon-api wrapper and made the actor
+   functions asynchronous
+   [#1457](https://github.com/valhalla/valhalla/pull/1457)
+
+## Release Date: 2018-07-24 Valhalla 3.0.0-rc.2
+* **Node Bindings**
+   * FIXED: turn on the autocleanup functionality for the actor object.
+   [#1439](https://github.com/valhalla/valhalla/pull/1439)
+
+## Release Date: 2018-07-16 Valhalla 3.0.0-rc.1
+* **Enhancement**
+   * ADDED: exposed the rest of the actions to the node bindings and added tests. [#1415](https://github.com/valhalla/valhalla/pull/1415)
+
+## Release Date: 2018-07-12 Valhalla 3.0.0-alpha.1
+**NOTE**: There was already a small package named `valhalla` on the npm registry, only published up to version 0.0.3. The team at npm has transferred the package to us, but would like us to publish something to it ASAP to prove our stake in it. Though the bindings do not have all of the actor functionality exposed yet (just route), we are going to publish an alpha release of 3.0.0 to get something up on npm.
 * **Infrastructure**:
    * ADDED: add in time dependent algorithms if the distance between locations is less than 500km.
+   * ADDED: TurnLanes to indicate turning lanes at the end of a directed edge.
+   * ADDED: Added PredictedSpeeds to Valhalla tiles and logic to compute speed based on predictive speed profiles.
 * **Data Producer Update**
    * ADDED: is_route_num flag was added to Sign records. Set this to true if the exit sign comes from a route number/ref.
    * CHANGED: Lower speeds on driveways, drive-thru, and parking aisle. Set destination only flag for drive thru use.
+   * ADDED: Initial implementation of turn lanes.
   **Bug Fix**
    * CHANGED: Fix destination only penalty for A* and time dependent cases.
+   * CHANGED: Use the distance from GetOffsetForHeading, based on road classification and road use (e.g. ramp, turn channel, etc.), within tangent_angle function.
 * **Map Matching**
    * FIXED: Fixed trace_route edge_walk server abort [#1365](https://github.com/valhalla/valhalla/pull/1365)
 * **Enhancement**
    * ADDED: Added post process for updating free and constrained speeds in the directed edges.
    * UPDATED: Parse the json request once and store in a protocol buffer to pass along the pipeline. This completed the first portion of [1357](https://github.com/valhalla/valhalla/issues/1357)
+   * UPDATED: Changed the shape_match attribute from a string to an enum. Fixes [1376](https://github.com/valhalla/valhalla/issues/1376)
+   * ADDED: Node bindings for route [#1341](https://github.com/valhalla/valhalla/pull/1341)
+   * UPDATED: Use a non-linear use_highways factor (to more heavily penalize highways as use_highways approaches 0).
+
+## Release Date: 2018-07-15 Valhalla 2.6.3
+* **API**:
+   * FIXED: Use a non-linear use_highways factor (to more heavily penalize highways as use_highways approaches 0).
+   * FIXED: Fixed the highway_factor when use_highways < 0.5.
+   * ENHANCEMENT: Added logic to modulate the surface factor based on use_trails.
+   * ADDED: New customer test requests for motorcycle costing.
+
+## Release Date: 2018-06-28 Valhalla 2.6.2
+* **Data Producer Update**
+   * FIXED: Complex restriction sorting bug.  Check of has_dt in ComplexRestrictionBuilder::operator==.
+* **API**:
+   * FIXED: Fixed CostFactory convenience method that registers costing models
+   * ADDED: Added use_tolls into motorcycle costing options
 
 ## Release Date: 2018-05-28 Valhalla 2.6.0
 * **Infrastructure**:

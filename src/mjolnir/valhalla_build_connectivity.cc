@@ -11,10 +11,10 @@
 
 using namespace valhalla::baldr;
 
+#include "baldr/rapidjson_utils.h"
 #include <boost/filesystem/operations.hpp>
 #include <boost/optional.hpp>
 #include <boost/program_options.hpp>
-#include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <ostream>
 
@@ -33,7 +33,7 @@ struct PPMObject {
 bool ParseArguments(int argc, char* argv[]) {
 
   bpo::options_description options(
-      "connectivitymap " VERSION "\n"
+      "connectivitymap " VALHALLA_VERSION "\n"
       "\n"
       " Usage: connectivitymap [options]\n"
       "\n"
@@ -72,7 +72,7 @@ bool ParseArguments(int argc, char* argv[]) {
   }
 
   if (vm.count("version")) {
-    std::cout << "connectivitymap " << VERSION << "\n";
+    std::cout << "connectivitymap " << VALHALLA_VERSION << "\n";
     return true;
   }
 
@@ -112,7 +112,7 @@ int main(int argc, char** argv) {
 
   // Get the config to see which coverage we are using
   boost::property_tree::ptree pt;
-  boost::property_tree::read_json(config_file_path.c_str(), pt);
+  rapidjson::read_json(config_file_path.c_str(), pt);
 
   // Get something we can use to fetch tiles
   valhalla::baldr::connectivity_map_t connectivity_map(pt.get_child("mjolnir"));
