@@ -44,7 +44,6 @@ private:
   // Construct the cos table
   BucketCosTable() {
     // Fill out the table in bucket order.
-    uint32_t index = 0;
     float* t = &table_[0];
     for (uint32_t bucket = 0; bucket < kBucketsPerWeek; ++bucket) {
       for (uint32_t c = 0; c < kCoefficientCount; ++c) {
@@ -110,7 +109,7 @@ public:
     float speed = *coefficients * k1OverSqrt2;
     ++coefficients;
     ++b;
-    for (int k = 1; k < kCoefficientCount; ++k, ++coefficients, ++b) {
+    for (uint32_t k = 1; k < kCoefficientCount; ++k, ++coefficients, ++b) {
       speed += *coefficients * *b;
     }
     return speed * kSpeedNormalization;
