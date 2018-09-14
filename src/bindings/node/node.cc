@@ -45,6 +45,7 @@ public:
     try {
       response = func(actor, request);
     } catch (const valhalla::valhalla_exception_t& e) {
+      actor.cleanup();
       rapidjson::StringBuffer err_message;
       rapidjson::Writer<rapidjson::StringBuffer> writer(err_message);
 
@@ -57,12 +58,20 @@ public:
       writer.String(e.message);
       writer.EndObject();
       throw std::runtime_error(err_message.GetString());
-    } catch (const std::exception& e) { throw std::runtime_error(e.what()); }
+    } catch (const std::exception& e) {
+      actor.cleanup();
+      throw std::runtime_error(e.what());
+    }
   }
 
   void OnOK() {
     Napi::HandleScope scope(Env());
     Callback().Call({Env().Undefined(), Napi::String::New(Env(), response)});
+  }
+
+  void OnError(const Napi::Error& e) {
+    Napi::Env env = Env();
+    Callback().MakeCallback(Receiver().Value(), {e.Value(), env.Undefined()});
   }
 
   valhalla::tyr::actor_t actor;
