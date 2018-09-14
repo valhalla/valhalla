@@ -35,6 +35,15 @@ uint32_t GetOperatorId(const GraphTile* tile,
   return 0;
 }
 
+// Get the timezone at the origin.
+int GetTimezone(GraphReader& graphreader, const GraphId& node) {
+  const GraphTile* tile = graphreader.GetGraphTile(node);
+  if (tile == nullptr) {
+    return -1;
+  }
+  return tile->node(node)->timezone();
+}
+
 } // namespace
 
 namespace valhalla {
@@ -45,8 +54,8 @@ constexpr uint32_t kInitialEdgeLabelCount = 500000;
 
 // Default constructor
 Isochrone::Isochrone()
-    : access_mode_(kAutoAccess), shape_interval_(50.0f), mode_(TravelMode::kDrive),
-      adjacencylist_(nullptr) {
+    : has_date_time_(false), seconds_of_week_(0), access_mode_(kAutoAccess), shape_interval_(50.0f),
+      mode_(TravelMode::kDrive), adjacencylist_(nullptr) {
 }
 
 // Destructor
@@ -194,7 +203,8 @@ void Isochrone::ExpandForward(GraphReader& graphreader,
                               const GraphId& node,
                               const EdgeLabel& pred,
                               const uint32_t pred_idx,
-                              const bool from_transition) {
+                              const bool from_transition,
+                              int32_t seconds_of_week) {
   // Get the tile and the node info. Skip if tile is null (can happen
   // with regional data sets) or if no access at the node.
   const GraphTile* tile = graphreader.GetGraphTile(node);
@@ -222,12 +232,12 @@ void Isochrone::ExpandForward(GraphReader& graphreader,
     // (unless this is called from a transition).
     if (directededge->trans_up()) {
       if (!from_transition) {
-        ExpandForward(graphreader, directededge->endnode(), pred, pred_idx, true);
+        ExpandForward(graphreader, directededge->endnode(), pred, pred_idx, true, seconds_of_week);
       }
       continue;
     } else if (directededge->trans_down()) {
       if (!from_transition) {
-        ExpandForward(graphreader, directededge->endnode(), pred, pred_idx, true);
+        ExpandForward(graphreader, directededge->endnode(), pred, pred_idx, true, seconds_of_week);
       }
       continue;
     }
@@ -244,7 +254,9 @@ void Isochrone::ExpandForward(GraphReader& graphreader,
     }
 
     // Compute the cost to the end of this edge
-    Cost newcost = pred.cost() + costing_->EdgeCost(directededge, tile->GetSpeed(directededge)) +
+    uint32_t speed = (has_date_time_) ? tile->GetSpeed(directededge, edgeid, seconds_of_week_)
+                                      : tile->GetSpeed(directededge);
+    Cost newcost = pred.cost() + costing_->EdgeCost(directededge, speed) +
                    costing_->TransitionCost(directededge, nodeinfo, pred);
 
     // Check if edge is temporarily labeled and this path has less cost. If
@@ -288,6 +300,24 @@ Isochrone::Compute(google::protobuf::RepeatedPtrField<valhalla::odin::Location>&
   // Set the origin locations
   SetOriginLocations(graphreader, origin_locations, costing_);
 
+  // Check if date_time is set on the origin location. Set the seconds_of_week if it is set
+  has_date_time_ = false;
+  const auto& origin = origin_locations.Get(0);
+  if (origin.has_date_time() && edgelabels_.size() > 0) {
+    // Set the origin timezone to be the timezone at the end node
+    int origin_tz_index_ = GetTimezone(graphreader, edgelabels_[0].endnode());
+
+    // Set route start time (seconds from epoch)
+    uint64_t start_time =
+        DateTime::seconds_since_epoch(origin.date_time(),
+                                      DateTime::get_tz_db().from_index(origin_tz_index_));
+
+    // Set seconds from beginning of the week
+    seconds_of_week_ = DateTime::day_of_week(origin.date_time()) * kSecondsPerDay +
+                       DateTime::seconds_from_midnight(origin.date_time());
+    has_date_time_ = true;
+  }
+
   // Compute the isotile
   uint32_t n = 0;
   while (true) {
@@ -302,8 +332,14 @@ Isochrone::Compute(google::protobuf::RepeatedPtrField<valhalla::odin::Location>&
     EdgeLabel pred = edgelabels_[predindex];
     edgestatus_.Update(pred.edgeid(), EdgeSet::kPermanent);
 
+    // Update seconds from beginning of the week
+    int32_t seconds_of_week = seconds_of_week_ + static_cast<uint32_t>(pred.cost().secs);
+    if (seconds_of_week > midgard::kSecondsPerWeek) {
+      seconds_of_week -= midgard::kSecondsPerWeek;
+    }
+
     // Expand from the end node in forward direction.
-    ExpandForward(graphreader, pred.endnode(), pred, predindex, false);
+    ExpandForward(graphreader, pred.endnode(), pred, predindex, false, seconds_of_week);
     n++;
 
     // Return after the time interval has been met
@@ -321,7 +357,8 @@ void Isochrone::ExpandReverse(GraphReader& graphreader,
                               const BDEdgeLabel& pred,
                               const uint32_t pred_idx,
                               const DirectedEdge* opp_pred_edge,
-                              const bool from_transition) {
+                              const bool from_transition,
+                              int32_t seconds_of_week) {
   // Get the tile and the node info. Skip if tile is null (can happen
   // with regional data sets) or if no access at the node.
   const GraphTile* tile = graphreader.GetGraphTile(node);
@@ -349,12 +386,14 @@ void Isochrone::ExpandReverse(GraphReader& graphreader,
     // unless this is called from a transition.
     if (directededge->trans_up()) {
       if (!from_transition) {
-        ExpandReverse(graphreader, directededge->endnode(), pred, pred_idx, opp_pred_edge, true);
+        ExpandReverse(graphreader, directededge->endnode(), pred, pred_idx, opp_pred_edge, true,
+                      seconds_of_week);
       }
       continue;
     } else if (directededge->trans_down()) {
       if (!from_transition) {
-        ExpandReverse(graphreader, directededge->endnode(), pred, pred_idx, opp_pred_edge, true);
+        ExpandReverse(graphreader, directededge->endnode(), pred, pred_idx, opp_pred_edge, true,
+                      seconds_of_week);
       }
       continue;
     }
@@ -427,8 +466,26 @@ std::shared_ptr<const GriddedData<PointLL>> Isochrone::ComputeReverse(
   InitializeReverse(costing_->UnitSize());
   ConstructIsoTile(false, max_minutes, dest_locations);
 
-  // Set the origin locations
+  // Set the locations (call them destinations - routing to them)
   SetDestinationLocations(graphreader, dest_locations, costing_);
+
+  // Check if date_time is set on the destination location. Set the seconds_of_week if it is set
+  has_date_time_ = false;
+  const auto& dest = dest_locations.Get(0);
+  if (dest.has_date_time() && bdedgelabels_.size() > 0) {
+    // Set the destination timezone to be the timezone at the end node
+    int dest_tz_index_ = GetTimezone(graphreader, bdedgelabels_[0].endnode());
+
+    // Set route start time (seconds from epoch)
+    uint64_t start_time =
+        DateTime::seconds_since_epoch(dest.date_time(),
+                                      DateTime::get_tz_db().from_index(dest_tz_index_));
+
+    // Set seconds from beginning of the week
+    seconds_of_week_ = DateTime::day_of_week(dest.date_time()) * kSecondsPerDay +
+                       DateTime::seconds_from_midnight(dest.date_time());
+    has_date_time_ = true;
+  }
 
   // Compute the isotile
   uint32_t n = 0;
@@ -449,8 +506,13 @@ std::shared_ptr<const GriddedData<PointLL>> Isochrone::ComputeReverse(
     const DirectedEdge* opp_pred_edge =
         graphreader.GetGraphTile(pred.opp_edgeid())->directededge(pred.opp_edgeid());
 
+    // Update seconds from beginning of the week
+    int32_t seconds_of_week = DateTime::normalize_seconds_of_week(
+        seconds_of_week_ - static_cast<uint32_t>(pred.cost().secs));
+
     // Expand from the end node in forward direction.
-    ExpandReverse(graphreader, pred.endnode(), pred, predindex, opp_pred_edge, false);
+    ExpandReverse(graphreader, pred.endnode(), pred, predindex, opp_pred_edge, false,
+                  seconds_of_week);
     n++;
 
     // Return after the time interval has been met

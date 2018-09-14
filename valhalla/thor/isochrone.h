@@ -91,9 +91,11 @@ public:
                     const sif::TravelMode mode);
 
 protected:
-  float shape_interval_; // Interval along shape to mark time
-  sif::TravelMode mode_; // Current travel mode
-  uint32_t access_mode_; // Access mode used by the costing method
+  bool has_date_time_;
+  uint32_t seconds_of_week_; // Seconds of week (for isochrones using predicted speeds)
+  float shape_interval_;     // Interval along shape to mark time
+  sif::TravelMode mode_;     // Current travel mode
+  uint32_t access_mode_;     // Access mode used by the costing method
 
   // Current costing mode
   std::shared_ptr<sif::DynamicCost> costing_;
@@ -147,22 +149,36 @@ protected:
 
   /**
    * Expand from the node along the forward search path.
+   * @param graphreader  Graph reader.
+   * @param node Graph Id of the node to expand.
+   * @param pred Edge label of the predecessor edge leading to the node.
+   * @param pred_idx Index in the edge label list of the predecessor edge.
+   * @param from_transition Boolean indicating if this expansion is from a transition edge.
+   * @param seconds_of_week For time dependent isochrones this allows lookup of predicted traffic.
    */
   void ExpandForward(baldr::GraphReader& graphreader,
                      const baldr::GraphId& node,
                      const sif::EdgeLabel& pred,
                      const uint32_t pred_idx,
-                     const bool from_transition);
+                     const bool from_transition,
+                     int32_t seconds_of_week);
 
   /**
    * Expand from the node along the reverse search path.
+   * @param graphreader  Graph reader.
+   * @param node Graph Id of the node to expand.
+   * @param pred Edge label of the predecessor edge leading to the node.
+   * @param pred_idx Index in the edge label list of the predecessor edge.
+   * @param from_transition Boolean indicating if this expansion is from a transition edge.
+   * @param seconds_of_week For time dependent isochrones this allows lookup of predicted traffic.
    */
   void ExpandReverse(baldr::GraphReader& graphreader,
                      const baldr::GraphId& node,
                      const sif::BDEdgeLabel& pred,
                      const uint32_t pred_idx,
                      const baldr::DirectedEdge* opp_pred_edge,
-                     const bool from_transition);
+                     const bool from_transition,
+                     int32_t seconds_of_week);
 
   /**
    * Updates the isotile using the edge information from the predecessor edge

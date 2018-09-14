@@ -81,9 +81,6 @@ int main(int argc, char* argv[]) {
     return EXIT_FAILURE;
   }
 
-  // Isochrone parameters (TODO - later we should test reverse in the interface)
-  bool reverse = false;
-
   // Process json request
   valhalla::valhalla_request_t request;
   request.parse(json, valhalla::odin::DirectionsOptions::isochrone);
@@ -106,6 +103,12 @@ int main(int argc, char* argv[]) {
 
   // Show locations
   bool show_locations = request.options.show_locations();
+
+  // reverse (arrive-by) isochrone - trigger if date time type is arrive by
+  // TODO - is this how we want to expose in the service? only support reverse
+  // for time dependent isochrones? or do we also want a flag to support for
+  // general case with no time?
+  bool reverse = request.options.date_time_type() == valhalla::odin::DirectionsOptions::arrive_by;
 
   // Get Contours
   std::unordered_map<float, std::string> colors{};
