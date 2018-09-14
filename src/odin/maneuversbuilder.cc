@@ -1187,8 +1187,8 @@ void ManeuversBuilder::SetManeuverType(Maneuver& maneuver, bool none_type_allowe
         break;
       }
       default: {
-        LOG_INFO(std::string("EXIT RelativeDirection=") +
-                 std::to_string(static_cast<int>(maneuver.begin_relative_direction())));
+        LOG_TRACE(std::string("EXIT RelativeDirection=") +
+                  std::to_string(static_cast<int>(maneuver.begin_relative_direction())));
         // TODO: determine how to handle, for now set to right
         maneuver.set_type(TripDirections_Maneuver_Type_kExitRight);
         LOG_TRACE("ManeuverType=EXIT_RIGHT");
@@ -1216,8 +1216,8 @@ void ManeuversBuilder::SetManeuverType(Maneuver& maneuver, bool none_type_allowe
         break;
       }
       default: {
-        LOG_INFO(std::string("RAMP RelativeDirection=") +
-                 std::to_string(static_cast<int>(maneuver.begin_relative_direction())));
+        LOG_TRACE(std::string("RAMP RelativeDirection=") +
+                  std::to_string(static_cast<int>(maneuver.begin_relative_direction())));
         // TODO: determine how to handle, for now set to right
         maneuver.set_type(TripDirections_Maneuver_Type_kRampRight);
         LOG_TRACE("ManeuverType=RAMP_RIGHT");
