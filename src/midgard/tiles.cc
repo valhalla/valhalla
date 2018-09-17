@@ -192,7 +192,7 @@ template <class coord_t> std::vector<int> Tiles<coord_t>::TileList(const AABB2<c
   }
 
   std::vector<int32_t> tilelist;
-  for (auto bb : bboxes) {
+  for (const auto& bb : bboxes) {
     int32_t minrow = std::max(Row(bb.miny()), 0);
     int32_t maxrow = std::max(Row(bb.maxy()), 0);
     int32_t mincol = std::max(Col(bb.minx()), 0);

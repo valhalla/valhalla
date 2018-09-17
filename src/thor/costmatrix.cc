@@ -232,7 +232,7 @@ void CostMatrix::Initialize(
 // Iterate the forward search from the source/origin location.
 void CostMatrix::ForwardSearch(const uint32_t index, const uint32_t n, GraphReader& graphreader) {
   // Get the next edge from the adjacency list for this source location
-  auto adj = source_adjacency_[index];
+  auto& adj = source_adjacency_[index];
   auto& edgelabels = source_edgelabel_[index];
   uint32_t pred_idx = adj->pop();
   if (pred_idx == kInvalidLabel) {
@@ -493,7 +493,7 @@ void CostMatrix::UpdateStatus(const uint32_t source, const uint32_t target) {
 // Expand the backwards search trees.
 void CostMatrix::BackwardSearch(const uint32_t index, GraphReader& graphreader) {
   // Get the next edge from the adjacency list for this target location
-  auto adj = target_adjacency_[index];
+  auto& adj = target_adjacency_[index];
   auto& edgelabels = target_edgelabel_[index];
   uint32_t pred_idx = adj->pop();
   if (pred_idx == kInvalidLabel) {
