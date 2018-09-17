@@ -19,6 +19,49 @@ constexpr float k1OverSqrt2 = 0.707106781f; // 1 / sqrt(2)
 constexpr float kPiBucketConstant = 3.14159265f / 2016.0f;
 constexpr float kSpeedNormalization = 0.031497039f; // sqrt(2.0f / 2016.0f);
 
+// Size of the cos table for the buckets
+constexpr uint32_t kCosBucketTableSize = kCoefficientCount * kBucketsPerWeek;
+
+// Precompute a cos table for each bucket of the week as a singleton.
+class BucketCosTable final {
+public:
+  static BucketCosTable& GetInstance() {
+    static BucketCosTable instance;
+    return instance;
+  }
+
+  /**
+   * Get a const pointer to the start of the stored cos values for the specified
+   * bucket.
+   * @param bucket  Bucket of the week.
+   * @return Returns a pointer to the first cos value for the bucket.
+   */
+  const float* get(const uint32_t bucket) const {
+    return &table_[bucket * kCoefficientCount];
+  }
+
+private:
+  // Construct the cos table
+  BucketCosTable() {
+    // Fill out the table in bucket order.
+    float* t = &table_[0];
+    for (uint32_t bucket = 0; bucket < kBucketsPerWeek; ++bucket) {
+      for (uint32_t c = 0; c < kCoefficientCount; ++c) {
+        *t++ = cosf(kPiBucketConstant * (bucket + 0.5f) * c);
+      }
+    }
+  }
+
+  ~BucketCosTable() = default;
+  BucketCosTable(const BucketCosTable&) = delete;
+  BucketCosTable& operator=(const BucketCosTable&) = delete;
+  BucketCosTable(BucketCosTable&&) = delete;
+  BucketCosTable& operator=(BucketCosTable&&) = delete;
+
+  // cos table (this uses about 1.6MB of memory)
+  float table_[kCosBucketTableSize];
+};
+
 /**
  * Class to access predicted speed information within a tile.
  */
@@ -59,21 +102,22 @@ public:
     // to DirectedEdge::predicted_speed being false.
     const int16_t* coefficients = profiles_ + offset_[idx];
 
-    // Compute the time bucket
-    int bucket = (seconds_of_week / kSpeedBucketSizeSeconds);
+    // Get a pointer to the precomputed cos values for this bucket
+    const float* b = BucketCosTable::GetInstance().get(seconds_of_week / kSpeedBucketSizeSeconds);
 
     // DTC-III with speed normalization
-    float b = kPiBucketConstant * (bucket + 0.5f);
-    float speed = coefficients[0] * k1OverSqrt2;
-    for (int k = 1; k < kCoefficientCount; k++) {
-      speed += coefficients[k] * cosf(b * k);
+    float speed = *coefficients * k1OverSqrt2;
+    ++coefficients;
+    ++b;
+    for (uint32_t k = 1; k < kCoefficientCount; ++k, ++coefficients, ++b) {
+      speed += *coefficients * *b;
     }
     return speed * kSpeedNormalization;
   }
 
 protected:
-  const uint32_t*
-      offset_; // Offset into the array of compressed speed profiles for each directed edge
+  const uint32_t* offset_;  // Offset into the array of compressed speed profiles
+                            // for each directed edge
   const int16_t* profiles_; // Compressed speed profiles
 };
 

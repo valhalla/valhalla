@@ -1,5 +1,3 @@
-#include "baldr/rapidjson_utils.h"
-#include <boost/format.hpp>
 #include <boost/optional.hpp>
 #include <boost/program_options.hpp>
 #include <boost/property_tree/ptree.hpp>
@@ -7,33 +5,22 @@
 #include <cstdint>
 #include <fstream>
 #include <iostream>
-#include <queue>
 #include <string>
-#include <tuple>
 #include <vector>
 
 #include "baldr/graphreader.h"
 #include "baldr/pathlocation.h"
 #include "loki/search.h"
-#include "midgard/distanceapproximator.h"
 #include "midgard/logging.h"
-#include "odin/directionsbuilder.h"
-#include "odin/util.h"
 #include "sif/costfactory.h"
-#include "thor/bidirectional_astar.h"
 #include "thor/isochrone.h"
-#include "thor/pathalgorithm.h"
-#include "thor/trippathbuilder.h"
 #include "tyr/serializers.h"
 #include "worker.h"
 
 #include <valhalla/proto/directions_options.pb.h>
-#include <valhalla/proto/tripdirections.pb.h>
-#include <valhalla/proto/trippath.pb.h>
 
 #include "config.h"
 
-using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 using namespace valhalla::loki;
 using namespace valhalla::sif;
@@ -53,13 +40,7 @@ int main(int argc, char* argv[]) {
       "Use the -j option for specifying the location and isocrhone options "
       "\n"
       "\n");
-
-  bool reverse = false, polygons = false, show_locations = false;
-  size_t n_contours = 4;
-  unsigned int max_minutes = 60;
   std::string json, config, filename;
-  float denoise = 1.f;
-  float generalize = kOptimalGeneralization;
   options.add_options()("help,h", "Print this help message.")("version,v",
                                                               "Print the version of this software.")(
       "json,j", boost::program_options::value<std::string>(&json),
@@ -85,75 +66,70 @@ int main(int argc, char* argv[]) {
     return EXIT_FAILURE;
   }
 
+  // Verify args. Make sure JSON payload exists.
   if (vm.count("help")) {
     std::cout << options << "\n";
     return EXIT_SUCCESS;
   }
-
   if (vm.count("version")) {
     std::cout << "valhalla_run_isochrone " << VALHALLA_VERSION << "\n";
     return EXIT_SUCCESS;
   }
-
-  // Verify JSON request exists.
-  boost::property_tree::ptree json_ptree;
   if (vm.count("json") == 0) {
     std::cerr << "A JSON format request must be present."
               << "\n";
     return EXIT_FAILURE;
   }
 
-  // Isochrone parameters
-  std::unordered_map<float, std::string> colors{};
-  std::vector<float> contour_times;
+  // Isochrone parameters (TODO - later we should test reverse in the interface)
+  bool reverse = false;
 
-  // Process json input
+  // Process json request
   valhalla::valhalla_request_t request;
   request.parse(json, valhalla::odin::DirectionsOptions::isochrone);
 
-  std::stringstream stream;
-  stream << json;
-  rapidjson::read_json(stream, json_ptree);
-
-  if (vm.count("minutes")) {
-    LOG_WARN("minutes parameter is being overwritten by JSON contours");
+  // Get the denoise parameter
+  float denoise = request.options.denoise();
+  if (denoise < 0.f || denoise > 1.f) {
+    denoise = std::max(std::min(denoise, 1.f), 0.f);
+    LOG_WARN("denoise parameter was out of range. Being clamped to " + std::to_string(denoise));
   }
-
-  if (vm.count("ncontours")) {
-    LOG_WARN("ncontours parameter is being overwritten by JSON contours");
-  }
-
-  // Get denoise parameter
-  try {
-    denoise = json_ptree.get<float>("denoise");
-    if (vm.count("denoise")) {
-      LOG_WARN("denoise parameter is being overwritten by JSON denoise parameter");
-    }
-  } catch (...) {}
 
   // Get generalize parameter
-  try {
-    generalize = json_ptree.get<float>("generalize");
-    if (vm.count("generalize")) {
-      LOG_WARN("generalize parameter is being overwritten by JSON generalize parameter");
-    }
-  } catch (...) {}
+  float generalize = kOptimalGeneralization;
+  if (request.options.has_generalize()) {
+    generalize = request.options.generalize();
+  }
 
-  // Get polygons
-  try {
-    polygons = json_ptree.get<bool>("polygons");
-    if (vm.count("polygons")) {
-      LOG_WARN("polygons parameter is being overwritten by JSON polygons parameter");
-    }
-  } catch (...) {}
+  // Get the polygons parameters
+  bool polygons = request.options.polygons();
 
-  // Get show_locations
-  try {
-    show_locations = json_ptree.get<bool>("show_locations");
-    if (vm.count("show_locations")) {
-      LOG_WARN("show_locations parameter is being overwritten by JSON show_locations parameter");
-    }
-  } catch (...) {}
+  // Show locations
+  bool show_locations = request.options.show_locations();
+
+  // Get Contours
+  std::unordered_map<float, std::string> colors{};
+  std::vector<float> contour_times;
+  if (request.options.contours_size() == 0) {
+    throw std::runtime_error("Contours failed to parse. JSON requires a contours object");
+  }
+  for (const auto& contour : request.options.contours()) {
+    contour_times.push_back(contour.time());
+    colors[contour_times.back()] = contour.color();
+  }
+
+  // Process locations
+  auto locations = PathLocation::fromPBF(request.options.locations());
+  if (locations.size() != 1) {
+    // TODO - for now just 1 location - maybe later allow multiple?
+    throw std::runtime_error("Requires a single location");
+  }
+
+  // Process avoid locations
+  auto avoid_locations = PathLocation::fromPBF(request.options.avoid_locations());
+  if (avoid_locations.size() == 0) {
+    LOG_INFO("No avoid locations");
+  }
 
   // parse the config
   boost::property_tree::ptree pt;
@@ -171,31 +147,6 @@ int main(int argc, char* argv[]) {
 
   // Get something we can use to fetch tiles
   valhalla::baldr::GraphReader reader(pt.get_child("mjolnir"));
-
-  // Grab the directions options, if they exist
-  request.parse(json, valhalla::odin::DirectionsOptions::route);
-
-  // Process locations
-  auto locations = PathLocation::fromPBF(request.options.locations());
-  if (locations.size() == 1) {
-    // TODO - for now just 1 location - maybe later allow multiple?
-    throw std::runtime_error("Requires a single location");
-  }
-
-  // Process avoid locations
-  auto avoid_locations = PathLocation::fromPBF(request.options.avoid_locations());
-  if (avoid_locations.size() == 0) {
-    LOG_INFO("No avoid locations");
-  }
-
-  // Get Contours
-  if (request.options.contours_size() == 0) {
-    throw std::runtime_error("Contours failed to parse. JSON requires a contours object");
-  }
-  for (const auto& contour : request.options.contours()) {
-    contour_times.push_back(contour.time());
-    colors[contour_times.back()] = contour.color();
-  }
 
   // Construct costing
   CostFactory<DynamicCost> factory;
@@ -275,6 +226,7 @@ int main(int argc, char* argv[]) {
 
   // Evaluate the min, max rows and columns that are set
   int nv = 0;
+  uint32_t max_minutes = contour_times.back();
   int32_t min_row = isotile->nrows();
   int32_t max_row = 0;
   int32_t min_col = isotile->ncolumns();
@@ -299,19 +251,21 @@ int main(int argc, char* argv[]) {
   LOG_INFO("Cols = " + std::to_string(isotile->ncolumns()) + " min = " + std::to_string(min_col) +
            " max = " + std::to_string(max_col));
 
-  if (denoise < 0.f || denoise > 1.f) {
-    denoise = std::max(std::min(denoise, 1.f), 0.f);
-    LOG_WARN("denoise parameter was out of range. Being clamped to " + std::to_string(denoise));
-  }
+  // Generate contours
+  t2 = std::chrono::high_resolution_clock::now();
   auto contours = isotile->GenerateContours(contour_times, polygons, denoise, generalize);
-
-  std::string geojson = valhalla::tyr::serializeIsochrones<PointLL>(request, contours, polygons,
-                                                                    colors, show_locations);
-
   auto t3 = std::chrono::high_resolution_clock::now();
   msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t3 - t2).count();
   LOG_INFO("Contour Generation took " + std::to_string(msecs) + " ms");
-  msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t3 - t1).count();
+
+  // Serialize to GeoJSON
+  std::string geojson = valhalla::tyr::serializeIsochrones<PointLL>(request, contours, polygons,
+                                                                    colors, show_locations);
+
+  auto t4 = std::chrono::high_resolution_clock::now();
+  msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t4 - t3).count();
+  LOG_INFO("GeoJSON serialization took " + std::to_string(msecs) + " ms");
+  msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t4 - t1).count();
   LOG_INFO("Isochrone took " + std::to_string(msecs) + " ms");
 
   std::cout << std::endl;
@@ -322,6 +276,5 @@ int main(int argc, char* argv[]) {
   } else {
     std::cout << geojson << std::endl;
   }
-
   return EXIT_SUCCESS;
 }

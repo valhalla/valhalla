@@ -46,10 +46,14 @@ constexpr double kMilePerMeter = 0.000621371;
 namespace valhalla {
 namespace thor {
 
-thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config)
-    : mode(valhalla::sif::TravelMode::kPedestrian), matcher_factory(config),
-      reader(matcher_factory.graphreader()),
-      long_request(config.get<float>("thor.logging.long_request")) {
+thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config,
+                             const std::shared_ptr<baldr::GraphReader>& graph_reader)
+    : mode(valhalla::sif::TravelMode::kPedestrian), matcher_factory(config, graph_reader),
+      reader(graph_reader), long_request(config.get<float>("thor.logging.long_request")) {
+  // If we weren't provided with a graph reader make our own
+  if (!reader)
+    reader = matcher_factory.graphreader();
+
   // Register standard edge/node costing methods
   factory.RegisterStandardCostingModels();
 
@@ -315,8 +319,8 @@ void thor_worker_t::cleanup() {
   trace.clear();
   isochrone_gen.Clear();
   matcher_factory.ClearFullCache();
-  if (reader.OverCommitted()) {
-    reader.Clear();
+  if (reader->OverCommitted()) {
+    reader->Clear();
   }
 }
 

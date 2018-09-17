@@ -26,6 +26,13 @@ namespace thor {
 // route starts to become suspect (due to user breaks and other factors).
 constexpr float kMaxTimeDependentDistance = 500000.0f; // 500 km
 
+// Threshold for running a second pass pedestrian route with adjusted A*. The first
+// pass for pedestrian routes is run with an aggressive A* threshold based on walking
+// speed. If ferries are included in the path the A* heuristic rules can be violated
+// which can lead to irregular paths. Running a second pass with less aggressive
+// A* can take excessive time for longer paths - so exclude them to protect the service.
+constexpr float kPedestrianMultipassThreshold = 50000.0f; // 50km
+
 std::list<valhalla::odin::TripPath> thor_worker_t::route(valhalla_request_t& request) {
   parse_locations(request);
   auto costing = parse_costing(request);
@@ -92,34 +99,47 @@ std::vector<thor::PathInfo> thor_worker_t::get_path(PathAlgorithm* path_algorith
                                                     odin::Location& origin,
                                                     odin::Location& destination,
                                                     const std::string& costing) {
-  // Find the path. If bidirectional A* disable use of destination only
-  // edges on the first pass. If there is a failure, we allow them on the
-  // second pass.
+  // Find the path. If bidirectional A* disable use of destination only edges on the
+  // first pass. If there is a failure, we allow them on the second pass.
   valhalla::sif::cost_ptr_t cost = mode_costing[static_cast<uint32_t>(mode)];
   if (path_algorithm == &bidir_astar) {
     cost->set_allow_destination_only(false);
   }
   cost->set_pass(0);
-  auto path = path_algorithm->GetBestPath(origin, destination, reader, mode_costing, mode);
+  auto path = path_algorithm->GetBestPath(origin, destination, *reader, mode_costing, mode);
 
-  // If path is not found try again with relaxed limits (if allowed)
-  if (path.empty() || (costing == "pedestrian" && path_algorithm->has_ferry())) {
-    if (cost->AllowMultiPass()) {
-      // 2nd pass. Less aggressive hierarchy transitioning, and retry with more candidate
-      // edges(filterd by heading in loki).
+  // Check if we should run a second pass pedestrian route with different A*
+  // (to look for better routes where a ferry is taken)
+  bool ped_second_pass = false;
+  if (!path.empty() && (costing == "pedestrian" && path_algorithm->has_ferry())) {
+    // DO NOT run a second pass on long routes due to performance issues
+    float d = PointLL(origin.ll().lng(), origin.ll().lat())
+                  .Distance(PointLL(destination.ll().lng(), destination.ll().lat()));
+    if (d < kPedestrianMultipassThreshold) {
+      ped_second_pass = true;
+    }
+  }
 
-      // add filtered edges to candidate edges for origin and destination
-      origin.mutable_path_edges()->MergeFrom(origin.filtered_edges());
-      destination.mutable_path_edges()->MergeFrom(destination.filtered_edges());
+  // If path is not found try again with relaxed limits (if allowed). Use less aggressive
+  // hierarchy transition limits, and retry with more candidate edges (add those filtered
+  // by heading on first pass).
+  if ((path.empty() || ped_second_pass) && cost->AllowMultiPass()) {
+    // add filtered edges to candidate edges for origin and destination
+    origin.mutable_path_edges()->MergeFrom(origin.filtered_edges());
+    destination.mutable_path_edges()->MergeFrom(destination.filtered_edges());
 
-      path_algorithm->Clear();
-      cost->set_pass(1);
-      bool using_astar = (path_algorithm == &astar);
-      float relax_factor = using_astar ? 16.0f : 8.0f;
-      float expansion_within_factor = using_astar ? 4.0f : 2.0f;
-      cost->RelaxHierarchyLimits(relax_factor, expansion_within_factor);
-      cost->set_allow_destination_only(true);
-      path = path_algorithm->GetBestPath(origin, destination, reader, mode_costing, mode);
+    path_algorithm->Clear();
+    cost->set_pass(1);
+    bool using_astar = (path_algorithm == &astar);
+    float relax_factor = using_astar ? 16.0f : 8.0f;
+    float expansion_within_factor = using_astar ? 4.0f : 2.0f;
+    cost->RelaxHierarchyLimits(relax_factor, expansion_within_factor);
+    cost->set_allow_destination_only(true);
+
+    // Get the best path. Return if not empty (else return the original path)
+    auto path2 = path_algorithm->GetBestPath(origin, destination, *reader, mode_costing, mode);
+    if (!path2.empty()) {
+      return path2;
     }
   }
 
@@ -184,7 +204,7 @@ std::list<valhalla::odin::TripPath> thor_worker_t::path_arrive_by(
       AttributesController controller;
 
       // Form output information based on path edges
-      auto trip_path = thor::TripPathBuilder::Build(controller, reader, mode_costing, path, *origin,
+      auto trip_path = thor::TripPathBuilder::Build(controller, *reader, mode_costing, path, *origin,
                                                     *destination, throughs, interrupt);
       path.clear();
 
@@ -253,7 +273,7 @@ std::list<valhalla::odin::TripPath> thor_worker_t::path_depart_at(
       AttributesController controller;
 
       // Form output information based on path edges
-      auto trip_path = thor::TripPathBuilder::Build(controller, reader, mode_costing, path, *origin,
+      auto trip_path = thor::TripPathBuilder::Build(controller, *reader, mode_costing, path, *origin,
                                                     *destination, throughs, interrupt);
       path.clear();
 

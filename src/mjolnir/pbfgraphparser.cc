@@ -23,7 +23,7 @@
 #include "midgard/polyline2.h"
 #include "midgard/sequence.h"
 #include "midgard/tiles.h"
-#include "mjolnir/servicedays.h"
+#include "mjolnir/timeparsing.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;

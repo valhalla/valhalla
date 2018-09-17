@@ -831,47 +831,68 @@ void Isochrone::UpdateIsoTile(const EdgeLabel& pred,
   // TODO - do we need partial shape from origin location to end of edge?
   float secs1 = pred.cost().secs;
 
-  // Avoid getting the shape for short edges
-  if (edge->length() < shape_interval_) {
-    // Mark the cell at the begin node
-    const auto* de = t2->directededge(opp);
-    const auto* node = tile->node(de->endnode());
-    isotile_->SetIfLessThan(node->latlng(), secs0 * kMinPerSec);
-
-    // Mark the cell at the end node (and any intervening cells)
-    auto tiles = isotile_->Intersect(std::list<PointLL>{node->latlng(), ll});
-    for (auto t : tiles) {
-      isotile_->SetIfLessThan(t.first, secs1 * kMinPerSec);
+  // For short edges just mark the segment between the 2 nodes of the edge. This
+  // avoid getting the shape for short edges.
+  if (edge->length() < shape_interval_ * 1.5f) {
+    // Mark tiles that intersect the segment. Optimize this to avoid calling the Intersect
+    // method unless more than 2 tiles are crossed by the segment.
+    PointLL ll0 = tile->node(t2->directededge(opp)->endnode())->latlng();
+    auto tile1 = isotile_->TileId(ll0);
+    auto tile2 = isotile_->TileId(ll);
+    if (tile1 == tile2) {
+      isotile_->SetIfLessThan(tile1, secs1 * kMinPerSec);
+    } else if (isotile_->AreNeighbors(tile1, tile2)) {
+      // If tile 2 is directly east, west, north, or south of tile 1 then the
+      // segment will not intersect any other tiles other than tile1 and tile2.
+      isotile_->SetIfLessThan(tile1, secs1 * kMinPerSec);
+      isotile_->SetIfLessThan(tile2, secs1 * kMinPerSec);
+    } else {
+      // Find intersecting tiles (using a Bresenham method)
+      auto tiles = isotile_->Intersect(std::list<PointLL>{ll0, ll});
+      for (auto t : tiles) {
+        isotile_->SetIfLessThan(t.first, secs1 * kMinPerSec);
+      }
     }
     return;
   }
 
   // Get the shape and make sure shape is forward direction. Resample it to
-  // the shape interval.
+  // the shape interval to get regular spacing. Use the faster resample method.
+  // This does not use spherical interpolation - so it is not as accurate but
+  // interpolation is over short distances so accuracy should be fine.
   auto shape = tile->edgeinfo(edge->edgeinfo_offset()).shape();
+  auto resampled = resample_polyline(shape, edge->length(), shape_interval_);
   if (!edge->forward()) {
-    std::reverse(shape.begin(), shape.end());
-  }
-  auto resampled = resample_spherical_polyline(shape, shape_interval_);
-
-  // Mark the initial grid cell and iterate through the shape pairs
-  float secs = secs0;
-  isotile_->SetIfLessThan(shape.front(), secs * kMinPerSec);
-  auto tiles = isotile_->Intersect(std::list<PointLL>{shape.front(), shape.back()});
-  for (auto t : tiles) {
-    isotile_->SetIfLessThan(t.first, secs * kMinPerSec);
+    std::reverse(resampled.begin(), resampled.end());
   }
 
   // Mark grid cells along the shape if time is less than what is
   // already populated. Get intersection of tiles along each segment
-  // so this doesn't miss shape that crosses tile corners
-  float delta = (shape_interval_ * (secs1 - secs0)) / edge->length();
+  // (just use a bounding box around the segment) so this doesn't miss
+  // shape that crosses tile corners
+  float minutes = secs0 * kMinPerSec;
+  float delta = ((secs1 - secs0) / (resampled.size() - 1)) * kMinPerSec;
   auto itr1 = resampled.begin();
   for (auto itr2 = itr1 + 1; itr2 < resampled.end(); itr1++, itr2++) {
-    secs += delta;
-    auto tiles = isotile_->Intersect(std::list<PointLL>{*itr1, *itr2});
-    for (auto t : tiles) {
-      isotile_->SetIfLessThan(t.first, secs * kMinPerSec);
+    minutes += delta;
+
+    // Mark tiles that intersect the segment. Optimize this to avoid calling the Intersect
+    // method unless more than 2 tiles are crossed by the segment.
+    auto tile1 = isotile_->TileId(*itr1);
+    auto tile2 = isotile_->TileId(*itr2);
+    if (tile1 == tile2) {
+      isotile_->SetIfLessThan(tile1, minutes);
+    } else if (isotile_->AreNeighbors(tile1, tile2)) {
+      // If tile 2 is directly east, west, north, or south of tile 1 then the
+      // segment will not intersect any other tiles other than tile1 and tile2.
+      isotile_->SetIfLessThan(tile1, minutes);
+      isotile_->SetIfLessThan(tile2, minutes);
+    } else {
+      // Find intersecting tiles (using a Bresenham method)
+      auto tiles = isotile_->Intersect(std::list<PointLL>{*itr1, *itr2});
+      for (auto t : tiles) {
+        isotile_->SetIfLessThan(t.first, minutes);
+      }
     }
   }
 }

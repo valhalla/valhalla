@@ -20,16 +20,17 @@ namespace meili {
 
 class MapMatcherFactory final {
 public:
-  MapMatcherFactory(const boost::property_tree::ptree& root);
+  MapMatcherFactory(const boost::property_tree::ptree& root,
+                    const std::shared_ptr<baldr::GraphReader>& graph_reader = {});
 
   ~MapMatcherFactory();
 
-  baldr::GraphReader& graphreader() {
+  std::shared_ptr<baldr::GraphReader>& graphreader() {
     return graphreader_;
   }
 
   CandidateQuery& candidatequery() {
-    return candidatequery_;
+    return *candidatequery_;
   }
 
   MapMatcher* Create(const odin::Costing costing, const odin::DirectionsOptions& options);
@@ -53,13 +54,13 @@ private:
 
   boost::property_tree::ptree config_;
 
-  baldr::GraphReader graphreader_;
+  std::shared_ptr<baldr::GraphReader> graphreader_;
 
   valhalla::sif::cost_ptr_t mode_costing_[kModeCostingCount];
 
   sif::CostFactory<sif::DynamicCost> cost_factory_;
 
-  CandidateGridQuery candidatequery_;
+  std::shared_ptr<CandidateGridQuery> candidatequery_;
 
   float max_grid_cache_size_;
 };

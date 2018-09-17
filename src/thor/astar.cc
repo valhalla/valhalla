@@ -16,6 +16,9 @@ namespace thor {
 
 constexpr uint64_t kInitialEdgeLabelCount = 500000;
 
+// Number of iterations to allow with no convergence to the destination
+constexpr uint32_t kMaxIterationsWithoutConvergence = 200000;
+
 // Default constructor
 AStarPathAlgorithm::AStarPathAlgorithm()
     : PathAlgorithm(), mode_(TravelMode::kDrive), travel_type_(0), adjacencylist_(nullptr),
@@ -315,7 +318,7 @@ AStarPathAlgorithm::GetBestPath(odin::Location& origin,
     if (dist2dest < mindist) {
       mindist = dist2dest;
       nc = 0;
-    } else if (nc++ > 50000) {
+    } else if (nc++ > kMaxIterationsWithoutConvergence) {
       if (best_path.first >= 0) {
         return FormPath(best_path.first);
       } else {

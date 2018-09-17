@@ -94,23 +94,46 @@ public:
    * so a specific point stays centered in the grid.
    * @param  shift  Amount to shift the bounding box.
    */
-  void ShiftTileBounds(const coord_t& shift);
+  void ShiftTileBounds(const coord_t& shift) {
+    tilebounds_ = AABB2<coord_t>(tilebounds_.minx() - shift.first, tilebounds_.miny() - shift.second,
+                                 tilebounds_.maxx() - shift.first, tilebounds_.maxy() - shift.second);
+  }
 
   /**
    * Get the "row" based on y.
    * @param   y   y coordinate
-   * @return  Returns the tile row. Returns -1 if outside the
-   *          tile system bounds.
+   * @return  Returns the tile row. Returns -1 if outside the tile system bounds.
    */
-  int32_t Row(const float y) const;
+  int32_t Row(const float y) const {
+    // Return -1 if outside the tile system bounds
+    if (y < tilebounds_.miny() || y > tilebounds_.maxy()) {
+      return -1;
+    }
+
+    // If equal to the max y return the largest row
+    return (y == tilebounds_.maxy()) ? nrows_ - 1
+                                     : static_cast<int32_t>((y - tilebounds_.miny()) / tilesize_);
+  }
 
   /**
    * Get the "column" based on x.
    * @param   x   x coordinate
-   * @return  Returns the tile column. Returns -1 if outside the
-   *          tile system bounds.
+   * @return  Returns the tile column. Returns -1 if outside the tile system bounds.
    */
-  int32_t Col(const float x) const;
+  int32_t Col(const float x) const {
+    // Return -1 if outside the tile system bounds
+    if (x < tilebounds_.minx() || x > tilebounds_.maxx()) {
+      return -1;
+    }
+
+    // If equal to the max x return the largest column
+    if (x == tilebounds_.maxx()) {
+      return ncolumns_ - 1;
+    } else {
+      float col = (x - tilebounds_.minx()) / tilesize_;
+      return (col >= 0.0) ? static_cast<int32_t>(col) : static_cast<int32_t>(col - 1);
+    }
+  }
 
   /**
    * Convert a coordinate into a tile Id. The point is within the tile.
@@ -129,7 +152,16 @@ public:
    * @return  Returns the tile Id. -1 (error is returned if the x,y is
    *          outside the bounding box of the tiling sytem).
    */
-  int32_t TileId(const float y, const float x) const;
+  int32_t TileId(const float y, const float x) const {
+    // Return -1 if totally outside the extent.
+    if (y < tilebounds_.miny() || x < tilebounds_.minx() || y > tilebounds_.maxy() ||
+        x > tilebounds_.maxx()) {
+      return -1;
+    }
+
+    // Find the tileid by finding the latitude row and longitude column
+    return (Row(y) * ncolumns_) + Col(x);
+  }
 
   /**
    * Get the tile Id given the row Id and column Id.
@@ -156,21 +188,32 @@ public:
    * @param tile_size   the size of a tile within the region
    * @return the highest tile number within the region
    */
-  static uint32_t MaxTileId(const AABB2<coord_t>& bounds, const float tile_size);
+  static uint32_t MaxTileId(const AABB2<coord_t>& bounds, const float tile_size) {
+    uint32_t cols = static_cast<uint32_t>(std::ceil(bounds.Width() / tile_size));
+    uint32_t rows = static_cast<uint32_t>(std::ceil(bounds.Height() / tile_size));
+    return (cols * rows) - 1;
+  }
 
   /**
    * Get the base x,y of a specified tile.
    * @param   tileid   Tile Id.
    * @return  The base x,y of the specified tile.
    */
-  coord_t Base(const int32_t tileid) const;
+  coord_t Base(const int32_t tileid) const {
+    int32_t row = tileid / ncolumns_;
+    int32_t col = tileid - (row * ncolumns_);
+    return coord_t(tilebounds_.minx() + (col * tilesize_), tilebounds_.miny() + (row * tilesize_));
+  }
 
   /**
    * Get the bounding box of the specified tile.
    * @param   tileid   Tile Id.
    * @return  The latitude, longitude extent of the specified tile.
    */
-  AABB2<coord_t> TileBounds(const int32_t tileid) const;
+  AABB2<coord_t> TileBounds(const int32_t tileid) const {
+    Point2 base = Base(tileid);
+    return AABB2<coord_t>(base.x(), base.y(), base.x() + tilesize_, base.y() + tilesize_);
+  }
 
   /**
    * Get the bounding box of the tile with specified row, column.
@@ -178,14 +221,21 @@ public:
    * @param   row   Tile row.
    * @return  The latitude, longitude extent of the specified tile.
    */
-  AABB2<coord_t> TileBounds(const int32_t col, const int32_t row) const;
+  AABB2<coord_t> TileBounds(const int32_t col, const int32_t row) const {
+    float basex = tilebounds_.minx() + ((float)col * tilesize_);
+    float basey = tilebounds_.miny() + ((float)row * tilesize_);
+    return AABB2<coord_t>(basex, basey, basex + tilesize_, basey + tilesize_);
+  }
 
   /**
    * Get the center of the specified tile.
    * @param   tileid   Tile Id.
    * @return  The center x,y of the specified tile.
    */
-  coord_t Center(const int32_t tileid) const;
+  coord_t Center(const int32_t tileid) const {
+    auto base = Base(tileid);
+    return coord_t(base.x() + tilesize_ * 0.5, base.y() + tilesize_ * 0.5);
+  }
 
   /**
    * Get the tile offsets (row,column) between the previous tile Id and
@@ -199,27 +249,41 @@ public:
   void TileOffsets(const int32_t initial_tileid,
                    const int32_t newtileid,
                    int32_t& delta_rows,
-                   int32_t& delta_cols) const;
+                   int32_t& delta_cols) const {
+    int32_t deltaTile = newtileid - initial_tileid;
+    delta_rows = (newtileid / ncolumns_) - (initial_tileid / ncolumns_);
+    delta_cols = deltaTile - (delta_rows * ncolumns_);
+  }
 
   /**
    * Get the number of tiles in the tiling system.
    * @return  Number of tiles.
    */
-  uint32_t TileCount() const;
+  uint32_t TileCount() const {
+    float nrows = (tilebounds_.maxy() - tilebounds_.miny()) / tilesize_;
+    return ncolumns_ * static_cast<int32_t>(std::ceil(nrows));
+  }
 
   /**
    * Get the neighboring tileid to the right/east.
    * @param  tileid   Tile Id.
    * @return  Returns the tile Id of the tile to the right/east.
    */
-  int32_t RightNeighbor(const int32_t tileid) const;
+  int32_t RightNeighbor(const int32_t tileid) const {
+    return (tileid - ((tileid / ncolumns_) * ncolumns_) < ncolumns_ - 1)
+               ? tileid + 1
+               : wrapx_ ? tileid - ncolumns_ + 1 : tileid;
+  }
 
   /**
    * Get the neighboring tileid to the left/west.
    * @param  tileid   Tile Id.
    * @return  Returns the tile Id of the tile to the left/west.
    */
-  int32_t LeftNeighbor(const int32_t tileid) const;
+  int32_t LeftNeighbor(const int32_t tileid) const {
+    return tileid - ((tileid / ncolumns_) * ncolumns_) > 0 ? tileid - 1
+                                                           : wrapx_ ? tileid + ncolumns_ - 1 : tileid;
+  }
 
   /**
    * Get the neighboring tileid above or north.
@@ -242,14 +306,13 @@ public:
   }
 
   /**
-   * Checks if 2 tiles are neighbors (N,E,S,W).
+   * Checks if 2 tiles are neighbors (N,E,S,W). Does not support wrap around 180 longitude.
    * @param  id1  Tile Id 1
    * @param  id2  Tile Id 2
    * @return  Returns true if tile id1 and id2 are neighbors, false if not.
    */
   bool AreNeighbors(const uint32_t id1, const uint32_t id2) const {
-    return (id2 == TopNeighbor(id1) || id2 == RightNeighbor(id1) || id2 == BottomNeighbor(id1) ||
-            id2 == LeftNeighbor(id1));
+    return id2 == id1 - 1 || id2 == id1 + 1 || id2 == id1 + ncolumns_ || id2 == id1 - ncolumns_;
   };
 
   /**

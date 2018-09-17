@@ -34,11 +34,11 @@ if [ ! -d $(dirname $tz_file) ]; then
     exit 1
 fi
 rm -f $tz_file
-url="http://efele.net/maps/tz/world/tz_world_mp.zip"
+url="https://github.com/evansiroky/timezone-boundary-builder/releases/download/2018d/timezones.shapefile.zip"
 echo "downloading timezone polygon file."
 wget -q $url || error_exit "wget failed for " $url
-unzip ./tz_world_mp.zip || error_exit "unzip failed"
-spatialite_tool -i -shp ./world/tz_world_mp -d $tz_file -t tz_world -s 4326 -g geom -c UTF-8 || error_exit "spatialite_tool import failed"
+unzip ./timezones.shapefile.zip || error_exit "unzip failed"
+spatialite_tool -i -shp ./dist/combined-shapefile -d $tz_file -t tz_world -s 4326 -g geom -c UTF-8 || error_exit "spatialite_tool import failed"
 spatialite $tz_file "SELECT CreateSpatialIndex('tz_world', 'geom');" || error_exit "SpatialIndex failed" 
 
 rm -rf world

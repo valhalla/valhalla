@@ -2,6 +2,7 @@
 #include "baldr/datetime.h"
 #include "midgard/logging.h"
 #include <algorithm>
+#include <fstream>
 #include <iostream> // TODO remove if not needed
 #include <map>
 
