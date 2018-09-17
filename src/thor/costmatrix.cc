@@ -106,7 +106,6 @@ std::vector<TimeDistance> CostMatrix::SourceToTarget(
     const std::shared_ptr<DynamicCost>* mode_costing,
     const TravelMode mode,
     const float max_matrix_distance) {
-  LOG_INFO("SourceToTarget");
   // Set the mode and costing
   mode_ = mode;
   costing_ = mode_costing[static_cast<uint32_t>(mode_)];
@@ -123,7 +122,6 @@ std::vector<TimeDistance> CostMatrix::SourceToTarget(
   // same get set to 0 time, distance and are not added to the remaining
   // location set.
   Initialize(source_location_list, target_location_list);
-  LOG_TRACE("Done initialize");
 
   // Perform backward search from all target locations. Perform forward
   // search from all source locations. Connections between the 2 search
@@ -218,13 +216,13 @@ void CostMatrix::Initialize(
 
   // Set the remaining number of sources and targets
   remaining_sources_ = 0;
-  for (auto s : source_status_) {
+  for (const auto& s : source_status_) {
     if (!s.remaining_locations.empty()) {
       remaining_sources_++;
     }
   }
   remaining_targets_ = 0;
-  for (auto t : target_status_) {
+  for (const auto& t : target_status_) {
     if (!t.remaining_locations.empty()) {
       remaining_targets_++;
     }
