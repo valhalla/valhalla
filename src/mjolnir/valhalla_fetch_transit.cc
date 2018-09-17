@@ -11,7 +11,6 @@
 #include <thread>
 #include <unordered_set>
 
-#include "baldr/rapidjson_utils.h"
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem/operations.hpp>
 #include <boost/format.hpp>
@@ -19,22 +18,18 @@
 #include <boost/tokenizer.hpp>
 #include <curl/curl.h>
 
-#include "baldr/datetime.h"
+#include "baldr/rapidjson_utils.h"
 #include "baldr/graphconstants.h"
 #include "baldr/graphid.h"
-#include "baldr/graphreader.h"
 #include "baldr/graphtile.h"
 #include "baldr/tilehierarchy.h"
-#include "filesystem.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
 #include "midgard/sequence.h"
 
 #include "mjolnir/admin.h"
-#include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/servicedays.h"
 #include "mjolnir/transitpbf.h"
-#include "mjolnir/validatetransit.h"
 
 #include <valhalla/proto/transit.pb.h>
 
