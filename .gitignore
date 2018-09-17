@@ -8,7 +8,6 @@ valhalla_benchmark_admins
 valhalla_build_admins
 valhalla_build_connectivity
 valhalla_build_tiles
-valhalla_build_transit
 valhalla_query_transit
 valhalla_ways_to_edges
 valhalla_build_speeds
