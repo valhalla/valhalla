@@ -240,6 +240,7 @@ int main(int argc, char* argv[]) {
     CostMatrix matrix;
     res = matrix.SourceToTarget(request.options.sources(), request.options.targets(), reader,
                                 mode_costing, mode, max_distance);
+    matrix.Clear();
   }
   t1 = std::chrono::high_resolution_clock::now();
   ms = std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count();
@@ -253,12 +254,16 @@ int main(int argc, char* argv[]) {
     TimeDistanceMatrix tdm;
     res = tdm.SourceToTarget(request.options.sources(), request.options.targets(), reader,
                              mode_costing, mode, max_distance);
+    tdm.Clear();
   }
   t1 = std::chrono::high_resolution_clock::now();
   ms = std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count();
   avg = (static_cast<float>(ms) / static_cast<float>(iterations)) * 0.001f;
   LOG_INFO("TimeDistanceMatrix average time to compute: " + std::to_string(avg) + " sec");
   LogResults(optimize, request, res);
+
+  // Shutdown protocol buffer library
+  google::protobuf::ShutdownProtobufLibrary();
 
   return EXIT_SUCCESS;
 }
