@@ -66,10 +66,10 @@ const auto config = json_to_pt(R"({
 } // namespace
 
 void try_isochrone(GraphReader& reader,
-              loki_worker_t& loki_worker,
-              thor_worker_t& thor_worker,
-              const char* test_request,
-              const std::string& expected) {
+                   loki_worker_t& loki_worker,
+                   thor_worker_t& thor_worker,
+                   const char* test_request,
+                   const std::string& expected) {
   valhalla::valhalla_request_t request;
   request.parse(test_request, valhalla::odin::DirectionsOptions::route);
   loki_worker.isochrones(request);
@@ -91,12 +91,14 @@ void test_isochrones() {
 
   // Test auto isochrone with one contour
   std::string expected1 = "\"type\":\"LineString\"";
-  const auto test_request1 = R"({"locations":[{"lat":52.078937,"lon":5.115321}],"costing":"auto","contours":[{"time":15}],"polygons":false,"denoise":0.2,"generalize":150})";
+  const auto test_request1 =
+      R"({"locations":[{"lat":52.078937,"lon":5.115321}],"costing":"auto","contours":[{"time":15}],"polygons":false,"denoise":0.2,"generalize":150})";
   try_isochrone(reader, loki_worker, thor_worker, test_request1, expected1);
 
   // Try pedestrian isochrone with one contour, polygon=true
   std::string expected2 = "\"type\":\"Polygon\"";
-  const auto test_request2 = R"({"locations":[{"lat":52.078937,"lon":5.115321}],"costing":"bicycle","contours":[{"time":15}],"polygons":true,"denoise":0.2})";
+  const auto test_request2 =
+      R"({"locations":[{"lat":52.078937,"lon":5.115321}],"costing":"bicycle","contours":[{"time":15}],"polygons":true,"denoise":0.2})";
   try_isochrone(reader, loki_worker, thor_worker, test_request2, expected2);
 }
 
