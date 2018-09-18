@@ -11,6 +11,7 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/regex.hpp>
 #include <boost/filesystem/operations.hpp>
+#include <boost/tokenizer.hpp>
 
 #include "baldr/datetime.h"
 #include "baldr/graphconstants.h"
