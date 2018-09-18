@@ -14,14 +14,10 @@
 #include "midgard/util.h"
 
 using namespace valhalla::baldr;
-
-namespace {
-const date::local_seconds pivot_date_ = DateTime::get_formatted_date(kPivotDate + "T00:00");
-}
-
 namespace valhalla {
 namespace baldr {
 namespace DateTime {
+
 
 tz_db_t::tz_db_t() : db(date::get_tzdb()) {
   // load up the tz data
@@ -50,11 +46,16 @@ const tz_db_t& get_tz_db() {
   return tz_db;
 }
 
-// get a formatted date.  date in the format of 2016-11-06T01:00
+// get a formatted date.  date in the format of 2016-11-06T01:00 or 2016-11-06
 date::local_seconds get_formatted_date(const std::string& date) {
   std::istringstream in{date};
   date::local_seconds tp;
-  in >> date::parse("%FT%R", tp);
+
+  if (date.find('T') != std::string::npos)
+    in >> date::parse("%FT%R", tp);
+  else if (date.find('-') != std::string::npos)
+    in >> date::parse("%F", tp);
+
   return tp;
 }
 
