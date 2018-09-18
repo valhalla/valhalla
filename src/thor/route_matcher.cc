@@ -340,7 +340,7 @@ bool RouteMatcher::FormPath(const std::shared_ptr<DynamicCost>* mode_costing,
 
     // Did not find the end of the origin edge. Check for special case where
     // end is along the same edge.
-    for (auto end : end_nodes) {
+    for (const auto& end : end_nodes) {
       if (end.second.first.graph_id() == edge.graph_id()) {
         // Update the elapsed time based on edge cost
         elapsed_time +=
