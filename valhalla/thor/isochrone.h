@@ -92,10 +92,10 @@ public:
 
 protected:
   bool has_date_time_;
-  uint32_t seconds_of_week_; // Seconds of week (for isochrones using predicted speeds)
-  float shape_interval_;     // Interval along shape to mark time
-  sif::TravelMode mode_;     // Current travel mode
-  uint32_t access_mode_;     // Access mode used by the costing method
+  int start_tz_index_;   // Timezone at the start of the isochrone
+  float shape_interval_; // Interval along shape to mark time
+  sif::TravelMode mode_; // Current travel mode
+  uint32_t access_mode_; // Access mode used by the costing method
 
   // Current costing mode
   std::shared_ptr<sif::DynamicCost> costing_;
@@ -154,6 +154,7 @@ protected:
    * @param pred Edge label of the predecessor edge leading to the node.
    * @param pred_idx Index in the edge label list of the predecessor edge.
    * @param from_transition Boolean indicating if this expansion is from a transition edge.
+   * @param localtime Current local time.  Seconds since epoch.
    * @param seconds_of_week For time dependent isochrones this allows lookup of predicted traffic.
    */
   void ExpandForward(baldr::GraphReader& graphreader,
@@ -161,6 +162,7 @@ protected:
                      const sif::EdgeLabel& pred,
                      const uint32_t pred_idx,
                      const bool from_transition,
+                     uint64_t localtime,
                      int32_t seconds_of_week);
 
   /**
@@ -170,6 +172,7 @@ protected:
    * @param pred Edge label of the predecessor edge leading to the node.
    * @param pred_idx Index in the edge label list of the predecessor edge.
    * @param from_transition Boolean indicating if this expansion is from a transition edge.
+   * @param localtime Current local time.  Seconds since epoch.
    * @param seconds_of_week For time dependent isochrones this allows lookup of predicted traffic.
    */
   void ExpandReverse(baldr::GraphReader& graphreader,
@@ -178,6 +181,7 @@ protected:
                      const uint32_t pred_idx,
                      const baldr::DirectedEdge* opp_pred_edge,
                      const bool from_transition,
+                     uint64_t localtime,
                      int32_t seconds_of_week);
 
   /**
