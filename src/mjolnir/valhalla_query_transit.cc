@@ -1,6 +1,4 @@
 #include <cstdint>
-//#include "mjolnir/transitbuilder.h"
-//#include "mjolnir/graphtilebuilder.h"
 #include <valhalla/proto/transit.pb.h>
 
 #include "baldr/rapidjson_utils.h"
@@ -189,22 +187,21 @@ void LogDepartures(const Transit& transit, const GraphId& stopid, std::string& f
               counter++;
             }
 
+            auto d = date::floor<date::days>(DateTime::pivot_date_);
             std::string added_dates;
             for (const auto& day : sp.service_added_dates()) {
 
               if (!added_dates.empty()) {
                 added_dates += ", ";
               }
-              boost::gregorian::date adddate(
-                  boost::gregorian::gregorian_calendar::from_julian_day_number(day));
+              date::sys_days adddate = date::sys_days(date::year_month_day(d + date::days(day)));
               added_dates += to_iso_extended_string(adddate);
             }
 
-            boost::gregorian::date start_date(
-                boost::gregorian::gregorian_calendar::from_julian_day_number(
-                    sp.service_start_date()));
-            boost::gregorian::date end_date(
-                boost::gregorian::gregorian_calendar::from_julian_day_number(sp.service_end_date()));
+            date::sys_days start_date =
+                date::sys_days(date::year_month_day(d + date::days(sp.service_start_date())));
+            date::sys_days end_date =
+                date::sys_days(date::year_month_day(d + date::days(sp.service_end_date())));
 
             LOG_INFO(" Route: " + std::to_string(sp.route_index()) +
                      " Trip: " + std::to_string(sp.trip_id()) + " Dep Time: " + ss.str() +

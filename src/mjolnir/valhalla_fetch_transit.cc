@@ -517,8 +517,11 @@ bool get_stop_pairs(Transit_Fetch& tile,
 
     pair->set_origin_departure_time(DateTime::seconds_from_midnight(origin_time));
     pair->set_destination_arrival_time(DateTime::seconds_from_midnight(dest_time));
-    pair->set_service_start_date(get_formatted_date(start_date).julian_day());
-    pair->set_service_end_date(get_formatted_date(end_date).julian_day());
+
+    pair->set_service_start_date(
+        DateTime::days_from_pivot_date(DateTime::get_formatted_date(start_date)));
+    pair->set_service_end_date(
+        DateTime::days_from_pivot_date(DateTime::get_formatted_date(end_date)));
     for (const auto& service_days : pair_pt.second.get_child("service_days_of_week")) {
       pair->add_service_days_of_week(service_days.second.get_value<bool>());
     }
@@ -556,16 +559,16 @@ bool get_stop_pairs(Transit_Fetch& tile,
     const auto& except_dates = pair_pt.second.get_child_optional("service_except_dates");
     if (except_dates && !except_dates->empty()) {
       for (const auto& service_except_dates : pair_pt.second.get_child("service_except_dates")) {
-        auto d = get_formatted_date(service_except_dates.second.get_value<std::string>());
-        pair->add_service_except_dates(d.julian_day());
+        auto d = DateTime::get_formatted_date(service_except_dates.second.get_value<std::string>());
+        pair->add_service_except_dates(DateTime::days_from_pivot_date(d));
       }
     }
 
     const auto& added_dates = pair_pt.second.get_child_optional("service_added_dates");
     if (added_dates && !added_dates->empty()) {
       for (const auto& service_added_dates : pair_pt.second.get_child("service_added_dates")) {
-        auto d = get_formatted_date(service_added_dates.second.get_value<std::string>());
-        pair->add_service_added_dates(d.julian_day());
+        auto d = DateTime::get_formatted_date(service_added_dates.second.get_value<std::string>());
+        pair->add_service_added_dates(DateTime::days_from_pivot_date(d));
       }
     }
 
