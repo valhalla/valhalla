@@ -169,9 +169,13 @@ bool is_restricted(const bool type,
  * @return Returns std::tm time structure. If the input string is not valid this method
  *         sets tm_year to 0.
  */
-static std::tm iso_to_tm(const std::string& iso) {
+static inline std::tm iso_to_tm(const std::string& iso) {
   // Create an invalid tm, then populate it from the ISO string using get_time
-  std::tm t = {0, -1, -1, -1, -1, 0, 0, 0};
+  std::tm t = {};
+  t.tm_min = -1;
+  t.tm_hour = -1;
+  t.tm_mday = -1;
+  t.tm_mon = -1;
 
   // Check for invalid string (not the right separators and sizes)
   if (iso.size() != 16 || iso.at(4) != '-' || iso.at(7) != '-' || iso.at(10) != 'T' ||
@@ -196,7 +200,7 @@ static std::tm iso_to_tm(const std::string& iso) {
  * @param   date_time should be in the format of 2015-05-06T08:00
  * @return true or false
  */
-static bool is_iso_valid(const std::string& date_time) {
+static inline bool is_iso_valid(const std::string& date_time) {
   return iso_to_tm(date_time).tm_year > 0;
 }
 
@@ -204,7 +208,7 @@ static bool is_iso_valid(const std::string& date_time) {
  * Get the day of the week given a time string
  * @param dt Date time string.
  */
-static uint32_t day_of_week(const std::string& dt) {
+static inline uint32_t day_of_week(const std::string& dt) {
   // Get the std::tm struct given the ISO string
   std::tm t = iso_to_tm(dt);
 
@@ -221,7 +225,7 @@ static uint32_t day_of_week(const std::string& dt) {
  *          (examples: 01:34:15 or 2015-05-06T08:00)
  * @return  Returns the seconds from midnight.
  */
-static uint32_t seconds_from_midnight(const std::string& date_time) {
+static inline uint32_t seconds_from_midnight(const std::string& date_time) {
   std::string str;
   std::size_t found = date_time.find('T'); // YYYY-MM-DDTHH:MM
   if (found != std::string::npos) {
@@ -247,10 +251,10 @@ static uint32_t seconds_from_midnight(const std::string& date_time) {
  * @param  secs  Seconds within the week.
  * @return Returns the seconds within the week within the valid range.
  */
-static int32_t normalize_seconds_of_week(const int32_t secs) {
+static inline int32_t normalize_seconds_of_week(const int32_t secs) {
   if (secs < 0) {
     return secs + midgard::kSecondsPerWeek;
-  } else if (secs > midgard::kSecondsPerWeek) {
+  } else if (secs > int32_t(midgard::kSecondsPerWeek)) {
     return secs - midgard::kSecondsPerWeek;
   } else {
     return secs;

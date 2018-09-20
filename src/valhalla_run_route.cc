@@ -680,5 +680,8 @@ int main(int argc, char* argv[]) {
   data.addRuntime(msecs);
   data.log();
 
+  // Shutdown protocol buffer library
+  google::protobuf::ShutdownProtobufLibrary();
+
   return EXIT_SUCCESS;
 }
