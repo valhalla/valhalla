@@ -138,6 +138,21 @@ public:
     unmap();
   }
 
+  // create a new file to map with a given size
+  void create(const std::string& new_file_name, size_t new_count, int advice = POSIX_MADV_NORMAL) {
+    auto target_size = new_count * sizeof(T);
+    struct stat s;
+    if (stat(new_file_name.c_str(), &s) || s.st_size != target_size) {
+      // open, create and truncate the file
+      std::ofstream f(new_file_name, std::ios::binary | std::ios::out | std::ios::trunc);
+      // seek to the new size and put a null char
+      f.seekp(new_count * sizeof(T) - 1);
+      f.write("\0", 1);
+    }
+    // map it
+    map(new_file_name, new_count, advice);
+  }
+
   // reset to another file or another size
   void map(const std::string& new_file_name, size_t new_count, int advice = POSIX_MADV_NORMAL) {
     // just in case there was already something
