@@ -31,19 +31,6 @@ TimeDepReverse::~TimeDepReverse() {
   Clear();
 }
 
-// Get the timezone at the destination.
-int TimeDepReverse::GetDestinationTimezone(GraphReader& graphreader) {
-  if (edgelabels_rev_.size() == 0) {
-    return -1;
-  }
-  GraphId node = edgelabels_rev_[0].endnode();
-  const GraphTile* tile = graphreader.GetGraphTile(node);
-  if (tile == nullptr) {
-    return -1;
-  }
-  return tile->node(node)->timezone();
-}
-
 // Initialize prior to finding best path
 void TimeDepReverse::Init(const PointLL& origll, const PointLL& destll) {
   // Set the origin lat,lon (since this is reverse path) and cost factor
@@ -263,7 +250,12 @@ std::vector<PathInfo> TimeDepReverse::GetBestPath(odin::Location& origin,
   SetOrigin(graphreader, destination, origin);
 
   // Set the destination timezone
-  dest_tz_index_ = GetDestinationTimezone(graphreader);
+  dest_tz_index_ =
+      edgelabels_rev_.size() == 0 ? 0 : GetTimezone(graphreader, edgelabels_rev_[0].endnode());
+  if (dest_tz_index_ == 0) {
+    // WHAT TO DO?
+    LOG_ERROR("Could not get the timezone at the destination");
+  }
 
   // Update hierarchy limits
   ModifyHierarchyLimits(mindist, density);
