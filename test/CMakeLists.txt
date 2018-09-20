@@ -10,7 +10,7 @@ set(tests aabb2 access_restriction actor admin attributes_controller complexrest
   verbal_text_formatter_us_co verbal_text_formatter_us_tx viterbi_search compression)
 
 if(ENABLE_DATA_TOOLS)
-  list(APPEND tests astar edgeinfobuilder graphbuilder graphparser graphtilebuilder graphreader predictive_traffic
+  list(APPEND tests astar edgeinfobuilder graphbuilder graphparser graphtilebuilder graphreader isochrone predictive_traffic
     idtable matrix names node_search refs search servicedays signinfo timedep_paths timeparsing trivial_paths uniquenames utrecht)
 endif()
 
