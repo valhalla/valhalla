@@ -139,7 +139,7 @@ public:
   }
 
   // create a new file to map with a given size
-  void create(const std::string& new_file_name, size_t new_count, int advice = POSIX_FADV_NORMAL) {
+  void create(const std::string& new_file_name, size_t new_count, int advice = POSIX_MADV_NORMAL) {
     {
       // open and create the file if needed, seek to the end as well
       std::ofstream f(new_file_name, std::ios::binary | std::ios::out | std::ios::ate);
