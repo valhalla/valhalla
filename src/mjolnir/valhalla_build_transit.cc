@@ -776,7 +776,8 @@ void write_pbf(const Transit& tile, const boost::filesystem::path& transit_tile)
     boost::filesystem::create_directories(transit_tile.parent_path());
   }
   auto size = tile.ByteSize();
-  valhalla::midgard::mem_map<char> buffer(transit_tile.string(), size);
+  valhalla::midgard::mem_map<char> buffer;
+  buffer.create(transit_tile.string(), size);
   if (!tile.SerializeToArray(buffer.get(), size)) {
     LOG_ERROR("Couldn't write: " + transit_tile.string() + " it would have been " +
               std::to_string(size));
