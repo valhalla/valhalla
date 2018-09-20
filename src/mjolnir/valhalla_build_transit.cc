@@ -228,10 +228,11 @@ std::priority_queue<weighted_tile_t> which_tiles(const ptree& pt, const std::str
   auto request = url("/api/v1/feeds.geojson?per_page=false", pt);
   request += transit_bounding_box;
   auto feeds = curler(request, "features");
+std::string f = "f-9qh0-anaheim~ca~us";//"f-dr5r-nyctsubway";
   for (const auto& feature : feeds.get_child("features")) {
 
     auto onestop_feed = feature.second.get_optional<std::string>("properties.onestop_id");
-    if (feed.empty() || (onestop_feed && *onestop_feed == feed)) {
+    if ((onestop_feed && *onestop_feed == f)) {
 
       // should be a polygon
       auto type = feature.second.get_optional<std::string>("geometry.type");

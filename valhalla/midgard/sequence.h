@@ -140,15 +140,14 @@ public:
 
   // create a new file to map with a given size
   void create(const std::string& new_file_name, size_t new_count, int advice = POSIX_MADV_NORMAL) {
-    {
-      // open and create the file if needed, seek to the end as well
-      std::ofstream f(new_file_name, std::ios::binary | std::ios::out | std::ios::ate);
-      // check the size and if its not big enough
-      auto size = f.tellp();
-      if (size < new_count * sizeof(T)) {
-        f.seekp(new_count * sizeof(T) - 1);
-        f.write("\0", 1);
-      }
+    auto target_size = new_count * sizeof(T);
+    struct stat s;
+    if (stat(new_file_name.c_str(), &s) || s.st_size != target_size) {
+      // open, create and truncate the file
+      std::ofstream f(new_file_name, std::ios::binary | std::ios::out | std::ios::trunc);
+      // seek to the new size and put a null char
+      f.seekp(new_count * sizeof(T) - 1);
+      f.write("\0", 1);
     }
     // map it
     map(new_file_name, new_count, advice);
