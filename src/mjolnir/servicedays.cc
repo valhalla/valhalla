@@ -19,12 +19,12 @@ std::string get_testing_date_time() {
   auto date = DateTime::iso_date_time(tz);
   std::istringstream in{date};
 
-  //needs to be local_days
+  // needs to be local_days
   date::local_days tp;
-   if (date.find('T') != std::string::npos)
-     in >> date::parse("%FT%R", tp);
-   else if (date.find('-') != std::string::npos)
-     in >> date::parse("%F", tp);
+  if (date.find('T') != std::string::npos)
+    in >> date::parse("%FT%R", tp);
+  else if (date.find('-') != std::string::npos)
+    in >> date::parse("%F", tp);
 
   while (date::weekday(tp) != date::Tuesday) {
     tp += date::days(1);
@@ -111,7 +111,6 @@ uint64_t get_service_days(date::sys_days& start_date,
     ++x;
   }
   return bit_set;
-
 }
 
 // Adds a service day to the days.

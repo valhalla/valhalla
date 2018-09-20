@@ -18,7 +18,6 @@ namespace valhalla {
 namespace baldr {
 namespace DateTime {
 
-
 tz_db_t::tz_db_t() : db(date::get_tzdb()) {
   // load up the tz data
   for (const auto& z : db.zones) {

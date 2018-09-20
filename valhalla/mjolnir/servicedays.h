@@ -11,8 +11,8 @@
 #include <string>
 #include <vector>
 
-#include <valhalla/baldr/graphconstants.h>
 #include "baldr/datetime.h"
+#include <valhalla/baldr/graphconstants.h>
 
 namespace valhalla {
 namespace mjolnir {

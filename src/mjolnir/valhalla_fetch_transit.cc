@@ -515,12 +515,13 @@ bool get_stop_pairs(Transit_Fetch& tile,
       continue;
     }
 
-
     pair->set_origin_departure_time(DateTime::seconds_from_midnight(origin_time));
     pair->set_destination_arrival_time(DateTime::seconds_from_midnight(dest_time));
 
-    pair->set_service_start_date(DateTime::days_from_pivot_date(DateTime::get_formatted_date(start_date)));
-    pair->set_service_end_date(DateTime::days_from_pivot_date(DateTime::get_formatted_date(end_date)));
+    pair->set_service_start_date(
+        DateTime::days_from_pivot_date(DateTime::get_formatted_date(start_date)));
+    pair->set_service_end_date(
+        DateTime::days_from_pivot_date(DateTime::get_formatted_date(end_date)));
     for (const auto& service_days : pair_pt.second.get_child("service_days_of_week")) {
       pair->add_service_days_of_week(service_days.second.get_value<bool>());
     }

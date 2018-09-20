@@ -198,8 +198,10 @@ void LogDepartures(const Transit& transit, const GraphId& stopid, std::string& f
               added_dates += to_iso_extended_string(adddate);
             }
 
-            date::sys_days start_date = date::sys_days(date::year_month_day(d + date::days(sp.service_start_date())));
-            date::sys_days end_date = date::sys_days(date::year_month_day(d + date::days(sp.service_end_date())));
+            date::sys_days start_date =
+                date::sys_days(date::year_month_day(d + date::days(sp.service_start_date())));
+            date::sys_days end_date =
+                date::sys_days(date::year_month_day(d + date::days(sp.service_end_date())));
 
             LOG_INFO(" Route: " + std::to_string(sp.route_index()) +
                      " Trip: " + std::to_string(sp.trip_id()) + " Dep Time: " + ss.str() +

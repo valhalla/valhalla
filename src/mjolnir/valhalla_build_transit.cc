@@ -680,8 +680,10 @@ bool get_stop_pairs(Transit& tile,
 
     pair->set_origin_departure_time(DateTime::seconds_from_midnight(origin_time));
     pair->set_destination_arrival_time(DateTime::seconds_from_midnight(dest_time));
-    pair->set_service_start_date(DateTime::days_from_pivot_date((DateTime::get_formatted_date(start_date))));
-    pair->set_service_end_date(DateTime::days_from_pivot_date(DateTime::get_formatted_date(end_date)));
+    pair->set_service_start_date(
+        DateTime::days_from_pivot_date((DateTime::get_formatted_date(start_date))));
+    pair->set_service_end_date(
+        DateTime::days_from_pivot_date(DateTime::get_formatted_date(end_date)));
     for (const auto& service_days : pair_pt.second.get_child("service_days_of_week")) {
       pair->add_service_days_of_week(service_days.second.get_value<bool>());
     }
@@ -1314,8 +1316,10 @@ ProcessStopPairs(GraphTileBuilder& transit_tilebuilder,
           // set the bits based on the dow.
 
           auto d = date::floor<date::days>(DateTime::pivot_date_);
-          date::sys_days start_date = date::sys_days(date::year_month_day(d + date::days(sp.service_start_date())));
-          date::sys_days end_date = date::sys_days(date::year_month_day(d + date::days(sp.service_end_date())));
+          date::sys_days start_date =
+              date::sys_days(date::year_month_day(d + date::days(sp.service_start_date())));
+          date::sys_days end_date =
+              date::sys_days(date::year_month_day(d + date::days(sp.service_end_date())));
 
           uint64_t days = get_service_days(start_date, end_date, tile_date, dow_mask);
 
@@ -2124,7 +2128,8 @@ void build_tiles(const boost::property_tree::ptree& pt,
     GraphTileBuilder tilebuilder_transit(reader_transit_level.tile_dir(), transit_tile_id, false);
 
     auto tz = DateTime::get_tz_db().from_index(DateTime::get_tz_db().to_index("America/New_York"));
-    uint32_t tile_creation_date = DateTime::days_from_pivot_date(DateTime::get_formatted_date(DateTime::iso_date_time(tz)));
+    uint32_t tile_creation_date =
+        DateTime::days_from_pivot_date(DateTime::get_formatted_date(DateTime::iso_date_time(tz)));
     tilebuilder_transit.AddTileCreationDate(tile_creation_date);
 
     lock.unlock();
