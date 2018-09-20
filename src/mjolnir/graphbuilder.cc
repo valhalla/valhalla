@@ -971,6 +971,12 @@ void BuildTileSet(const std::string& ways_file,
         // Set the time zone index
         uint32_t tz_index =
             (tile_within_one_tz) ? tz_polys.begin()->first : GetMultiPolyId(tz_polys, node_ll);
+
+        if (tz_index == 0) {
+          std::cout << "timezone is 0: " << graphtile.nodes().back().latlng().lat() << ","
+                    << graphtile.nodes().back().latlng().lng() << std::endl;
+        }
+
         graphtile.nodes().back().set_timezone(tz_index);
 
         // Increment the counts in the histogram
