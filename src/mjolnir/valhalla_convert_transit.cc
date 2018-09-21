@@ -185,10 +185,13 @@ ProcessStopPairs(GraphTileBuilder& transit_tilebuilder,
 
           // Compute the valid days
           // set the bits based on the dow.
-          boost::gregorian::date start_date(
-              boost::gregorian::gregorian_calendar::from_julian_day_number(sp.service_start_date()));
-          boost::gregorian::date end_date(
-              boost::gregorian::gregorian_calendar::from_julian_day_number(sp.service_end_date()));
+
+          auto d = date::floor<date::days>(DateTime::pivot_date_);
+          date::sys_days start_date =
+              date::sys_days(date::year_month_day(d + date::days(sp.service_start_date())));
+          date::sys_days end_date =
+              date::sys_days(date::year_month_day(d + date::days(sp.service_end_date())));
+
           uint64_t days = get_service_days(start_date, end_date, tile_date, dow_mask);
 
           // if this is a service addition for one day, delete the dow_mask.
@@ -205,7 +208,9 @@ ProcessStopPairs(GraphTileBuilder& transit_tilebuilder,
           }
 
           dep.headsign_offset = transit_tilebuilder.AddName(sp.trip_headsign());
-          uint32_t end_day = (days_from_pivot_date(end_date) - tile_date);
+
+          date::sys_days t_d = date::sys_days(date::year_month_day(d + date::days(tile_date)));
+          uint32_t end_day = static_cast<uint32_t>((end_date - t_d).count());
 
           if (end_day > kScheduleEndDay) {
             end_day = kScheduleEndDay;
@@ -213,14 +218,14 @@ ProcessStopPairs(GraphTileBuilder& transit_tilebuilder,
 
           // if subtractions are between start and end date then turn off bit.
           for (const auto& x : sp.service_except_dates()) {
-            boost::gregorian::date d(boost::gregorian::gregorian_calendar::from_julian_day_number(x));
-            days = remove_service_day(days, end_date, tile_date, d);
+            date::sys_days rm_date = date::sys_days(date::year_month_day(d + date::days(x)));
+            days = remove_service_day(days, end_date, tile_date, rm_date);
           }
 
           // if additions are between start and end date then turn on bit.
           for (const auto& x : sp.service_added_dates()) {
-            boost::gregorian::date d(boost::gregorian::gregorian_calendar::from_julian_day_number(x));
-            days = add_service_day(days, end_date, tile_date, d);
+            date::sys_days add_date = date::sys_days(date::year_month_day(d + date::days(x)));
+            days = add_service_day(days, end_date, tile_date, add_date);
           }
 
           TransitSchedule sched(days, dow_mask, end_day);
@@ -541,7 +546,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
       const std::string& tz = station.has_timezone() ? station.timezone() : "";
       uint32_t timezone = 0;
       if (!tz.empty()) {
-        timezone = get_tz_db().to_index(tz);
+        timezone = DateTime::get_tz_db().to_index(tz);
       }
 
       if (timezone == 0) {
@@ -587,7 +592,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
         const std::string& tz = egress.has_timezone() ? egress.timezone() : "";
         uint32_t timezone = 0;
         if (!tz.empty()) {
-          timezone = get_tz_db().to_index(tz);
+          timezone = DateTime::get_tz_db().to_index(tz);
         }
 
         if (timezone == 0) {
@@ -765,7 +770,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
     const std::string& tz = platform.has_timezone() ? platform.timezone() : "";
     uint32_t timezone = 0;
     if (!tz.empty()) {
-      timezone = get_tz_db().to_index(tz);
+      timezone = DateTime::get_tz_db().to_index(tz);
     }
 
     if (timezone == 0) {
@@ -981,8 +986,9 @@ void build_tiles(const boost::property_tree::ptree& pt,
     const GraphTile* transit_tile = reader_transit_level.GetGraphTile(transit_tile_id);
     GraphTileBuilder tilebuilder_transit(reader_transit_level.tile_dir(), transit_tile_id, false);
 
-    auto tz = get_tz_db().from_index(get_tz_db().to_index("America/New_York"));
-    uint32_t tile_creation_date = days_from_pivot_date(get_formatted_date(iso_date_time(tz)));
+    auto tz = DateTime::get_tz_db().from_index(DateTime::get_tz_db().to_index("America/New_York"));
+    uint32_t tile_creation_date =
+        DateTime::days_from_pivot_date(DateTime::get_formatted_date(DateTime::iso_date_time(tz)));
     tilebuilder_transit.AddTileCreationDate(tile_creation_date);
 
     lock.unlock();

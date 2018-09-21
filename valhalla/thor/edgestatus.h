@@ -60,7 +60,7 @@ public:
    */
   void clear() {
     // Delete any allocated arrays for tiles within the map.
-    for (auto iter : edgestatus_) {
+    for (auto& iter : edgestatus_) {
       delete[] iter.second;
     }
     edgestatus_.clear();
