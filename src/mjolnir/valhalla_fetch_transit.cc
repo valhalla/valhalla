@@ -18,10 +18,10 @@
 #include <boost/tokenizer.hpp>
 #include <curl/curl.h>
 
-#include "baldr/rapidjson_utils.h"
 #include "baldr/graphconstants.h"
 #include "baldr/graphid.h"
 #include "baldr/graphtile.h"
+#include "baldr/rapidjson_utils.h"
 #include "baldr/tilehierarchy.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
