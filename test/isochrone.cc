@@ -103,7 +103,7 @@ void test_isochrones() {
 }
 
 int main(int argc, char* argv[]) {
-  test::suite suite("trivial_paths");
+  test::suite suite("isochrones");
 
   // Silence logs (especially long request logging)
   logging::Configure({{"type", ""}});

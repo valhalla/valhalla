@@ -71,14 +71,6 @@ protected:
                      int32_t seconds_of_week,
                      const odin::Location& dest,
                      std::pair<int32_t, float>& best_path);
-
-  /**
-   * Get the timezone at the origin. Uses the timezone at the end node
-   * of the lowest cost edge.
-   * @param  graphreader  Graph tile reader.
-   * @return Returns the timezone index or -1 if an error occurs.
-   */
-  int GetOriginTimezone(baldr::GraphReader& graphreader);
 };
 
 /**
@@ -162,14 +154,6 @@ protected:
                      int32_t seconds_of_week,
                      const odin::Location& dest,
                      std::pair<int32_t, float>& best_path);
-
-  /**
-   * Get the timezone at the destination. Uses the timezone at the end node
-   * of the lowest cost edge.
-   * @param  graphreader  Graph tile reader.
-   * @return Returns the timezone index or -1 if an error occurs.
-   */
-  int GetDestinationTimezone(baldr::GraphReader& graphreader);
 
   /**
    * The origin of the reverse path is the destination location. Add edges at the
