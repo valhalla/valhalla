@@ -331,7 +331,7 @@ Isochrone::Compute(google::protobuf::RepeatedPtrField<valhalla::odin::Location>&
     if (start_tz_index_ == 0) {
       // TODO - should we throw an exception and return an error
       LOG_ERROR("Could not get the timezone at the origin");
-      return isotile_;
+      //return isotile_;
     }
 
     // Set route start time (seconds from epoch)
@@ -532,7 +532,7 @@ std::shared_ptr<const GriddedData<PointLL>> Isochrone::ComputeReverse(
     if (start_tz_index_ == 0) {
       // TODO - should we throw an exception and return an error
       LOG_ERROR("Could not get the timezone at the destination location");
-      return isotile_;
+      //return isotile_;
     }
 
     // Set route start time (seconds from epoch)
@@ -631,7 +631,7 @@ std::shared_ptr<const GriddedData<PointLL>> Isochrone::ComputeMultiModal(
     if (start_tz_index_ == 0) {
       // TODO - should we throw an exception and return an error
       LOG_ERROR("Could not get the timezone at the origin location");
-      return isotile_;
+      // return isotile_;
     }
 
     // Set route start time (seconds from midnight), date, and day of week

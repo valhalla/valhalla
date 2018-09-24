@@ -229,10 +229,10 @@ std::vector<PathInfo> TimeDepReverse::GetBestPath(odin::Location& origin,
   travel_type_ = costing_->travel_type();
   access_mode_ = costing_->access_mode();
 
-  // date_time must be set on the destination.
+  // date_time must be set on the destination. Log an error but allow routes for now.
   if (!destination.has_date_time()) {
     LOG_ERROR("TimeDepReverse called without time set on the destination location");
-    return {};
+    //return {};
   }
 
   // Initialize - create adjacency list, edgestatus support, A*, etc.

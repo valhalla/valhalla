@@ -184,10 +184,10 @@ std::vector<PathInfo> TimeDepForward::GetBestPath(odin::Location& origin,
   costing_ = mode_costing[static_cast<uint32_t>(mode_)];
   travel_type_ = costing_->travel_type();
 
-  // date_time must be set on the origin.
+  // date_time must be set on the origin. Log an error but allow routes for now.
   if (!origin.has_date_time()) {
     LOG_ERROR("TimeDepForward called without time set on the origin location");
-    return {};
+    //return {};
   }
 
   // Initialize - create adjacency list, edgestatus support, A*, etc.
