@@ -32,19 +32,6 @@ TimeDepForward::~TimeDepForward() {
   Clear();
 }
 
-// Get the timezone at the origin.
-int TimeDepForward::GetOriginTimezone(GraphReader& graphreader) {
-  if (edgelabels_.size() == 0) {
-    return -1;
-  }
-  GraphId node = edgelabels_[0].endnode();
-  const GraphTile* tile = graphreader.GetGraphTile(node);
-  if (tile == nullptr) {
-    return -1;
-  }
-  return tile->node(node)->timezone();
-}
-
 // Expand from the node along the forward search path. Immediately expands
 // from the end node of any transition edge (so no transition edges are added
 // to the adjacency list or EdgeLabel list). Does not expand transition
@@ -197,10 +184,10 @@ std::vector<PathInfo> TimeDepForward::GetBestPath(odin::Location& origin,
   costing_ = mode_costing[static_cast<uint32_t>(mode_)];
   travel_type_ = costing_->travel_type();
 
-  // date_time must be set on the origin.
+  // date_time must be set on the origin. Log an error but allow routes for now.
   if (!origin.has_date_time()) {
     LOG_ERROR("TimeDepForward called without time set on the origin location");
-    return {};
+    // return {};
   }
 
   // Initialize - create adjacency list, edgestatus support, A*, etc.
@@ -218,7 +205,11 @@ std::vector<PathInfo> TimeDepForward::GetBestPath(odin::Location& origin,
   SetOrigin(graphreader, origin, destination);
 
   // Set the origin timezone to be the timezone at the end node
-  origin_tz_index_ = GetOriginTimezone(graphreader);
+  origin_tz_index_ = edgelabels_.size() == 0 ? 0 : GetTimezone(graphreader, edgelabels_[0].endnode());
+  if (origin_tz_index_ == 0) {
+    // TODO - do not throw exception at this time
+    LOG_ERROR("Could not get the timezone at the origin");
+  }
 
   // Set route start time (seconds from epoch)
   uint64_t start_time =

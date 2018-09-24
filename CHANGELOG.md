@@ -1,8 +1,10 @@
 ## Release Date: TBD Valhalla 2.7.1
 * **Enhancement**
    * UPDATED: Added date time support to forward and reverse isochrones. Add speed lookup (predicted speeds and/or free-flow or constrained flow speed) if date_time is present.
+   * UPDATED: Add timezone checks to multimodal routes and isochrones (updates localtime if the path crosses into a timezone different than the start location).
 * **Data Producer Update**
    * UPDATED: Removed boost date time support from transit.  Now using the Howard Hinnant date library.
+
 ## Release Date: 2018-09-13 Valhalla 2.7.0
 * **Enhancement**
    * UPDATED: Refactor to use the pbf options instead of the ptree config [#1428](https://github.com/valhalla/valhalla/pull/1428) This completes [1357](https://github.com/valhalla/valhalla/issues/1357)
