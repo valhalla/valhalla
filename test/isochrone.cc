@@ -71,7 +71,7 @@ void try_isochrone(GraphReader& reader,
                    const char* test_request,
                    const std::string& expected) {
   valhalla::valhalla_request_t request;
-  request.parse(test_request, valhalla::odin::DirectionsOptions::isochrones);
+  request.parse(test_request, valhalla::odin::DirectionsOptions::isochrone);
   loki_worker.isochrones(request);
 
   // Process isochrone request

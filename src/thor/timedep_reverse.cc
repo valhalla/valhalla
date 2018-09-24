@@ -232,7 +232,7 @@ std::vector<PathInfo> TimeDepReverse::GetBestPath(odin::Location& origin,
   // date_time must be set on the destination. Log an error but allow routes for now.
   if (!destination.has_date_time()) {
     LOG_ERROR("TimeDepReverse called without time set on the destination location");
-    //return {};
+    // return {};
   }
 
   // Initialize - create adjacency list, edgestatus support, A*, etc.
@@ -253,7 +253,7 @@ std::vector<PathInfo> TimeDepReverse::GetBestPath(odin::Location& origin,
   dest_tz_index_ =
       edgelabels_rev_.size() == 0 ? 0 : GetTimezone(graphreader, edgelabels_rev_[0].endnode());
   if (dest_tz_index_ == 0) {
-    // WHAT TO DO?
+    // TODO - do not throw exception at this time
     LOG_ERROR("Could not get the timezone at the destination");
   }
 

@@ -187,7 +187,7 @@ std::vector<PathInfo> TimeDepForward::GetBestPath(odin::Location& origin,
   // date_time must be set on the origin. Log an error but allow routes for now.
   if (!origin.has_date_time()) {
     LOG_ERROR("TimeDepForward called without time set on the origin location");
-    //return {};
+    // return {};
   }
 
   // Initialize - create adjacency list, edgestatus support, A*, etc.
@@ -207,9 +207,8 @@ std::vector<PathInfo> TimeDepForward::GetBestPath(odin::Location& origin,
   // Set the origin timezone to be the timezone at the end node
   origin_tz_index_ = edgelabels_.size() == 0 ? 0 : GetTimezone(graphreader, edgelabels_[0].endnode());
   if (origin_tz_index_ == 0) {
-    // TODO - should we throw an exception and return an error
+    // TODO - do not throw exception at this time
     LOG_ERROR("Could not get the timezone at the origin");
-    return {};
   }
 
   // Set route start time (seconds from epoch)
