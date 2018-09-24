@@ -261,6 +261,8 @@ static inline int32_t normalize_seconds_of_week(const int32_t secs) {
   }
 }
 
+const date::local_seconds pivot_date_ = get_formatted_date(kPivotDate + "T00:00");
+
 } // namespace DateTime
 } // namespace baldr
 } // namespace valhalla
