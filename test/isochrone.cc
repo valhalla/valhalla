@@ -71,7 +71,7 @@ void try_isochrone(GraphReader& reader,
                    const char* test_request,
                    const std::string& expected) {
   valhalla::valhalla_request_t request;
-  request.parse(test_request, valhalla::odin::DirectionsOptions::isochrone);
+  request.parse(test_request, valhalla::odin::DirectionsOptions::isochrones);
   loki_worker.isochrones(request);
 
   // Process isochrone request
@@ -103,7 +103,7 @@ void test_isochrones() {
 }
 
 int main(int argc, char* argv[]) {
-  test::suite suite("trivial_paths");
+  test::suite suite("isochrones");
 
   // Silence logs (especially long request logging)
   logging::Configure({{"type", ""}});
