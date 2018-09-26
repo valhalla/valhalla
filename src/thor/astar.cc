@@ -149,26 +149,32 @@ void AStarPathAlgorithm::ExpandForward(GraphReader& graphreader,
       continue;
     }
 
+    // Skip shortcut edges until we have stopped expanding on the next level.
+    // Also skip shortcut edges when near the destination. Always skip within
+    // 10km but also reject long shortcut edges outside this distance.
+    // TODO - configure this distance based on density?
+    // Use regular edges while still expanding on the next level since we can still
+    // transition down to that level. If using a shortcut, set the shortcuts mask.
+    // Skip if this is a regular edge superseded by a shortcut.
+    if (directededge->is_shortcut()) {
+      if (!hierarchy_limits_[edgeid.level() + 1].StopExpanding() ||
+          (pred.distance() < 10000.0f || directededge->length() > max_shortcut_length)) {
+        continue;
+      } else {
+        shortcuts |= directededge->shortcut();
+      }
+    } else if (shortcuts & directededge->superseded()) {
+      continue;
+    }
+
     // Skip this edge if permanently labeled (best path already found to this
-    // directed edge), if edge is superseded by a shortcut edge that was taken,
-    // or if no access is allowed to this edge (based on costing method), or if
-    // a complex restriction exists.
-    if (es->set() == EdgeSet::kPermanent || (shortcuts & directededge->superseded()) ||
+    // directed edge), if no access is allowed to this edge (based on costing method),
+    // or if a complex restriction exists.
+    if (es->set() == EdgeSet::kPermanent ||
         !costing_->Allowed(directededge, pred, tile, edgeid, 0, 0) ||
         costing_->Restricted(directededge, pred, edgelabels_, tile, edgeid, true)) {
       continue;
     }
-
-    // Skip shortcut edges when near the destination. Always skip within
-    // 10km but also reject long shortcut edges outside this distance.
-    // TODO - configure this distance based on density?
-    if (directededge->is_shortcut() &&
-        (pred.distance() < 10000.0f || directededge->length() > max_shortcut_length)) {
-      continue;
-    }
-
-    // Update the_shortcuts mask
-    shortcuts |= directededge->shortcut();
 
     // Compute the cost to the end of this edge
     Cost newcost = pred.cost() + costing_->EdgeCost(directededge, tile->GetSpeed(directededge)) +
