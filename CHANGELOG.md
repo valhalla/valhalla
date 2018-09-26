@@ -4,6 +4,8 @@
    * UPDATED: Add timezone checks to multimodal routes and isochrones (updates localtime if the path crosses into a timezone different than the start location).
 * **Data Producer Update**
    * UPDATED: Removed boost date time support from transit.  Now using the Howard Hinnant date library.
+* **Bug Fix**
+   * FIXED: Fixed a bug with shortcuts that leads to inconsistent routes depending on whether shortcuts are taken, different origins can lead to different paths near the destination. This fix also improves performance on long routes and matrices.
 
 ## Release Date: 2018-09-13 Valhalla 2.7.0
 * **Enhancement**
