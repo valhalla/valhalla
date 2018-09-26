@@ -117,7 +117,7 @@ if(ENABLE_DATA_TOOLS)
   add_dependencies(run-timedep_paths utrecht_tiles)
   add_dependencies(run-trivial_paths utrecht_tiles)
   add_dependencies(predictive_traffic utrecht_tiles)
-  add_dependencies(isochrones utrecht_tiles)
+  add_dependencies(isochrone utrecht_tiles)
 endif()
 
 if(ENABLE_SERVICES)
