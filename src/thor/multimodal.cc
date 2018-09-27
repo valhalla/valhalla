@@ -151,15 +151,21 @@ MultiModalPathAlgorithm::GetBestPath(odin::Location& origin,
   SetDestination(graphreader, destination, costing);
   SetOrigin(graphreader, origin, destination, costing);
 
-  uint32_t start_time, localtime, date, dow, day = 0;
+  // Set route start time (seconds from midnight) and timezone.
+  // NOTe: already made sure origin has date_time set.
+  uint32_t date, dow, day = 0;
   bool date_before_tile = false;
-  if (origin.has_date_time()) {
-    // Set route start time (seconds from midnight), date, and day of week
-    start_time = DateTime::seconds_from_midnight(origin.date_time());
-    localtime = start_time;
+  bool date_set = false;
+  uint32_t start_time = DateTime::seconds_from_midnight(origin.date_time());
+  uint32_t localtime = start_time;
+  int origin_tz_index =
+      edgelabels_.size() == 0 ? 0 : GetTimezone(graphreader, edgelabels_[0].endnode());
+  if (origin_tz_index == 0) {
+    // TODO - should we throw an exception and return an error
+    LOG_ERROR("Could not get the timezone at the origin location");
+    return {};
   }
 
-  bool date_set = false;
   // Find shortest path
   uint32_t blockid, tripid;
   uint32_t nc = 0; // Count of iterations with no convergence
@@ -244,8 +250,15 @@ MultiModalPathAlgorithm::GetBestPath(odin::Location& origin,
       }
     }
 
-    // Set local time. TODO: adjust for time zone.
+    // Set local time and adjust for time zone (if different from timezone at the start).
     uint32_t localtime = start_time + pred.cost().secs;
+    if (nodeinfo->timezone() != origin_tz_index) {
+      // Get the difference in seconds between the origin tz and current tz
+      int tz_diff =
+          DateTime::timezone_diff(localtime, DateTime::get_tz_db().from_index(origin_tz_index),
+                                  DateTime::get_tz_db().from_index(nodeinfo->timezone()));
+      localtime += tz_diff;
+    }
 
     // Set a default transfer penalty at a stop (if not same trip Id and block Id)
     Cost transfer_cost = tc->DefaultTransferCost();

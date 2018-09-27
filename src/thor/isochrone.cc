@@ -35,15 +35,6 @@ uint32_t GetOperatorId(const GraphTile* tile,
   return 0;
 }
 
-// Get the timezone at the origin.
-int GetTimezone(GraphReader& graphreader, const GraphId& node) {
-  const GraphTile* tile = graphreader.GetGraphTile(node);
-  if (tile == nullptr) {
-    return -1;
-  }
-  return tile->node(node)->timezone();
-}
-
 } // namespace
 
 namespace valhalla {
@@ -335,7 +326,13 @@ Isochrone::Compute(google::protobuf::RepeatedPtrField<valhalla::odin::Location>&
   const auto& origin = origin_locations.Get(0);
   if (origin.has_date_time() && edgelabels_.size() > 0) {
     // Set the origin timezone to be the timezone at the end node
-    start_tz_index_ = GetTimezone(graphreader, edgelabels_[0].endnode());
+    start_tz_index_ =
+        edgelabels_.size() == 0 ? 0 : GetTimezone(graphreader, edgelabels_[0].endnode());
+    if (start_tz_index_ == 0) {
+      // TODO - should we throw an exception and return an error
+      LOG_ERROR("Could not get the timezone at the origin");
+      // return isotile_;
+    }
 
     // Set route start time (seconds from epoch)
     start_time = DateTime::seconds_since_epoch(origin.date_time(),
@@ -530,7 +527,13 @@ std::shared_ptr<const GriddedData<PointLL>> Isochrone::ComputeReverse(
   const auto& dest = dest_locations.Get(0);
   if (dest.has_date_time() && bdedgelabels_.size() > 0) {
     // Set the timezone to be the timezone at the end node
-    start_tz_index_ = GetTimezone(graphreader, bdedgelabels_[0].endnode());
+    start_tz_index_ =
+        bdedgelabels_.size() == 0 ? 0 : GetTimezone(graphreader, bdedgelabels_[0].endnode());
+    if (start_tz_index_ == 0) {
+      // TODO - should we throw an exception and return an error
+      LOG_ERROR("Could not get the timezone at the destination location");
+      // return isotile_;
+    }
 
     // Set route start time (seconds from epoch)
     start_time = DateTime::seconds_since_epoch(dest.date_time(),
@@ -622,6 +625,15 @@ std::shared_ptr<const GriddedData<PointLL>> Isochrone::ComputeMultiModal(
   uint32_t start_time, localtime, date, dow, day = 0;
   bool date_before_tile = false;
   if (origin_locations.Get(0).has_date_time()) {
+    // Set the timezone to be the timezone at the end node
+    start_tz_index_ =
+        mmedgelabels_.size() == 0 ? 0 : GetTimezone(graphreader, mmedgelabels_[0].endnode());
+    if (start_tz_index_ == 0) {
+      // TODO - should we throw an exception and return an error
+      LOG_ERROR("Could not get the timezone at the origin location");
+      // return isotile_;
+    }
+
     // Set route start time (seconds from midnight), date, and day of week
     start_time = DateTime::seconds_from_midnight(origin_locations.Get(0).date_time());
     localtime = start_time;
@@ -676,8 +688,15 @@ std::shared_ptr<const GriddedData<PointLL>> Isochrone::ComputeMultiModal(
       continue;
     }
 
-    // Set local time. TODO: adjust for time zone.
+    // Set local time and adjust for time zone  (if different from timezone at the start).
     uint32_t localtime = start_time + pred.cost().secs;
+    if (nodeinfo->timezone() != start_tz_index_) {
+      // Get the difference in seconds between the origin tz and current tz
+      int tz_diff =
+          DateTime::timezone_diff(localtime, DateTime::get_tz_db().from_index(start_tz_index_),
+                                  DateTime::get_tz_db().from_index(nodeinfo->timezone()));
+      localtime += tz_diff;
+    }
 
     // Set a default transfer penalty at a stop (if not same trip Id and block Id)
     Cost transfer_cost = tc->DefaultTransferCost();
