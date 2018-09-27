@@ -83,10 +83,8 @@ std::string iso_date_time(const date::time_zone* time_zone) {
     return "";
   std::ostringstream iso_date_time;
   const auto date = date::make_zoned(time_zone, std::chrono::system_clock::now());
-  iso_date_time << date::format("%FT%R%z", date);
-  std::string iso_date = iso_date_time.str();
-  iso_date.insert(19, 1, ':');
-  return iso_date;
+  iso_date_time << date::format("%FT%R", date);
+  return iso_date_time.str();
 }
 
 // Get the seconds since epoch time is already adjusted based on TZ
