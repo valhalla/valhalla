@@ -4,6 +4,8 @@
    * UPDATED: Add timezone checks to multimodal routes and isochrones (updates localtime if the path crosses into a timezone different than the start location).
 * **Data Producer Update**
    * UPDATED: Removed boost date time support from transit.  Now using the Howard Hinnant date library.
+* **Bug Fix**
+   * FIXED: We were getting inconsistent results between departing at current date/time vs entering the current date/time.  This issue is due to the fact that the iso_date_time function returns the full iso date_time with the timezone offset (e.g., 2018-09-27T10:23-07:00 vs 2018-09-27T10:23). When we refactored the date_time code to use the new Howard Hinnant date library, we introduced this bug.
 
 ## Release Date: 2018-09-13 Valhalla 2.7.0
 * **Enhancement**
