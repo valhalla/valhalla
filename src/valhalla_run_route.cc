@@ -585,8 +585,9 @@ int main(int argc, char* argv[]) {
       // Use time dependent algorithms if date time is present
       // TODO - this isn't really correct for multipoint routes but should allow
       // simple testing.
-      if (directions_options.date_time_type() == DirectionsOptions_DateTimeType_depart_at ||
-          directions_options.date_time_type() == DirectionsOptions_DateTimeType_current) {
+      if (directions_options.has_date_time() &&
+          (directions_options.date_time_type() == DirectionsOptions_DateTimeType_depart_at ||
+           directions_options.date_time_type() == DirectionsOptions_DateTimeType_current)) {
         pathalgorithm = &timedep_forward;
       } else if (directions_options.date_time_type() == DirectionsOptions_DateTimeType_arrive_by) {
         pathalgorithm = &timedep_reverse;
