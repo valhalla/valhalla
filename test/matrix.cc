@@ -95,7 +95,8 @@ public:
   Cost TransitionCostReverse(const uint32_t idx,
                              const NodeInfo* node,
                              const DirectedEdge* opp_edge,
-                             const DirectedEdge* opp_pred_edge) const {
+                             const DirectedEdge* opp_pred_edge,
+                             const bool has_traffic) const {
     return {5.0f, 5.0f};
   }
 
