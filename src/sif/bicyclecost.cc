@@ -310,11 +310,13 @@ public:
    * @param  edge  Directed edge (the to edge)
    * @param  node  Node (intersection) where transition occurs.
    * @param  pred  Predecessor edge information.
+   * @param  has_traffic  Does the transition have traffic information.
    * @return  Returns the cost and time (seconds)
    */
   virtual Cost TransitionCost(const baldr::DirectedEdge* edge,
                               const baldr::NodeInfo* node,
-                              const EdgeLabel& pred) const;
+                              const EdgeLabel& pred,
+                              const bool has_traffic = false) const;
 
   /**
    * Returns the cost to make the transition from the predecessor edge
@@ -323,12 +325,14 @@ public:
    * @param  node  Node (intersection) where transition occurs.
    * @param  pred  the opposing current edge in the reverse tree.
    * @param  edge  the opposing predecessor in the reverse tree
+   * @param  has_traffic  Does the transition have traffic information.
    * @return  Returns the cost and time (seconds)
    */
   virtual Cost TransitionCostReverse(const uint32_t idx,
                                      const baldr::NodeInfo* node,
                                      const baldr::DirectedEdge* pred,
-                                     const baldr::DirectedEdge* edge) const;
+                                     const baldr::DirectedEdge* edge,
+                                     const bool has_traffic = false) const;
 
   /**
    * Get the cost factor for A* heuristics. This factor is multiplied
@@ -746,7 +750,8 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge, const uint32_t speed
 // Returns the time (in seconds) to make the transition from the predecessor
 Cost BicycleCost::TransitionCost(const baldr::DirectedEdge* edge,
                                  const baldr::NodeInfo* node,
-                                 const EdgeLabel& pred) const {
+                                 const EdgeLabel& pred,
+                                 const bool has_traffic) const {
   // Accumulate cost and penalty
   float seconds = 0.0f;
   float penalty = 0.0f;
@@ -850,7 +855,8 @@ Cost BicycleCost::TransitionCost(const baldr::DirectedEdge* edge,
 Cost BicycleCost::TransitionCostReverse(const uint32_t idx,
                                         const baldr::NodeInfo* node,
                                         const baldr::DirectedEdge* pred,
-                                        const baldr::DirectedEdge* edge) const {
+                                        const baldr::DirectedEdge* edge,
+                                        const bool has_traffic) const {
   // Accumulate cost and penalty
   float seconds = 0.0f;
   float penalty = 0.0f;
