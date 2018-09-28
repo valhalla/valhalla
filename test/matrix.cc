@@ -241,19 +241,10 @@ const auto test_request_osrm = R"({
     "costing":"auto"
   }&format=osrm)";
 
-std::vector<TimeDistance> cost_matrix_answers = {{29, 29},     {1967, 1852}, {2329, 2225},
-                                                 {4084, 3854}, {1488, 1398}, {1739, 1639},
-                                                 {2065, 1981}, {3857, 3641}, {2313, 2213},
-                                                 {686, 641},   {0, 0},       {2803, 2643},
-                                                 {5529, 5279}, {3902, 3707}, {4302, 4108},
-                                                 {1810, 1680}};
-
-std::vector<TimeDistance> timedist_matrix_answers = {{28, 28},     {2027, 1837}, {2402, 2211},
-                                                     {4164, 3839}, {1518, 1397}, {1809, 1639},
-                                                     {2062, 1951}, {3946, 3641}, {2312, 2111},
-                                                     {700, 640},   {0, 0},       {2822, 2626},
-                                                     {5563, 5177}, {3951, 3706}, {4367, 4106},
-                                                     {1825, 1679}};
+std::vector<TimeDistance> matrix_answers = {{28, 28},     {2027, 1837}, {2402, 2211}, {4164, 3839},
+                                            {1518, 1397}, {1809, 1639}, {2062, 1951}, {3946, 3641},
+                                            {2312, 2112}, {700, 640},   {0, 0},       {2822, 2626},
+                                            {5563, 5178}, {3951, 3706}, {4367, 4107}, {1825, 1679}};
 } // namespace
 
 const uint32_t kThreshold = 1;
@@ -278,18 +269,18 @@ void test_matrix() {
   results = cost_matrix.SourceToTarget(request.options.sources(), request.options.targets(), reader,
                                        &costing, TravelMode::kDrive, 400000.0);
   for (uint32_t i = 0; i < results.size(); ++i) {
-    if (!within_tolerance(results[i].dist, cost_matrix_answers[i].dist)) {
+    if (!within_tolerance(results[i].dist, matrix_answers[i].dist)) {
       throw std::runtime_error("result " + std::to_string(i) +
                                "'s distance is not close enough"
                                " to expected value for CostMatrix. Expected: " +
-                               std::to_string(cost_matrix_answers[i].dist) +
+                               std::to_string(matrix_answers[i].dist) +
                                " Actual: " + std::to_string(results[i].dist));
     }
-    if (!within_tolerance(results[i].time, cost_matrix_answers[i].time)) {
+    if (!within_tolerance(results[i].time, matrix_answers[i].time)) {
       throw std::runtime_error("result " + std::to_string(i) +
                                "'s time is not close enough"
                                " to expected value for CostMatrix. Expected: " +
-                               std::to_string(cost_matrix_answers[i].time) +
+                               std::to_string(matrix_answers[i].time) +
                                " Actual: " + std::to_string(results[i].time));
     }
   }
@@ -298,18 +289,18 @@ void test_matrix() {
   results = timedist_matrix.SourceToTarget(request.options.sources(), request.options.targets(),
                                            reader, &costing, TravelMode::kDrive, 400000.0);
   for (uint32_t i = 0; i < results.size(); ++i) {
-    if (!within_tolerance(results[i].dist, timedist_matrix_answers[i].dist)) {
+    if (!within_tolerance(results[i].dist, matrix_answers[i].dist)) {
       throw std::runtime_error("result " + std::to_string(i) +
                                "'s distance is not equal to"
                                " the expected value for TimeDistMatrix. Expected: " +
-                               std::to_string(timedist_matrix_answers[i].dist) +
+                               std::to_string(matrix_answers[i].dist) +
                                " Actual: " + std::to_string(results[i].dist));
     }
-    if (!within_tolerance(results[i].time, timedist_matrix_answers[i].time)) {
+    if (!within_tolerance(results[i].time, matrix_answers[i].time)) {
       throw std::runtime_error("result " + std::to_string(i) +
                                "'s time is not equal to"
                                " the expected value for TimeDistMatrix. Expected: " +
-                               std::to_string(timedist_matrix_answers[i].time) +
+                               std::to_string(matrix_answers[i].time) +
                                " Actual: " + std::to_string(results[i].time));
     }
   }
@@ -333,19 +324,19 @@ void test_matrix_osrm() {
   results = cost_matrix.SourceToTarget(request.options.sources(), request.options.targets(), reader,
                                        &costing, TravelMode::kDrive, 400000.0);
   for (uint32_t i = 0; i < results.size(); ++i) {
-    if (results[i].dist != cost_matrix_answers[i].dist) {
+    if (results[i].dist != matrix_answers[i].dist) {
       throw std::runtime_error("Something is wrong");
       throw std::runtime_error("result " + std::to_string(i) +
                                "'s distance is not close enough"
                                " to expected value for CostMatrix. Expected: " +
-                               std::to_string(cost_matrix_answers[i].dist) +
+                               std::to_string(matrix_answers[i].dist) +
                                " Actual: " + std::to_string(results[i].dist));
     }
-    if (results[i].time != cost_matrix_answers[i].time) {
+    if (results[i].time != matrix_answers[i].time) {
       throw std::runtime_error("result " + std::to_string(i) +
                                "'s time is not close enough"
                                " to expected value for CostMatrix. Expected: " +
-                               std::to_string(cost_matrix_answers[i].time) +
+                               std::to_string(matrix_answers[i].time) +
                                " Actual: " + std::to_string(results[i].time));
     }
   }
@@ -354,18 +345,18 @@ void test_matrix_osrm() {
   results = timedist_matrix.SourceToTarget(request.options.sources(), request.options.targets(),
                                            reader, &costing, TravelMode::kDrive, 400000.0);
   for (uint32_t i = 0; i < results.size(); ++i) {
-    if (results[i].dist != timedist_matrix_answers[i].dist) {
+    if (results[i].dist != matrix_answers[i].dist) {
       throw std::runtime_error("result " + std::to_string(i) +
                                "'s distance is not equal to"
                                " the expected value for TimeDistMatrix. Expected: " +
-                               std::to_string(timedist_matrix_answers[i].dist) +
+                               std::to_string(matrix_answers[i].dist) +
                                " Actual: " + std::to_string(results[i].dist));
     }
-    if (results[i].time != timedist_matrix_answers[i].time) {
+    if (results[i].time != matrix_answers[i].time) {
       throw std::runtime_error("result " + std::to_string(i) +
                                "'s time is not equal to"
                                " the expected value for TimeDistMatrix. Expected: " +
-                               std::to_string(timedist_matrix_answers[i].time) +
+                               std::to_string(matrix_answers[i].time) +
                                " Actual: " + std::to_string(results[i].time));
     }
   }

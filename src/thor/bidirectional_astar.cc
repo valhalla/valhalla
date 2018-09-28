@@ -139,24 +139,30 @@ void BidirectionalAStar::ExpandForward(GraphReader& graphreader,
       continue;
     }
 
-    // Skip this edge if edge is permanently labeled (best path already
-    // found to this directed edge), if edge is superseded by a shortcut
-    // edge that was taken, if no access is allowed (based on costing method),
+    // Skip shortcut edges until we have stopped expanding on the next level. Use regular
+    // edges while still expanding on the next level since we can still transition down to
+    // that level. If using a shortcut, set the shortcuts mask. Skip if this is a regular
+    // edge superseded by a shortcut.
+    if (directededge->is_shortcut()) {
+      if (hierarchy_limits_forward_[edgeid.level() + 1].StopExpanding()) {
+        shortcuts |= directededge->shortcut();
+      } else {
+        continue;
+      }
+    } else if (shortcuts & directededge->superseded()) {
+      continue;
+    }
+
+    // Skip this edge if edge is permanently labeled (best path already found
+    // to this directed edge), if no access is allowed (based on costing method),
     // or if a complex restriction prevents transition onto this edge.
-    if (es->set() == EdgeSet::kPermanent || (shortcuts & directededge->superseded()) ||
+    if (es->set() == EdgeSet::kPermanent ||
         !costing_->Allowed(directededge, pred, tile, edgeid, 0, 0) ||
         costing_->Restricted(directededge, pred, edgelabels_forward_, tile, edgeid, true)) {
       continue;
     }
 
-    // Get cost. Separate out transition cost. Update the_shortcuts mask.
-    // to supersede any regular edge, but only do this once we have stopped
-    // expanding on the next lower level (so we can still transition down to
-    // that level).
-    if (directededge->is_shortcut() &&
-        hierarchy_limits_forward_[edgeid.level() + 1].StopExpanding()) {
-      shortcuts |= directededge->shortcut();
-    }
+    // Get cost. Separate out transition cost.
     Cost tc = costing_->TransitionCost(directededge, nodeinfo, pred);
     Cost newcost = pred.cost() + tc + costing_->EdgeCost(directededge, tile->GetSpeed(directededge));
 
@@ -237,11 +243,23 @@ void BidirectionalAStar::ExpandReverse(GraphReader& graphreader,
       continue;
     }
 
+    // Skip shortcut edges until we have stopped expanding on the next level. Use regular
+    // edges while still expanding on the next level since we can still transition down to
+    // that level. If using a shortcut, set the shortcuts mask. Skip if this is a regular
+    // edge superseded by a shortcut.
+    if (directededge->is_shortcut()) {
+      if (hierarchy_limits_reverse_[edgeid.level() + 1].StopExpanding()) {
+        shortcuts |= directededge->shortcut();
+      } else {
+        continue;
+      }
+    } else if (shortcuts & directededge->superseded()) {
+      continue;
+    }
+
     // Skip this edge if permanently labeled (best path already found to this
-    // directed edge), if no access for this mode, or if edge is superseded
-    // by a shortcut edge that was taken.
-    if (es->set() == EdgeSet::kPermanent || !(directededge->reverseaccess() & access_mode_) ||
-        (shortcuts & directededge->superseded())) {
+    // directed edge) or if no access for this mode.
+    if (es->set() == EdgeSet::kPermanent || !(directededge->reverseaccess() & access_mode_)) {
       continue;
     }
 
@@ -261,15 +279,8 @@ void BidirectionalAStar::ExpandReverse(GraphReader& graphreader,
       continue;
     }
 
-    // Get cost. Use opposing edge for EdgeCost. Update the_shortcuts mask
-    // to supersede any regular edge, but only do this once we have stopped
-    // expanding on the next lower level (so we can still transition down to
-    // that level). Separate the transition seconds so we can properly recover
-    // elapsed time on the reverse path.
-    if (directededge->is_shortcut() &&
-        hierarchy_limits_reverse_[edgeid.level() + 1].StopExpanding()) {
-      shortcuts |= directededge->shortcut();
-    }
+    // Get cost. Use opposing edge for EdgeCost. Separate the transition seconds so we
+    // can properly recover elapsed time on the reverse path.
     Cost tc = costing_->TransitionCostReverse(directededge->localedgeidx(), nodeinfo, opp_edge,
                                               opp_pred_edge);
     Cost newcost = pred.cost() + costing_->EdgeCost(opp_edge, tile->GetSpeed(opp_edge));
