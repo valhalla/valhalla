@@ -149,7 +149,7 @@ void TimeDepReverse::ExpandReverse(GraphReader& graphreader,
     }
 
     Cost tc = costing_->TransitionCostReverse(directededge->localedgeidx(), nodeinfo, opp_edge,
-                                              opp_pred_edge);
+                                              opp_pred_edge, opp_pred_edge->predicted_speed());
     Cost newcost = pred.cost() +
                    costing_->EdgeCost(opp_edge, t2->GetSpeed(directededge, edgeid, seconds_of_week));
     newcost.cost += tc.cost;

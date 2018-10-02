@@ -176,11 +176,13 @@ public:
    * @param  edge  Directed edge (the to edge)
    * @param  node  Node (intersection) where transition occurs.
    * @param  pred  Predecessor edge information.
+   * @param  has_traffic  Does the transition have traffic information.
    * @return  Returns the cost and time (seconds)
    */
   virtual Cost TransitionCost(const baldr::DirectedEdge* edge,
                               const baldr::NodeInfo* node,
-                              const EdgeLabel& pred) const;
+                              const EdgeLabel& pred,
+                              const bool has_traffic = false) const;
 
   /**
    * Returns the transfer cost between 2 transit stops.
@@ -603,7 +605,8 @@ Cost TransitCost::EdgeCost(const baldr::DirectedEdge* edge,
 // Returns the time (in seconds) to make the transition from the predecessor
 Cost TransitCost::TransitionCost(const baldr::DirectedEdge* edge,
                                  const baldr::NodeInfo* node,
-                                 const EdgeLabel& pred) const {
+                                 const EdgeLabel& pred,
+                                 const bool has_traffic) const {
   if (pred.mode() == TravelMode::kPedestrian) {
     // Apply any mode-based penalties when boarding transit
     // Do we want any time cost to board?
