@@ -36,7 +36,8 @@ TransitionCostModel::TransitionCostModel(baldr::GraphReader& graphreader,
   }
 
   if (0.f < turn_penalty_factor_) {
-    for (int i = 0; i <= 180; ++i) {
+    turn_cost_table_[0] = turn_penalty_factor_ * 4.0f;
+    for (int i = 1; i <= 180; ++i) {
       turn_cost_table_[i] = turn_penalty_factor_ * std::exp(-i / 45.f);
     }
   }
