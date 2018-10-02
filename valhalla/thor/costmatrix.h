@@ -20,8 +20,8 @@
 namespace valhalla {
 namespace thor {
 
-// These cost thresholds are in addition to the distance
-// thresholds for quick rejection
+// These cost thresholds are in addition to the distance thresholds. If either forward or reverse
+// costs exceed the threshold the search is terminated.
 constexpr float kCostThresholdAutoDivisor =
     56.0f; // 400 km distance threshold will result in a cost threshold of ~7200 (2 hours)
 constexpr float kCostThresholdBicycleDivisor =

@@ -50,7 +50,9 @@ float CostMatrix::GetCostThreshold(const float max_matrix_distance) {
       cost_threshold = max_matrix_distance / kCostThresholdAutoDivisor;
   }
 
-  return cost_threshold;
+  // Increase the cost threshold to make sure requests near the max distance succeed.
+  // Some costing models and locations require higher thresholds to succeed.
+  return cost_threshold * 2.0f;
 }
 
 // Clear the temporary information generated during time + distance matrix
