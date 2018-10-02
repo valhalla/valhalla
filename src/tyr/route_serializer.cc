@@ -8,6 +8,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "baldr/edge_data.h"
 #include "baldr/json.h"
 #include "baldr/rapidjson_utils.h"
 #include "baldr/turn.h"
@@ -1150,6 +1151,229 @@ travel_mode_type(const valhalla::odin::TripDirections_Maneuver& maneuver) {
   }
 }
 
+// The types of properties that will be returned
+// for a given route
+enum class Properties {
+  Grade,
+  Surface,
+  Cycle_Lane,
+  Use,
+  Toll,
+  Bridge,
+  Tunnel
+};
+
+bool isPropertyAbsent(Properties current_property) {
+  return current_property == Properties::Toll ||
+         current_property == Properties::Bridge ||
+         current_property == Properties::Tunnel;
+}
+
+// Will return a json of an edge's type, distance and percentage
+// compared to the entire route
+json::ArrayPtr summary_data(valhalla::baldr::EdgeData data) {
+  auto summary_data = json::array({});
+
+  summary_data->emplace_back(json::fp_t{data.type(), 3});
+  summary_data->emplace_back(json::fp_t{data.distance(), 3});
+  summary_data->emplace_back(json::fp_t{data.percentage(), 2});
+
+  return summary_data;
+}
+
+// Will return a json of an edge's start and stop index
+// for a certain type
+json::ArrayPtr indices_data(valhalla::baldr::EdgeData data) {
+  auto indices_data = json::array({});
+
+  indices_data->emplace_back(static_cast<uint64_t>(data.start_index()));
+  indices_data->emplace_back(static_cast<uint64_t>(data.end_index()));
+
+  return indices_data;
+}
+
+// Returns the start and stop indices for the entire route
+// for a certain property
+json::ArrayPtr indices(const std::vector<valhalla::baldr::EdgeData> property_data) {
+  auto indices_array = json::array({});
+
+  if (property_data.size() > 0) {
+    for (auto data: property_data) {
+      indices_array->emplace_back(indices_data(data));
+    }
+  }
+
+  return indices_array;
+}
+
+// Returns the summary for the entire route
+// for a certain property
+json::ArrayPtr summary(const std::vector<valhalla::baldr::EdgeData> property_data) {
+  auto summary_array = json::array({});
+
+  if (property_data.size() > 0) {
+    for (auto data: property_data) {
+      summary_array->emplace_back(summary_data(data));
+    }
+  }
+
+  return summary_array;
+}
+
+// Returns the overall summary for the entire route
+// This will condense the summary
+json::ArrayPtr overall_summary(const std::vector<valhalla::baldr::EdgeData> property_data) {
+  auto overall_summary_array = json::array({});
+  auto overall_property = property_data.front();
+
+  if (property_data.size() == 1) {
+    overall_summary_array->emplace_back(summary_data(overall_property));
+    return overall_summary_array;
+  }
+
+  for (auto data: property_data) {
+    if (data == property_data.front())
+      continue;
+
+    if (overall_property.type() == data.type())
+      overall_property += data;
+    else {
+      overall_summary_array->emplace_back(summary_data(overall_property));
+      overall_property = data;
+    }
+
+    if (data == property_data.back()) {
+      overall_summary_array->emplace_back(summary_data(overall_property));
+    }
+  }
+
+  return overall_summary_array;
+}
+
+float get_property_type(valhalla::odin::TripPath_Edge current_edge, Properties current_property) {
+  switch (current_property) {
+    case Properties::Grade:
+      return current_edge.weighted_grade();
+    case Properties::Surface:
+      return current_edge.surface();
+    case Properties::Cycle_Lane:
+      return current_edge.cycle_lane();
+    case Properties::Use:
+      return current_edge.use();
+    case Properties::Toll:
+      return current_edge.toll();
+    case Properties::Bridge:
+      return current_edge.bridge();
+    case Properties::Tunnel:
+      return current_edge.tunnel();
+  }
+}
+
+// Returns the properties data
+std::vector<std::vector<valhalla::baldr::EdgeData>>
+  get_properties_data(const std::vector<valhalla::odin::TripPath_Edge> edges,
+                      float total_length, std::vector<Properties> properties_enabled) {
+  valhalla::baldr::EdgeData properties [properties_enabled.size()];
+
+  int start_of_property [properties_enabled.size()];
+
+  std::vector<std::vector<valhalla::baldr::EdgeData>> properties_data(properties_enabled.size());
+
+  for (int i = 0; i < edges.size(); i++) {
+    auto current_edge = edges[i];
+
+    for (int j = 0; j < properties_enabled.size(); j++) {
+      auto current_property = properties_enabled[j];
+
+      if (i == 0) {
+        start_of_property[j] = 0;
+
+        properties[j].set_type(get_property_type(current_edge, current_property));
+        properties[j].set_distance(current_edge.length());
+      } else {
+        auto previous_edge = edges[i - 1];
+
+        if (i != edges.size() - 1 && properties[j].type() == get_property_type(current_edge, current_property)) {
+          properties[j] += current_edge.length();
+          continue;
+        }
+
+        properties[j].set_start_index(start_of_property[j]);
+        properties[j].set_end_index(previous_edge.end_shape_index());
+        properties[j].set_percentage(properties[j].distance()/total_length * 100);
+
+        properties_data[j].push_back(properties[j]);
+
+        if (isPropertyAbsent(current_property) && properties_data[j].back().type() == 0)
+          properties_data[j].pop_back();
+
+        start_of_property[j] = current_edge.begin_shape_index();
+        properties[j].set_distance(current_edge.length());
+        properties[j].set_type(get_property_type(current_edge, current_property));
+      }
+    }
+  }
+
+  return properties_data;
+}
+
+json::MapPtr properties(const std::vector<valhalla::odin::TripPath_Edge> edges,
+                    float total_length,
+                    std::vector<Properties> properties_enabled) {
+  auto properties = json::map({});
+
+  auto properties_data = get_properties_data(edges, total_length, properties_enabled);
+
+  for (int i = 0; i < properties_enabled.size(); i++) {
+    auto property = json::map({});
+
+    json::ArrayPtr summary_array;
+    json::ArrayPtr indices_array;
+    json::ArrayPtr overall_summary_array;
+
+    if (properties_data[i].size() > 0) {
+      summary_array = summary(properties_data[i]);
+      indices_array = indices(properties_data[i]);
+      std::sort(properties_data[i].begin(), properties_data[i].end());
+      overall_summary_array = overall_summary(properties_data[i]);
+    } else {
+      summary_array = json::array({});
+      indices_array = json::array({});
+      overall_summary_array = json::array({});
+    }
+
+    property->emplace("overall_summary", std::move(overall_summary_array));
+    property->emplace("summary", std::move(summary_array));
+    property->emplace("indices", std::move(indices_array));
+
+    switch (properties_enabled[i]) {
+      case Properties::Grade:
+       properties->emplace("grade", property);
+       break;
+      case Properties::Surface:
+        properties->emplace("surface", property);
+        break;
+      case Properties::Cycle_Lane:
+        properties->emplace("cycle_lane", property);
+        break;
+      case Properties::Use:
+        properties->emplace("use", property);
+        break;
+      case Properties::Toll:
+        properties->emplace("toll", property);
+        break;
+      case Properties::Bridge:
+        properties->emplace("bridge", property);
+        break;
+      case Properties::Tunnel:
+        properties->emplace("tunnel", property);
+        break;
+    }
+  }
+
+  return properties;
+}
+
 json::ArrayPtr legs(const std::list<valhalla::odin::TripDirections>& directions_legs) {
 
   // TODO: multiple legs.
@@ -1312,6 +1536,16 @@ json::ArrayPtr legs(const std::list<valhalla::odin::TripDirections>& directions_
       if (maneuver.has_roundabout_exit_count()) {
         man->emplace("roundabout_exit_count",
                      static_cast<uint64_t>(maneuver.roundabout_exit_count()));
+
+        man->emplace("roundabout_clockwise", static_cast<bool>(maneuver.roundabout_clockwise()));
+
+        auto roundabout_exit_angles_json = json::array({});
+
+        for (auto roundabout_exit_angle : maneuver.roundabout_exit_angles()) {
+          roundabout_exit_angles_json->emplace_back(static_cast<uint64_t>(roundabout_exit_angle));
+        }
+
+        man->emplace("roundabout_exit_angle", roundabout_exit_angles_json);
       }
 
       // Depart and arrive instructions
@@ -1459,23 +1693,65 @@ json::ArrayPtr legs(const std::list<valhalla::odin::TripDirections>& directions_
 }
 
 std::string serialize(const valhalla::odin::DirectionsOptions& directions_options,
-                      const std::list<valhalla::odin::TripDirections>& directions_legs) {
+                      const std::list<valhalla::odin::TripDirections>& directions_legs,
+                      const std::list<valhalla::odin::TripPath>& trip_paths) {
   // build up the json object
-  auto json = json::map(
-      {{"trip", json::map({{"locations", locations(directions_legs)},
-                           {"summary", summary(directions_legs)},
-                           {"legs", legs(directions_legs)},
-                           {"status_message",
-                            string("Found route between points")}, // found route between points OR
-                                                                   // cannot find route between points
-                           {"status", static_cast<uint64_t>(0)},   // 0 success
-                           {"units", valhalla::odin::DirectionsOptions::Units_Name(
-                                         directions_options.units())},
-                           {"language", directions_options.language()}})}});
-  if (directions_options.has_id()) {
-    json->emplace("id", directions_options.id());
+
+  std::vector<valhalla::odin::TripPath_Edge> edges;
+  float total_length = 0;
+
+  for (auto path = trip_paths.begin(); path != trip_paths.end(); ++path) {
+    for (auto node: path->node()) {
+      auto edge = node.edge();
+
+      total_length += edge.length();
+
+      edges.push_back(edge);
+    }
   }
 
+  auto json = json::map
+  ({
+    {"trip", json::map
+       ({
+        {"locations", locations(directions_legs)},
+        {"summary", summary(directions_legs)},
+        {"legs", legs(directions_legs)},
+        {"status_message", string("Found route between points")}, //found route between points OR cannot find route between points
+        {"status", static_cast<uint64_t>(0)}, //0 success
+        {"units", valhalla::odin::DirectionsOptions::Units_Name(directions_options.units())},
+        {"language", directions_options.language()}
+      })
+    }
+  });
+
+  std::vector<Properties> properties_enabled;
+
+  if (directions_options.grades())
+    properties_enabled.push_back(Properties::Grade);
+
+  if (directions_options.surface())
+    properties_enabled.push_back(Properties::Surface);
+
+  if (directions_options.cycle_lane())
+    properties_enabled.push_back(Properties::Cycle_Lane);
+
+  if (directions_options.use())
+    properties_enabled.push_back(Properties::Use);
+
+  if (directions_options.toll())
+    properties_enabled.push_back(Properties::Toll);
+
+  if (directions_options.bridge())
+    properties_enabled.push_back(Properties::Bridge);
+
+  if (directions_options.tunnel())
+    properties_enabled.push_back(Properties::Tunnel);
+
+  json->emplace("properties", properties(edges, total_length, properties_enabled));
+
+  if (directions_options.has_id())
+    json->emplace("id", directions_options.id());
   std::stringstream ss;
   ss << *json;
   return ss.str();
@@ -2281,7 +2557,7 @@ std::string serializeDirections(const valhalla_request_t& request,
     case DirectionsOptions_Format_gpx:
       return pathToGPX(path_legs);
     case DirectionsOptions_Format_json:
-      return valhalla_serializers::serialize(request.options, directions_legs);
+      return (valhalla_serializers::serialize(request.options, directions_legs, path_legs));
     default:
       throw;
   }
