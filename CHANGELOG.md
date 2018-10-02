@@ -1,4 +1,4 @@
-## Release Date: TBD Valhalla 2.7.1
+## Release Date: 2018-10-02 Valhalla 2.7.1
 * **Enhancement**
    * UPDATED: Added date time support to forward and reverse isochrones. Add speed lookup (predicted speeds and/or free-flow or constrained flow speed) if date_time is present.
    * UPDATED: Add timezone checks to multimodal routes and isochrones (updates localtime if the path crosses into a timezone different than the start location).
