@@ -85,14 +85,18 @@ public:
     return {sec / 10.0f, sec};
   }
 
-  Cost TransitionCost(const DirectedEdge* edge, const NodeInfo* node, const EdgeLabel& pred) const {
+  Cost TransitionCost(const DirectedEdge* edge,
+                      const NodeInfo* node,
+                      const EdgeLabel& pred,
+                      const bool has_traffic) const {
     return {5.0f, 5.0f};
   }
 
   Cost TransitionCostReverse(const uint32_t idx,
                              const NodeInfo* node,
                              const DirectedEdge* opp_edge,
-                             const DirectedEdge* opp_pred_edge) const {
+                             const DirectedEdge* opp_pred_edge,
+                             const bool has_traffic) const {
     return {5.0f, 5.0f};
   }
 
