@@ -123,6 +123,12 @@ public:
   bool roundabout() const;
   void set_roundabout(bool roundabout);
 
+  bool roundabout_clockwise() const;
+  void set_roundabout_clockwise(bool roundabout_clockwise);
+
+  std::vector<uint32_t> roundabout_exit_angles() const;
+  void set_roundabout_exit_angles(std::vector<uint32_t> roundabout_edges_length);
+
   bool portions_toll() const;
   void set_portions_toll(bool portionsToll);
 
@@ -289,6 +295,7 @@ protected:
   bool ferry_;
   bool rail_ferry_;
   bool roundabout_;
+  bool roundabout_clockwise_;
   bool portions_toll_;
   bool portions_unpaved_;
   bool portions_highway_;
@@ -344,6 +351,7 @@ protected:
   // TODO notes
 
   static const std::unordered_map<int, std::string> relative_direction_string_;
+  std::vector<uint32_t> roundabout_exit_angles_;
 };
 
 } // namespace odin

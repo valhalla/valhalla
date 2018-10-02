@@ -19,6 +19,7 @@ valhalla_module(NAME baldr
     datetime.cc
     directededge.cc
     edge_elevation.cc
+    edge_data.cc
     edgeinfo.cc
     graphid.cc
     graphreader.cc

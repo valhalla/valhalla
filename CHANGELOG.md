@@ -17,6 +17,9 @@
    * UPDATED: Changed the shape_match attribute from a string to an enum. Fixes [1376](https://github.com/valhalla/valhalla/issues/1376)
    * ADDED: Node bindings for route [#1341](https://github.com/valhalla/valhalla/pull/1341)
    * UPDATED: Use a non-linear use_highways factor (to more heavily penalize highways as use_highways approaches 0).
+   * ADDED: Getting angles for exits within a roundabout
+* **Routing**
+   * CHANGED: Getting roundabout exit counts
 
 ## Release Date: 2018-07-15 Valhalla 2.6.3
 * **API**:

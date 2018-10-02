@@ -301,6 +301,22 @@ void Maneuver::set_roundabout(bool roundabout) {
   roundabout_ = roundabout;
 }
 
+bool Maneuver::roundabout_clockwise() const {
+  return roundabout_clockwise_;
+}
+
+void Maneuver::set_roundabout_clockwise(bool roundabout_clockwise) {
+  roundabout_clockwise_ = roundabout_clockwise;
+}
+
+std::vector<uint32_t> Maneuver::roundabout_exit_angles() const {
+  return roundabout_exit_angles_;
+}
+
+void Maneuver::set_roundabout_exit_angles(std::vector<uint32_t> roundabout_exit_angles) {
+  roundabout_exit_angles_ = roundabout_exit_angles;
+}
+
 bool Maneuver::portions_toll() const {
   return portions_toll_;
 }
