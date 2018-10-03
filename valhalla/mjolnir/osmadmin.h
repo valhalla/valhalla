@@ -30,7 +30,7 @@ struct OSMAdmin {
    * Get the admin id
    * @return  Returns admin id.
    */
-  uint64_t admin_id() const{
+  uint64_t admin_id() const {
     return osmrelationid_;
   }
 
@@ -85,7 +85,7 @@ struct OSMAdmin {
    * Sets the index for name:en
    * @param  idx  Index for the English name.
    */
-  void set_name_en_index(const uint32_t idx){
+  void set_name_en_index(const uint32_t idx) {
     name_en_index_ = idx;
   }
 

@@ -55,14 +55,14 @@ struct OSMNode {
    * Gets the lat,lng.
    * @return   Returns the lat,lng of the node.
    */
-  std::pair<float, float> latlng() const{
+  std::pair<float, float> latlng() const {
     return std::make_pair(lng, lat);
   }
 
   /**
    * Set access mask.
    */
-  void set_access_mask(const uint32_t access_mask)  {
+  void set_access_mask(const uint32_t access_mask) {
     attributes_.access_mask = access_mask;
   }
 
@@ -180,7 +180,7 @@ struct OSMNode {
   /**
    * Set backward_signal flag.
    */
-  void set_backward_signal(const bool backward_signal)  {
+  void set_backward_signal(const bool backward_signal) {
     attributes_.backward_signal = backward_signal;
   }
 
