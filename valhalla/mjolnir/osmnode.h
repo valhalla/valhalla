@@ -190,14 +190,6 @@ struct OSMNode {
   bool backward_signal() const {
     return attributes_.backward_signal;
   }
-
-  /**
-   * Get the attributes.
-   * @return  Returns the attributes.
-   */
-//  const NodeAttributes& attributes() const {
-//    return attributes_;
-//  }
 };
 
 } // namespace mjolnir
