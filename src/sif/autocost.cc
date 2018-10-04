@@ -543,16 +543,14 @@ Cost AutoCost::TransitionCost(const baldr::DirectedEdge* edge,
                       ? kRightSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))]
                       : kLeftSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))];
     }
-    turn_cost *= edge->stopimpact(idx);
 
-    // Separate time and penalty if using predicted speeds. Even when we reduce time
-    // for a particular turn we still may want to have slight penalties to help avoid
-    // unfavorable turns).
+    // Separate time and penalty when traffic is present. With traffic, edge speeds account for
+    // much of the intersection transition time (TODO - evaluate different elapsed time settings).
+    // Still want to add a penalty so routes avoid high cost intersections.
     if (has_traffic) {
-      seconds += kTrafficTransitionFactor * turn_cost;
-      penalty += (trans_density_factor_[node->density()] - kTrafficTransitionFactor) * turn_cost;
+      penalty += turn_cost * edge->stopimpact(idx);
     } else {
-      seconds += trans_density_factor_[node->density()] * turn_cost;
+      seconds += trans_density_factor_[node->density()] * turn_cost * edge->stopimpact(idx);
     }
   }
 
