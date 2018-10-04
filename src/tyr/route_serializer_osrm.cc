@@ -788,7 +788,7 @@ json::ArrayPtr serialize_legs(const std::list<valhalla::odin::TripDirections>& l
       // if arrive use prev name ref
       if (arrive) {
         step->emplace("name", prev_name);
-        if(!prev_ref.empty())
+        if (!prev_ref.empty())
           step->emplace("ref", prev_ref);
       }
 
