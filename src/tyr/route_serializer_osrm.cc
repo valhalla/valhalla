@@ -788,7 +788,8 @@ json::ArrayPtr serialize_legs(const std::list<valhalla::odin::TripDirections>& l
       // if arrive use prev name ref
       if (arrive) {
         step->emplace("name", prev_name);
-        step->emplace("ref", prev_ref);
+        if(!prev_ref.empty())
+          step->emplace("ref", prev_ref);
       }
 
       // Record street name and distance.. TODO - need to also worry about order
