@@ -675,6 +675,89 @@ uint32_t MultiModalPathAlgorithm::SetDestination(GraphReader& graphreader,
   return density;
 }
 
+// Expand from the node along the forward search path. Immediately expands from the end node
+// of any transition edge (so no transition edges are added to the adjacency list or EdgeLabel
+// list). Does not expand transition edges if from_transition is false. This method is only
+// used in CanReachDestination.
+bool MultiModalPathAlgorithm::ExpandFromNode(baldr::GraphReader& graphreader,
+                                             const baldr::GraphId& node,
+                                             const sif::EdgeLabel& pred,
+                                             const uint32_t pred_idx,
+                                             const std::shared_ptr<DynamicCost>& costing,
+                                             EdgeStatus& edgestatus,
+                                             std::vector<EdgeLabel>& edgelabels,
+                                             DoubleBucketQueue& adjlist,
+                                             const bool from_transition) {
+  // Get the tile and the node info. Skip if tile is null (can happen
+  // with regional data sets) or if no access at the node.
+  const GraphTile* tile = graphreader.GetGraphTile(node);
+  if (tile == nullptr) {
+    return false;
+  }
+  const NodeInfo* nodeinfo = tile->node(node);
+  if (!costing->Allowed(nodeinfo)) {
+    return false;
+  }
+
+  // Return true if we reach a transit stop
+  if (nodeinfo->type() == NodeType::kMultiUseTransitPlatform) {
+    return true;
+  }
+
+  // Expand edges from the node
+  GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
+  EdgeStatusInfo* es = edgestatus.GetPtr(edgeid, tile);
+  const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
+  for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++, ++edgeid, ++es) {
+    // Handle transition edges - expand from the end node of the transition
+    // (unless this is called from a transition).
+    if (directededge->trans_up()) {
+      if (!from_transition) {
+        ExpandFromNode(graphreader, directededge->endnode(), pred, pred_idx, costing, edgestatus,
+                       edgelabels, adjlist, true);
+      }
+      continue;
+    } else if (directededge->trans_down()) {
+      if (!from_transition) {
+        ExpandFromNode(graphreader, directededge->endnode(), pred, pred_idx, costing, edgestatus,
+                       edgelabels, adjlist, true);
+      }
+      continue;
+    }
+
+    // Skip this edge if permanently labeled (best path already found to this directed edge) or
+    // access is not allowed for this mode.
+    if (es->set() == EdgeSet::kPermanent ||
+        !costing->Allowed(directededge, pred, tile, edgeid, 0, 0)) {
+      continue;
+    }
+
+    // Get cost
+    Cost newcost = pred.cost() + costing->EdgeCost(directededge, tile->GetSpeed(directededge)) +
+                   costing->TransitionCost(directededge, nodeinfo, pred);
+    uint32_t walking_distance = pred.path_distance() + directededge->length();
+
+    // Check if lower cost path
+    if (es->set() == EdgeSet::kTemporary) {
+      EdgeLabel& lab = edgelabels[es->index()];
+      if (newcost.cost < lab.cost().cost) {
+        float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
+        adjlist.decrease(es->index(), newsortcost);
+        lab.Update(pred_idx, newcost, newsortcost, walking_distance);
+      }
+      continue;
+    }
+
+    // Add edge label, add to the adjacency list and set edge status
+    uint32_t idx = edgelabels.size();
+    edgelabels.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, 0.0f, mode_,
+                            walking_distance);
+    *es = {EdgeSet::kTemporary, idx};
+    adjlist.add(idx);
+  }
+  return false;
+}
+
 // Check if destination can be reached if walking is the last mode. Checks
 // if there are any transit stops within maximum walking distance.
 // TODO - once auto/bicycle are allowed modes we need to check if parking
@@ -690,18 +773,16 @@ bool MultiModalPathAlgorithm::CanReachDestination(const odin::Location& destinat
   EdgeStatus edgestatus;
   std::vector<EdgeLabel> edgelabels;
 
-  // Set up lambda to get sort costs (use the local edgelabels, not the class
-  // member!)
+  // Set up lambda to get sort costs (use the local edgelabels, not the class member!)
   const auto edgecost = [&edgelabels](const uint32_t label) { return edgelabels[label].sortcost(); };
 
-  // Use a simple Dijkstra method - no need to recover the path just need to
-  // make sure we can get to a transit stop within the specified max. walking
-  // distance
-  uint32_t label_idx = 0;
+  // Use a simple Dijkstra method - no need to recover the path just need to make sure we can
+  // get to a transit stop within the specified max. walking distance
   uint32_t bucketsize = costing->UnitSize();
   DoubleBucketQueue adjlist(0.0f, kBucketCount * bucketsize, bucketsize, edgecost);
 
   // Add the opposing destination edges to the priority queue
+  uint32_t label_idx = 0;
   for (const auto& edge : destination.path_edges()) {
     // Keep the id and the cost to traverse the partial distance
     float ratio = (1.0f - edge.percent_along());
@@ -717,87 +798,20 @@ bool MultiModalPathAlgorithm::CanReachDestination(const odin::Location& destinat
     label_idx++;
   }
 
-  // TODO - we really want to traverse in reverse direction - but since
-  // pedestrian access should be the same in either direction we will
-  // traverse in a forward direction for now
-  const GraphTile* tile;
-  while (true) {
-    // Get next element from adjacency list. Check that it is valid. An
-    // invalid label indicates there are no edges that can be expanded.
-    uint32_t predindex = adjlist.pop();
-    if (predindex == kInvalidLabel) {
-      return false;
-    }
-
-    // Mark the edge as as permanently labeled - copy the EdgeLabel
-    // for use in costing
+  // Get the next edge from they priority queue until either a transit stop has been found, we exceed
+  // the maximum walking distance, or there are no edges in the priority queue.
+  // TODO - really should traverse in reverse direction - but since pedestrian access should be the
+  // same in either direction we will traverse in a forward direction for now
+  uint32_t predindex;
+  while ((predindex = adjlist.pop()) != kInvalidLabel) {
+    // Mark the edge as as permanently labeled - copy the EdgeLabel for use in costing
     EdgeLabel pred = edgelabels[predindex];
     edgestatus.Update(pred.edgeid(), EdgeSet::kPermanent);
 
-    // Get the end node of the prior directed edge and check access
-    GraphId node = pred.endnode();
-    if ((tile = graphreader.GetGraphTile(node)) == nullptr) {
-      continue;
-    }
-    const NodeInfo* nodeinfo = tile->node(node);
-    if (!costing->Allowed(nodeinfo)) {
-      continue;
-    }
-
-    // Return true if we reach a transit stop
-    if (nodeinfo->type() == NodeType::kMultiUseTransitPlatform) {
+    // Expand from the end node of the predecessor
+    if (ExpandFromNode(graphreader, pred.endnode(), pred, predindex, costing, edgestatus, edgelabels,
+                       adjlist, false)) {
       return true;
-    }
-
-    // Expand edges from the node
-    GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
-    EdgeStatusInfo* es = edgestatus.GetPtr(edgeid, tile);
-    const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
-    for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++, ++edgeid, ++es) {
-      // Skip this edge if permanently labeled (best path already found to
-      // this directed edge).
-      if (es->set() == EdgeSet::kPermanent) {
-        continue;
-      }
-
-      // Handle transition edges
-      if (directededge->IsTransition()) {
-        // Add the transition edge to the adjacency list and edge labels
-        // using the predecessor information.
-        edgelabels.emplace_back(predindex, edgeid, directededge->endnode(), pred);
-        adjlist.add(label_idx);
-        *es = {EdgeSet::kTemporary, label_idx};
-        label_idx++;
-        continue;
-      }
-
-      // Skip if access is not allowed for this mode
-      if (!costing->Allowed(directededge, pred, tile, edgeid, 0, 0)) {
-        continue;
-      }
-
-      // Get cost
-      Cost newcost = pred.cost() + costing->EdgeCost(directededge, tile->GetSpeed(directededge)) +
-                     costing->TransitionCost(directededge, nodeinfo, pred);
-      uint32_t walking_distance = pred.path_distance() + directededge->length();
-
-      // Check if lower cost path
-      if (es->set() == EdgeSet::kTemporary) {
-        EdgeLabel& lab = edgelabels[es->index()];
-        if (newcost.cost < lab.cost().cost) {
-          float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
-          adjlist.decrease(es->index(), newsortcost);
-          lab.Update(predindex, newcost, newsortcost, walking_distance);
-        }
-        continue;
-      }
-
-      // Add edge label, add to the adjacency list and set edge status
-      edgelabels.emplace_back(predindex, edgeid, directededge, newcost, newcost.cost, 0.0f, mode_,
-                              walking_distance);
-      adjlist.add(label_idx);
-      *es = {EdgeSet::kTemporary, label_idx};
-      label_idx++;
     }
   }
   return false;
