@@ -276,9 +276,8 @@ void Isochrone::ExpandForward(GraphReader& graphreader,
     }
 
     // Compute the cost to the end of this edge
-    Cost newcost =
-        pred.cost() + costing_->EdgeCost(directededge, speed) +
-        costing_->TransitionCost(directededge, nodeinfo, pred, has_traffic);
+    Cost newcost = pred.cost() + costing_->EdgeCost(directededge, speed) +
+                   costing_->TransitionCost(directededge, nodeinfo, pred, has_traffic);
 
     // Check if edge is temporarily labeled and this path has less cost. If
     // less cost the predecessor is updated and the sort cost is decremented
@@ -475,7 +474,8 @@ void Isochrone::ExpandReverse(GraphReader& graphreader,
     }
 
     // Compute the cost to the end of this edge with separate transition cost
-    bool has_traffic = opp_pred_edge->predicted_speed() || opp_pred_edge->constrained_flow_speed() > 0;
+    bool has_traffic =
+        opp_pred_edge->predicted_speed() || opp_pred_edge->constrained_flow_speed() > 0;
     Cost tc = costing_->TransitionCostReverse(directededge->localedgeidx(), nodeinfo, opp_edge,
                                               opp_pred_edge, has_traffic);
     Cost newcost = pred.cost() + costing_->EdgeCost(opp_edge, speed);

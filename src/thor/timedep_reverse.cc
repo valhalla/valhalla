@@ -148,7 +148,8 @@ void TimeDepReverse::ExpandReverse(GraphReader& graphreader,
       continue;
     }
 
-    bool has_traffic = opp_pred_edge->predicted_speed() || opp_pred_edge->constrained_flow_speed() > 0;
+    bool has_traffic =
+        opp_pred_edge->predicted_speed() || opp_pred_edge->constrained_flow_speed() > 0;
     Cost tc = costing_->TransitionCostReverse(directededge->localedgeidx(), nodeinfo, opp_edge,
                                               opp_pred_edge, has_traffic);
     Cost newcost = pred.cost() +
