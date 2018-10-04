@@ -114,7 +114,7 @@ std::string json_escape(const std::string& unescaped) {
   return escaped;
 }
 
-int seed = 973;
+int seed = 520;
 int bound = 81;
 std::string make_test_case(PointLL& start, PointLL& end) {
   static std::minstd_rand0 generator(seed);
