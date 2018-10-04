@@ -202,11 +202,13 @@ public:
    * @param   edge  Directed edge (the to edge)
    * @param   node  Node (intersection) where transition occurs.
    * @param   pred  Predecessor edge information.
+   * @param   has_traffic  Does the transition have traffic information.
    * @return  Returns the cost and time (seconds)
    */
   virtual Cost TransitionCost(const baldr::DirectedEdge* edge,
                               const baldr::NodeInfo* node,
-                              const EdgeLabel& pred) const;
+                              const EdgeLabel& pred,
+                              const bool has_traffic = false) const;
 
   /**
    * Returns the cost to make the transition from the predecessor edge
@@ -219,12 +221,14 @@ public:
    *                   "from" or predecessor edge in the transition.
    * @param  opp_pred_edge  Pointer to the opposing directed edge to the
    *                        predecessor. This is the "to" edge.
+   * @param   has_traffic  Does the transition have traffic information.
    * @return  Returns the cost and time (seconds)
    */
   virtual Cost TransitionCostReverse(const uint32_t idx,
                                      const baldr::NodeInfo* node,
                                      const baldr::DirectedEdge* opp_edge,
-                                     const baldr::DirectedEdge* opp_pred_edge) const;
+                                     const baldr::DirectedEdge* opp_pred_edge,
+                                     const bool has_traffic = false) const;
 
   /**
    * Test if an edge should be restricted due to a complex restriction.
@@ -498,6 +502,17 @@ protected:
 
   // User specified edges to avoid
   std::unordered_set<baldr::GraphId> user_avoid_edges_;
+
+  /**
+   * Convenience method to get the transition factor.
+   * @param has_traffic Does the intersection have traffic information? Currently
+   *                    is based on the exiting edge. TODO - determine if we also
+   *                    need this info on the predecessor.
+   * @param density_factor Density factor.
+   */
+  float TransitionFactor(const bool has_traffic, const float density) const {
+    return has_traffic ? kTrafficTransitionFactor : density;
+  }
 };
 
 typedef std::shared_ptr<DynamicCost> cost_ptr_t;

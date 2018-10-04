@@ -42,8 +42,6 @@ set(sources
   luatagtransform.cc
   node_expander.cc
   osmaccess.cc
-  osmadmin.cc
-  osmnode.cc
   osmpbfparser.cc
   osmaccessrestriction.cc
   osmrestriction.cc

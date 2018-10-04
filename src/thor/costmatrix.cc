@@ -50,7 +50,9 @@ float CostMatrix::GetCostThreshold(const float max_matrix_distance) {
       cost_threshold = max_matrix_distance / kCostThresholdAutoDivisor;
   }
 
-  return cost_threshold;
+  // Increase the cost threshold to make sure requests near the max distance succeed.
+  // Some costing models and locations require higher thresholds to succeed.
+  return cost_threshold * 2.0f;
 }
 
 // Clear the temporary information generated during time + distance matrix
@@ -307,11 +309,23 @@ void CostMatrix::ForwardSearch(const uint32_t index, const uint32_t n, GraphRead
         continue;
       }
 
+      // Skip shortcut edges until we have stopped expanding on the next level. Use regular
+      // edges while still expanding on the next level since we can still transition down to
+      // that level. If using a shortcut, set the shortcuts mask. Skip if this is a regular
+      // edge superseded by a shortcut.
+      if (directededge->is_shortcut()) {
+        if (hierarchy_limits[edgeid.level() + 1].StopExpanding()) {
+          shortcuts |= directededge->shortcut();
+        } else {
+          continue;
+        }
+      } else if (shortcuts & directededge->superseded()) {
+        continue;
+      }
+
       // Skip this edge if permanently labeled (best path already found to this
-      // directed edge), if no access for this mode or if edge is superseded by
-      // a shortcut edge that was taken.
-      if (es->set() == EdgeSet::kPermanent || !(directededge->forwardaccess() & access_mode_) ||
-          (shortcuts & directededge->superseded())) {
+      // directed edge) or if no access for this mode.
+      if (es->set() == EdgeSet::kPermanent || !(directededge->forwardaccess() & access_mode_)) {
         continue;
       }
 
@@ -322,13 +336,7 @@ void CostMatrix::ForwardSearch(const uint32_t index, const uint32_t n, GraphRead
         continue;
       }
 
-      // Get cost. Separate out transition cost. Update the_shortcuts mask.
-      // to supersede any regular edge, but only do this once we have stopped
-      // expanding on the next lower level (so we can still transition down to
-      // that level).
-      if (directededge->is_shortcut() && hierarchy_limits[edgeid.level() + 1].StopExpanding()) {
-        shortcuts |= directededge->shortcut();
-      }
+      // Get cost. Separate out transition cost.
       Cost tc = costing_->TransitionCost(directededge, nodeinfo, pred);
       Cost newcost =
           pred.cost() + tc + costing_->EdgeCost(directededge, tile->GetSpeed(directededge));
@@ -566,16 +574,24 @@ void CostMatrix::BackwardSearch(const uint32_t index, GraphReader& graphreader) 
         continue;
       }
 
-      // Skip edges not allowed by the access mode. Do this here to avoid having
-      // to get opposing edge. Also skip edges superseded by a shortcut.
-      if (!(directededge->reverseaccess() & access_mode_) ||
-          (shortcuts & directededge->superseded())) {
+      // Skip shortcut edges until we have stopped expanding on the next level. Use regular
+      // edges while still expanding on the next level since we can still transition down to
+      // that level. If using a shortcut, set the shortcuts mask. Skip if this is a regular
+      // edge superseded by a shortcut.
+      if (directededge->is_shortcut()) {
+        if (hierarchy_limits[edgeid.level() + 1].StopExpanding()) {
+          shortcuts |= directededge->shortcut();
+        } else {
+          continue;
+        }
+      } else if (shortcuts & directededge->superseded()) {
         continue;
       }
 
-      // Get the current set. Skip this edge if permanently labeled (best
-      // path already found to this directed edge).
-      if (es->set() == EdgeSet::kPermanent) {
+      // Skip edges not allowed by the access mode. Do this here to avoid having
+      // to get opposing edge. Also skip edges that are permanently labeled (
+      // best path already found to this directed edge).
+      if (!(directededge->reverseaccess() & access_mode_) || es->set() == EdgeSet::kPermanent) {
         continue;
       }
 
@@ -595,14 +611,8 @@ void CostMatrix::BackwardSearch(const uint32_t index, GraphReader& graphreader) 
         continue;
       }
 
-      // Get cost. Use opposing edge for EdgeCost. Update the_shortcuts mask
-      // to supersede any regular edge, but only do this once we have stopped
-      // expanding on the next lower level (so we can still transition down to
-      // that level). Separate the transition seconds so we can properly recover
-      // elapsed time on the reverse path.
-      if (directededge->is_shortcut() && hierarchy_limits[edgeid.level() + 1].StopExpanding()) {
-        shortcuts |= directededge->shortcut();
-      }
+      // Get cost. Use opposing edge for EdgeCost. Separate the transition seconds so
+      // we can properly recover elapsed time on the reverse path.
       Cost tc = costing_->TransitionCostReverse(directededge->localedgeidx(), nodeinfo, opp_edge,
                                                 opp_pred_edge);
       Cost newcost = pred.cost() + tc + costing_->EdgeCost(opp_edge, tile->GetSpeed(opp_edge));

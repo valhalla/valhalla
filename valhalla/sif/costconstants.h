@@ -4,6 +4,12 @@
 namespace valhalla {
 namespace sif {
 
+// Transition factor to use when traffic data is available. This multiplies the
+// turn cost * stop impact (rather than using the density factor). When traffic
+// is available, the edge speeds account for some of the intersection costing
+// due to deceleration and acceleration into and out of an intersection.
+const float kTrafficTransitionFactor = 0.25f;
+
 // Travel modes
 enum class TravelMode : uint8_t {
   kDrive = 0,

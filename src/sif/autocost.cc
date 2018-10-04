@@ -214,11 +214,13 @@ public:
    * @param  edge  Directed edge (the to edge)
    * @param  node  Node (intersection) where transition occurs.
    * @param  pred  Predecessor edge information.
+   * @param  has_traffic  Does the transition have traffic information.
    * @return  Returns the cost and time (seconds)
    */
   virtual Cost TransitionCost(const baldr::DirectedEdge* edge,
                               const baldr::NodeInfo* node,
-                              const EdgeLabel& pred) const;
+                              const EdgeLabel& pred,
+                              const bool has_traffic = false) const;
 
   /**
    * Returns the cost to make the transition from the predecessor edge
@@ -227,12 +229,14 @@ public:
    * @param  node  Node (intersection) where transition occurs.
    * @param  pred  the opposing current edge in the reverse tree.
    * @param  edge  the opposing predecessor in the reverse tree
+   * @param  has_traffic  Does the transition have traffic information.
    * @return  Returns the cost and time (seconds)
    */
   virtual Cost TransitionCostReverse(const uint32_t idx,
                                      const baldr::NodeInfo* node,
                                      const baldr::DirectedEdge* pred,
-                                     const baldr::DirectedEdge* edge) const;
+                                     const baldr::DirectedEdge* edge,
+                                     const bool has_traffic = false) const;
 
   /**
    * Get the cost factor for A* heuristics. This factor is multiplied
@@ -490,7 +494,8 @@ Cost AutoCost::EdgeCost(const DirectedEdge* edge, const uint32_t speed) const {
 // Returns the time (in seconds) to make the transition from the predecessor
 Cost AutoCost::TransitionCost(const baldr::DirectedEdge* edge,
                               const baldr::NodeInfo* node,
-                              const EdgeLabel& pred) const {
+                              const EdgeLabel& pred,
+                              const bool has_traffic) const {
   // Accumulate cost and penalty
   float seconds = 0.0f;
   float penalty = 0.0f;
@@ -527,7 +532,8 @@ Cost AutoCost::TransitionCost(const baldr::DirectedEdge* edge,
     penalty += maneuver_penalty_;
   }
 
-  // Transition time = densityfactor * stopimpact * turncost
+  // Intersection transition time = factor * stopimpact * turncost. Factor depends
+  // on density and whether traffic is available
   if (edge->stopimpact(idx) > 0) {
     float turn_cost;
     if (edge->edge_to_right(idx) && edge->edge_to_left(idx)) {
@@ -537,7 +543,15 @@ Cost AutoCost::TransitionCost(const baldr::DirectedEdge* edge,
                       ? kRightSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))]
                       : kLeftSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))];
     }
-    seconds += trans_density_factor_[node->density()] * edge->stopimpact(idx) * turn_cost;
+
+    // Separate time and penalty when traffic is present. With traffic, edge speeds account for
+    // much of the intersection transition time (TODO - evaluate different elapsed time settings).
+    // Still want to add a penalty so routes avoid high cost intersections.
+    if (has_traffic) {
+      penalty += turn_cost * edge->stopimpact(idx);
+    } else {
+      seconds += trans_density_factor_[node->density()] * turn_cost * edge->stopimpact(idx);
+    }
   }
 
   // Return cost (time and penalty)
@@ -551,7 +565,8 @@ Cost AutoCost::TransitionCost(const baldr::DirectedEdge* edge,
 Cost AutoCost::TransitionCostReverse(const uint32_t idx,
                                      const baldr::NodeInfo* node,
                                      const baldr::DirectedEdge* pred,
-                                     const baldr::DirectedEdge* edge) const {
+                                     const baldr::DirectedEdge* edge,
+                                     const bool has_traffic) const {
   // Accumulate cost and penalty
   float seconds = 0.0f;
   float penalty = 0.0f;
