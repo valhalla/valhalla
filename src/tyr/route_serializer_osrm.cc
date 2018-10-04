@@ -772,7 +772,7 @@ json::ArrayPtr serialize_legs(const std::list<valhalla::odin::TripDirections>& l
 
       bool arrive = (index == leg.maneuver().size() - 1);
       bool depart = (index == 0);
-      // Add street names and refs even if they are empty strings
+      // Add street names and refs. Names get added even if empty
       auto nr = names_and_refs(maneuver, path_leg);
       step->emplace("name", nr.first);
       if (depart) {
