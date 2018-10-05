@@ -823,28 +823,31 @@ json::ArrayPtr serialize_legs(const std::list<valhalla::odin::TripDirections>& l
       step->emplace("weight", json::fp_t{duration, 1});
       step->emplace("distance", json::fp_t{distance, 1});
 
-      bool arrive = (index == leg.maneuver().size() - 1);
+      // Add street names and refs. Names get added even if empty
       bool depart = (index == 0);
-      // Add street names and refs
+      bool arrive = (index == leg.maneuver().size() - 1);
       auto nr = names_and_refs(maneuver, path_leg);
-      if (!nr.first.empty()) {
-        step->emplace("name", nr.first);
-        if (depart) {
-          prev_name = nr.first;
-        }
-      }
-      if (!nr.second.empty()) {
-        step->emplace("ref", nr.second);
-        if (depart) {
-          prev_ref = nr.second;
-        }
+
+      // We dont have previous stuff yet so we just take what we have now
+      if (depart) {
+        prev_name = nr.first;
+        prev_ref = nr.second;
       }
 
-      // if arrive use prev name ref
+      // Arrival step uses previous names
       if (arrive) {
         step->emplace("name", prev_name);
-        step->emplace("ref", prev_ref);
+        if (!prev_ref.empty())
+          step->emplace("ref", prev_ref);
+      } else {
+        step->emplace("name", nr.first);
+        if (!nr.second.empty())
+          step->emplace("ref", nr.second);
       }
+
+      // Save these for the next round
+      prev_name = nr.first;
+      prev_ref = nr.second;
 
       // Record street name and distance.. TODO - need to also worry about order
       if (maneuver.street_name().size() > 0) {
@@ -856,9 +859,6 @@ json::ArrayPtr serialize_legs(const std::list<valhalla::odin::TripDirections>& l
           man->second += distance;
         }
       }
-
-      prev_name = nr.first;
-      prev_ref = nr.second;
 
       // Add OSRM maneuver
       step->emplace("maneuver", osrm_maneuver(maneuver, path_leg, shape[maneuver.begin_shape_index()],

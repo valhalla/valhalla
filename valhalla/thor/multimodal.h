@@ -121,6 +121,32 @@ protected:
                           const std::shared_ptr<sif::DynamicCost>& costing);
 
   /**
+   * Expand from the node along the forward search path. Immediately expands
+   * from the end node of any transition edge (so no transition edges are added
+   * to the adjacency list or EdgeLabel list). Does not expand transition edges if
+   * from_transition is false. This method is only used in CanReachDestination.
+   * @param  graphreader  Graph tile reader.
+   * @param  node         Graph Id of the node being expanded.
+   * @param  pred         Predecessor edge label (for costing).
+   * @param  pred_idx     Predecessor index into the EdgeLabel list.
+   * @param  costing      Current costing method.
+   * @param  edgestatus   Local edge status information.
+   * @param  edgelabels   Local edge label list.
+   * @param  adjlist      Local adjacency list/priority queue.
+   * @param  from_transition True if this method is called from a transition edge.
+   * @return Returns true if a transit stop has been reached. False, otherwise.
+   */
+  bool ExpandFromNode(baldr::GraphReader& graphreader,
+                      const baldr::GraphId& node,
+                      const sif::EdgeLabel& pred,
+                      const uint32_t pred_idx,
+                      const std::shared_ptr<sif::DynamicCost>& costing,
+                      EdgeStatus& edgestatus,
+                      std::vector<sif::EdgeLabel>& edgelabels,
+                      baldr::DoubleBucketQueue& adjlist,
+                      const bool from_transition);
+
+  /**
    * Check if destination can be reached if walking is the last mode. Checks
    * if there are any transit stops within maximum walking distance from
    * the destination. This is used to reject impossible routes given the
