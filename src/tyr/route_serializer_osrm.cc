@@ -423,7 +423,6 @@ std::string destinations(const valhalla::odin::TripDirections::Maneuver& maneuve
 
 // Get the turn modifier based on incoming edge bearing and outgoing edge
 // bearing.
-// TODO - resolve differences between OSRM turn modifiers and Valhalla turn degrees.
 std::string turn_modifier(const uint32_t in_brg, const uint32_t out_brg) {
   auto turn_degree = GetTurnDegree(in_brg, out_brg);
   auto turn_type = Turn::GetType(turn_degree);
@@ -444,6 +443,59 @@ std::string turn_modifier(const uint32_t in_brg, const uint32_t out_brg) {
       return "left";
     case baldr::Turn::Type::kSlightLeft:
       return "slight left";
+  }
+}
+
+// Get the turn modifier based on the maneuver type
+// or if needed, the incoming edge bearing and outgoing edge bearing.
+std::string turn_modifier(const valhalla::odin::TripDirections::Maneuver& maneuver,
+                          const uint32_t in_brg,
+                          const uint32_t out_brg) {
+  switch (maneuver.type()) {
+    case valhalla::odin::TripDirections_Maneuver_Type_kStart:
+    case valhalla::odin::TripDirections_Maneuver_Type_kDestination:
+      return "";
+    case valhalla::odin::TripDirections_Maneuver_Type_kSlightRight:
+    case valhalla::odin::TripDirections_Maneuver_Type_kStayRight:
+    case valhalla::odin::TripDirections_Maneuver_Type_kExitRight:
+      return "slight right";
+    case valhalla::odin::TripDirections_Maneuver_Type_kRight:
+    case valhalla::odin::TripDirections_Maneuver_Type_kStartRight:
+    case valhalla::odin::TripDirections_Maneuver_Type_kDestinationRight:
+      return "right";
+    case valhalla::odin::TripDirections_Maneuver_Type_kSharpRight:
+      return "sharp right";
+    case valhalla::odin::TripDirections_Maneuver_Type_kUturnRight:
+    case valhalla::odin::TripDirections_Maneuver_Type_kUturnLeft:
+      return "uturn";
+    case valhalla::odin::TripDirections_Maneuver_Type_kSharpLeft:
+      return "sharp left";
+    case valhalla::odin::TripDirections_Maneuver_Type_kLeft:
+    case valhalla::odin::TripDirections_Maneuver_Type_kStartLeft:
+    case valhalla::odin::TripDirections_Maneuver_Type_kDestinationLeft:
+      return "left";
+    case valhalla::odin::TripDirections_Maneuver_Type_kSlightLeft:
+    case valhalla::odin::TripDirections_Maneuver_Type_kExitLeft:
+    case valhalla::odin::TripDirections_Maneuver_Type_kStayLeft:
+      return "slight left";
+    case valhalla::odin::TripDirections_Maneuver_Type_kRampRight:
+      if (Turn::GetType(GetTurnDegree(in_brg, out_brg)) == baldr::Turn::Type::kRight)
+        return "right";
+      else
+        return "slight right";
+    case valhalla::odin::TripDirections_Maneuver_Type_kRampLeft:
+      if (Turn::GetType(GetTurnDegree(in_brg, out_brg)) == baldr::Turn::Type::kLeft)
+        return "left";
+      else
+        return "slight left";
+    case valhalla::odin::TripDirections_Maneuver_Type_kMerge:
+    case valhalla::odin::TripDirections_Maneuver_Type_kRoundaboutEnter:
+    case valhalla::odin::TripDirections_Maneuver_Type_kRoundaboutExit:
+    case valhalla::odin::TripDirections_Maneuver_Type_kFerryEnter:
+    case valhalla::odin::TripDirections_Maneuver_Type_kFerryExit:
+      return turn_modifier(in_brg, out_brg);
+    default:
+      return "straight";
   }
 }
 
@@ -498,8 +550,9 @@ json::MapPtr osrm_maneuver(const valhalla::odin::TripDirections::Maneuver& maneu
 
   std::string modifier;
   if (!depart) {
-    modifier = turn_modifier(in_brg, out_brg);
-    osrm_man->emplace("modifier", modifier);
+    modifier = turn_modifier(maneuver, in_brg, out_brg);
+    if (!modifier.empty())
+      osrm_man->emplace("modifier", modifier);
   }
 
   // TODO - logic to convert maneuver types from Valhalla into OSRM maneuver types.
@@ -915,5 +968,6 @@ std::string serialize(const valhalla::odin::DirectionsOptions& directions_option
   ss << *json;
   return ss.str();
 }
+
 } // namespace osrm_serializers
 } // namespace
