@@ -659,7 +659,8 @@ json::MapPtr osrm_maneuver(const valhalla::odin::TripDirections::Maneuver& maneu
 std::string maneuver_geometry(const uint32_t begin_idx,
                               const uint32_t end_idx,
                               const std::vector<PointLL>& shape) {
-  std::vector<PointLL> maneuver_shape(shape.begin() + begin_idx, shape.begin() + end_idx);
+  // Must add one to the end range since it is exclusive
+  std::vector<PointLL> maneuver_shape(shape.begin() + begin_idx, shape.begin() + end_idx + 1);
   return std::string(midgard::encode(maneuver_shape));
 }
 
