@@ -1,6 +1,7 @@
 ## Release Date: TBD
 * **Bug Fix**
    * FIXED: Fixed the ramp turn modifiers for osrm compat [#1569](https://github.com/valhalla/valhalla/pull/1569)
+   * FIXED: Fixed the step geometry when using the osrm compat mode [#1571](https://github.com/valhalla/valhalla/pull/1571)
 
 ## Release Date: 2018-10-02 Valhalla 2.7.1
 * **Enhancement**
