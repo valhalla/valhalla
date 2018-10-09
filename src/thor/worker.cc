@@ -25,7 +25,7 @@ using namespace valhalla::thor;
 
 namespace {
 
-// Maximum distance allowed for time dependent routes. Since these use
+// Default maximum distance allowed for time dependent routes. Since these use
 // single direction A* there may be performance issues allowing very long
 // routes. Also, for long routes the accuracy of predicted time along the
 // route starts to become suspect (due to user breaks and other factors).
@@ -86,7 +86,8 @@ thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config,
     source_to_target_algorithm = SELECT_OPTIMAL;
   }
 
-  max_timedep_distance = config.get<float>("service_limits.max_timedep_distance", kDefaultMaxTimeDependentDistance);
+  max_timedep_distance =
+      config.get<float>("service_limits.max_timedep_distance", kDefaultMaxTimeDependentDistance);
 }
 
 thor_worker_t::~thor_worker_t() {
