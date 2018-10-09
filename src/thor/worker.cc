@@ -24,6 +24,13 @@ using namespace valhalla::sif;
 using namespace valhalla::thor;
 
 namespace {
+
+// Maximum distance allowed for time dependent routes. Since these use
+// single direction A* there may be performance issues allowing very long
+// routes. Also, for long routes the accuracy of predicted time along the
+// route starts to become suspect (due to user breaks and other factors).
+constexpr float kDefaultMaxTimeDependentDistance = 500000.0f; // 500 km
+
 // Maximum edge score - base this on costing type.
 // Large values can cause very bad performance. Setting this back
 // to 2 hours for bike and pedestrian and 12 hours for driving routes.
@@ -62,7 +69,7 @@ thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config,
   auto conf_algorithm = config.get<std::string>("thor.source_to_target_algorithm", "select_optimal");
   for (const auto& kv : config.get_child("service_limits")) {
     if (kv.first == "max_avoid_locations" || kv.first == "max_reachability" ||
-        kv.first == "max_radius") {
+        kv.first == "max_radius" || kv.first == "max_timedep_distance") {
       continue;
     }
     if (kv.first != "skadi" && kv.first != "trace" && kv.first != "isochrone") {
@@ -78,6 +85,8 @@ thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config,
   } else {
     source_to_target_algorithm = SELECT_OPTIMAL;
   }
+
+  max_timedep_distance = config.get<float>("service_limits.max_timedep_distance", kDefaultMaxTimeDependentDistance);
 }
 
 thor_worker_t::~thor_worker_t() {
