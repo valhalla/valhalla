@@ -2,6 +2,7 @@
 #include "mjolnir/admin.h"
 #include "mjolnir/countryaccess.h"
 #include "mjolnir/graphtilebuilder.h"
+#include "mjolnir/util.h"
 
 #include <cinttypes>
 #include <future>
@@ -918,27 +919,42 @@ void ProcessEdgeTransitions(const uint32_t idx,
 }
 
 /**
- * Get the index of the opposing edge at the end node. This is
- * on the local hierarchy (before adding transition and shortcut edges).
+ * Get the index of the opposing edge at the end node. This is on the local hierarchy,
+ * before adding transition and shortcut edges. Make sure that even if the end nodes
+ * and lengths match that the correct edge is selected (match shape) since some loops
+ * can have the same length and end node.
  * @param  endnodetile   Graph tile at the end node.
  * @param  startnode     Start node of the directed edge.
+ * @param  tile          Graph tile of the edge
  * @param  directededge  Directed edge to match.
  */
 uint32_t GetOpposingEdgeIndex(const GraphTile* endnodetile,
                               const GraphId& startnode,
+                              const GraphTile* tile,
                               const DirectedEdge& edge) {
-  // Get the tile at the end node and get the node info
-  GraphId endnode = edge.endnode();
-  const NodeInfo* nodeinfo = endnodetile->node(endnode.id());
+  // Get the nodeinfo at the end of the edge
+  const NodeInfo* nodeinfo = endnodetile->node(edge.endnode().id());
 
-  // Get the directed edges and return when the end node matches
-  // the specified node and length matches
+  // Iterate through the directed edges and return when the end node matches the specified
+  // node, the length matches, and the shape matches (or edgeinfo offset matches)
   const DirectedEdge* directededge = endnodetile->directededge(nodeinfo->edge_index());
   for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++) {
     if (directededge->endnode() == startnode && directededge->length() == edge.length()) {
-      return i;
+      // If in the same tile and the edgeinfo offset matches then the shape will match
+      if (endnodetile == tile) {
+        if (directededge->edgeinfo_offset() == edge.edgeinfo_offset()) {
+          return i;
+        }
+      } else {
+        // Need to compare shape if not in the same tile
+        if (shapes_match(tile->edgeinfo(edge.edgeinfo_offset()).shape(),
+            endnodetile->edgeinfo(directededge->edgeinfo_offset()).shape())) {
+          return i;
+        }
+      }
     }
   }
+  LOG_ERROR("Could not find opposing edge index");
   return kMaxEdgesPerNode;
 }
 
@@ -1061,7 +1077,7 @@ void enhance(const boost::property_tree::ptree& pt,
         }
 
         // Set the opposing index on the local level
-        directededge.set_opp_local_idx(GetOpposingEdgeIndex(endnodetile, startnode, directededge));
+        directededge.set_opp_local_idx(GetOpposingEdgeIndex(endnodetile, startnode, tile, directededge));
       }
     }
 
