@@ -26,6 +26,14 @@ std::vector<std::string> GetTagTokens(const std::string& tag_value, char delim =
 std::string remove_double_quotes(const std::string& s);
 
 /**
+ * Do the 2 supplied shape vectors match (either direction).
+ * @param shape1 First shape vector.
+ * @param shape2 Second shape vector.
+ * @return Returns true if the shapes match. Checks if one is reverse direction than the other.
+ */
+bool shapes_match(const std::vector<midgard::PointLL>& shape1, const std::vector<midgard::PointLL>& shape2);
+
+/**
  * Compute a curvature metric given an edge shape.
  * @param  shape  Shape of an edge (list of lat,lon vertices).
  * @return Returns a curvature measure [0-15] where higher numbers indicate
