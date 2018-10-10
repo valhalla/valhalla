@@ -948,7 +948,7 @@ uint32_t GetOpposingEdgeIndex(const GraphTile* endnodetile,
       } else {
         // Need to compare shape if not in the same tile
         if (shapes_match(tile->edgeinfo(edge.edgeinfo_offset()).shape(),
-            endnodetile->edgeinfo(directededge->edgeinfo_offset()).shape())) {
+                         endnodetile->edgeinfo(directededge->edgeinfo_offset()).shape())) {
           return i;
         }
       }
@@ -1077,7 +1077,8 @@ void enhance(const boost::property_tree::ptree& pt,
         }
 
         // Set the opposing index on the local level
-        directededge.set_opp_local_idx(GetOpposingEdgeIndex(endnodetile, startnode, tile, directededge));
+        directededge.set_opp_local_idx(
+            GetOpposingEdgeIndex(endnodetile, startnode, tile, directededge));
       }
     }
 

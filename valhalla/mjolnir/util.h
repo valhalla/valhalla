@@ -31,7 +31,8 @@ std::string remove_double_quotes(const std::string& s);
  * @param shape2 Second shape vector.
  * @return Returns true if the shapes match. Checks if one is reverse direction than the other.
  */
-bool shapes_match(const std::vector<midgard::PointLL>& shape1, const std::vector<midgard::PointLL>& shape2);
+bool shapes_match(const std::vector<midgard::PointLL>& shape1,
+                  const std::vector<midgard::PointLL>& shape2);
 
 /**
  * Compute a curvature metric given an edge shape.
