@@ -1,8 +1,7 @@
 
 #include "mjolnir/graphvalidator.h"
 #include "mjolnir/graphtilebuilder.h"
-
-#include "midgard/logging.h"
+#include "mjolnir/util.h"
 
 #include <boost/filesystem/operations.hpp>
 #include <boost/format.hpp>
@@ -44,37 +43,6 @@ struct HGVRestrictionTypes {
   bool weight;
   bool width;
 };
-
-bool ShapesMatch(const std::vector<PointLL>& shape1, const std::vector<PointLL>& shape2) {
-  if (shape1.size() != shape2.size()) {
-    return false;
-  }
-
-  if (shape1.front() == shape2.front()) {
-    // Compare shape in forward direction
-    auto iter1 = shape1.begin();
-    auto iter2 = shape2.begin();
-    for (; iter2 != shape2.end(); iter2++, iter1++) {
-      if (*iter1 != *iter2) {
-        return false;
-      }
-    }
-    return true;
-  } else if (shape1.front() == shape2.back()) {
-    // Compare shape (reverse direction for shape2)
-    auto iter1 = shape1.begin();
-    auto iter2 = shape2.rbegin();
-    for (; iter2 != shape2.rend(); iter2++, iter1++) {
-      if (*iter1 != *iter2) {
-        return false;
-      }
-    }
-    return true;
-  } else {
-    LOG_WARN("Neither end of the shape matches");
-    return false;
-  }
-}
 
 // Get the GraphId of the opposing edge.
 uint32_t GetOpposingEdgeIndex(const GraphId& startnode,
@@ -151,14 +119,13 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode,
         (edge.use() == Use::kEgressConnection && directededge->use() == Use::kEgressConnection)) {
       auto shape1 = tile->edgeinfo(edge.edgeinfo_offset()).shape();
       auto shape2 = end_tile->edgeinfo(directededge->edgeinfo_offset()).shape();
-      if (ShapesMatch(shape1, shape2)) {
+      if (shapes_match(shape1, shape2)) {
         opp_index = i;
         continue;
       }
     }
 
-    // After this point should just have regular edges, shortcut edges, and
-    // transit lines.
+    // After this point should just have regular edges, shortcut edges, and transit lines.
     if (startnode.level() == transit_level) {
       // Transit level - handle transit lines
       if (edge.IsTransitLine() && directededge->IsTransitLine()) {
@@ -199,7 +166,7 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode,
           } else {
             auto shape1 = tile->edgeinfo(edge.edgeinfo_offset()).shape();
             auto shape2 = end_tile->edgeinfo(directededge->edgeinfo_offset()).shape();
-            if (ShapesMatch(shape1, shape2)) {
+            if (shapes_match(shape1, shape2)) {
               match = true;
             }
           }

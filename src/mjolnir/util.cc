@@ -77,6 +77,38 @@ uint32_t compute_curvature(const std::list<PointLL>& shape) {
   return average_score > 15.0f ? 15 : static_cast<uint32_t>(average_score);
 }
 
+// Do the 2 shape vectors match (either direction).
+bool shapes_match(const std::vector<PointLL>& shape1, const std::vector<PointLL>& shape2) {
+  if (shape1.size() != shape2.size()) {
+    return false;
+  }
+
+  if (shape1.front() == shape2.front()) {
+    // Compare shape in forward direction
+    auto iter1 = shape1.begin();
+    auto iter2 = shape2.begin();
+    for (; iter2 != shape2.end(); iter2++, iter1++) {
+      if (*iter1 != *iter2) {
+        return false;
+      }
+    }
+    return true;
+  } else if (shape1.front() == shape2.back()) {
+    // Compare shape (reverse direction for shape2)
+    auto iter1 = shape1.begin();
+    auto iter2 = shape2.rbegin();
+    for (; iter2 != shape2.rend(); iter2++, iter1++) {
+      if (*iter1 != *iter2) {
+        return false;
+      }
+    }
+    return true;
+  } else {
+    LOG_WARN("Neither end of the shape matches");
+    return false;
+  }
+}
+
 void build_tile_set(const boost::property_tree::ptree& config,
                     const std::vector<std::string>& input_files,
                     const std::string& bin_file_prefix,
