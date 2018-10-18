@@ -38,10 +38,6 @@ constexpr float kDefaultDestinationOnlyPenalty = 600.0f; // Seconds
 
 constexpr Surface kMinimumMotorcycleSurface = Surface::kDirt;
 
-// Maximum ferry penalty (when use_ferry == 0). Can't make this too large
-// since a ferry is sometimes required to complete a route.
-constexpr float kMaxFerryPenalty = 6.0f * kSecPerHour; // 6 hours
-
 // Default turn costs
 constexpr float kTCStraight = 0.5f;
 constexpr float kTCSlight = 0.75f;
@@ -298,26 +294,11 @@ public:
 public:
   VehicleType type_; // Vehicle type: car (default), motorcycle, etc
   float speedfactor_[kMaxSpeedKph + 1];
-  float density_factor_[16];       // Density factor
-  float maneuver_penalty_;         // Penalty (seconds) when inconsistent names
-  float destination_only_penalty_; // Penalty (seconds) using private road, driveway, or parking aisle
-  float gate_cost_;                // Cost (seconds) to go through gate
-  float gate_penalty_;             // Penalty (seconds) to go through gate
-  float tollbooth_cost_;           // Cost (seconds) to go through toll booth
-  float tollbooth_penalty_;        // Penalty (seconds) to go through a toll booth
-  float ferry_cost_;               // Cost (seconds) to enter a ferry
-  float ferry_penalty_;            // Penalty (seconds) to enter a ferry
-  float ferry_factor_;             // Weighting to apply to ferry edges
-  float alley_penalty_;            // Penalty (seconds) to use a alley
-  float country_crossing_cost_;    // Cost (seconds) to go across a country border
-  float country_crossing_penalty_; // Penalty (seconds) to go across a country border
-  float use_ferry_;
-  float use_highways_;   // Preference to use highways. Is a value from 0 to 1
-  float use_tolls_;      // Preference to use tolls. Is a value from 0 to 1
-  float toll_factor_;    // Factor applied when road has a toll
-  float surface_factor_; // How much the surface factors are applied when using trails
-  float highway_factor_; // Factor applied when road is a motorway or trunk
-  float use_trails_;     // Preference to use trails/tracks/bad surface types. Is a value from 0 to 1
+  float density_factor_[16]; // Density factor
+  float ferry_factor_;       // Weighting to apply to ferry edges
+  float toll_factor_;        // Factor applied when road has a toll
+  float surface_factor_;     // How much the surface factors are applied when using trails
+  float highway_factor_;     // Factor applied when road is a motorway or trunk
 
   // Density factor used in edge transition costing
   std::vector<float> trans_density_factor_;
@@ -336,70 +317,45 @@ MotorcycleCost::MotorcycleCost(const odin::Costing costing, const odin::Directio
   // Vehicle type is motorcycle
   type_ = VehicleType::kMotorcycle;
 
-  maneuver_penalty_ = costing_options.maneuver_penalty();
-  destination_only_penalty_ = costing_options.destination_only_penalty();
-  gate_cost_ = costing_options.gate_cost();
-  gate_penalty_ = costing_options.gate_penalty();
-  tollbooth_cost_ = costing_options.toll_booth_cost();
-  tollbooth_penalty_ = costing_options.toll_booth_penalty();
-  alley_penalty_ = costing_options.alley_penalty();
-  country_crossing_cost_ = costing_options.country_crossing_cost();
-  country_crossing_penalty_ = costing_options.country_crossing_penalty();
+  // Get the base costs
+  get_base_costs(costing_options);
 
-  // Set the cost (seconds) to enter a ferry (only apply entering since
-  // a route must exit a ferry (except artificial test routes ending on
-  // a ferry!)
-  ferry_cost_ = costing_options.ferry_cost();
-
-  // Modify ferry penalty and edge weighting based on use_ferry factor
-  use_ferry_ = costing_options.use_ferry();
-  if (use_ferry_ < 0.5f) {
-    // Penalty goes from max at use_ferry_ = 0 to 0 at use_ferry_ = 0.5
-    ferry_penalty_ = static_cast<uint32_t>(kMaxFerryPenalty * (1.0f - use_ferry_ * 2.0f));
-
-    // Cost X10 at use_ferry_ == 0, slopes downwards towards 1.0 at use_ferry_ = 0.5
-    ferry_factor_ = 10.0f - use_ferry_ * 18.0f;
-  } else {
-    // Add a ferry weighting factor to influence cost along ferries to make
-    // them more favorable if desired rather than driving. No ferry penalty.
-    // Half the cost at use_ferry_ == 1, progress to 1.0 at use_ferry_ = 0.5
-    ferry_penalty_ = 0.0f;
-    ferry_factor_ = 1.5f - use_ferry_;
-  }
-
+  // Preference to use highways. Is a value from 0 to 1
   // Factor for highway use - use a non-linear factor with values at 0.5 being neutral (factor
   // of 0). Values between 0.5 and 1 slowly decrease to a maximum of -0.125 (to slightly prefer
   // highways) while values between 0.5 to 0 slowly increase to a maximum of kMaxHighwayBiasFactor
   // to avoid/penalize highways.
-  use_highways_ = costing_options.use_highways();
-  if (use_highways_ >= 0.5f) {
-    float f = (0.5f - use_highways_);
+  float use_highways = costing_options.use_highways();
+  if (use_highways >= 0.5f) {
+    float f = (0.5f - use_highways);
     highway_factor_ = f * f * f;
   } else {
-    float f = 1.0f - (use_highways_ * 2.0f);
+    float f = 1.0f - (use_highways * 2.0f);
     highway_factor_ = kMaxHighwayBiasFactor * (f * f);
   }
 
+  // Set toll factor based on preference to use tolls (value from 0 to 1).
   // Toll factor of 0 would indicate no adjustment to weighting for toll roads.
   // use_tolls = 1 would reduce weighting slightly (a negative delta) while
   // use_tolls = 0 would penalize (positive delta to weighting factor).
-  use_tolls_ = costing_options.use_tolls();
-  toll_factor_ = use_tolls_ < 0.5f ? (2.0f - 4 * use_tolls_) : // ranges from 2 to 0
-                     (0.5f - use_tolls_) * 0.03f;              // ranges from 0 to -0.15
+  float use_tolls = costing_options.use_tolls();
+  toll_factor_ = use_tolls < 0.5f ? (2.0f - 4 * use_tolls) : // ranges from 2 to 0
+                     (0.5f - use_tolls) * 0.03f;             // ranges from 0 to -0.15
 
-  // Set the surface factor based on the use trails value
-  use_trails_ = costing_options.use_trails();
+  // Set the surface factor based on the use trails value - this is a
+  // preference to use trails/tracks/bad surface types (a value from 0 to 1).
+  float use_trails = costing_options.use_trails();
 
   // Factor for trail use - use a non-linear factor with values at 0.5 being neutral (factor
   // of 0). Values between 0.5 and 1 slowly decrease to a maximum of -0.125 (to slightly prefer
   // trails) while values between 0.5 to 0 slowly increase to a maximum of the surfact_factor_
   // to avoid/penalize trails.
   // modulates surface factor based on use_trails
-  if (use_trails_ >= 0.5f) {
-    float f = (0.5f - use_trails_);
+  if (use_trails >= 0.5f) {
+    float f = (0.5f - use_trails);
     surface_factor_ = f * f * f;
   } else {
-    float f = 1.0f - use_trails_ * 2.0f;
+    float f = 1.0f - use_trails * 2.0f;
     surface_factor_ = static_cast<uint32_t>(kMaxTrailBiasFactor * (f * f));
   }
 
@@ -520,41 +476,10 @@ Cost MotorcycleCost::TransitionCost(const baldr::DirectedEdge* edge,
                                     const baldr::NodeInfo* node,
                                     const EdgeLabel& pred,
                                     const bool has_traffic) const {
-  // Accumulate cost and penalty
-  float seconds = 0.0f;
-  float penalty = 0.0f;
-
-  // Special cases with both time and penalty: country crossing, ferry,
-  // gate, toll booth
-  if (node->type() == NodeType::kBorderControl) {
-    seconds += country_crossing_cost_;
-    penalty += country_crossing_penalty_;
-  } else if (node->type() == NodeType::kGate) {
-    seconds += gate_cost_;
-    penalty += gate_penalty_;
-  }
-  if (node->type() == NodeType::kTollBooth || (!pred.toll() && edge->toll())) {
-    seconds += tollbooth_cost_;
-    penalty += tollbooth_penalty_;
-  }
-  if (edge->use() == Use::kFerry && pred.use() != Use::kFerry) {
-    seconds += ferry_cost_;
-    penalty += ferry_penalty_;
-  }
-
-  // Additional penalties without any time cost
+  // Get the transition cost for country crossing, ferry, gate, toll booth,
+  // destination only, alley, maneuver penalty
   uint32_t idx = pred.opp_local_idx();
-  if (!pred.destonly() && edge->destonly()) {
-    penalty += destination_only_penalty_;
-  }
-  if (pred.use() != Use::kAlley && edge->use() == Use::kAlley) {
-    penalty += alley_penalty_;
-  }
-
-  // Maneuver penalty, ignore when entering a link to avoid double penalizing
-  if (!edge->link() && !node->name_consistency(idx, edge->localedgeidx())) {
-    penalty += maneuver_penalty_;
-  }
+  Cost c = base_transition_cost(node, edge, pred, idx);
 
   // Transition time = densityfactor * stopimpact * turncost
   if (edge->stopimpact(idx) > 0) {
@@ -566,11 +491,11 @@ Cost MotorcycleCost::TransitionCost(const baldr::DirectedEdge* edge,
                       ? kRightSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))]
                       : kLeftSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))];
     }
-    seconds += trans_density_factor_[node->density()] * edge->stopimpact(idx) * turn_cost;
+    float seconds = trans_density_factor_[node->density()] * edge->stopimpact(idx) * turn_cost;
+    c.cost += seconds;
+    c.secs += seconds;
   }
-
-  // Return cost (time and penalty)
-  return {seconds + penalty, seconds};
+  return c;
 }
 
 // Returns the cost to make the transition from the predecessor edge
@@ -582,40 +507,9 @@ Cost MotorcycleCost::TransitionCostReverse(const uint32_t idx,
                                            const baldr::DirectedEdge* pred,
                                            const baldr::DirectedEdge* edge,
                                            const bool has_traffic) const {
-  // Accumulate cost and penalty
-  float seconds = 0.0f;
-  float penalty = 0.0f;
-
-  // Special cases with both time and penalty: country crossing, ferry,
-  // gate, toll booth
-  if (node->type() == NodeType::kBorderControl) {
-    seconds += country_crossing_cost_;
-    penalty += country_crossing_penalty_;
-  } else if (node->type() == NodeType::kGate) {
-    seconds += gate_cost_;
-    penalty += gate_penalty_;
-  }
-  if (node->type() == NodeType::kTollBooth || (!pred->toll() && edge->toll())) {
-    seconds += tollbooth_cost_;
-    penalty += tollbooth_penalty_;
-  }
-  if (edge->use() == Use::kFerry && pred->use() != Use::kFerry) {
-    seconds += ferry_cost_;
-    penalty += ferry_penalty_;
-  }
-
-  // Additional penalties without any time cost
-  if (edge->destonly() && !pred->destonly()) {
-    penalty += destination_only_penalty_;
-  }
-  if (edge->use() == Use::kAlley && pred->use() != Use::kAlley) {
-    penalty += alley_penalty_;
-  }
-
-  // Maneuver penalty, ignore when entering a link to avoid double penalizing
-  if (!edge->link() && !node->name_consistency(idx, edge->localedgeidx())) {
-    penalty += maneuver_penalty_;
-  }
+  // Get the transition cost for country crossing, ferry, gate, toll booth,
+  // destination only, alley, maneuver penalty
+  Cost c = base_transition_cost(node, edge, pred, idx);
 
   // Transition time = densityfactor * stopimpact * turncost
   if (edge->stopimpact(idx) > 0) {
@@ -627,11 +521,11 @@ Cost MotorcycleCost::TransitionCostReverse(const uint32_t idx,
                       ? kRightSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))]
                       : kLeftSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))];
     }
-    seconds += trans_density_factor_[node->density()] * edge->stopimpact(idx) * turn_cost;
+    float seconds = trans_density_factor_[node->density()] * edge->stopimpact(idx) * turn_cost;
+    c.cost += seconds;
+    c.secs += seconds;
   }
-
-  // Return cost (time and penalty)
-  return {seconds + penalty, seconds};
+  return c;
 }
 
 void ParseMotorcycleCostOptions(const rapidjson::Document& doc,
@@ -859,41 +753,41 @@ void testMotorcycleCostParams() {
     }
   }
 
-  // use_ferry_
+  // use_ferry
   distributor.reset(make_distributor_from_range(kUseFerryRange));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_motorcyclecost_from_json("use_ferry", (*distributor)(generator)));
-    if (ctorTester->use_ferry_ < kUseFerryRange.min || ctorTester->use_ferry_ > kUseFerryRange.max) {
-      throw std::runtime_error("use_ferry_ is not within it's range");
+    if (ctorTester->use_ferry < kUseFerryRange.min || ctorTester->use_ferry > kUseFerryRange.max) {
+      throw std::runtime_error("use_ferry is not within it's range");
     }
   }
 
-  // use_highways_
+  // use_highways
   distributor.reset(make_distributor_from_range(kUseHighwaysRange));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_motorcyclecost_from_json("use_highways", (*distributor)(generator)));
-    if (ctorTester->use_highways_ < kUseHighwaysRange.min ||
-        ctorTester->use_highways_ > kUseHighwaysRange.max) {
-      throw std::runtime_error("use_highways_ is not within it's range");
+    if (ctorTester->use_highways < kUseHighwaysRange.min ||
+        ctorTester->use_highways > kUseHighwaysRange.max) {
+      throw std::runtime_error("use_highways is not within it's range");
     }
   }
 
-  // use_trails_
+  // use_trails
   distributor.reset(make_distributor_from_range(kUseTrailsRange));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_motorcyclecost_from_json("use_trails", (*distributor)(generator)));
-    if (ctorTester->use_trails_ < kUseTrailsRange.min ||
-        ctorTester->use_trails_ > kUseTrailsRange.max) {
-      throw std::runtime_error("use_trails_ is not within it's range");
+    if (ctorTester->use_trails < kUseTrailsRange.min ||
+        ctorTester->use_trails > kUseTrailsRange.max) {
+      throw std::runtime_error("use_trails is not within it's range");
     }
   }
 
-  // use_tolls_
+  // use_tolls
   distributor.reset(make_distributor_from_range(kUseTollsRange));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_motorcyclecost_from_json("use_tolls", (*distributor)(generator)));
-    if (ctorTester->use_tolls_ < kUseTollsRange.min || ctorTester->use_tolls_ > kUseTollsRange.max) {
-      throw std::runtime_error("use_tolls_ is not within it's range");
+    if (ctorTester->use_tolls < kUseTollsRange.min || ctorTester->use_tolls > kUseTollsRange.max) {
+      throw std::runtime_error("use_tolls is not within it's range");
     }
   }
 }

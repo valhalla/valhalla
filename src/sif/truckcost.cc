@@ -275,17 +275,8 @@ public:
 public:
   VehicleType type_; // Vehicle type: tractor trailer
   float speedfactor_[kMaxSpeedKph + 1];
-  float density_factor_[16];       // Density factor
-  float maneuver_penalty_;         // Penalty (seconds) when inconsistent names
-  float destination_only_penalty_; // Penalty (seconds) using private road, driveway, or parking aisle
-  float gate_cost_;                // Cost (seconds) to go through gate
-  float gate_penalty_;             // Penalty (seconds) to go through gate
-  float tollbooth_cost_;           // Cost (seconds) to go through toll booth
-  float tollbooth_penalty_;        // Penalty (seconds) to go through a toll booth
-  float alley_penalty_;            // Penalty (seconds) to use a alley
-  float country_crossing_cost_;    // Cost (seconds) to go through a country border
-  float country_crossing_penalty_; // Penalty (seconds) to go across a country border
-  float low_class_penalty_;        // Penalty (seconds) to go to residential or service road
+  float density_factor_[16]; // Density factor
+  float low_class_penalty_;  // Penalty (seconds) to go to residential or service road
 
   // Vehicle attributes (used for special restrictions and costing)
   bool hazmat_;     // Carrying hazardous materials
@@ -311,15 +302,8 @@ TruckCost::TruckCost(const odin::Costing costing, const odin::DirectionsOptions&
 
   type_ = VehicleType::kTractorTrailer;
 
-  maneuver_penalty_ = costing_options.maneuver_penalty();
-  destination_only_penalty_ = costing_options.destination_only_penalty();
-  alley_penalty_ = costing_options.alley_penalty();
-  gate_cost_ = costing_options.gate_cost();
-  gate_penalty_ = costing_options.gate_penalty();
-  tollbooth_cost_ = costing_options.toll_booth_cost();
-  tollbooth_penalty_ = costing_options.toll_booth_penalty();
-  country_crossing_cost_ = costing_options.country_crossing_cost();
-  country_crossing_penalty_ = costing_options.country_crossing_penalty();
+  // Get the base costs
+  get_base_costs(costing_options);
 
   low_class_penalty_ = costing_options.low_class_penalty();
 
@@ -533,39 +517,15 @@ Cost TruckCost::TransitionCost(const baldr::DirectedEdge* edge,
                                const baldr::NodeInfo* node,
                                const EdgeLabel& pred,
                                const bool has_traffic) const {
-  // Accumulate cost and penalty
-  float seconds = 0.0f;
-  float penalty = 0.0f;
-
-  // Special cases with both time and penalty: country crossing, gate, toll booth
-  if (node->type() == NodeType::kBorderControl) {
-    seconds += country_crossing_cost_;
-    penalty += country_crossing_penalty_;
-  } else if (node->type() == NodeType::kGate) {
-    seconds += gate_cost_;
-    penalty += gate_penalty_;
-  }
-  if (node->type() == NodeType::kTollBooth || (!pred.toll() && edge->toll())) {
-    seconds += tollbooth_cost_;
-    penalty += tollbooth_penalty_;
-  }
-
-  // Additional penalties without any time cost
+  // Get the transition cost for country crossing, ferry, gate, toll booth,
+  // destination only, alley, maneuver penalty
   uint32_t idx = pred.opp_local_idx();
-  if (edge->destonly() && !pred.destonly()) {
-    penalty += destination_only_penalty_;
-  }
-  if (edge->use() == Use::kAlley && pred.use() != Use::kAlley) {
-    penalty += alley_penalty_;
-  }
+  Cost c = base_transition_cost(node, edge, pred, idx);
+
+  // Penalty to transition onto low class roads.
   if (edge->classification() == RoadClass::kResidential ||
       edge->classification() == RoadClass::kServiceOther) {
-    penalty += low_class_penalty_;
-  }
-
-  // Maneuver penalty, ignore when entering a link to avoid double penalizing
-  if (!edge->link() && !node->name_consistency(idx, edge->localedgeidx())) {
-    penalty += maneuver_penalty_;
+    c.cost += low_class_penalty_;
   }
 
   // Transition time = densityfactor * stopimpact * turncost
@@ -578,11 +538,11 @@ Cost TruckCost::TransitionCost(const baldr::DirectedEdge* edge,
                       ? kRightSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))]
                       : kLeftSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))];
     }
-    seconds += trans_density_factor_[node->density()] * edge->stopimpact(idx) * turn_cost;
+    float seconds = trans_density_factor_[node->density()] * edge->stopimpact(idx) * turn_cost;
+    c.cost += seconds;
+    c.secs += seconds;
   }
-
-  // Return cost (time and penalty)
-  return {seconds + penalty, seconds};
+  return c;
 }
 
 // Returns the cost to make the transition from the predecessor edge
@@ -594,38 +554,14 @@ Cost TruckCost::TransitionCostReverse(const uint32_t idx,
                                       const baldr::DirectedEdge* pred,
                                       const baldr::DirectedEdge* edge,
                                       const bool has_traffic) const {
-  // Accumulate cost and penalty
-  float seconds = 0.0f;
-  float penalty = 0.0f;
+  // Get the transition cost for country crossing, ferry, gate, toll booth,
+  // destination only, alley, maneuver penalty
+  Cost c = base_transition_cost(node, edge, pred, idx);
 
-  // Special cases with both time and penalty: country crossing, gate, toll booth
-  if (node->type() == NodeType::kBorderControl) {
-    seconds += country_crossing_cost_;
-    penalty += country_crossing_penalty_;
-  } else if (node->type() == NodeType::kGate) {
-    seconds += gate_cost_;
-    penalty += gate_penalty_;
-  }
-  if (node->type() == NodeType::kTollBooth || (!pred->toll() && edge->toll())) {
-    seconds += tollbooth_cost_;
-    penalty += tollbooth_penalty_;
-  }
-
-  // Additional penalties without any time cost
-  if (edge->destonly() && !pred->destonly()) {
-    penalty += destination_only_penalty_;
-  }
-  if (edge->use() == Use::kAlley && pred->use() != Use::kAlley) {
-    penalty += alley_penalty_;
-  }
+  // Penalty to transition onto low class roads.
   if (edge->classification() == RoadClass::kResidential ||
       edge->classification() == RoadClass::kServiceOther) {
-    penalty += low_class_penalty_;
-  }
-
-  // Maneuver penalty, ignore when entering a link to avoid double penalizing
-  if (!edge->link() && !node->name_consistency(idx, edge->localedgeidx())) {
-    penalty += maneuver_penalty_;
+    c.cost += low_class_penalty_;
   }
 
   // Transition time = densityfactor * stopimpact * turncost
@@ -638,11 +574,11 @@ Cost TruckCost::TransitionCostReverse(const uint32_t idx,
                       ? kRightSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))]
                       : kLeftSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))];
     }
-    seconds += trans_density_factor_[node->density()] * edge->stopimpact(idx) * turn_cost;
+    float seconds = trans_density_factor_[node->density()] * edge->stopimpact(idx) * turn_cost;
+    c.cost += seconds;
+    c.secs += seconds;
   }
-
-  // Return cost (time and penalty)
-  return {seconds + penalty, seconds};
+  return c;
 }
 
 // Get the cost factor for A* heuristics. This factor is multiplied

@@ -62,10 +62,6 @@ constexpr uint32_t kTransitTransferMaxDistance = 805; // 0.5 miles
 // Avoid roundabouts
 constexpr float kRoundaboutFactor = 2.0f;
 
-// Maximum ferry penalty (when use_ferry == 0). Can't make this too large
-// since a ferry is sometimes required to complete a route.
-constexpr float kMaxFerryPenalty = 8.0f * 3600.0f; // 8 hours
-
 // Minimum and maximum average pedestrian speed (to validate input).
 constexpr float kMinPedestrianSpeed = 0.5f;
 constexpr float kMaxPedestrianSpeed = 25.0f;
@@ -398,14 +394,6 @@ public:
   float alley_factor_;             // Avoid alleys factor.
   float driveway_factor_;          // Avoid driveways factor.
   float step_penalty_;             // Penalty applied to steps/stairs (seconds).
-  float gate_penalty_;             // Penalty (seconds) to go through gate
-  float maneuver_penalty_;         // Penalty (seconds) when inconsistent names
-  float country_crossing_cost_;    // Cost (seconds) to go across a country border
-  float country_crossing_penalty_; // Penalty (seconds) to go across a country border
-  float ferry_cost_;               // Cost (seconds) to exit a ferry
-  float ferry_penalty_;            // Penalty (seconds) to enter a ferry
-  float ferry_factor_;             // Weighting to apply to ferry edges
-  float use_ferry_;
 };
 
 // Constructor. Parse pedestrian options from property tree. If option is
@@ -421,6 +409,9 @@ PedestrianCost::PedestrianCost(const odin::Costing costing, const odin::Directio
   }
 
   allow_transit_connections_ = false;
+
+  // Get the base costs
+  get_base_costs(costing_options);
 
   // Get the pedestrian type - enter as string and convert to enum
   std::string type = costing_options.transport_type();
@@ -453,33 +444,12 @@ PedestrianCost::PedestrianCost(const odin::Costing costing, const odin::Directio
   }
 
   mode_factor_ = costing_options.mode_factor();
-  maneuver_penalty_ = costing_options.maneuver_penalty();
-  gate_penalty_ = costing_options.gate_penalty();
   walkway_factor_ = costing_options.walkway_factor();
   sidewalk_factor_ = costing_options.sidewalk_factor();
   alley_factor_ = costing_options.alley_factor();
   driveway_factor_ = costing_options.driveway_factor();
-  ferry_cost_ = costing_options.ferry_cost();
-  country_crossing_cost_ = costing_options.country_crossing_cost();
-  country_crossing_penalty_ = costing_options.country_crossing_penalty();
   transit_start_end_max_distance_ = costing_options.transit_start_end_max_distance();
   transit_transfer_max_distance_ = costing_options.transit_transfer_max_distance();
-
-  // Modify ferry penalty and edge weighting based on use_ferry_ factor
-  use_ferry_ = costing_options.use_ferry();
-  if (use_ferry_ < 0.5f) {
-    // Penalty goes from max at use_ferry_ = 0 to 0 at use_ferry_ = 0.5
-    ferry_penalty_ = static_cast<uint32_t>(kMaxFerryPenalty * (1.0f - use_ferry_ * 2.0f));
-
-    // Cost X10 at use_ferry_ == 0, slopes downwards towards 1.0 at use_ferry_ = 0.5
-    ferry_factor_ = 10.0f - use_ferry_ * 18.0f;
-  } else {
-    // Add a ferry weighting factor to influence cost along ferries to make
-    // them more favorable if desired rather than driving. No ferry penalty.
-    // Half the cost at use_ferry_ == 1, progress to 1.0 at use_ferry_ = 0.5
-    ferry_penalty_ = 0.0f;
-    ferry_factor_ = 1.5f - use_ferry_;
-  }
 
   // Set the speed factor (to avoid division in costing)
   speedfactor_ = (kSecPerHour * 0.001f) / speed_;
@@ -613,32 +583,27 @@ Cost PedestrianCost::TransitionCost(const baldr::DirectedEdge* edge,
     return {step_penalty_, 0.0f};
   }
 
-  // Penalty through gates, ferries, and border control.
-  float seconds = 0.0f;
-  float penalty = 0.0f;
-  if (node->type() == NodeType::kBorderControl) {
-    seconds += country_crossing_cost_;
-    penalty += country_crossing_penalty_;
-  } else if (node->type() == NodeType::kGate) {
-    penalty += gate_penalty_;
-  }
-  if (edge->use() == Use::kFerry && pred.use() != Use::kFerry) {
-    seconds += ferry_cost_;
-    penalty += ferry_penalty_;
-  }
+  // Get the transition cost for country crossing, ferry, gate, toll booth,
+  // destination only, alley, maneuver penalty
+  uint32_t idx = pred.opp_local_idx();
+  Cost c = base_transition_cost(node, edge, pred, idx);
 
+/**
   // Maneuver penalty, ignore when entering a link to avoid double penalizing
   uint32_t idx = pred.opp_local_idx();
   if (!edge->link() && edge->use() != Use::kEgressConnection &&
       edge->use() != Use::kPlatformConnection && !node->name_consistency(idx, edge->localedgeidx())) {
     penalty += maneuver_penalty_;
   }
+*/
 
   // Costs for crossing an intersection.
   if (edge->edge_to_right(idx) && edge->edge_to_left(idx)) {
-    seconds += kCrossingCosts[edge->stopimpact(idx)];
+    float seconds = kCrossingCosts[edge->stopimpact(idx)];
+    c.secs += seconds;
+    c.cost += seconds;
   }
-  return {seconds + penalty, seconds};
+  return c;
 }
 
 // Returns the cost to make the transition from the predecessor edge
@@ -655,31 +620,24 @@ Cost PedestrianCost::TransitionCostReverse(const uint32_t idx,
     return {step_penalty_, 0.0f};
   }
 
-  // Penalty through gates, ferries, and border control.
-  float seconds = 0.0f;
-  float penalty = 0.0f;
-  if (node->type() == NodeType::kBorderControl) {
-    seconds += country_crossing_cost_;
-    penalty += country_crossing_penalty_;
-  } else if (node->type() == NodeType::kGate) {
-    penalty += gate_penalty_;
-  }
-  if (edge->use() == Use::kFerry && pred->use() != Use::kFerry) {
-    seconds += ferry_cost_;
-    penalty += ferry_penalty_;
-  }
+  // Get the transition cost for country crossing, ferry, gate, toll booth,
+  // destination only, alley, maneuver penalty
+  Cost c = base_transition_cost(node, edge, pred, idx);
 
+/**
   // Maneuver penalty, ignore when entering a link to avoid double penalizing
   if (!edge->link() && edge->use() != Use::kEgressConnection &&
       edge->use() != Use::kPlatformConnection && !node->name_consistency(idx, edge->localedgeidx())) {
     penalty += maneuver_penalty_;
   }
-
+**/
   // Costs for crossing an intersection.
   if (edge->edge_to_right(idx) && edge->edge_to_left(idx)) {
-    seconds += kCrossingCosts[edge->stopimpact(idx)];
+    float seconds = kCrossingCosts[edge->stopimpact(idx)];
+    c.secs += seconds;
+    c.cost += seconds;
   }
-  return {seconds + penalty, seconds};
+  return c;
 }
 
 void ParsePedestrianCostOptions(const rapidjson::Document& doc,

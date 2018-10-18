@@ -39,10 +39,6 @@ constexpr uint32_t kMaximumTopSpeed = 120; // Kilometers per hour
 
 constexpr Surface kMinimumScooterSurface = Surface::kDirt;
 
-// Maximum ferry penalty (when use_ferry == 0). Can't make this too large
-// since a ferry is sometimes required to complete a route.
-constexpr float kMaxFerryPenalty = 6.0f * kSecPerHour; // 6 hours
-
 // Default turn costs
 constexpr float kTCStraight = 0.5f;
 constexpr float kTCSlight = 0.75f;
@@ -337,28 +333,15 @@ public:
   // We expose it within the source file for testing purposes
 public:
   float speedfactor_[kMaxSpeedKph + 1];
-  float density_factor_[16];       // Density factor
-  float maneuver_penalty_;         // Penalty (seconds) when inconsistent names
-  float destination_only_penalty_; // Penalty (seconds) using private road, driveway, or parking aisle
-  float gate_cost_;                // Cost (seconds) to go through gate
-  float gate_penalty_;             // Penalty (seconds) to go through gate
-  float ferry_cost_;               // Cost (seconds) to enter a ferry
-  float ferry_penalty_;            // Penalty (seconds) to enter a ferry
-  float ferry_factor_;             // Weighting to apply to ferry edges
-  float alley_penalty_;            // Penalty (seconds) to use a alley
-  float country_crossing_cost_;    // Cost (seconds) to go across a country border
-  float country_crossing_penalty_; // Penalty (seconds) to go across a country border
-  float use_ferry_;
+  float density_factor_[16]; // Density factor
+  float ferry_factor_;       // Weighting to apply to ferry edges
 
   // Density factor used in edge transition costing
   std::vector<float> trans_density_factor_;
 
   uint32_t top_speed_; // Top speed the motorized scooter can go. Used to avoid roads
                        // with higher speeds than it
-
-  float use_hills_;   // Scale from 0 (avoid hills) to 1 (don't avoid hills)
-  float use_primary_; // Scale from 0 (avoid primary roads) to 1 (don't avoid primary roads)
-  float road_factor_; // Road factor based on use_primary_
+  float road_factor_;  // Road factor based on use_primary
 
   // Elevation/grade penalty (weighting applied based on the edge's weighted
   // grade (relative value from 0-15)
@@ -375,34 +358,8 @@ MotorScooterCost::MotorScooterCost(const odin::Costing costing,
   // Grab the costing options based on the specified costing type
   const odin::CostingOptions& costing_options = options.costing_options(static_cast<int>(costing));
 
-  maneuver_penalty_ = costing_options.maneuver_penalty();
-  destination_only_penalty_ = costing_options.destination_only_penalty();
-  gate_cost_ = costing_options.gate_cost();
-  gate_penalty_ = costing_options.gate_penalty();
-  alley_penalty_ = costing_options.alley_penalty();
-  country_crossing_cost_ = costing_options.country_crossing_cost();
-  country_crossing_penalty_ = costing_options.country_crossing_penalty();
-
-  // Set the cost (seconds) to enter a ferry (only apply entering since
-  // a route must exit a ferry (except artificial test routes ending on
-  // a ferry!)
-  ferry_cost_ = costing_options.ferry_cost();
-
-  // Modify ferry penalty and edge weighting based on use_ferry factor
-  use_ferry_ = costing_options.use_ferry();
-  if (use_ferry_ < 0.5f) {
-    // Penalty goes from max at use_ferry_ = 0 to 0 at use_ferry_ = 0.5
-    ferry_penalty_ = static_cast<uint32_t>(kMaxFerryPenalty * (1.0f - use_ferry_ * 2.0f));
-
-    // Cost X10 at use_ferry_ == 0, slopes downwards towards 1.0 at use_ferry_ = 0.5
-    ferry_factor_ = 10.0f - use_ferry_ * 18.0f;
-  } else {
-    // Add a ferry weighting factor to influence cost along ferries to make
-    // them more favorable if desired rather than driving. No ferry penalty.
-    // Half the cost at use_ferry_ == 1, progress to 1.0 at use_ferry_ = 0.5
-    ferry_penalty_ = 0.0f;
-    ferry_factor_ = 1.5f - use_ferry_;
-  }
+  // Get the base costs
+  get_base_costs(costing_options);
 
   // Create speed cost table
   speedfactor_[0] = kSecPerHour; // TODO - what to make speed=0?
@@ -415,21 +372,23 @@ MotorScooterCost::MotorScooterCost(const odin::Costing costing,
     density_factor_[d] = 0.85f + (d * 0.018f);
   }
 
+  // Set top speed for motor scooter
   top_speed_ = costing_options.top_speed();
 
-  use_hills_ = costing_options.use_hills();
-
-  float avoid_hills = (1.0f - use_hills_);
+  // Set grade penalties based on use_hills option.
+  // Scale from 0 (avoid hills) to 1 (don't avoid hills)
+  float use_hills = costing_options.use_hills();
+  float avoid_hills = (1.0f - use_hills);
   for (uint32_t i = 0; i <= kMaxGradeFactor; ++i) {
     grade_penalty_[i] = avoid_hills * kAvoidHillsStrength[i];
   }
 
-  use_primary_ = costing_options.use_primary();
-
-  // Set the road classification factor. use_roads factors above 0.5 start to
+  // Set the road classification factor based on use_primary option - scales from
+  // 0 (avoid primary roads) to 1 (don't avoid primary roads). Above 0.5 start to
   // reduce the weight difference between road classes while factors below 0.5
   // start to increase the differences.
-  road_factor_ = (use_primary_ >= 0.5f) ? 1.5f - use_primary_ : 3.0f - use_primary_ * 5.0f;
+  float use_primary = costing_options.use_primary();
+  road_factor_ = (use_primary >= 0.5f) ? 1.5f - use_primary : 3.0f - use_primary * 5.0f;
 }
 
 // Check if access is allowed on the specified edge.
@@ -538,36 +497,10 @@ Cost MotorScooterCost::TransitionCost(const baldr::DirectedEdge* edge,
                                       const baldr::NodeInfo* node,
                                       const EdgeLabel& pred,
                                       const bool has_traffic) const {
-  // Accumulate cost and penalty
-  float seconds = 0.0f;
-  float penalty = 0.0f;
-
-  // Special cases with both time and penalty: country crossing, ferry, and gate
-  if (node->type() == NodeType::kBorderControl) {
-    seconds += country_crossing_cost_;
-    penalty += country_crossing_penalty_;
-  } else if (node->type() == NodeType::kGate) {
-    seconds += gate_cost_;
-    penalty += gate_penalty_;
-  }
-  if (edge->use() == Use::kFerry && pred.use() != Use::kFerry) {
-    seconds += ferry_cost_;
-    penalty += ferry_penalty_;
-  }
-
-  // Additional penalties without any time cost
+  // Get the transition cost for country crossing, ferry, gate, toll booth,
+  // destination only, alley, maneuver penalty
   uint32_t idx = pred.opp_local_idx();
-  if (edge->destonly() && !pred.destonly()) {
-    penalty += destination_only_penalty_;
-  }
-  if (edge->use() == Use::kAlley && pred.use() != Use::kAlley) {
-    penalty += alley_penalty_;
-  }
-
-  // Maneuver penalty, ignore when entering a link to avoid double penalizing
-  if (!edge->link() && !node->name_consistency(idx, edge->localedgeidx())) {
-    penalty += maneuver_penalty_;
-  }
+  Cost c = base_transition_cost(node, edge, pred, idx);
 
   // Transition time = densityfactor * stopimpact * turncost
   if (edge->stopimpact(idx) > 0) {
@@ -579,11 +512,11 @@ Cost MotorScooterCost::TransitionCost(const baldr::DirectedEdge* edge,
                       ? kRightSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))]
                       : kLeftSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))];
     }
-    seconds += trans_density_factor_[node->density()] * edge->stopimpact(idx) * turn_cost;
+    float seconds = trans_density_factor_[node->density()] * edge->stopimpact(idx) * turn_cost;
+    c.cost += seconds;
+    c.secs += seconds;
   }
-
-  // Return cost (time and penalty)
-  return {seconds + penalty, seconds};
+  return c;
 }
 
 // Returns the cost to make the transition from the predecessor edge
@@ -595,35 +528,9 @@ Cost MotorScooterCost::TransitionCostReverse(const uint32_t idx,
                                              const baldr::DirectedEdge* pred,
                                              const baldr::DirectedEdge* edge,
                                              const bool has_traffic) const {
-  // Accumulate cost and penalty
-  float seconds = 0.0f;
-  float penalty = 0.0f;
-
-  // Special cases with both time and penalty: country crossing, ferry, and gate
-  if (node->type() == NodeType::kBorderControl) {
-    seconds += country_crossing_cost_;
-    penalty += country_crossing_penalty_;
-  } else if (node->type() == NodeType::kGate) {
-    seconds += gate_cost_;
-    penalty += gate_penalty_;
-  }
-  if (edge->use() == Use::kFerry && pred->use() != Use::kFerry) {
-    seconds += ferry_cost_;
-    penalty += ferry_penalty_;
-  }
-
-  // Additional penalties without any time cost
-  if (edge->destonly() && !pred->destonly()) {
-    penalty += destination_only_penalty_;
-  }
-  if (edge->use() == Use::kAlley && pred->use() != Use::kAlley) {
-    penalty += alley_penalty_;
-  }
-
-  // Maneuver penalty, ignore when entering a link to avoid double penalizing.
-  if (!edge->link() && !node->name_consistency(idx, edge->localedgeidx())) {
-    penalty += maneuver_penalty_;
-  }
+  // Get the transition cost for country crossing, ferry, gate, toll booth,
+  // destination only, alley, maneuver penalty
+  Cost c = base_transition_cost(node, edge, pred, idx);
 
   // Transition time = densityfactor * stopimpact * turncost
   if (edge->stopimpact(idx) > 0) {
@@ -635,11 +542,11 @@ Cost MotorScooterCost::TransitionCostReverse(const uint32_t idx,
                       ? kRightSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))]
                       : kLeftSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))];
     }
-    seconds += trans_density_factor_[node->density()] * edge->stopimpact(idx) * turn_cost;
+    float seconds = trans_density_factor_[node->density()] * edge->stopimpact(idx) * turn_cost;
+    c.cost += seconds;
+    c.secs += seconds;
   }
-
-  // Return cost (time and penalty)
-  return {seconds + penalty, seconds};
+  return c;
 }
 
 void ParseMotorScooterCostOptions(const rapidjson::Document& doc,
@@ -844,12 +751,12 @@ void testMotorScooterCostParams() {
     }
   }
 
-  // use_ferry_
+  // use_ferry
   fDistributor.reset(make_real_distributor_from_range(kUseFerryRange));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_motorscootercost_from_json("use_ferry", (*fDistributor)(generator)));
-    if (ctorTester->use_ferry_ < kUseFerryRange.min || ctorTester->use_ferry_ > kUseFerryRange.max) {
-      throw std::runtime_error("use_ferry_ is not within it's range");
+    if (ctorTester->use_ferry < kUseFerryRange.min || ctorTester->use_ferry > kUseFerryRange.max) {
+      throw std::runtime_error("use_ferry is not within it's range");
     }
   }
 
@@ -862,22 +769,22 @@ void testMotorScooterCostParams() {
     }
   }
 
-  // use_hills_
+  // use_hills
   fDistributor.reset(make_real_distributor_from_range(kUseHillsRange));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_motorscootercost_from_json("use_hills", (*fDistributor)(generator)));
-    if (ctorTester->use_hills_ < kUseHillsRange.min || ctorTester->use_hills_ > kUseHillsRange.max) {
-      throw std::runtime_error("use_hills_ is not within it's range");
+    if (ctorTester->use_hills < kUseHillsRange.min || ctorTester->use_hills > kUseHillsRange.max) {
+      throw std::runtime_error("use_hills is not within it's range");
     }
   }
 
-  // use_primary_
+  // use_primary
   fDistributor.reset(make_real_distributor_from_range(kUsePrimaryRange));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_motorscootercost_from_json("use_primary", (*fDistributor)(generator)));
-    if (ctorTester->use_primary_ < kUsePrimaryRange.min ||
-        ctorTester->use_primary_ > kUsePrimaryRange.max) {
-      throw std::runtime_error("use_hills_ is not within it's range");
+    if (ctorTester->use_primary < kUsePrimaryRange.min ||
+        ctorTester->use_primary > kUsePrimaryRange.max) {
+      throw std::runtime_error("use_primary is not within it's range");
     }
   }
 }
