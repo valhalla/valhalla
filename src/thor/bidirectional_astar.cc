@@ -501,7 +501,7 @@ bool BidirectionalAStar::SetForwardConnection(const BDEdgeLabel& pred) {
   }
 
   // Set a threshold to extend search
-  if (threshold_ == std::numeric_limits<float>::max() ) {
+  if (threshold_ == std::numeric_limits<float>::max()) {
     threshold_ = pred.sortcost() + cost_diff_ + kThresholdDelta;
   }
   return true;
@@ -543,7 +543,7 @@ bool BidirectionalAStar::SetReverseConnection(const BDEdgeLabel& pred) {
   }
 
   // Set a threshold to extend search
-  if (threshold_ == std::numeric_limits<float>::max() ) {
+  if (threshold_ == std::numeric_limits<float>::max()) {
     threshold_ = pred.sortcost() + kThresholdDelta;
   }
   return true;
