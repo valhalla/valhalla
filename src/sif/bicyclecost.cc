@@ -21,18 +21,23 @@ namespace sif {
 // Default options/values
 namespace {
 
-constexpr float kDefaultManeuverPenalty = 5.0f;        // Seconds
-constexpr float kDefaultDrivewayPenalty = 300.0f;      // Seconds
-constexpr float kDefaultAlleyPenalty = 60.0f;          // Seconds
-constexpr float kDefaultGateCost = 30.0f;              // Seconds
-constexpr float kDefaultGatePenalty = 300.0f;          // Seconds
-constexpr float kDefaultFerryCost = 300.0f;            // Seconds
-constexpr float kDefaultCountryCrossingCost = 600.0f;  // Seconds
-constexpr float kDefaultCountryCrossingPenalty = 0.0f; // Seconds
-constexpr float kDefaultUseRoad = 0.25f;               // Factor between 0 and 1
-constexpr float kDefaultUseFerry = 0.5f;               // Factor between 0 and 1
-constexpr float kDefaultAvoidBadSurfaces = 0.25f;      // Factor between 0 and 1
-const std::string kDefaultBicycleType = "Hybrid";      // Bicycle type
+// Base transition costs
+// TODO - can we define these in dynamiccost.h and override here if they differ?
+constexpr float kDefaultDestinationOnlyPenalty = 600.0f; // Seconds
+constexpr float kDefaultManeuverPenalty = 5.0f;          // Seconds
+constexpr float kDefaultAlleyPenalty = 60.0f;            // Seconds
+constexpr float kDefaultGateCost = 30.0f;                // Seconds
+constexpr float kDefaultGatePenalty = 300.0f;            // Seconds
+constexpr float kDefaultFerryCost = 300.0f;              // Seconds
+constexpr float kDefaultCountryCrossingCost = 600.0f;    // Seconds
+constexpr float kDefaultCountryCrossingPenalty = 0.0f;   // Seconds
+
+// Other options
+constexpr float kDefaultDrivewayPenalty = 300.0f; // Seconds
+constexpr float kDefaultUseRoad = 0.25f;          // Factor between 0 and 1
+constexpr float kDefaultUseFerry = 0.5f;          // Factor between 0 and 1
+constexpr float kDefaultAvoidBadSurfaces = 0.25f; // Factor between 0 and 1
+const std::string kDefaultBicycleType = "Hybrid"; // Bicycle type
 
 // Maximum ferry penalty (when use_ferry == 0). Can't make this too large
 // since a ferry is sometimes required to complete a route.
@@ -113,12 +118,6 @@ constexpr Surface kWorstAllowedSurface[] = {Surface::kCompacted, // Road bicycle
 
 constexpr float kSurfaceFactors[] = {1.0f, 2.5f, 4.5f, 7.0f};
 
-// Avoid driveways
-constexpr float kDrivewayFactor = 20.0f;
-
-// Additional penalty to avoid destination only
-constexpr float kDestinationOnlyFactor = 0.1f;
-
 // Weighting factor based on road class. These apply penalties to higher class
 // roads. These penalties are modulated by the useroads factor - further
 // avoiding higher class roads for those with low propensity for using roads.
@@ -196,6 +195,8 @@ constexpr float kBicycleNetworkFactor = 0.95f;
 constexpr float kMaxSeconds = 12.0f * kSecPerHour; // 12 hours
 
 // Valid ranges and defaults
+constexpr ranged_default_t<float> kDestinationOnlyPenaltyRange{0, kDefaultDestinationOnlyPenalty,
+                                                               kMaxSeconds};
 constexpr ranged_default_t<float> kManeuverPenaltyRange{0.0f, kDefaultManeuverPenalty, kMaxSeconds};
 constexpr ranged_default_t<float> kDrivewayPenaltyRange{0.0f, kDefaultDrivewayPenalty, kMaxSeconds};
 constexpr ranged_default_t<float> kAlleyPenaltyRange{0.0f, kDefaultAlleyPenalty, kMaxSeconds};
@@ -359,7 +360,6 @@ public:
   // We expose it within the source file for testing purposes
 
   float speedfactor_[kMaxSpeedKph + 1]; // Cost factors based on speed in kph
-  float driveway_penalty_;              // Penalty (seconds) using a driveway
   float ferry_factor_;                  // Weighting to apply to ferry edges
   float use_roads_;                     // Preference of using roads between 0 and 1
   float road_factor_;                   // Road factor based on use_roads_
@@ -644,9 +644,6 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge, const uint32_t speed
     roadway_stress = 0.2f + use_roads_ * 0.8f;
   } else if (edge->use() == Use::kTrack) {
     roadway_stress = 0.5f + use_roads_;
-  } else if (edge->use() == Use::kDriveway) {
-    // Heavily penalize driveways
-    roadway_stress = kDrivewayFactor;
   } else {
     // Favor roads where a cycle lane exists
     if (edge->cyclelane() == CycleLane::kShared) {
@@ -658,9 +655,6 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge, const uint32_t speed
     } else if (edge->shoulder()) {
       // If no cycle lane, but there is a shoulder then have a slight preference for this road
       accommodation_factor = 0.7f + use_roads_ * 0.2f;
-    } else if (edge->destonly()) {
-      // Slight penalty going though destination only areas if no bike lanes
-      roadway_stress += kDestinationOnlyFactor;
     }
 
     // Penalize roads that have more than one lane (in the direction of travel)
@@ -722,10 +716,6 @@ Cost BicycleCost::TransitionCost(const baldr::DirectedEdge* edge,
   // Accumulate cost and penalty
   float seconds = 0.0f;
   float penalty = 0.0f;
-  if (edge->use() == Use::kDriveway && pred.use() != Use::kDriveway) {
-    penalty += driveway_penalty_;
-  }
-
   float class_factor = kRoadClassFactor[static_cast<uint32_t>(edge->classification())];
 
   // Reduce penalty to make this turn if the road we are turning on has some kind of bicycle
@@ -808,9 +798,6 @@ Cost BicycleCost::TransitionCostReverse(const uint32_t idx,
   // Additional costs
   float seconds = 0.0f;
   float penalty = 0.0f;
-  if (edge->use() == Use::kDriveway && pred->use() != Use::kDriveway) {
-    penalty += driveway_penalty_;
-  }
 
   // Reduce penalty to make this turn if the road we are turning on has some kind of bicycle
   // accommodation
@@ -889,10 +876,10 @@ void ParseBicycleCostOptions(const rapidjson::Document& doc,
         rapidjson::get_optional<float>(*json_costing_options, "/maneuver_penalty")
             .get_value_or(kDefaultManeuverPenalty)));
 
-    // driveway_penalty
-    pbf_costing_options->set_driveway_penalty(
-        kDrivewayPenaltyRange(rapidjson::get_optional<float>(*json_costing_options, "/driveway")
-                                  .get_value_or(kDefaultDrivewayPenalty)));
+    // destination_only_penalty
+    pbf_costing_options->set_destination_only_penalty(kDestinationOnlyPenaltyRange(
+        rapidjson::get_optional<float>(*json_costing_options, "/destination_only_penalty")
+            .get_value_or(kDefaultDestinationOnlyPenalty)));
 
     // alley_penalty
     pbf_costing_options->set_alley_penalty(
@@ -976,7 +963,7 @@ void ParseBicycleCostOptions(const rapidjson::Document& doc,
   } else {
     // Set pbf values to defaults
     pbf_costing_options->set_maneuver_penalty(kDefaultManeuverPenalty);
-    pbf_costing_options->set_driveway_penalty(kDefaultDrivewayPenalty);
+    pbf_costing_options->set_destination_only_penalty(kDefaultDestinationOnlyPenalty);
     pbf_costing_options->set_alley_penalty(kDefaultAlleyPenalty);
     pbf_costing_options->set_gate_cost(kDefaultGateCost);
     pbf_costing_options->set_gate_penalty(kDefaultGatePenalty);
@@ -1040,13 +1027,13 @@ void testBicycleCostParams() {
     }
   }
 
-  // driveway_penalty_
-  distributor.reset(make_distributor_from_range(kDrivewayPenaltyRange));
+  // destination_only_penalty_
+  distributor.reset(make_distributor_from_range(kDestinationOnlyPenaltyRange));
   for (unsigned i = 0; i < testIterations; ++i) {
-    ctorTester.reset(make_bicyclecost_from_json("driveway", (*distributor)(generator)));
-    if (ctorTester->driveway_penalty_ < kDrivewayPenaltyRange.min ||
-        ctorTester->driveway_penalty_ > kDrivewayPenaltyRange.max) {
-      throw std::runtime_error("driveway_penalty_ is not within it's range");
+    ctorTester.reset(make_autocost_from_json("destination_only_penalty", (*distributor)(generator)));
+    if (ctorTester->destination_only_penalty_ < kDestinationOnlyPenaltyRange.min ||
+        ctorTester->destination_only_penalty_ > kDestinationOnlyPenaltyRange.max) {
+      throw std::runtime_error("destination_only_penalty_ is not within it's range");
     }
   }
 

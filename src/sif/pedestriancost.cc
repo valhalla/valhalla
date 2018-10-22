@@ -19,6 +19,17 @@ namespace sif {
 // Default options/values
 namespace {
 
+// Base transition costs
+// TODO - can we define these in dynamiccost.h and override here if they differ?
+constexpr float kDefaultDestinationOnlyPenalty = 600.0f; // Seconds
+constexpr float kDefaultManeuverPenalty = 5.0f;          // Seconds
+constexpr float kDefaultAlleyPenalty = 5.0f;             // Seconds
+constexpr float kDefaultGatePenalty = 10.0f;             // Seconds
+constexpr float kDefaultTollBoothCost = 15.0f;           // Seconds
+constexpr float kDefaultFerryCost = 300.0f;              // Seconds
+constexpr float kDefaultCountryCrossingCost = 600.0f;    // Seconds
+constexpr float kDefaultCountryCrossingPenalty = 0.0f;   // Seconds
+
 // Maximum route distances
 constexpr uint32_t kMaxDistanceFoot = 100000;      // 100 km
 constexpr uint32_t kMaxDistanceWheelchair = 10000; // 10 km
@@ -36,17 +47,12 @@ constexpr uint32_t kDefaultMaxGradeFoot = 90;
 constexpr uint32_t kDefaultMaxGradeWheelchair = 12; // Conservative for now...
 
 // Other defaults (not dependent on type)
-constexpr uint8_t kDefaultMaxHikingDifficulty = 1;     // T1 (kHiking)
-constexpr float kModeFactor = 1.5f;                    // Favor this mode?
-constexpr float kDefaultManeuverPenalty = 5.0f;        // Seconds
-constexpr float kDefaultGatePenalty = 10.0f;           // Seconds
-constexpr float kDefaultWalkwayFactor = 0.9f;          // Slightly favor walkways
-constexpr float kDefaultSideWalkFactor = 0.95f;        // Slightly favor sidewalks
-constexpr float kDefaultAlleyFactor = 2.0f;            // Avoid alleys
-constexpr float kDefaultDrivewayFactor = 5.0f;         // Avoid driveways
-constexpr float kDefaultFerryCost = 300.0f;            // Seconds
-constexpr float kDefaultCountryCrossingCost = 600.0f;  // Seconds
-constexpr float kDefaultCountryCrossingPenalty = 0.0f; // Seconds
+constexpr uint8_t kDefaultMaxHikingDifficulty = 1; // T1 (kHiking)
+constexpr float kModeFactor = 1.5f;                // Favor this mode?
+constexpr float kDefaultWalkwayFactor = 0.9f;      // Slightly favor walkways
+constexpr float kDefaultSideWalkFactor = 0.95f;    // Slightly favor sidewalks
+constexpr float kDefaultAlleyFactor = 2.0f;        // Avoid alleys
+constexpr float kDefaultDrivewayFactor = 5.0f;     // Avoid driveways
 constexpr float kDefaultUseFerry = 1.0f;
 
 // Maximum distance at the beginning or end of a multimodal route
@@ -101,7 +107,10 @@ constexpr ranged_default_t<uint8_t> kMaxHikingDifficultyRange{0, kDefaultMaxHiki
 constexpr ranged_default_t<float> kModeFactorRange{kMinFactor, kModeFactor, kMaxFactor};
 constexpr ranged_default_t<float> kManeuverPenaltyRange{kMinFactor, kDefaultManeuverPenalty,
                                                         kMaxSeconds};
-constexpr ranged_default_t<float> kGatePenaltyRange{kMinFactor, kDefaultGatePenalty, kMaxSeconds};
+constexpr ranged_default_t<float> kDestinationOnlyPenaltyRange{0, kDefaultDestinationOnlyPenalty,
+                                                               kMaxSeconds};
+constexpr ranged_default_t<float> kAlleyPenaltyRange{0.0f, kDefaultAlleyPenalty, kMaxSeconds};
+constexpr ranged_default_t<float> kGatePenaltyRange{0.0f, kDefaultGatePenalty, kMaxSeconds};
 constexpr ranged_default_t<float> kWalkwayFactorRange{kMinFactor, kDefaultWalkwayFactor, kMaxFactor};
 constexpr ranged_default_t<float> kSideWalkFactorRange{kMinFactor, kDefaultSideWalkFactor,
                                                        kMaxFactor};
@@ -394,6 +403,98 @@ public:
   float alley_factor_;             // Avoid alleys factor.
   float driveway_factor_;          // Avoid driveways factor.
   float step_penalty_;             // Penalty applied to steps/stairs (seconds).
+
+  /**
+   * Override the base transition cost to not add maneuver penalties onto transit edges.
+   * Base transition cost that all costing methods use. Includes costs for
+   * country crossing, boarding a ferry, toll booth, gates, entering destination
+   * only, alleys, and maneuver penalties. Each costing method can provide different
+   * costs for these transitions (via costing options).
+   * @param node Node at the intersection where the edge transition occurs.
+   * @param edge Directed edge entering.
+   * @param pred Predecessor edge information.
+   * @param idx  Index used for name consistency.
+   * @return Returns the transition cost (cost, elapsed time).
+   */
+  sif::Cost base_transition_cost(const baldr::NodeInfo* node,
+                                 const baldr::DirectedEdge* edge,
+                                 const sif::EdgeLabel& pred,
+                                 const uint32_t idx) const {
+    // Cases with both time and penalty: country crossing, ferry, gate, toll booth
+    sif::Cost c;
+    if (node->type() == baldr::NodeType::kBorderControl) {
+      c += country_crossing_cost_;
+    }
+    if (node->type() == baldr::NodeType::kGate) {
+      c += gate_cost_;
+    }
+    if (node->type() == baldr::NodeType::kTollBooth) {
+      c += toll_booth_cost_;
+    }
+    if (edge->use() == baldr::Use::kFerry && pred.use() != baldr::Use::kFerry) {
+      c += ferry_transition_cost_;
+    }
+
+    // Additional penalties without any time cost
+    if (edge->destonly() && !pred.destonly()) {
+      c.cost += destination_only_penalty_;
+    }
+    if (edge->use() == baldr::Use::kAlley && pred.use() != baldr::Use::kAlley) {
+      c.cost += alley_penalty_;
+    }
+    if (!edge->link() && edge->use() != Use::kEgressConnection &&
+        edge->use() != Use::kPlatformConnection &&
+        !node->name_consistency(idx, edge->localedgeidx())) {
+      c.cost += maneuver_penalty_;
+    }
+    return c;
+  }
+
+  /**
+   * Override the base transition cost to not add maneuver penalties onto transit edges.
+   * Base transition cost that all costing methods use. Includes costs for
+   * country crossing, boarding a ferry, toll booth, gates, entering destination
+   * only, alleys, and maneuver penalties. Each costing method can provide different
+   * costs for these transitions (via costing options).
+   * @param node Node at the intersection where the edge transition occurs.
+   * @param edge Directed edge entering.
+   * @param pred Predecessor edge.
+   * @param idx  Index used for name consistency.
+   * @return Returns the transition cost (cost, elapsed time).
+   */
+  sif::Cost base_transition_cost(const baldr::NodeInfo* node,
+                                 const baldr::DirectedEdge* edge,
+                                 const baldr::DirectedEdge* pred,
+                                 const uint32_t idx) const {
+    // Cases with both time and penalty: country crossing, ferry, gate, toll booth
+    sif::Cost c;
+    if (node->type() == baldr::NodeType::kBorderControl) {
+      c += country_crossing_cost_;
+    }
+    if (node->type() == baldr::NodeType::kGate) {
+      c += gate_cost_;
+    }
+    if (node->type() == baldr::NodeType::kTollBooth) {
+      c += toll_booth_cost_;
+    }
+    if (edge->use() == baldr::Use::kFerry && pred->use() != baldr::Use::kFerry) {
+      c += ferry_transition_cost_;
+    }
+
+    // Additional penalties without any time cost
+    if (edge->destonly() && !pred->destonly()) {
+      c.cost += destination_only_penalty_;
+    }
+    if (edge->use() == baldr::Use::kAlley && pred->use() != baldr::Use::kAlley) {
+      c.cost += alley_penalty_;
+    }
+    if (!edge->link() && edge->use() != Use::kEgressConnection &&
+        edge->use() != Use::kPlatformConnection &&
+        !node->name_consistency(idx, edge->localedgeidx())) {
+      c.cost += maneuver_penalty_;
+    }
+    return c;
+  }
 };
 
 // Constructor. Parse pedestrian options from property tree. If option is
@@ -588,15 +689,6 @@ Cost PedestrianCost::TransitionCost(const baldr::DirectedEdge* edge,
   uint32_t idx = pred.opp_local_idx();
   Cost c = base_transition_cost(node, edge, pred, idx);
 
-/**
-  // Maneuver penalty, ignore when entering a link to avoid double penalizing
-  uint32_t idx = pred.opp_local_idx();
-  if (!edge->link() && edge->use() != Use::kEgressConnection &&
-      edge->use() != Use::kPlatformConnection && !node->name_consistency(idx, edge->localedgeidx())) {
-    penalty += maneuver_penalty_;
-  }
-*/
-
   // Costs for crossing an intersection.
   if (edge->edge_to_right(idx) && edge->edge_to_left(idx)) {
     float seconds = kCrossingCosts[edge->stopimpact(idx)];
@@ -624,13 +716,6 @@ Cost PedestrianCost::TransitionCostReverse(const uint32_t idx,
   // destination only, alley, maneuver penalty
   Cost c = base_transition_cost(node, edge, pred, idx);
 
-/**
-  // Maneuver penalty, ignore when entering a link to avoid double penalizing
-  if (!edge->link() && edge->use() != Use::kEgressConnection &&
-      edge->use() != Use::kPlatformConnection && !node->name_consistency(idx, edge->localedgeidx())) {
-    penalty += maneuver_penalty_;
-  }
-**/
   // Costs for crossing an intersection.
   if (edge->edge_to_right(idx) && edge->edge_to_left(idx)) {
     float seconds = kCrossingCosts[edge->stopimpact(idx)];
@@ -653,10 +738,20 @@ void ParsePedestrianCostOptions(const rapidjson::Document& doc,
         rapidjson::get_optional<float>(*json_costing_options, "/maneuver_penalty")
             .get_value_or(kDefaultManeuverPenalty)));
 
+    // destination_only_penalty
+    pbf_costing_options->set_destination_only_penalty(kDestinationOnlyPenaltyRange(
+        rapidjson::get_optional<float>(*json_costing_options, "/destination_only_penalty")
+            .get_value_or(kDefaultDestinationOnlyPenalty)));
+
     // gate_penalty
     pbf_costing_options->set_gate_penalty(
         kGatePenaltyRange(rapidjson::get_optional<float>(*json_costing_options, "/gate_penalty")
                               .get_value_or(kDefaultGatePenalty)));
+
+    // alley_penalty
+    pbf_costing_options->set_alley_penalty(
+        kAlleyPenaltyRange(rapidjson::get_optional<float>(*json_costing_options, "/alley_penalty")
+                               .get_value_or(kDefaultAlleyPenalty)));
 
     // country_crossing_cost
     pbf_costing_options->set_country_crossing_cost(kCountryCrossingCostRange(
@@ -770,7 +865,9 @@ void ParsePedestrianCostOptions(const rapidjson::Document& doc,
   } else {
     // Set pbf values to defaults
     pbf_costing_options->set_maneuver_penalty(kDefaultManeuverPenalty);
+    pbf_costing_options->set_destination_only_penalty(kDefaultDestinationOnlyPenalty);
     pbf_costing_options->set_gate_penalty(kDefaultGatePenalty);
+    pbf_costing_options->set_alley_penalty(kDefaultAlleyPenalty);
     pbf_costing_options->set_country_crossing_cost(kDefaultCountryCrossingCost);
     pbf_costing_options->set_country_crossing_penalty(kDefaultCountryCrossingPenalty);
     pbf_costing_options->set_ferry_cost(kDefaultFerryCost);

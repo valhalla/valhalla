@@ -574,10 +574,10 @@ protected:
    * @param idx  Index used for name consistency.
    * @return Returns the transition cost (cost, elapsed time).
    */
-  sif::Cost base_transition_cost(const baldr::NodeInfo* node,
-                                 const baldr::DirectedEdge* edge,
-                                 const sif::EdgeLabel& pred,
-                                 const uint32_t idx) const {
+  virtual sif::Cost base_transition_cost(const baldr::NodeInfo* node,
+                                         const baldr::DirectedEdge* edge,
+                                         const sif::EdgeLabel& pred,
+                                         const uint32_t idx) const {
     // Cases with both time and penalty: country crossing, ferry, gate, toll booth
     sif::Cost c;
     if (node->type() == baldr::NodeType::kBorderControl) {
@@ -617,10 +617,10 @@ protected:
    * @param idx  Index used for name consistency.
    * @return Returns the transition cost (cost, elapsed time).
    */
-  sif::Cost base_transition_cost(const baldr::NodeInfo* node,
-                                 const baldr::DirectedEdge* edge,
-                                 const baldr::DirectedEdge* pred,
-                                 const uint32_t idx) const {
+  virtual sif::Cost base_transition_cost(const baldr::NodeInfo* node,
+                                         const baldr::DirectedEdge* edge,
+                                         const baldr::DirectedEdge* pred,
+                                         const uint32_t idx) const {
     // Cases with both time and penalty: country crossing, ferry, gate, toll booth
     sif::Cost c;
     if (node->type() == baldr::NodeType::kBorderControl) {
