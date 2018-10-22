@@ -42,6 +42,10 @@ using NodeFilter = std::function<bool(const baldr::NodeInfo*)>;
 // Default unit size (seconds) for cost sorting.
 constexpr uint32_t kDefaultUnitSize = 1;
 
+// Maximum penalty allowed. Cannot be too high because sometimes one cannot avoid a particular attribute
+// or condition to complete a route.
+constexpr float kMaxPenalty = 12.0f * kSecPerHour; // 12 hours
+
 // Maximum ferry penalty (when use_ferry == 0). Can't make this too large
 // since a ferry is sometimes required to complete a route.
 constexpr float kMaxFerryPenalty = 6.0f * kSecPerHour; // 6 hours

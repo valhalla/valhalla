@@ -39,10 +39,6 @@ constexpr float kDefaultUseFerry = 0.5f;          // Factor between 0 and 1
 constexpr float kDefaultAvoidBadSurfaces = 0.25f; // Factor between 0 and 1
 const std::string kDefaultBicycleType = "Hybrid"; // Bicycle type
 
-// Maximum ferry penalty (when use_ferry == 0). Can't make this too large
-// since a ferry is sometimes required to complete a route.
-constexpr float kMaxFerryPenalty = 8.0f * 3600.0f; // 8 hours
-
 // Default turn costs - modified by the stop impact.
 constexpr float kTCStraight = 0.15f;
 constexpr float kTCFavorableSlight = 0.2f;
@@ -190,23 +186,19 @@ constexpr uint32_t kSpeedPenaltyThreshold = 40; // 40 KPH ~ 25 MPH
 // How much to favor bicycle networks.
 constexpr float kBicycleNetworkFactor = 0.95f;
 
-// Maximum amount of seconds that will be allowed to be passed in to influence paths
-// This can't be too high because sometimes a certain kind of path is required to be taken
-constexpr float kMaxSeconds = 12.0f * kSecPerHour; // 12 hours
-
 // Valid ranges and defaults
 constexpr ranged_default_t<float> kDestinationOnlyPenaltyRange{0, kDefaultDestinationOnlyPenalty,
-                                                               kMaxSeconds};
-constexpr ranged_default_t<float> kManeuverPenaltyRange{0.0f, kDefaultManeuverPenalty, kMaxSeconds};
-constexpr ranged_default_t<float> kDrivewayPenaltyRange{0.0f, kDefaultDrivewayPenalty, kMaxSeconds};
-constexpr ranged_default_t<float> kAlleyPenaltyRange{0.0f, kDefaultAlleyPenalty, kMaxSeconds};
-constexpr ranged_default_t<float> kGateCostRange{0.0f, kDefaultGateCost, kMaxSeconds};
-constexpr ranged_default_t<float> kGatePenaltyRange{0.0f, kDefaultGatePenalty, kMaxSeconds};
-constexpr ranged_default_t<float> kFerryCostRange{0.0f, kDefaultFerryCost, kMaxSeconds};
+                                                               kMaxPenalty};
+constexpr ranged_default_t<float> kManeuverPenaltyRange{0.0f, kDefaultManeuverPenalty, kMaxPenalty};
+constexpr ranged_default_t<float> kDrivewayPenaltyRange{0.0f, kDefaultDrivewayPenalty, kMaxPenalty};
+constexpr ranged_default_t<float> kAlleyPenaltyRange{0.0f, kDefaultAlleyPenalty, kMaxPenalty};
+constexpr ranged_default_t<float> kGateCostRange{0.0f, kDefaultGateCost, kMaxPenalty};
+constexpr ranged_default_t<float> kGatePenaltyRange{0.0f, kDefaultGatePenalty, kMaxPenalty};
+constexpr ranged_default_t<float> kFerryCostRange{0.0f, kDefaultFerryCost, kMaxPenalty};
 constexpr ranged_default_t<float> kCountryCrossingCostRange{0.0f, kDefaultCountryCrossingCost,
-                                                            kMaxSeconds};
+                                                            kMaxPenalty};
 constexpr ranged_default_t<float> kCountryCrossingPenaltyRange{0.0f, kDefaultCountryCrossingPenalty,
-                                                               kMaxSeconds};
+                                                               kMaxPenalty};
 constexpr ranged_default_t<float> kUseRoadRange{0.0f, kDefaultUseRoad, 1.0f};
 constexpr ranged_default_t<float> kUseFerryRange{0.0f, kDefaultUseFerry, 1.0f};
 constexpr ranged_default_t<float> kUseHillsRange{0.0f, kDefaultUseHills, 1.0f};
