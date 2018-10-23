@@ -28,3 +28,4 @@
 -j '{"locations":[{"lat":34.417545,"lon":-119.854576,"street":""},{"lat":34.418053,"lon":-119.853683,"street":""}],"costing":"bicycle","directions_options":{"units":"miles"}}'
 -j '{"locations":[{"lat":37.94152381803029,"lon":-121.96226477622986},{"lat":37.931335857027115,"lon":-121.97398066520691}],"costing":"bicycle","costing_options":{"bicycle":{"bicycle_type":"Road","use_roads":"0.5","use_hills":"0.0"}}}
 -j '{"locations":[{"lat":37.94152381803029,"lon":-121.96226477622986},{"lat":37.931335857027115,"lon":-121.97398066520691}],"costing":"bicycle","costing_options":{"bicycle":{"bicycle_type":"Mountain","use_roads":"0.5","use_hills":"0.0"}}}
+-j '{"locations":["lat":47.248125,"lon":37.573585},{"lat":47.179168,"lon":37.538695}],"costing":"bicycle","directions_options":{"language":"en-US"}}'

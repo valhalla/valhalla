@@ -590,7 +590,7 @@ protected:
     if (node->type() == baldr::NodeType::kGate) {
       c += gate_cost_;
     }
-    if (node->type() == baldr::NodeType::kTollBooth) {
+    if (node->type() == baldr::NodeType::kTollBooth || (edge->toll() && !pred.toll())) {
       c += toll_booth_cost_;
     }
     if (edge->use() == baldr::Use::kFerry && pred.use() != baldr::Use::kFerry) {
@@ -633,7 +633,7 @@ protected:
     if (node->type() == baldr::NodeType::kGate) {
       c += gate_cost_;
     }
-    if (node->type() == baldr::NodeType::kTollBooth) {
+    if (node->type() == baldr::NodeType::kTollBooth || (edge->toll() && !pred->toll())) {
       c += toll_booth_cost_;
     }
     if (edge->use() == baldr::Use::kFerry && pred->use() != baldr::Use::kFerry) {
