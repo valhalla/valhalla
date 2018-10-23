@@ -1,6 +1,7 @@
 #ifndef VALHALLA_MJOLNIR_ADMIN_H_
 #define VALHALLA_MJOLNIR_ADMIN_H_
 
+#include <boost/multiprecision/cpp_dec_float.hpp>
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/point_xy.hpp>
 #include <boost/geometry/geometries/polygon.hpp>
@@ -12,7 +13,6 @@
 #include <valhalla/baldr/graphconstants.h>
 #include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/pointll.h>
-
 #include <valhalla/mjolnir/graphtilebuilder.h>
 
 using namespace valhalla::baldr;
@@ -38,7 +38,7 @@ sqlite3* GetDBHandle(const std::string& database);
  * @param  polys   unordered map of polys.
  * @param  ll      point that needs to be checked.
  */
-uint32_t GetMultiPolyId(const std::unordered_map<uint32_t, multi_polygon_type>& polys,
+uint32_t GetMultiPolyId(const std::unordered_multimap<uint32_t, multi_polygon_type>& polys,
                         const PointLL& ll);
 
 /**
@@ -46,8 +46,8 @@ uint32_t GetMultiPolyId(const std::unordered_map<uint32_t, multi_polygon_type>& 
  * @param  db_handle    sqlite3 db handle
  * @param  aabb         bb of the tile
  */
-std::unordered_map<uint32_t, multi_polygon_type> GetTimeZones(sqlite3* db_handle,
-                                                              const AABB2<PointLL>& aabb);
+std::unordered_multimap<uint32_t, multi_polygon_type> GetTimeZones(sqlite3* db_handle,
+                                                      const AABB2<PointLL>& aabb);
 
 /**
  * Get the admin polys that intersect with the tile bounding box.
@@ -57,7 +57,7 @@ std::unordered_map<uint32_t, multi_polygon_type> GetTimeZones(sqlite3* db_handle
  * @param  aabb             bb of the tile
  * @param  tilebuilder      Graph tile builder
  */
-std::unordered_map<uint32_t, multi_polygon_type>
+std::unordered_multimap<uint32_t, multi_polygon_type>
 GetAdminInfo(sqlite3* db_handle,
              std::unordered_map<uint32_t, bool>& drive_on_right,
              const AABB2<PointLL>& aabb,
