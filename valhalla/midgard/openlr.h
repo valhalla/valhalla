@@ -206,7 +206,7 @@ struct LineLocation {
     append3(decimal2integer(longitude));
     append3(decimal2integer(latitude));
     result.push_back(((first.frc & 0x7) << 3) | (first.fow & 0x7));
-    result.push_back(((first.lfrcnp & 0x7) << 5) | bearing2integer(first.bearing) & 0x1f);
+    result.push_back(((first.lfrcnp & 0x7) << 5) | (bearing2integer(first.bearing) & 0x1f));
     result.push_back(distance2integer(first.distance));
 
     for (const auto& lrp : intermediate) {
@@ -214,7 +214,7 @@ struct LineLocation {
       append2(static_cast<std::int32_t>(std::round(100000 * (lrp.longitude - longitude))));
       append2(static_cast<std::int32_t>(std::round(100000 * (lrp.latitude - latitude))));
       result.push_back(((lrp.frc & 0x7) << 3) | (lrp.fow & 0x7));
-      result.push_back(((lrp.lfrcnp & 0x7) << 5) | bearing2integer(lrp.bearing) & 0x1f);
+      result.push_back(((lrp.lfrcnp & 0x7) << 5) | (bearing2integer(lrp.bearing) & 0x1f));
       result.push_back(distance2integer(lrp.distance));
 
       longitude = lrp.longitude;
@@ -227,7 +227,7 @@ struct LineLocation {
     append2(static_cast<std::int32_t>(std::round(100000 * (last.longitude - longitude))));
     append2(static_cast<std::int32_t>(std::round(100000 * (last.latitude - latitude))));
     result.push_back(((last.frc & 0x7) << 3) | (last.fow & 0x7));
-    result.push_back((pofff << 6) | (nofff << 5) | bearing2integer(last.bearing) & 0x1f);
+    result.push_back((pofff << 6) | (nofff << 5) | (bearing2integer(last.bearing) & 0x1f));
 
     // Offsets
     if (pofff) {

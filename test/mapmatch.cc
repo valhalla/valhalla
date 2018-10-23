@@ -114,10 +114,10 @@ std::string json_escape(const std::string& unescaped) {
   return escaped;
 }
 
-int seed = 973;
+int seed = 520;
 int bound = 81;
 std::string make_test_case(PointLL& start, PointLL& end) {
-  static std::default_random_engine generator(seed);
+  static std::minstd_rand0 generator(seed);
   static std::uniform_real_distribution<float> distribution(0, 1);
   float distance = 0;
   do {

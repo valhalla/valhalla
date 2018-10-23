@@ -96,7 +96,6 @@ void TimeDepReverse::ExpandReverse(GraphReader& graphreader,
   }
 
   // Expand from end node.
-  uint32_t max_shortcut_length = static_cast<uint32_t>(pred.distance() * 0.5f);
   GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
   EdgeStatusInfo* es = edgestatus_.GetPtr(edgeid, tile);
   const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());

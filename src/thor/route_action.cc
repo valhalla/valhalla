@@ -20,12 +20,6 @@ using namespace valhalla::thor;
 namespace valhalla {
 namespace thor {
 
-// Maximum distance allowed for time dependent routes. Since these use
-// single direction A* there may be performance issues allowing very long
-// routes. Also, for long routes the accuracy of predicted time along the
-// route starts to become suspect (due to user breaks and other factors).
-constexpr float kMaxTimeDependentDistance = 500000.0f; // 500 km
-
 // Threshold for running a second pass pedestrian route with adjusted A*. The first
 // pass for pedestrian routes is run with an aggressive A* threshold based on walking
 // speed. If ferries are included in the path the A* heuristic rules can be violated
@@ -63,7 +57,7 @@ thor::PathAlgorithm* thor_worker_t::get_path_algorithm(const std::string& routet
   if (origin.has_date_time()) {
     PointLL ll1(origin.ll().lng(), origin.ll().lat());
     PointLL ll2(destination.ll().lng(), destination.ll().lat());
-    if (ll1.Distance(ll2) < kMaxTimeDependentDistance) {
+    if (ll1.Distance(ll2) < max_timedep_distance) {
       timedep_forward.set_interrupt(interrupt);
       return &timedep_forward;
     }
@@ -74,7 +68,7 @@ thor::PathAlgorithm* thor_worker_t::get_path_algorithm(const std::string& routet
   if (destination.has_date_time()) {
     PointLL ll1(origin.ll().lng(), origin.ll().lat());
     PointLL ll2(destination.ll().lng(), destination.ll().lat());
-    if (ll1.Distance(ll2) < kMaxTimeDependentDistance) {
+    if (ll1.Distance(ll2) < max_timedep_distance) {
       timedep_reverse.set_interrupt(interrupt);
       return &timedep_reverse;
     }

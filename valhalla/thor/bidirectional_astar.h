@@ -101,7 +101,7 @@ protected:
   EdgeStatus edgestatus_reverse_;
 
   // Best candidate connection and threshold to extend search.
-  uint32_t threshold_;
+  float threshold_;
   CandidateConnection best_connection_;
 
   /**
@@ -150,16 +150,18 @@ protected:
    * search tree. Check if this is the best connection so far and set the
    * search threshold.
    * @param  pred  Edge label of the predecessor.
+   * @return Returns true if a connection was set, false if not (if on a complex restriction).
    */
-  void SetForwardConnection(const sif::BDEdgeLabel& pred);
+  bool SetForwardConnection(const sif::BDEdgeLabel& pred);
 
   /**
    * The edge on the reverse search connects to a reached edge on the forward
    * search tree. Check if this is the best connection so far and set the
    * search threshold.
    * @param  pred  Edge label of the predecessor.
+   * @return Returns true if a connection was set, false if not (if on a complex restriction).
    */
-  void SetReverseConnection(const sif::BDEdgeLabel& pred);
+  bool SetReverseConnection(const sif::BDEdgeLabel& pred);
 
   /**
    * Form the path from the adjacency lists. Recovers the path from the
