@@ -189,7 +189,7 @@ void test_matcher() {
     }
     // simulate gps from the route shape
     std::vector<float> accuracies;
-    auto simulation = simulate_gps(segments, accuracies, 50, 100.f, 1);
+    auto simulation = simulate_gps(segments, accuracies, 50, 75.f, 1);
     auto locations = to_locations(simulation, accuracies, 1);
     // get a trace-attributes from the simulated gps
     auto matched = json_to_pt(actor.trace_attributes(
