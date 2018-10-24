@@ -6,7 +6,6 @@
 #include <boost/geometry/geometries/polygon.hpp>
 #include <boost/geometry/io/wkt/wkt.hpp>
 #include <boost/geometry/multi/geometries/multi_polygon.hpp>
-#include <boost/multiprecision/cpp_dec_float.hpp>
 #include <cstdint>
 #include <sqlite3.h>
 #include <unordered_map>
