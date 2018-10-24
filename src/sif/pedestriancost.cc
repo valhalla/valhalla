@@ -900,13 +900,26 @@ using namespace sif;
 
 namespace {
 
-PedestrianCost*
+class TestPedestrianCost : public PedestrianCost {
+public:
+  TestPedestrianCost(const odin::Costing costing, const odin::DirectionsOptions& options)
+      : PedestrianCost(costing, options){};
+
+  using PedestrianCost::alley_penalty_;
+  using PedestrianCost::country_crossing_cost_;
+  using PedestrianCost::destination_only_penalty_;
+  using PedestrianCost::ferry_transition_cost_;
+  using PedestrianCost::gate_cost_;
+  using PedestrianCost::maneuver_penalty_;
+};
+
+TestPedestrianCost*
 make_pedestriancost_from_json(const std::string& property, float testVal, const std::string& type) {
   std::stringstream ss;
   ss << R"({"costing_options":{"pedestrian":{")" << property << R"(":)" << testVal << "}}}";
   valhalla::valhalla_request_t request;
   request.parse(ss.str(), valhalla::odin::DirectionsOptions::route);
-  return new PedestrianCost(valhalla::odin::Costing::pedestrian, request.options);
+  return new TestPedestrianCost(valhalla::odin::Costing::pedestrian, request.options);
 }
 
 std::uniform_real_distribution<float>*
@@ -928,7 +941,74 @@ void testPedestrianCostParams() {
   std::default_random_engine generator(seed);
   std::shared_ptr<std::uniform_real_distribution<float>> real_distributor;
   std::shared_ptr<std::uniform_int_distribution<uint32_t>> int_distributor;
-  std::shared_ptr<PedestrianCost> ctorTester;
+  std::shared_ptr<TestPedestrianCost> ctorTester;
+
+  // maneuver_penalty_
+  real_distributor.reset(make_distributor_from_range(kManeuverPenaltyRange));
+  for (unsigned i = 0; i < testIterations; ++i) {
+    ctorTester.reset(
+        make_pedestriancost_from_json("maneuver_penalty", (*real_distributor)(generator), "foot"));
+    if (ctorTester->maneuver_penalty_ < kManeuverPenaltyRange.min ||
+        ctorTester->maneuver_penalty_ > kManeuverPenaltyRange.max) {
+      throw std::runtime_error("maneuver_penalty_ is not within it's range");
+    }
+  }
+
+  // gate_penalty_
+  real_distributor.reset(make_distributor_from_range(kGatePenaltyRange));
+  for (unsigned i = 0; i < testIterations; ++i) {
+    ctorTester.reset(
+        make_pedestriancost_from_json("gate_penalty", (*real_distributor)(generator), "foot"));
+    if (ctorTester->gate_cost_.cost < kGatePenaltyRange.min ||
+        ctorTester->gate_cost_.cost > kGatePenaltyRange.max) {
+      throw std::runtime_error("gate_penalty_ is not within it's range");
+    }
+  }
+
+  // alley_factor_
+  real_distributor.reset(make_distributor_from_range(kAlleyFactorRange));
+  for (unsigned i = 0; i < testIterations; ++i) {
+    ctorTester.reset(
+        make_pedestriancost_from_json("alley_factor", (*real_distributor)(generator), "foot"));
+    if (ctorTester->alley_factor_ < kAlleyFactorRange.min ||
+        ctorTester->alley_factor_ > kAlleyFactorRange.max) {
+      throw std::runtime_error("alley_factor_ is not within it's range");
+    }
+  }
+
+  // ferry_cost_
+  real_distributor.reset(make_distributor_from_range(kFerryCostRange));
+  for (unsigned i = 0; i < testIterations; ++i) {
+    ctorTester.reset(
+        make_pedestriancost_from_json("ferry_cost", (*real_distributor)(generator), "foot"));
+    if (ctorTester->ferry_transition_cost_.secs < kFerryCostRange.min ||
+        ctorTester->ferry_transition_cost_.secs > kFerryCostRange.max) {
+      throw std::runtime_error("ferry_cost_ is not within it's range");
+    }
+  }
+
+  // country_crossing_cost_
+  real_distributor.reset(make_distributor_from_range(kCountryCrossingCostRange));
+  for (unsigned i = 0; i < testIterations; ++i) {
+    ctorTester.reset(make_pedestriancost_from_json("country_crossing_cost",
+                                                   (*real_distributor)(generator), "foot"));
+    if (ctorTester->country_crossing_cost_.secs < kCountryCrossingCostRange.min ||
+        ctorTester->country_crossing_cost_.secs > kCountryCrossingCostRange.max) {
+      throw std::runtime_error("country_crossing_cost_ is not within it's range");
+    }
+  }
+
+  // country_crossing_penalty_
+  real_distributor.reset(make_distributor_from_range(kCountryCrossingPenaltyRange));
+  for (unsigned i = 0; i < testIterations; ++i) {
+    ctorTester.reset(make_pedestriancost_from_json("country_crossing_penalty",
+                                                   (*real_distributor)(generator), "foot"));
+    if (ctorTester->country_crossing_cost_.cost < kCountryCrossingPenaltyRange.min ||
+        ctorTester->country_crossing_cost_.cost >
+            kCountryCrossingPenaltyRange.max + kDefaultCountryCrossingCost) {
+      throw std::runtime_error("country_crossing_penalty_ is not within it's range");
+    }
+  }
 
   // Wheelchair tests
   // max_distance_
@@ -1031,27 +1111,18 @@ void testPedestrianCostParams() {
     }
   }
 
-  // maneuver_penalty_
-  real_distributor.reset(make_distributor_from_range(kManeuverPenaltyRange));
-  for (unsigned i = 0; i < testIterations; ++i) {
-    ctorTester.reset(
-        make_pedestriancost_from_json("maneuver_penalty", (*real_distributor)(generator), "foot"));
-    if (ctorTester->maneuver_penalty_ < kManeuverPenaltyRange.min ||
-        ctorTester->maneuver_penalty_ > kManeuverPenaltyRange.max) {
-      throw std::runtime_error("maneuver_penalty_ is not within it's range");
-    }
-  }
+  /*
+   // use_ferry_
+   real_distributor.reset(make_distributor_from_range(kUseFerryRange));
+   for (unsigned i = 0; i < testIterations; ++i) {
+     ctorTester.reset(
+         make_pedestriancost_from_json("use_ferry", (*real_distributor)(generator), "foot"));
+     if (ctorTester->use_ferry_ < kUseFerryRange.min || ctorTester->use_ferry_ > kUseFerryRange.max) {
+       throw std::runtime_error("use_ferry_ is not within it's range");
+     }
+   }
 
-  // gate_penalty_
-  real_distributor.reset(make_distributor_from_range(kGatePenaltyRange));
-  for (unsigned i = 0; i < testIterations; ++i) {
-    ctorTester.reset(
-        make_pedestriancost_from_json("gate_penalty", (*real_distributor)(generator), "foot"));
-    if (ctorTester->gate_penalty_ < kGatePenaltyRange.min ||
-        ctorTester->gate_penalty_ > kGatePenaltyRange.max) {
-      throw std::runtime_error("gate_penalty_ is not within it's range");
-    }
-  }
+   */
 
   // walkway_factor_
   real_distributor.reset(make_distributor_from_range(kWalkwayFactorRange));
@@ -1075,17 +1146,6 @@ void testPedestrianCostParams() {
     }
   }
 
-  // alley_factor_
-  real_distributor.reset(make_distributor_from_range(kAlleyFactorRange));
-  for (unsigned i = 0; i < testIterations; ++i) {
-    ctorTester.reset(
-        make_pedestriancost_from_json("alley_factor", (*real_distributor)(generator), "foot"));
-    if (ctorTester->alley_factor_ < kAlleyFactorRange.min ||
-        ctorTester->alley_factor_ > kAlleyFactorRange.max) {
-      throw std::runtime_error("alley_factor_ is not within it's range");
-    }
-  }
-
   // driveway_factor_
   real_distributor.reset(make_distributor_from_range(kDrivewayFactorRange));
   for (unsigned i = 0; i < testIterations; ++i) {
@@ -1094,39 +1154,6 @@ void testPedestrianCostParams() {
     if (ctorTester->driveway_factor_ < kDrivewayFactorRange.min ||
         ctorTester->driveway_factor_ > kDrivewayFactorRange.max) {
       throw std::runtime_error("driveway_factor_ is not within it's range");
-    }
-  }
-
-  // ferry_cost_
-  real_distributor.reset(make_distributor_from_range(kFerryCostRange));
-  for (unsigned i = 0; i < testIterations; ++i) {
-    ctorTester.reset(
-        make_pedestriancost_from_json("ferry_cost", (*real_distributor)(generator), "foot"));
-    if (ctorTester->ferry_cost_ < kFerryCostRange.min ||
-        ctorTester->ferry_cost_ > kFerryCostRange.max) {
-      throw std::runtime_error("ferry_cost_ is not within it's range");
-    }
-  }
-
-  // country_crossing_cost_
-  real_distributor.reset(make_distributor_from_range(kCountryCrossingCostRange));
-  for (unsigned i = 0; i < testIterations; ++i) {
-    ctorTester.reset(make_pedestriancost_from_json("country_crossing_cost",
-                                                   (*real_distributor)(generator), "foot"));
-    if (ctorTester->country_crossing_cost_ < kCountryCrossingCostRange.min ||
-        ctorTester->country_crossing_cost_ > kCountryCrossingCostRange.max) {
-      throw std::runtime_error("country_crossing_cost_ is not within it's range");
-    }
-  }
-
-  // country_crossing_penalty_
-  real_distributor.reset(make_distributor_from_range(kCountryCrossingPenaltyRange));
-  for (unsigned i = 0; i < testIterations; ++i) {
-    ctorTester.reset(make_pedestriancost_from_json("country_crossing_penalty",
-                                                   (*real_distributor)(generator), "foot"));
-    if (ctorTester->country_crossing_penalty_ < kCountryCrossingPenaltyRange.min ||
-        ctorTester->country_crossing_penalty_ > kCountryCrossingPenaltyRange.max) {
-      throw std::runtime_error("country_crossing_penalty_ is not within it's range");
     }
   }
 
@@ -1149,16 +1176,6 @@ void testPedestrianCostParams() {
     if (ctorTester->transit_transfer_max_distance_ < kTransitTransferMaxDistanceRange.min ||
         ctorTester->transit_transfer_max_distance_ > kTransitTransferMaxDistanceRange.max) {
       throw std::runtime_error("transit_transfer_max_distance_ is not within it's range");
-    }
-  }
-
-  // use_ferry_
-  real_distributor.reset(make_distributor_from_range(kUseFerryRange));
-  for (unsigned i = 0; i < testIterations; ++i) {
-    ctorTester.reset(
-        make_pedestriancost_from_json("use_ferry", (*real_distributor)(generator), "foot"));
-    if (ctorTester->use_ferry_ < kUseFerryRange.min || ctorTester->use_ferry_ > kUseFerryRange.max) {
-      throw std::runtime_error("use_ferry_ is not within it's range");
     }
   }
 }
