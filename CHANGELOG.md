@@ -2,6 +2,7 @@
 * **Enhancement**
    * UPDATED: Added a configuration variable for max_timedep_distance. This is used in selecting the path algorithm and provides the maximum distance between locations when choosing a time dependent path algorithm (other than multi modal). Above this distance, bidirectional A* is used with no time dependencies.
 * **Bug Fix**
+   * FIXED: Changed unordered_map to unordered_multimap for polys. Poly map can contain the same key but different multi-polygons. For example, islands for a country or timezone polygons for a country.
    * FIXED: Fixed timezone db issue where TZIDs did not exist in the Howard Hinnant date time db that is used in the date_time class for tz indexes.  Added logic to create aliases for TZIDs based on https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
    * FIXED: Fixed the ramp turn modifiers for osrm compat [#1569](https://github.com/valhalla/valhalla/pull/1569)
    * FIXED: Fixed the step geometry when using the osrm compat mode [#1571](https://github.com/valhalla/valhalla/pull/1571)

@@ -487,7 +487,7 @@ int main(int argc, char** argv) {
   int shortcuts_with_speed = 0;
   int non_dr_with_speed = 0;
   int trans_with_speed = 0;
-  std::vector<uint32_t> road_class_edges(8);
+  std::vector<uint32_t> dr_class_edges_links(8);
   std::vector<uint32_t> dr_road_class_edges(8);
   std::vector<uint32_t> pred_road_class_edges(8);
   std::vector<uint32_t> ff_road_class_edges(8);
@@ -511,9 +511,10 @@ int main(int argc, char** argv) {
         if (de->is_shortcut() || de->IsTransition()) {
           continue;
         }
-        road_class_edges[rc]++;
         if ((de->forwardaccess() & kAutoAccess)) {
           dr_road_class_edges[rc]++;
+          if (de->link())
+            dr_class_edges_links[rc]++;
         } else {
           if (de->free_flow_speed()) {
             non_dr_with_speed++;
@@ -543,9 +544,7 @@ int main(int argc, char** argv) {
   LOG_INFO("non driveable with speed = " + std::to_string(non_dr_with_speed));
   LOG_INFO("Shortcuts with speed = " + std::to_string(shortcuts_with_speed));
   LOG_INFO("Transitions with speed = " + std::to_string(shortcuts_with_speed));
-  uint32_t totaldriveable = 0;
-  uint32_t totalpt = 0;
-  uint32_t totalff = 0;
+  uint32_t totaldriveable = 0, totalpt = 0, totalff = 0, totaldriveablelink = 0;
   for (uint32_t i = 0; i < 8; i++) {
     float pct1 = 100.0f * (float)pred_road_class_edges[i] / dr_road_class_edges[i];
     float pct2 = 100.0f * (float)ff_road_class_edges[i] / dr_road_class_edges[i];
@@ -558,10 +557,13 @@ int main(int argc, char** argv) {
              std::to_string(pred_road_class_edges[i]) + " pct " + ss_pct1.str() + " ff " +
              std::to_string(ff_road_class_edges[i]) + " pct " + ss_pct2.str());
     totaldriveable += dr_road_class_edges[i];
+    totaldriveablelink += dr_class_edges_links[i];
     totalpt += pred_road_class_edges[i];
     totalff += ff_road_class_edges[i];
   }
-  LOG_INFO("total driveable = " + std::to_string(totaldriveable) + " total pred " +
+  LOG_INFO("total driveable = " + std::to_string(totaldriveable) + " total driveable ramps/links = " +
+           std::to_string(totaldriveablelink) + " total driveable non ramps/links = " +
+           std::to_string(totaldriveable - totaldriveablelink) + " total pred " +
            std::to_string(totalpt) + " total ff " + std::to_string(totalff));
 
   return EXIT_SUCCESS;
