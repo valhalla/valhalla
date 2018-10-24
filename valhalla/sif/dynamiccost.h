@@ -523,10 +523,14 @@ protected:
   sif::Cost ferry_transition_cost_;
 
   // Penalties that all costing methods support
+  float maneuver_penalty_;         // Penalty (seconds) when inconsistent names
   float alley_penalty_;            // Penalty (seconds) to use a alley
   float destination_only_penalty_; // Penalty (seconds) using private road, driveway, or parking aisle
-  float maneuver_penalty_;         // Penalty (seconds) when inconsistent names
 
+  /**
+   * Get the base transition costs (and ferry factor) from the costing options.
+   * @param costing_options Protocol buffer of costing options.
+   */
   void get_base_costs(const odin::CostingOptions& costing_options) {
     // Cost only (no time) penalties
     alley_penalty_ = costing_options.alley_penalty();
@@ -534,22 +538,18 @@ protected:
     maneuver_penalty_ = costing_options.maneuver_penalty();
 
     // Transition costs (both time and cost)
-    float cost = costing_options.toll_booth_cost();
-    float penalty = costing_options.toll_booth_penalty();
-    toll_booth_cost_ = {cost + penalty, cost};
-    cost = costing_options.country_crossing_cost();
-    penalty = costing_options.country_crossing_penalty();
-    country_crossing_cost_ = {cost + penalty, cost};
-    cost = costing_options.gate_cost();
-    penalty = costing_options.gate_penalty();
-    gate_cost_ = {cost + penalty, cost};
+    toll_booth_cost_ = {costing_options.toll_booth_cost() + costing_options.toll_booth_penalty(),
+                        costing_options.toll_booth_cost()};
+    country_crossing_cost_ = {costing_options.country_crossing_cost() +
+                                  costing_options.country_crossing_penalty(),
+                              costing_options.country_crossing_cost()};
+    gate_cost_ = {costing_options.gate_cost() + costing_options.gate_penalty(),
+                  costing_options.gate_cost()};
 
     // Set the cost (seconds) to enter a ferry (only apply entering since
     // a route must exit a ferry (except artificial test routes ending on
-    // a ferry!)
-    cost = costing_options.ferry_cost();
-
-    // Modify ferry penalty and edge weighting based on use_ferry factor
+    // a ferry!). Modify ferry edge weighting based on use_ferry factor.
+    float penalty;
     float use_ferry = costing_options.use_ferry();
     if (use_ferry < 0.5f) {
       // Penalty goes from max at use_ferry = 0 to 0 at use_ferry = 0.5
@@ -564,7 +564,7 @@ protected:
       penalty = 0.0f;
       ferry_factor_ = 1.5f - use_ferry;
     }
-    ferry_transition_cost_ = {cost, penalty};
+    ferry_transition_cost_ = {costing_options.ferry_cost() + penalty, costing_options.ferry_cost()};
   }
 
   /**

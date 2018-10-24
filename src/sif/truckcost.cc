@@ -721,12 +721,26 @@ using namespace sif;
 
 namespace {
 
-TruckCost* make_truckcost_from_json(const std::string& property, float testVal) {
+class TestTruckCost : public TruckCost {
+public:
+  TestTruckCost(const odin::Costing costing, const odin::DirectionsOptions& options)
+      : TruckCost(costing, options){};
+
+  using TruckCost::alley_penalty_;
+  using TruckCost::country_crossing_cost_;
+  using TruckCost::destination_only_penalty_;
+  using TruckCost::ferry_transition_cost_;
+  using TruckCost::gate_cost_;
+  using TruckCost::maneuver_penalty_;
+  using TruckCost::toll_booth_cost_;
+};
+
+TestTruckCost* make_truckcost_from_json(const std::string& property, float testVal) {
   std::stringstream ss;
   ss << R"({"costing_options":{"truck":{")" << property << R"(":)" << testVal << "}}}";
   valhalla::valhalla_request_t request;
   request.parse(ss.str(), valhalla::odin::DirectionsOptions::route);
-  return new TruckCost(valhalla::odin::Costing::truck, request.options);
+  return new TestTruckCost(valhalla::odin::Costing::truck, request.options);
 }
 
 std::uniform_real_distribution<float>*
@@ -740,7 +754,7 @@ void testTruckCostParams() {
   constexpr unsigned seed = 0;
   std::default_random_engine generator(seed);
   std::shared_ptr<std::uniform_real_distribution<float>> distributor;
-  std::shared_ptr<TruckCost> ctorTester;
+  std::shared_ptr<TestTruckCost> ctorTester;
 
   // maneuver_penalty_
   distributor.reset(make_distributor_from_range(kManeuverPenaltyRange));
@@ -749,16 +763,6 @@ void testTruckCostParams() {
     if (ctorTester->maneuver_penalty_ < kManeuverPenaltyRange.min ||
         ctorTester->maneuver_penalty_ > kManeuverPenaltyRange.max) {
       throw std::runtime_error("maneuver_penalty_ is not within it's range");
-    }
-  }
-
-  // destination_only_penalty_
-  distributor.reset(make_distributor_from_range(kDestinationOnlyPenaltyRange));
-  for (unsigned i = 0; i < testIterations; ++i) {
-    ctorTester.reset(make_truckcost_from_json("destination_only_penalty", (*distributor)(generator)));
-    if (ctorTester->destination_only_penalty_ < kDestinationOnlyPenaltyRange.min ||
-        ctorTester->destination_only_penalty_ > kDestinationOnlyPenaltyRange.max) {
-      throw std::runtime_error("destination_only_penalty_ is not within it's range");
     }
   }
 
@@ -772,64 +776,78 @@ void testTruckCostParams() {
     }
   }
 
-  // gate_cost_
+  // destination_only_penalty_
+  distributor.reset(make_distributor_from_range(kDestinationOnlyPenaltyRange));
+  for (unsigned i = 0; i < testIterations; ++i) {
+    ctorTester.reset(make_truckcost_from_json("destination_only_penalty", (*distributor)(generator)));
+    if (ctorTester->destination_only_penalty_ < kDestinationOnlyPenaltyRange.min ||
+        ctorTester->destination_only_penalty_ > kDestinationOnlyPenaltyRange.max) {
+      throw std::runtime_error("destination_only_penalty_ is not within it's range");
+    }
+  }
+
+  // gate_cost_ (Cost.secs)
   distributor.reset(make_distributor_from_range(kGateCostRange));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_truckcost_from_json("gate_cost", (*distributor)(generator)));
-    if (ctorTester->gate_cost_ < kGateCostRange.min || ctorTester->gate_cost_ > kGateCostRange.max) {
+    if (ctorTester->gate_cost_.secs < kGateCostRange.min ||
+        ctorTester->gate_cost_.secs > kGateCostRange.max) {
       throw std::runtime_error("gate_cost_ is not within it's range");
     }
   }
 
-  // gate_penalty_
+  // gate_penalty_ (Cost.cost)
   distributor.reset(make_distributor_from_range(kGatePenaltyRange));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_truckcost_from_json("gate_penalty", (*distributor)(generator)));
-    if (ctorTester->gate_penalty_ < kGatePenaltyRange.min ||
-        ctorTester->gate_penalty_ > kGatePenaltyRange.max) {
+    if (ctorTester->gate_cost_.cost < kGatePenaltyRange.min ||
+        ctorTester->gate_cost_.cost > kGatePenaltyRange.max + kDefaultGateCost) {
       throw std::runtime_error("gate_penalty_ is not within it's range");
     }
   }
 
-  // tollbooth_cost_
+  // tollbooth_cost_ (Cost.secs)
   distributor.reset(make_distributor_from_range(kTollBoothCostRange));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_truckcost_from_json("toll_booth_cost", (*distributor)(generator)));
-    if (ctorTester->tollbooth_cost_ < kTollBoothCostRange.min ||
-        ctorTester->tollbooth_cost_ > kTollBoothCostRange.max) {
+    if (ctorTester->toll_booth_cost_.secs < kTollBoothCostRange.min ||
+        ctorTester->toll_booth_cost_.secs > kTollBoothCostRange.max) {
       throw std::runtime_error("tollbooth_cost_ is not within it's range");
     }
   }
 
-  // tollbooth_penalty_
+  // tollbooth_penalty_ (Cost.cost)
   distributor.reset(make_distributor_from_range(kTollBoothPenaltyRange));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_truckcost_from_json("toll_booth_penalty", (*distributor)(generator)));
-    if (ctorTester->tollbooth_penalty_ < kTollBoothPenaltyRange.min ||
-        ctorTester->tollbooth_penalty_ > kTollBoothPenaltyRange.max) {
+    if (ctorTester->toll_booth_cost_.cost < kTollBoothPenaltyRange.min ||
+        ctorTester->toll_booth_cost_.cost > kTollBoothPenaltyRange.max + kDefaultTollBoothCost) {
       throw std::runtime_error("tollbooth_penalty_ is not within it's range");
     }
   }
 
-  // country_crossing_cost_
+  // country_crossing_cost_ (Cost.secs)
   distributor.reset(make_distributor_from_range(kCountryCrossingCostRange));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_truckcost_from_json("country_crossing_cost", (*distributor)(generator)));
-    if (ctorTester->country_crossing_cost_ < kCountryCrossingCostRange.min ||
-        ctorTester->country_crossing_cost_ > kCountryCrossingCostRange.max) {
+    if (ctorTester->country_crossing_cost_.secs < kCountryCrossingCostRange.min ||
+        ctorTester->country_crossing_cost_.secs > kCountryCrossingCostRange.max) {
       throw std::runtime_error("country_crossing_cost_ is not within it's range");
     }
   }
 
-  // country_crossing_penalty_
+  // country_crossing_penalty_ (Cost.cost)
   distributor.reset(make_distributor_from_range(kCountryCrossingPenaltyRange));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_truckcost_from_json("country_crossing_penalty", (*distributor)(generator)));
-    if (ctorTester->country_crossing_penalty_ < kCountryCrossingPenaltyRange.min ||
-        ctorTester->country_crossing_penalty_ > kCountryCrossingPenaltyRange.max) {
+    if (ctorTester->country_crossing_cost_.cost < kCountryCrossingPenaltyRange.min ||
+        ctorTester->country_crossing_cost_.cost >
+            kCountryCrossingPenaltyRange.max + kDefaultCountryCrossingCost) {
       throw std::runtime_error("country_crossing_penalty_ is not within it's range");
     }
   }
+
+  // Ferry transition cost and ferry use not yet supported
 
   // low_class_penalty_
   distributor.reset(make_distributor_from_range(kLowClassPenaltyRange));
