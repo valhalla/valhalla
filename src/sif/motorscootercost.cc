@@ -21,6 +21,9 @@ namespace sif {
 // Default options/values
 namespace {
 
+// Base transition costs (not toll booth penalties since scooters likely don't take toll roads)
+// TODO - can we define these in dynamiccost.h and override here if they differ?
+constexpr float kDefaultDestinationOnlyPenalty = 120.0f; // Seconds
 constexpr float kDefaultManeuverPenalty = 5.0f;          // Seconds
 constexpr float kDefaultAlleyPenalty = 5.0f;             // Seconds
 constexpr float kDefaultGateCost = 30.0f;                // Seconds
@@ -28,20 +31,15 @@ constexpr float kDefaultGatePenalty = 300.0f;            // Seconds
 constexpr float kDefaultFerryCost = 300.0f;              // Seconds
 constexpr float kDefaultCountryCrossingCost = 600.0f;    // Seconds
 constexpr float kDefaultCountryCrossingPenalty = 0.0f;   // Seconds
-constexpr float kDefaultUseFerry = 0.5f;                 // Factor between 0 and 1
-constexpr float kDefaultDestinationOnlyPenalty = 120.0f; // Seconds
 
+// Other options
+constexpr float kDefaultUseFerry = 0.5f;   // Factor between 0 and 1
 constexpr float kDefaultUseHills = 0.5f;   // Factor between 0 and 1
 constexpr float kDefaultUsePrimary = 0.5f; // Factor between 0 and 1
 constexpr uint32_t kMinimumTopSpeed = 20;  // Kilometers per hour
 constexpr uint32_t kDefaultTopSpeed = 45;  // Kilometers per hour
 constexpr uint32_t kMaximumTopSpeed = 120; // Kilometers per hour
-
 constexpr Surface kMinimumScooterSurface = Surface::kDirt;
-
-// Maximum ferry penalty (when use_ferry == 0). Can't make this too large
-// since a ferry is sometimes required to complete a route.
-constexpr float kMaxFerryPenalty = 6.0f * kSecPerHour; // 6 hours
 
 // Default turn costs
 constexpr float kTCStraight = 0.5f;
@@ -61,27 +59,23 @@ constexpr float kLeftSideTurnCosts[] = {kTCStraight,         kTCSlight,  kTCUnfa
                                         kTCUnfavorableSharp, kTCReverse, kTCFavorableSharp,
                                         kTCFavorable,        kTCSlight};
 
-// Maximum amount of seconds that will be allowed to be passed in to influence paths
-// This can't be too high because sometimes a certain kind of path is required to be taken
-constexpr float kMaxSeconds = 12.0f * kSecPerHour; // 12 hours
-
 // Valid ranges and defaults
-constexpr ranged_default_t<float> kManeuverPenaltyRange{0, kDefaultManeuverPenalty, kMaxSeconds};
-constexpr ranged_default_t<float> kAlleyPenaltyRange{0, kDefaultAlleyPenalty, kMaxSeconds};
-constexpr ranged_default_t<float> kGateCostRange{0, kDefaultGateCost, kMaxSeconds};
-constexpr ranged_default_t<float> kGatePenaltyRange{0, kDefaultGatePenalty, kMaxSeconds};
-constexpr ranged_default_t<float> kFerryCostRange{0, kDefaultFerryCost, kMaxSeconds};
+constexpr ranged_default_t<float> kManeuverPenaltyRange{0, kDefaultManeuverPenalty, kMaxPenalty};
+constexpr ranged_default_t<float> kAlleyPenaltyRange{0, kDefaultAlleyPenalty, kMaxPenalty};
+constexpr ranged_default_t<float> kGateCostRange{0, kDefaultGateCost, kMaxPenalty};
+constexpr ranged_default_t<float> kGatePenaltyRange{0, kDefaultGatePenalty, kMaxPenalty};
+constexpr ranged_default_t<float> kFerryCostRange{0, kDefaultFerryCost, kMaxPenalty};
 constexpr ranged_default_t<float> kCountryCrossingCostRange{0, kDefaultCountryCrossingCost,
-                                                            kMaxSeconds};
+                                                            kMaxPenalty};
 constexpr ranged_default_t<float> kCountryCrossingPenaltyRange{0, kDefaultCountryCrossingPenalty,
-                                                               kMaxSeconds};
+                                                               kMaxPenalty};
 constexpr ranged_default_t<float> kUseFerryRange{0, kDefaultUseFerry, 1.0f};
 constexpr ranged_default_t<float> kUseHillsRange{0, kDefaultUseHills, 1.0f};
 constexpr ranged_default_t<float> kUsePrimaryRange{0, kDefaultUsePrimary, 1.0f};
 constexpr ranged_default_t<uint32_t> kTopSpeedRange{kMinimumTopSpeed, kDefaultTopSpeed,
                                                     kMaximumTopSpeed};
 constexpr ranged_default_t<float> kDestinationOnlyPenaltyRange{0, kDefaultDestinationOnlyPenalty,
-                                                               kMaxSeconds};
+                                                               kMaxPenalty};
 
 // Additional penalty to avoid destination only
 constexpr float kDestinationOnlyFactor = 0.2f;
@@ -337,28 +331,15 @@ public:
   // We expose it within the source file for testing purposes
 public:
   float speedfactor_[kMaxSpeedKph + 1];
-  float density_factor_[16];       // Density factor
-  float maneuver_penalty_;         // Penalty (seconds) when inconsistent names
-  float destination_only_penalty_; // Penalty (seconds) using private road, driveway, or parking aisle
-  float gate_cost_;                // Cost (seconds) to go through gate
-  float gate_penalty_;             // Penalty (seconds) to go through gate
-  float ferry_cost_;               // Cost (seconds) to enter a ferry
-  float ferry_penalty_;            // Penalty (seconds) to enter a ferry
-  float ferry_factor_;             // Weighting to apply to ferry edges
-  float alley_penalty_;            // Penalty (seconds) to use a alley
-  float country_crossing_cost_;    // Cost (seconds) to go across a country border
-  float country_crossing_penalty_; // Penalty (seconds) to go across a country border
-  float use_ferry_;
+  float density_factor_[16]; // Density factor
+  float ferry_factor_;       // Weighting to apply to ferry edges
 
   // Density factor used in edge transition costing
   std::vector<float> trans_density_factor_;
 
   uint32_t top_speed_; // Top speed the motorized scooter can go. Used to avoid roads
                        // with higher speeds than it
-
-  float use_hills_;   // Scale from 0 (avoid hills) to 1 (don't avoid hills)
-  float use_primary_; // Scale from 0 (avoid primary roads) to 1 (don't avoid primary roads)
-  float road_factor_; // Road factor based on use_primary_
+  float road_factor_;  // Road factor based on use_primary
 
   // Elevation/grade penalty (weighting applied based on the edge's weighted
   // grade (relative value from 0-15)
@@ -375,34 +356,8 @@ MotorScooterCost::MotorScooterCost(const odin::Costing costing,
   // Grab the costing options based on the specified costing type
   const odin::CostingOptions& costing_options = options.costing_options(static_cast<int>(costing));
 
-  maneuver_penalty_ = costing_options.maneuver_penalty();
-  destination_only_penalty_ = costing_options.destination_only_penalty();
-  gate_cost_ = costing_options.gate_cost();
-  gate_penalty_ = costing_options.gate_penalty();
-  alley_penalty_ = costing_options.alley_penalty();
-  country_crossing_cost_ = costing_options.country_crossing_cost();
-  country_crossing_penalty_ = costing_options.country_crossing_penalty();
-
-  // Set the cost (seconds) to enter a ferry (only apply entering since
-  // a route must exit a ferry (except artificial test routes ending on
-  // a ferry!)
-  ferry_cost_ = costing_options.ferry_cost();
-
-  // Modify ferry penalty and edge weighting based on use_ferry factor
-  use_ferry_ = costing_options.use_ferry();
-  if (use_ferry_ < 0.5f) {
-    // Penalty goes from max at use_ferry_ = 0 to 0 at use_ferry_ = 0.5
-    ferry_penalty_ = static_cast<uint32_t>(kMaxFerryPenalty * (1.0f - use_ferry_ * 2.0f));
-
-    // Cost X10 at use_ferry_ == 0, slopes downwards towards 1.0 at use_ferry_ = 0.5
-    ferry_factor_ = 10.0f - use_ferry_ * 18.0f;
-  } else {
-    // Add a ferry weighting factor to influence cost along ferries to make
-    // them more favorable if desired rather than driving. No ferry penalty.
-    // Half the cost at use_ferry_ == 1, progress to 1.0 at use_ferry_ = 0.5
-    ferry_penalty_ = 0.0f;
-    ferry_factor_ = 1.5f - use_ferry_;
-  }
+  // Get the base costs
+  get_base_costs(costing_options);
 
   // Create speed cost table
   speedfactor_[0] = kSecPerHour; // TODO - what to make speed=0?
@@ -415,21 +370,23 @@ MotorScooterCost::MotorScooterCost(const odin::Costing costing,
     density_factor_[d] = 0.85f + (d * 0.018f);
   }
 
+  // Set top speed for motor scooter
   top_speed_ = costing_options.top_speed();
 
-  use_hills_ = costing_options.use_hills();
-
-  float avoid_hills = (1.0f - use_hills_);
+  // Set grade penalties based on use_hills option.
+  // Scale from 0 (avoid hills) to 1 (don't avoid hills)
+  float use_hills = costing_options.use_hills();
+  float avoid_hills = (1.0f - use_hills);
   for (uint32_t i = 0; i <= kMaxGradeFactor; ++i) {
     grade_penalty_[i] = avoid_hills * kAvoidHillsStrength[i];
   }
 
-  use_primary_ = costing_options.use_primary();
-
-  // Set the road classification factor. use_roads factors above 0.5 start to
+  // Set the road classification factor based on use_primary option - scales from
+  // 0 (avoid primary roads) to 1 (don't avoid primary roads). Above 0.5 start to
   // reduce the weight difference between road classes while factors below 0.5
   // start to increase the differences.
-  road_factor_ = (use_primary_ >= 0.5f) ? 1.5f - use_primary_ : 3.0f - use_primary_ * 5.0f;
+  float use_primary = costing_options.use_primary();
+  road_factor_ = (use_primary >= 0.5f) ? 1.5f - use_primary : 3.0f - use_primary * 5.0f;
 }
 
 // Check if access is allowed on the specified edge.
@@ -538,36 +495,10 @@ Cost MotorScooterCost::TransitionCost(const baldr::DirectedEdge* edge,
                                       const baldr::NodeInfo* node,
                                       const EdgeLabel& pred,
                                       const bool has_traffic) const {
-  // Accumulate cost and penalty
-  float seconds = 0.0f;
-  float penalty = 0.0f;
-
-  // Special cases with both time and penalty: country crossing, ferry, and gate
-  if (node->type() == NodeType::kBorderControl) {
-    seconds += country_crossing_cost_;
-    penalty += country_crossing_penalty_;
-  } else if (node->type() == NodeType::kGate) {
-    seconds += gate_cost_;
-    penalty += gate_penalty_;
-  }
-  if (edge->use() == Use::kFerry && pred.use() != Use::kFerry) {
-    seconds += ferry_cost_;
-    penalty += ferry_penalty_;
-  }
-
-  // Additional penalties without any time cost
+  // Get the transition cost for country crossing, ferry, gate, toll booth,
+  // destination only, alley, maneuver penalty
   uint32_t idx = pred.opp_local_idx();
-  if (edge->destonly() && !pred.destonly()) {
-    penalty += destination_only_penalty_;
-  }
-  if (edge->use() == Use::kAlley && pred.use() != Use::kAlley) {
-    penalty += alley_penalty_;
-  }
-
-  // Maneuver penalty, ignore when entering a link to avoid double penalizing
-  if (!edge->link() && !node->name_consistency(idx, edge->localedgeidx())) {
-    penalty += maneuver_penalty_;
-  }
+  Cost c = base_transition_cost(node, edge, pred, idx);
 
   // Transition time = densityfactor * stopimpact * turncost
   if (edge->stopimpact(idx) > 0) {
@@ -579,11 +510,11 @@ Cost MotorScooterCost::TransitionCost(const baldr::DirectedEdge* edge,
                       ? kRightSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))]
                       : kLeftSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))];
     }
-    seconds += trans_density_factor_[node->density()] * edge->stopimpact(idx) * turn_cost;
+    float seconds = trans_density_factor_[node->density()] * edge->stopimpact(idx) * turn_cost;
+    c.cost += seconds;
+    c.secs += seconds;
   }
-
-  // Return cost (time and penalty)
-  return {seconds + penalty, seconds};
+  return c;
 }
 
 // Returns the cost to make the transition from the predecessor edge
@@ -595,35 +526,9 @@ Cost MotorScooterCost::TransitionCostReverse(const uint32_t idx,
                                              const baldr::DirectedEdge* pred,
                                              const baldr::DirectedEdge* edge,
                                              const bool has_traffic) const {
-  // Accumulate cost and penalty
-  float seconds = 0.0f;
-  float penalty = 0.0f;
-
-  // Special cases with both time and penalty: country crossing, ferry, and gate
-  if (node->type() == NodeType::kBorderControl) {
-    seconds += country_crossing_cost_;
-    penalty += country_crossing_penalty_;
-  } else if (node->type() == NodeType::kGate) {
-    seconds += gate_cost_;
-    penalty += gate_penalty_;
-  }
-  if (edge->use() == Use::kFerry && pred->use() != Use::kFerry) {
-    seconds += ferry_cost_;
-    penalty += ferry_penalty_;
-  }
-
-  // Additional penalties without any time cost
-  if (edge->destonly() && !pred->destonly()) {
-    penalty += destination_only_penalty_;
-  }
-  if (edge->use() == Use::kAlley && pred->use() != Use::kAlley) {
-    penalty += alley_penalty_;
-  }
-
-  // Maneuver penalty, ignore when entering a link to avoid double penalizing.
-  if (!edge->link() && !node->name_consistency(idx, edge->localedgeidx())) {
-    penalty += maneuver_penalty_;
-  }
+  // Get the transition cost for country crossing, ferry, gate, toll booth,
+  // destination only, alley, maneuver penalty
+  Cost c = base_transition_cost(node, edge, pred, idx);
 
   // Transition time = densityfactor * stopimpact * turncost
   if (edge->stopimpact(idx) > 0) {
@@ -635,11 +540,11 @@ Cost MotorScooterCost::TransitionCostReverse(const uint32_t idx,
                       ? kRightSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))]
                       : kLeftSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))];
     }
-    seconds += trans_density_factor_[node->density()] * edge->stopimpact(idx) * turn_cost;
+    float seconds = trans_density_factor_[node->density()] * edge->stopimpact(idx) * turn_cost;
+    c.cost += seconds;
+    c.secs += seconds;
   }
-
-  // Return cost (time and penalty)
-  return {seconds + penalty, seconds};
+  return c;
 }
 
 void ParseMotorScooterCostOptions(const rapidjson::Document& doc,
@@ -744,12 +649,25 @@ using namespace sif;
 
 namespace {
 
-MotorScooterCost* make_motorscootercost_from_json(const std::string& property, float testVal) {
+class TestMotorScooterCost : public MotorScooterCost {
+public:
+  TestMotorScooterCost(const odin::Costing costing, const odin::DirectionsOptions& options)
+      : MotorScooterCost(costing, options){};
+
+  using MotorScooterCost::alley_penalty_;
+  using MotorScooterCost::country_crossing_cost_;
+  using MotorScooterCost::destination_only_penalty_;
+  using MotorScooterCost::ferry_transition_cost_;
+  using MotorScooterCost::gate_cost_;
+  using MotorScooterCost::maneuver_penalty_;
+};
+
+TestMotorScooterCost* make_motorscootercost_from_json(const std::string& property, float testVal) {
   std::stringstream ss;
   ss << R"({"costing_options":{"motor_scooter":{")" << property << R"(":)" << testVal << "}}}";
   valhalla::valhalla_request_t request;
   request.parse(ss.str(), valhalla::odin::DirectionsOptions::route);
-  return new MotorScooterCost(valhalla::odin::Costing::motor_scooter, request.options);
+  return new TestMotorScooterCost(valhalla::odin::Costing::motor_scooter, request.options);
 }
 
 template <typename T>
@@ -771,7 +689,7 @@ void testMotorScooterCostParams() {
   std::default_random_engine generator(seed);
   std::shared_ptr<std::uniform_real_distribution<float>> fDistributor;
   std::shared_ptr<std::uniform_int_distribution<uint32_t>> iDistributor;
-  std::shared_ptr<MotorScooterCost> ctorTester;
+  std::shared_ptr<TestMotorScooterCost> ctorTester;
 
   // maneuver_penalty_
   fDistributor.reset(make_real_distributor_from_range(kManeuverPenaltyRange));
@@ -780,25 +698,6 @@ void testMotorScooterCostParams() {
     if (ctorTester->maneuver_penalty_ < kManeuverPenaltyRange.min ||
         ctorTester->maneuver_penalty_ > kManeuverPenaltyRange.max) {
       throw std::runtime_error("maneuver_penalty_ is not within it's range");
-    }
-  }
-
-  // gate_cost_
-  fDistributor.reset(make_real_distributor_from_range(kGateCostRange));
-  for (unsigned i = 0; i < testIterations; ++i) {
-    ctorTester.reset(make_motorscootercost_from_json("gate_cost", (*fDistributor)(generator)));
-    if (ctorTester->gate_cost_ < kGateCostRange.min || ctorTester->gate_cost_ > kGateCostRange.max) {
-      throw std::runtime_error("gate_cost_ is not within it's range");
-    }
-  }
-
-  // gate_penalty_
-  fDistributor.reset(make_real_distributor_from_range(kGatePenaltyRange));
-  for (unsigned i = 0; i < testIterations; ++i) {
-    ctorTester.reset(make_motorscootercost_from_json("gate_penalty", (*fDistributor)(generator)));
-    if (ctorTester->gate_penalty_ < kGatePenaltyRange.min ||
-        ctorTester->gate_penalty_ > kGatePenaltyRange.max) {
-      throw std::runtime_error("gate_penalty_ is not within it's range");
     }
   }
 
@@ -812,44 +711,67 @@ void testMotorScooterCostParams() {
     }
   }
 
-  // country_crossing_cost_
+  // destination_only_penalty_
+  fDistributor.reset(make_real_distributor_from_range(kDestinationOnlyPenaltyRange));
+  for (unsigned i = 0; i < testIterations; ++i) {
+    ctorTester.reset(
+        make_motorscootercost_from_json("destination_only_penalty", (*fDistributor)(generator)));
+    if (ctorTester->destination_only_penalty_ < kDestinationOnlyPenaltyRange.min ||
+        ctorTester->destination_only_penalty_ > kDestinationOnlyPenaltyRange.max) {
+      throw std::runtime_error("destination_only_penalty_ is not within it's range");
+    }
+  }
+
+  // gate_cost_ (Cost.secs)
+  fDistributor.reset(make_real_distributor_from_range(kGateCostRange));
+  for (unsigned i = 0; i < testIterations; ++i) {
+    ctorTester.reset(make_motorscootercost_from_json("gate_cost", (*fDistributor)(generator)));
+    if (ctorTester->gate_cost_.secs < kGateCostRange.min ||
+        ctorTester->gate_cost_.secs > kGateCostRange.max) {
+      throw std::runtime_error("gate_cost_ is not within it's range");
+    }
+  }
+
+  // gate_penalty_ (Cost.cost)
+  fDistributor.reset(make_real_distributor_from_range(kGatePenaltyRange));
+  for (unsigned i = 0; i < testIterations; ++i) {
+    ctorTester.reset(make_motorscootercost_from_json("gate_penalty", (*fDistributor)(generator)));
+    if (ctorTester->gate_cost_.cost < kGatePenaltyRange.min ||
+        ctorTester->gate_cost_.cost > kGatePenaltyRange.max + kDefaultGateCost) {
+      throw std::runtime_error("gate_penalty_ is not within it's range");
+    }
+  }
+
+  // country_crossing_cost_ (Cost.secs)
   fDistributor.reset(make_real_distributor_from_range(kCountryCrossingCostRange));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(
         make_motorscootercost_from_json("country_crossing_cost", (*fDistributor)(generator)));
-    if (ctorTester->country_crossing_cost_ < kCountryCrossingCostRange.min ||
-        ctorTester->country_crossing_cost_ > kCountryCrossingCostRange.max) {
+    if (ctorTester->country_crossing_cost_.secs < kCountryCrossingCostRange.min ||
+        ctorTester->country_crossing_cost_.secs > kCountryCrossingCostRange.max) {
       throw std::runtime_error("country_crossing_cost_ is not within it's range");
     }
   }
 
-  // country_crossing_penalty_
+  // country_crossing_penalty_ (Cost.cost)
   fDistributor.reset(make_real_distributor_from_range(kCountryCrossingPenaltyRange));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(
         make_motorscootercost_from_json("country_crossing_penalty", (*fDistributor)(generator)));
-    if (ctorTester->country_crossing_penalty_ < kCountryCrossingPenaltyRange.min ||
-        ctorTester->country_crossing_penalty_ > kCountryCrossingPenaltyRange.max) {
+    if (ctorTester->country_crossing_cost_.cost < kCountryCrossingPenaltyRange.min ||
+        ctorTester->country_crossing_cost_.cost >
+            kCountryCrossingPenaltyRange.max + kDefaultCountryCrossingCost) {
       throw std::runtime_error("country_crossing_penalty_ is not within it's range");
     }
   }
 
-  // ferry_cost_
+  // ferry_cost_ (Cost.secs)
   fDistributor.reset(make_real_distributor_from_range(kFerryCostRange));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_motorscootercost_from_json("ferry_cost", (*fDistributor)(generator)));
-    if (ctorTester->ferry_cost_ < kFerryCostRange.min ||
-        ctorTester->ferry_cost_ > kFerryCostRange.max) {
+    if (ctorTester->ferry_transition_cost_.secs < kFerryCostRange.min ||
+        ctorTester->ferry_transition_cost_.secs > kFerryCostRange.max) {
       throw std::runtime_error("ferry_cost_ is not within it's range");
-    }
-  }
-
-  // use_ferry_
-  fDistributor.reset(make_real_distributor_from_range(kUseFerryRange));
-  for (unsigned i = 0; i < testIterations; ++i) {
-    ctorTester.reset(make_motorscootercost_from_json("use_ferry", (*fDistributor)(generator)));
-    if (ctorTester->use_ferry_ < kUseFerryRange.min || ctorTester->use_ferry_ > kUseFerryRange.max) {
-      throw std::runtime_error("use_ferry_ is not within it's range");
     }
   }
 
@@ -862,24 +784,35 @@ void testMotorScooterCostParams() {
     }
   }
 
-  // use_hills_
-  fDistributor.reset(make_real_distributor_from_range(kUseHillsRange));
+  /**
+  // use_ferry
+  fDistributor.reset(make_real_distributor_from_range(kUseFerryRange));
   for (unsigned i = 0; i < testIterations; ++i) {
-    ctorTester.reset(make_motorscootercost_from_json("use_hills", (*fDistributor)(generator)));
-    if (ctorTester->use_hills_ < kUseHillsRange.min || ctorTester->use_hills_ > kUseHillsRange.max) {
-      throw std::runtime_error("use_hills_ is not within it's range");
+    ctorTester.reset(make_motorscootercost_from_json("use_ferry", (*fDistributor)(generator)));
+    if (ctorTester->use_ferry < kUseFerryRange.min || ctorTester->use_ferry > kUseFerryRange.max) {
+      throw std::runtime_error("use_ferry is not within it's range");
     }
   }
 
-  // use_primary_
+  // use_hills - used in the constructor to create grade penalties
+  fDistributor.reset(make_real_distributor_from_range(kUseHillsRange));
+  for (unsigned i = 0; i < testIterations; ++i) {
+    ctorTester.reset(make_motorscootercost_from_json("use_hills", (*fDistributor)(generator)));
+    if (ctorTester->use_hills < kUseHillsRange.min || ctorTester->use_hills > kUseHillsRange.max) {
+      throw std::runtime_error("use_hills is not within it's range");
+    }
+  }
+
+  // use_primary - used in the constructor to create road factors.
   fDistributor.reset(make_real_distributor_from_range(kUsePrimaryRange));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_motorscootercost_from_json("use_primary", (*fDistributor)(generator)));
-    if (ctorTester->use_primary_ < kUsePrimaryRange.min ||
-        ctorTester->use_primary_ > kUsePrimaryRange.max) {
-      throw std::runtime_error("use_hills_ is not within it's range");
+    if (ctorTester->use_primary < kUsePrimaryRange.min ||
+        ctorTester->use_primary > kUsePrimaryRange.max) {
+      throw std::runtime_error("use_primary is not within it's range");
     }
   }
+**/
 }
 } // namespace
 

@@ -21,6 +21,8 @@
 namespace valhalla {
 namespace sif {
 
+const sif::Cost kNoCost(0.0f, 0.0f);
+
 /**
  * A callable element which returns a value between 0 and 1 indicating how
  * desirable the edge is for use as a location. A value of 0 indicates the
@@ -39,6 +41,14 @@ using NodeFilter = std::function<bool(const baldr::NodeInfo*)>;
 
 // Default unit size (seconds) for cost sorting.
 constexpr uint32_t kDefaultUnitSize = 1;
+
+// Maximum penalty allowed. Cannot be too high because sometimes one cannot avoid a particular
+// attribute or condition to complete a route.
+constexpr float kMaxPenalty = 12.0f * kSecPerHour; // 12 hours
+
+// Maximum ferry penalty (when use_ferry == 0). Can't make this too large
+// since a ferry is sometimes required to complete a route.
+constexpr float kMaxFerryPenalty = 6.0f * kSecPerHour; // 6 hours
 
 /**
  * Base class for dynamic edge costing. This class defines the interface for
@@ -502,6 +512,146 @@ protected:
 
   // User specified edges to avoid
   std::unordered_set<baldr::GraphId> user_avoid_edges_;
+
+  // Weighting to apply to ferry edges
+  float ferry_factor_;
+
+  // Transition costs
+  sif::Cost country_crossing_cost_;
+  sif::Cost gate_cost_;
+  sif::Cost toll_booth_cost_;
+  sif::Cost ferry_transition_cost_;
+
+  // Penalties that all costing methods support
+  float maneuver_penalty_;         // Penalty (seconds) when inconsistent names
+  float alley_penalty_;            // Penalty (seconds) to use a alley
+  float destination_only_penalty_; // Penalty (seconds) using private road, driveway, or parking aisle
+
+  /**
+   * Get the base transition costs (and ferry factor) from the costing options.
+   * @param costing_options Protocol buffer of costing options.
+   */
+  void get_base_costs(const odin::CostingOptions& costing_options) {
+    // Cost only (no time) penalties
+    alley_penalty_ = costing_options.alley_penalty();
+    destination_only_penalty_ = costing_options.destination_only_penalty();
+    maneuver_penalty_ = costing_options.maneuver_penalty();
+
+    // Transition costs (both time and cost)
+    toll_booth_cost_ = {costing_options.toll_booth_cost() + costing_options.toll_booth_penalty(),
+                        costing_options.toll_booth_cost()};
+    country_crossing_cost_ = {costing_options.country_crossing_cost() +
+                                  costing_options.country_crossing_penalty(),
+                              costing_options.country_crossing_cost()};
+    gate_cost_ = {costing_options.gate_cost() + costing_options.gate_penalty(),
+                  costing_options.gate_cost()};
+
+    // Set the cost (seconds) to enter a ferry (only apply entering since
+    // a route must exit a ferry (except artificial test routes ending on
+    // a ferry!). Modify ferry edge weighting based on use_ferry factor.
+    float penalty;
+    float use_ferry = costing_options.use_ferry();
+    if (use_ferry < 0.5f) {
+      // Penalty goes from max at use_ferry = 0 to 0 at use_ferry = 0.5
+      penalty = static_cast<uint32_t>(kMaxFerryPenalty * (1.0f - use_ferry * 2.0f));
+
+      // Cost X10 at use_ferry == 0, slopes downwards towards 1.0 at use_ferry = 0.5
+      ferry_factor_ = 10.0f - use_ferry * 18.0f;
+    } else {
+      // Add a ferry weighting factor to influence cost along ferries to make
+      // them more favorable if desired rather than driving. No ferry penalty.
+      // Half the cost at use_ferry == 1, progress to 1.0 at use_ferry = 0.5
+      penalty = 0.0f;
+      ferry_factor_ = 1.5f - use_ferry;
+    }
+    ferry_transition_cost_ = {costing_options.ferry_cost() + penalty, costing_options.ferry_cost()};
+  }
+
+  /**
+   * Base transition cost that all costing methods use. Includes costs for
+   * country crossing, boarding a ferry, toll booth, gates, entering destination
+   * only, alleys, and maneuver penalties. Each costing method can provide different
+   * costs for these transitions (via costing options).
+   * @param node Node at the intersection where the edge transition occurs.
+   * @param edge Directed edge entering.
+   * @param pred Predecessor edge information.
+   * @param idx  Index used for name consistency.
+   * @return Returns the transition cost (cost, elapsed time).
+   */
+  virtual sif::Cost base_transition_cost(const baldr::NodeInfo* node,
+                                         const baldr::DirectedEdge* edge,
+                                         const sif::EdgeLabel& pred,
+                                         const uint32_t idx) const {
+    // Cases with both time and penalty: country crossing, ferry, gate, toll booth
+    sif::Cost c;
+    if (node->type() == baldr::NodeType::kBorderControl) {
+      c += country_crossing_cost_;
+    }
+    if (node->type() == baldr::NodeType::kGate) {
+      c += gate_cost_;
+    }
+    if (node->type() == baldr::NodeType::kTollBooth || (edge->toll() && !pred.toll())) {
+      c += toll_booth_cost_;
+    }
+    if (edge->use() == baldr::Use::kFerry && pred.use() != baldr::Use::kFerry) {
+      c += ferry_transition_cost_;
+    }
+
+    // Additional penalties without any time cost
+    if (edge->destonly() && !pred.destonly()) {
+      c.cost += destination_only_penalty_;
+    }
+    if (edge->use() == baldr::Use::kAlley && pred.use() != baldr::Use::kAlley) {
+      c.cost += alley_penalty_;
+    }
+    if (!edge->link() && !node->name_consistency(idx, edge->localedgeidx())) {
+      c.cost += maneuver_penalty_;
+    }
+    return c;
+  }
+
+  /**
+   * Base transition cost that all costing methods use. Includes costs for
+   * country crossing, boarding a ferry, toll booth, gates, entering destination
+   * only, alleys, and maneuver penalties. Each costing method can provide different
+   * costs for these transitions (via costing options).
+   * @param node Node at the intersection where the edge transition occurs.
+   * @param edge Directed edge entering.
+   * @param pred Predecessor edge.
+   * @param idx  Index used for name consistency.
+   * @return Returns the transition cost (cost, elapsed time).
+   */
+  virtual sif::Cost base_transition_cost(const baldr::NodeInfo* node,
+                                         const baldr::DirectedEdge* edge,
+                                         const baldr::DirectedEdge* pred,
+                                         const uint32_t idx) const {
+    // Cases with both time and penalty: country crossing, ferry, gate, toll booth
+    sif::Cost c;
+    if (node->type() == baldr::NodeType::kBorderControl) {
+      c += country_crossing_cost_;
+    }
+    if (node->type() == baldr::NodeType::kGate) {
+      c += gate_cost_;
+    }
+    if (node->type() == baldr::NodeType::kTollBooth || (edge->toll() && !pred->toll())) {
+      c += toll_booth_cost_;
+    }
+    if (edge->use() == baldr::Use::kFerry && pred->use() != baldr::Use::kFerry) {
+      c += ferry_transition_cost_;
+    }
+
+    // Additional penalties without any time cost
+    if (edge->destonly() && !pred->destonly()) {
+      c.cost += destination_only_penalty_;
+    }
+    if (edge->use() == baldr::Use::kAlley && pred->use() != baldr::Use::kAlley) {
+      c.cost += alley_penalty_;
+    }
+    if (!edge->link() && !node->name_consistency(idx, edge->localedgeidx())) {
+      c.cost += maneuver_penalty_;
+    }
+    return c;
+  }
 
   /**
    * Convenience method to get the transition factor.
