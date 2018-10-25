@@ -288,6 +288,7 @@ json::MapPtr NodeInfo::json(const GraphTile* tile) const {
       {"mode_change", static_cast<bool>(mode_change_)},
       {"traffic_signal", static_cast<bool>(traffic_signal_)},
       {"type", to_string(static_cast<NodeType>(type_))},
+      {"transition count", static_cast<uint64_t>(transition_count_)},
   });
   if (is_transit()) {
     m->emplace("stop_index", static_cast<uint64_t>(stop_.stop_index));

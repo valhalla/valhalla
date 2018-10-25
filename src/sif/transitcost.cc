@@ -220,7 +220,7 @@ public:
   virtual const EdgeFilter GetEdgeFilter() const {
     // Throw back a lambda that checks the access for this type of costing
     return [](const baldr::DirectedEdge* edge) {
-      if (edge->IsTransition() || edge->is_shortcut() || edge->use() >= Use::kFerry ||
+      if (edge->is_shortcut() || edge->use() >= Use::kFerry ||
           !(edge->forwardaccess() & kPedestrianAccess)) {
         return 0.0f;
       } else {

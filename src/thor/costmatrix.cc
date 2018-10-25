@@ -286,29 +286,6 @@ void CostMatrix::ForwardSearch(const uint32_t index, const uint32_t n, GraphRead
     EdgeStatusInfo* es = edgestate.GetPtr(edgeid, tile);
     const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
     for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++, ++edgeid, ++es) {
-      // Handle transition edges
-      if (directededge->IsTransition()) {
-        // Do not take transition edges if this is called from a transition.
-        // Also skip transition edges onto a level no longer being expanded.
-        if (from_transition || (directededge->trans_down() &&
-                                hierarchy_limits[directededge->endnode().level()].StopExpanding())) {
-          continue;
-        }
-
-        // Increment upwards transition count
-        if (directededge->trans_up()) {
-          hierarchy_limits[node.level()].up_transition_count++;
-        }
-
-        // Expand from end node of this transition edge.
-        GraphId node = directededge->endnode();
-        const GraphTile* endtile = graphreader.GetGraphTile(node);
-        if (endtile != nullptr) {
-          expand(endtile, node, endtile->node(node), pred, pred_idx, true);
-        }
-        continue;
-      }
-
       // Skip shortcut edges until we have stopped expanding on the next level. Use regular
       // edges while still expanding on the next level since we can still transition down to
       // that level. If using a shortcut, set the shortcuts mask. Skip if this is a regular
@@ -368,6 +345,25 @@ void CostMatrix::ForwardSearch(const uint32_t index, const uint32_t n, GraphRead
                               pred.path_distance() + directededge->length(),
                               (pred.not_thru_pruning() || !directededge->not_thru()));
       adj->add(idx);
+    }
+
+    // Handle transitions - expand from the end node of the transition
+    if (!from_transition && nodeinfo->transition_count() > 0) {
+      const NodeTransition* trans = tile->transition(nodeinfo->transition_index());
+      for (uint32_t i = 0; i < nodeinfo->transition_count(); ++i, ++trans) {
+        if (trans->up()) {
+          hierarchy_limits[node.level()].up_transition_count++;
+        } else if (hierarchy_limits[trans->endnode().level()].StopExpanding()) {
+          continue;
+        }
+
+        // Expand from end node of this transition.
+        GraphId node = trans->endnode();
+        const GraphTile* endtile = graphreader.GetGraphTile(node);
+        if (endtile != nullptr) {
+          expand(endtile, node, endtile->node(node), pred, pred_idx, true);
+        }
+      }
     }
   };
 
@@ -551,29 +547,6 @@ void CostMatrix::BackwardSearch(const uint32_t index, GraphReader& graphreader) 
     EdgeStatusInfo* es = edgestate.GetPtr(edgeid, tile);
     const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
     for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++, ++edgeid, ++es) {
-      // Handle transition edges.
-      if (directededge->IsTransition()) {
-        // Do not take transition edges if this is called from a transition.
-        // Also skip transition edges onto a level no longer being expanded.
-        if (from_transition || (directededge->trans_down() &&
-                                hierarchy_limits[directededge->endnode().level()].StopExpanding())) {
-          continue;
-        }
-
-        // Increment upwards transition count
-        if (directededge->trans_up()) {
-          hierarchy_limits[node.level()].up_transition_count++;
-        }
-
-        // Expand from end node of this transition edge.
-        GraphId node = directededge->endnode();
-        const GraphTile* endtile = graphreader.GetGraphTile(node);
-        if (endtile != nullptr) {
-          expand(endtile, node, endtile->node(node), index, pred, pred_idx, opp_pred_edge, true);
-        }
-        continue;
-      }
-
       // Skip shortcut edges until we have stopped expanding on the next level. Use regular
       // edges while still expanding on the next level since we can still transition down to
       // that level. If using a shortcut, set the shortcuts mask. Skip if this is a regular
@@ -639,6 +612,26 @@ void CostMatrix::BackwardSearch(const uint32_t index, GraphReader& graphreader) 
 
       // Add to the list of targets that have reached this edge
       targets_[edgeid].push_back(index);
+    }
+
+    // Handle transitions - expand from the end node of the transition
+    if (!from_transition && nodeinfo->transition_count() > 0) {
+      const NodeTransition* trans = tile->transition(nodeinfo->transition_index());
+      for (uint32_t i = 0; i < nodeinfo->transition_count(); ++i, ++trans) {
+        if (trans->up()) {
+          hierarchy_limits[node.level()].up_transition_count++;
+        } else if (hierarchy_limits[trans->endnode().level()].StopExpanding()) {
+          continue;
+        }
+
+        // Expand from end node of this transition edge.
+        GraphId node = trans->endnode();
+        const GraphTile* endtile = graphreader.GetGraphTile(node);
+        if (endtile != nullptr) {
+          expand(endtile, node, endtile->node(node), index, pred, pred_idx, opp_pred_edge, true);
+        }
+        continue;
+      }
     }
   };
 

@@ -17,6 +17,7 @@
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphtile.h>
 #include <valhalla/baldr/graphtileheader.h>
+#include <valhalla/baldr/nodetransition.h>
 #include <valhalla/baldr/sign.h>
 #include <valhalla/baldr/signinfo.h>
 #include <valhalla/baldr/transitdeparture.h>
@@ -80,6 +81,14 @@ public:
    * @return  Returns the directed edge builders.
    */
   std::vector<DirectedEdge>& directededges();
+
+  /**
+   * Gets the current list of node transition (builders).
+   * @return  Returns a reference to node transition builders.
+   */
+  std::vector<NodeTransition>& transitions() {
+    return transitions_builder_;
+  }
 
   /**
    * Add a transit departure.
@@ -465,6 +474,10 @@ protected:
   // List of directed edges. This is a fixed size structure so it can be
   // indexed directly.
   std::vector<DirectedEdge> directededges_builder_;
+
+  // List of node transitions. This is a fixed size structure so it can be
+  // indexed directly.
+  std::vector<NodeTransition> transitions_builder_;
 
   // List of transit departures. Sorted by directed edge Id and
   // departure time

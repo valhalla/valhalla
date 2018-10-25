@@ -56,18 +56,9 @@ struct OldToNewNodes {
 };
 
 // Add a downward transition edge if the node is valid.
-bool AddDownwardTransition(const GraphId& node,
-                           GraphTileBuilder* tilebuilder,
-                           const bool has_elevation) {
+bool AddDownwardTransition(const GraphId& node, GraphTileBuilder* tilebuilder) {
   if (node.Is_Valid()) {
-    DirectedEdge downwardedge;
-    downwardedge.set_endnode(node);
-    downwardedge.set_trans_down();
-    downwardedge.set_all_forward_access();
-    tilebuilder->directededges().emplace_back(std::move(downwardedge));
-    if (has_elevation) {
-      tilebuilder->edge_elevations().emplace_back(0.0f, 0.0f, 0.0f);
-    }
+    tilebuilder->transitions().emplace_back(node, false);
     return true;
   } else {
     return false;
@@ -75,18 +66,9 @@ bool AddDownwardTransition(const GraphId& node,
 }
 
 // Add an upward transition edge if the node is valid.
-bool AddUpwardTransition(const GraphId& node,
-                         GraphTileBuilder* tilebuilder,
-                         const bool has_elevation) {
+bool AddUpwardTransition(const GraphId& node, GraphTileBuilder* tilebuilder) {
   if (node.Is_Valid()) {
-    DirectedEdge upwardedge;
-    upwardedge.set_endnode(node);
-    upwardedge.set_trans_up();
-    upwardedge.set_all_forward_access();
-    tilebuilder->directededges().emplace_back(std::move(upwardedge));
-    if (has_elevation) {
-      tilebuilder->edge_elevations().emplace_back(0.0f, 0.0f, 0.0f);
-    }
+    tilebuilder->transitions().emplace_back(node, true);
     return true;
   } else {
     return false;
@@ -324,18 +306,26 @@ void FormTilesInNewLevel(GraphReader& reader, bool has_elevation) {
       }
     }
 
-    // Add transition edges
+    // Add node transitions
+    uint32_t index = tilebuilder->transitions().size();
     auto new_nodes = find_nodes(old_to_new, base_node);
     if (current_level == 0) {
-      AddDownwardTransition(new_nodes.arterial_node, tilebuilder, has_elevation);
-      AddDownwardTransition(new_nodes.local_node, tilebuilder, has_elevation);
+      AddDownwardTransition(new_nodes.arterial_node, tilebuilder);
+      AddDownwardTransition(new_nodes.local_node, tilebuilder);
     } else if (current_level == 1) {
-      AddDownwardTransition(new_nodes.local_node, tilebuilder, has_elevation);
-      AddUpwardTransition(new_nodes.highway_node, tilebuilder, has_elevation);
+      AddDownwardTransition(new_nodes.local_node, tilebuilder);
+      AddUpwardTransition(new_nodes.highway_node, tilebuilder);
     }
     if (current_level == 2) {
-      AddUpwardTransition(new_nodes.arterial_node, tilebuilder, has_elevation);
-      AddUpwardTransition(new_nodes.highway_node, tilebuilder, has_elevation);
+      AddUpwardTransition(new_nodes.arterial_node, tilebuilder);
+      AddUpwardTransition(new_nodes.highway_node, tilebuilder);
+    }
+
+    // Set the node transition count and index
+    uint32_t count = tilebuilder->transitions().size() - index;
+    if (count > 0) {
+      node.set_transition_count(count);
+      node.set_transition_index(index);
     }
 
     // Set the edge count for the new node

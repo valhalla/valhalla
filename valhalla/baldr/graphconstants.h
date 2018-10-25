@@ -255,10 +255,6 @@ enum class Use : uint8_t {
   kPedestrian = 28,
   kBridleway = 29,
 
-  // Hierarchy transitions
-  kTransitionUp = 38,
-  kTransitionDown = 39,
-
   // Other...
   kOther = 40,
 

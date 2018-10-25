@@ -50,7 +50,9 @@ public:
    * Set the graph Id of this tile.
    * @param  graphid  GraphId (tileid and level) of this tile.
    */
-  void set_graphid(const baldr::GraphId& graphid);
+  void set_graphid(const baldr::GraphId& graphid) {
+    graphid_ = graphid;
+  }
 
   /**
    * Gets the date when this tile was created. Days since pivot date.
@@ -64,7 +66,9 @@ public:
    * Set the date created.
    * @param  date  Days since pivot date.
    */
-  void set_date_created(const uint32_t date);
+  void set_date_created(const uint32_t date) {
+    date_created_ = date;
+  }
 
   /**
    * Gets the version of this tile.
@@ -92,7 +96,9 @@ public:
    * Set the data set Id (latest OSM changeset Id).
    * @param  id  Data set Id.
    */
-  void set_dataset_id(const uint64_t id);
+  void set_dataset_id(const uint64_t id) {
+    dataset_id_ = id;
+  }
 
   /**
    * Get the relative road density within this tile.
@@ -106,7 +112,9 @@ public:
    * Set the relative road density within this tile.
    * @param  density  Relative road density within this tile (0-15).
    */
-  void set_density(const uint32_t density);
+  void set_density(const uint32_t density) {
+    density_ = (density <= kMaxDensity) ? density : kMaxDensity;
+  }
 
   /**
    * Get the relative quality of name assignment for this tile.
@@ -120,7 +128,9 @@ public:
    * Set the relative quality of name assignment for this tile.
    * @param   name_quality  Relative name quality for this tile (0-15).
    */
-  void set_name_quality(const uint32_t name_quality);
+  void set_name_quality(const uint32_t name_quality) {
+    name_quality_ = (name_quality <= kMaxQualityMeasure) ? name_quality : kMaxQualityMeasure;
+  }
 
   /**
    * Get the relative quality of speed assignment for this tile.
@@ -134,7 +144,9 @@ public:
    * Set the relative quality of speed assignment for this tile.
    * @param  speed_quality   Relative speed quality for this tile (0-15).
    */
-  void set_speed_quality(const uint32_t speed_quality);
+  void set_speed_quality(const uint32_t speed_quality) {
+    speed_quality_ = (speed_quality <= kMaxQualityMeasure) ? speed_quality : kMaxQualityMeasure;
+  }
 
   /**
    * Get the relative quality of exit signs for this tile.
@@ -148,7 +160,9 @@ public:
    * Set the relative quality of exit signs for this tile.
    * @param  exit_quality   Relative exit sign quality for this tile (0-15).
    */
-  void set_exit_quality(const uint32_t exit_quality);
+  void set_exit_quality(const uint32_t exit_quality) {
+    exit_quality_ = (exit_quality <= kMaxQualityMeasure) ? exit_quality : kMaxQualityMeasure;
+  }
 
   /**
    * Gets the number of nodes in this tile.
@@ -162,7 +176,9 @@ public:
    * Sets the number of nodes in this tile.
    * @param  count  Number of nodes within the tile.
    */
-  void set_nodecount(const uint32_t count);
+  void set_nodecount(const uint32_t count) {
+    nodecount_ = count;
+  }
 
   /**
    * Gets the number of directed edges in this tile.
@@ -176,7 +192,25 @@ public:
    * Sets the number of directed edges in this tile.
    * @param  count  Number of directed edges within the tile.
    */
-  void set_directededgecount(const uint32_t count);
+  void set_directededgecount(const uint32_t count) {
+    directededgecount_ = count;
+  }
+
+  /**
+   * Gets the number of node transitions in this tile.
+   * @return  Returns the number of node transitions.
+   */
+  uint32_t transitioncount() const {
+    return transitioncount_;
+  }
+
+  /**
+   * Sets the number of node transitions in this tile.
+   * @param  count  Number of node transitions within the tile.
+   */
+  void set_transitioncount(const uint32_t count) {
+    transitioncount_ = count;
+  }
 
   /**
    * Gets the number of signs in this tile.
@@ -190,7 +224,9 @@ public:
    * Sets the number of signs within this tile.
    * @param count Number of signs within the tile.
    */
-  void set_signcount(const uint32_t count);
+  void set_signcount(const uint32_t count) {
+    signcount_ = count;
+  }
 
   /**
    * Gets the number of transit departures in this tile.
@@ -272,9 +308,11 @@ public:
 
   /**
    * Sets the number of access restrictions in this tile.
-   * @param  restrictions   The number of access restrictions.
+   * @param  n  The number of access restrictions.
    */
-  void set_access_restriction_count(const uint32_t restrictions);
+  void set_access_restriction_count(const uint32_t n) {
+    access_restriction_count_ = n;
+  }
 
   /**
    * Gets the number of admin records in this tile.
@@ -288,7 +326,9 @@ public:
    * Sets the number of admin records within this tile.
    * @param count Number of admin records within the tile.
    */
-  void set_admincount(const uint32_t count);
+  void set_admincount(const uint32_t count) {
+    admincount_ = count;
+  }
 
   /**
    * Get the offset to the Complex Restriction list in the forward direction.
@@ -304,7 +344,9 @@ public:
    * @param offset Offset in bytes to the start of the complex restriction
    *               list.
    */
-  void set_complex_restriction_forward_offset(const uint32_t offset);
+  void set_complex_restriction_forward_offset(const uint32_t offset) {
+    complex_restriction_forward_offset_ = offset;
+  }
 
   /**
    * Get the offset to the Complex Restriction list in the reverse direction.
@@ -320,7 +362,9 @@ public:
    * @param offset Offset in bytes to the start of the complex restriction
    *               list.
    */
-  void set_complex_restriction_reverse_offset(const uint32_t offset);
+  void set_complex_restriction_reverse_offset(const uint32_t offset) {
+    complex_restriction_reverse_offset_ = offset;
+  }
 
   /**
    * Gets the offset to the edge info.
@@ -334,7 +378,9 @@ public:
    * Sets the offset to the edge info.
    * @param offset Offset in bytes to the start of the edge information.
    */
-  void set_edgeinfo_offset(const uint32_t offset);
+  void set_edgeinfo_offset(const uint32_t offset) {
+    edgeinfo_offset_ = offset;
+  }
 
   /**
    * Gets the offset to the text list.
@@ -348,7 +394,9 @@ public:
    * Sets the offset to the text list.
    * @param offset Offset in bytes to the start of the text list.
    */
-  void set_textlist_offset(const uint32_t offset);
+  void set_textlist_offset(const uint32_t offset) {
+    textlist_offset_ = offset;
+  }
 
   /**
    * Get the offset to the given bin in the 5x5 grid, the bins contain
@@ -357,7 +405,9 @@ public:
    * @param  row of the grid
    * @return the begin and end offset in the list of edge ids
    */
-  std::pair<uint32_t, uint32_t> bin_offset(size_t column, size_t row) const;
+  std::pair<uint32_t, uint32_t> bin_offset(size_t column, size_t row) const {
+    return bin_offset(row * kBinsDim + column);
+  }
 
   /**
    * Get the offset to the given bin in the 5x5 grid, the bins contain
@@ -385,7 +435,9 @@ public:
    * Sets the number of traffic segment Ids in this tile.
    * @param  count   The number of traffic segment Ids.
    */
-  void set_traffic_id_count(const uint32_t count);
+  void set_traffic_id_count(const uint32_t count) {
+    traffic_id_count_ = count;
+  }
 
   /**
    * Gets the flag indicating whether this tile includes edge elevation data.
@@ -415,7 +467,9 @@ public:
    * Sets the offset to the traffic segment Ids.
    * @param offset Offset in bytes to the start of the traffic segment Ids.
    */
-  void set_traffic_segmentid_offset(const uint32_t offset);
+  void set_traffic_segmentid_offset(const uint32_t offset) {
+    traffic_segmentid_offset_ = offset;
+  }
 
   /**
    * Gets the offset to the traffic chunks. Chunks occur when an edge
@@ -431,7 +485,9 @@ public:
    * Sets the offset to the traffic chunks.
    * @param offset Offset in bytes to the start of the traffic chunks.
    */
-  void set_traffic_chunk_offset(const uint32_t offset);
+  void set_traffic_chunk_offset(const uint32_t offset) {
+    traffic_chunk_offset_ = offset;
+  }
 
   /**
    * Gets the offset to the lane connectivity data.
@@ -445,7 +501,9 @@ public:
    * Sets the offset to the lane connectivity data.
    * @param offset Offset in bytes to the start of the lane connectivity data.
    */
-  void set_lane_connectivity_offset(const uint32_t offset);
+  void set_lane_connectivity_offset(const uint32_t offset) {
+    lane_connectivity_offset_ = offset;
+  }
 
   /**
    * Gets the offset to the edge elevation data.
@@ -459,7 +517,9 @@ public:
    * Sets the offset to the edge elevation data.
    * @param offset Offset in bytes to the start of the edge elevation data.
    */
-  void set_edge_elevation_offset(const uint32_t offset);
+  void set_edge_elevation_offset(const uint32_t offset) {
+    edge_elevation_offset_ = offset;
+  }
 
   /**
    * Gets the offset to the turn lane data.
@@ -529,13 +589,19 @@ public:
    * Get the offset to the end of the tile
    * @return the number of bytes in the tile, unless the last slot is used
    */
-  uint32_t end_offset() const;
+  uint32_t end_offset() const {
+    return empty_slots_[0];
+  }
 
   /**
    * Sets the offset to the end of the tile
    * @param offset the offset in bytes to the end of the tile
    */
-  void set_end_offset(uint32_t offset);
+  void set_end_offset(uint32_t offset) {
+    for (size_t i = 0; i < kEmptySlots; i++) {
+      empty_slots_[i] = offset;
+    }
+  }
 
 protected:
   // GraphId (tileid and level) of this tile
@@ -553,7 +619,8 @@ protected:
   uint64_t speed_quality_ : 4;
   uint64_t exit_quality_ : 4;
   uint64_t predictedspeeds_count_ : 22;
-  uint64_t spare1_ : 26;
+  uint64_t transitioncount_ : 24; // Number of node transitions
+  uint64_t spare1_ : 2;
 
   // Number of transit records
   uint64_t departurecount_ : 24;

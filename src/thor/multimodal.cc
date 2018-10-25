@@ -100,6 +100,7 @@ MultiModalPathAlgorithm::GetBestPath(odin::Location& origin,
                                      GraphReader& graphreader,
                                      const std::shared_ptr<DynamicCost>* mode_costing,
                                      const TravelMode mode) {
+#ifdef TODO_NO_TRANSITIONS
   // For pedestrian costing - set flag allowing use of transit connections
   // Set pedestrian costing to use max distance. TODO - need for other modes
   const auto& pc = mode_costing[static_cast<uint32_t>(TravelMode::kPedestrian)];
@@ -528,6 +529,7 @@ MultiModalPathAlgorithm::GetBestPath(odin::Location& origin,
       adjacencylist_->add(idx);
     }
   }
+#endif
   return {}; // Should never get here
 }
 
@@ -709,6 +711,7 @@ bool MultiModalPathAlgorithm::ExpandFromNode(baldr::GraphReader& graphreader,
   EdgeStatusInfo* es = edgestatus.GetPtr(edgeid, tile);
   const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
   for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++, ++edgeid, ++es) {
+/**
     // Handle transition edges - expand from the end node of the transition
     // (unless this is called from a transition).
     if (directededge->trans_up()) {
@@ -724,7 +727,7 @@ bool MultiModalPathAlgorithm::ExpandFromNode(baldr::GraphReader& graphreader,
       }
       continue;
     }
-
+**/
     // Skip this edge if permanently labeled (best path already found to this directed edge) or
     // access is not allowed for this mode.
     if (es->set() == EdgeSet::kPermanent ||
@@ -766,6 +769,7 @@ bool MultiModalPathAlgorithm::CanReachDestination(const odin::Location& destinat
                                                   GraphReader& graphreader,
                                                   const TravelMode dest_mode,
                                                   const std::shared_ptr<DynamicCost>& costing) {
+#ifdef TODO_NO_TRANSITIONS
   // Assume pedestrian mode for now
   mode_ = dest_mode;
 
@@ -814,6 +818,7 @@ bool MultiModalPathAlgorithm::CanReachDestination(const odin::Location& destinat
       return true;
     }
   }
+#endif
   return false;
 }
 

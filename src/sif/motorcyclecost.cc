@@ -269,8 +269,8 @@ public:
   virtual const EdgeFilter GetEdgeFilter() const {
     // Throw back a lambda that checks the access for this type of costing
     return [](const baldr::DirectedEdge* edge) {
-      if (edge->IsTransition() || edge->is_shortcut() ||
-          !(edge->forwardaccess() & kMotorcycleAccess) || edge->surface() > kMinimumMotorcycleSurface)
+      if (edge->is_shortcut() || !(edge->forwardaccess() & kMotorcycleAccess) ||
+          edge->surface() > kMinimumMotorcycleSurface)
         return 0.0f;
       else {
         // TODO - use classification/use to alter the factor

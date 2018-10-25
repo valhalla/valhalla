@@ -528,18 +528,6 @@ void DirectedEdge::set_superseded(const uint32_t superseded) {
   }
 }
 
-// Set the use indicating this edge represents a transition up one level
-// in the hierarchy.
-void DirectedEdge::set_trans_up() {
-  set_use(Use::kTransitionUp);
-}
-
-// Set the use indicating this edge represents a transition down one level
-// in the hierarchy.
-void DirectedEdge::set_trans_down() {
-  set_use(Use::kTransitionDown);
-}
-
 // Set the flag indicating whether the end node of this directed edge is in
 // a different tile
 void DirectedEdge::set_leaves_tile(const bool leaves_tile) {

@@ -391,7 +391,7 @@ protected:
     // Throw back a lambda that checks the access for this type of costing
     Surface s = worst_allowed_surface_;
     return [s](const baldr::DirectedEdge* edge) {
-      if (edge->IsTransition() || edge->is_shortcut() || !(edge->forwardaccess() & kBicycleAccess) ||
+      if (edge->is_shortcut() || !(edge->forwardaccess() & kBicycleAccess) ||
           edge->use() == Use::kSteps || edge->surface() > s) {
         return 0.0f;
       } else {

@@ -119,22 +119,6 @@ void BidirectionalAStar::ExpandForward(GraphReader& graphreader,
   EdgeStatusInfo* es = edgestatus_forward_.GetPtr(edgeid, tile);
   const DirectedEdge* directededge = tile->directededge(edgeid);
   for (uint32_t i = 0; i < nodeinfo->edge_count(); ++i, ++directededge, ++edgeid, ++es) {
-    // Handle transition edges - expand from the end node of the transition
-    // (unless this is called from a transition).
-    if (directededge->trans_up()) {
-      if (!from_transition) {
-        hierarchy_limits_forward_[node.level()].up_transition_count++;
-        ExpandForward(graphreader, directededge->endnode(), pred, pred_idx, true);
-      }
-      continue;
-    } else if (directededge->trans_down()) {
-      if (!from_transition &&
-          !hierarchy_limits_forward_[directededge->endnode().level()].StopExpanding()) {
-        ExpandForward(graphreader, directededge->endnode(), pred, pred_idx, true);
-      }
-      continue;
-    }
-
     // Skip shortcut edges until we have stopped expanding on the next level. Use regular
     // edges while still expanding on the next level since we can still transition down to
     // that level. If using a shortcut, set the shortcuts mask. Skip if this is a regular
@@ -198,6 +182,19 @@ void BidirectionalAStar::ExpandForward(GraphReader& graphreader,
     adjacencylist_forward_->add(idx);
     *es = {EdgeSet::kTemporary, idx};
   }
+
+  // Handle transitions - expand from the end node of each transition
+  if (!from_transition && nodeinfo->transition_count() > 0) {
+    const NodeTransition* trans = tile->transition(nodeinfo->transition_index());
+    for (uint32_t i = 0; i < nodeinfo->transition_count(); ++i, ++trans) {
+      if (trans->up()) {
+        hierarchy_limits_forward_[node.level()].up_transition_count++;
+        ExpandForward(graphreader, trans->endnode(), pred, pred_idx, true);
+      } else if (!hierarchy_limits_forward_[trans->endnode().level()].StopExpanding()) {
+        ExpandForward(graphreader, trans->endnode(), pred, pred_idx, true);
+      }
+    }
+  }
 }
 
 // Expand from a node in reverse direction.
@@ -224,22 +221,6 @@ void BidirectionalAStar::ExpandReverse(GraphReader& graphreader,
   EdgeStatusInfo* es = edgestatus_reverse_.GetPtr(edgeid, tile);
   const DirectedEdge* directededge = tile->directededge(edgeid);
   for (uint32_t i = 0; i < nodeinfo->edge_count(); ++i, ++directededge, ++edgeid, ++es) {
-    // Handle transition edges - expand from the end not of the transition
-    // unless this is called from a transition.
-    if (directededge->trans_up()) {
-      if (!from_transition) {
-        hierarchy_limits_reverse_[node.level()].up_transition_count++;
-        ExpandReverse(graphreader, directededge->endnode(), pred, pred_idx, opp_pred_edge, true);
-      }
-      continue;
-    } else if (directededge->trans_down()) {
-      if (!from_transition &&
-          !hierarchy_limits_reverse_[directededge->endnode().level()].StopExpanding()) {
-        ExpandReverse(graphreader, directededge->endnode(), pred, pred_idx, opp_pred_edge, true);
-      }
-      continue;
-    }
-
     // Skip shortcut edges until we have stopped expanding on the next level. Use regular
     // edges while still expanding on the next level since we can still transition down to
     // that level. If using a shortcut, set the shortcuts mask. Skip if this is a regular
@@ -309,6 +290,19 @@ void BidirectionalAStar::ExpandReverse(GraphReader& graphreader,
                                      (pred.not_thru_pruning() || !directededge->not_thru()));
     adjacencylist_reverse_->add(idx);
     *es = {EdgeSet::kTemporary, idx};
+  }
+
+  // Handle transitions - expand from the end node of each transition
+  if (!from_transition && nodeinfo->transition_count() > 0) {
+    const NodeTransition* trans = tile->transition(nodeinfo->transition_index());
+    for (uint32_t i = 0; i < nodeinfo->transition_count(); ++i, ++trans) {
+      if (trans->up()) {
+        hierarchy_limits_reverse_[node.level()].up_transition_count++;
+        ExpandReverse(graphreader, trans->endnode(), pred, pred_idx, opp_pred_edge, true);
+      } else if (!hierarchy_limits_reverse_[trans->endnode().level()].StopExpanding()) {
+        ExpandReverse(graphreader, trans->endnode(), pred, pred_idx, opp_pred_edge, true);
+      }
+    }
   }
 }
 

@@ -486,7 +486,6 @@ int main(int argc, char** argv) {
   // Iterate through the tiles
   int shortcuts_with_speed = 0;
   int non_dr_with_speed = 0;
-  int trans_with_speed = 0;
   std::vector<uint32_t> dr_class_edges_links(8);
   std::vector<uint32_t> dr_road_class_edges(8);
   std::vector<uint32_t> pred_road_class_edges(8);
@@ -505,10 +504,7 @@ int main(int argc, char** argv) {
         if (de->is_shortcut() && de->free_flow_speed() > 0) {
           shortcuts_with_speed++;
         }
-        if (de->IsTransition() && de->free_flow_speed() > 0) {
-          trans_with_speed++;
-        }
-        if (de->is_shortcut() || de->IsTransition()) {
+        if (de->is_shortcut()) {
           continue;
         }
         if ((de->forwardaccess() & kAutoAccess)) {

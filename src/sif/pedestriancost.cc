@@ -346,7 +346,7 @@ public:
     auto access_mask = access_mask_;
     auto max_sac_scale = max_hiking_difficulty_;
     return [access_mask, max_sac_scale](const baldr::DirectedEdge* edge) {
-      return !(edge->IsTransition() || edge->is_shortcut() || edge->use() >= Use::kRail ||
+      return !(edge->is_shortcut() || edge->use() >= Use::kRail ||
                edge->sac_scale() > max_sac_scale || !(edge->forwardaccess() & access_mask));
     };
   }
