@@ -7,8 +7,8 @@ using namespace std;
 using namespace valhalla::baldr;
 using namespace valhalla::midgard;
 
-// Expected size is 32 bytes.
-constexpr size_t kNodeInfoExpectedSize = 32;
+// Expected size is 32 bytes. (NOTE - first iteration for V3 leaves this struct at 40 bytes)
+constexpr size_t kNodeInfoExpectedSize = 40;
 
 namespace {
 
