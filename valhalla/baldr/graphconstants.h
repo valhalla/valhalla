@@ -201,7 +201,7 @@ inline std::string to_string(NodeType n) {
 }
 
 // Intersection types. Classifications of various intersections.
-// Maximum value = 31 (DO NOT EXCEED!)
+// Maximum value = 15 (DO NOT EXCEED!)
 enum class IntersectionType : uint8_t {
   kRegular = 0, // Regular, unclassified intersection
   kFalse = 1,   // False intersection. Only 2 edges connect. Typically
