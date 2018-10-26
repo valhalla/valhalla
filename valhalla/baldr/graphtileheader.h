@@ -15,7 +15,7 @@ namespace baldr {
 // something to the tile simply subtract one from this number and add it
 // just before the empty_slots_ array below. NOTE that it can ONLY be an
 // offset in bytes and NOT a bitfield or union or anything of that sort
-constexpr size_t kEmptySlots = 11;
+constexpr size_t kEmptySlots = 12;
 
 // Maximum size of the version string (stored as a fixed size
 // character array so the GraphTileHeader size remains fixed).
@@ -442,22 +442,6 @@ public:
   void set_edge_bin_offsets(const uint32_t (&offsets)[baldr::kBinCount]);
 
   /**
-   * Gets the number of traffic segment Ids in this tile.
-   * @return  Returns the number of traffic segment Ids.
-   */
-  uint32_t traffic_id_count() const {
-    return traffic_id_count_;
-  }
-
-  /**
-   * Sets the number of traffic segment Ids in this tile.
-   * @param  count   The number of traffic segment Ids.
-   */
-  void set_traffic_id_count(const uint32_t count) {
-    traffic_id_count_ = count;
-  }
-
-  /**
    * Gets the flag indicating whether this tile includes edge elevation data.
    * @return  Returns true if this tile includes edge elevation data.
    */
@@ -471,40 +455,6 @@ public:
    */
   void set_has_edge_elevation(const bool elev) {
     has_edge_elevation_ = elev;
-  }
-
-  /**
-   * Gets the offset to the traffic segment Ids.
-   * @return  Returns the number of bytes to offset to the traffic segment Ids.
-   */
-  uint32_t traffic_segmentid_offset() const {
-    return traffic_segmentid_offset_;
-  }
-
-  /**
-   * Sets the offset to the traffic segment Ids.
-   * @param offset Offset in bytes to the start of the traffic segment Ids.
-   */
-  void set_traffic_segmentid_offset(const uint32_t offset) {
-    traffic_segmentid_offset_ = offset;
-  }
-
-  /**
-   * Gets the offset to the traffic chunks. Chunks occur when an edge
-   * is associated to more than one traffic segment. Chunks store lists of
-   * segment Ids and "weights".
-   * @return  Returns the number of bytes to offset to the traffic chunks.
-   */
-  uint32_t traffic_chunk_offset() const {
-    return traffic_chunk_offset_;
-  }
-
-  /**
-   * Sets the offset to the traffic chunks.
-   * @param offset Offset in bytes to the start of the traffic chunks.
-   */
-  void set_traffic_chunk_offset(const uint32_t offset) {
-    traffic_chunk_offset_ = offset;
   }
 
   /**
@@ -652,10 +602,9 @@ protected:
   // Number of transit transfers and number of traffic segment Ids (
   // generally the same as the number of directed edges but can be 0)
   uint64_t transfercount_ : 16;
-  uint64_t traffic_id_count_ : 24;
   uint64_t has_edge_elevation_ : 1;
   uint64_t turnlane_count_ : 22;
-  uint64_t spare2_ : 1;
+  uint64_t spare2_ : 25;
 
   // Date the tile was created. Days since pivot date.
   uint32_t date_created_;
@@ -675,13 +624,6 @@ protected:
 
   // Offsets for each bin of the 5x5 grid (for search/lookup)
   uint32_t bin_offsets_[kBinCount];
-
-  // Offset to beginning of the traffic segment associations.
-  uint32_t traffic_segmentid_offset_;
-
-  // Offset to the beginning of traffic segment "chunks". Chunks occur when an
-  // edge maps to more than one traffic segment.
-  uint32_t traffic_chunk_offset_;
 
   // Offset to beginning of the lane connectivity data
   uint32_t lane_connectivity_offset_;

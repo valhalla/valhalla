@@ -44,9 +44,8 @@ GraphTile::GraphTile()
       signs_(nullptr), admins_(nullptr), edge_bins_(nullptr), complex_restriction_forward_(nullptr),
       complex_restriction_reverse_(nullptr), edgeinfo_(nullptr), textlist_(nullptr),
       complex_restriction_forward_size_(0), complex_restriction_reverse_size_(0), edgeinfo_size_(0),
-      textlist_size_(0), traffic_segments_(nullptr), traffic_chunks_(nullptr), traffic_chunk_size_(0),
-      lane_connectivity_(nullptr), lane_connectivity_size_(0), edge_elevation_(nullptr),
-      turnlanes_(nullptr) {
+      textlist_size_(0), lane_connectivity_(nullptr), lane_connectivity_size_(0),
+      edge_elevation_(nullptr), turnlanes_(nullptr) {
 }
 
 // Constructor given a filename. Reads the graph data into memory.
@@ -219,16 +218,7 @@ void GraphTile::Initialize(const GraphId& graphid, char* tile_ptr, const size_t 
 
   // Start of text list and its size
   textlist_ = tile_ptr + header_->textlist_offset();
-  textlist_size_ = header_->traffic_segmentid_offset() - header_->textlist_offset();
-
-  // Start of the traffic segment association records
-  traffic_segments_ =
-      reinterpret_cast<TrafficAssociation*>(tile_ptr + header_->traffic_segmentid_offset());
-
-  // Start of traffic chunks and their size
-  // TODO - update chunk definition...
-  traffic_chunks_ = reinterpret_cast<TrafficChunk*>(tile_ptr + header_->traffic_chunk_offset());
-  traffic_chunk_size_ = header_->lane_connectivity_offset() - header_->traffic_chunk_offset();
+  textlist_size_ = header_->lane_connectivity_offset() - header_->textlist_offset();
 
   // Start of lane connections and their size
   lane_connectivity_ =
@@ -924,51 +914,6 @@ midgard::iterable_t<GraphId> GraphTile::GetBin(size_t column, size_t row) const 
 midgard::iterable_t<GraphId> GraphTile::GetBin(size_t index) const {
   auto offsets = header_->bin_offset(index);
   return iterable_t<GraphId>{edge_bins_ + offsets.first, edge_bins_ + offsets.second};
-}
-
-std::vector<TrafficSegment> GraphTile::GetTrafficSegments(const GraphId& edge) const {
-  if (edge.Tile_Base() != header_->graphid()) {
-    throw std::runtime_error("Wrong tile for edge id");
-  }
-  return GetTrafficSegments(edge.id());
-}
-
-// Get traffic segment(s) associated to this edge.
-std::vector<TrafficSegment> GraphTile::GetTrafficSegments(const uint32_t idx) const {
-  if (idx < header_->traffic_id_count()) {
-    const TrafficAssociation& t = traffic_segments_[idx];
-    // normal ots's
-    if (!t.chunk()) {
-      // single association should always be 1 segment
-      if (t.count() != 1) {
-        return {};
-      }
-      // return the one
-      GraphId segment_id = {header_->graphid().tileid(), header_->graphid().level(), t.id()};
-      TrafficSegment seg(segment_id, 0.0f, 1.0f, t.starts_segment(), t.ends_segment());
-      return {seg};
-    } // chunked ots's
-    else {
-      // This edge associates to more than 1 segment (or the segment is in
-      // a different tile. Get traffic chunks.
-      auto c = t.GetChunkCountAndIndex();
-      TrafficChunk* chunk = &traffic_chunks_[c.second];
-      std::vector<TrafficSegment> segments;
-      for (uint32_t i = 0; i < c.first; i++, chunk++) {
-        segments.emplace_back(chunk->segment_id(), chunk->begin_percent(), chunk->end_percent(),
-                              chunk->starts_segment(), chunk->ends_segment());
-      }
-      return segments;
-    }
-  } // Tile does not contain traffic
-  else if (header_->traffic_id_count() == 0) {
-    return {};
-  }
-  // you were out of bounds
-  throw std::runtime_error("GraphTile GetTrafficSegments index out of bounds: " +
-                           std::to_string(header_->graphid().tileid()) + "," +
-                           std::to_string(header_->graphid().level()) + "," + std::to_string(idx) +
-                           " traffic Id count= " + std::to_string(header_->traffic_id_count()));
 }
 
 // Get turn lanes for this edge.

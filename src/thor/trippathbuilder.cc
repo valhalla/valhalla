@@ -1549,19 +1549,6 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const AttributesController& controll
     trip_edge->set_truck_route(true);
   }
 
-  // Traffic segments
-  if (controller.attributes.at(kEdgeTrafficSegments)) {
-    auto segments = graphtile->GetTrafficSegments(edge);
-    for (const auto& segment : segments) {
-      TripPath_TrafficSegment* traffic_segment = trip_edge->add_traffic_segment();
-      traffic_segment->set_segment_id(segment.segment_id_);
-      traffic_segment->set_begin_percent(segment.begin_percent_);
-      traffic_segment->set_end_percent(segment.end_percent_);
-      traffic_segment->set_starts_segment(segment.starts_segment_);
-      traffic_segment->set_ends_segment(segment.ends_segment_);
-    }
-  }
-
   /////////////////////////////////////////////////////////////////////////////
   // Process transit information
   if (trip_id && (directededge->use() == Use::kRail || directededge->use() == Use::kBus)) {

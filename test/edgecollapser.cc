@@ -19,7 +19,11 @@ namespace vb = valhalla::baldr;
 namespace {
 
 struct graph_tile_builder {
-  void append_node(valhalla::midgard::PointLL& base_ll, float lon, float lat, uint32_t edge_count, uint32_t first_edge) {
+  void append_node(valhalla::midgard::PointLL& base_ll,
+                   float lon,
+                   float lat,
+                   uint32_t edge_count,
+                   uint32_t first_edge) {
     nodes.push_back(vb::NodeInfo(base_ll, std::make_pair(lon, lat), vb::RoadClass::kResidential,
                                  vb::kAllAccess, vb::NodeType::kStreetIntersection, false));
     nodes.back().set_edge_count(edge_count);

@@ -286,7 +286,7 @@ struct node_collector {
       const auto& node = m_cache.node(node_id);
 
       // node is in this tile, so add it to the collection
-      m_nodes.push_back(node_id,  m_cache.node_ll(node_id));
+      m_nodes.push_back(node_id, m_cache.node_ll(node_id));
     }
     // node is not in this tile, so save it for later
     else {

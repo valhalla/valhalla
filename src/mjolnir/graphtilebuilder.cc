@@ -301,15 +301,9 @@ void GraphTileBuilder::StoreTileData() {
       in_mem.write("\0\0\0\0\0\0\0\0", padding);
     }
 
-    // At this point there is no traffic segment data, so set traffic segment
-    // Id offset and chunk offset to same value
-    header_builder_.set_traffic_id_count(0);
-    header_builder_.set_traffic_segmentid_offset(header_builder_.textlist_offset() +
-                                                 text_list_offset_ + padding);
-    header_builder_.set_traffic_chunk_offset(header_builder_.traffic_segmentid_offset());
-
     // Write lane connections
-    header_builder_.set_lane_connectivity_offset(header_builder_.traffic_chunk_offset());
+    header_builder_.set_lane_connectivity_offset(header_builder_.textlist_offset() +
+                                                 text_list_offset_ + padding);
     std::sort(lane_connectivity_builder_.begin(), lane_connectivity_builder_.end());
     in_mem.write(reinterpret_cast<const char*>(lane_connectivity_builder_.data()),
                  lane_connectivity_builder_.size() * sizeof(LaneConnectivity));
@@ -875,8 +869,6 @@ void GraphTileBuilder::AddBins(const std::string& tile_dir,
   header.set_complex_restriction_reverse_offset(header.complex_restriction_reverse_offset() + shift);
   header.set_edgeinfo_offset(header.edgeinfo_offset() + shift);
   header.set_textlist_offset(header.textlist_offset() + shift);
-  header.set_traffic_segmentid_offset(header.traffic_segmentid_offset() + shift);
-  header.set_traffic_chunk_offset(header.traffic_chunk_offset() + shift);
   header.set_lane_connectivity_offset(header.lane_connectivity_offset() + shift);
   header.set_edge_elevation_offset(header.edge_elevation_offset() + shift);
   header.set_turnlane_offset(header.turnlane_offset() + shift);
@@ -907,166 +899,6 @@ void GraphTileBuilder::AddBins(const std::string& tile_dir,
   } // failed
   else {
     throw std::runtime_error("Failed to open file " + filename.string());
-  }
-}
-
-// Initialize traffic segment association. Sizes the traffic segment Id list
-// and sets them all to Invalid.
-void GraphTileBuilder::InitializeTrafficSegments() {
-  if (header_->traffic_id_count()) {
-    traffic_segment_builder_.assign(traffic_segments_,
-                                    traffic_segments_ + header_->traffic_id_count());
-  } else {
-    traffic_segment_builder_.resize(header_builder_.directededgecount());
-  }
-}
-
-// Initialize traffic chunks. Copies existing chunks into the chunk builder.
-// This is executed before adding "leftovers" and again before adding chunks.
-void GraphTileBuilder::InitializeTrafficChunks() {
-  // Assign the chunks to its builder counterpart
-  if (traffic_chunk_size_ > 0) {
-    size_t count = traffic_chunk_size_ / sizeof(TrafficChunk);
-    traffic_chunk_builder_.assign(traffic_chunks_, traffic_chunks_ + count);
-  }
-}
-
-// Add a traffic segment association - used when an edge associates to
-// a single traffic segment.
-void GraphTileBuilder::AddTrafficSegment(const GraphId& edgeid, const TrafficChunk& seg) {
-  // Check if edge Id is within range and part of this tile
-  if (edgeid.Tile_Base() != header_builder_.graphid()) {
-    LOG_ERROR("AddTrafficSegments - edge does not belong to this tile");
-    return;
-  }
-  if (edgeid.id() >= header_builder_.directededgecount()) {
-    LOG_ERROR("AddTrafficSegments - edge is not valid for this tile");
-    return;
-  }
-
-  // If this segment is in the same tile we have a 1:1 association of an edge
-  // to a segment in this tile - create a single segment association
-  if (seg.segment_id().Tile_Base() == edgeid.Tile_Base()) {
-    traffic_segment_builder_[edgeid.id()] = {seg.segment_id().id(), seg.starts_segment(),
-                                             seg.ends_segment()};
-  } else {
-    // Associates to a single traffic segment but in a different tile. Set
-    // the TrafficAssociation to represent a chunk count (1) and index. Store
-    // a single TrafficChunk.
-    traffic_segment_builder_[edgeid.id()] = {1, traffic_chunk_builder_.size()};
-    traffic_chunk_builder_.emplace_back(seg);
-  }
-}
-
-// Add a traffic segment association - used when an edge associates to
-// more than one traffic segment.
-void GraphTileBuilder::AddTrafficSegments(const baldr::GraphId& edgeid,
-                                          const std::vector<baldr::TrafficChunk>& segs) {
-  // Check if edge Id is within range and part of this tile
-  if (edgeid.Tile_Base() != header_builder_.graphid()) {
-    LOG_ERROR("AddTrafficSegments - edge does not belong to this tile");
-    return;
-  }
-  if (edgeid.id() >= header_builder_.directededgecount()) {
-    LOG_ERROR("AddTrafficSegments - edge is not valid for this tile");
-    return;
-  }
-
-  // This edge associates to many segments or portions of segments.
-  // Set the TrafficAssociation to represent a chunk count and index.
-  // Store each TrafficChunk.
-  traffic_segment_builder_[edgeid.id()] = {segs.size(), traffic_chunk_builder_.size()};
-  for (const auto& seg : segs) {
-    traffic_chunk_builder_.push_back(seg);
-  }
-}
-
-/**
- * Updates a tile with traffic segment and chunk data. UpdateTrafficSegments
- * is called 3 times - first to add segments within the tile, then to add any
- * "leftover" segments for OSMLR segments that cross tiles, and then to add
- * "chunks". Need to make sure the "shift" for offsets to data after the
- * traffic information are only increased by the amount of "new" segments.
- */
-void GraphTileBuilder::UpdateTrafficSegments(const bool update_dir_edges) {
-  // Get the number of new segments and chunks added with this call.
-  uint32_t new_segments = traffic_segment_builder_.size() - header_->traffic_id_count();
-  uint32_t new_chunks =
-      traffic_chunk_builder_.size() -
-      (header_->lane_connectivity_offset() - header_->traffic_chunk_offset()) / sizeof(TrafficChunk);
-
-  // Update header to include the traffic segment count and update the
-  // offset to chunks (based on size of traffic segments).
-  // Padding should already be done so we start traffic info on an 8-byte boundary
-  header_builder_.set_traffic_id_count(traffic_segment_builder_.size());
-  header_builder_.set_traffic_chunk_offset(header_builder_.traffic_segmentid_offset() +
-                                           traffic_segment_builder_.size() *
-                                               sizeof(TrafficAssociation));
-
-  // Shift offsets to anything that comes after traffic
-  uint32_t shift = new_segments * sizeof(TrafficAssociation) + new_chunks * sizeof(TrafficChunk);
-  header_builder_.set_lane_connectivity_offset(header_builder_.lane_connectivity_offset() + shift);
-  header_builder_.set_edge_elevation_offset(header_builder_.edge_elevation_offset() + shift);
-  header_builder_.set_end_offset(header_builder_.end_offset() + shift);
-
-  // Get the name of the file
-  boost::filesystem::path filename = tile_dir_ + filesystem::path::preferred_separator +
-                                     GraphTile::FileSuffix(header_builder_.graphid());
-
-  // Make sure the directory exists on the system
-  if (!boost::filesystem::exists(filename.parent_path())) {
-    boost::filesystem::create_directories(filename.parent_path());
-  }
-
-  // Open file and truncate
-  std::ofstream file(filename.c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
-  if (file.is_open()) {
-    // Write a new header
-    file.write(reinterpret_cast<const char*>(&header_builder_), sizeof(GraphTileHeader));
-
-    // Copy the tile contents from nodes to the beginning of traffic segments
-    file.write(reinterpret_cast<const char*>(nodes_),
-               header_->traffic_segmentid_offset() - sizeof(GraphTileHeader));
-
-    // Append the traffic segment list
-    file.write(reinterpret_cast<const char*>(traffic_segment_builder_.data()),
-               traffic_segment_builder_.size() * sizeof(TrafficAssociation));
-
-    // Append the traffic chunks
-    file.write(reinterpret_cast<const char*>(traffic_chunk_builder_.data()),
-               traffic_chunk_builder_.size() * sizeof(TrafficChunk));
-
-    // Write rest of the stuff after traffic chunks (includes lane connectivity
-    // and edge elevation, turn lanes, ...so far).
-    const auto* begin = reinterpret_cast<const char*>(header_) + header_->lane_connectivity_offset();
-    const auto* end = reinterpret_cast<const char*>(header_) + header_->end_offset();
-    file.write(begin, end - begin);
-
-    // Update directed edge flags
-    if (update_dir_edges) {
-      // Copy directed edges so we can modify them
-      uint32_t n = header_->directededgecount();
-      directededges_builder_.reserve(n);
-      std::copy(directededges_, directededges_ + n, std::back_inserter(directededges_builder_));
-
-      // Iterate through directed edges and set traffic segment flag for aby
-      // that have any traffic segments.
-      for (uint32_t i = 0; i < n; i++) {
-        const TrafficAssociation& t = traffic_segment_builder_[i];
-        if (t.chunk() || t.count() == 1) {
-          directededges_builder_[i].set_traffic_seg(true);
-        }
-      }
-
-      // Write the updated directed edges
-      size_t offset = sizeof(GraphTileHeader) + header_->nodecount() * sizeof(NodeInfo);
-      file.seekp(offset, std::ios_base::beg);
-      file.write(reinterpret_cast<const char*>(directededges_builder_.data()),
-                 directededges_builder_.size() * sizeof(DirectedEdge));
-    }
-
-    // Close the file
-    file.close();
   }
 }
 
