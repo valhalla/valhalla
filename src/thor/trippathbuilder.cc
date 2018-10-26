@@ -479,8 +479,9 @@ void AddTransitNodes(TripPath_Node* trip_node,
       odin::LatLng* stop_ll = transit_station_info->mutable_ll();
       // Set transit stop lat/lon if requested
       if (controller.attributes.at(kNodeTransitStationInfoLatLon)) {
-        stop_ll->set_lat(node->latlng().lat());
-        stop_ll->set_lng(node->latlng().lng());
+        PointLL ll = node->latlng(start_tile->header()->base_ll());
+        stop_ll->set_lat(ll.lat());
+        stop_ll->set_lng(ll.lng());
       }
     }
   }
@@ -506,8 +507,9 @@ void AddTransitNodes(TripPath_Node* trip_node,
       odin::LatLng* stop_ll = transit_egress_info->mutable_ll();
       // Set transit stop lat/lon if requested
       if (controller.attributes.at(kNodeTransitEgressInfoLatLon)) {
-        stop_ll->set_lat(node->latlng().lat());
-        stop_ll->set_lng(node->latlng().lng());
+        PointLL ll = node->latlng(start_tile->header()->base_ll());
+        stop_ll->set_lat(ll.lat());
+        stop_ll->set_lng(ll.lng());
       }
     }
   }
@@ -896,8 +898,9 @@ TripPathBuilder::Build(const AttributesController& controller,
         odin::LatLng* stop_ll = transit_platform_info->mutable_ll();
         // Set transit stop lat/lon if requested
         if (controller.attributes.at(kNodeTransitPlatformInfoLatLon)) {
-          stop_ll->set_lat(node->latlng().lat());
-          stop_ll->set_lng(node->latlng().lng());
+          PointLL ll = node->latlng(start_tile->header()->base_ll());
+          stop_ll->set_lat(ll.lat());
+          stop_ll->set_lng(ll.lng());
         }
       }
 

@@ -539,8 +539,10 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
         n_access &= ~s_access->second;
       }
 
-      NodeInfo station_node(station_ll, RoadClass::kServiceOther, n_access, NodeType::kTransitStation,
-                            false);
+      // Set the station lat,lon using the tile base LL
+      PointLL base_ll = tilebuilder_transit.header()->base_ll();
+      NodeInfo station_node(base_ll, station_ll, RoadClass::kServiceOther, n_access,
+                            NodeType::kTransitStation, false);
       station_node.set_stop_index(station_pbf_id.id());
 
       const std::string& tz = station.has_timezone() ? station.timezone() : "";
@@ -604,8 +606,10 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
           }
         }
 
-        NodeInfo egress_node(egress_ll, RoadClass::kServiceOther, n_access, NodeType::kTransitEgress,
-                             false);
+        // Set the egress lat,lon using the tile base LL
+        PointLL base_ll = tilebuilder_transit.header()->base_ll();
+        NodeInfo egress_node(base_ll, egress_ll, RoadClass::kServiceOther, n_access,
+                             NodeType::kTransitEgress, false);
         egress_node.set_stop_index(index);
         egress_node.set_timezone(timezone);
         egress_node.set_edge_index(tilebuilder_transit.directededges().size());
@@ -782,7 +786,9 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
       }
     }
 
-    NodeInfo platform_node(platform_ll, RoadClass::kServiceOther, n_access,
+    // Set the platform lat,lon using the tile base LL
+    PointLL base_ll = tilebuilder_transit.header()->base_ll();
+    NodeInfo platform_node(base_ll, platform_ll, RoadClass::kServiceOther, n_access,
                            NodeType::kMultiUseTransitPlatform, false);
     platform_node.set_mode_change(true);
     platform_node.set_stop_index(platform_index);
@@ -990,6 +996,10 @@ void build_tiles(const boost::property_tree::ptree& pt,
     uint32_t tile_creation_date =
         DateTime::days_from_pivot_date(DateTime::get_formatted_date(DateTime::iso_date_time(tz)));
     tilebuilder_transit.AddTileCreationDate(tile_creation_date);
+
+    // Set the tile base LL
+    PointLL base_ll = TileHierarchy::get_tiling(tile_id.level()).Base(tile_id.tileid());
+    tilebuilder_transit.header_builder().set_base_ll(base_ll);
 
     lock.unlock();
 

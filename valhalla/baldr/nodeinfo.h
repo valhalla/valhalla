@@ -8,8 +8,6 @@
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/util.h>
 
-using namespace valhalla::midgard;
-
 namespace valhalla {
 namespace baldr {
 
@@ -18,14 +16,20 @@ class GraphTile;
 constexpr uint32_t kMaxEdgesPerNode = 127;     // Maximum edges per node
 constexpr uint32_t kMaxAdminsPerTile = 4095;   // Maximum Admins per tile
 constexpr uint32_t kMaxTimeZonesPerTile = 511; // Maximum TimeZones index
-constexpr uint32_t kMaxLocalEdgeIndex = 7;     // Max. index of edges on
-                                               // local level
+constexpr uint32_t kMaxLocalEdgeIndex = 7;     // Max. index of edges on local level
+
+// Lat,lon precision (TODO - evaluate using 7 digits precision - which may
+// mean we need double precision)
+constexpr float kDegreesPrecision = 0.000001f;
 
 // Heading shrink factor to reduce max heading of 359 to 255
-constexpr float kHeadingShrinkFactor = (255.f / 359.f);
+constexpr float kHeadingShrinkFactor = (255.0f / 359.0f);
 
 // Heading expand factor to increase max heading of 255 to 359
-constexpr float kHeadingExpandFactor = (359.f / 255.f);
+constexpr float kHeadingExpandFactor = (359.0f / 255.0f);
+
+// Lookup for name continuity
+constexpr uint32_t ContinuityLookup[] = {0, 7, 13, 18, 22, 25, 27};
 
 /**
  * Information held for each node within the graph. The graph uses a forward
@@ -41,13 +45,15 @@ public:
 
   /**
    * Constructor with arguments
-   * @param  ll  Lat,lng position of the node.
+   * @param  tile_corner    Lower left (SW) corner of the tile that contains the node.
+   * @param  ll             Lat,lng position of the node.
    * @param  rc             Best road class / importance of outbound edges.
    * @param  access         Access mask at this node.
    * @param  type           The type of node.
    * @param  traffic_signal Has a traffic signal at this node?
    */
-  NodeInfo(const std::pair<float, float>& ll,
+  NodeInfo(const midgard::PointLL& tile_corner,
+           const std::pair<float, float>& ll,
            const baldr::RoadClass rc,
            const uint32_t access,
            const baldr::NodeType type,
@@ -55,17 +61,20 @@ public:
 
   /**
    * Get the latitude, longitude of the node.
+   * @param tile_corner Lower left (SW) corner of the tile.
    * @return  Returns the latitude and longitude of the node.
    */
-  const PointLL& latlng() const {
-    return static_cast<const PointLL&>(latlng_);
+  midgard::PointLL latlng(const midgard::PointLL& tile_corner) const {
+    return midgard::PointLL(tile_corner.lng() + (lon_offset_ * kDegreesPrecision),
+                   tile_corner.lat() + (lat_offset_ * kDegreesPrecision));
   }
 
   /**
    * Sets the latitude and longitude.
+   * @param  tile_corner Lower left (SW) corner of the tile.
    * @param  ll  Lat,lng position of the node.
    */
-  void set_latlng(const std::pair<float, float>& ll);
+  void set_latlng(const midgard::PointLL& tile_corner, const std::pair<float, float>& ll);
 
   /**
    * Get the index of the first outbound edge from this node. Since
@@ -260,12 +269,13 @@ public:
   void set_traffic_signal(const bool traffic_signal);
 
   /**
-   * Gets the transit stop index. This is used for schedule lookups
-   * and possibly queries to a transit service.
+   * Gets the transit stop index. This is used for schedule lookups.
+   * NOTE - this uses the transition_index_ field which is not used for transit level
+   * data. Transit stops connect to the road network with Transit Connection edges.
    * @return  Returns the transit stop index.
    */
   uint32_t stop_index() const {
-    return stop_.stop_index;
+    return transition_index_;
   }
 
   /**
@@ -282,7 +292,19 @@ public:
    * @return  Returns true if names are consistent, false if not (or if from
    *          or to index exceeds max).
    */
-  bool name_consistency(const uint32_t from, const uint32_t to) const;
+  bool name_consistency(const uint32_t from, const uint32_t to) const {
+    if (from == to) {
+      return true;
+    } else if (from < to) {
+      return (to > kMaxLocalEdgeIndex)
+                 ? false
+                 : (name_consistency_ & 1 << (ContinuityLookup[from] + (to - from - 1)));
+    } else {
+      return (from > kMaxLocalEdgeIndex)
+                 ? false
+                 : (name_consistency_ & 1 << (ContinuityLookup[to] + (from - to - 1)));
+    }
+  }
 
   /**
    * Set the name consistency between a pair of local edges. This is limited
@@ -362,43 +384,90 @@ public:
   json::MapPtr json(const GraphTile* tile) const;
 
 protected:
-  // Latitude, longitude position of the node.
-  std::pair<float, float> latlng_;
+  // Organize into 32-bit words. The structure will align to 4 byte boundaries.
+  // TODO - this is true if/when we move the WayHeading data member to another structure.
 
-  // Connectivity to edges
-  uint32_t edge_index_ : 21;      // Index within the node's tile of its
-                                  // first outbound directed edge
-  uint32_t edge_count_ : 7;       // Number of outbound edges (on this level)
-  uint32_t local_edge_count_ : 3; // # of regular edges across all levels
-                                  // (up to kMaxLocalEdgeIndex+1)
-  uint32_t mode_change_ : 1;      // Mode change allowed?
+  // 26 bits for lat,lon offset allows 7 digit precision within 4 degree tiles. Note that
+  // this would require using double precision to actually achieve this precision.
+  uint64_t lat_offset_ : 26; // Latitude offset from tile base latitude
+  uint64_t lon_offset_ : 26; // Longitude offset from tile base longitude
+  uint64_t access_ : 12;     // Access through the node - bit field
 
-  // Access information
-  uint32_t access_ : 12;      // Access through the node - bit field
-  uint32_t timezone_ : 9;     // Time zone
-  uint32_t intersection_ : 5; // Intersection type
-  uint32_t type_ : 4;         // NodeType, see graphconstants
+  uint64_t edge_index_ : 21;    // Index within the node's tile of its first outbound directed edge
+  uint64_t edge_count_ : 7;     // Number of outbound edges (on this level)
+  uint64_t timezone_ : 9;       // Time zone
+  uint64_t intersection_ : 5;   // Intersection type (TODO - change to 4 bits)
+  uint64_t type_ : 4;               // NodeType, see graphconstants
+  uint64_t density_ : 4;            // Relative road density
+  uint64_t traffic_signal_ : 1; // Traffic signal
+  uint64_t mode_change_ : 1;    // Mode change allowed?
+  uint64_t spare1_: 12;
 
+  uint64_t transition_index_ : 21;  // Index into the node transitions to the first transition
+                                    // (used to store transit stop index for transit level)
+  uint64_t transition_count_ : 3;  // Number of transitions from this node
+  uint64_t spare2_ : 40;
+
+  // Candidates to move....
+  uint64_t name_consistency_ : 32;  // Name consistency between edges
+  uint64_t admin_index_ : 12;       // Index into this tile's admin data list
+  uint64_t local_driveability_ : 16; // Driveability for regular edges (up to
+                                     // kMaxLocalEdgeIndex+1 edges)
+  uint64_t local_edge_count_ : 3;    // # of regular edges across all levels
+                                     // (up to kMaxLocalEdgeIndex+1)
+  uint64_t spare3_ : 1;
+
+  // TODO - consider moving name_consistency_ to DirectedEdge.
+  // Transit stop could be shared with transition index (since transit connects to the road
+  // network via transit connection edges)
+
+
+/**
+  // Organize into 32-bit words. The structure will align to 4 byte boundaries.
+  // TODO - this is true if/when we move the WayHeading data member to another structure.
+
+  // 26 bits for lat,lon offset allows 7 digit precision within 4 degree tiles. Note that
+  // this would require using double precision to actually achieve this precision.
+
+  uint32_t lat_offset_ : 26;    // Latitude offset from tile base latitude
+  uint32_t type_ : 4;           // NodeType, see graphconstants
   uint32_t traffic_signal_ : 1; // Traffic signal
-  uint32_t spare0_ : 1;
+  uint32_t mode_change_ : 1;    // Mode change allowed?
 
-  // Transitions between nodes on different hierarchy levels
-  uint32_t transition_index_ : 21; // Index into the node transitions to the
-                                   // first transition
-  uint32_t transition_count_ : 3;  // Number of transitions from this node
-  uint32_t density_ : 4;           // Relative road density
-  uint32_t spare1_ : 4;
+  uint32_t lon_offset_ : 26; // Longitude offset from tile base longitude
+  uint32_t density_ : 4;     // Relative road density
+  uint32_t spare1_ : 2;
 
-  // Transit stop index (for transit level) / name consistency for all
-  // other levels
-  union NodeStop {
-    uint32_t stop_index;
-    uint32_t name_consistency;
-  };
-  NodeStop stop_;
+  uint32_t edge_index_ : 21;    // Index within the node's tile of its first outbound directed edge
+  uint32_t edge_count_ : 7;     // Number of outbound edges (on this level)
+  uint32_t spare2_ : 4;
+
+  uint32_t access_ : 12;     // Access through the node - bit field
+  uint32_t timezone_ : 9;       // Time zone
+  uint32_t intersection_ : 5;   // Intersection type (TODO - change to 4 bits)
+  uint32_t spare3_ : 6;
+
+  uint32_t transition_index_ : 21;  // Index into the node transitions to the first transition
+                                    // (used to store transit stop index for transit level)
+  uint32_t transition_count_ : 3;   // Number of transitions from this node
+  uint32_t spare4_ : 8;
+
+  // TODO - consider moving name_consistency_ to DirectedEdge.
+  // Transit stop could be shared with transition index (since transit connects to the road
+  // network via transit connection edges)
+  uint32_t name_consistency_;  // Name consistency between edges
 
   // The following data could be split into a separate structure for node data
   // that is NOT required during path finding
+
+  // Admin index and driveability
+  uint32_t local_driveability_ : 16; // Driveability for regular edges (up to
+                                     // kMaxLocalEdgeIndex+1 edges)
+  uint32_t local_edge_count_ : 3;    // # of regular edges across all levels
+                                     // (up to kMaxLocalEdgeIndex+1)
+  uint32_t admin_index_ : 12;        // Index into this tile's admin data list
+  uint32_t spare5_ : 8;
+**/
 
   // Connecting way Id (for transit level) / headings of up to
   // kMaxLocalEdgeIndex+1 local edges (rounded to nearest 2 degrees)
@@ -408,12 +477,6 @@ protected:
     uint64_t headings_;
   };
   WayHeading way_heading_;
-
-  // Admin index and driveability
-  uint64_t local_driveability_ : 16; // Driveability for regular edges (up to
-                                     // kMaxLocalEdgeIndex+1 edges)
-  uint64_t admin_index_ : 12;        // Index into this tile's admin data list
-  uint64_t spare2_ : 36;
 };
 
 } // namespace baldr

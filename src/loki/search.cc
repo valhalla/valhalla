@@ -288,6 +288,7 @@ struct bin_handler_t {
       const auto* node = tile->node(node_id);
       const auto* start_edge = tile->directededge(node->edge_index());
       const auto* end_edge = start_edge + node->edge_count();
+      PointLL node_ll = node->latlng(tile->header()->base_ll());
       for (const auto* edge = start_edge; edge < end_edge; ++edge) {
         // get some info about this edge and the opposing
         GraphId id = tile->id();
@@ -296,9 +297,8 @@ struct bin_handler_t {
 
         // do we want this edge
         if (edge_filter(edge) != 0.0f) {
-          PathLocation::PathEdge path_edge{std::move(id),      0.f,
-                                           node->latlng(),     score,
-                                           PathLocation::NONE, get_reach(edge)};
+          PathLocation::PathEdge path_edge{std::move(id),  0.f, node_ll, score, PathLocation::NONE,
+                                           get_reach(edge)};
           auto index = edge->forward() ? 0 : info.shape().size() - 2;
           if (heading_filter(edge, info, location, candidate.point, index)) {
             filtered.emplace_back(std::move(path_edge));
@@ -315,9 +315,12 @@ struct bin_handler_t {
         }
         const auto* other_edge = other_tile->directededge(other_id);
         if (edge_filter(other_edge) != 0.0f) {
-          PathLocation::PathEdge path_edge{std::move(other_id), 1.f,
-                                           node->latlng(),      score,
-                                           PathLocation::NONE,  get_reach(other_edge)};
+          PathLocation::PathEdge path_edge{std::move(other_id),
+                                           1.f,
+                                           node_ll,
+                                           score,
+                                           PathLocation::NONE,
+                                           get_reach(other_edge)};
           auto index = other_edge->forward() ? 0 : info.shape().size() - 2;
           if (heading_filter(other_edge, tile->edgeinfo(edge->edgeinfo_offset()), location,
                              candidate.point, index)) {

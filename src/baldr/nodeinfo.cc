@@ -9,8 +9,6 @@ using namespace valhalla::baldr;
 
 namespace {
 
-const uint32_t ContinuityLookup[] = {0, 7, 13, 18, 22, 25, 27};
-
 json::MapPtr access_json(uint16_t access) {
   return json::map({{"bicycle", static_cast<bool>(access & kBicycleAccess)},
                     {"bus", static_cast<bool>(access & kBusAccess)},
@@ -72,21 +70,28 @@ NodeInfo::NodeInfo() {
   memset(this, 0, sizeof(NodeInfo));
 }
 
-NodeInfo::NodeInfo(const std::pair<float, float>& ll,
+NodeInfo::NodeInfo(const PointLL& tile_corner,
+                   const std::pair<float, float>& ll,
                    const RoadClass rc,
                    const uint32_t access,
                    const NodeType type,
                    const bool traffic_signal) {
   memset(this, 0, sizeof(NodeInfo));
-  set_latlng(ll);
+  set_latlng(tile_corner, ll);
   set_access(access);
   set_type(type);
   set_traffic_signal(traffic_signal);
 }
 
 // Sets the latitude and longitude.
-void NodeInfo::set_latlng(const std::pair<float, float>& ll) {
-  latlng_ = ll;
+void NodeInfo::set_latlng(const PointLL& tile_corner, const std::pair<float, float>& ll) {
+  // Protect against a node being slightly outside the tile (due to float roundoff)
+  lat_offset_ = ll.second < tile_corner.lat()
+                    ? 0
+                    : static_cast<uint32_t>((ll.second - tile_corner.lat()) / kDegreesPrecision);
+  lon_offset_ = ll.first < tile_corner.lng()
+                    ? 0
+                    : static_cast<uint32_t>((ll.first - tile_corner.lng()) / kDegreesPrecision);
 }
 
 // Set the index in the node's tile of its first outbound edge.
@@ -198,23 +203,7 @@ void NodeInfo::set_traffic_signal(const bool traffic_signal) {
 
 // Set the transit stop index.
 void NodeInfo::set_stop_index(const uint32_t stop_index) {
-  stop_.stop_index = stop_index;
-}
-
-// Get the name consistency between a pair of local edges. This is limited
-// to the first kMaxLocalEdgeIndex local edge indexes.
-bool NodeInfo::name_consistency(const uint32_t from, const uint32_t to) const {
-  if (from == to) {
-    return true;
-  } else if (from < to) {
-    return (to > kMaxLocalEdgeIndex)
-               ? false
-               : (stop_.name_consistency & 1 << (ContinuityLookup[from] + (to - from - 1)));
-  } else {
-    return (from > kMaxLocalEdgeIndex)
-               ? false
-               : (stop_.name_consistency & 1 << (ContinuityLookup[to] + (from - to - 1)));
-  }
+  transition_index_ = stop_index;
 }
 
 /**
@@ -231,11 +220,11 @@ void NodeInfo::set_name_consistency(const uint32_t from, const uint32_t to, cons
     LOG_WARN("Local index exceeds max in set_name_consistency, skip");
   } else {
     if (from < to) {
-      stop_.name_consistency =
-          OverwriteBits(stop_.name_consistency, c, (ContinuityLookup[from] + (to - from - 1)), 1);
+      name_consistency_ =
+          OverwriteBits(name_consistency_, c, (ContinuityLookup[from] + (to - from - 1)), 1);
     } else {
-      stop_.name_consistency =
-          OverwriteBits(stop_.name_consistency, c, (ContinuityLookup[to] + (from - to - 1)), 1);
+      name_consistency_ =
+          OverwriteBits(name_consistency_, c, (ContinuityLookup[to] + (from - to - 1)), 1);
     }
   }
 }
@@ -277,8 +266,8 @@ void NodeInfo::set_heading(uint32_t localidx, uint32_t heading) {
 
 json::MapPtr NodeInfo::json(const GraphTile* tile) const {
   auto m = json::map({
-      {"lon", json::fp_t{latlng_.first, 6}},
-      {"lat", json::fp_t{latlng_.second, 6}},
+      {"lon", json::fp_t{latlng(tile->header()->base_ll()).first, 6}},
+      {"lat", json::fp_t{latlng(tile->header()->base_ll()).second, 6}},
       {"edge_count", static_cast<uint64_t>(edge_count_)},
       {"access", access_json(access_)},
       {"intersection_type", to_string(static_cast<IntersectionType>(intersection_))},
@@ -291,7 +280,7 @@ json::MapPtr NodeInfo::json(const GraphTile* tile) const {
       {"transition count", static_cast<uint64_t>(transition_count_)},
   });
   if (is_transit()) {
-    m->emplace("stop_index", static_cast<uint64_t>(stop_.stop_index));
+    m->emplace("stop_index", static_cast<uint64_t>(name_consistency_));
   }
   return m;
 }

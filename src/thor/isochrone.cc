@@ -209,7 +209,7 @@ void Isochrone::ExpandForward(GraphReader& graphreader,
   if (!from_transition) {
     uint32_t idx = pred.predecessor();
     float secs0 = (idx == kInvalidLabel) ? 0 : edgelabels_[idx].cost().secs;
-    UpdateIsoTile(pred, graphreader, nodeinfo->latlng(), secs0);
+    UpdateIsoTile(pred, graphreader, tile->get_node_ll(node), secs0);
   }
   if (!costing_->Allowed(nodeinfo)) {
     return;
@@ -393,7 +393,7 @@ void Isochrone::ExpandReverse(GraphReader& graphreader,
   if (!from_transition) {
     uint32_t idx = pred.predecessor();
     float secs0 = (idx == kInvalidLabel) ? 0 : bdedgelabels_[idx].cost().secs;
-    UpdateIsoTile(pred, graphreader, nodeinfo->latlng(), secs0);
+    UpdateIsoTile(pred, graphreader, tile->get_node_ll(node), secs0);
   }
   if (!costing_->Allowed(nodeinfo)) {
     return;
@@ -592,7 +592,7 @@ bool Isochrone::ExpandForwardMM(GraphReader& graphreader,
   // Update the isotile
   uint32_t idx = pred.predecessor();
   float secs0 = (idx == kInvalidLabel) ? 0 : mmedgelabels_[idx].cost().secs;
-  UpdateIsoTile(pred, graphreader, nodeinfo->latlng(), secs0);
+  UpdateIsoTile(pred, graphreader, tile->get_node_ll(node), secs0);
 
   // Return true if the time interval has been met
   if (pred.cost().secs > max_seconds_) {
@@ -966,7 +966,7 @@ void Isochrone::UpdateIsoTile(const EdgeLabel& pred,
   if (edge->length() < shape_interval_ * 1.5f) {
     // Mark tiles that intersect the segment. Optimize this to avoid calling the Intersect
     // method unless more than 2 tiles are crossed by the segment.
-    PointLL ll0 = tile->node(t2->directededge(opp)->endnode())->latlng();
+    PointLL ll0 = tile->get_node_ll(t2->directededge(opp)->endnode());
     auto tile1 = isotile_->TileId(ll0);
     auto tile2 = isotile_->TileId(ll);
     if (tile1 == tile2) {

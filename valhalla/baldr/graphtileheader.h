@@ -6,6 +6,7 @@
 #include <string>
 
 #include <valhalla/baldr/graphid.h>
+#include <valhalla/midgard/pointll.h>
 
 namespace valhalla {
 namespace baldr {
@@ -52,6 +53,23 @@ public:
    */
   void set_graphid(const baldr::GraphId& graphid) {
     graphid_ = graphid;
+  }
+
+  /**
+   * Get the base (SW corner) of the tile.
+   * @return Returns the base lat,lon of the tile (degrees).
+   */
+  const midgard::PointLL& base_ll() const {
+    return static_cast<const midgard::PointLL&>(base_ll_);
+  }
+
+  /**
+   * Sets the base (SW corner) lat,lon of the tile.
+   * @param ll  Base lat,lon of the tile.
+   */
+  void set_base_ll(const midgard::PointLL& ll) {
+    base_ll_.first = ll.lng();
+    base_ll_.second = ll.lat();
   }
 
   /**
@@ -606,6 +624,9 @@ public:
 protected:
   // GraphId (tileid and level) of this tile
   GraphId graphid_;
+
+  // Base lon, lat of the tile
+  std::pair<float, float> base_ll_;
 
   // baldr version.
   char version_[kMaxVersionSize];

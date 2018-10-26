@@ -141,7 +141,7 @@ bool expand_from_node(const std::shared_ptr<DynamicCost>* mode_costing,
     if (end_node_tile == nullptr) {
       continue;
     }
-    PointLL de_end_ll = end_node_tile->node(de->endnode())->latlng();
+    PointLL de_end_ll = end_node_tile->get_node_ll(de->endnode());
     float de_length = length_comparison(de->length(), true);
 
     // Process current edge until shape matches end node
@@ -251,7 +251,7 @@ bool RouteMatcher::FormPath(const std::shared_ptr<DynamicCost>* mode_costing,
     if (begin_edge_tile == nullptr) {
       throw std::runtime_error("End node tile is null");
     }
-    PointLL de_end_ll = end_node_tile->node(de->endnode())->latlng();
+    PointLL de_end_ll = end_node_tile->get_node_ll(de->endnode());
 
     // Initialize indexes and shape
     size_t index = 0;

@@ -172,7 +172,7 @@ void BidirectionalAStar::ExpandForward(GraphReader& graphreader,
     // end node of the directed edge.
     float dist = 0.0f;
     float sortcost =
-        newcost.cost + astarheuristic_forward_.Get(t2->node(directededge->endnode())->latlng(), dist);
+        newcost.cost + astarheuristic_forward_.Get(t2->get_node_ll(directededge->endnode()), dist);
 
     // Add edge label, add to the adjacency list and set edge status
     uint32_t idx = edgelabels_forward_.size();
@@ -281,7 +281,7 @@ void BidirectionalAStar::ExpandReverse(GraphReader& graphreader,
     // end node of the directed edge.
     float dist = 0.0f;
     float sortcost =
-        newcost.cost + astarheuristic_reverse_.Get(t2->node(directededge->endnode())->latlng(), dist);
+        newcost.cost + astarheuristic_reverse_.Get(t2->get_node_ll(directededge->endnode()), dist);
 
     // Add edge label, add to the adjacency list and set edge status
     uint32_t idx = edgelabels_reverse_.size();
@@ -588,7 +588,7 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader, odin::Location& ori
     // We assume the slowest speed you could travel to cover that distance to start/end the route
     // TODO: assumes 1m/s which is a maximum penalty this could vary per costing model
     cost.cost += edge.distance();
-    float dist = astarheuristic_forward_.GetDistance(nodeinfo->latlng());
+    float dist = astarheuristic_forward_.GetDistance(nodeinfo->latlng(endtile->header()->base_ll()));
     float sortcost = cost.cost + astarheuristic_forward_.Get(dist);
 
     // Add EdgeLabel to the adjacency list. Set the predecessor edge index
@@ -652,7 +652,7 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader, const odin::Lo
     // We assume the slowest speed you could travel to cover that distance to start/end the route
     // TODO: assumes 1m/s which is a maximum penalty this could vary per costing model
     cost.cost += edge.distance();
-    float dist = astarheuristic_reverse_.GetDistance(tile->node(opp_dir_edge->endnode())->latlng());
+    float dist = astarheuristic_reverse_.GetDistance(tile->get_node_ll(opp_dir_edge->endnode()));
     float sortcost = cost.cost + astarheuristic_reverse_.Get(dist);
 
     // Add EdgeLabel to the adjacency list. Set the predecessor edge index

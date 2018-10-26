@@ -81,6 +81,13 @@ public:
    * @return  Returns the max. level.
    */
   static uint8_t get_max_level();
+
+  /**
+   * Get the tiling system for a specified level.
+   * @param level  Level Id.
+   * @return Returns a const reference to the tiling system for this level.
+   */
+  static const midgard::Tiles<midgard::PointLL>& get_tiling(const uint8_t level);
 };
 
 } // namespace baldr

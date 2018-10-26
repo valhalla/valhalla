@@ -5,9 +5,9 @@
 using namespace std;
 using namespace valhalla::baldr;
 
-// Expected size is 264 bytes. We want to alert if somehow any change grows
-// this structure size as that indicates incompatible tiles.
-constexpr size_t kGraphTileHeaderExpectedSize = 264;
+// Expected size is 272 (was 264 before adding base_ll) bytes. We want to alert if
+// somehow any change grows this structure size as that indicates incompatible tiles.
+constexpr size_t kGraphTileHeaderExpectedSize = 272;
 
 namespace {
 
@@ -30,6 +30,10 @@ void TestWriteRead() {
   hdr.set_date_created(12345);
   if (hdr.date_created() != 12345) {
     throw runtime_error("Header date created test failed");
+  }
+  hdr.set_base_ll({-76.5f, 39.5f});
+  if (hdr.base_ll().lng() != -76.5f && hdr.base_ll().lat() != 39.5f) {
+    throw runtime_error("Header base LL test failed");
   }
   std::string ver = "v1.5";
   hdr.set_version(ver);

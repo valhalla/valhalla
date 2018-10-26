@@ -146,6 +146,7 @@ void FormTilesInNewLevel(GraphReader& reader, bool has_elevation) {
   uint8_t current_level;
   GraphId tile_id;
   std::hash<std::string> hasher;
+  PointLL base_ll;
   GraphTileBuilder* tilebuilder = nullptr;
   for (auto new_node = new_to_old.begin(); new_node != new_to_old.end(); new_node++) {
     // Get the node - check if a new tile
@@ -161,6 +162,10 @@ void FormTilesInNewLevel(GraphReader& reader, bool has_elevation) {
       tile_id = nodea.Tile_Base();
       tilebuilder = new GraphTileBuilder(reader.tile_dir(), tile_id, false);
       current_level = nodea.level();
+
+      // Set the base ll for this tile
+      base_ll = TileHierarchy::get_tiling(current_level).Base(tile_id.tileid());
+      tilebuilder->header_builder().set_base_ll(base_ll);
 
       // Check if we need to clear the base/local tile cache
       if (reader.OverCommitted()) {
@@ -179,16 +184,18 @@ void FormTilesInNewLevel(GraphReader& reader, bool has_elevation) {
     // Copy the data version
     tilebuilder->header_builder().set_dataset_id(tile->header()->dataset_id());
 
-    // Copy node information
+    // Copy node information and set the node lat,lon offsets within the new tile
     NodeInfo baseni = *(tile->node(base_node.id()));
     tilebuilder->nodes().push_back(baseni);
     const auto& admin = tile->admininfo(baseni.admin_index());
     NodeInfo& node = tilebuilder->nodes().back();
+    node.set_latlng(base_ll, baseni.latlng(tile->header()->base_ll()));
     node.set_edge_index(tilebuilder->directededges().size());
     node.set_timezone(baseni.timezone());
     node.set_admin_index(tilebuilder->AddAdmin(admin.country_text(), admin.state_text(),
                                                admin.country_iso(), admin.state_iso()));
 
+    // Update node LL based on tile base
     // Density at this node
     uint32_t density1 = baseni.density();
 
@@ -406,6 +413,7 @@ bool CreateNodeAssociations(GraphReader& reader) {
     uint32_t nodecount = tile->header()->nodecount();
     GraphId basenode = base_tile_id;
     GraphId edgeid = base_tile_id;
+    PointLL base_ll = tile->header()->base_ll();
     const NodeInfo* nodeinfo = tile->node(basenode);
     for (uint32_t i = 0; i < nodecount; i++, nodeinfo++, ++basenode) {
       // Iterate through the edges to see which levels this node exists.
@@ -425,13 +433,13 @@ bool CreateNodeAssociations(GraphReader& reader) {
       GraphId highway_node, arterial_node, local_node;
       if (levels[0]) {
         // New node is on the highway level. Associate back to base/local node
-        GraphId new_tile(highway_level.tiles.TileId(nodeinfo->latlng()), hl, 0);
+        GraphId new_tile(highway_level.tiles.TileId(nodeinfo->latlng(base_ll)), hl, 0);
         highway_node = get_new_node(new_tile);
         new_to_old.push_back(std::make_pair(highway_node, basenode));
       }
       if (levels[1]) {
         // New node is on the arterial level. Associate back to base/local node
-        GraphId new_tile(arterial_level.tiles.TileId(nodeinfo->latlng()), al, 0);
+        GraphId new_tile(arterial_level.tiles.TileId(nodeinfo->latlng(base_ll)), al, 0);
         arterial_node = get_new_node(new_tile);
         new_to_old.push_back(std::make_pair(arterial_node, basenode));
       }

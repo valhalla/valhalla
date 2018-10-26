@@ -228,7 +228,7 @@ bool IsUnroutableNode(const GraphTile& tile,
   // And it's not a dead end
   // Or it is a dead end, but is a high class road
   if (((!outbound && inbound >= 2) || (outbound >= 2 && !inbound))) {
-    rd.AddNode(startnodeinfo.latlng());
+    rd.AddNode(startnodeinfo.latlng(tile.header()->base_ll()));
     return true;
   }
 
