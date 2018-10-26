@@ -18,6 +18,7 @@ We are working on updates to the Valhalla graph tile format that will be incompa
 
 One notable change is that Valhalla will **no longer support OSMLR** within Valhalla 3 tiles.
 
+------------
 Valhalla is an open source routing engine and accompanying libraries for use with OpenStreetMap data. Valhalla also includes tools like time+distance matrix computation, isochrones, elevation sampling, map matching and tour optimization (Travelling Salesman).
 
 Build Status
