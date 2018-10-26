@@ -13,7 +13,6 @@ set(sources
   route_matcher.cc
   timedep_forward.cc
   timedep_reverse.cc
-  trafficalgorithm.cc
   timedistancematrix.cc
   worker.cc
   isochrone_action.cc

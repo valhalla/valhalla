@@ -49,6 +49,10 @@ using namespace valhalla::meili;
 namespace bpo = boost::program_options;
 
 namespace {
+
+// Default maximum distance between locations to choose a time dependent path algorithm
+const float kDefaultMaxTimeDependentDistance = 500000.0f;
+
 class PathStatistics {
   std::pair<float, float> origin;
   std::pair<float, float> destination;
@@ -526,6 +530,10 @@ int main(int argc, char* argv[]) {
   // Get something we can use to fetch tiles
   valhalla::baldr::GraphReader reader(pt.get_child("mjolnir"));
 
+  // Get the maximum distance for time dependent routes
+  float max_timedep_distance =
+      pt.get<float>("service_limits.max_timedep_distance", kDefaultMaxTimeDependentDistance);
+
   auto t0 = std::chrono::high_resolution_clock::now();
 
   // Construct costing
@@ -577,6 +585,9 @@ int main(int argc, char* argv[]) {
     valhalla::odin::Location origin = directions_options.locations(i);
     valhalla::odin::Location dest = directions_options.locations(i + 1);
 
+    PointLL ll1(origin.ll().lng(), origin.ll().lat());
+    PointLL ll2(dest.ll().lng(), dest.ll().lat());
+
     // Choose path algorithm
     PathAlgorithm* pathalgorithm;
     if (routetype == "multimodal") {
@@ -585,9 +596,12 @@ int main(int argc, char* argv[]) {
       // Use time dependent algorithms if date time is present
       // TODO - this isn't really correct for multipoint routes but should allow
       // simple testing.
-      if (directions_options.date_time_type() == DirectionsOptions_DateTimeType_depart_at) {
+      if (directions_options.has_date_time() && ll1.Distance(ll2) < max_timedep_distance &&
+          (directions_options.date_time_type() == DirectionsOptions_DateTimeType_depart_at ||
+           directions_options.date_time_type() == DirectionsOptions_DateTimeType_current)) {
         pathalgorithm = &timedep_forward;
-      } else if (directions_options.date_time_type() == DirectionsOptions_DateTimeType_arrive_by) {
+      } else if (directions_options.date_time_type() == DirectionsOptions_DateTimeType_arrive_by &&
+                 ll1.Distance(ll2) < max_timedep_distance) {
         pathalgorithm = &timedep_reverse;
       } else {
         // Use bidirectional except for possible trivial cases

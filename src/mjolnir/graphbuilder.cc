@@ -446,7 +446,7 @@ void BuildTileSet(const std::string& ways_file,
       // tile is entirely inside the polygon
       bool tile_within_one_admin = false;
       uint32_t id = tile_id.tileid();
-      std::unordered_map<uint32_t, multi_polygon_type> admin_polys;
+      std::unordered_multimap<uint32_t, multi_polygon_type> admin_polys;
       std::unordered_map<uint32_t, bool> drive_on_right;
       if (admin_db_handle) {
         admin_polys = GetAdminInfo(admin_db_handle, drive_on_right, tiling.TileBounds(id), graphtile);
@@ -457,7 +457,7 @@ void BuildTileSet(const std::string& ways_file,
       }
 
       bool tile_within_one_tz = false;
-      std::unordered_map<uint32_t, multi_polygon_type> tz_polys;
+      std::unordered_multimap<uint32_t, multi_polygon_type> tz_polys;
       if (tz_db_handle) {
         tz_polys = GetTimeZones(tz_db_handle, tiling.TileBounds(id));
         if (tz_polys.size() == 1) {
@@ -971,6 +971,7 @@ void BuildTileSet(const std::string& ways_file,
         // Set the time zone index
         uint32_t tz_index =
             (tile_within_one_tz) ? tz_polys.begin()->first : GetMultiPolyId(tz_polys, node_ll);
+
         graphtile.nodes().back().set_timezone(tz_index);
 
         // Increment the counts in the histogram

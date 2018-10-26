@@ -114,10 +114,10 @@ std::string json_escape(const std::string& unescaped) {
   return escaped;
 }
 
-int seed = 973;
+int seed = 520;
 int bound = 81;
 std::string make_test_case(PointLL& start, PointLL& end) {
-  static std::default_random_engine generator(seed);
+  static std::minstd_rand0 generator(seed);
   static std::uniform_real_distribution<float> distribution(0, 1);
   float distance = 0;
   do {
@@ -189,7 +189,7 @@ void test_matcher() {
     }
     // simulate gps from the route shape
     std::vector<float> accuracies;
-    auto simulation = simulate_gps(segments, accuracies, 50, 100.f, 1);
+    auto simulation = simulate_gps(segments, accuracies, 50, 75.f, 1);
     auto locations = to_locations(simulation, accuracies, 1);
     // get a trace-attributes from the simulated gps
     auto matched = json_to_pt(actor.trace_attributes(

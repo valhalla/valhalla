@@ -52,7 +52,8 @@ Cost DynamicCost::EdgeCost(const baldr::DirectedEdge* edge, const uint32_t speed
 // costs (i.e., intersection/turn costs) must override this method.
 Cost DynamicCost::TransitionCost(const DirectedEdge* edge,
                                  const NodeInfo* node,
-                                 const EdgeLabel& pred) const {
+                                 const EdgeLabel& pred,
+                                 const bool has_traffic) const {
   return {0.0f, 0.0f};
 }
 
@@ -63,7 +64,8 @@ Cost DynamicCost::TransitionCost(const DirectedEdge* edge,
 Cost DynamicCost::TransitionCostReverse(const uint32_t idx,
                                         const baldr::NodeInfo* node,
                                         const baldr::DirectedEdge* opp_edge,
-                                        const baldr::DirectedEdge* opp_pred_edge) const {
+                                        const baldr::DirectedEdge* opp_pred_edge,
+                                        const bool has_traffic) const {
   return {0.0f, 0.0f};
 }
 

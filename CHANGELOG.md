@@ -1,9 +1,25 @@
-## Release Date: TBD Valhalla 2.7.1
+## Release Date: TBD
+* **Enhancement**
+   * UPDATED: Added a configuration variable for max_timedep_distance. This is used in selecting the path algorithm and provides the maximum distance between locations when choosing a time dependent path algorithm (other than multi modal). Above this distance, bidirectional A* is used with no time dependencies.
+* **Bug Fix**
+   * FIXED: Changed unordered_map to unordered_multimap for polys. Poly map can contain the same key but different multi-polygons. For example, islands for a country or timezone polygons for a country.
+   * FIXED: Fixed timezone db issue where TZIDs did not exist in the Howard Hinnant date time db that is used in the date_time class for tz indexes.  Added logic to create aliases for TZIDs based on https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+   * FIXED: Fixed the ramp turn modifiers for osrm compat [#1569](https://github.com/valhalla/valhalla/pull/1569)
+   * FIXED: Fixed the step geometry when using the osrm compat mode [#1571](https://github.com/valhalla/valhalla/pull/1571)
+   * FIXED: Fixed a data creation bug causing issues with A* routes ending on loops. [#1576](https://github.com/valhalla/valhalla/pull/1576)
+   * FIXED: Fixed an issue with a bad route where destination only was present. Was due to thresholds in bidirectional A*. Changed threshold to be cost based rather than number of iterations). [#1586](https://github.com/valhalla/valhalla/pull/1586)
+   * FIXED: Fixed an issue with destination only (private) roads being used in bicycle routes. Centralized some "base" transition cost logic in the base DynamicCost class. [#1587](https://github.com/valhalla/valhalla/pull/1587)
+
+## Release Date: 2018-10-02 Valhalla 2.7.1
 * **Enhancement**
    * UPDATED: Added date time support to forward and reverse isochrones. Add speed lookup (predicted speeds and/or free-flow or constrained flow speed) if date_time is present.
    * UPDATED: Add timezone checks to multimodal routes and isochrones (updates localtime if the path crosses into a timezone different than the start location).
 * **Data Producer Update**
    * UPDATED: Removed boost date time support from transit.  Now using the Howard Hinnant date library.
+* **Bug Fix**
+   * FIXED: Fixed a bug with shortcuts that leads to inconsistent routes depending on whether shortcuts are taken, different origins can lead to different paths near the destination. This fix also improves performance on long routes and matrices.
+   * FIXED: We were getting inconsistent results between departing at current date/time vs entering the current date/time.  This issue is due to the fact that the iso_date_time function returns the full iso date_time with the timezone offset (e.g., 2018-09-27T10:23-07:00 vs 2018-09-27T10:23). When we refactored the date_time code to use the new Howard Hinnant date library, we introduced this bug.
+   * FIXED: Increased the threshold in CostMatrix to address null time and distance values occuring for truck costing with locations near the max distance.
 
 ## Release Date: 2018-09-13 Valhalla 2.7.0
 * **Enhancement**

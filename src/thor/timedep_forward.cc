@@ -67,7 +67,6 @@ void TimeDepForward::ExpandForward(GraphReader& graphreader,
   }
 
   // Expand from end node.
-  uint32_t max_shortcut_length = static_cast<uint32_t>(pred.distance() * 0.5f);
   GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
   EdgeStatusInfo* es = edgestatus_.GetPtr(edgeid, tile);
   const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
@@ -105,11 +104,13 @@ void TimeDepForward::ExpandForward(GraphReader& graphreader,
       continue;
     }
 
-    // Compute the cost to the end of this edge
+    // Compute the cost to the end of this edge. Transition cost will vary based on whether
+    // there is traffic information.
+    bool has_traffic = directededge->predicted_speed() || directededge->constrained_flow_speed() > 0;
     Cost newcost =
         pred.cost() +
         costing_->EdgeCost(directededge, tile->GetSpeed(directededge, edgeid, seconds_of_week)) +
-        costing_->TransitionCost(directededge, nodeinfo, pred);
+        costing_->TransitionCost(directededge, nodeinfo, pred, has_traffic);
 
     // If this edge is a destination, subtract the partial/remainder cost
     // (cost from the dest. location to the end of the edge).

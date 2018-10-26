@@ -471,7 +471,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
                 const std::vector<uint32_t>& route_types,
                 std::vector<OneStopTest>& onestoptests,
                 bool tile_within_one_tz,
-                const std::unordered_map<uint32_t, multi_polygon_type>& tz_polys,
+                const std::unordered_multimap<uint32_t, multi_polygon_type>& tz_polys,
                 uint32_t& no_dir_edge_count) {
   auto t1 = std::chrono::high_resolution_clock::now();
 
@@ -1116,7 +1116,7 @@ void build_tiles(const boost::property_tree::ptree& pt,
     std::vector<uint32_t> route_types = AddRoutes(transit, tilebuilder_transit);
     auto filter = tiles.TileBounds(tile_id.tileid());
     bool tile_within_one_tz = false;
-    std::unordered_map<uint32_t, multi_polygon_type> tz_polys;
+    std::unordered_multimap<uint32_t, multi_polygon_type> tz_polys;
     if (tz_db_handle) {
       tz_polys = GetTimeZones(tz_db_handle, filter);
       if (tz_polys.size() == 1) {

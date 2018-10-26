@@ -40,17 +40,13 @@ Cost kImpossibleCost = {10000000.0f, 10000000.0f};
 constexpr float kMinFactor = 0.1f;
 constexpr float kMaxFactor = 100000.0f;
 
-// Maximum amount of seconds that will be allowed to be passed in to influence paths
-// This can't be too high because sometimes a certain kind of path is required to be taken
-constexpr float kMaxSeconds = 12.0f * kSecPerHour; // 12 hours
-
 // Valid ranges and defaults
 constexpr ranged_default_t<float> kModeFactorRange{kMinFactor, kModeFactor, kMaxFactor};
 constexpr ranged_default_t<float> kUseBusRange{0, kDefaultUseBus, 1.0f};
 constexpr ranged_default_t<float> kUseRailRange{0, kDefaultUseRail, 1.0f};
 constexpr ranged_default_t<float> kUseTransfersRange{0, kDefaultUseTransfers, 1.0f};
-constexpr ranged_default_t<float> kTransferCostRange{0, kDefaultTransferCost, kMaxSeconds};
-constexpr ranged_default_t<float> kTransferPenaltyRange{0, kDefaultTransferPenalty, kMaxSeconds};
+constexpr ranged_default_t<float> kTransferCostRange{0, kDefaultTransferCost, kMaxPenalty};
+constexpr ranged_default_t<float> kTransferPenaltyRange{0, kDefaultTransferPenalty, kMaxPenalty};
 
 } // namespace
 
@@ -176,11 +172,13 @@ public:
    * @param  edge  Directed edge (the to edge)
    * @param  node  Node (intersection) where transition occurs.
    * @param  pred  Predecessor edge information.
+   * @param  has_traffic  Does the transition have traffic information.
    * @return  Returns the cost and time (seconds)
    */
   virtual Cost TransitionCost(const baldr::DirectedEdge* edge,
                               const baldr::NodeInfo* node,
-                              const EdgeLabel& pred) const;
+                              const EdgeLabel& pred,
+                              const bool has_traffic = false) const;
 
   /**
    * Returns the transfer cost between 2 transit stops.
@@ -603,7 +601,8 @@ Cost TransitCost::EdgeCost(const baldr::DirectedEdge* edge,
 // Returns the time (in seconds) to make the transition from the predecessor
 Cost TransitCost::TransitionCost(const baldr::DirectedEdge* edge,
                                  const baldr::NodeInfo* node,
-                                 const EdgeLabel& pred) const {
+                                 const EdgeLabel& pred,
+                                 const bool has_traffic) const {
   if (pred.mode() == TravelMode::kPedestrian) {
     // Apply any mode-based penalties when boarding transit
     // Do we want any time cost to board?

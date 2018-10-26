@@ -19,7 +19,8 @@ sqlite3* GetDBHandle(const std::string& database) {
     sqlite3_stmt* stmt = 0;
     char* err_msg = nullptr;
     std::string sql;
-    uint32_t ret = sqlite3_open_v2(database.c_str(), &db_handle, SQLITE_OPEN_READONLY, nullptr);
+    uint32_t ret = sqlite3_open_v2(database.c_str(), &db_handle,
+                                   SQLITE_OPEN_READONLY | SQLITE_OPEN_NOMUTEX, nullptr);
     if (ret != SQLITE_OK) {
       LOG_ERROR("cannot open " + database);
       sqlite3_close(db_handle);
@@ -46,7 +47,7 @@ sqlite3* GetDBHandle(const std::string& database) {
 
 // Get the polygon index.  Used by tz and admin areas.  Checks if the pointLL is covered_by the
 // poly.
-uint32_t GetMultiPolyId(const std::unordered_map<uint32_t, multi_polygon_type>& polys,
+uint32_t GetMultiPolyId(const std::unordered_multimap<uint32_t, multi_polygon_type>& polys,
                         const PointLL& ll) {
   uint32_t index = 0;
   point_type p(ll.lng(), ll.lat());
@@ -59,9 +60,9 @@ uint32_t GetMultiPolyId(const std::unordered_map<uint32_t, multi_polygon_type>& 
 }
 
 // Get the timezone polys from the db
-std::unordered_map<uint32_t, multi_polygon_type> GetTimeZones(sqlite3* db_handle,
-                                                              const AABB2<PointLL>& aabb) {
-  std::unordered_map<uint32_t, multi_polygon_type> polys;
+std::unordered_multimap<uint32_t, multi_polygon_type> GetTimeZones(sqlite3* db_handle,
+                                                                   const AABB2<PointLL>& aabb) {
+  std::unordered_multimap<uint32_t, multi_polygon_type> polys;
   if (!db_handle) {
     return polys;
   }
@@ -105,7 +106,6 @@ std::unordered_map<uint32_t, multi_polygon_type> GetTimeZones(sqlite3* db_handle
       multi_polygon_type multi_poly;
       boost::geometry::read_wkt(geom, multi_poly);
       polys.emplace(idx, multi_poly);
-
       result = sqlite3_step(stmt);
     }
   }
@@ -117,12 +117,12 @@ std::unordered_map<uint32_t, multi_polygon_type> GetTimeZones(sqlite3* db_handle
 }
 
 // Get the admin polys that intersect with the tile bounding box.
-std::unordered_map<uint32_t, multi_polygon_type>
+std::unordered_multimap<uint32_t, multi_polygon_type>
 GetAdminInfo(sqlite3* db_handle,
              std::unordered_map<uint32_t, bool>& drive_on_right,
              const AABB2<PointLL>& aabb,
              GraphTileBuilder& tilebuilder) {
-  std::unordered_map<uint32_t, multi_polygon_type> polys;
+  std::unordered_multimap<uint32_t, multi_polygon_type> polys;
   if (!db_handle) {
     return polys;
   }

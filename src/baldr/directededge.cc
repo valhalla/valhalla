@@ -550,10 +550,14 @@ void DirectedEdge::set_leaves_tile(const bool leaves_tile) {
 json::MapPtr DirectedEdge::json() const {
   return json::map({
       {"end_node", endnode().json()},
-      {"speed", static_cast<uint64_t>(speed_)},
-      {"speed_limit", static_cast<uint64_t>(speed_limit_)},
-      {"free_flow_speed", static_cast<uint64_t>(free_flow_speed_)},
-      {"constrained_flow_speed", static_cast<uint64_t>(constrained_flow_speed_)},
+      {"speeds", json::map({
+                     {"default", static_cast<uint64_t>(speed_)},
+                     {"type", to_string(static_cast<SpeedType>(speed_type_))},
+                     {"speed_limit", static_cast<uint64_t>(speed_limit_)},
+                     {"free_flow", static_cast<uint64_t>(free_flow_speed_)},
+                     {"constrained_flow", static_cast<uint64_t>(constrained_flow_speed_)},
+                     {"predicted", static_cast<bool>(predicted_speed_)},
+                 })},
       //{"opp_index", static_cast<bool>(opp_index_)},
       //{"edge_info_offset", static_cast<uint64_t>(edgeinfo_offset_)},
       //{"restrictions", restrictions_},
@@ -577,8 +581,6 @@ json::MapPtr DirectedEdge::json() const {
       {"bike_network", bike_network_json(bike_network_)},
       {"truck_route", static_cast<bool>(truck_route_)},
       {"lane_count", static_cast<uint64_t>(lanecount_)},
-      {"use", to_string(static_cast<Use>(use_))},
-      {"speed_type", to_string(static_cast<SpeedType>(speed_type_))},
       {"country_crossing", static_cast<bool>(ctry_crossing_)},
       {"geo_attributes",
        json::map({
@@ -590,6 +592,7 @@ json::MapPtr DirectedEdge::json() const {
       //{"access", access_json(reverseaccess_)},
       {"classification", json::map({
                              {"classification", to_string(static_cast<RoadClass>(classification_))},
+                             {"use", to_string(static_cast<Use>(use_))},
                              {"surface", to_string(static_cast<Surface>(surface_))},
                              {"link", static_cast<bool>(link_)},
                              {"internal", static_cast<bool>(internal_)},
