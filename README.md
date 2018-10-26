@@ -13,7 +13,7 @@
          ░                                                                    
 
 
-###NOTICE
+### NOTICE
 We are working on updates to the Valhalla graph tile format that will be incompatible with the current version of Valhalla. Valhalla tiles have been stable for nearly 2 years and we are working on changes designed to make the tile data more efficient and flexible. This work is being done on a branch, so master is stable while this development occurs. We will tag a "last good release" of Valhalla version 2.x prior to merging the tile changes and creating Valhalla 3.0. We will create issues with the tag "V3Tiles" that describe the tile changes - so feel free to follow along and comment.
 
 One notable change is that Valhalla will **no longer support OSMLR** within Valhalla 3 tiles.
