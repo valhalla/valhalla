@@ -64,10 +64,25 @@ public:
 protected:
   // Current walking distance.
   uint32_t walking_distance_;
+  bool has_date_time_;
+  int start_tz_index_; // Timezone at the start of the mm route
 
   uint32_t max_label_count_; // Max label count to allow
   sif::TravelMode mode_;     // Current travel mode
   uint8_t travel_type_;      // Current travel type
+
+  bool date_set_;
+  bool date_before_tile_;
+  bool disable_transit_;
+  uint32_t date_;
+  uint32_t dow_;
+  uint32_t day_;
+  uint32_t start_time_;
+  uint32_t max_seconds_;
+  uint32_t max_transfer_distance_;
+  std::string origin_date_time_;
+  std::unordered_map<std::string, uint32_t> operators_;
+  std::unordered_set<uint32_t> processed_tiles_;
 
   // Hierarchy limits.
   std::vector<sif::HierarchyLimits> hierarchy_limits_;
@@ -145,6 +160,27 @@ protected:
                       std::vector<sif::EdgeLabel>& edgelabels,
                       baldr::DoubleBucketQueue& adjlist,
                       const bool from_transition);
+
+  /**
+   * Expand from the node using multimodal algorithm.
+   * @param graphreader  Graph reader.
+   * @param node Graph Id of the node to expand.
+   * @param pred Edge label of the predecessor edge leading to the node.
+   * @param pred_idx Index in the edge label list of the predecessor edge.
+   * @param from_transition Boolean indicating if this expansion is from a transition edge.
+   * @param pc Pedestrian costing.
+   * @param tc Transit costing.
+   * @param mode_costing Array of all costing models.
+   * @return Returns true if the isochrone is done.
+   */
+  bool ExpandForward(baldr::GraphReader& graphreader,
+                     const baldr::GraphId& node,
+                     const sif::MMEdgeLabel& pred,
+                     const uint32_t pred_idx,
+                     const bool from_transition,
+                     const std::shared_ptr<sif::DynamicCost>& pc,
+                     const std::shared_ptr<sif::DynamicCost>& tc,
+                     const std::shared_ptr<sif::DynamicCost>* mode_costing);
 
   /**
    * Check if destination can be reached if walking is the last mode. Checks
