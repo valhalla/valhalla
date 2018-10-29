@@ -200,10 +200,10 @@ void TimeDepReverse::ExpandReverse(GraphReader& graphreader,
     for (uint32_t i = 0; i < nodeinfo->transition_count(); ++i, ++trans) {
       if (trans->up()) {
         hierarchy_limits_[node.level()].up_transition_count++;
-        ExpandReverse(graphreader, directededge->endnode(), pred, pred_idx, opp_pred_edge, true,
+        ExpandReverse(graphreader, trans->endnode(), pred, pred_idx, opp_pred_edge, true,
                       seconds_of_week, localtime, destination, best_path);
       } else if (!hierarchy_limits_[trans->endnode().level()].StopExpanding()) {
-        ExpandReverse(graphreader, directededge->endnode(), pred, pred_idx, opp_pred_edge, true,
+        ExpandReverse(graphreader, trans->endnode(), pred, pred_idx, opp_pred_edge, true,
                       seconds_of_week, localtime, destination, best_path);
       }
     }
