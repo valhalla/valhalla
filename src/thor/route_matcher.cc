@@ -195,7 +195,7 @@ bool expand_from_node(const std::shared_ptr<DynamicCost>* mode_costing,
     for (uint32_t i = 0; i < node_info->transition_count(); ++i, ++trans) {
       const GraphTile* end_node_tile = reader.GetGraphTile(trans->endnode());
       if (expand_from_node(mode_costing, mode, reader, shape, distances, correlated_index,
-                           end_node_tile, de->endnode(), end_nodes, prev_edge_label, elapsed_time,
+                           end_node_tile, trans->endnode(), end_nodes, prev_edge_label, elapsed_time,
                            path_infos, true, end_node, total_distance)) {
         return true;
       }
