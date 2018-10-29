@@ -13,6 +13,12 @@
          ░                                                                    
 
 
+### NOTICE
+We are working on updates to the Valhalla graph tile format that will be incompatible with the current version of Valhalla. Valhalla tiles have been stable for nearly 2 years and we are working on changes designed to make the tile data more efficient and flexible. This work is being done on a branch, so master is stable while this development occurs. We will tag a "last good release" of Valhalla version 2.x prior to merging the tile changes and creating Valhalla 3.0. We will create issues with the tag "V3Tiles" that describe the tile changes - so feel free to follow along and comment.
+
+One notable change is that Valhalla will **no longer support OSMLR** within Valhalla 3 tiles.
+
+------------
 Valhalla is an open source routing engine and accompanying libraries for use with OpenStreetMap data. Valhalla also includes tools like time+distance matrix computation, isochrones, elevation sampling, map matching and tour optimization (Travelling Salesman).
 
 Build Status
@@ -27,7 +33,7 @@ Build Status
 License
 -------
 
-Valhalla, and all of the projects under the Valhalla organization, use the [MIT License](COPYING).  Avatar/logo by [Jordan](https://www.instagram.com/jaydraws.yt/?hl=en)
+Valhalla, and all of the projects under the Valhalla organization, use the [MIT License](COPYING).  Avatar/logo by [Jordan](https://www.instagram.com/jaykaydraws/)
 
 Overview
 --------
