@@ -49,10 +49,10 @@ namespace vo = valhalla::odin;
 
 /*
  * to regenerate the test tile you'll want to:
- *  add -I../mjolnir to the compile line
- *  add ../mjolnir/libvalhalla_mjolnir.la to the link line
  *  uncomment the define MAKE_TEST_TILES
  *  and delete the test tile: test/fake_tiles_astar/2/000/519/120.gph
+ *  run make check to generate the test file
+ *  copy the generated test file to test/fake_tiles_astar/2/000/519/120.gph
  */
 
 // #define MAKE_TEST_TILES
@@ -108,12 +108,19 @@ std::pair<vb::GraphId, vm::PointLL> g({tile_id.tileid(), tile_id.level(), 6}, {0
 void make_tile() {
   using namespace valhalla::mjolnir;
 
-  GraphTileBuilder tile(h, tile_id, false);
+  GraphTileBuilder tile(test_dir, tile_id, false);
+
+  // Set the base lat,lon of the tile
+  uint32_t id = tile_id.tileid();
+  const auto& tl = TileHierarchy::levels().rbegin();
+  PointLL base_ll = tl->second.tiles.Base(id);
+  tile.header_builder().set_base_ll(base_ll);
+
   uint32_t edge_index = 0;
 
   auto add_node = [&](const std::pair<vb::GraphId, vm::PointLL>& v, const uint32_t edge_count) {
     NodeInfo node_builder;
-    node_builder.set_latlng(v.second);
+    node_builder.set_latlng(base_ll, v.second);
     // node_builder.set_road_class(RoadClass::kSecondary);
     node_builder.set_access(vb::kAllAccess);
     node_builder.set_edge_count(edge_count);
@@ -136,7 +143,7 @@ void make_tile() {
     // make more complex edge geom so that there are 3 segments, affine combination doesnt properly
     // handle arcs but who cares
     uint32_t edge_info_offset =
-        tile.AddEdgeInfo(name, u.first, v.first, 123, shape, {std::to_string(name)}, add);
+        tile.AddEdgeInfo(name, u.first, v.first, 123, shape, {std::to_string(name)}, 0, add);
     edge_builder.set_edgeinfo_offset(edge_info_offset);
     tile.directededges().emplace_back(std::move(edge_builder));
   };
@@ -174,9 +181,9 @@ void make_tile() {
   tile.StoreTileData();
 
   GraphTileBuilder::tweeners_t tweeners;
-  GraphTile reloaded(h, tile_id);
-  auto bins = GraphTileBuilder::BinEdges(h, &reloaded, tweeners);
-  GraphTileBuilder::AddBins(h, &reloaded, bins);
+  GraphTile reloaded(test_dir, tile_id);
+  auto bins = GraphTileBuilder::BinEdges(&reloaded, tweeners);
+  GraphTileBuilder::AddBins(test_dir, &reloaded, bins);
 }
 #endif /* MAKE_TEST_TILES */
 
