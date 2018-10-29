@@ -1137,10 +1137,10 @@ void GraphTileBuilder::UpdatePredictedSpeeds(const std::vector<DirectedEdge>& di
   if (file.is_open()) {
     // Write a new header - add the offset to predicted speed data and the profile count.
     // Update the end offset (shift by the amount of predicted speed data added).
+    size_t offset = header_->end_offset();
     header_builder_.set_end_offset(header_->end_offset() +
                                    (speed_profile_offset_builder_.size() * sizeof(uint32_t)) +
                                    (speed_profile_builder_.size() * sizeof(int16_t)));
-    size_t offset = header_->turnlane_offset() + header_->turnlane_count() * sizeof(TurnLanes);
     header_builder_.set_predictedspeeds_offset(offset);
     header_builder_.set_predictedspeeds_count(speed_profile_builder_.size() / kCoefficientCount);
     file.write(reinterpret_cast<const char*>(&header_builder_), sizeof(GraphTileHeader));
@@ -1155,8 +1155,8 @@ void GraphTileBuilder::UpdatePredictedSpeeds(const std::vector<DirectedEdge>& di
     file.write(reinterpret_cast<const char*>(directededges.data()),
                directededges.size() * sizeof(DirectedEdge));
 
-    // Write out data from access restrictions to the end of turn lane data
-    auto begin = reinterpret_cast<const char*>(&access_restrictions_[0]);
+    // Write out data from transitions to the end of turn lane data
+    auto begin = reinterpret_cast<const char*>(&transitions_[0]);
     auto end = reinterpret_cast<const char*>(header()) + offset;
     file.write(begin, end - begin);
 
