@@ -710,23 +710,23 @@ bool MultiModalPathAlgorithm::ExpandFromNode(baldr::GraphReader& graphreader,
   EdgeStatusInfo* es = edgestatus.GetPtr(edgeid, tile);
   const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
   for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++, ++edgeid, ++es) {
-/**
-    // Handle transition edges - expand from the end node of the transition
-    // (unless this is called from a transition).
-    if (directededge->trans_up()) {
-      if (!from_transition) {
-        ExpandFromNode(graphreader, directededge->endnode(), pred, pred_idx, costing, edgestatus,
-                       edgelabels, adjlist, true);
-      }
-      continue;
-    } else if (directededge->trans_down()) {
-      if (!from_transition) {
-        ExpandFromNode(graphreader, directededge->endnode(), pred, pred_idx, costing, edgestatus,
-                       edgelabels, adjlist, true);
-      }
-      continue;
-    }
-**/
+    /**
+        // Handle transition edges - expand from the end node of the transition
+        // (unless this is called from a transition).
+        if (directededge->trans_up()) {
+          if (!from_transition) {
+            ExpandFromNode(graphreader, directededge->endnode(), pred, pred_idx, costing, edgestatus,
+                           edgelabels, adjlist, true);
+          }
+          continue;
+        } else if (directededge->trans_down()) {
+          if (!from_transition) {
+            ExpandFromNode(graphreader, directededge->endnode(), pred, pred_idx, costing, edgestatus,
+                           edgelabels, adjlist, true);
+          }
+          continue;
+        }
+    **/
     // Skip this edge if permanently labeled (best path already found to this directed edge) or
     // access is not allowed for this mode.
     if (es->set() == EdgeSet::kPermanent ||

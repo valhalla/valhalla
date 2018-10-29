@@ -436,6 +436,45 @@ struct bin_handler_t {
         }
       }
     }
+
+    // Follow transition to other hierarchy levels
+    if (node->transition_count() > 0) {
+      const NodeTransition* trans = tile->transition(node->transition_index());
+      for (uint32_t i = 0; reaches.back() < max_reach_limit && i < node->transition_count();
+           ++i, ++trans) {
+        const GraphTile* tile = reader.GetGraphTile(trans->endnode());
+        const NodeInfo* n = tile->node(trans->endnode());
+        if (!node_filter(n)) {
+          // try to mark the node
+          auto inserted = reach_indices.emplace(trans->endnode(), reach_index);
+          // we saw this one already
+          if (!inserted.second) {
+            // we've seen this node in this run so just skip it
+            if (reach_index == inserted.first->second) {
+              continue;
+            }
+
+            // signal the recursion to stop
+            reach_index = inserted.first->second;
+            // merge this paths reach with the previously found one
+            reaches.back() += reaches[reach_index] - 1;
+            reaches[reach_index] = reaches.back();
+            return;
+          }
+
+          // recurse
+          ++reaches.back();
+
+          size_t previous = reach_index;
+          depth_first(tile, n, reach_index);
+
+          // if we saw the edge in a previous run we want to be done completely
+          if (reach_index != previous) {
+            return;
+          }
+        }
+      }
+    }
   }
 
   // do a mini network expansion or maybe not
