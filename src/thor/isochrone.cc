@@ -287,7 +287,7 @@ void Isochrone::ExpandForward(GraphReader& graphreader,
   if (!from_transition && nodeinfo->transition_count() > 0) {
     const NodeTransition* trans = tile->transition(nodeinfo->transition_index());
     for (uint32_t i = 0; i < nodeinfo->transition_count(); ++i, ++trans) {
-      ExpandForward(graphreader, directededge->endnode(), pred, pred_idx, true, localtime,
+      ExpandForward(graphreader, trans->endnode(), pred, pred_idx, true, localtime,
                     seconds_of_week);
     }
   }
@@ -483,7 +483,7 @@ void Isochrone::ExpandReverse(GraphReader& graphreader,
   if (!from_transition && nodeinfo->transition_count() > 0) {
     const NodeTransition* trans = tile->transition(nodeinfo->transition_index());
     for (uint32_t i = 0; i < nodeinfo->transition_count(); ++i, ++trans) {
-      ExpandReverse(graphreader, directededge->endnode(), pred, pred_idx, opp_pred_edge, true,
+      ExpandReverse(graphreader, trans->endnode(), pred, pred_idx, opp_pred_edge, true,
                     localtime, seconds_of_week);
     }
   }
@@ -843,7 +843,7 @@ bool Isochrone::ExpandForwardMM(GraphReader& graphreader,
   if (!from_transition && nodeinfo->transition_count() > 0) {
     const NodeTransition* trans = tile->transition(nodeinfo->transition_index());
     for (uint32_t i = 0; i < nodeinfo->transition_count(); ++i, ++trans) {
-      ExpandForwardMM(graphreader, directededge->endnode(), pred, pred_idx, true, pc, tc,
+      ExpandForwardMM(graphreader, trans->endnode(), pred, pred_idx, true, pc, tc,
                       mode_costing);
     }
   }
