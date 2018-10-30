@@ -594,7 +594,7 @@ protected:
     if (edge->use() == baldr::Use::kAlley && pred.use() != baldr::Use::kAlley) {
       c.cost += alley_penalty_;
     }
-    if (!edge->link() && !node->name_consistency(idx, edge->localedgeidx())) {
+    if (!edge->link() && !edge->name_consistency(idx)) {
       c.cost += maneuver_penalty_;
     }
     return c;
@@ -637,7 +637,7 @@ protected:
     if (edge->use() == baldr::Use::kAlley && pred->use() != baldr::Use::kAlley) {
       c.cost += alley_penalty_;
     }
-    if (!edge->link() && !node->name_consistency(idx, edge->localedgeidx())) {
+    if (!edge->link() && !edge->name_consistency(idx)) {
       c.cost += maneuver_penalty_;
     }
     return c;
