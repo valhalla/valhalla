@@ -177,8 +177,7 @@ const std::vector<std::pair<uint16_t, std::string>> valhalla_responses{
      R"({"error_code":153,"error":"Too many shape points:(102). The best paths shape limit is 100","status_code":400,"status":"Bad Request"})"}};
 
 const std::vector<http_request_t>
-    osrm_requests{http_request_t(GET,
-                                 R"(/route?json={"directions_options":{"format":"osrm"}})"),
+    osrm_requests{http_request_t(GET, R"(/route?json={"directions_options":{"format":"osrm"}})"),
                   http_request_t(POST, "/route", R"({"directions_options":{"format":"osrm"}})"),
                   http_request_t(GET,
                                  R"(/optimized_route?json={"directions_options":{"format":"osrm"}})"),
