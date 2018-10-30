@@ -16,11 +16,6 @@ json::ArrayPtr serialize_edges(const PathLocation& location, GraphReader& reader
       auto edge_info = tile->edgeinfo(directed_edge->edgeinfo_offset());
       // they want MOAR!
       if (verbose) {
-        auto segments = tile->GetTrafficSegments(edge.id);
-        auto segments_array = json::array({});
-        for (const auto& segment : segments) {
-          segments_array->emplace_back(segment.json());
-        }
         array->emplace_back(json::map({
             {"correlated_lat", json::fp_t{edge.projected.lat(), 6}},
             {"correlated_lon", json::fp_t{edge.projected.lng(), 6}},
@@ -34,7 +29,6 @@ json::ArrayPtr serialize_edges(const PathLocation& location, GraphReader& reader
             {"edge_id", edge.id.json()},
             {"edge", directed_edge->json()},
             {"edge_info", edge_info.json()},
-            {"traffic_segments", segments_array},
         }));
       } // they want it lean and mean
       else {

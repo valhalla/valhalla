@@ -122,11 +122,11 @@ void test_interrupt() {
 int main() {
   test::suite suite("actor");
 
-/** TODO - actor test uses a test data set that needs to be redone!
-  suite.test(TEST_CASE(test_actor));
+  /** TODO - actor test uses a test data set that needs to be redone!
+    suite.test(TEST_CASE(test_actor));
 
-  suite.test(TEST_CASE(test_interrupt));
-**/
+    suite.test(TEST_CASE(test_interrupt));
+  **/
 
   return suite.tear_down();
 }

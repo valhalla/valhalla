@@ -364,41 +364,6 @@ public:
                       const std::array<std::vector<GraphId>, kBinCount>& more_bins);
 
   /**
-   * Initialize traffic segment association. Sizes the traffic segment
-   * association list and sets them all to Invalid.
-   */
-  void InitializeTrafficSegments();
-
-  /**
-   * Initialize traffic chunks. Copies existing chunks into the chunk builder.
-   * This is executed before adding "leftovers" and again before adding chunks.
-   */
-  void InitializeTrafficChunks();
-
-  /**
-   * Add a traffic segment association - used when an edge associates to
-   * a single traffic segment.
-   * @param  edgeid  Edge Id to which traffic segment is associated.
-   * @param  seg     Traffic segment associated to this edge.
-   */
-  void AddTrafficSegment(const baldr::GraphId& edgeid, const baldr::TrafficChunk& seg);
-
-  /**
-   * Add a traffic segment association - used when an edge associates to
-   * more than one traffic segment.
-   * @param  edgeid  Edge Id to which traffic segments are associated.
-   * @param  segs    A vector of traffic segment associations to an edge.
-   */
-  void AddTrafficSegments(const baldr::GraphId& edgeid, const std::vector<baldr::TrafficChunk>& segs);
-
-  /**
-   * Updates a tile with traffic segment and chunk data.
-   * @param  update_dir_edges  If true this will update directed edge flags
-   *                 indicating a traffic segment exists on the edge.
-   */
-  void UpdateTrafficSegments(const bool update_dir_edges);
-
-  /**
    * Gets the current list of edge elevation (builders).
    * @return  Returns the edge elevation builders.
    */
@@ -525,12 +490,6 @@ protected:
 
   // Text list. List of names used within this tile
   std::list<std::string> textlistbuilder_;
-
-  // Traffic segment association
-  std::vector<baldr::TrafficAssociation> traffic_segment_builder_;
-
-  // Traffic chunks
-  std::vector<baldr::TrafficChunk> traffic_chunk_builder_;
 
   // List of lane connectivity records.
   std::vector<LaneConnectivity> lane_connectivity_builder_;
