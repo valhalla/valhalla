@@ -26,7 +26,7 @@ public:
 #endif
   path(const char* path_name) : path(std::string(path_name)) {
   }
-  path(const std::string& path_name) : path_name_(path_name) {
+  path(const std::string& path_name) : path_name_(path_name), separators_() {
     // TODO: squash repeated separators
     // delineate the path
     for (size_t npos = path_name_.find_first_of(preferred_separator); npos != std::string::npos;
@@ -135,7 +135,7 @@ private:
       entry_->d_type = mode_to_type(s.st_mode);
     }
   }
-  int mode_to_type(decltype(stat::st_mode) mode) {
+  unsigned char mode_to_type(decltype(stat::st_mode) mode) {
     if (S_ISREG(mode))
       return DT_REG;
     else if (S_ISDIR(mode))
@@ -183,7 +183,7 @@ private:
 // NOTE: follows links by default..
 class recursive_directory_iterator {
 public:
-  recursive_directory_iterator(const filesystem::path& path) {
+  recursive_directory_iterator(const filesystem::path& path) : stack_() {
     stack_.emplace_back(new directory_entry(path, true));
     // if this was an iteratable directory go to the first entry
     if (stack_.back()->dir_)
@@ -192,7 +192,7 @@ public:
     else
       stack_.clear();
   }
-  recursive_directory_iterator() {
+  recursive_directory_iterator() : stack_() {
   }
   const directory_entry& operator*() const {
     return *stack_.back();
