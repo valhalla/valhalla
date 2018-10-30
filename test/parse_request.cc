@@ -299,9 +299,8 @@ std::string get_request_str(const std::string& grandparent_key,
                             const std::string& sibling_value,
                             const std::string& key,
                             const float specified_value) {
-  return R"({")" + grandparent_key + R"(":{")" + parent_key + R"(":{")" + sibling_key +
-         R"(":")" + sibling_value + R"(",")" + key + R"(":)" + std::to_string(specified_value) +
-         R"(}}})";
+  return R"({")" + grandparent_key + R"(":{")" + parent_key + R"(":{")" + sibling_key + R"(":")" +
+         sibling_value + R"(",")" + key + R"(":)" + std::to_string(specified_value) + R"(}}})";
 }
 
 std::string get_request_str(const std::string& grandparent_key,
@@ -318,9 +317,8 @@ std::string get_request_str(const std::string& grandparent_key,
                             const std::string& sibling_value,
                             const std::string& key,
                             const uint32_t specified_value) {
-  return R"({")" + grandparent_key + R"(":{")" + parent_key + R"(":{")" + sibling_key +
-         R"(":")" + sibling_value + R"(",")" + key + R"(":)" + std::to_string(specified_value) +
-         R"(}}})";
+  return R"({")" + grandparent_key + R"(":{")" + parent_key + R"(":{")" + sibling_key + R"(":")" +
+         sibling_value + R"(",")" + key + R"(":)" + std::to_string(specified_value) + R"(}}})";
 }
 
 std::string get_request_str(const std::string& grandparent_key,
@@ -379,10 +377,8 @@ std::string get_filter_request_str(const std::string& costing,
                                    const std::string& filter_type,
                                    const valhalla::odin::FilterAction filter_action,
                                    const std::vector<std::string>& filter_ids) {
-  return R"({"costing_options":{")" + costing + R"(":{"filters":{")" + filter_type +
-         R"(":{)" + get_kv_str("action", filter_action) +
-         R"(,)" + get_kv_str("ids", filter_ids) +
-         R"(}}}}})";
+  return R"({"costing_options":{")" + costing + R"(":{"filters":{")" + filter_type + R"(":{)" +
+         get_kv_str("action", filter_action) + R"(,)" + get_kv_str("ids", filter_ids) + R"(}}}}})";
 }
 
 valhalla::valhalla_request_t get_request(const std::string& request_str,
