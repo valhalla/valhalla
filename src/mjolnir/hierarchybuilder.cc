@@ -320,12 +320,12 @@ void FormTilesInNewLevel(GraphReader& reader, bool has_elevation) {
       AddDownwardTransition(new_nodes.arterial_node, tilebuilder);
       AddDownwardTransition(new_nodes.local_node, tilebuilder);
     } else if (current_level == 1) {
-      AddDownwardTransition(new_nodes.local_node, tilebuilder);
       AddUpwardTransition(new_nodes.highway_node, tilebuilder);
+      AddDownwardTransition(new_nodes.local_node, tilebuilder);
     }
     if (current_level == 2) {
-      AddUpwardTransition(new_nodes.arterial_node, tilebuilder);
       AddUpwardTransition(new_nodes.highway_node, tilebuilder);
+      AddUpwardTransition(new_nodes.arterial_node, tilebuilder);
     }
 
     // Set the node transition count and index
