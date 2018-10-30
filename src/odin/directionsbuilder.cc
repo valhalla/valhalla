@@ -78,20 +78,21 @@ TripDirections DirectionsBuilder::Build(const DirectionsOptions& directions_opti
 
   EnhancedTripPath* etp = static_cast<EnhancedTripPath*>(&trip_path);
 
-  // Produce maneuvers and narrative if enabled
+  // Produce maneuvers if desired
   std::list<Maneuver> maneuvers;
-  if (directions_options.narrative()) {
+  if (directions_options.directions_type() != DirectionsType::none) {
     // Update the heading of ~0 length edges
     UpdateHeading(etp);
 
-    // Create maneuvers
     ManeuversBuilder maneuversBuilder(directions_options, etp);
     maneuvers = maneuversBuilder.Build();
 
-    // Create the narrative
-    std::unique_ptr<NarrativeBuilder> narrative_builder =
-        NarrativeBuilderFactory::Create(directions_options, etp);
-    narrative_builder->Build(directions_options, etp, maneuvers);
+    // Create the instructions if desired
+    if (directions_options.directions_type() == DirectionsType::instructions) {
+      std::unique_ptr<NarrativeBuilder> narrative_builder =
+          NarrativeBuilderFactory::Create(directions_options, etp);
+      narrative_builder->Build(directions_options, etp, maneuvers);
+    }
   }
 
   // Return trip directions
