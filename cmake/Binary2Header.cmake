@@ -41,6 +41,7 @@ endfunction()
 #                     useful if the source file is a text file and we want to use the file contents
 #                     as string. But the size variable holds size of the byte array without this
 #                     null byte.
+#   SKIP_LINES      - Number of lines to skip (max 1).
 # Usage:
 #   bin2h(SOURCE_FILE "Logo.png" HEADER_FILE "Logo.h" VARIABLE_NAME "LOGO_PNG")
 function(BIN2H)
@@ -52,16 +53,33 @@ function(BIN2H)
       message(AUTHOR_WARNING "Only 1 line skip is supported")
     endif()
 
-    if(BIN2H_RAW)
+    set(MSVC ON)
+    # First workaround for MSVC limits (see below), generate data in hex:
+    # cmake -DMSVC=ON Binary2Header.cmake...
+    if(BIN2H_RAW AND NOT MSVC)
       file(READ ${BIN2H_SOURCE_FILE} string)
       if(BIN2H_SKIP_LINES)
         string(FIND "${string}" "\n" pos)
         math(EXPR pos "${pos}+1")
         string(SUBSTRING "${string}" ${pos} -1 string)
       endif()
-
+      
       string(LENGTH "${string}" arraySize)
-      set(arrayValues "R\"bin(${string})bin\"")
+      if(MSVC) # TODO: Effectively deactivated by earlier NOT MSVC, still on brainstorming
+        # Alternative workaround for MSVC limits to generate long string literals with concatenation:
+        # - While an individual quoted string cannot be longer than 2048 bytes,
+        #   a string literal of roughly 65535 bytes can be constructed by concatenating strings.
+        # - otherwise, compiler error C2026: string too big, trailing characters truncated
+        # - 65K bytes of total length must not be exceeded.
+        set(arrayValues "")
+        foreach(_split_pos RANGE 0 ${arraySize} 2000) # Visual C++ max is 2048 bytes
+          string(SUBSTRING "${string}" ${_split_pos} 2000 _concat_string)
+          set(arrayValues "${arrayValues}R\"bin(${_concat_string})bin\"\n")
+          unset(_concat_string)
+        endforeach()
+      else()
+        set(arrayValues "R\"bin(${string})bin\"")
+      endif()
     else()
       # reads source file contents as hex string
       file(READ ${BIN2H_SOURCE_FILE} hexString HEX)
@@ -101,7 +119,6 @@ function(BIN2H)
     # declares byte array and the length variables
     set(arrayDefinition "const unsigned char ${BIN2H_VARIABLE_NAME}[] = ${arrayValues};")
     set(arraySizeDefinition "const size_t ${BIN2H_VARIABLE_NAME}_len = ${arraySize};")
-
     set(declarations "${arrayDefinition}\n\n${arraySizeDefinition}\n\n")
     if(BIN2H_APPEND)
         file(APPEND ${BIN2H_HEADER_FILE} "${declarations}")
@@ -110,15 +127,13 @@ function(BIN2H)
     endif()
 endfunction()
 
-if("${CMAKE_ARGV1}" MATCHES "^-P$" AND "${CMAKE_ARGV2}" MATCHES "Binary2Header.cmake$")
-
-  # Prase command line argmuents
-  set(ARG_NUM 3)
+if(CMAKE_SCRIPT_MODE_FILE AND "${CMAKE_SCRIPT_MODE_FILE}" MATCHES "Binary2Header.cmake$")
+  # Parse command line argmuents
+  set(ARG_NUM 1)
   set(conversion_type "HEADER")
   set(options "")
   while(ARG_NUM LESS CMAKE_ARGC)
     set(CURRENT_ARG ${CMAKE_ARGV${ARG_NUM}})
-
     if(${CURRENT_ARG} MATCHES "^--usage$")
       message("Usage:
        cmake -P cmake/Binary2Header.cmake [options] infile outfile
@@ -128,6 +143,7 @@ Options:
     --variable-name [NAME]  variable name, default is converted to C identifier <infile>
     --skip-line [NUM]       skip NUM lines, default 0
     --append                append to a file
+    --raw                   generate raw string literals
     --null                  add a null byte(zero) to the byte array")
       set(exit TRUE)
     elseif(${CURRENT_ARG} MATCHES "^--header")
@@ -146,6 +162,10 @@ Options:
     elseif(${CURRENT_ARG} MATCHES "^--skip$")
       math(EXPR ARG_NUM "${ARG_NUM}+1")
       list(APPEND options "SKIP_LINES;${CMAKE_ARGV${ARG_NUM}}")
+    elseif(${CURRENT_ARG} MATCHES "^-P")
+      math(EXPR ARG_NUM "${ARG_NUM}+1") # skip -P and self
+    elseif(${CURRENT_ARG} MATCHES "^-D")
+      set(_) # skip self and any -D variables
     elseif(${CURRENT_ARG} MATCHES "^[^-]")
       if(NOT source)
         set(source ${CURRENT_ARG})
@@ -157,16 +177,15 @@ Options:
   endwhile()
 
   if(NOT exit)
-    if(NOT source)
-      message(FATAL_ERROR "no source file")
+    if(NOT source OR NOT EXISTS ${source})
+      message(FATAL_ERROR "no source file or ${source} does not exist")
     elseif(NOT target)
       message(FATAL_ERROR "no target file")
     endif()
 
     if(conversion_type MATCHES HEADER)
-      bin2h(SOURCE_FILE ${CMAKE_ARGV3} HEADER_FILE ${CMAKE_ARGV4} ${options})
+      bin2h(SOURCE_FILE ${source} HEADER_FILE ${target} ${options})
     elseif(conversion_type MATCHES LOCALES)
-
       file(WRITE ${target} "#include <unordered_map>\n")
       file(GLOB json_files LIST_DIRECTORIES FALSE "${source}/*.json")
       foreach(file ${json_files})
