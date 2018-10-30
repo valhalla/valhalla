@@ -130,9 +130,8 @@ std::string make_test_case(PointLL& start, PointLL& end) {
     // try again if they are too close or too far apart
   } while (distance < 1000 || distance > 2000);
   return R"({"costing":"auto","locations":[{"lat":)" + std::to_string(start.second) + R"(,"lon":)" +
-         std::to_string(start.first) +
-         R"(},{"lat":)" + std::to_string(end.second) + R"(,"lon":)" + std::to_string(end.first) +
-         "}]}";
+         std::to_string(start.first) + R"(},{"lat":)" + std::to_string(end.second) + R"(,"lon":)" +
+         std::to_string(end.first) + "}]}";
 }
 
 void test_matcher() {
