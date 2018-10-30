@@ -145,11 +145,6 @@ void DirectedEdge::set_laneconnectivity(const bool lc) {
   lane_conn_ = lc;
 }
 
-// Sets the traffic segment flag.
-void DirectedEdge::set_traffic_seg(const bool seg) {
-  traffic_seg_ = seg;
-}
-
 // -------------------------- Routing attributes --------------------------- //
 
 // Set if edge has a shoulder (Beneficial to know for cycling)

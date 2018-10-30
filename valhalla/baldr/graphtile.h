@@ -17,14 +17,12 @@
 #include <valhalla/baldr/nodetransition.h>
 #include <valhalla/baldr/predictedspeeds.h>
 #include <valhalla/baldr/sign.h>
-#include <valhalla/baldr/trafficassociation.h>
 #include <valhalla/baldr/transitdeparture.h>
 #include <valhalla/baldr/transitroute.h>
 #include <valhalla/baldr/transitschedule.h>
 #include <valhalla/baldr/transitstop.h>
 #include <valhalla/baldr/transittransfer.h>
 #include <valhalla/baldr/turnlanes.h>
-
 #include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/logging.h>
 #include <valhalla/midgard/util.h>
@@ -418,22 +416,6 @@ public:
   midgard::iterable_t<GraphId> GetBin(size_t index) const;
 
   /**
-   * Get traffic segment(s) associated to this edge.
-   * @param   edge  GraphId of the directed edge.
-   * @return  Returns a list of traffic segment Ids and weights that associate
-   *          to this edge.
-   */
-  std::vector<TrafficSegment> GetTrafficSegments(const GraphId& edge) const;
-
-  /**
-   * Get traffic segment(s) associated to this edge.
-   * @param   idx  index of the directed edge within the tile.
-   * @return  Returns a list of traffic segment Ids and weights that associate
-   *          to this edge.
-   */
-  std::vector<TrafficSegment> GetTrafficSegments(const uint32_t idx) const;
-
-  /**
    * Get lane connections ending on this edge.
    * @param  idx  GraphId of the directed edge.
    * @return  Returns a list of lane connections ending on this edge.
@@ -594,16 +576,6 @@ protected:
   // List of edge graph ids. The list is broken up in bins which have
   // indices in the tile header.
   GraphId* edge_bins_;
-
-  // Traffic segment association. Count is the same as the directed edge count.
-  TrafficAssociation* traffic_segments_;
-
-  // Traffic chunks. Chunks are an array of uint64_t which combines a traffic
-  // segment Id (GraphId) and weight (combined int a single uint64_t).
-  TrafficChunk* traffic_chunks_;
-
-  // Number of bytes in the traffic chunk list
-  std::size_t traffic_chunk_size_;
 
   // Lane connectivity data.
   LaneConnectivity* lane_connectivity_;
