@@ -7,8 +7,8 @@ using namespace std;
 using namespace valhalla::baldr;
 using namespace valhalla::midgard;
 
-// Expected size is 32 bytes. (NOTE - first iteration for V3 leaves this struct at 40 bytes)
-constexpr size_t kNodeInfoExpectedSize = 40;
+// Expected size is 32 bytes.
+constexpr size_t kNodeInfoExpectedSize = 32;
 
 namespace {
 
@@ -90,26 +90,6 @@ void TestWriteRead() {
   if (nodeinfo.heading(7) != 0) {
     throw runtime_error("NodeInfo heading for localidx 7 test failed " +
                         std::to_string(nodeinfo.heading(7)));
-  }
-
-  nodeinfo.set_name_consistency(0, 4, true);
-  nodeinfo.set_name_consistency(3, 1, false);
-  nodeinfo.set_name_consistency(2, 7, true);
-  nodeinfo.set_name_consistency(6, 6, true);
-  if (nodeinfo.name_consistency(0, 4) != true) {
-    throw runtime_error("NodeInfo name_consistency for 0,4 test failed");
-  }
-  if (nodeinfo.name_consistency(4, 0) != true) {
-    throw runtime_error("NodeInfo name_consistency for 4,0 test failed");
-  }
-  if (nodeinfo.name_consistency(1, 3) != false) {
-    throw runtime_error("NodeInfo name_consistency for 1,3 test failed");
-  }
-  if (nodeinfo.name_consistency(7, 2) != true) {
-    throw runtime_error("NodeInfo name_consistency for 7,2 test failed");
-  }
-  if (nodeinfo.name_consistency(6, 6) != true) {
-    throw runtime_error("NodeInfo name_consistency for 6,6 test failed");
   }
 
   nodeinfo.set_local_driveability(3, Traversability::kBoth);

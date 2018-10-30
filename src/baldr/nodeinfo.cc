@@ -206,50 +206,13 @@ void NodeInfo::set_stop_index(const uint32_t stop_index) {
   transition_index_ = stop_index;
 }
 
-/**
- * Set the name consistency between a pair of local edges. This is limited
- * to the first 8 local edge indexes.
- * @param  from  Local index of the from edge.
- * @param  to    Local index of the to edge.
- * @param  c     Are names consistent between the 2 edges?
- */
-void NodeInfo::set_name_consistency(const uint32_t from, const uint32_t to, const bool c) {
-  if (from == to) {
-    return;
-  } else if (from > kMaxLocalEdgeIndex || to > kMaxLocalEdgeIndex) {
-    LOG_WARN("Local index exceeds max in set_name_consistency, skip");
-  } else {
-    if (from < to) {
-      name_consistency_ =
-          OverwriteBits(name_consistency_, c, (ContinuityLookup[from] + (to - from - 1)), 1);
-    } else {
-      name_consistency_ =
-          OverwriteBits(name_consistency_, c, (ContinuityLookup[to] + (from - to - 1)), 1);
-    }
-  }
-}
-
-// Get the connecting way id for a transit stop.
-uint64_t NodeInfo::connecting_wayid() const {
-  return way_heading_.connecting_wayid_;
-}
-
-/**
- * Set the connecting way id for a transit stop.
- * @param  wayid  Connecting wayid.
- */
-void NodeInfo::set_connecting_wayid(const uint64_t wayid) {
-  way_heading_.connecting_wayid_ = wayid;
-}
-
 // Get the heading of the local edge given its local index. Supports
 // up to 8 local edges. Headings are expanded from 8 bits.
 uint32_t NodeInfo::heading(const uint32_t localidx) const {
   // Make sure everything is 64 bit!
   uint64_t shift = localidx * 8; // 8 bits per index
-  return static_cast<uint32_t>(
-      std::round(((way_heading_.headings_ & (static_cast<uint64_t>(255) << shift)) >> shift) *
-                 kHeadingExpandFactor));
+  return static_cast<uint32_t>(std::round(
+      ((headings_ & (static_cast<uint64_t>(255) << shift)) >> shift) * kHeadingExpandFactor));
 }
 
 // Set the heading of the local edge given its local index. Supports
@@ -260,8 +223,13 @@ void NodeInfo::set_heading(uint32_t localidx, uint32_t heading) {
   } else {
     // Has to be 64 bit!
     uint64_t hdg = static_cast<uint64_t>(std::round((heading % 360) * kHeadingShrinkFactor));
-    way_heading_.headings_ |= hdg << static_cast<uint64_t>(localidx * 8);
+    headings_ |= hdg << static_cast<uint64_t>(localidx * 8);
   }
+}
+
+// Set the connecting way id for a transit stop.
+void NodeInfo::set_connecting_wayid(const uint64_t wayid) {
+  headings_ = wayid;
 }
 
 json::MapPtr NodeInfo::json(const GraphTile* tile) const {
@@ -280,7 +248,7 @@ json::MapPtr NodeInfo::json(const GraphTile* tile) const {
       {"transition count", static_cast<uint64_t>(transition_count_)},
   });
   if (is_transit()) {
-    m->emplace("stop_index", static_cast<uint64_t>(name_consistency_));
+    m->emplace("stop_index", static_cast<uint64_t>(stop_index()));
   }
   return m;
 }

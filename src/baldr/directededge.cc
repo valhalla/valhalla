@@ -40,8 +40,20 @@ json::MapPtr access_json(uint32_t access) {
 uint32_t
 OverwriteBits(const uint32_t dst, const uint32_t src, const uint32_t pos, const uint32_t len) {
   uint32_t shift = (pos * len);
-  uint32_t mask = (((uint32_t)1 << len) - 1) << shift;
+  uint32_t mask = ((static_cast<uint32_t>(1) << len) - 1) << shift;
   return (dst & ~mask) | (src << shift);
+}
+
+/**
+ * Get the updated bit field.
+ * @param dst  Data member to be updated.
+ * @param src  Value to be updated.
+ * @param pos  Position (pos element within the bit field).
+ * @return  Returns an updated value for the bit field.
+ */
+uint32_t OverwriteBit(const uint32_t dst, const uint32_t src, const uint32_t pos) {
+  uint32_t mask = (static_cast<uint32_t>(1) << pos);
+  return (dst & ~mask) | (src << pos);
 }
 
 } // namespace
@@ -368,6 +380,17 @@ void DirectedEdge::set_classification(const RoadClass roadclass) {
 // of a hike it is.
 void DirectedEdge::set_sac_scale(const SacScale sac_scale) {
   sac_scale_ = static_cast<uint64_t>(sac_scale);
+}
+
+// Set the name consistency given the other edge's local index. This is limited
+// to the first 8 local edge indexes.
+void DirectedEdge::set_name_consistency(const uint32_t idx, const bool c) {
+  if (idx > kMaxLocalEdgeIndex) {
+    LOG_WARN("Local index exceeds max in set_name_consistency, skip");
+  } else {
+    name_consistency_ = OverwriteBit(name_consistency_, c, idx);
+    //    name_consistency_ |= 1 << idx;
+  }
 }
 
 // Sets the surface type (see baldr/graphconstants.h). This is a general
