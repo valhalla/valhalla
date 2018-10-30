@@ -607,6 +607,22 @@ public:
         }
       }
 
+      else if (tag.first == "erg_depth") {
+         try {
+           w.set_erg_depth(std::stof(tag.second));
+           w.set_tagged_erg_depth(true);
+
+           OSMAccessRestriction restriction;
+           restriction.set_type(AccessType::kErgMaxDepth);
+           restriction.set_value(std::stof(tag.second));
+           restriction.set_modes(kAutoAccess);
+           osmdata_.access_restrictions.insert(
+               AccessRestrictionsMultiMap::value_type(osmid, restriction));
+         } catch (const std::out_of_range& oor) {
+           LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid));
+         }
+       }
+
       else if (tag.first == "maxspeed:hgv") {
         try {
           w.set_truck_speed(std::stof(tag.second));

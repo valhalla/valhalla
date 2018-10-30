@@ -1427,6 +1427,36 @@ struct OSMWay {
   }
 
   /**
+   * Sets the depth
+   * @param  depth   Depth in meters.
+   */
+  void set_erg_depth(const float depth);
+
+  /**
+   * Gets the depth in meters.
+   * @return  Returns depth.
+   */
+  uint8_t erg_depth() const {
+    return erg_depth_;
+  }
+
+  /**
+   * Sets the tagged_erg_depth flag.
+   * @param  tagged_erg_depth  User specified erg_depth?
+   */
+  void set_tagged_erg_depth(const bool tagged_erg_depth) {
+    attributes_.fields.tagged_erg_depth = tagged_erg_depth;
+  }
+
+  /**
+   * Get the tagged_erg_depth flag.
+   * @return  Returns tagged_erg_depth flag.
+   */
+  bool tagged_erg_depth() const {
+    return attributes_.fields.tagged_erg_depth;
+  }
+
+  /**
    * Get the names for the edge info based on the road class.
    * @param  ref              updated refs from relations.
    * @param  ref_offset_map   map of unique refs from ways.
@@ -1501,6 +1531,7 @@ struct OSMWay {
       uint32_t sidewalk_right : 1;
       uint32_t sidewalk_left : 1;
       uint32_t sac_scale : 3;
+      uint32_t tagged_erg_depth : 1;
     } fields;
     uint32_t v;
   };
@@ -1587,6 +1618,10 @@ struct OSMWay {
   uint8_t truck_speed_;
 
   uint8_t spare_;
+
+  // embark routing graph
+  // Speed in kilometers per hour
+  uint8_t erg_depth_;
 };
 
 } // namespace mjolnir

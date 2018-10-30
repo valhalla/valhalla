@@ -72,6 +72,11 @@ void OSMWay::set_forward_lanes(const uint32_t forward_lanes) {
   classification_.fields.forward_lanes = forward_lanes;
 }
 
+// Sets the depth
+void OSMWay::set_erg_depth(const float depth) {
+  erg_depth_ = static_cast<unsigned char>(depth + 0.5f);
+}
+
 // Get the names for the edge info based on the road class.
 std::vector<std::string> OSMWay::GetNames(const std::string& ref,
                                           const UniqueNames& ref_offset_map,

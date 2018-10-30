@@ -517,7 +517,7 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
   // the order of costing must reflect the enum order
   for (const auto costing : {odin::auto_, odin::auto_shorter, odin::bicycle, odin::bus, odin::hov,
                              odin::motor_scooter, odin::multimodal, odin::pedestrian, odin::transit,
-                             odin::truck, odin::motorcycle, odin::auto_data_fix}) {
+                             odin::truck, odin::motorcycle, odin::auto_data_fix, odin::boat_}) {
     // Create the costing string
     auto costing_str = valhalla::odin::Costing_Name(costing);
     // Create the costing options key
@@ -570,6 +570,10 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
       }
       case odin::auto_data_fix: {
         sif::ParseAutoDataFixCostOptions(doc, costing_options_key, options.add_costing_options());
+        break;
+      }
+      case odin::boat_: {
+        sif::ParseBoatCostOptions(doc, costing_options_key, options.add_costing_options());
         break;
       }
     }
@@ -793,6 +797,7 @@ bool Costing_Parse(const std::string& costing, odin::Costing* c) {
       {"truck", odin::Costing::truck},
       {"motorcycle", odin::Costing::motorcycle},
       {"auto_data_fix", odin::Costing::auto_data_fix},
+      {"boat", odin::Costing::boat_},
   };
   auto i = costings.find(costing);
   if (i == costings.cend())
@@ -816,6 +821,7 @@ const std::string& Costing_Name(const odin::Costing costing) {
       {odin::Costing::truck, "truck"},
       {odin::Costing::motorcycle, "motorcycle"},
       {odin::Costing::auto_data_fix, "auto_data_fix"},
+      {odin::Costing::boat_, "boat"},
   };
   auto i = costings.find(costing);
   return i == costings.cend() ? empty : i->second;

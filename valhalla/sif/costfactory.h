@@ -7,6 +7,7 @@
 #include <valhalla/baldr/rapidjson_utils.h>
 #include <valhalla/proto/directions_options.pb.h>
 #include <valhalla/sif/autocost.h>
+#include <valhalla/sif/boatcost.h>
 #include <valhalla/sif/bicyclecost.h>
 #include <valhalla/sif/motorcyclecost.h>
 #include <valhalla/sif/motorscootercost.h>
@@ -73,6 +74,7 @@ public:
     Register(odin::Costing::pedestrian, CreatePedestrianCost);
     Register(odin::Costing::truck, CreateTruckCost);
     Register(odin::Costing::transit, CreateTransitCost);
+    Register(odin::Costing::boat_, CreateBoatCost);
   }
 
 private:
