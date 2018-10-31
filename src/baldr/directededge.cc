@@ -389,7 +389,6 @@ void DirectedEdge::set_name_consistency(const uint32_t idx, const bool c) {
     LOG_WARN("Local index exceeds max in set_name_consistency, skip");
   } else {
     name_consistency_ = OverwriteBit(name_consistency_, c, idx);
-    //    name_consistency_ |= 1 << idx;
   }
 }
 
