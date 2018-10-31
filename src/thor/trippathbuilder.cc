@@ -661,11 +661,15 @@ TripPathBuilder::Build(const AttributesController& controller,
       current_time += path.front().elapsed_time;
     }
 
+    // Driving on right from the start of the edge?
+    const GraphId start_node = graphreader.GetOpposingEdge(path.front().edgeid)->endnode();
+    bool drive_on_right = graphreader.nodeinfo(start_node)->drive_on_right();
+
     // Add trip edge
     auto trip_edge =
         AddTripEdge(controller, path.front().edgeid, path.front().trip_id, 0, path.front().mode,
-                    travel_types[static_cast<int>(path.front().mode)], edge, trip_path.add_node(),
-                    tile, current_time, std::abs(end_pct - start_pct));
+                    travel_types[static_cast<int>(path.front().mode)], edge, drive_on_right,
+                    trip_path.add_node(), tile, current_time, std::abs(end_pct - start_pct));
 
     // Set begin shape index if requested
     if (controller.attributes.at(kEdgeBeginShapeIndex)) {
@@ -996,8 +1000,8 @@ TripPathBuilder::Build(const AttributesController& controller,
     auto is_last_edge = edge_itr == path.end() - 1;
     float length_pct = (is_first_edge ? 1.f - start_pct : (is_last_edge ? end_pct : 1.f));
     TripPath_Edge* trip_edge =
-        AddTripEdge(controller, edge, trip_id, block_id, mode, travel_type, directededge, trip_node,
-                    graphtile, current_time, length_pct);
+        AddTripEdge(controller, edge, trip_id, block_id, mode, travel_type, directededge,
+                    node->drive_on_right(), trip_node, graphtile, current_time, length_pct);
 
     // Get the shape and set shape indexes (directed edge forward flag
     // determines whether shape is traversed forward or reverse).
@@ -1260,6 +1264,7 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const AttributesController& controll
                                             const sif::TravelMode mode,
                                             const uint8_t travel_type,
                                             const DirectedEdge* directededge,
+                                            const bool drive_on_right,
                                             TripPath_Node* trip_node,
                                             const GraphTile* graphtile,
                                             const uint32_t current_time,
@@ -1423,7 +1428,7 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const AttributesController& controll
 
   // Set drive_on_right if requested
   if (controller.attributes.at(kEdgeDriveOnRight)) {
-    trip_edge->set_drive_on_right(directededge->drive_on_right());
+    trip_edge->set_drive_on_right(drive_on_right);
   }
 
   // Set surface if requested

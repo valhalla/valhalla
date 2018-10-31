@@ -174,12 +174,6 @@ void DirectedEdge::set_use_sidepath(const bool use_sidepath) {
   use_sidepath_ = use_sidepath;
 }
 
-// Set the flag indicating driving is on the right hand side of the road
-// along this edge?
-void DirectedEdge::set_drive_on_right(const bool rsd) {
-  drive_on_right_ = rsd;
-}
-
 // Set the flag indicating the edge is a dead end (no other driveable
 // roads at the end node of this edge).
 void DirectedEdge::set_deadend(const bool d) {
@@ -571,7 +565,6 @@ json::MapPtr DirectedEdge::json() const {
       {"end_restriction", access_json(end_restriction_)},
       {"part_of_complex_restriction", static_cast<bool>(part_of_complex_restriction_)},
       {"has_exit_sign", static_cast<bool>(exitsign_)},
-      {"drive_on_right", static_cast<bool>(drive_on_right_)},
       {"toll", static_cast<bool>(toll_)},
       {"seasonal", static_cast<bool>(seasonal_)},
       {"destination_only", static_cast<bool>(dest_only_)},

@@ -196,23 +196,6 @@ public:
   void set_curvature(const uint32_t factor);
 
   /**
-   * Is driving on the right hand side of the road along this edge?
-   * @return  Returns true if this edge uses right-side driving, false if
-   *          left-side driving.
-   */
-  bool drive_on_right() const {
-    return drive_on_right_;
-  }
-
-  /**
-   * Set the flag indicating driving is on the right hand side of the road
-   * along this edge?
-   * @param rsd  True if this edge uses right-side driving, false if
-   *             left-side driving.
-   */
-  void set_drive_on_right(const bool rsd);
-
-  /**
    * Flag indicating the edge is a dead end (no other driveable
    * roads at the end node of this edge).
    * @return  Returns true if this edge is a dead end.
@@ -680,16 +663,16 @@ public:
   /**
    * Is this edge a link/ramp?
    */
-  bool link() const {
+/*  bool link() const {
     return link_;
   }
-
+*/
   /**
    * Sets the link flag indicating the edge is part of a link or connection
    * (ramp or turn channel).
    * @param  link  True if the edge is part of a link.
    */
-  void set_link(const bool link);
+ // void set_link(const bool link);
 
   /**
    * Gets the intersection internal flag. This indicates the edge is "internal"
@@ -1068,7 +1051,7 @@ protected:
                                      // ends on this directed edge
   uint64_t exitsign_ : 1;            // Exit signs exist for this edge
   uint64_t forward_ : 1;             // Is the edge info forward or reverse
-  uint64_t drive_on_right_ : 1;      // Driving side. Right if true (false=left)
+  uint64_t spare0_ : 1;
 
   // Attributes. Can be used in edge costing methods to favor or avoid edges.
   // Speed values above 250 used for special cases (closures, construction)
@@ -1081,7 +1064,8 @@ protected:
   uint64_t use_ : 6;                         // Specific use types
   uint64_t speed_type_ : 2;                  // Speed type (tagged vs. categorized)
   uint64_t opp_index_ : 7;                   // Opposing directed edge index
-  uint64_t link_ : 1;                        // *link tag - Ramp or turn channel
+  uint64_t spare1_ : 1;
+//  uint64_t link_ : 1;                        // *link tag - Ramp or turn channel
   uint64_t internal_ : 1;                    // Edge that is internal to an intersection
   uint64_t deadend_ : 1;                     // A dead-end (no other driveable roads)
   uint64_t toll_ : 1;                        // Edge is part of a toll road.

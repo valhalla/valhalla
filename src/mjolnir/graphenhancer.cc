@@ -598,10 +598,10 @@ bool IsPencilPointUturn(uint32_t from_index,
                         const NodeInfo& node_info,
                         uint32_t turn_degree) {
   // Logic for drive on right
-  if (directededge.drive_on_right()) {
+  if (node_info.drive_on_right()) {
     // If the turn is a sharp left (179 < turn < 211)
     //    or short distance (< 50m) and wider sharp left (179 < turn < 226)
-    // and oneway edges
+    // and oneway edgesb
     // and an intersecting right road exists
     // and no intersecting left road exists
     // and the from and to edges have a common base name
@@ -669,7 +669,7 @@ bool IsCyclewayUturn(uint32_t from_index,
   }
 
   // Logic for drive on right
-  if (directededge.drive_on_right()) {
+  if (node_info.drive_on_right()) {
     // If the turn is a sharp left (179 < turn < 211)
     //    or short distance (< 50m) and wider sharp left (179 < turn < 226)
     // and an intersecting right road exists

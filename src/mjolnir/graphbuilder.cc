@@ -878,11 +878,6 @@ void BuildTileSet(const std::string& ways_file,
             res_it++;
           }
 
-          // Set drive on right flag
-          if (admin_index != 0) {
-            directededge.set_drive_on_right(drive_on_right[admin_index]);
-          }
-
           // Set shoulder based on current facing direction and which
           // side of the road is meant to be driven on.
           if (forward) {
@@ -971,6 +966,11 @@ void BuildTileSet(const std::string& ways_file,
 
         // Set admin index
         graphtile.nodes().back().set_admin_index(admin_index);
+
+        // Set drive on right flag
+        if (admin_index != 0) {
+          graphtile.nodes().back().set_drive_on_right(drive_on_right[admin_index]);
+        }
 
         // Set the time zone index
         uint32_t tz_index =
