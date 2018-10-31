@@ -402,6 +402,7 @@ struct bin_handler_t {
   // TODO: test whether writing this non-recursively would be faster
   void depth_first(const GraphTile*& tile, const NodeInfo* node, size_t& reach_index) {
     // for each edge recurse on the usable ones
+    const GraphTile* start_tile = tile;
     auto* e = tile->directededge(node->edge_index());
     for (uint32_t i = 0; reaches.back() < max_reach_limit && i < node->edge_count(); ++i, ++e) {
       // if we can take the edge and we can get the node and we can pass through the node
@@ -439,7 +440,7 @@ struct bin_handler_t {
 
     // Follow transition to other hierarchy levels
     if (node->transition_count() > 0) {
-      const NodeTransition* trans = tile->transition(node->transition_index());
+      const NodeTransition* trans = start_tile->transition(node->transition_index());
       for (uint32_t i = 0; reaches.back() < max_reach_limit && i < node->transition_count();
            ++i, ++trans) {
         const GraphTile* tile = reader.GetGraphTile(trans->endnode());
