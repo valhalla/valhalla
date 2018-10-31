@@ -28,9 +28,6 @@ constexpr float kHeadingShrinkFactor = (255.0f / 359.0f);
 // Heading expand factor to increase max heading of 255 to 359
 constexpr float kHeadingExpandFactor = (359.0f / 255.0f);
 
-// Lookup for name continuity
-constexpr uint32_t ContinuityLookup[] = {0, 7, 13, 18, 22, 25, 27};
-
 /**
  * Information held for each node within the graph. The graph uses a forward
  * star structure: nodes point to the first outbound directed edge and each
@@ -285,44 +282,13 @@ public:
   void set_stop_index(const uint32_t stop_index);
 
   /**
-   * Get the name consistency between a pair of local edges. This is limited to the
-   * first 8 local edge indexes. Name consistency information relies on the fact that
-   * there is a reciprocal relationship between edge pairs. Thus, for edge 0 we store
-   * 7 bits (name consistency between remaining 7 edges), for edge 1 we require 6 bits,
-   * edge 2 requires 5 bits, etc.
-   * @param  from  Local index of the from edge.
-   * @param  to    Local index of the to edge.
-   * @return  Returns true if names are consistent, false if not (or if from
-   *          or to index exceeds max).
-   */
-  bool name_consistency(const uint32_t from, const uint32_t to) const {
-    if (from == to) {
-      return true;
-    } else if (from < to) {
-      return (to > kMaxLocalEdgeIndex)
-                 ? false
-                 : (name_consistency_ & 1 << (ContinuityLookup[from] + (to - from - 1)));
-    } else {
-      return (from > kMaxLocalEdgeIndex)
-                 ? false
-                 : (name_consistency_ & 1 << (ContinuityLookup[to] + (from - to - 1)));
-    }
-  }
-
-  /**
-   * Set the name consistency between a pair of local edges. This is limited
-   * to the first 8 local edge indexes.
-   * @param  from  Local index of the from edge.
-   * @param  to    Local index of the to edge.
-   * @param  c     Are names consistent between the 2 edges?
-   */
-  void set_name_consistency(const uint32_t from, const uint32_t to, const bool c);
-
-  /**
-   * Get the connecting way id for a transit stop.
+   * Get the connecting way id for a transit stop (stored in headings_ while transit data
+   * is connected to the road network.
    * @return Returns the connecting way id for a transit stop.
    */
-  uint64_t connecting_wayid() const;
+  uint64_t connecting_wayid() const {
+    return headings_;
+  }
 
   /**
    * Set the connecting way id for a transit stop.
@@ -387,8 +353,7 @@ public:
   json::MapPtr json(const GraphTile* tile) const;
 
 protected:
-  // Organize into 32-bit words. The structure will align to 4 byte boundaries.
-  // TODO - this is true if/when we move the WayHeading data member to another structure.
+  // Organized into 8-byte words so structure will align to 8 byte boundaries.
 
   // 26 bits for lat,lon offset allows 7 digit precision within 4 degree tiles. Note that
   // this would require using double precision to actually achieve this precision.
@@ -399,7 +364,6 @@ protected:
   uint64_t edge_index_ : 21;    // Index within the node's tile of its first outbound directed edge
   uint64_t edge_count_ : 7;     // Number of outbound edges (on this level)
   uint64_t admin_index_ : 12;   // Index into this tile's administrative information list
-                                // TODO - could be moved to a new "guidance only" structure
   uint64_t timezone_ : 9;       // Time zone
   uint64_t intersection_ : 4;   // Intersection type (see graphconstants.h)
   uint64_t type_ : 4;           // NodeType (see graphconstants.h)
@@ -407,85 +371,19 @@ protected:
   uint64_t traffic_signal_ : 1; // Traffic signal
   uint64_t mode_change_ : 1;    // Mode change allowed?
 
-  uint64_t transition_index_ : 21; // Index into the node transitions to the first transition
-                                   // (used to store transit stop index for transit level)
-  uint64_t transition_count_ : 3;  // Number of transitions from this node
-  uint64_t spare2_ : 40;
-
-  // Candidates to move....
-  // Name consistency is required at the Node level. This is to avoid retrieving tiles
-  // at other hierarchy levels when forming the TripPath. Name consistency is needed for
-  // intersecting edges. Note that the name consistency information relies on the fact
-  // that there is a reciprocal relationship between edge pairs. Thus, for edge 0 we store
-  // 7 bits (name consistency between remaining 7 edges), for edge 1 we require 6 bits, edge
-  // 2 requires 5 bits, etc.
-  uint64_t name_consistency_ : 28; // Name consistency between edges
-
+  uint64_t transition_index_ : 21;   // Index into the node transitions to the first transition
+                                     // (used to store transit stop index for transit level)
+  uint64_t transition_count_ : 3;    // Number of transitions from this node
   uint64_t local_driveability_ : 16; // Driveability for regular edges (up to
                                      // kMaxLocalEdgeIndex+1 edges)
   uint64_t local_edge_count_ : 3;    // # of regular edges across all levels
                                      // (up to kMaxLocalEdgeIndex+1)
-  uint64_t spare3_ : 17;
+  uint64_t spare2_ : 21;
 
-  // TODO - consider moving name_consistency_ to DirectedEdge.
-  // Transit stop could be shared with transition index (since transit connects to the road
-  // network via transit connection edges)
-
-  /**
-    // Organize into 32-bit words. The structure will align to 4 byte boundaries.
-    // TODO - this is true if/when we move the WayHeading data member to another structure.
-
-    // 26 bits for lat,lon offset allows 7 digit precision within 4 degree tiles. Note that
-    // this would require using double precision to actually achieve this precision.
-
-    uint32_t lat_offset_ : 26;    // Latitude offset from tile base latitude
-    uint32_t type_ : 4;           // NodeType, see graphconstants
-    uint32_t traffic_signal_ : 1; // Traffic signal
-    uint32_t mode_change_ : 1;    // Mode change allowed?
-
-    uint32_t lon_offset_ : 26; // Longitude offset from tile base longitude
-    uint32_t density_ : 4;     // Relative road density
-    uint32_t spare1_ : 2;
-
-    uint32_t edge_index_ : 21;    // Index within the node's tile of its first outbound directed edge
-    uint32_t edge_count_ : 7;     // Number of outbound edges (on this level)
-    uint32_t spare2_ : 4;
-
-    uint32_t access_ : 12;     // Access through the node - bit field
-    uint32_t timezone_ : 9;       // Time zone
-    uint32_t intersection_ : 5;   // Intersection type (TODO - change to 4 bits)
-    uint32_t spare3_ : 6;
-
-    uint32_t transition_index_ : 21;  // Index into the node transitions to the first transition
-                                      // (used to store transit stop index for transit level)
-    uint32_t transition_count_ : 3;   // Number of transitions from this node
-    uint32_t spare4_ : 8;
-
-    // TODO - consider moving name_consistency_ to DirectedEdge.
-    // Transit stop could be shared with transition index (since transit connects to the road
-    // network via transit connection edges)
-    uint32_t name_consistency_;  // Name consistency between edges
-
-    // The following data could be split into a separate structure for node data
-    // that is NOT required during path finding
-
-    // Admin index and driveability
-    uint32_t local_driveability_ : 16; // Driveability for regular edges (up to
-                                       // kMaxLocalEdgeIndex+1 edges)
-    uint32_t local_edge_count_ : 3;    // # of regular edges across all levels
-                                       // (up to kMaxLocalEdgeIndex+1)
-    uint32_t admin_index_ : 12;        // Index into this tile's admin data list
-    uint32_t spare5_ : 8;
-  **/
-
-  // Connecting way Id (for transit level) / headings of up to
-  // kMaxLocalEdgeIndex+1 local edges (rounded to nearest 2 degrees)
-  // for all other levels.
-  union WayHeading {
-    uint64_t connecting_wayid_;
-    uint64_t headings_;
-  };
-  WayHeading way_heading_;
+  // Headings of up to kMaxLocalEdgeIndex+1 local edges (rounded to nearest 2 degrees)
+  // for all other levels. Connecting way Id (for transit level) while data build occurs.
+  // Need to keep this in NodeInfo since it is used in map-matching.
+  uint64_t headings_;
 };
 
 } // namespace baldr

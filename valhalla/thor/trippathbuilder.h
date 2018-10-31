@@ -79,18 +79,18 @@ public:
   /**
    * Add trip intersecting edge.
    * @param  controller   Controller to determine which attributes to set.
+   * @param  directededge Directed edge on the path.
+   * @param  prev_de  Previous directed edge on the path.
    * @param  local_edge_index  Index of the local intersecting path edge at intersection.
-   * @param  prev_edge_index  Index of the local previous path edge at intersection.
-   * @param  curr_edge_index  Index of the local current path edge at intersection.
    * @param  nodeinfo  Node information of the intersection.
    * @param  trip_node  Trip node that will store the intersecting edge information.
    * @param  intersecting_de Intersecting directed edge. Will be nullptr except when
    *                         on the local hierarchy.
    */
   static void AddTripIntersectingEdge(const AttributesController& controller,
+                                      const baldr::DirectedEdge* directededge,
+                                      const baldr::DirectedEdge* prev_de,
                                       uint32_t local_edge_index,
-                                      uint32_t prev_edge_index,
-                                      uint32_t curr_edge_index,
                                       const baldr::NodeInfo* nodeinfo,
                                       odin::TripPath_Node* trip_node,
                                       const baldr::DirectedEdge* intersecting_de);

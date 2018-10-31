@@ -54,6 +54,34 @@ void TestWriteRead() {
   if (directededge.stopimpact(1) != 4) {
     throw runtime_error("DirectedEdge stopimpact for localidx 1 test failed");
   }
+
+  // name consistency should be false by default
+  if (directededge.name_consistency(2) != false) {
+    throw runtime_error("DirectedEdge name_consistency for idx 2 test failed");
+  }
+
+  directededge.set_name_consistency(4, true);
+  directededge.set_name_consistency(1, false);
+  directededge.set_name_consistency(7, true);
+  directededge.set_name_consistency(6, true);
+  if (directededge.name_consistency(4) != true) {
+    throw runtime_error("DirectedEdge name_consistency for idx 4 test failed");
+  }
+  if (directededge.name_consistency(1) != false) {
+    throw runtime_error("DirectedEdge name_consistency for idx 1 test failed");
+  }
+  if (directededge.name_consistency(7) != true) {
+    throw runtime_error("DirectedEdge name_consistency for idx 7 test failed");
+  }
+  if (directededge.name_consistency(6) != true) {
+    throw runtime_error("DirectedEdge name_consistency for idx 6 test failed");
+  }
+
+  // Overwrite idx 6 with false
+  directededge.set_name_consistency(6, false);
+  if (directededge.name_consistency(6) != false) {
+    throw runtime_error("DirectedEdge name_consistency overwrite idx 6 test failed");
+  }
 }
 } // namespace
 

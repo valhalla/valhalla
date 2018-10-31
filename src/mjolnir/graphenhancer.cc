@@ -614,7 +614,7 @@ bool IsPencilPointUturn(uint32_t from_index,
         ((directededge.forwardaccess() & kAutoAccess) &&
          !(directededge.reverseaccess() & kAutoAccess)) &&
         directededge.edge_to_right(from_index) && !directededge.edge_to_left(from_index) &&
-        node_info.name_consistency(from_index, to_index)) {
+        edges[to_index].name_consistency(from_index)) {
       return true;
     }
 
@@ -636,7 +636,7 @@ bool IsPencilPointUturn(uint32_t from_index,
         ((directededge.forwardaccess() & kAutoAccess) &&
          !(directededge.reverseaccess() & kAutoAccess)) &&
         !directededge.edge_to_right(from_index) && directededge.edge_to_left(from_index) &&
-        node_info.name_consistency(from_index, to_index)) {
+        edges[to_index].name_consistency(from_index)) {
       return true;
     }
   }
@@ -1271,12 +1271,12 @@ void enhance(const boost::property_tree::ptree& pt,
         auto names = tilebuilder.edgeinfo(directededge.edgeinfo_offset()).GetNames();
         directededge.set_named(names.size() > 0);
 
-        // Name continuity - set in NodeInfo.
-        for (uint32_t k = (j + 1); k < ntrans; k++) {
+        // Name continuity - on the directededge.
+        for (uint32_t k = 0; k < ntrans; k++) {
           DirectedEdge& fromedge = tilebuilder.directededge(nodeinfo.edge_index() + k);
           if (ConsistentNames(country_code, names,
                               tilebuilder.edgeinfo(fromedge.edgeinfo_offset()).GetNames())) {
-            nodeinfo.set_name_consistency(j, k, true);
+            directededge.set_name_consistency(k, true);
           }
         }
 

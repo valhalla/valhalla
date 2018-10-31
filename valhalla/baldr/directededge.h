@@ -640,6 +640,22 @@ public:
   void set_sac_scale(const SacScale sac_scale);
 
   /**
+   * Are names consistent with the from edge (local edge index at the start node).
+   * @param idx  Local edge index at the start.
+   */
+  bool name_consistency(const uint32_t idx) const {
+    return name_consistency_ & (1 << idx);
+  }
+
+  /**
+   * Set the name consistency given the other edge's local index. This is limited
+   * to the first 8 local edge indexes.
+   * @param  from  Local index of the from edge.
+   * @param  c     Are names consistent between the 2 edges?
+   */
+  void set_name_consistency(const uint32_t from, const bool c);
+
+  /**
    * Is this edge unpaved or bad surface?
    */
   bool unpaved() const {
@@ -1085,19 +1101,20 @@ protected:
 
   // Legal access to the directed link (also include reverse direction access).
   // See graphconstants.h.
-  uint64_t forwardaccess_ : 12; // Access (bit mask) in forward direction
-  uint64_t reverseaccess_ : 12; // Access (bit mask) in reverse direction
-  uint64_t classification_ : 3; // Classification/importance of the road/path
-  uint64_t surface_ : 3;        // representation of smoothness
-  uint64_t shoulder_ : 1;       // Does the edge have a shoulder?
-  uint64_t use_sidepath_ : 1;   // Is there a cycling path to the side that should be preferred?
-  uint64_t dismount_ : 1;       // Do you need to dismount when biking on this edge?
-  uint64_t density_ : 4;        // Density along the edge
-  uint64_t speed_limit_ : 8;    // Speed limit (kph)
-  uint64_t named_ : 1;          // 1 if this edge has names, 0 if unnamed
-  uint64_t lane_conn_ : 1;      // 1 if has lane connectivity, 0 otherwise
-  uint64_t sac_scale_ : 3;      // Is this edge for hiking and if so how difficult is the hike?
-  uint64_t spare2_ : 14;
+  uint64_t forwardaccess_ : 12;   // Access (bit mask) in forward direction
+  uint64_t reverseaccess_ : 12;   // Access (bit mask) in reverse direction
+  uint64_t classification_ : 3;   // Classification/importance of the road/path
+  uint64_t surface_ : 3;          // representation of smoothness
+  uint64_t shoulder_ : 1;         // Does the edge have a shoulder?
+  uint64_t use_sidepath_ : 1;     // Is there a cycling path to the side that should be preferred?
+  uint64_t dismount_ : 1;         // Do you need to dismount when biking on this edge?
+  uint64_t density_ : 4;          // Density along the edge
+  uint64_t speed_limit_ : 8;      // Speed limit (kph)
+  uint64_t named_ : 1;            // 1 if this edge has names, 0 if unnamed
+  uint64_t lane_conn_ : 1;        // 1 if has lane connectivity, 0 otherwise
+  uint64_t sac_scale_ : 3;        // Is this edge for hiking and if so how difficult is the hike?
+  uint64_t name_consistency_ : 8; // Name consistency at the start node with other local edges
+  uint64_t spare2_ : 6;
 
   // Geometric attributes: length, weighted grade, curvature factor.
   // Turn types between edges.

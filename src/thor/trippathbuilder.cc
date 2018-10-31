@@ -763,6 +763,7 @@ TripPathBuilder::Build(const AttributesController& controller,
   sif::TravelMode prev_mode = sif::TravelMode::kPedestrian;
   uint64_t osmchangeset = 0;
   size_t edge_index = 0;
+  const DirectedEdge* prev_de = nullptr;
   // TODO: this is temp until we use transit stop type from transitland
   TransitPlatformInfo_Type prev_transit_node_type = TransitPlatformInfo_Type_kStop;
   for (auto edge_itr = path.begin(); edge_itr != path.end(); ++edge_itr, ++edge_index) {
@@ -1097,7 +1098,7 @@ TripPathBuilder::Build(const AttributesController& controller,
     // Each letter represents the edge info.
     // So at node 2, we will store the edge info for D and we will store the
     // intersecting edge info for B, C, E, F, and G.  We need to make sure
-    // that we don't store the edge info from A and D again.  Also, do not store transition edges.
+    // that we don't store the edge info from A and D again.
     //
     //     (X)    (3)   (X)
     //       \\   ||   //
@@ -1126,8 +1127,8 @@ TripPathBuilder::Build(const AttributesController& controller,
           }
 
           // Add intersecting edges on the same hierarchy level and not on the path
-          AddTripIntersectingEdge(controller, de->localedgeidx(), prior_opp_local_index,
-                                  directededge->localedgeidx(), nodeinfo, trip_node, de);
+          AddTripIntersectingEdge(controller, directededge, prev_de, de->localedgeidx(), nodeinfo,
+                                  trip_node, de);
 
           // Add intersecting edges on different levels (follow NodeTransitions)
           const NodeTransition* trans = tile->transition(nodeinfo->transition_index());
@@ -1143,8 +1144,8 @@ TripPathBuilder::Build(const AttributesController& controller,
                   de2->localedgeidx() == directededge->localedgeidx()) {
                 continue;
               }
-              AddTripIntersectingEdge(controller, de2->localedgeidx(), prior_opp_local_index,
-                                      directededge->localedgeidx(), nodeinfo2, trip_node, de2);
+              AddTripIntersectingEdge(controller, directededge, prev_de, de2->localedgeidx(),
+                                      nodeinfo2, trip_node, de2);
             }
           }
         }
@@ -1154,8 +1155,8 @@ TripPathBuilder::Build(const AttributesController& controller,
         for (uint32_t edge_idx = 0; edge_idx < nodeinfo->local_edge_count(); ++edge_idx) {
           // Add intersecting edge if this edge is not on the path
           if ((edge_idx != prior_opp_local_index) && (edge_idx != directededge->localedgeidx())) {
-            AddTripIntersectingEdge(controller, edge_idx, prior_opp_local_index,
-                                    directededge->localedgeidx(), nodeinfo, trip_node, nullptr);
+            AddTripIntersectingEdge(controller, directededge, prev_de, edge_idx, nodeinfo, trip_node,
+                                    nullptr);
           }
         }
       }
@@ -1170,10 +1171,19 @@ TripPathBuilder::Build(const AttributesController& controller,
     // Set the endnode of this directed edge as the startnode of the next edge.
     startnode = directededge->endnode();
 
+    // Save the opposing edge as the previous DirectedEdge (for name consistency)
+    const GraphTile* t2 =
+        directededge->leaves_tile() ? graphreader.GetGraphTile(directededge->endnode()) : graphtile;
+    if (t2 == nullptr) {
+      continue;
+    }
+    GraphId oppedge = t2->GetOpposingEdgeId(directededge);
+    prev_de = t2->directededge(oppedge);
+
     // Save the index of the opposing local directed edge at the end node
     prior_opp_local_index = directededge->opp_local_idx();
 
-    // We processed a non-transition edge - set is_first edge to false
+    // set is_first edge to false
     is_first_edge = false;
   }
 
@@ -1646,10 +1656,10 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const AttributesController& controll
 }
 
 void TripPathBuilder::AddTripIntersectingEdge(const AttributesController& controller,
+                                              const DirectedEdge* directededge,
+                                              const DirectedEdge* prev_de,
                                               uint32_t local_edge_index,
-                                              uint32_t prev_edge_index,
-                                              uint32_t curr_edge_index,
-                                              const baldr::NodeInfo* nodeinfo,
+                                              const NodeInfo* nodeinfo,
                                               odin::TripPath_Node* trip_node,
                                               const DirectedEdge* intersecting_de) {
   TripPath_IntersectingEdge* itersecting_edge = trip_node->add_intersecting_edge();
@@ -1699,14 +1709,14 @@ void TripPathBuilder::AddTripIntersectingEdge(const AttributesController& contro
 
   // Set the previous/intersecting edge name consistency if requested
   if (controller.attributes.at(kNodeIntersectingEdgeFromEdgeNameConsistency)) {
-    itersecting_edge->set_prev_name_consistency(
-        nodeinfo->name_consistency(prev_edge_index, local_edge_index));
+    bool name_consistency =
+        (prev_de == nullptr) ? false : prev_de->name_consistency(local_edge_index);
+    itersecting_edge->set_prev_name_consistency(name_consistency);
   }
 
   // Set the current/intersecting edge name consistency if requested
   if (controller.attributes.at(kNodeIntersectingEdgeToEdgeNameConsistency)) {
-    itersecting_edge->set_curr_name_consistency(
-        nodeinfo->name_consistency(curr_edge_index, local_edge_index));
+    itersecting_edge->set_curr_name_consistency(directededge->name_consistency(local_edge_index));
   }
 }
 

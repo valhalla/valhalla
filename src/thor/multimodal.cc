@@ -529,8 +529,7 @@ bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
   if (!from_transition && nodeinfo->transition_count() > 0) {
     const NodeTransition* trans = tile->transition(nodeinfo->transition_index());
     for (uint32_t i = 0; i < nodeinfo->transition_count(); ++i, ++trans) {
-      ExpandForward(graphreader, trans->endnode(), pred, pred_idx, true, pc, tc,
-                          mode_costing);
+      ExpandForward(graphreader, trans->endnode(), pred, pred_idx, true, pc, tc, mode_costing);
     }
   }
   return false;
@@ -749,8 +748,8 @@ bool MultiModalPathAlgorithm::ExpandFromNode(baldr::GraphReader& graphreader,
   if (!from_transition && nodeinfo->transition_count() > 0) {
     const NodeTransition* trans = tile->transition(nodeinfo->transition_index());
     for (uint32_t i = 0; i < nodeinfo->transition_count(); ++i, ++trans) {
-      ExpandFromNode(graphreader, trans->endnode(), pred, pred_idx, costing, edgestatus,
-                           edgelabels, adjlist, true);
+      ExpandFromNode(graphreader, trans->endnode(), pred, pred_idx, costing, edgestatus, edgelabels,
+                     adjlist, true);
     }
   }
   return false;
