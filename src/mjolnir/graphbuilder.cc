@@ -835,7 +835,7 @@ void BuildTileSet(const std::string& ways_file,
           }
 
           if (osmdata.via_set.find(w.way_id()) != osmdata.via_set.end()) {
-            directededge.set_part_of_complex_restriction(true);
+            directededge.complex_restriction(true);
           }
 
           // grab all the modes if this way ends at a restriction(s)
