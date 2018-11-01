@@ -301,25 +301,6 @@ public:
   void set_roundabout(const bool roundabout);
 
   /**
-   * Is this edge is unreachable by driving. This can happen if a driveable
-   * edge is surrounded by pedestrian only edges (e.g. in a city center) or
-   * is not properly connected to other edges.
-   * @return  Returns true if this edge is unreachable by auto.
-   */
-  bool unreachable() const {
-    return unreachable_;
-  }
-
-  /**
-   * Sets the flag indicating the edge is unreachable by driving. This can
-   * happen if a driveable edge is surrounded by pedestrian only edges (e.g.
-   * in a city center) or is not properly connected to other edges.
-   * @param  unreachable  True if the edge is unreachable by driving,
-   *                      false if not.
-   */
-  void set_unreachable(const bool unreachable);
-
-  /**
    * A traffic signal occurs at the end of this edge.
    * @return  Returns true if a traffic signal is present at the end of the
    *          directed edge.
@@ -663,16 +644,16 @@ public:
   /**
    * Is this edge a link/ramp?
    */
-/*  bool link() const {
+  bool link() const {
     return link_;
   }
-*/
+
   /**
    * Sets the link flag indicating the edge is part of a link or connection
    * (ramp or turn channel).
    * @param  link  True if the edge is part of a link.
    */
- // void set_link(const bool link);
+  void set_link(const bool link);
 
   /**
    * Gets the intersection internal flag. This indicates the edge is "internal"
@@ -1064,8 +1045,7 @@ protected:
   uint64_t use_ : 6;                         // Specific use types
   uint64_t speed_type_ : 2;                  // Speed type (tagged vs. categorized)
   uint64_t opp_index_ : 7;                   // Opposing directed edge index
-  uint64_t spare1_ : 1;
-//  uint64_t link_ : 1;                        // *link tag - Ramp or turn channel
+  uint64_t link_ : 1;                        // *link tag - Ramp or turn channel
   uint64_t internal_ : 1;                    // Edge that is internal to an intersection
   uint64_t deadend_ : 1;                     // A dead-end (no other driveable roads)
   uint64_t toll_ : 1;                        // Edge is part of a toll road.
@@ -1075,7 +1055,7 @@ protected:
   uint64_t tunnel_ : 1;                      // Is this edge part of a tunnel
   uint64_t bridge_ : 1;                      // Is this edge part of a bridge?
   uint64_t roundabout_ : 1;                  // Edge is part of a roundabout
-  uint64_t unreachable_ : 1;                 // Edge that is unreachable by driving
+  uint64_t spare1_ : 1;
   uint64_t traffic_signal_ : 1;              // Traffic signal at end of the directed edge
   uint64_t not_thru_ : 1;                    // Edge leads to "no-through" region
   uint64_t cycle_lane_ : 2;                  // Does this edge have bicycle lanes?

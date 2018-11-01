@@ -212,13 +212,6 @@ void DirectedEdge::set_roundabout(const bool roundabout) {
   roundabout_ = roundabout;
 }
 
-// Sets the flag indicating the edge is unreachable by driving. This can
-// happen if a driveable edge is surrounded by pedestrian only edges (e.g.
-// in a city center) or is not properly connected to other edges.
-void DirectedEdge::set_unreachable(const bool unreachable) {
-  unreachable_ = unreachable;
-}
-
 // Sets the flag indicating a traffic signal is present at the end of
 // this edge.
 void DirectedEdge::set_traffic_signal(const bool signal) {
@@ -571,7 +564,6 @@ json::MapPtr DirectedEdge::json() const {
       {"tunnel", static_cast<bool>(tunnel_)},
       {"bridge", static_cast<bool>(bridge_)},
       {"round_about", static_cast<bool>(roundabout_)},
-      {"unreachable", static_cast<bool>(unreachable_)},
       {"traffic_signal", static_cast<bool>(traffic_signal_)},
       {"forward", static_cast<bool>(forward_)},
       {"not_thru", static_cast<bool>(not_thru_)},

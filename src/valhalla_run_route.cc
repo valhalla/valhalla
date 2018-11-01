@@ -641,42 +641,8 @@ int main(int argc, char* argv[]) {
       LOG_INFO("trip_length (meters)::" + std::to_string(trip_length));
       data.setSuccess("success");
     } else {
-      // Check if origins are unreachable
-      bool unreachable_origin = false;
-      for (auto& edge : origin.path_edges()) {
-        const GraphTile* tile = reader.GetGraphTile(GraphId(edge.graph_id()));
-        const DirectedEdge* directededge = tile->directededge(GraphId(edge.graph_id()));
-        auto ei = tile->edgeinfo(directededge->edgeinfo_offset());
-        if (directededge->unreachable()) {
-          LOG_INFO("Origin edge is unconnected: wayid = " + std::to_string(ei.wayid()));
-          unreachable_origin = true;
-        }
-        LOG_INFO("Origin wayId = " + std::to_string(ei.wayid()));
-      }
-
-      // Check if destinations are unreachable
-      bool unreachable_dest = false;
-      for (auto& edge : dest.path_edges()) {
-        const GraphTile* tile = reader.GetGraphTile(GraphId(edge.graph_id()));
-        const DirectedEdge* directededge = tile->directededge(GraphId(edge.graph_id()));
-        auto ei = tile->edgeinfo(directededge->edgeinfo_offset());
-        if (directededge->unreachable()) {
-          LOG_INFO("Destination edge is unconnected: wayid = " + std::to_string(ei.wayid()));
-          unreachable_dest = true;
-        }
-        LOG_INFO("Destination wayId = " + std::to_string(ei.wayid()));
-      }
-
       // Route was unsuccessful
-      if (unreachable_origin && unreachable_dest) {
-        data.setSuccess("fail_unreachable_locations");
-      } else if (unreachable_origin) {
-        data.setSuccess("fail_unreachable_origin");
-      } else if (unreachable_dest) {
-        data.setSuccess("fail_unreachable_dest");
-      } else {
-        data.setSuccess("fail_no_route");
-      }
+      data.setSuccess("fail_no_route");
     }
   }
 
