@@ -24,7 +24,7 @@ constexpr uint16_t kHOVAccess = 128;
 constexpr uint16_t kWheelchairAccess = 256;
 constexpr uint16_t kMopedAccess = 512;
 constexpr uint16_t kMotorcycleAccess = 1024;
-constexpr uint16_t kSpareAccess = 2048;      // Unused so far
+constexpr uint16_t kSpareAccess = 2048; // Unused so far
 constexpr uint16_t kAllAccess = 4095;
 
 // Constant representing vehicular access types
@@ -311,16 +311,12 @@ inline std::string to_string(Use u) {
 // Speed type
 enum class SpeedType : uint8_t {
   kTagged = 0,          // Tagged maximum speed
-  kClassified = 1,      // Speed assigned based on highway classification
-  kClassifiedUrban = 2, // Classified speed in urban area
-  kClassifiedRural = 3  // Classified speed in rural area
+  kClassified = 1       // Speed assigned based on highway classification
 };
 inline std::string to_string(SpeedType s) {
   static const std::unordered_map<uint8_t, std::string> SpeedTypeStrings = {
       {static_cast<uint8_t>(SpeedType::kTagged), "tagged"},
       {static_cast<uint8_t>(SpeedType::kClassified), "classified"},
-      {static_cast<uint8_t>(SpeedType::kClassifiedUrban), "classified_urban"},
-      {static_cast<uint8_t>(SpeedType::kClassifiedRural), "classified_rural"},
   };
 
   auto i = SpeedTypeStrings.find(static_cast<uint8_t>(s));

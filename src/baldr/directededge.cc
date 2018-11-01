@@ -407,8 +407,8 @@ void DirectedEdge::set_end_restriction(const uint32_t modes) {
 }
 
 // Set the part of complex restriction flag.
-void DirectedEdge::set_part_of_complex_restriction(const bool part_of) {
-  part_of_complex_restriction_ = part_of;
+void DirectedEdge::complex_restriction(const bool part_of) {
+  complex_restriction_ = part_of;
 }
 
 // Set the density along the edges.
@@ -423,7 +423,7 @@ void DirectedEdge::set_density(const uint32_t density) {
 
 // Sets the named flag.
 void DirectedEdge::set_named(const bool named) {
-  named_ = named;
+  ; // TODO named_ = named;
 }
 
 // Set the flag for a sidewalk to the left of this directed edge.
@@ -556,7 +556,7 @@ json::MapPtr DirectedEdge::json() const {
       {"access_restriction", static_cast<bool>(access_restriction_)},
       {"start_restriction", access_json(start_restriction_)},
       {"end_restriction", access_json(end_restriction_)},
-      {"part_of_complex_restriction", static_cast<bool>(part_of_complex_restriction_)},
+      {"part_of_complex_restriction", static_cast<bool>(complex_restriction_)},
       {"has_exit_sign", static_cast<bool>(exitsign_)},
       {"toll", static_cast<bool>(toll_)},
       {"seasonal", static_cast<bool>(seasonal_)},
