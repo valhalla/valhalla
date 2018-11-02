@@ -30,6 +30,20 @@ public:
   void set_wayid(const uint64_t wayid);
 
   /**
+   * Get the mean elevation along the edge.
+   * @return  Returns mean elevation in meters relative to sea level.
+   */
+  float mean_elevation() const {
+    return kMinElevation + (w0_.mean_elevation_ * kElevationBinSize);
+  }
+
+  /**
+   * Set the mean elevation.
+   * @param  mean_elev  Mean elevation in meters.
+   */
+  void set_mean_elevation(const float mean_elev);
+
+  /**
    * Set the name info for names used by this edge
    * @param  offsets  List of street name info.
    */
@@ -68,8 +82,16 @@ public:
   std::size_t SizeOf() const;
 
 protected:
-  // OSM Way Id
-  uint64_t wayid_;
+  // 1st 8-byte word
+  union Word0 {
+    struct {
+      uint64_t wayid_ : 45;          // OSM way Id
+      uint64_t mean_elevation_ : 12; // Mean elevation with 2 meter precision
+      uint64_t spare0_ : 7;
+    };
+    uint64_t value_;
+  };
+  Word0 w0_;
 
   // List of name info (offsets, etc.)
   std::vector<baldr::NameInfo> name_info_list_;

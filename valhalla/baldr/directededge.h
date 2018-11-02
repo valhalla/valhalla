@@ -1084,15 +1084,15 @@ protected:
   // 4th 8-byte word
   uint64_t forwardaccess_ : 12; // Access (bit mask) in forward direction (see graphconstants.h)
   uint64_t reverseaccess_ : 12; // Access (bit mask) in reverse direction (see graphconstants.h)
-  uint32_t max_up_slope_ : 5;   // Maximum upward slope
-  uint32_t max_down_slope_ : 5; // Maximum downward slope
+  uint64_t max_up_slope_ : 5;   // Maximum upward slope
+  uint64_t max_down_slope_ : 5; // Maximum downward slope
   uint64_t sac_scale_ : 3;      // Is this edge for hiking and if so how difficult is the hike?
   uint64_t cycle_lane_ : 2;     // Does this edge have bicycle lanes?
   uint64_t use_sidepath_ : 1;   // Is there a cycling path to the side that should be preferred?
   uint64_t dismount_ : 1;       // Do you need to dismount when biking on this edge?
-  uint32_t sidewalk_left_ : 1;  // Sidewalk to the left of the edge
-  uint32_t sidewalk_right_ : 1; // Sidewalk to the right of the edge
-  uint32_t shoulder_ : 1;       // Does the edge have a shoulder?
+  uint64_t sidewalk_left_ : 1;  // Sidewalk to the left of the edge
+  uint64_t sidewalk_right_ : 1; // Sidewalk to the right of the edge
+  uint64_t shoulder_ : 1;       // Does the edge have a shoulder?
   // 44 bits above...Data below may not be needed in DirectedEdge removed/moved??
   uint64_t lane_conn_ : 1;      // 1 if has lane connectivity, 0 otherwise
   uint64_t bike_network_ : 4;   // Edge that is part of a bicycle network
@@ -1130,17 +1130,17 @@ protected:
   StopOrLine stopimpact_;
 
   // Local edge index, opposing local index, shortcut info
-  uint32_t localedgeidx_ : 7;   // Index of the edge on the local level
-  uint32_t opp_local_idx_ : 7;  // Opposing local edge index (for costing and Uturn detection)
-  uint32_t shortcut_ : 7;       // Shortcut edge (mask)
-  uint32_t superseded_ : 7;     // Edge is superseded by a shortcut (mask)
-  uint32_t is_shortcut_ : 1;    // True if this edge is a shortcut.
-  uint64_t speed_type_ : 1;     // Speed type TODO
-  uint64_t deadend_ : 1;        // Leads to a dead-end (no other driveable roads) TODO
-  uint64_t link_ : 1;           // *link tag - Ramp or turn channel TODO
+  uint32_t localedgeidx_ : 7;  // Index of the edge on the local level
+  uint32_t opp_local_idx_ : 7; // Opposing local edge index (for costing and Uturn detection)
+  uint32_t shortcut_ : 7;      // Shortcut edge (mask)
+  uint32_t superseded_ : 7;    // Edge is superseded by a shortcut (mask)
+  uint32_t is_shortcut_ : 1;   // True if this edge is a shortcut.
+  uint32_t speed_type_ : 1;    // Speed type TODO
+  uint32_t deadend_ : 1;       // Leads to a dead-end (no other driveable roads) TODO
+  uint32_t link_ : 1;          // *link tag - Ramp or turn channel TODO
 
   // Could be desirable?
-// uint64_t named_ : 1;          // 1 if this edge has names, 0 if unnamed
+  // uint64_t named_ : 1;          // 1 if this edge has names, 0 if unnamed
 };
 
 } // namespace baldr

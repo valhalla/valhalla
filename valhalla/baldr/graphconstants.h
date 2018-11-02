@@ -313,8 +313,8 @@ inline std::string to_string(Use u) {
 
 // Speed type
 enum class SpeedType : uint8_t {
-  kTagged = 0,          // Tagged maximum speed
-  kClassified = 1       // Speed assigned based on highway classification
+  kTagged = 0,    // Tagged maximum speed
+  kClassified = 1 // Speed assigned based on highway classification
 };
 inline std::string to_string(SpeedType s) {
   static const std::unordered_map<uint8_t, std::string> SpeedTypeStrings = {

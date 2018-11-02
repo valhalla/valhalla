@@ -185,6 +185,7 @@ public:
    *                form tuple that uniquely identifies the edge info since
    *                there are two directed edges per edge info.
    * @param  wayid  The target edge is part of this the way id.
+   * @param  elev   Mean elevation.
    * @param  lls    The shape of the target edge.
    * @param  names  The names of the target edge.
    * @param  types  Bits indicating if the name is a ref vs a name.
@@ -198,15 +199,14 @@ public:
                        const baldr::GraphId& nodea,
                        const baldr::GraphId& nodeb,
                        const uint64_t wayid,
+                       const float mean_elevation,
                        const shape_container_t& lls,
                        const std::vector<std::string>& names,
                        const uint16_t types,
                        bool& added);
 
   /**
-   * Add the edge info to the tile. This method accepts an encoded shape
-   * string.
-   *
+   * Add the edge info to the tile. This method accepts an encoded shape string.
    * @param  edgeindex  The index of the edge - used with nodea and nodeb to
    *                    form tuple that uniquely identifies the edge info since
    *                    there are two directed edges per edge info.
@@ -217,6 +217,7 @@ public:
    *                form tuple that uniquely identifies the edge info since
    *                there are two directed edges per edge info.
    * @param  wayid  The target edge is part of this the way id.
+   * @param  elev   Mean elevation.
    * @param  llstr  The shape of the target edge as an encoded string.
    * @param  names  The names of the target edge.
    * @param  types  Bits indicating if the name is a ref vs a name.
@@ -229,10 +230,17 @@ public:
                        const baldr::GraphId& nodea,
                        const baldr::GraphId& nodeb,
                        const uint64_t wayid,
+                       const float mean_elevation,
                        const std::string& llstr,
                        const std::vector<std::string>& names,
                        const uint16_t types,
                        bool& added);
+
+  /**
+   * Set the mean elevation in the most recently added EdgeInfo.
+   * @param elev Mean elevation.
+   */
+  void set_mean_elevation(const float elev);
 
   /**
    * Add a name to the text list.

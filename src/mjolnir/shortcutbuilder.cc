@@ -485,11 +485,12 @@ uint32_t AddShortcutEdges(GraphReader& reader,
       // Add the edge info. Use length and number of shape points to match an
       // edge in case multiple shortcut edges exist between the 2 nodes.
       // Test whether this shape is forward or reverse (in case an existing
-      // edge exists). Shortcuts use way Id = 0.
+      // edge exists). Shortcuts use way Id = 0.Set mean elevation to 0 as a placeholder,
+      // set it later if adding elevation to this dataset.
       bool forward = true;
       uint32_t idx = ((length & 0xfffff) | ((shape.size() & 0xfff) << 20));
       uint32_t edge_info_offset =
-          tilebuilder.AddEdgeInfo(idx, start_node, end_node, 0, shape, names, types, forward);
+          tilebuilder.AddEdgeInfo(idx, start_node, end_node, 0, 0, shape, names, types, forward);
       newedge.set_edgeinfo_offset(edge_info_offset);
 
       // Set the forward flag on this directed edge. If a new edge was added
@@ -513,9 +514,11 @@ uint32_t AddShortcutEdges(GraphReader& reader,
         newedge.set_weighted_grade(static_cast<uint32_t>(std::get<0>(grades) * .6 + 6.5));
         newedge.set_max_up_slope(std::get<1>(grades));
         newedge.set_max_down_slope(std::get<2>(grades));
-        float mean_elevation = std::get<3>(grades);
 
-        // TODO - update EdgeInfo
+        // Set the mean elevation on EdgeInfo (if this is the first instance - forward)
+        if (forward) {
+          tilebuilder.set_mean_elevation(std::get<3>(grades));
+        }
       } else {
         // Set the default weighted grade for the edge. No edge elevation is added.
         newedge.set_weighted_grade(6);
@@ -672,7 +675,8 @@ uint32_t FormShortcuts(GraphReader& reader,
         auto edgeinfo = tile->edgeinfo(directededge->edgeinfo_offset());
         uint32_t edge_info_offset =
             tilebuilder.AddEdgeInfo(directededge->edgeinfo_offset(), node_id, directededge->endnode(),
-                                    edgeinfo.wayid(), edgeinfo.encoded_shape(),
+                                    edgeinfo.wayid(), edgeinfo.mean_elevation(),
+                                    edgeinfo.encoded_shape(),
                                     tile->GetNames(directededge->edgeinfo_offset()),
                                     tile->GetTypes(directededge->edgeinfo_offset()), added);
         newedge.set_edgeinfo_offset(edge_info_offset);

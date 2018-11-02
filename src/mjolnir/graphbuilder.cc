@@ -638,15 +638,15 @@ void BuildTileSet(const std::string& ways_file,
             uint16_t types = 0;
             auto names = w.GetNames(ref, osmdata.ref_offset_map, osmdata.name_offset_map, types);
 
+            // Add edge info. Mean elevation is set to 1234 as a placeholder, set later if we have it.
             edge_info_offset = graphtile.AddEdgeInfo(edge_pair.second, (*nodes[source]).graph_id,
-                                                     (*nodes[target]).graph_id, w.way_id(), shape,
-                                                     names, types, added);
+                                                     (*nodes[target]).graph_id, w.way_id(), 1234,
+                                                     shape, names, types, added);
 
             // length
             auto length = valhalla::midgard::length(shape);
 
             // Grade estimation and max slopes
-            // TODO - add mean elevation
             std::tuple<double, double, double, double> forward_grades(0.0, 0.0, 0.0, 0.0);
             std::tuple<double, double, double, double> reverse_grades(0.0, 0.0, 0.0, 0.0);
             if (sample && !w.tunnel() && !w.ferry()) {
@@ -766,15 +766,17 @@ void BuildTileSet(const std::string& ways_file,
           }
 
           // Edge elevation
-          // TODO - make sure graphtile header has elevation gets set
           if (sample) {
+            // Reverse max slopes if not forward direction
             float max_up_slope = forward ? std::get<4>(found->second) : std::get<6>(found->second);
             float max_down_slope = forward ? std::get<5>(found->second) : std::get<7>(found->second);
             directededge.set_max_up_slope(max_up_slope);
             directededge.set_max_down_slope(max_down_slope);
-  //          graphtile.edge_elevations().emplace_back(std::get<8>(found->second), max_up_slope,
-  //                                                   max_down_slope);
-            // TODO - set the mean elevation on EdgeInfo
+
+            // Set the mean elevation on EdgeInfo if added (1st instance of EdgeInfo)
+            if (added) {
+              graphtile.set_mean_elevation(std::get<8>(found->second));
+            }
           }
 
           // Add turn lanes if they exist. Store forward turn lanes on the last edge for a way
