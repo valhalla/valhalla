@@ -58,6 +58,9 @@ void id_from_string() {
       GraphId(1000002, 3, 0))
     throw std::logic_error("Unexpected graphtile id");
 
+  if (GraphTile::GetTileId("2/000/791/317.gph.gz") != GraphId(791317, 2, 0))
+    throw std::logic_error("Unexpected graphtile id");
+
   try {
     GraphTile::GetTileId("foo2/8675309/bar/1baz2/qux42corge/1/000/002/.gph");
     throw std::logic_error("Should fail to get graphtile id");
