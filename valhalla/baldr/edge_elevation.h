@@ -5,6 +5,7 @@
 namespace valhalla {
 namespace baldr {
 
+#ifdef OLD
 // Use elevation bins of 8 meters to store mean elevation. Clamp to a range
 // from -500 meters to 7683 meters.
 constexpr uint32_t kMaxStoredElevation = 4095; // 12 bits
@@ -77,6 +78,8 @@ protected:
   uint32_t mean_elevation_ : 12; // Mean elevation with 2 meter precision
   uint32_t spare_ : 10;
 };
+
+#endif
 
 } // namespace baldr
 } // namespace valhalla

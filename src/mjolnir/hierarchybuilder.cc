@@ -301,16 +301,6 @@ void FormTilesInNewLevel(GraphReader& reader, bool has_elevation) {
 
       // Add directed edge
       tilebuilder->directededges().emplace_back(std::move(newedge));
-
-      // Add edge elevation
-      if (has_elevation) {
-        const EdgeElevation* elev = tile->edge_elevation(base_edge_id);
-        if (elev == nullptr) {
-          tilebuilder->edge_elevations().emplace_back(0.0f, 0.0f, 0.0f);
-        } else {
-          tilebuilder->edge_elevations().emplace_back(std::move(*elev));
-        }
-      }
     }
 
     // Add node transitions

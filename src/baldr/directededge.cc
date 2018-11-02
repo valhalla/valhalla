@@ -538,6 +538,32 @@ void DirectedEdge::set_leaves_tile(const bool leaves_tile) {
   leaves_tile_ = leaves_tile;
 }
 
+// Sets the maximum upward slope. If slope is negative, 0 is set.
+void DirectedEdge::set_max_up_slope(const float slope) {
+  if (slope < 0.0f) {
+    max_up_slope_ = 0;
+  } else if (slope < 16.0f) {
+    max_up_slope_ = static_cast<int>(std::ceil(slope));
+  } else if (slope < 76.0f) {
+    max_up_slope_ = 0x10 | static_cast<int>(std::ceil((slope - 16.0f) * 0.25f));
+  } else {
+    max_up_slope_ = 0x1f;
+  }
+}
+
+// Sets the maximum downward slope. If slope is positive, 0 is set.
+void DirectedEdge::set_max_down_slope(const float slope) {
+  if (slope > 0.0f) {
+    max_down_slope_ = 0;
+  } else if (slope > -16.0f) {
+    max_down_slope_ = static_cast<int>(std::ceil(-slope));
+  } else if (slope > -76.0f) {
+    max_down_slope_ = 0x10 | static_cast<int>(std::ceil((-slope - 16.0f) * 0.25f));
+  } else {
+    max_down_slope_ = 0x1f;
+  }
+}
+
 // Json representation
 json::MapPtr DirectedEdge::json() const {
   return json::map({
@@ -576,6 +602,8 @@ json::MapPtr DirectedEdge::json() const {
        json::map({
            {"length", static_cast<uint64_t>(length_)},
            {"weighted_grade", json::fp_t{static_cast<double>(weighted_grade_ - 6.0) / .6, 2}},
+           {"max_up_slope", json::fp_t{static_cast<double>(max_up_slope()), 2}},
+           {"max_down_slope", json::fp_t{static_cast<double>(max_down_slope()), 2}},
            {"curvature", static_cast<uint64_t>(curvature_)},
        })},
       {"access", access_json(forwardaccess_)},

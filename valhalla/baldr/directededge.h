@@ -182,6 +182,37 @@ public:
   void set_weighted_grade(const uint32_t factor);
 
   /**
+   * Gets the maximum upward slope. Uses 1 degree precision for slopes to 16
+   * degrees and 4 degree precision afterwards (up to a max of 76 degrees).
+   * @return  Returns the maximum upward slope (0 to 76 degrees).
+   */
+  int max_up_slope() const {
+    return ((max_up_slope_ & 0x10) == 0) ? max_up_slope_ : 16 + ((max_up_slope_ & 0xf) * 4);
+  }
+
+  /**
+   * Sets the maximum upward slope. If slope is negative, 0 is set.
+   * @param  slope  Maximum upward slope (degrees).
+   */
+  void set_max_up_slope(const float slope);
+
+  /**
+   * Gets the maximum downward slope. Uses 1 degree precision for slopes to
+   * -16 degrees, and 4 degree precision afterwards (up to a max of -76 degs).
+   * @return  Returns the maximum downward slope (0 to -76 degrees).
+   */
+  int max_down_slope() const {
+    return ((max_down_slope_ & 0x10) == 0) ? -static_cast<int>(max_down_slope_)
+                                           : -static_cast<int>(16 + ((max_down_slope_ & 0xf) * 4));
+  }
+
+  /**
+   * Sets the maximum downward slope. If slope is positive, 0 is set.
+   * @param  slope  Maximum downward slope (degrees).
+   */
+  void set_max_down_slope(const float slope);
+
+  /**
    * Get the road curvature factor.
    * @return  Returns the curvature factor (0-15).
    */
@@ -1053,7 +1084,8 @@ protected:
   // 4th 8-byte word
   uint64_t forwardaccess_ : 12; // Access (bit mask) in forward direction (see graphconstants.h)
   uint64_t reverseaccess_ : 12; // Access (bit mask) in reverse direction (see graphconstants.h)
-  uint64_t spare4_ : 10;        // TODO - use this for max slopes from EdgeElevation
+  uint32_t max_up_slope_ : 5;   // Maximum upward slope
+  uint32_t max_down_slope_ : 5; // Maximum downward slope
   uint64_t sac_scale_ : 3;      // Is this edge for hiking and if so how difficult is the hike?
   uint64_t cycle_lane_ : 2;     // Does this edge have bicycle lanes?
   uint64_t use_sidepath_ : 1;   // Is there a cycling path to the side that should be preferred?

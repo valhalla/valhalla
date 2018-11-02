@@ -766,11 +766,15 @@ void BuildTileSet(const std::string& ways_file,
           }
 
           // Edge elevation
+          // TODO - make sure graphtile header has elevation gets set
           if (sample) {
             float max_up_slope = forward ? std::get<4>(found->second) : std::get<6>(found->second);
             float max_down_slope = forward ? std::get<5>(found->second) : std::get<7>(found->second);
-            graphtile.edge_elevations().emplace_back(std::get<8>(found->second), max_up_slope,
-                                                     max_down_slope);
+            directededge.set_max_up_slope(max_up_slope);
+            directededge.set_max_down_slope(max_down_slope);
+  //          graphtile.edge_elevations().emplace_back(std::get<8>(found->second), max_up_slope,
+  //                                                   max_down_slope);
+            // TODO - set the mean elevation on EdgeInfo
           }
 
           // Add turn lanes if they exist. Store forward turn lanes on the last edge for a way

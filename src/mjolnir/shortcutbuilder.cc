@@ -502,22 +502,24 @@ uint32_t AddShortcutEdges(GraphReader& reader,
       newedge.set_opp_local_idx(opp_local_idx);
       newedge.set_restrictions(rst);
 
-      // Update the length, elevation, curvature, and end node
+      // Update the length, curvature, and end node
       newedge.set_length(length);
+      newedge.set_curvature(compute_curvature(shape));
+      newedge.set_endnode(end_node);
+
+      // Set elevation
       if (sample) {
         auto grades = GetGrade(sample, shape, length, forward);
         newedge.set_weighted_grade(static_cast<uint32_t>(std::get<0>(grades) * .6 + 6.5));
+        newedge.set_max_up_slope(std::get<1>(grades));
+        newedge.set_max_down_slope(std::get<2>(grades));
+        float mean_elevation = std::get<3>(grades);
 
-        // Store mean_elevation, max_up_slope, and max_down_slope
-        tilebuilder.edge_elevations().emplace_back(std::get<3>(grades), std::get<1>(grades),
-                                                   std::get<2>(grades));
+        // TODO - update EdgeInfo
       } else {
-        // Set the default weighted grade for the edge. No edge elevation
-        // is added.
+        // Set the default weighted grade for the edge. No edge elevation is added.
         newedge.set_weighted_grade(6);
       }
-      newedge.set_curvature(compute_curvature(shape));
-      newedge.set_endnode(end_node);
 
       // Sanity check - should never see a shortcut with signs
       if (newedge.exitsign()) {
@@ -683,16 +685,6 @@ uint32_t FormShortcuts(GraphReader& reader,
 
         // Add directed edge
         tilebuilder.directededges().emplace_back(std::move(newedge));
-
-        // Add existing edge elevation (if the tile has elevation information)
-        if (tile->header()->has_edge_elevation()) {
-          const EdgeElevation* elev = tile->edge_elevation(edgeid);
-          if (elev == nullptr) {
-            tilebuilder.edge_elevations().emplace_back(0.0f, 0.0f, 0.0f);
-          } else {
-            tilebuilder.edge_elevations().emplace_back(std::move(*elev));
-          }
-        }
       }
 
       // Set the edge count for the new node

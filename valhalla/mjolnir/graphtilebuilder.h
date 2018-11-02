@@ -364,12 +364,6 @@ public:
                       const std::array<std::vector<GraphId>, kBinCount>& more_bins);
 
   /**
-   * Gets the current list of edge elevation (builders).
-   * @return  Returns the edge elevation builders.
-   */
-  std::vector<EdgeElevation>& edge_elevations();
-
-  /**
    * Get the turn lane builder at the specified index.
    * @param  idx  Index of the turn lane builder.
    * @return  Returns a reference to the turn lane builder.
@@ -493,9 +487,6 @@ protected:
 
   // List of lane connectivity records.
   std::vector<LaneConnectivity> lane_connectivity_builder_;
-
-  // List of edge elevation records. Index with directed edge Id.
-  std::vector<EdgeElevation> edge_elevation_builder_;
 
   // List of turn lanes.
   std::vector<TurnLanes> turnlanes_builder_;

@@ -8,7 +8,6 @@
 #include <valhalla/baldr/curler.h>
 #include <valhalla/baldr/datetime.h>
 #include <valhalla/baldr/directededge.h>
-#include <valhalla/baldr/edge_elevation.h>
 #include <valhalla/baldr/edgeinfo.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphtileheader.h>
@@ -472,20 +471,6 @@ public:
   }
 
   /**
-   * Get a pointer to a edge elevation data for the specified edge.
-   * @param  edge  GraphId of the directed edge.
-   * @return  Returns a pointer to the edge elevation data for the edge.
-   *          Returns nullptr if no elevation data exists.
-   */
-  const EdgeElevation* edge_elevation(const GraphId& edge) const {
-    if (header_->has_edge_elevation() && edge.id() < header_->directededgecount()) {
-      return &edge_elevation_[edge.id()];
-    } else {
-      return nullptr;
-    }
-  }
-
-  /**
    * Convenience method to get the turn lanes for an edge given the directed edge index.
    * @param  idx  Directed edge index. Used to lookup turn lanes.
    * @return  Returns a list (vector) of signs.
@@ -582,9 +567,6 @@ protected:
 
   // Number of bytes in lane connectivity data.
   std::size_t lane_connectivity_size_;
-
-  // Edge elevation data
-  EdgeElevation* edge_elevation_;
 
   // Turn lanes (indexed by directed edge index)
   TurnLanes* turnlanes_;

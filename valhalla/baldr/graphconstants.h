@@ -164,6 +164,9 @@ constexpr uint32_t kMaxCurvatureFactor = 15;
 // Maximum added time along shortcuts to approximate transition costs
 constexpr uint32_t kMaxAddedTime = 255;
 
+// Elevation constants
+constexpr float kNoElevationData = 32768.0f;
+
 // Node types.
 enum class NodeType : uint8_t {
   kStreetIntersection = 0, // Regular intersection of 2 roads

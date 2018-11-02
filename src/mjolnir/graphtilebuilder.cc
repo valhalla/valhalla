@@ -172,14 +172,6 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
   lane_connectivity_builder_.reserve(n);
   std::copy(lane_connectivity_, lane_connectivity_ + n,
             std::back_inserter(lane_connectivity_builder_));
-
-  // Edge elevation
-  if (header_->has_edge_elevation()) {
-    // Edge elevation count is the same as the directed edge count
-    n = header_->directededgecount();
-    edge_elevation_builder_.reserve(n);
-    std::copy(edge_elevation_, edge_elevation_ + n, std::back_inserter(edge_elevation_builder_));
-  }
 }
 
 // Output the tile to file. Stores as binary data.
@@ -308,23 +300,9 @@ void GraphTileBuilder::StoreTileData() {
     in_mem.write(reinterpret_cast<const char*>(lane_connectivity_builder_.data()),
                  lane_connectivity_builder_.size() * sizeof(LaneConnectivity));
 
-    // Write the edge elevation data. Make sure that if it exists it has
-    // the same count as directed edges.
-    header_builder_.set_edge_elevation_offset(
-        header_builder_.lane_connectivity_offset() +
-        (lane_connectivity_builder_.size() * sizeof(LaneConnectivity)));
-    if (edge_elevation_builder_.size() > 0) {
-      if (edge_elevation_builder_.size() != directededges_builder_.size()) {
-        LOG_ERROR("Edge elevation count is not equal to directed edge count!");
-      }
-      header_builder_.set_has_edge_elevation(true);
-      in_mem.write(reinterpret_cast<const char*>(edge_elevation_builder_.data()),
-                   edge_elevation_builder_.size() * sizeof(EdgeElevation));
-    }
-
     // Write turn lanes
-    header_builder_.set_turnlane_offset(header_builder_.edge_elevation_offset() +
-                                        edge_elevation_builder_.size() * sizeof(EdgeElevation));
+    header_builder_.set_turnlane_offset(header_builder_.lane_connectivity_offset() +
+        (lane_connectivity_builder_.size() * sizeof(LaneConnectivity)));
     header_builder_.set_turnlane_count(turnlanes_builder_.size());
     in_mem.write(reinterpret_cast<const char*>(turnlanes_builder_.data()),
                  turnlanes_builder_.size() * sizeof(TurnLanes));
@@ -870,7 +848,6 @@ void GraphTileBuilder::AddBins(const std::string& tile_dir,
   header.set_edgeinfo_offset(header.edgeinfo_offset() + shift);
   header.set_textlist_offset(header.textlist_offset() + shift);
   header.set_lane_connectivity_offset(header.lane_connectivity_offset() + shift);
-  header.set_edge_elevation_offset(header.edge_elevation_offset() + shift);
   header.set_turnlane_offset(header.turnlane_offset() + shift);
   header.set_end_offset(header.end_offset() + shift);
   // rewrite the tile
@@ -900,11 +877,6 @@ void GraphTileBuilder::AddBins(const std::string& tile_dir,
   else {
     throw std::runtime_error("Failed to open file " + filename.string());
   }
-}
-
-// Gets the current list of directed edge (builders).
-std::vector<EdgeElevation>& GraphTileBuilder::edge_elevations() {
-  return edge_elevation_builder_;
 }
 
 // Gets a sign builder at the specified index.
