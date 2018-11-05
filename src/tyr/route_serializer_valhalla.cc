@@ -308,20 +308,19 @@ json::ArrayPtr legs(const std::list<valhalla::odin::TripDirections>& directions_
         auto sign = json::map({});
 
         // Process exit number
-        if (maneuver.sign().exit_number_elements_size() > 0) {
+        if (maneuver.sign().exit_numbers_size() > 0) {
           auto exit_number_elements = json::array({});
-          for (int i = 0; i < maneuver.sign().exit_number_elements_size(); ++i) {
+          for (int i = 0; i < maneuver.sign().exit_numbers_size(); ++i) {
             auto exit_number_element = json::map({});
 
             // Add the exit number text
-            exit_number_element->emplace("text", maneuver.sign().exit_number_elements(i).text());
+            exit_number_element->emplace("text", maneuver.sign().exit_numbers(i).text());
 
             // Add the exit number consecutive count only if greater than zero
-            if (maneuver.sign().exit_number_elements(i).consecutive_count() > 0) {
-              exit_number_element
-                  ->emplace("consecutive_count",
-                            static_cast<uint64_t>(
-                                maneuver.sign().exit_number_elements(i).consecutive_count()));
+            if (maneuver.sign().exit_numbers(i).consecutive_count() > 0) {
+              exit_number_element->emplace("consecutive_count",
+                                           static_cast<uint64_t>(
+                                               maneuver.sign().exit_numbers(i).consecutive_count()));
             }
 
             exit_number_elements->emplace_back(exit_number_element);
@@ -330,20 +329,20 @@ json::ArrayPtr legs(const std::list<valhalla::odin::TripDirections>& directions_
         }
 
         // Process exit branch
-        if (maneuver.sign().exit_branch_elements_size() > 0) {
+        if (maneuver.sign().exit_onto_streets_size() > 0) {
           auto exit_branch_elements = json::array({});
-          for (int i = 0; i < maneuver.sign().exit_branch_elements_size(); ++i) {
+          for (int i = 0; i < maneuver.sign().exit_onto_streets_size(); ++i) {
             auto exit_branch_element = json::map({});
 
             // Add the exit branch text
-            exit_branch_element->emplace("text", maneuver.sign().exit_branch_elements(i).text());
+            exit_branch_element->emplace("text", maneuver.sign().exit_onto_streets(i).text());
 
             // Add the exit branch consecutive count only if greater than zero
-            if (maneuver.sign().exit_branch_elements(i).consecutive_count() > 0) {
+            if (maneuver.sign().exit_onto_streets(i).consecutive_count() > 0) {
               exit_branch_element
                   ->emplace("consecutive_count",
                             static_cast<uint64_t>(
-                                maneuver.sign().exit_branch_elements(i).consecutive_count()));
+                                maneuver.sign().exit_onto_streets(i).consecutive_count()));
             }
 
             exit_branch_elements->emplace_back(exit_branch_element);
@@ -352,20 +351,20 @@ json::ArrayPtr legs(const std::list<valhalla::odin::TripDirections>& directions_
         }
 
         // Process exit toward
-        if (maneuver.sign().exit_toward_elements_size() > 0) {
+        if (maneuver.sign().exit_toward_locations_size() > 0) {
           auto exit_toward_elements = json::array({});
-          for (int i = 0; i < maneuver.sign().exit_toward_elements_size(); ++i) {
+          for (int i = 0; i < maneuver.sign().exit_toward_locations_size(); ++i) {
             auto exit_toward_element = json::map({});
 
             // Add the exit toward text
-            exit_toward_element->emplace("text", maneuver.sign().exit_toward_elements(i).text());
+            exit_toward_element->emplace("text", maneuver.sign().exit_toward_locations(i).text());
 
             // Add the exit toward consecutive count only if greater than zero
-            if (maneuver.sign().exit_toward_elements(i).consecutive_count() > 0) {
+            if (maneuver.sign().exit_toward_locations(i).consecutive_count() > 0) {
               exit_toward_element
                   ->emplace("consecutive_count",
                             static_cast<uint64_t>(
-                                maneuver.sign().exit_toward_elements(i).consecutive_count()));
+                                maneuver.sign().exit_toward_locations(i).consecutive_count()));
             }
 
             exit_toward_elements->emplace_back(exit_toward_element);
@@ -374,20 +373,19 @@ json::ArrayPtr legs(const std::list<valhalla::odin::TripDirections>& directions_
         }
 
         // Process exit name
-        if (maneuver.sign().exit_name_elements_size() > 0) {
+        if (maneuver.sign().exit_names_size() > 0) {
           auto exit_name_elements = json::array({});
-          for (int i = 0; i < maneuver.sign().exit_name_elements_size(); ++i) {
+          for (int i = 0; i < maneuver.sign().exit_names_size(); ++i) {
             auto exit_name_element = json::map({});
 
             // Add the exit name text
-            exit_name_element->emplace("text", maneuver.sign().exit_name_elements(i).text());
+            exit_name_element->emplace("text", maneuver.sign().exit_names(i).text());
 
             // Add the exit name consecutive count only if greater than zero
-            if (maneuver.sign().exit_name_elements(i).consecutive_count() > 0) {
-              exit_name_element
-                  ->emplace("consecutive_count",
-                            static_cast<uint64_t>(
-                                maneuver.sign().exit_name_elements(i).consecutive_count()));
+            if (maneuver.sign().exit_names(i).consecutive_count() > 0) {
+              exit_name_element->emplace("consecutive_count",
+                                         static_cast<uint64_t>(
+                                             maneuver.sign().exit_names(i).consecutive_count()));
             }
 
             exit_name_elements->emplace_back(exit_name_element);
