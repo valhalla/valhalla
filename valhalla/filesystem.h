@@ -12,7 +12,13 @@
 #include <memory>
 #include <string>
 #include <sys/stat.h>
+#ifdef _MSC_VER
+#include <direct.h> // _mkdir
+#include <fcntl.h>
+#include <io.h> // _chsize
+#else
 #include <unistd.h>
+#endif
 #include <vector>
 
 namespace filesystem {
@@ -256,7 +262,11 @@ inline bool create_directories(const path& p) {
     auto partial = p.path_name_.substr(0, sep);
     if (stat(partial.c_str(), &s) != 0) {
       // create this piece with filesystem::permissions::all
+#ifdef _MSC_VER
+      if (_mkdir(partial.c_str()) != 0) {
+#else
       if (mkdir(partial.c_str(), S_IRWXU | S_IRWXG | S_IRWXO) != 0) {
+#endif
         return false;
         // throw std::runtime_error(std::string("Failed to create path: ") + strerror(errno));
       }
@@ -272,6 +282,23 @@ inline bool create_directories(const path& p) {
 }
 
 inline void resize_file(const path& p, std::uintmax_t new_size) {
+
+#ifdef _MSC_VER
+  auto truncate = [](char const* filepath, std::uintmax_t length) -> int {
+    // _chsize expects value in range of signed long
+    if (length > (std::numeric_limits<long>::max)())
+      return false;
+
+    int fd{0};
+    if (::_sopen_s(&fd, filepath, _O_RDWR | _O_CREAT, _SH_DENYNO, _S_IREAD | _S_IWRITE) != 0)
+      return false;
+
+    int const rc = ::_chsize(fd, static_cast<long>(length));
+    _close(fd);
+    return rc == 0;
+  };
+#endif
+
   if (truncate(p.c_str(), new_size))
     throw std::runtime_error(std::string("Failed to resize path: ") + strerror(errno));
 }
