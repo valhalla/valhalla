@@ -972,23 +972,30 @@ void ManeuversBuilder::UpdateManeuver(Maneuver& maneuver, int node_index) {
   // Signs
   if (prev_edge->has_sign()) {
     // Exit number
-    for (auto& text : prev_edge->sign().exit_number()) {
-      maneuver.mutable_signs()->mutable_exit_number_list()->emplace_back(text);
+    for (const auto& exit_number : prev_edge->sign().exit_numbers()) {
+      maneuver.mutable_signs()
+          ->mutable_exit_number_list()
+          ->emplace_back(exit_number.text(), exit_number.is_route_number());
     }
 
     // Exit branch
-    for (auto& text : prev_edge->sign().exit_branch()) {
-      maneuver.mutable_signs()->mutable_exit_branch_list()->emplace_back(text);
+    for (const auto& exit_onto_street : prev_edge->sign().exit_onto_streets()) {
+      maneuver.mutable_signs()
+          ->mutable_exit_branch_list()
+          ->emplace_back(exit_onto_street.text(), exit_onto_street.is_route_number());
     }
 
     // Exit toward
-    for (auto& text : prev_edge->sign().exit_toward()) {
-      maneuver.mutable_signs()->mutable_exit_toward_list()->emplace_back(text);
+    for (const auto& exit_toward_location : prev_edge->sign().exit_toward_locations()) {
+      maneuver.mutable_signs()
+          ->mutable_exit_toward_list()
+          ->emplace_back(exit_toward_location.text(), exit_toward_location.is_route_number());
     }
 
     // Exit name
-    for (auto& text : prev_edge->sign().exit_name()) {
-      maneuver.mutable_signs()->mutable_exit_name_list()->emplace_back(text);
+    for (const auto& exit_name : prev_edge->sign().exit_names()) {
+      maneuver.mutable_signs()->mutable_exit_name_list()->emplace_back(exit_name.text(),
+                                                                       exit_name.is_route_number());
     }
   }
 
