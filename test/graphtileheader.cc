@@ -5,9 +5,9 @@
 using namespace std;
 using namespace valhalla::baldr;
 
-// Expected size is 272 (was 264 before adding base_ll) bytes. We want to alert if
-// somehow any change grows this structure size as that indicates incompatible tiles.
-constexpr size_t kGraphTileHeaderExpectedSize = 272;
+// Expected size is 256. We want to alert if somehow any change grows this structure
+// size as that indicates incompatible tiles.
+constexpr size_t kGraphTileHeaderExpectedSize = 256;
 
 namespace {
 
@@ -79,6 +79,10 @@ void TestWriteRead() {
   hdr.set_nodecount(55511);
   if (hdr.nodecount() != 55511) {
     throw runtime_error("Header node count test failed");
+  }
+  hdr.set_transitioncount(555);
+  if (hdr.transitioncount() != 555) {
+    throw runtime_error("Header node transition count test failed");
   }
   hdr.set_directededgecount(55511);
   if (hdr.directededgecount() != 55511) {
@@ -178,16 +182,6 @@ void TestWriteRead() {
     throw runtime_error("Header bin index bounds check failed");
   } catch (const std::runtime_error& e) {
     // Error thrown as it should be
-  }
-
-  hdr.set_turnlane_count(1234);
-  if (hdr.turnlane_count() != 1234) {
-    throw runtime_error("Header turnlane count test failed");
-  }
-
-  hdr.set_turnlane_offset(4321);
-  if (hdr.turnlane_offset() != 4321) {
-    throw runtime_error("Header turnlane offset test failed");
   }
 }
 } // namespace
