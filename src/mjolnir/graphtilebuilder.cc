@@ -54,15 +54,17 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
   nodes_builder_.reserve(n);
   std::copy(nodes_, nodes_ + n, std::back_inserter(nodes_builder_));
 
+  // Copy node transitions to the builder list
+  n = header_->transitioncount();
+  transitions_builder_.reserve(n);
+  std::copy(transitions_, transitions_ + n, std::back_inserter(transitions_builder_));
+
   // Copy directed edges to the builder list
   n = header_->directededgecount();
   directededges_builder_.reserve(n);
   std::copy(directededges_, directededges_ + n, std::back_inserter(directededges_builder_));
 
-  // Copy node transitions to the builder list
-  n = header_->transitioncount();
-  transitions_builder_.reserve(n);
-  std::copy(transitions_, transitions_ + n, std::back_inserter(transitions_builder_));
+  // Add extended directededge attributes (if available)
 
   // Create access restriction list
   for (uint32_t i = 0; i < header_->access_restriction_count(); i++) {
@@ -195,15 +197,26 @@ void GraphTileBuilder::StoreTileData() {
     in_mem.write(reinterpret_cast<const char*>(nodes_builder_.data()),
                  nodes_builder_.size() * sizeof(NodeInfo));
 
+    // Write the node transitions
+    header_builder_.set_transitioncount(transitions_builder_.size());
+    in_mem.write(reinterpret_cast<const char*>(transitions_builder_.data()),
+                 transitions_builder_.size() * sizeof(NodeTransition));
+
     // Write the directed edges
     header_builder_.set_directededgecount(directededges_builder_.size());
     in_mem.write(reinterpret_cast<const char*>(directededges_builder_.data()),
                  directededges_builder_.size() * sizeof(DirectedEdge));
 
-    // Write the node transitions
-    header_builder_.set_transitioncount(transitions_builder_.size());
-    in_mem.write(reinterpret_cast<const char*>(transitions_builder_.data()),
-                 transitions_builder_.size() * sizeof(NodeTransition));
+    // Write extended directed edge attributes if they exist.
+    if (directededges_ext_builder_.size() > 0) {
+      if (directededges_ext_builder_.size() != directededges_builder_.size()) {
+        LOG_ERROR("DirectedEdge extended attributes not same size as directed edges");
+      } else {
+        header_builder_.set_has_ext_directededge(true);
+        in_mem.write(reinterpret_cast<const char*>(directededges_ext_builder_.data()),
+                     directededges_ext_builder_.size() * sizeof(DirectedEdgeExt));
+      }
+    }
 
     // Sort and write the access restrictions
     header_builder_.set_access_restriction_count(access_restriction_builder_.size());
@@ -240,6 +253,11 @@ void GraphTileBuilder::StoreTileData() {
     in_mem.write(reinterpret_cast<const char*>(signs_builder_.data()),
                  signs_builder_.size() * sizeof(Sign));
 
+    // Write turn lanes
+    header_builder_.set_turnlane_count(turnlanes_builder_.size());
+    in_mem.write(reinterpret_cast<const char*>(turnlanes_builder_.data()),
+                 turnlanes_builder_.size() * sizeof(TurnLanes));
+
     // Write the admins
     header_builder_.set_admincount(admins_builder_.size());
     in_mem.write(reinterpret_cast<const char*>(admins_builder_.data()),
@@ -250,15 +268,17 @@ void GraphTileBuilder::StoreTileData() {
     // Write the forward complex restriction data
     header_builder_.set_complex_restriction_forward_offset(
         (sizeof(GraphTileHeader)) + (nodes_builder_.size() * sizeof(NodeInfo)) +
-        (directededges_builder_.size() * sizeof(DirectedEdge)) +
         (transitions_builder_.size() * sizeof(NodeTransition)) +
+        (directededges_builder_.size() * sizeof(DirectedEdge)) +
+        (directededges_ext_builder_.size() * sizeof(DirectedEdgeExt)) +
         (access_restriction_builder_.size() * sizeof(AccessRestriction)) +
         (departure_builder_.size() * sizeof(TransitDeparture)) +
         (stop_builder_.size() * sizeof(TransitStop)) +
         (route_builder_.size() * sizeof(TransitRoute)) +
-        (schedule_builder_.size() * sizeof(TransitSchedule))
+        (schedule_builder_.size() * sizeof(TransitSchedule)) +
         // TODO - once transit transfers are added need to update here
-        + (signs_builder_.size() * sizeof(Sign)) + (admins_builder_.size() * sizeof(Admin)));
+        (signs_builder_.size() * sizeof(Sign)) + (turnlanes_builder_.size() * sizeof(TurnLanes)) +
+        (admins_builder_.size() * sizeof(Admin)));
     uint32_t forward_restriction_size = 0;
     for (auto& complex_restriction : complex_restriction_forward_builder_) {
       in_mem << complex_restriction;
@@ -301,17 +321,9 @@ void GraphTileBuilder::StoreTileData() {
     in_mem.write(reinterpret_cast<const char*>(lane_connectivity_builder_.data()),
                  lane_connectivity_builder_.size() * sizeof(LaneConnectivity));
 
-    // Write turn lanes
-    header_builder_.set_turnlane_offset(
-        header_builder_.lane_connectivity_offset() +
-        (lane_connectivity_builder_.size() * sizeof(LaneConnectivity)));
-    header_builder_.set_turnlane_count(turnlanes_builder_.size());
-    in_mem.write(reinterpret_cast<const char*>(turnlanes_builder_.data()),
-                 turnlanes_builder_.size() * sizeof(TurnLanes));
-
     // Set the end offset
-    header_builder_.set_end_offset(header_builder_.turnlane_offset() +
-                                   turnlanes_builder_.size() * sizeof(TurnLanes));
+    header_builder_.set_end_offset(header_builder_.lane_connectivity_offset() +
+                                   (lane_connectivity_builder_.size() * sizeof(LaneConnectivity)));
 
     // Sanity check for the end offset
     uint32_t curr =
@@ -346,7 +358,6 @@ void GraphTileBuilder::StoreTileData() {
 // tile contents remains the same.
 void GraphTileBuilder::Update(const std::vector<NodeInfo>& nodes,
                               const std::vector<DirectedEdge>& directededges) {
-
   // Get the name of the file
   boost::filesystem::path filename =
       tile_dir_ + filesystem::path::preferred_separator + GraphTile::FileSuffix(header_->graphid());
@@ -368,6 +379,10 @@ void GraphTileBuilder::Update(const std::vector<NodeInfo>& nodes,
     }
     file.write(reinterpret_cast<const char*>(nodes.data()), nodes.size() * sizeof(NodeInfo));
 
+    // Write node transitions
+    file.write(reinterpret_cast<const char*>(transitions_),
+               header_->transitioncount() * sizeof(NodeTransition));
+
     // Write the updated directed edges. Make sure edge count matches.
     if (directededges.size() != header_->directededgecount()) {
       throw std::runtime_error("GraphTileBuilder::Update - directed edge count has changed");
@@ -375,8 +390,11 @@ void GraphTileBuilder::Update(const std::vector<NodeInfo>& nodes,
     file.write(reinterpret_cast<const char*>(directededges.data()),
                directededges.size() * sizeof(DirectedEdge));
 
+    // If there are extended directed edge attributes they would need to be written out here
+    // (and likely added to the method)
+
     // Write the rest of the tiles
-    auto begin = reinterpret_cast<const char*>(&transitions_[0]);
+    auto begin = reinterpret_cast<const char*>(&access_restrictions_[0]);
     auto end = reinterpret_cast<const char*>(header()) + header()->end_offset();
     file.write(begin, end - begin);
     file.close();
@@ -750,6 +768,22 @@ Sign& GraphTileBuilder::sign_builder(const size_t idx) {
   throw std::runtime_error("GraphTileBuilder sign index is out of bounds");
 }
 
+// Gets a sign builder at the specified index.
+TurnLanes& GraphTileBuilder::turnlane_builder(const size_t idx) {
+  if (idx < header_->turnlane_count()) {
+    return turnlanes_[idx];
+  }
+  throw std::runtime_error("GraphTileBuilder turn lane index is out of bounds");
+}
+
+// Add turn lanes for a directed edge
+void GraphTileBuilder::AddTurnLanes(const uint32_t idx, const std::string& str) {
+  if (!str.empty()) {
+    uint32_t offset = AddName(str);
+    turnlanes_builder_.emplace_back(idx, offset);
+  }
+}
+
 // Gets a const admin builder at specified index.
 const Admin& GraphTileBuilder::admins_builder(size_t idx) {
   if (idx < admins_builder_.size()) {
@@ -862,7 +896,6 @@ void GraphTileBuilder::AddBins(const std::string& tile_dir,
   header.set_edgeinfo_offset(header.edgeinfo_offset() + shift);
   header.set_textlist_offset(header.textlist_offset() + shift);
   header.set_lane_connectivity_offset(header.lane_connectivity_offset() + shift);
-  header.set_turnlane_offset(header.turnlane_offset() + shift);
   header.set_end_offset(header.end_offset() + shift);
   // rewrite the tile
   boost::filesystem::path filename =
@@ -890,22 +923,6 @@ void GraphTileBuilder::AddBins(const std::string& tile_dir,
   } // failed
   else {
     throw std::runtime_error("Failed to open file " + filename.string());
-  }
-}
-
-// Gets a sign builder at the specified index.
-TurnLanes& GraphTileBuilder::turnlane_builder(const size_t idx) {
-  if (idx < header_->turnlane_count()) {
-    return turnlanes_[idx];
-  }
-  throw std::runtime_error("GraphTileBuilder turn lane index is out of bounds");
-}
-
-// Add turn lanes for a directed edge
-void GraphTileBuilder::AddTurnLanes(const uint32_t idx, const std::string& str) {
-  if (!str.empty()) {
-    uint32_t offset = AddName(str);
-    turnlanes_builder_.emplace_back(idx, offset);
   }
 }
 
@@ -966,6 +983,10 @@ void GraphTileBuilder::UpdatePredictedSpeeds(const std::vector<DirectedEdge>& di
     // Copy the nodes (they are unchanged when adding predicted speeds).
     file.write(reinterpret_cast<const char*>(nodes_), header_->nodecount() * sizeof(NodeInfo));
 
+    // Copy the node transitions (they are unchanged when adding predicted speeds).
+    file.write(reinterpret_cast<const char*>(transitions_),
+               header_->transitioncount() * sizeof(NodeTransition));
+
     // Write the updated directed edges. Make sure edge count matches.
     if (directededges.size() != header_->directededgecount()) {
       throw std::runtime_error("GraphTileBuilder::Update - directed edge count has changed");
@@ -973,8 +994,8 @@ void GraphTileBuilder::UpdatePredictedSpeeds(const std::vector<DirectedEdge>& di
     file.write(reinterpret_cast<const char*>(directededges.data()),
                directededges.size() * sizeof(DirectedEdge));
 
-    // Write out data from transitions to the end of turn lane data
-    auto begin = reinterpret_cast<const char*>(&transitions_[0]);
+    // Write out data from access restrictions to the end of lane connectivity data.
+    auto begin = reinterpret_cast<const char*>(&access_restrictions_[0]);
     auto end = reinterpret_cast<const char*>(header()) + offset;
     file.write(begin, end - begin);
 

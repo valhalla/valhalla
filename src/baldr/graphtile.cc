@@ -159,13 +159,19 @@ void GraphTile::Initialize(const GraphId& graphid, char* tile_ptr, const size_t 
   nodes_ = reinterpret_cast<NodeInfo*>(ptr);
   ptr += header_->nodecount() * sizeof(NodeInfo);
 
+  // Set a pointer to the node transition list
+  transitions_ = reinterpret_cast<NodeTransition*>(ptr);
+  ptr += header_->transitioncount() * sizeof(NodeTransition);
+
   // Set a pointer to the directed edge list
   directededges_ = reinterpret_cast<DirectedEdge*>(ptr);
   ptr += header_->directededgecount() * sizeof(DirectedEdge);
 
-  // Set a pointer to the node transition list
-  transitions_ = reinterpret_cast<NodeTransition*>(ptr);
-  ptr += header_->transitioncount() * sizeof(NodeTransition);
+  // Extended directed edge attribution (if available).
+  if (header_->has_ext_directededge()) {
+    ext_directededges_ = reinterpret_cast<DirectedEdgeExt*>(ptr);
+    ptr += header_->directededgecount() * sizeof(DirectedEdgeExt);
+  }
 
   // Set a pointer access restriction list
   access_restrictions_ = reinterpret_cast<AccessRestriction*>(ptr);
@@ -195,6 +201,10 @@ void GraphTile::Initialize(const GraphId& graphid, char* tile_ptr, const size_t 
   signs_ = reinterpret_cast<Sign*>(ptr);
   ptr += header_->signcount() * sizeof(Sign);
 
+  // Start of turn lane data.
+  turnlanes_ = reinterpret_cast<TurnLanes*>(ptr);
+  ptr += header_->turnlane_count() * sizeof(TurnLanes);
+
   // Set a pointer to the admininstrative information list
   admins_ = reinterpret_cast<Admin*>(ptr);
   ptr += header_->admincount() * sizeof(Admin);
@@ -223,10 +233,7 @@ void GraphTile::Initialize(const GraphId& graphid, char* tile_ptr, const size_t 
   // Start of lane connections and their size
   lane_connectivity_ =
       reinterpret_cast<LaneConnectivity*>(tile_ptr + header_->lane_connectivity_offset());
-  lane_connectivity_size_ = header_->turnlane_offset() - header_->lane_connectivity_offset();
-
-  // Start of turn lane data.
-  turnlanes_ = reinterpret_cast<TurnLanes*>(tile_ptr + header_->turnlane_offset());
+  lane_connectivity_size_ = header_->predictedspeeds_offset() - header_->lane_connectivity_offset();
 
   // Start of predicted speed data.
   if (header_->predictedspeeds_count() > 0) {
@@ -234,6 +241,10 @@ void GraphTile::Initialize(const GraphId& graphid, char* tile_ptr, const size_t 
     char* ptr2 = ptr1 + (header_->directededgecount() * sizeof(int32_t));
     predictedspeeds_.set_offset(reinterpret_cast<uint32_t*>(ptr1));
     predictedspeeds_.set_profiles(reinterpret_cast<int16_t*>(ptr2));
+
+    lane_connectivity_size_ = header_->predictedspeeds_offset() - header_->lane_connectivity_offset();
+  } else {
+    lane_connectivity_size_ = header_->end_offset() - header_->lane_connectivity_offset();
   }
 
   // For reference - how to use the end offset to set size of an object (that

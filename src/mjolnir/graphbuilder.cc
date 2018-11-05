@@ -447,6 +447,11 @@ void BuildTileSet(const std::string& ways_file,
       PointLL base_ll = tiling.Base(id);
       graphtile.header_builder().set_base_ll(base_ll);
 
+      // Set the has_elevation flag
+      if (sample) {
+        graphtile.header_builder().set_has_elevation(true);
+      }
+
       // Get the admin polygons. If only one exists for the tile check if the
       // tile is entirely inside the polygon
       bool tile_within_one_admin = false;

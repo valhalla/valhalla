@@ -307,6 +307,9 @@ public:
    */
   DirectedEdge& directededge_builder(const size_t idx);
 
+  // TODO - add access method to directededge_ext_builder if extended directed edge
+  // attributes are needed.
+
   /**
    * Gets a non-const access restriction from existing tile data.
    * @param  idx  Index of the restriction (index in the array, not the
@@ -441,6 +444,10 @@ protected:
   // List of directed edges. This is a fixed size structure so it can be
   // indexed directly.
   std::vector<DirectedEdge> directededges_builder_;
+
+  // Optional list of directed edge extended attributes. If this is used it must be the same size
+  // as the directededges_builder.
+  std::vector<DirectedEdgeExt> directededges_ext_builder_;
 
   // List of node transitions. This is a fixed size structure so it can be
   // indexed directly.
