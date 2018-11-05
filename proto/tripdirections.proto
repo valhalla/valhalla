@@ -119,17 +119,17 @@ message TripDirections {
       kPostTransitConnectionDestination = 36;
     }
   
+    message SignElement {
+      optional string text = 1;               // The actual sign element text, examples: I 95 North or Derry Street
+      optional bool is_route_number = 2;      // true if sign element is a reference route number such as: I 81 South or US 322 West
+      optional uint32 consecutive_count = 3;  // The frequency of this sign element within a set a consecutive signs
+    }
+
     message Sign {
-
-      message Element {
-        optional string text = 1;              // The actual sign element text
-        optional uint32 consecutive_count = 2; // The frequency of this sign element within a set a consecutive signs
-      }
-
-      repeated Element exit_number_elements = 1;  // The list of exit numbers, example: 67B
-      repeated Element exit_branch_elements = 2;  // The list of exit branch street names, example: I 95 North
-      repeated Element exit_toward_elements = 3;  // The list of exit toward locations, example: New York
-      repeated Element exit_name_elements   = 4;  // The list of exit names - not used much in US, example: Gettysburg Pike
+      repeated SignElement exit_numbers = 1;          // The list of exit numbers, example: 67B
+      repeated SignElement exit_onto_streets = 2;     // The list of exit branch street names, example: I 95 North
+      repeated SignElement exit_toward_locations = 3; // The list of exit toward locations, examples: New York or I 395 South
+      repeated SignElement exit_names = 4;            // The list of exit names - not used much in US, example: Gettysburg Pike
     }
 
     optional Type type = 1;                                  // Maneuver type
