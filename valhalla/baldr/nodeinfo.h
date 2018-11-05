@@ -234,6 +234,23 @@ public:
   void set_local_edge_count(const uint32_t n);
 
   /**
+   * Is driving on the right hand side of the road along edges originating at this node?
+   * @return  Returns true outbound edges use right-side driving, false if
+   *          left-side driving.
+   */
+  bool drive_on_right() const {
+    return drive_on_right_;
+  }
+
+  /**
+   * Set the flag indicating driving is on the right hand side of the road
+   * for outbound edges from this node.
+   * @param rsd  True if outbound edges use right-side driving, false if
+   *             left-side driving.
+   */
+  void set_drive_on_right(const bool rsd);
+
+  /**
    * Is a mode change allowed at this node? The access data tells which
    * modes are allowed at the node. Examples include transit stops, bike
    * share locations, and parking locations.
@@ -378,7 +395,9 @@ protected:
                                      // kMaxLocalEdgeIndex+1 edges)
   uint64_t local_edge_count_ : 3;    // # of regular edges across all levels
                                      // (up to kMaxLocalEdgeIndex+1)
-  uint64_t spare2_ : 21;
+  uint64_t drive_on_right_ : 1;      // Driving side. Right if true (false=left)
+
+  uint64_t spare2_ : 20;
 
   // Headings of up to kMaxLocalEdgeIndex+1 local edges (rounded to nearest 2 degrees)
   // for all other levels. Connecting way Id (for transit level) while data build occurs.

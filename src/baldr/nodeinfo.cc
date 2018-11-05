@@ -189,6 +189,12 @@ void NodeInfo::set_local_edge_count(const uint32_t n) {
   }
 }
 
+// Set the flag indicating driving is on the right hand side of the road
+// for outbound edges from this node.
+void NodeInfo::set_drive_on_right(const bool rsd) {
+  drive_on_right_ = rsd;
+}
+
 // Sets the flag indicating a mode change is allowed at this node.
 // The access data tells which modes are allowed at the node. Examples
 // include transit stops, bike share locations, and parking locations.
@@ -242,6 +248,7 @@ json::MapPtr NodeInfo::json(const GraphTile* tile) const {
       {"administrative", admin_json(tile->admininfo(admin_index_), timezone_)},
       {"density", static_cast<uint64_t>(density_)},
       {"local_edge_count", static_cast<uint64_t>(local_edge_count_ + 1)},
+      {"drive_on_right", static_cast<bool>(drive_on_right_)},
       {"mode_change", static_cast<bool>(mode_change_)},
       {"traffic_signal", static_cast<bool>(traffic_signal_)},
       {"type", to_string(static_cast<NodeType>(type_))},

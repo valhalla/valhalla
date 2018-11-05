@@ -56,11 +56,6 @@ typedef boost::geometry::model::d2::point_xy<double> point_type;
 typedef boost::geometry::model::polygon<point_type> polygon_type;
 typedef boost::geometry::model::multi_polygon<polygon_type> multi_polygon_type;
 
-// Number of iterations to try to determine if an edge is unreachable
-// by driving. If a search terminates before this without reaching
-// a secondary road then the edge is considered unreachable.
-constexpr uint32_t kUnreachableIterations = 20;
-
 // Number of tries when determining not thru edges
 constexpr uint32_t kMaxNoThruTries = 256;
 
@@ -77,7 +72,6 @@ constexpr float kRampFactor = 0.85f;
 // A little struct to hold stats information during each threads work
 struct enhancer_stats {
   float max_density; //(km/km2)
-  uint32_t unreachable;
   uint32_t not_thru;
   uint32_t no_country_found;
   uint32_t internalcount;
@@ -89,7 +83,6 @@ struct enhancer_stats {
     if (max_density < other.max_density) {
       max_density = other.max_density;
     }
-    unreachable += other.unreachable;
     not_thru += other.not_thru;
     no_country_found += other.no_country_found;
     internalcount += other.internalcount;
@@ -194,6 +187,14 @@ void UpdateSpeed(DirectedEdge& directededge, const uint32_t density, const uint3
   }
 }
 
+#ifdef UNREACHABLE
+// TODO - may want to keep this to add to a postprocess to find unreachable areas
+
+// Number of iterations to try to determine if an edge is unreachable
+// by driving. If a search terminates before this without reaching
+// a secondary road then the edge is considered unreachable.
+constexpr uint32_t kUnreachableIterations = 20;
+
 /**
  * Tests if the directed edge is unreachable by driving. If a driveable
  * edge cannot reach higher class roads and a search cannot expand after
@@ -258,6 +259,7 @@ bool IsUnreachable(GraphReader& reader, std::mutex& lock, DirectedEdge& directed
   }
   return false;
 }
+#endif
 
 // Test if this is a "not thru" edge. These are edges that enter a region that
 // has no exit other than the edge entering the region
@@ -598,10 +600,10 @@ bool IsPencilPointUturn(uint32_t from_index,
                         const NodeInfo& node_info,
                         uint32_t turn_degree) {
   // Logic for drive on right
-  if (directededge.drive_on_right()) {
+  if (node_info.drive_on_right()) {
     // If the turn is a sharp left (179 < turn < 211)
     //    or short distance (< 50m) and wider sharp left (179 < turn < 226)
-    // and oneway edges
+    // and oneway edgesb
     // and an intersecting right road exists
     // and no intersecting left road exists
     // and the from and to edges have a common base name
@@ -669,7 +671,7 @@ bool IsCyclewayUturn(uint32_t from_index,
   }
 
   // Logic for drive on right
-  if (directededge.drive_on_right()) {
+  if (node_info.drive_on_right()) {
     // If the turn is a sharp left (179 < turn < 211)
     //    or short distance (< 50m) and wider sharp left (179 < turn < 226)
     // and an intersecting right road exists
@@ -1280,16 +1282,9 @@ void enhance(const boost::property_tree::ptree& pt,
           }
         }
 
-        // Set edge transitions and unreachable, not_thru, and internal
-        // intersection flags.
+        // Set edge transitions.
         if (j < kNumberOfEdgeTransitions) {
           ProcessEdgeTransitions(j, directededge, edges, ntrans, &heading[0], nodeinfo, stats);
-        }
-
-        // Set unreachable (driving) flag
-        if (IsUnreachable(reader, lock, directededge)) {
-          directededge.set_unreachable(true);
-          stats.unreachable++;
         }
 
         // Check for not_thru edge (only on low importance edges). Exclude
@@ -1426,8 +1421,7 @@ void GraphEnhancer::Enhance(const boost::property_tree::ptree& pt, const std::st
       // TODO: throw further up the chain?
     }
   }
-  LOG_INFO("Finished with max_density " + std::to_string(stats.max_density) + " and unreachable " +
-           std::to_string(stats.unreachable));
+  LOG_INFO("Finished with max_density " + std::to_string(stats.max_density));
   LOG_DEBUG("not_thru = " + std::to_string(stats.not_thru));
   LOG_DEBUG("no country found = " + std::to_string(stats.no_country_found));
   LOG_INFO("internal intersection = " + std::to_string(stats.internalcount));

@@ -45,7 +45,7 @@ GraphTile::GraphTile()
       complex_restriction_reverse_(nullptr), edgeinfo_(nullptr), textlist_(nullptr),
       complex_restriction_forward_size_(0), complex_restriction_reverse_size_(0), edgeinfo_size_(0),
       textlist_size_(0), lane_connectivity_(nullptr), lane_connectivity_size_(0),
-      edge_elevation_(nullptr), turnlanes_(nullptr) {
+      turnlanes_(nullptr) {
 }
 
 // Constructor given a filename. Reads the graph data into memory.
@@ -223,11 +223,7 @@ void GraphTile::Initialize(const GraphId& graphid, char* tile_ptr, const size_t 
   // Start of lane connections and their size
   lane_connectivity_ =
       reinterpret_cast<LaneConnectivity*>(tile_ptr + header_->lane_connectivity_offset());
-  lane_connectivity_size_ = header_->edge_elevation_offset() - header_->lane_connectivity_offset();
-
-  // Start of edge elevation data. If the tile has edge elevation data (query
-  // the header) then the count is the same as the directed edge count.
-  edge_elevation_ = reinterpret_cast<EdgeElevation*>(tile_ptr + header_->edge_elevation_offset());
+  lane_connectivity_size_ = header_->turnlane_offset() - header_->lane_connectivity_offset();
 
   // Start of turn lane data.
   turnlanes_ = reinterpret_cast<TurnLanes*>(tile_ptr + header_->turnlane_offset());

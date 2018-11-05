@@ -22,7 +22,7 @@ namespace baldr {
 EdgeInfo::EdgeInfo(char* ptr, const char* names_list, const size_t names_list_length)
     : names_list_(names_list), names_list_length_(names_list_length) {
 
-  wayid_ = *(reinterpret_cast<uint64_t*>(ptr));
+  w0_.value_ = *(reinterpret_cast<uint64_t*>(ptr));
   ptr += sizeof(uint64_t);
 
   item_ = reinterpret_cast<PackedItem*>(ptr);
@@ -111,7 +111,8 @@ std::string EdgeInfo::encoded_shape() const {
 
 json::MapPtr EdgeInfo::json() const {
   return json::map({
-      {"way_id", static_cast<uint64_t>(wayid_)},
+      {"way_id", static_cast<uint64_t>(wayid())},
+      {"mean elevation", static_cast<uint64_t>(mean_elevation())},
       {"names", names_json(GetNames())},
       {"shape", midgard::encode(shape())},
   });

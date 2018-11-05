@@ -474,22 +474,6 @@ public:
   }
 
   /**
-   * Gets the offset to the edge elevation data.
-   * @return  Returns the number of bytes to offset to the the edge elevation data.
-   */
-  uint32_t edge_elevation_offset() const {
-    return edge_elevation_offset_;
-  }
-
-  /**
-   * Sets the offset to the edge elevation data.
-   * @param offset Offset in bytes to the start of the edge elevation data.
-   */
-  void set_edge_elevation_offset(const uint32_t offset) {
-    edge_elevation_offset_ = offset;
-  }
-
-  /**
    * Gets the offset to the turn lane data.
    * @return  Returns the number of bytes to offset to the the turn lane data.
    */
@@ -627,9 +611,6 @@ protected:
 
   // Offset to beginning of the lane connectivity data
   uint32_t lane_connectivity_offset_;
-
-  // Offset to the beginning of the edge elevation data.
-  uint32_t edge_elevation_offset_;
 
   // Offset to the beginning of the turn lane data.
   uint32_t turnlane_offset_;

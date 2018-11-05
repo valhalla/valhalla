@@ -174,12 +174,6 @@ void DirectedEdge::set_use_sidepath(const bool use_sidepath) {
   use_sidepath_ = use_sidepath;
 }
 
-// Set the flag indicating driving is on the right hand side of the road
-// along this edge?
-void DirectedEdge::set_drive_on_right(const bool rsd) {
-  drive_on_right_ = rsd;
-}
-
 // Set the flag indicating the edge is a dead end (no other driveable
 // roads at the end node of this edge).
 void DirectedEdge::set_deadend(const bool d) {
@@ -216,13 +210,6 @@ void DirectedEdge::set_bridge(const bool bridge) {
 // Sets the flag indicating the  edge is part of a roundabout.
 void DirectedEdge::set_roundabout(const bool roundabout) {
   roundabout_ = roundabout;
-}
-
-// Sets the flag indicating the edge is unreachable by driving. This can
-// happen if a driveable edge is surrounded by pedestrian only edges (e.g.
-// in a city center) or is not properly connected to other edges.
-void DirectedEdge::set_unreachable(const bool unreachable) {
-  unreachable_ = unreachable;
 }
 
 // Sets the flag indicating a traffic signal is present at the end of
@@ -420,8 +407,8 @@ void DirectedEdge::set_end_restriction(const uint32_t modes) {
 }
 
 // Set the part of complex restriction flag.
-void DirectedEdge::set_part_of_complex_restriction(const bool part_of) {
-  part_of_complex_restriction_ = part_of;
+void DirectedEdge::complex_restriction(const bool part_of) {
+  complex_restriction_ = part_of;
 }
 
 // Set the density along the edges.
@@ -436,7 +423,7 @@ void DirectedEdge::set_density(const uint32_t density) {
 
 // Sets the named flag.
 void DirectedEdge::set_named(const bool named) {
-  named_ = named;
+  ; // TODO named_ = named;
 }
 
 // Set the flag for a sidewalk to the left of this directed edge.
@@ -551,6 +538,32 @@ void DirectedEdge::set_leaves_tile(const bool leaves_tile) {
   leaves_tile_ = leaves_tile;
 }
 
+// Sets the maximum upward slope. If slope is negative, 0 is set.
+void DirectedEdge::set_max_up_slope(const float slope) {
+  if (slope < 0.0f) {
+    max_up_slope_ = 0;
+  } else if (slope < 16.0f) {
+    max_up_slope_ = static_cast<int>(std::ceil(slope));
+  } else if (slope < 76.0f) {
+    max_up_slope_ = 0x10 | static_cast<int>(std::ceil((slope - 16.0f) * 0.25f));
+  } else {
+    max_up_slope_ = 0x1f;
+  }
+}
+
+// Sets the maximum downward slope. If slope is positive, 0 is set.
+void DirectedEdge::set_max_down_slope(const float slope) {
+  if (slope > 0.0f) {
+    max_down_slope_ = 0;
+  } else if (slope > -16.0f) {
+    max_down_slope_ = static_cast<int>(std::ceil(-slope));
+  } else if (slope > -76.0f) {
+    max_down_slope_ = 0x10 | static_cast<int>(std::ceil((-slope - 16.0f) * 0.25f));
+  } else {
+    max_down_slope_ = 0x1f;
+  }
+}
+
 // Json representation
 json::MapPtr DirectedEdge::json() const {
   return json::map({
@@ -569,16 +582,14 @@ json::MapPtr DirectedEdge::json() const {
       {"access_restriction", static_cast<bool>(access_restriction_)},
       {"start_restriction", access_json(start_restriction_)},
       {"end_restriction", access_json(end_restriction_)},
-      {"part_of_complex_restriction", static_cast<bool>(part_of_complex_restriction_)},
+      {"part_of_complex_restriction", static_cast<bool>(complex_restriction_)},
       {"has_exit_sign", static_cast<bool>(exitsign_)},
-      {"drive_on_right", static_cast<bool>(drive_on_right_)},
       {"toll", static_cast<bool>(toll_)},
       {"seasonal", static_cast<bool>(seasonal_)},
       {"destination_only", static_cast<bool>(dest_only_)},
       {"tunnel", static_cast<bool>(tunnel_)},
       {"bridge", static_cast<bool>(bridge_)},
       {"round_about", static_cast<bool>(roundabout_)},
-      {"unreachable", static_cast<bool>(unreachable_)},
       {"traffic_signal", static_cast<bool>(traffic_signal_)},
       {"forward", static_cast<bool>(forward_)},
       {"not_thru", static_cast<bool>(not_thru_)},
@@ -591,6 +602,8 @@ json::MapPtr DirectedEdge::json() const {
        json::map({
            {"length", static_cast<uint64_t>(length_)},
            {"weighted_grade", json::fp_t{static_cast<double>(weighted_grade_ - 6.0) / .6, 2}},
+           {"max_up_slope", json::fp_t{static_cast<double>(max_up_slope()), 2}},
+           {"max_down_slope", json::fp_t{static_cast<double>(max_down_slope()), 2}},
            {"curvature", static_cast<uint64_t>(curvature_)},
        })},
       {"access", access_json(forwardaccess_)},

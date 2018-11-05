@@ -485,11 +485,12 @@ uint32_t AddShortcutEdges(GraphReader& reader,
       // Add the edge info. Use length and number of shape points to match an
       // edge in case multiple shortcut edges exist between the 2 nodes.
       // Test whether this shape is forward or reverse (in case an existing
-      // edge exists). Shortcuts use way Id = 0.
+      // edge exists). Shortcuts use way Id = 0.Set mean elevation to 0 as a placeholder,
+      // set it later if adding elevation to this dataset.
       bool forward = true;
       uint32_t idx = ((length & 0xfffff) | ((shape.size() & 0xfff) << 20));
       uint32_t edge_info_offset =
-          tilebuilder.AddEdgeInfo(idx, start_node, end_node, 0, shape, names, types, forward);
+          tilebuilder.AddEdgeInfo(idx, start_node, end_node, 0, 0, shape, names, types, forward);
       newedge.set_edgeinfo_offset(edge_info_offset);
 
       // Set the forward flag on this directed edge. If a new edge was added
@@ -502,22 +503,26 @@ uint32_t AddShortcutEdges(GraphReader& reader,
       newedge.set_opp_local_idx(opp_local_idx);
       newedge.set_restrictions(rst);
 
-      // Update the length, elevation, curvature, and end node
+      // Update the length, curvature, and end node
       newedge.set_length(length);
+      newedge.set_curvature(compute_curvature(shape));
+      newedge.set_endnode(end_node);
+
+      // Set elevation
       if (sample) {
         auto grades = GetGrade(sample, shape, length, forward);
         newedge.set_weighted_grade(static_cast<uint32_t>(std::get<0>(grades) * .6 + 6.5));
+        newedge.set_max_up_slope(std::get<1>(grades));
+        newedge.set_max_down_slope(std::get<2>(grades));
 
-        // Store mean_elevation, max_up_slope, and max_down_slope
-        tilebuilder.edge_elevations().emplace_back(std::get<3>(grades), std::get<1>(grades),
-                                                   std::get<2>(grades));
+        // Set the mean elevation on EdgeInfo (if this is the first instance - forward)
+        if (forward) {
+          tilebuilder.set_mean_elevation(std::get<3>(grades));
+        }
       } else {
-        // Set the default weighted grade for the edge. No edge elevation
-        // is added.
+        // Set the default weighted grade for the edge. No edge elevation is added.
         newedge.set_weighted_grade(6);
       }
-      newedge.set_curvature(compute_curvature(shape));
-      newedge.set_endnode(end_node);
 
       // Sanity check - should never see a shortcut with signs
       if (newedge.exitsign()) {
@@ -670,7 +675,8 @@ uint32_t FormShortcuts(GraphReader& reader,
         auto edgeinfo = tile->edgeinfo(directededge->edgeinfo_offset());
         uint32_t edge_info_offset =
             tilebuilder.AddEdgeInfo(directededge->edgeinfo_offset(), node_id, directededge->endnode(),
-                                    edgeinfo.wayid(), edgeinfo.encoded_shape(),
+                                    edgeinfo.wayid(), edgeinfo.mean_elevation(),
+                                    edgeinfo.encoded_shape(),
                                     tile->GetNames(directededge->edgeinfo_offset()),
                                     tile->GetTypes(directededge->edgeinfo_offset()), added);
         newedge.set_edgeinfo_offset(edge_info_offset);
@@ -683,16 +689,6 @@ uint32_t FormShortcuts(GraphReader& reader,
 
         // Add directed edge
         tilebuilder.directededges().emplace_back(std::move(newedge));
-
-        // Add existing edge elevation (if the tile has elevation information)
-        if (tile->header()->has_edge_elevation()) {
-          const EdgeElevation* elev = tile->edge_elevation(edgeid);
-          if (elev == nullptr) {
-            tilebuilder.edge_elevations().emplace_back(0.0f, 0.0f, 0.0f);
-          } else {
-            tilebuilder.edge_elevations().emplace_back(std::move(*elev));
-          }
-        }
       }
 
       // Set the edge count for the new node

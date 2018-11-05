@@ -58,6 +58,7 @@ public:
    * @param  block_id      Transit block Id (0 if not a transit edge)
    * @param  mode          Travel mode for the edge: Biking, walking, etc.
    * @param  directededge  Directed edge information.
+   * @param  drive_right   Right side driving for this edge.
    * @param  trip_node     Trip node to add the edge information to.
    * @param  graphtile     Graph tile for accessing data.
    * @param   current_time Current time (seconds from midnight).
@@ -71,6 +72,7 @@ public:
                                           const sif::TravelMode mode,
                                           const uint8_t travel_type,
                                           const baldr::DirectedEdge* directededge,
+                                          const bool drive_right,
                                           odin::TripPath_Node* trip_node,
                                           const baldr::GraphTile* graphtile,
                                           const uint32_t current_time,

@@ -138,6 +138,7 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
     EdgeInfo ei(edgeinfo_ + offset, textlist_, textlist_size_);
     EdgeInfoBuilder eib;
     eib.set_wayid(ei.wayid());
+    eib.set_mean_elevation(ei.mean_elevation());
     for (uint32_t nm = 0; nm < ei.name_count(); nm++) {
       NameInfo info = ei.GetNameInfo(nm);
       name_info.insert(info);
@@ -172,14 +173,6 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
   lane_connectivity_builder_.reserve(n);
   std::copy(lane_connectivity_, lane_connectivity_ + n,
             std::back_inserter(lane_connectivity_builder_));
-
-  // Edge elevation
-  if (header_->has_edge_elevation()) {
-    // Edge elevation count is the same as the directed edge count
-    n = header_->directededgecount();
-    edge_elevation_builder_.reserve(n);
-    std::copy(edge_elevation_, edge_elevation_ + n, std::back_inserter(edge_elevation_builder_));
-  }
 }
 
 // Output the tile to file. Stores as binary data.
@@ -308,23 +301,10 @@ void GraphTileBuilder::StoreTileData() {
     in_mem.write(reinterpret_cast<const char*>(lane_connectivity_builder_.data()),
                  lane_connectivity_builder_.size() * sizeof(LaneConnectivity));
 
-    // Write the edge elevation data. Make sure that if it exists it has
-    // the same count as directed edges.
-    header_builder_.set_edge_elevation_offset(
+    // Write turn lanes
+    header_builder_.set_turnlane_offset(
         header_builder_.lane_connectivity_offset() +
         (lane_connectivity_builder_.size() * sizeof(LaneConnectivity)));
-    if (edge_elevation_builder_.size() > 0) {
-      if (edge_elevation_builder_.size() != directededges_builder_.size()) {
-        LOG_ERROR("Edge elevation count is not equal to directed edge count!");
-      }
-      header_builder_.set_has_edge_elevation(true);
-      in_mem.write(reinterpret_cast<const char*>(edge_elevation_builder_.data()),
-                   edge_elevation_builder_.size() * sizeof(EdgeElevation));
-    }
-
-    // Write turn lanes
-    header_builder_.set_turnlane_offset(header_builder_.edge_elevation_offset() +
-                                        edge_elevation_builder_.size() * sizeof(EdgeElevation));
     header_builder_.set_turnlane_count(turnlanes_builder_.size());
     in_mem.write(reinterpret_cast<const char*>(turnlanes_builder_.data()),
                  turnlanes_builder_.size() * sizeof(TurnLanes));
@@ -499,6 +479,7 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
                                        const GraphId& nodea,
                                        const baldr::GraphId& nodeb,
                                        const uint64_t wayid,
+                                       const float elev,
                                        const shape_container_t& lls,
                                        const std::vector<std::string>& names,
                                        const uint16_t types,
@@ -511,6 +492,7 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
     edgeinfo_list_.emplace_back();
     EdgeInfoBuilder& edgeinfo = edgeinfo_list_.back();
     edgeinfo.set_wayid(wayid);
+    edgeinfo.set_mean_elevation(elev);
     edgeinfo.set_shape(lls);
 
     // Add names to the common text/name list. Skip blank names.
@@ -562,6 +544,7 @@ template uint32_t GraphTileBuilder::AddEdgeInfo<std::vector<PointLL>>(const uint
                                                                       const GraphId&,
                                                                       const baldr::GraphId&,
                                                                       const uint64_t,
+                                                                      const float,
                                                                       const std::vector<PointLL>&,
                                                                       const std::vector<std::string>&,
                                                                       const uint16_t,
@@ -570,6 +553,7 @@ template uint32_t GraphTileBuilder::AddEdgeInfo<std::list<PointLL>>(const uint32
                                                                     const GraphId&,
                                                                     const baldr::GraphId&,
                                                                     const uint64_t,
+                                                                    const float,
                                                                     const std::list<PointLL>&,
                                                                     const std::vector<std::string>&,
                                                                     const uint16_t,
@@ -580,6 +564,7 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
                                        const baldr::GraphId& nodea,
                                        const baldr::GraphId& nodeb,
                                        const uint64_t wayid,
+                                       const float elev,
                                        const std::string& llstr,
                                        const std::vector<std::string>& names,
                                        const uint16_t types,
@@ -592,6 +577,7 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
     edgeinfo_list_.emplace_back();
     EdgeInfoBuilder& edgeinfo = edgeinfo_list_.back();
     edgeinfo.set_wayid(wayid);
+    edgeinfo.set_mean_elevation(elev);
     edgeinfo.set_encoded_shape(llstr);
 
     // Add names to the common text/name list. Skip blank names.
@@ -638,6 +624,12 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
   // Already have this edge - return the offset
   added = false;
   return existing_edge_offset_item->second;
+}
+
+// Set the mean elevation in the last added EdgeInfo.
+void GraphTileBuilder::set_mean_elevation(const float elev) {
+  EdgeInfoBuilder& edgeinfo = edgeinfo_list_.back();
+  edgeinfo.set_mean_elevation(elev);
 }
 
 // Add a name to the text list
@@ -870,7 +862,6 @@ void GraphTileBuilder::AddBins(const std::string& tile_dir,
   header.set_edgeinfo_offset(header.edgeinfo_offset() + shift);
   header.set_textlist_offset(header.textlist_offset() + shift);
   header.set_lane_connectivity_offset(header.lane_connectivity_offset() + shift);
-  header.set_edge_elevation_offset(header.edge_elevation_offset() + shift);
   header.set_turnlane_offset(header.turnlane_offset() + shift);
   header.set_end_offset(header.end_offset() + shift);
   // rewrite the tile
@@ -900,11 +891,6 @@ void GraphTileBuilder::AddBins(const std::string& tile_dir,
   else {
     throw std::runtime_error("Failed to open file " + filename.string());
   }
-}
-
-// Gets the current list of directed edge (builders).
-std::vector<EdgeElevation>& GraphTileBuilder::edge_elevations() {
-  return edge_elevation_builder_;
 }
 
 // Gets a sign builder at the specified index.

@@ -21,6 +21,13 @@ namespace baldr {
 constexpr size_t kMaxNamesPerEdge = 15;
 constexpr size_t kMaxEncodedShapeSize = 65535;
 
+// Use elevation bins of 2 meters to store mean elevation. Clamp to a range
+// from -500 meters to 7683 meters.
+constexpr uint32_t kMaxStoredElevation = 4095; // 12 bits
+constexpr float kElevationBinSize = 2.0f;
+constexpr float kMinElevation = -500.0f;
+constexpr float kMaxElevation = kMinElevation + (kElevationBinSize * kMaxStoredElevation);
+
 // Name information. Information about names added to the names list within
 // the tile. A name can have a textual representation followed by optional
 // fields that provide additional information about the name.
@@ -74,7 +81,15 @@ public:
    * @return  Returns the OSM way Id.
    */
   uint64_t wayid() const {
-    return wayid_;
+    return w0_.wayid_;
+  }
+
+  /**
+   * Get the mean elevation along the edge.
+   * @return  Returns mean elevation in meters relative to sea level.
+   */
+  float mean_elevation() const {
+    return kMinElevation + (w0_.mean_elevation_ * kElevationBinSize);
   }
 
   /**
@@ -152,8 +167,16 @@ public:
   };
 
 protected:
-  // OSM way Id
-  uint64_t wayid_;
+  // 1st 8-byte word
+  union Word0 {
+    struct {
+      uint64_t wayid_ : 45;          // OSM way Id
+      uint64_t mean_elevation_ : 12; // Mean elevation with 2 meter precision
+      uint64_t spare0_ : 7;
+    };
+    uint64_t value_;
+  };
+  Word0 w0_;
 
   // Where we keep the statistics about how large the vectors below are
   const PackedItem* item_;

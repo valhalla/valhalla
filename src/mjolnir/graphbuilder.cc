@@ -638,15 +638,15 @@ void BuildTileSet(const std::string& ways_file,
             uint16_t types = 0;
             auto names = w.GetNames(ref, osmdata.ref_offset_map, osmdata.name_offset_map, types);
 
+            // Add edge info. Mean elevation is set to 1234 as a placeholder, set later if we have it.
             edge_info_offset = graphtile.AddEdgeInfo(edge_pair.second, (*nodes[source]).graph_id,
-                                                     (*nodes[target]).graph_id, w.way_id(), shape,
-                                                     names, types, added);
+                                                     (*nodes[target]).graph_id, w.way_id(), 1234,
+                                                     shape, names, types, added);
 
             // length
             auto length = valhalla::midgard::length(shape);
 
             // Grade estimation and max slopes
-            // TODO - add mean elevation
             std::tuple<double, double, double, double> forward_grades(0.0, 0.0, 0.0, 0.0);
             std::tuple<double, double, double, double> reverse_grades(0.0, 0.0, 0.0, 0.0);
             if (sample && !w.tunnel() && !w.ferry()) {
@@ -767,10 +767,16 @@ void BuildTileSet(const std::string& ways_file,
 
           // Edge elevation
           if (sample) {
+            // Reverse max slopes if not forward direction
             float max_up_slope = forward ? std::get<4>(found->second) : std::get<6>(found->second);
             float max_down_slope = forward ? std::get<5>(found->second) : std::get<7>(found->second);
-            graphtile.edge_elevations().emplace_back(std::get<8>(found->second), max_up_slope,
-                                                     max_down_slope);
+            directededge.set_max_up_slope(max_up_slope);
+            directededge.set_max_down_slope(max_down_slope);
+
+            // Set the mean elevation on EdgeInfo if added (1st instance of EdgeInfo)
+            if (added) {
+              graphtile.set_mean_elevation(std::get<8>(found->second));
+            }
           }
 
           // Add turn lanes if they exist. Store forward turn lanes on the last edge for a way
@@ -835,7 +841,7 @@ void BuildTileSet(const std::string& ways_file,
           }
 
           if (osmdata.via_set.find(w.way_id()) != osmdata.via_set.end()) {
-            directededge.set_part_of_complex_restriction(true);
+            directededge.complex_restriction(true);
           }
 
           // grab all the modes if this way ends at a restriction(s)
@@ -876,11 +882,6 @@ void BuildTileSet(const std::string& ways_file,
             directededge.set_start_restriction(directededge.start_restriction() |
                                                restriction.modes());
             res_it++;
-          }
-
-          // Set drive on right flag
-          if (admin_index != 0) {
-            directededge.set_drive_on_right(drive_on_right[admin_index]);
           }
 
           // Set shoulder based on current facing direction and which
@@ -971,6 +972,11 @@ void BuildTileSet(const std::string& ways_file,
 
         // Set admin index
         graphtile.nodes().back().set_admin_index(admin_index);
+
+        // Set drive on right flag
+        if (admin_index != 0) {
+          graphtile.nodes().back().set_drive_on_right(drive_on_right[admin_index]);
+        }
 
         // Set the time zone index
         uint32_t tz_index =

@@ -12,7 +12,17 @@ namespace mjolnir {
 
 // Set the OSM way Id.
 void EdgeInfoBuilder::set_wayid(const uint64_t wayid) {
-  wayid_ = wayid;
+  w0_.wayid_ = wayid;
+}
+
+// Set the mean elevation.
+void EdgeInfoBuilder::set_mean_elevation(const float mean_elev) {
+  if (mean_elev < kMinElevation) {
+    w0_.mean_elevation_ = 0;
+  } else {
+    uint32_t elev = static_cast<uint32_t>((mean_elev - kMinElevation) / kElevationBinSize);
+    w0_.mean_elevation_ = (elev > kMaxStoredElevation) ? kMaxStoredElevation : elev;
+  }
 }
 
 // Set the list of name info (offsets, etc.) used by this edge.
@@ -86,7 +96,7 @@ std::ostream& operator<<(std::ostream& os, const EdgeInfoBuilder& eib) {
   }
 
   // Write out the bytes
-  os.write(reinterpret_cast<const char*>(&eib.wayid_), sizeof(uint64_t));
+  os.write(reinterpret_cast<const char*>(&eib.w0_.value_), sizeof(uint64_t));
   os.write(reinterpret_cast<const char*>(&item), sizeof(baldr::EdgeInfo::PackedItem));
   os.write(reinterpret_cast<const char*>(eib.name_info_list_.data()),
            (name_count * sizeof(NameInfo)));
