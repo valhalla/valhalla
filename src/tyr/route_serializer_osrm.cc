@@ -370,7 +370,7 @@ std::string exits(const valhalla::odin::TripDirections::Maneuver& maneuver) {
   uint32_t i = 0;
   std::string exits;
   const auto& sign = maneuver.sign();
-  for (const auto& number : maneuver.sign().exit_number_elements()) {
+  for (const auto& number : maneuver.sign().exit_numbers()) {
     if (!exits.empty()) {
       exits += "; ";
     }
@@ -386,34 +386,34 @@ std::string destinations(const valhalla::odin::TripDirections::Maneuver& maneuve
   std::string dest;
   const auto& sign = maneuver.sign();
   uint32_t i = 0;
-  for (const auto& branch : maneuver.sign().exit_branch_elements()) {
+  for (const auto& branch : maneuver.sign().exit_onto_streets()) {
     if (i == 0 && !dest.empty()) {
       dest += ": ";
     }
     dest += branch.text();
-    if (i < maneuver.sign().exit_branch_elements().size() - 1) {
+    if (i < maneuver.sign().exit_onto_streets().size() - 1) {
       dest += ", ";
     }
     i++;
   }
   i = 0;
-  for (const auto& toward : maneuver.sign().exit_toward_elements()) {
+  for (const auto& toward : maneuver.sign().exit_toward_locations()) {
     if (i == 0 && !dest.empty() && dest.back() != ' ') {
       dest += ": ";
     }
     dest += toward.text();
-    if (i < maneuver.sign().exit_toward_elements().size() - 1) {
+    if (i < maneuver.sign().exit_toward_locations().size() - 1) {
       dest += ", ";
     }
     i++;
   }
   i = 0;
-  for (const auto& name : maneuver.sign().exit_name_elements()) {
+  for (const auto& name : maneuver.sign().exit_names()) {
     if (i == 0 && !dest.empty() && dest.back() != ' ') {
       dest += ": ";
     }
     dest += name.text();
-    if (i < maneuver.sign().exit_name_elements().size() - 1) {
+    if (i < maneuver.sign().exit_names().size() - 1) {
       dest += ", ";
     }
     i++;
