@@ -5,11 +5,16 @@ namespace valhalla {
 namespace odin {
 
 // Constructor
-Sign::Sign(const std::string& text) : text_(text), consecutive_count_(0) {
+Sign::Sign(const std::string& text, const bool is_route_number)
+    : text_(text), is_route_number_(is_route_number), consecutive_count_(0) {
 }
 
 const std::string& Sign::text() const {
   return text_;
+}
+
+bool Sign::is_route_number() const {
+  return is_route_number_;
 }
 
 uint32_t Sign::consecutive_count() const {
@@ -26,6 +31,8 @@ std::string Sign::ToParameterString() const {
   std::string str;
   str += "{ ";
   str += GetQuotedString(text_);
+  str += delim;
+  str += GetQuotedString(std::to_string(is_route_number_));
   str += delim;
   str += GetQuotedString(std::to_string(consecutive_count_));
   str += " }";
