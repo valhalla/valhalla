@@ -26,13 +26,13 @@ public:
    */
   GraphId endnode() const {
     return GraphId(endnode_);
-  };
+  }
 
   /**
    * Set the end node of this directed edge.
    * @param  endnode  End node of the directed link.
    */
-  void set_endnode(const baldr::GraphId& endnode);
+  void set_endnode(const GraphId& endnode);
 
   /**
    * Gets the free flow speed in KPH.
@@ -1141,6 +1141,17 @@ protected:
 
   // Could be desirable?
   // uint64_t named_ : 1;          // 1 if this edge has names, 0 if unnamed
+};
+
+/**
+ * Extended directed edge attribution. This structure provides the ability to add extra
+ * attribution per directed edge without breaking backward compatibility. For now this structure
+ * is unused.
+ */
+class DirectedEdgeExt {
+
+protected:
+  uint64_t spare0_ : 64;
 };
 
 } // namespace baldr
