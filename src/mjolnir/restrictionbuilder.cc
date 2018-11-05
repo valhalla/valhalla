@@ -110,72 +110,98 @@ std::deque<GraphId> GetGraphIds(GraphId& n_graphId,
       }
 
       // if we made it here we need to check transition edges.
-      if (j + 1 == n_info->edge_count() && n_info->transition_count() > 0) {
-        bool bfound = false;
-        // Handle transitions - expand from the end node each transition
-        const NodeTransition* trans = endnodetile->transition(n_info->transition_index());
-        for (uint32_t i = 0; i < n_info->transition_count(); ++i, ++trans) {
-          // only look at transition edges from this end node
-          const GraphTile* temp_endnodetile = endnodetile;
+      if (j + 1 == n_info->edge_count()) {
+        if (n_info->transition_count() > 0) {
+          bool bfound = false;
+          uint32_t k = 0;
+          while (k < n_info->transition_count()) {
+            // only look at transition edges from this end node
+            const GraphTile* temp_endnodetile = endnodetile;
+            // Handle transitions - expand from the end node each transition
+            const NodeTransition* trans = endnodetile->transition(n_info->transition_index() + k);
 
-          if (temp_endnodetile->id() != de->endnode().Tile_Base()) {
-            lock.lock();
-            temp_endnodetile = reader.GetGraphTile(de->endnode());
-            lock.unlock();
-          }
-
-          currentNode = de->endnode();
-          const NodeInfo* tmp_n_info = temp_endnodetile->node(currentNode);
-
-          // look for the end way id.
-          uint32_t l = 0;
-          while (l < tmp_n_info->edge_count()) {
-
-            const DirectedEdge* de = temp_endnodetile->directededge(tmp_n_info->edge_index() + l);
-
-            GraphId g_id(temp_endnodetile->id().tileid(), temp_endnodetile->id().level(),
-                         tmp_n_info->edge_index() + l);
-
-            // only look at non transition edges.
-            if (de->edgeinfo_offset() != 0 && de->endnode() != prev_Node && g_id != avoidId &&
-                !(de->IsTransitLine() || de->is_shortcut() || de->use() == Use::kTransitConnection ||
-                  de->use() == Use::kEgressConnection || de->use() == Use::kPlatformConnection)) {
-              auto current_offset = temp_endnodetile->edgeinfo(de->edgeinfo_offset());
-
-              if (end_wayid == current_offset.wayid()) {
-                // only save the last graphid as the others are not needed.
-                if (i == 1 && graphids.size() > 1) {
-                  std::deque<GraphId> tmp(graphids.end() - 1, graphids.end());
-                  graphids = tmp;
-                }
-
-                prev_Node = currentNode;
-                graphids.push_back(g_id);
-
-                currentNode = de->endnode();
-                endnodetile = temp_endnodetile;
-
-                // get the new tile if needed.
-                if (endnodetile->id() != currentNode.Tile_Base()) {
-                  lock.lock();
-                  endnodetile = reader.GetGraphTile(currentNode);
-                  lock.unlock();
-                }
-
-                // get new end node and start over.
-                n_info = endnodetile->node(currentNode);
-                bfound = true;
-                break; // while (l < tmp_n_info->edge_count())
-              }
+            if (temp_endnodetile->id() != trans->endnode().Tile_Base()) {
+              lock.lock();
+              temp_endnodetile = reader.GetGraphTile(trans->endnode());
+              lock.unlock();
             }
-            l++;
-          }
 
-          if (bfound) {
-            break; // while (k < n_info->edge_count())
+            currentNode = trans->endnode();
+            const NodeInfo* tmp_n_info = temp_endnodetile->node(currentNode);
+
+            // look for the end way id.
+            uint32_t l = 0;
+            while (l < tmp_n_info->edge_count()) {
+
+              const DirectedEdge* de = temp_endnodetile->directededge(tmp_n_info->edge_index() + l);
+
+              GraphId g_id(temp_endnodetile->id().tileid(), temp_endnodetile->id().level(),
+                           tmp_n_info->edge_index() + l);
+
+              // only look at non transition edges.
+              if (de->edgeinfo_offset() != 0 && de->endnode() != prev_Node && g_id != avoidId &&
+                  !(de->IsTransitLine() || de->is_shortcut() ||
+                    de->use() == Use::kTransitConnection || de->use() == Use::kEgressConnection ||
+                    de->use() == Use::kPlatformConnection)) {
+                auto current_offset = temp_endnodetile->edgeinfo(de->edgeinfo_offset());
+
+                if (end_wayid == current_offset.wayid()) {
+                  // only save the last graphid as the others are not needed.
+                  if (i == 1 && graphids.size() > 1) {
+                    std::deque<GraphId> tmp(graphids.end() - 1, graphids.end());
+                    graphids = tmp;
+                  }
+
+                  prev_Node = currentNode;
+                  graphids.push_back(g_id);
+
+                  currentNode = de->endnode();
+                  endnodetile = temp_endnodetile;
+
+                  // get the new tile if needed.
+                  if (endnodetile->id() != currentNode.Tile_Base()) {
+                    lock.lock();
+                    endnodetile = reader.GetGraphTile(currentNode);
+                    lock.unlock();
+                  }
+
+                  // get new end node and start over.
+                  n_info = endnodetile->node(currentNode);
+                  bfound = true;
+                  break; // while (l < tmp_n_info->edge_count())
+                }
+              }
+              l++;
+            }
+
+            if (bfound) {
+              break; // while (k < n_info->transition_count())
+            }
+            k++;
           }
-        }
-        if (!bfound) { // bad restriction or on another level
+          if (!bfound) { // bad restriction or on another level
+            if (bBeginFound && !avoidId.Is_Valid()) {
+              avoidId = graphids.at(0);
+              graphids.clear();
+              bBeginFound = false;
+              visited_set.clear();
+              i = 0; // start over avoiding the first graphid
+                     //(i.e., we walked the graph in the wrong direction)
+              lock.lock();
+              endnodetile = reader.GetGraphTile(n_graphId);
+              lock.unlock();
+              n_info = endnodetile->node(n_graphId);
+              currentNode = n_graphId;
+              prev_Node = GraphId();
+            } else {
+              graphids.clear();
+              return graphids;
+            }
+          }
+          break; // while (j < n_info->edge_count())
+        } else if (n_info->transition_count() == 0) {
+          // We need to make sure we did not walk in the wrong direction along a huge wayid that has
+          // no transitions.
           if (bBeginFound && !avoidId.Is_Valid()) {
             avoidId = graphids.at(0);
             graphids.clear();
@@ -193,9 +219,9 @@ std::deque<GraphId> GetGraphIds(GraphId& n_graphId,
             graphids.clear();
             return graphids;
           }
+          break; // while (j < n_info->edge_count())
         }
-        break; // while (j < n_info->edge_count())
-      }
+      } // if (j + 1 == n_info->edge_count())
       j++;
     }
   }
