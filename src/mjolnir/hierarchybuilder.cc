@@ -109,7 +109,7 @@ OldToNewNodes find_nodes(sequence<OldToNewNodes>& old_to_new, const GraphId& nod
 }
 
 // Form tiles in the new level.
-void FormTilesInNewLevel(GraphReader& reader, bool has_elevation) {
+void FormTilesInNewLevel(GraphReader& reader) {
   // Use the sequence that associate new nodes to old nodes
   sequence<std::pair<GraphId, GraphId>> new_to_old(new_to_old_file, false);
 
@@ -342,9 +342,8 @@ void FormTilesInNewLevel(GraphReader& reader, bool has_elevation) {
  * associations go both ways: from the "old" nodes on the base/local level
  * to new nodes (using a mapping in memory) and from new nodes to old nodes
  * using a sequence (file).
- * @return  Returns true if any base tiles have edge elevation data.
  */
-bool CreateNodeAssociations(GraphReader& reader) {
+void CreateNodeAssociations(GraphReader& reader) {
   // Map of tiles vs. count of nodes. Used to construct new node Ids.
   std::unordered_map<GraphId, uint32_t> new_nodes;
 
@@ -380,7 +379,6 @@ bool CreateNodeAssociations(GraphReader& reader) {
   auto local_tiles = reader.GetTileSet(base_level.level);
 
   // Iterate through all tiles in the local level
-  bool has_elevation = false;
   uint32_t ntiles = base_level.tiles.TileCount();
   uint32_t bl = static_cast<uint32_t>(base_level.level);
   uint32_t al = static_cast<uint32_t>(arterial_level.level);
@@ -390,11 +388,6 @@ bool CreateNodeAssociations(GraphReader& reader) {
     const GraphTile* tile = reader.GetGraphTile(base_tile_id);
     if (tile == nullptr || tile->header()->nodecount() == 0) {
       continue;
-    }
-
-    // Update the has_elevation flag
-    if (tile->header()->has_edge_elevation()) {
-      has_elevation = true;
     }
 
     // Iterate through the nodes. Add nodes to the new level when
@@ -454,7 +447,6 @@ bool CreateNodeAssociations(GraphReader& reader) {
       reader.Clear();
     }
   }
-  return has_elevation;
 }
 
 /**
@@ -560,17 +552,14 @@ void HierarchyBuilder::Build(const boost::property_tree::ptree& pt) {
   GraphReader reader(pt.get_child("mjolnir"));
 
   // Association of old nodes to new nodes
-  bool has_elevation = CreateNodeAssociations(reader);
-  if (has_elevation) {
-    LOG_INFO("Base tiles have edge elevation information");
-  }
+  CreateNodeAssociations(reader);
 
   // Sort the sequences
   SortSequences();
 
   // Iterate through the hierarchy (from highway down to local) and build
   // new tiles
-  FormTilesInNewLevel(reader, has_elevation);
+  FormTilesInNewLevel(reader);
 
   // Remove any base tiles that no longer have any data (nodes and edges
   // only exist on arterial and highway levels)
