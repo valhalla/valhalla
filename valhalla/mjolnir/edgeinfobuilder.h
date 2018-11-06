@@ -44,6 +44,21 @@ public:
   void set_mean_elevation(const float mean_elev);
 
   /**
+   * Get the bike network mask for this directed edge.
+   * @return  Returns the bike network mask for this directed edge.
+   */
+  uint32_t bike_network() const {
+    return w0_.bike_network_;
+  }
+
+  /**
+   * Sets the bike network mask indicating which (if any) bicycle networks are
+   * along this edge. See baldr/directededge.h for definitions.
+   * @param  bike_network  Bicycle network mask.
+   */
+  void set_bike_network(const uint32_t bike_network);
+
+  /**
    * Set the name info for names used by this edge
    * @param  offsets  List of street name info.
    */
@@ -87,7 +102,8 @@ protected:
     struct {
       uint64_t wayid_ : 45;          // OSM way Id
       uint64_t mean_elevation_ : 12; // Mean elevation with 2 meter precision
-      uint64_t spare0_ : 7;
+      uint64_t bike_network_ : 4;    // Mask of bicycle network types (see graphconstants.h)
+      uint64_t spare0_ : 3;
     };
     uint64_t value_;
   };

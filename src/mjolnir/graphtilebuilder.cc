@@ -498,6 +498,7 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
                                        const baldr::GraphId& nodeb,
                                        const uint64_t wayid,
                                        const float elev,
+                                       const uint32_t bike_network,
                                        const shape_container_t& lls,
                                        const std::vector<std::string>& names,
                                        const uint16_t types,
@@ -511,6 +512,7 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
     EdgeInfoBuilder& edgeinfo = edgeinfo_list_.back();
     edgeinfo.set_wayid(wayid);
     edgeinfo.set_mean_elevation(elev);
+    edgeinfo.set_bike_network(bike_network);
     edgeinfo.set_shape(lls);
 
     // Add names to the common text/name list. Skip blank names.
@@ -563,6 +565,7 @@ template uint32_t GraphTileBuilder::AddEdgeInfo<std::vector<PointLL>>(const uint
                                                                       const baldr::GraphId&,
                                                                       const uint64_t,
                                                                       const float,
+                                                                      const uint32_t,
                                                                       const std::vector<PointLL>&,
                                                                       const std::vector<std::string>&,
                                                                       const uint16_t,
@@ -572,6 +575,7 @@ template uint32_t GraphTileBuilder::AddEdgeInfo<std::list<PointLL>>(const uint32
                                                                     const baldr::GraphId&,
                                                                     const uint64_t,
                                                                     const float,
+                                                                    const uint32_t,
                                                                     const std::list<PointLL>&,
                                                                     const std::vector<std::string>&,
                                                                     const uint16_t,
@@ -583,6 +587,7 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
                                        const baldr::GraphId& nodeb,
                                        const uint64_t wayid,
                                        const float elev,
+                                       const uint32_t bike_network,
                                        const std::string& llstr,
                                        const std::vector<std::string>& names,
                                        const uint16_t types,
@@ -596,6 +601,7 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
     EdgeInfoBuilder& edgeinfo = edgeinfo_list_.back();
     edgeinfo.set_wayid(wayid);
     edgeinfo.set_mean_elevation(elev);
+    edgeinfo.set_bike_network(bike_network);
     edgeinfo.set_encoded_shape(llstr);
 
     // Add names to the common text/name list. Skip blank names.

@@ -643,10 +643,17 @@ void BuildTileSet(const std::string& ways_file,
             uint16_t types = 0;
             auto names = w.GetNames(ref, osmdata.ref_offset_map, osmdata.name_offset_map, types);
 
+            // Update bike_network type
+            if (bike_network) {
+              bike_network |= w.bike_network();
+            } else {
+              bike_network = w.bike_network();
+            }
+
             // Add edge info. Mean elevation is set to 1234 as a placeholder, set later if we have it.
             edge_info_offset = graphtile.AddEdgeInfo(edge_pair.second, (*nodes[source]).graph_id,
                                                      (*nodes[target]).graph_id, w.way_id(), 1234,
-                                                     shape, names, types, added);
+                                                     bike_network, shape, names, types, added);
 
             // length
             auto length = valhalla::midgard::length(shape);

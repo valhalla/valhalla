@@ -25,6 +25,12 @@ void EdgeInfoBuilder::set_mean_elevation(const float mean_elev) {
   }
 }
 
+// Sets the bike network mask indicating which (if any) bicycle networks are
+// along this edge. See baldr/directededge.h for definitions.
+void EdgeInfoBuilder::set_bike_network(const uint32_t bike_network) {
+  w0_.bike_network_ = bike_network;
+}
+
 // Set the list of name info (offsets, etc.) used by this edge.
 void EdgeInfoBuilder::set_name_info_list(const std::vector<NameInfo>& name_info_list) {
   if (name_info_list.size() > kMaxNamesPerEdge) {
