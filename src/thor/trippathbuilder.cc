@@ -1491,14 +1491,14 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const AttributesController& controll
 
   // Set maximum upward and downward grade if requested (set to kNoElevationData if unavailable)
   if (controller.attributes.at(kEdgeMaxUpwardGrade)) {
-    if (graphtile->header()->has_edge_elevation()) {
+    if (graphtile->header()->has_elevation()) {
       trip_edge->set_max_upward_grade(directededge->max_up_slope());
     } else {
       trip_edge->set_max_upward_grade(kNoElevationData);
     }
   }
   if (controller.attributes.at(kEdgeMaxDownwardGrade)) {
-    if (graphtile->header()->has_edge_elevation()) {
+    if (graphtile->header()->has_elevation()) {
       trip_edge->set_max_downward_grade(directededge->max_down_slope());
     } else {
       trip_edge->set_max_downward_grade(kNoElevationData);
@@ -1507,7 +1507,7 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const AttributesController& controll
 
   // Set mean elevation if requested (set to kNoElevationData if unavailable)
   if (controller.attributes.at(kEdgeMeanElevation)) {
-    if (graphtile->header()->has_edge_elevation()) {
+    if (graphtile->header()->has_elevation()) {
       trip_edge->set_mean_elevation(edgeinfo.mean_elevation());
     } else {
       trip_edge->set_mean_elevation(kNoElevationData);

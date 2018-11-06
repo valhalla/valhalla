@@ -93,6 +93,14 @@ public:
   }
 
   /**
+   * Get the bike network mask for this directed edge.
+   * @return  Returns the bike network mask for this directed edge.
+   */
+  uint32_t bike_network() const {
+    return w0_.bike_network_;
+  }
+
+  /**
    * Get the number of names.
    * @return Returns the name count.
    */
@@ -172,7 +180,8 @@ protected:
     struct {
       uint64_t wayid_ : 45;          // OSM way Id
       uint64_t mean_elevation_ : 12; // Mean elevation with 2 meter precision
-      uint64_t spare0_ : 7;
+      uint64_t bike_network_ : 4;    // Mask of bicycle network types (see graphconstants.h)
+      uint64_t spare0_ : 3;
     };
     uint64_t value_;
   };

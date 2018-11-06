@@ -26,13 +26,13 @@ public:
    */
   GraphId endnode() const {
     return GraphId(endnode_);
-  };
+  }
 
   /**
    * Set the end node of this directed edge.
    * @param  endnode  End node of the directed link.
    */
-  void set_endnode(const baldr::GraphId& endnode);
+  void set_endnode(const GraphId& endnode);
 
   /**
    * Gets the free flow speed in KPH.
@@ -417,19 +417,19 @@ public:
   void set_cyclelane(const CycleLane cyclelane);
 
   /**
-   * Get the bike network mask for this directed edge.
-   * @return  Returns the bike network mask for this directed edge.
+   * Get the bike network flag for this directed edge.
+   * @return  Returns the bike network flag. This is true if the edge is part of any
+   *          bike network. They type(s) of bike networks are stored in EdgeInfo.
    */
-  uint32_t bike_network() const {
+  bool bike_network() const {
     return bike_network_;
   }
 
   /**
-   * Sets the bike network mask indicating which (if any) bicycle networks are
-   * along this edge. See baldr/directededge.h for definitions.
-   * @param  bike_network  Bicycle network mask.
+   * Sets the bike network flag.
+   * @param  bike_network  Bicycle network flag. True if edge is part of any bike network.
    */
-  void set_bike_network(const uint32_t bike_network);
+  void set_bike_network(const bool bike_network);
 
   /**
    * Get the truck route flag for this directed edge.
@@ -1088,15 +1088,15 @@ protected:
   uint64_t max_down_slope_ : 5; // Maximum downward slope
   uint64_t sac_scale_ : 3;      // Is this edge for hiking and if so how difficult is the hike?
   uint64_t cycle_lane_ : 2;     // Does this edge have bicycle lanes?
+  uint64_t bike_network_ : 1;   // Edge that is part of a bicycle network
   uint64_t use_sidepath_ : 1;   // Is there a cycling path to the side that should be preferred?
   uint64_t dismount_ : 1;       // Do you need to dismount when biking on this edge?
   uint64_t sidewalk_left_ : 1;  // Sidewalk to the left of the edge
   uint64_t sidewalk_right_ : 1; // Sidewalk to the right of the edge
   uint64_t shoulder_ : 1;       // Does the edge have a shoulder?
-  // 44 bits above...Data below may not be needed in DirectedEdge removed/moved??
-  uint64_t lane_conn_ : 1;      // 1 if has lane connectivity, 0 otherwise
-  uint64_t bike_network_ : 4;   // Edge that is part of a bicycle network
+  // 45 bits above...Data below may not be needed in DirectedEdge removed/moved??
   uint64_t speed_limit_ : 8;    // Speed limit (kph)
+  uint64_t lane_conn_ : 1;      // 1 if has lane connectivity, 0 otherwise
   uint64_t turnlanes_ : 1;      // Does this edge have turn lanes (end of edge)
   uint64_t exitsign_ : 1;       // Exit signs exist for this edge
   uint64_t internal_ : 1;       // Edge that is internal to an intersection
@@ -1104,6 +1104,7 @@ protected:
   uint64_t bridge_ : 1;         // Is this edge part of a bridge?
   uint64_t traffic_signal_ : 1; // Traffic signal at end of the directed edge
   uint64_t seasonal_ : 1;       // Seasonal access (ex. no access in winter)
+  uint64_t spare4_ : 3;
 
   // 5th 8-byte word
   uint64_t turntype_ : 24;      // Turn type (see graphconstants.h)
@@ -1141,6 +1142,17 @@ protected:
 
   // Could be desirable?
   // uint64_t named_ : 1;          // 1 if this edge has names, 0 if unnamed
+};
+
+/**
+ * Extended directed edge attribution. This structure provides the ability to add extra
+ * attribution per directed edge without breaking backward compatibility. For now this structure
+ * is unused.
+ */
+class DirectedEdgeExt {
+
+protected:
+  uint64_t spare0_ : 64;
 };
 
 } // namespace baldr

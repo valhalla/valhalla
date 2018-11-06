@@ -495,19 +495,22 @@ protected:
   // Header information for the tile
   GraphTileHeader* header_;
 
-  // List of nodes. This is a fixed size structure so it can be
-  // indexed directly.
+  // List of nodes. Fixed size structure, indexed by Id within the tile.
   NodeInfo* nodes_;
 
-  // List of directed edges. This is a fixed size structure so it can be
-  // indexed directly.
+  // List of transitions between nodes on different levels. NodeInfo contains
+  // an index and count of transitions.
+  NodeTransition* transitions_;
+
+  // List of directed edges. Fixed size structure indexed by Id within the tile.
   DirectedEdge* directededges_;
+
+  // Extended directed edge records. For expansion. These are indexed by the same
+  // Id as the directed edge.
+  DirectedEdgeExt* ext_directededges_;
 
   // Access restrictions, 1 or more per edge id
   AccessRestriction* access_restrictions_;
-
-  // List of transitions between nodes on different levels.
-  NodeTransition* transitions_;
 
   // Transit departures, many per index (indexed by directed edge index and
   // sorted by departure time)
@@ -527,6 +530,9 @@ protected:
 
   // Signs (indexed by directed edge index)
   Sign* signs_;
+
+  // Turn lanes (indexed by directed edge index)
+  TurnLanes* turnlanes_;
 
   // List of admins. This is a fixed size structure so it can be
   // indexed directly.
@@ -567,9 +573,6 @@ protected:
 
   // Number of bytes in lane connectivity data.
   std::size_t lane_connectivity_size_;
-
-  // Turn lanes (indexed by directed edge index)
-  TurnLanes* turnlanes_;
 
   // Predicted speeds
   PredictedSpeeds predictedspeeds_;

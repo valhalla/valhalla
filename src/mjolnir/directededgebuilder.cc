@@ -43,10 +43,9 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
   }
   set_toll(way.toll());
 
+  // Set flag indicating this edge has a bike network
   if (bike_network) {
-    set_bike_network(way.bike_network() | bike_network);
-  } else {
-    set_bike_network(way.bike_network());
+    set_bike_network(true);
   }
 
   set_truck_route(way.truck_route());

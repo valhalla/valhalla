@@ -6,6 +6,15 @@ using namespace valhalla::baldr;
 
 namespace {
 
+json::MapPtr bike_network_json(uint8_t mask) {
+  return json::map({
+      {"national", static_cast<bool>(mask & kNcn)},
+      {"regional", static_cast<bool>(mask & kRcn)},
+      {"local", static_cast<bool>(mask & kLcn)},
+      {"mountain", static_cast<bool>(mask & kMcn)},
+  });
+}
+
 json::ArrayPtr names_json(const std::vector<std::string>& names) {
   auto a = json::array({});
   for (const auto& n : names) {
@@ -113,6 +122,7 @@ json::MapPtr EdgeInfo::json() const {
   return json::map({
       {"way_id", static_cast<uint64_t>(wayid())},
       {"mean elevation", static_cast<uint64_t>(mean_elevation())},
+      {"bike_network", bike_network_json(bike_network())},
       {"names", names_json(GetNames())},
       {"shape", midgard::encode(shape())},
   });

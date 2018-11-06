@@ -6,15 +6,6 @@ using namespace valhalla::baldr;
 
 namespace {
 
-json::MapPtr bike_network_json(uint8_t mask) {
-  return json::map({
-      {"national", static_cast<bool>(mask & kNcn)},
-      {"regional", static_cast<bool>(mask & kRcn)},
-      {"local", static_cast<bool>(mask & kLcn)},
-      {"mountain", static_cast<bool>(mask & kMcn)},
-  });
-}
-
 json::MapPtr access_json(uint32_t access) {
   return json::map({{"bicycle", static_cast<bool>(access & kBicycleAccess)},
                     {"bus", static_cast<bool>(access & kBusAccess)},
@@ -240,15 +231,9 @@ void DirectedEdge::set_cyclelane(const CycleLane cyclelane) {
   cycle_lane_ = static_cast<uint32_t>(cyclelane);
 }
 
-// Sets the bike network mask indicating which (if any) bicycle networks are
-// along this edge. See baldr/directededge.h for definitions.
-void DirectedEdge::set_bike_network(const uint32_t bike_network) {
-  if (bike_network > kMaxBicycleNetwork) {
-    LOG_WARN("Bicycle Network mask exceeds maximum: " + std::to_string(bike_network));
-    bike_network_ = 0;
-  } else {
-    bike_network_ = bike_network;
-  }
+// Sets the bike network flag.
+void DirectedEdge::set_bike_network(const bool bike_network) {
+  bike_network_ = bike_network;
 }
 
 // Sets truck route flag.
@@ -594,7 +579,7 @@ json::MapPtr DirectedEdge::json() const {
       {"forward", static_cast<bool>(forward_)},
       {"not_thru", static_cast<bool>(not_thru_)},
       {"cycle_lane", to_string(static_cast<CycleLane>(cycle_lane_))},
-      {"bike_network", bike_network_json(bike_network_)},
+      {"bike_network", static_cast<bool>(bike_network_)},
       {"truck_route", static_cast<bool>(truck_route_)},
       {"lane_count", static_cast<uint64_t>(lanecount_)},
       {"country_crossing", static_cast<bool>(ctry_crossing_)},

@@ -186,6 +186,7 @@ public:
    *                there are two directed edges per edge info.
    * @param  wayid  The target edge is part of this the way id.
    * @param  elev   Mean elevation.
+   * @param  bn     Bike network.
    * @param  lls    The shape of the target edge.
    * @param  names  The names of the target edge.
    * @param  types  Bits indicating if the name is a ref vs a name.
@@ -199,7 +200,8 @@ public:
                        const baldr::GraphId& nodea,
                        const baldr::GraphId& nodeb,
                        const uint64_t wayid,
-                       const float mean_elevation,
+                       const float elev,
+                       const uint32_t bn,
                        const shape_container_t& lls,
                        const std::vector<std::string>& names,
                        const uint16_t types,
@@ -218,6 +220,7 @@ public:
    *                there are two directed edges per edge info.
    * @param  wayid  The target edge is part of this the way id.
    * @param  elev   Mean elevation.
+   * @param  bn     Bike network.
    * @param  llstr  The shape of the target edge as an encoded string.
    * @param  names  The names of the target edge.
    * @param  types  Bits indicating if the name is a ref vs a name.
@@ -230,7 +233,8 @@ public:
                        const baldr::GraphId& nodea,
                        const baldr::GraphId& nodeb,
                        const uint64_t wayid,
-                       const float mean_elevation,
+                       const float elev,
+                       const uint32_t bn,
                        const std::string& llstr,
                        const std::vector<std::string>& names,
                        const uint16_t types,
@@ -306,6 +310,9 @@ public:
    * @return  Returns a reference to the directed edge builder.
    */
   DirectedEdge& directededge_builder(const size_t idx);
+
+  // TODO - add access method to directededge_ext_builder if extended directed edge
+  // attributes are needed.
 
   /**
    * Gets a non-const access restriction from existing tile data.
@@ -441,6 +448,10 @@ protected:
   // List of directed edges. This is a fixed size structure so it can be
   // indexed directly.
   std::vector<DirectedEdge> directededges_builder_;
+
+  // Optional list of directed edge extended attributes. If this is used it must be the same size
+  // as the directededges_builder.
+  std::vector<DirectedEdgeExt> directededges_ext_builder_;
 
   // List of node transitions. This is a fixed size structure so it can be
   // indexed directly.
