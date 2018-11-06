@@ -317,7 +317,11 @@ public:
             }
             continue;
           }
-          return true;
+          // TODO: If a user runs a non-time dependent route, we need to provide Manuever Notes for
+          // the timed restriction.
+          else if (!current_time && cr->has_dt())
+            return false;
+          return true; // Otherwise this is a non-timed restriction and it exists all the time.
         }
       }
     }

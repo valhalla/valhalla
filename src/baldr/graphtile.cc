@@ -339,17 +339,17 @@ std::string GraphTile::FileSuffix(const GraphId& graphid) {
 
 // Get the tile Id given the full path to the file.
 GraphId GraphTile::GetTileId(const std::string& fname) {
-  const std::unordered_set<std::string::value_type> allowed{filesystem::path::preferred_separator,
-                                                            '0',
-                                                            '1',
-                                                            '2',
-                                                            '3',
-                                                            '4',
-                                                            '5',
-                                                            '6',
-                                                            '7',
-                                                            '8',
-                                                            '9'};
+  std::unordered_set<std::string::value_type> allowed{filesystem::path::preferred_separator,
+                                                      '0',
+                                                      '1',
+                                                      '2',
+                                                      '3',
+                                                      '4',
+                                                      '5',
+                                                      '6',
+                                                      '7',
+                                                      '8',
+                                                      '9'};
   // we require slashes
   auto pos = fname.find_last_of(filesystem::path::preferred_separator);
   if (pos == fname.npos) {
@@ -362,6 +362,7 @@ GraphId GraphTile::GetTileId(const std::string& fname) {
       break;
     }
   }
+  allowed.erase(static_cast<std::string::value_type>(filesystem::path::preferred_separator));
 
   // if you didnt reach the end and it wasnt a dot then this isnt valid
   if (pos != fname.size() && fname[pos] != '.') {
@@ -371,28 +372,29 @@ GraphId GraphTile::GetTileId(const std::string& fname) {
   // run backwards while you find an allowed char but stop if not 3 digits between slashes
   std::vector<int> digits;
   auto last = pos;
-  for (--pos; pos < last; --pos) {
-    auto& c = fname.at(pos);
+  while (--pos < last) {
+    auto c = fname[pos];
     // invalid char showed up
     if (allowed.find(c) == allowed.cend()) {
       throw std::runtime_error("Invalid tile path: " + fname);
     }
-    // if its a slash thats another digit
-    if (c == filesystem::path::preferred_separator) {
+
+    // if its the last thing or the next one is a separator thats another digit
+    if (pos == 0 || fname[pos - 1] == filesystem::path::preferred_separator) {
       // this is not 3 or 1 digits so its wrong
       auto dist = last - pos;
-      if (dist != 4 && dist != 2) {
+      if (dist != 3 && dist != 1) {
         throw std::runtime_error("Invalid tile path: " + fname);
       }
       // we'll keep this
-      auto i = atoi(fname.substr(pos + 1, last - (pos + 1)).c_str());
+      auto i = atoi(fname.substr(pos, dist).c_str());
       digits.push_back(i);
       // and we'll stop if it was the level (always a single digit see GraphId)
-      if (dist == 2) {
+      if (dist == 1) {
         break;
       }
       // next
-      last = pos;
+      last = --pos;
     }
   }
 
