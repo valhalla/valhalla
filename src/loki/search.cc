@@ -425,9 +425,8 @@ struct bin_handler_t {
           return;
         }
 
-        // recurse
+        // Increment and recurse
         ++reaches.back();
-
         size_t previous = reach_index;
         depth_first(tile, n, reach_index);
 
@@ -463,9 +462,7 @@ struct bin_handler_t {
             return;
           }
 
-          // recurse
-          ++reaches.back();
-
+          // For transitions, recurse but don't increment so we don't double count nodes
           size_t previous = reach_index;
           depth_first(tile, n, reach_index);
 
