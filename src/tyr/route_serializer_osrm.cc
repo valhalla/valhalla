@@ -380,6 +380,7 @@ std::string exits(const valhalla::odin::TripDirections_Maneuver_Sign& sign) {
 }
 
 // Compile and return the refs of the specified list
+// TODO we could enhance by limiting results by using consecutive count
 std::string get_refs(const google::protobuf::RepeatedPtrField<
                          ::valhalla::odin::TripDirections_Maneuver_SignElement>& sign_elements,
                      const std::string& delimiter = kSignElementDelimiter) {
@@ -399,6 +400,7 @@ std::string get_refs(const google::protobuf::RepeatedPtrField<
 }
 
 // Compile and return the nonrefs of the specified list
+// TODO we could enhance by limiting results by using consecutive count
 std::string get_nonrefs(const google::protobuf::RepeatedPtrField<
                             ::valhalla::odin::TripDirections_Maneuver_SignElement>& sign_elements,
                         const std::string& delimiter = kSignElementDelimiter) {
@@ -429,12 +431,18 @@ std::string destinations(const valhalla::odin::TripDirections_Maneuver_Sign& sig
   /////////////////////////////////////////////////////////////////////////////
   // Process the refs
   // Get the branch refs
-  std::string refs = get_refs(sign.exit_onto_streets());
+  std::string branch_refs = get_refs(sign.exit_onto_streets());
 
-  // If refs is empty then get the toward refs
-  if (refs.empty()) {
-    refs = get_refs(sign.exit_toward_locations());
+  // Get the toward refs
+  std::string toward_refs = get_refs(sign.exit_toward_locations());
+
+  // Create the refs by combining the branch and toward ref lists
+  std::string refs = branch_refs;
+  // If needed, add the delimiter between the lists
+  if (!refs.empty() && !toward_refs.empty()) {
+    refs += kSignElementDelimiter;
   }
+  refs += toward_refs;
 
   /////////////////////////////////////////////////////////////////////////////
   // Process the nonrefs
@@ -447,9 +455,9 @@ std::string destinations(const valhalla::odin::TripDirections_Maneuver_Sign& sig
   // Get the name nonrefs
   std::string name_nonrefs = get_nonrefs(sign.exit_names());
 
-  // Create nonrefs by combining branch, toward, name nonref lists
+  // Create nonrefs by combining the branch, toward, name nonref lists
   std::string nonrefs = branch_nonrefs;
-  // If needed, add the delimiter between lists
+  // If needed, add the delimiter between the lists
   if (!nonrefs.empty() && !toward_nonrefs.empty()) {
     nonrefs += kSignElementDelimiter;
   }
