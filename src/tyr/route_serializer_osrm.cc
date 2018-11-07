@@ -21,6 +21,8 @@ using namespace valhalla::tyr;
 using namespace std;
 
 namespace {
+const std::string kSignElementDelimiter = ", ";
+const std::string kDestinationsDelimiter = ": ";
 
 namespace osrm_serializers {
 /*
@@ -365,12 +367,10 @@ json::ArrayPtr intersections(const valhalla::odin::TripDirections::Maneuver& man
 }
 
 // Add exits (exit numbers) along a step/maneuver.
-std::string exits(const valhalla::odin::TripDirections::Maneuver& maneuver) {
-  // Iterate through the signs for this maneuver
-  uint32_t i = 0;
+std::string exits(const valhalla::odin::TripDirections_Maneuver_Sign& sign) {
+  // Iterate through the exit numbers
   std::string exits;
-  const auto& sign = maneuver.sign();
-  for (const auto& number : maneuver.sign().exit_numbers()) {
+  for (const auto& number : sign.exit_numbers()) {
     if (!exits.empty()) {
       exits += "; ";
     }
@@ -379,46 +379,96 @@ std::string exits(const valhalla::odin::TripDirections::Maneuver& maneuver) {
   return exits;
 }
 
-// Add destinations along a step/maneuver. Constructs a destinations
-// string.
-std::string destinations(const valhalla::odin::TripDirections::Maneuver& maneuver) {
-  // Iterate through the signs for this maneuver
-  std::string dest;
-  const auto& sign = maneuver.sign();
-  uint32_t i = 0;
-  for (const auto& branch : maneuver.sign().exit_onto_streets()) {
-    if (i == 0 && !dest.empty()) {
-      dest += ": ";
+// Compile and return the refs of the specified list
+std::string get_refs(const google::protobuf::RepeatedPtrField<
+                         ::valhalla::odin::TripDirections_Maneuver_SignElement>& sign_elements,
+                     const std::string& delimiter = kSignElementDelimiter) {
+  std::string refs;
+  for (const auto& sign_element : sign_elements) {
+    // Only process refs
+    if (sign_element.is_route_number()) {
+      // If refs is not empty, append specified delimiter
+      if (!refs.empty()) {
+        refs += delimiter;
+      }
+      // Append sign element
+      refs += sign_element.text();
     }
-    dest += branch.text();
-    if (i < maneuver.sign().exit_onto_streets().size() - 1) {
-      dest += ", ";
-    }
-    i++;
   }
-  i = 0;
-  for (const auto& toward : maneuver.sign().exit_toward_locations()) {
-    if (i == 0 && !dest.empty() && dest.back() != ' ') {
-      dest += ": ";
+  return refs;
+}
+
+// Compile and return the nonrefs of the specified list
+std::string get_nonrefs(const google::protobuf::RepeatedPtrField<
+                            ::valhalla::odin::TripDirections_Maneuver_SignElement>& sign_elements,
+                        const std::string& delimiter = kSignElementDelimiter) {
+  std::string nonrefs;
+  for (const auto& sign_element : sign_elements) {
+    // Only process nonrefs
+    if (!(sign_element.is_route_number())) {
+      // If nonrefs is not empty, append specified delimiter
+      if (!nonrefs.empty()) {
+        nonrefs += delimiter;
+      }
+      // Append sign element
+      nonrefs += sign_element.text();
     }
-    dest += toward.text();
-    if (i < maneuver.sign().exit_toward_locations().size() - 1) {
-      dest += ", ";
-    }
-    i++;
   }
-  i = 0;
-  for (const auto& name : maneuver.sign().exit_names()) {
-    if (i == 0 && !dest.empty() && dest.back() != ' ') {
-      dest += ": ";
-    }
-    dest += name.text();
-    if (i < maneuver.sign().exit_names().size() - 1) {
-      dest += ", ";
-    }
-    i++;
+  return nonrefs;
+}
+
+// Add destinations along a step/maneuver. Constructs a destinations string.
+// Here are the destinations formats:
+//   1. <ref>
+//   2. <non-ref>
+//   3. <ref>: <non-ref>
+// Each <ref> or <non-ref> could have one or more items and will separated with ", "
+//   for example: "I 99, US 220, US 30: Altoona, Johnstown"
+std::string destinations(const valhalla::odin::TripDirections_Maneuver_Sign& sign) {
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Process the refs
+  // Get the branch refs
+  std::string refs = get_refs(sign.exit_onto_streets());
+
+  // If refs is empty then get the toward refs
+  if (refs.empty()) {
+    refs = get_refs(sign.exit_toward_locations());
   }
-  return dest;
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Process the nonrefs
+  // Get the branch nonrefs
+  std::string branch_nonrefs = get_nonrefs(sign.exit_onto_streets());
+
+  // Get the towards nonrefs
+  std::string toward_nonrefs = get_nonrefs(sign.exit_toward_locations());
+
+  // Get the name nonrefs
+  std::string name_nonrefs = get_nonrefs(sign.exit_names());
+
+  // Create nonrefs by combining branch, toward, name nonref lists
+  std::string nonrefs = branch_nonrefs;
+  // If needed, add the delimiter between lists
+  if (!nonrefs.empty() && !toward_nonrefs.empty()) {
+    nonrefs += kSignElementDelimiter;
+  }
+  nonrefs += toward_nonrefs;
+  // If needed, add the delimiter between lists
+  if (!nonrefs.empty() && !name_nonrefs.empty()) {
+    nonrefs += kSignElementDelimiter;
+  }
+  nonrefs += name_nonrefs;
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Process the destinations
+  std::string destinations = refs;
+  if (!refs.empty() && !nonrefs.empty()) {
+    destinations += kDestinationsDelimiter;
+  }
+  destinations += nonrefs;
+
+  return destinations;
 }
 
 // Get the turn modifier based on incoming edge bearing and outgoing edge
@@ -866,11 +916,12 @@ json::ArrayPtr serialize_legs(const std::list<valhalla::odin::TripDirections>& l
                                               depart, arrive, count, mode, prev_mode));
 
       // Add destinations and exits
-      std::string dest = destinations(maneuver);
+      const auto& sign = maneuver.sign();
+      std::string dest = destinations(sign);
       if (!dest.empty()) {
         step->emplace("destinations", dest);
       }
-      std::string ex = exits(maneuver);
+      std::string ex = exits(sign);
       if (!ex.empty()) {
         step->emplace("exits", ex);
       }
