@@ -157,7 +157,7 @@ void TimeDepForward::ExpandForward(GraphReader& graphreader,
         hierarchy_limits_[node.level()].up_transition_count++;
         ExpandForward(graphreader, trans->endnode(), pred, pred_idx, true, localtime, seconds_of_week,
                       destination, best_path);
-      } else if (!hierarchy_limits_[trans->endnode().level()].StopExpanding()) {
+      } else if (!hierarchy_limits_[trans->endnode().level()].StopExpanding(pred.distance())) {
         ExpandForward(graphreader, trans->endnode(), pred, pred_idx, true, localtime, seconds_of_week,
                       destination, best_path);
       }
