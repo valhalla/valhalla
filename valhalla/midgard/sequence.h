@@ -47,10 +47,18 @@
 #endif
 
 #ifdef _MSC_VER
+#ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN 1
+#endif
+#ifndef VC_EXTRALEAN
 #define VC_EXTRALEAN 1
+#endif
+#ifndef _CRT_SECURE_NO_DEPRECATE
 #define _CRT_SECURE_NO_DEPRECATE 1
+#endif
+#ifndef _CRT_NONSTDC_NO_WARNINGS
 #define _CRT_NONSTDC_NO_WARNINGS 1
+#endif
 #include <windows.h>
 
 #define PROT_READ 0x01

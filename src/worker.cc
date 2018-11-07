@@ -590,7 +590,8 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
   // time type
   auto date_time_type = rapidjson::get_optional<float>(doc, "/date_time/type");
   if (date_time_type && odin::DirectionsOptions::DateTimeType_IsValid(*date_time_type)) {
-    options.set_date_time_type(static_cast<odin::DirectionsOptions::DateTimeType>(*date_time_type));
+    auto const v = static_cast<int>(*date_time_type);
+    options.set_date_time_type(static_cast<odin::DirectionsOptions::DateTimeType>(v));
   } // not specified but you want transit, then we default to current
   else if (options.has_costing() &&
            (options.costing() == odin::multimodal || options.costing() == odin::transit)) {
