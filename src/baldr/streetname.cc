@@ -21,7 +21,7 @@ bool StreetName::is_route_number() const {
 }
 
 bool StreetName::operator==(const StreetName& rhs) const {
-  return (value_ == rhs.value_);
+  return ((value_ == rhs.value_) && (is_route_number_ == rhs.is_route_number_));
 }
 
 bool StreetName::StartsWith(const std::string& prefix) const {
