@@ -1273,10 +1273,11 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const AttributesController& controll
 
   // Add names to edge if requested
   if (controller.attributes.at(kEdgeNames)) {
-    auto names_and_info = edgeinfo.GetNamesAndInfo();
-    for (const auto& ni : names_and_info) {
-      trip_edge->add_name(ni.first);
-      trip_edge->add_name_is_ref(ni.second.is_ref_);
+    auto names_and_types = edgeinfo.GetNamesAndTypes();
+    for (const auto& name_and_type : names_and_types) {
+      auto* trip_edge_name = trip_edge->mutable_name()->Add();
+      trip_edge_name->set_value(name_and_type.first);
+      trip_edge_name->set_is_route_number(name_and_type.second);
     }
   }
 

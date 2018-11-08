@@ -12,9 +12,9 @@ namespace baldr {
 StreetNames::StreetNames() : std::list<std::unique_ptr<StreetName>>() {
 }
 
-StreetNames::StreetNames(const std::vector<std::string>& names) {
+StreetNames::StreetNames(const std::vector<std::pair<std::string, bool>>& names) {
   for (auto& name : names) {
-    this->emplace_back(midgard::make_unique<StreetName>(name));
+    this->emplace_back(midgard::make_unique<StreetName>(name.first, name.second));
   }
 }
 

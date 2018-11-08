@@ -172,7 +172,7 @@ message TripPath {
   }
 
   message Edge {
-    repeated string name = 1;               // street names
+    repeated StreetName name = 1;           // street names
     optional float length = 2;              // km
     optional float speed = 3;               // km/h
     optional RoadClass road_class = 4;
@@ -213,8 +213,6 @@ message TripPath {
     repeated LaneConnectivity lane_connectivity = 39;
     optional int32 mean_elevation = 40;
     repeated TrafficSegment traffic_segment = 41;
-    repeated bool name_is_ref = 42;          // Corresponds to street name to
-                                             // indicate name is a reference name
   }
 
   message IntersectingEdge {

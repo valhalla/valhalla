@@ -189,19 +189,6 @@ std::string full_shape(const std::list<valhalla::odin::TripDirections>& legs,
   return midgard::encode(decoded);
 }
 
-// Convenience method to get the street names for the maneuver
-// TODO - split into name and ref
-std::string street_names(const odin::TripDirections::Maneuver& maneuver) {
-  std::string street;
-  for (const auto& name : maneuver.street_name()) {
-    if (street.size() > 0) {
-      street += ';';
-    }
-    street += name;
-  }
-  return street;
-}
-
 // Serialize waypoints for optimized route. Note that OSRM retains the
 // original location order, and stores an index for the waypoint index in
 // the optimized sequence.
@@ -381,9 +368,10 @@ std::string exits(const valhalla::odin::TripDirections_Maneuver_Sign& sign) {
 
 // Compile and return the refs of the specified list
 // TODO we could enhance by limiting results by using consecutive count
-std::string get_refs(const google::protobuf::RepeatedPtrField<
-                         ::valhalla::odin::TripDirections_Maneuver_SignElement>& sign_elements,
-                     const std::string& delimiter = kSignElementDelimiter) {
+std::string get_sign_element_refs(
+    const google::protobuf::RepeatedPtrField<::valhalla::odin::TripDirections_Maneuver_SignElement>&
+        sign_elements,
+    const std::string& delimiter = kSignElementDelimiter) {
   std::string refs;
   for (const auto& sign_element : sign_elements) {
     // Only process refs
@@ -401,9 +389,10 @@ std::string get_refs(const google::protobuf::RepeatedPtrField<
 
 // Compile and return the nonrefs of the specified list
 // TODO we could enhance by limiting results by using consecutive count
-std::string get_nonrefs(const google::protobuf::RepeatedPtrField<
-                            ::valhalla::odin::TripDirections_Maneuver_SignElement>& sign_elements,
-                        const std::string& delimiter = kSignElementDelimiter) {
+std::string get_sign_element_nonrefs(
+    const google::protobuf::RepeatedPtrField<::valhalla::odin::TripDirections_Maneuver_SignElement>&
+        sign_elements,
+    const std::string& delimiter = kSignElementDelimiter) {
   std::string nonrefs;
   for (const auto& sign_element : sign_elements) {
     // Only process nonrefs
@@ -431,10 +420,10 @@ std::string destinations(const valhalla::odin::TripDirections_Maneuver_Sign& sig
   /////////////////////////////////////////////////////////////////////////////
   // Process the refs
   // Get the branch refs
-  std::string branch_refs = get_refs(sign.exit_onto_streets());
+  std::string branch_refs = get_sign_element_refs(sign.exit_onto_streets());
 
   // Get the toward refs
-  std::string toward_refs = get_refs(sign.exit_toward_locations());
+  std::string toward_refs = get_sign_element_refs(sign.exit_toward_locations());
 
   // Create the refs by combining the branch and toward ref lists
   std::string refs = branch_refs;
@@ -447,13 +436,13 @@ std::string destinations(const valhalla::odin::TripDirections_Maneuver_Sign& sig
   /////////////////////////////////////////////////////////////////////////////
   // Process the nonrefs
   // Get the branch nonrefs
-  std::string branch_nonrefs = get_nonrefs(sign.exit_onto_streets());
+  std::string branch_nonrefs = get_sign_element_nonrefs(sign.exit_onto_streets());
 
   // Get the towards nonrefs
-  std::string toward_nonrefs = get_nonrefs(sign.exit_toward_locations());
+  std::string toward_nonrefs = get_sign_element_nonrefs(sign.exit_toward_locations());
 
   // Get the name nonrefs
-  std::string name_nonrefs = get_nonrefs(sign.exit_names());
+  std::string name_nonrefs = get_sign_element_nonrefs(sign.exit_names());
 
   // Create nonrefs by combining the branch, toward, name nonref lists
   std::string nonrefs = branch_nonrefs;
@@ -689,8 +678,8 @@ json::MapPtr osrm_maneuver(const valhalla::odin::TripDirections::Maneuver& maneu
 
       // Check if previous maneuver and current maneuver have same name
       // TODO - more extensive name comparison method?
-      if (prior_edge.name().size() > 0 && prior_edge.name().size() == current_edge.name().size() &&
-          (prior_edge.name(0) != current_edge.name(0))) {
+      if (prior_edge.name_size() > 0 && prior_edge.name_size() == current_edge.name_size() &&
+          (prior_edge.name(0).value() != current_edge.name(0).value())) {
         new_name = true;
       }
 
@@ -748,62 +737,25 @@ std::string get_mode(const valhalla::odin::TripDirections::Maneuver& maneuver,
   }
 }
 
-bool is_ref_name(const valhalla::odin::TripDirections::Maneuver& maneuver,
-                 const std::string& name,
-                 std::list<odin::TripPath>::const_iterator path_leg) {
-
-  for (uint32_t i = maneuver.begin_path_index(); i < maneuver.end_path_index(); i++) {
-
-    // Get names and refs for this maneuver
-    auto edgenames = path_leg->node(i).edge().name();
-    auto edgerefs = path_leg->node(i).edge().name_is_ref();
-
-    // Check if the name is a name or ref
-    // TODO - at some point we probably want to pull is_ref into the
-    // maneuver.
-    if (edgenames.size() != edgerefs.size()) {
-      return true;
-    }
-    auto edgeref = edgerefs.begin();
-    for (const auto& edgename : edgenames) {
-      if (edgename == name) {
-        return *edgeref;
-      }
-      edgeref++;
-    }
-  }
-  return true;
-}
-
 // Get the names and ref names
 std::pair<std::string, std::string>
-names_and_refs(const valhalla::odin::TripDirections::Maneuver& maneuver,
-               std::list<odin::TripPath>::const_iterator path_leg) {
+names_and_refs(const valhalla::odin::TripDirections::Maneuver& maneuver) {
   std::string names, refs;
 
   for (const auto& name : maneuver.street_name()) {
     // Check if the name is a ref
-    if (is_ref_name(maneuver, name, path_leg)) {
-      if (refs.size() > 0) {
+    if (name.is_route_number()) {
+      if (!refs.empty()) {
         refs += "; ";
       }
-      refs += name;
+      refs += name.value();
     } else {
-      if (names.size() > 0) {
+      if (!names.empty()) {
         names += "; ";
       }
-      names += name;
+      names += name.value();
     }
   }
-
-  /** TODO - not sure if we want begin names or street names
-  std::string begin_names;
-  for (const auto& name : maneuver.begin_street_name()) {
-    if (begin_names.size() > 0) {
-      begin_names += ';';
-    }
-    begin_names += name;
-  } */
 
   return std::make_pair(names, refs);
 }
@@ -885,7 +837,7 @@ json::ArrayPtr serialize_legs(const std::list<valhalla::odin::TripDirections>& l
       // Add street names and refs. Names get added even if empty
       bool depart = (index == 0);
       bool arrive = (index == leg.maneuver().size() - 1);
-      auto nr = names_and_refs(maneuver, path_leg);
+      auto nr = names_and_refs(maneuver);
 
       // We dont have previous stuff yet so we just take what we have now
       if (depart) {
@@ -909,8 +861,8 @@ json::ArrayPtr serialize_legs(const std::list<valhalla::odin::TripDirections>& l
       prev_ref = nr.second;
 
       // Record street name and distance.. TODO - need to also worry about order
-      if (maneuver.street_name().size() > 0) {
-        const std::string& name = maneuver.street_name(0);
+      if (maneuver.street_name_size() > 0) {
+        const std::string& name = maneuver.street_name(0).value();
         auto man = maneuvers.find(name);
         if (man == maneuvers.end()) {
           maneuvers[name] = distance;

@@ -275,7 +275,7 @@ json::ArrayPtr legs(const std::list<valhalla::odin::TripDirections>& directions_
       if (maneuver.street_name_size() > 0) {
         auto street_names = json::array({});
         for (int i = 0; i < maneuver.street_name_size(); i++) {
-          street_names->emplace_back(maneuver.street_name(i));
+          street_names->emplace_back(maneuver.street_name(i).value());
         }
         man->emplace("street_names", std::move(street_names));
       }
@@ -284,7 +284,7 @@ json::ArrayPtr legs(const std::list<valhalla::odin::TripDirections>& directions_
       if (maneuver.begin_street_name_size() > 0) {
         auto begin_street_names = json::array({});
         for (int i = 0; i < maneuver.begin_street_name_size(); i++) {
-          begin_street_names->emplace_back(maneuver.begin_street_name(i));
+          begin_street_names->emplace_back(maneuver.begin_street_name(i).value());
         }
         man->emplace("begin_street_names", std::move(begin_street_names));
       }

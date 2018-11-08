@@ -10,9 +10,9 @@ namespace baldr {
 StreetNamesUs::StreetNamesUs() : StreetNames() {
 }
 
-StreetNamesUs::StreetNamesUs(const std::vector<std::string>& names) {
+StreetNamesUs::StreetNamesUs(const std::vector<std::pair<std::string, bool>>& names) {
   for (auto& name : names) {
-    this->emplace_back(midgard::make_unique<StreetNameUs>(name));
+    this->emplace_back(midgard::make_unique<StreetNameUs>(name.first, name.second));
   }
 }
 

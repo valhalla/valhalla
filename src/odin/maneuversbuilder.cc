@@ -126,12 +126,13 @@ std::list<Maneuver> ManeuversBuilder::Build() {
     throw valhalla_exception_t{213};
   const auto& orig = trip_path_->GetOrigin();
   const auto& dest = trip_path_->GetDestination();
-  std::string first_name =
-      (trip_path_->GetCurrEdge(0)->name_size() == 0) ? "" : trip_path_->GetCurrEdge(0)->name(0);
+  std::string first_name = (trip_path_->GetCurrEdge(0)->name_size() == 0)
+                               ? ""
+                               : trip_path_->GetCurrEdge(0)->name(0).value();
   auto last_node_index = (trip_path_->node_size() - 2);
   std::string last_name = (trip_path_->GetCurrEdge(last_node_index)->name_size() == 0)
                               ? ""
-                              : trip_path_->GetCurrEdge(last_node_index)->name(0);
+                              : trip_path_->GetCurrEdge(last_node_index)->name(0).value();
   std::string units = (directions_options_.units() == valhalla::odin::DirectionsOptions::kilometers)
                           ? "kilometers"
                           : "miles";
@@ -1081,7 +1082,7 @@ void ManeuversBuilder::FinalizeManeuver(Maneuver& maneuver, int node_index) {
 
   // Set begin street names
   if (!curr_edge->IsHighway() && !curr_edge->internal_intersection() &&
-      (curr_edge->GetNameList().size() > 1)) {
+      (curr_edge->name_size() > 1)) {
     std::unique_ptr<StreetNames> curr_edge_names =
         StreetNamesFactory::Create(trip_path_->GetCountryCode(node_index), curr_edge->GetNameList());
     std::unique_ptr<StreetNames> common_base_names =

@@ -148,12 +148,16 @@ TripDirections DirectionsBuilder::PopulateTripDirections(const DirectionsOptions
 
     // Set street names
     for (const auto& street_name : maneuver.street_names()) {
-      trip_maneuver->add_street_name(street_name->value());
+      auto* maneuver_street_name = trip_maneuver->add_street_name();
+      maneuver_street_name->set_value(street_name->value());
+      maneuver_street_name->set_is_route_number(street_name->is_route_number());
     }
 
     // Set begin street names
     for (const auto& begin_street_name : maneuver.begin_street_names()) {
-      trip_maneuver->add_begin_street_name(begin_street_name->value());
+      auto* maneuver_begin_street_name = trip_maneuver->add_begin_street_name();
+      maneuver_begin_street_name->set_value(begin_street_name->value());
+      maneuver_begin_street_name->set_is_route_number(begin_street_name->is_route_number());
     }
 
     trip_maneuver->set_length(maneuver.length(directions_options.units()));

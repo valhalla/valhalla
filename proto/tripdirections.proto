@@ -134,7 +134,7 @@ message TripDirections {
 
     optional Type type = 1;                                  // Maneuver type
     optional string text_instruction = 2;                    // text instruction
-    repeated string street_name = 3;                         // street names
+    repeated StreetName street_name = 3;                     // street names
     optional float length = 4;                               // kilometers or miles based on units
     optional uint32 time = 5;                                // seconds
     optional CardinalDirection begin_cardinal_direction = 6; // CardinalDirection
@@ -146,7 +146,7 @@ message TripDirections {
     optional string verbal_transition_alert_instruction = 12;// verbal transition alert instruction
     optional string verbal_pre_transition_instruction = 13;  // verbal pre-transition instruction
     optional string verbal_post_transition_instruction = 14; // verbal post-transition instruction
-    repeated string begin_street_name = 15;                  // begin street names
+    repeated StreetName begin_street_name = 15;              // begin street names
     optional Sign sign = 16;                                 // associated sign information, for example: exit number
     optional uint32 roundabout_exit_count = 17;              // which spoke to exit roundabout after entering
     optional string depart_instruction = 18;                 // depart instruction - used with transit
