@@ -94,7 +94,7 @@ void SortSequences() {
       [](const OldToNewNodes& a, const OldToNewNodes& b) { return a.node_id < b.node_id; });
 }
 
-// Convencience method to find the node association.
+// Convenience method to find the node association.
 OldToNewNodes find_nodes(sequence<OldToNewNodes>& old_to_new, const GraphId& node) {
   GraphId dmy;
   OldToNewNodes target(node, dmy, dmy, dmy, 0);
