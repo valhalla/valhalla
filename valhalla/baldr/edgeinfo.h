@@ -80,7 +80,7 @@ public:
    * Gets the OSM way Id.
    * @return  Returns the OSM way Id.
    */
-  uint64_t wayid() const {
+  uint32_t wayid() const {
     return w0_.wayid_;
   }
 
@@ -98,6 +98,14 @@ public:
    */
   uint32_t bike_network() const {
     return w0_.bike_network_;
+  }
+
+  /**
+   * Gets the speed limit in KPH.
+   * @return  Returns the speed limit in KPH.
+   */
+  uint32_t speed_limit() const {
+    return w0_.speed_limit_;
   }
 
   /**
@@ -178,10 +186,11 @@ protected:
   // 1st 8-byte word
   union Word0 {
     struct {
-      uint64_t wayid_ : 45;          // OSM way Id
+      uint64_t wayid_ : 32;          // OSM way Id
       uint64_t mean_elevation_ : 12; // Mean elevation with 2 meter precision
       uint64_t bike_network_ : 4;    // Mask of bicycle network types (see graphconstants.h)
-      uint64_t spare0_ : 3;
+      uint64_t speed_limit_ : 8;     // Speed limit (kph)
+      uint64_t spare0_ : 8;
     };
     uint64_t value_;
   };

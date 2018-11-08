@@ -1550,7 +1550,7 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const AttributesController& controll
   }
 
   if (controller.attributes.at(kEdgeSpeedLimit)) {
-    trip_edge->set_speed_limit(directededge->speed_limit());
+    trip_edge->set_speed_limit(edgeinfo.speed_limit());
   }
 
   if (controller.attributes.at(kEdgeTruckSpeed)) {

@@ -232,8 +232,8 @@ void graph_builder::write_tiles(uint8_t level) const {
     vm::PointLL start_point = writer.node_latlng(e.first);
     vm::PointLL end_point = writer.node_latlng(e.second);
 
-    DirectedEdgeBuilder edge_builder({}, e.second, forward, start_point.Distance(end_point), 1, 1, 1,
-                                     {}, {}, 0, false, 0, 0);
+    DirectedEdgeBuilder edge_builder({}, e.second, forward, start_point.Distance(end_point), 1, 1, {},
+                                     {}, 0, false, 0, 0);
 
     auto opp = std::make_pair(e.second, e.first);
     auto itr =
@@ -260,7 +260,7 @@ void graph_builder::write_tiles(uint8_t level) const {
       bool add;
       // make more complex edge geom so that there are 3 segments, affine
       // combination doesnt properly handle arcs but who cares
-      edge_info_offset = tile.AddEdgeInfo(edge_index, e.first, e.second, 123, 456, 0, shape,
+      edge_info_offset = tile.AddEdgeInfo(edge_index, e.first, e.second, 123, 456, 0, 55, shape,
                                           {std::to_string(edge_index)}, 0, add);
     }
     edge_builder.set_edgeinfo_offset(edge_info_offset);
