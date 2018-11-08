@@ -628,6 +628,13 @@ protected:
   uint64_t access_restriction_count_ : 24; // Number of access restriction records
   uint64_t admincount_ : 16;               // Number of admin records
 
+  // Spare 8=byte words that can be used for custom information. As long as the size of
+  // the GraphTileHeader structure and order of data within the structure does not change
+  // this should be backwards compatible. Make sure use of bits from spareword* does not
+  // exceed 128 bits.
+  uint64_t spareword0_;
+  uint64_t spareword1_;
+
   // Offsets to beginning of data (for variable size records)
   uint32_t complex_restriction_forward_offset_; // Offset to complex restriction list
   uint32_t complex_restriction_reverse_offset_; // Offset to complex restriction list

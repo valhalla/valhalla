@@ -651,9 +651,10 @@ void BuildTileSet(const std::string& ways_file,
             }
 
             // Add edge info. Mean elevation is set to 1234 as a placeholder, set later if we have it.
-            edge_info_offset = graphtile.AddEdgeInfo(edge_pair.second, (*nodes[source]).graph_id,
-                                                     (*nodes[target]).graph_id, w.way_id(), 1234,
-                                                     bike_network, shape, names, types, added);
+            edge_info_offset =
+                graphtile.AddEdgeInfo(edge_pair.second, (*nodes[source]).graph_id,
+                                      (*nodes[target]).graph_id, w.way_id(), 1234, bike_network,
+                                      speed_limit, shape, names, types, added);
 
             // length
             auto length = valhalla::midgard::length(shape);
@@ -727,9 +728,8 @@ void BuildTileSet(const std::string& ways_file,
           // Add a directed edge and get a reference to it
           DirectedEdgeBuilder de(w, (*nodes[target]).graph_id, forward,
                                  static_cast<uint32_t>(std::get<0>(found->second) + .5), speed,
-                                 speed_limit, truck_speed, use,
-                                 static_cast<RoadClass>(edge.attributes.importance), n, has_signal,
-                                 restrictions, bike_network);
+                                 truck_speed, use, static_cast<RoadClass>(edge.attributes.importance),
+                                 n, has_signal, restrictions, bike_network);
           graphtile.directededges().emplace_back(de);
           DirectedEdge& directededge = graphtile.directededges().back();
 

@@ -577,20 +577,6 @@ public:
   void set_speed(const uint32_t speed);
 
   /**
-   * Gets the speed limit in KPH.
-   * @return  Returns the speed limit in KPH.
-   */
-  uint32_t speed_limit() const {
-    return speed_limit_;
-  }
-
-  /**
-   * Sets the speed limit in KPH.
-   * @param  speed_limit  Speed limit in KPH.
-   */
-  void set_speed_limit(const uint32_t speed_limit);
-
-  /**
    * Gets the truck speed in KPH.
    * @return  Returns the truck speed in KPH.
    */
@@ -807,7 +793,6 @@ public:
    */
   void set_density(const uint32_t density);
 
-#ifdef OLD
   /**
    * Is this edge named?
    * @return  Returns true if the edge is named, false if unnamed.
@@ -815,7 +800,7 @@ public:
   bool named() const {
     return named_;
   }
-#endif
+
   /**
    * Sets the named flag.
    * @param  named  true if the edge has names, false if unnamed.
@@ -1094,8 +1079,6 @@ protected:
   uint64_t sidewalk_left_ : 1;  // Sidewalk to the left of the edge
   uint64_t sidewalk_right_ : 1; // Sidewalk to the right of the edge
   uint64_t shoulder_ : 1;       // Does the edge have a shoulder?
-  // 45 bits above...Data below may not be needed in DirectedEdge removed/moved??
-  uint64_t speed_limit_ : 8;    // Speed limit (kph)
   uint64_t lane_conn_ : 1;      // 1 if has lane connectivity, 0 otherwise
   uint64_t turnlanes_ : 1;      // Does this edge have turn lanes (end of edge)
   uint64_t exitsign_ : 1;       // Exit signs exist for this edge
@@ -1104,7 +1087,8 @@ protected:
   uint64_t bridge_ : 1;         // Is this edge part of a bridge?
   uint64_t traffic_signal_ : 1; // Traffic signal at end of the directed edge
   uint64_t seasonal_ : 1;       // Seasonal access (ex. no access in winter)
-  uint64_t spare4_ : 3;
+  uint64_t deadend_ : 1;        // Leads to a dead-end (no other driveable roads) TODO
+  uint64_t spare4_ : 10;
 
   // 5th 8-byte word
   uint64_t turntype_ : 24;      // Turn type (see graphconstants.h)
@@ -1135,13 +1119,10 @@ protected:
   uint32_t opp_local_idx_ : 7; // Opposing local edge index (for costing and Uturn detection)
   uint32_t shortcut_ : 7;      // Shortcut edge (mask)
   uint32_t superseded_ : 7;    // Edge is superseded by a shortcut (mask)
-  uint32_t is_shortcut_ : 1;   // True if this edge is a shortcut.
-  uint32_t speed_type_ : 1;    // Speed type TODO
-  uint32_t deadend_ : 1;       // Leads to a dead-end (no other driveable roads) TODO
-  uint32_t link_ : 1;          // *link tag - Ramp or turn channel TODO
-
-  // Could be desirable?
-  // uint64_t named_ : 1;          // 1 if this edge has names, 0 if unnamed
+  uint32_t is_shortcut_ : 1;   // True if this edge is a shortcut
+  uint32_t speed_type_ : 1;    // Speed type (used in setting default speeds)
+  uint32_t named_ : 1;         // 1 if this edge has names, 0 if unnamed
+  uint32_t link_ : 1;          // *link tag - Ramp or turn channel. Used in costing.
 };
 
 /**

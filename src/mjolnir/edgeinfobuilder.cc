@@ -3,6 +3,7 @@
 #include <ostream>
 
 #include "baldr/edgeinfo.h"
+#include "baldr/graphconstants.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
 #include "mjolnir/edgeinfobuilder.h"
@@ -12,6 +13,9 @@ namespace mjolnir {
 
 // Set the OSM way Id.
 void EdgeInfoBuilder::set_wayid(const uint64_t wayid) {
+  if (wayid > kMaxOSMWayId) {
+    throw std::runtime_error("EdgeInfoBuilder: exceeded maximum wayId " + std::to_string(wayid));
+  }
   w0_.wayid_ = wayid;
 }
 
@@ -29,6 +33,16 @@ void EdgeInfoBuilder::set_mean_elevation(const float mean_elev) {
 // along this edge. See baldr/directededge.h for definitions.
 void EdgeInfoBuilder::set_bike_network(const uint32_t bike_network) {
   w0_.bike_network_ = bike_network;
+}
+
+// Sets the speed limit in KPH.
+void EdgeInfoBuilder::set_speed_limit(const uint32_t speed_limit) {
+  if (speed_limit > kMaxSpeedKph) {
+    LOG_WARN("Exceeding maximum.  Speed limit: " + std::to_string(speed_limit));
+    w0_.speed_limit_ = kMaxSpeedKph;
+  } else {
+    w0_.speed_limit_ = speed_limit;
+  }
 }
 
 // Set the list of name info (offsets, etc.) used by this edge.
