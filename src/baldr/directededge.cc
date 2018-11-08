@@ -321,16 +321,6 @@ void DirectedEdge::set_speed(const uint32_t speed) {
   }
 }
 
-// Sets the speed limit in KPH.
-void DirectedEdge::set_speed_limit(const uint32_t speed_limit) {
-  if (speed_limit > kMaxSpeedKph) {
-    LOG_WARN("Exceeding maximum.  Speed limit: " + std::to_string(speed_limit));
-    speed_limit_ = kMaxSpeedKph;
-  } else {
-    speed_limit_ = speed_limit;
-  }
-}
-
 // Sets the truck speed in KPH.
 void DirectedEdge::set_truck_speed(const uint32_t speed) {
   if (speed > kMaxSpeedKph) {
@@ -408,7 +398,7 @@ void DirectedEdge::set_density(const uint32_t density) {
 
 // Sets the named flag.
 void DirectedEdge::set_named(const bool named) {
-  ; // TODO named_ = named;
+  named_ = named;
 }
 
 // Set the flag for a sidewalk to the left of this directed edge.
@@ -556,7 +546,6 @@ json::MapPtr DirectedEdge::json() const {
       {"speeds", json::map({
                      {"default", static_cast<uint64_t>(speed_)},
                      {"type", to_string(static_cast<SpeedType>(speed_type_))},
-                     {"speed_limit", static_cast<uint64_t>(speed_limit_)},
                      {"free_flow", static_cast<uint64_t>(free_flow_speed_)},
                      {"constrained_flow", static_cast<uint64_t>(constrained_flow_speed_)},
                      {"predicted", static_cast<bool>(predicted_speed_)},
@@ -605,8 +594,6 @@ json::MapPtr DirectedEdge::json() const {
         {"opposing_local_index", static_cast<uint64_t>(opp_local_idx_)},
         {"shortcut_mask", static_cast<uint64_t>(shortcut_)},
         {"superseded_mask", static_cast<uint64_t>(superseded_)},
-        {"transition_up", use() == Use::kTransitionUp},
-        {"transition_down", use() == Use::kTransitionDown},
         {"shortcut", static_cast<bool>(is_shortcut_)},
       })},*/
   });

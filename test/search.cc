@@ -67,8 +67,8 @@ void make_tile() {
   };
   auto add_edge = [&tile](const std::pair<GraphId, PointLL>& u, const std::pair<GraphId, PointLL>& v,
                           const uint32_t name, const uint32_t opposing, const bool forward) {
-    DirectedEdgeBuilder edge_builder({}, v.first, forward, u.second.Distance(v.second) + .5, 1, 1, 1,
-                                     {}, {}, 0, false, 0, 0);
+    DirectedEdgeBuilder edge_builder({}, v.first, forward, u.second.Distance(v.second) + .5, 1, 1, {},
+                                     {}, 0, false, 0, 0);
     edge_builder.set_opp_index(opposing);
     std::vector<PointLL> shape = {u.second, u.second.MidPoint(v.second), v.second};
     if (!forward)
@@ -77,8 +77,8 @@ void make_tile() {
     bool add;
     // make more complex edge geom so that there are 3 segments, affine combination doesnt properly
     // handle arcs but who cares
-    uint32_t edge_info_offset =
-        tile.AddEdgeInfo(name, u.first, v.first, 123, 456, 0, shape, {std::to_string(name)}, 0, add);
+    uint32_t edge_info_offset = tile.AddEdgeInfo(name, u.first, v.first, 123, 456, 0, 55, shape,
+                                                 {std::to_string(name)}, 0, add);
     edge_builder.set_edgeinfo_offset(edge_info_offset);
     return edge_builder;
   };

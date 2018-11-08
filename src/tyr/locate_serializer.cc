@@ -33,7 +33,7 @@ json::ArrayPtr serialize_edges(const PathLocation& location, GraphReader& reader
       } // they want it lean and mean
       else {
         array->emplace_back(json::map({
-            {"way_id", edge_info.wayid()},
+            {"way_id", static_cast<uint64_t>(edge_info.wayid())},
             {"correlated_lat", json::fp_t{edge.projected.lat(), 6}},
             {"correlated_lon", json::fp_t{edge.projected.lng(), 6}},
             {"side_of_street",

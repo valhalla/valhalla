@@ -44,6 +44,12 @@ public:
   void set_mean_elevation(const float mean_elev);
 
   /**
+   * Sets the speed limit in KPH.
+   * @param  speed_limit  Speed limit in KPH.
+   */
+  void set_speed_limit(const uint32_t speed_limit);
+
+  /**
    * Get the bike network mask for this directed edge.
    * @return  Returns the bike network mask for this directed edge.
    */
@@ -100,10 +106,11 @@ protected:
   // 1st 8-byte word
   union Word0 {
     struct {
-      uint64_t wayid_ : 45;          // OSM way Id
+      uint64_t wayid_ : 32;          // OSM way Id
       uint64_t mean_elevation_ : 12; // Mean elevation with 2 meter precision
       uint64_t bike_network_ : 4;    // Mask of bicycle network types (see graphconstants.h)
-      uint64_t spare0_ : 3;
+      uint64_t speed_limit_ : 8;     // Speed limit (kph)
+      uint64_t spare0_ : 8;
     };
     uint64_t value_;
   };

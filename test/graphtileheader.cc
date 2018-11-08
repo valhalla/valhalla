@@ -7,7 +7,7 @@ using namespace valhalla::baldr;
 
 // Expected size is 256. We want to alert if somehow any change grows this structure
 // size as that indicates incompatible tiles.
-constexpr size_t kGraphTileHeaderExpectedSize = 256;
+constexpr size_t kGraphTileHeaderExpectedSize = 272;
 
 namespace {
 
