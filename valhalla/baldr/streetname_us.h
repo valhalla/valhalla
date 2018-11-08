@@ -17,7 +17,7 @@ public:
    * @param  value  Street name string.
    * @param  is_route_number   boolean indicating if street name is a reference route number.
    */
-  StreetNameUs(const std::string& value, const bool is_route_number = false);
+  StreetNameUs(const std::string& value, const bool is_route_number);
 
   std::string GetPreDir() const override;
 

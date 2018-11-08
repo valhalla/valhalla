@@ -14,7 +14,7 @@ public:
    * @param  value  Street name string.
    * @param  is_route_number   boolean indicating if street name is a reference route number.
    */
-  StreetName(const std::string& value, const bool is_route_number = false);
+  StreetName(const std::string& value, const bool is_route_number);
 
   virtual ~StreetName();
 
