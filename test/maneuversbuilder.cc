@@ -350,7 +350,7 @@ void TryCombine(ManeuversBuilderTest& mbTest,
 
 // Deprecated
 void PopulateEdge(TripPath_Edge* edge,
-                  std::vector<std::string> names,
+                  const std::vector<std::pair<std::string, bool>>& names,
                   float length,
                   float speed,
                   TripPath_RoadClass road_class,
@@ -370,13 +370,15 @@ void PopulateEdge(TripPath_Edge* edge,
                   bool roundabout,
                   bool internal_intersection,
                   ::google::protobuf::uint32 end_node_index,
-                  std::vector<std::string> exit_numbers,
-                  std::vector<std::string> exit_branches,
-                  std::vector<std::string> exit_towards,
-                  std::vector<std::string> exit_names,
+                  const std::vector<std::pair<std::string, bool>>& exit_numbers,
+                  const std::vector<std::pair<std::string, bool>>& exit_onto_streets,
+                  const std::vector<std::pair<std::string, bool>>& exit_toward_locations,
+                  const std::vector<std::pair<std::string, bool>>& exit_names,
                   TripPath_TravelMode travel_mode = TripPath_TravelMode_kDrive) {
-  for (auto& name : names) {
-    edge->add_name(name);
+  for (const auto& name : names) {
+    auto* edge_name = edge->add_name();
+    edge_name->set_value(name.first);
+    edge_name->set_is_route_number(name.second);
   }
   edge->set_length(length);
   edge->set_speed(speed);
@@ -402,17 +404,25 @@ void PopulateEdge(TripPath_Edge* edge,
   edge->set_roundabout(roundabout);
   edge->set_internal_intersection(internal_intersection);
   TripPath_Sign* sign = edge->mutable_sign();
-  for (auto& exit_number : exit_numbers) {
-    sign->add_exit_number(exit_number);
+  for (const auto& exit_number : exit_numbers) {
+    auto* edge_exit_number = sign->add_exit_numbers();
+    edge_exit_number->set_text(exit_number.first);
+    edge_exit_number->set_is_route_number(exit_number.second);
   }
-  for (auto& exit_branch : exit_branches) {
-    sign->add_exit_branch(exit_branch);
+  for (const auto& exit_onto_street : exit_onto_streets) {
+    auto* edge_exit_onto_street = sign->add_exit_onto_streets();
+    edge_exit_onto_street->set_text(exit_onto_street.first);
+    edge_exit_onto_street->set_is_route_number(exit_onto_street.second);
   }
-  for (auto& exit_toward : exit_towards) {
-    sign->add_exit_toward(exit_toward);
+  for (const auto& exit_toward_location : exit_toward_locations) {
+    auto* edge_exit_toward_location = sign->add_exit_toward_locations();
+    edge_exit_toward_location->set_text(exit_toward_location.first);
+    edge_exit_toward_location->set_is_route_number(exit_toward_location.second);
   }
-  for (auto& exit_name : exit_names) {
-    sign->add_exit_name(exit_name);
+  for (const auto& exit_name : exit_names) {
+    auto* edge_exit_name = sign->add_exit_names();
+    edge_exit_name->set_text(exit_name.first);
+    edge_exit_name->set_is_route_number(exit_name.second);
   }
   edge->set_travel_mode(travel_mode);
 }
