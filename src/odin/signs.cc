@@ -101,16 +101,16 @@ bool Signs::HasExitName() const {
 std::string Signs::ToString() const {
   std::string signs_string;
 
-  signs_string += "exit.number=";
+  signs_string += "exit_numbers=";
   signs_string += GetExitNumberString();
 
-  signs_string += " | exit.branch=";
+  signs_string += " | exit_onto_streets=";
   signs_string += GetExitBranchString();
 
-  signs_string += " | exit.toward=";
+  signs_string += " | exit_toward_locations=";
   signs_string += GetExitTowardString();
 
-  signs_string += " | exit.name=";
+  signs_string += " | exit_names=";
   signs_string += GetExitNameString();
 
   return signs_string;
@@ -181,18 +181,17 @@ const std::string Signs::ListToString(const std::vector<Sign>& signs,
 
 #ifdef LOGGING_LEVEL_TRACE
 const std::string Signs::ListToParameterString(const std::vector<Sign>& signs) const {
-  const std::string delim = ", ";
   std::string sign_string;
-  bool is_first = true;
+  std::string param_list;
+
   sign_string += "{ ";
-  for (auto& sign : signs) {
-    if (is_first) {
-      is_first = false;
-    } else {
-      sign_string += delim;
+  for (const auto& sign : signs) {
+    if (!param_list.empty()) {
+      param_list += ", ";
     }
-    sign_string += sign.ToParameterString();
+    param_list += sign.ToParameterString();
   }
+  sign_string += param_list;
   sign_string += " }";
 
   return sign_string;

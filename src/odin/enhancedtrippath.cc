@@ -835,11 +835,11 @@ std::string EnhancedTripPath_Edge::StreetNamesToParameterString(
     if (!param_list.empty()) {
       param_list += ", ";
     }
-    param_list += "{\"";
+    param_list += "{ \"";
     param_list += street_name.value();
-    param_list += "\",";
+    param_list += "\", ";
     param_list += std::to_string(street_name.is_route_number());
-    param_list += "}";
+    param_list += " }";
   }
   str += param_list;
   str += " }";
@@ -873,11 +873,11 @@ std::string EnhancedTripPath_Edge::SignElementsToParameterString(
     if (!param_list.empty()) {
       param_list += ", ";
     }
-    param_list += "{\"";
+    param_list += "{ \"";
     param_list += sign_element.text();
-    param_list += "\",";
+    param_list += "\", ";
     param_list += std::to_string(sign_element.is_route_number());
-    param_list += "}";
+    param_list += " }";
   }
   str += param_list;
   str += " }";

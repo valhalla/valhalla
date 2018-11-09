@@ -47,19 +47,22 @@ std::string StreetNames::ToString(uint32_t max_count,
 #ifdef LOGGING_LEVEL_TRACE
 std::string StreetNames::ToParameterString() const {
   std::string name_string;
-  bool is_first = true;
+  std::string param_list;
+
   name_string += "{ ";
-  for (auto& street_name : *this) {
-    if (is_first) {
-      is_first = false;
-    } else {
-      name_string += ", ";
+  for (const auto& street_name : *this) {
+    if (!param_list.empty()) {
+      param_list += ", ";
     }
-    name_string += "\"";
-    name_string += street_name->value();
-    name_string += "\"";
+    param_list += "{ \"";
+    param_list += street_name->value();
+    param_list += "\", ";
+    param_list += std::to_string(street_name->is_route_number());
+    param_list += " }";
   }
+  name_string += param_list;
   name_string += " }";
+
   return name_string;
 }
 #endif

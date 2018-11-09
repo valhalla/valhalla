@@ -32,9 +32,9 @@ std::string Sign::ToParameterString() const {
   str += "{ ";
   str += GetQuotedString(text_);
   str += delim;
-  str += GetQuotedString(std::to_string(is_route_number_));
+  str += std::to_string(is_route_number_);
   str += delim;
-  str += GetQuotedString(std::to_string(consecutive_count_));
+  str += std::to_string(consecutive_count_);
   str += " }";
 
   return str;
