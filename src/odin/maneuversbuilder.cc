@@ -2020,8 +2020,10 @@ void ManeuversBuilder::EnhanceSignlessInterchnages(std::list<Maneuver>& maneuver
         !curr_man->HasExitSign() && !(prev_man->ramp() || prev_man->fork()) &&
         (next_man->type() == TripDirections_Maneuver_Type::TripDirections_Maneuver_Type_kMerge) &&
         next_man->HasStreetNames()) {
-      curr_man->mutable_signs()->mutable_exit_branch_list()->emplace_back(
-          next_man->street_names().front()->value());
+      curr_man->mutable_signs()
+          ->mutable_exit_branch_list()
+          ->emplace_back(next_man->street_names().front()->value(),
+                         next_man->street_names().front()->is_route_number());
     }
 
     // on to the next maneuver...
