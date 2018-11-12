@@ -8,6 +8,7 @@
 #include "midgard/polyline2.h"
 #include "mjolnir/graphbuilder.h"
 #include "mjolnir/graphenhancer.h"
+#include "mjolnir/graphfilter.h"
 #include "mjolnir/graphvalidator.h"
 #include "mjolnir/hierarchybuilder.h"
 #include "mjolnir/osmpbfparser.h"
@@ -160,6 +161,9 @@ void build_tile_set(const boost::property_tree::ptree& config,
   // level that is usable across all levels (density, administrative
   // information (and country based attribution), edge transition logic, etc.
   GraphEnhancer::Enhance(config, bin_file_prefix + "access.bin");
+
+  // Perform optional edge filtering (remove edges and nodes for specific access modes)
+  GraphFilter::Filter(config);
 
   // Add transit
   TransitBuilder::Build(config);

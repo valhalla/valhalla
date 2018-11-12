@@ -36,6 +36,7 @@ set(sources
   ferry_connections.cc
   graphbuilder.cc
   graphenhancer.cc
+  graphfilter.cc
   graphvalidator.cc
   hierarchybuilder.cc
   linkclassification.cc
