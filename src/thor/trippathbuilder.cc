@@ -1135,21 +1135,23 @@ TripPathBuilder::Build(const AttributesController& controller,
                                   trip_node, de);
 
           // Add intersecting edges on different levels (follow NodeTransitions)
-          const NodeTransition* trans = tile->transition(nodeinfo->transition_index());
-          for (uint32_t i = 0; i < nodeinfo->transition_count(); ++i, ++trans) {
-            // Get the end node tile and its directed edges
-            GraphId endnode = trans->endnode();
-            const GraphTile* endtile = graphreader.GetGraphTile(endnode);
-            const NodeInfo* nodeinfo2 = endtile->node(endnode);
-            const DirectedEdge* de2 = endtile->directededge(nodeinfo2->edge_index());
-            for (uint32_t idx2 = 0; idx2 < nodeinfo2->edge_count(); ++idx2, de2++) {
-              // Skip shortcut edges and edges on the path
-              if (de2->is_shortcut() || de2->localedgeidx() == prior_opp_local_index ||
-                  de2->localedgeidx() == directededge->localedgeidx()) {
-                continue;
+          if (nodeinfo->transition_count() > 0) {
+            const NodeTransition* trans = tile->transition(nodeinfo->transition_index());
+            for (uint32_t i = 0; i < nodeinfo->transition_count(); ++i, ++trans) {
+              // Get the end node tile and its directed edges
+              GraphId endnode = trans->endnode();
+              const GraphTile* endtile = graphreader.GetGraphTile(endnode);
+              const NodeInfo* nodeinfo2 = endtile->node(endnode);
+              const DirectedEdge* de2 = endtile->directededge(nodeinfo2->edge_index());
+              for (uint32_t idx2 = 0; idx2 < nodeinfo2->edge_count(); ++idx2, de2++) {
+                // Skip shortcut edges and edges on the path
+                if (de2->is_shortcut() || de2->localedgeidx() == prior_opp_local_index ||
+                    de2->localedgeidx() == directededge->localedgeidx()) {
+                  continue;
+                }
+                AddTripIntersectingEdge(controller, directededge, prev_de, de2->localedgeidx(),
+                                        nodeinfo2, trip_node, de2);
               }
-              AddTripIntersectingEdge(controller, directededge, prev_de, de2->localedgeidx(),
-                                      nodeinfo2, trip_node, de2);
             }
           }
         }
