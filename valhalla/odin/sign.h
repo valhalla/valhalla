@@ -14,7 +14,7 @@ public:
    * @param  text  Text string.
    * @param  is_route_number   boolean indicating if sign element is a reference route number.
    */
-  Sign(const std::string& text, const bool is_route_number = false);
+  Sign(const std::string& text, const bool is_route_number);
 
   /**
    * Returns the sign text.
