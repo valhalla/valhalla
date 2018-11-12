@@ -128,11 +128,6 @@ const StreetNames& Maneuver::street_names() const {
   return *street_names_;
 }
 
-// TODO rm after updating tests
-void Maneuver::set_street_names(const std::vector<std::string>& names) {
-  //  street_names_ = midgard::make_unique<StreetNamesUs>(names);
-}
-
 void Maneuver::set_street_names(const std::vector<std::pair<std::string, bool>>& names) {
   street_names_ = midgard::make_unique<StreetNamesUs>(names);
 }

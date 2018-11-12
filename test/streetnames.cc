@@ -16,10 +16,11 @@ void TryListCtor(const std::vector<std::pair<std::string, bool>>& names) {
 
   int x = 0;
   for (const auto& street_name : street_names) {
-    if (names.at(x++).first != street_name->value())
+    if (names.at(x).first != street_name->value())
       throw std::runtime_error("Incorrect street name value");
-    if (names.at(x++).second != street_name->is_route_number())
+    if (names.at(x).second != street_name->is_route_number())
       throw std::runtime_error("Incorrect street name is_route_number");
+    ++x;
   }
 }
 

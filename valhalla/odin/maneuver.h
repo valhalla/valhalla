@@ -44,8 +44,6 @@ public:
   void set_type(const TripDirections_Maneuver_Type& type);
 
   const StreetNames& street_names() const;
-  // TODO rm after updating tests
-  void set_street_names(const std::vector<std::string>& names);
   void set_street_names(const std::vector<std::pair<std::string, bool>>& names);
   void set_street_names(std::unique_ptr<StreetNames>&& street_names);
   bool HasStreetNames() const;
