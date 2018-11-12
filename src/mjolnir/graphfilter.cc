@@ -280,25 +280,21 @@ void GraphFilter::Filter(const boost::property_tree::ptree& pt) {
   // Edge filtering (optionally exclude edges)
   bool include_driving = pt.get_child("mjolnir").get<bool>("include_driving", true);
   if (!include_driving) {
-    LOG_INFO("Filter driving edges");
+    LOG_INFO("GraphFilter: Filter driving edges");
   }
   bool include_bicycle = pt.get_child("mjolnir").get<bool>("include_bicycle", true);
   if (!include_bicycle) {
-    LOG_INFO("Filter bicycle edges");
+    LOG_INFO("GraphFilter: Filter bicycle edges");
   }
   bool include_pedestrian = pt.get_child("mjolnir").get<bool>("include_pedestrian", true);
-  if (!include_bicycle) {
-    LOG_INFO("Filter pedestrian edges");
+  if (!include_pedestrian) {
+    LOG_INFO("GraphFilter: Filter pedestrian edges");
   }
   if (include_bicycle && include_driving && include_pedestrian) {
     // Nothing to filter!
     LOG_INFO("GraphFilter - nothing to filter. Skipping...");
     return;
   }
-
-  LOG_INFO("GraphFilter: include_driving: " + std::to_string(include_driving) +
-           " include_bicycle: " + std::to_string(include_bicycle) +
-           " include_pedestrian: " + std::to_string(include_pedestrian));
 
   // Map of old node Ids to new node Ids (after filtering).
   std::unordered_map<baldr::GraphId, baldr::GraphId> old_to_new;
