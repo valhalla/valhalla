@@ -29,13 +29,13 @@ void Sign::set_consecutive_count(uint32_t consecutive_count) {
 std::string Sign::ToParameterString() const {
   const std::string delim = ", ";
   std::string str;
-  str += "{ ";
+  str += "std::make_tuple(";
   str += GetQuotedString(text_);
   str += delim;
   str += std::to_string(is_route_number_);
   str += delim;
   str += std::to_string(consecutive_count_);
-  str += " }";
+  str += ")";
 
   return str;
 }
