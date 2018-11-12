@@ -184,11 +184,6 @@ const StreetNames& Maneuver::begin_street_names() const {
   return *begin_street_names_;
 }
 
-// TODO rm after updating tests
-void Maneuver::set_begin_street_names(const std::vector<std::string>& names) {
-  //  begin_street_names_ = midgard::make_unique<StreetNamesUs>(names);
-}
-
 void Maneuver::set_begin_street_names(const std::vector<std::pair<std::string, bool>>& names) {
   begin_street_names_ = midgard::make_unique<StreetNamesUs>(names);
 }
@@ -203,11 +198,6 @@ bool Maneuver::HasBeginStreetNames() const {
 
 const StreetNames& Maneuver::cross_street_names() const {
   return *cross_street_names_;
-}
-
-// TODO rm after updating tests
-void Maneuver::set_cross_street_names(const std::vector<std::string>& names) {
-  //  cross_street_names_ = midgard::make_unique<StreetNamesUs>(names);
 }
 
 void Maneuver::set_cross_street_names(const std::vector<std::pair<std::string, bool>>& names) {
