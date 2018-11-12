@@ -522,9 +522,9 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
       if (!(name.empty())) {
         // Add name and add its offset to edge info's list.
         NameInfo ni{AddName(name)};
-        ni.is_ref_ = 0;
+        ni.is_route_num_ = 0;
         if ((types & (1ULL << location))) {
-          ni.is_ref_ = 1; // set the ref bit.
+          ni.is_route_num_ = 1; // set the ref bit.
         }
         name_info_list.emplace_back(ni);
         ++name_count;
@@ -603,9 +603,9 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
       if (!(name.empty())) {
         // Add name and add its offset to edge info's list.
         NameInfo ni{AddName(name)};
-        ni.is_ref_ = 0;
+        ni.is_route_num_ = 0;
         if ((types & (1ULL << location))) {
-          ni.is_ref_ = 1; // set the ref bit.
+          ni.is_route_num_ = 1; // set the ref bit.
         }
         name_info_list.emplace_back(ni);
         ++name_count;

@@ -1273,10 +1273,11 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const AttributesController& controll
 
   // Add names to edge if requested
   if (controller.attributes.at(kEdgeNames)) {
-    auto names_and_info = edgeinfo.GetNamesAndInfo();
-    for (const auto& ni : names_and_info) {
-      trip_edge->add_name(ni.first);
-      trip_edge->add_name_is_ref(ni.second.is_ref_);
+    auto names_and_types = edgeinfo.GetNamesAndTypes();
+    for (const auto& name_and_type : names_and_types) {
+      auto* trip_edge_name = trip_edge->mutable_name()->Add();
+      trip_edge_name->set_value(name_and_type.first);
+      trip_edge_name->set_is_route_number(name_and_type.second);
     }
   }
 
@@ -1293,25 +1294,33 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const AttributesController& controll
         switch (sign.type()) {
           case Sign::Type::kExitNumber: {
             if (controller.attributes.at(kEdgeSignExitNumber)) {
-              trip_exit->add_exit_number(sign.text());
+              auto* trip_exit_number = trip_exit->mutable_exit_numbers()->Add();
+              trip_exit_number->set_text(sign.text());
+              trip_exit_number->set_is_route_number(sign.is_route_num());
             }
             break;
           }
           case Sign::Type::kExitBranch: {
             if (controller.attributes.at(kEdgeSignExitBranch)) {
-              trip_exit->add_exit_branch(sign.text());
+              auto* trip_exit_onto_street = trip_exit->mutable_exit_onto_streets()->Add();
+              trip_exit_onto_street->set_text(sign.text());
+              trip_exit_onto_street->set_is_route_number(sign.is_route_num());
             }
             break;
           }
           case Sign::Type::kExitToward: {
             if (controller.attributes.at(kEdgeSignExitToward)) {
-              trip_exit->add_exit_toward(sign.text());
+              auto* trip_exit_toward_location = trip_exit->mutable_exit_toward_locations()->Add();
+              trip_exit_toward_location->set_text(sign.text());
+              trip_exit_toward_location->set_is_route_number(sign.is_route_num());
             }
             break;
           }
           case Sign::Type::kExitName: {
             if (controller.attributes.at(kEdgeSignExitName)) {
-              trip_exit->add_exit_name(sign.text());
+              auto* trip_exit_name = trip_exit->mutable_exit_names()->Add();
+              trip_exit_name->set_text(sign.text());
+              trip_exit_name->set_is_route_number(sign.is_route_num());
             }
             break;
           }

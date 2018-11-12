@@ -30,8 +30,8 @@ struct NameInfo {
                                    // the name. These can be used for
                                    // additional information like language
                                    // phonetic string, etc.
-  uint32_t is_ref_ : 1;            // Flag used to indicate if this is a ref
-                                   // vs a name.
+  uint32_t is_route_num_ : 1;      // Flag used to indicate if this is a route number
+                                   // vs just a name.
   uint32_t spare_ : 3;
 
   bool operator==(const NameInfo& other) const {
@@ -107,14 +107,14 @@ public:
   std::vector<std::string> GetNames() const;
 
   /**
-   * Get a list of names and NameInfo for each name of the edge.
-   * @return  Returns a vector of string,NameInfo pairs.
+   * Convenience method to get the names and route number flags for an edge.
+   * @return   Returns a list (vector) of name/route number pairs.
    */
-  std::vector<std::pair<std::string, NameInfo>> GetNamesAndInfo() const;
+  std::vector<std::pair<std::string, bool>> GetNamesAndTypes() const;
 
   /**
    * Convenience method to get the types for the names.
-   * @return   Returns types - If a bit is set, it is a ref.
+   * @return   Returns types - If a bit is set, it is a route number.
    */
   uint16_t GetTypes() const;
 

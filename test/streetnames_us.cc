@@ -11,19 +11,22 @@ using namespace valhalla::baldr;
 
 namespace {
 
-void TryListCtor(const std::vector<std::string>& names) {
+void TryListCtor(const std::vector<std::pair<std::string, bool>>& names) {
   StreetNamesUs street_names(names);
 
   int x = 0;
   for (const auto& street_name : street_names) {
-    if (names.at(x++) != street_name->value())
+    if (names.at(x).first != street_name->value())
       throw std::runtime_error("Incorrect street name value");
+    if (names.at(x).second != street_name->is_route_number())
+      throw std::runtime_error("Incorrect street name is_route_number");
+    ++x;
   }
 }
 
 void TestListCtor() {
-  TryListCtor({"Main Street"});
-  TryListCtor({"Hershey Road", "PA 743 North"});
+  TryListCtor({{"Main Street", false}});
+  TryListCtor({{"Hershey Road", false}, {"PA 743 North", true}});
 }
 
 void TryFindCommonStreetNames(const StreetNamesUs& lhs,
@@ -37,15 +40,19 @@ void TryFindCommonStreetNames(const StreetNamesUs& lhs,
 }
 
 void TestFindCommonStreetNames() {
-  TryFindCommonStreetNames(StreetNamesUs({"Hershey Road", "PA 743 North"}),
-                           StreetNamesUs({"Fishburn Road", "PA 743 North"}),
-                           StreetNamesUs({"PA 743 North"}));
+  TryFindCommonStreetNames(StreetNamesUs({{"Hershey Road", false}, {"PA 743 North", true}}),
+                           StreetNamesUs({{"Fishburn Road", false}, {"PA 743 North", true}}),
+                           StreetNamesUs({{"PA 743 North", true}}));
 
-  TryFindCommonStreetNames(StreetNamesUs({"Hershey Road", "PA 743 North"}),
-                           StreetNamesUs({"Fishburn Road", "PA 743"}), StreetNamesUs());
+  TryFindCommonStreetNames(StreetNamesUs({{"Hershey Road", false}, {"PA 743 North", true}}),
+                           StreetNamesUs({{"Fishburn Road", false}, {"PA 743", true}}),
+                           StreetNamesUs());
 
-  TryFindCommonStreetNames(StreetNamesUs({"Capital Beltway", "I 95 South", "I 495 South"}),
-                           StreetNamesUs({"I 95 South"}), StreetNamesUs({"I 95 South"}));
+  TryFindCommonStreetNames(StreetNamesUs({{"Capital Beltway", false},
+                                          {"I 95 South", true},
+                                          {"I 495 South", true}}),
+                           StreetNamesUs({{"I 95 South", true}}),
+                           StreetNamesUs({{"I 95 South", true}}));
 }
 
 void TryFindCommonBaseNames(const StreetNamesUs& lhs,
@@ -59,22 +66,27 @@ void TryFindCommonBaseNames(const StreetNamesUs& lhs,
 }
 
 void TestFindCommonBaseNames() {
-  TryFindCommonBaseNames(StreetNamesUs({"Hershey Road", "PA 743 North"}),
-                         StreetNamesUs({"Fishburn Road", "PA 743 North"}),
-                         StreetNamesUs({"PA 743 North"}));
+  TryFindCommonBaseNames(StreetNamesUs({{"Hershey Road", false}, {"PA 743 North", true}}),
+                         StreetNamesUs({{"Fishburn Road", false}, {"PA 743 North", true}}),
+                         StreetNamesUs({{"PA 743 North", true}}));
 
-  TryFindCommonBaseNames(StreetNamesUs({"Hershey Road", "PA 743 North"}),
-                         StreetNamesUs({"Fishburn Road", "PA 743"}), StreetNamesUs({"PA 743 North"}));
+  TryFindCommonBaseNames(StreetNamesUs({{"Hershey Road", false}, {"PA 743 North", true}}),
+                         StreetNamesUs({{"Fishburn Road", false}, {"PA 743", true}}),
+                         StreetNamesUs({{"PA 743 North", true}}));
 
-  TryFindCommonBaseNames(StreetNamesUs({"Hershey Road", "PA 743"}),
-                         StreetNamesUs({"Fishburn Road", "PA 743 North"}),
-                         StreetNamesUs({"PA 743 North"}));
+  TryFindCommonBaseNames(StreetNamesUs({{"Hershey Road", false}, {"PA 743", true}}),
+                         StreetNamesUs({{"Fishburn Road", false}, {"PA 743 North", true}}),
+                         StreetNamesUs({{"PA 743 North", true}}));
 
-  TryFindCommonBaseNames(StreetNamesUs({"Hershey Road", "PA 743"}),
-                         StreetNamesUs({"Fishburn Road", "PA 743"}), StreetNamesUs({"PA 743"}));
+  TryFindCommonBaseNames(StreetNamesUs({{"Hershey Road", false}, {"PA 743", true}}),
+                         StreetNamesUs({{"Fishburn Road", false}, {"PA 743", true}}),
+                         StreetNamesUs({{"PA 743", true}}));
 
-  TryFindCommonBaseNames(StreetNamesUs({"Capital Beltway", "I 95 South", "I 495 South"}),
-                         StreetNamesUs({"I 95 South"}), StreetNamesUs({"I 95 South"}));
+  TryFindCommonBaseNames(StreetNamesUs({{"Capital Beltway", false},
+                                        {"I 95 South", true},
+                                        {"I 495 South", true}}),
+                         StreetNamesUs({{"I 95 South", true}}),
+                         StreetNamesUs({{"I 95 South", true}}));
 }
 
 } // namespace

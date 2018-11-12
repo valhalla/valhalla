@@ -424,10 +424,10 @@ bool EnhancedTripPath_Edge::IsStraightest(uint32_t prev2curr_turn_degree,
   }
 }
 
-std::vector<std::string> EnhancedTripPath_Edge::GetNameList() const {
-  std::vector<std::string> name_list;
+std::vector<std::pair<std::string, bool>> EnhancedTripPath_Edge::GetNameList() const {
+  std::vector<std::pair<std::string, bool>> name_list;
   for (const auto& name : this->name()) {
-    name_list.push_back(name);
+    name_list.push_back({name.value(), name.is_route_number()});
   }
   return name_list;
 }
@@ -448,7 +448,7 @@ std::string EnhancedTripPath_Edge::ToString() const {
   if (name_size() == 0) {
     str += "unnamed";
   } else {
-    str += ListToString(this->name());
+    str += StreetNamesToString(this->name());
   }
 
   str += " | length=";
@@ -498,17 +498,17 @@ std::string EnhancedTripPath_Edge::ToString() const {
 
   // Process exits, if needed
   if (this->has_sign()) {
-    str += " | exit.number=";
-    str += ListToString(this->sign().exit_number());
+    str += " | exit_numbers=";
+    str += SignElementsToString(this->sign().exit_numbers());
 
-    str += " | exit.branch=";
-    str += ListToString(this->sign().exit_branch());
+    str += " | exit_onto_streets=";
+    str += SignElementsToString(this->sign().exit_onto_streets());
 
-    str += " | exit.toward=";
-    str += ListToString(this->sign().exit_toward());
+    str += " | exit_toward_locations=";
+    str += SignElementsToString(this->sign().exit_toward_locations());
 
-    str += " | exit.name=";
-    str += ListToString(this->sign().exit_name());
+    str += " | exit_names=";
+    str += SignElementsToString(this->sign().exit_names());
   }
 
   str += " | travel_mode=";
@@ -620,7 +620,7 @@ std::string EnhancedTripPath_Edge::ToParameterString() const {
   std::string str;
   str.reserve(128);
 
-  str += ListToParameterString(this->name());
+  str += StreetNamesToParameterString(this->name());
 
   str += delim;
   str += std::to_string(length());
@@ -671,16 +671,16 @@ std::string EnhancedTripPath_Edge::ToParameterString() const {
   str += std::to_string(internal_intersection());
 
   str += delim;
-  str += ListToParameterString(this->sign().exit_number());
+  str += SignElementsToParameterString(this->sign().exit_numbers());
 
   str += delim;
-  str += ListToParameterString(this->sign().exit_branch());
+  str += SignElementsToParameterString(this->sign().exit_onto_streets());
 
   str += delim;
-  str += ListToParameterString(this->sign().exit_toward());
+  str += SignElementsToParameterString(this->sign().exit_toward_locations());
 
   str += delim;
-  str += ListToParameterString(this->sign().exit_name());
+  str += SignElementsToParameterString(this->sign().exit_names());
 
   str += delim;
   if (this->has_travel_mode()) {
@@ -811,38 +811,75 @@ std::string EnhancedTripPath_Edge::ToParameterString() const {
   return str;
 }
 
-std::string EnhancedTripPath_Edge::ListToString(
-    const ::google::protobuf::RepeatedPtrField<::std::string>& string_list) const {
+std::string EnhancedTripPath_Edge::StreetNamesToString(
+    const ::google::protobuf::RepeatedPtrField<::valhalla::odin::StreetName>& street_names) const {
   std::string str;
 
-  bool is_first = true;
-  for (const auto& item : string_list) {
-    if (is_first) {
-      is_first = false;
-    } else {
+  for (const auto& street_name : street_names) {
+    if (!str.empty()) {
       str += "/";
     }
-    str += item;
+    str += street_name.value();
   }
   return str;
 }
 
-std::string EnhancedTripPath_Edge::ListToParameterString(
-    const ::google::protobuf::RepeatedPtrField<::std::string>& string_list) const {
+std::string EnhancedTripPath_Edge::StreetNamesToParameterString(
+    const ::google::protobuf::RepeatedPtrField<::valhalla::odin::StreetName>& street_names) const {
+  std::string str;
+  std::string param_list;
+
+  // FORMAT: { {"I 83 South",1}, {"Jones Expressway",0} }
+  str += "{ ";
+  for (const auto& street_name : street_names) {
+    if (!param_list.empty()) {
+      param_list += ", ";
+    }
+    param_list += "{ \"";
+    param_list += street_name.value();
+    param_list += "\", ";
+    param_list += std::to_string(street_name.is_route_number());
+    param_list += " }";
+  }
+  str += param_list;
+  str += " }";
+
+  return str;
+}
+
+std::string EnhancedTripPath_Edge::SignElementsToString(
+    const ::google::protobuf::RepeatedPtrField<::valhalla::odin::TripPath_SignElement>& sign_elements)
+    const {
   std::string str;
 
-  str += "{ ";
-  bool is_first = true;
-  for (const auto& item : string_list) {
-    if (is_first) {
-      is_first = false;
-    } else {
-      str += ", ";
+  for (const auto& sign_element : sign_elements) {
+    if (!str.empty()) {
+      str += "/";
     }
-    str += "\"";
-    str += item;
-    str += "\"";
+    str += sign_element.text();
   }
+  return str;
+}
+
+std::string EnhancedTripPath_Edge::SignElementsToParameterString(
+    const ::google::protobuf::RepeatedPtrField<::valhalla::odin::TripPath_SignElement>& sign_elements)
+    const {
+  std::string str;
+  std::string param_list;
+
+  // FORMAT: { {"I 83 South",1}, {"Jones Expressway",0} }
+  str += "{ ";
+  for (const auto& sign_element : sign_elements) {
+    if (!param_list.empty()) {
+      param_list += ", ";
+    }
+    param_list += "{ \"";
+    param_list += sign_element.text();
+    param_list += "\", ";
+    param_list += std::to_string(sign_element.is_route_number());
+    param_list += " }";
+  }
+  str += param_list;
   str += " }";
 
   return str;

@@ -5,11 +5,16 @@ import public "tripcommon.proto";
 
 message TripPath {
 
+  message SignElement {
+    optional string text = 1;               // The actual sign element text, examples: I 95 North or Derry Street
+    optional bool is_route_number = 2;      // true if sign element is a reference route number such as: I 81 South or US 322 West
+  }
+
   message Sign {
-    repeated string exit_number = 1;  // 67B
-    repeated string exit_branch = 2;  // I 95 North
-    repeated string exit_toward = 3;  // New York
-    repeated string exit_name = 4;    // Not used much in US; Used in Canada
+    repeated SignElement exit_numbers = 1;          // The list of exit numbers, example: 67B
+    repeated SignElement exit_onto_streets = 2;     // The list of exit branch street names, example: I 95 North
+    repeated SignElement exit_toward_locations = 3; // The list of exit toward locations, examples: New York or I 395 South
+    repeated SignElement exit_names = 4;            // The list of exit names - not used much in US, example: Gettysburg Pike
   }
 
   enum Traversability {
@@ -167,7 +172,7 @@ message TripPath {
   }
 
   message Edge {
-    repeated string name = 1;               // street names
+    repeated StreetName name = 1;           // street names
     optional float length = 2;              // km
     optional float speed = 3;               // km/h
     optional RoadClass road_class = 4;
@@ -208,8 +213,6 @@ message TripPath {
     repeated LaneConnectivity lane_connectivity = 39;
     optional int32 mean_elevation = 40;
     repeated TrafficSegment traffic_segment = 41;
-    repeated bool name_is_ref = 42;          // Corresponds to street name to
-                                             // indicate name is a reference name
   }
 
   message IntersectingEdge {
