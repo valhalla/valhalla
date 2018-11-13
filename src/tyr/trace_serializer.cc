@@ -186,10 +186,11 @@ json::ArrayPtr serialize_edges(const AttributesController& controller,
       if (edge.has_length()) {
         edge_map->emplace("length", json::fp_t{edge.length() * scale, 3});
       }
+      // TODO: do we want to output 'is_route_number'?
       if (edge.name_size() > 0) {
         auto names_array = json::array({});
         for (const auto& name : edge.name()) {
-          names_array->push_back(name);
+          names_array->push_back(name.value());
         }
         edge_map->emplace("names", names_array);
       }
@@ -207,41 +208,42 @@ json::ArrayPtr serialize_edges(const AttributesController& controller,
       }
 
       // Process edge sign
+      // TODO: do we want to output 'is_route_number'?
       if (edge.has_sign()) {
         auto sign_map = json::map({});
 
         // Populate exit number array
-        if (edge.sign().exit_number_size() > 0) {
+        if (edge.sign().exit_numbers_size() > 0) {
           auto exit_number_array = json::array({});
-          for (const auto& exit_number : edge.sign().exit_number()) {
-            exit_number_array->push_back(exit_number);
+          for (const auto& exit_number : edge.sign().exit_numbers()) {
+            exit_number_array->push_back(exit_number.text());
           }
           sign_map->emplace("exit_number", exit_number_array);
         }
 
         // Populate exit branch array
-        if (edge.sign().exit_branch_size() > 0) {
+        if (edge.sign().exit_onto_streets_size() > 0) {
           auto exit_branch_array = json::array({});
-          for (const auto& exit_branch : edge.sign().exit_branch()) {
-            exit_branch_array->push_back(exit_branch);
+          for (const auto& exit_onto_street : edge.sign().exit_onto_streets()) {
+            exit_branch_array->push_back(exit_onto_street.text());
           }
           sign_map->emplace("exit_branch", exit_branch_array);
         }
 
         // Populate exit toward array
-        if (edge.sign().exit_toward_size() > 0) {
+        if (edge.sign().exit_toward_locations_size() > 0) {
           auto exit_toward_array = json::array({});
-          for (const auto& exit_toward : edge.sign().exit_toward()) {
-            exit_toward_array->push_back(exit_toward);
+          for (const auto& exit_toward_location : edge.sign().exit_toward_locations()) {
+            exit_toward_array->push_back(exit_toward_location.text());
           }
           sign_map->emplace("exit_toward", exit_toward_array);
         }
 
         // Populate exit name array
-        if (edge.sign().exit_name_size() > 0) {
+        if (edge.sign().exit_names_size() > 0) {
           auto exit_name_array = json::array({});
-          for (const auto& exit_name : edge.sign().exit_name()) {
-            exit_name_array->push_back(exit_name);
+          for (const auto& exit_name : edge.sign().exit_names()) {
+            exit_name_array->push_back(exit_name.text());
           }
           sign_map->emplace("exit_name", exit_name_array);
         }

@@ -5,7 +5,8 @@
 namespace valhalla {
 namespace baldr {
 
-StreetName::StreetName(const std::string& value) : value_(value) {
+StreetName::StreetName(const std::string& value, const bool is_route_number)
+    : value_(value), is_route_number_(is_route_number) {
 }
 
 StreetName::~StreetName() {
@@ -15,8 +16,12 @@ const std::string& StreetName::value() const {
   return value_;
 }
 
+bool StreetName::is_route_number() const {
+  return is_route_number_;
+}
+
 bool StreetName::operator==(const StreetName& rhs) const {
-  return (value_ == rhs.value_);
+  return ((value_ == rhs.value_) && (is_route_number_ == rhs.is_route_number_));
 }
 
 bool StreetName::StartsWith(const std::string& prefix) const {

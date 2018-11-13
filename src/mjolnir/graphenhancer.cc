@@ -962,8 +962,8 @@ uint32_t GetOpposingEdgeIndex(const GraphTile* endnodetile,
 }
 
 bool ConsistentNames(const std::string& country_code,
-                     const std::vector<std::string>& names1,
-                     const std::vector<std::string>& names2) {
+                     const std::vector<std::pair<std::string, bool>>& names1,
+                     const std::vector<std::pair<std::string, bool>>& names2) {
   std::unique_ptr<StreetNames> street_names1 = StreetNamesFactory::Create(country_code, names1);
   std::unique_ptr<StreetNames> street_names2 = StreetNamesFactory::Create(country_code, names2);
 
@@ -1270,14 +1270,14 @@ void enhance(const boost::property_tree::ptree& pt,
         UpdateSpeed(directededge, density, urban_rc_speed);
 
         // Update the named flag
-        auto names = tilebuilder.edgeinfo(directededge.edgeinfo_offset()).GetNames();
+        auto names = tilebuilder.edgeinfo(directededge.edgeinfo_offset()).GetNamesAndTypes();
         directededge.set_named(names.size() > 0);
 
         // Name continuity - on the directededge.
         for (uint32_t k = 0; k < ntrans; k++) {
           DirectedEdge& fromedge = tilebuilder.directededge(nodeinfo.edge_index() + k);
           if (ConsistentNames(country_code, names,
-                              tilebuilder.edgeinfo(fromedge.edgeinfo_offset()).GetNames())) {
+                              tilebuilder.edgeinfo(fromedge.edgeinfo_offset()).GetNamesAndTypes())) {
             directededge.set_name_consistency(k, true);
           }
         }

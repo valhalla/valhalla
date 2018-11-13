@@ -76,29 +76,29 @@ std::vector<std::string> EdgeInfo::GetNames() const {
   return names;
 }
 
-// Get a list of names and NameInfo for each
-std::vector<std::pair<std::string, NameInfo>> EdgeInfo::GetNamesAndInfo() const {
+// Get a list of names
+std::vector<std::pair<std::string, bool>> EdgeInfo::GetNamesAndTypes() const {
   // Get each name
-  std::vector<std::pair<std::string, NameInfo>> names;
-  names.reserve(name_count());
+  std::vector<std::pair<std::string, bool>> name_type_pairs;
+  name_type_pairs.reserve(name_count());
   const NameInfo* ni = name_info_list_;
-  for (uint32_t i = 0; i < name_count(); ++i, ++ni) {
+  for (uint32_t i = 0; i < name_count(); i++, ni++) {
     if (ni->name_offset_ < names_list_length_) {
-      names.push_back(std::make_pair(names_list_ + ni->name_offset_, *ni));
+      name_type_pairs.push_back({names_list_ + ni->name_offset_, ni->is_route_num_});
     } else {
-      throw std::runtime_error("GetNamesAndInfo: offset exceeds size of text list");
+      throw std::runtime_error("GetNamesAndTypes: offset exceeds size of text list");
     }
   }
-  return names;
+  return name_type_pairs;
 }
 
-// Get the types.  Are these names refs or not?
+// Get the types.  Are these names route numbers or not?
 uint16_t EdgeInfo::GetTypes() const {
   // Get the types.
   uint16_t types = 0;
   for (uint32_t i = 0; i < name_count(); i++) {
     NameInfo info = GetNameInfo(i);
-    types |= static_cast<uint64_t>(info.is_ref_) << i;
+    types |= static_cast<uint64_t>(info.is_route_num_) << i;
   }
   return types;
 }
