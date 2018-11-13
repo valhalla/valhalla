@@ -70,7 +70,6 @@ void FilterTiles(GraphReader& reader,
     // Get the graph tile. Read from this tile to create the new tile.
     const GraphTile* tile = reader.GetGraphTile(tile_id);
 
-    std::vector<uint32_t> wayid;
     std::hash<std::string> hasher;
     GraphId nodeid(tile_id.tileid(), tile_id.level(), 0);
     for (uint32_t i = 0; i < tile->header()->nodecount(); ++i, ++nodeid) {
@@ -81,6 +80,8 @@ void FilterTiles(GraphReader& reader,
       uint32_t edge_index = tilebuilder.directededges().size();
 
       // Iterate through directed edges outbound from this node
+      std::vector<uint32_t> wayid;
+      std::vector<GraphId> endnode;
       const NodeInfo* nodeinfo = tile->node(nodeid);
       GraphId edgeid(nodeid.tileid(), nodeid.level(), nodeinfo->edge_index());
       for (uint32_t j = 0; j < nodeinfo->edge_count(); ++j, ++edgeid) {
@@ -151,6 +152,7 @@ void FilterTiles(GraphReader& reader,
                                     tile->GetTypes(idx), added);
         newedge.set_edgeinfo_offset(edge_info_offset);
         wayid.push_back(edgeinfo.wayid());
+        endnode.push_back(directededge->endnode());
 
         // Add directed edge
         tilebuilder.directededges().emplace_back(std::move(newedge));
@@ -172,11 +174,10 @@ void FilterTiles(GraphReader& reader,
         // Associate the old node to the new node.
         old_to_new[nodeid] = new_node;
 
-        // Check if edges at this node can be aggregated
-        if (edge_count == 2) {
-          if (wayid[0] == wayid[1]) {
-            ++can_aggregate;
-          }
+        // Check if edges at this node can be aggregated. Only 2 edges, same way Id (so that
+        // edge attributes should match), don't end at same node (no loops).
+        if (edge_count == 2 && wayid[0] == wayid[1] && endnode[0] != endnode[1]) {
+          ++can_aggregate;
         }
       } else {
         ++n_filtered_nodes;
