@@ -39,8 +39,6 @@ using RestrictionsMultiMap = std::unordered_multimap<uint64_t, OSMRestriction>;
 
 using ViaSet = std::unordered_set<uint64_t>;
 
-using EndMap = std::unordered_multimap<uint64_t, uint64_t>;
-
 using AccessRestrictionsMultiMap = std::unordered_multimap<uint64_t, OSMAccessRestriction>;
 
 using BikeMultiMap = std::unordered_multimap<uint64_t, OSMBike>;
@@ -77,9 +75,6 @@ struct OSMData {
 
   // unordered set used to find out if a wayid is in the vector of vias
   ViaSet via_set;
-
-  // Multi Map used to find out if a wayid is the to edge for a complex restriction
-  EndMap end_map;
 
   // Stores access restrictions. Indexed by the from way Id.
   AccessRestrictionsMultiMap access_restrictions;

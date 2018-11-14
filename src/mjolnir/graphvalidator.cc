@@ -47,10 +47,10 @@ struct HGVRestrictionTypes {
 // Get the GraphId of the opposing edge.
 uint32_t GetOpposingEdgeIndex(const GraphId& startnode,
                               DirectedEdge& edge,
-                              uint64_t wayid,
+                              uint32_t wayid,
                               const GraphTile* tile,
                               const GraphTile* end_tile,
-                              std::set<uint64_t>& problem_ways,
+                              std::set<uint32_t>& problem_ways,
                               uint32_t& dupcount,
                               std::string& endnodeiso,
                               const uint32_t transit_level) {
@@ -136,7 +136,7 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode,
       }
 
       bool match = false;
-      uint64_t wayid2 = 0;
+      uint32_t wayid2 = 0;
       if (edge.is_shortcut()) {
         // Shortcut edges - use must match (or both are links)
         if ((directededge->link() && edge.link()) || (directededge->use() == edge.use())) {
@@ -270,7 +270,7 @@ void validate(
   std::vector<uint32_t> duplicates(numLevels, 0);
 
   // Vector to hold problem ways
-  std::set<uint64_t> problem_ways;
+  std::set<uint32_t> problem_ways;
 
   // Check for more tiles
   while (true) {
@@ -387,7 +387,7 @@ void validate(
         // node. Set the deadend flag and internal flag (if the opposing
         // edge is internal then make sure this edge is as well)
         std::string end_node_iso;
-        uint64_t wayid = tile->edgeinfo(directededge.edgeinfo_offset()).wayid();
+        uint32_t wayid = tile->edgeinfo(directededge.edgeinfo_offset()).wayid();
         uint32_t opp_index =
             GetOpposingEdgeIndex(node, directededge, wayid, tile, endnode_tile, problem_ways,
                                  dupcount, end_node_iso, transit_level);

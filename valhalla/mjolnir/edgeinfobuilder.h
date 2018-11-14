@@ -27,7 +27,7 @@ public:
    * Set the OSM way Id.
    * @param wayid  Way Id.
    */
-  void set_wayid(const uint64_t wayid);
+  void set_wayid(const uint32_t wayid);
 
   /**
    * Get the mean elevation along the edge.
