@@ -27,10 +27,10 @@ public:
    * @param  osmdata                        OSM data used to build the graph.
    * @param  ways_file                      where to store the ways so they are not in memory
    * @param  way_nodes_file                 where to store the nodes so they are not in memory
-   * @param  complex_from_restriction_file  where to store the from complex restrictions so they are not in
-   * memory
-   * @param  complex_to_restriction_file    where to store the to complex restrictions so they are not in
-   * memory
+   * @param  complex_from_restriction_file  where to store the from complex restrictions so they are
+   * not in memory
+   * @param  complex_to_restriction_file    where to store the to complex restrictions so they are not
+   * in memory
    */
   static void Build(const boost::property_tree::ptree& pt,
                     const OSMData& osmdata,

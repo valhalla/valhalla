@@ -23,10 +23,10 @@ public:
    * @param  ways_file                      where to store the ways so they are not in memory
    * @param  way_nodes_file                 where to store the nodes so they are not in memory
    * @param  access_file                    where to store the access tags so they are not in memory
-   * @param  complex_restriction_from_file  where to store the from complex restrictions so they are not in
-   * memory
-   * @param  complex_restriction_to_file    where to store the to complex restrictions so they are not in
-   * memory
+   * @param  complex_restriction_from_file  where to store the from complex restrictions so they are
+   * not in memory
+   * @param  complex_restriction_to_file    where to store the to complex restrictions so they are not
+   * in memory
    */
   static OSMData Parse(const boost::property_tree::ptree& pt,
                        const std::vector<std::string>& input_files,
