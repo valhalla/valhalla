@@ -85,11 +85,13 @@ void CountryAccess(const std::string& config_file) {
   std::string from_restriction_file = "test_from_complex_restrictions_amsterdam.bin";
   std::string to_restriction_file = "test_to_complex_restrictions_amsterdam.bin";
 
-  auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"),
-                                       {VALHALLA_SOURCE_DIR "test/data/amsterdam.osm.pbf"}, ways_file,
-                                       way_nodes_file, access_file, from_restriction_file, to_restriction_file);
+  auto osmdata =
+      PBFGraphParser::Parse(conf.get_child("mjolnir"),
+                            {VALHALLA_SOURCE_DIR "test/data/amsterdam.osm.pbf"}, ways_file,
+                            way_nodes_file, access_file, from_restriction_file, to_restriction_file);
   // Build the graph using the OSMNodes and OSMWays from the parser
-  GraphBuilder::Build(conf, osmdata, ways_file, way_nodes_file, from_restriction_file, to_restriction_file);
+  GraphBuilder::Build(conf, osmdata, ways_file, way_nodes_file, from_restriction_file,
+                      to_restriction_file);
 
   // load a tile and test the default access.
   GraphId id(820099, 2, 0);

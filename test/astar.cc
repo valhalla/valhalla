@@ -345,7 +345,8 @@ void trivial_path_no_uturns(const std::string& config_file) {
                                 ways_file, way_nodes_file, access_file, from_restriction_file,
                                 to_restriction_file);
   // Build the graph using the OSMNodes and OSMWays from the parser
-  vj::GraphBuilder::Build(conf, osmdata, ways_file, way_nodes_file, from_restriction_file, to_restriction_file);
+  vj::GraphBuilder::Build(conf, osmdata, ways_file, way_nodes_file, from_restriction_file,
+                          to_restriction_file);
   // Enhance the local level of the graph. This adds information to the local
   // level that is usable across all levels (density, administrative
   // information (and country based attribution), edge transition logic, etc.

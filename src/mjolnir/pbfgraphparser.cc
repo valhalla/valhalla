@@ -1443,9 +1443,9 @@ public:
             if (conditions.size()) {
               restriction.set_from(from_way_id);
               restriction.set_vias(vias);
-              // for bi-directional we need to create the restriction in reverse.  flip the to and from.
-              // also in order to avoid duplicate data in the from and to restrictions, we only need
-              // to store the mode, from, and to for the to_restrictions.
+              // for bi-directional we need to create the restriction in reverse.  flip the to and
+              // from. also in order to avoid duplicate data in the from and to restrictions, we only
+              // need to store the mode, from, and to for the to_restrictions.
               to_restriction.set_from(restriction.to());
               to_restriction.set_to(from_way_id);
               to_restriction.set_modes(restriction.modes());
@@ -1564,7 +1564,7 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt,
                               const std::string& way_nodes_file,
                               const std::string& access_file,
                               const std::string& complex_restriction_from_file,
-                              const std::string& complex_restriction_to_file){
+                              const std::string& complex_restriction_to_file) {
   // TODO: option 1: each one threads makes an osmdata and we splice them together at the end
   // option 2: synchronize around adding things to a single osmdata. will have to test to see
   // which is the least expensive (memory and speed). leaning towards option 2
@@ -1661,7 +1661,8 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt,
   for (auto& file_handle : file_handles) {
     // each time we parse nodes we have to run through the way nodes file from the beginning because
     // because osm node ids are only sorted at the single pbf file level
-    callback.reset(nullptr, new sequence<OSMWayNode>(way_nodes_file, false), nullptr, nullptr, nullptr);
+    callback.reset(nullptr, new sequence<OSMWayNode>(way_nodes_file, false), nullptr, nullptr,
+                   nullptr);
     callback.current_way_node_index_ = callback.last_node_ = callback.last_way_ =
         callback.last_relation_ = 0;
     OSMPBF::Parser::parse(file_handle,

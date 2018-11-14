@@ -189,7 +189,8 @@ void build_tile_set(const boost::property_tree::ptree& config,
   }
 
   // Build the Complex Restrictions
-  RestrictionBuilder::Build(config, bin_file_prefix + "complex_from_restrictions.bin", "complex_to_restrictions.bin");
+  RestrictionBuilder::Build(config, bin_file_prefix + "complex_from_restrictions.bin",
+                            "complex_to_restrictions.bin");
 
   // Validate the graph and add information that cannot be added until
   // full graph is formed.
