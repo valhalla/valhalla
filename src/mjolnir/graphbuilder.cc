@@ -255,8 +255,8 @@ void CheckForDuplicates(const GraphId& nodeid, const Node& node,
     // Check if the end node is already in the set of edges from this node
     const auto en = endnodes.find(endnode);
     if (en != endnodes.end() && en->second.length == edgelengths[n]) {
-      uint64_t wayid1 = ways[edges[en->second.edgeindex].wayindex_].way_id();
-      uint64_t wayid2 = ways[edges[edgeindex].wayindex_].way_id();
+      uint32_t wayid1 = ways[edges[en->second.edgeindex].wayindex_].way_id();
+      uint32_t wayid2 = ways[edges[edgeindex].wayindex_].way_id();
       (*stats).AddIssue(kDuplicateWays, GraphId(), wayid1, wayid2);
     } else {
       endnodes.emplace(std::piecewise_construct,
@@ -267,7 +267,7 @@ void CheckForDuplicates(const GraphId& nodeid, const Node& node,
   }
 }
 */
-uint32_t CreateSimpleTurnRestriction(const uint64_t wayid,
+uint32_t CreateSimpleTurnRestriction(const uint32_t wayid,
                                      const size_t endnode,
                                      sequence<Node>& nodes,
                                      sequence<Edge>& edges,
@@ -296,7 +296,7 @@ uint32_t CreateSimpleTurnRestriction(const uint64_t wayid,
   }
 
   // Get the way Ids of the edges at the endnode
-  std::vector<uint64_t> wayids;
+  std::vector<uint32_t> wayids;
   auto bundle = collect_node_edges(node_itr, nodes, edges);
   for (const auto& edge : bundle.node_edges) {
     wayids.push_back((*ways[edge.first.wayindex_]).osmwayid_);
@@ -350,7 +350,7 @@ uint32_t CreateSimpleTurnRestriction(const uint64_t wayid,
 // Add an access restriction. Returns the mode(s) that have access
 // restrictions on this edge.
 uint32_t AddAccessRestrictions(const uint32_t edgeid,
-                               const uint64_t wayid,
+                               const uint32_t wayid,
                                const OSMData& osmdata,
                                GraphTileBuilder& graphtile) {
   auto res = osmdata.access_restrictions.equal_range(wayid);

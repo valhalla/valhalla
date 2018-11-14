@@ -18,7 +18,7 @@ struct OSMWay {
    * Set way id.
    * @param   id  way id
    */
-  void set_way_id(const uint64_t id) {
+  void set_way_id(const uint32_t id) {
     osmwayid_ = id;
   }
 
@@ -26,7 +26,7 @@ struct OSMWay {
    * Get the way id
    * @return  Returns way id.
    */
-  uint64_t way_id() const {
+  uint32_t way_id() const {
     return osmwayid_;
   }
 
@@ -1439,7 +1439,7 @@ struct OSMWay {
                                     uint16_t& types) const;
 
   // OSM way Id
-  uint64_t osmwayid_;
+  uint32_t osmwayid_;
 
   // Reference name (highway numbers)
   uint32_t ref_index_;
