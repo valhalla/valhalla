@@ -12,10 +12,7 @@ namespace valhalla {
 namespace mjolnir {
 
 // Set the OSM way Id.
-void EdgeInfoBuilder::set_wayid(const uint64_t wayid) {
-  if (wayid > kMaxOSMWayId) {
-    throw std::runtime_error("EdgeInfoBuilder: exceeded maximum wayId " + std::to_string(wayid));
-  }
+void EdgeInfoBuilder::set_wayid(const uint32_t wayid) {
   w0_.wayid_ = wayid;
 }
 

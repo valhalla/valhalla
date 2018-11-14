@@ -16,6 +16,7 @@
 
 #include "baldr/complexrestriction.h"
 #include "baldr/datetime.h"
+#include "baldr/graphconstants.h"
 #include "baldr/tilehierarchy.h"
 #include "midgard/aabb2.h"
 #include "midgard/logging.h"
@@ -265,6 +266,11 @@ public:
       }
     }
 
+    if (osmid > kMaxOSMWayId) {
+      throw std::runtime_error("OSM way Id exceeds 32 bit maximum");
+    }
+    uint32_t wayid = static_cast<uint32_t>(osmid);
+
     // unsorted extracts are just plain nasty, so they can bugger off!
     if (osmid < last_way_) {
       throw std::runtime_error("Detected unsorted input data");
@@ -319,10 +325,10 @@ public:
     std::string name;
 
     // Process tags
-    OSMWay w{osmid};
+    OSMWay w{wayid};
     w.set_node_count(nodes.size());
 
-    OSMAccess access{osmid};
+    OSMAccess access{wayid};
     bool has_user_tags = false;
 
     const auto& surface_exists = results.find("surface");
@@ -1636,6 +1642,7 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt,
                                                         OSMPBF::Interest::CHANGESETS),
                           callback);
   }
+  uint64_t max_osm_id = callback.last_node_;
   callback.reset(nullptr, nullptr, nullptr, nullptr);
   LOG_INFO("Finished with " + std::to_string(osmdata.osm_node_count) +
            " nodes contained in routable ways");
@@ -1654,7 +1661,14 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt,
     });
   }
 
-  LOG_INFO("Finished at changeset id " + std::to_string(osmdata.max_changeset_id_));
+  // Some OSM extracts do not have changeset Ids. For these set the max changeset Id
+  // to the max OSM Id
+  if (osmdata.max_changeset_id_ == 0) {
+    osmdata.max_changeset_id_ = max_osm_id;
+    LOG_INFO("Finished: max_osm_id " + std::to_string(osmdata.max_changeset_id_));
+  } else {
+    LOG_INFO("Finished: changeset id " + std::to_string(osmdata.max_changeset_id_));
+  }
 
   // Log some information about extra node information and names
   LOG_DEBUG("Number of node refs (exits) = " + std::to_string(osmdata.node_ref.size()));

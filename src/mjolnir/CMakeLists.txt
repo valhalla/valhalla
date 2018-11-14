@@ -42,7 +42,6 @@ set(sources
   linkclassification.cc
   luatagtransform.cc
   node_expander.cc
-  osmaccess.cc
   osmpbfparser.cc
   osmaccessrestriction.cc
   osmrestriction.cc
