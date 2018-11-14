@@ -336,13 +336,17 @@ void trivial_path_no_uturns(const std::string& config_file) {
   std::string ways_file = "test_ways_trivial.bin";
   std::string way_nodes_file = "test_way_nodes_trivial.bin";
   std::string access_file = "test_access_trivial.bin";
-  std::string restriction_file = "test_complex_restrictions_trivial.bin";
+  std::string from_restriction_file = "test_from_complex_restrictions_trivial.bin";
+  std::string to_restriction_file = "test_to_complex_restrictions_trivial.bin";
+
   auto osmdata =
       vj::PBFGraphParser::Parse(conf.get_child("mjolnir"),
                                 {VALHALLA_SOURCE_DIR "test/data/utrecht_netherlands.osm.pbf"},
-                                ways_file, way_nodes_file, access_file, restriction_file);
+                                ways_file, way_nodes_file, access_file, from_restriction_file,
+                                to_restriction_file);
   // Build the graph using the OSMNodes and OSMWays from the parser
-  vj::GraphBuilder::Build(conf, osmdata, ways_file, way_nodes_file, restriction_file);
+  vj::GraphBuilder::Build(conf, osmdata, ways_file, way_nodes_file, from_restriction_file,
+                          to_restriction_file);
   // Enhance the local level of the graph. This adds information to the local
   // level that is usable across all levels (density, administrative
   // information (and country based attribution), edge transition logic, etc.

@@ -59,7 +59,7 @@ OSMNode GetNode(uint64_t node_id, sequence<OSMWayNode>& way_nodes) {
 
 auto way_predicate = [](const OSMWay& a, const OSMWay& b) { return a.osmwayid_ < b.osmwayid_; };
 
-OSMWay GetWay(uint64_t way_id, sequence<OSMWay>& ways) {
+OSMWay GetWay(uint32_t way_id, sequence<OSMWay>& ways) {
   auto found = ways.find({way_id}, way_predicate);
   if (found == ways.end())
     throw std::runtime_error("Couldn't find way: " + std::to_string(way_id));
@@ -82,12 +82,16 @@ void CountryAccess(const std::string& config_file) {
   std::string ways_file = "test_ways_amsterdam.bin";
   std::string way_nodes_file = "test_way_nodes_amsterdam.bin";
   std::string access_file = "test_access_amsterdam.bin";
-  std::string restriction_file = "test_complex_restrictions_amsterdam.bin";
-  auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"),
-                                       {VALHALLA_SOURCE_DIR "test/data/amsterdam.osm.pbf"}, ways_file,
-                                       way_nodes_file, access_file, restriction_file);
+  std::string from_restriction_file = "test_from_complex_restrictions_amsterdam.bin";
+  std::string to_restriction_file = "test_to_complex_restrictions_amsterdam.bin";
+
+  auto osmdata =
+      PBFGraphParser::Parse(conf.get_child("mjolnir"),
+                            {VALHALLA_SOURCE_DIR "test/data/amsterdam.osm.pbf"}, ways_file,
+                            way_nodes_file, access_file, from_restriction_file, to_restriction_file);
   // Build the graph using the OSMNodes and OSMWays from the parser
-  GraphBuilder::Build(conf, osmdata, ways_file, way_nodes_file, restriction_file);
+  GraphBuilder::Build(conf, osmdata, ways_file, way_nodes_file, from_restriction_file,
+                      to_restriction_file);
 
   // load a tile and test the default access.
   GraphId id(820099, 2, 0);

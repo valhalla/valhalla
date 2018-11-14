@@ -372,7 +372,8 @@ void BuildTileSet(const std::string& ways_file,
                   const std::string& way_nodes_file,
                   const std::string& nodes_file,
                   const std::string& edges_file,
-                  const std::string& complex_restriction_file,
+                  const std::string& complex_restriction_from_file,
+                  const std::string& complex_restriction_to_file,
                   const std::string& tile_dir,
                   const OSMData& osmdata,
                   const std::unique_ptr<const valhalla::skadi::sample>& sample,
@@ -386,7 +387,8 @@ void BuildTileSet(const std::string& ways_file,
   sequence<OSMWayNode> way_nodes(way_nodes_file, false);
   sequence<Edge> edges(edges_file, false);
   sequence<Node> nodes(nodes_file, false);
-  sequence<OSMRestriction> complex_restrictions(complex_restriction_file, false);
+  sequence<OSMRestriction> complex_restrictions_from(complex_restriction_from_file, false);
+  sequence<OSMRestriction> complex_restrictions_to(complex_restriction_to_file, false);
 
   auto database = pt.get_optional<std::string>("admin");
   // Initialize the admin DB (if it exists)
@@ -857,43 +859,35 @@ void BuildTileSet(const std::string& ways_file,
           }
 
           // grab all the modes if this way ends at a restriction(s)
-          auto to = osmdata.end_map.equal_range(w.way_id());
-          if (to.first != osmdata.end_map.end()) {
-            for (auto it = to.first; it != to.second; ++it) {
+          OSMRestriction target_to_res{
+              w.way_id()}; // this is our from way id.  to is really our from for to_restrictions.
+          OSMRestriction restriction_to{};
+          sequence<OSMRestriction>::iterator res_to_it =
+              complex_restrictions_to.find(target_to_res,
+                                           [](const OSMRestriction& a, const OSMRestriction& b) {
+                                             return a.from() < b.from();
+                                           });
 
-              OSMRestriction target_res{it->second}; // this is our from way id
-              OSMRestriction restriction{};
-              sequence<OSMRestriction>::iterator res_it =
-                  complex_restrictions.find(target_res,
-                                            [](const OSMRestriction& a, const OSMRestriction& b) {
-                                              return a.from() < b.from();
-                                            });
-
-              while (res_it != complex_restrictions.end() &&
-                     (restriction = *res_it).from() == it->second) {
-                if (restriction.to() == w.way_id()) {
-                  directededge.set_end_restriction(directededge.end_restriction() |
-                                                   restriction.modes());
-                }
-                res_it++;
-              }
-            }
+          while (res_to_it != complex_restrictions_to.end() &&
+                 (restriction_to = *res_to_it).from() == w.way_id()) {
+            directededge.set_end_restriction(directededge.end_restriction() | restriction_to.modes());
+            res_to_it++;
           }
 
           // grab all the modes if this way starts at a restriction(s)
-          OSMRestriction target_res{w.way_id()}; // this is our to way id
-          OSMRestriction restriction{};
-          sequence<OSMRestriction>::iterator res_it =
-              complex_restrictions.find(target_res,
-                                        [](const OSMRestriction& a, const OSMRestriction& b) {
-                                          return a.from() < b.from();
-                                        });
+          OSMRestriction target_from_res{w.way_id()}; // this is our to way id
+          OSMRestriction restriction_from{};
+          sequence<OSMRestriction>::iterator res_from_it =
+              complex_restrictions_from.find(target_from_res,
+                                             [](const OSMRestriction& a, const OSMRestriction& b) {
+                                               return a.from() < b.from();
+                                             });
 
-          while (res_it != complex_restrictions.end() &&
-                 (restriction = *res_it).from() == w.way_id()) {
+          while (res_from_it != complex_restrictions_from.end() &&
+                 (restriction_from = *res_from_it).from() == w.way_id()) {
             directededge.set_start_restriction(directededge.start_restriction() |
-                                               restriction.modes());
-            res_it++;
+                                               restriction_from.modes());
+            res_from_it++;
           }
 
           // Set shoulder based on current facing direction and which
@@ -1040,7 +1034,8 @@ void BuildLocalTiles(const unsigned int thread_count,
                      const std::string& way_nodes_file,
                      const std::string& nodes_file,
                      const std::string& edges_file,
-                     const std::string& complex_restriction_file,
+                     const std::string& complex_from_restriction_file,
+                     const std::string& complex_to_restriction_file,
                      const std::map<GraphId, size_t>& tiles,
                      const std::string& tile_dir,
                      DataQuality& stats,
@@ -1076,7 +1071,8 @@ void BuildLocalTiles(const unsigned int thread_count,
     // Make the thread
     threads[i].reset(new std::thread(BuildTileSet, std::cref(ways_file), std::cref(way_nodes_file),
                                      std::cref(nodes_file), std::cref(edges_file),
-                                     std::cref(complex_restriction_file), std::cref(tile_dir),
+                                     std::cref(complex_from_restriction_file),
+                                     std::cref(complex_to_restriction_file), std::cref(tile_dir),
                                      std::cref(osmdata), std::cref(sample), tile_start, tile_end,
                                      tile_creation_date, std::cref(pt.get_child("mjolnir")),
                                      std::ref(results[i])));
@@ -1113,7 +1109,8 @@ void GraphBuilder::Build(const boost::property_tree::ptree& pt,
                          const OSMData& osmdata,
                          const std::string& ways_file,
                          const std::string& way_nodes_file,
-                         const std::string& complex_restriction_file) {
+                         const std::string& complex_from_restriction_file,
+                         const std::string& complex_to_restriction_file) {
   std::string nodes_file = "nodes.bin";
   std::string edges_file = "edges.bin";
   std::string tile_dir = pt.get<std::string>("mjolnir.tile_dir");
@@ -1160,7 +1157,8 @@ void GraphBuilder::Build(const boost::property_tree::ptree& pt,
 
   // Build tiles at the local level. Form connected graph from nodes and edges.
   BuildLocalTiles(threads, osmdata, ways_file, way_nodes_file, nodes_file, edges_file,
-                  complex_restriction_file, tiles, tile_dir, stats, sample, pt);
+                  complex_from_restriction_file, complex_to_restriction_file, tiles, tile_dir, stats,
+                  sample, pt);
 
   stats.LogStatistics();
 }
