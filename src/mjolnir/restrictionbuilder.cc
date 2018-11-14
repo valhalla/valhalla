@@ -235,13 +235,15 @@ std::deque<GraphId> GetGraphIds(GraphId& n_graphId,
   return graphids;
 }
 
-void build(const std::string& complex_restriction_file,
-           const std::unordered_multimap<uint64_t, uint64_t>& end_map,
+void build(const std::string& complex_restriction_from_file,
+           const std::string& complex_restriction_to_file,
            const boost::property_tree::ptree& hierarchy_properties,
            std::queue<GraphId>& tilequeue,
            std::mutex& lock,
            std::promise<DataQuality>& result) {
-  sequence<OSMRestriction> complex_restrictions(complex_restriction_file, false);
+  sequence<OSMRestriction> complex_restrictions_from(complex_restriction_from_file, false);
+  sequence<OSMRestriction> complex_restrictions_to(complex_restriction_to_file, false);
+
   GraphReader reader(hierarchy_properties);
   DataQuality stats;
 
@@ -313,11 +315,11 @@ void build(const std::string& complex_restriction_file,
           OSMRestriction target_res{e_offset.wayid()}; // this is our from way id
           OSMRestriction restriction{};
           sequence<OSMRestriction>::iterator res_it =
-              complex_restrictions.find(target_res,
+              complex_restrictions_from.find(target_res,
                                         [](const OSMRestriction& a, const OSMRestriction& b) {
                                           return a.from() < b.from();
                                         });
-          while (res_it != complex_restrictions.end() &&
+          while (res_it != complex_restrictions_from.end() &&
                  (restriction = *res_it).from() == e_offset.wayid() && restriction.vias().size()) {
 
             if (restriction.type() < RestrictionType::kOnlyRightTurn ||
@@ -437,20 +439,26 @@ void build(const std::string& complex_restriction_file,
 
         if (directededge.end_restriction()) {
 
+          OSMRestriction target_to_res{e_offset.wayid()}; // this is our from way id
+          OSMRestriction restriction_to{};
+          sequence<OSMRestriction>::iterator res_to_it =
+              complex_restrictions_to.find(target_to_res,
+                                        [](const OSMRestriction& a, const OSMRestriction& b) {
+                                          return a.from() < b.from();
+                                        });
           // is this edge the end of a restriction?
-          const auto to = end_map.equal_range(e_offset.wayid());
-          if (to.first != end_map.end()) {
-            for (auto it = to.first; it != to.second; ++it) {
+          while (res_to_it != complex_restrictions_to.end() &&
+                 (restriction_to = *res_to_it).from() == e_offset.wayid()) {
 
-              OSMRestriction target_res{it->second}; // this is our from way id
+              OSMRestriction target_res{restriction_to.to()}; // this is our from way id
               OSMRestriction restriction{};
               sequence<OSMRestriction>::iterator res_it =
-                  complex_restrictions.find(target_res,
+                  complex_restrictions_from.find(target_res,
                                             [](const OSMRestriction& a, const OSMRestriction& b) {
                                               return a.from() < b.from();
                                             });
-              while (res_it != complex_restrictions.end() &&
-                     (restriction = *res_it).from() == it->second && restriction.vias().size()) {
+              while (res_it != complex_restrictions_from.end() &&
+                     (restriction = *res_it).from() == restriction_to.to() && restriction.vias().size()) {
 
                 if (restriction.type() < RestrictionType::kOnlyRightTurn ||
                     restriction.type() > RestrictionType::kOnlyStraightOn) {
@@ -478,7 +486,7 @@ void build(const std::string& complex_restriction_file,
                     }
                   }
 
-                  res_way_ids.push_back(it->second);
+                  res_way_ids.push_back(restriction_to.to());
 
                   // walk in the forward direction (reverse in relation to the restriction)
                   std::deque<GraphId> tmp_ids =
@@ -490,7 +498,7 @@ void build(const std::string& complex_restriction_file,
                   if (tmp_ids.size()) {
 
                     res_way_ids.clear();
-                    res_way_ids.push_back(it->second);
+                    res_way_ids.push_back(restriction_to.to());
 
                     for (const auto& v : restriction.vias()) {
                       res_way_ids.push_back(v);
@@ -567,8 +575,8 @@ void build(const std::string& complex_restriction_file,
                 }
                 res_it++;
               }
+              res_to_it++;
             }
-          }
         }
       }
     }
@@ -595,8 +603,8 @@ namespace mjolnir {
 
 // Enhance the local level of the graph
 void RestrictionBuilder::Build(const boost::property_tree::ptree& pt,
-                               const std::string& complex_restrictions_file,
-                               const std::unordered_multimap<uint64_t, uint64_t>& end_map) {
+                               const std::string& complex_from_restrictions_file,
+                               const std::string& complex_to_restrictions_file) {
 
   boost::property_tree::ptree hierarchy_properties = pt.get_child("mjolnir");
   GraphReader reader(hierarchy_properties);
@@ -625,9 +633,10 @@ void RestrictionBuilder::Build(const boost::property_tree::ptree& pt,
     // Start the threads
     LOG_INFO("Adding Restrictions at level " + std::to_string(tile_level.level));
     for (size_t i = 0; i < threads.size(); ++i) {
-      threads[i].reset(new std::thread(build, std::cref(complex_restrictions_file),
-                                       std::cref(end_map), std::cref(hierarchy_properties),
-                                       std::ref(tilequeue), std::ref(lock), std::ref(results[i])));
+      threads[i].reset(new std::thread(build, std::cref(complex_from_restrictions_file),
+                                       std::cref(complex_to_restrictions_file),
+                                       std::cref(hierarchy_properties), std::ref(tilequeue),
+                                       std::ref(lock), std::ref(results[i])));
     }
 
     // Wait for them to finish up their work
