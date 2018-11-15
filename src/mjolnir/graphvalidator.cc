@@ -169,8 +169,8 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode,
             std::vector<std::string> names = tile->edgeinfo(edge.edgeinfo_offset()).GetNames();
             std::string name = (names.size() > 0) ? names[0] : "unnamed";
             LOG_DEBUG("Duplicate shortcut for " + name +
-                      " at LL = " + std::to_string(nodeinfo->latlng().lat()) + "," +
-                      std::to_string(nodeinfo->latlng().lng()));
+                      " at LL = " + std::to_string(tile->get_node_ll(endnode).lat()) + "," +
+                      std::to_string(tile->get_node_ll(endnode).lng()));
           } else {
             LOG_DEBUG("Potential duplicate: wayids " + std::to_string(wayid) + " and " +
                       std::to_string(wayid2) + " level = " + std::to_string(startnode.level()) +
