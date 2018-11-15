@@ -11,15 +11,22 @@ class Sign {
 public:
   /**
    * Constructor.
-   * @param  text   Text string.
+   * @param  text  Text string.
+   * @param  is_route_number   boolean indicating if sign element is a reference route number.
    */
-  Sign(const std::string& text);
+  Sign(const std::string& text, const bool is_route_number);
 
   /**
    * Returns the sign text.
    * @return  Returns the sign text as a const reference to the text string.
    */
   const std::string& text() const;
+
+  /**
+   * Returns true if sign element is a reference route number such as: I 81 South or US 322 West.
+   * @return true if sign element is a reference route number such as: I 81 South or US 322 West.
+   */
+  bool is_route_number() const;
 
   /**
    * Returns the frequency of this sign within a set a consecutive signs.
@@ -41,6 +48,7 @@ public:
 
 protected:
   std::string text_;
+  bool is_route_number_;
   uint32_t consecutive_count_;
 };
 

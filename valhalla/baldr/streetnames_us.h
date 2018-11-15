@@ -14,7 +14,7 @@ class StreetNamesUs : public StreetNames {
 public:
   StreetNamesUs();
 
-  StreetNamesUs(const std::vector<std::string>& names);
+  StreetNamesUs(const std::vector<std::pair<std::string, bool>>& names);
 
   ~StreetNamesUs();
 

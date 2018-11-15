@@ -4,6 +4,8 @@
 #include <cstdint>
 #include <string>
 #include <unordered_map>
+#include <utility>
+#include <vector>
 
 #include <valhalla/proto/directions_options.pb.h>
 #include <valhalla/proto/trippath.pb.h>
@@ -101,7 +103,7 @@ public:
 
   bool IsStraightest(uint32_t prev2curr_turn_degree, uint32_t straightest_xedge_turn_degree) const;
 
-  std::vector<std::string> GetNameList() const;
+  std::vector<std::pair<std::string, bool>> GetNameList() const;
 
   float GetLength(const DirectionsOptions::Units& units);
 
@@ -113,11 +115,19 @@ public:
 
 protected:
 #ifdef LOGGING_LEVEL_TRACE
-  std::string
-  ListToString(const ::google::protobuf::RepeatedPtrField<::std::string>& string_list) const;
+  std::string StreetNamesToString(
+      const ::google::protobuf::RepeatedPtrField<::valhalla::odin::StreetName>& street_names) const;
 
-  std::string
-  ListToParameterString(const ::google::protobuf::RepeatedPtrField<::std::string>& string_list) const;
+  std::string StreetNamesToParameterString(
+      const ::google::protobuf::RepeatedPtrField<::valhalla::odin::StreetName>& street_names) const;
+
+  std::string SignElementsToString(
+      const ::google::protobuf::RepeatedPtrField<::valhalla::odin::TripPath_SignElement>&
+          sign_elements) const;
+
+  std::string SignElementsToParameterString(
+      const ::google::protobuf::RepeatedPtrField<::valhalla::odin::TripPath_SignElement>&
+          sign_elements) const;
 #endif
 };
 

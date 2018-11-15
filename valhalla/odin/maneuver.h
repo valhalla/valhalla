@@ -44,7 +44,7 @@ public:
   void set_type(const TripDirections_Maneuver_Type& type);
 
   const StreetNames& street_names() const;
-  void set_street_names(const std::vector<std::string>& names);
+  void set_street_names(const std::vector<std::pair<std::string, bool>>& names);
   void set_street_names(std::unique_ptr<StreetNames>&& street_names);
   bool HasStreetNames() const;
 
@@ -55,12 +55,12 @@ public:
                        bool allow_begin_intersecting_edge_name_consistency = false) const;
 
   const StreetNames& begin_street_names() const;
-  void set_begin_street_names(const std::vector<std::string>& names);
+  void set_begin_street_names(const std::vector<std::pair<std::string, bool>>& names);
   void set_begin_street_names(std::unique_ptr<StreetNames>&& begin_street_names);
   bool HasBeginStreetNames() const;
 
   const StreetNames& cross_street_names() const;
-  void set_cross_street_names(const std::vector<std::string>& names);
+  void set_cross_street_names(const std::vector<std::pair<std::string, bool>>& names);
   void set_cross_street_names(std::unique_ptr<StreetNames>&& cross_street_names);
   bool HasCrossStreetNames() const;
 

@@ -2,6 +2,7 @@
 * **Enhancement**
    * UPDATED: Added a configuration variable for max_timedep_distance. This is used in selecting the path algorithm and provides the maximum distance between locations when choosing a time dependent path algorithm (other than multi modal). Above this distance, bidirectional A* is used with no time dependencies.
    * UPDATED: Remove transition edges from priority queue in Multimodal methods.
+   * UPDATED: Fully implement street names and exit signs with ability to identify route numbers. [#1635](https://github.com/valhalla/valhalla/pull/1635)
 * **Bug Fix**
    * FIXED: A timed-turned restriction should not be applied when a non-timed route is executed.  [#1615](https://github.com/valhalla/valhalla/pull/1615)
    * FIXED: Changed unordered_map to unordered_multimap for polys. Poly map can contain the same key but different multi-polygons. For example, islands for a country or timezone polygons for a country.
