@@ -431,6 +431,12 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
         LOG_TRACE("+++ Combine: unnamed straight maneuvers +++");
         next_man = CombineSameNameStraightManeuver(maneuvers, curr_man, next_man);
         maneuvers_have_been_combined = true;
+      }
+      // Combine ramp maneuvers
+      else if (AreRampManeuversCombinable(curr_man, next_man)) {
+        LOG_TRACE("+++ Combine: ramp maneuvers +++");
+        next_man = CombineSameNameStraightManeuver(maneuvers, curr_man, next_man);
+        maneuvers_have_been_combined = true;
       } else {
         LOG_TRACE("+++ Do Not Combine +++");
         // Update with no combine
@@ -1993,6 +1999,17 @@ bool ManeuversBuilder::IsTurnChannelManeuverCombinable(std::list<Maneuver>::iter
     // Process simple straight "turn channel"
     if ((curr_man->begin_relative_direction() == Maneuver::RelativeDirection::kKeepStraight) &&
         (new_turn_type == Turn::Type::kStraight)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool ManeuversBuilder::AreRampManeuversCombinable(std::list<Maneuver>::iterator curr_man,
+                                                  std::list<Maneuver>::iterator next_man) const {
+  if (curr_man->ramp() && next_man->ramp() && !next_man->fork()) {
+    auto* node = trip_path_->GetEnhancedNode(next_man->begin_node_index());
+    if (!node->HasTraversableOutboundIntersectingEdge(next_man->travel_mode())) {
       return true;
     }
   }
