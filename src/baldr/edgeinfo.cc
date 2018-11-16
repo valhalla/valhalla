@@ -67,6 +67,10 @@ std::vector<std::string> EdgeInfo::GetNames() const {
   names.reserve(name_count());
   const NameInfo* ni = name_info_list_;
   for (uint32_t i = 0; i < name_count(); i++, ni++) {
+    // Skip any tagged names (FUTURE code may make use of them)
+    if (ni->tagged_) {
+      continue;
+    }
     if (ni->name_offset_ < names_list_length_) {
       names.push_back(names_list_ + ni->name_offset_);
     } else {
@@ -83,6 +87,10 @@ std::vector<std::pair<std::string, bool>> EdgeInfo::GetNamesAndTypes() const {
   name_type_pairs.reserve(name_count());
   const NameInfo* ni = name_info_list_;
   for (uint32_t i = 0; i < name_count(); i++, ni++) {
+    // Skip any tagged names (FUTURE code may make use of them)
+    if (ni->tagged_) {
+      continue;
+    }
     if (ni->name_offset_ < names_list_length_) {
       name_type_pairs.push_back({names_list_ + ni->name_offset_, ni->is_route_num_});
     } else {
