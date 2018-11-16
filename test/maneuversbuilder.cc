@@ -339,7 +339,9 @@ void TryCombine(ManeuversBuilderTest& mbTest,
   mbTest.Combine(maneuvers);
 
   if (maneuvers.size() != expected_maneuvers.size())
-    throw std::runtime_error("Incorrect maneuver count");
+    throw std::runtime_error(
+        "Incorrect maneuver count: " + std::to_string(maneuvers.size()) +
+        " | Expected maneuver count=" + std::to_string(expected_maneuvers.size()));
   for (auto man = maneuvers.begin(), expected_man = expected_maneuvers.begin();
        man != maneuvers.end(); ++man, ++expected_man) {
     if (man->type() != expected_man->type())
