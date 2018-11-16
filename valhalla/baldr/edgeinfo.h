@@ -39,7 +39,12 @@ struct NameInfo {
                                    // phonetic string, etc.
   uint32_t is_route_num_ : 1;      // Flag used to indicate if this is a route number
                                    // vs just a name.
-  uint32_t spare_ : 3;
+  uint32_t tagged_ : 1;            // Future use - this indicates the text string is
+                                   // specially tagged (for example uses the first char as
+                                   // the tag type). To make this forward and backward
+                                   // compatible, tagged text will not be read in GetNames
+                                   // and GetNamesAndTags until code is ready to actually use it.
+  uint32_t spare_ : 2;
 
   bool operator==(const NameInfo& other) const {
     return (name_offset_ == other.name_offset_);
