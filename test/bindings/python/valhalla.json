@@ -102,7 +102,7 @@
     "max_cache_size": 1000000000,
     "shortcuts": true,
     "tile_dir": "test/data/utrecht_tiles",
-    "tile_extract": "/data/valhalla/tiles.tar",
+    "tile_extract": "/dev/null",
     "timezone": "/data/valhalla/tz_world.sqlite",
     "transit_dir": "/data/valhalla/transit"
   },
