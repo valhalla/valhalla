@@ -1114,7 +1114,7 @@ public:
     OSMRestriction restriction{};
     OSMRestriction to_restriction{};
 
-    uint64_t from_way_id = 0;
+    uint32_t from_way_id = 0;
     bool isRestriction = false, isTypeRestriction = false, hasRestriction = false;
     bool isRoad = false, isRoute = false, isBicycle = false, isConnectivity = false;
     bool isConditional = false, has_multiple_times = false;
@@ -1303,8 +1303,8 @@ public:
       }
     } else if (isConnectivity && (!to_lanes.empty() || !to.empty()) &&
                (!from_lanes.empty() || !from.empty())) {
-      uint64_t from_way_id = 0;
-      uint64_t to_way_id = 0;
+      uint32_t from_way_id = 0;
+      uint32_t to_way_id = 0;
       for (const auto& member : members) {
         // from and to must be of type 1(way).
         if (member.role == "from" &&

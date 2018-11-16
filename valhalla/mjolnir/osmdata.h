@@ -29,13 +29,13 @@ struct OSMBike {
 };
 
 struct OSMLaneConnectivity {
-  uint64_t to_way_id;
-  uint64_t from_way_id;
+  uint32_t to_way_id;
+  uint32_t from_way_id;
   std::string to_lanes;
   std::string from_lanes;
 };
 
-using RestrictionsMultiMap = std::unordered_multimap<uint64_t, OSMRestriction>;
+using RestrictionsMultiMap = std::unordered_multimap<uint32_t, OSMRestriction>;
 
 using ViaSet = std::unordered_set<uint64_t>;
 
@@ -48,7 +48,7 @@ using OSMStringMap = std::unordered_map<uint64_t, std::string>;
 using OSMShapeMap = std::unordered_map<uint64_t, PointLL>;
 using OSMWayMap = std::unordered_map<uint64_t, std::list<uint64_t>>;
 
-using OSMLaneConnectivityMultiMap = std::unordered_multimap<uint64_t, OSMLaneConnectivity>;
+using OSMLaneConnectivityMultiMap = std::unordered_multimap<uint32_t, OSMLaneConnectivity>;
 
 enum class OSMType : uint8_t { kNode, kWay, kRelation };
 
