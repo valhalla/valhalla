@@ -2007,7 +2007,8 @@ bool ManeuversBuilder::IsTurnChannelManeuverCombinable(std::list<Maneuver>::iter
 
 bool ManeuversBuilder::AreRampManeuversCombinable(std::list<Maneuver>::iterator curr_man,
                                                   std::list<Maneuver>::iterator next_man) const {
-  if (curr_man->ramp() && next_man->ramp() && !next_man->fork()) {
+  if (curr_man->ramp() && next_man->ramp() && !next_man->fork() &&
+      !curr_man->internal_intersection() && !next_man->internal_intersection()) {
     auto* node = trip_path_->GetEnhancedNode(next_man->begin_node_index());
     if (!node->HasTraversableOutboundIntersectingEdge(next_man->travel_mode())) {
       return true;
