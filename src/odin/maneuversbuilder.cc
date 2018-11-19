@@ -417,7 +417,7 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
         // Update current maneuver street names
         curr_man->set_street_names(std::move(common_base_names));
 
-        next_man = CombineSameNameStraightManeuver(maneuvers, curr_man, next_man);
+        next_man = CombineManeuvers(maneuvers, curr_man, next_man);
         maneuvers_have_been_combined = true;
       }
       // Combine unnamed straight maneuvers
@@ -429,13 +429,13 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
                !curr_man->roundabout() && !next_man->roundabout()) {
 
         LOG_TRACE("+++ Combine: unnamed straight maneuvers +++");
-        next_man = CombineSameNameStraightManeuver(maneuvers, curr_man, next_man);
+        next_man = CombineManeuvers(maneuvers, curr_man, next_man);
         maneuvers_have_been_combined = true;
       }
       // Combine ramp maneuvers
       else if (AreRampManeuversCombinable(curr_man, next_man)) {
         LOG_TRACE("+++ Combine: ramp maneuvers +++");
-        next_man = CombineSameNameStraightManeuver(maneuvers, curr_man, next_man);
+        next_man = CombineManeuvers(maneuvers, curr_man, next_man);
         maneuvers_have_been_combined = true;
       } else {
         LOG_TRACE("+++ Do Not Combine +++");
@@ -591,9 +591,9 @@ ManeuversBuilder::CombineTurnChannelManeuver(std::list<Maneuver>& maneuvers,
 }
 
 std::list<Maneuver>::iterator
-ManeuversBuilder::CombineSameNameStraightManeuver(std::list<Maneuver>& maneuvers,
-                                                  std::list<Maneuver>::iterator curr_man,
-                                                  std::list<Maneuver>::iterator next_man) {
+ManeuversBuilder::CombineManeuvers(std::list<Maneuver>& maneuvers,
+                                   std::list<Maneuver>::iterator curr_man,
+                                   std::list<Maneuver>::iterator next_man) {
 
   // Add distance
   curr_man->set_length(curr_man->length() + next_man->length());
