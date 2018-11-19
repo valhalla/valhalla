@@ -12,6 +12,7 @@
    * FIXED: Fixed a data creation bug causing issues with A* routes ending on loops. [#1576](https://github.com/valhalla/valhalla/pull/1576)
    * FIXED: Fixed an issue with a bad route where destination only was present. Was due to thresholds in bidirectional A*. Changed threshold to be cost based rather than number of iterations). [#1586](https://github.com/valhalla/valhalla/pull/1586)
    * FIXED: Fixed an issue with destination only (private) roads being used in bicycle routes. Centralized some "base" transition cost logic in the base DynamicCost class. [#1587](https://github.com/valhalla/valhalla/pull/1587)
+   * FIXED: Remove extraneous ramp maneuvers [#1657](https://github.com/valhalla/valhalla/pull/1657)
 
 ## Release Date: 2018-10-02 Valhalla 2.7.1
 * **Enhancement**
