@@ -417,7 +417,7 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
         // Update current maneuver street names
         curr_man->set_street_names(std::move(common_base_names));
 
-        next_man = CombineSameNameStraightManeuver(maneuvers, curr_man, next_man);
+        next_man = CombineManeuvers(maneuvers, curr_man, next_man);
         maneuvers_have_been_combined = true;
       }
       // Combine unnamed straight maneuvers
@@ -429,7 +429,13 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
                !curr_man->roundabout() && !next_man->roundabout()) {
 
         LOG_TRACE("+++ Combine: unnamed straight maneuvers +++");
-        next_man = CombineSameNameStraightManeuver(maneuvers, curr_man, next_man);
+        next_man = CombineManeuvers(maneuvers, curr_man, next_man);
+        maneuvers_have_been_combined = true;
+      }
+      // Combine ramp maneuvers
+      else if (AreRampManeuversCombinable(curr_man, next_man)) {
+        LOG_TRACE("+++ Combine: ramp maneuvers +++");
+        next_man = CombineManeuvers(maneuvers, curr_man, next_man);
         maneuvers_have_been_combined = true;
       } else {
         LOG_TRACE("+++ Do Not Combine +++");
@@ -585,9 +591,9 @@ ManeuversBuilder::CombineTurnChannelManeuver(std::list<Maneuver>& maneuvers,
 }
 
 std::list<Maneuver>::iterator
-ManeuversBuilder::CombineSameNameStraightManeuver(std::list<Maneuver>& maneuvers,
-                                                  std::list<Maneuver>::iterator curr_man,
-                                                  std::list<Maneuver>::iterator next_man) {
+ManeuversBuilder::CombineManeuvers(std::list<Maneuver>& maneuvers,
+                                   std::list<Maneuver>::iterator curr_man,
+                                   std::list<Maneuver>::iterator next_man) {
 
   // Add distance
   curr_man->set_length(curr_man->length() + next_man->length());
@@ -1993,6 +1999,18 @@ bool ManeuversBuilder::IsTurnChannelManeuverCombinable(std::list<Maneuver>::iter
     // Process simple straight "turn channel"
     if ((curr_man->begin_relative_direction() == Maneuver::RelativeDirection::kKeepStraight) &&
         (new_turn_type == Turn::Type::kStraight)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool ManeuversBuilder::AreRampManeuversCombinable(std::list<Maneuver>::iterator curr_man,
+                                                  std::list<Maneuver>::iterator next_man) const {
+  if (curr_man->ramp() && next_man->ramp() && !next_man->fork() &&
+      !curr_man->internal_intersection() && !next_man->internal_intersection()) {
+    auto* node = trip_path_->GetEnhancedNode(next_man->begin_node_index());
+    if (!node->HasTraversableOutboundIntersectingEdge(next_man->travel_mode())) {
       return true;
     }
   }

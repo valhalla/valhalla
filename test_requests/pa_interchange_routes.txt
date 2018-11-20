@@ -81,3 +81,7 @@
 -j '{"locations":[{"lat":40.491829,"lon":-78.382027,"street":"17th Street"},{"lat":40.487823,"lon":-78.388962,"street":"I 99 South"}],"costing":"auto","directions_options":{"units":"miles"}}'
 -j '{"locations":[{"lat":40.496288,"lon":-78.386047,"street":"17th Street"},{"lat":40.500919,"lon":-78.376152,"street":"I 99 North"}],"costing":"auto","directions_options":{"units":"miles"}}'
 -j '{"locations":[{"lat":40.512505,"lon":-78.405029,"street":"10th Avenue"},{"lat":40.511711,"lon":-78.405197,"street":"17th Street"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":40.172848,"lon":-76.593849,"street":"PA 283 West"},{"lat":40.180206,"lon":-76.600227,"street":"Hershey Road"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":40.172848,"lon":-76.593849,"street":"PA 283 West"},{"lat":40.175640,"lon":-76.602196,"street":"Elizabethtown Road"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":40.182072,"lon":-76.606354,"street":"PA 283 East"},{"lat":40.175640,"lon":-76.602196,"street":"Elizabethtown Road"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":40.182072,"lon":-76.606354,"street":"PA 283 East"},{"lat":40.180153,"lon":-76.600220,"street":"Hershey Road"}],"costing":"auto","directions_options":{"units":"miles"}}'
