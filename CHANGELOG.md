@@ -1,4 +1,4 @@
-## Release Date: TBD
+## Release Date: 2018-11-20 Valhalla 2.7.2
 * **Enhancement**
    * UPDATED: Added a configuration variable for max_timedep_distance. This is used in selecting the path algorithm and provides the maximum distance between locations when choosing a time dependent path algorithm (other than multi modal). Above this distance, bidirectional A* is used with no time dependencies.
    * UPDATED: Remove transition edges from priority queue in Multimodal methods.
