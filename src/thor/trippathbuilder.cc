@@ -1133,25 +1133,25 @@ TripPathBuilder::Build(const AttributesController& controller,
           // Add intersecting edges on the same hierarchy level and not on the path
           AddTripIntersectingEdge(controller, directededge, prev_de, de->localedgeidx(), nodeinfo,
                                   trip_node, de);
+        }
 
-          // Add intersecting edges on different levels (follow NodeTransitions)
-          if (nodeinfo->transition_count() > 0) {
-            const NodeTransition* trans = tile->transition(nodeinfo->transition_index());
-            for (uint32_t i = 0; i < nodeinfo->transition_count(); ++i, ++trans) {
-              // Get the end node tile and its directed edges
-              GraphId endnode = trans->endnode();
-              const GraphTile* endtile = graphreader.GetGraphTile(endnode);
-              const NodeInfo* nodeinfo2 = endtile->node(endnode);
-              const DirectedEdge* de2 = endtile->directededge(nodeinfo2->edge_index());
-              for (uint32_t idx2 = 0; idx2 < nodeinfo2->edge_count(); ++idx2, de2++) {
-                // Skip shortcut edges and edges on the path
-                if (de2->is_shortcut() || de2->localedgeidx() == prior_opp_local_index ||
-                    de2->localedgeidx() == directededge->localedgeidx()) {
-                  continue;
-                }
-                AddTripIntersectingEdge(controller, directededge, prev_de, de2->localedgeidx(),
-                                        nodeinfo2, trip_node, de2);
+        // Add intersecting edges on different levels (follow NodeTransitions)
+        if (nodeinfo->transition_count() > 0) {
+          const NodeTransition* trans = tile->transition(nodeinfo->transition_index());
+          for (uint32_t i = 0; i < nodeinfo->transition_count(); ++i, ++trans) {
+            // Get the end node tile and its directed edges
+            GraphId endnode = trans->endnode();
+            const GraphTile* endtile = graphreader.GetGraphTile(endnode);
+            const NodeInfo* nodeinfo2 = endtile->node(endnode);
+            const DirectedEdge* de2 = endtile->directededge(nodeinfo2->edge_index());
+            for (uint32_t idx2 = 0; idx2 < nodeinfo2->edge_count(); ++idx2, de2++) {
+              // Skip shortcut edges and edges on the path
+              if (de2->is_shortcut() || de2->localedgeidx() == prior_opp_local_index ||
+                  de2->localedgeidx() == directededge->localedgeidx()) {
+                continue;
               }
+              AddTripIntersectingEdge(controller, directededge, prev_de, de2->localedgeidx(),
+                                      nodeinfo2, trip_node, de2);
             }
           }
         }
@@ -1159,6 +1159,7 @@ TripPathBuilder::Build(const AttributesController& controller,
         // Driving routes - do not need intersecting edges since the node info
         // contains driveability at all regular edges.
         for (uint32_t edge_idx = 0; edge_idx < nodeinfo->local_edge_count(); ++edge_idx) {
+
           // Add intersecting edge if this edge is not on the path
           if ((edge_idx != prior_opp_local_index) && (edge_idx != directededge->localedgeidx())) {
             AddTripIntersectingEdge(controller, directededge, prev_de, edge_idx, nodeinfo, trip_node,
@@ -1256,7 +1257,7 @@ TripPathBuilder::Build(const AttributesController& controller,
 
   // hand it back
   return trip_path;
-}
+} // namespace thor
 
 // Add a trip edge to the trip node and set its attributes
 TripPath_Edge* TripPathBuilder::AddTripEdge(const AttributesController& controller,
