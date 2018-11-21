@@ -1,4 +1,4 @@
-## Release Date: TBD Valhalla 3.0
+## Release Date: 2018-11-21TBD Valhalla 3.0 Valhalla 3.0.0
 * **NOTE**
    * This release changes the Valhalla graph tile formats. Tile data is incompatible with Valhalla 2.x builds, and code for 3.x is incompatible with data built for Valahalla 2.x versions. Valhalla tile sizes are slightly smaller (for datasets using elevation information the size savings is over 10%). In addition, there is increased flexibility for creating different variants of tiles to support different applications (e.g. bicycle only, or driving only).
 * **Enhancement**
