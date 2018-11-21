@@ -19,8 +19,12 @@ namespace vb = valhalla::baldr;
 namespace {
 
 struct graph_tile_builder {
-  void append_node(float lon, float lat, uint32_t edge_count, uint32_t first_edge) {
-    nodes.push_back(vb::NodeInfo(std::make_pair(lon, lat), vb::RoadClass::kResidential,
+  void append_node(valhalla::midgard::PointLL& base_ll,
+                   float lon,
+                   float lat,
+                   uint32_t edge_count,
+                   uint32_t first_edge) {
+    nodes.push_back(vb::NodeInfo(base_ll, std::make_pair(lon, lat), vb::RoadClass::kResidential,
                                  vb::kAllAccess, vb::NodeType::kStreetIntersection, false));
     nodes.back().set_edge_count(edge_count);
     nodes.back().set_edge_index(first_edge);
@@ -92,10 +96,11 @@ void TestCollapseEdgeSimple() {
   //  (node 0)                (node 1)              (node 2)
   //          \<--(edge 2)---/       \<--(edge 3)---/
   //
+  valhalla::midgard::PointLL base_ll(0.0f, 0.0f);
   graph_tile_builder builder;
-  builder.append_node(0.00f, 0.0f, 1, 0);
-  builder.append_node(0.01f, 0.0f, 2, 1);
-  builder.append_node(0.02f, 0.0f, 1, 3);
+  builder.append_node(base_ll, 0.00f, 0.0f, 1, 0);
+  builder.append_node(base_ll, 0.01f, 0.0f, 2, 1);
+  builder.append_node(base_ll, 0.02f, 0.0f, 1, 3);
 
   builder.append_edge(base_id + uint64_t(1), 1113);
   builder.append_edge(base_id + uint64_t(2), 1113);
@@ -149,11 +154,12 @@ void TestCollapseEdgeJunction() {
   //                           |   |
   //                            \  /
   //                          (node 3)
+  valhalla::midgard::PointLL base_ll(0.0f, 0.0f);
   graph_tile_builder builder;
-  builder.append_node(0.00f, 0.00f, 1, 0);
-  builder.append_node(0.01f, 0.00f, 3, 1);
-  builder.append_node(0.02f, 0.00f, 1, 4);
-  builder.append_node(0.00f, 0.01f, 1, 5);
+  builder.append_node(base_ll, 0.00f, 0.00f, 1, 0);
+  builder.append_node(base_ll, 0.01f, 0.00f, 3, 1);
+  builder.append_node(base_ll, 0.02f, 0.00f, 1, 4);
+  builder.append_node(base_ll, 0.00f, 0.01f, 1, 5);
 
   builder.append_edge(base_id + uint64_t(1), 1113);
   builder.append_edge(base_id + uint64_t(2), 1113);
@@ -206,11 +212,12 @@ void TestCollapseEdgeChain() {
   //  (n0)            (n1)            (n2)            (n3)
   //      \<--(e2)---/    \<--(e4)---/    \<--(e5)---/
   //
+  valhalla::midgard::PointLL base_ll(0.0f, 0.0f);
   graph_tile_builder builder;
-  builder.append_node(0.00f, 0.0f, 1, 0);
-  builder.append_node(0.01f, 0.0f, 2, 1);
-  builder.append_node(0.02f, 0.0f, 2, 3);
-  builder.append_node(0.03f, 0.0f, 1, 5);
+  builder.append_node(base_ll, 0.00f, 0.0f, 1, 0);
+  builder.append_node(base_ll, 0.01f, 0.0f, 2, 1);
+  builder.append_node(base_ll, 0.02f, 0.0f, 2, 3);
+  builder.append_node(base_ll, 0.03f, 0.0f, 1, 5);
 
   builder.append_edge(base_id + uint64_t(1), 1113);
   builder.append_edge(base_id + uint64_t(2), 1113);

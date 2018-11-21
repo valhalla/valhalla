@@ -1,3 +1,17 @@
+## Release Date: TBD Valhalla 3.0
+* **NOTE**
+   * This release changes the Valhalla graph tile formats. Tile data is incompatible with Valhalla 2.x builds, and code for 3.x is incompatible with data built for Valahalla 2.x versions. Valhalla tile sizes are slightly smaller (for datasets using elevation information the size savings is over 10%). In addition, there is increased flexibility for creating different variants of tiles to support different applications (e.g. bicycle only, or driving only).
+* **Enhancement**
+   * Remove the use of DirectedEdge for transitions between nodes on different hierarchy levels. A new structure, NodeTransition, is now used to transition to nodes on different hierarchy level. This saves space since only the end node GraphId is needed for the transitions (and DirectedEdge is a large data structure).
+   * Change the NodeInfo lat,lon to use an offset from the tile base lat,lon. This potentially allows higher precision than using float, but more importantly saves space and allows support for NodeTransitions as well as spare for future growth.
+   * Remove the EdgeElevation structure and max grade information into DirectedEdge and mean elevation into EdgeInfo. This saves space.
+   * Reduce wayid to 32 bits. This allows sufficient growth when using OpenStreetMap data and frees space in EdgeInfo (allows moving speed limit and mean elevation from other structures).
+   * Move name consistency from NodeInfo to DirectedEdge. This allows a more efficient lookup of name consistency.
+   * Update all path algorithms to use NodeTransition logic rather than special DirectedEdge transition types. This simplifies PathAlgorithms slightly and removes some conditional logic.
+   * Add an optional GraphFilter stage to tile building pipeline. This allows removal of edges and nodes based on access. This allows bicycle only, pedestrian only, or driving only datasets (or combinations) to be created - allowing smaller datasets for special purpose applications.
+* **Deprecate**
+   * Valhalla 3.0 removes support for OSMLR.
+
 ## Release Date: 2018-11-20 Valhalla 2.7.2
 * **Enhancement**
    * UPDATED: Added a configuration variable for max_timedep_distance. This is used in selecting the path algorithm and provides the maximum distance between locations when choosing a time dependent path algorithm (other than multi modal). Above this distance, bidirectional A* is used with no time dependencies.

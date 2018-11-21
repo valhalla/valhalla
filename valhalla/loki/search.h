@@ -22,7 +22,7 @@ namespace loki {
  * opposing edges added to the graph
  */
 const sif::EdgeFilter PassThroughEdgeFilter = [](const baldr::DirectedEdge* edge) -> float {
-  return !(edge->IsTransition() || edge->is_shortcut() || edge->IsTransitLine());
+  return !(edge->is_shortcut() || edge->IsTransitLine());
 };
 
 /**

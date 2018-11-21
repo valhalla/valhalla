@@ -36,12 +36,12 @@ set(sources
   ferry_connections.cc
   graphbuilder.cc
   graphenhancer.cc
+  graphfilter.cc
   graphvalidator.cc
   hierarchybuilder.cc
   linkclassification.cc
   luatagtransform.cc
   node_expander.cc
-  osmaccess.cc
   osmpbfparser.cc
   osmaccessrestriction.cc
   osmrestriction.cc

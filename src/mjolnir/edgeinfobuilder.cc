@@ -3,6 +3,7 @@
 #include <ostream>
 
 #include "baldr/edgeinfo.h"
+#include "baldr/graphconstants.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
 #include "mjolnir/edgeinfobuilder.h"
@@ -11,8 +12,34 @@ namespace valhalla {
 namespace mjolnir {
 
 // Set the OSM way Id.
-void EdgeInfoBuilder::set_wayid(const uint64_t wayid) {
-  wayid_ = wayid;
+void EdgeInfoBuilder::set_wayid(const uint32_t wayid) {
+  w0_.wayid_ = wayid;
+}
+
+// Set the mean elevation.
+void EdgeInfoBuilder::set_mean_elevation(const float mean_elev) {
+  if (mean_elev < kMinElevation) {
+    w0_.mean_elevation_ = 0;
+  } else {
+    uint32_t elev = static_cast<uint32_t>((mean_elev - kMinElevation) / kElevationBinSize);
+    w0_.mean_elevation_ = (elev > kMaxStoredElevation) ? kMaxStoredElevation : elev;
+  }
+}
+
+// Sets the bike network mask indicating which (if any) bicycle networks are
+// along this edge. See baldr/directededge.h for definitions.
+void EdgeInfoBuilder::set_bike_network(const uint32_t bike_network) {
+  w0_.bike_network_ = bike_network;
+}
+
+// Sets the speed limit in KPH.
+void EdgeInfoBuilder::set_speed_limit(const uint32_t speed_limit) {
+  if (speed_limit > kMaxSpeedKph) {
+    LOG_WARN("Exceeding maximum.  Speed limit: " + std::to_string(speed_limit));
+    w0_.speed_limit_ = kMaxSpeedKph;
+  } else {
+    w0_.speed_limit_ = speed_limit;
+  }
 }
 
 // Set the list of name info (offsets, etc.) used by this edge.
@@ -86,7 +113,7 @@ std::ostream& operator<<(std::ostream& os, const EdgeInfoBuilder& eib) {
   }
 
   // Write out the bytes
-  os.write(reinterpret_cast<const char*>(&eib.wayid_), sizeof(uint64_t));
+  os.write(reinterpret_cast<const char*>(&eib.w0_.value_), sizeof(uint64_t));
   os.write(reinterpret_cast<const char*>(&item), sizeof(baldr::EdgeInfo::PackedItem));
   os.write(reinterpret_cast<const char*>(eib.name_info_list_.data()),
            (name_count * sizeof(NameInfo)));

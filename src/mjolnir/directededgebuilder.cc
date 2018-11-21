@@ -16,7 +16,6 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
                                          const bool forward,
                                          const uint32_t length,
                                          const uint32_t speed,
-                                         const uint32_t speed_limit,
                                          const uint32_t truck_speed,
                                          const baldr::Use use,
                                          const RoadClass rc,
@@ -28,7 +27,6 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
   set_endnode(endnode);
   set_use(use);
   set_speed(speed);             // KPH
-  set_speed_limit(speed_limit); // KPH
   set_truck_speed(truck_speed); // KPH
 
   // Protect against 0 length edges
@@ -43,10 +41,9 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
   }
   set_toll(way.toll());
 
+  // Set flag indicating this edge has a bike network
   if (bike_network) {
-    set_bike_network(way.bike_network() | bike_network);
-  } else {
-    set_bike_network(way.bike_network());
+    set_bike_network(true);
   }
 
   set_truck_route(way.truck_route());

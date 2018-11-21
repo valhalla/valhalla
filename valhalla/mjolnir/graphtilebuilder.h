@@ -17,6 +17,7 @@
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphtile.h>
 #include <valhalla/baldr/graphtileheader.h>
+#include <valhalla/baldr/nodetransition.h>
 #include <valhalla/baldr/sign.h>
 #include <valhalla/baldr/signinfo.h>
 #include <valhalla/baldr/transitdeparture.h>
@@ -80,6 +81,14 @@ public:
    * @return  Returns the directed edge builders.
    */
   std::vector<DirectedEdge>& directededges();
+
+  /**
+   * Gets the current list of node transition (builders).
+   * @return  Returns a reference to node transition builders.
+   */
+  std::vector<NodeTransition>& transitions() {
+    return transitions_builder_;
+  }
 
   /**
    * Add a transit departure.
@@ -176,6 +185,9 @@ public:
    *                form tuple that uniquely identifies the edge info since
    *                there are two directed edges per edge info.
    * @param  wayid  The target edge is part of this the way id.
+   * @param  elev   Mean elevation.
+   * @param  bn     Bike network.
+   * @param  spd    Speed limit.
    * @param  lls    The shape of the target edge.
    * @param  names  The names of the target edge.
    * @param  types  Bits indicating if the name is a ref vs a name.
@@ -188,16 +200,17 @@ public:
   uint32_t AddEdgeInfo(const uint32_t edgeindex,
                        const baldr::GraphId& nodea,
                        const baldr::GraphId& nodeb,
-                       const uint64_t wayid,
+                       const uint32_t wayid,
+                       const float elev,
+                       const uint32_t bn,
+                       const uint32_t spd,
                        const shape_container_t& lls,
                        const std::vector<std::string>& names,
                        const uint16_t types,
                        bool& added);
 
   /**
-   * Add the edge info to the tile. This method accepts an encoded shape
-   * string.
-   *
+   * Add the edge info to the tile. This method accepts an encoded shape string.
    * @param  edgeindex  The index of the edge - used with nodea and nodeb to
    *                    form tuple that uniquely identifies the edge info since
    *                    there are two directed edges per edge info.
@@ -208,6 +221,9 @@ public:
    *                form tuple that uniquely identifies the edge info since
    *                there are two directed edges per edge info.
    * @param  wayid  The target edge is part of this the way id.
+   * @param  elev   Mean elevation.
+   * @param  bn     Bike network.
+   * @param  spd    Speed limit.
    * @param  llstr  The shape of the target edge as an encoded string.
    * @param  names  The names of the target edge.
    * @param  types  Bits indicating if the name is a ref vs a name.
@@ -219,11 +235,20 @@ public:
   uint32_t AddEdgeInfo(const uint32_t edgeindex,
                        const baldr::GraphId& nodea,
                        const baldr::GraphId& nodeb,
-                       const uint64_t wayid,
+                       const uint32_t wayid,
+                       const float elev,
+                       const uint32_t bn,
+                       const uint32_t spd,
                        const std::string& llstr,
                        const std::vector<std::string>& names,
                        const uint16_t types,
                        bool& added);
+
+  /**
+   * Set the mean elevation in the most recently added EdgeInfo.
+   * @param elev Mean elevation.
+   */
+  void set_mean_elevation(const float elev);
 
   /**
    * Add a name to the text list.
@@ -290,6 +315,9 @@ public:
    */
   DirectedEdge& directededge_builder(const size_t idx);
 
+  // TODO - add access method to directededge_ext_builder if extended directed edge
+  // attributes are needed.
+
   /**
    * Gets a non-const access restriction from existing tile data.
    * @param  idx  Index of the restriction (index in the array, not the
@@ -353,47 +381,6 @@ public:
   static void AddBins(const std::string& tile_dir,
                       const GraphTile* tile,
                       const std::array<std::vector<GraphId>, kBinCount>& more_bins);
-
-  /**
-   * Initialize traffic segment association. Sizes the traffic segment
-   * association list and sets them all to Invalid.
-   */
-  void InitializeTrafficSegments();
-
-  /**
-   * Initialize traffic chunks. Copies existing chunks into the chunk builder.
-   * This is executed before adding "leftovers" and again before adding chunks.
-   */
-  void InitializeTrafficChunks();
-
-  /**
-   * Add a traffic segment association - used when an edge associates to
-   * a single traffic segment.
-   * @param  edgeid  Edge Id to which traffic segment is associated.
-   * @param  seg     Traffic segment associated to this edge.
-   */
-  void AddTrafficSegment(const baldr::GraphId& edgeid, const baldr::TrafficChunk& seg);
-
-  /**
-   * Add a traffic segment association - used when an edge associates to
-   * more than one traffic segment.
-   * @param  edgeid  Edge Id to which traffic segments are associated.
-   * @param  segs    A vector of traffic segment associations to an edge.
-   */
-  void AddTrafficSegments(const baldr::GraphId& edgeid, const std::vector<baldr::TrafficChunk>& segs);
-
-  /**
-   * Updates a tile with traffic segment and chunk data.
-   * @param  update_dir_edges  If true this will update directed edge flags
-   *                 indicating a traffic segment exists on the edge.
-   */
-  void UpdateTrafficSegments(const bool update_dir_edges);
-
-  /**
-   * Gets the current list of edge elevation (builders).
-   * @return  Returns the edge elevation builders.
-   */
-  std::vector<EdgeElevation>& edge_elevations();
 
   /**
    * Get the turn lane builder at the specified index.
@@ -466,6 +453,14 @@ protected:
   // indexed directly.
   std::vector<DirectedEdge> directededges_builder_;
 
+  // Optional list of directed edge extended attributes. If this is used it must be the same size
+  // as the directededges_builder.
+  std::vector<DirectedEdgeExt> directededges_ext_builder_;
+
+  // List of node transitions. This is a fixed size structure so it can be
+  // indexed directly.
+  std::vector<NodeTransition> transitions_builder_;
+
   // List of transit departures. Sorted by directed edge Id and
   // departure time
   std::vector<baldr::TransitDeparture> departure_builder_;
@@ -513,17 +508,8 @@ protected:
   // Text list. List of names used within this tile
   std::list<std::string> textlistbuilder_;
 
-  // Traffic segment association
-  std::vector<baldr::TrafficAssociation> traffic_segment_builder_;
-
-  // Traffic chunks
-  std::vector<baldr::TrafficChunk> traffic_chunk_builder_;
-
   // List of lane connectivity records.
   std::vector<LaneConnectivity> lane_connectivity_builder_;
-
-  // List of edge elevation records. Index with directed edge Id.
-  std::vector<EdgeElevation> edge_elevation_builder_;
 
   // List of turn lanes.
   std::vector<TurnLanes> turnlanes_builder_;

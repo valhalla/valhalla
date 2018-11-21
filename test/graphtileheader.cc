@@ -5,9 +5,9 @@
 using namespace std;
 using namespace valhalla::baldr;
 
-// Expected size is 264 bytes. We want to alert if somehow any change grows
-// this structure size as that indicates incompatible tiles.
-constexpr size_t kGraphTileHeaderExpectedSize = 264;
+// Expected size is 256. We want to alert if somehow any change grows this structure
+// size as that indicates incompatible tiles.
+constexpr size_t kGraphTileHeaderExpectedSize = 272;
 
 namespace {
 
@@ -30,6 +30,10 @@ void TestWriteRead() {
   hdr.set_date_created(12345);
   if (hdr.date_created() != 12345) {
     throw runtime_error("Header date created test failed");
+  }
+  hdr.set_base_ll({-76.5f, 39.5f});
+  if (hdr.base_ll().lng() != -76.5f && hdr.base_ll().lat() != 39.5f) {
+    throw runtime_error("Header base LL test failed");
   }
   std::string ver = "v1.5";
   hdr.set_version(ver);
@@ -75,6 +79,10 @@ void TestWriteRead() {
   hdr.set_nodecount(55511);
   if (hdr.nodecount() != 55511) {
     throw runtime_error("Header node count test failed");
+  }
+  hdr.set_transitioncount(555);
+  if (hdr.transitioncount() != 555) {
+    throw runtime_error("Header node transition count test failed");
   }
   hdr.set_directededgecount(55511);
   if (hdr.directededgecount() != 55511) {
@@ -174,21 +182,6 @@ void TestWriteRead() {
     throw runtime_error("Header bin index bounds check failed");
   } catch (const std::runtime_error& e) {
     // Error thrown as it should be
-  }
-
-  hdr.set_edge_elevation_offset(55511);
-  if (hdr.edge_elevation_offset() != 55511) {
-    throw runtime_error("Header edge elevation offset test failed");
-  }
-
-  hdr.set_turnlane_count(1234);
-  if (hdr.turnlane_count() != 1234) {
-    throw runtime_error("Header turnlane count test failed");
-  }
-
-  hdr.set_turnlane_offset(4321);
-  if (hdr.turnlane_offset() != 4321) {
-    throw runtime_error("Header turnlane offset test failed");
   }
 }
 } // namespace

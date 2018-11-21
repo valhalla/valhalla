@@ -345,22 +345,6 @@ bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
       continue;
     }
 
-    // Handle transition edges - expand from the end node of the transition
-    // (unless this is called from a transition).
-    if (directededge->trans_up()) {
-      if (!from_transition) {
-        ExpandForward(graphreader, directededge->endnode(), pred, pred_idx, true, pc, tc,
-                      mode_costing);
-      }
-      continue;
-    } else if (directededge->trans_down()) {
-      if (!from_transition) {
-        ExpandForward(graphreader, directededge->endnode(), pred, pred_idx, true, pc, tc,
-                      mode_costing);
-      }
-      continue;
-    }
-
     // Reset cost and walking distance
     Cost newcost = pred.cost();
     walking_distance_ = pred.path_distance();
@@ -528,7 +512,7 @@ bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
         continue;
       }
       const NodeInfo* endnode = endtile->node(directededge->endnode());
-      dist = astarheuristic_.GetDistance(endnode->latlng());
+      dist = astarheuristic_.GetDistance(endnode->latlng(endtile->header()->base_ll()));
       sortcost += astarheuristic_.Get(dist);
     }
 
@@ -539,6 +523,14 @@ bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
                              walking_distance_, tripid, prior_stop, blockid, operator_id,
                              has_transit);
     adjacencylist_->add(idx);
+  }
+
+  // Handle transitions - expand from the end node each transition
+  if (!from_transition && nodeinfo->transition_count() > 0) {
+    const NodeTransition* trans = tile->transition(nodeinfo->transition_index());
+    for (uint32_t i = 0; i < nodeinfo->transition_count(); ++i, ++trans) {
+      ExpandForward(graphreader, trans->endnode(), pred, pred_idx, true, pc, tc, mode_costing);
+    }
   }
   return false;
 }
@@ -580,7 +572,7 @@ void MultiModalPathAlgorithm::SetOrigin(GraphReader& graphreader,
     nodeinfo = endtile->node(directededge->endnode());
     Cost cost =
         costing->EdgeCost(directededge, tile->GetSpeed(directededge)) * (1.0f - edge.percent_along());
-    float dist = astarheuristic_.GetDistance(nodeinfo->latlng());
+    float dist = astarheuristic_.GetDistance(nodeinfo->latlng(endtile->header()->base_ll()));
 
     // We need to penalize this location based on its score (distance in meters from input)
     // We assume the slowest speed you could travel to cover that distance to start/end the route
@@ -721,22 +713,6 @@ bool MultiModalPathAlgorithm::ExpandFromNode(baldr::GraphReader& graphreader,
   EdgeStatusInfo* es = edgestatus.GetPtr(edgeid, tile);
   const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
   for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++, ++edgeid, ++es) {
-    // Handle transition edges - expand from the end node of the transition
-    // (unless this is called from a transition).
-    if (directededge->trans_up()) {
-      if (!from_transition) {
-        ExpandFromNode(graphreader, directededge->endnode(), pred, pred_idx, costing, edgestatus,
-                       edgelabels, adjlist, true);
-      }
-      continue;
-    } else if (directededge->trans_down()) {
-      if (!from_transition) {
-        ExpandFromNode(graphreader, directededge->endnode(), pred, pred_idx, costing, edgestatus,
-                       edgelabels, adjlist, true);
-      }
-      continue;
-    }
-
     // Skip this edge if permanently labeled (best path already found to this directed edge) or
     // access is not allowed for this mode.
     if (es->set() == EdgeSet::kPermanent ||
@@ -766,6 +742,15 @@ bool MultiModalPathAlgorithm::ExpandFromNode(baldr::GraphReader& graphreader,
                             walking_distance);
     *es = {EdgeSet::kTemporary, idx};
     adjlist.add(idx);
+  }
+
+  // Handle transitions - expand from the end node each transition
+  if (!from_transition && nodeinfo->transition_count() > 0) {
+    const NodeTransition* trans = tile->transition(nodeinfo->transition_index());
+    for (uint32_t i = 0; i < nodeinfo->transition_count(); ++i, ++trans) {
+      ExpandFromNode(graphreader, trans->endnode(), pred, pred_idx, costing, edgestatus, edgelabels,
+                     adjlist, true);
+    }
   }
   return false;
 }

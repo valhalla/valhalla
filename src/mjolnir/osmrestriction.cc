@@ -74,22 +74,22 @@ uint32_t OSMRestriction::modes() const {
 }
 
 // Set the from way id
-void OSMRestriction::set_from(uint64_t from) {
+void OSMRestriction::set_from(uint32_t from) {
   from_ = from;
 }
 
 // Get the from way id
-uint64_t OSMRestriction::from() const {
+uint32_t OSMRestriction::from() const {
   return from_;
 }
 
 // Set the to way id
-void OSMRestriction::set_to(uint64_t to) {
+void OSMRestriction::set_to(uint32_t to) {
   to_ = to;
 }
 
 // Get the to way id
-uint64_t OSMRestriction::to() const {
+uint32_t OSMRestriction::to() const {
   return to_;
 }
 

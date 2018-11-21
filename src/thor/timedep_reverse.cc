@@ -100,32 +100,10 @@ void TimeDepReverse::ExpandReverse(GraphReader& graphreader,
   EdgeStatusInfo* es = edgestatus_.GetPtr(edgeid, tile);
   const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
   for (uint32_t i = 0; i < nodeinfo->edge_count(); ++i, ++directededge, ++edgeid, ++es) {
-    // Handle transition edges - expand from the end node of the transition
-    // (unless this is called from a transition).
-    if (directededge->trans_up()) {
-      if (!from_transition) {
-        hierarchy_limits_[node.level()].up_transition_count++;
-        ExpandReverse(graphreader, directededge->endnode(), pred, pred_idx, opp_pred_edge, true,
-                      seconds_of_week, localtime, destination, best_path);
-      }
-      continue;
-    } else if (directededge->trans_down()) {
-      if (!from_transition &&
-          !hierarchy_limits_[directededge->endnode().level()].StopExpanding(pred.distance())) {
-        ExpandReverse(graphreader, directededge->endnode(), pred, pred_idx, opp_pred_edge, true,
-                      seconds_of_week, localtime, destination, best_path);
-      }
-      continue;
-    }
-
-    // Skip shortcut edges for time dependent routes
-    if (directededge->is_shortcut()) {
-      continue;
-    }
-
-    // Skip this edge if permanently labeled (best path already found to this
-    // directed edge) or if no access for this mode.
-    if (es->set() == EdgeSet::kPermanent || !(directededge->reverseaccess() & access_mode_)) {
+    // Skip shortcut edges for time dependent routes. Also skip this edge if permanently labeled (best
+    // path already found to this directed edge) or if no access for this mode.
+    if (directededge->is_shortcut() || es->set() == EdgeSet::kPermanent ||
+        !(directededge->reverseaccess() & access_mode_)) {
       continue;
     }
 
@@ -205,7 +183,7 @@ void TimeDepReverse::ExpandReverse(GraphReader& graphreader,
       if (t2 == nullptr) {
         continue;
       }
-      sortcost += astarheuristic_.Get(t2->node(directededge->endnode())->latlng(), dist);
+      sortcost += astarheuristic_.Get(t2->get_node_ll(directededge->endnode()), dist);
     }
 
     // Add edge label, add to the adjacency list and set edge status
@@ -214,6 +192,21 @@ void TimeDepReverse::ExpandReverse(GraphReader& graphreader,
                                  mode_, tc, (pred.not_thru_pruning() || !directededge->not_thru()));
     adjacencylist_->add(idx);
     *es = {EdgeSet::kTemporary, idx};
+  }
+
+  // Handle transitions - expand from the end node of each transition
+  if (!from_transition && nodeinfo->transition_count() > 0) {
+    const NodeTransition* trans = tile->transition(nodeinfo->transition_index());
+    for (uint32_t i = 0; i < nodeinfo->transition_count(); ++i, ++trans) {
+      if (trans->up()) {
+        hierarchy_limits_[node.level()].up_transition_count++;
+        ExpandReverse(graphreader, trans->endnode(), pred, pred_idx, opp_pred_edge, true,
+                      seconds_of_week, localtime, destination, best_path);
+      } else if (!hierarchy_limits_[trans->endnode().level()].StopExpanding(pred.distance())) {
+        ExpandReverse(graphreader, trans->endnode(), pred, pred_idx, opp_pred_edge, true,
+                      seconds_of_week, localtime, destination, best_path);
+      }
+    }
   }
 }
 
@@ -409,7 +402,7 @@ void TimeDepReverse::SetOrigin(GraphReader& graphreader,
 
     // Get cost
     Cost cost = costing_->EdgeCost(directededge, tile->GetSpeed(directededge)) * edge.percent_along();
-    float dist = astarheuristic_.GetDistance(tile->node(opp_dir_edge->endnode())->latlng());
+    float dist = astarheuristic_.GetDistance(tile->get_node_ll(opp_dir_edge->endnode()));
 
     // We need to penalize this location based on its score (distance in meters from input)
     // We assume the slowest speed you could travel to cover that distance to start/end the route

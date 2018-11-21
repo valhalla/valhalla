@@ -215,8 +215,7 @@ private:
 // merged path. This method should match the predicate used to create OSMLR
 // segments.
 bool allow_edge_pred(const vb::DirectedEdge* edge) {
-  return (!edge->trans_up() && !edge->trans_down() && !edge->is_shortcut() &&
-          edge->classification() != vb::RoadClass::kServiceOther &&
+  return (!edge->is_shortcut() && edge->classification() != vb::RoadClass::kServiceOther &&
           (edge->use() == vb::Use::kRoad || edge->use() == vb::Use::kRamp) && !edge->roundabout() &&
           !edge->internal() && (edge->forwardaccess() & vb::kVehicularAccess) != 0);
 }
@@ -435,8 +434,7 @@ std::vector<CandidateEdge> GetEdgesFromNodes(vb::GraphReader& reader,
     const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
     for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++, ++edgeid) {
       // Skip non-regular edges - must be a road or ramp
-      if (directededge->trans_up() || directededge->trans_down() || directededge->is_shortcut() ||
-          directededge->roundabout() ||
+      if (directededge->is_shortcut() || directededge->roundabout() ||
           (directededge->use() != vb::Use::kRoad && directededge->use() != vb::Use::kRamp) ||
           directededge->internal()) {
         continue;
@@ -445,14 +443,14 @@ std::vector<CandidateEdge> GetEdgesFromNodes(vb::GraphReader& reader,
       // If origin - add outbound edges that have vehicular access
       if (origin && (directededge->forwardaccess() & vb::kVehicularAccess) != 0) {
         vb::PathLocation::PathEdge edge(edgeid, 0.0f, dmy, 1.0f);
-        edges.emplace_back(edge, seg_coord.Distance(nodeinfo->latlng()));
+        edges.emplace_back(edge, seg_coord.Distance(nodeinfo->latlng(tile->header()->base_ll())));
       }
 
       // If destination, add incoming, opposing edge if it has vehicular access
       if (!origin && (directededge->reverseaccess() & vb::kVehicularAccess) != 0) {
         GraphId opp_edge_id = reader.GetOpposingEdgeId(edgeid);
         vb::PathLocation::PathEdge edge(opp_edge_id, 1.0f, dmy, 1.0f);
-        edges.emplace_back(edge, seg_coord.Distance(nodeinfo->latlng()));
+        edges.emplace_back(edge, seg_coord.Distance(nodeinfo->latlng(tile->header()->base_ll())));
       }
     }
   }
@@ -744,7 +742,7 @@ vm::PointLL edge_association::lookup_end_coord(const vb::GraphId& edge_id) {
     node_tile = m_reader.GetGraphTile(node_id);
   }
   auto* node = node_tile->node(node_id);
-  return node->latlng();
+  return node->latlng(tile->header()->base_ll());
 }
 
 vm::PointLL edge_association::lookup_start_coord(const vb::GraphId& edge_id) {
