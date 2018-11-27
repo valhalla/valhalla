@@ -219,6 +219,16 @@ protected:
                        const std::shared_ptr<sif::DynamicCost>* mode_costing);
 
   /**
+   * Expand from the node for a multi-modal path.
+   */
+  void ExpandMM(baldr::GraphReader& graphreader,
+                const baldr::GraphId& node,
+                const sif::MMEdgeLabel& pred,
+                const sif::DynamicCost* costing,
+                const sif::DynamicCost* tc,
+                const std::shared_ptr<sif::DynamicCost>* mode_costing);
+
+  /**
    * Updates the isotile using the edge information from the predecessor edge
    * label. This is the edge being settled (lowest cost found to the edge).
    * @param  pred         Predecessor edge label (edge being settled).

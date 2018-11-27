@@ -47,10 +47,10 @@ struct HGVRestrictionTypes {
 // Get the GraphId of the opposing edge.
 uint32_t GetOpposingEdgeIndex(const GraphId& startnode,
                               DirectedEdge& edge,
-                              uint64_t wayid,
+                              uint32_t wayid,
                               const GraphTile* tile,
                               const GraphTile* end_tile,
-                              std::set<uint64_t>& problem_ways,
+                              std::set<uint32_t>& problem_ways,
                               uint32_t& dupcount,
                               std::string& endnodeiso,
                               const uint32_t transit_level) {
@@ -91,18 +91,6 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode,
     if (directededge->endnode() != startnode ||
         edge.forwardaccess() != directededge->reverseaccess() ||
         edge.reverseaccess() != directededge->forwardaccess()) {
-      continue;
-    }
-
-    // Transition edges - set opp_index if an opposing transition
-    // edge is found. Continue if either edge is a transition
-    if ((edge.trans_down() && directededge->trans_up()) ||
-        (edge.trans_up() && directededge->trans_down())) {
-      opp_index = i;
-      continue;
-    }
-    if (edge.trans_down() || directededge->trans_down() || edge.trans_up() ||
-        directededge->trans_up()) {
       continue;
     }
 
@@ -148,7 +136,7 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode,
       }
 
       bool match = false;
-      uint64_t wayid2 = 0;
+      uint32_t wayid2 = 0;
       if (edge.is_shortcut()) {
         // Shortcut edges - use must match (or both are links)
         if ((directededge->link() && edge.link()) || (directededge->use() == edge.use())) {
@@ -181,8 +169,8 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode,
             std::vector<std::string> names = tile->edgeinfo(edge.edgeinfo_offset()).GetNames();
             std::string name = (names.size() > 0) ? names[0] : "unnamed";
             LOG_DEBUG("Duplicate shortcut for " + name +
-                      " at LL = " + std::to_string(nodeinfo->latlng().lat()) + "," +
-                      std::to_string(nodeinfo->latlng().lng()));
+                      " at LL = " + std::to_string(tile->get_node_ll(endnode).lat()) + "," +
+                      std::to_string(tile->get_node_ll(endnode).lng()));
           } else {
             LOG_DEBUG("Potential duplicate: wayids " + std::to_string(wayid) + " and " +
                       std::to_string(wayid2) + " level = " + std::to_string(startnode.level()) +
@@ -205,10 +193,8 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode,
 
   // No matching opposing edge found - log error cases
   if (opp_index == absurd_index) {
-    if (edge.IsTransition()) {
-      LOG_ERROR("No match found to a transition edge");
-    } else if (edge.use() == Use::kTransitConnection || edge.use() == Use::kEgressConnection ||
-               edge.use() == Use::kPlatformConnection) {
+    if (edge.use() == Use::kTransitConnection || edge.use() == Use::kEgressConnection ||
+        edge.use() == Use::kPlatformConnection) {
       // Log error - no opposing edge for a transit connection
       LOG_ERROR("No opposing transit/egress/platform connection edge: endstop = " +
                 std::to_string(nodeinfo->stop_index()) + " has " +
@@ -220,18 +206,18 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode,
                std::to_string(nodeinfo->stop_index()) + " has " +
                std::to_string(nodeinfo->edge_count())); */
     } else if (startnode.level() != transit_level) {
+      PointLL ll = end_tile->get_node_ll(endnode);
       if (edge.is_shortcut()) {
         LOG_ERROR(
             (boost::format(
                  "No opposing shortcut edge at LL=%1%,%2% Length = %3% Startnode %4% EndNode %5%") %
-             nodeinfo->latlng().lat() % nodeinfo->latlng().lng() % edge.length() % startnode %
-             edge.endnode())
+             ll.lat() % ll.lng() % edge.length() % startnode % edge.endnode())
                 .str());
       } else {
         LOG_ERROR((boost::format("No opposing edge at LL=%1%,%2% Length = %3% Startnode %4% "
                                  "EndNode %5% WayID %6% EdgeInfoOffset %7%") %
-                   nodeinfo->latlng().lat() % nodeinfo->latlng().lng() % edge.length() % startnode %
-                   edge.endnode() % wayid % edge.edgeinfo_offset())
+                   ll.lat() % ll.lng() % edge.length() % startnode % edge.endnode() % wayid %
+                   edge.edgeinfo_offset())
                       .str());
       }
 
@@ -284,7 +270,7 @@ void validate(
   std::vector<uint32_t> duplicates(numLevels, 0);
 
   // Vector to hold problem ways
-  std::set<uint64_t> problem_ways;
+  std::set<uint32_t> problem_ways;
 
   // Check for more tiles
   while (true) {
@@ -377,7 +363,7 @@ void validate(
         // Road Length and some variables for statistics
         float edge_length;
         bool valid_length = false;
-        if (!directededge.shortcut() && !directededge.trans_up() && !directededge.trans_down()) {
+        if (!directededge.shortcut()) {
           edge_length = directededge.length();
           roadlength += edge_length;
           valid_length = true;
@@ -401,8 +387,7 @@ void validate(
         // node. Set the deadend flag and internal flag (if the opposing
         // edge is internal then make sure this edge is as well)
         std::string end_node_iso;
-        uint64_t wayid =
-            directededge.IsTransition() ? 0 : tile->edgeinfo(directededge.edgeinfo_offset()).wayid();
+        uint32_t wayid = tile->edgeinfo(directededge.edgeinfo_offset()).wayid();
         uint32_t opp_index =
             GetOpposingEdgeIndex(node, directededge, wayid, tile, endnode_tile, problem_ways,
                                  dupcount, end_node_iso, transit_level);

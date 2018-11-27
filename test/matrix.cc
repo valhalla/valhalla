@@ -106,7 +106,7 @@ public:
 
   const EdgeFilter GetEdgeFilter() const {
     return [](const DirectedEdge* edge) {
-      if (edge->IsTransition() || edge->is_shortcut() || !(edge->forwardaccess() & kAutoAccess))
+      if (edge->is_shortcut() || !(edge->forwardaccess() & kAutoAccess))
         return 0.0f;
       else {
         return 1.0f;

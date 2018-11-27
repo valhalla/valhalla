@@ -270,10 +270,6 @@ public:
       // the next predecessor if the edge is a transition edge.
       const EdgeLabel* next_pred =
           (label->predecessor() == baldr::kInvalidLabel) ? label : &edge_labels[label->predecessor()];
-      while (next_pred->use() == baldr::Use::kTransitionUp &&
-             next_pred->predecessor() != baldr::kInvalidLabel) {
-        next_pred = &edge_labels[next_pred->predecessor()];
-      }
       return next_pred;
     };
 
@@ -287,14 +283,8 @@ public:
         return false;
       }
 
-      // Get the first predecessor edge (that is not a transition)
-      // TODO - do not need this if no transition edges are added to EdgeLabels
-      const EdgeLabel* first_pred = &pred;
-      if (first_pred->use() == baldr::Use::kTransitionUp) {
-        first_pred = next_predecessor(first_pred);
-      }
-
       // Iterate through the restrictions
+      const EdgeLabel* first_pred = &pred;
       for (const auto& cr : restrictions) {
         // Walk the via list, move to the next restriction if the via edge
         // Ids do not match the path for this restriction.
@@ -327,7 +317,11 @@ public:
             }
             continue;
           }
-          return true;
+          // TODO: If a user runs a non-time dependent route, we need to provide Manuever Notes for
+          // the timed restriction.
+          else if (!current_time && cr->has_dt())
+            return false;
+          return true; // Otherwise this is a non-timed restriction and it exists all the time.
         }
       }
     }
@@ -604,7 +598,7 @@ protected:
     if (edge->use() == baldr::Use::kAlley && pred.use() != baldr::Use::kAlley) {
       c.cost += alley_penalty_;
     }
-    if (!edge->link() && !node->name_consistency(idx, edge->localedgeidx())) {
+    if (!edge->link() && !edge->name_consistency(idx)) {
       c.cost += maneuver_penalty_;
     }
     return c;
@@ -647,7 +641,7 @@ protected:
     if (edge->use() == baldr::Use::kAlley && pred->use() != baldr::Use::kAlley) {
       c.cost += alley_penalty_;
     }
-    if (!edge->link() && !node->name_consistency(idx, edge->localedgeidx())) {
+    if (!edge->link() && !edge->name_consistency(idx)) {
       c.cost += maneuver_penalty_;
     }
     return c;

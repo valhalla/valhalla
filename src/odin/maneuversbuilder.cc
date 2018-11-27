@@ -126,12 +126,13 @@ std::list<Maneuver> ManeuversBuilder::Build() {
     throw valhalla_exception_t{213};
   const auto& orig = trip_path_->GetOrigin();
   const auto& dest = trip_path_->GetDestination();
-  std::string first_name =
-      (trip_path_->GetCurrEdge(0)->name_size() == 0) ? "" : trip_path_->GetCurrEdge(0)->name(0);
+  std::string first_name = (trip_path_->GetCurrEdge(0)->name_size() == 0)
+                               ? ""
+                               : trip_path_->GetCurrEdge(0)->name(0).value();
   auto last_node_index = (trip_path_->node_size() - 2);
   std::string last_name = (trip_path_->GetCurrEdge(last_node_index)->name_size() == 0)
                               ? ""
-                              : trip_path_->GetCurrEdge(last_node_index)->name(0);
+                              : trip_path_->GetCurrEdge(last_node_index)->name(0).value();
   std::string units = (directions_options_.units() == valhalla::odin::DirectionsOptions::kilometers)
                           ? "kilometers"
                           : "miles";
@@ -416,7 +417,7 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
         // Update current maneuver street names
         curr_man->set_street_names(std::move(common_base_names));
 
-        next_man = CombineSameNameStraightManeuver(maneuvers, curr_man, next_man);
+        next_man = CombineManeuvers(maneuvers, curr_man, next_man);
         maneuvers_have_been_combined = true;
       }
       // Combine unnamed straight maneuvers
@@ -428,7 +429,13 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
                !curr_man->roundabout() && !next_man->roundabout()) {
 
         LOG_TRACE("+++ Combine: unnamed straight maneuvers +++");
-        next_man = CombineSameNameStraightManeuver(maneuvers, curr_man, next_man);
+        next_man = CombineManeuvers(maneuvers, curr_man, next_man);
+        maneuvers_have_been_combined = true;
+      }
+      // Combine ramp maneuvers
+      else if (AreRampManeuversCombinable(curr_man, next_man)) {
+        LOG_TRACE("+++ Combine: ramp maneuvers +++");
+        next_man = CombineManeuvers(maneuvers, curr_man, next_man);
         maneuvers_have_been_combined = true;
       } else {
         LOG_TRACE("+++ Do Not Combine +++");
@@ -584,9 +591,9 @@ ManeuversBuilder::CombineTurnChannelManeuver(std::list<Maneuver>& maneuvers,
 }
 
 std::list<Maneuver>::iterator
-ManeuversBuilder::CombineSameNameStraightManeuver(std::list<Maneuver>& maneuvers,
-                                                  std::list<Maneuver>::iterator curr_man,
-                                                  std::list<Maneuver>::iterator next_man) {
+ManeuversBuilder::CombineManeuvers(std::list<Maneuver>& maneuvers,
+                                   std::list<Maneuver>::iterator curr_man,
+                                   std::list<Maneuver>::iterator next_man) {
 
   // Add distance
   curr_man->set_length(curr_man->length() + next_man->length());
@@ -972,23 +979,30 @@ void ManeuversBuilder::UpdateManeuver(Maneuver& maneuver, int node_index) {
   // Signs
   if (prev_edge->has_sign()) {
     // Exit number
-    for (auto& text : prev_edge->sign().exit_number()) {
-      maneuver.mutable_signs()->mutable_exit_number_list()->emplace_back(text);
+    for (const auto& exit_number : prev_edge->sign().exit_numbers()) {
+      maneuver.mutable_signs()
+          ->mutable_exit_number_list()
+          ->emplace_back(exit_number.text(), exit_number.is_route_number());
     }
 
     // Exit branch
-    for (auto& text : prev_edge->sign().exit_branch()) {
-      maneuver.mutable_signs()->mutable_exit_branch_list()->emplace_back(text);
+    for (const auto& exit_onto_street : prev_edge->sign().exit_onto_streets()) {
+      maneuver.mutable_signs()
+          ->mutable_exit_branch_list()
+          ->emplace_back(exit_onto_street.text(), exit_onto_street.is_route_number());
     }
 
     // Exit toward
-    for (auto& text : prev_edge->sign().exit_toward()) {
-      maneuver.mutable_signs()->mutable_exit_toward_list()->emplace_back(text);
+    for (const auto& exit_toward_location : prev_edge->sign().exit_toward_locations()) {
+      maneuver.mutable_signs()
+          ->mutable_exit_toward_list()
+          ->emplace_back(exit_toward_location.text(), exit_toward_location.is_route_number());
     }
 
     // Exit name
-    for (auto& text : prev_edge->sign().exit_name()) {
-      maneuver.mutable_signs()->mutable_exit_name_list()->emplace_back(text);
+    for (const auto& exit_name : prev_edge->sign().exit_names()) {
+      maneuver.mutable_signs()->mutable_exit_name_list()->emplace_back(exit_name.text(),
+                                                                       exit_name.is_route_number());
     }
   }
 
@@ -1074,7 +1088,7 @@ void ManeuversBuilder::FinalizeManeuver(Maneuver& maneuver, int node_index) {
 
   // Set begin street names
   if (!curr_edge->IsHighway() && !curr_edge->internal_intersection() &&
-      (curr_edge->GetNameList().size() > 1)) {
+      (curr_edge->name_size() > 1)) {
     std::unique_ptr<StreetNames> curr_edge_names =
         StreetNamesFactory::Create(trip_path_->GetCountryCode(node_index), curr_edge->GetNameList());
     std::unique_ptr<StreetNames> common_base_names =
@@ -1991,6 +2005,18 @@ bool ManeuversBuilder::IsTurnChannelManeuverCombinable(std::list<Maneuver>::iter
   return false;
 }
 
+bool ManeuversBuilder::AreRampManeuversCombinable(std::list<Maneuver>::iterator curr_man,
+                                                  std::list<Maneuver>::iterator next_man) const {
+  if (curr_man->ramp() && next_man->ramp() && !next_man->fork() &&
+      !curr_man->internal_intersection() && !next_man->internal_intersection()) {
+    auto* node = trip_path_->GetEnhancedNode(next_man->begin_node_index());
+    if (!node->HasTraversableOutboundIntersectingEdge(next_man->travel_mode())) {
+      return true;
+    }
+  }
+  return false;
+}
+
 void ManeuversBuilder::EnhanceSignlessInterchnages(std::list<Maneuver>& maneuvers) {
   auto prev_man = maneuvers.begin();
   auto curr_man = maneuvers.begin();
@@ -2012,8 +2038,10 @@ void ManeuversBuilder::EnhanceSignlessInterchnages(std::list<Maneuver>& maneuver
         !curr_man->HasExitSign() && !(prev_man->ramp() || prev_man->fork()) &&
         (next_man->type() == TripDirections_Maneuver_Type::TripDirections_Maneuver_Type_kMerge) &&
         next_man->HasStreetNames()) {
-      curr_man->mutable_signs()->mutable_exit_branch_list()->emplace_back(
-          next_man->street_names().front()->value());
+      curr_man->mutable_signs()
+          ->mutable_exit_branch_list()
+          ->emplace_back(next_man->street_names().front()->value(),
+                         next_man->street_names().front()->is_route_number());
     }
 
     // on to the next maneuver...

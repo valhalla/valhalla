@@ -21,11 +21,11 @@ enum DataIssueType {
 
 // Simple struct for holding duplicate ways to allow sorting by edgecount
 struct DuplicateWay {
-  uint64_t wayid1;
-  uint64_t wayid2;
+  uint32_t wayid1;
+  uint32_t wayid2;
   uint32_t edgecount;
 
-  DuplicateWay(const uint64_t id1, const uint64_t id2, const uint32_t n)
+  DuplicateWay(const uint32_t id1, const uint32_t id2, const uint32_t n)
       : wayid1(id1), wayid2(id2), edgecount(n) {
   }
 
@@ -57,8 +57,8 @@ public:
    */
   void AddIssue(const DataIssueType issuetype,
                 const baldr::GraphId& graphid,
-                const uint64_t wayid1,
-                const uint64_t wayid2);
+                const uint32_t wayid1,
+                const uint32_t wayid2);
 
   /**
    * Log simple statistics.
@@ -82,13 +82,13 @@ public:
 
 protected:
   // Unconnected links
-  std::unordered_set<uint64_t> unconnectedlinks_;
+  std::unordered_set<uint32_t> unconnectedlinks_;
 
   // Unconnected links
-  std::unordered_set<uint64_t> incompatiblelinkuse_;
+  std::unordered_set<uint32_t> incompatiblelinkuse_;
 
   // Duplicate way Ids
-  std::map<std::pair<uint64_t, uint64_t>, uint32_t> duplicateways_;
+  std::map<std::pair<uint32_t, uint32_t>, uint32_t> duplicateways_;
 };
 
 } // namespace mjolnir

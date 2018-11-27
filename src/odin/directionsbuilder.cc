@@ -149,12 +149,16 @@ TripDirections DirectionsBuilder::PopulateTripDirections(const DirectionsOptions
 
     // Set street names
     for (const auto& street_name : maneuver.street_names()) {
-      trip_maneuver->add_street_name(street_name->value());
+      auto* maneuver_street_name = trip_maneuver->add_street_name();
+      maneuver_street_name->set_value(street_name->value());
+      maneuver_street_name->set_is_route_number(street_name->is_route_number());
     }
 
     // Set begin street names
     for (const auto& begin_street_name : maneuver.begin_street_names()) {
-      trip_maneuver->add_begin_street_name(begin_street_name->value());
+      auto* maneuver_begin_street_name = trip_maneuver->add_begin_street_name();
+      maneuver_begin_street_name->set_value(begin_street_name->value());
+      maneuver_begin_street_name->set_is_route_number(begin_street_name->is_route_number());
     }
 
     trip_maneuver->set_length(maneuver.length(directions_options.units()));
@@ -191,41 +195,41 @@ TripDirections DirectionsBuilder::PopulateTripDirections(const DirectionsOptions
 
       // Process exit number info
       if (maneuver.HasExitNumberSign()) {
-        auto* trip_exit_number_elements = trip_sign->mutable_exit_number_elements();
         for (const auto& exit_number : maneuver.signs().exit_number_list()) {
-          auto* trip_exit_number_element = trip_exit_number_elements->Add();
-          trip_exit_number_element->set_text(exit_number.text());
-          trip_exit_number_element->set_consecutive_count(exit_number.consecutive_count());
+          auto* trip_exit_number = trip_sign->mutable_exit_numbers()->Add();
+          trip_exit_number->set_text(exit_number.text());
+          trip_exit_number->set_is_route_number(exit_number.is_route_number());
+          trip_exit_number->set_consecutive_count(exit_number.consecutive_count());
         }
       }
 
       // Process exit branch info
       if (maneuver.HasExitBranchSign()) {
-        auto* trip_exit_branch_elements = trip_sign->mutable_exit_branch_elements();
         for (const auto& exit_branch : maneuver.signs().exit_branch_list()) {
-          auto* trip_exit_branch_element = trip_exit_branch_elements->Add();
-          trip_exit_branch_element->set_text(exit_branch.text());
-          trip_exit_branch_element->set_consecutive_count(exit_branch.consecutive_count());
+          auto* trip_exit_onto_street = trip_sign->mutable_exit_onto_streets()->Add();
+          trip_exit_onto_street->set_text(exit_branch.text());
+          trip_exit_onto_street->set_is_route_number(exit_branch.is_route_number());
+          trip_exit_onto_street->set_consecutive_count(exit_branch.consecutive_count());
         }
       }
 
       // Process exit toward info
       if (maneuver.HasExitTowardSign()) {
-        auto* trip_exit_toward_elements = trip_sign->mutable_exit_toward_elements();
         for (const auto& exit_toward : maneuver.signs().exit_toward_list()) {
-          auto* trip_exit_toward_element = trip_exit_toward_elements->Add();
-          trip_exit_toward_element->set_text(exit_toward.text());
-          trip_exit_toward_element->set_consecutive_count(exit_toward.consecutive_count());
+          auto* trip_exit_toward_location = trip_sign->mutable_exit_toward_locations()->Add();
+          trip_exit_toward_location->set_text(exit_toward.text());
+          trip_exit_toward_location->set_is_route_number(exit_toward.is_route_number());
+          trip_exit_toward_location->set_consecutive_count(exit_toward.consecutive_count());
         }
       }
 
       // Process exit name info
       if (maneuver.HasExitNameSign()) {
-        auto* trip_exit_name_elements = trip_sign->mutable_exit_name_elements();
         for (const auto& exit_name : maneuver.signs().exit_name_list()) {
-          auto* trip_exit_name_element = trip_exit_name_elements->Add();
-          trip_exit_name_element->set_text(exit_name.text());
-          trip_exit_name_element->set_consecutive_count(exit_name.consecutive_count());
+          auto* trip_exit_name = trip_sign->mutable_exit_names()->Add();
+          trip_exit_name->set_text(exit_name.text());
+          trip_exit_name->set_is_route_number(exit_name.is_route_number());
+          trip_exit_name->set_consecutive_count(exit_name.consecutive_count());
         }
       }
     }

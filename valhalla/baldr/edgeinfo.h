@@ -21,6 +21,13 @@ namespace baldr {
 constexpr size_t kMaxNamesPerEdge = 15;
 constexpr size_t kMaxEncodedShapeSize = 65535;
 
+// Use elevation bins of 2 meters to store mean elevation. Clamp to a range
+// from -500 meters to 7683 meters.
+constexpr uint32_t kMaxStoredElevation = 4095; // 12 bits
+constexpr float kElevationBinSize = 2.0f;
+constexpr float kMinElevation = -500.0f;
+constexpr float kMaxElevation = kMinElevation + (kElevationBinSize * kMaxStoredElevation);
+
 // Name information. Information about names added to the names list within
 // the tile. A name can have a textual representation followed by optional
 // fields that provide additional information about the name.
@@ -30,9 +37,14 @@ struct NameInfo {
                                    // the name. These can be used for
                                    // additional information like language
                                    // phonetic string, etc.
-  uint32_t is_ref_ : 1;            // Flag used to indicate if this is a ref
-                                   // vs a name.
-  uint32_t spare_ : 3;
+  uint32_t is_route_num_ : 1;      // Flag used to indicate if this is a route number
+                                   // vs just a name.
+  uint32_t tagged_ : 1;            // Future use - this indicates the text string is
+                                   // specially tagged (for example uses the first char as
+                                   // the tag type). To make this forward and backward
+                                   // compatible, tagged text will not be read in GetNames
+                                   // and GetNamesAndTags until code is ready to actually use it.
+  uint32_t spare_ : 2;
 
   bool operator==(const NameInfo& other) const {
     return (name_offset_ == other.name_offset_);
@@ -73,8 +85,32 @@ public:
    * Gets the OSM way Id.
    * @return  Returns the OSM way Id.
    */
-  uint64_t wayid() const {
-    return wayid_;
+  uint32_t wayid() const {
+    return w0_.wayid_;
+  }
+
+  /**
+   * Get the mean elevation along the edge.
+   * @return  Returns mean elevation in meters relative to sea level.
+   */
+  float mean_elevation() const {
+    return kMinElevation + (w0_.mean_elevation_ * kElevationBinSize);
+  }
+
+  /**
+   * Get the bike network mask for this directed edge.
+   * @return  Returns the bike network mask for this directed edge.
+   */
+  uint32_t bike_network() const {
+    return w0_.bike_network_;
+  }
+
+  /**
+   * Gets the speed limit in KPH.
+   * @return  Returns the speed limit in KPH.
+   */
+  uint32_t speed_limit() const {
+    return w0_.speed_limit_;
   }
 
   /**
@@ -107,14 +143,14 @@ public:
   std::vector<std::string> GetNames() const;
 
   /**
-   * Get a list of names and NameInfo for each name of the edge.
-   * @return  Returns a vector of string,NameInfo pairs.
+   * Convenience method to get the names and route number flags for an edge.
+   * @return   Returns a list (vector) of name/route number pairs.
    */
-  std::vector<std::pair<std::string, NameInfo>> GetNamesAndInfo() const;
+  std::vector<std::pair<std::string, bool>> GetNamesAndTypes() const;
 
   /**
    * Convenience method to get the types for the names.
-   * @return   Returns types - If a bit is set, it is a ref.
+   * @return   Returns types - If a bit is set, it is a route number.
    */
   uint16_t GetTypes() const;
 
@@ -152,8 +188,18 @@ public:
   };
 
 protected:
-  // OSM way Id
-  uint64_t wayid_;
+  // 1st 8-byte word
+  union Word0 {
+    struct {
+      uint64_t wayid_ : 32;          // OSM way Id
+      uint64_t mean_elevation_ : 12; // Mean elevation with 2 meter precision
+      uint64_t bike_network_ : 4;    // Mask of bicycle network types (see graphconstants.h)
+      uint64_t speed_limit_ : 8;     // Speed limit (kph)
+      uint64_t spare0_ : 8;
+    };
+    uint64_t value_;
+  };
+  Word0 w0_;
 
   // Where we keep the statistics about how large the vectors below are
   const PackedItem* item_;

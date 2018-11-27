@@ -209,7 +209,7 @@ void Isochrone::ExpandForward(GraphReader& graphreader,
   if (!from_transition) {
     uint32_t idx = pred.predecessor();
     float secs0 = (idx == kInvalidLabel) ? 0 : edgelabels_[idx].cost().secs;
-    UpdateIsoTile(pred, graphreader, nodeinfo->latlng(), secs0);
+    UpdateIsoTile(pred, graphreader, tile->get_node_ll(node), secs0);
   }
   if (!costing_->Allowed(nodeinfo)) {
     return;
@@ -230,22 +230,6 @@ void Isochrone::ExpandForward(GraphReader& graphreader,
   EdgeStatusInfo* es = edgestatus_.GetPtr(edgeid, tile);
   const DirectedEdge* directededge = tile->directededge(edgeid);
   for (uint32_t i = 0; i < nodeinfo->edge_count(); ++i, ++directededge, ++edgeid, ++es) {
-    // Handle transition edges - expand from the end node of the transition
-    // (unless this is called from a transition).
-    if (directededge->trans_up()) {
-      if (!from_transition) {
-        ExpandForward(graphreader, directededge->endnode(), pred, pred_idx, true, localtime,
-                      seconds_of_week);
-      }
-      continue;
-    } else if (directededge->trans_down()) {
-      if (!from_transition) {
-        ExpandForward(graphreader, directededge->endnode(), pred, pred_idx, true, localtime,
-                      seconds_of_week);
-      }
-      continue;
-    }
-
     // Skip this edge if permanently labeled (best path already found to this
     // directed edge). skip shortcuts or if no access is allowed to this edge
     // (based on the costing method) or if a complex restriction exists for
@@ -297,6 +281,14 @@ void Isochrone::ExpandForward(GraphReader& graphreader,
     *es = {EdgeSet::kTemporary, idx};
     edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, 0.0f, mode_, 0);
     adjacencylist_->add(idx);
+  }
+
+  // Handle transitions - expand from the end node of each transition
+  if (!from_transition && nodeinfo->transition_count() > 0) {
+    const NodeTransition* trans = tile->transition(nodeinfo->transition_index());
+    for (uint32_t i = 0; i < nodeinfo->transition_count(); ++i, ++trans) {
+      ExpandForward(graphreader, trans->endnode(), pred, pred_idx, true, localtime, seconds_of_week);
+    }
   }
 }
 
@@ -400,7 +392,7 @@ void Isochrone::ExpandReverse(GraphReader& graphreader,
   if (!from_transition) {
     uint32_t idx = pred.predecessor();
     float secs0 = (idx == kInvalidLabel) ? 0 : bdedgelabels_[idx].cost().secs;
-    UpdateIsoTile(pred, graphreader, nodeinfo->latlng(), secs0);
+    UpdateIsoTile(pred, graphreader, tile->get_node_ll(node), secs0);
   }
   if (!costing_->Allowed(nodeinfo)) {
     return;
@@ -421,22 +413,6 @@ void Isochrone::ExpandReverse(GraphReader& graphreader,
   EdgeStatusInfo* es = edgestatus_.GetPtr(edgeid, tile);
   const DirectedEdge* directededge = tile->directededge(edgeid);
   for (uint32_t i = 0; i < nodeinfo->edge_count(); ++i, ++directededge, ++edgeid, ++es) {
-    // Handle transition edges - expand from the end not of the transition
-    // unless this is called from a transition.
-    if (directededge->trans_up()) {
-      if (!from_transition) {
-        ExpandReverse(graphreader, directededge->endnode(), pred, pred_idx, opp_pred_edge, true,
-                      localtime, seconds_of_week);
-      }
-      continue;
-    } else if (directededge->trans_down()) {
-      if (!from_transition) {
-        ExpandReverse(graphreader, directededge->endnode(), pred, pred_idx, opp_pred_edge, true,
-                      localtime, seconds_of_week);
-      }
-      continue;
-    }
-
     // Skip this edge if permanently labeled (best path already found to this
     // directed edge), if no access for this mode, or if edge is a shortcut
     if (!(directededge->reverseaccess() & access_mode_) || directededge->is_shortcut() ||
@@ -500,6 +476,15 @@ void Isochrone::ExpandReverse(GraphReader& graphreader,
     bdedgelabels_.emplace_back(pred_idx, edgeid, oppedge, directededge, newcost, newcost.cost, 0.0f,
                                mode_, tc, false);
     adjacencylist_->add(idx);
+  }
+
+  // Handle transitions - expand from the end node of each transition
+  if (!from_transition && nodeinfo->transition_count() > 0) {
+    const NodeTransition* trans = tile->transition(nodeinfo->transition_index());
+    for (uint32_t i = 0; i < nodeinfo->transition_count(); ++i, ++trans) {
+      ExpandReverse(graphreader, trans->endnode(), pred, pred_idx, opp_pred_edge, true, localtime,
+                    seconds_of_week);
+    }
   }
 }
 
@@ -606,7 +591,7 @@ bool Isochrone::ExpandForwardMM(GraphReader& graphreader,
   // Update the isotile
   uint32_t idx = pred.predecessor();
   float secs0 = (idx == kInvalidLabel) ? 0 : mmedgelabels_[idx].cost().secs;
-  UpdateIsoTile(pred, graphreader, nodeinfo->latlng(), secs0);
+  UpdateIsoTile(pred, graphreader, tile->get_node_ll(node), secs0);
 
   // Return true if the time interval has been met
   if (pred.cost().secs > max_seconds_) {
@@ -690,22 +675,6 @@ bool Isochrone::ExpandForwardMM(GraphReader& graphreader,
     // Skip shortcut edges and edges that are permanently labeled (best
     // path already found to this directed edge).
     if (directededge->is_shortcut() || es->set() == EdgeSet::kPermanent) {
-      continue;
-    }
-
-    // Handle transition edges - expand from the end node of the transition
-    // (unless this is called from a transition).
-    if (directededge->trans_up()) {
-      if (!from_transition) {
-        ExpandForwardMM(graphreader, directededge->endnode(), pred, pred_idx, true, pc, tc,
-                        mode_costing);
-      }
-      continue;
-    } else if (directededge->trans_down()) {
-      if (!from_transition) {
-        ExpandForwardMM(graphreader, directededge->endnode(), pred, pred_idx, true, pc, tc,
-                        mode_costing);
-      }
       continue;
     }
 
@@ -868,6 +837,14 @@ bool Isochrone::ExpandForwardMM(GraphReader& graphreader,
                                has_transit);
     adjacencylist_->add(idx);
   }
+
+  // Handle transitions - expand from the end node of each transition
+  if (!from_transition && nodeinfo->transition_count() > 0) {
+    const NodeTransition* trans = tile->transition(nodeinfo->transition_index());
+    for (uint32_t i = 0; i < nodeinfo->transition_count(); ++i, ++trans) {
+      ExpandForwardMM(graphreader, trans->endnode(), pred, pred_idx, true, pc, tc, mode_costing);
+    }
+  }
   return false;
 }
 
@@ -987,7 +964,7 @@ void Isochrone::UpdateIsoTile(const EdgeLabel& pred,
   if (edge->length() < shape_interval_ * 1.5f) {
     // Mark tiles that intersect the segment. Optimize this to avoid calling the Intersect
     // method unless more than 2 tiles are crossed by the segment.
-    PointLL ll0 = tile->node(t2->directededge(opp)->endnode())->latlng();
+    PointLL ll0 = tile->get_node_ll(t2->directededge(opp)->endnode());
     auto tile1 = isotile_->TileId(ll0);
     auto tile2 = isotile_->TileId(ll);
     if (tile1 == tile2) {

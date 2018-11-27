@@ -9,8 +9,6 @@ using namespace valhalla::baldr;
 
 namespace {
 
-const uint32_t ContinuityLookup[] = {0, 7, 13, 18, 22, 25, 27};
-
 json::MapPtr access_json(uint16_t access) {
   return json::map({{"bicycle", static_cast<bool>(access & kBicycleAccess)},
                     {"bus", static_cast<bool>(access & kBusAccess)},
@@ -72,21 +70,28 @@ NodeInfo::NodeInfo() {
   memset(this, 0, sizeof(NodeInfo));
 }
 
-NodeInfo::NodeInfo(const std::pair<float, float>& ll,
+NodeInfo::NodeInfo(const PointLL& tile_corner,
+                   const std::pair<float, float>& ll,
                    const RoadClass rc,
                    const uint32_t access,
                    const NodeType type,
                    const bool traffic_signal) {
   memset(this, 0, sizeof(NodeInfo));
-  set_latlng(ll);
+  set_latlng(tile_corner, ll);
   set_access(access);
   set_type(type);
   set_traffic_signal(traffic_signal);
 }
 
 // Sets the latitude and longitude.
-void NodeInfo::set_latlng(const std::pair<float, float>& ll) {
-  latlng_ = ll;
+void NodeInfo::set_latlng(const PointLL& tile_corner, const std::pair<float, float>& ll) {
+  // Protect against a node being slightly outside the tile (due to float roundoff)
+  lat_offset_ = ll.second < tile_corner.lat()
+                    ? 0
+                    : static_cast<uint32_t>((ll.second - tile_corner.lat()) / kDegreesPrecision);
+  lon_offset_ = ll.first < tile_corner.lng()
+                    ? 0
+                    : static_cast<uint32_t>((ll.first - tile_corner.lng()) / kDegreesPrecision);
 }
 
 // Set the index in the node's tile of its first outbound edge.
@@ -184,6 +189,12 @@ void NodeInfo::set_local_edge_count(const uint32_t n) {
   }
 }
 
+// Set the flag indicating driving is on the right hand side of the road
+// for outbound edges from this node.
+void NodeInfo::set_drive_on_right(const bool rsd) {
+  drive_on_right_ = rsd;
+}
+
 // Sets the flag indicating a mode change is allowed at this node.
 // The access data tells which modes are allowed at the node. Examples
 // include transit stops, bike share locations, and parking locations.
@@ -198,59 +209,7 @@ void NodeInfo::set_traffic_signal(const bool traffic_signal) {
 
 // Set the transit stop index.
 void NodeInfo::set_stop_index(const uint32_t stop_index) {
-  stop_.stop_index = stop_index;
-}
-
-// Get the name consistency between a pair of local edges. This is limited
-// to the first kMaxLocalEdgeIndex local edge indexes.
-bool NodeInfo::name_consistency(const uint32_t from, const uint32_t to) const {
-  if (from == to) {
-    return true;
-  } else if (from < to) {
-    return (to > kMaxLocalEdgeIndex)
-               ? false
-               : (stop_.name_consistency & 1 << (ContinuityLookup[from] + (to - from - 1)));
-  } else {
-    return (from > kMaxLocalEdgeIndex)
-               ? false
-               : (stop_.name_consistency & 1 << (ContinuityLookup[to] + (from - to - 1)));
-  }
-}
-
-/**
- * Set the name consistency between a pair of local edges. This is limited
- * to the first 8 local edge indexes.
- * @param  from  Local index of the from edge.
- * @param  to    Local index of the to edge.
- * @param  c     Are names consistent between the 2 edges?
- */
-void NodeInfo::set_name_consistency(const uint32_t from, const uint32_t to, const bool c) {
-  if (from == to) {
-    return;
-  } else if (from > kMaxLocalEdgeIndex || to > kMaxLocalEdgeIndex) {
-    LOG_WARN("Local index exceeds max in set_name_consistency, skip");
-  } else {
-    if (from < to) {
-      stop_.name_consistency =
-          OverwriteBits(stop_.name_consistency, c, (ContinuityLookup[from] + (to - from - 1)), 1);
-    } else {
-      stop_.name_consistency =
-          OverwriteBits(stop_.name_consistency, c, (ContinuityLookup[to] + (from - to - 1)), 1);
-    }
-  }
-}
-
-// Get the connecting way id for a transit stop.
-uint64_t NodeInfo::connecting_wayid() const {
-  return way_heading_.connecting_wayid_;
-}
-
-/**
- * Set the connecting way id for a transit stop.
- * @param  wayid  Connecting wayid.
- */
-void NodeInfo::set_connecting_wayid(const uint64_t wayid) {
-  way_heading_.connecting_wayid_ = wayid;
+  transition_index_ = stop_index;
 }
 
 // Get the heading of the local edge given its local index. Supports
@@ -258,9 +217,8 @@ void NodeInfo::set_connecting_wayid(const uint64_t wayid) {
 uint32_t NodeInfo::heading(const uint32_t localidx) const {
   // Make sure everything is 64 bit!
   uint64_t shift = localidx * 8; // 8 bits per index
-  return static_cast<uint32_t>(
-      std::round(((way_heading_.headings_ & (static_cast<uint64_t>(255) << shift)) >> shift) *
-                 kHeadingExpandFactor));
+  return static_cast<uint32_t>(std::round(
+      ((headings_ & (static_cast<uint64_t>(255) << shift)) >> shift) * kHeadingExpandFactor));
 }
 
 // Set the heading of the local edge given its local index. Supports
@@ -271,26 +229,33 @@ void NodeInfo::set_heading(uint32_t localidx, uint32_t heading) {
   } else {
     // Has to be 64 bit!
     uint64_t hdg = static_cast<uint64_t>(std::round((heading % 360) * kHeadingShrinkFactor));
-    way_heading_.headings_ |= hdg << static_cast<uint64_t>(localidx * 8);
+    headings_ |= hdg << static_cast<uint64_t>(localidx * 8);
   }
+}
+
+// Set the connecting way id for a transit stop.
+void NodeInfo::set_connecting_wayid(const uint64_t wayid) {
+  headings_ = wayid;
 }
 
 json::MapPtr NodeInfo::json(const GraphTile* tile) const {
   auto m = json::map({
-      {"lon", json::fp_t{latlng_.first, 6}},
-      {"lat", json::fp_t{latlng_.second, 6}},
+      {"lon", json::fp_t{latlng(tile->header()->base_ll()).first, 6}},
+      {"lat", json::fp_t{latlng(tile->header()->base_ll()).second, 6}},
       {"edge_count", static_cast<uint64_t>(edge_count_)},
       {"access", access_json(access_)},
       {"intersection_type", to_string(static_cast<IntersectionType>(intersection_))},
       {"administrative", admin_json(tile->admininfo(admin_index_), timezone_)},
       {"density", static_cast<uint64_t>(density_)},
       {"local_edge_count", static_cast<uint64_t>(local_edge_count_ + 1)},
+      {"drive_on_right", static_cast<bool>(drive_on_right_)},
       {"mode_change", static_cast<bool>(mode_change_)},
       {"traffic_signal", static_cast<bool>(traffic_signal_)},
       {"type", to_string(static_cast<NodeType>(type_))},
+      {"transition count", static_cast<uint64_t>(transition_count_)},
   });
   if (is_transit()) {
-    m->emplace("stop_index", static_cast<uint64_t>(stop_.stop_index));
+    m->emplace("stop_index", static_cast<uint64_t>(stop_index()));
   }
   return m;
 }

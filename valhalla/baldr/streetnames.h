@@ -17,7 +17,7 @@ class StreetNames : public std::list<std::unique_ptr<StreetName>> {
 public:
   StreetNames();
 
-  StreetNames(const std::vector<std::string>& names);
+  StreetNames(const std::vector<std::pair<std::string, bool>>& names);
 
   virtual ~StreetNames();
 

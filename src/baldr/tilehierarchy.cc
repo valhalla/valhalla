@@ -95,5 +95,17 @@ std::vector<GraphId> TileHierarchy::GetGraphIds(const midgard::AABB2<midgard::Po
   return ids;
 }
 
+/**
+ * Get the tiling system for a specified level.
+ * @param level  Level Id.
+ * @return Returns a const reference to the tiling system for this level.
+ */
+const midgard::Tiles<midgard::PointLL>& TileHierarchy::get_tiling(const uint8_t level) {
+  const auto& tl = levels().find(level);
+  if (tl != levels().end()) {
+    return tl->second.tiles;
+  }
+  throw std::runtime_error("Invalid level Id for TileHierarchy::get_tiling");
+}
 } // namespace baldr
 } // namespace valhalla

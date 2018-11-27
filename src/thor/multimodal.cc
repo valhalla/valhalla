@@ -110,11 +110,9 @@ MultiModalPathAlgorithm::GetBestPath(odin::Location& origin,
   mode_ = mode;
   const auto& costing = mode_costing[static_cast<uint32_t>(mode)];
   const auto& tc = mode_costing[static_cast<uint32_t>(TravelMode::kPublicTransit)];
-  bool wheelchair = tc->wheelchair();
-  bool bicycle = tc->bicycle();
 
   // Get maximum transfer distance
-  uint32_t max_transfer_distance = costing->GetMaxTransferDistanceMM();
+  max_transfer_distance_ = costing->GetMaxTransferDistanceMM();
 
   // For now the date_time must be set on the origin.
   if (!origin.has_date_time()) {
@@ -133,7 +131,7 @@ MultiModalPathAlgorithm::GetBestPath(odin::Location& origin,
   // Check if there no possible path to destination based on mode to the
   // destination - for now assume pedestrian
   // TODO - some means of setting destination mode
-  bool disable_transit = false;
+  disable_transit_ = false;
   if (!CanReachDestination(destination, graphreader, TravelMode::kPedestrian, pc)) {
     // Return if distance exceeds maximum distance set for the starting distance
     // of a multimodal route (TODO - add methods to costing to support this).
@@ -142,7 +140,7 @@ MultiModalPathAlgorithm::GetBestPath(odin::Location& origin,
       throw valhalla_exception_t{440};
     } else {
       // Allow routing but disable use of transit
-      disable_transit = true;
+      disable_transit_ = true;
     }
   }
 
@@ -153,26 +151,25 @@ MultiModalPathAlgorithm::GetBestPath(odin::Location& origin,
 
   // Set route start time (seconds from midnight) and timezone.
   // NOTe: already made sure origin has date_time set.
-  uint32_t date, dow, day = 0;
-  bool date_before_tile = false;
-  bool date_set = false;
-  uint32_t start_time = DateTime::seconds_from_midnight(origin.date_time());
-  uint32_t localtime = start_time;
-  int origin_tz_index =
-      edgelabels_.size() == 0 ? 0 : GetTimezone(graphreader, edgelabels_[0].endnode());
-  if (origin_tz_index == 0) {
+  date_before_tile_ = false;
+  date_set_ = false;
+  origin_date_time_ = origin.date_time();
+
+  start_time_ = DateTime::seconds_from_midnight(origin_date_time_);
+  start_tz_index_ = edgelabels_.size() == 0 ? 0 : GetTimezone(graphreader, edgelabels_[0].endnode());
+  if (start_tz_index_ == 0) {
     // TODO - should we throw an exception and return an error
     LOG_ERROR("Could not get the timezone at the origin location");
     return {};
   }
 
+  // Clear operators and processed tiles
+  operators_.clear();
+  processed_tiles_.clear();
+
   // Find shortest path
-  uint32_t blockid, tripid;
   uint32_t nc = 0; // Count of iterations with no convergence
                    // towards destination
-  std::unordered_map<std::string, uint32_t> operators;
-  std::unordered_set<uint32_t> processed_tiles;
-
   const GraphTile* tile;
   size_t total_labels = 0;
   while (true) {
@@ -223,312 +220,319 @@ MultiModalPathAlgorithm::GetBestPath(odin::Location& origin,
       return {};
     }
 
-    // Get the end node. Skip if tile not found (can happen with
-    // regional data sets).
-    GraphId node = pred.endnode();
-    if ((tile = graphreader.GetGraphTile(node)) == nullptr) {
-      continue;
-    }
-
-    // Check access at the node
-    const NodeInfo* nodeinfo = tile->node(node);
-    if (!costing->Allowed(nodeinfo)) {
-      continue;
-    }
-
-    if (nodeinfo->type() == NodeType::kMultiUseTransitPlatform ||
-        nodeinfo->type() == NodeType::kTransitStation) {
-
-      if (processed_tiles.find(tile->id().tileid()) == processed_tiles.end()) {
-        tc->AddToExcludeList(tile);
-        processed_tiles.emplace(tile->id().tileid());
-      }
-
-      // check if excluded.
-      if (tc->IsExcluded(tile, nodeinfo)) {
-        continue;
-      }
-    }
-
-    // Set local time and adjust for time zone (if different from timezone at the start).
-    uint32_t localtime = start_time + pred.cost().secs;
-    if (nodeinfo->timezone() != origin_tz_index) {
-      // Get the difference in seconds between the origin tz and current tz
-      int tz_diff =
-          DateTime::timezone_diff(localtime, DateTime::get_tz_db().from_index(origin_tz_index),
-                                  DateTime::get_tz_db().from_index(nodeinfo->timezone()));
-      localtime += tz_diff;
-    }
-
-    // Set a default transfer penalty at a stop (if not same trip Id and block Id)
-    Cost transfer_cost = tc->DefaultTransferCost();
-
-    // Get any transfer times and penalties if this is a transit stop (and
-    // transit has been taken at some point on the path) and mode is pedestrian
-    mode_ = pred.mode();
-    bool has_transit = pred.has_transit();
-    GraphId prior_stop = pred.prior_stopid();
-    uint32_t operator_id = pred.transit_operator();
-    if (nodeinfo->type() == NodeType::kMultiUseTransitPlatform) {
-
-      // Get the transfer penalty when changing stations
-      if (mode_ == TravelMode::kPedestrian && prior_stop.Is_Valid() && has_transit) {
-        transfer_cost = tc->TransferCost();
-      }
-
-      // Add transfer time to the local time when entering a stop
-      // as a pedestrian. This is a small added cost on top of
-      // any costs along paths and roads
-      if (mode_ == TravelMode::kPedestrian) {
-        localtime += transfer_cost.secs;
-      }
-
-      // Update prior stop. TODO - parent/child stop info?
-      prior_stop = node;
-
-      // we must get the date from level 3 transit tiles and not level 2.  The level 3 date is
-      // set when the fetcher grabbed the transit data and created the schedules.
-      if (!date_set) {
-        date = DateTime::days_from_pivot_date(DateTime::get_formatted_date(origin.date_time()));
-        dow = DateTime::day_of_week_mask(origin.date_time());
-        uint32_t date_created = tile->header()->date_created();
-        if (date < date_created) {
-          date_before_tile = true;
-        } else {
-          day = date - date_created;
-        }
-
-        date_set = true;
-      }
-    }
-
-    // Allow mode changes at special nodes
-    //      bike share (pedestrian <--> bicycle)
-    //      parking (drive <--> pedestrian)
-    //      transit stop (pedestrian <--> transit).
-    // TODO - evaluate how this will work when an edge may have already
-    // been visited using a different mode.
-    bool mode_change = false;
-    /*if (nodeinfo->type() == NodeType::kBikeShare) {
-       if (mode_ == TravelMode::kBicycle) {
-         mode_ = TravelMode::kPedestrian;
-         mode_change = true;
-       } else if (mode_ == TravelMode::kPedestrian) {
-         mode_ = TravelMode::kBicycle;
-         mode_change = true;
-       }
-     } else if (nodeinfo->type() == NodeType::kParking) {
-       if (mode_ == TravelMode::kDrive) {
-         mode_ = TravelMode::kPedestrian;
-         mode_change = true;
-       } else if (mode_ == TravelMode::kPedestrian) {
-         mode_ = TravelMode::kDrive;
-         mode_change = true;
-       }
-     }*/
-
-    // Expand from end node.
-    GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
-    EdgeStatusInfo* es = edgestatus_.GetPtr(edgeid, tile);
-    const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
-    for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++, ++edgeid, ++es) {
-      // Skip shortcuts and edges that are permanently labeled (best path already found to
-      // this directed edge).
-      if (directededge->is_shortcut() || es->set() == EdgeSet::kPermanent) {
-        continue;
-      }
-
-      if (directededge->trans_up() || directededge->trans_down()) {
-        // Add the transition edge to the adjacency list and edge labels
-        // using the predecessor information. Transition edges have
-        // no length.
-        uint32_t idx = edgelabels_.size();
-        *es = {EdgeSet::kTemporary, idx};
-        edgelabels_.emplace_back(predindex, edgeid, directededge->endnode(), pred);
-        adjacencylist_->add(idx);
-        continue;
-      }
-
-      // Reset cost and walking distance
-      Cost newcost = pred.cost();
-      walking_distance_ = pred.path_distance();
-
-      // If this is a transit edge - get the next departure. Do not check
-      // if allowed by costing - assume if you get a transit edge you
-      // walked to the transit stop
-      tripid = 0;
-      blockid = 0;
-      if (directededge->IsTransitLine()) {
-        // Check if transit costing allows this edge
-        if (!tc->Allowed(directededge, pred, tile, edgeid, 0, 0)) {
-          continue;
-        }
-        // check if excluded.
-        if (tc->IsExcluded(tile, directededge)) {
-          continue;
-        }
-
-        // Look up the next departure along this edge
-        const TransitDeparture* departure =
-            tile->GetNextDeparture(directededge->lineid(), localtime, day, dow, date_before_tile,
-                                   wheelchair, bicycle);
-        if (departure) {
-          // Check if there has been a mode change
-          mode_change = (mode_ == TravelMode::kPedestrian);
-
-          // Update trip Id and block Id
-          tripid = departure->tripid();
-          blockid = departure->blockid();
-          has_transit = true;
-
-          // There is no cost to remain on the same trip or valid blockId
-          if (tripid == pred.tripid() || (blockid != 0 && blockid == pred.blockid())) {
-            // This departure is valid without any added cost. Operator Id
-            // is the same as the predecessor
-            operator_id = pred.transit_operator();
-          } else {
-            if (pred.tripid() > 0) {
-              // tripId > 0 means the prior edge was a transit edge and this
-              // is an "in-station" transfer. Add a small transfer time and
-              // call GetNextDeparture again if we cannot make the current
-              // departure.
-              // TODO - is there a better way?
-              if (localtime + 30 > departure->departure_time()) {
-                departure = tile->GetNextDeparture(directededge->lineid(), localtime + 30, day, dow,
-                                                   date_before_tile, wheelchair, bicycle);
-                if (!departure) {
-                  continue;
-                }
-              }
-            }
-
-            // Get the operator Id
-            operator_id = GetOperatorId(tile, departure->routeid(), operators);
-
-            // Add transfer penalty and operator change penalty
-            if (pred.transit_operator() > 0 && pred.transit_operator() != operator_id) {
-              // TODO - create a configurable operator change penalty
-              newcost.cost += 300;
-            } else {
-              newcost.cost += transfer_cost.cost;
-            }
-          }
-
-          // Change mode and costing to transit. Add edge cost.
-          mode_ = TravelMode::kPublicTransit;
-          newcost += tc->EdgeCost(directededge, departure, localtime);
-        } else {
-          // No matching departures found for this edge
-          continue;
-        }
-      } else {
-        // If current mode is public transit we should only connect to
-        // transit connection edges or transit edges
-        if (mode_ == TravelMode::kPublicTransit) {
-          // Disembark from transit and reset walking distance
-          mode_ = TravelMode::kPedestrian;
-          walking_distance_ = 0;
-          mode_change = true;
-        }
-
-        // Regular edge - use the appropriate costing and check if access
-        // is allowed. If mode is pedestrian this will validate walking
-        // distance has not been exceeded.
-        if (!mode_costing[static_cast<uint32_t>(mode_)]->Allowed(directededge, pred, tile, edgeid, 0,
-                                                                 0)) {
-          continue;
-        }
-
-        Cost c = mode_costing[static_cast<uint32_t>(mode_)]->EdgeCost(directededge,
-                                                                      tile->GetSpeed(directededge));
-        c.cost *= mode_costing[static_cast<uint32_t>(mode_)]->GetModeFactor();
-        newcost += c;
-
-        // Add to walking distance
-        if (mode_ == TravelMode::kPedestrian) {
-          walking_distance_ += directededge->length();
-
-          // Prevent going from one transit connection directly to another
-          // at a transit stop - this is like entering a station and exiting
-          // without getting on transit
-          if (nodeinfo->type() == NodeType::kTransitEgress && pred.use() == Use::kTransitConnection &&
-              directededge->use() == Use::kTransitConnection) {
-            continue;
-          }
-        }
-      }
-
-      // Add mode change cost or edge transition cost from the costing model
-      if (mode_change) {
-        // TODO: make mode change cost configurable. No cost for entering
-        // a transit line (assume the wait time is the cost)
-        ; // newcost += {10.0f, 10.0f };
-      } else {
-        newcost +=
-            mode_costing[static_cast<uint32_t>(mode_)]->TransitionCost(directededge, nodeinfo, pred);
-      }
-
-      // If this edge is a destination, subtract the partial/remainder cost
-      // (cost from the dest. location to the end of the edge)
-      auto p = destinations_.find(edgeid);
-      if (p != destinations_.end()) {
-        newcost -= p->second;
-      }
-
-      // Do not allow transit connection edges if transit is disabled. Also,
-      // prohibit entering the same station as the prior.
-      if (directededge->use() == Use::kPlatformConnection &&
-          (disable_transit || directededge->endnode() == pred.prior_stopid())) {
-        continue;
-      }
-
-      // Test if exceeding maximum transfer walking distance
-      if (directededge->use() == Use::kPlatformConnection && pred.prior_stopid().Is_Valid() &&
-          walking_distance_ > max_transfer_distance) {
-        continue;
-      }
-
-      // Check if edge is temporarily labeled and this path has less cost. If
-      // less cost the predecessor is updated and the sort cost is decremented
-      // by the difference in real cost (A* heuristic doesn't change). Update
-      // trip Id and block Id.
-      if (es->set() == EdgeSet::kTemporary) {
-        MMEdgeLabel& lab = edgelabels_[es->index()];
-        if (newcost.cost < lab.cost().cost) {
-          float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
-          adjacencylist_->decrease(es->index(), newsortcost);
-          lab.Update(predindex, newcost, newsortcost, walking_distance_, tripid, blockid);
-        }
-        continue;
-      }
-
-      // If this is a destination edge the A* heuristic is 0. Otherwise the
-      // sort cost (with A* heuristic) is found using the lat,lng at the
-      // end node of the directed edge.
-      float dist = 0.0f;
-      float sortcost = newcost.cost;
-      if (p == destinations_.end()) {
-        // Get the end node, skip if the end node tile is not found
-        const GraphTile* endtile =
-            (directededge->leaves_tile()) ? graphreader.GetGraphTile(directededge->endnode()) : tile;
-        if (endtile == nullptr) {
-          continue;
-        }
-        const NodeInfo* endnode = endtile->node(directededge->endnode());
-        dist = astarheuristic_.GetDistance(endnode->latlng());
-        sortcost += astarheuristic_.Get(dist);
-      }
-
-      // Add edge label, add to the adjacency list and set edge status
-      uint32_t idx = edgelabels_.size();
-      *es = {EdgeSet::kTemporary, idx};
-      edgelabels_.emplace_back(predindex, edgeid, directededge, newcost, sortcost, dist, mode_,
-                               walking_distance_, tripid, prior_stop, blockid, operator_id,
-                               has_transit);
-      adjacencylist_->add(idx);
-    }
+    // Expand from the end node of the predecessor edge.
+    ExpandForward(graphreader, pred.endnode(), pred, predindex, false, pc, tc, mode_costing);
   }
   return {}; // Should never get here
+}
+
+// Expand from a node using multi-modal algorithm.
+bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
+                                            const GraphId& node,
+                                            const MMEdgeLabel& pred,
+                                            const uint32_t pred_idx,
+                                            const bool from_transition,
+                                            const std::shared_ptr<DynamicCost>& pc,
+                                            const std::shared_ptr<DynamicCost>& tc,
+                                            const std::shared_ptr<DynamicCost>* mode_costing) {
+
+  // Get the tile and the node info. Skip if tile is null (can happen
+  // with regional data sets) or if no access at the node.
+  const GraphTile* tile = graphreader.GetGraphTile(node);
+  if (tile == nullptr) {
+    return false;
+  }
+  const NodeInfo* nodeinfo = tile->node(node);
+
+  if (nodeinfo->type() == NodeType::kMultiUseTransitPlatform ||
+      nodeinfo->type() == NodeType::kTransitStation) {
+
+    if (processed_tiles_.find(tile->id().tileid()) == processed_tiles_.end()) {
+      tc->AddToExcludeList(tile);
+      processed_tiles_.emplace(tile->id().tileid());
+    }
+
+    // check if excluded.
+    if (tc->IsExcluded(tile, nodeinfo)) {
+      return false;
+    }
+  }
+
+  // Set local time and adjust for time zone (if different from timezone at the start).
+  uint32_t localtime = start_time_ + pred.cost().secs;
+  if (nodeinfo->timezone() != start_tz_index_) {
+    // Get the difference in seconds between the origin tz and current tz
+    int tz_diff =
+        DateTime::timezone_diff(localtime, DateTime::get_tz_db().from_index(start_tz_index_),
+                                DateTime::get_tz_db().from_index(nodeinfo->timezone()));
+    localtime += tz_diff;
+  }
+
+  // Set a default transfer penalty at a stop (if not same trip Id and block Id)
+  Cost transfer_cost = tc->DefaultTransferCost();
+
+  // Get any transfer times and penalties if this is a transit stop (and
+  // transit has been taken at some point on the path) and mode is pedestrian
+  mode_ = pred.mode();
+  bool has_transit = pred.has_transit();
+  GraphId prior_stop = pred.prior_stopid();
+  uint32_t operator_id = pred.transit_operator();
+  if (nodeinfo->type() == NodeType::kMultiUseTransitPlatform) {
+
+    // Get the transfer penalty when changing stations
+    if (mode_ == TravelMode::kPedestrian && prior_stop.Is_Valid() && has_transit) {
+      transfer_cost = tc->TransferCost();
+    }
+
+    // Add transfer time to the local time when entering a stop
+    // as a pedestrian. This is a small added cost on top of
+    // any costs along paths and roads
+    if (mode_ == TravelMode::kPedestrian) {
+      localtime += transfer_cost.secs;
+    }
+
+    // Update prior stop. TODO - parent/child stop info?
+    prior_stop = node;
+
+    // we must get the date from level 3 transit tiles and not level 2.  The level 3 date is
+    // set when the fetcher grabbed the transit data and created the schedules.
+    if (!date_set_) {
+      date_ = DateTime::days_from_pivot_date(DateTime::get_formatted_date(origin_date_time_));
+      dow_ = DateTime::day_of_week_mask(origin_date_time_);
+      uint32_t date_created = tile->header()->date_created();
+      if (date_ < date_created) {
+        date_before_tile_ = true;
+      } else {
+        day_ = date_ - date_created;
+      }
+      date_set_ = true;
+    }
+  }
+
+  // Allow mode changes at special nodes
+  //      bike share (pedestrian <--> bicycle)
+  //      parking (drive <--> pedestrian)
+  //      transit stop (pedestrian <--> transit).
+  // TODO - evaluate how this will work when an edge may have already
+  // been visited using a different mode.
+  bool mode_change = false;
+  /*if (nodeinfo->type() == NodeType::kBikeShare) {
+     if (mode_ == TravelMode::kBicycle) {
+       mode_ = TravelMode::kPedestrian;
+       mode_change = true;
+     } else if (mode_ == TravelMode::kPedestrian) {
+       mode_ = TravelMode::kBicycle;
+       mode_change = true;
+     }
+   } else if (nodeinfo->type() == NodeType::kParking) {
+     if (mode_ == TravelMode::kDrive) {
+       mode_ = TravelMode::kPedestrian;
+       mode_change = true;
+     } else if (mode_ == TravelMode::kPedestrian) {
+       mode_ = TravelMode::kDrive;
+       mode_change = true;
+     }
+   }*/
+
+  // Expand from end node.
+  GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
+  EdgeStatusInfo* es = edgestatus_.GetPtr(edgeid, tile);
+  const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
+  for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++, ++edgeid, ++es) {
+    // Skip shortcuts and edges that are permanently labeled (best path already found to
+    // this directed edge).
+    if (directededge->is_shortcut() || es->set() == EdgeSet::kPermanent) {
+      continue;
+    }
+
+    // Reset cost and walking distance
+    Cost newcost = pred.cost();
+    walking_distance_ = pred.path_distance();
+
+    // If this is a transit edge - get the next departure. Do not check
+    // if allowed by costing - assume if you get a transit edge you
+    // walked to the transit stop
+    uint32_t tripid = 0;
+    uint32_t blockid = 0;
+    if (directededge->IsTransitLine()) {
+      // Check if transit costing allows this edge
+      if (!tc->Allowed(directededge, pred, tile, edgeid, 0, 0)) {
+        continue;
+      }
+      // check if excluded.
+      if (tc->IsExcluded(tile, directededge)) {
+        continue;
+      }
+
+      // Look up the next departure along this edge
+      const TransitDeparture* departure =
+          tile->GetNextDeparture(directededge->lineid(), localtime, day_, dow_, date_before_tile_,
+                                 tc->wheelchair(), tc->bicycle());
+
+      if (departure) {
+        // Check if there has been a mode change
+        mode_change = (mode_ == TravelMode::kPedestrian);
+
+        // Update trip Id and block Id
+        tripid = departure->tripid();
+        blockid = departure->blockid();
+        has_transit = true;
+
+        // There is no cost to remain on the same trip or valid blockId
+        if (tripid == pred.tripid() || (blockid != 0 && blockid == pred.blockid())) {
+          // This departure is valid without any added cost. Operator Id
+          // is the same as the predecessor
+          operator_id = pred.transit_operator();
+        } else {
+          if (pred.tripid() > 0) {
+            // tripId > 0 means the prior edge was a transit edge and this
+            // is an "in-station" transfer. Add a small transfer time and
+            // call GetNextDeparture again if we cannot make the current
+            // departure.
+            // TODO - is there a better way?
+            if (localtime + 30 > departure->departure_time()) {
+              departure = tile->GetNextDeparture(directededge->lineid(), localtime + 30, day_, dow_,
+                                                 date_before_tile_, tc->wheelchair(), tc->bicycle());
+              if (!departure) {
+                continue;
+              }
+            }
+          }
+
+          // Get the operator Id
+          operator_id = GetOperatorId(tile, departure->routeid(), operators_);
+
+          // Add transfer penalty and operator change penalty
+          if (pred.transit_operator() > 0 && pred.transit_operator() != operator_id) {
+            // TODO - create a configurable operator change penalty
+            newcost.cost += 300;
+          } else {
+            newcost.cost += transfer_cost.cost;
+          }
+        }
+
+        // Change mode and costing to transit. Add edge cost.
+        mode_ = TravelMode::kPublicTransit;
+        newcost += tc->EdgeCost(directededge, departure, localtime);
+      } else {
+        // No matching departures found for this edge
+        continue;
+      }
+    } else {
+      // If current mode is public transit we should only connect to
+      // transit connection edges or transit edges
+      if (mode_ == TravelMode::kPublicTransit) {
+        // Disembark from transit and reset walking distance
+        mode_ = TravelMode::kPedestrian;
+        walking_distance_ = 0;
+        mode_change = true;
+      }
+
+      // Regular edge - use the appropriate costing and check if access
+      // is allowed. If mode is pedestrian this will validate walking
+      // distance has not been exceeded.
+      if (!mode_costing[static_cast<uint32_t>(mode_)]->Allowed(directededge, pred, tile, edgeid, 0,
+                                                               0)) {
+        continue;
+      }
+
+      Cost c = mode_costing[static_cast<uint32_t>(mode_)]->EdgeCost(directededge,
+                                                                    tile->GetSpeed(directededge));
+      c.cost *= mode_costing[static_cast<uint32_t>(mode_)]->GetModeFactor();
+      newcost += c;
+
+      // Add to walking distance
+      if (mode_ == TravelMode::kPedestrian) {
+        walking_distance_ += directededge->length();
+
+        // Prevent going from one transit connection directly to another
+        // at a transit stop - this is like entering a station and exiting
+        // without getting on transit
+        if (nodeinfo->type() == NodeType::kTransitEgress && pred.use() == Use::kTransitConnection &&
+            directededge->use() == Use::kTransitConnection) {
+          continue;
+        }
+      }
+    }
+
+    // Add mode change cost or edge transition cost from the costing model
+    if (mode_change) {
+      // TODO: make mode change cost configurable. No cost for entering
+      // a transit line (assume the wait time is the cost)
+      ; // newcost += {10.0f, 10.0f };
+    } else {
+      newcost +=
+          mode_costing[static_cast<uint32_t>(mode_)]->TransitionCost(directededge, nodeinfo, pred);
+    }
+
+    // If this edge is a destination, subtract the partial/remainder cost
+    // (cost from the dest. location to the end of the edge)
+    auto p = destinations_.find(edgeid);
+    if (p != destinations_.end()) {
+      newcost -= p->second;
+    }
+
+    // Do not allow transit connection edges if transit is disabled. Also,
+    // prohibit entering the same station as the prior.
+    if (directededge->use() == Use::kPlatformConnection &&
+        (disable_transit_ || directededge->endnode() == pred.prior_stopid())) {
+      continue;
+    }
+
+    // Test if exceeding maximum transfer walking distance
+    if (directededge->use() == Use::kPlatformConnection && pred.prior_stopid().Is_Valid() &&
+        walking_distance_ > max_transfer_distance_) {
+      continue;
+    }
+
+    // Check if edge is temporarily labeled and this path has less cost. If
+    // less cost the predecessor is updated and the sort cost is decremented
+    // by the difference in real cost (A* heuristic doesn't change). Update
+    // trip Id and block Id.
+    if (es->set() == EdgeSet::kTemporary) {
+      MMEdgeLabel& lab = edgelabels_[es->index()];
+      if (newcost.cost < lab.cost().cost) {
+        float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
+        adjacencylist_->decrease(es->index(), newsortcost);
+        lab.Update(pred_idx, newcost, newsortcost, walking_distance_, tripid, blockid);
+      }
+      continue;
+    }
+
+    // If this is a destination edge the A* heuristic is 0. Otherwise the
+    // sort cost (with A* heuristic) is found using the lat,lng at the
+    // end node of the directed edge.
+    float dist = 0.0f;
+    float sortcost = newcost.cost;
+    if (p == destinations_.end()) {
+      // Get the end node, skip if the end node tile is not found
+      const GraphTile* endtile =
+          (directededge->leaves_tile()) ? graphreader.GetGraphTile(directededge->endnode()) : tile;
+      if (endtile == nullptr) {
+        continue;
+      }
+      const NodeInfo* endnode = endtile->node(directededge->endnode());
+      dist = astarheuristic_.GetDistance(endnode->latlng(endtile->header()->base_ll()));
+      sortcost += astarheuristic_.Get(dist);
+    }
+
+    // Add edge label, add to the adjacency list and set edge status
+    uint32_t idx = edgelabels_.size();
+    *es = {EdgeSet::kTemporary, idx};
+    edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, sortcost, dist, mode_,
+                             walking_distance_, tripid, prior_stop, blockid, operator_id,
+                             has_transit);
+    adjacencylist_->add(idx);
+  }
+
+  // Handle transitions - expand from the end node each transition
+  if (!from_transition && nodeinfo->transition_count() > 0) {
+    const NodeTransition* trans = tile->transition(nodeinfo->transition_index());
+    for (uint32_t i = 0; i < nodeinfo->transition_count(); ++i, ++trans) {
+      ExpandForward(graphreader, trans->endnode(), pred, pred_idx, true, pc, tc, mode_costing);
+    }
+  }
+  return false;
 }
 
 // Add an edge at the origin to the adjacency list
@@ -568,7 +572,7 @@ void MultiModalPathAlgorithm::SetOrigin(GraphReader& graphreader,
     nodeinfo = endtile->node(directededge->endnode());
     Cost cost =
         costing->EdgeCost(directededge, tile->GetSpeed(directededge)) * (1.0f - edge.percent_along());
-    float dist = astarheuristic_.GetDistance(nodeinfo->latlng());
+    float dist = astarheuristic_.GetDistance(nodeinfo->latlng(endtile->header()->base_ll()));
 
     // We need to penalize this location based on its score (distance in meters from input)
     // We assume the slowest speed you could travel to cover that distance to start/end the route
@@ -709,22 +713,6 @@ bool MultiModalPathAlgorithm::ExpandFromNode(baldr::GraphReader& graphreader,
   EdgeStatusInfo* es = edgestatus.GetPtr(edgeid, tile);
   const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
   for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++, ++edgeid, ++es) {
-    // Handle transition edges - expand from the end node of the transition
-    // (unless this is called from a transition).
-    if (directededge->trans_up()) {
-      if (!from_transition) {
-        ExpandFromNode(graphreader, directededge->endnode(), pred, pred_idx, costing, edgestatus,
-                       edgelabels, adjlist, true);
-      }
-      continue;
-    } else if (directededge->trans_down()) {
-      if (!from_transition) {
-        ExpandFromNode(graphreader, directededge->endnode(), pred, pred_idx, costing, edgestatus,
-                       edgelabels, adjlist, true);
-      }
-      continue;
-    }
-
     // Skip this edge if permanently labeled (best path already found to this directed edge) or
     // access is not allowed for this mode.
     if (es->set() == EdgeSet::kPermanent ||
@@ -754,6 +742,15 @@ bool MultiModalPathAlgorithm::ExpandFromNode(baldr::GraphReader& graphreader,
                             walking_distance);
     *es = {EdgeSet::kTemporary, idx};
     adjlist.add(idx);
+  }
+
+  // Handle transitions - expand from the end node each transition
+  if (!from_transition && nodeinfo->transition_count() > 0) {
+    const NodeTransition* trans = tile->transition(nodeinfo->transition_index());
+    for (uint32_t i = 0; i < nodeinfo->transition_count(); ++i, ++trans) {
+      ExpandFromNode(graphreader, trans->endnode(), pred, pred_idx, costing, edgestatus, edgelabels,
+                     adjlist, true);
+    }
   }
   return false;
 }

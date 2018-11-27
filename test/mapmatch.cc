@@ -554,12 +554,12 @@ void test_topk_frontage_alternate() {
       names.push_back("<empty>");
     }
   }
-  if (names != std::vector<std::string>{"Rubenslaan"}) {
+  if (names != std::vector<std::string>{"Rubenslaan", "Rubenslaan", "Rubenslaan"}) {
     std::string streets;
     for (const auto& n : names)
       streets += n + ", ";
     throw std::logic_error(
-        "The second most obvious result is fronatge road to the right - but got: " + streets);
+        "The second most obvious result is frontage road to the right - but got: " + streets);
   }
   if (alternate.get<float>("confidence_score") >= 1.0f)
     throw std::logic_error("Confidence of the second result is always less than 1");

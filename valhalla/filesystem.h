@@ -6,11 +6,19 @@
  * version missing the stuff we dont make use of. it should work on posix and windows
  */
 
+#include <cerrno>
 #include <cstring>
 #include <dirent.h>
 #include <memory>
 #include <string>
 #include <sys/stat.h>
+#ifdef _MSC_VER
+#include <direct.h> // _mkdir
+#include <fcntl.h>
+#include <io.h> // _chsize
+#else
+#include <unistd.h>
+#endif
 #include <vector>
 
 namespace filesystem {
@@ -24,7 +32,7 @@ public:
 #endif
   path(const char* path_name) : path(std::string(path_name)) {
   }
-  path(const std::string& path_name) : path_name_(path_name) {
+  path(const std::string& path_name) : path_name_(path_name), separators_() {
     // TODO: squash repeated separators
     // delineate the path
     for (size_t npos = path_name_.find_first_of(preferred_separator); npos != std::string::npos;
@@ -76,6 +84,8 @@ public:
     }
     return *this;
   }
+
+  friend bool create_directories(const path&);
 
 private:
   std::string path_name_;
@@ -131,7 +141,7 @@ private:
       entry_->d_type = mode_to_type(s.st_mode);
     }
   }
-  int mode_to_type(decltype(stat::st_mode) mode) {
+  unsigned char mode_to_type(decltype(stat::st_mode) mode) {
     if (S_ISREG(mode))
       return DT_REG;
     else if (S_ISDIR(mode))
@@ -179,7 +189,7 @@ private:
 // NOTE: follows links by default..
 class recursive_directory_iterator {
 public:
-  recursive_directory_iterator(const filesystem::path& path) {
+  recursive_directory_iterator(const filesystem::path& path) : stack_() {
     stack_.emplace_back(new directory_entry(path, true));
     // if this was an iteratable directory go to the first entry
     if (stack_.back()->dir_)
@@ -188,7 +198,7 @@ public:
     else
       stack_.clear();
   }
-  recursive_directory_iterator() {
+  recursive_directory_iterator() : stack_() {
   }
   const directory_entry& operator*() const {
     return *stack_.back();
@@ -237,6 +247,60 @@ inline bool is_directory(const path& p) {
 
 inline bool is_regular_file(const path& p) {
   return directory_entry(p).is_regular_file();
+}
+
+inline bool create_directories(const path& p) {
+  // name no work to do
+  if (p.path_name_.empty())
+    return true;
+
+  // for each piece of the path
+  struct stat s;
+  for (size_t i = 0; i <= p.separators_.size(); ++i) {
+    auto sep = i < p.separators_.size() ? p.separators_[i] + 1 : p.path_name_.size();
+    // if this piece doesnt exist
+    auto partial = p.path_name_.substr(0, sep);
+    if (stat(partial.c_str(), &s) != 0) {
+      // create this piece with filesystem::permissions::all
+#ifdef _MSC_VER
+      if (_mkdir(partial.c_str()) != 0) {
+#else
+      if (mkdir(partial.c_str(), S_IRWXU | S_IRWXG | S_IRWXO) != 0) {
+#endif
+        return false;
+        // throw std::runtime_error(std::string("Failed to create path: ") + strerror(errno));
+      }
+    } // if it did exist but wasnt a directory not good
+    else if (!S_ISDIR(s.st_mode)) {
+      return false;
+      // throw std::runtime_error("Path exists and is not a directory");
+    }
+  }
+
+  // make it!
+  return true;
+}
+
+inline void resize_file(const path& p, std::uintmax_t new_size) {
+
+#ifdef _MSC_VER
+  auto truncate = [](char const* filepath, std::uintmax_t length) -> int {
+    // _chsize expects value in range of signed long
+    if (length > (std::numeric_limits<long>::max)())
+      return false;
+
+    int fd{0};
+    if (::_sopen_s(&fd, filepath, _O_RDWR | _O_CREAT, _SH_DENYNO, _S_IREAD | _S_IWRITE) != 0)
+      return false;
+
+    int const rc = ::_chsize(fd, static_cast<long>(length));
+    _close(fd);
+    return rc == 0;
+  };
+#endif
+
+  if (truncate(p.c_str(), new_size))
+    throw std::runtime_error(std::string("Failed to resize path: ") + strerror(errno));
 }
 
 } // namespace filesystem

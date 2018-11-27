@@ -8,6 +8,7 @@
 #include "midgard/polyline2.h"
 #include "mjolnir/graphbuilder.h"
 #include "mjolnir/graphenhancer.h"
+#include "mjolnir/graphfilter.h"
 #include "mjolnir/graphvalidator.h"
 #include "mjolnir/hierarchybuilder.h"
 #include "mjolnir/osmpbfparser.h"
@@ -144,7 +145,8 @@ void build_tile_set(const boost::property_tree::ptree& config,
   auto osm_data =
       PBFGraphParser::Parse(config.get_child("mjolnir"), input_files, bin_file_prefix + "ways.bin",
                             bin_file_prefix + "way_nodes.bin", bin_file_prefix + "access.bin",
-                            bin_file_prefix + "complex_restrictions.bin");
+                            bin_file_prefix + "complex_from_restrictions.bin",
+                            bin_file_prefix + "complex_to_restrictions.bin");
 
   // Optionally free all protobuf memory but also you cant use the protobuffer lib after this!
   if (free_protobuf) {
@@ -154,12 +156,16 @@ void build_tile_set(const boost::property_tree::ptree& config,
   // Build the graph using the OSMNodes and OSMWays from the parser
   GraphBuilder::Build(config, osm_data, bin_file_prefix + "ways.bin",
                       bin_file_prefix + "way_nodes.bin",
-                      bin_file_prefix + "complex_restrictions.bin");
+                      bin_file_prefix + "complex_from_restrictions.bin",
+                      bin_file_prefix + "complex_to_restrictions.bin");
 
   // Enhance the local level of the graph. This adds information to the local
   // level that is usable across all levels (density, administrative
   // information (and country based attribution), edge transition logic, etc.
   GraphEnhancer::Enhance(config, bin_file_prefix + "access.bin");
+
+  // Perform optional edge filtering (remove edges and nodes for specific access modes)
+  GraphFilter::Filter(config);
 
   // Add transit
   TransitBuilder::Build(config);
@@ -183,7 +189,8 @@ void build_tile_set(const boost::property_tree::ptree& config,
   }
 
   // Build the Complex Restrictions
-  RestrictionBuilder::Build(config, bin_file_prefix + "complex_restrictions.bin", osm_data.end_map);
+  RestrictionBuilder::Build(config, bin_file_prefix + "complex_from_restrictions.bin",
+                            "complex_to_restrictions.bin");
 
   // Validate the graph and add information that cannot be added until
   // full graph is formed.

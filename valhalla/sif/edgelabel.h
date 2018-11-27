@@ -62,33 +62,6 @@ public:
   }
 
   /**
-   * Constructor given a predecessor edge label. This is used for hierarchy
-   * transitions where the attributes at the predecessor are needed (rather
-   * than attributes from the directed edge).
-   * TODO - remove when all path algorithms avoid adding transition edges to
-   * the label set.
-   * @param predecessor  Index into the edge label list for the predecessor
-   *                     directed edge in the shortest path.
-   * @param edgeid       Directed edge id.
-   * @param endnode      End node of the transition edge.
-   * @param pred         Predecessor edge label (to copy attributes from)
-   */
-  EdgeLabel(const uint32_t predecessor,
-            const baldr::GraphId& edgeid,
-            const baldr::GraphId& endnode,
-            const EdgeLabel& pred) {
-    *this = pred;
-    predecessor_ = predecessor;
-    edgeid_ = edgeid;
-    endnode_ = endnode;
-    origin_ = 0;
-
-    // Set the use so we know this is a transition edge. For now we only need to
-    // know it is a transition edge so we can skip it in complex restrictions.
-    use_ = static_cast<uint32_t>(baldr::Use::kTransitionUp);
-  }
-
-  /**
    * Update an existing edge label with new predecessor and cost information.
    * The mode, edge Id, and end node remain the same.
    * @param predecessor Predecessor directed edge in the shortest path.
@@ -589,33 +562,6 @@ public:
       : EdgeLabel(predecessor, edgeid, edge, cost, sortcost, dist, mode, path_distance),
         prior_stopid_(prior_stopid), tripid_(tripid), blockid_(blockid),
         transit_operator_(transit_operator), has_transit_(has_transit) {
-  }
-
-  /**
-   * Constructor given a predecessor edge label. This is used for hierarchy
-   * transitions where the attributes at the predecessor are needed (rather
-   * than attributes from the directed edge).
-   * TODO - remove when all path algorithms avoid adding transition edges to
-   * the label set.
-   * @param predecessor  Index into the edge label list for the predecessor
-   *                     directed edge in the shortest path.
-   * @param edgeid       Directed edge id.
-   * @param endnode      End node of the transition edge.
-   * @param pred         Predecessor edge label (to copy attributes from)
-   */
-  MMEdgeLabel(const uint32_t predecessor,
-              const baldr::GraphId& edgeid,
-              const baldr::GraphId& endnode,
-              const MMEdgeLabel& pred) {
-    *this = pred;
-    predecessor_ = predecessor;
-    edgeid_ = edgeid;
-    endnode_ = endnode;
-    origin_ = 0;
-
-    // Set the use so we know this is a transition edge. For now we only need to
-    // know it is a transition edge so we can skip it in complex restrictions.
-    use_ = static_cast<uint32_t>(baldr::Use::kTransitionUp);
   }
 
   /**

@@ -119,22 +119,6 @@ void BidirectionalAStar::ExpandForward(GraphReader& graphreader,
   EdgeStatusInfo* es = edgestatus_forward_.GetPtr(edgeid, tile);
   const DirectedEdge* directededge = tile->directededge(edgeid);
   for (uint32_t i = 0; i < nodeinfo->edge_count(); ++i, ++directededge, ++edgeid, ++es) {
-    // Handle transition edges - expand from the end node of the transition
-    // (unless this is called from a transition).
-    if (directededge->trans_up()) {
-      if (!from_transition) {
-        hierarchy_limits_forward_[node.level()].up_transition_count++;
-        ExpandForward(graphreader, directededge->endnode(), pred, pred_idx, true);
-      }
-      continue;
-    } else if (directededge->trans_down()) {
-      if (!from_transition &&
-          !hierarchy_limits_forward_[directededge->endnode().level()].StopExpanding()) {
-        ExpandForward(graphreader, directededge->endnode(), pred, pred_idx, true);
-      }
-      continue;
-    }
-
     // Skip shortcut edges until we have stopped expanding on the next level. Use regular
     // edges while still expanding on the next level since we can still transition down to
     // that level. If using a shortcut, set the shortcuts mask. Skip if this is a regular
@@ -188,7 +172,7 @@ void BidirectionalAStar::ExpandForward(GraphReader& graphreader,
     // end node of the directed edge.
     float dist = 0.0f;
     float sortcost =
-        newcost.cost + astarheuristic_forward_.Get(t2->node(directededge->endnode())->latlng(), dist);
+        newcost.cost + astarheuristic_forward_.Get(t2->get_node_ll(directededge->endnode()), dist);
 
     // Add edge label, add to the adjacency list and set edge status
     uint32_t idx = edgelabels_forward_.size();
@@ -197,6 +181,19 @@ void BidirectionalAStar::ExpandForward(GraphReader& graphreader,
                                      (pred.not_thru_pruning() || !directededge->not_thru()));
     adjacencylist_forward_->add(idx);
     *es = {EdgeSet::kTemporary, idx};
+  }
+
+  // Handle transitions - expand from the end node of each transition
+  if (!from_transition && nodeinfo->transition_count() > 0) {
+    const NodeTransition* trans = tile->transition(nodeinfo->transition_index());
+    for (uint32_t i = 0; i < nodeinfo->transition_count(); ++i, ++trans) {
+      if (trans->up()) {
+        hierarchy_limits_forward_[node.level()].up_transition_count++;
+        ExpandForward(graphreader, trans->endnode(), pred, pred_idx, true);
+      } else if (!hierarchy_limits_forward_[trans->endnode().level()].StopExpanding()) {
+        ExpandForward(graphreader, trans->endnode(), pred, pred_idx, true);
+      }
+    }
   }
 }
 
@@ -224,22 +221,6 @@ void BidirectionalAStar::ExpandReverse(GraphReader& graphreader,
   EdgeStatusInfo* es = edgestatus_reverse_.GetPtr(edgeid, tile);
   const DirectedEdge* directededge = tile->directededge(edgeid);
   for (uint32_t i = 0; i < nodeinfo->edge_count(); ++i, ++directededge, ++edgeid, ++es) {
-    // Handle transition edges - expand from the end not of the transition
-    // unless this is called from a transition.
-    if (directededge->trans_up()) {
-      if (!from_transition) {
-        hierarchy_limits_reverse_[node.level()].up_transition_count++;
-        ExpandReverse(graphreader, directededge->endnode(), pred, pred_idx, opp_pred_edge, true);
-      }
-      continue;
-    } else if (directededge->trans_down()) {
-      if (!from_transition &&
-          !hierarchy_limits_reverse_[directededge->endnode().level()].StopExpanding()) {
-        ExpandReverse(graphreader, directededge->endnode(), pred, pred_idx, opp_pred_edge, true);
-      }
-      continue;
-    }
-
     // Skip shortcut edges until we have stopped expanding on the next level. Use regular
     // edges while still expanding on the next level since we can still transition down to
     // that level. If using a shortcut, set the shortcuts mask. Skip if this is a regular
@@ -300,7 +281,7 @@ void BidirectionalAStar::ExpandReverse(GraphReader& graphreader,
     // end node of the directed edge.
     float dist = 0.0f;
     float sortcost =
-        newcost.cost + astarheuristic_reverse_.Get(t2->node(directededge->endnode())->latlng(), dist);
+        newcost.cost + astarheuristic_reverse_.Get(t2->get_node_ll(directededge->endnode()), dist);
 
     // Add edge label, add to the adjacency list and set edge status
     uint32_t idx = edgelabels_reverse_.size();
@@ -309,6 +290,19 @@ void BidirectionalAStar::ExpandReverse(GraphReader& graphreader,
                                      (pred.not_thru_pruning() || !directededge->not_thru()));
     adjacencylist_reverse_->add(idx);
     *es = {EdgeSet::kTemporary, idx};
+  }
+
+  // Handle transitions - expand from the end node of each transition
+  if (!from_transition && nodeinfo->transition_count() > 0) {
+    const NodeTransition* trans = tile->transition(nodeinfo->transition_index());
+    for (uint32_t i = 0; i < nodeinfo->transition_count(); ++i, ++trans) {
+      if (trans->up()) {
+        hierarchy_limits_reverse_[node.level()].up_transition_count++;
+        ExpandReverse(graphreader, trans->endnode(), pred, pred_idx, opp_pred_edge, true);
+      } else if (!hierarchy_limits_reverse_[trans->endnode().level()].StopExpanding()) {
+        ExpandReverse(graphreader, trans->endnode(), pred, pred_idx, opp_pred_edge, true);
+      }
+    }
   }
 }
 
@@ -594,7 +588,7 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader, odin::Location& ori
     // We assume the slowest speed you could travel to cover that distance to start/end the route
     // TODO: assumes 1m/s which is a maximum penalty this could vary per costing model
     cost.cost += edge.distance();
-    float dist = astarheuristic_forward_.GetDistance(nodeinfo->latlng());
+    float dist = astarheuristic_forward_.GetDistance(nodeinfo->latlng(endtile->header()->base_ll()));
     float sortcost = cost.cost + astarheuristic_forward_.Get(dist);
 
     // Add EdgeLabel to the adjacency list. Set the predecessor edge index
@@ -658,7 +652,7 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader, const odin::Lo
     // We assume the slowest speed you could travel to cover that distance to start/end the route
     // TODO: assumes 1m/s which is a maximum penalty this could vary per costing model
     cost.cost += edge.distance();
-    float dist = astarheuristic_reverse_.GetDistance(tile->node(opp_dir_edge->endnode())->latlng());
+    float dist = astarheuristic_reverse_.GetDistance(tile->get_node_ll(opp_dir_edge->endnode()));
     float sortcost = cost.cost + astarheuristic_reverse_.Get(dist);
 
     // Add EdgeLabel to the adjacency list. Set the predecessor edge index
@@ -685,9 +679,9 @@ std::vector<PathInfo> BidirectionalAStar::FormPath(GraphReader& graphreader) {
 
   // Metrics (TODO - more accurate cost)
   uint32_t pathcost = edgelabels_forward_[idx1].cost().cost + edgelabels_reverse_[idx2].cost().cost;
-  LOG_INFO("path_cost::" + std::to_string(pathcost));
-  LOG_INFO("FormPath path_iterations::" + std::to_string(edgelabels_forward_.size()) + "," +
-           std::to_string(edgelabels_reverse_.size()));
+  LOG_DEBUG("path_cost::" + std::to_string(pathcost));
+  LOG_DEBUG("FormPath path_iterations::" + std::to_string(edgelabels_forward_.size()) + "," +
+            std::to_string(edgelabels_reverse_.size()));
 
   // Work backwards on the forward path
   std::vector<PathInfo> path;

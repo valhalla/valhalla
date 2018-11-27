@@ -49,13 +49,22 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
   std::set<NameInfo> name_info;
   name_info.insert({0});
 
-  // Create vectors of the fixed size objects
+  // Copy nodes to the builder list
   size_t n = header_->nodecount();
-  nodes_builder_.resize(n);
-  memcpy(&nodes_builder_[0], nodes_, n * sizeof(NodeInfo));
+  nodes_builder_.reserve(n);
+  std::copy(nodes_, nodes_ + n, std::back_inserter(nodes_builder_));
+
+  // Copy node transitions to the builder list
+  n = header_->transitioncount();
+  transitions_builder_.reserve(n);
+  std::copy(transitions_, transitions_ + n, std::back_inserter(transitions_builder_));
+
+  // Copy directed edges to the builder list
   n = header_->directededgecount();
-  directededges_builder_.resize(n);
-  memcpy(&directededges_builder_[0], directededges_, n * sizeof(DirectedEdge));
+  directededges_builder_.reserve(n);
+  std::copy(directededges_, directededges_ + n, std::back_inserter(directededges_builder_));
+
+  // Add extended directededge attributes (if available)
 
   // Create access restriction list
   for (uint32_t i = 0; i < header_->access_restriction_count(); i++) {
@@ -131,6 +140,7 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
     EdgeInfo ei(edgeinfo_ + offset, textlist_, textlist_size_);
     EdgeInfoBuilder eib;
     eib.set_wayid(ei.wayid());
+    eib.set_mean_elevation(ei.mean_elevation());
     for (uint32_t nm = 0; nm < ei.name_count(); nm++) {
       NameInfo info = ei.GetNameInfo(nm);
       name_info.insert(info);
@@ -165,14 +175,6 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
   lane_connectivity_builder_.reserve(n);
   std::copy(lane_connectivity_, lane_connectivity_ + n,
             std::back_inserter(lane_connectivity_builder_));
-
-  // Edge elevation
-  if (header_->has_edge_elevation()) {
-    // Edge elevation count is the same as the directed edge count
-    n = header_->directededgecount();
-    edge_elevation_builder_.reserve(n);
-    std::copy(edge_elevation_, edge_elevation_ + n, std::back_inserter(edge_elevation_builder_));
-  }
 }
 
 // Output the tile to file. Stores as binary data.
@@ -195,10 +197,26 @@ void GraphTileBuilder::StoreTileData() {
     in_mem.write(reinterpret_cast<const char*>(nodes_builder_.data()),
                  nodes_builder_.size() * sizeof(NodeInfo));
 
+    // Write the node transitions
+    header_builder_.set_transitioncount(transitions_builder_.size());
+    in_mem.write(reinterpret_cast<const char*>(transitions_builder_.data()),
+                 transitions_builder_.size() * sizeof(NodeTransition));
+
     // Write the directed edges
     header_builder_.set_directededgecount(directededges_builder_.size());
     in_mem.write(reinterpret_cast<const char*>(directededges_builder_.data()),
                  directededges_builder_.size() * sizeof(DirectedEdge));
+
+    // Write extended directed edge attributes if they exist.
+    if (directededges_ext_builder_.size() > 0) {
+      if (directededges_ext_builder_.size() != directededges_builder_.size()) {
+        LOG_ERROR("DirectedEdge extended attributes not same size as directed edges");
+      } else {
+        header_builder_.set_has_ext_directededge(true);
+        in_mem.write(reinterpret_cast<const char*>(directededges_ext_builder_.data()),
+                     directededges_ext_builder_.size() * sizeof(DirectedEdgeExt));
+      }
+    }
 
     // Sort and write the access restrictions
     header_builder_.set_access_restriction_count(access_restriction_builder_.size());
@@ -235,6 +253,11 @@ void GraphTileBuilder::StoreTileData() {
     in_mem.write(reinterpret_cast<const char*>(signs_builder_.data()),
                  signs_builder_.size() * sizeof(Sign));
 
+    // Write turn lanes
+    header_builder_.set_turnlane_count(turnlanes_builder_.size());
+    in_mem.write(reinterpret_cast<const char*>(turnlanes_builder_.data()),
+                 turnlanes_builder_.size() * sizeof(TurnLanes));
+
     // Write the admins
     header_builder_.set_admincount(admins_builder_.size());
     in_mem.write(reinterpret_cast<const char*>(admins_builder_.data()),
@@ -245,14 +268,17 @@ void GraphTileBuilder::StoreTileData() {
     // Write the forward complex restriction data
     header_builder_.set_complex_restriction_forward_offset(
         (sizeof(GraphTileHeader)) + (nodes_builder_.size() * sizeof(NodeInfo)) +
+        (transitions_builder_.size() * sizeof(NodeTransition)) +
         (directededges_builder_.size() * sizeof(DirectedEdge)) +
+        (directededges_ext_builder_.size() * sizeof(DirectedEdgeExt)) +
         (access_restriction_builder_.size() * sizeof(AccessRestriction)) +
         (departure_builder_.size() * sizeof(TransitDeparture)) +
         (stop_builder_.size() * sizeof(TransitStop)) +
         (route_builder_.size() * sizeof(TransitRoute)) +
-        (schedule_builder_.size() * sizeof(TransitSchedule))
+        (schedule_builder_.size() * sizeof(TransitSchedule)) +
         // TODO - once transit transfers are added need to update here
-        + (signs_builder_.size() * sizeof(Sign)) + (admins_builder_.size() * sizeof(Admin)));
+        (signs_builder_.size() * sizeof(Sign)) + (turnlanes_builder_.size() * sizeof(TurnLanes)) +
+        (admins_builder_.size() * sizeof(Admin)));
     uint32_t forward_restriction_size = 0;
     for (auto& complex_restriction : complex_restriction_forward_builder_) {
       in_mem << complex_restriction;
@@ -288,43 +314,16 @@ void GraphTileBuilder::StoreTileData() {
       in_mem.write("\0\0\0\0\0\0\0\0", padding);
     }
 
-    // At this point there is no traffic segment data, so set traffic segment
-    // Id offset and chunk offset to same value
-    header_builder_.set_traffic_id_count(0);
-    header_builder_.set_traffic_segmentid_offset(header_builder_.textlist_offset() +
-                                                 text_list_offset_ + padding);
-    header_builder_.set_traffic_chunk_offset(header_builder_.traffic_segmentid_offset());
-
     // Write lane connections
-    header_builder_.set_lane_connectivity_offset(header_builder_.traffic_chunk_offset());
+    header_builder_.set_lane_connectivity_offset(header_builder_.textlist_offset() +
+                                                 text_list_offset_ + padding);
     std::sort(lane_connectivity_builder_.begin(), lane_connectivity_builder_.end());
     in_mem.write(reinterpret_cast<const char*>(lane_connectivity_builder_.data()),
                  lane_connectivity_builder_.size() * sizeof(LaneConnectivity));
 
-    // Write the edge elevation data. Make sure that if it exists it has
-    // the same count as directed edges.
-    header_builder_.set_edge_elevation_offset(
-        header_builder_.lane_connectivity_offset() +
-        (lane_connectivity_builder_.size() * sizeof(LaneConnectivity)));
-    if (edge_elevation_builder_.size() > 0) {
-      if (edge_elevation_builder_.size() != directededges_builder_.size()) {
-        LOG_ERROR("Edge elevation count is not equal to directed edge count!");
-      }
-      header_builder_.set_has_edge_elevation(true);
-      in_mem.write(reinterpret_cast<const char*>(edge_elevation_builder_.data()),
-                   edge_elevation_builder_.size() * sizeof(EdgeElevation));
-    }
-
-    // Write turn lanes
-    header_builder_.set_turnlane_offset(header_builder_.edge_elevation_offset() +
-                                        edge_elevation_builder_.size() * sizeof(EdgeElevation));
-    header_builder_.set_turnlane_count(turnlanes_builder_.size());
-    in_mem.write(reinterpret_cast<const char*>(turnlanes_builder_.data()),
-                 turnlanes_builder_.size() * sizeof(TurnLanes));
-
     // Set the end offset
-    header_builder_.set_end_offset(header_builder_.turnlane_offset() +
-                                   turnlanes_builder_.size() * sizeof(TurnLanes));
+    header_builder_.set_end_offset(header_builder_.lane_connectivity_offset() +
+                                   (lane_connectivity_builder_.size() * sizeof(LaneConnectivity)));
 
     // Sanity check for the end offset
     uint32_t curr =
@@ -359,7 +358,6 @@ void GraphTileBuilder::StoreTileData() {
 // tile contents remains the same.
 void GraphTileBuilder::Update(const std::vector<NodeInfo>& nodes,
                               const std::vector<DirectedEdge>& directededges) {
-
   // Get the name of the file
   boost::filesystem::path filename =
       tile_dir_ + filesystem::path::preferred_separator + GraphTile::FileSuffix(header_->graphid());
@@ -381,12 +379,19 @@ void GraphTileBuilder::Update(const std::vector<NodeInfo>& nodes,
     }
     file.write(reinterpret_cast<const char*>(nodes.data()), nodes.size() * sizeof(NodeInfo));
 
+    // Write node transitions
+    file.write(reinterpret_cast<const char*>(transitions_),
+               header_->transitioncount() * sizeof(NodeTransition));
+
     // Write the updated directed edges. Make sure edge count matches.
     if (directededges.size() != header_->directededgecount()) {
       throw std::runtime_error("GraphTileBuilder::Update - directed edge count has changed");
     }
     file.write(reinterpret_cast<const char*>(directededges.data()),
                directededges.size() * sizeof(DirectedEdge));
+
+    // If there are extended directed edge attributes they would need to be written out here
+    // (and likely added to the method)
 
     // Write the rest of the tiles
     auto begin = reinterpret_cast<const char*>(&access_restrictions_[0]);
@@ -491,7 +496,10 @@ template <class shape_container_t>
 uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
                                        const GraphId& nodea,
                                        const baldr::GraphId& nodeb,
-                                       const uint64_t wayid,
+                                       const uint32_t wayid,
+                                       const float elev,
+                                       const uint32_t bike_network,
+                                       const uint32_t speed_limit,
                                        const shape_container_t& lls,
                                        const std::vector<std::string>& names,
                                        const uint16_t types,
@@ -504,6 +512,9 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
     edgeinfo_list_.emplace_back();
     EdgeInfoBuilder& edgeinfo = edgeinfo_list_.back();
     edgeinfo.set_wayid(wayid);
+    edgeinfo.set_mean_elevation(elev);
+    edgeinfo.set_bike_network(bike_network);
+    edgeinfo.set_speed_limit(speed_limit);
     edgeinfo.set_shape(lls);
 
     // Add names to the common text/name list. Skip blank names.
@@ -522,9 +533,9 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
       if (!(name.empty())) {
         // Add name and add its offset to edge info's list.
         NameInfo ni{AddName(name)};
-        ni.is_ref_ = 0;
+        ni.is_route_num_ = 0;
         if ((types & (1ULL << location))) {
-          ni.is_ref_ = 1; // set the ref bit.
+          ni.is_route_num_ = 1; // set the ref bit.
         }
         name_info_list.emplace_back(ni);
         ++name_count;
@@ -554,7 +565,10 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
 template uint32_t GraphTileBuilder::AddEdgeInfo<std::vector<PointLL>>(const uint32_t edgeindex,
                                                                       const GraphId&,
                                                                       const baldr::GraphId&,
-                                                                      const uint64_t,
+                                                                      const uint32_t,
+                                                                      const float,
+                                                                      const uint32_t,
+                                                                      const uint32_t,
                                                                       const std::vector<PointLL>&,
                                                                       const std::vector<std::string>&,
                                                                       const uint16_t,
@@ -562,7 +576,10 @@ template uint32_t GraphTileBuilder::AddEdgeInfo<std::vector<PointLL>>(const uint
 template uint32_t GraphTileBuilder::AddEdgeInfo<std::list<PointLL>>(const uint32_t edgeindex,
                                                                     const GraphId&,
                                                                     const baldr::GraphId&,
-                                                                    const uint64_t,
+                                                                    const uint32_t,
+                                                                    const float,
+                                                                    const uint32_t,
+                                                                    const uint32_t,
                                                                     const std::list<PointLL>&,
                                                                     const std::vector<std::string>&,
                                                                     const uint16_t,
@@ -572,7 +589,10 @@ template uint32_t GraphTileBuilder::AddEdgeInfo<std::list<PointLL>>(const uint32
 uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
                                        const baldr::GraphId& nodea,
                                        const baldr::GraphId& nodeb,
-                                       const uint64_t wayid,
+                                       const uint32_t wayid,
+                                       const float elev,
+                                       const uint32_t bike_network,
+                                       const uint32_t speed_limit,
                                        const std::string& llstr,
                                        const std::vector<std::string>& names,
                                        const uint16_t types,
@@ -585,6 +605,9 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
     edgeinfo_list_.emplace_back();
     EdgeInfoBuilder& edgeinfo = edgeinfo_list_.back();
     edgeinfo.set_wayid(wayid);
+    edgeinfo.set_mean_elevation(elev);
+    edgeinfo.set_bike_network(bike_network);
+    edgeinfo.set_speed_limit(speed_limit);
     edgeinfo.set_encoded_shape(llstr);
 
     // Add names to the common text/name list. Skip blank names.
@@ -603,9 +626,9 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
       if (!(name.empty())) {
         // Add name and add its offset to edge info's list.
         NameInfo ni{AddName(name)};
-        ni.is_ref_ = 0;
+        ni.is_route_num_ = 0;
         if ((types & (1ULL << location))) {
-          ni.is_ref_ = 1; // set the ref bit.
+          ni.is_route_num_ = 1; // set the ref bit.
         }
         name_info_list.emplace_back(ni);
         ++name_count;
@@ -631,6 +654,12 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
   // Already have this edge - return the offset
   added = false;
   return existing_edge_offset_item->second;
+}
+
+// Set the mean elevation in the last added EdgeInfo.
+void GraphTileBuilder::set_mean_elevation(const float elev) {
+  EdgeInfoBuilder& edgeinfo = edgeinfo_list_.back();
+  edgeinfo.set_mean_elevation(elev);
 }
 
 // Add a name to the text list
@@ -751,6 +780,22 @@ Sign& GraphTileBuilder::sign_builder(const size_t idx) {
   throw std::runtime_error("GraphTileBuilder sign index is out of bounds");
 }
 
+// Gets a sign builder at the specified index.
+TurnLanes& GraphTileBuilder::turnlane_builder(const size_t idx) {
+  if (idx < header_->turnlane_count()) {
+    return turnlanes_[idx];
+  }
+  throw std::runtime_error("GraphTileBuilder turn lane index is out of bounds");
+}
+
+// Add turn lanes for a directed edge
+void GraphTileBuilder::AddTurnLanes(const uint32_t idx, const std::string& str) {
+  if (!str.empty()) {
+    uint32_t offset = AddName(str);
+    turnlanes_builder_.emplace_back(idx, offset);
+  }
+}
+
 // Gets a const admin builder at specified index.
 const Admin& GraphTileBuilder::admins_builder(size_t idx) {
   if (idx < admins_builder_.size()) {
@@ -785,7 +830,7 @@ std::array<std::vector<GraphId>, kBinCount> GraphTileBuilder::BinEdges(const Gra
   for (const DirectedEdge* edge = start_edge; edge < start_edge + tile->header()->directededgecount();
        ++edge) {
     // dont bin these
-    if (edge->is_shortcut() || edge->IsTransition() || edge->use() == Use::kTransitConnection ||
+    if (edge->is_shortcut() || edge->use() == Use::kTransitConnection ||
         edge->use() == Use::kPlatformConnection || edge->use() == Use::kEgressConnection) {
       continue;
     }
@@ -862,11 +907,7 @@ void GraphTileBuilder::AddBins(const std::string& tile_dir,
   header.set_complex_restriction_reverse_offset(header.complex_restriction_reverse_offset() + shift);
   header.set_edgeinfo_offset(header.edgeinfo_offset() + shift);
   header.set_textlist_offset(header.textlist_offset() + shift);
-  header.set_traffic_segmentid_offset(header.traffic_segmentid_offset() + shift);
-  header.set_traffic_chunk_offset(header.traffic_chunk_offset() + shift);
   header.set_lane_connectivity_offset(header.lane_connectivity_offset() + shift);
-  header.set_edge_elevation_offset(header.edge_elevation_offset() + shift);
-  header.set_turnlane_offset(header.turnlane_offset() + shift);
   header.set_end_offset(header.end_offset() + shift);
   // rewrite the tile
   boost::filesystem::path filename =
@@ -894,187 +935,6 @@ void GraphTileBuilder::AddBins(const std::string& tile_dir,
   } // failed
   else {
     throw std::runtime_error("Failed to open file " + filename.string());
-  }
-}
-
-// Initialize traffic segment association. Sizes the traffic segment Id list
-// and sets them all to Invalid.
-void GraphTileBuilder::InitializeTrafficSegments() {
-  if (header_->traffic_id_count()) {
-    traffic_segment_builder_.assign(traffic_segments_,
-                                    traffic_segments_ + header_->traffic_id_count());
-  } else {
-    traffic_segment_builder_.resize(header_builder_.directededgecount());
-  }
-}
-
-// Initialize traffic chunks. Copies existing chunks into the chunk builder.
-// This is executed before adding "leftovers" and again before adding chunks.
-void GraphTileBuilder::InitializeTrafficChunks() {
-  // Assign the chunks to its builder counterpart
-  if (traffic_chunk_size_ > 0) {
-    size_t count = traffic_chunk_size_ / sizeof(TrafficChunk);
-    traffic_chunk_builder_.assign(traffic_chunks_, traffic_chunks_ + count);
-  }
-}
-
-// Add a traffic segment association - used when an edge associates to
-// a single traffic segment.
-void GraphTileBuilder::AddTrafficSegment(const GraphId& edgeid, const TrafficChunk& seg) {
-  // Check if edge Id is within range and part of this tile
-  if (edgeid.Tile_Base() != header_builder_.graphid()) {
-    LOG_ERROR("AddTrafficSegments - edge does not belong to this tile");
-    return;
-  }
-  if (edgeid.id() >= header_builder_.directededgecount()) {
-    LOG_ERROR("AddTrafficSegments - edge is not valid for this tile");
-    return;
-  }
-
-  // If this segment is in the same tile we have a 1:1 association of an edge
-  // to a segment in this tile - create a single segment association
-  if (seg.segment_id().Tile_Base() == edgeid.Tile_Base()) {
-    traffic_segment_builder_[edgeid.id()] = {seg.segment_id().id(), seg.starts_segment(),
-                                             seg.ends_segment()};
-  } else {
-    // Associates to a single traffic segment but in a different tile. Set
-    // the TrafficAssociation to represent a chunk count (1) and index. Store
-    // a single TrafficChunk.
-    traffic_segment_builder_[edgeid.id()] = {1, traffic_chunk_builder_.size()};
-    traffic_chunk_builder_.emplace_back(seg);
-  }
-}
-
-// Add a traffic segment association - used when an edge associates to
-// more than one traffic segment.
-void GraphTileBuilder::AddTrafficSegments(const baldr::GraphId& edgeid,
-                                          const std::vector<baldr::TrafficChunk>& segs) {
-  // Check if edge Id is within range and part of this tile
-  if (edgeid.Tile_Base() != header_builder_.graphid()) {
-    LOG_ERROR("AddTrafficSegments - edge does not belong to this tile");
-    return;
-  }
-  if (edgeid.id() >= header_builder_.directededgecount()) {
-    LOG_ERROR("AddTrafficSegments - edge is not valid for this tile");
-    return;
-  }
-
-  // This edge associates to many segments or portions of segments.
-  // Set the TrafficAssociation to represent a chunk count and index.
-  // Store each TrafficChunk.
-  traffic_segment_builder_[edgeid.id()] = {segs.size(), traffic_chunk_builder_.size()};
-  for (const auto& seg : segs) {
-    traffic_chunk_builder_.push_back(seg);
-  }
-}
-
-/**
- * Updates a tile with traffic segment and chunk data. UpdateTrafficSegments
- * is called 3 times - first to add segments within the tile, then to add any
- * "leftover" segments for OSMLR segments that cross tiles, and then to add
- * "chunks". Need to make sure the "shift" for offsets to data after the
- * traffic information are only increased by the amount of "new" segments.
- */
-void GraphTileBuilder::UpdateTrafficSegments(const bool update_dir_edges) {
-  // Get the number of new segments and chunks added with this call.
-  uint32_t new_segments = traffic_segment_builder_.size() - header_->traffic_id_count();
-  uint32_t new_chunks =
-      traffic_chunk_builder_.size() -
-      (header_->lane_connectivity_offset() - header_->traffic_chunk_offset()) / sizeof(TrafficChunk);
-
-  // Update header to include the traffic segment count and update the
-  // offset to chunks (based on size of traffic segments).
-  // Padding should already be done so we start traffic info on an 8-byte boundary
-  header_builder_.set_traffic_id_count(traffic_segment_builder_.size());
-  header_builder_.set_traffic_chunk_offset(header_builder_.traffic_segmentid_offset() +
-                                           traffic_segment_builder_.size() *
-                                               sizeof(TrafficAssociation));
-
-  // Shift offsets to anything that comes after traffic
-  uint32_t shift = new_segments * sizeof(TrafficAssociation) + new_chunks * sizeof(TrafficChunk);
-  header_builder_.set_lane_connectivity_offset(header_builder_.lane_connectivity_offset() + shift);
-  header_builder_.set_edge_elevation_offset(header_builder_.edge_elevation_offset() + shift);
-  header_builder_.set_end_offset(header_builder_.end_offset() + shift);
-
-  // Get the name of the file
-  boost::filesystem::path filename = tile_dir_ + filesystem::path::preferred_separator +
-                                     GraphTile::FileSuffix(header_builder_.graphid());
-
-  // Make sure the directory exists on the system
-  if (!boost::filesystem::exists(filename.parent_path())) {
-    boost::filesystem::create_directories(filename.parent_path());
-  }
-
-  // Open file and truncate
-  std::ofstream file(filename.c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
-  if (file.is_open()) {
-    // Write a new header
-    file.write(reinterpret_cast<const char*>(&header_builder_), sizeof(GraphTileHeader));
-
-    // Copy the tile contents from nodes to the beginning of traffic segments
-    file.write(reinterpret_cast<const char*>(nodes_),
-               header_->traffic_segmentid_offset() - sizeof(GraphTileHeader));
-
-    // Append the traffic segment list
-    file.write(reinterpret_cast<const char*>(traffic_segment_builder_.data()),
-               traffic_segment_builder_.size() * sizeof(TrafficAssociation));
-
-    // Append the traffic chunks
-    file.write(reinterpret_cast<const char*>(traffic_chunk_builder_.data()),
-               traffic_chunk_builder_.size() * sizeof(TrafficChunk));
-
-    // Write rest of the stuff after traffic chunks (includes lane connectivity
-    // and edge elevation, turn lanes, ...so far).
-    const auto* begin = reinterpret_cast<const char*>(header_) + header_->lane_connectivity_offset();
-    const auto* end = reinterpret_cast<const char*>(header_) + header_->end_offset();
-    file.write(begin, end - begin);
-
-    // Update directed edge flags
-    if (update_dir_edges) {
-      // Copy directed edges so we can modify them
-      uint32_t n = header_->directededgecount();
-      directededges_builder_.resize(n);
-      memcpy(&directededges_builder_[0], directededges_, n * sizeof(DirectedEdge));
-
-      // Iterate through directed edges and set traffic segment flag for aby
-      // that have any traffic segments.
-      for (uint32_t i = 0; i < n; i++) {
-        const TrafficAssociation& t = traffic_segment_builder_[i];
-        if (t.chunk() || t.count() == 1) {
-          directededges_builder_[i].set_traffic_seg(true);
-        }
-      }
-
-      // Write the updated directed edges
-      size_t offset = sizeof(GraphTileHeader) + header_->nodecount() * sizeof(NodeInfo);
-      file.seekp(offset, std::ios_base::beg);
-      file.write(reinterpret_cast<const char*>(directededges_builder_.data()),
-                 directededges_builder_.size() * sizeof(DirectedEdge));
-    }
-
-    // Close the file
-    file.close();
-  }
-}
-
-// Gets the current list of directed edge (builders).
-std::vector<EdgeElevation>& GraphTileBuilder::edge_elevations() {
-  return edge_elevation_builder_;
-}
-
-// Gets a sign builder at the specified index.
-TurnLanes& GraphTileBuilder::turnlane_builder(const size_t idx) {
-  if (idx < header_->turnlane_count()) {
-    return turnlanes_[idx];
-  }
-  throw std::runtime_error("GraphTileBuilder turn lane index is out of bounds");
-}
-
-// Add turn lanes for a directed edge
-void GraphTileBuilder::AddTurnLanes(const uint32_t idx, const std::string& str) {
-  if (!str.empty()) {
-    uint32_t offset = AddName(str);
-    turnlanes_builder_.emplace_back(idx, offset);
   }
 }
 
@@ -1124,16 +984,20 @@ void GraphTileBuilder::UpdatePredictedSpeeds(const std::vector<DirectedEdge>& di
   if (file.is_open()) {
     // Write a new header - add the offset to predicted speed data and the profile count.
     // Update the end offset (shift by the amount of predicted speed data added).
+    size_t offset = header_->end_offset();
     header_builder_.set_end_offset(header_->end_offset() +
                                    (speed_profile_offset_builder_.size() * sizeof(uint32_t)) +
                                    (speed_profile_builder_.size() * sizeof(int16_t)));
-    size_t offset = header_->turnlane_offset() + header_->turnlane_count() * sizeof(TurnLanes);
     header_builder_.set_predictedspeeds_offset(offset);
     header_builder_.set_predictedspeeds_count(speed_profile_builder_.size() / kCoefficientCount);
     file.write(reinterpret_cast<const char*>(&header_builder_), sizeof(GraphTileHeader));
 
     // Copy the nodes (they are unchanged when adding predicted speeds).
     file.write(reinterpret_cast<const char*>(nodes_), header_->nodecount() * sizeof(NodeInfo));
+
+    // Copy the node transitions (they are unchanged when adding predicted speeds).
+    file.write(reinterpret_cast<const char*>(transitions_),
+               header_->transitioncount() * sizeof(NodeTransition));
 
     // Write the updated directed edges. Make sure edge count matches.
     if (directededges.size() != header_->directededgecount()) {
@@ -1142,7 +1006,7 @@ void GraphTileBuilder::UpdatePredictedSpeeds(const std::vector<DirectedEdge>& di
     file.write(reinterpret_cast<const char*>(directededges.data()),
                directededges.size() * sizeof(DirectedEdge));
 
-    // Write out data from access restrictions to the end of turn lane data
+    // Write out data from access restrictions to the end of lane connectivity data.
     auto begin = reinterpret_cast<const char*>(&access_restrictions_[0]);
     auto end = reinterpret_cast<const char*>(header()) + offset;
     file.write(begin, end - begin);

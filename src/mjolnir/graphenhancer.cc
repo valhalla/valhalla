@@ -56,11 +56,6 @@ typedef boost::geometry::model::d2::point_xy<double> point_type;
 typedef boost::geometry::model::polygon<point_type> polygon_type;
 typedef boost::geometry::model::multi_polygon<polygon_type> multi_polygon_type;
 
-// Number of iterations to try to determine if an edge is unreachable
-// by driving. If a search terminates before this without reaching
-// a secondary road then the edge is considered unreachable.
-constexpr uint32_t kUnreachableIterations = 20;
-
 // Number of tries when determining not thru edges
 constexpr uint32_t kMaxNoThruTries = 256;
 
@@ -77,7 +72,6 @@ constexpr float kRampFactor = 0.85f;
 // A little struct to hold stats information during each threads work
 struct enhancer_stats {
   float max_density; //(km/km2)
-  uint32_t unreachable;
   uint32_t not_thru;
   uint32_t no_country_found;
   uint32_t internalcount;
@@ -89,7 +83,6 @@ struct enhancer_stats {
     if (max_density < other.max_density) {
       max_density = other.max_density;
     }
-    unreachable += other.unreachable;
     not_thru += other.not_thru;
     no_country_found += other.no_country_found;
     internalcount += other.internalcount;
@@ -194,6 +187,14 @@ void UpdateSpeed(DirectedEdge& directededge, const uint32_t density, const uint3
   }
 }
 
+#ifdef UNREACHABLE
+// TODO - may want to keep this to add to a postprocess to find unreachable areas
+
+// Number of iterations to try to determine if an edge is unreachable
+// by driving. If a search terminates before this without reaching
+// a secondary road then the edge is considered unreachable.
+constexpr uint32_t kUnreachableIterations = 20;
+
 /**
  * Tests if the directed edge is unreachable by driving. If a driveable
  * edge cannot reach higher class roads and a search cannot expand after
@@ -258,6 +259,7 @@ bool IsUnreachable(GraphReader& reader, std::mutex& lock, DirectedEdge& directed
   }
   return false;
 }
+#endif
 
 // Test if this is a "not thru" edge. These are edges that enter a region that
 // has no exit other than the edge entering the region
@@ -539,11 +541,12 @@ uint32_t GetDensity(GraphReader& reader,
     if (!newtile || newtile->header()->nodecount() == 0) {
       continue;
     }
+    PointLL base_ll = newtile->header()->base_ll();
     const auto start_node = newtile->node(0);
     const auto end_node = start_node + newtile->header()->nodecount();
     for (auto node = start_node; node < end_node; ++node) {
       // Check if within radius
-      if (approximator.DistanceSquared(node->latlng()) < mr2) {
+      if (approximator.DistanceSquared(node->latlng(base_ll)) < mr2) {
         // Get all directed edges and add length
         const DirectedEdge* directededge = newtile->directededge(node->edge_index());
         for (uint32_t i = 0; i < node->edge_count(); i++, directededge++) {
@@ -597,10 +600,10 @@ bool IsPencilPointUturn(uint32_t from_index,
                         const NodeInfo& node_info,
                         uint32_t turn_degree) {
   // Logic for drive on right
-  if (directededge.drive_on_right()) {
+  if (node_info.drive_on_right()) {
     // If the turn is a sharp left (179 < turn < 211)
     //    or short distance (< 50m) and wider sharp left (179 < turn < 226)
-    // and oneway edges
+    // and oneway edgesb
     // and an intersecting right road exists
     // and no intersecting left road exists
     // and the from and to edges have a common base name
@@ -613,7 +616,7 @@ bool IsPencilPointUturn(uint32_t from_index,
         ((directededge.forwardaccess() & kAutoAccess) &&
          !(directededge.reverseaccess() & kAutoAccess)) &&
         directededge.edge_to_right(from_index) && !directededge.edge_to_left(from_index) &&
-        node_info.name_consistency(from_index, to_index)) {
+        edges[to_index].name_consistency(from_index)) {
       return true;
     }
 
@@ -635,7 +638,7 @@ bool IsPencilPointUturn(uint32_t from_index,
         ((directededge.forwardaccess() & kAutoAccess) &&
          !(directededge.reverseaccess() & kAutoAccess)) &&
         !directededge.edge_to_right(from_index) && directededge.edge_to_left(from_index) &&
-        node_info.name_consistency(from_index, to_index)) {
+        edges[to_index].name_consistency(from_index)) {
       return true;
     }
   }
@@ -668,7 +671,7 @@ bool IsCyclewayUturn(uint32_t from_index,
   }
 
   // Logic for drive on right
-  if (directededge.drive_on_right()) {
+  if (node_info.drive_on_right()) {
     // If the turn is a sharp left (179 < turn < 211)
     //    or short distance (< 50m) and wider sharp left (179 < turn < 226)
     // and an intersecting right road exists
@@ -959,8 +962,8 @@ uint32_t GetOpposingEdgeIndex(const GraphTile* endnodetile,
 }
 
 bool ConsistentNames(const std::string& country_code,
-                     const std::vector<std::string>& names1,
-                     const std::vector<std::string>& names2) {
+                     const std::vector<std::pair<std::string, bool>>& names1,
+                     const std::vector<std::pair<std::string, bool>>& names2) {
   std::unique_ptr<StreetNames> street_names1 = StreetNamesFactory::Create(country_code, names1);
   std::unique_ptr<StreetNames> street_names2 = StreetNamesFactory::Create(country_code, names2);
 
@@ -1083,12 +1086,14 @@ void enhance(const boost::property_tree::ptree& pt,
     }
 
     // Second pass - add admin information and edge transition information.
+    PointLL base_ll = tilebuilder.header()->base_ll();
     for (uint32_t i = 0; i < tilebuilder.header()->nodecount(); i++) {
       GraphId startnode(id, local_level, i);
       NodeInfo& nodeinfo = tilebuilder.node_builder(i);
 
       // Get relative road density and local density
-      uint32_t density = GetDensity(reader, lock, nodeinfo.latlng(), stats, tiles, local_level);
+      uint32_t density =
+          GetDensity(reader, lock, nodeinfo.latlng(base_ll), stats, tiles, local_level);
       nodeinfo.set_density(density);
 
       uint32_t admin_index = nodeinfo.admin_index();
@@ -1265,28 +1270,21 @@ void enhance(const boost::property_tree::ptree& pt,
         UpdateSpeed(directededge, density, urban_rc_speed);
 
         // Update the named flag
-        auto names = tilebuilder.edgeinfo(directededge.edgeinfo_offset()).GetNames();
+        auto names = tilebuilder.edgeinfo(directededge.edgeinfo_offset()).GetNamesAndTypes();
         directededge.set_named(names.size() > 0);
 
-        // Name continuity - set in NodeInfo.
-        for (uint32_t k = (j + 1); k < ntrans; k++) {
+        // Name continuity - on the directededge.
+        for (uint32_t k = 0; k < ntrans; k++) {
           DirectedEdge& fromedge = tilebuilder.directededge(nodeinfo.edge_index() + k);
           if (ConsistentNames(country_code, names,
-                              tilebuilder.edgeinfo(fromedge.edgeinfo_offset()).GetNames())) {
-            nodeinfo.set_name_consistency(j, k, true);
+                              tilebuilder.edgeinfo(fromedge.edgeinfo_offset()).GetNamesAndTypes())) {
+            directededge.set_name_consistency(k, true);
           }
         }
 
-        // Set edge transitions and unreachable, not_thru, and internal
-        // intersection flags.
+        // Set edge transitions.
         if (j < kNumberOfEdgeTransitions) {
           ProcessEdgeTransitions(j, directededge, edges, ntrans, &heading[0], nodeinfo, stats);
-        }
-
-        // Set unreachable (driving) flag
-        if (IsUnreachable(reader, lock, directededge)) {
-          directededge.set_unreachable(true);
-          stats.unreachable++;
         }
 
         // Check for not_thru edge (only on low importance edges). Exclude
@@ -1423,8 +1421,7 @@ void GraphEnhancer::Enhance(const boost::property_tree::ptree& pt, const std::st
       // TODO: throw further up the chain?
     }
   }
-  LOG_INFO("Finished with max_density " + std::to_string(stats.max_density) + " and unreachable " +
-           std::to_string(stats.unreachable));
+  LOG_INFO("Finished with max_density " + std::to_string(stats.max_density));
   LOG_DEBUG("not_thru = " + std::to_string(stats.not_thru));
   LOG_DEBUG("no country found = " + std::to_string(stats.no_country_found));
   LOG_INFO("internal intersection = " + std::to_string(stats.internalcount));

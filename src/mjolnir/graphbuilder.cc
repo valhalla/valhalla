@@ -255,8 +255,8 @@ void CheckForDuplicates(const GraphId& nodeid, const Node& node,
     // Check if the end node is already in the set of edges from this node
     const auto en = endnodes.find(endnode);
     if (en != endnodes.end() && en->second.length == edgelengths[n]) {
-      uint64_t wayid1 = ways[edges[en->second.edgeindex].wayindex_].way_id();
-      uint64_t wayid2 = ways[edges[edgeindex].wayindex_].way_id();
+      uint32_t wayid1 = ways[edges[en->second.edgeindex].wayindex_].way_id();
+      uint32_t wayid2 = ways[edges[edgeindex].wayindex_].way_id();
       (*stats).AddIssue(kDuplicateWays, GraphId(), wayid1, wayid2);
     } else {
       endnodes.emplace(std::piecewise_construct,
@@ -267,7 +267,7 @@ void CheckForDuplicates(const GraphId& nodeid, const Node& node,
   }
 }
 */
-uint32_t CreateSimpleTurnRestriction(const uint64_t wayid,
+uint32_t CreateSimpleTurnRestriction(const uint32_t wayid,
                                      const size_t endnode,
                                      sequence<Node>& nodes,
                                      sequence<Edge>& edges,
@@ -296,7 +296,7 @@ uint32_t CreateSimpleTurnRestriction(const uint64_t wayid,
   }
 
   // Get the way Ids of the edges at the endnode
-  std::vector<uint64_t> wayids;
+  std::vector<uint32_t> wayids;
   auto bundle = collect_node_edges(node_itr, nodes, edges);
   for (const auto& edge : bundle.node_edges) {
     wayids.push_back((*ways[edge.first.wayindex_]).osmwayid_);
@@ -350,7 +350,7 @@ uint32_t CreateSimpleTurnRestriction(const uint64_t wayid,
 // Add an access restriction. Returns the mode(s) that have access
 // restrictions on this edge.
 uint32_t AddAccessRestrictions(const uint32_t edgeid,
-                               const uint64_t wayid,
+                               const uint32_t wayid,
                                const OSMData& osmdata,
                                GraphTileBuilder& graphtile) {
   auto res = osmdata.access_restrictions.equal_range(wayid);
@@ -372,7 +372,8 @@ void BuildTileSet(const std::string& ways_file,
                   const std::string& way_nodes_file,
                   const std::string& nodes_file,
                   const std::string& edges_file,
-                  const std::string& complex_restriction_file,
+                  const std::string& complex_restriction_from_file,
+                  const std::string& complex_restriction_to_file,
                   const std::string& tile_dir,
                   const OSMData& osmdata,
                   const std::unique_ptr<const valhalla::skadi::sample>& sample,
@@ -386,7 +387,8 @@ void BuildTileSet(const std::string& ways_file,
   sequence<OSMWayNode> way_nodes(way_nodes_file, false);
   sequence<Edge> edges(edges_file, false);
   sequence<Node> nodes(nodes_file, false);
-  sequence<OSMRestriction> complex_restrictions(complex_restriction_file, false);
+  sequence<OSMRestriction> complex_restrictions_from(complex_restriction_from_file, false);
+  sequence<OSMRestriction> complex_restrictions_to(complex_restriction_to_file, false);
 
   auto database = pt.get_optional<std::string>("admin");
   // Initialize the admin DB (if it exists)
@@ -442,10 +444,19 @@ void BuildTileSet(const std::string& ways_file,
       graphtile.AddTileCreationDate(tile_creation_date);
       graphtile.header_builder().set_dataset_id(osmdata.max_changeset_id_);
 
+      // Set the base lat,lon of the tile
+      uint32_t id = tile_id.tileid();
+      PointLL base_ll = tiling.Base(id);
+      graphtile.header_builder().set_base_ll(base_ll);
+
+      // Set the has_elevation flag
+      if (sample) {
+        graphtile.header_builder().set_has_elevation(true);
+      }
+
       // Get the admin polygons. If only one exists for the tile check if the
       // tile is entirely inside the polygon
       bool tile_within_one_admin = false;
-      uint32_t id = tile_id.tileid();
       std::unordered_multimap<uint32_t, multi_polygon_type> admin_polys;
       std::unordered_map<uint32_t, bool> drive_on_right;
       if (admin_db_handle) {
@@ -634,15 +645,23 @@ void BuildTileSet(const std::string& ways_file,
             uint16_t types = 0;
             auto names = w.GetNames(ref, osmdata.ref_offset_map, osmdata.name_offset_map, types);
 
-            edge_info_offset = graphtile.AddEdgeInfo(edge_pair.second, (*nodes[source]).graph_id,
-                                                     (*nodes[target]).graph_id, w.way_id(), shape,
-                                                     names, types, added);
+            // Update bike_network type
+            if (bike_network) {
+              bike_network |= w.bike_network();
+            } else {
+              bike_network = w.bike_network();
+            }
+
+            // Add edge info. Mean elevation is set to 1234 as a placeholder, set later if we have it.
+            edge_info_offset =
+                graphtile.AddEdgeInfo(edge_pair.second, (*nodes[source]).graph_id,
+                                      (*nodes[target]).graph_id, w.way_id(), 1234, bike_network,
+                                      speed_limit, shape, names, types, added);
 
             // length
             auto length = valhalla::midgard::length(shape);
 
             // Grade estimation and max slopes
-            // TODO - add mean elevation
             std::tuple<double, double, double, double> forward_grades(0.0, 0.0, 0.0, 0.0);
             std::tuple<double, double, double, double> reverse_grades(0.0, 0.0, 0.0, 0.0);
             if (sample && !w.tunnel() && !w.ferry()) {
@@ -711,9 +730,8 @@ void BuildTileSet(const std::string& ways_file,
           // Add a directed edge and get a reference to it
           DirectedEdgeBuilder de(w, (*nodes[target]).graph_id, forward,
                                  static_cast<uint32_t>(std::get<0>(found->second) + .5), speed,
-                                 speed_limit, truck_speed, use,
-                                 static_cast<RoadClass>(edge.attributes.importance), n, has_signal,
-                                 restrictions, bike_network);
+                                 truck_speed, use, static_cast<RoadClass>(edge.attributes.importance),
+                                 n, has_signal, restrictions, bike_network);
           graphtile.directededges().emplace_back(de);
           DirectedEdge& directededge = graphtile.directededges().back();
 
@@ -763,10 +781,16 @@ void BuildTileSet(const std::string& ways_file,
 
           // Edge elevation
           if (sample) {
+            // Reverse max slopes if not forward direction
             float max_up_slope = forward ? std::get<4>(found->second) : std::get<6>(found->second);
             float max_down_slope = forward ? std::get<5>(found->second) : std::get<7>(found->second);
-            graphtile.edge_elevations().emplace_back(std::get<8>(found->second), max_up_slope,
-                                                     max_down_slope);
+            directededge.set_max_up_slope(max_up_slope);
+            directededge.set_max_down_slope(max_down_slope);
+
+            // Set the mean elevation on EdgeInfo if added (1st instance of EdgeInfo)
+            if (added) {
+              graphtile.set_mean_elevation(std::get<8>(found->second));
+            }
           }
 
           // Add turn lanes if they exist. Store forward turn lanes on the last edge for a way
@@ -831,52 +855,39 @@ void BuildTileSet(const std::string& ways_file,
           }
 
           if (osmdata.via_set.find(w.way_id()) != osmdata.via_set.end()) {
-            directededge.set_part_of_complex_restriction(true);
+            directededge.complex_restriction(true);
           }
 
           // grab all the modes if this way ends at a restriction(s)
-          auto to = osmdata.end_map.equal_range(w.way_id());
-          if (to.first != osmdata.end_map.end()) {
-            for (auto it = to.first; it != to.second; ++it) {
+          OSMRestriction target_to_res{
+              w.way_id()}; // this is our from way id.  to is really our from for to_restrictions.
+          OSMRestriction restriction_to{};
+          sequence<OSMRestriction>::iterator res_to_it =
+              complex_restrictions_to.find(target_to_res,
+                                           [](const OSMRestriction& a, const OSMRestriction& b) {
+                                             return a.from() < b.from();
+                                           });
 
-              OSMRestriction target_res{it->second}; // this is our from way id
-              OSMRestriction restriction{};
-              sequence<OSMRestriction>::iterator res_it =
-                  complex_restrictions.find(target_res,
-                                            [](const OSMRestriction& a, const OSMRestriction& b) {
-                                              return a.from() < b.from();
-                                            });
-
-              while (res_it != complex_restrictions.end() &&
-                     (restriction = *res_it).from() == it->second) {
-                if (restriction.to() == w.way_id()) {
-                  directededge.set_end_restriction(directededge.end_restriction() |
-                                                   restriction.modes());
-                }
-                res_it++;
-              }
-            }
+          while (res_to_it != complex_restrictions_to.end() &&
+                 (restriction_to = *res_to_it).from() == w.way_id()) {
+            directededge.set_end_restriction(directededge.end_restriction() | restriction_to.modes());
+            res_to_it++;
           }
 
           // grab all the modes if this way starts at a restriction(s)
-          OSMRestriction target_res{w.way_id()}; // this is our to way id
-          OSMRestriction restriction{};
-          sequence<OSMRestriction>::iterator res_it =
-              complex_restrictions.find(target_res,
-                                        [](const OSMRestriction& a, const OSMRestriction& b) {
-                                          return a.from() < b.from();
-                                        });
+          OSMRestriction target_from_res{w.way_id()}; // this is our to way id
+          OSMRestriction restriction_from{};
+          sequence<OSMRestriction>::iterator res_from_it =
+              complex_restrictions_from.find(target_from_res,
+                                             [](const OSMRestriction& a, const OSMRestriction& b) {
+                                               return a.from() < b.from();
+                                             });
 
-          while (res_it != complex_restrictions.end() &&
-                 (restriction = *res_it).from() == w.way_id()) {
+          while (res_from_it != complex_restrictions_from.end() &&
+                 (restriction_from = *res_from_it).from() == w.way_id()) {
             directededge.set_start_restriction(directededge.start_restriction() |
-                                               restriction.modes());
-            res_it++;
-          }
-
-          // Set drive on right flag
-          if (admin_index != 0) {
-            directededge.set_drive_on_right(drive_on_right[admin_index]);
+                                               restriction_from.modes());
+            res_from_it++;
           }
 
           // Set shoulder based on current facing direction and which
@@ -956,7 +967,7 @@ void BuildTileSet(const std::string& ways_file,
         // Set the node lat,lng, index of the first outbound edge, and the
         // directed edge count from this edge and the best road class
         // from the node. Increment directed edge count.
-        graphtile.nodes().emplace_back(node_ll, bestclass, node.access_mask(), node.type(),
+        graphtile.nodes().emplace_back(base_ll, node_ll, bestclass, node.access_mask(), node.type(),
                                        node.traffic_signal());
         graphtile.nodes().back().set_edge_index(graphtile.directededges().size() -
                                                 bundle.node_edges.size());
@@ -967,6 +978,11 @@ void BuildTileSet(const std::string& ways_file,
 
         // Set admin index
         graphtile.nodes().back().set_admin_index(admin_index);
+
+        // Set drive on right flag
+        if (admin_index != 0) {
+          graphtile.nodes().back().set_drive_on_right(drive_on_right[admin_index]);
+        }
 
         // Set the time zone index
         uint32_t tz_index =
@@ -1018,7 +1034,8 @@ void BuildLocalTiles(const unsigned int thread_count,
                      const std::string& way_nodes_file,
                      const std::string& nodes_file,
                      const std::string& edges_file,
-                     const std::string& complex_restriction_file,
+                     const std::string& complex_from_restriction_file,
+                     const std::string& complex_to_restriction_file,
                      const std::map<GraphId, size_t>& tiles,
                      const std::string& tile_dir,
                      DataQuality& stats,
@@ -1054,7 +1071,8 @@ void BuildLocalTiles(const unsigned int thread_count,
     // Make the thread
     threads[i].reset(new std::thread(BuildTileSet, std::cref(ways_file), std::cref(way_nodes_file),
                                      std::cref(nodes_file), std::cref(edges_file),
-                                     std::cref(complex_restriction_file), std::cref(tile_dir),
+                                     std::cref(complex_from_restriction_file),
+                                     std::cref(complex_to_restriction_file), std::cref(tile_dir),
                                      std::cref(osmdata), std::cref(sample), tile_start, tile_end,
                                      tile_creation_date, std::cref(pt.get_child("mjolnir")),
                                      std::ref(results[i])));
@@ -1091,7 +1109,8 @@ void GraphBuilder::Build(const boost::property_tree::ptree& pt,
                          const OSMData& osmdata,
                          const std::string& ways_file,
                          const std::string& way_nodes_file,
-                         const std::string& complex_restriction_file) {
+                         const std::string& complex_from_restriction_file,
+                         const std::string& complex_to_restriction_file) {
   std::string nodes_file = "nodes.bin";
   std::string edges_file = "edges.bin";
   std::string tile_dir = pt.get<std::string>("mjolnir.tile_dir");
@@ -1138,7 +1157,8 @@ void GraphBuilder::Build(const boost::property_tree::ptree& pt,
 
   // Build tiles at the local level. Form connected graph from nodes and edges.
   BuildLocalTiles(threads, osmdata, ways_file, way_nodes_file, nodes_file, edges_file,
-                  complex_restriction_file, tiles, tile_dir, stats, sample, pt);
+                  complex_from_restriction_file, complex_to_restriction_file, tiles, tile_dir, stats,
+                  sample, pt);
 
   stats.LogStatistics();
 }

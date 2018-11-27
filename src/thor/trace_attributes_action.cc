@@ -5,7 +5,6 @@
 #include <vector>
 
 #include "baldr/directededge.h"
-#include "baldr/edge_elevation.h"
 #include "baldr/graphconstants.h"
 #include "baldr/json.h"
 #include "midgard/constants.h"

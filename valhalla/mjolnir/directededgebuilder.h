@@ -23,7 +23,6 @@ public:
    * @param  endnode        GraphId of the end node of this directed edge.
    * @param  length         Length in meters.
    * @param  speed          Average speed in kph.
-   * @param  speed_limit    Speed limit in kph.
    * @param  truck_speed    Truck speed limit in kph.
    * @param  use            Use of the edge.
    * @param  rc             Road class / importance
@@ -37,7 +36,6 @@ public:
                       const bool forward,
                       const uint32_t length,
                       const uint32_t speed,
-                      const uint32_t speed_limit,
                       const uint32_t truck_speed,
                       const baldr::Use use,
                       const baldr::RoadClass rc,

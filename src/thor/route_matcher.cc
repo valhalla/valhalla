@@ -136,31 +136,12 @@ bool expand_from_node(const std::shared_ptr<DynamicCost>* mode_costing,
       continue;
     }
 
-    // Process transition edge if previous edge was not from a transition
-    if (de->IsTransition()) {
-      if (from_transition) {
-        continue;
-      } else {
-        const GraphTile* end_node_tile = reader.GetGraphTile(de->endnode());
-        if (end_node_tile == nullptr) {
-          continue;
-        }
-        if (expand_from_node(mode_costing, mode, reader, shape, distances, correlated_index,
-                             end_node_tile, de->endnode(), end_nodes, prev_edge_label, elapsed_time,
-                             path_infos, true, end_node, total_distance)) {
-          return true;
-        } else {
-          continue;
-        }
-      }
-    }
-
     // Get the end node LL and set up the length comparison
     const GraphTile* end_node_tile = reader.GetGraphTile(de->endnode());
     if (end_node_tile == nullptr) {
       continue;
     }
-    PointLL de_end_ll = end_node_tile->node(de->endnode())->latlng();
+    PointLL de_end_ll = end_node_tile->get_node_ll(de->endnode());
     float de_length = length_comparison(de->length(), true);
 
     // Process current edge until shape matches end node
@@ -205,6 +186,19 @@ bool expand_from_node(const std::shared_ptr<DynamicCost>* mode_costing,
         }
       }
       index++;
+    }
+  }
+
+  // Handle transitions - expand from the end node of each transition
+  if (!from_transition && node_info->transition_count() > 0) {
+    const NodeTransition* trans = tile->transition(node_info->transition_index());
+    for (uint32_t i = 0; i < node_info->transition_count(); ++i, ++trans) {
+      const GraphTile* end_node_tile = reader.GetGraphTile(trans->endnode());
+      if (expand_from_node(mode_costing, mode, reader, shape, distances, correlated_index,
+                           end_node_tile, trans->endnode(), end_nodes, prev_edge_label, elapsed_time,
+                           path_infos, true, end_node, total_distance)) {
+        return true;
+      }
     }
   }
   return false;
@@ -257,7 +251,7 @@ bool RouteMatcher::FormPath(const std::shared_ptr<DynamicCost>* mode_costing,
     if (begin_edge_tile == nullptr) {
       throw std::runtime_error("End node tile is null");
     }
-    PointLL de_end_ll = end_node_tile->node(de->endnode())->latlng();
+    PointLL de_end_ll = end_node_tile->get_node_ll(de->endnode());
 
     // Initialize indexes and shape
     size_t index = 0;

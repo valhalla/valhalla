@@ -391,7 +391,7 @@ protected:
     // Throw back a lambda that checks the access for this type of costing
     Surface s = worst_allowed_surface_;
     return [s](const baldr::DirectedEdge* edge) {
-      if (edge->IsTransition() || edge->is_shortcut() || !(edge->forwardaccess() & kBicycleAccess) ||
+      if (edge->is_shortcut() || !(edge->forwardaccess() & kBicycleAccess) ||
           edge->use() == Use::kSteps || edge->surface() > s) {
         return 0.0f;
       } else {
@@ -736,13 +736,13 @@ Cost BicycleCost::TransitionCost(const baldr::DirectedEdge* edge,
 
   if (edge->stopimpact(idx) > 0) {
     // Increase turn stress depending on the kind of turn that has to be made.
-    float turn_penalty = (edge->drive_on_right())
+    float turn_penalty = (node->drive_on_right())
                              ? kRightSideTurnPenalties[static_cast<uint32_t>(edge->turntype(idx))]
                              : kLeftSideTurnPenalties[static_cast<uint32_t>(edge->turntype(idx))];
     turn_stress += turn_penalty;
 
     // Take the higher of the turn degree cost and the crossing cost
-    float turn_cost = (edge->drive_on_right())
+    float turn_cost = (node->drive_on_right())
                           ? kRightSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))]
                           : kLeftSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))];
     if (turn_cost < kTCCrossing && edge->edge_to_right(idx) && edge->edge_to_left(idx)) {
@@ -769,7 +769,7 @@ Cost BicycleCost::TransitionCost(const baldr::DirectedEdge* edge,
   penalty *= (bike_accom * avoid_roads) + use_roads_;
 
   // Return cost (time and penalty)
-  c.cost += (seconds * (turn_stress + 1.0f));
+  c.cost += (seconds * (turn_stress + 1.0f)) + penalty;
   c.secs += seconds;
   return c;
 }
@@ -817,13 +817,13 @@ Cost BicycleCost::TransitionCostReverse(const uint32_t idx,
   float turn_stress = 1.0f;
   if (edge->stopimpact(idx) > 0) {
     // Increase turn stress depending on the kind of turn that has to be made.
-    float turn_penalty = (edge->drive_on_right())
+    float turn_penalty = (node->drive_on_right())
                              ? kRightSideTurnPenalties[static_cast<uint32_t>(edge->turntype(idx))]
                              : kLeftSideTurnPenalties[static_cast<uint32_t>(edge->turntype(idx))];
     turn_stress += turn_penalty;
 
     // Take the higher of the turn degree cost and the crossing cost
-    float turn_cost = (edge->drive_on_right())
+    float turn_cost = (node->drive_on_right())
                           ? kRightSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))]
                           : kLeftSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))];
     if (turn_cost < kTCCrossing && edge->edge_to_right(idx) && edge->edge_to_left(idx)) {
@@ -850,7 +850,7 @@ Cost BicycleCost::TransitionCostReverse(const uint32_t idx,
   penalty *= (bike_accom * avoid_roads) + use_roads_;
 
   // Return cost (time and penalty)
-  c.cost += (seconds * (turn_stress + 1.0f));
+  c.cost += (seconds * (turn_stress + 1.0f)) + penalty;
   c.secs += seconds;
   return c;
 }
