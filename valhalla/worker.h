@@ -29,6 +29,7 @@ const std::string& DirectionsOptions_Format_Name(const odin::DirectionsOptions::
 const std::string& DirectionsOptions_Units_Name(const odin::DirectionsOptions::Units unit);
 bool FilterAction_Parse(const std::string& action, odin::FilterAction* a);
 const std::string& FilterAction_Name(const odin::FilterAction action);
+bool DirectionsType_Parse(const std::string& dtype, odin::DirectionsType* t);
 } // namespace odin
 
 const std::unordered_map<unsigned, std::string>

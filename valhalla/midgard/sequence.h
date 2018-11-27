@@ -579,7 +579,7 @@ struct tar {
     // get the file size
     struct stat s;
     if (stat(tar_file.c_str(), &s))
-      throw std::runtime_error("(stat): " + tar_file + strerror(errno));
+      throw std::runtime_error("(stat): " + tar_file + " " + strerror(errno));
     if (s.st_size == 0 || (s.st_size % sizeof(header_t)) != 0) {
       throw std::runtime_error(tar_file + "(stat): invalid archive size " +
                                std::to_string(s.st_size) + " with header size " +
