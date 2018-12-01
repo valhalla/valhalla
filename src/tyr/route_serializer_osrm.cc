@@ -7,7 +7,6 @@
 #include "baldr/json.h"
 #include "midgard/encoded.h"
 #include "midgard/pointll.h"
-#include "midgard/polyline2.h"
 #include "odin/util.h"
 #include "tyr/serializers.h"
 
