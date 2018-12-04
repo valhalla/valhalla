@@ -352,7 +352,6 @@ public:
   // We expose it within the source file for testing purposes
 
   float speedfactor_[kMaxSpeedKph + 1]; // Cost factors based on speed in kph
-  float ferry_factor_;                  // Weighting to apply to ferry edges
   float use_roads_;                     // Preference of using roads between 0 and 1
   float road_factor_;                   // Road factor based on use_roads_
   float avoid_bad_surfaces_;            // Preference of avoiding bad surfaces for the bike type
