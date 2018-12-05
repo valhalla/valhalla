@@ -1,4 +1,4 @@
-## Release Date: 2018-11-21 Valhalla 3.0.0
+## Release Date: 2018-11-21 Valhalla 3.0.1
 * **Bug Fix**
    * FIXED: Fixed a rare, but serious bug with bicycle costing. ferry_factor_ in bicycle costing shadowed the data member in the base dynamic cost class, leading to an unitialized variable. Occasionally, this would lead to negative costs which caused failures. [#1663](https://github.com/valhalla/valhalla/pull/1663)
    * FIXED: Fixed use of units in OSRM compatibility mode. [#1662](https://github.com/valhalla/valhalla/pull/1662)
