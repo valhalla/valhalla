@@ -10,8 +10,8 @@
 #include "odin/util.h"
 #include "tyr/serializers.h"
 
-#include <valhalla/proto/directions_options.pb.h>
-#include <valhalla/proto/tripdirections.pb.h>
+#include "proto/directions_options.pb.h"
+#include "proto/tripdirections.pb.h"
 
 using namespace valhalla;
 using namespace valhalla::midgard;
@@ -143,7 +143,9 @@ static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kDestinationLeft),
 **/
 
 // Add OSRM route summary information: distance, duration
-void route_summary(json::MapPtr& route, const std::list<valhalla::odin::TripDirections>& legs) {
+void route_summary(json::MapPtr& route,
+                   const std::list<valhalla::odin::TripDirections>& legs,
+                   bool imperial) {
   // Compute total distance and duration
   float duration = 0.0f;
   float distance = 0.0f;
@@ -153,7 +155,7 @@ void route_summary(json::MapPtr& route, const std::list<valhalla::odin::TripDire
   }
 
   // Convert distance to meters. Output distance and duration.
-  distance *= 1000.0f;
+  distance *= imperial ? 1609.34f : 1000.0f;
   route->emplace("distance", json::fp_t{distance, 1});
   route->emplace("duration", json::fp_t{duration, 1});
 
@@ -706,9 +708,9 @@ json::MapPtr osrm_maneuver(const valhalla::odin::TripDirections::Maneuver& maneu
 std::string maneuver_geometry(const uint32_t begin_idx,
                               const uint32_t end_idx,
                               const std::vector<PointLL>& shape) {
-  // Must add one to the end range since it is exclusive
+  // Must add one to the end range since maneuver end shape index is exclusive
   std::vector<PointLL> maneuver_shape(shape.begin() + begin_idx, shape.begin() + end_idx + 1);
-  return std::string(midgard::encode(maneuver_shape));
+  return midgard::encode(maneuver_shape);
 }
 
 // Get the mode
@@ -787,7 +789,8 @@ json::MapPtr annotations(std::list<odin::TripPath>::const_iterator path_leg) {
 
 // Serialize each leg
 json::ArrayPtr serialize_legs(const std::list<valhalla::odin::TripDirections>& legs,
-                              const std::list<odin::TripPath>& path_legs) {
+                              const std::list<odin::TripPath>& path_legs,
+                              bool imperial) {
   auto output_legs = json::array({});
 
   // TODO: verify that path_legs is same size as legs
@@ -819,7 +822,7 @@ json::ArrayPtr serialize_legs(const std::list<valhalla::odin::TripDirections>& l
                                                   maneuver.end_shape_index(), shape));
 
       // Add mode, driving side, weight, distance, duration, name
-      float distance = maneuver.length() * 1000.0f;
+      float distance = maneuver.length() * (imperial ? 1609.34f : 1000.0f);
       float duration = maneuver.time();
       std::string drive_side("right"); // TODO - pass this through TPB or TripDirections
 
@@ -909,7 +912,7 @@ json::ArrayPtr serialize_legs(const std::list<valhalla::odin::TripDirections>& l
     // Get a summary based on longest maneuvers.
     std::string summary = "TODO"; // Form summary from longest maneuvers?
     float duration = leg.summary().time();
-    float distance = leg.summary().length() * 1000.0f;
+    float distance = leg.summary().length() * (imperial ? 1609.34f : 1000.0f);
     output_leg->emplace("summary", summary);
     output_leg->emplace("distance", json::fp_t{distance, 1});
     output_leg->emplace("duration", json::fp_t{duration, 1});
@@ -953,6 +956,9 @@ std::string serialize(const valhalla::odin::DirectionsOptions& directions_option
   // TODO - alternate routes (currently Valhalla only has 1 route)
   auto routes = json::array({});
 
+  // OSRM is always using metric for non narrative stuff
+  bool imperial = directions_options.units() == DirectionsOptions::miles;
+
   // For each route...
   for (int i = 0; i < 1; ++i) {
     // Create a route to add to the array
@@ -962,15 +968,15 @@ std::string serialize(const valhalla::odin::DirectionsOptions& directions_option
     route->emplace("geometry", full_shape(legs, directions_options));
 
     // Other route summary information
-    route_summary(route, legs);
+    route_summary(route, legs, imperial);
 
     // Serialize route legs
-    route->emplace("legs", serialize_legs(legs, path_legs));
+    route->emplace("legs", serialize_legs(legs, path_legs, imperial));
 
     routes->emplace_back(route);
   }
 
-  // Routes are called matchings in osrm
+  // Routes are called matchings in osrm map matching mode
   json->emplace(directions_options.action() == valhalla::odin::DirectionsOptions::trace_route
                     ? "matchings"
                     : "routes",
