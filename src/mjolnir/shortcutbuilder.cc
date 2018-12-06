@@ -576,8 +576,8 @@ uint32_t AddShortcutEdges(GraphReader& reader,
   // is exceeded. This is not serious (see NOTE above) but good to know where it occurs.
   if (shortcut_count > kMaxShortcutsFromNode) {
     PointLL ll = tile->get_node_ll(start_node);
-    LOG_WARN("Exceeding max shortcut edges from a node at LL = " + std::to_string(ll.lat()) +
-              "," + std::to_string(ll.lng()));
+    LOG_WARN("Exceeding max shortcut edges from a node at LL = " + std::to_string(ll.lat()) + "," +
+             std::to_string(ll.lng()));
   }
   return shortcut_count;
 }
