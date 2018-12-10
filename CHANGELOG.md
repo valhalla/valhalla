@@ -1,3 +1,7 @@
+## Release Date: 201?-??-?? Valhalla 3.0.2
+* **Bug Fix**
+   * FIXED: Fix crash for trace_route with osrm serialization. Was passing shape rather than locations to the waypoint method.
+
 ## Release Date: 2018-11-21 Valhalla 3.0.1
 * **Bug Fix**
    * FIXED: Fixed a rare, but serious bug with bicycle costing. ferry_factor_ in bicycle costing shadowed the data member in the base dynamic cost class, leading to an unitialized variable. Occasionally, this would lead to negative costs which caused failures. [#1663](https://github.com/valhalla/valhalla/pull/1663)
