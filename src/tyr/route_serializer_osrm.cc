@@ -942,7 +942,7 @@ std::string serialize(const valhalla::odin::DirectionsOptions& directions_option
   json->emplace("code", status);
   switch (directions_options.action()) {
     case valhalla::odin::DirectionsOptions::trace_route:
-      json->emplace("tracepoints", osrm::waypoints(directions_options.shape(), true));
+      json->emplace("tracepoints", osrm::waypoints(directions_options.locations(), true));
       break;
     case valhalla::odin::DirectionsOptions::route:
       json->emplace("waypoints", osrm::waypoints(directions_options.locations()));
