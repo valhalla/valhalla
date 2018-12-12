@@ -411,6 +411,11 @@ uint32_t AddShortcutEdges(GraphReader& reader,
       continue;
     }
 
+    // NOTE - only kMaxShortcutsFromNode are allowed from a node. However,
+    // a problem exists if we do not add a shortcut and the opposing shortcut
+    // is added. So more than kMaxShortcutsFromNode can be created, but we will
+    // only mark up to kMaxShortcutsFromNode regular edges as superseded.
+
     // Get the end node and check if the edge is set as a matching, entering
     // edge of the contracted node.
     GraphId end_node = directededge->endnode();
@@ -566,6 +571,14 @@ uint32_t AddShortcutEdges(GraphReader& reader,
       shortcut++;
     }
   }
+
+  // Log a warning (with the node lat,lon) if the max number of shortcuts from a node
+  // is exceeded. This is not serious (see NOTE above) but good to know where it occurs.
+  if (shortcut_count > kMaxShortcutsFromNode) {
+    PointLL ll = tile->get_node_ll(start_node);
+    LOG_WARN("Exceeding max shortcut edges from a node at LL = " + std::to_string(ll.lat()) + "," +
+             std::to_string(ll.lng()));
+  }
   return shortcut_count;
 }
 
@@ -683,11 +696,14 @@ uint32_t FormShortcuts(GraphReader& reader,
                                     tile->GetTypes(directededge->edgeinfo_offset()), added);
         newedge.set_edgeinfo_offset(edge_info_offset);
 
-        // Set the superseded mask - this is the shortcut mask that
-        // supersedes this edge (outbound from the node)
+        // Set the superseded mask - this is the shortcut mask that supersedes this edge
+        // (outbound from the node). Do not set (keep as 0) if maximum number of shortcuts
+        // from a node has been exceeded.
         auto s = shortcuts.find(i);
-        uint32_t supersed_idx = (s != shortcuts.end()) ? s->second : 0;
-        newedge.set_superseded(supersed_idx);
+        uint32_t superseded_idx = (s != shortcuts.end()) ? s->second : 0;
+        if (superseded_idx <= kMaxShortcutsFromNode) {
+          newedge.set_superseded(superseded_idx);
+        }
 
         // Add directed edge
         tilebuilder.directededges().emplace_back(std::move(newedge));
