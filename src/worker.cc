@@ -501,6 +501,23 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
     }
   }
 
+  auto durations = rapidjson::get_optional<rapidjson::Value::ConstArray>(doc, "/durations");
+  if (durations) {
+    // Set the elasped time to 0 at the first shape point
+    double elapsed_time = 0.0;
+    options.mutable_shape()->Mutable(0)->set_time(elapsed_time);
+
+    // Iterate through the durations and add to elapsed time - set this on successive shape
+    // points. (TODO - what if the number of durations is not equal to shape size - 1)
+    int index = 1;
+    for (const auto& dur : *durations) {
+      auto duration = dur.GetDouble();
+      elapsed_time += duration;
+      options.mutable_shape()->Mutable(index)->set_time(elapsed_time);
+      ++index;
+    }
+  }
+
   // TODO: remove this?
   options.set_do_not_track(rapidjson::get_optional<bool>(doc, "/healthcheck").get_value_or(false));
 
