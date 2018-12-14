@@ -501,6 +501,7 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
     }
   }
 
+  // Use durations to set time
   auto durations = rapidjson::get_optional<rapidjson::Value::ConstArray>(doc, "/durations");
   if (durations) {
     // Set the elasped time to 0 at the first shape point
@@ -517,6 +518,10 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
       ++index;
     }
   }
+
+  // Option to use timestamps when computing elapsed time for matched routes
+  options.set_use_timestamps(
+      rapidjson::get_optional<bool>(doc, "/use_timestamps").get_value_or(false));
 
   // TODO: remove this?
   options.set_do_not_track(rapidjson::get_optional<bool>(doc, "/healthcheck").get_value_or(false));

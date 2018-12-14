@@ -164,4 +164,5 @@ message DirectionsOptions {
   repeated string filter_attributes = 34;                                 // The filter list for trace attributes
   repeated uint64 avoid_edges = 35;                                       // Avoid edges for any costing - derived from avoid_locations
   optional float breakage_distance = 36;                                  // Map-matching breaking distance (distance between GPS trace points)
+  optional bool use_timestamps = 37;                                      // Use timestamps to compute elapsed time for trace_route and trace_attributes
 }

@@ -120,8 +120,11 @@ odin::TripPath thor_worker_t::route_match(valhalla_request_t& request,
                                           const AttributesController& controller) {
   odin::TripPath trip_path;
   std::vector<PathInfo> path_infos;
-  if (RouteMatcher::FormPath(mode_costing, mode, *reader, trace, request.options.locations(),
-                             path_infos)) {
+
+  // TODO - make sure the trace has timestamps..
+  bool use_timestamps = request.options.use_timestamps();
+  if (RouteMatcher::FormPath(mode_costing, mode, *reader, trace, use_timestamps,
+                             request.options.locations(), path_infos)) {
     // Form the trip path based on mode costing, origin, destination, and path edges
     trip_path = thor::TripPathBuilder::Build(controller, *reader, mode_costing, path_infos,
                                              *request.options.mutable_locations()->begin(),
