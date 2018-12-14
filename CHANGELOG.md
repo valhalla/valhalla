@@ -2,6 +2,7 @@
 * **Bug Fix**
    * FIXED: Fix crash for trace_route with osrm serialization. Was passing shape rather than locations to the waypoint method.
    * FIXED: Properly set driving_side based on data set in TripPath.
+   * FIXED: A bad bicycle route exposed an issue with bidirectional A* when the origin and destination edges are connected. Use A* in these cases to avoid requiring a high cost threshold in BD A*.
 
 ## Release Date: 2018-11-21 Valhalla 3.0.1
 * **Bug Fix**
