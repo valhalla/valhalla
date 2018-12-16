@@ -613,20 +613,45 @@ protected:
   // Currently there can only be twice as many transitions as there are nodes,
   // but in practice the number should be much less.
   uint32_t transitioncount_ : 22; // Number of node transitions
+  uint32_t spare3_ : 10;          // TODO: DELETE ME IN V4
   uint32_t turnlane_count_ : 21;  // Number of turnlane records
+  uint32_t spare4_ : 11;          // TODO: DELETE ME IN V4
   uint64_t transfercount_ : 16;   // Number of transit transfer records
   uint64_t spare2_ : 7;
 
   // Number of transit records
   uint64_t departurecount_ : 24;
   uint64_t stopcount_ : 16;
+  uint64_t spare5_ : 1; // TODO: DELETE ME IN V4
   uint64_t routecount_ : 12;
   uint64_t schedulecount_ : 12;
 
   // Counts
   uint64_t signcount_ : 24;                // Number of signs
+  uint64_t spare6_ : 16;                   // TODO: DELETE ME IN V4
   uint64_t access_restriction_count_ : 24; // Number of access restriction records
   uint64_t admincount_ : 16;               // Number of admin records
+  uint64_t spare7_ : 24;                   // TODO: DELETE ME IN V4
+
+  // Note all of the comments about deleting spare in v4
+  // There are typos in the bitfield containing spare2_ above
+  // They cause the fields to be spread across multiple words
+  // The code should have been something like:
+  /*
+    uint64_t transitioncount_ : 22; // Number of node transitions
+    uint64_t turnlane_count_ : 21;  // Number of turnlane records
+    uint64_t transfercount_ : 16;   // Number of transit transfer records
+    uint64_t spare2_ : 5;
+  */
+  // This causes the compiler to pad the last word in a platform dependent way
+  // On x64 based systems the compiler will pad to 64bits
+  // On x86 based systems the compiler will only pad to 32bits
+  // This made tiles incompatibilte between x64 and x86 platforms
+  // To fix it we insert spare in the right places so that its the same as what
+  // the compiler automatically does on an 64bit system but makes 32bit sysems
+  // see the layout of the structure that way as well. This way both platforms agree
+  // that the x64 implementation, which is what we generally use to build tiles,
+  // is the correct implementation
 
   // Spare 8=byte words that can be used for custom information. As long as the size of
   // the GraphTileHeader structure and order of data within the structure does not change
