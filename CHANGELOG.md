@@ -4,6 +4,8 @@
    * FIXED: Properly set driving_side based on data set in TripPath.
    * FIXED: x86 and x64 data compatibility was fixed as the structures weren't aligned.
    * FIXED: x86 tests were failing due mostly to floating point issues and the aforementioned structure misalignment.
+* **Note**
+   * Isochrones and openlr are both noted as not working with release builds for x86 (32bit) platforms. We'll look at getting this fixed in a future release
 
 ## Release Date: 2018-11-21 Valhalla 3.0.1
 * **Bug Fix**
