@@ -217,14 +217,14 @@ void TestClosestPoint() {
                   0);
 
   // Construct a simple polyline
-  std::vector<PointLL> pts = {{-76.299171f, 40.042519f},
-                              {-76.298851f, 40.042549f},
-                              {-76.297806f, 40.042671f},
-                              {-76.297691f, 40.042015f},
-                              {-76.296837f, 40.042099f}};
+  std::vector<PointLL> pts = {{-76.299171, 40.042519},
+                              {-76.298851, 40.042549},
+                              {-76.297806, 40.042671},
+                              {-76.297691, 40.042015},
+                              {-76.296837, 40.042099}};
 
   // Closest to the 1st point
-  TryClosestPoint(pts, PointLL(-76.299179f, 40.042572f), PointLL(-76.299171f, 40.042519f), 5.933f, 0,
+  TryClosestPoint(pts, PointLL(-76.299189, 40.042572), PointLL(-76.299171f, 40.042519f), 5.933f, 0,
                   4);
 
   // Closest along the 2nd segment
