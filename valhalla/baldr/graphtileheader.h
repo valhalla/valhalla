@@ -613,7 +613,7 @@ protected:
   // Currently there can only be twice as many transitions as there are nodes,
   // but in practice the number should be much less.
   uint32_t transitioncount_ : 22; // Number of node transitions
-  uint32_t spare3_: 10;           // TODO: DELETE ME IN V4
+  uint32_t spare3_ : 10;          // TODO: DELETE ME IN V4
   uint32_t turnlane_count_ : 21;  // Number of turnlane records
   uint32_t spare4_ : 11;          // TODO: DELETE ME IN V4
   uint64_t transfercount_ : 16;   // Number of transit transfer records
@@ -622,7 +622,7 @@ protected:
   // Number of transit records
   uint64_t departurecount_ : 24;
   uint64_t stopcount_ : 16;
-  uint64_t spare5_ : 1;           // TODO: DELETE ME IN V4
+  uint64_t spare5_ : 1; // TODO: DELETE ME IN V4
   uint64_t routecount_ : 12;
   uint64_t schedulecount_ : 12;
 
