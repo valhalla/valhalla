@@ -2,6 +2,7 @@
 * **Bug Fix**
    * FIXED: Fix crash for trace_route with osrm serialization. Was passing shape rather than locations to the waypoint method.
    * FIXED: Properly set driving_side based on data set in TripPath.
+   * FIXED: A bad bicycle route exposed an issue with bidirectional A* when the origin and destination edges are connected. Use A* in these cases to avoid requiring a high cost threshold in BD A*.
    * FIXED: x86 and x64 data compatibility was fixed as the structures weren't aligned.
    * FIXED: x86 tests were failing due mostly to floating point issues and the aforementioned structure misalignment.
 * **Note**
