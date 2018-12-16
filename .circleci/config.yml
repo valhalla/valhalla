@@ -153,7 +153,7 @@ jobs:
       - image: valhalla/docker:build-x86-3.0.0
     steps:
       - checkout
-      - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
+      #- run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
       - run: git submodule sync && git submodule update --init
       - restore_cache:
           keys:
@@ -161,13 +161,10 @@ jobs:
       - run: npm install --ignore-scripts
       - run: mkdir build
       - run: |
-          cd build && cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=On -DENABLE_PYTHON_BINDINGS=On \
-          -DCPACK_GENERATOR=DEB -DCPACK_PACKAGE_VERSION_SUFFIX="-0ubuntu1-$(lsb_release -sc)"
+          cd build && cmake .. -DCMAKE_BUILD_TYPE=Release -DENABLE_NODE_BINDINGS=Off
       - run: make -C build -j4
       - run: make -C build -j4 tests
       - run: make -C build -j2 check
-      - run: make -C build install
-      - run: make -C build package
       - save_cache:
           key: ccache
           paths:
