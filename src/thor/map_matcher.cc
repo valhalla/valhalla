@@ -179,7 +179,7 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
         // Get time along the edge, handling partial distance along the first and last edge.
         // Add the transition cost at the begin node.
         elapsed_time += costing->EdgeCost(directededge, tile->GetSpeed(directededge)).secs *
-                        (edge_segment.target - edge_segment.source) +
+                            (edge_segment.target - edge_segment.source) +
                         costing->TransitionCost(directededge, nodeinfo, pred).secs;
       } else {
         // Get time along the edge, handling partial distance along the first and last edge
