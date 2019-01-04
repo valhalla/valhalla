@@ -47,6 +47,12 @@ Costing for `multimodal` is not supported for map matching because it would be d
 
 You can also set `directions_options` to specify output units, language, and whether or not to return directions in a narrative form. Refer to the [route options](/turn-by-turn/api-reference.md#directions-options) documentation for examples.
 
+`trace_route` has additional options that allow using timestamps from trace points to be used when computing elapsed time along the matched path. These options are:
+| Option | Description |
+| :--------- | :---------- |
+| `durations` | List of durations (seconds) between each successive pair of input trace points. This allows trace points to be supplied as an encoded polyline and timestamps to be supplied by using a separate array of "delta" times.
+| `use_timestamps` | A boolean value indicating whether the input timestamps or durations should be used when computing elapsed time at each edge along the matched path. If true, timestamps are used. If false (default), internal costing is applied to compute elapsed times. |
+
 ### Attribute filters (`trace_attributes` only)
 
 The `trace_attributes` action allows you to apply filters to `include` or `exclude` specific attribute filter keys in your response. These filters are optional and can be added to the action string inside of the `filters` object.
