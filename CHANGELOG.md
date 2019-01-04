@@ -2,7 +2,7 @@
 * **Bug Fix**
    * FIXED: Fix crash for trace_route with osrm serialization. Was passing shape rather than locations to the waypoint method.
 * **Enhancement**
-   * Add a durations list ((delta time between each pair of trace points), a begin_time and a use_timestamp flag to trace_route requests. This allows using the input trace timestamps or durations plus the begin_time to compute elapsed time at each edge in the matched path (rather than using costing methods).
+   * Add a durations list (delta time between each pair of trace points), a begin_time and a use_timestamp flag to trace_route requests. This allows using the input trace timestamps or durations plus the begin_time to compute elapsed time at each edge in the matched path (rather than using costing methods).
 
 ## Release Date: 2018-11-21 Valhalla 3.0.1
 * **Bug Fix**
