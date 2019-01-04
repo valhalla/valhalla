@@ -423,7 +423,7 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
   uint64_t nodeid;
   bool has_data;
 #if 3 == GEOS_VERSION_MAJOR && 6 <= GEOS_VERSION_MINOR
-  GeometryFactory::unique_ptr gf = GeometryFactory::create();
+  auto gf = GeometryFactory::create();
 #else
   std::unique_ptr<GeometryFactory> gf(new GeometryFactory());
 #endif
