@@ -50,7 +50,8 @@ You can also set `directions_options` to specify output units, language, and whe
 `trace_route` has additional options that allow using timestamps from trace points to be used when computing elapsed time along the matched path. These options are:
 | Option | Description |
 | :--------- | :---------- |
-| `durations` | List of durations (seconds) between each successive pair of input trace points. This allows trace points to be supplied as an encoded polyline and timestamps to be supplied by using a separate array of "delta" times.
+| `begin_time` | Begin timestamp for the trace. This is used along with the `durations` so that timestamps can be specified for a trace that is specified using an encoded polyline.
+| `durations` | List of durations (seconds) between each successive pair of input trace points. This allows trace points to be supplied as an encoded polyline and timestamps to be created by using this list of "delta" times along with the `begin_time` of the trace.
 | `use_timestamps` | A boolean value indicating whether the input timestamps or durations should be used when computing elapsed time at each edge along the matched path. If true, timestamps are used. If false (default), internal costing is applied to compute elapsed times. |
 
 ### Attribute filters (`trace_attributes` only)
