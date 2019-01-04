@@ -160,6 +160,10 @@ const std::unordered_map<unsigned, std::string> OSRM_ERRORS_CODES{
      R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
     {133,
      R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
+    {134,
+     R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
+    {135,
+     R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
     {136,
      R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
 
@@ -505,6 +509,10 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
     }
   }
 
+  // Begin time for timestamps when entered given durations/delta times (defaults to 0)
+  auto t = rapidjson::get_optional<unsigned int>(doc, "/begin_time");
+  double begin_time = (t) ? begin_time = *t : 0.0;
+
   // Use durations (per shape point pair) to set time
   auto durations = rapidjson::get_optional<rapidjson::Value::ConstArray>(doc, "/durations");
   if (durations) {
@@ -513,17 +521,17 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
       throw valhalla_exception_t{136};
     }
 
-    // Set the elasped time to 0 at the first shape point
-    double elapsed_time = 0.0;
-    options.mutable_shape()->Mutable(0)->set_time(elapsed_time);
+    // Set time to begin_time at the first trace point.
+    options.mutable_shape()->Mutable(0)->set_time(begin_time);
 
     // Iterate through the durations and add to elapsed time - set time on
-    // successive shape points.
+    // successive trace points.
+    double current_time = begin_time;
     int index = 1;
     for (const auto& dur : *durations) {
       auto duration = dur.GetDouble();
-      elapsed_time += duration;
-      options.mutable_shape()->Mutable(index)->set_time(elapsed_time);
+      current_time += duration;
+      options.mutable_shape()->Mutable(index)->set_time(current_time);
       ++index;
     }
   }
