@@ -155,5 +155,12 @@ uint64_t remove_service_day(const uint64_t& days,
   return days;
 }
 
+// Use when shifting all service and exception due to past midnight result
+uint64_t shift_service_day(const uint64_t& days) {
+  auto new_days = days << 1;
+  // remove the day after the last day
+  return ~((~new_days) | (static_cast<uint64_t>(1) << 60));
+}
+
 } // namespace mjolnir
 } // namespace valhalla

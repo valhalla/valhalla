@@ -66,6 +66,13 @@ uint64_t remove_service_day(const uint64_t& days,
                             const date::sys_days& removed_date);
 
 /**
+ * Shift all days by one in the futur, Friday 11th -> Saturday 12th
+ * @param   days supported by the gtfs feed/service
+ * @return  Returns the updated days.
+ */
+uint64_t shift_service_day(const uint64_t& days);
+
+/**
  * Get the month from the input string.Try to handle most inputs.
  * @param   month entered by a user
  * @return MONTH
