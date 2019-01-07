@@ -28,4 +28,13 @@
 -j '{"locations":[{"lat":34.417545,"lon":-119.854576,"street":""},{"lat":34.418053,"lon":-119.853683,"street":""}],"costing":"bicycle","directions_options":{"units":"miles"}}'
 -j '{"locations":[{"lat":37.94152381803029,"lon":-121.96226477622986},{"lat":37.931335857027115,"lon":-121.97398066520691}],"costing":"bicycle","costing_options":{"bicycle":{"bicycle_type":"Road","use_roads":"0.5","use_hills":"0.0"}}}
 -j '{"locations":[{"lat":37.94152381803029,"lon":-121.96226477622986},{"lat":37.931335857027115,"lon":-121.97398066520691}],"costing":"bicycle","costing_options":{"bicycle":{"bicycle_type":"Mountain","use_roads":"0.5","use_hills":"0.0"}}}
--j '{"locations":["lat":47.248125,"lon":37.573585},{"lat":47.179168,"lon":37.538695}],"costing":"bicycle","directions_options":{"language":"en-US"}}'
+-j '{"locations":[{"lat":47.248125,"lon":37.573585},{"lat":47.179168,"lon":37.538695}],"costing":"bicycle","directions_options":{"language":"en-US"}}'
+-j '{"locations":[{"lat":34.417011,"lon":-119.853523,"street":""},{"lat":34.417557,"lon":-119.852875,"street":""}],"costing":"bicycle","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":34.416904,"lon":-119.853531,"street":""},{"lat":34.418198,"lon":-119.853683,"street":""}],"costing":"bicycle","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":34.416904,"lon":-119.853531,"street":""},{"lat":34.417534,"lon":-119.854256,"street":""}],"costing":"bicycle","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":40.275089,"lon":-76.635117,"street":"US 322"},{"lat":40.274250,"lon":-76.633453,"street":"Homestead Lane"}],"costing":"bicycle","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":40.275089,"lon":-76.635117,"street":"US 322"},{"lat":40.274853,"lon":-76.631721,"street":"US 322"}],"costing":"bicycle","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":40.275089,"lon":-76.635117,"street":"US 322"},{"lat":40.275631,"lon":-76.633621,"street":"Homestead Lane"}],"costing":"bicycle","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":40.274254,"lon":-76.633461,"street":"Homestead Lane"},{"lat":40.274845,"lon":-76.631523,"street":"US 322"}],"costing":"bicycle","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":40.274254,"lon":-76.633461,"street":"Homestead Lane"},{"lat":40.275696,"lon":-76.633652,"street":"Homestead Lane"}],"costing":"bicycle","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":40.274254,"lon":-76.633461,"street":"Homestead Lane"},{"lat":40.275108,"lon":-76.635185,"street":"US 322"}],"costing":"bicycle","directions_options":{"units":"miles"}}'

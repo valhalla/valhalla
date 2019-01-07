@@ -7,8 +7,6 @@ protobuf_generate_cpp(protobuff_srcs protobuff_hdrs
   trippath.proto
   fileformat.proto
   osmformat.proto
-  segment.proto
-  tile.proto
   transit.proto
   transit_fetch.proto)
 

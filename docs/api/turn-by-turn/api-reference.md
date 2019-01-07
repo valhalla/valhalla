@@ -208,7 +208,8 @@ A multimodal request with a filter for certain Onestop IDs:
 | :------------------ | :----------- |
 | `units` | Distance units for output. Allowable unit types are miles (or mi) and kilometers (or km). If no unit type is specified, the units default to kilometers. |
 | `language` | The language of the narration instructions based on the [IETF BCP 47](https://tools.ietf.org/html/bcp47) language tag string. If no language is specified or the specified language is unsupported, United States-based English (en-US) is used. [Currently supported language list](#supported-language-tags) |
-| `narrative` |  Boolean to allow you to disable narrative production. Locations, shape, length, and time are still returned. The narrative production is enabled by default. Set the value to `false` to disable the narrative. |
+| `directions_type` |  An enum with 3 values. <ul><li>`none` indicating no maneuvers or instructions should be returned.</li><li>`maneuvers` indicating that only maneuvers be returned.</li><li>`instructions` indicating that maneuvers with instructions should be returned (this is the default if not specified).</li></ul> |
+| `narrative` |  **DEPRECATED** Should use `directions_type` instead. Boolean to allow you to disable narrative production. Locations, shape, length, and time are still returned. The narrative production is enabled by default. Set the value to `false` to disable the narrative. |
 
 ##### Supported language tags
 

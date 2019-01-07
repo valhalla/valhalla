@@ -339,7 +339,9 @@ void TryCombine(ManeuversBuilderTest& mbTest,
   mbTest.Combine(maneuvers);
 
   if (maneuvers.size() != expected_maneuvers.size())
-    throw std::runtime_error("Incorrect maneuver count");
+    throw std::runtime_error(
+        "Incorrect maneuver count: " + std::to_string(maneuvers.size()) +
+        " | Expected maneuver count=" + std::to_string(expected_maneuvers.size()));
   for (auto man = maneuvers.begin(), expected_man = expected_maneuvers.begin();
        man != maneuvers.end(); ++man, ++expected_man) {
     if (man->type() != expected_man->type())
@@ -802,11 +804,11 @@ void TestStraightInternalLeftCombine() {
 
   maneuvers.emplace_back();
   Maneuver& maneuver3 = maneuvers.back();
-  PopulateManeuver(maneuver3, TripDirections_Maneuver_Type_kRampLeft, {}, {}, {}, "", 0.050000, 4,
+  PopulateManeuver(maneuver3, TripDirections_Maneuver_Type_kStayLeft, {}, {}, {}, "", 0.050000, 4,
                    338, Maneuver::RelativeDirection::kKeepLeft,
                    TripDirections_Maneuver_CardinalDirection_kNorthWest, 308, 292, 2, 3, 12, 17, 1, 0,
                    0, 0, 0, 0, 0, 0, 0, {}, {std::make_tuple("PA 743 South", 1, 0)},
-                   {std::make_tuple("Elizabethtown", 0, 0)}, {});
+                   {std::make_tuple("Elizabethtown", 0, 0)}, {}, 0, 0, 0, 1);
 
   maneuvers.emplace_back();
   Maneuver& maneuver4 = maneuvers.back();
@@ -851,11 +853,11 @@ void TestStraightInternalLeftCombine() {
 
   expected_maneuvers.emplace_back();
   Maneuver& expected_maneuver3 = expected_maneuvers.back();
-  PopulateManeuver(expected_maneuver3, TripDirections_Maneuver_Type_kRampLeft, {}, {}, {}, "",
+  PopulateManeuver(expected_maneuver3, TripDirections_Maneuver_Type_kStayLeft, {}, {}, {}, "",
                    0.050000, 4, 338, Maneuver::RelativeDirection::kKeepLeft,
                    TripDirections_Maneuver_CardinalDirection_kNorthWest, 308, 292, 2, 3, 12, 17, 1, 0,
                    0, 0, 0, 0, 0, 0, 0, {}, {std::make_tuple("PA 743 South", 1, 0)},
-                   {std::make_tuple("Elizabethtown", 0, 0)}, {});
+                   {std::make_tuple("Elizabethtown", 0, 0)}, {}, 0, 0, 0, 1);
 
   expected_maneuvers.emplace_back();
   Maneuver& expected_maneuver4 = expected_maneuvers.back();

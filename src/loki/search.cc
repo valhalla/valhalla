@@ -288,13 +288,8 @@ struct bin_handler_t {
       const auto* node = tile->node(node_id);
       const auto* start_edge = tile->directededge(node->edge_index());
       const auto* end_edge = start_edge + node->edge_count();
+      PointLL node_ll = node->latlng(tile->header()->base_ll());
       for (const auto* edge = start_edge; edge < end_edge; ++edge) {
-        // if this is an edge leaving this level then we should go do that level awhile
-        if (follow_transitions && edge->IsTransition()) {
-          crawl(edge->endnode(), false);
-          continue;
-        }
-
         // get some info about this edge and the opposing
         GraphId id = tile->id();
         id.set_id(node->edge_index() + (edge - start_edge));
@@ -302,9 +297,8 @@ struct bin_handler_t {
 
         // do we want this edge
         if (edge_filter(edge) != 0.0f) {
-          PathLocation::PathEdge path_edge{std::move(id),      0.f,
-                                           node->latlng(),     score,
-                                           PathLocation::NONE, get_reach(edge)};
+          PathLocation::PathEdge path_edge{std::move(id),  0.f, node_ll, score, PathLocation::NONE,
+                                           get_reach(edge)};
           auto index = edge->forward() ? 0 : info.shape().size() - 2;
           if (heading_filter(edge, info, location, candidate.point, index)) {
             filtered.emplace_back(std::move(path_edge));
@@ -321,9 +315,12 @@ struct bin_handler_t {
         }
         const auto* other_edge = other_tile->directededge(other_id);
         if (edge_filter(other_edge) != 0.0f) {
-          PathLocation::PathEdge path_edge{std::move(other_id), 1.f,
-                                           node->latlng(),      score,
-                                           PathLocation::NONE,  get_reach(other_edge)};
+          PathLocation::PathEdge path_edge{std::move(other_id),
+                                           1.f,
+                                           node_ll,
+                                           score,
+                                           PathLocation::NONE,
+                                           get_reach(other_edge)};
           auto index = other_edge->forward() ? 0 : info.shape().size() - 2;
           if (heading_filter(other_edge, tile->edgeinfo(edge->edgeinfo_offset()), location,
                              candidate.point, index)) {
@@ -331,6 +328,14 @@ struct bin_handler_t {
           } else if (correlated_edges.insert(path_edge.id).second) {
             correlated.edges.push_back(std::move(path_edge));
           }
+        }
+      }
+
+      // Follow transition to other hierarchy levels
+      if (follow_transitions && node->transition_count() > 0) {
+        const NodeTransition* trans = tile->transition(node->transition_index());
+        for (uint32_t i = 0; i < node->transition_count(); ++i, ++trans) {
+          crawl(trans->endnode(), false);
         }
       }
     };
@@ -397,12 +402,12 @@ struct bin_handler_t {
   // TODO: test whether writing this non-recursively would be faster
   void depth_first(const GraphTile*& tile, const NodeInfo* node, size_t& reach_index) {
     // for each edge recurse on the usable ones
+    const GraphTile* start_tile = tile;
     auto* e = tile->directededge(node->edge_index());
     for (uint32_t i = 0; reaches.back() < max_reach_limit && i < node->edge_count(); ++i, ++e) {
       // if we can take the edge and we can get the node and we can pass through the node
       const NodeInfo* n = nullptr;
-      if ((e->IsTransition() || edge_filter(e) != 0.f) && (n = reader.GetEndNode(e, tile)) &&
-          !node_filter(n)) {
+      if ((edge_filter(e) != 0.f) && (n = reader.GetEndNode(e, tile)) && !node_filter(n)) {
         // try to mark the node
         auto inserted = reach_indices.emplace(e->endnode(), reach_index);
         // we saw this one already
@@ -420,16 +425,55 @@ struct bin_handler_t {
           return;
         }
 
-        // recurse, but dont increment if its a transition edge so we dont double count nodes
-        if (!e->IsTransition()) {
-          ++reaches.back();
-        }
+        // Increment and recurse
+        ++reaches.back();
         size_t previous = reach_index;
         depth_first(tile, n, reach_index);
 
         // if we saw the edge in a previous run we want to be done completely
         if (reach_index != previous) {
           return;
+        }
+      }
+    }
+
+    // Follow transition to other hierarchy levels
+    if (node->transition_count() > 0) {
+      const NodeTransition* trans = start_tile->transition(node->transition_index());
+      for (uint32_t i = 0; reaches.back() < max_reach_limit && i < node->transition_count();
+           ++i, ++trans) {
+        const GraphTile* tile = reader.GetGraphTile(trans->endnode());
+        if (tile == nullptr) {
+          // Protect against missing tile
+          continue;
+        }
+        const NodeInfo* n = tile->node(trans->endnode());
+        if (!node_filter(n)) {
+          // try to mark the node
+          auto inserted = reach_indices.emplace(trans->endnode(), reach_index);
+          // we saw this one already
+          if (!inserted.second) {
+            // we've seen this node in this run so just skip it
+            if (reach_index == inserted.first->second) {
+              continue;
+            }
+
+            // signal the recursion to stop
+            reach_index = inserted.first->second;
+            // merge this paths reach with the previously found one
+            reaches.back() += reaches[reach_index] - 1;
+            reaches[reach_index] = reaches.back();
+            return;
+          }
+
+          // For transitions, recurse but don't increment so we don't double count nodes
+          size_t previous = reach_index;
+          depth_first(tile, n, reach_index);
+
+          // if we saw the edge in a previous run we want to be done completely
+          if (reach_index != previous) {
+            return;
+          }
         }
       }
     }

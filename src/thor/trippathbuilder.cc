@@ -357,11 +357,8 @@ TripPath_Use GetTripPathUse(const Use use) {
       return TripPath_Use_kTransitConnectionUse;
     // Should not see other values
     default:
-    case Use::kTransitionUp:
-    case Use::kTransitionDown: {
       // TODO should we throw a runtime error?
       return TripPath_Use_kRoadUse;
-    }
   }
 }
 
@@ -482,8 +479,9 @@ void AddTransitNodes(TripPath_Node* trip_node,
       odin::LatLng* stop_ll = transit_station_info->mutable_ll();
       // Set transit stop lat/lon if requested
       if (controller.attributes.at(kNodeTransitStationInfoLatLon)) {
-        stop_ll->set_lat(node->latlng().lat());
-        stop_ll->set_lng(node->latlng().lng());
+        PointLL ll = node->latlng(start_tile->header()->base_ll());
+        stop_ll->set_lat(ll.lat());
+        stop_ll->set_lng(ll.lng());
       }
     }
   }
@@ -509,8 +507,9 @@ void AddTransitNodes(TripPath_Node* trip_node,
       odin::LatLng* stop_ll = transit_egress_info->mutable_ll();
       // Set transit stop lat/lon if requested
       if (controller.attributes.at(kNodeTransitEgressInfoLatLon)) {
-        stop_ll->set_lat(node->latlng().lat());
-        stop_ll->set_lng(node->latlng().lng());
+        PointLL ll = node->latlng(start_tile->header()->base_ll());
+        stop_ll->set_lat(ll.lat());
+        stop_ll->set_lng(ll.lng());
       }
     }
   }
@@ -662,11 +661,15 @@ TripPathBuilder::Build(const AttributesController& controller,
       current_time += path.front().elapsed_time;
     }
 
+    // Driving on right from the start of the edge?
+    const GraphId start_node = graphreader.GetOpposingEdge(path.front().edgeid)->endnode();
+    bool drive_on_right = graphreader.nodeinfo(start_node)->drive_on_right();
+
     // Add trip edge
     auto trip_edge =
         AddTripEdge(controller, path.front().edgeid, path.front().trip_id, 0, path.front().mode,
-                    travel_types[static_cast<int>(path.front().mode)], edge, trip_path.add_node(),
-                    tile, current_time, std::abs(end_pct - start_pct));
+                    travel_types[static_cast<int>(path.front().mode)], edge, drive_on_right,
+                    trip_path.add_node(), tile, current_time, std::abs(end_pct - start_pct));
 
     // Set begin shape index if requested
     if (controller.attributes.at(kEdgeBeginShapeIndex)) {
@@ -764,6 +767,7 @@ TripPathBuilder::Build(const AttributesController& controller,
   sif::TravelMode prev_mode = sif::TravelMode::kPedestrian;
   uint64_t osmchangeset = 0;
   size_t edge_index = 0;
+  const DirectedEdge* prev_de = nullptr;
   // TODO: this is temp until we use transit stop type from transitland
   TransitPlatformInfo_Type prev_transit_node_type = TransitPlatformInfo_Type_kStop;
   for (auto edge_itr = path.begin(); edge_itr != path.end(); ++edge_itr, ++edge_index) {
@@ -773,12 +777,6 @@ TripPathBuilder::Build(const AttributesController& controller,
     const DirectedEdge* directededge = graphtile->directededge(edge);
     const sif::TravelMode mode = edge_itr->mode;
     const uint8_t travel_type = travel_types[static_cast<uint32_t>(mode)];
-
-    // Skip transition edges - these are optional in the path. So we need
-    // to make sure we get the node info from the correct tile
-    if (directededge->IsTransition()) {
-      continue;
-    }
 
     // Add a node to the trip path and set its attributes.
     TripPath_Node* trip_node = trip_path.add_node();
@@ -905,8 +903,9 @@ TripPathBuilder::Build(const AttributesController& controller,
         odin::LatLng* stop_ll = transit_platform_info->mutable_ll();
         // Set transit stop lat/lon if requested
         if (controller.attributes.at(kNodeTransitPlatformInfoLatLon)) {
-          stop_ll->set_lat(node->latlng().lat());
-          stop_ll->set_lng(node->latlng().lng());
+          PointLL ll = node->latlng(start_tile->header()->base_ll());
+          stop_ll->set_lat(ll.lat());
+          stop_ll->set_lng(ll.lng());
         }
       }
 
@@ -1001,8 +1000,8 @@ TripPathBuilder::Build(const AttributesController& controller,
     auto is_last_edge = edge_itr == path.end() - 1;
     float length_pct = (is_first_edge ? 1.f - start_pct : (is_last_edge ? end_pct : 1.f));
     TripPath_Edge* trip_edge =
-        AddTripEdge(controller, edge, trip_id, block_id, mode, travel_type, directededge, trip_node,
-                    graphtile, current_time, length_pct);
+        AddTripEdge(controller, edge, trip_id, block_id, mode, travel_type, directededge,
+                    node->drive_on_right(), trip_node, graphtile, current_time, length_pct);
 
     // Get the shape and set shape indexes (directed edge forward flag
     // determines whether shape is traversed forward or reverse).
@@ -1103,7 +1102,7 @@ TripPathBuilder::Build(const AttributesController& controller,
     // Each letter represents the edge info.
     // So at node 2, we will store the edge info for D and we will store the
     // intersecting edge info for B, C, E, F, and G.  We need to make sure
-    // that we don't store the edge info from A and D again.  Also, do not store transition edges.
+    // that we don't store the edge info from A and D again.
     //
     //     (X)    (3)   (X)
     //       \\   ||   //
@@ -1127,43 +1126,47 @@ TripPathBuilder::Build(const AttributesController& controller,
 
           // Skip shortcut edges and edges on the path
           if ((de->is_shortcut() || de->localedgeidx() == prior_opp_local_index ||
-               de->localedgeidx() == directededge->localedgeidx()) &&
-              !de->IsTransition()) {
+               de->localedgeidx() == directededge->localedgeidx())) {
             continue;
           }
 
-          // If transition edge - get directed edges at the next level
-          if (de->IsTransition()) {
+          // Add intersecting edges on the same hierarchy level and not on the path
+          AddTripIntersectingEdge(controller, directededge, prev_de, de->localedgeidx(), nodeinfo,
+                                  trip_node, de);
+        }
 
+        // Add intersecting edges on different levels (follow NodeTransitions)
+        if (nodeinfo->transition_count() > 0) {
+          const NodeTransition* trans = tile->transition(nodeinfo->transition_index());
+          for (uint32_t i = 0; i < nodeinfo->transition_count(); ++i, ++trans) {
             // Get the end node tile and its directed edges
-            GraphId endnode = de->endnode();
+            GraphId endnode = trans->endnode();
             const GraphTile* endtile = graphreader.GetGraphTile(endnode);
+            if (endtile == nullptr) {
+              continue;
+            }
             const NodeInfo* nodeinfo2 = endtile->node(endnode);
             const DirectedEdge* de2 = endtile->directededge(nodeinfo2->edge_index());
             for (uint32_t idx2 = 0; idx2 < nodeinfo2->edge_count(); ++idx2, de2++) {
-
-              // Skip shortcut edges, edges on the path and transition edges
+              // Skip shortcut edges and edges on the path
               if (de2->is_shortcut() || de2->localedgeidx() == prior_opp_local_index ||
-                  de2->localedgeidx() == directededge->localedgeidx() || de2->IsTransition()) {
+                  de2->localedgeidx() == directededge->localedgeidx()) {
                 continue;
               }
-              AddTripIntersectingEdge(controller, de2->localedgeidx(), prior_opp_local_index,
-                                      directededge->localedgeidx(), nodeinfo2, trip_node, de2);
+              AddTripIntersectingEdge(controller, directededge, prev_de, de2->localedgeidx(),
+                                      nodeinfo2, trip_node, de2);
             }
-          } else {
-            // On the same hierarchy level and not on the path
-            AddTripIntersectingEdge(controller, de->localedgeidx(), prior_opp_local_index,
-                                    directededge->localedgeidx(), nodeinfo, trip_node, de);
           }
         }
       } else {
         // Driving routes - do not need intersecting edges since the node info
-        // contains driveabilty at all regular edges.
+        // contains driveability at all regular edges.
         for (uint32_t edge_idx = 0; edge_idx < nodeinfo->local_edge_count(); ++edge_idx) {
+
           // Add intersecting edge if this edge is not on the path
           if ((edge_idx != prior_opp_local_index) && (edge_idx != directededge->localedgeidx())) {
-            AddTripIntersectingEdge(controller, edge_idx, prior_opp_local_index,
-                                    directededge->localedgeidx(), nodeinfo, trip_node, nullptr);
+            AddTripIntersectingEdge(controller, directededge, prev_de, edge_idx, nodeinfo, trip_node,
+                                    nullptr);
           }
         }
       }
@@ -1178,10 +1181,19 @@ TripPathBuilder::Build(const AttributesController& controller,
     // Set the endnode of this directed edge as the startnode of the next edge.
     startnode = directededge->endnode();
 
+    // Save the opposing edge as the previous DirectedEdge (for name consistency)
+    const GraphTile* t2 =
+        directededge->leaves_tile() ? graphreader.GetGraphTile(directededge->endnode()) : graphtile;
+    if (t2 == nullptr) {
+      continue;
+    }
+    GraphId oppedge = t2->GetOpposingEdgeId(directededge);
+    prev_de = t2->directededge(oppedge);
+
     // Save the index of the opposing local directed edge at the end node
     prior_opp_local_index = directededge->opp_local_idx();
 
-    // We processed a non-transition edge - set is_first edge to false
+    // set is_first edge to false
     is_first_edge = false;
   }
 
@@ -1248,7 +1260,7 @@ TripPathBuilder::Build(const AttributesController& controller,
 
   // hand it back
   return trip_path;
-}
+} // namespace thor
 
 // Add a trip edge to the trip node and set its attributes
 TripPath_Edge* TripPathBuilder::AddTripEdge(const AttributesController& controller,
@@ -1258,6 +1270,7 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const AttributesController& controll
                                             const sif::TravelMode mode,
                                             const uint8_t travel_type,
                                             const DirectedEdge* directededge,
+                                            const bool drive_on_right,
                                             TripPath_Node* trip_node,
                                             const GraphTile* graphtile,
                                             const uint32_t current_time,
@@ -1430,7 +1443,7 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const AttributesController& controll
 
   // Set drive_on_right if requested
   if (controller.attributes.at(kEdgeDriveOnRight)) {
-    trip_edge->set_drive_on_right(directededge->drive_on_right());
+    trip_edge->set_drive_on_right(drive_on_right);
   }
 
   // Set surface if requested
@@ -1491,31 +1504,28 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const AttributesController& controll
     trip_edge->set_weighted_grade((directededge->weighted_grade() - 6.f) / 0.6f);
   }
 
-  // Set maximum upward and downward grade if requested
-  if (controller.attributes.at(kEdgeMaxUpwardGrade) ||
-      controller.attributes.at(kEdgeMaxDownwardGrade) ||
-      controller.attributes.at(kEdgeMeanElevation)) {
-    const EdgeElevation* elev = graphtile->edge_elevation(edge);
-    if (elev != nullptr) {
-      if (controller.attributes.at(kEdgeMaxUpwardGrade)) {
-        trip_edge->set_max_upward_grade(elev->max_up_slope());
-      }
-      if (controller.attributes.at(kEdgeMaxDownwardGrade)) {
-        trip_edge->set_max_downward_grade(elev->max_down_slope());
-      }
-      if (controller.attributes.at(kEdgeMeanElevation)) {
-        trip_edge->set_mean_elevation(elev->mean_elevation());
-      }
+  // Set maximum upward and downward grade if requested (set to kNoElevationData if unavailable)
+  if (controller.attributes.at(kEdgeMaxUpwardGrade)) {
+    if (graphtile->header()->has_elevation()) {
+      trip_edge->set_max_upward_grade(directededge->max_up_slope());
     } else {
-      if (controller.attributes.at(kEdgeMaxUpwardGrade)) {
-        trip_edge->set_max_upward_grade(kNoElevationData);
-      }
-      if (controller.attributes.at(kEdgeMaxDownwardGrade)) {
-        trip_edge->set_max_downward_grade(kNoElevationData);
-      }
-      if (controller.attributes.at(kEdgeMeanElevation)) {
-        trip_edge->set_mean_elevation(kNoElevationData);
-      }
+      trip_edge->set_max_upward_grade(kNoElevationData);
+    }
+  }
+  if (controller.attributes.at(kEdgeMaxDownwardGrade)) {
+    if (graphtile->header()->has_elevation()) {
+      trip_edge->set_max_downward_grade(directededge->max_down_slope());
+    } else {
+      trip_edge->set_max_downward_grade(kNoElevationData);
+    }
+  }
+
+  // Set mean elevation if requested (set to kNoElevationData if unavailable)
+  if (controller.attributes.at(kEdgeMeanElevation)) {
+    if (graphtile->header()->has_elevation()) {
+      trip_edge->set_mean_elevation(edgeinfo.mean_elevation());
+    } else {
+      trip_edge->set_mean_elevation(kNoElevationData);
     }
   }
 
@@ -1555,7 +1565,7 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const AttributesController& controll
   }
 
   if (controller.attributes.at(kEdgeSpeedLimit)) {
-    trip_edge->set_speed_limit(directededge->speed_limit());
+    trip_edge->set_speed_limit(edgeinfo.speed_limit());
   }
 
   if (controller.attributes.at(kEdgeTruckSpeed)) {
@@ -1564,19 +1574,6 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const AttributesController& controll
 
   if (directededge->truck_route() && controller.attributes.at(kEdgeTruckRoute)) {
     trip_edge->set_truck_route(true);
-  }
-
-  // Traffic segments
-  if (controller.attributes.at(kEdgeTrafficSegments)) {
-    auto segments = graphtile->GetTrafficSegments(edge);
-    for (const auto& segment : segments) {
-      TripPath_TrafficSegment* traffic_segment = trip_edge->add_traffic_segment();
-      traffic_segment->set_segment_id(segment.segment_id_);
-      traffic_segment->set_begin_percent(segment.begin_percent_);
-      traffic_segment->set_end_percent(segment.end_percent_);
-      traffic_segment->set_starts_segment(segment.starts_segment_);
-      traffic_segment->set_ends_segment(segment.ends_segment_);
-    }
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -1676,10 +1673,10 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const AttributesController& controll
 }
 
 void TripPathBuilder::AddTripIntersectingEdge(const AttributesController& controller,
+                                              const DirectedEdge* directededge,
+                                              const DirectedEdge* prev_de,
                                               uint32_t local_edge_index,
-                                              uint32_t prev_edge_index,
-                                              uint32_t curr_edge_index,
-                                              const baldr::NodeInfo* nodeinfo,
+                                              const NodeInfo* nodeinfo,
                                               odin::TripPath_Node* trip_node,
                                               const DirectedEdge* intersecting_de) {
   TripPath_IntersectingEdge* itersecting_edge = trip_node->add_intersecting_edge();
@@ -1729,14 +1726,14 @@ void TripPathBuilder::AddTripIntersectingEdge(const AttributesController& contro
 
   // Set the previous/intersecting edge name consistency if requested
   if (controller.attributes.at(kNodeIntersectingEdgeFromEdgeNameConsistency)) {
-    itersecting_edge->set_prev_name_consistency(
-        nodeinfo->name_consistency(prev_edge_index, local_edge_index));
+    bool name_consistency =
+        (prev_de == nullptr) ? false : prev_de->name_consistency(local_edge_index);
+    itersecting_edge->set_prev_name_consistency(name_consistency);
   }
 
   // Set the current/intersecting edge name consistency if requested
   if (controller.attributes.at(kNodeIntersectingEdgeToEdgeNameConsistency)) {
-    itersecting_edge->set_curr_name_consistency(
-        nodeinfo->name_consistency(curr_edge_index, local_edge_index));
+    itersecting_edge->set_curr_name_consistency(directededge->name_consistency(local_edge_index));
   }
 }
 

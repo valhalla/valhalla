@@ -120,8 +120,11 @@ odin::TripPath thor_worker_t::route_match(valhalla_request_t& request,
                                           const AttributesController& controller) {
   odin::TripPath trip_path;
   std::vector<PathInfo> path_infos;
-  if (RouteMatcher::FormPath(mode_costing, mode, *reader, trace, request.options.locations(),
-                             path_infos)) {
+
+  // TODO - make sure the trace has timestamps..
+  bool use_timestamps = request.options.use_timestamps();
+  if (RouteMatcher::FormPath(mode_costing, mode, *reader, trace, use_timestamps,
+                             request.options.locations(), path_infos)) {
     // Form the trip path based on mode costing, origin, destination, and path edges
     trip_path = thor::TripPathBuilder::Build(controller, *reader, mode_costing, path_infos,
                                              *request.options.mutable_locations()->begin(),
@@ -164,9 +167,10 @@ thor_worker_t::map_match(valhalla_request_t& request,
     std::vector<std::pair<GraphId, GraphId>> disconnected_edges;
     std::vector<PathInfo> path_edges =
         MapMatcher::FormPath(matcher.get(), match_results, edge_segments, mode_costing, mode,
-                             disconnected_edges);
+                             disconnected_edges, request.options.use_timestamps());
 
-    // Throw exception if not trace attributes action and disconnected path
+    // Throw exception if not trace attributes action and disconnected path.
+    // TODO - perhaps also throw exception if use_timestamps and disconnected path?
     if (request.options.action() == odin::DirectionsOptions::trace_route &&
         disconnected_edges.size()) {
       throw valhalla_exception_t{442};

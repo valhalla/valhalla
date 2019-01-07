@@ -56,10 +56,9 @@ protected:
                                                            std::list<Maneuver>::iterator next_man,
                                                            bool start_man);
 
-  std::list<Maneuver>::iterator
-  CombineSameNameStraightManeuver(std::list<Maneuver>& maneuvers,
-                                  std::list<Maneuver>::iterator curr_man,
-                                  std::list<Maneuver>::iterator next_man);
+  std::list<Maneuver>::iterator CombineManeuvers(std::list<Maneuver>& maneuvers,
+                                                 std::list<Maneuver>::iterator curr_man,
+                                                 std::list<Maneuver>::iterator next_man);
 
   void CountAndSortExitSigns(std::list<Maneuver>& maneuvers);
 
@@ -139,6 +138,19 @@ protected:
                                        std::list<Maneuver>::iterator curr_man,
                                        std::list<Maneuver>::iterator next_man,
                                        bool start_man) const;
+
+  /**
+   * Returns true if the current and next ramp maneuvers are able to be combined,
+   * false otherwise.
+   *
+   * @param curr_man Current maneuver
+   * @param next_man Next maneuver
+   *
+   * @return true if the current and next ramp maneuvers are able to be combined,
+   * false otherwise.
+   */
+  bool AreRampManeuversCombinable(std::list<Maneuver>::iterator curr_man,
+                                  std::list<Maneuver>::iterator next_man) const;
 
   /**
    * Enhance a signless interchange maneuver by adding the subsequent street name

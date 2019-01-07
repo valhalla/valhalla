@@ -224,7 +224,7 @@ void TestClosestPoint() {
                               {-76.296837f, 40.042099f}};
 
   // Closest to the 1st point
-  TryClosestPoint(pts, PointLL(-76.299179f, 40.042572f), PointLL(-76.299171f, 40.042519f), 5.933f, 0,
+  TryClosestPoint(pts, PointLL(-76.299189f, 40.042572f), PointLL(-76.299171f, 40.042519f), 5.933f, 0,
                   4);
 
   // Closest along the 2nd segment

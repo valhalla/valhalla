@@ -491,7 +491,7 @@ void test_topk_frontage_alternate() {
            {"lat":52.0796213915245,"lon":5.139262676239015,"accuracy":10},
            {"lat":52.079637875461195,"lon":5.139581859111787,"accuracy":10},
            {"lat":52.07964776582031,"lon":5.139828622341157,"accuracy":10},
-           {"lat":52.07965600778458,"lon":5.1402121782302865,"accuracy":10}]})"));
+           {"lat":52.07985600778458,"lon":5.1404121782302865,"accuracy":10}]})"));
 
   /*** Primary path - use main road
     {"type":"FeatureCollection","features":[
@@ -554,12 +554,12 @@ void test_topk_frontage_alternate() {
       names.push_back("<empty>");
     }
   }
-  if (names != std::vector<std::string>{"Rubenslaan"}) {
+  if (names != std::vector<std::string>{"Rubenslaan", "Rubenslaan", "Rubenslaan"}) {
     std::string streets;
     for (const auto& n : names)
       streets += n + ", ";
     throw std::logic_error(
-        "The second most obvious result is fronatge road to the right - but got: " + streets);
+        "The second most obvious result is frontage road to the right - but got: " + streets);
   }
   if (alternate.get<float>("confidence_score") >= 1.0f)
     throw std::logic_error("Confidence of the second result is always less than 1");

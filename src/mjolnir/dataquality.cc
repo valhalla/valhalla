@@ -29,10 +29,10 @@ void DataQuality::AddStatistics(const DataQuality& stats) {
 // Adds an issue.
 void DataQuality::AddIssue(const DataIssueType issuetype,
                            const GraphId& graphid,
-                           const uint64_t wayid1,
-                           const uint64_t wayid2) {
+                           const uint32_t wayid1,
+                           const uint32_t wayid2) {
   if (issuetype == kDuplicateWays) {
-    std::pair<uint64_t, uint64_t> wayids = std::make_pair(wayid1, wayid2);
+    std::pair<uint32_t, uint32_t> wayids = std::make_pair(wayid1, wayid2);
     auto it = duplicateways_.find(wayids);
     if (it == duplicateways_.end()) {
       duplicateways_.emplace(wayids, 1);

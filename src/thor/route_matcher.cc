@@ -91,6 +91,7 @@ bool expand_from_node(const std::shared_ptr<DynamicCost>* mode_costing,
                       GraphReader& reader,
                       const std::vector<meili::Measurement>& shape,
                       const std::vector<float>& distances,
+                      const bool use_timestamps,
                       size_t& correlated_index,
                       const GraphTile* tile,
                       const GraphId& node,
@@ -136,31 +137,12 @@ bool expand_from_node(const std::shared_ptr<DynamicCost>* mode_costing,
       continue;
     }
 
-    // Process transition edge if previous edge was not from a transition
-    if (de->IsTransition()) {
-      if (from_transition) {
-        continue;
-      } else {
-        const GraphTile* end_node_tile = reader.GetGraphTile(de->endnode());
-        if (end_node_tile == nullptr) {
-          continue;
-        }
-        if (expand_from_node(mode_costing, mode, reader, shape, distances, correlated_index,
-                             end_node_tile, de->endnode(), end_nodes, prev_edge_label, elapsed_time,
-                             path_infos, true, end_node, total_distance)) {
-          return true;
-        } else {
-          continue;
-        }
-      }
-    }
-
     // Get the end node LL and set up the length comparison
     const GraphTile* end_node_tile = reader.GetGraphTile(de->endnode());
     if (end_node_tile == nullptr) {
       continue;
     }
-    PointLL de_end_ll = end_node_tile->node(de->endnode())->latlng();
+    PointLL de_end_ll = end_node_tile->get_node_ll(de->endnode());
     float de_length = length_comparison(de->length(), true);
 
     // Process current edge until shape matches end node
@@ -178,13 +160,14 @@ bool expand_from_node(const std::shared_ptr<DynamicCost>* mode_costing,
       // Found a match if shape equals directed edge LL within tolerance
       if (shape.at(index).lnglat().ApproximatelyEqual(de_end_ll) &&
           de->length() < length_comparison(length, true)) {
-        // Update the elapsed time based on transition cost
-        elapsed_time +=
-            mode_costing[static_cast<int>(mode)]->TransitionCost(de, node_info, prev_edge_label).secs;
-
-        // Update the elapsed time based on edge cost
-        elapsed_time +=
-            mode_costing[static_cast<int>(mode)]->EdgeCost(de, end_node_tile->GetSpeed(de)).secs;
+        if (use_timestamps) {
+          elapsed_time = shape[index].epoch_time() - shape[0].epoch_time();
+        } else {
+          // Update the elapsed time based on transition cost and edge cost
+          auto& costing = mode_costing[static_cast<int>(mode)];
+          elapsed_time += costing->TransitionCost(de, node_info, prev_edge_label).secs +
+                          costing->EdgeCost(de, end_node_tile->GetSpeed(de)).secs;
+        }
 
         // Add edge and update correlated index
         path_infos.emplace_back(mode, elapsed_time, edge_id, 0);
@@ -193,9 +176,9 @@ bool expand_from_node(const std::shared_ptr<DynamicCost>* mode_costing,
         prev_edge_label = {kInvalidLabel, edge_id, de, {}, 0, 0, mode, 0};
 
         // Continue walking shape to find the end edge...
-        if (expand_from_node(mode_costing, mode, reader, shape, distances, index, end_node_tile,
-                             de->endnode(), end_nodes, prev_edge_label, elapsed_time, path_infos,
-                             false, end_node, total_distance)) {
+        if (expand_from_node(mode_costing, mode, reader, shape, distances, use_timestamps, index,
+                             end_node_tile, de->endnode(), end_nodes, prev_edge_label, elapsed_time,
+                             path_infos, false, end_node, total_distance)) {
           return true;
         } else {
           // Match failed along this edge, pop the last entry off path_infos
@@ -205,6 +188,23 @@ bool expand_from_node(const std::shared_ptr<DynamicCost>* mode_costing,
         }
       }
       index++;
+    }
+  }
+
+  // Handle transitions - expand from the end node of each transition
+  if (!from_transition && node_info->transition_count() > 0) {
+    const NodeTransition* trans = tile->transition(node_info->transition_index());
+    for (uint32_t i = 0; i < node_info->transition_count(); ++i, ++trans) {
+      const GraphTile* end_node_tile = reader.GetGraphTile(trans->endnode());
+      if (end_node_tile == nullptr) {
+        continue;
+      }
+      if (expand_from_node(mode_costing, mode, reader, shape, distances, use_timestamps,
+                           correlated_index, end_node_tile, trans->endnode(), end_nodes,
+                           prev_edge_label, elapsed_time, path_infos, true, end_node,
+                           total_distance)) {
+        return true;
+      }
     }
   }
   return false;
@@ -217,6 +217,7 @@ bool RouteMatcher::FormPath(const std::shared_ptr<DynamicCost>* mode_costing,
                             const sif::TravelMode& mode,
                             GraphReader& reader,
                             const std::vector<meili::Measurement>& shape,
+                            const bool use_timestamps,
                             const google::protobuf::RepeatedPtrField<odin::Location>& correlated,
                             std::vector<PathInfo>& path_infos) {
   // Form distances between shape points
@@ -257,7 +258,7 @@ bool RouteMatcher::FormPath(const std::shared_ptr<DynamicCost>* mode_costing,
     if (begin_edge_tile == nullptr) {
       throw std::runtime_error("End node tile is null");
     }
-    PointLL de_end_ll = end_node_tile->node(de->endnode())->latlng();
+    PointLL de_end_ll = end_node_tile->get_node_ll(de->endnode());
 
     // Initialize indexes and shape
     size_t index = 0;
@@ -275,11 +276,14 @@ bool RouteMatcher::FormPath(const std::shared_ptr<DynamicCost>* mode_costing,
       // Check if shape is within tolerance at the end node
       if (shape.at(index).lnglat().ApproximatelyEqual(de_end_ll) &&
           de_remaining_length < length_comparison(length, true)) {
-
-        // Update the elapsed time edge cost at begin edge
-        elapsed_time +=
-            mode_costing[static_cast<int>(mode)]->EdgeCost(de, end_node_tile->GetSpeed(de)).secs *
-            (1 - edge.percent_along());
+        if (use_timestamps) {
+          elapsed_time = shape[index].epoch_time() - shape[0].epoch_time();
+        } else {
+          // Update the elapsed time edge cost at begin edge
+          elapsed_time +=
+              mode_costing[static_cast<int>(mode)]->EdgeCost(de, end_node_tile->GetSpeed(de)).secs *
+              (1 - edge.percent_along());
+        }
 
         // Add begin edge
         path_infos.emplace_back(mode, elapsed_time, graphid, 0);
@@ -289,9 +293,9 @@ bool RouteMatcher::FormPath(const std::shared_ptr<DynamicCost>* mode_costing,
 
         // Continue walking shape to find the end node
         GraphId end_node;
-        if (expand_from_node(mode_costing, mode, reader, shape, distances, index, end_node_tile,
-                             de->endnode(), end_nodes, prev_edge_label, elapsed_time, path_infos,
-                             false, end_node, total_distance)) {
+        if (expand_from_node(mode_costing, mode, reader, shape, distances, use_timestamps, index,
+                             end_node_tile, de->endnode(), end_nodes, prev_edge_label, elapsed_time,
+                             path_infos, false, end_node, total_distance)) {
           // If node equals stop node then when are done expanding - get
           // the matching end edge
           auto n = end_nodes.find(end_node);
@@ -315,16 +319,16 @@ bool RouteMatcher::FormPath(const std::shared_ptr<DynamicCost>* mode_costing,
           }
           const DirectedEdge* end_de = end_edge_tile->directededge(end_edge_graphid);
 
-          // Update the elapsed time based on transition cost
-          elapsed_time += mode_costing[static_cast<int>(mode)]
-                              ->TransitionCost(end_de, end_edge_tile->node(n->first), prev_edge_label)
-                              .secs;
-
-          // Update the elapsed time based on edge cost
-          elapsed_time += mode_costing[static_cast<int>(mode)]
-                              ->EdgeCost(end_de, end_edge_tile->GetSpeed(end_de))
-                              .secs *
-                          end_edge.percent_along();
+          if (use_timestamps) {
+            elapsed_time = shape.back().epoch_time() - shape[0].epoch_time();
+          } else {
+            // Update the elapsed time based on transition cost and edge cost
+            auto& costing = mode_costing[static_cast<int>(mode)];
+            elapsed_time +=
+                costing->TransitionCost(end_de, end_edge_tile->node(n->first), prev_edge_label).secs +
+                costing->EdgeCost(end_de, end_edge_tile->GetSpeed(end_de)).secs *
+                    end_edge.percent_along();
+          }
 
           // Add end edge
           path_infos.emplace_back(mode, elapsed_time, end_edge_graphid, 0);
@@ -342,10 +346,14 @@ bool RouteMatcher::FormPath(const std::shared_ptr<DynamicCost>* mode_costing,
     // end is along the same edge.
     for (const auto& end : end_nodes) {
       if (end.second.first.graph_id() == edge.graph_id()) {
-        // Update the elapsed time based on edge cost
-        elapsed_time +=
-            mode_costing[static_cast<int>(mode)]->EdgeCost(de, end_node_tile->GetSpeed(de)).secs *
-            (end.second.first.percent_along() - edge.percent_along());
+        if (use_timestamps) {
+          elapsed_time = shape.back().epoch_time() - shape[0].epoch_time();
+        } else {
+          // Update the elapsed time based on edge cost
+          elapsed_time +=
+              mode_costing[static_cast<int>(mode)]->EdgeCost(de, end_node_tile->GetSpeed(de)).secs *
+              (end.second.first.percent_along() - edge.percent_along());
+        }
 
         // Add end edge
         path_infos.emplace_back(mode, elapsed_time, GraphId(edge.graph_id()), 0);

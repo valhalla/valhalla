@@ -74,12 +74,14 @@ thor::PathAlgorithm* thor_worker_t::get_path_algorithm(const std::string& routet
     }
   }
 
-  // Use A* if any origin and destination edges are the same - otherwise
-  // use bidirectional A*. Bidirectional A* does not handle trivial cases
-  // with oneways.
+  // Use A* if any origin and destination edges are the same or are connected - otherwise
+  // use bidirectional A*. Bidirectional A* does not handle trivial cases with oneways and
+  // has issues when cost of origin or destination edge is high (needs a high threshold to
+  // find the proper connection).
   for (auto& edge1 : origin.path_edges()) {
     for (auto& edge2 : destination.path_edges()) {
-      if (edge1.graph_id() == edge2.graph_id()) {
+      if (edge1.graph_id() == edge2.graph_id() ||
+          reader->AreEdgesConnected(GraphId(edge1.graph_id()), GraphId(edge2.graph_id()))) {
         astar.set_interrupt(interrupt);
         return &astar;
       }

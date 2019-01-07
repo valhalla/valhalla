@@ -18,6 +18,9 @@ config = {
     'hierarchy': True,
     'shortcuts': True,
     'include_driveways': True,
+    'include_bicycle': True,
+    'include_pedestrian': True,
+    'include_driving': True,
     'logging': {
       'type': 'std_out',
       'color': True,
@@ -224,7 +227,10 @@ help_text = {
     'transit_bounding_box': 'Add comma separated bounding box values to only download transit data inside the given bounding box',
     'hierarchy': 'bool indicating whether road hierarchy is to be built - default to True',
     'shortcuts': 'bool indicating whether shortcuts are to be built - default to True',
-    'include_driveways': 'bool indicating whether driveways are included - default to True',
+    'include_driveways': 'bool indicating whether private driveways are included - default to True',
+    'include_bicycle': 'bool indicating whether cycling only ways are included - default to True',
+    'include_pedestrian': 'bool indicating whether pedestrian only ways are included - default to True',
+    'include_driving': 'bool indicating whether driving only ways are included - default to True',
     'logging': {
       'type': 'Type of logger either std_out or file',
       'color': 'User colored log level in std_out logger',

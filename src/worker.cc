@@ -88,12 +88,12 @@ const std::unordered_map<unsigned, unsigned> ERROR_TO_STATUS{
 
     {120, 400}, {121, 400}, {122, 400}, {123, 400}, {124, 400}, {125, 400}, {126, 400},
 
-    {130, 400}, {131, 400}, {132, 400}, {133, 400},
+    {130, 400}, {131, 400}, {132, 400}, {133, 400}, {136, 400},
 
     {140, 400}, {141, 501}, {142, 501},
 
     {150, 400}, {151, 400}, {152, 400}, {153, 400}, {154, 400}, {155, 400}, {156, 400},
-    {157, 400}, {158, 400},
+    {157, 400}, {158, 400}, {159, 400},
 
     {160, 400}, {161, 400}, {162, 400}, {163, 400},
 
@@ -160,6 +160,12 @@ const std::unordered_map<unsigned, std::string> OSRM_ERRORS_CODES{
      R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
     {133,
      R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
+    {134,
+     R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
+    {135,
+     R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
+    {136,
+     R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
 
     {140,
      R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
@@ -182,6 +188,8 @@ const std::unordered_map<unsigned, std::string> OSRM_ERRORS_CODES{
     {157,
      R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
     {158,
+     R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
+    {159,
      R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
 
     {160, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
@@ -471,9 +479,16 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
     options.set_language(*language);
   }
 
+  // deprecated
   auto narrative = rapidjson::get_optional<bool>(doc, "/narrative");
-  if (narrative) {
-    options.set_narrative(*narrative);
+  if (narrative && !*narrative) {
+    options.set_directions_type(odin::DirectionsType::none);
+  }
+
+  auto dir_type = rapidjson::get_optional<std::string>(doc, "/directions_type");
+  odin::DirectionsType directions_type;
+  if (dir_type && odin::DirectionsType_Parse(*dir_type, &directions_type)) {
+    options.set_directions_type(directions_type);
   }
 
   auto encoded_polyline = rapidjson::get_optional<std::string>(doc, "/encoded_polyline");
@@ -491,6 +506,52 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
     // if no shape then try 'trace'
     if (options.shape().empty()) {
       parse_locations(doc, options.mutable_trace(), "trace", 135, false);
+    }
+  }
+
+  // Begin time for timestamps when entered given durations/delta times (defaults to 0)
+  auto t = rapidjson::get_optional<unsigned int>(doc, "/begin_time");
+  double begin_time = (t) ? begin_time = *t : 0.0;
+
+  // Use durations (per shape point pair) to set time
+  auto durations = rapidjson::get_optional<rapidjson::Value::ConstArray>(doc, "/durations");
+  if (durations) {
+    // Make sure durations is sized appropriately
+    if (durations->Size() != options.shape_size() - 1) {
+      throw valhalla_exception_t{136};
+    }
+
+    // Set time to begin_time at the first trace point.
+    options.mutable_shape()->Mutable(0)->set_time(begin_time);
+
+    // Iterate through the durations and add to elapsed time - set time on
+    // successive trace points.
+    double current_time = begin_time;
+    int index = 1;
+    for (const auto& dur : *durations) {
+      auto duration = dur.GetDouble();
+      current_time += duration;
+      options.mutable_shape()->Mutable(index)->set_time(current_time);
+      ++index;
+    }
+  }
+
+  // Option to use timestamps when computing elapsed time for matched routes
+  options.set_use_timestamps(
+      rapidjson::get_optional<bool>(doc, "/use_timestamps").get_value_or(false));
+
+  // Throw an error if use_timestamps is set to true but there are no timestamps in the
+  // trace (or no durations present)
+  if (options.use_timestamps()) {
+    bool has_time = false;
+    for (const auto& s : options.shape()) {
+      if (s.has_time()) {
+        has_time = true;
+        break;
+      }
+    }
+    if (!has_time) {
+      throw valhalla_exception_t{159};
     }
   }
 
@@ -900,6 +961,19 @@ const std::string& FilterAction_Name(const odin::FilterAction action) {
   };
   auto i = actions.find(action);
   return i == actions.cend() ? empty : i->second;
+}
+
+bool DirectionsType_Parse(const std::string& dtype, odin::DirectionsType* t) {
+  static const std::unordered_map<std::string, odin::DirectionsType> types{
+      {"none", odin::DirectionsType::none},
+      {"maneuvers", odin::DirectionsType::maneuvers},
+      {"instructions", odin::DirectionsType::instructions},
+  };
+  auto i = types.find(dtype);
+  if (i == types.cend())
+    return false;
+  *t = i->second;
+  return true;
 }
 } // namespace odin
 

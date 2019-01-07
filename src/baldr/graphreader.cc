@@ -303,10 +303,11 @@ bool GraphReader::AreEdgesConnected(const GraphId& edge1, const GraphId& edge2) 
     if (n1.level() == n2.level()) {
       return false;
     } else {
-      uint32_t n = 0, id = 0;
-      const DirectedEdge* de = GetGraphTile(n1)->GetDirectedEdges(n1.id(), n, id);
-      for (uint32_t i = 0; i < n; i++, de++) {
-        if (de->IsTransition() && de->endnode() == n2) {
+      const GraphTile* tile = GetGraphTile(n1);
+      const NodeInfo* ni = tile->node(n1);
+      const NodeTransition* trans = tile->transition(ni->transition_index());
+      for (uint32_t i = 0; i < ni->transition_count(); ++i, ++trans) {
+        if (trans->endnode() == n2) {
           return true;
         }
       }
@@ -355,9 +356,9 @@ bool GraphReader::AreEdgesConnectedForward(const GraphId& edge1,
 
   // If edge2 is on a different tile level transition to the node on that level
   if (edge2.level() != endnode.level()) {
-    for (const auto& edge : tile->GetDirectedEdges(endnode)) {
-      if (edge.IsTransition() && edge.endnode().level() == edge2.level()) {
-        endnode = edge.endnode();
+    for (const auto& trans : tile->GetNodeTransitions(endnode)) {
+      if (trans.endnode().level() == edge2.level()) {
+        endnode = trans.endnode();
         tile = GetGraphTile(endnode);
         if (tile == nullptr) {
           return false;
@@ -382,7 +383,7 @@ GraphId GraphReader::GetShortcut(const GraphId& id) {
     const DirectedEdge* continuing_edge = static_cast<const DirectedEdge*>(nullptr);
     const DirectedEdge* directededge = tile->directededge(idx);
     for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++, idx++) {
-      if (directededge->IsTransition() || idx == edgeid.id() || directededge->is_shortcut() ||
+      if (idx == edgeid.id() || directededge->is_shortcut() ||
           directededge->use() == Use::kTransitConnection ||
           directededge->use() == Use::kEgressConnection ||
           directededge->use() == Use::kPlatformConnection) {

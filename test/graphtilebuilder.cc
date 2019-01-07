@@ -113,15 +113,25 @@ void TestDuplicateEdgeInfo() {
   test_graph_tile_builder test(test_dir, GraphId(0, 2, 0), false);
   // add edge info for node 0 to node 1
   bool added = false;
-  test.AddEdgeInfo(0, GraphId(0, 2, 0), GraphId(0, 2, 1), 1234, std::list<PointLL>{{0, 0}, {1, 1}},
-                   {"einzelweg"}, 0, added);
+  test.AddEdgeInfo(0, GraphId(0, 2, 0), GraphId(0, 2, 1), 1234, 555, 0, 120,
+                   std::list<PointLL>{{0, 0}, {1, 1}}, {"einzelweg"}, 0, added);
   if (test.edge_offset_map_.size() != 1)
     throw std::runtime_error("There should be exactly one of these in here");
   // add edge info for node 1 to node 0
-  test.AddEdgeInfo(0, GraphId(0, 2, 1), GraphId(0, 2, 0), 1234, std::list<PointLL>{{1, 1}, {0, 0}},
-                   {"einzelweg"}, 0, added);
+  test.AddEdgeInfo(0, GraphId(0, 2, 1), GraphId(0, 2, 0), 1234, 555, 0, 120,
+                   std::list<PointLL>{{1, 1}, {0, 0}}, {"einzelweg"}, 0, added);
   if (test.edge_offset_map_.size() != 1)
     throw std::runtime_error("There should still be exactly one of these in here");
+
+  test.StoreTileData();
+  test_graph_tile_builder test2(test_dir, GraphId(0, 2, 0), false);
+  auto ei = test2.edgeinfo(0);
+  if (std::abs(ei.mean_elevation() - 555.0f) > kElevationBinSize) {
+    throw std::runtime_error("Mean elevation test failed " + std::to_string(ei.mean_elevation()));
+  }
+  if (ei.speed_limit() != 120) {
+    throw std::runtime_error("Speed limit test failed " + std::to_string(ei.speed_limit()));
+  }
 }
 
 void TestAddBins() {

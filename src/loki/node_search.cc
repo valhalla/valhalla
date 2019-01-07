@@ -1,6 +1,7 @@
 #include "loki/node_search.h"
 #include "baldr/tilehierarchy.h"
 #include "midgard/logging.h"
+#include "midgard/pointll.h"
 #include "midgard/tiles.h"
 #include <cmath>
 
@@ -28,6 +29,10 @@ struct tile_cache {
 
   inline const vb::NodeInfo& node(vb::GraphId id) {
     return m_nodes[id.id()];
+  }
+
+  inline vm::PointLL node_ll(const vb::GraphId id) {
+    return m_tile->get_node_ll(id);
   }
 
   inline const vb::DirectedEdge& edge(vb::GraphId id) {
@@ -185,8 +190,8 @@ struct filtered_nodes {
       : m_box(b), m_nodes(nodes) {
   }
 
-  inline void push_back(vb::GraphId id, const vb::NodeInfo& info) {
-    if (m_box.Contains(info.latlng())) {
+  inline void push_back(vb::GraphId id, const vm::PointLL& ll) {
+    if (m_box.Contains(ll)) {
       m_nodes.push_back(id);
     }
   }
@@ -255,7 +260,7 @@ struct node_collector {
       const auto& node = m_cache.node(node_id);
 
       // node is in this tile, so add it to the collection
-      m_nodes.push_back(node_id, node);
+      m_nodes.push_back(node_id, m_cache.node_ll(node_id));
 
       if (opp_index < node.edge_count()) {
         // assert(opp_index < node.edge_count());
@@ -281,7 +286,7 @@ struct node_collector {
       const auto& node = m_cache.node(node_id);
 
       // node is in this tile, so add it to the collection
-      m_nodes.push_back(node_id, node);
+      m_nodes.push_back(node_id, m_cache.node_ll(node_id));
     }
     // node is not in this tile, so save it for later
     else {

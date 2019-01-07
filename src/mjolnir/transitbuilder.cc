@@ -98,11 +98,6 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
   uint32_t edgecount = currentedges.size();
   tilebuilder_local.directededges().clear();
 
-  // Make sure we have associated edge elevations
-  std::vector<EdgeElevation> current_elevations(std::move(tilebuilder_local.edge_elevations()));
-  bool has_elevation = tilebuilder_local.header()->has_edge_elevation();
-  tilebuilder_local.edge_elevations().clear();
-
   // Get the directed edge index of the first sign. If no signs are
   // present in this tile set a value > number of directed edges
   uint32_t signidx = 0;
@@ -130,9 +125,6 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
     size_t edge_index = tilebuilder_local.directededges().size();
     for (uint32_t i = 0, idx = nb.edge_index(); i < nb.edge_count(); i++, idx++) {
       tilebuilder_local.directededges().emplace_back(std::move(currentedges[idx]));
-      if (has_elevation) {
-        tilebuilder_local.edge_elevations().emplace_back(std::move(current_elevations[idx]));
-      }
 
       // Update any signs that use this idx - increment their index by the
       // number of added edges
@@ -206,17 +198,12 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
 
       // Add edge info to the tile and set the offset in the directed edge
       bool added = false;
-      uint32_t edge_info_offset = tilebuilder_local.AddEdgeInfo(0, conn.osm_node, endnode, conn.wayid,
-                                                                conn.shape, conn.names, 0, added);
+      uint32_t edge_info_offset =
+          tilebuilder_local.AddEdgeInfo(0, conn.osm_node, endnode, conn.wayid, 0, 0, 0, conn.shape,
+                                        conn.names, 0, added);
       directededge.set_edgeinfo_offset(edge_info_offset);
       directededge.set_forward(true);
       tilebuilder_local.directededges().emplace_back(std::move(directededge));
-
-      // Add edge elevation. TODO - should we associate elevation
-      // information to transit connection edges?
-      if (has_elevation) {
-        tilebuilder_local.edge_elevations().emplace_back(0.0f, 0.0f, 0.0f);
-      }
 
       LOG_DEBUG("Add conn from OSM to stop: ei offset = " + std::to_string(edge_info_offset));
 
@@ -328,8 +315,8 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
         std::list<PointLL> r_shape = conn.shape;
         std::reverse(r_shape.begin(), r_shape.end());
         uint32_t edge_info_offset =
-            tilebuilder_transit.AddEdgeInfo(0, origin_node, conn.osm_node, conn.wayid, r_shape,
-                                            conn.names, 0, added);
+            tilebuilder_transit.AddEdgeInfo(0, origin_node, conn.osm_node, conn.wayid, 0, 0, 0,
+                                            r_shape, conn.names, 0, added);
         LOG_DEBUG("Add conn from stop to OSM: ei offset = " + std::to_string(edge_info_offset));
         directededge.set_edgeinfo_offset(edge_info_offset);
         directededge.set_forward(true);
@@ -419,11 +406,12 @@ void FindOSMConnection(const PointLL& stop_ll,
     }
 
     // Use distance approximator for all distance checks
+    PointLL base_ll = newtile->header()->base_ll();
     DistanceApproximator approximator(stop_ll);
     for (uint32_t i = 0; i < newtile->header()->nodecount(); i++) {
       const NodeInfo* node = newtile->node(i);
       // Check if within radius
-      if (approximator.DistanceSquared(node->latlng()) < mr2) {
+      if (approximator.DistanceSquared(node->latlng(base_ll)) < mr2) {
         for (uint32_t j = 0, n = node->edge_count(); j < n; j++) {
           const DirectedEdge* directededge = newtile->directededge(node->edge_index() + j);
           auto edgeinfo = newtile->edgeinfo(directededge->edgeinfo_offset());
@@ -468,7 +456,7 @@ void AddOSMConnection(const GraphId& transit_stop_node,
                       std::mutex& lock,
                       std::vector<OSMConnectionEdge>& connection_edges) {
 
-  const PointLL& stop_ll = transit_node->latlng();
+  const PointLL& stop_ll = transit_node->latlng(tile->header()->base_ll());
   uint64_t wayid = transit_node->connecting_wayid();
 
   float mindist = 10000000.0f;

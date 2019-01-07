@@ -40,7 +40,6 @@ set(sources
     curler.cc
     datetime.cc
     directededge.cc
-    edge_elevation.cc
     edgeinfo.cc
     graphid.cc
     graphreader.cc
