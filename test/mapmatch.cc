@@ -491,7 +491,7 @@ void test_topk_frontage_alternate() {
            {"lat":52.0796213915245,"lon":5.139262676239015,"accuracy":10},
            {"lat":52.079637875461195,"lon":5.139581859111787,"accuracy":10},
            {"lat":52.07964776582031,"lon":5.139828622341157,"accuracy":10},
-           {"lat":52.07965600778458,"lon":5.1402121782302865,"accuracy":10}]})"));
+           {"lat":52.07985600778458,"lon":5.1404121782302865,"accuracy":10}]})"));
 
   /*** Primary path - use main road
     {"type":"FeatureCollection","features":[
