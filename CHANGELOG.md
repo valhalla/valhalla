@@ -5,6 +5,8 @@
    * FIXED: A bad bicycle route exposed an issue with bidirectional A* when the origin and destination edges are connected. Use A* in these cases to avoid requiring a high cost threshold in BD A*.
    * FIXED: x86 and x64 data compatibility was fixed as the structures weren't aligned.
    * FIXED: x86 tests were failing due mostly to floating point issues and the aforementioned structure misalignment.
+* **Enhancement**
+   * Add a durations list (delta time between each pair of trace points), a begin_time and a use_timestamp flag to trace_route requests. This allows using the input trace timestamps or durations plus the begin_time to compute elapsed time at each edge in the matched path (rather than using costing methods).
 * **Note**
    * Isochrones and openlr are both noted as not working with release builds for x86 (32bit) platforms. We'll look at getting this fixed in a future release
 

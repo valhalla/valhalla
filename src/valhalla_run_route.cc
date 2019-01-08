@@ -197,7 +197,7 @@ TripPath PathTest(GraphReader& reader,
                           reader);
     }
     std::vector<PathInfo> path;
-    bool ret = RouteMatcher::FormPath(mode_costing, mode, reader, trace,
+    bool ret = RouteMatcher::FormPath(mode_costing, mode, reader, trace, false,
                                       directions_options.locations(), path);
     if (ret) {
       LOG_INFO("RouteMatcher succeeded");
