@@ -261,7 +261,8 @@ ProcessStopPairs(GraphTileBuilder& transit_tilebuilder,
               // If there was an exception on the Friday 11th of January,
               // then we need an exception on the Saturday 12th of January instead
               days = shift_service_day(days);
-              dow_mask = ((dow_mask << 1) & kAllDaysOfWeek) | (dow_mask & kSaturday ? kSunday : kDOWNone);
+              dow_mask =
+                  ((dow_mask << 1) & kAllDaysOfWeek) | (dow_mask & kSaturday ? kSunday : kDOWNone);
 
               TransitSchedule sched(days, dow_mask, end_day);
               auto sched_itr = schedules.find(sched);
