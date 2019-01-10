@@ -53,13 +53,13 @@ void do_polyline_pair(const container_t& points, const std::string& encoded) {
 }
 
 void do_polyline_pair5(const container_t& points, const std::string& encoded) {
-  auto enc_answer = encode<container_t>(points, 5);
+  auto enc_answer = encode<container_t>(points, 1e5);
   if (enc_answer != encoded)
     throw std::runtime_error("Simple polyline encoding failed. Expected: " + encoded +
                              " Got: " + enc_answer);
 
   // Decode the answer, use a lower epsilon when comparing
-  auto dec_answer = decode<container_t>(enc_answer, 5);
+  auto dec_answer = decode<container_t>(enc_answer, 1e-5);
   if (!appx_equal(dec_answer, points, 0.00005f))
     throw std::runtime_error("Simple polyline decoding failed. Expected: " + to_string(points) +
                              " Got: " + to_string(dec_answer));
@@ -75,7 +75,7 @@ void do_varint_pair(const container_t& points) {
 
 void test_polyline5() {
   // check an easy case first just to be sure its working
-  auto encoded = encode<container_t>({{-76.3002, 40.0433}, {-76.3036, 40.043}}, 5);
+  auto encoded = encode<container_t>({{-76.3002, 40.0433}, {-76.3036, 40.043}}, 1e5);
   if (encoded != "s}ksFfkupMz@fT")
     throw std::runtime_error("Expected: s}ksFfkupMz@fT but got: " + encoded);
 

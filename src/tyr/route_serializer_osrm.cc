@@ -188,8 +188,8 @@ std::string full_shape(const std::list<valhalla::odin::TripDirections>& legs,
     decoded.insert(decoded.end(), decoded.size() ? decoded_leg.begin() + 1 : decoded_leg.begin(),
                    decoded_leg.end());
   }
-  int prec = directions_options.shape_format() == odin::polyline6 ? 6 : 5;
-  return midgard::encode(decoded, prec);
+  int precision = directions_options.shape_format() == odin::polyline6 ? 1e6 : 1e5;
+  return midgard::encode(decoded, precision);
 }
 
 // Serialize waypoints for optimized route. Note that OSRM retains the
@@ -712,8 +712,8 @@ std::string maneuver_geometry(const uint32_t begin_idx,
                               const valhalla::odin::DirectionsOptions& directions_options) {
   // Must add one to the end range since maneuver end shape index is exclusive
   std::vector<PointLL> maneuver_shape(shape.begin() + begin_idx, shape.begin() + end_idx + 1);
-  int prec = directions_options.shape_format() == odin::polyline6 ? 6 : 5;
-  return midgard::encode(maneuver_shape, prec);
+  int precision = directions_options.shape_format() == odin::polyline6 ? 1e6 : 1e5;
+  return midgard::encode(maneuver_shape, precision);
 }
 
 // Get the mode

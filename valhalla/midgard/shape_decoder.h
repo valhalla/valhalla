@@ -46,9 +46,8 @@ private:
 
 template <typename Point> class Shape5Decoder {
 public:
-  Shape5Decoder(const char* begin, const size_t size, const int precision = 6)
-      : begin(begin), end(begin + size) {
-    prec = precision == 5 ? 1e-5 : 1e-6;
+  Shape5Decoder(const char* begin, const size_t size, const double precision = 1e-6)
+      : begin(begin), end(begin + size), prec(precision) {
   }
   Point pop() noexcept(false) {
     lat = next(lat);
