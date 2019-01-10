@@ -21,28 +21,28 @@ void test_ll() {
   PointLL base_ll(-70.0f, 40.0f);
   NodeInfo n;
   PointLL node_ll = n.latlng(base_ll);
-  if (node_ll.lng() != -70.0f || node_ll.lat() != 40.0f)
+  if (!equal(node_ll.lng(), -70.0f) || !equal(node_ll.lat(), 40.0f))
     throw std::runtime_error("NodeInfo ll should be -70, 40");
 
   NodeInfo t;
   PointLL nodell0(-69.5f, 40.25f);
   t.set_latlng(base_ll, nodell0);
   node_ll = t.latlng(base_ll);
-  if (node_ll.lng() != nodell0.lng() || node_ll.lat() != nodell0.lat())
+  if (!equal(node_ll.lng(), nodell0.lng()) || !equal(node_ll.lat(), nodell0.lat()))
     throw std::runtime_error("NodeInfo ll should be -69.5, 40.25");
 
   // Test lon just outside tile bounds
   PointLL nodell1(-70.000005f, 40.25f);
   t.set_latlng(base_ll, nodell1);
   node_ll = t.latlng(base_ll);
-  if (node_ll.lng() != base_ll.lng() || node_ll.lat() != nodell1.lat())
+  if (!equal(node_ll.lng(), base_ll.lng()) || !equal(node_ll.lat(), nodell1.lat()))
     throw std::runtime_error("NodeInfo ll should be -70.0, 40.25");
 
   // Test lat just outside tile bounds
   PointLL nodell2(-69.5f, 39.999995f);
   t.set_latlng(base_ll, nodell2);
   node_ll = t.latlng(base_ll);
-  if (node_ll.lng() != nodell2.lng() || node_ll.lat() != base_ll.lat())
+  if (!equal(node_ll.lng(), nodell2.lng()) || !equal(node_ll.lat(), base_ll.lat()))
     throw std::runtime_error("NodeInfo ll should be -69.5, 40.0");
 }
 

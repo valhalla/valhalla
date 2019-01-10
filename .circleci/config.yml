@@ -148,6 +148,28 @@ jobs:
           paths:
             - ~/.ccache
 
+  build-release-x86:
+    docker:
+      - image: valhalla/docker:build-x86-3.0.0
+    steps:
+      - checkout
+      #- run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
+      - run: git submodule sync && git submodule update --init
+      - restore_cache:
+          keys:
+            - ccache
+      - run: npm install --ignore-scripts
+      - run: mkdir build
+      - run: |
+          cd build && cmake .. -DCMAKE_BUILD_TYPE=Release -DENABLE_NODE_BINDINGS=Off
+      - run: make -C build -j4
+      - run: make -C build -j4 tests
+      - run: make -C build -j2 check
+      - save_cache:
+          key: ccache
+          paths:
+            - ~/.ccache
+
   build-osx:
     macos:
       xcode: "9.2.0"
@@ -258,6 +280,7 @@ workflows:
       - lint
       - build-debug
       - build-release
+      - build-release-x86
       - build-osx
       - build-release-binary-osx:
           filters:

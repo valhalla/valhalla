@@ -197,7 +197,7 @@ TripPath PathTest(GraphReader& reader,
                           reader);
     }
     std::vector<PathInfo> path;
-    bool ret = RouteMatcher::FormPath(mode_costing, mode, reader, trace,
+    bool ret = RouteMatcher::FormPath(mode_costing, mode, reader, trace, false,
                                       directions_options.locations(), path);
     if (ret) {
       LOG_INFO("RouteMatcher succeeded");
@@ -604,11 +604,12 @@ int main(int argc, char* argv[]) {
                  ll1.Distance(ll2) < max_timedep_distance) {
         pathalgorithm = &timedep_reverse;
       } else {
-        // Use bidirectional except for possible trivial cases
+        // Use bidirectional except for trivial cases (same edge or connected edges)
         pathalgorithm = &bd;
         for (auto& edge1 : origin.path_edges()) {
           for (auto& edge2 : dest.path_edges()) {
-            if (edge1.graph_id() == edge2.graph_id()) {
+            if (edge1.graph_id() == edge2.graph_id() ||
+                reader.AreEdgesConnected(GraphId(edge1.graph_id()), GraphId(edge2.graph_id()))) {
               pathalgorithm = &astar;
             }
           }

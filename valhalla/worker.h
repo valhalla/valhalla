@@ -60,6 +60,7 @@ const std::unordered_map<unsigned, std::string>
                 {133, "Failed to parse avoid"},
                 {134, "Failed to parse shape"},
                 {135, "Failed to parse trace"},
+                {136, "durations size not compatible with trace size"},
 
                 {140, "Action does not support multimodal costing"},
                 {141, "Arrive by for multimodal not implemented yet"},
@@ -75,6 +76,7 @@ const std::unordered_map<unsigned, std::string>
                 {156, "Outside the valid walking distance between stops of a multimodal route"},
                 {157, "Exceeded max avoid locations"},
                 {158, "Input trace option is out of bounds"},
+                {159, "use_timestamps set with no timestamps present"},
 
                 {160, "Date and time required for origin for date_type of depart at"},
                 {161, "Date and time required for destination for date_type of arrive by"},

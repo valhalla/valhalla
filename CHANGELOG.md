@@ -1,3 +1,20 @@
+## Release Date: 201?-??-?? Valhalla 3.0.2
+* **Bug Fix**
+   * FIXED: Fix crash for trace_route with osrm serialization. Was passing shape rather than locations to the waypoint method.
+   * FIXED: Properly set driving_side based on data set in TripPath.
+   * FIXED: A bad bicycle route exposed an issue with bidirectional A* when the origin and destination edges are connected. Use A* in these cases to avoid requiring a high cost threshold in BD A*.
+   * FIXED: x86 and x64 data compatibility was fixed as the structures weren't aligned.
+   * FIXED: x86 tests were failing due mostly to floating point issues and the aforementioned structure misalignment.
+* **Enhancement**
+   * Add a durations list (delta time between each pair of trace points), a begin_time and a use_timestamp flag to trace_route requests. This allows using the input trace timestamps or durations plus the begin_time to compute elapsed time at each edge in the matched path (rather than using costing methods).
+* **Note**
+   * Isochrones and openlr are both noted as not working with release builds for x86 (32bit) platforms. We'll look at getting this fixed in a future release
+
+## Release Date: 2018-11-21 Valhalla 3.0.1
+* **Bug Fix**
+   * FIXED: Fixed a rare, but serious bug with bicycle costing. ferry_factor_ in bicycle costing shadowed the data member in the base dynamic cost class, leading to an unitialized variable. Occasionally, this would lead to negative costs which caused failures. [#1663](https://github.com/valhalla/valhalla/pull/1663)
+   * FIXED: Fixed use of units in OSRM compatibility mode. [#1662](https://github.com/valhalla/valhalla/pull/1662)
+
 ## Release Date: 2018-11-21 Valhalla 3.0.0
 * **NOTE**
    * This release changes the Valhalla graph tile formats. Tile data is incompatible with Valhalla 2.x builds, and code for 3.x is incompatible with data built for Valahalla 2.x versions. Valhalla tile sizes are slightly smaller (for datasets using elevation information the size savings is over 10%). In addition, there is increased flexibility for creating different variants of tiles to support different applications (e.g. bicycle only, or driving only).

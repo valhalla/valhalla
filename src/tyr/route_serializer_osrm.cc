@@ -824,7 +824,8 @@ json::ArrayPtr serialize_legs(const std::list<valhalla::odin::TripDirections>& l
       // Add mode, driving side, weight, distance, duration, name
       float distance = maneuver.length() * (imperial ? 1609.34f : 1000.0f);
       float duration = maneuver.time();
-      std::string drive_side("right"); // TODO - pass this through TPB or TripDirections
+      uint32_t idx = maneuver.begin_path_index();
+      std::string drive_side = (path_leg->node(idx).edge().drive_on_right()) ? "right" : "left";
 
       mode = get_mode(maneuver, path_leg);
       if (prev_mode.empty()) {
@@ -942,7 +943,7 @@ std::string serialize(const valhalla::odin::DirectionsOptions& directions_option
   json->emplace("code", status);
   switch (directions_options.action()) {
     case valhalla::odin::DirectionsOptions::trace_route:
-      json->emplace("tracepoints", osrm::waypoints(directions_options.shape(), true));
+      json->emplace("tracepoints", osrm::waypoints(directions_options.locations(), true));
       break;
     case valhalla::odin::DirectionsOptions::route:
       json->emplace("waypoints", osrm::waypoints(directions_options.locations()));

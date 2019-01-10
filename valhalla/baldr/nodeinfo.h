@@ -387,6 +387,7 @@ protected:
   uint64_t density_ : 4;        // Relative road density
   uint64_t traffic_signal_ : 1; // Traffic signal
   uint64_t mode_change_ : 1;    // Mode change allowed?
+  uint64_t spare1_ : 1;
 
   uint64_t transition_index_ : 21;   // Index into the node transitions to the first transition
                                      // (used to store transit stop index for transit level)

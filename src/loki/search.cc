@@ -443,6 +443,10 @@ struct bin_handler_t {
       for (uint32_t i = 0; reaches.back() < max_reach_limit && i < node->transition_count();
            ++i, ++trans) {
         const GraphTile* tile = reader.GetGraphTile(trans->endnode());
+        if (tile == nullptr) {
+          // Protect against missing tile
+          continue;
+        }
         const NodeInfo* n = tile->node(trans->endnode());
         if (!node_filter(n)) {
           // try to mark the node
