@@ -822,9 +822,9 @@ json::ArrayPtr serialize_legs(const std::list<valhalla::odin::TripDirections>& l
       // name change
 
       // Add geometry for this maneuver
-      step->emplace("geometry", maneuver_geometry(maneuver.begin_shape_index(),
-                                                  maneuver.end_shape_index(), shape,
-                                                  directions_options));
+      step->emplace("geometry",
+                    maneuver_geometry(maneuver.begin_shape_index(), maneuver.end_shape_index(), shape,
+                                      directions_options));
 
       // Add mode, driving side, weight, distance, duration, name
       float distance = maneuver.length() * (imperial ? 1609.34f : 1000.0f);
