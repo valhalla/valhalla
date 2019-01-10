@@ -82,6 +82,7 @@ const std::unordered_map<unsigned, std::string>
                 {161, "Date and time required for destination for date_type of arrive by"},
                 {162, "Date and time is invalid.  Format is YYYY-MM-DDTHH:MM"},
                 {163, "Invalid date_type"},
+                {164, "Invalid shape format"},
 
                 {170, "Locations are in unconnected regions. Go check/edit the map at osm.org"},
                 {171, "No suitable edges near location"},
