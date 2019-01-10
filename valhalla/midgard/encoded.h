@@ -16,8 +16,8 @@ template <class container_t, class ShapeDecoder = Shape5Decoder<typename contain
 typename std::enable_if<
     std::is_same<std::vector<typename container_t::value_type>, container_t>::value,
     container_t>::type
-decode(const char* encoded, size_t length) {
-  ShapeDecoder shape(encoded, length);
+decode(const char* encoded, size_t length, const int precision = 6) {
+  ShapeDecoder shape(encoded, length, precision);
   container_t c;
   c.reserve(length / 4);
   while (!shape.empty()) {
@@ -31,8 +31,8 @@ template <class container_t, class ShapeDecoder = Shape5Decoder<typename contain
 typename std::enable_if<
     !std::is_same<std::vector<typename container_t::value_type>, container_t>::value,
     container_t>::type
-decode(const char* encoded, size_t length) {
-  ShapeDecoder shape(encoded, length);
+decode(const char* encoded, size_t length, const int precision = 6) {
+  ShapeDecoder shape(encoded, length, precision);
   container_t c;
   while (!shape.empty()) {
     c.emplace_back(shape.pop());
@@ -47,12 +47,14 @@ decode(const char* encoded, size_t length) {
  * @return points   the container of points
  */
 template <class container_t, class ShapeDecoder = Shape5Decoder<typename container_t::value_type>>
-container_t decode(const std::string& encoded) {
-  return decode<container_t, ShapeDecoder>(encoded.c_str(), encoded.length());
+container_t decode(const std::string& encoded, const int precision = 6) {
+  return decode<container_t, ShapeDecoder>(encoded.c_str(), encoded.length(), precision);
 }
 
-template <class container_t> container_t decode7(const char* encoded, size_t length) {
-  return decode<container_t, Shape7Decoder<typename container_t::value_type>>(encoded, length);
+template <class container_t>
+container_t decode7(const char* encoded, size_t length, const int precision = 7) {
+  return decode<container_t, Shape7Decoder<typename container_t::value_type>>(encoded, length,
+                                                                              precision);
 }
 
 /**
