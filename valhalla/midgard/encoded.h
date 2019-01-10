@@ -71,9 +71,11 @@ template <class container_t> container_t decode7(const std::string& encoded) {
  * which allows displaying simplified versions of the encoded linestring
  *
  * @param points    the list of points to encode
+ * @param precision Precision of the encoded polyline. Defaults to 6 digit precision, but also
+ *                  supports 5. (TODO - are any others really needed?)
  * @return string   the encoded container of points
  */
-template <class container_t> std::string encode(const container_t& points) {
+template <class container_t> std::string encode(const container_t& points, const int precision = 6) {
   // a place to keep the output
   std::string output;
   // unless the shape is very course you should probably only need about 3 bytes
@@ -95,13 +97,16 @@ template <class container_t> std::string encode(const container_t& points) {
     output.push_back(static_cast<char>(number));
   };
 
+  // Set precision - only allows 5 or 6. If any other value we go back to the default (6).
+  int prec = (precision == 5) ? 1e5 : 1e6;
+
   // this is an offset encoding so we remember the last point we saw
   int last_lon = 0, last_lat = 0;
   // for each point
   for (const auto& p : points) {
     // shift the decimal point 5 places to the right and truncate
-    int lon = static_cast<int>(floor(static_cast<double>(p.first) * 1e6));
-    int lat = static_cast<int>(floor(static_cast<double>(p.second) * 1e6));
+    int lon = static_cast<int>(floor(static_cast<double>(p.first) * prec));
+    int lat = static_cast<int>(floor(static_cast<double>(p.second) * prec));
     // encode each coordinate, lat first for some reason
     serialize(lat - last_lat);
     serialize(lon - last_lon);

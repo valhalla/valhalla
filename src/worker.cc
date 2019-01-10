@@ -555,6 +555,21 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
     }
   }
 
+  // Set the output precision for shape/geometry (polyline encoding). Defaults to polyline6
+  // TODO - is this just for OSRM compatibility?
+  options.set_shape_format(odin::polyline6);
+  auto shape_format = rapidjson::get_optional<std::string>(doc, "/shape_format");
+  if (shape_format) {
+    if (*shape_format == "polyline6") {
+      options.set_shape_format(odin::polyline6);
+    } else if (*shape_format == "polyline5") {
+      options.set_shape_format(odin::polyline5);
+    } else {
+      ; // TODO - error or just ignore?
+    }
+  }
+
+
   // TODO: remove this?
   options.set_do_not_track(rapidjson::get_optional<bool>(doc, "/healthcheck").get_value_or(false));
 
