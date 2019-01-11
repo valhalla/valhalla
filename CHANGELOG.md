@@ -1,5 +1,6 @@
 ## Release Date: 201?-??-?? Valhalla 3.0.2
 * **Bug Fix**
+   * FIXED: valhalla_convert_transit segfault - GraphTileBuilder has null GraphTileHeader [#1683](https://github.com/valhalla/valhalla/issues/1683)
    * FIXED: Fix crash for trace_route with osrm serialization. Was passing shape rather than locations to the waypoint method.
    * FIXED: Properly set driving_side based on data set in TripPath.
    * FIXED: A bad bicycle route exposed an issue with bidirectional A* when the origin and destination edges are connected. Use A* in these cases to avoid requiring a high cost threshold in BD A*.
@@ -7,6 +8,7 @@
    * FIXED: x86 tests were failing due mostly to floating point issues and the aforementioned structure misalignment.
 * **Enhancement**
    * Add a durations list (delta time between each pair of trace points), a begin_time and a use_timestamp flag to trace_route requests. This allows using the input trace timestamps or durations plus the begin_time to compute elapsed time at each edge in the matched path (rather than using costing methods).
+   * Add support for polyline5 encoding for OSRM formatted output.
 * **Note**
    * Isochrones and openlr are both noted as not working with release builds for x86 (32bit) platforms. We'll look at getting this fixed in a future release
 

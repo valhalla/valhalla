@@ -95,7 +95,7 @@ const std::unordered_map<unsigned, unsigned> ERROR_TO_STATUS{
     {150, 400}, {151, 400}, {152, 400}, {153, 400}, {154, 400}, {155, 400}, {156, 400},
     {157, 400}, {158, 400}, {159, 400},
 
-    {160, 400}, {161, 400}, {162, 400}, {163, 400},
+    {160, 400}, {161, 400}, {162, 400}, {163, 400}, {164, 400},
 
     {170, 400}, {171, 400}, {172, 400},
 
@@ -197,6 +197,8 @@ const std::unordered_map<unsigned, std::string> OSRM_ERRORS_CODES{
     {162,
      R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
     {163,
+     R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
+    {164,
      R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
 
     {170,
@@ -552,6 +554,21 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
     }
     if (!has_time) {
       throw valhalla_exception_t{159};
+    }
+  }
+
+  // Set the output precision for shape/geometry (polyline encoding). Defaults to polyline6
+  // TODO - is this just for OSRM compatibility?
+  options.set_shape_format(odin::polyline6);
+  auto shape_format = rapidjson::get_optional<std::string>(doc, "/shape_format");
+  if (shape_format) {
+    if (*shape_format == "polyline6") {
+      options.set_shape_format(odin::polyline6);
+    } else if (*shape_format == "polyline5") {
+      options.set_shape_format(odin::polyline5);
+    } else {
+      // Throw an error if shape format is invalid
+      throw valhalla_exception_t{164};
     }
   }
 
