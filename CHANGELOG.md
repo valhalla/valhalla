@@ -1,5 +1,6 @@
 ## Release Date: 201?-??-?? Valhalla 3.0.2
 * **Bug Fix**
+   * FIXED: valhalla_convert_transit segfault - GraphTileBuilder has null GraphTileHeader [#1683](https://github.com/valhalla/valhalla/issues/1683)
    * FIXED: Fix crash for trace_route with osrm serialization. Was passing shape rather than locations to the waypoint method.
    * FIXED: Properly set driving_side based on data set in TripPath.
    * FIXED: A bad bicycle route exposed an issue with bidirectional A* when the origin and destination edges are connected. Use A* in these cases to avoid requiring a high cost threshold in BD A*.
