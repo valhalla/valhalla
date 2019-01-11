@@ -16,8 +16,8 @@ template <class container_t, class ShapeDecoder = Shape5Decoder<typename contain
 typename std::enable_if<
     std::is_same<std::vector<typename container_t::value_type>, container_t>::value,
     container_t>::type
-decode(const char* encoded, size_t length) {
-  ShapeDecoder shape(encoded, length);
+decode(const char* encoded, size_t length, const double precision = 1e-6) {
+  ShapeDecoder shape(encoded, length, precision);
   container_t c;
   c.reserve(length / 4);
   while (!shape.empty()) {
@@ -31,8 +31,8 @@ template <class container_t, class ShapeDecoder = Shape5Decoder<typename contain
 typename std::enable_if<
     !std::is_same<std::vector<typename container_t::value_type>, container_t>::value,
     container_t>::type
-decode(const char* encoded, size_t length) {
-  ShapeDecoder shape(encoded, length);
+decode(const char* encoded, size_t length, const double precision = 1e-6) {
+  ShapeDecoder shape(encoded, length, precision);
   container_t c;
   while (!shape.empty()) {
     c.emplace_back(shape.pop());
@@ -44,15 +44,18 @@ decode(const char* encoded, size_t length) {
  * Polyline decode a string into a container of points
  *
  * @param encoded    the encoded points
+ * @param precision  decoding precision (1/encoding precision)
  * @return points   the container of points
  */
 template <class container_t, class ShapeDecoder = Shape5Decoder<typename container_t::value_type>>
-container_t decode(const std::string& encoded) {
-  return decode<container_t, ShapeDecoder>(encoded.c_str(), encoded.length());
+container_t decode(const std::string& encoded, const double precision = 1e-6) {
+  return decode<container_t, ShapeDecoder>(encoded.c_str(), encoded.length(), precision);
 }
 
-template <class container_t> container_t decode7(const char* encoded, size_t length) {
-  return decode<container_t, Shape7Decoder<typename container_t::value_type>>(encoded, length);
+template <class container_t>
+container_t decode7(const char* encoded, size_t length, const double precision = 1e-7) {
+  return decode<container_t, Shape7Decoder<typename container_t::value_type>>(encoded, length,
+                                                                              precision);
 }
 
 /**
@@ -71,9 +74,11 @@ template <class container_t> container_t decode7(const std::string& encoded) {
  * which allows displaying simplified versions of the encoded linestring
  *
  * @param points    the list of points to encode
+ * @param precision Precision of the encoded polyline. Defaults to 6 digit precision.
  * @return string   the encoded container of points
  */
-template <class container_t> std::string encode(const container_t& points) {
+template <class container_t>
+std::string encode(const container_t& points, const int precision = 1e6) {
   // a place to keep the output
   std::string output;
   // unless the shape is very course you should probably only need about 3 bytes
@@ -100,8 +105,8 @@ template <class container_t> std::string encode(const container_t& points) {
   // for each point
   for (const auto& p : points) {
     // shift the decimal point 5 places to the right and truncate
-    int lon = static_cast<int>(floor(static_cast<double>(p.first) * 1e6));
-    int lat = static_cast<int>(floor(static_cast<double>(p.second) * 1e6));
+    int lon = static_cast<int>(floor(static_cast<double>(p.first) * precision));
+    int lat = static_cast<int>(floor(static_cast<double>(p.second) * precision));
     // encode each coordinate, lat first for some reason
     serialize(lat - last_lat);
     serialize(lon - last_lon);

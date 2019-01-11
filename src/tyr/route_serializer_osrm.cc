@@ -169,10 +169,10 @@ void route_summary(json::MapPtr& route,
 // Generate full shape of the route. TODO - different encodings, generalization
 std::string full_shape(const std::list<valhalla::odin::TripDirections>& legs,
                        const valhalla::odin::DirectionsOptions& directions_options) {
+  // TODO - support generalization
 
-  // TODO - support 5 digit encoding, support generalization
-
-  if (legs.size() == 1) {
+  // If just one leg and it we want polyline6 then we just return the encoded leg shape
+  if (legs.size() == 1 && directions_options.shape_format() == odin::polyline6) {
     return legs.front().shape();
   }
 
@@ -188,7 +188,8 @@ std::string full_shape(const std::list<valhalla::odin::TripDirections>& legs,
     decoded.insert(decoded.end(), decoded.size() ? decoded_leg.begin() + 1 : decoded_leg.begin(),
                    decoded_leg.end());
   }
-  return midgard::encode(decoded);
+  int precision = directions_options.shape_format() == odin::polyline6 ? 1e6 : 1e5;
+  return midgard::encode(decoded, precision);
 }
 
 // Serialize waypoints for optimized route. Note that OSRM retains the
@@ -707,10 +708,12 @@ json::MapPtr osrm_maneuver(const valhalla::odin::TripDirections::Maneuver& maneu
 // TODO - encoding options
 std::string maneuver_geometry(const uint32_t begin_idx,
                               const uint32_t end_idx,
-                              const std::vector<PointLL>& shape) {
+                              const std::vector<PointLL>& shape,
+                              const valhalla::odin::DirectionsOptions& directions_options) {
   // Must add one to the end range since maneuver end shape index is exclusive
   std::vector<PointLL> maneuver_shape(shape.begin() + begin_idx, shape.begin() + end_idx + 1);
-  return midgard::encode(maneuver_shape);
+  int precision = directions_options.shape_format() == odin::polyline6 ? 1e6 : 1e5;
+  return midgard::encode(maneuver_shape, precision);
 }
 
 // Get the mode
@@ -790,7 +793,8 @@ json::MapPtr annotations(std::list<odin::TripPath>::const_iterator path_leg) {
 // Serialize each leg
 json::ArrayPtr serialize_legs(const std::list<valhalla::odin::TripDirections>& legs,
                               const std::list<odin::TripPath>& path_legs,
-                              bool imperial) {
+                              bool imperial,
+                              const valhalla::odin::DirectionsOptions& directions_options) {
   auto output_legs = json::array({});
 
   // TODO: verify that path_legs is same size as legs
@@ -818,8 +822,9 @@ json::ArrayPtr serialize_legs(const std::list<valhalla::odin::TripDirections>& l
       // name change
 
       // Add geometry for this maneuver
-      step->emplace("geometry", maneuver_geometry(maneuver.begin_shape_index(),
-                                                  maneuver.end_shape_index(), shape));
+      step->emplace("geometry",
+                    maneuver_geometry(maneuver.begin_shape_index(), maneuver.end_shape_index(), shape,
+                                      directions_options));
 
       // Add mode, driving side, weight, distance, duration, name
       float distance = maneuver.length() * (imperial ? 1609.34f : 1000.0f);
@@ -972,7 +977,7 @@ std::string serialize(const valhalla::odin::DirectionsOptions& directions_option
     route_summary(route, legs, imperial);
 
     // Serialize route legs
-    route->emplace("legs", serialize_legs(legs, path_legs, imperial));
+    route->emplace("legs", serialize_legs(legs, path_legs, imperial, directions_options));
 
     routes->emplace_back(route);
   }
