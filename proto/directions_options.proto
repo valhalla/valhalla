@@ -25,6 +25,11 @@ enum DirectionsType {
   instructions = 2;
 }
 
+enum ShapeFormat {
+  polyline5 = 0;
+  polyline6 = 1;
+}
+
 enum Costing {
   auto_ = 0;
   auto_shorter = 1;
@@ -165,4 +170,5 @@ message DirectionsOptions {
   repeated uint64 avoid_edges = 35;                                       // Avoid edges for any costing - derived from avoid_locations
   optional float breakage_distance = 36;                                  // Map-matching breaking distance (distance between GPS trace points)
   optional bool use_timestamps = 37;                                      // Use timestamps to compute elapsed time for trace_route and trace_attributes
+  optional ShapeFormat shape_format = 38 [default = polyline6];           // Shape format (defaults to polyline6 encoding)
 }
