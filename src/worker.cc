@@ -1028,7 +1028,7 @@ void valhalla_request_t::parse(const http_request_t& request) {
     throw valhalla_exception_t{101};
   };
 
-  midgard::logging::Log("Request body = " + request.body);
+  LOG_INFO("Request body = " + request.body);
 
   auto& allocator = document.GetAllocator();
   // parse the input
