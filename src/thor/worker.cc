@@ -107,6 +107,7 @@ worker_t::result_t thor_worker_t::work(const std::list<zmq::message_t>& job,
     std::string request_str(static_cast<const char*>(job.front().data()), job.front().size());
     std::string serialized_options(static_cast<const char*>(job.back().data()), job.back().size());
     request.parse(request_str, serialized_options);
+    LOG_INFO("THOR_LOG= " + rapidjson::to_string(request.document));
 
     // Set the interrupt function
     service_worker_t::set_interrupt(interrupt_function);
