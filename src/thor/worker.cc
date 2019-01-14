@@ -107,7 +107,8 @@ worker_t::result_t thor_worker_t::work(const std::list<zmq::message_t>& job,
     std::string request_str(static_cast<const char*>(job.front().data()), job.front().size());
     std::string serialized_options(static_cast<const char*>(job.back().data()), job.back().size());
     request.parse(request_str, serialized_options);
-    LOG_INFO("THOR_LOG= " + rapidjson::to_string(request.document));
+    LOG_INFO("THOR_LOG_TOP|" + std::to_string(info.id) + "|" +
+             rapidjson::to_string(request.document) + "|");
 
     // Set the interrupt function
     service_worker_t::set_interrupt(interrupt_function);
@@ -165,6 +166,9 @@ worker_t::result_t thor_worker_t::work(const std::list<zmq::message_t>& job,
 
     double elapsed_time =
         std::chrono::duration<float, std::milli>(std::chrono::system_clock::now() - s).count();
+    LOG_INFO("THOR_LOG_BOT|" + std::to_string(info.id) +
+             "|request elapsed time (ms)=" + std::to_string(elapsed_time) + "|");
+
     if (!request.options.do_not_track() && elapsed_time / denominator > long_request) {
       LOG_WARN("thor::" + odin::DirectionsOptions_Action_Name(request.options.action()) +
                " request elapsed time (ms)::" + std::to_string(elapsed_time));
@@ -177,9 +181,11 @@ worker_t::result_t thor_worker_t::work(const std::list<zmq::message_t>& job,
 
     return result;
   } catch (const valhalla_exception_t& e) {
+    LOG_INFO("THOR_LOG_ERR1|" + std::to_string(info.id) + "|" + std::string(e.what()) + "|");
     valhalla::midgard::logging::Log("400::" + std::string(e.what()), " [ANALYTICS] ");
     return jsonify_error(e, info, request);
   } catch (const std::exception& e) {
+    LOG_INFO("THOR_LOG_ERR2|" + std::to_string(info.id) + "|" + std::string(e.what()) + "|");
     valhalla::midgard::logging::Log("400::" + std::string(e.what()), " [ANALYTICS] ");
     return jsonify_error({499, std::string(e.what())}, info, request);
   }
