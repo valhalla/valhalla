@@ -1,5 +1,6 @@
 ## Release Date: 201?-??-?? Valhalla 3.0.2
 * **Bug Fix**
+   * FIXED: Transit update - fix dow and exception when after midnight trips are normalized [#1682](https://github.com/valhalla/valhalla/pull/1682)
    * FIXED: valhalla_convert_transit segfault - GraphTileBuilder has null GraphTileHeader [#1683](https://github.com/valhalla/valhalla/issues/1683)
    * FIXED: Fix crash for trace_route with osrm serialization. Was passing shape rather than locations to the waypoint method.
    * FIXED: Properly set driving_side based on data set in TripPath.
