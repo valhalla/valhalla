@@ -124,27 +124,43 @@ endif()
 if(NOT Protobuf_FOUND)
   find_package(Protobuf REQUIRED)
 endif()
+
 # TODO: remove after switching to CMake >= 3.7
-if(NOT TARGET protobuf::libprotobuf-lite)
-  add_library(protobuf::libprotobuf-lite UNKNOWN IMPORTED)
-  set_target_properties(protobuf::libprotobuf-lite PROPERTIES
-    INTERFACE_INCLUDE_DIRECTORIES "${PROTOBUF_INCLUDE_DIR}")
-  if(EXISTS "${PROTOBUF_LIBRARY}")
+if(CMAKE_VERSION VERSION_LESS 3.7)
+  if(NOT TARGET protobuf::libprotobuf-lite)
+    add_library(protobuf::libprotobuf-lite UNKNOWN IMPORTED)
     set_target_properties(protobuf::libprotobuf-lite PROPERTIES
-      IMPORTED_LOCATION "${PROTOBUF_LIBRARY}")
+      INTERFACE_INCLUDE_DIRECTORIES "${PROTOBUF_INCLUDE_DIR}")
+
+    if(EXISTS "${PROTOBUF_LIBRARY}")
+      set_target_properties(protobuf::libprotobuf-lite PROPERTIES
+        IMPORTED_LOCATION "${PROTOBUF_LIBRARY}")
+    endif()
+    if(EXISTS "${PROTOBUF_LIBRARY_RELEASE}")
+      set_property(TARGET protobuf::libprotobuf-lite APPEND PROPERTY
+        IMPORTED_CONFIGURATIONS RELEASE)
+      set_target_properties(protobuf::libprotobuf-lite PROPERTIES
+        IMPORTED_LOCATION_RELEASE "${PROTOBUF_LIBRARY_RELEASE}")
+    endif()
+    if(EXISTS "${PROTOBUF_LIBRARY_DEBUG}")
+      set_property(TARGET protobuf::libprotobuf-lite APPEND PROPERTY
+        IMPORTED_CONFIGURATIONS DEBUG)
+      set_target_properties(protobuf::libprotobuf-lite PROPERTIES
+        IMPORTED_LOCATION_DEBUG "${PROTOBUF_LIBRARY_DEBUG}")
+    endif()
   endif()
-  if(EXISTS "${PROTOBUF_LIBRARY_RELEASE}")
-    set_property(TARGET protobuf::libprotobuf-lite APPEND PROPERTY
-      IMPORTED_CONFIGURATIONS RELEASE)
-    set_target_properties(protobuf::libprotobuf-lite PROPERTIES
-      IMPORTED_LOCATION_RELEASE "${PROTOBUF_LIBRARY_RELEASE}")
-  endif()
-  if(EXISTS "${PROTOBUF_LIBRARY_DEBUG}")
-    set_property(TARGET protobuf::libprotobuf-lite APPEND PROPERTY
-      IMPORTED_CONFIGURATIONS DEBUG)
-    set_target_properties(protobuf::libprotobuf-lite PROPERTIES
-      IMPORTED_LOCATION_DEBUG "${PROTOBUF_LIBRARY_DEBUG}")
-  endif()
+endif()
+
+# Allow linking against full or lite version of Protobuf library
+# TODO: After switching to CMake 3.12+, replace with
+#       $<TARGET_EXISTS:protobuf::libprotobuf
+#       $<TARGET_EXISTS:protobuf::libprotobuf-lite 
+if(TARGET protobuf::libprotobuf-lite)
+  set(valhalla_protobuf_targets protobuf::libprotobuf-lite)
+elseif(TARGET protobuf::libprotobuf)
+  set(valhalla_protobuf_targets protobuf::libprotobuf)
+else()
+  message(FATAL_ERROR "Required target protobuf::libprotobuf-lite or protobuf::libprotobuf is not defined")
 endif()
 
 add_library(libprime_server INTERFACE IMPORTED)

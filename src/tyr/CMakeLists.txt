@@ -26,4 +26,7 @@ valhalla_module(NAME tyr
   DEPENDS
     valhalla::loki
     valhalla::thor
-    valhalla::odin)
+    valhalla::odin
+    valhalla::proto
+    ${valhalla_protobuf_targets}
+    Boost::boost)
