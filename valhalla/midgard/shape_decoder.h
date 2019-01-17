@@ -8,7 +8,8 @@ namespace midgard {
 
 template <typename Point> class Shape7Decoder {
 public:
-  Shape7Decoder(const char* begin, const size_t size) : begin(begin), end(begin + size) {
+  Shape7Decoder(const char* begin, const size_t size, const int precision = 7)
+      : begin(begin), end(begin + size) {
   }
   Point pop() noexcept(false) {
     lat = next(lat);
@@ -45,13 +46,14 @@ private:
 
 template <typename Point> class Shape5Decoder {
 public:
-  Shape5Decoder(const char* begin, const size_t size) : begin(begin), end(begin + size) {
+  Shape5Decoder(const char* begin, const size_t size, const double precision = 1e-6)
+      : begin(begin), end(begin + size), prec(precision) {
   }
   Point pop() noexcept(false) {
     lat = next(lat);
     lon = next(lon);
-    return Point(typename Point::first_type(double(lon) * 1e-6),
-                 typename Point::second_type(double(lat) * 1e-6));
+    return Point(typename Point::first_type(double(lon) * prec),
+                 typename Point::second_type(double(lat) * prec));
   }
   bool empty() const {
     return begin == end;
@@ -62,6 +64,7 @@ private:
   const char* end;
   int32_t lat = 0;
   int32_t lon = 0;
+  double prec;
 
   int32_t next(const int32_t previous) noexcept(false) {
     // grab each 5 bits and mask it in where it belongs using the shift

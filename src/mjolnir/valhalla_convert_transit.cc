@@ -243,7 +243,6 @@ ProcessStopPairs(GraphTileBuilder& transit_tilebuilder,
           }
 
           // is this passed midnight?
-          // adjust the time if it is after midnight.
           // create a departure for before midnight and one after
           uint32_t origin_seconds = sp.origin_departure_time();
           if (origin_seconds >= kSecondsPerDay) {
@@ -256,6 +255,28 @@ ProcessStopPairs(GraphTileBuilder& transit_tilebuilder,
             departures.emplace(dep.orig_pbf_graphid, dep);
             while (origin_seconds >= kSecondsPerDay) {
               origin_seconds -= kSecondsPerDay;
+              // Then we need to fix the dow mask and dates
+              // The departure that was initially for every Friday   26h
+              // needs to be for                      every Saturday 02h
+              // If there was an exception on the Friday 11th of January,
+              // then we need an exception on the Saturday 12th of January instead
+              days = shift_service_day(days);
+              dow_mask =
+                  ((dow_mask << 1) & kAllDaysOfWeek) | (dow_mask & kSaturday ? kSunday : kDOWNone);
+
+              TransitSchedule sched(days, dow_mask, end_day);
+              auto sched_itr = schedules.find(sched);
+              if (sched_itr == schedules.end()) {
+                // Not in the map - add a new transit schedule to the tile
+                transit_tilebuilder.AddTransitSchedule(sched);
+
+                // Add to the map and increment the index
+                schedules[sched] = schedule_index;
+                dep.schedule_index = schedule_index;
+                schedule_index++;
+              } else {
+                dep.schedule_index = sched_itr->second;
+              }
             }
 
             dep.dep_time = origin_seconds;
@@ -540,7 +561,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
       }
 
       // Set the station lat,lon using the tile base LL
-      PointLL base_ll = tilebuilder_transit.header()->base_ll();
+      PointLL base_ll = tilebuilder_transit.header_builder().base_ll();
       NodeInfo station_node(base_ll, station_ll, RoadClass::kServiceOther, n_access,
                             NodeType::kTransitStation, false);
       station_node.set_stop_index(station_pbf_id.id());
@@ -607,7 +628,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
         }
 
         // Set the egress lat,lon using the tile base LL
-        PointLL base_ll = tilebuilder_transit.header()->base_ll();
+        PointLL base_ll = tilebuilder_transit.header_builder().base_ll();
         NodeInfo egress_node(base_ll, egress_ll, RoadClass::kServiceOther, n_access,
                              NodeType::kTransitEgress, false);
         egress_node.set_stop_index(index);
@@ -787,7 +808,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
     }
 
     // Set the platform lat,lon using the tile base LL
-    PointLL base_ll = tilebuilder_transit.header()->base_ll();
+    PointLL base_ll = tilebuilder_transit.header_builder().base_ll();
     NodeInfo platform_node(base_ll, platform_ll, RoadClass::kServiceOther, n_access,
                            NodeType::kMultiUseTransitPlatform, false);
     platform_node.set_mode_change(true);
