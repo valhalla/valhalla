@@ -1,4 +1,8 @@
-## Release Date: 201?-??-?? Valhalla 3.0.2
+## Release Date: 2019-??-?? Valhalla 3.0.3
+* **Bug Fix**
+   * FIXED: Fixed a rare loop condition in route matcher (edge walking to match a trace).
+
+## Release Date: 2019-01-14 Valhalla 3.0.2
 * **Bug Fix**
    * FIXED: valhalla_convert_transit segfault - GraphTileBuilder has null GraphTileHeader [#1683](https://github.com/valhalla/valhalla/issues/1683)
    * FIXED: Fix crash for trace_route with osrm serialization. Was passing shape rather than locations to the waypoint method.
