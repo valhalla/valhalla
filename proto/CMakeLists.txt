@@ -19,4 +19,4 @@ valhalla_module(NAME proto
     PUBLIC
       ${CMAKE_CURRENT_BINARY_DIR}
   DEPENDS
-    protobuf::libprotobuf-lite)
+    ${valhalla_protobuf_targets})

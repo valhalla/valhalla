@@ -22,4 +22,6 @@ valhalla_module(NAME sif
       ${VALHALLA_SOURCE_DIR}/third_party/rapidjson/include
   DEPENDS
     valhalla::baldr
-    valhalla::proto)
+    valhalla::proto
+    ${valhalla_protobuf_targets}
+    Boost::boost)

@@ -22,4 +22,6 @@ valhalla_module(NAME meili
       ${VALHALLA_SOURCE_DIR}/third_party/rapidjson/include
       ${CMAKE_BINARY_DIR}
   DEPENDS
-    valhalla::sif)
+    valhalla::sif
+    ${valhalla_protobuf_targets}
+    Boost::boost)
