@@ -78,6 +78,7 @@ end_node_t GetEndEdges(GraphReader& reader,
       GraphId opp_edge_id = reader.GetOpposingEdgeId(graphid);
       auto* tile = reader.GetGraphTile(opp_edge_id);
       if (tile == nullptr) {
+        LOG_INFO("THOR_LOG_MATCHER: Couldn't get the opposing edge tile");
         throw std::runtime_error("Couldn't get the opposing edge tile");
       }
       auto* opp_edge = tile->directededge(opp_edge_id);
@@ -88,6 +89,7 @@ end_node_t GetEndEdges(GraphReader& reader,
     }
   }
   if (end_nodes.size() == 0) {
+    LOG_INFO("THOR_LOG_MATCHER: No valid end edges are found");
     throw std::runtime_error("No valid end edges are found");
   }
   return end_nodes;
@@ -233,6 +235,11 @@ bool RouteMatcher::FormPath(const std::shared_ptr<DynamicCost>* mode_costing,
                             const bool use_timestamps,
                             const google::protobuf::RepeatedPtrField<odin::Location>& correlated,
                             std::vector<PathInfo>& path_infos) {
+  if (shape.size() < 2) {
+    LOG_INFO("THOR_LOG_MATCHER: invalid shape - less than 2 points");
+    throw std::runtime_error("Invalid shape - less than 2 points");
+  }
+
   // Form distances between shape points and accumulated distance from start to each shape point
   float total_distance = 0.0f;
   std::vector<std::pair<float, float>> distances;
@@ -268,10 +275,12 @@ bool RouteMatcher::FormPath(const std::shared_ptr<DynamicCost>* mode_costing,
     // Process and validate begin edge
     GraphId graphid(edge.graph_id());
     if (!graphid.Is_Valid()) {
+      LOG_INFO("THOR_LOG_MATCHER: Invalid begin edge id");
       throw std::runtime_error("Invalid begin edge id");
     }
     const GraphTile* begin_edge_tile = reader.GetGraphTile(graphid);
     if (begin_edge_tile == nullptr) {
+      LOG_INFO("THOR_LOG_MATCHER: Begin tile is null");
       throw std::runtime_error("Begin tile is null");
     }
 
@@ -279,6 +288,7 @@ bool RouteMatcher::FormPath(const std::shared_ptr<DynamicCost>* mode_costing,
     const DirectedEdge* de = begin_edge_tile->directededge(graphid);
     const GraphTile* end_node_tile = reader.GetGraphTile(de->endnode());
     if (begin_edge_tile == nullptr) {
+      LOG_INFO("THOR_LOG_MATCHER: End node tile is null");
       throw std::runtime_error("End node tile is null");
     }
     PointLL de_end_ll = end_node_tile->get_node_ll(de->endnode());
@@ -339,6 +349,7 @@ bool RouteMatcher::FormPath(const std::shared_ptr<DynamicCost>* mode_costing,
           GraphId end_edge_graphid(end_edge.graph_id());
           const GraphTile* end_edge_tile = reader.GetGraphTile(end_edge_graphid);
           if (end_edge_tile == nullptr) {
+            LOG_INFO("THOR_LOG_MATCHER: End edge tile is null");
             throw std::runtime_error("End edge tile is null");
           }
           const DirectedEdge* end_de = end_edge_tile->directededge(end_edge_graphid);
@@ -360,7 +371,7 @@ bool RouteMatcher::FormPath(const std::shared_ptr<DynamicCost>* mode_costing,
         } else {
           // Did not find an edge that correlates with the trace, return false.
           LOG_INFO("THOR_LOG_MATCHER: failed to match: index " + std::to_string(index) +
-               " trace size = " + std::to_string(shape.size()));
+                   " trace size = " + std::to_string(shape.size()));
           return false;
         }
       }
