@@ -248,7 +248,9 @@ bool RouteMatcher::FormPath(const std::shared_ptr<DynamicCost>* mode_costing,
   followed_edges_t followed_edges;
   followed_edges.resize(shape.size());
   for (auto& f : followed_edges) {
-    f.resize(TileHierarchy::get_max_level());
+    for (size_t i = 0; i < TileHierarchy::get_max_level(); ++i) {
+      f.emplace_back(0, 0);
+    }
   }
 
   // Process and validate end edges (can be more than 1). Create a map of
@@ -321,6 +323,7 @@ bool RouteMatcher::FormPath(const std::shared_ptr<DynamicCost>* mode_costing,
           // If node equals stop node then when are done expanding - get the matching end edge
           auto n = end_nodes.find(end_node);
           if (n == end_nodes.end()) {
+            LOG_INFO("THOR_LOG_MATCHER: failed to find end edge");
             return false;
           }
 
@@ -356,6 +359,8 @@ bool RouteMatcher::FormPath(const std::shared_ptr<DynamicCost>* mode_costing,
           return true;
         } else {
           // Did not find an edge that correlates with the trace, return false.
+          LOG_INFO("THOR_LOG_MATCHER: failed to match: index " + std::to_string(index) +
+               " trace size = " + std::to_string(shape.size()));
           return false;
         }
       }
@@ -384,6 +389,7 @@ bool RouteMatcher::FormPath(const std::shared_ptr<DynamicCost>* mode_costing,
   // TODO - would be nice to know this, but if map-matching fallback is specified
   // this would not fall back.
   //  throw std::runtime_error("RouteMatcher::FormPath could not match to begin edge");
+  LOG_INFO("THOR_LOG_MATCHER: failed to match begin edge");
   return false;
 }
 
