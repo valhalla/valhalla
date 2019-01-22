@@ -64,7 +64,7 @@ odin::TripPath thor_worker_t::trace_route(valhalla_request_t& request) {
       try {
         trip_path = route_match(request, controller);
         if (trip_path.node().size() == 0) {
-          LOG_INFO("THOR_LOG_MATCHER: trip path node size is 0");
+          LOG_INFO("THOR_LOG_MATCHER - trip path node size is 0");
           throw std::exception{};
         }
       } catch (...) {
