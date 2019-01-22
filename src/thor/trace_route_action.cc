@@ -48,6 +48,8 @@ namespace thor {
  */
 odin::TripPath thor_worker_t::trace_route(valhalla_request_t& request) {
 
+  LOG_INFO("THOR_LOG_MATCHER in trace_route");
+
   // Parse request
   parse_locations(request);
   parse_costing(request);
@@ -61,6 +63,7 @@ odin::TripPath thor_worker_t::trace_route(valhalla_request_t& request) {
     // If the exact points from a prior route that was run against the Valhalla road network,
     // then we can traverse the exact shape to form a path by using edge-walking algorithm
     case odin::ShapeMatch::edge_walk:
+      LOG_INFO("THOR_LOG_MATCHER edge walk case ");
       try {
         trip_path = route_match(request, controller);
         if (trip_path.node().size() == 0) {
@@ -123,7 +126,7 @@ odin::TripPath thor_worker_t::route_match(valhalla_request_t& request,
   std::vector<PathInfo> path_infos;
 
   // TODO - make sure the trace has timestamps..
-  bool use_timestamps = request.options.use_timestamps();
+  bool use_timestamps = request.options.has_use_timestamps() && request.options.use_timestamps();
   if (RouteMatcher::FormPath(mode_costing, mode, *reader, trace, use_timestamps,
                              request.options.locations(), path_infos)) {
     // Form the trip path based on mode costing, origin, destination, and path edges
