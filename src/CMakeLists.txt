@@ -49,6 +49,7 @@ function(valhalla_module)
   add_library(valhalla::${MODULE_NAME} ALIAS ${library})
   target_compile_definitions(${library}
     PUBLIC
+      $<$<BOOL:${MSVC}>:VC_EXTRALEAN;WIN32_LEAN_AND_MEAN;NOMINMAX;NOGDI>
       RAPIDJSON_HAS_STDSTRING
       HAS_REMOTE_API=0
       AUTO_DOWNLOAD=0
@@ -116,7 +117,7 @@ add_library(valhalla worker.cc ${CMAKE_CURRENT_BINARY_DIR}/valhalla/config.h ${v
 
 target_compile_definitions(valhalla
   PUBLIC
-    $<$<BOOL:${MSVC}>:"VC_EXTRALEAN;WIN32_LEAN_AND_MEAN;NOMINMAX;NOGDI">
+    $<$<BOOL:${MSVC}>:VC_EXTRALEAN;WIN32_LEAN_AND_MEAN;NOMINMAX;NOGDI>
     RAPIDJSON_HAS_STDSTRING  # this is a part of the workaround for OBJECT libraries,
                              # because ${libvalhalla_compile_definitions} must be private.
                              # To be removed with ${libvalhalla_compile_definitions} below
@@ -163,8 +164,10 @@ if(BUILD_SHARED_LIBS)
     DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/doc/libvalhalla0"
     COMPONENT shared)
 else()
-  add_custom_target(${LIBVALHALLA_SO_LINK} ALL
-    COMMAND ${CMAKE_COMMAND} -E create_symlink "${LIBVALHALLA_SO_LINK}.${VALHALLA_VERSION_MAJOR}" ${LIBVALHALLA_SO_LINK})
+  if(UNIX)
+    add_custom_target(${LIBVALHALLA_SO_LINK} ALL
+      COMMAND ${CMAKE_COMMAND} -E create_symlink "${LIBVALHALLA_SO_LINK}.${VALHALLA_VERSION_MAJOR}" ${LIBVALHALLA_SO_LINK})
+  endif()
 endif()
 
 install(FILES ${VALHALLA_SOURCE_DIR}/COPYING ${VALHALLA_SOURCE_DIR}/ChangeLog ${VALHALLA_SOURCE_DIR}/README.md
@@ -179,16 +182,18 @@ install(FILES ${valhalla_hdrs}
   DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/valhalla"
   COMPONENT development)
 
-## Configure libvalhalla.pc file with valhalla target linking options via PkgConfig linker
-set(CMAKE_PkgConfig_LINK_EXECUTABLE "<CMAKE_COMMAND> -DINPUT=${VALHALLA_SOURCE_DIR}/libvalhalla.pc.in -DOUTPUT=<TARGET> -DVERSION=${VERSION} -Dprefix=${CMAKE_INSTALL_PREFIX} -Dexec_prefix=${CMAKE_INSTALL_PREFIX} -Dlibdir=${CMAKE_INSTALL_LIBDIR} -Dincludedir=${CMAKE_INSTALL_INCLUDEDIR} -Ddeplibs=\"<FLAGS> <LINK_FLAGS> <LINK_LIBRARIES>\" -P ${CMAKE_SOURCE_DIR}/cmake/PkgConfig.cmake")
+if(PKG_CONFIG_FOUND)
+  ## Configure libvalhalla.pc file with valhalla target linking options via PkgConfig linker
+  set(CMAKE_PkgConfig_LINK_EXECUTABLE "<CMAKE_COMMAND> -DINPUT=${VALHALLA_SOURCE_DIR}/libvalhalla.pc.in -DOUTPUT=<TARGET> -DVERSION=${VERSION} -Dprefix=${CMAKE_INSTALL_PREFIX} -Dexec_prefix=${CMAKE_INSTALL_PREFIX} -Dlibdir=${CMAKE_INSTALL_LIBDIR} -Dincludedir=${CMAKE_INSTALL_INCLUDEDIR} -Ddeplibs=\"<FLAGS> <LINK_FLAGS> <LINK_LIBRARIES>\" -P ${CMAKE_SOURCE_DIR}/cmake/PkgConfig.cmake")
 
-add_executable(libvalhalla.pc EXCLUDE_FROM_ALL ../libvalhalla.pc.in)
-target_link_libraries(libvalhalla.pc valhalla)
-set_target_properties(libvalhalla.pc PROPERTIES LINKER_LANGUAGE PkgConfig)
-install(CODE "execute_process(COMMAND ${CMAKE_COMMAND} --build . --target libvalhalla.pc OUTPUT_QUIET ERROR_VARIABLE _err RESULT_VARIABLE _res)
-if(NOT \${_res} EQUAL 0)
-  message(FATAL_ERROR \"Configuring libvalhalla.pc failed: \${_err}\")
-endif()")
-install(FILES ${VALHALLA_BINARY_DIR}/libvalhalla.pc
-  DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig"
-  COMPONENT development)
+  add_executable(libvalhalla.pc EXCLUDE_FROM_ALL ../libvalhalla.pc.in)
+  target_link_libraries(libvalhalla.pc valhalla)
+  set_target_properties(libvalhalla.pc PROPERTIES LINKER_LANGUAGE PkgConfig)
+  install(CODE "execute_process(COMMAND ${CMAKE_COMMAND} --build . --target libvalhalla.pc OUTPUT_QUIET ERROR_VARIABLE _err RESULT_VARIABLE _res)
+  if(NOT \${_res} EQUAL 0)
+    message(FATAL_ERROR \"Configuring libvalhalla.pc failed: \${_err}\")
+  endif()")
+  install(FILES ${VALHALLA_BINARY_DIR}/libvalhalla.pc
+    DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig"
+    COMPONENT development)
+endif()

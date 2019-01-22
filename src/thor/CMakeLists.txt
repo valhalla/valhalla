@@ -37,4 +37,6 @@ valhalla_module(NAME thor
     valhalla::proto
     valhalla::sif
     valhalla::meili
+    ${valhalla_protobuf_targets}
+    Boost::boost
     libprime_server)
