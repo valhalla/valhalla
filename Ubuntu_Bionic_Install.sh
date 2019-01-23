@@ -16,7 +16,7 @@ sudo apt install -y libgeos-dev libgeos++-dev liblua5.2-dev libspatialite-dev li
 if [[ $(grep -cF bionic /etc/lsb-release) > 0 ]]; then sudo apt install -y libsqlite3-mod-spatialite; fi
 
 
-#if you plan to compile with python bindings, see beloNODEJS_INCLUDE_DIRSw for more info
+#if you plan to compile with python bindings, see below for more info
 
 sudo apt install -y python-all-dev
 
@@ -50,14 +50,7 @@ cd $HOME
 
 git clone https://github.com/kevinkreiser/prime_server.git
 
-# trusty didn't have czmq or newer zmq in the repositories so its repackaged here
-if [[ $(grep -cF trusty /etc/lsb-release) > 0 ]]; then
-  sudo add-apt-repository -y ppa:kevinkreiser/libsodium
-  sudo add-apt-repository -y ppa:kevinkreiser/libpgm
-  sudo add-apt-repository -y ppa:kevinkreiser/zeromq3
-  sudo add-apt-repository -y ppa:kevinkreiser/czmq
-  sudo apt update
-fi
+
 # grab some standard autotools stuff
 sudo apt install -y autoconf automake libtool make gcc g++ lcov 
 # grab curl (for url de/encode) and zmq for the awesomeness
