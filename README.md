@@ -23,9 +23,9 @@ Valhalla is an open source routing engine and accompanying libraries for use wit
 Build Status
 ------------
 
-| Linux | Code Coverage |
-| ----- | ------------- |
-| [![Circle CI](https://circleci.com/gh/valhalla/valhalla.svg?style=svg)](https://circleci.com/gh/valhalla/valhalla) | [![codecov](https://codecov.io/gh/valhalla/valhalla/branch/master/graph/badge.svg)](https://codecov.io/gh/valhalla/valhalla) |
+| Linux/MacOs | Windows | Code Coverage |
+| ----------- | ------- | ------------- |
+| [![Circle CI](https://circleci.com/gh/valhalla/valhalla.svg?style=svg)](https://circleci.com/gh/valhalla/valhalla) | [![Build status](https://ci.appveyor.com/api/projects/status/6w7emulgcjweu457?svg=true)](https://ci.appveyor.com/project/kevinkreiser/valhalla) | [![codecov](https://codecov.io/gh/valhalla/valhalla/branch/master/graph/badge.svg)](https://codecov.io/gh/valhalla/valhalla) |
 
 
 
