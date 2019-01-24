@@ -149,7 +149,7 @@ worker_t::result_t thor_worker_t::work(const std::list<zmq::message_t>& job,
       }
       case odin::DirectionsOptions::trace_route: {
         // Forward the original request
-        LOG_INFO("THOR_LOG_MATCHER trace_route in thor worker");
+        LOG_INFO("THOR_LOG_MATCHER| trace_route in thor worker");
         result.messages.emplace_back(std::move(request_str));
         auto trip_path = trace_route(request);
         result.messages.emplace_back(request.options.SerializeAsString());
