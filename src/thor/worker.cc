@@ -164,7 +164,6 @@ worker_t::result_t thor_worker_t::work(const std::list<zmq::message_t>& job,
 
     double elapsed_time =
         std::chrono::duration<float, std::milli>(std::chrono::system_clock::now() - s).count();
-
     if (!request.options.do_not_track() && elapsed_time / denominator > long_request) {
       LOG_WARN("thor::" + odin::DirectionsOptions_Action_Name(request.options.action()) +
                " request elapsed time (ms)::" + std::to_string(elapsed_time));
