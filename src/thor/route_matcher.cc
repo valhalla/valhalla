@@ -252,9 +252,7 @@ bool RouteMatcher::FormPath(const std::shared_ptr<DynamicCost>* mode_costing,
   followed_edges_t followed_edges;
   followed_edges.resize(shape.size());
   for (auto& f : followed_edges) {
-    for (size_t i = 0; i < TileHierarchy::get_max_level(); ++i) {
-      f.emplace_back(0, 0);
-    }
+    f.resize(TileHierarchy::get_max_level());
   }
 
   // Process and validate end edges (can be more than 1). Create a map of
