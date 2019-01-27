@@ -9,6 +9,9 @@ The easiest way to start an elevation service is to install Valhalla from PPA, d
 The following bash should be enough to make some get some elevation data and start a server using it:
 
 ```bash
+# Be sure that the parallel and curl dependencies are installed
+sudo apt-get install parallel
+sudo apt-get install curl
 # grab data for the whole world (it's about 1.6TB) or a smaller bounding box
 valhalla_build_elevation -180 180 -90 90 ./elevation_tiles $(nproc)
 #configure the server

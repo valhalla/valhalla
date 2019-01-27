@@ -16,6 +16,7 @@ include(GNUInstallDirs)
 set(VALHALLA_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 list(INSERT CMAKE_MODULE_PATH 0 ${VALHALLA_SOURCE_DIR}/cmake)
 
+set(CMAKE_CXX_STANDARD 11 CACHE STRING "C++ language version to use (default is 11)")
 option(ENABLE_TOOLS "Enable Valhalla tools" ON)
 option(ENABLE_DATA_TOOLS "Enable Valhalla data tools" ON)
 option(ENABLE_SERVICES "Enable Valhalla services" ON)
@@ -28,7 +29,6 @@ option(ENABLE_SANITIZER "Use memory sanitizer for Debug build" OFF)
 set(LOGGING_LEVEL "" CACHE STRING "Logging level, default is INFO")
 set_property(CACHE LOGGING_LEVEL PROPERTY STRINGS "NONE;ALL;ERROR;WARN;INFO;DEBUG;TRACE")
 
-set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 
