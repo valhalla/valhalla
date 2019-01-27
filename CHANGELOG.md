@@ -1,3 +1,7 @@
+## Release Date: 2019-??-?? Valhalla 3.0.3
+* **Bug Fix**
+   * FIXED: Fixed a rare loop condition in route matcher (edge walking to match a trace).
+
 ## Release Date: 2019-01-14 Valhalla 3.0.2
 * **Bug Fix**
    * FIXED: Transit update - fix dow and exception when after midnight trips are normalized [#1682](https://github.com/valhalla/valhalla/pull/1682)
