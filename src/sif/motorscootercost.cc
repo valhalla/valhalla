@@ -686,7 +686,7 @@ std::uniform_int_distribution<T>* make_int_distributor_from_range(const ranged_d
 void testMotorScooterCostParams() {
   constexpr unsigned testIterations = 250;
   constexpr unsigned seed = 0;
-  std::default_random_engine generator(seed);
+  std::mt19937 generator(seed);
   std::shared_ptr<std::uniform_real_distribution<float>> fDistributor;
   std::shared_ptr<std::uniform_int_distribution<uint32_t>> iDistributor;
   std::shared_ptr<TestMotorScooterCost> ctorTester;

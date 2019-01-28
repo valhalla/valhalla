@@ -301,7 +301,7 @@ void test_intersect_linestring() {
 
 void test_random_linestring() {
   Tiles<Point2> t(AABB2<Point2>{-10, -10, 10, 10}, 1, 5);
-  std::default_random_engine generator;
+  std::mt19937 generator;
   std::uniform_real_distribution<> distribution(-10, 10);
   for (int i = 0; i < 500; ++i) {
     std::vector<Point2> linestring;
@@ -457,7 +457,7 @@ void test_closest_first() {
     test_point(t, p);
 
   // try some randos
-  std::default_random_engine generator;
+  std::mt19937 generator;
   std::uniform_real_distribution<> distribution(0, 360);
   for (size_t i = 0; i < 25; ++i) {
     PointLL p{distribution(generator) - 180.f, distribution(generator) / 2 - 90.f};

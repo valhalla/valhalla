@@ -94,7 +94,7 @@ json::MapPtr to_feature(const std::pair<size_t, polygon_t>& boundary, const std:
 template <class T>
 std::string to_feature_collection(const std::unordered_map<size_t, polygon_t>& boundaries,
                                   const std::multimap<size_t, size_t, T>& arities) {
-  std::default_random_engine generator;
+  std::mt19937 generator;
   std::uniform_int_distribution<int> distribution(64, 192);
   auto features = json::array({});
   for (const auto& arity : arities) {

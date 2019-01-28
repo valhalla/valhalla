@@ -18,7 +18,7 @@ void TestRangedDefaultT() {
   constexpr float lower = -50;
   constexpr float upper = 70;
   constexpr unsigned seed = 0;
-  std::default_random_engine generator(seed);
+  std::mt19937 generator(seed);
   std::uniform_real_distribution<float> defaultDistributor(lower, upper);
   std::uniform_real_distribution<float> testDistributor(lower - 40, upper + 40);
 

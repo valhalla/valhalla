@@ -145,7 +145,7 @@ private:
 };
 
 unsigned SEED = std::chrono::system_clock::now().time_since_epoch().count();
-std::default_random_engine TRANSITION_COST_GENERATOR(SEED), EMISSION_COST_GENERATOR(SEED),
+std::mt19937 TRANSITION_COST_GENERATOR(SEED), EMISSION_COST_GENERATOR(SEED),
     COUNT_GENERATOR(SEED);
 
 Column generate_column(size_t num_states,
