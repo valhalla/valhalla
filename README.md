@@ -103,7 +103,7 @@ nvm use install 10 && nvm use 10 # must use node 8.11.1 and up because of N-API
 npm install --ignore-scripts
 ```
 
-For instructions on installing Valhalla on Ubuntu 18.0.4 see this [script](scripts/Ubuntu_Bionic_Install.sh).
+For instructions on installing Valhalla on Ubuntu 18.04.x see this [script](scripts/Ubuntu_Bionic_Install.sh).
 
 To install on macOS, you need to install its dependencies with [Homebrew](http://brew.sh):
 
