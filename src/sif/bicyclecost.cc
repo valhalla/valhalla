@@ -1017,7 +1017,7 @@ make_distributor_from_range(const ranged_default_t<float>& range) {
 void testBicycleCostParams() {
   constexpr unsigned testIterations = 250;
   constexpr unsigned seed = 0;
-  std::default_random_engine generator(seed);
+  std::mt19937 generator(seed);
   std::shared_ptr<std::uniform_real_distribution<float>> distributor;
   std::shared_ptr<TestBicycleCost> ctorTester;
 
