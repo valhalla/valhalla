@@ -1,4 +1,4 @@
-# Thor #
+# Thor
 
 Thor serves as a routing engine backed by tiled open source routing data. Thor is a companion to Sif which it relies heavily on to determine the appropriate graph traversal. The resulting path can be used as input for creating guidance/narrative. The name Thor was chosen as an acronym standing for: Tiled Hierarchical Open Routing and was the foundational idea around which the organization Valhalla and its Norse mythology theme was formed.
 
