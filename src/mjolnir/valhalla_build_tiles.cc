@@ -90,10 +90,21 @@ int main(int argc, char** argv) {
     valhalla::midgard::logging::Configure(logging_config);
   }
 
-  // build some tiles
+  // Default to running all stages
+  BuildStage start_stage = BuildStage::kParse;
+  BuildStage end_stage = BuildStage::kCleanup;
+
+  // Make sure start stage < end stage
+  if (start_stage > end_stage) {
+    std::cerr << "Starting build stage is after ending build stage in pipeline. "
+              << " Please revise options!" << std::endl;
+  }
+
+  // Build some tiles! Take out tile_extract and tile_url from property tree as tiles
+  // must only use the tile_dir
   pt.get_child("mjolnir").erase("tile_extract");
   pt.get_child("mjolnir").erase("tile_url");
-  build_tile_set(pt, input_files);
+  build_tile_set(pt, input_files, start_stage, end_stage);
 
   return EXIT_SUCCESS;
 }
