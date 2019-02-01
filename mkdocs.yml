@@ -24,7 +24,6 @@ nav:
     - Decoding shape: decoding.md
     - Tile structure: tiles.md
     - Speed information: speeds.md
-    - OSM connectivity map: connectivity.md
     - Dynamic costing: sif/dynamic-costing.md
     - Elevation influenced bicycle routing: sif/elevation_costing.md
     - elevation.md
