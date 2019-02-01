@@ -26,7 +26,7 @@ mkdir -p "$DATA_DIR"
 ```
 
 Search your city at
-[Mapzen metro extracts](https://mapzen.com/data/metro-extracts/) or
+[Interline OSM Extracts](https://www.interline.io/osm/extracts) or your country at
 [Geofabrik Downloads](http://download.geofabrik.de/index.html) and
 download the OSM data to the data directory. Here we take Berlin as
 example:
