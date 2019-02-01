@@ -25,6 +25,7 @@ nav:
     - Data sources: mjolnir/data_sources.md
     - Administrative data: mjolnir/admins.md
     - Attribution requirements: mjolnir/attribution.md
+  - Changelog: changelog.md
 theme: readthedocs
 markdown_extensions:
   - toc:
