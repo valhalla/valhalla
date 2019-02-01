@@ -1,8 +1,8 @@
 #include "mjolnir/hierarchybuilder.h"
 #include "mjolnir/graphtilebuilder.h"
 
-#include <boost/format.hpp>
 #include <boost/filesystem/operations.hpp>
+#include <boost/format.hpp>
 #include <boost/property_tree/ptree.hpp>
 
 #include <iostream>
@@ -340,7 +340,9 @@ void FormTilesInNewLevel(GraphReader& reader,
  * to new nodes (using a mapping in memory) and from new nodes to old nodes
  * using a sequence (file).
  */
-void CreateNodeAssociations(GraphReader& reader, const std::string& new_to_old_file, const std::string& old_to_new_file) {
+void CreateNodeAssociations(GraphReader& reader,
+                            const std::string& new_to_old_file,
+                            const std::string& old_to_new_file) {
   // Map of tiles vs. count of nodes. Used to construct new node Ids.
   std::unordered_map<GraphId, uint32_t> new_nodes;
 
