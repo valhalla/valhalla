@@ -1,4 +1,7 @@
+# https://www.mkdocs.org/user-guide/configuration/
+
 site_name: Valhalla
+repo_url: https://github.com/valhalla/valhalla/
 nav:
   - Introduction: valhalla-intro.md
   - Terminology: terminology.md
@@ -23,3 +26,6 @@ nav:
     - Administrative data: mjolnir/admins.md
     - Attribution requirements: mjolnir/attribution.md
 theme: readthedocs
+markdown_extensions:
+  - toc:
+      permalink: True
