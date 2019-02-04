@@ -61,4 +61,7 @@ scripts/gdal-2.0.0.tar.gz
 node_modules
 lib/binding/node_valhalla.node
 
+# documentation
+site/
+
 .DS_Store
