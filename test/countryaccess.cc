@@ -17,6 +17,7 @@
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
 #include "baldr/tilehierarchy.h"
+#include "filesystem.h"
 
 #if !defined(VALHALLA_SOURCE_DIR)
 #define VALHALLA_SOURCE_DIR
@@ -29,6 +30,13 @@ using namespace valhalla::baldr;
 namespace {
 
 const std::string config_file = "test/test_config_country";
+
+// Remove a temporary file if it exists
+void remove_temp_file(const std::string& fname) {
+  if (boost::filesystem::exists(fname)) {
+    boost::filesystem::remove(fname);
+  }
+}
 
 void write_config(const std::string& filename) {
   std::ofstream file;
@@ -79,19 +87,29 @@ void CountryAccess(const std::string& config_file) {
     }
   }
 
-  std::string ways_file = "test_ways_amsterdam.bin";
-  std::string way_nodes_file = "test_way_nodes_amsterdam.bin";
-  std::string access_file = "test_access_amsterdam.bin";
-  std::string from_restriction_file = "test_from_complex_restrictions_amsterdam.bin";
-  std::string to_restriction_file = "test_to_complex_restrictions_amsterdam.bin";
+  // Get the tile directory (make sure it ends with the preferred separator
+  std::string tile_dir = conf.get<std::string>("mjolnir.tile_dir");
+  if (tile_dir.back() != filesystem::path::preferred_separator) {
+    tile_dir.push_back(filesystem::path::preferred_separator);
+  }
 
-  auto osmdata =
-      PBFGraphParser::Parse(conf.get_child("mjolnir"),
-                            {VALHALLA_SOURCE_DIR "test/data/amsterdam.osm.pbf"}, ways_file,
-                            way_nodes_file, access_file, from_restriction_file, to_restriction_file);
+  // Set up the temporary (*.bin) files used during processing
+  std::string ways_file = tile_dir + "test_ways_amsterdam.bin";
+  std::string way_nodes_file = tile_dir + "test_way_nodes_amsterdam.bin";
+  std::string nodes_file = tile_dir + "test_nodes_amsterdam.bin";
+  std::string edges_file = tile_dir + "test_edges_amsterdam.bin";
+  std::string access_file = tile_dir + "test_access_amsterdam.bin";
+  std::string cr_from_file = tile_dir + "test_from_complex_restrictions_amsterdam.bin";
+  std::string cr_to_file = tile_dir + "test_to_complex_restrictions_amsterdam.bin";
+
+  // Parse Amsterdam OSM data
+  auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"),
+                                       {VALHALLA_SOURCE_DIR "test/data/amsterdam.osm.pbf"}, ways_file,
+                                       way_nodes_file, access_file, cr_from_file, cr_to_file);
+
   // Build the graph using the OSMNodes and OSMWays from the parser
-  GraphBuilder::Build(conf, osmdata, ways_file, way_nodes_file, from_restriction_file,
-                      to_restriction_file);
+  GraphBuilder::Build(conf, osmdata, ways_file, way_nodes_file, nodes_file, edges_file, cr_from_file,
+                      cr_to_file);
 
   // load a tile and test the default access.
   GraphId id(820099, 2, 0);
@@ -224,9 +242,14 @@ void CountryAccess(const std::string& config_file) {
     }
   }
 
-  boost::filesystem::remove(ways_file);
-  boost::filesystem::remove(way_nodes_file);
-  boost::filesystem::remove(access_file);
+  // Remove temporary files
+  remove_temp_file(ways_file);
+  remove_temp_file(way_nodes_file);
+  remove_temp_file(nodes_file);
+  remove_temp_file(edges_file);
+  remove_temp_file(access_file);
+  remove_temp_file(cr_from_file);
+  remove_temp_file(cr_to_file);
 }
 
 void TestCountryAccess() {

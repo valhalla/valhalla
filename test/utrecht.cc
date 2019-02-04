@@ -159,6 +159,8 @@ void TearDown() {
   boost::filesystem::remove(ways_file);
   boost::filesystem::remove(way_nodes_file);
   boost::filesystem::remove(access_file);
+  boost::filesystem::remove(from_restriction_file);
+  boost::filesystem::remove(to_restriction_file);
 }
 
 } // namespace

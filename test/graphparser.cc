@@ -180,6 +180,8 @@ void BollardsGatesAndAccess(const std::string& config_file) {
   boost::filesystem::remove(ways_file);
   boost::filesystem::remove(way_nodes_file);
   boost::filesystem::remove(access_file);
+  boost::filesystem::remove(from_restriction_file);
+  boost::filesystem::remove(to_restriction_file);
 }
 
 void RemovableBollards(const std::string& config_file) {
@@ -210,6 +212,8 @@ void RemovableBollards(const std::string& config_file) {
   boost::filesystem::remove(ways_file);
   boost::filesystem::remove(way_nodes_file);
   boost::filesystem::remove(access_file);
+  boost::filesystem::remove(from_restriction_file);
+  boost::filesystem::remove(to_restriction_file);
 }
 
 void Exits(const std::string& config_file) {
@@ -247,6 +251,8 @@ void Exits(const std::string& config_file) {
   boost::filesystem::remove(ways_file);
   boost::filesystem::remove(way_nodes_file);
   boost::filesystem::remove(access_file);
+  boost::filesystem::remove(from_restriction_file);
+  boost::filesystem::remove(to_restriction_file);
 }
 
 void Baltimore(const std::string& config_file) {
@@ -332,6 +338,8 @@ void Baltimore(const std::string& config_file) {
   boost::filesystem::remove(ways_file);
   boost::filesystem::remove(way_nodes_file);
   boost::filesystem::remove(access_file);
+  boost::filesystem::remove(from_restriction_file);
+  boost::filesystem::remove(to_restriction_file);
 }
 
 void Bike(const std::string& config_file) {
@@ -391,6 +399,8 @@ void Bike(const std::string& config_file) {
   boost::filesystem::remove(ways_file);
   boost::filesystem::remove(way_nodes_file);
   boost::filesystem::remove(access_file);
+  boost::filesystem::remove(from_restriction_file);
+  boost::filesystem::remove(to_restriction_file);
 }
 
 void Bus(const std::string& config_file) {
@@ -440,6 +450,8 @@ void Bus(const std::string& config_file) {
   boost::filesystem::remove(ways_file);
   boost::filesystem::remove(way_nodes_file);
   boost::filesystem::remove(access_file);
+  boost::filesystem::remove(from_restriction_file);
+  boost::filesystem::remove(to_restriction_file);
 }
 
 void BicycleTrafficSignals(const std::string& config_file) {
@@ -477,6 +489,8 @@ void BicycleTrafficSignals(const std::string& config_file) {
   boost::filesystem::remove(ways_file);
   boost::filesystem::remove(way_nodes_file);
   boost::filesystem::remove(access_file);
+  boost::filesystem::remove(from_restriction_file);
+  boost::filesystem::remove(to_restriction_file);
 }
 
 void DoConfig() {

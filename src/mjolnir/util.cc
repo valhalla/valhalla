@@ -121,7 +121,7 @@ bool shapes_match(const std::vector<PointLL>& shape1, const std::vector<PointLL>
   }
 }
 
-// Remvoe a temporary file if it exists
+// Remove a temporary file if it exists
 void remove_temp_file(const std::string& fname) {
   if (boost::filesystem::exists(fname)) {
     boost::filesystem::remove(fname);
