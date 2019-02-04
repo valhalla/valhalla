@@ -21,7 +21,8 @@ namespace bpo = boost::program_options;
 // List the build stages
 void list_stages() {
   std::cout << "Build stage strings (in order)" << std::endl;
-  for (int i = static_cast<int>(BuildStage::kParse); i <= static_cast<int>(BuildStage::kCleanup); ++i) {
+  for (int i = static_cast<int>(BuildStage::kParse); i <= static_cast<int>(BuildStage::kCleanup);
+       ++i) {
     std::cout << "    " << to_string(static_cast<BuildStage>(i)) << std::endl;
   }
 }
@@ -45,9 +46,12 @@ int main(int argc, char** argv) {
       "Path to the json configuration file.")("inline-config,i",
                                               boost::program_options::value<std::string>(
                                                   &inline_config),
-                                              "Inline json config.")
-      ("start,s", boost::program_options::value<std::string>(&start_stage_str),"Starting stage of the build pipeline")
-      ("end,e", boost::program_options::value<std::string>(&end_stage_str),"End stage of the build pipeline")
+                                              "Inline json config.")(
+      "start,s", boost::program_options::value<std::string>(&start_stage_str),
+      "Starting stage of the build pipeline")("end,e",
+                                              boost::program_options::value<std::string>(
+                                                  &end_stage_str),
+                                              "End stage of the build pipeline")
 
       // positional arguments
       ("input_files",
