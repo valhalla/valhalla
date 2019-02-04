@@ -332,12 +332,6 @@ void trivial_path_no_uturns(const std::string& config_file) {
     }
   }
 
-  // Get the tile directory (make sure it ends with the preferred separator
-  std::string tile_dir = conf.get<std::string>("mjolnir.tile_dir");
-  if (tile_dir.back() != filesystem::path::preferred_separator) {
-    tile_dir.push_back(filesystem::path::preferred_separator);
-  }
-
   // Set up the temporary (*.bin) files used during processing
   std::string ways_file = "test_ways_trivial.bin";
   std::string way_nodes_file = "test_way_nodes_trivial.bin";
