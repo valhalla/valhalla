@@ -94,13 +94,13 @@ void CountryAccess(const std::string& config_file) {
   }
 
   // Set up the temporary (*.bin) files used during processing
-  std::string ways_file = tile_dir + "test_ways_amsterdam.bin";
-  std::string way_nodes_file = tile_dir + "test_way_nodes_amsterdam.bin";
-  std::string nodes_file = tile_dir + "test_nodes_amsterdam.bin";
-  std::string edges_file = tile_dir + "test_edges_amsterdam.bin";
-  std::string access_file = tile_dir + "test_access_amsterdam.bin";
-  std::string cr_from_file = tile_dir + "test_from_cr_amsterdam.bin";
-  std::string cr_to_file = tile_dir + "test_to_cr_amsterdam.bin";
+  std::string ways_file = "test_ways_amsterdam.bin";
+  std::string way_nodes_file = "test_way_nodes_amsterdam.bin";
+  std::string nodes_file = "test_nodes_amsterdam.bin";
+  std::string edges_file = "test_edges_amsterdam.bin";
+  std::string access_file = "test_access_amsterdam.bin";
+  std::string cr_from_file = "test_from_cr_amsterdam.bin";
+  std::string cr_to_file = "test_to_cr_amsterdam.bin";
 
   // Parse Amsterdam OSM data
   auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"),
