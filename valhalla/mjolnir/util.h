@@ -24,7 +24,8 @@ enum class BuildStage : uint8_t {
   kShortcuts = 6,
   kRestrictions = 7,
   kValidate = 8,
-  kCleanup = 9
+  kCleanup = 9,
+  kInvalid = 200
 };
 
 // Convert string to BuildStage
@@ -36,7 +37,8 @@ inline BuildStage string_to_buildstage(const std::string& s) {
        {"shortcuts", BuildStage::kShortcuts}, {"restrictions", BuildStage::kRestrictions},
        {"validate", BuildStage::kValidate},   {"cleanup", BuildStage::kCleanup}};
 
-  return stringToBuildStage.find(s)->second;
+  auto i = stringToBuildStage.find(s);
+  return (i == stringToBuildStage.cend()) ? BuildStage::kInvalid : i->second;
 }
 
 // Convert BuildStage to string
