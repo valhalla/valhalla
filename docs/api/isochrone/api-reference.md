@@ -8,10 +8,6 @@ This is an example of isochrones showing the travel times by driving from a loca
 
 ![Isochrones for travel times by walking in Lancaster, PA](/images/isochrone.png)
 
-## Using the hosted Mapbox Isochrone Service
-
-The Mapbox isochrone service requires an access token. In a request, you must append your own access_token to the request URL, following access_token=. See the [Mapbox API documentation](https://www.mapbox.com/api-documentation/#access-tokens) for more on access tokens. Contact Mapbox for instructions on accessing this API.
-
 ## Inputs of the Isochrone service
 
 An isochrone request run locally takes the form of `localhost:8002/isochrone?json={}`, where the JSON inputs inside the `{}` includes an array of at least one location and options for the [route costing model](/turn-by-turn/api-reference/#costing-models).

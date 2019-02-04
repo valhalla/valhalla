@@ -1,4 +1,4 @@
-# Valhalla Routing
+# Overview of how routes are computed
 This document provides a brief overview of Valhalla route computation.
 
 

@@ -46,7 +46,8 @@ spatialite $tz_file "DROP TABLE IF EXISTS "alias";" || error_exit "drop table al
 spatialite $tz_file "CREATE TABLE "alias" (alias_TZID text,alias_new_TZID text);" || error_exit "create table alias failed"
 spatialite -csv $tz_file ".import alias_tz.csv alias" || error_exit "alias table import failed"
 spatialite $tz_file "update tz_world set TZID = (select alias_new_TZID from alias where TZID = alias_TZID) where TZID in (select alias_TZID from alias);" || error_exit "updating tz_world failed"
-spatialite $tz_file "VACUUM ANALYZE;" || error_exit "VACUUM ANALYZE failed"
+spatialite $tz_file "VACUUM;" || error_exit "VACUUM failed"
+spatialite $tz_file "ANALYZE;" || error_exit "ANALYZE failed"
 
 rm -rf dist
 rm -f ./timezones-with-oceans.shapefile.zip

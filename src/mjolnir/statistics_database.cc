@@ -94,7 +94,7 @@ void statistics::build_db(const boost::property_tree::ptree& pt) {
     return;
   }
 
-  sql = "VACUUM ANALYZE";
+  sql = "VACUUM";
   ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
   if (ret != SQLITE_OK) {
     LOG_ERROR("Error: " + std::string(err_msg));
@@ -102,6 +102,16 @@ void statistics::build_db(const boost::property_tree::ptree& pt) {
     sqlite3_close(db_handle);
     return;
   }
+
+  sql = "ANALYZE";
+  ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
+  if (ret != SQLITE_OK) {
+    LOG_ERROR("Error: " + std::string(err_msg));
+    sqlite3_free(err_msg);
+    sqlite3_close(db_handle);
+    return;
+  }
+
   sqlite3_close(db_handle);
   LOG_INFO("Statistics database saved to statistics.sqlite");
 }

@@ -6,10 +6,6 @@ Valhalla's locate service, is an open-source service that provides detailed info
 
 The default logic for the OpenStreetMap tags, keys, and values used when routing are documented on an [OSM wiki page](http://wiki.openstreetmap.org/wiki/OSM_tags_for_routing/Valhalla).
 
-## Using the hosted Mapbox Locate Service
-
-The Mapbox locate service requires an access token. In a request, you must append your own access_token to the request URL, following access_token=. See the [Mapbox API documentation](https://www.mapbox.com/api-documentation/#access-tokens) for more on access tokens. Contact Mapbox for instructions on accessing this API.
-
 ## Inputs of a locate request
 
 The locate request run locally takes the form of `localhost:8002/locate?json={}`, where the JSON inputs inside the `{}` include location information, name and options for the costing model, and output options. Here is the JSON payload for an example request:
