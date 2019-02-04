@@ -1631,17 +1631,13 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt,
 
   // we need to sort the from complex restrictions so that we can easily find them.
   LOG_INFO("Sorting complex restrictions by from id...");
-  {
-    sequence<OSMRestriction> complex_restrictions(complex_restriction_from_file, false);
-    complex_restrictions.sort([](const OSMRestriction& a, const OSMRestriction& b) { return a < b; });
-  }
+  sequence<OSMRestriction> complex_restrictions_from(complex_restriction_from_file, false);
+  complex_restrictions_from.sort([](const OSMRestriction& a, const OSMRestriction& b) { return a < b; });
 
   // we need to sort the to complex restrictions so that we can easily find them.
   LOG_INFO("Sorting complex restrictions by to id...");
-  {
-    sequence<OSMRestriction> complex_restrictions(complex_restriction_to_file, false);
-    complex_restrictions.sort([](const OSMRestriction& a, const OSMRestriction& b) { return a < b; });
-  }
+  sequence<OSMRestriction> complex_restrictions_to(complex_restriction_to_file, false);
+  complex_restrictions_to.sort([](const OSMRestriction& a, const OSMRestriction& b) { return a < b; });
 
   // we need to sort the refs so that we can easily (sequentially) update them
   // during node processing, we use memory mapping here because otherwise we aren't
