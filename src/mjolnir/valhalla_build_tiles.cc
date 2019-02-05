@@ -18,10 +18,21 @@ using namespace valhalla::mjolnir;
 
 namespace bpo = boost::program_options;
 
+// List the build stages
+void list_stages() {
+  std::cout << "Build stage strings (in order)" << std::endl;
+  for (int i = static_cast<int>(BuildStage::kParse); i <= static_cast<int>(BuildStage::kCleanup);
+       ++i) {
+    std::cout << "    " << to_string(static_cast<BuildStage>(i)) << std::endl;
+  }
+}
+
 int main(int argc, char** argv) {
   // Program options
   boost::filesystem::path config_file_path;
   std::string inline_config;
+  std::string start_stage_str = "parse";
+  std::string end_stage_str = "cleanup";
   std::vector<std::string> input_files;
   bpo::options_description options(
       "valhalla_build_tiles " VALHALLA_VERSION "\n\n"
@@ -35,7 +46,13 @@ int main(int argc, char** argv) {
       "Path to the json configuration file.")("inline-config,i",
                                               boost::program_options::value<std::string>(
                                                   &inline_config),
-                                              "Inline json config.")
+                                              "Inline json config.")(
+      "start,s", boost::program_options::value<std::string>(&start_stage_str),
+      "Starting stage of the build pipeline")("end,e",
+                                              boost::program_options::value<std::string>(
+                                                  &end_stage_str),
+                                              "End stage of the build pipeline")
+
       // positional arguments
       ("input_files",
        boost::program_options::value<std::vector<std::string>>(&input_files)->multitoken());
@@ -56,6 +73,7 @@ int main(int argc, char** argv) {
   // Print out help or version and return
   if (vm.count("help")) {
     std::cout << options << "\n";
+    list_stages();
     return EXIT_SUCCESS;
   }
   if (vm.count("version")) {
@@ -90,10 +108,33 @@ int main(int argc, char** argv) {
     valhalla::midgard::logging::Configure(logging_config);
   }
 
-  // build some tiles
+  // Convert stage strings to BuildStage
+  BuildStage start_stage = string_to_buildstage(start_stage_str);
+  if (start_stage == BuildStage::kInvalid) {
+    std::cerr << "Invalid start stage" << std::endl;
+    list_stages();
+    return EXIT_FAILURE;
+  }
+  BuildStage end_stage = string_to_buildstage(end_stage_str);
+  if (end_stage == BuildStage::kInvalid) {
+    std::cerr << "Invalid end stage" << std::endl;
+    list_stages();
+    return EXIT_FAILURE;
+  }
+
+  // Make sure start stage < end stage
+  if (static_cast<int>(start_stage) > static_cast<int>(end_stage)) {
+    std::cerr << "Starting build stage is after ending build stage in pipeline. "
+              << " Please revise options!" << std::endl;
+    list_stages();
+    return EXIT_FAILURE;
+  }
+
+  // Build some tiles! Take out tile_extract and tile_url from property tree as tiles
+  // must only use the tile_dir
   pt.get_child("mjolnir").erase("tile_extract");
   pt.get_child("mjolnir").erase("tile_url");
-  build_tile_set(pt, input_files);
+  build_tile_set(pt, input_files, start_stage, end_stage);
 
   return EXIT_SUCCESS;
 }

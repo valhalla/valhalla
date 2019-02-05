@@ -2,9 +2,12 @@
 #include "mjolnir/graphtilebuilder.h"
 
 #include <boost/filesystem/operations.hpp>
+#include <boost/format.hpp>
 #include <boost/property_tree/ptree.hpp>
+
 #include <iostream>
 #include <map>
+#include <ostream>
 #include <sstream>
 #include <string>
 #include <utility>
@@ -16,24 +19,15 @@
 #include "baldr/graphtile.h"
 #include "baldr/tilehierarchy.h"
 #include "filesystem.h"
-#include "midgard/encoded.h"
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
 #include "midgard/sequence.h"
-
-#include <boost/format.hpp>
-#include <ostream>
-#include <set>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 using namespace valhalla::mjolnir;
 
 namespace {
-
-// Sequence file names (named as bin so it gets cleaned up/removed when done)
-std::string new_to_old_file = std::string("new_nodes_to_old_nodes.bin");
-std::string old_to_new_file = std::string("old_nodes_to_new_nodes.bin");
 
 // Structure to associate old nodes to new nodes. Stored in a sequence so
 // this can work on lower memory computers. Note that an original node can
@@ -75,7 +69,7 @@ bool AddUpwardTransition(const GraphId& node, GraphTileBuilder* tilebuilder) {
   }
 }
 
-void SortSequences() {
+void SortSequences(const std::string& new_to_old_file, const std::string& old_to_new_file) {
   // Sort the new nodes. Sort so highway level is first
   sequence<std::pair<GraphId, GraphId>> new_to_old(new_to_old_file, false);
   new_to_old.sort([](const std::pair<GraphId, GraphId>& a, const std::pair<GraphId, GraphId>& b) {
@@ -109,7 +103,9 @@ OldToNewNodes find_nodes(sequence<OldToNewNodes>& old_to_new, const GraphId& nod
 }
 
 // Form tiles in the new level.
-void FormTilesInNewLevel(GraphReader& reader) {
+void FormTilesInNewLevel(GraphReader& reader,
+                         const std::string& new_to_old_file,
+                         const std::string& old_to_new_file) {
   // Use the sequence that associate new nodes to old nodes
   sequence<std::pair<GraphId, GraphId>> new_to_old(new_to_old_file, false);
 
@@ -344,7 +340,9 @@ void FormTilesInNewLevel(GraphReader& reader) {
  * to new nodes (using a mapping in memory) and from new nodes to old nodes
  * using a sequence (file).
  */
-void CreateNodeAssociations(GraphReader& reader) {
+void CreateNodeAssociations(GraphReader& reader,
+                            const std::string& new_to_old_file,
+                            const std::string& old_to_new_file) {
   // Map of tiles vs. count of nodes. Used to construct new node Ids.
   std::unordered_map<GraphId, uint32_t> new_nodes;
 
@@ -453,7 +451,7 @@ void CreateNodeAssociations(GraphReader& reader) {
 /**
  * Update end nodes of transit connection directed edges.
  */
-void UpdateTransitConnections(GraphReader& reader) {
+void UpdateTransitConnections(GraphReader& reader, const std::string& old_to_new_file) {
   // Use the sorted sequence that associates old nodes to new nodes
   sequence<OldToNewNodes> old_to_new(old_to_new_file, false);
 
@@ -509,7 +507,7 @@ void UpdateTransitConnections(GraphReader& reader) {
 
 // Remove any base tiles that no longer have any data (nodes and edges
 // only exist on arterial and highway levels)
-void RemoveUnusedLocalTiles(const std::string& tile_dir) {
+void RemoveUnusedLocalTiles(const std::string& tile_dir, const std::string& old_to_new_file) {
   // Iterate through the node association sequence
   std::unordered_map<GraphId, bool> tile_map;
   sequence<OldToNewNodes> old_to_new(old_to_new_file, false);
@@ -543,7 +541,9 @@ namespace mjolnir {
 // Build successive levels of the hierarchy, starting at the local
 // base level. Each successive level of the hierarchy is based on
 // and connected to the next.
-void HierarchyBuilder::Build(const boost::property_tree::ptree& pt) {
+void HierarchyBuilder::Build(const boost::property_tree::ptree& pt,
+                             const std::string& new_to_old_file,
+                             const std::string& old_to_new_file) {
 
   // TODO: thread this. Might be more possible now that we don't create
   // shortcuts in the HierarchyBuilder
@@ -553,25 +553,25 @@ void HierarchyBuilder::Build(const boost::property_tree::ptree& pt) {
   GraphReader reader(pt.get_child("mjolnir"));
 
   // Association of old nodes to new nodes
-  CreateNodeAssociations(reader);
+  CreateNodeAssociations(reader, new_to_old_file, old_to_new_file);
 
   // Sort the sequences
-  SortSequences();
+  SortSequences(new_to_old_file, old_to_new_file);
 
   // Iterate through the hierarchy (from highway down to local) and build
   // new tiles
-  FormTilesInNewLevel(reader);
+  FormTilesInNewLevel(reader, new_to_old_file, old_to_new_file);
 
   // Remove any base tiles that no longer have any data (nodes and edges
   // only exist on arterial and highway levels)
-  RemoveUnusedLocalTiles(reader.tile_dir());
+  RemoveUnusedLocalTiles(reader.tile_dir(), old_to_new_file);
 
   // Update the end nodes to all transit connections in the transit hierarchy
   auto hierarchy_properties = pt.get_child("mjolnir");
   auto transit_dir = hierarchy_properties.get_optional<std::string>("transit_dir");
   if (transit_dir && boost::filesystem::exists(*transit_dir) &&
       boost::filesystem::is_directory(*transit_dir)) {
-    UpdateTransitConnections(reader);
+    UpdateTransitConnections(reader, old_to_new_file);
   }
 
   LOG_INFO("Done HierarchyBuilder");

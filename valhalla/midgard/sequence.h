@@ -262,7 +262,7 @@ public:
 
     // crack open the file
     if (!*file) {
-      throw std::runtime_error(file_name + ": " + strerror(errno));
+      throw std::runtime_error("sequence: " + file_name + ": " + strerror(errno));
     }
     auto end = file->tellg();
     auto element_count = static_cast<std::streamoff>(std::ceil(end / sizeof(T)));

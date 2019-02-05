@@ -15,10 +15,6 @@
 #include <valhalla/mjolnir/osmway.h>
 #include <valhalla/mjolnir/uniquenames.h>
 
-#include <boost/multi_index/hashed_index.hpp>
-#include <boost/multi_index/member.hpp>
-#include <boost/multi_index_container.hpp>
-
 namespace valhalla {
 namespace mjolnir {
 
@@ -61,14 +57,16 @@ struct OSMWayNode {
 /**
  * Simple container for OSM data.
  * Populated by the PBF parser and sent into GraphBuilder.
+ *
  */
 struct OSMData {
-  size_t osm_node_count;     // Count of osm nodes
-  size_t osm_way_count;      // Count of osm ways
-  size_t osm_way_node_count; // Count of osm nodes on osm ways
-  size_t intersection_count; // Count of intersection nodes
-  size_t node_count;         // Count of all nodes
-  size_t edge_count;         // Estimated count of edges
+  uint64_t max_changeset_id_; // The largest/newest changeset id encountered when parsing OSM data
+  size_t osm_node_count;      // Count of osm nodes
+  size_t osm_way_count;       // Count of osm ways
+  size_t osm_way_node_count;  // Count of osm nodes on osm ways
+  size_t intersection_count;  // Count of intersection nodes
+  size_t node_count;          // Count of all nodes
+  size_t edge_count;          // Estimated count of edges
 
   // Stores simple restrictions. Indexed by the from way Id
   RestrictionsMultiMap restrictions;
@@ -117,9 +115,6 @@ struct OSMData {
 
   // Vector of admins.
   std::vector<OSMAdmin> admins_;
-
-  // The largest/newest changeset id encountered when parsing OSM data
-  uint64_t max_changeset_id_;
 };
 
 } // namespace mjolnir

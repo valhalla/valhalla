@@ -27,6 +27,8 @@ public:
    * @param  osmdata                        OSM data used to build the graph.
    * @param  ways_file                      where to store the ways so they are not in memory
    * @param  way_nodes_file                 where to store the nodes so they are not in memory
+   * @param  nodes_file                     where to store node information so it isn't in memory
+   * @param  edges_file                     where to store edge information so it isn't in memory
    * @param  complex_from_restriction_file  where to store the from complex restrictions so they are
    * not in memory
    * @param  complex_to_restriction_file    where to store the to complex restrictions so they are not
@@ -36,6 +38,8 @@ public:
                     const OSMData& osmdata,
                     const std::string& ways_file,
                     const std::string& way_nodes_file,
+                    const std::string& nodes_file,
+                    const std::string& edges_file,
                     const std::string& complex_from_restriction_file,
                     const std::string& complex_to_restriction_file);
 

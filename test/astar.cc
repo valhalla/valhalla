@@ -1,12 +1,13 @@
 #include "test.h"
 #include <cstdint>
-
-#include <valhalla/baldr/rapidjson_utils.h>
+#include <fstream>
 
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
 #include "baldr/location.h"
+#include "baldr/rapidjson_utils.h"
 #include "baldr/tilehierarchy.h"
+#include "filesystem.h"
 #include "loki/search.h"
 #include "midgard/pointll.h"
 #include "midgard/vector2.h"
@@ -27,11 +28,9 @@
 #include <valhalla/proto/tripdirections.pb.h>
 #include <valhalla/proto/trippath.pb.h>
 
-#include "baldr/rapidjson_utils.h"
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
 #include <boost/property_tree/ptree.hpp>
-#include <fstream>
 
 #if !defined(VALHALLA_SOURCE_DIR)
 #define VALHALLA_SOURCE_DIR
@@ -333,20 +332,25 @@ void trivial_path_no_uturns(const std::string& config_file) {
     }
   }
 
+  // Set up the temporary (*.bin) files used during processing
   std::string ways_file = "test_ways_trivial.bin";
   std::string way_nodes_file = "test_way_nodes_trivial.bin";
+  std::string nodes_file = "test_nodes_trivial.bin";
+  std::string edges_file = "test_edges_trivial.bin";
   std::string access_file = "test_access_trivial.bin";
-  std::string from_restriction_file = "test_from_complex_restrictions_trivial.bin";
-  std::string to_restriction_file = "test_to_complex_restrictions_trivial.bin";
+  std::string cr_from_file = "test_from_complex_restrictions_trivial.bin";
+  std::string cr_to_file = "test_to_complex_restrictions_trivial.bin";
 
+  // Parse Utrecht OSM data
   auto osmdata =
       vj::PBFGraphParser::Parse(conf.get_child("mjolnir"),
                                 {VALHALLA_SOURCE_DIR "test/data/utrecht_netherlands.osm.pbf"},
-                                ways_file, way_nodes_file, access_file, from_restriction_file,
-                                to_restriction_file);
+                                ways_file, way_nodes_file, access_file, cr_from_file, cr_to_file);
+
   // Build the graph using the OSMNodes and OSMWays from the parser
-  vj::GraphBuilder::Build(conf, osmdata, ways_file, way_nodes_file, from_restriction_file,
-                          to_restriction_file);
+  vj::GraphBuilder::Build(conf, osmdata, ways_file, way_nodes_file, nodes_file, edges_file,
+                          cr_from_file, cr_to_file);
+
   // Enhance the local level of the graph. This adds information to the local
   // level that is usable across all levels (density, administrative
   // information (and country based attribution), edge transition logic, etc.
@@ -405,7 +409,11 @@ void trivial_path_no_uturns(const std::string& config_file) {
 
   boost::filesystem::remove(ways_file);
   boost::filesystem::remove(way_nodes_file);
+  boost::filesystem::remove(nodes_file);
+  boost::filesystem::remove(edges_file);
   boost::filesystem::remove(access_file);
+  boost::filesystem::remove(cr_from_file);
+  boost::filesystem::remove(cr_to_file);
 }
 
 void TestTrivialPathNoUturns() {

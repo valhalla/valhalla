@@ -1109,10 +1109,10 @@ void GraphBuilder::Build(const boost::property_tree::ptree& pt,
                          const OSMData& osmdata,
                          const std::string& ways_file,
                          const std::string& way_nodes_file,
+                         const std::string& nodes_file,
+                         const std::string& edges_file,
                          const std::string& complex_from_restriction_file,
                          const std::string& complex_to_restriction_file) {
-  std::string nodes_file = "nodes.bin";
-  std::string edges_file = "edges.bin";
   std::string tile_dir = pt.get<std::string>("mjolnir.tile_dir");
   unsigned int threads =
       std::max(static_cast<unsigned int>(1),

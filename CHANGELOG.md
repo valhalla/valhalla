@@ -2,6 +2,8 @@
 * **Bug Fix**
    * FIXED: Fixed a rare loop condition in route matcher (edge walking to match a trace).
    * FIXED: Fixed VACUUM ANALYZE syntax issue.  [#1704](https://github.com/valhalla/valhalla/pull/1704)
+* **Enhancement**
+   * Add the ability to run valhalla_build_tiles in stages. Specify the begin_stage and end_stage as command line options. Also cleans up temporary files as the last stage in the pipeline.
 
 ## Release Date: 2019-01-14 Valhalla 3.0.2
 * **Bug Fix**
