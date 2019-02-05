@@ -22,8 +22,7 @@
 #include <boost/filesystem/operations.hpp>
 #include <boost/property_tree/ptree.hpp>
 
-namespace valhalla {
-namespace mjolnir {
+namespace {
 
 // Temporary files used during tile building
 const std::string ways_file = "ways.bin";
@@ -35,6 +34,11 @@ const std::string cr_from_file = "complex_from_restrictions.bin";
 const std::string cr_to_file = "complex_to_restrictions.bin";
 const std::string new_to_old_file = "new_nodes_to_old_nodes.bin";
 const std::string old_to_new_file = "old_nodes_to_new_nodes.bin";
+
+} // namespace
+
+namespace valhalla {
+namespace mjolnir {
 
 /**
  * Splits a tag into a vector of strings.  Delim defaults to ;
@@ -121,17 +125,16 @@ bool shapes_match(const std::vector<PointLL>& shape1, const std::vector<PointLL>
   }
 }
 
-// Remove a temporary file if it exists
-void remove_temp_file(const std::string& fname) {
-  if (boost::filesystem::exists(fname)) {
-    boost::filesystem::remove(fname);
-  }
-}
-
 void build_tile_set(const boost::property_tree::ptree& config,
                     const std::vector<std::string>& input_files,
                     const BuildStage start_stage,
                     const BuildStage end_stage) {
+  auto remove_temp_file = [](const std::string& fname) {
+    if (boost::filesystem::exists(fname)) {
+      boost::filesystem::remove(fname);
+    }
+  };
+
   // cannot allow this when building tiles
   if (config.get_child("mjolnir").get_optional<std::string>("tile_extract")) {
     throw std::runtime_error("Tiles cannot be directly built into a tar extract");

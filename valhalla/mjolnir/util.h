@@ -14,7 +14,8 @@ namespace mjolnir {
 
 // NOTE - for now parse and build must be run at the same time!
 // Stages of the Valhalla tile building pipeline
-enum class BuildStage : uint8_t {
+enum class BuildStage : int8_t {
+  kInvalid = -1,
   kParse = 0,
   kBuild = 1,
   kEnhance = 2,
@@ -24,8 +25,7 @@ enum class BuildStage : uint8_t {
   kShortcuts = 6,
   kRestrictions = 7,
   kValidate = 8,
-  kCleanup = 9,
-  kInvalid = 200
+  kCleanup = 9
 };
 
 // Convert string to BuildStage
@@ -44,18 +44,18 @@ inline BuildStage string_to_buildstage(const std::string& s) {
 // Convert BuildStage to string
 inline std::string to_string(BuildStage stg) {
   static const std::unordered_map<uint8_t, std::string> BuildStageStrings =
-      {{static_cast<uint8_t>(BuildStage::kParse), "parse"},
-       {static_cast<uint8_t>(BuildStage::kBuild), "build"},
-       {static_cast<uint8_t>(BuildStage::kEnhance), "enhance"},
-       {static_cast<uint8_t>(BuildStage::kFilter), "filter"},
-       {static_cast<uint8_t>(BuildStage::kTransit), "transit"},
-       {static_cast<uint8_t>(BuildStage::kHierarchy), "hierarchy"},
-       {static_cast<uint8_t>(BuildStage::kShortcuts), "shortcuts"},
-       {static_cast<uint8_t>(BuildStage::kRestrictions), "restrictions"},
-       {static_cast<uint8_t>(BuildStage::kValidate), "validate"},
-       {static_cast<uint8_t>(BuildStage::kCleanup), "cleanup"}};
+      {{static_cast<int8_t>(BuildStage::kParse), "parse"},
+       {static_cast<int8_t>(BuildStage::kBuild), "build"},
+       {static_cast<int8_t>(BuildStage::kEnhance), "enhance"},
+       {static_cast<int8_t>(BuildStage::kFilter), "filter"},
+       {static_cast<int8_t>(BuildStage::kTransit), "transit"},
+       {static_cast<int8_t>(BuildStage::kHierarchy), "hierarchy"},
+       {static_cast<int8_t>(BuildStage::kShortcuts), "shortcuts"},
+       {static_cast<int8_t>(BuildStage::kRestrictions), "restrictions"},
+       {static_cast<int8_t>(BuildStage::kValidate), "validate"},
+       {static_cast<int8_t>(BuildStage::kCleanup), "cleanup"}};
 
-  auto i = BuildStageStrings.find(static_cast<uint8_t>(stg));
+  auto i = BuildStageStrings.find(static_cast<int8_t>(stg));
   return (i == BuildStageStrings.cend()) ? "null" : i->second;
 }
 
