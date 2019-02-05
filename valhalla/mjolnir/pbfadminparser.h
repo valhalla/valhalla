@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 
-#include <valhalla/mjolnir/osmdata.h>
+#include <valhalla/mjolnir/osmadmindata.h>
 
 namespace valhalla {
 namespace mjolnir {
@@ -19,8 +19,8 @@ public:
   /**
    * Loads given input files
    */
-  static OSMData Parse(const boost::property_tree::ptree& pt,
-                       const std::vector<std::string>& input_files);
+  static OSMAdminData Parse(const boost::property_tree::ptree& pt,
+                            const std::vector<std::string>& input_files);
 };
 
 } // namespace mjolnir
