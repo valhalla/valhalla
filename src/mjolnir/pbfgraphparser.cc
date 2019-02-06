@@ -116,21 +116,24 @@ public:
         n.set_backward_signal(tag.second == "true" ? true : false);
       } else if (is_highway_junction && (tag.first == "exit_to")) {
         bool hasTag = (tag.second.length() ? true : false);
-        n.set_exit_to(hasTag);
         if (hasTag) {
-          osmdata_.node_exit_to[osmid] = tag.second;
+          // Add the name to the unique names list and store its index in the OSM node
+          n.set_exit_to_index(osmdata_.name_offset_map.index(tag.second));
+          ++osmdata_.node_exit_to_count;
         }
       } else if (is_highway_junction && (tag.first == "ref")) {
         bool hasTag = (tag.second.length() ? true : false);
-        n.set_ref(hasTag);
         if (hasTag) {
-          osmdata_.node_ref[osmid] = tag.second;
+          // Add the name to the unique names list and store its index in the OSM node
+          n.set_ref_index(osmdata_.name_offset_map.index(tag.second));
+          ++osmdata_.node_ref_count;
         }
       } else if (is_highway_junction && (tag.first == "name")) {
         bool hasTag = (tag.second.length() ? true : false);
-        n.set_name(hasTag);
         if (hasTag) {
-          osmdata_.node_name[osmid] = tag.second;
+          // Add the name to the unique names list and store its index in the OSM node
+          n.set_name_index(osmdata_.name_offset_map.index(tag.second));
+          ++osmdata_.node_name_count;
         }
       } else if (tag.first == "gate") {
         if (tag.second == "true") {
@@ -165,7 +168,7 @@ public:
           n.set_type(NodeType::kBorderControl);
         }
       } else if (tag.first == "access_mask") {
-        n.set_access_mask(std::stoi(tag.second));
+        n.set_access(std::stoi(tag.second));
       }
 
       /* TODO: payment type.
@@ -744,9 +747,9 @@ public:
       }
 
       else if (tag.first == "ref" && !tag.second.empty()) {
-        w.set_ref_index(osmdata_.ref_offset_map.index(tag.second));
+        w.set_ref_index(osmdata_.name_offset_map.index(tag.second));
       } else if (tag.first == "int_ref" && !tag.second.empty()) {
-        w.set_int_ref_index(osmdata_.ref_offset_map.index(tag.second));
+        w.set_int_ref_index(osmdata_.name_offset_map.index(tag.second));
 
       } else if (tag.first == "sac_scale") {
         std::string value = tag.second;
@@ -923,11 +926,11 @@ public:
       } else if (tag.first == "bike_network_mask") {
         w.set_bike_network(std::stoi(tag.second));
       } else if (tag.first == "bike_national_ref" && !tag.second.empty()) {
-        w.set_bike_national_ref_index(osmdata_.ref_offset_map.index(tag.second));
+        w.set_bike_national_ref_index(osmdata_.name_offset_map.index(tag.second));
       } else if (tag.first == "bike_regional_ref" && !tag.second.empty()) {
-        w.set_bike_regional_ref_index(osmdata_.ref_offset_map.index(tag.second));
+        w.set_bike_regional_ref_index(osmdata_.name_offset_map.index(tag.second));
       } else if (tag.first == "bike_local_ref" && !tag.second.empty()) {
-        w.set_bike_local_ref_index(osmdata_.ref_offset_map.index(tag.second));
+        w.set_bike_local_ref_index(osmdata_.name_offset_map.index(tag.second));
 
       } else if (tag.first == "destination" && !tag.second.empty()) {
         w.set_destination_index(osmdata_.name_offset_map.index(tag.second));
@@ -939,10 +942,10 @@ public:
         w.set_destination_backward_index(osmdata_.name_offset_map.index(tag.second));
         w.set_exit(true);
       } else if (tag.first == "destination:ref" && !tag.second.empty()) {
-        w.set_destination_ref_index(osmdata_.ref_offset_map.index(tag.second));
+        w.set_destination_ref_index(osmdata_.name_offset_map.index(tag.second));
         w.set_exit(true);
       } else if (tag.first == "destination:ref:to" && !tag.second.empty()) {
-        w.set_destination_ref_to_index(osmdata_.ref_offset_map.index(tag.second));
+        w.set_destination_ref_to_index(osmdata_.name_offset_map.index(tag.second));
         w.set_exit(true);
       } else if (tag.first == "destination:street" && !tag.second.empty()) {
         w.set_destination_street_index(osmdata_.name_offset_map.index(tag.second));
@@ -951,14 +954,14 @@ public:
         w.set_destination_street_to_index(osmdata_.name_offset_map.index(tag.second));
         w.set_exit(true);
       } else if (tag.first == "junction:ref" && !tag.second.empty()) {
-        w.set_junction_ref_index(osmdata_.ref_offset_map.index(tag.second));
+        w.set_junction_ref_index(osmdata_.name_offset_map.index(tag.second));
         w.set_exit(true);
       } else if (tag.first == "turn:lanes" || tag.first == "turn:lanes:forward") {
         // Turn lanes in the forward direction
-        w.set_fwd_turn_lanes_index(osmdata_.fwd_turn_lanes_map.index(tag.second));
+        w.set_fwd_turn_lanes_index(osmdata_.name_offset_map.index(tag.second));
       } else if (tag.first == "turn:lanes:backward") {
         // Turn lanes in the reverse direction
-        w.set_bwd_turn_lanes_index(osmdata_.bwd_turn_lanes_map.index(tag.second));
+        w.set_bwd_turn_lanes_index(osmdata_.name_offset_map.index(tag.second));
       }
     }
 
@@ -1055,7 +1058,7 @@ public:
     // Delete the name from from name field if it exists in the ref.
     if (!name.empty() && w.ref_index()) {
       std::vector<std::string> names = GetTagTokens(name);
-      std::vector<std::string> refs = GetTagTokens(osmdata_.ref_offset_map.name(w.ref_index()));
+      std::vector<std::string> refs = GetTagTokens(osmdata_.name_offset_map.name(w.ref_index()));
       bool bFound = false;
 
       std::string tmp;
@@ -1250,7 +1253,7 @@ public:
     if (isBicycle && isRoute && !network.empty()) {
       OSMBike bike;
       const uint32_t name_index = osmdata_.name_offset_map.index(name);
-      const uint32_t ref_index = osmdata_.ref_offset_map.index(ref);
+      const uint32_t ref_index = osmdata_.name_offset_map.index(ref);
 
       // if the network is not of type lcn, rcn, ncn, or mtb don't save.
       if (!bike_network_mask) {
@@ -1701,14 +1704,11 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt,
   }
 
   // Log some information about extra node information and names
-  LOG_DEBUG("Number of node refs (exits) = " + std::to_string(osmdata.node_ref.size()));
-  LOG_DEBUG("Number of node exit_to = " + std::to_string(osmdata.node_exit_to.size()));
-  LOG_DEBUG("Number of node names = " + std::to_string(osmdata.node_name.size()));
-  LOG_DEBUG("Number of way refs = " + std::to_string(osmdata.node_ref.size()));
-  LOG_DEBUG("Ref Names:");
-  osmdata.ref_offset_map.Log();
-  LOG_DEBUG("Names");
-  osmdata.name_offset_map.Log();
+  LOG_INFO("Number of nodes with refs (exits) = " + std::to_string(osmdata.node_ref_count));
+  LOG_INFO("Number of nodes with exit_to = " + std::to_string(osmdata.node_exit_to_count));
+  LOG_INFO("Number of nodes with names = " + std::to_string(osmdata.node_name_count));
+  LOG_INFO("Number of way refs = " + std::to_string(osmdata.way_ref.size()));
+  LOG_INFO("Unique Strings (names, refs, etc.) = " + std::to_string(osmdata.name_offset_map.Size()));
 
   // Return OSM data
   return osmdata;
