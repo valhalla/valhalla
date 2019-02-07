@@ -52,7 +52,8 @@ bool write_viaset(const std::string& filename, const ViaSet& vias) {
   return true;
 }
 
-bool write_access_restrictions(const std::string& filename, const AccessRestrictionsMultiMap& access) {
+bool write_access_restrictions(const std::string& filename,
+                               const AccessRestrictionsMultiMap& access) {
   // Open file and truncate
   std::ofstream file(filename.c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
   if (!file.is_open()) {
@@ -78,12 +79,12 @@ bool write_bike_relations(const std::string& filename, const BikeMultiMap& bike_
   std::vector<BikeRelation> relations;
   for (const auto& r : bike_relations) {
     // TODO - iterate through the multimap
-
   }
 
   // Write the count and then the wayids (keys)
   in_mem.write(reinterpret_cast<const char*>(relations.size()), sizeof(uint32_t));
-  in_mem.write(reinterpret_cast<const char*>(relations.data()), relations.size() * sizeof(BikeRelation));
+  in_mem.write(reinterpret_cast<const char*>(relations.data()),
+               relations.size() * sizeof(BikeRelation));
   file << in_mem.rdbuf();
   file.close();
   return true;
@@ -225,7 +226,6 @@ bool read_way_refs(const std::string& filename, const OSMStringMap& string_map) 
 
   return true;
 }
-
 
 bool read_unique_names(const std::string& filename, UniqueNames& names) {
   // Open file and truncate
