@@ -125,8 +125,8 @@ if(NOT Protobuf_FOUND)
   find_package(Protobuf REQUIRED)
 endif()
 
-# TODO: remove after switching to CMake >= 3.7
-if(CMAKE_VERSION VERSION_LESS 3.7)
+# TODO: remove after switching to CMake >= 3.9
+if(CMAKE_VERSION VERSION_LESS 3.9)
   if(NOT TARGET protobuf::libprotobuf-lite)
     add_library(protobuf::libprotobuf-lite UNKNOWN IMPORTED)
     set_target_properties(protobuf::libprotobuf-lite PROPERTIES
