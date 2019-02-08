@@ -3297,6 +3297,7 @@ void TestBuildTurnInstructions_0_miles_en_US() {
                                   "Continue for a half mile.");
 
   TryBuild(directions_options, maneuvers, expected_maneuvers);
+  VerifyToStayOn(maneuvers.back(), false);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -3325,6 +3326,7 @@ void TestBuildTurnInstructions_1_miles_en_US() {
                                   "Turn left onto Middletown Road.", "Continue for 1.2 miles.");
 
   TryBuild(directions_options, maneuvers, expected_maneuvers);
+  VerifyToStayOn(maneuvers.back(), false);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -3440,6 +3442,7 @@ void TestBuildTurnInstructions_2_miles_en_US() {
       "Continue on Maryland 9 24 for a half mile.");
 
   TryBuild(directions_options, maneuvers, expected_maneuvers);
+  VerifyToStayOn(maneuvers.back(), false);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
