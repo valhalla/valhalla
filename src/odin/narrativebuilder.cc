@@ -196,6 +196,8 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
       case TripDirections_Maneuver_Type_kStayRight:
       case TripDirections_Maneuver_Type_kStayLeft: {
         if (maneuver.HasSimilarNames(prev_maneuver)) {
+          maneuver.set_to_stay_on(true);
+
           // Set stay on instruction
           maneuver.set_instruction(FormKeepToStayOnInstruction(maneuver));
 
@@ -918,7 +920,8 @@ std::string NarrativeBuilder::FormTurnInstruction(Maneuver& maneuver, Maneuver* 
   // "0": "Turn/Bear/Turn sharp <RELATIVE_DIRECTION>.",
   // "1": "Turn/Bear/Turn sharp <RELATIVE_DIRECTION> onto <STREET_NAMES>.",
   // "2": "Turn/Bear/Turn sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>. Continue on
-  // <STREET_NAMES>.", "3": "Turn/Bear/Turn sharp <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
+  // <STREET_NAMES>.",
+  // "3": "Turn/Bear/Turn sharp <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
   const TurnSubset* subset = nullptr;
   switch (maneuver.type()) {
     case TripDirections_Maneuver_Type_kSlightRight:
@@ -956,6 +959,7 @@ std::string NarrativeBuilder::FormTurnInstruction(Maneuver& maneuver, Maneuver* 
     phrase_id = 2;
   }
   if (begin_street_names.empty() && maneuver.HasSimilarNames(prev_maneuver, true)) {
+    maneuver.set_to_stay_on(true);
     phrase_id = 3;
   }
 
@@ -1037,6 +1041,7 @@ std::string NarrativeBuilder::FormVerbalTurnInstruction(Maneuver& maneuver,
     phrase_id = 2;
   }
   if (begin_street_names.empty() && maneuver.HasSimilarNames(prev_maneuver, true)) {
+    maneuver.set_to_stay_on(true);
     phrase_id = 3;
   }
 
@@ -1081,6 +1086,7 @@ std::string NarrativeBuilder::FormUturnInstruction(Maneuver& maneuver, Maneuver*
   if (!street_names.empty()) {
     phrase_id += 1;
     if (maneuver.HasSameNames(prev_maneuver, true)) {
+      maneuver.set_to_stay_on(true);
       phrase_id += 1;
     }
   }
@@ -1135,6 +1141,7 @@ std::string NarrativeBuilder::FormVerbalAlertUturnInstruction(Maneuver& maneuver
   if (!street_names.empty()) {
     phrase_id = 1;
     if (maneuver.HasSameNames(prev_maneuver, true)) {
+      maneuver.set_to_stay_on(true);
       phrase_id = 2;
     }
   }
@@ -1177,6 +1184,7 @@ std::string NarrativeBuilder::FormVerbalUturnInstruction(Maneuver& maneuver,
   if (!street_names.empty()) {
     phrase_id += 1;
     if (maneuver.HasSameNames(prev_maneuver, true)) {
+      maneuver.set_to_stay_on(true);
       phrase_id += 1;
     }
   }
