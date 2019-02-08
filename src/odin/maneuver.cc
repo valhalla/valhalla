@@ -110,7 +110,7 @@ Maneuver::Maneuver()
       transit_connection_(false), rail_(false), bus_(false), fork_(false),
       begin_intersecting_edge_name_consistency_(false), intersecting_forward_edge_(false),
       tee_(false), unnamed_walkway_(false), unnamed_cycleway_(false),
-      unnamed_mountain_bike_trail_(false), verbal_multi_cue_(false) {
+      unnamed_mountain_bike_trail_(false), verbal_multi_cue_(false), to_stay_on_(false) {
   street_names_ = midgard::make_unique<StreetNames>();
   begin_street_names_ = midgard::make_unique<StreetNames>();
   cross_street_names_ = midgard::make_unique<StreetNames>();
@@ -573,6 +573,14 @@ bool Maneuver::verbal_multi_cue() const {
 
 void Maneuver::set_verbal_multi_cue(bool verbal_multi_cue) {
   verbal_multi_cue_ = verbal_multi_cue;
+}
+
+bool Maneuver::to_stay_on() const {
+  return to_stay_on_;
+}
+
+void Maneuver::set_to_stay_on(bool to_stay_on) {
+  to_stay_on_ = to_stay_on;
 }
 
 TripPath_TravelMode Maneuver::travel_mode() const {
