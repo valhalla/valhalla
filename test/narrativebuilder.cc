@@ -337,6 +337,13 @@ void TryBuild(const DirectionsOptions& directions_options,
   }
 }
 
+void VerifyToStayOn(const Maneuver& maneuver, bool expected_to_stay_on) {
+
+  // Check to stay on attribute
+  if (maneuver.to_stay_on() != expected_to_stay_on)
+    throw std::runtime_error("Incorrect 'to stay on' attribute");
+}
+
 void PopulateStartManeuverList_0(std::list<Maneuver>& maneuvers,
                                  const std::string& country_code,
                                  const std::string& state_code) {
@@ -3465,6 +3472,7 @@ void TestBuildTurnInstructions_3_miles_en_US() {
                                   "Turn right to stay on Sunstone Drive.", "Continue for 100 feet.");
 
   TryBuild(directions_options, maneuvers, expected_maneuvers);
+  VerifyToStayOn(maneuvers.back(), true);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -3585,6 +3593,7 @@ void TestBuildSharpInstructions_3_miles_en_US() {
                                   "Continue for 100 feet.");
 
   TryBuild(directions_options, maneuvers, expected_maneuvers);
+  VerifyToStayOn(maneuvers.back(), true);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -3702,6 +3711,7 @@ void TestBuildBearInstructions_3_miles_en_US() {
                                   "Bear left to stay on U.S. 15 South.", "Continue for 2.6 miles.");
 
   TryBuild(directions_options, maneuvers, expected_maneuvers);
+  VerifyToStayOn(maneuvers.back(), true);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -3792,6 +3802,7 @@ void TestBuildUturnInstructions_2_miles_en_US() {
                                   "Continue for 2 tenths of a mile.");
 
   TryBuild(directions_options, maneuvers, expected_maneuvers);
+  VerifyToStayOn(maneuvers.back(), true);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -3885,6 +3896,7 @@ void TestBuildUturnInstructions_5_miles_en_US() {
       "Continue for 200 feet.");
 
   TryBuild(directions_options, maneuvers, expected_maneuvers);
+  VerifyToStayOn(maneuvers.back(), true);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -4924,6 +4936,7 @@ void TestBuildKeepToStayOn_0_miles_en_US() {
                                   "Continue for 5.1 miles.");
 
   TryBuild(directions_options, maneuvers, expected_maneuvers);
+  VerifyToStayOn(maneuvers.back(), true);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -4958,6 +4971,7 @@ void TestBuildKeepToStayOn_1_miles_en_US() {
                                   "Continue for 5.1 miles.");
 
   TryBuild(directions_options, maneuvers, expected_maneuvers);
+  VerifyToStayOn(maneuvers.back(), true);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -4992,6 +5006,7 @@ void TestBuildKeepToStayOn_2_miles_en_US() {
                                   "Continue for 5.1 miles.");
 
   TryBuild(directions_options, maneuvers, expected_maneuvers);
+  VerifyToStayOn(maneuvers.back(), true);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -5026,6 +5041,7 @@ void TestBuildKeepToStayOn_3_miles_en_US() {
       "Continue for 5.1 miles.");
 
   TryBuild(directions_options, maneuvers, expected_maneuvers);
+  VerifyToStayOn(maneuvers.back(), true);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
