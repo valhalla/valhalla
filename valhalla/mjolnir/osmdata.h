@@ -53,9 +53,12 @@ struct OSMWayNode {
 /**
  * Simple container for OSM data.
  * Populated by the PBF parser and sent into GraphBuilder.
- *
  */
 struct OSMData {
+  // TODO - add a method to serialize the OSMData to temporary files and another method
+  // to read these temporary files back into the OSMData struct.
+  // Also - probably want  a method that will clean up the temporary files.
+
   uint64_t max_changeset_id_; // The largest/newest changeset id encountered when parsing OSM data
   size_t osm_node_count;      // Count of osm nodes
   size_t osm_way_count;       // Count of osm ways
@@ -63,6 +66,9 @@ struct OSMData {
   size_t intersection_count;  // Count of intersection nodes
   size_t node_count;          // Count of all nodes
   size_t edge_count;          // Estimated count of edges
+  size_t node_ref_count;      // Number of node with ref
+  size_t node_name_count;     // Number of nodes with names
+  size_t node_exit_to_count;  // Number of nodes with exit_to
 
   // Stores simple restrictions. Indexed by the from way Id
   RestrictionsMultiMap restrictions;
@@ -76,29 +82,12 @@ struct OSMData {
   // Stores bike information from the relations.  Indexed by the way Id.
   BikeMultiMap bike_relations;
 
-  // Map that stores all the ref info on a node
-  OSMStringMap node_ref;
-
-  // Map that stores all the exit_to info on a node
-  OSMStringMap node_exit_to;
-
-  // Map that stores all the name info on a node
-  OSMStringMap node_name;
-
-  // Map that stores an updated ref for a way
+  // Map that stores an updated ref for a way. This needs to remain a map, since relations
+  // update many ways at a time (so we can't move this into OSMWay unless that is mapped by Id).
   OSMStringMap way_ref;
 
-  // References
-  UniqueNames ref_offset_map;
-
-  // Names
+  // Unique names and string (includes road names, references, turn lane strings, exit refs, etc.)
   UniqueNames name_offset_map;
-
-  // Forward turn lane strings
-  UniqueNames fwd_turn_lanes_map;
-
-  // Backward turn lane strings
-  UniqueNames bwd_turn_lanes_map;
 
   // Lane connectivity, index by the to way Id
   OSMLaneConnectivityMultiMap lane_connectivity_map;

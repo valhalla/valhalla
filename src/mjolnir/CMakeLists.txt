@@ -32,7 +32,6 @@ set(sources
   directededgebuilder.cc
   graphtilebuilder.cc
   edgeinfobuilder.cc
-  uniquenames.cc
   ferry_connections.cc
   graphbuilder.cc
   graphenhancer.cc

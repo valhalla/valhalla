@@ -231,7 +231,7 @@ bool ShortFerry(const uint32_t node_index,
           (edge.first.sourcenode_ == node_index) ? edge.first.targetnode_ : edge.first.sourcenode_;
       auto end_node_itr = nodes[endnode];
       auto bundle2 = collect_node_edges(end_node_itr, nodes, edges);
-      if (bundle2.node.attributes_.non_ferry_edge) {
+      if (bundle2.node.non_ferry_edge_) {
         auto shape = EdgeShape(edge.first.llindex_, edge.first.attributes.llcount);
         if (midgard::length(shape) < 2000.0f) {
           const OSMWay w = *ways[edge.first.wayindex_];
@@ -275,7 +275,7 @@ void ReclassifyFerryConnections(const std::string& ways_file,
   sequence<Node>::iterator node_itr = nodes.begin();
   while (node_itr != nodes.end()) {
     auto bundle = collect_node_edges(node_itr, nodes, edges);
-    if (bundle.node.attributes_.ferry_edge && bundle.node.attributes_.non_ferry_edge &&
+    if (bundle.node.ferry_edge_ && bundle.node.non_ferry_edge_ &&
         GetBestNonFerryClass(bundle.node_edges) > rc &&
         !ShortFerry(node_itr.position(), bundle, edges, nodes, ways, way_nodes)) {
       // Form shortest path from node along each edge connected to the ferry,
