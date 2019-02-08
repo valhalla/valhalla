@@ -194,6 +194,9 @@ public:
   bool verbal_multi_cue() const;
   void set_verbal_multi_cue(bool verbal_multi_cue);
 
+  bool to_stay_on() const;
+  void set_to_stay_on(bool to_stay_on);
+
   TripPath_TravelMode travel_mode() const;
   void set_travel_mode(TripPath_TravelMode travel_mode);
 
@@ -310,6 +313,7 @@ protected:
   bool unnamed_cycleway_;
   bool unnamed_mountain_bike_trail_;
   bool verbal_multi_cue_;
+  bool to_stay_on_;
 
   ////////////////////////////////////////////////////////////////////////////
   // Transit support
