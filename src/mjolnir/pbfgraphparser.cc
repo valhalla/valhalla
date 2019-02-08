@@ -1298,9 +1298,12 @@ public:
             direction == "West") {
           auto iter = osmdata_.way_ref.find(member.member_id);
           if (iter != osmdata_.way_ref.end()) {
-            osmdata_.way_ref[member.member_id] = iter->second + ";" + reference + "|" + direction;
+            std::string ref = osmdata_.name_offset_map.name(iter->second);
+            osmdata_.way_ref[member.member_id] =
+                osmdata_.name_offset_map.index(ref + ";" + reference + "|" + direction);
           } else {
-            osmdata_.way_ref[member.member_id] = reference + "|" + direction;
+            osmdata_.way_ref[member.member_id] =
+                osmdata_.name_offset_map.index(reference + "|" + direction);
           }
         }
       }

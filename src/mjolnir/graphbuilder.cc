@@ -628,7 +628,8 @@ void BuildTileSet(const std::string& ways_file,
           auto iter = osmdata.way_ref.find(w.way_id());
           if (iter != osmdata.way_ref.end()) {
             if (w.ref_index() != 0) {
-              ref = GraphBuilder::GetRef(osmdata.name_offset_map.name(w.ref_index()), iter->second);
+              ref = GraphBuilder::GetRef(osmdata.name_offset_map.name(w.ref_index()),
+                                         osmdata.name_offset_map.name(iter->second));
             }
           }
 

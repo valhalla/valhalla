@@ -45,11 +45,13 @@ struct OSMLaneConnectivity {
 // Data types used within OSMData. Note that any maps using OSM way Id as a key can be
 // 32 bit (OSM nodes require 64 bits, but ways do not)
 using RestrictionsMultiMap = std::unordered_multimap<uint32_t, OSMRestriction>;
-using ViaSet = std::unordered_set<uint64_t>;
-using AccessRestrictionsMultiMap = std::unordered_multimap<uint64_t, OSMAccessRestriction>;
+using ViaSet = std::unordered_set<uint32_t>;
+using AccessRestrictionsMultiMap = std::unordered_multimap<uint32_t, OSMAccessRestriction>;
 using BikeMultiMap = std::unordered_multimap<uint32_t, OSMBike>;
-using OSMStringMap = std::unordered_map<uint32_t, std::string>;
 using OSMLaneConnectivityMultiMap = std::unordered_multimap<uint32_t, OSMLaneConnectivity>;
+
+// OSMString map uses the way Id as the key and the name index into UniqueNames as the value
+using OSMStringMap = std::unordered_map<uint32_t, uint32_t>;
 
 /**
  * Simple container for OSM data.
@@ -71,7 +73,7 @@ struct OSMData {
   /**
    * Cleanup temporary files.
    */
-  void cleanup_temp_files(const std::string& tile_dir);
+  static void cleanup_temp_files(const std::string& tile_dir);
 
   uint64_t max_changeset_id_; // The largest/newest changeset id encountered when parsing OSM data
   size_t osm_node_count;      // Count of osm nodes
@@ -87,7 +89,7 @@ struct OSMData {
   // Stores simple restrictions. Indexed by the from way Id
   RestrictionsMultiMap restrictions;
 
-  // unordered set used to find out if a wayid is in the vector of vias
+  // unordered set used to find out if a wayid is included in any vias for complex restrictions
   ViaSet via_set;
 
   // Stores access restrictions. Indexed by the from way Id.

@@ -23,12 +23,52 @@ const std::string unique_names_file = "osmdata_unique_strings.bin";
 const std::string lane_connectivity_file = "osmdata_lane_connectivity.bin";
 
 // Data structures to assist writing and reading data
-struct BikeRelation {
+struct TempRestriction {
   uint32_t way_id;
-  OSMBike bike_relation;
+  OSMRestriction restriction;
+  TempRestriction() : way_id(0), restriction(OSMRestriction()) {
+  }
+  TempRestriction(const uint32_t w, const OSMRestriction& r) : way_id(w), restriction(r) {
+  }
 };
 
-bool write_restrictions(const std::string& filename, const RestrictionsMultiMap& res) {
+struct TempWayRef {
+  uint32_t way_id;
+  uint32_t name_index;
+  TempWayRef() : way_id(0), name_index(0) {
+  }
+  TempWayRef(const uint32_t w, const uint32_t& index) : way_id(w), name_index(index) {
+  }
+};
+
+struct BikeRelation {
+  uint32_t way_id;
+  OSMBike relation;
+  BikeRelation() : way_id(0), relation(OSMBike()) {
+  }
+  BikeRelation(const uint32_t w, const OSMBike& r) : way_id(w), relation(r) {
+  }
+};
+
+struct TempAccessRestriction {
+  uint32_t way_id;
+  OSMAccessRestriction restriction;
+  TempAccessRestriction() : way_id(0), restriction(OSMAccessRestriction()) {
+  }
+  TempAccessRestriction(const uint32_t w, const OSMAccessRestriction& r) : way_id(w), restriction(r) {
+  }
+};
+
+struct TempLaneConnectivity {
+  uint32_t way_id;
+  OSMLaneConnectivity lane;
+  TempLaneConnectivity() : way_id(0), lane(OSMLaneConnectivity()) {
+  }
+  TempLaneConnectivity(const uint32_t w, const OSMLaneConnectivity& l) : way_id(w), lane(l) {
+  }
+};
+
+bool write_restrictions(const std::string& filename, const RestrictionsMultiMap& res_map) {
   // Open file and truncate
   std::ofstream file(filename.c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
   if (!file.is_open()) {
@@ -36,10 +76,21 @@ bool write_restrictions(const std::string& filename, const RestrictionsMultiMap&
     return false;
   }
 
+  // Convert the multi map into a vector of TempRestriction
+  std::vector<TempRestriction> res;
+  for (auto it = res_map.cbegin(); it != res_map.cend(); ++it) {
+    res.emplace_back(it->first, it->second);
+  }
+
+  // Write the count and then the via ids
+  uint32_t sz = res.size();
+  file.write(reinterpret_cast<const char*>(&sz), sizeof(uint32_t));
+  file.write(reinterpret_cast<const char*>(res.data()), res.size() * sizeof(TempRestriction));
+  file.close();
   return true;
 }
 
-bool write_viaset(const std::string& filename, const ViaSet& vias) {
+bool write_viaset(const std::string& filename, const ViaSet& via_set) {
   // Open file and truncate
   std::ofstream file(filename.c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
   if (!file.is_open()) {
@@ -47,13 +98,24 @@ bool write_viaset(const std::string& filename, const ViaSet& vias) {
     return false;
   }
 
-  // TODO!
+  // Create a vector to hold the elements of the via set
+  uint32_t i = 0;
+  std::vector<uint32_t> via_vector(via_set.size());
+  for (const auto v : via_set) {
+    via_vector[i] = v;
+    ++i;
+  }
 
+  // Write the count and then the via ids
+  uint32_t sz = via_vector.size();
+  file.write(reinterpret_cast<const char*>(&sz), sizeof(uint32_t));
+  file.write(reinterpret_cast<const char*>(via_vector.data()), via_vector.size() * sizeof(uint32_t));
+  file.close();
   return true;
 }
 
 bool write_access_restrictions(const std::string& filename,
-                               const AccessRestrictionsMultiMap& access) {
+                               const AccessRestrictionsMultiMap& access_map) {
   // Open file and truncate
   std::ofstream file(filename.c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
   if (!file.is_open()) {
@@ -61,8 +123,17 @@ bool write_access_restrictions(const std::string& filename,
     return false;
   }
 
-  // TODO!
+  // Convert the multi map into a vector of TempAccessRestriction
+  std::vector<TempAccessRestriction> res;
+  for (auto it = access_map.cbegin(); it != access_map.cend(); ++it) {
+    res.emplace_back(it->first, it->second);
+  }
 
+  // Write the count and then the via ids
+  uint32_t sz = res.size();
+  file.write(reinterpret_cast<const char*>(&sz), sizeof(uint32_t));
+  file.write(reinterpret_cast<const char*>(res.data()), res.size() * sizeof(TempAccessRestriction));
+  file.close();
   return true;
 }
 
@@ -77,20 +148,20 @@ bool write_bike_relations(const std::string& filename, const BikeMultiMap& bike_
 
   // Create a vector of bike relations from the multimap
   std::vector<BikeRelation> relations;
-  for (const auto& r : bike_relations) {
-    // TODO - iterate through the multimap
+  for (auto it = bike_relations.cbegin(); it != bike_relations.cend(); ++it) {
+    relations.emplace_back(it->first, it->second);
   }
 
-  // Write the count and then the wayids (keys)
-  in_mem.write(reinterpret_cast<const char*>(relations.size()), sizeof(uint32_t));
-  in_mem.write(reinterpret_cast<const char*>(relations.data()),
-               relations.size() * sizeof(BikeRelation));
-  file << in_mem.rdbuf();
+  // Write the count and then the bike relations
+  uint32_t sz = relations.size();
+  file.write(reinterpret_cast<const char*>(&sz), sizeof(uint32_t));
+  file.write(reinterpret_cast<const char*>(relations.data()),
+             relations.size() * sizeof(BikeRelation));
   file.close();
   return true;
 }
 
-bool write_way_refs(const std::string& filename, const OSMStringMap& string_map) {
+bool write_way_refs(const std::string& filename, const OSMStringMap& way_refs) {
   // Open file and truncate
   std::ofstream file(filename.c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
   if (!file.is_open()) {
@@ -98,24 +169,20 @@ bool write_way_refs(const std::string& filename, const OSMStringMap& string_map)
     return false;
   }
 
-  // Store the way Id keys in a vector and the strings in ????
+  // Store the way Id keys and name indexes in a TempWayRef vector
   uint32_t i = 0;
-  std::vector<uint32_t> wayids(string_map.size());
+  std::vector<TempWayRef> temp_wayrefs(way_refs.size());
   std::vector<char> strings;
-  for (const auto& s : string_map) {
-    wayids[i] = s.first;
+  for (const auto& s : way_refs) {
+    temp_wayrefs[i] = {s.first, s.second};
+    ++i;
   }
 
-  // TODO - store the strings
-
-  // Write the count and then the wayids (keys)
-  std::stringstream in_mem;
-  in_mem.write(reinterpret_cast<const char*>(wayids.size()), sizeof(uint32_t));
-  in_mem.write(reinterpret_cast<const char*>(wayids.data()), wayids.size() * sizeof(uint32_t));
-
-  // TODO write the strings to in_mem
-
-  file << in_mem.rdbuf();
+  // Write the count and then the TempWayRefs
+  uint32_t sz = temp_wayrefs.size();
+  file.write(reinterpret_cast<const char*>(&sz), sizeof(uint32_t));
+  file.write(reinterpret_cast<const char*>(temp_wayrefs.data()),
+             temp_wayrefs.size() * sizeof(TempWayRef));
   file.close();
   return true;
 }
@@ -128,12 +195,31 @@ bool write_unique_names(const std::string& filename, const UniqueNames& names) {
     return false;
   }
 
-  // TODO!
+  // Store a count of strings followed by an array of string lengths
+  uint32_t offset = 0;
+  uint32_t name_count = names.Size();
+  std::vector<uint32_t> lengths(name_count);
+  std::vector<char> namebuf;
+  for (uint32_t n = 0; n < name_count; ++n) {
+    const auto str = names.name(n + 1); // Add 1 since the first name is blank
+    lengths[n] = str.length() + 1;      // Add 1 for the null terminator
 
+    // Copy the string to the namebuf and add a terminator
+    std::copy(str.c_str(), str.c_str() + str.length(), back_inserter(namebuf));
+    namebuf.push_back(0);
+  }
+
+  // Write to file
+  file.write(reinterpret_cast<const char*>(&name_count), sizeof(uint32_t));
+  file.write(reinterpret_cast<const char*>(lengths.data()), lengths.size() * sizeof(uint32_t));
+  uint32_t sz = namebuf.size();
+  file.write(reinterpret_cast<const char*>(&sz), sizeof(uint32_t));
+  file.write(reinterpret_cast<const char*>(namebuf.data()), namebuf.size());
   return true;
 }
 
-bool write_lane_connectivity(const std::string& filename, const OSMLaneConnectivityMultiMap& lanes) {
+bool write_lane_connectivity(const std::string& filename,
+                             const OSMLaneConnectivityMultiMap& lane_map) {
   // Open file and truncate
   std::ofstream file(filename.c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
   if (!file.is_open()) {
@@ -141,12 +227,23 @@ bool write_lane_connectivity(const std::string& filename, const OSMLaneConnectiv
     return false;
   }
 
-  // TODO!
+  // Convert the multi map into a vector of TempLaneConnectivity
+  std::vector<TempLaneConnectivity> lanes;
+  for (auto it = lane_map.cbegin(); it != lane_map.cend(); ++it) {
+    lanes.emplace_back(it->first, it->second);
+  }
 
+  // Write the count and then the via ids
+  uint32_t sz = lanes.size();
+  file.write(reinterpret_cast<const char*>(&sz), sizeof(uint32_t));
+  file.write(reinterpret_cast<const char*>(lanes.data()),
+             lanes.size() * sizeof(TempLaneConnectivity));
+  file.close();
+  return true;
   return true;
 }
 
-bool read_restrictions(const std::string& filename, RestrictionsMultiMap& res) {
+bool read_restrictions(const std::string& filename, RestrictionsMultiMap& res_map) {
   // Open file and truncate
   std::ifstream file(filename, std::ios::in | std::ios::binary);
   if (!file.is_open()) {
@@ -154,12 +251,21 @@ bool read_restrictions(const std::string& filename, RestrictionsMultiMap& res) {
     return false;
   }
 
-  // TODO!!
+  // Read the count and then the temporary restriction list
+  uint32_t count = 0;
+  file.read(reinterpret_cast<char*>(&count), sizeof(uint32_t));
+  std::vector<TempRestriction> access_res(count);
+  file.read(reinterpret_cast<char*>(access_res.data()), count * sizeof(TempRestriction));
+  file.close();
 
+  // Iterate through the temporary restriction list and add to the restriction multi-map
+  for (const auto& r : access_res) {
+    res_map.insert({r.way_id, r.restriction});
+  }
   return true;
 }
 
-bool read_viaset(const std::string& filename, ViaSet& res) {
+bool read_viaset(const std::string& filename, ViaSet& via_set) {
   // Open file and truncate
   std::ifstream file(filename, std::ios::in | std::ios::binary);
   if (!file.is_open()) {
@@ -167,12 +273,21 @@ bool read_viaset(const std::string& filename, ViaSet& res) {
     return false;
   }
 
-  // TODO!!
+  // Read the count and then the via ids
+  uint32_t count = 0;
+  file.read(reinterpret_cast<char*>(&count), sizeof(uint32_t));
+  std::vector<uint32_t> via_vector(count);
+  file.read(reinterpret_cast<char*>(via_vector.data()), count * sizeof(uint32_t));
+  file.close();
 
+  // Iterate through the vector of via Ids and add them to the via set
+  for (const auto v : via_vector) {
+    via_set.insert(v);
+  }
   return true;
 }
 
-bool read_access_restrictions(const std::string& filename, AccessRestrictionsMultiMap& res) {
+bool read_access_restrictions(const std::string& filename, AccessRestrictionsMultiMap& access_map) {
   // Open file and truncate
   std::ifstream file(filename, std::ios::in | std::ios::binary);
   if (!file.is_open()) {
@@ -180,12 +295,21 @@ bool read_access_restrictions(const std::string& filename, AccessRestrictionsMul
     return false;
   }
 
-  // TODO!!
+  // Read the count and then the temporary access restriction list
+  uint32_t count = 0;
+  file.read(reinterpret_cast<char*>(&count), sizeof(uint32_t));
+  std::vector<TempAccessRestriction> access_res(count);
+  file.read(reinterpret_cast<char*>(access_res.data()), count * sizeof(TempAccessRestriction));
+  file.close();
 
+  // Iterate through the temporary access restriction list and add to the restriction multi-map
+  for (const auto& r : access_res) {
+    access_map.insert({r.way_id, r.restriction});
+  }
   return true;
 }
 
-bool read_bike_relations(const std::string& filename, const BikeMultiMap& string_map) {
+bool read_bike_relations(const std::string& filename, BikeMultiMap& bike_relations) {
   // Open file and truncate
   std::ifstream file(filename, std::ios::in | std::ios::binary);
   if (!file.is_open()) {
@@ -193,20 +317,21 @@ bool read_bike_relations(const std::string& filename, const BikeMultiMap& string
     return false;
   }
 
-  // Read the wayids (keys)
-  uint32_t count;
+  // Read the count and then the bike relations list
+  uint32_t count = 0;
   file.read(reinterpret_cast<char*>(&count), sizeof(uint32_t));
-  std::vector<uint32_t> wayids(count);
-  file.read(reinterpret_cast<char*>(wayids.data()), sizeof(uint32_t) * count);
+  std::vector<BikeRelation> rel(count);
+  file.read(reinterpret_cast<char*>(rel.data()), count * sizeof(BikeRelation));
+  file.close();
 
-  // TODO - read the strings
-
-  // TODO - add the strings into string_map using the way Ids as keys
-
+  // Iterate through the temporary bike relations list and add to the bike relations multi-map
+  for (const auto& r : rel) {
+    bike_relations.insert({r.way_id, r.relation});
+  }
   return true;
 }
 
-bool read_way_refs(const std::string& filename, const OSMStringMap& string_map) {
+bool read_way_refs(const std::string& filename, OSMStringMap& way_refs) {
   // Open file and truncate
   std::ifstream file(filename, std::ios::in | std::ios::binary);
   if (!file.is_open()) {
@@ -217,13 +342,13 @@ bool read_way_refs(const std::string& filename, const OSMStringMap& string_map) 
   // Read the wayids (keys)
   uint32_t count;
   file.read(reinterpret_cast<char*>(&count), sizeof(uint32_t));
-  std::vector<uint32_t> wayids(count);
-  file.read(reinterpret_cast<char*>(wayids.data()), sizeof(uint32_t) * count);
+  std::vector<TempWayRef> temp_wayrefs(count);
+  file.read(reinterpret_cast<char*>(temp_wayrefs.data()), sizeof(TempWayRef) * count);
 
-  // TODO - read the strings
-
-  // TODO - add the strings into string_map using the way Ids as keys
-
+  // Iterate through the temp wayrefs and form map
+  for (const auto& r : temp_wayrefs) {
+    way_refs[r.way_id] = r.name_index;
+  }
   return true;
 }
 
@@ -235,12 +360,31 @@ bool read_unique_names(const std::string& filename, UniqueNames& names) {
     return false;
   }
 
-  // TODO!!
+  // Read from file
+  uint32_t count = 0;
+  file.read(reinterpret_cast<char*>(&count), sizeof(uint32_t));
+  std::vector<uint32_t> lengths(count);
+  file.read(reinterpret_cast<char*>(lengths.data()), count * sizeof(uint32_t));
+  uint32_t bufsize = 0;
+  file.read(reinterpret_cast<char*>(&bufsize), sizeof(uint32_t));
+  std::vector<char> namebuf(bufsize);
+  file.read(reinterpret_cast<char*>(namebuf.data()), bufsize);
 
+  // Iterate through the temporary data and add the unique names
+  uint32_t offset = 0;
+  for (uint32_t n = 0; n < count; ++n) {
+    std::string name(&namebuf[offset]);
+    names.index(name);
+    offset += lengths[n];
+
+    if ((name.length() + 1) != lengths[n]) {
+      LOG_ERROR("name " + name + " length should be " + std::to_string(lengths[n]));
+    }
+  }
   return true;
 }
 
-bool read_lane_connectivity(const std::string& filename, OSMLaneConnectivityMultiMap& lanes) {
+bool read_lane_connectivity(const std::string& filename, OSMLaneConnectivityMultiMap& lane_map) {
   // Open file and truncate
   std::ifstream file(filename, std::ios::in | std::ios::binary);
   if (!file.is_open()) {
@@ -248,8 +392,17 @@ bool read_lane_connectivity(const std::string& filename, OSMLaneConnectivityMult
     return false;
   }
 
-  // TODO!!
+  // Read the count and then the temporary lane connectivity list
+  uint32_t count = 0;
+  file.read(reinterpret_cast<char*>(&count), sizeof(uint32_t));
+  std::vector<TempLaneConnectivity> lanes(count);
+  file.read(reinterpret_cast<char*>(lanes.data()), count * sizeof(TempLaneConnectivity));
+  file.close();
 
+  // Iterate through the temporary lane connectivity list and add to the lane connectivity multi-map
+  for (const auto& l : lanes) {
+    lane_map.insert({l.way_id, l.lane});
+  }
   return true;
 }
 
@@ -260,6 +413,8 @@ namespace mjolnir {
 
 // Write OSMData to temporary files
 bool OSMData::write_to_temp_files(const std::string& tile_dir) {
+  LOG_INFO("Write OSMData to temp files");
+
   // Write counts
   std::string countfile = tile_dir + count_file;
   std::ofstream file(countfile, std::ios::out | std::ios::binary | std::ios::trunc);
@@ -280,17 +435,21 @@ bool OSMData::write_to_temp_files(const std::string& tile_dir) {
   file.close();
 
   // Write the rest of OSMData
-  return write_restrictions(tile_dir + restrictions_file, restrictions) &&
-         write_viaset(tile_dir + viaset_file, via_set) &&
-         write_access_restrictions(tile_dir + access_restrictions_file, access_restrictions) &&
-         write_bike_relations(tile_dir + bike_relations_file, bike_relations) &&
-         write_way_refs(tile_dir + wayref_file, way_ref) &&
-         write_unique_names(tile_dir + unique_names_file, name_offset_map) &&
-         write_lane_connectivity(tile_dir + lane_connectivity_file, lane_connectivity_map);
+  bool status = write_restrictions(tile_dir + restrictions_file, restrictions) &&
+                write_viaset(tile_dir + viaset_file, via_set) &&
+                write_access_restrictions(tile_dir + access_restrictions_file, access_restrictions) &&
+                write_bike_relations(tile_dir + bike_relations_file, bike_relations) &&
+                write_way_refs(tile_dir + wayref_file, way_ref) &&
+                write_unique_names(tile_dir + unique_names_file, name_offset_map) &&
+                write_lane_connectivity(tile_dir + lane_connectivity_file, lane_connectivity_map);
+  LOG_INFO("Done");
+  return status;
 }
 
 // Read OSMData from temporary files
 bool OSMData::read_from_temp_files(const std::string& tile_dir) {
+  LOG_INFO("Read OSMData from temp files");
+
   // Open the count file
   std::string countfile = tile_dir + count_file;
   std::ifstream file(countfile, std::ios::in | std::ios::binary);
@@ -311,13 +470,15 @@ bool OSMData::read_from_temp_files(const std::string& tile_dir) {
   file.close();
 
   // Read the other data
-  return read_restrictions(tile_dir + restrictions_file, restrictions) &&
-         read_viaset(tile_dir + viaset_file, via_set) &&
-         read_access_restrictions(tile_dir + access_restrictions_file, access_restrictions) &&
-         read_bike_relations(tile_dir + bike_relations_file, bike_relations) &&
-         read_way_refs(tile_dir + wayref_file, way_ref) &&
-         read_unique_names(tile_dir + unique_names_file, name_offset_map) &&
-         read_lane_connectivity(tile_dir + lane_connectivity_file, lane_connectivity_map);
+  bool status = read_restrictions(tile_dir + restrictions_file, restrictions) &&
+                read_viaset(tile_dir + viaset_file, via_set) &&
+                read_access_restrictions(tile_dir + access_restrictions_file, access_restrictions) &&
+                read_bike_relations(tile_dir + bike_relations_file, bike_relations) &&
+                read_way_refs(tile_dir + wayref_file, way_ref) &&
+                read_unique_names(tile_dir + unique_names_file, name_offset_map) &&
+                read_lane_connectivity(tile_dir + lane_connectivity_file, lane_connectivity_map);
+  LOG_INFO("Done");
+  return status;
 }
 
 void OSMData::cleanup_temp_files(const std::string& tile_dir) {
