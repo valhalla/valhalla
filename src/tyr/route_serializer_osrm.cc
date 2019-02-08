@@ -691,7 +691,7 @@ json::MapPtr osrm_maneuver(const valhalla::odin::TripDirections::Maneuver& maneu
       } else if (false_node && new_name) {
         maneuver_type = "new name";
       } else {
-        if (modifier != "uturn") {
+        if ((modifier != "uturn") && (!maneuver.to_stay_on())) {
           maneuver_type = "turn";
         } else {
           maneuver_type = "continue";
