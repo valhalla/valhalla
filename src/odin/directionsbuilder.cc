@@ -297,6 +297,11 @@ TripDirections DirectionsBuilder::PopulateTripDirections(const DirectionsOptions
       trip_maneuver->set_verbal_multi_cue(maneuver.verbal_multi_cue());
     }
 
+    // To stay on
+    if (maneuver.to_stay_on()) {
+      trip_maneuver->set_to_stay_on(maneuver.to_stay_on());
+    }
+
     // Travel mode
     trip_maneuver->set_travel_mode(translate_travel_mode.find(maneuver.travel_mode())->second);
 
