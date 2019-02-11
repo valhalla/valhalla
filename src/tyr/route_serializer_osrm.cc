@@ -760,7 +760,7 @@ names_and_refs(const valhalla::odin::TripDirections::Maneuver& maneuver) {
 }
 
 // Add annotations to the leg
-json::MapPtr annotations(std::list<odin::TripPath>::const_iterator path_leg) {
+json::MapPtr annotations(EnhancedTripPath* etp) {
   auto annotations = json::map({});
 
   // Create distance and duration arrays. Iterate through trip edges and
@@ -770,10 +770,10 @@ json::MapPtr annotations(std::list<odin::TripPath>::const_iterator path_leg) {
   uint32_t elapsed_time = 0;
   auto distances = json::array({});
   auto durations = json::array({});
-  for (uint32_t idx = 0; idx < path_leg->node().size() - 1; ++idx) {
-    distances->emplace_back(json::fp_t{path_leg->node(idx).edge().length() * 1000.0f, 1});
-    uint32_t t = path_leg->node(idx + 1).elapsed_time() > path_leg->node(idx).elapsed_time()
-                     ? path_leg->node(idx + 1).elapsed_time() - path_leg->node(idx).elapsed_time()
+  for (uint32_t idx = 0; idx < etp->node_size() - 1; ++idx) {
+    distances->emplace_back(json::fp_t{etp->node(idx).edge().length() * 1000.0f, 1});
+    uint32_t t = etp->node(idx + 1).elapsed_time() > etp->node(idx).elapsed_time()
+                     ? etp->node(idx + 1).elapsed_time() - etp->node(idx).elapsed_time()
                      : 0;
     durations->emplace_back(static_cast<uint64_t>(t));
   }
@@ -786,7 +786,7 @@ json::MapPtr annotations(std::list<odin::TripPath>::const_iterator path_leg) {
 
 // Serialize each leg
 json::ArrayPtr serialize_legs(const std::list<valhalla::odin::TripDirections>& legs,
-                              const std::list<odin::TripPath>& path_legs,
+                              std::list<odin::TripPath>& path_legs,
                               bool imperial,
                               const valhalla::odin::DirectionsOptions& directions_options) {
   auto output_legs = json::array({});
@@ -797,8 +797,8 @@ json::ArrayPtr serialize_legs(const std::list<valhalla::odin::TripDirections>& l
   }
 
   // Iterate through the legs in TripDirections and TripPath
-  const auto leg = legs.begin();
-  for (const auto& path_leg : path_legs) {
+  auto leg = legs.begin();
+  for (auto& path_leg : path_legs) {
     EnhancedTripPath* etp = static_cast<EnhancedTripPath*>(&path_leg);
     auto output_leg = json::map({});
 
@@ -908,15 +908,15 @@ json::ArrayPtr serialize_legs(const std::list<valhalla::odin::TripDirections>& l
     // NOTE: Valhalla outputs annotations per edge not between node Id
     // pairs like OSRM does.
     // Protect against empty trip path
-    if (path_leg->node().size() > 0) {
-      output_leg->emplace("annotation", annotations(path_leg));
+    if (etp->node_size() > 0) {
+      output_leg->emplace("annotation", annotations(etp));
     }
 
     // Add distance, duration, weight, and summary
     // Get a summary based on longest maneuvers.
     std::string summary = "TODO"; // Form summary from longest maneuvers?
-    float duration = leg.summary().time();
-    float distance = leg.summary().length() * (imperial ? 1609.34f : 1000.0f);
+    float duration = leg->summary().time();
+    float distance = leg->summary().length() * (imperial ? 1609.34f : 1000.0f);
     output_leg->emplace("summary", summary);
     output_leg->emplace("distance", json::fp_t{distance, 1});
     output_leg->emplace("duration", json::fp_t{duration, 1});
@@ -936,7 +936,7 @@ json::ArrayPtr serialize_legs(const std::list<valhalla::odin::TripDirections>& l
 //     TripPath protocol buffer
 //     TripDirections protocol buffer
 std::string serialize(const valhalla::odin::DirectionsOptions& directions_options,
-                      const std::list<TripPath>& path_legs,
+                      std::list<TripPath>& path_legs,
                       const std::list<valhalla::odin::TripDirections>& legs) {
   auto json = json::map({});
 

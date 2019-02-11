@@ -75,7 +75,7 @@ namespace valhalla {
 namespace tyr {
 
 std::string serializeDirections(const valhalla_request_t& request,
-                                const std::list<TripPath>& path_legs,
+                                std::list<TripPath>& path_legs,
                                 const std::list<TripDirections>& directions_legs) {
   // serialize them
   switch (request.options.format()) {
