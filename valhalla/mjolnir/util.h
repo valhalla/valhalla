@@ -111,7 +111,7 @@ uint32_t compute_curvature(const std::list<midgard::PointLL>& shape);
  */
 bool build_tile_set(const boost::property_tree::ptree& config,
                     const std::vector<std::string>& input_files,
-                    const BuildStage start_stage = BuildStage::kParse,
+                    const BuildStage start_stage = BuildStage::kInitialize,
                     const BuildStage end_stage = BuildStage::kValidate);
 
 } // namespace mjolnir

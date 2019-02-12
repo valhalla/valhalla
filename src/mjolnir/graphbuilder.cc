@@ -815,7 +815,8 @@ void BuildTileSet(const std::string& ways_file,
               std::vector<LaneConnectivity> v;
               for (; ei.first != ei.second; ++ei.first) {
                 const auto& lc = ei.first->second;
-                v.emplace_back(idx, lc.from_way_id, lc.to_lanes, lc.from_lanes);
+                v.emplace_back(idx, lc.from_way_id, osmdata.name_offset_map.name(lc.to_lanes_index),
+                               osmdata.name_offset_map.name(lc.from_lanes_index));
               }
               graphtile.AddLaneConnectivity(v);
               directededge.set_laneconnectivity(true);

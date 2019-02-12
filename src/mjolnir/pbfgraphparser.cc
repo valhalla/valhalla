@@ -1323,11 +1323,12 @@ public:
       }
 
       if (from_way_id && to_way_id) {
+        uint32_t to_idx = osmdata_.name_offset_map.index(std::max(to, to_lanes));
+        uint32_t from_idx = osmdata_.name_offset_map.index(std::max(from, from_lanes));
         osmdata_.lane_connectivity_map.insert(
             OSMLaneConnectivityMultiMap::value_type(to_way_id,
                                                     OSMLaneConnectivity{to_way_id, from_way_id,
-                                                                        std::max(to, to_lanes),
-                                                                        std::max(from, from_lanes)}));
+                                                                        to_idx, from_idx}));
       }
     } else if (isRestriction && hasRestriction) {
       std::vector<uint64_t> vias;

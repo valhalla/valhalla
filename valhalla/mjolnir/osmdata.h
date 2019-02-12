@@ -38,8 +38,8 @@ struct OSMBike {
 struct OSMLaneConnectivity {
   uint32_t to_way_id;
   uint32_t from_way_id;
-  std::string to_lanes;
-  std::string from_lanes;
+  uint32_t to_lanes_index;   // Index to string in UniqueNames
+  uint32_t from_lanes_index; // Index to string in UniqueNames
 };
 
 // Data types used within OSMData. Note that any maps using OSM way Id as a key can be
