@@ -10,24 +10,6 @@
 namespace valhalla {
 namespace mjolnir {
 
-struct NodeAttributes {
-  uint32_t access_mask : 12;
-  uint32_t type : 4;
-  uint32_t exit_to : 1;
-  uint32_t ref : 1;
-  uint32_t name : 1;
-  uint32_t intersection : 1;
-  uint32_t traffic_signal : 1;
-  uint32_t forward_signal : 1;
-  uint32_t backward_signal : 1;
-  uint32_t non_link_edge : 1;
-  uint32_t link_edge : 1;
-  uint32_t shortlink : 1; // Link edge < kMaxInternalLength
-  uint32_t non_ferry_edge : 1;
-  uint32_t ferry_edge : 1;
-  uint32_t spare : 4;
-};
-
 /**
  * OSM node information. Result of parsing an OSM node.
  */
@@ -39,8 +21,28 @@ struct OSMNode {
   // Lat,lng of the node
   float lng, lat;
 
+  // Index to the node name (if it exists)
+  uint32_t name_index_;
+
+  // Index to the node ref (if it exists)
+  uint32_t ref_index_;
+
+  // Index to exit_to (if it exists)
+  uint32_t exit_to_index_;
+
   // Node attributes. Shared by OSMNode and GraphBuilder Node.
-  NodeAttributes attributes_;
+  uint32_t access_ : 12;
+  uint32_t type_ : 4;
+  uint32_t intersection_ : 1;
+  uint32_t traffic_signal_ : 1;
+  uint32_t forward_signal_ : 1;
+  uint32_t backward_signal_ : 1;
+  uint32_t non_link_edge_ : 1;
+  uint32_t link_edge_ : 1;
+  uint32_t shortlink_ : 1; // Link edge < kMaxInternalLength
+  uint32_t non_ferry_edge_ : 1;
+  uint32_t ferry_edge_ : 1;
+  uint32_t spare_ : 7;
 
   /**
    * Sets the lat,lng.
@@ -60,17 +62,80 @@ struct OSMNode {
   }
 
   /**
+   * Set the name index.
+   */
+  void set_name_index(const uint32_t index) {
+    name_index_ = index;
+  }
+
+  /**
+   * Get the name index.
+   */
+  uint32_t name_index() const {
+    return name_index_;
+  }
+
+  /**
+   * Does the node have a name. Check if name_index is non-zero
+   */
+  bool has_name() const {
+    return name_index_ > 0;
+  }
+
+  /**
+   * Set the ref index.
+   */
+  void set_ref_index(const uint32_t index) {
+    ref_index_ = index;
+  }
+
+  /**
+   * Get the ref index.
+   */
+  uint32_t ref_index() const {
+    return ref_index_;
+  }
+
+  /**
+   * Does the node have ref information. Checks if exit_ref_index is non-zero
+   */
+  bool has_ref() const {
+    return ref_index_ > 0;
+  }
+
+  /**
+   * Set the exit_to index.
+   */
+  void set_exit_to_index(const uint32_t index) {
+    exit_to_index_ = index;
+  }
+
+  /**
+   * Get the exit_to index.
+   */
+  uint32_t exit_to_index() const {
+    return exit_to_index_;
+  }
+
+  /**
+   * Does the node have exit_to information. Checks if exit_to_index is non-zero
+   */
+  bool has_exit_to() const {
+    return exit_to_index_ > 0;
+  }
+
+  /**
    * Set access mask.
    */
-  void set_access_mask(const uint32_t access_mask) {
-    attributes_.access_mask = access_mask;
+  void set_access(const uint32_t mask) {
+    access_ = mask;
   }
 
   /**
    * Get the access mask.
    */
-  uint32_t access_mask() const {
-    return attributes_.access_mask;
+  uint32_t access() const {
+    return access_;
   }
 
   /**
@@ -78,7 +143,7 @@ struct OSMNode {
    * @param  type
    */
   void set_type(const baldr::NodeType type) {
-    attributes_.type = static_cast<uint8_t>(type);
+    type_ = static_cast<uint8_t>(type);
   }
 
   /**
@@ -86,49 +151,7 @@ struct OSMNode {
    * @return  Returns the type of node.
    */
   baldr::NodeType type() const {
-    return static_cast<baldr::NodeType>(attributes_.type);
-  }
-
-  /**
-   * Set the exit to flag
-   */
-  void set_exit_to(const bool exit_to) {
-    attributes_.exit_to = exit_to;
-  }
-
-  /**
-   * Get the exit to flag
-   */
-  bool exit_to() const {
-    return attributes_.exit_to;
-  }
-
-  /**
-   * Set the ref flag
-   */
-  void set_ref(const bool ref) {
-    attributes_.ref = ref;
-  }
-
-  /**
-   * Get the ref flag
-   */
-  bool ref() const {
-    return attributes_.ref;
-  }
-
-  /**
-   * Set the name flag (for some exit information)
-   */
-  void set_name(const bool name) {
-    attributes_.name = name;
-  }
-
-  /**
-   * Get the name flag
-   */
-  bool name() const {
-    return attributes_.name;
+    return static_cast<baldr::NodeType>(type_);
   }
 
   /**
@@ -137,7 +160,7 @@ struct OSMNode {
    *                       this node is an end node of more than 1 way.
    */
   void set_intersection(const bool intersection) {
-    attributes_.intersection = intersection;
+    intersection_ = intersection;
   }
 
   /**
@@ -146,49 +169,49 @@ struct OSMNode {
    *          node of more than 1 way), false if not.
    */
   bool intersection() const {
-    return attributes_.intersection;
+    return intersection_;
   }
 
   /**
    * Set traffic_signal flag.
    */
   void set_traffic_signal(const bool traffic_signal) {
-    attributes_.traffic_signal = traffic_signal;
+    traffic_signal_ = traffic_signal;
   }
 
   /**
    * Get the traffic_signal flag.
    */
   bool traffic_signal() const {
-    return attributes_.traffic_signal;
+    return traffic_signal_;
   }
 
   /**
    * Set forward_signal flag.
    */
   void set_forward_signal(const bool forward_signal) {
-    attributes_.forward_signal = forward_signal;
+    forward_signal_ = forward_signal;
   }
 
   /**
    * Get the forward_signal flag.
    */
   bool forward_signal() const {
-    return attributes_.forward_signal;
+    return forward_signal_;
   }
 
   /**
    * Set backward_signal flag.
    */
   void set_backward_signal(const bool backward_signal) {
-    attributes_.backward_signal = backward_signal;
+    backward_signal_ = backward_signal;
   }
 
   /**
    * Get the backward_signal flag.
    */
   bool backward_signal() const {
-    return attributes_.backward_signal;
+    return backward_signal_;
   }
 };
 
