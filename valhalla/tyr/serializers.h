@@ -27,7 +27,7 @@ namespace tyr {
  * Turn path and directions into a route that one can follow
  */
 std::string serializeDirections(const valhalla_request_t& request,
-                                const std::list<odin::TripPath>& path_legs,
+                                std::list<odin::TripPath>& path_legs,
                                 const std::list<odin::TripDirections>& directions_legs);
 
 /**

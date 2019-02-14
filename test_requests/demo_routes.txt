@@ -19,3 +19,4 @@
 -j '{"locations":[{"lat":34.0942323860854,"lon":-117.69556760787965},{"lat":34.09421461662547,"lon":-117.69537448883057}],"costing":"bus","output":"json"}'
 -j '{"locations":[{"lat":34.0942323860854,"lon":-117.69556760787965},{"lat":34.09426792499404,"lon":-117.69500970840456}],"costing":"bus","output":"json"}'
 -j '{"locations":[{"lat":34.094646,"lon":-117.695015,"street":"Busway"},{"lat":34.095200,"lon":-117.694580,"street":"Richton Street"}],"costing":"pedestrian","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":40.794838,"lon":-77.861061,"street":"East College Avenue"},{"lat":40.794830,"lon":-77.861069,"street":"East College Avenue"}],"costing":"auto","directions_options":{"units":"miles"}}'

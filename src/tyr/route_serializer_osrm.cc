@@ -7,11 +7,13 @@
 #include "baldr/json.h"
 #include "midgard/encoded.h"
 #include "midgard/pointll.h"
+#include "odin/enhancedtrippath.h"
 #include "odin/util.h"
 #include "tyr/serializers.h"
 
 #include "proto/directions_options.pb.h"
 #include "proto/tripdirections.pb.h"
+#include "proto/trippath.pb.h"
 
 using namespace valhalla;
 using namespace valhalla::midgard;
@@ -235,25 +237,26 @@ struct IntersectionEdges {
 
 // Add intersections along a step/maneuver.
 json::ArrayPtr intersections(const valhalla::odin::TripDirections::Maneuver& maneuver,
-                             std::list<odin::TripPath>::const_iterator path_leg,
+                             valhalla::odin::EnhancedTripPath* etp,
                              const std::vector<PointLL>& shape,
                              uint32_t& count,
-                             const bool arrive) {
+                             const bool arrive_maneuver) {
   // Iterate through the nodes/intersections of the path for this maneuver
   count = 0;
   auto intersections = json::array({});
-  uint32_t n = arrive ? maneuver.end_path_index() + 1 : maneuver.end_path_index();
+  uint32_t n = arrive_maneuver ? maneuver.end_path_index() + 1 : maneuver.end_path_index();
   for (uint32_t i = maneuver.begin_path_index(); i < n; i++) {
     auto intersection = json::map({});
 
-    // Get the node from the path leg
-    auto node = path_leg->node(i);
-    auto prior_node = (i > 0) ? path_leg->node(i - 1) : path_leg->node(0);
+    // Get the node and current edge from the enhanced trip path
+    // NOTE: curr_edge does not exist for the arrive maneuver
+    auto* node = etp->GetEnhancedNode(i);
+    auto* curr_edge = etp->GetCurrEdge(i);
 
     // Add the node location (lon, lat). Use the last shape point for
     // the arrive step
     auto loc = json::array({});
-    PointLL ll = arrive ? shape[shape.size() - 1] : shape[node.edge().begin_shape_index()];
+    PointLL ll = arrive_maneuver ? shape[shape.size() - 1] : shape[curr_edge->begin_shape_index()];
     loc->emplace_back(json::fp_t{ll.lng(), 6});
     loc->emplace_back(json::fp_t{ll.lat(), 6});
     intersection->emplace("location", loc);
@@ -261,32 +264,27 @@ json::ArrayPtr intersections(const valhalla::odin::TripDirections::Maneuver& man
     // Get bearings and access to outgoing intersecting edges. Do not add
     // any intersecting edges for the first depart intersection and for
     // the arrive step.
-    // TODO - round off?
     std::vector<IntersectionEdges> edges;
-    if (i > 0 && !arrive) {
-      for (uint32_t n = 0; n < node.intersecting_edge().size(); n++) {
-        const auto& intersecting_edge = node.intersecting_edge(n);
-
-        // TODO - how to get info on whether routing is allowed on this edge
-        // (based on mode?).
-        bool routeable = (intersecting_edge.driveability() &
-                          odin::TripPath_Traversability::TripPath_Traversability_kForward);
-        uint32_t bearing = static_cast<uint32_t>(intersecting_edge.begin_heading());
+    if (i > 0 && !arrive_maneuver) {
+      for (uint32_t n = 0; n < node->intersecting_edge_size(); n++) {
+        auto* intersecting_edge = node->GetIntersectingEdge(n);
+        bool routeable = intersecting_edge->IsTraversableOutbound(curr_edge->travel_mode());
+        uint32_t bearing = static_cast<uint32_t>(intersecting_edge->begin_heading());
         edges.emplace_back(bearing, routeable, false, false);
       }
     }
 
     // Add the edge departing the node
-    if (!arrive) {
-      edges.emplace_back(node.edge().begin_heading(), true, false, true);
+    if (!arrive_maneuver) {
+      edges.emplace_back(curr_edge->begin_heading(), true, false, true);
     }
 
     // Add the incoming edge except for the first depart intersection.
     // Set routeable to false except for arrive.
     // TODO - what if a true U-turn - need to set it to routeable.
     if (i > 0) {
-      bool entry = (arrive) ? true : false;
-      uint32_t prior_heading = prior_node.edge().end_heading();
+      bool entry = (arrive_maneuver) ? true : false;
+      uint32_t prior_heading = etp->GetPrevEdge(i)->end_heading();
       edges.emplace_back(((prior_heading + 180) % 360), entry, true, false);
     }
 
@@ -312,7 +310,7 @@ json::ArrayPtr intersections(const valhalla::odin::TripDirections::Maneuver& man
     if (i > 0) {
       intersection->emplace("in", static_cast<uint64_t>(incoming_index));
     }
-    if (!arrive) {
+    if (!arrive_maneuver) {
       intersection->emplace("out", static_cast<uint64_t>(outgoing_index));
     }
 
@@ -321,18 +319,19 @@ json::ArrayPtr intersections(const valhalla::odin::TripDirections::Maneuver& man
 
     // Add classes based on the first edge after the maneuver (not needed
     // for arrive maneuver).
-    if (!arrive) {
+    if (!arrive_maneuver) {
       std::vector<std::string> classes;
-      if (node.edge().tunnel()) {
+      if (curr_edge->tunnel()) {
         classes.push_back("tunnel");
       }
-      if (maneuver.portions_toll() || node.edge().toll()) {
+      if (maneuver.portions_toll() || curr_edge->toll()) {
         classes.push_back("toll");
       }
-      if (node.edge().road_class() == odin::TripPath_RoadClass_kMotorway) {
+      // TODO We might want to have more specific logic for ramp
+      if ((curr_edge->road_class() == odin::TripPath_RoadClass_kMotorway) || curr_edge->IsRampUse()) {
         classes.push_back("motorway");
       }
-      if (node.edge().use() == odin::TripPath::Use::TripPath_Use_kFerryUse) {
+      if (curr_edge->use() == odin::TripPath::Use::TripPath_Use_kFerryUse) {
         classes.push_back("ferry");
       }
 
@@ -551,17 +550,19 @@ std::string turn_modifier(const valhalla::odin::TripDirections::Maneuver& maneuv
 
 // Ramp cases - off ramp transitions from a motorway. On ramp ends
 // in a motorway.
-std::string ramp_type(const odin::TripPath::Edge& prior_edge,
+// TODO are we able to use the TripDirections_Maneuver_Type ramp/exit classification
+std::string ramp_type(valhalla::odin::EnhancedTripPath_Edge* prev_edge,
                       const uint32_t idx,
-                      std::list<odin::TripPath>::const_iterator path_leg) {
-  if (prior_edge.use() == odin::TripPath_Use_kRoadUse) {
-    if (prior_edge.road_class() == odin::TripPath_RoadClass_kMotorway) {
+                      valhalla::odin::EnhancedTripPath* etp) {
+  if (prev_edge->use() == odin::TripPath_Use_kRoadUse) {
+    if (prev_edge->road_class() == odin::TripPath_RoadClass_kMotorway) {
       return std::string("off ramp");
-    } else if (prior_edge.road_class() != odin::TripPath_RoadClass_kMotorway) {
+    } else if (prev_edge->road_class() != odin::TripPath_RoadClass_kMotorway) {
       // Check that next road is a motorway
-      for (uint32_t i = idx + 1; i < path_leg->node().size(); ++i) {
-        if (path_leg->node(i).edge().use() == odin::TripPath_Use_kRoadUse) {
-          if (path_leg->node(i).edge().road_class() == odin::TripPath_RoadClass_kMotorway) {
+      for (uint32_t i = idx + 1; i < (etp->node_size() - 1); ++i) {
+        auto* curr_edge = etp->GetCurrEdge(i);
+        if (curr_edge->use() == odin::TripPath_Use_kRoadUse) {
+          if (curr_edge->road_class() == odin::TripPath_RoadClass_kMotorway) {
             return std::string("on ramp");
           }
           break;
@@ -574,11 +575,11 @@ std::string ramp_type(const odin::TripPath::Edge& prior_edge,
 
 // Populate the OSRM maneuver record within a step.
 json::MapPtr osrm_maneuver(const valhalla::odin::TripDirections::Maneuver& maneuver,
-                           std::list<odin::TripPath>::const_iterator path_leg,
+                           valhalla::odin::EnhancedTripPath* etp,
                            const PointLL& man_ll,
-                           const bool depart,
-                           const bool arrive,
-                           const uint32_t count,
+                           const bool depart_maneuver,
+                           const bool arrive_maneuver,
+                           const uint32_t prev_intersection_count,
                            const std::string& mode,
                            const std::string& prev_mode) {
   auto osrm_man = json::map({});
@@ -593,13 +594,13 @@ json::MapPtr osrm_maneuver(const valhalla::odin::TripDirections::Maneuver& maneu
   // prior edge from the TripPath. Compute turn modifier. TODO - reconcile
   // turn degrees between Valhalla and OSRM
   uint32_t idx = maneuver.begin_path_index();
-  uint32_t in_brg = (idx > 0) ? path_leg->node(idx - 1).edge().end_heading() : 0;
+  uint32_t in_brg = (idx > 0) ? etp->GetPrevEdge(idx)->end_heading() : 0;
   uint32_t out_brg = maneuver.begin_heading();
   osrm_man->emplace("bearing_before", static_cast<uint64_t>(in_brg));
   osrm_man->emplace("bearing_after", static_cast<uint64_t>(out_brg));
 
   std::string modifier;
-  if (!depart) {
+  if (!depart_maneuver) {
     modifier = turn_modifier(maneuver, in_brg, out_brg);
     if (!modifier.empty())
       osrm_man->emplace("modifier", modifier);
@@ -607,9 +608,9 @@ json::MapPtr osrm_maneuver(const valhalla::odin::TripDirections::Maneuver& maneu
 
   // TODO - logic to convert maneuver types from Valhalla into OSRM maneuver types.
   std::string maneuver_type;
-  if (depart) {
+  if (depart_maneuver) {
     maneuver_type = "depart";
-  } else if (arrive) {
+  } else if (arrive_maneuver) {
     maneuver_type = "arrive";
   } else if (mode != prev_mode) {
     maneuver_type = "notification";
@@ -623,28 +624,28 @@ json::MapPtr osrm_maneuver(const valhalla::odin::TripDirections::Maneuver& maneu
     maneuver_type = "exit roundabout";
   } else {
     // Special cases
-    const auto& prior_edge = path_leg->node(idx - 1).edge();
-    const auto& current_edge = path_leg->node(idx).edge();
+    auto* prev_edge = etp->GetPrevEdge(idx);
+    auto* curr_edge = etp->GetCurrEdge(idx);
     bool new_name = maneuver.type() == odin::TripDirections_Maneuver_Type_kContinue ||
                     maneuver.type() == odin::TripDirections_Maneuver_Type_kBecomes;
-    bool ramp = current_edge.use() == odin::TripPath_Use_kRampUse;
-    bool fork = path_leg->node(idx).fork();
-    bool merge = prior_edge.use() == odin::TripPath_Use_kRampUse &&
-                 current_edge.use() == odin::TripPath_Use_kRoadUse &&
-                 (current_edge.road_class() == odin::TripPath_RoadClass_kMotorway ||
-                  current_edge.road_class() == odin::TripPath_RoadClass_kTrunk);
+    bool ramp = curr_edge->use() == odin::TripPath_Use_kRampUse;
+    bool fork = etp->node(idx).fork();
+    bool merge = prev_edge->use() == odin::TripPath_Use_kRampUse &&
+                 curr_edge->use() == odin::TripPath_Use_kRoadUse &&
+                 (curr_edge->road_class() == odin::TripPath_RoadClass_kMotorway ||
+                  curr_edge->road_class() == odin::TripPath_RoadClass_kTrunk);
     if (merge) {
       maneuver_type = "merge";
     } else if (fork) {
       maneuver_type = "fork";
     } else if (ramp) {
-      maneuver_type = ramp_type(prior_edge, idx, path_leg);
+      maneuver_type = ramp_type(prev_edge, idx, etp);
     } else if (new_name) {
       maneuver_type = "new name";
     }
 
     // Are there any intersecting edges
-    bool false_node = path_leg->node(idx).intersecting_edge().size() == 0;
+    bool false_node = etp->node(idx).intersecting_edge_size() == 0;
 
     // Fall through case if maneuver not set by special cases above
     new_name = false;
@@ -654,22 +655,22 @@ json::MapPtr osrm_maneuver(const valhalla::odin::TripDirections::Maneuver& maneu
       // passed. Description is: at t-intersections, when you’re turning
       // onto a new road name, and have passed at least 1 intersection to
       // get there.
-      bool road_ends = (count > 1 && prior_edge.use() != odin::TripPath_Use_kRampUse &&
-                        path_leg->node(idx).intersecting_edge().size() == 1);
+      bool road_ends =
+          (prev_intersection_count > 1 && prev_edge->use() != odin::TripPath_Use_kRampUse &&
+           etp->node(idx).intersecting_edge_size() == 1);
       if (road_ends) {
         // TODO what about a doubly digitized road ending at a T (would be
         // 2 intersecting edges)? What if there is a driveway or path as
         // an intersecting edge?
-        const auto& intsct_edge = path_leg->node(idx).intersecting_edge(0);
+        const auto& intsct_edge = etp->node(idx).intersecting_edge(0);
         if (intsct_edge.prev_name_consistency()) {
           road_ends = false;
         } else {
           // Get turn types to see if this is a turn at a "T"
           // (opposing right/left turns).
-          uint32_t turn_degree1 =
-              GetTurnDegree(prior_edge.end_heading(), current_edge.begin_heading());
+          uint32_t turn_degree1 = GetTurnDegree(prev_edge->end_heading(), curr_edge->begin_heading());
           uint32_t turn_degree2 =
-              GetTurnDegree(prior_edge.end_heading(), intsct_edge.begin_heading());
+              GetTurnDegree(prev_edge->end_heading(), intsct_edge.begin_heading());
           Turn::Type turn_type1 = Turn::GetType(turn_degree1);
           Turn::Type turn_type2 = Turn::GetType(turn_degree2);
           if (!(turn_type1 == Turn::Type::kRight && turn_type2 == Turn::Type::kLeft) &&
@@ -681,12 +682,12 @@ json::MapPtr osrm_maneuver(const valhalla::odin::TripDirections::Maneuver& maneu
 
       // Check if previous maneuver and current maneuver have same name
       // TODO - more extensive name comparison method?
-      if (prior_edge.name_size() > 0 && prior_edge.name_size() == current_edge.name_size() &&
-          (prior_edge.name(0).value() != current_edge.name(0).value())) {
+      if (prev_edge->name_size() > 0 && prev_edge->name_size() == curr_edge->name_size() &&
+          (prev_edge->name(0).value() != curr_edge->name(0).value())) {
         new_name = true;
       }
 
-      if (count > 1 && road_ends) {
+      if (prev_intersection_count > 1 && road_ends) {
         maneuver_type = "end of road";
       } else if (false_node && new_name) {
         maneuver_type = "new name";
@@ -718,10 +719,11 @@ std::string maneuver_geometry(const uint32_t begin_idx,
 
 // Get the mode
 std::string get_mode(const valhalla::odin::TripDirections::Maneuver& maneuver,
-                     std::list<odin::TripPath>::const_iterator path_leg) {
-  // Return ferry if the edge use is Ferry
-  uint32_t idx = maneuver.begin_path_index();
-  if (path_leg->node(idx).edge().use() == odin::TripPath::Use::TripPath_Use_kFerryUse) {
+                     const bool arrive_maneuver,
+                     valhalla::odin::EnhancedTripPath* etp) {
+  // Return ferry if not last maneuver and the edge use is Ferry
+  if (!arrive_maneuver && (etp->GetCurrEdge(maneuver.begin_path_index())->use() ==
+                           odin::TripPath::Use::TripPath_Use_kFerryUse)) {
     return "ferry";
   }
 
@@ -766,7 +768,7 @@ names_and_refs(const valhalla::odin::TripDirections::Maneuver& maneuver) {
 }
 
 // Add annotations to the leg
-json::MapPtr annotations(std::list<odin::TripPath>::const_iterator path_leg) {
+json::MapPtr annotations(valhalla::odin::EnhancedTripPath* etp) {
   auto annotations = json::map({});
 
   // Create distance and duration arrays. Iterate through trip edges and
@@ -776,10 +778,10 @@ json::MapPtr annotations(std::list<odin::TripPath>::const_iterator path_leg) {
   uint32_t elapsed_time = 0;
   auto distances = json::array({});
   auto durations = json::array({});
-  for (uint32_t idx = 0; idx < path_leg->node().size() - 1; ++idx) {
-    distances->emplace_back(json::fp_t{path_leg->node(idx).edge().length() * 1000.0f, 1});
-    uint32_t t = path_leg->node(idx + 1).elapsed_time() > path_leg->node(idx).elapsed_time()
-                     ? path_leg->node(idx + 1).elapsed_time() - path_leg->node(idx).elapsed_time()
+  for (uint32_t idx = 0; idx < etp->node_size() - 1; ++idx) {
+    distances->emplace_back(json::fp_t{etp->GetCurrEdge(idx)->length() * 1000.0f, 1});
+    uint32_t t = etp->node(idx + 1).elapsed_time() > etp->node(idx).elapsed_time()
+                     ? etp->node(idx + 1).elapsed_time() - etp->node(idx).elapsed_time()
                      : 0;
     durations->emplace_back(static_cast<uint64_t>(t));
   }
@@ -792,30 +794,41 @@ json::MapPtr annotations(std::list<odin::TripPath>::const_iterator path_leg) {
 
 // Serialize each leg
 json::ArrayPtr serialize_legs(const std::list<valhalla::odin::TripDirections>& legs,
-                              const std::list<odin::TripPath>& path_legs,
+                              std::list<valhalla::odin::TripPath>& path_legs,
                               bool imperial,
                               const valhalla::odin::DirectionsOptions& directions_options) {
   auto output_legs = json::array({});
 
-  // TODO: verify that path_legs is same size as legs
+  // Verify that the path_legs list is the same size as the legs list
+  if (legs.size() != path_legs.size()) {
+    throw valhalla_exception_t{503};
+  }
 
   // Iterate through the legs in TripDirections and TripPath
-  auto path_leg = path_legs.begin();
-  for (const auto& leg : legs) {
+  auto leg = legs.begin();
+  for (auto& path_leg : path_legs) {
+    valhalla::odin::EnhancedTripPath* etp = static_cast<valhalla::odin::EnhancedTripPath*>(&path_leg);
     auto output_leg = json::map({});
 
     // Get the full shape for the leg. We want to use this for serializing
     // encoded shape for each step (maneuver) in OSRM output.
-    auto shape = midgard::decode<std::vector<PointLL>>(leg.shape());
+    auto shape = midgard::decode<std::vector<PointLL>>(leg->shape());
 
+    //#########################################################################
     // Iterate through maneuvers - convert to OSRM steps
-    uint32_t index = 0;
-    uint32_t count = 0;
-    std::string prev_name, prev_ref, mode, prev_mode;
+    uint32_t maneuver_index = 0;
+    uint32_t prev_intersection_count = 0;
+    std::string drive_side = "right";
+    std::string name = "";
+    std::string ref = "";
+    std::string mode = "";
+    std::string prev_mode = "";
     auto steps = json::array({});
     std::unordered_map<std::string, float> maneuvers;
-    for (const auto& maneuver : leg.maneuver()) {
+    for (const auto& maneuver : leg->maneuver()) {
       auto step = json::map({});
+      bool depart_maneuver = (maneuver_index == 0);
+      bool arrive_maneuver = (maneuver_index == leg->maneuver_size() - 1);
 
       // TODO - iterate through TripPath from prior maneuver end to
       // end of this maneuver - perhaps insert OSRM specific steps such as
@@ -829,12 +842,17 @@ json::ArrayPtr serialize_legs(const std::list<valhalla::odin::TripDirections>& l
       // Add mode, driving side, weight, distance, duration, name
       float distance = maneuver.length() * (imperial ? 1609.34f : 1000.0f);
       float duration = maneuver.time();
-      uint32_t idx = maneuver.begin_path_index();
-      std::string drive_side = (path_leg->node(idx).edge().drive_on_right()) ? "right" : "left";
 
-      mode = get_mode(maneuver, path_leg);
-      if (prev_mode.empty()) {
-        prev_mode = mode;
+      // Process drive_side, name, ref, mode, and prev_mode attributes if not the arrive maneuver
+      if (!arrive_maneuver) {
+        drive_side =
+            (etp->GetCurrEdge(maneuver.begin_path_index())->drive_on_right()) ? "right" : "left";
+        auto name_ref_pair = names_and_refs(maneuver);
+        name = name_ref_pair.first;
+        ref = name_ref_pair.second;
+        mode = get_mode(maneuver, arrive_maneuver, etp);
+        if (prev_mode.empty())
+          prev_mode = mode;
       }
 
       step->emplace("mode", mode);
@@ -842,32 +860,10 @@ json::ArrayPtr serialize_legs(const std::list<valhalla::odin::TripDirections>& l
       step->emplace("duration", json::fp_t{duration, 1});
       step->emplace("weight", json::fp_t{duration, 1});
       step->emplace("distance", json::fp_t{distance, 1});
-
-      // Add street names and refs. Names get added even if empty
-      bool depart = (index == 0);
-      bool arrive = (index == leg.maneuver().size() - 1);
-      auto nr = names_and_refs(maneuver);
-
-      // We dont have previous stuff yet so we just take what we have now
-      if (depart) {
-        prev_name = nr.first;
-        prev_ref = nr.second;
+      step->emplace("name", name);
+      if (!ref.empty()) {
+        step->emplace("ref", ref);
       }
-
-      // Arrival step uses previous names
-      if (arrive) {
-        step->emplace("name", prev_name);
-        if (!prev_ref.empty())
-          step->emplace("ref", prev_ref);
-      } else {
-        step->emplace("name", nr.first);
-        if (!nr.second.empty())
-          step->emplace("ref", nr.second);
-      }
-
-      // Save these for the next round
-      prev_name = nr.first;
-      prev_ref = nr.second;
 
       // Record street name and distance.. TODO - need to also worry about order
       if (maneuver.street_name_size() > 0) {
@@ -881,8 +877,9 @@ json::ArrayPtr serialize_legs(const std::list<valhalla::odin::TripDirections>& l
       }
 
       // Add OSRM maneuver
-      step->emplace("maneuver", osrm_maneuver(maneuver, path_leg, shape[maneuver.begin_shape_index()],
-                                              depart, arrive, count, mode, prev_mode));
+      step->emplace("maneuver",
+                    osrm_maneuver(maneuver, etp, shape[maneuver.begin_shape_index()], depart_maneuver,
+                                  arrive_maneuver, prev_intersection_count, mode, prev_mode));
 
       // Add destinations and exits
       const auto& sign = maneuver.sign();
@@ -896,29 +893,30 @@ json::ArrayPtr serialize_legs(const std::list<valhalla::odin::TripDirections>& l
       }
 
       // Add intersections
-      step->emplace("intersections", intersections(maneuver, path_leg, shape, count, arrive));
+      step->emplace("intersections",
+                    intersections(maneuver, etp, shape, prev_intersection_count, arrive_maneuver));
 
       // Add step
       steps->emplace_back(step);
       prev_mode = mode;
-
-      index++;
-    }
+      maneuver_index++;
+    } // end maneuver loop
+    //#########################################################################
 
     // Add annotations. Valhalla cannot support node Ids (Valhalla does
     // not store node Ids) but can support distance, duration, speed.
     // NOTE: Valhalla outputs annotations per edge not between node Id
     // pairs like OSRM does.
     // Protect against empty trip path
-    if (path_leg->node().size() > 0) {
-      output_leg->emplace("annotation", annotations(path_leg));
+    if (etp->node_size() > 0) {
+      output_leg->emplace("annotation", annotations(etp));
     }
 
     // Add distance, duration, weight, and summary
     // Get a summary based on longest maneuvers.
     std::string summary = "TODO"; // Form summary from longest maneuvers?
-    float duration = leg.summary().time();
-    float distance = leg.summary().length() * (imperial ? 1609.34f : 1000.0f);
+    float duration = leg->summary().time();
+    float distance = leg->summary().length() * (imperial ? 1609.34f : 1000.0f);
     output_leg->emplace("summary", summary);
     output_leg->emplace("distance", json::fp_t{distance, 1});
     output_leg->emplace("duration", json::fp_t{duration, 1});
@@ -927,7 +925,7 @@ json::ArrayPtr serialize_legs(const std::list<valhalla::odin::TripDirections>& l
     // Add steps to the leg
     output_leg->emplace("steps", steps);
     output_legs->emplace_back(output_leg);
-    path_leg++;
+    leg++;
   }
   return output_legs;
 }
@@ -938,7 +936,7 @@ json::ArrayPtr serialize_legs(const std::list<valhalla::odin::TripDirections>& l
 //     TripPath protocol buffer
 //     TripDirections protocol buffer
 std::string serialize(const valhalla::odin::DirectionsOptions& directions_options,
-                      const std::list<TripPath>& path_legs,
+                      std::list<valhalla::odin::TripPath>& path_legs,
                       const std::list<valhalla::odin::TripDirections>& legs) {
   auto json = json::map({});
 

@@ -145,6 +145,7 @@ const std::unordered_map<unsigned, std::string>
                 {500, "Failed to parse intermediate request format"},
                 {501, "Failed to parse TripDirections"},
                 {502, "Maneuver index not found for specified shape index"},
+                {503, "Leg count mismatch"},
 
                 {599, "Unknown"}};
 

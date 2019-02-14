@@ -3,6 +3,7 @@
    * FIXED: Fixed a rare loop condition in route matcher (edge walking to match a trace).
    * FIXED: Fixed VACUUM ANALYZE syntax issue.  [#1704](https://github.com/valhalla/valhalla/pull/1704)
    * FIXED: Fixed the osrm maneuver type when a maneuver has the to_stay_on attribute set.  [#1714](https://github.com/valhalla/valhalla/pull/1714)
+   * FIXED: Fixed osrm compatibility mode attributes.  [#1716](https://github.com/valhalla/valhalla/pull/1716)
 * **Enhancement**
    * Add the ability to run valhalla_build_tiles in stages. Specify the begin_stage and end_stage as command line options. Also cleans up temporary files as the last stage in the pipeline.
 
