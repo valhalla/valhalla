@@ -290,7 +290,7 @@ public:
       } else {
         ++osmdata_.node_count;
       }
-      way_nodes_->push_back({{node}, ways_->size(), i});
+      way_nodes_->push_back({{node}, static_cast<uint32_t>(ways_->size()), static_cast<uint32_t>(i)});
       shape_.set(node);
       // If this way is a loop (node occurs twice) we can make our lives way easier if we simply
       // split it up into multiple edges in the graph. If a problem is hard, avoid the problem!

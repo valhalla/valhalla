@@ -23,8 +23,8 @@ enum class OSMType : uint8_t { kNode, kWay, kRelation };
 // Structure to store OSM node information and associate it to an OSM way
 struct OSMWayNode {
   OSMNode node;
-  size_t way_index;
-  size_t way_shape_node_index;
+  uint32_t way_index;
+  uint32_t way_shape_node_index;
 };
 
 // OSM bicycle data (stored within OSMData)
