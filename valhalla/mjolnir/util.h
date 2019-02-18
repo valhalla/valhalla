@@ -16,26 +16,33 @@ namespace mjolnir {
 // Stages of the Valhalla tile building pipeline
 enum class BuildStage : int8_t {
   kInvalid = -1,
-  kParse = 0,
-  kBuild = 1,
-  kEnhance = 2,
-  kFilter = 3,
-  kTransit = 4,
-  kHierarchy = 5,
-  kShortcuts = 6,
-  kRestrictions = 7,
-  kValidate = 8,
-  kCleanup = 9
+  kInitialize = 0,
+  kParse = 1,
+  kBuild = 2,
+  kEnhance = 3,
+  kFilter = 4,
+  kTransit = 5,
+  kHierarchy = 6,
+  kShortcuts = 7,
+  kRestrictions = 8,
+  kValidate = 9,
+  kCleanup = 10
 };
 
 // Convert string to BuildStage
 inline BuildStage string_to_buildstage(const std::string& s) {
   static const std::unordered_map<std::string, BuildStage> stringToBuildStage =
-      {{"parse", BuildStage::kParse},         {"build", BuildStage::kBuild},
-       {"enhance", BuildStage::kEnhance},     {"filter", BuildStage::kFilter},
-       {"transit", BuildStage::kTransit},     {"hierarchy", BuildStage::kHierarchy},
-       {"shortcuts", BuildStage::kShortcuts}, {"restrictions", BuildStage::kRestrictions},
-       {"validate", BuildStage::kValidate},   {"cleanup", BuildStage::kCleanup}};
+      {{"initialize", BuildStage::kInitialize},
+       {"parse", BuildStage::kParse},
+       {"build", BuildStage::kBuild},
+       {"enhance", BuildStage::kEnhance},
+       {"filter", BuildStage::kFilter},
+       {"transit", BuildStage::kTransit},
+       {"hierarchy", BuildStage::kHierarchy},
+       {"shortcuts", BuildStage::kShortcuts},
+       {"restrictions", BuildStage::kRestrictions},
+       {"validate", BuildStage::kValidate},
+       {"cleanup", BuildStage::kCleanup}};
 
   auto i = stringToBuildStage.find(s);
   return (i == stringToBuildStage.cend()) ? BuildStage::kInvalid : i->second;
@@ -44,7 +51,8 @@ inline BuildStage string_to_buildstage(const std::string& s) {
 // Convert BuildStage to string
 inline std::string to_string(BuildStage stg) {
   static const std::unordered_map<uint8_t, std::string> BuildStageStrings =
-      {{static_cast<int8_t>(BuildStage::kParse), "parse"},
+      {{static_cast<int8_t>(BuildStage::kInitialize), "initialize"},
+       {static_cast<int8_t>(BuildStage::kParse), "parse"},
        {static_cast<int8_t>(BuildStage::kBuild), "build"},
        {static_cast<int8_t>(BuildStage::kEnhance), "enhance"},
        {static_cast<int8_t>(BuildStage::kFilter), "filter"},
@@ -99,10 +107,11 @@ uint32_t compute_curvature(const std::list<midgard::PointLL>& shape);
  * @param input_files   Tells what osm pbf files to build the tiles from
  * @param start_stage   Starting stage of the pipeline to run
  * @param end_stage     End stage of the pipeline to run
+ * @return Returns true if no errors occur, false if an error occurs.
  */
-void build_tile_set(const boost::property_tree::ptree& config,
+bool build_tile_set(const boost::property_tree::ptree& config,
                     const std::vector<std::string>& input_files,
-                    const BuildStage start_stage = BuildStage::kParse,
+                    const BuildStage start_stage = BuildStage::kInitialize,
                     const BuildStage end_stage = BuildStage::kValidate);
 
 } // namespace mjolnir

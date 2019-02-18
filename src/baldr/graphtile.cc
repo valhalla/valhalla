@@ -38,8 +38,8 @@ namespace baldr {
 
 // Default constructor
 GraphTile::GraphTile()
-    : header_(nullptr), nodes_(nullptr), directededges_(nullptr), transitions_(nullptr),
-      departures_(nullptr), transit_stops_(nullptr), transit_routes_(nullptr),
+    : header_(nullptr), nodes_(nullptr), directededges_(nullptr), ext_directededges_(nullptr),
+      transitions_(nullptr), departures_(nullptr), transit_stops_(nullptr), transit_routes_(nullptr),
       transit_schedules_(nullptr), transit_transfers_(nullptr), access_restrictions_(nullptr),
       signs_(nullptr), admins_(nullptr), edge_bins_(nullptr), complex_restriction_forward_(nullptr),
       complex_restriction_reverse_(nullptr), edgeinfo_(nullptr), textlist_(nullptr),

@@ -1298,9 +1298,12 @@ public:
             direction == "West") {
           auto iter = osmdata_.way_ref.find(member.member_id);
           if (iter != osmdata_.way_ref.end()) {
-            osmdata_.way_ref[member.member_id] = iter->second + ";" + reference + "|" + direction;
+            std::string ref = osmdata_.name_offset_map.name(iter->second);
+            osmdata_.way_ref[member.member_id] =
+                osmdata_.name_offset_map.index(ref + ";" + reference + "|" + direction);
           } else {
-            osmdata_.way_ref[member.member_id] = reference + "|" + direction;
+            osmdata_.way_ref[member.member_id] =
+                osmdata_.name_offset_map.index(reference + "|" + direction);
           }
         }
       }
@@ -1320,11 +1323,12 @@ public:
       }
 
       if (from_way_id && to_way_id) {
+        uint32_t to_idx = osmdata_.name_offset_map.index(std::max(to, to_lanes));
+        uint32_t from_idx = osmdata_.name_offset_map.index(std::max(from, from_lanes));
         osmdata_.lane_connectivity_map.insert(
             OSMLaneConnectivityMultiMap::value_type(to_way_id,
                                                     OSMLaneConnectivity{to_way_id, from_way_id,
-                                                                        std::max(to, to_lanes),
-                                                                        std::max(from, from_lanes)}));
+                                                                        to_idx, from_idx}));
       }
     } else if (isRestriction && hasRestriction) {
       std::vector<uint64_t> vias;
