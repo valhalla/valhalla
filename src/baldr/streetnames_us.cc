@@ -75,5 +75,17 @@ StreetNamesUs::FindCommonBaseNames(const StreetNames& other_street_names) const 
   return common_base_names;
 }
 
+std::unique_ptr<StreetNames> StreetNamesUs::GetRouteNumbers() const {
+  std::unique_ptr<StreetNames> route_numbers = midgard::make_unique<StreetNamesUs>();
+  for (const auto& street_name : *this) {
+    if (street_name->is_route_number()) {
+      route_numbers->emplace_back(
+          midgard::make_unique<StreetNameUs>(street_name->value(), street_name->is_route_number()));
+    }
+  }
+
+  return route_numbers;
+}
+
 } // namespace baldr
 } // namespace valhalla

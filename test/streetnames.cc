@@ -78,6 +78,22 @@ void TestFindCommonBaseNames() {
                          StreetNames({{"B 2", true}, {"B 5", true}}));
 }
 
+void TryGetRouteNumbers(const StreetNames& street_names, const StreetNames& expected) {
+  std::unique_ptr<StreetNames> computed = street_names.GetRouteNumbers();
+  if (computed->ToString() != expected.ToString()) {
+    throw std::runtime_error(expected.ToString() +
+                             ": Incorrect values returned from GetRouteNumbers");
+  }
+}
+
+void TestGetRouteNumbers() {
+  TryGetRouteNumbers(StreetNames({{"Hershey Road", false}, {"PA 743 North", true}}),
+                     StreetNames({{"PA 743 North", true}}));
+
+  TryGetRouteNumbers(StreetNames({{"Unter den Linden", false}, {"B 2", true}, {"B 5", true}}),
+                     StreetNames({{"B 2", true}, {"B 5", true}}));
+}
+
 } // namespace
 
 int main() {
@@ -91,6 +107,9 @@ int main() {
 
   // FindCommonBaseNames
   suite.test(TEST_CASE(TestFindCommonBaseNames));
+
+  // GetRouteNumbers
+  suite.test(TEST_CASE(TestGetRouteNumbers));
 
   return suite.tear_down();
 }
