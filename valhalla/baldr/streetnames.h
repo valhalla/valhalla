@@ -37,6 +37,7 @@ public:
   FindCommonBaseNames(const StreetNames& other_street_names) const;
 
   virtual std::unique_ptr<StreetNames> GetRouteNumbers() const;
+  virtual std::unique_ptr<StreetNames> GetNonRouteNumbers() const;
 };
 
 } // namespace baldr

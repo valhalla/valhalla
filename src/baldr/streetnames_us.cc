@@ -87,5 +87,17 @@ std::unique_ptr<StreetNames> StreetNamesUs::GetRouteNumbers() const {
   return route_numbers;
 }
 
+std::unique_ptr<StreetNames> StreetNamesUs::GetNonRouteNumbers() const {
+  std::unique_ptr<StreetNames> non_route_numbers = midgard::make_unique<StreetNamesUs>();
+  for (const auto& street_name : *this) {
+    if (!street_name->is_route_number()) {
+      non_route_numbers->emplace_back(
+          midgard::make_unique<StreetNameUs>(street_name->value(), street_name->is_route_number()));
+    }
+  }
+
+  return non_route_numbers;
+}
+
 } // namespace baldr
 } // namespace valhalla

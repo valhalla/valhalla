@@ -104,9 +104,39 @@ void TestGetRouteNumbers() {
   TryGetRouteNumbers(StreetNamesUs({{"Unter den Linden", false}, {"B 2", true}, {"B 5", true}}),
                      StreetNamesUs({{"B 2", true}, {"B 5", true}}));
 
+  TryGetRouteNumbers(StreetNamesUs({{"I 95 South", true}}), StreetNamesUs({{"I 95 South", true}}));
+
+  TryGetRouteNumbers(StreetNamesUs({{"Sheridan Circle", false}}), StreetNamesUs());
+
   TryGetRouteNumbers(StreetNamesUs(
                          {{"Capital Beltway", false}, {"I 95 South", true}, {"I 495 South", true}}),
                      StreetNamesUs({{"I 95 South", true}, {"I 495 South", true}}));
+}
+
+void TryGetNonRouteNumbers(const StreetNamesUs& street_names, const StreetNamesUs& expected) {
+  std::unique_ptr<StreetNames> computed = street_names.GetNonRouteNumbers();
+  if (computed->ToString() != expected.ToString()) {
+    throw std::runtime_error(expected.ToString() +
+                             ": Incorrect values returned from GetNonRouteNumbers");
+  }
+}
+
+void TestGetNonRouteNumbers() {
+  TryGetNonRouteNumbers(StreetNamesUs({{"Hershey Road", false}, {"PA 743 North", true}}),
+                        StreetNamesUs({{"Hershey Road", false}}));
+
+  TryGetNonRouteNumbers(StreetNamesUs({{"Unter den Linden", false}, {"B 2", true}, {"B 5", true}}),
+                        StreetNamesUs({{"Unter den Linden", false}}));
+
+  TryGetNonRouteNumbers(StreetNamesUs({{"I 95 South", true}}), StreetNamesUs());
+
+  TryGetNonRouteNumbers(StreetNamesUs({{"Sheridan Circle", false}}),
+                        StreetNamesUs({{"Sheridan Circle", false}}));
+
+  TryGetNonRouteNumbers(StreetNamesUs({{"Capital Beltway", false},
+                                       {"I 95 South", true},
+                                       {"I 495 South", true}}),
+                        StreetNamesUs({{"Capital Beltway", false}}));
 }
 
 } // namespace
