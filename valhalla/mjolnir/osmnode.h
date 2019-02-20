@@ -42,12 +42,15 @@ struct OSMNode {
   uint64_t exit_to_index_ : 21;
   uint64_t spare1_ : 1;
 
-  OSMNode() { }
+  OSMNode() {
+    memset(this, 0, sizeof(OSMNode));
+  }
 
   /**
    * Constructor with OSM node Id
    */
   OSMNode(const uint64_t id) {
+    memset(this, 0, sizeof(OSMNode));
     set_id(id);
   }
 
