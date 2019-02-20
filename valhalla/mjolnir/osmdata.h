@@ -102,7 +102,11 @@ struct OSMData {
   // update many ways at a time (so we can't move this into OSMWay unless that is mapped by Id).
   OSMStringMap way_ref;
 
-  // Unique names and string (includes road names, references, turn lane strings, exit refs, etc.)
+  // Unique names and strings for nodes. This is separate from other names/strings so that
+  // the OSMNode (and OSMWayNode) structures can be made smaller.
+  UniqueNames node_names;
+
+  // Unique names and strings (includes road names, references, turn lane strings, etc.)
   UniqueNames name_offset_map;
 
   // Lane connectivity, index by the to way Id

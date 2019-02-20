@@ -10,47 +10,61 @@
 namespace valhalla {
 namespace mjolnir {
 
+constexpr uint64_t kMaxOSMNodeId = 68719476735;
+constexpr uint32_t kMaxNodeNameIndex = 2097151;
+
 /**
  * OSM node information. Result of parsing an OSM node.
  */
 struct OSMNode {
-
   // The osm id of the node
-  uint64_t osmid;
+  uint64_t osmid_ : 36;       // Allows up to 64B Ids
+  uint64_t access_ : 12;
+  uint64_t type_ : 4;
+  uint64_t intersection_ : 1;
+  uint64_t traffic_signal_ : 1;
+  uint64_t forward_signal_ : 1;
+  uint64_t backward_signal_ : 1;
+  uint64_t non_link_edge_ : 1;
+  uint64_t link_edge_ : 1;
+  uint64_t shortlink_ : 1; // Link edge < kMaxInternalLength
+  uint64_t non_ferry_edge_ : 1;
+  uint64_t ferry_edge_ : 1;
+  uint64_t spare_ : 3;
 
   // Lat,lng of the node
-  float lng, lat;
+  float lng_;
+  float lat_;
 
-  // Index to the node name (if it exists)
-  uint32_t name_index_;
+  // Store node names in a separate list (so they don't require as many indexes)
+  uint64_t name_index_ : 21;
+  uint64_t ref_index_ : 21;
+  uint64_t exit_to_index_ : 21;
+  uint64_t spare1_ : 1;
 
-  // Index to the node ref (if it exists)
-  uint32_t ref_index_;
+  OSMNode() : osmid_(0), lng_(0.0f), lat_(0.0f) {}
+  OSMNode(const uint64_t id) : lng_(0.0f), lat_(0.0f) {
+    set_id(id);
+  }
+  OSMNode(const uint64_t id, const float lng, const float lat) : lng_(lng), lat_(lat) {
+    set_id(id);
+  }
 
-  // Index to exit_to (if it exists)
-  uint32_t exit_to_index_;
-
-  // Node attributes. Shared by OSMNode and GraphBuilder Node.
-  uint32_t access_ : 12;
-  uint32_t type_ : 4;
-  uint32_t intersection_ : 1;
-  uint32_t traffic_signal_ : 1;
-  uint32_t forward_signal_ : 1;
-  uint32_t backward_signal_ : 1;
-  uint32_t non_link_edge_ : 1;
-  uint32_t link_edge_ : 1;
-  uint32_t shortlink_ : 1; // Link edge < kMaxInternalLength
-  uint32_t non_ferry_edge_ : 1;
-  uint32_t ferry_edge_ : 1;
-  uint32_t spare_ : 7;
+  void set_id(const uint64_t id) {
+    // Check for overflow
+    if (id > kMaxOSMNodeId) {
+      throw std::runtime_error("OSMNode: exceeded maximum OSM node Id: " + std::to_string(id));
+    }
+    osmid_ = id;
+  }
 
   /**
    * Sets the lat,lng.
    * @param  ll  Lat,lng of the node.
    */
   void set_latlng(const std::pair<float, float>& ll) {
-    lng = ll.first;
-    lat = ll.second;
+    lng_ = ll.first;
+    lat_ = ll.second;
   }
 
   /**
@@ -58,18 +72,23 @@ struct OSMNode {
    * @return   Returns the lat,lng of the node.
    */
   std::pair<float, float> latlng() const {
-    return std::make_pair(lng, lat);
+    return std::make_pair(lng_, lat_);
   }
 
   /**
-   * Set the name index.
+   * Set the name index into the unique node names list.
+   * @param index Index into OSMData node_names.
    */
   void set_name_index(const uint32_t index) {
+    if (index > kMaxNodeNameIndex) {
+      throw std::runtime_error("OSMNode: exceeded maximum name index");
+    }
     name_index_ = index;
   }
 
   /**
-   * Get the name index.
+   * Get the name index into the unique node names list.
+   * @return Returns the index into OSMData node_names.
    */
   uint32_t name_index() const {
     return name_index_;
@@ -83,14 +102,19 @@ struct OSMNode {
   }
 
   /**
-   * Set the ref index.
+   * Set the ref index into the unique node names list.
+   * @param index Index into OSMData node_names
    */
   void set_ref_index(const uint32_t index) {
+    if (index > kMaxNodeNameIndex) {
+      throw std::runtime_error("OSMNode: exceeded maximum name index");
+    }
     ref_index_ = index;
   }
 
   /**
-   * Get the ref index.
+   * Get the ref index into the unique node names list.
+   * @return Returns the index into OSMData node_names.
    */
   uint32_t ref_index() const {
     return ref_index_;
@@ -104,14 +128,19 @@ struct OSMNode {
   }
 
   /**
-   * Set the exit_to index.
+   * Set the exit_to index into the unique node names list.
+   * @param index Index into OSMData node_names
    */
   void set_exit_to_index(const uint32_t index) {
+    if (index > kMaxNodeNameIndex) {
+      throw std::runtime_error("OSMNode: exceeded maximum name index");
+    }
     exit_to_index_ = index;
   }
 
   /**
-   * Get the exit_to index.
+   * Get the exit_to index into the unique node names list.
+   * @return Returns the index into OSMData node_names.
    */
   uint32_t exit_to_index() const {
     return exit_to_index_;

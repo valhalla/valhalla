@@ -11,7 +11,7 @@ node_bundle collect_node_edges(const sequence<Node>::iterator& node_itr,
   node_bundle bundle(*itr);
   Node node;
   // for each node with the same id (duplicate)
-  for (; itr != nodes.end() && (node = *itr).node.osmid == bundle.node.osmid; ++itr) {
+  for (; itr != nodes.end() && (node = *itr).node.osmid_ == bundle.node.osmid_; ++itr) {
     ++bundle.node_count;
     if (node.is_start()) {
       auto edge_itr = edges[node.start_of];

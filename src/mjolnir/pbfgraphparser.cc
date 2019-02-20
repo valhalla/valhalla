@@ -117,22 +117,22 @@ public:
       } else if (is_highway_junction && (tag.first == "exit_to")) {
         bool hasTag = (tag.second.length() ? true : false);
         if (hasTag) {
-          // Add the name to the unique names list and store its index in the OSM node
-          n.set_exit_to_index(osmdata_.name_offset_map.index(tag.second));
+          // Add the name to the unique node names list and store its index in the OSM node
+          n.set_exit_to_index(osmdata_.node_names.index(tag.second));
           ++osmdata_.node_exit_to_count;
         }
       } else if (is_highway_junction && (tag.first == "ref")) {
         bool hasTag = (tag.second.length() ? true : false);
         if (hasTag) {
-          // Add the name to the unique names list and store its index in the OSM node
-          n.set_ref_index(osmdata_.name_offset_map.index(tag.second));
+          // Add the name to the unique node names list and store its index in the OSM node
+          n.set_ref_index(osmdata_.node_names.index(tag.second));
           ++osmdata_.node_ref_count;
         }
       } else if (is_highway_junction && (tag.first == "name")) {
         bool hasTag = (tag.second.length() ? true : false);
         if (hasTag) {
-          // Add the name to the unique names list and store its index in the OSM node
-          n.set_name_index(osmdata_.name_offset_map.index(tag.second));
+          // Add the name to the unique node names list and store its index in the OSM node
+          n.set_name_index(osmdata_.node_names.index(tag.second));
           ++osmdata_.node_name_count;
         }
       } else if (tag.first == "gate") {
@@ -187,7 +187,7 @@ public:
     // find a node we need to update
     current_way_node_index_ = way_nodes_->find_first_of(OSMWayNode{{osmid}},
                                                         [](const OSMWayNode& a, const OSMWayNode& b) {
-                                                          return a.node.osmid == b.node.osmid;
+                                                          return a.node.osmid_ == b.node.osmid_;
                                                         },
                                                         current_way_node_index_);
     // we found the first one
@@ -196,7 +196,7 @@ public:
       OSMWayNode way_node;
       sequence<OSMWayNode>::iterator element = (*way_nodes_)[current_way_node_index_];
       while (current_way_node_index_ < way_nodes_->size() &&
-             (way_node = element = (*way_nodes_)[current_way_node_index_]).node.osmid == osmid) {
+             (way_node = element = (*way_nodes_)[current_way_node_index_]).node.osmid_ == osmid) {
         way_node.node = n;
         element = way_node;
         ++current_way_node_index_;
@@ -1659,7 +1659,7 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt,
   {
     sequence<OSMWayNode> way_nodes(way_nodes_file, false);
     way_nodes.sort(
-        [](const OSMWayNode& a, const OSMWayNode& b) { return a.node.osmid < b.node.osmid; });
+        [](const OSMWayNode& a, const OSMWayNode& b) { return a.node.osmid_ < b.node.osmid_; });
   }
   LOG_INFO("Finished");
 
