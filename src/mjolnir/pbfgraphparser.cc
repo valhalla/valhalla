@@ -186,9 +186,7 @@ public:
     }
 
     // find a node we need to update
-    OSMWayNode wn;
-    wn.node.set_id(osmid);
-    current_way_node_index_ = way_nodes_->find_first_of(wn,
+    current_way_node_index_ = way_nodes_->find_first_of(OSMWayNode{{osmid}},
                                                         [](const OSMWayNode& a, const OSMWayNode& b) {
                                                           return a.node.osmid_ == b.node.osmid_;
                                                         },
@@ -1695,6 +1693,9 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt,
     way_nodes.sort([](const OSMWayNode& a, const OSMWayNode& b) {
       if (a.way_index == b.way_index) {
         // TODO: if its equal we have screwed something up, should we check and throw here?
+        if (a.way_shape_node_index == b.way_shape_node_index) {
+          throw std::runtime_error("way shape node indexes are equal?");
+        }
         return a.way_shape_node_index < b.way_shape_node_index;
       }
       return a.way_index < b.way_index;
