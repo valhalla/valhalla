@@ -100,8 +100,9 @@ public:
         ((highway_junction != results.end()) && (highway_junction->second == "motorway_junction"));
 
     // Create a new node and set its attributes
-    OSMNode n{osmid, static_cast<float>(lng), static_cast<float>(lat)};
-
+    OSMNode n;
+    n.set_id(osmid);
+    n.set_latlng(static_cast<float>(lng), static_cast<float>(lat));
     if (is_highway_junction) {
       n.set_type(NodeType::kMotorWayJunction);
     }
@@ -185,7 +186,9 @@ public:
     }
 
     // find a node we need to update
-    current_way_node_index_ = way_nodes_->find_first_of(OSMWayNode{{osmid}},
+    OSMWayNode wn;
+    wn.node.set_id(osmid);
+    current_way_node_index_ = way_nodes_->find_first_of(wn,
                                                         [](const OSMWayNode& a, const OSMWayNode& b) {
                                                           return a.node.osmid_ == b.node.osmid_;
                                                         },

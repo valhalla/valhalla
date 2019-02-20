@@ -25,7 +25,7 @@ namespace {
 const std::string config_file = "test/test_config_gp";
 
 const auto node_predicate = [](const OSMWayNode& a, const OSMWayNode& b) {
-  return a.node.osmid < b.node.osmid;
+  return a.node.osmid_ < b.node.osmid_;
 };
 
 OSMNode GetNode(uint64_t node_id, sequence<OSMWayNode>& way_nodes) {

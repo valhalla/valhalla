@@ -42,14 +42,11 @@ struct OSMNode {
   uint64_t exit_to_index_ : 21;
   uint64_t spare1_ : 1;
 
-  OSMNode() : osmid_(0), lng_(0.0f), lat_(0.0f) {}
-  OSMNode(const uint64_t id) : lng_(0.0f), lat_(0.0f) {
-    set_id(id);
-  }
-  OSMNode(const uint64_t id, const float lng, const float lat) : lng_(lng), lat_(lat) {
-    set_id(id);
-  }
-
+  /**
+   * Sets the OSM node Id. Ensures the Id does not exceed the maximum allowed based on
+   * ths OSMNode structure.
+   * @param id Node Id.
+   */
   void set_id(const uint64_t id) {
     // Check for overflow
     if (id > kMaxOSMNodeId) {
@@ -60,11 +57,13 @@ struct OSMNode {
 
   /**
    * Sets the lat,lng.
-   * @param  ll  Lat,lng of the node.
+   * @param  lng  Longitude of the node.
+   * @param  lat  Latitude of the node.
+   *
    */
-  void set_latlng(const std::pair<float, float>& ll) {
-    lng_ = ll.first;
-    lat_ = ll.second;
+  void set_latlng(const float lng, const float lat) {
+    lng_ = lng;
+    lat_ = lat;
   }
 
   /**
