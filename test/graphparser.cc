@@ -235,8 +235,7 @@ void Exits(const std::string& config_file) {
 
   auto node = GetNode(33698177, way_nodes);
 
-  if (!node.intersection() || !node.has_ref() ||
-      osmdata.node_names.name(node.ref_index()) != "51A-B")
+  if (!node.intersection() || !node.has_ref() || osmdata.node_names.name(node.ref_index()) != "51A-B")
     throw std::runtime_error("Ref not set correctly .");
 
   node = GetNode(1901353894, way_nodes);

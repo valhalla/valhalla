@@ -1291,8 +1291,7 @@ std::vector<SignInfo> GraphBuilder::CreateExitSignInfoList(const OSMNode& node,
     if (node.has_exit_to() && !fork) {
       std::string tmp;
       std::size_t pos;
-      std::vector<std::string> exit_tos =
-          GetTagTokens(osmdata.node_names.name(node.exit_to_index()));
+      std::vector<std::string> exit_tos = GetTagTokens(osmdata.node_names.name(node.exit_to_index()));
       for (auto& exit_to : exit_tos) {
 
         tmp = exit_to;

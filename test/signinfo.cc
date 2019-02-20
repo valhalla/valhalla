@@ -89,8 +89,8 @@ void ExitToTest() {
     throw std::runtime_error("I 495 Toward I 270 failed to be parsed.");
 
   exitsigns.clear();
-  node.set_exit_to_index(osmdata.node_names.index(
-      "I 495 Toward I 270 To I 95")); // default to toward.  Punt on parsing.
+  node.set_exit_to_index(
+      osmdata.node_names.index("I 495 Toward I 270 To I 95")); // default to toward.  Punt on parsing.
 
   exitsigns = GraphBuilder::CreateExitSignInfoList(node, way, osmdata, fork, forward);
 
