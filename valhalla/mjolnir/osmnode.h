@@ -42,6 +42,15 @@ struct OSMNode {
   uint64_t exit_to_index_ : 21;
   uint64_t spare1_ : 1;
 
+  OSMNode() { }
+
+  /**
+   * Constructor with OSM node Id
+   */
+  OSMNode(const uint64_t id) {
+    set_id(id);
+  }
+
   /**
    * Sets the OSM node Id. Ensures the Id does not exceed the maximum allowed based on
    * ths OSMNode structure.
