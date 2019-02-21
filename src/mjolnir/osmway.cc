@@ -56,25 +56,22 @@ void OSMWay::set_truck_speed(const float speed) {
 
 // Sets the number of lanes
 void OSMWay::set_lanes(const uint32_t lanes) {
-  // TODO - range check
-  classification_.fields.lanes = lanes;
+  lanes_ = (lanes > kMaxLaneCount) ? kMaxLaneCount : lanes;
 }
 
 // Sets the number of backward lanes
 void OSMWay::set_backward_lanes(const uint32_t backward_lanes) {
-  // TODO - range check
-  classification_.fields.backward_lanes = backward_lanes;
+  backward_lanes_ = (backward_lanes > kMaxLaneCount) ? kMaxLaneCount : backward_lanes;
 }
 
 // Sets the number of forward lanes
 void OSMWay::set_forward_lanes(const uint32_t forward_lanes) {
   // TODO - range check
-  classification_.fields.forward_lanes = forward_lanes;
+  forward_lanes_ = (forward_lanes > kMaxLaneCount) ? kMaxLaneCount : forward_lanes;
 }
 
 // Get the names for the edge info based on the road class.
 std::vector<std::string> OSMWay::GetNames(const std::string& ref,
-                                          const UniqueNames& ref_offset_map,
                                           const UniqueNames& name_offset_map,
                                           uint16_t& types) const {
 
@@ -84,14 +81,14 @@ std::vector<std::string> OSMWay::GetNames(const std::string& ref,
   std::vector<std::string> names;
   // Process motorway and trunk refs
   if ((ref_index_ != 0 || !ref.empty()) &&
-      ((static_cast<RoadClass>(classification_.fields.road_class) == RoadClass::kMotorway) ||
-       (static_cast<RoadClass>(classification_.fields.road_class) == RoadClass::kTrunk))) {
+      ((static_cast<RoadClass>(road_class_) == RoadClass::kMotorway) ||
+       (static_cast<RoadClass>(road_class_) == RoadClass::kTrunk))) {
     std::vector<std::string> tokens;
 
     if (!ref.empty()) {
       tokens = GetTagTokens(ref); // use updated refs from relations.
     } else {
-      tokens = GetTagTokens(ref_offset_map.name(ref_index_));
+      tokens = GetTagTokens(name_offset_map.name(ref_index_));
     }
 
     for (const auto& t : tokens) {
@@ -111,14 +108,13 @@ std::vector<std::string> OSMWay::GetNames(const std::string& ref,
   }
 
   // Process non limited access refs
-  if (ref_index_ != 0 &&
-      (static_cast<RoadClass>(classification_.fields.road_class) != RoadClass::kMotorway) &&
-      (static_cast<RoadClass>(classification_.fields.road_class) != RoadClass::kTrunk)) {
+  if (ref_index_ != 0 && (static_cast<RoadClass>(road_class_) != RoadClass::kMotorway) &&
+      (static_cast<RoadClass>(road_class_) != RoadClass::kTrunk)) {
     std::vector<std::string> tokens;
     if (!ref.empty()) {
       tokens = GetTagTokens(ref); // use updated refs from relations.
     } else {
-      tokens = GetTagTokens(ref_offset_map.name(ref_index_));
+      tokens = GetTagTokens(name_offset_map.name(ref_index_));
     }
 
     for (const auto& t : tokens) {
