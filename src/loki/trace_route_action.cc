@@ -227,7 +227,7 @@ void loki_worker_t::locations_from_shape(valhalla_request_t& request) {
         const GraphTile* tile = reader->GetGraphTile(edgeid);
         const DirectedEdge* de = tile->directededge(edgeid);
         auto& shape = tile->edgeinfo(de->edgeinfo_offset()).shape();
-        auto closest = orig_ll.ClosestPoint(shape);
+        auto closest = dest_ll.ClosestPoint(shape);
 
         // Close to centerline - set to no side of street
         if (std::get<1>(closest) < 5.0f) {
