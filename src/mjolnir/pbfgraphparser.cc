@@ -1713,6 +1713,7 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt,
   LOG_INFO("Number of nodes with exit_to = " + std::to_string(osmdata.node_exit_to_count));
   LOG_INFO("Number of nodes with names = " + std::to_string(osmdata.node_name_count));
   LOG_INFO("Number of way refs = " + std::to_string(osmdata.way_ref.size()));
+  LOG_INFO("Unique Node Strings (names, refs, etc.) = " + std::to_string(osmdata.node_names.Size()));
   LOG_INFO("Unique Strings (names, refs, etc.) = " + std::to_string(osmdata.name_offset_map.Size()));
 
   // Return OSM data
