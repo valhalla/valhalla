@@ -56,7 +56,7 @@ SortGraph(const std::string& nodes_file, const std::string& edges_file, const ui
   sequence<Node> nodes(nodes_file, false);
   nodes.sort([](const Node& a, const Node& b) {
     if (a.graph_id == b.graph_id) {
-      return a.node.osmid < b.node.osmid;
+      return a.node.osmid_ < b.node.osmid_;
     }
     return a.graph_id < b.graph_id;
   });
@@ -79,7 +79,7 @@ SortGraph(const std::string& nodes_file, const std::string& edges_file, const ui
           run_index = node_index;
           ++node_count;
         } // but is it a new node
-        else if (last_node.node.osmid != node.node.osmid) {
+        else if (last_node.node.osmid_ != node.node.osmid_) {
           node.graph_id.set_id(last_node.graph_id.id() + 1);
           run_index = node_index;
           ++node_count;
@@ -133,8 +133,8 @@ void ConstructEdges(const OSMData& osmdata,
   // Method to get length of an edge (used to find short link edges)
   const auto Length = [&way_nodes](const size_t idx1, const OSMNode& node2) {
     auto node1 = (*way_nodes[idx1]).node;
-    PointLL a(node1.lng, node1.lat);
-    PointLL b(node2.lng, node2.lat);
+    PointLL a(node1.lng_, node1.lat_);
+    PointLL b(node2.lng_, node2.lat_);
     return a.Distance(b);
   };
 
@@ -153,8 +153,8 @@ void ConstructEdges(const OSMData& osmdata,
     bool valid = true;
     for (auto ni = current_way_node_index; ni <= last_way_node_index; ni++) {
       const auto wn = (*way_nodes[ni]).node;
-      if (wn.lat == 0.0 && wn.lng == 0.0) {
-        LOG_ERROR("Cannot find node " + std::to_string(wn.osmid) + " in way " +
+      if (wn.lat_ == 0.0 && wn.lng_ == 0.0) {
+        LOG_ERROR("Cannot find node " + std::to_string(wn.osmid_) + " in way " +
                   std::to_string(way.way_id()));
         valid = false;
       }
@@ -284,7 +284,7 @@ uint32_t CreateSimpleTurnRestriction(const uint32_t wayid,
   auto node = *node_itr;
   std::vector<OSMRestriction> trs;
   for (auto r = res.first; r != res.second; ++r) {
-    if (r->second.via() == node.node.osmid) {
+    if (r->second.via() == node.node.osmid_) {
       trs.push_back(r->second);
     }
   }
@@ -415,7 +415,7 @@ void BuildTileSet(const std::string& ways_file,
     std::list<PointLL> shape;
     for (size_t i = 0; i < count; ++i) {
       auto node = (*way_nodes[idx++]).node;
-      shape.emplace_back(node.lng, node.lat);
+      shape.emplace_back(node.lng_, node.lat_);
     }
     return shape;
   };
@@ -498,7 +498,7 @@ void BuildTileSet(const std::string& ways_file,
         }
 
         const auto& node = bundle.node;
-        PointLL node_ll{node.lng, node.lat};
+        PointLL node_ll{node.lng_, node.lat_};
 
         // Get the admin index
         uint32_t admin_index = (tile_within_one_admin) ? admin_polys.begin()->first
@@ -1123,7 +1123,7 @@ void GraphBuilder::Build(const boost::property_tree::ptree& pt,
   // Make the edges and nodes in the graph
   ConstructEdges(osmdata, ways_file, way_nodes_file, nodes_file, edges_file,
                  tl->second.tiles.TileSize(), [&level](const OSMNode& node) {
-                   return TileHierarchy::GetGraphId({node.lng, node.lat}, level);
+                   return TileHierarchy::GetGraphId({node.lng_, node.lat_}, level);
                  });
 
   // Line up the nodes and then re-map the edges that the edges to them
@@ -1216,7 +1216,7 @@ std::vector<SignInfo> GraphBuilder::CreateExitSignInfoList(const OSMNode& node,
       exit_list.emplace_back(Sign::Type::kExitNumber, false, j_ref);
     }
   } else if (node.has_ref() && !fork) {
-    std::vector<std::string> n_refs = GetTagTokens(osmdata.name_offset_map.name(node.ref_index()));
+    std::vector<std::string> n_refs = GetTagTokens(osmdata.node_names.name(node.ref_index()));
     for (auto& n_ref : n_refs) {
       exit_list.emplace_back(Sign::Type::kExitNumber, false, n_ref);
     }
@@ -1291,8 +1291,7 @@ std::vector<SignInfo> GraphBuilder::CreateExitSignInfoList(const OSMNode& node,
     if (node.has_exit_to() && !fork) {
       std::string tmp;
       std::size_t pos;
-      std::vector<std::string> exit_tos =
-          GetTagTokens(osmdata.name_offset_map.name(node.exit_to_index()));
+      std::vector<std::string> exit_tos = GetTagTokens(osmdata.node_names.name(node.exit_to_index()));
       for (auto& exit_to : exit_tos) {
 
         tmp = exit_to;
@@ -1348,7 +1347,7 @@ std::vector<SignInfo> GraphBuilder::CreateExitSignInfoList(const OSMNode& node,
   // Exit sign name
   if (node.has_name() && !fork) {
     // Get the name from OSMData using the name index
-    std::vector<std::string> names = GetTagTokens(osmdata.name_offset_map.name(node.name_index()));
+    std::vector<std::string> names = GetTagTokens(osmdata.node_names.name(node.name_index()));
     for (auto& name : names) {
       exit_list.emplace_back(Sign::Type::kExitName, false, name);
     }

@@ -19,6 +19,7 @@ const std::string viaset_file = "osmdata_viaset.bin";
 const std::string access_restrictions_file = "osmdata_access_restrictions.bin";
 const std::string bike_relations_file = "osmdata_bike_relations.bin";
 const std::string wayref_file = "osmdata_wayrefs.bin";
+const std::string node_names_file = "osmdata_node_names.bin";
 const std::string unique_names_file = "osmdata_unique_strings.bin";
 const std::string lane_connectivity_file = "osmdata_lane_connectivity.bin";
 
@@ -187,6 +188,37 @@ bool write_way_refs(const std::string& filename, const OSMStringMap& way_refs) {
   return true;
 }
 
+bool write_node_names(const std::string& filename, const UniqueNames& names) {
+  // Open file and truncate
+  std::ofstream file(filename.c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
+  if (!file.is_open()) {
+    LOG_ERROR("write_node_names failed to open output file: " + filename);
+    return false;
+  }
+
+  // Store a count of strings followed by an array of string lengths
+  uint32_t offset = 0;
+  uint32_t name_count = names.Size();
+  std::vector<uint32_t> lengths(name_count);
+  std::vector<char> namebuf;
+  for (uint32_t n = 0; n < name_count; ++n) {
+    const auto str = names.name(n + 1); // Add 1 since the first name is blank
+    lengths[n] = str.length() + 1;      // Add 1 for the null terminator
+
+    // Copy the string to the namebuf and add a terminator
+    std::copy(str.c_str(), str.c_str() + str.length(), back_inserter(namebuf));
+    namebuf.push_back(0);
+  }
+
+  // Write to file
+  file.write(reinterpret_cast<const char*>(&name_count), sizeof(uint32_t));
+  file.write(reinterpret_cast<const char*>(lengths.data()), lengths.size() * sizeof(uint32_t));
+  uint32_t sz = namebuf.size();
+  file.write(reinterpret_cast<const char*>(&sz), sizeof(uint32_t));
+  file.write(reinterpret_cast<const char*>(namebuf.data()), namebuf.size());
+  return true;
+}
+
 bool write_unique_names(const std::string& filename, const UniqueNames& names) {
   // Open file and truncate
   std::ofstream file(filename.c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
@@ -352,6 +384,38 @@ bool read_way_refs(const std::string& filename, OSMStringMap& way_refs) {
   return true;
 }
 
+bool read_node_names(const std::string& filename, UniqueNames& names) {
+  // Open file and truncate
+  std::ifstream file(filename, std::ios::in | std::ios::binary);
+  if (!file.is_open()) {
+    LOG_ERROR("read_node_names failed to open input file: " + filename);
+    return false;
+  }
+
+  // Read from file
+  uint32_t count = 0;
+  file.read(reinterpret_cast<char*>(&count), sizeof(uint32_t));
+  std::vector<uint32_t> lengths(count);
+  file.read(reinterpret_cast<char*>(lengths.data()), count * sizeof(uint32_t));
+  uint32_t bufsize = 0;
+  file.read(reinterpret_cast<char*>(&bufsize), sizeof(uint32_t));
+  std::vector<char> namebuf(bufsize);
+  file.read(reinterpret_cast<char*>(namebuf.data()), bufsize);
+
+  // Iterate through the temporary data and add the unique names
+  uint32_t offset = 0;
+  for (uint32_t n = 0; n < count; ++n) {
+    std::string name(&namebuf[offset]);
+    names.index(name);
+    offset += lengths[n];
+
+    if ((name.length() + 1) != lengths[n]) {
+      LOG_ERROR("name " + name + " length should be " + std::to_string(lengths[n]));
+    }
+  }
+  return true;
+}
+
 bool read_unique_names(const std::string& filename, UniqueNames& names) {
   // Open file and truncate
   std::ifstream file(filename, std::ios::in | std::ios::binary);
@@ -440,6 +504,7 @@ bool OSMData::write_to_temp_files(const std::string& tile_dir) {
                 write_access_restrictions(tile_dir + access_restrictions_file, access_restrictions) &&
                 write_bike_relations(tile_dir + bike_relations_file, bike_relations) &&
                 write_way_refs(tile_dir + wayref_file, way_ref) &&
+                write_node_names(tile_dir + node_names_file, node_names) &&
                 write_unique_names(tile_dir + unique_names_file, name_offset_map) &&
                 write_lane_connectivity(tile_dir + lane_connectivity_file, lane_connectivity_map);
   LOG_INFO("Done");
@@ -475,6 +540,7 @@ bool OSMData::read_from_temp_files(const std::string& tile_dir) {
                 read_access_restrictions(tile_dir + access_restrictions_file, access_restrictions) &&
                 read_bike_relations(tile_dir + bike_relations_file, bike_relations) &&
                 read_way_refs(tile_dir + wayref_file, way_ref) &&
+                read_node_names(tile_dir + node_names_file, node_names) &&
                 read_unique_names(tile_dir + unique_names_file, name_offset_map) &&
                 read_lane_connectivity(tile_dir + lane_connectivity_file, lane_connectivity_map);
   LOG_INFO("Done");
@@ -494,6 +560,7 @@ void OSMData::cleanup_temp_files(const std::string& tile_dir) {
   remove_temp_file(tile_dir + access_restrictions_file);
   remove_temp_file(tile_dir + bike_relations_file);
   remove_temp_file(tile_dir + wayref_file);
+  remove_temp_file(tile_dir + node_names_file);
   remove_temp_file(tile_dir + unique_names_file);
   remove_temp_file(tile_dir + lane_connectivity_file);
 }

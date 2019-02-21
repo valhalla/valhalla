@@ -29,7 +29,7 @@ std::string from_restriction_file = "test_from_complex_restrictions_utrecht.bin"
 std::string to_restriction_file = "test_to_complex_restrictions_utrecht.bin";
 
 const auto node_predicate = [](const OSMWayNode& a, const OSMWayNode& b) {
-  return a.node.osmid < b.node.osmid;
+  return a.node.osmid_ < b.node.osmid_;
 };
 
 OSMNode GetNode(uint64_t node_id, sequence<OSMWayNode>& way_nodes) {

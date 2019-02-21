@@ -25,7 +25,7 @@ namespace {
 const std::string config_file = "test/test_config_gp";
 
 const auto node_predicate = [](const OSMWayNode& a, const OSMWayNode& b) {
-  return a.node.osmid < b.node.osmid;
+  return a.node.osmid_ < b.node.osmid_;
 };
 
 OSMNode GetNode(uint64_t node_id, sequence<OSMWayNode>& way_nodes) {
@@ -235,19 +235,18 @@ void Exits(const std::string& config_file) {
 
   auto node = GetNode(33698177, way_nodes);
 
-  if (!node.intersection() || !node.has_ref() ||
-      osmdata.name_offset_map.name(node.ref_index()) != "51A-B")
+  if (!node.intersection() || !node.has_ref() || osmdata.node_names.name(node.ref_index()) != "51A-B")
     throw std::runtime_error("Ref not set correctly .");
 
   node = GetNode(1901353894, way_nodes);
 
   if (!node.intersection() || !node.has_ref() ||
-      osmdata.name_offset_map.name(node.name_index()) != "Harrisburg East")
+      osmdata.node_names.name(node.name_index()) != "Harrisburg East")
     throw std::runtime_error("node name not set correctly .");
 
   node = GetNode(462240654, way_nodes);
 
-  if (!node.intersection() || osmdata.name_offset_map.name(node.exit_to_index()) != "PA441")
+  if (!node.intersection() || osmdata.node_names.name(node.exit_to_index()) != "PA441")
     throw std::runtime_error("node exit_to not set correctly .");
 
   boost::filesystem::remove(ways_file);
