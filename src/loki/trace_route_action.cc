@@ -205,6 +205,9 @@ void loki_worker_t::locations_from_shape(valhalla_request_t& request) {
         auto& shape = tile->edgeinfo(de->edgeinfo_offset()).shape();
         auto closest = orig_ll.ClosestPoint(shape);
 
+        // TODO - consider consolidating side of street logic into a common method
+        // (perhaps in baldr that can be called here and in search.cc get_side)
+
         // Close to centerline - set to no side of street
         if (std::get<1>(closest) < 5.0f) {
           e.set_side_of_street(odin::Location::kNone);
@@ -228,6 +231,9 @@ void loki_worker_t::locations_from_shape(valhalla_request_t& request) {
         const DirectedEdge* de = tile->directededge(edgeid);
         auto& shape = tile->edgeinfo(de->edgeinfo_offset()).shape();
         auto closest = dest_ll.ClosestPoint(shape);
+
+        // TODO - consider consolidating side of street logic into a common method
+        // (perhaps in baldr that can be called here and in search.cc get_side)
 
         // Close to centerline - set to no side of street
         if (std::get<1>(closest) < 5.0f) {
