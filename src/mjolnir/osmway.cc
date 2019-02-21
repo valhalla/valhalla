@@ -71,9 +71,8 @@ void OSMWay::set_forward_lanes(const uint32_t forward_lanes) {
 }
 
 // Get the names for the edge info based on the road class.
-std::vector<std::string> OSMWay::GetNames(const std::string& ref,
-                                          const UniqueNames& name_offset_map,
-                                          uint16_t& types) const {
+std::vector<std::string>
+OSMWay::GetNames(const std::string& ref, const UniqueNames& name_offset_map, uint16_t& types) const {
 
   uint16_t location = 0;
   types = 0;
