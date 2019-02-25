@@ -239,6 +239,14 @@ TripDirections DirectionsBuilder::PopulateTripDirections(const DirectionsOptions
       trip_maneuver->set_roundabout_exit_count(maneuver.roundabout_exit_count());
     }
 
+    // Set roundabout exit street names
+    for (const auto& roundabout_exit_street_names : maneuver.roundabout_exit_street_names()) {
+      auto* maneuver_roundabout_exit_street_names = trip_maneuver->add_roundabout_exit_street_names();
+      maneuver_roundabout_exit_street_names->set_value(roundabout_exit_street_names->value());
+      maneuver_roundabout_exit_street_names->set_is_route_number(
+          roundabout_exit_street_names->is_route_number());
+    }
+
     // Depart instructions
     if (!maneuver.depart_instruction().empty()) {
       trip_maneuver->set_depart_instruction(maneuver.depart_instruction());
