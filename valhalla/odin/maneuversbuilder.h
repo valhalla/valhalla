@@ -153,6 +153,15 @@ protected:
                                   std::list<Maneuver>::iterator next_man) const;
 
   /**
+   * Review each roundabout and if appropriate - set the roundabout name and roundabout exit name.
+   * The roundabout name shall be a non-route number street name that does not exist on the incoming
+   * and outgoing steps.
+   *
+   * @param maneuvers The list of maneuvers to process.
+   */
+  void ProcessRoundaboutNames(std::list<Maneuver>& maneuvers);
+
+  /**
    * Enhance a signless interchange maneuver by adding the subsequent street name
    * as a branch name.
    *
