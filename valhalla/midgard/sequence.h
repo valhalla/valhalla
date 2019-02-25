@@ -267,7 +267,7 @@ public:
     auto end = file->tellg();
     auto element_count = static_cast<std::streamoff>(std::ceil(end / sizeof(T)));
     if (end != static_cast<decltype(end)>(element_count * sizeof(T))) {
-      throw std::runtime_error("This file has an incorrect size for type");
+      throw std::runtime_error("sequence: " + file_name + " has an incorrect size for type");
     }
     write_buffer.reserve(write_buffer_size ? write_buffer_size : 1);
 

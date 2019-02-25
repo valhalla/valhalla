@@ -125,7 +125,7 @@ bool shapes_match(const std::vector<PointLL>& shape1, const std::vector<PointLL>
   }
 }
 
-void build_tile_set(const boost::property_tree::ptree& config,
+bool build_tile_set(const boost::property_tree::ptree& config,
                     const std::vector<std::string>& input_files,
                     const BuildStage start_stage,
                     const BuildStage end_stage) {
@@ -146,21 +146,9 @@ void build_tile_set(const boost::property_tree::ptree& config,
     tile_dir.push_back(filesystem::path::preferred_separator);
   }
 
-  // Set up the temporary (*.bin) files used during processing
-  std::string ways_bin = tile_dir + ways_file;
-  std::string way_nodes_bin = tile_dir + way_nodes_file;
-  std::string nodes_bin = tile_dir + nodes_file;
-  std::string edges_bin = tile_dir + edges_file;
-  std::string access_bin = tile_dir + access_file;
-  std::string cr_from_bin = tile_dir + cr_from_file;
-  std::string cr_to_bin = tile_dir + cr_to_file;
-  std::string new_to_old_bin = tile_dir + new_to_old_file;
-  std::string old_to_new_bin = tile_dir + old_to_new_file;
-
-  // Read the OSM protocol buffer file. Callbacks for nodes, ways, and
-  // relations are defined within the PBFParser class
-  // NOTE: parse and build stages must be run together due to osm_data
-  if (start_stage == BuildStage::kParse && BuildStage::kBuild <= end_stage) {
+  // During the initialize stage the tile directory will be purged (if it already exists)
+  // and will be created if it does not already exist
+  if (start_stage == BuildStage::kInitialize) {
     // set up the directories and purge old tiles if starting at the parsing stage
     for (const auto& level : valhalla::baldr::TileHierarchy::levels()) {
       auto level_dir = tile_dir + std::to_string(level.first);
@@ -179,14 +167,46 @@ void build_tile_set(const boost::property_tree::ptree& config,
       boost::filesystem::remove_all(level_dir);
     }
 
+    // Create the directory if it does not exist
     boost::filesystem::create_directories(tile_dir);
+  }
 
-    // Parse OSM data
-    auto osm_data = PBFGraphParser::Parse(config.get_child("mjolnir"), input_files, ways_bin,
-                                          way_nodes_bin, access_bin, cr_from_bin, cr_to_bin);
+  // Set up the temporary (*.bin) files used during processing
+  std::string ways_bin = tile_dir + ways_file;
+  std::string way_nodes_bin = tile_dir + way_nodes_file;
+  std::string nodes_bin = tile_dir + nodes_file;
+  std::string edges_bin = tile_dir + edges_file;
+  std::string access_bin = tile_dir + access_file;
+  std::string cr_from_bin = tile_dir + cr_from_file;
+  std::string cr_to_bin = tile_dir + cr_to_file;
+  std::string new_to_old_bin = tile_dir + new_to_old_file;
+  std::string old_to_new_bin = tile_dir + old_to_new_file;
+
+  // OSMData class
+  OSMData osm_data;
+
+  // Parse OSM data
+  if (start_stage <= BuildStage::kParse && BuildStage::kParse <= end_stage) {
+    // Read the OSM protocol buffer file. Callbacks for nodes, ways, and
+    // relations are defined within the PBFParser class
+    osm_data = PBFGraphParser::Parse(config.get_child("mjolnir"), input_files, ways_bin,
+                                     way_nodes_bin, access_bin, cr_from_bin, cr_to_bin);
 
     // Free all protobuf memory - cannot use the protobuffer lib after this!
     OSMPBF::Parser::free();
+
+    // Write the OSMData to files if parsing is the end stage
+    if (end_stage == BuildStage::kParse) {
+      osm_data.write_to_temp_files(tile_dir);
+    }
+  }
+
+  // Build Valhalla routing tiles
+  if (start_stage <= BuildStage::kBuild && BuildStage::kBuild <= end_stage) {
+    // Read OSMData from files if building tiles is the first stage
+    if (start_stage == BuildStage::kBuild) {
+      osm_data.read_from_temp_files(tile_dir);
+    }
 
     // Build the graph using the OSMNodes and OSMWays from the parser
     GraphBuilder::Build(config, osm_data, ways_bin, way_nodes_bin, nodes_bin, edges_bin, cr_from_bin,
@@ -254,7 +274,9 @@ void build_tile_set(const boost::property_tree::ptree& config,
     remove_temp_file(cr_to_bin);
     remove_temp_file(new_to_old_bin);
     remove_temp_file(old_to_new_bin);
+    OSMData::cleanup_temp_files(tile_dir);
   }
+  return true;
 }
 
 } // namespace mjolnir

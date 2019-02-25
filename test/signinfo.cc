@@ -20,7 +20,7 @@ void ExitToTest() {
   bool fork = false;
   bool forward = true;
 
-  node.set_exit_to_index(osmdata.name_offset_map.index("US 11;To I 81;Carlisle;Harrisburg"));
+  node.set_exit_to_index(osmdata.node_names.index("US 11;To I 81;Carlisle;Harrisburg"));
 
   std::vector<SignInfo> exitsigns;
   exitsigns = GraphBuilder::CreateExitSignInfoList(node, way, osmdata, fork, forward);
@@ -39,7 +39,7 @@ void ExitToTest() {
                              std::to_string(exitsigns.size()));
 
   exitsigns.clear();
-  node.set_exit_to_index(osmdata.name_offset_map.index("US 11;Toward I 81;Carlisle;Harrisburg"));
+  node.set_exit_to_index(osmdata.node_names.index("US 11;Toward I 81;Carlisle;Harrisburg"));
 
   exitsigns = GraphBuilder::CreateExitSignInfoList(node, way, osmdata, fork, forward);
 
@@ -55,7 +55,7 @@ void ExitToTest() {
     throw std::runtime_error("US 11;Toward I 81;Carlisle;Harrisburg failed to be parsed.");
 
   exitsigns.clear();
-  node.set_exit_to_index(osmdata.name_offset_map.index("I 95 To I 695"));
+  node.set_exit_to_index(osmdata.node_names.index("I 95 To I 695"));
 
   exitsigns = GraphBuilder::CreateExitSignInfoList(node, way, osmdata, fork, forward);
 
@@ -72,7 +72,7 @@ void ExitToTest() {
     throw std::runtime_error("I 95 To I 695 failed to be parsed.");
 
   exitsigns.clear();
-  node.set_exit_to_index(osmdata.name_offset_map.index("I 495 Toward I 270"));
+  node.set_exit_to_index(osmdata.node_names.index("I 495 Toward I 270"));
 
   exitsigns = GraphBuilder::CreateExitSignInfoList(node, way, osmdata, fork, forward);
 
@@ -89,8 +89,8 @@ void ExitToTest() {
     throw std::runtime_error("I 495 Toward I 270 failed to be parsed.");
 
   exitsigns.clear();
-  node.set_exit_to_index(osmdata.name_offset_map.index(
-      "I 495 Toward I 270 To I 95")); // default to toward.  Punt on parsing.
+  node.set_exit_to_index(
+      osmdata.node_names.index("I 495 Toward I 270 To I 95")); // default to toward.  Punt on parsing.
 
   exitsigns = GraphBuilder::CreateExitSignInfoList(node, way, osmdata, fork, forward);
 

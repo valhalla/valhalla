@@ -31,7 +31,7 @@ int main(int argc, char** argv) {
   // Program options
   boost::filesystem::path config_file_path;
   std::string inline_config;
-  std::string start_stage_str = "parse";
+  std::string start_stage_str = "initialize";
   std::string end_stage_str = "cleanup";
   std::vector<std::string> input_files;
   bpo::options_description options(
@@ -121,6 +121,7 @@ int main(int argc, char** argv) {
     list_stages();
     return EXIT_FAILURE;
   }
+  LOG_INFO("Start stage = " + to_string(start_stage) + " End stage = " + to_string(end_stage));
 
   // Make sure start stage < end stage
   if (static_cast<int>(start_stage) > static_cast<int>(end_stage)) {
@@ -134,7 +135,9 @@ int main(int argc, char** argv) {
   // must only use the tile_dir
   pt.get_child("mjolnir").erase("tile_extract");
   pt.get_child("mjolnir").erase("tile_url");
-  build_tile_set(pt, input_files, start_stage, end_stage);
-
-  return EXIT_SUCCESS;
+  if (build_tile_set(pt, input_files, start_stage, end_stage)) {
+    return EXIT_SUCCESS;
+  } else {
+    return EXIT_FAILURE;
+  }
 }

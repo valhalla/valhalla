@@ -100,8 +100,9 @@ public:
         ((highway_junction != results.end()) && (highway_junction->second == "motorway_junction"));
 
     // Create a new node and set its attributes
-    OSMNode n{osmid, static_cast<float>(lng), static_cast<float>(lat)};
-
+    OSMNode n;
+    n.set_id(osmid);
+    n.set_latlng(static_cast<float>(lng), static_cast<float>(lat));
     if (is_highway_junction) {
       n.set_type(NodeType::kMotorWayJunction);
     }
@@ -117,22 +118,22 @@ public:
       } else if (is_highway_junction && (tag.first == "exit_to")) {
         bool hasTag = (tag.second.length() ? true : false);
         if (hasTag) {
-          // Add the name to the unique names list and store its index in the OSM node
-          n.set_exit_to_index(osmdata_.name_offset_map.index(tag.second));
+          // Add the name to the unique node names list and store its index in the OSM node
+          n.set_exit_to_index(osmdata_.node_names.index(tag.second));
           ++osmdata_.node_exit_to_count;
         }
       } else if (is_highway_junction && (tag.first == "ref")) {
         bool hasTag = (tag.second.length() ? true : false);
         if (hasTag) {
-          // Add the name to the unique names list and store its index in the OSM node
-          n.set_ref_index(osmdata_.name_offset_map.index(tag.second));
+          // Add the name to the unique node names list and store its index in the OSM node
+          n.set_ref_index(osmdata_.node_names.index(tag.second));
           ++osmdata_.node_ref_count;
         }
       } else if (is_highway_junction && (tag.first == "name")) {
         bool hasTag = (tag.second.length() ? true : false);
         if (hasTag) {
-          // Add the name to the unique names list and store its index in the OSM node
-          n.set_name_index(osmdata_.name_offset_map.index(tag.second));
+          // Add the name to the unique node names list and store its index in the OSM node
+          n.set_name_index(osmdata_.node_names.index(tag.second));
           ++osmdata_.node_name_count;
         }
       } else if (tag.first == "gate") {
@@ -187,7 +188,7 @@ public:
     // find a node we need to update
     current_way_node_index_ = way_nodes_->find_first_of(OSMWayNode{{osmid}},
                                                         [](const OSMWayNode& a, const OSMWayNode& b) {
-                                                          return a.node.osmid == b.node.osmid;
+                                                          return a.node.osmid_ == b.node.osmid_;
                                                         },
                                                         current_way_node_index_);
     // we found the first one
@@ -196,7 +197,7 @@ public:
       OSMWayNode way_node;
       sequence<OSMWayNode>::iterator element = (*way_nodes_)[current_way_node_index_];
       while (current_way_node_index_ < way_nodes_->size() &&
-             (way_node = element = (*way_nodes_)[current_way_node_index_]).node.osmid == osmid) {
+             (way_node = element = (*way_nodes_)[current_way_node_index_]).node.osmid_ == osmid) {
         way_node.node = n;
         element = way_node;
         ++current_way_node_index_;
@@ -290,7 +291,7 @@ public:
       } else {
         ++osmdata_.node_count;
       }
-      way_nodes_->push_back({{node}, ways_->size(), i});
+      way_nodes_->push_back({{node}, static_cast<uint32_t>(ways_->size()), static_cast<uint32_t>(i)});
       shape_.set(node);
       // If this way is a loop (node occurs twice) we can make our lives way easier if we simply
       // split it up into multiple edges in the graph. If a problem is hard, avoid the problem!
@@ -1298,9 +1299,12 @@ public:
             direction == "West") {
           auto iter = osmdata_.way_ref.find(member.member_id);
           if (iter != osmdata_.way_ref.end()) {
-            osmdata_.way_ref[member.member_id] = iter->second + ";" + reference + "|" + direction;
+            std::string ref = osmdata_.name_offset_map.name(iter->second);
+            osmdata_.way_ref[member.member_id] =
+                osmdata_.name_offset_map.index(ref + ";" + reference + "|" + direction);
           } else {
-            osmdata_.way_ref[member.member_id] = reference + "|" + direction;
+            osmdata_.way_ref[member.member_id] =
+                osmdata_.name_offset_map.index(reference + "|" + direction);
           }
         }
       }
@@ -1320,11 +1324,12 @@ public:
       }
 
       if (from_way_id && to_way_id) {
+        uint32_t to_idx = osmdata_.name_offset_map.index(std::max(to, to_lanes));
+        uint32_t from_idx = osmdata_.name_offset_map.index(std::max(from, from_lanes));
         osmdata_.lane_connectivity_map.insert(
             OSMLaneConnectivityMultiMap::value_type(to_way_id,
                                                     OSMLaneConnectivity{to_way_id, from_way_id,
-                                                                        std::max(to, to_lanes),
-                                                                        std::max(from, from_lanes)}));
+                                                                        to_idx, from_idx}));
       }
     } else if (isRestriction && hasRestriction) {
       std::vector<uint64_t> vias;
@@ -1655,7 +1660,7 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt,
   {
     sequence<OSMWayNode> way_nodes(way_nodes_file, false);
     way_nodes.sort(
-        [](const OSMWayNode& a, const OSMWayNode& b) { return a.node.osmid < b.node.osmid; });
+        [](const OSMWayNode& a, const OSMWayNode& b) { return a.node.osmid_ < b.node.osmid_; });
   }
   LOG_INFO("Finished");
 
@@ -1708,6 +1713,7 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt,
   LOG_INFO("Number of nodes with exit_to = " + std::to_string(osmdata.node_exit_to_count));
   LOG_INFO("Number of nodes with names = " + std::to_string(osmdata.node_name_count));
   LOG_INFO("Number of way refs = " + std::to_string(osmdata.way_ref.size()));
+  LOG_INFO("Unique Node Strings (names, refs, etc.) = " + std::to_string(osmdata.node_names.Size()));
   LOG_INFO("Unique Strings (names, refs, etc.) = " + std::to_string(osmdata.name_offset_map.Size()));
 
   // Return OSM data
