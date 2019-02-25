@@ -23,8 +23,8 @@ enum class OSMType : uint8_t { kNode, kWay, kRelation };
 // Structure to store OSM node information and associate it to an OSM way
 struct OSMWayNode {
   OSMNode node;
-  size_t way_index;
-  size_t way_shape_node_index;
+  uint32_t way_index;
+  uint32_t way_shape_node_index;
 };
 
 // OSM bicycle data (stored within OSMData)
@@ -102,7 +102,11 @@ struct OSMData {
   // update many ways at a time (so we can't move this into OSMWay unless that is mapped by Id).
   OSMStringMap way_ref;
 
-  // Unique names and string (includes road names, references, turn lane strings, exit refs, etc.)
+  // Unique names and strings for nodes. This is separate from other names/strings so that
+  // the OSMNode (and OSMWayNode) structures can be made smaller.
+  UniqueNames node_names;
+
+  // Unique names and strings (includes road names, references, turn lane strings, etc.)
   UniqueNames name_offset_map;
 
   // Lane connectivity, index by the to way Id
