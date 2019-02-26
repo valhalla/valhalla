@@ -23,34 +23,34 @@ if [ -z "$build_tiles" ]; then
 fi
 
 # Initialize (e.g. create the directory or remove files if it already exists)
-$build_tiles --config $1 --start initialize --end initialize $datafiles || error_exit "[Error] tile initialization failed!"
+$build_tiles --config $1 --start initialize --end initialize || error_exit "[Error] tile initialization failed!"
 
 # Parse OSM PBF
 $build_tiles --config $1 --start parse --end parse $datafiles || error_exit "[Error] OSM PBF parsing failed!"
 
 # Build tiles
-$build_tiles --config $1 --start build --end build $datafiles || error_exit "[Error] build tiles failed!"
+$build_tiles --config $1 --start build --end build || error_exit "[Error] build tiles failed!"
 
 # Enhance tiles
-$build_tiles --config $1 --start enhance --end enhance $datafiles || error_exit "[Error] Enhance tiles failed!"
+$build_tiles --config $1 --start enhance --end enhance || error_exit "[Error] Enhance tiles failed!"
 
 # Filter tiles (optional - based on config)
-$build_tiles --config $1 --start filter --end filter $datafiles || error_exit "[Error] Filter tiles failed!"
+$build_tiles --config $1 --start filter --end filter || error_exit "[Error] Filter tiles failed!"
 
 # Add transit tiles (optional - based on config)
-$build_tiles --config $1 --start transit --end transit $datafiles || error_exit "[Error] Add transit tiles failed!"
+$build_tiles --config $1 --start transit --end transit || error_exit "[Error] Add transit tiles failed!"
 
 # Create hierarchy (optional - based on config)
-$build_tiles --config $1 --start hierarchy --end hierarchy $datafiles || error_exit "[Error] Hierarchy building failed!"
+$build_tiles --config $1 --start hierarchy --end hierarchy || error_exit "[Error] Hierarchy building failed!"
 
 # Create shortcuts (optional - based on config)
-$build_tiles --config $1 --start shortcuts --end shortcuts $datafiles || error_exit "[Error] Shortcut building failed!"
+$build_tiles --config $1 --start shortcuts --end shortcuts || error_exit "[Error] Shortcut building failed!"
 
 # Add restrictions
-$build_tiles --config $1 --start restrictions --end restrictions $datafiles || error_exit "[Error] Adding complex restrictions failed!"
+$build_tiles --config $1 --start restrictions --end restrictions || error_exit "[Error] Adding complex restrictions failed!"
 
 # Validate data
-$build_tiles --config $1 --start validate --end validate $datafiles || error_exit "[Error] Validate tiles failed!"
+$build_tiles --config $1 --start validate --end validate || error_exit "[Error] Validate tiles failed!"
 
 # Cleanup temporary files
-$build_tiles --config $1 --start cleanup --end cleanup $datafiles || error_exit "[Error] Cleanup temporary data failed!"
+$build_tiles --config $1 --start cleanup --end cleanup || error_exit "[Error] Cleanup temporary data failed!"
