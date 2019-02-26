@@ -119,7 +119,8 @@ int main(int argc, char** argv) {
   }
   LOG_INFO("Start stage = " + to_string(start_stage) + " End stage = " + to_string(end_stage));
 
-  if (input_files.size() == 0 && (start_stage <= BuildStage::kParse && end_stage >= BuildStage::kParse)) {
+  if (input_files.size() == 0 &&
+      (start_stage <= BuildStage::kParse && end_stage >= BuildStage::kParse)) {
     std::cerr << "Input file is required\n\n" << options << "\n\n";
     return EXIT_FAILURE;
   }
