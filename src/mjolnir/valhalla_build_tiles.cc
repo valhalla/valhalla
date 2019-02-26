@@ -80,10 +80,6 @@ int main(int argc, char** argv) {
     std::cout << "valhalla_build_tiles " << VALHALLA_VERSION << "\n";
     return EXIT_SUCCESS;
   }
-  if (input_files.size() == 0) {
-    std::cerr << "Input file is required\n\n" << options << "\n\n";
-    return EXIT_FAILURE;
-  }
 
   // Read the config file
   boost::property_tree::ptree pt;
@@ -122,6 +118,11 @@ int main(int argc, char** argv) {
     return EXIT_FAILURE;
   }
   LOG_INFO("Start stage = " + to_string(start_stage) + " End stage = " + to_string(end_stage));
+
+  if (input_files.size() == 0 && (start_stage <= BuildStage::kParse && end_stage >= BuildStage::kParse)) {
+    std::cerr << "Input file is required\n\n" << options << "\n\n";
+    return EXIT_FAILURE;
+  }
 
   // Make sure start stage < end stage
   if (static_cast<int>(start_stage) > static_cast<int>(end_stage)) {
