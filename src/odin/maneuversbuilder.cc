@@ -89,6 +89,9 @@ std::list<Maneuver> ManeuversBuilder::Build() {
   // Confirm maneuver type assignment
   ConfirmManeuverTypeAssignment(maneuvers);
 
+  // Process the roundabout names
+  ProcessRoundaboutNames(maneuvers);
+
   // Enhance signless interchanges
   EnhanceSignlessInterchnages(maneuvers);
 
@@ -143,10 +146,6 @@ std::list<Maneuver> ManeuversBuilder::Build() {
              orig.ll().lat() % orig.ll().lng() % first_name % dest.ll().lat() % dest.ll().lng() %
              last_name % units)
                 .str());
-  LOG_TRACE((boost::format("http://localhost:8000/?loc=%1$.6f,%2$.6f&loc=%3$.6f,%4$.6f&hl=en&alt=0") %
-             orig.ll().lat() % orig.ll().lng() % dest.ll().lat() % dest.ll().lng())
-                .str());
-
 #endif
 
   return maneuvers;
@@ -2015,6 +2014,65 @@ bool ManeuversBuilder::AreRampManeuversCombinable(std::list<Maneuver>::iterator 
     }
   }
   return false;
+}
+
+void ManeuversBuilder::ProcessRoundaboutNames(std::list<Maneuver>& maneuvers) {
+  // Set previous maneuver
+  auto prev_man = maneuvers.begin();
+
+  // Set current maneuver
+  auto curr_man = maneuvers.begin();
+  auto next_man = maneuvers.begin();
+  if (next_man != maneuvers.end()) {
+    ++next_man;
+    curr_man = next_man;
+  }
+
+  // Set next maneuver
+  if (next_man != maneuvers.end()) {
+    ++next_man;
+  }
+
+  // Walk the maneuvers to find roundabout maneuvers
+  while (next_man != maneuvers.end()) {
+
+    // Process roundabout maneuvers
+    if (curr_man->roundabout()) {
+      // Get the non route numbers for the roundabout
+      std::unique_ptr<StreetNames> non_route_numbers = curr_man->street_names().GetNonRouteNumbers();
+
+      // Clear out the current street name values
+      curr_man->ClearStreetNames();
+      curr_man->ClearBeginStreetNames();
+
+      if (!non_route_numbers->empty()) {
+        // Determine if there are street name matches between incoming and outgoing names
+        std::unique_ptr<StreetNames> prev_common_base_names =
+            non_route_numbers->FindCommonBaseNames(prev_man->street_names());
+        std::unique_ptr<StreetNames> next_common_base_names =
+            non_route_numbers->FindCommonBaseNames(next_man->street_names());
+        // Use roundabout name if did not match incoming and outgoing names
+        if (prev_common_base_names->empty() && next_common_base_names->empty()) {
+          // Set roundabout name
+          curr_man->set_street_names(std::move(non_route_numbers));
+        }
+      }
+
+      // Process roundabout exit names
+      if (next_man->type() == TripDirections_Maneuver_Type_kRoundaboutExit) {
+        if (next_man->HasBeginStreetNames()) {
+          curr_man->set_roundabout_exit_street_names(next_man->begin_street_names().clone());
+        } else {
+          curr_man->set_roundabout_exit_street_names(next_man->street_names().clone());
+        }
+      }
+    }
+
+    // on to the next maneuver...
+    prev_man = curr_man;
+    curr_man = next_man;
+    ++next_man;
+  }
 }
 
 void ManeuversBuilder::EnhanceSignlessInterchnages(std::list<Maneuver>& maneuvers) {

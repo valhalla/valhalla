@@ -78,6 +78,47 @@ void TestFindCommonBaseNames() {
                          StreetNames({{"B 2", true}, {"B 5", true}}));
 }
 
+void TryGetRouteNumbers(const StreetNames& street_names, const StreetNames& expected) {
+  std::unique_ptr<StreetNames> computed = street_names.GetRouteNumbers();
+  if (computed->ToString() != expected.ToString()) {
+    throw std::runtime_error(expected.ToString() +
+                             ": Incorrect values returned from GetRouteNumbers");
+  }
+}
+
+void TestGetRouteNumbers() {
+  TryGetRouteNumbers(StreetNames({{"Hershey Road", false}, {"PA 743 North", true}}),
+                     StreetNames({{"PA 743 North", true}}));
+
+  TryGetRouteNumbers(StreetNames({{"Unter den Linden", false}, {"B 2", true}, {"B 5", true}}),
+                     StreetNames({{"B 2", true}, {"B 5", true}}));
+
+  TryGetRouteNumbers(StreetNames({{"I 95 South", true}}), StreetNames({{"I 95 South", true}}));
+
+  TryGetRouteNumbers(StreetNames({{"Sheridan Circle", false}}), StreetNames());
+}
+
+void TryGetNonRouteNumbers(const StreetNames& street_names, const StreetNames& expected) {
+  std::unique_ptr<StreetNames> computed = street_names.GetNonRouteNumbers();
+  if (computed->ToString() != expected.ToString()) {
+    throw std::runtime_error(expected.ToString() +
+                             ": Incorrect values returned from GetNonRouteNumbers");
+  }
+}
+
+void TestGetNonRouteNumbers() {
+  TryGetNonRouteNumbers(StreetNames({{"Hershey Road", false}, {"PA 743 North", true}}),
+                        StreetNames({{"Hershey Road", false}}));
+
+  TryGetNonRouteNumbers(StreetNames({{"Unter den Linden", false}, {"B 2", true}, {"B 5", true}}),
+                        StreetNames({{"Unter den Linden", false}}));
+
+  TryGetNonRouteNumbers(StreetNames({{"I 95 South", true}}), StreetNames());
+
+  TryGetNonRouteNumbers(StreetNames({{"Sheridan Circle", false}}),
+                        StreetNames({{"Sheridan Circle", false}}));
+}
+
 } // namespace
 
 int main() {
@@ -91,6 +132,12 @@ int main() {
 
   // FindCommonBaseNames
   suite.test(TEST_CASE(TestFindCommonBaseNames));
+
+  // GetRouteNumbers
+  suite.test(TEST_CASE(TestGetRouteNumbers));
+
+  // GetNonRouteNumbers
+  suite.test(TEST_CASE(TestGetNonRouteNumbers));
 
   return suite.tear_down();
 }

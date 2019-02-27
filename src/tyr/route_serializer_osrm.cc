@@ -581,7 +581,9 @@ json::MapPtr osrm_maneuver(const valhalla::odin::TripDirections::Maneuver& maneu
                            const bool arrive_maneuver,
                            const uint32_t prev_intersection_count,
                            const std::string& mode,
-                           const std::string& prev_mode) {
+                           const std::string& prev_mode,
+                           const bool rotary,
+                           const bool prev_rotary) {
   auto osrm_man = json::map({});
 
   // Set the location
@@ -615,13 +617,21 @@ json::MapPtr osrm_maneuver(const valhalla::odin::TripDirections::Maneuver& maneu
   } else if (mode != prev_mode) {
     maneuver_type = "notification";
   } else if (maneuver.type() == odin::TripDirections_Maneuver_Type_kRoundaboutEnter) {
-    maneuver_type = "roundabout";
+    if (rotary) {
+      maneuver_type = "rotary";
+    } else {
+      maneuver_type = "roundabout";
+    }
     // Roundabout count
     if (maneuver.has_roundabout_exit_count()) {
       osrm_man->emplace("exit", static_cast<uint64_t>(maneuver.roundabout_exit_count()));
     }
   } else if (maneuver.type() == odin::TripDirections_Maneuver_Type_kRoundaboutExit) {
-    maneuver_type = "exit roundabout";
+    if (prev_rotary) {
+      maneuver_type = "exit rotary";
+    } else {
+      maneuver_type = "exit roundabout";
+    }
   } else {
     // Special cases
     auto* prev_edge = etp->GetPrevEdge(idx);
@@ -749,7 +759,11 @@ std::pair<std::string, std::string>
 names_and_refs(const valhalla::odin::TripDirections::Maneuver& maneuver) {
   std::string names, refs;
 
-  for (const auto& name : maneuver.street_name()) {
+  // Roundabouts need to use the roundabout_exit_street_names
+  auto& street_names = (maneuver.type() == odin::TripDirections_Maneuver_Type_kRoundaboutEnter)
+                           ? maneuver.roundabout_exit_street_names()
+                           : maneuver.street_name();
+  for (const auto& name : street_names) {
     // Check if the name is a ref
     if (name.is_route_number()) {
       if (!refs.empty()) {
@@ -823,6 +837,8 @@ json::ArrayPtr serialize_legs(const std::list<valhalla::odin::TripDirections>& l
     std::string ref = "";
     std::string mode = "";
     std::string prev_mode = "";
+    bool rotary = false;
+    bool prev_rotary = false;
     auto steps = json::array({});
     std::unordered_map<std::string, float> maneuvers;
     for (const auto& maneuver : leg->maneuver()) {
@@ -850,6 +866,8 @@ json::ArrayPtr serialize_legs(const std::list<valhalla::odin::TripDirections>& l
         auto name_ref_pair = names_and_refs(maneuver);
         name = name_ref_pair.first;
         ref = name_ref_pair.second;
+        rotary = ((maneuver.type() == TripDirections_Maneuver_Type_kRoundaboutEnter) &&
+                  (maneuver.street_name_size() > 0));
         mode = get_mode(maneuver, arrive_maneuver, etp);
         if (prev_mode.empty())
           prev_mode = mode;
@@ -863,6 +881,9 @@ json::ArrayPtr serialize_legs(const std::list<valhalla::odin::TripDirections>& l
       step->emplace("name", name);
       if (!ref.empty()) {
         step->emplace("ref", ref);
+      }
+      if (rotary) {
+        step->emplace("rotary_name", maneuver.street_name(0).value());
       }
 
       // Record street name and distance.. TODO - need to also worry about order
@@ -879,7 +900,8 @@ json::ArrayPtr serialize_legs(const std::list<valhalla::odin::TripDirections>& l
       // Add OSRM maneuver
       step->emplace("maneuver",
                     osrm_maneuver(maneuver, etp, shape[maneuver.begin_shape_index()], depart_maneuver,
-                                  arrive_maneuver, prev_intersection_count, mode, prev_mode));
+                                  arrive_maneuver, prev_intersection_count, mode, prev_mode, rotary,
+                                  prev_rotary));
 
       // Add destinations and exits
       const auto& sign = maneuver.sign();
@@ -898,6 +920,7 @@ json::ArrayPtr serialize_legs(const std::list<valhalla::odin::TripDirections>& l
 
       // Add step
       steps->emplace_back(step);
+      prev_rotary = rotary;
       prev_mode = mode;
       maneuver_index++;
     } // end maneuver loop

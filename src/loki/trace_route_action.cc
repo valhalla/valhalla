@@ -171,12 +171,84 @@ void loki_worker_t::locations_from_shape(valhalla_request_t& request) {
 
   // Add first and last correlated locations to request
   try {
+    // If trace route has 2 locations get the lat,lng of the first and last so we can support
+    // side of street.
+    bool has_locations = false;
+    PointLL orig_ll, dest_ll;
+    if (request.options.locations_size() == 2) {
+      has_locations = true;
+      orig_ll = {request.options.locations(0).ll().lng(), request.options.locations(0).ll().lat()};
+      dest_ll = {request.options.locations(1).ll().lng(), request.options.locations(1).ll().lat()};
+    }
+
+    // Project first and last shape point onto nearest edge(s). Clear current locations list
+    // and set the path locations
     auto projections = loki::Search(locations, *reader, edge_filter, node_filter);
     request.options.clear_locations();
     PathLocation::toPBF(projections.at(locations.front()), request.options.mutable_locations()->Add(),
                         *reader);
     PathLocation::toPBF(projections.at(locations.back()), request.options.mutable_locations()->Add(),
                         *reader);
+
+    // If locations were provided, backfill the origin and dest lat,lon and update
+    // side of street on associated edges. TODO - create a constant for side of street
+    // distance
+    if (has_locations) {
+      // Update the location lat,lon and fill in new side of street to each edge
+      auto orig = request.options.mutable_locations(0);
+      orig->mutable_ll()->set_lng(orig_ll.lng());
+      orig->mutable_ll()->set_lat(orig_ll.lat());
+      for (auto& e : *orig->mutable_path_edges()) {
+        GraphId edgeid(e.graph_id());
+        const GraphTile* tile = reader->GetGraphTile(edgeid);
+        const DirectedEdge* de = tile->directededge(edgeid);
+        auto& shape = tile->edgeinfo(de->edgeinfo_offset()).shape();
+        auto closest = orig_ll.ClosestPoint(shape);
+
+        // TODO - consider consolidating side of street logic into a common method
+        // (perhaps in baldr that can be called here and in search.cc get_side)
+
+        // Close to centerline - set to no side of street
+        if (std::get<1>(closest) < 5.0f) {
+          e.set_side_of_street(odin::Location::kNone);
+          continue;
+        }
+
+        // Check side of street of the origin location
+        int idx = std::get<2>(closest);
+        LineSegment2<PointLL> segment(shape[idx], shape[idx + 1]);
+        bool is_left = segment.IsLeft(orig_ll) > 0;
+        e.set_side_of_street(is_left == de->forward() ? odin::Location::kLeft
+                                                      : odin::Location::kRight);
+      }
+
+      auto dest = request.options.mutable_locations(1);
+      dest->mutable_ll()->set_lng(dest_ll.lng());
+      dest->mutable_ll()->set_lat(dest_ll.lat());
+      for (auto& e : *dest->mutable_path_edges()) {
+        GraphId edgeid(e.graph_id());
+        const GraphTile* tile = reader->GetGraphTile(edgeid);
+        const DirectedEdge* de = tile->directededge(edgeid);
+        auto& shape = tile->edgeinfo(de->edgeinfo_offset()).shape();
+        auto closest = dest_ll.ClosestPoint(shape);
+
+        // TODO - consider consolidating side of street logic into a common method
+        // (perhaps in baldr that can be called here and in search.cc get_side)
+
+        // Close to centerline - set to no side of street
+        if (std::get<1>(closest) < 5.0f) {
+          e.set_side_of_street(odin::Location::kNone);
+          continue;
+        }
+
+        // Check side of street of the destination location
+        int idx = std::get<2>(closest);
+        LineSegment2<PointLL> segment(shape[idx], shape[idx + 1]);
+        bool is_left = segment.IsLeft(dest_ll) > 0;
+        e.set_side_of_street(is_left == de->forward() ? odin::Location::kLeft
+                                                      : odin::Location::kRight);
+      }
+    }
   } catch (const std::exception&) { throw valhalla_exception_t{171}; }
 }
 
