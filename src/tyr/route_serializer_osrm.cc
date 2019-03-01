@@ -443,8 +443,11 @@ std::string destinations(const valhalla::odin::TripDirections_Maneuver_Sign& sig
   // Get the towards nonrefs
   std::string toward_nonrefs = get_sign_element_nonrefs(sign.exit_toward_locations());
 
-  // Get the name nonrefs
-  std::string name_nonrefs = get_sign_element_nonrefs(sign.exit_names());
+  // Get the name nonrefs only if the others are empty
+  std::string name_nonrefs;
+  if (branch_nonrefs.empty() && toward_nonrefs.empty()) {
+    name_nonrefs = get_sign_element_nonrefs(sign.exit_names());
+  }
 
   // Create nonrefs by combining the branch, toward, name nonref lists
   std::string nonrefs = branch_nonrefs;
