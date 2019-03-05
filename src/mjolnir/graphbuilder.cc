@@ -624,12 +624,32 @@ void BuildTileSet(const std::string& ways_file,
           }
 
           // Check for updated ref from relations.
-          std::string ref;
+          std::string ref, rev_ref;
           auto iter = osmdata.way_ref.find(w.way_id());
           if (iter != osmdata.way_ref.end()) {
             if (w.ref_index() != 0) {
               ref = GraphBuilder::GetRef(osmdata.name_offset_map.name(w.ref_index()),
                                          osmdata.name_offset_map.name(iter->second));
+
+              if (w.way_id() == 562919103)
+                std::cout << w.way_id() << " Singly digitized forward = " << ref << std::endl;
+              else if (w.way_id() == 563088740)
+                std::cout << w.way_id() << " Doubly digitized forward = " << ref << std::endl;
+            }
+          }
+
+          if (!forward) {
+            auto iter_rev = osmdata.way_ref_rev.find(w.way_id());
+            if (iter_rev != osmdata.way_ref_rev.end()) {
+              if (w.ref_index() != 0) {
+                rev_ref = GraphBuilder::GetRef(osmdata.name_offset_map.name(w.ref_index()),
+                                               osmdata.name_offset_map.name(iter_rev->second));
+
+                if (w.way_id() == 562919103)
+                  std::cout << w.way_id() << " Singly digitized reverse = " << rev_ref << std::endl;
+                else if (w.way_id() == 563088740)
+                  std::cout << w.way_id() << " Doubly digitized forward = " << ref << std::endl;
+              }
             }
           }
 
@@ -643,6 +663,10 @@ void BuildTileSet(const std::string& ways_file,
 
             uint16_t types = 0;
             auto names = w.GetNames(ref, osmdata.name_offset_map, osmdata.name_offset_map, types);
+
+            if (w.way_id() == 563088740)
+              for (auto n : names)
+                std::cout << "names " << n << std::endl;
 
             // Update bike_network type
             if (bike_network) {
