@@ -71,6 +71,12 @@ struct OSMData {
   bool read_from_temp_files(const std::string& tile_dir);
 
   /**
+   * add the direction information to the forward or reverse map for relations.
+   */
+  void add_to_name_map(const uint32_t member_id, const std::string& direction,
+                       const std::string& reference, const bool forward = true);
+
+  /**
    * Cleanup temporary files.
    */
   static void cleanup_temp_files(const std::string& tile_dir);
@@ -102,6 +108,10 @@ struct OSMData {
   // update many ways at a time (so we can't move this into OSMWay unless that is mapped by Id).
   OSMStringMap way_ref;
 
+  // Map that stores an updated reverse ref for a way. This needs to remain a map, since relations
+  // update many ways at a time (so we can't move this into OSMWay unless that is mapped by Id).
+  OSMStringMap way_ref_rev;
+
   // Unique names and strings for nodes. This is separate from other names/strings so that
   // the OSMNode (and OSMWayNode) structures can be made smaller.
   UniqueNames node_names;
@@ -111,6 +121,7 @@ struct OSMData {
 
   // Lane connectivity, index by the to way Id
   OSMLaneConnectivityMultiMap lane_connectivity_map;
+
 };
 
 } // namespace mjolnir
