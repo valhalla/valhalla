@@ -1662,6 +1662,10 @@ bool ManeuversBuilder::IsMergeManeuverType(Maneuver& maneuver,
                                            EnhancedTripPath_Edge* prev_edge,
                                            EnhancedTripPath_Edge* curr_edge) const {
   auto* node = trip_path_->GetEnhancedNode(maneuver.begin_node_index());
+  // Previous edge is ramp and current edge is not a ramp
+  // Current edge is a highway OR
+  // Current edge is a trunk or primary, oneway, forward turn degree, and
+  // consistent name with intersecting edge
   if (prev_edge && prev_edge->IsRampUse() && !curr_edge->IsRampUse() &&
       (curr_edge->IsHighway() ||
        (((curr_edge->road_class() == TripPath_RoadClass_kTrunk) ||
