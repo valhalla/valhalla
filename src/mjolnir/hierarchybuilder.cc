@@ -282,18 +282,27 @@ void FormTilesInNewLevel(GraphReader& reader,
         tilebuilder->AddLaneConnectivity(laneconnectivity);
       }
 
+      // Do we need to force adding edgeinfo (opposing edge could have diff names)?
+      // If end node is in the same tile and opposing edge does not have matching
+      // edge_info_offset).
+      bool diff_names = false;
+      uint32_t idx = directededge->edgeinfo_offset();
+      if (directededge->endnode().tileid() == base_edge_id.tileid() &&
+          tile->directededge(tile->GetOpposingEdgeId(directededge))->edgeinfo_offset() != idx) {
+        diff_names = true;
+      }
+
       // Get edge info, shape, and names from the old tile and add to the
       // new. Cannot use edge info offset since edges in arterial and
       // highway hierarchy can cross base tiles! Use a hash based on the
       // encoded shape plus way Id.
-      uint32_t idx = directededge->edgeinfo_offset();
       auto edgeinfo = tile->edgeinfo(idx);
       std::string encoded_shape = edgeinfo.encoded_shape();
       uint32_t w = hasher(encoded_shape + std::to_string(edgeinfo.wayid()));
       uint32_t edge_info_offset =
           tilebuilder->AddEdgeInfo(w, nodea, nodeb, edgeinfo.wayid(), edgeinfo.mean_elevation(),
                                    edgeinfo.bike_network(), edgeinfo.speed_limit(), encoded_shape,
-                                   tile->GetNames(idx), tile->GetTypes(idx), added);
+                                   tile->GetNames(idx), tile->GetTypes(idx), added, diff_names);
       newedge.set_edgeinfo_offset(edge_info_offset);
 
       // Add directed edge

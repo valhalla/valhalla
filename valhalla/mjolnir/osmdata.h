@@ -73,8 +73,10 @@ struct OSMData {
   /**
    * add the direction information to the forward or reverse map for relations.
    */
-  void add_to_name_map(const uint32_t member_id, const std::string& direction,
-                       const std::string& reference, const bool forward = true);
+  void add_to_name_map(const uint32_t member_id,
+                       const std::string& direction,
+                       const std::string& reference,
+                       const bool forward = true);
 
   /**
    * Cleanup temporary files.
@@ -121,7 +123,6 @@ struct OSMData {
 
   // Lane connectivity, index by the to way Id
   OSMLaneConnectivityMultiMap lane_connectivity_map;
-
 };
 
 } // namespace mjolnir

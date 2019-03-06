@@ -2,8 +2,8 @@
 #include <fstream>
 #include <iostream>
 
-#include <boost/filesystem/operations.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/filesystem/operations.hpp>
 
 #include "midgard/logging.h"
 #include "mjolnir/osmdata.h"
@@ -552,8 +552,10 @@ bool OSMData::read_from_temp_files(const std::string& tile_dir) {
 }
 
 // add the direction information to the forward or reverse map for relations.
-void OSMData::add_to_name_map(const uint32_t member_id, const std::string& direction,
-                              const std::string& reference, const bool forward) {
+void OSMData::add_to_name_map(const uint32_t member_id,
+                              const std::string& direction,
+                              const std::string& reference,
+                              const bool forward) {
 
   std::string dir = direction;
   boost::algorithm::to_lower(dir);
@@ -562,28 +564,23 @@ void OSMData::add_to_name_map(const uint32_t member_id, const std::string& direc
   // TODO:  network=e-road with int_ref=E #
   if ((boost::starts_with(dir, "North (") || boost::starts_with(dir, "South (") ||
        boost::starts_with(dir, "East (") || boost::starts_with(dir, "West (")) ||
-      dir == "North" || dir == "South" || dir == "East" ||
-      dir == "West") {
+      dir == "North" || dir == "South" || dir == "East" || dir == "West") {
 
     if (forward) {
       auto iter = way_ref.find(member_id);
       if (iter != way_ref.end()) {
         std::string ref = name_offset_map.name(iter->second);
-        way_ref[member_id] =
-            name_offset_map.index(ref + ";" + reference + "|" + dir);
+        way_ref[member_id] = name_offset_map.index(ref + ";" + reference + "|" + dir);
       } else {
-        way_ref[member_id] =
-            name_offset_map.index(reference + "|" + dir);
+        way_ref[member_id] = name_offset_map.index(reference + "|" + dir);
       }
     } else {
       auto iter = way_ref_rev.find(member_id);
       if (iter != way_ref_rev.end()) {
         std::string ref = name_offset_map.name(iter->second);
-        way_ref_rev[member_id] =
-            name_offset_map.index(ref + ";" + reference + "|" + dir);
+        way_ref_rev[member_id] = name_offset_map.index(ref + ";" + reference + "|" + dir);
       } else {
-        way_ref_rev[member_id] =
-            name_offset_map.index(reference + "|" + dir);
+        way_ref_rev[member_id] = name_offset_map.index(reference + "|" + dir);
       }
     }
   }

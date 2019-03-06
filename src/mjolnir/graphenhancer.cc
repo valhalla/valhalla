@@ -943,13 +943,12 @@ uint32_t GetOpposingEdgeIndex(const GraphTile* endnodetile,
   const DirectedEdge* directededge = endnodetile->directededge(nodeinfo->edge_index());
   for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++) {
     if (directededge->endnode() == startnode && directededge->length() == edge.length()) {
-      // If in the same tile and the edgeinfo offset matches then the shape will match
-      if (endnodetile == tile) {
-        if (directededge->edgeinfo_offset() == edge.edgeinfo_offset()) {
-          return i;
-        }
+      // If in the same tile and the edgeinfo offset matches then the shape and names will match
+      if (endnodetile == tile && directededge->edgeinfo_offset() == edge.edgeinfo_offset()) {
+        return i;
       } else {
-        // Need to compare shape if not in the same tile
+        // Need to compare shape if not in the same tile or different EdgeInfo (could be different
+        // names in opposing directions)
         if (shapes_match(tile->edgeinfo(edge.edgeinfo_offset()).shape(),
                          endnodetile->edgeinfo(directededge->edgeinfo_offset()).shape())) {
           return i;

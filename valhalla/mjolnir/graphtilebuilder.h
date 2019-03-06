@@ -193,7 +193,8 @@ public:
    * @param  types  Bits indicating if the name is a ref vs a name.
    * @param  added  Set to true if the target edge was newly added to the list,
    *                set to false if the target edge was already in the list.
-   *
+   * @param  diff_names Indicates the opposing direction has different names.
+   *                    If true a new EdgeInfo is always added.
    * @return  The edge info offset that will be stored in the directed edge.
    */
   template <class shape_container_t>
@@ -207,7 +208,8 @@ public:
                        const shape_container_t& lls,
                        const std::vector<std::string>& names,
                        const uint16_t types,
-                       bool& added);
+                       bool& added,
+                       bool diff_names = false);
 
   /**
    * Add the edge info to the tile. This method accepts an encoded shape string.
@@ -229,7 +231,8 @@ public:
    * @param  types  Bits indicating if the name is a ref vs a name.
    * @param  added  Set to true if the target edge was newly added to the list,
    *                set to false if the target edge was already in the list.
-   *
+   * @param  diff_names Indicates the opposing direction has different names.
+   *                    If true a new EdgeInfo is always added.
    * @return  The edge info offset that will be stored in the directed edge.
    */
   uint32_t AddEdgeInfo(const uint32_t edgeindex,
@@ -242,7 +245,8 @@ public:
                        const std::string& llstr,
                        const std::vector<std::string>& names,
                        const uint16_t types,
-                       bool& added);
+                       bool& added,
+                       bool diff_names = false);
 
   /**
    * Set the mean elevation in the most recently added EdgeInfo.
