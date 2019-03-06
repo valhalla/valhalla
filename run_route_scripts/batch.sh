@@ -46,7 +46,8 @@ mkdir -p "${RESULTS_OUTDIR}"
 TMP="$(mktemp)"
 cp -rp "${INPUT}" "${TMP}"
 for arg in $(valhalla_run_route --help | grep -o '\-[a-z\-]\+' | sort | uniq); do
-	sed -i -e "s/[ ]\?${arg}[ ]\+/|${arg}|/g" "${TMP}"
+    sed -i -e "s/^${arg}[ ]\+/${arg}|/g" "${TMP}"
+    sed -i -e "s/[ ]\+${arg}[ ]\+/|${arg}|/g" "${TMP}"
 done
 sed -i -e "s;$;|--config|${CONF};g" -e "s/\([^\\]\)'|/\1|/g" -e "s/|'/|/g" "${TMP}"
 
