@@ -1238,7 +1238,7 @@ void ManeuversBuilder::SetManeuverType(Maneuver& maneuver, bool none_type_allowe
     }
   }
   // Process merge
-  else if (curr_edge->IsHighway() && prev_edge && prev_edge->IsRampUse()) {
+  else if (IsMergeManeuverType(prev_edge, curr_edge)) {
     maneuver.set_type(TripDirections_Maneuver_Type_kMerge);
     LOG_TRACE("ManeuverType=MERGE");
   }
@@ -1652,6 +1652,21 @@ bool ManeuversBuilder::IncludeUnnamedPrevEdge(int node_index,
                                                     curr_edge->begin_heading()),
                                       node->GetStraightestIntersectingEdgeTurnDegree(
                                           prev_edge->end_heading()))) {
+    return true;
+  }
+
+  return false;
+}
+
+bool ManeuversBuilder::IsMergeManeuverType(EnhancedTripPath_Edge* prev_edge,
+                                           EnhancedTripPath_Edge* curr_edge) const {
+
+  if (prev_edge && prev_edge->IsRampUse() && !curr_edge->IsRampUse() &&
+      (curr_edge->IsHighway() ||
+       (((curr_edge->road_class() == TripPath_RoadClass_kTrunk) ||
+         (curr_edge->road_class() == TripPath_RoadClass_kPrimary)) &&
+        curr_edge->IsOneway() &&
+        curr_edge->IsForward(GetTurnDegree(prev_edge->end_heading(), curr_edge->begin_heading()))))) {
     return true;
   }
 
