@@ -23,7 +23,7 @@ public:
    * What kind of location this, determines whether a route can double back or not
    * to find the most efficient path
    */
-  enum class StopType : bool { BREAK, THROUGH };
+  enum class StopType : uint8_t { BREAK, THROUGH, VIA, BREAK_THROUGH };
 
   /**
    * You have to initialize the location with something

@@ -24,6 +24,10 @@ rapidjson::Value Location::ToRapidJson(rapidjson::Document::AllocatorType& a) co
   location.AddMember("lon", latlng_.lng(), a);
   if (stoptype_ == StopType::THROUGH) {
     location.AddMember("type", "through", a);
+  } else if (stoptype_ == StopType::VIA) {
+    location.AddMember("type", "via", a);
+  } else if (stoptype_ == StopType::BREAK_THROUGH) {
+    location.AddMember("type", "break_through", a);
   } else {
     location.AddMember("type", "break", a);
   }
@@ -88,8 +92,13 @@ Location Location::FromRapidJson(const rapidjson::Value& d,
 
   StopType stop_type{StopType::BREAK};
   auto stop_type_json = rapidjson::get_optional<std::string>(d, "/type");
-  if (stop_type_json && *stop_type_json == std::string("through")) {
-    stop_type = StopType::THROUGH;
+  if (stop_type_json) {
+    if (*stop_type_json == std::string("through"))
+      stop_type = StopType::THROUGH;
+    else if (*stop_type_json == std::string("via"))
+      stop_type = StopType::VIA;
+    else if (*stop_type_json == std::string("break_through"))
+      stop_type = StopType::BREAK_THROUGH;
   }
 
   Location location{{*lon, *lat}, stop_type};
@@ -112,7 +121,7 @@ Location Location::FromRapidJson(const rapidjson::Value& d,
   location.radius_ = rapidjson::get<unsigned int>(d, "/radius", default_radius);
 
   return location;
-}
+} // namespace baldr
 
 bool Location::operator==(const Location& o) const {
   return latlng_ == o.latlng_ && stoptype_ == o.stoptype_ && name_ == o.name_ &&

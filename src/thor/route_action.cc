@@ -164,7 +164,9 @@ std::list<valhalla::odin::TripPath> thor_worker_t::path_arrive_by(
 
     // If we are continuing through a location we need to make sure we
     // only allow the edge that was used previously (avoid u-turns)
-    while (!path.empty() && destination->path_edges_size() > 1) {
+    bool through = destination->type() == odin::Location::kThrough ||
+                   destination->type() == odin::Location::kBreakThrough;
+    while (!path.empty() && through && destination->path_edges_size() > 1) {
       if (destination->path_edges().rbegin()->graph_id() == path.front().edgeid) {
         destination->mutable_path_edges()->SwapElements(0, destination->path_edges_size() - 1);
       }
@@ -188,10 +190,11 @@ std::list<valhalla::odin::TripPath> thor_worker_t::path_arrive_by(
 
     // Build trip path for this leg and add to the result if this
     // location is a BREAK or if this is the last location
-    if (origin->type() == odin::Location::kBreak) {
+    if (origin->type() == odin::Location::kBreak || origin->type() == odin::Location::kBreakThrough) {
       // Move destination back to the last break and collect the throughs
       std::list<odin::Location> throughs;
-      while (destination->type() != odin::Location::kBreak) {
+      while (destination->type() != odin::Location::kBreak &&
+             destination->type() != odin::Location::kBreakThrough) {
         throughs.push_back(*destination);
         --destination;
       }
@@ -231,7 +234,9 @@ std::list<valhalla::odin::TripPath> thor_worker_t::path_depart_at(
 
     // If we are continuing through a location we need to make sure we
     // only allow the edge that was used previously (avoid u-turns)
-    while (!path.empty() && origin->path_edges_size() > 1) {
+    bool through =
+        origin->type() == odin::Location::kThrough || origin->type() == odin::Location::kBreakThrough;
+    while (!path.empty() && through && origin->path_edges_size() > 1) {
       if (origin->path_edges().rbegin()->graph_id() == path.back().edgeid) {
         origin->mutable_path_edges()->SwapElements(0, origin->path_edges_size() - 1);
       }
@@ -257,10 +262,12 @@ std::list<valhalla::odin::TripPath> thor_worker_t::path_depart_at(
 
     // Build trip path for this leg and add to the result if this
     // location is a BREAK or if this is the last location
-    if (destination->type() == odin::Location::kBreak) {
+    if (destination->type() == odin::Location::kBreak ||
+        destination->type() == odin::Location::kBreakThrough) {
       // Move origin back to the last break and collect the throughs
       std::list<odin::Location> throughs;
-      while (origin->type() != odin::Location::kBreak) {
+      while (origin->type() != odin::Location::kBreak &&
+             origin->type() != odin::Location::kBreakThrough) {
         throughs.push_front(*origin);
         --origin;
       }
