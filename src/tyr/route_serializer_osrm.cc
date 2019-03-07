@@ -643,11 +643,7 @@ json::MapPtr osrm_maneuver(const valhalla::odin::TripDirections::Maneuver& maneu
                     maneuver.type() == odin::TripDirections_Maneuver_Type_kBecomes;
     bool ramp = curr_edge->use() == odin::TripPath_Use_kRampUse;
     bool fork = etp->node(idx).fork();
-    bool merge = prev_edge->use() == odin::TripPath_Use_kRampUse &&
-                 curr_edge->use() == odin::TripPath_Use_kRoadUse &&
-                 (curr_edge->road_class() == odin::TripPath_RoadClass_kMotorway ||
-                  curr_edge->road_class() == odin::TripPath_RoadClass_kTrunk);
-    if (merge) {
+    if (maneuver.type() == odin::TripDirections_Maneuver_Type_kMerge) {
       maneuver_type = "merge";
     } else if (fork) {
       maneuver_type = "fork";

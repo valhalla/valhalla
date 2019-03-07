@@ -88,6 +88,10 @@ protected:
                               EnhancedTripPath_Edge* prev_edge,
                               EnhancedTripPath_Edge* curr_edge) const;
 
+  bool IsMergeManeuverType(Maneuver& maneuver,
+                           EnhancedTripPath_Edge* prev_edge,
+                           EnhancedTripPath_Edge* curr_edge) const;
+
   bool
   IsFork(int node_index, EnhancedTripPath_Edge* prev_edge, EnhancedTripPath_Edge* curr_edge) const;
 
