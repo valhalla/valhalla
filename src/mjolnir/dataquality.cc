@@ -10,8 +10,9 @@ namespace mjolnir {
 
 // Constructor
 DataQuality::DataQuality()
-    : nodecount(0), directededge_count(0), edgeinfocount(0), simplerestrictions(0), timedrestrictions(0),
-      culdesaccount(0), forward_restrictions_count(0), reverse_restrictions_count(0), node_counts{} {
+    : nodecount(0), directededge_count(0), edgeinfocount(0), simplerestrictions(0),
+      timedrestrictions(0), culdesaccount(0), forward_restrictions_count(0),
+      reverse_restrictions_count(0), node_counts{} {
 }
 
 // Add statistics (accumulate from several DataQuality objects)
