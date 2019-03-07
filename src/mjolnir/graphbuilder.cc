@@ -675,6 +675,10 @@ void BuildTileSet(const std::string& ways_file,
                 graphtile.AddEdgeInfo(edge_pair.second, (*nodes[source]).graph_id,
                                       (*nodes[target]).graph_id, w.way_id(), 1234, bike_network,
                                       speed_limit, shape, names, types, added, dual_refs);
+            if (added) {
+              stats.edgeinfocount++;
+            }
+
             // length
             auto length = valhalla::midgard::length(shape);
 

@@ -10,7 +10,7 @@ namespace mjolnir {
 
 // Constructor
 DataQuality::DataQuality()
-    : nodecount(0), directededge_count(0), simplerestrictions(0), timedrestrictions(0),
+    : nodecount(0), directededge_count(0), edgeinfocount(0), simplerestrictions(0), timedrestrictions(0),
       culdesaccount(0), forward_restrictions_count(0), reverse_restrictions_count(0), node_counts{} {
 }
 
@@ -18,6 +18,7 @@ DataQuality::DataQuality()
 void DataQuality::AddStatistics(const DataQuality& stats) {
   nodecount += stats.nodecount;
   directededge_count += stats.directededge_count;
+  edgeinfocount += stats.edgeinfocount;
   simplerestrictions += stats.simplerestrictions;
   timedrestrictions += stats.timedrestrictions;
   culdesaccount += stats.culdesaccount;
@@ -48,8 +49,9 @@ void DataQuality::AddIssue(const DataIssueType issuetype,
 
 // Logs statistics and issues
 void DataQuality::LogStatistics() const {
-  LOG_DEBUG("Node Count = " + std::to_string(nodecount));
-  LOG_DEBUG("Directed Edge Count = " + std::to_string(directededge_count));
+  LOG_INFO("Node Count = " + std::to_string(nodecount));
+  LOG_INFO("Directed Edge Count = " + std::to_string(directededge_count));
+  LOG_INFO("EdgeInfo Count = " + std::to_string(edgeinfocount));
   LOG_DEBUG("Simple Restriction Count = " + std::to_string(simplerestrictions));
   LOG_DEBUG("Timed  Restriction Count = " + std::to_string(timedrestrictions));
   LOG_DEBUG("Cul-de-Sac Count = " + std::to_string(culdesaccount));
