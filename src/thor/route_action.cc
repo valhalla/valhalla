@@ -150,6 +150,7 @@ std::list<valhalla::odin::TripPath> thor_worker_t::path_arrive_by(
     google::protobuf::RepeatedPtrField<valhalla::odin::Location>& correlated,
     const std::string& costing) {
   // Things we'll need
+  GraphId first_edge;
   std::vector<thor::PathInfo> path;
   std::list<valhalla::odin::TripPath> trip_paths;
   correlated.begin()->set_type(odin::Location::kBreak);
@@ -166,8 +167,8 @@ std::list<valhalla::odin::TripPath> thor_worker_t::path_arrive_by(
     // only allow the edge that was used previously (avoid u-turns)
     bool through = destination->type() == odin::Location::kThrough ||
                    destination->type() == odin::Location::kBreakThrough;
-    while (!path.empty() && through && destination->path_edges_size() > 1) {
-      if (destination->path_edges().rbegin()->graph_id() == path.front().edgeid) {
+    while (through && first_edge.Is_Valid() && destination->path_edges_size() > 1) {
+      if (destination->path_edges().rbegin()->graph_id() == first_edge) {
         destination->mutable_path_edges()->SwapElements(0, destination->path_edges_size() - 1);
       }
       destination->mutable_path_edges()->RemoveLast();
@@ -175,6 +176,7 @@ std::list<valhalla::odin::TripPath> thor_worker_t::path_arrive_by(
 
     // Get best path and keep it
     auto temp_path = get_path(path_algorithm, *origin, *destination, costing);
+    first_edge = temp_path.front().edgeid;
     temp_path.swap(path);
 
     // Merge through legs by updating the time and splicing the lists
@@ -220,6 +222,7 @@ std::list<valhalla::odin::TripPath> thor_worker_t::path_depart_at(
     google::protobuf::RepeatedPtrField<valhalla::odin::Location>& correlated,
     const std::string& costing) {
   // Things we'll need
+  GraphId last_edge;
   std::vector<thor::PathInfo> path;
   std::list<valhalla::odin::TripPath> trip_paths;
   correlated.begin()->set_type(odin::Location::kBreak);
@@ -236,8 +239,8 @@ std::list<valhalla::odin::TripPath> thor_worker_t::path_depart_at(
     // only allow the edge that was used previously (avoid u-turns)
     bool through =
         origin->type() == odin::Location::kThrough || origin->type() == odin::Location::kBreakThrough;
-    while (!path.empty() && through && origin->path_edges_size() > 1) {
-      if (origin->path_edges().rbegin()->graph_id() == path.back().edgeid) {
+    while (through && last_edge.Is_Valid() && origin->path_edges_size() > 1) {
+      if (origin->path_edges().rbegin()->graph_id() == last_edge) {
         origin->mutable_path_edges()->SwapElements(0, origin->path_edges_size() - 1);
       }
       origin->mutable_path_edges()->RemoveLast();
@@ -245,6 +248,7 @@ std::list<valhalla::odin::TripPath> thor_worker_t::path_depart_at(
 
     // Get best path and keep it
     auto temp_path = get_path(path_algorithm, *origin, *destination, costing);
+    last_edge = temp_path.back().edgeid;
 
     // Merge through legs by updating the time and splicing the lists
     if (!path.empty()) {
