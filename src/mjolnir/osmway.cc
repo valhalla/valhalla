@@ -9,7 +9,9 @@ using namespace valhalla::baldr;
 namespace {
 
 constexpr uint32_t kMaxNodesPerWay = 65535;
-}
+constexpr float kMaxOSMSpeed = 255.0f;
+
+} // namespace
 
 namespace valhalla {
 namespace mjolnir {
@@ -26,32 +28,52 @@ void OSMWay::set_node_count(const uint32_t count) {
 
 // Sets the speed in KPH.
 void OSMWay::set_speed(const float speed) {
-  // TODO - range check
-  speed_ = static_cast<unsigned char>(speed + 0.5f);
+  if (speed > kMaxOSMSpeed) {
+    LOG_ERROR("Exceeded max speed for way id: " + std::to_string(osmwayid_));
+    speed_ = 255;
+  } else {
+    speed_ = static_cast<unsigned char>(speed + 0.5f);
+  }
 }
 
 // Sets the speed limit in KPH.
 void OSMWay::set_speed_limit(const float speed_limit) {
-  // TODO - range check
-  speed_limit_ = static_cast<unsigned char>(speed_limit + 0.5f);
+  if (speed_limit > kMaxOSMSpeed) {
+    LOG_ERROR("Exceeded max speed for way id: " + std::to_string(osmwayid_));
+    speed_limit_ = 255;
+  } else {
+    speed_limit_ = static_cast<unsigned char>(speed_limit + 0.5f);
+  }
 }
 
 // Sets the backward speed in KPH.
 void OSMWay::set_backward_speed(const float backward_speed) {
-  // TODO - range check
-  backward_speed_ = static_cast<unsigned char>(backward_speed + 0.5f);
+  if (backward_speed > kMaxOSMSpeed) {
+    LOG_ERROR("Exceeded max backward speed for way id: " + std::to_string(osmwayid_));
+    backward_speed_ = 255;
+  } else {
+    backward_speed_ = static_cast<unsigned char>(backward_speed + 0.5f);
+  }
 }
 
 // Sets the backward speed in KPH.
 void OSMWay::set_forward_speed(const float forward_speed) {
-  // TODO - range check
-  forward_speed_ = static_cast<unsigned char>(forward_speed + 0.5f);
+  if (forward_speed > kMaxOSMSpeed) {
+    LOG_ERROR("Exceeded max forward speed for way id: " + std::to_string(osmwayid_));
+    forward_speed_ = 255;
+  } else {
+    forward_speed_ = static_cast<unsigned char>(forward_speed + 0.5f);
+  }
 }
 
 // Sets the truck speed in KPH.
 void OSMWay::set_truck_speed(const float speed) {
-  // TODO - range check
-  truck_speed_ = static_cast<unsigned char>(speed + 0.5f);
+  if (speed > kMaxOSMSpeed) {
+    LOG_ERROR("Exceeded max truck speed for way id: " + std::to_string(osmwayid_));
+    truck_speed_ = 255;
+  } else {
+    truck_speed_ = static_cast<unsigned char>(speed + 0.5f);
+  }
 }
 
 // Sets the number of lanes
@@ -66,7 +88,6 @@ void OSMWay::set_backward_lanes(const uint32_t backward_lanes) {
 
 // Sets the number of forward lanes
 void OSMWay::set_forward_lanes(const uint32_t forward_lanes) {
-  // TODO - range check
   forward_lanes_ = (forward_lanes > kMaxLaneCount) ? kMaxLaneCount : forward_lanes;
 }
 
