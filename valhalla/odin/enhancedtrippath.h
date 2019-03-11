@@ -190,6 +190,8 @@ public:
 
   bool HasIntersectingEdgeNameConsistency() const;
 
+  bool HasIntersectingEdgeCurrNameConsistency() const;
+
   EnhancedTripPath_IntersectingEdge* GetIntersectingEdge(size_t index);
 
   void CalculateRightLeftIntersectingEdgeCounts(uint32_t from_heading,

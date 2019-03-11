@@ -443,8 +443,11 @@ std::string destinations(const valhalla::odin::TripDirections_Maneuver_Sign& sig
   // Get the towards nonrefs
   std::string toward_nonrefs = get_sign_element_nonrefs(sign.exit_toward_locations());
 
-  // Get the name nonrefs
-  std::string name_nonrefs = get_sign_element_nonrefs(sign.exit_names());
+  // Get the name nonrefs only if the others are empty
+  std::string name_nonrefs;
+  if (branch_nonrefs.empty() && toward_nonrefs.empty()) {
+    name_nonrefs = get_sign_element_nonrefs(sign.exit_names());
+  }
 
   // Create nonrefs by combining the branch, toward, name nonref lists
   std::string nonrefs = branch_nonrefs;
@@ -640,11 +643,7 @@ json::MapPtr osrm_maneuver(const valhalla::odin::TripDirections::Maneuver& maneu
                     maneuver.type() == odin::TripDirections_Maneuver_Type_kBecomes;
     bool ramp = curr_edge->use() == odin::TripPath_Use_kRampUse;
     bool fork = etp->node(idx).fork();
-    bool merge = prev_edge->use() == odin::TripPath_Use_kRampUse &&
-                 curr_edge->use() == odin::TripPath_Use_kRoadUse &&
-                 (curr_edge->road_class() == odin::TripPath_RoadClass_kMotorway ||
-                  curr_edge->road_class() == odin::TripPath_RoadClass_kTrunk);
-    if (merge) {
+    if (maneuver.type() == odin::TripDirections_Maneuver_Type_kMerge) {
       maneuver_type = "merge";
     } else if (fork) {
       maneuver_type = "fork";
