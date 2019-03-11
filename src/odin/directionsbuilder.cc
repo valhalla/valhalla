@@ -165,6 +165,7 @@ TripDirections DirectionsBuilder::PopulateTripDirections(const DirectionsOptions
     trip_maneuver->set_time(maneuver.time());
     trip_maneuver->set_begin_cardinal_direction(maneuver.begin_cardinal_direction());
     trip_maneuver->set_begin_heading(maneuver.begin_heading());
+    trip_maneuver->set_turn_degree(maneuver.turn_degree());
     trip_maneuver->set_begin_shape_index(maneuver.begin_shape_index());
     trip_maneuver->set_end_shape_index(maneuver.end_shape_index());
     if (maneuver.portions_toll()) {

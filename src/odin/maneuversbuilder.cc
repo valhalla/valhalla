@@ -1697,11 +1697,14 @@ bool ManeuversBuilder::IsFork(int node_index,
 
     // if there is a similar traversable intersecting edge
     //   or there is a traversable intersecting edge and curr edge is link(ramp)
+    //   and the straightest intersecting edge is not in the reversed direction
     if (((xedge_counts.left_similar_traversable_outbound > 0) ||
          (xedge_counts.right_similar_traversable_outbound > 0)) ||
         (((xedge_counts.left_traversable_outbound > 0) ||
           (xedge_counts.right_traversable_outbound > 0)) &&
-         curr_edge->IsRampUse())) {
+         curr_edge->IsRampUse() &&
+         !node->IsStraightestTraversableIntersectingEdgeReversed(prev_edge->end_heading(),
+                                                                 prev_edge->travel_mode()))) {
       return true;
     }
   }
@@ -1888,6 +1891,8 @@ void ManeuversBuilder::DetermineRelativeDirection(Maneuver& maneuver) {
       } else if (maneuver.turn_channel() &&
                  (Turn::GetType(maneuver.turn_degree()) != Turn::Type::kStraight)) {
         maneuver.set_begin_relative_direction(Maneuver::RelativeDirection::kKeepRight);
+      } else if (maneuver.fork()) {
+        maneuver.set_begin_relative_direction(Maneuver::RelativeDirection::kKeepRight);
       }
     } else if ((xedge_counts.right_similar_traversable_outbound == 0) &&
                (xedge_counts.right_traversable_outbound > 0) &&
@@ -1898,6 +1903,8 @@ void ManeuversBuilder::DetermineRelativeDirection(Maneuver& maneuver) {
         maneuver.set_begin_relative_direction(Maneuver::RelativeDirection::kKeepLeft);
       } else if (maneuver.turn_channel() &&
                  (Turn::GetType(maneuver.turn_degree()) != Turn::Type::kStraight)) {
+        maneuver.set_begin_relative_direction(Maneuver::RelativeDirection::kKeepLeft);
+      } else if (maneuver.fork()) {
         maneuver.set_begin_relative_direction(Maneuver::RelativeDirection::kKeepLeft);
       }
     }
@@ -2029,7 +2036,9 @@ bool ManeuversBuilder::AreRampManeuversCombinable(std::list<Maneuver>::iterator 
   if (curr_man->ramp() && next_man->ramp() && !next_man->fork() &&
       !curr_man->internal_intersection() && !next_man->internal_intersection()) {
     auto* node = trip_path_->GetEnhancedNode(next_man->begin_node_index());
-    if (!node->HasTraversableOutboundIntersectingEdge(next_man->travel_mode())) {
+    if (!node->HasTraversableOutboundIntersectingEdge(next_man->travel_mode()) ||
+        node->IsStraightestTraversableIntersectingEdgeReversed(curr_man->end_heading(),
+                                                               next_man->travel_mode())) {
       return true;
     }
   }

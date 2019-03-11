@@ -210,6 +210,9 @@ public:
   uint32_t GetStraightestTraversableIntersectingEdgeTurnDegree(uint32_t from_heading,
                                                                const TripPath_TravelMode travel_mode);
 
+  bool IsStraightestTraversableIntersectingEdgeReversed(uint32_t from_heading,
+                                                        const TripPath_TravelMode travel_mode);
+
   // Type
   bool IsStreetIntersection() const;
   bool IsGate() const;
