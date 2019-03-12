@@ -1283,23 +1283,24 @@ public:
       }
 
       std::string reference = net.at(1) + " " + ref; // US 51 or I 95
+      bool bfound = false;
+      for (const auto& member : members) {
+        if (member.role.empty() || member.role == "forward" || member.role == "backward") {
+          continue;
+        }
+        direction = member.role;
+        osmdata_.add_to_name_map(member.member_id, direction, reference);
+        bfound = true;
+      }
 
       // direction is already set via a direction tag and not at the member level.
-      if (!direction.empty()) {
+      if (!direction.empty() && !bfound) {
         for (const auto& member : members) {
           if (member.role == "forward") {
             osmdata_.add_to_name_map(member.member_id, direction, reference);
           } else if (member.role == "backward") {
             osmdata_.add_to_name_map(member.member_id, direction, reference, false);
           }
-        }
-      } else {
-        for (const auto& member : members) {
-          if (member.role.empty() || member.role == "forward" || member.role == "backward") {
-            continue;
-          }
-          direction = member.role;
-          osmdata_.add_to_name_map(member.member_id, direction, reference);
         }
       }
     } else if (isConnectivity && (!to_lanes.empty() || !to.empty()) &&
