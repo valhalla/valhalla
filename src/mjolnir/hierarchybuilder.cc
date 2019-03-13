@@ -102,6 +102,26 @@ OldToNewNodes find_nodes(sequence<OldToNewNodes>& old_to_new, const GraphId& nod
   }
 }
 
+/**
+ * Is there an opposing edge with matching edgeinfo offset. The end node of the directed edge
+ * must be in the same tile as the directed edge.
+ * @param  tile          Graph tile of the edge
+ * @param  directededge  Directed edge to match.
+ */
+bool OpposingEdgeInfoMatches(const GraphTile* tile, const DirectedEdge* edge) {
+  // Get the nodeinfo at the end of the edge. Iterate through the directed edges and return
+  // true if a matching edgeinfo offset if found.
+  const NodeInfo* nodeinfo = tile->node(edge->endnode().id());
+  const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
+  for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++) {
+    // Return true if the edge info matches (same name, shape, etc.)
+    if (directededge->edgeinfo_offset() == edge->edgeinfo_offset()) {
+      return true;
+    }
+  }
+  return false;
+}
+
 // Form tiles in the new level.
 void FormTilesInNewLevel(GraphReader& reader,
                          const std::string& new_to_old_file,
@@ -282,18 +302,24 @@ void FormTilesInNewLevel(GraphReader& reader,
         tilebuilder->AddLaneConnectivity(laneconnectivity);
       }
 
+      // Do we need to force adding edgeinfo (opposing edge could have diff names)?
+      // If end node is in the same tile and there is no opposing edge with matching
+      // edge_info_offset).
+      uint32_t idx = directededge->edgeinfo_offset();
+      bool diff_names = directededge->endnode().tileid() == base_edge_id.tileid() &&
+                        !OpposingEdgeInfoMatches(tile, directededge);
+
       // Get edge info, shape, and names from the old tile and add to the
       // new. Cannot use edge info offset since edges in arterial and
       // highway hierarchy can cross base tiles! Use a hash based on the
       // encoded shape plus way Id.
-      uint32_t idx = directededge->edgeinfo_offset();
       auto edgeinfo = tile->edgeinfo(idx);
       std::string encoded_shape = edgeinfo.encoded_shape();
       uint32_t w = hasher(encoded_shape + std::to_string(edgeinfo.wayid()));
       uint32_t edge_info_offset =
           tilebuilder->AddEdgeInfo(w, nodea, nodeb, edgeinfo.wayid(), edgeinfo.mean_elevation(),
                                    edgeinfo.bike_network(), edgeinfo.speed_limit(), encoded_shape,
-                                   tile->GetNames(idx), tile->GetTypes(idx), added);
+                                   tile->GetNames(idx), tile->GetTypes(idx), added, diff_names);
       newedge.set_edgeinfo_offset(edge_info_offset);
 
       // Add directed edge

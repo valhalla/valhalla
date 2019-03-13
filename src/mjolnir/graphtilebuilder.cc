@@ -503,11 +503,12 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
                                        const shape_container_t& lls,
                                        const std::vector<std::string>& names,
                                        const uint16_t types,
-                                       bool& added) {
+                                       bool& added,
+                                       bool diff_names) {
   // If we haven't yet added edge info for this edge tuple
   auto edge_tuple_item = EdgeTuple(edgeindex, nodea, nodeb);
   auto existing_edge_offset_item = edge_offset_map_.find(edge_tuple_item);
-  if (existing_edge_offset_item == edge_offset_map_.end()) {
+  if (diff_names || existing_edge_offset_item == edge_offset_map_.end()) {
     // Add a new EdgeInfo to the list and get a reference to it
     edgeinfo_list_.emplace_back();
     EdgeInfoBuilder& edgeinfo = edgeinfo_list_.back();
@@ -572,7 +573,8 @@ template uint32_t GraphTileBuilder::AddEdgeInfo<std::vector<PointLL>>(const uint
                                                                       const std::vector<PointLL>&,
                                                                       const std::vector<std::string>&,
                                                                       const uint16_t,
-                                                                      bool&);
+                                                                      bool&,
+                                                                      bool);
 template uint32_t GraphTileBuilder::AddEdgeInfo<std::list<PointLL>>(const uint32_t edgeindex,
                                                                     const GraphId&,
                                                                     const baldr::GraphId&,
@@ -583,7 +585,8 @@ template uint32_t GraphTileBuilder::AddEdgeInfo<std::list<PointLL>>(const uint32
                                                                     const std::list<PointLL>&,
                                                                     const std::vector<std::string>&,
                                                                     const uint16_t,
-                                                                    bool&);
+                                                                    bool&,
+                                                                    bool);
 
 // AddEdgeInfo - accepts an encoded shape string.
 uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
@@ -596,11 +599,12 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
                                        const std::string& llstr,
                                        const std::vector<std::string>& names,
                                        const uint16_t types,
-                                       bool& added) {
+                                       bool& added,
+                                       bool diff_names) {
   // If we haven't yet added edge info for this edge tuple
   auto edge_tuple_item = EdgeTuple(edgeindex, nodea, nodeb);
   auto existing_edge_offset_item = edge_offset_map_.find(edge_tuple_item);
-  if (existing_edge_offset_item == edge_offset_map_.end()) {
+  if (diff_names || existing_edge_offset_item == edge_offset_map_.end()) {
     // Add a new EdgeInfo to the list and get a reference to it
     edgeinfo_list_.emplace_back();
     EdgeInfoBuilder& edgeinfo = edgeinfo_list_.back();
