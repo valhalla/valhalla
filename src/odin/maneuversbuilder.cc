@@ -92,6 +92,9 @@ std::list<Maneuver> ManeuversBuilder::Build() {
   // Process the roundabout names
   ProcessRoundaboutNames(maneuvers);
 
+  // Process the roundabout names
+  SetToStayOnAttribute(maneuvers);
+
   // Enhance signless interchanges
   EnhanceSignlessInterchnages(maneuvers);
 
@@ -2097,6 +2100,64 @@ void ManeuversBuilder::ProcessRoundaboutNames(std::list<Maneuver>& maneuvers) {
       }
     }
 
+    // on to the next maneuver...
+    prev_man = curr_man;
+    curr_man = next_man;
+    ++next_man;
+  }
+}
+
+void ManeuversBuilder::SetToStayOnAttribute(std::list<Maneuver>& maneuvers) {
+  // Set previous maneuver
+  auto prev_man = maneuvers.begin();
+
+  // Set current maneuver
+  auto curr_man = maneuvers.begin();
+  auto next_man = maneuvers.begin();
+  if (next_man != maneuvers.end()) {
+    ++next_man;
+    curr_man = next_man;
+  }
+
+  // Set next maneuver
+  if (next_man != maneuvers.end()) {
+    ++next_man;
+  }
+
+  // Walk the maneuvers to find 'to stay on' maneuvers
+  while (next_man != maneuvers.end()) {
+    switch (curr_man->type()) {
+      case TripDirections_Maneuver_Type_kSlightRight:
+      case TripDirections_Maneuver_Type_kSlightLeft:
+      case TripDirections_Maneuver_Type_kRight:
+      case TripDirections_Maneuver_Type_kSharpRight:
+      case TripDirections_Maneuver_Type_kSharpLeft:
+      case TripDirections_Maneuver_Type_kLeft: {
+        if (!curr_man->HasBeginStreetNames() && curr_man->HasSimilarNames(&(*prev_man), true)) {
+          curr_man->set_to_stay_on(true);
+        }
+        break;
+      }
+      case TripDirections_Maneuver_Type_kStayStraight:
+      case TripDirections_Maneuver_Type_kStayRight:
+      case TripDirections_Maneuver_Type_kStayLeft: {
+        if (curr_man->HasSimilarNames(&(*prev_man))) {
+          if (!curr_man->ramp()) {
+            curr_man->set_to_stay_on(true);
+          } else if (curr_man->HasSimilarNames(&(*next_man))) {
+            curr_man->set_to_stay_on(true);
+          }
+        }
+        break;
+      }
+      case TripDirections_Maneuver_Type_kUturnRight:
+      case TripDirections_Maneuver_Type_kUturnLeft: {
+        if (curr_man->HasSameNames(&(*prev_man), true)) {
+          curr_man->set_to_stay_on(true);
+        }
+        break;
+      }
+    }
     // on to the next maneuver...
     prev_man = curr_man;
     curr_man = next_man;

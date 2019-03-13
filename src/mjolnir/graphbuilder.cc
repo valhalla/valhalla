@@ -509,10 +509,15 @@ void BuildTileSet(const std::string& ways_file,
 
         // it is a fork if more than two edges and more than one driveforward edge and
         //   if all the edges are links
-        //   OR the node is a motorway_junction and none of the edges are links
-        bool fork = (((bundle.node_edges.size() > 2) && (bundle.driveforward_count > 1)) &&
-                     ((bundle.link_count == bundle.node_edges.size()) ||
-                      ((node.type() == NodeType::kMotorWayJunction) && (bundle.link_count == 0))));
+        //   OR the node is a motorway_junction
+        //      AND none of the edges are links
+        //      OR all outbound edges are links and there is only one inbound edge
+        bool fork =
+            (((bundle.node_edges.size() > 2) && (bundle.driveforward_count > 1)) &&
+             ((bundle.link_count == bundle.node_edges.size()) ||
+              ((node.type() == NodeType::kMotorWayJunction) &&
+               ((bundle.link_count == 0) || ((bundle.link_count == bundle.driveforward_count) &&
+                                             (bundle.node_edges.size() == bundle.link_count + 1))))));
 
         //////////////////////////////////////////////////////////////////////
         // Iterate over edges at node

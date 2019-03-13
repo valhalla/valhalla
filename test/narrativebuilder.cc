@@ -678,6 +678,7 @@ void PopulateTurnManeuverList_3(std::list<Maneuver>& maneuvers,
                    Maneuver::RelativeDirection::kRight,
                    TripDirections_Maneuver_CardinalDirection_kSouth, 167, 167, 3, 4, 3, 4, 0, 0, 0, 0,
                    0, 0, 0, 0, 0, {}, {}, {}, {}, 1, 0, 0, 0, 1, 0, "", "", "", 1);
+  maneuver2.set_to_stay_on(true);
 }
 
 void PopulateSharpManeuverList_0(std::list<Maneuver>& maneuvers,
@@ -732,6 +733,7 @@ void PopulateSharpManeuverList_3(std::list<Maneuver>& maneuvers,
                    Maneuver::RelativeDirection::kRight,
                    TripDirections_Maneuver_CardinalDirection_kSouth, 167, 167, 3, 4, 3, 4, 0, 0, 0, 0,
                    0, 0, 0, 0, 0, {}, {}, {}, {}, 1, 0, 0, 0, 1, 0, "", "", "", 1);
+  maneuver2.set_to_stay_on(true);
 }
 
 void PopulateBearManeuverList_0(std::list<Maneuver>& maneuvers,
@@ -788,6 +790,7 @@ void PopulateBearManeuverList_3(std::list<Maneuver>& maneuvers,
                    TripDirections_Maneuver_CardinalDirection_kSouth, 193, 197, 187, 197, 1805, 1878,
                    0, 0, 0, 0, 0, 0, 0, 1, 0, {}, {}, {}, {}, 0, 0, 0, 0, 0, 1, "", "", "", 0, 0, 0,
                    0, 200, 0);
+  maneuver2.set_to_stay_on(true);
 }
 
 void PopulateUturnManeuverList_0(std::list<Maneuver>& maneuvers,
@@ -831,6 +834,7 @@ void PopulateUturnManeuverList_2(std::list<Maneuver>& maneuvers,
                    Maneuver::RelativeDirection::KReverse,
                    TripDirections_Maneuver_CardinalDirection_kSouth, 157, 155, 3, 4, 46, 56, 0, 0, 0,
                    0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 0, 0, "", "", "", 0, 0, 0, 0, 20, 0);
+  maneuver2.set_to_stay_on(true);
 }
 
 void PopulateUturnManeuverList_3(std::list<Maneuver>& maneuvers,
@@ -875,6 +879,7 @@ void PopulateUturnManeuverList_5(std::list<Maneuver>& maneuvers,
                    TripDirections_Maneuver_CardinalDirection_kSouthWest, 212, 221, 1, 3, 1, 3, 0, 0,
                    0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 1, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 40,
                    0);
+  maneuver2.set_to_stay_on(true);
 }
 
 void PopulateRampStraightManeuverList_0(std::list<Maneuver>& maneuvers,
@@ -1362,6 +1367,7 @@ void PopulateKeepToStayOnManeuverList_0(std::list<Maneuver>& maneuvers,
                    TripDirections_Maneuver_CardinalDirection_kSouthWest, 219, 232, 34, 45, 380, 491,
                    0, 0, 0, 0, 0, 1, 0, 1, 0, {}, {std::make_tuple("I 95 South", 1, 0)}, {}, {}, 0, 0,
                    0, 1, 0, 0, "", "", "", 0, 0, 0, 0, 334, 0);
+  maneuver2.set_to_stay_on(true);
 }
 
 void PopulateKeepToStayOnManeuverList_1(std::list<Maneuver>& maneuvers,
@@ -1385,6 +1391,7 @@ void PopulateKeepToStayOnManeuverList_1(std::list<Maneuver>& maneuvers,
                    0, 0, 0, 0, 0, 1, 0, 1, 0, {std::make_tuple("62", 0, 0)},
                    {std::make_tuple("I 95 South", 1, 0)}, {}, {}, 0, 0, 0, 1, 0, 0, "", "", "", 0, 0,
                    0, 0, 334, 0);
+  maneuver2.set_to_stay_on(true);
 }
 
 void PopulateKeepToStayOnManeuverList_2(std::list<Maneuver>& maneuvers,
@@ -1408,6 +1415,7 @@ void PopulateKeepToStayOnManeuverList_2(std::list<Maneuver>& maneuvers,
                    0, 0, 0, 0, 0, 1, 0, 1, 0, {}, {std::make_tuple("I 95 South", 1, 0)},
                    {std::make_tuple("Baltimore", 0, 0)}, {}, 0, 0, 0, 1, 0, 0, "", "", "", 0, 0, 0, 0,
                    334, 0);
+  maneuver2.set_to_stay_on(true);
 }
 
 void PopulateKeepToStayOnManeuverList_3(std::list<Maneuver>& maneuvers,
@@ -1431,6 +1439,7 @@ void PopulateKeepToStayOnManeuverList_3(std::list<Maneuver>& maneuvers,
                    0, 0, 0, 0, 0, 1, 0, 1, 0, {std::make_tuple("62", 0, 0)},
                    {std::make_tuple("I 95 South", 1, 0)}, {std::make_tuple("Baltimore", 0, 0)}, {}, 0,
                    0, 0, 1, 0, 0, "", "", "", 0, 0, 0, 0, 334, 0);
+  maneuver2.set_to_stay_on(true);
 }
 
 void PopulateMergeManeuverList_0(std::list<Maneuver>& maneuvers,

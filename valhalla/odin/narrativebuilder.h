@@ -77,29 +77,25 @@ protected:
                                             const std::string& delim = kVerbalDelim);
 
   /////////////////////////////////////////////////////////////////////////////
-  std::string FormTurnInstruction(Maneuver& maneuver, Maneuver* prev_maneuver);
+  std::string FormTurnInstruction(Maneuver& maneuver);
 
   std::string FormVerbalAlertTurnInstruction(Maneuver& maneuver,
-                                             Maneuver* prev_maneuver,
                                              uint32_t element_max_count = kVerbalAlertElementMaxCount,
                                              const std::string& delim = kVerbalDelim);
 
   std::string FormVerbalTurnInstruction(Maneuver& maneuver,
-                                        Maneuver* prev_maneuver,
                                         uint32_t element_max_count = kVerbalPreElementMaxCount,
                                         const std::string& delim = kVerbalDelim);
 
   /////////////////////////////////////////////////////////////////////////////
-  std::string FormUturnInstruction(Maneuver& maneuver, Maneuver* prev_maneuver);
+  std::string FormUturnInstruction(Maneuver& maneuver);
 
   std::string
   FormVerbalAlertUturnInstruction(Maneuver& maneuver,
-                                  Maneuver* prev_maneuver,
                                   uint32_t element_max_count = kVerbalAlertElementMaxCount,
                                   const std::string& delim = kVerbalDelim);
 
   std::string FormVerbalUturnInstruction(Maneuver& maneuver,
-                                         Maneuver* prev_maneuver,
                                          uint32_t element_max_count = kVerbalPreElementMaxCount,
                                          const std::string& delim = kVerbalDelim);
 
