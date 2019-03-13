@@ -347,9 +347,6 @@ public:
 
     for (const auto& tag : results) {
 
-      // if (562919014 == osmid)
-      // std::cout << tag.first << " " << tag.second << std::endl;
-
       if (tag.first == "road_class") {
         RoadClass roadclass = (RoadClass)std::stoi(tag.second);
         switch (roadclass) {
