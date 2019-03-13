@@ -628,21 +628,38 @@ void BuildTileSet(const std::string& ways_file,
             }
           }
 
-          // Check for updated ref from relations.
+          // Check if refs occur in both directions for this way. If so, a separate EdgeInfo needs to
+          // be stored. This usually indicates a single carriageway with different directional
+          // indicators.
+          bool dual_refs = false;
           std::string ref;
-          auto iter = osmdata.way_ref.find(w.way_id());
-          if (iter != osmdata.way_ref.end()) {
-            if (w.ref_index() != 0) {
-              ref = GraphBuilder::GetRef(osmdata.name_offset_map.name(w.ref_index()),
-                                         osmdata.name_offset_map.name(iter->second));
+          if (w.ref_index() != 0) {
+            auto iter = osmdata.way_ref.find(w.way_id());
+            auto iter_rev = osmdata.way_ref_rev.find(w.way_id());
+            dual_refs = iter != osmdata.way_ref.end() && iter_rev != osmdata.way_ref_rev.end();
+
+            // Check for updated ref from relations. If dual refs and reverse direction use the
+            // reverse ref, otherwise use the forward ref.
+            if (dual_refs && !forward) {
+              if (iter_rev != osmdata.way_ref_rev.end()) {
+                // Replace the ref with the reverse ref
+                ref = GraphBuilder::GetRef(osmdata.name_offset_map.name(w.ref_index()),
+                                           osmdata.name_offset_map.name(iter_rev->second));
+              }
+            } else {
+              if (iter != osmdata.way_ref.end()) {
+                ref = GraphBuilder::GetRef(osmdata.name_offset_map.name(w.ref_index()),
+                                           osmdata.name_offset_map.name(iter->second));
+              }
             }
           }
 
           // Get the shape for the edge and compute its length
           uint32_t edge_info_offset;
           auto found = geo_attribute_cache.cend();
-          if (!graphtile.HasEdgeInfo(edge_pair.second, (*nodes[source]).graph_id,
-                                     (*nodes[target]).graph_id, edge_info_offset)) {
+          if (dual_refs || !graphtile.HasEdgeInfo(edge_pair.second, (*nodes[source]).graph_id,
+                                                  (*nodes[target]).graph_id, edge_info_offset)) {
+
             // add the info
             auto shape = EdgeShape(edge.llindex_, edge.attributes.llcount);
 
@@ -660,7 +677,10 @@ void BuildTileSet(const std::string& ways_file,
             edge_info_offset =
                 graphtile.AddEdgeInfo(edge_pair.second, (*nodes[source]).graph_id,
                                       (*nodes[target]).graph_id, w.way_id(), 1234, bike_network,
-                                      speed_limit, shape, names, types, added);
+                                      speed_limit, shape, names, types, added, dual_refs);
+            if (added) {
+              stats.edgeinfocount++;
+            }
 
             // length
             auto length = valhalla::midgard::length(shape);
