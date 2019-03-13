@@ -661,8 +661,6 @@ void BuildTileSet(const std::string& ways_file,
             uint16_t types = 0;
             auto names = w.GetNames(ref, osmdata.name_offset_map, osmdata.name_offset_map, types);
 
-            if (w.way_id() == 562919103 || w.way_id() == 563088740) {}
-
             // Update bike_network type
             if (bike_network) {
               bike_network |= w.bike_network();
