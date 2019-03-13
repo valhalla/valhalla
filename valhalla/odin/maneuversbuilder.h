@@ -166,6 +166,13 @@ protected:
   void ProcessRoundaboutNames(std::list<Maneuver>& maneuvers);
 
   /**
+   * Iterate through the maneuvers and set the 'to stay on' attribute as needed.
+   *
+   * @param maneuvers The list of maneuvers to process.
+   */
+  void SetToStayOnAttribute(std::list<Maneuver>& maneuvers);
+
+  /**
    * Enhance a signless interchange maneuver by adding the subsequent street name
    * as a branch name.
    *
