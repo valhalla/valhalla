@@ -92,6 +92,9 @@ std::list<Maneuver> ManeuversBuilder::Build() {
   // Process the roundabout names
   ProcessRoundaboutNames(maneuvers);
 
+  // Process the roundabout names
+  SetToStayOnAttribute(maneuvers);
+
   // Enhance signless interchanges
   EnhanceSignlessInterchnages(maneuvers);
 
@@ -1697,11 +1700,14 @@ bool ManeuversBuilder::IsFork(int node_index,
 
     // if there is a similar traversable intersecting edge
     //   or there is a traversable intersecting edge and curr edge is link(ramp)
+    //   and the straightest intersecting edge is not in the reversed direction
     if (((xedge_counts.left_similar_traversable_outbound > 0) ||
          (xedge_counts.right_similar_traversable_outbound > 0)) ||
         (((xedge_counts.left_traversable_outbound > 0) ||
           (xedge_counts.right_traversable_outbound > 0)) &&
-         curr_edge->IsRampUse())) {
+         curr_edge->IsRampUse() &&
+         !node->IsStraightestTraversableIntersectingEdgeReversed(prev_edge->end_heading(),
+                                                                 prev_edge->travel_mode()))) {
       return true;
     }
   }
@@ -1888,6 +1894,8 @@ void ManeuversBuilder::DetermineRelativeDirection(Maneuver& maneuver) {
       } else if (maneuver.turn_channel() &&
                  (Turn::GetType(maneuver.turn_degree()) != Turn::Type::kStraight)) {
         maneuver.set_begin_relative_direction(Maneuver::RelativeDirection::kKeepRight);
+      } else if (maneuver.fork()) {
+        maneuver.set_begin_relative_direction(Maneuver::RelativeDirection::kKeepRight);
       }
     } else if ((xedge_counts.right_similar_traversable_outbound == 0) &&
                (xedge_counts.right_traversable_outbound > 0) &&
@@ -1898,6 +1906,8 @@ void ManeuversBuilder::DetermineRelativeDirection(Maneuver& maneuver) {
         maneuver.set_begin_relative_direction(Maneuver::RelativeDirection::kKeepLeft);
       } else if (maneuver.turn_channel() &&
                  (Turn::GetType(maneuver.turn_degree()) != Turn::Type::kStraight)) {
+        maneuver.set_begin_relative_direction(Maneuver::RelativeDirection::kKeepLeft);
+      } else if (maneuver.fork()) {
         maneuver.set_begin_relative_direction(Maneuver::RelativeDirection::kKeepLeft);
       }
     }
@@ -2029,7 +2039,9 @@ bool ManeuversBuilder::AreRampManeuversCombinable(std::list<Maneuver>::iterator 
   if (curr_man->ramp() && next_man->ramp() && !next_man->fork() &&
       !curr_man->internal_intersection() && !next_man->internal_intersection()) {
     auto* node = trip_path_->GetEnhancedNode(next_man->begin_node_index());
-    if (!node->HasTraversableOutboundIntersectingEdge(next_man->travel_mode())) {
+    if (!node->HasTraversableOutboundIntersectingEdge(next_man->travel_mode()) ||
+        node->IsStraightestTraversableIntersectingEdgeReversed(curr_man->end_heading(),
+                                                               next_man->travel_mode())) {
       return true;
     }
   }
@@ -2088,6 +2100,64 @@ void ManeuversBuilder::ProcessRoundaboutNames(std::list<Maneuver>& maneuvers) {
       }
     }
 
+    // on to the next maneuver...
+    prev_man = curr_man;
+    curr_man = next_man;
+    ++next_man;
+  }
+}
+
+void ManeuversBuilder::SetToStayOnAttribute(std::list<Maneuver>& maneuvers) {
+  // Set previous maneuver
+  auto prev_man = maneuvers.begin();
+
+  // Set current maneuver
+  auto curr_man = maneuvers.begin();
+  auto next_man = maneuvers.begin();
+  if (next_man != maneuvers.end()) {
+    ++next_man;
+    curr_man = next_man;
+  }
+
+  // Set next maneuver
+  if (next_man != maneuvers.end()) {
+    ++next_man;
+  }
+
+  // Walk the maneuvers to find 'to stay on' maneuvers
+  while (next_man != maneuvers.end()) {
+    switch (curr_man->type()) {
+      case TripDirections_Maneuver_Type_kSlightRight:
+      case TripDirections_Maneuver_Type_kSlightLeft:
+      case TripDirections_Maneuver_Type_kRight:
+      case TripDirections_Maneuver_Type_kSharpRight:
+      case TripDirections_Maneuver_Type_kSharpLeft:
+      case TripDirections_Maneuver_Type_kLeft: {
+        if (!curr_man->HasBeginStreetNames() && curr_man->HasSimilarNames(&(*prev_man), true)) {
+          curr_man->set_to_stay_on(true);
+        }
+        break;
+      }
+      case TripDirections_Maneuver_Type_kStayStraight:
+      case TripDirections_Maneuver_Type_kStayRight:
+      case TripDirections_Maneuver_Type_kStayLeft: {
+        if (curr_man->HasSimilarNames(&(*prev_man))) {
+          if (!curr_man->ramp()) {
+            curr_man->set_to_stay_on(true);
+          } else if (curr_man->HasSimilarNames(&(*next_man))) {
+            curr_man->set_to_stay_on(true);
+          }
+        }
+        break;
+      }
+      case TripDirections_Maneuver_Type_kUturnRight:
+      case TripDirections_Maneuver_Type_kUturnLeft: {
+        if (curr_man->HasSameNames(&(*prev_man), true)) {
+          curr_man->set_to_stay_on(true);
+        }
+        break;
+      }
+    }
     // on to the next maneuver...
     prev_man = curr_man;
     curr_man = next_man;

@@ -147,10 +147,8 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode,
         // or shape (if not in same tile)
         wayid2 = end_tile->edgeinfo(directededge->edgeinfo_offset()).wayid();
         if (wayid == wayid2) {
-          if (sametile) {
-            if (edge.edgeinfo_offset() == directededge->edgeinfo_offset()) {
-              match = true;
-            }
+          if (sametile && edge.edgeinfo_offset() == directededge->edgeinfo_offset()) {
+            match = true;
           } else {
             auto shape1 = tile->edgeinfo(edge.edgeinfo_offset()).shape();
             auto shape2 = end_tile->edgeinfo(directededge->edgeinfo_offset()).shape();

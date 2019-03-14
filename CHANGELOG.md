@@ -7,6 +7,10 @@
    * FIXED: Fixed rotary/roundabout issues in Valhalla OSRM compatibility.  [#1727](https://github.com/valhalla/valhalla/pull/1727)
    * FIXED: Fixed the destinations assignment for exit names in OSRM compatibility mode. [#1732](https://github.com/valhalla/valhalla/pull/1732)
    * FIXED: Enhance merge maneuver type assignment. [#1735](https://github.com/valhalla/valhalla/pull/1735)
+   * FIXED: Fixed fork assignments and on ramps for OSRM compatibility mode. [#1738](https://github.com/valhalla/valhalla/pull/1738)
+   * FIXED: Fixed cardinal direction on reference names when forward/backward tag is present on relations. Fixes singly digitized roads with opposing directional modifiers. [#1741](https://github.com/valhalla/valhalla/pull/1741)
+   * FIXED: Fixed fork assignment and narrative logic when a highway ends and splits into multiple ramps. [#1742](https://github.com/valhalla/valhalla/pull/1742)
+
 * **Enhancement**
    * Add the ability to run valhalla_build_tiles in stages. Specify the begin_stage and end_stage as command line options. Also cleans up temporary files as the last stage in the pipeline.
 
