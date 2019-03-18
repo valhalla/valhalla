@@ -19,7 +19,7 @@ namespace mjolnir {
 // Set the number of nodes for this way.
 void OSMWay::set_node_count(const uint32_t count) {
   if (count > kMaxNodesPerWay) {
-    LOG_ERROR("Exceeded max nodes per way: " + std::to_string(count));
+    LOG_WARN("Exceeded max nodes per way: " + std::to_string(count));
     nodecount_ = static_cast<uint16_t>(kMaxNodesPerWay);
   } else {
     nodecount_ = static_cast<uint16_t>(count);
@@ -29,7 +29,7 @@ void OSMWay::set_node_count(const uint32_t count) {
 // Sets the speed in KPH.
 void OSMWay::set_speed(const float speed) {
   if (speed > kMaxOSMSpeed) {
-    LOG_ERROR("Exceeded max speed for way id: " + std::to_string(osmwayid_));
+    LOG_WARN("Exceeded max speed for way id: " + std::to_string(osmwayid_));
     speed_ = 255;
   } else {
     speed_ = static_cast<unsigned char>(speed + 0.5f);
@@ -39,7 +39,7 @@ void OSMWay::set_speed(const float speed) {
 // Sets the speed limit in KPH.
 void OSMWay::set_speed_limit(const float speed_limit) {
   if (speed_limit > kMaxOSMSpeed) {
-    LOG_ERROR("Exceeded max speed for way id: " + std::to_string(osmwayid_));
+    LOG_WARN("Exceeded max speed for way id: " + std::to_string(osmwayid_));
     speed_limit_ = 255;
   } else {
     speed_limit_ = static_cast<unsigned char>(speed_limit + 0.5f);
@@ -49,7 +49,7 @@ void OSMWay::set_speed_limit(const float speed_limit) {
 // Sets the backward speed in KPH.
 void OSMWay::set_backward_speed(const float backward_speed) {
   if (backward_speed > kMaxOSMSpeed) {
-    LOG_ERROR("Exceeded max backward speed for way id: " + std::to_string(osmwayid_));
+    LOG_WARN("Exceeded max backward speed for way id: " + std::to_string(osmwayid_));
     backward_speed_ = 255;
   } else {
     backward_speed_ = static_cast<unsigned char>(backward_speed + 0.5f);
@@ -59,7 +59,7 @@ void OSMWay::set_backward_speed(const float backward_speed) {
 // Sets the backward speed in KPH.
 void OSMWay::set_forward_speed(const float forward_speed) {
   if (forward_speed > kMaxOSMSpeed) {
-    LOG_ERROR("Exceeded max forward speed for way id: " + std::to_string(osmwayid_));
+    LOG_WARN("Exceeded max forward speed for way id: " + std::to_string(osmwayid_));
     forward_speed_ = 255;
   } else {
     forward_speed_ = static_cast<unsigned char>(forward_speed + 0.5f);
@@ -69,7 +69,7 @@ void OSMWay::set_forward_speed(const float forward_speed) {
 // Sets the truck speed in KPH.
 void OSMWay::set_truck_speed(const float speed) {
   if (speed > kMaxOSMSpeed) {
-    LOG_ERROR("Exceeded max truck speed for way id: " + std::to_string(osmwayid_));
+    LOG_WARN("Exceeded max truck speed for way id: " + std::to_string(osmwayid_));
     truck_speed_ = 255;
   } else {
     truck_speed_ = static_cast<unsigned char>(speed + 0.5f);
