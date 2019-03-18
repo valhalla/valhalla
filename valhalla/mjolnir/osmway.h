@@ -373,48 +373,48 @@ struct OSMWay {
    * @param  idx  Index for the name of the national bike network.
    */
   void set_bike_national_ref_index(const uint32_t idx) {
-    bike_national_ref_index_ = idx;
+    ; // bike_national_ref_index_ = idx; UNUSED - future
   }
 
   /**
    * Get the bike national ref index.
    * @return  Returns the index for the national bike network name.
    */
-  uint32_t bike_national_ref_index() const {
-    return bike_national_ref_index_;
-  }
+//  uint32_t bike_national_ref_index() const {
+//    return bike_national_ref_index_;
+//  }
 
   /**
    * Sets the index for bike regional ref.
    * @param  idx  Index for the name of the regional bike network.
    */
   void set_bike_regional_ref_index(const uint32_t idx) {
-    bike_regional_ref_index_ = idx;
+    ; // bike_regional_ref_index_ = idx; UNUSED - future
   }
 
   /**
    * Get the bike regional ref index.
    * @return  Returns the index for the regional bike network name.
    */
-  uint32_t bike_regional_ref_index() const {
-    return bike_regional_ref_index_;
-  }
+//  uint32_t bike_regional_ref_index() const {
+//    return bike_regional_ref_index_;
+//  }
 
   /**
    * Sets the index for bike local ref.
    * @param  idx  Index for the name of the local bike network.
    */
   void set_bike_local_ref_index(const uint32_t idx) {
-    bike_local_ref_index_ = idx;
+    ; // bike_local_ref_index_ = idx; UNUSED - future
   }
 
   /**
    * Get the bike local ref index.
    * @return  Returns the index for the local bike network name.
    */
-  uint32_t bike_local_ref_index() const {
-    return bike_local_ref_index_;
-  }
+//  uint32_t bike_local_ref_index() const {
+//    return bike_local_ref_index_;
+//  }
 
   /**
    * Sets the duration for ferries.
@@ -1462,10 +1462,10 @@ struct OSMWay {
   uint32_t destination_street_to_index_;
   uint32_t junction_ref_index_;
 
-  // Bike network information
-  uint32_t bike_national_ref_index_;
-  uint32_t bike_regional_ref_index_;
-  uint32_t bike_local_ref_index_;
+  // Bike network information. TODO - these are not yet used.
+//  uint32_t bike_national_ref_index_;
+//  uint32_t bike_regional_ref_index_;
+//  uint32_t bike_local_ref_index_;
 
   // duration of a ferry in seconds
   uint32_t duration_;
