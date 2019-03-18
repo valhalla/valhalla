@@ -572,6 +572,8 @@ json::MapPtr DirectedEdge::json() const {
       {"truck_route", static_cast<bool>(truck_route_)},
       {"lane_count", static_cast<uint64_t>(lanecount_)},
       {"country_crossing", static_cast<bool>(ctry_crossing_)},
+      {"sidewalk_left", static_cast<bool>(sidewalk_left_)},
+      {"sidewalk_right", static_cast<bool>(sidewalk_right_)},
       {"geo_attributes",
        json::map({
            {"length", static_cast<uint64_t>(length_)},

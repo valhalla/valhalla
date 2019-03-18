@@ -650,13 +650,13 @@ Cost PedestrianCost::EdgeCost(const baldr::DirectedEdge* edge, const uint32_t sp
 
   // TODO - consider using an array of "use factors" to avoid this conditional
   float factor = 1.0f + kSacScaleCostFactor[static_cast<uint8_t>(edge->sac_scale())];
-  if (edge->use() == Use::kFootway) {
+  if (edge->use() == Use::kFootway or edge->use() == Use::kSidewalk) {
     factor *= walkway_factor_;
   } else if (edge->use() == Use::kAlley) {
     factor *= alley_factor_;
   } else if (edge->use() == Use::kDriveway) {
     factor *= driveway_factor_;
-  } else if (edge->use() == Use::kSidewalk) {
+  } else if (edge->sidewalk_left() or edge->sidewalk_right()) {
     factor *= sidewalk_factor_;
   } else if (edge->roundabout()) {
     factor *= kRoundaboutFactor;
