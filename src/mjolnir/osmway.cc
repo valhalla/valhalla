@@ -9,7 +9,9 @@ using namespace valhalla::baldr;
 namespace {
 
 constexpr uint32_t kMaxNodesPerWay = 65535;
-}
+constexpr float kMaxOSMSpeed = 255.0f;
+
+} // namespace
 
 namespace valhalla {
 namespace mjolnir {
@@ -17,7 +19,7 @@ namespace mjolnir {
 // Set the number of nodes for this way.
 void OSMWay::set_node_count(const uint32_t count) {
   if (count > kMaxNodesPerWay) {
-    LOG_ERROR("Exceeded max nodes per way: " + std::to_string(count));
+    LOG_WARN("Exceeded max nodes per way: " + std::to_string(count));
     nodecount_ = static_cast<uint16_t>(kMaxNodesPerWay);
   } else {
     nodecount_ = static_cast<uint16_t>(count);
@@ -26,57 +28,72 @@ void OSMWay::set_node_count(const uint32_t count) {
 
 // Sets the speed in KPH.
 void OSMWay::set_speed(const float speed) {
-  // TODO - range check
-  speed_ = static_cast<unsigned char>(speed + 0.5f);
+  if (speed > kMaxOSMSpeed) {
+    LOG_WARN("Exceeded max speed for way id: " + std::to_string(osmwayid_));
+    speed_ = 255;
+  } else {
+    speed_ = static_cast<unsigned char>(speed + 0.5f);
+  }
 }
 
 // Sets the speed limit in KPH.
 void OSMWay::set_speed_limit(const float speed_limit) {
-  // TODO - range check
-  speed_limit_ = static_cast<unsigned char>(speed_limit + 0.5f);
+  if (speed_limit > kMaxOSMSpeed) {
+    LOG_WARN("Exceeded max speed for way id: " + std::to_string(osmwayid_));
+    speed_limit_ = 255;
+  } else {
+    speed_limit_ = static_cast<unsigned char>(speed_limit + 0.5f);
+  }
 }
 
 // Sets the backward speed in KPH.
 void OSMWay::set_backward_speed(const float backward_speed) {
-  // TODO - range check
-  backward_speed_ = static_cast<unsigned char>(backward_speed + 0.5f);
+  if (backward_speed > kMaxOSMSpeed) {
+    LOG_WARN("Exceeded max backward speed for way id: " + std::to_string(osmwayid_));
+    backward_speed_ = 255;
+  } else {
+    backward_speed_ = static_cast<unsigned char>(backward_speed + 0.5f);
+  }
 }
 
 // Sets the backward speed in KPH.
 void OSMWay::set_forward_speed(const float forward_speed) {
-  // TODO - range check
-  forward_speed_ = static_cast<unsigned char>(forward_speed + 0.5f);
+  if (forward_speed > kMaxOSMSpeed) {
+    LOG_WARN("Exceeded max forward speed for way id: " + std::to_string(osmwayid_));
+    forward_speed_ = 255;
+  } else {
+    forward_speed_ = static_cast<unsigned char>(forward_speed + 0.5f);
+  }
 }
 
 // Sets the truck speed in KPH.
 void OSMWay::set_truck_speed(const float speed) {
-  // TODO - range check
-  truck_speed_ = static_cast<unsigned char>(speed + 0.5f);
+  if (speed > kMaxOSMSpeed) {
+    LOG_WARN("Exceeded max truck speed for way id: " + std::to_string(osmwayid_));
+    truck_speed_ = 255;
+  } else {
+    truck_speed_ = static_cast<unsigned char>(speed + 0.5f);
+  }
 }
 
 // Sets the number of lanes
 void OSMWay::set_lanes(const uint32_t lanes) {
-  // TODO - range check
-  classification_.fields.lanes = lanes;
+  lanes_ = (lanes > kMaxLaneCount) ? kMaxLaneCount : lanes;
 }
 
 // Sets the number of backward lanes
 void OSMWay::set_backward_lanes(const uint32_t backward_lanes) {
-  // TODO - range check
-  classification_.fields.backward_lanes = backward_lanes;
+  backward_lanes_ = (backward_lanes > kMaxLaneCount) ? kMaxLaneCount : backward_lanes;
 }
 
 // Sets the number of forward lanes
 void OSMWay::set_forward_lanes(const uint32_t forward_lanes) {
-  // TODO - range check
-  classification_.fields.forward_lanes = forward_lanes;
+  forward_lanes_ = (forward_lanes > kMaxLaneCount) ? kMaxLaneCount : forward_lanes;
 }
 
 // Get the names for the edge info based on the road class.
-std::vector<std::string> OSMWay::GetNames(const std::string& ref,
-                                          const UniqueNames& ref_offset_map,
-                                          const UniqueNames& name_offset_map,
-                                          uint16_t& types) const {
+std::vector<std::string>
+OSMWay::GetNames(const std::string& ref, const UniqueNames& name_offset_map, uint16_t& types) const {
 
   uint16_t location = 0;
   types = 0;
@@ -84,14 +101,14 @@ std::vector<std::string> OSMWay::GetNames(const std::string& ref,
   std::vector<std::string> names;
   // Process motorway and trunk refs
   if ((ref_index_ != 0 || !ref.empty()) &&
-      ((static_cast<RoadClass>(classification_.fields.road_class) == RoadClass::kMotorway) ||
-       (static_cast<RoadClass>(classification_.fields.road_class) == RoadClass::kTrunk))) {
+      ((static_cast<RoadClass>(road_class_) == RoadClass::kMotorway) ||
+       (static_cast<RoadClass>(road_class_) == RoadClass::kTrunk))) {
     std::vector<std::string> tokens;
 
     if (!ref.empty()) {
       tokens = GetTagTokens(ref); // use updated refs from relations.
     } else {
-      tokens = GetTagTokens(ref_offset_map.name(ref_index_));
+      tokens = GetTagTokens(name_offset_map.name(ref_index_));
     }
 
     for (const auto& t : tokens) {
@@ -111,14 +128,13 @@ std::vector<std::string> OSMWay::GetNames(const std::string& ref,
   }
 
   // Process non limited access refs
-  if (ref_index_ != 0 &&
-      (static_cast<RoadClass>(classification_.fields.road_class) != RoadClass::kMotorway) &&
-      (static_cast<RoadClass>(classification_.fields.road_class) != RoadClass::kTrunk)) {
+  if (ref_index_ != 0 && (static_cast<RoadClass>(road_class_) != RoadClass::kMotorway) &&
+      (static_cast<RoadClass>(road_class_) != RoadClass::kTrunk)) {
     std::vector<std::string> tokens;
     if (!ref.empty()) {
       tokens = GetTagTokens(ref); // use updated refs from relations.
     } else {
-      tokens = GetTagTokens(ref_offset_map.name(ref_index_));
+      tokens = GetTagTokens(name_offset_map.name(ref_index_));
     }
 
     for (const auto& t : tokens) {
