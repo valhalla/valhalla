@@ -561,8 +561,13 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader, odin::Location& ori
       continue;
     }
 
-    // Get the directed edge
+    // Disallow any user avoid edges
     GraphId edgeid(edge.graph_id());
+    if (costing_->IsUserAvoidEdge(edgeid)) {
+      continue;
+    }
+
+    // Get the directed edge
     const GraphTile* tile = graphreader.GetGraphTile(edgeid);
     const DirectedEdge* directededge = tile->directededge(edgeid);
 
@@ -629,8 +634,13 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader, const odin::Lo
       continue;
     }
 
-    // Get the directed edge
+    // Disallow any user avoided edges
     GraphId edgeid(edge.graph_id());
+    if (costing_->IsUserAvoidEdge(edgeid)) {
+      continue;
+    }
+
+    // Get the directed edge
     const GraphTile* tile = graphreader.GetGraphTile(edgeid);
     const DirectedEdge* directededge = tile->directededge(edgeid);
 

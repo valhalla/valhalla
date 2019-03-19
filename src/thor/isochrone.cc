@@ -1051,8 +1051,13 @@ void Isochrone::SetOriginLocations(
         continue;
       }
 
-      // Get the directed edge
+      // Disallow any user avoided edges
       GraphId edgeid(edge.graph_id());
+      if (costing_->IsUserAvoidEdge(edgeid)) {
+        continue;
+      }
+
+      // Get the directed edge
       const GraphTile* tile = graphreader.GetGraphTile(edgeid);
       const DirectedEdge* directededge = tile->directededge(edgeid);
 
@@ -1122,8 +1127,13 @@ void Isochrone::SetOriginLocationsMM(
         continue;
       }
 
-      // Get the directed edge
+      // Disallow any user avoided edges
       GraphId edgeid(edge.graph_id());
+      if (costing_->IsUserAvoidEdge(edgeid)) {
+        continue;
+      }
+
+      // Get the directed edge
       const GraphTile* tile = graphreader.GetGraphTile(edgeid);
       const DirectedEdge* directededge = tile->directededge(edgeid);
 
