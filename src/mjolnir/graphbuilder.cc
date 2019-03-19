@@ -664,7 +664,7 @@ void BuildTileSet(const std::string& ways_file,
             auto shape = EdgeShape(edge.llindex_, edge.attributes.llcount);
 
             uint16_t types = 0;
-            auto names = w.GetNames(ref, osmdata.name_offset_map, osmdata.name_offset_map, types);
+            auto names = w.GetNames(ref, osmdata.name_offset_map, types);
 
             // Update bike_network type
             if (bike_network) {
