@@ -1,6 +1,8 @@
 #ifndef VALHALLA_SIF_COST_CONSTANTS_H_
 #define VALHALLA_SIF_COST_CONSTANTS_H_
 
+#include <valhalla/baldr/graphid.h>
+
 namespace valhalla {
 namespace sif {
 
