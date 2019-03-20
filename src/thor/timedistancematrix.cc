@@ -420,9 +420,9 @@ void TimeDistanceMatrix::SetOriginOneToMany(GraphReader& graphreader, const odin
       continue;
     }
 
-    // Disallow any user avoided edges
+    // Disallow any user avoid edges if the avoid location is ahead of the origin along the edge
     GraphId edgeid(edge.graph_id());
-    if (costing_->IsUserAvoidEdge(edgeid)) {
+    if (costing_->AvoidAsOriginEdge(edgeid, edge.percent_along())) {
       continue;
     }
 
@@ -462,9 +462,9 @@ void TimeDistanceMatrix::SetOriginOneToMany(GraphReader& graphreader, const odin
 void TimeDistanceMatrix::SetOriginManyToOne(GraphReader& graphreader, const odin::Location& dest) {
   // Iterate through edges and add opposing edges to adjacency list
   for (const auto& edge : dest.path_edges()) {
-    // Disallow any user avoided edges
+    // Disallow any user avoided edges if the avoid location is behind the destination along the edge
     GraphId edgeid(edge.graph_id());
-    if (costing_->IsUserAvoidEdge(edgeid)) {
+    if (costing_->AvoidAsDestinationEdge(edgeid, edge.percent_along())) {
       continue;
     }
 
@@ -518,9 +518,10 @@ void TimeDistanceMatrix::SetDestinations(
     // Set up the destination - consider each possible location edge.
     bool added = false;
     for (const auto& edge : loc.path_edges()) {
-      // Disallow user avoided edges
+      // Disallow any user avoided edges if the avoid location is behind the destination along the
+      // edge
       GraphId edgeid(edge.graph_id());
-      if (costing_->IsUserAvoidEdge(edgeid)) {
+      if (costing_->AvoidAsDestinationEdge(edgeid, edge.percent_along())) {
         continue;
       }
 

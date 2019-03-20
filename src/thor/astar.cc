@@ -374,9 +374,9 @@ void AStarPathAlgorithm::SetOrigin(GraphReader& graphreader,
       continue;
     }
 
-    // Disallow any user avoided edges
+    // Disallow any user avoid edges if the avoid location is ahead of the origin along the edge
     GraphId edgeid(edge.graph_id());
-    if (costing_->IsUserAvoidEdge(edgeid)) {
+    if (costing_->AvoidAsOriginEdge(edgeid, edge.percent_along())) {
       continue;
     }
 
@@ -479,9 +479,9 @@ uint32_t AStarPathAlgorithm::SetDestination(GraphReader& graphreader, const odin
       continue;
     }
 
-    // Disallow any user avoided edges
+    // Disallow any user avoided edges if the avoid location is behind the destination along the edge
     GraphId edgeid(edge.graph_id());
-    if (costing_->IsUserAvoidEdge(edgeid)) {
+    if (costing_->AvoidAsDestinationEdge(edgeid, edge.percent_along())) {
       continue;
     }
 

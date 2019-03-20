@@ -1051,9 +1051,9 @@ void Isochrone::SetOriginLocations(
         continue;
       }
 
-      // Disallow any user avoided edges
+      // Disallow any user avoid edges if the avoid location is ahead of the origin along the edge
       GraphId edgeid(edge.graph_id());
-      if (costing_->IsUserAvoidEdge(edgeid)) {
+      if (costing_->AvoidAsOriginEdge(edgeid, edge.percent_along())) {
         continue;
       }
 
@@ -1127,9 +1127,9 @@ void Isochrone::SetOriginLocationsMM(
         continue;
       }
 
-      // Disallow any user avoided edges
+      // Disallow any user avoid edges if the avoid location is ahead of the origin along the edge
       GraphId edgeid(edge.graph_id());
-      if (costing_->IsUserAvoidEdge(edgeid)) {
+      if (costing_->AvoidAsOriginEdge(edgeid, edge.percent_along())) {
         continue;
       }
 

@@ -55,6 +55,16 @@ enum class BicycleType : uint8_t {
 //};
 
 /**
+ * Simple structure to denote edge locations to avoid. Includes the edge Id and percent
+ * along the edge. The percent along is used when checking origin and destination locations
+ * to see if the avoided location can be traveled along the "partial" edge.
+ */
+struct AvoidEdge {
+  baldr::GraphId id;
+  float percent_along;
+};
+
+/**
  * Simple structure for returning costs. Includes cost and true elapsed time
  * in seconds.
  */

@@ -190,11 +190,11 @@ int main(int argc, char* argv[]) {
   }
 
   // Find avoid locations
-  std::vector<GraphId> avoid_edges;
+  std::vector<AvoidEdge> avoid_edges;
   const auto avoids = Search(avoid_locations, reader, cost->GetEdgeFilter(), cost->GetNodeFilter());
   for (const auto& loc : avoid_locations) {
     for (auto& e : avoids.at(loc).edges) {
-      avoid_edges.push_back(e.id);
+      avoid_edges.push_back({e.id, e.percent_along});
     }
   }
   if (avoid_edges.size() > 0) {

@@ -556,9 +556,9 @@ void MultiModalPathAlgorithm::SetOrigin(GraphReader& graphreader,
       continue;
     }
 
-    // Disallow any user avoided edges
+    // Disallow any user avoid edges if the avoid location is ahead of the origin along the edge
     GraphId edgeid(edge.graph_id());
-    if (costing->IsUserAvoidEdge(edgeid)) {
+    if (costing->AvoidAsOriginEdge(edgeid, edge.percent_along())) {
       continue;
     }
 
@@ -664,9 +664,9 @@ uint32_t MultiModalPathAlgorithm::SetDestination(GraphReader& graphreader,
       continue;
     }
 
-    // Disallow any user avoided edges
+    // Disallow any user avoided edges if the avoid location is behind the destination along the edge
     GraphId edgeid(edge.graph_id());
-    if (costing->IsUserAvoidEdge(edgeid)) {
+    if (costing->AvoidAsDestinationEdge(edgeid, edge.percent_along())) {
       continue;
     }
 
@@ -795,8 +795,9 @@ bool MultiModalPathAlgorithm::CanReachDestination(const odin::Location& destinat
     GraphId id(edge.graph_id());
     GraphId oppedge = graphreader.GetOpposingEdgeId(id);
 
-    // Disallow user avoided edges
-    if (costing->IsUserAvoidEdge(oppedge)) {
+    // Disallow any user avoided edges if the avoid location is behind the destination along the edge
+    GraphId edgeid(edge.graph_id());
+    if (costing->AvoidAsDestinationEdge(edgeid, ratio)) {
       continue;
     }
 
