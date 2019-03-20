@@ -120,7 +120,7 @@ void loki_worker_t::parse_costing(valhalla_request_t& request) {
             if (shortcut.Is_Valid()) {
               // Check if this shortcut has not been added
               auto shortcut_inserted = avoids.insert(shortcut);
-              if (inserted.second) {
+              if (shortcut_inserted.second) {
                 avoids.insert(shortcut);
 
                 // Add to pbf (with 0 percent along)
