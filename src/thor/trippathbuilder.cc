@@ -1011,6 +1011,7 @@ TripPathBuilder::Build(const AttributesController& controller,
     // Process the shape for edges where a route discontinuity occurs
     if (route_discontinuities && !route_discontinuities->empty() &&
         route_discontinuities->count(edge_index) > 0) {
+      printf("TPB: Discontinuity at index %d\n", edge_index);
       // Get edge shape
       auto edge_shape = edgeinfo.shape();
 
@@ -1039,6 +1040,9 @@ TripPathBuilder::Build(const AttributesController& controller,
 
       // Trim the shape
       float edge_length = static_cast<float>(directededge->length());
+      printf("Trim shape: edge length %f begin length %f end length %f\n", edge_length,
+             edge_begin_info.distance_along * edge_length,
+             edge_end_info.distance_along * edge_length);
       TrimShape(edge_shape, edge_begin_info.distance_along * edge_length, edge_begin_info.vertex,
                 edge_end_info.distance_along * edge_length, edge_end_info.vertex);
 

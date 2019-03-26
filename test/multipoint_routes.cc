@@ -179,7 +179,7 @@ void test_mid_via() {
   }
 
   if (uturns != 1)
-    throw std::logic_error("Should be exactly 1 u-turn");
+    throw std::logic_error("Should be exactly 1 u-turn but there are: " + std::to_string(uturns));
 
   float mid_via_distance = directions.front().summary().length();
   if (!equal(mid_via_distance, mid_break_distance, 0.001f))
