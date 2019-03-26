@@ -24,23 +24,52 @@ namespace {
 // which can lead to irregular paths. Running a second pass with less aggressive
 // A* can take excessive time for longer paths - so exclude them to protect the service.
 constexpr float kPedestrianMultipassThreshold = 50000.0f; // 50km
-/*
-void via_discontinuity(const odin::Location& loc, const GraphId& in, const GraphId& out) {
-  // find the path edges where these paths are connecting
+
+/**
+ * Check if the paths meet at opposing edges (but not at a node). If so, add a route discontinuity
+ * so that the shape / distance along the path is adjusted at the location.
+ */
+void via_discontinuity(
+    GraphReader& reader,
+    const odin::Location& loc,
+    const GraphId& in,
+    const GraphId& out,
+    std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>>& vias,
+    const size_t path_index) {
+  // Find the path edges within the locations.
   auto in_pe = std::find_if(loc.path_edges().begin(), loc.path_edges().end(),
                             [&in](const odin::Location::PathEdge& e) { return e.graph_id() == in; });
   auto out_pe =
       std::find_if(loc.path_edges().begin(), loc.path_edges().end(),
                    [&out](const odin::Location::PathEdge& e) { return e.graph_id() == out; });
-  // couldnt find the right edges on this candidate so assume its good?
-  if (in_pe == loc.path_edges.end() || out_pe == loc.path_edges.end())
+
+  // Could not find the edges. This seems like it should not happen. Log a warning
+  // and do not add a discontinuity.
+  if (in_pe == loc.path_edges().end() || out_pe == loc.path_edges().end()) {
+    LOG_WARN("Could not find connecting edges within via_discontinuity");
     return;
-  // if any are at a graph node we dont need to signal a discontinuity
-  if (in_pe->begin_node() || in_pe->end_node() || out_pe->begin_node() || out_pe->end_node())
+  }
+
+  // Do not add a discontinuity if  the connections are at a graph node we dont need to signal a
+  // discontinuity.
+  if (in_pe->begin_node() || in_pe->end_node() || out_pe->begin_node() || out_pe->end_node()) {
     return;
-  // if they arent opposing edges
+  }
+
+  // Add a discontinuity if the edges are opposing
+  GraphId in_edge_id(in_pe->graph_id());
+  GraphId out_edge_id(out_pe->graph_id());
+  GraphId opp_edge_id = reader.GetOpposingEdgeId(in_edge_id);
+  if (opp_edge_id == out_edge_id) {
+    PointLL snap_ll(in_pe->ll().lng(), in_pe->ll().lat());
+    float dist_along = in_pe->percent_along();
+    printf("Opposing edges - add discontinuity at index %d: LL %f %f dist_along %f\n", path_index,
+           snap_ll.lat(), snap_ll.lng(), dist_along);
+    vias.insert({path_index, {{true, snap_ll, dist_along}, {true, snap_ll, 1.0f - dist_along}}});
+  }
 }
 
+/**
 // removes any edges from the location that aren't connected to it (because of radius)
 void remove_edges(const GraphId& edge_id, odin::Location& loc, GraphReader& reader) {
   // find the path edge at this point
@@ -212,6 +241,7 @@ std::list<valhalla::odin::TripPath> thor_worker_t::path_arrive_by(
     const std::string& costing) {
   // Things we'll need
   GraphId first_edge;
+  std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>> vias;
   std::vector<thor::PathInfo> path;
   std::list<valhalla::odin::TripPath> trip_paths;
   correlated.begin()->set_type(odin::Location::kBreak);
@@ -267,8 +297,9 @@ std::list<valhalla::odin::TripPath> thor_worker_t::path_arrive_by(
 
       // Form output information based on path edges
       auto trip_path = thor::TripPathBuilder::Build(controller, *reader, mode_costing, path, *origin,
-                                                    *destination, throughs, interrupt);
+                                                    *destination, throughs, interrupt, &vias);
       path.clear();
+      vias.clear();
 
       // Keep the protobuf path
       trip_paths.emplace_back(std::move(trip_path));
@@ -321,10 +352,11 @@ std::list<valhalla::odin::TripPath> thor_worker_t::path_depart_at(
       // Connects via the same edge so we only need it once
       if (path.back().edgeid == temp_path.front().edgeid) {
         path.pop_back();
-      } // Connects via opposing edge and isnt at a graph node
-      else if (origin->type() == odin::Location::kVia) {
-        // TODO:
-        // via_discontinuity(*origin, path.back().edgeid, temp_path.front().edgeid);
+      } else if (origin->type() == odin::Location::kVia) {
+        // Insert a route discontinuity if the paths meet at opposing edges and not
+        // at a graph node.
+        via_discontinuity(*reader, *origin, path.back().edgeid, temp_path.front().edgeid, vias,
+                          path.size());
       }
       path.insert(path.end(), temp_path.begin(), temp_path.end());
     } // Didnt need to merge
@@ -347,10 +379,11 @@ std::list<valhalla::odin::TripPath> thor_worker_t::path_depart_at(
       // Create controller for default route attributes
       AttributesController controller;
 
-      // Form output information based on path edges
+      // Form output information based on path edges. vias are a route discontinuity map
       auto trip_path = thor::TripPathBuilder::Build(controller, *reader, mode_costing, path, *origin,
-                                                    *destination, throughs, interrupt);
+                                                    *destination, throughs, interrupt, &vias);
       path.clear();
+      vias.clear();
 
       // Keep the protobuf path
       trip_paths.emplace_back(std::move(trip_path));

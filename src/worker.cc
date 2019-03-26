@@ -321,7 +321,7 @@ void parse_locations(const rapidjson::Document& doc,
             location->set_type(odin::Location::kThrough);
           else if (*stop_type_json == std::string("via"))
             location->set_type(odin::Location::kVia);
-            else if (*stop_type_json == std::string("break_through"))
+          else if (*stop_type_json == std::string("break_through"))
             location->set_type(odin::Location::kBreakThrough);
         }
 
