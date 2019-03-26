@@ -1126,7 +1126,7 @@ public:
 
     std::string network, ref, name, except;
     std::string from_lanes, from, to_lanes, to;
-    std::string condition;
+    std::string condition, direction;
     std::string hour_start, hour_end, day_start, day_end;
     uint32_t modes = 0;
 
@@ -1149,6 +1149,8 @@ public:
       } else if (tag.first == "restriction:conditional") {
         isConditional = true;
         condition = tag.second;
+      } else if (tag.first == "direction") {
+        direction = tag.second;
       } else if (tag.first == "network") {
         network = tag.second; // US:US
       } else if (tag.first == "ref") {
@@ -1278,33 +1280,23 @@ public:
       }
 
       std::string reference = net.at(1) + " " + ref; // US 51 or I 95
-
-      std::string direction;
-
+      bool bfound = false;
       for (const auto& member : members) {
-
         if (member.role.empty() || member.role == "forward" || member.role == "backward") {
           continue;
         }
-
         direction = member.role;
+        osmdata_.add_to_name_map(member.member_id, direction, reference);
+        bfound = true;
+      }
 
-        boost::algorithm::to_lower(direction);
-        direction[0] = std::toupper(direction[0]);
-
-        // TODO:  network=e-road with int_ref=E #
-        if ((boost::starts_with(direction, "North (") || boost::starts_with(direction, "South (") ||
-             boost::starts_with(direction, "East (") || boost::starts_with(direction, "West (")) ||
-            direction == "North" || direction == "South" || direction == "East" ||
-            direction == "West") {
-          auto iter = osmdata_.way_ref.find(member.member_id);
-          if (iter != osmdata_.way_ref.end()) {
-            std::string ref = osmdata_.name_offset_map.name(iter->second);
-            osmdata_.way_ref[member.member_id] =
-                osmdata_.name_offset_map.index(ref + ";" + reference + "|" + direction);
-          } else {
-            osmdata_.way_ref[member.member_id] =
-                osmdata_.name_offset_map.index(reference + "|" + direction);
+      // direction is already set via a direction tag and not at the member level.
+      if (!direction.empty() && !bfound) {
+        for (const auto& member : members) {
+          if (member.role == "forward") {
+            osmdata_.add_to_name_map(member.member_id, direction, reference);
+          } else if (member.role == "backward") {
+            osmdata_.add_to_name_map(member.member_id, direction, reference, false);
           }
         }
       }
@@ -1713,6 +1705,7 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt,
   LOG_INFO("Number of nodes with exit_to = " + std::to_string(osmdata.node_exit_to_count));
   LOG_INFO("Number of nodes with names = " + std::to_string(osmdata.node_name_count));
   LOG_INFO("Number of way refs = " + std::to_string(osmdata.way_ref.size()));
+  LOG_INFO("Number of reverse way refs = " + std::to_string(osmdata.way_ref_rev.size()));
   LOG_INFO("Unique Node Strings (names, refs, etc.) = " + std::to_string(osmdata.node_names.Size()));
   LOG_INFO("Unique Strings (names, refs, etc.) = " + std::to_string(osmdata.name_offset_map.Size()));
 

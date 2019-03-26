@@ -551,26 +551,22 @@ std::string turn_modifier(const valhalla::odin::TripDirections::Maneuver& maneuv
   }
 }
 
-// Ramp cases - off ramp transitions from a motorway. On ramp ends
-// in a motorway.
-// TODO are we able to use the TripDirections_Maneuver_Type ramp/exit classification
-std::string ramp_type(valhalla::odin::EnhancedTripPath_Edge* prev_edge,
-                      const uint32_t idx,
-                      valhalla::odin::EnhancedTripPath* etp) {
-  if (prev_edge->use() == odin::TripPath_Use_kRoadUse) {
-    if (prev_edge->road_class() == odin::TripPath_RoadClass_kMotorway) {
-      return std::string("off ramp");
-    } else if (prev_edge->road_class() != odin::TripPath_RoadClass_kMotorway) {
-      // Check that next road is a motorway
-      for (uint32_t i = idx + 1; i < (etp->node_size() - 1); ++i) {
-        auto* curr_edge = etp->GetCurrEdge(i);
-        if (curr_edge->use() == odin::TripPath_Use_kRoadUse) {
-          if (curr_edge->road_class() == odin::TripPath_RoadClass_kMotorway) {
-            return std::string("on ramp");
-          }
-          break;
-        }
-      }
+// Ramp cases - off ramp transitions from a motorway.
+// On ramp ends in a motorway.
+std::string ramp_type(const valhalla::odin::TripDirections::Maneuver& maneuver) {
+  if ((maneuver.type() == TripDirections_Maneuver_Type_kExitRight) ||
+      (maneuver.type() == TripDirections_Maneuver_Type_kExitLeft)) {
+    return "off ramp";
+  } else if ((maneuver.type() == TripDirections_Maneuver_Type_kRampStraight) ||
+             (maneuver.type() == TripDirections_Maneuver_Type_kRampRight) ||
+             (maneuver.type() == TripDirections_Maneuver_Type_kRampLeft)) {
+
+    // If slight turn
+    uint32_t turn_degree = maneuver.turn_degree();
+    if ((turn_degree > 329) || (turn_degree < 31)) {
+      return "on ramp";
+    } else {
+      return "turn";
     }
   }
   return "";
@@ -641,18 +637,20 @@ json::MapPtr osrm_maneuver(const valhalla::odin::TripDirections::Maneuver& maneu
     auto* curr_edge = etp->GetCurrEdge(idx);
     bool new_name = maneuver.type() == odin::TripDirections_Maneuver_Type_kContinue ||
                     maneuver.type() == odin::TripDirections_Maneuver_Type_kBecomes;
-    bool ramp = curr_edge->use() == odin::TripPath_Use_kRampUse;
-    bool fork = etp->node(idx).fork();
-    bool merge = prev_edge->use() == odin::TripPath_Use_kRampUse &&
-                 curr_edge->use() == odin::TripPath_Use_kRoadUse &&
-                 (curr_edge->road_class() == odin::TripPath_RoadClass_kMotorway ||
-                  curr_edge->road_class() == odin::TripPath_RoadClass_kTrunk);
-    if (merge) {
+    bool ramp = ((maneuver.type() == TripDirections_Maneuver_Type_kRampStraight) ||
+                 (maneuver.type() == TripDirections_Maneuver_Type_kRampRight) ||
+                 (maneuver.type() == TripDirections_Maneuver_Type_kRampLeft) ||
+                 (maneuver.type() == TripDirections_Maneuver_Type_kExitRight) ||
+                 (maneuver.type() == TripDirections_Maneuver_Type_kExitLeft));
+    bool fork = ((maneuver.type() == TripDirections_Maneuver_Type_kStayStraight) ||
+                 (maneuver.type() == TripDirections_Maneuver_Type_kStayRight) ||
+                 (maneuver.type() == TripDirections_Maneuver_Type_kStayLeft));
+    if (maneuver.type() == odin::TripDirections_Maneuver_Type_kMerge) {
       maneuver_type = "merge";
     } else if (fork) {
       maneuver_type = "fork";
     } else if (ramp) {
-      maneuver_type = ramp_type(prev_edge, idx, etp);
+      maneuver_type = ramp_type(maneuver);
     } else if (new_name) {
       maneuver_type = "new name";
     }

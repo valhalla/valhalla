@@ -967,6 +967,15 @@ bool EnhancedTripPath_Node::HasIntersectingEdgeNameConsistency() const {
   return false;
 }
 
+bool EnhancedTripPath_Node::HasIntersectingEdgeCurrNameConsistency() const {
+  for (const auto& xedge : intersecting_edge()) {
+    if (xedge.curr_name_consistency()) {
+      return true;
+    }
+  }
+  return false;
+}
+
 EnhancedTripPath_IntersectingEdge* EnhancedTripPath_Node::GetIntersectingEdge(size_t index) {
   return static_cast<EnhancedTripPath_IntersectingEdge*>(mutable_intersecting_edge(index));
 }
@@ -1099,6 +1108,19 @@ uint32_t EnhancedTripPath_Node::GetStraightestTraversableIntersectingEdgeTurnDeg
     }
   }
   return staightest_turn_degree;
+}
+
+bool EnhancedTripPath_Node::IsStraightestTraversableIntersectingEdgeReversed(
+    uint32_t from_heading,
+    const TripPath_TravelMode travel_mode) {
+  uint32_t straightest_traversable_xedge_turn_degree =
+      GetStraightestTraversableIntersectingEdgeTurnDegree(from_heading, travel_mode);
+  // Determine if the straightest intersecting edge is in the reversed direction
+  if ((straightest_traversable_xedge_turn_degree > 124) &&
+      (straightest_traversable_xedge_turn_degree < 236)) {
+    return true;
+  }
+  return false;
 }
 
 uint32_t EnhancedTripPath_Node::GetStraightestIntersectingEdgeTurnDegree(uint32_t from_heading) {

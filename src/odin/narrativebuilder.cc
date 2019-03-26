@@ -102,15 +102,13 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
       case TripDirections_Maneuver_Type_kSharpLeft:
       case TripDirections_Maneuver_Type_kLeft: {
         // Set instruction
-        maneuver.set_instruction(FormTurnInstruction(maneuver, prev_maneuver));
+        maneuver.set_instruction(FormTurnInstruction(maneuver));
 
         // Set verbal transition alert instruction
-        maneuver.set_verbal_transition_alert_instruction(
-            FormVerbalAlertTurnInstruction(maneuver, prev_maneuver));
+        maneuver.set_verbal_transition_alert_instruction(FormVerbalAlertTurnInstruction(maneuver));
 
         // Set verbal pre transition instruction
-        maneuver.set_verbal_pre_transition_instruction(
-            FormVerbalTurnInstruction(maneuver, prev_maneuver));
+        maneuver.set_verbal_pre_transition_instruction(FormVerbalTurnInstruction(maneuver));
 
         // Set verbal post transition instruction
         maneuver.set_verbal_post_transition_instruction(
@@ -120,15 +118,13 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
       case TripDirections_Maneuver_Type_kUturnRight:
       case TripDirections_Maneuver_Type_kUturnLeft: {
         // Set instruction
-        maneuver.set_instruction(FormUturnInstruction(maneuver, prev_maneuver));
+        maneuver.set_instruction(FormUturnInstruction(maneuver));
 
         // Set verbal transition alert instruction
-        maneuver.set_verbal_transition_alert_instruction(
-            FormVerbalAlertUturnInstruction(maneuver, prev_maneuver));
+        maneuver.set_verbal_transition_alert_instruction(FormVerbalAlertUturnInstruction(maneuver));
 
         // Set verbal pre transition instruction
-        maneuver.set_verbal_pre_transition_instruction(
-            FormVerbalUturnInstruction(maneuver, prev_maneuver));
+        maneuver.set_verbal_pre_transition_instruction(FormVerbalUturnInstruction(maneuver));
 
         // Set verbal post transition instruction
         maneuver.set_verbal_post_transition_instruction(
@@ -195,9 +191,7 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
       case TripDirections_Maneuver_Type_kStayStraight:
       case TripDirections_Maneuver_Type_kStayRight:
       case TripDirections_Maneuver_Type_kStayLeft: {
-        if (maneuver.HasSimilarNames(prev_maneuver)) {
-          maneuver.set_to_stay_on(true);
-
+        if (maneuver.to_stay_on()) {
           // Set stay on instruction
           maneuver.set_instruction(FormKeepToStayOnInstruction(maneuver));
 
@@ -916,7 +910,7 @@ std::string NarrativeBuilder::FormVerbalContinueInstruction(Maneuver& maneuver,
   return instruction;
 }
 
-std::string NarrativeBuilder::FormTurnInstruction(Maneuver& maneuver, Maneuver* prev_maneuver) {
+std::string NarrativeBuilder::FormTurnInstruction(Maneuver& maneuver) {
   // "0": "Turn/Bear/Turn sharp <RELATIVE_DIRECTION>.",
   // "1": "Turn/Bear/Turn sharp <RELATIVE_DIRECTION> onto <STREET_NAMES>.",
   // "2": "Turn/Bear/Turn sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>. Continue on
@@ -958,8 +952,7 @@ std::string NarrativeBuilder::FormTurnInstruction(Maneuver& maneuver, Maneuver* 
   if (!begin_street_names.empty()) {
     phrase_id = 2;
   }
-  if (begin_street_names.empty() && maneuver.HasSimilarNames(prev_maneuver, true)) {
-    maneuver.set_to_stay_on(true);
+  if (maneuver.to_stay_on()) {
     phrase_id = 3;
   }
 
@@ -981,7 +974,6 @@ std::string NarrativeBuilder::FormTurnInstruction(Maneuver& maneuver, Maneuver* 
 }
 
 std::string NarrativeBuilder::FormVerbalAlertTurnInstruction(Maneuver& maneuver,
-                                                             Maneuver* prev_maneuver,
                                                              uint32_t element_max_count,
                                                              const std::string& delim) {
   // "0": "Turn/Bear/Turn sharp <RELATIVE_DIRECTION>.",
@@ -989,11 +981,10 @@ std::string NarrativeBuilder::FormVerbalAlertTurnInstruction(Maneuver& maneuver,
   // "2": "Turn/Bear/Turn sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>.",
   // "3": "Turn/Bear/Turn sharp <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
 
-  return FormVerbalTurnInstruction(maneuver, prev_maneuver, element_max_count, delim);
+  return FormVerbalTurnInstruction(maneuver, element_max_count, delim);
 }
 
 std::string NarrativeBuilder::FormVerbalTurnInstruction(Maneuver& maneuver,
-                                                        Maneuver* prev_maneuver,
                                                         uint32_t element_max_count,
                                                         const std::string& delim) {
   // "0": "Turn/Bear/Turn sharp <RELATIVE_DIRECTION>.",
@@ -1040,8 +1031,7 @@ std::string NarrativeBuilder::FormVerbalTurnInstruction(Maneuver& maneuver,
   if (!begin_street_names.empty()) {
     phrase_id = 2;
   }
-  if (begin_street_names.empty() && maneuver.HasSimilarNames(prev_maneuver, true)) {
-    maneuver.set_to_stay_on(true);
+  if (maneuver.to_stay_on()) {
     phrase_id = 3;
   }
 
@@ -1062,7 +1052,7 @@ std::string NarrativeBuilder::FormVerbalTurnInstruction(Maneuver& maneuver,
   return instruction;
 }
 
-std::string NarrativeBuilder::FormUturnInstruction(Maneuver& maneuver, Maneuver* prev_maneuver) {
+std::string NarrativeBuilder::FormUturnInstruction(Maneuver& maneuver) {
   // "0": "Make a <RELATIVE_DIRECTION> U-turn.",
   // "1": "Make a <RELATIVE_DIRECTION> U-turn onto <STREET_NAMES>.",
   // "2": "Make a <RELATIVE_DIRECTION> U-turn to stay on <STREET_NAMES>.",
@@ -1085,8 +1075,7 @@ std::string NarrativeBuilder::FormUturnInstruction(Maneuver& maneuver, Maneuver*
   uint8_t phrase_id = 0;
   if (!street_names.empty()) {
     phrase_id += 1;
-    if (maneuver.HasSameNames(prev_maneuver, true)) {
-      maneuver.set_to_stay_on(true);
+    if (maneuver.to_stay_on()) {
       phrase_id += 1;
     }
   }
@@ -1113,7 +1102,6 @@ std::string NarrativeBuilder::FormUturnInstruction(Maneuver& maneuver, Maneuver*
 }
 
 std::string NarrativeBuilder::FormVerbalAlertUturnInstruction(Maneuver& maneuver,
-                                                              Maneuver* prev_maneuver,
                                                               uint32_t element_max_count,
                                                               const std::string& delim) {
   // "0": "Make a <RELATIVE_DIRECTION> U-turn.",
@@ -1140,8 +1128,7 @@ std::string NarrativeBuilder::FormVerbalAlertUturnInstruction(Maneuver& maneuver
   uint8_t phrase_id = 0;
   if (!street_names.empty()) {
     phrase_id = 1;
-    if (maneuver.HasSameNames(prev_maneuver, true)) {
-      maneuver.set_to_stay_on(true);
+    if (maneuver.to_stay_on()) {
       phrase_id = 2;
     }
   }
@@ -1157,7 +1144,6 @@ std::string NarrativeBuilder::FormVerbalAlertUturnInstruction(Maneuver& maneuver
 }
 
 std::string NarrativeBuilder::FormVerbalUturnInstruction(Maneuver& maneuver,
-                                                         Maneuver* prev_maneuver,
                                                          uint32_t element_max_count,
                                                          const std::string& delim) {
   // "0": "Make a <RELATIVE_DIRECTION> U-turn.",
@@ -1183,8 +1169,7 @@ std::string NarrativeBuilder::FormVerbalUturnInstruction(Maneuver& maneuver,
   uint8_t phrase_id = 0;
   if (!street_names.empty()) {
     phrase_id += 1;
-    if (maneuver.HasSameNames(prev_maneuver, true)) {
-      maneuver.set_to_stay_on(true);
+    if (maneuver.to_stay_on()) {
       phrase_id += 1;
     }
   }
@@ -1794,15 +1779,23 @@ std::string NarrativeBuilder::FormKeepInstruction(Maneuver& maneuver,
   instruction.reserve(kInstructionInitialCapacity);
 
   // Assign the street names
-  std::string street_names =
-      FormStreetNames(maneuver, maneuver.street_names(),
-                      &dictionary_.keep_subset.empty_street_name_labels, true, element_max_count);
+  std::string street_names;
 
-  // If street names string is empty and the maneuver has sign branch info
-  // then assign the sign branch name to the street names string
-  if (street_names.empty() && maneuver.HasExitBranchSign()) {
+  // For ramps with branch sign info - we use the sign info to match what users are seeing
+  if (maneuver.ramp() && maneuver.HasExitBranchSign()) {
     street_names =
         maneuver.signs().GetExitBranchString(element_max_count, limit_by_consecutive_count);
+  } else {
+    street_names =
+        FormStreetNames(maneuver, maneuver.street_names(),
+                        &dictionary_.keep_subset.empty_street_name_labels, true, element_max_count);
+
+    // If street names string is empty and the maneuver has sign branch info
+    // then assign the sign branch name to the street names string
+    if (street_names.empty() && maneuver.HasExitBranchSign()) {
+      street_names =
+          maneuver.signs().GetExitBranchString(element_max_count, limit_by_consecutive_count);
+    }
   }
 
   // Determine which phrase to use
