@@ -97,6 +97,7 @@ void loki_worker_t::parse_costing(valhalla_request_t& request) {
     throw valhalla_exception_t{157, std::to_string(max_avoid_locations)};
   }
 
+  // Process avoid locations. Add to a list of edgeids and percent along the edge.
   if (request.options.avoid_locations_size()) {
     try {
       auto avoid_locations = PathLocation::fromPBF(request.options.avoid_locations());
@@ -105,14 +106,31 @@ void loki_worker_t::parse_costing(valhalla_request_t& request) {
       for (const auto& result : results) {
         for (const auto& edge : result.second.edges) {
           auto inserted = avoids.insert(edge.id);
-          GraphId shortcut;
-          if (inserted.second && (shortcut = reader->GetShortcut(edge.id)).Is_Valid()) {
-            avoids.insert(shortcut);
+
+          // If this edge Id was inserted add it to the request options (along with percent along)
+          // Also insert shortcut edge if one includes this edge
+          if (inserted.second) {
+            // Add edge and percent along to pbf
+            auto* avoid = request.options.add_avoid_edges();
+            avoid->set_id(edge.id);
+            avoid->set_percent_along(edge.percent_along);
+
+            // Check if a shortcut exists
+            GraphId shortcut = reader->GetShortcut(edge.id);
+            if (shortcut.Is_Valid()) {
+              // Check if this shortcut has not been added
+              auto shortcut_inserted = avoids.insert(shortcut);
+              if (shortcut_inserted.second) {
+                avoids.insert(shortcut);
+
+                // Add to pbf (with 0 percent along)
+                auto* avoid = request.options.add_avoid_edges();
+                avoid->set_id(shortcut);
+                avoid->set_percent_along(0);
+              }
+            }
           }
         }
-      }
-      for (auto avoid : avoids) {
-        request.options.add_avoid_edges(avoid);
       }
     } // swallow all failures on optional avoids
     catch (...) {
