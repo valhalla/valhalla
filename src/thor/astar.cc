@@ -374,8 +374,13 @@ void AStarPathAlgorithm::SetOrigin(GraphReader& graphreader,
       continue;
     }
 
-    // Get the directed edge
+    // Disallow any user avoid edges if the avoid location is ahead of the origin along the edge
     GraphId edgeid(edge.graph_id());
+    if (costing_->AvoidAsOriginEdge(edgeid, edge.percent_along())) {
+      continue;
+    }
+
+    // Get the directed edge
     const GraphTile* tile = graphreader.GetGraphTile(edgeid);
     const DirectedEdge* directededge = tile->directededge(edgeid);
 
@@ -474,12 +479,16 @@ uint32_t AStarPathAlgorithm::SetDestination(GraphReader& graphreader, const odin
       continue;
     }
 
-    // Keep the id and the cost to traverse the partial distance for the
-    // remainder of the edge. This cost is subtracted from the total cost
-    // up to the end of the destination edge.
-    GraphId id(edge.graph_id());
-    const GraphTile* tile = graphreader.GetGraphTile(id);
-    const DirectedEdge* directededge = tile->directededge(id);
+    // Disallow any user avoided edges if the avoid location is behind the destination along the edge
+    GraphId edgeid(edge.graph_id());
+    if (costing_->AvoidAsDestinationEdge(edgeid, edge.percent_along())) {
+      continue;
+    }
+
+    // Keep the cost to traverse the partial distance for the remainder of the edge. This cost
+    // is subtracted from the total cost up to the end of the destination edge.
+    const GraphTile* tile = graphreader.GetGraphTile(edgeid);
+    const DirectedEdge* directededge = tile->directededge(edgeid);
     destinations_[edge.graph_id()] = costing_->EdgeCost(directededge, tile->GetSpeed(directededge)) *
                                      (1.0f - edge.percent_along());
 

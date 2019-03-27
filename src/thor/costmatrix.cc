@@ -688,8 +688,13 @@ void CostMatrix::SetSources(GraphReader& graphreader,
         continue;
       }
 
+      // Disallow any user avoid edges if the avoid location is ahead of the origin along the edge
+      GraphId edgeid(edge.graph_id());
+      if (costing_->AvoidAsOriginEdge(edgeid, edge.percent_along())) {
+        continue;
+      }
+
       // Get the directed edge and the opposing edge Id
-      GraphId edgeid = static_cast<GraphId>(edge.graph_id());
       const GraphTile* tile = graphreader.GetGraphTile(edgeid);
       const DirectedEdge* directededge = tile->directededge(edgeid);
       GraphId oppedge = graphreader.GetOpposingEdgeId(edgeid);
@@ -760,8 +765,14 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
         continue;
       }
 
+      // Disallow any user avoided edges if the avoid location is behind the destination along the
+      // edge
+      GraphId edgeid(edge.graph_id());
+      if (costing_->AvoidAsDestinationEdge(edgeid, edge.percent_along())) {
+        continue;
+      }
+
       // Get the directed edge
-      GraphId edgeid = static_cast<GraphId>(edge.graph_id());
       const GraphTile* tile = graphreader.GetGraphTile(edgeid);
       const DirectedEdge* directededge = tile->directededge(edgeid);
 
