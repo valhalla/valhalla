@@ -7,6 +7,7 @@
  */
 
 #include <cerrno>
+#include <cstdio>
 #include <cstring>
 #include <dirent.h>
 #include <memory>
@@ -301,6 +302,10 @@ inline void resize_file(const path& p, std::uintmax_t new_size) {
 
   if (truncate(p.c_str(), new_size))
     throw std::runtime_error(std::string("Failed to resize path: ") + strerror(errno));
+}
+
+inline bool remove(const path& p) {
+  return ::remove(p.c_str()) == 0;
 }
 
 } // namespace filesystem
