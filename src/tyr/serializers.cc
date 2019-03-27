@@ -56,7 +56,7 @@ valhalla::baldr::json::MapPtr waypoint(const odin::Location& location,
   // Add hint. Goal is for the hint returned from a locate request to be able
   // to quickly find the edge and point along the edge in a route request.
   // Defer this - not currently used in OSRM.
-  waypoint->emplace("hint", std::string("TODO"));
+  // waypoint->emplace("hint", std::string("TODO"));
 
   // If the location was used for a tracepoint we trigger extra serialization
   if (tracepoint) {

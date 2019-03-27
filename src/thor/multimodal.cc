@@ -556,8 +556,13 @@ void MultiModalPathAlgorithm::SetOrigin(GraphReader& graphreader,
       continue;
     }
 
-    // Get the directed edge
+    // Disallow any user avoid edges if the avoid location is ahead of the origin along the edge
     GraphId edgeid(edge.graph_id());
+    if (costing->AvoidAsOriginEdge(edgeid, edge.percent_along())) {
+      continue;
+    }
+
+    // Get the directed edge
     const GraphTile* tile = graphreader.GetGraphTile(edgeid);
     const DirectedEdge* directededge = tile->directededge(edgeid);
 
@@ -659,12 +664,16 @@ uint32_t MultiModalPathAlgorithm::SetDestination(GraphReader& graphreader,
       continue;
     }
 
-    // Keep the id and the cost to traverse the partial distance for the
-    // remainder of the edge. This cost is subtracted from the total cost
-    // up to the end of the destination edge.
-    GraphId id(edge.graph_id());
-    const GraphTile* tile = graphreader.GetGraphTile(id);
-    const DirectedEdge* dest_diredge = tile->directededge(id);
+    // Disallow any user avoided edges if the avoid location is behind the destination along the edge
+    GraphId edgeid(edge.graph_id());
+    if (costing->AvoidAsDestinationEdge(edgeid, edge.percent_along())) {
+      continue;
+    }
+
+    // Keep the cost to traverse the partial distance for the remainder of the edge. This cost
+    // is subtracted from the total cost up to the end of the destination edge.
+    const GraphTile* tile = graphreader.GetGraphTile(edgeid);
+    const DirectedEdge* dest_diredge = tile->directededge(edgeid);
     destinations_[edge.graph_id()] =
         costing->EdgeCost(dest_diredge, tile->GetSpeed(dest_diredge)) * (1.0f - edge.percent_along());
 
@@ -785,6 +794,13 @@ bool MultiModalPathAlgorithm::CanReachDestination(const odin::Location& destinat
     float ratio = (1.0f - edge.percent_along());
     GraphId id(edge.graph_id());
     GraphId oppedge = graphreader.GetOpposingEdgeId(id);
+
+    // Disallow any user avoided edges if the avoid location is behind the destination along the edge
+    GraphId edgeid(edge.graph_id());
+    if (costing->AvoidAsDestinationEdge(edgeid, ratio)) {
+      continue;
+    }
+
     const GraphTile* tile = graphreader.GetGraphTile(oppedge);
     const DirectedEdge* diredge = tile->directededge(oppedge);
     uint32_t length = static_cast<uint32_t>(diredge->length()) * ratio;
