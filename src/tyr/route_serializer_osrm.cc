@@ -26,6 +26,13 @@ namespace {
 const std::string kSignElementDelimiter = ", ";
 const std::string kDestinationsDelimiter = ": ";
 
+constexpr std::size_t MAX_USED_SEGMENTS = 2;
+struct NamedSegment {
+  std::string name;
+  uint32_t index;
+  float distance;
+};
+
 namespace osrm_serializers {
 /*
 OSRM output is described in: http://project-osrm.org/docs/v5.5.1/api/
@@ -807,6 +814,53 @@ json::MapPtr annotations(valhalla::odin::EnhancedTripPath* etp) {
   return annotations;
 }
 
+std::string summarize_leg(std::list<valhalla::odin::TripDirections>::const_iterator leg) {
+  // Create a map of maneuver names to index,distance pairs
+  std::unordered_map<std::string, std::pair<uint32_t, float>> maneuver_summary_map;
+  uint32_t maneuver_index = 0;
+  for (const auto& maneuver : leg->maneuver()) {
+    if (maneuver.street_name_size() > 0) {
+      const std::string& name = maneuver.street_name(0).value();
+      auto maneuver_summary = maneuver_summary_map.find(name);
+      if (maneuver_summary == maneuver_summary_map.end()) {
+        maneuver_summary_map[name] = std::make_pair(maneuver_index, maneuver.length());
+      } else {
+        maneuver_summary->second.second += maneuver.length();
+      }
+    }
+    // Increment maneuver index
+    ++maneuver_index;
+  }
+
+  // Create a list of named segments (maneuver name, index, distance items)
+  std::vector<NamedSegment> named_segments;
+  for (const auto map_item : maneuver_summary_map) {
+    named_segments.emplace_back(
+        NamedSegment{map_item.first, map_item.second.first, map_item.second.second});
+  }
+
+  // Sort list by descending maneuver distance
+  std::sort(named_segments.begin(), named_segments.end(),
+            [](const NamedSegment& a, const NamedSegment& b) { return b.distance < a.distance; });
+
+  // Reduce the list size to the summary list max
+  named_segments.resize(std::min(named_segments.size(), MAX_USED_SEGMENTS));
+
+  // Sort final list by ascending maneuver index
+  std::sort(named_segments.begin(), named_segments.end(),
+            [](const NamedSegment& a, const NamedSegment& b) { return a.index < b.index; });
+
+  // Create single summary string from list
+  std::stringstream ss;
+  for (size_t i = 0; i < named_segments.size(); ++i) {
+    if (i != 0)
+      ss << ", ";
+    ss << named_segments[i].name;
+  }
+
+  return ss.str();
+}
+
 // Serialize each leg
 json::ArrayPtr serialize_legs(const std::list<valhalla::odin::TripDirections>& legs,
                               std::list<valhalla::odin::TripPath>& path_legs,
@@ -841,7 +895,6 @@ json::ArrayPtr serialize_legs(const std::list<valhalla::odin::TripDirections>& l
     bool rotary = false;
     bool prev_rotary = false;
     auto steps = json::array({});
-    std::unordered_map<std::string, float> maneuvers;
     for (const auto& maneuver : leg->maneuver()) {
       auto step = json::map({});
       bool depart_maneuver = (maneuver_index == 0);
@@ -887,17 +940,6 @@ json::ArrayPtr serialize_legs(const std::list<valhalla::odin::TripDirections>& l
         step->emplace("rotary_name", maneuver.street_name(0).value());
       }
 
-      // Record street name and distance.. TODO - need to also worry about order
-      if (maneuver.street_name_size() > 0) {
-        const std::string& name = maneuver.street_name(0).value();
-        auto man = maneuvers.find(name);
-        if (man == maneuvers.end()) {
-          maneuvers[name] = distance;
-        } else {
-          man->second += distance;
-        }
-      }
-
       // Add OSRM maneuver
       step->emplace("maneuver",
                     osrm_maneuver(maneuver, etp, shape[maneuver.begin_shape_index()], depart_maneuver,
@@ -938,10 +980,9 @@ json::ArrayPtr serialize_legs(const std::list<valhalla::odin::TripDirections>& l
 
     // Add distance, duration, weight, and summary
     // Get a summary based on longest maneuvers.
-    std::string summary = "TODO"; // Form summary from longest maneuvers?
     float duration = leg->summary().time();
     float distance = leg->summary().length() * (imperial ? 1609.34f : 1000.0f);
-    output_leg->emplace("summary", summary);
+    output_leg->emplace("summary", summarize_leg(leg));
     output_leg->emplace("distance", json::fp_t{distance, 1});
     output_leg->emplace("duration", json::fp_t{duration, 1});
     output_leg->emplace("weight", json::fp_t{duration, 1});
