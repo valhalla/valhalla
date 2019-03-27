@@ -814,6 +814,10 @@ json::MapPtr annotations(valhalla::odin::EnhancedTripPath* etp) {
   return annotations;
 }
 
+// This is an initial implementation to be as good or better than the current OSRM response
+// In the future we shall use the percent of name distance as compared to the total distance
+// to determine how many named segments to display.
+// Also, might need to combine some similar named segments
 std::string summarize_leg(std::list<valhalla::odin::TripDirections>::const_iterator leg) {
   // Create a map of maneuver names to index,distance pairs
   std::unordered_map<std::string, std::pair<uint32_t, float>> maneuver_summary_map;
