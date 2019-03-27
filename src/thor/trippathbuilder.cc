@@ -1011,11 +1011,8 @@ TripPathBuilder::Build(const AttributesController& controller,
     // Process the shape for edges where a route discontinuity occurs
     if (route_discontinuities && !route_discontinuities->empty() &&
         route_discontinuities->count(edge_index) > 0) {
-      printf("TPB: Discontinuity at index %d\n", edge_index);
-      // Get edge shape
+      // Get edge shape and reverse it if directed edge is not forward.
       auto edge_shape = edgeinfo.shape();
-
-      // Reverse edge shape if directed edge is not forward
       if (!directededge->forward()) {
         std::reverse(edge_shape.begin(), edge_shape.end());
       }
@@ -1040,9 +1037,6 @@ TripPathBuilder::Build(const AttributesController& controller,
 
       // Trim the shape
       float edge_length = static_cast<float>(directededge->length());
-      printf("Trim shape: edge length %f begin length %f end length %f\n", edge_length,
-             edge_begin_info.distance_along * edge_length,
-             edge_end_info.distance_along * edge_length);
       TrimShape(edge_shape, edge_begin_info.distance_along * edge_length, edge_begin_info.vertex,
                 edge_end_info.distance_along * edge_length, edge_end_info.vertex);
 
@@ -1051,10 +1045,13 @@ TripPathBuilder::Build(const AttributesController& controller,
                         (edge_shape.begin() + ((edge_begin_info.exists || is_first_edge) ? 0 : 1)),
                         edge_shape.end());
 
-      // If edge_begin_info.exists and not the first edge
-      // then increment begin_index
-      // since the previous end shape index should not equal
-      // the current begin shape index because of discontinuity
+      // Adjust the length of the trimmed edge
+      trip_edge->set_length(edge_length * kKmPerMeter *
+                            (edge_end_info.distance_along - edge_begin_info.distance_along));
+
+      // If edge_begin_info.exists and is not the first edge then increment begin_index since
+      // the previous end shape index should not equal the current begin shape index because
+      // of discontinuity
       if (edge_begin_info.exists && !is_first_edge) {
         ++begin_index;
       }
@@ -1359,7 +1356,7 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const AttributesController& controll
 
   // Set length if requested. Convert to km
   if (controller.attributes.at(kEdgeLength)) {
-    float km = std::max((directededge->length() * 0.001f * length_percentage), 0.001f);
+    float km = std::max((directededge->length() * kKmPerMeter * length_percentage), 0.001f);
     trip_edge->set_length(km);
   }
 
