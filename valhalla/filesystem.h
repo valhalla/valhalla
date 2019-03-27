@@ -305,7 +305,7 @@ inline void resize_file(const path& p, std::uintmax_t new_size) {
 }
 
 bool remove(const path& p) {
-  return remove(p.c_str()) == 0;
+  return ::remove(p.c_str()) == 0;
 }
 
 } // namespace filesystem
