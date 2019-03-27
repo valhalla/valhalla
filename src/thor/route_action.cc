@@ -64,20 +64,13 @@ void via_discontinuity(
     PointLL snap_ll(in_pe->ll().lng(), in_pe->ll().lat());
     float dist_along = in_pe->percent_along();
 
-    // TODO - remove
-    printf("Opposing edges - add discontinuity at index %d: LL %f %f dist_along %f\n", path_index,
-           snap_ll.lat(), snap_ll.lng(), dist_along);
     // Insert a discontinuity so the last edge of the first segment is trimmed at the beginning
     // from 0 to dist_along
-    vias.insert({path_index, {{true, snap_ll, 0.0f}, {true, snap_ll, dist_along}}});
-
-    // TODO - remove
-    printf("Opposing edges - add discontinuity at index %d: LL %f %f dist_along %f\n", path_index + 1,
-           snap_ll.lat(), snap_ll.lng(), dist_along);
+    vias.insert({path_index, {{true, PointLL(), 0.0f}, {true, snap_ll, dist_along}}});
 
     // Insert a second discontinuity so the next (opposing) edge is trimmed at the end from
     // 1-dist along to 1
-    vias.insert({path_index + 1, {{true, snap_ll, 1.0f - dist_along}, {true, snap_ll, 1.0f}}});
+    vias.insert({path_index + 1, {{true, snap_ll, 1.0f - dist_along}, {true, PointLL(), 1.0f}}});
   }
 }
 
