@@ -1039,15 +1039,17 @@ TripPathBuilder::Build(const AttributesController& controller,
       float edge_length = static_cast<float>(directededge->length());
       TrimShape(edge_shape, edge_begin_info.distance_along * edge_length, edge_begin_info.vertex,
                 edge_end_info.distance_along * edge_length, edge_end_info.vertex);
-
       // Add edge shape to trip
       trip_shape.insert(trip_shape.end(),
                         (edge_shape.begin() + ((edge_begin_info.exists || is_first_edge) ? 0 : 1)),
                         edge_shape.end());
 
-      // Adjust the length of the trimmed edge
-      trip_edge->set_length(edge_length * kKmPerMeter *
-                            (edge_end_info.distance_along - edge_begin_info.distance_along));
+      // Adjust the length of the trimmed edge if this is a route (check if through_location exist).
+      // Do not want to trim the edge length if this is part of map matching (TODO - verify).
+      if (through_loc.size() > 0) {
+        trip_edge->set_length(edge_length * kKmPerMeter *
+                              (edge_end_info.distance_along - edge_begin_info.distance_along));
+      }
 
       // If edge_begin_info.exists and is not the first edge then increment begin_index since
       // the previous end shape index should not equal the current begin shape index because
