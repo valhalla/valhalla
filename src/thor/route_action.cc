@@ -65,12 +65,12 @@ void via_discontinuity(
     float dist_along = in_pe->percent_along();
 
     // Insert a discontinuity so the last edge of the first segment is trimmed at the beginning
-    // from 0 to dist_along
-    vias.insert({path_index, {{true, PointLL(), 0.0f}, {true, snap_ll, dist_along}}});
+    // from 0 to dist_along. Set the first
+    vias.insert({path_index, {{false, PointLL(), 0.0f}, {true, snap_ll, dist_along}}});
 
     // Insert a second discontinuity so the next (opposing) edge is trimmed at the end from
     // 1-dist along to 1
-    vias.insert({path_index + 1, {{true, snap_ll, 1.0f - dist_along}, {true, PointLL(), 1.0f}}});
+    vias.insert({path_index + 1, {{false, snap_ll, 1.0f - dist_along}, {true, PointLL(), 1.0f}}});
   }
 }
 
