@@ -402,6 +402,9 @@ public:
       } else if (tag.first == "hov_tag") {
         access.set_hov_tag(true);
         has_user_tags = true;
+      } else if (tag.first == "taxi_tag") {
+        access.set_taxi_tag(true);
+        has_user_tags = true;
       } else if (tag.first == "motorroad_tag") {
         access.set_motorroad_tag(true);
         has_user_tags = true;
@@ -436,6 +439,8 @@ public:
         w.set_emergency_forward(tag.second == "true" ? true : false);
       } else if (tag.first == "hov_forward") {
         w.set_hov_forward(tag.second == "true" ? true : false);
+      } else if (tag.first == "taxi_forward") {
+        w.set_taxi_forward(tag.second == "true" ? true : false);
       } else if (tag.first == "moped_forward") {
         w.set_moped_forward(tag.second == "true" ? true : false);
       } else if (tag.first == "motorcycle_forward") {
@@ -452,6 +457,8 @@ public:
         w.set_emergency_backward(tag.second == "true" ? true : false);
       } else if (tag.first == "hov_backward") {
         w.set_hov_backward(tag.second == "true" ? true : false);
+      } else if (tag.first == "taxi_backward") {
+        w.set_taxi_backward(tag.second == "true" ? true : false);
       } else if (tag.first == "moped_backward") {
         w.set_moped_backward(tag.second == "true" ? true : false);
       } else if (tag.first == "motorcycle_backward") {

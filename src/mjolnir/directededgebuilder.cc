@@ -121,6 +121,12 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
   if ((way.hov_forward() && !forward) || (way.hov_backward() && forward)) {
     reverse_access |= kHOVAccess;
   }
+  if ((way.taxi_forward() && forward) || (way.taxi_backward() && !forward)) {
+    forward_access |= kTaxiAccess;
+  }
+  if ((way.taxi_forward() && !forward) || (way.taxi_backward() && forward)) {
+    reverse_access |= kTaxiAccess;
+  }
   if (way.pedestrian()) {
     forward_access |= kPedestrianAccess;
     reverse_access |= kPedestrianAccess;
@@ -134,8 +140,6 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
   // Set access modes
   set_forwardaccess(forward_access);
   set_reverseaccess(reverse_access);
-
-  // TODO: Taxi?
 }
 
 } // namespace mjolnir

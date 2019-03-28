@@ -1707,9 +1707,9 @@ void test_filter_attributes() {
 }
 
 std::vector<valhalla::odin::Costing> get_base_auto_costing_list() {
-  return {valhalla::odin::Costing::auto_, valhalla::odin::Costing::auto_shorter,
+  return {valhalla::odin::Costing::auto_,         valhalla::odin::Costing::auto_shorter,
           valhalla::odin::Costing::auto_data_fix, valhalla::odin::Costing::bus,
-          valhalla::odin::Costing::hov};
+          valhalla::odin::Costing::hov,           valhalla::odin::Costing::taxi};
 }
 void test_default_base_auto_cost_options() {
   for (auto costing : get_base_auto_costing_list()) {
