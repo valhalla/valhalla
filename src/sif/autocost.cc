@@ -1232,11 +1232,11 @@ public:
 
 // Check if access is allowed on the specified edge.
 bool TaxiCost::Allowed(const baldr::DirectedEdge* edge,
-                      const EdgeLabel& pred,
-                      const baldr::GraphTile*& tile,
-                      const baldr::GraphId& edgeid,
-                      const uint64_t current_time,
-                      const uint32_t tz_index) const {
+                       const EdgeLabel& pred,
+                       const baldr::GraphTile*& tile,
+                       const baldr::GraphId& edgeid,
+                       const uint64_t current_time,
+                       const uint32_t tz_index) const {
   // TODO - obtain and check the access restrictions.
 
   // Check access, U-turn, and simple turn restriction.
@@ -1273,12 +1273,12 @@ bool TaxiCost::Allowed(const baldr::DirectedEdge* edge,
 // Checks if access is allowed for an edge on the reverse path (from
 // destination towards origin). Both opposing edges are provided.
 bool TaxiCost::AllowedReverse(const baldr::DirectedEdge* edge,
-                             const EdgeLabel& pred,
-                             const baldr::DirectedEdge* opp_edge,
-                             const baldr::GraphTile*& tile,
-                             const baldr::GraphId& opp_edgeid,
-                             const uint64_t current_time,
-                             const uint32_t tz_index) const {
+                              const EdgeLabel& pred,
+                              const baldr::DirectedEdge* opp_edge,
+                              const baldr::GraphTile*& tile,
+                              const baldr::GraphId& opp_edgeid,
+                              const uint64_t current_time,
+                              const uint32_t tz_index) const {
   // TODO - obtain and check the access restrictions.
 
   // Check access, U-turn, and simple turn restriction.
@@ -1312,8 +1312,8 @@ bool TaxiCost::AllowedReverse(const baldr::DirectedEdge* edge,
 }
 
 void ParseTaxiCostOptions(const rapidjson::Document& doc,
-                         const std::string& costing_options_key,
-                         odin::CostingOptions* pbf_costing_options) {
+                          const std::string& costing_options_key,
+                          odin::CostingOptions* pbf_costing_options) {
   ParseAutoCostOptions(doc, costing_options_key, pbf_costing_options);
 }
 

@@ -174,7 +174,6 @@ struct OSMAccess {
     return attributes_.fields.taxi_tag;
   }
 
-
   /**
    * Sets the motorroad_tag flag.
    * @param  motorroad_tag    motorroad tag exists?

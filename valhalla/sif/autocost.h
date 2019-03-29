@@ -118,8 +118,8 @@ cost_ptr_t CreateHOVCost(const odin::Costing costing, const odin::DirectionsOpti
  * @param pbf_costing_options A mutable protocol buffer where the parsed json values will be stored.
  */
 void ParseTaxiCostOptions(const rapidjson::Document& doc,
-                         const std::string& costing_options_key,
-                         odin::CostingOptions* pbf_costing_options);
+                          const std::string& costing_options_key,
+                          odin::CostingOptions* pbf_costing_options);
 
 /**
  * Create a taxi cost method. This is derived from auto costing and

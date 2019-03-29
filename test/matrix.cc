@@ -151,7 +151,7 @@ const std::unordered_map<std::string, float> kMaxDistances = {
     {"auto", 43200.0f},      {"auto_shorter", 43200.0f}, {"bicycle", 7200.0f},
     {"bus", 43200.0f},       {"hov", 43200.0f},          {"motor_scooter", 14400.0f},
     {"multimodal", 7200.0f}, {"pedestrian", 7200.0f},    {"transit", 14400.0f},
-    {"truck", 43200.0f},     {"taxi", 43200.0f}, 
+    {"truck", 43200.0f},     {"taxi", 43200.0f},
 };
 // a scale factor to apply to the score so that we bias towards closer results more
 constexpr float kDistanceScale = 10.f;
