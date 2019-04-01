@@ -25,8 +25,6 @@
 #include "midgard/polyline2.h"
 #include "midgard/tiles.h"
 #include "midgard/util.h"
-#include "skadi/sample.h"
-#include "skadi/util.h"
 
 #include "mjolnir/edgeinfobuilder.h"
 #include "mjolnir/graphtilebuilder.h"
@@ -36,12 +34,6 @@ using namespace valhalla::baldr;
 using namespace valhalla::mjolnir;
 
 namespace {
-
-// how many meters to resample shape to when checking elevations
-constexpr double POSTING_INTERVAL = 60;
-
-// Do not compute grade for intervals less than 10 meters.
-constexpr double kMinimumInterval = 10.0f;
 
 /**
  * we need the nodes to be sorted by graphid and then by osmid to make a set of tiles
@@ -374,7 +366,6 @@ void BuildTileSet(const std::string& ways_file,
                   const std::string& complex_restriction_to_file,
                   const std::string& tile_dir,
                   const OSMData& osmdata,
-                  const std::unique_ptr<const valhalla::skadi::sample>& sample,
                   std::map<GraphId, size_t>::const_iterator tile_start,
                   std::map<GraphId, size_t>::const_iterator tile_end,
                   const uint32_t tile_creation_date,
@@ -426,9 +417,7 @@ void BuildTileSet(const std::string& ways_file,
 
   // Lots of times in a given tile we may end up accessing the same
   // shape/attributes twice we avoid doing this by caching it here
-  std::unordered_map<
-      uint32_t, std::tuple<uint32_t, uint32_t, uint32_t, uint32_t, float, float, float, float, float>>
-      geo_attribute_cache;
+  std::unordered_map<uint32_t, std::pair<float, uint32_t>> geo_attribute_cache;
 
   ////////////////////////////////////////////////////////////////////////////
   // Iterate over tiles
@@ -446,11 +435,6 @@ void BuildTileSet(const std::string& ways_file,
       uint32_t id = tile_id.tileid();
       PointLL base_ll = tiling.Base(id);
       graphtile.header_builder().set_base_ll(base_ll);
-
-      // Set the has_elevation flag
-      if (sample) {
-        graphtile.header_builder().set_has_elevation(true);
-      }
 
       // Get the admin polygons. If only one exists for the tile check if the
       // tile is entirely inside the polygon
@@ -685,53 +669,11 @@ void BuildTileSet(const std::string& ways_file,
             // length
             auto length = valhalla::midgard::length(shape);
 
-            // Grade estimation and max slopes
-            std::tuple<double, double, double, double> forward_grades(0.0, 0.0, 0.0, 0.0);
-            std::tuple<double, double, double, double> reverse_grades(0.0, 0.0, 0.0, 0.0);
-            if (sample && !w.tunnel() && !w.ferry()) {
-              // Evenly sample the shape. If it is really short or a bridge
-              // just do both ends
-              auto interval = POSTING_INTERVAL;
-              std::list<PointLL> resampled;
-              if (length < POSTING_INTERVAL * 3 || w.bridge()) {
-                resampled = {shape.front(), shape.back()};
-                interval = length;
-              } else {
-                resampled = valhalla::midgard::resample_spherical_polyline(shape, interval);
-              }
-
-              // Get the heights at each sampled point. Compute "weighted"
-              // grades as well as max grades in both directions. Valid range
-              // for weighted grades is between -10 and +15 which is then
-              // mapped to a value between 0 to 15 for use in costing.
-              auto heights = sample->get_all(resampled);
-              auto grades = valhalla::skadi::weighted_grade(heights, interval);
-              if (length < kMinimumInterval) {
-                // Keep the default grades - but set the mean elevation
-                forward_grades = std::make_tuple(0.0, 0.0, 0.0, std::get<3>(grades));
-                reverse_grades = std::make_tuple(0.0, 0.0, 0.0, std::get<3>(grades));
-              } else {
-                // Set the forward grades. Reverse the path and compute the
-                // weighted grade in reverse direction.
-                forward_grades = grades;
-                std::reverse(heights.begin(), heights.end());
-                reverse_grades = valhalla::skadi::weighted_grade(heights, interval);
-              }
-            }
-
             // Compute a curvature metric [0-15]. TODO - use resampled polyline?
             uint32_t curvature = compute_curvature(shape);
 
-            // Add elevation info to the geo attribute cache. TODO - add mean elevation.
-            uint32_t forward_grade = static_cast<uint32_t>(std::get<0>(forward_grades) * .6 + 6.5);
-            uint32_t reverse_grade = static_cast<uint32_t>(std::get<0>(reverse_grades) * .6 + 6.5);
-            auto inserted = geo_attribute_cache.insert(
-                {edge_info_offset,
-                 std::make_tuple(static_cast<uint32_t>(length + .5), forward_grade, reverse_grade,
-                                 curvature, std::get<1>(forward_grades), std::get<2>(forward_grades),
-                                 std::get<1>(reverse_grades), std::get<2>(reverse_grades),
-                                 std::get<3>(forward_grades))});
-
+            // Add the curvature to the cache
+            auto inserted = geo_attribute_cache.insert({edge_info_offset, {length, curvature}});
             found = inserted.first;
 
           } // now we have the edge info offset
@@ -769,10 +711,7 @@ void BuildTileSet(const std::string& ways_file,
           }
 
           directededge.set_edgeinfo_offset(found->first);
-          // if this is against the direction of the shape we must use the second one
-          directededge.set_weighted_grade(forward ? std::get<1>(found->second)
-                                                  : std::get<2>(found->second));
-          directededge.set_curvature(std::get<3>(found->second));
+          directededge.set_curvature(std::get<1>(found->second));
 
           // Set use to ramp or turn channel
           if (edge.attributes.turn_channel) {
@@ -801,20 +740,6 @@ void BuildTileSet(const std::string& ways_file,
                (edge.attributes.driveablereverse && edge.attributes.way_end))) {
             graphtile.AddSigns(idx, exits);
             directededge.set_exitsign(true);
-          }
-
-          // Edge elevation
-          if (sample) {
-            // Reverse max slopes if not forward direction
-            float max_up_slope = forward ? std::get<4>(found->second) : std::get<6>(found->second);
-            float max_down_slope = forward ? std::get<5>(found->second) : std::get<7>(found->second);
-            directededge.set_max_up_slope(max_up_slope);
-            directededge.set_max_down_slope(max_down_slope);
-
-            // Set the mean elevation on EdgeInfo if added (1st instance of EdgeInfo)
-            if (added) {
-              graphtile.set_mean_elevation(std::get<8>(found->second));
-            }
           }
 
           // Add turn lanes if they exist. Store forward turn lanes on the last edge for a way
@@ -1064,7 +989,6 @@ void BuildLocalTiles(const unsigned int thread_count,
                      const std::map<GraphId, size_t>& tiles,
                      const std::string& tile_dir,
                      DataQuality& stats,
-                     const std::unique_ptr<const valhalla::skadi::sample>& sample,
                      const boost::property_tree::ptree& pt) {
 
   auto tz = DateTime::get_tz_db().from_index(DateTime::get_tz_db().to_index("America/New_York"));
@@ -1098,9 +1022,8 @@ void BuildLocalTiles(const unsigned int thread_count,
                                      std::cref(nodes_file), std::cref(edges_file),
                                      std::cref(complex_from_restriction_file),
                                      std::cref(complex_to_restriction_file), std::cref(tile_dir),
-                                     std::cref(osmdata), std::cref(sample), tile_start, tile_end,
-                                     tile_creation_date, std::cref(pt.get_child("mjolnir")),
-                                     std::ref(results[i])));
+                                     std::cref(osmdata), tile_start, tile_end, tile_creation_date,
+                                     std::cref(pt.get_child("mjolnir")), std::ref(results[i])));
   }
 
   // Join all the threads to wait for them to finish up their work
@@ -1173,17 +1096,10 @@ void GraphBuilder::Build(const boost::property_tree::ptree& pt,
   ReclassifyFerryConnections(ways_file, way_nodes_file, nodes_file, edges_file,
                              static_cast<uint32_t>(rc), stats);
 
-  // Crack open some elevation data if its there
-  boost::optional<std::string> elevation = pt.get_optional<std::string>("additional_data.elevation");
-  std::unique_ptr<const skadi::sample> sample;
-  if (elevation && boost::filesystem::exists(*elevation)) {
-    sample.reset(new skadi::sample(*elevation));
-  }
-
   // Build tiles at the local level. Form connected graph from nodes and edges.
   BuildLocalTiles(threads, osmdata, ways_file, way_nodes_file, nodes_file, edges_file,
                   complex_from_restriction_file, complex_to_restriction_file, tiles, tile_dir, stats,
-                  sample, pt);
+                  pt);
 
   stats.LogStatistics();
 }

@@ -22,21 +22,12 @@
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
 #include "mjolnir/util.h"
-#include "skadi/sample.h"
-#include "skadi/util.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
-using namespace valhalla::skadi;
 using namespace valhalla::mjolnir;
 
 namespace {
-
-// how many meters to resample shape to when checking elevations
-constexpr double POSTING_INTERVAL = 60.0;
-
-// Do not compute grade for intervals less than 10 meters.
-constexpr double kMinimumInterval = 10.0f;
 
 // Simple structure to hold the 2 pair of directed edges at a node.
 // First edge in the pair is incoming and second is outgoing
@@ -44,40 +35,6 @@ struct EdgePairs {
   std::pair<GraphId, GraphId> edge1;
   std::pair<GraphId, GraphId> edge2;
 };
-
-/**
- * Sample elevation along the shape to get weighted grade and max grades
- */
-std::tuple<double, double, double, double>
-GetGrade(const std::unique_ptr<const valhalla::skadi::sample>& sample,
-         const std::list<PointLL>& shape,
-         const float length,
-         const bool forward) {
-  // Evenly sample the shape. If edge is really short, just do both ends
-  std::list<PointLL> resampled;
-  auto interval = POSTING_INTERVAL;
-  if (length < POSTING_INTERVAL * 3) {
-    resampled = {shape.front(), shape.back()};
-    interval = length;
-  } else {
-    resampled = valhalla::midgard::resample_spherical_polyline(shape, POSTING_INTERVAL);
-  }
-
-  // Get the heights at each point
-  auto heights = sample->get_all(resampled);
-  if (!forward) {
-    std::reverse(heights.begin(), heights.end());
-  }
-
-  // Get the weighted grade, max slopes, and mean elevation.
-  auto grades = valhalla::skadi::weighted_grade(heights, interval);
-  if (length < kMinimumInterval) {
-    // For very short lengths just return 0 grades but a valid mean elevation
-    return std::make_tuple(0.0, 0.0, 0.0, std::get<3>(grades));
-  } else {
-    return grades;
-  }
-}
 
 /**
  * Test if 2 edges have matching attributes such that they should be
@@ -404,8 +361,7 @@ uint32_t AddShortcutEdges(GraphReader& reader,
                           const GraphId& start_node,
                           const uint32_t edge_index,
                           const uint32_t edge_count,
-                          std::unordered_map<uint32_t, uint32_t>& shortcuts,
-                          const std::unique_ptr<const valhalla::skadi::sample>& sample) {
+                          std::unordered_map<uint32_t, uint32_t>& shortcuts) {
   // Shortcut edges have to start at a node that is not contracted - return if
   // this node can be contracted.
   EdgePairs edgepairs;
@@ -540,21 +496,8 @@ uint32_t AddShortcutEdges(GraphReader& reader,
       newedge.set_curvature(compute_curvature(shape));
       newedge.set_endnode(end_node);
 
-      // Set elevation
-      if (sample) {
-        auto grades = GetGrade(sample, shape, length, forward);
-        newedge.set_weighted_grade(static_cast<uint32_t>(std::get<0>(grades) * .6 + 6.5));
-        newedge.set_max_up_slope(std::get<1>(grades));
-        newedge.set_max_down_slope(std::get<2>(grades));
-
-        // Set the mean elevation on EdgeInfo (if this is the first instance - forward)
-        if (forward) {
-          tilebuilder.set_mean_elevation(std::get<3>(grades));
-        }
-      } else {
-        // Set the default weighted grade for the edge. No edge elevation is added.
-        newedge.set_weighted_grade(6);
-      }
+      // Set the default weighted grade for the edge. No edge elevation is added.
+      newedge.set_weighted_grade(6);
 
       // Sanity check - should never see a shortcut with signs
       if (newedge.exitsign()) {
@@ -609,9 +552,7 @@ uint32_t AddShortcutEdges(GraphReader& reader,
 }
 
 // Form shortcuts for tiles in this level.
-uint32_t FormShortcuts(GraphReader& reader,
-                       const TileLevel& level,
-                       const std::unique_ptr<const valhalla::skadi::sample>& sample) {
+uint32_t FormShortcuts(GraphReader& reader, const TileLevel& level) {
   // Iterate through the tiles at this level (TODO - can we mark the tiles
   // the tiles that shortcuts end within?)
   reader.Clear();
@@ -660,7 +601,7 @@ uint32_t FormShortcuts(GraphReader& reader,
       // Add shortcut edges first.
       std::unordered_map<uint32_t, uint32_t> shortcuts;
       shortcut_count += AddShortcutEdges(reader, tile, tilebuilder, node_id, old_edge_index,
-                                         old_edge_count, shortcuts, sample);
+                                         old_edge_count, shortcuts);
 
       // Copy the rest of the directed edges from this node
       GraphId edgeid(tileid, tile_level, old_edge_index);
@@ -771,20 +712,13 @@ void ShortcutBuilder::Build(const boost::property_tree::ptree& pt) {
   // Get GraphReader
   GraphReader reader(pt.get_child("mjolnir"));
 
-  // Crack open some elevation data if its there
-  boost::optional<std::string> elevation = pt.get_optional<std::string>("additional_data.elevation");
-  std::unique_ptr<const skadi::sample> sample;
-  if (elevation && boost::filesystem::exists(*elevation)) {
-    sample.reset(new skadi::sample(*elevation));
-  }
-
   auto level = TileHierarchy::levels().rbegin();
   level++;
   for (; level != TileHierarchy::levels().rend(); ++level) {
     // Create shortcuts on this level
     auto tile_level = level->second;
     LOG_INFO("Creating shortcuts on level " + std::to_string(tile_level.level));
-    uint32_t count = FormShortcuts(reader, tile_level, sample);
+    uint32_t count = FormShortcuts(reader, tile_level);
     LOG_INFO("Finished with " + std::to_string(count) + " shortcuts");
   }
 }
