@@ -982,12 +982,11 @@ function filter_tags_generic(kv)
   end
 
   --TODO: handle Time conditional restrictions if available for HOVs with oneway = reversible
-  if ((kv["access"] == "permissive" or kv["access"] == "hov") and kv["oneway"] == "reversible") then
+  if ((kv["access"] == "permissive" or kv["access"] == "hov" or kv["access"] == "taxi") and kv["oneway"] == "reversible") then
 
     -- for now enable only for buses if the tag exists and they are allowed.
     if (kv["bus_forward"] == "true") then
       kv["auto_forward"] = "false"
-      kv["taxi_forward"] = "false"
       kv["truck_forward"] = "false"
       kv["pedestrian"] = "false"
       kv["bike_forward"] = "false"
@@ -1050,8 +1049,15 @@ function filter_tags_generic(kv)
     kv["taxi_backward"] = "true"
   end
 
+  if kv["taxi_backward"] == nil or kv["taxi_backward"] == "false" then
+    kv["taxi_backward"] = psv[kv["lanes:psv:backward"]] or "false"
+  end
+
   if kv["taxi_backward"] == "true" then
     oneway_taxi = oneway[kv["oneway:taxi"]]
+    if (oneway_taxi == "false" and kv["taxi:backward"] == "yes") then
+      oneway_taxi = "true"
+    end
   end
 
   if kv["moped_backward"] == nil then
@@ -1236,6 +1242,14 @@ function filter_tags_generic(kv)
     local forwards = kv["taxi_forward"]
     kv["taxi_forward"] = kv["taxi_backward"]
     kv["taxi_backward"] = forwards
+  end
+
+  if kv["lanes:psv"] == "1" then
+    kv["taxi_forward"] = "true"
+    kv["taxi_backward"] = "false"
+  elseif kv["lanes:psv"] == "2" then
+    kv["taxi_forward"] = "true"
+    kv["taxi_backward"] = "true"
   end
 
   --if none of the modes were set we are done looking at this
