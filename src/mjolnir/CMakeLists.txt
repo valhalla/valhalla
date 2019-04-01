@@ -32,6 +32,7 @@ set(sources
   directededgebuilder.cc
   graphtilebuilder.cc
   edgeinfobuilder.cc
+  elevationbuilder.cc
   ferry_connections.cc
   graphbuilder.cc
   graphenhancer.cc

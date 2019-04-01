@@ -129,6 +129,7 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
 
   // EdgeInfo. Create list of EdgeInfoBuilders. Add to text offset set.
   edge_info_offset_ = 0;
+  edgeinfo_offset_map_.clear();
   for (auto offset : edge_info_offsets) {
     // Verify the offsets match as we create the edge info builder list
     if (offset != edge_info_offset_) {
@@ -149,6 +150,9 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
     eib.set_encoded_shape(ei.encoded_shape());
     edge_info_offset_ += eib.SizeOf();
     edgeinfo_list_.emplace_back(std::move(eib));
+
+    // Associate the offset to the index in the edgeinfo list
+    edgeinfo_offset_map_[offset] = &edgeinfo_list_.back();
   }
 
   // Text list
@@ -664,6 +668,17 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
 void GraphTileBuilder::set_mean_elevation(const float elev) {
   EdgeInfoBuilder& edgeinfo = edgeinfo_list_.back();
   edgeinfo.set_mean_elevation(elev);
+}
+
+// Set the mean elevation to the EdgeInfo given the edge info offset. This requires
+// a serialized tile builder.
+void GraphTileBuilder::set_mean_elevation(const uint32_t offset, const float elev) {
+  auto e = edgeinfo_offset_map_.find(offset);
+  if (e == edgeinfo_offset_map_.end()) {
+    LOG_ERROR("set_mean_elevation - could not find the EdgeInfo index given the offset");
+    return;
+  }
+  e->second->set_mean_elevation(elev);
 }
 
 // Add a name to the text list
