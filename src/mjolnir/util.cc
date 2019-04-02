@@ -6,6 +6,7 @@
 #include "midgard/logging.h"
 #include "midgard/point2.h"
 #include "midgard/polyline2.h"
+#include "mjolnir/elevationbuilder.h"
 #include "mjolnir/graphbuilder.h"
 #include "mjolnir/graphenhancer.h"
 #include "mjolnir/graphfilter.h"
@@ -255,6 +256,11 @@ bool build_tile_set(const boost::property_tree::ptree& config,
   // Build the Complex Restrictions
   if (start_stage <= BuildStage::kRestrictions && BuildStage::kRestrictions <= end_stage) {
     RestrictionBuilder::Build(config, cr_from_bin, cr_to_bin);
+  }
+
+  // Add elevation to the tiles
+  if (start_stage <= BuildStage::kElevation && BuildStage::kElevation <= end_stage) {
+    ElevationBuilder::Build(config);
   }
 
   // Validate the graph and add information that cannot be added until full graph is formed.

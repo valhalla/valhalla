@@ -255,6 +255,14 @@ public:
   void set_mean_elevation(const float elev);
 
   /**
+   * Set the mean elevation to the EdgeInfo given the edge info offset. This requires
+   * a serialized tile builder.
+   * @param offset Edge info offset.
+   * @param elev Mean elevation.
+   */
+  void set_mean_elevation(const uint32_t offset, const float elev);
+
+  /**
    * Add a name to the text list.
    * @param  name  Name/text to add.
    * @return  Returns offset (bytes) to the name.
@@ -501,6 +509,7 @@ protected:
   // Edge info offset and map
   size_t edge_info_offset_ = 0;
   std::unordered_map<edge_tuple, size_t, EdgeTupleHasher> edge_offset_map_;
+  std::unordered_map<uint32_t, EdgeInfoBuilder*> edgeinfo_offset_map_;
 
   // The edgeinfo list
   std::list<EdgeInfoBuilder> edgeinfo_list_;
