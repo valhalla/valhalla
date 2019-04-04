@@ -2,11 +2,12 @@
 #include "valhalla/midgard/constants.h"
 #include "valhalla/midgard/distanceapproximator.h"
 #include "valhalla/midgard/point2.h"
-#include <cmath>
-#include <valhalla/midgard/polyline2.h>
+#include "valhalla/midgard/polyline2.h"
 
 #include <algorithm>
+#include <array>
 #include <cctype>
+#include <cmath>
 #include <cstdint>
 #include <fstream>
 #include <list>
