@@ -96,8 +96,6 @@
 -j '{"locations":[{"lat":39.729270563045645,"lon":-104.95718458812917},{"lat":39.736927306637895,"lon":-104.96772030513966}],"costing":"pedestrian"}'
 -j '{"locations":[{"lat":39.729270563045645,"lon":-104.95718458812917},{"lat":39.736927306637895,"lon":-104.96772030513966}],"costing":"pedestrian","costing_options":{"pedestrian":{"walkway_factor":1.5}}}'
 -j '{"locations":[{"lat":39.729270563045645,"lon":-104.95718458812917},{"lat":39.736927306637895,"lon":-104.96772030513966}],"costing":"pedestrian","costing_options":{"pedestrian":{"walkway_factor":2.5}}}'
-###Mapbox Customer Routes
 -j '{"locations":[{"lat":43.64812,"lon": -79.38370},{"lat":43.64965,"lon":-79.38382}],"costing":"pedestrian","directions_options":{"units":"kilometers"}}'
 -j '{"locations":[{"lat":43.64812,"lon": -79.38370},{"lat":43.64965,"lon":-79.38382}],"costing":"pedestrian","directions_options":{"units":"kilometers"},"costing_options":{"pedestrian":{"walkway_factor":1.5}}}'
 -j '{"locations":[{"lat":43.64812,"lon": -79.38370},{"lat":43.64965,"lon":-79.38382}],"costing":"pedestrian","directions_options":{"units":"kilometers"},"costing_options":{"pedestrian":{"walkway_factor":2.5}}}'
-
