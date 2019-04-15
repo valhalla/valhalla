@@ -24,6 +24,7 @@ void create_costing_options(valhalla::odin::DirectionsOptions& directions_option
   ParseBicycleCostOptions(doc, "/costing_options/bicycle", directions_options.add_costing_options());
   ParseBusCostOptions(doc, "/costing_options/bus", directions_options.add_costing_options());
   ParseHOVCostOptions(doc, "/costing_options/hov", directions_options.add_costing_options());
+  ParseTaxiCostOptions(doc, "/costing_options/taxi", directions_options.add_costing_options());
   ParseMotorScooterCostOptions(doc, "/costing_options/motor_scooter",
                                directions_options.add_costing_options());
   directions_options.add_costing_options();

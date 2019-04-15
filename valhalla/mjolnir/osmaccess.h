@@ -159,6 +159,22 @@ struct OSMAccess {
   }
 
   /**
+   * Sets the taxi_tag flag.
+   * @param  taxi_tag
+   */
+  void set_taxi_tag(const bool taxi_tag) {
+    attributes_.fields.taxi_tag = taxi_tag;
+  }
+
+  /**
+   * Get the taxi_tag flag.
+   * @return  Returns taxi_tag flag.
+   */
+  bool taxi_tag() const {
+    return attributes_.fields.taxi_tag;
+  }
+
+  /**
    * Sets the motorroad_tag flag.
    * @param  motorroad_tag    motorroad tag exists?
    */
@@ -202,10 +218,11 @@ struct OSMAccess {
       uint16_t foot_tag : 1;
       uint16_t truck_tag : 1;
       uint16_t hov_tag : 1;
+      uint16_t taxi_tag : 1;
       uint16_t motorroad_tag : 1;
       uint16_t moped_tag : 1;
       uint16_t motorcycle_tag : 1;
-      uint16_t spare : 7;
+      uint16_t spare : 6;
     } fields;
     uint32_t v;
   };

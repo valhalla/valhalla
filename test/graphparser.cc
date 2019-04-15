@@ -100,7 +100,7 @@ void BollardsGatesAndAccess(const std::string& config_file) {
   node = GetNode(2949666866, way_nodes);
   if (!node.intersection() || node.type() != NodeType::kGate ||
       node.access() !=
-          (kAutoAccess | kHOVAccess | kTruckAccess | kBusAccess | kEmergencyAccess |
+          (kAutoAccess | kHOVAccess | kTaxiAccess | kTruckAccess | kBusAccess | kEmergencyAccess |
            kPedestrianAccess | kWheelchairAccess | kBicycleAccess | kMopedAccess | kMotorcycleAccess))
     throw std::runtime_error("Gate at end of way test failed.");
 
@@ -114,7 +114,7 @@ void BollardsGatesAndAccess(const std::string& config_file) {
   node = GetNode(3256854624, way_nodes);
   if (!node.intersection() || node.type() != NodeType::kBorderControl ||
       node.access() !=
-          (kAutoAccess | kHOVAccess | kTruckAccess | kBusAccess | kEmergencyAccess |
+          (kAutoAccess | kHOVAccess | kTaxiAccess | kTruckAccess | kBusAccess | kEmergencyAccess |
            kPedestrianAccess | kWheelchairAccess | kBicycleAccess | kMopedAccess | kMotorcycleAccess))
     throw std::runtime_error("Border control test failed.");
 
@@ -122,7 +122,7 @@ void BollardsGatesAndAccess(const std::string& config_file) {
   node = GetNode(696222071, way_nodes);
   if (!node.intersection() ||
       node.access() !=
-          (kAutoAccess | kHOVAccess | kTruckAccess | kBusAccess | kEmergencyAccess |
+          (kAutoAccess | kHOVAccess | kTaxiAccess | kTruckAccess | kBusAccess | kEmergencyAccess |
            kPedestrianAccess | kWheelchairAccess | kBicycleAccess | kMopedAccess | kMotorcycleAccess))
     throw std::runtime_error("Bike access only failed.");
 
@@ -205,7 +205,7 @@ void RemovableBollards(const std::string& config_file) {
   auto node = GetNode(2425784125, way_nodes);
   if (!node.intersection() || node.type() != NodeType::kGate ||
       node.access() !=
-          (kAutoAccess | kHOVAccess | kTruckAccess | kBusAccess | kEmergencyAccess |
+          (kAutoAccess | kHOVAccess | kTaxiAccess | kTruckAccess | kBusAccess | kEmergencyAccess |
            kPedestrianAccess | kWheelchairAccess | kBicycleAccess | kMopedAccess | kMotorcycleAccess))
     throw std::runtime_error("Rising Bollard not marked as intersection.");
 

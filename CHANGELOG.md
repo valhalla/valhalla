@@ -1,3 +1,7 @@
+## Release Date: 2019-04-17 Valhalla 3.0.4
+* **Enhancement**
+* Slightly decreased the internal side-walk factor to .90f to favor roads with attached sidewalks. This impacts roads that have added sidewalk:left, sidewalk:right or sidewalk:both OSM tags (these become attributes on each directedEdge). The user can then avoid/penalize dedicated sidewalks and walkways, when they increase the walkway_factor. Since we slightly decreased the sidewalk_factor internally and only favor sidewalks if use is tagged as sidewalk_left or sidewalk_right, we should tend to route on roads with attached sidewalks rather than separate/dedicated sidewalks, allowing for more road names to be called out since these are labeled more.
+
 ## Release Date: 2019-04-01 Valhalla 3.0.3
 * **Bug Fix**
    * FIXED: Fixed a rare loop condition in route matcher (edge walking to match a trace).
@@ -16,8 +20,7 @@
 
 * **Enhancement**
    * Add the ability to run valhalla_build_tiles in stages. Specify the begin_stage and end_stage as command line options. Also cleans up temporary files as the last stage in the pipeline.
-   * Slightly decreased the internal side-walk factor to .90f to favor roads with attached sidewalks. This impacts roads that have added sidewalk:left, sidewalk:right or sidewalk:both OSM tags (these become attributes on each directedEdge). The user can then avoid/penalize dedicated sidewalks and walkways, when they increase the walkway_factor. Since we slightly decreased the sidewalk_factor internally and only favor sidewalks if use is tagged as sidewalk_left or sidewalk_right, we should tend to route on roads with attached sidewalks rather than separate/dedicated sidewalks, allowing for more road names to be called out since these are labeled more.
-
+   * Add TaxiCost into auto costing options. 
 
 ## Release Date: 2019-01-14 Valhalla 3.0.2
 * **Bug Fix**

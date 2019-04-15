@@ -110,6 +110,25 @@ void ParseHOVCostOptions(const rapidjson::Document& doc,
  */
 cost_ptr_t CreateHOVCost(const odin::Costing costing, const odin::DirectionsOptions& options);
 
+/**
+ * Parses the taxi cost options from json and stores values in pbf.
+ * @param doc The json request represented as a DOM tree.
+ * @param costing_options_key A string representing the location in the DOM tree where the costing
+ *                            options are stored.
+ * @param pbf_costing_options A mutable protocol buffer where the parsed json values will be stored.
+ */
+void ParseTaxiCostOptions(const rapidjson::Document& doc,
+                          const std::string& costing_options_key,
+                          odin::CostingOptions* pbf_costing_options);
+
+/**
+ * Create a taxi cost method. This is derived from auto costing and
+ * uses the same rules except for favoring taxi roads
+ * @param  costing specified costing type.
+ * @param  options pbf with request options.
+ */
+cost_ptr_t CreateTaxiCost(const odin::Costing costing, const odin::DirectionsOptions& options);
+
 } // namespace sif
 } // namespace valhalla
 
