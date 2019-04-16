@@ -24,6 +24,12 @@ message Location {
     kRight = 2;
   }
 
+  enum PreferredSide {
+    either = 0;
+    same = 1;
+    opposite = 2;
+  }
+
   message PathEdge {
     optional uint64 graph_id = 1;
     optional float percent_along = 2;
@@ -36,6 +42,7 @@ message Location {
     repeated string names = 10;
   }
 
+  //inputs
   optional LatLng ll = 1;
   optional Type type = 2 [default = kBreak];
   optional uint32 heading = 3;                                 // 0-359
@@ -63,6 +70,9 @@ message Location {
   repeated PathEdge filtered_edges = 23;
   optional uint32 original_index = 24;
   optional LatLng projected_ll = 25;
+
+  //more inputs
+  optional PreferredSide preferred_side = 26 [default = either];
 }
 
 message TransitEgressInfo {

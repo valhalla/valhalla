@@ -12,9 +12,10 @@ namespace baldr {
 Location::Location(const midgard::PointLL& latlng,
                    const StopType& stoptype,
                    unsigned int minimum_reachability,
-                   unsigned long radius)
+                   unsigned long radius,
+                   const PreferredSide& side)
     : latlng_(latlng), stoptype_(stoptype), minimum_reachability_(minimum_reachability),
-      radius_(radius) {
+      radius_(radius), preferred_side_(side) {
 }
 
 rapidjson::Value Location::ToRapidJson(rapidjson::Document::AllocatorType& a) const {
@@ -64,6 +65,12 @@ rapidjson::Value Location::ToRapidJson(rapidjson::Document::AllocatorType& a) co
 
   location.AddMember("minimum_reachability", minimum_reachability_, a);
   location.AddMember("radius", static_cast<unsigned int>(radius_), a);
+  if (preferred_side_ == PreferredSide::SAME)
+    location.AddMember("preferred_side", "same", a);
+  else if (preferred_side_ == PreferredSide::OPPOSITE)
+    location.AddMember("preferred_side", "opposite", a);
+  else
+    location.AddMember("preferred_side", "either", a);
   return location;
 }
 
@@ -110,6 +117,10 @@ Location Location::FromRapidJson(const rapidjson::Value& d,
   location.minimum_reachability_ =
       rapidjson::get<unsigned int>(d, "/minimum_reachability", default_reachability);
   location.radius_ = rapidjson::get<unsigned int>(d, "/radius", default_radius);
+  auto side = rapidjson::get<std::string>(d, "/preferred_side", "either");
+  location.preferred_side_ =
+      side == "same" ? PreferredSide::SAME
+                     : (side == "opposite" ? PreferredSide::OPPOSITE : PreferredSide::EITHER);
 
   return location;
 }
@@ -120,7 +131,8 @@ bool Location::operator==(const Location& o) const {
          country_ == o.country_ && date_time_ == o.date_time_ && heading_ == o.heading_ &&
          heading_tolerance_ == o.heading_tolerance_ &&
          node_snap_tolerance_ == o.node_snap_tolerance_ && way_id_ == o.way_id_ &&
-         minimum_reachability_ == o.minimum_reachability_ && radius_ == o.radius_;
+         minimum_reachability_ == o.minimum_reachability_ && radius_ == o.radius_ &&
+         preferred_side_ == o.preferred_side_;
 }
 
 } // namespace baldr
