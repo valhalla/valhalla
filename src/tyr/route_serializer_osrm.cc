@@ -315,10 +315,15 @@ std::string simplified_shape(const std::list<valhalla::odin::TripDirections>& le
   for (const auto& leg : legs) {
     auto decoded_leg = midgard::decode<std::vector<PointLL>>(leg.shape());
 
-    Polyline2<PointLL> pl(decoded_leg);
-    uint32_t size = pl.Generalize(DOUGLAS_PEUCKER_THRESHOLDS[zoom_level]);
-    std::vector<PointLL> pts = pl.pts();
-    decoded.insert(pts.end(), size ? pts.begin() + 1 : pts.begin(), pts.end());
+    for (const auto& maneuver : leg.maneuver()) {
+      std::vector<PointLL> maneuver_shape(decoded_leg.begin() + maneuver.begin_shape_index(), decoded_leg.begin() + maneuver.end_shape_index() + 1);
+      Polyline2<PointLL> pl(maneuver_shape);
+      if (maneuver_shape.size() > 1) {
+        pl.Generalize(DOUGLAS_PEUCKER_THRESHOLDS[zoom_level]);
+        std::vector<PointLL> pts = pl.pts();
+        decoded.insert(decoded.end(), decoded.size() ? pts.begin() + 1 : pts.begin(), pts.end());
+      } else decoded.insert(decoded.end(), decoded.size() ? maneuver_shape.begin() + 1 : maneuver_shape.begin(), maneuver_shape.end());
+    }
   }
   int precision = directions_options.shape_format() == odin::polyline6 ? 1e6 : 1e5;
   return midgard::encode(decoded, precision);
