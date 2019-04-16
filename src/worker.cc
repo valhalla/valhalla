@@ -394,6 +394,11 @@ void parse_locations(const rapidjson::Document& doc,
         if (rank_candidates) {
           location->set_rank_candidates(*rank_candidates);
         }
+        auto preferred_side = rapidjson::get_optional<std::string>(r_loc, "/preferred_side");
+        odin::Location::PreferredSide side;
+        if (preferred_side && PreferredSide_Parse(*preferred_side, &side)) {
+          location->set_preferred_side(side);
+        }
       } catch (...) { throw valhalla_exception_t{location_parse_error_code}; }
     }
     if (track) {
@@ -996,6 +1001,19 @@ bool DirectionsType_Parse(const std::string& dtype, odin::DirectionsType* t) {
   if (i == types.cend())
     return false;
   *t = i->second;
+  return true;
+}
+
+bool PreferredSide_Parse(const std::string& pside, odin::Location::PreferredSide* p) {
+  static const std::unordered_map<std::string, odin::Location::PreferredSide> types{
+      {"either", odin::Location::either},
+      {"same", odin::Location::same},
+      {"opposite", odin::Location::opposite},
+  };
+  auto i = types.find(pside);
+  if (i == types.cend())
+    return false;
+  *p = i->second;
   return true;
 }
 } // namespace odin
