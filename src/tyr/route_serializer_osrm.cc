@@ -7,6 +7,8 @@
 #include "baldr/json.h"
 #include "midgard/encoded.h"
 #include "midgard/pointll.h"
+#include "midgard/polyline2.h"
+
 #include "odin/enhancedtrippath.h"
 #include "odin/util.h"
 #include "tyr/serializers.h"
@@ -32,6 +34,86 @@ struct NamedSegment {
   uint32_t index;
   float distance;
 };
+
+const constexpr double TILE_SIZE = 256.0;
+static constexpr unsigned MAX_ZOOM = 18;
+static constexpr unsigned MIN_ZOOM = 1;
+// this is an upper bound to current display sizes
+static constexpr double VIEWPORT_WIDTH = 8 * TILE_SIZE;
+static constexpr double VIEWPORT_HEIGHT = 5 * TILE_SIZE;
+static double INV_LOG_2 = 1. / std::log(2);
+const constexpr double DEGREE_TO_RAD = 0.017453292519943295769236907684886;
+const constexpr double RAD_TO_DEGREE = 1. / DEGREE_TO_RAD;
+const constexpr double EPSG3857_MAX_LATITUDE = 85.051128779806592378; // 90(4*atan(exp(pi))/pi-1)
+
+const constexpr float DOUGLAS_PEUCKER_THRESHOLDS[19] = {
+    49438476562500.f, // z0
+    12359619140625.f, // z1
+    3089903027344.f,  // z2
+    772475756836.f,   // z3
+    193118939209.f,   // z4
+    48279515076.f,    // z5
+    12069878769.f,    // z6
+    3017414761.f,     // z7
+    754326225.f,      // z8
+    188567824.f,      // z9
+    47141956.f,       // z10
+    11785489.f,       // z11
+    2944656.f,        // z12
+    736164.f,         // z13
+    184041.f,         // z14
+    45796.f,          // z15
+    11449.f,          // z16
+    2809.f,           // z17
+    676.f,            // z18
+};
+
+inline float clamp(float lat)
+{
+    return std::max(std::min(lat, float(EPSG3857_MAX_LATITUDE)),
+                    float(-EPSG3857_MAX_LATITUDE));
+}
+
+inline double latToY(float latitude)
+{
+    // apparently this is the (faster) version of the canonical log(tan()) version
+    const auto clamped_latitude = clamp(latitude);
+    const double f = std::sin(DEGREE_TO_RAD * static_cast<double>(clamped_latitude));
+    return RAD_TO_DEGREE * 0.5 * std::log((1 + f) / (1 - f));
+}
+
+inline double lngToPixel(float lon, unsigned zoom)
+{
+    const double shift = (1u << zoom) * TILE_SIZE;
+    const double b = shift / 2.0;
+    const double x = b * (1 + static_cast<double>(lon) / 180.0);
+    return x;
+}
+
+inline double latToPixel(float lat, unsigned zoom)
+{
+    const double shift = (1u << zoom) * TILE_SIZE;
+    const double b = shift / 2.0;
+    const double y = b * (1. - latToY(lat) / 180.);
+    return y;
+}
+
+inline unsigned getFittedZoom(PointLL south_west, PointLL north_east)
+{
+    const auto min_x = lngToPixel(south_west.lng(), MAX_ZOOM);
+    const auto max_y = latToPixel(south_west.lat(), MAX_ZOOM);
+    const auto max_x = lngToPixel(north_east.lng(), MAX_ZOOM);
+    const auto min_y = latToPixel(north_east.lat(), MAX_ZOOM);
+    const double width_ratio = (max_x - min_x) / VIEWPORT_WIDTH;
+    const double height_ratio = (max_y - min_y) / VIEWPORT_HEIGHT;
+    const auto zoom = MAX_ZOOM -
+                      std::max(std::log(width_ratio), std::log(height_ratio)) * INV_LOG_2;
+
+    if (std::isfinite(zoom))
+        return std::max<unsigned>(MIN_ZOOM, zoom);
+    else
+        return MIN_ZOOM;
+}
 
 namespace osrm_serializers {
 /*
@@ -175,11 +257,9 @@ void route_summary(json::MapPtr& route,
   route->emplace("weight_name", std::string("Valhalla default"));
 }
 
-// Generate full shape of the route. TODO - different encodings, generalization
+// Generate full shape of the route.
 std::string full_shape(const std::list<valhalla::odin::TripDirections>& legs,
                        const valhalla::odin::DirectionsOptions& directions_options) {
-  // TODO - support generalization
-
   // If just one leg and it we want polyline6 then we just return the encoded leg shape
   if (legs.size() == 1 && directions_options.shape_format() == odin::polyline6) {
     return legs.front().shape();
@@ -196,6 +276,49 @@ std::string full_shape(const std::list<valhalla::odin::TripDirections>& legs,
     auto decoded_leg = midgard::decode<std::vector<PointLL>>(leg.shape());
     decoded.insert(decoded.end(), decoded.size() ? decoded_leg.begin() + 1 : decoded_leg.begin(),
                    decoded_leg.end());
+  }
+  int precision = directions_options.shape_format() == odin::polyline6 ? 1e6 : 1e5;
+  return midgard::encode(decoded, precision);
+}
+
+unsigned calculateOverviewZoomLevel(const std::list<valhalla::odin::TripDirections>& legs)
+{
+    PointLL south_west(std::numeric_limits<float>::max(),std::numeric_limits<float>::max());
+    PointLL north_east(std::numeric_limits<float>::min(),std::numeric_limits<float>::min());
+
+    std::vector<PointLL> decoded;
+    for (const auto &leg : legs)
+    {
+        auto decoded_leg = midgard::decode<std::vector<PointLL>>(leg.shape());
+        for (const auto &coord : decoded_leg)
+        {
+            south_west = PointLL(std::min(south_west.lng(), coord.lng()),std::min(south_west.lat(), coord.lat()));
+            north_east = PointLL(std::max(north_east.lng(), coord.lng()), std::max(north_east.lat(), coord.lat()));
+        }
+    }
+    return getFittedZoom(south_west, north_east);
+}
+
+// Generate simplified shape of the route.
+std::string simplified_shape(const std::list<valhalla::odin::TripDirections>& legs,
+                       const valhalla::odin::DirectionsOptions& directions_options) {
+
+  const auto zoom_level = std::min(18u, calculateOverviewZoomLevel(legs));
+
+  // TODO: there is a tricky way to do this... since the end of each leg is the same as the
+  // beginning we essentially could just peel off the first encoded shape point of all the legs (but
+  // the first) this way we wouldn't really have to do any decoding (would be far faster). it might
+  // even be the case that the string length of the first number is a fixed length (which would be
+  // great!) have to have a look should make this a function in midgard probably so the logic is all
+  // in the same place
+  std::vector<PointLL> decoded;
+  for (const auto& leg : legs) {
+    auto decoded_leg = midgard::decode<std::vector<PointLL>>(leg.shape());
+
+    Polyline2<PointLL> pl(decoded_leg);
+    uint32_t size = pl.Generalize(DOUGLAS_PEUCKER_THRESHOLDS[zoom_level]);
+    std::vector<PointLL> pts = pl.pts();
+    decoded.insert(pts.end(), size ? pts.begin() + 1 : pts.begin(), pts.end());
   }
   int precision = directions_options.shape_format() == odin::polyline6 ? 1e6 : 1e5;
   return midgard::encode(decoded, precision);
@@ -1037,8 +1160,12 @@ std::string serialize(const valhalla::odin::DirectionsOptions& directions_option
     // Create a route to add to the array
     auto route = json::map({});
 
-    // Get full shape for the route.
-    route->emplace("geometry", full_shape(legs, directions_options));
+    if (directions_options.generalize() <= 1) {
+      route->emplace("geometry", simplified_shape(legs, directions_options));
+    } else {
+      // Get full shape for the route.
+      route->emplace("geometry", full_shape(legs, directions_options));
+    }
 
     // Other route summary information
     route_summary(route, legs, imperial);
