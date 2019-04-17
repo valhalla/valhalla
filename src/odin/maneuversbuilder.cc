@@ -92,7 +92,7 @@ std::list<Maneuver> ManeuversBuilder::Build() {
   // Process the roundabout names
   ProcessRoundaboutNames(maneuvers);
 
-  // Process the roundabout names
+  // Process the 'to stay on' attribute
   SetToStayOnAttribute(maneuvers);
 
   // Enhance signless interchanges
@@ -830,7 +830,7 @@ void ManeuversBuilder::InitializeManeuver(Maneuver& maneuver, int node_index) {
   }
 
   // Roundabout
-  if (prev_edge->roundabout()) {
+  if (AreRoundaboutsProcessable(prev_edge->travel_mode()) && prev_edge->roundabout()) {
     maneuver.set_roundabout(true);
     maneuver.set_roundabout_exit_count(1);
   }
@@ -957,7 +957,7 @@ void ManeuversBuilder::UpdateManeuver(Maneuver& maneuver, int node_index) {
   }
 
   // Roundabouts
-  if (prev_edge->roundabout()) {
+  if (AreRoundaboutsProcessable(prev_edge->travel_mode()) && prev_edge->roundabout()) {
     TripPath_TravelMode mode = prev_edge->travel_mode();
 
     // Adjust bicycle travel mode if roundabout is a road
@@ -1047,7 +1047,7 @@ void ManeuversBuilder::FinalizeManeuver(Maneuver& maneuver, int node_index) {
 
     // TODO - determine if we want to count right traversable at entrance node
     // Roundabouts
-    //    if (curr_edge->roundabout()) {
+    //    if (AreRoundaboutsProcessable(prev_edge->travel_mode()) && curr_edge->roundabout()) {
     //      IntersectingEdgeCounts xedge_counts;
     //      trip_path_->GetEnhancedNode(node_index)
     //            ->CalculateRightLeftIntersectingEdgeCounts(prev_edge->end_heading(),
@@ -1152,7 +1152,8 @@ void ManeuversBuilder::SetManeuverType(Maneuver& maneuver, bool none_type_allowe
     LOG_TRACE("ManeuverType=ROUNDABOUT_ENTER");
   }
   // Process exit roundabout
-  else if (prev_edge && prev_edge->roundabout()) {
+  else if (prev_edge && AreRoundaboutsProcessable(prev_edge->travel_mode()) &&
+           prev_edge->roundabout()) {
     maneuver.set_type(TripDirections_Maneuver_Type_kRoundaboutExit);
     LOG_TRACE("ManeuverType=ROUNDABOUT_EXIT");
   }
@@ -1512,14 +1513,16 @@ bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver, int node_i
 
   /////////////////////////////////////////////////////////////////////////////
   // Process roundabouts
-  if (maneuver.roundabout() && !prev_edge->roundabout()) {
-    return false;
-  }
-  if (prev_edge->roundabout() && !maneuver.roundabout()) {
-    return false;
-  }
-  if (maneuver.roundabout() && prev_edge->roundabout()) {
-    return true;
+  if (AreRoundaboutsProcessable(prev_edge->travel_mode())) {
+    if (maneuver.roundabout() && !prev_edge->roundabout()) {
+      return false;
+    }
+    if (prev_edge->roundabout() && !maneuver.roundabout()) {
+      return false;
+    }
+    if (maneuver.roundabout() && prev_edge->roundabout()) {
+      return true;
+    }
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -2055,6 +2058,13 @@ bool ManeuversBuilder::AreRampManeuversCombinable(std::list<Maneuver>::iterator 
                                                                next_man->travel_mode())) {
       return true;
     }
+  }
+  return false;
+}
+
+bool ManeuversBuilder::AreRoundaboutsProcessable(const TripPath_TravelMode travel_mode) const {
+  if ((travel_mode == TripPath_TravelMode_kDrive) || (travel_mode == TripPath_TravelMode_kBicycle)) {
+    return true;
   }
   return false;
 }

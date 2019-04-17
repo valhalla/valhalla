@@ -157,6 +157,15 @@ protected:
                                   std::list<Maneuver>::iterator next_man) const;
 
   /**
+   * Returns true if roundabouts are processable based on the specified travel mode.
+   *
+   * @param travel_mode The current specified travel mode.
+   *
+   * @return true if roundabouts are processable based on the specified travel mode.
+   */
+  bool AreRoundaboutsProcessable(const TripPath_TravelMode travel_mode) const;
+
+  /**
    * Review each roundabout and if appropriate - set the roundabout name and roundabout exit name.
    * The roundabout name shall be a non-route number street name that does not exist on the incoming
    * and outgoing steps.
