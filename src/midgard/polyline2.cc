@@ -11,7 +11,7 @@ template <class coord_t> Polyline2<coord_t>::Polyline2() {
 }
 
 // Constructor given a list of points.
-template <class coord_t> Polyline2<coord_t>::Polyline2(std::vector<coord_t>& pts) {
+template <class coord_t> Polyline2<coord_t>::Polyline2(const std::vector<coord_t>& pts) {
   pts_ = pts;
 }
 
@@ -91,7 +91,6 @@ template <class container_t>
 void Polyline2<coord_t>::Generalize(container_t& polyline,
                                     float epsilon,
                                     const std::unordered_set<size_t>& indices) {
-
   // the recursive bit
   epsilon *= epsilon;
   std::function<void(typename container_t::iterator, size_t, typename container_t::iterator, size_t)>
@@ -102,20 +101,22 @@ void Polyline2<coord_t>::Generalize(container_t& polyline,
     float dmax = 0.f;
     typename container_t::iterator itr;
     LineSegment2<coord_t> l{*start, *end};
-    size_t j = s + 1;
-    size_t k;
+    size_t j = e - 1, k;
     coord_t tmp;
-    for (auto i = std::next(start); i != end; ++i, ++j) {
+    for (auto i = std::prev(end); i != start; --i, --j) {
+      // special points we dont want to generalize no matter what take precidence
+      if (indices.find(j) != indices.end()) {
+        itr = i;
+        dmax = epsilon;
+        k = j;
+        break;
+      }
+
       // if this is the highest frequency detail so far
       auto d = l.DistanceSquared(*i, tmp);
       if (d > dmax) {
         itr = i;
         dmax = d;
-        k = j;
-      } // if we didnt find a high frequency detail but we want to keep this one
-      else if (dmax < epsilon && indices.find(j) != indices.end()) {
-        itr = i;
-        dmax = epsilon;
         k = j;
       }
     }
@@ -123,12 +124,16 @@ void Polyline2<coord_t>::Generalize(container_t& polyline,
     // there are some high frequency details between start and end
     // so we need to look for flatter sections between them
     if (dmax >= epsilon) {
-      peucker(start, s, itr, k);
-      peucker(itr, k, end, e);
-    } // nothing sticks out between start and end so simplify it away
-    else {
+      // we recurse from right to left for two reasons:
+      // 1. we want to preserve iterator validity in the vector version
+      // 2. its the only way to preserve the indices in the keep set
+      if (e - k > 1)
+        peucker(itr, k, end, e);
+      if (k - s > 1)
+        peucker(start, s, itr, k);
+    } // nothing sticks out between start and end so simplify everything between away
+    else
       polyline.erase(std::next(start), end);
-    }
   };
 
   // recurse!
@@ -148,6 +153,10 @@ Polyline2<coord_t> Polyline2<coord_t>::ClippedPolyline(const AABB2<coord_t>& box
   std::vector<coord_t> pts = pts_;
   box.Clip(pts, false);
   return Polyline2(pts);
+}
+
+template <class coord_t> bool Polyline2<coord_t>::operator==(const Polyline2<coord_t>& other) const {
+  return pts_.size() == other.pts_.size() && std::equal(pts_.begin(), pts_.end(), other.pts_.begin());
 }
 
 // Explicit instantiation

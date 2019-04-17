@@ -25,7 +25,7 @@ public:
    * Constructor given a list of points.
    * @param  pts  List of points.
    */
-  Polyline2(std::vector<coord_t>& pts);
+  Polyline2(const std::vector<coord_t>& pts);
 
   /**
    * Gets the list of points.
@@ -108,6 +108,13 @@ public:
    * @param  box  AABB (rectangle) to which the polyline is clipped.
    */
   Polyline2 ClippedPolyline(const AABB2<coord_t>& box);
+
+  /**
+   * Checks if the polylines are equal
+   * @param   other  the other polyline to check against this one
+   * @return         true if they are equal false otherwise
+   */
+  bool operator==(const Polyline2<coord_t>& other) const;
 
 protected:
   // Polyline points
