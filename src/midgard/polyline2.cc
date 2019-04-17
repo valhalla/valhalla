@@ -65,51 +65,66 @@ std::tuple<coord_t, float, int> Polyline2<coord_t>::ClosestPoint(const coord_t& 
 }
 
 // Generalize this polyline.
-template <class coord_t> uint32_t Polyline2<coord_t>::Generalize(const float t) {
+template <class coord_t>
+uint32_t Polyline2<coord_t>::Generalize(const float t, const std::unordered_set<size_t>& indices) {
   // Create a vector for the output shape. Recursively call Douglass-Peucker
   // method to generalize the polyline. Square the error tolerance to avoid
   // sqrts.
-  Generalize(pts_, t);
+  Generalize(pts_, t, indices);
   return pts_.size();
 }
 
 // Get a generalized polyline from this polyline. This polyline remains
 // unchanged.
-template <class coord_t> Polyline2<coord_t> Polyline2<coord_t>::GeneralizedPolyline(const float t) {
+template <class coord_t>
+Polyline2<coord_t>
+Polyline2<coord_t>::GeneralizedPolyline(const float t, const std::unordered_set<size_t>& indices) {
   // Recursively call Douglass-Peucker method to generalize the polyline.
   // Square the error tolerance to avoid sqrts.
   Polyline2 generalized(pts_);
-  generalized.Generalize(t);
+  generalized.Generalize(t, indices);
   return generalized;
 }
 
 template <class coord_t>
 template <class container_t>
-void Polyline2<coord_t>::Generalize(container_t& polyline, float epsilon) {
+void Polyline2<coord_t>::Generalize(container_t& polyline,
+                                    float epsilon,
+                                    const std::unordered_set<size_t>& indices) {
 
   // the recursive bit
   epsilon *= epsilon;
-  std::function<void(typename container_t::iterator, typename container_t::iterator)> peucker;
-  peucker = [&peucker, &polyline, epsilon](typename container_t::iterator start,
-                                           typename container_t::iterator end) {
+  std::function<void(typename container_t::iterator, size_t, typename container_t::iterator, size_t)>
+      peucker;
+  peucker = [&peucker, &polyline, epsilon, &indices](typename container_t::iterator start, size_t s,
+                                                     typename container_t::iterator end, size_t e) {
     // find the point furthest from the line
     float dmax = 0.f;
     typename container_t::iterator itr;
     LineSegment2<coord_t> l{*start, *end};
+    size_t j = s + 1;
+    size_t k;
     coord_t tmp;
-    for (auto i = std::next(start); i != end; ++i) {
+    for (auto i = std::next(start); i != end; ++i, ++j) {
+      // if this is the highest frequency detail so far
       auto d = l.DistanceSquared(*i, tmp);
       if (d > dmax) {
         itr = i;
         dmax = d;
+        k = j;
+      } // if we didnt find a high frequency detail but we want to keep this one
+      else if (dmax < epsilon && indices.find(j) != indices.end()) {
+        itr = i;
+        dmax = epsilon;
+        k = j;
       }
     }
 
     // there are some high frequency details between start and end
     // so we need to look for flatter sections between them
     if (dmax >= epsilon) {
-      peucker(start, itr);
-      peucker(itr, end);
+      peucker(start, s, itr, k);
+      peucker(itr, k, end, e);
     } // nothing sticks out between start and end so simplify it away
     else {
       polyline.erase(std::next(start), end);
@@ -117,7 +132,7 @@ void Polyline2<coord_t>::Generalize(container_t& polyline, float epsilon) {
   };
 
   // recurse!
-  peucker(polyline.begin(), std::prev(polyline.end()));
+  peucker(polyline.begin(), 0, std::prev(polyline.end()), polyline.size() - 1);
 }
 
 // Clip this polyline to the specified bounding box.
@@ -144,10 +159,14 @@ template float Polyline2<Point2>::Length(const std::vector<Point2>&);
 template float Polyline2<PointLL>::Length(const std::list<PointLL>&);
 template float Polyline2<Point2>::Length(const std::list<Point2>&);
 
-template void Polyline2<PointLL>::Generalize(std::vector<PointLL>&, float);
-template void Polyline2<Point2>::Generalize(std::vector<Point2>&, float);
-template void Polyline2<PointLL>::Generalize(std::list<PointLL>&, float);
-template void Polyline2<Point2>::Generalize(std::list<Point2>&, float);
+template void
+Polyline2<PointLL>::Generalize(std::vector<PointLL>&, float, const std::unordered_set<size_t>&);
+template void
+Polyline2<Point2>::Generalize(std::vector<Point2>&, float, const std::unordered_set<size_t>&);
+template void
+Polyline2<PointLL>::Generalize(std::list<PointLL>&, float, const std::unordered_set<size_t>&);
+template void
+Polyline2<Point2>::Generalize(std::list<Point2>&, float, const std::unordered_set<size_t>&);
 
 } // namespace midgard
 } // namespace valhalla
