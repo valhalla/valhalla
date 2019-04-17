@@ -292,7 +292,7 @@ unsigned calculateOverviewZoomLevel(const std::list<valhalla::odin::TripDirectio
         auto decoded_leg = midgard::decode<std::vector<PointLL>>(leg.shape());
         for (const auto &coord : decoded_leg)
         {
-            south_west = PointLL(std::min(south_west.lng(), coord.lng()),std::min(south_west.lat(), coord.lat()));
+            south_west = PointLL(std::min(south_west.lng(), coord.lng()), std::min(south_west.lat(), coord.lat()));
             north_east = PointLL(std::max(north_east.lng(), coord.lng()), std::max(north_east.lat(), coord.lat()));
         }
     }
@@ -304,13 +304,6 @@ std::string simplified_shape(const std::list<valhalla::odin::TripDirections>& le
                        const valhalla::odin::DirectionsOptions& directions_options) {
 
   const auto zoom_level = std::min(18u, calculateOverviewZoomLevel(legs));
-
-  // TODO: there is a tricky way to do this... since the end of each leg is the same as the
-  // beginning we essentially could just peel off the first encoded shape point of all the legs (but
-  // the first) this way we wouldn't really have to do any decoding (would be far faster). it might
-  // even be the case that the string length of the first number is a fixed length (which would be
-  // great!) have to have a look should make this a function in midgard probably so the logic is all
-  // in the same place
   std::vector<PointLL> decoded;
   for (const auto& leg : legs) {
     auto decoded_leg = midgard::decode<std::vector<PointLL>>(leg.shape());
@@ -1165,7 +1158,7 @@ std::string serialize(const valhalla::odin::DirectionsOptions& directions_option
     // Create a route to add to the array
     auto route = json::map({});
 
-    if (directions_options.generalize() <= 1) {
+    if (directions_options.generalize() <= 0.0f) {
       route->emplace("geometry", simplified_shape(legs, directions_options));
     } else {
       // Get full shape for the route.
