@@ -281,43 +281,39 @@ std::string full_shape(const std::list<valhalla::odin::TripDirections>& legs,
   return midgard::encode(decoded, precision);
 }
 
-unsigned calculateOverviewZoomLevel(const std::list<valhalla::odin::TripDirections>& legs)
-{
-    PointLL south_west(std::numeric_limits<float>::max(),std::numeric_limits<float>::max());
-    PointLL north_east(std::numeric_limits<float>::min(),std::numeric_limits<float>::min());
-
-    std::vector<PointLL> decoded;
-    for (const auto &leg : legs)
-    {
-        auto decoded_leg = midgard::decode<std::vector<PointLL>>(leg.shape());
-        for (const auto &coord : decoded_leg)
-        {
-            south_west = PointLL(std::min(south_west.lng(), coord.lng()), std::min(south_west.lat(), coord.lat()));
-            north_east = PointLL(std::max(north_east.lng(), coord.lng()), std::max(north_east.lat(), coord.lat()));
-        }
-    }
-    return getFittedZoom(south_west, north_east);
-}
-
 // Generate simplified shape of the route.
 std::string simplified_shape(const std::list<valhalla::odin::TripDirections>& legs,
                        const valhalla::odin::DirectionsOptions& directions_options) {
 
-  const auto zoom_level = std::min(18u, calculateOverviewZoomLevel(legs));
-  std::vector<PointLL> decoded;
-  for (const auto& leg : legs) {
-    auto decoded_leg = midgard::decode<std::vector<PointLL>>(leg.shape());
+  PointLL south_west(std::numeric_limits<float>::max(),std::numeric_limits<float>::max());
+  PointLL north_east(std::numeric_limits<float>::min(),std::numeric_limits<float>::min());
 
-    for (const auto& maneuver : leg.maneuver()) {
-      std::vector<PointLL> maneuver_shape(decoded_leg.begin() + maneuver.begin_shape_index(), decoded_leg.begin() + maneuver.end_shape_index() + 1);
-      Polyline2<PointLL> pl(maneuver_shape);
-      if (maneuver_shape.size() > 1) {
-        pl.Generalize(DOUGLAS_PEUCKER_THRESHOLDS[zoom_level]);
-        std::vector<PointLL> pts = pl.pts();
-        decoded.insert(decoded.end(), decoded.size() ? pts.begin() + 1 : pts.begin(), pts.end());
-      } else decoded.insert(decoded.end(), decoded.size() ? maneuver_shape.begin() + 1 : maneuver_shape.begin(), maneuver_shape.end());
-    }
+  std::vector<PointLL> decoded,full_shape;
+  std::unordered_set<size_t> indices;
+
+  for (const auto &leg : legs)
+  {
+      auto decoded_leg = midgard::decode<std::vector<PointLL>>(leg.shape());
+      for (const auto &coord : decoded_leg)
+      {
+          south_west = PointLL(std::min(south_west.lng(), coord.lng()), std::min(south_west.lat(), coord.lat()));
+          north_east = PointLL(std::max(north_east.lng(), coord.lng()), std::max(north_east.lat(), coord.lat()));
+      }
+
+      for (const auto& maneuver : leg.maneuver()) {
+        indices.emplace(full_shape.size() ? ((full_shape.size()-1) + maneuver.begin_shape_index()) : 0);
+      }
+
+      full_shape.insert(full_shape.end(), full_shape.size() ? decoded_leg.begin() + 1 : decoded_leg.begin(),
+                     decoded_leg.end());
   }
+
+  const auto zoom_level = getFittedZoom(south_west, north_east);
+  Polyline2<PointLL> pl(full_shape);
+  pl.GeneralizedPolyline(DOUGLAS_PEUCKER_THRESHOLDS[zoom_level],indices);
+  std::vector<PointLL> pts = pl.pts();
+  decoded.insert(decoded.end(), decoded.size() ? pts.begin() + 1 : pts.begin(), pts.end());
+
   int precision = directions_options.shape_format() == odin::polyline6 ? 1e6 : 1e5;
   return midgard::encode(decoded, precision);
 }
@@ -1158,7 +1154,7 @@ std::string serialize(const valhalla::odin::DirectionsOptions& directions_option
     // Create a route to add to the array
     auto route = json::map({});
 
-    if (directions_options.generalize() <= 0.0f) {
+    if (directions_options.generalize() == 0.0f) {
       route->emplace("geometry", simplified_shape(legs, directions_options));
     } else {
       // Get full shape for the route.
