@@ -399,6 +399,11 @@ void parse_locations(const rapidjson::Document& doc,
         if (rank_candidates) {
           location->set_rank_candidates(*rank_candidates);
         }
+        auto preferred_side = rapidjson::get_optional<std::string>(r_loc, "/preferred_side");
+        odin::Location::PreferredSide side;
+        if (preferred_side && PreferredSide_Parse(*preferred_side, &side)) {
+          location->set_preferred_side(side);
+        }
       } catch (...) { throw valhalla_exception_t{location_parse_error_code}; }
     }
     if (track) {
@@ -600,7 +605,7 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
   // the order of costing must reflect the enum order
   for (const auto costing : {odin::auto_, odin::auto_shorter, odin::bicycle, odin::bus, odin::hov,
                              odin::motor_scooter, odin::multimodal, odin::pedestrian, odin::transit,
-                             odin::truck, odin::motorcycle, odin::auto_data_fix}) {
+                             odin::truck, odin::motorcycle, odin::auto_data_fix, odin::taxi}) {
     // Create the costing string
     auto costing_str = valhalla::odin::Costing_Name(costing);
     // Create the costing options key
@@ -625,6 +630,10 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
       }
       case odin::hov: {
         sif::ParseHOVCostOptions(doc, costing_options_key, options.add_costing_options());
+        break;
+      }
+      case odin::taxi: {
+        sif::ParseTaxiCostOptions(doc, costing_options_key, options.add_costing_options());
         break;
       }
       case odin::motor_scooter: {
@@ -870,6 +879,7 @@ bool Costing_Parse(const std::string& costing, odin::Costing* c) {
       {"bicycle", odin::Costing::bicycle},
       {"bus", odin::Costing::bus},
       {"hov", odin::Costing::hov},
+      {"taxi", odin::Costing::taxi},
       {"motor_scooter", odin::Costing::motor_scooter},
       {"multimodal", odin::Costing::multimodal},
       {"pedestrian", odin::Costing::pedestrian},
@@ -893,6 +903,7 @@ const std::string& Costing_Name(const odin::Costing costing) {
       {odin::Costing::bicycle, "bicycle"},
       {odin::Costing::bus, "bus"},
       {odin::Costing::hov, "hov"},
+      {odin::Costing::taxi, "taxi"},
       {odin::Costing::motor_scooter, "motor_scooter"},
       {odin::Costing::multimodal, "multimodal"},
       {odin::Costing::pedestrian, "pedestrian"},
@@ -995,6 +1006,19 @@ bool DirectionsType_Parse(const std::string& dtype, odin::DirectionsType* t) {
   if (i == types.cend())
     return false;
   *t = i->second;
+  return true;
+}
+
+bool PreferredSide_Parse(const std::string& pside, odin::Location::PreferredSide* p) {
+  static const std::unordered_map<std::string, odin::Location::PreferredSide> types{
+      {"either", odin::Location::either},
+      {"same", odin::Location::same},
+      {"opposite", odin::Location::opposite},
+  };
+  auto i = types.find(pside);
+  if (i == types.cend())
+    return false;
+  *p = i->second;
   return true;
 }
 } // namespace odin

@@ -35,17 +35,21 @@ const std::unordered_map<std::string, std::vector<int>>
                      (kPedestrianAccess | kWheelchairAccess | kBicycleAccess),
                      (kPedestrianAccess | kWheelchairAccess | kBicycleAccess), -1, -1}},
                    {"Austria",
-                    {(kAutoAccess | kTruckAccess | kBusAccess | kHOVAccess | kMotorcycleAccess),
-                     (kAutoAccess | kTruckAccess | kBusAccess | kHOVAccess | kMotorcycleAccess), -1,
-                     -1, -1, -1, -1, (kPedestrianAccess | kWheelchairAccess), -1}},
+                    {(kAutoAccess | kTruckAccess | kBusAccess | kHOVAccess | kTaxiAccess |
+                      kMotorcycleAccess),
+                     (kAutoAccess | kTruckAccess | kBusAccess | kHOVAccess | kTaxiAccess |
+                      kMotorcycleAccess),
+                     -1, -1, -1, -1, -1, (kPedestrianAccess | kWheelchairAccess), -1}},
                    {"Belarus",
                     {-1, -1, -1, (kPedestrianAccess | kWheelchairAccess | kBicycleAccess),
                      (kPedestrianAccess | kWheelchairAccess | kBicycleAccess), -1,
                      (kPedestrianAccess | kWheelchairAccess | kBicycleAccess), -1, -1}},
                    {"Belgium",
-                    {(kAutoAccess | kTruckAccess | kBusAccess | kHOVAccess | kMotorcycleAccess),
-                     (kAutoAccess | kTruckAccess | kBusAccess | kHOVAccess | kMotorcycleAccess), -1,
-                     -1, (kPedestrianAccess | kWheelchairAccess | kBicycleAccess),
+                    {(kAutoAccess | kTruckAccess | kBusAccess | kHOVAccess | kTaxiAccess |
+                      kMotorcycleAccess),
+                     (kAutoAccess | kTruckAccess | kBusAccess | kHOVAccess | kTaxiAccess |
+                      kMotorcycleAccess),
+                     -1, -1, (kPedestrianAccess | kWheelchairAccess | kBicycleAccess),
                      (kPedestrianAccess | kWheelchairAccess),
                      (kPedestrianAccess | kWheelchairAccess | kBicycleAccess | kMopedAccess),
                      (kPedestrianAccess | kWheelchairAccess | kBicycleAccess | kMopedAccess), -1}},
@@ -56,54 +60,70 @@ const std::unordered_map<std::string, std::vector<int>>
                      (kPedestrianAccess | kWheelchairAccess | kBicycleAccess | kMopedAccess),
                      (kPedestrianAccess | kWheelchairAccess | kBicycleAccess | kMopedAccess), -1}},
                    {"Denmark",
-                    {(kAutoAccess | kTruckAccess | kBusAccess | kHOVAccess | kMotorcycleAccess),
-                     (kAutoAccess | kTruckAccess | kBusAccess | kHOVAccess | kMotorcycleAccess),
+                    {(kAutoAccess | kTruckAccess | kBusAccess | kHOVAccess | kTaxiAccess |
+                      kMotorcycleAccess),
+                     (kAutoAccess | kTruckAccess | kBusAccess | kHOVAccess | kTaxiAccess |
+                      kMotorcycleAccess),
                      (kPedestrianAccess | kWheelchairAccess | kBicycleAccess), -1, -1, -1,
                      (kPedestrianAccess | kWheelchairAccess | kBicycleAccess), -1, -1}},
                    {"France",
-                    {(kAutoAccess | kTruckAccess | kBusAccess | kHOVAccess | kMotorcycleAccess),
-                     (kAutoAccess | kTruckAccess | kBusAccess | kHOVAccess | kMotorcycleAccess), -1,
-                     -1, (kPedestrianAccess | kWheelchairAccess | kBicycleAccess), -1, -1,
+                    {(kAutoAccess | kTruckAccess | kBusAccess | kHOVAccess | kTaxiAccess |
+                      kMotorcycleAccess),
+                     (kAutoAccess | kTruckAccess | kBusAccess | kHOVAccess | kTaxiAccess |
+                      kMotorcycleAccess),
+                     -1, -1, (kPedestrianAccess | kWheelchairAccess | kBicycleAccess), -1, -1,
                      (kPedestrianAccess | kWheelchairAccess | kBicycleAccess | kMopedAccess), -1}},
                    {"Finland",
                     {-1, -1, -1, -1, (kPedestrianAccess | kWheelchairAccess | kBicycleAccess), -1,
                      (kPedestrianAccess | kWheelchairAccess | kBicycleAccess), -1, -1}},
                    {"Hungary",
-                    {(kAutoAccess | kTruckAccess | kBusAccess | kHOVAccess | kMotorcycleAccess),
-                     (kAutoAccess | kTruckAccess | kBusAccess | kHOVAccess | kMotorcycleAccess), -1,
-                     -1, -1, -1, -1, -1, -1}},
+                    {(kAutoAccess | kTruckAccess | kBusAccess | kHOVAccess | kTaxiAccess |
+                      kMotorcycleAccess),
+                     (kAutoAccess | kTruckAccess | kBusAccess | kHOVAccess | kTaxiAccess |
+                      kMotorcycleAccess),
+                     -1, -1, -1, -1, -1, -1, -1}},
                    {"The Netherlands",
-                    {(kAutoAccess | kTruckAccess | kBusAccess | kHOVAccess | kMotorcycleAccess),
-                     (kAutoAccess | kTruckAccess | kBusAccess | kHOVAccess | kMotorcycleAccess), -1,
-                     -1, -1, -1, (kPedestrianAccess | kWheelchairAccess | kBicycleAccess),
+                    {(kAutoAccess | kTruckAccess | kBusAccess | kHOVAccess | kTaxiAccess |
+                      kMotorcycleAccess),
+                     (kAutoAccess | kTruckAccess | kBusAccess | kHOVAccess | kTaxiAccess |
+                      kMotorcycleAccess),
+                     -1, -1, -1, -1, (kPedestrianAccess | kWheelchairAccess | kBicycleAccess),
                      (kPedestrianAccess | kWheelchairAccess | kBicycleAccess | kMopedAccess), -1}},
                    {"Norway",
                     {-1, -1, -1, (kPedestrianAccess | kWheelchairAccess | kBicycleAccess),
                      (kPedestrianAccess | kWheelchairAccess | kBicycleAccess), -1,
                      (kPedestrianAccess | kWheelchairAccess | kBicycleAccess), -1, -1}},
                    {"Poland",
-                    {(kAutoAccess | kTruckAccess | kBusAccess | kHOVAccess | kMotorcycleAccess),
-                     (kAutoAccess | kTruckAccess | kBusAccess | kHOVAccess | kMotorcycleAccess), -1,
-                     -1, -1, -1, -1, -1, -1}},
+                    {(kAutoAccess | kTruckAccess | kBusAccess | kHOVAccess | kTaxiAccess |
+                      kMotorcycleAccess),
+                     (kAutoAccess | kTruckAccess | kBusAccess | kHOVAccess | kTaxiAccess |
+                      kMotorcycleAccess),
+                     -1, -1, -1, -1, -1, -1, -1}},
                    {"Romania",
-                    {(kAutoAccess | kTruckAccess | kBusAccess | kHOVAccess | kMotorcycleAccess),
-                     (kAutoAccess | kTruckAccess | kBusAccess | kHOVAccess | kMotorcycleAccess), -1,
-                     -1, -1, -1, -1,
+                    {(kAutoAccess | kTruckAccess | kBusAccess | kHOVAccess | kTaxiAccess |
+                      kMotorcycleAccess),
+                     (kAutoAccess | kTruckAccess | kBusAccess | kHOVAccess | kTaxiAccess |
+                      kMotorcycleAccess),
+                     -1, -1, -1, -1, -1,
                      (kPedestrianAccess | kWheelchairAccess | kBicycleAccess | kMopedAccess), -1}},
                    {"Russia", {-1, -1, -1, -1, -1, -1, (kMopedAccess | kBicycleAccess), -1, -1}},
                    {"Slovakia",
-                    {(kAutoAccess | kTruckAccess | kBusAccess | kHOVAccess | kMotorcycleAccess),
-                     (kAutoAccess | kTruckAccess | kBusAccess | kHOVAccess | kMotorcycleAccess), -1,
-                     -1, -1, -1, -1, -1, -1}},
+                    {(kAutoAccess | kTruckAccess | kBusAccess | kHOVAccess | kTaxiAccess |
+                      kMotorcycleAccess),
+                     (kAutoAccess | kTruckAccess | kBusAccess | kHOVAccess | kTaxiAccess |
+                      kMotorcycleAccess),
+                     -1, -1, -1, -1, -1, -1, -1}},
                    {"Spain",
                     {-1, -1, -1, -1, -1, -1, -1,
                      (kPedestrianAccess | kWheelchairAccess | kBicycleAccess | kMopedAccess),
-                     (kAutoAccess | kTruckAccess | kBusAccess | kHOVAccess | kMotorcycleAccess |
-                      kBicycleAccess)}},
+                     (kAutoAccess | kTruckAccess | kBusAccess | kHOVAccess | kTaxiAccess |
+                      kMotorcycleAccess | kBicycleAccess)}},
                    {"Switzerland",
-                    {(kAutoAccess | kTruckAccess | kBusAccess | kHOVAccess | kMotorcycleAccess),
-                     (kAutoAccess | kTruckAccess | kBusAccess | kHOVAccess | kMotorcycleAccess), -1,
-                     -1, -1, -1, (kBicycleAccess | kMopedAccess), -1, -1}},
+                    {(kAutoAccess | kTruckAccess | kBusAccess | kHOVAccess | kTaxiAccess |
+                      kMotorcycleAccess),
+                     (kAutoAccess | kTruckAccess | kBusAccess | kHOVAccess | kTaxiAccess |
+                      kMotorcycleAccess),
+                     -1, -1, -1, -1, (kBicycleAccess | kMopedAccess), -1, -1}},
                    {"Turkey",
                     {-1, -1, -1, -1, -1, (kPedestrianAccess | kWheelchairAccess), -1, -1, -1}},
                    {"United Kingdom",

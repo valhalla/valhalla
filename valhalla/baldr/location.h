@@ -25,6 +25,8 @@ public:
    */
   enum class StopType : uint8_t { BREAK, THROUGH, VIA, BREAK_THROUGH };
 
+  enum class PreferredSide : uint8_t { EITHER, SAME, OPPOSITE };
+
   /**
    * You have to initialize the location with something
    */
@@ -37,7 +39,8 @@ public:
   Location(const midgard::PointLL& latlng,
            const StopType& stoptype = StopType::BREAK,
            unsigned int minimum_reachability = 0,
-           unsigned long radius = 0);
+           unsigned long radius = 0,
+           const PreferredSide& side = PreferredSide::EITHER);
 
   /**
    * Serializes this object to rapidjson::Value
@@ -86,6 +89,9 @@ public:
   unsigned int minimum_reachability_;
   // dont return results further away than this (meters) unless there is nothing this close
   unsigned long radius_;
+
+  // which side of the street wrt your input location to leave/arrive from/at
+  PreferredSide preferred_side_;
 
 protected:
 };

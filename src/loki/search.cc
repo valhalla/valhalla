@@ -26,11 +26,33 @@ constexpr float NODE_SNAP = 5.f;
 // during side of street computations we figured you're on the street if you are less than
 // 5 meters (16) feet from the centerline. this is actually pretty large (with accurate shape
 // data for the roads it might want half that) but its better to assume on street than not
-constexpr float SIDE_OF_STREET_SNAP =
-    25.f; // this is 5 meters squared, the computation uses square distance
+// this is 5 meters squared, the computation uses square distance
+constexpr float SIDE_OF_STREET_SNAP = 25.f;
 
 // cone width to use for cosine similarity comparisons for favoring heading
 constexpr float DEFAULT_ANGLE_WIDTH = 60.f;
+
+bool side_filter(const PathLocation::PathEdge& edge, const Location& location, GraphReader& reader) {
+  // nothing to filter if you dont want to filter or if there is no side of street
+  if (edge.sos == PathLocation::SideOfStreet::NONE ||
+      location.preferred_side_ == Location::PreferredSide::EITHER)
+    return false;
+
+  // need the driving side for this edge
+  const GraphTile* tile;
+  auto* opp = reader.GetOpposingEdge(edge.id, tile);
+  if (!opp)
+    return false;
+  auto* node = reader.GetEndNode(opp, tile);
+  if (!node)
+    return false;
+  // if its on the right side and you drive on the rigth OR if its not on the right and you dont drive
+  // on the right THEN its the same side that you drive on
+  bool same = node->drive_on_right() == (edge.sos == PathLocation::SideOfStreet::RIGHT);
+  // and then if you were asking for the same and it was the same OR if you were asking for opposite
+  // and it was opposite THEN we dont filter
+  return same != (location.preferred_side_ == Location::PreferredSide::SAME);
+}
 
 bool heading_filter(const DirectedEdge* edge,
                     const EdgeInfo& info,
@@ -373,7 +395,8 @@ struct bin_handler_t {
                                        side,
                                        get_reach(candidate.edge)};
       // correlate the edge we found
-      if (heading_filter(candidate.edge, *candidate.edge_info, location, candidate.point,
+      if (side_filter(path_edge, location, reader) ||
+          heading_filter(candidate.edge, *candidate.edge_info, location, candidate.point,
                          candidate.index)) {
         filtered.push_back(std::move(path_edge));
       } else if (correlated_edges.insert(candidate.edge_id).second) {
@@ -388,7 +411,8 @@ struct bin_handler_t {
         PathLocation::PathEdge other_path_edge{opposing_edge_id, 1 - length_ratio,
                                                candidate.point,  score,
                                                flip_side(side),  get_reach(other_edge)};
-        if (heading_filter(other_edge, *candidate.edge_info, location, candidate.point,
+        if (side_filter(other_path_edge, location, reader) ||
+            heading_filter(other_edge, *candidate.edge_info, location, candidate.point,
                            candidate.index)) {
           filtered.push_back(std::move(other_path_edge));
         } else if (correlated_edges.insert(opposing_edge_id).second) {

@@ -146,27 +146,27 @@ void CountryAccess(const std::string& config_file) {
       } else if (e_offset.wayid() == 139156014) {
         if (directededge.forward()) {
           if (forward !=
-              (kAutoAccess | kHOVAccess | kPedestrianAccess | kWheelchairAccess | kBicycleAccess |
-               kTruckAccess | kBusAccess | kMopedAccess | kMotorcycleAccess))
+              (kAutoAccess | kHOVAccess | kTaxiAccess | kPedestrianAccess | kWheelchairAccess |
+               kBicycleAccess | kTruckAccess | kBusAccess | kMopedAccess | kMotorcycleAccess))
             throw std::runtime_error("Defaults:  Forward access is not correct for way 139156014.");
           if (reverse != (kPedestrianAccess | kWheelchairAccess))
             throw std::runtime_error("Defaults:  Reverse access is not correct for way 139156014.");
         } else {
           if (reverse !=
-              (kAutoAccess | kHOVAccess | kPedestrianAccess | kWheelchairAccess | kBicycleAccess |
-               kTruckAccess | kBusAccess | kMopedAccess | kMotorcycleAccess))
+              (kAutoAccess | kHOVAccess | kTaxiAccess | kPedestrianAccess | kWheelchairAccess |
+               kBicycleAccess | kTruckAccess | kBusAccess | kMopedAccess | kMotorcycleAccess))
             throw std::runtime_error("Defaults:  Reverse access is not correct for way 139156014.");
           if (forward != (kPedestrianAccess | kWheelchairAccess))
             throw std::runtime_error("Defaults:  Forward access is not correct for way 139156014.");
         }
       } else if (e_offset.wayid() == 512688404) { // motorroad key test
         if (directededge.forward()) {
-          if (forward != (kAutoAccess | kHOVAccess | kTruckAccess | kBusAccess))
+          if (forward != (kAutoAccess | kHOVAccess | kTaxiAccess | kTruckAccess | kBusAccess))
             throw std::runtime_error("Defaults:  Forward access is not correct for way 512688404.");
           if (reverse != 0)
             throw std::runtime_error("Defaults:  Reverse access is not correct for way 512688404.");
         } else {
-          if (reverse != (kAutoAccess | kHOVAccess | kTruckAccess | kBusAccess))
+          if (reverse != (kAutoAccess | kHOVAccess | kTaxiAccess | kTruckAccess | kBusAccess))
             throw std::runtime_error("Defaults:  Reverse access is not correct for way 512688404.");
           if (forward != 0)
             throw std::runtime_error("Defaults:  Forward access is not correct for way 512688404.");
@@ -222,12 +222,14 @@ void CountryAccess(const std::string& config_file) {
         // trunk should have no kPedestrianAccess
       } else if (e_offset.wayid() == 139156014) {
         if (directededge.forward()) {
-          if (forward != (kAutoAccess | kHOVAccess | kTruckAccess | kBusAccess | kMotorcycleAccess))
+          if (forward != (kAutoAccess | kHOVAccess | kTaxiAccess | kTruckAccess | kBusAccess |
+                          kMotorcycleAccess))
             throw std::runtime_error("Enhanced:  Forward access is not correct for way 139156014.");
           if (reverse != 0)
             throw std::runtime_error("Enhanced:  Reverse access is not correct for way 139156014.");
         } else {
-          if (reverse != (kAutoAccess | kHOVAccess | kTruckAccess | kBusAccess | kMotorcycleAccess))
+          if (reverse != (kAutoAccess | kHOVAccess | kTaxiAccess | kTruckAccess | kBusAccess |
+                          kMotorcycleAccess))
             throw std::runtime_error("Enhanced:  Reverse access is not correct for way 139156014.");
           if (forward != 0)
             throw std::runtime_error("Enhanced:  Forward access is not correct for way 139156014.");
