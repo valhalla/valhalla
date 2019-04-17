@@ -1339,7 +1339,13 @@ void ManeuversBuilder::SetSimpleDirectionalManeuverType(Maneuver& maneuver,
       break;
     }
     case Turn::Type::kSlightRight: {
-      maneuver.set_type(TripDirections_Maneuver_Type_kSlightRight);
+      if (maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kKeepStraight) {
+        maneuver.set_type(TripDirections_Maneuver_Type_kContinue);
+        LOG_TRACE("ManeuverType=CONTINUE");
+      } else {
+        maneuver.set_type(TripDirections_Maneuver_Type_kSlightRight);
+        LOG_TRACE("ManeuverType=SLIGHT_RIGHT");
+      }
       break;
     }
     case Turn::Type::kRight: {
@@ -1395,8 +1401,13 @@ void ManeuversBuilder::SetSimpleDirectionalManeuverType(Maneuver& maneuver,
       break;
     }
     case Turn::Type::kSlightLeft: {
-      maneuver.set_type(TripDirections_Maneuver_Type_kSlightLeft);
-      LOG_TRACE("ManeuverType=SLIGHT_LEFT");
+      if (maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kKeepStraight) {
+        maneuver.set_type(TripDirections_Maneuver_Type_kContinue);
+        LOG_TRACE("ManeuverType=CONTINUE");
+      } else {
+        maneuver.set_type(TripDirections_Maneuver_Type_kSlightLeft);
+        LOG_TRACE("ManeuverType=SLIGHT_LEFT");
+      }
       break;
     }
   }
