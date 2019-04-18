@@ -198,6 +198,8 @@ void test_edge_search() {
   auto l = a.first.level();
   using S = PathLocation::SideOfStreet;
   using PE = PathLocation::PathEdge;
+  using ST = Location::StopType;
+  using PS = Location::PreferredSide;
 
   // snap to node searches
   search({a.second}, true, a.second,
@@ -252,6 +254,14 @@ void test_edge_search() {
   search({test}, false, answer,
          {PE{{t, l, 3}, ratio, answer, 0, S::RIGHT}, PE{{t, l, 8}, 1.f - ratio, answer, 0, S::LEFT}});
 
+  // we only want opposite driving side, tiles are left hand driving
+  search({test, ST::BREAK, 0, 0, PS::OPPOSITE}, false, answer,
+         {PE{{t, l, 3}, ratio, answer, 0, S::RIGHT}}, true);
+
+  // we only want same driving side, tiles are left hand driving
+  search({test, ST::BREAK, 0, 0, PS::SAME}, false, answer,
+         {PE{{t, l, 8}, 1.f - ratio, answer, 0, S::LEFT}}, true);
+
   // set a point 40% along the edge that runs in reverse of the shape
   answer = b.second.AffineCombination(.6f, .4f, d.second);
   ratio = b.second.Distance(answer) / b.second.Distance(d.second);
@@ -263,6 +273,14 @@ void test_edge_search() {
   test.Set(answer.first + ortho.x(), answer.second + ortho.y());
   search({test}, false, answer,
          {PE{{t, l, 0}, ratio, answer, 0, S::LEFT}, PE{{t, l, 7}, 1.f - ratio, answer, 0, S::RIGHT}});
+
+  // we only want opposite driving side, tiles are left hand driving
+  search({test, ST::BREAK, 0, 0, PS::OPPOSITE}, false, answer,
+         {PE{{t, l, 7}, 1.f - ratio, answer, 0, S::RIGHT}}, true);
+
+  // we only want same driving side, tiles are left hand driving
+  search({test, ST::BREAK, 0, 0, PS::SAME}, false, answer, {PE{{t, l, 0}, ratio, answer, 0, S::LEFT}},
+         true);
 
   // TODO: add more tests
 }

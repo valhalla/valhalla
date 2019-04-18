@@ -18,6 +18,7 @@
 * **Enhancement**
    * Add the ability to run valhalla_build_tiles in stages. Specify the begin_stage and end_stage as command line options. Also cleans up temporary files as the last stage in the pipeline.
    * Add TaxiCost into auto costing options. 
+   * Add `preferred_side` to allow per-location filtering of edges based on the side of the road the location is on and the driving side for that locale.
 
 ## Release Date: 2019-01-14 Valhalla 3.0.2
 * **Bug Fix**
