@@ -2199,10 +2199,10 @@ void ManeuversBuilder::SetToStayOnAttribute(std::list<Maneuver>& maneuvers) {
       case TripDirections_Maneuver_Type_kStayStraight:
       case TripDirections_Maneuver_Type_kStayRight:
       case TripDirections_Maneuver_Type_kStayLeft: {
-        if (curr_man->HasSimilarNames(&(*prev_man))) {
+        if (curr_man->HasSimilarNames(&(*prev_man), true)) {
           if (!curr_man->ramp()) {
             curr_man->set_to_stay_on(true);
-          } else if (curr_man->HasSimilarNames(&(*next_man))) {
+          } else if (curr_man->HasSimilarNames(&(*next_man), true)) {
             curr_man->set_to_stay_on(true);
           }
         }
