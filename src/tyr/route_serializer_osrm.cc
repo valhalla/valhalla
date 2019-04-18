@@ -36,26 +36,24 @@ struct NamedSegment {
 };
 
 constexpr const double COORDINATE_PRECISION = 1e6;
-struct Coordinate
-{
+struct Coordinate {
   std::int32_t lng;
   std::int32_t lat;
 
-  Coordinate(const std::int32_t lng_, const std::int32_t lat_) : lng(lng_), lat(lat_) {}
+  Coordinate(const std::int32_t lng_, const std::int32_t lat_) : lng(lng_), lat(lat_) {
+  }
 };
 
-inline std::int32_t toFixed(const float floating)
-{
-    const auto d = static_cast<double>(floating);
-    const auto fixed = static_cast<std::int32_t>(std::round(d * COORDINATE_PRECISION));
-    return fixed;
+inline std::int32_t toFixed(const float floating) {
+  const auto d = static_cast<double>(floating);
+  const auto fixed = static_cast<std::int32_t>(std::round(d * COORDINATE_PRECISION));
+  return fixed;
 }
 
-inline double toFloating(const std::int32_t fixed)
-{
-    const auto i = static_cast<std::int32_t>(fixed);
-    const auto floating = static_cast<double>(i) / COORDINATE_PRECISION;
-    return floating;
+inline double toFloating(const std::int32_t fixed) {
+  const auto i = static_cast<std::int32_t>(fixed);
+  const auto floating = static_cast<double>(i) / COORDINATE_PRECISION;
+  return floating;
 }
 
 const constexpr double TILE_SIZE = 256.0;
@@ -91,18 +89,15 @@ const constexpr float DOUGLAS_PEUCKER_THRESHOLDS[19] = {
     2.6,      // z18
 };
 
-inline double clamp(const double lat)
-{
-    return std::max(std::min(lat, double(EPSG3857_MAX_LATITUDE)),
-                    double(-EPSG3857_MAX_LATITUDE));
+inline double clamp(const double lat) {
+  return std::max(std::min(lat, double(EPSG3857_MAX_LATITUDE)), double(-EPSG3857_MAX_LATITUDE));
 }
 
-inline double latToY(const double latitude)
-{
-    // apparently this is the (faster) version of the canonical log(tan()) version
-    const auto clamped_latitude = clamp(latitude);
-    const double f = std::sin(DEGREE_TO_RAD * static_cast<double>(clamped_latitude));
-    return RAD_TO_DEGREE * 0.5 * std::log((1 + f) / (1 - f));
+inline double latToY(const double latitude) {
+  // apparently this is the (faster) version of the canonical log(tan()) version
+  const auto clamped_latitude = clamp(latitude);
+  const double f = std::sin(DEGREE_TO_RAD * static_cast<double>(clamped_latitude));
+  return RAD_TO_DEGREE * 0.5 * std::log((1 + f) / (1 - f));
 }
 
 inline double lngToPixel(double lon, unsigned zoom) {

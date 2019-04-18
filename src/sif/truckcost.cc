@@ -34,7 +34,7 @@ constexpr float kDefaultCountryCrossingPenalty = 0.0f;   // Seconds
 
 // Other options
 constexpr float kDefaultLowClassPenalty = 30.0f; // Seconds
-constexpr float kDefaultUseTolls = 0.5f;    // Factor between 0 and 1
+constexpr float kDefaultUseTolls = 0.5f;         // Factor between 0 and 1
 
 // Default turn costs
 constexpr float kTCStraight = 0.5f;
