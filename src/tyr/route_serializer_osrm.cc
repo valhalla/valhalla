@@ -47,25 +47,25 @@ const constexpr double RAD_TO_DEGREE = 1. / DEGREE_TO_RAD;
 const constexpr double EPSG3857_MAX_LATITUDE = 85.051128779806592378; // 90(4*atan(exp(pi))/pi-1)
 
 const constexpr float DOUGLAS_PEUCKER_THRESHOLDS[19] = {
-    49438476562500.f, // z0
-    12359619140625.f, // z1
-    3089903027344.f,  // z2
-    772475756836.f,   // z3
-    193118939209.f,   // z4
-    48279515076.f,    // z5
-    12069878769.f,    // z6
-    3017414761.f,     // z7
-    754326225.f,      // z8
-    188567824.f,      // z9
-    47141956.f,       // z10
-    11785489.f,       // z11
-    2944656.f,        // z12
-    736164.f,         // z13
-    184041.f,         // z14
-    45796.f,          // z15
-    11449.f,          // z16
-    2809.f,           // z17
-    676.f,            // z18
+    703125.0, // z0
+    351562.5, // z1
+    175781.2, // z2
+    87890.6,  // z3
+    43945.3,  // z4
+    21972.6,  // z5
+    10986.3,  // z6
+    5493.1,   // z7
+    2746.5,   // z8
+    1373.2,   // z9
+    686.6,    // z10
+    343.3,    // z11
+    171.6,    // z12
+    85.8,     // z13
+    42.9,     // z14
+    21.4,     // z15
+    10.7,     // z16
+    5.3,      // z17
+    2.6,      // z18
 };
 
 inline float clamp(float lat) {
@@ -302,11 +302,10 @@ std::string simplified_shape(const std::list<valhalla::odin::TripDirections>& le
                       decoded_leg.end());
   }
 
-  // printf("encodedfull:\n%s\n", midgard::encode(full_shape, 1e6));
-
+  printf("encodedfull:\n%s\n", midgard::encode(full_shape, 1e6).c_str());
   const auto zoom_level = getFittedZoom(south_west, north_east);
   Polyline2<PointLL>::Generalize(full_shape, DOUGLAS_PEUCKER_THRESHOLDS[zoom_level], indices);
-  // printf("encodedsimp:\n%s\n", midgard::encode(full_shape, 1e6));
+  printf("encodedsimp:\n%s\n", midgard::encode(full_shape, 1e6).c_str());
   int precision = directions_options.shape_format() == odin::polyline6 ? 1e6 : 1e5;
   return midgard::encode(full_shape, precision);
 }
