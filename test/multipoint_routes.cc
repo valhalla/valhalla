@@ -89,142 +89,174 @@ float mid_break_distance;
 float mid_through_distance;
 
 void test_mid_break() {
-  route_tester tester;
-  std::list<TripPath> legs;
-  std::list<TripDirections> directions;
-  std::tie(legs, directions) = tester.test(
-      R"({"locations":[{"lat":52.09015,"lon":5.06362},{"lat":52.09041,"lon":5.06337,"type":"break"},{"lat":52.09015,"lon":5.06362}],"costing":"auto"})");
+  for (const auto& date_time :
+       std::vector<std::string>{R"(,"date_time":{"type":1,"value":"2016-07-03T08:06"}})",
+                                R"(,"date_time":{"type":1,"value":"2016-07-03T08:06"}})"}) {
+    route_tester tester;
+    std::list<TripPath> legs;
+    std::list<TripDirections> directions;
+    std::string request =
+        R"({"locations":[{"lat":52.09015,"lon":5.06362},{"lat":52.09041,"lon":5.06337,"type":"break"},{"lat":52.09015,"lon":5.06362}],"costing":"auto"})";
 
-  if (legs.size() != 2 || directions.size() != 2)
-    throw std::logic_error("Should have two legs with two sets of directions");
+    request.pop_back();
+    request += date_time;
+    std::tie(legs, directions) = tester.test(request);
 
-  std::vector<std::string> names;
-  for (const auto& d : directions) {
-    for (const auto& m : d.maneuver()) {
-      std::string name;
-      for (const auto& n : m.street_name())
-        name += n.value() + " ";
-      if (!name.empty())
-        name.pop_back();
-      names.push_back(name);
-      if (m.type() == TripDirections_Maneuver_Type_kUturnRight ||
-          m.type() == TripDirections_Maneuver_Type_kUturnLeft)
-        throw std::logic_error("Should not encounter any u-turns");
+    if (legs.size() != 2 || directions.size() != 2)
+      throw std::logic_error("Should have two legs with two sets of directions");
+
+    std::vector<std::string> names;
+    for (const auto& d : directions) {
+      for (const auto& m : d.maneuver()) {
+        std::string name;
+        for (const auto& n : m.street_name())
+          name += n.value() + " ";
+        if (!name.empty())
+          name.pop_back();
+        names.push_back(name);
+        if (m.type() == TripDirections_Maneuver_Type_kUturnRight ||
+            m.type() == TripDirections_Maneuver_Type_kUturnLeft)
+          throw std::logic_error("Should not encounter any u-turns");
+      }
     }
+
+    if (names != std::vector<std::string>{"Korianderstraat", "Maanzaadstraat", "", "Maanzaadstraat",
+                                          "Korianderstraat", ""})
+      throw std::logic_error(
+          "Should be a destination at the midpoint and reverse the route for the second leg");
+
+    mid_break_distance = directions.front().summary().length() + directions.back().summary().length();
   }
-
-  if (names != std::vector<std::string>{"Korianderstraat", "Maanzaadstraat", "", "Maanzaadstraat",
-                                        "Korianderstraat", ""})
-    throw std::logic_error(
-        "Should be a destination at the midpoint and reverse the route for the second leg");
-
-  mid_break_distance = directions.front().summary().length() + directions.back().summary().length();
 }
 
 void test_mid_through() {
-  route_tester tester;
-  std::list<TripPath> legs;
-  std::list<TripDirections> directions;
-  std::tie(legs, directions) = tester.test(
-      R"({"locations":[{"lat":52.09015,"lon":5.06362},{"lat":52.09041,"lon":5.06337,"type":"through"},{"lat":52.09015,"lon":5.06362}],"costing":"auto"})");
+  for (const auto& date_time :
+       std::vector<std::string>{R"(,"date_time":{"type":1,"value":"2016-07-03T08:06"}})",
+                                R"(,"date_time":{"type":1,"value":"2016-07-03T08:06"}})"}) {
+    route_tester tester;
+    std::list<TripPath> legs;
+    std::list<TripDirections> directions;
+    std::string request =
+        R"({"locations":[{"lat":52.09015,"lon":5.06362},{"lat":52.09041,"lon":5.06337,"type":"through"},{"lat":52.09015,"lon":5.06362}],"costing":"auto"})";
 
-  if (legs.size() != 1 || directions.size() != 1)
-    throw std::logic_error("Should have 1 leg with 1 set of directions");
+    request.pop_back();
+    request += date_time;
+    std::tie(legs, directions) = tester.test(request);
 
-  std::vector<std::string> names;
-  for (const auto& d : directions) {
-    for (const auto& m : d.maneuver()) {
-      std::string name;
-      for (const auto& n : m.street_name())
-        name += n.value() + " ";
-      if (!name.empty())
-        name.pop_back();
-      names.push_back(name);
-      if (m.type() == TripDirections_Maneuver_Type_kUturnRight ||
-          m.type() == TripDirections_Maneuver_Type_kUturnLeft)
-        throw std::logic_error("Should not encounter any u-turns");
+    if (legs.size() != 1 || directions.size() != 1)
+      throw std::logic_error("Should have 1 leg with 1 set of directions");
+
+    std::vector<std::string> names;
+    for (const auto& d : directions) {
+      for (const auto& m : d.maneuver()) {
+        std::string name;
+        for (const auto& n : m.street_name())
+          name += n.value() + " ";
+        if (!name.empty())
+          name.pop_back();
+        names.push_back(name);
+        if (m.type() == TripDirections_Maneuver_Type_kUturnRight ||
+            m.type() == TripDirections_Maneuver_Type_kUturnLeft)
+          throw std::logic_error("Should not encounter any u-turns");
+      }
     }
+
+    if (names != std::vector<std::string>{"Korianderstraat", "Maanzaadstraat", "Pimpernelstraat",
+                                          "Selderiestraat", "Korianderstraat", ""})
+      throw std::logic_error("Should continue through the midpoint and around the block");
+
+    mid_through_distance = directions.front().summary().length();
   }
-
-  if (names != std::vector<std::string>{"Korianderstraat", "Maanzaadstraat", "Pimpernelstraat",
-                                        "Selderiestraat", "Korianderstraat", ""})
-    throw std::logic_error("Should continue through the midpoint and around the block");
-
-  mid_through_distance = directions.front().summary().length();
 }
 
 void test_mid_via() {
-  route_tester tester;
-  std::list<TripPath> legs;
-  std::list<TripDirections> directions;
-  std::tie(legs, directions) = tester.test(
-      R"({"locations":[{"lat":52.09015,"lon":5.06362},{"lat":52.09041,"lon":5.06337,"type":"via"},{"lat":52.09015,"lon":5.06362}],"costing":"auto"})");
+  for (const auto& date_time :
+       std::vector<std::string>{R"(,"date_time":{"type":1,"value":"2016-07-03T08:06"}})",
+                                R"(,"date_time":{"type":1,"value":"2016-07-03T08:06"}})"}) {
+    route_tester tester;
+    std::list<TripPath> legs;
+    std::list<TripDirections> directions;
+    std::string request =
+        R"({"locations":[{"lat":52.09015,"lon":5.06362},{"lat":52.09041,"lon":5.06337,"type":"via"},{"lat":52.09015,"lon":5.06362}],"costing":"auto"})";
 
-  if (legs.size() != 1 || directions.size() != 1)
-    throw std::logic_error("Should have 1 leg with 1 set of directions");
+    request.pop_back();
+    request += date_time;
+    std::tie(legs, directions) = tester.test(request);
 
-  std::vector<std::string> names;
-  unsigned int uturns = 0;
-  for (const auto& d : directions) {
-    for (const auto& m : d.maneuver()) {
-      std::string name;
-      for (const auto& n : m.street_name())
-        name += n.value() + " ";
-      if (!name.empty())
-        name.pop_back();
-      names.push_back(name);
-      uturns += m.type() == TripDirections_Maneuver_Type_kUturnRight ||
-                m.type() == TripDirections_Maneuver_Type_kUturnLeft;
+    if (legs.size() != 1 || directions.size() != 1)
+      throw std::logic_error("Should have 1 leg with 1 set of directions");
+
+    std::vector<std::string> names;
+    unsigned int uturns = 0;
+    for (const auto& d : directions) {
+      for (const auto& m : d.maneuver()) {
+        std::string name;
+        for (const auto& n : m.street_name())
+          name += n.value() + " ";
+        if (!name.empty())
+          name.pop_back();
+        names.push_back(name);
+        uturns += m.type() == TripDirections_Maneuver_Type_kUturnRight ||
+                  m.type() == TripDirections_Maneuver_Type_kUturnLeft;
+      }
     }
+
+    if (uturns != 1)
+      throw std::logic_error("Should be exactly 1 u-turn but there are: " + std::to_string(uturns));
+
+    float mid_via_distance = directions.front().summary().length();
+    if (!equal(mid_via_distance, mid_break_distance, 0.001f))
+      throw std::logic_error(
+          "The only difference in path between mid break and mid via is arrive/depart guidance");
+
+    if (names != std::vector<std::string>{"Korianderstraat", "Maanzaadstraat", "Maanzaadstraat",
+                                          "Korianderstraat", ""})
+      throw std::logic_error("Should be a uturn at the mid point");
   }
-
-  if (uturns != 1)
-    throw std::logic_error("Should be exactly 1 u-turn but there are: " + std::to_string(uturns));
-
-  float mid_via_distance = directions.front().summary().length();
-  if (!equal(mid_via_distance, mid_break_distance, 0.001f))
-    throw std::logic_error(
-        "The only difference in path between mid break and mid via is arrive/depart guidance");
-
-  if (names != std::vector<std::string>{"Korianderstraat", "Maanzaadstraat", "Maanzaadstraat",
-                                        "Korianderstraat", ""})
-    throw std::logic_error("Should be a uturn at the mid point");
 }
 
 void test_mid_break_through() {
-  route_tester tester;
-  std::list<TripPath> legs;
-  std::list<TripDirections> directions;
-  std::tie(legs, directions) = tester.test(
-      R"({"locations":[{"lat":52.09015,"lon":5.06362},{"lat":52.09041,"lon":5.06337,"type":"break_through"},{"lat":52.09015,"lon":5.06362}],"costing":"auto"})");
+  for (const auto& date_time :
+       std::vector<std::string>{R"(,"date_time":{"type":1,"value":"2016-07-03T08:06"}})",
+                                R"(,"date_time":{"type":1,"value":"2016-07-03T08:06"}})"}) {
+    route_tester tester;
+    std::list<TripPath> legs;
+    std::list<TripDirections> directions;
+    std::string request =
+        R"({"locations":[{"lat":52.09015,"lon":5.06362},{"lat":52.09041,"lon":5.06337,"type":"break_through"},{"lat":52.09015,"lon":5.06362}],"costing":"auto"})";
 
-  if (legs.size() != 2 || directions.size() != 2)
-    throw std::logic_error("Should have two legs with two sets of directions");
+    request.pop_back();
+    request += date_time;
+    std::tie(legs, directions) = tester.test(request);
 
-  std::vector<std::string> names;
-  for (const auto& d : directions) {
-    for (const auto& m : d.maneuver()) {
-      std::string name;
-      for (const auto& n : m.street_name())
-        name += n.value() + " ";
-      if (!name.empty())
-        name.pop_back();
-      names.push_back(name);
-      if (m.type() == TripDirections_Maneuver_Type_kUturnRight ||
-          m.type() == TripDirections_Maneuver_Type_kUturnLeft)
-        throw std::logic_error("Should not encounter any u-turns");
+    if (legs.size() != 2 || directions.size() != 2)
+      throw std::logic_error("Should have two legs with two sets of directions");
+
+    std::vector<std::string> names;
+    for (const auto& d : directions) {
+      for (const auto& m : d.maneuver()) {
+        std::string name;
+        for (const auto& n : m.street_name())
+          name += n.value() + " ";
+        if (!name.empty())
+          name.pop_back();
+        names.push_back(name);
+        if (m.type() == TripDirections_Maneuver_Type_kUturnRight ||
+            m.type() == TripDirections_Maneuver_Type_kUturnLeft)
+          throw std::logic_error("Should not encounter any u-turns");
+      }
     }
+
+    float mid_break_through_distance =
+        directions.front().summary().length() + directions.back().summary().length();
+    if (!equal(mid_break_through_distance, mid_through_distance, 0.001f))
+      throw std::logic_error(
+          "The only difference in path between mid through and mid break through is arrive/depart guidance");
+
+    if (names != std::vector<std::string>{"Korianderstraat", "Maanzaadstraat", "", "Maanzaadstraat",
+                                          "Pimpernelstraat", "Selderiestraat", "Korianderstraat", ""})
+      throw std::logic_error("Should be a destination at the midpoint and continue around the block");
   }
-
-  float mid_break_through_distance =
-      directions.front().summary().length() + directions.back().summary().length();
-  if (!equal(mid_break_through_distance, mid_through_distance, 0.001f))
-    throw std::logic_error(
-        "The only difference in path between mid through and mid break through is arrive/depart guidance");
-
-  if (names != std::vector<std::string>{"Korianderstraat", "Maanzaadstraat", "", "Maanzaadstraat",
-                                        "Pimpernelstraat", "Selderiestraat", "Korianderstraat", ""})
-    throw std::logic_error("Should be a destination at the midpoint and continue around the block");
 }
 
 int main(int argc, char* argv[]) {
