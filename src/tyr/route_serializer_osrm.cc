@@ -1165,9 +1165,12 @@ std::string serialize(const valhalla::odin::DirectionsOptions& directions_option
     // Create a route to add to the array
     auto route = json::map({});
 
+    // generalize == -1 then no geom
+    // generalize == 0 then simplified
+    // generalize > 0  then full
     if (directions_options.generalize() == 0.0f) {
       route->emplace("geometry", simplified_shape(legs, directions_options));
-    } else {
+    } else if (directions_options.generalize() > 0.0f) {
       // Get full shape for the route.
       route->emplace("geometry", full_shape(legs, directions_options));
     }
