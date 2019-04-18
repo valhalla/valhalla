@@ -95,6 +95,10 @@ protected:
   bool
   IsFork(int node_index, EnhancedTripPath_Edge* prev_edge, EnhancedTripPath_Edge* curr_edge) const;
 
+  bool IsPedestrianFork(int node_index,
+                        EnhancedTripPath_Edge* prev_edge,
+                        EnhancedTripPath_Edge* curr_edge) const;
+
   bool
   IsTee(int node_index, EnhancedTripPath_Edge* prev_edge, EnhancedTripPath_Edge* curr_edge) const;
 

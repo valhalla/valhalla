@@ -1527,7 +1527,8 @@ bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver, int node_i
 
   /////////////////////////////////////////////////////////////////////////////
   // Process fork
-  if (IsFork(node_index, prev_edge, curr_edge)) {
+  if (IsFork(node_index, prev_edge, curr_edge) ||
+      IsPedestrianFork(node_index, prev_edge, curr_edge)) {
     maneuver.set_fork(true);
     return false;
   }
@@ -1722,6 +1723,42 @@ bool ManeuversBuilder::IsFork(int node_index,
          curr_edge->IsRampUse() &&
          !node->IsStraightestTraversableIntersectingEdgeReversed(prev_edge->end_heading(),
                                                                  prev_edge->travel_mode()))) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+bool ManeuversBuilder::IsPedestrianFork(int node_index,
+                                        EnhancedTripPath_Edge* prev_edge,
+                                        EnhancedTripPath_Edge* curr_edge) const {
+  auto is_relative_straight = [](uint32_t turn_degree) -> bool {
+    return ((turn_degree > 315) || (turn_degree < 45));
+  };
+  auto* node = trip_path_->GetEnhancedNode(node_index);
+  uint32_t path_turn_degree = GetTurnDegree(prev_edge->end_heading(), curr_edge->begin_heading());
+  bool is_pedestrian_travel_mode = ((prev_edge->travel_mode() == TripPath_TravelMode_kPedestrian) &&
+                                    (curr_edge->travel_mode() == TripPath_TravelMode_kPedestrian));
+
+  // Must be pedestrian travel mode
+  // and the path turn degree is relative straight
+  if (is_pedestrian_travel_mode && is_relative_straight(path_turn_degree)) {
+    // If the above criteria is met then check the following criteria...
+    IntersectingEdgeCounts xedge_counts;
+    node->CalculateRightLeftIntersectingEdgeCounts(prev_edge->end_heading(), prev_edge->travel_mode(),
+                                                   xedge_counts);
+    uint32_t straightest_traversable_xedge_turn_degree =
+        node->GetStraightestTraversableIntersectingEdgeTurnDegree(prev_edge->end_heading(),
+                                                                  prev_edge->travel_mode());
+    // if there is a similar traversable intersecting edge
+    // or there is a relative straight traversable intersecting edge
+    // previous edge is a roundabout and the current edge is not a roundabout
+    // then we have a pedestrian fork
+    if (((xedge_counts.left_similar_traversable_outbound > 0) ||
+         (xedge_counts.right_similar_traversable_outbound > 0)) ||
+        is_relative_straight(straightest_traversable_xedge_turn_degree) ||
+        (prev_edge->roundabout() && !curr_edge->roundabout())) {
       return true;
     }
   }
