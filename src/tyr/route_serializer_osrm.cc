@@ -35,6 +35,29 @@ struct NamedSegment {
   float distance;
 };
 
+constexpr const double COORDINATE_PRECISION = 1e6;
+struct Coordinate
+{
+  std::int32_t lng;
+  std::int32_t lat;
+
+  Coordinate(const std::int32_t lng_, const std::int32_t lat_) : lng(lng_), lat(lat_) {}
+};
+
+inline std::int32_t toFixed(const float floating)
+{
+    const auto d = static_cast<double>(floating);
+    const auto fixed = static_cast<std::int32_t>(std::round(d * COORDINATE_PRECISION));
+    return fixed;
+}
+
+inline double toFloating(const std::int32_t fixed)
+{
+    const auto i = static_cast<std::int32_t>(fixed);
+    const auto floating = static_cast<double>(i) / COORDINATE_PRECISION;
+    return floating;
+}
+
 const constexpr double TILE_SIZE = 256.0;
 static constexpr unsigned MAX_ZOOM = 18;
 static constexpr unsigned MIN_ZOOM = 1;
@@ -68,36 +91,39 @@ const constexpr float DOUGLAS_PEUCKER_THRESHOLDS[19] = {
     2.6,      // z18
 };
 
-inline float clamp(float lat) {
-  return std::max(std::min(lat, float(EPSG3857_MAX_LATITUDE)), float(-EPSG3857_MAX_LATITUDE));
+inline double clamp(const double lat)
+{
+    return std::max(std::min(lat, double(EPSG3857_MAX_LATITUDE)),
+                    double(-EPSG3857_MAX_LATITUDE));
 }
 
-inline double latToY(float latitude) {
-  // apparently this is the (faster) version of the canonical log(tan()) version
-  const auto clamped_latitude = clamp(latitude);
-  const double f = std::sin(DEGREE_TO_RAD * static_cast<double>(clamped_latitude));
-  return RAD_TO_DEGREE * 0.5 * std::log((1 + f) / (1 - f));
+inline double latToY(const double latitude)
+{
+    // apparently this is the (faster) version of the canonical log(tan()) version
+    const auto clamped_latitude = clamp(latitude);
+    const double f = std::sin(DEGREE_TO_RAD * static_cast<double>(clamped_latitude));
+    return RAD_TO_DEGREE * 0.5 * std::log((1 + f) / (1 - f));
 }
 
-inline double lngToPixel(float lon, unsigned zoom) {
+inline double lngToPixel(double lon, unsigned zoom) {
   const double shift = (1u << zoom) * TILE_SIZE;
   const double b = shift / 2.0;
   const double x = b * (1 + static_cast<double>(lon) / 180.0);
   return x;
 }
 
-inline double latToPixel(float lat, unsigned zoom) {
+inline double latToPixel(double lat, unsigned zoom) {
   const double shift = (1u << zoom) * TILE_SIZE;
   const double b = shift / 2.0;
   const double y = b * (1. - latToY(lat) / 180.);
   return y;
 }
 
-inline unsigned getFittedZoom(PointLL south_west, PointLL north_east) {
-  const auto min_x = lngToPixel(south_west.lng(), MAX_ZOOM);
-  const auto max_y = latToPixel(south_west.lat(), MAX_ZOOM);
-  const auto max_x = lngToPixel(north_east.lng(), MAX_ZOOM);
-  const auto min_y = latToPixel(north_east.lat(), MAX_ZOOM);
+inline unsigned getFittedZoom(Coordinate south_west, Coordinate north_east) {
+  const auto min_x = lngToPixel(toFloating(south_west.lng), MAX_ZOOM);
+  const auto max_y = latToPixel(toFloating(south_west.lat), MAX_ZOOM);
+  const auto max_x = lngToPixel(toFloating(north_east.lng), MAX_ZOOM);
+  const auto min_y = latToPixel(toFloating(north_east.lat), MAX_ZOOM);
   const double width_ratio = (max_x - min_x) / VIEWPORT_WIDTH;
   const double height_ratio = (max_y - min_y) / VIEWPORT_HEIGHT;
   const auto zoom = MAX_ZOOM - std::max(std::log(width_ratio), std::log(height_ratio)) * INV_LOG_2;
@@ -277,8 +303,8 @@ std::string full_shape(const std::list<valhalla::odin::TripDirections>& legs,
 // Generate simplified shape of the route.
 std::string simplified_shape(const std::list<valhalla::odin::TripDirections>& legs,
                              const valhalla::odin::DirectionsOptions& directions_options) {
-  PointLL south_west(std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
-  PointLL north_east(std::numeric_limits<float>::min(), std::numeric_limits<float>::min());
+  Coordinate south_west(std::numeric_limits<int>::max(), std::numeric_limits<int>::max());
+  Coordinate north_east(std::numeric_limits<int>::min(), std::numeric_limits<int>::min());
 
   std::vector<PointLL> full_shape;
   std::unordered_set<size_t> indices;
@@ -286,10 +312,10 @@ std::string simplified_shape(const std::list<valhalla::odin::TripDirections>& le
   for (const auto& leg : legs) {
     auto decoded_leg = midgard::decode<std::vector<PointLL>>(leg.shape());
     for (const auto& coord : decoded_leg) {
-      south_west =
-          PointLL(std::min(south_west.lng(), coord.lng()), std::min(south_west.lat(), coord.lat()));
-      north_east =
-          PointLL(std::max(north_east.lng(), coord.lng()), std::max(north_east.lat(), coord.lat()));
+      south_west.lng = std::min(south_west.lng, toFixed(coord.lng()));
+      south_west.lat = std::min(south_west.lat, toFixed(coord.lat()));
+      north_east.lng = std::max(north_east.lng, toFixed(coord.lng()));
+      north_east.lat = std::max(north_east.lat, toFixed(coord.lat()));
     }
 
     for (const auto& maneuver : leg.maneuver()) {
