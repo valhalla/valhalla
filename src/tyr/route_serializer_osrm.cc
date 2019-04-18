@@ -47,25 +47,25 @@ const constexpr double RAD_TO_DEGREE = 1. / DEGREE_TO_RAD;
 const constexpr double EPSG3857_MAX_LATITUDE = 85.051128779806592378; // 90(4*atan(exp(pi))/pi-1)
 
 const constexpr float DOUGLAS_PEUCKER_THRESHOLDS[19] = {
-    703125.0, // z0
-    351562.5, // z1
-    175781.2, // z2
-    87890.6,  // z3
-    43945.3,  // z4
-    21972.6,  // z5
-    10986.3,  // z6
-    5493.1,   // z7
-    2746.5,   // z8
-    1373.2,   // z9
-    686.6,    // z10
-    343.3,    // z11
-    171.6,    // z12
-    85.8,     // z13
-    42.9,     // z14
-    21.4,     // z15
-    10.7,     // z16
-    5.3,      // z17
-    2.6,      // z18
+    70312.50, // z0
+    35156.25, // z1
+    17578.12, // z2
+    8789.06,  // z3
+    4394.53,  // z4
+    2197.26,  // z5
+    1098.63,  // z6
+    549.31,   // z7
+    274.65,   // z8
+    137.32,   // z9
+    68.66,    // z10
+    34.33,    // z11
+    17.16,    // z12
+    8.58,     // z13
+    4.29,     // z14
+    2.14,     // z15
+    1.07,     // z16
+    .53,      // z17
+    .26,      // z18
 };
 
 inline float clamp(float lat) {
@@ -304,8 +304,8 @@ std::string simplified_shape(const std::list<valhalla::odin::TripDirections>& le
 
   printf("encodedfull:\n%s\n", midgard::encode(full_shape, 1e6).c_str());
   const auto zoom_level = getFittedZoom(south_west, north_east);
-  Polyline2<PointLL>::Generalize(full_shape, DOUGLAS_PEUCKER_THRESHOLDS[zoom_level], indices);
-  printf("encodedsimp:\n%s\n", midgard::encode(full_shape, 1e6).c_str());
+  Polyline2<PointLL>::Generalize(full_shape, DOUGLAS_PEUCKER_THRESHOLDS[zoom_level]);
+  printf("encodedsimp z%u:\n%s\n", zoom_level, midgard::encode(full_shape, 1e6).c_str());
   int precision = directions_options.shape_format() == odin::polyline6 ? 1e6 : 1e5;
   return midgard::encode(full_shape, precision);
 }
