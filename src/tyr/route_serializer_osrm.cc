@@ -284,7 +284,6 @@ std::string full_shape(const std::list<valhalla::odin::TripDirections>& legs,
 // Generate simplified shape of the route.
 std::string simplified_shape(const std::list<valhalla::odin::TripDirections>& legs,
                        const valhalla::odin::DirectionsOptions& directions_options) {
-
   PointLL south_west(std::numeric_limits<float>::max(),std::numeric_limits<float>::max());
   PointLL north_east(std::numeric_limits<float>::min(),std::numeric_limits<float>::min());
 
@@ -301,7 +300,7 @@ std::string simplified_shape(const std::list<valhalla::odin::TripDirections>& le
       }
 
       for (const auto& maneuver : leg.maneuver()) {
-        indices.emplace(full_shape.size() ? ((full_shape.size()-1) + maneuver.begin_shape_index()) : 0);
+        indices.emplace(full_shape.size() ? ((full_shape.size()-1) + maneuver.begin_shape_index()) : maneuver.begin_shape_index());
       }
 
       full_shape.insert(full_shape.end(), full_shape.size() ? decoded_leg.begin() + 1 : decoded_leg.begin(),
