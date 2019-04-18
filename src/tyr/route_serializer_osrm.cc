@@ -68,51 +68,44 @@ const constexpr float DOUGLAS_PEUCKER_THRESHOLDS[19] = {
     676.f,            // z18
 };
 
-inline float clamp(float lat)
-{
-    return std::max(std::min(lat, float(EPSG3857_MAX_LATITUDE)),
-                    float(-EPSG3857_MAX_LATITUDE));
+inline float clamp(float lat) {
+  return std::max(std::min(lat, float(EPSG3857_MAX_LATITUDE)), float(-EPSG3857_MAX_LATITUDE));
 }
 
-inline double latToY(float latitude)
-{
-    // apparently this is the (faster) version of the canonical log(tan()) version
-    const auto clamped_latitude = clamp(latitude);
-    const double f = std::sin(DEGREE_TO_RAD * static_cast<double>(clamped_latitude));
-    return RAD_TO_DEGREE * 0.5 * std::log((1 + f) / (1 - f));
+inline double latToY(float latitude) {
+  // apparently this is the (faster) version of the canonical log(tan()) version
+  const auto clamped_latitude = clamp(latitude);
+  const double f = std::sin(DEGREE_TO_RAD * static_cast<double>(clamped_latitude));
+  return RAD_TO_DEGREE * 0.5 * std::log((1 + f) / (1 - f));
 }
 
-inline double lngToPixel(float lon, unsigned zoom)
-{
-    const double shift = (1u << zoom) * TILE_SIZE;
-    const double b = shift / 2.0;
-    const double x = b * (1 + static_cast<double>(lon) / 180.0);
-    return x;
+inline double lngToPixel(float lon, unsigned zoom) {
+  const double shift = (1u << zoom) * TILE_SIZE;
+  const double b = shift / 2.0;
+  const double x = b * (1 + static_cast<double>(lon) / 180.0);
+  return x;
 }
 
-inline double latToPixel(float lat, unsigned zoom)
-{
-    const double shift = (1u << zoom) * TILE_SIZE;
-    const double b = shift / 2.0;
-    const double y = b * (1. - latToY(lat) / 180.);
-    return y;
+inline double latToPixel(float lat, unsigned zoom) {
+  const double shift = (1u << zoom) * TILE_SIZE;
+  const double b = shift / 2.0;
+  const double y = b * (1. - latToY(lat) / 180.);
+  return y;
 }
 
-inline unsigned getFittedZoom(PointLL south_west, PointLL north_east)
-{
-    const auto min_x = lngToPixel(south_west.lng(), MAX_ZOOM);
-    const auto max_y = latToPixel(south_west.lat(), MAX_ZOOM);
-    const auto max_x = lngToPixel(north_east.lng(), MAX_ZOOM);
-    const auto min_y = latToPixel(north_east.lat(), MAX_ZOOM);
-    const double width_ratio = (max_x - min_x) / VIEWPORT_WIDTH;
-    const double height_ratio = (max_y - min_y) / VIEWPORT_HEIGHT;
-    const auto zoom = MAX_ZOOM -
-                      std::max(std::log(width_ratio), std::log(height_ratio)) * INV_LOG_2;
+inline unsigned getFittedZoom(PointLL south_west, PointLL north_east) {
+  const auto min_x = lngToPixel(south_west.lng(), MAX_ZOOM);
+  const auto max_y = latToPixel(south_west.lat(), MAX_ZOOM);
+  const auto max_x = lngToPixel(north_east.lng(), MAX_ZOOM);
+  const auto min_y = latToPixel(north_east.lat(), MAX_ZOOM);
+  const double width_ratio = (max_x - min_x) / VIEWPORT_WIDTH;
+  const double height_ratio = (max_y - min_y) / VIEWPORT_HEIGHT;
+  const auto zoom = MAX_ZOOM - std::max(std::log(width_ratio), std::log(height_ratio)) * INV_LOG_2;
 
-    if (std::isfinite(zoom))
-        return std::max<unsigned>(MIN_ZOOM, zoom);
-    else
-        return MIN_ZOOM;
+  if (std::isfinite(zoom))
+    return std::max<unsigned>(MIN_ZOOM, zoom);
+  else
+    return MIN_ZOOM;
 }
 
 namespace osrm_serializers {
@@ -283,38 +276,39 @@ std::string full_shape(const std::list<valhalla::odin::TripDirections>& legs,
 
 // Generate simplified shape of the route.
 std::string simplified_shape(const std::list<valhalla::odin::TripDirections>& legs,
-                       const valhalla::odin::DirectionsOptions& directions_options) {
-  PointLL south_west(std::numeric_limits<float>::max(),std::numeric_limits<float>::max());
-  PointLL north_east(std::numeric_limits<float>::min(),std::numeric_limits<float>::min());
+                             const valhalla::odin::DirectionsOptions& directions_options) {
+  PointLL south_west(std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
+  PointLL north_east(std::numeric_limits<float>::min(), std::numeric_limits<float>::min());
 
-  std::vector<PointLL> decoded,full_shape;
+  std::vector<PointLL> full_shape;
   std::unordered_set<size_t> indices;
 
-  for (const auto &leg : legs)
-  {
-      auto decoded_leg = midgard::decode<std::vector<PointLL>>(leg.shape());
-      for (const auto &coord : decoded_leg)
-      {
-          south_west = PointLL(std::min(south_west.lng(), coord.lng()), std::min(south_west.lat(), coord.lat()));
-          north_east = PointLL(std::max(north_east.lng(), coord.lng()), std::max(north_east.lat(), coord.lat()));
-      }
+  for (const auto& leg : legs) {
+    auto decoded_leg = midgard::decode<std::vector<PointLL>>(leg.shape());
+    for (const auto& coord : decoded_leg) {
+      south_west =
+          PointLL(std::min(south_west.lng(), coord.lng()), std::min(south_west.lat(), coord.lat()));
+      north_east =
+          PointLL(std::max(north_east.lng(), coord.lng()), std::max(north_east.lat(), coord.lat()));
+    }
 
-      for (const auto& maneuver : leg.maneuver()) {
-        indices.emplace(full_shape.size() ? ((full_shape.size()-1) + maneuver.begin_shape_index()) : maneuver.begin_shape_index());
-      }
+    for (const auto& maneuver : leg.maneuver()) {
+      indices.emplace(full_shape.size() ? ((full_shape.size() - 1) + maneuver.begin_shape_index())
+                                        : maneuver.begin_shape_index());
+    }
 
-      full_shape.insert(full_shape.end(), full_shape.size() ? decoded_leg.begin() + 1 : decoded_leg.begin(),
-                     decoded_leg.end());
+    full_shape.insert(full_shape.end(),
+                      full_shape.size() ? decoded_leg.begin() + 1 : decoded_leg.begin(),
+                      decoded_leg.end());
   }
 
-  const auto zoom_level = getFittedZoom(south_west, north_east);
-  Polyline2<PointLL> pl(full_shape);
-  pl.GeneralizedPolyline(DOUGLAS_PEUCKER_THRESHOLDS[zoom_level],indices);
-  std::vector<PointLL> pts = pl.pts();
-  decoded.insert(decoded.end(), decoded.size() ? pts.begin() + 1 : pts.begin(), pts.end());
+  // printf("encodedfull:\n%s\n", midgard::encode(full_shape, 1e6));
 
+  const auto zoom_level = getFittedZoom(south_west, north_east);
+  Polyline2<PointLL>::Generalize(full_shape, DOUGLAS_PEUCKER_THRESHOLDS[zoom_level], indices);
+  // printf("encodedsimp:\n%s\n", midgard::encode(full_shape, 1e6));
   int precision = directions_options.shape_format() == odin::polyline6 ? 1e6 : 1e5;
-  return midgard::encode(decoded, precision);
+  return midgard::encode(full_shape, precision);
 }
 
 // Serialize waypoints for optimized route. Note that OSRM retains the
