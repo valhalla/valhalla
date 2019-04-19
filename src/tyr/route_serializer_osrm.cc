@@ -1171,7 +1171,7 @@ std::string serialize(const valhalla::odin::DirectionsOptions& directions_option
     if (directions_options.has_generalize() && directions_options.generalize() == 0.0f) {
       route->emplace("geometry", simplified_shape(legs, directions_options));
     } else if (!directions_options.has_generalize() ||
-        (directions_options.has_generalize() && directions_options.generalize() > 0.0f)) {
+               (directions_options.has_generalize() && directions_options.generalize() > 0.0f)) {
       // Get full shape for the route.
       route->emplace("geometry", full_shape(legs, directions_options));
     }
