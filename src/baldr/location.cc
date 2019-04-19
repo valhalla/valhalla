@@ -126,7 +126,7 @@ Location Location::FromRapidJson(const rapidjson::Value& d,
   lon = rapidjson::get_optional<float>(d, "/display_lon");
   if (lat && lon && *lat >= -90.0f && *lat <= 90.0f) {
     lon = midgard::circular_range_clamp<float>(*lon, -180, 180);
-    location.display_latlng_ = {*lon, *lat};
+    location.display_latlng_ = midgard::PointLL{*lon, *lat};
   }
 
   return location;
