@@ -35,7 +35,8 @@ void via_discontinuity(
     const GraphId& in,
     const GraphId& out,
     std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>>& vias,
-    const size_t path_index) {
+    const size_t path_index,
+    const bool flip_index) {
   // Find the path edges within the locations.
   auto in_pe = std::find_if(loc.path_edges().begin(), loc.path_edges().end(),
                             [&in](const odin::Location::PathEdge& e) { return e.graph_id() == in; });
@@ -50,7 +51,7 @@ void via_discontinuity(
     return;
   }
 
-  // Do not add a discontinuity if  the connections are at a graph node we dont need to signal a
+  // Do not add a discontinuity if the connections are at a graph node we dont need to signal a
   // discontinuity.
   if (in_pe->begin_node() || in_pe->end_node() || out_pe->begin_node() || out_pe->end_node()) {
     return;
@@ -66,11 +67,13 @@ void via_discontinuity(
 
     // Insert a discontinuity so the last edge of the first segment is trimmed at the beginning
     // from 0 to dist_along. Set the first
-    vias.insert({path_index, {{false, PointLL(), 0.0f}, {true, snap_ll, dist_along}}});
+    vias.insert(
+        {path_index + (flip_index ? 1 : 0), {{false, PointLL(), 0.0f}, {true, snap_ll, dist_along}}});
 
     // Insert a second discontinuity so the next (opposing) edge is trimmed at the end from
     // 1-dist along to 1
-    vias.insert({path_index + 1, {{false, snap_ll, 1.0f - dist_along}, {true, PointLL(), 1.0f}}});
+    vias.insert({path_index + (flip_index ? 0 : 1),
+                 {{false, snap_ll, 1.0f - dist_along}, {true, PointLL(), 1.0f}}});
   }
 }
 
@@ -259,6 +262,7 @@ std::list<valhalla::odin::TripPath> thor_worker_t::path_arrive_by(
     thor::PathAlgorithm* path_algorithm = get_path_algorithm(costing, *origin, *destination);
     path_algorithm->Clear();
 
+    // TODO: delete this and send all cases to the function above
     // If we are continuing through a location we need to make sure we
     // only allow the edge that was used previously (avoid u-turns)
     bool through = destination->type() == odin::Location::kThrough ||
@@ -280,8 +284,14 @@ std::list<valhalla::odin::TripPath> thor_worker_t::path_arrive_by(
       auto offset = path.back().elapsed_time;
       std::for_each(temp_path.begin(), temp_path.end(),
                     [offset](PathInfo& i) { i.elapsed_time += offset; });
+      // Connects via the same edge so we only need it once
       if (path.back().edgeid == first_edge) {
         path.pop_back();
+      } else if (origin->type() == odin::Location::kVia) {
+        // Insert a route discontinuity if the paths meet at opposing edges and not
+        // at a graph node. Use path size - 1 as the index where the discontinuity lies.
+        via_discontinuity(*reader, *destination, path.back().edgeid, temp_path.front().edgeid, vias,
+                          temp_path.size(), true);
       }
       path.insert(path.end(), temp_path.begin(), temp_path.end());
     }
@@ -300,9 +310,15 @@ std::list<valhalla::odin::TripPath> thor_worker_t::path_arrive_by(
       // Create controller for default route attributes
       AttributesController controller;
 
+      // We have to flip the via indices because we built it backwards
+      decltype(vias) flipped;
+      flipped.reserve(vias.size());
+      for (const auto& kv : vias)
+        flipped.emplace(path.size() - kv.first, kv.second);
+
       // Form output information based on path edges
       auto trip_path = thor::TripPathBuilder::Build(controller, *reader, mode_costing, path, *origin,
-                                                    *destination, throughs, interrupt, &vias);
+                                                    *destination, throughs, interrupt, &flipped);
       path.clear();
       vias.clear();
 
@@ -361,7 +377,7 @@ std::list<valhalla::odin::TripPath> thor_worker_t::path_depart_at(
         // Insert a route discontinuity if the paths meet at opposing edges and not
         // at a graph node. Use path size - 1 as the index where the discontinuity lies.
         via_discontinuity(*reader, *origin, path.back().edgeid, temp_path.front().edgeid, vias,
-                          path.size() - 1);
+                          path.size() - 1, false);
       }
       path.insert(path.end(), temp_path.begin(), temp_path.end());
     } // Didnt need to merge
