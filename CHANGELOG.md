@@ -14,6 +14,7 @@
    * ADDED: `remove` to `filesystem` namespace. [#1752](https://github.com/valhalla/valhalla/pull/1752)
    * FIXED: Add leg summary and remove unused hint attribute for OSRM compatibility mode. [#1753](https://github.com/valhalla/valhalla/pull/1753)
    * FIXED: Improvements for pedestrian forks, pedestrian roundabouts, and continue maneuvers [#1768](https://github.com/valhalla/valhalla/pull/1768)
+   * ADDED: `display_lat` and `display_lon` to `locations` in in put for better control of routing side of street [#1769](https://github.com/valhalla/valhalla/pull/1769)
 
 * **Enhancement**
    * Add the ability to run valhalla_build_tiles in stages. Specify the begin_stage and end_stage as command line options. Also cleans up temporary files as the last stage in the pipeline.

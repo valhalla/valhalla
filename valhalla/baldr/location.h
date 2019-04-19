@@ -93,6 +93,9 @@ public:
   // which side of the street wrt your input location to leave/arrive from/at
   PreferredSide preferred_side_;
 
+  // coordinates of the location as used for altering the side of street
+  boost::optional<midgard::PointLL> display_latlng_;
+
 protected:
 };
 

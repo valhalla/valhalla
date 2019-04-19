@@ -399,6 +399,14 @@ void parse_locations(const rapidjson::Document& doc,
         if (preferred_side && PreferredSide_Parse(*preferred_side, &side)) {
           location->set_preferred_side(side);
         }
+
+        lat = rapidjson::get_optional<float>(r_loc, "/display_lat");
+        lon = rapidjson::get_optional<float>(r_loc, "/display_lon");
+        if (lat && lon && *lat >= -90.0f && *lat <= 90.0f) {
+          lon = midgard::circular_range_clamp<float>(*lon, -180, 180);
+          location->mutable_display_ll()->set_lat(*lat);
+          location->mutable_display_ll()->set_lng(*lon);
+        }
       } catch (...) { throw valhalla_exception_t{location_parse_error_code}; }
     }
     if (track) {

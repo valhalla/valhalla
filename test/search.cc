@@ -254,6 +254,17 @@ void test_edge_search() {
   search({test}, false, answer,
          {PE{{t, l, 3}, ratio, answer, 0, S::RIGHT}, PE{{t, l, 8}, 1.f - ratio, answer, 0, S::LEFT}});
 
+  // try getting side of street by setting the display ll instead
+  x = {answer};
+  x.display_latlng_ = test;
+  search(x, false, answer,
+         {PE{{t, l, 3}, ratio, answer, 0, S::RIGHT}, PE{{t, l, 8}, 1.f - ratio, answer, 0, S::LEFT}});
+
+  // try display ll on the other side
+  x.display_latlng_ = {answer.first - ortho.x(), answer.second - ortho.y()};
+  search(x, false, answer,
+         {PE{{t, l, 3}, ratio, answer, 0, S::LEFT}, PE{{t, l, 8}, 1.f - ratio, answer, 0, S::RIGHT}});
+
   // we only want opposite driving side, tiles are left hand driving
   search({test, ST::BREAK, 0, 0, PS::OPPOSITE}, false, answer,
          {PE{{t, l, 3}, ratio, answer, 0, S::RIGHT}}, true);

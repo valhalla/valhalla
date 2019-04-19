@@ -386,8 +386,13 @@ struct bin_handler_t {
       if (!candidate.edge->forward()) {
         length_ratio = 1.f - length_ratio;
       }
+      // side of street TODO: set limitations on when we should use provided display ll to control
       // side of street
-      auto side = candidate.get_side(location.latlng_, candidate.sq_distance);
+      auto side =
+          candidate.get_side(location.display_latlng_ ? *location.display_latlng_ : location.latlng_,
+                             location.display_latlng_
+                                 ? location.display_latlng_->DistanceSquared(candidate.point)
+                                 : candidate.sq_distance);
       PathLocation::PathEdge path_edge{candidate.edge_id,
                                        length_ratio,
                                        candidate.point,

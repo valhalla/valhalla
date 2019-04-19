@@ -71,6 +71,11 @@ rapidjson::Value Location::ToRapidJson(rapidjson::Document::AllocatorType& a) co
     location.AddMember("preferred_side", "opposite", a);
   else
     location.AddMember("preferred_side", "either", a);
+
+  if (display_latlng_) {
+    location.AddMember("display_lat", display_latlng_->lat(), a);
+    location.AddMember("display_lon", display_latlng_->lng(), a);
+  }
   return location;
 }
 
@@ -78,19 +83,14 @@ Location Location::FromRapidJson(const rapidjson::Value& d,
                                  unsigned int default_reachability,
                                  unsigned long default_radius) {
   auto lat = rapidjson::get_optional<float>(d, "/lat");
-  if (!lat) {
+  if (!lat)
     throw std::runtime_error{"lat is missing"};
-  };
-
-  if (*lat < -90.0f || *lat > 90.0f) {
+  if (*lat < -90.0f || *lat > 90.0f)
     throw std::runtime_error("Latitude must be in the range [-90, 90] degrees");
-  }
 
   auto lon = rapidjson::get_optional<float>(d, "/lon");
-  if (!lon) {
+  if (!lon)
     throw std::runtime_error{"lon is missing"};
-  };
-
   lon = midgard::circular_range_clamp<float>(*lon, -180, 180);
 
   StopType stop_type{StopType::BREAK};
@@ -122,6 +122,13 @@ Location Location::FromRapidJson(const rapidjson::Value& d,
       side == "same" ? PreferredSide::SAME
                      : (side == "opposite" ? PreferredSide::OPPOSITE : PreferredSide::EITHER);
 
+  lat = rapidjson::get_optional<float>(d, "/display_lat");
+  lon = rapidjson::get_optional<float>(d, "/display_lon");
+  if (lat && lon && *lat >= -90.0f && *lat <= 90.0f) {
+    lon = midgard::circular_range_clamp<float>(*lon, -180, 180);
+    location.display_latlng_ = {*lon, *lat};
+  }
+
   return location;
 }
 
@@ -132,7 +139,7 @@ bool Location::operator==(const Location& o) const {
          heading_tolerance_ == o.heading_tolerance_ &&
          node_snap_tolerance_ == o.node_snap_tolerance_ && way_id_ == o.way_id_ &&
          minimum_reachability_ == o.minimum_reachability_ && radius_ == o.radius_ &&
-         preferred_side_ == o.preferred_side_;
+         preferred_side_ == o.preferred_side_ && display_latlng_ == o.display_latlng_;
 }
 
 } // namespace baldr

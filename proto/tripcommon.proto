@@ -73,6 +73,7 @@ message Location {
 
   //more inputs
   optional PreferredSide preferred_side = 26 [default = either];
+  optional LatLng display_ll = 27;
 }
 
 message TransitEgressInfo {
