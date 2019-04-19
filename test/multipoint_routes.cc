@@ -91,7 +91,7 @@ float mid_through_distance;
 void test_mid_break() {
   for (const auto& date_time :
        std::vector<std::string>{R"(,"date_time":{"type":1,"value":"2016-07-03T08:06"}})",
-                                R"(,"date_time":{"type":1,"value":"2016-07-03T08:06"}})"}) {
+                                R"(,"date_time":{"type":2,"value":"2016-07-03T08:06"}})"}) {
     route_tester tester;
     std::list<TripPath> legs;
     std::list<TripDirections> directions;
@@ -132,7 +132,7 @@ void test_mid_break() {
 void test_mid_through() {
   for (const auto& date_time :
        std::vector<std::string>{R"(,"date_time":{"type":1,"value":"2016-07-03T08:06"}})",
-                                R"(,"date_time":{"type":1,"value":"2016-07-03T08:06"}})"}) {
+                                R"(,"date_time":{"type":2,"value":"2016-07-03T08:06"}})"}) {
     route_tester tester;
     std::list<TripPath> legs;
     std::list<TripDirections> directions;
@@ -172,7 +172,7 @@ void test_mid_through() {
 void test_mid_via() {
   for (const auto& date_time :
        std::vector<std::string>{R"(,"date_time":{"type":1,"value":"2016-07-03T08:06"}})",
-                                R"(,"date_time":{"type":1,"value":"2016-07-03T08:06"}})"}) {
+                                R"(,"date_time":{"type":2,"value":"2016-07-03T08:06"}})"}) {
     route_tester tester;
     std::list<TripPath> legs;
     std::list<TripDirections> directions;
@@ -218,7 +218,7 @@ void test_mid_via() {
 void test_mid_break_through() {
   for (const auto& date_time :
        std::vector<std::string>{R"(,"date_time":{"type":1,"value":"2016-07-03T08:06"}})",
-                                R"(,"date_time":{"type":1,"value":"2016-07-03T08:06"}})"}) {
+                                R"(,"date_time":{"type":2,"value":"2016-07-03T08:06"}})"}) {
     route_tester tester;
     std::list<TripPath> legs;
     std::list<TripDirections> directions;
