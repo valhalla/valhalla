@@ -92,7 +92,7 @@ std::list<Maneuver> ManeuversBuilder::Build() {
   // Process the roundabout names
   ProcessRoundaboutNames(maneuvers);
 
-  // Process the roundabout names
+  // Process the 'to stay on' attribute
   SetToStayOnAttribute(maneuvers);
 
   // Enhance signless interchanges
@@ -830,7 +830,7 @@ void ManeuversBuilder::InitializeManeuver(Maneuver& maneuver, int node_index) {
   }
 
   // Roundabout
-  if (prev_edge->roundabout()) {
+  if (AreRoundaboutsProcessable(prev_edge->travel_mode()) && prev_edge->roundabout()) {
     maneuver.set_roundabout(true);
     maneuver.set_roundabout_exit_count(1);
   }
@@ -957,7 +957,7 @@ void ManeuversBuilder::UpdateManeuver(Maneuver& maneuver, int node_index) {
   }
 
   // Roundabouts
-  if (prev_edge->roundabout()) {
+  if (AreRoundaboutsProcessable(prev_edge->travel_mode()) && prev_edge->roundabout()) {
     TripPath_TravelMode mode = prev_edge->travel_mode();
 
     // Adjust bicycle travel mode if roundabout is a road
@@ -1047,7 +1047,7 @@ void ManeuversBuilder::FinalizeManeuver(Maneuver& maneuver, int node_index) {
 
     // TODO - determine if we want to count right traversable at entrance node
     // Roundabouts
-    //    if (curr_edge->roundabout()) {
+    //    if (AreRoundaboutsProcessable(prev_edge->travel_mode()) && curr_edge->roundabout()) {
     //      IntersectingEdgeCounts xedge_counts;
     //      trip_path_->GetEnhancedNode(node_index)
     //            ->CalculateRightLeftIntersectingEdgeCounts(prev_edge->end_heading(),
@@ -1152,7 +1152,8 @@ void ManeuversBuilder::SetManeuverType(Maneuver& maneuver, bool none_type_allowe
     LOG_TRACE("ManeuverType=ROUNDABOUT_ENTER");
   }
   // Process exit roundabout
-  else if (prev_edge && prev_edge->roundabout()) {
+  else if (prev_edge && AreRoundaboutsProcessable(prev_edge->travel_mode()) &&
+           prev_edge->roundabout()) {
     maneuver.set_type(TripDirections_Maneuver_Type_kRoundaboutExit);
     LOG_TRACE("ManeuverType=ROUNDABOUT_EXIT");
   }
@@ -1339,7 +1340,13 @@ void ManeuversBuilder::SetSimpleDirectionalManeuverType(Maneuver& maneuver,
       break;
     }
     case Turn::Type::kSlightRight: {
-      maneuver.set_type(TripDirections_Maneuver_Type_kSlightRight);
+      if (maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kKeepStraight) {
+        maneuver.set_type(TripDirections_Maneuver_Type_kContinue);
+        LOG_TRACE("ManeuverType=CONTINUE");
+      } else {
+        maneuver.set_type(TripDirections_Maneuver_Type_kSlightRight);
+        LOG_TRACE("ManeuverType=SLIGHT_RIGHT");
+      }
       break;
     }
     case Turn::Type::kRight: {
@@ -1395,8 +1402,13 @@ void ManeuversBuilder::SetSimpleDirectionalManeuverType(Maneuver& maneuver,
       break;
     }
     case Turn::Type::kSlightLeft: {
-      maneuver.set_type(TripDirections_Maneuver_Type_kSlightLeft);
-      LOG_TRACE("ManeuverType=SLIGHT_LEFT");
+      if (maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kKeepStraight) {
+        maneuver.set_type(TripDirections_Maneuver_Type_kContinue);
+        LOG_TRACE("ManeuverType=CONTINUE");
+      } else {
+        maneuver.set_type(TripDirections_Maneuver_Type_kSlightLeft);
+        LOG_TRACE("ManeuverType=SLIGHT_LEFT");
+      }
       break;
     }
   }
@@ -1501,19 +1513,22 @@ bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver, int node_i
 
   /////////////////////////////////////////////////////////////////////////////
   // Process roundabouts
-  if (maneuver.roundabout() && !prev_edge->roundabout()) {
-    return false;
-  }
-  if (prev_edge->roundabout() && !maneuver.roundabout()) {
-    return false;
-  }
-  if (maneuver.roundabout() && prev_edge->roundabout()) {
-    return true;
+  if (AreRoundaboutsProcessable(prev_edge->travel_mode())) {
+    if (maneuver.roundabout() && !prev_edge->roundabout()) {
+      return false;
+    }
+    if (prev_edge->roundabout() && !maneuver.roundabout()) {
+      return false;
+    }
+    if (maneuver.roundabout() && prev_edge->roundabout()) {
+      return true;
+    }
   }
 
   /////////////////////////////////////////////////////////////////////////////
   // Process fork
-  if (IsFork(node_index, prev_edge, curr_edge)) {
+  if (IsFork(node_index, prev_edge, curr_edge) ||
+      IsPedestrianFork(node_index, prev_edge, curr_edge)) {
     maneuver.set_fork(true);
     return false;
   }
@@ -1708,6 +1723,42 @@ bool ManeuversBuilder::IsFork(int node_index,
          curr_edge->IsRampUse() &&
          !node->IsStraightestTraversableIntersectingEdgeReversed(prev_edge->end_heading(),
                                                                  prev_edge->travel_mode()))) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+bool ManeuversBuilder::IsPedestrianFork(int node_index,
+                                        EnhancedTripPath_Edge* prev_edge,
+                                        EnhancedTripPath_Edge* curr_edge) const {
+  auto is_relative_straight = [](uint32_t turn_degree) -> bool {
+    return ((turn_degree > 315) || (turn_degree < 45));
+  };
+  auto* node = trip_path_->GetEnhancedNode(node_index);
+  uint32_t path_turn_degree = GetTurnDegree(prev_edge->end_heading(), curr_edge->begin_heading());
+  bool is_pedestrian_travel_mode = ((prev_edge->travel_mode() == TripPath_TravelMode_kPedestrian) &&
+                                    (curr_edge->travel_mode() == TripPath_TravelMode_kPedestrian));
+
+  // Must be pedestrian travel mode
+  // and the path turn degree is relative straight
+  if (is_pedestrian_travel_mode && is_relative_straight(path_turn_degree)) {
+    // If the above criteria is met then check the following criteria...
+    IntersectingEdgeCounts xedge_counts;
+    node->CalculateRightLeftIntersectingEdgeCounts(prev_edge->end_heading(), prev_edge->travel_mode(),
+                                                   xedge_counts);
+    uint32_t straightest_traversable_xedge_turn_degree =
+        node->GetStraightestTraversableIntersectingEdgeTurnDegree(prev_edge->end_heading(),
+                                                                  prev_edge->travel_mode());
+    // if there is a similar traversable intersecting edge
+    // or there is a relative straight traversable intersecting edge
+    // previous edge is a roundabout and the current edge is not a roundabout
+    // then we have a pedestrian fork
+    if (((xedge_counts.left_similar_traversable_outbound > 0) ||
+         (xedge_counts.right_similar_traversable_outbound > 0)) ||
+        is_relative_straight(straightest_traversable_xedge_turn_degree) ||
+        (prev_edge->roundabout() && !curr_edge->roundabout())) {
       return true;
     }
   }
@@ -2048,6 +2099,13 @@ bool ManeuversBuilder::AreRampManeuversCombinable(std::list<Maneuver>::iterator 
   return false;
 }
 
+bool ManeuversBuilder::AreRoundaboutsProcessable(const TripPath_TravelMode travel_mode) const {
+  if ((travel_mode == TripPath_TravelMode_kDrive) || (travel_mode == TripPath_TravelMode_kBicycle)) {
+    return true;
+  }
+  return false;
+}
+
 void ManeuversBuilder::ProcessRoundaboutNames(std::list<Maneuver>& maneuvers) {
   // Set previous maneuver
   auto prev_man = maneuvers.begin();
@@ -2141,10 +2199,10 @@ void ManeuversBuilder::SetToStayOnAttribute(std::list<Maneuver>& maneuvers) {
       case TripDirections_Maneuver_Type_kStayStraight:
       case TripDirections_Maneuver_Type_kStayRight:
       case TripDirections_Maneuver_Type_kStayLeft: {
-        if (curr_man->HasSimilarNames(&(*prev_man))) {
+        if (curr_man->HasSimilarNames(&(*prev_man), true)) {
           if (!curr_man->ramp()) {
             curr_man->set_to_stay_on(true);
-          } else if (curr_man->HasSimilarNames(&(*next_man))) {
+          } else if (curr_man->HasSimilarNames(&(*next_man), true)) {
             curr_man->set_to_stay_on(true);
           }
         }
