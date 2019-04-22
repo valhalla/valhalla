@@ -91,6 +91,10 @@ template <class container_t>
 void Polyline2<coord_t>::Generalize(container_t& polyline,
                                     float epsilon,
                                     const std::unordered_set<size_t>& indices) {
+
+  if (epsilon <= 0.f)
+    return;
+
   // the recursive bit
   epsilon *= epsilon;
   std::function<void(typename container_t::iterator, size_t, typename container_t::iterator, size_t)>
