@@ -128,7 +128,7 @@ void test_mid_through(const std::string& date_time) {
   std::list<TripPath> legs;
   std::list<TripDirections> directions;
   std::string request =
-      R"({"locations":[{"lat":52.09015,"lon":5.06362},{"lat":52.09041,"lon":5.06337,"type":"through"},{"lat":52.09015,"lon":5.06362}],"costing":"auto"})";
+      R"({"locations":[{"lat":52.09015,"lon":5.06362},{"lat":52.09041,"lon":5.06337,"type":"through"},{"lat":52.09015,"lon":5.06362, "heading": 0}],"costing":"auto"})";
 
   request.pop_back();
   request += date_time;
@@ -206,7 +206,7 @@ void test_mid_break_through(const std::string& date_time) {
   std::list<TripPath> legs;
   std::list<TripDirections> directions;
   std::string request =
-      R"({"locations":[{"lat":52.09015,"lon":5.06362},{"lat":52.09041,"lon":5.06337,"type":"break_through"},{"lat":52.09015,"lon":5.06362}],"costing":"auto"})";
+      R"({"locations":[{"lat":52.09015,"lon":5.06362},{"lat":52.09041,"lon":5.06337,"type":"break_through"},{"lat":52.09015,"lon":5.06362,"heading":0}],"costing":"auto"})";
 
   request.pop_back();
   request += date_time;
@@ -241,12 +241,20 @@ void test_mid_break_through(const std::string& date_time) {
     throw std::logic_error("Should be a destination at the midpoint and continue around the block");
 }
 
+void test_mid_break_no_time() {
+  test_mid_break("}");
+}
+
 void test_mid_break_depart_at() {
   test_mid_break(R"(,"date_time":{"type":1,"value":"2016-07-03T08:06"}})");
 }
 
 void test_mid_break_arrive_by() {
   test_mid_break(R"(,"date_time":{"type":2,"value":"2016-07-03T08:06"}})");
+}
+
+void test_mid_through_no_time() {
+  test_mid_through("}");
 }
 
 void test_mid_through_depart_at() {
@@ -257,12 +265,20 @@ void test_mid_through_arrive_by() {
   test_mid_through(R"(,"date_time":{"type":2,"value":"2016-07-03T08:06"}})");
 }
 
+void test_mid_via_no_time() {
+  test_mid_via("}");
+}
+
 void test_mid_via_depart_at() {
   test_mid_via(R"(,"date_time":{"type":1,"value":"2016-07-03T08:06"}})");
 }
 
 void test_mid_via_arrive_by() {
   test_mid_via(R"(,"date_time":{"type":2,"value":"2016-07-03T08:06"}})");
+}
+
+void test_mid_break_through_no_time() {
+  test_mid_break_through("}");
 }
 
 void test_mid_break_through_depart_at() {
@@ -278,17 +294,31 @@ void test_mid_break_through_arrive_by() {
 int main(int argc, char* argv[]) {
   test::suite suite("multipoint_route");
 
+  valhalla::midgard::logging::Configure({{"type", ""}});
+
+  // break
+  suite.test(TEST_CASE(test_mid_break_no_time));
+
   suite.test(TEST_CASE(test_mid_break_depart_at));
 
   suite.test(TEST_CASE(test_mid_break_arrive_by));
+
+  // through
+  suite.test(TEST_CASE(test_mid_through_no_time));
 
   suite.test(TEST_CASE(test_mid_through_depart_at));
 
   suite.test(TEST_CASE(test_mid_through_arrive_by));
 
+  // via
+  suite.test(TEST_CASE(test_mid_via_no_time));
+
   suite.test(TEST_CASE(test_mid_via_depart_at));
 
   suite.test(TEST_CASE(test_mid_via_arrive_by));
+
+  // break_through
+  suite.test(TEST_CASE(test_mid_break_through_no_time));
 
   suite.test(TEST_CASE(test_mid_break_through_depart_at));
 

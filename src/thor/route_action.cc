@@ -277,7 +277,7 @@ std::list<valhalla::odin::TripPath> thor_worker_t::path_arrive_by(
     // Get best path and keep it
     auto temp_path = get_path(path_algorithm, *origin, *destination, costing);
     first_edge = temp_path.front().edgeid;
-    temp_path.swap(path);
+    temp_path.swap(path); // so we can append to path instead of prepend
 
     // Merge through legs by updating the time and splicing the lists
     if (!temp_path.empty()) {
@@ -285,9 +285,9 @@ std::list<valhalla::odin::TripPath> thor_worker_t::path_arrive_by(
       std::for_each(temp_path.begin(), temp_path.end(),
                     [offset](PathInfo& i) { i.elapsed_time += offset; });
       // Connects via the same edge so we only need it once
-      if (path.back().edgeid == first_edge) {
+      if (path.back().edgeid == temp_path.front().edgeid) {
         path.pop_back();
-      } else if (origin->type() == odin::Location::kVia) {
+      } else if (destination->type() == odin::Location::kVia) {
         // Insert a route discontinuity if the paths meet at opposing edges and not
         // at a graph node. Use path size - 1 as the index where the discontinuity lies.
         via_discontinuity(*reader, *destination, path.back().edgeid, temp_path.front().edgeid, vias,
@@ -310,20 +310,21 @@ std::list<valhalla::odin::TripPath> thor_worker_t::path_arrive_by(
       // Create controller for default route attributes
       AttributesController controller;
 
-      // We have to flip the via indices because we built it backwards
+      // We have to flip the via indices because we built them in backwards order
       decltype(vias) flipped;
       flipped.reserve(vias.size());
       for (const auto& kv : vias)
         flipped.emplace(path.size() - kv.first, kv.second);
+      vias.swap(flipped);
 
       // Form output information based on path edges
       auto trip_path = thor::TripPathBuilder::Build(controller, *reader, mode_costing, path, *origin,
-                                                    *destination, throughs, interrupt, &flipped);
+                                                    *destination, throughs, interrupt, &vias);
       path.clear();
       vias.clear();
 
       // Keep the protobuf path
-      trip_paths.emplace_back(std::move(trip_path));
+      trip_paths.emplace_front(std::move(trip_path));
     }
   }
 
