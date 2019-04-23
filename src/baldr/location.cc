@@ -132,7 +132,7 @@ Location Location::FromRapidJson(const rapidjson::Value& d,
                      : (side == "opposite" ? PreferredSide::OPPOSITE : PreferredSide::EITHER);
 
   return location;
-} // namespace baldr
+}
 
 bool Location::operator==(const Location& o) const {
   return latlng_ == o.latlng_ && stoptype_ == o.stoptype_ && name_ == o.name_ &&
