@@ -91,6 +91,10 @@ template <class container_t>
 void Polyline2<coord_t>::Generalize(container_t& polyline,
                                     float epsilon,
                                     const std::unordered_set<size_t>& indices) {
+  // any epsilon this low will have no effect on the input nor will any super short input
+  if (epsilon <= 0.f || polyline.size() < 3)
+    return;
+
   // the recursive bit
   epsilon *= epsilon;
   std::function<void(typename container_t::iterator, size_t, typename container_t::iterator, size_t)>
@@ -98,7 +102,7 @@ void Polyline2<coord_t>::Generalize(container_t& polyline,
   peucker = [&peucker, &polyline, epsilon, &indices](typename container_t::iterator start, size_t s,
                                                      typename container_t::iterator end, size_t e) {
     // find the point furthest from the line
-    float dmax = 0.f;
+    float dmax = std::numeric_limits<float>::lowest();
     typename container_t::iterator itr;
     LineSegment2<coord_t> l{*start, *end};
     size_t j = e - 1, k;

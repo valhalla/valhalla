@@ -323,9 +323,10 @@ std::string simplified_shape(const std::list<valhalla::odin::TripDirections>& le
                       decoded_leg.end());
   }
 
-  const auto zoom_level = getFittedZoom(south_west, north_east);
-  Polyline2<PointLL>::Generalize(full_shape, DOUGLAS_PEUCKER_THRESHOLDS[zoom_level]);
+  const auto zoom_level = std::min(MAX_ZOOM, getFittedZoom(south_west, north_east));
+  Polyline2<PointLL>::Generalize(full_shape, DOUGLAS_PEUCKER_THRESHOLDS[zoom_level], indices);
   int precision = directions_options.shape_format() == odin::polyline6 ? 1e6 : 1e5;
+
   return midgard::encode(full_shape, precision);
 }
 
