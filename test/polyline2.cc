@@ -4,6 +4,7 @@
 #include "test.h"
 
 #include <algorithm>
+#include <iostream>
 #include <vector>
 
 #include "midgard/point2.h"
@@ -76,6 +77,54 @@ void TestGeneralizeSimplification() {
     if (std::find(line1.pts().cbegin(), line1.pts().cend(), p) == line1.pts().cend())
       throw std::logic_error("Should still have at least the first, last and marked points");
   }
+
+  Polyline2<Point2> line2{{{-79.3837, 43.6481},
+                           {-79.3839, 43.6485},
+                           {-79.3839, 43.6485},
+                           {-79.3839, 43.6486},
+                           {-79.3842, 43.6491},
+                           {-79.3842, 43.6492},
+                           {-79.3842, 43.6492},
+                           {-79.3841, 43.6493},
+                           {-79.3841, 43.6493},
+                           {-79.384, 43.6493},
+                           {-79.3841, 43.6496},
+                           {-79.384, 43.6496},
+                           {-79.384, 43.6496},
+                           {-79.3839, 43.6496},
+                           {-79.3839, 43.6496},
+                           {-79.3838, 43.6496}}};
+  line2.Generalize(2.6f, std::unordered_set<size_t>{15, 14, 13, 0, 10, 6, 9});
+
+  if (!(line2 == Polyline2<Point2>{{{-79.3837, 43.6481},
+                                    {-79.3842, 43.6492},
+                                    {-79.384, 43.6493},
+                                    {-79.3841, 43.6496},
+                                    {-79.3839, 43.6496},
+                                    {-79.3839, 43.6496},
+                                    {-79.3838, 43.6496}}}))
+    throw std::logic_error("Wrong points removed.");
+
+  Polyline2<Point2> line3{{{-79.3837, 43.6481},
+                           {-79.3839, 43.6485},
+                           {-79.3839, 43.6485},
+                           {-79.3839, 43.6486},
+                           {-79.3842, 43.6491},
+                           {-79.3842, 43.6492},
+                           {-79.3842, 43.6492},
+                           {-79.3841, 43.6493},
+                           {-79.3841, 43.6493},
+                           {-79.384, 43.6493},
+                           {-79.3841, 43.6496},
+                           {-79.384, 43.6496},
+                           {-79.384, 43.6496},
+                           {-79.3839, 43.6496},
+                           {-79.3839, 43.6496},
+                           {-79.3838, 43.6496}}};
+  line3.Generalize(0.f);
+
+  if (line3.pts().size() != 16)
+    throw std::logic_error("No points should be removed.");
 }
 
 void TryClosestPoint(const Polyline2<Point2>& pl, const Point2& a, const Point2& b) {
