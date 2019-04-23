@@ -129,6 +129,10 @@ json::ArrayPtr locations(const std::list<valhalla::odin::TripDirections>& legs) 
       auto loc = json::map({});
       if (location->type() == odin::Location_Type_kThrough) {
         loc->emplace("type", std::string("through"));
+      } else if (location->type() == odin::Location_Type_kVia) {
+        loc->emplace("type", std::string("via"));
+      } else if (location->type() == odin::Location_Type_kBreakThrough) {
+        loc->emplace("type", std::string("break_through"));
       } else {
         loc->emplace("type", std::string("break"));
       }

@@ -316,8 +316,13 @@ void parse_locations(const rapidjson::Document& doc,
         location->mutable_ll()->set_lng(*lon);
 
         auto stop_type_json = rapidjson::get_optional<std::string>(r_loc, "/type");
-        if (stop_type_json && *stop_type_json == std::string("through")) {
-          location->set_type(odin::Location::kThrough);
+        if (stop_type_json) {
+          if (*stop_type_json == std::string("through"))
+            location->set_type(odin::Location::kThrough);
+          else if (*stop_type_json == std::string("via"))
+            location->set_type(odin::Location::kVia);
+          else if (*stop_type_json == std::string("break_through"))
+            location->set_type(odin::Location::kBreakThrough);
         }
 
         auto name = rapidjson::get_optional<std::string>(r_loc, "/name");

@@ -748,7 +748,9 @@ struct bin_handler_t {
       // angle? for now we are just saying that they want it to exit at the
       // heading provided. this means that if it was node snapped we only
       // want the outbound edges
-      if (pp.location.stoptype_ == Location::StopType::THROUGH && pp.location.heading_) {
+      if ((pp.location.stoptype_ == Location::StopType::THROUGH ||
+           pp.location.stoptype_ == Location::StopType::BREAK_THROUGH) &&
+          pp.location.heading_) {
         auto new_end = std::remove_if(correlated.edges.begin(), correlated.edges.end(),
                                       [](const PathLocation::PathEdge& e) { return e.end_node(); });
         correlated.edges.erase(new_end, correlated.edges.end());

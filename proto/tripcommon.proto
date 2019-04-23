@@ -16,6 +16,8 @@ message Location {
   enum Type {
     kBreak = 0;
     kThrough = 1;
+    kVia = 2;
+    kBreakThrough = 3;
   }
   
   enum SideOfStreet {

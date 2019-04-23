@@ -24,13 +24,13 @@ You specify locations as an ordered list of two or more locations within a JSON 
 
 A location must include a latitude and longitude in decimal degrees. The coordinates can come from many input sources, such as a GPS location, a point or a click on a map, a geocoding service, and so on. Note that the Valhalla cannot search for names or addresses or perform geocoding or reverse geocoding. External search services, such as [Mapbox Geocoding](https://www.mapbox.com/api-documentation/#geocoding), can be used to find places and geocode addresses, which must be converted to coordinates for input.
 
-To build a route, you need to specify two `break` locations. In addition, you can include `through` locations to influence the route path.
+To build a route, you need to specify two `break` locations. In addition, you can include `through`, `via` or `break_through` locations to influence the route path.
 
 | Location parameters | Description |
 | :--------- | :----------- |
 | `lat` | Latitude of the location in degrees. |
 | `lon` | Longitude of the location in degrees. |
-| `type` | Type of location, either `break` or `through`. A `break` is a stop, so the first and last locations must be of type `break`. A `through` location is one that the route path travels through, and is useful to force a route to go through location. The path is not allowed to reverse direction at the through locations. If no type is provided, the type is assumed to be a `break`. |
+| `type` | Type of location, either `break`, `through`, `via` or `break_through`. Each type controls two characteristics: whether or not to allow a u-turn at the location and whether or not to generate guidance/legs at the location. A `break` is a location at which we allows u-turns and generate legs and arrival/departure maneuvers. A `through` location is a location at which we neither allow u-turns nor generate legs or arrival/departure maneuvers. A `via` location is a location at which we allow u-turns but do not generate legs or arrival/departure maneuvers. A `break_through` location is a location at which we do not allow u-turns but do generate legs and arrival/departure maneuvers. If no type is provided, the type is assumed to be a `break`. The types of the first and last locations are ignored and are treated as `break`s. |
 | `heading` | (optional) Preferred direction of travel for the start from the location. This can be useful for mobile routing where a vehicle is traveling in a specific direction along a road, and the route should start in that direction. The `heading` is indicated in degrees from north in a clockwise direction, where north is 0°, east is 90°, south is 180°, and west is 270°. |
 | `heading_tolerance` | (optional) How close in degrees a given street's angle must be in order for it to be considered as in the same direction of the `heading` parameter. The default value is 60 degrees. |
 | `street` | (optional) Street name. The street name may be used to assist finding the correct routing location at the specified latitude, longitude. This is not currently implemented. |

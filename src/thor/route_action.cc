@@ -17,15 +17,113 @@ using namespace valhalla::baldr;
 using namespace valhalla::sif;
 using namespace valhalla::thor;
 
-namespace valhalla {
-namespace thor {
-
+namespace {
 // Threshold for running a second pass pedestrian route with adjusted A*. The first
 // pass for pedestrian routes is run with an aggressive A* threshold based on walking
 // speed. If ferries are included in the path the A* heuristic rules can be violated
 // which can lead to irregular paths. Running a second pass with less aggressive
 // A* can take excessive time for longer paths - so exclude them to protect the service.
 constexpr float kPedestrianMultipassThreshold = 50000.0f; // 50km
+
+/**
+ * Check if the paths meet at opposing edges (but not at a node). If so, add a route discontinuity
+ * so that the shape / distance along the path is adjusted at the location.
+ */
+void via_discontinuity(
+    GraphReader& reader,
+    const odin::Location& loc,
+    const GraphId& in,
+    const GraphId& out,
+    std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>>& vias,
+    const size_t path_index,
+    const bool flip_index) {
+  // Find the path edges within the locations.
+  auto in_pe = std::find_if(loc.path_edges().begin(), loc.path_edges().end(),
+                            [&in](const odin::Location::PathEdge& e) { return e.graph_id() == in; });
+  auto out_pe =
+      std::find_if(loc.path_edges().begin(), loc.path_edges().end(),
+                   [&out](const odin::Location::PathEdge& e) { return e.graph_id() == out; });
+
+  // Could not find the edges. This seems like it should not happen. Log a warning
+  // and do not add a discontinuity.
+  if (in_pe == loc.path_edges().end() || out_pe == loc.path_edges().end()) {
+    LOG_WARN("Could not find connecting edges within via_discontinuity");
+    return;
+  }
+
+  // Do not add a discontinuity if the connections are at a graph node we dont need to signal a
+  // discontinuity.
+  if (in_pe->begin_node() || in_pe->end_node() || out_pe->begin_node() || out_pe->end_node()) {
+    return;
+  }
+
+  // Add a discontinuity if the edges are opposing
+  GraphId in_edge_id(in_pe->graph_id());
+  GraphId out_edge_id(out_pe->graph_id());
+  GraphId opp_edge_id = reader.GetOpposingEdgeId(in_edge_id);
+  if (opp_edge_id == out_edge_id) {
+    PointLL snap_ll(in_pe->ll().lng(), in_pe->ll().lat());
+    float dist_along = in_pe->percent_along();
+
+    // Insert a discontinuity so the last edge of the first segment is trimmed at the beginning
+    // from 0 to dist_along. Set the first
+    vias.insert(
+        {path_index + (flip_index ? 1 : 0), {{false, PointLL(), 0.0f}, {true, snap_ll, dist_along}}});
+
+    // Insert a second discontinuity so the next (opposing) edge is trimmed at the end from
+    // 1-dist along to 1
+    vias.insert({path_index + (flip_index ? 0 : 1),
+                 {{false, snap_ll, 1.0f - dist_along}, {true, PointLL(), 1.0f}}});
+  }
+}
+
+/**
+// removes any edges from the location that aren't connected to it (because of radius)
+void remove_edges(const GraphId& edge_id, odin::Location& loc, GraphReader& reader) {
+  // find the path edge at this point
+  auto pe =
+      std::find_if(loc.path_edges().begin(), loc.path_edges().end(),
+                   [&edge_id](const odin::Location::PathEdge& e) { return e.graph_id() == edge_id; });
+  // if its in the middle of the edge it can only be this edge or the opposing depending on type
+  if (!pe->begin_node() && !pe->end_node()) {
+    GraphId opposing;
+    if (loc.type() == odin::Location::kBreak || loc.type() == odin::Location::kVia)
+      opposing = reader.GetOpposingEdgeId(edge_id);
+    // remove anything that isnt one of these two edges
+    for (int i = 0; i < loc.path_edges_size(); ++i) {
+      if (loc.path_edges(i).graph_id() != edge_id && loc.path_edges(i).graph_id() != opposing) {
+        loc.mutable_path_edges()->SwapElements(i, loc.path_edges_size() - 1);
+        loc.mutable_path_edges()->RemoveLast();
+      }
+    }
+    return;
+  }
+
+  // if its at the begin node lets center our sights on that
+  const GraphTile* tile = reader.GetGraphTile(edge_id);
+  const auto* edge = tile->directededge(edge_id);
+  const auto* node = reader.GetEndNode(edge, tile);
+  if (pe->begin_node()) {
+    const auto* opp_edge = tile->directededge(node->edge_index() + edge->opp_index());
+    node = reader.GetEndNode(opp_edge, tile);
+  }
+
+  // TODO: nuke any edges that aren't connected to this node
+  GraphId start_edge = tile->header()->graphid();
+  start_edge.set_id(node->edge_index);
+  GraphId end_edge = start_edge + node->edge_count;
+  for (int i = 0; i < loc.path_edges_size(); ++i) {
+    if (loc.path_edges(i).graph_id() < start_edge || loc.path_edges(i) >= end_edge) {
+      loc.mutable_path_edges()->SwapElements(i, loc.path_edges_size() - 1);
+      loc.mutable_path_edges()->RemoveLast();
+    }
+  }
+}*/
+
+} // namespace
+
+namespace valhalla {
+namespace thor {
 
 std::list<valhalla::odin::TripPath> thor_worker_t::route(valhalla_request_t& request) {
   parse_locations(request);
@@ -150,6 +248,8 @@ std::list<valhalla::odin::TripPath> thor_worker_t::path_arrive_by(
     google::protobuf::RepeatedPtrField<valhalla::odin::Location>& correlated,
     const std::string& costing) {
   // Things we'll need
+  GraphId first_edge;
+  std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>> vias;
   std::vector<thor::PathInfo> path;
   std::list<valhalla::odin::TripPath> trip_paths;
   correlated.begin()->set_type(odin::Location::kBreak);
@@ -162,10 +262,13 @@ std::list<valhalla::odin::TripPath> thor_worker_t::path_arrive_by(
     thor::PathAlgorithm* path_algorithm = get_path_algorithm(costing, *origin, *destination);
     path_algorithm->Clear();
 
+    // TODO: delete this and send all cases to the function above
     // If we are continuing through a location we need to make sure we
     // only allow the edge that was used previously (avoid u-turns)
-    while (!path.empty() && destination->path_edges_size() > 1) {
-      if (destination->path_edges().rbegin()->graph_id() == path.front().edgeid) {
+    bool through = destination->type() == odin::Location::kThrough ||
+                   destination->type() == odin::Location::kBreakThrough;
+    while (through && first_edge.Is_Valid() && destination->path_edges_size() > 1) {
+      if (destination->path_edges().rbegin()->graph_id() == first_edge) {
         destination->mutable_path_edges()->SwapElements(0, destination->path_edges_size() - 1);
       }
       destination->mutable_path_edges()->RemoveLast();
@@ -173,25 +276,33 @@ std::list<valhalla::odin::TripPath> thor_worker_t::path_arrive_by(
 
     // Get best path and keep it
     auto temp_path = get_path(path_algorithm, *origin, *destination, costing);
-    temp_path.swap(path);
+    first_edge = temp_path.front().edgeid;
+    temp_path.swap(path); // so we can append to path instead of prepend
 
     // Merge through legs by updating the time and splicing the lists
     if (!temp_path.empty()) {
       auto offset = path.back().elapsed_time;
       std::for_each(temp_path.begin(), temp_path.end(),
                     [offset](PathInfo& i) { i.elapsed_time += offset; });
+      // Connects via the same edge so we only need it once
       if (path.back().edgeid == temp_path.front().edgeid) {
         path.pop_back();
+      } else if (destination->type() == odin::Location::kVia) {
+        // Insert a route discontinuity if the paths meet at opposing edges and not
+        // at a graph node. Use path size - 1 as the index where the discontinuity lies.
+        via_discontinuity(*reader, *destination, path.back().edgeid, temp_path.front().edgeid, vias,
+                          temp_path.size(), true);
       }
       path.insert(path.end(), temp_path.begin(), temp_path.end());
     }
 
     // Build trip path for this leg and add to the result if this
     // location is a BREAK or if this is the last location
-    if (origin->type() == odin::Location::kBreak) {
+    if (origin->type() == odin::Location::kBreak || origin->type() == odin::Location::kBreakThrough) {
       // Move destination back to the last break and collect the throughs
       std::list<odin::Location> throughs;
-      while (destination->type() != odin::Location::kBreak) {
+      while (destination->type() != odin::Location::kBreak &&
+             destination->type() != odin::Location::kBreakThrough) {
         throughs.push_back(*destination);
         --destination;
       }
@@ -199,13 +310,21 @@ std::list<valhalla::odin::TripPath> thor_worker_t::path_arrive_by(
       // Create controller for default route attributes
       AttributesController controller;
 
+      // We have to flip the via indices because we built them in backwards order
+      decltype(vias) flipped;
+      flipped.reserve(vias.size());
+      for (const auto& kv : vias)
+        flipped.emplace(path.size() - kv.first, kv.second);
+      vias.swap(flipped);
+
       // Form output information based on path edges
       auto trip_path = thor::TripPathBuilder::Build(controller, *reader, mode_costing, path, *origin,
-                                                    *destination, throughs, interrupt);
+                                                    *destination, throughs, interrupt, &vias);
       path.clear();
+      vias.clear();
 
       // Keep the protobuf path
-      trip_paths.emplace_back(std::move(trip_path));
+      trip_paths.emplace_front(std::move(trip_path));
     }
   }
 
@@ -217,6 +336,8 @@ std::list<valhalla::odin::TripPath> thor_worker_t::path_depart_at(
     google::protobuf::RepeatedPtrField<valhalla::odin::Location>& correlated,
     const std::string& costing) {
   // Things we'll need
+  GraphId last_edge;
+  std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>> vias;
   std::vector<thor::PathInfo> path;
   std::list<valhalla::odin::TripPath> trip_paths;
   correlated.begin()->set_type(odin::Location::kBreak);
@@ -229,10 +350,13 @@ std::list<valhalla::odin::TripPath> thor_worker_t::path_depart_at(
     thor::PathAlgorithm* path_algorithm = get_path_algorithm(costing, *origin, *destination);
     path_algorithm->Clear();
 
+    // TODO: delete this and send all cases to the function above
     // If we are continuing through a location we need to make sure we
     // only allow the edge that was used previously (avoid u-turns)
-    while (!path.empty() && origin->path_edges_size() > 1) {
-      if (origin->path_edges().rbegin()->graph_id() == path.back().edgeid) {
+    bool through =
+        origin->type() == odin::Location::kThrough || origin->type() == odin::Location::kBreakThrough;
+    while (through && last_edge.Is_Valid() && origin->path_edges_size() > 1) {
+      if (origin->path_edges().rbegin()->graph_id() == last_edge) {
         origin->mutable_path_edges()->SwapElements(0, origin->path_edges_size() - 1);
       }
       origin->mutable_path_edges()->RemoveLast();
@@ -240,14 +364,21 @@ std::list<valhalla::odin::TripPath> thor_worker_t::path_depart_at(
 
     // Get best path and keep it
     auto temp_path = get_path(path_algorithm, *origin, *destination, costing);
+    last_edge = temp_path.back().edgeid;
 
     // Merge through legs by updating the time and splicing the lists
     if (!path.empty()) {
       auto offset = path.back().elapsed_time;
       std::for_each(temp_path.begin(), temp_path.end(),
                     [offset](PathInfo& i) { i.elapsed_time += offset; });
+      // Connects via the same edge so we only need it once
       if (path.back().edgeid == temp_path.front().edgeid) {
         path.pop_back();
+      } else if (origin->type() == odin::Location::kVia) {
+        // Insert a route discontinuity if the paths meet at opposing edges and not
+        // at a graph node. Use path size - 1 as the index where the discontinuity lies.
+        via_discontinuity(*reader, *origin, path.back().edgeid, temp_path.front().edgeid, vias,
+                          path.size() - 1, false);
       }
       path.insert(path.end(), temp_path.begin(), temp_path.end());
     } // Didnt need to merge
@@ -257,10 +388,12 @@ std::list<valhalla::odin::TripPath> thor_worker_t::path_depart_at(
 
     // Build trip path for this leg and add to the result if this
     // location is a BREAK or if this is the last location
-    if (destination->type() == odin::Location::kBreak) {
+    if (destination->type() == odin::Location::kBreak ||
+        destination->type() == odin::Location::kBreakThrough) {
       // Move origin back to the last break and collect the throughs
       std::list<odin::Location> throughs;
-      while (origin->type() != odin::Location::kBreak) {
+      while (origin->type() != odin::Location::kBreak &&
+             origin->type() != odin::Location::kBreakThrough) {
         throughs.push_front(*origin);
         --origin;
       }
@@ -268,10 +401,11 @@ std::list<valhalla::odin::TripPath> thor_worker_t::path_depart_at(
       // Create controller for default route attributes
       AttributesController controller;
 
-      // Form output information based on path edges
+      // Form output information based on path edges. vias are a route discontinuity map
       auto trip_path = thor::TripPathBuilder::Build(controller, *reader, mode_costing, path, *origin,
-                                                    *destination, throughs, interrupt);
+                                                    *destination, throughs, interrupt, &vias);
       path.clear();
+      vias.clear();
 
       // Keep the protobuf path
       trip_paths.emplace_back(std::move(trip_path));

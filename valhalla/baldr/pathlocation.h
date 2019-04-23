@@ -96,8 +96,14 @@ public:
   static void toPBF(const PathLocation& pl, odin::Location* l, baldr::GraphReader& reader) {
     l->mutable_ll()->set_lng(pl.latlng_.first);
     l->mutable_ll()->set_lat(pl.latlng_.second);
-    l->set_type(pl.stoptype_ == Location::StopType::THROUGH ? odin::Location::kThrough
-                                                            : odin::Location::kBreak);
+    l->set_type(odin::Location::kBreak);
+    if (pl.stoptype_ == Location::StopType::THROUGH)
+      l->set_type(odin::Location::kThrough);
+    else if (pl.stoptype_ == Location::StopType::VIA)
+      l->set_type(odin::Location::kVia);
+    else if (pl.stoptype_ == Location::StopType::BREAK_THROUGH)
+      l->set_type(odin::Location::kBreakThrough);
+
     if (!pl.name_.empty()) {
       l->set_name(pl.name_);
     }
@@ -172,10 +178,15 @@ public:
   }
 
   static Location fromPBF(const odin::Location& loc) {
-    Location l({loc.ll().lng(), loc.ll().lat()},
-               loc.type() == odin::Location::kThrough ? Location::StopType::THROUGH
-                                                      : Location::StopType::BREAK,
-               loc.minimum_reachability(), loc.radius());
+    auto stop_type = Location::StopType::BREAK;
+    if (loc.type() == odin::Location::kThrough)
+      stop_type = Location::StopType::THROUGH;
+    else if (loc.type() == odin::Location::kVia)
+      stop_type = Location::StopType::VIA;
+    else if (loc.type() == odin::Location::kBreakThrough)
+      stop_type = Location::StopType::BREAK_THROUGH;
+    Location l({loc.ll().lng(), loc.ll().lat()}, stop_type, loc.minimum_reachability(), loc.radius());
+
     if (loc.has_name()) {
       l.name_ = loc.name();
     }

@@ -11,7 +11,7 @@ set(tests aabb2 access_restriction actor admin attributes_controller complexrest
 
 if(ENABLE_DATA_TOOLS)
   list(APPEND tests astar edgeinfobuilder graphbuilder graphparser graphtilebuilder graphreader isochrone predictive_traffic
-    idtable matrix names node_search refs search servicedays signinfo timedep_paths timeparsing trivial_paths uniquenames utrecht)
+    idtable matrix multipoint_routes names node_search refs search servicedays signinfo timedep_paths timeparsing trivial_paths uniquenames utrecht)
 endif()
 
 if(ENABLE_SERVICES)
@@ -30,7 +30,7 @@ endif()
 
 ## Add executable targets
 foreach(test ${tests})
-  add_executable(${test} EXCLUDE_FROM_ALL	${test}.cc test.cc)
+  add_executable(${test} EXCLUDE_FROM_ALL ${test}.cc test.cc)
   set_target_properties(${test} PROPERTIES
     COMPILE_DEFINITIONS VALHALLA_SOURCE_DIR="${VALHALLA_SOURCE_DIR}/")
   target_link_libraries(${test} valhalla)
@@ -38,7 +38,7 @@ endforeach()
 
 set(cost_tests autocost bicyclecost motorcyclecost motorscootercost pedestriancost transitcost truckcost)
 foreach(test ${cost_tests})
-  add_executable(${test} EXCLUDE_FROM_ALL	${VALHALLA_SOURCE_DIR}/src/sif/${test}.cc test.cc)
+  add_executable(${test} EXCLUDE_FROM_ALL ${VALHALLA_SOURCE_DIR}/src/sif/${test}.cc test.cc)
   set_target_properties(${test} PROPERTIES
     COMPILE_DEFINITIONS INLINE_TEST)
   target_link_libraries(${test} valhalla)
@@ -118,6 +118,7 @@ if(ENABLE_DATA_TOOLS)
   add_dependencies(run-timedep_paths utrecht_tiles)
   add_dependencies(run-trivial_paths utrecht_tiles)
   add_dependencies(predictive_traffic utrecht_tiles)
+  add_dependencies(run-multipoint_routes utrecht_tiles)
 endif()
 
 if(ENABLE_SERVICES)
