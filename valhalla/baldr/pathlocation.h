@@ -76,23 +76,6 @@ public:
    */
   bool shares_edges(const PathLocation& other) const;
 
-  /**
-   * Serializes this object to rapidjson
-   * @return rapidjson::Value
-   */
-  rapidjson::Value ToRapidJson(size_t index, rapidjson::Document::AllocatorType& allocator) const;
-
-  // Serialize this edge to rapidjson
-  rapidjson::Value PathEdgeToRapidJson(const PathEdge& edge,
-                                       rapidjson::Document::AllocatorType& allocator) const;
-
-  /**
-   * Serializes one of these objects from a ptree and a list of locations
-   * @return PathLocation
-   */
-  static PathLocation FromRapidJson(const std::vector<Location>& locations,
-                                    const rapidjson::Value& path_location);
-
   static void toPBF(const PathLocation& pl, odin::Location* l, baldr::GraphReader& reader) {
     l->mutable_ll()->set_lng(pl.latlng_.first);
     l->mutable_ll()->set_lat(pl.latlng_.second);
@@ -103,6 +86,12 @@ public:
       l->set_type(odin::Location::kVia);
     else if (pl.stoptype_ == Location::StopType::BREAK_THROUGH)
       l->set_type(odin::Location::kBreakThrough);
+
+    l->set_preferred_side(odin::Location::either);
+    if (pl.preferred_side_ == Location::PreferredSide::SAME)
+      l->set_preferred_side(odin::Location::same);
+    else if (pl.preferred_side_ == Location::PreferredSide::OPPOSITE)
+      l->set_preferred_side(odin::Location::opposite);
 
     if (!pl.name_.empty()) {
       l->set_name(pl.name_);
@@ -185,7 +174,13 @@ public:
       stop_type = Location::StopType::VIA;
     else if (loc.type() == odin::Location::kBreakThrough)
       stop_type = Location::StopType::BREAK_THROUGH;
-    Location l({loc.ll().lng(), loc.ll().lat()}, stop_type, loc.minimum_reachability(), loc.radius());
+    auto side = PreferredSide::EITHER;
+    if (loc.preferred_side() == odin::Location::same)
+      side = PreferredSide::SAME;
+    else if (loc.preferred_side() == odin::Location::opposite)
+      side = PreferredSide::OPPOSITE;
+    Location l({loc.ll().lng(), loc.ll().lat()}, stop_type, loc.minimum_reachability(), loc.radius(),
+               side);
 
     if (loc.has_name()) {
       l.name_ = loc.name();

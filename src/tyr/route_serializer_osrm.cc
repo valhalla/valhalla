@@ -918,31 +918,6 @@ names_and_refs(const valhalla::odin::TripDirections::Maneuver& maneuver) {
   return std::make_pair(names, refs);
 }
 
-// Add annotations to the leg
-json::MapPtr annotations(valhalla::odin::EnhancedTripPath* etp) {
-  auto annotations = json::map({});
-
-  // Create distance and duration arrays. Iterate through trip edges and
-  // form distance and duration.
-  // NOTE: if we need to do per node Id pair we could walk the shape,
-  // compute distances, and interpolate durations.
-  uint32_t elapsed_time = 0;
-  auto distances = json::array({});
-  auto durations = json::array({});
-  for (uint32_t idx = 0; idx < etp->node_size() - 1; ++idx) {
-    distances->emplace_back(json::fp_t{etp->GetCurrEdge(idx)->length() * 1000.0f, 1});
-    uint32_t t = etp->node(idx + 1).elapsed_time() > etp->node(idx).elapsed_time()
-                     ? etp->node(idx + 1).elapsed_time() - etp->node(idx).elapsed_time()
-                     : 0;
-    durations->emplace_back(static_cast<uint64_t>(t));
-  }
-
-  // Add arrays and return
-  annotations->emplace("duration", durations);
-  annotations->emplace("distance", distances);
-  return annotations;
-}
-
 // This is an initial implementation to be as good or better than the current OSRM response
 // In the future we shall use the percent of name distance as compared to the total distance
 // to determine how many named segments to display.
@@ -1101,15 +1076,6 @@ json::ArrayPtr serialize_legs(const std::list<valhalla::odin::TripDirections>& l
       maneuver_index++;
     } // end maneuver loop
     //#########################################################################
-
-    // Add annotations. Valhalla cannot support node Ids (Valhalla does
-    // not store node Ids) but can support distance, duration, speed.
-    // NOTE: Valhalla outputs annotations per edge not between node Id
-    // pairs like OSRM does.
-    // Protect against empty trip path
-    if (etp->node_size() > 0) {
-      output_leg->emplace("annotation", annotations(etp));
-    }
 
     // Add distance, duration, weight, and summary
     // Get a summary based on longest maneuvers.

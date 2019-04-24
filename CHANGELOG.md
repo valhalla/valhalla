@@ -14,6 +14,7 @@
    * FIXED: Add leg summary and remove unused hint attribute for OSRM compatibility mode. [#1753](https://github.com/valhalla/valhalla/pull/1753)
    * FIXED: Improvements for pedestrian forks, pedestrian roundabouts, and continue maneuvers. [#1768](https://github.com/valhalla/valhalla/pull/1768)
    * FIXED: Added simplified overview for OSRM response and added use_toll logic back to truck costing. [#1765](https://github.com/valhalla/valhalla/pull/1765)
+   * FIXED: temp fix for location distance bug [#1774](https://github.com/valhalla/valhalla/pull/1774)
 
 * **Enhancement**
    * Add the ability to run valhalla_build_tiles in stages. Specify the begin_stage and end_stage as command line options. Also cleans up temporary files as the last stage in the pipeline.
