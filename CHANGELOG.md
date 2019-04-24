@@ -22,7 +22,7 @@
    * Add TaxiCost into auto costing options. 
    * Add `preferred_side` to allow per-location filtering of edges based on the side of the road the location is on and the driving side for that locale.
    * Add `via` and `break_through` location types [#1737](https://github.com/valhalla/valhalla/pull/1737)
-   * Add `street_side_tolerance` and `search_cutoff` to input `location` [#1740](https://github.com/valhalla/valhalla/pull/1740)
+   * Add `street_side_tolerance` and `search_cutoff` to input `location` [#1777](https://github.com/valhalla/valhalla/pull/1777)
    
 
 ## Release Date: 2019-01-14 Valhalla 3.0.2
