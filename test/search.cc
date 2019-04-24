@@ -9,6 +9,7 @@
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
 #include "baldr/location.h"
+#include "baldr/pathlocation.h"
 #include "baldr/tilehierarchy.h"
 #include "midgard/pointll.h"
 #include "midgard/vector2.h"
@@ -141,7 +142,7 @@ void make_tile() {
   GraphTileBuilder::AddBins(tile_dir, &reloaded, bins);
 }
 
-void search(const valhalla::baldr::Location& location,
+void search(valhalla::baldr::Location location,
             bool expected_node,
             const valhalla::midgard::PointLL& expected_point,
             const std::vector<PathLocation::PathEdge>& expected_edges,
@@ -149,8 +150,13 @@ void search(const valhalla::baldr::Location& location,
   // make the config file
   boost::property_tree::ptree conf;
   conf.put("tile_dir", tile_dir);
-
   valhalla::baldr::GraphReader reader(conf);
+
+  // send it to pbf and back just in case something is wrong with that conversion
+  valhalla::odin::Location pbf;
+  PathLocation::toPBF(location, &pbf, reader);
+  location = PathLocation::fromPBF(pbf);
+
   const auto results = Search({location}, reader, PassThroughEdgeFilter, PassThroughNodeFilter);
   const auto p = results.at(location);
 
@@ -177,12 +183,18 @@ void search(const valhalla::baldr::Location& location,
     throw std::logic_error("Got more edges than expected");
 }
 
-void search(const valhalla::baldr::Location& location, size_t result_count, int reachability) {
+void search(valhalla::baldr::Location location, size_t result_count, int reachability) {
+
   // make the config file
   boost::property_tree::ptree conf;
   conf.put("tile_dir", tile_dir);
-
   valhalla::baldr::GraphReader reader(conf);
+
+  // send it to pbf and back just in case something is wrong with that conversion
+  valhalla::odin::Location pbf;
+  PathLocation::toPBF(location, &pbf, reader);
+  location = PathLocation::fromPBF(pbf);
+
   const auto p =
       Search({location}, reader, PassThroughEdgeFilter, PassThroughNodeFilter).at(location);
 
