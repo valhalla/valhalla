@@ -43,20 +43,6 @@ public:
            const PreferredSide& side = PreferredSide::EITHER);
 
   /**
-   * Serializes this object to rapidjson::Value
-   * @return rapidjson::Value
-   */
-  rapidjson::Value ToRapidJson(rapidjson::Document::AllocatorType& a) const;
-
-  /**
-   * conversion.
-   * @param  d a rapidjson representation of the location
-   */
-  static Location FromRapidJson(const rapidjson::Value& d,
-                                unsigned int default_reachability = 0,
-                                unsigned long default_radius = 0);
-
-  /**
    * equality.
    *
    */
