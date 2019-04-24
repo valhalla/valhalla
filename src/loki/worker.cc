@@ -33,18 +33,27 @@ void loki_worker_t::parse_locations(google::protobuf::RepeatedPtrField<odin::Loc
                                     boost::optional<valhalla_exception_t> required_exception) {
   if (locations->size()) {
     for (auto& location : *locations) {
-      if (!location.has_minimum_reachability()) {
+      if (!location.has_minimum_reachability())
         location.set_minimum_reachability(default_reachability);
-      } else if (location.minimum_reachability() > max_reachability) {
+      else if (location.minimum_reachability() > max_reachability)
         location.set_minimum_reachability(max_reachability);
-      }
-      if (!location.has_radius()) {
+
+      if (!location.has_radius())
         location.set_radius(default_radius);
-      } else {
-        if (location.radius() > max_radius) {
-          location.set_radius(max_radius);
-        }
-      }
+      else if (location.radius() > max_radius)
+        location.set_radius(max_radius);
+
+      if (!location.has_heading_tolerance())
+        location.set_heading_tolerance(default_heading_tolerance);
+
+      if (!location.has_node_snap_tolerance())
+        location.set_node_snap_tolerance(default_node_snap_tolerance);
+
+      if (!location.has_search_cutoff())
+        location.set_search_cutoff(default_search_cutoff);
+
+      if (!location.has_street_side_tolerance())
+        location.set_street_side_tolerance(default_street_side_tolerance);
     }
   } else if (required_exception) {
     throw *required_exception;
@@ -216,8 +225,13 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
   max_avoid_locations = config.get<size_t>("service_limits.max_avoid_locations");
   max_reachability = config.get<unsigned int>("service_limits.max_reachability");
   default_reachability = config.get<unsigned int>("loki.service_defaults.minimum_reachability");
-  max_radius = config.get<unsigned long>("service_limits.max_radius");
-  default_radius = config.get<unsigned long>("loki.service_defaults.radius");
+  max_radius = config.get<unsigned int>("service_limits.max_radius");
+  default_radius = config.get<unsigned int>("loki.service_defaults.radius");
+  default_heading_tolerance = config.get<unsigned int>("loki.service_defaults.heading_tolerance");
+  default_node_snap_tolerance = config.get<unsigned int>("loki.service_defaults.node_snap_tolerance");
+  default_search_cutoff = config.get<unsigned int>("loki.service_defaults.search_cutoff");
+  default_street_side_tolerance =
+      config.get<unsigned int>("loki.service_defaults.street_side_tolerance");
   max_gps_accuracy = config.get<float>("service_limits.trace.max_gps_accuracy");
   max_search_radius = config.get<float>("service_limits.trace.max_search_radius");
   max_best_paths = config.get<unsigned int>("service_limits.trace.max_best_paths");

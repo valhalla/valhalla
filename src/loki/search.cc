@@ -16,21 +16,6 @@ using namespace valhalla::sif;
 using namespace valhalla::loki;
 
 namespace {
-// the cutoff at which we will assume the input is too far away from civilisation to be
-// worth correlating to the nearest graph elements
-constexpr float SEARCH_CUTOFF = 35000.f;
-// during edge correlation, if you end up < 5 meters from the beginning or end of the
-// edge we just assume you were at that node and not actually along the edge
-// we keep it small because point and click interfaces are more accurate than gps input
-constexpr float NODE_SNAP = 5.f;
-// during side of street computations we figured you're on the street if you are less than
-// 5 meters (16) feet from the centerline. this is actually pretty large (with accurate shape
-// data for the roads it might want half that) but its better to assume on street than not
-// this is 5 meters squared, the computation uses square distance
-constexpr float SIDE_OF_STREET_SNAP = 25.f;
-
-// cone width to use for cosine similarity comparisons for favoring heading
-constexpr float DEFAULT_ANGLE_WIDTH = 60.f;
 
 bool side_filter(const PathLocation::PathEdge& edge, const Location& location, GraphReader& reader) {
   // nothing to filter if you dont want to filter or if there is no side of street
@@ -72,10 +57,10 @@ bool heading_filter(const DirectedEdge* edge,
   // across 0 or between the two so we just need to know which is bigger
   if (*location.heading_ > angle) {
     return std::min(*location.heading_ - angle, (360.f - *location.heading_) + angle) >
-           location.heading_tolerance_.get_value_or(DEFAULT_ANGLE_WIDTH);
+           location.heading_tolerance_;
   }
   return std::min(angle - *location.heading_, (360.f - angle) + *location.heading_) >
-         location.heading_tolerance_.get_value_or(DEFAULT_ANGLE_WIDTH);
+         location.heading_tolerance_;
 }
 
 PathLocation::SideOfStreet flip_side(const PathLocation::SideOfStreet side) {
@@ -108,9 +93,10 @@ struct candidate_t {
     return sq_distance < c.sq_distance;
   }
 
-  PathLocation::SideOfStreet get_side(const PointLL& original, float sq_distance) const {
+  PathLocation::SideOfStreet
+  get_side(const PointLL& original, float sq_distance, float sq_tolerance) const {
     // its so close to the edge that its basically on the edge
-    if (sq_distance < SIDE_OF_STREET_SNAP) {
+    if (sq_distance < sq_tolerance) {
       return PathLocation::SideOfStreet::NONE;
     }
 
@@ -178,8 +164,9 @@ struct projector_t {
       int32_t tile_index;
       float distance;
       std::tie(tile_index, bin_index, distance) = binner();
-      if (distance > SEARCH_CUTOFF || (reachable.size() && distance > location.radius_ &&
-                                       distance > std::sqrt(reachable.back().sq_distance))) {
+      if (distance > location.search_cutoff_ ||
+          (reachable.size() && distance > location.radius_ &&
+           distance > std::sqrt(reachable.back().sq_distance))) {
         cur_tile = nullptr;
         break;
       }
@@ -387,7 +374,8 @@ struct bin_handler_t {
         length_ratio = 1.f - length_ratio;
       }
       // side of street
-      auto side = candidate.get_side(location.latlng_, candidate.sq_distance);
+      auto sq_tolerance = location.street_side_tolerance_ * location.street_side_tolerance_;
+      auto side = candidate.get_side(location.latlng_, candidate.sq_distance, sq_tolerance);
       PathLocation::PathEdge path_edge{candidate.edge_id,
                                        length_ratio,
                                        candidate.point,
@@ -712,10 +700,10 @@ struct bin_handler_t {
         // this may be at a node, either because it was the closest thing or from snap tolerance
         bool front = candidate.point == candidate.edge_info->shape().front() ||
                      pp.location.latlng_.Distance(candidate.edge_info->shape().front()) <
-                         pp.location.node_snap_tolerance_.get_value_or(NODE_SNAP);
+                         pp.location.node_snap_tolerance_;
         bool back = candidate.point == candidate.edge_info->shape().back() ||
                     pp.location.latlng_.Distance(candidate.edge_info->shape().back()) <
-                        pp.location.node_snap_tolerance_.get_value_or(NODE_SNAP);
+                        pp.location.node_snap_tolerance_;
         // it was the begin node
         if ((front && candidate.edge->forward()) || (back && !candidate.edge->forward())) {
           const GraphTile* other_tile;
