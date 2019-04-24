@@ -25,6 +25,12 @@ using namespace valhalla::baldr;
 using namespace valhalla::tyr;
 using namespace std;
 
+namespace {
+midgard::PointLL to_ll(const odin::LatLng& ll) {
+  return midgard::PointLL{ll.lng(), ll.lat()};
+}
+} // namespace
+
 namespace osrm {
 
 // Serialize a location (waypoint) in OSRM compatible format. Waypoint format is described here:
@@ -51,7 +57,10 @@ valhalla::baldr::json::MapPtr waypoint(const odin::Location& location,
 
   // Add distance in meters from the input location to the nearest
   // point on the road used in the route
-  waypoint->emplace("distance", json::fp_t{location.path_edges(0).distance(), 3});
+  // TODO: since distance was normalized in thor - need to recalculate here
+  //       in the future we shall have store separately from score
+  waypoint->emplace("distance",
+                    json::fp_t{to_ll(location.ll()).Distance(to_ll(location.path_edges(0).ll())), 3});
 
   // Add hint. Goal is for the hint returned from a locate request to be able
   // to quickly find the edge and point along the edge in a route request.
