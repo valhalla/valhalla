@@ -41,7 +41,6 @@ nav:
       - Configuration: meili/configuration.md
       - meili/implementation_details.md
       - meili/library_api.md
-      - meili/run_service_in_docker.md
       - meili/service_api.md
     - Mjolnir (routing graph/tile generation):
       - mjolnir.md
