@@ -124,7 +124,7 @@ public:
     }
     l->set_minimum_reachability(pl.minimum_reachability_);
     l->set_radius(pl.radius_);
-    l->set_search_cutoff(pl.search_cutoff_);
+    l->set_search_cutoff(pl.radius_ > pl.search_cutoff_ ? pl.radius_ : pl.search_cutoff_);
     l->set_street_side_tolerance(pl.street_side_tolerance_);
 
     auto* path_edges = l->mutable_path_edges();
