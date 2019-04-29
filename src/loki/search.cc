@@ -17,6 +17,10 @@ using namespace valhalla::loki;
 
 namespace {
 
+template <typename T> inline T square(T v) {
+  return v * v;
+}
+
 bool side_filter(const PathLocation::PathEdge& edge, const Location& location, GraphReader& reader) {
   // nothing to filter if you dont want to filter or if there is no side of street
   if (edge.sos == PathLocation::SideOfStreet::NONE ||
@@ -79,7 +83,7 @@ std::function<std::tuple<int32_t, unsigned short, float>()> make_binner(const Po
 
 // Model a segment (2 consecutive points in an edge in a bin).
 struct candidate_t {
-  float sq_distance;
+  double sq_distance;
   PointLL point;
   size_t index;
 
@@ -94,7 +98,7 @@ struct candidate_t {
   }
 
   PathLocation::SideOfStreet
-  get_side(const PointLL& original, float sq_distance, float sq_tolerance) const {
+  get_side(const PointLL& original, double sq_distance, double sq_tolerance) const {
     // its so close to the edge that its basically on the edge
     if (sq_distance < sq_tolerance) {
       return PathLocation::SideOfStreet::NONE;
@@ -120,7 +124,7 @@ struct candidate_t {
 struct projector_t {
   projector_t(const Location& location, GraphReader& reader)
       : binner(make_binner(location.latlng_, reader)), location(location),
-        sq_radius(location.radius_ * location.radius_),
+        sq_radius(square(double(location.radius_))),
         lon_scale(cosf(location.latlng_.lat() * kRadPerDeg)), lat(location.latlng_.lat()),
         lng(location.latlng_.lng()), approx(location.latlng_) {
     // TODO: something more empirical based on radius
@@ -188,8 +192,8 @@ struct projector_t {
 
     // project a onto b where b is the origin vector representing this segment
     // and a is the origin vector to the point we are projecting, (a.b/b.b)*b
-    auto bx = v.first - u.first;
-    auto by = v.second - u.second;
+    auto bx = double(v.first) - u.first;
+    auto by = double(v.second) - u.second;
 
     // Scale longitude when finding the projection
     auto bx2 = bx * lon_scale;
@@ -198,7 +202,7 @@ struct projector_t {
         (lng - u.lng()) * lon_scale * bx2 + (lat - u.lat()) * by; // only need the numerator at first
 
     // projects along the ray before u
-    if (scale <= 0.f) {
+    if (scale <= 0.0) {
       return u;
       // projects along the ray after v
     } else if (scale >= sq) {
@@ -218,9 +222,9 @@ struct projector_t {
   std::vector<candidate_t> reachable;
 
   // critical data
-  float lon_scale;
-  float lat;
-  float lng;
+  double lon_scale;
+  double lat;
+  double lng;
   DistanceApproximator approx;
 };
 
@@ -286,7 +290,7 @@ struct bin_handler_t {
                       PathLocation& correlated,
                       std::vector<PathLocation::PathEdge>& filtered) {
     // we need this because we might need to go to different levels
-    auto score = candidate.point.Distance(location.latlng_);
+    float distance = std::numeric_limits<float>::lowest();
     std::function<void(const GraphId& node_id, bool transition)> crawl;
     crawl = [&](const GraphId& node_id, bool follow_transitions) {
       // now that we have a node we can pass back all the edges leaving and entering it
@@ -298,6 +302,14 @@ struct bin_handler_t {
       const auto* start_edge = tile->directededge(node->edge_index());
       const auto* end_edge = start_edge + node->edge_count();
       PointLL node_ll = node->latlng(tile->header()->base_ll());
+      // cache the distance
+      if (distance == std::numeric_limits<float>::lowest())
+        distance = node_ll.Distance(location.latlng_);
+      // if the distance is too much (because of previous approximation) we bail
+      // no radius means we take the closest thing, unless you are outside of the search cutoff
+      if ((0 < location.radius_ && location.radius_ < distance) || location.search_cutoff_ < distance)
+        return;
+      // add edges leaving this node
       for (const auto* edge = start_edge; edge < end_edge; ++edge) {
         // get some info about this edge and the opposing
         GraphId id = tile->id();
@@ -306,7 +318,7 @@ struct bin_handler_t {
 
         // do we want this edge
         if (edge_filter(edge) != 0.0f) {
-          PathLocation::PathEdge path_edge{std::move(id),  0.f, node_ll, score, PathLocation::NONE,
+          PathLocation::PathEdge path_edge{std::move(id),  0.f, node_ll, distance, PathLocation::NONE,
                                            get_reach(edge)};
           auto index = edge->forward() ? 0 : info.shape().size() - 2;
           if (heading_filter(edge, info, location, candidate.point, index)) {
@@ -327,7 +339,7 @@ struct bin_handler_t {
           PathLocation::PathEdge path_edge{std::move(other_id),
                                            1.f,
                                            node_ll,
-                                           score,
+                                           distance,
                                            PathLocation::NONE,
                                            get_reach(other_edge)};
           auto index = other_edge->forward() ? 0 : info.shape().size() - 2;
@@ -357,8 +369,13 @@ struct bin_handler_t {
                       const candidate_t& candidate,
                       PathLocation& correlated,
                       std::vector<PathLocation::PathEdge>& filtered) {
+    // get the distance between the result
+    auto distance = candidate.point.Distance(location.latlng_);
+    // if the distance is too much (because of previous approximation) we bail
+    // no radius means we take the closest thing, unless you are outside of the search cutoff
+    if ((0 < location.radius_ && location.radius_ < distance) || location.search_cutoff_ < distance)
+      return;
     // now that we have an edge we can pass back all the info about it
-    auto score = candidate.point.Distance(location.latlng_);
     if (candidate.edge != nullptr) {
       // we need the ratio in the direction of the edge we are correlated to
       double partial_length = 0;
@@ -374,14 +391,10 @@ struct bin_handler_t {
         length_ratio = 1.f - length_ratio;
       }
       // side of street
-      auto sq_tolerance = location.street_side_tolerance_ * location.street_side_tolerance_;
+      auto sq_tolerance = double(location.street_side_tolerance_) * location.street_side_tolerance_;
       auto side = candidate.get_side(location.latlng_, candidate.sq_distance, sq_tolerance);
-      PathLocation::PathEdge path_edge{candidate.edge_id,
-                                       length_ratio,
-                                       candidate.point,
-                                       score,
-                                       side,
-                                       get_reach(candidate.edge)};
+      PathLocation::PathEdge path_edge{candidate.edge_id, length_ratio, candidate.point,
+                                       distance,          side,         get_reach(candidate.edge)};
       // correlate the edge we found
       if (side_filter(path_edge, location, reader) ||
           heading_filter(candidate.edge, *candidate.edge_info, location, candidate.point,
@@ -397,7 +410,7 @@ struct bin_handler_t {
       if (opposing_edge_id.Is_Valid() && (other_edge = other_tile->directededge(opposing_edge_id)) &&
           edge_filter(other_edge) != 0.0f) {
         PathLocation::PathEdge other_path_edge{opposing_edge_id, 1 - length_ratio,
-                                               candidate.point,  score,
+                                               candidate.point,  distance,
                                                flip_side(side),  get_reach(other_edge)};
         if (side_filter(other_path_edge, location, reader) ||
             heading_filter(other_edge, *candidate.edge_info, location, candidate.point,
@@ -587,6 +600,7 @@ struct bin_handler_t {
         for (p_itr = begin; p_itr != end; ++p_itr, ++c_itr) {
           // how close is the input to this segment
           auto point = p_itr->project(u, v);
+          // auto sq_distance = p_itr->square_distance(point);
           auto sq_distance = p_itr->approx.DistanceSquared(point);
           // do we want to keep it
           if (sq_distance < c_itr->sq_distance) {
@@ -744,7 +758,7 @@ struct bin_handler_t {
         correlated.edges.erase(new_end, correlated.edges.end());
       }
 
-      // keep filtered edges for retry in case we cant find a route non filtered edges
+      // keep filtered edges for retry in case we cant find a route with non filtered edges
       // use the max score of the non filtered edges as a penalty increase on each of the
       // filtered edges so that when finding a route using non filtered edges fails the
       // use of filtered edges are always penalized higher than the non filtered ones

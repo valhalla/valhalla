@@ -42,7 +42,6 @@ To build a route, you need to specify two `break` locations. In addition, you ca
 | `search_cutoff` | The cutoff at which we will assume the input is too far away from civilisation to be worth correlating to the nearest graph elements |
 | `node_snap_tolerance` | During edge correlation this is the tolerance used to determine whether or not to snap to the intersection rather than along the street, if the snap location is within this distance from the intersection the intersection is used instead |
 | `street_side_tolerance` | If your input coordinate is less than this tolerance away from the edge centerline then we set your side of street to none otherwise your side of street will be left or right depending on direction of travel |
-| `heading_tolerance` | When a heading is supplied, this is the tolerance around that heading with which we determine whether an edges heading is similar enough to match the supplied heading |
 
 Optionally, you can include the following location information without impacting the routing. This information is carried through the request and returned as a convenience.
 
