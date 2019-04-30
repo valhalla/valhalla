@@ -389,7 +389,7 @@ struct bin_handler_t {
         length_ratio = 1.f - length_ratio;
       }
       // side of street
-      auto sq_tolerance = double(location.street_side_tolerance_) * location.street_side_tolerance_;
+      auto sq_tolerance = square(double(location.street_side_tolerance_));
       auto side = candidate.get_side(location.latlng_, candidate.sq_distance, sq_tolerance);
       PathLocation::PathEdge path_edge{candidate.edge_id, length_ratio, candidate.point,
                                        distance,          side,         get_reach(candidate.edge)};
@@ -598,7 +598,6 @@ struct bin_handler_t {
         for (p_itr = begin; p_itr != end; ++p_itr, ++c_itr) {
           // how close is the input to this segment
           auto point = p_itr->project(u, v);
-          // auto sq_distance = p_itr->square_distance(point);
           auto sq_distance = p_itr->approx.DistanceSquared(point);
           // do we want to keep it
           if (sq_distance < c_itr->sq_distance) {
