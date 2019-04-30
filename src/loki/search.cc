@@ -305,9 +305,8 @@ struct bin_handler_t {
       // cache the distance
       if (distance == std::numeric_limits<float>::lowest())
         distance = node_ll.Distance(location.latlng_);
-      // if the distance is too much (because of previous approximation) we bail
-      // no radius means we take the closest thing, unless you are outside of the search cutoff
-      if ((0 < location.radius_ && location.radius_ < distance) || location.search_cutoff_ < distance)
+      // the search cutoff is a hard filter so skip any outside of that
+      if (distance > location.search_cutoff_)
         return;
       // add edges leaving this node
       for (const auto* edge = start_edge; edge < end_edge; ++edge) {
@@ -371,9 +370,8 @@ struct bin_handler_t {
                       std::vector<PathLocation::PathEdge>& filtered) {
     // get the distance between the result
     auto distance = candidate.point.Distance(location.latlng_);
-    // if the distance is too much (because of previous approximation) we bail
-    // no radius means we take the closest thing, unless you are outside of the search cutoff
-    if ((0 < location.radius_ && location.radius_ < distance) || location.search_cutoff_ < distance)
+    // the search cutoff is a hard filter so skip any outside of that
+    if (distance > location.search_cutoff_)
       return;
     // now that we have an edge we can pass back all the info about it
     if (candidate.edge != nullptr) {
