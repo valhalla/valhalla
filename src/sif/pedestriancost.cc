@@ -50,7 +50,7 @@ constexpr uint32_t kDefaultMaxGradeWheelchair = 12; // Conservative for now...
 constexpr uint8_t kDefaultMaxHikingDifficulty = 1; // T1 (kHiking)
 constexpr float kModeFactor = 1.5f;                // Favor this mode?
 constexpr float kDefaultWalkwayFactor = 0.9f;      // Slightly favor walkways
-constexpr float kDefaultSideWalkFactor = 0.95f;    // Slightly favor sidewalks
+constexpr float kDefaultSideWalkFactor = 0.90f;    // Slightly favor sidewalks
 constexpr float kDefaultAlleyFactor = 2.0f;        // Avoid alleys
 constexpr float kDefaultDrivewayFactor = 5.0f;     // Avoid driveways
 constexpr float kDefaultUseFerry = 1.0f;
@@ -650,13 +650,13 @@ Cost PedestrianCost::EdgeCost(const baldr::DirectedEdge* edge, const uint32_t sp
 
   // TODO - consider using an array of "use factors" to avoid this conditional
   float factor = 1.0f + kSacScaleCostFactor[static_cast<uint8_t>(edge->sac_scale())];
-  if (edge->use() == Use::kFootway) {
+  if (edge->use() == Use::kFootway || edge->use() == Use::kSidewalk) {
     factor *= walkway_factor_;
   } else if (edge->use() == Use::kAlley) {
     factor *= alley_factor_;
   } else if (edge->use() == Use::kDriveway) {
     factor *= driveway_factor_;
-  } else if (edge->use() == Use::kSidewalk) {
+  } else if (edge->sidewalk_left() || edge->sidewalk_right()) {
     factor *= sidewalk_factor_;
   } else if (edge->roundabout()) {
     factor *= kRoundaboutFactor;
