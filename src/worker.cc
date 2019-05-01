@@ -184,7 +184,8 @@ const std::unordered_map<unsigned, std::string> OSRM_ERRORS_CODES{
      R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
     // special case - we will return the valhalla error : Path distance exceeds the max distance
     // limit.
-    //{154, R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
+    {154,
+     R"({"code":"NoRoute","message":"Path distance exceeds the max distance limit."})"},
     {155, R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
     {156, R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
     {157,
@@ -1137,17 +1138,12 @@ worker_t::result_t jsonify_error(const valhalla_exception_t& exception,
 
   // overwrite with osrm error response
   if (request.options.format() == odin::DirectionsOptions::osrm) {
-    if (exception.code == 154) { // special case - return valhalla error.
-      body << (request.options.has_jsonp() ? request.options.jsonp() + "(" : "")
-           << R"({"code":"NoRoute","message":"Path distance exceeds the max distance limit."})"
-           << (request.options.has_jsonp() ? ")" : "");
-    } else {
-      auto found = OSRM_ERRORS_CODES.find(exception.code);
-      if (found == OSRM_ERRORS_CODES.cend())
-        found = OSRM_ERRORS_CODES.find(199);
-      body << (request.options.has_jsonp() ? request.options.jsonp() + "(" : "") << found->second
-           << (request.options.has_jsonp() ? ")" : "");
+    auto found = OSRM_ERRORS_CODES.find(exception.code);
+    if (found == OSRM_ERRORS_CODES.cend()) {
+      found = OSRM_ERRORS_CODES.find(199);
     }
+    body << (request.options.has_jsonp() ? request.options.jsonp() + "(" : "") << found->second
+         << (request.options.has_jsonp() ? ")" : "");
   } // valhalla error response
   else {
     // build up the json map
