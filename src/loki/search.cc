@@ -308,7 +308,7 @@ struct bin_handler_t {
       // the search cutoff is a hard filter so skip any outside of that
       if (distance > location.search_cutoff_)
         return;
-      // add edges leaving this node
+      // add edges entering/leaving this node
       for (const auto* edge = start_edge; edge < end_edge; ++edge) {
         // get some info about this edge and the opposing
         GraphId id = tile->id();
