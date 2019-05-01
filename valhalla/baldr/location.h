@@ -63,9 +63,7 @@ public:
   std::string country_;
 
   boost::optional<std::string> date_time_;
-  boost::optional<int> heading_;
-  boost::optional<int> heading_tolerance_;
-  boost::optional<float> node_snap_tolerance_;
+  boost::optional<float> heading_;
   boost::optional<uint64_t> way_id_;
 
   // try to find candidates who are reachable from this many or more nodes
@@ -78,6 +76,10 @@ public:
 
   // which side of the street wrt your input location to leave/arrive from/at
   PreferredSide preferred_side_;
+  float node_snap_tolerance_;
+  float heading_tolerance_;
+  float search_cutoff_;
+  float street_side_tolerance_;
 
 protected:
 };

@@ -404,6 +404,15 @@ void parse_locations(const rapidjson::Document& doc,
         if (preferred_side && PreferredSide_Parse(*preferred_side, &side)) {
           location->set_preferred_side(side);
         }
+        auto search_cutoff = rapidjson::get_optional<unsigned int>(r_loc, "/search_cutoff");
+        if (search_cutoff) {
+          location->set_search_cutoff(*search_cutoff);
+        }
+        auto street_side_tolerance =
+            rapidjson::get_optional<unsigned int>(r_loc, "/street_side_tolerance");
+        if (street_side_tolerance) {
+          location->set_street_side_tolerance(*street_side_tolerance);
+        }
       } catch (...) { throw valhalla_exception_t{location_parse_error_code}; }
     }
     if (track) {

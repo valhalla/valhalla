@@ -46,7 +46,7 @@ bool PathLocation::shares_edges(const PathLocation& other) const {
     for (const auto& other_edge : other.edges) {
       if (edge.id == other_edge.id && edge.sos == other_edge.sos &&
           midgard::equal<float>(edge.percent_along, other_edge.percent_along) &&
-          midgard::similar<float>(edge.distance + 1, other_edge.distance + 1) &&
+          midgard::equal<float>(edge.distance, other_edge.distance, .1f) &&
           edge.projected.ApproximatelyEqual(other_edge.projected)) {
         found = true;
         break;
