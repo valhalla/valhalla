@@ -30,3 +30,7 @@
 -j '{"locations":[{"lat":38.890591,"lon":-77.030014,"name":"National Museum of American History"},{"lat":38.899929,"lon":-77.033775}],"costing":"pedestrian","directions_options":{"units":"miles"}}'
 -j '{"locations":[{"lat":39.753151,"lon":-105.000160,"name":"Denver Union Station"},{"lat":39.747028,"lon":-104.994789,"name":"Starbucks"}],"costing":"pedestrian","directions_options":{"units":"miles"}}'
 -j '{"locations":[{"lat":39.747028,"lon":-104.994789,"name":"Starbucks"},{"lat":39.753151,"lon":-105.000160,"name":"Denver Union Station"}],"costing":"pedestrian","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":37.329918,"lon":-121.902328,"name":"San Jose Diridon Station"},{"lat":37.333054,"lon":-121.894478,"name":"The Almaden"}],"costing":"pedestrian","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":37.333054,"lon":-121.894478,"name":"The Almaden"},{"lat":37.329918,"lon":-121.902328,"name":"San Jose Diridon Station"}],"costing":"pedestrian","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":43.646835,"lon":-79.377213,"name":"Hockey Hall of Fame"},{"lat":43.652077,"lon":-79.383278,"name":"Nathan Phillips Square"}],"costing":"pedestrian","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":43.652077,"lon":-79.383278,"name":"Nathan Phillips Square"},{"lat":43.646835,"lon":-79.377213,"name":"Hockey Hall of Fame"}],"costing":"pedestrian","directions_options":{"units":"miles"}}'
