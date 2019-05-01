@@ -184,8 +184,7 @@ const std::unordered_map<unsigned, std::string> OSRM_ERRORS_CODES{
      R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
     // special case - we will return the valhalla error : Path distance exceeds the max distance
     // limit.
-    {154,
-     R"({"code":"NoRoute","message":"Path distance exceeds the max distance limit."})"},
+    {154, R"({"code":"NoRoute","message":"Path distance exceeds the max distance limit."})"},
     {155, R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
     {156, R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
     {157,
