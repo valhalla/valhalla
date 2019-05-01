@@ -182,7 +182,7 @@ const std::unordered_map<unsigned, std::string> OSRM_ERRORS_CODES{
      R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
     {153,
      R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
-    //OSRM has no equivalent message for this case so we return our own
+    // OSRM has no equivalent message for this case so we return our own
     {154, R"({"code":"DistanceExceeded","message":"Path distance exceeds the max distance limit."})"},
     {155, R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
     {156, R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
