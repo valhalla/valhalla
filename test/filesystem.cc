@@ -55,8 +55,8 @@ void recursive_directory_listing() {
   // cleanup from last run
   for (const auto& f : files)
     filesystem::remove(f);
-  for (const auto& d : dirs)
-    filesystem::remove(d);
+  for (auto d = dirs.rbegin(); d != dirs.rend(); ++d)
+    filesystem::remove(*d);
 
   // create them
   for (const auto& d : dirs)
