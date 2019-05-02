@@ -104,9 +104,7 @@ TripDirections DirectionsBuilder::Build(const DirectionsOptions& directions_opti
 // Update the heading of ~0 length edges.
 void DirectionsBuilder::UpdateHeading(EnhancedTripPath* etp) {
   auto is_walkway = [](TripPath_Use use) -> bool {
-    return ((use == TripPath_Use_kSidewalkUse) || (use == TripPath_Use_kFootwayUse) ||
-            (use == TripPath_Use_kStepsUse) || (use == TripPath_Use_kPathUse) ||
-            (use == TripPath_Use_kPedestrianUse) || (use == TripPath_Use_kBridlewayUse));
+    return ((use >= TripPath_Use_kSidewalkUse) && (use <= TripPath_Use_kBridlewayUse));
   };
 
   auto is_bikeway = [](TripPath_Use use) -> bool {
