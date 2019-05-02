@@ -202,8 +202,7 @@ const std::unordered_map<unsigned, std::string> OSRM_ERRORS_CODES{
     {164,
      R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
 
-    {170,
-     R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
+    {170, R"({"code":"NoRoute","message":"Impossible route between points"})"},
     {171,
      R"({"code":"NoSegment","message":"One of the supplied input coordinates could not snap to street segment."})"},
 
