@@ -34,3 +34,7 @@
 -j '{"locations":[{"lat":37.333054,"lon":-121.894478,"name":"The Almaden"},{"lat":37.329918,"lon":-121.902328,"name":"San Jose Diridon Station"}],"costing":"pedestrian","directions_options":{"units":"miles"}}'
 -j '{"locations":[{"lat":43.646835,"lon":-79.377213,"name":"Hockey Hall of Fame"},{"lat":43.652077,"lon":-79.383278,"name":"Nathan Phillips Square"}],"costing":"pedestrian","directions_options":{"units":"miles"}}'
 -j '{"locations":[{"lat":43.652077,"lon":-79.383278,"name":"Nathan Phillips Square"},{"lat":43.646835,"lon":-79.377213,"name":"Hockey Hall of Fame"}],"costing":"pedestrian","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":40.042545,"lon":-76.299072,"street":"East Fulton Street"},{"lat":40.038799,"lon":-76.305710,"street":"88 Chinese Express"}],"costing":"pedestrian","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":40.038799,"lon":-76.305710,"street":"88 Chinese Express"},{"lat":40.042545,"lon":-76.299072,"street":"East Fulton Street"}],"costing":"pedestrian","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":40.042534,"lon":-76.299171,"street":"East Fulton Street"},{"lat":40.041744,"lon":-76.308380,"street":"Roburrito's"}],"costing":"pedestrian","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":40.041744,"lon":-76.308380,"street":"Roburrito's"},{"lat":40.042534,"lon":-76.299171,"street":"East Fulton Street"}],"costing":"pedestrian","directions_options":{"units":"miles"}}'
