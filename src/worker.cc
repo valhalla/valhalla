@@ -415,6 +415,11 @@ void parse_locations(const rapidjson::Document& doc,
         }
       } catch (...) { throw valhalla_exception_t{location_parse_error_code}; }
     }
+    // first and last locations get the default type of break no matter what
+    if (locations->size()) {
+      locations->Mutable(0)->set_type(odin::Location::kBreak);
+      locations->Mutable(locations->size() - 1)->set_type(odin::Location::kBreak);
+    }
     if (track) {
       midgard::logging::Log(node + "_count::" + std::to_string(request_locations->Size()),
                             " [ANALYTICS] ");
