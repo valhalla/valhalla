@@ -706,6 +706,7 @@ struct bin_handler_t {
       correlated_edges.clear();
       // go through getting all the results for this one
       PathLocation correlated(pp.location);
+      // TODO: this is already in PathLocation, use it there
       std::vector<PathLocation::PathEdge> filtered;
       for (const auto& candidate : pp.reachable) {
         // this may be at a node, either because it was the closest thing or from snap tolerance
@@ -732,16 +733,6 @@ struct bin_handler_t {
         }
       }
 
-      // if we have nothing because of heading we'll just ignore it
-      if (correlated.edges.size() == 0 && filtered.size()) {
-        for (auto& path_edge : filtered) {
-          if (correlated_edges.insert(path_edge.id).second) {
-            correlated.edges.push_back(std::move(path_edge));
-          }
-        }
-        filtered.clear();
-      }
-
       // if it was a through location with a heading its pretty confusing.
       // does the user want to come into and exit the location at the preferred
       // angle? for now we are just saying that they want it to exit at the
@@ -750,9 +741,25 @@ struct bin_handler_t {
       if ((pp.location.stoptype_ == Location::StopType::THROUGH ||
            pp.location.stoptype_ == Location::StopType::BREAK_THROUGH) &&
           pp.location.heading_) {
-        auto new_end = std::remove_if(correlated.edges.begin(), correlated.edges.end(),
-                                      [](const PathLocation::PathEdge& e) { return e.end_node(); });
+        // partition the ones we want to move to the end
+        auto new_end =
+            std::stable_partition(correlated.edges.begin(), correlated.edges.end(),
+                                  [](const PathLocation::PathEdge& e) { return !e.end_node(); });
+        // move them to the end
+        filtered.insert(filtered.end(), std::make_move_iterator(new_end),
+                        std::make_move_iterator(correlated.edges.end()));
+        // remove them from the original
         correlated.edges.erase(new_end, correlated.edges.end());
+      }
+
+      // if we have nothing because of filtering (heading/side) we'll just ignore it
+      if (correlated.edges.size() == 0 && filtered.size()) {
+        for (auto& path_edge : filtered) {
+          if (correlated_edges.insert(path_edge.id).second) {
+            correlated.edges.push_back(std::move(path_edge));
+          }
+        }
+        filtered.clear();
       }
 
       // keep filtered edges for retry in case we cant find a route with non filtered edges
@@ -771,7 +778,7 @@ struct bin_handler_t {
                                        std::make_move_iterator(filtered.end()));
 
       // if we found nothing that is no good but if its batch maybe throwing makes no sense?
-      if (correlated.edges.size() != 0 || correlated.filtered_edges.size() != 0) {
+      if (correlated.edges.size() != 0) {
         searched.insert({pp.location, correlated});
       }
     }
