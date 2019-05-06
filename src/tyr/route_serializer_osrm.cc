@@ -638,7 +638,8 @@ std::string turn_modifier(const uint32_t in_brg, const uint32_t out_brg) {
 // or if needed, the incoming edge bearing and outgoing edge bearing.
 std::string turn_modifier(const valhalla::odin::TripDirections::Maneuver& maneuver,
                           const uint32_t in_brg,
-                          const uint32_t out_brg) {
+                          const uint32_t out_brg,
+                          const bool arrive_maneuver) {
   switch (maneuver.type()) {
     case valhalla::odin::TripDirections_Maneuver_Type_kStart:
     case valhalla::odin::TripDirections_Maneuver_Type_kDestination:
@@ -655,6 +656,9 @@ std::string turn_modifier(const valhalla::odin::TripDirections::Maneuver& maneuv
       return "sharp right";
     case valhalla::odin::TripDirections_Maneuver_Type_kUturnRight:
     case valhalla::odin::TripDirections_Maneuver_Type_kUturnLeft:
+      // [TODO #1789] route ending in uturn should not set modifier=uturn
+      if (arrive_maneuver)
+        return "";
       return "uturn";
     case valhalla::odin::TripDirections_Maneuver_Type_kSharpLeft:
       return "sharp left";
@@ -738,7 +742,7 @@ json::MapPtr osrm_maneuver(const valhalla::odin::TripDirections::Maneuver& maneu
 
   std::string modifier;
   if (!depart_maneuver) {
-    modifier = turn_modifier(maneuver, in_brg, out_brg);
+    modifier = turn_modifier(maneuver, in_brg, out_brg, arrive_maneuver);
     if (!modifier.empty())
       osrm_man->emplace("modifier", modifier);
   }
