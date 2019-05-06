@@ -141,6 +141,10 @@ std::list<valhalla::odin::TripPath> thor_worker_t::route(valhalla_request_t& req
   auto path = trippaths.begin();
   GraphId left, right;
   for (auto l = locations->begin(); l < locations->end(); ++l) {
+    // through and via will have been taken care of in the depart_at and arrive_by below
+    if (l->type() == odin::Location::kThrough || l->type() == odin::Location::kVia)
+      continue;
+
     // the edge on the right side of this node
     right = GraphId(path != trippaths.end() ? static_cast<uint64_t>(path->node(0).edge().id())
                                             : kInvalidGraphId);
