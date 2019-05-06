@@ -657,7 +657,8 @@ std::string turn_modifier(const valhalla::odin::TripDirections::Maneuver& maneuv
     case valhalla::odin::TripDirections_Maneuver_Type_kUturnRight:
     case valhalla::odin::TripDirections_Maneuver_Type_kUturnLeft:
       // [TODO #1789] route ending in uturn should not set modifier=uturn
-      if (arrive_maneuver) return "";
+      if (arrive_maneuver)
+        return "";
       return "uturn";
     case valhalla::odin::TripDirections_Maneuver_Type_kSharpLeft:
       return "sharp left";
