@@ -151,60 +151,33 @@ For more information on binaries, see [Command Line Tools](#command-line-tools) 
 Running
 -------
 
-The following steps should be enough to make some routing data and start a server using it.
-
-_If you would like to run an elevation lookup service with Valhalla follow the instructions [here](docs/elevation.md)._
-
-Create a data directory to collect OSM data, a configuration file, and generated routing-graph tiles:
-
-```sh
-DATA_DIR=/data
-mkdir -p "$DATA_DIR"
-```
-
-Search your city at [Interline OSM Extracts](https://www.interline.io/osm/extracts) or your country at [Geofabrik Downloads](http://download.geofabrik.de/index.html) and download the OSM data in PBF format to the data directory. For example, here we download OSM data for Switzerland and Liechtenstein:
+The following bash should be enough to make some routing data and start a server using it. (Note - if you would like to run an elevation lookup service with Valhalla follow the instructions [here](docs/elevation.md)).
 
 ```bash
-wget --directory-prefix "$DATA_DIR" http://download.geofabrik.de/europe/switzerland-latest.osm.pbf http://download.geofabrik.de/europe/liechtenstein-latest.osm.pbf
-```
+#download some data and make tiles out of it
+#NOTE: you can feed multiple extracts into pbfgraphbuilder
+wget http://download.geofabrik.de/europe/switzerland-latest.osm.pbf http://download.geofabrik.de/europe/liechtenstein-latest.osm.pbf
+#get the config and setup
+mkdir -p valhalla_tiles
+valhalla_build_config --mjolnir-tile-dir ${PWD}/valhalla_tiles --mjolnir-tile-extract ${PWD}/valhalla_tiles.tar --mjolnir-timezone ${PWD}/valhalla_tiles/timezones.sqlite --mjolnir-admin ${PWD}/valhalla_tiles/admins.sqlite > valhalla.json
+#build routing tiles
+#TODO: run valhalla_build_admins?
+valhalla_build_tiles -c valhalla.json switzerland-latest.osm.pbf liechtenstein-latest.osm.pbf
+#tar it up for running the server
+find valhalla_tiles | sort -n | tar cf valhalla_tiles.tar --no-recursion -T -
 
-Build a configuration file:
-
-```sh
-valhalla_build_config > ${$DATA_DIR}/valhalla.json
-```
-
-Build routing tiles:
-
-```sh
-valhalla_build_tiles -c ${$DATA_DIR}/valhalla.json ${$DATA_DIR}/switzerland-latest.osm.pbf ${$DATA_DIR}/liechtenstein-latest.osm.pbf
-```
-
-This process takes time from a few minutes to hours, depending on the
-OSM size. It creates tiles under `$DATA_DIR/valhalla`.
-
-Grab the demos repo and open up the point and click routing sample:
-
-```sh
+#grab the demos repo and open up the point and click routing sample
 git clone --depth=1 --recurse-submodules --single-branch --branch=gh-pages https://github.com/valhalla/demos.git
 firefox demos/routing/index-internal.html &
-```
+#NOTE: set the environment pulldown to 'localhost' to point it at your own server
 
-Start up your server:
-
-```sh
+#start up the server
 valhalla_service valhalla.json 1
-```
-
-Query it directly if you like using curl and jq:
-
-```sh
+#curl it directly if you like:
 curl http://localhost:8002/route --data '{"locations":[{"lat":40.285488,"lon":-76.650597,"type":"break","city":"Hershey","state":"PA"},{"lat":40.794025,"lon":-77.860695,"type":"break","city":"State College","state":"PA"}],"costing":"auto","directions_options":{"units":"miles"}}' | jq '.'
+
+#HAVE FUN!
 ```
-
-Or, if using the demo repo user interfaces: Set the environment pulldown to `localhost` to point it at your own server.
-
-Have fun!
 
 Contributing
 ------------
