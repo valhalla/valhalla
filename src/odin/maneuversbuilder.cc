@@ -355,7 +355,8 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
         ++next_man;
       }
       // Combine current internal maneuver with next maneuver
-      else if (curr_man->internal_intersection() && (curr_man != next_man)) {
+      else if (curr_man->internal_intersection() && (curr_man != next_man) &&
+               !next_man->IsDestinationType()) {
         LOG_TRACE("+++ Combine: current internal maneuver with next maneuver +++");
         curr_man = CombineInternalManeuver(maneuvers, prev_man, curr_man, next_man, is_first_man);
         if (is_first_man) {
@@ -836,7 +837,7 @@ void ManeuversBuilder::InitializeManeuver(Maneuver& maneuver, int node_index) {
   }
 
   // Internal Intersection
-  if (prev_edge->internal_intersection()) {
+  if (prev_edge->internal_intersection() && !trip_path_->IsLastNodeIndex(node_index)) {
     maneuver.set_internal_intersection(true);
   }
 
