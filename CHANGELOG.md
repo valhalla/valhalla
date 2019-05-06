@@ -1,4 +1,4 @@
-## Release Date: 2019-??-?? Valhalla 3.0.3
+## Release Date: 2019-04-22 Valhalla 3.0.3
 * **Bug Fix**
    * FIXED: Fixed a rare loop condition in route matcher (edge walking to match a trace).
    * FIXED: Fixed VACUUM ANALYZE syntax issue.  [#1704](https://github.com/valhalla/valhalla/pull/1704)
@@ -15,14 +15,19 @@
    * FIXED: Improvements for pedestrian forks, pedestrian roundabouts, and continue maneuvers. [#1768](https://github.com/valhalla/valhalla/pull/1768)
    * FIXED: Added simplified overview for OSRM response and added use_toll logic back to truck costing. [#1765](https://github.com/valhalla/valhalla/pull/1765)
    * FIXED: temp fix for location distance bug [#1774](https://github.com/valhalla/valhalla/pull/1774)
+   * FIXED: Fix pedestrian routes using walkway_factor [#1780](https://github.com/valhalla/valhalla/pull/1780)
+   * FIXED: Update the begin and end heading of short edges based on use [#1783](https://github.com/valhalla/valhalla/pull/1783)
+   * FIXED: GraphReader::AreEdgesConnected update.  If transition count == 0 return false and do not call transition function. [#1786](https://github.com/valhalla/valhalla/pull/1786)
 
 * **Enhancement**
    * Add the ability to run valhalla_build_tiles in stages. Specify the begin_stage and end_stage as command line options. Also cleans up temporary files as the last stage in the pipeline.
    * Add `remove` to `filesystem` namespace. [#1752](https://github.com/valhalla/valhalla/pull/1752)
    * Add TaxiCost into auto costing options. 
    * Add `preferred_side` to allow per-location filtering of edges based on the side of the road the location is on and the driving side for that locale.
+   * Slightly decreased the internal side-walk factor to .90f to favor roads with attached sidewalks. This impacts roads that have added sidewalk:left, sidewalk:right or sidewalk:both OSM tags (these become attributes on each directedEdge). The user can then avoid/penalize dedicated sidewalks and walkways, when they increase the walkway_factor. Since we slightly decreased the sidewalk_factor internally and only favor sidewalks if use is tagged as sidewalk_left or sidewalk_right, we should tend to route on roads with attached sidewalks rather than separate/dedicated sidewalks, allowing for more road names to be called out since these are labeled more.
    * Add `via` and `break_through` location types [#1737](https://github.com/valhalla/valhalla/pull/1737)
-   
+   * Add `street_side_tolerance` and `search_cutoff` to input `location` [#1777](https://github.com/valhalla/valhalla/pull/1777)
+   * Return the Valhalla error `Path distance exceeds the max distance limit` for OSRM responses when the route is greater than the service limits. [#1781](https://github.com/valhalla/valhalla/pull/1781)
 
 ## Release Date: 2019-01-14 Valhalla 3.0.2
 * **Bug Fix**

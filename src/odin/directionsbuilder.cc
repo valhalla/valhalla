@@ -12,8 +12,10 @@
 #include <valhalla/proto/tripdirections.pb.h>
 
 namespace {
-// Minimum edge length (~10 feet)
-constexpr auto kMinEdgeLength = 0.003f;
+// Minimum drive edge length (~10 feet)
+constexpr auto kMinDriveEdgeLength = 0.003f;
+// Minimum pedestrian/bicycle edge length (~1 foot)
+constexpr auto kMinPedestrianBicycleEdgeLength = 0.0003f;
 
 } // namespace
 
@@ -101,23 +103,39 @@ TripDirections DirectionsBuilder::Build(const DirectionsOptions& directions_opti
 
 // Update the heading of ~0 length edges.
 void DirectionsBuilder::UpdateHeading(EnhancedTripPath* etp) {
+  auto is_walkway = [](TripPath_Use use) -> bool {
+    return ((use >= TripPath_Use_kSidewalkUse) && (use <= TripPath_Use_kBridlewayUse));
+  };
+
+  auto is_bikeway = [](TripPath_Use use) -> bool {
+    return ((use == TripPath_Use_kCyclewayUse) || (use == TripPath_Use_kMountainBikeUse));
+  };
+
   for (size_t x = 0; x < etp->node_size(); ++x) {
     auto* prev_edge = etp->GetPrevEdge(x);
     auto* curr_edge = etp->GetCurrEdge(x);
     auto* next_edge = etp->GetNextEdge(x);
-    if (curr_edge && (curr_edge->length() < kMinEdgeLength)) {
+
+    // Set the minimum edge length based on use
+    auto min_edge_length = kMinDriveEdgeLength;
+    if (curr_edge && !curr_edge->roundabout() &&
+        (is_walkway(curr_edge->use()) || is_bikeway(curr_edge->use()))) {
+      min_edge_length = kMinPedestrianBicycleEdgeLength;
+    }
+
+    if (curr_edge && (curr_edge->length() < min_edge_length)) {
 
       // Set the current begin heading
-      if (prev_edge && (prev_edge->length() >= kMinEdgeLength)) {
+      if (prev_edge && (prev_edge->length() >= min_edge_length)) {
         curr_edge->set_begin_heading(prev_edge->end_heading());
-      } else if (next_edge && (next_edge->length() >= kMinEdgeLength)) {
+      } else if (next_edge && (next_edge->length() >= min_edge_length)) {
         curr_edge->set_begin_heading(next_edge->begin_heading());
       }
 
       // Set the current end heading
-      if (next_edge && (next_edge->length() >= kMinEdgeLength)) {
+      if (next_edge && (next_edge->length() >= min_edge_length)) {
         curr_edge->set_end_heading(next_edge->begin_heading());
-      } else if (prev_edge && (prev_edge->length() >= kMinEdgeLength)) {
+      } else if (prev_edge && (prev_edge->length() >= min_edge_length)) {
         curr_edge->set_end_heading(prev_edge->end_heading());
       }
     }

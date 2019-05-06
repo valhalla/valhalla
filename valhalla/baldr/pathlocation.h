@@ -117,17 +117,15 @@ public:
     if (pl.heading_) {
       l->set_heading(*pl.heading_);
     }
-    if (pl.heading_tolerance_) {
-      l->set_heading_tolerance(*pl.heading_tolerance_);
-    }
-    if (pl.node_snap_tolerance_) {
-      l->set_node_snap_tolerance(*pl.node_snap_tolerance_);
-    }
+    l->set_heading_tolerance(pl.heading_tolerance_);
+    l->set_node_snap_tolerance(pl.node_snap_tolerance_);
     if (pl.way_id_) {
       l->set_way_id(*pl.way_id_);
     }
     l->set_minimum_reachability(pl.minimum_reachability_);
     l->set_radius(pl.radius_);
+    l->set_search_cutoff(pl.radius_ > pl.search_cutoff_ ? pl.radius_ : pl.search_cutoff_);
+    l->set_street_side_tolerance(pl.street_side_tolerance_);
 
     auto* path_edges = l->mutable_path_edges();
     for (const auto& e : pl.edges) {
@@ -214,6 +212,12 @@ public:
     }
     if (loc.has_way_id()) {
       l.way_id_ = loc.way_id();
+    }
+    if (loc.has_search_cutoff()) {
+      l.search_cutoff_ = loc.search_cutoff();
+    }
+    if (loc.has_street_side_tolerance()) {
+      l.street_side_tolerance_ = loc.street_side_tolerance();
     }
     return l;
   }

@@ -9,13 +9,15 @@
 namespace valhalla {
 namespace baldr {
 
+// TODO: get defaults from config singleton
 Location::Location(const midgard::PointLL& latlng,
                    const StopType& stoptype,
                    unsigned int minimum_reachability,
                    unsigned long radius,
                    const PreferredSide& side)
     : latlng_(latlng), stoptype_(stoptype), minimum_reachability_(minimum_reachability),
-      radius_(radius), preferred_side_(side) {
+      radius_(radius), preferred_side_(side), node_snap_tolerance_(5), heading_tolerance_(60),
+      search_cutoff_(35000), street_side_tolerance_(5) {
 }
 
 bool Location::operator==(const Location& o) const {

@@ -182,7 +182,8 @@ const std::unordered_map<unsigned, std::string> OSRM_ERRORS_CODES{
      R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
     {153,
      R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
-    {154, R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
+    // OSRM has no equivalent message for this case so we return our own
+    {154, R"({"code":"DistanceExceeded","message":"Path distance exceeds the max distance limit."})"},
     {155, R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
     {156, R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
     {157,
@@ -201,8 +202,7 @@ const std::unordered_map<unsigned, std::string> OSRM_ERRORS_CODES{
     {164,
      R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
 
-    {170,
-     R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
+    {170, R"({"code":"NoRoute","message":"Impossible route between points"})"},
     {171,
      R"({"code":"NoSegment","message":"One of the supplied input coordinates could not snap to street segment."})"},
 
@@ -404,7 +404,21 @@ void parse_locations(const rapidjson::Document& doc,
         if (preferred_side && PreferredSide_Parse(*preferred_side, &side)) {
           location->set_preferred_side(side);
         }
+        auto search_cutoff = rapidjson::get_optional<unsigned int>(r_loc, "/search_cutoff");
+        if (search_cutoff) {
+          location->set_search_cutoff(*search_cutoff);
+        }
+        auto street_side_tolerance =
+            rapidjson::get_optional<unsigned int>(r_loc, "/street_side_tolerance");
+        if (street_side_tolerance) {
+          location->set_street_side_tolerance(*street_side_tolerance);
+        }
       } catch (...) { throw valhalla_exception_t{location_parse_error_code}; }
+    }
+    // first and last locations get the default type of break no matter what
+    if (locations->size()) {
+      locations->Mutable(0)->set_type(odin::Location::kBreak);
+      locations->Mutable(locations->size() - 1)->set_type(odin::Location::kBreak);
     }
     if (track) {
       midgard::logging::Log(node + "_count::" + std::to_string(request_locations->Size()),
