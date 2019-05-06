@@ -1,4 +1,4 @@
-## Release Date: 2019-04-22 Valhalla 3.0.3
+## Release Date: UNRELEASED Valhalla 3.0.3
 * **Bug Fix**
    * FIXED: Fixed a rare loop condition in route matcher (edge walking to match a trace).
    * FIXED: Fixed VACUUM ANALYZE syntax issue.  [#1704](https://github.com/valhalla/valhalla/pull/1704)
@@ -18,6 +18,7 @@
    * FIXED: Fix pedestrian routes using walkway_factor [#1780](https://github.com/valhalla/valhalla/pull/1780)
    * FIXED: Update the begin and end heading of short edges based on use [#1783](https://github.com/valhalla/valhalla/pull/1783)
    * FIXED: GraphReader::AreEdgesConnected update.  If transition count == 0 return false and do not call transition function. [#1786](https://github.com/valhalla/valhalla/pull/1786)
+   * FIXED: Only edge candidates that were used in the path are send to serializer: [1788](https://github.com/valhalla/valhalla/pull/1788)
 
 * **Enhancement**
    * Add the ability to run valhalla_build_tiles in stages. Specify the begin_stage and end_stage as command line options. Also cleans up temporary files as the last stage in the pipeline.
