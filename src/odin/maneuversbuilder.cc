@@ -836,8 +836,9 @@ void ManeuversBuilder::InitializeManeuver(Maneuver& maneuver, int node_index) {
     maneuver.set_roundabout_exit_count(1);
   }
 
-  // Internal Intersection
-  if (prev_edge->internal_intersection() && !trip_path_->IsLastNodeIndex(node_index)) {
+  // Internal Intersection - excluding the first and last edges
+  if (prev_edge->internal_intersection() && !trip_path_->IsLastNodeIndex(node_index) &&
+      !trip_path_->IsFirstNodeIndex(node_index - 1)) {
     maneuver.set_internal_intersection(true);
   }
 
@@ -1536,11 +1537,13 @@ bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver, int node_i
 
   /////////////////////////////////////////////////////////////////////////////
   // Process internal intersection
+  // Cannot be the first edge in the trip
   if (prev_edge->internal_intersection() && !maneuver.internal_intersection()) {
     return false;
   } else if (!prev_edge->internal_intersection() && maneuver.internal_intersection()) {
     return false;
-  } else if (prev_edge->internal_intersection() && maneuver.internal_intersection()) {
+  } else if (prev_edge->internal_intersection() && !trip_path_->IsFirstNodeIndex(node_index - 1) &&
+             maneuver.internal_intersection()) {
     return true;
   }
 
