@@ -1342,7 +1342,15 @@ void ManeuversBuilder::SetSimpleDirectionalManeuverType(Maneuver& maneuver,
       break;
     }
     case Turn::Type::kSlightRight: {
-      if (maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kKeepStraight) {
+      // TODO refactor with enhanced trip path clean up
+      IntersectingEdgeCounts xedge_counts;
+      auto* node = trip_path_->GetEnhancedNode(maneuver.begin_node_index());
+      if (node && prev_edge) {
+        node->CalculateRightLeftIntersectingEdgeCounts(prev_edge->end_heading(),
+                                                       prev_edge->travel_mode(), xedge_counts);
+      }
+      if ((maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kKeepStraight) &&
+          ((xedge_counts.right > 0) || ((xedge_counts.right == 0) && (xedge_counts.left == 0)))) {
         maneuver.set_type(TripDirections_Maneuver_Type_kContinue);
         LOG_TRACE("ManeuverType=CONTINUE");
       } else {
@@ -1404,7 +1412,15 @@ void ManeuversBuilder::SetSimpleDirectionalManeuverType(Maneuver& maneuver,
       break;
     }
     case Turn::Type::kSlightLeft: {
-      if (maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kKeepStraight) {
+      // TODO refactor with enhanced trip path clean up
+      IntersectingEdgeCounts xedge_counts;
+      auto* node = trip_path_->GetEnhancedNode(maneuver.begin_node_index());
+      if (node && prev_edge) {
+        node->CalculateRightLeftIntersectingEdgeCounts(prev_edge->end_heading(),
+                                                       prev_edge->travel_mode(), xedge_counts);
+      }
+      if ((maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kKeepStraight) &&
+          ((xedge_counts.left > 0) || ((xedge_counts.right == 0) && (xedge_counts.left == 0)))) {
         maneuver.set_type(TripDirections_Maneuver_Type_kContinue);
         LOG_TRACE("ManeuverType=CONTINUE");
       } else {
