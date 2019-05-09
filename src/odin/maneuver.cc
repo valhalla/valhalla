@@ -125,6 +125,12 @@ void Maneuver::set_type(const TripDirections_Maneuver_Type& type) {
   type_ = type;
 }
 
+bool Maneuver::IsDestinationType() const {
+  return ((type_ == TripDirections_Maneuver_Type_kDestination) ||
+          (type_ == TripDirections_Maneuver_Type_kDestinationLeft) ||
+          (type_ == TripDirections_Maneuver_Type_kDestinationRight));
+}
+
 const StreetNames& Maneuver::street_names() const {
   return *street_names_;
 }
