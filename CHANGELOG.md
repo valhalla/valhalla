@@ -1,4 +1,8 @@
-## Release Date: 2019-05-07 Valhalla 3.0.3
+## Release Date: UNRELEASED Valhalla 3.0.4
+* **Bug Fix**
+   * FIXED: Improved logic to decide between bear vs. continue [#1798](https://github.com/valhalla/valhalla/pull/1798)
+
+## Release Date: 2019-05-08 Valhalla 3.0.3
 * **Bug Fix**
    * FIXED: Fixed a rare loop condition in route matcher (edge walking to match a trace).
    * FIXED: Fixed VACUUM ANALYZE syntax issue.  [#1704](https://github.com/valhalla/valhalla/pull/1704)
