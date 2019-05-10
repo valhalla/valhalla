@@ -388,10 +388,9 @@ protected:
    */
   virtual const EdgeFilter GetEdgeFilter() const {
     // Throw back a lambda that checks the access for this type of costing
-    Surface s = worst_allowed_surface_;
-    return [s](const baldr::DirectedEdge* edge) {
+    return [](const baldr::DirectedEdge* edge) {
       if (edge->is_shortcut() || !(edge->forwardaccess() & kBicycleAccess) ||
-          edge->use() == Use::kSteps || edge->surface() > s) {
+          edge->use() == Use::kSteps) {
         return 0.0f;
       } else {
         // TODO - use classification/use to alter the factor
