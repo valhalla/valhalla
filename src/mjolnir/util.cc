@@ -253,14 +253,14 @@ bool build_tile_set(const boost::property_tree::ptree& config,
     LOG_INFO("Skipping hierarchy builder and shortcut builder");
   }
 
-  // Build the Complex Restrictions
-  if (start_stage <= BuildStage::kRestrictions && BuildStage::kRestrictions <= end_stage) {
-    RestrictionBuilder::Build(config, cr_from_bin, cr_to_bin);
-  }
-
   // Add elevation to the tiles
   if (start_stage <= BuildStage::kElevation && BuildStage::kElevation <= end_stage) {
     ElevationBuilder::Build(config);
+  }
+
+  // Build the Complex Restrictions
+  if (start_stage <= BuildStage::kRestrictions && BuildStage::kRestrictions <= end_stage) {
+    RestrictionBuilder::Build(config, cr_from_bin, cr_to_bin);
   }
 
   // Validate the graph and add information that cannot be added until full graph is formed.
