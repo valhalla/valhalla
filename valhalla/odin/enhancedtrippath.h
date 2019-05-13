@@ -18,9 +18,69 @@ class EnhancedTripPath_Edge;
 class EnhancedTripPath_Node;
 class EnhancedTripPath_Admin;
 
-class EnhancedTripPath : public TripPath {
+class EnhancedTripPath {
 public:
-  EnhancedTripPath() = delete;
+  EnhancedTripPath(TripPath& trip_path);
+
+  const std::string& shape() const {
+    return trip_path_.shape();
+  }
+
+  int node_size() const {
+    return trip_path_.node_size();
+  }
+
+  const ::valhalla::odin::TripPath_Node& node(int index) const {
+    return trip_path_.node(index);
+  }
+
+  ::valhalla::odin::TripPath_Node* mutable_node(int index) {
+    return trip_path_.mutable_node(index);
+  }
+
+  const ::google::protobuf::RepeatedPtrField<::valhalla::odin::TripPath_Node>& node() const {
+    return trip_path_.node();
+  }
+
+  int location_size() const {
+    return trip_path_.location_size();
+  }
+
+  const ::valhalla::odin::Location& location(int index) const {
+    return trip_path_.location(index);
+  }
+
+  int admin_size() const {
+    return trip_path_.admin_size();
+  }
+
+  ::valhalla::odin::TripPath_Admin* mutable_admin(int index) {
+    return trip_path_.mutable_admin(index);
+  }
+
+  uint64_t osm_changeset() const {
+    return trip_path_.osm_changeset();
+  }
+
+  uint64_t trip_id() const {
+    return trip_path_.trip_id();
+  }
+
+  uint32_t leg_id() const {
+    return trip_path_.leg_id();
+  }
+
+  uint32_t leg_count() const {
+    return trip_path_.leg_count();
+  }
+
+  const ::google::protobuf::RepeatedPtrField<::valhalla::odin::Location>& location() const {
+    return trip_path_.location();
+  }
+
+  const ::valhalla::odin::BoundingBox& bbox() const {
+    return trip_path_.bbox();
+  }
 
   EnhancedTripPath_Node* GetEnhancedNode(const int node_index);
 
@@ -49,6 +109,9 @@ public:
   const ::valhalla::odin::Location& GetDestination() const;
 
   float GetLength(const DirectionsOptions::Units& units);
+
+protected:
+  TripPath& trip_path_;
 };
 
 class EnhancedTripPath_Edge : public TripPath_Edge {

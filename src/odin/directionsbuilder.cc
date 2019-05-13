@@ -78,27 +78,28 @@ TripDirections DirectionsBuilder::Build(const DirectionsOptions& directions_opti
     throw valhalla_exception_t{210};
   }
 
-  EnhancedTripPath* etp = static_cast<EnhancedTripPath*>(&trip_path);
+  // Create an enhanced trip path from the specified trip_path
+  EnhancedTripPath etp(trip_path);
 
   // Produce maneuvers if desired
   std::list<Maneuver> maneuvers;
   if (directions_options.directions_type() != DirectionsType::none) {
     // Update the heading of ~0 length edges
-    UpdateHeading(etp);
+    UpdateHeading(&etp);
 
-    ManeuversBuilder maneuversBuilder(directions_options, etp);
+    ManeuversBuilder maneuversBuilder(directions_options, &etp);
     maneuvers = maneuversBuilder.Build();
 
     // Create the instructions if desired
     if (directions_options.directions_type() == DirectionsType::instructions) {
       std::unique_ptr<NarrativeBuilder> narrative_builder =
-          NarrativeBuilderFactory::Create(directions_options, etp);
-      narrative_builder->Build(directions_options, etp, maneuvers);
+          NarrativeBuilderFactory::Create(directions_options, &etp);
+      narrative_builder->Build(directions_options, &etp, maneuvers);
     }
   }
 
   // Return trip directions
-  return PopulateTripDirections(directions_options, etp, maneuvers);
+  return PopulateTripDirections(directions_options, &etp, maneuvers);
 }
 
 // Update the heading of ~0 length edges.

@@ -166,6 +166,9 @@ namespace odin {
 ///////////////////////////////////////////////////////////////////////////////
 // EnhancedTripPath
 
+EnhancedTripPath::EnhancedTripPath(TripPath& trip_path) : trip_path_(trip_path) {
+}
+
 EnhancedTripPath_Node* EnhancedTripPath::GetEnhancedNode(const int node_index) {
   return static_cast<EnhancedTripPath_Node*>(mutable_node(node_index));
 }
