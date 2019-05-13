@@ -386,7 +386,7 @@ json::ArrayPtr intersections(const valhalla::odin::TripDirections::Maneuver& man
 
     // Get the node and current edge from the enhanced trip path
     // NOTE: curr_edge does not exist for the arrive maneuver
-    auto* node = etp->GetEnhancedNode(i);
+    auto node = etp->GetEnhancedNode(i);
     auto* curr_edge = etp->GetCurrEdge(i);
 
     // Add the node location (lon, lat). Use the last shape point for

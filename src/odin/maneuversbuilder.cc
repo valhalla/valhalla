@@ -205,7 +205,7 @@ std::list<Maneuver> ManeuversBuilder::Produce() {
     LOG_TRACE(std::string("  curr_edge=") + (curr_edge ? curr_edge->ToString() : "NONE"));
     LOG_TRACE(std::string("  prev2curr_turn_degree=") +
               std::to_string(GetTurnDegree(prev_edge->end_heading(), curr_edge->begin_heading())));
-    auto* node = trip_path_->GetEnhancedNode(i);
+    auto node = trip_path_->GetEnhancedNode(i);
     for (size_t z = 0; z < node->intersecting_edge_size(); ++z) {
       auto* intersecting_edge = node->GetIntersectingEdge(z);
       LOG_TRACE(std::string("    intersectingEdge=") + intersecting_edge->ToString());
@@ -250,7 +250,7 @@ std::list<Maneuver> ManeuversBuilder::Produce() {
   LOG_TRACE(std::string("  curr_edge_PARAMETERS=") +
             (curr_edge ? curr_edge->ToParameterString() : "NONE"));
   LOG_TRACE(std::string("  curr_edge=") + (curr_edge ? curr_edge->ToString() : "NONE"));
-  auto* node = trip_path_->GetEnhancedNode(0);
+  auto node = trip_path_->GetEnhancedNode(0);
   for (size_t z = 0; z < node->intersecting_edge_size(); ++z) {
     auto* intersecting_edge = node->GetIntersectingEdge(z);
     LOG_TRACE(std::string("    intersectingEdge=") + intersecting_edge->ToString());
@@ -905,7 +905,7 @@ void ManeuversBuilder::InitializeManeuver(Maneuver& maneuver, int node_index) {
         (curr_edge->travel_mode() == TripPath_TravelMode_kTransit)) {
       maneuver.set_type(TripDirections_Maneuver_Type_kTransitConnectionStart);
       LOG_TRACE("ManeuverType=TRANSIT_CONNECTION_START");
-      auto* node = trip_path_->GetEnhancedNode(node_index);
+      auto node = trip_path_->GetEnhancedNode(node_index);
       maneuver.set_transit_connection_platform_info(node->transit_platform_info());
     }
     // else mark it as transit connection destination
@@ -1012,7 +1012,7 @@ void ManeuversBuilder::UpdateManeuver(Maneuver& maneuver, int node_index) {
 
   // Insert transit stop into the transit maneuver
   if (prev_edge->travel_mode() == TripPath_TravelMode_kTransit) {
-    auto* node = trip_path_->GetEnhancedNode(node_index);
+    auto node = trip_path_->GetEnhancedNode(node_index);
     maneuver.InsertTransitStop(node->transit_platform_info());
   }
 }
@@ -1021,7 +1021,7 @@ void ManeuversBuilder::FinalizeManeuver(Maneuver& maneuver, int node_index) {
 
   auto* prev_edge = trip_path_->GetPrevEdge(node_index);
   auto* curr_edge = trip_path_->GetCurrEdge(node_index);
-  auto* node = trip_path_->GetEnhancedNode(node_index);
+  auto node = trip_path_->GetEnhancedNode(node_index);
 
   // Set begin cardinal direction
   maneuver.set_begin_cardinal_direction(DetermineCardinalDirection(curr_edge->begin_heading()));
@@ -1075,7 +1075,7 @@ void ManeuversBuilder::FinalizeManeuver(Maneuver& maneuver, int node_index) {
   // Add transit connection stop to a transit connection destination
   if ((maneuver.type() == TripDirections_Maneuver_Type_kTransitConnectionDestination) && prev_edge &&
       (prev_edge->travel_mode() == TripPath_TravelMode_kTransit)) {
-    auto* node = trip_path_->GetEnhancedNode(node_index);
+    auto node = trip_path_->GetEnhancedNode(node_index);
     maneuver.set_transit_connection_platform_info(node->transit_platform_info());
     LOG_TRACE("TripDirections_Maneuver_Type_kTransitConnectionDestination "
               "set_transit_connection_platform_info");
@@ -1083,7 +1083,7 @@ void ManeuversBuilder::FinalizeManeuver(Maneuver& maneuver, int node_index) {
 
   // Insert first transit stop
   if (maneuver.travel_mode() == TripPath_TravelMode_kTransit) {
-    auto* node = trip_path_->GetEnhancedNode(node_index);
+    auto node = trip_path_->GetEnhancedNode(node_index);
     maneuver.InsertTransitStop(node->transit_platform_info());
   }
 
@@ -1274,7 +1274,7 @@ void ManeuversBuilder::SetSimpleDirectionalManeuverType(Maneuver& maneuver,
       LOG_TRACE("ManeuverType=CONTINUE");
       if (trip_path_) {
         auto* man_begin_edge = trip_path_->GetCurrEdge(maneuver.begin_node_index());
-        auto* node = trip_path_->GetEnhancedNode(maneuver.begin_node_index());
+        auto node = trip_path_->GetEnhancedNode(maneuver.begin_node_index());
         bool prev_edge_has_names = (prev_edge ? !prev_edge->IsUnnamed() : false);
 
         ////////////////////////////////////////////////////////////////////
@@ -1344,7 +1344,7 @@ void ManeuversBuilder::SetSimpleDirectionalManeuverType(Maneuver& maneuver,
     case Turn::Type::kSlightRight: {
       // TODO refactor with enhanced trip path clean up
       IntersectingEdgeCounts xedge_counts;
-      auto* node = trip_path_->GetEnhancedNode(maneuver.begin_node_index());
+      auto node = trip_path_->GetEnhancedNode(maneuver.begin_node_index());
       if (node && prev_edge) {
         node->CalculateRightLeftIntersectingEdgeCounts(prev_edge->end_heading(),
                                                        prev_edge->travel_mode(), xedge_counts);
@@ -1414,7 +1414,7 @@ void ManeuversBuilder::SetSimpleDirectionalManeuverType(Maneuver& maneuver,
     case Turn::Type::kSlightLeft: {
       // TODO refactor with enhanced trip path clean up
       IntersectingEdgeCounts xedge_counts;
-      auto* node = trip_path_->GetEnhancedNode(maneuver.begin_node_index());
+      auto node = trip_path_->GetEnhancedNode(maneuver.begin_node_index());
       if (node && prev_edge) {
         node->CalculateRightLeftIntersectingEdgeCounts(prev_edge->end_heading(),
                                                        prev_edge->travel_mode(), xedge_counts);
@@ -1682,7 +1682,7 @@ bool ManeuversBuilder::IncludeUnnamedPrevEdge(int node_index,
                                               EnhancedTripPath_Edge* prev_edge,
                                               EnhancedTripPath_Edge* curr_edge) const {
 
-  auto* node = trip_path_->GetEnhancedNode(node_index);
+  auto node = trip_path_->GetEnhancedNode(node_index);
 
   if (!node->HasIntersectingEdges()) {
     return true;
@@ -1699,7 +1699,7 @@ bool ManeuversBuilder::IncludeUnnamedPrevEdge(int node_index,
 bool ManeuversBuilder::IsMergeManeuverType(Maneuver& maneuver,
                                            EnhancedTripPath_Edge* prev_edge,
                                            EnhancedTripPath_Edge* curr_edge) const {
-  auto* node = trip_path_->GetEnhancedNode(maneuver.begin_node_index());
+  auto node = trip_path_->GetEnhancedNode(maneuver.begin_node_index());
   // Previous edge is ramp and current edge is not a ramp
   // Current edge is a highway OR
   // Current edge is a trunk or primary, oneway, forward turn degree, and
@@ -1720,7 +1720,7 @@ bool ManeuversBuilder::IsFork(int node_index,
                               EnhancedTripPath_Edge* prev_edge,
                               EnhancedTripPath_Edge* curr_edge) const {
 
-  auto* node = trip_path_->GetEnhancedNode(node_index);
+  auto node = trip_path_->GetEnhancedNode(node_index);
   uint32_t turn_degree = GetTurnDegree(prev_edge->end_heading(), curr_edge->begin_heading());
 
   // If node is fork
@@ -1756,7 +1756,7 @@ bool ManeuversBuilder::IsPedestrianFork(int node_index,
   auto is_relative_straight = [](uint32_t turn_degree) -> bool {
     return ((turn_degree > 315) || (turn_degree < 45));
   };
-  auto* node = trip_path_->GetEnhancedNode(node_index);
+  auto node = trip_path_->GetEnhancedNode(node_index);
   uint32_t path_turn_degree = GetTurnDegree(prev_edge->end_heading(), curr_edge->begin_heading());
   bool is_pedestrian_travel_mode = ((prev_edge->travel_mode() == TripPath_TravelMode_kPedestrian) &&
                                     (curr_edge->travel_mode() == TripPath_TravelMode_kPedestrian));
@@ -1790,7 +1790,7 @@ bool ManeuversBuilder::IsTee(int node_index,
                              EnhancedTripPath_Edge* prev_edge,
                              EnhancedTripPath_Edge* curr_edge) const {
 
-  auto* node = trip_path_->GetEnhancedNode(node_index);
+  auto node = trip_path_->GetEnhancedNode(node_index);
   // Verify only one intersecting edge
   if (node->intersecting_edge_size() == 1) {
     // Assign turn type
@@ -1833,7 +1833,7 @@ bool ManeuversBuilder::IsLeftPencilPointUturn(int node_index,
     // If the above criteria is met then check the following criteria...
 
     IntersectingEdgeCounts xedge_counts;
-    auto* node = trip_path_->GetEnhancedNode(node_index);
+    auto node = trip_path_->GetEnhancedNode(node_index);
     node->CalculateRightLeftIntersectingEdgeCounts(prev_edge->end_heading(), prev_edge->travel_mode(),
                                                    xedge_counts);
 
@@ -1876,7 +1876,7 @@ bool ManeuversBuilder::IsRightPencilPointUturn(int node_index,
     // If the above criteria is met then check the following criteria...
 
     IntersectingEdgeCounts xedge_counts;
-    auto* node = trip_path_->GetEnhancedNode(node_index);
+    auto node = trip_path_->GetEnhancedNode(node_index);
     node->CalculateRightLeftIntersectingEdgeCounts(prev_edge->end_heading(), prev_edge->travel_mode(),
                                                    xedge_counts);
 
@@ -1905,7 +1905,7 @@ bool ManeuversBuilder::IsIntersectingForwardEdge(int node_index,
                                                  EnhancedTripPath_Edge* prev_edge,
                                                  EnhancedTripPath_Edge* curr_edge) const {
 
-  auto* node = trip_path_->GetEnhancedNode(node_index);
+  auto node = trip_path_->GetEnhancedNode(node_index);
   uint32_t turn_degree = GetTurnDegree(prev_edge->end_heading(), curr_edge->begin_heading());
 
   if (node->HasIntersectingEdges() && !node->IsMotorwayJunction() && !node->fork() &&
@@ -1939,7 +1939,7 @@ void ManeuversBuilder::DetermineRelativeDirection(Maneuver& maneuver) {
   auto* curr_edge = trip_path_->GetCurrEdge(maneuver.begin_node_index());
 
   IntersectingEdgeCounts xedge_counts;
-  auto* node = trip_path_->GetEnhancedNode(maneuver.begin_node_index());
+  auto node = trip_path_->GetEnhancedNode(maneuver.begin_node_index());
   node->CalculateRightLeftIntersectingEdgeCounts(prev_edge->end_heading(), prev_edge->travel_mode(),
                                                  xedge_counts);
 
@@ -2109,7 +2109,7 @@ bool ManeuversBuilder::AreRampManeuversCombinable(std::list<Maneuver>::iterator 
                                                   std::list<Maneuver>::iterator next_man) const {
   if (curr_man->ramp() && next_man->ramp() && !next_man->fork() &&
       !curr_man->internal_intersection() && !next_man->internal_intersection()) {
-    auto* node = trip_path_->GetEnhancedNode(next_man->begin_node_index());
+    auto node = trip_path_->GetEnhancedNode(next_man->begin_node_index());
     if (!node->HasTraversableOutboundIntersectingEdge(next_man->travel_mode()) ||
         node->IsStraightestTraversableIntersectingEdgeReversed(curr_man->end_heading(),
                                                                next_man->travel_mode())) {

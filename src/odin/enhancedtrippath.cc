@@ -4,6 +4,7 @@
 
 #include "midgard/constants.h"
 #include "midgard/util.h"
+
 #include "worker.h"
 
 #include "odin/enhancedtrippath.h"
@@ -169,8 +170,8 @@ namespace odin {
 EnhancedTripPath::EnhancedTripPath(TripPath& trip_path) : trip_path_(trip_path) {
 }
 
-EnhancedTripPath_Node* EnhancedTripPath::GetEnhancedNode(const int node_index) {
-  return static_cast<EnhancedTripPath_Node*>(mutable_node(node_index));
+std::unique_ptr<EnhancedTripPath_Node> EnhancedTripPath::GetEnhancedNode(const int node_index) {
+  return midgard::make_unique<EnhancedTripPath_Node>(mutable_node(node_index));
 }
 
 EnhancedTripPath_Edge* EnhancedTripPath::GetPrevEdge(const int node_index, int delta) {
@@ -956,6 +957,10 @@ std::string EnhancedTripPath_IntersectingEdge::ToString() const {
 
 ///////////////////////////////////////////////////////////////////////////////
 // EnhancedTripPath_Node
+
+EnhancedTripPath_Node::EnhancedTripPath_Node(TripPath_Node* mutable_node)
+    : mutable_node_(mutable_node) {
+}
 
 bool EnhancedTripPath_Node::HasIntersectingEdges() const {
   return (intersecting_edge_size() > 0);

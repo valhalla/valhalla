@@ -2,6 +2,7 @@
 #define VALHALLA_ODIN_ENHANCEDTRIPPATH_H_
 
 #include <cstdint>
+#include <memory>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -82,7 +83,7 @@ public:
     return trip_path_.bbox();
   }
 
-  EnhancedTripPath_Node* GetEnhancedNode(const int node_index);
+  std::unique_ptr<EnhancedTripPath_Node> GetEnhancedNode(const int node_index);
 
   EnhancedTripPath_Edge* GetPrevEdge(const int node_index, int delta = 1);
 
@@ -245,9 +246,58 @@ struct IntersectingEdgeCounts {
   uint32_t left_similar_traversable_outbound;
 };
 
-class EnhancedTripPath_Node : public TripPath_Node {
+class EnhancedTripPath_Node {
 public:
-  EnhancedTripPath_Node() = delete;
+  EnhancedTripPath_Node(TripPath_Node* mutable_node);
+
+  int intersecting_edge_size() const {
+    return mutable_node_->intersecting_edge_size();
+  }
+
+  const ::valhalla::odin::TransitPlatformInfo& transit_platform_info() const {
+    return mutable_node_->transit_platform_info();
+  }
+
+  bool fork() const {
+    return mutable_node_->fork();
+  }
+
+  const ::valhalla::odin::TripPath_IntersectingEdge& intersecting_edge(int index) const {
+    return mutable_node_->intersecting_edge(index);
+  }
+
+  ::valhalla::odin::TripPath_IntersectingEdge* mutable_intersecting_edge(int index) {
+    return mutable_node_->mutable_intersecting_edge(index);
+  }
+
+  const ::google::protobuf::RepeatedPtrField<::valhalla::odin::TripPath_IntersectingEdge>&
+  intersecting_edge() const {
+    return mutable_node_->intersecting_edge();
+  }
+
+  const ::valhalla::odin::TripPath_Edge& edge() const {
+    return mutable_node_->edge();
+  }
+
+  ::valhalla::odin::TripPath_Node_Type type() const {
+    return mutable_node_->type();
+  }
+
+  uint32_t elapsed_time() const {
+    return mutable_node_->elapsed_time();
+  }
+
+  uint32_t admin_index() const {
+    return mutable_node_->admin_index();
+  }
+
+  bool has_transit_platform_info() const {
+    return mutable_node_->has_transit_platform_info();
+  }
+
+  const std::string& time_zone() const {
+    return mutable_node_->time_zone();
+  }
 
   bool HasIntersectingEdges() const;
 
@@ -290,6 +340,9 @@ public:
   bool IsBorderControl() const;
 
   std::string ToString() const;
+
+protected:
+  TripPath_Node* mutable_node_;
 };
 
 class EnhancedTripPath_Admin : public TripPath_Admin {
