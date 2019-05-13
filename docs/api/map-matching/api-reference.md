@@ -147,7 +147,7 @@ The `trace_attributes` results contains a list of edges and, optionally, the fol
 | `edges` | List of edges associated with input shape. See the list of [edge items](#edge-items) for details. |
 | `osm_changeset` | Identifier of the OpenStreetMap base data version. |
 | `admins` | List of the administrative codes and names. See the list of [admin items](#admin-items) for details. |
-| `shape` | The [encoded polyline](/decoding.md) of the matched path. |
+| `shape` | The [encoded polyline](../../decoding.md) of the matched path. |
 | `matched_points` | List of match results when using the `map_snap` shape match algorithm. There is a one-to-one correspondence with the input set of latitude, longitude coordinates and this list of match results. See the list of [matched point items](#matched-point-items) for details. |
 | `units` | The specified units with the request, in either kilometers or miles. |
 
