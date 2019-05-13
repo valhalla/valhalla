@@ -129,11 +129,42 @@ std::list<valhalla::odin::TripPath> thor_worker_t::route(valhalla_request_t& req
   parse_locations(request);
   auto costing = parse_costing(request);
 
+  // get all the legs
+  auto* locations = request.options.mutable_locations();
   auto trippaths = (request.options.has_date_time_type() &&
                     request.options.date_time_type() == odin::DirectionsOptions::arrive_by)
-                       ? path_arrive_by(*request.options.mutable_locations(), costing)
-                       : path_depart_at(*request.options.mutable_locations(), costing);
+                       ? path_arrive_by(*locations, costing)
+                       : path_depart_at(*locations, costing);
 
+  // TODO: this wont be needed once we do the block comment above
+  // cull unused edges
+  auto path = trippaths.begin();
+  GraphId left, right;
+  for (auto l = locations->begin(); l < locations->end(); ++l) {
+    // through and via will have been taken care of in the depart_at and arrive_by below
+    if (l->type() == odin::Location::kThrough || l->type() == odin::Location::kVia)
+      continue;
+
+    // the edge on the right side of this node
+    right = GraphId(path != trippaths.end() ? static_cast<uint64_t>(path->node(0).edge().id())
+                                            : kInvalidGraphId);
+    // remove edges that we didnt use
+    auto end = std::partition(l->mutable_path_edges()->begin(), l->mutable_path_edges()->end(),
+                              [&left, &right](const valhalla::odin::Location::PathEdge& e) {
+                                return e.graph_id() == left || e.graph_id() == right;
+                              });
+    auto shrink_to_size = end - l->mutable_path_edges()->begin();
+    while (l->path_edges_size() > shrink_to_size)
+      l->mutable_path_edges()->RemoveLast();
+
+    // next leg
+    left = GraphId(path != trippaths.end()
+                       ? static_cast<uint64_t>(path->node(path->node_size() - 2).edge().id())
+                       : kInvalidGraphId);
+    ++path;
+  }
+
+  // log admin areas
   if (!request.options.do_not_track()) {
     for (const auto& tp : trippaths) {
       log_admin(tp);

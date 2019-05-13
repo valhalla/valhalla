@@ -355,7 +355,8 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
         ++next_man;
       }
       // Combine current internal maneuver with next maneuver
-      else if (curr_man->internal_intersection() && (curr_man != next_man)) {
+      else if (curr_man->internal_intersection() && (curr_man != next_man) &&
+               !next_man->IsDestinationType()) {
         LOG_TRACE("+++ Combine: current internal maneuver with next maneuver +++");
         curr_man = CombineInternalManeuver(maneuvers, prev_man, curr_man, next_man, is_first_man);
         if (is_first_man) {
@@ -835,8 +836,9 @@ void ManeuversBuilder::InitializeManeuver(Maneuver& maneuver, int node_index) {
     maneuver.set_roundabout_exit_count(1);
   }
 
-  // Internal Intersection
-  if (prev_edge->internal_intersection()) {
+  // Internal Intersection - excluding the first and last edges
+  if (prev_edge->internal_intersection() && !trip_path_->IsLastNodeIndex(node_index) &&
+      !trip_path_->IsFirstNodeIndex(node_index - 1)) {
     maneuver.set_internal_intersection(true);
   }
 
@@ -1340,7 +1342,15 @@ void ManeuversBuilder::SetSimpleDirectionalManeuverType(Maneuver& maneuver,
       break;
     }
     case Turn::Type::kSlightRight: {
-      if (maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kKeepStraight) {
+      // TODO refactor with enhanced trip path clean up
+      IntersectingEdgeCounts xedge_counts;
+      auto* node = trip_path_->GetEnhancedNode(maneuver.begin_node_index());
+      if (node && prev_edge) {
+        node->CalculateRightLeftIntersectingEdgeCounts(prev_edge->end_heading(),
+                                                       prev_edge->travel_mode(), xedge_counts);
+      }
+      if ((maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kKeepStraight) &&
+          ((xedge_counts.right > 0) || ((xedge_counts.right == 0) && (xedge_counts.left == 0)))) {
         maneuver.set_type(TripDirections_Maneuver_Type_kContinue);
         LOG_TRACE("ManeuverType=CONTINUE");
       } else {
@@ -1402,7 +1412,15 @@ void ManeuversBuilder::SetSimpleDirectionalManeuverType(Maneuver& maneuver,
       break;
     }
     case Turn::Type::kSlightLeft: {
-      if (maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kKeepStraight) {
+      // TODO refactor with enhanced trip path clean up
+      IntersectingEdgeCounts xedge_counts;
+      auto* node = trip_path_->GetEnhancedNode(maneuver.begin_node_index());
+      if (node && prev_edge) {
+        node->CalculateRightLeftIntersectingEdgeCounts(prev_edge->end_heading(),
+                                                       prev_edge->travel_mode(), xedge_counts);
+      }
+      if ((maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kKeepStraight) &&
+          ((xedge_counts.left > 0) || ((xedge_counts.right == 0) && (xedge_counts.left == 0)))) {
         maneuver.set_type(TripDirections_Maneuver_Type_kContinue);
         LOG_TRACE("ManeuverType=CONTINUE");
       } else {
@@ -1535,11 +1553,13 @@ bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver, int node_i
 
   /////////////////////////////////////////////////////////////////////////////
   // Process internal intersection
+  // Cannot be the first edge in the trip
   if (prev_edge->internal_intersection() && !maneuver.internal_intersection()) {
     return false;
   } else if (!prev_edge->internal_intersection() && maneuver.internal_intersection()) {
     return false;
-  } else if (prev_edge->internal_intersection() && maneuver.internal_intersection()) {
+  } else if (prev_edge->internal_intersection() && !trip_path_->IsFirstNodeIndex(node_index - 1) &&
+             maneuver.internal_intersection()) {
     return true;
   }
 

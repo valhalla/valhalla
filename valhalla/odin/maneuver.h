@@ -42,6 +42,7 @@ public:
 
   const TripDirections_Maneuver_Type& type() const;
   void set_type(const TripDirections_Maneuver_Type& type);
+  bool IsDestinationType() const;
 
   const StreetNames& street_names() const;
   void set_street_names(const std::vector<std::pair<std::string, bool>>& names);
