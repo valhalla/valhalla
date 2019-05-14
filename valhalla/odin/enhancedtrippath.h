@@ -99,7 +99,7 @@ public:
 
   int GetLastNodeIndex() const;
 
-  EnhancedTripPath_Admin* GetAdmin(size_t index);
+  std::unique_ptr<EnhancedTripPath_Admin> GetAdmin(size_t index);
 
   std::string GetCountryCode(int node_index);
 
@@ -571,11 +571,30 @@ protected:
   TripPath_Node* mutable_node_;
 };
 
-class EnhancedTripPath_Admin : public TripPath_Admin {
+class EnhancedTripPath_Admin {
 public:
-  EnhancedTripPath_Admin() = delete;
+  EnhancedTripPath_Admin(TripPath_Admin* mutable_admin);
+
+  const std::string& country_code() const {
+    return mutable_admin_->country_code();
+  }
+
+  const std::string& country_text() const {
+    return mutable_admin_->country_text();
+  }
+
+  const std::string& state_code() const {
+    return mutable_admin_->state_code();
+  }
+
+  const std::string& state_text() const {
+    return mutable_admin_->state_text();
+  }
 
   std::string ToString() const;
+
+protected:
+  TripPath_Admin* mutable_admin_;
 };
 
 const std::unordered_map<uint8_t, std::string> TripPath_TravelMode_Strings{

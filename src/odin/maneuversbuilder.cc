@@ -257,7 +257,7 @@ std::list<Maneuver> ManeuversBuilder::Produce() {
   }
   LOG_TRACE("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
   for (size_t z = 0; z < trip_path_->admin_size(); ++z) {
-    auto* admin = trip_path_->GetAdmin(z);
+    auto admin = trip_path_->GetAdmin(z);
     LOG_TRACE("ADMIN " + std::to_string(z) + ": " + admin->ToString());
   }
 

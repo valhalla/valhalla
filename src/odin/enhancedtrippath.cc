@@ -223,8 +223,8 @@ int EnhancedTripPath::GetLastNodeIndex() const {
   return (node_size() - 1);
 }
 
-EnhancedTripPath_Admin* EnhancedTripPath::GetAdmin(size_t index) {
-  return static_cast<EnhancedTripPath_Admin*>(mutable_admin(index));
+std::unique_ptr<EnhancedTripPath_Admin> EnhancedTripPath::GetAdmin(size_t index) {
+  return midgard::make_unique<EnhancedTripPath_Admin>(mutable_admin(index));
 }
 
 std::string EnhancedTripPath::GetCountryCode(int node_index) {
@@ -1255,6 +1255,10 @@ std::string EnhancedTripPath_Node::ToString() const {
 
 ///////////////////////////////////////////////////////////////////////////////
 // EnhancedTripPath_Admin
+
+EnhancedTripPath_Admin::EnhancedTripPath_Admin(TripPath_Admin* mutable_admin)
+    : mutable_admin_(mutable_admin) {
+}
 
 std::string EnhancedTripPath_Admin::ToString() const {
   std::string str;
