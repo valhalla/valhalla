@@ -394,15 +394,42 @@ protected:
 #endif
 };
 
-class EnhancedTripPath_IntersectingEdge : public TripPath_IntersectingEdge {
+class EnhancedTripPath_IntersectingEdge {
 public:
-  EnhancedTripPath_IntersectingEdge() = delete;
+  EnhancedTripPath_IntersectingEdge(TripPath_IntersectingEdge* mutable_intersecting_edge);
+
+  uint32_t begin_heading() const {
+    return mutable_intersecting_edge_->begin_heading();
+  }
+
+  bool prev_name_consistency() const {
+    return mutable_intersecting_edge_->prev_name_consistency();
+  }
+
+  bool curr_name_consistency() const {
+    return mutable_intersecting_edge_->curr_name_consistency();
+  }
+
+  ::valhalla::odin::TripPath_Traversability driveability() const {
+    return mutable_intersecting_edge_->driveability();
+  }
+
+  ::valhalla::odin::TripPath_Traversability cyclability() const {
+    return mutable_intersecting_edge_->cyclability();
+  }
+
+  ::valhalla::odin::TripPath_Traversability walkability() const {
+    return mutable_intersecting_edge_->walkability();
+  }
 
   bool IsTraversable(const TripPath_TravelMode travel_mode) const;
 
   bool IsTraversableOutbound(const TripPath_TravelMode travel_mode) const;
 
   std::string ToString() const;
+
+protected:
+  TripPath_IntersectingEdge* mutable_intersecting_edge_;
 };
 
 struct IntersectingEdgeCounts {
@@ -504,7 +531,7 @@ public:
 
   bool HasIntersectingEdgeCurrNameConsistency() const;
 
-  EnhancedTripPath_IntersectingEdge* GetIntersectingEdge(size_t index);
+  std::unique_ptr<EnhancedTripPath_IntersectingEdge> GetIntersectingEdge(size_t index);
 
   void CalculateRightLeftIntersectingEdgeCounts(uint32_t from_heading,
                                                 const TripPath_TravelMode travel_mode,

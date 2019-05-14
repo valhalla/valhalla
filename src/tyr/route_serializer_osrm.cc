@@ -403,7 +403,7 @@ json::ArrayPtr intersections(const valhalla::odin::TripDirections::Maneuver& man
     std::vector<IntersectionEdges> edges;
     if (i > 0 && !arrive_maneuver) {
       for (uint32_t n = 0; n < node->intersecting_edge_size(); n++) {
-        auto* intersecting_edge = node->GetIntersectingEdge(n);
+        auto intersecting_edge = node->GetIntersectingEdge(n);
         bool routeable = intersecting_edge->IsTraversableOutbound(curr_edge->travel_mode());
         uint32_t bearing = static_cast<uint32_t>(intersecting_edge->begin_heading());
         edges.emplace_back(bearing, routeable, false, false);

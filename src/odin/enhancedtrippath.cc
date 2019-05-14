@@ -899,6 +899,11 @@ std::string EnhancedTripPath_Edge::SignElementsToParameterString(
 ///////////////////////////////////////////////////////////////////////////////
 // EnhancedTripPath_IntersectingEdge
 
+EnhancedTripPath_IntersectingEdge::EnhancedTripPath_IntersectingEdge(
+    TripPath_IntersectingEdge* mutable_intersecting_edge)
+    : mutable_intersecting_edge_(mutable_intersecting_edge) {
+}
+
 bool EnhancedTripPath_IntersectingEdge::IsTraversable(const TripPath_TravelMode travel_mode) const {
   TripPath_Traversability t;
 
@@ -990,8 +995,9 @@ bool EnhancedTripPath_Node::HasIntersectingEdgeCurrNameConsistency() const {
   return false;
 }
 
-EnhancedTripPath_IntersectingEdge* EnhancedTripPath_Node::GetIntersectingEdge(size_t index) {
-  return static_cast<EnhancedTripPath_IntersectingEdge*>(mutable_intersecting_edge(index));
+std::unique_ptr<EnhancedTripPath_IntersectingEdge>
+EnhancedTripPath_Node::GetIntersectingEdge(size_t index) {
+  return midgard::make_unique<EnhancedTripPath_IntersectingEdge>(mutable_intersecting_edge(index));
 }
 
 void EnhancedTripPath_Node::CalculateRightLeftIntersectingEdgeCounts(

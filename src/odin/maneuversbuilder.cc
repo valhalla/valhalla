@@ -207,7 +207,7 @@ std::list<Maneuver> ManeuversBuilder::Produce() {
               std::to_string(GetTurnDegree(prev_edge->end_heading(), curr_edge->begin_heading())));
     auto node = trip_path_->GetEnhancedNode(i);
     for (size_t z = 0; z < node->intersecting_edge_size(); ++z) {
-      auto* intersecting_edge = node->GetIntersectingEdge(z);
+      auto intersecting_edge = node->GetIntersectingEdge(z);
       LOG_TRACE(std::string("    intersectingEdge=") + intersecting_edge->ToString());
       LOG_TRACE(std::string("    prev2int_turn_degree=") +
                 std::to_string(
@@ -252,7 +252,7 @@ std::list<Maneuver> ManeuversBuilder::Produce() {
   LOG_TRACE(std::string("  curr_edge=") + (curr_edge ? curr_edge->ToString() : "NONE"));
   auto node = trip_path_->GetEnhancedNode(0);
   for (size_t z = 0; z < node->intersecting_edge_size(); ++z) {
-    auto* intersecting_edge = node->GetIntersectingEdge(z);
+    auto intersecting_edge = node->GetIntersectingEdge(z);
     LOG_TRACE(std::string("    intersectingEdge=") + intersecting_edge->ToString());
   }
   LOG_TRACE("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
