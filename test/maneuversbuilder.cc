@@ -1750,10 +1750,11 @@ void TestCountAndSortExitSigns() {
 }
 
 void TryIsIntersectingForwardEdge(ManeuversBuilderTest& mbTest, int node_index, bool expected) {
-  auto* prev_edge = mbTest.trip_path()->GetPrevEdge(node_index);
-  auto* curr_edge = mbTest.trip_path()->GetCurrEdge(node_index);
+  auto prev_edge = mbTest.trip_path()->GetPrevEdge(node_index);
+  auto curr_edge = mbTest.trip_path()->GetCurrEdge(node_index);
 
-  bool intersecting_forward_link = mbTest.IsIntersectingForwardEdge(node_index, prev_edge, curr_edge);
+  bool intersecting_forward_link =
+      mbTest.IsIntersectingForwardEdge(node_index, prev_edge.get(), curr_edge.get());
 
   if (intersecting_forward_link != expected) {
     throw std::runtime_error("Incorrect intersecting forward link value - expected: " +

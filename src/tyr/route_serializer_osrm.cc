@@ -387,7 +387,7 @@ json::ArrayPtr intersections(const valhalla::odin::TripDirections::Maneuver& man
     // Get the node and current edge from the enhanced trip path
     // NOTE: curr_edge does not exist for the arrive maneuver
     auto node = etp->GetEnhancedNode(i);
-    auto* curr_edge = etp->GetCurrEdge(i);
+    auto curr_edge = etp->GetCurrEdge(i);
 
     // Add the node location (lon, lat). Use the last shape point for
     // the arrive step
@@ -773,8 +773,8 @@ json::MapPtr osrm_maneuver(const valhalla::odin::TripDirections::Maneuver& maneu
     }
   } else {
     // Special cases
-    auto* prev_edge = etp->GetPrevEdge(idx);
-    auto* curr_edge = etp->GetCurrEdge(idx);
+    auto prev_edge = etp->GetPrevEdge(idx);
+    auto curr_edge = etp->GetCurrEdge(idx);
     bool new_name = maneuver.type() == odin::TripDirections_Maneuver_Type_kContinue ||
                     maneuver.type() == odin::TripDirections_Maneuver_Type_kBecomes;
     bool ramp = ((maneuver.type() == TripDirections_Maneuver_Type_kRampStraight) ||

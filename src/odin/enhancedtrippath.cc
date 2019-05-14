@@ -174,23 +174,25 @@ std::unique_ptr<EnhancedTripPath_Node> EnhancedTripPath::GetEnhancedNode(const i
   return midgard::make_unique<EnhancedTripPath_Node>(mutable_node(node_index));
 }
 
-EnhancedTripPath_Edge* EnhancedTripPath::GetPrevEdge(const int node_index, int delta) {
+std::unique_ptr<EnhancedTripPath_Edge> EnhancedTripPath::GetPrevEdge(const int node_index,
+                                                                     int delta) {
   int index = node_index - delta;
   if (IsValidNodeIndex(index)) {
-    return static_cast<EnhancedTripPath_Edge*>(mutable_node(index)->mutable_edge());
+    return midgard::make_unique<EnhancedTripPath_Edge>(mutable_node(index)->mutable_edge());
   } else {
     return nullptr;
   }
 }
 
-EnhancedTripPath_Edge* EnhancedTripPath::GetCurrEdge(const int node_index) {
+std::unique_ptr<EnhancedTripPath_Edge> EnhancedTripPath::GetCurrEdge(const int node_index) {
   return GetNextEdge(node_index, 0);
 }
 
-EnhancedTripPath_Edge* EnhancedTripPath::GetNextEdge(const int node_index, int delta) {
+std::unique_ptr<EnhancedTripPath_Edge> EnhancedTripPath::GetNextEdge(const int node_index,
+                                                                     int delta) {
   int index = node_index + delta;
   if (IsValidNodeIndex(index) && !IsLastNodeIndex(index)) {
-    return static_cast<EnhancedTripPath_Edge*>(mutable_node(index)->mutable_edge());
+    return midgard::make_unique<EnhancedTripPath_Edge>(mutable_node(index)->mutable_edge());
   } else {
     return nullptr;
   }
@@ -266,6 +268,10 @@ float EnhancedTripPath::GetLength(const DirectionsOptions::Units& units) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // EnhancedTripPath_Edge
+
+EnhancedTripPath_Edge::EnhancedTripPath_Edge(TripPath_Edge* mutable_edge)
+    : mutable_edge_(mutable_edge) {
+}
 
 bool EnhancedTripPath_Edge::IsUnnamed() const {
   return (name_size() == 0);
