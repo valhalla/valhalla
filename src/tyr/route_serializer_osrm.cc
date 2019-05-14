@@ -386,8 +386,8 @@ json::ArrayPtr intersections(const valhalla::odin::TripDirections::Maneuver& man
 
     // Get the node and current edge from the enhanced trip path
     // NOTE: curr_edge does not exist for the arrive maneuver
-    auto* node = etp->GetEnhancedNode(i);
-    auto* curr_edge = etp->GetCurrEdge(i);
+    auto node = etp->GetEnhancedNode(i);
+    auto curr_edge = etp->GetCurrEdge(i);
 
     // Add the node location (lon, lat). Use the last shape point for
     // the arrive step
@@ -403,7 +403,7 @@ json::ArrayPtr intersections(const valhalla::odin::TripDirections::Maneuver& man
     std::vector<IntersectionEdges> edges;
     if (i > 0 && !arrive_maneuver) {
       for (uint32_t n = 0; n < node->intersecting_edge_size(); n++) {
-        auto* intersecting_edge = node->GetIntersectingEdge(n);
+        auto intersecting_edge = node->GetIntersectingEdge(n);
         bool routeable = intersecting_edge->IsTraversableOutbound(curr_edge->travel_mode());
         uint32_t bearing = static_cast<uint32_t>(intersecting_edge->begin_heading());
         edges.emplace_back(bearing, routeable, false, false);
@@ -773,8 +773,8 @@ json::MapPtr osrm_maneuver(const valhalla::odin::TripDirections::Maneuver& maneu
     }
   } else {
     // Special cases
-    auto* prev_edge = etp->GetPrevEdge(idx);
-    auto* curr_edge = etp->GetCurrEdge(idx);
+    auto prev_edge = etp->GetPrevEdge(idx);
+    auto curr_edge = etp->GetCurrEdge(idx);
     bool new_name = maneuver.type() == odin::TripDirections_Maneuver_Type_kContinue ||
                     maneuver.type() == odin::TripDirections_Maneuver_Type_kBecomes;
     bool ramp = ((maneuver.type() == TripDirections_Maneuver_Type_kRampStraight) ||
@@ -988,7 +988,7 @@ json::ArrayPtr serialize_legs(const std::list<valhalla::odin::TripDirections>& l
   // Iterate through the legs in TripDirections and TripPath
   auto leg = legs.begin();
   for (auto& path_leg : path_legs) {
-    valhalla::odin::EnhancedTripPath* etp = static_cast<valhalla::odin::EnhancedTripPath*>(&path_leg);
+    valhalla::odin::EnhancedTripPath etp(path_leg);
     auto output_leg = json::map({});
 
     // Get the full shape for the leg. We want to use this for serializing
@@ -1028,13 +1028,13 @@ json::ArrayPtr serialize_legs(const std::list<valhalla::odin::TripDirections>& l
       // Process drive_side, name, ref, mode, and prev_mode attributes if not the arrive maneuver
       if (!arrive_maneuver) {
         drive_side =
-            (etp->GetCurrEdge(maneuver.begin_path_index())->drive_on_right()) ? "right" : "left";
+            (etp.GetCurrEdge(maneuver.begin_path_index())->drive_on_right()) ? "right" : "left";
         auto name_ref_pair = names_and_refs(maneuver);
         name = name_ref_pair.first;
         ref = name_ref_pair.second;
         rotary = ((maneuver.type() == TripDirections_Maneuver_Type_kRoundaboutEnter) &&
                   (maneuver.street_name_size() > 0));
-        mode = get_mode(maneuver, arrive_maneuver, etp);
+        mode = get_mode(maneuver, arrive_maneuver, &etp);
         if (prev_mode.empty())
           prev_mode = mode;
       }
@@ -1054,9 +1054,9 @@ json::ArrayPtr serialize_legs(const std::list<valhalla::odin::TripDirections>& l
 
       // Add OSRM maneuver
       step->emplace("maneuver",
-                    osrm_maneuver(maneuver, etp, shape[maneuver.begin_shape_index()], depart_maneuver,
-                                  arrive_maneuver, prev_intersection_count, mode, prev_mode, rotary,
-                                  prev_rotary));
+                    osrm_maneuver(maneuver, &etp, shape[maneuver.begin_shape_index()],
+                                  depart_maneuver, arrive_maneuver, prev_intersection_count, mode,
+                                  prev_mode, rotary, prev_rotary));
 
       // Add destinations and exits
       const auto& sign = maneuver.sign();
@@ -1071,7 +1071,7 @@ json::ArrayPtr serialize_legs(const std::list<valhalla::odin::TripDirections>& l
 
       // Add intersections
       step->emplace("intersections",
-                    intersections(maneuver, etp, shape, prev_intersection_count, arrive_maneuver));
+                    intersections(maneuver, &etp, shape, prev_intersection_count, arrive_maneuver));
 
       // Add step
       steps->emplace_back(step);
