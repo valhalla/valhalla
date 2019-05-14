@@ -3,33 +3,33 @@
 --postgres
 
 highway = {
-["motorway"] =          {["auto_forward"] = "true",  ["truck_forward"] = "true",  ["bus_forward"] = "true",  ["moped_forward"] = "false", ["motorcycle_forward"] = "true", ["pedestrian"] = "false", ["bike_forward"] = "false"},
-["motorway_link"] =     {["auto_forward"] = "true",  ["truck_forward"] = "true",  ["bus_forward"] = "true",  ["moped_forward"] = "false", ["motorcycle_forward"] = "true", ["pedestrian"] = "false", ["bike_forward"] = "false"},
-["trunk"] =             {["auto_forward"] = "true",  ["truck_forward"] = "true",  ["bus_forward"] = "true",  ["moped_forward"] = "true",  ["motorcycle_forward"] = "true", ["pedestrian"] = "true",  ["bike_forward"] = "true"},
-["trunk_link"] =        {["auto_forward"] = "true",  ["truck_forward"] = "true",  ["bus_forward"] = "true",  ["moped_forward"] = "true",  ["motorcycle_forward"] = "true", ["pedestrian"] = "true",  ["bike_forward"] = "true"},
-["primary"] =           {["auto_forward"] = "true",  ["truck_forward"] = "true",  ["bus_forward"] = "true",  ["moped_forward"] = "true",  ["motorcycle_forward"] = "true", ["pedestrian"] = "true",  ["bike_forward"] = "true"},
-["primary_link"] =      {["auto_forward"] = "true",  ["truck_forward"] = "true",  ["bus_forward"] = "true",  ["moped_forward"] = "true",  ["motorcycle_forward"] = "true", ["pedestrian"] = "true",  ["bike_forward"] = "true"},
-["secondary"] =         {["auto_forward"] = "true",  ["truck_forward"] = "true",  ["bus_forward"] = "true",  ["moped_forward"] = "true",  ["motorcycle_forward"] = "true", ["pedestrian"] = "true",  ["bike_forward"] = "true"},
-["secondary_link"] =    {["auto_forward"] = "true",  ["truck_forward"] = "true",  ["bus_forward"] = "true",  ["moped_forward"] = "true",  ["motorcycle_forward"] = "true", ["pedestrian"] = "true",  ["bike_forward"] = "true"},
-["residential"] =       {["auto_forward"] = "true",  ["truck_forward"] = "true",  ["bus_forward"] = "true",  ["moped_forward"] = "true",  ["motorcycle_forward"] = "true", ["pedestrian"] = "true",  ["bike_forward"] = "true"},
-["residential_link"] =  {["auto_forward"] = "true",  ["truck_forward"] = "true",  ["bus_forward"] = "true",  ["moped_forward"] = "true",  ["motorcycle_forward"] = "true", ["pedestrian"] = "true",  ["bike_forward"] = "true"},
-["service"] =           {["auto_forward"] = "true",  ["truck_forward"] = "true",  ["bus_forward"] = "true",  ["moped_forward"] = "true",  ["motorcycle_forward"] = "true", ["pedestrian"] = "true",  ["bike_forward"] = "true"},
-["tertiary"] =          {["auto_forward"] = "true",  ["truck_forward"] = "true",  ["bus_forward"] = "true",  ["moped_forward"] = "true",  ["motorcycle_forward"] = "true", ["pedestrian"] = "true",  ["bike_forward"] = "true"},
-["tertiary_link"] =     {["auto_forward"] = "true",  ["truck_forward"] = "true",  ["bus_forward"] = "true",  ["moped_forward"] = "true",  ["motorcycle_forward"] = "true", ["pedestrian"] = "true",  ["bike_forward"] = "true"},
-["road"] =              {["auto_forward"] = "true",  ["truck_forward"] = "true",  ["bus_forward"] = "true",  ["moped_forward"] = "true",  ["motorcycle_forward"] = "true", ["pedestrian"] = "true",  ["bike_forward"] = "true"},
-["track"] =             {["auto_forward"] = "true",  ["truck_forward"] = "true",  ["bus_forward"] = "true",  ["moped_forward"] = "true",  ["motorcycle_forward"] = "true", ["pedestrian"] = "true",  ["bike_forward"] = "true"},
-["unclassified"] =      {["auto_forward"] = "true",  ["truck_forward"] = "true",  ["bus_forward"] = "true",  ["moped_forward"] = "true",  ["motorcycle_forward"] = "true", ["pedestrian"] = "true",  ["bike_forward"] = "true"},
-["undefined"] =         {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian"] = "false", ["bike_forward"] = "false"},
-["unknown"] =           {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian"] = "false", ["bike_forward"] = "false"},
-["living_street"] =     {["auto_forward"] = "true",  ["truck_forward"] = "true",  ["bus_forward"] = "true",  ["moped_forward"] = "true",  ["motorcycle_forward"] = "true", ["pedestrian"] = "true",  ["bike_forward"] = "true"},
-["footway"] =           {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian"] = "true",  ["bike_forward"] = "false"},
-["pedestrian"] =        {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian"] = "true",  ["bike_forward"] = "false"},
-["steps"] =             {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian"] = "true",  ["bike_forward"] = "true"},
-["bridleway"] =         {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian"] = "false", ["bike_forward"] = "false"},
-["construction"] =      {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian"] = "false", ["bike_forward"] = "false"},
-["cycleway"] =          {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian"] = "false", ["bike_forward"] = "true"},
-["path"] =              {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian"] = "true",  ["bike_forward"] = "true"},
-["bus_guideway"] =      {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "true",  ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian"] = "false", ["bike_forward"] = "false"}
+["motorway"] =          {["auto_forward"] = "true",  ["truck_forward"] = "true",  ["bus_forward"] = "true",  ["taxi_forward"] = "true",  ["moped_forward"] = "false", ["motorcycle_forward"] = "true",  ["pedestrian"] = "false", ["bike_forward"] = "false"},
+["motorway_link"] =     {["auto_forward"] = "true",  ["truck_forward"] = "true",  ["bus_forward"] = "true",  ["taxi_forward"] = "true",  ["moped_forward"] = "false", ["motorcycle_forward"] = "true",  ["pedestrian"] = "false", ["bike_forward"] = "false"},
+["trunk"] =             {["auto_forward"] = "true",  ["truck_forward"] = "true",  ["bus_forward"] = "true",  ["taxi_forward"] = "true",  ["moped_forward"] = "true",  ["motorcycle_forward"] = "true",  ["pedestrian"] = "true",  ["bike_forward"] = "true"},
+["trunk_link"] =        {["auto_forward"] = "true",  ["truck_forward"] = "true",  ["bus_forward"] = "true",  ["taxi_forward"] = "true",  ["moped_forward"] = "true",  ["motorcycle_forward"] = "true",  ["pedestrian"] = "true",  ["bike_forward"] = "true"},
+["primary"] =           {["auto_forward"] = "true",  ["truck_forward"] = "true",  ["bus_forward"] = "true",  ["taxi_forward"] = "true",  ["moped_forward"] = "true",  ["motorcycle_forward"] = "true",  ["pedestrian"] = "true",  ["bike_forward"] = "true"},
+["primary_link"] =      {["auto_forward"] = "true",  ["truck_forward"] = "true",  ["bus_forward"] = "true",  ["taxi_forward"] = "true",  ["moped_forward"] = "true",  ["motorcycle_forward"] = "true",  ["pedestrian"] = "true",  ["bike_forward"] = "true"},
+["secondary"] =         {["auto_forward"] = "true",  ["truck_forward"] = "true",  ["bus_forward"] = "true",  ["taxi_forward"] = "true",  ["moped_forward"] = "true",  ["motorcycle_forward"] = "true",  ["pedestrian"] = "true",  ["bike_forward"] = "true"},
+["secondary_link"] =    {["auto_forward"] = "true",  ["truck_forward"] = "true",  ["bus_forward"] = "true",  ["taxi_forward"] = "true",  ["moped_forward"] = "true",  ["motorcycle_forward"] = "true",  ["pedestrian"] = "true",  ["bike_forward"] = "true"},
+["residential"] =       {["auto_forward"] = "true",  ["truck_forward"] = "true",  ["bus_forward"] = "true",  ["taxi_forward"] = "true",  ["moped_forward"] = "true",  ["motorcycle_forward"] = "true",  ["pedestrian"] = "true",  ["bike_forward"] = "true"},
+["residential_link"] =  {["auto_forward"] = "true",  ["truck_forward"] = "true",  ["bus_forward"] = "true",  ["taxi_forward"] = "true",  ["moped_forward"] = "true",  ["motorcycle_forward"] = "true",  ["pedestrian"] = "true",  ["bike_forward"] = "true"},
+["service"] =           {["auto_forward"] = "true",  ["truck_forward"] = "true",  ["bus_forward"] = "true",  ["taxi_forward"] = "true",  ["moped_forward"] = "true",  ["motorcycle_forward"] = "true",  ["pedestrian"] = "true",  ["bike_forward"] = "true"},
+["tertiary"] =          {["auto_forward"] = "true",  ["truck_forward"] = "true",  ["bus_forward"] = "true",  ["taxi_forward"] = "true",  ["moped_forward"] = "true",  ["motorcycle_forward"] = "true",  ["pedestrian"] = "true",  ["bike_forward"] = "true"},
+["tertiary_link"] =     {["auto_forward"] = "true",  ["truck_forward"] = "true",  ["bus_forward"] = "true",  ["taxi_forward"] = "true",  ["moped_forward"] = "true",  ["motorcycle_forward"] = "true",  ["pedestrian"] = "true",  ["bike_forward"] = "true"},
+["road"] =              {["auto_forward"] = "true",  ["truck_forward"] = "true",  ["bus_forward"] = "true",  ["taxi_forward"] = "true",  ["moped_forward"] = "true",  ["motorcycle_forward"] = "true",  ["pedestrian"] = "true",  ["bike_forward"] = "true"},
+["track"] =             {["auto_forward"] = "true",  ["truck_forward"] = "true",  ["bus_forward"] = "true",  ["taxi_forward"] = "true",  ["moped_forward"] = "true",  ["motorcycle_forward"] = "true",  ["pedestrian"] = "true",  ["bike_forward"] = "true"},
+["unclassified"] =      {["auto_forward"] = "true",  ["truck_forward"] = "true",  ["bus_forward"] = "true",  ["taxi_forward"] = "true",  ["moped_forward"] = "true",  ["motorcycle_forward"] = "true",  ["pedestrian"] = "true",  ["bike_forward"] = "true"},
+["undefined"] =         {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "false", ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian"] = "false", ["bike_forward"] = "false"},
+["unknown"] =           {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "false", ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian"] = "false", ["bike_forward"] = "false"},
+["living_street"] =     {["auto_forward"] = "true",  ["truck_forward"] = "true",  ["bus_forward"] = "true",  ["taxi_forward"] = "true",  ["moped_forward"] = "true",  ["motorcycle_forward"] = "true",  ["pedestrian"] = "true",  ["bike_forward"] = "true"},
+["footway"] =           {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "false", ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian"] = "true",  ["bike_forward"] = "false"},
+["pedestrian"] =        {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "false", ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian"] = "true",  ["bike_forward"] = "false"},
+["steps"] =             {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "false", ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian"] = "true",  ["bike_forward"] = "true"},
+["bridleway"] =         {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "false", ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian"] = "false", ["bike_forward"] = "false"},
+["construction"] =      {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "false", ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian"] = "false", ["bike_forward"] = "false"},
+["cycleway"] =          {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "false", ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian"] = "false", ["bike_forward"] = "true"},
+["path"] =              {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "false", ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian"] = "true",  ["bike_forward"] = "true"},
+["bus_guideway"] =      {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "true",  ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian"] = "false", ["bike_forward"] = "false"}
 }
 
 road_class = {
@@ -215,8 +215,21 @@ bus = {
 ["official"] = "false"
 }
 
+taxi = {
+["no"] = "false",
+["yes"] = "true",
+["designated"] = "true",
+["urban"] = "true",
+["permissive"] = "true",
+["restricted"] = "true",
+["destination"] = "true",
+["delivery"] = "false",
+["official"] = "false"
+}
+
 psv = {
 ["bus"] = "true",
+["taxi"] = "true",
 ["no"] = "false",
 ["yes"] = "true",
 ["designated"] = "true",
@@ -492,6 +505,18 @@ bus_node = {
 ["official"] = 0,
 }
 
+taxi_node = {
+["no"] = 0,
+["yes"] = 32,
+["designated"] = 32,
+["urban"] = 32,
+["permissive"] = 32,
+["restricted"] = 32,
+["destination"] = 32,
+["delivery"] = 0,
+["official"] = 0
+}
+
 truck_node = {
 ["designated"] = 8,
 ["yes"] = 8,
@@ -510,7 +535,7 @@ truck_node = {
 ["destination;delivery"] = 8
 }
 
-psv_node = {
+psv_bus_node = {
 ["bus"] = 64,
 ["no"] = 0,
 ["yes"] = 64,
@@ -518,6 +543,16 @@ psv_node = {
 ["permissive"] = 64,
 ["1"] = 64,
 ["2"] = 64
+}
+
+psv_taxi_node = {
+["taxi"] = 32,
+["no"] = 0,
+["yes"] = 32,
+["designated"] = 32,
+["permissive"] = 32,
+["1"] = 32,
+["2"] = 32
 }
 
 function round(val, n)
@@ -791,6 +826,7 @@ function filter_tags_generic(kv)
       kv["auto_forward"] = "false"
       kv["truck_forward"] = "false"
       kv["bus_forward"] = "false"
+      kv["taxi_forward"] = "false"
       kv["moped_forward"] = "false"
       kv["motorcycle_forward"] = "false"
       kv["pedestrian"] = "false"
@@ -799,6 +835,7 @@ function filter_tags_generic(kv)
       kv["auto_backward"] = "false"
       kv["truck_backward"] = "false"
       kv["bus_backward"] = "false"
+      kv["taxi_backward"] = "false"
       kv["moped_backward"] = "false"
       kv["motorcycle_backward"] = "false"
       kv["bike_backward"] = "false"
@@ -806,6 +843,7 @@ function filter_tags_generic(kv)
       kv["auto_forward"] = "false"
       kv["truck_forward"] = "false"
       kv["bus_forward"] = "false"
+      kv["taxi_forward"] = "false"
       kv["moped_forward"] = "false"
       kv["motorcycle_forward"] = "false"
       kv["bike_forward"] = "false"
@@ -813,6 +851,7 @@ function filter_tags_generic(kv)
       kv["auto_backward"] = "false"
       kv["truck_backward"] = "false"
       kv["bus_backward"] = "false"
+      kv["taxi_backward"] = "false"
       kv["moped_backward"] = "false"
       kv["motorcycle_backward"] = "false"
       kv["bike_backward"] = "false"
@@ -829,6 +868,10 @@ function filter_tags_generic(kv)
     --check for bus_forward overrides
     kv["bus_forward"] = bus[kv["bus"]] or psv[kv["psv"]] or psv[kv["lanes:psv:forward"]] or motor_vehicle[kv["motor_vehicle"]] or kv["bus_forward"]
     kv["bus_tag"] = bus[kv["bus"]] or psv[kv["psv"]] or psv[kv["lanes:psv:forward"]] or motor_vehicle[kv["motor_vehicle"]] or nil
+
+    --check for taxi_forward overrides
+    kv["taxi_forward"] = taxi[kv["taxi"]] or psv[kv["psv"]] or psv[kv["lanes:psv:forward"]] or motor_vehicle[kv["motor_vehicle"]] or kv["taxi_forward"]
+    kv["taxi_tag"] = taxi[kv["taxi"]] or psv[kv["psv"]] or psv[kv["lanes:psv:forward"]] or motor_vehicle[kv["motor_vehicle"]] or nil
 
     --check for ped overrides
     kv["pedestrian"] = foot[kv["foot"]] or foot[kv["pedestrian"]] or kv["pedestrian"]
@@ -872,6 +915,7 @@ function filter_tags_generic(kv)
       kv["auto_forward"] = "false"
       kv["truck_forward"] = "false"
       kv["bus_forward"] = "false"
+      kv["taxi_forward"] = "false"
       kv["moped_forward"] = "false"
       kv["motorcycle_forward"] = "false"
       kv["pedestrian"] = "false"
@@ -880,6 +924,7 @@ function filter_tags_generic(kv)
       kv["auto_backward"] = "false"
       kv["truck_backward"] = "false"
       kv["bus_backward"] = "false"
+      kv["taxi_backward"] = "false"
       kv["moped_backward"] = "false"
       kv["motorcycle_backward"] = "false"
       kv["bike_backward"] = "false"
@@ -900,6 +945,10 @@ function filter_tags_generic(kv)
       --check for bus_forward overrides
       kv["bus_forward"] = bus[kv["bus"]] or psv[kv["psv"]] or psv[kv["lanes:psv:forward"]] or motor_vehicle[kv["motor_vehicle"]] or default_val
       kv["bus_tag"] = bus[kv["bus"]] or psv[kv["psv"]] or psv[kv["lanes:psv:forward"]] or motor_vehicle[kv["motor_vehicle"]] or nil
+
+      --check for taxi_forward overrides
+      kv["taxi_forward"] = taxi[kv["taxi"]] or psv[kv["psv"]] or psv[kv["lanes:psv:forward"]] or motor_vehicle[kv["motor_vehicle"]] or default_val
+      kv["taxi_tag"] = taxi[kv["taxi"]] or psv[kv["psv"]] or psv[kv["lanes:psv:forward"]] or motor_vehicle[kv["motor_vehicle"]] or nil
 
       --check for ped overrides
       kv["pedestrian"] = foot[kv["foot"]] or foot[kv["pedestrian"]] or ped_val
@@ -933,7 +982,7 @@ function filter_tags_generic(kv)
   end
 
   --TODO: handle Time conditional restrictions if available for HOVs with oneway = reversible
-  if ((kv["access"] == "permissive" or kv["access"] == "hov") and kv["oneway"] == "reversible") then
+  if ((kv["access"] == "permissive" or kv["access"] == "hov" or kv["access"] == "taxi") and kv["oneway"] == "reversible") then
 
     -- for now enable only for buses if the tag exists and they are allowed.
     if (kv["bus_forward"] == "true") then
@@ -953,6 +1002,7 @@ function filter_tags_generic(kv)
     kv["auto_forward"] = "true"
     kv["truck_forward"] = "true"
     kv["bus_forward"] = "true"
+    kv["taxi_forward"] = "true"
     kv["pedestrian"] = "true"
     kv["bike_forward"] = "true"
     kv["moped_forward"] = "true"
@@ -988,6 +1038,25 @@ function filter_tags_generic(kv)
     oneway_bus = oneway[kv["oneway:bus"]]
     if (oneway_bus == "false" and kv["bus:backward"] == "yes") then
       oneway_bus = "true"
+    end
+  end
+
+  if kv["oneway:taxi"] == nil and kv["oneway:psv"] ~= nil then
+    kv["oneway:taxi"] = kv["oneway:psv"]
+  end
+
+  if ((kv["oneway"] == "yes" and kv["oneway:taxi"] == "no") or kv["taxi:backward"] == "yes" or kv["taxi:backward"] == "designated") then
+    kv["taxi_backward"] = "true"
+  end
+
+  if kv["taxi_backward"] == nil or kv["taxi_backward"] == "false" then
+    kv["taxi_backward"] = psv[kv["lanes:psv:backward"]] or "false"
+  end
+
+  if kv["taxi_backward"] == "true" then
+    oneway_taxi = oneway[kv["oneway:taxi"]]
+    if (oneway_taxi == "false" and kv["taxi:backward"] == "yes") then
+      oneway_taxi = "true"
     end
   end
 
@@ -1043,6 +1112,13 @@ function filter_tags_generic(kv)
         kv["bus_forward"] = "true"
       end
     end
+    if kv["taxi_backward"] == "true" then
+      if (oneway_taxi == "true") then --taxi only in reverse on a taxi path.
+        kv["taxi_forward"] = "false"
+      elseif oneway_taxi == "false" then --taxi in both directions on a taxi path.
+        kv["taxi_forward"] = "true"
+      end
+    end
     if kv["moped_backward"] == "true" then
       if (oneway_moped == "true") then --moped only in reverse direction on street
         kv["moped_forward"] = "false"
@@ -1071,6 +1147,11 @@ function filter_tags_generic(kv)
     if (kv["bus_backward"] == "false" and kv["oneway:bus"] ~= "-1" and
        (kv["oneway:bus"] == nil or oneway[kv["oneway:bus"]] == false)) then
       kv["bus_backward"] = kv["bus_forward"]
+    end
+
+    if (kv["taxi_backward"] == "false" and kv["oneway:taxi"] ~= "-1" and
+       (kv["oneway:taxi"] == nil or oneway[kv["oneway:taxi"]] == false)) then
+      kv["taxi_backward"] = kv["taxi_forward"]
     end
 
     if (kv["moped_backward"] == "false" and (kv["oneway:moped"] == nil or oneway[kv["oneway:moped"]] == false or kv["oneway:moped"] == "no") and
@@ -1118,6 +1199,10 @@ function filter_tags_generic(kv)
     kv["bus_forward"] = kv["bus_backward"]
     kv["bus_backward"] = forwards
 
+    forwards = kv["taxi_forward"]
+    kv["taxi_forward"] = kv["taxi_backward"]
+    kv["taxi_backward"] = forwards
+
     forwards = kv["bike_forward"]
     kv["bike_forward"] = kv["bike_backward"]
     kv["bike_backward"] = forwards
@@ -1151,6 +1236,20 @@ function filter_tags_generic(kv)
   elseif kv["lanes:bus"] == "2" then
     kv["bus_forward"] = "true"
     kv["bus_backward"] = "true"
+  end
+
+  if kv["oneway:taxi"] == "-1" then
+    local forwards = kv["taxi_forward"]
+    kv["taxi_forward"] = kv["taxi_backward"]
+    kv["taxi_backward"] = forwards
+  end
+
+  if kv["lanes:psv"] == "1" then
+    kv["taxi_forward"] = "true"
+    kv["taxi_backward"] = "false"
+  elseif kv["lanes:psv"] == "2" then
+    kv["taxi_forward"] = "true"
+    kv["taxi_backward"] = "true"
   end
 
   --if none of the modes were set we are done looking at this
@@ -1538,7 +1637,7 @@ function nodes_proc (kv, nokeys)
   end
   local bus_tag = bus_node[kv["bus"]]
   if bus_tag == nil then
-    bus_tag = psv_node[kv["psv"]]
+    bus_tag = psv_bus_node[kv["psv"]]
   end
   --if bus was not set and car is
   if bus_tag == nil and auto_tag == 1 then
@@ -1555,6 +1654,15 @@ function nodes_proc (kv, nokeys)
     hov_tag = 128
   end
 
+  local taxi_tag = taxi_node[kv["taxi"]]
+  if taxi_tag == nil then
+    taxi_tag = psv_taxi_node[kv["psv"]]
+  end
+  --if taxi was not set and car is
+  if taxi_tag == nil and auto_tag == 1 then
+    taxi_tag = 32
+  end
+
   --if truck was not set and car is
   if truck_tag == nil and auto_tag == 1 then
     truck_tag = 8
@@ -1563,6 +1671,7 @@ function nodes_proc (kv, nokeys)
   --must shut these off if motor_vehicle = 0
   if motor_vehicle_tag == 0 then
     bus_tag = 0
+    taxi_tag = 0
     truck_tag = 0
     moped_tag = 0
     motorcycle_tag = 0
@@ -1582,6 +1691,7 @@ function nodes_proc (kv, nokeys)
   local auto = auto_tag or 1
   local truck = truck_tag or 8
   local bus = bus_tag or 64
+  local taxi = taxi_tag or 32
   local foot = foot_tag or 2
   local wheelchair = wheelchair_tag or 256
   local bike = bike_tag or 4
@@ -1595,6 +1705,7 @@ function nodes_proc (kv, nokeys)
     auto = auto_tag or 0
     truck = truck_tag or 0
     bus = bus_tag or 0
+    taxi = taxi_tag or 0
 
     --don't change ped if kv["vehicle"] == "no"
     if access == "false" or kv["hov"] == "designated" then
@@ -1627,6 +1738,7 @@ function nodes_proc (kv, nokeys)
       auto = auto_tag or 0
       truck = truck_tag or 0
       bus = bus_tag or 0
+      taxi = taxi_tag or 0
       foot = foot_tag or 2
       wheelchair = wheelchair_tag or 256
       bike = bike_tag or 4
@@ -1646,6 +1758,7 @@ function nodes_proc (kv, nokeys)
          auto = auto_tag or 1
          truck = truck_tag or 8
          bus = bus_tag or 64
+         taxi = taxi or 32
          foot = foot_tag or 2
          wheelchair = wheelchair_tag or 256
          bike = bike_tag or 4
@@ -1709,7 +1822,7 @@ function nodes_proc (kv, nokeys)
   end
 
   --store a mask denoting access
-  kv["access_mask"] = bit32.bor(auto, emergency, truck, bike, foot, wheelchair, bus, hov, moped, motorcycle)
+  kv["access_mask"] = bit32.bor(auto, emergency, truck, bike, foot, wheelchair, bus, hov, moped, motorcycle, taxi)
 
   return 0, kv
 end

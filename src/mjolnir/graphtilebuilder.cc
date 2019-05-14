@@ -127,6 +127,11 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
   // At this time, complex restrictions are created AFTER all need for
   // serializing and adding to a tile - so we assume they are both empty.
 
+  // Serializing complex restrictions would be difficult since they require a
+  // temporary vector of the via graphIds to be constructed for the ComplexRestrictionBuilder.
+  // This is possible, but non-trivial since the complex restriction data has a fixed size
+  // structure plus the variable sized data (the via Ids).
+
   // EdgeInfo. Create list of EdgeInfoBuilders. Add to text offset set.
   edge_info_offset_ = 0;
   edgeinfo_offset_map_.clear();

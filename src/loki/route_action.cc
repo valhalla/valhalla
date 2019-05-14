@@ -24,19 +24,22 @@ void check_locations(const size_t location_count, const size_t max_locations) {
 void check_distance(const GraphReader& reader,
                     const google::protobuf::RepeatedPtrField<odin::Location>& locations,
                     float max_distance) {
-  // see if any locations pairs are unreachable or too far apart
+  // test if total distance along a polyline formed by connecting locations exceeds the maximum
+  float total_path_distance = 0.0f;
   for (auto location = ++locations.begin(); location != locations.end(); ++location) {
     // check if distance between latlngs exceed max distance limit for each mode of travel
     auto path_distance = to_ll(*std::prev(location)).Distance(to_ll(*location));
     max_distance -= path_distance;
     if (max_distance < 0) {
       throw valhalla_exception_t{154};
-    };
-    valhalla::midgard::logging::Log("location_distance::" +
-                                        std::to_string(path_distance * kKmPerMeter) + "km",
-                                    " [ANALYTICS] ");
+    }
+    total_path_distance += path_distance;
   }
+  valhalla::midgard::logging::Log("total_location_distance::" +
+                                      std::to_string(total_path_distance * kKmPerMeter) + "km",
+                                  " [ANALYTICS] ");
 }
+
 } // namespace
 
 namespace valhalla {

@@ -95,6 +95,10 @@ protected:
   bool
   IsFork(int node_index, EnhancedTripPath_Edge* prev_edge, EnhancedTripPath_Edge* curr_edge) const;
 
+  bool IsPedestrianFork(int node_index,
+                        EnhancedTripPath_Edge* prev_edge,
+                        EnhancedTripPath_Edge* curr_edge) const;
+
   bool
   IsTee(int node_index, EnhancedTripPath_Edge* prev_edge, EnhancedTripPath_Edge* curr_edge) const;
 
@@ -155,6 +159,15 @@ protected:
    */
   bool AreRampManeuversCombinable(std::list<Maneuver>::iterator curr_man,
                                   std::list<Maneuver>::iterator next_man) const;
+
+  /**
+   * Returns true if roundabouts are processable based on the specified travel mode.
+   *
+   * @param travel_mode The current specified travel mode.
+   *
+   * @return true if roundabouts are processable based on the specified travel mode.
+   */
+  bool AreRoundaboutsProcessable(const TripPath_TravelMode travel_mode) const;
 
   /**
    * Review each roundabout and if appropriate - set the roundabout name and roundabout exit name.

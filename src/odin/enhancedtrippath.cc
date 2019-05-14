@@ -4,6 +4,7 @@
 
 #include "midgard/constants.h"
 #include "midgard/util.h"
+
 #include "worker.h"
 
 #include "odin/enhancedtrippath.h"
@@ -166,27 +167,32 @@ namespace odin {
 ///////////////////////////////////////////////////////////////////////////////
 // EnhancedTripPath
 
-EnhancedTripPath_Node* EnhancedTripPath::GetEnhancedNode(const int node_index) {
-  return static_cast<EnhancedTripPath_Node*>(mutable_node(node_index));
+EnhancedTripPath::EnhancedTripPath(TripPath& trip_path) : trip_path_(trip_path) {
 }
 
-EnhancedTripPath_Edge* EnhancedTripPath::GetPrevEdge(const int node_index, int delta) {
+std::unique_ptr<EnhancedTripPath_Node> EnhancedTripPath::GetEnhancedNode(const int node_index) {
+  return midgard::make_unique<EnhancedTripPath_Node>(mutable_node(node_index));
+}
+
+std::unique_ptr<EnhancedTripPath_Edge> EnhancedTripPath::GetPrevEdge(const int node_index,
+                                                                     int delta) {
   int index = node_index - delta;
   if (IsValidNodeIndex(index)) {
-    return static_cast<EnhancedTripPath_Edge*>(mutable_node(index)->mutable_edge());
+    return midgard::make_unique<EnhancedTripPath_Edge>(mutable_node(index)->mutable_edge());
   } else {
     return nullptr;
   }
 }
 
-EnhancedTripPath_Edge* EnhancedTripPath::GetCurrEdge(const int node_index) {
+std::unique_ptr<EnhancedTripPath_Edge> EnhancedTripPath::GetCurrEdge(const int node_index) {
   return GetNextEdge(node_index, 0);
 }
 
-EnhancedTripPath_Edge* EnhancedTripPath::GetNextEdge(const int node_index, int delta) {
+std::unique_ptr<EnhancedTripPath_Edge> EnhancedTripPath::GetNextEdge(const int node_index,
+                                                                     int delta) {
   int index = node_index + delta;
   if (IsValidNodeIndex(index) && !IsLastNodeIndex(index)) {
-    return static_cast<EnhancedTripPath_Edge*>(mutable_node(index)->mutable_edge());
+    return midgard::make_unique<EnhancedTripPath_Edge>(mutable_node(index)->mutable_edge());
   } else {
     return nullptr;
   }
@@ -217,8 +223,8 @@ int EnhancedTripPath::GetLastNodeIndex() const {
   return (node_size() - 1);
 }
 
-EnhancedTripPath_Admin* EnhancedTripPath::GetAdmin(size_t index) {
-  return static_cast<EnhancedTripPath_Admin*>(mutable_admin(index));
+std::unique_ptr<EnhancedTripPath_Admin> EnhancedTripPath::GetAdmin(size_t index) {
+  return midgard::make_unique<EnhancedTripPath_Admin>(mutable_admin(index));
 }
 
 std::string EnhancedTripPath::GetCountryCode(int node_index) {
@@ -262,6 +268,10 @@ float EnhancedTripPath::GetLength(const DirectionsOptions::Units& units) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // EnhancedTripPath_Edge
+
+EnhancedTripPath_Edge::EnhancedTripPath_Edge(TripPath_Edge* mutable_edge)
+    : mutable_edge_(mutable_edge) {
+}
 
 bool EnhancedTripPath_Edge::IsUnnamed() const {
   return (name_size() == 0);
@@ -889,6 +899,11 @@ std::string EnhancedTripPath_Edge::SignElementsToParameterString(
 ///////////////////////////////////////////////////////////////////////////////
 // EnhancedTripPath_IntersectingEdge
 
+EnhancedTripPath_IntersectingEdge::EnhancedTripPath_IntersectingEdge(
+    TripPath_IntersectingEdge* mutable_intersecting_edge)
+    : mutable_intersecting_edge_(mutable_intersecting_edge) {
+}
+
 bool EnhancedTripPath_IntersectingEdge::IsTraversable(const TripPath_TravelMode travel_mode) const {
   TripPath_Traversability t;
 
@@ -954,6 +969,10 @@ std::string EnhancedTripPath_IntersectingEdge::ToString() const {
 ///////////////////////////////////////////////////////////////////////////////
 // EnhancedTripPath_Node
 
+EnhancedTripPath_Node::EnhancedTripPath_Node(TripPath_Node* mutable_node)
+    : mutable_node_(mutable_node) {
+}
+
 bool EnhancedTripPath_Node::HasIntersectingEdges() const {
   return (intersecting_edge_size() > 0);
 }
@@ -976,8 +995,9 @@ bool EnhancedTripPath_Node::HasIntersectingEdgeCurrNameConsistency() const {
   return false;
 }
 
-EnhancedTripPath_IntersectingEdge* EnhancedTripPath_Node::GetIntersectingEdge(size_t index) {
-  return static_cast<EnhancedTripPath_IntersectingEdge*>(mutable_intersecting_edge(index));
+std::unique_ptr<EnhancedTripPath_IntersectingEdge>
+EnhancedTripPath_Node::GetIntersectingEdge(size_t index) {
+  return midgard::make_unique<EnhancedTripPath_IntersectingEdge>(mutable_intersecting_edge(index));
 }
 
 void EnhancedTripPath_Node::CalculateRightLeftIntersectingEdgeCounts(
@@ -1235,6 +1255,10 @@ std::string EnhancedTripPath_Node::ToString() const {
 
 ///////////////////////////////////////////////////////////////////////////////
 // EnhancedTripPath_Admin
+
+EnhancedTripPath_Admin::EnhancedTripPath_Admin(TripPath_Admin* mutable_admin)
+    : mutable_admin_(mutable_admin) {
+}
 
 std::string EnhancedTripPath_Admin::ToString() const {
   std::string str;

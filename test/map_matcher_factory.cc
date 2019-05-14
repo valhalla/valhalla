@@ -33,6 +33,7 @@ void create_costing_options(valhalla::odin::DirectionsOptions& directions_option
                                directions_options.add_costing_options());
   sif::ParseBusCostOptions(doc, "/costing_options/bus", directions_options.add_costing_options());
   sif::ParseHOVCostOptions(doc, "/costing_options/hov", directions_options.add_costing_options());
+  sif::ParseTaxiCostOptions(doc, "/costing_options/taxi", directions_options.add_costing_options());
   sif::ParseMotorScooterCostOptions(doc, "/costing_options/motor_scooter",
                                     directions_options.add_costing_options());
   directions_options.add_costing_options();

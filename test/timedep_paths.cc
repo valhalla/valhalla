@@ -56,7 +56,7 @@ const std::unordered_map<std::string, float> kMaxDistances = {
     {"auto", 43200.0f},      {"auto_shorter", 43200.0f}, {"bicycle", 7200.0f},
     {"bus", 43200.0f},       {"hov", 43200.0f},          {"motor_scooter", 14400.0f},
     {"multimodal", 7200.0f}, {"pedestrian", 7200.0f},    {"transit", 14400.0f},
-    {"truck", 43200.0f},
+    {"truck", 43200.0f},     {"taxi", 43200.0f},
 };
 // a scale factor to apply to the score so that we bias towards closer results more
 constexpr float kDistanceScale = 10.f;
@@ -99,7 +99,7 @@ const auto config = json_to_pt(R"({
     "loki":{
       "actions":["sources_to_targets"],
       "logging":{"long_request": 100},
-      "service_defaults":{"minimum_reachability": 50,"radius": 0}
+      "service_defaults":{"minimum_reachability": 50,"radius": 0,"search_cutoff": 35000, "node_snap_tolerance": 5, "street_side_tolerance": 5, "heading_tolerance": 60}
     },
     "service_limits": {
       "auto": {"max_distance": 5000000.0, "max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
@@ -107,6 +107,7 @@ const auto config = json_to_pt(R"({
       "bicycle": {"max_distance": 500000.0,"max_locations": 50,"max_matrix_distance": 200000.0,"max_matrix_locations": 50},
       "bus": {"max_distance": 5000000.0,"max_locations": 50,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
       "hov": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
+      "taxi": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
       "isochrone": {"max_contours": 4,"max_distance": 25000.0,"max_locations": 1,"max_time": 120},
       "max_avoid_locations": 50,"max_radius": 200,"max_reachability": 100,
       "multimodal": {"max_distance": 500000.0,"max_locations": 50,"max_matrix_distance": 0.0,"max_matrix_locations": 0},

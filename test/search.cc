@@ -9,6 +9,7 @@
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
 #include "baldr/location.h"
+#include "baldr/pathlocation.h"
 #include "baldr/tilehierarchy.h"
 #include "midgard/pointll.h"
 #include "midgard/vector2.h"
@@ -141,7 +142,7 @@ void make_tile() {
   GraphTileBuilder::AddBins(tile_dir, &reloaded, bins);
 }
 
-void search(const valhalla::baldr::Location& location,
+void search(valhalla::baldr::Location location,
             bool expected_node,
             const valhalla::midgard::PointLL& expected_point,
             const std::vector<PathLocation::PathEdge>& expected_edges,
@@ -149,8 +150,13 @@ void search(const valhalla::baldr::Location& location,
   // make the config file
   boost::property_tree::ptree conf;
   conf.put("tile_dir", tile_dir);
-
   valhalla::baldr::GraphReader reader(conf);
+
+  // send it to pbf and back just in case something is wrong with that conversion
+  valhalla::odin::Location pbf;
+  PathLocation::toPBF(location, &pbf, reader);
+  location = PathLocation::fromPBF(pbf);
+
   const auto results = Search({location}, reader, PassThroughEdgeFilter, PassThroughNodeFilter);
   const auto p = results.at(location);
 
@@ -177,14 +183,22 @@ void search(const valhalla::baldr::Location& location,
     throw std::logic_error("Got more edges than expected");
 }
 
-void search(const valhalla::baldr::Location& location, size_t result_count, int reachability) {
+void search(valhalla::baldr::Location location, size_t result_count, int reachability) {
+
   // make the config file
   boost::property_tree::ptree conf;
   conf.put("tile_dir", tile_dir);
-
   valhalla::baldr::GraphReader reader(conf);
-  const auto p =
-      Search({location}, reader, PassThroughEdgeFilter, PassThroughNodeFilter).at(location);
+
+  // send it to pbf and back just in case something is wrong with that conversion
+  valhalla::odin::Location pbf;
+  PathLocation::toPBF(location, &pbf, reader);
+  location = PathLocation::fromPBF(pbf);
+
+  const auto results = Search({location}, reader, PassThroughEdgeFilter, PassThroughNodeFilter);
+  if (results.empty() && result_count == 0)
+    return;
+  const auto& p = results.at(location);
 
   if (p.edges.size() != result_count)
     throw std::logic_error("Wrong number of edges");
@@ -198,6 +212,8 @@ void test_edge_search() {
   auto l = a.first.level();
   using S = PathLocation::SideOfStreet;
   using PE = PathLocation::PathEdge;
+  using ST = Location::StopType;
+  using PS = Location::PreferredSide;
 
   // snap to node searches
   search({a.second}, true, a.second,
@@ -252,6 +268,20 @@ void test_edge_search() {
   search({test}, false, answer,
          {PE{{t, l, 3}, ratio, answer, 0, S::RIGHT}, PE{{t, l, 8}, 1.f - ratio, answer, 0, S::LEFT}});
 
+  // check that the side of street tolerance works
+  Location sst_huge(test);
+  sst_huge.street_side_tolerance_ = 2000;
+  search(sst_huge, false, answer,
+         {PE{{t, l, 3}, ratio, answer, 0, S::NONE}, PE{{t, l, 8}, 1.f - ratio, answer, 0, S::NONE}});
+
+  // we only want opposite driving side, tiles are left hand driving
+  search({test, ST::BREAK, 0, 0, PS::OPPOSITE}, false, answer,
+         {PE{{t, l, 3}, ratio, answer, 0, S::RIGHT}}, true);
+
+  // we only want same driving side, tiles are left hand driving
+  search({test, ST::BREAK, 0, 0, PS::SAME}, false, answer,
+         {PE{{t, l, 8}, 1.f - ratio, answer, 0, S::LEFT}}, true);
+
   // set a point 40% along the edge that runs in reverse of the shape
   answer = b.second.AffineCombination(.6f, .4f, d.second);
   ratio = b.second.Distance(answer) / b.second.Distance(d.second);
@@ -263,6 +293,19 @@ void test_edge_search() {
   test.Set(answer.first + ortho.x(), answer.second + ortho.y());
   search({test}, false, answer,
          {PE{{t, l, 0}, ratio, answer, 0, S::LEFT}, PE{{t, l, 7}, 1.f - ratio, answer, 0, S::RIGHT}});
+
+  // check that the side of street tolerance works
+  sst_huge.latlng_ = test;
+  search(sst_huge, false, answer,
+         {PE{{t, l, 0}, ratio, answer, 0, S::NONE}, PE{{t, l, 7}, 1.f - ratio, answer, 0, S::NONE}});
+
+  // we only want opposite driving side, tiles are left hand driving
+  search({test, ST::BREAK, 0, 0, PS::OPPOSITE}, false, answer,
+         {PE{{t, l, 7}, 1.f - ratio, answer, 0, S::RIGHT}}, true);
+
+  // we only want same driving side, tiles are left hand driving
+  search({test, ST::BREAK, 0, 0, PS::SAME}, false, answer, {PE{{t, l, 0}, ratio, answer, 0, S::LEFT}},
+         true);
 
   // TODO: add more tests
 }
@@ -291,6 +334,41 @@ void test_reachability_radius() {
   search({ob, Location::StopType::BREAK, 3, 0}, 2, 3);
 }
 
+void test_search_cutoff() {
+  // test default cutoff of 35km showing no results
+  search({{-77, -77}}, 0, 0);
+
+  // test limits of cut off
+  auto t = c.second;
+  t.first -= 1;
+  t.second -= 1;
+  auto dist = t.Distance(c.second);
+
+  // set the cut off just too small and get nothing
+  Location x(t);
+  x.search_cutoff_ = dist - 1;
+  search(x, 0, 0);
+
+  // set the cut off just big enough and get one node snap result with 4 edges at it
+  x.search_cutoff_ = dist + 1;
+  search(x, 4, 0);
+
+  // lets try an edge snap
+  t = c.second;
+  t.first -= .00005;
+  t.second += .00005;
+  dist = t.Distance({0.01, 0.01005});
+
+  // just out of reach
+  x.latlng_ = t;
+  x.search_cutoff_ = dist - 1;
+  search(x, 0, 0);
+
+  // just within reach
+  x.search_cutoff_ = dist + 1;
+  search(x, 2, 0);
+}
+
 } // namespace
 
 int main() {
@@ -301,6 +379,8 @@ int main() {
   suite.test(TEST_CASE(test_edge_search));
 
   suite.test(TEST_CASE(test_reachability_radius));
+
+  suite.test(TEST_CASE(test_search_cutoff));
 
   return suite.tear_down();
 }

@@ -35,7 +35,11 @@ config = {
     'use_connectivity': True,
     'service_defaults': {
       'radius': 0,
-      'minimum_reachability': 50
+      'minimum_reachability': 50,
+      'search_cutoff': 35000,
+      'node_snap_tolerance': 5,
+      'street_side_tolerance': 5,
+      'heading_tolerance': 60
     },
     'logging': {
       'type': 'std_out',
@@ -146,6 +150,12 @@ config = {
       'max_matrix_distance': 400000.0,
       'max_matrix_locations': 50
     },
+    'taxi': {
+      'max_distance': 5000000.0,
+      'max_locations': 20,
+      'max_matrix_distance': 400000.0,
+      'max_matrix_locations': 50
+    },
     'pedestrian': {
       'max_distance': 250000.0,
       'max_locations': 50,
@@ -246,6 +256,10 @@ help_text = {
     'service_defaults': {
       'radius': 'Default radius to apply to incoming locations should one not be supplied',
       'minimum_reachability': 'Default minimum reachability to apply to incoming locations should one not be supplied',
+      'search_cutoff': 'The cutoff at which we will assume the input is too far away from civilisation to be worth correlating to the nearest graph elements',
+      'node_snap_tolerance': 'During edge correlation this is the tolerance used to determine whether or not to snap to the intersection rather than along the street, if the snap location is within this distance from the intersection the intersection is used instead',
+      'street_side_tolerance': 'If your input coordinate is less than this tolerance away from the edge centerline then we set your side of street to none otherwise your side of street will be left or right depending on direction of travel',
+      'heading_tolerance': 'When a heading is supplied, this is the tolerance around that heading with which we determine whether an edges heading is similar enough to match the supplied heading'
     },
     'logging': {
       'type': 'Type of logger either std_out or file',
@@ -351,6 +365,12 @@ help_text = {
       'max_matrix_locations': 'Maximum number of input locations for a matrix'
     },
     'hov': {
+      'max_distance': 'Maximum b-line distance between all locations in meters',
+      'max_locations': 'Maximum number of input locations',
+      'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',
+      'max_matrix_locations': 'Maximum number of input locations for a matrix'
+    },
+    'taxi': {
       'max_distance': 'Maximum b-line distance between all locations in meters',
       'max_locations': 'Maximum number of input locations',
       'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',

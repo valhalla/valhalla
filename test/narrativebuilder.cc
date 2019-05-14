@@ -3079,7 +3079,8 @@ void TestBuildDestinationInstructions_0_miles_en_US() {
   // destination
   location = path.add_location();
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers, static_cast<EnhancedTripPath*>(&path));
+  EnhancedTripPath etp(path);
+  TryBuild(directions_options, maneuvers, expected_maneuvers, &etp);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -3116,7 +3117,8 @@ void TestBuildDestinationInstructions_1_miles_en_US() {
   location = path.add_location();
   location->set_street("3206 Powelton Avenue");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers, static_cast<EnhancedTripPath*>(&path));
+  EnhancedTripPath etp(path);
+  TryBuild(directions_options, maneuvers, expected_maneuvers, &etp);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -3153,7 +3155,8 @@ void TestBuildDestinationInstructions_2_miles_en_US() {
   location = path.add_location();
   location->set_side_of_street(Location::kRight);
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers, static_cast<EnhancedTripPath*>(&path));
+  EnhancedTripPath etp(path);
+  TryBuild(directions_options, maneuvers, expected_maneuvers, &etp);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -3191,7 +3194,8 @@ void TestBuildDestinationInstructions_3_miles_en_US() {
   location->set_name("Lancaster Brewing Company");
   location->set_side_of_street(Location::kLeft);
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers, static_cast<EnhancedTripPath*>(&path));
+  EnhancedTripPath etp(path);
+  TryBuild(directions_options, maneuvers, expected_maneuvers, &etp);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

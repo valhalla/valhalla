@@ -68,6 +68,7 @@ public:
     Register(odin::Costing::bicycle, CreateBicycleCost);
     Register(odin::Costing::bus, CreateBusCost);
     Register(odin::Costing::hov, CreateHOVCost);
+    Register(odin::Costing::taxi, CreateTaxiCost);
     Register(odin::Costing::motor_scooter, CreateMotorScooterCost);
     Register(odin::Costing::motorcycle, CreateMotorcycleCost);
     Register(odin::Costing::pedestrian, CreatePedestrianCost);

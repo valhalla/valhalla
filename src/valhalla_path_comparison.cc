@@ -242,8 +242,8 @@ int main(int argc, char* argv[]) {
 
           loc.date_time_ = pt.get_optional<std::string>("date_time");
           loc.heading_ = pt.get_optional<float>("heading");
-          loc.heading_tolerance_ = pt.get_optional<float>("heading_tolerance");
-          loc.node_snap_tolerance_ = pt.get_optional<float>("node_snap_tolerance");
+          loc.heading_tolerance_ = pt.get<float>("heading_tolerance", loc.heading_tolerance_);
+          loc.node_snap_tolerance_ = pt.get<float>("node_snap_tolerance", loc.node_snap_tolerance_);
           loc.way_id_ = pt.get_optional<long double>("way_id");
 
           loc.minimum_reachability_ = pt.get<unsigned int>("minimum_reachability", 50);

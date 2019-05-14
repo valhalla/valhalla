@@ -79,7 +79,7 @@ const auto conf = json_to_pt(R"({
     "loki":{
       "actions":["locate","route","sources_to_targets","optimized_route","isochrone","trace_route","trace_attributes"],
       "logging":{"long_request": 100},
-      "service_defaults":{"minimum_reachability": 50,"radius": 0}
+      "service_defaults":{"minimum_reachability": 50,"radius": 0,"search_cutoff": 35000, "node_snap_tolerance": 5, "street_side_tolerance": 5, "heading_tolerance": 60}
     },
     "thor":{"logging":{"long_request": 110}},
     "skadi":{"actons":["height"],"logging":{"long_request": 5}},
@@ -94,6 +94,7 @@ const auto conf = json_to_pt(R"({
       "bicycle": {"max_distance": 500000.0,"max_locations": 50,"max_matrix_distance": 200000.0,"max_matrix_locations": 50},
       "bus": {"max_distance": 5000000.0,"max_locations": 50,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
       "hov": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
+      "taxi": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
       "isochrone": {"max_contours": 4,"max_distance": 25000.0,"max_locations": 1,"max_time": 120},
       "max_avoid_locations": 50,"max_radius": 200,"max_reachability": 100,
       "multimodal": {"max_distance": 500000.0,"max_locations": 50,"max_matrix_distance": 0.0,"max_matrix_locations": 0},

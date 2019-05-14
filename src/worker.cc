@@ -182,7 +182,8 @@ const std::unordered_map<unsigned, std::string> OSRM_ERRORS_CODES{
      R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
     {153,
      R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
-    {154, R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
+    // OSRM has no equivalent message for this case so we return our own
+    {154, R"({"code":"DistanceExceeded","message":"Path distance exceeds the max distance limit."})"},
     {155, R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
     {156, R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
     {157,
@@ -201,8 +202,7 @@ const std::unordered_map<unsigned, std::string> OSRM_ERRORS_CODES{
     {164,
      R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
 
-    {170,
-     R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
+    {170, R"({"code":"NoRoute","message":"Impossible route between points"})"},
     {171,
      R"({"code":"NoSegment","message":"One of the supplied input coordinates could not snap to street segment."})"},
 
@@ -316,8 +316,13 @@ void parse_locations(const rapidjson::Document& doc,
         location->mutable_ll()->set_lng(*lon);
 
         auto stop_type_json = rapidjson::get_optional<std::string>(r_loc, "/type");
-        if (stop_type_json && *stop_type_json == std::string("through")) {
-          location->set_type(odin::Location::kThrough);
+        if (stop_type_json) {
+          if (*stop_type_json == std::string("through"))
+            location->set_type(odin::Location::kThrough);
+          else if (*stop_type_json == std::string("via"))
+            location->set_type(odin::Location::kVia);
+          else if (*stop_type_json == std::string("break_through"))
+            location->set_type(odin::Location::kBreakThrough);
         }
 
         auto name = rapidjson::get_optional<std::string>(r_loc, "/name");
@@ -394,7 +399,26 @@ void parse_locations(const rapidjson::Document& doc,
         if (rank_candidates) {
           location->set_rank_candidates(*rank_candidates);
         }
+        auto preferred_side = rapidjson::get_optional<std::string>(r_loc, "/preferred_side");
+        odin::Location::PreferredSide side;
+        if (preferred_side && PreferredSide_Parse(*preferred_side, &side)) {
+          location->set_preferred_side(side);
+        }
+        auto search_cutoff = rapidjson::get_optional<unsigned int>(r_loc, "/search_cutoff");
+        if (search_cutoff) {
+          location->set_search_cutoff(*search_cutoff);
+        }
+        auto street_side_tolerance =
+            rapidjson::get_optional<unsigned int>(r_loc, "/street_side_tolerance");
+        if (street_side_tolerance) {
+          location->set_street_side_tolerance(*street_side_tolerance);
+        }
       } catch (...) { throw valhalla_exception_t{location_parse_error_code}; }
+    }
+    // first and last locations get the default type of break no matter what
+    if (locations->size()) {
+      locations->Mutable(0)->set_type(odin::Location::kBreak);
+      locations->Mutable(locations->size() - 1)->set_type(odin::Location::kBreak);
     }
     if (track) {
       midgard::logging::Log(node + "_count::" + std::to_string(request_locations->Size()),
@@ -595,7 +619,7 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
   // the order of costing must reflect the enum order
   for (const auto costing : {odin::auto_, odin::auto_shorter, odin::bicycle, odin::bus, odin::hov,
                              odin::motor_scooter, odin::multimodal, odin::pedestrian, odin::transit,
-                             odin::truck, odin::motorcycle, odin::auto_data_fix}) {
+                             odin::truck, odin::motorcycle, odin::auto_data_fix, odin::taxi}) {
     // Create the costing string
     auto costing_str = valhalla::odin::Costing_Name(costing);
     // Create the costing options key
@@ -620,6 +644,10 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
       }
       case odin::hov: {
         sif::ParseHOVCostOptions(doc, costing_options_key, options.add_costing_options());
+        break;
+      }
+      case odin::taxi: {
+        sif::ParseTaxiCostOptions(doc, costing_options_key, options.add_costing_options());
         break;
       }
       case odin::motor_scooter: {
@@ -865,6 +893,7 @@ bool Costing_Parse(const std::string& costing, odin::Costing* c) {
       {"bicycle", odin::Costing::bicycle},
       {"bus", odin::Costing::bus},
       {"hov", odin::Costing::hov},
+      {"taxi", odin::Costing::taxi},
       {"motor_scooter", odin::Costing::motor_scooter},
       {"multimodal", odin::Costing::multimodal},
       {"pedestrian", odin::Costing::pedestrian},
@@ -888,6 +917,7 @@ const std::string& Costing_Name(const odin::Costing costing) {
       {odin::Costing::bicycle, "bicycle"},
       {odin::Costing::bus, "bus"},
       {odin::Costing::hov, "hov"},
+      {odin::Costing::taxi, "taxi"},
       {odin::Costing::motor_scooter, "motor_scooter"},
       {odin::Costing::multimodal, "multimodal"},
       {odin::Costing::pedestrian, "pedestrian"},
@@ -990,6 +1020,19 @@ bool DirectionsType_Parse(const std::string& dtype, odin::DirectionsType* t) {
   if (i == types.cend())
     return false;
   *t = i->second;
+  return true;
+}
+
+bool PreferredSide_Parse(const std::string& pside, odin::Location::PreferredSide* p) {
+  static const std::unordered_map<std::string, odin::Location::PreferredSide> types{
+      {"either", odin::Location::either},
+      {"same", odin::Location::same},
+      {"opposite", odin::Location::opposite},
+  };
+  auto i = types.find(pside);
+  if (i == types.cend())
+    return false;
+  *p = i->second;
   return true;
 }
 } // namespace odin

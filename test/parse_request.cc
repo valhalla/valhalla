@@ -69,8 +69,8 @@ constexpr uint8_t kDefaultPedestrian_MaxHikingDifficulty = 1;     // T1 (kHiking
 constexpr float kDefaultPedestrian_ModeFactor = 1.5f;             // Favor this mode?
 constexpr float kDefaultPedestrian_ManeuverPenalty = 5.0f;        // Seconds
 constexpr float kDefaultPedestrian_GatePenalty = 10.0f;           // Seconds
-constexpr float kDefaultPedestrian_WalkwayFactor = 0.9f;          // Slightly favor walkways
-constexpr float kDefaultPedestrian_SideWalkFactor = 0.95f;        // Slightly favor sidewalks
+constexpr float kDefaultPedestrian_WalkwayFactor = 1.0f;          // Neutral value for walkways
+constexpr float kDefaultPedestrian_SideWalkFactor = 1.0f;         // Neutral value for sidewalks
 constexpr float kDefaultPedestrian_AlleyFactor = 2.0f;            // Avoid alleys
 constexpr float kDefaultPedestrian_DrivewayFactor = 5.0f;         // Avoid driveways
 constexpr float kDefaultPedestrian_FerryCost = 300.0f;            // Seconds
@@ -1707,9 +1707,9 @@ void test_filter_attributes() {
 }
 
 std::vector<valhalla::odin::Costing> get_base_auto_costing_list() {
-  return {valhalla::odin::Costing::auto_, valhalla::odin::Costing::auto_shorter,
+  return {valhalla::odin::Costing::auto_,         valhalla::odin::Costing::auto_shorter,
           valhalla::odin::Costing::auto_data_fix, valhalla::odin::Costing::bus,
-          valhalla::odin::Costing::hov};
+          valhalla::odin::Costing::hov,           valhalla::odin::Costing::taxi};
 }
 void test_default_base_auto_cost_options() {
   for (auto costing : get_base_auto_costing_list()) {
