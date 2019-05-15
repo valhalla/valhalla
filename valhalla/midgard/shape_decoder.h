@@ -14,8 +14,7 @@ public:
   Point pop() noexcept(false) {
     lat = next(lat);
     lon = next(lon);
-    return Point(typename Point::first_type(double(lon) * 1e-6),
-                 typename Point::second_type(double(lat) * 1e-6));
+    return Point(double(lon) * 1e-6, double(lat) * 1e-6);
   }
   bool empty() const {
     return begin == end;
@@ -52,8 +51,7 @@ public:
   Point pop() noexcept(false) {
     lat = next(lat);
     lon = next(lon);
-    return Point(typename Point::first_type(double(lon) * prec),
-                 typename Point::second_type(double(lat) * prec));
+    return Point(double(lon) * prec, double(lat) * prec);
   }
   bool empty() const {
     return begin == end;

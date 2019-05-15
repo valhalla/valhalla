@@ -158,12 +158,30 @@ Tiles<coord_t>::Tiles(const AABB2<coord_t>& bounds,
                       const float tilesize,
                       unsigned short subdivisions,
                       bool wrapx)
-    : tilebounds_(bounds), tilesize_(tilesize), nsubdivisions_(subdivisions), wrapx_(wrapx) {
-  tilebounds_ = bounds;
-  tilesize_ = tilesize;
-  subdivision_size_ = tilesize_ / nsubdivisions_;
-  ncolumns_ = static_cast<int32_t>(std::ceil((bounds.maxx() - bounds.minx()) / tilesize_));
-  nrows_ = static_cast<int32_t>(std::ceil((bounds.maxy() - bounds.miny()) / tilesize_));
+    : tilebounds_(bounds), tilesize_(tilesize), nsubdivisions_(subdivisions),
+      subdivision_size_(tilesize_ / nsubdivisions_), wrapx_(wrapx) {
+  auto columns = bounds.Width() / tilesize_;
+  auto rows = bounds.Height() / tilesize_;
+  // TODO: delete this constructor and force use of the lower one
+  // this is not safe because tilesize may not evenly divide into the bounds dimensions
+  ncolumns_ = static_cast<int32_t>(std::round(columns));
+  nrows_ = static_cast<int32_t>(std::round(rows));
+}
+
+// this constructor forces you to specify your tileset in such a way that it conforms to
+// an integer number of columns and rows as well as a tile_size which is evenly divisible into the
+// bounds dimensions
+template <class coord_t>
+Tiles<coord_t>::Tiles(const coord_t& min_pt,
+                      const float tile_size,
+                      const int32_t columns,
+                      const int32_t rows,
+                      const unsigned short subdivisions,
+                      bool wrapx)
+    : tilebounds_(min_pt,
+                  coord_t{min_pt.first + columns * tile_size, min_pt.second + rows * tile_size}),
+      tilesize_(tile_size), ncolumns_(columns), nrows_(rows),
+      subdivision_size_(tilesize_ / nsubdivisions_), nsubdivisions_(subdivisions), wrapx_(wrapx) {
 }
 
 // Get the list of tiles that lie within the specified bounding box.

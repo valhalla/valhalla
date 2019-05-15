@@ -30,14 +30,32 @@ namespace midgard {
 template <class coord_t> class Tiles {
 public:
   /**
-   * Constructor.  A bounding box and tile size is specified.
-   * Sets class data members and computes the number of rows and columns
-   * based on the bounding box and tile size.
-   * @param   bounds    Bounding box
-   * @param   tilesize  Tile size
+   * Constructor. A bounding box and tile size is specified.
+   * Sets class data members and computes the tile size
+   * based on the bounding box and rows and columns.
+   * @param   bounds       Bounding box
+   * @param   tilesize     Size of the tile in both dimensions
+   * @param   subdivisions Number of subtiles in both x and y axis of a single tile
+   * @param   wrapx        Should neighbor operations wrap around the x axis extents
    */
   Tiles(const AABB2<coord_t>& bounds,
         const float tilesize,
+        const unsigned short subdivisions = 1,
+        bool wrapx = true);
+
+  /**
+   * Constructor. A bottom left coord, with tile_size and number of rows and columns
+   * @param   min_pt       Bottom left coord of the tileset
+   * @param   tile_size    The size of a tile in both dimensions
+   * @param   columns      Number of tiles in the x axis
+   * @param   rows         Number of tiles in the y axis
+   * @param   subdivisions Number of subtiles in both x and y axis of a single tile
+   * @param   wrapx        Should neighbor operations wrap around the x axis extents
+   */
+  Tiles(const coord_t& min_pt,
+        const float tile_size,
+        const int32_t columns,
+        const int32_t rows,
         const unsigned short subdivisions = 1,
         bool wrapx = true);
 
