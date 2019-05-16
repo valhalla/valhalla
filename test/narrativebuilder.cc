@@ -12,9 +12,9 @@
 #include "odin/signs.h"
 #include "odin/util.h"
 
+#include <valhalla/proto/trip.pb.h>
 #include <valhalla/proto/tripcommon.pb.h>
 #include <valhalla/proto/tripdirections.pb.h>
-#include <valhalla/proto/trip.pb.h>
 
 #include "test.h"
 

@@ -2,8 +2,8 @@
 #define __VALHALLA_ODIN_SERVICE_H__
 
 #include <valhalla/proto/directions_options.pb.h>
-#include <valhalla/proto/tripdirections.pb.h>
 #include <valhalla/proto/trip.pb.h>
+#include <valhalla/proto/tripdirections.pb.h>
 #include <valhalla/worker.h>
 
 namespace valhalla {

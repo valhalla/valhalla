@@ -25,8 +25,8 @@
 #include "thor/triplegbuilder.h"
 
 #include <valhalla/proto/directions_options.pb.h>
-#include <valhalla/proto/tripdirections.pb.h>
 #include <valhalla/proto/trip.pb.h>
+#include <valhalla/proto/tripdirections.pb.h>
 
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
@@ -395,8 +395,8 @@ void trivial_path_no_uturns(const std::string& config_file) {
   vt::AttributesController controller;
   vo::TripLeg trip_path =
       vt::TripLegBuilder::Build(controller, graph_reader, mode_costing, path,
-                                 *directions_options.mutable_locations(0),
-                                 *directions_options.mutable_locations(1), std::list<vo::Location>{});
+                                *directions_options.mutable_locations(0),
+                                *directions_options.mutable_locations(1), std::list<vo::Location>{});
   // really could of got the total of the elapsed_time.
   vo::DirectionsBuilder directions;
   vo::TripDirections trip_directions = directions.Build(directions_options, trip_path);

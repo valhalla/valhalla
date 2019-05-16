@@ -33,8 +33,7 @@ const std::unordered_map<int, TripDirections_VehicleType> translate_vehicle_type
 
 const std::unordered_map<int, TripDirections_PedestrianType> translate_pedestrian_type{
     {static_cast<int>(TripLeg_PedestrianType_kFoot), TripDirections_PedestrianType_kFoot},
-    {static_cast<int>(TripLeg_PedestrianType_kWheelchair),
-     TripDirections_PedestrianType_kWheelchair},
+    {static_cast<int>(TripLeg_PedestrianType_kWheelchair), TripDirections_PedestrianType_kWheelchair},
     {static_cast<int>(TripLeg_PedestrianType_kSegway), TripDirections_PedestrianType_kSegway},
 };
 

@@ -107,8 +107,7 @@ void TestCalculateRightLeftIntersectingEdgeCounts_SlightLeft_Straight() {
   TripLeg_Node node2;
   node2.mutable_edge()->set_begin_heading(255);
   node2.add_intersecting_edge()->set_begin_heading(275);
-  TryCalculateRightLeftIntersectingEdgeCounts(270,
-                                              midgard::make_unique<EnhancedTripLeg_Node>(&node2),
+  TryCalculateRightLeftIntersectingEdgeCounts(270, midgard::make_unique<EnhancedTripLeg_Node>(&node2),
                                               IntersectingEdgeCounts(1, 1, 0, 0, 0, 0, 0, 0));
 }
 
@@ -147,8 +146,7 @@ void TestCalculateRightLeftIntersectingEdgeCounts_SharpRight_Right_Left() {
   node1.add_intersecting_edge()->set_begin_heading(180);
   node1.add_intersecting_edge()->set_begin_heading(90);
   node1.add_intersecting_edge()->set_begin_heading(10);
-  TryCalculateRightLeftIntersectingEdgeCounts(180,
-                                              midgard::make_unique<EnhancedTripLeg_Node>(&node1),
+  TryCalculateRightLeftIntersectingEdgeCounts(180, midgard::make_unique<EnhancedTripLeg_Node>(&node1),
                                               IntersectingEdgeCounts(1, 1, 0, 0, 4, 0, 0, 0));
 }
 
@@ -162,8 +160,7 @@ void TestCalculateRightLeftIntersectingEdgeCounts_SharpLeft_Right_Left() {
   node1.add_intersecting_edge()->set_begin_heading(352);
   node1.add_intersecting_edge()->set_begin_heading(355);
   node1.add_intersecting_edge()->set_begin_heading(5);
-  TryCalculateRightLeftIntersectingEdgeCounts(180,
-                                              midgard::make_unique<EnhancedTripLeg_Node>(&node1),
+  TryCalculateRightLeftIntersectingEdgeCounts(180, midgard::make_unique<EnhancedTripLeg_Node>(&node1),
                                               IntersectingEdgeCounts(5, 0, 0, 0, 1, 1, 0, 0));
 }
 

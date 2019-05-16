@@ -92,15 +92,13 @@ protected:
                            EnhancedTripLeg_Edge* prev_edge,
                            EnhancedTripLeg_Edge* curr_edge) const;
 
-  bool
-  IsFork(int node_index, EnhancedTripLeg_Edge* prev_edge, EnhancedTripLeg_Edge* curr_edge) const;
+  bool IsFork(int node_index, EnhancedTripLeg_Edge* prev_edge, EnhancedTripLeg_Edge* curr_edge) const;
 
   bool IsPedestrianFork(int node_index,
                         EnhancedTripLeg_Edge* prev_edge,
                         EnhancedTripLeg_Edge* curr_edge) const;
 
-  bool
-  IsTee(int node_index, EnhancedTripLeg_Edge* prev_edge, EnhancedTripLeg_Edge* curr_edge) const;
+  bool IsTee(int node_index, EnhancedTripLeg_Edge* prev_edge, EnhancedTripLeg_Edge* curr_edge) const;
 
   bool IsLeftPencilPointUturn(int node_index,
                               EnhancedTripLeg_Edge* prev_edge,

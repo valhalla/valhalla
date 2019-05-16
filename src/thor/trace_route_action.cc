@@ -117,7 +117,7 @@ odin::TripLeg thor_worker_t::trace_route(valhalla_request_t& request) {
  *
  */
 odin::TripLeg thor_worker_t::route_match(valhalla_request_t& request,
-                                          const AttributesController& controller) {
+                                         const AttributesController& controller) {
   odin::TripLeg trip_path;
   std::vector<PathInfo> path_infos;
 
@@ -127,9 +127,9 @@ odin::TripLeg thor_worker_t::route_match(valhalla_request_t& request,
                              request.options.locations(), path_infos)) {
     // Form the trip path based on mode costing, origin, destination, and path edges
     trip_path = thor::TripLegBuilder::Build(controller, *reader, mode_costing, path_infos,
-                                             *request.options.mutable_locations()->begin(),
-                                             *request.options.mutable_locations()->rbegin(),
-                                             std::list<odin::Location>{}, interrupt);
+                                            *request.options.mutable_locations()->begin(),
+                                            *request.options.mutable_locations()->rbegin(),
+                                            std::list<odin::Location>{}, interrupt);
   }
 
   return trip_path;
@@ -452,8 +452,8 @@ thor_worker_t::map_match(valhalla_request_t& request,
       // Form the trip path based on mode costing, origin, destination, and path edges
       trip_path =
           thor::TripLegBuilder::Build(controller, matcher->graphreader(), mode_costing, path_edges,
-                                       origin, destination, std::list<odin::Location>{}, interrupt,
-                                       &route_discontinuities);
+                                      origin, destination, std::list<odin::Location>{}, interrupt,
+                                      &route_discontinuities);
     } else {
       throw valhalla_exception_t{442};
     }

@@ -350,7 +350,7 @@ std::list<valhalla::odin::TripLeg> thor_worker_t::path_arrive_by(
 
       // Form output information based on path edges
       auto trip_path = thor::TripLegBuilder::Build(controller, *reader, mode_costing, path, *origin,
-                                                    *destination, throughs, interrupt, &vias);
+                                                   *destination, throughs, interrupt, &vias);
       path.clear();
       vias.clear();
 
@@ -434,7 +434,7 @@ std::list<valhalla::odin::TripLeg> thor_worker_t::path_depart_at(
 
       // Form output information based on path edges. vias are a route discontinuity map
       auto trip_path = thor::TripLegBuilder::Build(controller, *reader, mode_costing, path, *origin,
-                                                    *destination, throughs, interrupt, &vias);
+                                                   *destination, throughs, interrupt, &vias);
       path.clear();
       vias.clear();
 

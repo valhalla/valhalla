@@ -175,26 +175,26 @@ void SetBoundingBox(TripLeg& trip_path, std::vector<PointLL>& shape) {
 
 // Associate RoadClass values to TripLeg proto
 constexpr odin::TripLeg_RoadClass kTripLegRoadClass[] = {odin::TripLeg_RoadClass_kMotorway,
-                                                           odin::TripLeg_RoadClass_kTrunk,
-                                                           odin::TripLeg_RoadClass_kPrimary,
-                                                           odin::TripLeg_RoadClass_kSecondary,
-                                                           odin::TripLeg_RoadClass_kTertiary,
-                                                           odin::TripLeg_RoadClass_kUnclassified,
-                                                           odin::TripLeg_RoadClass_kResidential,
-                                                           odin::TripLeg_RoadClass_kServiceOther};
+                                                         odin::TripLeg_RoadClass_kTrunk,
+                                                         odin::TripLeg_RoadClass_kPrimary,
+                                                         odin::TripLeg_RoadClass_kSecondary,
+                                                         odin::TripLeg_RoadClass_kTertiary,
+                                                         odin::TripLeg_RoadClass_kUnclassified,
+                                                         odin::TripLeg_RoadClass_kResidential,
+                                                         odin::TripLeg_RoadClass_kServiceOther};
 TripLeg_RoadClass GetTripLegRoadClass(const RoadClass road_class) {
   return kTripLegRoadClass[static_cast<int>(road_class)];
 }
 
 // Associate Surface values to TripLeg proto
 constexpr odin::TripLeg_Surface kTripLegSurface[] = {odin::TripLeg_Surface_kPavedSmooth,
-                                                       odin::TripLeg_Surface_kPaved,
-                                                       odin::TripLeg_Surface_kPavedRough,
-                                                       odin::TripLeg_Surface_kCompacted,
-                                                       odin::TripLeg_Surface_kDirt,
-                                                       odin::TripLeg_Surface_kGravel,
-                                                       odin::TripLeg_Surface_kPath,
-                                                       odin::TripLeg_Surface_kImpassable};
+                                                     odin::TripLeg_Surface_kPaved,
+                                                     odin::TripLeg_Surface_kPavedRough,
+                                                     odin::TripLeg_Surface_kCompacted,
+                                                     odin::TripLeg_Surface_kDirt,
+                                                     odin::TripLeg_Surface_kGravel,
+                                                     odin::TripLeg_Surface_kPath,
+                                                     odin::TripLeg_Surface_kImpassable};
 TripLeg_Surface GetTripLegSurface(const Surface surface) {
   return kTripLegSurface[static_cast<int>(surface)];
 }
@@ -257,8 +257,8 @@ TripLeg_Traversability GetTripLegTraversability(const Traversability traversabil
 
 // Associate side of street to TripLeg proto
 constexpr odin::Location::SideOfStreet kTripLegSideOfStreet[] = {odin::Location::kNone,
-                                                                  odin::Location::kLeft,
-                                                                  odin::Location::kRight};
+                                                                 odin::Location::kLeft,
+                                                                 odin::Location::kRight};
 odin::Location::SideOfStreet GetTripLegSideOfStreet(const odin::Location::SideOfStreet sos) {
   return kTripLegSideOfStreet[static_cast<uint32_t>(sos)];
 }
@@ -292,9 +292,9 @@ TripLeg_Node_Type GetTripLegNodeType(const NodeType node_type) {
 
 // Associate cycle lane values to TripLeg proto
 constexpr odin::TripLeg_CycleLane kTripLegCycleLane[] = {odin::TripLeg_CycleLane_kNoCycleLane,
-                                                           odin::TripLeg_CycleLane_kShared,
-                                                           odin::TripLeg_CycleLane_kDedicated,
-                                                           odin::TripLeg_CycleLane_kSeparated};
+                                                         odin::TripLeg_CycleLane_kShared,
+                                                         odin::TripLeg_CycleLane_kDedicated,
+                                                         odin::TripLeg_CycleLane_kSeparated};
 TripLeg_CycleLane GetTripLegCycleLane(const CycleLane cyclelane) {
   return kTripLegCycleLane[static_cast<uint32_t>(cyclelane)];
 }
@@ -531,15 +531,15 @@ TripLegBuilder::~TripLegBuilder() {
 // add to the TripLeg
 TripLeg
 TripLegBuilder::Build(const AttributesController& controller,
-                       GraphReader& graphreader,
-                       const std::shared_ptr<sif::DynamicCost>* mode_costing,
-                       const std::vector<PathInfo>& path,
-                       odin::Location& origin,
-                       odin::Location& dest,
-                       const std::list<odin::Location>& through_loc,
-                       const std::function<void()>* interrupt_callback,
-                       std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>>*
-                           route_discontinuities) {
+                      GraphReader& graphreader,
+                      const std::shared_ptr<sif::DynamicCost>* mode_costing,
+                      const std::vector<PathInfo>& path,
+                      odin::Location& origin,
+                      odin::Location& dest,
+                      const std::list<odin::Location>& through_loc,
+                      const std::function<void()>* interrupt_callback,
+                      std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>>*
+                          route_discontinuities) {
   // Test interrupt prior to building trip path
   if (interrupt_callback) {
     (*interrupt_callback)();
@@ -1267,17 +1267,17 @@ TripLegBuilder::Build(const AttributesController& controller,
 
 // Add a trip edge to the trip node and set its attributes
 TripLeg_Edge* TripLegBuilder::AddTripEdge(const AttributesController& controller,
-                                            const GraphId& edge,
-                                            const uint32_t trip_id,
-                                            const uint32_t block_id,
-                                            const sif::TravelMode mode,
-                                            const uint8_t travel_type,
-                                            const DirectedEdge* directededge,
-                                            const bool drive_on_right,
-                                            TripLeg_Node* trip_node,
-                                            const GraphTile* graphtile,
-                                            const uint32_t current_time,
-                                            const float length_percentage) {
+                                          const GraphId& edge,
+                                          const uint32_t trip_id,
+                                          const uint32_t block_id,
+                                          const sif::TravelMode mode,
+                                          const uint8_t travel_type,
+                                          const DirectedEdge* directededge,
+                                          const bool drive_on_right,
+                                          TripLeg_Node* trip_node,
+                                          const GraphTile* graphtile,
+                                          const uint32_t current_time,
+                                          const float length_percentage) {
 
   // Index of the directed edge within the tile
   uint32_t idx = edge.id();
@@ -1676,12 +1676,12 @@ TripLeg_Edge* TripLegBuilder::AddTripEdge(const AttributesController& controller
 }
 
 void TripLegBuilder::AddTripIntersectingEdge(const AttributesController& controller,
-                                              const DirectedEdge* directededge,
-                                              const DirectedEdge* prev_de,
-                                              uint32_t local_edge_index,
-                                              const NodeInfo* nodeinfo,
-                                              odin::TripLeg_Node* trip_node,
-                                              const DirectedEdge* intersecting_de) {
+                                             const DirectedEdge* directededge,
+                                             const DirectedEdge* prev_de,
+                                             uint32_t local_edge_index,
+                                             const NodeInfo* nodeinfo,
+                                             odin::TripLeg_Node* trip_node,
+                                             const DirectedEdge* intersecting_de) {
   TripLeg_IntersectingEdge* itersecting_edge = trip_node->add_intersecting_edge();
 
   // Set the heading for the intersecting edge if requested

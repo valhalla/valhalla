@@ -11,8 +11,8 @@
 #include "tyr/serializers.h"
 
 #include <valhalla/proto/directions_options.pb.h>
-#include <valhalla/proto/tripdirections.pb.h>
 #include <valhalla/proto/trip.pb.h>
+#include <valhalla/proto/tripdirections.pb.h>
 
 using namespace valhalla;
 using namespace valhalla::tyr;

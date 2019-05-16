@@ -13,9 +13,9 @@
 #include <valhalla/odin/signs.h>
 #include <valhalla/odin/transitrouteinfo.h>
 #include <valhalla/proto/directions_options.pb.h>
+#include <valhalla/proto/trip.pb.h>
 #include <valhalla/proto/tripcommon.pb.h>
 #include <valhalla/proto/tripdirections.pb.h>
-#include <valhalla/proto/trip.pb.h>
 
 using namespace valhalla::baldr;
 

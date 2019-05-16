@@ -174,8 +174,7 @@ std::unique_ptr<EnhancedTripLeg_Node> EnhancedTripLeg::GetEnhancedNode(const int
   return midgard::make_unique<EnhancedTripLeg_Node>(mutable_node(node_index));
 }
 
-std::unique_ptr<EnhancedTripLeg_Edge> EnhancedTripLeg::GetPrevEdge(const int node_index,
-                                                                     int delta) {
+std::unique_ptr<EnhancedTripLeg_Edge> EnhancedTripLeg::GetPrevEdge(const int node_index, int delta) {
   int index = node_index - delta;
   if (IsValidNodeIndex(index)) {
     return midgard::make_unique<EnhancedTripLeg_Edge>(mutable_node(index)->mutable_edge());
@@ -188,8 +187,7 @@ std::unique_ptr<EnhancedTripLeg_Edge> EnhancedTripLeg::GetCurrEdge(const int nod
   return GetNextEdge(node_index, 0);
 }
 
-std::unique_ptr<EnhancedTripLeg_Edge> EnhancedTripLeg::GetNextEdge(const int node_index,
-                                                                     int delta) {
+std::unique_ptr<EnhancedTripLeg_Edge> EnhancedTripLeg::GetNextEdge(const int node_index, int delta) {
   int index = node_index + delta;
   if (IsValidNodeIndex(index) && !IsLastNodeIndex(index)) {
     return midgard::make_unique<EnhancedTripLeg_Edge>(mutable_node(index)->mutable_edge());
@@ -269,8 +267,7 @@ float EnhancedTripLeg::GetLength(const DirectionsOptions::Units& units) {
 ///////////////////////////////////////////////////////////////////////////////
 // EnhancedTripLeg_Edge
 
-EnhancedTripLeg_Edge::EnhancedTripLeg_Edge(TripLeg_Edge* mutable_edge)
-    : mutable_edge_(mutable_edge) {
+EnhancedTripLeg_Edge::EnhancedTripLeg_Edge(TripLeg_Edge* mutable_edge) : mutable_edge_(mutable_edge) {
 }
 
 bool EnhancedTripLeg_Edge::IsUnnamed() const {
@@ -415,7 +412,7 @@ bool EnhancedTripLeg_Edge::IsWiderForward(uint32_t prev2curr_turn_degree) const 
 }
 
 bool EnhancedTripLeg_Edge::IsStraightest(uint32_t prev2curr_turn_degree,
-                                          uint32_t straightest_xedge_turn_degree) const {
+                                         uint32_t straightest_xedge_turn_degree) const {
   if (IsWiderForward(prev2curr_turn_degree)) {
     int path_xedge_turn_degree_delta = std::abs(static_cast<int>(prev2curr_turn_degree) -
                                                 static_cast<int>(straightest_xedge_turn_degree));
@@ -969,8 +966,7 @@ std::string EnhancedTripLeg_IntersectingEdge::ToString() const {
 ///////////////////////////////////////////////////////////////////////////////
 // EnhancedTripLeg_Node
 
-EnhancedTripLeg_Node::EnhancedTripLeg_Node(TripLeg_Node* mutable_node)
-    : mutable_node_(mutable_node) {
+EnhancedTripLeg_Node::EnhancedTripLeg_Node(TripLeg_Node* mutable_node) : mutable_node_(mutable_node) {
 }
 
 bool EnhancedTripLeg_Node::HasIntersectingEdges() const {

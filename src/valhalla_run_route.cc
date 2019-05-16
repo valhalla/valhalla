@@ -33,8 +33,8 @@
 #include "worker.h"
 
 #include <valhalla/proto/directions_options.pb.h>
-#include <valhalla/proto/tripdirections.pb.h>
 #include <valhalla/proto/trip.pb.h>
+#include <valhalla/proto/tripdirections.pb.h>
 
 #include "config.h"
 
@@ -106,18 +106,18 @@ public:
  * Test a single path from origin to destination.
  */
 TripLeg PathTest(GraphReader& reader,
-                  valhalla::odin::Location& origin,
-                  valhalla::odin::Location& dest,
-                  PathAlgorithm* pathalgorithm,
-                  const std::shared_ptr<DynamicCost>* mode_costing,
-                  const TravelMode mode,
-                  PathStatistics& data,
-                  bool multi_run,
-                  uint32_t iterations,
-                  bool using_astar,
-                  bool using_bd,
-                  bool match_test,
-                  const std::string& routetype) {
+                 valhalla::odin::Location& origin,
+                 valhalla::odin::Location& dest,
+                 PathAlgorithm* pathalgorithm,
+                 const std::shared_ptr<DynamicCost>* mode_costing,
+                 const TravelMode mode,
+                 PathStatistics& data,
+                 bool multi_run,
+                 uint32_t iterations,
+                 bool using_astar,
+                 bool using_bd,
+                 bool match_test,
+                 const std::string& routetype) {
   auto t1 = std::chrono::high_resolution_clock::now();
   std::vector<PathInfo> pathedges;
   pathedges = pathalgorithm->GetBestPath(origin, dest, reader, mode_costing, mode);
@@ -156,8 +156,8 @@ TripLeg PathTest(GraphReader& reader,
   // Form trip path
   t1 = std::chrono::high_resolution_clock::now();
   AttributesController controller;
-  TripLeg trip_path = TripLegBuilder::Build(controller, reader, mode_costing, pathedges, origin,
-                                              dest, std::list<valhalla::odin::Location>{});
+  TripLeg trip_path = TripLegBuilder::Build(controller, reader, mode_costing, pathedges, origin, dest,
+                                            std::list<valhalla::odin::Location>{});
   t2 = std::chrono::high_resolution_clock::now();
   msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
   LOG_INFO("TripLegBuilder took " + std::to_string(msecs) + " ms");
