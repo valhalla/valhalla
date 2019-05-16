@@ -149,9 +149,11 @@ worker_t::result_t thor_worker_t::work(const std::list<zmq::message_t>& job,
       case odin::DirectionsOptions::trace_route: {
         // Forward the original request
         result.messages.emplace_back(std::move(request_str));
-        auto trip_path = trace_route(request);
+        auto trip_paths = trace_route(request);
         result.messages.emplace_back(request.options.SerializeAsString());
-        result.messages.emplace_back(trip_path.SerializeAsString());
+        for (const auto& trippath : trip_paths) {
+          result.messages.emplace_back(trippath.SerializeAsString());
+        }
         denominator = trace.size() / 1100;
         break;
       }

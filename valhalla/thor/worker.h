@@ -52,7 +52,7 @@ public:
   std::string matrix(valhalla_request_t& request);
   std::list<odin::TripPath> optimized_route(valhalla_request_t& request);
   std::string isochrones(valhalla_request_t& request);
-  odin::TripPath trace_route(valhalla_request_t& request);
+  std::list<odin::TripPath> trace_route(valhalla_request_t& request);
   std::string trace_attributes(valhalla_request_t& request);
 
 protected:
@@ -66,12 +66,16 @@ protected:
   thor::PathAlgorithm* get_path_algorithm(const std::string& routetype,
                                           const odin::Location& origin,
                                           const odin::Location& destination);
-  odin::TripPath route_match(valhalla_request_t& request, const AttributesController& controller);
-  std::vector<std::tuple<float, float, std::vector<thor::MatchResult>, odin::TripPath>>
+  std::list<odin::TripPath> route_match(valhalla_request_t& request, const AttributesController& controller);
+  std::vector<std::tuple<float, float, std::vector<thor::MatchResult>, std::list<odin::TripPath>>>
   map_match(valhalla_request_t& request,
             const AttributesController& controller,
             uint32_t best_paths = 1);
-
+  odin::TripPath
+  path_map_match(const std::vector<meili::MatchResult>& match_results,
+                 const AttributesController& controller,
+                 const std::vector<PathInfo>& path_edges,
+                 std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>>& route_discontinuities);
   std::list<odin::TripPath>
   path_arrive_by(google::protobuf::RepeatedPtrField<valhalla::odin::Location>& correlated,
                  const std::string& costing);

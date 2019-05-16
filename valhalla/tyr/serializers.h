@@ -98,7 +98,7 @@ std::string serializeTransitAvailable(const valhalla_request_t& request,
 std::string serializeTraceAttributes(
     const valhalla_request_t& request,
     const thor::AttributesController& controller,
-    std::vector<std::tuple<float, float, std::vector<thor::MatchResult>, odin::TripPath>>& results);
+    std::vector<std::tuple<float, float, std::vector<thor::MatchResult>, std::list<odin::TripPath>>>& results);
 
 } // namespace tyr
 } // namespace valhalla

@@ -46,15 +46,16 @@ namespace thor {
 /*
  * The trace_route action takes a GPS trace and turns it into a route result.
  */
-odin::TripPath thor_worker_t::trace_route(valhalla_request_t& request) {
+std::list<odin::TripPath> thor_worker_t::trace_route(valhalla_request_t& request) {
 
   // Parse request
   parse_locations(request);
   parse_costing(request);
   parse_measurements(request);
 
+  std::list<odin::TripPath> trip_paths;
+
   // Initialize the controller
-  odin::TripPath trip_path;
   AttributesController controller;
 
   switch (request.options.shape_match()) {
@@ -62,8 +63,9 @@ odin::TripPath thor_worker_t::trace_route(valhalla_request_t& request) {
     // then we can traverse the exact shape to form a path by using edge-walking algorithm
     case odin::ShapeMatch::edge_walk:
       try {
-        trip_path = route_match(request, controller);
-        if (trip_path.node().size() == 0) {
+        trip_paths = route_match(request, controller);
+        // TODO check each trippath?
+        if (trip_paths.front().node().size() == 0) {
           throw std::exception{};
         }
       } catch (...) {
@@ -79,7 +81,7 @@ odin::TripPath thor_worker_t::trace_route(valhalla_request_t& request) {
       try {
         auto map_match_results = map_match(request, controller);
         if (!map_match_results.empty()) {
-          trip_path = std::get<kTripPathIndex>(map_match_results.at(0));
+          trip_paths = std::get<kTripPathIndex>(map_match_results.at(0));
         }
       } catch (...) { throw valhalla_exception_t{442}; }
       break;
@@ -88,25 +90,27 @@ odin::TripPath thor_worker_t::trace_route(valhalla_request_t& request) {
     // network. No shortcuts are used and detailed information at every intersection becomes
     // available.
     case odin::ShapeMatch::walk_or_snap:
-      trip_path = route_match(request, controller);
-      if (trip_path.node().size() == 0) {
+      trip_paths = route_match(request, controller);
+      // TODO check each trippath?
+      if (trip_paths.front().node().size() == 0) {
         LOG_WARN(odin::ShapeMatch_Name(request.options.shape_match()) +
                  " algorithm failed to find exact route match; Falling back to map_match...");
         try {
           auto map_match_results = map_match(request, controller);
           if (!map_match_results.empty()) {
-            trip_path = std::get<kTripPathIndex>(map_match_results.at(0));
+            trip_paths = std::get<kTripPathIndex>(map_match_results.at(0));
           }
         } catch (...) { throw valhalla_exception_t{442}; }
       }
       break;
   }
 
-  if (!request.options.do_not_track()) {
-    log_admin(trip_path);
-  }
+  // TODO reenable
+  // if (!request.options.do_not_track()) {
+  //   log_admin(trip_path);
+  // }
 
-  return trip_path;
+  return trip_paths;
 }
 
 /*
@@ -116,9 +120,10 @@ odin::TripPath thor_worker_t::trace_route(valhalla_request_t& request) {
  * form the list of edges. It will return no nodes if path not found.
  *
  */
-odin::TripPath thor_worker_t::route_match(valhalla_request_t& request,
+std::list<odin::TripPath> thor_worker_t::route_match(valhalla_request_t& request,
                                           const AttributesController& controller) {
   odin::TripPath trip_path;
+  std::list<odin::TripPath> trip_paths;
   std::vector<PathInfo> path_infos;
 
   // TODO - make sure the trace has timestamps..
@@ -130,20 +135,21 @@ odin::TripPath thor_worker_t::route_match(valhalla_request_t& request,
                                              *request.options.mutable_locations()->begin(),
                                              *request.options.mutable_locations()->rbegin(),
                                              std::list<odin::Location>{}, interrupt);
+    trip_paths.emplace_back(trip_path);
   }
 
-  return trip_path;
+  return trip_paths;
 }
 
 // Form the path from the map-matching results. This path gets sent to TripPathBuilder.
 // PathInfo is primarily a list of edge Ids but it also include elapsed time to the end
 // of each edge. We will need to use the existing costing method to form the elapsed time
 // the path. We will start with just using edge costs and will add transition costs.
-std::vector<std::tuple<float, float, std::vector<thor::MatchResult>, odin::TripPath>>
+std::vector<std::tuple<float, float, std::vector<thor::MatchResult>,  std::list<odin::TripPath>>>
 thor_worker_t::map_match(valhalla_request_t& request,
                          const AttributesController& controller,
                          uint32_t best_paths) {
-  std::vector<std::tuple<float, float, std::vector<thor::MatchResult>, odin::TripPath>>
+  std::vector<std::tuple<float, float, std::vector<thor::MatchResult>,  std::list<odin::TripPath>>>
       map_match_results;
 
   // Call Meili for map matching to get a collection of Location Edges
@@ -160,6 +166,7 @@ thor_worker_t::map_match(valhalla_request_t& request,
     const auto& edge_segments = result.segments;
     std::vector<thor::MatchResult> enhanced_match_results;
     odin::TripPath trip_path;
+    std::list<odin::TripPath> trip_paths;
     std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>>
         route_discontinuities;
 
@@ -381,91 +388,126 @@ thor_worker_t::map_match(valhalla_request_t& request,
 #endif
     }
 
-    // Set origin and destination from map matching results
-    auto first_result_with_state =
-        std::find_if(match_results.begin(), match_results.end(),
-                     [](const meili::MatchResult& result) {
-                       return result.HasState() && result.edgeid.Is_Valid();
-                     });
-
-    auto last_result_with_state = std::find_if(match_results.rbegin(), match_results.rend(),
-                                               [](const meili::MatchResult& result) {
-                                                 return result.HasState() && result.edgeid.Is_Valid();
-                                               });
-
-    if ((first_result_with_state != match_results.end()) &&
-        (last_result_with_state != match_results.rend())) {
-      odin::Location origin;
-      PathLocation::toPBF(matcher->state_container()
-                              .state(first_result_with_state->stateid)
-                              .candidate(),
-                          &origin, *reader);
-      odin::Location destination;
-      PathLocation::toPBF(matcher->state_container()
-                              .state(last_result_with_state->stateid)
-                              .candidate(),
-                          &destination, *reader);
-
-      bool found_origin = false;
-      for (const auto& e : origin.path_edges()) {
-        if (e.graph_id() == path_edges.front().edgeid) {
-          found_origin = true;
-          break;
-        }
-      }
-
-      if (!found_origin) {
-        // 1. origin must be at a node, so we can reuse any one of
-        // origin's edges
-
-        // 2. path_edges.front().edgeid must be the downstream edge that
-        // connects one of origin.edges (twins) at its start node
-        auto* pe = origin.mutable_path_edges()->Add();
-        pe->CopyFrom(origin.path_edges(0));
-        pe->set_graph_id(path_edges.front().edgeid);
-        pe->set_percent_along(0.f);
-      }
-
-      bool found_destination = false;
-      for (const auto& e : destination.path_edges()) {
-        if (e.graph_id() == path_edges.back().edgeid) {
-          found_destination = true;
-          break;
-        }
-      }
-
-      if (!found_destination) {
-        // 1. destination must be at a node, so we can reuse any one of
-        // destination's edges
-
-        // 2. path_edges.back().edgeid must be the upstream edge that
-        // connects one of destination.edges (twins) at its end node
-        auto* pe = destination.mutable_path_edges()->Add();
-        pe->CopyFrom(destination.path_edges(0));
-        pe->set_graph_id(path_edges.back().edgeid);
-        pe->set_percent_along(1.f);
-      }
-
-      // assert origin.edges contains path_edges.front() &&
-      // destination.edges contains path_edges.back()
-
-      // Form the trip path based on mode costing, origin, destination, and path edges
-      trip_path =
-          thor::TripPathBuilder::Build(controller, matcher->graphreader(), mode_costing, path_edges,
-                                       origin, destination, std::list<odin::Location>{}, interrupt,
-                                       &route_discontinuities);
+    // trace_attributes always returns a single trip path and may have discontinuities
+    if (request.options.action() == odin::DirectionsOptions::trace_attributes) {
+      trip_path = path_map_match(match_results, controller, path_edges, route_discontinuities);
+      trip_paths.emplace_back(trip_path);
+    // trace_route can return multiple trip paths and cannot have discontinuities
     } else {
-      throw valhalla_exception_t{442};
+      // TODO remove
+      trip_path = path_map_match(match_results, controller, path_edges, route_discontinuities);
+      trip_paths.emplace_back(trip_path);
+
+      // TODO
+      // loop through match_results here to split at breaks
+      // then pass through the split match_results and split path_edges to get a single trip_path
+      // as such accumulate multiple trip_paths
+      // for (int i = 0; i < match_results.size(); ++i) {
+      //   const auto& match = match_results[i];
+      //   // get location from match, then
+      //   // if (location->type() == odin::Location::kBreak ||
+      //   //     location->type() == odin::Location::kBreakThrough) {
+      //     // splice match_results at index i
+      //     // splice path_edges at index i, somehow
+      //     trip_path = path_map_match(match_results, controller, path_edges, route_discontinuities);
+      //     trip_paths.emplace_back(trip_path);
+      // }
     }
     // Keep the result
     map_match_results.emplace_back(map_match_results.empty()
                                        ? 1.0f
                                        : std::get<kRawScoreIndex>(map_match_results.front()) /
                                              result.score,
-                                   result.score, enhanced_match_results, trip_path);
+                                   result.score, enhanced_match_results, trip_paths);
   }
 
   return map_match_results;
+}
+
+odin::TripPath thor_worker_t::path_map_match(const std::vector<meili::MatchResult>& match_results,
+                                             const AttributesController& controller,
+                                             const std::vector<PathInfo>& path_edges,
+                                             std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>>& route_discontinuities) {
+  odin::TripPath trip_path;
+
+  // Set origin and destination from map matching results
+  auto first_result_with_state =
+      std::find_if(match_results.begin(), match_results.end(),
+                   [](const meili::MatchResult& result) {
+                     return result.HasState() && result.edgeid.Is_Valid();
+                   });
+
+  auto last_result_with_state = std::find_if(match_results.rbegin(), match_results.rend(),
+                                             [](const meili::MatchResult& result) {
+                                               return result.HasState() && result.edgeid.Is_Valid();
+                                             });
+
+  if ((first_result_with_state != match_results.end()) &&
+      (last_result_with_state != match_results.rend())) {
+    odin::Location origin;
+    PathLocation::toPBF(matcher->state_container()
+                            .state(first_result_with_state->stateid)
+                            .candidate(),
+                        &origin, *reader);
+    odin::Location destination;
+    PathLocation::toPBF(matcher->state_container()
+                            .state(last_result_with_state->stateid)
+                            .candidate(),
+                        &destination, *reader);
+
+    bool found_origin = false;
+    for (const auto& e : origin.path_edges()) {
+      if (e.graph_id() == path_edges.front().edgeid) {
+        found_origin = true;
+        break;
+      }
+    }
+
+    if (!found_origin) {
+      // 1. origin must be at a node, so we can reuse any one of
+      // origin's edges
+
+      // 2. path_edges.front().edgeid must be the downstream edge that
+      // connects one of origin.edges (twins) at its start node
+      auto* pe = origin.mutable_path_edges()->Add();
+      pe->CopyFrom(origin.path_edges(0));
+      pe->set_graph_id(path_edges.front().edgeid);
+      pe->set_percent_along(0.f);
+    }
+
+    bool found_destination = false;
+    for (const auto& e : destination.path_edges()) {
+      if (e.graph_id() == path_edges.back().edgeid) {
+        found_destination = true;
+        break;
+      }
+    }
+
+    if (!found_destination) {
+      // 1. destination must be at a node, so we can reuse any one of
+      // destination's edges
+
+      // 2. path_edges.back().edgeid must be the upstream edge that
+      // connects one of destination.edges (twins) at its end node
+      auto* pe = destination.mutable_path_edges()->Add();
+      pe->CopyFrom(destination.path_edges(0));
+      pe->set_graph_id(path_edges.back().edgeid);
+      pe->set_percent_along(1.f);
+    }
+
+    // assert origin.edges contains path_edges.front() &&
+    // destination.edges contains path_edges.back()
+
+    // Form the trip path based on mode costing, origin, destination, and path edges
+    trip_path =
+        thor::TripPathBuilder::Build(controller, matcher->graphreader(), mode_costing, path_edges,
+                                     origin, destination, std::list<odin::Location>{}, interrupt,
+                                     &route_discontinuities);
+  } else {
+    throw valhalla_exception_t{442};
+  }
+
+  return trip_path;
 }
 
 } // namespace thor
