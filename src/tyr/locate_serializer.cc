@@ -29,7 +29,9 @@ json::ArrayPtr serialize_edges(const PathLocation& location, GraphReader& reader
             {"edge_id", edge.id.json()},
             {"edge", directed_edge->json()},
             {"edge_info", edge_info.json()},
-        }));
+            {"edge_heading", json::fp_t{edge.edge_heading, 2}}
+
+                                      }));
       } // they want it lean and mean
       else {
         array->emplace_back(json::map({
@@ -41,6 +43,7 @@ json::ArrayPtr serialize_edges(const PathLocation& location, GraphReader& reader
                  ? std::string("left")
                  : (edge.sos == PathLocation::RIGHT ? std::string("right") : std::string("neither"))},
             {"percent_along", json::fp_t{edge.percent_along, 5}},
+            {"edge_heading", json::fp_t{edge.edge_heading, 2}}
         }));
       }
     } catch (...) {

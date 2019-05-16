@@ -683,6 +683,7 @@ void CostMatrix::SetSources(GraphReader& graphreader,
 
     // Iterate through edges and add to adjacency list
     for (const auto& edge : origin.path_edges()) {
+
       // If origin is at a node - skip any inbound edge (dist = 1)
       if (edge.end_node()) {
         continue;
