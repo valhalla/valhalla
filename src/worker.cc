@@ -284,10 +284,27 @@ rapidjson::Document from_string(const std::string& json, const valhalla_exceptio
 }
 
 void parse_locations(const rapidjson::Document& doc,
-                     google::protobuf::RepeatedPtrField<odin::Location>* locations,
+                     odin::DirectionsOptions& options,
                      const std::string& node,
                      unsigned location_parse_error_code,
                      bool track) {
+
+  google::protobuf::RepeatedPtrField<odin::Location>* locations = nullptr;
+  if (node == "locations") {
+    locations = options.mutable_locations();
+  } else if (node == "shape") {
+    locations = options.mutable_shape();
+  } else if (node == "trace") {
+    locations = options.mutable_trace();
+  } else if (node == "sources") {
+    locations = options.mutable_sources();
+  } else if (node == "targets") {
+    locations = options.mutable_targets();
+  } else if (node == "avoid_locations") {
+    locations = options.mutable_avoid_locations();
+  } else {
+    return;
+  }
 
   auto request_locations =
       rapidjson::get_optional<rapidjson::Value::ConstArray>(doc, std::string("/" + node).c_str());
@@ -323,6 +340,9 @@ void parse_locations(const rapidjson::Document& doc,
             location->set_type(odin::Location::kVia);
           else if (*stop_type_json == std::string("break_through"))
             location->set_type(odin::Location::kBreakThrough);
+        } // for map matching the default type is a through
+        else if (options.action() == odin::DirectionsOptions::trace_route) {
+          location->set_type(odin::Location::kThrough);
         }
 
         auto name = rapidjson::get_optional<std::string>(r_loc, "/name");
@@ -527,11 +547,11 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
       sll->mutable_ll()->set_lng(ll.lng());
     }
   } else {
-    parse_locations(doc, options.mutable_shape(), "shape", 134, false);
+    parse_locations(doc, options, "shape", 134, false);
 
     // if no shape then try 'trace'
     if (options.shape().empty()) {
-      parse_locations(doc, options.mutable_trace(), "trace", 135, false);
+      parse_locations(doc, options, "trace", 135, false);
     }
   }
 
@@ -682,16 +702,16 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
   }
 
   // get the locations in there
-  parse_locations(doc, options.mutable_locations(), "locations", 130, track);
+  parse_locations(doc, options, "locations", 130, track);
 
   // get the sources in there
-  parse_locations(doc, options.mutable_sources(), "sources", 131, track);
+  parse_locations(doc, options, "sources", 131, track);
 
   // get the targets in there
-  parse_locations(doc, options.mutable_targets(), "targets", 132, track);
+  parse_locations(doc, options, "targets", 132, track);
 
   // get the avoids in there
-  parse_locations(doc, options.mutable_avoid_locations(), "avoid_locations", 133, track);
+  parse_locations(doc, options, "avoid_locations", 133, track);
 
   // time type
   auto date_time_type = rapidjson::get_optional<float>(doc, "/date_time/type");
