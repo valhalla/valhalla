@@ -70,7 +70,8 @@ thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config,
   auto conf_algorithm = config.get<std::string>("thor.source_to_target_algorithm", "select_optimal");
   for (const auto& kv : config.get_child("service_limits")) {
     if (kv.first == "max_avoid_locations" || kv.first == "max_reachability" ||
-        kv.first == "max_radius" || kv.first == "max_timedep_distance") {
+        kv.first == "max_radius" || kv.first == "max_timedep_distance" ||
+        kv.first == "max_alternates") {
       continue;
     }
     if (kv.first != "skadi" && kv.first != "trace" && kv.first != "isochrone") {

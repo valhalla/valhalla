@@ -146,6 +146,10 @@ void loki_worker_t::parse_costing(valhalla_request_t& request) {
       LOG_WARN("Failed to find avoid_locations");
     }
   }
+
+  // If more alternates are requested than we support we cap it
+  if (request.options.alternates() > max_alternates)
+    request.options.set_alternates(max_alternates);
 }
 
 loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
@@ -182,7 +186,8 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
   // Build max_locations and max_distance maps
   for (const auto& kv : config.get_child("service_limits")) {
     if (kv.first == "max_avoid_locations" || kv.first == "max_reachability" ||
-        kv.first == "max_radius" || kv.first == "max_timedep_distance") {
+        kv.first == "max_radius" || kv.first == "max_timedep_distance" ||
+        kv.first == "max_alternates") {
       continue;
     }
     if (kv.first != "skadi" && kv.first != "trace") {
@@ -236,6 +241,7 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
   max_search_radius = config.get<float>("service_limits.trace.max_search_radius");
   max_best_paths = config.get<unsigned int>("service_limits.trace.max_best_paths");
   max_best_paths_shape = config.get<size_t>("service_limits.trace.max_best_paths_shape");
+  max_alternates = config.get<unsigned int>("service_limits.max_alternates");
 
   // Register standard edge/node costing methods
   factory.RegisterStandardCostingModels();
