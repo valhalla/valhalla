@@ -394,24 +394,19 @@ thor_worker_t::map_match(valhalla_request_t& request,
       trip_paths.emplace_back(trip_path);
     // trace_route can return multiple trip paths and cannot have discontinuities
     } else {
-      // TODO remove
-      trip_path = path_map_match(match_results, controller, path_edges, route_discontinuities);
-      trip_paths.emplace_back(trip_path);
-
-      // TODO
       // loop through match_results here to split at breaks
       // then pass through the split match_results and split path_edges to get a single trip_path
       // as such accumulate multiple trip_paths
-      // for (int i = 0; i < match_results.size(); ++i) {
-      //   const auto& match = match_results[i];
-      //   // get location from match, then
-      //   // if (location->type() == odin::Location::kBreak ||
-      //   //     location->type() == odin::Location::kBreakThrough) {
-      //     // splice match_results at index i
-      //     // splice path_edges at index i, somehow
-      //     trip_path = path_map_match(match_results, controller, path_edges, route_discontinuities);
-      //     trip_paths.emplace_back(trip_path);
-      // }
+      for (int i = 0; i < match_results.size(); ++i) {
+        const auto& match = match_results[i];
+        // get location from match, then
+        // if (location->type() == odin::Location::kBreak ||
+        //     location->type() == odin::Location::kBreakThrough) {
+        // splice match_results at index i
+        // splice path_edges at index i, somehow
+        trip_path = path_map_match(match_results, controller, path_edges, route_discontinuities);
+        trip_paths.emplace_back(trip_path);
+      }
     }
     // Keep the result
     map_match_results.emplace_back(map_match_results.empty()
