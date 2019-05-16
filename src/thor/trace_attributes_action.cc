@@ -17,7 +17,7 @@
 #include "tyr/serializers.h"
 
 #include <valhalla/proto/tripdirections.pb.h>
-#include <valhalla/proto/trippath.pb.h>
+#include <valhalla/proto/trip.pb.h>
 
 using namespace valhalla;
 using namespace valhalla::midgard;
@@ -30,7 +30,7 @@ namespace {
 constexpr size_t kConfidenceScoreIndex = 0;
 constexpr size_t kRawScoreIndex = 1;
 constexpr size_t kMatchResultsIndex = 2;
-constexpr size_t kTripPathIndex = 3;
+constexpr size_t kTripLegIndex = 3;
 } // namespace
 
 namespace valhalla {
@@ -83,8 +83,8 @@ std::string thor_worker_t::trace_attributes(valhalla_request_t& request) {
    * Valhalla will allow an efficient “edge-walking” algorithm rather than a more extensive
    * map-matching method. If true, this enforces to only use exact route match algorithm.
    */
-  odin::TripPath trip_path;
-  std::vector<std::tuple<float, float, std::vector<thor::MatchResult>, odin::TripPath>>
+  odin::TripLeg trip_path;
+  std::vector<std::tuple<float, float, std::vector<thor::MatchResult>, odin::TripLeg>>
       map_match_results;
   AttributesController controller;
   filter_attributes(request, controller);
@@ -140,7 +140,7 @@ std::string thor_worker_t::trace_attributes(valhalla_request_t& request) {
   }
 
   if (map_match_results.empty() ||
-      std::get<kTripPathIndex>(map_match_results.at(0)).node().size() == 0) {
+      std::get<kTripLegIndex>(map_match_results.at(0)).node().size() == 0) {
     throw valhalla_exception_t{442};
   }
   return tyr::serializeTraceAttributes(request, controller, map_match_results);

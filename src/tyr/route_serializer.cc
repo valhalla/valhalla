@@ -12,7 +12,7 @@
 
 #include <valhalla/proto/directions_options.pb.h>
 #include <valhalla/proto/tripdirections.pb.h>
-#include <valhalla/proto/trippath.pb.h>
+#include <valhalla/proto/trip.pb.h>
 
 using namespace valhalla;
 using namespace valhalla::tyr;
@@ -29,7 +29,7 @@ namespace {
  * @param  legs  The legs of the route
  * @return the gpx string
  */
-std::string pathToGPX(const std::list<odin::TripPath>& legs) {
+std::string pathToGPX(const std::list<odin::TripLeg>& legs) {
   // start the gpx, we'll use 6 digits of precision
   std::stringstream gpx;
   gpx << std::setprecision(6) << std::fixed;
@@ -77,7 +77,7 @@ namespace valhalla {
 namespace tyr {
 
 std::string serializeDirections(const valhalla_request_t& request,
-                                std::list<TripPath>& path_legs,
+                                std::list<TripLeg>& path_legs,
                                 const std::list<TripDirections>& directions_legs) {
   // serialize them
   switch (request.options.format()) {

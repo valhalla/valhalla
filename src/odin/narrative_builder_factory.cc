@@ -12,7 +12,7 @@ namespace odin {
 
 std::unique_ptr<NarrativeBuilder>
 NarrativeBuilderFactory::Create(const DirectionsOptions& directions_options,
-                                const EnhancedTripPath* trip_path) {
+                                const EnhancedTripLeg* trip_path) {
 
   // Get the locale dictionary
   const auto phrase_dictionary = get_locales().find(directions_options.language());

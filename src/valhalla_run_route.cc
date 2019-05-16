@@ -29,12 +29,12 @@
 #include "thor/multimodal.h"
 #include "thor/route_matcher.h"
 #include "thor/timedep.h"
-#include "thor/trippathbuilder.h"
+#include "thor/triplegbuilder.h"
 #include "worker.h"
 
 #include <valhalla/proto/directions_options.pb.h>
 #include <valhalla/proto/tripdirections.pb.h>
-#include <valhalla/proto/trippath.pb.h>
+#include <valhalla/proto/trip.pb.h>
 
 #include "config.h"
 
@@ -105,7 +105,7 @@ public:
 /**
  * Test a single path from origin to destination.
  */
-TripPath PathTest(GraphReader& reader,
+TripLeg PathTest(GraphReader& reader,
                   valhalla::odin::Location& origin,
                   valhalla::odin::Location& dest,
                   PathAlgorithm* pathalgorithm,
@@ -146,7 +146,7 @@ TripPath PathTest(GraphReader& reader,
   }
   if (pathedges.size() == 0) {
     // Return an empty trip path
-    return TripPath();
+    return TripLeg();
   }
 
   auto t2 = std::chrono::high_resolution_clock::now();
@@ -156,11 +156,11 @@ TripPath PathTest(GraphReader& reader,
   // Form trip path
   t1 = std::chrono::high_resolution_clock::now();
   AttributesController controller;
-  TripPath trip_path = TripPathBuilder::Build(controller, reader, mode_costing, pathedges, origin,
+  TripLeg trip_path = TripLegBuilder::Build(controller, reader, mode_costing, pathedges, origin,
                                               dest, std::list<valhalla::odin::Location>{});
   t2 = std::chrono::high_resolution_clock::now();
   msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
-  LOG_INFO("TripPathBuilder took " + std::to_string(msecs) + " ms");
+  LOG_INFO("TripLegBuilder took " + std::to_string(msecs) + " ms");
 
   // Time how long it takes to clear the path
   t1 = std::chrono::high_resolution_clock::now();
@@ -317,7 +317,7 @@ std::string GetFormattedTime(uint32_t seconds) {
 }
 
 TripDirections DirectionsTest(const DirectionsOptions& directions_options,
-                              TripPath& trip_path,
+                              TripLeg& trip_path,
                               valhalla::odin::Location& orig,
                               valhalla::odin::Location& dest,
                               PathStatistics& data) {
@@ -541,7 +541,7 @@ int main(int argc, char* argv[]) {
   factory.RegisterStandardCostingModels();
 
   // Get the costing method - pass the JSON configuration
-  TripPath trip_path;
+  TripLeg trip_path;
   TravelMode mode;
   std::shared_ptr<DynamicCost> mode_costing[4];
   if (routetype == "multimodal") {

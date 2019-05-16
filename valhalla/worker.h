@@ -92,8 +92,8 @@ const std::unordered_map<unsigned, std::string>
 
                 // odin project 2xx
                 {200, "Failed to parse intermediate request format"},
-                {201, "Failed to parse TripPath"},
-                {202, "Could not build directions for TripPath"},
+                {201, "Failed to parse TripLeg"},
+                {202, "Could not build directions for TripLeg"},
 
                 {210, "Trip path does not have any nodes"},
                 {211, "Trip path has only one node"},

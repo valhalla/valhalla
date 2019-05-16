@@ -18,9 +18,9 @@ namespace {
 constexpr size_t kConfidenceScoreIndex = 0;
 constexpr size_t kRawScoreIndex = 1;
 constexpr size_t kMatchResultsIndex = 2;
-constexpr size_t kTripPathIndex = 3;
+constexpr size_t kTripLegIndex = 3;
 
-json::ArrayPtr serialize_admins(const TripPath& trip_path) {
+json::ArrayPtr serialize_admins(const TripLeg& trip_path) {
   auto admin_array = json::array({});
   for (const auto& admin : trip_path.admin()) {
     auto admin_map = json::map({});
@@ -45,7 +45,7 @@ json::ArrayPtr serialize_admins(const TripPath& trip_path) {
 
 json::ArrayPtr serialize_edges(const AttributesController& controller,
                                const DirectionsOptions& directions_options,
-                               const TripPath& trip_path) {
+                               const TripLeg& trip_path) {
   json::ArrayPtr edge_array = json::array({});
 
   // Length and speed default to kilometers
@@ -260,13 +260,13 @@ json::ArrayPtr serialize_edges(const AttributesController& controller,
           auto intersecting_edge_array = json::array({});
           for (const auto& xedge : node.intersecting_edge()) {
             auto xedge_map = json::map({});
-            if (xedge.has_walkability() && (xedge.walkability() != TripPath_Traversability_kNone)) {
+            if (xedge.has_walkability() && (xedge.walkability() != TripLeg_Traversability_kNone)) {
               xedge_map->emplace("walkability", to_string(xedge.walkability()));
             }
-            if (xedge.has_cyclability() && (xedge.cyclability() != TripPath_Traversability_kNone)) {
+            if (xedge.has_cyclability() && (xedge.cyclability() != TripLeg_Traversability_kNone)) {
               xedge_map->emplace("cyclability", to_string(xedge.cyclability()));
             }
-            if (xedge.has_driveability() && (xedge.driveability() != TripPath_Traversability_kNone)) {
+            if (xedge.has_driveability() && (xedge.driveability() != TripLeg_Traversability_kNone)) {
               xedge_map->emplace("driveability", to_string(xedge.driveability()));
             }
             xedge_map->emplace("from_edge_name_consistency",
@@ -398,10 +398,10 @@ void append_trace_info(
     const json::MapPtr& json,
     const AttributesController& controller,
     const DirectionsOptions& directions_options,
-    const std::tuple<float, float, std::vector<thor::MatchResult>, TripPath>& map_match_result) {
+    const std::tuple<float, float, std::vector<thor::MatchResult>, TripLeg>& map_match_result) {
   // Set trip path and match results
   const auto& match_results = std::get<kMatchResultsIndex>(map_match_result);
-  const auto& trip_path = std::get<kTripPathIndex>(map_match_result);
+  const auto& trip_path = std::get<kTripLegIndex>(map_match_result);
 
   // Add osm_changeset
   if (trip_path.has_osm_changeset()) {
@@ -445,7 +445,7 @@ namespace tyr {
 std::string serializeTraceAttributes(
     const valhalla_request_t& request,
     const AttributesController& controller,
-    std::vector<std::tuple<float, float, std::vector<thor::MatchResult>, TripPath>>&
+    std::vector<std::tuple<float, float, std::vector<thor::MatchResult>, TripLeg>>&
         map_match_results) {
 
   // Create json map to return

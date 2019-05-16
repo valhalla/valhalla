@@ -160,7 +160,7 @@ int main(int argc, char* argv[]) {
   LOG_INFO("routetype: " + routetype);
 
   // Get the costing method - pass the JSON configuration
-  valhalla::odin::TripPath trip_path;
+  valhalla::odin::TripLeg trip_path;
   TravelMode mode;
   std::shared_ptr<DynamicCost> mode_costing[4];
   if (routetype == "multimodal") {

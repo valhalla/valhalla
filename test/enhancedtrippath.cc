@@ -12,9 +12,9 @@ namespace {
 
 void TryCalculateRightLeftIntersectingEdgeCounts(
     uint32_t from_heading,
-    std::unique_ptr<EnhancedTripPath_Node> node,
+    std::unique_ptr<EnhancedTripLeg_Node> node,
     const IntersectingEdgeCounts& expected_xedge_counts,
-    const TripPath_TravelMode travel_mode = TripPath_TravelMode_kDrive) {
+    const TripLeg_TravelMode travel_mode = TripLeg_TravelMode_kDrive) {
 
   IntersectingEdgeCounts xedge_counts;
   xedge_counts.clear();
@@ -57,64 +57,64 @@ void TryCalculateRightLeftIntersectingEdgeCounts(
 
 void TestCalculateRightLeftIntersectingEdgeCounts_Straight_Straight() {
   // Path straight, intersecting straight
-  TripPath_Node node1;
+  TripLeg_Node node1;
   node1.mutable_edge()->set_begin_heading(5);
-  TripPath_IntersectingEdge* n1_ie1 = node1.add_intersecting_edge();
+  TripLeg_IntersectingEdge* n1_ie1 = node1.add_intersecting_edge();
   n1_ie1->set_begin_heading(355);
-  n1_ie1->set_driveability(TripPath_Traversability_kBoth);
-  TryCalculateRightLeftIntersectingEdgeCounts(0, midgard::make_unique<EnhancedTripPath_Node>(&node1),
+  n1_ie1->set_driveability(TripLeg_Traversability_kBoth);
+  TryCalculateRightLeftIntersectingEdgeCounts(0, midgard::make_unique<EnhancedTripLeg_Node>(&node1),
                                               IntersectingEdgeCounts(0, 0, 0, 0, 1, 1, 1, 1));
 
   // Path straight, intersecting straight
-  TripPath_Node node2;
+  TripLeg_Node node2;
   node2.mutable_edge()->set_begin_heading(355);
-  TripPath_IntersectingEdge* n2_ie1 = node2.add_intersecting_edge();
+  TripLeg_IntersectingEdge* n2_ie1 = node2.add_intersecting_edge();
   n2_ie1->set_begin_heading(5);
-  n2_ie1->set_driveability(TripPath_Traversability_kForward);
-  TryCalculateRightLeftIntersectingEdgeCounts(0, midgard::make_unique<EnhancedTripPath_Node>(&node2),
+  n2_ie1->set_driveability(TripLeg_Traversability_kForward);
+  TryCalculateRightLeftIntersectingEdgeCounts(0, midgard::make_unique<EnhancedTripLeg_Node>(&node2),
                                               IntersectingEdgeCounts(1, 1, 1, 1, 0, 0, 0, 0));
 }
 
 void TestCalculateRightLeftIntersectingEdgeCounts_SlightRight_Straight() {
   // Path slight right, intersecting straight
-  TripPath_Node node1;
+  TripLeg_Node node1;
   node1.mutable_edge()->set_begin_heading(11);
-  TripPath_IntersectingEdge* n1_ie1 = node1.add_intersecting_edge();
+  TripLeg_IntersectingEdge* n1_ie1 = node1.add_intersecting_edge();
   n1_ie1->set_begin_heading(0);
-  n1_ie1->set_driveability(TripPath_Traversability_kBackward);
-  TryCalculateRightLeftIntersectingEdgeCounts(0, midgard::make_unique<EnhancedTripPath_Node>(&node1),
+  n1_ie1->set_driveability(TripLeg_Traversability_kBackward);
+  TryCalculateRightLeftIntersectingEdgeCounts(0, midgard::make_unique<EnhancedTripLeg_Node>(&node1),
                                               IntersectingEdgeCounts(0, 0, 0, 0, 1, 1, 0, 0));
 
   // Path slight right, intersecting straight
-  TripPath_Node node2;
+  TripLeg_Node node2;
   node2.mutable_edge()->set_begin_heading(105);
-  TripPath_IntersectingEdge* n2_ie1 = node2.add_intersecting_edge();
+  TripLeg_IntersectingEdge* n2_ie1 = node2.add_intersecting_edge();
   n2_ie1->set_begin_heading(85);
-  n2_ie1->set_driveability(TripPath_Traversability_kNone);
-  TryCalculateRightLeftIntersectingEdgeCounts(90, midgard::make_unique<EnhancedTripPath_Node>(&node2),
+  n2_ie1->set_driveability(TripLeg_Traversability_kNone);
+  TryCalculateRightLeftIntersectingEdgeCounts(90, midgard::make_unique<EnhancedTripLeg_Node>(&node2),
                                               IntersectingEdgeCounts(0, 0, 0, 0, 1, 1, 0, 0));
 }
 
 void TestCalculateRightLeftIntersectingEdgeCounts_SlightLeft_Straight() {
   // Path slight left, intersecting straight
-  TripPath_Node node1;
+  TripLeg_Node node1;
   node1.mutable_edge()->set_begin_heading(345);
   node1.add_intersecting_edge()->set_begin_heading(355);
-  TryCalculateRightLeftIntersectingEdgeCounts(0, midgard::make_unique<EnhancedTripPath_Node>(&node1),
+  TryCalculateRightLeftIntersectingEdgeCounts(0, midgard::make_unique<EnhancedTripLeg_Node>(&node1),
                                               IntersectingEdgeCounts(1, 1, 0, 0, 0, 0, 0, 0));
 
   // Path slight left, intersecting straight
-  TripPath_Node node2;
+  TripLeg_Node node2;
   node2.mutable_edge()->set_begin_heading(255);
   node2.add_intersecting_edge()->set_begin_heading(275);
   TryCalculateRightLeftIntersectingEdgeCounts(270,
-                                              midgard::make_unique<EnhancedTripPath_Node>(&node2),
+                                              midgard::make_unique<EnhancedTripLeg_Node>(&node2),
                                               IntersectingEdgeCounts(1, 1, 0, 0, 0, 0, 0, 0));
 }
 
 void TestCalculateRightLeftIntersectingEdgeCounts_SlightLeft_Right_Left() {
   // Path slight left, intersecting right and left
-  TripPath_Node node1;
+  TripLeg_Node node1;
   node1.mutable_edge()->set_begin_heading(340);
   node1.add_intersecting_edge()->set_begin_heading(45);
   node1.add_intersecting_edge()->set_begin_heading(90);
@@ -122,25 +122,25 @@ void TestCalculateRightLeftIntersectingEdgeCounts_SlightLeft_Right_Left() {
   node1.add_intersecting_edge()->set_begin_heading(315);
   node1.add_intersecting_edge()->set_begin_heading(270);
   node1.add_intersecting_edge()->set_begin_heading(225);
-  TryCalculateRightLeftIntersectingEdgeCounts(0, midgard::make_unique<EnhancedTripPath_Node>(&node1),
+  TryCalculateRightLeftIntersectingEdgeCounts(0, midgard::make_unique<EnhancedTripLeg_Node>(&node1),
                                               IntersectingEdgeCounts(3, 0, 0, 0, 3, 1, 0, 0));
 
   // Path slight left, intersecting right and left
-  TripPath_Node node2;
+  TripLeg_Node node2;
   node2.mutable_edge()->set_begin_heading(60);
-  TripPath_IntersectingEdge* n2_ie1 = node2.add_intersecting_edge();
+  TripLeg_IntersectingEdge* n2_ie1 = node2.add_intersecting_edge();
   n2_ie1->set_begin_heading(157);
-  n2_ie1->set_driveability(TripPath_Traversability_kBoth);
-  TripPath_IntersectingEdge* n2_ie2 = node2.add_intersecting_edge();
+  n2_ie1->set_driveability(TripLeg_Traversability_kBoth);
+  TripLeg_IntersectingEdge* n2_ie2 = node2.add_intersecting_edge();
   n2_ie2->set_begin_heading(337);
-  n2_ie2->set_driveability(TripPath_Traversability_kForward);
-  TryCalculateRightLeftIntersectingEdgeCounts(80, midgard::make_unique<EnhancedTripPath_Node>(&node2),
+  n2_ie2->set_driveability(TripLeg_Traversability_kForward);
+  TryCalculateRightLeftIntersectingEdgeCounts(80, midgard::make_unique<EnhancedTripLeg_Node>(&node2),
                                               IntersectingEdgeCounts(1, 0, 1, 0, 1, 0, 1, 0));
 }
 
 void TestCalculateRightLeftIntersectingEdgeCounts_SharpRight_Right_Left() {
   // Path sharp right, intersecting right and left
-  TripPath_Node node1;
+  TripLeg_Node node1;
   node1.mutable_edge()->set_begin_heading(352);
   node1.add_intersecting_edge()->set_begin_heading(355);
   node1.add_intersecting_edge()->set_begin_heading(270);
@@ -148,13 +148,13 @@ void TestCalculateRightLeftIntersectingEdgeCounts_SharpRight_Right_Left() {
   node1.add_intersecting_edge()->set_begin_heading(90);
   node1.add_intersecting_edge()->set_begin_heading(10);
   TryCalculateRightLeftIntersectingEdgeCounts(180,
-                                              midgard::make_unique<EnhancedTripPath_Node>(&node1),
+                                              midgard::make_unique<EnhancedTripLeg_Node>(&node1),
                                               IntersectingEdgeCounts(1, 1, 0, 0, 4, 0, 0, 0));
 }
 
 void TestCalculateRightLeftIntersectingEdgeCounts_SharpLeft_Right_Left() {
   // Path sharp left, intersecting right and left
-  TripPath_Node node1;
+  TripLeg_Node node1;
   node1.mutable_edge()->set_begin_heading(10);
   node1.add_intersecting_edge()->set_begin_heading(90);
   node1.add_intersecting_edge()->set_begin_heading(180);
@@ -163,7 +163,7 @@ void TestCalculateRightLeftIntersectingEdgeCounts_SharpLeft_Right_Left() {
   node1.add_intersecting_edge()->set_begin_heading(355);
   node1.add_intersecting_edge()->set_begin_heading(5);
   TryCalculateRightLeftIntersectingEdgeCounts(180,
-                                              midgard::make_unique<EnhancedTripPath_Node>(&node1),
+                                              midgard::make_unique<EnhancedTripLeg_Node>(&node1),
                                               IntersectingEdgeCounts(5, 0, 0, 0, 1, 1, 0, 0));
 }
 

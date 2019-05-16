@@ -296,7 +296,7 @@ void thor_worker_t::parse_measurements(const valhalla_request_t& request) {
   } catch (...) { throw valhalla_exception_t{424}; }
 }
 
-void thor_worker_t::log_admin(const valhalla::odin::TripPath& trip_path) {
+void thor_worker_t::log_admin(const valhalla::odin::TripLeg& trip_path) {
   std::unordered_set<std::string> state_iso;
   std::unordered_set<std::string> country_iso;
   std::stringstream s_ss, c_ss;

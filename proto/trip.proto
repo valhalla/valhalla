@@ -3,7 +3,7 @@ option optimize_for = LITE_RUNTIME;
 package valhalla.odin;
 import public "tripcommon.proto";
 
-message TripPath {
+message TripLeg {
 
   message SignElement {
     optional string text = 1;               // The actual sign element text, examples: I 95 North or Derry Street
@@ -270,3 +270,10 @@ message TripPath {
   optional BoundingBox bbox = 9;
 }
 
+message TripRoute {
+  repeated TripLeg legs = 1;
+}
+
+message Trip {
+  repeated TripRoute routes = 1;
+}

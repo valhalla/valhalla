@@ -13,7 +13,7 @@
 #include <valhalla/midgard/gridded_data.h>
 #include <valhalla/proto/directions_options.pb.h>
 #include <valhalla/proto/tripdirections.pb.h>
-#include <valhalla/proto/trippath.pb.h>
+#include <valhalla/proto/trip.pb.h>
 #include <valhalla/thor/attributes_controller.h>
 #include <valhalla/thor/costmatrix.h>
 #include <valhalla/thor/match_result.h>
@@ -27,7 +27,7 @@ namespace tyr {
  * Turn path and directions into a route that one can follow
  */
 std::string serializeDirections(const valhalla_request_t& request,
-                                std::list<odin::TripPath>& path_legs,
+                                std::list<odin::TripLeg>& path_legs,
                                 const std::list<odin::TripDirections>& directions_legs);
 
 /**
@@ -98,7 +98,7 @@ std::string serializeTransitAvailable(const valhalla_request_t& request,
 std::string serializeTraceAttributes(
     const valhalla_request_t& request,
     const thor::AttributesController& controller,
-    std::vector<std::tuple<float, float, std::vector<thor::MatchResult>, odin::TripPath>>& results);
+    std::vector<std::tuple<float, float, std::vector<thor::MatchResult>, odin::TripLeg>>& results);
 
 } // namespace tyr
 } // namespace valhalla

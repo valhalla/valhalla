@@ -144,7 +144,7 @@ std::string actor_t::trace_route(const std::string& request_str,
   // check the request and locate the locations in the graph
   pimpl->loki_worker.trace(request);
   // route between the locations in the graph to find the best path
-  std::list<TripPath> legs{pimpl->thor_worker.trace_route(request)};
+  std::list<TripLeg> legs{pimpl->thor_worker.trace_route(request)};
   // get some directions back from them
   auto directions = pimpl->odin_worker.narrate(request, legs);
   // serialize them out to json string
