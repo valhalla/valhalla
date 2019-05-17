@@ -32,9 +32,9 @@
 #include "thor/triplegbuilder.h"
 #include "worker.h"
 
+#include <valhalla/proto/directions.pb.h>
 #include <valhalla/proto/directions_options.pb.h>
 #include <valhalla/proto/trip.pb.h>
-#include <valhalla/proto/directions.pb.h>
 
 #include "config.h"
 
@@ -317,10 +317,10 @@ std::string GetFormattedTime(uint32_t seconds) {
 }
 
 DirectionsLeg DirectionsTest(const DirectionsOptions& directions_options,
-                              TripLeg& trip_path,
-                              valhalla::odin::Location& orig,
-                              valhalla::odin::Location& dest,
-                              PathStatistics& data) {
+                             TripLeg& trip_path,
+                             valhalla::odin::Location& orig,
+                             valhalla::odin::Location& dest,
+                             PathStatistics& data) {
   // TEMPORARY? Change to PathLocation...
   const PathLocation& origin = PathLocation::fromPBF(orig);
   const PathLocation& destination = PathLocation::fromPBF(dest);

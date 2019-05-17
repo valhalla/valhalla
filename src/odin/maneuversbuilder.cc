@@ -25,8 +25,8 @@
 #include "odin/sign.h"
 #include "odin/signs.h"
 
-#include <valhalla/proto/directions_options.pb.h>
 #include <valhalla/proto/directions.pb.h>
+#include <valhalla/proto/directions_options.pb.h>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;

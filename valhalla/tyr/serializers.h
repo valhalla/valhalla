@@ -11,9 +11,9 @@
 #include <valhalla/baldr/location.h>
 #include <valhalla/baldr/pathlocation.h>
 #include <valhalla/midgard/gridded_data.h>
+#include <valhalla/proto/directions.pb.h>
 #include <valhalla/proto/directions_options.pb.h>
 #include <valhalla/proto/trip.pb.h>
-#include <valhalla/proto/directions.pb.h>
 #include <valhalla/thor/attributes_controller.h>
 #include <valhalla/thor/costmatrix.h>
 #include <valhalla/thor/match_result.h>

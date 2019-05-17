@@ -13,9 +13,9 @@
 #include "odin/util.h"
 #include "tyr/serializers.h"
 
+#include "proto/directions.pb.h"
 #include "proto/directions_options.pb.h"
 #include "proto/trip.pb.h"
-#include "proto/directions.pb.h"
 
 using namespace valhalla;
 using namespace valhalla::midgard;

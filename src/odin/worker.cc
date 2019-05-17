@@ -36,7 +36,7 @@ void odin_worker_t::cleanup() {
 }
 
 std::list<DirectionsLeg> odin_worker_t::narrate(const valhalla_request_t& request,
-                                                 std::list<TripLeg>& legs) const {
+                                                std::list<TripLeg>& legs) const {
   // get some annotated directions
   std::list<DirectionsLeg> narrated;
   try {

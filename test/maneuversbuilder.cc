@@ -69,8 +69,7 @@ public:
   }
 };
 
-void TrySetSimpleDirectionalManeuverType(uint32_t turn_degree,
-                                         DirectionsLeg_Maneuver_Type expected) {
+void TrySetSimpleDirectionalManeuverType(uint32_t turn_degree, DirectionsLeg_Maneuver_Type expected) {
   DirectionsOptions directions_options;
   TripLeg path;
   TripLeg_Node* node;
@@ -647,8 +646,8 @@ void TestLeftInternalStraightCombine() {
   PopulateManeuver(maneuver1, DirectionsLeg_Maneuver_Type_kStart,
                    {{"Hershey Road", 0}, {"PA 743 South", 1}}, {}, {}, "", 0.453835, 28, 0,
                    Maneuver::RelativeDirection::kNone,
-                   DirectionsLeg_Maneuver_CardinalDirection_kSouth, 158, 198, 0, 4, 0, 13, 0, 0, 0,
-                   0, 0, 0, 0, 0, 0, {}, {}, {}, {});
+                   DirectionsLeg_Maneuver_CardinalDirection_kSouth, 158, 198, 0, 4, 0, 13, 0, 0, 0, 0,
+                   0, 0, 0, 0, 0, {}, {}, {}, {});
 
   maneuvers.emplace_back();
   Maneuver& maneuver2 = maneuvers.back();
@@ -659,8 +658,8 @@ void TestLeftInternalStraightCombine() {
 
   maneuvers.emplace_back();
   Maneuver& maneuver3 = maneuvers.back();
-  PopulateManeuver(maneuver3, DirectionsLeg_Maneuver_Type_kRampStraight, {}, {}, {}, "", 0.505000,
-                   36, 9, Maneuver::RelativeDirection::kKeepStraight,
+  PopulateManeuver(maneuver3, DirectionsLeg_Maneuver_Type_kRampStraight, {}, {}, {}, "", 0.505000, 36,
+                   9, Maneuver::RelativeDirection::kKeepStraight,
                    DirectionsLeg_Maneuver_CardinalDirection_kSouthEast, 127, 130, 5, 7, 14, 20, 1, 0,
                    0, 0, 0, 0, 0, 0, 0, {}, {std::make_tuple("PA 283 East", 1, 0)},
                    {std::make_tuple("Lancaster", 0, 0)}, {});
@@ -676,8 +675,8 @@ void TestLeftInternalStraightCombine() {
   Maneuver& maneuver5 = maneuvers.back();
   PopulateManeuver(maneuver5, DirectionsLeg_Maneuver_Type_kDestination, {}, {}, {}, "", 0.000000, 0,
                    0, Maneuver::RelativeDirection::kNone,
-                   DirectionsLeg_Maneuver_CardinalDirection_kNorth, 0, 0, 8, 8, 22, 22, 0, 0, 0, 0,
-                   0, 0, 0, 0, 0, {}, {}, {}, {});
+                   DirectionsLeg_Maneuver_CardinalDirection_kNorth, 0, 0, 8, 8, 22, 22, 0, 0, 0, 0, 0,
+                   0, 0, 0, 0, {}, {}, {}, {});
 
   ///////////////////////////////////////////////////////////////////////////
   // Create expected combined maneuver list
@@ -688,8 +687,8 @@ void TestLeftInternalStraightCombine() {
   PopulateManeuver(expected_maneuver1, DirectionsLeg_Maneuver_Type_kStart,
                    {{"Hershey Road", 0}, {"PA 743 South", 1}}, {}, {}, "", 0.453835, 28, 0,
                    Maneuver::RelativeDirection::kNone,
-                   DirectionsLeg_Maneuver_CardinalDirection_kSouth, 158, 198, 0, 4, 0, 13, 0, 0, 0,
-                   0, 0, 0, 0, 0, 0, {}, {}, {}, {});
+                   DirectionsLeg_Maneuver_CardinalDirection_kSouth, 158, 198, 0, 4, 0, 13, 0, 0, 0, 0,
+                   0, 0, 0, 0, 0, {}, {}, {}, {});
 
   expected_maneuvers.emplace_back();
   Maneuver& expected_maneuver2 = expected_maneuvers.back();
@@ -710,8 +709,8 @@ void TestLeftInternalStraightCombine() {
   Maneuver& expected_maneuver4 = expected_maneuvers.back();
   PopulateManeuver(expected_maneuver4, DirectionsLeg_Maneuver_Type_kDestination, {}, {}, {}, "",
                    0.000000, 0, 0, Maneuver::RelativeDirection::kNone,
-                   DirectionsLeg_Maneuver_CardinalDirection_kNorth, 0, 0, 8, 8, 22, 22, 0, 0, 0, 0,
-                   0, 0, 0, 0, 0, {}, {}, {}, {});
+                   DirectionsLeg_Maneuver_CardinalDirection_kNorth, 0, 0, 8, 8, 22, 22, 0, 0, 0, 0, 0,
+                   0, 0, 0, 0, {}, {}, {}, {});
 
   TryCombine(mbTest, maneuvers, expected_maneuvers);
 }
@@ -795,21 +794,21 @@ void TestStraightInternalLeftCombine() {
   Maneuver& maneuver1 = maneuvers.back();
   PopulateManeuver(maneuver1, DirectionsLeg_Maneuver_Type_kStart, {{"PA 283 West", 1}}, {}, {}, "",
                    0.511447, 18, 0, Maneuver::RelativeDirection::kNone,
-                   DirectionsLeg_Maneuver_CardinalDirection_kNorthWest, 315, 316, 0, 1, 0, 3, 0, 0,
-                   0, 0, 0, 0, 0, 1, 0, {}, {}, {}, {});
+                   DirectionsLeg_Maneuver_CardinalDirection_kNorthWest, 315, 316, 0, 1, 0, 3, 0, 0, 0,
+                   0, 0, 0, 0, 1, 0, {}, {}, {}, {});
 
   maneuvers.emplace_back();
   Maneuver& maneuver2 = maneuvers.back();
-  PopulateManeuver(maneuver2, DirectionsLeg_Maneuver_Type_kExitRight, {}, {}, {}, "", 0.397000, 29,
-                   6, Maneuver::RelativeDirection::kKeepRight,
+  PopulateManeuver(maneuver2, DirectionsLeg_Maneuver_Type_kExitRight, {}, {}, {}, "", 0.397000, 29, 6,
+                   Maneuver::RelativeDirection::kKeepRight,
                    DirectionsLeg_Maneuver_CardinalDirection_kNorthWest, 322, 330, 1, 2, 3, 12, 1, 0,
                    0, 0, 0, 0, 0, 0, 0, {}, {std::make_tuple("PA 743", 1, 0)},
                    {std::make_tuple("Hershey", 0, 0), std::make_tuple("Elizabethtown", 0, 0)}, {});
 
   maneuvers.emplace_back();
   Maneuver& maneuver3 = maneuvers.back();
-  PopulateManeuver(maneuver3, DirectionsLeg_Maneuver_Type_kStayLeft, {}, {}, {}, "", 0.050000, 4,
-                   338, Maneuver::RelativeDirection::kKeepLeft,
+  PopulateManeuver(maneuver3, DirectionsLeg_Maneuver_Type_kStayLeft, {}, {}, {}, "", 0.050000, 4, 338,
+                   Maneuver::RelativeDirection::kKeepLeft,
                    DirectionsLeg_Maneuver_CardinalDirection_kNorthWest, 308, 292, 2, 3, 12, 17, 1, 0,
                    0, 0, 0, 0, 0, 0, 0, {}, {std::make_tuple("PA 743 South", 1, 0)},
                    {std::make_tuple("Elizabethtown", 0, 0)}, {}, 0, 0, 0, 1);
@@ -818,23 +817,23 @@ void TestStraightInternalLeftCombine() {
   Maneuver& maneuver4 = maneuvers.back();
   PopulateManeuver(maneuver4, DirectionsLeg_Maneuver_Type_kNone, {}, {}, {}, "", 0.012000, 1, 357,
                    Maneuver::RelativeDirection::kKeepStraight,
-                   DirectionsLeg_Maneuver_CardinalDirection_kWest, 289, 289, 3, 4, 17, 18, 1, 0, 0,
-                   0, 0, 0, 0, 0, 1, {}, {}, {}, {});
+                   DirectionsLeg_Maneuver_CardinalDirection_kWest, 289, 289, 3, 4, 17, 18, 1, 0, 0, 0,
+                   0, 0, 0, 0, 1, {}, {}, {}, {});
 
   maneuvers.emplace_back();
   Maneuver& maneuver5 = maneuvers.back();
   PopulateManeuver(maneuver5, DirectionsLeg_Maneuver_Type_kLeft,
                    {{"Hershey Road", 0}, {"PA 743 South", 1}}, {}, {}, "", 0.486000, 30, 269,
                    Maneuver::RelativeDirection::kLeft,
-                   DirectionsLeg_Maneuver_CardinalDirection_kSouth, 198, 19, 4, 9, 18, 25, 0, 0, 0,
-                   0, 0, 0, 0, 0, 0, {}, {}, {}, {});
+                   DirectionsLeg_Maneuver_CardinalDirection_kSouth, 198, 19, 4, 9, 18, 25, 0, 0, 0, 0,
+                   0, 0, 0, 0, 0, {}, {}, {}, {});
 
   maneuvers.emplace_back();
   Maneuver& maneuver6 = maneuvers.back();
   PopulateManeuver(maneuver6, DirectionsLeg_Maneuver_Type_kDestination, {}, {}, {}, "", 0.000000, 0,
                    0, Maneuver::RelativeDirection::kNone,
-                   DirectionsLeg_Maneuver_CardinalDirection_kNorth, 0, 0, 9, 9, 25, 25, 0, 0, 0, 0,
-                   0, 0, 0, 0, 0, {}, {}, {}, {});
+                   DirectionsLeg_Maneuver_CardinalDirection_kNorth, 0, 0, 9, 9, 25, 25, 0, 0, 0, 0, 0,
+                   0, 0, 0, 0, {}, {}, {}, {});
 
   ///////////////////////////////////////////////////////////////////////////
   // Create expected combined maneuver list
@@ -844,8 +843,8 @@ void TestStraightInternalLeftCombine() {
   Maneuver& expected_maneuver1 = expected_maneuvers.back();
   PopulateManeuver(expected_maneuver1, DirectionsLeg_Maneuver_Type_kStart, {{"PA 283 West", 1}}, {},
                    {}, "", 0.511447, 18, 0, Maneuver::RelativeDirection::kNone,
-                   DirectionsLeg_Maneuver_CardinalDirection_kNorthWest, 315, 316, 0, 1, 0, 3, 0, 0,
-                   0, 0, 0, 0, 0, 1, 0, {}, {}, {}, {});
+                   DirectionsLeg_Maneuver_CardinalDirection_kNorthWest, 315, 316, 0, 1, 0, 3, 0, 0, 0,
+                   0, 0, 0, 0, 1, 0, {}, {}, {}, {});
 
   expected_maneuvers.emplace_back();
   Maneuver& expected_maneuver2 = expected_maneuvers.back();
@@ -868,15 +867,15 @@ void TestStraightInternalLeftCombine() {
   PopulateManeuver(expected_maneuver4, DirectionsLeg_Maneuver_Type_kLeft,
                    {{"Hershey Road", 0}, {"PA 743 South", 1}}, {}, {}, "", 0.498000, 31, 266,
                    Maneuver::RelativeDirection::kLeft,
-                   DirectionsLeg_Maneuver_CardinalDirection_kSouth, 198, 19, 3, 9, 17, 25, 0, 0, 0,
-                   0, 0, 0, 0, 0, 0, {}, {}, {}, {});
+                   DirectionsLeg_Maneuver_CardinalDirection_kSouth, 198, 19, 3, 9, 17, 25, 0, 0, 0, 0,
+                   0, 0, 0, 0, 0, {}, {}, {}, {});
 
   expected_maneuvers.emplace_back();
   Maneuver& expected_maneuver5 = expected_maneuvers.back();
   PopulateManeuver(expected_maneuver5, DirectionsLeg_Maneuver_Type_kDestination, {}, {}, {}, "",
                    0.000000, 0, 0, Maneuver::RelativeDirection::kNone,
-                   DirectionsLeg_Maneuver_CardinalDirection_kNorth, 0, 0, 9, 9, 25, 25, 0, 0, 0, 0,
-                   0, 0, 0, 0, 0, {}, {}, {}, {});
+                   DirectionsLeg_Maneuver_CardinalDirection_kNorth, 0, 0, 9, 9, 25, 25, 0, 0, 0, 0, 0,
+                   0, 0, 0, 0, {}, {}, {}, {});
 
   TryCombine(mbTest, maneuvers, expected_maneuvers);
 }
@@ -973,9 +972,8 @@ void TestStraightInternalLeftInternalCombine() {
   Maneuver& expected_maneuver2 = expected_maneuvers.back();
   PopulateManeuver(expected_maneuver2, DirectionsLeg_Maneuver_Type_kLeft,
                    {{"Patuxent Woods Drive", 0}}, {}, {}, "", 0.106840, 8, 268,
-                   Maneuver::RelativeDirection::kLeft,
-                   DirectionsLeg_Maneuver_CardinalDirection_kWest, 292, 270, 2, 5, 3, 8, 0, 0, 0, 0,
-                   0, 0, 0, 0, 0, {}, {}, {}, {});
+                   Maneuver::RelativeDirection::kLeft, DirectionsLeg_Maneuver_CardinalDirection_kWest,
+                   292, 270, 2, 5, 3, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
 
   expected_maneuvers.emplace_back();
   Maneuver& expected_maneuver3 = expected_maneuvers.back();
@@ -1090,8 +1088,8 @@ void TestStraightInternalStraightCombine() {
   PopulateManeuver(maneuver3, DirectionsLeg_Maneuver_Type_kContinue,
                    {{"MD 43 East", 1}, {"White Marsh Boulevard", 0}}, {}, {}, "", 1.005000, 45, 358,
                    Maneuver::RelativeDirection::kKeepStraight,
-                   DirectionsLeg_Maneuver_CardinalDirection_kEast, 94, 86, 3, 7, 9, 33, 0, 0, 0, 0,
-                   0, 0, 0, 0, 0, {}, {}, {}, {});
+                   DirectionsLeg_Maneuver_CardinalDirection_kEast, 94, 86, 3, 7, 9, 33, 0, 0, 0, 0, 0,
+                   0, 0, 0, 0, {}, {}, {}, {});
 
   maneuvers.emplace_back();
   Maneuver& maneuver4 = maneuvers.back();
@@ -1124,8 +1122,8 @@ void TestStraightInternalStraightCombine() {
   PopulateManeuver(expected_maneuver1, DirectionsLeg_Maneuver_Type_kStart,
                    {{"MD 43 East", 1}, {"White Marsh Boulevard", 0}}, {}, {}, "", 1.539867, 71, 0,
                    Maneuver::RelativeDirection::kNone,
-                   DirectionsLeg_Maneuver_CardinalDirection_kNorthEast, 59, 10, 0, 10, 0, 40, 0, 0,
-                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
+                   DirectionsLeg_Maneuver_CardinalDirection_kNorthEast, 59, 10, 0, 10, 0, 40, 0, 0, 0,
+                   0, 0, 0, 0, 0, 0, {}, {}, {}, {});
 
   expected_maneuvers.emplace_back();
   Maneuver& expected_maneuver2 = expected_maneuvers.back();
@@ -1181,18 +1179,18 @@ void TestLeftInternalUturnCombine() {
 
   maneuvers.emplace_back();
   Maneuver& maneuver2 = maneuvers.back();
-  PopulateManeuver(maneuver2, DirectionsLeg_Maneuver_Type_kNone, {{"Devonshire Road", 0}}, {}, {},
-                   "", 0.013000, 1, 267, Maneuver::RelativeDirection::kLeft,
-                   DirectionsLeg_Maneuver_CardinalDirection_kNorthWest, 299, 299, 1, 2, 2, 3, 0, 0,
-                   0, 0, 0, 0, 0, 0, 1, {}, {}, {}, {});
+  PopulateManeuver(maneuver2, DirectionsLeg_Maneuver_Type_kNone, {{"Devonshire Road", 0}}, {}, {}, "",
+                   0.013000, 1, 267, Maneuver::RelativeDirection::kLeft,
+                   DirectionsLeg_Maneuver_CardinalDirection_kNorthWest, 299, 299, 1, 2, 2, 3, 0, 0, 0,
+                   0, 0, 0, 0, 0, 1, {}, {}, {}, {});
 
   maneuvers.emplace_back();
   Maneuver& maneuver3 = maneuvers.back();
   PopulateManeuver(maneuver3, DirectionsLeg_Maneuver_Type_kLeft,
                    {{"Jonestown Road", 0}, {"US 22", 1}}, {}, {}, "", 0.059697, 3, 273,
                    Maneuver::RelativeDirection::kLeft,
-                   DirectionsLeg_Maneuver_CardinalDirection_kSouthWest, 212, 221, 2, 3, 3, 5, 0, 0,
-                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
+                   DirectionsLeg_Maneuver_CardinalDirection_kSouthWest, 212, 221, 2, 3, 3, 5, 0, 0, 0,
+                   0, 0, 0, 0, 0, 0, {}, {}, {}, {});
 
   maneuvers.emplace_back();
   Maneuver& maneuver4 = maneuvers.back();
@@ -1218,8 +1216,8 @@ void TestLeftInternalUturnCombine() {
   PopulateManeuver(expected_maneuver2, DirectionsLeg_Maneuver_Type_kUturnLeft,
                    {{"Jonestown Road", 0}, {"US 22", 1}}, {}, {{"Devonshire Road", 0}}, "", 0.072697,
                    4, 180, Maneuver::RelativeDirection::KReverse,
-                   DirectionsLeg_Maneuver_CardinalDirection_kSouthWest, 212, 221, 1, 3, 2, 5, 0, 0,
-                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
+                   DirectionsLeg_Maneuver_CardinalDirection_kSouthWest, 212, 221, 1, 3, 2, 5, 0, 0, 0,
+                   0, 0, 0, 0, 0, 0, {}, {}, {}, {});
 
   expected_maneuvers.emplace_back();
   Maneuver& expected_maneuver3 = expected_maneuvers.back();
@@ -1284,16 +1282,16 @@ void TestLeftInternalUturnProperDirectionCombine() {
   Maneuver& maneuver2 = maneuvers.back();
   PopulateManeuver(maneuver2, DirectionsLeg_Maneuver_Type_kNone, {{"Moravia Park Drive", 0}}, {}, {},
                    "", 0.019000, 1, 265, Maneuver::RelativeDirection::kLeft,
-                   DirectionsLeg_Maneuver_CardinalDirection_kNorthWest, 317, 317, 1, 2, 3, 4, 0, 0,
-                   0, 0, 0, 0, 0, 0, 1, {}, {}, {}, {}, 0, 1);
+                   DirectionsLeg_Maneuver_CardinalDirection_kNorthWest, 317, 317, 1, 2, 3, 4, 0, 0, 0,
+                   0, 0, 0, 0, 0, 1, {}, {}, {}, {}, 0, 1);
 
   maneuvers.emplace_back();
   Maneuver& maneuver3 = maneuvers.back();
   PopulateManeuver(maneuver3, DirectionsLeg_Maneuver_Type_kLeft,
                    {{"US 40 West", 1}, {"Pulaski Highway", 0}}, {}, {}, "", 0.045000, 2, 272,
                    Maneuver::RelativeDirection::kLeft,
-                   DirectionsLeg_Maneuver_CardinalDirection_kSouthWest, 229, 229, 2, 4, 4, 5, 0, 0,
-                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 1);
+                   DirectionsLeg_Maneuver_CardinalDirection_kSouthWest, 229, 229, 2, 4, 4, 5, 0, 0, 0,
+                   0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 1);
 
   maneuvers.emplace_back();
   Maneuver& maneuver4 = maneuvers.back();
@@ -1319,8 +1317,8 @@ void TestLeftInternalUturnProperDirectionCombine() {
   PopulateManeuver(expected_maneuver2, DirectionsLeg_Maneuver_Type_kUturnLeft,
                    {{"US 40 West", 1}, {"Pulaski Highway", 0}}, {}, {{"Moravia Park Drive", 0}}, "",
                    0.064000, 3, 177, Maneuver::RelativeDirection::KReverse,
-                   DirectionsLeg_Maneuver_CardinalDirection_kSouthWest, 229, 229, 1, 4, 3, 5, 0, 0,
-                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 1);
+                   DirectionsLeg_Maneuver_CardinalDirection_kSouthWest, 229, 229, 1, 4, 3, 5, 0, 0, 0,
+                   0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 1);
 
   expected_maneuvers.emplace_back();
   Maneuver& expected_maneuver3 = expected_maneuvers.back();
@@ -1385,23 +1383,23 @@ void TestStraightInternalLeftInternalStraightInternalUturnCombine() {
   PopulateManeuver(maneuver1, DirectionsLeg_Maneuver_Type_kStart,
                    {{"MD 24", 1}, {"Vietnam Veterans Memorial Highway", 0}}, {}, {}, "", 0.071404, 3,
                    0, Maneuver::RelativeDirection::kNone,
-                   DirectionsLeg_Maneuver_CardinalDirection_kNorthWest, 335, 334, 0, 1, 0, 2, 0, 0,
-                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
+                   DirectionsLeg_Maneuver_CardinalDirection_kNorthWest, 335, 334, 0, 1, 0, 2, 0, 0, 0,
+                   0, 0, 0, 0, 0, 0, {}, {}, {}, {});
 
   maneuvers.emplace_back();
   Maneuver& maneuver2 = maneuvers.back();
   PopulateManeuver(maneuver2, DirectionsLeg_Maneuver_Type_kNone, {{"Bel Air South Parkway", 0}}, {},
                    {}, "", 0.049000, 2, 0, Maneuver::RelativeDirection::kKeepStraight,
-                   DirectionsLeg_Maneuver_CardinalDirection_kNorthWest, 334, 153, 1, 4, 2, 5, 0, 0,
-                   0, 0, 0, 0, 0, 0, 1, {}, {}, {}, {});
+                   DirectionsLeg_Maneuver_CardinalDirection_kNorthWest, 334, 153, 1, 4, 2, 5, 0, 0, 0,
+                   0, 0, 0, 0, 0, 1, {}, {}, {}, {});
 
   maneuvers.emplace_back();
   Maneuver& maneuver3 = maneuvers.back();
   PopulateManeuver(maneuver3, DirectionsLeg_Maneuver_Type_kContinue,
                    {{"MD 24", 1}, {"Vietnam Veterans Memorial Highway", 0}}, {}, {}, "", 0.070695, 3,
                    2, Maneuver::RelativeDirection::kKeepStraight,
-                   DirectionsLeg_Maneuver_CardinalDirection_kSouthEast, 155, 156, 4, 5, 5, 9, 0, 0,
-                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
+                   DirectionsLeg_Maneuver_CardinalDirection_kSouthEast, 155, 156, 4, 5, 5, 9, 0, 0, 0,
+                   0, 0, 0, 0, 0, 0, {}, {}, {}, {});
 
   maneuvers.emplace_back();
   Maneuver& maneuver4 = maneuvers.back();
@@ -1419,8 +1417,8 @@ void TestStraightInternalLeftInternalStraightInternalUturnCombine() {
   PopulateManeuver(expected_maneuver1, DirectionsLeg_Maneuver_Type_kStart,
                    {{"MD 24", 1}, {"Vietnam Veterans Memorial Highway", 0}}, {}, {}, "", 0.071404, 3,
                    0, Maneuver::RelativeDirection::kNone,
-                   DirectionsLeg_Maneuver_CardinalDirection_kNorthWest, 335, 334, 0, 1, 0, 2, 0, 0,
-                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
+                   DirectionsLeg_Maneuver_CardinalDirection_kNorthWest, 335, 334, 0, 1, 0, 2, 0, 0, 0,
+                   0, 0, 0, 0, 0, 0, {}, {}, {}, {});
 
   expected_maneuvers.emplace_back();
   Maneuver& expected_maneuver2 = expected_maneuvers.back();
@@ -1428,8 +1426,8 @@ void TestStraightInternalLeftInternalStraightInternalUturnCombine() {
                    {{"MD 24", 1}, {"Vietnam Veterans Memorial Highway", 0}}, {},
                    {{"Bel Air South Parkway", 0}}, "", 0.119695, 5, 181,
                    Maneuver::RelativeDirection::KReverse,
-                   DirectionsLeg_Maneuver_CardinalDirection_kSouthEast, 155, 156, 1, 5, 2, 9, 0, 0,
-                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
+                   DirectionsLeg_Maneuver_CardinalDirection_kSouthEast, 155, 156, 1, 5, 2, 9, 0, 0, 0,
+                   0, 0, 0, 0, 0, 0, {}, {}, {}, {});
 
   expected_maneuvers.emplace_back();
   Maneuver& expected_maneuver3 = expected_maneuvers.back();
@@ -1484,8 +1482,8 @@ void TestInternalPencilPointUturnProperDirectionCombine() {
   std::list<Maneuver> maneuvers;
   maneuvers.emplace_back();
   Maneuver& maneuver1 = maneuvers.back();
-  PopulateManeuver(maneuver1, DirectionsLeg_Maneuver_Type_kStart, {{"Stonewall Shops Square", 0}},
-                   {}, {}, "", 0.027386, 2, 0, Maneuver::RelativeDirection::kNone,
+  PopulateManeuver(maneuver1, DirectionsLeg_Maneuver_Type_kStart, {{"Stonewall Shops Square", 0}}, {},
+                   {}, "", 0.027386, 2, 0, Maneuver::RelativeDirection::kNone,
                    DirectionsLeg_Maneuver_CardinalDirection_kNorth, 352, 343, 0, 1, 0, 2, 0, 0, 0, 0,
                    0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0);
 
@@ -1493,8 +1491,8 @@ void TestInternalPencilPointUturnProperDirectionCombine() {
   Maneuver& maneuver2 = maneuvers.back();
   PopulateManeuver(maneuver2, DirectionsLeg_Maneuver_Type_kNone, {{"Stonewall Shops Square", 0}}, {},
                    {}, "", 0.040000, 3, 348, Maneuver::RelativeDirection::kKeepStraight,
-                   DirectionsLeg_Maneuver_CardinalDirection_kNorthWest, 331, 187, 1, 3, 2, 4, 0, 0,
-                   0, 0, 0, 0, 0, 0, 1, {}, {}, {}, {}, 0, 1);
+                   DirectionsLeg_Maneuver_CardinalDirection_kNorthWest, 331, 187, 1, 3, 2, 4, 0, 0, 0,
+                   0, 0, 0, 0, 0, 1, {}, {}, {}, {}, 0, 1);
 
   maneuvers.emplace_back();
   Maneuver& maneuver3 = maneuvers.back();
@@ -1600,8 +1598,8 @@ void TestSimpleRightTurnChannelCombine() {
   Maneuver& maneuver4 = maneuvers.back();
   PopulateManeuver(maneuver4, DirectionsLeg_Maneuver_Type_kDestination, {}, {}, {}, "", 0.000000, 0,
                    0, Maneuver::RelativeDirection::kNone,
-                   DirectionsLeg_Maneuver_CardinalDirection_kNorth, 0, 0, 3, 3, 14, 14, 0, 0, 0, 0,
-                   0, 0, 0, 0, 0, {}, {}, {}, {});
+                   DirectionsLeg_Maneuver_CardinalDirection_kNorth, 0, 0, 3, 3, 14, 14, 0, 0, 0, 0, 0,
+                   0, 0, 0, 0, {}, {}, {}, {});
 
   ///////////////////////////////////////////////////////////////////////////
   // Create expected combined maneuver list
@@ -1620,15 +1618,15 @@ void TestSimpleRightTurnChannelCombine() {
   PopulateManeuver(expected_maneuver2, DirectionsLeg_Maneuver_Type_kRight,
                    {{"Perry Hall Boulevard", 0}}, {}, {}, "", 0.207867, 9, 94,
                    Maneuver::RelativeDirection::kKeepRight,
-                   DirectionsLeg_Maneuver_CardinalDirection_kSouth, 188, 188, 1, 3, 4, 14, 0, 0, 0,
-                   0, 0, 0, 0, 0, 0, {}, {}, {}, {});
+                   DirectionsLeg_Maneuver_CardinalDirection_kSouth, 188, 188, 1, 3, 4, 14, 0, 0, 0, 0,
+                   0, 0, 0, 0, 0, {}, {}, {}, {});
 
   expected_maneuvers.emplace_back();
   Maneuver& expected_maneuver3 = expected_maneuvers.back();
   PopulateManeuver(expected_maneuver3, DirectionsLeg_Maneuver_Type_kDestination, {}, {}, {}, "",
                    0.000000, 0, 0, Maneuver::RelativeDirection::kNone,
-                   DirectionsLeg_Maneuver_CardinalDirection_kNorth, 0, 0, 3, 3, 14, 14, 0, 0, 0, 0,
-                   0, 0, 0, 0, 0, {}, {}, {}, {});
+                   DirectionsLeg_Maneuver_CardinalDirection_kNorth, 0, 0, 3, 3, 14, 14, 0, 0, 0, 0, 0,
+                   0, 0, 0, 0, {}, {}, {}, {});
 
   TryCombine(mbTest, maneuvers, expected_maneuvers);
 }
@@ -1694,8 +1692,8 @@ void TestCountAndSortExitSigns() {
   Maneuver& maneuver5 = maneuvers.back();
   PopulateManeuver(maneuver5, DirectionsLeg_Maneuver_Type_kDestination, {}, {}, {}, "", 0.000000, 0,
                    0, Maneuver::RelativeDirection::kNone,
-                   DirectionsLeg_Maneuver_CardinalDirection_kNorth, 0, 0, 57, 57, 1303, 1303, 0, 0,
-                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0);
+                   DirectionsLeg_Maneuver_CardinalDirection_kNorth, 0, 0, 57, 57, 1303, 1303, 0, 0, 0,
+                   0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0);
 
   ///////////////////////////////////////////////////////////////////////////
   // Create expected combined maneuver list
@@ -1743,8 +1741,8 @@ void TestCountAndSortExitSigns() {
   Maneuver& expected_maneuver5 = expected_maneuvers.back();
   PopulateManeuver(expected_maneuver5, DirectionsLeg_Maneuver_Type_kDestination, {}, {}, {}, "",
                    0.000000, 0, 0, Maneuver::RelativeDirection::kNone,
-                   DirectionsLeg_Maneuver_CardinalDirection_kNorth, 0, 0, 57, 57, 1303, 1303, 0, 0,
-                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0);
+                   DirectionsLeg_Maneuver_CardinalDirection_kNorth, 0, 0, 57, 57, 1303, 1303, 0, 0, 0,
+                   0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0);
 
   TryCountAndSortExitSigns(maneuvers, expected_maneuvers);
 }

@@ -8,8 +8,8 @@
 #include "odin/narrativebuilder.h"
 #include "worker.h"
 
-#include <valhalla/proto/directions_options.pb.h>
 #include <valhalla/proto/directions.pb.h>
+#include <valhalla/proto/directions_options.pb.h>
 
 namespace {
 // Minimum drive edge length (~10 feet)
@@ -71,7 +71,7 @@ DirectionsBuilder::DirectionsBuilder() {
 // calls PopulateDirectionsLeg to transform the maneuver list into the
 // trip directions.
 DirectionsLeg DirectionsBuilder::Build(const DirectionsOptions& directions_options,
-                                        TripLeg& trip_path) {
+                                       TripLeg& trip_path) {
   // Validate trip path node list
   if (trip_path.node_size() < 1) {
     throw valhalla_exception_t{210};
@@ -145,8 +145,8 @@ void DirectionsBuilder::UpdateHeading(EnhancedTripLeg* etp) {
 // Returns the trip directions based on the specified directions options,
 // trip path, and maneuver list.
 DirectionsLeg DirectionsBuilder::PopulateDirectionsLeg(const DirectionsOptions& directions_options,
-                                                         EnhancedTripLeg* etp,
-                                                         std::list<Maneuver>& maneuvers) {
+                                                       EnhancedTripLeg* etp,
+                                                       std::list<Maneuver>& maneuvers) {
   DirectionsLeg trip_directions;
 
   // Populate trip and leg IDs

@@ -24,9 +24,9 @@
 #include "thor/attributes_controller.h"
 #include "thor/triplegbuilder.h"
 
+#include <valhalla/proto/directions.pb.h>
 #include <valhalla/proto/directions_options.pb.h>
 #include <valhalla/proto/trip.pb.h>
-#include <valhalla/proto/directions.pb.h>
 
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
