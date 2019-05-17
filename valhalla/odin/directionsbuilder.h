@@ -6,8 +6,8 @@
 #include <valhalla/odin/enhancedtrippath.h>
 #include <valhalla/odin/maneuver.h>
 #include <valhalla/proto/directions_options.pb.h>
+#include <valhalla/proto/trip.pb.h>
 #include <valhalla/proto/tripdirections.pb.h>
-#include <valhalla/proto/trippath.pb.h>
 
 namespace valhalla {
 namespace odin {
@@ -31,7 +31,7 @@ public:
    *                           language.
    * @param trip_path The trip path - list of nodes, edges, attributes and shape.
    */
-  TripDirections Build(const DirectionsOptions& directions_options, TripPath& trip_path);
+  TripDirections Build(const DirectionsOptions& directions_options, TripLeg& trip_path);
 
 protected:
   /**
@@ -39,7 +39,7 @@ protected:
    *
    * @param etp The enhanced trip path contains the edges to process.
    */
-  void UpdateHeading(EnhancedTripPath* etp);
+  void UpdateHeading(EnhancedTripLeg* etp);
 
   /**
    * Returns the trip directions based on the specified directions options,
@@ -52,7 +52,7 @@ protected:
    * @returns the trip directions.
    */
   TripDirections PopulateTripDirections(const DirectionsOptions& directions_options,
-                                        EnhancedTripPath* etp,
+                                        EnhancedTripLeg* etp,
                                         std::list<Maneuver>& maneuvers);
 };
 

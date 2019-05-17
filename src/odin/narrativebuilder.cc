@@ -39,14 +39,14 @@ namespace valhalla {
 namespace odin {
 
 NarrativeBuilder::NarrativeBuilder(const DirectionsOptions& directions_options,
-                                   const EnhancedTripPath* trip_path,
+                                   const EnhancedTripLeg* trip_path,
                                    const NarrativeDictionary& dictionary)
     : directions_options_(directions_options), trip_path_(trip_path), dictionary_(dictionary),
       articulated_preposition_enabled_(false) {
 }
 
 void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
-                             const EnhancedTripPath* etp,
+                             const EnhancedTripLeg* etp,
                              std::list<Maneuver>& maneuvers) {
   Maneuver* prev_maneuver = nullptr;
   for (auto& maneuver : maneuvers) {
@@ -493,11 +493,11 @@ std::string NarrativeBuilder::FormStartInstruction(Maneuver& maneuver) {
   if (!begin_street_names.empty()) {
     phrase_id += 1;
   }
-  if (maneuver.travel_mode() == TripPath_TravelMode_kDrive) {
+  if (maneuver.travel_mode() == TripLeg_TravelMode_kDrive) {
     phrase_id += 4;
-  } else if (maneuver.travel_mode() == TripPath_TravelMode_kPedestrian) {
+  } else if (maneuver.travel_mode() == TripLeg_TravelMode_kPedestrian) {
     phrase_id += 8;
-  } else if (maneuver.travel_mode() == TripPath_TravelMode_kBicycle) {
+  } else if (maneuver.travel_mode() == TripLeg_TravelMode_kBicycle) {
     phrase_id += 16;
   }
 
@@ -551,11 +551,11 @@ std::string NarrativeBuilder::FormVerbalStartInstruction(Maneuver& maneuver,
   if (!begin_street_names.empty()) {
     phrase_id += 1;
   }
-  if (maneuver.travel_mode() == TripPath_TravelMode_kDrive) {
+  if (maneuver.travel_mode() == TripLeg_TravelMode_kDrive) {
     phrase_id += 4;
-  } else if (maneuver.travel_mode() == TripPath_TravelMode_kPedestrian) {
+  } else if (maneuver.travel_mode() == TripLeg_TravelMode_kPedestrian) {
     phrase_id += 8;
-  } else if (maneuver.travel_mode() == TripPath_TravelMode_kBicycle) {
+  } else if (maneuver.travel_mode() == TripLeg_TravelMode_kBicycle) {
     phrase_id += 16;
   }
 
@@ -2500,11 +2500,11 @@ std::string NarrativeBuilder::FormExitFerryInstruction(Maneuver& maneuver) {
   } else if (!street_names.empty()) {
     phrase_id = 1;
   }
-  if (maneuver.travel_mode() == TripPath_TravelMode_kDrive) {
+  if (maneuver.travel_mode() == TripLeg_TravelMode_kDrive) {
     phrase_id += 4;
-  } else if (maneuver.travel_mode() == TripPath_TravelMode_kPedestrian) {
+  } else if (maneuver.travel_mode() == TripLeg_TravelMode_kPedestrian) {
     phrase_id += 8;
-  } else if (maneuver.travel_mode() == TripPath_TravelMode_kBicycle) {
+  } else if (maneuver.travel_mode() == TripLeg_TravelMode_kBicycle) {
     phrase_id += 16;
   }
 
@@ -2585,11 +2585,11 @@ std::string NarrativeBuilder::FormVerbalExitFerryInstruction(Maneuver& maneuver,
   } else if (!street_names.empty()) {
     phrase_id = 1;
   }
-  if (maneuver.travel_mode() == TripPath_TravelMode_kDrive) {
+  if (maneuver.travel_mode() == TripLeg_TravelMode_kDrive) {
     phrase_id += 4;
-  } else if (maneuver.travel_mode() == TripPath_TravelMode_kPedestrian) {
+  } else if (maneuver.travel_mode() == TripLeg_TravelMode_kPedestrian) {
     phrase_id += 8;
-  } else if (maneuver.travel_mode() == TripPath_TravelMode_kBicycle) {
+  } else if (maneuver.travel_mode() == TripLeg_TravelMode_kBicycle) {
     phrase_id += 16;
   }
 
@@ -3200,11 +3200,11 @@ std::string NarrativeBuilder::FormPostTransitConnectionDestinationInstruction(Ma
   } else if (!street_names.empty()) {
     phrase_id = 1;
   }
-  if (maneuver.travel_mode() == TripPath_TravelMode_kDrive) {
+  if (maneuver.travel_mode() == TripLeg_TravelMode_kDrive) {
     phrase_id += 4;
-  } else if (maneuver.travel_mode() == TripPath_TravelMode_kPedestrian) {
+  } else if (maneuver.travel_mode() == TripLeg_TravelMode_kPedestrian) {
     phrase_id += 8;
-  } else if (maneuver.travel_mode() == TripPath_TravelMode_kBicycle) {
+  } else if (maneuver.travel_mode() == TripLeg_TravelMode_kBicycle) {
     phrase_id += 16;
   }
 
@@ -3271,11 +3271,11 @@ NarrativeBuilder::FormVerbalPostTransitConnectionDestinationInstruction(Maneuver
   } else if (!street_names.empty()) {
     phrase_id = 1;
   }
-  if (maneuver.travel_mode() == TripPath_TravelMode_kDrive) {
+  if (maneuver.travel_mode() == TripLeg_TravelMode_kDrive) {
     phrase_id += 4;
-  } else if (maneuver.travel_mode() == TripPath_TravelMode_kPedestrian) {
+  } else if (maneuver.travel_mode() == TripLeg_TravelMode_kPedestrian) {
     phrase_id += 8;
-  } else if (maneuver.travel_mode() == TripPath_TravelMode_kBicycle) {
+  } else if (maneuver.travel_mode() == TripLeg_TravelMode_kBicycle) {
     phrase_id += 16;
   }
 
@@ -3592,19 +3592,19 @@ NarrativeBuilder::FormStreetNames(const Maneuver& maneuver,
 
     // If pedestrian travel mode on unnamed footway
     // then set street names string to walkway
-    if ((maneuver.travel_mode() == TripPath_TravelMode_kPedestrian) && maneuver.unnamed_walkway()) {
+    if ((maneuver.travel_mode() == TripLeg_TravelMode_kPedestrian) && maneuver.unnamed_walkway()) {
       street_names_string = empty_street_name_labels->at(kWalkwayIndex);
     }
 
     // If bicycle travel mode on unnamed cycleway
     // then set street names string to cycleway
-    if ((maneuver.travel_mode() == TripPath_TravelMode_kBicycle) && maneuver.unnamed_cycleway()) {
+    if ((maneuver.travel_mode() == TripLeg_TravelMode_kBicycle) && maneuver.unnamed_cycleway()) {
       street_names_string = empty_street_name_labels->at(kCyclewayIndex);
     }
 
     // If bicycle travel mode on unnamed mountain bike trail
     // then set street names string to mountain bike trail
-    if ((maneuver.travel_mode() == TripPath_TravelMode_kBicycle) &&
+    if ((maneuver.travel_mode() == TripLeg_TravelMode_kBicycle) &&
         maneuver.unnamed_mountain_bike_trail()) {
       street_names_string = empty_street_name_labels->at(kMountainBikeTrailIndex);
     }

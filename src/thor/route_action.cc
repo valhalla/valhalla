@@ -125,7 +125,7 @@ void remove_edges(const GraphId& edge_id, odin::Location& loc, GraphReader& read
 namespace valhalla {
 namespace thor {
 
-std::list<valhalla::odin::TripPath> thor_worker_t::route(valhalla_request_t& request) {
+std::list<valhalla::odin::TripLeg> thor_worker_t::route(valhalla_request_t& request) {
   parse_locations(request);
   auto costing = parse_costing(request);
 
@@ -275,14 +275,14 @@ std::vector<thor::PathInfo> thor_worker_t::get_path(PathAlgorithm* path_algorith
   return path;
 }
 
-std::list<valhalla::odin::TripPath> thor_worker_t::path_arrive_by(
+std::list<valhalla::odin::TripLeg> thor_worker_t::path_arrive_by(
     google::protobuf::RepeatedPtrField<valhalla::odin::Location>& correlated,
     const std::string& costing) {
   // Things we'll need
   GraphId first_edge;
   std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>> vias;
   std::vector<thor::PathInfo> path;
-  std::list<valhalla::odin::TripPath> trip_paths;
+  std::list<valhalla::odin::TripLeg> trip_paths;
   correlated.begin()->set_type(odin::Location::kBreak);
   correlated.rbegin()->set_type(odin::Location::kBreak);
 
@@ -349,8 +349,8 @@ std::list<valhalla::odin::TripPath> thor_worker_t::path_arrive_by(
       vias.swap(flipped);
 
       // Form output information based on path edges
-      auto trip_path = thor::TripPathBuilder::Build(controller, *reader, mode_costing, path, *origin,
-                                                    *destination, throughs, interrupt, &vias);
+      auto trip_path = thor::TripLegBuilder::Build(controller, *reader, mode_costing, path, *origin,
+                                                   *destination, throughs, interrupt, &vias);
       path.clear();
       vias.clear();
 
@@ -363,14 +363,14 @@ std::list<valhalla::odin::TripPath> thor_worker_t::path_arrive_by(
   return trip_paths;
 }
 
-std::list<valhalla::odin::TripPath> thor_worker_t::path_depart_at(
+std::list<valhalla::odin::TripLeg> thor_worker_t::path_depart_at(
     google::protobuf::RepeatedPtrField<valhalla::odin::Location>& correlated,
     const std::string& costing) {
   // Things we'll need
   GraphId last_edge;
   std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>> vias;
   std::vector<thor::PathInfo> path;
-  std::list<valhalla::odin::TripPath> trip_paths;
+  std::list<valhalla::odin::TripLeg> trip_paths;
   correlated.begin()->set_type(odin::Location::kBreak);
   correlated.rbegin()->set_type(odin::Location::kBreak);
 
@@ -433,8 +433,8 @@ std::list<valhalla::odin::TripPath> thor_worker_t::path_depart_at(
       AttributesController controller;
 
       // Form output information based on path edges. vias are a route discontinuity map
-      auto trip_path = thor::TripPathBuilder::Build(controller, *reader, mode_costing, path, *origin,
-                                                    *destination, throughs, interrupt, &vias);
+      auto trip_path = thor::TripLegBuilder::Build(controller, *reader, mode_costing, path, *origin,
+                                                   *destination, throughs, interrupt, &vias);
       path.clear();
       vias.clear();
 

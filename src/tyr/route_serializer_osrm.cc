@@ -14,8 +14,8 @@
 #include "tyr/serializers.h"
 
 #include "proto/directions_options.pb.h"
+#include "proto/trip.pb.h"
 #include "proto/tripdirections.pb.h"
-#include "proto/trippath.pb.h"
 
 using namespace valhalla;
 using namespace valhalla::midgard;
@@ -373,7 +373,7 @@ struct IntersectionEdges {
 
 // Add intersections along a step/maneuver.
 json::ArrayPtr intersections(const valhalla::odin::TripDirections::Maneuver& maneuver,
-                             valhalla::odin::EnhancedTripPath* etp,
+                             valhalla::odin::EnhancedTripLeg* etp,
                              const std::vector<PointLL>& shape,
                              uint32_t& count,
                              const bool arrive_maneuver) {
@@ -464,10 +464,10 @@ json::ArrayPtr intersections(const valhalla::odin::TripDirections::Maneuver& man
         classes.push_back("toll");
       }
       // TODO We might want to have more specific logic for ramp
-      if ((curr_edge->road_class() == odin::TripPath_RoadClass_kMotorway) || curr_edge->IsRampUse()) {
+      if ((curr_edge->road_class() == odin::TripLeg_RoadClass_kMotorway) || curr_edge->IsRampUse()) {
         classes.push_back("motorway");
       }
-      if (curr_edge->use() == odin::TripPath::Use::TripPath_Use_kFerryUse) {
+      if (curr_edge->use() == odin::TripLeg::Use::TripLeg_Use_kFerryUse) {
         classes.push_back("ferry");
       }
 
@@ -714,7 +714,7 @@ std::string ramp_type(const valhalla::odin::TripDirections::Maneuver& maneuver) 
 
 // Populate the OSRM maneuver record within a step.
 json::MapPtr osrm_maneuver(const valhalla::odin::TripDirections::Maneuver& maneuver,
-                           valhalla::odin::EnhancedTripPath* etp,
+                           valhalla::odin::EnhancedTripLeg* etp,
                            const PointLL& man_ll,
                            const bool depart_maneuver,
                            const bool arrive_maneuver,
@@ -732,7 +732,7 @@ json::MapPtr osrm_maneuver(const valhalla::odin::TripDirections::Maneuver& maneu
   osrm_man->emplace("location", loc);
 
   // Get incoming and outgoing bearing. For the incoming heading, use the
-  // prior edge from the TripPath. Compute turn modifier. TODO - reconcile
+  // prior edge from the TripLeg. Compute turn modifier. TODO - reconcile
   // turn degrees between Valhalla and OSRM
   uint32_t idx = maneuver.begin_path_index();
   uint32_t in_brg = (idx > 0) ? etp->GetPrevEdge(idx)->end_heading() : 0;
@@ -807,7 +807,7 @@ json::MapPtr osrm_maneuver(const valhalla::odin::TripDirections::Maneuver& maneu
       // onto a new road name, and have passed at least 1 intersection to
       // get there.
       bool road_ends =
-          (prev_intersection_count > 1 && prev_edge->use() != odin::TripPath_Use_kRampUse &&
+          (prev_intersection_count > 1 && prev_edge->use() != odin::TripLeg_Use_kRampUse &&
            etp->node(idx).intersecting_edge_size() == 1);
       if (road_ends) {
         // TODO what about a doubly digitized road ending at a T (would be
@@ -871,10 +871,10 @@ std::string maneuver_geometry(const uint32_t begin_idx,
 // Get the mode
 std::string get_mode(const valhalla::odin::TripDirections::Maneuver& maneuver,
                      const bool arrive_maneuver,
-                     valhalla::odin::EnhancedTripPath* etp) {
+                     valhalla::odin::EnhancedTripLeg* etp) {
   // Return ferry if not last maneuver and the edge use is Ferry
   if (!arrive_maneuver && (etp->GetCurrEdge(maneuver.begin_path_index())->use() ==
-                           odin::TripPath::Use::TripPath_Use_kFerryUse)) {
+                           odin::TripLeg::Use::TripLeg_Use_kFerryUse)) {
     return "ferry";
   }
 
@@ -975,7 +975,7 @@ std::string summarize_leg(std::list<valhalla::odin::TripDirections>::const_itera
 
 // Serialize each leg
 json::ArrayPtr serialize_legs(const std::list<valhalla::odin::TripDirections>& legs,
-                              std::list<valhalla::odin::TripPath>& path_legs,
+                              std::list<valhalla::odin::TripLeg>& path_legs,
                               bool imperial,
                               const valhalla::odin::DirectionsOptions& directions_options) {
   auto output_legs = json::array({});
@@ -985,10 +985,10 @@ json::ArrayPtr serialize_legs(const std::list<valhalla::odin::TripDirections>& l
     throw valhalla_exception_t{503};
   }
 
-  // Iterate through the legs in TripDirections and TripPath
+  // Iterate through the legs in TripDirections and TripLeg
   auto leg = legs.begin();
   for (auto& path_leg : path_legs) {
-    valhalla::odin::EnhancedTripPath etp(path_leg);
+    valhalla::odin::EnhancedTripLeg etp(path_leg);
     auto output_leg = json::map({});
 
     // Get the full shape for the leg. We want to use this for serializing
@@ -1012,7 +1012,7 @@ json::ArrayPtr serialize_legs(const std::list<valhalla::odin::TripDirections>& l
       bool depart_maneuver = (maneuver_index == 0);
       bool arrive_maneuver = (maneuver_index == leg->maneuver_size() - 1);
 
-      // TODO - iterate through TripPath from prior maneuver end to
+      // TODO - iterate through TripLeg from prior maneuver end to
       // end of this maneuver - perhaps insert OSRM specific steps such as
       // name change
 
@@ -1101,10 +1101,10 @@ json::ArrayPtr serialize_legs(const std::list<valhalla::odin::TripDirections>& l
 // Serialize route response in OSRM compatible format.
 // Inputs are:
 //     directions options
-//     TripPath protocol buffer
+//     TripLeg protocol buffer
 //     TripDirections protocol buffer
 std::string serialize(const valhalla::odin::DirectionsOptions& directions_options,
-                      std::list<valhalla::odin::TripPath>& path_legs,
+                      std::list<valhalla::odin::TripLeg>& path_legs,
                       const std::list<valhalla::odin::TripDirections>& legs) {
   auto json = json::map({});
 

@@ -30,7 +30,7 @@ public:
   ManeuversBuilderTest() : ManeuversBuilder(DirectionsOptions(), nullptr) {
   }
 
-  ManeuversBuilderTest(const DirectionsOptions& directions_options, EnhancedTripPath* etp)
+  ManeuversBuilderTest(const DirectionsOptions& directions_options, EnhancedTripLeg* etp)
       : ManeuversBuilder(directions_options, etp) {
   }
 
@@ -59,12 +59,12 @@ public:
   }
 
   bool IsIntersectingForwardEdge(int node_index,
-                                 EnhancedTripPath_Edge* prev_edge,
-                                 EnhancedTripPath_Edge* curr_edge) {
+                                 EnhancedTripLeg_Edge* prev_edge,
+                                 EnhancedTripLeg_Edge* curr_edge) {
     return ManeuversBuilder::IsIntersectingForwardEdge(node_index, prev_edge, curr_edge);
   }
 
-  EnhancedTripPath* trip_path() {
+  EnhancedTripLeg* trip_path() {
     return trip_path_;
   }
 };
@@ -72,8 +72,8 @@ public:
 void TrySetSimpleDirectionalManeuverType(uint32_t turn_degree,
                                          TripDirections_Maneuver_Type expected) {
   DirectionsOptions directions_options;
-  TripPath path;
-  TripPath_Node* node;
+  TripLeg path;
+  TripLeg_Node* node;
 
   // node:0
   node = path.add_node();
@@ -85,7 +85,7 @@ void TrySetSimpleDirectionalManeuverType(uint32_t turn_degree,
   // node:2 dummy last node
   node = path.add_node();
 
-  EnhancedTripPath etp(path);
+  EnhancedTripLeg etp(path);
   ManeuversBuilderTest mbTest(directions_options, &etp);
   Maneuver maneuver;
   maneuver.set_begin_node_index(1);
@@ -228,8 +228,8 @@ void TryDetermineRelativeDirection_Maneuver(uint32_t prev_heading,
                                             const vector<uint32_t>& intersecting_headings,
                                             Maneuver::RelativeDirection expected) {
   DirectionsOptions directions_options;
-  TripPath path;
-  TripPath_Node* node;
+  TripLeg path;
+  TripLeg_Node* node;
 
   // node:0
   node = path.add_node();
@@ -239,15 +239,15 @@ void TryDetermineRelativeDirection_Maneuver(uint32_t prev_heading,
   node = path.add_node();
   node->mutable_edge()->set_begin_heading(curr_heading);
   for (auto intersecting_heading : intersecting_headings) {
-    TripPath_IntersectingEdge* xedge = node->add_intersecting_edge();
+    TripLeg_IntersectingEdge* xedge = node->add_intersecting_edge();
     xedge->set_begin_heading(intersecting_heading);
-    xedge->set_driveability(TripPath_Traversability_kBoth);
+    xedge->set_driveability(TripLeg_Traversability_kBoth);
   }
 
   // node:2 dummy last node
   node = path.add_node();
 
-  EnhancedTripPath etp(path);
+  EnhancedTripLeg etp(path);
   ManeuversBuilderTest mbTest(directions_options, &etp);
   Maneuver maneuver;
   maneuver.set_begin_node_index(1);
@@ -360,16 +360,16 @@ void TryCombine(ManeuversBuilderTest& mbTest,
 }
 
 // Deprecated
-void PopulateEdge(TripPath_Edge* edge,
+void PopulateEdge(TripLeg_Edge* edge,
                   const std::vector<std::pair<std::string, bool>>& names,
                   float length,
                   float speed,
-                  TripPath_RoadClass road_class,
+                  TripLeg_RoadClass road_class,
                   ::google::protobuf::uint32 begin_heading,
                   ::google::protobuf::uint32 end_heading,
                   ::google::protobuf::uint32 begin_shape_index,
                   ::google::protobuf::uint32 end_shape_index,
-                  TripPath_Traversability traversability,
+                  TripLeg_Traversability traversability,
                   bool ramp,
                   bool turn_channel,
                   bool ferry,
@@ -385,7 +385,7 @@ void PopulateEdge(TripPath_Edge* edge,
                   const std::vector<std::pair<std::string, bool>>& exit_onto_streets,
                   const std::vector<std::pair<std::string, bool>>& exit_toward_locations,
                   const std::vector<std::pair<std::string, bool>>& exit_names,
-                  TripPath_TravelMode travel_mode = TripPath_TravelMode_kDrive) {
+                  TripLeg_TravelMode travel_mode = TripLeg_TravelMode_kDrive) {
   for (const auto& name : names) {
     auto* edge_name = edge->add_name();
     edge_name->set_value(name.first);
@@ -400,13 +400,13 @@ void PopulateEdge(TripPath_Edge* edge,
   edge->set_end_shape_index(end_shape_index);
   edge->set_traversability(traversability);
   if (ramp) {
-    edge->set_use(TripPath_Use::TripPath_Use_kRampUse);
+    edge->set_use(TripLeg_Use::TripLeg_Use_kRampUse);
   } else if (turn_channel) {
-    edge->set_use(TripPath_Use::TripPath_Use_kTurnChannelUse);
+    edge->set_use(TripLeg_Use::TripLeg_Use_kTurnChannelUse);
   } else if (ferry) {
-    edge->set_use(TripPath_Use::TripPath_Use_kFerryUse);
+    edge->set_use(TripLeg_Use::TripLeg_Use_kFerryUse);
   } else if (rail_ferry) {
-    edge->set_use(TripPath_Use::TripPath_Use_kRailFerryUse);
+    edge->set_use(TripLeg_Use::TripLeg_Use_kRailFerryUse);
   }
   edge->set_toll(toll);
   edge->set_unpaved(unpaved);
@@ -414,7 +414,7 @@ void PopulateEdge(TripPath_Edge* edge,
   edge->set_bridge(bridge);
   edge->set_roundabout(roundabout);
   edge->set_internal_intersection(internal_intersection);
-  TripPath_Sign* sign = edge->mutable_sign();
+  TripLeg_Sign* sign = edge->mutable_sign();
   for (const auto& exit_number : exit_numbers) {
     auto* edge_exit_number = sign->add_exit_numbers();
     edge_exit_number->set_text(exit_number.first);
@@ -438,13 +438,13 @@ void PopulateEdge(TripPath_Edge* edge,
   edge->set_travel_mode(travel_mode);
 }
 
-void PopulateIntersectingEdge(TripPath_IntersectingEdge* xedge,
+void PopulateIntersectingEdge(TripLeg_IntersectingEdge* xedge,
                               ::google::protobuf::uint32 begin_heading,
                               bool prev_name_consistency = false,
                               bool curr_name_consistency = false,
-                              TripPath_Traversability driveability = TripPath_Traversability_kBoth,
-                              TripPath_Traversability cyclability = TripPath_Traversability_kBoth,
-                              TripPath_Traversability walkability = TripPath_Traversability_kBoth) {
+                              TripLeg_Traversability driveability = TripLeg_Traversability_kBoth,
+                              TripLeg_Traversability cyclability = TripLeg_Traversability_kBoth,
+                              TripLeg_Traversability walkability = TripLeg_Traversability_kBoth) {
   xedge->set_begin_heading(begin_heading);
   xedge->set_driveability(driveability);
   xedge->set_prev_name_consistency(prev_name_consistency);
@@ -577,66 +577,66 @@ void PopulateManeuver(Maneuver& maneuver,
 
 void TestLeftInternalStraightCombine() {
   DirectionsOptions directions_options;
-  TripPath path;
-  TripPath_Node* node;
-  TripPath_Edge* edge;
+  TripLeg path;
+  TripLeg_Node* node;
+  TripLeg_Edge* edge;
 
   ///////////////////////////////////////////////////////////////////////////
   // node:0
   node = path.add_node();
   edge = node->mutable_edge();
   PopulateEdge(edge, {{"Hershey Road", 0}, {"PA 743", 1}, {"PA 341 Truck", 1}}, 0.033835, 60.000000,
-               TripPath_RoadClass_kSecondary, 158, 180, 0, 3, TripPath_Traversability_kBoth, 0, 0, 0,
-               0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
+               TripLeg_RoadClass_kSecondary, 158, 180, 0, 3, TripLeg_Traversability_kBoth, 0, 0, 0, 0,
+               0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
 
   // node:1
   node = path.add_node();
   edge = node->mutable_edge();
   PopulateEdge(edge, {{"Hershey Road", 0}, {"PA 743 South", 1}}, 0.181000, 60.000000,
-               TripPath_RoadClass_kSecondary, 187, 192, 3, 8, TripPath_Traversability_kBoth, 0, 0, 0,
-               0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
+               TripLeg_RoadClass_kSecondary, 187, 192, 3, 8, TripLeg_Traversability_kBoth, 0, 0, 0, 0,
+               0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
 
   // node:2
   node = path.add_node();
   edge = node->mutable_edge();
   PopulateEdge(edge, {{"Hershey Road", 0}, {"PA 743 South", 1}}, 0.079000, 60.000000,
-               TripPath_RoadClass_kSecondary, 196, 196, 8, 10, TripPath_Traversability_kBoth, 0, 0, 0,
+               TripLeg_RoadClass_kSecondary, 196, 196, 8, 10, TripLeg_Traversability_kBoth, 0, 0, 0,
                0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
 
   // node:3
   node = path.add_node();
   edge = node->mutable_edge();
   PopulateEdge(edge, {{"Hershey Road", 0}, {"PA 743 South", 1}}, 0.160000, 60.000000,
-               TripPath_RoadClass_kSecondary, 198, 198, 10, 13, TripPath_Traversability_kBoth, 0, 0,
-               0, 0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
+               TripLeg_RoadClass_kSecondary, 198, 198, 10, 13, TripLeg_Traversability_kBoth, 0, 0, 0,
+               0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
 
   // node:4 INTERNAL_INTERSECTION
   node = path.add_node();
   edge = node->mutable_edge();
-  PopulateEdge(edge, {}, 0.013000, 50.000000, TripPath_RoadClass_kSecondary, 118, 118, 13, 14,
-               TripPath_Traversability_kForward, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, {}, {}, {}, {});
+  PopulateEdge(edge, {}, 0.013000, 50.000000, TripLeg_RoadClass_kSecondary, 118, 118, 13, 14,
+               TripLeg_Traversability_kForward, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, {}, {}, {}, {});
 
   // node:5
   node = path.add_node();
   edge = node->mutable_edge();
-  PopulateEdge(edge, {}, 0.073000, 50.000000, TripPath_RoadClass_kSecondary, 127, 127, 14, 15,
-               TripPath_Traversability_kForward, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {},
+  PopulateEdge(edge, {}, 0.073000, 50.000000, TripLeg_RoadClass_kSecondary, 127, 127, 14, 15,
+               TripLeg_Traversability_kForward, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {},
                {{"PA 283 East", 1}}, {{"Lancaster", 0}}, {});
 
   // node:6
   node = path.add_node();
   edge = node->mutable_edge();
-  PopulateEdge(edge, {}, 0.432000, 50.000000, TripPath_RoadClass_kSecondary, 127, 130, 15, 20,
-               TripPath_Traversability_kForward, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
+  PopulateEdge(edge, {}, 0.432000, 50.000000, TripLeg_RoadClass_kSecondary, 127, 130, 15, 20,
+               TripLeg_Traversability_kForward, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
 
   // node:7
   node = path.add_node();
   edge = node->mutable_edge();
-  PopulateEdge(edge, {{"PA 283 East", 1}}, 0.176467, 105.000000, TripPath_RoadClass_kMotorway, 134,
-               134, 20, 22, TripPath_Traversability_kForward, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {}, {},
+  PopulateEdge(edge, {{"PA 283 East", 1}}, 0.176467, 105.000000, TripLeg_RoadClass_kMotorway, 134,
+               134, 20, 22, TripLeg_Traversability_kForward, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {}, {},
                {}, {});
 
-  EnhancedTripPath etp(path);
+  EnhancedTripLeg etp(path);
   ManeuversBuilderTest mbTest(directions_options, &etp);
 
   ///////////////////////////////////////////////////////////////////////////
@@ -718,74 +718,74 @@ void TestLeftInternalStraightCombine() {
 
 void TestStraightInternalLeftCombine() {
   DirectionsOptions directions_options;
-  TripPath path;
-  TripPath_Node* node;
-  TripPath_Edge* edge;
+  TripLeg path;
+  TripLeg_Node* node;
+  TripLeg_Edge* edge;
 
   ///////////////////////////////////////////////////////////////////////////
   // node:0
   node = path.add_node();
   edge = node->mutable_edge();
-  PopulateEdge(edge, {{"PA 283 West", 1}}, 0.511447, 105.000000, TripPath_RoadClass_kMotorway, 315,
-               316, 0, 3, TripPath_Traversability_kForward, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {}, {},
+  PopulateEdge(edge, {{"PA 283 West", 1}}, 0.511447, 105.000000, TripLeg_RoadClass_kMotorway, 315,
+               316, 0, 3, TripLeg_Traversability_kForward, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {}, {},
                {}, {});
 
   // node:1
   node = path.add_node();
   edge = node->mutable_edge();
-  PopulateEdge(edge, {}, 0.397000, 50.000000, TripPath_RoadClass_kSecondary, 322, 330, 3, 12,
-               TripPath_Traversability_kForward, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {}, {{"PA 743", 1}},
+  PopulateEdge(edge, {}, 0.397000, 50.000000, TripLeg_RoadClass_kSecondary, 322, 330, 3, 12,
+               TripLeg_Traversability_kForward, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {}, {{"PA 743", 1}},
                {{"Hershey", 0}, {"Elizabethtown", 0}}, {});
 
   // node:2
   node = path.add_node();
   edge = node->mutable_edge();
-  PopulateEdge(edge, {}, 0.050000, 50.000000, TripPath_RoadClass_kSecondary, 308, 292, 12, 17,
-               TripPath_Traversability_kForward, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {},
+  PopulateEdge(edge, {}, 0.050000, 50.000000, TripLeg_RoadClass_kSecondary, 308, 292, 12, 17,
+               TripLeg_Traversability_kForward, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {},
                {{"PA 743 South", 1}}, {{"Elizabethtown", 0}}, {});
 
   // node:3 INTERNAL_INTERSECTION
   node = path.add_node();
   edge = node->mutable_edge();
-  PopulateEdge(edge, {}, 0.012000, 50.000000, TripPath_RoadClass_kSecondary, 289, 289, 17, 18,
-               TripPath_Traversability_kForward, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, {}, {}, {}, {});
+  PopulateEdge(edge, {}, 0.012000, 50.000000, TripLeg_RoadClass_kSecondary, 289, 289, 17, 18,
+               TripLeg_Traversability_kForward, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, {}, {}, {}, {});
 
   // node:4
   node = path.add_node();
   edge = node->mutable_edge();
   PopulateEdge(edge, {{"Hershey Road", 0}, {"PA 743 South", 1}}, 0.160000, 60.000000,
-               TripPath_RoadClass_kSecondary, 198, 198, 18, 21, TripPath_Traversability_kBoth, 0, 0,
-               0, 0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
+               TripLeg_RoadClass_kSecondary, 198, 198, 18, 21, TripLeg_Traversability_kBoth, 0, 0, 0,
+               0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
 
   // node:5
   node = path.add_node();
   edge = node->mutable_edge();
   PopulateEdge(edge, {{"Hershey Road", 0}, {"PA 743 South", 1}}, 0.084000, 60.000000,
-               TripPath_RoadClass_kSecondary, 199, 198, 21, 23, TripPath_Traversability_kBoth, 0, 0,
-               0, 0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
+               TripLeg_RoadClass_kSecondary, 199, 198, 21, 23, TripLeg_Traversability_kBoth, 0, 0, 0,
+               0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
 
   // node:6
   node = path.add_node();
   edge = node->mutable_edge();
   PopulateEdge(edge, {{"Hershey Road", 0}, {"PA 743 South", 1}}, 0.113000, 60.000000,
-               TripPath_RoadClass_kSecondary, 198, 198, 23, 24, TripPath_Traversability_kBoth, 0, 0,
-               0, 0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
+               TripLeg_RoadClass_kSecondary, 198, 198, 23, 24, TripLeg_Traversability_kBoth, 0, 0, 0,
+               0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
 
   // node:7
   node = path.add_node();
   edge = node->mutable_edge();
   PopulateEdge(edge, {{"Hershey Road", 0}, {"PA 743 South", 1}}, 0.129000, 60.000000,
-               TripPath_RoadClass_kSecondary, 196, 196, 24, 25, TripPath_Traversability_kBoth, 0, 0,
-               0, 0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
+               TripLeg_RoadClass_kSecondary, 196, 196, 24, 25, TripLeg_Traversability_kBoth, 0, 0, 0,
+               0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
 
   // node:8
   node = path.add_node();
   edge = node->mutable_edge();
   PopulateEdge(edge, {{"Hershey Road", 0}, {"PA 743 North", 1}}, 0.000000, 60.000000,
-               TripPath_RoadClass_kSecondary, 22, 19, 25, 25, TripPath_Traversability_kBoth, 0, 0, 0,
-               0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
+               TripLeg_RoadClass_kSecondary, 22, 19, 25, 25, TripLeg_Traversability_kBoth, 0, 0, 0, 0,
+               0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
 
-  EnhancedTripPath etp(path);
+  EnhancedTripLeg etp(path);
   ManeuversBuilderTest mbTest(directions_options, &etp);
 
   ///////////////////////////////////////////////////////////////////////////
@@ -883,47 +883,47 @@ void TestStraightInternalLeftCombine() {
 
 void TestStraightInternalLeftInternalCombine() {
   DirectionsOptions directions_options;
-  TripPath path;
-  TripPath_Node* node;
-  TripPath_Edge* edge;
+  TripLeg path;
+  TripLeg_Node* node;
+  TripLeg_Edge* edge;
 
   ///////////////////////////////////////////////////////////////////////////
   // node:0
   node = path.add_node();
   edge = node->mutable_edge();
-  PopulateEdge(edge, {{"Broken Land Parkway", 0}}, 0.056148, 72.000000, TripPath_RoadClass_kSecondary,
-               26, 24, 0, 2, TripPath_Traversability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {}, {},
+  PopulateEdge(edge, {{"Broken Land Parkway", 0}}, 0.056148, 72.000000, TripLeg_RoadClass_kSecondary,
+               26, 24, 0, 2, TripLeg_Traversability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {}, {},
                {}, {});
 
   // node:1
   node = path.add_node();
   edge = node->mutable_edge();
-  PopulateEdge(edge, {{"Broken Land Parkway", 0}}, 0.081000, 72.000000, TripPath_RoadClass_kSecondary,
-               24, 24, 2, 3, TripPath_Traversability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {}, {},
+  PopulateEdge(edge, {{"Broken Land Parkway", 0}}, 0.081000, 72.000000, TripLeg_RoadClass_kSecondary,
+               24, 24, 2, 3, TripLeg_Traversability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {}, {},
                {}, {});
 
   // node:2 INTERNAL_INTERSECTION
   node = path.add_node();
   edge = node->mutable_edge();
-  PopulateEdge(edge, {{"Broken Land Parkway", 0}}, 0.017000, 72.000000, TripPath_RoadClass_kSecondary,
-               25, 25, 3, 4, TripPath_Traversability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, {}, {},
+  PopulateEdge(edge, {{"Broken Land Parkway", 0}}, 0.017000, 72.000000, TripLeg_RoadClass_kSecondary,
+               25, 25, 3, 4, TripLeg_Traversability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, {}, {},
                {}, {});
 
   // node:3 INTERNAL_INTERSECTION
   node = path.add_node();
   edge = node->mutable_edge();
   PopulateEdge(edge, {{"Snowden River Parkway", 0}}, 0.030000, 60.000000,
-               TripPath_RoadClass_kSecondary, 291, 291, 4, 5, TripPath_Traversability_kBoth, 0, 0, 0,
-               0, 0, 0, 0, 0, 0, 1, 0, {}, {}, {}, {});
+               TripLeg_RoadClass_kSecondary, 291, 291, 4, 5, TripLeg_Traversability_kBoth, 0, 0, 0, 0,
+               0, 0, 0, 0, 0, 1, 0, {}, {}, {}, {});
 
   // node:4
   node = path.add_node();
   edge = node->mutable_edge();
-  PopulateEdge(edge, {{"Patuxent Woods Drive", 0}}, 0.059840, 40.000000, TripPath_RoadClass_kTertiary,
-               292, 270, 5, 8, TripPath_Traversability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {}, {},
+  PopulateEdge(edge, {{"Patuxent Woods Drive", 0}}, 0.059840, 40.000000, TripLeg_RoadClass_kTertiary,
+               292, 270, 5, 8, TripLeg_Traversability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {}, {},
                {}, {});
 
-  EnhancedTripPath etp(path);
+  EnhancedTripLeg etp(path);
   ManeuversBuilderTest mbTest(directions_options, &etp);
 
   ///////////////////////////////////////////////////////////////////////////
@@ -989,82 +989,82 @@ void TestStraightInternalLeftInternalCombine() {
 
 void TestStraightInternalStraightCombine() {
   DirectionsOptions directions_options;
-  TripPath path;
-  TripPath_Node* node;
-  TripPath_Edge* edge;
+  TripLeg path;
+  TripLeg_Node* node;
+  TripLeg_Edge* edge;
 
   ///////////////////////////////////////////////////////////////////////////
   // node:0
   node = path.add_node();
   edge = node->mutable_edge();
   PopulateEdge(edge, {{"MD 43 East", 1}, {"White Marsh Boulevard", 0}}, 0.120902, 80.000000,
-               TripPath_RoadClass_kTrunk, 59, 94, 0, 5, TripPath_Traversability_kBoth, 0, 0, 0, 0, 0,
-               0, 0, 0, 0, 0, 0, {}, {}, {}, {});
+               TripLeg_RoadClass_kTrunk, 59, 94, 0, 5, TripLeg_Traversability_kBoth, 0, 0, 0, 0, 0, 0,
+               0, 0, 0, 0, 0, {}, {}, {}, {});
 
   // node:1
   node = path.add_node();
   edge = node->mutable_edge();
   PopulateEdge(edge, {{"MD 43 East", 1}, {"White Marsh Boulevard", 0}}, 0.086000, 80.000000,
-               TripPath_RoadClass_kTrunk, 94, 94, 5, 8, TripPath_Traversability_kBoth, 0, 0, 0, 0, 0,
-               0, 0, 0, 0, 0, 0, {}, {}, {}, {});
+               TripLeg_RoadClass_kTrunk, 94, 94, 5, 8, TripLeg_Traversability_kBoth, 0, 0, 0, 0, 0, 0,
+               0, 0, 0, 0, 0, {}, {}, {}, {});
 
   // node:2 INTERNAL_INTERSECTION
   node = path.add_node();
   edge = node->mutable_edge();
   PopulateEdge(edge, {{"MD 43 East", 1}, {"White Marsh Boulevard", 0}}, 0.018000, 90.000000,
-               TripPath_RoadClass_kTrunk, 96, 96, 8, 9, TripPath_Traversability_kBoth, 0, 0, 0, 0, 0,
-               0, 0, 0, 0, 1, 0, {}, {}, {}, {});
+               TripLeg_RoadClass_kTrunk, 96, 96, 8, 9, TripLeg_Traversability_kBoth, 0, 0, 0, 0, 0, 0,
+               0, 0, 0, 1, 0, {}, {}, {}, {});
 
   // node:3
   node = path.add_node();
   edge = node->mutable_edge();
   PopulateEdge(edge, {{"MD 43 East", 1}, {"White Marsh Boulevard", 0}}, 0.099000, 80.000000,
-               TripPath_RoadClass_kTrunk, 94, 95, 9, 12, TripPath_Traversability_kBoth, 0, 0, 0, 0, 0,
+               TripLeg_RoadClass_kTrunk, 94, 95, 9, 12, TripLeg_Traversability_kBoth, 0, 0, 0, 0, 0,
                0, 0, 0, 0, 0, 0, {}, {}, {}, {});
 
   // node:4
   node = path.add_node();
   edge = node->mutable_edge();
   PopulateEdge(edge, {{"MD 43 East", 1}, {"White Marsh Boulevard", 0}}, 0.774000, 80.000000,
-               TripPath_RoadClass_kTrunk, 96, 88, 12, 28, TripPath_Traversability_kBoth, 0, 0, 0, 0,
-               0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
+               TripLeg_RoadClass_kTrunk, 96, 88, 12, 28, TripLeg_Traversability_kBoth, 0, 0, 0, 0, 0,
+               0, 0, 0, 0, 0, 0, {}, {}, {}, {});
 
   // node:5
   node = path.add_node();
   edge = node->mutable_edge();
   PopulateEdge(edge, {{"MD 43 East", 1}, {"White Marsh Boulevard", 0}}, 0.123000, 80.000000,
-               TripPath_RoadClass_kTrunk, 90, 90, 28, 32, TripPath_Traversability_kBoth, 0, 0, 0, 0,
-               0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
+               TripLeg_RoadClass_kTrunk, 90, 90, 28, 32, TripLeg_Traversability_kBoth, 0, 0, 0, 0, 0,
+               0, 0, 0, 0, 0, 0, {}, {}, {}, {});
 
   // node:6
   node = path.add_node();
   edge = node->mutable_edge();
   PopulateEdge(edge, {{"MD 43 East", 1}, {"White Marsh Boulevard", 0}}, 0.009000, 80.000000,
-               TripPath_RoadClass_kTrunk, 86, 86, 32, 33, TripPath_Traversability_kBoth, 0, 0, 0, 0,
-               0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
+               TripLeg_RoadClass_kTrunk, 86, 86, 32, 33, TripLeg_Traversability_kBoth, 0, 0, 0, 0, 0,
+               0, 0, 0, 0, 0, 0, {}, {}, {}, {});
 
   // node:7 INTERNAL_INTERSECTION
   node = path.add_node();
   edge = node->mutable_edge();
   PopulateEdge(edge, {{"MD 43 East", 1}, {"White Marsh Boulevard", 0}}, 0.015000, 72.000000,
-               TripPath_RoadClass_kTrunk, 93, 93, 33, 34, TripPath_Traversability_kBoth, 0, 0, 0, 0,
-               0, 0, 0, 0, 0, 1, 0, {}, {}, {}, {});
+               TripLeg_RoadClass_kTrunk, 93, 93, 33, 34, TripLeg_Traversability_kBoth, 0, 0, 0, 0, 0,
+               0, 0, 0, 0, 1, 0, {}, {}, {}, {});
 
   // node:8
   node = path.add_node();
   edge = node->mutable_edge();
   PopulateEdge(edge, {{"MD 43 East", 1}, {"White Marsh Boulevard", 0}}, 0.077000, 72.000000,
-               TripPath_RoadClass_kTrunk, 90, 90, 34, 35, TripPath_Traversability_kBoth, 0, 0, 0, 0,
-               0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
+               TripLeg_RoadClass_kTrunk, 90, 90, 34, 35, TripLeg_Traversability_kBoth, 0, 0, 0, 0, 0,
+               0, 0, 0, 0, 0, 0, {}, {}, {}, {});
 
   // node:9
   node = path.add_node();
   edge = node->mutable_edge();
   PopulateEdge(edge, {{"MD 43 East", 1}, {"White Marsh Boulevard", 0}}, 0.217965, 72.000000,
-               TripPath_RoadClass_kTrunk, 90, 89, 35, 40, TripPath_Traversability_kBoth, 0, 0, 0, 0,
-               0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
+               TripLeg_RoadClass_kTrunk, 90, 89, 35, 40, TripLeg_Traversability_kBoth, 0, 0, 0, 0, 0,
+               0, 0, 0, 0, 0, 0, {}, {}, {}, {});
 
-  EnhancedTripPath etp(path);
+  EnhancedTripLeg etp(path);
   ManeuversBuilderTest mbTest(directions_options, &etp);
 
   ///////////////////////////////////////////////////////////////////////////
@@ -1139,33 +1139,33 @@ void TestStraightInternalStraightCombine() {
 
 void TestLeftInternalUturnCombine() {
   DirectionsOptions directions_options;
-  TripPath path;
-  TripPath_Node* node;
-  TripPath_Edge* edge;
+  TripLeg path;
+  TripLeg_Node* node;
+  TripLeg_Edge* edge;
 
   ///////////////////////////////////////////////////////////////////////////
   // node:0
   node = path.add_node();
   edge = node->mutable_edge();
   PopulateEdge(edge, {{"Jonestown Road", 0}, {"US 22", 1}}, 0.062923, 75.000000,
-               TripPath_RoadClass_kPrimary, 36, 32, 0, 2, TripPath_Traversability_kBoth, 0, 0, 0, 0,
-               0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
+               TripLeg_RoadClass_kPrimary, 36, 32, 0, 2, TripLeg_Traversability_kBoth, 0, 0, 0, 0, 0,
+               0, 0, 0, 0, 0, 0, {}, {}, {}, {});
 
   // node:1 TURN_CHANNNEL
   node = path.add_node();
   edge = node->mutable_edge();
-  PopulateEdge(edge, {{"Devonshire Road", 0}}, 0.013000, 50.000000, TripPath_RoadClass_kTertiary, 299,
-               299, 2, 3, TripPath_Traversability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, {}, {}, {},
+  PopulateEdge(edge, {{"Devonshire Road", 0}}, 0.013000, 50.000000, TripLeg_RoadClass_kTertiary, 299,
+               299, 2, 3, TripLeg_Traversability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, {}, {}, {},
                {});
 
   // node:2
   node = path.add_node();
   edge = node->mutable_edge();
   PopulateEdge(edge, {{"Jonestown Road", 0}, {"US 22", 1}}, 0.059697, 75.000000,
-               TripPath_RoadClass_kPrimary, 212, 221, 3, 5, TripPath_Traversability_kBoth, 0, 0, 0, 0,
+               TripLeg_RoadClass_kPrimary, 212, 221, 3, 5, TripLeg_Traversability_kBoth, 0, 0, 0, 0,
                0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
 
-  EnhancedTripPath etp(path);
+  EnhancedTripLeg etp(path);
   ManeuversBuilderTest mbTest(directions_options, &etp);
 
   ///////////////////////////////////////////////////////////////////////////
@@ -1233,40 +1233,40 @@ void TestLeftInternalUturnCombine() {
 
 void TestLeftInternalUturnProperDirectionCombine() {
   DirectionsOptions directions_options;
-  TripPath path;
-  TripPath_Node* node;
-  TripPath_Edge* edge;
+  TripLeg path;
+  TripLeg_Node* node;
+  TripLeg_Edge* edge;
 
   ///////////////////////////////////////////////////////////////////////////
   // node:0
   node = path.add_node();
   edge = node->mutable_edge();
   PopulateEdge(edge, {{"Pulaski Highway", 0}, {"US 40 East", 1}}, 0.067483, 75.000000,
-               TripPath_RoadClass_kPrimary, 48, 52, 0, 3, TripPath_Traversability_kBoth, 0, 0, 0, 0,
-               0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
+               TripLeg_RoadClass_kPrimary, 48, 52, 0, 3, TripLeg_Traversability_kBoth, 0, 0, 0, 0, 0,
+               0, 0, 0, 0, 0, 0, {}, {}, {}, {});
 
   // node:1 TURN_CHANNNEL
   node = path.add_node();
   edge = node->mutable_edge();
-  PopulateEdge(edge, {{"Moravia Park Drive", 0}}, 0.019000, 60.000000, TripPath_RoadClass_kSecondary,
-               317, 317, 3, 4, TripPath_Traversability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, {}, {},
+  PopulateEdge(edge, {{"Moravia Park Drive", 0}}, 0.019000, 60.000000, TripLeg_RoadClass_kSecondary,
+               317, 317, 3, 4, TripLeg_Traversability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, {}, {},
                {}, {});
 
   // node:2
   node = path.add_node();
   edge = node->mutable_edge();
   PopulateEdge(edge, {{"US 40 West", 1}, {"Pulaski Highway", 0}}, 0.045000, 90.000000,
-               TripPath_RoadClass_kTrunk, 229, 229, 4, 5, TripPath_Traversability_kBoth, 0, 0, 0, 0,
-               0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
+               TripLeg_RoadClass_kTrunk, 229, 229, 4, 5, TripLeg_Traversability_kBoth, 0, 0, 0, 0, 0,
+               0, 0, 0, 0, 0, 0, {}, {}, {}, {});
 
   // node:3
   node = path.add_node();
   edge = node->mutable_edge();
   PopulateEdge(edge, {{"Pulaski Highway", 0}, {"US 40 West", 1}}, 0.000000, 75.000000,
-               TripPath_RoadClass_kPrimary, 229, 229, 5, 5, TripPath_Traversability_kBoth, 0, 0, 0, 0,
+               TripLeg_RoadClass_kPrimary, 229, 229, 5, 5, TripLeg_Traversability_kBoth, 0, 0, 0, 0,
                0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
 
-  EnhancedTripPath etp(path);
+  EnhancedTripLeg etp(path);
   ManeuversBuilderTest mbTest(directions_options, &etp);
 
   ///////////////////////////////////////////////////////////////////////////
@@ -1334,47 +1334,47 @@ void TestLeftInternalUturnProperDirectionCombine() {
 
 void TestStraightInternalLeftInternalStraightInternalUturnCombine() {
   DirectionsOptions directions_options;
-  TripPath path;
-  TripPath_Node* node;
-  TripPath_Edge* edge;
+  TripLeg path;
+  TripLeg_Node* node;
+  TripLeg_Edge* edge;
 
   ///////////////////////////////////////////////////////////////////////////
   // node:0
   node = path.add_node();
   edge = node->mutable_edge();
   PopulateEdge(edge, {{"MD 24", 1}, {"Vietnam Veterans Memorial Highway", 0}}, 0.071404, 89.000000,
-               TripPath_RoadClass_kTrunk, 335, 334, 0, 2, TripPath_Traversability_kBoth, 0, 0, 0, 0,
-               0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
+               TripLeg_RoadClass_kTrunk, 335, 334, 0, 2, TripLeg_Traversability_kBoth, 0, 0, 0, 0, 0,
+               0, 0, 0, 0, 0, 0, {}, {}, {}, {});
 
   // node:1 TURN_CHANNNEL
   node = path.add_node();
   edge = node->mutable_edge();
   PopulateEdge(edge, {{"MD 24", 1}, {"Vietnam Veterans Memorial Highway", 0}}, 0.012000, 89.000000,
-               TripPath_RoadClass_kTrunk, 334, 334, 2, 3, TripPath_Traversability_kBoth, 0, 0, 0, 0,
-               0, 0, 0, 0, 0, 1, 0, {}, {}, {}, {});
+               TripLeg_RoadClass_kTrunk, 334, 334, 2, 3, TripLeg_Traversability_kBoth, 0, 0, 0, 0, 0,
+               0, 0, 0, 0, 1, 0, {}, {}, {}, {});
 
   // node:2
   node = path.add_node();
   edge = node->mutable_edge();
   PopulateEdge(edge, {{"Bel Air South Parkway", 0}}, 0.025000, 48.000000,
-               TripPath_RoadClass_kSecondary, 245, 245, 3, 4, TripPath_Traversability_kBoth, 0, 0, 0,
-               0, 0, 0, 0, 0, 0, 1, 0, {}, {}, {}, {});
+               TripLeg_RoadClass_kSecondary, 245, 245, 3, 4, TripLeg_Traversability_kBoth, 0, 0, 0, 0,
+               0, 0, 0, 0, 0, 1, 0, {}, {}, {}, {});
 
   // node:3
   node = path.add_node();
   edge = node->mutable_edge();
   PopulateEdge(edge, {{"MD 24", 1}, {"Vietnam Veterans Memorial Highway", 0}}, 0.012000, 89.000000,
-               TripPath_RoadClass_kTrunk, 153, 153, 4, 5, TripPath_Traversability_kBoth, 0, 0, 0, 0,
-               0, 0, 0, 0, 0, 1, 0, {}, {}, {}, {});
+               TripLeg_RoadClass_kTrunk, 153, 153, 4, 5, TripLeg_Traversability_kBoth, 0, 0, 0, 0, 0,
+               0, 0, 0, 0, 1, 0, {}, {}, {}, {});
 
   // node:4
   node = path.add_node();
   edge = node->mutable_edge();
   PopulateEdge(edge, {{"MD 24", 1}, {"Vietnam Veterans Memorial Highway", 0}}, 0.070695, 89.000000,
-               TripPath_RoadClass_kTrunk, 155, 156, 5, 9, TripPath_Traversability_kBoth, 0, 0, 0, 0,
-               0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
+               TripLeg_RoadClass_kTrunk, 155, 156, 5, 9, TripLeg_Traversability_kBoth, 0, 0, 0, 0, 0,
+               0, 0, 0, 0, 0, 0, {}, {}, {}, {});
 
-  EnhancedTripPath etp(path);
+  EnhancedTripLeg etp(path);
   ManeuversBuilderTest mbTest(directions_options, &etp);
 
   ///////////////////////////////////////////////////////////////////////////
@@ -1443,40 +1443,40 @@ void TestStraightInternalLeftInternalStraightInternalUturnCombine() {
 
 void TestInternalPencilPointUturnProperDirectionCombine() {
   DirectionsOptions directions_options;
-  TripPath path;
-  TripPath_Node* node;
-  TripPath_Edge* edge;
+  TripLeg path;
+  TripLeg_Node* node;
+  TripLeg_Edge* edge;
 
   ///////////////////////////////////////////////////////////////////////////
   // node:0
   node = path.add_node();
   edge = node->mutable_edge();
   PopulateEdge(edge, {{"Stonewall Shops Square", 0}}, 0.027386, 40.000000,
-               TripPath_RoadClass_kUnclassified, 352, 343, 0, 2, TripPath_Traversability_kBoth, 0, 0,
-               0, 0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
+               TripLeg_RoadClass_kUnclassified, 352, 343, 0, 2, TripLeg_Traversability_kBoth, 0, 0, 0,
+               0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
 
   // node:1 TURN_CHANNNEL
   node = path.add_node();
   edge = node->mutable_edge();
-  PopulateEdge(edge, {{"Old Carolina Road", 0}}, 0.019000, 50.000000, TripPath_RoadClass_kTertiary,
-               331, 331, 2, 3, TripPath_Traversability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, {}, {},
+  PopulateEdge(edge, {{"Old Carolina Road", 0}}, 0.019000, 50.000000, TripLeg_RoadClass_kTertiary,
+               331, 331, 2, 3, TripLeg_Traversability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, {}, {},
                {}, {});
 
   // node:2
   node = path.add_node();
   edge = node->mutable_edge();
   PopulateEdge(edge, {{"Stonewall Shops Square", 0}}, 0.021000, 50.000000,
-               TripPath_RoadClass_kTertiary, 187, 187, 3, 4, TripPath_Traversability_kBoth, 0, 0, 0,
-               0, 0, 0, 0, 0, 0, 1, 0, {}, {}, {}, {});
+               TripLeg_RoadClass_kTertiary, 187, 187, 3, 4, TripLeg_Traversability_kBoth, 0, 0, 0, 0,
+               0, 0, 0, 0, 0, 1, 0, {}, {}, {}, {});
 
   // node:3
   node = path.add_node();
   edge = node->mutable_edge();
   PopulateEdge(edge, {{"Stonewall Shops Square", 0}}, 0.025240, 40.000000,
-               TripPath_RoadClass_kUnclassified, 162, 149, 4, 6, TripPath_Traversability_kBoth, 0, 0,
-               0, 0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
+               TripLeg_RoadClass_kUnclassified, 162, 149, 4, 6, TripLeg_Traversability_kBoth, 0, 0, 0,
+               0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
 
-  EnhancedTripPath etp(path);
+  EnhancedTripLeg etp(path);
   ManeuversBuilderTest mbTest(directions_options, &etp);
 
   ///////////////////////////////////////////////////////////////////////////
@@ -1543,32 +1543,32 @@ void TestInternalPencilPointUturnProperDirectionCombine() {
 
 void TestSimpleRightTurnChannelCombine() {
   DirectionsOptions directions_options;
-  TripPath path;
-  TripPath_Node* node;
-  TripPath_Edge* edge;
+  TripLeg path;
+  TripLeg_Node* node;
+  TripLeg_Edge* edge;
 
   ///////////////////////////////////////////////////////////////////////////
   // node:0
   node = path.add_node();
   edge = node->mutable_edge();
   PopulateEdge(edge, {{"MD 43 East", 1}, {"White Marsh Boulevard", 0}}, 0.091237, 80.000000,
-               TripPath_RoadClass_kTrunk, 59, 94, 0, 4, TripPath_Traversability_kBoth, 0, 0, 0, 0, 0,
-               0, 0, 0, 0, 0, 0, {}, {}, {}, {});
+               TripLeg_RoadClass_kTrunk, 59, 94, 0, 4, TripLeg_Traversability_kBoth, 0, 0, 0, 0, 0, 0,
+               0, 0, 0, 0, 0, {}, {}, {}, {});
 
   // node:1 TURN_CHANNNEL
   node = path.add_node();
   edge = node->mutable_edge();
-  PopulateEdge(edge, {}, 0.142000, 113.000000, TripPath_RoadClass_kSecondary, 105, 179, 4, 11,
-               TripPath_Traversability_kBoth, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
+  PopulateEdge(edge, {}, 0.142000, 113.000000, TripLeg_RoadClass_kSecondary, 105, 179, 4, 11,
+               TripLeg_Traversability_kBoth, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
 
   // node:2
   node = path.add_node();
   edge = node->mutable_edge();
-  PopulateEdge(edge, {{"Perry Hall Boulevard", 0}}, 0.065867, 64.000000,
-               TripPath_RoadClass_kSecondary, 188, 188, 11, 14, TripPath_Traversability_kBoth, 0, 0,
-               0, 0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
+  PopulateEdge(edge, {{"Perry Hall Boulevard", 0}}, 0.065867, 64.000000, TripLeg_RoadClass_kSecondary,
+               188, 188, 11, 14, TripLeg_Traversability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {},
+               {}, {}, {});
 
-  EnhancedTripPath etp(path);
+  EnhancedTripLeg etp(path);
   ManeuversBuilderTest mbTest(directions_options, &etp);
 
   ///////////////////////////////////////////////////////////////////////////
@@ -1764,31 +1764,31 @@ void TryIsIntersectingForwardEdge(ManeuversBuilderTest& mbTest, int node_index, 
 
 void TestPathRightXStraightIsIntersectingForwardEdge() {
   DirectionsOptions directions_options;
-  TripPath path;
-  TripPath_Node* node;
-  TripPath_Edge* edge;
+  TripLeg path;
+  TripLeg_Node* node;
+  TripLeg_Edge* edge;
 
   ///////////////////////////////////////////////////////////////////////////
   // node:0
   node = path.add_node();
   edge = node->mutable_edge();
-  PopulateEdge(edge, {{"Raleigh Road", 0}}, 0.027827, 30.000000, TripPath_RoadClass_kResidential, 250,
-               291, 0, 1, TripPath_Traversability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {},
-               {}, TripPath_TravelMode_kDrive);
+  PopulateEdge(edge, {{"Raleigh Road", 0}}, 0.027827, 30.000000, TripLeg_RoadClass_kResidential, 250,
+               291, 0, 1, TripLeg_Traversability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {},
+               {}, TripLeg_TravelMode_kDrive);
 
   // node:1 Intersecting forward link
   node = path.add_node();
   edge = node->mutable_edge();
-  PopulateEdge(edge, {{"Raleigh Road", 0}}, 0.054344, 30.000000, TripPath_RoadClass_kResidential, 20,
-               337, 1, 3, TripPath_Traversability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {},
-               {}, TripPath_TravelMode_kDrive);
-  PopulateIntersectingEdge(node->add_intersecting_edge(), 289, 1, 1, TripPath_Traversability_kBoth,
-                           TripPath_Traversability_kBoth, TripPath_Traversability_kBoth);
+  PopulateEdge(edge, {{"Raleigh Road", 0}}, 0.054344, 30.000000, TripLeg_RoadClass_kResidential, 20,
+               337, 1, 3, TripLeg_Traversability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {},
+               {}, TripLeg_TravelMode_kDrive);
+  PopulateIntersectingEdge(node->add_intersecting_edge(), 289, 1, 1, TripLeg_Traversability_kBoth,
+                           TripLeg_Traversability_kBoth, TripLeg_Traversability_kBoth);
 
   // node:2
   node = path.add_node();
 
-  EnhancedTripPath etp(path);
+  EnhancedTripLeg etp(path);
   ManeuversBuilderTest mbTest(directions_options, &etp);
 
   TryIsIntersectingForwardEdge(mbTest, 1, true);
@@ -1796,31 +1796,31 @@ void TestPathRightXStraightIsIntersectingForwardEdge() {
 
 void TestPathLeftXStraightIsIntersectingForwardEdge() {
   DirectionsOptions directions_options;
-  TripPath path;
-  TripPath_Node* node;
-  TripPath_Edge* edge;
+  TripLeg path;
+  TripLeg_Node* node;
+  TripLeg_Edge* edge;
 
   ///////////////////////////////////////////////////////////////////////////
   // node:0
   node = path.add_node();
   edge = node->mutable_edge();
-  PopulateEdge(edge, {{"Raleigh Road", 0}}, 0.047007, 30.000000, TripPath_RoadClass_kResidential, 108,
-               108, 0, 1, TripPath_Traversability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {},
-               {}, TripPath_TravelMode_kDrive);
+  PopulateEdge(edge, {{"Raleigh Road", 0}}, 0.047007, 30.000000, TripLeg_RoadClass_kResidential, 108,
+               108, 0, 1, TripLeg_Traversability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {},
+               {}, TripLeg_TravelMode_kDrive);
 
   // node:1 Intersecting forward link
   node = path.add_node();
   edge = node->mutable_edge();
-  PopulateEdge(edge, {{"Raleigh Road", 0}}, 0.046636, 30.000000, TripPath_RoadClass_kResidential, 20,
-               337, 1, 3, TripPath_Traversability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {},
-               {}, TripPath_TravelMode_kDrive);
-  PopulateIntersectingEdge(node->add_intersecting_edge(), 111, 1, 1, TripPath_Traversability_kBoth,
-                           TripPath_Traversability_kBoth, TripPath_Traversability_kBoth);
+  PopulateEdge(edge, {{"Raleigh Road", 0}}, 0.046636, 30.000000, TripLeg_RoadClass_kResidential, 20,
+               337, 1, 3, TripLeg_Traversability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {},
+               {}, TripLeg_TravelMode_kDrive);
+  PopulateIntersectingEdge(node->add_intersecting_edge(), 111, 1, 1, TripLeg_Traversability_kBoth,
+                           TripLeg_Traversability_kBoth, TripLeg_Traversability_kBoth);
 
   // node:2
   node = path.add_node();
 
-  EnhancedTripPath etp(path);
+  EnhancedTripLeg etp(path);
   ManeuversBuilderTest mbTest(directions_options, &etp);
 
   TryIsIntersectingForwardEdge(mbTest, 1, true);
@@ -1828,31 +1828,31 @@ void TestPathLeftXStraightIsIntersectingForwardEdge() {
 
 void TestPathSlightRightXSlightLeftIsIntersectingForwardEdge() {
   DirectionsOptions directions_options;
-  TripPath path;
-  TripPath_Node* node;
-  TripPath_Edge* edge;
+  TripLeg path;
+  TripLeg_Node* node;
+  TripLeg_Edge* edge;
 
   ///////////////////////////////////////////////////////////////////////////
   // node:0
   node = path.add_node();
   edge = node->mutable_edge();
   PopulateEdge(edge, {{"Horace Greeley Road", 0}}, 0.102593, 30.000000,
-               TripPath_RoadClass_kResidential, 23, 13, 0, 6, TripPath_Traversability_kBoth, 0, 0, 0,
-               0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, TripPath_TravelMode_kDrive);
+               TripLeg_RoadClass_kResidential, 23, 13, 0, 6, TripLeg_Traversability_kBoth, 0, 0, 0, 0,
+               0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, TripLeg_TravelMode_kDrive);
 
   // node:1 Intersecting forward link
   node = path.add_node();
   edge = node->mutable_edge();
   PopulateEdge(edge, {{"Horace Greeley Road", 0}}, 0.205258, 30.000000,
-               TripPath_RoadClass_kResidential, 35, 19, 6, 12, TripPath_Traversability_kBoth, 0, 0, 0,
-               0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, TripPath_TravelMode_kDrive);
-  PopulateIntersectingEdge(node->add_intersecting_edge(), 355, 0, 0, TripPath_Traversability_kBoth,
-                           TripPath_Traversability_kBoth, TripPath_Traversability_kBoth);
+               TripLeg_RoadClass_kResidential, 35, 19, 6, 12, TripLeg_Traversability_kBoth, 0, 0, 0,
+               0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, TripLeg_TravelMode_kDrive);
+  PopulateIntersectingEdge(node->add_intersecting_edge(), 355, 0, 0, TripLeg_Traversability_kBoth,
+                           TripLeg_Traversability_kBoth, TripLeg_Traversability_kBoth);
 
   // node:2
   node = path.add_node();
 
-  EnhancedTripPath etp(path);
+  EnhancedTripLeg etp(path);
   ManeuversBuilderTest mbTest(directions_options, &etp);
 
   TryIsIntersectingForwardEdge(mbTest, 1, true);
