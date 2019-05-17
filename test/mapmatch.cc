@@ -243,6 +243,18 @@ void test_distance_only() {
     throw std::logic_error("Using distance only it should have taken a small detour");
 }
 
+void test_trace_route_breaks() {
+  tyr::actor_t actor(conf, true);
+  auto matched = json_to_pt(actor.trace_route(
+      R"({"costing":"auto","shape_match":"map_snap","shape":[
+          {"lat":52.09110,"lon":5.09806,"type":"break"},
+          {"lat":52.09050,"lon":5.09769,"type":"break"},
+          {"lat":52.09098,"lon":5.09679,"type":"break"}]})"));
+  auto& legs = matched.get_child("trip.legs");
+  if (legs.size() != 2)
+    throw std::logic_error("Setting type:break should split route into multiple legs");
+}
+
 void test_time_rejection() {
   tyr::actor_t actor(conf, true);
   auto matched = json_to_pt(actor.trace_attributes(
@@ -582,6 +594,8 @@ int main(int argc, char* argv[]) {
   suite.test(TEST_CASE(test32bit));
 
   suite.test(TEST_CASE(test_matcher));
+
+  suite.test(TEST_CASE(test_trace_route_breaks));
 
   suite.test(TEST_CASE(test_distance_only));
 
