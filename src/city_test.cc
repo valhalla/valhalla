@@ -27,7 +27,7 @@
 
 #include <valhalla/proto/directions_options.pb.h>
 #include <valhalla/proto/trip.pb.h>
-#include <valhalla/proto/tripdirections.pb.h>
+#include <valhalla/proto/directions.pb.h>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;

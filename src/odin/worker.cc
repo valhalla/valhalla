@@ -35,10 +35,10 @@ odin_worker_t::~odin_worker_t() {
 void odin_worker_t::cleanup() {
 }
 
-std::list<TripDirections> odin_worker_t::narrate(const valhalla_request_t& request,
+std::list<DirectionsLeg> odin_worker_t::narrate(const valhalla_request_t& request,
                                                  std::list<TripLeg>& legs) const {
   // get some annotated directions
-  std::list<TripDirections> narrated;
+  std::list<DirectionsLeg> narrated;
   try {
     for (auto& leg : legs) {
       narrated.emplace_back(odin::DirectionsBuilder().Build(request.options, leg));

@@ -34,7 +34,7 @@
 
 #include <valhalla/proto/directions_options.pb.h>
 #include <valhalla/proto/trip.pb.h>
-#include <valhalla/proto/tripdirections.pb.h>
+#include <valhalla/proto/directions.pb.h>
 
 #include "config.h"
 
@@ -316,7 +316,7 @@ std::string GetFormattedTime(uint32_t seconds) {
   return formattedTime;
 }
 
-TripDirections DirectionsTest(const DirectionsOptions& directions_options,
+DirectionsLeg DirectionsTest(const DirectionsOptions& directions_options,
                               TripLeg& trip_path,
                               valhalla::odin::Location& orig,
                               valhalla::odin::Location& dest,
@@ -326,7 +326,7 @@ TripDirections DirectionsTest(const DirectionsOptions& directions_options,
   const PathLocation& destination = PathLocation::fromPBF(dest);
 
   DirectionsBuilder directions;
-  TripDirections trip_directions = directions.Build(directions_options, trip_path);
+  DirectionsLeg trip_directions = directions.Build(directions_options, trip_path);
   std::string units = (directions_options.units() == DirectionsOptions::kilometers ? "km" : "mi");
   int m = 1;
   valhalla::midgard::logging::Log("From: " + std::to_string(origin), " [NARRATIVE] ");
@@ -630,7 +630,7 @@ int main(int argc, char* argv[]) {
     if (trip_path.node().size() > 0) {
       // Try the the directions
       auto t1 = std::chrono::high_resolution_clock::now();
-      TripDirections trip_directions =
+      DirectionsLeg trip_directions =
           DirectionsTest(directions_options, trip_path, origin, dest, data);
       auto t2 = std::chrono::high_resolution_clock::now();
       auto msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();

@@ -7,7 +7,7 @@
 #include <valhalla/odin/maneuver.h>
 #include <valhalla/proto/directions_options.pb.h>
 #include <valhalla/proto/trip.pb.h>
-#include <valhalla/proto/tripdirections.pb.h>
+#include <valhalla/proto/directions.pb.h>
 
 namespace valhalla {
 namespace odin {
@@ -24,14 +24,14 @@ public:
    * Returns the trip directions based on the specified directions options
    * and trip path. This method calls ManeuversBuilder::Build and
    * NarrativeBuilder::Build to form the maneuver list. This method
-   * calls PopulateTripDirections to transform the maneuver list into the
+   * calls PopulateDirectionsLeg to transform the maneuver list into the
    * trip directions.
    *
    * @param directions_options The directions options such as: units and
    *                           language.
    * @param trip_path The trip path - list of nodes, edges, attributes and shape.
    */
-  TripDirections Build(const DirectionsOptions& directions_options, TripLeg& trip_path);
+  DirectionsLeg Build(const DirectionsOptions& directions_options, TripLeg& trip_path);
 
 protected:
   /**
@@ -51,7 +51,7 @@ protected:
    *                  to populate the trip directions.
    * @returns the trip directions.
    */
-  TripDirections PopulateTripDirections(const DirectionsOptions& directions_options,
+  DirectionsLeg PopulateDirectionsLeg(const DirectionsOptions& directions_options,
                                         EnhancedTripLeg* etp,
                                         std::list<Maneuver>& maneuvers);
 };

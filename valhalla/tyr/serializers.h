@@ -13,7 +13,7 @@
 #include <valhalla/midgard/gridded_data.h>
 #include <valhalla/proto/directions_options.pb.h>
 #include <valhalla/proto/trip.pb.h>
-#include <valhalla/proto/tripdirections.pb.h>
+#include <valhalla/proto/directions.pb.h>
 #include <valhalla/thor/attributes_controller.h>
 #include <valhalla/thor/costmatrix.h>
 #include <valhalla/thor/match_result.h>
@@ -28,7 +28,7 @@ namespace tyr {
  */
 std::string serializeDirections(const valhalla_request_t& request,
                                 std::list<odin::TripLeg>& path_legs,
-                                const std::list<odin::TripDirections>& directions_legs);
+                                const std::list<odin::DirectionsLeg>& directions_legs);
 
 /**
  * Turn a time distance matrix into json that one can look up location pair results from

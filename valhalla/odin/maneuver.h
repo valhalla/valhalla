@@ -15,7 +15,7 @@
 #include <valhalla/proto/directions_options.pb.h>
 #include <valhalla/proto/trip.pb.h>
 #include <valhalla/proto/tripcommon.pb.h>
-#include <valhalla/proto/tripdirections.pb.h>
+#include <valhalla/proto/directions.pb.h>
 
 using namespace valhalla::baldr;
 
@@ -40,8 +40,8 @@ public:
 
   Maneuver();
 
-  const TripDirections_Maneuver_Type& type() const;
-  void set_type(const TripDirections_Maneuver_Type& type);
+  const DirectionsLeg_Maneuver_Type& type() const;
+  void set_type(const DirectionsLeg_Maneuver_Type& type);
   bool IsDestinationType() const;
 
   const StreetNames& street_names() const;
@@ -90,9 +90,9 @@ public:
   RelativeDirection begin_relative_direction() const;
   void set_begin_relative_direction(RelativeDirection begin_relative_direction);
 
-  TripDirections_Maneuver_CardinalDirection begin_cardinal_direction() const;
+  DirectionsLeg_Maneuver_CardinalDirection begin_cardinal_direction() const;
   void
-  set_begin_cardinal_direction(TripDirections_Maneuver_CardinalDirection begin_cardinal_direction);
+  set_begin_cardinal_direction(DirectionsLeg_Maneuver_CardinalDirection begin_cardinal_direction);
 
   uint32_t begin_heading() const;
   void set_begin_heading(uint32_t beginHeading);
@@ -282,7 +282,7 @@ public:
 #endif
 
 protected:
-  TripDirections_Maneuver_Type type_;
+  DirectionsLeg_Maneuver_Type type_;
   std::unique_ptr<StreetNames> street_names_;
   std::unique_ptr<StreetNames> begin_street_names_;
   std::unique_ptr<StreetNames> cross_street_names_;
@@ -292,7 +292,7 @@ protected:
   uint32_t basic_time_; // len/speed on each edge with no stop impact in seconds
   uint32_t turn_degree_;
   RelativeDirection begin_relative_direction_;
-  TripDirections_Maneuver_CardinalDirection begin_cardinal_direction_;
+  DirectionsLeg_Maneuver_CardinalDirection begin_cardinal_direction_;
   uint32_t begin_heading_;
   uint32_t end_heading_;
   uint32_t begin_node_index_;
