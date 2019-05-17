@@ -903,7 +903,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
 
       // Add edge info to the tile and set the offset in the directed edge
       // Leave the name empty. Use the trip Id to look up the route Id and
-      // route within TripPathBuilder.
+      // route within TripLegBuilder.
       bool added = false;
       std::vector<std::string> names;
 

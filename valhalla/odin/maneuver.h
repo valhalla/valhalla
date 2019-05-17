@@ -13,9 +13,9 @@
 #include <valhalla/odin/signs.h>
 #include <valhalla/odin/transitrouteinfo.h>
 #include <valhalla/proto/directions_options.pb.h>
+#include <valhalla/proto/trip.pb.h>
 #include <valhalla/proto/tripcommon.pb.h>
 #include <valhalla/proto/tripdirections.pb.h>
-#include <valhalla/proto/trippath.pb.h>
 
 using namespace valhalla::baldr;
 
@@ -207,8 +207,8 @@ public:
   bool HasRoundaboutExitStreetNames() const;
   void ClearRoundaboutExitStreetNames();
 
-  TripPath_TravelMode travel_mode() const;
-  void set_travel_mode(TripPath_TravelMode travel_mode);
+  TripLeg_TravelMode travel_mode() const;
+  void set_travel_mode(TripLeg_TravelMode travel_mode);
 
   bool rail() const;
   void set_rail(bool rail);
@@ -216,17 +216,17 @@ public:
   bool bus() const;
   void set_bus(bool bus);
 
-  TripPath_VehicleType vehicle_type() const;
-  void set_vehicle_type(TripPath_VehicleType vehicle_type);
+  TripLeg_VehicleType vehicle_type() const;
+  void set_vehicle_type(TripLeg_VehicleType vehicle_type);
 
-  TripPath_PedestrianType pedestrian_type() const;
-  void set_pedestrian_type(TripPath_PedestrianType pedestrian_type);
+  TripLeg_PedestrianType pedestrian_type() const;
+  void set_pedestrian_type(TripLeg_PedestrianType pedestrian_type);
 
-  TripPath_BicycleType bicycle_type() const;
-  void set_bicycle_type(TripPath_BicycleType bicycle_type);
+  TripLeg_BicycleType bicycle_type() const;
+  void set_bicycle_type(TripLeg_BicycleType bicycle_type);
 
-  TripPath_TransitType transit_type() const;
-  void set_transit_type(TripPath_TransitType transit_type);
+  TripLeg_TransitType transit_type() const;
+  void set_transit_type(TripLeg_TransitType transit_type);
 
   bool transit_connection() const;
   void set_transit_connection(bool transit_connection);
@@ -346,15 +346,15 @@ protected:
   ////////////////////////////////////////////////////////////////////////////
 
   // Travel mode
-  TripPath_TravelMode travel_mode_;
+  TripLeg_TravelMode travel_mode_;
   bool rail_;
   bool bus_;
 
   // Travel types
-  TripPath_VehicleType vehicle_type_;
-  TripPath_PedestrianType pedestrian_type_;
-  TripPath_BicycleType bicycle_type_;
-  TripPath_TransitType transit_type_;
+  TripLeg_VehicleType vehicle_type_;
+  TripLeg_PedestrianType pedestrian_type_;
+  TripLeg_BicycleType bicycle_type_;
+  TripLeg_TransitType transit_type_;
 
   std::unique_ptr<VerbalTextFormatter> verbal_formatter_;
 };

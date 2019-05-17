@@ -10,12 +10,12 @@
 #include "odin/enhancedtrippath.h"
 #include "odin/util.h"
 
-#include <valhalla/proto/trippath.pb.h>
+#include <valhalla/proto/trip.pb.h>
 
 using namespace valhalla::midgard;
 
 namespace {
-const std::string& TripPath_RoadClass_Name(int v) {
+const std::string& TripLeg_RoadClass_Name(int v) {
   static const std::unordered_map<int, std::string> values{
       {0, "kMotorway"}, {1, "kTrunk"},        {2, "kPrimary"},     {3, "kSecondary"},
       {4, "kTertiary"}, {5, "kUnclassified"}, {6, "kResidential"}, {7, "kServiceOther"},
@@ -26,7 +26,7 @@ const std::string& TripPath_RoadClass_Name(int v) {
   return f->second;
 }
 
-const std::string& TripPath_Traversability_Name(int v) {
+const std::string& TripLeg_Traversability_Name(int v) {
   static const std::unordered_map<int, std::string> values{
       {0, "kNone"},
       {1, "kForward"},
@@ -39,7 +39,7 @@ const std::string& TripPath_Traversability_Name(int v) {
   return f->second;
 }
 
-const std::string& TripPath_Use_Name(int v) {
+const std::string& TripLeg_Use_Name(int v) {
   static const std::unordered_map<int, std::string> values{
       {0, "kRoadUse"},
       {1, "kRampUse"},
@@ -74,7 +74,7 @@ const std::string& TripPath_Use_Name(int v) {
   return f->second;
 }
 
-const std::string& TripPath_TravelMode_Name(int v) {
+const std::string& TripLeg_TravelMode_Name(int v) {
   static const std::unordered_map<int, std::string> values{
       {0, "kDrive"},
       {1, "kPedestrian"},
@@ -87,7 +87,7 @@ const std::string& TripPath_TravelMode_Name(int v) {
   return f->second;
 }
 
-const std::string& TripPath_VehicleType_Name(int v) {
+const std::string& TripLeg_VehicleType_Name(int v) {
   static const std::unordered_map<int, std::string> values{
       {0, "kCar"}, {1, "kMotorcycle"}, {2, "kAutoBus"}, {3, "kTractorTrailer"}, {4, "kMotorScooter"},
   };
@@ -97,7 +97,7 @@ const std::string& TripPath_VehicleType_Name(int v) {
   return f->second;
 }
 
-const std::string& TripPath_PedestrianType_Name(int v) {
+const std::string& TripLeg_PedestrianType_Name(int v) {
   static const std::unordered_map<int, std::string> values{
       {0, "kFoot"},
       {1, "kWheelchair"},
@@ -109,7 +109,7 @@ const std::string& TripPath_PedestrianType_Name(int v) {
   return f->second;
 }
 
-const std::string& TripPath_BicycleType_Name(int v) {
+const std::string& TripLeg_BicycleType_Name(int v) {
   static const std::unordered_map<int, std::string> values{
       {0, "kRoad"},
       {1, "kCross"},
@@ -122,7 +122,7 @@ const std::string& TripPath_BicycleType_Name(int v) {
   return f->second;
 }
 
-const std::string& TripPath_TransitType_Name(int v) {
+const std::string& TripLeg_TransitType_Name(int v) {
   static const std::unordered_map<int, std::string> values{
       {0, "kTram"},  {1, "kMetro"},    {2, "kRail"},    {3, "kBus"},
       {4, "kFerry"}, {5, "kCableCar"}, {6, "kGondola"}, {7, "kFunicular"},
@@ -133,7 +133,7 @@ const std::string& TripPath_TransitType_Name(int v) {
   return f->second;
 }
 
-const std::string& TripPath_CycleLane_Name(int v) {
+const std::string& TripLeg_CycleLane_Name(int v) {
   static const std::unordered_map<int, std::string> values{
       {0, "kNoCycleLane"},
       {1, "kShared"},
@@ -146,7 +146,7 @@ const std::string& TripPath_CycleLane_Name(int v) {
   return f->second;
 }
 
-const std::string& TripPath_Sidewalk_Name(int v) {
+const std::string& TripLeg_Sidewalk_Name(int v) {
   static const std::unordered_map<int, std::string> values{
       {0, "kNoSidewalk"},
       {1, "kLeft"},
@@ -165,77 +165,75 @@ namespace valhalla {
 namespace odin {
 
 ///////////////////////////////////////////////////////////////////////////////
-// EnhancedTripPath
+// EnhancedTripLeg
 
-EnhancedTripPath::EnhancedTripPath(TripPath& trip_path) : trip_path_(trip_path) {
+EnhancedTripLeg::EnhancedTripLeg(TripLeg& trip_path) : trip_path_(trip_path) {
 }
 
-std::unique_ptr<EnhancedTripPath_Node> EnhancedTripPath::GetEnhancedNode(const int node_index) {
-  return midgard::make_unique<EnhancedTripPath_Node>(mutable_node(node_index));
+std::unique_ptr<EnhancedTripLeg_Node> EnhancedTripLeg::GetEnhancedNode(const int node_index) {
+  return midgard::make_unique<EnhancedTripLeg_Node>(mutable_node(node_index));
 }
 
-std::unique_ptr<EnhancedTripPath_Edge> EnhancedTripPath::GetPrevEdge(const int node_index,
-                                                                     int delta) {
+std::unique_ptr<EnhancedTripLeg_Edge> EnhancedTripLeg::GetPrevEdge(const int node_index, int delta) {
   int index = node_index - delta;
   if (IsValidNodeIndex(index)) {
-    return midgard::make_unique<EnhancedTripPath_Edge>(mutable_node(index)->mutable_edge());
+    return midgard::make_unique<EnhancedTripLeg_Edge>(mutable_node(index)->mutable_edge());
   } else {
     return nullptr;
   }
 }
 
-std::unique_ptr<EnhancedTripPath_Edge> EnhancedTripPath::GetCurrEdge(const int node_index) {
+std::unique_ptr<EnhancedTripLeg_Edge> EnhancedTripLeg::GetCurrEdge(const int node_index) {
   return GetNextEdge(node_index, 0);
 }
 
-std::unique_ptr<EnhancedTripPath_Edge> EnhancedTripPath::GetNextEdge(const int node_index,
-                                                                     int delta) {
+std::unique_ptr<EnhancedTripLeg_Edge> EnhancedTripLeg::GetNextEdge(const int node_index, int delta) {
   int index = node_index + delta;
   if (IsValidNodeIndex(index) && !IsLastNodeIndex(index)) {
-    return midgard::make_unique<EnhancedTripPath_Edge>(mutable_node(index)->mutable_edge());
+    return midgard::make_unique<EnhancedTripLeg_Edge>(mutable_node(index)->mutable_edge());
   } else {
     return nullptr;
   }
 }
 
-bool EnhancedTripPath::IsValidNodeIndex(int node_index) const {
+bool EnhancedTripLeg::IsValidNodeIndex(int node_index) const {
   if ((node_index >= 0) && (node_index < node_size())) {
     return true;
   }
   return false;
 }
 
-bool EnhancedTripPath::IsFirstNodeIndex(int node_index) const {
+bool EnhancedTripLeg::IsFirstNodeIndex(int node_index) const {
   if (node_index == 0) {
     return true;
   }
   return false;
 }
 
-bool EnhancedTripPath::IsLastNodeIndex(int node_index) const {
+bool EnhancedTripLeg::IsLastNodeIndex(int node_index) const {
   if (IsValidNodeIndex(node_index) && (node_index == (node_size() - 1))) {
     return true;
   }
   return false;
 }
 
-int EnhancedTripPath::GetLastNodeIndex() const {
+int EnhancedTripLeg::GetLastNodeIndex() const {
   return (node_size() - 1);
 }
 
-std::unique_ptr<EnhancedTripPath_Admin> EnhancedTripPath::GetAdmin(size_t index) {
-  return midgard::make_unique<EnhancedTripPath_Admin>(mutable_admin(index));
+std::unique_ptr<EnhancedTripLeg_Admin> EnhancedTripLeg::GetAdmin(size_t index) {
+  return midgard::make_unique<EnhancedTripLeg_Admin>(mutable_admin(index));
 }
 
-std::string EnhancedTripPath::GetCountryCode(int node_index) {
+std::string EnhancedTripLeg::GetCountryCode(int node_index) {
   return GetAdmin(node(node_index).admin_index())->country_code();
 }
 
-std::string EnhancedTripPath::GetStateCode(int node_index) {
+std::string EnhancedTripLeg::GetStateCode(int node_index) {
   return GetAdmin(node(node_index).admin_index())->state_code();
 }
 
-const ::valhalla::odin::Location& EnhancedTripPath::GetOrigin() const {
+const ::valhalla::odin::Location& EnhancedTripLeg::GetOrigin() const {
   // Validate location count
   if (location_size() < 2) {
     throw valhalla_exception_t{212};
@@ -244,7 +242,7 @@ const ::valhalla::odin::Location& EnhancedTripPath::GetOrigin() const {
   return location(0);
 }
 
-const ::valhalla::odin::Location& EnhancedTripPath::GetDestination() const {
+const ::valhalla::odin::Location& EnhancedTripLeg::GetDestination() const {
   // Validate location count
   if (location_size() < 2) {
     throw valhalla_exception_t{212};
@@ -253,7 +251,7 @@ const ::valhalla::odin::Location& EnhancedTripPath::GetDestination() const {
   return location(location_size() - 1);
 }
 
-float EnhancedTripPath::GetLength(const DirectionsOptions::Units& units) {
+float EnhancedTripLeg::GetLength(const DirectionsOptions::Units& units) {
   float length = 0.0f;
   for (const auto& n : node()) {
     if (n.has_edge()) {
@@ -267,155 +265,154 @@ float EnhancedTripPath::GetLength(const DirectionsOptions::Units& units) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// EnhancedTripPath_Edge
+// EnhancedTripLeg_Edge
 
-EnhancedTripPath_Edge::EnhancedTripPath_Edge(TripPath_Edge* mutable_edge)
-    : mutable_edge_(mutable_edge) {
+EnhancedTripLeg_Edge::EnhancedTripLeg_Edge(TripLeg_Edge* mutable_edge) : mutable_edge_(mutable_edge) {
 }
 
-bool EnhancedTripPath_Edge::IsUnnamed() const {
+bool EnhancedTripLeg_Edge::IsUnnamed() const {
   return (name_size() == 0);
 }
 
-bool EnhancedTripPath_Edge::IsRoadUse() const {
-  return (use() == TripPath_Use_kRoadUse);
+bool EnhancedTripLeg_Edge::IsRoadUse() const {
+  return (use() == TripLeg_Use_kRoadUse);
 }
 
-bool EnhancedTripPath_Edge::IsRampUse() const {
-  return (use() == TripPath_Use_kRampUse);
+bool EnhancedTripLeg_Edge::IsRampUse() const {
+  return (use() == TripLeg_Use_kRampUse);
 }
 
-bool EnhancedTripPath_Edge::IsTurnChannelUse() const {
-  return (use() == TripPath_Use_kTurnChannelUse);
+bool EnhancedTripLeg_Edge::IsTurnChannelUse() const {
+  return (use() == TripLeg_Use_kTurnChannelUse);
 }
 
-bool EnhancedTripPath_Edge::IsTrackUse() const {
-  return (use() == TripPath_Use_kTrackUse);
+bool EnhancedTripLeg_Edge::IsTrackUse() const {
+  return (use() == TripLeg_Use_kTrackUse);
 }
 
-bool EnhancedTripPath_Edge::IsDrivewayUse() const {
-  return (use() == TripPath_Use_kDrivewayUse);
+bool EnhancedTripLeg_Edge::IsDrivewayUse() const {
+  return (use() == TripLeg_Use_kDrivewayUse);
 }
 
-bool EnhancedTripPath_Edge::IsAlleyUse() const {
-  return (use() == TripPath_Use_kAlleyUse);
+bool EnhancedTripLeg_Edge::IsAlleyUse() const {
+  return (use() == TripLeg_Use_kAlleyUse);
 }
 
-bool EnhancedTripPath_Edge::IsParkingAisleUse() const {
-  return (use() == TripPath_Use_kParkingAisleUse);
+bool EnhancedTripLeg_Edge::IsParkingAisleUse() const {
+  return (use() == TripLeg_Use_kParkingAisleUse);
 }
 
-bool EnhancedTripPath_Edge::IsEmergencyAccessUse() const {
-  return (use() == TripPath_Use_kEmergencyAccessUse);
+bool EnhancedTripLeg_Edge::IsEmergencyAccessUse() const {
+  return (use() == TripLeg_Use_kEmergencyAccessUse);
 }
 
-bool EnhancedTripPath_Edge::IsDriveThruUse() const {
-  return (use() == TripPath_Use_kDriveThruUse);
+bool EnhancedTripLeg_Edge::IsDriveThruUse() const {
+  return (use() == TripLeg_Use_kDriveThruUse);
 }
 
-bool EnhancedTripPath_Edge::IsCuldesacUse() const {
-  return (use() == TripPath_Use_kCuldesacUse);
+bool EnhancedTripLeg_Edge::IsCuldesacUse() const {
+  return (use() == TripLeg_Use_kCuldesacUse);
 }
 
-bool EnhancedTripPath_Edge::IsCyclewayUse() const {
-  return (use() == TripPath_Use_kCyclewayUse);
+bool EnhancedTripLeg_Edge::IsCyclewayUse() const {
+  return (use() == TripLeg_Use_kCyclewayUse);
 }
 
-bool EnhancedTripPath_Edge::IsMountainBikeUse() const {
-  return (use() == TripPath_Use_kMountainBikeUse);
+bool EnhancedTripLeg_Edge::IsMountainBikeUse() const {
+  return (use() == TripLeg_Use_kMountainBikeUse);
 }
 
-bool EnhancedTripPath_Edge::IsSidewalkUse() const {
-  return (use() == TripPath_Use_kSidewalkUse);
+bool EnhancedTripLeg_Edge::IsSidewalkUse() const {
+  return (use() == TripLeg_Use_kSidewalkUse);
 }
 
-bool EnhancedTripPath_Edge::IsFootwayUse() const {
-  return (use() == TripPath_Use_kFootwayUse);
+bool EnhancedTripLeg_Edge::IsFootwayUse() const {
+  return (use() == TripLeg_Use_kFootwayUse);
 }
 
-bool EnhancedTripPath_Edge::IsStepsUse() const {
-  return (use() == TripPath_Use_kStepsUse);
+bool EnhancedTripLeg_Edge::IsStepsUse() const {
+  return (use() == TripLeg_Use_kStepsUse);
 }
 
-bool EnhancedTripPath_Edge::IsPathUse() const {
-  return (use() == TripPath_Use_kPathUse);
+bool EnhancedTripLeg_Edge::IsPathUse() const {
+  return (use() == TripLeg_Use_kPathUse);
 }
 
-bool EnhancedTripPath_Edge::IsPedestrianUse() const {
-  return (use() == TripPath_Use_kPedestrianUse);
+bool EnhancedTripLeg_Edge::IsPedestrianUse() const {
+  return (use() == TripLeg_Use_kPedestrianUse);
 }
 
-bool EnhancedTripPath_Edge::IsBridlewayUse() const {
-  return (use() == TripPath_Use_kBridlewayUse);
+bool EnhancedTripLeg_Edge::IsBridlewayUse() const {
+  return (use() == TripLeg_Use_kBridlewayUse);
 }
 
-bool EnhancedTripPath_Edge::IsOtherUse() const {
-  return (use() == TripPath_Use_kOtherUse);
+bool EnhancedTripLeg_Edge::IsOtherUse() const {
+  return (use() == TripLeg_Use_kOtherUse);
 }
 
-bool EnhancedTripPath_Edge::IsFerryUse() const {
-  return (use() == TripPath_Use_kFerryUse);
+bool EnhancedTripLeg_Edge::IsFerryUse() const {
+  return (use() == TripLeg_Use_kFerryUse);
 }
 
-bool EnhancedTripPath_Edge::IsRailFerryUse() const {
-  return (use() == TripPath_Use_kRailFerryUse);
+bool EnhancedTripLeg_Edge::IsRailFerryUse() const {
+  return (use() == TripLeg_Use_kRailFerryUse);
 }
 
-bool EnhancedTripPath_Edge::IsRailUse() const {
-  return (use() == TripPath_Use_kRailUse);
+bool EnhancedTripLeg_Edge::IsRailUse() const {
+  return (use() == TripLeg_Use_kRailUse);
 }
 
-bool EnhancedTripPath_Edge::IsBusUse() const {
-  return (use() == TripPath_Use_kBusUse);
+bool EnhancedTripLeg_Edge::IsBusUse() const {
+  return (use() == TripLeg_Use_kBusUse);
 }
 
-bool EnhancedTripPath_Edge::IsEgressConnectionUse() const {
-  return (use() == TripPath_Use_kEgressConnectionUse);
+bool EnhancedTripLeg_Edge::IsEgressConnectionUse() const {
+  return (use() == TripLeg_Use_kEgressConnectionUse);
 }
 
-bool EnhancedTripPath_Edge::IsPlatformConnectionUse() const {
-  return (use() == TripPath_Use_kPlatformConnectionUse);
+bool EnhancedTripLeg_Edge::IsPlatformConnectionUse() const {
+  return (use() == TripLeg_Use_kPlatformConnectionUse);
 }
 
-bool EnhancedTripPath_Edge::IsTransitConnectionUse() const {
-  return (use() == TripPath_Use_kTransitConnectionUse);
+bool EnhancedTripLeg_Edge::IsTransitConnectionUse() const {
+  return (use() == TripLeg_Use_kTransitConnectionUse);
 }
 
-bool EnhancedTripPath_Edge::IsTransitConnection() const {
+bool EnhancedTripLeg_Edge::IsTransitConnection() const {
   return (IsTransitConnectionUse() || IsEgressConnectionUse() || IsPlatformConnectionUse());
 }
 
-bool EnhancedTripPath_Edge::IsUnnamedWalkway() const {
+bool EnhancedTripLeg_Edge::IsUnnamedWalkway() const {
   return (IsUnnamed() && IsFootwayUse());
 }
 
-bool EnhancedTripPath_Edge::IsUnnamedCycleway() const {
+bool EnhancedTripLeg_Edge::IsUnnamedCycleway() const {
   return (IsUnnamed() && IsCyclewayUse());
 }
 
-bool EnhancedTripPath_Edge::IsUnnamedMountainBikeTrail() const {
+bool EnhancedTripLeg_Edge::IsUnnamedMountainBikeTrail() const {
   return (IsUnnamed() && IsMountainBikeUse());
 }
 
-bool EnhancedTripPath_Edge::IsHighway() const {
-  return ((road_class() == TripPath_RoadClass_kMotorway) && (!IsRampUse()));
+bool EnhancedTripLeg_Edge::IsHighway() const {
+  return ((road_class() == TripLeg_RoadClass_kMotorway) && (!IsRampUse()));
 }
 
-bool EnhancedTripPath_Edge::IsOneway() const {
-  return ((traversability() == TripPath_Traversability_kForward) ||
-          (traversability() == TripPath_Traversability_kBackward));
+bool EnhancedTripLeg_Edge::IsOneway() const {
+  return ((traversability() == TripLeg_Traversability_kForward) ||
+          (traversability() == TripLeg_Traversability_kBackward));
 }
 
-bool EnhancedTripPath_Edge::IsForward(uint32_t prev2curr_turn_degree) const {
+bool EnhancedTripLeg_Edge::IsForward(uint32_t prev2curr_turn_degree) const {
   return ((prev2curr_turn_degree > 314) || (prev2curr_turn_degree < 46));
 }
 
-bool EnhancedTripPath_Edge::IsWiderForward(uint32_t prev2curr_turn_degree) const {
+bool EnhancedTripLeg_Edge::IsWiderForward(uint32_t prev2curr_turn_degree) const {
   return ((prev2curr_turn_degree > 304) || (prev2curr_turn_degree < 56));
 }
 
-bool EnhancedTripPath_Edge::IsStraightest(uint32_t prev2curr_turn_degree,
-                                          uint32_t straightest_xedge_turn_degree) const {
+bool EnhancedTripLeg_Edge::IsStraightest(uint32_t prev2curr_turn_degree,
+                                         uint32_t straightest_xedge_turn_degree) const {
   if (IsWiderForward(prev2curr_turn_degree)) {
     int path_xedge_turn_degree_delta = std::abs(static_cast<int>(prev2curr_turn_degree) -
                                                 static_cast<int>(straightest_xedge_turn_degree));
@@ -434,7 +431,7 @@ bool EnhancedTripPath_Edge::IsStraightest(uint32_t prev2curr_turn_degree,
   }
 }
 
-std::vector<std::pair<std::string, bool>> EnhancedTripPath_Edge::GetNameList() const {
+std::vector<std::pair<std::string, bool>> EnhancedTripLeg_Edge::GetNameList() const {
   std::vector<std::pair<std::string, bool>> name_list;
   for (const auto& name : this->name()) {
     name_list.push_back({name.value(), name.is_route_number()});
@@ -442,7 +439,7 @@ std::vector<std::pair<std::string, bool>> EnhancedTripPath_Edge::GetNameList() c
   return name_list;
 }
 
-float EnhancedTripPath_Edge::GetLength(const DirectionsOptions::Units& units) {
+float EnhancedTripLeg_Edge::GetLength(const DirectionsOptions::Units& units) {
   if (units == DirectionsOptions::miles) {
     return (length() * kMilePerKm);
   }
@@ -450,7 +447,7 @@ float EnhancedTripPath_Edge::GetLength(const DirectionsOptions::Units& units) {
 }
 
 #ifdef LOGGING_LEVEL_TRACE
-std::string EnhancedTripPath_Edge::ToString() const {
+std::string EnhancedTripLeg_Edge::ToString() const {
   std::string str;
   str.reserve(256);
 
@@ -625,7 +622,7 @@ std::string EnhancedTripPath_Edge::ToString() const {
   return str;
 }
 
-std::string EnhancedTripPath_Edge::ToParameterString() const {
+std::string EnhancedTripLeg_Edge::ToParameterString() const {
   const std::string delim = ", ";
   std::string str;
   str.reserve(128);
@@ -639,8 +636,8 @@ std::string EnhancedTripPath_Edge::ToParameterString() const {
   str += std::to_string(speed());
 
   str += delim;
-  str += "TripPath_RoadClass_";
-  str += TripPath_RoadClass_Name(road_class());
+  str += "TripLeg_RoadClass_";
+  str += TripLeg_RoadClass_Name(road_class());
 
   str += delim;
   str += std::to_string(begin_heading());
@@ -655,12 +652,12 @@ std::string EnhancedTripPath_Edge::ToParameterString() const {
   str += std::to_string(end_shape_index());
 
   str += delim;
-  str += "TripPath_Traversability_";
-  str += TripPath_Traversability_Name(traversability());
+  str += "TripLeg_Traversability_";
+  str += TripLeg_Traversability_Name(traversability());
 
   str += delim;
-  str += "TripPath_Use_";
-  str += TripPath_Use_Name(use());
+  str += "TripLeg_Use_";
+  str += TripLeg_Use_Name(use());
 
   str += delim;
   str += std::to_string(toll());
@@ -694,34 +691,34 @@ std::string EnhancedTripPath_Edge::ToParameterString() const {
 
   str += delim;
   if (this->has_travel_mode()) {
-    str += "TripPath_TravelMode_";
-    str += TripPath_TravelMode_Name(travel_mode());
+    str += "TripLeg_TravelMode_";
+    str += TripLeg_TravelMode_Name(travel_mode());
   }
 
   // NOTE: Current PopulateEdge implementation
 
   str += delim;
   if (this->has_vehicle_type()) {
-    str += "TripPath_VehicleType_";
-    str += TripPath_VehicleType_Name(vehicle_type());
+    str += "TripLeg_VehicleType_";
+    str += TripLeg_VehicleType_Name(vehicle_type());
   }
 
   str += delim;
   if (this->has_pedestrian_type()) {
-    str += "TripPath_PedestrianType_";
-    str += TripPath_PedestrianType_Name(pedestrian_type());
+    str += "TripLeg_PedestrianType_";
+    str += TripLeg_PedestrianType_Name(pedestrian_type());
   }
 
   str += delim;
   if (this->has_bicycle_type()) {
-    str += "TripPath_BicycleType_";
-    str += TripPath_BicycleType_Name(bicycle_type());
+    str += "TripLeg_BicycleType_";
+    str += TripLeg_BicycleType_Name(bicycle_type());
   }
 
   str += delim;
   if (this->has_transit_type()) {
-    str += "TripPath_TransitType_";
-    str += TripPath_TransitType_Name(transit_type());
+    str += "TripLeg_TransitType_";
+    str += TripLeg_TransitType_Name(transit_type());
   }
 
   str += delim;
@@ -796,15 +793,15 @@ std::string EnhancedTripPath_Edge::ToParameterString() const {
   str += std::to_string(lane_count());
 
   str += delim;
-  str += "TripPath_CycleLane_";
-  str += TripPath_CycleLane_Name(cycle_lane());
+  str += "TripLeg_CycleLane_";
+  str += TripLeg_CycleLane_Name(cycle_lane());
 
   str += delim;
   str += std::to_string(bicycle_network());
 
   str += delim;
-  str += "TripPath_Sidewalk_";
-  str += TripPath_Sidewalk_Name(sidewalk());
+  str += "TripLeg_Sidewalk_";
+  str += TripLeg_Sidewalk_Name(sidewalk());
 
   str += delim;
   str += std::to_string(density());
@@ -821,7 +818,7 @@ std::string EnhancedTripPath_Edge::ToParameterString() const {
   return str;
 }
 
-std::string EnhancedTripPath_Edge::StreetNamesToString(
+std::string EnhancedTripLeg_Edge::StreetNamesToString(
     const ::google::protobuf::RepeatedPtrField<::valhalla::odin::StreetName>& street_names) const {
   std::string str;
 
@@ -834,7 +831,7 @@ std::string EnhancedTripPath_Edge::StreetNamesToString(
   return str;
 }
 
-std::string EnhancedTripPath_Edge::StreetNamesToParameterString(
+std::string EnhancedTripLeg_Edge::StreetNamesToParameterString(
     const ::google::protobuf::RepeatedPtrField<::valhalla::odin::StreetName>& street_names) const {
   std::string str;
   std::string param_list;
@@ -857,8 +854,8 @@ std::string EnhancedTripPath_Edge::StreetNamesToParameterString(
   return str;
 }
 
-std::string EnhancedTripPath_Edge::SignElementsToString(
-    const ::google::protobuf::RepeatedPtrField<::valhalla::odin::TripPath_SignElement>& sign_elements)
+std::string EnhancedTripLeg_Edge::SignElementsToString(
+    const ::google::protobuf::RepeatedPtrField<::valhalla::odin::TripLeg_SignElement>& sign_elements)
     const {
   std::string str;
 
@@ -871,8 +868,8 @@ std::string EnhancedTripPath_Edge::SignElementsToString(
   return str;
 }
 
-std::string EnhancedTripPath_Edge::SignElementsToParameterString(
-    const ::google::protobuf::RepeatedPtrField<::valhalla::odin::TripPath_SignElement>& sign_elements)
+std::string EnhancedTripLeg_Edge::SignElementsToParameterString(
+    const ::google::protobuf::RepeatedPtrField<::valhalla::odin::TripLeg_SignElement>& sign_elements)
     const {
   std::string str;
   std::string param_list;
@@ -897,51 +894,51 @@ std::string EnhancedTripPath_Edge::SignElementsToParameterString(
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////
-// EnhancedTripPath_IntersectingEdge
+// EnhancedTripLeg_IntersectingEdge
 
-EnhancedTripPath_IntersectingEdge::EnhancedTripPath_IntersectingEdge(
-    TripPath_IntersectingEdge* mutable_intersecting_edge)
+EnhancedTripLeg_IntersectingEdge::EnhancedTripLeg_IntersectingEdge(
+    TripLeg_IntersectingEdge* mutable_intersecting_edge)
     : mutable_intersecting_edge_(mutable_intersecting_edge) {
 }
 
-bool EnhancedTripPath_IntersectingEdge::IsTraversable(const TripPath_TravelMode travel_mode) const {
-  TripPath_Traversability t;
+bool EnhancedTripLeg_IntersectingEdge::IsTraversable(const TripLeg_TravelMode travel_mode) const {
+  TripLeg_Traversability t;
 
   // Set traversability based on travel mode
-  if (travel_mode == TripPath_TravelMode_kDrive) {
+  if (travel_mode == TripLeg_TravelMode_kDrive) {
     t = driveability();
-  } else if (travel_mode == TripPath_TravelMode_kBicycle) {
+  } else if (travel_mode == TripLeg_TravelMode_kBicycle) {
     t = cyclability();
   } else {
     t = walkability();
   }
 
-  if (t != TripPath_Traversability_kNone) {
+  if (t != TripLeg_Traversability_kNone) {
     return true;
   }
   return false;
 }
 
-bool EnhancedTripPath_IntersectingEdge::IsTraversableOutbound(
-    const TripPath_TravelMode travel_mode) const {
-  TripPath_Traversability t;
+bool EnhancedTripLeg_IntersectingEdge::IsTraversableOutbound(
+    const TripLeg_TravelMode travel_mode) const {
+  TripLeg_Traversability t;
 
   // Set traversability based on travel mode
-  if (travel_mode == TripPath_TravelMode_kDrive) {
+  if (travel_mode == TripLeg_TravelMode_kDrive) {
     t = driveability();
-  } else if (travel_mode == TripPath_TravelMode_kBicycle) {
+  } else if (travel_mode == TripLeg_TravelMode_kBicycle) {
     t = cyclability();
   } else {
     t = walkability();
   }
 
-  if ((t == TripPath_Traversability_kForward) || (t == TripPath_Traversability_kBoth)) {
+  if ((t == TripLeg_Traversability_kForward) || (t == TripLeg_Traversability_kBoth)) {
     return true;
   }
   return false;
 }
 
-std::string EnhancedTripPath_IntersectingEdge::ToString() const {
+std::string EnhancedTripLeg_IntersectingEdge::ToString() const {
   std::string str;
   str.reserve(128);
 
@@ -967,17 +964,16 @@ std::string EnhancedTripPath_IntersectingEdge::ToString() const {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// EnhancedTripPath_Node
+// EnhancedTripLeg_Node
 
-EnhancedTripPath_Node::EnhancedTripPath_Node(TripPath_Node* mutable_node)
-    : mutable_node_(mutable_node) {
+EnhancedTripLeg_Node::EnhancedTripLeg_Node(TripLeg_Node* mutable_node) : mutable_node_(mutable_node) {
 }
 
-bool EnhancedTripPath_Node::HasIntersectingEdges() const {
+bool EnhancedTripLeg_Node::HasIntersectingEdges() const {
   return (intersecting_edge_size() > 0);
 }
 
-bool EnhancedTripPath_Node::HasIntersectingEdgeNameConsistency() const {
+bool EnhancedTripLeg_Node::HasIntersectingEdgeNameConsistency() const {
   for (const auto& xedge : intersecting_edge()) {
     if (xedge.curr_name_consistency() || xedge.prev_name_consistency()) {
       return true;
@@ -986,7 +982,7 @@ bool EnhancedTripPath_Node::HasIntersectingEdgeNameConsistency() const {
   return false;
 }
 
-bool EnhancedTripPath_Node::HasIntersectingEdgeCurrNameConsistency() const {
+bool EnhancedTripLeg_Node::HasIntersectingEdgeCurrNameConsistency() const {
   for (const auto& xedge : intersecting_edge()) {
     if (xedge.curr_name_consistency()) {
       return true;
@@ -995,14 +991,14 @@ bool EnhancedTripPath_Node::HasIntersectingEdgeCurrNameConsistency() const {
   return false;
 }
 
-std::unique_ptr<EnhancedTripPath_IntersectingEdge>
-EnhancedTripPath_Node::GetIntersectingEdge(size_t index) {
-  return midgard::make_unique<EnhancedTripPath_IntersectingEdge>(mutable_intersecting_edge(index));
+std::unique_ptr<EnhancedTripLeg_IntersectingEdge>
+EnhancedTripLeg_Node::GetIntersectingEdge(size_t index) {
+  return midgard::make_unique<EnhancedTripLeg_IntersectingEdge>(mutable_intersecting_edge(index));
 }
 
-void EnhancedTripPath_Node::CalculateRightLeftIntersectingEdgeCounts(
+void EnhancedTripLeg_Node::CalculateRightLeftIntersectingEdgeCounts(
     uint32_t from_heading,
-    const TripPath_TravelMode travel_mode,
+    const TripLeg_TravelMode travel_mode,
     IntersectingEdgeCounts& xedge_counts) {
   xedge_counts.clear();
 
@@ -1069,7 +1065,7 @@ void EnhancedTripPath_Node::CalculateRightLeftIntersectingEdgeCounts(
   }
 }
 
-bool EnhancedTripPath_Node::HasFowardIntersectingEdge(uint32_t from_heading) {
+bool EnhancedTripLeg_Node::HasFowardIntersectingEdge(uint32_t from_heading) {
 
   for (int i = 0; i < intersecting_edge_size(); ++i) {
     uint32_t intersecting_turn_degree =
@@ -1081,9 +1077,9 @@ bool EnhancedTripPath_Node::HasFowardIntersectingEdge(uint32_t from_heading) {
   return false;
 }
 
-bool EnhancedTripPath_Node::HasForwardTraversableIntersectingEdge(
+bool EnhancedTripLeg_Node::HasForwardTraversableIntersectingEdge(
     uint32_t from_heading,
-    const TripPath_TravelMode travel_mode) {
+    const TripLeg_TravelMode travel_mode) {
 
   for (int i = 0; i < intersecting_edge_size(); ++i) {
     uint32_t intersecting_turn_degree =
@@ -1097,8 +1093,8 @@ bool EnhancedTripPath_Node::HasForwardTraversableIntersectingEdge(
   return false;
 }
 
-bool EnhancedTripPath_Node::HasTraversableOutboundIntersectingEdge(
-    const TripPath_TravelMode travel_mode) {
+bool EnhancedTripLeg_Node::HasTraversableOutboundIntersectingEdge(
+    const TripLeg_TravelMode travel_mode) {
 
   for (int i = 0; i < intersecting_edge_size(); ++i) {
     if (GetIntersectingEdge(i)->IsTraversableOutbound(travel_mode)) {
@@ -1109,9 +1105,9 @@ bool EnhancedTripPath_Node::HasTraversableOutboundIntersectingEdge(
 }
 
 // TODO: refactor to clean up code
-uint32_t EnhancedTripPath_Node::GetStraightestTraversableIntersectingEdgeTurnDegree(
+uint32_t EnhancedTripLeg_Node::GetStraightestTraversableIntersectingEdgeTurnDegree(
     uint32_t from_heading,
-    const TripPath_TravelMode travel_mode) {
+    const TripLeg_TravelMode travel_mode) {
 
   uint32_t staightest_turn_degree = 180; // Initialize to reverse turn degree
   uint32_t staightest_delta = 180;       // Initialize to reverse delta
@@ -1130,9 +1126,9 @@ uint32_t EnhancedTripPath_Node::GetStraightestTraversableIntersectingEdgeTurnDeg
   return staightest_turn_degree;
 }
 
-bool EnhancedTripPath_Node::IsStraightestTraversableIntersectingEdgeReversed(
+bool EnhancedTripLeg_Node::IsStraightestTraversableIntersectingEdgeReversed(
     uint32_t from_heading,
-    const TripPath_TravelMode travel_mode) {
+    const TripLeg_TravelMode travel_mode) {
   uint32_t straightest_traversable_xedge_turn_degree =
       GetStraightestTraversableIntersectingEdgeTurnDegree(from_heading, travel_mode);
   // Determine if the straightest intersecting edge is in the reversed direction
@@ -1143,7 +1139,7 @@ bool EnhancedTripPath_Node::IsStraightestTraversableIntersectingEdgeReversed(
   return false;
 }
 
-uint32_t EnhancedTripPath_Node::GetStraightestIntersectingEdgeTurnDegree(uint32_t from_heading) {
+uint32_t EnhancedTripLeg_Node::GetStraightestIntersectingEdgeTurnDegree(uint32_t from_heading) {
 
   uint32_t staightest_turn_degree = 180; // Initialize to reverse turn degree
   uint32_t staightest_delta = 180;       // Initialize to reverse delta
@@ -1161,51 +1157,51 @@ uint32_t EnhancedTripPath_Node::GetStraightestIntersectingEdgeTurnDegree(uint32_
   return staightest_turn_degree;
 }
 
-bool EnhancedTripPath_Node::IsStreetIntersection() const {
-  return (type() == TripPath_Node_Type_kStreetIntersection);
+bool EnhancedTripLeg_Node::IsStreetIntersection() const {
+  return (type() == TripLeg_Node_Type_kStreetIntersection);
 }
 
-bool EnhancedTripPath_Node::IsGate() const {
-  return (type() == TripPath_Node_Type_kGate);
+bool EnhancedTripLeg_Node::IsGate() const {
+  return (type() == TripLeg_Node_Type_kGate);
 }
 
-bool EnhancedTripPath_Node::IsBollard() const {
-  return (type() == TripPath_Node_Type_kBollard);
+bool EnhancedTripLeg_Node::IsBollard() const {
+  return (type() == TripLeg_Node_Type_kBollard);
 }
 
-bool EnhancedTripPath_Node::IsTollBooth() const {
-  return (type() == TripPath_Node_Type_kTollBooth);
+bool EnhancedTripLeg_Node::IsTollBooth() const {
+  return (type() == TripLeg_Node_Type_kTollBooth);
 }
 
-bool EnhancedTripPath_Node::IsTransitEgress() const {
-  return (type() == TripPath_Node_Type_kTransitEgress);
+bool EnhancedTripLeg_Node::IsTransitEgress() const {
+  return (type() == TripLeg_Node_Type_kTransitEgress);
 }
 
-bool EnhancedTripPath_Node::IsTransitStation() const {
-  return (type() == TripPath_Node_Type_kTransitStation);
+bool EnhancedTripLeg_Node::IsTransitStation() const {
+  return (type() == TripLeg_Node_Type_kTransitStation);
 }
 
-bool EnhancedTripPath_Node::IsTransitPlatform() const {
-  return (type() == TripPath_Node_Type_kTransitPlatform);
+bool EnhancedTripLeg_Node::IsTransitPlatform() const {
+  return (type() == TripLeg_Node_Type_kTransitPlatform);
 }
 
-bool EnhancedTripPath_Node::IsBikeShare() const {
-  return (type() == TripPath_Node_Type_kBikeShare);
+bool EnhancedTripLeg_Node::IsBikeShare() const {
+  return (type() == TripLeg_Node_Type_kBikeShare);
 }
 
-bool EnhancedTripPath_Node::IsParking() const {
-  return (type() == TripPath_Node_Type_kParking);
+bool EnhancedTripLeg_Node::IsParking() const {
+  return (type() == TripLeg_Node_Type_kParking);
 }
 
-bool EnhancedTripPath_Node::IsMotorwayJunction() const {
-  return (type() == TripPath_Node_Type_kMotorwayJunction);
+bool EnhancedTripLeg_Node::IsMotorwayJunction() const {
+  return (type() == TripLeg_Node_Type_kMotorwayJunction);
 }
 
-bool EnhancedTripPath_Node::IsBorderControl() const {
-  return (type() == TripPath_Node_Type_kBorderControl);
+bool EnhancedTripLeg_Node::IsBorderControl() const {
+  return (type() == TripLeg_Node_Type_kBorderControl);
 }
 
-std::string EnhancedTripPath_Node::ToString() const {
+std::string EnhancedTripLeg_Node::ToString() const {
   std::string str;
   str.reserve(256);
 
@@ -1254,13 +1250,13 @@ std::string EnhancedTripPath_Node::ToString() const {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// EnhancedTripPath_Admin
+// EnhancedTripLeg_Admin
 
-EnhancedTripPath_Admin::EnhancedTripPath_Admin(TripPath_Admin* mutable_admin)
+EnhancedTripLeg_Admin::EnhancedTripLeg_Admin(TripLeg_Admin* mutable_admin)
     : mutable_admin_(mutable_admin) {
 }
 
-std::string EnhancedTripPath_Admin::ToString() const {
+std::string EnhancedTripLeg_Admin::ToString() const {
   std::string str;
   str.reserve(256);
 

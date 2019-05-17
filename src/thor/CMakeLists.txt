@@ -8,7 +8,7 @@ set(sources
   map_matcher.cc
   multimodal.cc
   optimizer.cc
-  trippathbuilder.cc
+  triplegbuilder.cc
   attributes_controller.cc
   route_matcher.cc
   timedep_forward.cc

@@ -9,19 +9,19 @@
 #include <vector>
 
 #include <valhalla/proto/directions_options.pb.h>
-#include <valhalla/proto/trippath.pb.h>
+#include <valhalla/proto/trip.pb.h>
 
 namespace valhalla {
 namespace odin {
 
-class EnhancedTripPath;
-class EnhancedTripPath_Edge;
-class EnhancedTripPath_Node;
-class EnhancedTripPath_Admin;
+class EnhancedTripLeg;
+class EnhancedTripLeg_Edge;
+class EnhancedTripLeg_Node;
+class EnhancedTripLeg_Admin;
 
-class EnhancedTripPath {
+class EnhancedTripLeg {
 public:
-  EnhancedTripPath(TripPath& trip_path);
+  EnhancedTripLeg(TripLeg& trip_path);
 
   const std::string& shape() const {
     return trip_path_.shape();
@@ -31,15 +31,15 @@ public:
     return trip_path_.node_size();
   }
 
-  const ::valhalla::odin::TripPath_Node& node(int index) const {
+  const ::valhalla::odin::TripLeg_Node& node(int index) const {
     return trip_path_.node(index);
   }
 
-  ::valhalla::odin::TripPath_Node* mutable_node(int index) {
+  ::valhalla::odin::TripLeg_Node* mutable_node(int index) {
     return trip_path_.mutable_node(index);
   }
 
-  const ::google::protobuf::RepeatedPtrField<::valhalla::odin::TripPath_Node>& node() const {
+  const ::google::protobuf::RepeatedPtrField<::valhalla::odin::TripLeg_Node>& node() const {
     return trip_path_.node();
   }
 
@@ -55,7 +55,7 @@ public:
     return trip_path_.admin_size();
   }
 
-  ::valhalla::odin::TripPath_Admin* mutable_admin(int index) {
+  ::valhalla::odin::TripLeg_Admin* mutable_admin(int index) {
     return trip_path_.mutable_admin(index);
   }
 
@@ -83,13 +83,13 @@ public:
     return trip_path_.bbox();
   }
 
-  std::unique_ptr<EnhancedTripPath_Node> GetEnhancedNode(const int node_index);
+  std::unique_ptr<EnhancedTripLeg_Node> GetEnhancedNode(const int node_index);
 
-  std::unique_ptr<EnhancedTripPath_Edge> GetPrevEdge(const int node_index, int delta = 1);
+  std::unique_ptr<EnhancedTripLeg_Edge> GetPrevEdge(const int node_index, int delta = 1);
 
-  std::unique_ptr<EnhancedTripPath_Edge> GetCurrEdge(const int node_index);
+  std::unique_ptr<EnhancedTripLeg_Edge> GetCurrEdge(const int node_index);
 
-  std::unique_ptr<EnhancedTripPath_Edge> GetNextEdge(const int node_index, int delta = 1);
+  std::unique_ptr<EnhancedTripLeg_Edge> GetNextEdge(const int node_index, int delta = 1);
 
   bool IsValidNodeIndex(int node_index) const;
 
@@ -99,7 +99,7 @@ public:
 
   int GetLastNodeIndex() const;
 
-  std::unique_ptr<EnhancedTripPath_Admin> GetAdmin(size_t index);
+  std::unique_ptr<EnhancedTripLeg_Admin> GetAdmin(size_t index);
 
   std::string GetCountryCode(int node_index);
 
@@ -112,12 +112,12 @@ public:
   float GetLength(const DirectionsOptions::Units& units);
 
 protected:
-  TripPath& trip_path_;
+  TripLeg& trip_path_;
 };
 
-class EnhancedTripPath_Edge {
+class EnhancedTripLeg_Edge {
 public:
-  EnhancedTripPath_Edge(TripPath_Edge* mutable_edge);
+  EnhancedTripLeg_Edge(TripLeg_Edge* mutable_edge);
 
   int name_size() const {
     return mutable_edge_->name_size();
@@ -139,7 +139,7 @@ public:
     return mutable_edge_->speed();
   }
 
-  ::valhalla::odin::TripPath_RoadClass road_class() const {
+  ::valhalla::odin::TripLeg_RoadClass road_class() const {
     return mutable_edge_->road_class();
   }
 
@@ -167,11 +167,11 @@ public:
     return mutable_edge_->end_shape_index();
   }
 
-  ::valhalla::odin::TripPath_Traversability traversability() const {
+  ::valhalla::odin::TripLeg_Traversability traversability() const {
     return mutable_edge_->traversability();
   }
 
-  ::valhalla::odin::TripPath_Use use() const {
+  ::valhalla::odin::TripLeg_Use use() const {
     return mutable_edge_->use();
   }
 
@@ -179,7 +179,7 @@ public:
     return mutable_edge_->has_vehicle_type();
   }
 
-  ::valhalla::odin::TripPath_VehicleType vehicle_type() const {
+  ::valhalla::odin::TripLeg_VehicleType vehicle_type() const {
     return mutable_edge_->vehicle_type();
   }
 
@@ -187,7 +187,7 @@ public:
     return mutable_edge_->has_pedestrian_type();
   }
 
-  ::valhalla::odin::TripPath_PedestrianType pedestrian_type() const {
+  ::valhalla::odin::TripLeg_PedestrianType pedestrian_type() const {
     return mutable_edge_->pedestrian_type();
   }
 
@@ -195,7 +195,7 @@ public:
     return mutable_edge_->has_bicycle_type();
   }
 
-  ::valhalla::odin::TripPath_BicycleType bicycle_type() const {
+  ::valhalla::odin::TripLeg_BicycleType bicycle_type() const {
     return mutable_edge_->bicycle_type();
   }
 
@@ -203,7 +203,7 @@ public:
     return mutable_edge_->has_transit_type();
   }
 
-  ::valhalla::odin::TripPath_TransitType transit_type() const {
+  ::valhalla::odin::TripLeg_TransitType transit_type() const {
     return mutable_edge_->transit_type();
     return mutable_edge_->transit_type();
   }
@@ -236,7 +236,7 @@ public:
     return mutable_edge_->drive_on_right();
   }
 
-  ::valhalla::odin::TripPath_Surface surface() const {
+  ::valhalla::odin::TripLeg_Surface surface() const {
     return mutable_edge_->surface();
   }
 
@@ -244,7 +244,7 @@ public:
     return mutable_edge_->has_sign();
   }
 
-  const ::valhalla::odin::TripPath_Sign& sign() const {
+  const ::valhalla::odin::TripLeg_Sign& sign() const {
     return mutable_edge_->sign();
   }
 
@@ -252,7 +252,7 @@ public:
     return mutable_edge_->has_travel_mode();
   }
 
-  ::valhalla::odin::TripPath_TravelMode travel_mode() const {
+  ::valhalla::odin::TripLeg_TravelMode travel_mode() const {
     return mutable_edge_->travel_mode();
   }
 
@@ -260,7 +260,7 @@ public:
     return mutable_edge_->has_transit_route_info();
   }
 
-  const ::valhalla::odin::TripPath_TransitRouteInfo& transit_route_info() const {
+  const ::valhalla::odin::TripLeg_TransitRouteInfo& transit_route_info() const {
     return mutable_edge_->transit_route_info();
   }
 
@@ -288,7 +288,7 @@ public:
     return mutable_edge_->lane_count();
   }
 
-  ::valhalla::odin::TripPath_CycleLane cycle_lane() const {
+  ::valhalla::odin::TripLeg_CycleLane cycle_lane() const {
     return mutable_edge_->cycle_lane();
   }
 
@@ -296,7 +296,7 @@ public:
     return mutable_edge_->bicycle_network();
   }
 
-  ::valhalla::odin::TripPath_Sidewalk sidewalk() const {
+  ::valhalla::odin::TripLeg_Sidewalk sidewalk() const {
     return mutable_edge_->sidewalk();
   }
 
@@ -375,7 +375,7 @@ public:
 #endif
 
 protected:
-  TripPath_Edge* mutable_edge_;
+  TripLeg_Edge* mutable_edge_;
 
 #ifdef LOGGING_LEVEL_TRACE
   std::string StreetNamesToString(
@@ -385,18 +385,18 @@ protected:
       const ::google::protobuf::RepeatedPtrField<::valhalla::odin::StreetName>& street_names) const;
 
   std::string SignElementsToString(
-      const ::google::protobuf::RepeatedPtrField<::valhalla::odin::TripPath_SignElement>&
+      const ::google::protobuf::RepeatedPtrField<::valhalla::odin::TripLeg_SignElement>&
           sign_elements) const;
 
   std::string SignElementsToParameterString(
-      const ::google::protobuf::RepeatedPtrField<::valhalla::odin::TripPath_SignElement>&
+      const ::google::protobuf::RepeatedPtrField<::valhalla::odin::TripLeg_SignElement>&
           sign_elements) const;
 #endif
 };
 
-class EnhancedTripPath_IntersectingEdge {
+class EnhancedTripLeg_IntersectingEdge {
 public:
-  EnhancedTripPath_IntersectingEdge(TripPath_IntersectingEdge* mutable_intersecting_edge);
+  EnhancedTripLeg_IntersectingEdge(TripLeg_IntersectingEdge* mutable_intersecting_edge);
 
   uint32_t begin_heading() const {
     return mutable_intersecting_edge_->begin_heading();
@@ -410,26 +410,26 @@ public:
     return mutable_intersecting_edge_->curr_name_consistency();
   }
 
-  ::valhalla::odin::TripPath_Traversability driveability() const {
+  ::valhalla::odin::TripLeg_Traversability driveability() const {
     return mutable_intersecting_edge_->driveability();
   }
 
-  ::valhalla::odin::TripPath_Traversability cyclability() const {
+  ::valhalla::odin::TripLeg_Traversability cyclability() const {
     return mutable_intersecting_edge_->cyclability();
   }
 
-  ::valhalla::odin::TripPath_Traversability walkability() const {
+  ::valhalla::odin::TripLeg_Traversability walkability() const {
     return mutable_intersecting_edge_->walkability();
   }
 
-  bool IsTraversable(const TripPath_TravelMode travel_mode) const;
+  bool IsTraversable(const TripLeg_TravelMode travel_mode) const;
 
-  bool IsTraversableOutbound(const TripPath_TravelMode travel_mode) const;
+  bool IsTraversableOutbound(const TripLeg_TravelMode travel_mode) const;
 
   std::string ToString() const;
 
 protected:
-  TripPath_IntersectingEdge* mutable_intersecting_edge_;
+  TripLeg_IntersectingEdge* mutable_intersecting_edge_;
 };
 
 struct IntersectingEdgeCounts {
@@ -472,9 +472,9 @@ struct IntersectingEdgeCounts {
   uint32_t left_similar_traversable_outbound;
 };
 
-class EnhancedTripPath_Node {
+class EnhancedTripLeg_Node {
 public:
-  EnhancedTripPath_Node(TripPath_Node* mutable_node);
+  EnhancedTripLeg_Node(TripLeg_Node* mutable_node);
 
   int intersecting_edge_size() const {
     return mutable_node_->intersecting_edge_size();
@@ -488,24 +488,24 @@ public:
     return mutable_node_->fork();
   }
 
-  const ::valhalla::odin::TripPath_IntersectingEdge& intersecting_edge(int index) const {
+  const ::valhalla::odin::TripLeg_IntersectingEdge& intersecting_edge(int index) const {
     return mutable_node_->intersecting_edge(index);
   }
 
-  ::valhalla::odin::TripPath_IntersectingEdge* mutable_intersecting_edge(int index) {
+  ::valhalla::odin::TripLeg_IntersectingEdge* mutable_intersecting_edge(int index) {
     return mutable_node_->mutable_intersecting_edge(index);
   }
 
-  const ::google::protobuf::RepeatedPtrField<::valhalla::odin::TripPath_IntersectingEdge>&
+  const ::google::protobuf::RepeatedPtrField<::valhalla::odin::TripLeg_IntersectingEdge>&
   intersecting_edge() const {
     return mutable_node_->intersecting_edge();
   }
 
-  const ::valhalla::odin::TripPath_Edge& edge() const {
+  const ::valhalla::odin::TripLeg_Edge& edge() const {
     return mutable_node_->edge();
   }
 
-  ::valhalla::odin::TripPath_Node_Type type() const {
+  ::valhalla::odin::TripLeg_Node_Type type() const {
     return mutable_node_->type();
   }
 
@@ -531,26 +531,26 @@ public:
 
   bool HasIntersectingEdgeCurrNameConsistency() const;
 
-  std::unique_ptr<EnhancedTripPath_IntersectingEdge> GetIntersectingEdge(size_t index);
+  std::unique_ptr<EnhancedTripLeg_IntersectingEdge> GetIntersectingEdge(size_t index);
 
   void CalculateRightLeftIntersectingEdgeCounts(uint32_t from_heading,
-                                                const TripPath_TravelMode travel_mode,
+                                                const TripLeg_TravelMode travel_mode,
                                                 IntersectingEdgeCounts& xedge_counts);
 
   bool HasFowardIntersectingEdge(uint32_t from_heading);
 
   bool HasForwardTraversableIntersectingEdge(uint32_t from_heading,
-                                             const TripPath_TravelMode travel_mode);
+                                             const TripLeg_TravelMode travel_mode);
 
-  bool HasTraversableOutboundIntersectingEdge(const TripPath_TravelMode travel_mode);
+  bool HasTraversableOutboundIntersectingEdge(const TripLeg_TravelMode travel_mode);
 
   uint32_t GetStraightestIntersectingEdgeTurnDegree(uint32_t from_heading);
 
   uint32_t GetStraightestTraversableIntersectingEdgeTurnDegree(uint32_t from_heading,
-                                                               const TripPath_TravelMode travel_mode);
+                                                               const TripLeg_TravelMode travel_mode);
 
   bool IsStraightestTraversableIntersectingEdgeReversed(uint32_t from_heading,
-                                                        const TripPath_TravelMode travel_mode);
+                                                        const TripLeg_TravelMode travel_mode);
 
   // Type
   bool IsStreetIntersection() const;
@@ -568,12 +568,12 @@ public:
   std::string ToString() const;
 
 protected:
-  TripPath_Node* mutable_node_;
+  TripLeg_Node* mutable_node_;
 };
 
-class EnhancedTripPath_Admin {
+class EnhancedTripLeg_Admin {
 public:
-  EnhancedTripPath_Admin(TripPath_Admin* mutable_admin);
+  EnhancedTripLeg_Admin(TripLeg_Admin* mutable_admin);
 
   const std::string& country_code() const {
     return mutable_admin_->country_code();
@@ -594,87 +594,87 @@ public:
   std::string ToString() const;
 
 protected:
-  TripPath_Admin* mutable_admin_;
+  TripLeg_Admin* mutable_admin_;
 };
 
-const std::unordered_map<uint8_t, std::string> TripPath_TravelMode_Strings{
-    {static_cast<uint8_t>(TripPath_TravelMode_kDrive), "drive"},
-    {static_cast<uint8_t>(TripPath_TravelMode_kPedestrian), "pedestrian"},
-    {static_cast<uint8_t>(TripPath_TravelMode_kBicycle), "bicycle"},
-    {static_cast<uint8_t>(TripPath_TravelMode_kTransit), "transit"},
+const std::unordered_map<uint8_t, std::string> TripLeg_TravelMode_Strings{
+    {static_cast<uint8_t>(TripLeg_TravelMode_kDrive), "drive"},
+    {static_cast<uint8_t>(TripLeg_TravelMode_kPedestrian), "pedestrian"},
+    {static_cast<uint8_t>(TripLeg_TravelMode_kBicycle), "bicycle"},
+    {static_cast<uint8_t>(TripLeg_TravelMode_kTransit), "transit"},
 };
-inline std::string to_string(TripPath_TravelMode travel_mode) {
-  auto i = TripPath_TravelMode_Strings.find(static_cast<uint8_t>(travel_mode));
-  if (i == TripPath_TravelMode_Strings.cend()) {
+inline std::string to_string(TripLeg_TravelMode travel_mode) {
+  auto i = TripLeg_TravelMode_Strings.find(static_cast<uint8_t>(travel_mode));
+  if (i == TripLeg_TravelMode_Strings.cend()) {
     return "null";
   }
   return i->second;
 }
 
-const std::unordered_map<uint8_t, std::string> TripPath_VehicleType_Strings{
-    {static_cast<uint8_t>(TripPath_VehicleType_kCar), "car"},
-    {static_cast<uint8_t>(TripPath_VehicleType_kMotorcycle), "motorcycle"},
-    {static_cast<uint8_t>(TripPath_VehicleType_kAutoBus), "bus"},
-    {static_cast<uint8_t>(TripPath_VehicleType_kTractorTrailer), "tractor_trailer"},
+const std::unordered_map<uint8_t, std::string> TripLeg_VehicleType_Strings{
+    {static_cast<uint8_t>(TripLeg_VehicleType_kCar), "car"},
+    {static_cast<uint8_t>(TripLeg_VehicleType_kMotorcycle), "motorcycle"},
+    {static_cast<uint8_t>(TripLeg_VehicleType_kAutoBus), "bus"},
+    {static_cast<uint8_t>(TripLeg_VehicleType_kTractorTrailer), "tractor_trailer"},
 };
-inline std::string to_string(TripPath_VehicleType vehicle_type) {
-  auto i = TripPath_VehicleType_Strings.find(static_cast<uint8_t>(vehicle_type));
-  if (i == TripPath_VehicleType_Strings.cend()) {
+inline std::string to_string(TripLeg_VehicleType vehicle_type) {
+  auto i = TripLeg_VehicleType_Strings.find(static_cast<uint8_t>(vehicle_type));
+  if (i == TripLeg_VehicleType_Strings.cend()) {
     return "null";
   }
   return i->second;
 }
 
-const std::unordered_map<uint8_t, std::string> TripPath_PedestrianType_Strings{
-    {static_cast<uint8_t>(TripPath_PedestrianType_kFoot), "foot"},
-    {static_cast<uint8_t>(TripPath_PedestrianType_kWheelchair), "wheelchair"},
-    {static_cast<uint8_t>(TripPath_PedestrianType_kSegway), "segway"},
+const std::unordered_map<uint8_t, std::string> TripLeg_PedestrianType_Strings{
+    {static_cast<uint8_t>(TripLeg_PedestrianType_kFoot), "foot"},
+    {static_cast<uint8_t>(TripLeg_PedestrianType_kWheelchair), "wheelchair"},
+    {static_cast<uint8_t>(TripLeg_PedestrianType_kSegway), "segway"},
 };
-inline std::string to_string(TripPath_PedestrianType pedestrian_type) {
-  auto i = TripPath_PedestrianType_Strings.find(static_cast<uint8_t>(pedestrian_type));
-  if (i == TripPath_PedestrianType_Strings.cend()) {
+inline std::string to_string(TripLeg_PedestrianType pedestrian_type) {
+  auto i = TripLeg_PedestrianType_Strings.find(static_cast<uint8_t>(pedestrian_type));
+  if (i == TripLeg_PedestrianType_Strings.cend()) {
     return "null";
   }
   return i->second;
 }
 
-const std::unordered_map<uint8_t, std::string> TripPath_BicycleType_Strings{
-    {static_cast<uint8_t>(TripPath_BicycleType_kRoad), "road"},
-    {static_cast<uint8_t>(TripPath_BicycleType_kCross), "cross"},
-    {static_cast<uint8_t>(TripPath_BicycleType_kHybrid), "hybrid"},
-    {static_cast<uint8_t>(TripPath_BicycleType_kMountain), "mountain"},
+const std::unordered_map<uint8_t, std::string> TripLeg_BicycleType_Strings{
+    {static_cast<uint8_t>(TripLeg_BicycleType_kRoad), "road"},
+    {static_cast<uint8_t>(TripLeg_BicycleType_kCross), "cross"},
+    {static_cast<uint8_t>(TripLeg_BicycleType_kHybrid), "hybrid"},
+    {static_cast<uint8_t>(TripLeg_BicycleType_kMountain), "mountain"},
 };
-inline std::string to_string(TripPath_BicycleType bicycle_type) {
-  auto i = TripPath_BicycleType_Strings.find(static_cast<uint8_t>(bicycle_type));
-  if (i == TripPath_BicycleType_Strings.cend()) {
+inline std::string to_string(TripLeg_BicycleType bicycle_type) {
+  auto i = TripLeg_BicycleType_Strings.find(static_cast<uint8_t>(bicycle_type));
+  if (i == TripLeg_BicycleType_Strings.cend()) {
     return "null";
   }
   return i->second;
 }
 
-const std::unordered_map<uint8_t, std::string> TripPath_Sidewalk_Strings = {
-    {static_cast<uint8_t>(TripPath_Sidewalk_kNoSidewalk), "none"},
-    {static_cast<uint8_t>(TripPath_Sidewalk_kLeft), "left"},
-    {static_cast<uint8_t>(TripPath_Sidewalk_kRight), "right"},
-    {static_cast<uint8_t>(TripPath_Sidewalk_kBothSides), "both"},
+const std::unordered_map<uint8_t, std::string> TripLeg_Sidewalk_Strings = {
+    {static_cast<uint8_t>(TripLeg_Sidewalk_kNoSidewalk), "none"},
+    {static_cast<uint8_t>(TripLeg_Sidewalk_kLeft), "left"},
+    {static_cast<uint8_t>(TripLeg_Sidewalk_kRight), "right"},
+    {static_cast<uint8_t>(TripLeg_Sidewalk_kBothSides), "both"},
 };
-inline std::string to_string(TripPath_Sidewalk s) {
-  auto i = TripPath_Sidewalk_Strings.find(static_cast<uint8_t>(s));
-  if (i == TripPath_Sidewalk_Strings.cend()) {
+inline std::string to_string(TripLeg_Sidewalk s) {
+  auto i = TripLeg_Sidewalk_Strings.find(static_cast<uint8_t>(s));
+  if (i == TripLeg_Sidewalk_Strings.cend()) {
     return "null";
   }
   return i->second;
 }
 
-const std::unordered_map<uint8_t, std::string> TripPath_Traversability_Strings = {
-    {static_cast<uint8_t>(TripPath_Traversability_kNone), "none"},
-    {static_cast<uint8_t>(TripPath_Traversability_kForward), "forward"},
-    {static_cast<uint8_t>(TripPath_Traversability_kBackward), "backward"},
-    {static_cast<uint8_t>(TripPath_Traversability_kBoth), "both"},
+const std::unordered_map<uint8_t, std::string> TripLeg_Traversability_Strings = {
+    {static_cast<uint8_t>(TripLeg_Traversability_kNone), "none"},
+    {static_cast<uint8_t>(TripLeg_Traversability_kForward), "forward"},
+    {static_cast<uint8_t>(TripLeg_Traversability_kBackward), "backward"},
+    {static_cast<uint8_t>(TripLeg_Traversability_kBoth), "both"},
 };
-inline std::string to_string(TripPath_Traversability t) {
-  auto i = TripPath_Traversability_Strings.find(static_cast<uint8_t>(t));
-  if (i == TripPath_Traversability_Strings.cend()) {
+inline std::string to_string(TripLeg_Traversability t) {
+  auto i = TripLeg_Traversability_Strings.find(static_cast<uint8_t>(t));
+  if (i == TripLeg_Traversability_Strings.cend()) {
     return "null";
   }
   return i->second;

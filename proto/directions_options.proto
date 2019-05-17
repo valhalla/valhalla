@@ -177,4 +177,5 @@ message DirectionsOptions {
   optional float breakage_distance = 36;                                  // Map-matching breaking distance (distance between GPS trace points)
   optional bool use_timestamps = 37 [default = false];                    // Use timestamps to compute elapsed time for trace_route and trace_attributes
   optional ShapeFormat shape_format = 38 [default = polyline6];           // Shape format (defaults to polyline6 encoding)
+  optional uint32 alternates = 39;                                        // Maximum number of alternate routes that can be returned
 }

@@ -12,9 +12,9 @@
 #include "odin/signs.h"
 #include "odin/util.h"
 
+#include <valhalla/proto/trip.pb.h>
 #include <valhalla/proto/tripcommon.pb.h>
 #include <valhalla/proto/tripdirections.pb.h>
-#include <valhalla/proto/trippath.pb.h>
 
 #include "test.h"
 
@@ -32,7 +32,7 @@ class NarrativeBuilderTest : public NarrativeBuilder {
 public:
   NarrativeBuilderTest(const DirectionsOptions& directions_options,
                        const NarrativeDictionary& dictionary,
-                       const EnhancedTripPath* trip_path = nullptr)
+                       const EnhancedTripLeg* trip_path = nullptr)
       : NarrativeBuilder(directions_options, trip_path, dictionary) {
   }
 
@@ -261,7 +261,7 @@ TransitPlatformInfo GetTransitPlatformInfo(TransitPlatformInfo_Type type,
 void TryBuild(const DirectionsOptions& directions_options,
               std::list<Maneuver>& maneuvers,
               std::list<Maneuver>& expected_maneuvers,
-              const EnhancedTripPath* etp = nullptr) {
+              const EnhancedTripLeg* etp = nullptr) {
   std::unique_ptr<NarrativeBuilder> narrative_builder =
       NarrativeBuilderFactory::Create(directions_options, etp);
   narrative_builder->Build(directions_options, etp, maneuvers);
@@ -353,7 +353,7 @@ void PopulateStartManeuverList_0(std::list<Maneuver>& maneuvers,
                    {}, "", 0.786592, 0, 0, Maneuver::RelativeDirection::kNone,
                    TripDirections_Maneuver_CardinalDirection_kEast, 88, 80, 0, 1, 0, 7, 0, 0, 0, 0, 0,
                    0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", 0);
-  maneuver.set_travel_mode(TripPath_TravelMode_kTransit); // So it will just say Head
+  maneuver.set_travel_mode(TripLeg_TravelMode_kTransit); // So it will just say Head
 }
 
 void PopulateStartManeuverList_1(std::list<Maneuver>& maneuvers,
@@ -366,7 +366,7 @@ void PopulateStartManeuverList_1(std::list<Maneuver>& maneuvers,
                    Maneuver::RelativeDirection::kNone,
                    TripDirections_Maneuver_CardinalDirection_kSouthWest, 209, 209, 0, 3, 0, 3, 0, 0,
                    0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", 0);
-  maneuver.set_travel_mode(TripPath_TravelMode_kTransit); // So it will just say Head
+  maneuver.set_travel_mode(TripLeg_TravelMode_kTransit); // So it will just say Head
 }
 
 void PopulateStartManeuverList_2(std::list<Maneuver>& maneuvers,
@@ -380,7 +380,7 @@ void PopulateStartManeuverList_2(std::list<Maneuver>& maneuvers,
                    Maneuver::RelativeDirection::kNone,
                    TripDirections_Maneuver_CardinalDirection_kSouth, 173, 143, 0, 45, 0, 88, 0, 0, 0,
                    0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", 0);
-  maneuver.set_travel_mode(TripPath_TravelMode_kTransit); // So it will just say Head
+  maneuver.set_travel_mode(TripLeg_TravelMode_kTransit); // So it will just say Head
 }
 
 void PopulateStartManeuverList_4(std::list<Maneuver>& maneuvers,
@@ -392,7 +392,7 @@ void PopulateStartManeuverList_4(std::list<Maneuver>& maneuvers,
                    {}, "", 0.786592, 0, 0, Maneuver::RelativeDirection::kNone,
                    TripDirections_Maneuver_CardinalDirection_kEast, 88, 80, 0, 1, 0, 7, 0, 0, 0, 0, 0,
                    0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", 0);
-  maneuver.set_travel_mode(TripPath_TravelMode_kDrive);
+  maneuver.set_travel_mode(TripLeg_TravelMode_kDrive);
 }
 
 void PopulateStartManeuverList_5(std::list<Maneuver>& maneuvers,
@@ -405,7 +405,7 @@ void PopulateStartManeuverList_5(std::list<Maneuver>& maneuvers,
                    Maneuver::RelativeDirection::kNone,
                    TripDirections_Maneuver_CardinalDirection_kSouthWest, 209, 209, 0, 3, 0, 3, 0, 0,
                    0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", 0);
-  maneuver.set_travel_mode(TripPath_TravelMode_kDrive);
+  maneuver.set_travel_mode(TripLeg_TravelMode_kDrive);
 }
 
 void PopulateStartManeuverList_6(std::list<Maneuver>& maneuvers,
@@ -419,7 +419,7 @@ void PopulateStartManeuverList_6(std::list<Maneuver>& maneuvers,
                    Maneuver::RelativeDirection::kNone,
                    TripDirections_Maneuver_CardinalDirection_kSouth, 173, 143, 0, 45, 0, 88, 0, 0, 0,
                    0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", 0);
-  maneuver.set_travel_mode(TripPath_TravelMode_kDrive);
+  maneuver.set_travel_mode(TripLeg_TravelMode_kDrive);
 }
 
 void PopulateStartManeuverList_8(std::list<Maneuver>& maneuvers,
@@ -431,7 +431,7 @@ void PopulateStartManeuverList_8(std::list<Maneuver>& maneuvers,
                    {}, "", 0.786592, 0, 0, Maneuver::RelativeDirection::kNone,
                    TripDirections_Maneuver_CardinalDirection_kEast, 88, 80, 0, 1, 0, 7, 0, 0, 0, 0, 0,
                    0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", 0);
-  maneuver.set_travel_mode(TripPath_TravelMode_kPedestrian);
+  maneuver.set_travel_mode(TripLeg_TravelMode_kPedestrian);
 }
 
 void PopulateStartManeuverList_9(std::list<Maneuver>& maneuvers,
@@ -444,7 +444,7 @@ void PopulateStartManeuverList_9(std::list<Maneuver>& maneuvers,
                    Maneuver::RelativeDirection::kNone,
                    TripDirections_Maneuver_CardinalDirection_kSouthWest, 209, 209, 0, 3, 0, 3, 0, 0,
                    0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", 0);
-  maneuver.set_travel_mode(TripPath_TravelMode_kPedestrian);
+  maneuver.set_travel_mode(TripLeg_TravelMode_kPedestrian);
 }
 
 void PopulateStartManeuverList_9_unnamed_walkway(std::list<Maneuver>& maneuvers,
@@ -457,7 +457,7 @@ void PopulateStartManeuverList_9_unnamed_walkway(std::list<Maneuver>& maneuvers,
                    TripDirections_Maneuver_CardinalDirection_kSouthWest, 213, 209, 0, 3, 0, 4, 0, 0,
                    0, 0, 0, 0, 1, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", 0, 1, 0, 0, 36,
                    0);
-  maneuver.set_travel_mode(TripPath_TravelMode_kPedestrian);
+  maneuver.set_travel_mode(TripLeg_TravelMode_kPedestrian);
 }
 
 void PopulateStartManeuverList_10(std::list<Maneuver>& maneuvers,
@@ -471,7 +471,7 @@ void PopulateStartManeuverList_10(std::list<Maneuver>& maneuvers,
                    Maneuver::RelativeDirection::kNone,
                    TripDirections_Maneuver_CardinalDirection_kSouth, 173, 143, 0, 45, 0, 88, 0, 0, 0,
                    0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", 0);
-  maneuver.set_travel_mode(TripPath_TravelMode_kPedestrian);
+  maneuver.set_travel_mode(TripLeg_TravelMode_kPedestrian);
 }
 
 void PopulateStartManeuverList_16(std::list<Maneuver>& maneuvers,
@@ -483,7 +483,7 @@ void PopulateStartManeuverList_16(std::list<Maneuver>& maneuvers,
                    {}, "", 0.786592, 0, 0, Maneuver::RelativeDirection::kNone,
                    TripDirections_Maneuver_CardinalDirection_kEast, 88, 80, 0, 1, 0, 7, 0, 0, 0, 0, 0,
                    0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", 0);
-  maneuver.set_travel_mode(TripPath_TravelMode_kBicycle);
+  maneuver.set_travel_mode(TripLeg_TravelMode_kBicycle);
 }
 
 void PopulateStartManeuverList_17(std::list<Maneuver>& maneuvers,
@@ -496,7 +496,7 @@ void PopulateStartManeuverList_17(std::list<Maneuver>& maneuvers,
                    Maneuver::RelativeDirection::kNone,
                    TripDirections_Maneuver_CardinalDirection_kSouthWest, 209, 209, 0, 3, 0, 3, 0, 0,
                    0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", 0);
-  maneuver.set_travel_mode(TripPath_TravelMode_kBicycle);
+  maneuver.set_travel_mode(TripLeg_TravelMode_kBicycle);
 }
 
 void PopulateStartManeuverList_17_unnamed_cycleway(std::list<Maneuver>& maneuvers,
@@ -508,7 +508,7 @@ void PopulateStartManeuverList_17_unnamed_cycleway(std::list<Maneuver>& maneuver
                    {}, "", 2.675882, 386, 0, Maneuver::RelativeDirection::kNone,
                    TripDirections_Maneuver_CardinalDirection_kEast, 84, 70, 0, 2, 0, 93, 0, 0, 0, 0,
                    0, 0, 0, 0, 0, {}, {}, {}, {}, 1, 0, 0, 0, 0, 0, "", "", "", 0, 0, 1, 0, 482, 0);
-  maneuver.set_travel_mode(TripPath_TravelMode_kBicycle);
+  maneuver.set_travel_mode(TripLeg_TravelMode_kBicycle);
 }
 
 void PopulateStartManeuverList_17_unnamed_mountain_bike_trail(std::list<Maneuver>& maneuvers,
@@ -520,7 +520,7 @@ void PopulateStartManeuverList_17_unnamed_mountain_bike_trail(std::list<Maneuver
                    {}, "", 0.200000, 29, 0, Maneuver::RelativeDirection::kNone,
                    TripDirections_Maneuver_CardinalDirection_kWest, 269, 221, 0, 2, 0, 21, 0, 0, 0, 0,
                    0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 0, 0, "", "", "", 0, 0, 0, 1, 36, 0);
-  maneuver.set_travel_mode(TripPath_TravelMode_kBicycle);
+  maneuver.set_travel_mode(TripLeg_TravelMode_kBicycle);
 }
 
 void PopulateStartManeuverList_18(std::list<Maneuver>& maneuvers,
@@ -534,7 +534,7 @@ void PopulateStartManeuverList_18(std::list<Maneuver>& maneuvers,
                    Maneuver::RelativeDirection::kNone,
                    TripDirections_Maneuver_CardinalDirection_kSouth, 173, 143, 0, 45, 0, 88, 0, 0, 0,
                    0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", 0);
-  maneuver.set_travel_mode(TripPath_TravelMode_kBicycle);
+  maneuver.set_travel_mode(TripLeg_TravelMode_kBicycle);
 }
 
 void PopulateDestinationManeuverList_0(std::list<Maneuver>& maneuvers,
@@ -1618,7 +1618,7 @@ void PopulateExitFerryManeuverList_0(std::list<Maneuver>& maneuvers,
                    TripDirections_Maneuver_CardinalDirection_kSouthEast, 144, 94, 4, 5, 30, 32, 0, 0,
                    0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 0, 0, "", "", "", 0, 0, 0, 0, 12,
                    0);
-  maneuver.set_travel_mode(TripPath_TravelMode_kTransit); // So it will just say Head
+  maneuver.set_travel_mode(TripLeg_TravelMode_kTransit); // So it will just say Head
 }
 
 void PopulateExitFerryManeuverList_1(std::list<Maneuver>& maneuvers,
@@ -1631,7 +1631,7 @@ void PopulateExitFerryManeuverList_1(std::list<Maneuver>& maneuvers,
                    Maneuver::RelativeDirection::kKeepStraight,
                    TripDirections_Maneuver_CardinalDirection_kWest, 287, 262, 6, 13, 9, 40, 0, 0, 0,
                    0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 1, 0, 0, 0, 0, 0, "", "", "", 0, 0, 0, 0, 70, 0);
-  maneuver.set_travel_mode(TripPath_TravelMode_kTransit); // So it will just say Head
+  maneuver.set_travel_mode(TripLeg_TravelMode_kTransit); // So it will just say Head
 }
 
 void PopulateExitFerryManeuverList_2(std::list<Maneuver>& maneuvers,
@@ -1645,7 +1645,7 @@ void PopulateExitFerryManeuverList_2(std::list<Maneuver>& maneuvers,
                    TripDirections_Maneuver_CardinalDirection_kNorthEast, 31, 62, 23, 25, 71, 75, 0, 0,
                    0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 1, 0, 0, 0, 0, 0, "", "", "", 0, 0, 0, 0, 5,
                    0);
-  maneuver.set_travel_mode(TripPath_TravelMode_kTransit); // So it will just say Head
+  maneuver.set_travel_mode(TripLeg_TravelMode_kTransit); // So it will just say Head
 }
 
 void PopulateExitFerryManeuverList_4(std::list<Maneuver>& maneuvers,
@@ -1658,7 +1658,7 @@ void PopulateExitFerryManeuverList_4(std::list<Maneuver>& maneuvers,
                    TripDirections_Maneuver_CardinalDirection_kSouthEast, 144, 94, 4, 5, 30, 32, 0, 0,
                    0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 0, 0, "", "", "", 0, 0, 0, 0, 12,
                    0);
-  maneuver.set_travel_mode(TripPath_TravelMode_kDrive);
+  maneuver.set_travel_mode(TripLeg_TravelMode_kDrive);
 }
 
 void PopulateExitFerryManeuverList_5(std::list<Maneuver>& maneuvers,
@@ -1671,7 +1671,7 @@ void PopulateExitFerryManeuverList_5(std::list<Maneuver>& maneuvers,
                    Maneuver::RelativeDirection::kKeepStraight,
                    TripDirections_Maneuver_CardinalDirection_kWest, 287, 262, 6, 13, 9, 40, 0, 0, 0,
                    0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 1, 0, 0, 0, 0, 0, "", "", "", 0, 0, 0, 0, 70, 0);
-  maneuver.set_travel_mode(TripPath_TravelMode_kDrive);
+  maneuver.set_travel_mode(TripLeg_TravelMode_kDrive);
 }
 
 void PopulateExitFerryManeuverList_6(std::list<Maneuver>& maneuvers,
@@ -1685,7 +1685,7 @@ void PopulateExitFerryManeuverList_6(std::list<Maneuver>& maneuvers,
                    TripDirections_Maneuver_CardinalDirection_kNorthEast, 31, 62, 23, 25, 71, 75, 0, 0,
                    0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 1, 0, 0, 0, 0, 0, "", "", "", 0, 0, 0, 0, 5,
                    0);
-  maneuver.set_travel_mode(TripPath_TravelMode_kDrive);
+  maneuver.set_travel_mode(TripLeg_TravelMode_kDrive);
 }
 
 void PopulateExitFerryManeuverList_8(std::list<Maneuver>& maneuvers,
@@ -1698,7 +1698,7 @@ void PopulateExitFerryManeuverList_8(std::list<Maneuver>& maneuvers,
                    TripDirections_Maneuver_CardinalDirection_kSouthEast, 144, 94, 4, 5, 30, 32, 0, 0,
                    0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 0, 0, "", "", "", 0, 0, 0, 0, 12,
                    0);
-  maneuver.set_travel_mode(TripPath_TravelMode_kPedestrian);
+  maneuver.set_travel_mode(TripLeg_TravelMode_kPedestrian);
 }
 
 void PopulateExitFerryManeuverList_9(std::list<Maneuver>& maneuvers,
@@ -1711,7 +1711,7 @@ void PopulateExitFerryManeuverList_9(std::list<Maneuver>& maneuvers,
                    Maneuver::RelativeDirection::kKeepStraight,
                    TripDirections_Maneuver_CardinalDirection_kWest, 287, 262, 6, 13, 9, 40, 0, 0, 0,
                    0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 1, 0, 0, 0, 0, 0, "", "", "", 0, 0, 0, 0, 70, 0);
-  maneuver.set_travel_mode(TripPath_TravelMode_kPedestrian);
+  maneuver.set_travel_mode(TripLeg_TravelMode_kPedestrian);
 }
 
 void PopulateExitFerryManeuverList_10(std::list<Maneuver>& maneuvers,
@@ -1725,7 +1725,7 @@ void PopulateExitFerryManeuverList_10(std::list<Maneuver>& maneuvers,
                    TripDirections_Maneuver_CardinalDirection_kNorthEast, 31, 62, 23, 25, 71, 75, 0, 0,
                    0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 1, 0, 0, 0, 0, 0, "", "", "", 0, 0, 0, 0, 5,
                    0);
-  maneuver.set_travel_mode(TripPath_TravelMode_kPedestrian);
+  maneuver.set_travel_mode(TripLeg_TravelMode_kPedestrian);
 }
 
 void PopulateExitFerryManeuverList_16(std::list<Maneuver>& maneuvers,
@@ -1738,7 +1738,7 @@ void PopulateExitFerryManeuverList_16(std::list<Maneuver>& maneuvers,
                    TripDirections_Maneuver_CardinalDirection_kSouthEast, 144, 94, 4, 5, 30, 32, 0, 0,
                    0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 0, 0, "", "", "", 0, 0, 0, 0, 12,
                    0);
-  maneuver.set_travel_mode(TripPath_TravelMode_kBicycle);
+  maneuver.set_travel_mode(TripLeg_TravelMode_kBicycle);
 }
 
 void PopulateExitFerryManeuverList_17(std::list<Maneuver>& maneuvers,
@@ -1751,7 +1751,7 @@ void PopulateExitFerryManeuverList_17(std::list<Maneuver>& maneuvers,
                    Maneuver::RelativeDirection::kKeepStraight,
                    TripDirections_Maneuver_CardinalDirection_kWest, 287, 262, 6, 13, 9, 40, 0, 0, 0,
                    0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 1, 0, 0, 0, 0, 0, "", "", "", 0, 0, 0, 0, 70, 0);
-  maneuver.set_travel_mode(TripPath_TravelMode_kBicycle);
+  maneuver.set_travel_mode(TripLeg_TravelMode_kBicycle);
 }
 
 void PopulateExitFerryManeuverList_18(std::list<Maneuver>& maneuvers,
@@ -1765,7 +1765,7 @@ void PopulateExitFerryManeuverList_18(std::list<Maneuver>& maneuvers,
                    TripDirections_Maneuver_CardinalDirection_kNorthEast, 31, 62, 23, 25, 71, 75, 0, 0,
                    0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 1, 0, 0, 0, 0, 0, "", "", "", 0, 0, 0, 0, 5,
                    0);
-  maneuver.set_travel_mode(TripPath_TravelMode_kBicycle);
+  maneuver.set_travel_mode(TripLeg_TravelMode_kBicycle);
 }
 
 void PopulateTransitConnectionStartManeuverList_0(std::list<Maneuver>& maneuvers,
@@ -1944,7 +1944,7 @@ void PopulateTransitManeuverList_0_train(std::list<Maneuver>& maneuvers,
       GetTransitPlatformInfo(TransitPlatformInfo_Type_kStation, "s-dr5rsq8pqg-8st~nyu<r21n",
                              "8 St - NYU", "", "2016-03-29T08:02-04:00", 0, 1, 0.0f, 0.0f)));
 
-  maneuver.set_transit_type(TripPath_TransitType_kRail);
+  maneuver.set_transit_type(TripLeg_TransitType_kRail);
 }
 
 void PopulateTransitManeuverList_0(std::list<Maneuver>& maneuvers,
@@ -2031,7 +2031,7 @@ void PopulateTransitManeuverList_1_cable_car(std::list<Maneuver>& maneuvers,
       GetTransitPlatformInfo(TransitPlatformInfo_Type_kStation, "s-9q8zn60kc1-hydest~bayst",
                              "Hyde St & Bay St", "", "2016-05-17T08:03-04:00", 0, 1, 0.0f, 0.0f)));
 
-  maneuver.set_transit_type(TripPath_TransitType_kCableCar);
+  maneuver.set_transit_type(TripLeg_TransitType_kCableCar);
 }
 
 void PopulateTransitManeuverList_1_stop_count_1(std::list<Maneuver>& maneuvers,
@@ -2417,7 +2417,7 @@ void PopulatePostTransitConnectionDestinationManeuverList_0(std::list<Maneuver>&
                    TripDirections_Maneuver_CardinalDirection_kSouthWest, 210, 211, 8, 11, 13, 17, 0,
                    0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0,
                    62, 0);
-  maneuver.set_travel_mode(TripPath_TravelMode_kTransit); // So it will just say Head
+  maneuver.set_travel_mode(TripLeg_TravelMode_kTransit); // So it will just say Head
 }
 
 void PopulatePostTransitConnectionDestinationManeuverList_1(std::list<Maneuver>& maneuvers,
@@ -2432,7 +2432,7 @@ void PopulatePostTransitConnectionDestinationManeuverList_1(std::list<Maneuver>&
                    TripDirections_Maneuver_CardinalDirection_kSouthWest, 210, 211, 8, 11, 13, 17, 0,
                    0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0,
                    62, 0);
-  maneuver.set_travel_mode(TripPath_TravelMode_kTransit); // So it will just say Head
+  maneuver.set_travel_mode(TripLeg_TravelMode_kTransit); // So it will just say Head
 }
 
 void PopulatePostTransitConnectionDestinationManeuverList_2(std::list<Maneuver>& maneuvers,
@@ -2447,7 +2447,7 @@ void PopulatePostTransitConnectionDestinationManeuverList_2(std::list<Maneuver>&
                    TripDirections_Maneuver_CardinalDirection_kSouthWest, 210, 211, 8, 11, 13, 17, 0,
                    0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0,
                    62, 0);
-  maneuver.set_travel_mode(TripPath_TravelMode_kTransit); // So it will just say Head
+  maneuver.set_travel_mode(TripLeg_TravelMode_kTransit); // So it will just say Head
 }
 
 void PopulatePostTransitConnectionDestinationManeuverList_4(std::list<Maneuver>& maneuvers,
@@ -2461,7 +2461,7 @@ void PopulatePostTransitConnectionDestinationManeuverList_4(std::list<Maneuver>&
                    TripDirections_Maneuver_CardinalDirection_kSouthWest, 210, 211, 8, 11, 13, 17, 0,
                    0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0,
                    62, 0);
-  maneuver.set_travel_mode(TripPath_TravelMode_kDrive);
+  maneuver.set_travel_mode(TripLeg_TravelMode_kDrive);
 }
 
 void PopulatePostTransitConnectionDestinationManeuverList_5(std::list<Maneuver>& maneuvers,
@@ -2476,7 +2476,7 @@ void PopulatePostTransitConnectionDestinationManeuverList_5(std::list<Maneuver>&
                    TripDirections_Maneuver_CardinalDirection_kSouthWest, 210, 211, 8, 11, 13, 17, 0,
                    0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0,
                    62, 0);
-  maneuver.set_travel_mode(TripPath_TravelMode_kDrive);
+  maneuver.set_travel_mode(TripLeg_TravelMode_kDrive);
 }
 
 void PopulatePostTransitConnectionDestinationManeuverList_6(std::list<Maneuver>& maneuvers,
@@ -2491,7 +2491,7 @@ void PopulatePostTransitConnectionDestinationManeuverList_6(std::list<Maneuver>&
                    TripDirections_Maneuver_CardinalDirection_kSouthWest, 210, 211, 8, 11, 13, 17, 0,
                    0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0,
                    62, 0);
-  maneuver.set_travel_mode(TripPath_TravelMode_kDrive);
+  maneuver.set_travel_mode(TripLeg_TravelMode_kDrive);
 }
 
 void PopulatePostTransitConnectionDestinationManeuverList_8(std::list<Maneuver>& maneuvers,
@@ -2505,7 +2505,7 @@ void PopulatePostTransitConnectionDestinationManeuverList_8(std::list<Maneuver>&
                    TripDirections_Maneuver_CardinalDirection_kSouthWest, 210, 211, 8, 11, 13, 17, 0,
                    0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0,
                    62, 0);
-  maneuver.set_travel_mode(TripPath_TravelMode_kPedestrian);
+  maneuver.set_travel_mode(TripLeg_TravelMode_kPedestrian);
 }
 
 void PopulatePostTransitConnectionDestinationManeuverList_9(std::list<Maneuver>& maneuvers,
@@ -2520,7 +2520,7 @@ void PopulatePostTransitConnectionDestinationManeuverList_9(std::list<Maneuver>&
                    TripDirections_Maneuver_CardinalDirection_kSouthWest, 210, 211, 8, 11, 13, 17, 0,
                    0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0,
                    62, 0);
-  maneuver.set_travel_mode(TripPath_TravelMode_kPedestrian);
+  maneuver.set_travel_mode(TripLeg_TravelMode_kPedestrian);
 }
 
 void PopulatePostTransitConnectionDestinationManeuverList_10(std::list<Maneuver>& maneuvers,
@@ -2535,7 +2535,7 @@ void PopulatePostTransitConnectionDestinationManeuverList_10(std::list<Maneuver>
                    TripDirections_Maneuver_CardinalDirection_kSouthWest, 210, 211, 8, 11, 13, 17, 0,
                    0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0,
                    62, 0);
-  maneuver.set_travel_mode(TripPath_TravelMode_kPedestrian);
+  maneuver.set_travel_mode(TripLeg_TravelMode_kPedestrian);
 }
 
 void PopulatePostTransitConnectionDestinationManeuverList_16(std::list<Maneuver>& maneuvers,
@@ -2549,7 +2549,7 @@ void PopulatePostTransitConnectionDestinationManeuverList_16(std::list<Maneuver>
                    TripDirections_Maneuver_CardinalDirection_kSouthWest, 210, 211, 8, 11, 13, 17, 0,
                    0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0,
                    62, 0);
-  maneuver.set_travel_mode(TripPath_TravelMode_kBicycle);
+  maneuver.set_travel_mode(TripLeg_TravelMode_kBicycle);
 }
 
 void PopulatePostTransitConnectionDestinationManeuverList_17(std::list<Maneuver>& maneuvers,
@@ -2564,7 +2564,7 @@ void PopulatePostTransitConnectionDestinationManeuverList_17(std::list<Maneuver>
                    TripDirections_Maneuver_CardinalDirection_kSouthWest, 210, 211, 8, 11, 13, 17, 0,
                    0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0,
                    62, 0);
-  maneuver.set_travel_mode(TripPath_TravelMode_kBicycle);
+  maneuver.set_travel_mode(TripLeg_TravelMode_kBicycle);
 }
 
 void PopulatePostTransitConnectionDestinationManeuverList_18(std::list<Maneuver>& maneuvers,
@@ -2579,7 +2579,7 @@ void PopulatePostTransitConnectionDestinationManeuverList_18(std::list<Maneuver>
                    TripDirections_Maneuver_CardinalDirection_kSouthWest, 210, 211, 8, 11, 13, 17, 0,
                    0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0,
                    62, 0);
-  maneuver.set_travel_mode(TripPath_TravelMode_kBicycle);
+  maneuver.set_travel_mode(TripLeg_TravelMode_kBicycle);
 }
 
 void PopulateVerbalMultiCueManeuverList_0(std::list<Maneuver>& maneuvers,
@@ -3072,14 +3072,14 @@ void TestBuildDestinationInstructions_0_miles_en_US() {
                                   "You have arrived at your destination.", "");
 
   // Add location info to trip path
-  TripPath path;
+  TripLeg path;
   Location* location;
   // origin
   location = path.add_location();
   // destination
   location = path.add_location();
 
-  EnhancedTripPath etp(path);
+  EnhancedTripLeg etp(path);
   TryBuild(directions_options, maneuvers, expected_maneuvers, &etp);
 }
 
@@ -3109,7 +3109,7 @@ void TestBuildDestinationInstructions_1_miles_en_US() {
                                   "You have arrived at 32 o6 Powelton Avenue.", "");
 
   // Add location info to trip path
-  TripPath path;
+  TripLeg path;
   Location* location;
   // origin
   location = path.add_location();
@@ -3117,7 +3117,7 @@ void TestBuildDestinationInstructions_1_miles_en_US() {
   location = path.add_location();
   location->set_street("3206 Powelton Avenue");
 
-  EnhancedTripPath etp(path);
+  EnhancedTripLeg etp(path);
   TryBuild(directions_options, maneuvers, expected_maneuvers, &etp);
 }
 
@@ -3147,7 +3147,7 @@ void TestBuildDestinationInstructions_2_miles_en_US() {
                                   "Your destination is on the right.", "");
 
   // Add location info to trip path
-  TripPath path;
+  TripLeg path;
   Location* location;
   // origin
   location = path.add_location();
@@ -3155,7 +3155,7 @@ void TestBuildDestinationInstructions_2_miles_en_US() {
   location = path.add_location();
   location->set_side_of_street(Location::kRight);
 
-  EnhancedTripPath etp(path);
+  EnhancedTripLeg etp(path);
   TryBuild(directions_options, maneuvers, expected_maneuvers, &etp);
 }
 
@@ -3185,7 +3185,7 @@ void TestBuildDestinationInstructions_3_miles_en_US() {
                                   "Lancaster Brewing Company is on the left.", "");
 
   // Add location info to trip path
-  TripPath path;
+  TripLeg path;
   Location* location;
   // origin
   location = path.add_location();
@@ -3194,7 +3194,7 @@ void TestBuildDestinationInstructions_3_miles_en_US() {
   location->set_name("Lancaster Brewing Company");
   location->set_side_of_street(Location::kLeft);
 
-  EnhancedTripPath etp(path);
+  EnhancedTripLeg etp(path);
   TryBuild(directions_options, maneuvers, expected_maneuvers, &etp);
 }
 

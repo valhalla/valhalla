@@ -70,7 +70,8 @@ thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config,
   auto conf_algorithm = config.get<std::string>("thor.source_to_target_algorithm", "select_optimal");
   for (const auto& kv : config.get_child("service_limits")) {
     if (kv.first == "max_avoid_locations" || kv.first == "max_reachability" ||
-        kv.first == "max_radius" || kv.first == "max_timedep_distance") {
+        kv.first == "max_radius" || kv.first == "max_timedep_distance" ||
+        kv.first == "max_alternates") {
       continue;
     }
     if (kv.first != "skadi" && kv.first != "trace" && kv.first != "isochrone") {
@@ -295,7 +296,7 @@ void thor_worker_t::parse_measurements(const valhalla_request_t& request) {
   } catch (...) { throw valhalla_exception_t{424}; }
 }
 
-void thor_worker_t::log_admin(const valhalla::odin::TripPath& trip_path) {
+void thor_worker_t::log_admin(const valhalla::odin::TripLeg& trip_path) {
   std::unordered_set<std::string> state_iso;
   std::unordered_set<std::string> country_iso;
   std::stringstream s_ss, c_ss;
