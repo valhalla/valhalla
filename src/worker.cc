@@ -342,7 +342,7 @@ void parse_locations(const rapidjson::Document& doc,
             location->set_type(odin::Location::kBreakThrough);
         } // for map matching the default type is a through
         else if (options.action() == odin::DirectionsOptions::trace_route) {
-          location->set_type(odin::Location::kThrough);
+          location->set_type(odin::Location::kVia);
         }
 
         auto name = rapidjson::get_optional<std::string>(r_loc, "/name");
