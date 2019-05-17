@@ -4,7 +4,7 @@ protobuf_generate_cpp(protobuff_srcs protobuff_hdrs
   directions_options.proto
   tripcommon.proto
   tripdirections.proto
-  trippath.proto
+  trip.proto
   fileformat.proto
   osmformat.proto
   transit.proto

@@ -166,6 +166,7 @@
     "max_avoid_locations": 50,
     "max_radius": 200,
     "max_reachability": 100,
+    "max_alternates": 2,
     "motor_scooter": {
       "max_distance": 500000.0,
       "max_locations": 50,

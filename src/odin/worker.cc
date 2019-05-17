@@ -16,7 +16,7 @@
 #include "odin/worker.h"
 #include "tyr/serializers.h"
 
-#include <valhalla/proto/trippath.pb.h>
+#include <valhalla/proto/trip.pb.h>
 
 using namespace valhalla;
 using namespace valhalla::tyr;
@@ -36,7 +36,7 @@ void odin_worker_t::cleanup() {
 }
 
 std::list<TripDirections> odin_worker_t::narrate(const valhalla_request_t& request,
-                                                 std::list<TripPath>& legs) const {
+                                                 std::list<TripLeg>& legs) const {
   // get some annotated directions
   std::list<TripDirections> narrated;
   try {
@@ -66,7 +66,7 @@ worker_t::result_t odin_worker_t::work(const std::list<zmq::message_t>& job,
     service_worker_t::set_interrupt(interrupt_function);
 
     // parse each leg
-    std::list<TripPath> legs;
+    std::list<TripLeg> legs;
     for (auto leg = ++(++job.cbegin()); leg != job.cend(); ++leg) {
       // crack open the path
       legs.emplace_back();

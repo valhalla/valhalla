@@ -104,9 +104,9 @@ Maneuver::Maneuver()
       end_shape_index_(0), ramp_(false), turn_channel_(false), ferry_(false), rail_ferry_(false),
       roundabout_(false), portions_toll_(false), portions_unpaved_(false), portions_highway_(false),
       internal_intersection_(false), internal_right_turn_count_(0), internal_left_turn_count_(0),
-      roundabout_exit_count_(0), travel_mode_(TripPath_TravelMode_kDrive),
-      vehicle_type_(TripPath_VehicleType_kCar), pedestrian_type_(TripPath_PedestrianType_kFoot),
-      bicycle_type_(TripPath_BicycleType_kRoad), transit_type_(TripPath_TransitType_kRail),
+      roundabout_exit_count_(0), travel_mode_(TripLeg_TravelMode_kDrive),
+      vehicle_type_(TripLeg_VehicleType_kCar), pedestrian_type_(TripLeg_PedestrianType_kFoot),
+      bicycle_type_(TripLeg_BicycleType_kRoad), transit_type_(TripLeg_TransitType_kRail),
       transit_connection_(false), rail_(false), bus_(false), fork_(false),
       begin_intersecting_edge_name_consistency_(false), intersecting_forward_edge_(false),
       tee_(false), unnamed_walkway_(false), unnamed_cycleway_(false),
@@ -624,43 +624,43 @@ void Maneuver::ClearRoundaboutExitStreetNames() {
   roundabout_exit_street_names_->clear();
 }
 
-TripPath_TravelMode Maneuver::travel_mode() const {
+TripLeg_TravelMode Maneuver::travel_mode() const {
   return travel_mode_;
 }
 
-void Maneuver::set_travel_mode(TripPath_TravelMode travel_mode) {
+void Maneuver::set_travel_mode(TripLeg_TravelMode travel_mode) {
   travel_mode_ = travel_mode;
 }
 
-TripPath_VehicleType Maneuver::vehicle_type() const {
+TripLeg_VehicleType Maneuver::vehicle_type() const {
   return vehicle_type_;
 }
 
-void Maneuver::set_vehicle_type(TripPath_VehicleType vehicle_type) {
+void Maneuver::set_vehicle_type(TripLeg_VehicleType vehicle_type) {
   vehicle_type_ = vehicle_type;
 }
 
-TripPath_PedestrianType Maneuver::pedestrian_type() const {
+TripLeg_PedestrianType Maneuver::pedestrian_type() const {
   return pedestrian_type_;
 }
 
-void Maneuver::set_pedestrian_type(TripPath_PedestrianType pedestrian_type) {
+void Maneuver::set_pedestrian_type(TripLeg_PedestrianType pedestrian_type) {
   pedestrian_type_ = pedestrian_type;
 }
 
-TripPath_BicycleType Maneuver::bicycle_type() const {
+TripLeg_BicycleType Maneuver::bicycle_type() const {
   return bicycle_type_;
 }
 
-void Maneuver::set_bicycle_type(TripPath_BicycleType bicycle_type) {
+void Maneuver::set_bicycle_type(TripLeg_BicycleType bicycle_type) {
   bicycle_type_ = bicycle_type;
 }
 
-TripPath_TransitType Maneuver::transit_type() const {
+TripLeg_TransitType Maneuver::transit_type() const {
   return transit_type_;
 }
 
-void Maneuver::set_transit_type(TripPath_TransitType transit_type) {
+void Maneuver::set_transit_type(TripLeg_TransitType transit_type) {
   transit_type_ = transit_type;
 }
 
@@ -1100,8 +1100,8 @@ std::string Maneuver::ToParameterString() const {
   man_str += std::to_string(verbal_multi_cue_);
 
   //  man_str += delim;
-  //  man_str += "TripPath_TravelMode_";
-  //  man_str += TripPath_TravelMode_descriptor()
+  //  man_str += "TripLeg_TravelMode_";
+  //  man_str += TripLeg_TravelMode_descriptor()
   //      ->FindValueByNumber(travel_mode_)->name();
   //  bool rail_;
   //  bool bus_;

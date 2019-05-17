@@ -10,7 +10,7 @@ namespace thor {
 
 /**
  * Simple structure to pass path information from PathAlgorithm
- * to TripPathBuilder
+ * to TripLegBuilder
  */
 struct PathInfo {
   sif::TravelMode mode;  // Travel mode along this edge

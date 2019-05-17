@@ -95,6 +95,7 @@ protected:
   skadi::sample sample;
   size_t max_elevation_shape;
   float min_resample;
+  unsigned int max_alternates;
 };
 } // namespace loki
 } // namespace valhalla
