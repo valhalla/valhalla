@@ -67,11 +67,11 @@ struct route_tester {
       : conf(get_conf()), reader(new GraphReader(conf.get_child("mjolnir"))),
         loki_worker(conf, reader), thor_worker(conf, reader), odin_worker(conf) {
   }
-  std::pair<std::list<TripLeg>, std::list<TripDirections>> test(const std::string& request_json) {
+  std::pair<std::list<TripLeg>, std::list<DirectionsLeg>> test(const std::string& request_json) {
     valhalla::valhalla_request_t request;
     request.parse(request_json, valhalla::odin::DirectionsOptions::route);
     loki_worker.route(request);
-    std::pair<std::list<TripLeg>, std::list<TripDirections>> results;
+    std::pair<std::list<TripLeg>, std::list<DirectionsLeg>> results;
     results.first = thor_worker.route(request);
     results.second = odin_worker.narrate(request, results.first);
     return results;
@@ -89,7 +89,7 @@ float mid_through_distance;
 void test_mid_break(const std::string& date_time) {
   route_tester tester;
   std::list<TripLeg> legs;
-  std::list<TripDirections> directions;
+  std::list<DirectionsLeg> directions;
   std::string request =
       R"({"locations":[{"lat":52.09015,"lon":5.06362},{"lat":52.09041,"lon":5.06337,"type":"break"},{"lat":52.09015,"lon":5.06362}],"costing":"auto"})";
 
@@ -109,8 +109,8 @@ void test_mid_break(const std::string& date_time) {
       if (!name.empty())
         name.pop_back();
       names.push_back(name);
-      if (m.type() == TripDirections_Maneuver_Type_kUturnRight ||
-          m.type() == TripDirections_Maneuver_Type_kUturnLeft)
+      if (m.type() == DirectionsLeg_Maneuver_Type_kUturnRight ||
+          m.type() == DirectionsLeg_Maneuver_Type_kUturnLeft)
         throw std::logic_error("Should not encounter any u-turns");
     }
   }
@@ -126,7 +126,7 @@ void test_mid_break(const std::string& date_time) {
 void test_mid_through(const std::string& date_time) {
   route_tester tester;
   std::list<TripLeg> legs;
-  std::list<TripDirections> directions;
+  std::list<DirectionsLeg> directions;
   std::string request =
       R"({"locations":[{"lat":52.09015,"lon":5.06362},{"lat":52.09041,"lon":5.06337,"type":"through"},{"lat":52.09015,"lon":5.06362, "heading": 0}],"costing":"auto"})";
 
@@ -146,8 +146,8 @@ void test_mid_through(const std::string& date_time) {
       if (!name.empty())
         name.pop_back();
       names.push_back(name);
-      if (m.type() == TripDirections_Maneuver_Type_kUturnRight ||
-          m.type() == TripDirections_Maneuver_Type_kUturnLeft)
+      if (m.type() == DirectionsLeg_Maneuver_Type_kUturnRight ||
+          m.type() == DirectionsLeg_Maneuver_Type_kUturnLeft)
         throw std::logic_error("Should not encounter any u-turns");
     }
   }
@@ -162,7 +162,7 @@ void test_mid_through(const std::string& date_time) {
 void test_mid_via(const std::string& date_time) {
   route_tester tester;
   std::list<TripLeg> legs;
-  std::list<TripDirections> directions;
+  std::list<DirectionsLeg> directions;
   std::string request =
       R"({"locations":[{"lat":52.09015,"lon":5.06362},{"lat":52.09041,"lon":5.06337,"type":"via"},{"lat":52.09015,"lon":5.06362}],"costing":"auto"})";
 
@@ -183,8 +183,8 @@ void test_mid_via(const std::string& date_time) {
       if (!name.empty())
         name.pop_back();
       names.push_back(name);
-      uturns += m.type() == TripDirections_Maneuver_Type_kUturnRight ||
-                m.type() == TripDirections_Maneuver_Type_kUturnLeft;
+      uturns += m.type() == DirectionsLeg_Maneuver_Type_kUturnRight ||
+                m.type() == DirectionsLeg_Maneuver_Type_kUturnLeft;
     }
   }
 
@@ -204,7 +204,7 @@ void test_mid_via(const std::string& date_time) {
 void test_mid_break_through(const std::string& date_time) {
   route_tester tester;
   std::list<TripLeg> legs;
-  std::list<TripDirections> directions;
+  std::list<DirectionsLeg> directions;
   std::string request =
       R"({"locations":[{"lat":52.09015,"lon":5.06362},{"lat":52.09041,"lon":5.06337,"type":"break_through"},{"lat":52.09015,"lon":5.06362,"heading":0}],"costing":"auto"})";
 
@@ -224,8 +224,8 @@ void test_mid_break_through(const std::string& date_time) {
       if (!name.empty())
         name.pop_back();
       names.push_back(name);
-      if (m.type() == TripDirections_Maneuver_Type_kUturnRight ||
-          m.type() == TripDirections_Maneuver_Type_kUturnLeft)
+      if (m.type() == DirectionsLeg_Maneuver_Type_kUturnRight ||
+          m.type() == DirectionsLeg_Maneuver_Type_kUturnLeft)
         throw std::logic_error("Should not encounter any u-turns");
     }
   }

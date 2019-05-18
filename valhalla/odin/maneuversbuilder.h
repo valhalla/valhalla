@@ -80,7 +80,7 @@ protected:
                                         EnhancedTripLeg_Edge* prev_edge,
                                         EnhancedTripLeg_Edge* curr_edge);
 
-  TripDirections_Maneuver_CardinalDirection DetermineCardinalDirection(uint32_t heading);
+  DirectionsLeg_Maneuver_CardinalDirection DetermineCardinalDirection(uint32_t heading);
 
   bool CanManeuverIncludePrevEdge(Maneuver& maneuver, int node_index);
 
