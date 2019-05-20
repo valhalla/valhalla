@@ -24,9 +24,9 @@
 #include "thor/attributes_controller.h"
 #include "thor/triplegbuilder.h"
 
+#include <valhalla/proto/directions.pb.h>
 #include <valhalla/proto/directions_options.pb.h>
 #include <valhalla/proto/trip.pb.h>
-#include <valhalla/proto/tripdirections.pb.h>
 
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
@@ -399,7 +399,7 @@ void trivial_path_no_uturns(const std::string& config_file) {
                                 *directions_options.mutable_locations(1), std::list<vo::Location>{});
   // really could of got the total of the elapsed_time.
   vo::DirectionsBuilder directions;
-  vo::TripDirections trip_directions = directions.Build(directions_options, trip_path);
+  vo::DirectionsLeg trip_directions = directions.Build(directions_options, trip_path);
 
   if (trip_directions.summary().time() != 0) {
     std::ostringstream ostr;

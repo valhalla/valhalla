@@ -10,9 +10,9 @@
 #include "route_serializer_valhalla.cc"
 #include "tyr/serializers.h"
 
+#include <valhalla/proto/directions.pb.h>
 #include <valhalla/proto/directions_options.pb.h>
 #include <valhalla/proto/trip.pb.h>
-#include <valhalla/proto/tripdirections.pb.h>
 
 using namespace valhalla;
 using namespace valhalla::tyr;
@@ -78,7 +78,7 @@ namespace tyr {
 
 std::string serializeDirections(const valhalla_request_t& request,
                                 std::list<TripLeg>& path_legs,
-                                const std::list<TripDirections>& directions_legs) {
+                                const std::list<DirectionsLeg>& directions_legs) {
   // serialize them
   switch (request.options.format()) {
     case DirectionsOptions_Format_osrm:
