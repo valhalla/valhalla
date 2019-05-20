@@ -398,7 +398,8 @@ void append_trace_info(
     const json::MapPtr& json,
     const AttributesController& controller,
     const DirectionsOptions& directions_options,
-    const std::tuple<float, float, std::vector<thor::MatchResult>, std::list<TripPath>>& map_match_result) {
+    const std::tuple<float, float, std::vector<thor::MatchResult>, std::list<TripPath>>&
+        map_match_result) {
   // Set trip path and match results
   const auto& match_results = std::get<kMatchResultsIndex>(map_match_result);
   // TODO serialize all trip_paths

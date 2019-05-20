@@ -121,7 +121,7 @@ std::list<odin::TripPath> thor_worker_t::trace_route(valhalla_request_t& request
  *
  */
 std::list<odin::TripPath> thor_worker_t::route_match(valhalla_request_t& request,
-                                          const AttributesController& controller) {
+                                                     const AttributesController& controller) {
   odin::TripPath trip_path;
   std::list<odin::TripPath> trip_paths;
   std::vector<PathInfo> path_infos;
@@ -145,11 +145,11 @@ std::list<odin::TripPath> thor_worker_t::route_match(valhalla_request_t& request
 // PathInfo is primarily a list of edge Ids but it also include elapsed time to the end
 // of each edge. We will need to use the existing costing method to form the elapsed time
 // the path. We will start with just using edge costs and will add transition costs.
-std::vector<std::tuple<float, float, std::vector<thor::MatchResult>,  std::list<odin::TripPath>>>
+std::vector<std::tuple<float, float, std::vector<thor::MatchResult>, std::list<odin::TripPath>>>
 thor_worker_t::map_match(valhalla_request_t& request,
                          const AttributesController& controller,
                          uint32_t best_paths) {
-  std::vector<std::tuple<float, float, std::vector<thor::MatchResult>,  std::list<odin::TripPath>>>
+  std::vector<std::tuple<float, float, std::vector<thor::MatchResult>, std::list<odin::TripPath>>>
       map_match_results;
 
   // Call Meili for map matching to get a collection of Location Edges
@@ -174,7 +174,7 @@ thor_worker_t::map_match(valhalla_request_t& request,
     std::vector<std::pair<GraphId, GraphId>> disconnected_edges;
     std::vector<PathInfo> path_edges =
         MapMatcher::FormPath(matcher.get(), match_results, edge_segments, mode_costing, mode,
-                             disconnected_edges, request.options.use_timestamps());
+                             disconnected_edges, request.options);
 
     // Throw exception if not trace attributes action and disconnected path.
     // TODO - perhaps also throw exception if use_timestamps and disconnected path?
@@ -392,20 +392,40 @@ thor_worker_t::map_match(valhalla_request_t& request,
     if (request.options.action() == odin::DirectionsOptions::trace_attributes) {
       trip_path = path_map_match(match_results, controller, path_edges, route_discontinuities);
       trip_paths.emplace_back(trip_path);
-    // trace_route can return multiple trip paths and cannot have discontinuities
+      // trace_route can return multiple trip paths and cannot have discontinuities
     } else {
-      // loop through match_results here to split at breaks
-      // then pass through the split match_results and split path_edges to get a single trip_path
-      // as such accumulate multiple trip_paths
-      for (int i = 0; i < match_results.size(); ++i) {
-        const auto& match = match_results[i];
-        // get location from match, then
-        // if (location->type() == odin::Location::kBreak ||
-        //     location->type() == odin::Location::kBreakThrough) {
-        // splice match_results at index i
-        // splice path_edges at index i, somehow
-        trip_path = path_map_match(match_results, controller, path_edges, route_discontinuities);
-        trip_paths.emplace_back(trip_path);
+      auto origin = match_results.begin();
+      auto destination = match_results.begin();
+
+      size_t last_index = 0;
+      // for each edge in the path
+      for (size_t i = 0; i < path_edges.size(); ++i) {
+        const auto& path_edge = path_edges[i];
+        // while we still have trace points that are on this current edge of the path
+        while (destination != match_results.end() && path_edge.edgeid == destination->edgeid) {
+          // if it's not the first trace point, and it's a break, make a trip path leg
+          if (origin != destination &&
+              request.options.shape(destination - match_results.begin()).type() ==
+                  odin::Location::kBreak) {
+            std::vector<PathInfo> sub_path_edges(path_edges.begin() + last_index,
+                                                 path_edges.begin() + i + 1);
+            trip_path = thor::TripPathBuilder::Build(controller, matcher->graphreader(), mode_costing,
+                                                     sub_path_edges,
+                                                     *request.options.mutable_shape(
+                                                         origin - match_results.begin()),
+                                                     *request.options.mutable_shape(
+                                                         destination - match_results.begin()),
+                                                     std::list<odin::Location>{}, interrupt,
+                                                     &route_discontinuities);
+            trip_paths.emplace_back(trip_path);
+            // beginning of next leg will be the end of this leg
+            origin = destination;
+            // store the starting index of the path_edges
+            last_index = i;
+          }
+          // increment to next trace point
+          ++destination;
+        }
       }
     }
     // Keep the result
@@ -419,18 +439,19 @@ thor_worker_t::map_match(valhalla_request_t& request,
   return map_match_results;
 }
 
-odin::TripPath thor_worker_t::path_map_match(const std::vector<meili::MatchResult>& match_results,
-                                             const AttributesController& controller,
-                                             const std::vector<PathInfo>& path_edges,
-                                             std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>>& route_discontinuities) {
+odin::TripPath thor_worker_t::path_map_match(
+    const std::vector<meili::MatchResult>& match_results,
+    const AttributesController& controller,
+    const std::vector<PathInfo>& path_edges,
+    std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>>&
+        route_discontinuities) {
   odin::TripPath trip_path;
 
   // Set origin and destination from map matching results
   auto first_result_with_state =
-      std::find_if(match_results.begin(), match_results.end(),
-                   [](const meili::MatchResult& result) {
-                     return result.HasState() && result.edgeid.Is_Valid();
-                   });
+      std::find_if(match_results.begin(), match_results.end(), [](const meili::MatchResult& result) {
+        return result.HasState() && result.edgeid.Is_Valid();
+      });
 
   auto last_result_with_state = std::find_if(match_results.rbegin(), match_results.rend(),
                                              [](const meili::MatchResult& result) {
@@ -445,9 +466,7 @@ odin::TripPath thor_worker_t::path_map_match(const std::vector<meili::MatchResul
                             .candidate(),
                         &origin, *reader);
     odin::Location destination;
-    PathLocation::toPBF(matcher->state_container()
-                            .state(last_result_with_state->stateid)
-                            .candidate(),
+    PathLocation::toPBF(matcher->state_container().state(last_result_with_state->stateid).candidate(),
                         &destination, *reader);
 
     bool found_origin = false;

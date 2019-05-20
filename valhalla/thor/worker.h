@@ -66,7 +66,8 @@ protected:
   thor::PathAlgorithm* get_path_algorithm(const std::string& routetype,
                                           const odin::Location& origin,
                                           const odin::Location& destination);
-  std::list<odin::TripPath> route_match(valhalla_request_t& request, const AttributesController& controller);
+  std::list<odin::TripPath> route_match(valhalla_request_t& request,
+                                        const AttributesController& controller);
   std::vector<std::tuple<float, float, std::vector<thor::MatchResult>, std::list<odin::TripPath>>>
   map_match(valhalla_request_t& request,
             const AttributesController& controller,
@@ -75,7 +76,8 @@ protected:
   path_map_match(const std::vector<meili::MatchResult>& match_results,
                  const AttributesController& controller,
                  const std::vector<PathInfo>& path_edges,
-                 std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>>& route_discontinuities);
+                 std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>>&
+                     route_discontinuities);
   std::list<odin::TripPath>
   path_arrive_by(google::protobuf::RepeatedPtrField<valhalla::odin::Location>& correlated,
                  const std::string& costing);
