@@ -619,6 +619,11 @@ std::string EnhancedTripLeg_Edge::ToString() const {
   str += " | truck_route=";
   str += std::to_string(truck_route());
 
+  if (turn_lanes_size() > 0) {
+    str += " | turn_lanes=";
+    str += TurnLanesToString(turn_lanes());
+  }
+
   return str;
 }
 
@@ -889,6 +894,19 @@ std::string EnhancedTripLeg_Edge::SignElementsToParameterString(
   str += param_list;
   str += " }";
 
+  return str;
+}
+
+std::string EnhancedTripLeg_Edge::TurnLanesToString(
+    const ::google::protobuf::RepeatedPtrField<::valhalla::odin::TurnLane>& turn_lanes) const {
+  std::string str;
+
+  for (const auto& turn_lane : turn_lanes) {
+    if (!str.empty()) {
+      str += "|";
+    }
+    str += std::to_string(turn_lane.directions_mask());
+  }
   return str;
 }
 #endif

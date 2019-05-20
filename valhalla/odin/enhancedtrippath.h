@@ -316,6 +316,14 @@ public:
     return mutable_edge_->truck_route();
   }
 
+  int turn_lanes_size() const {
+    return mutable_edge_->turn_lanes_size();
+  }
+
+  const ::google::protobuf::RepeatedPtrField<::valhalla::odin::TurnLane>& turn_lanes() const {
+    return mutable_edge_->turn_lanes();
+  }
+
   bool IsUnnamed() const;
 
   // Use
@@ -391,6 +399,10 @@ protected:
   std::string SignElementsToParameterString(
       const ::google::protobuf::RepeatedPtrField<::valhalla::odin::TripLeg_SignElement>&
           sign_elements) const;
+
+  std::string TurnLanesToString(
+      const ::google::protobuf::RepeatedPtrField<::valhalla::odin::TurnLane>& turn_lanes) const;
+
 #endif
 };
 
