@@ -67,7 +67,7 @@ protected:
                                           const odin::Location& origin,
                                           const odin::Location& destination);
   std::list<odin::TripLeg> route_match(valhalla_request_t& request,
-                                        const AttributesController& controller);
+                                       const AttributesController& controller);
   std::vector<std::tuple<float, float, std::vector<thor::MatchResult>, std::list<odin::TripLeg>>>
   map_match(valhalla_request_t& request,
             const AttributesController& controller,

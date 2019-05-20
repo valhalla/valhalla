@@ -63,8 +63,8 @@ std::list<odin::TripLeg> thor_worker_t::trace_route(valhalla_request_t& request)
     case odin::ShapeMatch::edge_walk:
       try {
         trip_paths = route_match(request, controller);
-        for (const auto& trippath : trip_paths) {
-          if (trip_path.node().size() == 0) {
+        for (const auto& tp : trip_paths) {
+          if (tp.node().size() == 0) {
             throw std::exception{};
           };
         }
@@ -107,7 +107,7 @@ std::list<odin::TripLeg> thor_worker_t::trace_route(valhalla_request_t& request)
 
   // log admin areas
   if (!request.options.do_not_track()) {
-    for (const auto& tp : trippaths) {
+    for (const auto& tp : trip_paths) {
       log_admin(tp);
     }
   }
@@ -122,7 +122,7 @@ std::list<odin::TripLeg> thor_worker_t::trace_route(valhalla_request_t& request)
  *
  */
 std::list<odin::TripLeg> thor_worker_t::route_match(valhalla_request_t& request,
-                                                     const AttributesController& controller) {
+                                                    const AttributesController& controller) {
   odin::TripLeg trip_path;
   std::list<odin::TripLeg> trip_paths;
   std::vector<PathInfo> path_infos;
@@ -133,9 +133,9 @@ std::list<odin::TripLeg> thor_worker_t::route_match(valhalla_request_t& request,
                              request.options.locations(), path_infos)) {
     // Form the trip path based on mode costing, origin, destination, and path edges
     trip_path = thor::TripLegBuilder::Build(controller, *reader, mode_costing, path_infos,
-                                             *request.options.mutable_locations()->begin(),
-                                             *request.options.mutable_locations()->rbegin(),
-                                             std::list<odin::Location>{}, interrupt);
+                                            *request.options.mutable_locations()->begin(),
+                                            *request.options.mutable_locations()->rbegin(),
+                                            std::list<odin::Location>{}, interrupt);
     trip_paths.emplace_back(trip_path);
   }
 
@@ -410,7 +410,7 @@ thor_worker_t::map_match(valhalla_request_t& request,
                   odin::Location::kBreak) {
             std::vector<PathInfo> sub_path_edges(path_edges.begin() + last_index,
                                                  path_edges.begin() + i + 1);
-            trip_path = thor::TripPathBuilder::Build(controller, matcher->graphreader(), mode_costing,
+            trip_path = thor::TripLegBuilder::Build(controller, matcher->graphreader(), mode_costing,
                                                      sub_path_edges,
                                                      *request.options.mutable_shape(
                                                          origin - match_results.begin()),
@@ -440,13 +440,13 @@ thor_worker_t::map_match(valhalla_request_t& request,
   return map_match_results;
 }
 
-odin::TripPath thor_worker_t::path_map_match(
+odin::TripLeg thor_worker_t::path_map_match(
     const std::vector<meili::MatchResult>& match_results,
     const AttributesController& controller,
     const std::vector<PathInfo>& path_edges,
     std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>>&
         route_discontinuities) {
-  odin::TripPath trip_path;
+  odin::TripLeg trip_path;
 
   // Set origin and destination from map matching results
   auto first_result_with_state =
@@ -516,8 +516,8 @@ odin::TripPath thor_worker_t::path_map_match(
     // Form the trip path based on mode costing, origin, destination, and path edges
     trip_path =
         thor::TripLegBuilder::Build(controller, matcher->graphreader(), mode_costing, path_edges,
-                                     origin, destination, std::list<odin::Location>{}, interrupt,
-                                     &route_discontinuities);
+                                    origin, destination, std::list<odin::Location>{}, interrupt,
+                                    &route_discontinuities);
   } else {
     throw valhalla_exception_t{442};
   }
