@@ -10,9 +10,9 @@
 #include "odin/maneuver.h"
 #include "odin/transitrouteinfo.h"
 
+#include <valhalla/proto/directions.pb.h>
 #include <valhalla/proto/directions_options.pb.h>
 #include <valhalla/proto/tripcommon.pb.h>
-#include <valhalla/proto/tripdirections.pb.h>
 
 using namespace valhalla::odin;
 using namespace valhalla::baldr;
@@ -34,7 +34,7 @@ const std::unordered_map<int, std::string>
                               {static_cast<int>(Maneuver::RelativeDirection::kKeepLeft),
                                "Maneuver::RelativeDirection::kKeepLeft"}};
 
-const std::string& TripDirections_Maneuver_Type_Name(int v) {
+const std::string& DirectionsLeg_Maneuver_Type_Name(int v) {
   static const std::unordered_map<int, std::string> values{
       {0, "kNone"},
       {1, "kStart"},
@@ -80,7 +80,7 @@ const std::string& TripDirections_Maneuver_Type_Name(int v) {
   return f->second;
 }
 
-const std::string& TripDirections_Maneuver_CardinalDirection_Name(int v) {
+const std::string& DirectionsLeg_Maneuver_CardinalDirection_Name(int v) {
   static const std::unordered_map<int, std::string> values{
       {0, "kNorth"}, {1, "kNorthEast"}, {2, "kEast"}, {3, "kSouthEast"},
       {4, "kSouth"}, {5, "kSouthWest"}, {6, "kWest"}, {7, "kNorthWest"},
@@ -97,16 +97,16 @@ namespace valhalla {
 namespace odin {
 
 Maneuver::Maneuver()
-    : type_(TripDirections_Maneuver_Type_kNone), length_(0.0f), time_(0), basic_time_(0),
+    : type_(DirectionsLeg_Maneuver_Type_kNone), length_(0.0f), time_(0), basic_time_(0),
       turn_degree_(0), begin_relative_direction_(RelativeDirection::kNone),
-      begin_cardinal_direction_(TripDirections_Maneuver_CardinalDirection_kNorth), begin_heading_(0),
+      begin_cardinal_direction_(DirectionsLeg_Maneuver_CardinalDirection_kNorth), begin_heading_(0),
       end_heading_(0), begin_node_index_(0), end_node_index_(0), begin_shape_index_(0),
       end_shape_index_(0), ramp_(false), turn_channel_(false), ferry_(false), rail_ferry_(false),
       roundabout_(false), portions_toll_(false), portions_unpaved_(false), portions_highway_(false),
       internal_intersection_(false), internal_right_turn_count_(0), internal_left_turn_count_(0),
-      roundabout_exit_count_(0), travel_mode_(TripPath_TravelMode_kDrive),
-      vehicle_type_(TripPath_VehicleType_kCar), pedestrian_type_(TripPath_PedestrianType_kFoot),
-      bicycle_type_(TripPath_BicycleType_kRoad), transit_type_(TripPath_TransitType_kRail),
+      roundabout_exit_count_(0), travel_mode_(TripLeg_TravelMode_kDrive),
+      vehicle_type_(TripLeg_VehicleType_kCar), pedestrian_type_(TripLeg_PedestrianType_kFoot),
+      bicycle_type_(TripLeg_BicycleType_kRoad), transit_type_(TripLeg_TransitType_kRail),
       transit_connection_(false), rail_(false), bus_(false), fork_(false),
       begin_intersecting_edge_name_consistency_(false), intersecting_forward_edge_(false),
       tee_(false), unnamed_walkway_(false), unnamed_cycleway_(false),
@@ -117,18 +117,18 @@ Maneuver::Maneuver()
   roundabout_exit_street_names_ = midgard::make_unique<StreetNames>();
 }
 
-const TripDirections_Maneuver_Type& Maneuver::type() const {
+const DirectionsLeg_Maneuver_Type& Maneuver::type() const {
   return type_;
 }
 
-void Maneuver::set_type(const TripDirections_Maneuver_Type& type) {
+void Maneuver::set_type(const DirectionsLeg_Maneuver_Type& type) {
   type_ = type;
 }
 
 bool Maneuver::IsDestinationType() const {
-  return ((type_ == TripDirections_Maneuver_Type_kDestination) ||
-          (type_ == TripDirections_Maneuver_Type_kDestinationLeft) ||
-          (type_ == TripDirections_Maneuver_Type_kDestinationRight));
+  return ((type_ == DirectionsLeg_Maneuver_Type_kDestination) ||
+          (type_ == DirectionsLeg_Maneuver_Type_kDestinationLeft) ||
+          (type_ == DirectionsLeg_Maneuver_Type_kDestinationRight));
 }
 
 const StreetNames& Maneuver::street_names() const {
@@ -286,12 +286,12 @@ void Maneuver::set_begin_relative_direction(RelativeDirection begin_relative_dir
   begin_relative_direction_ = begin_relative_direction;
 }
 
-TripDirections_Maneuver_CardinalDirection Maneuver::begin_cardinal_direction() const {
+DirectionsLeg_Maneuver_CardinalDirection Maneuver::begin_cardinal_direction() const {
   return begin_cardinal_direction_;
 }
 
 void Maneuver::set_begin_cardinal_direction(
-    TripDirections_Maneuver_CardinalDirection begin_cardinal_direction) {
+    DirectionsLeg_Maneuver_CardinalDirection begin_cardinal_direction) {
   begin_cardinal_direction_ = begin_cardinal_direction;
 }
 
@@ -624,43 +624,43 @@ void Maneuver::ClearRoundaboutExitStreetNames() {
   roundabout_exit_street_names_->clear();
 }
 
-TripPath_TravelMode Maneuver::travel_mode() const {
+TripLeg_TravelMode Maneuver::travel_mode() const {
   return travel_mode_;
 }
 
-void Maneuver::set_travel_mode(TripPath_TravelMode travel_mode) {
+void Maneuver::set_travel_mode(TripLeg_TravelMode travel_mode) {
   travel_mode_ = travel_mode;
 }
 
-TripPath_VehicleType Maneuver::vehicle_type() const {
+TripLeg_VehicleType Maneuver::vehicle_type() const {
   return vehicle_type_;
 }
 
-void Maneuver::set_vehicle_type(TripPath_VehicleType vehicle_type) {
+void Maneuver::set_vehicle_type(TripLeg_VehicleType vehicle_type) {
   vehicle_type_ = vehicle_type;
 }
 
-TripPath_PedestrianType Maneuver::pedestrian_type() const {
+TripLeg_PedestrianType Maneuver::pedestrian_type() const {
   return pedestrian_type_;
 }
 
-void Maneuver::set_pedestrian_type(TripPath_PedestrianType pedestrian_type) {
+void Maneuver::set_pedestrian_type(TripLeg_PedestrianType pedestrian_type) {
   pedestrian_type_ = pedestrian_type;
 }
 
-TripPath_BicycleType Maneuver::bicycle_type() const {
+TripLeg_BicycleType Maneuver::bicycle_type() const {
   return bicycle_type_;
 }
 
-void Maneuver::set_bicycle_type(TripPath_BicycleType bicycle_type) {
+void Maneuver::set_bicycle_type(TripLeg_BicycleType bicycle_type) {
   bicycle_type_ = bicycle_type;
 }
 
-TripPath_TransitType Maneuver::transit_type() const {
+TripLeg_TransitType Maneuver::transit_type() const {
   return transit_type_;
 }
 
-void Maneuver::set_transit_type(TripPath_TransitType transit_type) {
+void Maneuver::set_transit_type(TripLeg_TransitType transit_type) {
   transit_type_ = transit_type;
 }
 
@@ -716,9 +716,9 @@ void Maneuver::set_bus(bool bus) {
 }
 
 bool Maneuver::IsTransit() const {
-  return ((type_ == TripDirections_Maneuver_Type_kTransit) ||
-          (type_ == TripDirections_Maneuver_Type_kTransitTransfer) ||
-          (type_ == TripDirections_Maneuver_Type_kTransitRemainOn));
+  return ((type_ == DirectionsLeg_Maneuver_Type_kTransit) ||
+          (type_ == DirectionsLeg_Maneuver_Type_kTransitTransfer) ||
+          (type_ == DirectionsLeg_Maneuver_Type_kTransitRemainOn));
 }
 
 const TransitRouteInfo& Maneuver::transit_info() const {
@@ -967,8 +967,8 @@ std::string Maneuver::ToParameterString() const {
   std::string man_str;
   man_str.reserve(256);
 
-  man_str += "TripDirections_Maneuver_Type_";
-  man_str += TripDirections_Maneuver_Type_Name(type_);
+  man_str += "DirectionsLeg_Maneuver_Type_";
+  man_str += DirectionsLeg_Maneuver_Type_Name(type_);
 
   man_str += delim;
   man_str += street_names_->ToParameterString();
@@ -997,8 +997,8 @@ std::string Maneuver::ToParameterString() const {
   man_str += relative_direction_string.find(static_cast<int>(begin_relative_direction_))->second;
 
   man_str += delim;
-  man_str += "TripDirections_Maneuver_CardinalDirection_";
-  man_str += TripDirections_Maneuver_CardinalDirection_Name(begin_cardinal_direction_);
+  man_str += "DirectionsLeg_Maneuver_CardinalDirection_";
+  man_str += DirectionsLeg_Maneuver_CardinalDirection_Name(begin_cardinal_direction_);
 
   man_str += delim;
   man_str += std::to_string(begin_heading_);
@@ -1100,8 +1100,8 @@ std::string Maneuver::ToParameterString() const {
   man_str += std::to_string(verbal_multi_cue_);
 
   //  man_str += delim;
-  //  man_str += "TripPath_TravelMode_";
-  //  man_str += TripPath_TravelMode_descriptor()
+  //  man_str += "TripLeg_TravelMode_";
+  //  man_str += TripLeg_TravelMode_descriptor()
   //      ->FindValueByNumber(travel_mode_)->name();
   //  bool rail_;
   //  bool bus_;

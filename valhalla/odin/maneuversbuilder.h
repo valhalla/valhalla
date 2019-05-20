@@ -7,7 +7,7 @@
 #include <valhalla/odin/enhancedtrippath.h>
 #include <valhalla/odin/maneuver.h>
 #include <valhalla/proto/directions_options.pb.h>
-#include <valhalla/proto/trippath.pb.h>
+#include <valhalla/proto/trip.pb.h>
 
 namespace valhalla {
 namespace odin {
@@ -25,7 +25,7 @@ public:
    *                           language.
    * @param trip_path The trip path - list of nodes, edges, attributes and shape.
    */
-  ManeuversBuilder(const DirectionsOptions& directions_options, EnhancedTripPath* trip_path);
+  ManeuversBuilder(const DirectionsOptions& directions_options, EnhancedTripLeg* trip_path);
 
   std::list<Maneuver> Build();
 
@@ -77,42 +77,40 @@ protected:
   void SetManeuverType(Maneuver& maneuver, bool none_type_allowed = true);
 
   void SetSimpleDirectionalManeuverType(Maneuver& maneuver,
-                                        EnhancedTripPath_Edge* prev_edge,
-                                        EnhancedTripPath_Edge* curr_edge);
+                                        EnhancedTripLeg_Edge* prev_edge,
+                                        EnhancedTripLeg_Edge* curr_edge);
 
-  TripDirections_Maneuver_CardinalDirection DetermineCardinalDirection(uint32_t heading);
+  DirectionsLeg_Maneuver_CardinalDirection DetermineCardinalDirection(uint32_t heading);
 
   bool CanManeuverIncludePrevEdge(Maneuver& maneuver, int node_index);
 
   bool IncludeUnnamedPrevEdge(int node_index,
-                              EnhancedTripPath_Edge* prev_edge,
-                              EnhancedTripPath_Edge* curr_edge) const;
+                              EnhancedTripLeg_Edge* prev_edge,
+                              EnhancedTripLeg_Edge* curr_edge) const;
 
   bool IsMergeManeuverType(Maneuver& maneuver,
-                           EnhancedTripPath_Edge* prev_edge,
-                           EnhancedTripPath_Edge* curr_edge) const;
+                           EnhancedTripLeg_Edge* prev_edge,
+                           EnhancedTripLeg_Edge* curr_edge) const;
 
-  bool
-  IsFork(int node_index, EnhancedTripPath_Edge* prev_edge, EnhancedTripPath_Edge* curr_edge) const;
+  bool IsFork(int node_index, EnhancedTripLeg_Edge* prev_edge, EnhancedTripLeg_Edge* curr_edge) const;
 
   bool IsPedestrianFork(int node_index,
-                        EnhancedTripPath_Edge* prev_edge,
-                        EnhancedTripPath_Edge* curr_edge) const;
+                        EnhancedTripLeg_Edge* prev_edge,
+                        EnhancedTripLeg_Edge* curr_edge) const;
 
-  bool
-  IsTee(int node_index, EnhancedTripPath_Edge* prev_edge, EnhancedTripPath_Edge* curr_edge) const;
+  bool IsTee(int node_index, EnhancedTripLeg_Edge* prev_edge, EnhancedTripLeg_Edge* curr_edge) const;
 
   bool IsLeftPencilPointUturn(int node_index,
-                              EnhancedTripPath_Edge* prev_edge,
-                              EnhancedTripPath_Edge* curr_edge) const;
+                              EnhancedTripLeg_Edge* prev_edge,
+                              EnhancedTripLeg_Edge* curr_edge) const;
 
   bool IsRightPencilPointUturn(int node_index,
-                               EnhancedTripPath_Edge* prev_edge,
-                               EnhancedTripPath_Edge* curr_edge) const;
+                               EnhancedTripLeg_Edge* prev_edge,
+                               EnhancedTripLeg_Edge* curr_edge) const;
 
   bool IsIntersectingForwardEdge(int node_index,
-                                 EnhancedTripPath_Edge* prev_edge,
-                                 EnhancedTripPath_Edge* curr_edge) const;
+                                 EnhancedTripLeg_Edge* prev_edge,
+                                 EnhancedTripLeg_Edge* curr_edge) const;
 
   void DetermineRelativeDirection(Maneuver& maneuver);
 
@@ -130,7 +128,7 @@ protected:
    *
    * @return the speed based on the specified travel mode.
    */
-  float GetSpeed(TripPath_TravelMode travel_mode, float edge_speed) const;
+  float GetSpeed(TripLeg_TravelMode travel_mode, float edge_speed) const;
 
   /**
    * Returns true if the current turn channel maneuver is able to be combined
@@ -167,7 +165,7 @@ protected:
    *
    * @return true if roundabouts are processable based on the specified travel mode.
    */
-  bool AreRoundaboutsProcessable(const TripPath_TravelMode travel_mode) const;
+  bool AreRoundaboutsProcessable(const TripLeg_TravelMode travel_mode) const;
 
   /**
    * Review each roundabout and if appropriate - set the roundabout name and roundabout exit name.
@@ -194,7 +192,7 @@ protected:
   void EnhanceSignlessInterchnages(std::list<Maneuver>& maneuvers);
 
   const DirectionsOptions& directions_options_;
-  EnhancedTripPath* trip_path_;
+  EnhancedTripLeg* trip_path_;
 };
 
 } // namespace odin

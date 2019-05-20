@@ -29,7 +29,7 @@ public:
    * @return NarrativeBuilder unique pointer.
    */
   static std::unique_ptr<NarrativeBuilder> Create(const DirectionsOptions& directions_options,
-                                                  const EnhancedTripPath* trip_path);
+                                                  const EnhancedTripLeg* trip_path);
 };
 
 } // namespace odin

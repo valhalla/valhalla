@@ -11,9 +11,9 @@
 #include <valhalla/baldr/location.h>
 #include <valhalla/baldr/pathlocation.h>
 #include <valhalla/midgard/gridded_data.h>
+#include <valhalla/proto/directions.pb.h>
 #include <valhalla/proto/directions_options.pb.h>
-#include <valhalla/proto/tripdirections.pb.h>
-#include <valhalla/proto/trippath.pb.h>
+#include <valhalla/proto/trip.pb.h>
 #include <valhalla/thor/attributes_controller.h>
 #include <valhalla/thor/costmatrix.h>
 #include <valhalla/thor/match_result.h>
@@ -27,8 +27,8 @@ namespace tyr {
  * Turn path and directions into a route that one can follow
  */
 std::string serializeDirections(const valhalla_request_t& request,
-                                std::list<odin::TripPath>& path_legs,
-                                const std::list<odin::TripDirections>& directions_legs);
+                                std::list<odin::TripLeg>& path_legs,
+                                const std::list<odin::DirectionsLeg>& directions_legs);
 
 /**
  * Turn a time distance matrix into json that one can look up location pair results from
@@ -98,7 +98,7 @@ std::string serializeTransitAvailable(const valhalla_request_t& request,
 std::string serializeTraceAttributes(
     const valhalla_request_t& request,
     const thor::AttributesController& controller,
-    std::vector<std::tuple<float, float, std::vector<thor::MatchResult>, std::list<odin::TripPath>>>&
+    std::vector<std::tuple<float, float, std::vector<thor::MatchResult>, std::list<odin::TripLeg>>>&
         results);
 
 } // namespace tyr

@@ -92,8 +92,8 @@ const std::unordered_map<unsigned, std::string>
 
                 // odin project 2xx
                 {200, "Failed to parse intermediate request format"},
-                {201, "Failed to parse TripPath"},
-                {202, "Could not build directions for TripPath"},
+                {201, "Failed to parse TripLeg"},
+                {202, "Could not build directions for TripLeg"},
 
                 {210, "Trip path does not have any nodes"},
                 {211, "Trip path has only one node"},
@@ -102,9 +102,9 @@ const std::unordered_map<unsigned, std::string>
 
                 {220, "Turn degree out of range for cardinal direction"},
 
-                {230, "Invalid TripDirections_Maneuver_Type in method FormTurnInstruction"},
-                {231, "Invalid TripDirections_Maneuver_Type in method FormRelativeTwoDirection"},
-                {232, "Invalid TripDirections_Maneuver_Type in method FormRelativeThreeDirection"},
+                {230, "Invalid DirectionsLeg_Maneuver_Type in method FormTurnInstruction"},
+                {231, "Invalid DirectionsLeg_Maneuver_Type in method FormRelativeTwoDirection"},
+                {232, "Invalid DirectionsLeg_Maneuver_Type in method FormRelativeThreeDirection"},
 
                 {299, "Unknown"},
 
@@ -144,7 +144,7 @@ const std::unordered_map<unsigned, std::string>
 
                 // tyr project 5xx
                 {500, "Failed to parse intermediate request format"},
-                {501, "Failed to parse TripDirections"},
+                {501, "Failed to parse DirectionsLeg"},
                 {502, "Maneuver index not found for specified shape index"},
                 {503, "Leg count mismatch"},
 

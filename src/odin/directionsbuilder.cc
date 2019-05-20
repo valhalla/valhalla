@@ -8,8 +8,8 @@
 #include "odin/narrativebuilder.h"
 #include "worker.h"
 
+#include <valhalla/proto/directions.pb.h>
 #include <valhalla/proto/directions_options.pb.h>
-#include <valhalla/proto/tripdirections.pb.h>
 
 namespace {
 // Minimum drive edge length (~10 feet)
@@ -22,45 +22,44 @@ constexpr auto kMinPedestrianBicycleEdgeLength = 0.0003f;
 namespace valhalla {
 namespace odin {
 
-const std::unordered_map<int, TripDirections_VehicleType> translate_vehicle_type{
-    {static_cast<int>(TripPath_VehicleType_kCar), TripDirections_VehicleType_kCar},
-    {static_cast<int>(TripPath_VehicleType_kMotorcycle), TripDirections_VehicleType_kMotorcycle},
-    {static_cast<int>(TripPath_VehicleType_kAutoBus), TripDirections_VehicleType_kAutoBus},
-    {static_cast<int>(TripPath_VehicleType_kTractorTrailer),
-     TripDirections_VehicleType_kTractorTrailer},
-    {static_cast<int>(TripPath_VehicleType_kMotorScooter), TripDirections_VehicleType_kMotorScooter},
+const std::unordered_map<int, DirectionsLeg_VehicleType> translate_vehicle_type{
+    {static_cast<int>(TripLeg_VehicleType_kCar), DirectionsLeg_VehicleType_kCar},
+    {static_cast<int>(TripLeg_VehicleType_kMotorcycle), DirectionsLeg_VehicleType_kMotorcycle},
+    {static_cast<int>(TripLeg_VehicleType_kAutoBus), DirectionsLeg_VehicleType_kAutoBus},
+    {static_cast<int>(TripLeg_VehicleType_kTractorTrailer),
+     DirectionsLeg_VehicleType_kTractorTrailer},
+    {static_cast<int>(TripLeg_VehicleType_kMotorScooter), DirectionsLeg_VehicleType_kMotorScooter},
 };
 
-const std::unordered_map<int, TripDirections_PedestrianType> translate_pedestrian_type{
-    {static_cast<int>(TripPath_PedestrianType_kFoot), TripDirections_PedestrianType_kFoot},
-    {static_cast<int>(TripPath_PedestrianType_kWheelchair),
-     TripDirections_PedestrianType_kWheelchair},
-    {static_cast<int>(TripPath_PedestrianType_kSegway), TripDirections_PedestrianType_kSegway},
+const std::unordered_map<int, DirectionsLeg_PedestrianType> translate_pedestrian_type{
+    {static_cast<int>(TripLeg_PedestrianType_kFoot), DirectionsLeg_PedestrianType_kFoot},
+    {static_cast<int>(TripLeg_PedestrianType_kWheelchair), DirectionsLeg_PedestrianType_kWheelchair},
+    {static_cast<int>(TripLeg_PedestrianType_kSegway), DirectionsLeg_PedestrianType_kSegway},
 };
 
-const std::unordered_map<int, TripDirections_BicycleType> translate_bicycle_type{
-    {static_cast<int>(TripPath_BicycleType_kRoad), TripDirections_BicycleType_kRoad},
-    {static_cast<int>(TripPath_BicycleType_kCross), TripDirections_BicycleType_kCross},
-    {static_cast<int>(TripPath_BicycleType_kHybrid), TripDirections_BicycleType_kHybrid},
-    {static_cast<int>(TripPath_BicycleType_kMountain), TripDirections_BicycleType_kMountain},
+const std::unordered_map<int, DirectionsLeg_BicycleType> translate_bicycle_type{
+    {static_cast<int>(TripLeg_BicycleType_kRoad), DirectionsLeg_BicycleType_kRoad},
+    {static_cast<int>(TripLeg_BicycleType_kCross), DirectionsLeg_BicycleType_kCross},
+    {static_cast<int>(TripLeg_BicycleType_kHybrid), DirectionsLeg_BicycleType_kHybrid},
+    {static_cast<int>(TripLeg_BicycleType_kMountain), DirectionsLeg_BicycleType_kMountain},
 };
 
-const std::unordered_map<int, TripDirections_TransitType> translate_transit_type{
-    {static_cast<int>(TripPath_TransitType_kTram), TripDirections_TransitType_kTram},
-    {static_cast<int>(TripPath_TransitType_kMetro), TripDirections_TransitType_kMetro},
-    {static_cast<int>(TripPath_TransitType_kRail), TripDirections_TransitType_kRail},
-    {static_cast<int>(TripPath_TransitType_kBus), TripDirections_TransitType_kBus},
-    {static_cast<int>(TripPath_TransitType_kFerry), TripDirections_TransitType_kFerry},
-    {static_cast<int>(TripPath_TransitType_kCableCar), TripDirections_TransitType_kCableCar},
-    {static_cast<int>(TripPath_TransitType_kGondola), TripDirections_TransitType_kGondola},
-    {static_cast<int>(TripPath_TransitType_kFunicular), TripDirections_TransitType_kFunicular},
+const std::unordered_map<int, DirectionsLeg_TransitType> translate_transit_type{
+    {static_cast<int>(TripLeg_TransitType_kTram), DirectionsLeg_TransitType_kTram},
+    {static_cast<int>(TripLeg_TransitType_kMetro), DirectionsLeg_TransitType_kMetro},
+    {static_cast<int>(TripLeg_TransitType_kRail), DirectionsLeg_TransitType_kRail},
+    {static_cast<int>(TripLeg_TransitType_kBus), DirectionsLeg_TransitType_kBus},
+    {static_cast<int>(TripLeg_TransitType_kFerry), DirectionsLeg_TransitType_kFerry},
+    {static_cast<int>(TripLeg_TransitType_kCableCar), DirectionsLeg_TransitType_kCableCar},
+    {static_cast<int>(TripLeg_TransitType_kGondola), DirectionsLeg_TransitType_kGondola},
+    {static_cast<int>(TripLeg_TransitType_kFunicular), DirectionsLeg_TransitType_kFunicular},
 };
 
-const std::unordered_map<int, TripDirections_TravelMode> translate_travel_mode{
-    {static_cast<int>(TripPath_TravelMode_kDrive), TripDirections_TravelMode_kDrive},
-    {static_cast<int>(TripPath_TravelMode_kPedestrian), TripDirections_TravelMode_kPedestrian},
-    {static_cast<int>(TripPath_TravelMode_kBicycle), TripDirections_TravelMode_kBicycle},
-    {static_cast<int>(TripPath_TravelMode_kTransit), TripDirections_TravelMode_kTransit},
+const std::unordered_map<int, DirectionsLeg_TravelMode> translate_travel_mode{
+    {static_cast<int>(TripLeg_TravelMode_kDrive), DirectionsLeg_TravelMode_kDrive},
+    {static_cast<int>(TripLeg_TravelMode_kPedestrian), DirectionsLeg_TravelMode_kPedestrian},
+    {static_cast<int>(TripLeg_TravelMode_kBicycle), DirectionsLeg_TravelMode_kBicycle},
+    {static_cast<int>(TripLeg_TravelMode_kTransit), DirectionsLeg_TravelMode_kTransit},
 };
 
 DirectionsBuilder::DirectionsBuilder() {
@@ -69,17 +68,17 @@ DirectionsBuilder::DirectionsBuilder() {
 // Returns the trip directions based on the specified directions options
 // and trip path. This method calls ManeuversBuilder::Build and
 // NarrativeBuilder::Build to form the maneuver list. This method
-// calls PopulateTripDirections to transform the maneuver list into the
+// calls PopulateDirectionsLeg to transform the maneuver list into the
 // trip directions.
-TripDirections DirectionsBuilder::Build(const DirectionsOptions& directions_options,
-                                        TripPath& trip_path) {
+DirectionsLeg DirectionsBuilder::Build(const DirectionsOptions& directions_options,
+                                       TripLeg& trip_path) {
   // Validate trip path node list
   if (trip_path.node_size() < 1) {
     throw valhalla_exception_t{210};
   }
 
   // Create an enhanced trip path from the specified trip_path
-  EnhancedTripPath etp(trip_path);
+  EnhancedTripLeg etp(trip_path);
 
   // Produce maneuvers if desired
   std::list<Maneuver> maneuvers;
@@ -99,17 +98,17 @@ TripDirections DirectionsBuilder::Build(const DirectionsOptions& directions_opti
   }
 
   // Return trip directions
-  return PopulateTripDirections(directions_options, &etp, maneuvers);
+  return PopulateDirectionsLeg(directions_options, &etp, maneuvers);
 }
 
 // Update the heading of ~0 length edges.
-void DirectionsBuilder::UpdateHeading(EnhancedTripPath* etp) {
-  auto is_walkway = [](TripPath_Use use) -> bool {
-    return ((use >= TripPath_Use_kSidewalkUse) && (use <= TripPath_Use_kBridlewayUse));
+void DirectionsBuilder::UpdateHeading(EnhancedTripLeg* etp) {
+  auto is_walkway = [](TripLeg_Use use) -> bool {
+    return ((use >= TripLeg_Use_kSidewalkUse) && (use <= TripLeg_Use_kBridlewayUse));
   };
 
-  auto is_bikeway = [](TripPath_Use use) -> bool {
-    return ((use == TripPath_Use_kCyclewayUse) || (use == TripPath_Use_kMountainBikeUse));
+  auto is_bikeway = [](TripLeg_Use use) -> bool {
+    return ((use == TripLeg_Use_kCyclewayUse) || (use == TripLeg_Use_kMountainBikeUse));
   };
 
   for (size_t x = 0; x < etp->node_size(); ++x) {
@@ -145,10 +144,10 @@ void DirectionsBuilder::UpdateHeading(EnhancedTripPath* etp) {
 
 // Returns the trip directions based on the specified directions options,
 // trip path, and maneuver list.
-TripDirections DirectionsBuilder::PopulateTripDirections(const DirectionsOptions& directions_options,
-                                                         EnhancedTripPath* etp,
-                                                         std::list<Maneuver>& maneuvers) {
-  TripDirections trip_directions;
+DirectionsLeg DirectionsBuilder::PopulateDirectionsLeg(const DirectionsOptions& directions_options,
+                                                       EnhancedTripLeg* etp,
+                                                       std::list<Maneuver>& maneuvers) {
+  DirectionsLeg trip_directions;
 
   // Populate trip and leg IDs
   trip_directions.set_trip_id(etp->trip_id());
@@ -335,20 +334,20 @@ TripDirections DirectionsBuilder::PopulateTripDirections(const DirectionsOptions
 
     // Travel type
     switch (maneuver.travel_mode()) {
-      case TripPath_TravelMode_kDrive: {
+      case TripLeg_TravelMode_kDrive: {
         trip_maneuver->set_vehicle_type(translate_vehicle_type.find(maneuver.vehicle_type())->second);
         break;
       }
-      case TripPath_TravelMode_kPedestrian: {
+      case TripLeg_TravelMode_kPedestrian: {
         trip_maneuver->set_pedestrian_type(
             translate_pedestrian_type.find(maneuver.pedestrian_type())->second);
         break;
       }
-      case TripPath_TravelMode_kBicycle: {
+      case TripLeg_TravelMode_kBicycle: {
         trip_maneuver->set_bicycle_type(translate_bicycle_type.find(maneuver.bicycle_type())->second);
         break;
       }
-      case TripPath_TravelMode_kTransit: {
+      case TripLeg_TravelMode_kTransit: {
         trip_maneuver->set_transit_type(translate_transit_type.find(maneuver.transit_type())->second);
         break;
       }

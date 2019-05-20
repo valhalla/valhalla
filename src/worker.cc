@@ -858,6 +858,11 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
     }
   }
 
+  // how many alternates are desired, default to none and if its multi point its also none
+  options.set_alternates(rapidjson::get<uint32_t>(doc, "/alternates", 0));
+  if (options.locations_size() > 2)
+    options.set_alternates(0);
+
   // force these into the output so its obvious what we did to the user
   doc.AddMember({"language", allocator}, {options.language(), allocator}, allocator);
   doc.AddMember({"format", allocator},

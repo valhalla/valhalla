@@ -121,7 +121,7 @@ interpolate_matches(const std::vector<meili::MatchResult>& matches,
 }
 
 // Form the path from the map-matching results. This path gets sent to
-// TripPathBuilder.
+// TripLegBuilder.
 std::vector<PathInfo>
 MapMatcher::FormPath(meili::MapMatcher* matcher,
                      const std::vector<meili::MatchResult>& results,

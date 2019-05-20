@@ -39,21 +39,21 @@ namespace valhalla {
 namespace odin {
 
 NarrativeBuilder::NarrativeBuilder(const DirectionsOptions& directions_options,
-                                   const EnhancedTripPath* trip_path,
+                                   const EnhancedTripLeg* trip_path,
                                    const NarrativeDictionary& dictionary)
     : directions_options_(directions_options), trip_path_(trip_path), dictionary_(dictionary),
       articulated_preposition_enabled_(false) {
 }
 
 void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
-                             const EnhancedTripPath* etp,
+                             const EnhancedTripLeg* etp,
                              std::list<Maneuver>& maneuvers) {
   Maneuver* prev_maneuver = nullptr;
   for (auto& maneuver : maneuvers) {
     switch (maneuver.type()) {
-      case TripDirections_Maneuver_Type_kStartRight:
-      case TripDirections_Maneuver_Type_kStart:
-      case TripDirections_Maneuver_Type_kStartLeft: {
+      case DirectionsLeg_Maneuver_Type_kStartRight:
+      case DirectionsLeg_Maneuver_Type_kStart:
+      case DirectionsLeg_Maneuver_Type_kStartLeft: {
         // Set instruction
         maneuver.set_instruction(FormStartInstruction(maneuver));
 
@@ -68,9 +68,9 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
         }
         break;
       }
-      case TripDirections_Maneuver_Type_kDestinationRight:
-      case TripDirections_Maneuver_Type_kDestination:
-      case TripDirections_Maneuver_Type_kDestinationLeft: {
+      case DirectionsLeg_Maneuver_Type_kDestinationRight:
+      case DirectionsLeg_Maneuver_Type_kDestination:
+      case DirectionsLeg_Maneuver_Type_kDestinationLeft: {
         // Set instruction
         maneuver.set_instruction(FormDestinationInstruction(maneuver));
 
@@ -82,7 +82,7 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
         maneuver.set_verbal_pre_transition_instruction(FormVerbalDestinationInstruction(maneuver));
         break;
       }
-      case TripDirections_Maneuver_Type_kBecomes: {
+      case DirectionsLeg_Maneuver_Type_kBecomes: {
         // Set instruction
         maneuver.set_instruction(FormBecomesInstruction(maneuver, prev_maneuver));
 
@@ -95,12 +95,12 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
             FormVerbalPostTransitionInstruction(maneuver, maneuver.HasBeginStreetNames()));
         break;
       }
-      case TripDirections_Maneuver_Type_kSlightRight:
-      case TripDirections_Maneuver_Type_kSlightLeft:
-      case TripDirections_Maneuver_Type_kRight:
-      case TripDirections_Maneuver_Type_kSharpRight:
-      case TripDirections_Maneuver_Type_kSharpLeft:
-      case TripDirections_Maneuver_Type_kLeft: {
+      case DirectionsLeg_Maneuver_Type_kSlightRight:
+      case DirectionsLeg_Maneuver_Type_kSlightLeft:
+      case DirectionsLeg_Maneuver_Type_kRight:
+      case DirectionsLeg_Maneuver_Type_kSharpRight:
+      case DirectionsLeg_Maneuver_Type_kSharpLeft:
+      case DirectionsLeg_Maneuver_Type_kLeft: {
         // Set instruction
         maneuver.set_instruction(FormTurnInstruction(maneuver));
 
@@ -115,8 +115,8 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
             FormVerbalPostTransitionInstruction(maneuver, maneuver.HasBeginStreetNames()));
         break;
       }
-      case TripDirections_Maneuver_Type_kUturnRight:
-      case TripDirections_Maneuver_Type_kUturnLeft: {
+      case DirectionsLeg_Maneuver_Type_kUturnRight:
+      case DirectionsLeg_Maneuver_Type_kUturnLeft: {
         // Set instruction
         maneuver.set_instruction(FormUturnInstruction(maneuver));
 
@@ -131,7 +131,7 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
             FormVerbalPostTransitionInstruction(maneuver));
         break;
       }
-      case TripDirections_Maneuver_Type_kRampStraight: {
+      case DirectionsLeg_Maneuver_Type_kRampStraight: {
         // Set instruction
         maneuver.set_instruction(FormRampStraightInstruction(maneuver));
 
@@ -150,8 +150,8 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
         }
         break;
       }
-      case TripDirections_Maneuver_Type_kRampRight:
-      case TripDirections_Maneuver_Type_kRampLeft: {
+      case DirectionsLeg_Maneuver_Type_kRampRight:
+      case DirectionsLeg_Maneuver_Type_kRampLeft: {
         // Set instruction
         maneuver.set_instruction(FormRampInstruction(maneuver));
 
@@ -169,8 +169,8 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
         }
         break;
       }
-      case TripDirections_Maneuver_Type_kExitRight:
-      case TripDirections_Maneuver_Type_kExitLeft: {
+      case DirectionsLeg_Maneuver_Type_kExitRight:
+      case DirectionsLeg_Maneuver_Type_kExitLeft: {
         // Set instruction
         maneuver.set_instruction(FormExitInstruction(maneuver));
 
@@ -188,9 +188,9 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
         }
         break;
       }
-      case TripDirections_Maneuver_Type_kStayStraight:
-      case TripDirections_Maneuver_Type_kStayRight:
-      case TripDirections_Maneuver_Type_kStayLeft: {
+      case DirectionsLeg_Maneuver_Type_kStayStraight:
+      case DirectionsLeg_Maneuver_Type_kStayRight:
+      case DirectionsLeg_Maneuver_Type_kStayLeft: {
         if (maneuver.to_stay_on()) {
           // Set stay on instruction
           maneuver.set_instruction(FormKeepToStayOnInstruction(maneuver));
@@ -227,7 +227,7 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
         }
         break;
       }
-      case TripDirections_Maneuver_Type_kMerge: {
+      case DirectionsLeg_Maneuver_Type_kMerge: {
         // Set instruction
         maneuver.set_instruction(FormMergeInstruction(maneuver));
 
@@ -246,7 +246,7 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
             FormVerbalPostTransitionInstruction(maneuver));
         break;
       }
-      case TripDirections_Maneuver_Type_kRoundaboutEnter: {
+      case DirectionsLeg_Maneuver_Type_kRoundaboutEnter: {
         // Set instruction
         maneuver.set_instruction(FormEnterRoundaboutInstruction(maneuver));
 
@@ -259,7 +259,7 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
             FormVerbalEnterRoundaboutInstruction(maneuver));
         break;
       }
-      case TripDirections_Maneuver_Type_kRoundaboutExit: {
+      case DirectionsLeg_Maneuver_Type_kRoundaboutExit: {
         // Set instruction
         maneuver.set_instruction(FormExitRoundaboutInstruction(maneuver));
 
@@ -271,7 +271,7 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
             FormVerbalPostTransitionInstruction(maneuver, maneuver.HasBeginStreetNames()));
         break;
       }
-      case TripDirections_Maneuver_Type_kFerryEnter: {
+      case DirectionsLeg_Maneuver_Type_kFerryEnter: {
         // Set instruction
         maneuver.set_instruction(FormEnterFerryInstruction(maneuver));
 
@@ -287,7 +287,7 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
             FormVerbalPostTransitionInstruction(maneuver));
         break;
       }
-      case TripDirections_Maneuver_Type_kFerryExit: {
+      case DirectionsLeg_Maneuver_Type_kFerryExit: {
         // Set instruction
         maneuver.set_instruction(FormExitFerryInstruction(maneuver));
 
@@ -303,7 +303,7 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
             FormVerbalPostTransitionInstruction(maneuver, maneuver.HasBeginStreetNames()));
         break;
       }
-      case TripDirections_Maneuver_Type_kTransitConnectionStart: {
+      case DirectionsLeg_Maneuver_Type_kTransitConnectionStart: {
         // Set instruction
         maneuver.set_instruction(FormTransitConnectionStartInstruction(maneuver));
 
@@ -316,7 +316,7 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
             FormVerbalPostTransitionInstruction(maneuver));
         break;
       }
-      case TripDirections_Maneuver_Type_kTransitConnectionTransfer: {
+      case DirectionsLeg_Maneuver_Type_kTransitConnectionTransfer: {
         // Set instruction
         maneuver.set_instruction(FormTransitConnectionTransferInstruction(maneuver));
 
@@ -329,7 +329,7 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
             FormVerbalPostTransitionInstruction(maneuver));
         break;
       }
-      case TripDirections_Maneuver_Type_kTransitConnectionDestination: {
+      case DirectionsLeg_Maneuver_Type_kTransitConnectionDestination: {
         // Set instruction
         maneuver.set_instruction(FormTransitConnectionDestinationInstruction(maneuver));
 
@@ -342,7 +342,7 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
             FormVerbalPostTransitionInstruction(maneuver));
         break;
       }
-      case TripDirections_Maneuver_Type_kTransit: {
+      case DirectionsLeg_Maneuver_Type_kTransit: {
         // Set depart instruction
         maneuver.set_depart_instruction(FormDepartInstruction(maneuver));
 
@@ -367,7 +367,7 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
 
         break;
       }
-      case TripDirections_Maneuver_Type_kTransitRemainOn: {
+      case DirectionsLeg_Maneuver_Type_kTransitRemainOn: {
         // Set depart instruction
         maneuver.set_depart_instruction(FormDepartInstruction(maneuver));
 
@@ -393,7 +393,7 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
 
         break;
       }
-      case TripDirections_Maneuver_Type_kTransitTransfer: {
+      case DirectionsLeg_Maneuver_Type_kTransitTransfer: {
         // Set depart instruction
         maneuver.set_depart_instruction(FormDepartInstruction(maneuver));
 
@@ -418,7 +418,7 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
         maneuver.set_verbal_arrive_instruction(FormVerbalArriveInstruction(maneuver));
         break;
       }
-      case TripDirections_Maneuver_Type_kPostTransitConnectionDestination: {
+      case DirectionsLeg_Maneuver_Type_kPostTransitConnectionDestination: {
         // Set instruction
         maneuver.set_instruction(FormPostTransitConnectionDestinationInstruction(maneuver));
 
@@ -431,7 +431,7 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
             FormVerbalPostTransitionInstruction(maneuver));
         break;
       }
-      case TripDirections_Maneuver_Type_kContinue:
+      case DirectionsLeg_Maneuver_Type_kContinue:
       default: {
         // Set instruction
         maneuver.set_instruction(FormContinueInstruction(maneuver));
@@ -493,11 +493,11 @@ std::string NarrativeBuilder::FormStartInstruction(Maneuver& maneuver) {
   if (!begin_street_names.empty()) {
     phrase_id += 1;
   }
-  if (maneuver.travel_mode() == TripPath_TravelMode_kDrive) {
+  if (maneuver.travel_mode() == TripLeg_TravelMode_kDrive) {
     phrase_id += 4;
-  } else if (maneuver.travel_mode() == TripPath_TravelMode_kPedestrian) {
+  } else if (maneuver.travel_mode() == TripLeg_TravelMode_kPedestrian) {
     phrase_id += 8;
-  } else if (maneuver.travel_mode() == TripPath_TravelMode_kBicycle) {
+  } else if (maneuver.travel_mode() == TripLeg_TravelMode_kBicycle) {
     phrase_id += 16;
   }
 
@@ -551,11 +551,11 @@ std::string NarrativeBuilder::FormVerbalStartInstruction(Maneuver& maneuver,
   if (!begin_street_names.empty()) {
     phrase_id += 1;
   }
-  if (maneuver.travel_mode() == TripPath_TravelMode_kDrive) {
+  if (maneuver.travel_mode() == TripLeg_TravelMode_kDrive) {
     phrase_id += 4;
-  } else if (maneuver.travel_mode() == TripPath_TravelMode_kPedestrian) {
+  } else if (maneuver.travel_mode() == TripLeg_TravelMode_kPedestrian) {
     phrase_id += 8;
-  } else if (maneuver.travel_mode() == TripPath_TravelMode_kBicycle) {
+  } else if (maneuver.travel_mode() == TripLeg_TravelMode_kBicycle) {
     phrase_id += 16;
   }
 
@@ -604,10 +604,10 @@ std::string NarrativeBuilder::FormDestinationInstruction(Maneuver& maneuver) {
 
   // Check for side of street relative direction
   std::string relative_direction;
-  if (maneuver.type() == TripDirections_Maneuver_Type_kDestinationLeft) {
+  if (maneuver.type() == DirectionsLeg_Maneuver_Type_kDestinationLeft) {
     phrase_id += 2;
     relative_direction = dictionary_.destination_subset.relative_directions.at(0);
-  } else if (maneuver.type() == TripDirections_Maneuver_Type_kDestinationRight) {
+  } else if (maneuver.type() == DirectionsLeg_Maneuver_Type_kDestinationRight) {
     phrase_id += 2;
     relative_direction = dictionary_.destination_subset.relative_directions.at(1);
   }
@@ -660,10 +660,10 @@ std::string NarrativeBuilder::FormVerbalAlertDestinationInstruction(Maneuver& ma
 
   // Check for side of street relative direction
   std::string relative_direction;
-  if (maneuver.type() == TripDirections_Maneuver_Type_kDestinationLeft) {
+  if (maneuver.type() == DirectionsLeg_Maneuver_Type_kDestinationLeft) {
     phrase_id += 2;
     relative_direction = dictionary_.destination_subset.relative_directions.at(0);
-  } else if (maneuver.type() == TripDirections_Maneuver_Type_kDestinationRight) {
+  } else if (maneuver.type() == DirectionsLeg_Maneuver_Type_kDestinationRight) {
     phrase_id += 2;
     relative_direction = dictionary_.destination_subset.relative_directions.at(1);
   }
@@ -716,10 +716,10 @@ std::string NarrativeBuilder::FormVerbalDestinationInstruction(Maneuver& maneuve
 
   // Check for side of street relative direction
   std::string relative_direction;
-  if (maneuver.type() == TripDirections_Maneuver_Type_kDestinationLeft) {
+  if (maneuver.type() == DirectionsLeg_Maneuver_Type_kDestinationLeft) {
     phrase_id += 2;
     relative_direction = dictionary_.destination_subset.relative_directions.at(0);
-  } else if (maneuver.type() == TripDirections_Maneuver_Type_kDestinationRight) {
+  } else if (maneuver.type() == DirectionsLeg_Maneuver_Type_kDestinationRight) {
     phrase_id += 2;
     relative_direction = dictionary_.destination_subset.relative_directions.at(1);
   }
@@ -918,16 +918,16 @@ std::string NarrativeBuilder::FormTurnInstruction(Maneuver& maneuver) {
   // "3": "Turn/Bear/Turn sharp <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
   const TurnSubset* subset = nullptr;
   switch (maneuver.type()) {
-    case TripDirections_Maneuver_Type_kSlightRight:
-    case TripDirections_Maneuver_Type_kSlightLeft:
+    case DirectionsLeg_Maneuver_Type_kSlightRight:
+    case DirectionsLeg_Maneuver_Type_kSlightLeft:
       subset = &dictionary_.bear_subset;
       break;
-    case TripDirections_Maneuver_Type_kRight:
-    case TripDirections_Maneuver_Type_kLeft:
+    case DirectionsLeg_Maneuver_Type_kRight:
+    case DirectionsLeg_Maneuver_Type_kLeft:
       subset = &dictionary_.turn_subset;
       break;
-    case TripDirections_Maneuver_Type_kSharpRight:
-    case TripDirections_Maneuver_Type_kSharpLeft:
+    case DirectionsLeg_Maneuver_Type_kSharpRight:
+    case DirectionsLeg_Maneuver_Type_kSharpLeft:
       subset = &dictionary_.sharp_subset;
       break;
     default:
@@ -994,16 +994,16 @@ std::string NarrativeBuilder::FormVerbalTurnInstruction(Maneuver& maneuver,
 
   const TurnSubset* subset = nullptr;
   switch (maneuver.type()) {
-    case TripDirections_Maneuver_Type_kSlightRight:
-    case TripDirections_Maneuver_Type_kSlightLeft:
+    case DirectionsLeg_Maneuver_Type_kSlightRight:
+    case DirectionsLeg_Maneuver_Type_kSlightLeft:
       subset = &dictionary_.bear_verbal_subset;
       break;
-    case TripDirections_Maneuver_Type_kRight:
-    case TripDirections_Maneuver_Type_kLeft:
+    case DirectionsLeg_Maneuver_Type_kRight:
+    case DirectionsLeg_Maneuver_Type_kLeft:
       subset = &dictionary_.turn_verbal_subset;
       break;
-    case TripDirections_Maneuver_Type_kSharpRight:
-    case TripDirections_Maneuver_Type_kSharpLeft:
+    case DirectionsLeg_Maneuver_Type_kSharpRight:
+    case DirectionsLeg_Maneuver_Type_kSharpLeft:
       subset = &dictionary_.sharp_verbal_subset;
       break;
     default:
@@ -2500,11 +2500,11 @@ std::string NarrativeBuilder::FormExitFerryInstruction(Maneuver& maneuver) {
   } else if (!street_names.empty()) {
     phrase_id = 1;
   }
-  if (maneuver.travel_mode() == TripPath_TravelMode_kDrive) {
+  if (maneuver.travel_mode() == TripLeg_TravelMode_kDrive) {
     phrase_id += 4;
-  } else if (maneuver.travel_mode() == TripPath_TravelMode_kPedestrian) {
+  } else if (maneuver.travel_mode() == TripLeg_TravelMode_kPedestrian) {
     phrase_id += 8;
-  } else if (maneuver.travel_mode() == TripPath_TravelMode_kBicycle) {
+  } else if (maneuver.travel_mode() == TripLeg_TravelMode_kBicycle) {
     phrase_id += 16;
   }
 
@@ -2585,11 +2585,11 @@ std::string NarrativeBuilder::FormVerbalExitFerryInstruction(Maneuver& maneuver,
   } else if (!street_names.empty()) {
     phrase_id = 1;
   }
-  if (maneuver.travel_mode() == TripPath_TravelMode_kDrive) {
+  if (maneuver.travel_mode() == TripLeg_TravelMode_kDrive) {
     phrase_id += 4;
-  } else if (maneuver.travel_mode() == TripPath_TravelMode_kPedestrian) {
+  } else if (maneuver.travel_mode() == TripLeg_TravelMode_kPedestrian) {
     phrase_id += 8;
-  } else if (maneuver.travel_mode() == TripPath_TravelMode_kBicycle) {
+  } else if (maneuver.travel_mode() == TripLeg_TravelMode_kBicycle) {
     phrase_id += 16;
   }
 
@@ -3200,11 +3200,11 @@ std::string NarrativeBuilder::FormPostTransitConnectionDestinationInstruction(Ma
   } else if (!street_names.empty()) {
     phrase_id = 1;
   }
-  if (maneuver.travel_mode() == TripPath_TravelMode_kDrive) {
+  if (maneuver.travel_mode() == TripLeg_TravelMode_kDrive) {
     phrase_id += 4;
-  } else if (maneuver.travel_mode() == TripPath_TravelMode_kPedestrian) {
+  } else if (maneuver.travel_mode() == TripLeg_TravelMode_kPedestrian) {
     phrase_id += 8;
-  } else if (maneuver.travel_mode() == TripPath_TravelMode_kBicycle) {
+  } else if (maneuver.travel_mode() == TripLeg_TravelMode_kBicycle) {
     phrase_id += 16;
   }
 
@@ -3271,11 +3271,11 @@ NarrativeBuilder::FormVerbalPostTransitConnectionDestinationInstruction(Maneuver
   } else if (!street_names.empty()) {
     phrase_id = 1;
   }
-  if (maneuver.travel_mode() == TripPath_TravelMode_kDrive) {
+  if (maneuver.travel_mode() == TripLeg_TravelMode_kDrive) {
     phrase_id += 4;
-  } else if (maneuver.travel_mode() == TripPath_TravelMode_kPedestrian) {
+  } else if (maneuver.travel_mode() == TripLeg_TravelMode_kPedestrian) {
     phrase_id += 8;
-  } else if (maneuver.travel_mode() == TripPath_TravelMode_kBicycle) {
+  } else if (maneuver.travel_mode() == TripLeg_TravelMode_kBicycle) {
     phrase_id += 16;
   }
 
@@ -3511,25 +3511,25 @@ NarrativeBuilder::FormUsCustomaryLength(float miles,
 }
 
 std::string
-NarrativeBuilder::FormRelativeTwoDirection(TripDirections_Maneuver_Type type,
+NarrativeBuilder::FormRelativeTwoDirection(DirectionsLeg_Maneuver_Type type,
                                            const std::vector<std::string>& relative_directions) {
   switch (type) {
-    case TripDirections_Maneuver_Type_kLeft:
-    case TripDirections_Maneuver_Type_kSharpLeft:
-    case TripDirections_Maneuver_Type_kSlightLeft:
-    case TripDirections_Maneuver_Type_kUturnLeft:
-    case TripDirections_Maneuver_Type_kRampLeft:
-    case TripDirections_Maneuver_Type_kExitLeft:
-    case TripDirections_Maneuver_Type_kDestinationLeft: {
+    case DirectionsLeg_Maneuver_Type_kLeft:
+    case DirectionsLeg_Maneuver_Type_kSharpLeft:
+    case DirectionsLeg_Maneuver_Type_kSlightLeft:
+    case DirectionsLeg_Maneuver_Type_kUturnLeft:
+    case DirectionsLeg_Maneuver_Type_kRampLeft:
+    case DirectionsLeg_Maneuver_Type_kExitLeft:
+    case DirectionsLeg_Maneuver_Type_kDestinationLeft: {
       return relative_directions.at(0); // "left"
     }
-    case TripDirections_Maneuver_Type_kRight:
-    case TripDirections_Maneuver_Type_kSharpRight:
-    case TripDirections_Maneuver_Type_kSlightRight:
-    case TripDirections_Maneuver_Type_kUturnRight:
-    case TripDirections_Maneuver_Type_kRampRight:
-    case TripDirections_Maneuver_Type_kExitRight:
-    case TripDirections_Maneuver_Type_kDestinationRight: {
+    case DirectionsLeg_Maneuver_Type_kRight:
+    case DirectionsLeg_Maneuver_Type_kSharpRight:
+    case DirectionsLeg_Maneuver_Type_kSlightRight:
+    case DirectionsLeg_Maneuver_Type_kUturnRight:
+    case DirectionsLeg_Maneuver_Type_kRampRight:
+    case DirectionsLeg_Maneuver_Type_kExitRight:
+    case DirectionsLeg_Maneuver_Type_kDestinationRight: {
       return relative_directions.at(1); // "right"
     }
     default: { throw valhalla_exception_t{231}; }
@@ -3537,16 +3537,16 @@ NarrativeBuilder::FormRelativeTwoDirection(TripDirections_Maneuver_Type type,
 }
 
 std::string
-NarrativeBuilder::FormRelativeThreeDirection(TripDirections_Maneuver_Type type,
+NarrativeBuilder::FormRelativeThreeDirection(DirectionsLeg_Maneuver_Type type,
                                              const std::vector<std::string>& relative_directions) {
   switch (type) {
-    case TripDirections_Maneuver_Type_kStayLeft: {
+    case DirectionsLeg_Maneuver_Type_kStayLeft: {
       return relative_directions.at(0); // "left"
     }
-    case TripDirections_Maneuver_Type_kStayStraight: {
+    case DirectionsLeg_Maneuver_Type_kStayStraight: {
       return relative_directions.at(1); // "straight"
     }
-    case TripDirections_Maneuver_Type_kStayRight: {
+    case DirectionsLeg_Maneuver_Type_kStayRight: {
       return relative_directions.at(2); // "right"
     }
     default: { throw valhalla_exception_t{232}; }
@@ -3592,19 +3592,19 @@ NarrativeBuilder::FormStreetNames(const Maneuver& maneuver,
 
     // If pedestrian travel mode on unnamed footway
     // then set street names string to walkway
-    if ((maneuver.travel_mode() == TripPath_TravelMode_kPedestrian) && maneuver.unnamed_walkway()) {
+    if ((maneuver.travel_mode() == TripLeg_TravelMode_kPedestrian) && maneuver.unnamed_walkway()) {
       street_names_string = empty_street_name_labels->at(kWalkwayIndex);
     }
 
     // If bicycle travel mode on unnamed cycleway
     // then set street names string to cycleway
-    if ((maneuver.travel_mode() == TripPath_TravelMode_kBicycle) && maneuver.unnamed_cycleway()) {
+    if ((maneuver.travel_mode() == TripLeg_TravelMode_kBicycle) && maneuver.unnamed_cycleway()) {
       street_names_string = empty_street_name_labels->at(kCyclewayIndex);
     }
 
     // If bicycle travel mode on unnamed mountain bike trail
     // then set street names string to mountain bike trail
-    if ((maneuver.travel_mode() == TripPath_TravelMode_kBicycle) &&
+    if ((maneuver.travel_mode() == TripLeg_TravelMode_kBicycle) &&
         maneuver.unnamed_mountain_bike_trail()) {
       street_names_string = empty_street_name_labels->at(kMountainBikeTrailIndex);
     }
@@ -3693,7 +3693,7 @@ bool NarrativeBuilder::IsVerbalMultiCuePossible(Maneuver* maneuver, Maneuver& ne
       (next_maneuver.HasVerbalTransitionAlertInstruction() ||
        next_maneuver.HasVerbalPreTransitionInstruction()) &&
       maneuver->basic_time() < kVerbalMultiCueTimeThreshold &&
-      (next_maneuver.type() != TripDirections_Maneuver_Type_kMerge) && !maneuver->roundabout() &&
+      (next_maneuver.type() != DirectionsLeg_Maneuver_Type_kMerge) && !maneuver->roundabout() &&
       !next_maneuver.roundabout() && !maneuver->IsTransit() && !next_maneuver.IsTransit() &&
       !maneuver->transit_connection() && !next_maneuver.transit_connection()) {
     return true;

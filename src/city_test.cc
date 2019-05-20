@@ -23,11 +23,11 @@
 #include "sif/costfactory.h"
 #include "thor/bidirectional_astar.h"
 #include "thor/pathalgorithm.h"
-#include "thor/trippathbuilder.h"
+#include "thor/triplegbuilder.h"
 
+#include <valhalla/proto/directions.pb.h>
 #include <valhalla/proto/directions_options.pb.h>
-#include <valhalla/proto/tripdirections.pb.h>
-#include <valhalla/proto/trippath.pb.h>
+#include <valhalla/proto/trip.pb.h>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
