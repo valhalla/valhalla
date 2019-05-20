@@ -52,11 +52,7 @@ public:
   std::string matrix(valhalla_request_t& request);
   std::list<odin::TripLeg> optimized_route(valhalla_request_t& request);
   std::string isochrones(valhalla_request_t& request);
-<<<<<<< HEAD
-  std::list<odin::TripPath> trace_route(valhalla_request_t& request);
-=======
-  odin::TripLeg trace_route(valhalla_request_t& request);
->>>>>>> master
+  std::list<odin::TripLeg> trace_route(valhalla_request_t& request);
   std::string trace_attributes(valhalla_request_t& request);
 
 protected:

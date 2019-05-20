@@ -63,9 +63,10 @@ std::list<odin::TripLeg> thor_worker_t::trace_route(valhalla_request_t& request)
     case odin::ShapeMatch::edge_walk:
       try {
         trip_paths = route_match(request, controller);
-        // TODO check each trippath?
-        if (trip_paths.front().node().size() == 0) {
-          throw std::exception{};
+        for (const auto& trippath : trip_paths) {
+          if (trip_path.node().size() == 0) {
+            throw std::exception{};
+          };
         }
       } catch (...) {
         throw valhalla_exception_t{
@@ -104,11 +105,12 @@ std::list<odin::TripLeg> thor_worker_t::trace_route(valhalla_request_t& request)
       break;
   }
 
-  // TODO reenable
-  // if (!request.options.do_not_track()) {
-  //   log_admin(trip_path);
-  // }
-
+  // log admin areas
+  if (!request.options.do_not_track()) {
+    for (const auto& tp : trippaths) {
+      log_admin(tp);
+    }
+  }
   return trip_paths;
 }
 

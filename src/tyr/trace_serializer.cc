@@ -402,7 +402,6 @@ void append_trace_info(
         map_match_result) {
   // Set trip path and match results
   const auto& match_results = std::get<kMatchResultsIndex>(map_match_result);
-  // TODO serialize all trip_paths
   const auto& trip_path = std::get<kTripLegIndex>(map_match_result).front();
 
   // Add osm_changeset

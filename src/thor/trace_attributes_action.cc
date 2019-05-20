@@ -96,7 +96,6 @@ std::string thor_worker_t::trace_attributes(valhalla_request_t& request) {
     case odin::ShapeMatch::edge_walk:
       try {
         trip_paths = route_match(request, controller);
-        // TODO
         if (trip_paths.front().node().size() == 0) {
           throw std::exception{};
         };
@@ -141,9 +140,14 @@ std::string thor_worker_t::trace_attributes(valhalla_request_t& request) {
       break;
   }
 
-  if (map_match_results.empty() ||
-      std::get<kTripLegIndex>(map_match_results.at(0)).front().node().size() == 0) {
+  if (map_match_results.empty()) {
     throw valhalla_exception_t{442};
+  }
+
+  for (const auto& trippath : std::get<kTripLegIndex>(map_match_results.at(0))) {
+    if (trip_path.node().size() == 0) {
+      throw valhalla_exception_t{442};
+    };
   }
   return tyr::serializeTraceAttributes(request, controller, map_match_results);
 }
