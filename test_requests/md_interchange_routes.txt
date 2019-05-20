@@ -34,3 +34,7 @@
 -j '{"locations":[{"lat":39.703148,"lon":-77.319969,"street":"East Main Street"},{"lat":39.699394,"lon":-77.315651,"street":"US 15 South"}],"costing":"auto","directions_options":{"units":"miles"}}'
 -j '{"locations":[{"lat":39.704792,"lon":-77.317749,"street":"Silo Hill Road"},{"lat":39.699509,"lon":-77.315575,"street":"US 15 South"}],"costing":"auto","directions_options":{"units":"miles"}}'
 -j '{"locations":[{"lat":39.701317,"lon":-77.309723,"street":"Taneytown Pike"},{"lat":39.698818,"lon":-77.316093,"street":"US 15 South"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":39.223351,"lon":-76.661079,"street":"I 695 East"},{"lat":39.217499,"lon":-76.664665,"street":"MD 295 South"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":39.223351,"lon":-76.661079,"street":"I 695 East"},{"lat":39.222137,"lon":-76.653297,"street":"MD 295 North"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":39.214931,"lon":-76.654884,"street":"I 695 West"},{"lat":39.222237,"lon":-76.653305,"street":"MD 295 North"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":39.214931,"lon":-76.654884,"street":"I 695 West"},{"lat":39.217632,"lon":-76.664177,"street":"MD 295 South"}],"costing":"auto","directions_options":{"units":"miles"}}'

@@ -3,16 +3,21 @@
 
 #include <valhalla/baldr/streetname.h>
 
+#include <memory>
 #include <string>
 #include <vector>
-#include <memory>
 
 namespace valhalla {
 namespace baldr {
 
 class StreetNameUs : public StreetName {
- public:
-  StreetNameUs(const std::string& value);
+public:
+  /**
+   * Constructor.
+   * @param  value  Street name string.
+   * @param  is_route_number   boolean indicating if street name is a reference route number.
+   */
+  StreetNameUs(const std::string& value, const bool is_route_number);
 
   std::string GetPreDir() const override;
 
@@ -24,13 +29,13 @@ class StreetNameUs : public StreetName {
 
   bool HasSameBaseName(const StreetName& rhs) const override;
 
- protected:
+protected:
   static const std::vector<std::string> pre_dirs_;
   static const std::vector<std::string> post_dirs_;
   static const std::vector<std::string> post_cardinal_dirs_;
 };
 
-}
-}
+} // namespace baldr
+} // namespace valhalla
 
-#endif  // VALHALLA_BALDR_STREETNAME_US_H_
+#endif // VALHALLA_BALDR_STREETNAME_US_H_

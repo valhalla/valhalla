@@ -1,12 +1,12 @@
 #ifndef VALHALLA_MJOLNIR_PBFADMINPARSER_H
 #define VALHALLA_MJOLNIR_PBFADMINPARSER_H
 
+#include <boost/property_tree/ptree.hpp>
 #include <cstdint>
 #include <string>
 #include <vector>
-#include <boost/property_tree/ptree.hpp>
 
-#include <valhalla/mjolnir/osmdata.h>
+#include <valhalla/mjolnir/osmadmindata.h>
 
 namespace valhalla {
 namespace mjolnir {
@@ -15,16 +15,15 @@ namespace mjolnir {
  * Class used to parse OSM administrative protocol buffer extracts.
  */
 class PBFAdminParser {
- public:
-
+public:
   /**
    * Loads given input files
    */
-  static OSMData Parse(const boost::property_tree::ptree& pt, const std::vector<std::string>& input_files);
-
+  static OSMAdminData Parse(const boost::property_tree::ptree& pt,
+                            const std::vector<std::string>& input_files);
 };
 
-}
-}
+} // namespace mjolnir
+} // namespace valhalla
 
-#endif  // VALHALLA_MJOLNIR_PBFADMINPARSER_H
+#endif // VALHALLA_MJOLNIR_PBFADMINPARSER_H

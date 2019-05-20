@@ -1,8 +1,8 @@
 #ifndef VALHALLA_BALDR_VERBAL_TEXT_FORMATTER_FACTORY_H_
 #define VALHALLA_BALDR_VERBAL_TEXT_FORMATTER_FACTORY_H_
 
-#include <string>
 #include <memory>
+#include <string>
 
 #include <valhalla/baldr/verbal_text_formatter.h>
 
@@ -14,7 +14,7 @@ namespace baldr {
  * based on the specified country and state codes.
  */
 class VerbalTextFormatterFactory {
- public:
+public:
   VerbalTextFormatterFactory() = delete;
 
   /**
@@ -27,12 +27,11 @@ class VerbalTextFormatterFactory {
    *                      of verbal formatter. (example: PA)
    * @return VerbalTextFormatter unique pointer.
    */
-  static std::unique_ptr<VerbalTextFormatter> Create(
-      const std::string& country_code, const std::string& state_code);
-
+  static std::unique_ptr<VerbalTextFormatter> Create(const std::string& country_code,
+                                                     const std::string& state_code);
 };
 
-}
-}
+} // namespace baldr
+} // namespace valhalla
 
-#endif  // VALHALLA_BALDR_VERBAL_TEXT_FORMATTER_FACTORY_H_
+#endif // VALHALLA_BALDR_VERBAL_TEXT_FORMATTER_FACTORY_H_

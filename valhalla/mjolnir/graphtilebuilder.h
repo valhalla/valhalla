@@ -1,29 +1,30 @@
 #ifndef VALHALLA_MJOLNIR_GRAPHTILEBUILDER_H_
 #define VALHALLA_MJOLNIR_GRAPHTILEBUILDER_H_
 
-#include <cstdint>
+#include <algorithm>
 #include <boost/functional/hash.hpp>
+#include <cstdint>
 #include <fstream>
 #include <iostream>
 #include <list>
-#include <utility>
-#include <algorithm>
-#include <string>
 #include <memory>
-#include <list>
-#include <unordered_set>
+#include <string>
 #include <unordered_map>
+#include <unordered_set>
+#include <utility>
 
+#include <valhalla/baldr/admin.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphtile.h>
 #include <valhalla/baldr/graphtileheader.h>
-#include <valhalla/baldr/admin.h>
+#include <valhalla/baldr/nodetransition.h>
 #include <valhalla/baldr/sign.h>
 #include <valhalla/baldr/signinfo.h>
 #include <valhalla/baldr/transitdeparture.h>
 #include <valhalla/baldr/transitroute.h>
 #include <valhalla/baldr/transitschedule.h>
 #include <valhalla/baldr/transitstop.h>
+#include <valhalla/baldr/turnlanes.h>
 
 #include <valhalla/mjolnir/complexrestrictionbuilder.h>
 #include <valhalla/mjolnir/directededgebuilder.h>
@@ -38,8 +39,7 @@ using edge_tuple = std::tuple<uint32_t, baldr::GraphId, baldr::GraphId>;
  * Graph information for a tile within the Tiled Hierarchical Graph.
  */
 class GraphTileBuilder : public baldr::GraphTile {
- public:
-
+public:
   /**
    * Constructor given an existing tile. This is used to read in the tile
    * data and then add to it (e.g. adding node connections between hierarchy
@@ -51,9 +51,7 @@ class GraphTileBuilder : public baldr::GraphTile {
    * @param  deserialize  If true the existing objects in the tile are
    *                      converted into builders so they can be added to.
    */
-  GraphTileBuilder(const std::string& tile_dir,
-                   const GraphId& graphid,
-                   const bool deserialize);
+  GraphTileBuilder(const std::string& tile_dir, const GraphId& graphid, const bool deserialize);
 
   /**
    * Output the tile to file. Stores as binary data.
@@ -70,8 +68,7 @@ class GraphTileBuilder : public baldr::GraphTile {
    * @param nodes Updated list of nodes
    * @param directededges Updated list of edges.
    */
-  void Update(const std::vector<NodeInfo>& nodes,
-              const std::vector<DirectedEdge>& directededges);
+  void Update(const std::vector<NodeInfo>& nodes, const std::vector<DirectedEdge>& directededges);
 
   /**
    * Get the current list of node builders.
@@ -84,6 +81,14 @@ class GraphTileBuilder : public baldr::GraphTile {
    * @return  Returns the directed edge builders.
    */
   std::vector<DirectedEdge>& directededges();
+
+  /**
+   * Gets the current list of node transition (builders).
+   * @return  Returns a reference to node transition builders.
+   */
+  std::vector<NodeTransition>& transitions() {
+    return transitions_builder_;
+  }
 
   /**
    * Add a transit departure.
@@ -126,8 +131,7 @@ class GraphTileBuilder : public baldr::GraphTile {
    * @param  idx  Directed edge index.
    * @param  signs  Sign information.
    */
-  void AddSigns(const uint32_t idx,
-                const std::vector<baldr::SignInfo>& signs);
+  void AddSigns(const uint32_t idx, const std::vector<baldr::SignInfo>& signs);
 
   /**
    * Add lane connectivity information.
@@ -135,13 +139,18 @@ class GraphTileBuilder : public baldr::GraphTile {
    * @param  lc  Lane connectivity information.
    */
   void AddLaneConnectivity(const std::vector<baldr::LaneConnectivity>& lc);
+
   /**
-   * Update all of the complex restrictions.
-   * @param  complex_restriction_builder  list of complex restrictions.
-   * @param  forward                      do we update the reverse or forward list
+   * Add forward complex restriction.
+   * @param  res  Complex restriction.
    */
-  void UpdateComplexRestrictions(const std::list<ComplexRestrictionBuilder>& complex_restriction_builder,
-                                 const bool forward);
+  void AddForwardComplexRestriction(const ComplexRestrictionBuilder& res);
+
+  /**
+   * Add reverse complex restriction.
+   * @param  res  Complex restriction.
+   */
+  void AddReverseComplexRestriction(const ComplexRestrictionBuilder& res);
 
   /**
    *
@@ -158,8 +167,10 @@ class GraphTileBuilder : public baldr::GraphTile {
    *
    * @return            The edge info offset that will be stored in the directed edge.
    */
-  bool HasEdgeInfo(const uint32_t edgeindex, const baldr::GraphId& nodea,
-                       const baldr::GraphId& nodeb, uint32_t& edge_info_offset);
+  bool HasEdgeInfo(const uint32_t edgeindex,
+                   const baldr::GraphId& nodea,
+                   const baldr::GraphId& nodeb,
+                   uint32_t& edge_info_offset);
 
   /**
    * Add the edge info to the tile.
@@ -174,27 +185,34 @@ class GraphTileBuilder : public baldr::GraphTile {
    *                form tuple that uniquely identifies the edge info since
    *                there are two directed edges per edge info.
    * @param  wayid  The target edge is part of this the way id.
+   * @param  elev   Mean elevation.
+   * @param  bn     Bike network.
+   * @param  spd    Speed limit.
    * @param  lls    The shape of the target edge.
    * @param  names  The names of the target edge.
    * @param  types  Bits indicating if the name is a ref vs a name.
    * @param  added  Set to true if the target edge was newly added to the list,
    *                set to false if the target edge was already in the list.
-   *
+   * @param  diff_names Indicates the opposing direction has different names.
+   *                    If true a new EdgeInfo is always added.
    * @return  The edge info offset that will be stored in the directed edge.
    */
   template <class shape_container_t>
-  uint32_t AddEdgeInfo(const uint32_t edgeindex, const baldr::GraphId& nodea,
+  uint32_t AddEdgeInfo(const uint32_t edgeindex,
+                       const baldr::GraphId& nodea,
                        const baldr::GraphId& nodeb,
-                       const uint64_t wayid,
+                       const uint32_t wayid,
+                       const float elev,
+                       const uint32_t bn,
+                       const uint32_t spd,
                        const shape_container_t& lls,
                        const std::vector<std::string>& names,
                        const uint16_t types,
-                       bool& added);
+                       bool& added,
+                       bool diff_names = false);
 
   /**
-   * Add the edge info to the tile. This method accepts an encoded shape
-   * string.
-   *
+   * Add the edge info to the tile. This method accepts an encoded shape string.
    * @param  edgeindex  The index of the edge - used with nodea and nodeb to
    *                    form tuple that uniquely identifies the edge info since
    *                    there are two directed edges per edge info.
@@ -205,20 +223,44 @@ class GraphTileBuilder : public baldr::GraphTile {
    *                form tuple that uniquely identifies the edge info since
    *                there are two directed edges per edge info.
    * @param  wayid  The target edge is part of this the way id.
+   * @param  elev   Mean elevation.
+   * @param  bn     Bike network.
+   * @param  spd    Speed limit.
    * @param  llstr  The shape of the target edge as an encoded string.
    * @param  names  The names of the target edge.
    * @param  types  Bits indicating if the name is a ref vs a name.
    * @param  added  Set to true if the target edge was newly added to the list,
    *                set to false if the target edge was already in the list.
-   *
+   * @param  diff_names Indicates the opposing direction has different names.
+   *                    If true a new EdgeInfo is always added.
    * @return  The edge info offset that will be stored in the directed edge.
    */
-  uint32_t AddEdgeInfo(const uint32_t edgeindex, const baldr::GraphId& nodea,
-                       const baldr::GraphId& nodeb, const uint64_t wayid,
+  uint32_t AddEdgeInfo(const uint32_t edgeindex,
+                       const baldr::GraphId& nodea,
+                       const baldr::GraphId& nodeb,
+                       const uint32_t wayid,
+                       const float elev,
+                       const uint32_t bn,
+                       const uint32_t spd,
                        const std::string& llstr,
                        const std::vector<std::string>& names,
                        const uint16_t types,
-                       bool& added);
+                       bool& added,
+                       bool diff_names = false);
+
+  /**
+   * Set the mean elevation in the most recently added EdgeInfo.
+   * @param elev Mean elevation.
+   */
+  void set_mean_elevation(const float elev);
+
+  /**
+   * Set the mean elevation to the EdgeInfo given the edge info offset. This requires
+   * a serialized tile builder.
+   * @param offset Edge info offset.
+   * @param elev Mean elevation.
+   */
+  void set_mean_elevation(const uint32_t offset, const float elev);
 
   /**
    * Add a name to the text list.
@@ -238,8 +280,10 @@ class GraphTileBuilder : public baldr::GraphTile {
    *                        you ISO3166-2 for state.
    * @return  The admin offset that will be stored on the node.
    */
-  uint32_t AddAdmin(const std::string& country_name, const std::string& state_name,
-                    const std::string& country_iso, const std::string& state_iso);
+  uint32_t AddAdmin(const std::string& country_name,
+                    const std::string& state_name,
+                    const std::string& country_iso,
+                    const std::string& state_iso);
 
   /**
    * Gets a reference to the header builder.
@@ -282,6 +326,9 @@ class GraphTileBuilder : public baldr::GraphTile {
    * @return  Returns a reference to the directed edge builder.
    */
   DirectedEdge& directededge_builder(const size_t idx);
+
+  // TODO - add access method to directededge_ext_builder if extended directed edge
+  // attributes are needed.
 
   /**
    * Gets a non-const access restriction from existing tile data.
@@ -332,8 +379,9 @@ class GraphTileBuilder : public baldr::GraphTile {
    * @param tile       the tile whose edges need the binned
    * @param tweeners   the additional bins in other tiles that intersect this tiles edges
    */
-  using tweeners_t = std::unordered_map<GraphId, std::array<std::vector<GraphId>, kBinCount> >;
-  static std::array<std::vector<GraphId>, kBinCount> BinEdges(const GraphTile* tile, tweeners_t& tweeners);
+  using tweeners_t = std::unordered_map<GraphId, std::array<std::vector<GraphId>, kBinCount>>;
+  static std::array<std::vector<GraphId>, kBinCount> BinEdges(const GraphTile* tile,
+                                                              tweeners_t& tweeners);
 
   /**
    * Adds to the bins the tile already has, only modifies the header to reflect the new counts
@@ -347,50 +395,35 @@ class GraphTileBuilder : public baldr::GraphTile {
                       const std::array<std::vector<GraphId>, kBinCount>& more_bins);
 
   /**
-   * Initialize traffic segment association. Sizes the traffic segment
-   * association list and sets them all to Invalid.
+   * Get the turn lane builder at the specified index.
+   * @param  idx  Index of the turn lane builder.
+   * @return  Returns a reference to the turn lane builder.
    */
-  void InitializeTrafficSegments();
+  TurnLanes& turnlane_builder(const size_t idx);
 
   /**
-   * Initialize traffic chunks. Copies existing chunks into the chunk builder.
-   * This is executed before adding "leftovers" and again before adding chunks.
+   * Add turn lane information for a directed edge.
+   * @param  idx  Directed edge index.
+   * @param  str  Turn lane information.
    */
-  void InitializeTrafficChunks();
+  void AddTurnLanes(const uint32_t idx, const std::string& str);
 
   /**
-   * Add a traffic segment association - used when an edge associates to
-   * a single traffic segment.
-   * @param  edgeid  Edge Id to which traffic segment is associated.
-   * @param  seg     Traffic segment associated to this edge.
+   * Add a predicted speed profile for a directed edge.
+   * @param  idx  Edge Id within the tile.
+   * @param  profile  Compressed profile (200 short int)
    */
-  void AddTrafficSegment(const baldr::GraphId& edgeid,
-                         const baldr::TrafficChunk& seg);
+  void AddPredictedSpeed(const uint32_t idx, const std::vector<int16_t>& profile);
 
   /**
-   * Add a traffic segment association - used when an edge associates to
-   * more than one traffic segment.
-   * @param  edgeid  Edge Id to which traffic segments are associated.
-   * @param  segs    A vector of traffic segment associations to an edge.
+   * Updates a tile with predictive speed data. Also updates directed edges with
+   * free flow and constrained flow speeds and the predicted traffic flag. The
+   * predicted traffic is written after turn lane data.
+   * @param  directededges  Updated directed edge information.
    */
-  void AddTrafficSegments(const baldr::GraphId& edgeid,
-                          const std::vector<baldr::TrafficChunk>& segs);
+  void UpdatePredictedSpeeds(const std::vector<DirectedEdge>& directededges);
 
-  /**
-   * Updates a tile with traffic segment and chunk data.
-   * @param  update_dir_edges  If true this will update directed edge flags
-   *                 indicating a traffic segment exists on the edge.
-   */
-  void UpdateTrafficSegments(const bool update_dir_edges);
-
-  /**
-    * Gets the current list of edge elevation (builders).
-    * @return  Returns the edge elevation builders.
-    */
-   std::vector<EdgeElevation>& edge_elevations();
-
- protected:
-
+protected:
   struct EdgeTupleHasher {
     std::size_t operator()(const edge_tuple& k) const {
       std::size_t seed = 13;
@@ -399,24 +432,18 @@ class GraphTileBuilder : public baldr::GraphTile {
       boost::hash_combine(seed, id_hasher(std::get<2>(k)));
       return seed;
     }
-    //function to hash each id
+    // function to hash each id
     std::hash<uint32_t> index_hasher;
     std::hash<valhalla::baldr::GraphId> id_hasher;
   };
 
   // Edge tuple for sharing edges that have common nodes and edgeindex
   static edge_tuple EdgeTuple(const uint32_t edgeindex,
-                       const valhalla::baldr::GraphId& nodea,
-                       const valhalla::baldr::GraphId& nodeb) {
-    return (nodea < nodeb) ? std::make_tuple(edgeindex, nodea, nodeb):
-        std::make_tuple(edgeindex, nodeb, nodea);
+                              const valhalla::baldr::GraphId& nodea,
+                              const valhalla::baldr::GraphId& nodeb) {
+    return (nodea < nodeb) ? std::make_tuple(edgeindex, nodea, nodeb)
+                           : std::make_tuple(edgeindex, nodeb, nodea);
   }
-
-  // Write all forward complex restriction items to specified stream
-  void SerializeComplexRestrictionsForwardToOstream(std::ostream& out) const;
-
-  // Write all reverse complex restriction items to specified stream
-  void SerializeComplexRestrictionsReverseToOstream(std::ostream& out) const;
 
   // Write all edgeinfo items to specified stream
   void SerializeEdgeInfosToOstream(std::ostream& out) const;
@@ -437,6 +464,14 @@ class GraphTileBuilder : public baldr::GraphTile {
   // List of directed edges. This is a fixed size structure so it can be
   // indexed directly.
   std::vector<DirectedEdge> directededges_builder_;
+
+  // Optional list of directed edge extended attributes. If this is used it must be the same size
+  // as the directededges_builder.
+  std::vector<DirectedEdgeExt> directededges_ext_builder_;
+
+  // List of node transitions. This is a fixed size structure so it can be
+  // indexed directly.
+  std::vector<NodeTransition> transitions_builder_;
 
   // List of transit departures. Sorted by directed edge Id and
   // departure time
@@ -463,21 +498,18 @@ class GraphTileBuilder : public baldr::GraphTile {
   std::vector<Admin> admins_builder_;
 
   // Admin info offset
-  std::unordered_map<std::string,size_t> admin_info_offset_map_;
+  std::unordered_map<std::string, size_t> admin_info_offset_map_;
 
-  // forward complex list offset
-  uint32_t complex_restriction_forward_list_offset_ = 0;
   // The forward complex restriction list
-  std::list<ComplexRestrictionBuilder> complex_restriction_forward_builder_;
+  std::vector<ComplexRestrictionBuilder> complex_restriction_forward_builder_;
 
-  // reverse complex list offset
-  uint32_t complex_restriction_reverse_list_offset_ = 0;
   // The reverse complex restriction list
-  std::list<ComplexRestrictionBuilder> complex_restriction_reverse_builder_;
+  std::vector<ComplexRestrictionBuilder> complex_restriction_reverse_builder_;
 
   // Edge info offset and map
   size_t edge_info_offset_ = 0;
   std::unordered_map<edge_tuple, size_t, EdgeTupleHasher> edge_offset_map_;
+  std::unordered_map<uint32_t, EdgeInfoBuilder*> edgeinfo_offset_map_;
 
   // The edgeinfo list
   std::list<EdgeInfoBuilder> edgeinfo_list_;
@@ -489,24 +521,23 @@ class GraphTileBuilder : public baldr::GraphTile {
   // Text list. List of names used within this tile
   std::list<std::string> textlistbuilder_;
 
-  // Traffic segment association
-  std::vector<baldr::TrafficAssociation> traffic_segment_builder_;
-
-  // Traffic chunks
-  std::vector<baldr::TrafficChunk> traffic_chunk_builder_;
-
   // List of lane connectivity records.
   std::vector<LaneConnectivity> lane_connectivity_builder_;
 
-  // List of edge elevation records. Index with directed edge Id.
-  std::vector<EdgeElevation> edge_elevation_builder_;
+  // List of turn lanes.
+  std::vector<TurnLanes> turnlanes_builder_;
+
+  // Offsets into predicted speed profiles for each directed edge.
+  std::vector<uint32_t> speed_profile_offset_builder_;
+
+  // Predicted speed profiles. 200 short int for each directed edge which has predicted speed.
+  std::vector<int16_t> speed_profile_builder_;
 
   // lane connectivity list offset
   uint32_t lane_connectivity_offset_ = 0;
 };
 
-}
-}
+} // namespace mjolnir
+} // namespace valhalla
 
-#endif  // VALHALLA_MJOLNIR_GRAPHTILEBUILDER_H_
-
+#endif // VALHALLA_MJOLNIR_GRAPHTILEBUILDER_H_

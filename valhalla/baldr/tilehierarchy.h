@@ -1,22 +1,20 @@
 #ifndef VALHALLA_MIDGARD_TILEHIERARCHY_H
 #define VALHALLA_MIDGARD_TILEHIERARCHY_H
 
+#include <cstdint>
 #include <map>
 #include <string>
-#include <cstdint>
-#include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/json_parser.hpp>
 
+#include <valhalla/baldr/graphconstants.h>
+#include <valhalla/baldr/graphid.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/tiles.h>
-#include <valhalla/baldr/graphid.h>
-#include <valhalla/baldr/graphconstants.h>
 
 namespace valhalla {
 namespace baldr {
 
 /**
- * TileLevel: Define a level in the hierarchy of the tiles. Includes:
+ * TileLevel: Defines a level in the hierarchy of the tiles. Includes:
  *          Hierarchy level.
  *          Minimum (largest value) road class in this level.
  *          Name for the level.
@@ -34,22 +32,18 @@ struct TileLevel {
  * tile hierarchy levels are static.
  */
 class TileHierarchy {
- public:
+public:
   /**
    * Get the set of levels in this hierarchy.
    * @return set of TileLevel objects.
    */
-  static const std::map<uint8_t, TileLevel>& levels() {
-    return levels_;
-  }
+  static const std::map<uint8_t, TileLevel>& levels();
 
   /**
    * Get the transit level in this hierarchy.
    * @return the transit TileLevel object.
    */
-  static const TileLevel& GetTransitLevel() {
-    return transit_level_;
-  }
+  static const TileLevel& GetTransitLevel();
 
   /**
    * Returns the GraphId of the requested tile based on a lat,lng and a level.
@@ -88,12 +82,15 @@ class TileHierarchy {
    */
   static uint8_t get_max_level();
 
- private:
-  static std::map<uint8_t, TileLevel> levels_;
-  static TileLevel transit_level_;
+  /**
+   * Get the tiling system for a specified level.
+   * @param level  Level Id.
+   * @return Returns a const reference to the tiling system for this level.
+   */
+  static const midgard::Tiles<midgard::PointLL>& get_tiling(const uint8_t level);
 };
 
-}
-}
+} // namespace baldr
+} // namespace valhalla
 
-#endif  // VALHALLA_MIDGARD_TILEHIERARCHY_H
+#endif // VALHALLA_MIDGARD_TILEHIERARCHY_H

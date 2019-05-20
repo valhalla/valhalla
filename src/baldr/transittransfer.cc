@@ -10,9 +10,7 @@ TransitTransfer::TransitTransfer(const uint32_t from_stopid,
                                  const uint32_t to_stopid,
                                  const TransferType type,
                                  const uint32_t mintime)
-    : from_stopid_(from_stopid),
-      to_stopid_(to_stopid),
-      spare_(0) {
+    : from_stopid_(from_stopid), to_stopid_(to_stopid), spare_(0) {
   type_ = static_cast<uint32_t>(type);
 
   if (mintime > kMaxTransferTime) {
@@ -44,7 +42,7 @@ uint32_t TransitTransfer::mintime() const {
 }
 
 // operator < - for sorting. Sort by from stop Id and to stop Id.
-bool TransitTransfer::operator < (const TransitTransfer& other) const {
+bool TransitTransfer::operator<(const TransitTransfer& other) const {
   if (from_stopid() == other.from_stopid()) {
     return to_stopid() < other.to_stopid();
   } else {
@@ -52,5 +50,5 @@ bool TransitTransfer::operator < (const TransitTransfer& other) const {
   }
 }
 
-}
-}
+} // namespace baldr
+} // namespace valhalla

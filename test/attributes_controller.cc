@@ -19,8 +19,7 @@ void TestCtor() {
   TryCtor();
 }
 
-void TryArgCtor(const std::unordered_map<std::string, bool>& new_attributes,
-                size_t expected_size) {
+void TryArgCtor(const std::unordered_map<std::string, bool>& new_attributes, size_t expected_size) {
   AttributesController controller(new_attributes);
   if (controller.attributes != new_attributes)
     throw runtime_error("Incorrect Constructor using argument attributes");
@@ -29,12 +28,10 @@ void TryArgCtor(const std::unordered_map<std::string, bool>& new_attributes,
 }
 
 void TestArgCtor() {
-  const std::unordered_map<std::string, bool> attributes = {
-    { kEdgeNames, true },
-    { kEdgeLength, false },
-    { kEdgeSpeed, true },
-    { kEdgeRoadClass, false }
-  };
+  const std::unordered_map<std::string, bool> attributes = {{kEdgeNames, true},
+                                                            {kEdgeLength, false},
+                                                            {kEdgeSpeed, true},
+                                                            {kEdgeRoadClass, false}};
 
   TryArgCtor(attributes, attributes.size());
 }
@@ -72,9 +69,8 @@ void TryCategoryAttributeEnabled(const AttributesController& controller,
                                  bool expected_response) {
   // If category_attribute_enabled does not equal expected response then throw error
   if (controller.category_attribute_enabled(category) != expected_response) {
-    throw runtime_error(
-        "Incorrect cateogry_attribute_enabled response - expected: "
-            + std::string(expected_response ? "true" : "false"));
+    throw runtime_error("Incorrect cateogry_attribute_enabled response - expected: " +
+                        std::string(expected_response ? "true" : "false"));
   }
 }
 
@@ -131,7 +127,7 @@ void TestAdminAttributeEnabled() {
   TryCategoryAttributeEnabled(controller, kAdminCategory, true);
 }
 
-}
+} // namespace
 
 int main() {
   test::suite suite("trip_path_controller");

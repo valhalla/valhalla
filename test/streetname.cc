@@ -1,55 +1,53 @@
-#include "test.h"
 #include "baldr/streetname.h"
+#include "test.h"
 
-#include <vector>
 #include <algorithm>
-#include <utility>
 #include <memory>
+#include <utility>
+#include <vector>
 
 using namespace std;
 using namespace valhalla::baldr;
 
 namespace {
 
-void TryCtor(const std::string& text) {
-  StreetName street_name(text);
+void TryCtor(const std::string& text, const bool is_route_number) {
+  StreetName street_name(text, is_route_number);
 
   if (text != street_name.value())
-    throw std::runtime_error("Incorrect street name text");
-
+    throw std::runtime_error("Incorrect street name value");
+  if (is_route_number != street_name.is_route_number())
+    throw std::runtime_error("Incorrect street name is_route_number");
 }
 
 void TestCtor() {
   // Street name
-  TryCtor("Main Street");
+  TryCtor("Main Street", false);
 
   // Ref
-  TryCtor("PA 743");
+  TryCtor("PA 743", true);
 
   // Ref with post modifier
-  TryCtor("US 220 Business");
+  TryCtor("US 220 Business", true);
 
   // Ref with directional
-  TryCtor("I 81 South");
-
+  TryCtor("I 81 South", true);
 }
 
-void TryEquals(const std::string& text) {
-  StreetName lhs(text);
-  StreetName rhs(text);
+void TryEquals(const std::string& text, const bool is_route_number) {
+  StreetName lhs(text, is_route_number);
+  StreetName rhs(text, is_route_number);
 
   if (!(lhs == rhs))
     throw std::runtime_error("Incorrect equals return");
-
 }
 
 void TestEquals() {
-  TryEquals("Main Street");
-  TryEquals("PA 743");
-  TryEquals("US 220 Business");
-  TryEquals("I 81 South");
-  TryEquals("Mittelstraße");
-
+  TryEquals("Main Street", false);
+  TryEquals("PA 743", true);
+  TryEquals("US 220 Business", true);
+  TryEquals("I 81 South", true);
+  TryEquals("Mittelstraße", false);
 }
 
 void TryStartsWith(const StreetName& street_name, const std::string& prefix) {
@@ -58,8 +56,8 @@ void TryStartsWith(const StreetName& street_name, const std::string& prefix) {
 }
 
 void TestStartsWith() {
-  TryStartsWith(StreetName("I 81 South"), "I ");
-  TryStartsWith(StreetName("North Main Street"), "North");
+  TryStartsWith(StreetName("I 81 South", true), "I ");
+  TryStartsWith(StreetName("North Main Street", false), "North");
 }
 
 void TryEndsWith(const StreetName& street_name, const std::string& suffix) {
@@ -68,8 +66,8 @@ void TryEndsWith(const StreetName& street_name, const std::string& suffix) {
 }
 
 void TestEndsWith() {
-  TryEndsWith(StreetName("I 81 South"), "South");
-  TryEndsWith(StreetName("Main Street"), "Street");
+  TryEndsWith(StreetName("I 81 South", true), "South");
+  TryEndsWith(StreetName("Main Street", false), "Street");
 }
 
 void TryGetPreDir(const StreetName& street_name, const std::string& pre_dir) {
@@ -78,8 +76,8 @@ void TryGetPreDir(const StreetName& street_name, const std::string& pre_dir) {
 }
 
 void TestGetPreDir() {
-  TryGetPreDir(StreetName("North Main Street"), "");
-  TryGetPreDir(StreetName("Main Street"), "");
+  TryGetPreDir(StreetName("North Main Street", false), "");
+  TryGetPreDir(StreetName("Main Street", false), "");
 }
 
 void TryGetPostDir(const StreetName& street_name, const std::string& post_dir) {
@@ -88,56 +86,51 @@ void TryGetPostDir(const StreetName& street_name, const std::string& post_dir) {
 }
 
 void TestGetPostDir() {
-  TryGetPostDir(StreetName("I 81 South"), "");
-  TryGetPostDir(StreetName("Main Street"), "");
+  TryGetPostDir(StreetName("I 81 South", true), "");
+  TryGetPostDir(StreetName("Main Street", true), "");
 }
 
-void TryGetPostCardinalDir(const StreetName& street_name,
-                           const std::string& post_dir) {
+void TryGetPostCardinalDir(const StreetName& street_name, const std::string& post_dir) {
   if (post_dir != street_name.GetPostCardinalDir())
-    throw std::runtime_error(
-        street_name.value() + ": Incorrect GetPostCardinalDir");
+    throw std::runtime_error(street_name.value() + ": Incorrect GetPostCardinalDir");
 }
 
 void TestGetPostCardinalDir() {
-  TryGetPostCardinalDir(StreetName("US 220 North"), "");
-  TryGetPostCardinalDir(StreetName("Main Street"), "");
+  TryGetPostCardinalDir(StreetName("US 220 North", true), "");
+  TryGetPostCardinalDir(StreetName("Main Street", false), "");
 }
 
-void TryGetBaseName(const StreetName& street_name,
-                    const std::string& base_name) {
+void TryGetBaseName(const StreetName& street_name, const std::string& base_name) {
   if (base_name != street_name.GetBaseName())
     throw std::runtime_error(street_name.value() + ": Incorrect GetBaseName");
 }
 
 void TestGetBaseName() {
-  TryGetBaseName(StreetName("North Main Street"), "North Main Street");
-  TryGetBaseName(StreetName("Main Street"), "Main Street");
-  TryGetBaseName(StreetName("Broadway"), "Broadway");
-  TryGetBaseName(StreetName(""), "");
+  TryGetBaseName(StreetName("North Main Street", false), "North Main Street");
+  TryGetBaseName(StreetName("Main Street", false), "Main Street");
+  TryGetBaseName(StreetName("Broadway", false), "Broadway");
+  TryGetBaseName(StreetName("", false), "");
 }
 
 void TryHasSameBaseName(const StreetName& street_name, const StreetName& rhs) {
   if (!street_name.HasSameBaseName(rhs)) {
-    throw std::runtime_error(
-        street_name.value() + ": Incorrect HasSameBaseName");
+    throw std::runtime_error(street_name.value() + ": Incorrect HasSameBaseName");
   }
 }
 
 void TestHasSameBaseName() {
-  TryHasSameBaseName(StreetName("North Main Street"),
-                     StreetName("North Main Street"));
-  TryHasSameBaseName(StreetName("I 81 South"), StreetName("I 81 South"));
-  TryHasSameBaseName(StreetName("PA 283 West"), StreetName("PA 283 West"));
-  TryHasSameBaseName(StreetName("Constitution Avenue Northeast"),
-                     StreetName("Constitution Avenue Northeast"));
-  TryHasSameBaseName(StreetName("Main Street"), StreetName("Main Street"));
-  TryHasSameBaseName(StreetName("Broadway"), StreetName("Broadway"));
-  TryHasSameBaseName(StreetName("Mittelstraße"), StreetName("Mittelstraße"));
-  TryHasSameBaseName(StreetName(""), StreetName(""));
+  TryHasSameBaseName(StreetName("North Main Street", false), StreetName("North Main Street", false));
+  TryHasSameBaseName(StreetName("I 81 South", true), StreetName("I 81 South", true));
+  TryHasSameBaseName(StreetName("PA 283 West", true), StreetName("PA 283 West", true));
+  TryHasSameBaseName(StreetName("Constitution Avenue Northeast", false),
+                     StreetName("Constitution Avenue Northeast", false));
+  TryHasSameBaseName(StreetName("Main Street", false), StreetName("Main Street", false));
+  TryHasSameBaseName(StreetName("Broadway", false), StreetName("Broadway", false));
+  TryHasSameBaseName(StreetName("Mittelstraße", false), StreetName("Mittelstraße", false));
+  TryHasSameBaseName(StreetName("", false), StreetName("", false));
 }
 
-}
+} // namespace
 
 int main() {
   test::suite suite("streetname");

@@ -30,5 +30,5 @@ if [ ! -f "${CONF}" ]; then
 	usage
 fi
 
-PATH=../:$PATH ./batch.sh ${INPUT} ${CONF}
+PATH=../build/:$PATH ./batch.sh ${INPUT} ${CONF}
 

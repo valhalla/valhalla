@@ -1,15 +1,15 @@
-#include <cstdint>
 #include "test.h"
+#include <cstdint>
 
-#include <vector>
-#include <iostream>
 #include <fstream>
+#include <iostream>
+#include <vector>
 
-#include "baldr/graphid.h"
 #include "baldr/edgeinfo.h"
+#include "baldr/graphid.h"
+#include "baldr/sign.h"
 #include "mjolnir/edgeinfobuilder.h"
 #include <boost/shared_array.hpp>
-#include "baldr/sign.h"
 #include <memory>
 
 using namespace std;
@@ -50,6 +50,26 @@ void TestWriteRead() {
   // Make a builder to write the info to disk
   EdgeInfoBuilder eibuilder;
 
+  eibuilder.set_mean_elevation(kMinElevation - 100.0f);
+  if (eibuilder.mean_elevation() != kMinElevation) {
+    throw runtime_error("EdgeInfoBuilder mean_elevation test 1 failed");
+  }
+
+  eibuilder.set_mean_elevation(kMaxElevation + 100.0f);
+  if (eibuilder.mean_elevation() != kMaxElevation) {
+    throw runtime_error("EdgeInfoBuilder mean_elevation test 2 failed");
+  }
+
+  eibuilder.set_mean_elevation(0.0f);
+  if (std::abs(eibuilder.mean_elevation()) > kElevationBinSize) {
+    throw runtime_error("EdgeInfoBuilder mean_elevation test 3 failed");
+  }
+
+  eibuilder.set_mean_elevation(100.0f);
+  if (std::abs(eibuilder.mean_elevation() - 100.0f) > kElevationBinSize) {
+    throw runtime_error("EdgeInfoBuilder mean_elevation test 4 failed");
+  }
+
   // Name
   std::vector<NameInfo> name_info_list;
   name_info_list.push_back({963});
@@ -67,7 +87,7 @@ void TestWriteRead() {
   boost::shared_array<char> memblock = ToFileAndBack(eibuilder);
   std::unique_ptr<EdgeInfo> ei(new EdgeInfo(memblock.get(), nullptr, 0));
 
-  //TODO: errors thrown should say what was found and what was expected
+  // TODO: errors thrown should say what was found and what was expected
 
   // Validate the read in fields to the original EdgeInfoBuilder
   if (!(name_info_list.size() == ei->name_count()))
@@ -88,7 +108,7 @@ void TestWriteRead() {
   }
 }
 
-}
+} // namespace
 
 int main() {
   test::suite suite("edgeinfobuilder");

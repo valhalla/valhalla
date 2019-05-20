@@ -2,10 +2,10 @@
 #define VALHALLA_BALDR_DIRECTEDEDGE_H_
 
 #include <cstdint>
-#include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphconstants.h>
-#include <valhalla/baldr/turn.h>
+#include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/json.h>
+#include <valhalla/baldr/turn.h>
 
 namespace valhalla {
 namespace baldr {
@@ -14,7 +14,7 @@ namespace baldr {
  * Directed edge within the graph.
  */
 class DirectedEdge {
- public:
+public:
   /**
    * Constructor
    */
@@ -26,13 +26,71 @@ class DirectedEdge {
    */
   GraphId endnode() const {
     return GraphId(endnode_);
-  };
+  }
 
   /**
    * Set the end node of this directed edge.
    * @param  endnode  End node of the directed link.
    */
-  void set_endnode(const baldr::GraphId& endnode);
+  void set_endnode(const GraphId& endnode);
+
+  /**
+   * Gets the free flow speed in KPH.
+   * @return  Returns the free flow speed in KPH.
+   */
+  uint32_t free_flow_speed() const {
+    return free_flow_speed_;
+  }
+
+  /**
+   * Sets the free flow speed in KPH.
+   * @param free flow Speed in KPH.
+   */
+  void set_free_flow_speed(const uint32_t speed);
+
+  /**
+   * Gets the constrained flow speed in KPH.
+   * @return  Returns the constrained flow speed in KPH.
+   */
+  uint32_t constrained_flow_speed() const {
+    return constrained_flow_speed_;
+  }
+
+  /**
+   * Sets the constrained flow speed in KPH.
+   * @param constrained flow Speed in KPH.
+   */
+  void set_constrained_flow_speed(const uint32_t speed);
+
+  /**
+   * Flag indicating the edge has predicted speed records.
+   * @return  Returns true if this edge has predicted speed records.
+   */
+  bool predicted_speed() const {
+    return predicted_speed_;
+  }
+
+  /**
+   * Set the flag indicating the edge has turn lanes at the end of the edge.
+   * @param lanes  True if this edge has turn lane records.
+   */
+  void set_turnlanes(const bool lanes) {
+    turnlanes_ = lanes;
+  }
+
+  /**
+   * Flag indicating the edge has turn lanes at the end of the edge.
+   * @return  Returns true if this edge has turn lane records.
+   */
+  bool turnlanes() const {
+    return turnlanes_;
+  }
+
+  /**
+   * Set the flag indicating the edge has predicted speed records.
+   * @param p  True if this edge has predicted speed records
+   */
+  void set_predicted_speed(const bool p);
 
   /**
    * Offset to the common edge data. The offset is from the start
@@ -79,7 +137,6 @@ class DirectedEdge {
    */
   void set_exitsign(const bool exit);
 
-
   /**
    * Does this directed edge have the lane connectivity?
    * @return  Returns true if the directed edge has the lane connectivity,
@@ -94,21 +151,6 @@ class DirectedEdge {
    * @param  lc  True if this directed edge has lane connectivity.
    */
   void set_laneconnectivity(const bool lc);
-
-  /**
-   * Does this directed edge have a traffic segment?
-   * @return  Returns true if the directed edge has a traffic segment,
-   *          false if not.
-   */
-  bool traffic_seg() const {
-    return traffic_seg_;
-  }
-
-  /**
-   * Sets the traffic segment flag.
-   * @param  seg  True if this directed edge has a traffic segment.
-   */
-  void set_traffic_seg(const bool seg);
 
   /**
    * Gets the length of the edge in meters.
@@ -140,7 +182,38 @@ class DirectedEdge {
   void set_weighted_grade(const uint32_t factor);
 
   /**
-   * Get the road curvature factor. TODO
+   * Gets the maximum upward slope. Uses 1 degree precision for slopes to 16
+   * degrees and 4 degree precision afterwards (up to a max of 76 degrees).
+   * @return  Returns the maximum upward slope (0 to 76 degrees).
+   */
+  int max_up_slope() const {
+    return ((max_up_slope_ & 0x10) == 0) ? max_up_slope_ : 16 + ((max_up_slope_ & 0xf) * 4);
+  }
+
+  /**
+   * Sets the maximum upward slope. If slope is negative, 0 is set.
+   * @param  slope  Maximum upward slope (degrees).
+   */
+  void set_max_up_slope(const float slope);
+
+  /**
+   * Gets the maximum downward slope. Uses 1 degree precision for slopes to
+   * -16 degrees, and 4 degree precision afterwards (up to a max of -76 degs).
+   * @return  Returns the maximum downward slope (0 to -76 degrees).
+   */
+  int max_down_slope() const {
+    return ((max_down_slope_ & 0x10) == 0) ? -static_cast<int>(max_down_slope_)
+                                           : -static_cast<int>(16 + ((max_down_slope_ & 0xf) * 4));
+  }
+
+  /**
+   * Sets the maximum downward slope. If slope is positive, 0 is set.
+   * @param  slope  Maximum downward slope (degrees).
+   */
+  void set_max_down_slope(const float slope);
+
+  /**
+   * Get the road curvature factor.
    * @return  Returns the curvature factor (0-15).
    */
   uint32_t curvature() const {
@@ -148,27 +221,10 @@ class DirectedEdge {
   }
 
   /**
-   * Sets the curvature factor (0-16) for the edge. TODO.
+   * Sets the curvature factor (0-16) for the edge.
    * @param  factor  Curvature factor.
    */
   void set_curvature(const uint32_t factor);
-
-  /**
-   * Is driving on the right hand side of the road along this edge?
-   * @return  Returns true if this edge uses right-side driving, false if
-   *          left-side driving.
-   */
-  bool drive_on_right() const {
-    return drive_on_right_;
-  }
-
-  /**
-   * Set the flag indicating driving is on the right hand side of the road
-   * along this edge?
-   * @param rsd  True if this edge uses right-side driving, false if
-   *             left-side driving.
-   */
-  void set_drive_on_right(const bool rsd);
 
   /**
    * Flag indicating the edge is a dead end (no other driveable
@@ -237,7 +293,7 @@ class DirectedEdge {
    * Is this edge part of a tunnel?
    * @return  Returns true if this edge is part of a tunnel, false if not.
    */
-  bool tunnel() const  {
+  bool tunnel() const {
     return tunnel_;
   }
 
@@ -276,30 +332,11 @@ class DirectedEdge {
   void set_roundabout(const bool roundabout);
 
   /**
-   * Is this edge is unreachable by driving. This can happen if a driveable
-   * edge is surrounded by pedestrian only edges (e.g. in a city center) or
-   * is not properly connected to other edges.
-   * @return  Returns true if this edge is unreachable by auto.
-   */
-  bool unreachable() const {
-    return unreachable_;
-  }
-
-  /**
-   * Sets the flag indicating the edge is unreachable by driving. This can
-   * happen if a driveable edge is surrounded by pedestrian only edges (e.g.
-   * in a city center) or is not properly connected to other edges.
-   * @param  unreachable  True if the edge is unreachable by driving,
-   *                      false if not.
-   */
-  void set_unreachable(const bool unreachable);
-
-  /**
    * A traffic signal occurs at the end of this edge.
    * @return  Returns true if a traffic signal is present at the end of the
    *          directed edge.
    */
-  bool traffic_signal() const  {
+  bool traffic_signal() const {
     return traffic_signal_;
   }
 
@@ -367,7 +404,7 @@ class DirectedEdge {
    * then cyclelane holds information based on how separated cyclists are from pedestrians
    * @returns   Returns the type (if any) of bicycle lane along this edge.
    */
-  CycleLane cyclelane() const  {
+  CycleLane cyclelane() const {
     return static_cast<CycleLane>(cycle_lane_);
   }
 
@@ -380,19 +417,19 @@ class DirectedEdge {
   void set_cyclelane(const CycleLane cyclelane);
 
   /**
-   * Get the bike network mask for this directed edge.
-   * @return  Returns the bike network mask for this directed edge.
+   * Get the bike network flag for this directed edge.
+   * @return  Returns the bike network flag. This is true if the edge is part of any
+   *          bike network. They type(s) of bike networks are stored in EdgeInfo.
    */
-  uint32_t bike_network() const {
+  bool bike_network() const {
     return bike_network_;
   }
 
   /**
-   * Sets the bike network mask indicating which (if any) bicycle networks are
-   * along this edge. See baldr/directededge.h for definitions.
-   * @param  bike_network  Bicycle network mask.
+   * Sets the bike network flag.
+   * @param  bike_network  Bicycle network flag. True if edge is part of any bike network.
    */
-  void set_bike_network(const uint32_t bike_network);
+  void set_bike_network(const bool bike_network);
 
   /**
    * Get the truck route flag for this directed edge.
@@ -496,7 +533,7 @@ class DirectedEdge {
    * Get the access modes in the forward direction (bit field).
    * @return  Returns the access modes in the forward direction.
    */
-  uint32_t forwardaccess() const  {
+  uint32_t forwardaccess() const {
     return forwardaccess_;
   }
 
@@ -538,20 +575,6 @@ class DirectedEdge {
    * @param  speed  Speed in KPH.
    */
   void set_speed(const uint32_t speed);
-
-  /**
-   * Gets the speed limit in KPH.
-   * @return  Returns the speed limit in KPH.
-   */
-  uint32_t speed_limit() const {
-    return speed_limit_;
-  }
-
-  /**
-   * Sets the speed limit in KPH.
-   * @param  speed_limit  Speed limit in KPH.
-   */
-  void set_speed_limit(const uint32_t speed_limit);
 
   /**
    * Gets the truck speed in KPH.
@@ -596,6 +619,22 @@ class DirectedEdge {
    * @param  sac_scale SacScale type
    */
   void set_sac_scale(const SacScale sac_scale);
+
+  /**
+   * Are names consistent with the from edge (local edge index at the start node).
+   * @param idx  Local edge index at the start.
+   */
+  bool name_consistency(const uint32_t idx) const {
+    return name_consistency_ & (1 << idx);
+  }
+
+  /**
+   * Set the name consistency given the other edge's local index. This is limited
+   * to the first 8 local edge indexes.
+   * @param  from  Local index of the from edge.
+   * @param  c     Are names consistent between the 2 edges?
+   */
+  void set_name_consistency(const uint32_t from, const bool c);
 
   /**
    * Is this edge unpaved or bad surface?
@@ -685,9 +724,10 @@ class DirectedEdge {
 
   /**
    * Is this edge part of a complex restriction?
+   * @return Returns true if this edge is part of a complex restriction.
    */
   bool part_of_complex_restriction() const {
-    return part_of_complex_restriction_;
+    return complex_restriction_;
   }
 
   /**
@@ -695,13 +735,13 @@ class DirectedEdge {
    * of a complex restriction or really a via
    * @param  part_of  true if the edge is part of a complex restriction.
    */
-  void set_part_of_complex_restriction(const bool part_of);
+  void complex_restriction(const bool part_of);
 
   /**
    * Get if edge has a shoulder
    * @return  Returns if edge has a shoulder
    */
-  bool shoulder () const {
+  bool shoulder() const {
     return shoulder_;
   }
 
@@ -709,13 +749,13 @@ class DirectedEdge {
    * Set if edge has a shoulder
    * @param  shoulder  True if edge has shoulder
    */
-  void set_shoulder (const bool shoulder);
+  void set_shoulder(const bool shoulder);
 
   /**
    * Get if cyclists should dismount their bikes along this edge
    * @return  Returns true if edge is a dismount edge, false if it is not.
    */
-  bool dismount () const {
+  bool dismount() const {
     return dismount_;
   }
 
@@ -723,13 +763,13 @@ class DirectedEdge {
    * Set if cyclists should dismount their bikes along this edge
    * @param  dismount  true if the edge is a dismount edge, false if not.
    */
-  void set_dismount (const bool dismount);
+  void set_dismount(const bool dismount);
 
   /**
    * Get if a sidepath for bicycling should be preffered instead of this edge
    * @return  Returns if a sidepath should be preffered for cycling
    */
-  bool use_sidepath () const {
+  bool use_sidepath() const {
     return use_sidepath_;
   }
 
@@ -737,7 +777,7 @@ class DirectedEdge {
    * Set if a sidepath for bicycling should be preffered instead of this edge
    * @param  use_sidepath  true if sidepath should be preffered for cycling over this edge
    */
-  void set_use_sidepath (const bool use_sidepath);
+  void set_use_sidepath(const bool use_sidepath);
 
   /**
    * Get the density along the edges.
@@ -801,18 +841,17 @@ class DirectedEdge {
    * @param  localidx  Local index at the node of the inbound edge.
    * @return  Returns the turn type (see turn.h)
    */
-  Turn::Type turntype(const uint32_t localidx) const  {
+  Turn::Type turntype(const uint32_t localidx) const {
     // Turn type is 3 bits per index
     uint32_t shift = localidx * 3;
-    return static_cast<Turn::Type>(
-        ((turntype_ & (7 << shift))) >> shift);
+    return static_cast<Turn::Type>(((turntype_ & (7 << shift))) >> shift);
   }
 
   /**
    * Sets the turn type given the prior edge's local index
    * (index of the inbound edge).
    * @param  localidx  Local index at the node of the inbound edge.
-   * @param  turntype  Turn type (see TODO)
+   * @param  turntype  Turn type
    */
   void set_turntype(const uint32_t localidx, const Turn::Type turntype);
 
@@ -930,7 +969,7 @@ class DirectedEdge {
    */
   uint32_t shortcut() const {
     return shortcut_;
-   }
+  }
 
   /**
    * Set the mask for whether this edge represents a shortcut between 2 nodes.
@@ -961,50 +1000,6 @@ class DirectedEdge {
   void set_superseded(const uint32_t superseded);
 
   /**
-   * Does this edge represent a transition up one level in the hierarchy.
-   * Transition edges move between nodes in different levels of the
-   * hierarchy but have no length or other attribution. An upward transition
-   * is a transition from a minor road hierarchy (local) to more major
-   * (arterial).
-   * @return  Returns true if the edge is a transition from a lower level
-   *          to a higher (false if not).
-   */
-  bool trans_up() const {
-    return (use() == Use::kTransitionUp);
-  }
-
-  /**
-   * Set the use indicating this edge represents a transition up one level
-   * in the hierarchy. Transition edges move between nodes in different levels
-   * of the hierarchy but have no length or other attribution. An upward
-   * transition is a transition from a minor road hierarchy (local) to more
-   * major (arterial).
-   */
-  void set_trans_up();
-
-  /**
-   * Does this edge represent a transition down one level in the hierarchy.
-   * Transition edges move between nodes in different levels of the
-   * hierarchy but have no length or other attribution. An downward transition
-   * is a transition from a major road hierarchy (highway) to more minor
-   * (arterial).
-   * @return  Returns true if the edge is a transition from an upper level
-   *          to a lower (false if not).
-   */
-  bool trans_down() const {
-    return (use() == Use::kTransitionDown);
-  }
-
-  /**
-   * Set the use indicating this edge represents a transition down one level
-   * in the hierarchy. Transition edges move between nodes in different levels
-   * of the hierarchy but have no length or other attribution. A downward
-   * transition is a transition from a major road hierarchy (highway) to more
-   * minor (arterial).
-   */
-  void set_trans_down();
-
-  /**
    * Is this edge a shortcut edge. If there are more than kMaxShortcutsFromNode
    * shortcuts no mask is set but this flag is set to true.
    * @return  Returns true if this edge is a shortcut.
@@ -1032,98 +1027,82 @@ class DirectedEdge {
   void set_leaves_tile(const bool leaves_tile);
 
   /**
-   * Returns true if the edge is a transition edge either up or down
-   * @return true if the edge is a transition edge either up or down
-   */
-  bool IsTransition() const {
-    return use() == Use::kTransitionUp || use() == Use::kTransitionDown;
-  }
-
-  /**
    * Create a json object representing this edge
    * @return  Returns the json object
    */
   json::MapPtr json() const;
 
- protected:
+protected:
+  // 1st 8-byte word
+  uint64_t endnode_ : 46;      // End node of the directed edge
+  uint64_t restrictions_ : 8;  // Restrictions - mask of local edge indexes at the end node
+  uint64_t opp_index_ : 7;     // Opposing directed edge index
+  uint64_t forward_ : 1;       // Is the edge info forward or reverse
+  uint32_t leaves_tile_ : 1;   // Does directed edge end in a different tile?
+  uint64_t ctry_crossing_ : 1; // Does the edge cross into new country
 
-  uint64_t endnode_             : 46; // End node of the directed edge
-  uint64_t spare1_              : 18;
+  // 2nd 8 byte word
+  uint64_t edgeinfo_offset_ : 25;    // Offset to edge data
+  uint64_t access_restriction_ : 12; // General restriction or access condition (per mode)
+  uint64_t start_restriction_ : 12;  // Complex restriction (per mode) starts on this directed edge
+  uint64_t end_restriction_ : 12;    // Complex restriction (per mode) ends on this directed edge
+  uint64_t complex_restriction_ : 1; // Edge is part of a complex restriction
+  uint64_t dest_only_ : 1;           // Access allowed to destination only (e.g., private)
+  uint64_t not_thru_ : 1;            // Edge leads to "no-through" region
 
-  // Data offsets and flags for extended data. Where a flag exists the actual
-  // data can be indexed by the directed edge Id within the tile.
-  uint64_t edgeinfo_offset_     : 25; // Offset to edge data.
-  uint64_t access_restriction_  : 12; // General restriction or access
-                                      // condition (per mode)
-  uint64_t start_restriction_   : 12; // Complex restriction (per mode)
-                                      // starts on this directed edge
-  uint64_t end_restriction_     : 12; // Complex restriction (per mode)
-                                      // ends on this directed edge
-  uint64_t exitsign_            : 1;  // Exit signs exist for this edge
-  uint64_t forward_             : 1;  // Is the edge info forward or reverse
-  uint64_t drive_on_right_      : 1;  // Driving side. Right if true (false=left)
+  // 3rd 8-byte word. Note: speed values above 250 for special cases (closures, construction)
+  uint64_t speed_ : 8;                  // Speed (kph)
+  uint64_t free_flow_speed_ : 8;        // Speed when there is no traffic(kph)
+  uint64_t constrained_flow_speed_ : 8; // Speed when there is traffic(kph)
+  uint64_t truck_speed_ : 8;            // Truck speed (kph)
+  uint64_t name_consistency_ : 8;       // Name consistency at start node with other local edges
+  uint64_t use_ : 6;                    // Specific use types
+  uint64_t lanecount_ : 4;              // Number of lanes
+  uint64_t density_ : 4;                // Relative road density along the edge
+  uint64_t classification_ : 3;         // Classification/importance of the road/path
+  uint64_t surface_ : 3;                // Representation of smoothness
+  uint64_t toll_ : 1;                   // Edge is part of a toll road
+  uint64_t roundabout_ : 1;             // Edge is part of a roundabout
+  uint64_t truck_route_ : 1;            // Edge that is part of a truck route/network
+  uint64_t predicted_speed_ : 1;        // Does this edge have a predicted speed records?
 
-  // Attributes. Can be used in edge costing methods to favor or avoid edges.
-  // Speed values above 250 used for special cases (closures, construction)
-  uint64_t speed_               : 8; // Speed (kph)
-  uint64_t truck_speed_         : 8; // Truck speed (kph)
-  uint64_t restrictions_        : 8; // Restrictions - mask of local edge indexes
-                                     // at the end node that are restricted.
-  uint64_t lanecount_           : 4; // Number of lanes
-  uint64_t bike_network_        : 4; // Edge that is part of a bicycle network
-  uint64_t use_                 : 6; // Specific use types
-  uint64_t speed_type_          : 2; // Speed type (tagged vs. categorized)
-  uint64_t opp_index_           : 7; // Opposing directed edge index
-  uint64_t link_                : 1; // *link tag - Ramp or turn channel
-  uint64_t internal_            : 1; // Edge that is internal to an intersection
-  uint64_t deadend_             : 1; // A dead-end (no other driveable roads)
-  uint64_t toll_                : 1; // Edge is part of a toll road.
-  uint64_t seasonal_            : 1; // Seasonal access (ex. no access in winter)
-  uint64_t dest_only_           : 1; // Access allowed to destination only
-                                     //  (private or no through traffic)
-  uint64_t tunnel_              : 1; // Is this edge part of a tunnel
-  uint64_t bridge_              : 1; // Is this edge part of a bridge?
-  uint64_t roundabout_          : 1; // Edge is part of a roundabout
-  uint64_t unreachable_         : 1; // Edge that is unreachable by driving
-  uint64_t traffic_signal_      : 1; // Traffic signal at end of the directed edge
-  uint64_t not_thru_            : 1; // Edge leads to "no-through" region
-  uint64_t cycle_lane_          : 2; // Does this edge have bicycle lanes?
-  uint64_t truck_route_         : 1; // Edge that is part of a truck route/network
-  uint64_t ctry_crossing_       : 1; // Does the edge cross into new country
-  uint64_t part_of_complex_restriction_ : 1; // Edge is part of a complex restriction
+  // 4th 8-byte word
+  uint64_t forwardaccess_ : 12; // Access (bit mask) in forward direction (see graphconstants.h)
+  uint64_t reverseaccess_ : 12; // Access (bit mask) in reverse direction (see graphconstants.h)
+  uint64_t max_up_slope_ : 5;   // Maximum upward slope
+  uint64_t max_down_slope_ : 5; // Maximum downward slope
+  uint64_t sac_scale_ : 3;      // Is this edge for hiking and if so how difficult is the hike?
+  uint64_t cycle_lane_ : 2;     // Does this edge have bicycle lanes?
+  uint64_t bike_network_ : 1;   // Edge that is part of a bicycle network
+  uint64_t use_sidepath_ : 1;   // Is there a cycling path to the side that should be preferred?
+  uint64_t dismount_ : 1;       // Do you need to dismount when biking on this edge?
+  uint64_t sidewalk_left_ : 1;  // Sidewalk to the left of the edge
+  uint64_t sidewalk_right_ : 1; // Sidewalk to the right of the edge
+  uint64_t shoulder_ : 1;       // Does the edge have a shoulder?
+  uint64_t lane_conn_ : 1;      // 1 if has lane connectivity, 0 otherwise
+  uint64_t turnlanes_ : 1;      // Does this edge have turn lanes (end of edge)
+  uint64_t exitsign_ : 1;       // Exit signs exist for this edge
+  uint64_t internal_ : 1;       // Edge that is internal to an intersection
+  uint64_t tunnel_ : 1;         // Is this edge part of a tunnel
+  uint64_t bridge_ : 1;         // Is this edge part of a bridge?
+  uint64_t traffic_signal_ : 1; // Traffic signal at end of the directed edge
+  uint64_t seasonal_ : 1;       // Seasonal access (ex. no access in winter)
+  uint64_t deadend_ : 1;        // Leads to a dead-end (no other driveable roads) TODO
+  uint64_t spare4_ : 10;
 
-  // Legal access to the directed link (also include reverse direction access).
-  // See graphconstants.h.
-  uint64_t forwardaccess_  : 12; // Access (bit mask) in forward direction
-  uint64_t reverseaccess_  : 12; // Access (bit mask) in reverse direction
-  uint64_t classification_ : 3;  // Classification/importance of the road/path
-  uint64_t surface_        : 3;  // representation of smoothness
-  uint64_t shoulder_       : 1;  // Does the edge have a shoulder?
-  uint64_t spare2_         : 7;
-  uint64_t use_sidepath_   : 1;  // Is there a cycling path to the side that should be preferred?
-  uint64_t dismount_       : 1;  // Do you need to dismount when biking on this edge?
-  uint64_t density_        : 4;  // Density along the edge
-  uint64_t speed_limit_    : 8;  // Speed limit (kph)
-  uint64_t named_          : 1;  // 1 if this edge has names, 0 if unnamed
-  uint64_t lane_conn_      : 1;  // 1 if has lane connectivity, 0 otherwise
-  uint64_t traffic_seg_    : 1;  // 1 if has a traffic segment, 0 otherwise
-  uint64_t sac_scale_      : 3;  // Is this edge for hiking and if so how difficult is the hike?
-  uint64_t spare_          : 6;
-
-  // Geometric attributes: length, weighted grade, curvature factor.
-  // Turn types between edges.
-  uint64_t turntype_        : 24;   // Turn type (see graphconstants.h)
-  uint64_t edge_to_left_    :  8;   // Is there an edge to the left (between
-                                    // the "from edge" and this edge)
-  uint64_t length_          : 24;   // Length in meters
-  uint64_t weighted_grade_  :  4;   // Weighted estimate of grade
-  uint64_t curvature_       :  4;   // Curvature factor
+  // 5th 8-byte word
+  uint64_t turntype_ : 24;      // Turn type (see graphconstants.h)
+  uint64_t edge_to_left_ : 8;   // Is there an edge to the left (between
+                                // the "from edge" and this edge)
+  uint64_t length_ : 24;        // Length in meters
+  uint64_t weighted_grade_ : 4; // Weighted estimate of grade
+  uint64_t curvature_ : 4;      // Curvature factor
 
   // Stop impact among edges
   struct StopImpact {
-    uint32_t stopimpact      : 24; // Stop impact between edges
-    uint32_t edge_to_right   :  8; // Is there an edge to the right (between
-                                   // "from edge" and this edge)
+    uint32_t stopimpact : 24;   // Stop impact between edges
+    uint32_t edge_to_right : 8; // Is there an edge to the right (between
+                                // "from edge" and this edge)
   };
 
   // Store either the stop impact or the transit line identifier. Since
@@ -1131,24 +1110,33 @@ class DirectedEdge {
   // logic so we can safely share this field.
   union StopOrLine {
     StopImpact s;
-    uint32_t   lineid;
+    uint32_t lineid;
   };
   StopOrLine stopimpact_;
 
   // Local edge index, opposing local index, shortcut info
-  uint32_t localedgeidx_   : 7; // Index of the edge on the local level
-  uint32_t opp_local_idx_  : 7; // Opposing local edge index (for costing
-                                // and Uturn detection)
-  uint32_t shortcut_       : 7; // Shortcut edge (mask)
-  uint32_t superseded_     : 7; // Edge is superseded by a shortcut (mask)
-  uint32_t is_shortcut_    : 1; // True if this edge is a shortcut.
-  uint32_t leaves_tile_    : 1; // True if the end node of this directed edge
-                                // is in a different tile.
-  uint32_t sidewalk_left_  : 1; // Sidewalk to the left of the edge
-  uint32_t sidewalk_right_ : 1; // Sidewalk to the right of the edge
+  uint32_t localedgeidx_ : 7;  // Index of the edge on the local level
+  uint32_t opp_local_idx_ : 7; // Opposing local edge index (for costing and Uturn detection)
+  uint32_t shortcut_ : 7;      // Shortcut edge (mask)
+  uint32_t superseded_ : 7;    // Edge is superseded by a shortcut (mask)
+  uint32_t is_shortcut_ : 1;   // True if this edge is a shortcut
+  uint32_t speed_type_ : 1;    // Speed type (used in setting default speeds)
+  uint32_t named_ : 1;         // 1 if this edge has names, 0 if unnamed
+  uint32_t link_ : 1;          // *link tag - Ramp or turn channel. Used in costing.
 };
 
-}
-}
+/**
+ * Extended directed edge attribution. This structure provides the ability to add extra
+ * attribution per directed edge without breaking backward compatibility. For now this structure
+ * is unused.
+ */
+class DirectedEdgeExt {
 
-#endif  // VALHALLA_BALDR_DIRECTEDEDGE_H_
+protected:
+  uint64_t spare0_ : 64;
+};
+
+} // namespace baldr
+} // namespace valhalla
+
+#endif // VALHALLA_BALDR_DIRECTEDEDGE_H_

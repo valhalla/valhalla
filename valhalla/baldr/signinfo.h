@@ -11,32 +11,49 @@ namespace baldr {
  * Encapsulates the sign type and the associated text.
  */
 class SignInfo {
- public:
+public:
   /**
    * Constructor.
    * @param  type   Sign type.
+   *
+   * @param  rn     Bool indicating if this sign is a route number.
    * @param  text   Text string.
    */
-  SignInfo(const Sign::Type& type, const std::string& text);
+  SignInfo(const Sign::Type& type, const bool rn, const std::string& text)
+      : is_route_num_(rn), type_(type), text_(text) {
+  }
 
   /**
    * Returns the sign type.
    * @return Returns the sign type.
    */
-  const Sign::Type& type() const;
+  const Sign::Type& type() const {
+    return type_;
+  }
+
+  /**
+   * Does this sign record indicate a route number.
+   * @return  Returns true if the sign record is a route number.
+   */
+  bool is_route_num() const {
+    return is_route_num_;
+  }
 
   /**
    * Returns the sign text.
    * @return  Returns the sign text as a const reference to the text string.
    */
-  const std::string& text() const;
+  const std::string& text() const {
+    return text_;
+  }
 
- protected:
+protected:
   Sign::Type type_;
+  bool is_route_num_;
   std::string text_;
 };
 
-}
-}
+} // namespace baldr
+} // namespace valhalla
 
-#endif  // VALHALLA_BALDR_SIGNINFO_H_
+#endif // VALHALLA_BALDR_SIGNINFO_H_

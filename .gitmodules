@@ -1,9 +1,12 @@
 [submodule "OSM-binary"]
-	path = OSM-binary
+	path = third_party/OSM-binary
 	url = https://github.com/scrosby/OSM-binary.git
 [submodule "rapidjson"]
-	path = rapidjson
+	path = third_party/rapidjson
 	url = https://github.com/miloyip/rapidjson
-[submodule "proto"]
-	path = OSMLR
-	url = https://github.com/valhalla/osmlr-tile-spec.git
+[submodule "third_party/dirent"]
+	path = third_party/dirent
+	url = https://github.com/tronkko/dirent
+[submodule "third_party/date"]
+	path = third_party/date
+	url = https://github.com/HowardHinnant/date.git

@@ -3,21 +3,21 @@
 #define MMP_ROUTING_H_
 #include <cstdint>
 
-#include <vector>
-#include <unordered_map>
-#include <stdexcept>
 #include <algorithm>
+#include <stdexcept>
+#include <unordered_map>
+#include <vector>
 
-#include <valhalla/midgard/distanceapproximator.h>
+#include <valhalla/baldr/double_bucket_queue.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/pathlocation.h>
-#include <valhalla/baldr/double_bucket_queue.h>
+#include <valhalla/midgard/distanceapproximator.h>
 #include <valhalla/sif/costconstants.h>
-#include <valhalla/sif/edgelabel.h>
 #include <valhalla/sif/dynamiccost.h>
+#include <valhalla/sif/edgelabel.h>
 
-namespace valhalla{
+namespace valhalla {
 namespace meili {
 
 constexpr uint16_t kInvalidDestination = std::numeric_limits<uint16_t>::max();
@@ -28,8 +28,7 @@ constexpr uint16_t kInvalidDestination = std::numeric_limits<uint16_t>::max();
  * which uses a one to many routing algorithm.
  */
 class Label : public sif::EdgeLabel {
- public:
-
+public:
   Label() {
     // zero out the data but set the node Id and edge Id to invalid
     memset(this, 0, sizeof(Label));
@@ -41,21 +40,23 @@ class Label : public sif::EdgeLabel {
   /**
    * Construct a Label with all the required information.
    */
-  Label(const baldr::GraphId& nodeid, uint16_t dest,
-        const baldr::GraphId& edgeid, float source, float target,
-        const sif::Cost& cost, float turn_cost, float sortcost,
-        const uint32_t predecessor, const baldr::DirectedEdge* edge,
+  Label(const baldr::GraphId& nodeid,
+        uint16_t dest,
+        const baldr::GraphId& edgeid,
+        float source,
+        float target,
+        const sif::Cost& cost,
+        float turn_cost,
+        float sortcost,
+        const uint32_t predecessor,
+        const baldr::DirectedEdge* edge,
         const sif::TravelMode mode)
-     : sif::EdgeLabel(predecessor, edgeid, edge, cost, sortcost, 0.0f, mode, 0),
-       nodeid_(nodeid),
-       dest_(dest),
-       source_(source),
-       target_(target),
-       turn_cost_(turn_cost) {
+      : sif::EdgeLabel(predecessor, edgeid, edge, cost, sortcost, 0.0f, mode, 0), nodeid_(nodeid),
+        dest_(dest), source_(source), target_(target), turn_cost_(turn_cost) {
     // Validate inputs
     if (!(0.f <= source && source <= target && target <= 1.f)) {
-      throw std::invalid_argument("invalid source (" + std::to_string(source)
-                   + ") or target (" + std::to_string(target) + ")");
+      throw std::invalid_argument("invalid source (" + std::to_string(source) + ") or target (" +
+                                  std::to_string(target) + ")");
     }
     if (cost.cost < 0.f) {
       throw std::invalid_argument("invalid cost = " + std::to_string(cost.cost));
@@ -109,20 +110,19 @@ class Label : public sif::EdgeLabel {
    * Set all costs to 0. This is used when copying a prior Label to use as an
    * origin - we want to preserve Label values except costs must be set to 0.
    */
-  void InitAsOrigin(const sif::TravelMode mode, const uint16_t dest,
-                    const baldr::GraphId& id) {
+  void InitAsOrigin(const sif::TravelMode mode, const uint16_t dest, const baldr::GraphId& id) {
     source_ = 0.0f;
     target_ = 0.0f;
     turn_cost_ = 0.0f;
-    sortcost_  = 0.0f;
+    sortcost_ = 0.0f;
     cost_ = {};
     predecessor_ = baldr::kInvalidLabel;
     mode_ = static_cast<uint32_t>(mode);
     dest_ = dest;
-    nodeid_= id;
+    nodeid_ = id;
   }
 
- private:
+private:
   // Must be mutually exclusive, i.e. nodeid.Is_Valid() XOR dest != kInvalidDestination
   baldr::GraphId nodeid_;
   uint16_t dest_;
@@ -136,12 +136,11 @@ class Label : public sif::EdgeLabel {
 };
 
 // Status information: label index and whether it is permanently labeled.
-struct Status{
+struct Status {
   Status() = delete;
 
-  Status(uint32_t idx)
-      : label_idx(idx),
-        permanent(false) {}
+  Status(uint32_t idx) : label_idx(idx), permanent(false) {
+  }
 
   uint32_t label_idx : 31;
   uint32_t permanent : 1;
@@ -152,16 +151,14 @@ struct Status{
  * priority queue (sorted by sortdist) and maps that contain status (is the
  * element "permanently" labeled) of nodes and edges.
  */
-class LabelSet
-{
- public:
+class LabelSet {
+public:
   LabelSet(const float max_cost, const float bucket_size = 1.0f);
 
   /**
    * Add an origin label using a destination index.
    */
-  void put(const uint16_t dest, const sif::TravelMode mode,
-           const Label* edgelabel) {
+  void put(const uint16_t dest, const sif::TravelMode mode, const Label* edgelabel) {
     // Do not add a duplicate label for the same destination index
     if (dest_status_.find(dest) == dest_status_.end()) {
       // If edgelabel is not null, append it to the label set otherwise append
@@ -178,8 +175,7 @@ class LabelSet
   /**
    * Add an origin label using a node id.
    */
-  void put(const baldr::GraphId& nodeid, const sif::TravelMode mode,
-           const Label* edgelabel) {
+  void put(const baldr::GraphId& nodeid, const sif::TravelMode mode, const Label* edgelabel) {
     // Do not add a duplicate origin label for the same node
     if (node_status_.find(nodeid) == node_status_.end()) {
       // If edgelabel is not null, append it to the label set otherwise append
@@ -196,19 +192,29 @@ class LabelSet
   /**
    * Add a label with an edge and node Id.
    */
-  void put(const baldr::GraphId& nodeid, const baldr::GraphId& edgeid,
-           const float source, const float target, const sif::Cost& cost,
-           const float turn_cost, const float sortcost,
-           const uint32_t predecessor, const baldr::DirectedEdge* edge,
+  void put(const baldr::GraphId& nodeid,
+           const baldr::GraphId& edgeid,
+           const float source,
+           const float target,
+           const sif::Cost& cost,
+           const float turn_cost,
+           const float sortcost,
+           const uint32_t predecessor,
+           const baldr::DirectedEdge* edge,
            const sif::TravelMode mode);
 
   /**
    * Add a label with an edge and a destination index.
    */
-  void put(const uint16_t dest, const baldr::GraphId& edgeid,
-           const float source, const float target,
-           const sif::Cost& cost, const float turn_cost, const float sortcost,
-           const uint32_t predecessor, const baldr::DirectedEdge* edge,
+  void put(const uint16_t dest,
+           const baldr::GraphId& edgeid,
+           const float source,
+           const float target,
+           const sif::Cost& cost,
+           const float turn_cost,
+           const float sortcost,
+           const uint32_t predecessor,
+           const baldr::DirectedEdge* edge,
            const sif::TravelMode mode);
 
   /**
@@ -242,11 +248,11 @@ class LabelSet
     dest_status_.clear();
   }
 
- private:
-  std::shared_ptr<baldr::DoubleBucketQueue> queue_;         // Priority queue
-  std::unordered_map<baldr::GraphId, Status> node_status_;  // Node status
-  std::unordered_map<uint16_t, Status> dest_status_;        // Destination status
-  std::vector<Label> labels_;                               // Label list.
+private:
+  std::shared_ptr<baldr::DoubleBucketQueue> queue_;        // Priority queue
+  std::unordered_map<baldr::GraphId, Status> node_status_; // Node status
+  std::unordered_map<uint16_t, Status> dest_status_;       // Destination status
+  std::vector<Label> labels_;                              // Label list.
 };
 
 using labelset_ptr_t = std::shared_ptr<LabelSet>;
@@ -257,31 +263,32 @@ using labelset_ptr_t = std::shared_ptr<LabelSet>;
 std::unordered_map<uint16_t, uint32_t>
 find_shortest_path(baldr::GraphReader& reader,
                    const std::vector<baldr::PathLocation>& destinations,
-                   uint16_t origin_idx, labelset_ptr_t labelset,
+                   uint16_t origin_idx,
+                   labelset_ptr_t labelset,
                    const midgard::DistanceApproximator& approximator,
-                   const float search_radius, sif::cost_ptr_t costing,
-                   const Label* edgelabel, const float turn_cost_table[181],
-                   const float max_dist, const float max_time);
+                   const float search_radius,
+                   sif::cost_ptr_t costing,
+                   const Label* edgelabel,
+                   const float turn_cost_table[181],
+                   const float max_dist,
+                   const float max_time);
 
 // Route path iterator. Methods to assist recovering route paths from Labels.
-class RoutePathIterator:
-      public std::iterator<std::forward_iterator_tag, const Label>
-{
- public:
+class RoutePathIterator : public std::iterator<std::forward_iterator_tag, const Label> {
+public:
   // Construct a route path iterator.
   RoutePathIterator(const LabelSet* labelset, const uint32_t label_idx)
-      : labelset_(labelset),
-        label_idx_(label_idx) {}
+      : labelset_(labelset), label_idx_(label_idx) {
+  }
 
   // Construct a tail iterator.
   RoutePathIterator(const LabelSet* labelset)
-      : labelset_(labelset),
-        label_idx_(baldr::kInvalidLabel) {}
+      : labelset_(labelset), label_idx_(baldr::kInvalidLabel) {
+  }
 
   // Construct an invalid iterator.
-  RoutePathIterator()
-      : labelset_(nullptr),
-        label_idx_(baldr::kInvalidLabel) {}
+  RoutePathIterator() : labelset_(nullptr), label_idx_(baldr::kInvalidLabel) {
+  }
 
   // Postfix increment.
   RoutePathIterator operator++(int) {
@@ -321,11 +328,11 @@ class RoutePathIterator:
     return &(labelset_->label(label_idx_));
   }
 
- private:
+private:
   const LabelSet* labelset_;
   uint32_t label_idx_;
 };
 
-}
-}
+} // namespace meili
+} // namespace valhalla
 #endif // MMP_ROUTING_H_

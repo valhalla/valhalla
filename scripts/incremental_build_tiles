@@ -1,0 +1,56 @@
+#!/bin/bash
+
+error_exit() {
+  echo "$1" 1>&2
+  exit 1
+}
+
+function usage() {
+  echo "Usage: $0 config_file data_file(s)"
+  exit 1
+}
+
+if [ -z "$2" ]; then
+        usage
+fi
+
+config=$1
+datafiles=$2
+
+build_tiles=$(which valhalla_build_tiles)
+if [ -z "$build_tiles" ]; then
+    build_tiles="../build/valhalla_build_tiles"
+fi
+
+# Initialize (e.g. create the directory or remove files if it already exists)
+$build_tiles --config $1 --start initialize --end initialize || error_exit "[Error] tile initialization failed!"
+
+# Parse OSM PBF
+$build_tiles --config $1 --start parse --end parse $datafiles || error_exit "[Error] OSM PBF parsing failed!"
+
+# Build tiles
+$build_tiles --config $1 --start build --end build || error_exit "[Error] build tiles failed!"
+
+# Enhance tiles
+$build_tiles --config $1 --start enhance --end enhance || error_exit "[Error] Enhance tiles failed!"
+
+# Filter tiles (optional - based on config)
+$build_tiles --config $1 --start filter --end filter || error_exit "[Error] Filter tiles failed!"
+
+# Add transit tiles (optional - based on config)
+$build_tiles --config $1 --start transit --end transit || error_exit "[Error] Add transit tiles failed!"
+
+# Create hierarchy (optional - based on config)
+$build_tiles --config $1 --start hierarchy --end hierarchy || error_exit "[Error] Hierarchy building failed!"
+
+# Create shortcuts (optional - based on config)
+$build_tiles --config $1 --start shortcuts --end shortcuts || error_exit "[Error] Shortcut building failed!"
+
+# Add restrictions
+$build_tiles --config $1 --start restrictions --end restrictions || error_exit "[Error] Adding complex restrictions failed!"
+
+# Validate data
+$build_tiles --config $1 --start validate --end validate || error_exit "[Error] Validate tiles failed!"
+
+# Cleanup temporary files
+$build_tiles --config $1 --start cleanup --end cleanup || error_exit "[Error] Cleanup temporary data failed!"

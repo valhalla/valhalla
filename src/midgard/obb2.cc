@@ -4,18 +4,14 @@ namespace valhalla {
 namespace midgard {
 
 // Default constructor
-template <class coord_t>
-OBB2<coord_t>::OBB2()
-    : extent0_(0),
-      extent1_(0) {
+template <class coord_t> OBB2<coord_t>::OBB2() : extent0_(0), extent1_(0) {
 }
 
 // Construct an oriented bounding box given 4 corners. The center is found by
 // the average of the 4 vertex positions and the axes of the OBB are formed
 // by a vector from a0 to a1 and the other by a vector from a1 to a2.
 template <class coord_t>
-OBB2<coord_t>::OBB2(const coord_t& a0, const coord_t& a1,
-                    const coord_t& a2, const coord_t& a3) {
+OBB2<coord_t>::OBB2(const coord_t& a0, const coord_t& a1, const coord_t& a2, const coord_t& a3) {
   Set(a0, a1, a2, a3);
 }
 
@@ -23,8 +19,7 @@ OBB2<coord_t>::OBB2(const coord_t& a0, const coord_t& a1,
 // the average of the 4 vertex positions and the axes of the OBB are formed
 // by a vector from a0 to a1 and the other by a vector from a1 to a2.
 template <class coord_t>
-void OBB2<coord_t>::Set(const coord_t& a0, const coord_t& a1,
-                        const coord_t& a2, const coord_t& a3) {
+void OBB2<coord_t>::Set(const coord_t& a0, const coord_t& a1, const coord_t& a2, const coord_t& a3) {
   // Find center positions of each bounding box
   center_.Set((a0.x() + a1.x() + a2.x() + a3.x()) * 0.25f,
               (a0.y() + a1.y() + a2.y() + a3.y()) * 0.25f);
@@ -43,8 +38,7 @@ void OBB2<coord_t>::Set(const coord_t& a0, const coord_t& a1,
 
 // Check if two oriented bounding boxes overlap. Uses the separating
 // axis theorem.
-template <class coord_t>
-bool OBB2<coord_t>::Overlap(const OBB2<coord_t>& b) const {
+template <class coord_t> bool OBB2<coord_t>::Overlap(const OBB2<coord_t>& b) const {
   // Translation of B into A's frame
   Vector2 v(center_, b.center_);
   Vector2 t(v.Dot(basis0_), v.Dot(basis1_));
@@ -55,24 +49,28 @@ bool OBB2<coord_t>::Overlap(const OBB2<coord_t>& b) const {
   float r01 = basis0_.Dot(b.basis1_);
 
   // A's basis vectors as separating axes
-  float rb = b.extent0_ * fabs(r00) + b.extent1_ * fabs(r01);
-  if (fabs(t.x()) > (extent0_ + rb))
+  float rb = b.extent0_ * std::fabs(r00) + b.extent1_ * std::fabs(r01);
+  if (std::fabs(t.x()) > (extent0_ + rb)) {
     return false;
+  }
 
   float r10 = basis1_.Dot(b.basis0_);
   float r11 = basis1_.Dot(b.basis1_);
-  rb = b.extent0_ * fabs(r10) +  b.extent1_ * fabs(r11);
-  if (fabs(t.y()) > (extent1_ + rb))
+  rb = b.extent0_ * std::fabs(r10) + b.extent1_ * std::fabs(r11);
+  if (std::fabs(t.y()) > (extent1_ + rb)) {
     return false;
+  }
 
   // B's basis vectors as separating axes
-  float ra = extent0_ * fabs(r00) + extent1_ * fabs(r10);
-  if (fabs(t.x() * r00 + t.y() * r10) > (ra + b.extent0_))
+  float ra = extent0_ * std::fabs(r00) + extent1_ * std::fabs(r10);
+  if (std::fabs(t.x() * r00 + t.y() * r10) > (ra + b.extent0_)) {
     return false;
+  }
 
-  ra = extent0_ * fabs(r01) + extent1_ * fabs(r11);
-  if (fabs(t.x() * r01 + t.y() * r11) > (ra + b.extent1_))
+  ra = extent0_ * std::fabs(r01) + extent1_ * std::fabs(r11);
+  if (std::fabs(t.x() * r01 + t.y() * r11) > (ra + b.extent1_)) {
     return false;
+  }
 
   // No separating axis found, the two boxes overlap
   return true;
@@ -82,5 +80,5 @@ bool OBB2<coord_t>::Overlap(const OBB2<coord_t>& b) const {
 template class OBB2<Point2>;
 template class OBB2<PointLL>;
 
-}
-}
+} // namespace midgard
+} // namespace valhalla

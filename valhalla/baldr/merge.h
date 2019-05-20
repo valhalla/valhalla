@@ -3,9 +3,10 @@
 
 #include <cstdint>
 #include <deque>
+#include <utility>
+#include <valhalla/baldr/edgetracker.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
-#include <valhalla/baldr/edgetracker.h>
 
 namespace valhalla {
 namespace baldr {
@@ -16,9 +17,15 @@ namespace merge {
 struct segment {
   GraphId m_start, m_edge, m_end;
   segment(GraphId start, GraphId edge, GraphId end);
-  GraphId start() const { return m_start; }
-  GraphId end() const { return m_end; }
-  GraphId edge() const { return m_edge; }
+  GraphId start() const {
+    return m_start;
+  }
+  GraphId end() const {
+    return m_end;
+  }
+  GraphId edge() const {
+    return m_edge;
+  }
 };
 
 // a path is a start node, end node and a collection of contiguous edges between
@@ -37,24 +44,25 @@ struct path {
 namespace detail {
 
 struct edge_collapser {
-  edge_collapser(GraphReader &reader, edge_tracker &tracker,
-                 std::function<bool(const DirectedEdge *)> edge_merge_pred,
-                 std::function<bool(const DirectedEdge *)> edge_allowed_pred,
-                 std::function<void(const path &)> func);
+  edge_collapser(GraphReader& reader,
+                 edge_tracker& tracker,
+                 std::function<bool(const DirectedEdge*)> edge_merge_pred,
+                 std::function<bool(const DirectedEdge*)> edge_allowed_pred,
+                 std::function<void(const path&)> func);
   std::pair<GraphId, GraphId> nodes_reachable_from(GraphId node_id);
   GraphId next_node_id(GraphId last_node_id, GraphId node_id);
   GraphId edge_between(GraphId cur, GraphId next);
   void explore(GraphId node_id);
 
   // return true if a loop is detected
-  bool explore(GraphId prev, GraphId cur, path &forward, path &reverse);
+  bool explore(GraphId prev, GraphId cur, path& forward, path& reverse);
 
 private:
-  GraphReader &m_reader;
-  edge_tracker &m_tracker;
-  std::function<bool(const DirectedEdge *)> m_edge_merge_predicate;
-  std::function<bool(const DirectedEdge *)> m_edge_allowed_predicate;
-  std::function<void(const path &)> m_func;
+  GraphReader& m_reader;
+  edge_tracker& m_tracker;
+  std::function<bool(const DirectedEdge*)> m_edge_merge_predicate;
+  std::function<bool(const DirectedEdge*)> m_edge_allowed_predicate;
+  std::function<void(const path&)> m_func;
 };
 
 } // namespace detail
@@ -75,16 +83,17 @@ private:
  * @param func The function to execute for each discovered path.
  */
 template <typename TileSet>
-void merge(TileSet &tiles, GraphReader &reader,
-           std::function<bool(const DirectedEdge *)> edge_merge_pred,
-           std::function<bool(const DirectedEdge *)> edge_allowed_pred,
-           std::function<void(const path &)> func) {
+void merge(TileSet& tiles,
+           GraphReader& reader,
+           std::function<bool(const DirectedEdge*)> edge_merge_pred,
+           const std::function<bool(const DirectedEdge*)>& edge_allowed_pred,
+           const std::function<void(const path&)>& func) {
   edge_tracker tracker = edge_tracker::create(tiles, reader);
-  detail::edge_collapser e(reader, tracker, edge_merge_pred, edge_allowed_pred, func);
+  detail::edge_collapser e(reader, tracker, std::move(edge_merge_pred), edge_allowed_pred, func);
 
   // Iterate over tiles. Merge edges at nodes where the edges can be collapsed.
   for (GraphId tile_id : tiles) {
-    const auto *tile = reader.GetGraphTile(tile_id);
+    const auto* tile = reader.GetGraphTile(tile_id);
     uint32_t node_count = tile->header()->nodecount();
     GraphId node_id(tile_id.tileid(), tile_id.level(), 0);
     for (uint32_t i = 0; i < node_count; ++i, ++node_id) {
@@ -99,7 +108,7 @@ void merge(TileSet &tiles, GraphReader &reader,
 
   // Iterate over tiles. Handle single edges that remain.
   for (GraphId tile_id : tiles) {
-    const auto *tile = reader.GetGraphTile(tile_id);
+    const auto* tile = reader.GetGraphTile(tile_id);
     const auto num_edges = tile->header()->directededgecount();
     GraphId edge_id(tile_id.tileid(), tile_id.level(), 0);
     for (uint32_t i = 0; i < num_edges; ++i, ++edge_id) {
@@ -125,8 +134,8 @@ void merge(TileSet &tiles, GraphReader &reader,
   }
 }
 
-}
-}
-}
+} // namespace merge
+} // namespace baldr
+} // namespace valhalla
 
-#endif  // VALHALLA_BALDR_MERGE_H_
+#endif // VALHALLA_BALDR_MERGE_H_

@@ -1,7 +1,7 @@
-#include "test.h"
+#include "baldr/verbal_text_formatter_us_tx.h"
 #include "baldr/verbal_text_formatter.h"
 #include "baldr/verbal_text_formatter_us.h"
-#include "baldr/verbal_text_formatter_us_tx.h"
+#include "test.h"
 
 using namespace std;
 using namespace valhalla::baldr;
@@ -10,9 +10,8 @@ namespace {
 
 // Sub class to test protected methods
 class VerbalTextFormatterUsTxTest : public VerbalTextFormatterUsTx {
- public:
-  VerbalTextFormatterUsTxTest(const std::string& country_code,
-                          const std::string& state_code)
+public:
+  VerbalTextFormatterUsTxTest(const std::string& country_code, const std::string& state_code)
       : VerbalTextFormatterUsTx(country_code, state_code) {
   }
 
@@ -23,15 +22,13 @@ class VerbalTextFormatterUsTxTest : public VerbalTextFormatterUsTx {
   std::string FormRmTts(const std::string& source) const {
     return VerbalTextFormatterUsTx::FormRmTts(source);
   }
-
 };
 
 void TryFormFmTts(string source, string expected) {
   VerbalTextFormatterUsTxTest formatter_test("US", "TX");
   string tts = formatter_test.FormFmTts(source);
   if (tts != expected) {
-    throw std::runtime_error(
-        "Incorrect FormFmTts - EXPECTED: " + expected + "  |  FORMED: " + tts);
+    throw std::runtime_error("Incorrect FormFmTts - EXPECTED: " + expected + "  |  FORMED: " + tts);
   }
 }
 
@@ -42,15 +39,13 @@ void TestFormFmTts() {
   TryFormFmTts("F M 1018", "Farm to Market Road 1018");
   TryFormFmTts("F-M 1018", "Farm to Market Road 1018");
   TryFormFmTts("F-M-1018", "Farm to Market Road 1018");
-
 }
 
 void TryFormRmTts(string source, string expected) {
   VerbalTextFormatterUsTxTest formatter_test("US", "TX");
   string tts = formatter_test.FormRmTts(source);
   if (tts != expected) {
-    throw std::runtime_error(
-        "Incorrect FormRmTts - EXPECTED: " + expected + "  |  FORMED: " + tts);
+    throw std::runtime_error("Incorrect FormRmTts - EXPECTED: " + expected + "  |  FORMED: " + tts);
   }
 }
 
@@ -61,15 +56,13 @@ void TestFormRmTts() {
   TryFormRmTts("R M 1018", "Ranch to Market Road 1018");
   TryFormRmTts("R-M 1018", "Ranch to Market Road 1018");
   TryFormRmTts("R-M-1018", "Ranch to Market Road 1018");
-
 }
 
 void TryFormat(string source, string expected) {
   VerbalTextFormatterUsTxTest formatter_test("US", "TX");
   string tts = formatter_test.Format(source);
   if (tts != expected) {
-    throw std::runtime_error(
-        "Incorrect Format - EXPECTED: " + expected + "  |  FORMED: " + tts);
+    throw std::runtime_error("Incorrect Format - EXPECTED: " + expected + "  |  FORMED: " + tts);
   }
 }
 
@@ -125,7 +118,7 @@ void TestFormat() {
   TryFormat("T609", "T6 o9");
 }
 
-}
+} // namespace
 
 int main() {
   test::suite suite("verbal_text_formatter_us_tx");

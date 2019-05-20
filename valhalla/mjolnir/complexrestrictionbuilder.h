@@ -2,10 +2,10 @@
 #define VALHALLA_MJOLNIR_COMPLEXRESTRICTIONBUILDER_H_
 
 #include <cstdint>
-#include <vector>
+#include <iostream>
 #include <list>
 #include <string>
-#include <iostream>
+#include <vector>
 
 #include <valhalla/baldr/complexrestriction.h>
 #include <valhalla/baldr/graphconstants.h>
@@ -16,84 +16,164 @@ using namespace valhalla::baldr;
 namespace valhalla {
 namespace mjolnir {
 
-class ComplexRestrictionBuilder {
- public:
-
+/**
+ * Class to build complex restrictions. Derived from ComplexRestriction.
+ * Adds methods to set fields of the structure. Contains a vector of
+ * via edge GraphIds. Includes a method to serialize the structure.
+ */
+class ComplexRestrictionBuilder : public baldr::ComplexRestriction {
+public:
   /**
-   * Set the from edge id.
-   * @param  from_id  from id.
-   *
+   * Set the from edge graph id.
+   * @param  from_id  from graph id.
    */
-  void set_from_id(const GraphId from_id);
+  void set_from_id(const GraphId& from_id) {
+    from_graphid_ = from_id.value;
+  }
 
   /**
-   * Set the to edge id.
-   * @param  to_id  to id.
-   *
+   * Set the to edge graph id.
+   * @param  to_id  to graph id.
    */
-  void set_to_id(const GraphId to_id);
+  void set_to_id(const GraphId& to_id) {
+    to_graphid_ = to_id.value;
+  }
 
   /**
-   * set the vias for this restriction
+   * Set the number of vias.
+   * @param  count Number of vias
+   */
+  void set_via_count(const uint64_t count) {
+    via_count_ = (count > kMaxViasPerRestriction) ? kMaxViasPerRestriction : count;
+  }
+
+  /**
+   * Set the vias for this restriction
    * @param  via_list  via list.
-   *
    */
   void set_via_list(const std::vector<GraphId>& via_list);
 
   /**
-   * set the restriction type.
+   * Set the restriction type.
    * @param  type  restriction type.
-   *
    */
-  void set_type(const RestrictionType type);
+  void set_type(const RestrictionType type) {
+    type_ = (static_cast<uint64_t>(type));
+  }
 
   /**
-   * set the access modes for the restriction
+   * Set the access modes for the restriction
    * @param  modes  access modes - mask (auto, bus, truck, etc.).
-   *
    */
-  void set_modes(const uint64_t modes);
+  void set_modes(const uint64_t modes) {
+    modes_ = modes;
+  }
 
   /**
-   * set the begin dow for this restriction
-   * @param  day  begin dow.
-   *
+   * Set the date time flag for the restriction
+   * @param  dt  date time bit indicating if there is date time
+   *             info for this restriction.
    */
-//  void set_begin_day(const DOW day);
+  void set_dt(const bool dt) {
+    has_dt_ = dt;
+  }
 
   /**
-   * set the end dow for this restriction
-   * @param  day  end dow.
-   *
+   * Set the begin day or dow for the restriction.
+   * @param  begin_day_dow  begin day or dow for this restriction.
    */
-//  void set_end_day(const DOW day);
+  void set_begin_day_dow(const uint64_t begin_day_dow) {
+    begin_day_dow_ = begin_day_dow;
+  }
 
   /**
-   * set the begin time for this restriction
-   * @param  begin_time  when does it start - sec from midnight.
-   *
+   * Set the begin month for the restriction.
+   * @param  begin_month  begin month for this restriction.
    */
-//  void set_begin_time(const uint64_t begin_time);
+  void set_begin_month(const uint64_t begin_month) {
+    begin_month_ = begin_month;
+  }
 
   /**
-   * set the elapsed time for this restriction
-   * @param  elapsed_time  elapsed time in secs.
-   *
+   * Set the begin week for the restriction.
+   * @param  begin_week  begin week for this restriction.
    */
-//  void set_elapsed_time(const uint64_t elapsed_time);
+  void set_begin_week(const uint64_t begin_week) {
+    begin_week_ = begin_week;
+  }
 
   /**
-   * Get the size of this complex restriction (without padding).
-   * @return  Returns the size in bytes of this object.
+   * Set the begin hours for the restriction.
+   * @param  begin_hrs  begin hours for this restriction.
    */
-  std::size_t BaseSizeOf() const;
+  void set_begin_hrs(const uint64_t begin_hrs) {
+    begin_hrs_ = begin_hrs;
+  }
 
   /**
-   * Get the size of this complex restriction. Includes padding to align to
-   * 8-byte boundaries.
-   * @return  Returns the size in bytes of this object.
+   * Set the type for the restriction
+   * @param  type   the type of date time restriction.
+   *                YMD = 0 or nth dow = 1
    */
-  std::size_t SizeOf() const;
+  void set_dt_type(const bool type) {
+    dt_type_ = type;
+  }
+
+  /**
+   * Set the end day or dow for the restriction.
+   * @param  end_day_dow  end day or dow for this restriction.
+   */
+  void set_end_day_dow(const uint64_t end_day_dow) {
+    end_day_dow_ = end_day_dow;
+  }
+
+  /**
+   * Set the end month for the restriction.
+   * @param  end_month  end month for this restriction.
+   */
+  void set_end_month(const uint64_t end_month) {
+    end_month_ = end_month;
+  }
+
+  /**
+   * set the end week for the restriction.
+   * @param  end_week  end week for this restriction.
+   */
+  void set_end_week(const uint64_t end_week) {
+    end_week_ = end_week;
+  }
+
+  /**
+   * Set the end hours for the restriction.
+   * @param  end_hrs  end hours for this restriction.
+   */
+  void set_end_hrs(const uint64_t end_hrs) {
+    end_hrs_ = end_hrs;
+  }
+
+  /**
+   * Set the dow mask.  indicates days of week to apply the restriction
+   * @param  dow  day of week - This is a mask (e.g., Mo-Fr = 62).
+   */
+  void set_dow(const uint64_t dow) {
+    dow_ = dow;
+  }
+
+  /**
+   * Set the begin minutes for the restriction.
+   * @param  begin_mins  begin minutes for this restriction.
+   */
+  void set_begin_mins(const uint64_t begin_mins) {
+    begin_mins_ = begin_mins;
+  }
+
+  /**
+   * Set the end minutes for the restriction.
+   * @param  end_mins  end minutes for this restriction.
+   */
+  void set_end_mins(const uint64_t end_mins) {
+    end_mins_ = end_mins;
+  }
 
   /**
    * overloaded == operator - used to ensure no dups in tiles.
@@ -101,25 +181,16 @@ class ComplexRestrictionBuilder {
    * @return  Returns true or false if equal or not.
    *
    */
-  bool operator == (const ComplexRestrictionBuilder& other) const;
+  bool operator==(const ComplexRestrictionBuilder& other) const;
 
- protected:
-  //from edgeid
-  GraphId from_id_;
-
-  // to edgeid
-  GraphId to_id_;
-
-  // packed restriction data.
-  ComplexRestriction::PackedRestriction restriction_;
-
+protected:
   // via list
   std::vector<GraphId> via_list_;
 
   friend std::ostream& operator<<(std::ostream& os, const ComplexRestrictionBuilder& crb);
 };
 
-}
-}
+} // namespace mjolnir
+} // namespace valhalla
 
-#endif  // VALHALLA_MJOLNIR_COMPLEXRESTRICTIONBUILDER_H_
+#endif // VALHALLA_MJOLNIR_COMPLEXRESTRICTIONBUILDER_H_

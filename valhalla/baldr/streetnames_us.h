@@ -11,26 +11,28 @@ namespace valhalla {
 namespace baldr {
 
 class StreetNamesUs : public StreetNames {
- public:
+public:
   StreetNamesUs();
 
-  StreetNamesUs(const std::vector<std::string>& names);
+  StreetNamesUs(const std::vector<std::pair<std::string, bool>>& names);
 
   ~StreetNamesUs();
 
   std::unique_ptr<StreetNames> clone() const override;
 
-  std::unique_ptr<StreetNames> FindCommonStreetNames(
-      const StreetNames& other_street_names) const override;
+  std::unique_ptr<StreetNames>
+  FindCommonStreetNames(const StreetNames& other_street_names) const override;
 
-  std::unique_ptr<StreetNames> FindCommonBaseNames(
-      const StreetNames& other_street_names) const override;
+  std::unique_ptr<StreetNames>
+  FindCommonBaseNames(const StreetNames& other_street_names) const override;
 
- protected:
+  std::unique_ptr<StreetNames> GetRouteNumbers() const;
+  std::unique_ptr<StreetNames> GetNonRouteNumbers() const;
 
+protected:
 };
 
-}
-}
+} // namespace baldr
+} // namespace valhalla
 
-#endif  // VALHALLA_BALDR_STREETNAMES_US_H_
+#endif // VALHALLA_BALDR_STREETNAMES_US_H_

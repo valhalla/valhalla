@@ -1,23 +1,23 @@
-#include <cstdint>
-#include "test.h"
 #include "loki/node_search.h"
+#include "test.h"
+#include <cstdint>
 
+#include "baldr/rapidjson_utils.h"
 #include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/json_parser.hpp>
 #include <unordered_set>
 
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
 #include "baldr/location.h"
+#include "baldr/tilehierarchy.h"
 #include "midgard/pointll.h"
 #include "midgard/vector2.h"
-#include "baldr/tilehierarchy.h"
 
 namespace vm = valhalla::midgard;
 namespace vb = valhalla::baldr;
 
-#include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/directededgebuilder.h"
+#include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/graphvalidator.h"
 #include <boost/filesystem.hpp>
 
@@ -31,23 +31,24 @@ const std::string test_tile_dir = "test/node_search_tiles";
 struct graph_writer {
   graph_writer(uint8_t level);
 
-  vj::GraphTileBuilder &builder(vb::GraphId tile_id);
+  vj::GraphTileBuilder& builder(vb::GraphId tile_id);
 
   inline vm::PointLL node_latlng(vb::GraphId node_id) {
-    return builder(node_id.Tile_Base()).nodes()[node_id.id()].latlng();
+    auto& b = builder(node_id.Tile_Base());
+    return b.nodes()[node_id.id()].latlng(b.header_builder().base_ll());
   }
 
   void write_tiles();
 
 private:
   const uint8_t m_level;
-  std::unordered_map<vb::GraphId, std::shared_ptr<vj::GraphTileBuilder> > m_builders;
+  std::unordered_map<vb::GraphId, std::shared_ptr<vj::GraphTileBuilder>> m_builders;
 };
 
-graph_writer::graph_writer(uint8_t level)
-  : m_level(level) {}
+graph_writer::graph_writer(uint8_t level) : m_level(level) {
+}
 
-vj::GraphTileBuilder &graph_writer::builder(vb::GraphId tile_id) {
+vj::GraphTileBuilder& graph_writer::builder(vb::GraphId tile_id) {
   auto itr = m_builders.find(tile_id);
 
   if (itr == m_builders.end()) {
@@ -68,9 +69,13 @@ void graph_writer::write_tiles() {
 
   GraphTileBuilder::tweeners_t all_tweeners;
 
-  for (auto &entry : m_builders) {
+  for (auto& entry : m_builders) {
     auto tile_id = entry.first;
-    auto &tile = entry.second;
+    auto& tile = entry.second;
+
+    // set the base lat,lng in the header builder
+    PointLL base_ll = TileHierarchy::get_tiling(tile_id.level()).Base(tile_id.tileid());
+    tile->header_builder().set_base_ll(base_ll);
 
     // write the tile
     tile->StoreTileData();
@@ -85,22 +90,22 @@ void graph_writer::write_tiles() {
     GraphTileBuilder::AddBins(test_tile_dir, &reloaded, bins);
 
     // merge tweeners into global
-    for (const auto &entry : tweeners) {
+    for (const auto& entry : tweeners) {
       auto status = all_tweeners.insert(entry);
       if (!status.second) {
         auto tile_id = entry.first;
-        const auto &bins = entry.second;
+        const auto& bins = entry.second;
         auto itr = status.first;
 
         for (size_t i = 0; i < vb::kBinCount; ++i) {
-          auto &target_bin = itr->second[i];
+          auto& target_bin = itr->second[i];
           target_bin.insert(target_bin.end(), bins[i].cbegin(), bins[i].cend());
         }
       }
     }
   }
 
-  for (const auto &entry : all_tweeners) {
+  for (const auto& entry : all_tweeners) {
     // re-open tiles to add tweeners back in.
     vb::GraphTile tile(test_tile_dir, entry.first);
     vj::GraphTileBuilder::AddBins(test_tile_dir, &tile, entry.second);
@@ -118,7 +123,10 @@ struct edge_count_tracker {
     itr->second += count;
     return index;
   }
-  void clear() { m_counts.clear(); }
+  void clear() {
+    m_counts.clear();
+  }
+
 private:
   std::unordered_map<vb::GraphId, uint32_t> m_counts;
 };
@@ -128,9 +136,7 @@ struct sort_by_tile {
   inline bool operator()(vb::GraphId a, vb::GraphId b) const {
     return ((a.level() < b.level()) ||
             ((a.level() == b.level()) &&
-             ((a.tileid() < b.tileid()) ||
-              ((a.tileid() == b.tileid()) &&
-               (a.id() < b.id())))));
+             ((a.tileid() < b.tileid()) || ((a.tileid() == b.tileid()) && (a.id() < b.id())))));
   }
 };
 
@@ -139,10 +145,8 @@ struct sort_pair_by_tile {
   typedef std::pair<vb::GraphId, vb::GraphId> value_type;
   static const sort_by_tile sort_tile;
 
-  inline bool operator()(const value_type &a, const value_type &b) {
-    return (sort_tile(a.first, b.first) ||
-            ((a.first == b.first) &&
-             sort_tile(a.second, b.second)));
+  inline bool operator()(const value_type& a, const value_type& b) {
+    return (sort_tile(a.first, b.first) || ((a.first == b.first) && sort_tile(a.second, b.second)));
   }
 };
 
@@ -152,7 +156,7 @@ const sort_by_tile sort_pair_by_tile::sort_tile = {};
 // renumbered to the format needed for storing in tiles.
 struct graph_builder {
   std::vector<vm::PointLL> nodes;
-  std::vector<std::pair<size_t, size_t> > edges;
+  std::vector<std::pair<size_t, size_t>> edges;
   void write_tiles(uint8_t level) const;
 };
 
@@ -167,7 +171,7 @@ void graph_builder::write_tiles(uint8_t level) const {
 
   // count the number of edges originating at a node
   std::vector<uint32_t> edges_from_node(num_nodes, 0);
-  for (const auto &e : edges) {
+  for (const auto& e : edges) {
     edges_from_node[e.first] += 1;
   }
 
@@ -177,14 +181,15 @@ void graph_builder::write_tiles(uint8_t level) const {
   for (size_t i = 0; i < num_nodes; ++i) {
     auto coord = nodes[i];
     auto tile_id = TileHierarchy::GetGraphId(coord, level);
+    PointLL base_ll = TileHierarchy::get_tiling(tile_id.level()).Base(tile_id.tileid());
     uint32_t n = edges_from_node[i];
 
     NodeInfo node_builder;
-    node_builder.set_latlng(coord);
+    node_builder.set_latlng(base_ll, coord);
     node_builder.set_edge_index(edge_counts.update(tile_id, n));
     node_builder.set_edge_count(n);
 
-    auto &tile = writer.builder(tile_id);
+    auto& tile = writer.builder(tile_id);
     node_ids.emplace_back(tile_id.tileid(), level, tile.nodes().size());
     tile.nodes().emplace_back(std::move(node_builder));
   }
@@ -194,7 +199,7 @@ void graph_builder::write_tiles(uint8_t level) const {
   edge_counts.clear();
 
   // renumber the nodes of all the edges
-  typedef std::vector<std::pair<vb::GraphId, vb::GraphId> > edge_vector_t;
+  typedef std::vector<std::pair<vb::GraphId, vb::GraphId>> edge_vector_t;
   edge_vector_t renumbered_edges;
   renumbered_edges.reserve(num_edges);
   for (auto e : edges) {
@@ -204,16 +209,14 @@ void graph_builder::write_tiles(uint8_t level) const {
   // sort edges so that they come in tile, node order. this allows us to figure
   // out which edges start at which nodes in the tile, to assign them. it also
   // allows us to easily look up the opposing edges by binary search.
-  std::sort(renumbered_edges.begin(), renumbered_edges.end(),
-            sort_pair_by_tile());
+  std::sort(renumbered_edges.begin(), renumbered_edges.end(), sort_pair_by_tile());
 
   // find the first renumbered edge for each tile. this allows us to easily
   // calculate the index of the edge in the tile from the offset of the two
   // iterators.
   std::unordered_map<vb::GraphId, edge_vector_t::iterator> tile_bases;
   vb::GraphId last_tile_id;
-  for (edge_vector_t::iterator itr = renumbered_edges.begin();
-       itr != renumbered_edges.end(); ++itr) {
+  for (edge_vector_t::iterator itr = renumbered_edges.begin(); itr != renumbered_edges.end(); ++itr) {
     auto tile_id = itr->first.Tile_Base();
     if (last_tile_id != tile_id) {
       last_tile_id = tile_id;
@@ -223,21 +226,18 @@ void graph_builder::write_tiles(uint8_t level) const {
 
   for (auto e : renumbered_edges) {
     auto tile_id = e.first.Tile_Base();
-    auto &tile = writer.builder(tile_id);
+    auto& tile = writer.builder(tile_id);
 
     bool forward = e.first < e.second;
     vm::PointLL start_point = writer.node_latlng(e.first);
     vm::PointLL end_point = writer.node_latlng(e.second);
 
-    DirectedEdgeBuilder edge_builder(
-      {}, e.second, forward, start_point.Distance(end_point), 1, 1, 1, {}, {},
-      0, false, 0, 0);
+    DirectedEdgeBuilder edge_builder({}, e.second, forward, start_point.Distance(end_point), 1, 1, {},
+                                     {}, 0, false, 0, 0);
 
     auto opp = std::make_pair(e.second, e.first);
-    auto itr = std::lower_bound(renumbered_edges.begin(),
-                                renumbered_edges.end(),
-                                opp,
-                                sort_pair_by_tile());
+    auto itr =
+        std::lower_bound(renumbered_edges.begin(), renumbered_edges.end(), opp, sort_pair_by_tile());
 
     // check that we found the opposite edge, which should always exist.
     assert(itr != renumbered_edges.end() && *itr == opp);
@@ -254,15 +254,14 @@ void graph_builder::write_tiles(uint8_t level) const {
     } else {
       // make an edgeinfo
       std::vector<PointLL> shape = {start_point, end_point};
-      if(!forward)
+      if (!forward)
         std::reverse(shape.begin(), shape.end());
 
       bool add;
       // make more complex edge geom so that there are 3 segments, affine
       // combination doesnt properly handle arcs but who cares
-      edge_info_offset = tile.AddEdgeInfo(
-        edge_index, e.first, e.second, 123, shape, {std::to_string(edge_index)}, 0,
-        add);
+      edge_info_offset = tile.AddEdgeInfo(edge_index, e.first, e.second, 123, 456, 0, 55, shape,
+                                          {std::to_string(edge_index)}, 0, add);
     }
     edge_builder.set_edgeinfo_offset(edge_info_offset);
 
@@ -288,8 +287,7 @@ void make_tile() {
 
   for (uint32_t row = 0; row < rows; ++row) {
     for (uint32_t col = 0; col < cols; ++col) {
-      builder.nodes.emplace_back(box.minx() + col_stride * col,
-                                 box.miny() + row_stride * row);
+      builder.nodes.emplace_back(box.minx() + col_stride * col, box.miny() + row_stride * row);
     }
   }
 
@@ -322,16 +320,17 @@ void make_tile() {
   json << ", \"concurrency\": 1";
   json << " }";
   boost::property_tree::ptree conf;
-  boost::property_tree::json_parser::read_json(json, conf);
+  rapidjson::read_json(json, conf);
 
   vj::GraphValidator::Validate(conf);
 }
 
 void test_single_node() {
-  //make the config file
-  std::stringstream json; json << "{ \"tile_dir\": \"" << test_tile_dir << "\" }";
+  // make the config file
+  std::stringstream json;
+  json << "{ \"tile_dir\": \"" << test_tile_dir << "\" }";
   boost::property_tree::ptree conf;
-  boost::property_tree::json_parser::read_json(json, conf);
+  rapidjson::read_json(json, conf);
 
   vb::GraphReader reader(conf);
   // this should only find the node a 0,0
@@ -340,16 +339,16 @@ void test_single_node() {
   auto nodes = valhalla::loki::nodes_in_bbox(box, reader);
 
   if (nodes.size() != 1) {
-    throw std::runtime_error("Expecting to find one node, but got " +
-                             std::to_string(nodes.size()));
+    throw std::runtime_error("Expecting to find one node, but got " + std::to_string(nodes.size()));
   }
 }
 
 void test_small_node_block() {
-  //make the config file
-  std::stringstream json; json << "{ \"tile_dir\": \"" << test_tile_dir << "\" }";
+  // make the config file
+  std::stringstream json;
+  json << "{ \"tile_dir\": \"" << test_tile_dir << "\" }";
   boost::property_tree::ptree conf;
-  boost::property_tree::json_parser::read_json(json, conf);
+  rapidjson::read_json(json, conf);
 
   vb::GraphReader reader(conf);
   // this should find the four nodes which form a square at the lower left of
@@ -360,16 +359,16 @@ void test_small_node_block() {
   auto nodes = valhalla::loki::nodes_in_bbox(box, reader);
 
   if (nodes.size() != 4) {
-    throw std::runtime_error("Expecting to find four nodes, but got " +
-                             std::to_string(nodes.size()));
+    throw std::runtime_error("Expecting to find four nodes, but got " + std::to_string(nodes.size()));
   }
 }
 
 void test_node_at_tile_boundary() {
-  //make the config file
-  std::stringstream json; json << "{ \"tile_dir\": \"" << test_tile_dir << "\" }";
+  // make the config file
+  std::stringstream json;
+  json << "{ \"tile_dir\": \"" << test_tile_dir << "\" }";
   boost::property_tree::ptree conf;
-  boost::property_tree::json_parser::read_json(json, conf);
+  rapidjson::read_json(json, conf);
 
   vb::GraphReader reader(conf);
   // this should find node which is at the tile boundary
@@ -378,8 +377,7 @@ void test_node_at_tile_boundary() {
   auto nodes = valhalla::loki::nodes_in_bbox(box, reader);
 
   if (nodes.size() != 1) {
-    throw std::runtime_error("Expecting to find one node, but got " +
-                             std::to_string(nodes.size()));
+    throw std::runtime_error("Expecting to find one node, but got " + std::to_string(nodes.size()));
   }
 }
 
@@ -406,10 +404,11 @@ void test_opposite_in_another_tile() {
    * neighbouring tiles.
    */
 
-  //make the config file
-  std::stringstream json; json << "{ \"tile_dir\": \"" << test_tile_dir << "\" }";
+  // make the config file
+  std::stringstream json;
+  json << "{ \"tile_dir\": \"" << test_tile_dir << "\" }";
   boost::property_tree::ptree conf;
-  boost::property_tree::json_parser::read_json(json, conf);
+  rapidjson::read_json(json, conf);
 
   vb::GraphReader reader(conf);
   // this should find the four nodes which form a square at the lower left of
@@ -420,8 +419,7 @@ void test_opposite_in_another_tile() {
   auto nodes = valhalla::loki::nodes_in_bbox(box, reader);
 
   if (nodes.size() != 1) {
-    throw std::runtime_error("Expecting to find one node, but got " +
-                             std::to_string(nodes.size()));
+    throw std::runtime_error("Expecting to find one node, but got " + std::to_string(nodes.size()));
   }
 }
 

@@ -2,29 +2,21 @@
 
 using namespace valhalla::baldr;
 
-namespace valhalla{
+namespace valhalla {
 namespace sif {
 
-DynamicCost::DynamicCost(const boost::property_tree::ptree& pt,
-                         const TravelMode mode)
-    : pass_(0),
-      allow_transit_connections_(false),
-      allow_destination_only_(true),
-      travel_mode_(mode) {
+DynamicCost::DynamicCost(const odin::DirectionsOptions& options, const TravelMode mode)
+    : pass_(0), allow_transit_connections_(false), allow_destination_only_(true), travel_mode_(mode) {
   // Parse property tree to get hierarchy limits
   // TODO - get the number of levels
-  uint32_t n_levels = sizeof(kDefaultMaxUpTransitions) /
-      sizeof(kDefaultMaxUpTransitions[0]);
+  uint32_t n_levels = sizeof(kDefaultMaxUpTransitions) / sizeof(kDefaultMaxUpTransitions[0]);
   for (uint32_t level = 0; level < n_levels; level++) {
-    hierarchy_limits_.emplace_back(HierarchyLimits(pt, level));
+    hierarchy_limits_.emplace_back(HierarchyLimits(level));
   }
 
-  // Parse property tree to get avoid edges
-  auto avoid_edges = pt.get_child_optional("avoid_edges");
-  if (avoid_edges) {
-    for (auto& edgeid : *avoid_edges) {
-      user_avoid_edges_.insert(GraphId(edgeid.second.get_value<uint64_t>()));
-    }
+  // Add avoid edges to internal set
+  for (auto& edge : options.avoid_edges()) {
+    user_avoid_edges_.insert({GraphId(edge.id()), edge.percent_along()});
   }
 }
 
@@ -43,9 +35,16 @@ bool DynamicCost::AllowMultiPass() const {
 // the time (seconds) to traverse the edge. Only transit cost models override
 // this method.
 Cost DynamicCost::EdgeCost(const baldr::DirectedEdge* edge,
-              const baldr::TransitDeparture* departure,
-              const uint32_t curr_time) const {
-  return { 0.0f, 0.0f };
+                           const baldr::TransitDeparture* departure,
+                           const uint32_t curr_time) const {
+  return {0.0f, 0.0f};
+}
+
+// Get the cost to traverse the specified directed edge and gather/pass
+// the speed along for use within costing in the PathAlgorithm. Cost
+// includes the time (seconds) to traverse the edge.
+Cost DynamicCost::EdgeCost(const baldr::DirectedEdge* edge, const uint32_t speed) const {
+  return {0.0f, 0.0f};
 }
 
 // Returns the cost to make the transition from the predecessor edge.
@@ -53,29 +52,31 @@ Cost DynamicCost::EdgeCost(const baldr::DirectedEdge* edge,
 // costs (i.e., intersection/turn costs) must override this method.
 Cost DynamicCost::TransitionCost(const DirectedEdge* edge,
                                  const NodeInfo* node,
-                                 const EdgeLabel& pred) const {
-  return { 0.0f, 0.0f };
+                                 const EdgeLabel& pred,
+                                 const bool has_traffic) const {
+  return {0.0f, 0.0f};
 }
 
 // Returns the cost to make the transition from the predecessor edge
 // when using a reverse search (from destination towards the origin).
 // Defaults to 0. Costing models that wish to include edge transition
 // costs (i.e., intersection/turn costs) must override this method.
-Cost DynamicCost::TransitionCostReverse(
-    const uint32_t idx, const baldr::NodeInfo* node,
-    const baldr::DirectedEdge* opp_edge,
-    const baldr::DirectedEdge* opp_pred_edge) const {
-  return { 0.0f, 0.0f };
+Cost DynamicCost::TransitionCostReverse(const uint32_t idx,
+                                        const baldr::NodeInfo* node,
+                                        const baldr::DirectedEdge* opp_edge,
+                                        const baldr::DirectedEdge* opp_pred_edge,
+                                        const bool has_traffic) const {
+  return {0.0f, 0.0f};
 }
 
 // Returns the transfer cost between 2 transit stops.
 Cost DynamicCost::TransferCost() const {
-  return { 0.0f, 0.0f };
+  return {0.0f, 0.0f};
 }
 
 // Returns the default transfer cost between 2 transit stops.
 Cost DynamicCost::DefaultTransferCost() const {
-  return { 0.0f, 0.0f };
+  return {0.0f, 0.0f};
 }
 
 // Get the general unit size that can be considered as equal for sorting
@@ -122,8 +123,7 @@ std::vector<HierarchyLimits>& DynamicCost::GetHierarchyLimits() {
 }
 
 // Relax hierarchy limits.
-void DynamicCost::RelaxHierarchyLimits(const float factor,
-                                       const float expansion_within_factor) {
+void DynamicCost::RelaxHierarchyLimits(const float factor, const float expansion_within_factor) {
   for (auto& hierarchy : hierarchy_limits_) {
     hierarchy.Relax(factor, expansion_within_factor);
   }
@@ -160,23 +160,21 @@ void DynamicCost::AddToExcludeList(const baldr::GraphTile*& tile) {
 }
 
 // Checks if we should exclude or not.
-bool DynamicCost::IsExcluded(const baldr::GraphTile*& tile,
-                             const baldr::DirectedEdge* edge) {
+bool DynamicCost::IsExcluded(const baldr::GraphTile*& tile, const baldr::DirectedEdge* edge) {
   return false;
 }
 
 // Checks if we should exclude or not.
-bool DynamicCost::IsExcluded(const baldr::GraphTile*& tile,
-                             const baldr::NodeInfo* node) {
+bool DynamicCost::IsExcluded(const baldr::GraphTile*& tile, const baldr::NodeInfo* node) {
   return false;
 }
 
 // Adds a list of edges (GraphIds) to the user specified avoid list.
-void DynamicCost::AddUserAvoidEdges(const std::vector<GraphId>& avoid_edges) {
-  for (auto edgeid : avoid_edges) {
-    user_avoid_edges_.insert(edgeid);
+void DynamicCost::AddUserAvoidEdges(const std::vector<AvoidEdge>& avoid_edges) {
+  for (auto edge : avoid_edges) {
+    user_avoid_edges_.insert({edge.id, edge.percent_along});
   }
 }
 
-}
-}
+} // namespace sif
+} // namespace valhalla

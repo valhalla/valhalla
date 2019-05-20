@@ -1,42 +1,33 @@
 #include "mjolnir/shortcutbuilder.h"
 #include "mjolnir/graphtilebuilder.h"
 
-#include <ostream>
-#include <sstream>
-#include <iostream>
-#include <set>
-#include <string>
-#include <vector>
-#include <map>
-#include <utility>
-#include <boost/property_tree/ptree.hpp>
-#include <boost/format.hpp>
 #include <boost/filesystem/operations.hpp>
+#include <boost/format.hpp>
+#include <boost/property_tree/ptree.hpp>
+#include <iostream>
+#include <map>
+#include <ostream>
+#include <set>
+#include <sstream>
+#include <string>
+#include <utility>
+#include <vector>
 
-#include "midgard/pointll.h"
-#include "midgard/logging.h"
-#include "midgard/encoded.h"
-#include "baldr/tilehierarchy.h"
-#include "baldr/graphid.h"
 #include "baldr/graphconstants.h"
-#include "baldr/graphtile.h"
+#include "baldr/graphid.h"
 #include "baldr/graphreader.h"
-#include "skadi/sample.h"
-#include "skadi/util.h"
+#include "baldr/graphtile.h"
+#include "baldr/tilehierarchy.h"
+#include "midgard/encoded.h"
+#include "midgard/logging.h"
+#include "midgard/pointll.h"
 #include "mjolnir/util.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
-using namespace valhalla::skadi;
 using namespace valhalla::mjolnir;
 
 namespace {
-
-//how many meters to resample shape to when checking elevations
-constexpr double POSTING_INTERVAL = 60.0;
-
-// Do not compute grade for intervals less than 10 meters.
-constexpr double kMinimumInterval = 10.0f;
 
 // Simple structure to hold the 2 pair of directed edges at a node.
 // First edge in the pair is incoming and second is outgoing
@@ -46,44 +37,10 @@ struct EdgePairs {
 };
 
 /**
- * Sample elevation along the shape to get weighted grade and max grades
- */
-std::tuple<double, double, double, double> GetGrade(
-                const std::unique_ptr<const valhalla::skadi::sample>& sample,
-                const std::list<PointLL>& shape, const float length,
-                const bool forward) {
-  // Evenly sample the shape. If edge is really short, just do both ends
-  std::list<PointLL> resampled;
-  auto interval = POSTING_INTERVAL;
-  if(length < POSTING_INTERVAL * 3) {
-    resampled = {shape.front(), shape.back()};
-    interval = length;
-  } else {
-    resampled = valhalla::midgard::resample_spherical_polyline(shape, POSTING_INTERVAL);
-  }
-
-  // Get the heights at each point
-  auto heights = sample->get_all(resampled);
-  if (!forward) {
-    std::reverse(heights.begin(), heights.end());
-  }
-
-  // Get the weighted grade, max slopes, and mean elevation.
-  auto grades = valhalla::skadi::weighted_grade(heights, interval);
-  if (length < kMinimumInterval) {
-    // For very short lengths just return 0 grades but a valid mean elevation
-    return std::make_tuple(0.0, 0.0, 0.0, std::get<3>(grades));
-  } else {
-    return grades;
-  }
-}
-
-/**
  * Test if 2 edges have matching attributes such that they should be
  * considered for combining into a shortcut edge.
  */
-bool EdgesMatch(const GraphTile* tile, const DirectedEdge* edge1,
-                const DirectedEdge* edge2) {
+bool EdgesMatch(const GraphTile* tile, const DirectedEdge* edge1, const DirectedEdge* edge2) {
   // Check if edges end at same node.
   if (edge1->endnode() == edge2->endnode()) {
     return false;
@@ -98,8 +55,7 @@ bool EdgesMatch(const GraphTile* tile, const DirectedEdge* edge1,
 
   // Neither directed edge can have exit signs or be a roundabout.
   // TODO - other sign types?
-  if (edge1->exitsign() || edge2->exitsign() ||
-      edge1->roundabout() || edge2->roundabout()) {
+  if (edge1->exitsign() || edge2->exitsign() || edge1->roundabout() || edge2->roundabout()) {
     return false;
   }
 
@@ -107,15 +63,11 @@ bool EdgesMatch(const GraphTile* tile, const DirectedEdge* edge1,
   // NOTE: might want "better" bridge attribution. Seems most overpasses
   // get marked as a bridge and lead to less shortcuts - so we don't consider
   // bridge and tunnel here
-  if (edge1->classification() != edge2->classification()
-      || edge1->link() != edge2->link()
-      || edge1->use() != edge2->use()
-      || edge1->speed() != edge2->speed()
-      || edge1->toll() != edge2->toll()
-      || edge1->destonly() != edge2->destonly()
-      || edge1->unpaved() != edge2->unpaved()
-      || edge1->surface() != edge2->surface()
-      || edge1->roundabout() != edge2->roundabout()) {
+  if (edge1->classification() != edge2->classification() || edge1->link() != edge2->link() ||
+      edge1->use() != edge2->use() || edge1->speed() != edge2->speed() ||
+      edge1->toll() != edge2->toll() || edge1->destonly() != edge2->destonly() ||
+      edge1->unpaved() != edge2->unpaved() || edge1->surface() != edge2->surface() ||
+      edge1->roundabout() != edge2->roundabout()) {
     return false;
   }
 
@@ -143,38 +95,55 @@ bool EdgesMatch(const GraphTile* tile, const DirectedEdge* edge1,
 }
 
 // Get the GraphId of the opposing edge.
-GraphId GetOpposingEdge(const GraphId& node, const DirectedEdge* edge,
-                        GraphReader& reader, const uint64_t wayid) {
+GraphId GetOpposingEdge(const GraphId& node,
+                        const DirectedEdge* edge,
+                        GraphReader& reader,
+                        const uint32_t wayid) {
   // Get the tile at the end node
   const GraphTile* tile = reader.GetGraphTile(edge->endnode());
   const NodeInfo* nodeinfo = tile->node(edge->endnode().id());
 
   // Get the directed edges and return when the end node matches
   // the specified node and length matches
-  GraphId edgeid(edge->endnode().tileid(), edge->endnode().level(),
-                 nodeinfo->edge_index());
+  GraphId edgeid(edge->endnode().tileid(), edge->endnode().level(), nodeinfo->edge_index());
   const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
-  for (uint32_t i = 0, n = nodeinfo->edge_count(); i < n;
-                i++, directededge++, ++edgeid) {
-    if (directededge->IsTransition() ||
-        directededge->use() == Use::kTransitConnection ||
+  for (uint32_t i = 0, n = nodeinfo->edge_count(); i < n; i++, directededge++, ++edgeid) {
+    if (directededge->use() == Use::kTransitConnection ||
         directededge->use() == Use::kEgressConnection ||
         directededge->use() == Use::kPlatformConnection) {
       continue;
     }
-    if (directededge->endnode() == node &&
-        directededge->classification() == edge->classification() &&
+    if (directededge->endnode() == node && directededge->classification() == edge->classification() &&
         directededge->length() == edge->length() &&
-      ((directededge->link() && edge->link()) ||
-       (directededge->use() == edge->use())) &&
-       wayid == tile->edgeinfo(directededge->edgeinfo_offset()).wayid()) {
+        ((directededge->link() && edge->link()) || (directededge->use() == edge->use())) &&
+        wayid == tile->edgeinfo(directededge->edgeinfo_offset()).wayid()) {
       return edgeid;
     }
   }
-  LOG_ERROR("Opposing directed edge not found at LL= " +
-                  std::to_string(nodeinfo->latlng().lat()) + "," +
-                  std::to_string(nodeinfo->latlng().lng()));
+  PointLL ll = nodeinfo->latlng(tile->header()->base_ll());
+  LOG_ERROR("Opposing directed edge not found at LL= " + std::to_string(ll.lat()) + "," +
+            std::to_string(ll.lng()));
   return GraphId(0, 0, 0);
+}
+
+/**
+ * Is there an opposing edge with matching edgeinfo offset. The end node of the directed edge
+ * must be in the same tile as the directed edge.
+ * @param  tile          Graph tile of the edge
+ * @param  directededge  Directed edge to match.
+ */
+bool OpposingEdgeInfoMatches(const GraphTile* tile, const DirectedEdge* edge) {
+  // Get the nodeinfo at the end of the edge. Iterate through the directed edges and return
+  // true if a matching edgeinfo offset if found.
+  const NodeInfo* nodeinfo = tile->node(edge->endnode().id());
+  const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
+  for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++) {
+    // Return true if the edge info matches (same name, shape, etc.)
+    if (directededge->edgeinfo_offset() == edge->edgeinfo_offset()) {
+      return true;
+    }
+  }
+  return false;
 }
 
 // Get the ISO country code at the end node
@@ -194,8 +163,10 @@ std::string EndNodeIso(const DirectedEdge* edge, GraphReader& reader) {
  * @return  Returns true if the node can be contracted (part of shortcut),
  *          false if not.
  */
-bool CanContract(GraphReader& reader, const GraphTile* tile,
-                 const GraphId& node, EdgePairs& edgepairs) {
+bool CanContract(GraphReader& reader,
+                 const GraphTile* tile,
+                 const GraphId& node,
+                 EdgePairs& edgepairs) {
   // Return false if only 1 edge
   const NodeInfo* nodeinfo = tile->node(node);
   if (nodeinfo->edge_count() < 2) {
@@ -203,26 +174,31 @@ bool CanContract(GraphReader& reader, const GraphTile* tile,
   }
 
   // Do not contract if the node is a gate or toll booth
-  if (nodeinfo->type() == NodeType::kGate ||
-      nodeinfo->type() == NodeType::kTollBooth ||
+  if (nodeinfo->type() == NodeType::kGate || nodeinfo->type() == NodeType::kTollBooth ||
       nodeinfo->intersection() == IntersectionType::kFork) {
     return false;
   }
 
-  // Get list of valid edges, excluding downward transition edges and transit
-  // connection edges. An upward transition edge indicates edges exist on a
-  // higher class level, so we don't want to create a shortcut there.
+  // Do not create a shortcut across a node that has any upward transitions
+  if (nodeinfo->transition_count() > 0) {
+    for (const auto& trans : tile->GetNodeTransitions(node)) {
+      if (trans.up()) {
+        return false;
+      }
+    }
+  }
+
+  // Get list of valid edges, excluding transit connection edges.
   // Also skip shortcut edge - this can happen if tile cache is cleared
   // and this enters a tile where shortcuts have already been created.
   std::vector<GraphId> edges;
   GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
   for (uint32_t i = 0, n = nodeinfo->edge_count(); i < n; i++, ++edgeid) {
     const DirectedEdge* directededge = tile->directededge(edgeid);
-    if (!directededge->trans_down() && !directededge->is_shortcut() &&
-         directededge->use() != Use::kTransitConnection &&
-         directededge->use() != Use::kEgressConnection &&
-         directededge->use() != Use::kPlatformConnection &&
-         !directededge->start_restriction() && !directededge->end_restriction()) {
+    if (!directededge->is_shortcut() && directededge->use() != Use::kTransitConnection &&
+        directededge->use() != Use::kEgressConnection &&
+        directededge->use() != Use::kPlatformConnection && !directededge->start_restriction() &&
+        !directededge->end_restriction()) {
       edges.push_back(edgeid);
     }
   }
@@ -261,25 +237,23 @@ bool CanContract(GraphReader& reader, const GraphTile* tile,
   // Exactly one pair of edges match. Check if any other remaining edges
   // are driveable outbound from the node. If so this cannot be contracted.
   // NOTE-this seems to cause issues on PA Tpke / Breezewood
-/*  for (uint32_t i = 0; i < n; i++) {
-    if (i != match.first && i != match.second) {
-      if (tile->directededge(edges[i])->forwardaccess() & kAutoAccess)
-        return false;
-    }
-  }*/
+  /*  for (uint32_t i = 0; i < n; i++) {
+      if (i != match.first && i != match.second) {
+        if (tile->directededge(edges[i])->forwardaccess() & kAutoAccess)
+          return false;
+      }
+    }*/
 
   // Get the directed edges - these are the outbound edges from the node.
   // Get the opposing directed edges - these are the inbound edges to the node.
   const DirectedEdge* edge1 = tile->directededge(edges[match.first]);
-  uint64_t wayid1 = tile->edgeinfo(edge1->edgeinfo_offset()).wayid();
+  uint32_t wayid1 = tile->edgeinfo(edge1->edgeinfo_offset()).wayid();
   const DirectedEdge* edge2 = tile->directededge(edges[match.second]);
-  uint64_t wayid2 = tile->edgeinfo(edge2->edgeinfo_offset()).wayid();
+  uint32_t wayid2 = tile->edgeinfo(edge2->edgeinfo_offset()).wayid();
   GraphId oppedge1 = GetOpposingEdge(node, edge1, reader, wayid1);
   GraphId oppedge2 = GetOpposingEdge(node, edge2, reader, wayid2);
-  const DirectedEdge* oppdiredge1 =
-      reader.GetGraphTile(oppedge1)->directededge(oppedge1);
-  const DirectedEdge* oppdiredge2 =
-      reader.GetGraphTile(oppedge2)->directededge(oppedge2);
+  const DirectedEdge* oppdiredge1 = reader.GetGraphTile(oppedge1)->directededge(oppedge1);
+  const DirectedEdge* oppdiredge2 = reader.GetGraphTile(oppedge2)->directededge(oppedge2);
 
   // If either opposing directed edge has exit signs return false
   if (oppdiredge1->exitsign() || oppdiredge2->exitsign()) {
@@ -288,8 +262,7 @@ bool CanContract(GraphReader& reader, const GraphTile* tile,
 
   // Do not allow a shortcut on a ramp crossing at a traffic signal or where
   // more than 3 edges meet.
-  if (edge1->link() && edge2->link() && (nodeinfo->traffic_signal() ||
-      nodeinfo->edge_count() > 3)) {
+  if (edge1->link() && edge2->link() && (nodeinfo->traffic_signal() || nodeinfo->edge_count() > 3)) {
     return false;
   }
 
@@ -304,8 +277,9 @@ bool CanContract(GraphReader& reader, const GraphTile* tile,
   std::string iso = tile->admininfo(nodeinfo->admin_index()).country_iso();
   std::string e1_iso = EndNodeIso(edge1, reader);
   std::string e2_iso = EndNodeIso(edge2, reader);
-  if (e1_iso != iso || e2_iso != iso)
+  if (e1_iso != iso || e2_iso != iso) {
     return false;
+  }
 
   // Simple check for a possible maneuver where the continuation is a turn
   // and there are other edges at the node (forward intersecting edge or a
@@ -334,10 +308,13 @@ bool CanContract(GraphReader& reader, const GraphTile* tile,
 }
 
 // Connect 2 edges shape and update the next end node in the new level
-uint32_t ConnectEdges(GraphReader& reader, const GraphId& startnode,
+uint32_t ConnectEdges(GraphReader& reader,
+                      const GraphId& startnode,
                       const GraphId& edgeid,
-                      std::list<PointLL>& shape, GraphId& endnode,
-                      uint32_t& opp_local_idx,  uint32_t& restrictions,
+                      std::list<PointLL>& shape,
+                      GraphId& endnode,
+                      uint32_t& opp_local_idx,
+                      uint32_t& restrictions,
                       float& average_density) {
   // Get the tile and directed edge.
   const GraphTile* tile = reader.GetGraphTile(startnode);
@@ -350,7 +327,7 @@ uint32_t ConnectEdges(GraphReader& reader, const GraphId& startnode,
 
   // Get the shape for this edge. Reverse if directed edge is not forward.
   auto encoded = tile->edgeinfo(directededge->edgeinfo_offset()).encoded_shape();
-  std::list<PointLL> edgeshape = valhalla::midgard::decode7<std::list<PointLL> >(encoded);
+  std::list<PointLL> edgeshape = valhalla::midgard::decode7<std::list<PointLL>>(encoded);
   if (!directededge->forward()) {
     std::reverse(edgeshape.begin(), edgeshape.end());
   }
@@ -369,8 +346,7 @@ uint32_t ConnectEdges(GraphReader& reader, const GraphId& startnode,
 }
 
 // Check if the edge is entering a contracted node
-bool IsEnteringEdgeOfContractedNode(GraphReader& reader, const GraphId& nodeid,
-                                    const GraphId& edge) {
+bool IsEnteringEdgeOfContractedNode(GraphReader& reader, const GraphId& nodeid, const GraphId& edge) {
   EdgePairs edgepairs;
   const GraphTile* tile = reader.GetGraphTile(nodeid);
   bool c = CanContract(reader, tile, nodeid, edgepairs);
@@ -379,11 +355,13 @@ bool IsEnteringEdgeOfContractedNode(GraphReader& reader, const GraphId& nodeid,
 
 // Add shortcut edges (if they should exist) from the specified node
 // TODO - need to add access restrictions?
-uint32_t AddShortcutEdges(GraphReader& reader, const GraphTile* tile,
-              GraphTileBuilder& tilebuilder, const GraphId& start_node,
-              const uint32_t edge_index, const uint32_t edge_count,
-              std::unordered_map<uint32_t, uint32_t>& shortcuts,
-              const std::unique_ptr<const valhalla::skadi::sample>& sample) {
+uint32_t AddShortcutEdges(GraphReader& reader,
+                          const GraphTile* tile,
+                          GraphTileBuilder& tilebuilder,
+                          const GraphId& start_node,
+                          const uint32_t edge_index,
+                          const uint32_t edge_count,
+                          std::unordered_map<uint32_t, uint32_t>& shortcuts) {
   // Shortcut edges have to start at a node that is not contracted - return if
   // this node can be contracted.
   EdgePairs edgepairs;
@@ -391,19 +369,28 @@ uint32_t AddShortcutEdges(GraphReader& reader, const GraphTile* tile,
     return 0;
   }
 
+  // Check if this is the last edge in a shortcut (if the endnode cannot be contracted).
+  auto last_edge = [&reader](const GraphTile* tile, const GraphId& endnode, EdgePairs& edgepairs) {
+    return !CanContract(reader, tile, endnode, edgepairs);
+  };
+
   // Iterate through directed edges of the base node
   uint32_t shortcut = 0;
   uint32_t shortcut_count = 0;
   GraphId edge_id(start_node.tileid(), start_node.level(), edge_index);
   for (uint32_t i = 0; i < edge_count; i++, ++edge_id) {
-    // Skip transition edges and transit connections.
+    // Skip transit connection edges.
     const DirectedEdge* directededge = tile->directededge(edge_id);
-    if (directededge->IsTransition() ||
-        directededge->use() == Use::kTransitConnection ||
+    if (directededge->use() == Use::kTransitConnection ||
         directededge->use() == Use::kEgressConnection ||
         directededge->use() == Use::kPlatformConnection) {
       continue;
     }
+
+    // NOTE - only kMaxShortcutsFromNode are allowed from a node. However,
+    // a problem exists if we do not add a shortcut and the opposing shortcut
+    // is added. So more than kMaxShortcutsFromNode can be created, but we will
+    // only mark up to kMaxShortcutsFromNode regular edges as superseded.
 
     // Get the end node and check if the edge is set as a matching, entering
     // edge of the contracted node.
@@ -420,9 +407,11 @@ uint32_t AddShortcutEdges(GraphReader& reader, const GraphTile* tile,
       // forward - reverse the shape so the edge info stored is forward for
       // the first added edge info
       auto edgeinfo = tile->edgeinfo(directededge->edgeinfo_offset());
-      std::list<PointLL> shape = valhalla::midgard::decode7<std::list<PointLL> >(edgeinfo.encoded_shape());
-      if (!directededge->forward())
+      std::list<PointLL> shape =
+          valhalla::midgard::decode7<std::list<PointLL>>(edgeinfo.encoded_shape());
+      if (!directededge->forward()) {
         std::reverse(shape.begin(), shape.end());
+      }
 
       // Get names - they apply over all edges of the shortcut
       auto names = tile->GetNames(directededge->edgeinfo_offset());
@@ -433,9 +422,8 @@ uint32_t AddShortcutEdges(GraphReader& reader, const GraphTile* tile,
       if (newedge.access_restriction()) {
         auto restrictions = tile->GetAccessRestrictions(edge_id.id(), kAllAccess);
         for (const auto& res : restrictions) {
-          tilebuilder.AddAccessRestriction(
-              AccessRestriction(tilebuilder.directededges().size(),
-                  res.type(), res.modes(), res.value()));
+          tilebuilder.AddAccessRestriction(AccessRestriction(tilebuilder.directededges().size(),
+                                                             res.type(), res.modes(), res.value()));
         }
       }
 
@@ -447,7 +435,7 @@ uint32_t AddShortcutEdges(GraphReader& reader, const GraphTile* tile,
       while (true) {
         EdgePairs edgepairs;
         const GraphTile* tile = reader.GetGraphTile(end_node);
-        if (!CanContract(reader, tile, end_node, edgepairs)) {
+        if (last_edge(tile, end_node, edgepairs)) {
           break;
         }
 
@@ -463,7 +451,7 @@ uint32_t AddShortcutEdges(GraphReader& reader, const GraphTile* tile,
           // direction from the node).
           const DirectedEdge* de = tile->directededge(next_edge_id);
           LOG_ERROR("Edge not found in edge pairs. WayID = " +
-               std::to_string(tile->edgeinfo(de->edgeinfo_offset()).wayid()));
+                    std::to_string(tile->edgeinfo(de->edgeinfo_offset()).wayid()));
           break;
         }
 
@@ -471,18 +459,26 @@ uint32_t AddShortcutEdges(GraphReader& reader, const GraphTile* tile,
         // end node in the new level). Keep track of the last restriction
         // on the connected shortcut - need to set that so turn restrictions
         // off of shortcuts work properly
-        length += ConnectEdges(reader, end_node, next_edge_id, shape, end_node,
-                               opp_local_idx, rst, average_density);
+        length += ConnectEdges(reader, end_node, next_edge_id, shape, end_node, opp_local_idx, rst,
+                               average_density);
       }
+
+      // Do we need to force adding edgeinfo (opposing edge could have diff names)?
+      // If end node is in the same tile and opposing edge does not have matching
+      // edge_info_offset).
+      bool diff_names = directededge->endnode().tileid() == edge_id.tileid() &&
+                        !OpposingEdgeInfoMatches(tile, directededge);
 
       // Add the edge info. Use length and number of shape points to match an
       // edge in case multiple shortcut edges exist between the 2 nodes.
       // Test whether this shape is forward or reverse (in case an existing
-      // edge exists). Shortcuts use way Id = 0.
+      // edge exists). Shortcuts use way Id = 0.Set mean elevation to 0 as a placeholder,
+      // set it later if adding elevation to this dataset.
       bool forward = true;
       uint32_t idx = ((length & 0xfffff) | ((shape.size() & 0xfff) << 20));
-      uint32_t edge_info_offset = tilebuilder.AddEdgeInfo(idx, start_node,
-                          end_node, 0, shape, names, types, forward);
+      uint32_t edge_info_offset =
+          tilebuilder.AddEdgeInfo(idx, start_node, end_node, 0, 0, edgeinfo.bike_network(),
+                                  edgeinfo.speed_limit(), shape, names, types, forward, diff_names);
       newedge.set_edgeinfo_offset(edge_info_offset);
 
       // Set the forward flag on this directed edge. If a new edge was added
@@ -495,26 +491,28 @@ uint32_t AddShortcutEdges(GraphReader& reader, const GraphTile* tile,
       newedge.set_opp_local_idx(opp_local_idx);
       newedge.set_restrictions(rst);
 
-      // Update the length, elevation, curvature, and end node
+      // Update the length, curvature, and end node
       newedge.set_length(length);
-      if (sample) {
-        auto grades = GetGrade(sample, shape, length, forward);
-        newedge.set_weighted_grade(static_cast<uint32_t>(std::get<0>(grades) * .6 + 6.5));
-
-        // Store mean_elevation, max_up_slope, and max_down_slope
-        tilebuilder.edge_elevations().emplace_back(std::get<3>(grades),
-                  std::get<1>(grades), std::get<2>(grades));
-      } else {
-        // Set the default weighted grade for the edge. No edge elevation
-        // is added.
-        newedge.set_weighted_grade(6);
-      }
       newedge.set_curvature(compute_curvature(shape));
       newedge.set_endnode(end_node);
+
+      // Set the default weighted grade for the edge. No edge elevation is added.
+      newedge.set_weighted_grade(6);
 
       // Sanity check - should never see a shortcut with signs
       if (newedge.exitsign()) {
         LOG_ERROR("Shortcut edge with exit signs");
+      }
+
+      // Get turn lanes from the base directed edge. Add them if this is the last edge otherwise
+      // set the turnlanes flag to false;
+      if (directededge->turnlanes() && last_edge(reader.GetGraphTile(directededge->endnode()),
+                                                 directededge->endnode(), edgepairs)) {
+        uint32_t offset = tile->turnlanes_offset(edge_id.id());
+        tilebuilder.AddTurnLanes(tilebuilder.directededges().size(), tile->GetName(offset));
+        newedge.set_turnlanes(true);
+      } else {
+        newedge.set_turnlanes(false);
       }
 
       // TODO: for now just drop lane connectivity for shortcuts
@@ -529,8 +527,8 @@ uint32_t AddShortcutEdges(GraphReader& reader, const GraphTile* tile,
       // Add shortcut edge. Add to the shortcut map (associates the base edge
       // index to the shortcut index). Remove superseded mask that may have
       // been copied from base directed edge
-      shortcuts[i] = shortcut+1;
-      newedge.set_shortcut(shortcut+1);
+      shortcuts[i] = shortcut + 1;
+      newedge.set_shortcut(shortcut + 1);
       newedge.set_superseded(0);
 
       // Make sure shortcut edge is not marked as internal edge
@@ -542,13 +540,19 @@ uint32_t AddShortcutEdges(GraphReader& reader, const GraphTile* tile,
       shortcut++;
     }
   }
+
+  // Log a warning (with the node lat,lon) if the max number of shortcuts from a node
+  // is exceeded. This is not serious (see NOTE above) but good to know where it occurs.
+  if (shortcut_count > kMaxShortcutsFromNode) {
+    PointLL ll = tile->get_node_ll(start_node);
+    LOG_WARN("Exceeding max shortcut edges from a node at LL = " + std::to_string(ll.lat()) + "," +
+             std::to_string(ll.lng()));
+  }
   return shortcut_count;
 }
 
 // Form shortcuts for tiles in this level.
-uint32_t FormShortcuts(GraphReader& reader,
-            const TileLevel& level,
-            const std::unique_ptr<const valhalla::skadi::sample>& sample) {
+uint32_t FormShortcuts(GraphReader& reader, const TileLevel& level) {
   // Iterate through the tiles at this level (TODO - can we mark the tiles
   // the tiles that shortcuts end within?)
   reader.Clear();
@@ -568,6 +572,14 @@ uint32_t FormShortcuts(GraphReader& reader,
     GraphId new_tile(tileid, tile_level, 0);
     GraphTileBuilder tilebuilder(reader.tile_dir(), new_tile, false);
 
+    // Since the old tile is not serialized we must copy any data that is not
+    // dependent on edge Id into the new builders (e.g., node transitions)
+    if (tile->header()->transitioncount() > 0) {
+      for (uint32_t i = 0; i < tile->header()->transitioncount(); ++i) {
+        tilebuilder.transitions().emplace_back(std::move(*(tile->transition(i))));
+      }
+    }
+
     // Iterate through the nodes in the tile
     GraphId node_id(tileid, tile_level, 0);
     for (uint32_t n = 0; n < tile->header()->nodecount(); n++, ++node_id) {
@@ -580,16 +592,16 @@ uint32_t FormShortcuts(GraphReader& reader,
       const auto& admin = tile->admininfo(nodeinfo.admin_index());
       nodeinfo.set_edge_index(tilebuilder.directededges().size());
       nodeinfo.set_timezone(nodeinfo.timezone());
-      nodeinfo.set_admin_index(tilebuilder.AddAdmin(admin.country_text(),
-                admin.state_text(), admin.country_iso(), admin.state_iso()));
+      nodeinfo.set_admin_index(tilebuilder.AddAdmin(admin.country_text(), admin.state_text(),
+                                                    admin.country_iso(), admin.state_iso()));
 
       // Current edge count
       size_t edge_count = tilebuilder.directededges().size();
 
       // Add shortcut edges first.
       std::unordered_map<uint32_t, uint32_t> shortcuts;
-      shortcut_count += AddShortcutEdges(reader, tile, tilebuilder, node_id,
-                   old_edge_index, old_edge_count, shortcuts, sample);
+      shortcut_count += AddShortcutEdges(reader, tile, tilebuilder, node_id, old_edge_index,
+                                         old_edge_count, shortcuts);
 
       // Copy the rest of the directed edges from this node
       GraphId edgeid(tileid, tile_level, old_edge_index);
@@ -599,72 +611,69 @@ uint32_t FormShortcuts(GraphReader& reader,
         const DirectedEdge* directededge = tile->directededge(edgeid);
         DirectedEdge newedge = *directededge;
 
-        // Transition edges are stored as is (no need for EdgeInfo, signs,
-        // or restrictions).
-        if (!directededge->trans_down() && !directededge->trans_up()) {
-          // Get signs from the base directed edge
-          if (directededge->exitsign()) {
-            std::vector<SignInfo> signs = tile->GetSigns(edgeid.id());
-            if (signs.size() == 0) {
-              LOG_ERROR("Base edge should have signs, but none found");
-            }
-            tilebuilder.AddSigns(tilebuilder.directededges().size(), signs);
+        // Get signs from the base directed edge
+        if (directededge->exitsign()) {
+          std::vector<SignInfo> signs = tile->GetSigns(edgeid.id());
+          if (signs.size() == 0) {
+            LOG_ERROR("Base edge should have signs, but none found");
           }
+          tilebuilder.AddSigns(tilebuilder.directededges().size(), signs);
+        }
 
-          // Get access restrictions from the base directed edge. Add these to
-          // the list of access restrictions in the new tile. Update the
-          // edge index in the restriction to be the current directed edge Id
-          if (directededge->access_restriction()) {
-            auto restrictions = tile->GetAccessRestrictions(edgeid.id(), kAllAccess);
-            for (const auto& res : restrictions) {
-              tilebuilder.AddAccessRestriction(
-                  AccessRestriction(tilebuilder.directededges().size(),
-                     res.type(), res.modes(), res.value()));
-            }
+        // Get turn lanes from the base directed edge
+        if (directededge->turnlanes()) {
+          uint32_t offset = tile->turnlanes_offset(edgeid.id());
+          tilebuilder.AddTurnLanes(tilebuilder.directededges().size(), tile->GetName(offset));
+        }
+
+        // Get access restrictions from the base directed edge. Add these to
+        // the list of access restrictions in the new tile. Update the
+        // edge index in the restriction to be the current directed edge Id
+        if (directededge->access_restriction()) {
+          auto restrictions = tile->GetAccessRestrictions(edgeid.id(), kAllAccess);
+          for (const auto& res : restrictions) {
+            tilebuilder.AddAccessRestriction(AccessRestriction(tilebuilder.directededges().size(),
+                                                               res.type(), res.modes(), res.value()));
           }
+        }
 
-          // Copy lane connectivity
-          if (directededge->laneconnectivity()) {
-            auto laneconnectivity = tile->GetLaneConnectivity(edgeid.id());
-            if (laneconnectivity.size() == 0) {
-              LOG_ERROR("Base edge should have lane connectivity, but none found");
-            }
-            for (auto& lc : laneconnectivity) {
-              lc.set_to(tilebuilder.directededges().size());
-            }
-            tilebuilder.AddLaneConnectivity(laneconnectivity);
+        // Copy lane connectivity
+        if (directededge->laneconnectivity()) {
+          auto laneconnectivity = tile->GetLaneConnectivity(edgeid.id());
+          if (laneconnectivity.size() == 0) {
+            LOG_ERROR("Base edge should have lane connectivity, but none found");
           }
+          for (auto& lc : laneconnectivity) {
+            lc.set_to(tilebuilder.directededges().size());
+          }
+          tilebuilder.AddLaneConnectivity(laneconnectivity);
+        }
 
-          // Get edge info, shape, and names from the old tile and add
-          // to the new. Use prior edgeinfo offset as the key to make sure
-          // edges that have the same end nodes are differentiated (this
-          // should be a valid key since tile sizes aren't changed)
-          auto edgeinfo = tile->edgeinfo(directededge->edgeinfo_offset());
-          uint32_t edge_info_offset = tilebuilder.AddEdgeInfo(directededge->edgeinfo_offset(),
-                         node_id, directededge->endnode(), edgeinfo.wayid(), edgeinfo.encoded_shape(),
-                         tile->GetNames(directededge->edgeinfo_offset()),
-                         tile->GetTypes(directededge->edgeinfo_offset()), added);
-          newedge.set_edgeinfo_offset(edge_info_offset);
+        // Get edge info, shape, and names from the old tile and add
+        // to the new. Use prior edgeinfo offset as the key to make sure
+        // edges that have the same end nodes are differentiated (this
+        // should be a valid key since tile sizes aren't changed)
+        auto edgeinfo = tile->edgeinfo(directededge->edgeinfo_offset());
+        uint32_t edge_info_offset =
+            tilebuilder.AddEdgeInfo(directededge->edgeinfo_offset(), node_id, directededge->endnode(),
+                                    edgeinfo.wayid(), edgeinfo.mean_elevation(),
+                                    edgeinfo.bike_network(), edgeinfo.speed_limit(),
+                                    edgeinfo.encoded_shape(),
+                                    tile->GetNames(directededge->edgeinfo_offset()),
+                                    tile->GetTypes(directededge->edgeinfo_offset()), added);
+        newedge.set_edgeinfo_offset(edge_info_offset);
 
-          // Set the superseded mask - this is the shortcut mask that
-          // supersedes this edge (outbound from the node)
-          auto s = shortcuts.find(i);
-          uint32_t supersed_idx = (s != shortcuts.end()) ? s->second : 0;
-          newedge.set_superseded(supersed_idx);
+        // Set the superseded mask - this is the shortcut mask that supersedes this edge
+        // (outbound from the node). Do not set (keep as 0) if maximum number of shortcuts
+        // from a node has been exceeded.
+        auto s = shortcuts.find(i);
+        uint32_t superseded_idx = (s != shortcuts.end()) ? s->second : 0;
+        if (superseded_idx <= kMaxShortcutsFromNode) {
+          newedge.set_superseded(superseded_idx);
         }
 
         // Add directed edge
         tilebuilder.directededges().emplace_back(std::move(newedge));
-
-        // Add existing edge elevation (if the tile has elevation information)
-        if (tile->header()->has_edge_elevation()) {
-          const EdgeElevation* elev = tile->edge_elevation(edgeid);
-          if (elev == nullptr) {
-            tilebuilder.edge_elevations().emplace_back(0.0f, 0.0f, 0.0f);
-          } else {
-            tilebuilder.edge_elevations().emplace_back(std::move(*elev));
-          }
-        }
       }
 
       // Set the edge count for the new node
@@ -674,8 +683,9 @@ uint32_t FormShortcuts(GraphReader& reader,
 
     // Store the new tile
     tilebuilder.StoreTileData();
-    LOG_DEBUG((boost::format("ShortcutBuilder created tile %1%: %2% bytes") %
-         tile % tilebuilder.header_builder().end_offset()).str());
+    LOG_DEBUG((boost::format("ShortcutBuilder created tile %1%: %2% bytes") % tile %
+               tilebuilder.header_builder().end_offset())
+                  .str());
 
     // Check if we need to clear the tile cache.
     if (reader.OverCommitted()) {
@@ -685,7 +695,7 @@ uint32_t FormShortcuts(GraphReader& reader,
   return shortcut_count;
 }
 
-}
+} // namespace
 
 namespace valhalla {
 namespace mjolnir {
@@ -695,30 +705,23 @@ namespace mjolnir {
 // attributes. Shortcut edges are inserted before regular edges.
 void ShortcutBuilder::Build(const boost::property_tree::ptree& pt) {
 
-  //TODO: thread this. would need to make sure we dont make shortcuts
-  //across tile boundaries so that we are only messing with one tile
-  //in one thread at a time
+  // TODO: thread this. would need to make sure we dont make shortcuts
+  // across tile boundaries so that we are only messing with one tile
+  // in one thread at a time
 
   // Get GraphReader
   GraphReader reader(pt.get_child("mjolnir"));
 
-  // Crack open some elevation data if its there
-  boost::optional<std::string> elevation = pt.get_optional<std::string>("additional_data.elevation");
-  std::unique_ptr<const skadi::sample> sample;
-  if (elevation && boost::filesystem::exists(*elevation)) {
-    sample.reset(new skadi::sample(*elevation));
-  }
-
   auto level = TileHierarchy::levels().rbegin();
   level++;
-  for ( ; level != TileHierarchy::levels().rend(); ++level) {
+  for (; level != TileHierarchy::levels().rend(); ++level) {
     // Create shortcuts on this level
     auto tile_level = level->second;
     LOG_INFO("Creating shortcuts on level " + std::to_string(tile_level.level));
-    uint32_t count = FormShortcuts(reader, tile_level, sample);
+    uint32_t count = FormShortcuts(reader, tile_level);
     LOG_INFO("Finished with " + std::to_string(count) + " shortcuts");
   }
 }
 
-}
-}
+} // namespace mjolnir
+} // namespace valhalla

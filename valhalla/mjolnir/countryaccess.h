@@ -4,14 +4,13 @@
 #include <cstdint>
 #include <valhalla/baldr/directededge.h>
 #include <valhalla/baldr/graphconstants.h>
-#include <valhalla/mjolnir/osmaccess.h>
 #include <valhalla/mjolnir/adminconstants.h>
+#include <valhalla/mjolnir/osmaccess.h>
 
 using namespace valhalla::baldr;
 
 namespace valhalla {
 namespace mjolnir {
-
 
 /**
  * Removes or adds access.
@@ -19,7 +18,8 @@ namespace mjolnir {
  * @param  country_access   Country specific access.
  * @param  type             Type of access to add or remove?
  */
-uint32_t ProcessAccess(const uint32_t current_access, const uint32_t country_access, const uint32_t type);
+uint32_t
+ProcessAccess(const uint32_t current_access, const uint32_t country_access, const uint32_t type);
 
 /**
  * Get the new access for a DE.  If a user entered tags then we will not update
@@ -30,8 +30,11 @@ uint32_t ProcessAccess(const uint32_t current_access, const uint32_t country_acc
  * @param  oneway_bicycle   Is the DE oneway in the opposite direction for bicycles?
  * @param  target           User entered access tags.
  */
-uint32_t GetAccess(const uint32_t current_access, const uint32_t country_access,
-                   const bool oneway_vehicle, const bool oneway_bicycle, const OSMAccess& target);
+uint32_t GetAccess(const uint32_t current_access,
+                   const uint32_t country_access,
+                   const bool oneway_vehicle,
+                   const bool oneway_bicycle,
+                   const OSMAccess& target);
 
 /**
  * Set the country access for a DE.
@@ -39,9 +42,10 @@ uint32_t GetAccess(const uint32_t current_access, const uint32_t country_access,
  * @param  country_access   Country specific access.
  * @param  user_access      User entered access tags.
  */
-void SetCountryAccess(DirectedEdge& directededge, const std::vector<int>& country_access,
+void SetCountryAccess(DirectedEdge& directededge,
+                      const std::vector<int>& country_access,
                       const OSMAccess& user_access);
 
-}
-}
-#endif  // VALHALLA_MJOLNIR_COUNTRY_ACCESS_H_
+} // namespace mjolnir
+} // namespace valhalla
+#endif // VALHALLA_MJOLNIR_COUNTRY_ACCESS_H_
