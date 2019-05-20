@@ -447,11 +447,7 @@ namespace tyr {
 std::string serializeTraceAttributes(
     const valhalla_request_t& request,
     const AttributesController& controller,
-<<<<<<< HEAD
     std::vector<std::tuple<float, float, std::vector<thor::MatchResult>, std::list<TripLeg>>>&
-=======
-    std::vector<std::tuple<float, float, std::vector<thor::MatchResult>, TripLeg>>&
->>>>>>> master
         map_match_results) {
 
   // Create json map to return
