@@ -57,10 +57,8 @@ worker_t::result_t odin_worker_t::work(const std::list<zmq::message_t>& job,
   valhalla_request_t request;
   try {
     // crack open the original request
-    std::string request_str(static_cast<const char*>(job.front().data()), job.front().size());
-    std::string serialized_options(static_cast<const char*>((++job.cbegin())->data()),
-                                   (++job.cbegin())->size());
-    request.parse(request_str, serialized_options);
+    std::string serialized_options(static_cast<const char*>(job.front().data()), job.front().size());
+    request.parse(serialized_options);
 
     // Set the interrupt function
     service_worker_t::set_interrupt(interrupt_function);

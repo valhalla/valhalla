@@ -164,12 +164,9 @@ struct valhalla_exception_t : public std::runtime_error {
 
 // TODO: this will go away and DirectionsOptions will be the request object
 struct valhalla_request_t {
-  rapidjson::Document document;
   odin::DirectionsOptions options;
-
-  valhalla_request_t();
   void parse(const std::string& request, odin::DirectionsOptions::Action action);
-  void parse(const std::string& request, const std::string& serialized_options);
+  void parse(const std::string& serialized_options);
 #ifdef HAVE_HTTP
   void parse(const http_request_t& request);
 #endif

@@ -63,14 +63,14 @@ void loki_worker_t::route(valhalla_request_t& request) {
 
   // Validate walking distances (make sure they are in the accepted range)
   if (costing == "multimodal" || costing == "transit") {
-    auto transit_start_end_max_distance =
-        rapidjson::get_optional<int>(request.document,
-                                     "/costing_options/pedestrian/transit_start_end_max_distance")
-            .get_value_or(min_transit_walking_dis);
-    auto transit_transfer_max_distance =
-        rapidjson::get_optional<int>(request.document,
-                                     "/costing_options/pedestrian/transit_transfer_max_distance")
-            .get_value_or(min_transit_walking_dis);
+    auto* ped_opts = request.options.mutable_costing_options(static_cast<int>(odin::pedestrian));
+    if (!ped_opts->has_transit_start_end_max_distance())
+      ped_opts->set_transit_start_end_max_distance(min_transit_walking_dis);
+    auto transit_start_end_max_distance = ped_opts->transit_start_end_max_distance();
+
+    if (!ped_opts->has_transit_transfer_max_distance())
+      ped_opts->set_transit_transfer_max_distance(min_transit_walking_dis);
+    auto transit_transfer_max_distance = ped_opts->transit_transfer_max_distance();
 
     if (transit_start_end_max_distance < min_transit_walking_dis ||
         transit_start_end_max_distance > max_transit_walking_dis) {

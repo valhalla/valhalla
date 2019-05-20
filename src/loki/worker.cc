@@ -78,23 +78,6 @@ void loki_worker_t::parse_costing(valhalla_request_t& request) {
     costing = odin::Costing::pedestrian;
   }
 
-  // Get the costing options if in the config or make a blank one.
-  // Creates the cost in the cost factory
-  auto* method_options_ptr =
-      rapidjson::Pointer{"/costing_options/" + costing_str}.Get(request.document);
-  auto& allocator = request.document.GetAllocator();
-  if (!method_options_ptr) {
-    auto* costing_options = rapidjson::Pointer{"/costing_options"}.Get(request.document);
-    if (!costing_options) {
-      request.document.AddMember(rapidjson::Value("costing_options", allocator),
-                                 rapidjson::Value(rapidjson::kObjectType), allocator);
-      costing_options = rapidjson::Pointer{"/costing_options"}.Get(request.document);
-    }
-    costing_options->AddMember(rapidjson::Value(costing_str, allocator),
-                               rapidjson::Value{rapidjson::kObjectType}, allocator);
-    method_options_ptr = rapidjson::Pointer{"/costing_options/" + costing_str}.Get(request.document);
-  }
-
   try {
     cost_ptr_t c = factory.Create(costing, request.options);
     edge_filter = c->GetEdgeFilter();
@@ -295,7 +278,6 @@ worker_t::result_t loki_worker_t::work(const std::list<zmq::message_t>& job,
     switch (request.options.action()) {
       case odin::DirectionsOptions::route:
         route(request);
-        result.messages.emplace_back(rapidjson::to_string(request.document));
         result.messages.emplace_back(request.options.SerializeAsString());
         break;
       case odin::DirectionsOptions::locate:
@@ -304,18 +286,15 @@ worker_t::result_t loki_worker_t::work(const std::list<zmq::message_t>& job,
       case odin::DirectionsOptions::sources_to_targets:
       case odin::DirectionsOptions::optimized_route:
         matrix(request);
-        result.messages.emplace_back(rapidjson::to_string(request.document));
         result.messages.emplace_back(request.options.SerializeAsString());
         break;
       case odin::DirectionsOptions::isochrone:
         isochrones(request);
-        result.messages.emplace_back(rapidjson::to_string(request.document));
         result.messages.emplace_back(request.options.SerializeAsString());
         break;
       case odin::DirectionsOptions::trace_attributes:
       case odin::DirectionsOptions::trace_route:
         trace(request);
-        result.messages.emplace_back(rapidjson::to_string(request.document));
         result.messages.emplace_back(request.options.SerializeAsString());
         break;
       case odin::DirectionsOptions::height:
@@ -339,7 +318,7 @@ worker_t::result_t loki_worker_t::work(const std::list<zmq::message_t>& job,
                                  : request.options.shape_size() * 20);
     if (!request.options.do_not_track() && elapsed_time.count() / work_units > long_request) {
       LOG_WARN("loki::request elapsed time (ms)::" + std::to_string(elapsed_time.count()));
-      LOG_WARN("loki::request exceeded threshold::" + rapidjson::to_string(request.document));
+      LOG_WARN("loki::request exceeded threshold::" + std::to_string(info.id));
       midgard::logging::Log("valhalla_loki_long_request", " [ANALYTICS] ");
     }
 

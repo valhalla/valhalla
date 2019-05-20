@@ -617,9 +617,9 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
 
   // if specified, get the costing options in there
   // the order of costing must reflect the enum order
-  for (const auto costing : {odin::auto_, odin::auto_shorter, odin::bicycle, odin::bus, odin::hov,
-                             odin::motor_scooter, odin::multimodal, odin::pedestrian, odin::transit,
-                             odin::truck, odin::motorcycle, odin::auto_data_fix, odin::taxi}) {
+  for (const auto& costing : {odin::auto_, odin::auto_shorter, odin::bicycle, odin::bus, odin::hov,
+                              odin::motor_scooter, odin::multimodal, odin::pedestrian, odin::transit,
+                              odin::truck, odin::motorcycle, odin::auto_data_fix, odin::taxi}) {
     // Create the costing string
     auto costing_str = valhalla::odin::Costing_Name(costing);
     // Create the costing options key
@@ -1053,19 +1053,13 @@ valhalla_exception_t::valhalla_exception_t(unsigned code, const boost::optional<
   http_message = (http_message_iter == HTTP_STATUS_CODES.cend() ? "" : http_message_iter->second);
 }
 
-valhalla_request_t::valhalla_request_t() {
-  document.SetObject();
-}
 void valhalla_request_t::parse(const std::string& request, odin::DirectionsOptions::Action action) {
-  document = from_string(request, valhalla_exception_t{100});
+  auto document = from_string(request, valhalla_exception_t{100});
   options.set_action(action);
   from_json(document, options);
-  // TODO: sanity check the parsed values
 }
-void valhalla_request_t::parse(const std::string& request, const std::string& serialized_options) {
-  document = from_string(request, valhalla_exception_t{100});
+void valhalla_request_t::parse(const std::string& serialized_options) {
   options.ParseFromString(serialized_options);
-  // TODO: sanity check the parsed values
 }
 
 #ifdef HAVE_HTTP
@@ -1076,6 +1070,7 @@ void valhalla_request_t::parse(const http_request_t& request) {
     throw valhalla_exception_t{101};
   };
 
+  rapidjson::Document document;
   auto& allocator = document.GetAllocator();
   // parse the input
   const auto& json = request.query.find("json");

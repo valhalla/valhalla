@@ -106,9 +106,8 @@ worker_t::result_t thor_worker_t::work(const std::list<zmq::message_t>& job,
   valhalla_request_t request;
   try {
     // crack open the original request
-    std::string request_str(static_cast<const char*>(job.front().data()), job.front().size());
-    std::string serialized_options(static_cast<const char*>(job.back().data()), job.back().size());
-    request.parse(request_str, serialized_options);
+    std::string serialized_options(static_cast<const char*>(job.front().data()), job.front().size());
+    request.parse(serialized_options);
 
     // Set the interrupt function
     service_worker_t::set_interrupt(interrupt_function);
@@ -123,7 +122,6 @@ worker_t::result_t thor_worker_t::work(const std::list<zmq::message_t>& job,
         break;
       case odin::DirectionsOptions::optimized_route: {
         // Forward the original request
-        result.messages.emplace_back(std::move(request_str));
         auto trip_paths = optimized_route(request);
         result.messages.emplace_back(request.options.SerializeAsString());
         for (auto& trippath : trip_paths) {
@@ -138,7 +136,6 @@ worker_t::result_t thor_worker_t::work(const std::list<zmq::message_t>& job,
         break;
       case odin::DirectionsOptions::route: {
         // Forward the original request
-        result.messages.emplace_back(std::move(request_str));
         auto trip_paths = route(request);
         result.messages.emplace_back(request.options.SerializeAsString());
         for (const auto& trippath : trip_paths) {
@@ -149,7 +146,6 @@ worker_t::result_t thor_worker_t::work(const std::list<zmq::message_t>& job,
       }
       case odin::DirectionsOptions::trace_route: {
         // Forward the original request
-        result.messages.emplace_back(std::move(request_str));
         auto trip_path = trace_route(request);
         result.messages.emplace_back(request.options.SerializeAsString());
         result.messages.emplace_back(trip_path.SerializeAsString());
@@ -170,7 +166,7 @@ worker_t::result_t thor_worker_t::work(const std::list<zmq::message_t>& job,
       LOG_WARN("thor::" + odin::DirectionsOptions_Action_Name(request.options.action()) +
                " request elapsed time (ms)::" + std::to_string(elapsed_time));
       LOG_WARN("thor::" + odin::DirectionsOptions_Action_Name(request.options.action()) +
-               " request exceeded threshold::" + request_str);
+               " request exceeded threshold::" + std::to_string(info.id));
       midgard::logging::Log("valhalla_thor_long_request_" +
                                 odin::DirectionsOptions_Action_Name(request.options.action()),
                             " [ANALYTICS] ");
