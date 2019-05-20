@@ -1,14 +1,14 @@
 #ifndef VALHALLA_MIDGARD_POINT2_H_
 #define VALHALLA_MIDGARD_POINT2_H_
 
-#include <vector>
-#include <utility>
-#include <tuple>
 #include <cstring>
 #include <functional>
+#include <tuple>
+#include <utility>
+#include <vector>
 
-namespace valhalla{
-namespace midgard{
+namespace valhalla {
+namespace midgard {
 
 // Forward references
 class Vector2;
@@ -17,10 +17,9 @@ class Vector2;
  * 2D Point (cartesian). float x,y components.
  * @author David W. Nesbitt
  */
-class Point2 : public std::pair<float, float>{
+class Point2 : public std::pair<float, float> {
 
- public:
-
+public:
   /**
    * Use the constructors provided by pair
    */
@@ -29,7 +28,8 @@ class Point2 : public std::pair<float, float>{
   /**
    * Destructor
    */
-  virtual ~Point2() {}
+  virtual ~Point2() {
+  }
 
   /**
    * Get the x component.
@@ -102,7 +102,7 @@ class Point2 : public std::pair<float, float>{
    * @return Returns the point along the segment.
    */
   Point2 along_segment(const Point2& end, const float pct) const {
-    return { x() + (end.x() - x()) * pct, y() + (end.y() - y()) * pct};
+    return {x() + (end.x() - x()) * pct, y() + (end.y() - y()) * pct};
   }
 
   /**
@@ -112,8 +112,7 @@ class Point2 : public std::pair<float, float>{
    * @param  a1  Scalar for p1
    * @param  p1  Point 1
    */
-  Point2 AffineCombination(const float a0, const float a1,
-                           const Point2& p1) const;
+  Point2 AffineCombination(const float a0, const float a1, const Point2& p1) const;
   /**
    * Gets the midpoint on a line segment between this point and point p1.
    * @param   p1  Point
@@ -127,7 +126,7 @@ class Point2 : public std::pair<float, float>{
    * @return  Returns a new point: the result of the current point
    *          plus the specified vector.
    */
-  Point2 operator + (const Vector2& v) const;
+  Point2 operator+(const Vector2& v) const;
 
   /**
    * Subtract a vector from the current point.
@@ -135,14 +134,14 @@ class Point2 : public std::pair<float, float>{
    * @return  Returns a new point: the result of the current point
    *          minus the specified vector.
    */
-  Point2 operator - (const Vector2& v) const;
+  Point2 operator-(const Vector2& v) const;
 
   /**
    * Subtraction of a point from the current point.
    * @param p Point to subtract from the current point.
    * @return  Returns a vector.
    */
-  Vector2 operator - (const Point2& p) const;
+  Vector2 operator-(const Point2& p) const;
 
   /**
    * Finds the closest point to the supplied polyline as well as the distance
@@ -162,8 +161,7 @@ class Point2 : public std::pair<float, float>{
    * @return  Returns true if this point is left of the segment.
    */
   virtual float IsLeft(const Point2& p1, const Point2& p2) const {
-    return (p2.x() - p1.x()) * (   y() - p1.y()) -
-              (x() - p1.x()) * (p2.y() - p1.y());
+    return (p2.x() - p1.x()) * (y() - p1.y()) - (x() - p1.x()) * (p2.y() - p1.y());
   }
 
   /**
@@ -173,8 +171,7 @@ class Point2 : public std::pair<float, float>{
    *                  Only the first and last vertices may be duplicated.
    * @return  Returns true if the point is within the polygon, false if not.
    */
-  template <class container_t>
-  bool WithinPolygon(const container_t& poly) const;
+  template <class container_t> bool WithinPolygon(const container_t& poly) const;
 
   /**
    * Handy for templated functions that use both Point2 or PointLL to know whether or not
@@ -184,22 +181,22 @@ class Point2 : public std::pair<float, float>{
    */
   static bool IsSpherical();
 
- protected:
+protected:
 };
 
-}
-}
+} // namespace midgard
+} // namespace valhalla
 
 namespace std {
-  template <> struct hash<valhalla::midgard::Point2> {
-    size_t operator()(const valhalla::midgard::Point2& p) const {
-      uint64_t h;
-      char* b = static_cast<char*>(static_cast<void*>(&h));
-      std::memcpy(b, &p.first, 4);
-      std::memcpy(b + 4, &p.second, 4);
-      return std::hash<uint64_t>()(h);
-    }
-  };
-}
+template <> struct hash<valhalla::midgard::Point2> {
+  size_t operator()(const valhalla::midgard::Point2& p) const {
+    uint64_t h;
+    char* b = static_cast<char*>(static_cast<void*>(&h));
+    std::memcpy(b, &p.first, 4);
+    std::memcpy(b + 4, &p.second, 4);
+    return std::hash<uint64_t>()(h);
+  }
+};
+} // namespace std
 
-#endif  // VALHALLA_MIDGARD_POINT2_H_
+#endif // VALHALLA_MIDGARD_POINT2_H_

@@ -13,54 +13,47 @@
 namespace valhalla {
 namespace meili {
 
-class TransitionCostModel
-{
- public:
-  TransitionCostModel(
-      baldr::GraphReader& graphreader,
-      const IViterbiSearch& vs,
-      const TopKSearch& ts,
-      const StateContainer& container,
-      const sif::cost_ptr_t* mode_costing,
-      const sif::TravelMode travelmode,
-      float beta,
-      float breakage_distance,
-      float max_route_distance_factor,
-      float max_route_time_factor,
-      float turn_penalty_factor);
+class TransitionCostModel {
+public:
+  TransitionCostModel(baldr::GraphReader& graphreader,
+                      const IViterbiSearch& vs,
+                      const TopKSearch& ts,
+                      const StateContainer& container,
+                      const sif::cost_ptr_t* mode_costing,
+                      const sif::TravelMode travelmode,
+                      float beta,
+                      float breakage_distance,
+                      float max_route_distance_factor,
+                      float max_route_time_factor,
+                      float turn_penalty_factor);
 
-  TransitionCostModel(
-      baldr::GraphReader& graphreader,
-      const IViterbiSearch& vs,
-      const TopKSearch& ts,
-      const StateContainer& container,
-      const sif::cost_ptr_t* mode_costing,
-      const sif::TravelMode travelmode,
-      const boost::property_tree::ptree& config);
+  TransitionCostModel(baldr::GraphReader& graphreader,
+                      const IViterbiSearch& vs,
+                      const TopKSearch& ts,
+                      const StateContainer& container,
+                      const sif::cost_ptr_t* mode_costing,
+                      const sif::TravelMode travelmode,
+                      const boost::property_tree::ptree& config);
 
   // we use the difference between the original two measurements and the distance along the route
   // network to compute a transition cost of a given candidate, turn_cost may be added if
   // the turn_penalty_table_ is enabled, one could make use of time in this computation but
   // this is not advisable as traffic at the time may make readings unreliable and time information
   // is not strictly required to perform the matching
-  float
-  CalculateTransitionCost(
-      float turn_cost,
-      float route_distance,
-      float measurement_distance,
-      float route_time,
-      float measurement_time) const
-  { return (turn_cost + std::abs(route_distance - measurement_distance)) * inv_beta_; }
+  float CalculateTransitionCost(float turn_cost,
+                                float route_distance,
+                                float measurement_distance,
+                                float route_time,
+                                float measurement_time) const {
+    return (turn_cost + std::abs(route_distance - measurement_distance)) * inv_beta_;
+  }
 
   float operator()(const StateId& lhs, const StateId& rhs) const;
 
- private:
-
+private:
   void UpdateRoute(const StateId& lhs, const StateId& rhs) const;
 
-  float
-  ClockDistance(const StateId::Time& lhs, const StateId::Time& rhs) const
-  {
+  float ClockDistance(const StateId::Time& lhs, const StateId::Time& rhs) const {
     double clk_dist = -1.0;
 
     const auto lhs_leave_time = container_.leave_time(lhs);
@@ -85,7 +78,7 @@ class TransitionCostModel
   const sif::TravelMode travelmode_;
 
   float beta_;
-  float inv_beta_;  // equals to 1.f / beta_
+  float inv_beta_; // equals to 1.f / beta_
 
   float breakage_distance_;
 
@@ -99,6 +92,6 @@ class TransitionCostModel
   float turn_cost_table_[181];
 };
 
-}
-}
+} // namespace meili
+} // namespace valhalla
 #endif /* MMP_TRANSITION_COST_MODEL_H_ */

@@ -1,0 +1,10 @@
+*
+!README.md
+!CHANGELOG.md
+!LICENCE.MD
+!package.json
+!package-lock.json
+!docs
+!taginfo.json
+!lib/*.js
+!scripts/node_install.sh

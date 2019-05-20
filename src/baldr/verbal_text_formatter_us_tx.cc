@@ -9,8 +9,8 @@
 namespace valhalla {
 namespace baldr {
 
-VerbalTextFormatterUsTx::VerbalTextFormatterUsTx(
-    const std::string& country_code, const std::string& state_code)
+VerbalTextFormatterUsTx::VerbalTextFormatterUsTx(const std::string& country_code,
+                                                 const std::string& state_code)
     : VerbalTextFormatterUs(country_code, state_code) {
 }
 
@@ -25,14 +25,12 @@ std::string VerbalTextFormatterUsTx::Format(const std::string& text) const {
   return verbal_text;
 }
 
-std::string VerbalTextFormatterUsTx::FormFmTts(
-    const std::string& source) const {
-  return re::regex_replace(source, kFmRegex, kFmOutPattern);
+std::string VerbalTextFormatterUsTx::FormFmTts(const std::string& source) const {
+  return std::regex_replace(source, kFmRegex, kFmOutPattern);
 }
-std::string VerbalTextFormatterUsTx::FormRmTts(
-    const std::string& source) const {
-  return re::regex_replace(source, kRmRegex, kRmOutPattern);
+std::string VerbalTextFormatterUsTx::FormRmTts(const std::string& source) const {
+  return std::regex_replace(source, kRmRegex, kRmOutPattern);
 }
 
-}
-}
+} // namespace baldr
+} // namespace valhalla

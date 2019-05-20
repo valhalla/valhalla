@@ -1,0 +1,233 @@
+{
+  "additional_data": {
+    "elevation": "/data/valhalla/elevation/"
+  },
+  "httpd": {
+    "service": {
+      "interrupt": "ipc:///tmp/interrupt",
+      "listen": "tcp://*:8002",
+      "loopback": "ipc:///tmp/loopback"
+    }
+  },
+  "loki": {
+    "actions": [
+      "locate",
+      "route",
+      "height",
+      "sources_to_targets",
+      "optimized_route",
+      "isochrone",
+      "trace_route",
+      "trace_attributes",
+      "transit_available"
+    ],
+    "logging": {
+      "color": true,
+      "file_name": "path_to_some_file.log",
+      "long_request": 100.0,
+      "type": "std_out"
+    },
+    "service": {
+      "proxy": "ipc:///tmp/loki"
+    },
+    "service_defaults": {
+      "minimum_reachability": 50,
+      "radius": 0,
+      "search_cutoff": 35000,
+      "node_snap_tolerance": 5,
+      "street_side_tolerance": 5,
+      "heading_tolerance": 60
+    },
+    "use_connectivity": true
+  },
+  "meili": {
+    "auto": {
+      "search_radius": 50,
+      "turn_penalty_factor": 200
+    },
+    "bicycle": {
+      "turn_penalty_factor": 140
+    },
+    "customizable": [
+      "mode",
+      "search_radius",
+      "turn_penalty_factor",
+      "gps_accuracy",
+      "sigma_z",
+      "beta",
+      "max_route_distance_factor",
+      "max_route_time_factor"
+    ],
+    "default": {
+      "beta": 3,
+      "breakage_distance": 2000,
+      "geometry": false,
+      "gps_accuracy": 5.0,
+      "interpolation_distance": 10,
+      "max_route_distance_factor": 5,
+      "max_route_time_factor": 5,
+      "max_search_radius": 100,
+      "route": true,
+      "search_radius": 50,
+      "sigma_z": 4.07,
+      "turn_penalty_factor": 0
+    },
+    "grid": {
+      "cache_size": 100240,
+      "size": 500
+    },
+    "logging": {
+      "color": true,
+      "file_name": "path_to_some_file.log",
+      "type": "std_out"
+    },
+    "mode": "auto",
+    "multimodal": {
+      "turn_penalty_factor": 70
+    },
+    "pedestrian": {
+      "search_radius": 50,
+      "turn_penalty_factor": 100
+    },
+    "service": {
+      "proxy": "ipc:///tmp/meili"
+    },
+    "verbose": false
+  },
+  "mjolnir": {
+    "admin": "/data/valhalla/admin.sqlite",
+    "hierarchy": true,
+    "include_driveways": true,
+    "logging": {
+      "color": true,
+      "file_name": "path_to_some_file.log",
+      "type": "std_out"
+    },
+    "max_cache_size": 1000000000,
+    "shortcuts": true,
+    "tile_dir": "test/data/utrecht_tiles",
+    "tile_extract": "/dev/null",
+    "timezone": "/data/valhalla/tz_world.sqlite",
+    "transit_dir": "/data/valhalla/transit"
+  },
+  "odin": {
+    "logging": {
+      "color": true,
+      "file_name": "path_to_some_file.log",
+      "type": "std_out"
+    },
+    "service": {
+      "proxy": "ipc:///tmp/odin"
+    }
+  },
+  "service_limits": {
+    "auto": {
+      "max_distance": 5000000.0,
+      "max_locations": 20,
+      "max_matrix_distance": 400000.0,
+      "max_matrix_locations": 50
+    },
+    "auto_shorter": {
+      "max_distance": 5000000.0,
+      "max_locations": 20,
+      "max_matrix_distance": 400000.0,
+      "max_matrix_locations": 50
+    },
+    "bicycle": {
+      "max_distance": 500000.0,
+      "max_locations": 50,
+      "max_matrix_distance": 200000.0,
+      "max_matrix_locations": 50
+    },
+    "bus": {
+      "max_distance": 5000000.0,
+      "max_locations": 50,
+      "max_matrix_distance": 400000.0,
+      "max_matrix_locations": 50
+    },
+    "hov": {
+      "max_distance": 5000000.0,
+      "max_locations": 20,
+      "max_matrix_distance": 400000.0,
+      "max_matrix_locations": 50
+    },
+    "taxi": {
+      "max_distance": 5000000.0,
+      "max_locations": 20,
+      "max_matrix_distance": 400000.0,
+      "max_matrix_locations": 50
+    },
+    "isochrone": {
+      "max_contours": 4,
+      "max_distance": 25000.0,
+      "max_locations": 1,
+      "max_time": 120
+    },
+    "max_avoid_locations": 50,
+    "max_radius": 200,
+    "max_reachability": 100,
+    "max_alternates": 2,
+    "motor_scooter": {
+      "max_distance": 500000.0,
+      "max_locations": 50,
+      "max_matrix_distance": 200000.0,
+      "max_matrix_locations": 50
+    },
+    "motorcycle": {
+      "max_distance": 500000.0,
+      "max_locations": 50,
+      "max_matrix_distance": 200000.0,
+      "max_matrix_locations": 50
+    },
+    "multimodal": {
+      "max_distance": 500000.0,
+      "max_locations": 50,
+      "max_matrix_distance": 0.0,
+      "max_matrix_locations": 0
+    },
+    "pedestrian": {
+      "max_distance": 250000.0,
+      "max_locations": 50,
+      "max_matrix_distance": 200000.0,
+      "max_matrix_locations": 50,
+      "max_transit_walking_distance": 10000,
+      "min_transit_walking_distance": 1
+    },
+    "skadi": {
+      "max_shape": 750000,
+      "min_resample": 10.0
+    },
+    "trace": {
+      "max_best_paths": 4,
+      "max_best_paths_shape": 100,
+      "max_distance": 200000.0,
+      "max_gps_accuracy": 100.0,
+      "max_search_radius": 100.0,
+      "max_shape": 16000
+    },
+    "transit": {
+      "max_distance": 500000.0,
+      "max_locations": 50,
+      "max_matrix_distance": 200000.0,
+      "max_matrix_locations": 50
+    },
+    "truck": {
+      "max_distance": 5000000.0,
+      "max_locations": 20,
+      "max_matrix_distance": 400000.0,
+      "max_matrix_locations": 50
+    }
+  },
+  "thor": {
+    "logging": {
+      "color": true,
+      "file_name": "path_to_some_file.log",
+      "long_request": 110.0,
+      "type": "std_out"
+    },
+    "service": {
+      "proxy": "ipc:///tmp/thor"
+    },
+    "source_to_target_algorithm": "select_optimal"
+  }
+}

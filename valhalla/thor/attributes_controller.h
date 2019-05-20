@@ -44,7 +44,8 @@ const std::string kEdgeTransitRouteInfoHeadsign = "edge.transit_route_info.heads
 const std::string kEdgeTransitRouteInfoColor = "edge.transit_route_info.color";
 const std::string kEdgeTransitRouteInfoTextColor = "edge.transit_route_info.text_color";
 const std::string kEdgeTransitRouteInfoDescription = "edge.transit_route_info.description";
-const std::string kEdgeTransitRouteInfoOperatorOnestopId = "edge.transit_route_info.operator_onestop_id";
+const std::string kEdgeTransitRouteInfoOperatorOnestopId =
+    "edge.transit_route_info.operator_onestop_id";
 const std::string kEdgeTransitRouteInfoOperatorName = "edge.transit_route_info.operator_name";
 const std::string kEdgeTransitRouteInfoOperatorUrl = "edge.transit_route_info.operator_url";
 const std::string kEdgeId = "edge.id";
@@ -62,12 +63,13 @@ const std::string kEdgeDensity = "edge.density";
 const std::string kEdgeSpeedLimit = "edge.speed_limit";
 const std::string kEdgeTruckSpeed = "edge.truck_speed";
 const std::string kEdgeTruckRoute = "edge.truck_route";
-const std::string kEdgeTrafficSegments = "edge.traffic_segments";
 
 // Node keys
 const std::string kNodeIntersectingEdgeBeginHeading = "node.intersecting_edge.begin_heading";
-const std::string kNodeIntersectingEdgeFromEdgeNameConsistency = "node.intersecting_edge.from_edge_name_consistency";
-const std::string kNodeIntersectingEdgeToEdgeNameConsistency = "node.intersecting_edge.to_edge_name_consistency";
+const std::string kNodeIntersectingEdgeFromEdgeNameConsistency =
+    "node.intersecting_edge.from_edge_name_consistency";
+const std::string kNodeIntersectingEdgeToEdgeNameConsistency =
+    "node.intersecting_edge.to_edge_name_consistency";
 const std::string kNodeIntersectingEdgeDriveability = "node.intersecting_edge.driveability";
 const std::string kNodeIntersectingEdgeCyclability = "node.intersecting_edge.cyclability";
 const std::string kNodeIntersectingEdgeWalkability = "node.intersecting_edge.walkability";
@@ -78,12 +80,16 @@ const std::string kNodeFork = "node.fork";
 const std::string kNodeTransitPlatformInfoType = "node.transit_platform_info.type";
 const std::string kNodeTransitPlatformInfoOnestopId = "node.transit_platform_info.onestop_id";
 const std::string kNodeTransitPlatformInfoName = "node.transit_platform_info.name";
-const std::string kNodeTransitPlatformInfoStationOnestopId = "node.transit_platform_info.station_onestop_id";
+const std::string kNodeTransitPlatformInfoStationOnestopId =
+    "node.transit_platform_info.station_onestop_id";
 const std::string kNodeTransitPlatformInfoStationName = "node.transit_platform_info.station_name";
-const std::string kNodeTransitPlatformInfoArrivalDateTime = "node.transit_platform_info.arrival_date_time";
-const std::string kNodeTransitPlatformInfoDepartureDateTime = "node.transit_platform_info.departure_date_time";
+const std::string kNodeTransitPlatformInfoArrivalDateTime =
+    "node.transit_platform_info.arrival_date_time";
+const std::string kNodeTransitPlatformInfoDepartureDateTime =
+    "node.transit_platform_info.departure_date_time";
 const std::string kNodeTransitPlatformInfoIsParentStop = "node.transit_platform_info.is_parent_stop";
-const std::string kNodeTransitPlatformInfoAssumedSchedule = "node.transit_platform_info.assumed_schedule";
+const std::string kNodeTransitPlatformInfoAssumedSchedule =
+    "node.transit_platform_info.assumed_schedule";
 const std::string kNodeTransitPlatformInfoLatLon = "node.transit_platform_info.lat_lon";
 const std::string kNodeTransitStationInfoOnestopId = "node.transit_station_info.onestop_id";
 const std::string kNodeTransitStationInfoName = "node.transit_station_info.name";
@@ -116,7 +122,6 @@ const std::string kNodeCategory = "node.";
 const std::string kAdminCategory = "admin.";
 const std::string kMatchedCategory = "matched.";
 
-
 /**
  * Trip path controller for attributes
  */
@@ -130,9 +135,8 @@ struct AttributesController {
   /*
    * Constructor that will use the route attributes by default.
    */
-  AttributesController(
-      const std::unordered_map<std::string, bool>& new_attributes =
-          AttributesController::kRouteAttributes);
+  AttributesController(const std::unordered_map<std::string, bool>& new_attributes =
+                           AttributesController::kRouteAttributes);
 
   /**
    * Enable all of the attributes.
@@ -152,7 +156,7 @@ struct AttributesController {
   std::unordered_map<std::string, bool> attributes;
 };
 
-}
-}
+} // namespace thor
+} // namespace valhalla
 
-#endif  // VALHALLA_THOR_ATTRIBUTES_CONTROLLER_H_
+#endif // VALHALLA_THOR_ATTRIBUTES_CONTROLLER_H_

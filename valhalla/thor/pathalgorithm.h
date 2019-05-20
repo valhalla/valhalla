@@ -1,18 +1,18 @@
 #ifndef VALHALLA_THOR_PATHALGORITHM_H_
 #define VALHALLA_THOR_PATHALGORITHM_H_
 
-#include <vector>
+#include <functional>
 #include <map>
+#include <memory>
 #include <unordered_map>
 #include <utility>
-#include <memory>
-#include <functional>
+#include <vector>
 
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
+#include <valhalla/proto/tripcommon.pb.h>
 #include <valhalla/sif/dynamiccost.h>
 #include <valhalla/thor/pathinfo.h>
-#include <valhalla/proto/tripcommon.pb.h>
 
 namespace valhalla {
 namespace thor {
@@ -25,19 +25,18 @@ constexpr size_t kInterruptIterationsInterval = 5000;
  * to create shortest path.
  */
 class PathAlgorithm {
- public:
+public:
   /**
    * Constructor
    */
-  PathAlgorithm()
-     : interrupt(nullptr),
-       has_ferry_(false) {
+  PathAlgorithm() : interrupt(nullptr), has_ferry_(false) {
   }
 
   /**
    * Destructor
    */
-  virtual ~PathAlgorithm() { }
+  virtual ~PathAlgorithm() {
+  }
 
   /**
    * Form path between and origin and destination location using the supplied
@@ -51,9 +50,10 @@ class PathAlgorithm {
    *          each edge).
    */
   virtual std::vector<PathInfo> GetBestPath(odin::Location& origin,
-          odin::Location& dest, baldr::GraphReader& graphreader,
-          const std::shared_ptr<sif::DynamicCost>* mode_costing,
-          const sif::TravelMode mode) = 0;
+                                            odin::Location& dest,
+                                            baldr::GraphReader& graphreader,
+                                            const std::shared_ptr<sif::DynamicCost>* mode_costing,
+                                            const sif::TravelMode mode) = 0;
 
   /**
    * Clear the temporary information generated during path construction.
@@ -65,7 +65,7 @@ class PathAlgorithm {
    * @param interrupt_callback  the function to periodically call to see if
    *                            we should abort
    */
-  void set_interrupt(const std::function<void ()>* interrupt_callback) {
+  void set_interrupt(const std::function<void()>* interrupt_callback) {
     interrupt = interrupt_callback;
   }
 
@@ -77,10 +77,10 @@ class PathAlgorithm {
     return has_ferry_;
   }
 
- protected:
+protected:
   const std::function<void()>* interrupt;
 
-  bool has_ferry_;    // Indicates whether the path has a ferry
+  bool has_ferry_; // Indicates whether the path has a ferry
 
   /**
    * Check for path completion along the same edge. Edge ID in question
@@ -106,9 +106,20 @@ class PathAlgorithm {
     }
     return false;
   }
+
+  /**
+   * Convenience method to get the timezone index at a node.
+   * @param graphreader Graph reader.
+   * @param node GraphId of the node to get the timezone index.
+   * @return Returns the timezone index. A value of 0 indicates an invalid timezone.
+   */
+  int GetTimezone(baldr::GraphReader& graphreader, const baldr::GraphId& node) {
+    const baldr::GraphTile* tile = graphreader.GetGraphTile(node);
+    return (tile == nullptr) ? 0 : tile->node(node)->timezone();
+  }
 };
 
-}
-}
+} // namespace thor
+} // namespace valhalla
 
-#endif  // VALHALLA_THOR_PATHALGORITHM_H_
+#endif // VALHALLA_THOR_PATHALGORITHM_H_

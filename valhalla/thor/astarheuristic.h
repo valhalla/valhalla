@@ -13,13 +13,11 @@ namespace thor {
  * a destination within the shortest path computation.
  */
 class AStarHeuristic {
- public:
+public:
   /**
    * Constructor.
    */
-  AStarHeuristic()
-     : costfactor_(1.0f),
-       distapprox_({}) {
+  AStarHeuristic() : costfactor_(1.0f), distapprox_({}) {
   }
 
   /**
@@ -42,7 +40,7 @@ class AStarHeuristic {
    * @param   ll  Current latitude, longitude.
    * @return  Returns the distance to the destination.
    */
-  float GetDistance(const midgard::PointLL& ll) const  {
+  float GetDistance(const midgard::PointLL& ll) const {
     return sqrtf(distapprox_.DistanceSquared(ll));
   }
 
@@ -76,16 +74,16 @@ class AStarHeuristic {
    */
   float Get(const midgard::PointLL& ll, float& dist) const {
     dist = sqrtf(distapprox_.DistanceSquared(ll));
-    return  dist * costfactor_;
+    return dist * costfactor_;
   }
 
- private:
-  midgard::DistanceApproximator distapprox_;  // Distance approximation
-  float costfactor_;    // Cost factor - ensures the cost estimate
-                        // underestimates the true cost.
+private:
+  midgard::DistanceApproximator distapprox_; // Distance approximation
+  float costfactor_;                         // Cost factor - ensures the cost estimate
+                                             // underestimates the true cost.
 };
 
-}
-}
+} // namespace thor
+} // namespace valhalla
 
-#endif  // VALHALLA_THOR_ASTARHEURISTIC_H_
+#endif // VALHALLA_THOR_ASTARHEURISTIC_H_

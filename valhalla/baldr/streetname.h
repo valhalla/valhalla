@@ -1,21 +1,32 @@
 #ifndef VALHALLA_BALDR_STREETNAME_H_
 #define VALHALLA_BALDR_STREETNAME_H_
 
-#include <string>
 #include <memory>
+#include <string>
 
 namespace valhalla {
 namespace baldr {
 
 class StreetName {
- public:
-  StreetName(const std::string& value);
+public:
+  /**
+   * Constructor.
+   * @param  value  Street name string.
+   * @param  is_route_number   boolean indicating if street name is a reference route number.
+   */
+  StreetName(const std::string& value, const bool is_route_number);
 
   virtual ~StreetName();
 
   const std::string& value() const;
 
-  bool operator ==(const StreetName& rhs) const;
+  /**
+   * Returns true if street name is a reference route number such as: I 81 South or US 322 West.
+   * @return true if street name is a reference route number such as: I 81 South or US 322 West.
+   */
+  bool is_route_number() const;
+
+  bool operator==(const StreetName& rhs) const;
 
   bool StartsWith(const std::string& prefix) const;
 
@@ -31,12 +42,12 @@ class StreetName {
 
   virtual bool HasSameBaseName(const StreetName& rhs) const;
 
- protected:
+protected:
   std::string value_;
-
+  bool is_route_number_;
 };
 
-}
-}
+} // namespace baldr
+} // namespace valhalla
 
-#endif  // VALHALLA_BALDR_STREETNAME_H_
+#endif // VALHALLA_BALDR_STREETNAME_H_

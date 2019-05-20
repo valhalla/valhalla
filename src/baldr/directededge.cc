@@ -1,34 +1,23 @@
 #include "baldr/directededge.h"
 #include "baldr/nodeinfo.h"
-#include <boost/functional/hash.hpp>
 #include "midgard/logging.h"
 
 using namespace valhalla::baldr;
 
 namespace {
 
-json::MapPtr bike_network_json(uint8_t mask) {
-  return json::map({
-    {"national", static_cast<bool>(mask & kNcn)},
-    {"regional", static_cast<bool>(mask & kRcn)},
-    {"local", static_cast<bool>(mask & kLcn)},
-    {"mountain", static_cast<bool>(mask & kMcn)},
-  });
-}
-
 json::MapPtr access_json(uint32_t access) {
-  return json::map({
-    {"bicycle", static_cast<bool>(access & kBicycleAccess)},
-    {"bus", static_cast<bool>(access & kBusAccess)},
-    {"car", static_cast<bool>(access & kAutoAccess)},
-    {"emergency", static_cast<bool>(access & kEmergencyAccess)},
-    {"HOV", static_cast<bool>(access & kHOVAccess)},
-    {"pedestrian", static_cast<bool>(access & kPedestrianAccess)},
-    {"taxi", static_cast<bool>(access & kTaxiAccess)},
-    {"truck", static_cast<bool>(access & kTruckAccess)},
-    {"wheelchair", static_cast<bool>(access & kWheelchairAccess)},
-    {"moped", static_cast<bool>(access & kMopedAccess)}
-  });
+  return json::map({{"bicycle", static_cast<bool>(access & kBicycleAccess)},
+                    {"bus", static_cast<bool>(access & kBusAccess)},
+                    {"car", static_cast<bool>(access & kAutoAccess)},
+                    {"emergency", static_cast<bool>(access & kEmergencyAccess)},
+                    {"HOV", static_cast<bool>(access & kHOVAccess)},
+                    {"pedestrian", static_cast<bool>(access & kPedestrianAccess)},
+                    {"taxi", static_cast<bool>(access & kTaxiAccess)},
+                    {"truck", static_cast<bool>(access & kTruckAccess)},
+                    {"wheelchair", static_cast<bool>(access & kWheelchairAccess)},
+                    {"moped", static_cast<bool>(access & kMopedAccess)},
+                    {"motorcycle", static_cast<bool>(access & kMotorcycleAccess)}});
 }
 
 /**
@@ -39,14 +28,26 @@ json::MapPtr access_json(uint32_t access) {
  * @param len  Length of each element within the bit field.
  * @return  Returns an updated value for the bit field.
  */
-uint32_t OverwriteBits(const uint32_t dst, const uint32_t src,
-                       const uint32_t pos, const uint32_t len) {
+uint32_t
+OverwriteBits(const uint32_t dst, const uint32_t src, const uint32_t pos, const uint32_t len) {
   uint32_t shift = (pos * len);
-  uint32_t mask  = (((uint32_t)1 << len) - 1) << shift;
+  uint32_t mask = ((static_cast<uint32_t>(1) << len) - 1) << shift;
   return (dst & ~mask) | (src << shift);
 }
 
+/**
+ * Get the updated bit field.
+ * @param dst  Data member to be updated.
+ * @param src  Value to be updated.
+ * @param pos  Position (pos element within the bit field).
+ * @return  Returns an updated value for the bit field.
+ */
+uint32_t OverwriteBit(const uint32_t dst, const uint32_t src, const uint32_t pos) {
+  uint32_t mask = (static_cast<uint32_t>(1) << pos);
+  return (dst & ~mask) | (src << pos);
 }
+
+} // namespace
 
 namespace valhalla {
 namespace baldr {
@@ -60,6 +61,31 @@ DirectedEdge::DirectedEdge() {
 // Sets the end node of this directed edge.
 void DirectedEdge::set_endnode(const GraphId& endnode) {
   endnode_ = endnode.value;
+}
+
+// Sets the free flow speed in KPH.
+void DirectedEdge::set_free_flow_speed(const uint32_t speed) {
+  if (speed > kMaxSpeedKph) {
+    LOG_WARN("Exceeding maximum.  Free flow speed: " + std::to_string(speed));
+    free_flow_speed_ = kMaxSpeedKph;
+  } else {
+    free_flow_speed_ = speed;
+  }
+}
+
+// Sets the constrained flow speed in KPH.
+void DirectedEdge::set_constrained_flow_speed(const uint32_t speed) {
+  if (speed > kMaxSpeedKph) {
+    LOG_WARN("Exceeding maximum.  Constrained flow speed: " + std::to_string(speed));
+    constrained_flow_speed_ = kMaxSpeedKph;
+  } else {
+    constrained_flow_speed_ = speed;
+  }
+}
+
+// Set the flag indicating the edge has predicted speed records.
+void DirectedEdge::set_predicted_speed(const bool p) {
+  predicted_speed_ = p;
 }
 
 // ------------------  Data offsets and flags for extended data -------------//
@@ -122,32 +148,21 @@ void DirectedEdge::set_laneconnectivity(const bool lc) {
   lane_conn_ = lc;
 }
 
-// Sets the traffic segment flag.
-void DirectedEdge::set_traffic_seg(const bool seg) {
-  traffic_seg_ = seg;
-}
-
 // -------------------------- Routing attributes --------------------------- //
 
 // Set if edge has a shoulder (Beneficial to know for cycling)
-void DirectedEdge::set_shoulder (const bool shoulder) {
+void DirectedEdge::set_shoulder(const bool shoulder) {
   shoulder_ = shoulder;
 }
 
 // Set if bikers need to dismount along the edge
-void DirectedEdge::set_dismount (const bool dismount) {
+void DirectedEdge::set_dismount(const bool dismount) {
   dismount_ = dismount;
 }
 
 // Set if a sidepath should be preffered when cycling over this one
-void DirectedEdge::set_use_sidepath (const bool use_sidepath) {
+void DirectedEdge::set_use_sidepath(const bool use_sidepath) {
   use_sidepath_ = use_sidepath;
-}
-
-// Set the flag indicating driving is on the right hand side of the road
-// along this edge?
-void DirectedEdge::set_drive_on_right(const bool rsd) {
-  drive_on_right_ = rsd;
 }
 
 // Set the flag indicating the edge is a dead end (no other driveable
@@ -188,13 +203,6 @@ void DirectedEdge::set_roundabout(const bool roundabout) {
   roundabout_ = roundabout;
 }
 
-// Sets the flag indicating the edge is unreachable by driving. This can
-// happen if a driveable edge is surrounded by pedestrian only edges (e.g.
-// in a city center) or is not properly connected to other edges.
-void DirectedEdge::set_unreachable(const bool unreachable) {
-  unreachable_ = unreachable;
-}
-
 // Sets the flag indicating a traffic signal is present at the end of
 // this edge.
 void DirectedEdge::set_traffic_signal(const bool signal) {
@@ -223,16 +231,9 @@ void DirectedEdge::set_cyclelane(const CycleLane cyclelane) {
   cycle_lane_ = static_cast<uint32_t>(cyclelane);
 }
 
-// Sets the bike network mask indicating which (if any) bicycle networks are
-// along this edge. See baldr/directededge.h for definitions.
-void DirectedEdge::set_bike_network(const uint32_t bike_network) {
-  if (bike_network > kMaxBicycleNetwork) {
-    LOG_WARN("Bicycle Network mask exceeds maximum: " +
-              std::to_string(bike_network));
-    bike_network_ = 0;
-  } else {
-    bike_network_ = bike_network;
-  }
+// Sets the bike network flag.
+void DirectedEdge::set_bike_network(const bool bike_network) {
+  bike_network_ = bike_network;
 }
 
 // Sets truck route flag.
@@ -259,8 +260,7 @@ void DirectedEdge::set_lanecount(const uint32_t lanecount) {
 // all vehicles, at all times.
 void DirectedEdge::set_restrictions(const uint32_t mask) {
   if (mask >= (1 << kMaxTurnRestrictionEdges)) {
-    LOG_WARN("Restrictions mask exceeds allowable limit: " +
-                std::to_string(mask));
+    LOG_WARN("Restrictions mask exceeds allowable limit: " + std::to_string(mask));
     restrictions_ = (mask & ((1 << kMaxTurnRestrictionEdges) - 1));
   } else {
     restrictions_ = mask;
@@ -285,8 +285,7 @@ void DirectedEdge::set_ctry_crossing(const bool crossing) {
 // Set the access modes in the forward direction (bit field).
 void DirectedEdge::set_forwardaccess(const uint32_t modes) {
   if (modes > kAllAccess) {
-    LOG_ERROR("DirectedEdge: forward access exceeds maximum allowed: " +
-              std::to_string(modes));
+    LOG_ERROR("DirectedEdge: forward access exceeds maximum allowed: " + std::to_string(modes));
     forwardaccess_ = (modes & kAllAccess);
   } else {
     forwardaccess_ = modes;
@@ -303,8 +302,7 @@ void DirectedEdge::set_all_forward_access() {
 // Set the access modes in the reverse direction (bit field).
 void DirectedEdge::set_reverseaccess(const uint32_t modes) {
   if (modes > kAllAccess) {
-    LOG_ERROR("DirectedEdge: reverse access exceeds maximum allowed: " +
-              std::to_string(modes));
+    LOG_ERROR("DirectedEdge: reverse access exceeds maximum allowed: " + std::to_string(modes));
     reverseaccess_ = (modes & kAllAccess);
   } else {
     reverseaccess_ = modes;
@@ -323,16 +321,6 @@ void DirectedEdge::set_speed(const uint32_t speed) {
   }
 }
 
-// Sets the speed limit in KPH.
-void DirectedEdge::set_speed_limit(const uint32_t speed_limit) {
-  if (speed_limit > kMaxSpeedKph) {
-    LOG_WARN("Exceeding maximum.  Speed limit: " + std::to_string(speed_limit));
-    speed_limit_ = kMaxSpeedKph;
-  } else {
-    speed_limit_ = speed_limit;
-  }
-}
-
 // Sets the truck speed in KPH.
 void DirectedEdge::set_truck_speed(const uint32_t speed) {
   if (speed > kMaxSpeedKph) {
@@ -347,14 +335,23 @@ void DirectedEdge::set_truck_speed(const uint32_t speed) {
 
 // Sets the classification (importance) of this edge.
 void DirectedEdge::set_classification(const RoadClass roadclass) {
-  classification_= static_cast<uint32_t>(roadclass);
+  classification_ = static_cast<uint32_t>(roadclass);
 }
 
 // Sets the sac scale. Shows if edge is meant for hiking, and if so how difficult
 // of a hike it is.
-void DirectedEdge::set_sac_scale(const SacScale sac_scale)
-{
+void DirectedEdge::set_sac_scale(const SacScale sac_scale) {
   sac_scale_ = static_cast<uint64_t>(sac_scale);
+}
+
+// Set the name consistency given the other edge's local index. This is limited
+// to the first 8 local edge indexes.
+void DirectedEdge::set_name_consistency(const uint32_t idx, const bool c) {
+  if (idx > kMaxLocalEdgeIndex) {
+    LOG_WARN("Local index exceeds max in set_name_consistency, skip");
+  } else {
+    name_consistency_ = OverwriteBit(name_consistency_, c, idx);
+  }
 }
 
 // Sets the surface type (see baldr/graphconstants.h). This is a general
@@ -385,8 +382,8 @@ void DirectedEdge::set_end_restriction(const uint32_t modes) {
 }
 
 // Set the part of complex restriction flag.
-void DirectedEdge::set_part_of_complex_restriction(const bool part_of) {
-  part_of_complex_restriction_ = part_of;
+void DirectedEdge::complex_restriction(const bool part_of) {
+  complex_restriction_ = part_of;
 }
 
 // Set the density along the edges.
@@ -416,20 +413,17 @@ void DirectedEdge::set_sidewalk_right(const bool sidewalk) {
 
 // Sets the turn type given the prior edge's local index
 // (index of the inbound edge).
-void DirectedEdge::set_turntype(const uint32_t localidx,
-                                       const Turn::Type turntype) {
+void DirectedEdge::set_turntype(const uint32_t localidx, const Turn::Type turntype) {
   if (localidx > kMaxLocalEdgeIndex) {
     LOG_WARN("Exceeding max local index in set_turntype. Skipping");
   } else {
-    turntype_ = OverwriteBits(turntype_,
-                   static_cast<uint32_t>(turntype), localidx, 3);
+    turntype_ = OverwriteBits(turntype_, static_cast<uint32_t>(turntype), localidx, 3);
   }
 }
 
 // Set the flag indicating there is an edge to the left, in between
 // the from edge and this edge.
-void DirectedEdge::set_edge_to_left(const uint32_t localidx,
-                                           const bool left) {
+void DirectedEdge::set_edge_to_left(const uint32_t localidx, const bool left) {
   if (localidx > kMaxLocalEdgeIndex) {
     LOG_WARN("Exceeding max local index in set_edge_to_left. Skipping");
   } else {
@@ -439,15 +433,12 @@ void DirectedEdge::set_edge_to_left(const uint32_t localidx,
 
 // Set the stop impact when transitioning from the prior edge (given
 // by the local index of the corresponding inbound edge at the node).
-void DirectedEdge::set_stopimpact(const uint32_t localidx,
-                                         const uint32_t stopimpact) {
+void DirectedEdge::set_stopimpact(const uint32_t localidx, const uint32_t stopimpact) {
   if (stopimpact > kMaxStopImpact) {
     LOG_WARN("Exceeding maximum stop impact: " + std::to_string(stopimpact));
-    stopimpact_.s.stopimpact = OverwriteBits(stopimpact_.s.stopimpact,
-                                           kMaxStopImpact, localidx, 3);
+    stopimpact_.s.stopimpact = OverwriteBits(stopimpact_.s.stopimpact, kMaxStopImpact, localidx, 3);
   } else {
-    stopimpact_.s.stopimpact = OverwriteBits(stopimpact_.s.stopimpact, stopimpact,
-                                           localidx, 3);
+    stopimpact_.s.stopimpact = OverwriteBits(stopimpact_.s.stopimpact, stopimpact, localidx, 3);
   }
 }
 
@@ -458,13 +449,11 @@ void DirectedEdge::set_lineid(const uint32_t lineid) {
 
 // Set the flag indicating there is an edge to the right, in between
 // the from edge and this edge.
-void DirectedEdge::set_edge_to_right(const uint32_t localidx,
-                                            const bool right) {
+void DirectedEdge::set_edge_to_right(const uint32_t localidx, const bool right) {
   if (localidx > kMaxLocalEdgeIndex) {
     LOG_WARN("Exceeding max local index in set_edge_to_right. Skipping");
   } else {
-    stopimpact_.s.edge_to_right = OverwriteBits(stopimpact_.s.edge_to_right,
-                                right, localidx, 1);
+    stopimpact_.s.edge_to_right = OverwriteBits(stopimpact_.s.edge_to_right, right, localidx, 1);
   }
 }
 
@@ -502,7 +491,7 @@ void DirectedEdge::set_shortcut(const uint32_t shortcut) {
 
   // Set the shortcut mask if within the max number of masked shortcut edges
   if (shortcut <= kMaxShortcutsFromNode) {
-    shortcut_ = (1 << (shortcut-1));
+    shortcut_ = (1 << (shortcut - 1));
   }
 
   // Set the is_shortcut flag
@@ -512,22 +501,10 @@ void DirectedEdge::set_shortcut(const uint32_t shortcut) {
 // Set the flag for whether this edge is superseded by a shortcut edge.
 void DirectedEdge::set_superseded(const uint32_t superseded) {
   if (superseded > kMaxShortcutsFromNode) {
-      LOG_WARN("Exceeding max shortcut edges from a node: " + std::to_string(superseded));
+    LOG_WARN("Exceeding max shortcut edges from a node: " + std::to_string(superseded));
   } else {
-    superseded_ = (1 << (superseded-1));
+    superseded_ = (1 << (superseded - 1));
   }
-}
-
-// Set the use indicating this edge represents a transition up one level
-// in the hierarchy.
-void DirectedEdge::set_trans_up() {
-  set_use(Use::kTransitionUp);
-}
-
-// Set the use indicating this edge represents a transition down one level
-// in the hierarchy.
-void DirectedEdge::set_trans_down() {
-  set_use(Use::kTransitionDown);
 }
 
 // Set the flag indicating whether the end node of this directed edge is in
@@ -536,63 +513,93 @@ void DirectedEdge::set_leaves_tile(const bool leaves_tile) {
   leaves_tile_ = leaves_tile;
 }
 
+// Sets the maximum upward slope. If slope is negative, 0 is set.
+void DirectedEdge::set_max_up_slope(const float slope) {
+  if (slope < 0.0f) {
+    max_up_slope_ = 0;
+  } else if (slope < 16.0f) {
+    max_up_slope_ = static_cast<int>(std::ceil(slope));
+  } else if (slope < 76.0f) {
+    max_up_slope_ = 0x10 | static_cast<int>(std::ceil((slope - 16.0f) * 0.25f));
+  } else {
+    max_up_slope_ = 0x1f;
+  }
+}
+
+// Sets the maximum downward slope. If slope is positive, 0 is set.
+void DirectedEdge::set_max_down_slope(const float slope) {
+  if (slope > 0.0f) {
+    max_down_slope_ = 0;
+  } else if (slope > -16.0f) {
+    max_down_slope_ = static_cast<int>(std::ceil(-slope));
+  } else if (slope > -76.0f) {
+    max_down_slope_ = 0x10 | static_cast<int>(std::ceil((-slope - 16.0f) * 0.25f));
+  } else {
+    max_down_slope_ = 0x1f;
+  }
+}
+
 // Json representation
 json::MapPtr DirectedEdge::json() const {
   return json::map({
-    {"end_node", endnode().json()},
-    {"speed", static_cast<uint64_t>(speed_)},
-    {"speed_limit", static_cast<uint64_t>(speed_limit_)},
-    //{"opp_index", static_cast<bool>(opp_index_)},
-    //{"edge_info_offset", static_cast<uint64_t>(edgeinfo_offset_)},
-    //{"restrictions", restrictions_},
-    {"access_restriction", static_cast<bool>(access_restriction_)},
-    {"start_restriction", access_json(start_restriction_)},
-    {"end_restriction", access_json(end_restriction_)},
-    {"part_of_complex_restriction", static_cast<bool>(part_of_complex_restriction_)},
-    {"has_exit_sign", static_cast<bool>(exitsign_)},
-    {"drive_on_right", static_cast<bool>(drive_on_right_)},
-    {"toll", static_cast<bool>(toll_)},
-    {"seasonal", static_cast<bool>(seasonal_)},
-    {"destination_only", static_cast<bool>(dest_only_)},
-    {"tunnel", static_cast<bool>(tunnel_)},
-    {"bridge", static_cast<bool>(bridge_)},
-    {"round_about", static_cast<bool>(roundabout_)},
-    {"unreachable", static_cast<bool>(unreachable_)},
-    {"traffic_signal", static_cast<bool>(traffic_signal_)},
-    {"forward", static_cast<bool>(forward_)},
-    {"not_thru", static_cast<bool>(not_thru_)},
-    {"cycle_lane", to_string(static_cast<CycleLane>(cycle_lane_))},
-    {"bike_network", bike_network_json(bike_network_)},
-    {"truck_route", static_cast<bool>(truck_route_)},
-    {"lane_count", static_cast<uint64_t>(lanecount_)},
-    {"use", to_string(static_cast<Use>(use_))},
-    {"speed_type", to_string(static_cast<SpeedType>(speed_type_))},
-    {"country_crossing", static_cast<bool>(ctry_crossing_)},
-    {"geo_attributes", json::map({
-      {"length", static_cast<uint64_t>(length_)},
-      {"weighted_grade", json::fp_t{static_cast<double>(weighted_grade_ - 6.0) / .6, 2}},
-      {"curvature", static_cast<uint64_t>(curvature_)},
-    })},
-    {"access", access_json(forwardaccess_)},
-    //{"access", access_json(reverseaccess_)},
-    {"classification", json::map({
-      {"classification", to_string(static_cast<RoadClass>(classification_))},
-      {"surface", to_string(static_cast<Surface>(surface_))},
-      {"link", static_cast<bool>(link_)},
-      {"internal", static_cast<bool>(internal_)},
-    })},
-    /*{"hierarchy", json::map({
-      {"local_edge_index", static_cast<uint64_t>(localedgeidx_)},
-      {"opposing_local_index", static_cast<uint64_t>(opp_local_idx_)},
-      {"shortcut_mask", static_cast<uint64_t>(shortcut_)},
-      {"superseded_mask", static_cast<uint64_t>(superseded_)},
-      {"transition_up", use() == Use::kTransitionUp},
-      {"transition_down", use() == Use::kTransitionDown},
-      {"shortcut", static_cast<bool>(is_shortcut_)},
-    })},*/
+      {"end_node", endnode().json()},
+      {"speeds", json::map({
+                     {"default", static_cast<uint64_t>(speed_)},
+                     {"type", to_string(static_cast<SpeedType>(speed_type_))},
+                     {"free_flow", static_cast<uint64_t>(free_flow_speed_)},
+                     {"constrained_flow", static_cast<uint64_t>(constrained_flow_speed_)},
+                     {"predicted", static_cast<bool>(predicted_speed_)},
+                 })},
+      //{"opp_index", static_cast<bool>(opp_index_)},
+      //{"edge_info_offset", static_cast<uint64_t>(edgeinfo_offset_)},
+      //{"restrictions", restrictions_},
+      {"access_restriction", static_cast<bool>(access_restriction_)},
+      {"start_restriction", access_json(start_restriction_)},
+      {"end_restriction", access_json(end_restriction_)},
+      {"part_of_complex_restriction", static_cast<bool>(complex_restriction_)},
+      {"has_exit_sign", static_cast<bool>(exitsign_)},
+      {"toll", static_cast<bool>(toll_)},
+      {"seasonal", static_cast<bool>(seasonal_)},
+      {"destination_only", static_cast<bool>(dest_only_)},
+      {"tunnel", static_cast<bool>(tunnel_)},
+      {"bridge", static_cast<bool>(bridge_)},
+      {"round_about", static_cast<bool>(roundabout_)},
+      {"traffic_signal", static_cast<bool>(traffic_signal_)},
+      {"forward", static_cast<bool>(forward_)},
+      {"not_thru", static_cast<bool>(not_thru_)},
+      {"cycle_lane", to_string(static_cast<CycleLane>(cycle_lane_))},
+      {"bike_network", static_cast<bool>(bike_network_)},
+      {"truck_route", static_cast<bool>(truck_route_)},
+      {"lane_count", static_cast<uint64_t>(lanecount_)},
+      {"country_crossing", static_cast<bool>(ctry_crossing_)},
+      {"sidewalk_left", static_cast<bool>(sidewalk_left_)},
+      {"sidewalk_right", static_cast<bool>(sidewalk_right_)},
+      {"geo_attributes",
+       json::map({
+           {"length", static_cast<uint64_t>(length_)},
+           {"weighted_grade", json::fp_t{static_cast<double>(weighted_grade_ - 6.0) / .6, 2}},
+           {"max_up_slope", json::fp_t{static_cast<double>(max_up_slope()), 2}},
+           {"max_down_slope", json::fp_t{static_cast<double>(max_down_slope()), 2}},
+           {"curvature", static_cast<uint64_t>(curvature_)},
+       })},
+      {"access", access_json(forwardaccess_)},
+      //{"access", access_json(reverseaccess_)},
+      {"classification", json::map({
+                             {"classification", to_string(static_cast<RoadClass>(classification_))},
+                             {"use", to_string(static_cast<Use>(use_))},
+                             {"surface", to_string(static_cast<Surface>(surface_))},
+                             {"link", static_cast<bool>(link_)},
+                             {"internal", static_cast<bool>(internal_)},
+                         })},
+      /*{"hierarchy", json::map({
+        {"local_edge_index", static_cast<uint64_t>(localedgeidx_)},
+        {"opposing_local_index", static_cast<uint64_t>(opp_local_idx_)},
+        {"shortcut_mask", static_cast<uint64_t>(shortcut_)},
+        {"superseded_mask", static_cast<uint64_t>(superseded_)},
+        {"shortcut", static_cast<bool>(is_shortcut_)},
+      })},*/
   });
 }
 
-
-}
-}
+} // namespace baldr
+} // namespace valhalla

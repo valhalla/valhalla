@@ -7,7 +7,7 @@
     "arrive": {
       "phrases": {
         "0": "Ankunft: <TIME>.", 
-        "1": "Ankunft: <TIME> am <TRANSIT_STOP>."
+        "1": "Ankunft: <TIME> an <TRANSIT_STOP>."
       }, 
       "example_phrases": {
         "0": [
@@ -21,7 +21,7 @@
     "arrive_verbal": {
       "phrases": {
         "0": "Um <TIME> ankommen", 
-        "1": "Um <TIME> am <TRANSIT_STOP> ankommen."
+        "1": "Um <TIME> an <TRANSIT_STOP> ankommen."
       }, 
       "example_phrases": {
         "0": [
@@ -142,13 +142,13 @@
         "Fußweg", 
         "Radweg", 
         "Mountainbike Strecke"
-      ], 
+      ],
       "metric_lengths": [
-        "<KILOMETERS> kilometers", 
-        "1 kilometer", 
-        "a half kilometer", 
-        "<METERS> meters", 
-        "less than 10 meters"
+        "<KILOMETERS> Kilometer",
+        "einen Kilometer",
+        "einen halben Kilometer",
+        "<METERS> Meter",
+        "weniger als 10 Meter"
       ], 
       "us_customary_lengths": [
         "<MILES> miles", 
@@ -271,8 +271,8 @@
     }, 
     "destination_verbal_alert": {
       "phrases": {
-        "0": "Ziel gleich erreichen.", 
-        "1": "<DESTINATION> gleich erreichen.", 
+        "0": "Ziel fast erreicht.", 
+        "1": "<DESTINATION> fast erreicht.", 
         "2": "Gleich befindet sich das Ziel auf der <RELATIVE_DIRECTION> Seite.", 
         "3": "Gleich befindet sich <DESTINATION> auf der <RELATIVE_DIRECTION> Seite."
       }, 
@@ -725,7 +725,7 @@
         "4": "<RELATIVE_DIRECTION> halten Richtung <TOWARD_SIGN>.", 
         "5": "<RELATIVE_DIRECTION> halten um die Ausfahrt <NUMBER_SIGN> Richtung <TOWARD_SIGN> zu nehmen.", 
         "6": "<RELATIVE_DIRECTION> halten auf <STREET_NAMES> Richtung <TOWARD_SIGN>.", 
-        "7": "<RELATIVE_DIRECTION> halften um die Ausfahrt <NUMBER_SIGN> auf <STREET_NAMES> Richtung <TOWARD_SIGN> zu nehmen."
+        "7": "<RELATIVE_DIRECTION> halten um die Ausfahrt <NUMBER_SIGN> auf <STREET_NAMES> Richtung <TOWARD_SIGN> zu nehmen."
       }, 
       "empty_street_name_labels": [
         "Fußweg", 
@@ -843,7 +843,7 @@
         "4": "<RELATIVE_DIRECTION> halten Richtung <TOWARD_SIGN>.", 
         "5": "<RELATIVE_DIRECTION> halten um die Ausfahrt <NUMBER_SIGN> Richtung <TOWARD_SIGN> zu nehmen.", 
         "6": "<RELATIVE_DIRECTION> halten auf <STREET_NAMES> Richtung <TOWARD_SIGN>.", 
-        "7": "<RELATIVE_DIRECTION> halften um die Ausfahrt <NUMBER_SIGN> auf <STREET_NAMES> Richtung <TOWARD_SIGN> zu nehmen."
+        "7": "<RELATIVE_DIRECTION> halten um die Ausfahrt <NUMBER_SIGN> auf <STREET_NAMES> Richtung <TOWARD_SIGN> zu nehmen."
       }, 
       "empty_street_name_labels": [
         "Fußweg", 
@@ -1093,13 +1093,13 @@
         "weniger als 10 Meter"
       ], 
       "us_customary_lengths": [
-        "<MILES> Milen", 
+        "<MILES> Meilen", 
         "eine Meile", 
         "eine halbe Meile", 
-        "<TENTHS_OF_MILE> zehntel der Meile", 
-        "eine zehntel der Miele", 
-        "<FEET> Füße", 
-        "weniger als 10 Füße"
+        "<TENTHS_OF_MILE> Zehntel der Meile", 
+        "ein Zehntel der Meile", 
+        "<FEET> Fuß", 
+        "weniger als 10 Fuß"
       ], 
       "example_phrases": {
         "0": [
@@ -1115,14 +1115,14 @@
     "ramp": {
       "phrases": {
         "0": "Auf die Auffahrt leicht nach <RELATIVE_DIRECTION> abbiegen.", 
-        "1": "Über die Auffahrt leicht nach <RELATIVE_DIRECTION> auf <BRANCH_SIGN> abbiegen.", 
+        "1": "Auf die Auffahrt leicht nach <RELATIVE_DIRECTION> auf <BRANCH_SIGN> abbiegen.", 
         "2": "Auf die Auffahrt leicht nach <RELATIVE_DIRECTION> abbiegen Richtung <TOWARD_SIGN>.", 
-        "3": "Über die Auffahrt leicht nach <RELATIVE_DIRECTION> auf <BRANCH_SIGN> abbiegen Richtung <TOWARD_SIGN>.", 
+        "3": "Auf die Auffahrt leicht nach <RELATIVE_DIRECTION> auf <BRANCH_SIGN> abbiegen Richtung <TOWARD_SIGN>.", 
         "4": "Auf die Auffahrt <NAME_SIGN> leicht nach <RELATIVE_DIRECTION> abbiegen.", 
         "5": "Auf die Auffahrt nach <RELATIVE_DIRECTION> abbiegen.", 
-        "6": "Über die Auffahrt nach <RELATIVE_DIRECTION> auf <BRANCH_SIGN> abbiegen.", 
+        "6": "Auf die Auffahrt nach <RELATIVE_DIRECTION> auf <BRANCH_SIGN> abbiegen.", 
         "7": "Auf die Auffahrt nach <RELATIVE_DIRECTION> abbiegen Richtung <TOWARD_SIGN>.", 
-        "8": "Über die Auffahrt nach <RELATIVE_DIRECTION> auf <BRANCH_SIGN> abbiegen Richtung <TOWARD_SIGN>.", 
+        "8": "Auf die Auffahrt nach <RELATIVE_DIRECTION> auf <BRANCH_SIGN> abbiegen Richtung <TOWARD_SIGN>.", 
         "9": "Auf die Auffahrt <NAME_SIGN> nach <RELATIVE_DIRECTION> abbiegen."
       }, 
       "relative_directions": [
@@ -1166,11 +1166,11 @@
     }, 
     "ramp_straight": {
       "phrases": {
-        "0": "Geradeaus über die Auffahrt fahren.", 
-        "1": "Auf <BRANCH_SIGN> geradeaus über die Auffahrt fahren.", 
-        "2": "Geradeaus über die Auffahrt fahren Richtung <TOWARD_SIGN>.", 
-        "3": "Auf <BRANCH_SIGN> geradeaus über die Auffahrt fahren Richtung <TOWARD_SIGN>.", 
-        "4": "Geradeaus über die Auffahrt <NAME_SIGN> fahren."
+        "0": "Geradeaus auf die Auffahrt fahren.", 
+        "1": "Auf <BRANCH_SIGN> geradeaus auf die Auffahrt fahren.", 
+        "2": "Geradeaus auf die Auffahrt fahren Richtung <TOWARD_SIGN>.", 
+        "3": "Auf <BRANCH_SIGN> geradeaus auf die Auffahrt fahren Richtung <TOWARD_SIGN>.", 
+        "4": "Geradeaus auf die Auffahrt <NAME_SIGN> fahren."
       }, 
       "example_phrases": {
         "0": [
@@ -1192,11 +1192,11 @@
     }, 
     "ramp_straight_verbal": {
       "phrases": {
-        "0": "Geradeaus über die Auffahrt fahren.", 
-        "1": "Auf <BRANCH_SIGN> geradeaus über die Auffahrt fahren.", 
-        "2": "Geradeaus über die Auffahrt fahren Richtung <TOWARD_SIGN>.", 
-        "3": "Auf <BRANCH_SIGN> geradeaus über die Auffahrt fahren Richtung <TOWARD_SIGN>.", 
-        "4": "Geradeaus über die Auffahrt <NAME_SIGN> fahren."
+        "0": "Geradeaus auf die Auffahrt fahren.", 
+        "1": "Auf <BRANCH_SIGN> geradeaus auf die Auffahrt fahren.", 
+        "2": "Geradeaus auf die Auffahrt fahren Richtung <TOWARD_SIGN>.", 
+        "3": "Auf <BRANCH_SIGN> geradeaus auf die Auffahrt fahren Richtung <TOWARD_SIGN>.", 
+        "4": "Geradeaus auf die Auffahrt <NAME_SIGN> fahren."
       }, 
       "example_phrases": {
         "0": [
@@ -1219,14 +1219,14 @@
     "ramp_verbal": {
       "phrases": {
         "0": "Auf die Auffahrt leicht nach <RELATIVE_DIRECTION> abbiegen.", 
-        "1": "Über die Auffahrt leicht nach <RELATIVE_DIRECTION> auf <BRANCH_SIGN> abbiegen.", 
+        "1": "Auf die Auffahrt leicht nach <RELATIVE_DIRECTION> auf <BRANCH_SIGN> abbiegen.", 
         "2": "Auf die Auffahrt leicht nach <RELATIVE_DIRECTION> abbiegen Richtung <TOWARD_SIGN>.", 
-        "3": "Über die Auffahrt leicht nach <RELATIVE_DIRECTION> auf <BRANCH_SIGN> abbiegen Richtung <TOWARD_SIGN>.", 
+        "3": "Auf die Auffahrt leicht nach <RELATIVE_DIRECTION> auf <BRANCH_SIGN> abbiegen Richtung <TOWARD_SIGN>.", 
         "4": "Auf die Auffahrt <NAME_SIGN> leicht nach <RELATIVE_DIRECTION> abbiegen.", 
         "5": "Auf die Auffahrt nach <RELATIVE_DIRECTION> abbiegen.", 
-        "6": "Über die Auffahrt nach <RELATIVE_DIRECTION> auf <BRANCH_SIGN> abbiegen.", 
+        "6": "Auf die Auffahrt nach <RELATIVE_DIRECTION> auf <BRANCH_SIGN> abbiegen.", 
         "7": "Auf die Auffahrt nach <RELATIVE_DIRECTION> abbiegen Richtung <TOWARD_SIGN>.", 
-        "8": "Über die Auffahrt nach <RELATIVE_DIRECTION> auf <BRANCH_SIGN> abbiegen Richtung <TOWARD_SIGN>.", 
+        "8": "Auf die Auffahrt nach <RELATIVE_DIRECTION> auf <BRANCH_SIGN> abbiegen Richtung <TOWARD_SIGN>.", 
         "9": "Auf die Auffahrt <NAME_SIGN> nach <RELATIVE_DIRECTION> abbiegen."
       }, 
       "relative_directions": [
@@ -1444,13 +1444,13 @@
         "weniger als 10 Meter"
       ], 
       "us_customary_lengths": [
-        "<MILES> Milen", 
+        "<MILES> Meilen", 
         "eine Meile", 
         "eine halbe Meile", 
-        "<TENTHS_OF_MILE> zehntel der Meile", 
-        "eine zehntel der Miele", 
-        "<FEET> Füße", 
-        "weniger als 10 Füße"
+        "<TENTHS_OF_MILE> Zehntel der Meile", 
+        "ein Zehntel der Meile", 
+        "<FEET> Fuß", 
+        "weniger als 10 Fuß"
       ], 
       "example_phrases": {
         "0": [
@@ -1465,7 +1465,7 @@
         ], 
         "4": [
           "Drive east for a half mile.", 
-          "Drvie north for 1 kilometer."
+          "Drive north for 1 kilometer."
         ], 
         "5": [
           "Drive southwest on 5th Avenue for 1 tenth of a mile."
@@ -1696,7 +1696,7 @@
     "transit_transfer": {
       "phrases": {
         "0": "Zu <TRANSIT_NAME> umsteigen. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)", 
-        "1": "Zu <TRANSIT_NAME> Richtugn <TRANSIT_HEADSIGN> umsteigen. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+        "1": "Zu <TRANSIT_NAME> Richtung <TRANSIT_HEADSIGN> umsteigen. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
       }, 
       "empty_transit_name_labels": [
         "Straßenbahn", 
@@ -1725,7 +1725,7 @@
     "transit_transfer_verbal": {
       "phrases": {
         "0": "Zu <TRANSIT_NAME> umsteigen.", 
-        "1": "Zu <TRANSIT_NAME> Richtugn <TRANSIT_HEADSIGN> umsteigen."
+        "1": "Zu <TRANSIT_NAME> Richtung <TRANSIT_HEADSIGN> umsteigen."
       }, 
       "empty_transit_name_labels": [
         "Straßenbahn", 
@@ -1837,9 +1837,9 @@
         "0": "Nach <RELATIVE_DIRECTION> eine Kehrtwende machen.", 
         "1": "Nach <RELATIVE_DIRECTION> eine Kehrtwende auf <STREET_NAMES> machen.", 
         "2": "Nach <RELATIVE_DIRECTION> eine Kehrtwende machen um auf <STREET_NAMES> zu bleiben.", 
-        "3": "Nach <RELATIVE_DIRECTION> eine Kerhtwende bei <CROSS_STREET_NAMES> machen.", 
-        "4": "Nach <RELATIVE_DIRECTION> eine Kerhtwende bei <CROSS_STREET_NAMES> auf <STREET_NAMES> machen.", 
-        "5": "Nach <RELATIVE_DIRECTION> eine Kerhtwende bei <CROSS_STREET_NAMES> machen um auf <STREET_NAMES> zu bleiben."
+        "3": "Nach <RELATIVE_DIRECTION> eine Kehrtwende bei <CROSS_STREET_NAMES> machen.", 
+        "4": "Nach <RELATIVE_DIRECTION> eine Kehrtwende bei <CROSS_STREET_NAMES> auf <STREET_NAMES> machen.", 
+        "5": "Nach <RELATIVE_DIRECTION> eine Kehrtwende bei <CROSS_STREET_NAMES> machen um auf <STREET_NAMES> zu bleiben."
       }, 
       "empty_street_name_labels": [
         "Fußweg", 
@@ -1876,9 +1876,9 @@
         "0": "Nach <RELATIVE_DIRECTION> eine Kehrtwende machen.", 
         "1": "Nach <RELATIVE_DIRECTION> eine Kehrtwende auf <STREET_NAMES> machen.", 
         "2": "Nach <RELATIVE_DIRECTION> eine Kehrtwende machen um auf <STREET_NAMES> zu bleiben.", 
-        "3": "Nach <RELATIVE_DIRECTION> eine Kerhtwende bei <CROSS_STREET_NAMES> machen.", 
-        "4": "Nach <RELATIVE_DIRECTION> eine Kerhtwende bei <CROSS_STREET_NAMES> auf <STREET_NAMES> machen.", 
-        "5": "Nach <RELATIVE_DIRECTION> eine Kerhtwende bei <CROSS_STREET_NAMES> machen um auf <STREET_NAMES> zu bleiben."
+        "3": "Nach <RELATIVE_DIRECTION> eine Kehrtwende bei <CROSS_STREET_NAMES> machen.", 
+        "4": "Nach <RELATIVE_DIRECTION> eine Kehrtwende bei <CROSS_STREET_NAMES> auf <STREET_NAMES> machen.", 
+        "5": "Nach <RELATIVE_DIRECTION> eine Kehrtwende bei <CROSS_STREET_NAMES> machen um auf <STREET_NAMES> zu bleiben."
       }, 
       "empty_street_name_labels": [
         "Fußweg", 

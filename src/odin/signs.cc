@@ -3,6 +3,8 @@
 
 #include "odin/signs.h"
 
+#include <utility>
+
 using namespace valhalla::baldr;
 
 namespace valhalla {
@@ -19,11 +21,12 @@ std::vector<Sign>* Signs::mutable_exit_number_list() {
   return &exit_number_list_;
 }
 
-const std::string Signs::GetExitNumberString(
-    uint32_t max_count, bool limit_by_consecutive_count, std::string delim,
-    const VerbalTextFormatter* verbal_formatter) const {
-  return ListToString(exit_number_list_, max_count, limit_by_consecutive_count,
-                      delim, verbal_formatter);
+const std::string Signs::GetExitNumberString(uint32_t max_count,
+                                             bool limit_by_consecutive_count,
+                                             std::string delim,
+                                             const VerbalTextFormatter* verbal_formatter) const {
+  return ListToString(exit_number_list_, max_count, limit_by_consecutive_count, std::move(delim),
+                      verbal_formatter);
 }
 
 const std::vector<Sign>& Signs::exit_branch_list() const {
@@ -34,11 +37,12 @@ std::vector<Sign>* Signs::mutable_exit_branch_list() {
   return &exit_branch_list_;
 }
 
-const std::string Signs::GetExitBranchString(
-    uint32_t max_count, bool limit_by_consecutive_count, std::string delim,
-    const VerbalTextFormatter* verbal_formatter) const {
-  return ListToString(exit_branch_list_, max_count, limit_by_consecutive_count,
-                      delim, verbal_formatter);
+const std::string Signs::GetExitBranchString(uint32_t max_count,
+                                             bool limit_by_consecutive_count,
+                                             std::string delim,
+                                             const VerbalTextFormatter* verbal_formatter) const {
+  return ListToString(exit_branch_list_, max_count, limit_by_consecutive_count, std::move(delim),
+                      verbal_formatter);
 }
 
 const std::vector<Sign>& Signs::exit_toward_list() const {
@@ -49,11 +53,12 @@ std::vector<Sign>* Signs::mutable_exit_toward_list() {
   return &exit_toward_list_;
 }
 
-const std::string Signs::GetExitTowardString(
-    uint32_t max_count, bool limit_by_consecutive_count, std::string delim,
-    const VerbalTextFormatter* verbal_formatter) const {
-  return ListToString(exit_toward_list_, max_count, limit_by_consecutive_count,
-                      delim, verbal_formatter);
+const std::string Signs::GetExitTowardString(uint32_t max_count,
+                                             bool limit_by_consecutive_count,
+                                             std::string delim,
+                                             const VerbalTextFormatter* verbal_formatter) const {
+  return ListToString(exit_toward_list_, max_count, limit_by_consecutive_count, std::move(delim),
+                      verbal_formatter);
 }
 
 const std::vector<Sign>& Signs::exit_name_list() const {
@@ -64,16 +69,17 @@ std::vector<Sign>* Signs::mutable_exit_name_list() {
   return &exit_name_list_;
 }
 
-const std::string Signs::GetExitNameString(
-    uint32_t max_count, bool limit_by_consecutive_count, std::string delim,
-    const VerbalTextFormatter* verbal_formatter) const {
-  return ListToString(exit_name_list_, max_count, limit_by_consecutive_count,
-                      delim, verbal_formatter);
+const std::string Signs::GetExitNameString(uint32_t max_count,
+                                           bool limit_by_consecutive_count,
+                                           std::string delim,
+                                           const VerbalTextFormatter* verbal_formatter) const {
+  return ListToString(exit_name_list_, max_count, limit_by_consecutive_count, std::move(delim),
+                      verbal_formatter);
 }
 
 bool Signs::HasExit() const {
-  return ((exit_number_list_.size() > 0) || (exit_branch_list_.size() > 0)
-      || (exit_toward_list_.size() > 0) || (exit_name_list_.size() > 0));
+  return ((exit_number_list_.size() > 0) || (exit_branch_list_.size() > 0) ||
+          (exit_toward_list_.size() > 0) || (exit_name_list_.size() > 0));
 }
 
 bool Signs::HasExitNumber() const {
@@ -95,21 +101,22 @@ bool Signs::HasExitName() const {
 std::string Signs::ToString() const {
   std::string signs_string;
 
-  signs_string += "exit.number=";
+  signs_string += "exit_numbers=";
   signs_string += GetExitNumberString();
 
-  signs_string += " | exit.branch=";
+  signs_string += " | exit_onto_streets=";
   signs_string += GetExitBranchString();
 
-  signs_string += " | exit.toward=";
+  signs_string += " | exit_toward_locations=";
   signs_string += GetExitTowardString();
 
-  signs_string += " | exit.name=";
+  signs_string += " | exit_names=";
   signs_string += GetExitNameString();
 
   return signs_string;
 }
 
+#ifdef LOGGING_LEVEL_TRACE
 std::string Signs::ToParameterString() const {
   const std::string delim = ", ";
   std::string signs_string;
@@ -127,11 +134,13 @@ std::string Signs::ToParameterString() const {
 
   return signs_string;
 }
+#endif
 
-const std::string Signs::ListToString(
-    const std::vector<Sign>& signs, uint32_t max_count,
-    bool limit_by_consecutive_count, std::string delim,
-    const VerbalTextFormatter* verbal_formatter) const {
+const std::string Signs::ListToString(const std::vector<Sign>& signs,
+                                      uint32_t max_count,
+                                      bool limit_by_consecutive_count,
+                                      const std::string& delim,
+                                      const VerbalTextFormatter* verbal_formatter) const {
   std::string sign_string;
   uint32_t count = 0;
   uint32_t consecutive_count = -1;
@@ -163,39 +172,37 @@ const std::string Signs::ListToString(
     }
 
     // Concatenate exit text and update count
-    sign_string +=
-        (verbal_formatter) ?
-            verbal_formatter->Format(sign.text()) : sign.text();
+    sign_string += (verbal_formatter) ? verbal_formatter->Format(sign.text()) : sign.text();
     ++count;
   }
 
   return sign_string;
 }
 
-const std::string Signs::ListToParameterString(
-    const std::vector<Sign>& signs) const {
-  const std::string delim = ", ";
+#ifdef LOGGING_LEVEL_TRACE
+const std::string Signs::ListToParameterString(const std::vector<Sign>& signs) const {
   std::string sign_string;
-  bool is_first = true;
+  std::string param_list;
+
   sign_string += "{ ";
-  for (auto& sign : signs) {
-    if (is_first)
-      is_first = false;
-    else
-      sign_string += delim;
-    sign_string += sign.ToParameterString();
+  for (const auto& sign : signs) {
+    if (!param_list.empty()) {
+      param_list += ", ";
+    }
+    param_list += sign.ToParameterString();
   }
+  sign_string += param_list;
   sign_string += " }";
 
   return sign_string;
 }
+#endif
 
-bool Signs::operator ==(const Signs& rhs) const {
-  return ((exit_number_list_ == rhs.exit_number_list_)
-      && (exit_branch_list_ == rhs.exit_branch_list_)
-      && (exit_toward_list_ == rhs.exit_toward_list_)
-      && (exit_name_list_ == rhs.exit_name_list_));
+bool Signs::operator==(const Signs& rhs) const {
+  return ((exit_number_list_ == rhs.exit_number_list_) &&
+          (exit_branch_list_ == rhs.exit_branch_list_) &&
+          (exit_toward_list_ == rhs.exit_toward_list_) && (exit_name_list_ == rhs.exit_name_list_));
 }
 
-}
-}
+} // namespace odin
+} // namespace valhalla

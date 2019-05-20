@@ -2,12 +2,12 @@
 #define VALHALLA_SIF_EDGELABEL_H_
 
 #include <cstdint>
+#include <limits>
 #include <string.h>
+#include <valhalla/baldr/directededge.h>
 #include <valhalla/baldr/graphconstants.h>
 #include <valhalla/baldr/graphid.h>
-#include <valhalla/baldr/directededge.h>
 #include <valhalla/sif/costconstants.h>
-#include <limits>
 
 namespace valhalla {
 namespace sif {
@@ -22,7 +22,7 @@ namespace sif {
  * additional information required other path algorithms.
  */
 class EdgeLabel {
- public:
+public:
   /**
    * Default constructor.
    * TODO - without memset it warns of uninitialized data members
@@ -43,55 +43,22 @@ class EdgeLabel {
    * @param mode          Mode of travel along this edge.
    * @param path_distance Accumulated path distance
    */
-  EdgeLabel(const uint32_t predecessor, const baldr::GraphId& edgeid,
-            const baldr::DirectedEdge* edge, const Cost& cost,
-            const float sortcost, const float dist,
-            const TravelMode mode,  const uint32_t path_distance)
-    : predecessor_(predecessor),
-      path_distance_(path_distance),
-      restrictions_(edge->restrictions()),
-      edgeid_(edgeid),
-      opp_index_(edge->opp_index()),
-      opp_local_idx_(edge->opp_local_idx()),
-      mode_(static_cast<uint32_t>(mode)),
-      endnode_(edge->endnode()),
-      use_(static_cast<uint32_t>(edge->use())),
-      classification_(static_cast<uint32_t>(edge->classification())),
-      shortcut_(edge->shortcut()),
-      dest_only_(edge->destonly()),
-      origin_(0),
-      toll_(edge->toll()),
-      not_thru_(edge->not_thru()),
-      deadend_(edge->deadend()),
-      on_complex_rest_(edge->part_of_complex_restriction()),
-      cost_(cost),
-      sortcost_(sortcost),
-      distance_(dist) {
-  }
-
-  /**
-   * Constructor given a predecessor edge label. This is used for hierarchy
-   * transitions where the attributes at the predecessor are needed (rather
-   * than attributes from the directed edge).
-   * TODO - remove when all path algorithms avoid adding transition edges to
-   * the label set.
-   * @param predecessor  Index into the edge label list for the predecessor
-   *                     directed edge in the shortest path.
-   * @param edgeid       Directed edge id.
-   * @param endnode      End node of the transition edge.
-   * @param pred         Predecessor edge label (to copy attributes from)
-   */
-  EdgeLabel(const uint32_t predecessor, const baldr::GraphId& edgeid,
-            const baldr::GraphId& endnode, const EdgeLabel& pred) {
-    *this        = pred;
-    predecessor_ = predecessor;
-    edgeid_      = edgeid;
-    endnode_     = endnode;
-    origin_      = 0;
-
-    // Set the use so we know this is a transition edge. For now we only need to
-    // know it is a transition edge so we can skip it in complex restrictions.
-    use_ = static_cast<uint32_t>(baldr::Use::kTransitionUp);
+  EdgeLabel(const uint32_t predecessor,
+            const baldr::GraphId& edgeid,
+            const baldr::DirectedEdge* edge,
+            const Cost& cost,
+            const float sortcost,
+            const float dist,
+            const TravelMode mode,
+            const uint32_t path_distance)
+      : predecessor_(predecessor), path_distance_(path_distance), restrictions_(edge->restrictions()),
+        edgeid_(edgeid), opp_index_(edge->opp_index()), opp_local_idx_(edge->opp_local_idx()),
+        mode_(static_cast<uint32_t>(mode)), endnode_(edge->endnode()),
+        use_(static_cast<uint32_t>(edge->use())),
+        classification_(static_cast<uint32_t>(edge->classification())), shortcut_(edge->shortcut()),
+        dest_only_(edge->destonly()), origin_(0), toll_(edge->toll()), not_thru_(edge->not_thru()),
+        deadend_(edge->deadend()), on_complex_rest_(edge->part_of_complex_restriction()), cost_(cost),
+        sortcost_(sortcost), distance_(dist) {
   }
 
   /**
@@ -101,8 +68,7 @@ class EdgeLabel {
    * @param cost        True cost (and elapsed time in seconds) to the edge.
    * @param sortcost    Cost for sorting (includes A* heuristic).
    */
-  void Update(const uint32_t predecessor, const Cost& cost,
-              const float sortcost) {
+  void Update(const uint32_t predecessor, const Cost& cost, const float sortcost) {
     predecessor_ = predecessor;
     cost_ = cost;
     sortcost_ = sortcost;
@@ -118,8 +84,10 @@ class EdgeLabel {
    * @param sortcost       Cost for sorting (includes A* heuristic).
    * @param path_distance  Accumulated path distance.
    */
-  void Update(const uint32_t predecessor, const Cost& cost,
-              const float sortcost, const uint32_t path_distance) {
+  void Update(const uint32_t predecessor,
+              const Cost& cost,
+              const float sortcost,
+              const uint32_t path_distance) {
     predecessor_ = predecessor;
     cost_ = cost;
     sortcost_ = sortcost;
@@ -289,7 +257,7 @@ class EdgeLabel {
   /**
    * Operator < used for sorting.
    */
-  bool operator < (const EdgeLabel& other) const {
+  bool operator<(const EdgeLabel& other) const {
     return sortcost() < other.sortcost();
   }
 
@@ -325,7 +293,7 @@ class EdgeLabel {
     return deadend_;
   }
 
- protected:
+protected:
   // predecessor_: Index to the predecessor edge label information.
   // Note: invalid predecessor value uses all 32 bits (so if this needs to
   // be part of a bit field make sure kInvalidLabel is changed.
@@ -335,7 +303,7 @@ class EdgeLabel {
   // restriction_:   Bit mask of edges (by local edge index at the end node)
   //                 that are restricted (simple turn restrictions)
   uint32_t path_distance_ : 25;
-  uint32_t restrictions_  : 7;
+  uint32_t restrictions_ : 7;
 
   /**
    * edgeid_:         Graph Id of the edge.
@@ -345,10 +313,10 @@ class EdgeLabel {
    *                 for edge transition costing and Uturn detection.
    * mode_:          Current transport mode.
    */
-  uint64_t edgeid_        : 46;
-  uint64_t opp_index_     : 7;
+  uint64_t edgeid_ : 46;
+  uint64_t opp_index_ : 7;
   uint64_t opp_local_idx_ : 7;
-  uint64_t mode_          : 4;
+  uint64_t mode_ : 4;
 
   /**
    * endnode_:        GraphId of the end node of the edge. This allows the
@@ -364,20 +332,20 @@ class EdgeLabel {
    * deadend_:        Flag indicating edge is a dead-end.
    * on_complex_rest: Part of a complex restriction.
    */
-  uint64_t endnode_          : 48;   // Could be 46 (2 spare)
-  uint64_t use_              : 6;
-  uint64_t classification_   : 3;
-  uint64_t shortcut_         : 1;
-  uint64_t dest_only_        : 1;
-  uint64_t origin_           : 1;
-  uint64_t toll_             : 1;
-  uint64_t not_thru_         : 1;
-  uint64_t deadend_          : 1;
-  uint64_t on_complex_rest_  : 1;
+  uint64_t endnode_ : 48; // Could be 46 (2 spare)
+  uint64_t use_ : 6;
+  uint64_t classification_ : 3;
+  uint64_t shortcut_ : 1;
+  uint64_t dest_only_ : 1;
+  uint64_t origin_ : 1;
+  uint64_t toll_ : 1;
+  uint64_t not_thru_ : 1;
+  uint64_t deadend_ : 1;
+  uint64_t on_complex_rest_ : 1;
 
-  Cost cost_;       // Cost and elapsed time along the path.
-  float sortcost_;  // Sort cost - includes A* heuristic.
-  float distance_;  // Distance to the destination.
+  Cost cost_;      // Cost and elapsed time along the path.
+  float sortcost_; // Sort cost - includes A* heuristic.
+  float distance_; // Distance to the destination.
 };
 
 /**
@@ -386,8 +354,7 @@ class EdgeLabel {
  * to the destination).
  */
 class BDEdgeLabel : public EdgeLabel {
- public:
-
+public:
   // Default constructor
   BDEdgeLabel() {
     memset(this, 0, sizeof(BDEdgeLabel));
@@ -407,16 +374,18 @@ class BDEdgeLabel : public EdgeLabel {
    * @param tc           Transition cost entering this edge.
    * @param not_thru_pruning  Is not thru pruning enabled.
    */
-  BDEdgeLabel(const uint32_t predecessor, const baldr::GraphId& edgeid,
+  BDEdgeLabel(const uint32_t predecessor,
+              const baldr::GraphId& edgeid,
               const baldr::GraphId& oppedgeid,
-              const baldr::DirectedEdge* edge, const sif::Cost& cost,
-              const float sortcost, const float dist,
-              const sif::TravelMode mode, const sif::Cost& tc,
+              const baldr::DirectedEdge* edge,
+              const sif::Cost& cost,
+              const float sortcost,
+              const float dist,
+              const sif::TravelMode mode,
+              const sif::Cost& tc,
               const bool not_thru_pruning)
-      : EdgeLabel(predecessor, edgeid, edge, cost, sortcost, dist, mode, 0),
-        opp_edgeid_(oppedgeid),
-        transition_cost_(tc),
-        not_thru_pruning_(not_thru_pruning) {
+      : EdgeLabel(predecessor, edgeid, edge, cost, sortcost, dist, mode, 0), opp_edgeid_(oppedgeid),
+        transition_cost_(tc), not_thru_pruning_(not_thru_pruning) {
   }
 
   /**
@@ -433,15 +402,17 @@ class BDEdgeLabel : public EdgeLabel {
    * @param path_distance Accumulated path distance.
    * @param not_thru_pruning  Is not thru pruning enabled.
    */
-  BDEdgeLabel(const uint32_t predecessor, const baldr::GraphId& edgeid,
+  BDEdgeLabel(const uint32_t predecessor,
+              const baldr::GraphId& edgeid,
               const baldr::GraphId& oppedgeid,
-              const baldr::DirectedEdge* edge, const sif::Cost& cost,
-              const sif::TravelMode mode, const sif::Cost& tc,
-              const uint32_t path_distance, const bool not_thru_pruning)
-    : EdgeLabel(predecessor, edgeid, edge, cost, cost.cost, 0, mode, path_distance),
-      opp_edgeid_(oppedgeid),
-      transition_cost_(tc),
-      not_thru_pruning_(not_thru_pruning) {
+              const baldr::DirectedEdge* edge,
+              const sif::Cost& cost,
+              const sif::TravelMode mode,
+              const sif::Cost& tc,
+              const uint32_t path_distance,
+              const bool not_thru_pruning)
+      : EdgeLabel(predecessor, edgeid, edge, cost, cost.cost, 0, mode, path_distance),
+        opp_edgeid_(oppedgeid), transition_cost_(tc), not_thru_pruning_(not_thru_pruning) {
   }
 
   /**
@@ -455,13 +426,16 @@ class BDEdgeLabel : public EdgeLabel {
    * @param dist         Distance to the destination in meters.
    * @param mode         Mode of travel along this edge.
    */
-  BDEdgeLabel(const uint32_t predecessor, const baldr::GraphId& edgeid,
-            const baldr::DirectedEdge* edge, const sif::Cost& cost,
-            const float sortcost, const float dist,
-            const sif::TravelMode mode)
+  BDEdgeLabel(const uint32_t predecessor,
+              const baldr::GraphId& edgeid,
+              const baldr::DirectedEdge* edge,
+              const sif::Cost& cost,
+              const float sortcost,
+              const float dist,
+              const sif::TravelMode mode)
       : EdgeLabel(predecessor, edgeid, edge, cost, sortcost, dist, mode, 0),
         not_thru_pruning_(false) {
-    opp_edgeid_ =  {};
+    opp_edgeid_ = {};
     transition_cost_ = {};
   }
 
@@ -473,8 +447,10 @@ class BDEdgeLabel : public EdgeLabel {
    * @param sortcost    Cost for sorting (includes A* heuristic).
    * @param tc          Transition cost onto the edge.
    */
-  void Update(const uint32_t predecessor, const sif::Cost& cost,
-              const float sortcost, const sif::Cost& tc) {
+  void Update(const uint32_t predecessor,
+              const sif::Cost& cost,
+              const float sortcost,
+              const sif::Cost& tc) {
     predecessor_ = predecessor;
     cost_ = cost;
     sortcost_ = sortcost;
@@ -490,8 +466,10 @@ class BDEdgeLabel : public EdgeLabel {
    * @param tc            Transition cost onto the edge.
    * @param path_distance  Accumulated path distance.
    */
-  void Update(const uint32_t predecessor, const sif::Cost& cost,
-              const float sortcost, const sif::Cost& tc,
+  void Update(const uint32_t predecessor,
+              const sif::Cost& cost,
+              const float sortcost,
+              const sif::Cost& tc,
               const uint32_t path_distance) {
     predecessor_ = predecessor;
     cost_ = cost;
@@ -536,10 +514,10 @@ class BDEdgeLabel : public EdgeLabel {
     return not_thru_pruning_;
   }
 
- protected:
+protected:
   // Graph Id of the opposing edge.
   // not_thru_pruning_: Is not thru pruning enabled?
-  uint64_t opp_edgeid_       : 63;  // Could be 46 (to provide more spare)
+  uint64_t opp_edgeid_ : 63; // Could be 46 (to provide more spare)
   uint64_t not_thru_pruning_ : 1;
 
   // Transition cost (for recovering elapsed time on reverse path)
@@ -550,7 +528,7 @@ class BDEdgeLabel : public EdgeLabel {
  * EdgeLabel used for multi-modal A* path algorithm.
  */
 class MMEdgeLabel : public EdgeLabel {
- public:
+public:
   /**
    * Constructor with values.  Used for multi-modal path.
    * @param predecessor   Index into the edge label list for the predecessor
@@ -568,44 +546,22 @@ class MMEdgeLabel : public EdgeLabel {
    * @param transit_operator Transit operator - index into an internal map
    * @param has_transit   Does the path to this edge have any transit.
    */
-  MMEdgeLabel(const uint32_t predecessor, const baldr::GraphId& edgeid,
-            const baldr::DirectedEdge* edge, const sif::Cost& cost,
-            const float sortcost, const float dist,
-            const sif::TravelMode mode, const uint32_t path_distance,
-            const uint32_t tripid, const baldr::GraphId& prior_stopid,
-            const uint32_t blockid, const uint32_t transit_operator,
-            const bool has_transit)
+  MMEdgeLabel(const uint32_t predecessor,
+              const baldr::GraphId& edgeid,
+              const baldr::DirectedEdge* edge,
+              const sif::Cost& cost,
+              const float sortcost,
+              const float dist,
+              const sif::TravelMode mode,
+              const uint32_t path_distance,
+              const uint32_t tripid,
+              const baldr::GraphId& prior_stopid,
+              const uint32_t blockid,
+              const uint32_t transit_operator,
+              const bool has_transit)
       : EdgeLabel(predecessor, edgeid, edge, cost, sortcost, dist, mode, path_distance),
-        prior_stopid_(prior_stopid),
-        tripid_(tripid),
-        blockid_(blockid),
-        transit_operator_(transit_operator),
-        has_transit_(has_transit) {
-  }
-
-  /**
-   * Constructor given a predecessor edge label. This is used for hierarchy
-   * transitions where the attributes at the predecessor are needed (rather
-   * than attributes from the directed edge).
-   * TODO - remove when all path algorithms avoid adding transition edges to
-   * the label set.
-   * @param predecessor  Index into the edge label list for the predecessor
-   *                     directed edge in the shortest path.
-   * @param edgeid       Directed edge id.
-   * @param endnode      End node of the transition edge.
-   * @param pred         Predecessor edge label (to copy attributes from)
-   */
-  MMEdgeLabel(const uint32_t predecessor, const baldr::GraphId& edgeid,
-              const baldr::GraphId& endnode, const MMEdgeLabel& pred) {
-    *this        = pred;
-    predecessor_ = predecessor;
-    edgeid_      = edgeid;
-    endnode_     = endnode;
-    origin_      = 0;
-
-    // Set the use so we know this is a transition edge. For now we only need to
-    // know it is a transition edge so we can skip it in complex restrictions.
-    use_ = static_cast<uint32_t>(baldr::Use::kTransitionUp);
+        prior_stopid_(prior_stopid), tripid_(tripid), blockid_(blockid),
+        transit_operator_(transit_operator), has_transit_(has_transit) {
   }
 
   /**
@@ -620,9 +576,12 @@ class MMEdgeLabel : public EdgeLabel {
    * @param tripid         Trip Id for a transit edge.
    * @param blockid        Transit trip block Id.
    */
-  void Update(const uint32_t predecessor, const sif::Cost& cost,
-              const float sortcost, const uint32_t path_distance,
-              const uint32_t tripid, const uint32_t blockid) {
+  void Update(const uint32_t predecessor,
+              const sif::Cost& cost,
+              const float sortcost,
+              const uint32_t path_distance,
+              const uint32_t tripid,
+              const uint32_t blockid) {
     predecessor_ = predecessor;
     cost_ = cost;
     sortcost_ = sortcost;
@@ -671,8 +630,8 @@ class MMEdgeLabel : public EdgeLabel {
     return has_transit_;
   }
 
- protected:
-  //GraphId of the predecessor transit stop.
+protected:
+  // GraphId of the predecessor transit stop.
   baldr::GraphId prior_stopid_;
 
   // tripid_: Transit trip Id.
@@ -681,12 +640,12 @@ class MMEdgeLabel : public EdgeLabel {
   // blockid_:          Block Id (0 indicates no prior).
   // transit_operator_: Prior operator. Index to an internal mapping).
   // has_transit_:      True if any transit taken along the path to this edge.
-  uint32_t blockid_          : 21; // Really only needs 20 bits
+  uint32_t blockid_ : 21; // Really only needs 20 bits
   uint32_t transit_operator_ : 10;
-  uint32_t has_transit_      : 1;
+  uint32_t has_transit_ : 1;
 };
 
-}
-}
+} // namespace sif
+} // namespace valhalla
 
-#endif  // VALHALLA_SIF_EDGELABEL_H_
+#endif // VALHALLA_SIF_EDGELABEL_H_

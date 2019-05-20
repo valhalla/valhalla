@@ -1,11 +1,11 @@
 #ifndef VALHALLA_MIDGARD_GRIDDEDDATA_H_
 #define VALHALLA_MIDGARD_GRIDDEDDATA_H_
 
-#include <valhalla/midgard/tiles.h>
-#include <vector>
-#include <map>
 #include <limits>
 #include <list>
+#include <map>
+#include <valhalla/midgard/tiles.h>
+#include <vector>
 
 namespace valhalla {
 namespace midgard {
@@ -18,17 +18,15 @@ constexpr float kOptimalGeneralization = std::numeric_limits<float>::max();
  * Class to store data in a gridded/tiled data structure. Contains methods
  * to mark each tile with data using a compare operator.
  */
-template <class coord_t>
-class GriddedData : public Tiles<coord_t> {
- public:
+template <class coord_t> class GriddedData : public Tiles<coord_t> {
+public:
   /**
    * Constructor.
    * @param   bounds    Bounding box
    * @param   tilesize  Tile size
    * @param   value     Value to initialize data with.
    */
-  GriddedData(const AABB2<coord_t>& bounds, const float tilesize,
-              const float value);
+  GriddedData(const AABB2<coord_t>& bounds, const float tilesize, const float value);
 
   /**
    * Set the value at a specified point. Verifies that the point is within the
@@ -37,16 +35,26 @@ class GriddedData : public Tiles<coord_t> {
    * @param  value  Value to set at the tile/grid location.
    * @return whether or not the value was set
    */
-  bool Set(const coord_t& pt, const float value);
+  bool Set(const coord_t& pt, const float value) {
+    auto cell_id = this->TileId(pt);
+    if (cell_id >= 0 && cell_id < data_.size()) {
+      data_[cell_id] = value;
+      return true;
+    }
+    return false;
+  }
 
   /**
    * Set the value at a specified tile Id if the value is less than the current
    * value set at the grid location. Verifies that the tile is valid.
    * @param  tile_id     Tile Id to set value for.
    * @param  value  Value to set at the tile/grid location.
-   * @return whether or not the value was set
    */
-  bool SetIfLessThan(const int tile_id, const float value);
+  void SetIfLessThan(const int tile_id, const float value) {
+    if (tile_id >= 0 && tile_id < data_.size() && value < data_[tile_id]) {
+      data_[tile_id] = value;
+    }
+  }
 
   /**
    * Set the value at a specified point if the value is less than the current
@@ -54,20 +62,26 @@ class GriddedData : public Tiles<coord_t> {
    * tiles.
    * @param  pt     Coordinate to set within the tiles.
    * @param  value  Value to set at the tile/grid location.
-   * @return whether or not the value was set
    */
-  bool SetIfLessThan(const coord_t& pt, const float value);
+  void SetIfLessThan(const coord_t& pt, const float value) {
+    int32_t cell_id = this->TileId(pt);
+    if (cell_id >= 0 && cell_id < data_.size() && value < data_[cell_id]) {
+      data_[cell_id] = value;
+    }
+  }
 
   /**
    * Get the array of data.
    * @return  Returns the data associated with the tiles.
    */
-  const std::vector<float>& data() const;
-
+  const std::vector<float>& data() const {
+    return data_;
+  }
 
   using contour_t = std::list<coord_t>;
   using feature_t = std::list<contour_t>;
-  using contours_t = std::map<float, std::list<feature_t>, std::function<bool(const float, const float)> >;
+  using contours_t =
+      std::map<float, std::list<feature_t>, std::function<bool(const float, const float)>>;
   /**
    * TODO: implement two versions of this, leave this one for linestring contours
    * and make another for polygons
@@ -86,15 +100,17 @@ class GriddedData : public Tiles<coord_t> {
    *
    * @return contour line geometries with the larger intervals first (for rendering purposes)
    */
-  contours_t GenerateContours(const std::vector<float>& contour_intervals, const bool rings_only = false,
-    const float denoise = 1.f, const float generalize = 200.f) const;
+  contours_t GenerateContours(const std::vector<float>& contour_intervals,
+                              const bool rings_only = false,
+                              const float denoise = 1.f,
+                              const float generalize = 200.f) const;
 
- protected:
-  float max_value_;             // Maximum value stored in the tile
-  std::vector<float> data_;     // Data value within each tile
+protected:
+  float max_value_;         // Maximum value stored in the tile
+  std::vector<float> data_; // Data value within each tile
 };
 
-}
-}
+} // namespace midgard
+} // namespace valhalla
 
-#endif  // VALHALLA_MIDGARD_GRIDDEDDATA_H_
+#endif // VALHALLA_MIDGARD_GRIDDEDDATA_H_

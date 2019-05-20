@@ -6,13 +6,15 @@ namespace meili {
 float EnlargedEmissionCostModel::operator()(const StateId& stateid) {
   // If this was a removed state bail
   const auto& original_stateid = evs_.GetOrigin(stateid);
-  if (evs_.IsRemoved(original_stateid))
+  if (evs_.IsRemoved(original_stateid)) {
     return -1.0;
+  }
 
   // Check for cache and compute if its not there
   auto c = cached_costs_.find(stateid);
-  if (c == cached_costs_.cend())
+  if (c == cached_costs_.cend()) {
     c = cached_costs_.emplace(stateid, calculate_cost(stateid, original_stateid)).first;
+  }
   return c->second;
 }
 
@@ -20,8 +22,8 @@ float EnlargedEmissionCostModel::operator()(const StateId& stateid) {
 // 1. clone (evs_.GetOrigin(stateid).IsValid())
 // 2. origin that is been cloned (evs_.GetClone(stateid).IsValid())
 // 3. origin that is not been cloned (otherwise)
-float EnlargedEmissionCostModel::calculate_cost(const StateId& stateid, const StateId& original_stateid) const
-{
+float EnlargedEmissionCostModel::calculate_cost(const StateId& stateid,
+                                                const StateId& original_stateid) const {
   const auto& model = evs_.original_emission_cost_model();
   if (original_stateid.IsValid()) {
     // remove the last clone
@@ -42,13 +44,13 @@ float EnlargedEmissionCostModel::calculate_cost(const StateId& stateid, const St
 float EnlargedTransitionCostModel::operator()(const StateId& lhs, const StateId& rhs) {
   auto couple = std::make_pair(lhs, rhs);
   auto c = cached_costs_.find(couple);
-  if (c == cached_costs_.cend())
+  if (c == cached_costs_.cend()) {
     c = cached_costs_.emplace(couple, calculate_cost(lhs, rhs)).first;
+  }
   return c->second;
 }
 
-float EnlargedTransitionCostModel::calculate_cost(const StateId& lhs, const StateId& rhs) const
-{
+float EnlargedTransitionCostModel::calculate_cost(const StateId& lhs, const StateId& rhs) const {
   const auto& model = evs_.original_transition_cost_model();
 
   const auto& original_lhs = evs_.GetOrigin(lhs);
@@ -72,8 +74,7 @@ float EnlargedTransitionCostModel::calculate_cost(const StateId& lhs, const Stat
   }
 }
 
-void EnlargedViterbiSearch::ClonePath(const std::vector<StateId>& path)
-{
+void EnlargedViterbiSearch::ClonePath(const std::vector<StateId>& path) {
   for (const auto& origin : path) {
     // Did we actually get to this state
     if (origin.IsValid()) {
@@ -88,11 +89,11 @@ void EnlargedViterbiSearch::ClonePath(const std::vector<StateId>& path)
 
       // This candidate was not a clone this is the first use of it
       auto found = initial_origins_.find(origin);
-      if(found == initial_origins_.end()) {
-        initial_origins_[clone] = origin; //this use of clone to original candidate
-      }// This was a use of a clone so we already had the original candidate
+      if (found == initial_origins_.end()) {
+        initial_origins_[clone] = origin; // this use of clone to original candidate
+      } // This was a use of a clone so we already had the original candidate
       else {
-        initial_origins_[clone] = found->second; //this use of clone to original candidate
+        initial_origins_[clone] = found->second; // this use of clone to original candidate
       }
 
       // remember when the cloning starts and ends
@@ -106,7 +107,7 @@ void EnlargedViterbiSearch::ClonePath(const std::vector<StateId>& path)
   }
 
   // Add the clones to vs_
-  for (const auto& pair: clone_) {
+  for (const auto& pair : clone_) {
     const auto added = vs_.AddStateId(pair.second);
     if (!added) {
       std::runtime_error("generated clone state IDs must be unique");
@@ -114,15 +115,12 @@ void EnlargedViterbiSearch::ClonePath(const std::vector<StateId>& path)
   }
 }
 
-void TopKSearch::RemovePath(const std::vector<StateId>& path)
-{
+void TopKSearch::RemovePath(const std::vector<StateId>& path) {
   // A lambda for generating new claimed ids to use as a mapping
   auto claim = [this](const StateId::Time& time) {
-    const auto it = last_claimed_stateids_.emplace(
-        time,
-        std::numeric_limits<StateId::Id>::max());
+    const auto it = last_claimed_stateids_.emplace(time, std::numeric_limits<StateId::Id>::max());
     if (!it.second) {
-      it.first->second --;
+      it.first->second--;
     }
     return StateId(time, it.first->second);
   };
@@ -134,13 +132,13 @@ void TopKSearch::RemovePath(const std::vector<StateId>& path)
   evss_.back()->ClonePath(path);
 }
 
-StateId TopKSearch::GetOrigin(const StateId& stateid, const StateId& not_found) const
-{
+StateId TopKSearch::GetOrigin(const StateId& stateid, const StateId& not_found) const {
   auto found = initial_origins_.find(stateid);
-  if(found == initial_origins_.end())
+  if (found == initial_origins_.end()) {
     return not_found;
+  }
   return found->second;
 }
 
-}
-}
+} // namespace meili
+} // namespace valhalla

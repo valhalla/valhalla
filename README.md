@@ -1,7 +1,10 @@
+
+
+
      ██▒   █▓ ▄▄▄       ██▓     ██░ ██  ▄▄▄       ██▓     ██▓    ▄▄▄      
     ▓██░   █▒▒████▄    ▓██▒    ▓██░ ██▒▒████▄    ▓██▒    ▓██▒   ▒████▄    
      ▓██  █▒░▒██  ▀█▄  ▒██░    ▒██▀▀██░▒██  ▀█▄  ▒██░    ▒██░   ▒██  ▀█▄  
-      ▒██ █░░░██▄▄▄▄██ ▒██░    ░▓█ ░██ ░██▄▄▄▄██ ▒██░    ▒██░   ░██▄▄▄▄██ 
+      ▒██ █░░░██▄▄▄▄██ ▒██░    ░▓█ ░██ ░██▄▄▄▄██ ▒██░    ▒██░   ░██▄▄▄▄██
        ▒▀█░   ▓█   ▓██▒░██████▒░▓█▒░██▓ ▓█   ▓██▒░██████▒░██████▒▓█   ▓██▒
        ░ ▐░   ▒▒   ▓▒█░░ ▒░▓  ░ ▒ ░░▒░▒ ▒▒   ▓▒█░░ ▒░▓  ░░ ▒░▓  ░▒▒   ▓▒█░
        ░ ░░    ▒   ▒▒ ░░ ░ ▒  ░ ▒ ░▒░ ░  ▒   ▒▒ ░░ ░ ▒  ░░ ░ ▒  ░ ▒   ▒▒ ░
@@ -10,17 +13,26 @@
          ░                                                                    
 
 
+### NOTICE
+Valhalla 3.0 is now available!
+This release (current master) makes changes to the Valhalla graph tile format. These tile changes are designed to make the tile data more efficient and flexible. However, these changes make Valhalla 3.0 incompatible with data from Valhalla 2.x. Also, any data built using Valhalla 3.0 will not be usable with Valhalla 2.x. See the [CHANGELOG](CHANGELOG.md) to get a brief description of the updates.
+
+------------
 Valhalla is an open source routing engine and accompanying libraries for use with OpenStreetMap data. Valhalla also includes tools like time+distance matrix computation, isochrones, elevation sampling, map matching and tour optimization (Travelling Salesman).
 
 Build Status
 ------------
 
-[![Circle CI](https://circleci.com/gh/valhalla/valhalla.svg?style=svg)](https://circleci.com/gh/valhalla/valhalla)
+| Linux/MacOs | Windows | Code Coverage |
+| ----------- | ------- | ------------- |
+| [![Circle CI](https://circleci.com/gh/valhalla/valhalla.svg?style=svg)](https://circleci.com/gh/valhalla/valhalla) | [![Build status](https://ci.appveyor.com/api/projects/status/6w7emulgcjweu457/branch/master?svg=true)](https://ci.appveyor.com/project/kevinkreiser/valhalla/branch/master) | [![codecov](https://codecov.io/gh/valhalla/valhalla/branch/master/graph/badge.svg)](https://codecov.io/gh/valhalla/valhalla) |
+
+
 
 License
 -------
 
-Valhalla, and all of the projects under the Valhalla organization, use the [MIT License](COPYING).
+Valhalla, and all of the projects under the Valhalla organization, use the [MIT License](COPYING).  Avatar/logo by [Jordan](https://www.instagram.com/jaykaydraws/)
 
 Overview
 --------
@@ -51,12 +63,11 @@ The Valhalla organization is comprised of several library modules each responsib
 - [Tyr](https://github.com/valhalla/valhalla/tree/master/valhalla/tyr) - Service used to handle http requests for a route communicating with all of the other valhalla APIs. The service will format output from `odin` and support json (and eventually protocol buffer) output.
 - [Tools](https://github.com/valhalla/valhalla/tree/master/src) - A set command line tools that exercise bits of functionality from the library components above and provide the basis for quality testing and performance benchmarking.
 - [Demos](https://github.com/valhalla/demos) - A set of demos which allows interacting with the service and APIs.
-- [Chef](https://github.com/valhalla/chef-valhalla) - A chef cookbook demonstrating how to deploy the valhalla stack to a virtual machine (sample vagrant file included).
 
 Documentation
 --------
 
-Technical documentation for the various components of the library can be found here: [docs](docs). Service API documentation as well as links to a variety of technical descriptions are provided within the [valhalla-docs](https://github.com/valhalla/valhalla-docs) repository.
+Documentation is stored in the `docs/` folder in this GitHub repository. It can be viewed at [valhalla.readthedocs.io](https://valhalla.readthedocs.io/).
 
 Get Valhalla from Personal Package Archive (PPA)
 ------------------------------------------------
@@ -73,51 +84,67 @@ sudo apt-get install -y valhalla-bin
 Building from Source
 --------------------
 
-Valhalla uses the [GNU Build System](http://www.gnu.org/software/automake/manual/html_node/GNU-Build-System.html) to configure and build itself.
+Valhalla uses CMake as build system.
 
 To install on a Debian or Ubuntu system you need to install its dependencies with:
 
 ```bash
 sudo add-apt-repository -y ppa:valhalla-core/valhalla
 sudo apt-get update
-sudo apt-get install -y autoconf automake make libtool pkg-config g++ gcc jq lcov protobuf-compiler vim-common libboost-all-dev libboost-all-dev libcurl4-openssl-dev zlib1g-dev liblz4-dev libprime-server0.6.3-dev libprotobuf-dev prime-server0.6.3-bin
+sudo apt-get install -y cmake make libtool pkg-config g++ gcc jq lcov protobuf-compiler vim-common libboost-all-dev libboost-all-dev libcurl4-openssl-dev zlib1g-dev liblz4-dev libprime-server0.6.3-dev libprotobuf-dev prime-server0.6.3-bin nodejs npm
 #if you plan to compile with data building support, see below for more info
-sudo apt-get install -y libgeos-dev libgeos++-dev liblua5.2-dev libspatialite-dev libsqlite3-dev lua5.2
+sudo apt-get install -y libgeos-dev libgeos++-dev liblua5.2-dev libspatialite-dev libsqlite3-dev lua5.2 wget
 if [[ $(grep -cF xenial /etc/lsb-release) > 0 ]]; then sudo apt-get install -y libsqlite3-mod-spatialite; fi
 #if you plan to compile with python bindings, see below for more info
 sudo apt-get install -y python-all-dev
+#if you plan to compile with node bindings, run
+curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.11/install.sh | bash
+nvm use install 10 && nvm use 10 # must use node 8.11.1 and up because of N-API
+npm install --ignore-scripts
 ```
+
+For instructions on installing Valhalla on Ubuntu 18.04.x see this [script](scripts/Ubuntu_Bionic_Install.sh).
 
 To install on macOS, you need to install its dependencies with [Homebrew](http://brew.sh):
 
-    # install dependencies (czmq is required by prime_server)
-    brew install autoconf automake libtool protobuf-c boost-python libspatialite pkg-config sqlite3 lua jq curl czmq
+```bash
+# install dependencies (czmq is required by prime_server)
+brew install cmake libtool protobuf-c boost-python libspatialite pkg-config sqlite3 lua jq curl wget czmq lz4 node@10 npm
+curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.11/install.sh | bash
+nvm use 10 # must use node 8.11.1 and up because of N-API
+npm install --ignore-scripts
+```
 
-    # clone and build prime_server https://github.com/kevinkreiser/prime_server#build-and-install
+Then clone and build [`prime_server`](https://github.com/kevinkreiser/prime_server#build-and-install).
 
 After getting the dependencies install it with:
 
 ```bash
 git submodule update --init --recursive
-./autogen.sh
-# on macOS you need to tell linkers how to reach home-brewed sqlite3 and curl:
-# export LDFLAGS="-L/usr/local/opt/sqlite/lib/ -lsqlite3" PKG_CONFIG_PATH=/usr/local/opt/curl/lib/pkgconfig
-./configure
-make test -j$(nproc)
+mkdir build
+cd build
+cmake .. -DCMAKE_BUILD_TYPE=Release
+make -j$(nproc)
 sudo make install
-# Note: on macOS, a few tests involving time formatting will fail: narrativebuilder, util_odin, mapmatch
 ```
 
-Please see `./configure --help` for more options on how to control the build process. There are a few notable options that you might want to try out:
+Important build options include:
 
-* `--enable-data-tools=no` will disable building any of the components (library bits, executables and tests) which can be used to create the data that the services run on. This can be useful in embedded situations where you really don't need some of the dependencies above.
-* `--enable-services=no` will disable building any of the components (library bits, executables and tests) which can be used to run valhalla as an http service. This can be useful in embedded situations where you really don't need some of the dependencies above (prime_server et al).
-* `--enable-static=yes` will enable building of static libvalhalla.la which could be useful for embedded applications
-* `--enable-python-bindings=no` will disable python bindings for valhalla. Embedded applications would probably rather turn this off.
+| Option | Behavior |
+|--------|----------|
+| `-DENABLE_DATA_TOOLS` (`On`/`Off`) | Build the data preprocessing tools|
+| `-DENABLE_PYTHON_BINDINGS` (`On`/`Off`) | Build the python bindings|
+| `-DENABLE_SERVICES` (`On` / `Off`) | Build the HTTP service|
+| `-DBUILD_SHARED_LIBS` (`On` / `Off`) | Build static or shared libraries|
+| `-DENABLE_NODE_BINDINGS` (`ON` / `OFF`) | Build the node bindings (defaults to on)|
 
-The build will produce libraries, headers and binaries which you are free to use for your own projects. To simplify the inclusion of the libvalhalla in another autotoolized project you may make use of `pkg-config` within your own `configure.ac` to check for the existence of a recent version of the library. Something like this should suffice:
+For more build options run the interactive GUI:
 
-    PKG_CHECK_MODULES([VALHALLA_DEPS], [libvalhalla >= 2.0.6])
+```bash
+cd build
+cmake ..
+ccmake ..
+```
 
 For more information on binaries, see [Command Line Tools](#command-line-tools) section below and the [docs](docs).
 
@@ -157,7 +184,32 @@ Contributing
 
 We welcome contributions to valhalla. If you would like to report an issue, or even better fix an existing one, please use the [valhalla issue tracker](https://github.com/valhalla/valhalla/issues) on GitHub.
 
-If you would like to make an improvement to the code, please be aware that all valhalla projects are written mostly in C++11, in the K&R (1TBS variant) with two spaces as indentation. We welcome contributions as pull requests to the [repository](https://github.com/valhalla/valhalla) and highly recommend that your pull request include a test to validate the addition/change of functionality.
+If you would like to make an improvement to the code, please be aware that all valhalla projects are written mostly in C++11.  We use `clang-format` v7.0 to format the code. We welcome contributions as pull requests to the [repository](https://github.com/valhalla/valhalla) and highly recommend that your pull request include a test to validate the addition/change of functionality.
+
+Note that our CI system checks that code formatting is consistent, and the build will fail if formatting rules aren't followed.  Please run `./scripts/format.sh` over your code before committing, to auto-format it in the projects preferred style.
+
+Also note that we run some `clang-tidy` linting over the code as well (see `.clang-tidy` for the list of rules enforced).  You can run `./scripts/tidy.sh` over the code before committing to ensure you haven't added any of the common problems we check for (Note: `./scripts/tidy.sh` requires the exitence of a `compile_commands.json` database.  You can generate this file by running `bear make` instead of just `make`.  The `bear` tool is installable on Ubuntu-based systems with `apt-get install bear`, and on macOS with `brew install bear`).
+
+Using the Node.js Bindings
+--------------------------
+
+The Node.js bindings are still under construction. We are working on building binaries for as many environments as possible, but they may not all be available yet. We have exposed all of the `tyr::actor_t` actions to the bindings (`route`, `locate`, `height`, `isochrone`, `matrix`, `optimizedRoute`, `traceAttributes`, `traceRoute`, `transitAvailable`). Right now, the input and the output are both strings - THAT WILL LIKELY CHANGE. We plan on ingesting and producing protobufs and/or json.
+
+The Node.js bindings provide read-only access to the routing engine. You can install the Node.js bindings from this repository via `$npm install` which will check and use pre-built binaries if they're available for this release and your Node version. You can also run `npm install valhalla` to include the package as a dependency in another project, but we do not have a stable version of the bindings available on the npm org yet. Check the CHANGELOG for the details of the latest release. We also may not have built binaries for your particular setup. You can also build bindings from source with the ENABLE_NODE_BINDINGS option.
+
+We are using [node-pre-gyp](https://github.com/mapbox/node-pre-gyp) to manage the bindings for different build systems, and N-API to write the bindings themselves. Node-pre-gyp hooks into the `npm install` command and goes looking on s3 for the appropriate binary for the system on which it was run. CircleCI currently builds release and debug binaries for linux, and publishes them to s3. To use the debug binaries, run `npm install --debug` and node-pre-gyp will be told to go find the debug binary instead of the release one.
+
+N-API aims to provide ABI compatibility guarantees across different Node versions and also across different Node VMs - allowing N-API enabled native modules to just work across different versions and flavors of Node.js without recompilations. N-API is a new feature and was experimental until node 8.11.2, after which is it considered stable. Please make sure you are using node 8.11.2+ or node 10 if you want to use the node bindings. We have tested the bindings on 8.11.2, 10.3.0, and 10.6.0 - it is probably safest to pin your node version to one of those, since we have only built binaries for N-API v3. We will consider building binaries for newer N-API versions when and if they are released.
+
+Example of using in a node project:
+```js
+var Valhalla = require('valhalla');
+var valhalla = new Valhalla(configString);
+var hersheyRequest = '{"locations":[{"lat":40.546115,"lon":-76.385076,"type":"break"}, {"lat":40.544232,"lon":-76.385752,"type":"break"}],"costing":"auto"}';
+var route = valhalla.route(hersheyRequest); // returns a string, other actions also available
+```
+
+Please see the releasing docs for information on releasing a new version.
 
 Tests
 -----
@@ -166,19 +218,9 @@ We highly encourage running and updating the tests to make sure no regressions h
 
     make check
 
-You can also build a test coverage report. This requires that the packages `lcov`, `gcov` and `genhtml` be installed. On Ubuntu you can get these with:
+To run an individual test, `make run-<test name>` from the build directory or `./test/<testname>`
 
-    sudo apt-get install lcov
-
-To make the coverage report, configure the build for it:
-
-    ./configure --enable-coverage
-
-And generate an HTML coverage report in the `coverage/` directory:
-
-    make coverage-report
-
-Note also that, because calculating the coverage requires compiler support, you will need to clean any object files from a non-coverage build by running `make clean` before `make coverage-report`.
+Coverage reports are automatically generated using codecov for each pull request, but you can also build them locally by passing `-DENABLE_COVERAGE=On` and running `make coverage`.
 
 Command Line Tools
 ------------------

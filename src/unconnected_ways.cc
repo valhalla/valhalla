@@ -1,23 +1,23 @@
-#include <cstdint>
-#include <iostream>
-#include <string>
-#include <vector>
-#include <set>
-#include <tuple>
-#include <cmath>
+#include "baldr/rapidjson_utils.h"
+#include <boost/format.hpp>
+#include <boost/optional.hpp>
 #include <boost/program_options.hpp>
 #include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/json_parser.hpp>
-#include <boost/optional.hpp>
-#include <boost/format.hpp>
+#include <cmath>
+#include <cstdint>
+#include <iostream>
+#include <set>
+#include <string>
+#include <tuple>
+#include <vector>
 
 #include "config.h"
 
 #include "baldr/graphreader.h"
 #include "baldr/pathlocation.h"
+#include "midgard/aabb2.h"
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
-#include "midgard/aabb2.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -25,38 +25,36 @@ using namespace valhalla::baldr;
 namespace bpo = boost::program_options;
 
 // Main method for testing a single path
-int main(int argc, char *argv[]) {
-  bpo::options_description options("unconnected_ways " VERSION "\n"
-  "\n"
-  " Usage: unconnected_ways [options]\n"
-  "\n"
-  "unconnected_ways is a simple command line test tool to find unconnected ways\n"
-  "within a bounding box.\n"
-  "\n"
-  "\n");
+int main(int argc, char* argv[]) {
+  bpo::options_description options(
+      "unconnected_ways " VERSION "\n"
+      "\n"
+      " Usage: unconnected_ways [options]\n"
+      "\n"
+      "unconnected_ways is a simple command line test tool to find unconnected ways\n"
+      "within a bounding box.\n"
+      "\n"
+      "\n");
 
   std::string minll, maxll, config;
-  options.add_options()("help,h", "Print this help message.")(
-      "version,v", "Print the version of this software.")(
-      "min,n", boost::program_options::value<std::string>(&minll), "minll: lat,lng")(
-      "max,x", boost::program_options::value<std::string>(&maxll), "maxll: lat,lng")
+  options.add_options()("help,h", "Print this help message.")("version,v",
+                                                              "Print the version of this software.")(
+      "min,n", boost::program_options::value<std::string>(&minll),
+      "minll: lat,lng")("max,x", boost::program_options::value<std::string>(&maxll), "maxll: lat,lng")
       // positional arguments
       ("config,c", bpo::value<std::string>(&config), "Valhalla configuration file");
-
 
   bpo::positional_options_description pos_options;
   pos_options.add("config", 1);
   bpo::variables_map vm;
 
   try {
-    bpo::store(
-        bpo::command_line_parser(argc, argv).options(options).positional(
-            pos_options).run(), vm);
+    bpo::store(bpo::command_line_parser(argc, argv).options(options).positional(pos_options).run(),
+               vm);
     bpo::notify(vm);
-  } catch (std::exception &e) {
-    std::cerr << "Unable to parse command line options because: " << e.what()
-              << "\n" << "This is a bug, please report it at " PACKAGE_BUGREPORT
-              << "\n";
+  } catch (std::exception& e) {
+    std::cerr << "Unable to parse command line options because: " << e.what() << "\n"
+              << "This is a bug, please report it at " PACKAGE_BUGREPORT << "\n";
     return EXIT_FAILURE;
   }
 
@@ -73,10 +71,9 @@ int main(int argc, char *argv[]) {
   // argument checking and verification
   AABB2<PointLL> bb;
   boost::property_tree::ptree json_ptree;
-  for (auto arg : std::vector<std::string> { "min", "max", "config" }) {
+  for (auto arg : std::vector<std::string>{"min", "max", "config"}) {
     if (vm.count(arg) == 0) {
-      std::cerr
-          << "The <" << arg  << "> mandatory argument was not provided\n";
+      std::cerr << "The <" << arg << "> mandatory argument was not provided\n";
       std::cerr << options << "\n";
       return EXIT_FAILURE;
     }
@@ -87,15 +84,15 @@ int main(int argc, char *argv[]) {
 
   // Parse the config
   boost::property_tree::ptree pt;
-  boost::property_tree::read_json(config.c_str(), pt);
+  rapidjson::read_json(config.c_str(), pt);
 
-  //configure logging
-  boost::optional<boost::property_tree::ptree&> logging_subtree = pt
-      .get_child_optional("thor.logging");
+  // configure logging
+  boost::optional<boost::property_tree::ptree&> logging_subtree =
+      pt.get_child_optional("thor.logging");
   if (logging_subtree) {
-    auto logging_config = valhalla::midgard::ToMap<
-        const boost::property_tree::ptree&,
-        std::unordered_map<std::string, std::string> >(logging_subtree.get());
+    auto logging_config =
+        valhalla::midgard::ToMap<const boost::property_tree::ptree&,
+                                 std::unordered_map<std::string, std::string>>(logging_subtree.get());
     valhalla::midgard::logging::Configure(logging_config);
   }
 
@@ -129,4 +126,3 @@ int main(int argc, char *argv[]) {
 
   return EXIT_SUCCESS;
 }
-

@@ -1,4 +1,4 @@
-# Midgard #
+# Midgard
 
 Midgard serves as a set of geographic/metric data structures and algorithms for use in essentially all other parts of valhalla. In keeping with the Norse mythological theme, the name Midgard was chosen as it is represents the world as humans know it. Since the software and classes within midgard deal mostly with the maths of our favorite spheroid, this seemed like a fitting name!
 

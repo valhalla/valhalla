@@ -2,9 +2,9 @@
 #define VALHALLA_MJOLNIR_LUA_H
 
 extern "C" {
+#include <lauxlib.h>
 #include <lua.h>
 #include <lualib.h>
-#include <lauxlib.h>
 }
 
 #include <valhalla/mjolnir/osmdata.h>
@@ -20,8 +20,7 @@ using Tags = std::unordered_map<std::string, std::string>;
 /**
  */
 class LuaTagTransform {
- public:
-
+public:
   /**
    * Constructor
    * @param lua   the string containing the lua code
@@ -30,15 +29,13 @@ class LuaTagTransform {
 
   ~LuaTagTransform();
 
-  Tags Transform(OSMType type, const Tags &tags);
+  Tags Transform(OSMType type, const Tags& tags);
 
- protected:
-
+protected:
   lua_State* state_;
-
 };
 
-}
-}
+} // namespace mjolnir
+} // namespace valhalla
 
-#endif  // VALHALLA_MJOLNIR_LUA_H
+#endif // VALHALLA_MJOLNIR_LUA_H

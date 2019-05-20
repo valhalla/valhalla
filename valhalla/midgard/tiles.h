@@ -2,14 +2,14 @@
 #ifndef VALHALLA_MIDGARD_TILES_H_
 #define VALHALLA_MIDGARD_TILES_H_
 
-#include <list>
-#include <unordered_set>
-#include <unordered_map>
 #include <cstdint>
 #include <functional>
+#include <list>
+#include <unordered_map>
+#include <unordered_set>
 
-#include <valhalla/midgard/constants.h>
 #include <valhalla/midgard/aabb2.h>
+#include <valhalla/midgard/constants.h>
 
 namespace valhalla {
 namespace midgard {
@@ -27,17 +27,36 @@ namespace midgard {
  * are also provided. Also includes a method to get a list of tiles covering
  * a bounding box.
  */
-template <class coord_t>
-class Tiles {
- public:
+template <class coord_t> class Tiles {
+public:
   /**
-   * Constructor.  A bounding box and tile size is specified.
-   * Sets class data members and computes the number of rows and columns
-   * based on the bounding box and tile size.
-   * @param   bounds    Bounding box
-   * @param   tilesize  Tile size
+   * Constructor. A bounding box and tile size is specified.
+   * Sets class data members and computes the tile size
+   * based on the bounding box and rows and columns.
+   * @param   bounds       Bounding box
+   * @param   tilesize     Size of the tile in both dimensions
+   * @param   subdivisions Number of subtiles in both x and y axis of a single tile
+   * @param   wrapx        Should neighbor operations wrap around the x axis extents
    */
-  Tiles(const AABB2<coord_t>& bounds, const float tilesize, const unsigned short subdivisions = 1,
+  Tiles(const AABB2<coord_t>& bounds,
+        const float tilesize,
+        const unsigned short subdivisions = 1,
+        bool wrapx = true);
+
+  /**
+   * Constructor. A bottom left coord, with tile_size and number of rows and columns
+   * @param   min_pt       Bottom left coord of the tileset
+   * @param   tile_size    The size of a tile in both dimensions
+   * @param   columns      Number of tiles in the x axis
+   * @param   rows         Number of tiles in the y axis
+   * @param   subdivisions Number of subtiles in both x and y axis of a single tile
+   * @param   wrapx        Should neighbor operations wrap around the x axis extents
+   */
+  Tiles(const coord_t& min_pt,
+        const float tile_size,
+        const int32_t columns,
+        const int32_t rows,
+        const unsigned short subdivisions = 1,
         bool wrapx = true);
 
   /**
@@ -93,23 +112,46 @@ class Tiles {
    * so a specific point stays centered in the grid.
    * @param  shift  Amount to shift the bounding box.
    */
-  void ShiftTileBounds(const coord_t& shift);
+  void ShiftTileBounds(const coord_t& shift) {
+    tilebounds_ = AABB2<coord_t>(tilebounds_.minx() - shift.first, tilebounds_.miny() - shift.second,
+                                 tilebounds_.maxx() - shift.first, tilebounds_.maxy() - shift.second);
+  }
 
   /**
    * Get the "row" based on y.
    * @param   y   y coordinate
-   * @return  Returns the tile row. Returns -1 if outside the
-   *          tile system bounds.
+   * @return  Returns the tile row. Returns -1 if outside the tile system bounds.
    */
-  int32_t Row(const float y) const;
+  int32_t Row(const float y) const {
+    // Return -1 if outside the tile system bounds
+    if (y < tilebounds_.miny() || y > tilebounds_.maxy()) {
+      return -1;
+    }
+
+    // If equal to the max y return the largest row
+    return (y == tilebounds_.maxy()) ? nrows_ - 1
+                                     : static_cast<int32_t>((y - tilebounds_.miny()) / tilesize_);
+  }
 
   /**
    * Get the "column" based on x.
    * @param   x   x coordinate
-   * @return  Returns the tile column. Returns -1 if outside the
-   *          tile system bounds.
+   * @return  Returns the tile column. Returns -1 if outside the tile system bounds.
    */
-  int32_t Col(const float x) const;
+  int32_t Col(const float x) const {
+    // Return -1 if outside the tile system bounds
+    if (x < tilebounds_.minx() || x > tilebounds_.maxx()) {
+      return -1;
+    }
+
+    // If equal to the max x return the largest column
+    if (x == tilebounds_.maxx()) {
+      return ncolumns_ - 1;
+    } else {
+      float col = (x - tilebounds_.minx()) / tilesize_;
+      return (col >= 0.0) ? static_cast<int32_t>(col) : static_cast<int32_t>(col - 1);
+    }
+  }
 
   /**
    * Convert a coordinate into a tile Id. The point is within the tile.
@@ -128,7 +170,16 @@ class Tiles {
    * @return  Returns the tile Id. -1 (error is returned if the x,y is
    *          outside the bounding box of the tiling sytem).
    */
-  int32_t TileId(const float y, const float x) const;
+  int32_t TileId(const float y, const float x) const {
+    // Return -1 if totally outside the extent.
+    if (y < tilebounds_.miny() || x < tilebounds_.minx() || y > tilebounds_.maxy() ||
+        x > tilebounds_.maxx()) {
+      return -1;
+    }
+
+    // Find the tileid by finding the latitude row and longitude column
+    return (Row(y) * ncolumns_) + Col(x);
+  }
 
   /**
    * Get the tile Id given the row Id and column Id.
@@ -146,7 +197,7 @@ class Tiles {
    * @return  Returns a pair indicating {row, col}
    */
   std::pair<int32_t, int32_t> GetRowColumn(const int32_t tileid) const {
-    return { tileid / ncolumns_, tileid % ncolumns_ };
+    return {tileid / ncolumns_, tileid % ncolumns_};
   }
 
   /**
@@ -155,22 +206,32 @@ class Tiles {
    * @param tile_size   the size of a tile within the region
    * @return the highest tile number within the region
    */
-  static uint32_t MaxTileId(const AABB2<coord_t>& bounds,
-                            const float tile_size);
+  static uint32_t MaxTileId(const AABB2<coord_t>& bounds, const float tile_size) {
+    uint32_t cols = static_cast<uint32_t>(std::ceil(bounds.Width() / tile_size));
+    uint32_t rows = static_cast<uint32_t>(std::ceil(bounds.Height() / tile_size));
+    return (cols * rows) - 1;
+  }
 
   /**
    * Get the base x,y of a specified tile.
    * @param   tileid   Tile Id.
    * @return  The base x,y of the specified tile.
    */
-  coord_t Base(const int32_t tileid) const;
+  coord_t Base(const int32_t tileid) const {
+    int32_t row = tileid / ncolumns_;
+    int32_t col = tileid - (row * ncolumns_);
+    return coord_t(tilebounds_.minx() + (col * tilesize_), tilebounds_.miny() + (row * tilesize_));
+  }
 
   /**
    * Get the bounding box of the specified tile.
    * @param   tileid   Tile Id.
    * @return  The latitude, longitude extent of the specified tile.
    */
-  AABB2<coord_t> TileBounds(const int32_t tileid) const;
+  AABB2<coord_t> TileBounds(const int32_t tileid) const {
+    Point2 base = Base(tileid);
+    return AABB2<coord_t>(base.x(), base.y(), base.x() + tilesize_, base.y() + tilesize_);
+  }
 
   /**
    * Get the bounding box of the tile with specified row, column.
@@ -178,59 +239,69 @@ class Tiles {
    * @param   row   Tile row.
    * @return  The latitude, longitude extent of the specified tile.
    */
-  AABB2<coord_t> TileBounds(const int32_t col, const int32_t row) const;
+  AABB2<coord_t> TileBounds(const int32_t col, const int32_t row) const {
+    float basex = tilebounds_.minx() + ((float)col * tilesize_);
+    float basey = tilebounds_.miny() + ((float)row * tilesize_);
+    return AABB2<coord_t>(basex, basey, basex + tilesize_, basey + tilesize_);
+  }
 
   /**
    * Get the center of the specified tile.
    * @param   tileid   Tile Id.
    * @return  The center x,y of the specified tile.
    */
-  coord_t Center(const int32_t tileid) const;
-
-  /**
-   * Get the tile Id given a previous tile and a row, column offset.
-   * @param   initial_tile      Id of the tile to offset from.
-   * @param   delta_rows    Number of rows to offset (can be negative).
-   * @param   delta_cols    Number of columns to offset (can be negative).
-   * @return  Tile Id of the new tile.
-   */
-  int32_t GetRelativeTileId(const int32_t initial_tile,
-                            const int32_t delta_rows,
-                            const int32_t delta_cols) const {
-    return initial_tile + (delta_rows * ncolumns_) + delta_cols;
+  coord_t Center(const int32_t tileid) const {
+    auto base = Base(tileid);
+    return coord_t(base.x() + tilesize_ * 0.5, base.y() + tilesize_ * 0.5);
   }
 
-   /**
-    * Get the tile offsets (row,column) between the previous tile Id and
-    * a new tileid.  The offsets are returned through arguments (references).
-    * Offsets can be positive or negative or 0.
-    * @param   initial_tileid     Original tile.
-    * @param   newtileid      Tile to which relative offset is desired.
-    * @param   delta_rows    Return: Relative number of rows.
-    * @param   delta_cols    Return: Relative number of columns.
-    */
-   void TileOffsets(const int32_t initial_tileid, const int32_t newtileid,
-                       int32_t& delta_rows, int32_t& delta_cols) const;
+  /**
+   * Get the tile offsets (row,column) between the previous tile Id and
+   * a new tileid.  The offsets are returned through arguments (references).
+   * Offsets can be positive or negative or 0.
+   * @param   initial_tileid     Original tile.
+   * @param   newtileid      Tile to which relative offset is desired.
+   * @param   delta_rows    Return: Relative number of rows.
+   * @param   delta_cols    Return: Relative number of columns.
+   */
+  void TileOffsets(const int32_t initial_tileid,
+                   const int32_t newtileid,
+                   int32_t& delta_rows,
+                   int32_t& delta_cols) const {
+    int32_t deltaTile = newtileid - initial_tileid;
+    delta_rows = (newtileid / ncolumns_) - (initial_tileid / ncolumns_);
+    delta_cols = deltaTile - (delta_rows * ncolumns_);
+  }
 
   /**
    * Get the number of tiles in the tiling system.
    * @return  Number of tiles.
    */
-  uint32_t TileCount() const;
+  uint32_t TileCount() const {
+    float nrows = (tilebounds_.maxy() - tilebounds_.miny()) / tilesize_;
+    return ncolumns_ * static_cast<int32_t>(std::ceil(nrows));
+  }
 
   /**
    * Get the neighboring tileid to the right/east.
    * @param  tileid   Tile Id.
    * @return  Returns the tile Id of the tile to the right/east.
    */
-  int32_t RightNeighbor(const int32_t tileid) const;
+  int32_t RightNeighbor(const int32_t tileid) const {
+    return (tileid - ((tileid / ncolumns_) * ncolumns_) < ncolumns_ - 1)
+               ? tileid + 1
+               : wrapx_ ? tileid - ncolumns_ + 1 : tileid;
+  }
 
   /**
    * Get the neighboring tileid to the left/west.
    * @param  tileid   Tile Id.
    * @return  Returns the tile Id of the tile to the left/west.
    */
-  int32_t LeftNeighbor(const int32_t tileid) const;
+  int32_t LeftNeighbor(const int32_t tileid) const {
+    return tileid - ((tileid / ncolumns_) * ncolumns_) > 0 ? tileid - 1
+                                                           : wrapx_ ? tileid + ncolumns_ - 1 : tileid;
+  }
 
   /**
    * Get the neighboring tileid above or north.
@@ -239,8 +310,7 @@ class Tiles {
    *          if tile Id is on the top row (no neighbor to the north).
    */
   int32_t TopNeighbor(const int32_t tileid) const {
-    return (tileid < static_cast<int32_t>((TileCount() - ncolumns_))) ?
-                tileid + ncolumns_ : tileid;
+    return (tileid < static_cast<int32_t>((TileCount() - ncolumns_))) ? tileid + ncolumns_ : tileid;
   }
 
   /**
@@ -254,16 +324,13 @@ class Tiles {
   }
 
   /**
-   * Checks if 2 tiles are neighbors (N,E,S,W).
+   * Checks if 2 tiles are neighbors (N,E,S,W). Does not support wrap around 180 longitude.
    * @param  id1  Tile Id 1
    * @param  id2  Tile Id 2
    * @return  Returns true if tile id1 and id2 are neighbors, false if not.
    */
   bool AreNeighbors(const uint32_t id1, const uint32_t id2) const {
-    return (id2 == TopNeighbor(id1) ||
-            id2 == RightNeighbor(id1) ||
-            id2 == BottomNeighbor(id1) ||
-            id2 == LeftNeighbor(id1));
+    return id2 == id1 - 1 || id2 == id1 + 1 || id2 == id1 + ncolumns_ || id2 == id1 - ncolumns_;
   };
 
   /**
@@ -286,10 +353,12 @@ class Tiles {
   /**
    * Intersect the linestring with the tiles to see which tiles and sub cells it intersects
    * @param line_string  the linestring to be tested against the cells
-   * @return             the map of each tile intersected to a list of its intersected sub cell indices
+   * @return             the map of each tile intersected to a list of its intersected sub cell
+   * indices
    */
   template <class container_t>
-  std::unordered_map<int32_t, std::unordered_set<unsigned short> > Intersect(const container_t& line_string) const;
+  std::unordered_map<int32_t, std::unordered_set<unsigned short>>
+  Intersect(const container_t& line_string) const;
 
   /**
    * Intersect the bounding box with the tiles to see which tiles and sub-cells
@@ -299,18 +368,19 @@ class Tiles {
    * @param box the bounding box to be tested.
    * @return    a map of tile IDs to a set of bin IDs with that tile.
    */
-  std::unordered_map<int32_t, std::unordered_set<uint16_t> > Intersect(const AABB2<coord_t> &box) const;
+  std::unordered_map<int32_t, std::unordered_set<uint16_t>>
+  Intersect(const AABB2<coord_t>& box) const;
 
   /**
-   * Returns a functor which returns subdivisions close to the original point on each invocation in a best first fashion
-   * If the functor can't expand any further (no more subdivisions) it will throw
+   * Returns a functor which returns subdivisions close to the original point on each invocation in
+   * a best first fashion If the functor can't expand any further (no more subdivisions) it will
+   * throw
    * @param seed   the point at for which we measure 'closeness'
    * @return       the functor to be called
    */
-  std::function<std::tuple<int32_t, unsigned short, float>() > ClosestFirst(const coord_t& seed) const;
+  std::function<std::tuple<int32_t, unsigned short, float>()> ClosestFirst(const coord_t& seed) const;
 
-
- protected:
+protected:
   // Does the tile bounds wrap in the x direction (e.g. at longitude = 180)
   bool wrapx_;
 
@@ -332,7 +402,7 @@ class Tiles {
   float subdivision_size_;
 };
 
-}
-}
+} // namespace midgard
+} // namespace valhalla
 
-#endif  // VALHALLA_MIDGARD_TILES_H_
+#endif // VALHALLA_MIDGARD_TILES_H_

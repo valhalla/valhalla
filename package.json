@@ -1,0 +1,44 @@
+{
+  "name": "valhalla",
+  "version": "3.0.0-rc.4",
+  "main": "lib/index.js",
+  "directories": {
+    "doc": "docs",
+    "test": "test"
+  },
+  "scripts": {
+    "test": "tape test/bindings/nodejs/*.test.js",
+    "install": "node-pre-gyp install --fallback-to-build=false || ./scripts/node_install.sh"
+  },
+  "engines": {
+    "node": ">=8.11.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/valhalla/valhalla.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/valhalla/valhalla/issues"
+  },
+  "homepage": "https://github.com/valhalla/valhalla#readme",
+  "dependencies": {
+    "generic-pool": "3.4.2",
+    "node-addon-api": "1.4.0",
+    "node-pre-gyp": "^0.10.0"
+  },
+  "binary": {
+    "module_name": "node_valhalla",
+    "module_path": "./lib/binding",
+    "host": "https://mapbox-node-binary.s3.amazonaws.com",
+    "remote_path": "./valhalla/v{version}/{configuration}/",
+    "package_name": "{platform}-{arch}-napi-v{napi_version}.tar.gz"
+  },
+  "devDependencies": {
+    "node-cmake": "^2.5.1",
+    "aws-sdk": "^2.257.1",
+    "tape": "^4.9.0"
+  }
+}

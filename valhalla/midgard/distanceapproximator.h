@@ -4,11 +4,11 @@
 
 #include <math.h>
 
-#include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/constants.h>
+#include <valhalla/midgard/pointll.h>
 
-namespace valhalla{
-namespace midgard{
+namespace valhalla {
+namespace midgard {
 
 /**
  * Provides distance approximation in latitude, longitude space. Approximates
@@ -28,9 +28,8 @@ namespace midgard{
  * varies with latitude. The distance from A to B may not match the distance
  * from B to A if the latitudes of the 2 points differ.
  */
-class DistanceApproximator
-{
- public:
+class DistanceApproximator {
+public:
   /**
    * Constructor.
    *
@@ -40,9 +39,8 @@ class DistanceApproximator
    * @param   ll    Latitude, longitude of the test point (degrees)
    */
   DistanceApproximator(const PointLL& ll)
-      :  centerlat_(ll.lat()),
-         centerlng_(ll.lng()),
-         m_per_lng_degree_(MetersPerLngDegree(centerlat_)) {
+      : centerlat_(ll.lat()), centerlng_(ll.lng()), m_lng_scale_(LngScalePerLat(centerlat_)),
+        m_per_lng_degree_(m_lng_scale_ * kMetersPerDegreeLat) {
   }
 
   /**
@@ -54,7 +52,16 @@ class DistanceApproximator
   void SetTestPoint(const PointLL& ll) {
     centerlat_ = ll.lat();
     centerlng_ = ll.lng();
-    m_per_lng_degree_  = MetersPerLngDegree(centerlat_);
+    m_lng_scale_ = LngScalePerLat(centerlat_);
+    m_per_lng_degree_ = m_lng_scale_ * kMetersPerDegreeLat;
+  }
+
+  /*
+   * Getter for lng scale
+   * @return the distance scale for lng at this points latitude
+   */
+  float GetLngScale() const {
+    return m_lng_scale_;
   }
 
   /**
@@ -82,8 +89,7 @@ class DistanceApproximator
    */
   static float DistanceSquared(const PointLL& ll1, const PointLL& ll2) {
     float latm = (ll1.lat() - ll2.lat()) * kMetersPerDegreeLat;
-    float lngm = (ll1.lng() - ll2.lng()) *
-                  MetersPerLngDegree((ll1.lat() + ll2.lat()) * 0.5f);
+    float lngm = (ll1.lng() - ll2.lng()) * MetersPerLngDegree((ll1.lat() + ll2.lat()) * 0.5f);
     return (latm * latm + lngm * lngm);
   }
 
@@ -96,21 +102,31 @@ class DistanceApproximator
    * @return  Returns the number of meters per degree of longitude
    */
   static float MetersPerLngDegree(const float lat) {
-    return cosf(lat * kRadPerDeg) * kMetersPerDegreeLat;
+    return LngScalePerLat(lat) * kMetersPerDegreeLat;
+  }
+
+  /**
+   * Gets the distance scale needed when computing units of longitude
+   * at a certain latitude.
+   * @param   lat   Latitude in degrees
+   * @return  Returns the scale to use for longitude at this degree of latitude
+   */
+  static float LngScalePerLat(const float lat) {
+    return cosf(lat * kRadPerDeg);
   }
 
 private:
-   float centerlat_;
-   float centerlng_;
-   float m_per_lng_degree_;
+  float centerlat_;
+  float centerlng_;
+  float m_lng_scale_;
+  float m_per_lng_degree_;
 
-   float sqr(const float v) const {
-     return v * v;
-   }
+  float sqr(const float v) const {
+    return v * v;
+  }
 };
 
-}
-}
+} // namespace midgard
+} // namespace valhalla
 
-#endif  // VALHALLA_MIDGARD_DISTANCEAPPROXIMATOR_H_
-
+#endif // VALHALLA_MIDGARD_DISTANCEAPPROXIMATOR_H_

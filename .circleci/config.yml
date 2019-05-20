@@ -1,33 +1,308 @@
 version: 2
 jobs:
-  build:
+  lint:
     docker:
-      - image: ubuntu:16.04
-        environment:
-          PATH: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-          LD_LIBRARY_PATH: /usr/local/lib:/lib/x86_64-linux-gnu:/usr/lib/x86_64-linux-gnu:/lib32:/usr/lib32
+      - image: valhalla/docker:build-2.6.1
     steps:
       - checkout
-      - run: apt-get update && apt-get -y install git && git submodule sync && git submodule update --init
-      - run: bash -c '[[ $(grep -cE "^ " Makefile.am) -eq 0 ]]'
+      - run: apt-get update && apt-get -y install clang-tidy-5.0 clang-5.0 curl git nodejs
+      - run: nodejs ./scripts/validate_changelog.js
+      - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
+      - run: git submodule sync && git submodule update --init
       - restore_cache:
           keys:
             - ccache
-      #get dependencies and do the actual build
-      - run: .circleci/make_test.sh
-      - run: mkdir test/logs && cp test/*.log test/logs
-      - store_artifacts:
-          path: test/logs
+      - run: npm install --ignore-scripts
+      - run: mkdir build
+      - run: cd build && cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXPORT_COMPILE_COMMANDS=On
+      - run: make -C build -j4
+      - run: cd build && ../scripts/tidy.sh && ../scripts/error_on_dirty.sh
+
+  build-release-binary-linux:
+    docker:
+      - image: valhalla/docker:build-2.6.1
+    steps:
+      - checkout
+      - run:
+          command: |
+            set +e
+            touch $BASH_ENV
+            curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.5/install.sh | bash
+            echo 'export NVM_DIR="$HOME/.nvm"' >> $BASH_ENV
+            echo '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> $BASH_ENV
+            echo 'nvm install v8.11.2' >> $BASH_ENV
+            echo 'nvm alias default v8.11.2' >> $BASH_ENV
+      - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
+      - run: git submodule sync && git submodule update --init
+      - restore_cache:
+          keys:
+            - ccache
+      - run: npm install --ignore-scripts
+      - run: mkdir build
+      - run: |
+          cd build && cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=Off -DENABLE_PYTHON_BINDINGS=On \
+          -DCPACK_GENERATOR=DEB -DCPACK_PACKAGE_VERSION_SUFFIX="-0ubuntu1-$(lsb_release -sc)" -DENABLE_SERVICES=OFF
+      - run: make -C build -j4
+      - run: make -C build install
+      - run: make -C build package
+      - run:
+          command: |
+            export PACKAGE_JSON_VERSION=$(node -e "console.log(require('./package.json').version)")
+            export PUBLISH=$([[ "${CIRCLE_TAG:-}" == "${PACKAGE_JSON_VERSION}" ]] && echo "On" || echo "Off")
+            echo circle_tag ${CIRCLE_TAG:-}
+            echo package_json_version ${PACKAGE_JSON_VERSION}
+            export COMMIT_MESSAGE=$(git log --oneline --format=%B -n 1 ${CIRCLE_SHA1} | head -n 1)
+            export BUILD_TYPE=Release
+            ./scripts/publish.sh
       - save_cache:
           key: ccache
           paths:
             - ~/.ccache
-      #fail if tests failed
-      - run: (if [ $(cat test/logs/* | grep -cF FAIL) -ne 0 ]; then exit 1; fi)
-      #make sure installer works
-      - run: make install
+
+  build-debug-binary-linux:
+    docker:
+      - image: valhalla/docker:build-2.6.1
+    steps:
+      - checkout
+      - run:
+          command: |
+            set +e
+            touch $BASH_ENV
+            curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.5/install.sh | bash
+            echo 'export NVM_DIR="$HOME/.nvm"' >> $BASH_ENV
+            echo '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> $BASH_ENV
+            echo 'nvm install v8.11.2' >> $BASH_ENV
+            echo 'nvm alias default v8.11.2' >> $BASH_ENV
+      - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
+      - run: git submodule sync && git submodule update --init
+      - restore_cache:
+          keys:
+            - ccache
+      - run: npm install --ignore-scripts
+      - run: mkdir build
+      - run: |
+          cd build && cmake .. -DCMAKE_BUILD_TYPE=Debug -DBUILD_SHARED_LIBS=Off -DENABLE_PYTHON_BINDINGS=On \
+          -DCPACK_GENERATOR=DEB -DCPACK_PACKAGE_VERSION_SUFFIX="-0ubuntu1-$(lsb_release -sc)" -DENABLE_SERVICES=OFF
+      - run: make -C build -j4
+      - run: make -C build install
+      - run: make -C build package
+      - run:
+          command: |
+            export PACKAGE_JSON_VERSION=$(node -e "console.log(require('./package.json').version)")
+            export PUBLISH=$([[ "${CIRCLE_TAG:-}" == "${PACKAGE_JSON_VERSION}" ]] && echo "On" || echo "Off")
+            export COMMIT_MESSAGE=$(git log --oneline --format=%B -n 1 ${CIRCLE_SHA1} | head -n 1)
+            export BUILD_TYPE=Debug
+            ./scripts/publish.sh
+      - save_cache:
+          key: ccache
+          paths:
+            - ~/.ccache
+
+  build-debug:
+    docker:
+      - image: valhalla/docker:build-2.6.1
+    steps:
+      - checkout
+      - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
+      - run: git submodule sync && git submodule update --init
+      - restore_cache:
+          keys:
+            - ccache
+      - run: npm install --ignore-scripts
+      - run: mkdir build
+      - run: cd build && cmake .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_COVERAGE=On -DCPACK_GENERATOR=DEB
+      - run: make -C build -j4
+      - run: make -C build -j4 tests
+      - run: make -C build -j2 check
+      - run: make -C build install
+      - run: make -C build package
+      - run: make -C build coverage
+      - run: /bin/bash <(curl -s https://codecov.io/bash) || echo "Codecov did not collect coverage reports"
+      - save_cache:
+          key: ccache
+          paths:
+            - ~/.ccache
+
+  build-release:
+    docker:
+      - image: valhalla/docker:build-2.6.1
+    steps:
+      - checkout
+      - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
+      - run: git submodule sync && git submodule update --init
+      - restore_cache:
+          keys:
+            - ccache
+      - run: npm install --ignore-scripts
+      - run: mkdir build
+      - run: |
+          cd build && cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=On -DENABLE_PYTHON_BINDINGS=On \
+          -DCPACK_GENERATOR=DEB -DCPACK_PACKAGE_VERSION_SUFFIX="-0ubuntu1-$(lsb_release -sc)"
+      - run: make -C build -j4
+      - run: make -C build -j4 tests
+      - run: make -C build -j2 check
+      - run: make -C build install
+      - run: make -C build package
+      - save_cache:
+          key: ccache
+          paths:
+            - ~/.ccache
+
+  build-release-x86:
+    docker:
+      - image: valhalla/docker:build-x86-3.0.0
+    steps:
+      - checkout
+      #- run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
+      - run: git submodule sync && git submodule update --init
+      - restore_cache:
+          keys:
+            - ccache
+      - run: npm install --ignore-scripts
+      - run: mkdir build
+      - run: |
+          cd build && cmake .. -DCMAKE_BUILD_TYPE=Release -DENABLE_NODE_BINDINGS=Off
+      - run: make -C build -j4
+      - run: make -C build -j4 tests
+      - run: make -C build -j2 check
+      - save_cache:
+          key: ccache
+          paths:
+            - ~/.ccache
+
+  build-osx:
+    macos:
+      xcode: "9.2.0"
+    environment:
+      HOMEBREW_NO_AUTO_UPDATE: 1
+    steps:
+      - run: brew install protobuf --without-python@2
+      - run: brew upgrade python
+      - run: brew install cmake libtool boost-python libspatialite pkg-config lua jq curl wget czmq lz4 nvm
+      - run:
+          command: |
+            set +e
+            touch $BASH_ENV
+            curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.5/install.sh | bash
+            echo 'export NVM_DIR="$HOME/.nvm"' >> $BASH_ENV
+            echo '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> $BASH_ENV
+            echo 'nvm install v8.11.2' >> $BASH_ENV
+            echo 'nvm alias default v8.11.2' >> $BASH_ENV
+      - checkout
+      - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
+      - run: git submodule sync && git submodule update --init
+      # - restore_cache:
+      #     keys:
+      #       - ccache
+      - run: wget https://raw.githubusercontent.com/valhalla/homebrew-valhalla/master/Formula/prime_server.rb
+      - run: brew install --build-from-source ./prime_server.rb
+      - run: npm install --ignore-scripts
+      - run: mkdir -p build
+      - run: cd build && cmake .. -DENABLE_PYTHON_BINDINGS=Off
+      - run: make -C build -j4
+      - run: make -C build -j4 tests
+      - run: make -C build -j2 check
+      - save_cache:
+          key: ccache
+          paths:
+            - ~/.ccache
+
+  build-release-binary-osx:
+    macos:
+      xcode: "9.2.0"
+    environment:
+      HOMEBREW_NO_AUTO_UPDATE: 1
+    steps:
+      - run: brew install protobuf --without-python@2
+      - run: brew upgrade python
+      - run: brew install cmake libtool boost-python libspatialite pkg-config lua jq curl wget czmq lz4 nvm
+      - run:
+          command: |
+            set +e
+            touch $BASH_ENV
+            curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.5/install.sh | bash
+            echo 'export NVM_DIR="$HOME/.nvm"' >> $BASH_ENV
+            echo '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> $BASH_ENV
+            echo 'nvm install v8.11.2' >> $BASH_ENV
+            echo 'nvm alias default v8.11.2' >> $BASH_ENV
+      - checkout
+      - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
+      - run: git submodule sync && git submodule update --init
+      - run: npm install --ignore-scripts
+      - run: mkdir -p build
+      - run: cd build && cmake .. -DBUILD_SHARED_LIBS=Off -DENABLE_PYTHON_BINDINGS=Off -DENABLE_DATA_TOOLS=OFF -DENABLE_SERVICES=OFF -DBoost_USE_STATIC_LIBS=ON -DProtobuf_USE_STATIC_LIBS=ON -DLZ4_USE_STATIC_LIBS=ON
+      - run: make -C build -j4
+      - run:
+          command: |
+            export PACKAGE_JSON_VERSION=$(node -e "console.log(require('./package.json').version)")
+            export PUBLISH=$([[ "${CIRCLE_TAG:-}" == "${PACKAGE_JSON_VERSION}" ]] && echo "On" || echo "Off")
+            export COMMIT_MESSAGE=$(git log --oneline --format=%B -n 1 ${CIRCLE_SHA1} | head -n 1)
+            export BUILD_TYPE=Release
+            ./scripts/publish.sh
+
+  build-debug-binary-osx:
+    macos:
+      xcode: "9.2.0"
+    environment:
+      HOMEBREW_NO_AUTO_UPDATE: 1
+    steps:
+      - run: brew install protobuf --without-python@2
+      - run: brew upgrade python
+      - run: brew install cmake libtool boost-python libspatialite pkg-config lua jq curl wget czmq lz4 nvm
+      - run:
+          command: |
+            set +e
+            touch $BASH_ENV
+            curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.5/install.sh | bash
+            echo 'export NVM_DIR="$HOME/.nvm"' >> $BASH_ENV
+            echo '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> $BASH_ENV
+            echo 'nvm install v8.11.2' >> $BASH_ENV
+            echo 'nvm alias default v8.11.2' >> $BASH_ENV
+      - checkout
+      - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
+      - run: git submodule sync && git submodule update --init
+      - run: npm install --ignore-scripts
+      - run: mkdir -p build
+      - run: cd build && cmake .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_PYTHON_BINDINGS=Off -DBUILD_SHARED_LIBS=Off -DENABLE_DATA_TOOLS=OFF -DENABLE_SERVICES=OFF -DBoost_USE_STATIC_LIBS=ON -DProtobuf_USE_STATIC_LIBS=ON -DLZ4_USE_STATIC_LIBS=ON
+      - run: make -C build -j4
+      - run:
+          command: |
+            export PACKAGE_JSON_VERSION=$(node -e "console.log(require('./package.json').version)")
+            export PUBLISH=$([[ "${CIRCLE_TAG:-}" == "${PACKAGE_JSON_VERSION}" ]] && echo "On" || echo "Off")
+            export COMMIT_MESSAGE=$(git log --oneline --format=%B -n 1 ${CIRCLE_SHA1} | head -n 1)
+            export BUILD_TYPE=Debug
+            ./scripts/publish.sh
+
 workflows:
   version: 2
-  build_and_test:
+  build_test_publish:
     jobs:
-      - build
+      - lint
+      - build-debug
+      - build-release
+      - build-release-x86
+      - build-osx
+      - build-release-binary-osx:
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              ignore: /.*/
+      - build-debug-binary-osx:
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              ignore: /.*/
+      - build-release-binary-linux:
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              ignore: /.*/
+      - build-debug-binary-linux:
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              ignore: /.*/

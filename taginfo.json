@@ -7,7 +7,7 @@
       "description": "Open Source Tile-Based Routing Applications and APIs",
       "project_url": "https://github.com/valhalla",
       "doc_url": "",
-      "icon_url": "https://s3.amazonaws.com/assets-staging.mapzen.com/images/mapzen-icon/logo.png",
+      "icon_url": "https://avatars0.githubusercontent.com/u/10232331",
       "contact_name": "Valhalla",
       "contact_email": "valhalla@mapzen.com"
    },
@@ -1658,6 +1658,15 @@
             "way"
          ],
          "description": "Overrides access flags for bus.  Bus Routing allowed."
+      },
+      {
+         "key": "psv",
+         "value": "taxi",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for taxi.  Taxi Routing allowed."
       },
       {
          "key": "psv",
@@ -4058,6 +4067,94 @@
             "node"
          ],
          "description": "Allows access for hov."
+      },
+      {
+         "key": "taxi",
+         "value": "no",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for taxi.  taxi Routing not allowed."
+      },
+      {
+         "key": "taxi",
+         "value": "delivery",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for taxi.  taxi Routing not allowed."
+      },
+      {
+         "key": "taxi",
+         "value": "yes",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for taxi.  taxi Routing allowed."
+      },
+      {
+         "key": "taxi",
+         "value": "designated",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for taxi.  taxi Routing allowed."
+      },
+      {
+         "key": "taxi",
+         "value": "urban",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for taxi.  taxi Routing allowed."
+      },
+      {
+         "key": "taxi",
+         "value": "permissive",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for taxi.  taxi Routing allowed."
+      },
+      {
+         "key": "taxi",
+         "value": "restricted",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for taxi.  taxi Routing allowed."
+      },
+      {
+         "key": "taxi",
+         "value": "destination",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for taxi.  taxi Routing allowed."
+      },
+      {
+         "key": "taxi:backward",
+         "value": "designated",
+         "object_types": [
+            "way"
+         ],
+         "description": "Sets the taxi reverse flag to true."
+      },
+      {
+         "key": "taxi:backward",
+         "value": "yes",
+         "object_types": [
+            "way"
+         ],
+         "description": "Sets the taxi reverse flag to true."
       },
       {
          "key": "destination",

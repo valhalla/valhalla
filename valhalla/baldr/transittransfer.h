@@ -11,10 +11,12 @@ namespace baldr {
  * Transit transfer information between stops.
  */
 class TransitTransfer {
- public:
+public:
   // Constructor with arguments
-  TransitTransfer(const uint32_t from_stopid, const uint32_t to_stopid,
-                  const TransferType type, const uint32_t mintime);
+  TransitTransfer(const uint32_t from_stopid,
+                  const uint32_t to_stopid,
+                  const TransferType type,
+                  const uint32_t mintime);
 
   /**
    * Get the from stop Id.
@@ -46,20 +48,19 @@ class TransitTransfer {
    * @return  Returns true if from stop Id < other from stop Id or
    *          from stop Ids are equal and to stop Id < other to stop Id.
    */
-  bool operator < (const TransitTransfer& other) const;
+  bool operator<(const TransitTransfer& other) const;
 
+protected:
+  uint32_t from_stopid_; // From stop Id (internal)
 
- protected:
-  uint32_t from_stopid_;    // From stop Id (internal)
+  uint32_t to_stopid_; // To stop Id (internal)
 
-  uint32_t to_stopid_;      // To stop Id (internal)
-
-  uint32_t type_    : 4;   // Transfer type
-  uint32_t mintime_ : 16;  // Minimum transfer time (seconds)
-  uint32_t spare_   : 12;
+  uint32_t type_ : 4;     // Transfer type
+  uint32_t mintime_ : 16; // Minimum transfer time (seconds)
+  uint32_t spare_ : 12;
 };
 
-}
-}
+} // namespace baldr
+} // namespace valhalla
 
-#endif  // VALHALLA_BALDR_TRANSITTRANSFER_H_
+#endif // VALHALLA_BALDR_TRANSITTRANSFER_H_

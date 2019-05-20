@@ -1,26 +1,26 @@
 #include "mjolnir/admin.h"
 #include "baldr/datetime.h"
 #include "midgard/logging.h"
-#include <unordered_map>
 #include <boost/filesystem/operations.hpp>
-#include <sqlite3.h>
 #include <spatialite.h>
+#include <sqlite3.h>
+#include <unordered_map>
 
 namespace valhalla {
 namespace mjolnir {
 
 // Get the dbhandle of a sqlite db.  Used for timezones and admins DBs.
-sqlite3 * GetDBHandle(const std::string& database) {
+sqlite3* GetDBHandle(const std::string& database) {
 
   // Initialize the admin DB (if it exists)
-  sqlite3 *db_handle = nullptr;
+  sqlite3* db_handle = nullptr;
   if (!database.empty() && boost::filesystem::exists(database)) {
     spatialite_init(0);
     sqlite3_stmt* stmt = 0;
     char* err_msg = nullptr;
     std::string sql;
     uint32_t ret = sqlite3_open_v2(database.c_str(), &db_handle,
-                        SQLITE_OPEN_READONLY, nullptr);
+                                   SQLITE_OPEN_READONLY | SQLITE_OPEN_NOMUTEX, nullptr);
     if (ret != SQLITE_OK) {
       LOG_ERROR("cannot open " + database);
       sqlite3_close(db_handle);
@@ -45,27 +45,31 @@ sqlite3 * GetDBHandle(const std::string& database) {
   return db_handle;
 }
 
-// Get the polygon index.  Used by tz and admin areas.  Checks if the pointLL is covered_by the poly.
-uint32_t GetMultiPolyId(const std::unordered_map<uint32_t,multi_polygon_type>& polys, const PointLL& ll) {
+// Get the polygon index.  Used by tz and admin areas.  Checks if the pointLL is covered_by the
+// poly.
+uint32_t GetMultiPolyId(const std::unordered_multimap<uint32_t, multi_polygon_type>& polys,
+                        const PointLL& ll) {
   uint32_t index = 0;
   point_type p(ll.lng(), ll.lat());
   for (const auto& poly : polys) {
-    if (boost::geometry::covered_by(p, poly.second))
+    if (boost::geometry::covered_by(p, poly.second)) {
       return poly.first;
+    }
   }
   return index;
 }
 
 // Get the timezone polys from the db
-std::unordered_map<uint32_t,multi_polygon_type> GetTimeZones(sqlite3 *db_handle,
-                                                             const AABB2<PointLL>& aabb) {
-  std::unordered_map<uint32_t,multi_polygon_type> polys;
-  if (!db_handle)
+std::unordered_multimap<uint32_t, multi_polygon_type> GetTimeZones(sqlite3* db_handle,
+                                                                   const AABB2<PointLL>& aabb) {
+  std::unordered_multimap<uint32_t, multi_polygon_type> polys;
+  if (!db_handle) {
     return polys;
+  }
 
-  sqlite3_stmt *stmt = 0;
+  sqlite3_stmt* stmt = 0;
   uint32_t ret;
-  char *err_msg = nullptr;
+  char* err_msg = nullptr;
   uint32_t result = 0;
 
   std::string sql = "select TZID, st_astext(geom) from tz_world where ";
@@ -86,10 +90,12 @@ std::unordered_map<uint32_t,multi_polygon_type> GetTimeZones(sqlite3 *db_handle,
       std::string tz_id;
       std::string geom;
 
-      if (sqlite3_column_type(stmt, 0) == SQLITE_TEXT)
+      if (sqlite3_column_type(stmt, 0) == SQLITE_TEXT) {
         tz_id = (char*)sqlite3_column_text(stmt, 0);
-      if (sqlite3_column_type(stmt, 1) == SQLITE_TEXT)
+      }
+      if (sqlite3_column_type(stmt, 1) == SQLITE_TEXT) {
         geom = (char*)sqlite3_column_text(stmt, 1);
+      }
 
       uint32_t idx = DateTime::get_tz_db().to_index(tz_id);
       if (idx == 0) {
@@ -100,7 +106,6 @@ std::unordered_map<uint32_t,multi_polygon_type> GetTimeZones(sqlite3 *db_handle,
       multi_polygon_type multi_poly;
       boost::geometry::read_wkt(geom, multi_poly);
       polys.emplace(idx, multi_poly);
-
       result = sqlite3_step(stmt);
     }
   }
@@ -111,18 +116,21 @@ std::unordered_map<uint32_t,multi_polygon_type> GetTimeZones(sqlite3 *db_handle,
   return polys;
 }
 
-//Get the admin polys that intersect with the tile bounding box.
-std::unordered_map<uint32_t,multi_polygon_type> GetAdminInfo(sqlite3 *db_handle,
-                                                             std::unordered_map<uint32_t,bool>& drive_on_right,
-                                                             const AABB2<PointLL>& aabb, GraphTileBuilder& tilebuilder) {
-  std::unordered_map<uint32_t,multi_polygon_type> polys;
-  if (!db_handle)
+// Get the admin polys that intersect with the tile bounding box.
+std::unordered_multimap<uint32_t, multi_polygon_type>
+GetAdminInfo(sqlite3* db_handle,
+             std::unordered_map<uint32_t, bool>& drive_on_right,
+             const AABB2<PointLL>& aabb,
+             GraphTileBuilder& tilebuilder) {
+  std::unordered_multimap<uint32_t, multi_polygon_type> polys;
+  if (!db_handle) {
     return polys;
+  }
 
   std::unordered_map<uint32_t, uint32_t> indexes;
-  sqlite3_stmt *stmt = 0;
+  sqlite3_stmt* stmt = 0;
   uint32_t ret;
-  char *err_msg = nullptr;
+  char* err_msg = nullptr;
   uint32_t result = 0;
   bool dor = true;
   std::string geom;
@@ -144,7 +152,7 @@ std::unordered_map<uint32_t,multi_polygon_type> GetAdminInfo(sqlite3 *db_handle,
 
   if (ret == SQLITE_OK || ret == SQLITE_ERROR) {
     result = sqlite3_step(stmt);
-    if (result == SQLITE_DONE) { //state/prov not found, try to find country
+    if (result == SQLITE_DONE) { // state/prov not found, try to find country
 
       sql = "SELECT name, \"\", iso_code, \"\", drive_on_right, st_astext(geom) from ";
       sql += " admins where ST_Intersects(geom, BuildMBR(" + std::to_string(aabb.minx()) + ",";
@@ -171,28 +179,33 @@ std::unordered_map<uint32_t,multi_polygon_type> GetAdminInfo(sqlite3 *db_handle,
       country_iso = "";
       state_iso = "";
 
-      if (sqlite3_column_type(stmt, 0) == SQLITE_TEXT)
+      if (sqlite3_column_type(stmt, 0) == SQLITE_TEXT) {
         country_name = (char*)sqlite3_column_text(stmt, 0);
+      }
 
-      if (sqlite3_column_type(stmt, 1) == SQLITE_TEXT)
+      if (sqlite3_column_type(stmt, 1) == SQLITE_TEXT) {
         state_name = (char*)sqlite3_column_text(stmt, 1);
+      }
 
-      if (sqlite3_column_type(stmt, 2) == SQLITE_TEXT)
+      if (sqlite3_column_type(stmt, 2) == SQLITE_TEXT) {
         country_iso = (char*)sqlite3_column_text(stmt, 2);
+      }
 
-      if (sqlite3_column_type(stmt, 3) == SQLITE_TEXT)
+      if (sqlite3_column_type(stmt, 3) == SQLITE_TEXT) {
         state_iso = (char*)sqlite3_column_text(stmt, 3);
+      }
 
       dor = true;
-      if (sqlite3_column_type(stmt, 4) == SQLITE_INTEGER)
+      if (sqlite3_column_type(stmt, 4) == SQLITE_INTEGER) {
         dor = sqlite3_column_int(stmt, 4);
+      }
 
       geom = "";
-      if (sqlite3_column_type(stmt, 5) == SQLITE_TEXT)
+      if (sqlite3_column_type(stmt, 5) == SQLITE_TEXT) {
         geom = (char*)sqlite3_column_text(stmt, 5);
+      }
 
-      uint32_t index = tilebuilder.AddAdmin(country_name,state_name,
-                                            country_iso,state_iso);
+      uint32_t index = tilebuilder.AddAdmin(country_name, state_name, country_iso, state_iso);
       multi_polygon_type multi_poly;
       boost::geometry::read_wkt(geom, multi_poly);
       polys.emplace(index, multi_poly);
@@ -209,19 +222,21 @@ std::unordered_map<uint32_t,multi_polygon_type> GetAdminInfo(sqlite3 *db_handle,
   return polys;
 }
 
-//Get all the country access records from the db and save them to a map.
-std::unordered_map<std::string, std::vector<int>> GetCountryAccess(sqlite3 *db_handle) {
+// Get all the country access records from the db and save them to a map.
+std::unordered_map<std::string, std::vector<int>> GetCountryAccess(sqlite3* db_handle) {
 
   std::unordered_map<std::string, std::vector<int>> country_access;
 
-  if (!db_handle)
+  if (!db_handle) {
     return country_access;
+  }
 
-  sqlite3_stmt *stmt = 0;
+  sqlite3_stmt* stmt = 0;
   uint32_t ret;
-  char *err_msg = nullptr;
+  char* err_msg = nullptr;
   uint32_t result = 0;
-  std::string sql = "SELECT iso_code, trunk, trunk_link, track, footway, pedestrian, bridleway, cycleway, path, motorroad from admin_access";
+  std::string sql = "SELECT iso_code, trunk, trunk_link, track, footway, pedestrian, bridleway, "
+                    "cycleway, path, motorroad from admin_access";
 
   ret = sqlite3_prepare_v2(db_handle, sql.c_str(), sql.length(), &stmt, 0);
 
@@ -232,46 +247,65 @@ std::unordered_map<std::string, std::vector<int>> GetCountryAccess(sqlite3 *db_h
 
       std::vector<int> access;
       std::string country_iso;
-      if (sqlite3_column_type(stmt, 0) == SQLITE_TEXT)
+      if (sqlite3_column_type(stmt, 0) == SQLITE_TEXT) {
         country_iso = (char*)sqlite3_column_text(stmt, 0);
+      }
 
-      if (sqlite3_column_type(stmt, 1) == SQLITE_INTEGER)
+      if (sqlite3_column_type(stmt, 1) == SQLITE_INTEGER) {
         access.push_back(sqlite3_column_int(stmt, 1));
-      else access.push_back(-1);
+      } else {
+        access.push_back(-1);
+      }
 
-      if (sqlite3_column_type(stmt, 2) == SQLITE_INTEGER)
+      if (sqlite3_column_type(stmt, 2) == SQLITE_INTEGER) {
         access.push_back(sqlite3_column_int(stmt, 2));
-      else access.push_back(-1);
+      } else {
+        access.push_back(-1);
+      }
 
-      if (sqlite3_column_type(stmt, 3) == SQLITE_INTEGER)
+      if (sqlite3_column_type(stmt, 3) == SQLITE_INTEGER) {
         access.push_back(sqlite3_column_int(stmt, 3));
-      else access.push_back(-1);
+      } else {
+        access.push_back(-1);
+      }
 
-      if (sqlite3_column_type(stmt, 4) == SQLITE_INTEGER)
+      if (sqlite3_column_type(stmt, 4) == SQLITE_INTEGER) {
         access.push_back(sqlite3_column_int(stmt, 4));
-      else access.push_back(-1);
+      } else {
+        access.push_back(-1);
+      }
 
-      if (sqlite3_column_type(stmt, 5) == SQLITE_INTEGER)
+      if (sqlite3_column_type(stmt, 5) == SQLITE_INTEGER) {
         access.push_back(sqlite3_column_int(stmt, 5));
-      else access.push_back(-1);
+      } else {
+        access.push_back(-1);
+      }
 
-      if (sqlite3_column_type(stmt, 6) == SQLITE_INTEGER)
+      if (sqlite3_column_type(stmt, 6) == SQLITE_INTEGER) {
         access.push_back(sqlite3_column_int(stmt, 6));
-      else access.push_back(-1);
+      } else {
+        access.push_back(-1);
+      }
 
-      if (sqlite3_column_type(stmt, 7) == SQLITE_INTEGER)
+      if (sqlite3_column_type(stmt, 7) == SQLITE_INTEGER) {
         access.push_back(sqlite3_column_int(stmt, 7));
-      else access.push_back(-1);
+      } else {
+        access.push_back(-1);
+      }
 
-      if (sqlite3_column_type(stmt, 8) == SQLITE_INTEGER)
+      if (sqlite3_column_type(stmt, 8) == SQLITE_INTEGER) {
         access.push_back(sqlite3_column_int(stmt, 8));
-      else access.push_back(-1);
+      } else {
+        access.push_back(-1);
+      }
 
-      if (sqlite3_column_type(stmt, 9) == SQLITE_INTEGER)
+      if (sqlite3_column_type(stmt, 9) == SQLITE_INTEGER) {
         access.push_back(sqlite3_column_int(stmt, 9));
-      else access.push_back(-1);
+      } else {
+        access.push_back(-1);
+      }
 
-      country_access.emplace(country_iso,access);
+      country_access.emplace(country_iso, access);
 
       result = sqlite3_step(stmt);
     }
@@ -282,8 +316,7 @@ std::unordered_map<std::string, std::vector<int>> GetCountryAccess(sqlite3 *db_h
   }
 
   return country_access;
-
 }
 
-}
-}
+} // namespace mjolnir
+} // namespace valhalla
