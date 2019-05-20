@@ -411,13 +411,13 @@ thor_worker_t::map_match(valhalla_request_t& request,
             std::vector<PathInfo> sub_path_edges(path_edges.begin() + last_index,
                                                  path_edges.begin() + i + 1);
             trip_path = thor::TripLegBuilder::Build(controller, matcher->graphreader(), mode_costing,
-                                                     sub_path_edges,
-                                                     *request.options.mutable_shape(
-                                                         origin - match_results.begin()),
-                                                     *request.options.mutable_shape(
-                                                         destination - match_results.begin()),
-                                                     std::list<odin::Location>{}, interrupt,
-                                                     &route_discontinuities);
+                                                    sub_path_edges,
+                                                    *request.options.mutable_shape(
+                                                        origin - match_results.begin()),
+                                                    *request.options.mutable_shape(
+                                                        destination - match_results.begin()),
+                                                    std::list<odin::Location>{}, interrupt,
+                                                    &route_discontinuities);
             trip_paths.emplace_back(trip_path);
             // beginning of next leg will be the end of this leg
             origin = destination;
