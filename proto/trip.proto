@@ -213,7 +213,7 @@ message TripLeg {
     repeated LaneConnectivity lane_connectivity = 39;
     optional int32 mean_elevation = 40;
     repeated TrafficSegment traffic_segment = 41;
-    repeated TurnLanes turn_lanes = 42;
+    repeated TurnLane turn_lanes = 42;
   }
 
   message IntersectingEdge {

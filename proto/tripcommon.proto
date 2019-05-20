@@ -114,7 +114,7 @@ message StreetName {
   optional bool is_route_number = 2;  // true if the street name is a reference route number such as: I 81 South or US 322 West
 }
 
-message TurnLanes {
+message TurnLane {
   optional uint32 directions_mask = 1;
   optional bool is_active = 2;
 }
