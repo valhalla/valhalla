@@ -1348,7 +1348,10 @@ TripLeg_Edge* TripLegBuilder::AddTripEdge(const AttributesController& controller
   // If turn lanes exist
   if (directededge->turnlanes()) {
     auto turnlanes = graphtile->turnlanes(idx);
-    // TODO - add to TripLeg
+    for (auto tl : turnlanes) {
+      TurnLane* turn_lane = trip_edge->add_turn_lanes();
+      turn_lane->set_directions_mask(tl);
+    }
   }
 
   // Set road class if requested
