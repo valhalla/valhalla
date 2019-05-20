@@ -253,6 +253,24 @@ void test_trace_route_breaks() {
   auto& legs = matched.get_child("trip.legs");
   if (legs.size() != 2)
     throw std::logic_error("Setting type:break should split route into multiple legs");
+
+  matched = json_to_pt(actor.trace_route(
+      R"({"costing":"auto","shape_match":"map_snap","shape":[
+          {"lat":52.09110,"lon":5.09806,"type":"break"},
+          {"lat":52.09050,"lon":5.09769,"type":"via"},
+          {"lat":52.09098,"lon":5.09679,"type":"break"}]})"));
+  legs = matched.get_child("trip.legs");
+  if (legs.size() != 1)
+    throw std::logic_error("Setting type:via should keep route as single leg");
+
+  matched = json_to_pt(actor.trace_route(
+      R"({"costing":"auto","shape_match":"map_snap","shape":[
+          {"lat":52.09110,"lon":5.09806},
+          {"lat":52.09050,"lon":5.09769},
+          {"lat":52.09098,"lon":5.09679}]})"));
+  legs = matched.get_child("trip.legs");
+  if (legs.size() != 1)
+    throw std::logic_error("Setting no type should keep route as single leg");
 }
 
 void test_time_rejection() {
