@@ -66,7 +66,7 @@ odin_worker_t::work(const std::list<zmq::message_t>& job,
 
     // parse each leg
     std::list<TripLeg> legs;
-    for (auto leg = ++(++job.cbegin()); leg != job.cend(); ++leg) {
+    for (auto leg = ++job.cbegin(); leg != job.cend(); ++leg) {
       // crack open the path
       legs.emplace_back();
       try {

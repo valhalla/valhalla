@@ -12,7 +12,9 @@
 #include "worker.h"
 
 using namespace valhalla;
+#ifdef HAVE_HTTP
 using namespace prime_server;
+#endif
 
 namespace {
 // Credits: http://werkzeug.pocoo.org/

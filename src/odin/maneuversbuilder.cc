@@ -139,7 +139,7 @@ std::list<Maneuver> ManeuversBuilder::Build() {
   std::string last_name = (trip_path_->GetCurrEdge(last_node_index)->name_size() == 0)
                               ? ""
                               : trip_path_->GetCurrEdge(last_node_index)->name(0).value();
-  std::string units = (directions_options_.units() == valhalla::odin::DirectionsOptions::kilometers)
+  std::string units = (directions_options_.units() == valhalla::DirectionsOptions::kilometers)
                           ? "kilometers"
                           : "miles";
   LOG_DEBUG((boost::format("ROUTE_REQUEST|-j "
