@@ -50,8 +50,8 @@ public:
    * @return  Returns the path edges (and elapsed time/modes at end of
    *          each edge).
    */
-  std::vector<PathInfo> GetBestPath(odin::Location& origin,
-                                    odin::Location& dest,
+  std::vector<PathInfo> GetBestPath(valhalla::Location& origin,
+                                    valhalla::Location& dest,
                                     baldr::GraphReader& graphreader,
                                     const std::shared_ptr<sif::DynamicCost>* mode_costing,
                                     const sif::TravelMode mode);
@@ -108,8 +108,8 @@ protected:
    * @param  destll  Lat,lng of the destination.
    * @param  costing Dynamic costing method.
    */
-  void Init(const PointLL& origll,
-            const PointLL& destll,
+  void Init(const midgard::PointLL& origll,
+            const midgard::PointLL& destll,
             const std::shared_ptr<sif::DynamicCost>& costing);
 
   /**
@@ -120,8 +120,8 @@ protected:
    * @param  costing      Dynamic costing.
    */
   void SetOrigin(baldr::GraphReader& graphreader,
-                 odin::Location& origin,
-                 const odin::Location& dest,
+                 valhalla::Location& origin,
+                 const valhalla::Location& dest,
                  const std::shared_ptr<sif::DynamicCost>& costing);
 
   /**
@@ -132,7 +132,7 @@ protected:
    * @return  Returns the relative density near the destination (0-15)
    */
   uint32_t SetDestination(baldr::GraphReader& graphreader,
-                          const odin::Location& dest,
+                          const valhalla::Location& dest,
                           const std::shared_ptr<sif::DynamicCost>& costing);
 
   /**
@@ -190,7 +190,7 @@ protected:
    * TODO - once auto/bicycle are allowed modes we need to check if parking
    * or bikeshare locations are within walking distance.
    */
-  bool CanReachDestination(const odin::Location& destination,
+  bool CanReachDestination(const valhalla::Location& destination,
                            baldr::GraphReader& graphreader,
                            const sif::TravelMode dest_mode,
                            const std::shared_ptr<sif::DynamicCost>& costing);

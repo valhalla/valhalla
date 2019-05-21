@@ -19,7 +19,7 @@ using namespace valhalla;
 using ptree = boost::property_tree::ptree;
 
 // TODO - is there a better way to set these?
-void create_costing_options(valhalla::odin::DirectionsOptions& directions_options) {
+void create_costing_options(DirectionsOptions& directions_options) {
   // Add options in the order specified
   //  for (const auto costing : {auto_, auto_shorter, bicycle, bus, hov,
   //                              motor_scooter, multimodal, pedestrian, transit,
@@ -60,13 +60,13 @@ void TestMapMatcherFactory() {
     // Test configuration priority
     {
       // Copy it so we can change it
-      odin::DirectionsOptions options;
+      DirectionsOptions options;
       create_costing_options(options);
       auto config = root;
       config.put<std::string>("meili.auto.hello", "world");
       config.put<std::string>("meili.default.hello", "default world");
       meili::MapMatcherFactory factory(config);
-      auto matcher = factory.Create(odin::Costing::auto_, options);
+      auto matcher = factory.Create(Costing::auto_, options);
       test::assert_bool(matcher->travelmode() == sif::TravelMode::kDrive,
                         "travel mode should be drive");
       // NOT SURE WHAT THIS IS SUPPOSED TO DO?
@@ -77,12 +77,12 @@ void TestMapMatcherFactory() {
 
     // Test configuration priority
     {
-      odin::DirectionsOptions options;
+      DirectionsOptions options;
       create_costing_options(options);
       auto config = root;
       config.put<std::string>("meili.default.hello", "default world");
       meili::MapMatcherFactory factory(config);
-      auto matcher = factory.Create(odin::Costing::bicycle, options);
+      auto matcher = factory.Create(Costing::bicycle, options);
       test::assert_bool(matcher->travelmode() == sif::TravelMode::kBicycle,
                         "travel mode must be bicycle");
       // NOT SURE WHAT THIS IS SUPPOSED TO DO?
@@ -93,7 +93,7 @@ void TestMapMatcherFactory() {
 
     // Test configuration priority
     {
-      odin::DirectionsOptions options;
+      DirectionsOptions options;
       create_costing_options(options);
       auto config = root;
       meili::MapMatcherFactory factory(config);
@@ -103,7 +103,7 @@ void TestMapMatcherFactory() {
       options.set_search_radius(preferred_search_radius);
       config.put<int>("meili.auto.search_radius", incorrect_search_radius);
       config.put<int>("meili.default.search_radius", default_search_radius);
-      auto matcher = factory.Create(odin::Costing::pedestrian, options);
+      auto matcher = factory.Create(Costing::pedestrian, options);
       test::assert_bool(matcher->travelmode() == sif::TravelMode::kPedestrian,
                         "travel mode should be pedestrian");
       test::assert_bool(matcher->config().get<float>("search_radius") == preferred_search_radius,
@@ -113,12 +113,12 @@ void TestMapMatcherFactory() {
 
     // Test configuration priority
     {
-      odin::DirectionsOptions options;
+      DirectionsOptions options;
       create_costing_options(options);
       meili::MapMatcherFactory factory(root);
       float preferred_search_radius = 3;
       options.set_search_radius(preferred_search_radius);
-      auto matcher = factory.Create(odin::Costing::pedestrian, options);
+      auto matcher = factory.Create(Costing::pedestrian, options);
       test::assert_bool(matcher->travelmode() == sif::TravelMode::kPedestrian,
                         "travel mode should be pedestrian");
       test::assert_bool(matcher->config().get<float>("search_radius") == preferred_search_radius,
@@ -128,7 +128,7 @@ void TestMapMatcherFactory() {
 
     // Test default mode
     {
-      odin::DirectionsOptions options;
+      DirectionsOptions options;
       create_costing_options(options);
       meili::MapMatcherFactory factory(root);
       auto matcher = factory.Create(options);
@@ -139,16 +139,16 @@ void TestMapMatcherFactory() {
 
     // Test preferred mode
     {
-      odin::DirectionsOptions options;
+      DirectionsOptions options;
       create_costing_options(options);
       meili::MapMatcherFactory factory(root);
-      options.set_costing(odin::Costing::pedestrian);
+      options.set_costing(Costing::pedestrian);
       auto matcher = factory.Create(options);
       test::assert_bool(matcher->travelmode() == sif::TravelMode::kPedestrian,
                         "should read costing in options correctly");
       delete matcher;
 
-      options.set_costing(odin::Costing::bicycle);
+      options.set_costing(Costing::bicycle);
       matcher = factory.Create(options);
       test::assert_bool(matcher->travelmode() == sif::TravelMode::kBicycle,
                         "should read costing in options correctly again");
@@ -157,16 +157,16 @@ void TestMapMatcherFactory() {
 
     // Test custom costing
     {
-      odin::DirectionsOptions options;
+      DirectionsOptions options;
       create_costing_options(options);
       meili::MapMatcherFactory factory(root);
-      options.set_costing(odin::Costing::pedestrian);
+      options.set_costing(Costing::pedestrian);
       auto matcher = factory.Create(options);
       test::assert_bool(matcher->costing()->travel_type() != (int)sif::PedestrianType::kSegway,
                         "should not have custom costing options when not set in preferences");
       delete matcher;
 
-      options.mutable_costing_options(static_cast<int>(odin::Costing::pedestrian))
+      options.mutable_costing_options(static_cast<int>(Costing::pedestrian))
           ->set_transport_type("segway");
       matcher = factory.Create(options);
       test::assert_bool(matcher->costing()->travel_type() == (int)sif::PedestrianType::kSegway,
@@ -183,10 +183,10 @@ void TestMapMatcher() {
   // Nothing special to test for the moment
 
   meili::MapMatcherFactory factory(root);
-  odin::DirectionsOptions options;
+  DirectionsOptions options;
   create_costing_options(options);
-  auto auto_matcher = factory.Create(odin::Costing::auto_, options);
-  auto pedestrian_matcher = factory.Create(odin::Costing::pedestrian, options);
+  auto auto_matcher = factory.Create(Costing::auto_, options);
+  auto pedestrian_matcher = factory.Create(Costing::pedestrian, options);
 
   // Share the same pool
   test::assert_bool(&auto_matcher->graphreader() == &pedestrian_matcher->graphreader(),

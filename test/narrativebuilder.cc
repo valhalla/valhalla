@@ -19,6 +19,7 @@
 #include "test.h"
 
 using namespace std;
+using namespace valhalla;
 using namespace valhalla::odin;
 
 namespace {

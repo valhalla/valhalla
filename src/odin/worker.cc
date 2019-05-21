@@ -49,10 +49,11 @@ std::list<DirectionsLeg> odin_worker_t::narrate(const valhalla_request_t& reques
 }
 
 #ifdef HAVE_HTTP
-worker_t::result_t odin_worker_t::work(const std::list<zmq::message_t>& job,
-                                       void* request_info,
-                                       const std::function<void()>& interrupt_function) {
-  auto& info = *static_cast<http_request_info_t*>(request_info);
+prime_server::worker_t::result_t
+odin_worker_t::work(const std::list<zmq::message_t>& job,
+                    void* request_info,
+                    const std::function<void()>& interrupt_function) {
+  auto& info = *static_cast<prime_server::http_request_info_t*>(request_info);
   LOG_INFO("Got Odin Request " + std::to_string(info.id));
   valhalla_request_t request;
   try {

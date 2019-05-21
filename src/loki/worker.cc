@@ -29,7 +29,7 @@ using namespace valhalla::loki;
 
 namespace valhalla {
 namespace loki {
-void loki_worker_t::parse_locations(google::protobuf::RepeatedPtrField<odin::Location>* locations,
+void loki_worker_t::parse_locations(google::protobuf::RepeatedPtrField<valhalla::Location>* locations,
                                     boost::optional<valhalla_exception_t> required_exception) {
   if (locations->size()) {
     for (auto& location : *locations) {
@@ -67,15 +67,15 @@ void loki_worker_t::parse_costing(valhalla_request_t& request) {
   }
 
   auto costing = request.options.costing();
-  auto costing_str = odin::Costing_Name(costing);
+  auto costing_str = Costing_Name(costing);
 
   if (!request.options.do_not_track()) {
     valhalla::midgard::logging::Log("costing_type::" + costing_str, " [ANALYTICS] ");
   }
 
   // TODO - have a way of specifying mode at the location
-  if (costing == odin::Costing::multimodal) {
-    costing = odin::Costing::pedestrian;
+  if (costing == Costing::multimodal) {
+    costing = Costing::pedestrian;
   }
 
   try {
@@ -153,10 +153,10 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
     reader.reset(new baldr::GraphReader(config.get_child("mjolnir")));
 
   // Keep a string noting which actions we support, throw if one isnt supported
-  odin::DirectionsOptions::Action action;
+  DirectionsOptions::Action action;
   for (const auto& kv : config.get_child("loki.actions")) {
     auto path = kv.second.get_value<std::string>();
-    if (!odin::DirectionsOptions_Action_Parse(path, &action)) {
+    if (!DirectionsOptions_Action_Parse(path, &action)) {
       throw std::runtime_error("Action not supported " + path);
     }
     action_str.append("'/" + path + "' ");
@@ -237,29 +237,21 @@ void loki_worker_t::cleanup() {
 }
 
 #ifdef HAVE_HTTP
-void loki_worker_t::limits(valhalla_request_t& request) const {
-  for (auto& location : *request.options.mutable_locations()) {
-    if (location.minimum_reachability() > max_reachability) {
-      location.set_minimum_reachability(max_reachability);
-    }
-    if (location.radius() > max_radius) {
-      location.set_radius(max_radius);
-    }
-  }
-}
 
-worker_t::result_t loki_worker_t::work(const std::list<zmq::message_t>& job,
-                                       void* request_info,
-                                       const std::function<void()>& interrupt_function) {
+prime_server::worker_t::result_t
+loki_worker_t::work(const std::list<zmq::message_t>& job,
+                    void* request_info,
+                    const std::function<void()>& interrupt_function) {
   // get time for start of request
   auto s = std::chrono::system_clock::now();
-  auto& info = *static_cast<http_request_info_t*>(request_info);
+  auto& info = *static_cast<prime_server::http_request_info_t*>(request_info);
   LOG_INFO("Got Loki Request " + std::to_string(info.id));
   valhalla_request_t request;
   try {
     // request parsing
     auto http_request =
-        http_request_t::from_string(static_cast<const char*>(job.front().data()), job.front().size());
+        prime_server::http_request_t::from_string(static_cast<const char*>(job.front().data()),
+                                                  job.front().size());
     request.parse(http_request);
 
     // check there is a valid action
@@ -267,40 +259,37 @@ worker_t::result_t loki_worker_t::work(const std::list<zmq::message_t>& job,
       return jsonify_error({106, action_str}, info, request);
     }
 
-    // enforce some limits
-    limits(request);
-
     // Set the interrupt function
     service_worker_t::set_interrupt(interrupt_function);
 
-    worker_t::result_t result{true};
+    prime_server::worker_t::result_t result{true};
     // do request specific processing
     switch (request.options.action()) {
-      case odin::DirectionsOptions::route:
+      case DirectionsOptions::route:
         route(request);
         result.messages.emplace_back(request.options.SerializeAsString());
         break;
-      case odin::DirectionsOptions::locate:
+      case DirectionsOptions::locate:
         result = to_response_json(locate(request), info, request);
         break;
-      case odin::DirectionsOptions::sources_to_targets:
-      case odin::DirectionsOptions::optimized_route:
+      case DirectionsOptions::sources_to_targets:
+      case DirectionsOptions::optimized_route:
         matrix(request);
         result.messages.emplace_back(request.options.SerializeAsString());
         break;
-      case odin::DirectionsOptions::isochrone:
+      case DirectionsOptions::isochrone:
         isochrones(request);
         result.messages.emplace_back(request.options.SerializeAsString());
         break;
-      case odin::DirectionsOptions::trace_attributes:
-      case odin::DirectionsOptions::trace_route:
+      case DirectionsOptions::trace_attributes:
+      case DirectionsOptions::trace_route:
         trace(request);
         result.messages.emplace_back(request.options.SerializeAsString());
         break;
-      case odin::DirectionsOptions::height:
+      case DirectionsOptions::height:
         result = to_response_json(height(request), info, request);
         break;
-      case odin::DirectionsOptions::transit_available:
+      case DirectionsOptions::transit_available:
         result = to_response_json(transit_available(request), info, request);
         break;
       default:

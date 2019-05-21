@@ -17,7 +17,6 @@
 using namespace valhalla;
 using namespace valhalla::baldr;
 using namespace valhalla::sif;
-using namespace valhalla::odin;
 using namespace valhalla::thor;
 
 namespace {
@@ -46,7 +45,7 @@ namespace thor {
 /*
  * The trace_route action takes a GPS trace and turns it into a route result.
  */
-odin::TripLeg thor_worker_t::trace_route(valhalla_request_t& request) {
+TripLeg thor_worker_t::trace_route(valhalla_request_t& request) {
 
   // Parse request
   parse_locations(request);
@@ -54,13 +53,13 @@ odin::TripLeg thor_worker_t::trace_route(valhalla_request_t& request) {
   parse_measurements(request);
 
   // Initialize the controller
-  odin::TripLeg trip_path;
+  TripLeg trip_path;
   AttributesController controller;
 
   switch (request.options.shape_match()) {
     // If the exact points from a prior route that was run against the Valhalla road network,
     // then we can traverse the exact shape to form a path by using edge-walking algorithm
-    case odin::ShapeMatch::edge_walk:
+    case ShapeMatch::edge_walk:
       try {
         trip_path = route_match(request, controller);
         if (trip_path.node().size() == 0) {
@@ -68,14 +67,14 @@ odin::TripLeg thor_worker_t::trace_route(valhalla_request_t& request) {
         }
       } catch (...) {
         throw valhalla_exception_t{
-            443, odin::ShapeMatch_Name(request.options.shape_match()) +
+            443, ShapeMatch_Name(request.options.shape_match()) +
                      " algorithm failed to find exact route match.  Try using "
                      "shape_match:'walk_or_snap' to fallback to map-matching algorithm"};
       }
       break;
     // If non-exact shape points are used, then we need to correct this shape by sending them
     // through the map-matching algorithm to snap the points to the correct shape
-    case odin::ShapeMatch::map_snap:
+    case ShapeMatch::map_snap:
       try {
         auto map_match_results = map_match(request, controller);
         if (!map_match_results.empty()) {
@@ -87,10 +86,10 @@ odin::TripLeg thor_worker_t::trace_route(valhalla_request_t& request) {
     // then we want to fallback to try and use meili map matching to match to local route
     // network. No shortcuts are used and detailed information at every intersection becomes
     // available.
-    case odin::ShapeMatch::walk_or_snap:
+    case ShapeMatch::walk_or_snap:
       trip_path = route_match(request, controller);
       if (trip_path.node().size() == 0) {
-        LOG_WARN(odin::ShapeMatch_Name(request.options.shape_match()) +
+        LOG_WARN(ShapeMatch_Name(request.options.shape_match()) +
                  " algorithm failed to find exact route match; Falling back to map_match...");
         try {
           auto map_match_results = map_match(request, controller);
@@ -116,9 +115,9 @@ odin::TripLeg thor_worker_t::trace_route(valhalla_request_t& request) {
  * form the list of edges. It will return no nodes if path not found.
  *
  */
-odin::TripLeg thor_worker_t::route_match(valhalla_request_t& request,
-                                         const AttributesController& controller) {
-  odin::TripLeg trip_path;
+TripLeg thor_worker_t::route_match(valhalla_request_t& request,
+                                   const AttributesController& controller) {
+  TripLeg trip_path;
   std::vector<PathInfo> path_infos;
 
   // TODO - make sure the trace has timestamps..
@@ -129,7 +128,7 @@ odin::TripLeg thor_worker_t::route_match(valhalla_request_t& request,
     trip_path = thor::TripLegBuilder::Build(controller, *reader, mode_costing, path_infos,
                                             *request.options.mutable_locations()->begin(),
                                             *request.options.mutable_locations()->rbegin(),
-                                            std::list<odin::Location>{}, interrupt);
+                                            std::list<valhalla::Location>{}, interrupt);
   }
 
   return trip_path;
@@ -139,12 +138,11 @@ odin::TripLeg thor_worker_t::route_match(valhalla_request_t& request,
 // PathInfo is primarily a list of edge Ids but it also include elapsed time to the end
 // of each edge. We will need to use the existing costing method to form the elapsed time
 // the path. We will start with just using edge costs and will add transition costs.
-std::vector<std::tuple<float, float, std::vector<thor::MatchResult>, odin::TripLeg>>
+std::vector<std::tuple<float, float, std::vector<thor::MatchResult>, TripLeg>>
 thor_worker_t::map_match(valhalla_request_t& request,
                          const AttributesController& controller,
                          uint32_t best_paths) {
-  std::vector<std::tuple<float, float, std::vector<thor::MatchResult>, odin::TripLeg>>
-      map_match_results;
+  std::vector<std::tuple<float, float, std::vector<thor::MatchResult>, TripLeg>> map_match_results;
 
   // Call Meili for map matching to get a collection of Location Edges
   matcher->set_interrupt(interrupt);
@@ -159,7 +157,7 @@ thor_worker_t::map_match(valhalla_request_t& request,
     const auto& match_results = result.results;
     const auto& edge_segments = result.segments;
     std::vector<thor::MatchResult> enhanced_match_results;
-    odin::TripLeg trip_path;
+    TripLeg trip_path;
     std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>>
         route_discontinuities;
 
@@ -171,15 +169,14 @@ thor_worker_t::map_match(valhalla_request_t& request,
 
     // Throw exception if not trace attributes action and disconnected path.
     // TODO - perhaps also throw exception if use_timestamps and disconnected path?
-    if (request.options.action() == odin::DirectionsOptions::trace_route &&
-        disconnected_edges.size()) {
+    if (request.options.action() == DirectionsOptions::trace_route && disconnected_edges.size()) {
       throw valhalla_exception_t{442};
     };
 
     // OSRM map matching format has both the match points and the route, fill out the match points
     // here Note that we only support trace_route as OSRM format so best_paths == 1
-    if (request.options.action() == odin::DirectionsOptions::trace_route &&
-        request.options.format() == odin::DirectionsOptions::osrm) {
+    if (request.options.action() == DirectionsOptions::trace_route &&
+        request.options.format() == DirectionsOptions::osrm) {
       const GraphTile* tile = nullptr;
       for (int i = 0; i < match_results.size(); ++i) {
         // Get the match
@@ -209,7 +206,7 @@ thor_worker_t::map_match(valhalla_request_t& request,
     }
 
     // Associate match points to edges, if enabled
-    if (request.options.action() == odin::DirectionsOptions::trace_attributes &&
+    if (request.options.action() == DirectionsOptions::trace_attributes &&
         controller.category_attribute_enabled(kMatchedCategory)) {
       // Populate for matched points so we have 1:1 with trace points
       for (const auto& match_result : match_results) {
@@ -395,12 +392,12 @@ thor_worker_t::map_match(valhalla_request_t& request,
 
     if ((first_result_with_state != match_results.end()) &&
         (last_result_with_state != match_results.rend())) {
-      odin::Location origin;
+      valhalla::Location origin;
       PathLocation::toPBF(matcher->state_container()
                               .state(first_result_with_state->stateid)
                               .candidate(),
                           &origin, *reader);
-      odin::Location destination;
+      valhalla::Location destination;
       PathLocation::toPBF(matcher->state_container()
                               .state(last_result_with_state->stateid)
                               .candidate(),
@@ -452,7 +449,7 @@ thor_worker_t::map_match(valhalla_request_t& request,
       // Form the trip path based on mode costing, origin, destination, and path edges
       trip_path =
           thor::TripLegBuilder::Build(controller, matcher->graphreader(), mode_costing, path_edges,
-                                      origin, destination, std::list<odin::Location>{}, interrupt,
+                                      origin, destination, std::list<valhalla::Location>{}, interrupt,
                                       &route_discontinuities);
     } else {
       throw valhalla_exception_t{442};

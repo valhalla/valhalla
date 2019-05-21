@@ -159,65 +159,65 @@ OSRM output is described in: http://project-osrm.org/docs/v5.5.1/api/
 
 /**********OLD OSRM CODE - delete
     const std::unordered_map<int, std::string> maneuver_type = {
-        { static_cast<int>(valhalla::odin::DirectionsLeg_Maneuver_Type_kNone),             "0"
-},//NoTurn = 0, { static_cast<int>(valhalla::odin::DirectionsLeg_Maneuver_Type_kContinue), "1"
-},//GoStraight, { static_cast<int>(valhalla::odin::DirectionsLeg_Maneuver_Type_kBecomes), "1"
-},//GoStraight, { static_cast<int>(valhalla::odin::DirectionsLeg_Maneuver_Type_kRampStraight), "1"
-},//GoStraight, { static_cast<int>(valhalla::odin::DirectionsLeg_Maneuver_Type_kStayStraight), "1"
-},//GoStraight, { static_cast<int>(valhalla::odin::DirectionsLeg_Maneuver_Type_kMerge), "1"
-},//GoStraight, { static_cast<int>(valhalla::odin::DirectionsLeg_Maneuver_Type_kFerryEnter), "1"
-},//GoStraight, { static_cast<int>(valhalla::odin::DirectionsLeg_Maneuver_Type_kFerryExit), "1"
-},//GoStraight, { static_cast<int>(valhalla::odin::DirectionsLeg_Maneuver_Type_kSlightRight), "2"
-},//TurnSlightRight, { static_cast<int>(valhalla::odin::DirectionsLeg_Maneuver_Type_kRight), "3"
-},//TurnRight, { static_cast<int>(valhalla::odin::DirectionsLeg_Maneuver_Type_kRampRight), "3"
-},//TurnRight, { static_cast<int>(valhalla::odin::DirectionsLeg_Maneuver_Type_kExitRight), "3"
-},//TurnRight, { static_cast<int>(valhalla::odin::DirectionsLeg_Maneuver_Type_kStayRight), "3"
-},//TurnRight, { static_cast<int>(valhalla::odin::DirectionsLeg_Maneuver_Type_kSharpRight), "4"
-},//TurnSharpRight, { static_cast<int>(valhalla::odin::DirectionsLeg_Maneuver_Type_kUturnLeft), "5"
-},//UTurn, { static_cast<int>(valhalla::odin::DirectionsLeg_Maneuver_Type_kUturnRight),       "5"
-},//UTurn, { static_cast<int>(valhalla::odin::DirectionsLeg_Maneuver_Type_kSharpLeft),        "6"
-},//TurnSharpLeft, { static_cast<int>(valhalla::odin::DirectionsLeg_Maneuver_Type_kLeft), "7"
-},//TurnLeft, { static_cast<int>(valhalla::odin::DirectionsLeg_Maneuver_Type_kRampLeft), "7"
-},//TurnLeft, { static_cast<int>(valhalla::odin::DirectionsLeg_Maneuver_Type_kExitLeft), "7"
-},//TurnLeft, { static_cast<int>(valhalla::odin::DirectionsLeg_Maneuver_Type_kStayLeft), "7"
-},//TurnLeft, { static_cast<int>(valhalla::odin::DirectionsLeg_Maneuver_Type_kSlightLeft), "8"
+        { static_cast<int>(valhalla::DirectionsLeg_Maneuver_Type_kNone),             "0"
+},//NoTurn = 0, { static_cast<int>(valhalla::DirectionsLeg_Maneuver_Type_kContinue), "1"
+},//GoStraight, { static_cast<int>(valhalla::DirectionsLeg_Maneuver_Type_kBecomes), "1"
+},//GoStraight, { static_cast<int>(valhalla::DirectionsLeg_Maneuver_Type_kRampStraight), "1"
+},//GoStraight, { static_cast<int>(valhalla::DirectionsLeg_Maneuver_Type_kStayStraight), "1"
+},//GoStraight, { static_cast<int>(valhalla::DirectionsLeg_Maneuver_Type_kMerge), "1"
+},//GoStraight, { static_cast<int>(valhalla::DirectionsLeg_Maneuver_Type_kFerryEnter), "1"
+},//GoStraight, { static_cast<int>(valhalla::DirectionsLeg_Maneuver_Type_kFerryExit), "1"
+},//GoStraight, { static_cast<int>(valhalla::DirectionsLeg_Maneuver_Type_kSlightRight), "2"
+},//TurnSlightRight, { static_cast<int>(valhalla::DirectionsLeg_Maneuver_Type_kRight), "3"
+},//TurnRight, { static_cast<int>(valhalla::DirectionsLeg_Maneuver_Type_kRampRight), "3"
+},//TurnRight, { static_cast<int>(valhalla::DirectionsLeg_Maneuver_Type_kExitRight), "3"
+},//TurnRight, { static_cast<int>(valhalla::DirectionsLeg_Maneuver_Type_kStayRight), "3"
+},//TurnRight, { static_cast<int>(valhalla::DirectionsLeg_Maneuver_Type_kSharpRight), "4"
+},//TurnSharpRight, { static_cast<int>(valhalla::DirectionsLeg_Maneuver_Type_kUturnLeft), "5"
+},//UTurn, { static_cast<int>(valhalla::DirectionsLeg_Maneuver_Type_kUturnRight),       "5"
+},//UTurn, { static_cast<int>(valhalla::DirectionsLeg_Maneuver_Type_kSharpLeft),        "6"
+},//TurnSharpLeft, { static_cast<int>(valhalla::DirectionsLeg_Maneuver_Type_kLeft), "7"
+},//TurnLeft, { static_cast<int>(valhalla::DirectionsLeg_Maneuver_Type_kRampLeft), "7"
+},//TurnLeft, { static_cast<int>(valhalla::DirectionsLeg_Maneuver_Type_kExitLeft), "7"
+},//TurnLeft, { static_cast<int>(valhalla::DirectionsLeg_Maneuver_Type_kStayLeft), "7"
+},//TurnLeft, { static_cast<int>(valhalla::DirectionsLeg_Maneuver_Type_kSlightLeft), "8"
 },//TurnSlightLeft,
-        //{ static_cast<int>(valhalla::odin::DirectionsLeg_Maneuver_Type_k),               "9"
+        //{ static_cast<int>(valhalla::DirectionsLeg_Maneuver_Type_k),               "9"
 },//ReachViaLocation, {
-static_cast<int>(valhalla::odin::DirectionsLeg_Maneuver_Type_kRoundaboutEnter),  "11"
+static_cast<int>(valhalla::DirectionsLeg_Maneuver_Type_kRoundaboutEnter),  "11"
 },//EnterRoundAbout, {
-static_cast<int>(valhalla::odin::DirectionsLeg_Maneuver_Type_kRoundaboutExit),   "12"
+static_cast<int>(valhalla::DirectionsLeg_Maneuver_Type_kRoundaboutExit),   "12"
 },//LeaveRoundAbout,
-        //{ static_cast<int>(valhalla::odin::DirectionsLeg_Maneuver_Type_k),               "13"
-},//StayOnRoundAbout, { static_cast<int>(valhalla::odin::DirectionsLeg_Maneuver_Type_kStart), "14"
+        //{ static_cast<int>(valhalla::DirectionsLeg_Maneuver_Type_k),               "13"
+},//StayOnRoundAbout, { static_cast<int>(valhalla::DirectionsLeg_Maneuver_Type_kStart), "14"
 },//StartAtEndOfStreet, {
-static_cast<int>(valhalla::odin::DirectionsLeg_Maneuver_Type_kStartRight),       "14"
-},//StartAtEndOfStreet, { static_cast<int>(valhalla::odin::DirectionsLeg_Maneuver_Type_kStartLeft),
+static_cast<int>(valhalla::DirectionsLeg_Maneuver_Type_kStartRight),       "14"
+},//StartAtEndOfStreet, { static_cast<int>(valhalla::DirectionsLeg_Maneuver_Type_kStartLeft),
 "14" },//StartAtEndOfStreet, {
-static_cast<int>(valhalla::odin::DirectionsLeg_Maneuver_Type_kDestination),      "15"
+static_cast<int>(valhalla::DirectionsLeg_Maneuver_Type_kDestination),      "15"
 },//ReachedYourDestination, {
-static_cast<int>(valhalla::odin::DirectionsLeg_Maneuver_Type_kDestinationRight), "15"
+static_cast<int>(valhalla::DirectionsLeg_Maneuver_Type_kDestinationRight), "15"
 },//ReachedYourDestination, {
-static_cast<int>(valhalla::odin::DirectionsLeg_Maneuver_Type_kDestinationLeft),  "15"
+static_cast<int>(valhalla::DirectionsLeg_Maneuver_Type_kDestinationLeft),  "15"
 },//ReachedYourDestination,
-        //{ static_cast<int>valhalla::odin::DirectionsLeg_Maneuver_Type_k),                "16"
+        //{ static_cast<int>valhalla::DirectionsLeg_Maneuver_Type_k),                "16"
 },//EnterAgainstAllowedDirection,
-        //{ static_cast<int>valhalla::odin::DirectionsLeg_Maneuver_Type_k),                "17"
+        //{ static_cast<int>valhalla::DirectionsLeg_Maneuver_Type_k),                "17"
 },//LeaveAgainstAllowedDirection
     };
 
     const std::unordered_map<int, std::string> cardinal_direction_string = {
-      { static_cast<int>(valhalla::odin::DirectionsLeg_Maneuver_CardinalDirection_kNorth),     "N"
-}, { static_cast<int>(valhalla::odin::DirectionsLeg_Maneuver_CardinalDirection_kNorthEast), "NE" },
-      { static_cast<int>(valhalla::odin::DirectionsLeg_Maneuver_CardinalDirection_kEast),      "E"
-}, { static_cast<int>(valhalla::odin::DirectionsLeg_Maneuver_CardinalDirection_kSouthEast), "SE" },
-      { static_cast<int>(valhalla::odin::DirectionsLeg_Maneuver_CardinalDirection_kSouth),     "S"
-}, { static_cast<int>(valhalla::odin::DirectionsLeg_Maneuver_CardinalDirection_kSouthWest), "SW" },
-      { static_cast<int>(valhalla::odin::DirectionsLeg_Maneuver_CardinalDirection_kWest),      "W"
-}, { static_cast<int>(valhalla::odin::DirectionsLeg_Maneuver_CardinalDirection_kNorthWest), "NW" }
+      { static_cast<int>(valhalla::DirectionsLeg_Maneuver_CardinalDirection_kNorth),     "N"
+}, { static_cast<int>(valhalla::DirectionsLeg_Maneuver_CardinalDirection_kNorthEast), "NE" },
+      { static_cast<int>(valhalla::DirectionsLeg_Maneuver_CardinalDirection_kEast),      "E"
+}, { static_cast<int>(valhalla::DirectionsLeg_Maneuver_CardinalDirection_kSouthEast), "SE" },
+      { static_cast<int>(valhalla::DirectionsLeg_Maneuver_CardinalDirection_kSouth),     "S"
+}, { static_cast<int>(valhalla::DirectionsLeg_Maneuver_CardinalDirection_kSouthWest), "SW" },
+      { static_cast<int>(valhalla::DirectionsLeg_Maneuver_CardinalDirection_kWest),      "W"
+}, { static_cast<int>(valhalla::DirectionsLeg_Maneuver_CardinalDirection_kNorthWest), "NW" }
     };
 
-    json::ArrayPtr route_instructions(const std::list<valhalla::odin::DirectionsLeg>& legs){
+    json::ArrayPtr route_instructions(const std::list<valhalla::DirectionsLeg>& legs){
       auto route_instructions = json::array({});
       for(const auto& leg : legs) {
         for(const auto& maneuver : leg.maneuver()) {
@@ -249,7 +249,7 @@ static_cast<int>(valhalla::odin::DirectionsLeg_Maneuver_Type_kDestinationLeft), 
 
 // Add OSRM route summary information: distance, duration
 void route_summary(json::MapPtr& route,
-                   const std::list<valhalla::odin::DirectionsLeg>& legs,
+                   const std::list<valhalla::DirectionsLeg>& legs,
                    bool imperial) {
   // Compute total distance and duration
   float duration = 0.0f;
@@ -272,10 +272,10 @@ void route_summary(json::MapPtr& route,
 }
 
 // Generate full shape of the route.
-std::string full_shape(const std::list<valhalla::odin::DirectionsLeg>& legs,
-                       const valhalla::odin::DirectionsOptions& directions_options) {
+std::string full_shape(const std::list<valhalla::DirectionsLeg>& legs,
+                       const valhalla::DirectionsOptions& directions_options) {
   // If just one leg and it we want polyline6 then we just return the encoded leg shape
-  if (legs.size() == 1 && directions_options.shape_format() == odin::polyline6) {
+  if (legs.size() == 1 && directions_options.shape_format() == polyline6) {
     return legs.front().shape();
   }
 
@@ -291,13 +291,13 @@ std::string full_shape(const std::list<valhalla::odin::DirectionsLeg>& legs,
     decoded.insert(decoded.end(), decoded.size() ? decoded_leg.begin() + 1 : decoded_leg.begin(),
                    decoded_leg.end());
   }
-  int precision = directions_options.shape_format() == odin::polyline6 ? 1e6 : 1e5;
+  int precision = directions_options.shape_format() == polyline6 ? 1e6 : 1e5;
   return midgard::encode(decoded, precision);
 }
 
 // Generate simplified shape of the route.
-std::string simplified_shape(const std::list<valhalla::odin::DirectionsLeg>& legs,
-                             const valhalla::odin::DirectionsOptions& directions_options) {
+std::string simplified_shape(const std::list<valhalla::DirectionsLeg>& legs,
+                             const valhalla::DirectionsOptions& directions_options) {
   Coordinate south_west(std::numeric_limits<int>::max(), std::numeric_limits<int>::max());
   Coordinate north_east(std::numeric_limits<int>::min(), std::numeric_limits<int>::min());
 
@@ -325,7 +325,7 @@ std::string simplified_shape(const std::list<valhalla::odin::DirectionsLeg>& leg
 
   const auto zoom_level = std::min(MAX_ZOOM, getFittedZoom(south_west, north_east));
   Polyline2<PointLL>::Generalize(full_shape, DOUGLAS_PEUCKER_THRESHOLDS[zoom_level], indices);
-  int precision = directions_options.shape_format() == odin::polyline6 ? 1e6 : 1e5;
+  int precision = directions_options.shape_format() == polyline6 ? 1e6 : 1e5;
 
   return midgard::encode(full_shape, precision);
 }
@@ -333,7 +333,7 @@ std::string simplified_shape(const std::list<valhalla::odin::DirectionsLeg>& leg
 // Serialize waypoints for optimized route. Note that OSRM retains the
 // original location order, and stores an index for the waypoint index in
 // the optimized sequence.
-json::ArrayPtr waypoints(const google::protobuf::RepeatedPtrField<odin::Location>& locs) {
+json::ArrayPtr waypoints(const google::protobuf::RepeatedPtrField<valhalla::Location>& locs) {
   // Create a vector of indexes.
   uint32_t i = 0;
   std::vector<uint32_t> indexes;
@@ -372,7 +372,7 @@ struct IntersectionEdges {
 };
 
 // Add intersections along a step/maneuver.
-json::ArrayPtr intersections(const valhalla::odin::DirectionsLeg::Maneuver& maneuver,
+json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
                              valhalla::odin::EnhancedTripLeg* etp,
                              const std::vector<PointLL>& shape,
                              uint32_t& count,
@@ -464,10 +464,10 @@ json::ArrayPtr intersections(const valhalla::odin::DirectionsLeg::Maneuver& mane
         classes.push_back("toll");
       }
       // TODO We might want to have more specific logic for ramp
-      if ((curr_edge->road_class() == odin::TripLeg_RoadClass_kMotorway) || curr_edge->IsRampUse()) {
+      if ((curr_edge->road_class() == TripLeg_RoadClass_kMotorway) || curr_edge->IsRampUse()) {
         classes.push_back("motorway");
       }
-      if (curr_edge->use() == odin::TripLeg::Use::TripLeg_Use_kFerryUse) {
+      if (curr_edge->use() == TripLeg::Use::TripLeg_Use_kFerryUse) {
         classes.push_back("ferry");
       }
 
@@ -492,7 +492,7 @@ json::ArrayPtr intersections(const valhalla::odin::DirectionsLeg::Maneuver& mane
 }
 
 // Add exits (exit numbers) along a step/maneuver.
-std::string exits(const valhalla::odin::DirectionsLeg_Maneuver_Sign& sign) {
+std::string exits(const valhalla::DirectionsLeg_Maneuver_Sign& sign) {
   // Iterate through the exit numbers
   std::string exits;
   for (const auto& number : sign.exit_numbers()) {
@@ -507,7 +507,7 @@ std::string exits(const valhalla::odin::DirectionsLeg_Maneuver_Sign& sign) {
 // Compile and return the refs of the specified list
 // TODO we could enhance by limiting results by using consecutive count
 std::string get_sign_element_refs(
-    const google::protobuf::RepeatedPtrField<::valhalla::odin::DirectionsLeg_Maneuver_SignElement>&
+    const google::protobuf::RepeatedPtrField<::valhalla::DirectionsLeg_Maneuver_SignElement>&
         sign_elements,
     const std::string& delimiter = kSignElementDelimiter) {
   std::string refs;
@@ -528,7 +528,7 @@ std::string get_sign_element_refs(
 // Compile and return the nonrefs of the specified list
 // TODO we could enhance by limiting results by using consecutive count
 std::string get_sign_element_nonrefs(
-    const google::protobuf::RepeatedPtrField<::valhalla::odin::DirectionsLeg_Maneuver_SignElement>&
+    const google::protobuf::RepeatedPtrField<::valhalla::DirectionsLeg_Maneuver_SignElement>&
         sign_elements,
     const std::string& delimiter = kSignElementDelimiter) {
   std::string nonrefs;
@@ -553,7 +553,7 @@ std::string get_sign_element_nonrefs(
 //   3. <ref>: <non-ref>
 // Each <ref> or <non-ref> could have one or more items and will separated with ", "
 //   for example: "I 99, US 220, US 30: Altoona, Johnstown"
-std::string destinations(const valhalla::odin::DirectionsLeg_Maneuver_Sign& sign) {
+std::string destinations(const valhalla::DirectionsLeg_Maneuver_Sign& sign) {
 
   /////////////////////////////////////////////////////////////////////////////
   // Process the refs
@@ -636,55 +636,55 @@ std::string turn_modifier(const uint32_t in_brg, const uint32_t out_brg) {
 
 // Get the turn modifier based on the maneuver type
 // or if needed, the incoming edge bearing and outgoing edge bearing.
-std::string turn_modifier(const valhalla::odin::DirectionsLeg::Maneuver& maneuver,
+std::string turn_modifier(const valhalla::DirectionsLeg::Maneuver& maneuver,
                           const uint32_t in_brg,
                           const uint32_t out_brg,
                           const bool arrive_maneuver) {
   switch (maneuver.type()) {
-    case valhalla::odin::DirectionsLeg_Maneuver_Type_kStart:
-    case valhalla::odin::DirectionsLeg_Maneuver_Type_kDestination:
+    case valhalla::DirectionsLeg_Maneuver_Type_kStart:
+    case valhalla::DirectionsLeg_Maneuver_Type_kDestination:
       return "";
-    case valhalla::odin::DirectionsLeg_Maneuver_Type_kSlightRight:
-    case valhalla::odin::DirectionsLeg_Maneuver_Type_kStayRight:
-    case valhalla::odin::DirectionsLeg_Maneuver_Type_kExitRight:
+    case valhalla::DirectionsLeg_Maneuver_Type_kSlightRight:
+    case valhalla::DirectionsLeg_Maneuver_Type_kStayRight:
+    case valhalla::DirectionsLeg_Maneuver_Type_kExitRight:
       return "slight right";
-    case valhalla::odin::DirectionsLeg_Maneuver_Type_kRight:
-    case valhalla::odin::DirectionsLeg_Maneuver_Type_kStartRight:
-    case valhalla::odin::DirectionsLeg_Maneuver_Type_kDestinationRight:
+    case valhalla::DirectionsLeg_Maneuver_Type_kRight:
+    case valhalla::DirectionsLeg_Maneuver_Type_kStartRight:
+    case valhalla::DirectionsLeg_Maneuver_Type_kDestinationRight:
       return "right";
-    case valhalla::odin::DirectionsLeg_Maneuver_Type_kSharpRight:
+    case valhalla::DirectionsLeg_Maneuver_Type_kSharpRight:
       return "sharp right";
-    case valhalla::odin::DirectionsLeg_Maneuver_Type_kUturnRight:
-    case valhalla::odin::DirectionsLeg_Maneuver_Type_kUturnLeft:
+    case valhalla::DirectionsLeg_Maneuver_Type_kUturnRight:
+    case valhalla::DirectionsLeg_Maneuver_Type_kUturnLeft:
       // [TODO #1789] route ending in uturn should not set modifier=uturn
       if (arrive_maneuver)
         return "";
       return "uturn";
-    case valhalla::odin::DirectionsLeg_Maneuver_Type_kSharpLeft:
+    case valhalla::DirectionsLeg_Maneuver_Type_kSharpLeft:
       return "sharp left";
-    case valhalla::odin::DirectionsLeg_Maneuver_Type_kLeft:
-    case valhalla::odin::DirectionsLeg_Maneuver_Type_kStartLeft:
-    case valhalla::odin::DirectionsLeg_Maneuver_Type_kDestinationLeft:
+    case valhalla::DirectionsLeg_Maneuver_Type_kLeft:
+    case valhalla::DirectionsLeg_Maneuver_Type_kStartLeft:
+    case valhalla::DirectionsLeg_Maneuver_Type_kDestinationLeft:
       return "left";
-    case valhalla::odin::DirectionsLeg_Maneuver_Type_kSlightLeft:
-    case valhalla::odin::DirectionsLeg_Maneuver_Type_kExitLeft:
-    case valhalla::odin::DirectionsLeg_Maneuver_Type_kStayLeft:
+    case valhalla::DirectionsLeg_Maneuver_Type_kSlightLeft:
+    case valhalla::DirectionsLeg_Maneuver_Type_kExitLeft:
+    case valhalla::DirectionsLeg_Maneuver_Type_kStayLeft:
       return "slight left";
-    case valhalla::odin::DirectionsLeg_Maneuver_Type_kRampRight:
+    case valhalla::DirectionsLeg_Maneuver_Type_kRampRight:
       if (Turn::GetType(GetTurnDegree(in_brg, out_brg)) == baldr::Turn::Type::kRight)
         return "right";
       else
         return "slight right";
-    case valhalla::odin::DirectionsLeg_Maneuver_Type_kRampLeft:
+    case valhalla::DirectionsLeg_Maneuver_Type_kRampLeft:
       if (Turn::GetType(GetTurnDegree(in_brg, out_brg)) == baldr::Turn::Type::kLeft)
         return "left";
       else
         return "slight left";
-    case valhalla::odin::DirectionsLeg_Maneuver_Type_kMerge:
-    case valhalla::odin::DirectionsLeg_Maneuver_Type_kRoundaboutEnter:
-    case valhalla::odin::DirectionsLeg_Maneuver_Type_kRoundaboutExit:
-    case valhalla::odin::DirectionsLeg_Maneuver_Type_kFerryEnter:
-    case valhalla::odin::DirectionsLeg_Maneuver_Type_kFerryExit:
+    case valhalla::DirectionsLeg_Maneuver_Type_kMerge:
+    case valhalla::DirectionsLeg_Maneuver_Type_kRoundaboutEnter:
+    case valhalla::DirectionsLeg_Maneuver_Type_kRoundaboutExit:
+    case valhalla::DirectionsLeg_Maneuver_Type_kFerryEnter:
+    case valhalla::DirectionsLeg_Maneuver_Type_kFerryExit:
       return turn_modifier(in_brg, out_brg);
     default:
       return "straight";
@@ -693,7 +693,7 @@ std::string turn_modifier(const valhalla::odin::DirectionsLeg::Maneuver& maneuve
 
 // Ramp cases - off ramp transitions from a motorway.
 // On ramp ends in a motorway.
-std::string ramp_type(const valhalla::odin::DirectionsLeg::Maneuver& maneuver) {
+std::string ramp_type(const valhalla::DirectionsLeg::Maneuver& maneuver) {
   if ((maneuver.type() == DirectionsLeg_Maneuver_Type_kExitRight) ||
       (maneuver.type() == DirectionsLeg_Maneuver_Type_kExitLeft)) {
     return "off ramp";
@@ -713,7 +713,7 @@ std::string ramp_type(const valhalla::odin::DirectionsLeg::Maneuver& maneuver) {
 }
 
 // Populate the OSRM maneuver record within a step.
-json::MapPtr osrm_maneuver(const valhalla::odin::DirectionsLeg::Maneuver& maneuver,
+json::MapPtr osrm_maneuver(const valhalla::DirectionsLeg::Maneuver& maneuver,
                            valhalla::odin::EnhancedTripLeg* etp,
                            const PointLL& man_ll,
                            const bool depart_maneuver,
@@ -755,7 +755,7 @@ json::MapPtr osrm_maneuver(const valhalla::odin::DirectionsLeg::Maneuver& maneuv
     maneuver_type = "arrive";
   } else if (mode != prev_mode) {
     maneuver_type = "notification";
-  } else if (maneuver.type() == odin::DirectionsLeg_Maneuver_Type_kRoundaboutEnter) {
+  } else if (maneuver.type() == DirectionsLeg_Maneuver_Type_kRoundaboutEnter) {
     if (rotary) {
       maneuver_type = "rotary";
     } else {
@@ -765,7 +765,7 @@ json::MapPtr osrm_maneuver(const valhalla::odin::DirectionsLeg::Maneuver& maneuv
     if (maneuver.has_roundabout_exit_count()) {
       osrm_man->emplace("exit", static_cast<uint64_t>(maneuver.roundabout_exit_count()));
     }
-  } else if (maneuver.type() == odin::DirectionsLeg_Maneuver_Type_kRoundaboutExit) {
+  } else if (maneuver.type() == DirectionsLeg_Maneuver_Type_kRoundaboutExit) {
     if (prev_rotary) {
       maneuver_type = "exit rotary";
     } else {
@@ -775,8 +775,8 @@ json::MapPtr osrm_maneuver(const valhalla::odin::DirectionsLeg::Maneuver& maneuv
     // Special cases
     auto prev_edge = etp->GetPrevEdge(idx);
     auto curr_edge = etp->GetCurrEdge(idx);
-    bool new_name = maneuver.type() == odin::DirectionsLeg_Maneuver_Type_kContinue ||
-                    maneuver.type() == odin::DirectionsLeg_Maneuver_Type_kBecomes;
+    bool new_name = maneuver.type() == DirectionsLeg_Maneuver_Type_kContinue ||
+                    maneuver.type() == DirectionsLeg_Maneuver_Type_kBecomes;
     bool ramp = ((maneuver.type() == DirectionsLeg_Maneuver_Type_kRampStraight) ||
                  (maneuver.type() == DirectionsLeg_Maneuver_Type_kRampRight) ||
                  (maneuver.type() == DirectionsLeg_Maneuver_Type_kRampLeft) ||
@@ -785,7 +785,7 @@ json::MapPtr osrm_maneuver(const valhalla::odin::DirectionsLeg::Maneuver& maneuv
     bool fork = ((maneuver.type() == DirectionsLeg_Maneuver_Type_kStayStraight) ||
                  (maneuver.type() == DirectionsLeg_Maneuver_Type_kStayRight) ||
                  (maneuver.type() == DirectionsLeg_Maneuver_Type_kStayLeft));
-    if (maneuver.type() == odin::DirectionsLeg_Maneuver_Type_kMerge) {
+    if (maneuver.type() == DirectionsLeg_Maneuver_Type_kMerge) {
       maneuver_type = "merge";
     } else if (fork) {
       maneuver_type = "fork";
@@ -807,7 +807,7 @@ json::MapPtr osrm_maneuver(const valhalla::odin::DirectionsLeg::Maneuver& maneuv
       // onto a new road name, and have passed at least 1 intersection to
       // get there.
       bool road_ends =
-          (prev_intersection_count > 1 && prev_edge->use() != odin::TripLeg_Use_kRampUse &&
+          (prev_intersection_count > 1 && prev_edge->use() != TripLeg_Use_kRampUse &&
            etp->node(idx).intersecting_edge_size() == 1);
       if (road_ends) {
         // TODO what about a doubly digitized road ending at a T (would be
@@ -861,20 +861,20 @@ json::MapPtr osrm_maneuver(const valhalla::odin::DirectionsLeg::Maneuver& maneuv
 std::string maneuver_geometry(const uint32_t begin_idx,
                               const uint32_t end_idx,
                               const std::vector<PointLL>& shape,
-                              const valhalla::odin::DirectionsOptions& directions_options) {
+                              const valhalla::DirectionsOptions& directions_options) {
   // Must add one to the end range since maneuver end shape index is exclusive
   std::vector<PointLL> maneuver_shape(shape.begin() + begin_idx, shape.begin() + end_idx + 1);
-  int precision = directions_options.shape_format() == odin::polyline6 ? 1e6 : 1e5;
+  int precision = directions_options.shape_format() == polyline6 ? 1e6 : 1e5;
   return midgard::encode(maneuver_shape, precision);
 }
 
 // Get the mode
-std::string get_mode(const valhalla::odin::DirectionsLeg::Maneuver& maneuver,
+std::string get_mode(const valhalla::DirectionsLeg::Maneuver& maneuver,
                      const bool arrive_maneuver,
                      valhalla::odin::EnhancedTripLeg* etp) {
   // Return ferry if not last maneuver and the edge use is Ferry
   if (!arrive_maneuver && (etp->GetCurrEdge(maneuver.begin_path_index())->use() ==
-                           odin::TripLeg::Use::TripLeg_Use_kFerryUse)) {
+                           TripLeg::Use::TripLeg_Use_kFerryUse)) {
     return "ferry";
   }
 
@@ -897,11 +897,11 @@ std::string get_mode(const valhalla::odin::DirectionsLeg::Maneuver& maneuver,
 
 // Get the names and ref names
 std::pair<std::string, std::string>
-names_and_refs(const valhalla::odin::DirectionsLeg::Maneuver& maneuver) {
+names_and_refs(const valhalla::DirectionsLeg::Maneuver& maneuver) {
   std::string names, refs;
 
   // Roundabouts need to use the roundabout_exit_street_names
-  auto& street_names = (maneuver.type() == odin::DirectionsLeg_Maneuver_Type_kRoundaboutEnter)
+  auto& street_names = (maneuver.type() == DirectionsLeg_Maneuver_Type_kRoundaboutEnter)
                            ? maneuver.roundabout_exit_street_names()
                            : maneuver.street_name();
   for (const auto& name : street_names) {
@@ -926,7 +926,7 @@ names_and_refs(const valhalla::odin::DirectionsLeg::Maneuver& maneuver) {
 // In the future we shall use the percent of name distance as compared to the total distance
 // to determine how many named segments to display.
 // Also, might need to combine some similar named segments
-std::string summarize_leg(std::list<valhalla::odin::DirectionsLeg>::const_iterator leg) {
+std::string summarize_leg(std::list<valhalla::DirectionsLeg>::const_iterator leg) {
   // Create a map of maneuver names to index,distance pairs
   std::unordered_map<std::string, std::pair<uint32_t, float>> maneuver_summary_map;
   uint32_t maneuver_index = 0;
@@ -974,10 +974,10 @@ std::string summarize_leg(std::list<valhalla::odin::DirectionsLeg>::const_iterat
 }
 
 // Serialize each leg
-json::ArrayPtr serialize_legs(const std::list<valhalla::odin::DirectionsLeg>& legs,
-                              std::list<valhalla::odin::TripLeg>& path_legs,
+json::ArrayPtr serialize_legs(const std::list<valhalla::DirectionsLeg>& legs,
+                              std::list<valhalla::TripLeg>& path_legs,
                               bool imperial,
-                              const valhalla::odin::DirectionsOptions& directions_options) {
+                              const valhalla::DirectionsOptions& directions_options) {
   auto output_legs = json::array({});
 
   // Verify that the path_legs list is the same size as the legs list
@@ -1103,9 +1103,9 @@ json::ArrayPtr serialize_legs(const std::list<valhalla::odin::DirectionsLeg>& le
 //     directions options
 //     TripLeg protocol buffer
 //     DirectionsLeg protocol buffer
-std::string serialize(const valhalla::odin::DirectionsOptions& directions_options,
-                      std::list<valhalla::odin::TripLeg>& path_legs,
-                      const std::list<valhalla::odin::DirectionsLeg>& legs) {
+std::string serialize(const valhalla::DirectionsOptions& directions_options,
+                      std::list<valhalla::TripLeg>& path_legs,
+                      const std::list<valhalla::DirectionsLeg>& legs) {
   auto json = json::map({});
 
   // If here then the route succeeded. Set status code to OK and serialize
@@ -1113,13 +1113,13 @@ std::string serialize(const valhalla::odin::DirectionsOptions& directions_option
   std::string status("Ok");
   json->emplace("code", status);
   switch (directions_options.action()) {
-    case valhalla::odin::DirectionsOptions::trace_route:
+    case valhalla::DirectionsOptions::trace_route:
       json->emplace("tracepoints", osrm::waypoints(directions_options.locations(), true));
       break;
-    case valhalla::odin::DirectionsOptions::route:
+    case valhalla::DirectionsOptions::route:
       json->emplace("waypoints", osrm::waypoints(directions_options.locations()));
       break;
-    case valhalla::odin::DirectionsOptions::optimized_route:
+    case valhalla::DirectionsOptions::optimized_route:
       json->emplace("waypoints", waypoints(directions_options.locations()));
       break;
   }
@@ -1157,7 +1157,7 @@ std::string serialize(const valhalla::odin::DirectionsOptions& directions_option
   }
 
   // Routes are called matchings in osrm map matching mode
-  json->emplace(directions_options.action() == valhalla::odin::DirectionsOptions::trace_route
+  json->emplace(directions_options.action() == valhalla::DirectionsOptions::trace_route
                     ? "matchings"
                     : "routes",
                 routes);

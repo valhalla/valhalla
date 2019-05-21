@@ -29,13 +29,13 @@ std::string thor_worker_t::matrix(valhalla_request_t& request) {
 
   if (!request.options.do_not_track()) {
     valhalla::midgard::logging::Log("matrix_type::" +
-                                        odin::DirectionsOptions_Action_Name(request.options.action()),
+                                        DirectionsOptions_Action_Name(request.options.action()),
                                     " [ANALYTICS] ");
   }
 
   // Parse out units; if none specified, use kilometers
   double distance_scale = kKmPerMeter;
-  if (request.options.units() == odin::DirectionsOptions::miles) {
+  if (request.options.units() == DirectionsOptions::miles) {
     distance_scale = kMilePerMeter;
   }
 
