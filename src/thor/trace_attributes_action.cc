@@ -95,9 +95,13 @@ std::string thor_worker_t::trace_attributes(valhalla_request_t& request) {
     case odin::ShapeMatch::edge_walk:
       try {
         trip_paths = route_match(request, controller);
-        if (trip_paths.front().node().size() == 0) {
+        if (trip_paths.empty())
           throw std::exception{};
-        };
+        for (const auto& tp : trip_paths) {
+          if (tp.node().empty()) {
+            throw std::exception{};
+          };
+        }
         map_match_results.emplace_back(1.0f, 0.0f, std::vector<thor::MatchResult>{}, trip_paths);
       } catch (const std::exception& e) {
         throw valhalla_exception_t{
@@ -123,7 +127,14 @@ std::string thor_worker_t::trace_attributes(valhalla_request_t& request) {
     // available.
     case odin::ShapeMatch::walk_or_snap:
       trip_paths = route_match(request, controller);
-      if (trip_paths.front().node().size() == 0) {
+      bool empty_leg = false;
+      for (const auto& tp : trip_paths) {
+        if (tp.node().empty()) {
+          empty_leg = true;
+          break;
+        };
+      }
+      if (empty_leg || trip_paths.empty()) {
         LOG_WARN(odin::ShapeMatch_Name(request.options.shape_match()) +
                  " algorithm failed to find exact route match; Falling back to map_match...");
         try {

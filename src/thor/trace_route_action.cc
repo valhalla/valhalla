@@ -93,8 +93,14 @@ std::list<odin::TripLeg> thor_worker_t::trace_route(valhalla_request_t& request)
     // available.
     case odin::ShapeMatch::walk_or_snap:
       trip_paths = route_match(request, controller);
-      // TODO check each trippath?
-      if (trip_paths.front().node().size() == 0) {
+      bool empty_leg = false;
+      for (const auto& tp : trip_paths) {
+        if (tp.node().empty()) {
+          empty_leg = true;
+          break;
+        };
+      }
+      if (empty_leg || trip_paths.empty()) {
         LOG_WARN(odin::ShapeMatch_Name(request.options.shape_match()) +
                  " algorithm failed to find exact route match; Falling back to map_match...");
         try {
