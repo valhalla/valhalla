@@ -21,7 +21,7 @@ if  ! which spatialite >/dev/null; then
 fi
 
 rm -rf dist
-rm -f ./timezones.shapefile.zip
+rm -f ./timezones-with-oceans.shapefile.zip
 
 config=$1
 if [ ! -f $config ]; then
