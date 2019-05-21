@@ -154,10 +154,11 @@ std::list<odin::TripLeg> thor_worker_t::route_match(valhalla_request_t& request,
   if (RouteMatcher::FormPath(mode_costing, mode, *reader, trace, use_timestamps,
                              request.options.locations(), path_infos)) {
     // Form the trip path based on mode costing, origin, destination, and path edges
-    trip_path = thor::TripLegBuilder::Build(controller, *reader, mode_costing, path_infos,
-                                            *request.options.mutable_locations()->begin(),
-                                            *request.options.mutable_locations()->rbegin(),
-                                            std::list<odin::Location>{}, interrupt);
+    trip_path =
+        thor::TripLegBuilder::Build(controller, *reader, mode_costing, path_infos.begin(),
+                                    path_infos.end(), *request.options.mutable_locations()->begin(),
+                                    *request.options.mutable_locations()->rbegin(),
+                                    std::list<odin::Location>{}, interrupt);
     trip_paths.emplace_back(trip_path);
   }
 
@@ -442,7 +443,8 @@ thor_worker_t::map_match(valhalla_request_t& request,
                                                  path_edges.begin() + i + 1);
             // build the leg
             trip_path = thor::TripLegBuilder::Build(controller, matcher->graphreader(), mode_costing,
-                                                    sub_path_edges, *o_loc, *d_loc,
+                                                    path_edges.begin() + last_index,
+                                                    path_edges.begin() + i + 1, *o_loc, *d_loc,
                                                     std::list<odin::Location>{}, interrupt,
                                                     &route_discontinuities);
             trip_paths.emplace_back(trip_path);
@@ -542,9 +544,9 @@ odin::TripLeg thor_worker_t::path_map_match(
 
     // Form the trip path based on mode costing, origin, destination, and path edges
     trip_path =
-        thor::TripLegBuilder::Build(controller, matcher->graphreader(), mode_costing, path_edges,
-                                    origin, destination, std::list<odin::Location>{}, interrupt,
-                                    &route_discontinuities);
+        thor::TripLegBuilder::Build(controller, matcher->graphreader(), mode_costing,
+                                    path_edges.begin(), path_edges.end(), origin, destination,
+                                    std::list<odin::Location>{}, interrupt, &route_discontinuities);
   } else {
     throw valhalla_exception_t{442};
   }
