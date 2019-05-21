@@ -48,8 +48,8 @@ def requestLocations(stops):
     return resultsStops
 
 
-stopsFrom = ["35.186695,136.924255", "35.176218,136.923218"]
-stopsTo = ["35.166695,136.924255", "35.15218,136.923218"]
+stopsFrom = ["35.202929,136.891067"]
+stopsTo = ["35.172888,136.890023"]
 stopsFromWithHeadings=requestLocations(stopsFrom)
 stopsToWithHeadings=requestLocations(stopsTo)
 

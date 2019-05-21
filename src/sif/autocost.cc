@@ -268,7 +268,8 @@ public:
     // Throw back a lambda that checks the access for this type of costing
     return [*this](const baldr::DirectedEdge* edge) {
       if (edge->is_shortcut() || !(edge->forwardaccess() & kAutoAccess) ||
-          this->maximum_candidate_road_class_ > edge->classification()) {
+          this->maximum_candidate_road_class_ > edge->classification() ||
+          this->minimum_candidate_road_class_ < edge->classification()) {
 
         return 0.0f;
       } else {
@@ -298,6 +299,8 @@ public:
   float toll_factor_;        // Factor applied when road has a toll
   float surface_factor_;     // How much the surface factors are applied.
   RoadClass maximum_candidate_road_class_;
+  RoadClass minimum_candidate_road_class_;
+
   // Density factor used in edge transition costing
   std::vector<float> trans_density_factor_;
 };
@@ -361,6 +364,32 @@ AutoCost::AutoCost(const odin::Costing costing, const odin::DirectionsOptions& o
 
   } else {
     maximum_candidate_road_class_ = RoadClass::kTrunk;
+  }
+
+  std::string minimum_candidate_road_class = costing_options.minimum_candidate_road_class();
+  if (maximum_candidate_road_class == "motorway") {
+    minimum_candidate_road_class_ = RoadClass::kMotorway;
+  } else if (maximum_candidate_road_class == "trunk") {
+    minimum_candidate_road_class_ = RoadClass::kTrunk;
+  } else if (maximum_candidate_road_class == "primary") {
+    minimum_candidate_road_class_ = RoadClass::kPrimary;
+  } else if (maximum_candidate_road_class == "secondary") {
+    minimum_candidate_road_class_ = RoadClass::kSecondary;
+
+  } else if (maximum_candidate_road_class == "tertiary") {
+    minimum_candidate_road_class_ = RoadClass::kTertiary;
+
+  } else if (maximum_candidate_road_class == "unclassified") {
+    minimum_candidate_road_class_ = RoadClass::kUnclassified;
+
+  } else if (maximum_candidate_road_class == "residential") {
+    minimum_candidate_road_class_ = RoadClass::kResidential;
+
+  } else if (maximum_candidate_road_class == "serviceOther") {
+    minimum_candidate_road_class_ = RoadClass::kServiceOther;
+
+  } else {
+    minimum_candidate_road_class_ = RoadClass::kTrunk;
   }
 
   // Preference to use toll roads (separate from toll booth penalty). Sets a toll
@@ -622,6 +651,10 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
         rapidjson::get_optional<std::string>(*json_costing_options, "/maximum_candidate_road_class")
             .get_value_or("trunk"));
 
+    pbf_costing_options->set_minimum_candidate_road_class(
+        rapidjson::get_optional<std::string>(*json_costing_options, "/minimum_candidate_road_class")
+            .get_value_or("kServiceOther"));
+
   } else {
     // Set pbf values to defaults
     pbf_costing_options->set_transport_type("car");
@@ -639,6 +672,7 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_use_highways(kDefaultUseHighways);
     pbf_costing_options->set_use_tolls(kDefaultUseTolls);
     pbf_costing_options->set_maximum_candidate_road_class("trunk");
+    pbf_costing_options->set_minimum_candidate_road_class("kServiceOther");
   }
 }
 

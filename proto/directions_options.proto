@@ -103,6 +103,8 @@ message CostingOptions {
   optional FilterAction filter_route_action = 53;
   repeated string filter_route_ids = 54;
   optional string maximum_candidate_road_class = 55;
+  optional string minimum_candidate_road_class = 56;
+
 
 
 }

@@ -68,15 +68,15 @@ void loki_worker_t::init_matrix(valhalla_request_t& request) {
   if (request.options.sources_size() < 1) {
     throw valhalla_exception_t{121};
   };
-//  for (auto& s : *request.options.mutable_sources()) {
-//    s.clear_heading();
-//  }
+  //  for (auto& s : *request.options.mutable_sources()) {
+  //    s.clear_heading();
+  //  }
   if (request.options.targets_size() < 1) {
     throw valhalla_exception_t{122};
   };
-//  for (auto& t : *request.options.mutable_targets()) {
-//    t.clear_heading();
-//  }
+  //  for (auto& t : *request.options.mutable_targets()) {
+  //    t.clear_heading();
+  //  }
 
   // no locations!
   request.options.clear_locations();

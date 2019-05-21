@@ -34,7 +34,8 @@ public:
              const midgard::PointLL& projected,
              const float score,
              const SideOfStreet sos = NONE,
-             const unsigned int minimum_reachability = 0,const double edge_heading=0);
+             const unsigned int minimum_reachability = 0,
+             const double edge_heading = 0);
     // the directed edge it appears on
     GraphId id;
     // how far along the edge it is (as a percentage  from 0 - 1)
@@ -55,7 +56,7 @@ public:
     // it could be reachable from many many more edges than are reported here
     unsigned int minimum_reachability;
 
-    //Heading of this PathEdge
+    // Heading of this PathEdge
     double edge_heading;
   };
 
