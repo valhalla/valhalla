@@ -40,8 +40,7 @@ MapMatcherFactory::MapMatcherFactory(const boost::property_tree::ptree& root,
 MapMatcherFactory::~MapMatcherFactory() {
 }
 
-MapMatcher* MapMatcherFactory::Create(const Costing costing,
-                                      const DirectionsOptions& options) {
+MapMatcher* MapMatcherFactory::Create(const Costing costing, const DirectionsOptions& options) {
   // Merge any customizable options with the config defaults
   const auto& config = MergeConfig(options);
 

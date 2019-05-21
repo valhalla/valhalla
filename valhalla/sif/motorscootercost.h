@@ -29,8 +29,7 @@ void ParseMotorScooterCostOptions(const rapidjson::Document& doc,
  * @param  costing specified costing type.
  * @param  options pbf with request options.
  */
-cost_ptr_t CreateMotorScooterCost(const Costing costing,
-                                  const DirectionsOptions& options);
+cost_ptr_t CreateMotorScooterCost(const Costing costing, const DirectionsOptions& options);
 
 } // namespace sif
 } // namespace valhalla

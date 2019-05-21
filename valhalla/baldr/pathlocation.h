@@ -134,10 +134,10 @@ public:
       edge->set_percent_along(e.percent_along);
       edge->mutable_ll()->set_lng(e.projected.first);
       edge->mutable_ll()->set_lat(e.projected.second);
-      edge->set_side_of_street(
-          e.sos == PathLocation::LEFT
-              ? valhalla::Location::kLeft
-              : (e.sos == PathLocation::RIGHT ? valhalla::Location::kRight : valhalla::Location::kNone));
+      edge->set_side_of_street(e.sos == PathLocation::LEFT
+                                   ? valhalla::Location::kLeft
+                                   : (e.sos == PathLocation::RIGHT ? valhalla::Location::kRight
+                                                                   : valhalla::Location::kNone));
       edge->set_distance(e.distance);
       edge->set_minimum_reachability(e.minimum_reachability);
       for (const auto& n : reader.edgeinfo(e.id).GetNames()) {
@@ -152,10 +152,10 @@ public:
       edge->set_percent_along(e.percent_along);
       edge->mutable_ll()->set_lng(e.projected.first);
       edge->mutable_ll()->set_lat(e.projected.second);
-      edge->set_side_of_street(
-          e.sos == PathLocation::LEFT
-              ? valhalla::Location::kLeft
-              : (e.sos == PathLocation::RIGHT ? valhalla::Location::kRight : valhalla::Location::kNone));
+      edge->set_side_of_street(e.sos == PathLocation::LEFT
+                                   ? valhalla::Location::kLeft
+                                   : (e.sos == PathLocation::RIGHT ? valhalla::Location::kRight
+                                                                   : valhalla::Location::kNone));
       edge->set_distance(e.distance);
       edge->set_minimum_reachability(e.minimum_reachability);
       for (const auto& n : reader.edgeinfo(e.id).GetNames()) {

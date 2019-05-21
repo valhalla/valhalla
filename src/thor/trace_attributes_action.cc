@@ -84,8 +84,7 @@ std::string thor_worker_t::trace_attributes(valhalla_request_t& request) {
    * map-matching method. If true, this enforces to only use exact route match algorithm.
    */
   TripLeg trip_path;
-  std::vector<std::tuple<float, float, std::vector<thor::MatchResult>, TripLeg>>
-      map_match_results;
+  std::vector<std::tuple<float, float, std::vector<thor::MatchResult>, TripLeg>> map_match_results;
   AttributesController controller;
   filter_attributes(request, controller);
 

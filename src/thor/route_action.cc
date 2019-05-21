@@ -38,8 +38,9 @@ void via_discontinuity(
     const size_t path_index,
     const bool flip_index) {
   // Find the path edges within the locations.
-  auto in_pe = std::find_if(loc.path_edges().begin(), loc.path_edges().end(),
-                            [&in](const valhalla::Location::PathEdge& e) { return e.graph_id() == in; });
+  auto in_pe =
+      std::find_if(loc.path_edges().begin(), loc.path_edges().end(),
+                   [&in](const valhalla::Location::PathEdge& e) { return e.graph_id() == in; });
   auto out_pe =
       std::find_if(loc.path_edges().begin(), loc.path_edges().end(),
                    [&out](const valhalla::Location::PathEdge& e) { return e.graph_id() == out; });
@@ -83,7 +84,8 @@ void remove_edges(const GraphId& edge_id, valhalla::Location& loc, GraphReader& 
   // find the path edge at this point
   auto pe =
       std::find_if(loc.path_edges().begin(), loc.path_edges().end(),
-                   [&edge_id](const valhalla::Location::PathEdge& e) { return e.graph_id() == edge_id; });
+                   [&edge_id](const valhalla::Location::PathEdge& e) { return e.graph_id() == edge_id;
+});
   // if its in the middle of the edge it can only be this edge or the opposing depending on type
   if (!pe->begin_node() && !pe->end_node()) {
     GraphId opposing;
@@ -275,9 +277,9 @@ std::vector<thor::PathInfo> thor_worker_t::get_path(PathAlgorithm* path_algorith
   return path;
 }
 
-std::list<valhalla::TripLeg> thor_worker_t::path_arrive_by(
-    google::protobuf::RepeatedPtrField<valhalla::Location>& correlated,
-    const std::string& costing) {
+std::list<valhalla::TripLeg>
+thor_worker_t::path_arrive_by(google::protobuf::RepeatedPtrField<valhalla::Location>& correlated,
+                              const std::string& costing) {
   // Things we'll need
   GraphId first_edge;
   std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>> vias;
@@ -329,7 +331,8 @@ std::list<valhalla::TripLeg> thor_worker_t::path_arrive_by(
 
     // Build trip path for this leg and add to the result if this
     // location is a BREAK or if this is the last location
-    if (origin->type() == valhalla::Location::kBreak || origin->type() == valhalla::Location::kBreakThrough) {
+    if (origin->type() == valhalla::Location::kBreak ||
+        origin->type() == valhalla::Location::kBreakThrough) {
       // Move destination back to the last break and collect the throughs
       std::list<valhalla::Location> throughs;
       while (destination->type() != valhalla::Location::kBreak &&
@@ -363,9 +366,9 @@ std::list<valhalla::TripLeg> thor_worker_t::path_arrive_by(
   return trip_paths;
 }
 
-std::list<valhalla::TripLeg> thor_worker_t::path_depart_at(
-    google::protobuf::RepeatedPtrField<valhalla::Location>& correlated,
-    const std::string& costing) {
+std::list<valhalla::TripLeg>
+thor_worker_t::path_depart_at(google::protobuf::RepeatedPtrField<valhalla::Location>& correlated,
+                              const std::string& costing) {
   // Things we'll need
   GraphId last_edge;
   std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>> vias;
@@ -384,8 +387,8 @@ std::list<valhalla::TripLeg> thor_worker_t::path_depart_at(
     // TODO: delete this and send all cases to the function above
     // If we are continuing through a location we need to make sure we
     // only allow the edge that was used previously (avoid u-turns)
-    bool through =
-        origin->type() == valhalla::Location::kThrough || origin->type() == valhalla::Location::kBreakThrough;
+    bool through = origin->type() == valhalla::Location::kThrough ||
+                   origin->type() == valhalla::Location::kBreakThrough;
     while (through && last_edge.Is_Valid() && origin->path_edges_size() > 1) {
       if (origin->path_edges().rbegin()->graph_id() == last_edge) {
         origin->mutable_path_edges()->SwapElements(0, origin->path_edges_size() - 1);

@@ -38,17 +38,16 @@ public:
    * Format the trip path output given the edges on the path.
    * For now just return length. TODO - modify to return trip path.
    */
-  static TripLeg
-  Build(const AttributesController& controller,
-        baldr::GraphReader& graphreader,
-        const std::shared_ptr<sif::DynamicCost>* mode_costing,
-        const std::vector<PathInfo>& path,
-        valhalla::Location& origin,
-        valhalla::Location& dest,
-        const std::list<valhalla::Location>& through_loc,
-        const std::function<void()>* interrupt_callback = nullptr,
-        std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>>*
-            route_discontinuities = nullptr);
+  static TripLeg Build(const AttributesController& controller,
+                       baldr::GraphReader& graphreader,
+                       const std::shared_ptr<sif::DynamicCost>* mode_costing,
+                       const std::vector<PathInfo>& path,
+                       valhalla::Location& origin,
+                       valhalla::Location& dest,
+                       const std::list<valhalla::Location>& through_loc,
+                       const std::function<void()>* interrupt_callback = nullptr,
+                       std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>>*
+                           route_discontinuities = nullptr);
 
   /**
    * Add trip edge. (TODO more comments)
@@ -66,17 +65,17 @@ public:
    *                       at begin and end edges
    */
   static TripLeg_Edge* AddTripEdge(const AttributesController& controller,
-                                         const baldr::GraphId& edge,
-                                         const uint32_t trip_id,
-                                         const uint32_t block_id,
-                                         const sif::TravelMode mode,
-                                         const uint8_t travel_type,
-                                         const baldr::DirectedEdge* directededge,
-                                         const bool drive_right,
-                                         TripLeg_Node* trip_node,
-                                         const baldr::GraphTile* graphtile,
-                                         const uint32_t current_time,
-                                         const float length_percentage = 1.f);
+                                   const baldr::GraphId& edge,
+                                   const uint32_t trip_id,
+                                   const uint32_t block_id,
+                                   const sif::TravelMode mode,
+                                   const uint8_t travel_type,
+                                   const baldr::DirectedEdge* directededge,
+                                   const bool drive_right,
+                                   TripLeg_Node* trip_node,
+                                   const baldr::GraphTile* graphtile,
+                                   const uint32_t current_time,
+                                   const float length_percentage = 1.f);
 
   /**
    * Add trip intersecting edge.

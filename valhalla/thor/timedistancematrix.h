@@ -239,8 +239,9 @@ protected:
    * @param  graphreader   Graph reader for accessing routing graph.
    * @param  locations     List of locations.
    */
-  void SetDestinationsManyToOne(baldr::GraphReader& graphreader,
-                                const google::protobuf::RepeatedPtrField<valhalla::Location>& locations);
+  void
+  SetDestinationsManyToOne(baldr::GraphReader& graphreader,
+                           const google::protobuf::RepeatedPtrField<valhalla::Location>& locations);
 
   /**
    * Update destinations along an edge that has been settled (lowest cost path

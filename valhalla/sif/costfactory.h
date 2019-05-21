@@ -24,8 +24,7 @@ namespace sif {
 template <class cost_t> class CostFactory {
 public:
   typedef std::shared_ptr<cost_t> cost_ptr_t;
-  typedef cost_ptr_t (*factory_function_t)(const Costing costing,
-                                           const DirectionsOptions& options);
+  typedef cost_ptr_t (*factory_function_t)(const Costing costing, const DirectionsOptions& options);
 
   /**
    * Constructor

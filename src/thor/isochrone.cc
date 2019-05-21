@@ -489,12 +489,12 @@ void Isochrone::ExpandReverse(GraphReader& graphreader,
 }
 
 // Compute iso-tile that we can use to generate isochrones.
-std::shared_ptr<const GriddedData<PointLL>> Isochrone::ComputeReverse(
-    google::protobuf::RepeatedPtrField<valhalla::Location>& dest_locations,
-    const unsigned int max_minutes,
-    GraphReader& graphreader,
-    const std::shared_ptr<DynamicCost>* mode_costing,
-    const TravelMode mode) {
+std::shared_ptr<const GriddedData<PointLL>>
+Isochrone::ComputeReverse(google::protobuf::RepeatedPtrField<valhalla::Location>& dest_locations,
+                          const unsigned int max_minutes,
+                          GraphReader& graphreader,
+                          const std::shared_ptr<DynamicCost>* mode_costing,
+                          const TravelMode mode) {
   // Set the mode and costing
   mode_ = mode;
   costing_ = mode_costing[static_cast<uint32_t>(mode_)];
@@ -849,12 +849,12 @@ bool Isochrone::ExpandForwardMM(GraphReader& graphreader,
 }
 
 // Compute isochrone for mulit-modal route.
-std::shared_ptr<const GriddedData<PointLL>> Isochrone::ComputeMultiModal(
-    google::protobuf::RepeatedPtrField<valhalla::Location>& origin_locations,
-    const unsigned int max_minutes,
-    GraphReader& graphreader,
-    const std::shared_ptr<DynamicCost>* mode_costing,
-    const TravelMode mode) {
+std::shared_ptr<const GriddedData<PointLL>>
+Isochrone::ComputeMultiModal(google::protobuf::RepeatedPtrField<valhalla::Location>& origin_locations,
+                             const unsigned int max_minutes,
+                             GraphReader& graphreader,
+                             const std::shared_ptr<DynamicCost>* mode_costing,
+                             const TravelMode mode) {
   // For pedestrian costing - set flag allowing use of transit connections
   // Set pedestrian costing to use max distance. TODO - need for other modes
   const auto& pc = mode_costing[static_cast<uint8_t>(TravelMode::kPedestrian)];

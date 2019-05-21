@@ -506,10 +506,9 @@ std::string exits(const valhalla::DirectionsLeg_Maneuver_Sign& sign) {
 
 // Compile and return the refs of the specified list
 // TODO we could enhance by limiting results by using consecutive count
-std::string get_sign_element_refs(
-    const google::protobuf::RepeatedPtrField<::valhalla::DirectionsLeg_Maneuver_SignElement>&
-        sign_elements,
-    const std::string& delimiter = kSignElementDelimiter) {
+std::string get_sign_element_refs(const google::protobuf::RepeatedPtrField<
+                                      ::valhalla::DirectionsLeg_Maneuver_SignElement>& sign_elements,
+                                  const std::string& delimiter = kSignElementDelimiter) {
   std::string refs;
   for (const auto& sign_element : sign_elements) {
     // Only process refs
@@ -806,9 +805,8 @@ json::MapPtr osrm_maneuver(const valhalla::DirectionsLeg::Maneuver& maneuver,
       // passed. Description is: at t-intersections, when you’re turning
       // onto a new road name, and have passed at least 1 intersection to
       // get there.
-      bool road_ends =
-          (prev_intersection_count > 1 && prev_edge->use() != TripLeg_Use_kRampUse &&
-           etp->node(idx).intersecting_edge_size() == 1);
+      bool road_ends = (prev_intersection_count > 1 && prev_edge->use() != TripLeg_Use_kRampUse &&
+                        etp->node(idx).intersecting_edge_size() == 1);
       if (road_ends) {
         // TODO what about a doubly digitized road ending at a T (would be
         // 2 intersecting edges)? What if there is a driveway or path as
@@ -873,8 +871,8 @@ std::string get_mode(const valhalla::DirectionsLeg::Maneuver& maneuver,
                      const bool arrive_maneuver,
                      valhalla::odin::EnhancedTripLeg* etp) {
   // Return ferry if not last maneuver and the edge use is Ferry
-  if (!arrive_maneuver && (etp->GetCurrEdge(maneuver.begin_path_index())->use() ==
-                           TripLeg::Use::TripLeg_Use_kFerryUse)) {
+  if (!arrive_maneuver &&
+      (etp->GetCurrEdge(maneuver.begin_path_index())->use() == TripLeg::Use::TripLeg_Use_kFerryUse)) {
     return "ferry";
   }
 
@@ -1157,9 +1155,8 @@ std::string serialize(const valhalla::DirectionsOptions& directions_options,
   }
 
   // Routes are called matchings in osrm map matching mode
-  json->emplace(directions_options.action() == valhalla::DirectionsOptions::trace_route
-                    ? "matchings"
-                    : "routes",
+  json->emplace(directions_options.action() == valhalla::DirectionsOptions::trace_route ? "matchings"
+                                                                                        : "routes",
                 routes);
 
   std::stringstream ss;

@@ -554,16 +554,16 @@ std::string serialize(const valhalla::DirectionsOptions& directions_options,
                       const std::list<valhalla::DirectionsLeg>& directions_legs) {
   // build up the json object
   auto json = json::map(
-      {{"trip", json::map({{"locations", locations(directions_legs)},
-                           {"summary", summary(directions_legs)},
-                           {"legs", legs(directions_legs)},
-                           {"status_message",
-                            string("Found route between points")}, // found route between points OR
-                                                                   // cannot find route between points
-                           {"status", static_cast<uint64_t>(0)},   // 0 success
-                           {"units",
-                            valhalla::DirectionsOptions_Units_Name(directions_options.units())},
-                           {"language", directions_options.language()}})}});
+      {{"trip",
+        json::map({{"locations", locations(directions_legs)},
+                   {"summary", summary(directions_legs)},
+                   {"legs", legs(directions_legs)},
+                   {"status_message",
+                    string("Found route between points")}, // found route between points OR
+                                                           // cannot find route between points
+                   {"status", static_cast<uint64_t>(0)},   // 0 success
+                   {"units", valhalla::DirectionsOptions_Units_Name(directions_options.units())},
+                   {"language", directions_options.language()}})}});
   if (directions_options.has_id()) {
     json->emplace("id", directions_options.id());
   }

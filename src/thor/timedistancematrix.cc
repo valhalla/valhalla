@@ -368,12 +368,12 @@ TimeDistanceMatrix::ManyToOne(const valhalla::Location& dest,
 
 // Many to one time and distance cost matrix. Computes time and distance
 // from many locations to many locations.
-std::vector<TimeDistance>
-TimeDistanceMatrix::ManyToMany(const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
-                               GraphReader& graphreader,
-                               const std::shared_ptr<DynamicCost>* mode_costing,
-                               const sif::TravelMode mode,
-                               const float max_matrix_distance) {
+std::vector<TimeDistance> TimeDistanceMatrix::ManyToMany(
+    const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
+    GraphReader& graphreader,
+    const std::shared_ptr<DynamicCost>* mode_costing,
+    const sif::TravelMode mode,
+    const float max_matrix_distance) {
   return SourceToTarget(locations, locations, graphreader, mode_costing, mode, max_matrix_distance);
 }
 
@@ -405,7 +405,8 @@ std::vector<TimeDistance> TimeDistanceMatrix::SourceToTarget(
 }
 
 // Add edges at the origin to the adjacency list
-void TimeDistanceMatrix::SetOriginOneToMany(GraphReader& graphreader, const valhalla::Location& origin) {
+void TimeDistanceMatrix::SetOriginOneToMany(GraphReader& graphreader,
+                                            const valhalla::Location& origin) {
   // Only skip inbound edges if we have other options
   bool has_other_edges = false;
   std::for_each(origin.path_edges().begin(), origin.path_edges().end(),
@@ -459,7 +460,8 @@ void TimeDistanceMatrix::SetOriginOneToMany(GraphReader& graphreader, const valh
 }
 
 // Add origin for a many to one time distance matrix.
-void TimeDistanceMatrix::SetOriginManyToOne(GraphReader& graphreader, const valhalla::Location& dest) {
+void TimeDistanceMatrix::SetOriginManyToOne(GraphReader& graphreader,
+                                            const valhalla::Location& dest) {
   // Iterate through edges and add opposing edges to adjacency list
   for (const auto& edge : dest.path_edges()) {
     // Disallow any user avoided edges if the avoid location is behind the destination along the edge

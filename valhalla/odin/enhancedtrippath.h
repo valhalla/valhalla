@@ -385,12 +385,12 @@ protected:
       const ::google::protobuf::RepeatedPtrField<::valhalla::StreetName>& street_names) const;
 
   std::string SignElementsToString(
-      const ::google::protobuf::RepeatedPtrField<::valhalla::TripLeg_SignElement>&
-          sign_elements) const;
+      const ::google::protobuf::RepeatedPtrField<::valhalla::TripLeg_SignElement>& sign_elements)
+      const;
 
   std::string SignElementsToParameterString(
-      const ::google::protobuf::RepeatedPtrField<::valhalla::TripLeg_SignElement>&
-          sign_elements) const;
+      const ::google::protobuf::RepeatedPtrField<::valhalla::TripLeg_SignElement>& sign_elements)
+      const;
 #endif
 };
 
