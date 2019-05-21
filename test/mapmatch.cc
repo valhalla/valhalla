@@ -265,6 +265,12 @@ void test_trace_route_breaks() {
     if (legs.size() != test_answers[i])
       throw std::logic_error("Expected " + std::to_string(test_answers[i]) + " legs but got " +
                              std::to_string(legs.size()));
+
+    for (const auto& leg : legs) {
+      auto decoded_match =
+          midgard::decode<std::vector<PointLL>>(leg.second.get<std::string>("shape"));
+      std::cout << print(decoded_match) << std::endl;
+    }
   }
 }
 
