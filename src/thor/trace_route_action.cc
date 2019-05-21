@@ -63,8 +63,10 @@ std::list<odin::TripLeg> thor_worker_t::trace_route(valhalla_request_t& request)
     case odin::ShapeMatch::edge_walk:
       try {
         trip_paths = route_match(request, controller);
+        if (trip_paths.empty())
+          throw std::exception{};
         for (const auto& tp : trip_paths) {
-          if (tp.node().size() == 0) {
+          if (tp.node().empty()) {
             throw std::exception{};
           };
         }

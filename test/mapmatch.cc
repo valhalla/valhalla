@@ -244,33 +244,28 @@ void test_distance_only() {
 }
 
 void test_trace_route_breaks() {
-  tyr::actor_t actor(conf, true);
-  auto matched = json_to_pt(actor.trace_route(
-      R"({"costing":"auto","shape_match":"map_snap","shape":[
+  std::vector<std::string> test_cases = {R"({"costing":"auto","shape_match":"map_snap","shape":[
           {"lat":52.09110,"lon":5.09806,"type":"break"},
           {"lat":52.09050,"lon":5.09769,"type":"break"},
-          {"lat":52.09098,"lon":5.09679,"type":"break"}]})"));
-  auto& legs = matched.get_child("trip.legs");
-  if (legs.size() != 2)
-    throw std::logic_error("Setting type:break should split route into multiple legs");
-
-  matched = json_to_pt(actor.trace_route(
-      R"({"costing":"auto","shape_match":"map_snap","shape":[
+          {"lat":52.09098,"lon":5.09679,"type":"break"}]})",
+                                         R"({"costing":"auto","shape_match":"map_snap","shape":[
           {"lat":52.09110,"lon":5.09806,"type":"break"},
           {"lat":52.09050,"lon":5.09769,"type":"via"},
-          {"lat":52.09098,"lon":5.09679,"type":"break"}]})"));
-  legs = matched.get_child("trip.legs");
-  if (legs.size() != 1)
-    throw std::logic_error("Setting type:via should keep route as single leg");
-
-  matched = json_to_pt(actor.trace_route(
-      R"({"costing":"auto","shape_match":"map_snap","shape":[
+          {"lat":52.09098,"lon":5.09679,"type":"break"}]})",
+                                         R"({"costing":"auto","shape_match":"map_snap","shape":[
           {"lat":52.09110,"lon":5.09806},
           {"lat":52.09050,"lon":5.09769},
-          {"lat":52.09098,"lon":5.09679}]})"));
-  legs = matched.get_child("trip.legs");
-  if (legs.size() != 1)
-    throw std::logic_error("Setting no type should keep route as single leg");
+          {"lat":52.09098,"lon":5.09679}]})"};
+  std::vector<size_t> test_answers = {2, 1, 1};
+
+  tyr::actor_t actor(conf, true);
+  for (size_t i = 0; i < test_cases.size(); ++i) {
+    auto matched = json_to_pt(actor.trace_route(test_cases[i]));
+    const auto& legs = matched.get_child("trip.legs");
+    if (legs.size() != test_answers[i])
+      throw std::logic_error("Expected " + std::to_string(test_answers[i]) + " legs but got " +
+                             std::to_string(legs.size()));
+  }
 }
 
 void test_time_rejection() {
