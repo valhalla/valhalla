@@ -266,7 +266,7 @@ public:
    */
   virtual const EdgeFilter GetEdgeFilter() const {
     // Throw back a lambda that checks the access for this type of costing
-    return [*this](const baldr::DirectedEdge* edge) {
+    return [this](const baldr::DirectedEdge* edge) {
       if (edge->is_shortcut() || !(edge->forwardaccess() & kAutoAccess) ||
           this->maximum_candidate_road_class_ > edge->classification() ||
           this->minimum_candidate_road_class_ < edge->classification()) {
