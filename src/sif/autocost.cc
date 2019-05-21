@@ -266,8 +266,10 @@ public:
    */
   virtual const EdgeFilter GetEdgeFilter() const {
     // Throw back a lambda that checks the access for this type of costing
-    return [](const baldr::DirectedEdge* edge) {
-      if (edge->is_shortcut() || !(edge->forwardaccess() & kAutoAccess)) {
+    return [*this](const baldr::DirectedEdge* edge) {
+      if (edge->is_shortcut() || !(edge->forwardaccess() & kAutoAccess) ||
+          this->maximum_candidate_road_class_ > edge->classification()) {
+
         return 0.0f;
       } else {
         // TODO - use classification/use to alter the factor
@@ -295,7 +297,7 @@ public:
   float highway_factor_;     // Factor applied when road is a motorway or trunk
   float toll_factor_;        // Factor applied when road has a toll
   float surface_factor_;     // How much the surface factors are applied.
-
+  RoadClass maximum_candidate_road_class_;
   // Density factor used in edge transition costing
   std::vector<float> trans_density_factor_;
 };
@@ -334,6 +336,32 @@ AutoCost::AutoCost(const odin::Costing costing, const odin::DirectionsOptions& o
   // Preference to use highways. Is a value from 0 to 1
   float use_highways_ = costing_options.use_highways();
   highway_factor_ = 1.0f - use_highways_;
+
+  std::string maximum_candidate_road_class = costing_options.maximum_candidate_road_class();
+  if (maximum_candidate_road_class == "motorway") {
+    maximum_candidate_road_class_ = RoadClass::kMotorway;
+  } else if (maximum_candidate_road_class == "trunk") {
+    maximum_candidate_road_class_ = RoadClass::kTrunk;
+  } else if (maximum_candidate_road_class == "primary") {
+    maximum_candidate_road_class_ = RoadClass::kPrimary;
+  } else if (maximum_candidate_road_class == "secondary") {
+    maximum_candidate_road_class_ = RoadClass::kSecondary;
+
+  } else if (maximum_candidate_road_class == "tertiary") {
+    maximum_candidate_road_class_ = RoadClass::kTertiary;
+
+  } else if (maximum_candidate_road_class == "unclassified") {
+    maximum_candidate_road_class_ = RoadClass::kUnclassified;
+
+  } else if (maximum_candidate_road_class == "residential") {
+    maximum_candidate_road_class_ = RoadClass::kResidential;
+
+  } else if (maximum_candidate_road_class == "serviceOther") {
+    maximum_candidate_road_class_ = RoadClass::kServiceOther;
+
+  } else {
+    maximum_candidate_road_class_ = RoadClass::kTrunk;
+  }
 
   // Preference to use toll roads (separate from toll booth penalty). Sets a toll
   // factor. A toll factor of 0 would indicate no adjustment to weighting for toll roads.
@@ -590,6 +618,10 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
         kUseTollsRange(rapidjson::get_optional<float>(*json_costing_options, "/use_tolls")
                            .get_value_or(kDefaultUseTolls)));
 
+    pbf_costing_options->set_maximum_candidate_road_class(
+        rapidjson::get_optional<std::string>(*json_costing_options, "/maximum_candidate_road_class")
+            .get_value_or("trunk"));
+
   } else {
     // Set pbf values to defaults
     pbf_costing_options->set_transport_type("car");
@@ -606,6 +638,7 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_use_ferry(kDefaultUseFerry);
     pbf_costing_options->set_use_highways(kDefaultUseHighways);
     pbf_costing_options->set_use_tolls(kDefaultUseTolls);
+    pbf_costing_options->set_maximum_candidate_road_class("trunk");
   }
 }
 
