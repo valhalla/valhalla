@@ -83,7 +83,6 @@ std::string thor_worker_t::trace_attributes(valhalla_request_t& request) {
    * Valhalla will allow an efficient “edge-walking” algorithm rather than a more extensive
    * map-matching method. If true, this enforces to only use exact route match algorithm.
    */
-  odin::TripLeg trip_path;
   std::list<odin::TripLeg> trip_paths;
   std::vector<std::tuple<float, float, std::vector<thor::MatchResult>, std::list<odin::TripLeg>>>
       map_match_results;
@@ -145,7 +144,7 @@ std::string thor_worker_t::trace_attributes(valhalla_request_t& request) {
   }
 
   for (const auto& trippath : std::get<kTripLegIndex>(map_match_results.at(0))) {
-    if (trip_path.node().size() == 0) {
+    if (trippath.node().size() == 0) {
       throw valhalla_exception_t{442};
     };
   }
