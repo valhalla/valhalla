@@ -38,6 +38,20 @@ constexpr size_t kRawScoreIndex = 1;
 constexpr size_t kMatchResultsIndex = 2;
 constexpr size_t kTripLegIndex = 3;
 
+void add_path_edge(valhalla::odin::Location* l, const meili::MatchResult& m) {
+  auto* edge = l->mutable_path_edges()->Add();
+  edge->set_graph_id(m.edgeid);
+  edge->set_percent_along(m.distance_along);
+  edge->mutable_ll()->set_lng(m.lnglat.first);
+  edge->mutable_ll()->set_lat(m.lnglat.second);
+  edge->set_distance(m.distance_from);
+  // NOTE: we dont need side of street here because the match is continuous we dont know if they were
+  // starting a route from the side of the road or whatever so calling that out is not a good idea
+  // edge->set_side_of_street();
+  // NOTE: we dont care about reachablity because the match will have worked or not worked!
+  // edge->set_minimum_reachability();
+}
+
 } // namespace
 
 namespace valhalla {
@@ -416,14 +430,19 @@ thor_worker_t::map_match(valhalla_request_t& request,
           if (origin != destination &&
               request.options.shape(destination - match_results.begin()).type() ==
                   odin::Location::kBreak) {
+            // turn the origin and locations into real ones with a path edge on them
+            // its possible that meili has a path edge for this one but its also possible
+            // that it doesnt because its interpolated
+            auto* o_loc = request.options.mutable_shape(origin - match_results.begin());
+            auto* d_loc = request.options.mutable_shape(destination - match_results.begin());
+            add_path_edge(o_loc, *origin);
+            add_path_edge(d_loc, *destination);
+            // get a slice of the paths edges
             std::vector<PathInfo> sub_path_edges(path_edges.begin() + last_index,
                                                  path_edges.begin() + i + 1);
+            // build the leg
             trip_path = thor::TripLegBuilder::Build(controller, matcher->graphreader(), mode_costing,
-                                                    sub_path_edges,
-                                                    *request.options.mutable_shape(
-                                                        origin - match_results.begin()),
-                                                    *request.options.mutable_shape(
-                                                        destination - match_results.begin()),
+                                                    sub_path_edges, *o_loc, *d_loc,
                                                     std::list<odin::Location>{}, interrupt,
                                                     &route_discontinuities);
             trip_paths.emplace_back(trip_path);
