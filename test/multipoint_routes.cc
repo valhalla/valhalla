@@ -14,13 +14,14 @@
 #include "thor/worker.h"
 #include <boost/property_tree/ptree.hpp>
 
+using namespace valhalla;
 using namespace valhalla::thor;
+using namespace valhalla::odin;
 using namespace valhalla::sif;
 using namespace valhalla::loki;
 using namespace valhalla::baldr;
 using namespace valhalla::midgard;
 using namespace valhalla::tyr;
-using namespace valhalla::odin;
 
 namespace {
 
@@ -68,8 +69,8 @@ struct route_tester {
         loki_worker(conf, reader), thor_worker(conf, reader), odin_worker(conf) {
   }
   std::pair<std::list<TripLeg>, std::list<DirectionsLeg>> test(const std::string& request_json) {
-    valhalla::valhalla_request_t request;
-    request.parse(request_json, valhalla::odin::DirectionsOptions::route);
+    valhalla_request_t request;
+    request.parse(request_json, DirectionsOptions::route);
     loki_worker.route(request);
     std::pair<std::list<TripLeg>, std::list<DirectionsLeg>> results;
     results.first = thor_worker.route(request);

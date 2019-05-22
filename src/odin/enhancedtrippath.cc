@@ -233,7 +233,7 @@ std::string EnhancedTripLeg::GetStateCode(int node_index) {
   return GetAdmin(node(node_index).admin_index())->state_code();
 }
 
-const ::valhalla::odin::Location& EnhancedTripLeg::GetOrigin() const {
+const ::valhalla::Location& EnhancedTripLeg::GetOrigin() const {
   // Validate location count
   if (location_size() < 2) {
     throw valhalla_exception_t{212};
@@ -242,7 +242,7 @@ const ::valhalla::odin::Location& EnhancedTripLeg::GetOrigin() const {
   return location(0);
 }
 
-const ::valhalla::odin::Location& EnhancedTripLeg::GetDestination() const {
+const ::valhalla::Location& EnhancedTripLeg::GetDestination() const {
   // Validate location count
   if (location_size() < 2) {
     throw valhalla_exception_t{212};
@@ -824,7 +824,7 @@ std::string EnhancedTripLeg_Edge::ToParameterString() const {
 }
 
 std::string EnhancedTripLeg_Edge::StreetNamesToString(
-    const ::google::protobuf::RepeatedPtrField<::valhalla::odin::StreetName>& street_names) const {
+    const ::google::protobuf::RepeatedPtrField<::valhalla::StreetName>& street_names) const {
   std::string str;
 
   for (const auto& street_name : street_names) {
@@ -837,7 +837,7 @@ std::string EnhancedTripLeg_Edge::StreetNamesToString(
 }
 
 std::string EnhancedTripLeg_Edge::StreetNamesToParameterString(
-    const ::google::protobuf::RepeatedPtrField<::valhalla::odin::StreetName>& street_names) const {
+    const ::google::protobuf::RepeatedPtrField<::valhalla::StreetName>& street_names) const {
   std::string str;
   std::string param_list;
 
@@ -860,7 +860,7 @@ std::string EnhancedTripLeg_Edge::StreetNamesToParameterString(
 }
 
 std::string EnhancedTripLeg_Edge::SignElementsToString(
-    const ::google::protobuf::RepeatedPtrField<::valhalla::odin::TripLeg_SignElement>& sign_elements)
+    const ::google::protobuf::RepeatedPtrField<::valhalla::TripLeg_SignElement>& sign_elements)
     const {
   std::string str;
 
@@ -874,7 +874,7 @@ std::string EnhancedTripLeg_Edge::SignElementsToString(
 }
 
 std::string EnhancedTripLeg_Edge::SignElementsToParameterString(
-    const ::google::protobuf::RepeatedPtrField<::valhalla::odin::TripLeg_SignElement>& sign_elements)
+    const ::google::protobuf::RepeatedPtrField<::valhalla::TripLeg_SignElement>& sign_elements)
     const {
   std::string str;
   std::string param_list;
@@ -898,7 +898,7 @@ std::string EnhancedTripLeg_Edge::SignElementsToParameterString(
 }
 
 std::string EnhancedTripLeg_Edge::TurnLanesToString(
-    const ::google::protobuf::RepeatedPtrField<::valhalla::odin::TurnLane>& turn_lanes) const {
+    const ::google::protobuf::RepeatedPtrField<::valhalla::TurnLane>& turn_lanes) const {
   std::string str;
 
   for (const auto& turn_lane : turn_lanes) {

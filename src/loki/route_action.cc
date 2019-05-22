@@ -10,8 +10,8 @@ using namespace valhalla;
 using namespace valhalla::baldr;
 
 namespace {
-PointLL to_ll(const odin::Location& l) {
-  return PointLL{l.ll().lng(), l.ll().lat()};
+midgard::PointLL to_ll(const valhalla::Location& l) {
+  return midgard::PointLL{l.ll().lng(), l.ll().lat()};
 }
 
 void check_locations(const size_t location_count, const size_t max_locations) {
@@ -22,7 +22,7 @@ void check_locations(const size_t location_count, const size_t max_locations) {
 }
 
 void check_distance(const GraphReader& reader,
-                    const google::protobuf::RepeatedPtrField<odin::Location>& locations,
+                    const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
                     float max_distance) {
   // test if total distance along a polyline formed by connecting locations exceeds the maximum
   float total_path_distance = 0.0f;
@@ -36,7 +36,8 @@ void check_distance(const GraphReader& reader,
     total_path_distance += path_distance;
   }
   valhalla::midgard::logging::Log("total_location_distance::" +
-                                      std::to_string(total_path_distance * kKmPerMeter) + "km",
+                                      std::to_string(total_path_distance * midgard::kKmPerMeter) +
+                                      "km",
                                   " [ANALYTICS] ");
 }
 
@@ -57,20 +58,20 @@ void loki_worker_t::init_route(valhalla_request_t& request) {
 
 void loki_worker_t::route(valhalla_request_t& request) {
   init_route(request);
-  auto costing = odin::Costing_Name(request.options.costing());
+  auto costing = Costing_Name(request.options.costing());
   check_locations(request.options.locations_size(), max_locations.find(costing)->second);
   check_distance(*reader, request.options.locations(), max_distance.find(costing)->second);
 
   // Validate walking distances (make sure they are in the accepted range)
   if (costing == "multimodal" || costing == "transit") {
-    auto transit_start_end_max_distance =
-        rapidjson::get_optional<int>(request.document,
-                                     "/costing_options/pedestrian/transit_start_end_max_distance")
-            .get_value_or(min_transit_walking_dis);
-    auto transit_transfer_max_distance =
-        rapidjson::get_optional<int>(request.document,
-                                     "/costing_options/pedestrian/transit_transfer_max_distance")
-            .get_value_or(min_transit_walking_dis);
+    auto* ped_opts = request.options.mutable_costing_options(static_cast<int>(pedestrian));
+    if (!ped_opts->has_transit_start_end_max_distance())
+      ped_opts->set_transit_start_end_max_distance(min_transit_walking_dis);
+    auto transit_start_end_max_distance = ped_opts->transit_start_end_max_distance();
+
+    if (!ped_opts->has_transit_transfer_max_distance())
+      ped_opts->set_transit_transfer_max_distance(min_transit_walking_dis);
+    auto transit_transfer_max_distance = ped_opts->transit_transfer_max_distance();
 
     if (transit_start_end_max_distance < min_transit_walking_dis ||
         transit_start_end_max_distance > max_transit_walking_dis) {

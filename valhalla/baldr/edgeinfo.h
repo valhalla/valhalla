@@ -13,8 +13,6 @@
 #include <valhalla/midgard/shape_decoder.h>
 #include <valhalla/midgard/util.h>
 
-using namespace valhalla::midgard;
-
 namespace valhalla {
 namespace baldr {
 
@@ -159,10 +157,10 @@ public:
    * @return  Returns the the list of lat,lng points describing the
    *          shape of the edge.
    */
-  const std::vector<PointLL>& shape() const;
+  const std::vector<midgard::PointLL>& shape() const;
 
-  midgard::Shape7Decoder<PointLL> lazy_shape() const {
-    return midgard::Shape7Decoder<PointLL>(encoded_shape_, item_->encoded_shape_size);
+  midgard::Shape7Decoder<midgard::PointLL> lazy_shape() const {
+    return midgard::Shape7Decoder<midgard::PointLL>(encoded_shape_, item_->encoded_shape_size);
   }
 
   /**
@@ -211,7 +209,7 @@ protected:
   const char* encoded_shape_;
 
   // Lng, lat shape of the edge
-  mutable std::vector<PointLL> shape_;
+  mutable std::vector<midgard::PointLL> shape_;
 
   // The list of names within the tile
   const char* names_list_;

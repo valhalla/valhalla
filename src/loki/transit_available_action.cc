@@ -2,10 +2,12 @@
 
 #include "baldr/connectivity_map.h"
 #include "loki/worker.h"
+#include "midgard/distanceapproximator.h"
 #include "tyr/serializers.h"
 
 using namespace valhalla;
 using namespace valhalla::baldr;
+using namespace valhalla::midgard;
 
 namespace valhalla {
 namespace loki {

@@ -70,7 +70,7 @@ json::ArrayPtr serialize_nodes(const PathLocation& location, GraphReader& reader
       node = node_info->json(tile);
       node->emplace("node_id", n.json());
     } else {
-      PointLL node_ll = tile->get_node_ll(n);
+      midgard::PointLL node_ll = tile->get_node_ll(n);
       node = json::map({
           {"lon", json::fp_t{node_ll.first, 6}}, {"lat", json::fp_t{node_ll.second, 6}},
           // TODO: osm_id
@@ -93,7 +93,7 @@ json::MapPtr serialize(const PathLocation& location, GraphReader& reader, bool v
   return m;
 }
 
-json::MapPtr serialize(const PointLL& ll, const std::string& reason, bool verbose) {
+json::MapPtr serialize(const midgard::PointLL& ll, const std::string& reason, bool verbose) {
   auto m = json::map({
       {"edges", static_cast<std::nullptr_t>(nullptr)},
       {"nodes", static_cast<std::nullptr_t>(nullptr)},
@@ -112,8 +112,8 @@ namespace valhalla {
 namespace tyr {
 
 std::string serializeLocate(const valhalla_request_t& request,
-                            const std::vector<Location>& locations,
-                            const std::unordered_map<Location, PathLocation>& projections,
+                            const std::vector<baldr::Location>& locations,
+                            const std::unordered_map<baldr::Location, PathLocation>& projections,
                             GraphReader& reader) {
   auto json = json::array({});
   for (const auto& location : locations) {

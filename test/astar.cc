@@ -38,13 +38,13 @@
 
 namespace bpt = boost::property_tree;
 
+using namespace valhalla;
 namespace vm = valhalla::midgard;
 namespace vb = valhalla::baldr;
 namespace vs = valhalla::sif;
 namespace vt = valhalla::thor;
 namespace vk = valhalla::loki;
 namespace vj = valhalla::mjolnir;
-namespace vo = valhalla::odin;
 
 /*
  * to regenerate the test tile you'll want to:
@@ -204,11 +204,10 @@ void write_config(const std::string& filename) {
   file.close();
 }
 
-void create_costing_options(vo::DirectionsOptions& directions_options) {
-  for (const auto costing :
-       {vo::auto_, vo::auto_shorter, vo::bicycle, vo::bus, vo::hov, vo::motor_scooter, vo::multimodal,
-        vo::pedestrian, vo::transit, vo::truck, vo::motorcycle, vo::auto_data_fix}) {
-    if (costing == vo::pedestrian) {
+void create_costing_options(DirectionsOptions& directions_options) {
+  for (const auto costing : {auto_, auto_shorter, bicycle, bus, hov, motor_scooter, multimodal,
+                             pedestrian, transit, truck, motorcycle, auto_data_fix}) {
+    if (costing == pedestrian) {
       const rapidjson::Document doc;
       vs::ParsePedestrianCostOptions(doc, "/costing_options/pedestrian",
                                      directions_options.add_costing_options());
@@ -218,7 +217,9 @@ void create_costing_options(vo::DirectionsOptions& directions_options) {
   }
 }
 // check that a path from origin to dest goes along the edge with expected_edge_index
-void assert_is_trivial_path(vo::Location& origin, vo::Location& dest, uint32_t expected_edge_index) {
+void assert_is_trivial_path(valhalla::Location& origin,
+                            valhalla::Location& dest,
+                            uint32_t expected_edge_index) {
 
   // make the config file
   std::stringstream json;
@@ -233,11 +234,11 @@ void assert_is_trivial_path(vo::Location& origin, vo::Location& dest, uint32_t e
                              "file about generating the test tiles.");
   }
 
-  vo::DirectionsOptions directions_options;
+  DirectionsOptions directions_options;
   create_costing_options(directions_options);
   auto mode = vs::TravelMode::kPedestrian;
   vs::cost_ptr_t costs[int(vs::TravelMode::kMaxTravelMode)];
-  auto pedestrian = vs::CreatePedestrianCost(valhalla::odin::Costing::pedestrian, directions_options);
+  auto pedestrian = vs::CreatePedestrianCost(Costing::pedestrian, directions_options);
   costs[int(mode)] = pedestrian;
   assert(bool(costs[int(mode)]));
 
@@ -259,7 +260,7 @@ void assert_is_trivial_path(vo::Location& origin, vo::Location& dest, uint32_t e
   }
 }
 
-void add(GraphId id, float dist, PointLL ll, vo::Location& l) {
+void add(GraphId id, float dist, PointLL ll, valhalla::Location& l) {
   l.mutable_path_edges()->Add()->set_graph_id(id);
   l.mutable_path_edges()->rbegin()->set_percent_along(dist);
   l.mutable_path_edges()->rbegin()->mutable_ll()->set_lng(ll.first);
@@ -273,7 +274,7 @@ void TestTrivialPath() {
   using node::a;
   using node::b;
 
-  vo::Location origin;
+  valhalla::Location origin;
   origin.mutable_ll()->set_lng(a.second.first);
   origin.mutable_ll()->set_lat(a.second.second);
   add(tile_id + uint64_t(1), 0.0f, a.second, origin);
@@ -281,7 +282,7 @@ void TestTrivialPath() {
   add(tile_id + uint64_t(0), 0.0f, a.second, origin);
   add(tile_id + uint64_t(2), 1.0f, a.second, origin);
 
-  vo::Location dest;
+  valhalla::Location dest;
   dest.mutable_ll()->set_lng(b.second.first);
   dest.mutable_ll()->set_lat(b.second.second);
   add(tile_id + uint64_t(3), 0.0f, b.second, dest);
@@ -299,7 +300,7 @@ void TestTrivialPathTriangle() {
   using node::e;
   using node::f;
 
-  vo::Location origin;
+  valhalla::Location origin;
   origin.mutable_ll()->set_lng(e.second.first);
   origin.mutable_ll()->set_lat(e.second.second);
   add(tile_id + uint64_t(9), 0.0f, e.second, origin);
@@ -307,7 +308,7 @@ void TestTrivialPathTriangle() {
   add(tile_id + uint64_t(8), 0.0f, e.second, origin);
   add(tile_id + uint64_t(10), 1.0f, e.second, origin);
 
-  vo::Location dest;
+  valhalla::Location dest;
   dest.mutable_ll()->set_lng(f.second.first);
   dest.mutable_ll()->set_lat(f.second.second);
   add(tile_id + uint64_t(11), 0.0f, f.second, dest);
@@ -362,16 +363,18 @@ void trivial_path_no_uturns(const std::string& config_file) {
 
   // Locations
   std::vector<valhalla::baldr::Location> locations;
-  Location origin(valhalla::midgard::PointLL(5.114587f, 52.095957f), Location::StopType::BREAK);
+  baldr::Location origin(valhalla::midgard::PointLL(5.114587f, 52.095957f),
+                         baldr::Location::StopType::BREAK);
   locations.push_back(origin);
-  Location dest(valhalla::midgard::PointLL(5.114506f, 52.096141f), Location::StopType::BREAK);
+  baldr::Location dest(valhalla::midgard::PointLL(5.114506f, 52.096141f),
+                       baldr::Location::StopType::BREAK);
   locations.push_back(dest);
 
-  vo::DirectionsOptions directions_options;
+  DirectionsOptions directions_options;
   create_costing_options(directions_options);
   std::shared_ptr<vs::DynamicCost> mode_costing[4];
   std::shared_ptr<vs::DynamicCost> cost =
-      vs::CreatePedestrianCost(valhalla::odin::Costing::pedestrian, directions_options);
+      vs::CreatePedestrianCost(Costing::pedestrian, directions_options);
   auto mode = cost->travel_mode();
   mode_costing[static_cast<uint32_t>(mode)] = cost;
 
@@ -393,13 +396,13 @@ void trivial_path_no_uturns(const std::string& config_file) {
                         *directions_options.mutable_locations(1), graph_reader, mode_costing, mode);
 
   vt::AttributesController controller;
-  vo::TripLeg trip_path =
-      vt::TripLegBuilder::Build(controller, graph_reader, mode_costing, path,
-                                *directions_options.mutable_locations(0),
-                                *directions_options.mutable_locations(1), std::list<vo::Location>{});
+  TripLeg trip_path = vt::TripLegBuilder::Build(controller, graph_reader, mode_costing, path,
+                                                *directions_options.mutable_locations(0),
+                                                *directions_options.mutable_locations(1),
+                                                std::list<valhalla::Location>{});
   // really could of got the total of the elapsed_time.
-  vo::DirectionsBuilder directions;
-  vo::DirectionsLeg trip_directions = directions.Build(directions_options, trip_path);
+  odin::DirectionsBuilder directions;
+  DirectionsLeg trip_directions = directions.Build(directions_options, trip_path);
 
   if (trip_directions.summary().time() != 0) {
     std::ostringstream ostr;

@@ -21,6 +21,7 @@
 #include "worker.h"
 
 using namespace valhalla;
+using namespace valhalla::midgard;
 
 namespace std {
 std::string to_string(const midgard::PointLL& p) {

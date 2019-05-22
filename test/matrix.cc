@@ -14,6 +14,7 @@
 #include "thor/timedistancematrix.h"
 #include "thor/worker.h"
 
+using namespace valhalla;
 using namespace valhalla::thor;
 using namespace valhalla::sif;
 using namespace valhalla::loki;
@@ -32,8 +33,7 @@ public:
    * Constructor.
    * @param  options Request options in a pbf
    */
-  SimpleCost(const valhalla::odin::DirectionsOptions& options)
-      : DynamicCost(options, TravelMode::kDrive) {
+  SimpleCost(const DirectionsOptions& options) : DynamicCost(options, TravelMode::kDrive) {
   }
 
   ~SimpleCost() {
@@ -119,7 +119,7 @@ public:
   }
 };
 
-cost_ptr_t CreateSimpleCost(const valhalla::odin::DirectionsOptions& options) {
+cost_ptr_t CreateSimpleCost(const DirectionsOptions& options) {
   return std::make_shared<SimpleCost>(options);
 }
 
@@ -136,7 +136,7 @@ rapidjson::Document to_document(const std::string& request) {
   auto& allocator = d.GetAllocator();
   d.Parse(request.c_str());
   if (d.HasParseError())
-    throw valhalla::valhalla_exception_t{100};
+    throw valhalla_exception_t{100};
   return d;
 }
 
@@ -156,7 +156,7 @@ const std::unordered_map<std::string, float> kMaxDistances = {
 // a scale factor to apply to the score so that we bias towards closer results more
 constexpr float kDistanceScale = 10.f;
 
-void adjust_scores(valhalla::valhalla_request_t& request) {
+void adjust_scores(valhalla_request_t& request) {
   for (auto* locations : {request.options.mutable_locations(), request.options.mutable_sources(),
                           request.options.mutable_targets()}) {
     for (auto& location : *locations) {
@@ -177,7 +177,7 @@ void adjust_scores(valhalla::valhalla_request_t& request) {
       }
 
       // subtract off the min score and cap at max so that path algorithm doesnt go too far
-      auto max_score = kMaxDistances.find(valhalla::odin::Costing_Name(request.options.costing()));
+      auto max_score = kMaxDistances.find(Costing_Name(request.options.costing()));
       for (auto* candidates : {location.mutable_path_edges(), location.mutable_filtered_edges()}) {
         for (auto& candidate : *candidates) {
           candidate.set_distance(candidate.distance() - minScore);
@@ -260,8 +260,8 @@ bool within_tolerance(const uint32_t v1, const uint32_t v2) {
 void test_matrix() {
   loki_worker_t loki_worker(config);
 
-  valhalla::valhalla_request_t request;
-  request.parse(test_request, valhalla::odin::DirectionsOptions::sources_to_targets);
+  valhalla_request_t request;
+  request.parse(test_request, DirectionsOptions::sources_to_targets);
   loki_worker.matrix(request);
   adjust_scores(request);
 
@@ -314,8 +314,8 @@ void test_matrix() {
 void test_matrix_osrm() {
   loki_worker_t loki_worker(config);
 
-  valhalla::valhalla_request_t request;
-  request.parse(test_request_osrm, valhalla::odin::DirectionsOptions::sources_to_targets);
+  valhalla_request_t request;
+  request.parse(test_request_osrm, DirectionsOptions::sources_to_targets);
 
   loki_worker.matrix(request);
   adjust_scores(request);

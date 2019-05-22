@@ -55,8 +55,8 @@ public:
    * @return  Returns the path edges (and elapsed time/modes at end of
    *          each edge).
    */
-  std::vector<PathInfo> GetBestPath(odin::Location& origin,
-                                    odin::Location& dest,
+  std::vector<PathInfo> GetBestPath(valhalla::Location& origin,
+                                    valhalla::Location& dest,
                                     baldr::GraphReader& graphreader,
                                     const std::shared_ptr<sif::DynamicCost>* mode_costing,
                                     const sif::TravelMode mode);
@@ -110,7 +110,7 @@ protected:
    * @param  origll  Lat,lng of the origin.
    * @param  destll  Lat,lng of the destination.
    */
-  void Init(const PointLL& origll, const PointLL& destll);
+  void Init(const midgard::PointLL& origll, const midgard::PointLL& destll);
 
   /**
    * Expand from the node along the forward search path.
@@ -136,14 +136,14 @@ protected:
    * @param  graphreader  Graph tile reader.
    * @param  origin       Location information of the destination
    */
-  void SetOrigin(baldr::GraphReader& graphreader, odin::Location& origin);
+  void SetOrigin(baldr::GraphReader& graphreader, valhalla::Location& origin);
 
   /**
    * Add destination edges to the reverse path adjacency list.
    * @param   graphreader  Graph tile reader.
    * @param   dest         Location information of the destination
    */
-  void SetDestination(baldr::GraphReader& graphreader, const odin::Location& dest);
+  void SetDestination(baldr::GraphReader& graphreader, const valhalla::Location& dest);
 
   /**
    * The edge on the forward search connects to a reached edge on the reverse
