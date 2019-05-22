@@ -11,7 +11,7 @@ set(tests aabb2 access_restriction actor admin attributes_controller complexrest
 
 if(ENABLE_DATA_TOOLS)
   list(APPEND tests astar edgeinfobuilder graphbuilder graphparser graphtilebuilder graphreader isochrone predictive_traffic
-    idtable matrix multipoint_routes names node_search refs search servicedays signinfo  timeparsing trivial_paths uniquenames utrecht)
+    idtable matrix multipoint_routes names node_search refs search servicedays signinfo timedep_paths timeparsing trivial_paths uniquenames utrecht)
 endif()
 
 if(ENABLE_SERVICES)
@@ -108,14 +108,14 @@ if(NOT APPLE)
 endif()
 
 add_dependencies(run-sample test_directories)
-if(ENABLE_DATA_TOOLS)
+if(!ENABLE_DATA_TOOLS)
   ## TODO: fix apple tests!
   if(NOT APPLE)
     add_dependencies(run-mapmatch utrecht_tiles)
   endif()
   add_dependencies(run-isochrone utrecht_tiles)
   add_dependencies(run-matrix utrecht_tiles)
-#  add_dependencies(run-timedep_paths utrecht_tiles)
+  add_dependencies(run-timedep_paths utrecht_tiles)
   add_dependencies(run-trivial_paths utrecht_tiles)
   add_dependencies(predictive_traffic utrecht_tiles)
   add_dependencies(run-multipoint_routes utrecht_tiles)
