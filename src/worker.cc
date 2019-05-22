@@ -549,12 +549,12 @@ void from_json(rapidjson::Document& doc, DirectionsOptions& options) {
       sll->mutable_ll()->set_lat(ll.lat());
       sll->mutable_ll()->set_lng(ll.lng());
       // set type to via by default
-      sll->set_type(odin::Location::kVia);
+      sll->set_type(valhalla::Location::kVia);
     }
     // first and last always get type break
     if (options.shape_size()) {
-      options.mutable_shape(0)->set_type(odin::Location::kBreak);
-      options.mutable_shape(options.shape_size() - 1)->set_type(odin::Location::kBreak);
+      options.mutable_shape(0)->set_type(valhalla::Location::kBreak);
+      options.mutable_shape(options.shape_size() - 1)->set_type(valhalla::Location::kBreak);
     }
   } else {
     parse_locations(doc, options, "shape", 134, false);
