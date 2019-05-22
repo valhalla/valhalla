@@ -16,11 +16,11 @@ using namespace valhalla::midgard;
 using namespace valhalla::loki;
 
 namespace {
-PointLL to_ll(const odin::Location& l) {
+PointLL to_ll(const valhalla::Location& l) {
   return PointLL{l.ll().lng(), l.ll().lat()};
 }
 
-void check_shape(const google::protobuf::RepeatedPtrField<odin::Location>& shape,
+void check_shape(const google::protobuf::RepeatedPtrField<valhalla::Location>& shape,
                  unsigned int max_shape,
                  float max_factor = 1.0f) {
   // Adjust max - this enables max edge_walk shape count to be larger
@@ -38,7 +38,7 @@ void check_shape(const google::protobuf::RepeatedPtrField<odin::Location>& shape
   valhalla::midgard::logging::Log("trace_size::" + std::to_string(shape.size()), " [ANALYTICS] ");
 }
 
-void check_distance(const google::protobuf::RepeatedPtrField<odin::Location>& shape,
+void check_distance(const google::protobuf::RepeatedPtrField<valhalla::Location>& shape,
                     float max_distance,
                     float max_factor = 1.0f) {
   // Adjust max - this enables max edge_walk distance to be larger
@@ -73,7 +73,7 @@ void check_best_paths(unsigned int best_paths, unsigned int max_best_paths) {
 }
 
 void check_best_paths_shape(unsigned int best_paths,
-                            const google::protobuf::RepeatedPtrField<odin::Location>& shape,
+                            const google::protobuf::RepeatedPtrField<valhalla::Location>& shape,
                             size_t max_best_paths_shape) {
 
   // Validate shape is not larger than the configured best paths shape max
@@ -123,7 +123,7 @@ void loki_worker_t::init_trace(valhalla_request_t& request) {
   // Determine max factor, defaults to 1. This factor is used to increase
   // the max value when an edge_walk shape match is requested
   float max_factor = 1.0f;
-  if (request.options.shape_match() == odin::ShapeMatch::edge_walk) {
+  if (request.options.shape_match() == ShapeMatch::edge_walk) {
     max_factor = 5.0f;
   }
 
@@ -132,7 +132,7 @@ void loki_worker_t::init_trace(valhalla_request_t& request) {
   check_distance(request.options.shape(), max_distance.find("trace")->second, max_factor);
 
   // Validate best paths and best paths shape for `map_snap` requests
-  if (request.options.shape_match() == odin::ShapeMatch::map_snap) {
+  if (request.options.shape_match() == ShapeMatch::map_snap) {
     check_best_paths(request.options.best_paths(), max_best_paths);
     check_best_paths_shape(request.options.best_paths(), request.options.shape(),
                            max_best_paths_shape);
@@ -155,15 +155,15 @@ void loki_worker_t::init_trace(valhalla_request_t& request) {
 
 void loki_worker_t::trace(valhalla_request_t& request) {
   init_trace(request);
-  auto costing = odin::Costing_Name(request.options.costing());
+  auto costing = Costing_Name(request.options.costing());
   if (costing == "multimodal") {
-    throw valhalla_exception_t{140, odin::DirectionsOptions_Action_Name(request.options.action())};
+    throw valhalla_exception_t{140, DirectionsOptions_Action_Name(request.options.action())};
   };
 }
 
 void loki_worker_t::locations_from_shape(valhalla_request_t& request) {
-  std::vector<Location> locations{PathLocation::fromPBF(*request.options.shape().begin()),
-                                  PathLocation::fromPBF(*request.options.shape().rbegin())};
+  std::vector<baldr::Location> locations{PathLocation::fromPBF(*request.options.shape().begin()),
+                                         PathLocation::fromPBF(*request.options.shape().rbegin())};
   locations.front().node_snap_tolerance_ = 0.f;
   locations.front().radius_ = 10;
   locations.back().node_snap_tolerance_ = 0.f;
@@ -210,7 +210,7 @@ void loki_worker_t::locations_from_shape(valhalla_request_t& request) {
 
         // Close to centerline - set to no side of street
         if (std::get<1>(closest) < 5.0f) {
-          e.set_side_of_street(odin::Location::kNone);
+          e.set_side_of_street(valhalla::Location::kNone);
           continue;
         }
 
@@ -218,8 +218,8 @@ void loki_worker_t::locations_from_shape(valhalla_request_t& request) {
         int idx = std::get<2>(closest);
         LineSegment2<PointLL> segment(shape[idx], shape[idx + 1]);
         bool is_left = segment.IsLeft(orig_ll) > 0;
-        e.set_side_of_street(is_left == de->forward() ? odin::Location::kLeft
-                                                      : odin::Location::kRight);
+        e.set_side_of_street(is_left == de->forward() ? valhalla::Location::kLeft
+                                                      : valhalla::Location::kRight);
       }
 
       auto dest = request.options.mutable_locations(1);
@@ -237,7 +237,7 @@ void loki_worker_t::locations_from_shape(valhalla_request_t& request) {
 
         // Close to centerline - set to no side of street
         if (std::get<1>(closest) < 5.0f) {
-          e.set_side_of_street(odin::Location::kNone);
+          e.set_side_of_street(valhalla::Location::kNone);
           continue;
         }
 
@@ -245,8 +245,8 @@ void loki_worker_t::locations_from_shape(valhalla_request_t& request) {
         int idx = std::get<2>(closest);
         LineSegment2<PointLL> segment(shape[idx], shape[idx + 1]);
         bool is_left = segment.IsLeft(dest_ll) > 0;
-        e.set_side_of_street(is_left == de->forward() ? odin::Location::kLeft
-                                                      : odin::Location::kRight);
+        e.set_side_of_street(is_left == de->forward() ? valhalla::Location::kLeft
+                                                      : valhalla::Location::kRight);
       }
     }
   } catch (const std::exception&) { throw valhalla_exception_t{171}; }

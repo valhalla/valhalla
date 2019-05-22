@@ -52,8 +52,8 @@ MultiModalPathAlgorithm::~MultiModalPathAlgorithm() {
 }
 
 // Initialize prior to finding best path
-void MultiModalPathAlgorithm::Init(const PointLL& origll,
-                                   const PointLL& destll,
+void MultiModalPathAlgorithm::Init(const midgard::PointLL& origll,
+                                   const midgard::PointLL& destll,
                                    const std::shared_ptr<DynamicCost>& costing) {
   // Disable A* for multimodal
   astarheuristic_.Init(destll, 0.0f);
@@ -95,8 +95,8 @@ void MultiModalPathAlgorithm::Clear() {
 
 // Calculate best path using multiple modes (e.g. transit).
 std::vector<PathInfo>
-MultiModalPathAlgorithm::GetBestPath(odin::Location& origin,
-                                     odin::Location& destination,
+MultiModalPathAlgorithm::GetBestPath(valhalla::Location& origin,
+                                     valhalla::Location& destination,
                                      GraphReader& graphreader,
                                      const std::shared_ptr<DynamicCost>* mode_costing,
                                      const TravelMode mode) {
@@ -123,8 +123,9 @@ MultiModalPathAlgorithm::GetBestPath(odin::Location& origin,
   // Note: because we can correlate to more than one place for a given PathLocation
   // using edges.front here means we are only setting the heuristics to one of them
   // alternate paths using the other correlated points to may be harder to find
-  PointLL origin_new(origin.path_edges(0).ll().lng(), origin.path_edges(0).ll().lat());
-  PointLL destination_new(destination.path_edges(0).ll().lng(), destination.path_edges(0).ll().lat());
+  midgard::PointLL origin_new(origin.path_edges(0).ll().lng(), origin.path_edges(0).ll().lat());
+  midgard::PointLL destination_new(destination.path_edges(0).ll().lng(),
+                                   destination.path_edges(0).ll().lat());
   Init(origin_new, destination_new, costing);
   float mindist = astarheuristic_.GetDistance(origin_new);
 
@@ -537,13 +538,13 @@ bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
 
 // Add an edge at the origin to the adjacency list
 void MultiModalPathAlgorithm::SetOrigin(GraphReader& graphreader,
-                                        odin::Location& origin,
-                                        const odin::Location& destination,
+                                        valhalla::Location& origin,
+                                        const valhalla::Location& destination,
                                         const std::shared_ptr<DynamicCost>& costing) {
   // Only skip inbound edges if we have other options
   bool has_other_edges = false;
   std::for_each(origin.path_edges().begin(), origin.path_edges().end(),
-                [&has_other_edges](const odin::Location::PathEdge& e) {
+                [&has_other_edges](const valhalla::Location::PathEdge& e) {
                   has_other_edges = has_other_edges || !e.end_node();
                 });
 
@@ -647,12 +648,12 @@ void MultiModalPathAlgorithm::SetOrigin(GraphReader& graphreader,
 
 // Add a destination edge
 uint32_t MultiModalPathAlgorithm::SetDestination(GraphReader& graphreader,
-                                                 const odin::Location& dest,
+                                                 const valhalla::Location& dest,
                                                  const std::shared_ptr<DynamicCost>& costing) {
   // Only skip outbound edges if we have other options
   bool has_other_edges = false;
   std::for_each(dest.path_edges().begin(), dest.path_edges().end(),
-                [&has_other_edges](const odin::Location::PathEdge& e) {
+                [&has_other_edges](const valhalla::Location::PathEdge& e) {
                   has_other_edges = has_other_edges || !e.begin_node();
                 });
 
@@ -768,7 +769,7 @@ bool MultiModalPathAlgorithm::ExpandFromNode(baldr::GraphReader& graphreader,
 // if there are any transit stops within maximum walking distance.
 // TODO - once auto/bicycle are allowed modes we need to check if parking
 // or bikeshare locations are within walking distance.
-bool MultiModalPathAlgorithm::CanReachDestination(const odin::Location& destination,
+bool MultiModalPathAlgorithm::CanReachDestination(const valhalla::Location& destination,
                                                   GraphReader& graphreader,
                                                   const TravelMode dest_mode,
                                                   const std::shared_ptr<DynamicCost>& costing) {

@@ -8,8 +8,8 @@ using namespace valhalla::sif;
 
 namespace {
 static bool IsTrivial(const uint64_t& edgeid,
-                      const valhalla::odin::Location& origin,
-                      const valhalla::odin::Location& destination) {
+                      const valhalla::Location& origin,
+                      const valhalla::Location& destination) {
   for (const auto& destination_edge : destination.path_edges()) {
     if (destination_edge.graph_id() == edgeid) {
       for (const auto& origin_edge : origin.path_edges()) {
@@ -137,8 +137,8 @@ void TimeDistanceMatrix::ExpandForward(GraphReader& graphreader,
 // Calculate time and distance from one origin location to many destination
 // locations.
 std::vector<TimeDistance>
-TimeDistanceMatrix::OneToMany(const odin::Location& origin,
-                              const google::protobuf::RepeatedPtrField<odin::Location>& locations,
+TimeDistanceMatrix::OneToMany(const valhalla::Location& origin,
+                              const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
                               GraphReader& graphreader,
                               const std::shared_ptr<DynamicCost>* mode_costing,
                               const TravelMode mode,
@@ -297,8 +297,8 @@ void TimeDistanceMatrix::ExpandReverse(GraphReader& graphreader,
 // Many to one time and distance cost matrix. Computes time and distance
 // from many locations to one location.
 std::vector<TimeDistance>
-TimeDistanceMatrix::ManyToOne(const odin::Location& dest,
-                              const google::protobuf::RepeatedPtrField<odin::Location>& locations,
+TimeDistanceMatrix::ManyToOne(const valhalla::Location& dest,
+                              const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
                               GraphReader& graphreader,
                               const std::shared_ptr<DynamicCost>* mode_costing,
                               const TravelMode mode,
@@ -368,18 +368,18 @@ TimeDistanceMatrix::ManyToOne(const odin::Location& dest,
 
 // Many to one time and distance cost matrix. Computes time and distance
 // from many locations to many locations.
-std::vector<TimeDistance>
-TimeDistanceMatrix::ManyToMany(const google::protobuf::RepeatedPtrField<odin::Location>& locations,
-                               GraphReader& graphreader,
-                               const std::shared_ptr<DynamicCost>* mode_costing,
-                               const sif::TravelMode mode,
-                               const float max_matrix_distance) {
+std::vector<TimeDistance> TimeDistanceMatrix::ManyToMany(
+    const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
+    GraphReader& graphreader,
+    const std::shared_ptr<DynamicCost>* mode_costing,
+    const sif::TravelMode mode,
+    const float max_matrix_distance) {
   return SourceToTarget(locations, locations, graphreader, mode_costing, mode, max_matrix_distance);
 }
 
 std::vector<TimeDistance> TimeDistanceMatrix::SourceToTarget(
-    const google::protobuf::RepeatedPtrField<odin::Location>& source_location_list,
-    const google::protobuf::RepeatedPtrField<odin::Location>& target_location_list,
+    const google::protobuf::RepeatedPtrField<valhalla::Location>& source_location_list,
+    const google::protobuf::RepeatedPtrField<valhalla::Location>& target_location_list,
     baldr::GraphReader& graphreader,
     const std::shared_ptr<sif::DynamicCost>* mode_costing,
     const sif::TravelMode mode,
@@ -405,11 +405,12 @@ std::vector<TimeDistance> TimeDistanceMatrix::SourceToTarget(
 }
 
 // Add edges at the origin to the adjacency list
-void TimeDistanceMatrix::SetOriginOneToMany(GraphReader& graphreader, const odin::Location& origin) {
+void TimeDistanceMatrix::SetOriginOneToMany(GraphReader& graphreader,
+                                            const valhalla::Location& origin) {
   // Only skip inbound edges if we have other options
   bool has_other_edges = false;
   std::for_each(origin.path_edges().begin(), origin.path_edges().end(),
-                [&has_other_edges](const odin::Location::PathEdge& e) {
+                [&has_other_edges](const valhalla::Location::PathEdge& e) {
                   has_other_edges = has_other_edges || !e.end_node();
                 });
 
@@ -459,7 +460,8 @@ void TimeDistanceMatrix::SetOriginOneToMany(GraphReader& graphreader, const odin
 }
 
 // Add origin for a many to one time distance matrix.
-void TimeDistanceMatrix::SetOriginManyToOne(GraphReader& graphreader, const odin::Location& dest) {
+void TimeDistanceMatrix::SetOriginManyToOne(GraphReader& graphreader,
+                                            const valhalla::Location& dest) {
   // Iterate through edges and add opposing edges to adjacency list
   for (const auto& edge : dest.path_edges()) {
     // Disallow any user avoided edges if the avoid location is behind the destination along the edge
@@ -511,7 +513,7 @@ void TimeDistanceMatrix::SetOriginManyToOne(GraphReader& graphreader, const odin
 // Set destinations
 void TimeDistanceMatrix::SetDestinations(
     GraphReader& graphreader,
-    const google::protobuf::RepeatedPtrField<odin::Location>& locations) {
+    const google::protobuf::RepeatedPtrField<valhalla::Location>& locations) {
   // For each destination
   uint32_t idx = 0;
   for (const auto& loc : locations) {
@@ -560,7 +562,7 @@ void TimeDistanceMatrix::SetDestinations(
 // Set destinations for the many to one case.
 void TimeDistanceMatrix::SetDestinationsManyToOne(
     GraphReader& graphreader,
-    const google::protobuf::RepeatedPtrField<odin::Location>& locations) {
+    const google::protobuf::RepeatedPtrField<valhalla::Location>& locations) {
   // For each destination
   uint32_t idx = 0;
   for (const auto& loc : locations) {
@@ -606,8 +608,8 @@ void TimeDistanceMatrix::SetDestinationsManyToOne(
 // Update any destinations along the edge. Returns true if all destinations
 // have be settled.
 bool TimeDistanceMatrix::UpdateDestinations(
-    const odin::Location& origin,
-    const google::protobuf::RepeatedPtrField<odin::Location>& locations,
+    const valhalla::Location& origin,
+    const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
     std::vector<uint32_t>& destinations,
     const DirectedEdge* edge,
     const EdgeLabel& pred,

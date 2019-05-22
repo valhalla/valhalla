@@ -54,8 +54,8 @@ public:
    * @return Returns the path edges (and elapsed time/modes at end of
    *          each edge).
    */
-  virtual std::vector<PathInfo> GetBestPath(odin::Location& origin,
-                                            odin::Location& dest,
+  virtual std::vector<PathInfo> GetBestPath(valhalla::Location& origin,
+                                            valhalla::Location& dest,
                                             baldr::GraphReader& graphreader,
                                             const std::shared_ptr<sif::DynamicCost>* mode_costing,
                                             const sif::TravelMode mode);
@@ -105,7 +105,7 @@ protected:
    * @param  origll  Lat,lng of the origin.
    * @param  destll  Lat,lng of the destination.
    */
-  virtual void Init(const PointLL& origll, const PointLL& destll);
+  virtual void Init(const midgard::PointLL& origll, const midgard::PointLL& destll);
 
   /**
    * Modify hierarchy limits based on distance between origin and destination
@@ -136,7 +136,7 @@ protected:
                      const sif::EdgeLabel& pred,
                      const uint32_t pred_idx,
                      const bool from_transition,
-                     const odin::Location& dest,
+                     const valhalla::Location& dest,
                      std::pair<int32_t, float>& best_path);
 
   /**
@@ -145,8 +145,9 @@ protected:
    * @param  origin       Location information of the origin.
    * @param  dest         Location information of the destination.
    */
-  virtual void
-  SetOrigin(baldr::GraphReader& graphreader, odin::Location& origin, const odin::Location& dest);
+  virtual void SetOrigin(baldr::GraphReader& graphreader,
+                         valhalla::Location& origin,
+                         const valhalla::Location& dest);
 
   /**
    * Set the destination edge(s).
@@ -154,7 +155,7 @@ protected:
    * @param   dest         Location information of the destination.
    * @return  Returns the relative density near the destination (0-15)
    */
-  virtual uint32_t SetDestination(baldr::GraphReader& graphreader, const odin::Location& dest);
+  virtual uint32_t SetDestination(baldr::GraphReader& graphreader, const valhalla::Location& dest);
 
   /**
    * Form the path from the adjacency list. Recovers the path from the

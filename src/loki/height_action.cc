@@ -10,10 +10,10 @@ using namespace valhalla::baldr;
 using namespace valhalla::skadi;
 
 namespace {
-PointLL to_ll(const odin::Location& l) {
+PointLL to_ll(const valhalla::Location& l) {
   return PointLL{l.ll().lng(), l.ll().lat()};
 }
-void from_ll(odin::Location* l, const PointLL& p) {
+void from_ll(valhalla::Location* l, const PointLL& p) {
   l->mutable_ll()->set_lat(p.lat());
   l->mutable_ll()->set_lng(p.lng());
 }

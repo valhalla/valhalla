@@ -10,28 +10,25 @@
 #ifdef HAVE_HTTP
 #include <prime_server/http_protocol.hpp>
 #include <prime_server/prime_server.hpp>
-using namespace prime_server;
 #endif
 
 namespace valhalla {
 
 // to use protobuflite we cant use descriptors which means we cant translate enums to strings
 // and so we reimplement the ones we use here
-namespace odin {
-bool DirectionsOptions_Action_Parse(const std::string& action, odin::DirectionsOptions::Action* a);
-const std::string& DirectionsOptions_Action_Name(const odin::DirectionsOptions::Action action);
-bool Costing_Parse(const std::string& costing, odin::Costing* c);
-const std::string& Costing_Name(const odin::Costing costing);
-bool ShapeMatch_Parse(const std::string& match, odin::ShapeMatch* s);
-const std::string& ShapeMatch_Name(const odin::ShapeMatch match);
-bool DirectionsOptions_Format_Parse(const std::string& format, odin::DirectionsOptions::Format* f);
-const std::string& DirectionsOptions_Format_Name(const odin::DirectionsOptions::Format match);
-const std::string& DirectionsOptions_Units_Name(const odin::DirectionsOptions::Units unit);
-bool FilterAction_Parse(const std::string& action, odin::FilterAction* a);
-const std::string& FilterAction_Name(const odin::FilterAction action);
-bool DirectionsType_Parse(const std::string& dtype, odin::DirectionsType* t);
-bool PreferredSide_Parse(const std::string& pside, odin::Location::PreferredSide* p);
-} // namespace odin
+bool DirectionsOptions_Action_Parse(const std::string& action, DirectionsOptions::Action* a);
+const std::string& DirectionsOptions_Action_Name(const DirectionsOptions::Action action);
+bool Costing_Parse(const std::string& costing, Costing* c);
+const std::string& Costing_Name(const Costing costing);
+bool ShapeMatch_Parse(const std::string& match, ShapeMatch* s);
+const std::string& ShapeMatch_Name(const ShapeMatch match);
+bool DirectionsOptions_Format_Parse(const std::string& format, DirectionsOptions::Format* f);
+const std::string& DirectionsOptions_Format_Name(const DirectionsOptions::Format match);
+const std::string& DirectionsOptions_Units_Name(const DirectionsOptions::Units unit);
+bool FilterAction_Parse(const std::string& action, FilterAction* a);
+const std::string& FilterAction_Name(const FilterAction action);
+bool DirectionsType_Parse(const std::string& dtype, DirectionsType* t);
+bool PreferredSide_Parse(const std::string& pside, valhalla::Location::PreferredSide* p);
 
 const std::unordered_map<unsigned, std::string>
     error_codes{// loki project 1xx
@@ -164,33 +161,30 @@ struct valhalla_exception_t : public std::runtime_error {
 
 // TODO: this will go away and DirectionsOptions will be the request object
 struct valhalla_request_t {
-  rapidjson::Document document;
-  odin::DirectionsOptions options;
-
-  valhalla_request_t();
-  void parse(const std::string& request, odin::DirectionsOptions::Action action);
-  void parse(const std::string& request, const std::string& serialized_options);
+  DirectionsOptions options;
+  void parse(const std::string& request, DirectionsOptions::Action action);
+  void parse(const std::string& serialized_options);
 #ifdef HAVE_HTTP
-  void parse(const http_request_t& request);
+  void parse(const prime_server::http_request_t& request);
 #endif
 };
 
 #ifdef HAVE_HTTP
-worker_t::result_t jsonify_error(const valhalla_exception_t& exception,
-                                 http_request_info_t& request_info,
-                                 const valhalla_request_t& options);
-worker_t::result_t to_response(const baldr::json::ArrayPtr& array,
-                               http_request_info_t& request_info,
-                               const valhalla_request_t& options);
-worker_t::result_t to_response(const baldr::json::MapPtr& map,
-                               http_request_info_t& request_info,
-                               const valhalla_request_t& options);
-worker_t::result_t to_response_json(const std::string& json,
-                                    http_request_info_t& request_info,
-                                    const valhalla_request_t& options);
-worker_t::result_t to_response_xml(const std::string& xml,
-                                   http_request_info_t& request_info,
-                                   const valhalla_request_t& options);
+prime_server::worker_t::result_t jsonify_error(const valhalla_exception_t& exception,
+                                               prime_server::http_request_info_t& request_info,
+                                               const valhalla_request_t& options);
+prime_server::worker_t::result_t to_response(const baldr::json::ArrayPtr& array,
+                                             prime_server::http_request_info_t& request_info,
+                                             const valhalla_request_t& options);
+prime_server::worker_t::result_t to_response(const baldr::json::MapPtr& map,
+                                             prime_server::http_request_info_t& request_info,
+                                             const valhalla_request_t& options);
+prime_server::worker_t::result_t to_response_json(const std::string& json,
+                                                  prime_server::http_request_info_t& request_info,
+                                                  const valhalla_request_t& options);
+prime_server::worker_t::result_t to_response_xml(const std::string& xml,
+                                                 prime_server::http_request_info_t& request_info,
+                                                 const valhalla_request_t& options);
 #endif
 
 class service_worker_t {
@@ -212,9 +206,9 @@ public:
    * @return result_t      the finished bit of work to be either send back to the client or
    * forwarded on to the next pipeline stage
    */
-  virtual worker_t::result_t work(const std::list<zmq::message_t>& job,
-                                  void* request_info,
-                                  const std::function<void()>& interrupt) = 0;
+  virtual prime_server::worker_t::result_t work(const std::list<zmq::message_t>& job,
+                                                void* request_info,
+                                                const std::function<void()>& interrupt) = 0;
 #endif
 
   /**

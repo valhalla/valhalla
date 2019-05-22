@@ -13,6 +13,7 @@
 #include <random>
 #endif
 
+using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 
 namespace valhalla {
@@ -157,7 +158,7 @@ public:
    * @param  costing specified costing type.
    * @param  options pbf with request options.
    */
-  MotorScooterCost(const odin::Costing costing, const odin::DirectionsOptions& options);
+  MotorScooterCost(const Costing costing, const DirectionsOptions& options);
 
   // virtual destructor
   virtual ~MotorScooterCost() {
@@ -347,14 +348,13 @@ public:
 };
 
 // Constructor
-MotorScooterCost::MotorScooterCost(const odin::Costing costing,
-                                   const odin::DirectionsOptions& options)
+MotorScooterCost::MotorScooterCost(const Costing costing, const DirectionsOptions& options)
     : DynamicCost(options, TravelMode::kDrive), trans_density_factor_{1.0f, 1.0f, 1.0f, 1.0f,
                                                                       1.0f, 1.1f, 1.2f, 1.3f,
                                                                       1.4f, 1.6f, 1.9f, 2.2f,
                                                                       2.5f, 2.8f, 3.1f, 3.5f} {
   // Grab the costing options based on the specified costing type
-  const odin::CostingOptions& costing_options = options.costing_options(static_cast<int>(costing));
+  const CostingOptions& costing_options = options.costing_options(static_cast<int>(costing));
 
   // Get the base costs
   get_base_costs(costing_options);
@@ -549,7 +549,7 @@ Cost MotorScooterCost::TransitionCostReverse(const uint32_t idx,
 
 void ParseMotorScooterCostOptions(const rapidjson::Document& doc,
                                   const std::string& costing_options_key,
-                                  odin::CostingOptions* pbf_costing_options) {
+                                  CostingOptions* pbf_costing_options) {
   auto json_costing_options = rapidjson::get_child_optional(doc, costing_options_key.c_str());
 
   if (json_costing_options) {
@@ -632,8 +632,7 @@ void ParseMotorScooterCostOptions(const rapidjson::Document& doc,
   }
 }
 
-cost_ptr_t CreateMotorScooterCost(const odin::Costing costing,
-                                  const odin::DirectionsOptions& options) {
+cost_ptr_t CreateMotorScooterCost(const Costing costing, const DirectionsOptions& options) {
   return std::make_shared<MotorScooterCost>(costing, options);
 }
 
@@ -651,7 +650,7 @@ namespace {
 
 class TestMotorScooterCost : public MotorScooterCost {
 public:
-  TestMotorScooterCost(const odin::Costing costing, const odin::DirectionsOptions& options)
+  TestMotorScooterCost(const Costing costing, const DirectionsOptions& options)
       : MotorScooterCost(costing, options){};
 
   using MotorScooterCost::alley_penalty_;
@@ -665,9 +664,9 @@ public:
 TestMotorScooterCost* make_motorscootercost_from_json(const std::string& property, float testVal) {
   std::stringstream ss;
   ss << R"({"costing_options":{"motor_scooter":{")" << property << R"(":)" << testVal << "}}}";
-  valhalla::valhalla_request_t request;
-  request.parse(ss.str(), valhalla::odin::DirectionsOptions::route);
-  return new TestMotorScooterCost(valhalla::odin::Costing::motor_scooter, request.options);
+  valhalla_request_t request;
+  request.parse(ss.str(), valhalla::DirectionsOptions::route);
+  return new TestMotorScooterCost(valhalla::Costing::motor_scooter, request.options);
 }
 
 template <typename T>
