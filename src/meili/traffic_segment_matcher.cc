@@ -126,8 +126,8 @@ TrafficSegmentMatcher::TrafficSegmentMatcher(const boost::property_tree::ptree& 
 
 std::string TrafficSegmentMatcher::match(const std::string& json) {
   // Try to parse json
-  valhalla::valhalla_request_t request;
-  request.parse(json, valhalla::odin::DirectionsOptions::trace_route);
+  valhalla_request_t request;
+  request.parse(json, valhalla::DirectionsOptions::trace_route);
 
   // Create a matcher
   std::shared_ptr<MapMatcher> matcher;
@@ -422,7 +422,7 @@ TrafficSegmentMatcher::form_segments(const std::list<std::vector<interpolation_t
 }
 
 std::vector<meili::Measurement>
-TrafficSegmentMatcher::parse_measurements(const odin::DirectionsOptions& options,
+TrafficSegmentMatcher::parse_measurements(const DirectionsOptions& options,
                                           float default_accuracy,
                                           float default_search_radius) {
   // check for required trace points

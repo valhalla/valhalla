@@ -20,7 +20,7 @@ namespace sif {
  */
 void ParseAutoCostOptions(const rapidjson::Document& doc,
                           const std::string& costing_options_key,
-                          odin::CostingOptions* pbf_costing_options);
+                          CostingOptions* pbf_costing_options);
 
 /**
  * Create an auto route cost method. This is generally shortest time but uses
@@ -28,7 +28,7 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
  * @param  costing specified costing type.
  * @param  options pbf with request options.
  */
-cost_ptr_t CreateAutoCost(const odin::Costing costing, const odin::DirectionsOptions& options);
+cost_ptr_t CreateAutoCost(const Costing costing, const DirectionsOptions& options);
 
 /**
  * Parses the auto_shorter cost options from json and stores values in pbf.
@@ -39,7 +39,7 @@ cost_ptr_t CreateAutoCost(const odin::Costing costing, const odin::DirectionsOpt
  */
 void ParseAutoShorterCostOptions(const rapidjson::Document& doc,
                                  const std::string& costing_options_key,
-                                 odin::CostingOptions* pbf_costing_options);
+                                 CostingOptions* pbf_costing_options);
 
 /**
  * Create an auto shorter cost method. This is derived from auto costing and
@@ -48,7 +48,7 @@ void ParseAutoShorterCostOptions(const rapidjson::Document& doc,
  * @param  costing specified costing type.
  * @param  options pbf with request options.
  */
-cost_ptr_t CreateAutoShorterCost(const odin::Costing costing, const odin::DirectionsOptions& options);
+cost_ptr_t CreateAutoShorterCost(const Costing costing, const DirectionsOptions& options);
 
 /**
  * Parses the auto_data_fix cost options from json and stores values in pbf.
@@ -59,7 +59,7 @@ cost_ptr_t CreateAutoShorterCost(const odin::Costing costing, const odin::Direct
  */
 void ParseAutoDataFixCostOptions(const rapidjson::Document& doc,
                                  const std::string& costing_options_key,
-                                 odin::CostingOptions* pbf_costing_options);
+                                 CostingOptions* pbf_costing_options);
 
 /**
  * Create an auto costing method for data fixing. This is derived from auto
@@ -69,7 +69,7 @@ void ParseAutoDataFixCostOptions(const rapidjson::Document& doc,
  * @param  costing specified costing type.
  * @param  options pbf with request options.
  */
-cost_ptr_t CreateAutoDataFixCost(const odin::Costing costing, const odin::DirectionsOptions& options);
+cost_ptr_t CreateAutoDataFixCost(const Costing costing, const DirectionsOptions& options);
 
 /**
  * Parses the bus cost options from json and stores values in pbf.
@@ -80,7 +80,7 @@ cost_ptr_t CreateAutoDataFixCost(const odin::Costing costing, const odin::Direct
  */
 void ParseBusCostOptions(const rapidjson::Document& doc,
                          const std::string& costing_options_key,
-                         odin::CostingOptions* pbf_costing_options);
+                         CostingOptions* pbf_costing_options);
 
 /**
  * Create a bus cost method. This is derived from auto costing and
@@ -89,7 +89,7 @@ void ParseBusCostOptions(const rapidjson::Document& doc,
  * @param  costing specified costing type.
  * @param  options pbf with request options.
  */
-cost_ptr_t CreateBusCost(const odin::Costing costing, const odin::DirectionsOptions& options);
+cost_ptr_t CreateBusCost(const Costing costing, const DirectionsOptions& options);
 
 /**
  * Parses the hov cost options from json and stores values in pbf.
@@ -100,7 +100,7 @@ cost_ptr_t CreateBusCost(const odin::Costing costing, const odin::DirectionsOpti
  */
 void ParseHOVCostOptions(const rapidjson::Document& doc,
                          const std::string& costing_options_key,
-                         odin::CostingOptions* pbf_costing_options);
+                         CostingOptions* pbf_costing_options);
 
 /**
  * Create a hov cost method. This is derived from auto costing and
@@ -108,7 +108,7 @@ void ParseHOVCostOptions(const rapidjson::Document& doc,
  * @param  costing specified costing type.
  * @param  options pbf with request options.
  */
-cost_ptr_t CreateHOVCost(const odin::Costing costing, const odin::DirectionsOptions& options);
+cost_ptr_t CreateHOVCost(const Costing costing, const DirectionsOptions& options);
 
 /**
  * Parses the taxi cost options from json and stores values in pbf.
@@ -119,7 +119,7 @@ cost_ptr_t CreateHOVCost(const odin::Costing costing, const odin::DirectionsOpti
  */
 void ParseTaxiCostOptions(const rapidjson::Document& doc,
                           const std::string& costing_options_key,
-                          odin::CostingOptions* pbf_costing_options);
+                          CostingOptions* pbf_costing_options);
 
 /**
  * Create a taxi cost method. This is derived from auto costing and
@@ -127,7 +127,7 @@ void ParseTaxiCostOptions(const rapidjson::Document& doc,
  * @param  costing specified costing type.
  * @param  options pbf with request options.
  */
-cost_ptr_t CreateTaxiCost(const odin::Costing costing, const odin::DirectionsOptions& options);
+cost_ptr_t CreateTaxiCost(const Costing costing, const DirectionsOptions& options);
 
 } // namespace sif
 } // namespace valhalla

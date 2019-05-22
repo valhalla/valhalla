@@ -43,7 +43,7 @@ void TimeDepForward::ExpandForward(GraphReader& graphreader,
                                    const bool from_transition,
                                    uint64_t localtime,
                                    int32_t seconds_of_week,
-                                   const odin::Location& destination,
+                                   const valhalla::Location& destination,
                                    std::pair<int32_t, float>& best_path) {
   // Get the tile and the node info. Skip if tile is null (can happen
   // with regional data sets) or if no access at the node.
@@ -167,8 +167,8 @@ void TimeDepForward::ExpandForward(GraphReader& graphreader,
 
 // Calculate time-dependent best path using a forward search. Supports
 // "depart-at" routes.
-std::vector<PathInfo> TimeDepForward::GetBestPath(odin::Location& origin,
-                                                  odin::Location& destination,
+std::vector<PathInfo> TimeDepForward::GetBestPath(valhalla::Location& origin,
+                                                  valhalla::Location& destination,
                                                   GraphReader& graphreader,
                                                   const std::shared_ptr<DynamicCost>* mode_costing,
                                                   const TravelMode mode) {
@@ -187,8 +187,9 @@ std::vector<PathInfo> TimeDepForward::GetBestPath(odin::Location& origin,
   // Note: because we can correlate to more than one place for a given PathLocation
   // using edges.front here means we are only setting the heuristics to one of them
   // alternate paths using the other correlated points to may be harder to find
-  PointLL origin_new(origin.path_edges(0).ll().lng(), origin.path_edges(0).ll().lat());
-  PointLL destination_new(destination.path_edges(0).ll().lng(), destination.path_edges(0).ll().lat());
+  midgard::PointLL origin_new(origin.path_edges(0).ll().lng(), origin.path_edges(0).ll().lat());
+  midgard::PointLL destination_new(destination.path_edges(0).ll().lng(),
+                                   destination.path_edges(0).ll().lat());
   Init(origin_new, destination_new);
   float mindist = astarheuristic_.GetDistance(origin_new);
 
@@ -210,7 +211,7 @@ std::vector<PathInfo> TimeDepForward::GetBestPath(odin::Location& origin,
                                     DateTime::get_tz_db().from_index(origin_tz_index_));
 
   // Set seconds from beginning of the week
-  seconds_of_week_ = DateTime::day_of_week(origin.date_time()) * kSecondsPerDay +
+  seconds_of_week_ = DateTime::day_of_week(origin.date_time()) * midgard::kSecondsPerDay +
                      DateTime::seconds_from_midnight(origin.date_time());
 
   // Update hierarchy limits

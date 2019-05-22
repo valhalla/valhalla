@@ -20,7 +20,7 @@ namespace sif {
  */
 void ParseMotorcycleCostOptions(const rapidjson::Document& doc,
                                 const std::string& costing_options_key,
-                                odin::CostingOptions* pbf_costing_options);
+                                CostingOptions* pbf_costing_options);
 
 /**
  * Create motorcycle cost method. This is derived from auto costing and
@@ -29,7 +29,7 @@ void ParseMotorcycleCostOptions(const rapidjson::Document& doc,
  * @param  costing specified costing type.
  * @param  options pbf with request options.
  */
-cost_ptr_t CreateMotorcycleCost(const odin::Costing costing, const odin::DirectionsOptions& options);
+cost_ptr_t CreateMotorcycleCost(const Costing costing, const DirectionsOptions& options);
 
 } // namespace sif
 } // namespace valhalla

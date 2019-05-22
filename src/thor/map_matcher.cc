@@ -129,7 +129,7 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
                      const std::shared_ptr<sif::DynamicCost>* mode_costing,
                      const sif::TravelMode mode,
                      std::vector<std::pair<GraphId, GraphId>>& disconnected_edges,
-                     const odin::DirectionsOptions options) {
+                     const DirectionsOptions options) {
   // Set costing based on the mode
   const auto& costing = mode_costing[static_cast<uint32_t>(mode)];
   const bool use_timestamps = options.use_timestamps();
