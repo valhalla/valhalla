@@ -2,6 +2,7 @@
 #include <cstdlib>
 #include <iostream>
 
+#include "baldr/turnlanes.h"
 #include "midgard/constants.h"
 #include "midgard/util.h"
 
@@ -13,6 +14,7 @@
 #include <valhalla/proto/trip.pb.h>
 
 using namespace valhalla::midgard;
+using namespace valhalla::baldr;
 
 namespace {
 const std::string& TripLeg_RoadClass_Name(int v) {
@@ -905,7 +907,96 @@ std::string EnhancedTripLeg_Edge::TurnLanesToString(
     if (!str.empty()) {
       str += "|";
     }
-    str += std::to_string(turn_lane.directions_mask());
+
+    uint16_t mask = turn_lane.directions_mask();
+
+    // empty
+    if (mask == kTurnLaneEmpty) {
+      str += "empty";
+    }
+    // none
+    else if (mask == kTurnLaneNone) {
+      str += "none";
+    } else {
+      bool prior_item = false;
+      // reverse (left u-turn)
+      if ((mask & kTurnLaneReverse) && drive_on_right()) {
+        if (prior_item)
+          str += ";";
+        str += "reverse";
+        prior_item = true;
+      }
+      // sharp_left
+      if (mask & kTurnLaneSharpLeft) {
+        if (prior_item)
+          str += ";";
+        str += "sharp_left";
+        prior_item = true;
+      }
+      // left
+      if (mask & kTurnLaneLeft) {
+        if (prior_item)
+          str += ";";
+        str += "left";
+        prior_item = true;
+      }
+      // slight_left
+      if (mask & kTurnLaneSlightLeft) {
+        if (prior_item)
+          str += ";";
+        str += "slight_left";
+        prior_item = true;
+      }
+      // merge_to_left
+      if (mask & kTurnLaneMergeToLeft) {
+        if (prior_item)
+          str += ";";
+        str += "merge_to_left";
+        prior_item = true;
+      }
+      // through
+      if (mask & kTurnLaneThrough) {
+        if (prior_item)
+          str += ";";
+        str += "through";
+        prior_item = true;
+      }
+      // merge_to_right
+      if (mask & kTurnLaneMergeToRight) {
+        if (prior_item)
+          str += ";";
+        str += "merge_to_right";
+        prior_item = true;
+      }
+      // slight_right
+      if (mask & kTurnLaneSlightRight) {
+        if (prior_item)
+          str += ";";
+        str += "slight_right";
+        prior_item = true;
+      }
+      // right
+      if (mask & kTurnLaneRight) {
+        if (prior_item)
+          str += ";";
+        str += "right";
+        prior_item = true;
+      }
+      // sharp_right
+      if (mask & kTurnLaneSharpRight) {
+        if (prior_item)
+          str += ";";
+        str += "sharp_right";
+        prior_item = true;
+      }
+      // reverse (right u-turn)
+      if ((mask & kTurnLaneReverse) && !drive_on_right()) {
+        if (prior_item)
+          str += ";";
+        str += "reverse";
+        prior_item = true;
+      }
+    }
   }
   return str;
 }
