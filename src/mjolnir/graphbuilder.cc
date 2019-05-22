@@ -761,7 +761,8 @@ void BuildTileSet(const std::string& ways_file,
               for (int i=0; i<enhanced_tls.size(); i++) {
                 tl = enhanced_tls[i];
                 if (((tl & kTurnLaneLeft) || (tl & kTurnLaneSharpLeft) || (tl & kTurnLaneSlightLeft) || (tl & kTurnLaneThrough))
-                    && previous == 0u) {
+                    && (previous == 0u || (previous & kTurnLaneLeft) || (previous & kTurnLaneSharpLeft) || (previous & kTurnLaneSlightLeft)
+                        || (previous & kTurnLaneThrough))) {
                   previous = tl;
                 }
                 else if (previous && (tl == kTurnLaneEmpty || tl == kTurnLaneNone)) {
