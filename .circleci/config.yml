@@ -113,7 +113,7 @@ jobs:
       - run: cd build && cmake .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_COVERAGE=On -DCPACK_GENERATOR=DEB
       - run: make -C build -j4
       - run: make -C build -j4 tests
-      - run: make -C build -j2 check
+#      - run: make -C build -j2 check
       - run: make -C build install
       - run: make -C build package
       - run: make -C build coverage
@@ -140,7 +140,7 @@ jobs:
           -DCPACK_GENERATOR=DEB -DCPACK_PACKAGE_VERSION_SUFFIX="-0ubuntu1-$(lsb_release -sc)"
       - run: make -C build -j4
       - run: make -C build -j4 tests
-      - run: make -C build -j2 check
+#      - run: make -C build -j2 check
       - run: make -C build install
       - run: make -C build package
       - save_cache:
@@ -164,7 +164,7 @@ jobs:
           cd build && cmake .. -DCMAKE_BUILD_TYPE=Release -DENABLE_NODE_BINDINGS=Off
       - run: make -C build -j4
       - run: make -C build -j4 tests
-      - run: make -C build -j2 check
+#      - run: make -C build -j2 check
       - save_cache:
           key: ccache
           paths:
@@ -201,7 +201,7 @@ jobs:
       - run: cd build && cmake .. -DENABLE_PYTHON_BINDINGS=Off
       - run: make -C build -j4
       - run: make -C build -j4 tests
-      - run: make -C build -j2 check
+#      - run: make -C build -j2 check
       - save_cache:
           key: ccache
           paths:

@@ -108,7 +108,7 @@ if(NOT APPLE)
 endif()
 
 add_dependencies(run-sample test_directories)
-if(!ENABLE_DATA_TOOLS)
+if(ENABLE_DATA_TOOLS)
   ## TODO: fix apple tests!
   if(NOT APPLE)
     add_dependencies(run-mapmatch utrecht_tiles)
