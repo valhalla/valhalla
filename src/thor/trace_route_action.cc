@@ -466,6 +466,10 @@ thor_worker_t::map_match(valhalla_request_t& request,
   return map_match_results;
 }
 
+// Function that returns a trip path for a trace_attributes map match.
+// TODO merge this logic with the trace_route version above. Much of the
+// logic is similar but handles discontinuities at the origin/destination.
+// We need to add a test for that scenario and then we can merge the logic.
 TripLeg thor_worker_t::path_map_match(
     const std::vector<meili::MatchResult>& match_results,
     const AttributesController& controller,

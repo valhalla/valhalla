@@ -245,19 +245,21 @@ void test_distance_only() {
 }
 
 void test_trace_route_breaks() {
-  std::vector<std::string> test_cases = {R"({"costing":"auto","shape_match":"map_snap","shape":[
+  std::vector<std::string> test_cases = {
+      R"({"costing":"auto","shape_match":"map_snap","shape":[
           {"lat":52.09110,"lon":5.09806,"type":"break"},
           {"lat":52.09050,"lon":5.09769,"type":"break"},
           {"lat":52.09098,"lon":5.09679,"type":"break"}]})",
-                                         R"({"costing":"auto","shape_match":"map_snap","shape":[
+      R"({"costing":"auto","shape_match":"map_snap","shape":[
           {"lat":52.09110,"lon":5.09806,"type":"break"},
           {"lat":52.09050,"lon":5.09769,"type":"via"},
           {"lat":52.09098,"lon":5.09679,"type":"break"}]})",
-                                         R"({"costing":"auto","shape_match":"map_snap","shape":[
+      R"({"costing":"auto","shape_match":"map_snap","shape":[
           {"lat":52.09110,"lon":5.09806},
           {"lat":52.09050,"lon":5.09769},
-          {"lat":52.09098,"lon":5.09679}]})"};
-  std::vector<size_t> test_answers = {2, 1, 1};
+          {"lat":52.09098,"lon":5.09679}]})",
+      R"({"costing":"auto","shape_match":"map_snap","encoded_polyline":"quijbBqpnwHfJxc@bBdJrDfSdAzFX|AHd@bG~[|AnIdArGbAo@z@m@`EuClO}MjE}E~NkPaAuC"})"};
+  std::vector<size_t> test_answers = {2, 1, 1, 1};
 
   tyr::actor_t actor(conf, true);
   for (size_t i = 0; i < test_cases.size(); ++i) {
@@ -270,7 +272,6 @@ void test_trace_route_breaks() {
     for (const auto& leg : legs) {
       auto decoded_match =
           midgard::decode<std::vector<PointLL>>(leg.second.get<std::string>("shape"));
-      std::cout << print(decoded_match) << std::endl;
     }
   }
 }
