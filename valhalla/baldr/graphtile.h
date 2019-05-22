@@ -90,7 +90,7 @@ public:
    * Get the bounding box of this graph tile.
    * @return Returns the bounding box of the tile.
    */
-  midgard::AABB2<PointLL> BoundingBox() const;
+  midgard::AABB2<midgard::PointLL> BoundingBox() const;
 
   /**
    * Gets the id of the graph tile
@@ -180,14 +180,14 @@ public:
    * @param  node  GraphId of the node from which the edges leave
    * @return returns an iterable collection of directed edges
    */
-  iterable_t<const DirectedEdge> GetDirectedEdges(const GraphId& node) const;
+  midgard::iterable_t<const DirectedEdge> GetDirectedEdges(const GraphId& node) const;
 
   /**
    * Get an iterable set of directed edges from a node in this tile
    * @param  idx  Index of the node within the current tile
    * @return returns an iterable collection of directed edges
    */
-  iterable_t<const DirectedEdge> GetDirectedEdges(const size_t idx) const;
+  midgard::iterable_t<const DirectedEdge> GetDirectedEdges(const size_t idx) const;
 
   /**
    * Convenience method to get opposing edge Id given a directed edge.
@@ -219,11 +219,11 @@ public:
    * @param  node  GraphId of the node from which the transitions leave
    * @return returns an iterable collection of node transitions
    */
-  iterable_t<const NodeTransition> GetNodeTransitions(const GraphId& node) const {
+  midgard::iterable_t<const NodeTransition> GetNodeTransitions(const GraphId& node) const {
     if (node.id() < header_->nodecount()) {
       const auto& nodeinfo = nodes_[node.id()];
       const auto* trans = transition(nodeinfo.transition_index());
-      return iterable_t<const NodeTransition>{trans, nodeinfo.transition_count()};
+      return midgard::iterable_t<const NodeTransition>{trans, nodeinfo.transition_count()};
     }
     throw std::runtime_error(
         "GraphTile NodeInfo index out of bounds: " + std::to_string(node.tileid()) + "," +
@@ -467,7 +467,7 @@ public:
     }
 
     // Fallback if no predicted speed
-    return GetSpeed(de, seconds_of_week % kSecondsPerDay);
+    return GetSpeed(de, seconds_of_week % midgard::kSecondsPerDay);
   }
 
   /**

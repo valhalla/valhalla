@@ -1,6 +1,6 @@
 syntax = "proto2";
 option optimize_for = LITE_RUNTIME;
-package valhalla.odin;
+package valhalla;
 
 message LatLng {
   optional float lat = 1;

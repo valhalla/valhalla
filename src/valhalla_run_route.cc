@@ -105,19 +105,19 @@ public:
 /**
  * Test a single path from origin to destination.
  */
-TripLeg PathTest(GraphReader& reader,
-                 valhalla::odin::Location& origin,
-                 valhalla::odin::Location& dest,
-                 PathAlgorithm* pathalgorithm,
-                 const std::shared_ptr<DynamicCost>* mode_costing,
-                 const TravelMode mode,
-                 PathStatistics& data,
-                 bool multi_run,
-                 uint32_t iterations,
-                 bool using_astar,
-                 bool using_bd,
-                 bool match_test,
-                 const std::string& routetype) {
+valhalla::TripLeg PathTest(GraphReader& reader,
+                           valhalla::Location& origin,
+                           valhalla::Location& dest,
+                           PathAlgorithm* pathalgorithm,
+                           const std::shared_ptr<DynamicCost>* mode_costing,
+                           const TravelMode mode,
+                           PathStatistics& data,
+                           bool multi_run,
+                           uint32_t iterations,
+                           bool using_astar,
+                           bool using_bd,
+                           bool match_test,
+                           const std::string& routetype) {
   auto t1 = std::chrono::high_resolution_clock::now();
   std::vector<PathInfo> pathedges;
   pathedges = pathalgorithm->GetBestPath(origin, dest, reader, mode_costing, mode);
@@ -146,7 +146,7 @@ TripLeg PathTest(GraphReader& reader,
   }
   if (pathedges.size() == 0) {
     // Return an empty trip path
-    return TripLeg();
+    return valhalla::TripLeg();
   }
 
   auto t2 = std::chrono::high_resolution_clock::now();
@@ -156,8 +156,8 @@ TripLeg PathTest(GraphReader& reader,
   // Form trip path
   t1 = std::chrono::high_resolution_clock::now();
   AttributesController controller;
-  TripLeg trip_path = TripLegBuilder::Build(controller, reader, mode_costing, pathedges, origin, dest,
-                                            std::list<valhalla::odin::Location>{});
+  valhalla::TripLeg trip_path = TripLegBuilder::Build(controller, reader, mode_costing, pathedges,
+                                                      origin, dest, std::list<valhalla::Location>{});
   t2 = std::chrono::high_resolution_clock::now();
   msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
   LOG_INFO("TripLegBuilder took " + std::to_string(msecs) + " ms");
@@ -190,7 +190,7 @@ TripLeg PathTest(GraphReader& reader,
     std::shared_ptr<DynamicCost> cost = mode_costing[static_cast<uint32_t>(mode)];
     const auto projections = Search(locations, reader, cost->GetEdgeFilter(), cost->GetNodeFilter());
     std::vector<PathLocation> path_location;
-    valhalla::odin::DirectionsOptions directions_options;
+    valhalla::DirectionsOptions directions_options;
     for (const auto& loc : locations) {
       path_location.push_back(projections.at(loc));
       PathLocation::toPBF(path_location.back(), directions_options.mutable_locations()->Add(),
@@ -316,18 +316,19 @@ std::string GetFormattedTime(uint32_t seconds) {
   return formattedTime;
 }
 
-DirectionsLeg DirectionsTest(const DirectionsOptions& directions_options,
-                             TripLeg& trip_path,
-                             valhalla::odin::Location& orig,
-                             valhalla::odin::Location& dest,
-                             PathStatistics& data) {
+valhalla::DirectionsLeg DirectionsTest(const valhalla::DirectionsOptions& directions_options,
+                                       valhalla::TripLeg& trip_path,
+                                       valhalla::Location& orig,
+                                       valhalla::Location& dest,
+                                       PathStatistics& data) {
   // TEMPORARY? Change to PathLocation...
   const PathLocation& origin = PathLocation::fromPBF(orig);
   const PathLocation& destination = PathLocation::fromPBF(dest);
 
   DirectionsBuilder directions;
-  DirectionsLeg trip_directions = directions.Build(directions_options, trip_path);
-  std::string units = (directions_options.units() == DirectionsOptions::kilometers ? "km" : "mi");
+  valhalla::DirectionsLeg trip_directions = directions.Build(directions_options, trip_path);
+  std::string units =
+      (directions_options.units() == valhalla::DirectionsOptions::kilometers ? "km" : "mi");
   int m = 1;
   valhalla::midgard::logging::Log("From: " + std::to_string(origin), " [NARRATIVE] ");
   valhalla::midgard::logging::Log("To: " + std::to_string(destination), " [NARRATIVE] ");
@@ -489,11 +490,11 @@ int main(int argc, char* argv[]) {
 
   // Grab the directions options, if they exist
   valhalla::valhalla_request_t request;
-  request.parse(json, valhalla::odin::DirectionsOptions::route);
+  request.parse(json, valhalla::DirectionsOptions::route);
   const auto& directions_options = request.options;
 
   // Get type of route - this provides the costing method to use.
-  std::string routetype = valhalla::odin::Costing_Name(request.options.costing());
+  std::string routetype = valhalla::Costing_Name(request.options.costing());
   LOG_INFO("routetype: " + routetype);
 
   // Locations
@@ -541,16 +542,16 @@ int main(int argc, char* argv[]) {
   factory.RegisterStandardCostingModels();
 
   // Get the costing method - pass the JSON configuration
-  TripLeg trip_path;
+  valhalla::TripLeg trip_path;
   TravelMode mode;
   std::shared_ptr<DynamicCost> mode_costing[4];
   if (routetype == "multimodal") {
     // Create array of costing methods per mode and set initial mode to
     // pedestrian
-    mode_costing[0] = factory.Create(valhalla::odin::Costing::auto_, directions_options);
-    mode_costing[1] = factory.Create(valhalla::odin::Costing::pedestrian, directions_options);
-    mode_costing[2] = factory.Create(valhalla::odin::Costing::bicycle, directions_options);
-    mode_costing[3] = factory.Create(valhalla::odin::Costing::transit, directions_options);
+    mode_costing[0] = factory.Create(valhalla::Costing::auto_, directions_options);
+    mode_costing[1] = factory.Create(valhalla::Costing::pedestrian, directions_options);
+    mode_costing[2] = factory.Create(valhalla::Costing::bicycle, directions_options);
+    mode_costing[3] = factory.Create(valhalla::Costing::transit, directions_options);
     mode = TravelMode::kPedestrian;
   } else {
     // Assign costing method, override any config options that are in the
@@ -582,8 +583,8 @@ int main(int argc, char* argv[]) {
   TimeDepReverse timedep_reverse;
   for (uint32_t i = 0; i < n; i++) {
     // Set origin and destination for this segment
-    valhalla::odin::Location origin = directions_options.locations(i);
-    valhalla::odin::Location dest = directions_options.locations(i + 1);
+    valhalla::Location origin = directions_options.locations(i);
+    valhalla::Location dest = directions_options.locations(i + 1);
 
     PointLL ll1(origin.ll().lng(), origin.ll().lat());
     PointLL ll2(dest.ll().lng(), dest.ll().lat());
@@ -597,10 +598,12 @@ int main(int argc, char* argv[]) {
       // TODO - this isn't really correct for multipoint routes but should allow
       // simple testing.
       if (directions_options.has_date_time() && ll1.Distance(ll2) < max_timedep_distance &&
-          (directions_options.date_time_type() == DirectionsOptions_DateTimeType_depart_at ||
-           directions_options.date_time_type() == DirectionsOptions_DateTimeType_current)) {
+          (directions_options.date_time_type() ==
+               valhalla::DirectionsOptions_DateTimeType_depart_at ||
+           directions_options.date_time_type() == valhalla::DirectionsOptions_DateTimeType_current)) {
         pathalgorithm = &timedep_forward;
-      } else if (directions_options.date_time_type() == DirectionsOptions_DateTimeType_arrive_by &&
+      } else if (directions_options.date_time_type() ==
+                     valhalla::DirectionsOptions_DateTimeType_arrive_by &&
                  ll1.Distance(ll2) < max_timedep_distance) {
         pathalgorithm = &timedep_reverse;
       } else {
@@ -630,7 +633,7 @@ int main(int argc, char* argv[]) {
     if (trip_path.node().size() > 0) {
       // Try the the directions
       auto t1 = std::chrono::high_resolution_clock::now();
-      DirectionsLeg trip_directions =
+      valhalla::DirectionsLeg trip_directions =
           DirectionsTest(directions_options, trip_path, origin, dest, data);
       auto t2 = std::chrono::high_resolution_clock::now();
       auto msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
@@ -648,7 +651,7 @@ int main(int argc, char* argv[]) {
   }
 
   // Set the arc distance. Convert to miles if needed
-  if (directions_options.units() == DirectionsOptions::miles) {
+  if (directions_options.units() == valhalla::DirectionsOptions::miles) {
     d1 *= kMilePerKm;
   }
   data.setArcDist(d1);

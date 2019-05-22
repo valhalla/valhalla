@@ -31,7 +31,7 @@ struct actor_t::pimpl_t {
   std::shared_ptr<baldr::GraphReader> reader;
   loki::loki_worker_t loki_worker;
   thor::thor_worker_t thor_worker;
-  odin::odin_worker_t odin_worker;
+  odin_worker_t odin_worker;
 };
 
 actor_t::actor_t(const boost::property_tree::ptree& config, bool auto_cleanup)
@@ -47,7 +47,7 @@ std::string actor_t::route(const std::string& request_str, const std::function<v
   pimpl->set_interrupts(interrupt);
   // parse the request
   valhalla_request_t request;
-  request.parse(request_str, odin::DirectionsOptions::route);
+  request.parse(request_str, DirectionsOptions::route);
   // check the request and locate the locations in the graph
   pimpl->loki_worker.route(request);
   auto legs = pimpl->thor_worker.route(request);
@@ -67,7 +67,7 @@ std::string actor_t::locate(const std::string& request_str, const std::function<
   pimpl->set_interrupts(interrupt);
   // parse the request
   valhalla_request_t request;
-  request.parse(request_str, odin::DirectionsOptions::locate);
+  request.parse(request_str, DirectionsOptions::locate);
   // check the request and locate the locations in the graph
   auto json = pimpl->loki_worker.locate(request);
   // if they want you do to do the cleanup automatically
@@ -82,7 +82,7 @@ std::string actor_t::matrix(const std::string& request_str, const std::function<
   pimpl->set_interrupts(interrupt);
   // parse the request
   valhalla_request_t request;
-  request.parse(request_str, odin::DirectionsOptions::sources_to_targets);
+  request.parse(request_str, DirectionsOptions::sources_to_targets);
   // check the request and locate the locations in the graph
   pimpl->loki_worker.matrix(request);
   // compute the matrix
@@ -100,7 +100,7 @@ std::string actor_t::optimized_route(const std::string& request_str,
   pimpl->set_interrupts(interrupt);
   // parse the request
   valhalla_request_t request;
-  request.parse(request_str, odin::DirectionsOptions::optimized_route);
+  request.parse(request_str, DirectionsOptions::optimized_route);
   // check the request and locate the locations in the graph
   pimpl->loki_worker.matrix(request);
   // compute compute all pairs and then the shortest path through them all
@@ -122,7 +122,7 @@ std::string actor_t::isochrone(const std::string& request_str,
   pimpl->set_interrupts(interrupt);
   // parse the request
   valhalla_request_t request;
-  request.parse(request_str, odin::DirectionsOptions::isochrone);
+  request.parse(request_str, DirectionsOptions::isochrone);
   // check the request and locate the locations in the graph
   pimpl->loki_worker.isochrones(request);
   // compute the isochrones
@@ -140,7 +140,7 @@ std::string actor_t::trace_route(const std::string& request_str,
   pimpl->set_interrupts(interrupt);
   // parse the request
   valhalla_request_t request;
-  request.parse(request_str, odin::DirectionsOptions::trace_route);
+  request.parse(request_str, DirectionsOptions::trace_route);
   // check the request and locate the locations in the graph
   pimpl->loki_worker.trace(request);
   // route between the locations in the graph to find the best path
@@ -162,7 +162,7 @@ std::string actor_t::trace_attributes(const std::string& request_str,
   pimpl->set_interrupts(interrupt);
   // parse the request
   valhalla_request_t request;
-  request.parse(request_str, odin::DirectionsOptions::trace_attributes);
+  request.parse(request_str, DirectionsOptions::trace_attributes);
   // check the request and locate the locations in the graph
   pimpl->loki_worker.trace(request);
   // get the path and turn it into attribution along it
@@ -179,7 +179,7 @@ std::string actor_t::height(const std::string& request_str, const std::function<
   pimpl->set_interrupts(interrupt);
   // parse the request
   valhalla_request_t request;
-  request.parse(request_str, odin::DirectionsOptions::height);
+  request.parse(request_str, DirectionsOptions::height);
   // get the height at each point
   auto json = pimpl->loki_worker.height(request);
   // if they want you do to do the cleanup automatically
@@ -195,7 +195,7 @@ std::string actor_t::transit_available(const std::string& request_str,
   pimpl->set_interrupts(interrupt);
   // parse the request
   valhalla_request_t request;
-  request.parse(request_str, odin::DirectionsOptions::transit_available);
+  request.parse(request_str, DirectionsOptions::transit_available);
   // check the request and locate the locations in the graph
   auto json = pimpl->loki_worker.transit_available(request);
   // if they want you do to do the cleanup automatically

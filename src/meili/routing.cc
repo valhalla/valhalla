@@ -364,7 +364,8 @@ find_shortest_path(baldr::GraphReader& reader,
 
   // Lambda for heuristic
   float search_rad2 = search_radius * search_radius;
-  const auto heuristic = [&approximator, &search_radius, &search_rad2](const PointLL& lnglat) {
+  const auto heuristic = [&approximator, &search_radius,
+                          &search_rad2](const midgard::PointLL& lnglat) {
     float d2 = approximator.DistanceSquared(lnglat);
     return (d2 < search_rad2) ? 0.0f : sqrtf(d2) - search_radius;
   };

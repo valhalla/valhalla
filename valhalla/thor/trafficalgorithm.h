@@ -42,8 +42,8 @@ public:
    * @return  Returns the path edges (and elapsed time/modes at end of
    *          each edge).
    */
-  std::vector<PathInfo> GetBestPath(odin::Location& origin,
-                                    odin::Location& dest,
+  std::vector<PathInfo> GetBestPath(valhalla::Location& origin,
+                                    valhalla::Location& dest,
                                     baldr::GraphReader& graphreader,
                                     const std::shared_ptr<sif::DynamicCost>* mode_costing,
                                     const sif::TravelMode mode);

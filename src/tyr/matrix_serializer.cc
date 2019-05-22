@@ -78,7 +78,7 @@ valhalla output looks like this:
 
 */
 
-json::ArrayPtr locations(const google::protobuf::RepeatedPtrField<odin::Location>& correlated) {
+json::ArrayPtr locations(const google::protobuf::RepeatedPtrField<valhalla::Location>& correlated) {
   auto input_locs = json::array({});
   for (size_t i = 0; i < correlated.size(); i++) {
     input_locs->emplace_back(json::map({{"lat", json::fp_t{correlated.Get(i).ll().lat(), 6}},
@@ -123,7 +123,7 @@ json::MapPtr serialize(const valhalla_request_t& request,
   }
   auto json = json::map({
       {"sources_to_targets", matrix},
-      {"units", odin::DirectionsOptions_Units_Name(request.options.units())},
+      {"units", DirectionsOptions_Units_Name(request.options.units())},
   });
   json->emplace("targets", json::array({locations(request.options.targets())}));
   json->emplace("sources", json::array({locations(request.options.sources())}));
@@ -142,7 +142,7 @@ std::string serializeMatrix(const valhalla_request_t& request,
                             const std::vector<TimeDistance>& time_distances,
                             double distance_scale) {
 
-  auto json = request.options.format() == odin::DirectionsOptions::osrm
+  auto json = request.options.format() == DirectionsOptions::osrm
                   ? osrm_serializers::serialize(request, time_distances, distance_scale)
                   : valhalla_serializers::serialize(request, time_distances, distance_scale);
 

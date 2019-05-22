@@ -23,6 +23,8 @@
 #include <boost/filesystem/operations.hpp>
 #include <boost/property_tree/ptree.hpp>
 
+using namespace valhalla::midgard;
+
 namespace {
 
 // Temporary files used during tile building

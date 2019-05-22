@@ -7,11 +7,12 @@
 #include <valhalla/proto/directions_options.pb.h>
 
 using namespace std;
+using namespace valhalla;
 using namespace valhalla::sif;
 
 namespace {
 
-void create_costing_options(valhalla::odin::DirectionsOptions& directions_options) {
+void create_costing_options(DirectionsOptions& directions_options) {
   // Add options in the order specified
   //  for (const auto costing : {auto_, auto_shorter, bicycle, bus, hov,
   //                              motor_scooter, multimodal, pedestrian, transit,
@@ -41,16 +42,16 @@ void create_costing_options(valhalla::odin::DirectionsOptions& directions_option
 }
 
 void test_register() {
-  valhalla::odin::DirectionsOptions directions_options;
+  DirectionsOptions directions_options;
   create_costing_options(directions_options);
 
   CostFactory<DynamicCost> factory;
-  factory.Register(valhalla::odin::Costing::auto_, CreateAutoCost);
-  factory.Register(valhalla::odin::Costing::auto_shorter, CreateAutoShorterCost);
-  factory.Register(valhalla::odin::Costing::bicycle, CreateBicycleCost);
-  factory.Register(valhalla::odin::Costing::pedestrian, CreatePedestrianCost);
+  factory.Register(Costing::auto_, CreateAutoCost);
+  factory.Register(Costing::auto_shorter, CreateAutoShorterCost);
+  factory.Register(Costing::bicycle, CreateBicycleCost);
+  factory.Register(Costing::pedestrian, CreatePedestrianCost);
   // TODO: then ask for some odin::DirectionsOptions& options
-  auto car = factory.Create(valhalla::odin::Costing::auto_, directions_options);
+  auto car = factory.Create(Costing::auto_, directions_options);
 }
 } // namespace
 

@@ -29,7 +29,7 @@ namespace {
  * @param  legs  The legs of the route
  * @return the gpx string
  */
-std::string pathToGPX(const std::list<odin::TripLeg>& legs) {
+std::string pathToGPX(const std::list<TripLeg>& legs) {
   // start the gpx, we'll use 6 digits of precision
   std::stringstream gpx;
   gpx << std::setprecision(6) << std::fixed;

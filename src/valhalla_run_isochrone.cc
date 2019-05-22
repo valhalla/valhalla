@@ -12,6 +12,7 @@
 #include "baldr/pathlocation.h"
 #include "loki/search.h"
 #include "midgard/logging.h"
+#include "sif/costconstants.h"
 #include "sif/costfactory.h"
 #include "thor/isochrone.h"
 #include "tyr/serializers.h"
@@ -21,6 +22,8 @@
 
 #include "config.h"
 
+using namespace valhalla;
+using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 using namespace valhalla::loki;
 using namespace valhalla::sif;
@@ -82,8 +85,8 @@ int main(int argc, char* argv[]) {
   }
 
   // Process json request
-  valhalla::valhalla_request_t request;
-  request.parse(json, valhalla::odin::DirectionsOptions::isochrone);
+  valhalla_request_t request;
+  request.parse(json, valhalla::DirectionsOptions::isochrone);
 
   // Get the denoise parameter
   float denoise = request.options.denoise();
@@ -108,7 +111,7 @@ int main(int argc, char* argv[]) {
   // TODO - is this how we want to expose in the service? only support reverse
   // for time dependent isochrones? or do we also want a flag to support for
   // general case with no time?
-  bool reverse = request.options.date_time_type() == valhalla::odin::DirectionsOptions::arrive_by;
+  bool reverse = request.options.date_time_type() == valhalla::DirectionsOptions::arrive_by;
 
   // Get Contours
   std::unordered_map<float, std::string> colors{};
@@ -156,20 +159,20 @@ int main(int argc, char* argv[]) {
   factory.RegisterStandardCostingModels();
 
   // Get type of route - this provides the costing method to use.
-  std::string routetype = valhalla::odin::Costing_Name(request.options.costing());
+  std::string routetype = valhalla::Costing_Name(request.options.costing());
   LOG_INFO("routetype: " + routetype);
 
   // Get the costing method - pass the JSON configuration
-  valhalla::odin::TripLeg trip_path;
+  valhalla::TripLeg trip_path;
   TravelMode mode;
   std::shared_ptr<DynamicCost> mode_costing[4];
   if (routetype == "multimodal") {
     // Create array of costing methods per mode and set initial mode to
     // pedestrian
-    mode_costing[0] = factory.Create(valhalla::odin::Costing::auto_, request.options);
-    mode_costing[1] = factory.Create(valhalla::odin::Costing::pedestrian, request.options);
-    mode_costing[2] = factory.Create(valhalla::odin::Costing::bicycle, request.options);
-    mode_costing[3] = factory.Create(valhalla::odin::Costing::transit, request.options);
+    mode_costing[0] = factory.Create(valhalla::Costing::auto_, request.options);
+    mode_costing[1] = factory.Create(valhalla::Costing::pedestrian, request.options);
+    mode_costing[2] = factory.Create(valhalla::Costing::bicycle, request.options);
+    mode_costing[3] = factory.Create(valhalla::Costing::transit, request.options);
     mode = TravelMode::kPedestrian;
   } else {
     // Assign costing method, override any config options that are in the
@@ -190,7 +193,7 @@ int main(int argc, char* argv[]) {
   }
 
   // Find avoid locations
-  std::vector<AvoidEdge> avoid_edges;
+  std::vector<sif::AvoidEdge> avoid_edges;
   const auto avoids = Search(avoid_locations, reader, cost->GetEdgeFilter(), cost->GetNodeFilter());
   for (const auto& loc : avoid_locations) {
     for (auto& e : avoids.at(loc).edges) {

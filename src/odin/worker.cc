@@ -49,25 +49,24 @@ std::list<DirectionsLeg> odin_worker_t::narrate(const valhalla_request_t& reques
 }
 
 #ifdef HAVE_HTTP
-worker_t::result_t odin_worker_t::work(const std::list<zmq::message_t>& job,
-                                       void* request_info,
-                                       const std::function<void()>& interrupt_function) {
-  auto& info = *static_cast<http_request_info_t*>(request_info);
+prime_server::worker_t::result_t
+odin_worker_t::work(const std::list<zmq::message_t>& job,
+                    void* request_info,
+                    const std::function<void()>& interrupt_function) {
+  auto& info = *static_cast<prime_server::http_request_info_t*>(request_info);
   LOG_INFO("Got Odin Request " + std::to_string(info.id));
   valhalla_request_t request;
   try {
     // crack open the original request
-    std::string request_str(static_cast<const char*>(job.front().data()), job.front().size());
-    std::string serialized_options(static_cast<const char*>((++job.cbegin())->data()),
-                                   (++job.cbegin())->size());
-    request.parse(request_str, serialized_options);
+    std::string serialized_options(static_cast<const char*>(job.front().data()), job.front().size());
+    request.parse(serialized_options);
 
     // Set the interrupt function
     service_worker_t::set_interrupt(interrupt_function);
 
     // parse each leg
     std::list<TripLeg> legs;
-    for (auto leg = ++(++job.cbegin()); leg != job.cend(); ++leg) {
+    for (auto leg = ++job.cbegin(); leg != job.cend(); ++leg) {
       // crack open the path
       legs.emplace_back();
       try {

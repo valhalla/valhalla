@@ -42,41 +42,40 @@ public:
                 const std::shared_ptr<baldr::GraphReader>& graph_reader = {});
   virtual ~thor_worker_t();
 #ifdef HAVE_HTTP
-  virtual worker_t::result_t work(const std::list<zmq::message_t>& job,
-                                  void* request_info,
-                                  const std::function<void()>& interrupt) override;
+  virtual prime_server::worker_t::result_t work(const std::list<zmq::message_t>& job,
+                                                void* request_info,
+                                                const std::function<void()>& interrupt) override;
 #endif
   virtual void cleanup() override;
 
-  std::list<odin::TripLeg> route(valhalla_request_t& request);
+  std::list<TripLeg> route(valhalla_request_t& request);
   std::string matrix(valhalla_request_t& request);
-  std::list<odin::TripLeg> optimized_route(valhalla_request_t& request);
+  std::list<TripLeg> optimized_route(valhalla_request_t& request);
   std::string isochrones(valhalla_request_t& request);
-  odin::TripLeg trace_route(valhalla_request_t& request);
+  TripLeg trace_route(valhalla_request_t& request);
   std::string trace_attributes(valhalla_request_t& request);
 
 protected:
   std::vector<thor::PathInfo> get_path(PathAlgorithm* path_algorithm,
-                                       odin::Location& origin,
-                                       odin::Location& destination,
+                                       valhalla::Location& origin,
+                                       valhalla::Location& destination,
                                        const std::string& costing);
-  void log_admin(const odin::TripLeg&);
-  valhalla::sif::cost_ptr_t get_costing(const odin::Costing costing,
-                                        const odin::DirectionsOptions& options);
+  void log_admin(const TripLeg&);
+  valhalla::sif::cost_ptr_t get_costing(const Costing costing, const DirectionsOptions& options);
   thor::PathAlgorithm* get_path_algorithm(const std::string& routetype,
-                                          const odin::Location& origin,
-                                          const odin::Location& destination);
-  odin::TripLeg route_match(valhalla_request_t& request, const AttributesController& controller);
-  std::vector<std::tuple<float, float, std::vector<thor::MatchResult>, odin::TripLeg>>
+                                          const valhalla::Location& origin,
+                                          const valhalla::Location& destination);
+  TripLeg route_match(valhalla_request_t& request, const AttributesController& controller);
+  std::vector<std::tuple<float, float, std::vector<thor::MatchResult>, TripLeg>>
   map_match(valhalla_request_t& request,
             const AttributesController& controller,
             uint32_t best_paths = 1);
 
-  std::list<odin::TripLeg>
-  path_arrive_by(google::protobuf::RepeatedPtrField<valhalla::odin::Location>& correlated,
+  std::list<TripLeg>
+  path_arrive_by(google::protobuf::RepeatedPtrField<valhalla::Location>& correlated,
                  const std::string& costing);
-  std::list<odin::TripLeg>
-  path_depart_at(google::protobuf::RepeatedPtrField<valhalla::odin::Location>& correlated,
+  std::list<TripLeg>
+  path_depart_at(google::protobuf::RepeatedPtrField<valhalla::Location>& correlated,
                  const std::string& costing);
 
   void parse_locations(valhalla_request_t& request);
