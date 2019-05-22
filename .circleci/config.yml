@@ -277,7 +277,7 @@ workflows:
   version: 2
   build_test_publish:
     jobs:
-      - lint
+#      - lint
       - build-debug
       - build-release
       - build-release-x86
