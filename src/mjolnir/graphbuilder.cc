@@ -742,47 +742,29 @@ void BuildTileSet(const std::string& ways_file,
             directededge.set_exitsign(true);
           }
 
-          // Add turn lanes if they exist. Store forward turn lanes on the last edge for a way
-          // and the backward turn lanes on the first edge in a way.
+          // Add turn lanes if they exist. Store forward index on the last edge for a way
+          // and the backward index on the first edge in a way.  The turn lanes are populated
+          // later in the enhancer phase.
           std::string turnlane_tags;
           if (forward && w.fwd_turn_lanes_index() > 0 && edge.attributes.way_end) {
             turnlane_tags = osmdata.name_offset_map.name(w.fwd_turn_lanes_index());
+            if (!turnlane_tags.empty()) {
+              std::string str = TurnLanes::GetTurnLaneString(turnlane_tags);
+              if (!str.empty()) { // don't add if invalid.
+                directededge.set_turnlanes(true);
+                graphtile.AddTurnLanes(idx, w.fwd_turn_lanes_index());
+              }
+            }
           } else if (!forward && w.bwd_turn_lanes_index() > 0 && edge.attributes.way_begin) {
             turnlane_tags = osmdata.name_offset_map.name(w.bwd_turn_lanes_index());
-          }
-          if (!turnlane_tags.empty()) {
-            std::string str = TurnLanes::GetTurnLaneString(turnlane_tags);
-            if (!str.empty()) {
-              // handle [left, none, none, right] --> [left, straight, straight, right]
-              // handle [straight, none, [straight, right], right] --> [straight, straight, [straight, right], right]
-              std::vector<uint16_t> enhanced_tls = TurnLanes::lanemasks(str);
-              uint16_t previous,tl = 0u;
-              bool bUpdated = false;
-              for (int i=0; i<enhanced_tls.size(); i++) {
-                tl = enhanced_tls[i];
-                if (((tl & kTurnLaneLeft) || (tl & kTurnLaneSharpLeft) || (tl & kTurnLaneSlightLeft) || (tl & kTurnLaneThrough))
-                    && (previous == 0u || (previous & kTurnLaneLeft) || (previous & kTurnLaneSharpLeft) || (previous & kTurnLaneSlightLeft)
-                        || (previous & kTurnLaneThrough))) {
-                  previous = tl;
-                }
-                else if (previous && (tl == kTurnLaneEmpty || tl == kTurnLaneNone)) {
-                  enhanced_tls[i] = kTurnLaneThrough;
-                }
-                else if (previous && ((tl & kTurnLaneRight) || (tl & kTurnLaneSharpRight) || (tl & kTurnLaneSlightRight))) {
-                  bUpdated = true;
-                  break;
-                }
-                else break;
+            if (!turnlane_tags.empty()) {
+              std::string str = TurnLanes::GetTurnLaneString(turnlane_tags);
+              if (!str.empty()) { // don't add if invalid.
+                directededge.set_turnlanes(true);
+                graphtile.AddTurnLanes(idx, w.bwd_turn_lanes_index());
               }
-
-              if (bUpdated)
-                str = TurnLanes::GetTurnLaneString(TurnLanes::turnlane_string(enhanced_tls));
-
-              graphtile.AddTurnLanes(idx, str);
-              directededge.set_turnlanes(true);
             }
           }
-
           // Add lane connectivity
           try {
             auto ei = osmdata.lane_connectivity_map.equal_range(w.way_id());
