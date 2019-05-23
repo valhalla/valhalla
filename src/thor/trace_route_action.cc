@@ -96,6 +96,13 @@ std::list<TripLeg> thor_worker_t::trace_route(valhalla_request_t& request) {
         auto map_match_results = map_match(request, controller);
         if (!map_match_results.empty()) {
           trip_paths = std::get<kTripLegIndex>(map_match_results.at(0));
+          if (trip_paths.empty())
+            throw std::exception{};
+          for (const auto& tp : trip_paths) {
+            if (tp.node().empty()) {
+              throw std::exception{};
+            };
+          }
         }
       } catch (...) { throw valhalla_exception_t{442}; }
       break;

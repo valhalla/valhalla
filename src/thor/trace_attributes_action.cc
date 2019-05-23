@@ -154,6 +154,10 @@ std::string thor_worker_t::trace_attributes(valhalla_request_t& request) {
     throw valhalla_exception_t{442};
   }
 
+  if (std::get<kTripLegIndex>(map_match_results.at(0)).empty()) {
+    throw valhalla_exception_t{442};
+  }
+
   for (const auto& trippath : std::get<kTripLegIndex>(map_match_results.at(0))) {
     if (trippath.node().size() == 0) {
       throw valhalla_exception_t{442};
