@@ -178,7 +178,6 @@ void CountryAccess(const std::string& config_file) {
   // Enhance the local level of the graph. This adds information to the local
   // level that is usable across all levels (density, administrative
   // information (and country based attribution), edge transition logic, etc.
-  osmdata.read_from_unique_names_file("test/data/amsterdam_tiles");
   GraphEnhancer::Enhance(conf, osmdata, access_file);
 
   // load a tile and test that the country level access is set.
