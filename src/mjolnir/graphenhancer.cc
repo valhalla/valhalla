@@ -198,10 +198,6 @@ void UpdateTurnLanes(const OSMData& osmdata,
     std::string turnlane_tags = osmdata.name_offset_map.name(index);
     std::string str = TurnLanes::GetTurnLaneString(turnlane_tags);
 
-    if (tilebuilder.edgeinfo(directededge.edgeinfo_offset()).wayid() == 535826174) {
-      std::cout << str << " " << turnlane_tags << std::endl;
-    }
-
     // handle [left, none, none, right] --> [left, straight, straight, right]
     // handle [straight, none, [straight, right], right] --> [straight, straight, [straight, right],
     // right]
@@ -227,10 +223,6 @@ void UpdateTurnLanes(const OSMData& osmdata,
 
     if (bUpdated)
       str = TurnLanes::GetTurnLaneString(TurnLanes::turnlane_string(enhanced_tls));
-
-    if (tilebuilder.edgeinfo(directededge.edgeinfo_offset()).wayid() == 535826174) {
-      std::cout << str << " " << turnlane_tags << std::endl;
-    }
 
     uint32_t offset = tilebuilder.AddName(str);
     turn_lanes.emplace_back(idx, offset);
