@@ -187,6 +187,56 @@ void UpdateSpeed(DirectedEdge& directededge, const uint32_t density, const uint3
   }
 }
 
+void UpdateTurnLanes(const OSMData& osmdata,
+                     const DirectedEdge directededge,
+                     const uint32_t idx,
+                     GraphTileBuilder& tilebuilder,
+                     std::vector<TurnLanes>& turn_lanes) {
+
+  if (directededge.turnlanes()) {
+    auto index = tilebuilder.turnlanes_offset(idx);
+    std::string turnlane_tags = osmdata.name_offset_map.name(index);
+    std::string str = TurnLanes::GetTurnLaneString(turnlane_tags);
+
+    if (tilebuilder.edgeinfo(directededge.edgeinfo_offset()).wayid() == 535826174) {
+      std::cout << str << " " << turnlane_tags << std::endl;
+    }
+
+    // handle [left, none, none, right] --> [left, straight, straight, right]
+    // handle [straight, none, [straight, right], right] --> [straight, straight, [straight, right],
+    // right]
+    std::vector<uint16_t> enhanced_tls = TurnLanes::lanemasks(str);
+    uint16_t previous, tl = 0u;
+    bool bUpdated = false;
+    for (int i = 0; i < enhanced_tls.size(); i++) {
+      tl = enhanced_tls[i];
+      if (((tl & kTurnLaneLeft) || (tl & kTurnLaneSharpLeft) || (tl & kTurnLaneSlightLeft) ||
+           (tl & kTurnLaneThrough)) &&
+          (previous == 0u || (previous & kTurnLaneLeft) || (previous & kTurnLaneSharpLeft) ||
+           (previous & kTurnLaneSlightLeft) || (previous & kTurnLaneThrough))) {
+        previous = tl;
+      } else if (previous && (tl == kTurnLaneEmpty || tl == kTurnLaneNone)) {
+        enhanced_tls[i] = kTurnLaneThrough;
+      } else if (previous && ((tl & kTurnLaneRight) || (tl & kTurnLaneSharpRight) ||
+                              (tl & kTurnLaneSlightRight))) {
+        bUpdated = true;
+        break;
+      } else
+        break;
+    }
+
+    if (bUpdated)
+      str = TurnLanes::GetTurnLaneString(TurnLanes::turnlane_string(enhanced_tls));
+
+    if (tilebuilder.edgeinfo(directededge.edgeinfo_offset()).wayid() == 535826174) {
+      std::cout << str << " " << turnlane_tags << std::endl;
+    }
+
+    uint32_t offset = tilebuilder.AddName(str);
+    turn_lanes.emplace_back(idx, offset);
+  }
+}
+
 #ifdef UNREACHABLE
 // TODO - may want to keep this to add to a postprocess to find unreachable areas
 
@@ -978,6 +1028,7 @@ bool ConsistentNames(const std::string& country_code,
 // We make sure to lock on reading and writing because we dont want to race
 // since difference threads, use for the tilequeue as well
 void enhance(const boost::property_tree::ptree& pt,
+             const OSMData& osmdata,
              const std::string& access_file,
              const boost::property_tree::ptree& hierarchy_properties,
              std::queue<GraphId>& tilequeue,
@@ -1040,7 +1091,7 @@ void enhance(const boost::property_tree::ptree& pt,
     }
 
     // Tile builder - serialize in existing tile so we can add admin names
-    GraphTileBuilder tilebuilder(reader.tile_dir(), tile_id, true);
+    GraphTileBuilder tilebuilder(reader.tile_dir(), tile_id, true, false);
     lock.unlock();
 
     // this will be our updated list of restrictions.
@@ -1048,6 +1099,9 @@ void enhance(const boost::property_tree::ptree& pt,
     // the restriction list.
     uint32_t ar_before = tilebuilder.header()->access_restriction_count();
     std::vector<AccessRestriction> access_restrictions;
+
+    uint32_t tl_before = tilebuilder.header()->turnlane_count();
+    std::vector<TurnLanes> turn_lanes;
 
     uint32_t id = tile_id.tileid();
     // First pass - update links (set use to ramp or turn channel) and
@@ -1268,6 +1322,9 @@ void enhance(const boost::property_tree::ptree& pt,
         // Update speed.
         UpdateSpeed(directededge, density, urban_rc_speed);
 
+        // Update turn lanes.
+        UpdateTurnLanes(osmdata, directededge, nodeinfo.edge_index() + j, tilebuilder, turn_lanes);
+
         // Update the named flag
         auto names = tilebuilder.edgeinfo(directededge.edgeinfo_offset()).GetNamesAndTypes();
         directededge.set_named(names.size() > 0);
@@ -1344,6 +1401,15 @@ void enhance(const boost::property_tree::ptree& pt,
     }
     tilebuilder.AddAccessRestrictions(access_restrictions);
 
+    // Replace turnlanes
+    if (tl_before != turn_lanes.size()) {
+      LOG_ERROR("Mismatch in turn lane count before " + std::to_string(tl_before) +
+                ""
+                " and after " +
+                std::to_string(turn_lanes.size()) + " tileid = " + std::to_string(tile_id.tileid()));
+    }
+    tilebuilder.AddTurnLanes(turn_lanes);
+
     // Write the new file
     lock.lock();
     tilebuilder.StoreTileData();
@@ -1370,7 +1436,9 @@ namespace valhalla {
 namespace mjolnir {
 
 // Enhance the local level of the graph
-void GraphEnhancer::Enhance(const boost::property_tree::ptree& pt, const std::string& access_file) {
+void GraphEnhancer::Enhance(const boost::property_tree::ptree& pt,
+                            const OSMData& osmdata,
+                            const std::string& access_file) {
   LOG_INFO("Enhancing local graph...");
 
   // A place to hold worker threads and their results, exceptions or otherwise
@@ -1399,9 +1467,9 @@ void GraphEnhancer::Enhance(const boost::property_tree::ptree& pt, const std::st
   // Start the threads
   for (auto& thread : threads) {
     results.emplace_back();
-    thread.reset(new std::thread(enhance, std::cref(hierarchy_properties), std::cref(access_file),
-                                 std::ref(hierarchy_properties), std::ref(tilequeue), std::ref(lock),
-                                 std::ref(results.back())));
+    thread.reset(new std::thread(enhance, std::cref(hierarchy_properties), std::cref(osmdata),
+                                 std::cref(access_file), std::ref(hierarchy_properties),
+                                 std::ref(tilequeue), std::ref(lock), std::ref(results.back())));
   }
 
   // Wait for them to finish up their work
