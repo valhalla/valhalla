@@ -52,7 +52,7 @@ public:
   std::string matrix(valhalla_request_t& request);
   std::list<TripLeg> optimized_route(valhalla_request_t& request);
   std::string isochrones(valhalla_request_t& request);
-  TripLeg trace_route(valhalla_request_t& request);
+  std::list<TripLeg> trace_route(valhalla_request_t& request);
   std::string trace_attributes(valhalla_request_t& request);
 
 protected:
@@ -65,12 +65,17 @@ protected:
   thor::PathAlgorithm* get_path_algorithm(const std::string& routetype,
                                           const valhalla::Location& origin,
                                           const valhalla::Location& destination);
-  TripLeg route_match(valhalla_request_t& request, const AttributesController& controller);
-  std::vector<std::tuple<float, float, std::vector<thor::MatchResult>, TripLeg>>
+  std::list<TripLeg> route_match(valhalla_request_t& request, const AttributesController& controller);
+  std::vector<std::tuple<float, float, std::vector<thor::MatchResult>, std::list<TripLeg>>>
   map_match(valhalla_request_t& request,
             const AttributesController& controller,
             uint32_t best_paths = 1);
-
+  TripLeg
+  path_map_match(const std::vector<meili::MatchResult>& match_results,
+                 const AttributesController& controller,
+                 const std::vector<PathInfo>& path_edges,
+                 std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>>&
+                     route_discontinuities);
   std::list<TripLeg>
   path_arrive_by(google::protobuf::RepeatedPtrField<valhalla::Location>& correlated,
                  const std::string& costing);

@@ -398,10 +398,11 @@ void append_trace_info(
     const json::MapPtr& json,
     const AttributesController& controller,
     const DirectionsOptions& directions_options,
-    const std::tuple<float, float, std::vector<thor::MatchResult>, TripLeg>& map_match_result) {
+    const std::tuple<float, float, std::vector<thor::MatchResult>, std::list<TripLeg>>&
+        map_match_result) {
   // Set trip path and match results
   const auto& match_results = std::get<kMatchResultsIndex>(map_match_result);
-  const auto& trip_path = std::get<kTripLegIndex>(map_match_result);
+  const auto& trip_path = std::get<kTripLegIndex>(map_match_result).front();
 
   // Add osm_changeset
   if (trip_path.has_osm_changeset()) {
@@ -445,7 +446,7 @@ namespace tyr {
 std::string serializeTraceAttributes(
     const valhalla_request_t& request,
     const AttributesController& controller,
-    std::vector<std::tuple<float, float, std::vector<thor::MatchResult>, TripLeg>>&
+    std::vector<std::tuple<float, float, std::vector<thor::MatchResult>, std::list<TripLeg>>>&
         map_match_results) {
 
   // Create json map to return

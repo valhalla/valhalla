@@ -119,7 +119,7 @@ std::string json_escape(const std::string& unescaped) {
 int seed = 520;
 int bound = 81;
 std::string make_test_case(PointLL& start, PointLL& end) {
-  static std::minstd_rand0 generator(seed);
+  static std::mt19937 generator(seed);
   static std::uniform_real_distribution<float> distribution(0, 1);
   float distance = 0;
   do {
@@ -242,6 +242,38 @@ void test_distance_only() {
       names.insert(name.second.get_value<std::string>());
   if (names.find("Jan Pieterszoon Coenstraat") == names.end())
     throw std::logic_error("Using distance only it should have taken a small detour");
+}
+
+void test_trace_route_breaks() {
+  std::vector<std::string> test_cases = {
+      R"({"costing":"auto","shape_match":"map_snap","shape":[
+          {"lat":52.09110,"lon":5.09806,"type":"break"},
+          {"lat":52.09050,"lon":5.09769,"type":"break"},
+          {"lat":52.09098,"lon":5.09679,"type":"break"}]})",
+      R"({"costing":"auto","shape_match":"map_snap","shape":[
+          {"lat":52.09110,"lon":5.09806,"type":"break"},
+          {"lat":52.09050,"lon":5.09769,"type":"via"},
+          {"lat":52.09098,"lon":5.09679,"type":"break"}]})",
+      R"({"costing":"auto","shape_match":"map_snap","shape":[
+          {"lat":52.09110,"lon":5.09806},
+          {"lat":52.09050,"lon":5.09769},
+          {"lat":52.09098,"lon":5.09679}]})",
+      R"({"costing":"auto","shape_match":"map_snap","encoded_polyline":"quijbBqpnwHfJxc@bBdJrDfSdAzFX|AHd@bG~[|AnIdArGbAo@z@m@`EuClO}MjE}E~NkPaAuC"})"};
+  std::vector<size_t> test_answers = {2, 1, 1, 1};
+
+  tyr::actor_t actor(conf, true);
+  for (size_t i = 0; i < test_cases.size(); ++i) {
+    auto matched = json_to_pt(actor.trace_route(test_cases[i]));
+    const auto& legs = matched.get_child("trip.legs");
+    if (legs.size() != test_answers[i])
+      throw std::logic_error("Expected " + std::to_string(test_answers[i]) + " legs but got " +
+                             std::to_string(legs.size()));
+
+    for (const auto& leg : legs) {
+      auto decoded_match =
+          midgard::decode<std::vector<PointLL>>(leg.second.get<std::string>("shape"));
+    }
+  }
 }
 
 void test_time_rejection() {
@@ -583,6 +615,8 @@ int main(int argc, char* argv[]) {
   suite.test(TEST_CASE(test32bit));
 
   suite.test(TEST_CASE(test_matcher));
+
+  suite.test(TEST_CASE(test_trace_route_breaks));
 
   suite.test(TEST_CASE(test_distance_only));
 

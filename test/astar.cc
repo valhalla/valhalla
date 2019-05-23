@@ -396,8 +396,8 @@ void trivial_path_no_uturns(const std::string& config_file) {
                         *directions_options.mutable_locations(1), graph_reader, mode_costing, mode);
 
   vt::AttributesController controller;
-  TripLeg trip_path = vt::TripLegBuilder::Build(controller, graph_reader, mode_costing, path,
-                                                *directions_options.mutable_locations(0),
+  TripLeg trip_path = vt::TripLegBuilder::Build(controller, graph_reader, mode_costing, path.begin(),
+                                                path.end(), *directions_options.mutable_locations(0),
                                                 *directions_options.mutable_locations(1),
                                                 std::list<valhalla::Location>{});
   // really could of got the total of the elapsed_time.

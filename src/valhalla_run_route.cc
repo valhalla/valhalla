@@ -156,8 +156,9 @@ valhalla::TripLeg PathTest(GraphReader& reader,
   // Form trip path
   t1 = std::chrono::high_resolution_clock::now();
   AttributesController controller;
-  valhalla::TripLeg trip_path = TripLegBuilder::Build(controller, reader, mode_costing, pathedges,
-                                                      origin, dest, std::list<valhalla::Location>{});
+  valhalla::TripLeg trip_path =
+      TripLegBuilder::Build(controller, reader, mode_costing, pathedges.begin(), pathedges.end(),
+                            origin, dest, std::list<valhalla::Location>{});
   t2 = std::chrono::high_resolution_clock::now();
   msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
   LOG_INFO("TripLegBuilder took " + std::to_string(msecs) + " ms");
