@@ -24,7 +24,8 @@ namespace mjolnir {
 // StoreTileData.
 GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
                                    const GraphId& graphid,
-                                   bool deserialize)
+                                   bool deserialize,
+                                   bool serialize_turn_lanes)
     : tile_dir_(tile_dir), GraphTile(tile_dir, graphid) {
 
   // Copy tile header to a builder (if tile exists). Always set the tileid
@@ -104,7 +105,8 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
 
   // Create turn lane builders
   for (uint32_t i = 0; i < header_->turnlane_count(); i++) {
-    name_info.insert({turnlanes_[i].text_offset()});
+    if (serialize_turn_lanes)
+      name_info.insert({turnlanes_[i].text_offset()});
     turnlanes_builder_.emplace_back(turnlanes_[i].edgeindex(), turnlanes_[i].text_offset());
   }
 
@@ -804,7 +806,7 @@ Sign& GraphTileBuilder::sign_builder(const size_t idx) {
   throw std::runtime_error("GraphTileBuilder sign index is out of bounds");
 }
 
-// Gets a sign builder at the specified index.
+// Gets a turn lane at the specified index.
 TurnLanes& GraphTileBuilder::turnlane_builder(const size_t idx) {
   if (idx < header_->turnlane_count()) {
     return turnlanes_[idx];
@@ -818,6 +820,18 @@ void GraphTileBuilder::AddTurnLanes(const uint32_t idx, const std::string& str) 
     uint32_t offset = AddName(str);
     turnlanes_builder_.emplace_back(idx, offset);
   }
+}
+
+// Add turn lanes idx for a directed edge
+void GraphTileBuilder::AddTurnLanes(const uint32_t idx, const uint32_t tl_idx) {
+  turnlanes_builder_.emplace_back(idx, tl_idx);
+}
+
+// Add turn lanes
+void GraphTileBuilder::AddTurnLanes(const std::vector<TurnLanes>& turn_lanes) {
+  turnlanes_builder_.clear();
+  // Add restrictions to the list
+  turnlanes_builder_ = turn_lanes;
 }
 
 // Gets a const admin builder at specified index.
