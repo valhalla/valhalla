@@ -95,15 +95,9 @@ std::list<TripLeg> thor_worker_t::trace_route(valhalla_request_t& request) {
     // network. No shortcuts are used and detailed information at every intersection becomes
     // available.
     case ShapeMatch::walk_or_snap:
-      trip_paths = route_match(request, controller);
-      bool empty_leg = false;
-      for (const auto& tp : trip_paths) {
-        if (tp.node().empty()) {
-          empty_leg = true;
-          break;
-        };
-      }
-      if (empty_leg || trip_paths.empty()) {
+      try {
+        trip_paths = route_match(request, controller);
+      } catch (...) {
         LOG_WARN(ShapeMatch_Name(request.options.shape_match()) +
                  " algorithm failed to find exact route match; Falling back to map_match...");
         try {
