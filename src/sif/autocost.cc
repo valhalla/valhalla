@@ -266,9 +266,9 @@ public:
    */
   virtual const EdgeFilter GetEdgeFilter() const {
     // Throw back a lambda that checks the access for this type of costing
-    return [&](const baldr::DirectedEdge* edge) {
+    return [maximum_candidate_road_class_ = this->maximum_candidate_road_class_](const baldr::DirectedEdge* edge) {
       if (edge->is_shortcut() || !(edge->forwardaccess() & kAutoAccess) ||
-          this->maximum_candidate_road_class_ > edge->classification() ) {
+          maximum_candidate_road_class_ > edge->classification() ) {
 
         return 0.0f;
       } else {
@@ -366,29 +366,29 @@ AutoCost::AutoCost(const odin::Costing costing, const odin::DirectionsOptions& o
   }
 
   std::string minimum_candidate_road_class = costing_options.minimum_candidate_road_class();
-  if (maximum_candidate_road_class == "motorway") {
+  if (minimum_candidate_road_class == "motorway") {
     minimum_candidate_road_class_ = RoadClass::kMotorway;
-  } else if (maximum_candidate_road_class == "trunk") {
+  } else if (minimum_candidate_road_class == "trunk") {
     minimum_candidate_road_class_ = RoadClass::kTrunk;
-  } else if (maximum_candidate_road_class == "primary") {
+  } else if (minimum_candidate_road_class == "primary") {
     minimum_candidate_road_class_ = RoadClass::kPrimary;
-  } else if (maximum_candidate_road_class == "secondary") {
+  } else if (minimum_candidate_road_class == "secondary") {
     minimum_candidate_road_class_ = RoadClass::kSecondary;
 
-  } else if (maximum_candidate_road_class == "tertiary") {
+  } else if (minimum_candidate_road_class == "tertiary") {
     minimum_candidate_road_class_ = RoadClass::kTertiary;
 
-  } else if (maximum_candidate_road_class == "unclassified") {
+  } else if (minimum_candidate_road_class == "unclassified") {
     minimum_candidate_road_class_ = RoadClass::kUnclassified;
 
-  } else if (maximum_candidate_road_class == "residential") {
+  } else if (minimum_candidate_road_class == "residential") {
     minimum_candidate_road_class_ = RoadClass::kResidential;
 
-  } else if (maximum_candidate_road_class == "serviceOther") {
+  } else if (minimum_candidate_road_class == "serviceOther") {
     minimum_candidate_road_class_ = RoadClass::kServiceOther;
 
   } else {
-    minimum_candidate_road_class_ = RoadClass::kTrunk;
+    minimum_candidate_road_class_ = RoadClass::kServiceOther;
   }
 
   // Preference to use toll roads (separate from toll booth penalty). Sets a toll
