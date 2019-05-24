@@ -146,8 +146,6 @@ std::list<TripLeg> thor_worker_t::route_match(valhalla_request_t& request,
                                     path_infos.end(), *request.options.mutable_locations()->begin(),
                                     *request.options.mutable_locations()->rbegin(),
                                     std::list<valhalla::Location>{}, interrupt);
-    if (trip_path.node_size() == 0)
-      throw std::exception{};
     trip_paths.emplace_back(trip_path);
   } else {
     throw std::exception{};
