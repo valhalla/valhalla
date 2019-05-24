@@ -197,7 +197,7 @@ thor_worker_t::map_match(valhalla_request_t& request,
     // TODO - perhaps also throw exception if use_timestamps and disconnected path?
     if (request.options.action() == DirectionsOptions::trace_route &&
         (disconnected_edges.size() || path_edges.empty())) {
-      throw valhalla_exception_t{442};
+      throw std::exception{};
     };
 
     // OSRM map matching format has both the match points and the route, fill out the match points
