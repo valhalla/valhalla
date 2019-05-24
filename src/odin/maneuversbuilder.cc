@@ -12,6 +12,7 @@
 #include "baldr/streetnames_factory.h"
 #include "baldr/streetnames_us.h"
 #include "baldr/turn.h"
+#include "baldr/turnlanes.h"
 #include "baldr/verbal_text_formatter.h"
 #include "baldr/verbal_text_formatter_factory.h"
 #include "baldr/verbal_text_formatter_us.h"
@@ -97,6 +98,9 @@ std::list<Maneuver> ManeuversBuilder::Build() {
 
   // Enhance signless interchanges
   EnhanceSignlessInterchnages(maneuvers);
+
+  // Process the turn lanes
+  ProcessTurnLanes(maneuvers);
 
 #ifdef LOGGING_LEVEL_TRACE
   int combined_man_id = 1;
@@ -2272,6 +2276,47 @@ void ManeuversBuilder::EnhanceSignlessInterchnages(std::list<Maneuver>& maneuver
 
     // on to the next maneuver...
     prev_man = curr_man;
+    curr_man = next_man;
+    ++next_man;
+  }
+}
+
+void ManeuversBuilder::ProcessTurnLanes(std::list<Maneuver>& maneuvers) {
+  auto curr_man = maneuvers.begin();
+  auto next_man = maneuvers.begin();
+
+  if (next_man != maneuvers.end()) {
+    ++next_man;
+  }
+
+  // Walk the maneuvers to activate turn lanes
+  while (next_man != maneuvers.end()) {
+
+    // Walk maneuvers by node (prev_edge of node has the turn lane info)
+    // Assign turn lane at transition point
+    // TODO: make real - Hack for now
+    auto prev_edge = trip_path_->GetPrevEdge(curr_man->begin_node_index());
+    if (prev_edge && (prev_edge->turn_lanes_size() > 0)) {
+      prev_edge->ActivateTurnLanes(kTurnLaneRight);
+    }
+
+    // If curr_man is short then specific lane activation
+    // Left-most left / through / right
+    // Right-most left / through / right
+
+    // If curr_man is short ramp and prev_man is ramp special logic
+    // (if curr_man is left or right subset of prev_man L|T|R is begin subset of L|T|R|R)
+
+    // Assign turn lanes within step
+    // Track remaining maneuver distance
+
+    // If remaining distance is short then specific lane activation
+
+    // Handle any special `none` lanes
+
+    // Do we mark maneuver?
+
+    // on to the next maneuver...
     curr_man = next_man;
     ++next_man;
   }

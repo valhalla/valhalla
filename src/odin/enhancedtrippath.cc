@@ -448,6 +448,37 @@ float EnhancedTripLeg_Edge::GetLength(const DirectionsOptions::Units& units) {
   return length();
 }
 
+bool EnhancedTripLeg_Edge::HasActiveTurnLane() const {
+  for (const auto& turn_lane : turn_lanes()) {
+    if (turn_lane.is_active()) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool EnhancedTripLeg_Edge::HasNonDirectionalTurnLane() const {
+  for (const auto& turn_lane : turn_lanes()) {
+    // Return true if directions mask is empty or none
+    if ((turn_lane.directions_mask() == kTurnLaneEmpty) ||
+        (turn_lane.directions_mask() & kTurnLaneNone)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool EnhancedTripLeg_Edge::ActivateTurnLanes(uint16_t turn_lane_direction) {
+  bool activated = false;
+  for (auto& turn_lane : *(mutable_turn_lanes())) {
+    if (turn_lane.directions_mask() & turn_lane_direction) {
+      turn_lane.set_is_active(true);
+      activated = true;
+    }
+  }
+  return activated;
+}
+
 #ifdef LOGGING_LEVEL_TRACE
 std::string EnhancedTripLeg_Edge::ToString() const {
   std::string str;

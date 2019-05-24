@@ -324,6 +324,10 @@ public:
     return mutable_edge_->turn_lanes();
   }
 
+  ::google::protobuf::RepeatedPtrField<::valhalla::TurnLane>* mutable_turn_lanes() {
+    return mutable_edge_->mutable_turn_lanes();
+  }
+
   bool IsUnnamed() const;
 
   // Use
@@ -375,6 +379,11 @@ public:
   std::vector<std::pair<std::string, bool>> GetNameList() const;
 
   float GetLength(const DirectionsOptions::Units& units);
+
+  // Turn Lanes
+  bool HasActiveTurnLane() const;
+  bool HasNonDirectionalTurnLane() const;
+  bool ActivateTurnLanes(uint16_t turn_lane_direction);
 
   std::string ToString() const;
 
