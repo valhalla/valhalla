@@ -75,13 +75,6 @@ std::list<TripLeg> thor_worker_t::trace_route(valhalla_request_t& request) {
     case ShapeMatch::edge_walk:
       try {
         trip_paths = route_match(request, controller);
-        if (trip_paths.empty())
-          throw std::exception{};
-        for (const auto& tp : trip_paths) {
-          if (tp.node().empty()) {
-            throw std::exception{};
-          };
-        }
       } catch (...) {
         throw valhalla_exception_t{
             443, ShapeMatch_Name(request.options.shape_match()) +
@@ -94,9 +87,7 @@ std::list<TripLeg> thor_worker_t::trace_route(valhalla_request_t& request) {
     case ShapeMatch::map_snap:
       try {
         auto map_match_results = map_match(request, controller);
-        if (!map_match_results.empty()) {
-          trip_paths = std::get<kTripLegIndex>(map_match_results.at(0));
-        }
+        trip_paths = std::get<kTripLegIndex>(map_match_results.at(0));
       } catch (...) { throw valhalla_exception_t{442}; }
       break;
     // If we think that we have the exact shape but there ends up being no Valhalla route match,
@@ -104,22 +95,14 @@ std::list<TripLeg> thor_worker_t::trace_route(valhalla_request_t& request) {
     // network. No shortcuts are used and detailed information at every intersection becomes
     // available.
     case ShapeMatch::walk_or_snap:
-      trip_paths = route_match(request, controller);
-      bool empty_leg = false;
-      for (const auto& tp : trip_paths) {
-        if (tp.node().empty()) {
-          empty_leg = true;
-          break;
-        };
-      }
-      if (empty_leg || trip_paths.empty()) {
+      try {
+        trip_paths = route_match(request, controller);
+      } catch (...) {
         LOG_WARN(ShapeMatch_Name(request.options.shape_match()) +
                  " algorithm failed to find exact route match; Falling back to map_match...");
         try {
           auto map_match_results = map_match(request, controller);
-          if (!map_match_results.empty()) {
-            trip_paths = std::get<kTripLegIndex>(map_match_results.at(0));
-          }
+          trip_paths = std::get<kTripLegIndex>(map_match_results.at(0));
         } catch (...) { throw valhalla_exception_t{442}; }
       }
       break;
@@ -158,6 +141,8 @@ std::list<TripLeg> thor_worker_t::route_match(valhalla_request_t& request,
                                     *request.options.mutable_locations()->rbegin(),
                                     std::list<valhalla::Location>{}, interrupt);
     trip_paths.emplace_back(trip_path);
+  } else {
+    throw std::exception{};
   }
 
   return trip_paths;
@@ -200,8 +185,9 @@ thor_worker_t::map_match(valhalla_request_t& request,
 
     // Throw exception if not trace attributes action and disconnected path.
     // TODO - perhaps also throw exception if use_timestamps and disconnected path?
-    if (request.options.action() == DirectionsOptions::trace_route && disconnected_edges.size()) {
-      throw valhalla_exception_t{442};
+    if (request.options.action() == DirectionsOptions::trace_route &&
+        (disconnected_edges.size() || path_edges.empty())) {
+      throw std::exception{};
     };
 
     // OSRM map matching format has both the match points and the route, fill out the match points
