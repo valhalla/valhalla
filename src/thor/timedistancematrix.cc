@@ -392,18 +392,9 @@ std::vector<TimeDistance> TimeDistanceMatrix::SourceToTarget(
   int id = 100;
 
   if (source_location_list.size() <= target_location_list.size()) {
-
-    //        int id = omp_get_thread_num();
-    //        int data = id;
-    //        int total = omp_get_num_threads();
-    //        std::cout << "hello from thread: "<<total<<std::endl;
-
-//#pragma omp parallel for private( edgelabels_,destinations_,dest_edges_,adjacencylist_,edgestatus_)
-    for (int i = 0; i < source_location_list.size(); i++) {
-      const auto& origin = source_location_list[i];
+    for (const auto& origin : source_location_list) {
       std::vector<TimeDistance> td = OneToMany(origin, target_location_list, graphreader,
                                                mode_costing, mode, max_matrix_distance);
-//#pragma omp critical
       many_to_many.insert(many_to_many.end(), td.begin(), td.end());
       Clear();
     }
