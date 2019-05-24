@@ -110,6 +110,35 @@ endif()
 find_package(Threads REQUIRED)
 find_package(ZLIB REQUIRED)
 
+# libompのインストール先パスをbrewコマンドを実行して取得する.
+execute_process(COMMAND brew --prefix libomp
+        OUTPUT_VARIABLE OpenMP_HOME
+        OUTPUT_STRIP_TRAILING_WHITESPACE)
+message(STATUS "OpenMP Root : ${OpenMP_HOME}")
+
+# OpenMPのfindに必要な変数設定
+set(OpenMP_C_LIB_NAMES "omp")
+set(OpenMP_CXX_LIB_NAMES "omp")
+set(OpenMP_omp_LIBRARY "${OpenMP_HOME}/lib/")
+set(OpenMP_CXX_FLAGS "-Xpreprocessor -fopenmp -Wno-unused-command-line-argument -I${OpenMP_HOME}/include -lomp -L${OpenMP_omp_LIBRARY}")
+set(OpenMP_C_FLAGS "-fopenmp -Wno-unused-command-line-argument -I${OpenMP_HOME}/include -lomp -L${OpenMP_omp_LIBRARY}")
+
+# libompをlookup
+find_package(OpenMP)
+
+message(STATUS "OpenMP_C_Found   : ${OpenMP_C_FOUND}")
+message(STATUS "OpenMP_CXX_Found : ${OpenMP_CXX_FOUND}")
+
+if (OpenMP_FOUND)
+  message(STATUS "YES!! OpenMP found.")
+else (OpenMP_FOUND)
+  message(STATUS "No!!   OpenMP did not find.")
+endif (OpenMP_FOUND)
+if(OpenMP_FOUND)
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+endif()
+
 add_library(CURL::CURL INTERFACE IMPORTED)
 if(ENABLE_HTTP OR ENABLE_DATA_TOOLS)
   if(NOT CURL_FOUND)

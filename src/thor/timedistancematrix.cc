@@ -1,6 +1,7 @@
 #include "thor/timedistancematrix.h"
 #include "midgard/logging.h"
 #include <algorithm>
+#include <omp.h>
 #include <vector>
 
 using namespace valhalla::baldr;
@@ -386,10 +387,23 @@ std::vector<TimeDistance> TimeDistanceMatrix::SourceToTarget(
     const float max_matrix_distance) {
   // Run a series of one to many calls and concatenate the results.
   std::vector<TimeDistance> many_to_many;
+
+  int threads = 100;
+  int id = 100;
+
   if (source_location_list.size() <= target_location_list.size()) {
-    for (const auto& origin : source_location_list) {
+
+    //        int id = omp_get_thread_num();
+    //        int data = id;
+    //        int total = omp_get_num_threads();
+    //        std::cout << "hello from thread: "<<total<<std::endl;
+
+//#pragma omp parallel for private( edgelabels_,destinations_,dest_edges_,adjacencylist_,edgestatus_)
+    for (int i = 0; i < source_location_list.size(); i++) {
+      const auto& origin = source_location_list[i];
       std::vector<TimeDistance> td = OneToMany(origin, target_location_list, graphreader,
                                                mode_costing, mode, max_matrix_distance);
+//#pragma omp critical
       many_to_many.insert(many_to_many.end(), td.begin(), td.end());
       Clear();
     }
