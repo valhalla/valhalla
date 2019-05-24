@@ -75,13 +75,6 @@ std::list<TripLeg> thor_worker_t::trace_route(valhalla_request_t& request) {
     case ShapeMatch::edge_walk:
       try {
         trip_paths = route_match(request, controller);
-        if (trip_paths.empty())
-          throw std::exception{};
-        for (const auto& tp : trip_paths) {
-          if (tp.node().empty()) {
-            throw std::exception{};
-          };
-        }
       } catch (...) {
         throw valhalla_exception_t{
             443, ShapeMatch_Name(request.options.shape_match()) +
@@ -94,16 +87,7 @@ std::list<TripLeg> thor_worker_t::trace_route(valhalla_request_t& request) {
     case ShapeMatch::map_snap:
       try {
         auto map_match_results = map_match(request, controller);
-        if (!map_match_results.empty()) {
-          trip_paths = std::get<kTripLegIndex>(map_match_results.at(0));
-          if (trip_paths.empty())
-            throw std::exception{};
-          for (const auto& tp : trip_paths) {
-            if (tp.node().empty()) {
-              throw std::exception{};
-            };
-          }
-        }
+        trip_paths = std::get<kTripLegIndex>(map_match_results.at(0));
       } catch (...) { throw valhalla_exception_t{442}; }
       break;
     // If we think that we have the exact shape but there ends up being no Valhalla route match,
@@ -124,9 +108,7 @@ std::list<TripLeg> thor_worker_t::trace_route(valhalla_request_t& request) {
                  " algorithm failed to find exact route match; Falling back to map_match...");
         try {
           auto map_match_results = map_match(request, controller);
-          if (!map_match_results.empty()) {
-            trip_paths = std::get<kTripLegIndex>(map_match_results.at(0));
-          }
+          trip_paths = std::get<kTripLegIndex>(map_match_results.at(0));
         } catch (...) { throw valhalla_exception_t{442}; }
       }
       break;
@@ -164,7 +146,11 @@ std::list<TripLeg> thor_worker_t::route_match(valhalla_request_t& request,
                                     path_infos.end(), *request.options.mutable_locations()->begin(),
                                     *request.options.mutable_locations()->rbegin(),
                                     std::list<valhalla::Location>{}, interrupt);
+    if (trip_path.node_size() == 0)
+      throw std::exception{};
     trip_paths.emplace_back(trip_path);
+  } else {
+    throw std::exception{};
   }
 
   return trip_paths;
@@ -189,6 +175,10 @@ thor_worker_t::map_match(valhalla_request_t& request,
     offline_results = matcher->OfflineMatch(trace, best_paths);
   }
 
+  // This exception will be caught upstream and return a 442 error
+  if (offline_results.empty())
+    throw std::exception{};
+
   // Process each score/match result
   for (const auto& result : offline_results) {
     const auto& match_results = result.results;
@@ -207,7 +197,8 @@ thor_worker_t::map_match(valhalla_request_t& request,
 
     // Throw exception if not trace attributes action and disconnected path.
     // TODO - perhaps also throw exception if use_timestamps and disconnected path?
-    if (request.options.action() == DirectionsOptions::trace_route && disconnected_edges.size()) {
+    if (request.options.action() == DirectionsOptions::trace_route &&
+        (disconnected_edges.size() || path_edges.empty())) {
       throw valhalla_exception_t{442};
     };
 

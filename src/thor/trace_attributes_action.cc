@@ -95,13 +95,6 @@ std::string thor_worker_t::trace_attributes(valhalla_request_t& request) {
     case ShapeMatch::edge_walk:
       try {
         trip_paths = route_match(request, controller);
-        if (trip_paths.empty())
-          throw std::exception{};
-        for (const auto& tp : trip_paths) {
-          if (tp.node().empty()) {
-            throw std::exception{};
-          };
-        }
         map_match_results.emplace_back(1.0f, 0.0f, std::vector<thor::MatchResult>{}, trip_paths);
       } catch (const std::exception& e) {
         throw valhalla_exception_t{
@@ -126,15 +119,10 @@ std::string thor_worker_t::trace_attributes(valhalla_request_t& request) {
     // network. No shortcuts are used and detailed information at every intersection becomes
     // available.
     case ShapeMatch::walk_or_snap:
-      trip_paths = route_match(request, controller);
-      bool empty_leg = false;
-      for (const auto& tp : trip_paths) {
-        if (tp.node().empty()) {
-          empty_leg = true;
-          break;
-        };
-      }
-      if (empty_leg || trip_paths.empty()) {
+      try {
+        trip_paths = route_match(request, controller);
+        map_match_results.emplace_back(1.0f, 0.0f, std::vector<thor::MatchResult>{}, trip_paths);
+      } catch (...) {
         LOG_WARN(ShapeMatch_Name(request.options.shape_match()) +
                  " algorithm failed to find exact route match; Falling back to map_match...");
         try {
@@ -144,25 +132,10 @@ std::string thor_worker_t::trace_attributes(valhalla_request_t& request) {
               444, ShapeMatch_Name(request.options.shape_match()) +
                        " algorithm failed to snap the shape points to the correct shape."};
         }
-      } else {
-        map_match_results.emplace_back(1.0f, 0.0f, std::vector<thor::MatchResult>{}, trip_paths);
       }
       break;
   }
 
-  if (map_match_results.empty()) {
-    throw valhalla_exception_t{442};
-  }
-
-  if (std::get<kTripLegIndex>(map_match_results.at(0)).empty()) {
-    throw valhalla_exception_t{442};
-  }
-
-  for (const auto& trippath : std::get<kTripLegIndex>(map_match_results.at(0))) {
-    if (trippath.node().size() == 0) {
-      throw valhalla_exception_t{442};
-    };
-  }
   return tyr::serializeTraceAttributes(request, controller, map_match_results);
 }
 
