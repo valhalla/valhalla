@@ -167,10 +167,6 @@ thor_worker_t::map_match(valhalla_request_t& request,
     offline_results = matcher->OfflineMatch(trace, best_paths);
   }
 
-  // This exception will be caught upstream and return a 442 error
-  if (offline_results.empty())
-    throw std::exception{};
-
   // Process each score/match result
   for (const auto& result : offline_results) {
     const auto& match_results = result.results;
