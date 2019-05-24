@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <map>
 
+using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 using namespace valhalla::sif;
 
@@ -309,8 +310,8 @@ void BidirectionalAStar::ExpandReverse(GraphReader& graphreader,
 // Calculate best path using bi-directional A*. No hierarchies or time
 // dependencies are used. Suitable for pedestrian routes (and bicycle?).
 std::vector<PathInfo>
-BidirectionalAStar::GetBestPath(odin::Location& origin,
-                                odin::Location& destination,
+BidirectionalAStar::GetBestPath(valhalla::Location& origin,
+                                valhalla::Location& destination,
                                 GraphReader& graphreader,
                                 const std::shared_ptr<DynamicCost>* mode_costing,
                                 const sif::TravelMode mode) {
@@ -544,11 +545,11 @@ bool BidirectionalAStar::SetReverseConnection(const BDEdgeLabel& pred) {
 }
 
 // Add edges at the origin to the forward adjacency list.
-void BidirectionalAStar::SetOrigin(GraphReader& graphreader, odin::Location& origin) {
+void BidirectionalAStar::SetOrigin(GraphReader& graphreader, valhalla::Location& origin) {
   // Only skip inbound edges if we have other options
   bool has_other_edges = false;
   std::for_each(origin.path_edges().begin(), origin.path_edges().end(),
-                [&has_other_edges](const odin::Location::PathEdge& e) {
+                [&has_other_edges](const valhalla::Location::PathEdge& e) {
                   has_other_edges = has_other_edges || !e.end_node();
                 });
 
@@ -617,11 +618,11 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader, odin::Location& ori
 }
 
 // Add destination edges to the reverse path adjacency list.
-void BidirectionalAStar::SetDestination(GraphReader& graphreader, const odin::Location& dest) {
+void BidirectionalAStar::SetDestination(GraphReader& graphreader, const valhalla::Location& dest) {
   // Only skip outbound edges if we have other options
   bool has_other_edges = false;
   std::for_each(dest.path_edges().begin(), dest.path_edges().end(),
-                [&has_other_edges](const odin::Location::PathEdge& e) {
+                [&has_other_edges](const valhalla::Location::PathEdge& e) {
                   has_other_edges = has_other_edges || !e.begin_node();
                 });
 

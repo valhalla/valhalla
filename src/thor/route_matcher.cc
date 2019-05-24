@@ -23,7 +23,7 @@ namespace thor {
 
 namespace {
 
-using end_edge_t = std::pair<odin::Location::PathEdge, float>;
+using end_edge_t = std::pair<valhalla::Location::PathEdge, float>;
 using end_node_t = std::unordered_map<GraphId, end_edge_t>;
 
 // Data type to record edges and transitions that have been followed for each shape
@@ -56,7 +56,7 @@ float length_comparison(const float length, const bool exact_match) {
 // Get a map of end edges and the start node of each edge. This is used
 // to terminate the edge walking method.
 end_node_t GetEndEdges(GraphReader& reader,
-                       const google::protobuf::RepeatedPtrField<odin::Location>& correlated) {
+                       const google::protobuf::RepeatedPtrField<valhalla::Location>& correlated) {
   end_node_t end_nodes;
   for (const auto& edge : correlated.rbegin()->path_edges()) {
     // If destination is at a node - skip any outbound edge
@@ -153,7 +153,7 @@ bool expand_from_node(const std::shared_ptr<DynamicCost>* mode_costing,
     if (end_node_tile == nullptr) {
       continue;
     }
-    PointLL de_end_ll = end_node_tile->get_node_ll(de->endnode());
+    midgard::PointLL de_end_ll = end_node_tile->get_node_ll(de->endnode());
     float de_length = length_comparison(de->length(), true);
 
     // Process current edge until shape matches end node or shape length is longer than
@@ -231,7 +231,7 @@ bool RouteMatcher::FormPath(const std::shared_ptr<DynamicCost>* mode_costing,
                             GraphReader& reader,
                             const std::vector<meili::Measurement>& shape,
                             const bool use_timestamps,
-                            const google::protobuf::RepeatedPtrField<odin::Location>& correlated,
+                            const google::protobuf::RepeatedPtrField<valhalla::Location>& correlated,
                             std::vector<PathInfo>& path_infos) {
   if (shape.size() < 2) {
     throw std::runtime_error("Invalid shape - less than 2 points");
@@ -283,7 +283,7 @@ bool RouteMatcher::FormPath(const std::shared_ptr<DynamicCost>* mode_costing,
     if (begin_edge_tile == nullptr) {
       throw std::runtime_error("End node tile is null");
     }
-    PointLL de_end_ll = end_node_tile->get_node_ll(de->endnode());
+    midgard::PointLL de_end_ll = end_node_tile->get_node_ll(de->endnode());
 
     // Initialize indexes and shape
     size_t index = 0;

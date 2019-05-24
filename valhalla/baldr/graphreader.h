@@ -244,7 +244,7 @@ public:
    * @param level    the hierarchy level to use when getting the tile
    * @return GraphTile* a pointer to the graph tile
    */
-  const GraphTile* GetGraphTile(const PointLL& pointll, const uint8_t level) {
+  const GraphTile* GetGraphTile(const midgard::PointLL& pointll, const uint8_t level) {
     GraphId id = TileHierarchy::GetGraphId(pointll, level);
     return id.Is_Valid() ? GetGraphTile(id) : nullptr;
   }
@@ -255,7 +255,7 @@ public:
    * @param pointll  the lat,lng that the tile covers
    * @return GraphTile* a pointer to the graph tile
    */
-  const GraphTile* GetGraphTile(const PointLL& pointll) {
+  const GraphTile* GetGraphTile(const midgard::PointLL& pointll) {
     return GetGraphTile(pointll, TileHierarchy::levels().rbegin()->second.level);
   }
 

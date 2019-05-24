@@ -15,12 +15,12 @@ using namespace valhalla::baldr;
 using namespace valhalla::loki;
 
 namespace {
-PointLL to_ll(const odin::Location& l) {
-  return PointLL{l.ll().lng(), l.ll().lat()};
+midgard::PointLL to_ll(const valhalla::Location& l) {
+  return midgard::PointLL{l.ll().lng(), l.ll().lat()};
 }
 
-void check_distance(const google::protobuf::RepeatedPtrField<odin::Location>& sources,
-                    const google::protobuf::RepeatedPtrField<odin::Location>& targets,
+void check_distance(const google::protobuf::RepeatedPtrField<valhalla::Location>& sources,
+                    const google::protobuf::RepeatedPtrField<valhalla::Location>& targets,
                     float matrix_max_distance,
                     float& max_location_distance) {
   // see if any locations pairs are unreachable or too far apart
@@ -49,7 +49,7 @@ namespace loki {
 
 void loki_worker_t::init_matrix(valhalla_request_t& request) {
   // we require sources and targets
-  if (request.options.action() == odin::DirectionsOptions::sources_to_targets) {
+  if (request.options.action() == DirectionsOptions::sources_to_targets) {
     parse_locations(request.options.mutable_sources(), valhalla_exception_t{112});
     parse_locations(request.options.mutable_targets(), valhalla_exception_t{112});
   } // optimized route uses locations but needs to do a matrix
@@ -87,10 +87,10 @@ void loki_worker_t::init_matrix(valhalla_request_t& request) {
 
 void loki_worker_t::matrix(valhalla_request_t& request) {
   init_matrix(request);
-  auto costing = odin::Costing_Name(request.options.costing());
+  auto costing = Costing_Name(request.options.costing());
 
   if (costing == "multimodal") {
-    throw valhalla_exception_t{140, odin::DirectionsOptions_Action_Name(request.options.action())};
+    throw valhalla_exception_t{140, DirectionsOptions_Action_Name(request.options.action())};
   };
 
   // check that location size does not exceed max.
@@ -156,7 +156,8 @@ void loki_worker_t::matrix(valhalla_request_t& request) {
   };
   if (!request.options.do_not_track()) {
     valhalla::midgard::logging::Log("max_location_distance::" +
-                                        std::to_string(max_location_distance * kKmPerMeter) + "km",
+                                        std::to_string(max_location_distance * midgard::kKmPerMeter) +
+                                        "km",
                                     " [ANALYTICS] ");
   }
 }

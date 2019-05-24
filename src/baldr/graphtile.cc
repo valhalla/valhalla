@@ -17,6 +17,8 @@
 #include <string>
 #include <vector>
 
+using namespace valhalla::midgard;
+
 namespace {
 struct dir_facet : public std::numpunct<char> {
 protected:

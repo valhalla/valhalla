@@ -24,6 +24,7 @@
 #include "thor/timedistancematrix.h"
 #include "worker.h"
 
+using namespace valhalla;
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 using namespace valhalla::loki;
@@ -45,7 +46,7 @@ std::string GetFormattedTime(uint32_t secs) {
 
 // Log results
 void LogResults(const bool optimize,
-                const valhalla::valhalla_request_t& request,
+                const valhalla_request_t& request,
                 const std::vector<TimeDistance>& res) {
   LOG_INFO("Results:");
   uint32_t idx1 = 0;
@@ -136,8 +137,8 @@ int main(int argc, char* argv[]) {
     return EXIT_SUCCESS;
   }
 
-  valhalla::valhalla_request_t request;
-  request.parse(json, valhalla::odin::DirectionsOptions::sources_to_targets);
+  valhalla_request_t request;
+  request.parse(json, valhalla::DirectionsOptions::sources_to_targets);
 
   // parse the config
   boost::property_tree::ptree pt;
@@ -161,7 +162,7 @@ int main(int argc, char* argv[]) {
   factory.RegisterStandardCostingModels();
 
   // Get type of route - this provides the costing method to use.
-  std::string routetype = valhalla::odin::Costing_Name(request.options.costing());
+  std::string routetype = valhalla::Costing_Name(request.options.costing());
   LOG_INFO("routetype: " + routetype);
 
   // Get the costing method - pass the JSON configuration
@@ -170,10 +171,10 @@ int main(int argc, char* argv[]) {
   if (routetype == "multimodal") {
     // Create array of costing methods per mode and set initial mode to
     // pedestrian
-    mode_costing[0] = factory.Create(valhalla::odin::Costing::auto_, request.options);
-    mode_costing[1] = factory.Create(valhalla::odin::Costing::pedestrian, request.options);
-    mode_costing[2] = factory.Create(valhalla::odin::Costing::bicycle, request.options);
-    mode_costing[3] = factory.Create(valhalla::odin::Costing::transit, request.options);
+    mode_costing[0] = factory.Create(valhalla::Costing::auto_, request.options);
+    mode_costing[1] = factory.Create(valhalla::Costing::pedestrian, request.options);
+    mode_costing[2] = factory.Create(valhalla::Costing::bicycle, request.options);
+    mode_costing[3] = factory.Create(valhalla::Costing::transit, request.options);
     mode = TravelMode::kPedestrian;
   } else {
     // Assign costing method

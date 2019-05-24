@@ -35,8 +35,8 @@ public:
    * @return Returns the path edges (and elapsed time/modes at end of
    *          each edge).
    */
-  virtual std::vector<PathInfo> GetBestPath(odin::Location& origin,
-                                            odin::Location& dest,
+  virtual std::vector<PathInfo> GetBestPath(valhalla::Location& origin,
+                                            valhalla::Location& dest,
                                             baldr::GraphReader& graphreader,
                                             const std::shared_ptr<sif::DynamicCost>* mode_costing,
                                             const sif::TravelMode mode);
@@ -69,7 +69,7 @@ protected:
                      const bool from_transition,
                      uint64_t localtime,
                      int32_t seconds_of_week,
-                     const odin::Location& dest,
+                     const valhalla::Location& dest,
                      std::pair<int32_t, float>& best_path);
 };
 
@@ -102,8 +102,8 @@ public:
    * @return Returns the path edges (and elapsed time/modes at end of
    *          each edge).
    */
-  virtual std::vector<PathInfo> GetBestPath(odin::Location& origin,
-                                            odin::Location& dest,
+  virtual std::vector<PathInfo> GetBestPath(valhalla::Location& origin,
+                                            valhalla::Location& dest,
                                             baldr::GraphReader& graphreader,
                                             const std::shared_ptr<sif::DynamicCost>* mode_costing,
                                             const sif::TravelMode mode);
@@ -124,7 +124,7 @@ protected:
    * @param  origll  Lat,lng of the origin.
    * @param  destll  Lat,lng of the destination.
    */
-  void Init(const PointLL& origll, const PointLL& destll);
+  void Init(const midgard::PointLL& origll, const midgard::PointLL& destll);
 
   /**
    * Expand from the node along the reverse search path. Immediately expands
@@ -152,7 +152,7 @@ protected:
                      const bool from_transition,
                      uint64_t localtime,
                      int32_t seconds_of_week,
-                     const odin::Location& dest,
+                     const valhalla::Location& dest,
                      std::pair<int32_t, float>& best_path);
 
   /**
@@ -162,8 +162,9 @@ protected:
    * @param  origin       Location information of the origin.
    * @param  dest         Location information of the destination.
    */
-  void
-  SetOrigin(baldr::GraphReader& graphreader, odin::Location& origin, odin::Location& destination);
+  void SetOrigin(baldr::GraphReader& graphreader,
+                 valhalla::Location& origin,
+                 valhalla::Location& destination);
 
   /**
    * The destination of the reverse path is the origin location. Set the
@@ -172,7 +173,7 @@ protected:
    * @param   dest         Location information of the destination.
    * @return  Returns the relative density near the destination (0-15)
    */
-  uint32_t SetDestination(baldr::GraphReader& graphreader, const odin::Location& dest);
+  uint32_t SetDestination(baldr::GraphReader& graphreader, const valhalla::Location& dest);
 
   /**
    * Form the path from the adjacency list. Recovers the path from the

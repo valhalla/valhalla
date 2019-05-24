@@ -26,7 +26,7 @@ using namespace valhalla::tyr;
 using namespace std;
 
 namespace {
-midgard::PointLL to_ll(const odin::LatLng& ll) {
+midgard::PointLL to_ll(const LatLng& ll) {
   return midgard::PointLL{ll.lng(), ll.lat()};
 }
 } // namespace
@@ -35,7 +35,7 @@ namespace osrm {
 
 // Serialize a location (waypoint) in OSRM compatible format. Waypoint format is described here:
 //     http://project-osrm.org/docs/v5.5.1/api/#waypoint-object
-valhalla::baldr::json::MapPtr waypoint(const odin::Location& location,
+valhalla::baldr::json::MapPtr waypoint(const valhalla::Location& location,
                                        bool tracepoint,
                                        const bool optimized,
                                        const uint32_t waypoint_index) {
@@ -88,7 +88,7 @@ valhalla::baldr::json::MapPtr waypoint(const odin::Location& location,
 
 // Serialize locations (called waypoints in OSRM). Waypoints are described here:
 //     http://project-osrm.org/docs/v5.5.1/api/#waypoint-object
-json::ArrayPtr waypoints(const google::protobuf::RepeatedPtrField<odin::Location>& locations,
+json::ArrayPtr waypoints(const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
                          bool tracepoints) {
   auto waypoints = json::array({});
   for (const auto& location : locations) {

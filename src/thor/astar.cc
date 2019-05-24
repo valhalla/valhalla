@@ -44,7 +44,7 @@ void AStarPathAlgorithm::Clear() {
 }
 
 // Initialize prior to finding best path
-void AStarPathAlgorithm::Init(const PointLL& origll, const PointLL& destll) {
+void AStarPathAlgorithm::Init(const midgard::PointLL& origll, const midgard::PointLL& destll) {
   LOG_TRACE("Orig LL = " + std::to_string(origll.lat()) + "," + std::to_string(origll.lng()));
   LOG_TRACE("Dest LL = " + std::to_string(destll.lat()) + "," + std::to_string(destll.lng()));
 
@@ -111,7 +111,7 @@ void AStarPathAlgorithm::ExpandForward(GraphReader& graphreader,
                                        const EdgeLabel& pred,
                                        const uint32_t pred_idx,
                                        const bool from_transition,
-                                       const odin::Location& destination,
+                                       const valhalla::Location& destination,
                                        std::pair<int32_t, float>& best_path) {
   // Get the tile and the node info. Skip if tile is null (can happen
   // with regional data sets) or if no access at the node.
@@ -238,8 +238,8 @@ void AStarPathAlgorithm::ExpandForward(GraphReader& graphreader,
 
 // Calculate best path. This method is single mode, not time-dependent.
 std::vector<PathInfo>
-AStarPathAlgorithm::GetBestPath(odin::Location& origin,
-                                odin::Location& destination,
+AStarPathAlgorithm::GetBestPath(valhalla::Location& origin,
+                                valhalla::Location& destination,
                                 GraphReader& graphreader,
                                 const std::shared_ptr<DynamicCost>* mode_costing,
                                 const TravelMode mode) {
@@ -252,8 +252,9 @@ AStarPathAlgorithm::GetBestPath(odin::Location& origin,
   // Note: because we can correlate to more than one place for a given PathLocation
   // using edges.front here means we are only setting the heuristics to one of them
   // alternate paths using the other correlated points to may be harder to find
-  PointLL origin_new(origin.path_edges(0).ll().lng(), origin.path_edges(0).ll().lat());
-  PointLL destination_new(destination.path_edges(0).ll().lng(), destination.path_edges(0).ll().lat());
+  midgard::PointLL origin_new(origin.path_edges(0).ll().lng(), origin.path_edges(0).ll().lat());
+  midgard::PointLL destination_new(destination.path_edges(0).ll().lng(),
+                                   destination.path_edges(0).ll().lat());
   Init(origin_new, destination_new);
   float mindist = astarheuristic_.GetDistance(origin_new);
 
@@ -342,17 +343,17 @@ AStarPathAlgorithm::GetBestPath(odin::Location& origin,
 
 // Add an edge at the origin to the adjacency list
 void AStarPathAlgorithm::SetOrigin(GraphReader& graphreader,
-                                   odin::Location& origin,
-                                   const odin::Location& destination) {
+                                   valhalla::Location& origin,
+                                   const valhalla::Location& destination) {
   // Only skip inbound edges if we have other options
   bool has_other_edges = false;
   std::for_each(origin.path_edges().begin(), origin.path_edges().end(),
-                [&has_other_edges](const odin::Location::PathEdge& e) {
+                [&has_other_edges](const valhalla::Location::PathEdge& e) {
                   has_other_edges = has_other_edges || !e.end_node();
                 });
 
   // Check if the origin edge matches a destination edge at the node.
-  auto trivial_at_node = [this, &destination](const odin::Location::PathEdge& edge) {
+  auto trivial_at_node = [this, &destination](const valhalla::Location::PathEdge& edge) {
     auto p = destinations_.find(edge.graph_id());
     if (p != destinations_.end()) {
       for (const auto& destination_edge : destination.path_edges()) {
@@ -463,11 +464,12 @@ void AStarPathAlgorithm::SetOrigin(GraphReader& graphreader,
 }
 
 // Add a destination edge
-uint32_t AStarPathAlgorithm::SetDestination(GraphReader& graphreader, const odin::Location& dest) {
+uint32_t AStarPathAlgorithm::SetDestination(GraphReader& graphreader,
+                                            const valhalla::Location& dest) {
   // Only skip outbound edges if we have other options
   bool has_other_edges = false;
   std::for_each(dest.path_edges().begin(), dest.path_edges().end(),
-                [&has_other_edges](const odin::Location::PathEdge& e) {
+                [&has_other_edges](const valhalla::Location::PathEdge& e) {
                   has_other_edges = has_other_edges || !e.begin_node();
                 });
 

@@ -5,7 +5,7 @@ using namespace valhalla::baldr;
 namespace valhalla {
 namespace sif {
 
-DynamicCost::DynamicCost(const odin::DirectionsOptions& options, const TravelMode mode)
+DynamicCost::DynamicCost(const DirectionsOptions& options, const TravelMode mode)
     : pass_(0), allow_transit_connections_(false), allow_destination_only_(true), travel_mode_(mode) {
   // Parse property tree to get hierarchy limits
   // TODO - get the number of levels

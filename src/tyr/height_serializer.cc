@@ -45,7 +45,7 @@ json::ArrayPtr serialize_height(const std::vector<double>& heights, const double
   return array;
 }
 
-json::ArrayPtr serialize_shape(const google::protobuf::RepeatedPtrField<odin::Location>& shape) {
+json::ArrayPtr serialize_shape(const google::protobuf::RepeatedPtrField<valhalla::Location>& shape) {
   auto array = json::array({});
   for (const auto& p : shape) {
     array->emplace_back(

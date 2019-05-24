@@ -819,18 +819,19 @@ struct bin_handler_t {
   }
 };
 
-}; // namespace
+} // namespace
 
 namespace valhalla {
 namespace loki {
 
-std::unordered_map<Location, PathLocation> Search(const std::vector<Location>& locations,
-                                                  GraphReader& reader,
-                                                  const EdgeFilter& edge_filter,
-                                                  const NodeFilter& node_filter) {
+std::unordered_map<valhalla::baldr::Location, PathLocation>
+Search(const std::vector<valhalla::baldr::Location>& locations,
+       GraphReader& reader,
+       const EdgeFilter& edge_filter,
+       const NodeFilter& node_filter) {
   // trivially finished already
   if (locations.empty()) {
-    return std::unordered_map<Location, PathLocation>{};
+    return std::unordered_map<valhalla::baldr::Location, PathLocation>{};
   };
   // setup the unique list of locations
   bin_handler_t handler(locations, reader, edge_filter, node_filter);
