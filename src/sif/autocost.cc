@@ -13,6 +13,7 @@
 #include <random>
 #endif
 
+using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 
 namespace valhalla {
@@ -117,7 +118,7 @@ public:
    * @param  costing specified costing type.
    * @param  options pbf with request options.
    */
-  AutoCost(const odin::Costing costing, const odin::DirectionsOptions& options);
+  AutoCost(const Costing costing, const DirectionsOptions& options);
 
   virtual ~AutoCost() {
   }
@@ -305,14 +306,14 @@ public:
 };
 
 // Constructor
-AutoCost::AutoCost(const odin::Costing costing, const odin::DirectionsOptions& options)
+AutoCost::AutoCost(const Costing costing, const DirectionsOptions& options)
     : DynamicCost(options, TravelMode::kDrive), trans_density_factor_{1.0f, 1.0f, 1.0f, 1.0f,
                                                                       1.0f, 1.1f, 1.2f, 1.3f,
                                                                       1.4f, 1.6f, 1.9f, 2.2f,
                                                                       2.5f, 2.8f, 3.1f, 3.5f} {
 
   // Grab the costing options based on the specified costing type
-  const odin::CostingOptions& costing_options = options.costing_options(static_cast<int>(costing));
+  const CostingOptions& costing_options = options.costing_options(static_cast<int>(costing));
 
   // Get the vehicle type - enter as string and convert to enum.
   // Used to set the surface factor - penalize some roads based on surface type.
@@ -571,7 +572,7 @@ Cost AutoCost::TransitionCostReverse(const uint32_t idx,
 
 void ParseAutoCostOptions(const rapidjson::Document& doc,
                           const std::string& costing_options_key,
-                          odin::CostingOptions* pbf_costing_options) {
+                          CostingOptions* pbf_costing_options) {
   auto json_costing_options = rapidjson::get_child_optional(doc, costing_options_key.c_str());
 
   if (json_costing_options) {
@@ -675,7 +676,7 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
   }
 }
 
-cost_ptr_t CreateAutoCost(const odin::Costing costing, const odin::DirectionsOptions& options) {
+cost_ptr_t CreateAutoCost(const Costing costing, const DirectionsOptions& options) {
   return std::make_shared<AutoCost>(costing, options);
 }
 
@@ -690,7 +691,7 @@ public:
    * Pass in options with protocol buffer(pbf).
    * @param  options  pbf with options.
    */
-  AutoShorterCost(const odin::Costing costing, const odin::DirectionsOptions& options)
+  AutoShorterCost(const Costing costing, const DirectionsOptions& options)
       : AutoCost(costing, options) {
     // Create speed cost table that reduces the impact of speed
     adjspeedfactor_[0] = kSecPerHour; // TODO - what to make speed=0?
@@ -734,12 +735,11 @@ protected:
 
 void ParseAutoShorterCostOptions(const rapidjson::Document& doc,
                                  const std::string& costing_options_key,
-                                 odin::CostingOptions* pbf_costing_options) {
+                                 CostingOptions* pbf_costing_options) {
   ParseAutoCostOptions(doc, costing_options_key, pbf_costing_options);
 }
 
-cost_ptr_t CreateAutoShorterCost(const odin::Costing costing,
-                                 const odin::DirectionsOptions& options) {
+cost_ptr_t CreateAutoShorterCost(const Costing costing, const DirectionsOptions& options) {
   return std::make_shared<AutoShorterCost>(costing, options);
 }
 
@@ -753,8 +753,7 @@ public:
    * Pass in configuration using property tree.
    * @param  pt  Property tree with configuration/options.
    */
-  BusCost(const odin::Costing costing, const odin::DirectionsOptions& options)
-      : AutoCost(costing, options) {
+  BusCost(const Costing costing, const DirectionsOptions& options) : AutoCost(costing, options) {
     type_ = VehicleType::kBus;
   }
 
@@ -939,11 +938,11 @@ bool BusCost::AllowedReverse(const baldr::DirectedEdge* edge,
 
 void ParseBusCostOptions(const rapidjson::Document& doc,
                          const std::string& costing_options_key,
-                         odin::CostingOptions* pbf_costing_options) {
+                         CostingOptions* pbf_costing_options) {
   ParseAutoCostOptions(doc, costing_options_key, pbf_costing_options);
 }
 
-cost_ptr_t CreateBusCost(const odin::Costing costing, const odin::DirectionsOptions& options) {
+cost_ptr_t CreateBusCost(const Costing costing, const DirectionsOptions& options) {
   return std::make_shared<BusCost>(costing, options);
 }
 
@@ -958,8 +957,7 @@ public:
    * Pass in options using protocol buffer(pbf).
    * @param  options  pbf with options.
    */
-  HOVCost(const odin::Costing costing, const odin::DirectionsOptions& options)
-      : AutoCost(costing, options) {
+  HOVCost(const Costing costing, const DirectionsOptions& options) : AutoCost(costing, options) {
   }
 
   virtual ~HOVCost() {
@@ -1159,11 +1157,11 @@ bool HOVCost::AllowedReverse(const baldr::DirectedEdge* edge,
 
 void ParseHOVCostOptions(const rapidjson::Document& doc,
                          const std::string& costing_options_key,
-                         odin::CostingOptions* pbf_costing_options) {
+                         CostingOptions* pbf_costing_options) {
   ParseAutoCostOptions(doc, costing_options_key, pbf_costing_options);
 }
 
-cost_ptr_t CreateHOVCost(const odin::Costing costing, const odin::DirectionsOptions& options) {
+cost_ptr_t CreateHOVCost(const Costing costing, const DirectionsOptions& options) {
   return std::make_shared<HOVCost>(costing, options);
 }
 
@@ -1178,8 +1176,7 @@ public:
    * Pass in options using protocol buffer(pbf).
    * @param  options  pbf with options.
    */
-  TaxiCost(const odin::Costing costing, const odin::DirectionsOptions& options)
-      : AutoCost(costing, options) {
+  TaxiCost(const Costing costing, const DirectionsOptions& options) : AutoCost(costing, options) {
   }
 
   virtual ~TaxiCost() {
@@ -1379,11 +1376,11 @@ bool TaxiCost::AllowedReverse(const baldr::DirectedEdge* edge,
 
 void ParseTaxiCostOptions(const rapidjson::Document& doc,
                           const std::string& costing_options_key,
-                          odin::CostingOptions* pbf_costing_options) {
+                          CostingOptions* pbf_costing_options) {
   ParseAutoCostOptions(doc, costing_options_key, pbf_costing_options);
 }
 
-cost_ptr_t CreateTaxiCost(const odin::Costing costing, const odin::DirectionsOptions& options) {
+cost_ptr_t CreateTaxiCost(const Costing costing, const DirectionsOptions& options) {
   return std::make_shared<TaxiCost>(costing, options);
 }
 
@@ -1399,8 +1396,7 @@ public:
    * Pass in configuration using property tree.
    * @param  pt  Property tree with configuration/options.
    */
-  AutoDataFix(const odin::Costing costing, const odin::DirectionsOptions& options)
-      : AutoCost(costing, options) {
+  AutoDataFix(const Costing costing, const DirectionsOptions& options) : AutoCost(costing, options) {
   }
 
   virtual ~AutoDataFix() {
@@ -1460,12 +1456,11 @@ public:
 
 void ParseAutoDataFixCostOptions(const rapidjson::Document& doc,
                                  const std::string& costing_options_key,
-                                 odin::CostingOptions* pbf_costing_options) {
+                                 CostingOptions* pbf_costing_options) {
   ParseAutoCostOptions(doc, costing_options_key, pbf_costing_options);
 }
 
-cost_ptr_t CreateAutoDataFixCost(const odin::Costing costing,
-                                 const odin::DirectionsOptions& options) {
+cost_ptr_t CreateAutoDataFixCost(const Costing costing, const DirectionsOptions& options) {
   return std::make_shared<AutoDataFix>(costing, options);
 }
 
@@ -1483,7 +1478,7 @@ namespace {
 
 class TestAutoCost : public AutoCost {
 public:
-  TestAutoCost(const odin::Costing costing, const odin::DirectionsOptions& options)
+  TestAutoCost(const Costing costing, const DirectionsOptions& options)
       : AutoCost(costing, options){};
 
   using AutoCost::alley_penalty_;
@@ -1498,9 +1493,9 @@ public:
 TestAutoCost* make_autocost_from_json(const std::string& property, float testVal) {
   std::stringstream ss;
   ss << R"({"costing_options":{"auto":{")" << property << R"(":)" << testVal << "}}}";
-  valhalla::valhalla_request_t request;
-  request.parse(ss.str(), valhalla::odin::DirectionsOptions::route);
-  return new TestAutoCost(valhalla::odin::Costing::auto_, request.options);
+  valhalla_request_t request;
+  request.parse(ss.str(), valhalla::DirectionsOptions::route);
+  return new TestAutoCost(valhalla::Costing::auto_, request.options);
 }
 
 std::uniform_real_distribution<float>*

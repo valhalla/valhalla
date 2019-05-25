@@ -33,15 +33,15 @@ public:
     return *candidatequery_;
   }
 
-  MapMatcher* Create(const odin::Costing costing, const odin::DirectionsOptions& options);
+  MapMatcher* Create(const Costing costing, const DirectionsOptions& options);
 
-  MapMatcher* Create(const odin::Costing costing) {
-    return Create(costing, odin::DirectionsOptions());
+  MapMatcher* Create(const Costing costing) {
+    return Create(costing, DirectionsOptions());
   }
 
-  MapMatcher* Create(const odin::DirectionsOptions& options);
+  MapMatcher* Create(const DirectionsOptions& options);
 
-  boost::property_tree::ptree MergeConfig(const odin::DirectionsOptions& options);
+  boost::property_tree::ptree MergeConfig(const DirectionsOptions& options);
 
   void ClearFullCache();
 

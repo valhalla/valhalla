@@ -11,9 +11,9 @@
 #include <valhalla/baldr/location.h>
 #include <valhalla/baldr/pathlocation.h>
 #include <valhalla/midgard/gridded_data.h>
+#include <valhalla/proto/directions.pb.h>
 #include <valhalla/proto/directions_options.pb.h>
 #include <valhalla/proto/trip.pb.h>
-#include <valhalla/proto/tripdirections.pb.h>
 #include <valhalla/thor/attributes_controller.h>
 #include <valhalla/thor/costmatrix.h>
 #include <valhalla/thor/match_result.h>
@@ -27,8 +27,8 @@ namespace tyr {
  * Turn path and directions into a route that one can follow
  */
 std::string serializeDirections(const valhalla_request_t& request,
-                                std::list<odin::TripLeg>& path_legs,
-                                const std::list<odin::TripDirections>& directions_legs);
+                                std::list<TripLeg>& path_legs,
+                                const std::list<DirectionsLeg>& directions_legs);
 
 /**
  * Turn a time distance matrix into json that one can look up location pair results from
@@ -98,7 +98,8 @@ std::string serializeTransitAvailable(const valhalla_request_t& request,
 std::string serializeTraceAttributes(
     const valhalla_request_t& request,
     const thor::AttributesController& controller,
-    std::vector<std::tuple<float, float, std::vector<thor::MatchResult>, odin::TripLeg>>& results);
+    std::vector<std::tuple<float, float, std::vector<thor::MatchResult>, std::list<TripLeg>>>&
+        results);
 
 } // namespace tyr
 } // namespace valhalla
@@ -108,7 +109,7 @@ namespace osrm {
 /*
  *
  */
-valhalla::baldr::json::MapPtr waypoint(const valhalla::odin::Location& location,
+valhalla::baldr::json::MapPtr waypoint(const valhalla::Location& location,
                                        bool tracepoint = false,
                                        const bool optimized = false,
                                        const uint32_t waypoint_index = 0);
@@ -117,7 +118,7 @@ valhalla::baldr::json::MapPtr waypoint(const valhalla::odin::Location& location,
  *
  */
 valhalla::baldr::json::ArrayPtr
-waypoints(const google::protobuf::RepeatedPtrField<valhalla::odin::Location>& locations,
+waypoints(const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
           bool tracepoints = false);
 
 } // namespace osrm

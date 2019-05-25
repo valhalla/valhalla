@@ -23,6 +23,7 @@
 #include "thor/pathinfo.h"
 #include "thor/route_matcher.h"
 
+using namespace valhalla;
 using namespace valhalla::sif;
 using namespace valhalla::meili;
 using namespace valhalla::baldr;
@@ -99,13 +100,13 @@ void walk_edges(const std::string& shape, GraphReader& reader, cost_ptr_t cost_p
 
   // Add a location for the origin (first shape point) and destination (last
   // shape point)
-  std::vector<Location> locations;
+  std::vector<baldr::Location> locations;
   locations.push_back({shape_pts.front()});
   locations.push_back({shape_pts.back()});
   const auto projections =
       Search(locations, reader, cost_ptr->GetEdgeFilter(), cost_ptr->GetNodeFilter());
   std::vector<PathLocation> path_location;
-  valhalla::odin::DirectionsOptions directions_options;
+  valhalla::DirectionsOptions directions_options;
   for (const auto& loc : locations) {
     try {
       path_location.push_back(projections.at(loc));
@@ -207,12 +208,12 @@ int main(int argc, char* argv[]) {
 
   // argument checking and verification
   boost::property_tree::ptree json_ptree;
-  valhalla::valhalla_request_t request;
+  valhalla_request_t request;
   ////////////////////////////////////////////////////////////////////////////
   // Process json input
   bool map_match = true;
   if (vm.count("json")) {
-    request.parse(json, valhalla::odin::DirectionsOptions::trace_route);
+    request.parse(json, valhalla::DirectionsOptions::trace_route);
     std::stringstream stream(json);
     rapidjson::read_json(stream, json_ptree);
     try {
@@ -229,9 +230,9 @@ int main(int argc, char* argv[]) {
           }
           float lon = valhalla::midgard::circular_range_clamp<float>(pt.get<float>("lon"), -180, 180);
 
-          Location loc({lon, lat}, (pt.get<std::string>("type", "break") == "through"
-                                        ? Location::StopType::THROUGH
-                                        : Location::StopType::BREAK));
+          baldr::Location loc({lon, lat}, (pt.get<std::string>("type", "break") == "through"
+                                               ? baldr::Location::StopType::THROUGH
+                                               : baldr::Location::StopType::BREAK));
 
           loc.name_ = pt.get<std::string>("name", "");
           loc.street_ = pt.get<std::string>("street", "");
@@ -274,8 +275,8 @@ int main(int argc, char* argv[]) {
   // Construct costing
   CostFactory<DynamicCost> factory;
   factory.RegisterStandardCostingModels();
-  valhalla::odin::Costing costing;
-  if (valhalla::odin::Costing_Parse(routetype, &costing)) {
+  valhalla::Costing costing;
+  if (valhalla::Costing_Parse(routetype, &costing)) {
     request.options.set_costing(costing);
   } else {
     throw std::runtime_error("No costing method found");

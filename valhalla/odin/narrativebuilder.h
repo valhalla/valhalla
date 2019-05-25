@@ -388,13 +388,13 @@ protected:
                                     const std::vector<std::string>& us_customary_lengths);
 
   /////////////////////////////////////////////////////////////////////////////
-  std::string FormRelativeTwoDirection(TripDirections_Maneuver_Type type,
+  std::string FormRelativeTwoDirection(DirectionsLeg_Maneuver_Type type,
                                        const std::vector<std::string>& relative_directions);
 
-  std::string FormRelativeThreeDirection(TripDirections_Maneuver_Type type,
+  std::string FormRelativeThreeDirection(DirectionsLeg_Maneuver_Type type,
                                          const std::vector<std::string>& relative_directions);
 
-  std::string FormRelativeTurnDirection(TripDirections_Maneuver_Type type,
+  std::string FormRelativeTurnDirection(DirectionsLeg_Maneuver_Type type,
                                         const std::vector<std::string>& relative_directions);
 
   /////////////////////////////////////////////////////////////////////////////

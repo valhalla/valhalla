@@ -13,6 +13,7 @@
 #include "thor/worker.h"
 #include <boost/property_tree/ptree.hpp>
 
+using namespace valhalla;
 using namespace valhalla::thor;
 using namespace valhalla::sif;
 using namespace valhalla::loki;
@@ -71,8 +72,8 @@ void try_isochrone(GraphReader& reader,
                    thor_worker_t& thor_worker,
                    const char* test_request,
                    const std::string& expected) {
-  valhalla::valhalla_request_t request;
-  request.parse(test_request, valhalla::odin::DirectionsOptions::isochrone);
+  valhalla_request_t request;
+  request.parse(test_request, DirectionsOptions::isochrone);
   loki_worker.isochrones(request);
 
   // Process isochrone request

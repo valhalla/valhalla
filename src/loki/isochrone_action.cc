@@ -8,11 +8,11 @@ using namespace valhalla;
 using namespace valhalla::baldr;
 
 namespace {
-PointLL to_ll(const odin::Location& l) {
-  return PointLL{l.ll().lng(), l.ll().lat()};
+midgard::PointLL to_ll(const valhalla::Location& l) {
+  return midgard::PointLL{l.ll().lng(), l.ll().lat()};
 }
 
-void check_distance(const google::protobuf::RepeatedPtrField<odin::Location>& locations,
+void check_distance(const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
                     float matrix_max_distance,
                     float& max_location_distance) {
   // see if any locations pairs are unreachable or too far apart
@@ -74,7 +74,8 @@ void loki_worker_t::isochrones(valhalla_request_t& request) {
                  max_location_distance);
   if (!request.options.do_not_track()) {
     valhalla::midgard::logging::Log("max_location_distance::" +
-                                        std::to_string(max_location_distance * kKmPerMeter) + "km",
+                                        std::to_string(max_location_distance * midgard::kKmPerMeter) +
+                                        "km",
                                     " [ANALYTICS] ");
   }
 

@@ -20,14 +20,14 @@ namespace sif {
  */
 void ParsePedestrianCostOptions(const rapidjson::Document& doc,
                                 const std::string& costing_options_key,
-                                odin::CostingOptions* pbf_costing_options);
+                                CostingOptions* pbf_costing_options);
 
 /**
  * Create a pedestriancost
  * @param  costing specified costing type.
  * @param  options pbf with request options.
  */
-cost_ptr_t CreatePedestrianCost(const odin::Costing costing, const odin::DirectionsOptions& options);
+cost_ptr_t CreatePedestrianCost(const Costing costing, const DirectionsOptions& options);
 
 } // namespace sif
 } // namespace valhalla

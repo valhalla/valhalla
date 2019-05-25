@@ -12,6 +12,7 @@
 #include <random>
 #endif
 
+using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 
 namespace valhalla {
@@ -110,7 +111,7 @@ public:
    * @param  costing specified costing type.
    * @param  options pbf with request options.
    */
-  TruckCost(const odin::Costing costing, const odin::DirectionsOptions& options);
+  TruckCost(const Costing costing, const DirectionsOptions& options);
 
   virtual ~TruckCost();
 
@@ -295,14 +296,14 @@ public:
 };
 
 // Constructor
-TruckCost::TruckCost(const odin::Costing costing, const odin::DirectionsOptions& options)
+TruckCost::TruckCost(const Costing costing, const DirectionsOptions& options)
     : DynamicCost(options, TravelMode::kDrive), trans_density_factor_{1.0f, 1.0f, 1.0f, 1.0f,
                                                                       1.0f, 1.1f, 1.2f, 1.3f,
                                                                       1.4f, 1.6f, 1.9f, 2.2f,
                                                                       2.5f, 2.8f, 3.1f, 3.5f} {
 
   // Grab the costing options based on the specified costing type
-  const odin::CostingOptions& costing_options = options.costing_options(static_cast<int>(costing));
+  const CostingOptions& costing_options = options.costing_options(static_cast<int>(costing));
 
   type_ = VehicleType::kTractorTrailer;
 
@@ -615,7 +616,7 @@ uint8_t TruckCost::travel_type() const {
 
 void ParseTruckCostOptions(const rapidjson::Document& doc,
                            const std::string& costing_options_key,
-                           odin::CostingOptions* pbf_costing_options) {
+                           CostingOptions* pbf_costing_options) {
   auto json_costing_options = rapidjson::get_child_optional(doc, costing_options_key.c_str());
 
   if (json_costing_options) {
@@ -727,7 +728,7 @@ void ParseTruckCostOptions(const rapidjson::Document& doc,
   }
 }
 
-cost_ptr_t CreateTruckCost(const odin::Costing costing, const odin::DirectionsOptions& options) {
+cost_ptr_t CreateTruckCost(const Costing costing, const DirectionsOptions& options) {
   return std::make_shared<TruckCost>(costing, options);
 }
 
@@ -745,7 +746,7 @@ namespace {
 
 class TestTruckCost : public TruckCost {
 public:
-  TestTruckCost(const odin::Costing costing, const odin::DirectionsOptions& options)
+  TestTruckCost(const Costing costing, const DirectionsOptions& options)
       : TruckCost(costing, options){};
 
   using TruckCost::alley_penalty_;
@@ -760,9 +761,9 @@ public:
 TestTruckCost* make_truckcost_from_json(const std::string& property, float testVal) {
   std::stringstream ss;
   ss << R"({"costing_options":{"truck":{")" << property << R"(":)" << testVal << "}}}";
-  valhalla::valhalla_request_t request;
-  request.parse(ss.str(), valhalla::odin::DirectionsOptions::route);
-  return new TestTruckCost(valhalla::odin::Costing::truck, request.options);
+  valhalla_request_t request;
+  request.parse(ss.str(), valhalla::DirectionsOptions::route);
+  return new TestTruckCost(valhalla::Costing::truck, request.options);
 }
 
 std::uniform_real_distribution<float>*

@@ -2,6 +2,8 @@
 #include "baldr/tilehierarchy.h"
 #include "meili/geometry_helpers.h"
 
+using namespace valhalla::midgard;
+
 namespace valhalla {
 
 namespace meili {
