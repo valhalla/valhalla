@@ -56,6 +56,49 @@ void CountAndSortExitSignList(std::vector<Sign>* prev_signs, std::vector<Sign>* 
   SortExitSignList(curr_signs);
 }
 
+uint16_t GetExpectedTurnLaneDirection(Maneuver& maneuver) {
+  // TODO
+  // DirectionsLeg_Maneuver_Type_kStayLeft
+  // DirectionsLeg_Maneuver_Type_kStayRight
+  switch (maneuver.type()) {
+    case valhalla::DirectionsLeg_Maneuver_Type_kUturnLeft:
+      return kTurnLaneReverse;
+    case valhalla::DirectionsLeg_Maneuver_Type_kSharpLeft:
+      return kTurnLaneSharpLeft;
+    case valhalla::DirectionsLeg_Maneuver_Type_kLeft:
+      return kTurnLaneLeft;
+    case valhalla::DirectionsLeg_Maneuver_Type_kSlightLeft:
+    case valhalla::DirectionsLeg_Maneuver_Type_kExitLeft:
+      return kTurnLaneSlightLeft;
+    case valhalla::DirectionsLeg_Maneuver_Type_kRampLeft:
+      if (maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kLeft) {
+        return kTurnLaneLeft;
+      }
+      return kTurnLaneSlightLeft;
+    case valhalla::DirectionsLeg_Maneuver_Type_kBecomes:
+    case valhalla::DirectionsLeg_Maneuver_Type_kContinue:
+    case valhalla::DirectionsLeg_Maneuver_Type_kRampStraight:
+    case valhalla::DirectionsLeg_Maneuver_Type_kStayStraight:
+      return kTurnLaneThrough;
+    case valhalla::DirectionsLeg_Maneuver_Type_kSlightRight:
+    case valhalla::DirectionsLeg_Maneuver_Type_kExitRight:
+      return kTurnLaneSlightRight;
+    case valhalla::DirectionsLeg_Maneuver_Type_kRampRight:
+      if (maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kRight) {
+        return kTurnLaneRight;
+      }
+      return kTurnLaneSlightRight;
+    case valhalla::DirectionsLeg_Maneuver_Type_kRight:
+      return kTurnLaneRight;
+    case valhalla::DirectionsLeg_Maneuver_Type_kSharpRight:
+      return kTurnLaneSharpRight;
+    case valhalla::DirectionsLeg_Maneuver_Type_kUturnRight:
+      return kTurnLaneReverse;
+    default:
+      return kTurnLaneNone;
+  }
+}
+
 } // namespace
 
 namespace valhalla {
@@ -84,6 +127,18 @@ std::list<Maneuver> ManeuversBuilder::Build() {
   // Combine maneuvers
   Combine(maneuvers);
 
+#ifdef LOGGING_LEVEL_TRACE
+  int combined_man_id = 1;
+  LOG_TRACE("############################################");
+  LOG_TRACE("COMBINED MANEUVERS");
+  for (const Maneuver& maneuver : maneuvers) {
+    LOG_TRACE("---------------------------------------------");
+    LOG_TRACE(std::to_string(combined_man_id++) + ":  ");
+    LOG_TRACE(std::string("  maneuver_PARAMETERS=") + maneuver.ToParameterString());
+    LOG_TRACE(std::string("  maneuver=") + maneuver.ToString());
+  }
+#endif
+
   // Calculate the consecutive exit sign count and then sort
   CountAndSortExitSigns(maneuvers);
 
@@ -101,18 +156,6 @@ std::list<Maneuver> ManeuversBuilder::Build() {
 
   // Process the turn lanes
   ProcessTurnLanes(maneuvers);
-
-#ifdef LOGGING_LEVEL_TRACE
-  int combined_man_id = 1;
-  LOG_TRACE("############################################");
-  LOG_TRACE("COMBINED MANEUVERS");
-  for (const Maneuver& maneuver : maneuvers) {
-    LOG_TRACE("---------------------------------------------");
-    LOG_TRACE(std::to_string(combined_man_id++) + ":  ");
-    LOG_TRACE(std::string("  maneuver_PARAMETERS=") + maneuver.ToParameterString());
-    LOG_TRACE(std::string("  maneuver=") + maneuver.ToString());
-  }
-#endif
 
 #ifdef LOGGING_LEVEL_DEBUG
   std::vector<PointLL> shape = midgard::decode<std::vector<PointLL>>(trip_path_->shape());
@@ -2294,12 +2337,12 @@ void ManeuversBuilder::ProcessTurnLanes(std::list<Maneuver>& maneuvers) {
 
     // Walk maneuvers by node (prev_edge of node has the turn lane info)
     // Assign turn lane at transition point
-    // TODO: make real - Hack for now
     auto prev_edge = trip_path_->GetPrevEdge(curr_man->begin_node_index());
     if (prev_edge && (prev_edge->turn_lanes_size() > 0)) {
-      prev_edge->ActivateTurnLanes(kTurnLaneRight);
+      prev_edge->ActivateTurnLanes(GetExpectedTurnLaneDirection(*(curr_man)));
     }
 
+    // TODO
     // If curr_man is short then specific lane activation
     // Left-most left / through / right
     // Right-most left / through / right
