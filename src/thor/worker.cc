@@ -351,8 +351,6 @@ void thor_worker_t::filter_attributes(const valhalla_request_t& request,
         break;
       }
     }
-  } else {
-    controller.enable_all();
   }
 }
 

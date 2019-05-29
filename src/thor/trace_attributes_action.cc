@@ -57,7 +57,10 @@ std::string thor_worker_t::trace_attributes(valhalla_request_t& request) {
   std::list<TripLeg> trip_paths;
   std::vector<std::tuple<float, float, std::vector<thor::MatchResult>, std::list<TripLeg>>>
       map_match_results;
+
+  // Initialize controller, enable all attributes by default
   AttributesController controller;
+  controller.enable_all();
   filter_attributes(request, controller);
 
   switch (request.options.shape_match()) {
