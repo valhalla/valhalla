@@ -2,7 +2,7 @@
 #define __VALHALLA_ODIN_SERVICE_H__
 
 #include <valhalla/proto/directions.pb.h>
-#include <valhalla/proto/directions_options.pb.h>
+#include <valhalla/proto/options.pb.h>
 #include <valhalla/proto/trip.pb.h>
 #include <valhalla/worker.h>
 
@@ -24,7 +24,7 @@ public:
 #endif
   virtual void cleanup() override;
 
-  std::list<DirectionsLeg> narrate(const valhalla_request_t& request, std::list<TripLeg>& legs) const;
+  std::list<DirectionsLeg> narrate(const Api& request, std::list<TripLeg>& legs) const;
 };
 } // namespace odin
 } // namespace valhalla

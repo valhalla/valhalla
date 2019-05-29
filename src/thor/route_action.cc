@@ -127,14 +127,14 @@ void remove_edges(const GraphId& edge_id, valhalla::Location& loc, GraphReader& 
 namespace valhalla {
 namespace thor {
 
-std::list<valhalla::TripLeg> thor_worker_t::route(valhalla_request_t& request) {
+std::list<valhalla::TripLeg> thor_worker_t::route(Api& request) {
   parse_locations(request);
   auto costing = parse_costing(request);
+  auto& options = *request.mutable_options();
 
   // get all the legs
-  auto* locations = request.options.mutable_locations();
-  auto trippaths = (request.options.has_date_time_type() &&
-                    request.options.date_time_type() == DirectionsOptions::arrive_by)
+  auto* locations = options.mutable_locations();
+  auto trippaths = (options.has_date_time_type() && options.date_time_type() == Options::arrive_by)
                        ? path_arrive_by(*locations, costing)
                        : path_depart_at(*locations, costing);
 
@@ -167,7 +167,7 @@ std::list<valhalla::TripLeg> thor_worker_t::route(valhalla_request_t& request) {
   }
 
   // log admin areas
-  if (!request.options.do_not_track()) {
+  if (!options.do_not_track()) {
     for (const auto& tp : trippaths) {
       log_admin(tp);
     }

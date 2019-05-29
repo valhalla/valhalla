@@ -11,7 +11,7 @@
 #include "tyr/serializers.h"
 
 #include <valhalla/proto/directions.pb.h>
-#include <valhalla/proto/directions_options.pb.h>
+#include <valhalla/proto/options.pb.h>
 #include <valhalla/proto/trip.pb.h>
 
 using namespace valhalla;
@@ -76,17 +76,17 @@ std::string pathToGPX(const std::list<TripLeg>& legs) {
 namespace valhalla {
 namespace tyr {
 
-std::string serializeDirections(const valhalla_request_t& request,
+std::string serializeDirections(const Api& request,
                                 std::list<TripLeg>& path_legs,
                                 const std::list<DirectionsLeg>& directions_legs) {
   // serialize them
-  switch (request.options.format()) {
-    case DirectionsOptions_Format_osrm:
-      return osrm_serializers::serialize(request.options, path_legs, directions_legs);
-    case DirectionsOptions_Format_gpx:
+  switch (request.options().format()) {
+    case Options_Format_osrm:
+      return osrm_serializers::serialize(request.options(), path_legs, directions_legs);
+    case Options_Format_gpx:
       return pathToGPX(path_legs);
-    case DirectionsOptions_Format_json:
-      return valhalla_serializers::serialize(request.options, directions_legs);
+    case Options_Format_json:
+      return valhalla_serializers::serialize(request.options(), directions_legs);
     default:
       throw;
   }

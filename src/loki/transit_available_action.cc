@@ -12,15 +12,15 @@ using namespace valhalla::midgard;
 namespace valhalla {
 namespace loki {
 
-void loki_worker_t::init_transit_available(valhalla_request_t& request) {
-  if (request.options.locations_size() < 1) {
+void loki_worker_t::init_transit_available(Api& request) {
+  if (request.options().locations_size() < 1) {
     throw valhalla_exception_t{120};
   };
 }
 
-std::string loki_worker_t::transit_available(valhalla_request_t& request) {
+std::string loki_worker_t::transit_available(Api& request) {
   init_transit_available(request);
-  auto locations = PathLocation::fromPBF(request.options.locations());
+  auto locations = PathLocation::fromPBF(request.options().locations());
   std::unordered_set<baldr::Location> found;
   try {
     const auto& tiles =

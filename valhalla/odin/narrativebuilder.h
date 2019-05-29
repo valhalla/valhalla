@@ -9,7 +9,7 @@
 #include <valhalla/odin/enhancedtrippath.h>
 #include <valhalla/odin/maneuver.h>
 #include <valhalla/odin/narrative_dictionary.h>
-#include <valhalla/proto/directions_options.pb.h>
+#include <valhalla/proto/options.pb.h>
 #include <valhalla/proto/trip.pb.h>
 
 namespace valhalla {
@@ -24,7 +24,7 @@ const std::string kVerbalDelim = ", ";
 
 class NarrativeBuilder {
 public:
-  NarrativeBuilder(const DirectionsOptions& directions_options,
+  NarrativeBuilder(const Options& options,
                    const EnhancedTripLeg* trip_path,
                    const NarrativeDictionary& dictionary);
 
@@ -36,7 +36,7 @@ public:
   NarrativeBuilder(const NarrativeBuilder&) = default;
   NarrativeBuilder& operator=(const NarrativeBuilder&) = default;
 
-  void Build(const DirectionsOptions& directions_options,
+  void Build(const Options& options,
              const EnhancedTripLeg* etp,
              std::list<Maneuver>& maneuvers);
 
@@ -72,7 +72,7 @@ protected:
                                      const std::string& delim = kVerbalDelim);
 
   std::string FormVerbalContinueInstruction(Maneuver& maneuver,
-                                            DirectionsOptions_Units units,
+                                            Options_Units units,
                                             uint32_t element_max_count = kVerbalPreElementMaxCount,
                                             const std::string& delim = kVerbalDelim);
 
@@ -513,7 +513,7 @@ protected:
   }
 
   /////////////////////////////////////////////////////////////////////////////
-  const DirectionsOptions& directions_options_;
+  const Options& options_;
   const EnhancedTripLeg* trip_path_;
   const NarrativeDictionary& dictionary_;
   bool articulated_preposition_enabled_;
@@ -523,10 +523,10 @@ protected:
 class NarrativeBuilder_csCZ : public NarrativeBuilder {
 
 public:
-  NarrativeBuilder_csCZ(const DirectionsOptions& directions_options,
+  NarrativeBuilder_csCZ(const Options& options,
                         const EnhancedTripLeg* trip_path,
                         const NarrativeDictionary& dictionary)
-      : NarrativeBuilder(directions_options, trip_path, dictionary) {
+      : NarrativeBuilder(options, trip_path, dictionary) {
   }
 
 protected:
@@ -546,10 +546,10 @@ protected:
 class NarrativeBuilder_hiIN : public NarrativeBuilder {
 
 public:
-  NarrativeBuilder_hiIN(const DirectionsOptions& directions_options,
+  NarrativeBuilder_hiIN(const Options& options,
                         const EnhancedTripLeg* trip_path,
                         const NarrativeDictionary& dictionary)
-      : NarrativeBuilder(directions_options, trip_path, dictionary) {
+      : NarrativeBuilder(options, trip_path, dictionary) {
   }
 
 protected:
@@ -569,10 +569,10 @@ protected:
 class NarrativeBuilder_itIT : public NarrativeBuilder {
 
 public:
-  NarrativeBuilder_itIT(const DirectionsOptions& directions_options,
+  NarrativeBuilder_itIT(const Options& options,
                         const EnhancedTripLeg* trip_path,
                         const NarrativeDictionary& dictionary)
-      : NarrativeBuilder(directions_options, trip_path, dictionary) {
+      : NarrativeBuilder(options, trip_path, dictionary) {
     // Enable articulated prepositions for Itailian
     articulated_preposition_enabled_ = true;
   }
@@ -591,10 +591,10 @@ private:
 class NarrativeBuilder_ruRU : public NarrativeBuilder {
 
 public:
-  NarrativeBuilder_ruRU(const DirectionsOptions& directions_options,
+  NarrativeBuilder_ruRU(const Options& options,
                         const EnhancedTripLeg* trip_path,
                         const NarrativeDictionary& dictionary)
-      : NarrativeBuilder(directions_options, trip_path, dictionary) {
+      : NarrativeBuilder(options, trip_path, dictionary) {
   }
 
 protected:

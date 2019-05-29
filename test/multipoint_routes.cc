@@ -69,8 +69,8 @@ struct route_tester {
         loki_worker(conf, reader), thor_worker(conf, reader), odin_worker(conf) {
   }
   std::pair<std::list<TripLeg>, std::list<DirectionsLeg>> test(const std::string& request_json) {
-    valhalla_request_t request;
-    request.parse(request_json, DirectionsOptions::route);
+    Api request;
+ParseApi(request_json, Options::route, request);
     loki_worker.route(request);
     std::pair<std::list<TripLeg>, std::list<DirectionsLeg>> results;
     results.first = thor_worker.route(request);

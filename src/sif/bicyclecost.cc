@@ -216,7 +216,7 @@ public:
    * @param  costing specified costing type.
    * @param  options pbf with request options.
    */
-  BicycleCost(const Costing costing, const DirectionsOptions& options);
+  BicycleCost(const Costing costing, const Options& options);
 
   // virtual destructor
   virtual ~BicycleCost() {
@@ -418,7 +418,7 @@ protected:
 // is modulated based on surface type and grade factors.
 
 // Constructor
-BicycleCost::BicycleCost(const Costing costing, const DirectionsOptions& options)
+BicycleCost::BicycleCost(const Costing costing, const Options& options)
     : DynamicCost(options, TravelMode::kBicycle) {
   // Grab the costing options based on the specified costing type
   const CostingOptions& costing_options = options.costing_options(static_cast<int>(costing));
@@ -973,7 +973,7 @@ void ParseBicycleCostOptions(const rapidjson::Document& doc,
   }
 }
 
-cost_ptr_t CreateBicycleCost(const Costing costing, const DirectionsOptions& options) {
+cost_ptr_t CreateBicycleCost(const Costing costing, const Options& options) {
   return std::make_shared<BicycleCost>(costing, options);
 }
 
@@ -991,8 +991,7 @@ namespace {
 
 class TestBicycleCost : public BicycleCost {
 public:
-  TestBicycleCost(const Costing costing, const DirectionsOptions& options)
-      : BicycleCost(costing, options){};
+  TestBicycleCost(const Costing costing, const Options& options) : BicycleCost(costing, options){};
 
   using BicycleCost::alley_penalty_;
   using BicycleCost::country_crossing_cost_;
@@ -1005,9 +1004,9 @@ public:
 TestBicycleCost* make_bicyclecost_from_json(const std::string& property, float testVal) {
   std::stringstream ss;
   ss << R"({"costing_options":{"bicycle":{")" << property << R"(":)" << testVal << "}}}";
-  valhalla_request_t request;
-  request.parse(ss.str(), valhalla::DirectionsOptions::route);
-  return new TestBicycleCost(valhalla::Costing::bicycle, request.options);
+  Api request;
+ParseApi(ss.str(), valhalla::Options::route, request);
+  return new TestBicycleCost(valhalla::Costing::bicycle, request.options());
 }
 
 std::uniform_real_distribution<float>*

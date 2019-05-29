@@ -121,7 +121,7 @@ public:
    * @param  costing specified costing type.
    * @param  options pbf with request options.
    */
-  MotorcycleCost(const Costing costing, const DirectionsOptions& options);
+  MotorcycleCost(const Costing costing, const Options& options);
 
   virtual ~MotorcycleCost();
 
@@ -306,7 +306,7 @@ public:
 };
 
 // Constructor
-MotorcycleCost::MotorcycleCost(const Costing costing, const DirectionsOptions& options)
+MotorcycleCost::MotorcycleCost(const Costing costing, const Options& options)
     : DynamicCost(options, TravelMode::kDrive), trans_density_factor_{1.0f, 1.0f, 1.0f, 1.0f,
                                                                       1.0f, 1.1f, 1.2f, 1.3f,
                                                                       1.4f, 1.6f, 1.9f, 2.2f,
@@ -626,7 +626,7 @@ void ParseMotorcycleCostOptions(const rapidjson::Document& doc,
   }
 }
 
-cost_ptr_t CreateMotorcycleCost(const Costing costing, const DirectionsOptions& options) {
+cost_ptr_t CreateMotorcycleCost(const Costing costing, const Options& options) {
   return std::make_shared<MotorcycleCost>(costing, options);
 }
 
@@ -644,7 +644,7 @@ namespace {
 
 class TestMotorcycleCost : public MotorcycleCost {
 public:
-  TestMotorcycleCost(const Costing costing, const DirectionsOptions& options)
+  TestMotorcycleCost(const Costing costing, const Options& options)
       : MotorcycleCost(costing, options){};
 
   using MotorcycleCost::alley_penalty_;
@@ -659,9 +659,9 @@ public:
 TestMotorcycleCost* make_motorcyclecost_from_json(const std::string& property, float testVal) {
   std::stringstream ss;
   ss << R"({"costing_options":{"motorcycle":{")" << property << R"(":)" << testVal << "}}}";
-  valhalla_request_t request;
-  request.parse(ss.str(), valhalla::DirectionsOptions::route);
-  return new TestMotorcycleCost(valhalla::Costing::auto_, request.options);
+  Api request;
+ParseApi(ss.str(), valhalla::Options::route, request);
+  return new TestMotorcycleCost(valhalla::Costing::auto_, request.options());
 }
 
 template <typename T>

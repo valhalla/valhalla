@@ -7,7 +7,7 @@
 #include "odin/util.h"
 #include "tyr/serializers.h"
 
-#include <valhalla/proto/directions_options.pb.h>
+#include <valhalla/proto/options.pb.h>
 
 using namespace valhalla;
 using namespace valhalla::midgard;
@@ -550,7 +550,7 @@ json::ArrayPtr legs(const std::list<valhalla::DirectionsLeg>& directions_legs) {
   return legs;
 }
 
-std::string serialize(const valhalla::DirectionsOptions& directions_options,
+std::string serialize(const valhalla::Options& options,
                       const std::list<valhalla::DirectionsLeg>& directions_legs) {
   // build up the json object
   auto json = json::map(
@@ -562,10 +562,10 @@ std::string serialize(const valhalla::DirectionsOptions& directions_options,
                     string("Found route between points")}, // found route between points OR
                                                            // cannot find route between points
                    {"status", static_cast<uint64_t>(0)},   // 0 success
-                   {"units", valhalla::DirectionsOptions_Units_Name(directions_options.units())},
-                   {"language", directions_options.language()}})}});
-  if (directions_options.has_id()) {
-    json->emplace("id", directions_options.id());
+                   {"units", valhalla::Options_Units_Name(options.units())},
+                   {"language", options.language()}})}});
+  if (options.has_id()) {
+    json->emplace("id", options.id());
   }
 
   std::stringstream ss;

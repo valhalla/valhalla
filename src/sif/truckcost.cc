@@ -111,7 +111,7 @@ public:
    * @param  costing specified costing type.
    * @param  options pbf with request options.
    */
-  TruckCost(const Costing costing, const DirectionsOptions& options);
+  TruckCost(const Costing costing, const Options& options);
 
   virtual ~TruckCost();
 
@@ -296,7 +296,7 @@ public:
 };
 
 // Constructor
-TruckCost::TruckCost(const Costing costing, const DirectionsOptions& options)
+TruckCost::TruckCost(const Costing costing, const Options& options)
     : DynamicCost(options, TravelMode::kDrive), trans_density_factor_{1.0f, 1.0f, 1.0f, 1.0f,
                                                                       1.0f, 1.1f, 1.2f, 1.3f,
                                                                       1.4f, 1.6f, 1.9f, 2.2f,
@@ -728,7 +728,7 @@ void ParseTruckCostOptions(const rapidjson::Document& doc,
   }
 }
 
-cost_ptr_t CreateTruckCost(const Costing costing, const DirectionsOptions& options) {
+cost_ptr_t CreateTruckCost(const Costing costing, const Options& options) {
   return std::make_shared<TruckCost>(costing, options);
 }
 
@@ -746,8 +746,7 @@ namespace {
 
 class TestTruckCost : public TruckCost {
 public:
-  TestTruckCost(const Costing costing, const DirectionsOptions& options)
-      : TruckCost(costing, options){};
+  TestTruckCost(const Costing costing, const Options& options) : TruckCost(costing, options){};
 
   using TruckCost::alley_penalty_;
   using TruckCost::country_crossing_cost_;
@@ -761,9 +760,9 @@ public:
 TestTruckCost* make_truckcost_from_json(const std::string& property, float testVal) {
   std::stringstream ss;
   ss << R"({"costing_options":{"truck":{")" << property << R"(":)" << testVal << "}}}";
-  valhalla_request_t request;
-  request.parse(ss.str(), valhalla::DirectionsOptions::route);
-  return new TestTruckCost(valhalla::Costing::truck, request.options);
+  Api request;
+ParseApi(ss.str(), valhalla::Options::route, request);
+  return new TestTruckCost(valhalla::Costing::truck, request.options());
 }
 
 std::uniform_real_distribution<float>*

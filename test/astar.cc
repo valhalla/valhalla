@@ -25,7 +25,7 @@
 #include "thor/triplegbuilder.h"
 
 #include <valhalla/proto/directions.pb.h>
-#include <valhalla/proto/directions_options.pb.h>
+#include <valhalla/proto/options.pb.h>
 #include <valhalla/proto/trip.pb.h>
 
 #include <boost/filesystem.hpp>
@@ -204,15 +204,15 @@ void write_config(const std::string& filename) {
   file.close();
 }
 
-void create_costing_options(DirectionsOptions& directions_options) {
+void create_costing_options(Options& options) {
   for (const auto costing : {auto_, auto_shorter, bicycle, bus, hov, motor_scooter, multimodal,
                              pedestrian, transit, truck, motorcycle, auto_data_fix}) {
     if (costing == pedestrian) {
       const rapidjson::Document doc;
       vs::ParsePedestrianCostOptions(doc, "/costing_options/pedestrian",
-                                     directions_options.add_costing_options());
+                                     options.add_costing_options());
     } else {
-      directions_options.add_costing_options();
+      options.add_costing_options();
     }
   }
 }
@@ -234,11 +234,11 @@ void assert_is_trivial_path(valhalla::Location& origin,
                              "file about generating the test tiles.");
   }
 
-  DirectionsOptions directions_options;
-  create_costing_options(directions_options);
+  Options options;
+  create_costing_options(options);
   auto mode = vs::TravelMode::kPedestrian;
   vs::cost_ptr_t costs[int(vs::TravelMode::kMaxTravelMode)];
-  auto pedestrian = vs::CreatePedestrianCost(Costing::pedestrian, directions_options);
+  auto pedestrian = vs::CreatePedestrianCost(Costing::pedestrian, options);
   costs[int(mode)] = pedestrian;
   assert(bool(costs[int(mode)]));
 
@@ -370,11 +370,11 @@ void trivial_path_no_uturns(const std::string& config_file) {
                        baldr::Location::StopType::BREAK);
   locations.push_back(dest);
 
-  DirectionsOptions directions_options;
-  create_costing_options(directions_options);
+  Options options;
+  create_costing_options(options);
   std::shared_ptr<vs::DynamicCost> mode_costing[4];
   std::shared_ptr<vs::DynamicCost> cost =
-      vs::CreatePedestrianCost(Costing::pedestrian, directions_options);
+      vs::CreatePedestrianCost(Costing::pedestrian, options);
   auto mode = cost->travel_mode();
   mode_costing[static_cast<uint32_t>(mode)] = cost;
 
@@ -385,24 +385,24 @@ void trivial_path_no_uturns(const std::string& config_file) {
   for (auto loc : locations) {
     try {
       path_location.push_back(projections.at(loc));
-      PathLocation::toPBF(path_location.back(), directions_options.mutable_locations()->Add(),
+      PathLocation::toPBF(path_location.back(), options.mutable_locations()->Add(),
                           graph_reader);
     } catch (...) { throw std::runtime_error("fail_invalid_origin"); }
   }
 
   vt::AStarPathAlgorithm astar;
   auto path =
-      astar.GetBestPath(*directions_options.mutable_locations(0),
-                        *directions_options.mutable_locations(1), graph_reader, mode_costing, mode);
+      astar.GetBestPath(*options.mutable_locations(0),
+                        *options.mutable_locations(1), graph_reader, mode_costing, mode);
 
   vt::AttributesController controller;
   TripLeg trip_path = vt::TripLegBuilder::Build(controller, graph_reader, mode_costing, path.begin(),
-                                                path.end(), *directions_options.mutable_locations(0),
-                                                *directions_options.mutable_locations(1),
+                                                path.end(), *options.mutable_locations(0),
+                                                *options.mutable_locations(1),
                                                 std::list<valhalla::Location>{});
   // really could of got the total of the elapsed_time.
   odin::DirectionsBuilder directions;
-  DirectionsLeg trip_directions = directions.Build(directions_options, trip_path);
+  DirectionsLeg trip_directions = directions.Build(options, trip_path);
 
   if (trip_directions.summary().time() != 0) {
     std::ostringstream ostr;

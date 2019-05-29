@@ -4,7 +4,7 @@
 
 #include <valhalla/baldr/json.h>
 #include <valhalla/baldr/rapidjson_utils.h>
-#include <valhalla/proto/directions_options.pb.h>
+#include <valhalla/proto/api.pb.h>
 #include <valhalla/valhalla.h>
 
 #ifdef HAVE_HTTP
@@ -16,15 +16,15 @@ namespace valhalla {
 
 // to use protobuflite we cant use descriptors which means we cant translate enums to strings
 // and so we reimplement the ones we use here
-bool DirectionsOptions_Action_Parse(const std::string& action, DirectionsOptions::Action* a);
-const std::string& DirectionsOptions_Action_Name(const DirectionsOptions::Action action);
+bool Options_Action_Parse(const std::string& action, Options::Action* a);
+const std::string& Options_Action_Name(const Options::Action action);
 bool Costing_Parse(const std::string& costing, Costing* c);
 const std::string& Costing_Name(const Costing costing);
 bool ShapeMatch_Parse(const std::string& match, ShapeMatch* s);
 const std::string& ShapeMatch_Name(const ShapeMatch match);
-bool DirectionsOptions_Format_Parse(const std::string& format, DirectionsOptions::Format* f);
-const std::string& DirectionsOptions_Format_Name(const DirectionsOptions::Format match);
-const std::string& DirectionsOptions_Units_Name(const DirectionsOptions::Units unit);
+bool Options_Format_Parse(const std::string& format, Options::Format* f);
+const std::string& Options_Format_Name(const Options::Format match);
+const std::string& Options_Units_Name(const Options::Units unit);
 bool FilterAction_Parse(const std::string& action, FilterAction* a);
 const std::string& FilterAction_Name(const FilterAction action);
 bool DirectionsType_Parse(const std::string& dtype, DirectionsType* t);
@@ -159,32 +159,28 @@ struct valhalla_exception_t : public std::runtime_error {
   unsigned http_code;
 };
 
-// TODO: this will go away and DirectionsOptions will be the request object
-struct valhalla_request_t {
-  DirectionsOptions options;
-  void parse(const std::string& request, DirectionsOptions::Action action);
-  void parse(const std::string& serialized_options);
+// TODO: this will go away and Options will be the request object
+void ParseApi(const std::string& json_request, Options::Action action, Api& api);
 #ifdef HAVE_HTTP
-  void parse(const prime_server::http_request_t& request);
+void ParseApi(const prime_server::http_request_t& http_request, Api& api);
 #endif
-};
 
 #ifdef HAVE_HTTP
 prime_server::worker_t::result_t jsonify_error(const valhalla_exception_t& exception,
                                                prime_server::http_request_info_t& request_info,
-                                               const valhalla_request_t& options);
+                                               const Api& options);
 prime_server::worker_t::result_t to_response(const baldr::json::ArrayPtr& array,
                                              prime_server::http_request_info_t& request_info,
-                                             const valhalla_request_t& options);
+                                             const Api& options);
 prime_server::worker_t::result_t to_response(const baldr::json::MapPtr& map,
                                              prime_server::http_request_info_t& request_info,
-                                             const valhalla_request_t& options);
+                                             const Api& options);
 prime_server::worker_t::result_t to_response_json(const std::string& json,
                                                   prime_server::http_request_info_t& request_info,
-                                                  const valhalla_request_t& options);
+                                                  const Api& options);
 prime_server::worker_t::result_t to_response_xml(const std::string& xml,
                                                  prime_server::http_request_info_t& request_info,
-                                                 const valhalla_request_t& options);
+                                                 const Api& options);
 #endif
 
 class service_worker_t {

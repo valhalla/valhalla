@@ -157,7 +157,7 @@ public:
    * @param  costing specified costing type.
    * @param  options pbf with request options.
    */
-  PedestrianCost(const Costing costing, const DirectionsOptions& options);
+  PedestrianCost(const Costing costing, const Options& options);
 
   // virtual destructor
   virtual ~PedestrianCost() {
@@ -509,7 +509,7 @@ public:
 
 // Constructor. Parse pedestrian options from property tree. If option is
 // not present, set the default.
-PedestrianCost::PedestrianCost(const Costing costing, const DirectionsOptions& options)
+PedestrianCost::PedestrianCost(const Costing costing, const Options& options)
     : DynamicCost(options, TravelMode::kPedestrian) {
   // Grab the costing options based on the specified costing type
   const CostingOptions& costing_options = options.costing_options(static_cast<int>(costing));
@@ -898,7 +898,7 @@ void ParsePedestrianCostOptions(const rapidjson::Document& doc,
   }
 }
 
-cost_ptr_t CreatePedestrianCost(const Costing costing, const DirectionsOptions& options) {
+cost_ptr_t CreatePedestrianCost(const Costing costing, const Options& options) {
   return std::make_shared<PedestrianCost>(costing, options);
 }
 
@@ -916,7 +916,7 @@ namespace {
 
 class TestPedestrianCost : public PedestrianCost {
 public:
-  TestPedestrianCost(const Costing costing, const DirectionsOptions& options)
+  TestPedestrianCost(const Costing costing, const Options& options)
       : PedestrianCost(costing, options){};
 
   using PedestrianCost::alley_penalty_;
@@ -931,9 +931,9 @@ TestPedestrianCost*
 make_pedestriancost_from_json(const std::string& property, float testVal, const std::string& type) {
   std::stringstream ss;
   ss << R"({"costing_options":{"pedestrian":{")" << property << R"(":)" << testVal << "}}}";
-  valhalla_request_t request;
-  request.parse(ss.str(), valhalla::DirectionsOptions::route);
-  return new TestPedestrianCost(valhalla::Costing::pedestrian, request.options);
+  Api request;
+ParseApi(ss.str(), valhalla::Options::route, request);
+  return new TestPedestrianCost(valhalla::Costing::pedestrian, request.options());
 }
 
 std::uniform_real_distribution<float>*

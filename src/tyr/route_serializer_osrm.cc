@@ -14,7 +14,7 @@
 #include "tyr/serializers.h"
 
 #include "proto/directions.pb.h"
-#include "proto/directions_options.pb.h"
+#include "proto/options.pb.h"
 #include "proto/trip.pb.h"
 
 using namespace valhalla;
@@ -273,9 +273,9 @@ void route_summary(json::MapPtr& route,
 
 // Generate full shape of the route.
 std::string full_shape(const std::list<valhalla::DirectionsLeg>& legs,
-                       const valhalla::DirectionsOptions& directions_options) {
+                       const valhalla::Options& options) {
   // If just one leg and it we want polyline6 then we just return the encoded leg shape
-  if (legs.size() == 1 && directions_options.shape_format() == polyline6) {
+  if (legs.size() == 1 && options.shape_format() == polyline6) {
     return legs.front().shape();
   }
 
@@ -291,13 +291,13 @@ std::string full_shape(const std::list<valhalla::DirectionsLeg>& legs,
     decoded.insert(decoded.end(), decoded.size() ? decoded_leg.begin() + 1 : decoded_leg.begin(),
                    decoded_leg.end());
   }
-  int precision = directions_options.shape_format() == polyline6 ? 1e6 : 1e5;
+  int precision = options.shape_format() == polyline6 ? 1e6 : 1e5;
   return midgard::encode(decoded, precision);
 }
 
 // Generate simplified shape of the route.
 std::string simplified_shape(const std::list<valhalla::DirectionsLeg>& legs,
-                             const valhalla::DirectionsOptions& directions_options) {
+                             const valhalla::Options& options) {
   Coordinate south_west(std::numeric_limits<int>::max(), std::numeric_limits<int>::max());
   Coordinate north_east(std::numeric_limits<int>::min(), std::numeric_limits<int>::min());
 
@@ -325,7 +325,7 @@ std::string simplified_shape(const std::list<valhalla::DirectionsLeg>& legs,
 
   const auto zoom_level = std::min(MAX_ZOOM, getFittedZoom(south_west, north_east));
   Polyline2<PointLL>::Generalize(full_shape, DOUGLAS_PEUCKER_THRESHOLDS[zoom_level], indices);
-  int precision = directions_options.shape_format() == polyline6 ? 1e6 : 1e5;
+  int precision = options.shape_format() == polyline6 ? 1e6 : 1e5;
 
   return midgard::encode(full_shape, precision);
 }
@@ -859,10 +859,10 @@ json::MapPtr osrm_maneuver(const valhalla::DirectionsLeg::Maneuver& maneuver,
 std::string maneuver_geometry(const uint32_t begin_idx,
                               const uint32_t end_idx,
                               const std::vector<PointLL>& shape,
-                              const valhalla::DirectionsOptions& directions_options) {
+                              const valhalla::Options& options) {
   // Must add one to the end range since maneuver end shape index is exclusive
   std::vector<PointLL> maneuver_shape(shape.begin() + begin_idx, shape.begin() + end_idx + 1);
-  int precision = directions_options.shape_format() == polyline6 ? 1e6 : 1e5;
+  int precision = options.shape_format() == polyline6 ? 1e6 : 1e5;
   return midgard::encode(maneuver_shape, precision);
 }
 
@@ -975,7 +975,7 @@ std::string summarize_leg(std::list<valhalla::DirectionsLeg>::const_iterator leg
 json::ArrayPtr serialize_legs(const std::list<valhalla::DirectionsLeg>& legs,
                               std::list<valhalla::TripLeg>& path_legs,
                               bool imperial,
-                              const valhalla::DirectionsOptions& directions_options) {
+                              const valhalla::Options& options) {
   auto output_legs = json::array({});
 
   // Verify that the path_legs list is the same size as the legs list
@@ -1017,7 +1017,7 @@ json::ArrayPtr serialize_legs(const std::list<valhalla::DirectionsLeg>& legs,
       // Add geometry for this maneuver
       step->emplace("geometry",
                     maneuver_geometry(maneuver.begin_shape_index(), maneuver.end_shape_index(), shape,
-                                      directions_options));
+                                      options));
 
       // Add mode, driving side, weight, distance, duration, name
       float distance = maneuver.length() * (imperial ? 1609.34f : 1000.0f);
@@ -1101,7 +1101,7 @@ json::ArrayPtr serialize_legs(const std::list<valhalla::DirectionsLeg>& legs,
 //     directions options
 //     TripLeg protocol buffer
 //     DirectionsLeg protocol buffer
-std::string serialize(const valhalla::DirectionsOptions& directions_options,
+std::string serialize(const valhalla::Options& options,
                       std::list<valhalla::TripLeg>& path_legs,
                       const std::list<valhalla::DirectionsLeg>& legs) {
   auto json = json::map({});
@@ -1110,15 +1110,15 @@ std::string serialize(const valhalla::DirectionsOptions& directions_options,
   // waypoints (locations).
   std::string status("Ok");
   json->emplace("code", status);
-  switch (directions_options.action()) {
-    case valhalla::DirectionsOptions::trace_route:
-      json->emplace("tracepoints", osrm::waypoints(directions_options.locations(), true));
+  switch (options.action()) {
+    case valhalla::Options::trace_route:
+      json->emplace("tracepoints", osrm::waypoints(options.locations(), true));
       break;
-    case valhalla::DirectionsOptions::route:
-      json->emplace("waypoints", osrm::waypoints(directions_options.locations()));
+    case valhalla::Options::route:
+      json->emplace("waypoints", osrm::waypoints(options.locations()));
       break;
-    case valhalla::DirectionsOptions::optimized_route:
-      json->emplace("waypoints", waypoints(directions_options.locations()));
+    case valhalla::Options::optimized_route:
+      json->emplace("waypoints", waypoints(options.locations()));
       break;
   }
 
@@ -1127,7 +1127,7 @@ std::string serialize(const valhalla::DirectionsOptions& directions_options,
   auto routes = json::array({});
 
   // OSRM is always using metric for non narrative stuff
-  bool imperial = directions_options.units() == DirectionsOptions::miles;
+  bool imperial = options.units() == Options::miles;
 
   // For each route...
   for (int i = 0; i < 1; ++i) {
@@ -1137,25 +1137,25 @@ std::string serialize(const valhalla::DirectionsOptions& directions_options,
     // full geom = !has_generalize()
     // simplified geom = has_generalize && generalize == 0
     // no geom = has_generalize && generalize == -1
-    if (directions_options.has_generalize() && directions_options.generalize() == 0.0f) {
-      route->emplace("geometry", simplified_shape(legs, directions_options));
-    } else if (!directions_options.has_generalize() ||
-               (directions_options.has_generalize() && directions_options.generalize() > 0.0f)) {
+    if (options.has_generalize() && options.generalize() == 0.0f) {
+      route->emplace("geometry", simplified_shape(legs, options));
+    } else if (!options.has_generalize() ||
+               (options.has_generalize() && options.generalize() > 0.0f)) {
       // Get full shape for the route.
-      route->emplace("geometry", full_shape(legs, directions_options));
+      route->emplace("geometry", full_shape(legs, options));
     }
 
     // Other route summary information
     route_summary(route, legs, imperial);
 
     // Serialize route legs
-    route->emplace("legs", serialize_legs(legs, path_legs, imperial, directions_options));
+    route->emplace("legs", serialize_legs(legs, path_legs, imperial, options));
 
     routes->emplace_back(route);
   }
 
   // Routes are called matchings in osrm map matching mode
-  json->emplace(directions_options.action() == valhalla::DirectionsOptions::trace_route ? "matchings"
+  json->emplace(options.action() == valhalla::Options::trace_route ? "matchings"
                                                                                         : "routes",
                 routes);
 

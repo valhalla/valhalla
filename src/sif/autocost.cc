@@ -118,7 +118,7 @@ public:
    * @param  costing specified costing type.
    * @param  options pbf with request options.
    */
-  AutoCost(const Costing costing, const DirectionsOptions& options);
+  AutoCost(const Costing costing, const Options& options);
 
   virtual ~AutoCost() {
   }
@@ -302,7 +302,7 @@ public:
 };
 
 // Constructor
-AutoCost::AutoCost(const Costing costing, const DirectionsOptions& options)
+AutoCost::AutoCost(const Costing costing, const Options& options)
     : DynamicCost(options, TravelMode::kDrive), trans_density_factor_{1.0f, 1.0f, 1.0f, 1.0f,
                                                                       1.0f, 1.1f, 1.2f, 1.3f,
                                                                       1.4f, 1.6f, 1.9f, 2.2f,
@@ -610,7 +610,7 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
   }
 }
 
-cost_ptr_t CreateAutoCost(const Costing costing, const DirectionsOptions& options) {
+cost_ptr_t CreateAutoCost(const Costing costing, const Options& options) {
   return std::make_shared<AutoCost>(costing, options);
 }
 
@@ -625,8 +625,7 @@ public:
    * Pass in options with protocol buffer(pbf).
    * @param  options  pbf with options.
    */
-  AutoShorterCost(const Costing costing, const DirectionsOptions& options)
-      : AutoCost(costing, options) {
+  AutoShorterCost(const Costing costing, const Options& options) : AutoCost(costing, options) {
     // Create speed cost table that reduces the impact of speed
     adjspeedfactor_[0] = kSecPerHour; // TODO - what to make speed=0?
     for (uint32_t s = 1; s <= kMaxSpeedKph; s++) {
@@ -673,7 +672,7 @@ void ParseAutoShorterCostOptions(const rapidjson::Document& doc,
   ParseAutoCostOptions(doc, costing_options_key, pbf_costing_options);
 }
 
-cost_ptr_t CreateAutoShorterCost(const Costing costing, const DirectionsOptions& options) {
+cost_ptr_t CreateAutoShorterCost(const Costing costing, const Options& options) {
   return std::make_shared<AutoShorterCost>(costing, options);
 }
 
@@ -687,7 +686,7 @@ public:
    * Pass in configuration using property tree.
    * @param  pt  Property tree with configuration/options.
    */
-  BusCost(const Costing costing, const DirectionsOptions& options) : AutoCost(costing, options) {
+  BusCost(const Costing costing, const Options& options) : AutoCost(costing, options) {
     type_ = VehicleType::kBus;
   }
 
@@ -876,7 +875,7 @@ void ParseBusCostOptions(const rapidjson::Document& doc,
   ParseAutoCostOptions(doc, costing_options_key, pbf_costing_options);
 }
 
-cost_ptr_t CreateBusCost(const Costing costing, const DirectionsOptions& options) {
+cost_ptr_t CreateBusCost(const Costing costing, const Options& options) {
   return std::make_shared<BusCost>(costing, options);
 }
 
@@ -891,7 +890,7 @@ public:
    * Pass in options using protocol buffer(pbf).
    * @param  options  pbf with options.
    */
-  HOVCost(const Costing costing, const DirectionsOptions& options) : AutoCost(costing, options) {
+  HOVCost(const Costing costing, const Options& options) : AutoCost(costing, options) {
   }
 
   virtual ~HOVCost() {
@@ -1095,7 +1094,7 @@ void ParseHOVCostOptions(const rapidjson::Document& doc,
   ParseAutoCostOptions(doc, costing_options_key, pbf_costing_options);
 }
 
-cost_ptr_t CreateHOVCost(const Costing costing, const DirectionsOptions& options) {
+cost_ptr_t CreateHOVCost(const Costing costing, const Options& options) {
   return std::make_shared<HOVCost>(costing, options);
 }
 
@@ -1110,7 +1109,7 @@ public:
    * Pass in options using protocol buffer(pbf).
    * @param  options  pbf with options.
    */
-  TaxiCost(const Costing costing, const DirectionsOptions& options) : AutoCost(costing, options) {
+  TaxiCost(const Costing costing, const Options& options) : AutoCost(costing, options) {
   }
 
   virtual ~TaxiCost() {
@@ -1314,7 +1313,7 @@ void ParseTaxiCostOptions(const rapidjson::Document& doc,
   ParseAutoCostOptions(doc, costing_options_key, pbf_costing_options);
 }
 
-cost_ptr_t CreateTaxiCost(const Costing costing, const DirectionsOptions& options) {
+cost_ptr_t CreateTaxiCost(const Costing costing, const Options& options) {
   return std::make_shared<TaxiCost>(costing, options);
 }
 
@@ -1330,7 +1329,7 @@ public:
    * Pass in configuration using property tree.
    * @param  pt  Property tree with configuration/options.
    */
-  AutoDataFix(const Costing costing, const DirectionsOptions& options) : AutoCost(costing, options) {
+  AutoDataFix(const Costing costing, const Options& options) : AutoCost(costing, options) {
   }
 
   virtual ~AutoDataFix() {
@@ -1394,7 +1393,7 @@ void ParseAutoDataFixCostOptions(const rapidjson::Document& doc,
   ParseAutoCostOptions(doc, costing_options_key, pbf_costing_options);
 }
 
-cost_ptr_t CreateAutoDataFixCost(const Costing costing, const DirectionsOptions& options) {
+cost_ptr_t CreateAutoDataFixCost(const Costing costing, const Options& options) {
   return std::make_shared<AutoDataFix>(costing, options);
 }
 
@@ -1412,8 +1411,7 @@ namespace {
 
 class TestAutoCost : public AutoCost {
 public:
-  TestAutoCost(const Costing costing, const DirectionsOptions& options)
-      : AutoCost(costing, options){};
+  TestAutoCost(const Costing costing, const Options& options) : AutoCost(costing, options){};
 
   using AutoCost::alley_penalty_;
   using AutoCost::country_crossing_cost_;
@@ -1427,9 +1425,9 @@ public:
 TestAutoCost* make_autocost_from_json(const std::string& property, float testVal) {
   std::stringstream ss;
   ss << R"({"costing_options":{"auto":{")" << property << R"(":)" << testVal << "}}}";
-  valhalla_request_t request;
-  request.parse(ss.str(), valhalla::DirectionsOptions::route);
-  return new TestAutoCost(valhalla::Costing::auto_, request.options);
+  Api request;
+ParseApi(ss.str(), valhalla::Options::route, request);
+  return new TestAutoCost(valhalla::Costing::auto_, request.options());
 }
 
 std::uniform_real_distribution<float>*

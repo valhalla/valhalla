@@ -33,7 +33,7 @@
 #include "worker.h"
 
 #include <valhalla/proto/directions.pb.h>
-#include <valhalla/proto/directions_options.pb.h>
+#include <valhalla/proto/options.pb.h>
 #include <valhalla/proto/trip.pb.h>
 
 #include "config.h"
@@ -191,15 +191,14 @@ valhalla::TripLeg PathTest(GraphReader& reader,
     std::shared_ptr<DynamicCost> cost = mode_costing[static_cast<uint32_t>(mode)];
     const auto projections = Search(locations, reader, cost->GetEdgeFilter(), cost->GetNodeFilter());
     std::vector<PathLocation> path_location;
-    valhalla::DirectionsOptions directions_options;
+    valhalla::Options options;
     for (const auto& loc : locations) {
       path_location.push_back(projections.at(loc));
-      PathLocation::toPBF(path_location.back(), directions_options.mutable_locations()->Add(),
-                          reader);
+      PathLocation::toPBF(path_location.back(), options.mutable_locations()->Add(), reader);
     }
     std::vector<PathInfo> path;
-    bool ret = RouteMatcher::FormPath(mode_costing, mode, reader, trace, false,
-                                      directions_options.locations(), path);
+    bool ret =
+        RouteMatcher::FormPath(mode_costing, mode, reader, trace, false, options.locations(), path);
     if (ret) {
       LOG_INFO("RouteMatcher succeeded");
     } else {
@@ -317,7 +316,7 @@ std::string GetFormattedTime(uint32_t seconds) {
   return formattedTime;
 }
 
-valhalla::DirectionsLeg DirectionsTest(const valhalla::DirectionsOptions& directions_options,
+valhalla::DirectionsLeg DirectionsTest(const valhalla::Options& options,
                                        valhalla::TripLeg& trip_path,
                                        valhalla::Location& orig,
                                        valhalla::Location& dest,
@@ -327,9 +326,8 @@ valhalla::DirectionsLeg DirectionsTest(const valhalla::DirectionsOptions& direct
   const PathLocation& destination = PathLocation::fromPBF(dest);
 
   DirectionsBuilder directions;
-  valhalla::DirectionsLeg trip_directions = directions.Build(directions_options, trip_path);
-  std::string units =
-      (directions_options.units() == valhalla::DirectionsOptions::kilometers ? "km" : "mi");
+  valhalla::DirectionsLeg trip_directions = directions.Build(options, trip_path);
+  std::string units = (options.units() == valhalla::Options::kilometers ? "km" : "mi");
   int m = 1;
   valhalla::midgard::logging::Log("From: " + std::to_string(origin), " [NARRATIVE] ");
   valhalla::midgard::logging::Log("To: " + std::to_string(destination), " [NARRATIVE] ");
@@ -422,7 +420,7 @@ valhalla::DirectionsLeg DirectionsTest(const valhalla::DirectionsOptions& direct
 
 // Main method for testing a single path
 int main(int argc, char* argv[]) {
-  bpo::options_description options(
+  bpo::options_description poptions(
       "valhalla_run_route " VALHALLA_VERSION "\n"
       "\n"
       " Usage: valhalla_run_route [options]\n"
@@ -438,8 +436,8 @@ int main(int argc, char* argv[]) {
   bool match_test = false;
   uint32_t iterations;
 
-  options.add_options()("help,h", "Print this help message.")("version,v",
-                                                              "Print the version of this software.")(
+  poptions.add_options()("help,h", "Print this help message.")("version,v",
+                                                               "Print the version of this software.")(
       "json,j", boost::program_options::value<std::string>(&json),
       "JSON Example: "
       "'{\"locations\":[{\"lat\":40.748174,\"lon\":-73.984984,\"type\":\"break\",\"heading\":200,"
@@ -448,8 +446,8 @@ int main(int argc, char* argv[]) {
       "749231,\"lon\":-73.968703,\"type\":\"break\",\"name\":\"United Nations "
       "Headquarters\",\"street\":\"405 East 42nd Street\",\"city\":\"New "
       "York\",\"state\":\"NY\",\"postal_code\":\"10017-3507\",\"country\":\"US\"}],\"costing\":"
-      "\"auto\",\"directions_options\":{\"units\":\"miles\"}}'")(
-      "match-test", "Test RouteMatcher with resulting shape.")(
+      "\"auto\",\"options\":{\"units\":\"miles\"}}'")("match-test",
+                                                      "Test RouteMatcher with resulting shape.")(
       "multi-run", bpo::value<uint32_t>(&iterations),
       "Generate the route N additional times before exiting.")
       // positional arguments
@@ -461,7 +459,7 @@ int main(int argc, char* argv[]) {
   bpo::variables_map vm;
 
   try {
-    bpo::store(bpo::command_line_parser(argc, argv).options(options).positional(pos_options).run(),
+    bpo::store(bpo::command_line_parser(argc, argv).options(poptions).positional(pos_options).run(),
                vm);
     bpo::notify(vm);
 
@@ -472,7 +470,7 @@ int main(int argc, char* argv[]) {
   }
 
   if (vm.count("help")) {
-    std::cout << options << "\n";
+    std::cout << poptions << "\n";
     return EXIT_SUCCESS;
   }
 
@@ -490,16 +488,16 @@ int main(int argc, char* argv[]) {
   }
 
   // Grab the directions options, if they exist
-  valhalla::valhalla_request_t request;
-  request.parse(json, valhalla::DirectionsOptions::route);
-  const auto& directions_options = request.options;
+  valhalla::Api request;
+  valhalla::ParseApi(json, valhalla::Options::route, request);
+  const auto& options = request.options();
 
   // Get type of route - this provides the costing method to use.
-  std::string routetype = valhalla::Costing_Name(request.options.costing());
+  std::string routetype = valhalla::Costing_Name(options.costing());
   LOG_INFO("routetype: " + routetype);
 
   // Locations
-  auto locations = valhalla::baldr::PathLocation::fromPBF(directions_options.locations());
+  auto locations = valhalla::baldr::PathLocation::fromPBF(options.locations());
   if (locations.size() < 2) {
     throw;
   }
@@ -549,16 +547,15 @@ int main(int argc, char* argv[]) {
   if (routetype == "multimodal") {
     // Create array of costing methods per mode and set initial mode to
     // pedestrian
-    mode_costing[0] = factory.Create(valhalla::Costing::auto_, directions_options);
-    mode_costing[1] = factory.Create(valhalla::Costing::pedestrian, directions_options);
-    mode_costing[2] = factory.Create(valhalla::Costing::bicycle, directions_options);
-    mode_costing[3] = factory.Create(valhalla::Costing::transit, directions_options);
+    mode_costing[0] = factory.Create(valhalla::Costing::auto_, options);
+    mode_costing[1] = factory.Create(valhalla::Costing::pedestrian, options);
+    mode_costing[2] = factory.Create(valhalla::Costing::bicycle, options);
+    mode_costing[3] = factory.Create(valhalla::Costing::transit, options);
     mode = TravelMode::kPedestrian;
   } else {
     // Assign costing method, override any config options that are in the
     // json request
-    std::shared_ptr<DynamicCost> cost =
-        factory.Create(directions_options.costing(), directions_options);
+    std::shared_ptr<DynamicCost> cost = factory.Create(options.costing(), options);
     mode = cost->travel_mode();
     mode_costing[static_cast<uint32_t>(mode)] = cost;
   }
@@ -584,8 +581,8 @@ int main(int argc, char* argv[]) {
   TimeDepReverse timedep_reverse;
   for (uint32_t i = 0; i < n; i++) {
     // Set origin and destination for this segment
-    valhalla::Location origin = directions_options.locations(i);
-    valhalla::Location dest = directions_options.locations(i + 1);
+    valhalla::Location origin = options.locations(i);
+    valhalla::Location dest = options.locations(i + 1);
 
     PointLL ll1(origin.ll().lng(), origin.ll().lat());
     PointLL ll2(dest.ll().lng(), dest.ll().lat());
@@ -598,13 +595,11 @@ int main(int argc, char* argv[]) {
       // Use time dependent algorithms if date time is present
       // TODO - this isn't really correct for multipoint routes but should allow
       // simple testing.
-      if (directions_options.has_date_time() && ll1.Distance(ll2) < max_timedep_distance &&
-          (directions_options.date_time_type() ==
-               valhalla::DirectionsOptions_DateTimeType_depart_at ||
-           directions_options.date_time_type() == valhalla::DirectionsOptions_DateTimeType_current)) {
+      if (options.has_date_time() && ll1.Distance(ll2) < max_timedep_distance &&
+          (options.date_time_type() == valhalla::Options_DateTimeType_depart_at ||
+           options.date_time_type() == valhalla::Options_DateTimeType_current)) {
         pathalgorithm = &timedep_forward;
-      } else if (directions_options.date_time_type() ==
-                     valhalla::DirectionsOptions_DateTimeType_arrive_by &&
+      } else if (options.date_time_type() == valhalla::Options_DateTimeType_arrive_by &&
                  ll1.Distance(ll2) < max_timedep_distance) {
         pathalgorithm = &timedep_reverse;
       } else {
@@ -635,7 +630,7 @@ int main(int argc, char* argv[]) {
       // Try the the directions
       auto t1 = std::chrono::high_resolution_clock::now();
       valhalla::DirectionsLeg trip_directions =
-          DirectionsTest(directions_options, trip_path, origin, dest, data);
+          DirectionsTest(options, trip_path, origin, dest, data);
       auto t2 = std::chrono::high_resolution_clock::now();
       auto msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
 
@@ -652,7 +647,7 @@ int main(int argc, char* argv[]) {
   }
 
   // Set the arc distance. Convert to miles if needed
-  if (directions_options.units() == valhalla::DirectionsOptions::miles) {
+  if (options.units() == valhalla::Options::miles) {
     d1 *= kMilePerKm;
   }
   data.setArcDist(d1);

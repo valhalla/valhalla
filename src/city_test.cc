@@ -26,7 +26,7 @@
 #include "thor/triplegbuilder.h"
 
 #include <valhalla/proto/directions.pb.h>
-#include <valhalla/proto/directions_options.pb.h>
+#include <valhalla/proto/options.pb.h>
 #include <valhalla/proto/trip.pb.h>
 
 using namespace valhalla::midgard;
@@ -131,7 +131,7 @@ std::string GetJSONRequest(const Location& originloc, const Location& destloc) {
   str += "\"}],";
 
   // Add costing and return string
-  str += "\"costing\":\"auto\",\"directions_options\":{\"units\":\"miles\"}}' --config "
+  str += "\"costing\":\"auto\",\"options\":{\"units\":\"miles\"}}' --config "
          "../conf/valhalla.json\n";
   return str;
 }

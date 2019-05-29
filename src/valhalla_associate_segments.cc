@@ -290,7 +290,7 @@ public:
 };
 
 DistanceOnlyCost::DistanceOnlyCost(vs::TravelMode travel_mode)
-    : DynamicCost(valhalla::DirectionsOptions(), travel_mode) {
+    : DynamicCost(valhalla::Options(), travel_mode) {
 }
 
 DistanceOnlyCost::~DistanceOnlyCost() {

@@ -10,7 +10,7 @@
 #include <valhalla/baldr/nodeinfo.h>
 #include <valhalla/baldr/timedomain.h>
 #include <valhalla/baldr/transitdeparture.h>
-#include <valhalla/proto/directions_options.pb.h>
+#include <valhalla/proto/options.pb.h>
 #include <valhalla/sif/costconstants.h>
 #include <valhalla/sif/edgelabel.h>
 #include <valhalla/sif/hierarchylimits.h>
@@ -70,7 +70,7 @@ public:
    * @param  options Request options in a pbf
    * @param  mode Travel mode
    */
-  DynamicCost(const DirectionsOptions& options, const TravelMode mode);
+  DynamicCost(const Options& options, const TravelMode mode);
 
   virtual ~DynamicCost();
 

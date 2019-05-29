@@ -287,7 +287,7 @@ rapidjson::Document from_string(const std::string& json, const valhalla_exceptio
 }
 
 void parse_locations(const rapidjson::Document& doc,
-                     DirectionsOptions& options,
+                     Options& options,
                      const std::string& node,
                      unsigned location_parse_error_code,
                      bool track) {
@@ -344,7 +344,7 @@ void parse_locations(const rapidjson::Document& doc,
           else if (*stop_type_json == std::string("break_through"))
             location->set_type(valhalla::Location::kBreakThrough);
         } // for map matching the default type is a through
-        else if (options.action() == DirectionsOptions::trace_route) {
+        else if (options.action() == Options::trace_route) {
           location->set_type(valhalla::Location::kVia);
         }
 
@@ -480,12 +480,12 @@ void parse_contours(const rapidjson::Document& doc,
   }
 }
 
-void from_json(rapidjson::Document& doc, DirectionsOptions& options) {
+void from_json(rapidjson::Document& doc, Options& options) {
   bool track = !options.has_do_not_track() || !options.do_not_track();
 
   // TODO: stop doing this after a sufficient amount of time has passed
-  // move anything nested in deprecated directions_options up to the top level
-  auto deprecated = get_child_optional(doc, "/directions_options");
+  // move anything nested in deprecated options up to the top level
+  auto deprecated = get_child_optional(doc, "/options");
   auto& allocator = doc.GetAllocator();
   if (deprecated) {
     for (const auto& key : {"/units", "/narrative", "/format", "/language"}) {
@@ -494,13 +494,13 @@ void from_json(rapidjson::Document& doc, DirectionsOptions& options) {
         doc.AddMember(rapidjson::Value(&key[1], allocator), *child, allocator);
       }
     }
-    // delete directions_options if it existed
-    doc.RemoveMember("directions_options");
+    // delete options if it existed
+    doc.RemoveMember("options");
   }
 
   auto fmt = rapidjson::get_optional<std::string>(doc, "/format");
-  DirectionsOptions::Format format;
-  if (fmt && DirectionsOptions_Format_Parse(*fmt, &format)) {
+  Options::Format format;
+  if (fmt && Options_Format_Parse(*fmt, &format)) {
     options.set_format(format);
   }
 
@@ -517,9 +517,9 @@ void from_json(rapidjson::Document& doc, DirectionsOptions& options) {
   auto units = rapidjson::get_optional<std::string>(doc, "/units");
   if (units) {
     if ((*units == "miles") || (*units == "mi")) {
-      options.set_units(DirectionsOptions::miles);
+      options.set_units(Options::miles);
     } else {
-      options.set_units(DirectionsOptions::kilometers);
+      options.set_units(Options::kilometers);
     }
   }
 
@@ -724,26 +724,26 @@ void from_json(rapidjson::Document& doc, DirectionsOptions& options) {
 
   // time type
   auto date_time_type = rapidjson::get_optional<float>(doc, "/date_time/type");
-  if (date_time_type && DirectionsOptions::DateTimeType_IsValid(*date_time_type)) {
+  if (date_time_type && Options::DateTimeType_IsValid(*date_time_type)) {
     auto const v = static_cast<int>(*date_time_type);
-    options.set_date_time_type(static_cast<DirectionsOptions::DateTimeType>(v));
+    options.set_date_time_type(static_cast<Options::DateTimeType>(v));
   } // not specified but you want transit, then we default to current
   else if (options.has_costing() &&
            (options.costing() == multimodal || options.costing() == transit)) {
-    options.set_date_time_type(DirectionsOptions::current);
+    options.set_date_time_type(Options::current);
   }
 
   // time value
   if (options.has_date_time_type()) {
     auto date_time_value = rapidjson::get_optional<std::string>(doc, "/date_time/value");
     switch (options.date_time_type()) {
-      case DirectionsOptions::current:
+      case Options::current:
         options.set_date_time("current");
         if (options.locations_size() > 0) {
           options.mutable_locations(0)->set_date_time("current");
         }
         break;
-      case DirectionsOptions::depart_at:
+      case Options::depart_at:
         if (!date_time_value) {
           throw valhalla_exception_t{160};
         };
@@ -755,7 +755,7 @@ void from_json(rapidjson::Document& doc, DirectionsOptions& options) {
           options.mutable_locations(0)->set_date_time(*date_time_value);
         }
         break;
-      case DirectionsOptions::arrive_by:
+      case Options::arrive_by:
         // not yet for transit
         if (options.costing() == multimodal || options.costing() == transit) {
           throw valhalla_exception_t{141};
@@ -874,25 +874,25 @@ void from_json(rapidjson::Document& doc, DirectionsOptions& options) {
 
   // force these into the output so its obvious what we did to the user
   doc.AddMember({"language", allocator}, {options.language(), allocator}, allocator);
-  doc.AddMember({"format", allocator},
-                {valhalla::DirectionsOptions_Format_Name(options.format()), allocator}, allocator);
+  doc.AddMember({"format", allocator}, {valhalla::Options_Format_Name(options.format()), allocator},
+                allocator);
 }
 
 } // namespace
 
 namespace valhalla {
 
-bool DirectionsOptions_Action_Parse(const std::string& action, DirectionsOptions::Action* a) {
-  static const std::unordered_map<std::string, DirectionsOptions::Action> actions{
-      {"route", DirectionsOptions::route},
-      {"locate", DirectionsOptions::locate},
-      {"sources_to_targets", DirectionsOptions::sources_to_targets},
-      {"optimized_route", DirectionsOptions::optimized_route},
-      {"isochrone", DirectionsOptions::isochrone},
-      {"trace_route", DirectionsOptions::trace_route},
-      {"trace_attributes", DirectionsOptions::trace_attributes},
-      {"height", DirectionsOptions::height},
-      {"transit_available", DirectionsOptions::transit_available},
+bool Options_Action_Parse(const std::string& action, Options::Action* a) {
+  static const std::unordered_map<std::string, Options::Action> actions{
+      {"route", Options::route},
+      {"locate", Options::locate},
+      {"sources_to_targets", Options::sources_to_targets},
+      {"optimized_route", Options::optimized_route},
+      {"isochrone", Options::isochrone},
+      {"trace_route", Options::trace_route},
+      {"trace_attributes", Options::trace_attributes},
+      {"height", Options::height},
+      {"transit_available", Options::transit_available},
   };
   auto i = actions.find(action);
   if (i == actions.cend())
@@ -901,18 +901,18 @@ bool DirectionsOptions_Action_Parse(const std::string& action, DirectionsOptions
   return true;
 }
 
-const std::string& DirectionsOptions_Action_Name(const DirectionsOptions::Action action) {
+const std::string& Options_Action_Name(const Options::Action action) {
   static const std::string empty;
   static const std::unordered_map<int, std::string> actions{
-      {DirectionsOptions::route, "route"},
-      {DirectionsOptions::locate, "locate"},
-      {DirectionsOptions::sources_to_targets, "sources_to_targets"},
-      {DirectionsOptions::optimized_route, "optimized_route"},
-      {DirectionsOptions::isochrone, "isochrone"},
-      {DirectionsOptions::trace_route, "trace_route"},
-      {DirectionsOptions::trace_attributes, "trace_attributes"},
-      {DirectionsOptions::height, "height"},
-      {DirectionsOptions::transit_available, "transit_available"},
+      {Options::route, "route"},
+      {Options::locate, "locate"},
+      {Options::sources_to_targets, "sources_to_targets"},
+      {Options::optimized_route, "optimized_route"},
+      {Options::isochrone, "isochrone"},
+      {Options::trace_route, "trace_route"},
+      {Options::trace_attributes, "trace_attributes"},
+      {Options::height, "height"},
+      {Options::transit_available, "transit_available"},
   };
   auto i = actions.find(action);
   return i == actions.cend() ? empty : i->second;
@@ -986,11 +986,11 @@ const std::string& ShapeMatch_Name(const ShapeMatch match) {
   return i == matches.cend() ? empty : i->second;
 }
 
-bool DirectionsOptions_Format_Parse(const std::string& format, DirectionsOptions::Format* f) {
-  static const std::unordered_map<std::string, DirectionsOptions::Format> formats{
-      {"json", DirectionsOptions::json},
-      {"gpx", DirectionsOptions::gpx},
-      {"osrm", DirectionsOptions::osrm},
+bool Options_Format_Parse(const std::string& format, Options::Format* f) {
+  static const std::unordered_map<std::string, Options::Format> formats{
+      {"json", Options::json},
+      {"gpx", Options::gpx},
+      {"osrm", Options::osrm},
   };
   auto i = formats.find(format);
   if (i == formats.cend())
@@ -999,22 +999,22 @@ bool DirectionsOptions_Format_Parse(const std::string& format, DirectionsOptions
   return true;
 }
 
-const std::string& DirectionsOptions_Format_Name(const DirectionsOptions::Format match) {
+const std::string& Options_Format_Name(const Options::Format match) {
   static const std::string empty;
   static const std::unordered_map<int, std::string> formats{
-      {DirectionsOptions::json, "json"},
-      {DirectionsOptions::gpx, "gpx"},
-      {DirectionsOptions::osrm, "osrm"},
+      {Options::json, "json"},
+      {Options::gpx, "gpx"},
+      {Options::osrm, "osrm"},
   };
   auto i = formats.find(match);
   return i == formats.cend() ? empty : i->second;
 }
 
-const std::string& DirectionsOptions_Units_Name(const DirectionsOptions::Units unit) {
+const std::string& Options_Units_Name(const Options::Units unit) {
   static const std::string empty;
   static const std::unordered_map<int, std::string> units{
-      {DirectionsOptions::kilometers, "kilometers"},
-      {DirectionsOptions::miles, "miles"},
+      {Options::kilometers, "kilometers"},
+      {Options::miles, "miles"},
   };
   auto i = units.find(unit);
   return i == units.cend() ? empty : i->second;
@@ -1079,17 +1079,16 @@ valhalla_exception_t::valhalla_exception_t(unsigned code, const boost::optional<
   http_message = (http_message_iter == HTTP_STATUS_CODES.cend() ? "" : http_message_iter->second);
 }
 
-void valhalla_request_t::parse(const std::string& request, DirectionsOptions::Action action) {
+void ParseApi(const std::string& request, Options::Action action, valhalla::Api& api) {
+  api.Clear();
   auto document = from_string(request, valhalla_exception_t{100});
-  options.set_action(action);
-  from_json(document, options);
-}
-void valhalla_request_t::parse(const std::string& serialized_options) {
-  options.ParseFromString(serialized_options);
+  api.mutable_options()->set_action(action);
+  from_json(document, *api.mutable_options());
 }
 
 #ifdef HAVE_HTTP
-void valhalla_request_t::parse(const http_request_t& request) {
+void ParseApi(const http_request_t& request, valhalla::Api& api) {
+  api.Clear();
 
   // block all but get and post
   if (request.method != method_t::POST && request.method != method_t::GET) {
@@ -1135,9 +1134,11 @@ void valhalla_request_t::parse(const http_request_t& request) {
     document.AddMember({kv.first, allocator}, array, allocator);
   }
 
+  auto& options = *api.mutable_options();
+
   // set the action
-  DirectionsOptions::Action action;
-  if (!request.path.empty() && DirectionsOptions_Action_Parse(request.path.substr(1), &action)) {
+  Options::Action action;
+  if (!request.path.empty() && Options_Action_Parse(request.path.substr(1), &action)) {
     options.set_action(action);
   }
 
@@ -1159,18 +1160,18 @@ const headers_t::value_type ATTACHMENT{"Content-Disposition", "attachment; filen
 
 worker_t::result_t jsonify_error(const valhalla_exception_t& exception,
                                  http_request_info_t& request_info,
-                                 const valhalla_request_t& request) {
+                                 const Api& request) {
   // get the http status
   std::stringstream body;
 
   // overwrite with osrm error response
-  if (request.options.format() == DirectionsOptions::osrm) {
+  if (request.options().format() == Options::osrm) {
     auto found = OSRM_ERRORS_CODES.find(exception.code);
     if (found == OSRM_ERRORS_CODES.cend()) {
       found = OSRM_ERRORS_CODES.find(199);
     }
-    body << (request.options.has_jsonp() ? request.options.jsonp() + "(" : "") << found->second
-         << (request.options.has_jsonp() ? ")" : "");
+    body << (request.options().has_jsonp() ? request.options().jsonp() + "(" : "") << found->second
+         << (request.options().has_jsonp() ? ")" : "");
   } // valhalla error response
   else {
     // build up the json map
@@ -1179,13 +1180,13 @@ worker_t::result_t jsonify_error(const valhalla_exception_t& exception,
     json_error->emplace("status_code", static_cast<uint64_t>(exception.http_code));
     json_error->emplace("error", std::string(exception.message));
     json_error->emplace("error_code", static_cast<uint64_t>(exception.code));
-    body << (request.options.has_jsonp() ? request.options.jsonp() + "(" : "") << *json_error
-         << (request.options.has_jsonp() ? ")" : "");
+    body << (request.options().has_jsonp() ? request.options().jsonp() + "(" : "") << *json_error
+         << (request.options().has_jsonp() ? ")" : "");
   }
 
   worker_t::result_t result{false};
   http_response_t response(exception.http_code, exception.http_message, body.str(),
-                           headers_t{CORS, request.options.has_jsonp() ? JS_MIME : JSON_MIME});
+                           headers_t{CORS, request.options().has_jsonp() ? JS_MIME : JSON_MIME});
   response.from_info(request_info);
   result.messages.emplace_back(response.to_string());
 
@@ -1194,70 +1195,67 @@ worker_t::result_t jsonify_error(const valhalla_exception_t& exception,
 
 worker_t::result_t to_response(const baldr::json::ArrayPtr& array,
                                http_request_info_t& request_info,
-                               const valhalla_request_t& request) {
+                               const Api& request) {
   std::ostringstream stream;
   // jsonp callback if need be
-  if (request.options.has_jsonp()) {
-    stream << request.options.jsonp() << '(';
+  if (request.options().has_jsonp()) {
+    stream << request.options().jsonp() << '(';
   }
   stream << *array;
-  if (request.options.has_jsonp()) {
+  if (request.options().has_jsonp()) {
     stream << ')';
   }
 
   worker_t::result_t result{false};
   http_response_t response(200, "OK", stream.str(),
-                           headers_t{CORS, request.options.has_jsonp() ? JS_MIME : JSON_MIME});
+                           headers_t{CORS, request.options().has_jsonp() ? JS_MIME : JSON_MIME});
   response.from_info(request_info);
   result.messages.emplace_back(response.to_string());
   return result;
 }
 
-worker_t::result_t to_response(const baldr::json::MapPtr& map,
-                               http_request_info_t& request_info,
-                               const valhalla_request_t& request) {
+worker_t::result_t
+to_response(const baldr::json::MapPtr& map, http_request_info_t& request_info, const Api& request) {
   std::ostringstream stream;
   // jsonp callback if need be
-  if (request.options.has_jsonp()) {
-    stream << request.options.jsonp() << '(';
+  if (request.options().has_jsonp()) {
+    stream << request.options().jsonp() << '(';
   }
   stream << *map;
-  if (request.options.has_jsonp()) {
+  if (request.options().has_jsonp()) {
     stream << ')';
   }
 
   worker_t::result_t result{false};
   http_response_t response(200, "OK", stream.str(),
-                           headers_t{CORS, request.options.has_jsonp() ? JS_MIME : JSON_MIME});
+                           headers_t{CORS, request.options().has_jsonp() ? JS_MIME : JSON_MIME});
   response.from_info(request_info);
   result.messages.emplace_back(response.to_string());
   return result;
 }
 
-worker_t::result_t to_response_json(const std::string& json,
-                                    http_request_info_t& request_info,
-                                    const valhalla_request_t& request) {
+worker_t::result_t
+to_response_json(const std::string& json, http_request_info_t& request_info, const Api& request) {
   std::ostringstream stream;
   // jsonp callback if need be
-  if (request.options.has_jsonp()) {
-    stream << request.options.jsonp() << '(';
+  if (request.options().has_jsonp()) {
+    stream << request.options().jsonp() << '(';
   }
   stream << json;
-  if (request.options.has_jsonp()) {
+  if (request.options().has_jsonp()) {
     stream << ')';
   }
 
   worker_t::result_t result{false};
   http_response_t response(200, "OK", stream.str(),
-                           headers_t{CORS, request.options.has_jsonp() ? JS_MIME : JSON_MIME});
+                           headers_t{CORS, request.options().has_jsonp() ? JS_MIME : JSON_MIME});
   response.from_info(request_info);
   result.messages.emplace_back(response.to_string());
   return result;
 }
 
-worker_t::result_t to_response_xml(const std::string& xml,
-                                   http_request_info_t& request_info,
-                                   const valhalla_request_t& request) {
+worker_t::result_t
+to_response_xml(const std::string& xml, http_request_info_t& request_info, const Api& request) {
   worker_t::result_t result{false};
   http_response_t response(200, "OK", xml, headers_t{CORS, GPX_MIME, ATTACHMENT});
   response.from_info(request_info);

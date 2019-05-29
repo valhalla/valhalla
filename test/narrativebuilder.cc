@@ -31,10 +31,10 @@ constexpr size_t CONSECUTIVE_COUNT = 2;
 // Sub class to test protected methods
 class NarrativeBuilderTest : public NarrativeBuilder {
 public:
-  NarrativeBuilderTest(const DirectionsOptions& directions_options,
+  NarrativeBuilderTest(const Options& options,
                        const NarrativeDictionary& dictionary,
                        const EnhancedTripLeg* trip_path = nullptr)
-      : NarrativeBuilder(directions_options, trip_path, dictionary) {
+      : NarrativeBuilder(options, trip_path, dictionary) {
   }
 
   std::string FormRampStraightInstruction(Maneuver& maneuver) {
@@ -59,9 +59,9 @@ public:
   }
 };
 
-const NarrativeDictionary& GetNarrativeDictionary(const DirectionsOptions& directions_options) {
+const NarrativeDictionary& GetNarrativeDictionary(const Options& options) {
   // Get the locale dictionary
-  const auto phrase_dictionary = get_locales().find(directions_options.language());
+  const auto phrase_dictionary = get_locales().find(options.language());
 
   // If language tag is not found then throw error
   if (phrase_dictionary == get_locales().end()) {
@@ -259,13 +259,13 @@ TransitPlatformInfo GetTransitPlatformInfo(TransitPlatformInfo_Type type,
   return transit_platform_info;
 }
 
-void TryBuild(const DirectionsOptions& directions_options,
+void TryBuild(const Options& options,
               std::list<Maneuver>& maneuvers,
               std::list<Maneuver>& expected_maneuvers,
               const EnhancedTripLeg* etp = nullptr) {
   std::unique_ptr<NarrativeBuilder> narrative_builder =
-      NarrativeBuilderFactory::Create(directions_options, etp);
-  narrative_builder->Build(directions_options, etp, maneuvers);
+      NarrativeBuilderFactory::Create(options, etp);
+  narrative_builder->Build(options, etp, maneuvers);
 
   // Check maneuver list sizes
   if (maneuvers.size() != expected_maneuvers.size())
@@ -2635,9 +2635,9 @@ void TestBuildStartInstructions_0_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -2649,7 +2649,7 @@ void TestBuildStartInstructions_0_miles_en_US() {
   SetExpectedManeuverInstructions(expected_maneuvers, "Head east.", "", "Head east for a half mile.",
                                   "");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 void TestBuildStartInstructions_1_miles_en_US() {
@@ -2657,9 +2657,9 @@ void TestBuildStartInstructions_1_miles_en_US() {
   std::string state_code = "NY";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -2671,7 +2671,7 @@ void TestBuildStartInstructions_1_miles_en_US() {
   SetExpectedManeuverInstructions(expected_maneuvers, "Head southwest on 5th Avenue.", "",
                                   "Head southwest on 5th Avenue for 1 tenth of a mile.", "");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 void TestBuildStartInstructions_2_miles_en_US() {
@@ -2679,9 +2679,9 @@ void TestBuildStartInstructions_2_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -2696,7 +2696,7 @@ void TestBuildStartInstructions_2_miles_en_US() {
       "Head south on North Prince Street, U.S. 2 22.",
       "Continue on U.S. 2 22, Pennsylvania 2 72 for 3.2 miles.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 void TestBuildStartInstructions_4_miles_en_US() {
@@ -2704,9 +2704,9 @@ void TestBuildStartInstructions_4_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -2718,7 +2718,7 @@ void TestBuildStartInstructions_4_miles_en_US() {
   SetExpectedManeuverInstructions(expected_maneuvers, "Drive east.", "",
                                   "Drive east for a half mile.", "");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 void TestBuildStartInstructions_5_miles_en_US() {
@@ -2726,9 +2726,9 @@ void TestBuildStartInstructions_5_miles_en_US() {
   std::string state_code = "NY";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -2740,7 +2740,7 @@ void TestBuildStartInstructions_5_miles_en_US() {
   SetExpectedManeuverInstructions(expected_maneuvers, "Drive southwest on 5th Avenue.", "",
                                   "Drive southwest on 5th Avenue for 1 tenth of a mile.", "");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 void TestBuildStartInstructions_6_miles_en_US() {
@@ -2748,9 +2748,9 @@ void TestBuildStartInstructions_6_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -2765,7 +2765,7 @@ void TestBuildStartInstructions_6_miles_en_US() {
       "Drive south on North Prince Street, U.S. 2 22.",
       "Continue on U.S. 2 22, Pennsylvania 2 72 for 3.2 miles.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 void TestBuildStartInstructions_8_miles_en_US() {
@@ -2773,9 +2773,9 @@ void TestBuildStartInstructions_8_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -2787,7 +2787,7 @@ void TestBuildStartInstructions_8_miles_en_US() {
   SetExpectedManeuverInstructions(expected_maneuvers, "Walk east.", "", "Walk east for a half mile.",
                                   "");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 void TestBuildStartInstructions_9_miles_en_US() {
@@ -2795,9 +2795,9 @@ void TestBuildStartInstructions_9_miles_en_US() {
   std::string state_code = "NY";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -2809,7 +2809,7 @@ void TestBuildStartInstructions_9_miles_en_US() {
   SetExpectedManeuverInstructions(expected_maneuvers, "Walk southwest on 5th Avenue.", "",
                                   "Walk southwest on 5th Avenue for 1 tenth of a mile.", "");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 void TestBuildStartInstructions_9_unnamed_walkway_miles_en_US() {
@@ -2817,9 +2817,9 @@ void TestBuildStartInstructions_9_unnamed_walkway_miles_en_US() {
   std::string state_code = "NY";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -2831,7 +2831,7 @@ void TestBuildStartInstructions_9_unnamed_walkway_miles_en_US() {
   SetExpectedManeuverInstructions(expected_maneuvers, "Walk southwest on the walkway.", "",
                                   "Walk southwest on the walkway for 200 feet.", "");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 void TestBuildStartInstructions_10_miles_en_US() {
@@ -2839,9 +2839,9 @@ void TestBuildStartInstructions_10_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -2856,7 +2856,7 @@ void TestBuildStartInstructions_10_miles_en_US() {
       "Walk south on North Prince Street, U.S. 2 22.",
       "Continue on U.S. 2 22, Pennsylvania 2 72 for 3.2 miles.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 void TestBuildStartInstructions_16_miles_en_US() {
@@ -2864,9 +2864,9 @@ void TestBuildStartInstructions_16_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -2878,7 +2878,7 @@ void TestBuildStartInstructions_16_miles_en_US() {
   SetExpectedManeuverInstructions(expected_maneuvers, "Bike east.", "", "Bike east for a half mile.",
                                   "");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 void TestBuildStartInstructions_17_miles_en_US() {
@@ -2886,9 +2886,9 @@ void TestBuildStartInstructions_17_miles_en_US() {
   std::string state_code = "NY";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -2900,7 +2900,7 @@ void TestBuildStartInstructions_17_miles_en_US() {
   SetExpectedManeuverInstructions(expected_maneuvers, "Bike southwest on 5th Avenue.", "",
                                   "Bike southwest on 5th Avenue for 1 tenth of a mile.", "");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 void TestBuildStartInstructions_17_unnamed_cycleway_miles_en_US() {
@@ -2908,9 +2908,9 @@ void TestBuildStartInstructions_17_unnamed_cycleway_miles_en_US() {
   std::string state_code = "NY";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -2922,7 +2922,7 @@ void TestBuildStartInstructions_17_unnamed_cycleway_miles_en_US() {
   SetExpectedManeuverInstructions(expected_maneuvers, "Bike east on the cycleway.", "",
                                   "Bike east on the cycleway for 1.7 miles.", "");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 void TestBuildStartInstructions_17_unnamed_mountain_bike_trail_miles_en_US() {
@@ -2930,9 +2930,9 @@ void TestBuildStartInstructions_17_unnamed_mountain_bike_trail_miles_en_US() {
   std::string state_code = "NY";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -2945,7 +2945,7 @@ void TestBuildStartInstructions_17_unnamed_mountain_bike_trail_miles_en_US() {
   SetExpectedManeuverInstructions(expected_maneuvers, "Bike west on the mountain bike trail.", "",
                                   "Bike west on the mountain bike trail for 1 tenth of a mile.", "");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 void TestBuildStartInstructions_18_miles_en_US() {
@@ -2953,9 +2953,9 @@ void TestBuildStartInstructions_18_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -2970,7 +2970,7 @@ void TestBuildStartInstructions_18_miles_en_US() {
       "Bike south on North Prince Street, U.S. 2 22.",
       "Continue on U.S. 2 22, Pennsylvania 2 72 for 3.2 miles.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 void TestBuildStartInstructions_0_kilometers_en_US() {
@@ -2978,9 +2978,9 @@ void TestBuildStartInstructions_0_kilometers_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::kilometers);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::kilometers);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -2992,7 +2992,7 @@ void TestBuildStartInstructions_0_kilometers_en_US() {
   SetExpectedManeuverInstructions(expected_maneuvers, "Head east.", "", "Head east for 800 meters.",
                                   "");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 void TestBuildStartInstructions_1_kilometers_en_US() {
@@ -3000,9 +3000,9 @@ void TestBuildStartInstructions_1_kilometers_en_US() {
   std::string state_code = "NY";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::kilometers);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::kilometers);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -3014,7 +3014,7 @@ void TestBuildStartInstructions_1_kilometers_en_US() {
   SetExpectedManeuverInstructions(expected_maneuvers, "Head southwest on 5th Avenue.", "",
                                   "Head southwest on 5th Avenue for 200 meters.", "");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 void TestBuildStartInstructions_2_kilometers_en_US() {
@@ -3022,9 +3022,9 @@ void TestBuildStartInstructions_2_kilometers_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::kilometers);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::kilometers);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -3039,7 +3039,7 @@ void TestBuildStartInstructions_2_kilometers_en_US() {
       "Head south on North Prince Street, U.S. 2 22.",
       "Continue on U.S. 2 22, Pennsylvania 2 72 for 5.1 kilometers.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -3052,9 +3052,9 @@ void TestBuildDestinationInstructions_0_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -3076,7 +3076,7 @@ void TestBuildDestinationInstructions_0_miles_en_US() {
   location = path.add_location();
 
   EnhancedTripLeg etp(path);
-  TryBuild(directions_options, maneuvers, expected_maneuvers, &etp);
+  TryBuild(options, maneuvers, expected_maneuvers, &etp);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -3089,9 +3089,9 @@ void TestBuildDestinationInstructions_1_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -3114,7 +3114,7 @@ void TestBuildDestinationInstructions_1_miles_en_US() {
   location->set_street("3206 Powelton Avenue");
 
   EnhancedTripLeg etp(path);
-  TryBuild(directions_options, maneuvers, expected_maneuvers, &etp);
+  TryBuild(options, maneuvers, expected_maneuvers, &etp);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -3127,9 +3127,9 @@ void TestBuildDestinationInstructions_2_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -3152,7 +3152,7 @@ void TestBuildDestinationInstructions_2_miles_en_US() {
   location->set_side_of_street(Location::kRight);
 
   EnhancedTripLeg etp(path);
-  TryBuild(directions_options, maneuvers, expected_maneuvers, &etp);
+  TryBuild(options, maneuvers, expected_maneuvers, &etp);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -3165,9 +3165,9 @@ void TestBuildDestinationInstructions_3_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -3191,7 +3191,7 @@ void TestBuildDestinationInstructions_3_miles_en_US() {
   location->set_side_of_street(Location::kLeft);
 
   EnhancedTripLeg etp(path);
-  TryBuild(directions_options, maneuvers, expected_maneuvers, &etp);
+  TryBuild(options, maneuvers, expected_maneuvers, &etp);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -3204,9 +3204,9 @@ void TestBuildBecomesInstructions_0_miles_en_US() {
   std::string state_code = "VA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -3223,7 +3223,7 @@ void TestBuildBecomesInstructions_0_miles_en_US() {
                                   "Vine Street becomes Middletown Road.",
                                   "Continue for 9 tenths of a mile.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -3236,9 +3236,9 @@ void TestBuildContinueInstructions_0_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -3250,7 +3250,7 @@ void TestBuildContinueInstructions_0_miles_en_US() {
   SetExpectedManeuverInstructions(expected_maneuvers, "Continue.", "Continue.",
                                   "Continue for 300 feet.", "");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -3263,9 +3263,9 @@ void TestBuildContinueInstructions_1_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -3278,7 +3278,7 @@ void TestBuildContinueInstructions_1_miles_en_US() {
                                   "Continue on 10th Avenue.",
                                   "Continue on 10th Avenue for 3 tenths of a mile.", "");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -3291,9 +3291,9 @@ void TestBuildTurnInstructions_0_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -3305,7 +3305,7 @@ void TestBuildTurnInstructions_0_miles_en_US() {
   SetExpectedManeuverInstructions(expected_maneuvers, "Turn left.", "Turn left.", "Turn left.",
                                   "Continue for a half mile.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
   VerifyToStayOn(maneuvers.back(), false);
 }
 
@@ -3319,9 +3319,9 @@ void TestBuildTurnInstructions_1_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -3334,7 +3334,7 @@ void TestBuildTurnInstructions_1_miles_en_US() {
                                   "Turn left onto Middletown Road.",
                                   "Turn left onto Middletown Road.", "Continue for 1.2 miles.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
   VerifyToStayOn(maneuvers.back(), false);
 }
 
@@ -3348,9 +3348,9 @@ void TestBuildTurnInstructions_1_miles_cs_CZ() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("cs-CZ");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("cs-CZ");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -3363,7 +3363,7 @@ void TestBuildTurnInstructions_1_miles_cs_CZ() {
                                   "Odbočte vlevo na Middletown Road.",
                                   "Odbočte vlevo na Middletown Road.", "Pokračujte 1,2 mil.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -3376,9 +3376,9 @@ void TestBuildTurnInstructions_1_miles_de_DE() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("de-DE");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("de-DE");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -3391,7 +3391,7 @@ void TestBuildTurnInstructions_1_miles_de_DE() {
                                   "Links auf Middletown Road abbiegen.",
                                   "Links auf Middletown Road abbiegen.", "1,2 Meilen weiter.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -3404,9 +3404,9 @@ void TestBuildTurnInstructions_1_miles_it_IT() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("it-IT");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("it-IT");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -3420,7 +3420,7 @@ void TestBuildTurnInstructions_1_miles_it_IT() {
                                   "Svolta a sinistra e prendi Middletown Road.",
                                   "Continua per 1,2 miglia.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -3433,9 +3433,9 @@ void TestBuildTurnInstructions_2_miles_en_US() {
   std::string state_code = "MD";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -3450,7 +3450,7 @@ void TestBuildTurnInstructions_2_miles_en_US() {
       "Turn left onto North Bond Street.", "Turn left onto North Bond Street, U.S. 1 Business.",
       "Continue on Maryland 9 24 for a half mile.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
   VerifyToStayOn(maneuvers.back(), false);
 }
 
@@ -3464,9 +3464,9 @@ void TestBuildTurnInstructions_3_miles_en_US() {
   std::string state_code = "VA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -3483,7 +3483,7 @@ void TestBuildTurnInstructions_3_miles_en_US() {
                                   "Turn right to stay on Sunstone Drive.",
                                   "Turn right to stay on Sunstone Drive.", "Continue for 100 feet.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
   VerifyToStayOn(maneuvers.back(), true);
 }
 
@@ -3497,9 +3497,9 @@ void TestBuildSharpInstructions_0_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -3511,7 +3511,7 @@ void TestBuildSharpInstructions_0_miles_en_US() {
   SetExpectedManeuverInstructions(expected_maneuvers, "Turn sharp left.", "Turn sharp left.",
                                   "Turn sharp left.", "Continue for a half mile.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -3524,9 +3524,9 @@ void TestBuildSharpInstructions_1_miles_en_US() {
   std::string state_code = "NY";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -3540,7 +3540,7 @@ void TestBuildSharpInstructions_1_miles_en_US() {
                                   "Turn sharp right onto Flatbush Avenue.",
                                   "Continue for 1 tenth of a mile.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -3553,9 +3553,9 @@ void TestBuildSharpInstructions_2_miles_en_US() {
   std::string state_code = "MD";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -3571,7 +3571,7 @@ void TestBuildSharpInstructions_2_miles_en_US() {
       "Turn sharp left onto North Bond Street, U.S. 1 Business.",
       "Continue on Maryland 9 24 for a half mile.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -3584,9 +3584,9 @@ void TestBuildSharpInstructions_3_miles_en_US() {
   std::string state_code = "VA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -3604,7 +3604,7 @@ void TestBuildSharpInstructions_3_miles_en_US() {
                                   "Turn sharp right to stay on Sunstone Drive.",
                                   "Continue for 100 feet.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
   VerifyToStayOn(maneuvers.back(), true);
 }
 
@@ -3618,9 +3618,9 @@ void TestBuildBearInstructions_0_miles_en_US() {
   std::string state_code = "MD";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -3632,7 +3632,7 @@ void TestBuildBearInstructions_0_miles_en_US() {
   SetExpectedManeuverInstructions(expected_maneuvers, "Bear right.", "Bear right.", "Bear right.",
                                   "Continue for 60 feet.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -3645,9 +3645,9 @@ void TestBuildBearInstructions_1_miles_en_US() {
   std::string state_code = "MD";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -3660,7 +3660,7 @@ void TestBuildBearInstructions_1_miles_en_US() {
                                   "Bear left onto Arlen Road.", "Bear left onto Arlen Road.",
                                   "Continue for 400 feet.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -3673,9 +3673,9 @@ void TestBuildBearInstructions_2_miles_en_US() {
   std::string state_code = "MD";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -3689,7 +3689,7 @@ void TestBuildBearInstructions_2_miles_en_US() {
       "Bear right onto Belair Road.", "Bear right onto Belair Road, U.S. 1 Business.",
       "Continue on U.S. 1 Business for 2.1 miles.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -3702,9 +3702,9 @@ void TestBuildBearInstructions_3_miles_en_US() {
   std::string state_code = "VA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -3722,7 +3722,7 @@ void TestBuildBearInstructions_3_miles_en_US() {
                                   "Bear left to stay on U.S. 15 South.",
                                   "Bear left to stay on U.S. 15 South.", "Continue for 2.6 miles.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
   VerifyToStayOn(maneuvers.back(), true);
 }
 
@@ -3736,9 +3736,9 @@ void TestBuildUturnInstructions_0_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -3750,7 +3750,7 @@ void TestBuildUturnInstructions_0_miles_en_US() {
   SetExpectedManeuverInstructions(expected_maneuvers, "Make a left U-turn.", "Make a left U-turn.",
                                   "Make a left U-turn.", "Continue for 4 tenths of a mile.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -3763,9 +3763,9 @@ void TestBuildUturnInstructions_1_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -3779,7 +3779,7 @@ void TestBuildUturnInstructions_1_miles_en_US() {
                                   "Make a right U-turn onto Bunker Hill Road.",
                                   "Continue for 4 tenths of a mile.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -3792,9 +3792,9 @@ void TestBuildUturnInstructions_2_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -3813,7 +3813,7 @@ void TestBuildUturnInstructions_2_miles_en_US() {
                                   "Make a left U-turn to stay on Bunker Hill Road.",
                                   "Continue for 2 tenths of a mile.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
   VerifyToStayOn(maneuvers.back(), true);
 }
 
@@ -3827,9 +3827,9 @@ void TestBuildUturnInstructions_3_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -3842,7 +3842,7 @@ void TestBuildUturnInstructions_3_miles_en_US() {
                                   "Make a left U-turn at Devonshire Road.",
                                   "Make a left U-turn at Devonshire Road.", "Continue for 200 feet.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -3855,9 +3855,9 @@ void TestBuildUturnInstructions_4_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -3872,7 +3872,7 @@ void TestBuildUturnInstructions_4_miles_en_US() {
       "Make a left U-turn at Devonshire Road onto Jonestown Road, U.S. 22.",
       "Continue for 200 feet.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -3885,9 +3885,9 @@ void TestBuildUturnInstructions_5_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -3907,7 +3907,7 @@ void TestBuildUturnInstructions_5_miles_en_US() {
       "Make a left U-turn at Devonshire Road to stay on Jonestown Road, U.S. 22.",
       "Continue for 200 feet.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
   VerifyToStayOn(maneuvers.back(), true);
 }
 
@@ -3921,9 +3921,9 @@ void TestBuildRampStraight_0_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -3936,7 +3936,7 @@ void TestBuildRampStraight_0_miles_en_US() {
                                   "Stay straight to take the ramp.",
                                   "Stay straight to take the ramp.", "Continue for 1.5 miles.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -3949,9 +3949,9 @@ void TestBuildRampStraight_1_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -3964,7 +3964,7 @@ void TestBuildRampStraight_1_miles_en_US() {
                                   "Stay straight to take the U.S. 3 22 East ramp.",
                                   "Stay straight to take the U.S. 3 22 East ramp.", "");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -3977,9 +3977,9 @@ void TestBuildRampStraight_2_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -3993,7 +3993,7 @@ void TestBuildRampStraight_2_miles_en_US() {
                                   "Stay straight to take the ramp toward Hershey.",
                                   "Stay straight to take the ramp toward Hershey.", "");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -4006,9 +4006,9 @@ void TestBuildRampStraight_3_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -4024,7 +4024,7 @@ void TestBuildRampStraight_3_miles_en_US() {
       "Stay straight to take the U.S. 3 22 East ramp.",
       "Stay straight to take the U.S. 3 22 East, U.S. 4 22 East ramp toward Hershey, Palmdale.", "");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -4037,9 +4037,9 @@ void TestBuildRampStraight_4_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -4053,7 +4053,7 @@ void TestBuildRampStraight_4_miles_en_US() {
                                   "Stay straight to take the Gettysburg Pike ramp.",
                                   "Stay straight to take the Gettysburg Pike ramp.", "");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -4066,9 +4066,9 @@ void TestBuildRamp_0_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -4080,7 +4080,7 @@ void TestBuildRamp_0_miles_en_US() {
   SetExpectedManeuverInstructions(expected_maneuvers, "Take the ramp on the right.",
                                   "Take the ramp on the right.", "Take the ramp on the right.", "");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -4093,9 +4093,9 @@ void TestBuildRamp_1_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -4108,7 +4108,7 @@ void TestBuildRamp_1_miles_en_US() {
                                   "Take the Interstate 95 ramp on the right.",
                                   "Take the Interstate 95 ramp on the right.", "");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -4121,9 +4121,9 @@ void TestBuildRamp_2_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -4136,7 +4136,7 @@ void TestBuildRamp_2_miles_en_US() {
                                   "Take the ramp on the left toward JFK.",
                                   "Take the ramp on the left toward JFK.", "");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -4149,9 +4149,9 @@ void TestBuildRamp_3_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -4165,7 +4165,7 @@ void TestBuildRamp_3_miles_en_US() {
                                   "Take the South Conduit Avenue ramp on the left.",
                                   "Take the South Conduit Avenue ramp on the left toward JFK.", "");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -4178,9 +4178,9 @@ void TestBuildRamp_4_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -4193,7 +4193,7 @@ void TestBuildRamp_4_miles_en_US() {
                                   "Take the Gettysburg Pike ramp on the right.",
                                   "Take the Gettysburg Pike ramp on the right.", "");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -4206,9 +4206,9 @@ void TestBuildRamp_5_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -4220,7 +4220,7 @@ void TestBuildRamp_5_miles_en_US() {
   SetExpectedManeuverInstructions(expected_maneuvers, "Turn right to take the ramp.",
                                   "Turn right to take the ramp.", "Turn right to take the ramp.", "");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -4233,9 +4233,9 @@ void TestBuildRamp_6_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -4248,7 +4248,7 @@ void TestBuildRamp_6_miles_en_US() {
                                   "Turn left to take the Pennsylvania 2 83 West ramp.",
                                   "Turn left to take the Pennsylvania 2 83 West ramp.", "");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -4261,9 +4261,9 @@ void TestBuildRamp_7_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -4278,7 +4278,7 @@ void TestBuildRamp_7_miles_en_US() {
       "Turn left to take the ramp toward Harrisburg.",
       "Turn left to take the ramp toward Harrisburg, Harrisburg International Airport.", "");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -4291,9 +4291,9 @@ void TestBuildRamp_8_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -4310,7 +4310,7 @@ void TestBuildRamp_8_miles_en_US() {
       "International Airport.",
       "");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -4323,9 +4323,9 @@ void TestBuildRamp_9_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -4338,7 +4338,7 @@ void TestBuildRamp_9_miles_en_US() {
                                   "Turn right to take the Gettysburg Pike ramp.",
                                   "Turn right to take the Gettysburg Pike ramp.", "");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -4351,9 +4351,9 @@ void TestBuildExit_0_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -4365,7 +4365,7 @@ void TestBuildExit_0_miles_en_US() {
   SetExpectedManeuverInstructions(expected_maneuvers, "Take the exit on the right.",
                                   "Take the exit on the right.", "Take the exit on the right.", "");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -4378,9 +4378,9 @@ void TestBuildExit_1_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -4393,7 +4393,7 @@ void TestBuildExit_1_miles_en_US() {
                                   "Take exit 67 B-A on the right.", "Take exit 67 B-A on the right.",
                                   "");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -4406,9 +4406,9 @@ void TestBuildExit_2_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -4421,7 +4421,7 @@ void TestBuildExit_2_miles_en_US() {
                                   "Take the U.S. 3 22 West exit on the right.",
                                   "Take the U.S. 3 22 West exit on the right.", "");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -4434,9 +4434,9 @@ void TestBuildExit_3_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -4450,7 +4450,7 @@ void TestBuildExit_3_miles_en_US() {
                                   "Take exit 67 B-A on the right.",
                                   "Take exit 67 B-A on the right onto U.S. 3 22 West.", "");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -4463,9 +4463,9 @@ void TestBuildExit_4_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -4478,7 +4478,7 @@ void TestBuildExit_4_miles_en_US() {
                                   "Take the exit on the right toward Lewistown.",
                                   "Take the exit on the right toward Lewistown.", "");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -4491,9 +4491,9 @@ void TestBuildExit_5_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -4507,7 +4507,7 @@ void TestBuildExit_5_miles_en_US() {
                                   "Take exit 67 B-A on the right.",
                                   "Take exit 67 B-A on the right toward Lewistown.", "");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -4520,9 +4520,9 @@ void TestBuildExit_6_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -4536,7 +4536,7 @@ void TestBuildExit_6_miles_en_US() {
                                   "Take the U.S. 3 22 West exit on the right.",
                                   "Take the U.S. 3 22 West exit on the right toward Lewistown.", "");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -4549,9 +4549,9 @@ void TestBuildExit_7_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -4566,7 +4566,7 @@ void TestBuildExit_7_miles_en_US() {
       "Take exit 67 B-A on the right.",
       "Take exit 67 B-A on the right onto U.S. 3 22 West toward Lewistown, State College.", "");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -4579,9 +4579,9 @@ void TestBuildExit_8_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -4595,7 +4595,7 @@ void TestBuildExit_8_miles_en_US() {
                                   "Take the White Marsh Boulevard exit on the left.",
                                   "Take the White Marsh Boulevard exit on the left.", "");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -4608,9 +4608,9 @@ void TestBuildExit_10_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -4624,7 +4624,7 @@ void TestBuildExit_10_miles_en_US() {
       "Take the Maryland 43 East exit on the left.",
       "Take the White Marsh Boulevard exit on the left onto Maryland 43 East.", "");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -4637,9 +4637,9 @@ void TestBuildExit_12_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -4653,7 +4653,7 @@ void TestBuildExit_12_miles_en_US() {
       "Take the exit on the left toward White Marsh.",
       "Take the White Marsh Boulevard exit on the left toward White Marsh.", "");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -4666,9 +4666,9 @@ void TestBuildExit_14_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -4684,7 +4684,7 @@ void TestBuildExit_14_miles_en_US() {
       "Take the White Marsh Boulevard exit on the left onto Maryland 43 East toward White Marsh.",
       "");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -4697,9 +4697,9 @@ void TestBuildKeep_0_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -4711,7 +4711,7 @@ void TestBuildKeep_0_miles_en_US() {
   SetExpectedManeuverInstructions(expected_maneuvers, "Keep straight at the fork.",
                                   "Keep straight at the fork.", "Keep straight at the fork.", "");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -4724,9 +4724,9 @@ void TestBuildKeep_1_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -4739,7 +4739,7 @@ void TestBuildKeep_1_miles_en_US() {
                                   "Keep right to take exit 62.", "Keep right to take exit 62.",
                                   "Continue for 9 miles.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -4752,9 +4752,9 @@ void TestBuildKeep_2_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -4768,7 +4768,7 @@ void TestBuildKeep_2_miles_en_US() {
                                   "Keep right to take Interstate 8 95 South.",
                                   "Continue for 9 miles.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -4781,9 +4781,9 @@ void TestBuildKeep_3_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -4797,7 +4797,7 @@ void TestBuildKeep_3_miles_en_US() {
                                   "Keep right to take exit 62 onto Interstate 8 95 South.",
                                   "Continue for 9 miles.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -4810,9 +4810,9 @@ void TestBuildKeep_4_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -4825,7 +4825,7 @@ void TestBuildKeep_4_miles_en_US() {
                                   "Keep right toward Annapolis.", "Keep right toward Annapolis.",
                                   "Continue for 9 miles.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -4838,9 +4838,9 @@ void TestBuildKeep_5_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -4854,7 +4854,7 @@ void TestBuildKeep_5_miles_en_US() {
                                   "Keep right to take exit 62 toward Annapolis.",
                                   "Continue for 9 miles.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -4867,9 +4867,9 @@ void TestBuildKeep_6_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -4884,7 +4884,7 @@ void TestBuildKeep_6_miles_en_US() {
                                   "Keep right to take Interstate 8 95 South toward Annapolis.",
                                   "Continue for 9 miles.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -4897,9 +4897,9 @@ void TestBuildKeep_7_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -4914,7 +4914,7 @@ void TestBuildKeep_7_miles_en_US() {
       "Keep right to take exit 62 onto Interstate 8 95 South toward Annapolis.",
       "Continue for 9 miles.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -4927,9 +4927,9 @@ void TestBuildKeepToStayOn_0_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -4947,7 +4947,7 @@ void TestBuildKeepToStayOn_0_miles_en_US() {
                                   "Keep left to stay on Interstate 95 South.",
                                   "Continue for 5.1 miles.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
   VerifyToStayOn(maneuvers.back(), true);
 }
 
@@ -4961,9 +4961,9 @@ void TestBuildKeepToStayOn_1_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -4982,7 +4982,7 @@ void TestBuildKeepToStayOn_1_miles_en_US() {
                                   "Keep left to take exit 62 to stay on Interstate 95 South.",
                                   "Continue for 5.1 miles.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
   VerifyToStayOn(maneuvers.back(), true);
 }
 
@@ -4996,9 +4996,9 @@ void TestBuildKeepToStayOn_2_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -5017,7 +5017,7 @@ void TestBuildKeepToStayOn_2_miles_en_US() {
                                   "Keep left to stay on Interstate 95 South toward Baltimore.",
                                   "Continue for 5.1 miles.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
   VerifyToStayOn(maneuvers.back(), true);
 }
 
@@ -5031,9 +5031,9 @@ void TestBuildKeepToStayOn_3_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -5052,7 +5052,7 @@ void TestBuildKeepToStayOn_3_miles_en_US() {
       "Keep left to take exit 62 to stay on Interstate 95 South toward Baltimore.",
       "Continue for 5.1 miles.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
   VerifyToStayOn(maneuvers.back(), true);
 }
 
@@ -5066,9 +5066,9 @@ void TestBuildMerge_0_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -5084,7 +5084,7 @@ void TestBuildMerge_0_miles_en_US() {
   SetExpectedManeuverInstructions(expected_maneuvers, "Merge.", "", "Merge.",
                                   "Continue for 4.7 miles.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -5097,9 +5097,9 @@ void TestBuildMerge_1_1_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -5116,7 +5116,7 @@ void TestBuildMerge_1_1_miles_en_US() {
                                   "", "Merge onto Interstate 76 West, Pennsylvania Turnpike.",
                                   "Continue for 4.7 miles.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -5129,9 +5129,9 @@ void TestBuildMerge_1_2_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -5149,7 +5149,7 @@ void TestBuildMerge_1_2_miles_en_US() {
                                   "Merge onto Interstate 76 West, Pennsylvania Turnpike.",
                                   "Continue for 4.7 miles.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -5162,9 +5162,9 @@ void TestBuildEnterRoundabout_0_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -5176,7 +5176,7 @@ void TestBuildEnterRoundabout_0_miles_en_US() {
   SetExpectedManeuverInstructions(expected_maneuvers, "Enter the roundabout.",
                                   "Enter the roundabout.", "Enter the roundabout.", "");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -5189,9 +5189,9 @@ void TestBuildEnterRoundabout_1_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   uint32_t roundabout_exit_count = 1;
   const std::vector<std::string> kExpectedOrdinalValues = {"1st", "2nd", "3rd", "4th", "5th",
@@ -5212,7 +5212,7 @@ void TestBuildEnterRoundabout_1_miles_en_US() {
                                     "Enter the roundabout and take the " + ordinal_value + " exit.",
                                     "");
 
-    TryBuild(directions_options, maneuvers, expected_maneuvers);
+    TryBuild(options, maneuvers, expected_maneuvers);
   }
 }
 
@@ -5226,9 +5226,9 @@ void TestBuildExitRoundabout_0_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -5240,7 +5240,7 @@ void TestBuildExitRoundabout_0_miles_en_US() {
   SetExpectedManeuverInstructions(expected_maneuvers, "Exit the roundabout.", "",
                                   "Exit the roundabout.", "Continue for 6 tenths of a mile.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -5253,9 +5253,9 @@ void TestBuildExitRoundabout_1_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -5269,7 +5269,7 @@ void TestBuildExitRoundabout_1_miles_en_US() {
                                   "Exit the roundabout onto Philadelphia Road, Maryland 7.",
                                   "Continue for 6 tenths of a mile.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -5282,9 +5282,9 @@ void TestBuildExitRoundabout_2_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -5299,7 +5299,7 @@ void TestBuildExitRoundabout_2_miles_en_US() {
       "Exit the roundabout onto Catoctin Mountain Highway, U.S. 15.",
       "Continue on U.S. 15 for 11.4 miles.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -5312,9 +5312,9 @@ void TestBuildEnterFerry_0_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -5326,7 +5326,7 @@ void TestBuildEnterFerry_0_miles_en_US() {
   SetExpectedManeuverInstructions(expected_maneuvers, "Take the Ferry.", "Take the Ferry.",
                                   "Take the Ferry.", "Continue for 9 tenths of a mile.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -5339,9 +5339,9 @@ void TestBuildEnterFerry_1_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -5354,7 +5354,7 @@ void TestBuildEnterFerry_1_miles_en_US() {
                                   "Take the Millersburg FERRY.", "Take the Millersburg FERRY.",
                                   "Continue for 9 tenths of a mile.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -5367,9 +5367,9 @@ void TestBuildEnterFerry_2_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -5383,7 +5383,7 @@ void TestBuildEnterFerry_2_miles_en_US() {
                                   "Take the Bridgeport - Port Jefferson Ferry.",
                                   "Continue for 17.2 miles.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -5396,9 +5396,9 @@ void TestBuildExitFerry_0_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -5410,7 +5410,7 @@ void TestBuildExitFerry_0_miles_en_US() {
   SetExpectedManeuverInstructions(expected_maneuvers, "Head southeast.", "Head southeast.",
                                   "Head southeast.", "Continue for 200 feet.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -5423,9 +5423,9 @@ void TestBuildExitFerry_1_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -5438,7 +5438,7 @@ void TestBuildExitFerry_1_miles_en_US() {
                                   "Head west on Ferry Lane.", "Head west on Ferry Lane.",
                                   "Continue for 4 tenths of a mile.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -5451,9 +5451,9 @@ void TestBuildExitFerry_2_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -5467,7 +5467,7 @@ void TestBuildExitFerry_2_miles_en_US() {
       "Head northeast on Cape May-Lewes Ferry Entrance.",
       "Head northeast on Cape May-Lewes Ferry Entrance, U.S. 9.", "Continue on U.S. 9 for 300 feet.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -5480,9 +5480,9 @@ void TestBuildExitFerry_4_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -5494,7 +5494,7 @@ void TestBuildExitFerry_4_miles_en_US() {
   SetExpectedManeuverInstructions(expected_maneuvers, "Drive southeast.", "Drive southeast.",
                                   "Drive southeast.", "Continue for 200 feet.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -5507,9 +5507,9 @@ void TestBuildExitFerry_5_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -5522,7 +5522,7 @@ void TestBuildExitFerry_5_miles_en_US() {
                                   "Drive west on Ferry Lane.", "Drive west on Ferry Lane.",
                                   "Continue for 4 tenths of a mile.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -5535,9 +5535,9 @@ void TestBuildExitFerry_6_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -5552,7 +5552,7 @@ void TestBuildExitFerry_6_miles_en_US() {
       "Drive northeast on Cape May-Lewes Ferry Entrance, U.S. 9.",
       "Continue on U.S. 9 for 300 feet.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -5565,9 +5565,9 @@ void TestBuildExitFerry_8_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -5579,7 +5579,7 @@ void TestBuildExitFerry_8_miles_en_US() {
   SetExpectedManeuverInstructions(expected_maneuvers, "Walk southeast.", "Walk southeast.",
                                   "Walk southeast.", "Continue for 200 feet.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -5592,9 +5592,9 @@ void TestBuildExitFerry_9_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -5607,7 +5607,7 @@ void TestBuildExitFerry_9_miles_en_US() {
                                   "Walk west on Ferry Lane.", "Walk west on Ferry Lane.",
                                   "Continue for 4 tenths of a mile.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -5620,9 +5620,9 @@ void TestBuildExitFerry_10_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -5636,7 +5636,7 @@ void TestBuildExitFerry_10_miles_en_US() {
       "Walk northeast on Cape May-Lewes Ferry Entrance.",
       "Walk northeast on Cape May-Lewes Ferry Entrance, U.S. 9.", "Continue on U.S. 9 for 300 feet.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -5649,9 +5649,9 @@ void TestBuildExitFerry_16_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -5663,7 +5663,7 @@ void TestBuildExitFerry_16_miles_en_US() {
   SetExpectedManeuverInstructions(expected_maneuvers, "Bike southeast.", "Bike southeast.",
                                   "Bike southeast.", "Continue for 200 feet.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -5676,9 +5676,9 @@ void TestBuildExitFerry_17_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -5691,7 +5691,7 @@ void TestBuildExitFerry_17_miles_en_US() {
                                   "Bike west on Ferry Lane.", "Bike west on Ferry Lane.",
                                   "Continue for 4 tenths of a mile.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -5704,9 +5704,9 @@ void TestBuildExitFerry_18_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -5720,7 +5720,7 @@ void TestBuildExitFerry_18_miles_en_US() {
       "Bike northeast on Cape May-Lewes Ferry Entrance.",
       "Bike northeast on Cape May-Lewes Ferry Entrance, U.S. 9.", "Continue on U.S. 9 for 300 feet.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -5733,9 +5733,9 @@ void TestBuildTransitConnectionStart_0_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -5747,7 +5747,7 @@ void TestBuildTransitConnectionStart_0_miles_en_US() {
   SetExpectedManeuverInstructions(expected_maneuvers, "Enter the station.", "", "Enter the station.",
                                   "Continue for 100 feet.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -5760,9 +5760,9 @@ void TestBuildTransitConnectionStart_1_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -5775,7 +5775,7 @@ void TestBuildTransitConnectionStart_1_miles_en_US() {
                                   "", "Enter the CALTRAIN - SAN FRANCISCO STATION.",
                                   "Continue for 300 feet.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -5788,9 +5788,9 @@ void TestBuildTransitConnectionStart_2_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -5802,7 +5802,7 @@ void TestBuildTransitConnectionStart_2_miles_en_US() {
   SetExpectedManeuverInstructions(expected_maneuvers, "Enter the 8 St - NYU Station.", "",
                                   "Enter the 8 St - NYU Station.", "Continue for 100 feet.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -5815,9 +5815,9 @@ void TestBuildTransitConnectionTransfer_0_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -5829,7 +5829,7 @@ void TestBuildTransitConnectionTransfer_0_miles_en_US() {
   SetExpectedManeuverInstructions(expected_maneuvers, "Transfer at the station.", "",
                                   "Transfer at the station.", "Continue for 100 feet.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -5842,9 +5842,9 @@ void TestBuildTransitConnectionTransfer_1_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -5858,7 +5858,7 @@ void TestBuildTransitConnectionTransfer_1_miles_en_US() {
                                   "Transfer at the CALTRAIN - SAN FRANCISCO STATION.",
                                   "Continue for 300 feet.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -5871,9 +5871,9 @@ void TestBuildTransitConnectionTransfer_2_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -5885,7 +5885,7 @@ void TestBuildTransitConnectionTransfer_2_miles_en_US() {
   SetExpectedManeuverInstructions(expected_maneuvers, "Transfer at the 8 St - NYU Station.", "",
                                   "Transfer at the 8 St - NYU Station.", "Continue for 100 feet.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -5898,9 +5898,9 @@ void TestBuildTransitConnectionDestination_0_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -5912,7 +5912,7 @@ void TestBuildTransitConnectionDestination_0_miles_en_US() {
   SetExpectedManeuverInstructions(expected_maneuvers, "Exit the station.", "", "Exit the station.",
                                   "Continue for 100 feet.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -5925,9 +5925,9 @@ void TestBuildTransitConnectionDestination_1_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -5940,7 +5940,7 @@ void TestBuildTransitConnectionDestination_1_miles_en_US() {
                                   "", "Exit the CALTRAIN - SAN FRANCISCO STATION.",
                                   "Continue for 300 feet.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -5953,9 +5953,9 @@ void TestBuildTransitConnectionDestination_2_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -5967,7 +5967,7 @@ void TestBuildTransitConnectionDestination_2_miles_en_US() {
   SetExpectedManeuverInstructions(expected_maneuvers, "Exit the 8 St - NYU Station.", "",
                                   "Exit the 8 St - NYU Station.", "Continue for 100 feet.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -5980,9 +5980,9 @@ void TestBuildTransit_0_train_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -5998,7 +5998,7 @@ void TestBuildTransit_0_train_miles_en_US() {
                                   "Arrive: 8:08 AM at 34 St - Herald Sq.",
                                   "Arrive at 8:08 AM at 34 St - Herald Sq.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -6011,9 +6011,9 @@ void TestBuildTransit_0_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -6028,7 +6028,7 @@ void TestBuildTransit_0_miles_en_US() {
                                   "Arrive: 8:08 AM at 34 St - Herald Sq.",
                                   "Arrive at 8:08 AM at 34 St - Herald Sq.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -6041,9 +6041,9 @@ void TestBuildTransit_1_cable_car_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -6060,7 +6060,7 @@ void TestBuildTransit_1_cable_car_miles_en_US() {
                                   "Arrive: 8:06 AM at Hyde St & Vallejo St.",
                                   "Arrive at 8:06 AM at Hyde St & Vallejo St.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -6073,9 +6073,9 @@ void TestBuildTransit_1_stop_count_1_miles_en_US() {
   std::string state_code = "NY";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -6092,7 +6092,7 @@ void TestBuildTransit_1_stop_count_1_miles_en_US() {
                                   "Arrive: 8:08 AM at Atlantic Av - Barclays Ctr.",
                                   "Arrive at 8:08 AM at Atlantic Av - Barclays Ctr.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -6105,9 +6105,9 @@ void TestBuildTransit_1_stop_count_2_miles_en_US() {
   std::string state_code = "NY";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -6123,7 +6123,7 @@ void TestBuildTransit_1_stop_count_2_miles_en_US() {
                                   "Arrive: 8:08 AM at 14 St - Union Sq.",
                                   "Arrive at 8:08 AM at 14 St - Union Sq.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -6136,9 +6136,9 @@ void TestBuildTransit_1_stop_count_4_miles_en_US() {
   std::string state_code = "NY";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -6155,7 +6155,7 @@ void TestBuildTransit_1_stop_count_4_miles_en_US() {
                                   "Arrive: 8:08 AM at 34 St - Herald Sq.",
                                   "Arrive at 8:08 AM at 34 St - Herald Sq.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -6168,9 +6168,9 @@ void TestBuildTransit_1_stop_count_8_miles_en_US() {
   std::string state_code = "NY";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -6186,7 +6186,7 @@ void TestBuildTransit_1_stop_count_8_miles_en_US() {
                                   "Depart at 8:11 AM from Flushing Av.", "Arrive: 8:32 AM at 23 St.",
                                   "Arrive at 8:32 AM at 23 St.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -6199,9 +6199,9 @@ void TestBuildTransit_1_stop_count_1_miles_cs_CZ() {
   std::string state_code = "NY";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("cs-CZ");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("cs-CZ");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -6217,7 +6217,7 @@ void TestBuildTransit_1_stop_count_1_miles_cs_CZ() {
                                   "Příjezd: 08:08 na Atlantic Av - Barclays Ctr.",
                                   "Přijedete v 08:08 na Atlantic Av - Barclays Ctr.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -6230,9 +6230,9 @@ void TestBuildTransit_1_stop_count_2_miles_cs_CZ() {
   std::string state_code = "NY";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("cs-CZ");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("cs-CZ");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -6248,7 +6248,7 @@ void TestBuildTransit_1_stop_count_2_miles_cs_CZ() {
                                   "Příjezd: 08:08 na 14 St - Union Sq.",
                                   "Přijedete v 08:08 na 14 St - Union Sq.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -6261,9 +6261,9 @@ void TestBuildTransit_1_stop_count_4_miles_cs_CZ() {
   std::string state_code = "NY";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("cs-CZ");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("cs-CZ");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -6279,7 +6279,7 @@ void TestBuildTransit_1_stop_count_4_miles_cs_CZ() {
                                   "Příjezd: 08:08 na 34 St - Herald Sq.",
                                   "Přijedete v 08:08 na 34 St - Herald Sq.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -6292,9 +6292,9 @@ void TestBuildTransit_1_stop_count_8_miles_cs_CZ() {
   std::string state_code = "NY";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("cs-CZ");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("cs-CZ");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -6309,7 +6309,7 @@ void TestBuildTransit_1_stop_count_8_miles_cs_CZ() {
                                   "Odjezd: 08:11 z Flushing Av.", "Odjíždíte v 08:11 z Flushing Av.",
                                   "Příjezd: 08:32 na 23 St.", "Přijedete v 08:32 na 23 St.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -6322,9 +6322,9 @@ void TestBuildTransitTransfer_0_no_name_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -6340,7 +6340,7 @@ void TestBuildTransitTransfer_0_no_name_miles_en_US() {
                                   "Arrive: 8:08 AM at 34 St - Herald Sq.",
                                   "Arrive at 8:08 AM at 34 St - Herald Sq.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -6353,9 +6353,9 @@ void TestBuildTransitTransfer_0_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -6371,7 +6371,7 @@ void TestBuildTransitTransfer_0_miles_en_US() {
                                   "Arrive: 8:08 AM at 34 St - Herald Sq.",
                                   "Arrive at 8:08 AM at 34 St - Herald Sq.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -6384,9 +6384,9 @@ void TestBuildTransitTransfer_1_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -6403,7 +6403,7 @@ void TestBuildTransitTransfer_1_miles_en_US() {
                                   "Arrive: 8:08 AM at 34 St - Herald Sq.",
                                   "Arrive at 8:08 AM at 34 St - Herald Sq.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -6416,9 +6416,9 @@ void TestBuildTransitRemainOn_0_no_name_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -6434,7 +6434,7 @@ void TestBuildTransitRemainOn_0_no_name_miles_en_US() {
                                   "Arrive: 8:08 AM at 34 St - Herald Sq.",
                                   "Arrive at 8:08 AM at 34 St - Herald Sq.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -6447,9 +6447,9 @@ void TestBuildTransitRemainOn_0_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -6465,7 +6465,7 @@ void TestBuildTransitRemainOn_0_miles_en_US() {
                                   "Arrive: 8:08 AM at 34 St - Herald Sq.",
                                   "Arrive at 8:08 AM at 34 St - Herald Sq.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -6478,9 +6478,9 @@ void TestBuildTransitRemainOn_1_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -6497,7 +6497,7 @@ void TestBuildTransitRemainOn_1_miles_en_US() {
                                   "Arrive: 8:08 AM at 34 St - Herald Sq.",
                                   "Arrive at 8:08 AM at 34 St - Herald Sq.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -6510,9 +6510,9 @@ void TestBuildPostTransitConnectionDestination_0_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -6525,7 +6525,7 @@ void TestBuildPostTransitConnectionDestination_0_miles_en_US() {
   SetExpectedManeuverInstructions(expected_maneuvers, "Head southwest.", "", "Head southwest.",
                                   "Continue for 300 feet.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -6538,9 +6538,9 @@ void TestBuildPostTransitConnectionDestination_1_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -6555,7 +6555,7 @@ void TestBuildPostTransitConnectionDestination_1_miles_en_US() {
                                   "Head southwest on 6th Avenue, Avenue of the Americas.",
                                   "Continue for 300 feet.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -6568,9 +6568,9 @@ void TestBuildPostTransitConnectionDestination_2_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -6585,7 +6585,7 @@ void TestBuildPostTransitConnectionDestination_2_miles_en_US() {
       "Head southwest on 6th Avenue/Avenue of the Americas. Continue on 6th Avenue.", "",
       "Head southwest on 6th Avenue, Avenue of the Americas.", "Continue for 300 feet.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -6598,9 +6598,9 @@ void TestBuildPostTransitConnectionDestination_4_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -6613,7 +6613,7 @@ void TestBuildPostTransitConnectionDestination_4_miles_en_US() {
   SetExpectedManeuverInstructions(expected_maneuvers, "Drive southwest.", "", "Drive southwest.",
                                   "Continue for 300 feet.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -6626,9 +6626,9 @@ void TestBuildPostTransitConnectionDestination_5_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -6643,7 +6643,7 @@ void TestBuildPostTransitConnectionDestination_5_miles_en_US() {
                                   "Drive southwest on 6th Avenue, Avenue of the Americas.",
                                   "Continue for 300 feet.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -6656,9 +6656,9 @@ void TestBuildPostTransitConnectionDestination_6_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -6673,7 +6673,7 @@ void TestBuildPostTransitConnectionDestination_6_miles_en_US() {
       "Drive southwest on 6th Avenue/Avenue of the Americas. Continue on 6th Avenue.", "",
       "Drive southwest on 6th Avenue, Avenue of the Americas.", "Continue for 300 feet.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -6686,9 +6686,9 @@ void TestBuildPostTransitConnectionDestination_8_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -6701,7 +6701,7 @@ void TestBuildPostTransitConnectionDestination_8_miles_en_US() {
   SetExpectedManeuverInstructions(expected_maneuvers, "Walk southwest.", "", "Walk southwest.",
                                   "Continue for 300 feet.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -6714,9 +6714,9 @@ void TestBuildPostTransitConnectionDestination_9_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -6731,7 +6731,7 @@ void TestBuildPostTransitConnectionDestination_9_miles_en_US() {
                                   "Walk southwest on 6th Avenue, Avenue of the Americas.",
                                   "Continue for 300 feet.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -6744,9 +6744,9 @@ void TestBuildPostTransitConnectionDestination_10_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -6761,7 +6761,7 @@ void TestBuildPostTransitConnectionDestination_10_miles_en_US() {
       "Walk southwest on 6th Avenue/Avenue of the Americas. Continue on 6th Avenue.", "",
       "Walk southwest on 6th Avenue, Avenue of the Americas.", "Continue for 300 feet.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -6774,9 +6774,9 @@ void TestBuildPostTransitConnectionDestination_16_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -6789,7 +6789,7 @@ void TestBuildPostTransitConnectionDestination_16_miles_en_US() {
   SetExpectedManeuverInstructions(expected_maneuvers, "Bike southwest.", "", "Bike southwest.",
                                   "Continue for 300 feet.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -6802,9 +6802,9 @@ void TestBuildPostTransitConnectionDestination_17_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -6819,7 +6819,7 @@ void TestBuildPostTransitConnectionDestination_17_miles_en_US() {
                                   "Bike southwest on 6th Avenue, Avenue of the Americas.",
                                   "Continue for 300 feet.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -6832,9 +6832,9 @@ void TestBuildPostTransitConnectionDestination_18_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -6849,7 +6849,7 @@ void TestBuildPostTransitConnectionDestination_18_miles_en_US() {
       "Bike southwest on 6th Avenue/Avenue of the Americas. Continue on 6th Avenue.", "",
       "Bike southwest on 6th Avenue, Avenue of the Americas.", "Continue for 300 feet.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -6860,9 +6860,9 @@ void TestBuildVerbalMultiCue_0_miles_en_US() {
   std::string state_code = "PA";
 
   // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
@@ -6879,7 +6879,7 @@ void TestBuildVerbalMultiCue_0_miles_en_US() {
                                   "Turn left onto East Fulton Street.",
                                   "Turn left onto East Fulton Street.", "Continue for 400 feet.");
 
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 Maneuver
@@ -6906,13 +6906,13 @@ void TryFormVerbalPostTransitionInstruction(NarrativeBuilderTest& nbt,
 }
 
 void TestFormVerbalPostTransitionInstruction() {
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::kilometers);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::kilometers);
+  options.set_language("en-US");
 
-  const NarrativeDictionary& dictionary = GetNarrativeDictionary(directions_options);
+  const NarrativeDictionary& dictionary = GetNarrativeDictionary(options);
 
-  NarrativeBuilderTest nbt_km(directions_options, dictionary);
+  NarrativeBuilderTest nbt_km(options, dictionary);
 
   // Verify kilometer whole number
   TryFormVerbalPostTransitionInstruction(nbt_km, CreateVerbalPostManeuver({{"Main Street", 0}}, 4.0f),
@@ -7065,9 +7065,9 @@ void TestFormVerbalPostTransitionInstruction() {
 
   /////////////////////////////////////////////////////////////////////////////
 
-  directions_options.set_units(DirectionsOptions::miles);
+  options.set_units(Options::miles);
 
-  NarrativeBuilderTest nbt_mi(directions_options, dictionary);
+  NarrativeBuilderTest nbt_mi(options, dictionary);
 
   // Verify mile whole number
   TryFormVerbalPostTransitionInstruction(nbt_mi,
@@ -7294,13 +7294,13 @@ void TryFormRampStraightInstruction(NarrativeBuilderTest& nbt,
 }
 
 void TestFormRampStraightInstruction() {
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
-  const NarrativeDictionary& dictionary = GetNarrativeDictionary(directions_options);
+  const NarrativeDictionary& dictionary = GetNarrativeDictionary(options);
 
-  NarrativeBuilderTest nbt(directions_options, dictionary);
+  NarrativeBuilderTest nbt(options, dictionary);
 
   // phrase_id = 0
   TryFormRampStraightInstruction(nbt,
@@ -7372,13 +7372,13 @@ void TryFormRampRightInstruction(NarrativeBuilderTest& nbt, Maneuver maneuver, s
 }
 
 void TestFormRampRightInstruction() {
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
-  const NarrativeDictionary& dictionary = GetNarrativeDictionary(directions_options);
+  const NarrativeDictionary& dictionary = GetNarrativeDictionary(options);
 
-  NarrativeBuilderTest nbt(directions_options, dictionary);
+  NarrativeBuilderTest nbt(options, dictionary);
 
   // phrase_id = 0
   TryFormRampRightInstruction(nbt,
@@ -7485,13 +7485,13 @@ void TryFormRampLeftInstruction(NarrativeBuilderTest& nbt, Maneuver maneuver, st
 }
 
 void TestFormRampLeftInstruction() {
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
-  const NarrativeDictionary& dictionary = GetNarrativeDictionary(directions_options);
+  const NarrativeDictionary& dictionary = GetNarrativeDictionary(options);
 
-  NarrativeBuilderTest nbt(directions_options, dictionary);
+  NarrativeBuilderTest nbt(options, dictionary);
 
   // phrase_id = 0
   TryFormRampLeftInstruction(nbt,
@@ -7598,13 +7598,13 @@ void TryFormExitRightInstruction(NarrativeBuilderTest& nbt, Maneuver maneuver, s
 }
 
 void TestFormExitRightInstruction() {
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
-  const NarrativeDictionary& dictionary = GetNarrativeDictionary(directions_options);
+  const NarrativeDictionary& dictionary = GetNarrativeDictionary(options);
 
-  NarrativeBuilderTest nbt(directions_options, dictionary);
+  NarrativeBuilderTest nbt(options, dictionary);
 
   // phrase_id = 0
   TryFormExitRightInstruction(nbt,
@@ -7717,13 +7717,13 @@ void TryFormExitLeftInstruction(NarrativeBuilderTest& nbt, Maneuver maneuver, st
 }
 
 void TestFormExitLeftInstruction() {
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions::miles);
-  directions_options.set_language("en-US");
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
 
-  const NarrativeDictionary& dictionary = GetNarrativeDictionary(directions_options);
+  const NarrativeDictionary& dictionary = GetNarrativeDictionary(options);
 
-  NarrativeBuilderTest nbt(directions_options, dictionary);
+  NarrativeBuilderTest nbt(options, dictionary);
 
   // phrase_id = 0
   TryFormExitLeftInstruction(nbt,

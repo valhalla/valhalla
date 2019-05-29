@@ -12,7 +12,7 @@
 #include <valhalla/baldr/pathlocation.h>
 #include <valhalla/midgard/gridded_data.h>
 #include <valhalla/proto/directions.pb.h>
-#include <valhalla/proto/directions_options.pb.h>
+#include <valhalla/proto/options.pb.h>
 #include <valhalla/proto/trip.pb.h>
 #include <valhalla/thor/attributes_controller.h>
 #include <valhalla/thor/costmatrix.h>
@@ -26,14 +26,14 @@ namespace tyr {
 /**
  * Turn path and directions into a route that one can follow
  */
-std::string serializeDirections(const valhalla_request_t& request,
+std::string serializeDirections(const Api& request,
                                 std::list<TripLeg>& path_legs,
                                 const std::list<DirectionsLeg>& directions_legs);
 
 /**
  * Turn a time distance matrix into json that one can look up location pair results from
  */
-std::string serializeMatrix(const valhalla_request_t& request,
+std::string serializeMatrix(const Api& request,
                             const std::vector<thor::TimeDistance>& time_distances,
                             double distance_scale);
 
@@ -45,7 +45,7 @@ std::string serializeMatrix(const valhalla_request_t& request,
  */
 template <class coord_t>
 std::string
-serializeIsochrones(const valhalla_request_t& request,
+serializeIsochrones(const Api& request,
                     const typename midgard::GriddedData<coord_t>::contours_t& grid_contours,
                     bool polygons = true,
                     const std::unordered_map<float, std::string>& colors = {},
@@ -58,7 +58,7 @@ serializeIsochrones(const valhalla_request_t& request,
  * @param heights  The actual height at each shape point
  * @param ranges   The distances between each point. If this is empty no ranges are serialized
  */
-std::string serializeHeight(const valhalla_request_t& request,
+std::string serializeHeight(const Api& request,
                             const std::vector<double>& heights,
                             const std::vector<float>& ranges = {});
 
@@ -71,7 +71,7 @@ std::string serializeHeight(const valhalla_request_t& request,
  * @param reader       A graph reader to get at each correlated points info
  */
 std::string
-serializeLocate(const valhalla_request_t& request,
+serializeLocate(const Api& request,
                 const std::vector<baldr::Location>& locations,
                 const std::unordered_map<baldr::Location, baldr::PathLocation>& projections,
                 baldr::GraphReader& reader);
@@ -84,7 +84,7 @@ serializeLocate(const valhalla_request_t& request,
  * @param locations  The input locations
  * @param found      Which locations had transit
  */
-std::string serializeTransitAvailable(const valhalla_request_t& request,
+std::string serializeTransitAvailable(const Api& request,
                                       const std::vector<baldr::Location>& locations,
                                       const std::unordered_set<baldr::Location>& found);
 
@@ -96,7 +96,7 @@ std::string serializeTransitAvailable(const valhalla_request_t& request,
  * @param results     The vector of trip paths and match results for each match found
  */
 std::string serializeTraceAttributes(
-    const valhalla_request_t& request,
+    const Api& request,
     const thor::AttributesController& controller,
     std::vector<std::tuple<float, float, std::vector<thor::MatchResult>, std::list<TripLeg>>>&
         results);

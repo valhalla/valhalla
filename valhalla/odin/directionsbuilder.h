@@ -6,7 +6,7 @@
 #include <valhalla/odin/enhancedtrippath.h>
 #include <valhalla/odin/maneuver.h>
 #include <valhalla/proto/directions.pb.h>
-#include <valhalla/proto/directions_options.pb.h>
+#include <valhalla/proto/options.pb.h>
 #include <valhalla/proto/trip.pb.h>
 
 namespace valhalla {
@@ -27,11 +27,11 @@ public:
    * calls PopulateDirectionsLeg to transform the maneuver list into the
    * trip directions.
    *
-   * @param directions_options The directions options such as: units and
+   * @param options The directions options such as: units and
    *                           language.
    * @param trip_path The trip path - list of nodes, edges, attributes and shape.
    */
-  DirectionsLeg Build(const DirectionsOptions& directions_options, TripLeg& trip_path);
+  DirectionsLeg Build(const Options& options, TripLeg& trip_path);
 
 protected:
   /**
@@ -44,14 +44,14 @@ protected:
   /**
    * Returns the trip directions based on the specified directions options,
    * trip path, and maneuver list.
-   * @param directions_options The directions options such as: units and
+   * @param options The directions options such as: units and
    *                           language.
    * @param etp The enhanced trip path - list of nodes, edges, attributes and shape.
    * @param maneuvers the maneuver list that contains the information required
    *                  to populate the trip directions.
    * @returns the trip directions.
    */
-  DirectionsLeg PopulateDirectionsLeg(const DirectionsOptions& directions_options,
+  DirectionsLeg PopulateDirectionsLeg(const Options& options,
                                       EnhancedTripLeg* etp,
                                       std::list<Maneuver>& maneuvers);
 };

@@ -9,7 +9,7 @@
 #include "worker.h"
 
 #include <valhalla/proto/directions.pb.h>
-#include <valhalla/proto/directions_options.pb.h>
+#include <valhalla/proto/options.pb.h>
 
 namespace {
 // Minimum drive edge length (~10 feet)
@@ -70,7 +70,7 @@ DirectionsBuilder::DirectionsBuilder() {
 // NarrativeBuilder::Build to form the maneuver list. This method
 // calls PopulateDirectionsLeg to transform the maneuver list into the
 // trip directions.
-DirectionsLeg DirectionsBuilder::Build(const DirectionsOptions& directions_options,
+DirectionsLeg DirectionsBuilder::Build(const Options& options,
                                        TripLeg& trip_path) {
   // Validate trip path node list
   if (trip_path.node_size() < 1) {
@@ -82,23 +82,23 @@ DirectionsLeg DirectionsBuilder::Build(const DirectionsOptions& directions_optio
 
   // Produce maneuvers if desired
   std::list<Maneuver> maneuvers;
-  if (directions_options.directions_type() != DirectionsType::none) {
+  if (options.directions_type() != DirectionsType::none) {
     // Update the heading of ~0 length edges
     UpdateHeading(&etp);
 
-    ManeuversBuilder maneuversBuilder(directions_options, &etp);
+    ManeuversBuilder maneuversBuilder(options, &etp);
     maneuvers = maneuversBuilder.Build();
 
     // Create the instructions if desired
-    if (directions_options.directions_type() == DirectionsType::instructions) {
+    if (options.directions_type() == DirectionsType::instructions) {
       std::unique_ptr<NarrativeBuilder> narrative_builder =
-          NarrativeBuilderFactory::Create(directions_options, &etp);
-      narrative_builder->Build(directions_options, &etp, maneuvers);
+          NarrativeBuilderFactory::Create(options, &etp);
+      narrative_builder->Build(options, &etp, maneuvers);
     }
   }
 
   // Return trip directions
-  return PopulateDirectionsLeg(directions_options, &etp, maneuvers);
+  return PopulateDirectionsLeg(options, &etp, maneuvers);
 }
 
 // Update the heading of ~0 length edges.
@@ -144,7 +144,7 @@ void DirectionsBuilder::UpdateHeading(EnhancedTripLeg* etp) {
 
 // Returns the trip directions based on the specified directions options,
 // trip path, and maneuver list.
-DirectionsLeg DirectionsBuilder::PopulateDirectionsLeg(const DirectionsOptions& directions_options,
+DirectionsLeg DirectionsBuilder::PopulateDirectionsLeg(const Options& options,
                                                        EnhancedTripLeg* etp,
                                                        std::list<Maneuver>& maneuvers) {
   DirectionsLeg trip_directions;
@@ -179,7 +179,7 @@ DirectionsLeg DirectionsBuilder::PopulateDirectionsLeg(const DirectionsOptions& 
       maneuver_begin_street_name->set_is_route_number(begin_street_name->is_route_number());
     }
 
-    trip_maneuver->set_length(maneuver.length(directions_options.units()));
+    trip_maneuver->set_length(maneuver.length(options.units()));
     trip_maneuver->set_time(maneuver.time());
     trip_maneuver->set_begin_cardinal_direction(maneuver.begin_cardinal_direction());
     trip_maneuver->set_begin_heading(maneuver.begin_heading());
@@ -355,7 +355,7 @@ DirectionsLeg DirectionsBuilder::PopulateDirectionsLeg(const DirectionsOptions& 
   }
 
   // Populate summary
-  trip_directions.mutable_summary()->set_length(etp->GetLength(directions_options.units()));
+  trip_directions.mutable_summary()->set_length(etp->GetLength(options.units()));
   trip_directions.mutable_summary()->set_time(etp->node(etp->GetLastNodeIndex()).elapsed_time());
   auto mutable_bbox = trip_directions.mutable_summary()->mutable_bbox();
   mutable_bbox->mutable_min_ll()->set_lat(etp->bbox().min_ll().lat());
