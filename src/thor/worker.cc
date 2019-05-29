@@ -329,11 +329,13 @@ void thor_worker_t::log_admin(const valhalla::TripLeg& trip_path) {
  * are honored in route, trace_route, and trace_attributes actions.
  */
 void thor_worker_t::filter_attributes(const valhalla_request_t& request,
-                                      AttributesController& controller) {
+                                      AttributesController& controller,
+                                      bool is_strict_filter) {
   if (request.options.has_filter_action()) {
     switch (request.options.filter_action()) {
       case (FilterAction::include): {
-        controller.disable_all();
+        if (is_strict_filter)
+          controller.disable_all();
         for (const auto& filter_attribute : request.options.filter_attributes()) {
           try {
             controller.attributes.at(filter_attribute) = true;
@@ -342,7 +344,8 @@ void thor_worker_t::filter_attributes(const valhalla_request_t& request,
         break;
       }
       case (FilterAction::exclude): {
-        controller.enable_all();
+        if (is_strict_filter)
+          controller.enable_all();
         for (const auto& filter_attribute : request.options.filter_attributes()) {
           try {
             controller.attributes.at(filter_attribute) = false;

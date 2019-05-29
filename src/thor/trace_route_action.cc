@@ -67,7 +67,7 @@ std::list<TripLeg> thor_worker_t::trace_route(valhalla_request_t& request) {
 
   // Initialize the controller
   AttributesController controller;
-  filter_attributes(request, controller);
+  filter_attributes(request, controller, false);
 
   std::list<TripLeg> trip_paths;
   switch (request.options.shape_match()) {

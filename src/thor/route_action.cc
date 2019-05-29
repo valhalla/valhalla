@@ -133,7 +133,7 @@ std::list<valhalla::TripLeg> thor_worker_t::route(valhalla_request_t& request) {
 
   // Initialize the controller
   AttributesController controller;
-  filter_attributes(request, controller);
+  filter_attributes(request, controller, false);
 
   // get all the legs
   auto* locations = request.options.mutable_locations();

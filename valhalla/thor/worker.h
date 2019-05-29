@@ -88,7 +88,9 @@ protected:
   void parse_locations(valhalla_request_t& request);
   void parse_measurements(const valhalla_request_t& request);
   std::string parse_costing(const valhalla_request_t& request);
-  void filter_attributes(const valhalla_request_t& request, AttributesController& controller);
+  void filter_attributes(const valhalla_request_t& request,
+                         AttributesController& controller,
+                         bool is_strict_filter);
 
   sif::TravelMode mode;
   std::vector<meili::Measurement> trace;

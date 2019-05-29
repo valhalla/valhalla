@@ -61,7 +61,7 @@ std::string thor_worker_t::trace_attributes(valhalla_request_t& request) {
   // Initialize controller, enable all attributes by default
   AttributesController controller;
   controller.enable_all();
-  filter_attributes(request, controller);
+  filter_attributes(request, controller, true);
 
   switch (request.options.shape_match()) {
     // If the exact points from a prior route that was run against the Valhalla road network,
