@@ -191,7 +191,7 @@ void search(valhalla::baldr::Location location, size_t result_count, int reachab
   valhalla::baldr::GraphReader reader(conf);
 
   // send it to pbf and back just in case something is wrong with that conversion
-  valhalla::Location pbf;
+  valhalla::odin::Location pbf;
   PathLocation::toPBF(location, &pbf, reader);
   location = PathLocation::fromPBF(pbf);
 
