@@ -100,7 +100,7 @@ const std::string kNodeTransitEgressInfoLatLon = "node.transit_egress_info.lat_l
 
 const std::string kNodeTimeZone = "node.time_zone";
 
-// Top level: osm chnageset, admin list, and full shape keys
+// Top level: osm changeset, admin list, and full shape keys
 const std::string kOsmChangeset = "osm_changeset";
 const std::string kAdminCountryCode = "admin.country_code";
 const std::string kAdminCountryText = "admin.country_text";
@@ -114,6 +114,9 @@ const std::string kMatchedBeginRouteDiscontinuity = "matched.begin_route_discont
 const std::string kMatchedEndRouteDiscontinuity = "matched.end_route_discontinuity";
 const std::string kMatchedDistanceAlongEdge = "matched.distance_along_edge";
 const std::string kMatchedDistanceFromTracePoint = "matched.distance_from_trace_point";
+const std::string kMatchedShapePointDuration = "matched.shape_point_duration";
+const std::string kMatchedShapePointDistance = "matched.shape_point_distance";
+const std::string kMatchedShapePointSpeed = "matched.shape_point_speed";
 const std::string kConfidenceScore = "confidence_score";
 const std::string kRawScore = "raw_score";
 
