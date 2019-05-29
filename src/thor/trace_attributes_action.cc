@@ -35,35 +35,6 @@ constexpr size_t kTripLegIndex = 3;
 
 namespace valhalla {
 namespace thor {
-
-void thor_worker_t::filter_attributes(const valhalla_request_t& request,
-                                      AttributesController& controller) {
-  if (request.options.has_filter_action()) {
-    switch (request.options.filter_action()) {
-      case (FilterAction::include): {
-        controller.disable_all();
-        for (const auto& filter_attribute : request.options.filter_attributes()) {
-          try {
-            controller.attributes.at(filter_attribute) = true;
-          } catch (...) { LOG_ERROR("Invalid filter attribute " + filter_attribute); }
-        }
-        break;
-      }
-      case (FilterAction::exclude): {
-        controller.enable_all();
-        for (const auto& filter_attribute : request.options.filter_attributes()) {
-          try {
-            controller.attributes.at(filter_attribute) = false;
-          } catch (...) { LOG_ERROR("Invalid filter attribute " + filter_attribute); }
-        }
-        break;
-      }
-    }
-  } else {
-    controller.enable_all();
-  }
-}
-
 /*
  * The trace_attributes action takes a GPS trace or latitude, longitude positions
  * from a portion of an existing route and returns detailed attribution along the

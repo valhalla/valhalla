@@ -323,6 +323,39 @@ void thor_worker_t::log_admin(const valhalla::TripLeg& trip_path) {
   }
 }
 
+/*
+ * Apply attribute filters from the request to the AttributesController. These filters
+ * allow including or excluding specific attributes from the response. These filters
+ * are honored in route, trace_route, and trace_attributes actions.
+ */
+void thor_worker_t::filter_attributes(const valhalla_request_t& request,
+                                      AttributesController& controller) {
+  if (request.options.has_filter_action()) {
+    switch (request.options.filter_action()) {
+      case (FilterAction::include): {
+        controller.disable_all();
+        for (const auto& filter_attribute : request.options.filter_attributes()) {
+          try {
+            controller.attributes.at(filter_attribute) = true;
+          } catch (...) { LOG_ERROR("Invalid filter attribute " + filter_attribute); }
+        }
+        break;
+      }
+      case (FilterAction::exclude): {
+        controller.enable_all();
+        for (const auto& filter_attribute : request.options.filter_attributes()) {
+          try {
+            controller.attributes.at(filter_attribute) = false;
+          } catch (...) { LOG_ERROR("Invalid filter attribute " + filter_attribute); }
+        }
+        break;
+      }
+    }
+  } else {
+    controller.enable_all();
+  }
+}
+
 void thor_worker_t::cleanup() {
   astar.Clear();
   bidir_astar.Clear();
