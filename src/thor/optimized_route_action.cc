@@ -61,7 +61,9 @@ std::list<valhalla::TripLeg> thor_worker_t::optimized_route(valhalla_request_t& 
     request.options.mutable_locations()->Add()->CopyFrom(correlated.Get(optimal_order[i]));
   }
 
-  return path_depart_at(*request.options.mutable_locations(), costing);
+  // Create controller for default route attributes
+  AttributesController controller;
+  return path_depart_at(*request.options.mutable_locations(), costing, controller);
 }
 
 } // namespace thor

@@ -131,12 +131,16 @@ std::list<valhalla::TripLeg> thor_worker_t::route(valhalla_request_t& request) {
   parse_locations(request);
   auto costing = parse_costing(request);
 
+  // Initialize the controller
+  AttributesController controller;
+  filter_attributes(request, controller);
+
   // get all the legs
   auto* locations = request.options.mutable_locations();
   auto trippaths = (request.options.has_date_time_type() &&
                     request.options.date_time_type() == DirectionsOptions::arrive_by)
-                       ? path_arrive_by(*locations, costing)
-                       : path_depart_at(*locations, costing);
+                       ? path_arrive_by(*locations, costing, controller)
+                       : path_depart_at(*locations, costing, controller);
 
   // TODO: this wont be needed once we do the block comment above
   // cull unused edges
@@ -279,7 +283,8 @@ std::vector<thor::PathInfo> thor_worker_t::get_path(PathAlgorithm* path_algorith
 
 std::list<valhalla::TripLeg>
 thor_worker_t::path_arrive_by(google::protobuf::RepeatedPtrField<valhalla::Location>& correlated,
-                              const std::string& costing) {
+                              const std::string& costing,
+                              const AttributesController& controller) {
   // Things we'll need
   GraphId first_edge;
   std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>> vias;
@@ -341,9 +346,6 @@ thor_worker_t::path_arrive_by(google::protobuf::RepeatedPtrField<valhalla::Locat
         --destination;
       }
 
-      // Create controller for default route attributes
-      AttributesController controller;
-
       // We have to flip the via indices because we built them in backwards order
       decltype(vias) flipped;
       flipped.reserve(vias.size());
@@ -369,7 +371,8 @@ thor_worker_t::path_arrive_by(google::protobuf::RepeatedPtrField<valhalla::Locat
 
 std::list<valhalla::TripLeg>
 thor_worker_t::path_depart_at(google::protobuf::RepeatedPtrField<valhalla::Location>& correlated,
-                              const std::string& costing) {
+                              const std::string& costing,
+                              const AttributesController& controller) {
   // Things we'll need
   GraphId last_edge;
   std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>> vias;
@@ -432,9 +435,6 @@ thor_worker_t::path_depart_at(google::protobuf::RepeatedPtrField<valhalla::Locat
         throughs.push_front(*origin);
         --origin;
       }
-
-      // Create controller for default route attributes
-      AttributesController controller;
 
       // Form output information based on path edges. vias are a route discontinuity map
       auto trip_path =

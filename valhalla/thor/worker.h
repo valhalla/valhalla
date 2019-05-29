@@ -78,10 +78,12 @@ protected:
                      route_discontinuities);
   std::list<TripLeg>
   path_arrive_by(google::protobuf::RepeatedPtrField<valhalla::Location>& correlated,
-                 const std::string& costing);
+                 const std::string& costing,
+                 const AttributesController& controller);
   std::list<TripLeg>
   path_depart_at(google::protobuf::RepeatedPtrField<valhalla::Location>& correlated,
-                 const std::string& costing);
+                 const std::string& costing,
+                 const AttributesController& controller);
 
   void parse_locations(valhalla_request_t& request);
   void parse_measurements(const valhalla_request_t& request);
