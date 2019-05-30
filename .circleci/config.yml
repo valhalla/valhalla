@@ -303,6 +303,7 @@ jobs:
             export BUILD_TYPE=Debug
             ./scripts/publish.sh
 
+
 workflows:
   version: 2
   build_test_publish:
