@@ -165,6 +165,15 @@ jobs:
       - run: make -C build -j4
       - run: make -C build -j4 tests
 #      - run: make -C build -j2 check
+      - run:
+            command: |
+              export PACKAGE_JSON_VERSION=$(node -e "console.log(require('./package.json').version)")
+              export PUBLISH=$([[ "${CIRCLE_TAG:-}" == "${PACKAGE_JSON_VERSION}" ]] && echo "On" || echo "Off")
+              echo circle_tag ${CIRCLE_TAG:-}
+              echo package_json_version ${PACKAGE_JSON_VERSION}
+              export COMMIT_MESSAGE=$(git log --oneline --format=%B -n 1 ${CIRCLE_SHA1} | head -n 1)
+              export BUILD_TYPE=Release
+              ./scripts/publish.sh
       - save_cache:
           key: ccache
           paths:
@@ -278,7 +287,6 @@ workflows:
   build_test_publish:
     jobs:
 #      - lint
-      - build-release-binary-linux
       - build-debug
       - build-release
       - build-release-x86
