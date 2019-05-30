@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 3.1)
 
 message(STATUS "Building node_valhalla")
 
-set(BINDING_DIR "${CMAKE_CURRENT_SOURCE_DIR}/lib/binding")
+set(BINDING_DIR "${CMAKE_CURRENT_BINARY_DIR}/lib/binding")
 
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/node_modules/node-cmake")
 
