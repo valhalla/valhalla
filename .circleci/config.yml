@@ -63,7 +63,7 @@ jobs:
       - image: circleci/golang:1.8
     steps:
       - attach_workspace:
-          at: ./artifacts
+          at: ./artifacts/root/project/build/src/
       - run:
           name: "Publish Release on GitHub"
           command: |
@@ -152,7 +152,7 @@ jobs:
             export BUILD_TYPE=Release
             ./scripts/node_install.sh&& ./scripts/publish.sh
       - store_artifacts:
-          path: .
+          path: build
 
   build-release:
     docker:
