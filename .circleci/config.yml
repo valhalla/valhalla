@@ -67,7 +67,6 @@ jobs:
       - run:
           name: "Publish Release on GitHub"
           command: |
-            export PACKAGE_JSON_VERSION=$(node -e "console.log(require('./package.json').version)")
             go get github.com/tcnksm/ghr
             VERSION=PACKAGE_JSON_VERSION
             ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${VERSION} ./artifacts/
@@ -152,6 +151,8 @@ jobs:
             export COMMIT_MESSAGE=$(git log --oneline --format=%B -n 1 ${CIRCLE_SHA1} | head -n 1)
             export BUILD_TYPE=Release
             ./scripts/node_install.sh&& ./scripts/publish.sh
+      - store_artifacts:
+          path: /lib
 
   build-release:
     docker:
