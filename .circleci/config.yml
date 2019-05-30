@@ -310,7 +310,7 @@ workflows:
     jobs:
 #      - lint
       - build-node-release
-      - publish-github-release
+      - publish-github-release:
          requires:
            - build-node-release
 #      - build-release
