@@ -30,4 +30,4 @@ add_custom_command(OUTPUT ${BINDING_DIR}/node_valhalla.node
 
 
 message(STATUS "node_valhalla artifacts will be copied to: ${BINDING_DIR}")
-add_custom_target(copy_node_artifacts ALL DEPENDS ${BINDING_DIR}/node_valhalla.node)
+#add_custom_target(copy_node_artifacts ALL DEPENDS ${BINDING_DIR}/node_valhalla.node)
