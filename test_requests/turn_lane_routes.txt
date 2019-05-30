@@ -17,3 +17,5 @@
 -j '{"locations":[{"lat":38.926250,"lon":-77.230789,"street":"International Drive"},{"lat":38.925182,"lon":-77.232826,"street":"Greensboro Drive"}],"costing":"auto","directions_options":{"units":"miles"}}'
 -j '{"locations":[{"lat":38.926250,"lon":-77.230789,"street":"International Drive"},{"lat":38.927101,"lon":-77.230438,"street":"Westpark Drive"}],"costing":"auto","directions_options":{"units":"miles"}}'
 -j '{"locations":[{"lat":38.894779,"lon":-77.027489,"street":"Pennsylvania Avenue Northwest"},{"lat":38.895359,"lon":-77.027046,"street":"11th Street Northwest"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":40.042469,"lon":-76.302101,"street":"North Lime Street"},{"lat":40.041771,"lon":-76.308472,"street":"North Prince Street"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":40.038239,"lon":-76.307861,"street":"North Prince Street"},{"lat":40.038116,"lon":-76.304283,"street":"East King Street"}],"costing":"auto","directions_options":{"units":"miles"}}'
