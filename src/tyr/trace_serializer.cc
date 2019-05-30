@@ -394,6 +394,25 @@ json::ArrayPtr serialize_matched_points(const AttributesController& controller,
   return match_points_array;
 }
 
+json::ArrayPtr serialize_shape_attributes(const AttributesController& controller,
+                                          const TripLeg& trip_path) {
+  auto attributes_array = json::array({});
+  for (const auto& attr : trip_path.shape_attributes()) {
+    auto attr_map = json::map({});
+    if (controller.attributes.at(kShapeAttributesTime) && attr.has_time()) {
+      attr_map->emplace("time", attr.time());
+    }
+    if (controller.attributes.at(kShapeAttributesLength) && attr.has_length()) {
+      attr_map->emplace("length", attr.length());
+    }
+    if (controller.attributes.at(kShapeAttributesSpeed) && attr.has_speed()) {
+      attr_map->emplace("speed", attr.speed());
+    }
+    attributes_array->push_back(attr_map);
+  }
+  return attributes_array;
+}
+
 void append_trace_info(
     const json::MapPtr& json,
     const AttributesController& controller,
@@ -436,6 +455,11 @@ void append_trace_info(
   // Add matched points, if requested
   if (controller.category_attribute_enabled(kMatchedCategory) && !match_results.empty()) {
     json->emplace("matched_points", serialize_matched_points(controller, match_results));
+  }
+
+  // Add shape_attributes, if requested
+  if (controller.category_attribute_enabled(kShapeAttributesCategory)) {
+    json->emplace("shape_attributes", serialize_shape_attributes(controller, trip_path));
   }
 }
 } // namespace

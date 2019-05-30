@@ -34,7 +34,7 @@ message TripLeg {
     kResidential = 6;
     kServiceOther = 7;
   }
-  
+
   enum Use {
     kRoadUse = 0;
     kRampUse = 1;              // Link - exits/entrance ramps.
@@ -116,7 +116,7 @@ message TripLeg {
     kHybrid = 2;
     kMountain = 3;
   }
-  
+
   enum TransitType {
     kTram = 0;
     kMetro = 1;
@@ -239,9 +239,9 @@ message TripLeg {
       kMotorwayJunction = 9;        // Highway = motorway_junction
       kBorderControl = 10;          // Border control
     }
-    
+
     optional Edge edge = 1;
-    repeated IntersectingEdge intersecting_edge = 2; 
+    repeated IntersectingEdge intersecting_edge = 2;
     optional uint32 elapsed_time = 3;        // seconds from start of leg
     optional uint32 admin_index = 4;         // index into the admin list
     optional Type type = 5;                  // The type of node
@@ -258,7 +258,13 @@ message TripLeg {
     optional string state_code = 3;
     optional string state_text = 4;
   }
-  
+
+  message ShapeAttributes {
+    optional string time = 1;
+    optional string length = 2;
+    optional string speed = 3;
+  }
+
   optional uint64 osm_changeset = 1;
   optional uint64 trip_id = 2;
   optional uint32 leg_id = 3;
@@ -268,6 +274,7 @@ message TripLeg {
   repeated Admin admin = 7;
   optional string shape = 8;
   optional BoundingBox bbox = 9;
+  repeated ShapeAttributes shape_attributes = 10;
 }
 
 message TripRoute {

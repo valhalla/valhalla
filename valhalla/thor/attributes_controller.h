@@ -114,16 +114,19 @@ const std::string kMatchedBeginRouteDiscontinuity = "matched.begin_route_discont
 const std::string kMatchedEndRouteDiscontinuity = "matched.end_route_discontinuity";
 const std::string kMatchedDistanceAlongEdge = "matched.distance_along_edge";
 const std::string kMatchedDistanceFromTracePoint = "matched.distance_from_trace_point";
-const std::string kMatchedShapePointDuration = "matched.shape_point_duration";
-const std::string kMatchedShapePointDistance = "matched.shape_point_distance";
-const std::string kMatchedShapePointSpeed = "matched.shape_point_speed";
 const std::string kConfidenceScore = "confidence_score";
 const std::string kRawScore = "raw_score";
+
+// Per-shape attributes
+const std::string kShapeAttributesTime = "shape_attributes.time";
+const std::string kShapeAttributesLength = "shape_attributes.length";
+const std::string kShapeAttributesSpeed = "shape_attributes.speed";
 
 // Categories
 const std::string kNodeCategory = "node.";
 const std::string kAdminCategory = "admin.";
 const std::string kMatchedCategory = "matched.";
+const std::string kShapeAttributesCategory = "shape_attributes.";
 
 /**
  * Trip path controller for attributes
