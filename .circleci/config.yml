@@ -143,6 +143,7 @@ jobs:
       - restore_cache:
           keys:
             - ccache
+      - run: npm install bit-bin -g
       - run: npm install --ignore-scripts
       - run:
           command: |
@@ -150,6 +151,8 @@ jobs:
             export PUBLISH=$([[ "${CIRCLE_TAG:-}" == "${PACKAGE_JSON_VERSION}" ]] && echo "On" || echo "Off")
             export COMMIT_MESSAGE=$(git log --oneline --format=%B -n 1 ${CIRCLE_SHA1} | head -n 1)
             export BUILD_TYPE=Release
+            bit init
+            bit add
             ./scripts/node_install.sh&& ./scripts/publish.sh
       - store_artifacts:
           path: build
