@@ -59,6 +59,7 @@ jobs:
           paths:
             - ~/.ccache
 
+
   build-debug-binary-linux:
     docker:
       - image: valhalla/docker:build-2.6.1
@@ -170,6 +171,7 @@ jobs:
           paths:
             - ~/.ccache
 
+
   build-osx:
     macos:
       xcode: "9.2.0"
@@ -272,37 +274,54 @@ jobs:
             export COMMIT_MESSAGE=$(git log --oneline --format=%B -n 1 ${CIRCLE_SHA1} | head -n 1)
             export BUILD_TYPE=Debug
             ./scripts/publish.sh
+  publish-github-release:
+        docker:
+          - image: circleci/golang:1.8
+        steps:
+          - attach_workspace:
+              at: ./artifacts
+          - run:
+              name: "Publish Release on GitHub"
+              command: |
+                go get github.com/tcnksm/ghr
+                VERSION=$(PACKAGE_JSON_VERSION)
+                ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${VERSION} ./artifacts/
 
 workflows:
   version: 2
   build_test_publish:
     jobs:
 #      - lint
-      - build-debug
-      - build-release
-      - build-release-x86
-      - build-osx
-      - build-release-binary-osx:
-          filters:
-            tags:
-              only: /.*/
-            branches:
-              ignore: /.*/
-      - build-debug-binary-osx:
-          filters:
-            tags:
-              only: /.*/
-            branches:
-              ignore: /.*/
+#      - build-debug
+#      - build-release
+#      - build-release-x86
+#      - publish-github-release
+#      - build-osx
+#      - build-release-binary-osx:
+#          filters:
+#            tags:
+#              only: /.*/
+#            branches:
+#              ignore: /.*/
+#      - build-debug-binary-osx:
+#          filters:
+#            tags:
+#              only: /.*/
+#            branches:
+#              ignore: /.*/
       - build-release-binary-linux:
           filters:
             tags:
               only: /.*/
             branches:
               ignore: /.*/
-      - build-debug-binary-linux:
-          filters:
-            tags:
-              only: /.*/
-            branches:
-              ignore: /.*/
+      - publish-github-release:
+          requires:
+            - build-release-binary-linux
+
+#      - build-debug-binary-linux:
+#          filters:
+#            tags:
+#              only: /.*/
+#            branches:
+#              ignore: /.*/
