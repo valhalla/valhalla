@@ -378,10 +378,11 @@ void CopyLocations(TripLeg& trip_path,
                    const valhalla::Location& origin,
                    const std::list<valhalla::Location>& throughs,
                    const valhalla::Location& dest,
-                   const std::vector<PathInfo>& path) {
+                   const std::vector<PathInfo>::const_iterator path_begin,
+                   const std::vector<PathInfo>::const_iterator path_end) {
   // origin
   trip_path.add_location()->CopyFrom(origin);
-  auto pe = path.begin();
+  auto pe = path_begin;
   RemovePathEdges(trip_path.mutable_location(trip_path.location_size() - 1), pe->edgeid);
 
   // throughs
@@ -395,7 +396,7 @@ void CopyLocations(TripLeg& trip_path,
       ids.insert(e.graph_id());
     }
     // find id
-    auto found = std::find_if(pe, path.end(), [&ids](const PathInfo& pi) {
+    auto found = std::find_if(pe, path_end, [&ids](const PathInfo& pi) {
       return ids.find(pi.edgeid) != ids.end();
     });
     pe = found;
@@ -404,7 +405,7 @@ void CopyLocations(TripLeg& trip_path,
 
   // destination
   trip_path.add_location()->CopyFrom(dest);
-  RemovePathEdges(trip_path.mutable_location(trip_path.location_size() - 1), path.back().edgeid);
+  RemovePathEdges(trip_path.mutable_location(trip_path.location_size() - 1), (path_end - 1)->edgeid);
 }
 
 /**
@@ -525,7 +526,8 @@ TripLeg
 TripLegBuilder::Build(const AttributesController& controller,
                       GraphReader& graphreader,
                       const std::shared_ptr<sif::DynamicCost>* mode_costing,
-                      const std::vector<PathInfo>& path,
+                      const std::vector<PathInfo>::const_iterator path_begin,
+                      const std::vector<PathInfo>::const_iterator path_end,
                       valhalla::Location& origin,
                       valhalla::Location& dest,
                       const std::list<valhalla::Location>& through_loc,
@@ -542,7 +544,7 @@ TripLegBuilder::Build(const AttributesController& controller,
 
   // Set origin, any through locations, and destination. Origin and
   // destination are assumed to be breaks.
-  CopyLocations(trip_path, origin, through_loc, dest, path);
+  CopyLocations(trip_path, origin, through_loc, dest, path_begin, path_end);
   auto* tp_orig = trip_path.mutable_location(0);
   auto* tp_dest = trip_path.mutable_location(trip_path.location_size() - 1);
 
@@ -560,7 +562,7 @@ TripLegBuilder::Build(const AttributesController& controller,
   // Get the first nodes graph id by using the end node of the first edge to get the tile with the
   // opposing edge then use the opposing index to get the opposing edge, and its end node is the
   // begin node of the original edge
-  auto* first_edge = graphreader.GetGraphTile(path.front().edgeid)->directededge(path.front().edgeid);
+  auto* first_edge = graphreader.GetGraphTile(path_begin->edgeid)->directededge(path_begin->edgeid);
   auto* first_tile = graphreader.GetGraphTile(first_edge->endnode());
   auto* first_node = first_tile->node(first_edge->endnode());
   GraphId startnode =
@@ -572,7 +574,7 @@ TripLegBuilder::Build(const AttributesController& controller,
       valhalla::Location::SideOfStreet::Location_SideOfStreet_kNone;
   PointLL start_vrt;
   for (const auto& e : origin.path_edges()) {
-    if (e.graph_id() == path.front().edgeid) {
+    if (e.graph_id() == path_begin->edgeid) {
       start_pct = e.percent_along();
       start_sos = e.side_of_street();
       start_vrt = PointLL(e.ll().lng(), e.ll().lat());
@@ -596,7 +598,7 @@ TripLegBuilder::Build(const AttributesController& controller,
       valhalla::Location::SideOfStreet::Location_SideOfStreet_kNone;
   PointLL end_vrt;
   for (const auto& e : dest.path_edges()) {
-    if (e.graph_id() == path.back().edgeid) {
+    if (e.graph_id() == (path_end - 1)->edgeid) {
       end_pct = e.percent_along();
       end_sos = e.side_of_street();
       end_vrt = PointLL(e.ll().lng(), e.ll().lat());
@@ -619,9 +621,9 @@ TripLegBuilder::Build(const AttributesController& controller,
   std::vector<AdminInfo> admin_info_list;
 
   // If the path was only one edge we have a special case
-  if (path.size() == 1) {
-    const GraphTile* tile = graphreader.GetGraphTile(path.front().edgeid);
-    const DirectedEdge* edge = tile->directededge(path.front().edgeid);
+  if ((path_end - path_begin) == 1) {
+    const GraphTile* tile = graphreader.GetGraphTile(path_begin->edgeid);
+    const DirectedEdge* edge = tile->directededge(path_begin->edgeid);
 
     // Get the shape. Reverse if the directed edge direction does
     // not match the traversal direction (based on start and end percent).
@@ -636,7 +638,7 @@ TripLegBuilder::Build(const AttributesController& controller,
     if (start_pct > end_pct) {
       start_pct = 1.0f - start_pct;
       end_pct = 1.0f - end_pct;
-      edge = graphreader.GetOpposingEdge(path.front().edgeid, tile);
+      edge = graphreader.GetOpposingEdge(path_begin->edgeid, tile);
       if (end_sos == valhalla::Location::SideOfStreet::Location_SideOfStreet_kLeft) {
         tp_dest->set_side_of_street(
             GetTripLegSideOfStreet(valhalla::Location::SideOfStreet::Location_SideOfStreet_kRight));
@@ -652,17 +654,17 @@ TripLegBuilder::Build(const AttributesController& controller,
     uint32_t current_time = 0;
     if (origin.has_date_time()) {
       DateTime::seconds_from_midnight(origin.date_time());
-      current_time += path.front().elapsed_time;
+      current_time += path_begin->elapsed_time;
     }
 
     // Driving on right from the start of the edge?
-    const GraphId start_node = graphreader.GetOpposingEdge(path.front().edgeid)->endnode();
+    const GraphId start_node = graphreader.GetOpposingEdge(path_begin->edgeid)->endnode();
     bool drive_on_right = graphreader.nodeinfo(start_node)->drive_on_right();
 
     // Add trip edge
     auto trip_edge =
-        AddTripEdge(controller, path.front().edgeid, path.front().trip_id, 0, path.front().mode,
-                    travel_types[static_cast<int>(path.front().mode)], edge, drive_on_right,
+        AddTripEdge(controller, path_begin->edgeid, path_begin->trip_id, 0, path_begin->mode,
+                    travel_types[static_cast<int>(path_begin->mode)], edge, drive_on_right,
                     trip_path.add_node(), tile, current_time, std::abs(end_pct - start_pct));
 
     // Set begin shape index if requested
@@ -680,7 +682,7 @@ TripLegBuilder::Build(const AttributesController& controller,
 
     auto* node = trip_path.add_node();
     if (controller.attributes.at(kNodeElapsedTime)) {
-      node->set_elapsed_time(path.front().elapsed_time);
+      node->set_elapsed_time(path_begin->elapsed_time);
     }
 
     const GraphTile* end_tile = graphreader.GetGraphTile(edge->endnode());
@@ -764,7 +766,7 @@ TripLegBuilder::Build(const AttributesController& controller,
   const DirectedEdge* prev_de = nullptr;
   // TODO: this is temp until we use transit stop type from transitland
   TransitPlatformInfo_Type prev_transit_node_type = TransitPlatformInfo_Type_kStop;
-  for (auto edge_itr = path.begin(); edge_itr != path.end(); ++edge_itr, ++edge_index) {
+  for (auto edge_itr = path_begin; edge_itr != path_end; ++edge_itr, ++edge_index) {
     const GraphId& edge = edge_itr->edgeid;
     const uint32_t trip_id = edge_itr->trip_id;
     const GraphTile* graphtile = graphreader.GetGraphTile(edge);
@@ -991,7 +993,7 @@ TripLegBuilder::Build(const AttributesController& controller,
     }
 
     // Add edge to the trip node and set its attributes
-    auto is_last_edge = edge_itr == path.end() - 1;
+    auto is_last_edge = edge_itr == (path_end - 1);
     float length_pct = (is_first_edge ? 1.f - start_pct : (is_last_edge ? end_pct : 1.f));
     TripLeg_Edge* trip_edge =
         AddTripEdge(controller, edge, trip_id, block_id, mode, travel_type, directededge,

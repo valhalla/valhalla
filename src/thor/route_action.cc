@@ -352,8 +352,9 @@ thor_worker_t::path_arrive_by(google::protobuf::RepeatedPtrField<valhalla::Locat
       vias.swap(flipped);
 
       // Form output information based on path edges
-      auto trip_path = thor::TripLegBuilder::Build(controller, *reader, mode_costing, path, *origin,
-                                                   *destination, throughs, interrupt, &vias);
+      auto trip_path =
+          thor::TripLegBuilder::Build(controller, *reader, mode_costing, path.begin(), path.end(),
+                                      *origin, *destination, throughs, interrupt, &vias);
       path.clear();
       vias.clear();
 
@@ -436,8 +437,9 @@ thor_worker_t::path_depart_at(google::protobuf::RepeatedPtrField<valhalla::Locat
       AttributesController controller;
 
       // Form output information based on path edges. vias are a route discontinuity map
-      auto trip_path = thor::TripLegBuilder::Build(controller, *reader, mode_costing, path, *origin,
-                                                   *destination, throughs, interrupt, &vias);
+      auto trip_path =
+          thor::TripLegBuilder::Build(controller, *reader, mode_costing, path.begin(), path.end(),
+                                      *origin, *destination, throughs, interrupt, &vias);
       path.clear();
       vias.clear();
 

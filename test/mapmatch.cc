@@ -119,7 +119,7 @@ std::string json_escape(const std::string& unescaped) {
 int seed = 520;
 int bound = 81;
 std::string make_test_case(PointLL& start, PointLL& end) {
-  static std::minstd_rand0 generator(seed);
+  static std::mt19937 generator(seed);
   static std::uniform_real_distribution<float> distribution(0, 1);
   float distance = 0;
   do {
@@ -244,6 +244,38 @@ void test_distance_only() {
     throw std::logic_error("Using distance only it should have taken a small detour");
 }
 
+void test_trace_route_breaks() {
+  std::vector<std::string> test_cases = {
+      R"({"costing":"auto","shape_match":"map_snap","shape":[
+          {"lat":52.09110,"lon":5.09806,"type":"break"},
+          {"lat":52.09050,"lon":5.09769,"type":"break"},
+          {"lat":52.09098,"lon":5.09679,"type":"break"}]})",
+      R"({"costing":"auto","shape_match":"map_snap","shape":[
+          {"lat":52.09110,"lon":5.09806,"type":"break"},
+          {"lat":52.09050,"lon":5.09769,"type":"via"},
+          {"lat":52.09098,"lon":5.09679,"type":"break"}]})",
+      R"({"costing":"auto","shape_match":"map_snap","shape":[
+          {"lat":52.09110,"lon":5.09806},
+          {"lat":52.09050,"lon":5.09769},
+          {"lat":52.09098,"lon":5.09679}]})",
+      R"({"costing":"auto","shape_match":"map_snap","encoded_polyline":"quijbBqpnwHfJxc@bBdJrDfSdAzFX|AHd@bG~[|AnIdArGbAo@z@m@`EuClO}MjE}E~NkPaAuC"})"};
+  std::vector<size_t> test_answers = {2, 1, 1, 1};
+
+  tyr::actor_t actor(conf, true);
+  for (size_t i = 0; i < test_cases.size(); ++i) {
+    auto matched = json_to_pt(actor.trace_route(test_cases[i]));
+    const auto& legs = matched.get_child("trip.legs");
+    if (legs.size() != test_answers[i])
+      throw std::logic_error("Expected " + std::to_string(test_answers[i]) + " legs but got " +
+                             std::to_string(legs.size()));
+
+    for (const auto& leg : legs) {
+      auto decoded_match =
+          midgard::decode<std::vector<PointLL>>(leg.second.get<std::string>("shape"));
+    }
+  }
+}
+
 void test_time_rejection() {
   tyr::actor_t actor(conf, true);
   auto matched = json_to_pt(actor.trace_attributes(
@@ -295,6 +327,33 @@ void test_trace_route_edge_walk_expected_error_code() {
   throw std::logic_error("Expected trace_route edge_walk exception was not found");
 }
 
+void test_trace_route_map_snap_expected_error_code() {
+  // tests expected error_code for trace_route edge_walk
+  auto expected_error_code = 442;
+  tyr::actor_t actor(conf, true);
+
+  try {
+    auto response = json_to_pt(actor.trace_route(
+        R"({"costing":"auto","shape_match":"map_snap","shape":[
+         {"lat":52.088548,"lon":5.15357,"radius":5},
+         {"lat":52.088627,"lon":5.153269,"radius":5},
+         {"lat":52.08864,"lon":5.15298,"radius":5},
+         {"lat":52.08861,"lon":5.15272,"radius":5},
+         {"lat":52.08863,"lon":5.15253,"radius":5},
+         {"lat":52.08851,"lon":5.15249,"radius":5}]})"));
+  } catch (const valhalla_exception_t& e) {
+    if (e.code != expected_error_code) {
+      throw std::logic_error("Expected error code=" + std::to_string(expected_error_code) +
+                             " | found=" + std::to_string(e.code));
+    }
+    // If we get here then all good - return
+    return;
+  }
+
+  // If we get here then throw an exception
+  throw std::logic_error("Expected trace_route map_snap exception was not found");
+}
+
 void test_trace_attributes_edge_walk_expected_error_code() {
   // tests expected error_code for trace_attributes edge_walk
   auto expected_error_code = 443;
@@ -320,6 +379,33 @@ void test_trace_attributes_edge_walk_expected_error_code() {
 
   // If we get here then throw an exception
   throw std::logic_error("Expected trace_attributes edge_walk exception was not found");
+}
+
+void test_trace_attributes_map_snap_expected_error_code() {
+  // tests expected error_code for trace_attributes edge_walk
+  auto expected_error_code = 444;
+  tyr::actor_t actor(conf, true);
+
+  try {
+    auto response = json_to_pt(actor.trace_attributes(
+        R"({"costing":"auto","shape_match":"map_snap","shape":[
+         {"lat":52.088548,"lon":5.15357,"radius":5},
+         {"lat":52.088627,"lon":5.153269,"radius":5},
+         {"lat":52.08864,"lon":5.15298,"radius":5},
+         {"lat":52.08861,"lon":5.15272,"radius":5},
+         {"lat":52.08863,"lon":5.15253,"radius":5},
+         {"lat":52.08851,"lon":5.15249,"radius":5}]})"));
+  } catch (const valhalla_exception_t& e) {
+    if (e.code != expected_error_code) {
+      throw std::logic_error("Expected error code=" + std::to_string(expected_error_code) +
+                             " | found=" + std::to_string(e.code));
+    }
+    // If we get here then all good - return
+    return;
+  }
+
+  // If we get here then throw an exception
+  throw std::logic_error("Expected trace_attributes map_snap exception was not found");
 }
 
 void test_topk_validate() {
@@ -584,13 +670,19 @@ int main(int argc, char* argv[]) {
 
   suite.test(TEST_CASE(test_matcher));
 
+  suite.test(TEST_CASE(test_trace_route_breaks));
+
   suite.test(TEST_CASE(test_distance_only));
 
   suite.test(TEST_CASE(test_time_rejection));
 
   suite.test(TEST_CASE(test_trace_route_edge_walk_expected_error_code));
 
+  suite.test(TEST_CASE(test_trace_route_map_snap_expected_error_code));
+
   suite.test(TEST_CASE(test_trace_attributes_edge_walk_expected_error_code));
+
+  suite.test(TEST_CASE(test_trace_attributes_map_snap_expected_error_code));
 
   suite.test(TEST_CASE(test_topk_validate));
 

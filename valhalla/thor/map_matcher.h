@@ -29,7 +29,7 @@ public:
            const std::shared_ptr<sif::DynamicCost>* mode_costing,
            const sif::TravelMode mode,
            std::vector<std::pair<baldr::GraphId, baldr::GraphId>>& disconnected_edges,
-           const bool use_timestamps);
+           const DirectionsOptions options);
 };
 
 } // namespace thor

@@ -83,8 +83,9 @@ std::string thor_worker_t::trace_attributes(valhalla_request_t& request) {
    * Valhalla will allow an efficient “edge-walking” algorithm rather than a more extensive
    * map-matching method. If true, this enforces to only use exact route match algorithm.
    */
-  TripLeg trip_path;
-  std::vector<std::tuple<float, float, std::vector<thor::MatchResult>, TripLeg>> map_match_results;
+  std::list<TripLeg> trip_paths;
+  std::vector<std::tuple<float, float, std::vector<thor::MatchResult>, std::list<TripLeg>>>
+      map_match_results;
   AttributesController controller;
   filter_attributes(request, controller);
 
@@ -93,11 +94,8 @@ std::string thor_worker_t::trace_attributes(valhalla_request_t& request) {
     // then we can traverse the exact shape to form a path by using edge-walking algorithm
     case ShapeMatch::edge_walk:
       try {
-        trip_path = route_match(request, controller);
-        if (trip_path.node().size() == 0) {
-          throw std::exception{};
-        };
-        map_match_results.emplace_back(1.0f, 0.0f, std::vector<thor::MatchResult>{}, trip_path);
+        trip_paths = route_match(request, controller);
+        map_match_results.emplace_back(1.0f, 0.0f, std::vector<thor::MatchResult>{}, trip_paths);
       } catch (const std::exception& e) {
         throw valhalla_exception_t{
             443, ShapeMatch_Name(request.options.shape_match()) +
@@ -121,8 +119,10 @@ std::string thor_worker_t::trace_attributes(valhalla_request_t& request) {
     // network. No shortcuts are used and detailed information at every intersection becomes
     // available.
     case ShapeMatch::walk_or_snap:
-      trip_path = route_match(request, controller);
-      if (trip_path.node().size() == 0) {
+      try {
+        trip_paths = route_match(request, controller);
+        map_match_results.emplace_back(1.0f, 0.0f, std::vector<thor::MatchResult>{}, trip_paths);
+      } catch (...) {
         LOG_WARN(ShapeMatch_Name(request.options.shape_match()) +
                  " algorithm failed to find exact route match; Falling back to map_match...");
         try {
@@ -132,16 +132,10 @@ std::string thor_worker_t::trace_attributes(valhalla_request_t& request) {
               444, ShapeMatch_Name(request.options.shape_match()) +
                        " algorithm failed to snap the shape points to the correct shape."};
         }
-      } else {
-        map_match_results.emplace_back(1.0f, 0.0f, std::vector<thor::MatchResult>{}, trip_path);
       }
       break;
   }
 
-  if (map_match_results.empty() ||
-      std::get<kTripLegIndex>(map_match_results.at(0)).node().size() == 0) {
-    throw valhalla_exception_t{442};
-  }
   return tyr::serializeTraceAttributes(request, controller, map_match_results);
 }
 
