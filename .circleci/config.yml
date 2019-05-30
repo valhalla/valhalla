@@ -152,7 +152,7 @@ jobs:
             export BUILD_TYPE=Release
             ./scripts/node_install.sh&& ./scripts/publish.sh
       - store_artifacts:
-          path: build
+          path: ./lib
 
   build-release:
     docker:
