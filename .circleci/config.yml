@@ -69,7 +69,7 @@ jobs:
           command: |
             go get github.com/tcnksm/ghr
             VERSION=PACKAGE_JSON_VERSION
-            ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${VERSION} /root/project/lib
+            ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${VERSION} .
   build-debug-binary-linux:
     docker:
       - image: valhalla/docker:build-2.6.1
@@ -152,7 +152,7 @@ jobs:
             export BUILD_TYPE=Release
             ./scripts/node_install.sh&& ./scripts/publish.sh
       - store_artifacts:
-          path: /root/project/lib
+          path: .
 
   build-release:
     docker:
