@@ -133,7 +133,6 @@ jobs:
           keys:
             - ccache
       - run: npm install --ignore-scripts
-      - run: ./scripts/node_install.sh&& ./scripts/publish.sh
 
   build-release:
     docker:
@@ -290,10 +289,10 @@ workflows:
   build_test_publish:
     jobs:
 #      - lint
-      - build-node-release
-#      - build-release
-#      - build-release-x86
-#      - build-osx
+      - build-debug
+      - build-release
+      - build-release-x86
+      - build-osx
       - build-release-binary-osx:
           filters:
             tags:
