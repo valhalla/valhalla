@@ -278,31 +278,31 @@ workflows:
   build_test_publish:
     jobs:
 #      - lint
-#      - build-debug
-#      - build-release
-#      - build-release-x86
-#      - build-osx
-#      - build-release-binary-osx:
-#          filters:
-#            tags:
-#              only: /.*/
-#            branches:
-#              ignore: /.*/
-#      - build-debug-binary-osx:
-#          filters:
-#            tags:
-#              only: /.*/
-#            branches:
-#              ignore: /.*/
+      - build-debug
+      - build-release
+      - build-release-x86
+      - build-osx
+      - build-release-binary-osx:
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              ignore: /.*/
+      - build-debug-binary-osx:
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              ignore: /.*/
       - build-release-binary-linux:
           filters:
             tags:
               only: /.*/
             branches:
               ignore: /.*/
-#      - build-debug-binary-linux:
-#          filters:
-#            tags:
-#              only: /.*/
-#            branches:
-#              ignore: /.*/
+      - build-debug-binary-linux:
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              ignore: /.*/
