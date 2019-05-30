@@ -146,11 +146,14 @@ jobs:
       - run: npm install --ignore-scripts
       - run:
           command: |
+
             export PACKAGE_JSON_VERSION=$(node -e "console.log(require('./package.json').version)")
             export PUBLISH=$([[ "${CIRCLE_TAG:-}" == "${PACKAGE_JSON_VERSION}" ]] && echo "On" || echo "Off")
             export COMMIT_MESSAGE=$(git log --oneline --format=%B -n 1 ${CIRCLE_SHA1} | head -n 1)
             export BUILD_TYPE=Release
             ./scripts/node_install.sh&& ./scripts/publish.sh
+            echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" >> ~/.npmrc
+            npm publish
       - store_artifacts:
           path: ./lib
 
@@ -317,27 +320,27 @@ workflows:
 #      - build-release
 #      - build-release-x86
 #      - build-osx
-      - build-release-binary-osx:
-          filters:
-            tags:
-              only: /.*/
-            branches:
-              ignore: /.*/
-      - build-debug-binary-osx:
-          filters:
-            tags:
-              only: /.*/
-            branches:
-              ignore: /.*/
-      - build-release-binary-linux:
-          filters:
-            tags:
-              only: /.*/
-            branches:
-              ignore: /.*/
-      - build-debug-binary-linux:
-          filters:
-            tags:
-              only: /.*/
-            branches:
-              ignore: /.*/
+#      - build-release-binary-osx:
+#          filters:
+#            tags:
+#              only: /.*/
+#            branches:
+#              ignore: /.*/
+#      - build-debug-binary-osx:
+#          filters:
+#            tags:
+#              only: /.*/
+#            branches:
+#              ignore: /.*/
+#      - build-release-binary-linux:
+#          filters:
+#            tags:
+#              only: /.*/
+#            branches:
+#              ignore: /.*/
+#      - build-debug-binary-linux:
+#          filters:
+#            tags:
+#              only: /.*/
+#            branches:
+#              ignore: /.*/

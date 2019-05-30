@@ -1,6 +1,6 @@
 {
   "name": "valhalla",
-  "version": "3.0.0-rc.4",
+  "version": "3.0.0",
   "main": "lib/index.js",
   "directories": {
     "doc": "docs",
@@ -32,7 +32,7 @@
   "binary": {
     "module_name": "node_valhalla",
     "module_path": "./lib/binding",
-    "host": "https://mapbox-node-binary.s3.amazonaws.com",
+    "host": "https://amapbox-node-binary.s3.amazonaws.com",
     "remote_path": "./valhalla/v{version}/{configuration}/",
     "package_name": "{platform}-{arch}-napi-v{napi_version}.tar.gz"
   },
