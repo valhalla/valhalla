@@ -274,18 +274,6 @@ jobs:
             export COMMIT_MESSAGE=$(git log --oneline --format=%B -n 1 ${CIRCLE_SHA1} | head -n 1)
             export BUILD_TYPE=Debug
             ./scripts/publish.sh
-  publish-github-release:
-    docker:
-      - image: circleci/golang:1.8
-    steps:
-      - attach_workspace:
-          at: ./artifacts
-      - run:
-          name: "Publish Release on GitHub"
-          command: |
-            go get github.com/tcnksm/ghr
-            VERSION=$(PACKAGE_JSON_VERSION)
-            ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${VERSION} ./artifacts/
 
 workflows:
   version: 2
@@ -297,9 +285,7 @@ workflows:
               only: /.*/
             branches:
               ignore: /.*/
-      - publish-github-release:
-          requires:
-            - build-release-binary-linux
+
 #      - build-debug-binary-linux:
 #          filters:
 #            tags:
