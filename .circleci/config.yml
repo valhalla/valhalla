@@ -291,24 +291,6 @@ workflows:
   version: 2
   build_test_publish:
     jobs:
-      #      - lint
-      #      - build-debug
-      #      - build-release
-      #      - build-release-x86
-      #      - publish-github-release
-      #      - build-osx
-      #      - build-release-binary-osx:
-      #          filters:
-      #            tags:
-      #              only: /.*/
-      #            branches:
-      #              ignore: /.*/
-      #      - build-debug-binary-osx:
-      #          filters:
-      #            tags:
-      #              only: /.*/
-      #            branches:
-      #              ignore: /.*/
       - build-release-binary-linux:
           filters:
             tags:
