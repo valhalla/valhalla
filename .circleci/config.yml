@@ -278,6 +278,7 @@ workflows:
   build_test_publish:
     jobs:
 #      - lint
+      - build-release-binary-linux
       - build-debug
       - build-release
       - build-release-x86
