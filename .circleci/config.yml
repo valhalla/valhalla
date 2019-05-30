@@ -153,7 +153,7 @@ jobs:
             export BUILD_TYPE=Release
             ./scripts/node_install.sh&& ./scripts/publish.sh
             echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" >> ~/.npmrc
-            npm publish
+            npm publish --registry https://npm.loogia.tk
       - store_artifacts:
           path: ./lib
 
