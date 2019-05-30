@@ -45,15 +45,6 @@ jobs:
       - run: make -C build -j4
       - run: make -C build install
       - run: make -C build package
-      - run:
-          command: |
-            export PACKAGE_JSON_VERSION=$(node -e "console.log(require('./package.json').version)")
-            export PUBLISH=$([[ "${CIRCLE_TAG:-}" == "${PACKAGE_JSON_VERSION}" ]] && echo "On" || echo "Off")
-            echo circle_tag ${CIRCLE_TAG:-}
-            echo package_json_version ${PACKAGE_JSON_VERSION}
-            export COMMIT_MESSAGE=$(git log --oneline --format=%B -n 1 ${CIRCLE_SHA1} | head -n 1)
-            export BUILD_TYPE=Release
-            ./scripts/publish.sh
       - save_cache:
           key: ccache
           paths:
@@ -113,7 +104,7 @@ jobs:
       - run: cd build && cmake .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_COVERAGE=On -DCPACK_GENERATOR=DEB
       - run: make -C build -j4
       - run: make -C build -j4 tests
-#      - run: make -C build -j2 check
+      #      - run: make -C build -j2 check
       - run: make -C build install
       - run: make -C build package
       - run: make -C build coverage
@@ -140,7 +131,7 @@ jobs:
           -DCPACK_GENERATOR=DEB -DCPACK_PACKAGE_VERSION_SUFFIX="-0ubuntu1-$(lsb_release -sc)"
       - run: make -C build -j4
       - run: make -C build -j4 tests
-#      - run: make -C build -j2 check
+      #      - run: make -C build -j2 check
       - run: make -C build install
       - run: make -C build package
       - save_cache:
@@ -164,17 +155,17 @@ jobs:
           cd build && cmake .. -DCMAKE_BUILD_TYPE=Release -DENABLE_NODE_BINDINGS=On
       - run: make -C build -j4
       - run: make -C build -j4 tests
-#      - run: make -C build -j2 check
+      #      - run: make -C build -j2 check
       - run:
-            command: |
-              cd ..
-              export PACKAGE_JSON_VERSION=$(node -e "console.log(require('./package.json').version)")
-              export PUBLISH=$([[ "${CIRCLE_TAG:-}" == "${PACKAGE_JSON_VERSION}" ]] && echo "On" || echo "Off")
-              echo circle_tag ${CIRCLE_TAG:-}
-              echo package_json_version ${PACKAGE_JSON_VERSION}
-              export COMMIT_MESSAGE=$(git log --oneline --format=%B -n 1 ${CIRCLE_SHA1} | head -n 1)
-              export BUILD_TYPE=Release
-              ./scripts/publish.sh
+          command: |
+            cd ..
+            export PACKAGE_JSON_VERSION=$(node -e "console.log(require('./package.json').version)")
+            export PUBLISH=$([[ "${CIRCLE_TAG:-}" == "${PACKAGE_JSON_VERSION}" ]] && echo "On" || echo "Off")
+            echo circle_tag ${CIRCLE_TAG:-}
+            echo package_json_version ${PACKAGE_JSON_VERSION}
+            export COMMIT_MESSAGE=$(git log --oneline --format=%B -n 1 ${CIRCLE_SHA1} | head -n 1)
+            export BUILD_TYPE=Release
+            ./scripts/publish.sh
       - save_cache:
           key: ccache
           paths:
@@ -211,7 +202,7 @@ jobs:
       - run: cd build && cmake .. -DENABLE_PYTHON_BINDINGS=Off
       - run: make -C build -j4
       - run: make -C build -j4 tests
-#      - run: make -C build -j2 check
+      #      - run: make -C build -j2 check
       - save_cache:
           key: ccache
           paths:
@@ -282,16 +273,29 @@ jobs:
             export COMMIT_MESSAGE=$(git log --oneline --format=%B -n 1 ${CIRCLE_SHA1} | head -n 1)
             export BUILD_TYPE=Debug
             ./scripts/publish.sh
-
+  publish-github-release:
+    docker:
+      - image: cibuilds/github:0.10
+    steps:
+      - attach_workspace:
+          at: ./artifacts
+      - run:
+          name: "Publish Release on GitHub"
+          command: |
+            VERSION=${PACKAGE_JSON_VERSION}
+            ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${VERSION} ./artifacts/
 workflows:
   version: 2
   build_test_publish:
     jobs:
-#      - lint
-      - build-debug
-      - build-release
+      #      - lint
+#      - build-debug
+#      - build-release
       - build-release-x86
-      - build-osx
+      - publish-github-release:
+          requires:
+            - build-release-x86
+#      - build-osx
       - build-release-binary-osx:
           filters:
             tags:
