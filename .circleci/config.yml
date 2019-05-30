@@ -318,7 +318,6 @@ workflows:
       - publish-github-release:
           requires:
             - build-release-binary-linux
-
 #      - build-debug-binary-linux:
 #          filters:
 #            tags:
