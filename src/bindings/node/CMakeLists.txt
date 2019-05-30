@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 3.1)
 
 message(STATUS "Building node_valhalla")
 
-set(BINDING_DIR "${PROJECT_SOURCE_DIR}/lib/binding")
+set(BINDING_DIR "${CMAKE_CURRENT_SOURCE_DIR}/lib/binding")
 
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/node_modules/node-cmake")
 
@@ -30,4 +30,4 @@ list(APPEND ARTIFACTS "${BINDING_DIR}/node_valhalla.node")
 
 
 message(STATUS "node_valhalla artifacts will be copied to: ${BINDING_DIR}")
-#add_custom_target(copy_node_artifacts ALL DEPENDS ${ARTIFACTS})
+add_custom_target(copy_node_artifacts ALL DEPENDS ${ARTIFACTS})
