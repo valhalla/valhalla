@@ -202,7 +202,7 @@ void UpdateTurnLanes(const OSMData& osmdata,
     // handle [straight, none, [straight, right], right] --> [straight, straight, [straight, right],
     // right]
     std::vector<uint16_t> enhanced_tls = TurnLanes::lanemasks(str);
-    uint16_t previous, tl = 0u;
+    uint16_t previous = 0u, tl = 0u;
     bool bUpdated = false;
     for (int i = 0; i < enhanced_tls.size(); i++) {
       tl = enhanced_tls[i];
