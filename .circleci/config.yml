@@ -311,8 +311,8 @@ workflows:
 #      - lint
       - build-node-release
       - publish-github-release
-        requires:
-          - build-node-release
+         requires:
+           - build-node-release
 #      - build-release
 #      - build-release-x86
 #      - build-osx
