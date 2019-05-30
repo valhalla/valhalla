@@ -14,7 +14,7 @@ nodejs_init()
 message(STATUS "Configuring node_valhalla bindings for NodeJs ${NODEJS_VERSION}")
 
 add_nodejs_module(node_valhalla node.cc)
-set_target_properties(node_valhalla PROPERTIES CXX_STANDARD 11)
+set_target_properties(node_valhalla PROPERTIES CXX_STANDARD 14)
 target_link_libraries(node_valhalla valhalla)
 
 # Include N-API wrappers
@@ -30,4 +30,4 @@ list(APPEND ARTIFACTS "${BINDING_DIR}/node_valhalla.node")
 
 
 message(STATUS "node_valhalla artifacts will be copied to: ${BINDING_DIR}")
-add_custom_target(copy_node_artifacts ALL DEPENDS ${ARTIFACTS})
+#add_custom_target(copy_node_artifacts ALL DEPENDS ${ARTIFACTS})
