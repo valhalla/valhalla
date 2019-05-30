@@ -26,8 +26,8 @@ set(ARTIFACTS "")
 add_custom_command(OUTPUT ${BINDING_DIR}/node_valhalla.node
                    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:node_valhalla> ${BINDING_DIR}
                    DEPENDS node_valhalla ${BINDING_DIR})
-list(APPEND ARTIFACTS "${BINDING_DIR}/node_valhalla.node")
+#list(APPEND ARTIFACTS "${BINDING_DIR}/node_valhalla.node")
 
 
 message(STATUS "node_valhalla artifacts will be copied to: ${BINDING_DIR}")
-add_custom_target(copy_node_artifacts ALL DEPENDS ${ARTIFACTS})
+add_custom_target(copy_node_artifacts ALL DEPENDS ${BINDING_DIR}/node_valhalla.node)
