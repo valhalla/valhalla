@@ -278,6 +278,7 @@ void TestActivateTurnLanes() {
   edge_2.add_turn_lanes()->set_directions_mask(kTurnLaneNone);
   edge_2.add_turn_lanes()->set_directions_mask(kTurnLaneNone);
   edge_2.add_turn_lanes()->set_directions_mask(kTurnLaneNone);
+  edge_2.add_turn_lanes()->set_directions_mask(kTurnLaneMergeToRight);
 
   // Slight left active
   TryActivateTurnLanes(midgard::make_unique<EnhancedTripLeg_Edge>(&edge_2), kTurnLaneSlightLeft, 2);
@@ -287,15 +288,24 @@ void TestActivateTurnLanes() {
   TryActivateTurnLanes(midgard::make_unique<EnhancedTripLeg_Edge>(&edge_2), kTurnLaneNone, 3);
   ClearActiveTurnLanes(edge_2.mutable_turn_lanes());
 
+  // Merge-to-right active
+  TryActivateTurnLanes(midgard::make_unique<EnhancedTripLeg_Edge>(&edge_2), kTurnLaneMergeToRight, 1);
+  ClearActiveTurnLanes(edge_2.mutable_turn_lanes());
+
   //
   // Test none and slight right
   //
   TripLeg_Edge edge_3;
+  edge_3.add_turn_lanes()->set_directions_mask(kTurnLaneMergeToLeft);
   edge_3.add_turn_lanes()->set_directions_mask(kTurnLaneNone);
   edge_3.add_turn_lanes()->set_directions_mask(kTurnLaneNone);
   edge_3.add_turn_lanes()->set_directions_mask(kTurnLaneNone);
   edge_3.add_turn_lanes()->set_directions_mask(kTurnLaneSlightRight);
   edge_3.add_turn_lanes()->set_directions_mask(kTurnLaneSlightRight);
+
+  // Merge-to-left active
+  TryActivateTurnLanes(midgard::make_unique<EnhancedTripLeg_Edge>(&edge_3), kTurnLaneMergeToLeft, 1);
+  ClearActiveTurnLanes(edge_3.mutable_turn_lanes());
 
   // None active
   TryActivateTurnLanes(midgard::make_unique<EnhancedTripLeg_Edge>(&edge_3), kTurnLaneNone, 3);
