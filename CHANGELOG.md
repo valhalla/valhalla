@@ -1,3 +1,9 @@
+## Release Date: UNRELEASED Valhalla 3.0.5
+* **Bug Fix**
+
+* **Enhancement**
+   * ADDED: Add turn lane info at maneuver point [#1830](https://github.com/valhalla/valhalla/pull/1830)
+
 ## Release Date: 2019-05-31 Valhalla 3.0.4
 * **Bug Fix**
    * FIXED: Improved logic to decide between bear vs. continue [#1798](https://github.com/valhalla/valhalla/pull/1798)
