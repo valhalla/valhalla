@@ -383,7 +383,7 @@ public:
   // Turn Lanes
   bool HasActiveTurnLane() const;
   bool HasNonDirectionalTurnLane() const;
-  bool ActivateTurnLanes(uint16_t turn_lane_direction);
+  uint16_t ActivateTurnLanes(uint16_t turn_lane_direction);
 
   std::string ToString() const;
 

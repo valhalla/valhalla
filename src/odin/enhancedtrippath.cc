@@ -468,15 +468,15 @@ bool EnhancedTripLeg_Edge::HasNonDirectionalTurnLane() const {
   return false;
 }
 
-bool EnhancedTripLeg_Edge::ActivateTurnLanes(uint16_t turn_lane_direction) {
-  bool activated = false;
+uint16_t EnhancedTripLeg_Edge::ActivateTurnLanes(uint16_t turn_lane_direction) {
+  uint16_t activated_count = 0;
   for (auto& turn_lane : *(mutable_turn_lanes())) {
     if (turn_lane.directions_mask() & turn_lane_direction) {
       turn_lane.set_is_active(true);
-      activated = true;
+      ++activated_count;
     }
   }
-  return activated;
+  return activated_count;
 }
 
 #ifdef LOGGING_LEVEL_TRACE
