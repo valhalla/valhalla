@@ -123,12 +123,8 @@ thor_worker_t::work(const std::list<zmq::message_t>& job,
         denominator = options.sources_size() + options.targets_size();
         break;
       case Options::optimized_route: {
-        // Forward the original request
-        auto trip_paths = optimized_route(request);
-        result.messages.emplace_back(options.SerializeAsString());
-        for (auto& trippath : trip_paths) {
-          result.messages.emplace_back(trippath.SerializeAsString());
-        }
+        optimized_route(request);
+        result.messages.emplace_back(request.SerializeAsString());
         denominator = std::max(options.sources_size(), options.targets_size());
         break;
       }
@@ -137,22 +133,14 @@ thor_worker_t::work(const std::list<zmq::message_t>& job,
         denominator = options.sources_size() * options.targets_size();
         break;
       case Options::route: {
-        // Forward the original request
-        auto trip_paths = route(request);
-        result.messages.emplace_back(options.SerializeAsString());
-        for (const auto& trippath : trip_paths) {
-          result.messages.emplace_back(trippath.SerializeAsString());
-        }
+        route(request);
+        result.messages.emplace_back(request.SerializeAsString());
         denominator = options.locations_size();
         break;
       }
       case Options::trace_route: {
-        // Forward the original request
-        auto trip_paths = trace_route(request);
-        result.messages.emplace_back(options.SerializeAsString());
-        for (const auto& trippath : trip_paths) {
-          result.messages.emplace_back(trippath.SerializeAsString());
-        }
+        trace_route(request);
+        result.messages.emplace_back(request.SerializeAsString());
         denominator = trace.size() / 1100;
         break;
       }

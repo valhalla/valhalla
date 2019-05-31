@@ -5,9 +5,7 @@
 
 #include <valhalla/odin/enhancedtrippath.h>
 #include <valhalla/odin/maneuver.h>
-#include <valhalla/proto/directions.pb.h>
-#include <valhalla/proto/options.pb.h>
-#include <valhalla/proto/trip.pb.h>
+#include <valhalla/proto/api.pb.h>
 
 namespace valhalla {
 namespace odin {
@@ -18,8 +16,6 @@ namespace odin {
  */
 class DirectionsBuilder {
 public:
-  DirectionsBuilder();
-
   /**
    * Returns the trip directions based on the specified directions options
    * and trip path. This method calls ManeuversBuilder::Build and
@@ -27,11 +23,10 @@ public:
    * calls PopulateDirectionsLeg to transform the maneuver list into the
    * trip directions.
    *
-   * @param options The directions options such as: units and
-   *                           language.
-   * @param trip_path The trip path - list of nodes, edges, attributes and shape.
+   * @param api   the protobuf object containing the request, the path and a place
+   *              to store the resulting directions
    */
-  DirectionsLeg Build(const Options& options, TripLeg& trip_path);
+  static void Build(Api& api);
 
 protected:
   /**
@@ -39,7 +34,7 @@ protected:
    *
    * @param etp The enhanced trip path contains the edges to process.
    */
-  void UpdateHeading(EnhancedTripLeg* etp);
+  static void UpdateHeading(EnhancedTripLeg* etp);
 
   /**
    * Returns the trip directions based on the specified directions options,
@@ -51,9 +46,10 @@ protected:
    *                  to populate the trip directions.
    * @returns the trip directions.
    */
-  DirectionsLeg PopulateDirectionsLeg(const Options& options,
-                                      EnhancedTripLeg* etp,
-                                      std::list<Maneuver>& maneuvers);
+  static void PopulateDirectionsLeg(const Options& options,
+                                    EnhancedTripLeg* etp,
+                                    std::list<Maneuver>& maneuvers,
+                                    DirectionsLeg& trip_directions);
 };
 
 } // namespace odin

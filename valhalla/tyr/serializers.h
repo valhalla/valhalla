@@ -26,9 +26,7 @@ namespace tyr {
 /**
  * Turn path and directions into a route that one can follow
  */
-std::string serializeDirections(const Api& request,
-                                std::list<TripLeg>& path_legs,
-                                const std::list<DirectionsLeg>& directions_legs);
+std::string serializeDirections(Api& request);
 
 /**
  * Turn a time distance matrix into json that one can look up location pair results from
@@ -98,8 +96,7 @@ std::string serializeTransitAvailable(const Api& request,
 std::string serializeTraceAttributes(
     const Api& request,
     const thor::AttributesController& controller,
-    std::vector<std::tuple<float, float, std::vector<thor::MatchResult>, std::list<TripLeg>>>&
-        results);
+    std::vector<std::tuple<float, float, std::vector<thor::MatchResult>>>& results);
 
 } // namespace tyr
 } // namespace valhalla

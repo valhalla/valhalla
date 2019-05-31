@@ -83,9 +83,8 @@ std::string thor_worker_t::trace_attributes(Api& request) {
    * Valhalla will allow an efficient “edge-walking” algorithm rather than a more extensive
    * map-matching method. If true, this enforces to only use exact route match algorithm.
    */
-  std::list<TripLeg> trip_paths;
-  std::vector<std::tuple<float, float, std::vector<thor::MatchResult>, std::list<TripLeg>>>
-      map_match_results;
+
+  std::vector<std::tuple<float, float, std::vector<thor::MatchResult>>> map_match_results;
   AttributesController controller;
   filter_attributes(request, controller);
   const auto& options = *request.mutable_options();
@@ -95,8 +94,8 @@ std::string thor_worker_t::trace_attributes(Api& request) {
     // then we can traverse the exact shape to form a path by using edge-walking algorithm
     case ShapeMatch::edge_walk:
       try {
-        trip_paths = route_match(request, controller);
-        map_match_results.emplace_back(1.0f, 0.0f, std::vector<thor::MatchResult>{}, trip_paths);
+        route_match(request, controller);
+        map_match_results.emplace_back(1.0f, 0.0f, std::vector<thor::MatchResult>{});
       } catch (const std::exception& e) {
         throw valhalla_exception_t{
             443, ShapeMatch_Name(options.shape_match()) +
@@ -121,8 +120,8 @@ std::string thor_worker_t::trace_attributes(Api& request) {
     // available.
     case ShapeMatch::walk_or_snap:
       try {
-        trip_paths = route_match(request, controller);
-        map_match_results.emplace_back(1.0f, 0.0f, std::vector<thor::MatchResult>{}, trip_paths);
+        route_match(request, controller);
+        map_match_results.emplace_back(1.0f, 0.0f, std::vector<thor::MatchResult>{});
       } catch (...) {
         LOG_WARN(ShapeMatch_Name(options.shape_match()) +
                  " algorithm failed to find exact route match; Falling back to map_match...");

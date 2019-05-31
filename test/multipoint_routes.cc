@@ -68,14 +68,14 @@ struct route_tester {
       : conf(get_conf()), reader(new GraphReader(conf.get_child("mjolnir"))),
         loki_worker(conf, reader), thor_worker(conf, reader), odin_worker(conf) {
   }
-  std::pair<std::list<TripLeg>, std::list<DirectionsLeg>> test(const std::string& request_json) {
+  Api test(const std::string& request_json) {
     Api request;
-ParseApi(request_json, Options::route, request);
+    ParseApi(request_json, Options::route, request);
     loki_worker.route(request);
     std::pair<std::list<TripLeg>, std::list<DirectionsLeg>> results;
-    results.first = thor_worker.route(request);
-    results.second = odin_worker.narrate(request, results.first);
-    return results;
+    thor_worker.route(request);
+    odin_worker.narrate(request);
+    return request;
   }
   boost::property_tree::ptree conf;
   std::shared_ptr<GraphReader> reader;
@@ -89,14 +89,14 @@ float mid_through_distance;
 
 void test_mid_break(const std::string& date_time) {
   route_tester tester;
-  std::list<TripLeg> legs;
-  std::list<DirectionsLeg> directions;
   std::string request =
       R"({"locations":[{"lat":52.09015,"lon":5.06362},{"lat":52.09041,"lon":5.06337,"type":"break"},{"lat":52.09015,"lon":5.06362}],"costing":"auto"})";
 
   request.pop_back();
   request += date_time;
-  std::tie(legs, directions) = tester.test(request);
+  auto response = tester.test(request);
+  const auto& legs = response.trip().routes(0).legs();
+  const auto& directions = response.directions().routes(0).legs();
 
   if (legs.size() != 2 || directions.size() != 2)
     throw std::logic_error("Should have two legs with two sets of directions");
@@ -121,19 +121,19 @@ void test_mid_break(const std::string& date_time) {
     throw std::logic_error(
         "Should be a destination at the midpoint and reverse the route for the second leg");
 
-  mid_break_distance = directions.front().summary().length() + directions.back().summary().length();
+  mid_break_distance = directions.begin()->summary().length() + directions.rbegin()->summary().length();
 }
 
 void test_mid_through(const std::string& date_time) {
   route_tester tester;
-  std::list<TripLeg> legs;
-  std::list<DirectionsLeg> directions;
   std::string request =
       R"({"locations":[{"lat":52.09015,"lon":5.06362},{"lat":52.09041,"lon":5.06337,"type":"through"},{"lat":52.09015,"lon":5.06362, "heading": 0}],"costing":"auto"})";
 
   request.pop_back();
   request += date_time;
-  std::tie(legs, directions) = tester.test(request);
+  auto response = tester.test(request);
+  const auto& legs = response.trip().routes(0).legs();
+  const auto& directions = response.directions().routes(0).legs();
 
   if (legs.size() != 1 || directions.size() != 1)
     throw std::logic_error("Should have 1 leg with 1 set of directions");
@@ -157,19 +157,19 @@ void test_mid_through(const std::string& date_time) {
                                         "Selderiestraat", "Korianderstraat", ""})
     throw std::logic_error("Should continue through the midpoint and around the block");
 
-  mid_through_distance = directions.front().summary().length();
+  mid_through_distance = directions.begin()->summary().length();
 }
 
 void test_mid_via(const std::string& date_time) {
   route_tester tester;
-  std::list<TripLeg> legs;
-  std::list<DirectionsLeg> directions;
   std::string request =
       R"({"locations":[{"lat":52.09015,"lon":5.06362},{"lat":52.09041,"lon":5.06337,"type":"via"},{"lat":52.09015,"lon":5.06362}],"costing":"auto"})";
 
   request.pop_back();
   request += date_time;
-  std::tie(legs, directions) = tester.test(request);
+  auto response = tester.test(request);
+  const auto& legs = response.trip().routes(0).legs();
+  const auto& directions = response.directions().routes(0).legs();
 
   if (legs.size() != 1 || directions.size() != 1)
     throw std::logic_error("Should have 1 leg with 1 set of directions");
@@ -192,7 +192,7 @@ void test_mid_via(const std::string& date_time) {
   if (uturns != 1)
     throw std::logic_error("Should be exactly 1 u-turn but there are: " + std::to_string(uturns));
 
-  float mid_via_distance = directions.front().summary().length();
+  float mid_via_distance = directions.begin()->summary().length();
   if (!equal(mid_via_distance, mid_break_distance, 0.001f))
     throw std::logic_error(
         "The only difference in path between mid break and mid via is arrive/depart guidance");
@@ -204,14 +204,14 @@ void test_mid_via(const std::string& date_time) {
 
 void test_mid_break_through(const std::string& date_time) {
   route_tester tester;
-  std::list<TripLeg> legs;
-  std::list<DirectionsLeg> directions;
   std::string request =
       R"({"locations":[{"lat":52.09015,"lon":5.06362},{"lat":52.09041,"lon":5.06337,"type":"break_through"},{"lat":52.09015,"lon":5.06362,"heading":0}],"costing":"auto"})";
 
   request.pop_back();
   request += date_time;
-  std::tie(legs, directions) = tester.test(request);
+  auto response = tester.test(request);
+  const auto& legs = response.trip().routes(0).legs();
+  const auto& directions = response.directions().routes(0).legs();
 
   if (legs.size() != 2 || directions.size() != 2)
     throw std::logic_error("Should have two legs with two sets of directions");
@@ -232,7 +232,7 @@ void test_mid_break_through(const std::string& date_time) {
   }
 
   float mid_break_through_distance =
-      directions.front().summary().length() + directions.back().summary().length();
+      directions.begin()->summary().length() + directions.rbegin()->summary().length();
   if (!equal(mid_break_through_distance, mid_through_distance, 0.001f))
     throw std::logic_error(
         "The only difference in path between mid through and mid break through is arrive/depart guidance");

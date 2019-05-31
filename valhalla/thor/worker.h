@@ -48,40 +48,38 @@ public:
 #endif
   virtual void cleanup() override;
 
-  std::list<TripLeg> route(Api& request);
+  void route(Api& request);
   std::string matrix(Api& request);
-  std::list<TripLeg> optimized_route(Api& request);
+  void optimized_route(Api& request);
   std::string isochrones(Api& request);
-  std::list<TripLeg> trace_route(Api& request);
+  void trace_route(Api& request);
   std::string trace_attributes(Api& request);
 
 protected:
   std::vector<thor::PathInfo> get_path(PathAlgorithm* path_algorithm,
-                                       valhalla::Location& origin,
-                                       valhalla::Location& destination,
+                                       Location& origin,
+                                       Location& destination,
                                        const std::string& costing);
   void log_admin(const TripLeg&);
-  valhalla::sif::cost_ptr_t get_costing(const Costing costing, const Options& options);
+  sif::cost_ptr_t get_costing(const Costing costing, const Options& options);
   thor::PathAlgorithm* get_path_algorithm(const std::string& routetype,
-                                          const valhalla::Location& origin,
-                                          const valhalla::Location& destination);
-  std::list<TripLeg> route_match(Api& request, const AttributesController& controller);
-  std::vector<std::tuple<float, float, std::vector<thor::MatchResult>, std::list<TripLeg>>>
-  map_match(Api& request,
-            const AttributesController& controller,
-            uint32_t best_paths = 1);
-  TripLeg
-  path_map_match(const std::vector<meili::MatchResult>& match_results,
-                 const AttributesController& controller,
-                 const std::vector<PathInfo>& path_edges,
-                 std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>>&
-                     route_discontinuities);
-  std::list<TripLeg>
-  path_arrive_by(google::protobuf::RepeatedPtrField<valhalla::Location>& correlated,
-                 const std::string& costing);
-  std::list<TripLeg>
-  path_depart_at(google::protobuf::RepeatedPtrField<valhalla::Location>& correlated,
-                 const std::string& costing);
+                                          const Location& origin,
+                                          const Location& destination);
+  void route_match(Api& request, const AttributesController& controller);
+  std::vector<std::tuple<float, float, std::vector<thor::MatchResult>>>
+  map_match(Api& request, const AttributesController& controller, uint32_t best_paths = 1);
+  void path_map_match(const std::vector<meili::MatchResult>& match_results,
+                      const AttributesController& controller,
+                      const std::vector<PathInfo>& path_edges,
+                      TripLeg& leg,
+                      std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>>&
+                          route_discontinuities);
+  void path_arrive_by(google::protobuf::RepeatedPtrField<Location>& correlated,
+                      const std::string& costing,
+                      Trip& trip);
+  void path_depart_at(google::protobuf::RepeatedPtrField<Location>& correlated,
+                      const std::string& costing,
+                      Trip& trip);
 
   void parse_locations(Api& request);
   void parse_measurements(const Api& request);

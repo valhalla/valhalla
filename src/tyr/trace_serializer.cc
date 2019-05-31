@@ -397,11 +397,10 @@ void append_trace_info(
     const json::MapPtr& json,
     const AttributesController& controller,
     const Options& options,
-    const std::tuple<float, float, std::vector<thor::MatchResult>, std::list<TripLeg>>&
-        map_match_result) {
+    const std::tuple<float, float, std::vector<thor::MatchResult>>& map_match_result,
+    const TripLeg& trip_path) {
   // Set trip path and match results
   const auto& match_results = std::get<kMatchResultsIndex>(map_match_result);
-  const auto& trip_path = std::get<kTripLegIndex>(map_match_result).front();
 
   // Add osm_changeset
   if (trip_path.has_osm_changeset()) {
@@ -445,8 +444,7 @@ namespace tyr {
 std::string serializeTraceAttributes(
     const Api& request,
     const AttributesController& controller,
-    std::vector<std::tuple<float, float, std::vector<thor::MatchResult>, std::list<TripLeg>>>&
-        map_match_results) {
+    std::vector<std::tuple<float, float, std::vector<thor::MatchResult>>>& map_match_results) {
 
   // Create json map to return
   auto json = json::map({});
@@ -466,17 +464,20 @@ std::string serializeTraceAttributes(
   bool best_path = true;
   auto alt_paths_array = json::array({});
   json->emplace("alternate_paths", alt_paths_array);
+  auto route = request.trip().routes().begin();
   for (const auto& map_match_result : map_match_results) {
     if (best_path) {
       // Append the best path trace info
-      append_trace_info(json, controller, request.options(), map_match_result);
+      append_trace_info(json, controller, request.options(), map_match_result, route->legs(0));
       best_path = false;
     } else {
       // Append alternate path trace info to alternate path array
       auto alt_path_json = json::map({});
-      append_trace_info(alt_path_json, controller, request.options(), map_match_result);
+      append_trace_info(alt_path_json, controller, request.options(), map_match_result,
+                        route->legs(0));
       alt_paths_array->push_back(alt_path_json);
     }
+    ++route;
   }
   std::stringstream ss;
   ss << *json;

@@ -17,7 +17,7 @@ using namespace valhalla::thor;
 namespace valhalla {
 namespace thor {
 
-std::list<valhalla::TripLeg> thor_worker_t::optimized_route(Api& request) {
+void thor_worker_t::optimized_route(Api& request) {
   parse_locations(request);
   auto costing = parse_costing(request);
   auto& options = *request.mutable_options();
@@ -61,7 +61,8 @@ std::list<valhalla::TripLeg> thor_worker_t::optimized_route(Api& request) {
     options.mutable_locations()->Add()->CopyFrom(correlated.Get(optimal_order[i]));
   }
 
-  return path_depart_at(*options.mutable_locations(), costing);
+  // run the route
+  path_depart_at(*options.mutable_locations(), costing, *request.mutable_trip());
 }
 
 } // namespace thor

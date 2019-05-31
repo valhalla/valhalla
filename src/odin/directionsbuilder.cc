@@ -1,15 +1,15 @@
 #include <iostream>
 #include <unordered_map>
 
+#include "midgard/logging.h"
 #include "odin/directionsbuilder.h"
 #include "odin/enhancedtrippath.h"
 #include "odin/maneuversbuilder.h"
 #include "odin/narrative_builder_factory.h"
 #include "odin/narrativebuilder.h"
+#include "proto/directions.pb.h"
+#include "proto/options.pb.h"
 #include "worker.h"
-
-#include <valhalla/proto/directions.pb.h>
-#include <valhalla/proto/options.pb.h>
 
 namespace {
 // Minimum drive edge length (~10 feet)
@@ -62,43 +62,49 @@ const std::unordered_map<int, DirectionsLeg_TravelMode> translate_travel_mode{
     {static_cast<int>(TripLeg_TravelMode_kTransit), DirectionsLeg_TravelMode_kTransit},
 };
 
-DirectionsBuilder::DirectionsBuilder() {
-}
-
 // Returns the trip directions based on the specified directions options
 // and trip path. This method calls ManeuversBuilder::Build and
 // NarrativeBuilder::Build to form the maneuver list. This method
 // calls PopulateDirectionsLeg to transform the maneuver list into the
 // trip directions.
-DirectionsLeg DirectionsBuilder::Build(const Options& options,
-                                       TripLeg& trip_path) {
-  // Validate trip path node list
-  if (trip_path.node_size() < 1) {
-    throw valhalla_exception_t{210};
-  }
+void DirectionsBuilder::Build(Api& api) {
+  const auto& options = api.options();
+  for (auto& trip_route : *api.mutable_trip()->mutable_routes()) {
+    auto& directions_route = *api.mutable_directions()->mutable_routes()->Add();
+    for (auto& trip_path : *trip_route.mutable_legs()) {
+      auto& trip_directions = *directions_route.mutable_legs()->Add();
 
-  // Create an enhanced trip path from the specified trip_path
-  EnhancedTripLeg etp(trip_path);
+      // Validate trip path node list
+      if (trip_path.node_size() < 1) {
+        throw valhalla_exception_t{210};
+      }
 
-  // Produce maneuvers if desired
-  std::list<Maneuver> maneuvers;
-  if (options.directions_type() != DirectionsType::none) {
-    // Update the heading of ~0 length edges
-    UpdateHeading(&etp);
+      // Create an enhanced trip path from the specified trip_path
+      EnhancedTripLeg etp(trip_path);
 
-    ManeuversBuilder maneuversBuilder(options, &etp);
-    maneuvers = maneuversBuilder.Build();
+      // Produce maneuvers if desired
+      std::list<Maneuver> maneuvers;
+      if (options.directions_type() != DirectionsType::none) {
+        // Update the heading of ~0 length edges
+        UpdateHeading(&etp);
 
-    // Create the instructions if desired
-    if (options.directions_type() == DirectionsType::instructions) {
-      std::unique_ptr<NarrativeBuilder> narrative_builder =
-          NarrativeBuilderFactory::Create(options, &etp);
-      narrative_builder->Build(options, &etp, maneuvers);
+        ManeuversBuilder maneuversBuilder(options, &etp);
+        maneuvers = maneuversBuilder.Build();
+
+        // Create the instructions if desired
+        if (options.directions_type() == DirectionsType::instructions) {
+          std::unique_ptr<NarrativeBuilder> narrative_builder =
+              NarrativeBuilderFactory::Create(options, &etp);
+          narrative_builder->Build(options, &etp, maneuvers);
+        }
+      }
+
+      // Return trip directions
+      PopulateDirectionsLeg(options, &etp, maneuvers, trip_directions);
+
+      LOG_INFO("maneuver_count::" + std::to_string(trip_directions.maneuver_size()));
     }
   }
-
-  // Return trip directions
-  return PopulateDirectionsLeg(options, &etp, maneuvers);
 }
 
 // Update the heading of ~0 length edges.
@@ -144,11 +150,10 @@ void DirectionsBuilder::UpdateHeading(EnhancedTripLeg* etp) {
 
 // Returns the trip directions based on the specified directions options,
 // trip path, and maneuver list.
-DirectionsLeg DirectionsBuilder::PopulateDirectionsLeg(const Options& options,
-                                                       EnhancedTripLeg* etp,
-                                                       std::list<Maneuver>& maneuvers) {
-  DirectionsLeg trip_directions;
-
+void DirectionsBuilder::PopulateDirectionsLeg(const Options& options,
+                                              EnhancedTripLeg* etp,
+                                              std::list<Maneuver>& maneuvers,
+                                              DirectionsLeg& trip_directions) {
   // Populate trip and leg IDs
   trip_directions.set_trip_id(etp->trip_id());
   trip_directions.set_leg_id(etp->leg_id());
@@ -365,8 +370,6 @@ DirectionsLeg DirectionsBuilder::PopulateDirectionsLeg(const Options& options,
 
   // Populate shape
   trip_directions.set_shape(etp->shape());
-
-  return trip_directions;
 }
 
 } // namespace odin

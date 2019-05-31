@@ -59,7 +59,7 @@ namespace thor {
 /*
  * The trace_route action takes a GPS trace and turns it into a route result.
  */
-std::list<TripLeg> thor_worker_t::trace_route(Api& request) {
+void thor_worker_t::trace_route(Api& request) {
   // Parse request
   parse_locations(request);
   parse_costing(request);
@@ -68,13 +68,12 @@ std::list<TripLeg> thor_worker_t::trace_route(Api& request) {
   // Initialize the controller
   AttributesController controller;
 
-  std::list<TripLeg> trip_paths;
   switch (request.options().shape_match()) {
     // If the exact points from a prior route that was run against the Valhalla road network,
     // then we can traverse the exact shape to form a path by using edge-walking algorithm
     case ShapeMatch::edge_walk:
       try {
-        trip_paths = route_match(request, controller);
+        route_match(request, controller);
       } catch (...) {
         throw valhalla_exception_t{
             443, ShapeMatch_Name(request.options().shape_match()) +
@@ -86,8 +85,7 @@ std::list<TripLeg> thor_worker_t::trace_route(Api& request) {
     // through the map-matching algorithm to snap the points to the correct shape
     case ShapeMatch::map_snap:
       try {
-        auto map_match_results = map_match(request, controller);
-        trip_paths = std::get<kTripLegIndex>(map_match_results.at(0));
+        map_match(request, controller);
       } catch (...) { throw valhalla_exception_t{442}; }
       break;
     // If we think that we have the exact shape but there ends up being no Valhalla route match,
@@ -96,13 +94,12 @@ std::list<TripLeg> thor_worker_t::trace_route(Api& request) {
     // available.
     case ShapeMatch::walk_or_snap:
       try {
-        trip_paths = route_match(request, controller);
+        route_match(request, controller);
       } catch (...) {
         LOG_WARN(ShapeMatch_Name(request.options().shape_match()) +
                  " algorithm failed to find exact route match; Falling back to map_match...");
         try {
-          auto map_match_results = map_match(request, controller);
-          trip_paths = std::get<kTripLegIndex>(map_match_results.at(0));
+          map_match(request, controller);
         } catch (...) { throw valhalla_exception_t{442}; }
       }
       break;
@@ -110,11 +107,12 @@ std::list<TripLeg> thor_worker_t::trace_route(Api& request) {
 
   // log admin areas
   if (!request.options().do_not_track()) {
-    for (const auto& tp : trip_paths) {
-      log_admin(tp);
+    for (const auto& route : request.trip().routes()) {
+      for (const auto& leg : route.legs()) {
+        log_admin(leg);
+      }
     }
   }
-  return trip_paths;
 }
 
 /*
@@ -124,37 +122,31 @@ std::list<TripLeg> thor_worker_t::trace_route(Api& request) {
  * form the list of edges. It will return no nodes if path not found.
  *
  */
-std::list<TripLeg> thor_worker_t::route_match(Api& request, const AttributesController& controller) {
-  TripLeg trip_path;
-  std::list<TripLeg> trip_paths;
-  std::vector<PathInfo> path_infos;
-
+void thor_worker_t::route_match(Api& request, const AttributesController& controller) {
   // TODO - make sure the trace has timestamps..
   auto& options = *request.mutable_options();
   bool use_timestamps = options.use_timestamps();
+  std::vector<PathInfo> path_infos;
   if (RouteMatcher::FormPath(mode_costing, mode, *reader, trace, use_timestamps, options.locations(),
                              path_infos)) {
     // Form the trip path based on mode costing, origin, destination, and path edges
-    trip_path = thor::TripLegBuilder::Build(controller, *reader, mode_costing, path_infos.begin(),
-                                            path_infos.end(), *options.mutable_locations()->begin(),
-                                            *options.mutable_locations()->rbegin(),
-                                            std::list<valhalla::Location>{}, interrupt);
-    trip_paths.emplace_back(trip_path);
+    auto& leg = *request.mutable_trip()->mutable_routes()->Add()->mutable_legs()->Add();
+    thor::TripLegBuilder::Build(controller, *reader, mode_costing, path_infos.begin(),
+                                path_infos.end(), *options.mutable_locations()->begin(),
+                                *options.mutable_locations()->rbegin(),
+                                std::list<valhalla::Location>{}, leg, interrupt);
   } else {
     throw std::exception{};
   }
-
-  return trip_paths;
 }
 
 // Form the path from the map-matching results. This path gets sent to TripLegBuilder.
 // PathInfo is primarily a list of edge Ids but it also include elapsed time to the end
 // of each edge. We will need to use the existing costing method to form the elapsed time
 // the path. We will start with just using edge costs and will add transition costs.
-std::vector<std::tuple<float, float, std::vector<thor::MatchResult>, std::list<TripLeg>>>
+std::vector<std::tuple<float, float, std::vector<thor::MatchResult>>>
 thor_worker_t::map_match(Api& request, const AttributesController& controller, uint32_t best_paths) {
-  std::vector<std::tuple<float, float, std::vector<thor::MatchResult>, std::list<TripLeg>>>
-      map_match_results;
+  std::vector<std::tuple<float, float, std::vector<thor::MatchResult>>> map_match_results;
   auto& options = *request.mutable_options();
 
   // Call Meili for map matching to get a collection of Location Edges
@@ -170,8 +162,6 @@ thor_worker_t::map_match(Api& request, const AttributesController& controller, u
     const auto& match_results = result.results;
     const auto& edge_segments = result.segments;
     std::vector<thor::MatchResult> enhanced_match_results;
-    TripLeg trip_path;
-    std::list<TripLeg> trip_paths;
     std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>>
         route_discontinuities;
 
@@ -394,10 +384,14 @@ thor_worker_t::map_match(Api& request, const AttributesController& controller, u
 
     // trace_attributes always returns a single trip path and may have discontinuities
     if (options.action() == Options::trace_attributes) {
-      trip_path = path_map_match(match_results, controller, path_edges, route_discontinuities);
-      trip_paths.emplace_back(trip_path);
-      // trace_route can return multiple trip paths and cannot have discontinuities
-    } else {
+      // we make a new route to hold the result of each iteraton of top k
+      auto& route = *request.mutable_trip()->mutable_routes()->Add();
+      path_map_match(match_results, controller, path_edges, *route.mutable_legs()->Add(),
+                     route_discontinuities);
+    } // trace_route can return multiple trip paths and cannot have discontinuities
+    else {
+      // we make a new route to hold the result of each iteraton of top k
+      auto& route = *request.mutable_trip()->mutable_routes()->Add();
       auto origin = match_results.begin();
       auto destination = match_results.begin();
 
@@ -421,12 +415,10 @@ thor_worker_t::map_match(Api& request, const AttributesController& controller, u
             std::vector<PathInfo> sub_path_edges(path_edges.begin() + last_index,
                                                  path_edges.begin() + i + 1);
             // build the leg
-            trip_path = thor::TripLegBuilder::Build(controller, matcher->graphreader(), mode_costing,
-                                                    path_edges.begin() + last_index,
-                                                    path_edges.begin() + i + 1, *o_loc, *d_loc,
-                                                    std::list<valhalla::Location>{}, interrupt,
-                                                    &route_discontinuities);
-            trip_paths.emplace_back(trip_path);
+            TripLegBuilder::Build(controller, matcher->graphreader(), mode_costing,
+                                  path_edges.begin() + last_index, path_edges.begin() + i + 1, *o_loc,
+                                  *d_loc, std::list<valhalla::Location>{},
+                                  *route.mutable_legs()->Add(), interrupt, &route_discontinuities);
             // beginning of next leg will be the end of this leg
             origin = destination;
             // store the starting index of the path_edges
@@ -437,12 +429,13 @@ thor_worker_t::map_match(Api& request, const AttributesController& controller, u
         }
       }
     }
+    // TODO: move this info to the trip leg
     // Keep the result
     map_match_results.emplace_back(map_match_results.empty()
                                        ? 1.0f
                                        : std::get<kRawScoreIndex>(map_match_results.front()) /
                                              result.score,
-                                   result.score, enhanced_match_results, trip_paths);
+                                   result.score, enhanced_match_results);
   }
 
   return map_match_results;
@@ -452,13 +445,13 @@ thor_worker_t::map_match(Api& request, const AttributesController& controller, u
 // TODO merge this logic with the trace_route version above. Much of the
 // logic is similar but handles discontinuities at the origin/destination.
 // We need to add a test for that scenario and then we can merge the logic.
-TripLeg thor_worker_t::path_map_match(
+void thor_worker_t::path_map_match(
     const std::vector<meili::MatchResult>& match_results,
     const AttributesController& controller,
     const std::vector<PathInfo>& path_edges,
+    TripLeg& trip_path,
     std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>>&
         route_discontinuities) {
-  TripLeg trip_path;
 
   // Set origin and destination from map matching results
   auto first_result_with_state =
@@ -526,15 +519,13 @@ TripLeg thor_worker_t::path_map_match(
     // destination.edges contains path_edges.back()
 
     // Form the trip path based on mode costing, origin, destination, and path edges
-    trip_path = thor::TripLegBuilder::Build(controller, matcher->graphreader(), mode_costing,
-                                            path_edges.begin(), path_edges.end(), origin, destination,
-                                            std::list<valhalla::Location>{}, interrupt,
-                                            &route_discontinuities);
+    thor::TripLegBuilder::Build(controller, matcher->graphreader(), mode_costing, path_edges.begin(),
+                                path_edges.end(), origin, destination,
+                                std::list<valhalla::Location>{}, trip_path, interrupt,
+                                &route_discontinuities);
   } else {
     throw valhalla_exception_t{442};
   }
-
-  return trip_path;
 }
 
 } // namespace thor

@@ -50,11 +50,11 @@ std::string actor_t::route(const std::string& request_str, const std::function<v
   ParseApi(request_str, Options::route, request);
   // check the request and locate the locations in the graph
   pimpl->loki_worker.route(request);
-  auto legs = pimpl->thor_worker.route(request);
+  pimpl->thor_worker.route(request);
   // get some directions back from them
-  auto directions = pimpl->odin_worker.narrate(request, legs);
+  pimpl->odin_worker.narrate(request);
   // serialize them out to json string
-  auto bytes = tyr::serializeDirections(request, legs, directions);
+  auto bytes = tyr::serializeDirections(request);
   // if they want you do to do the cleanup automatically
   if (auto_cleanup) {
     cleanup();
@@ -104,11 +104,11 @@ std::string actor_t::optimized_route(const std::string& request_str,
   // check the request and locate the locations in the graph
   pimpl->loki_worker.matrix(request);
   // compute compute all pairs and then the shortest path through them all
-  auto legs = pimpl->thor_worker.optimized_route(request);
+  pimpl->thor_worker.optimized_route(request);
   // get some directions back from them
-  auto directions = pimpl->odin_worker.narrate(request, legs);
+  pimpl->odin_worker.narrate(request);
   // serialize them out to json string
-  auto bytes = tyr::serializeDirections(request, legs, directions);
+  auto bytes = tyr::serializeDirections(request);
   // if they want you do to do the cleanup automatically
   if (auto_cleanup) {
     cleanup();
@@ -144,11 +144,11 @@ std::string actor_t::trace_route(const std::string& request_str,
   // check the request and locate the locations in the graph
   pimpl->loki_worker.trace(request);
   // route between the locations in the graph to find the best path
-  std::list<TripLeg> legs{pimpl->thor_worker.trace_route(request)};
+  pimpl->thor_worker.trace_route(request);
   // get some directions back from them
-  auto directions = pimpl->odin_worker.narrate(request, legs);
+  pimpl->odin_worker.narrate(request);
   // serialize them out to json string
-  auto bytes = tyr::serializeDirections(request, legs, directions);
+  auto bytes = tyr::serializeDirections(request);
   // if they want you do to do the cleanup automatically
   if (auto_cleanup) {
     cleanup();

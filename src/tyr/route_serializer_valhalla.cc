@@ -93,7 +93,7 @@ valhalla output looks like this:
 */
 using namespace std;
 
-json::MapPtr summary(const std::list<valhalla::DirectionsLeg>& legs) {
+json::MapPtr summary(const google::protobuf::RepeatedPtrField<valhalla::DirectionsLeg>& legs) {
 
   uint64_t time = 0;
   long double length = 0;
@@ -118,7 +118,7 @@ json::MapPtr summary(const std::list<valhalla::DirectionsLeg>& legs) {
   return route_summary;
 }
 
-json::ArrayPtr locations(const std::list<valhalla::DirectionsLeg>& legs) {
+json::ArrayPtr locations(const google::protobuf::RepeatedPtrField<valhalla::DirectionsLeg>& legs) {
   auto locations = json::array({});
 
   int index = 0;
@@ -244,7 +244,8 @@ travel_mode_type(const valhalla::DirectionsLeg_Maneuver& maneuver) {
   }
 }
 
-json::ArrayPtr legs(const std::list<valhalla::DirectionsLeg>& directions_legs) {
+json::ArrayPtr
+legs(const google::protobuf::RepeatedPtrField<valhalla::DirectionsLeg>& directions_legs) {
 
   // TODO: multiple legs.
   auto legs = json::array({});
@@ -550,22 +551,18 @@ json::ArrayPtr legs(const std::list<valhalla::DirectionsLeg>& directions_legs) {
   return legs;
 }
 
-std::string serialize(const valhalla::Options& options,
-                      const std::list<valhalla::DirectionsLeg>& directions_legs) {
+std::string serialize(const Api& api) {
   // build up the json object
-  auto json = json::map(
-      {{"trip",
-        json::map({{"locations", locations(directions_legs)},
-                   {"summary", summary(directions_legs)},
-                   {"legs", legs(directions_legs)},
-                   {"status_message",
-                    string("Found route between points")}, // found route between points OR
-                                                           // cannot find route between points
-                   {"status", static_cast<uint64_t>(0)},   // 0 success
-                   {"units", valhalla::Options_Units_Name(options.units())},
-                   {"language", options.language()}})}});
-  if (options.has_id()) {
-    json->emplace("id", options.id());
+  auto json =
+      json::map({{"trip", json::map({{"locations", locations(api.directions().routes(0).legs())},
+                                     {"summary", summary(api.directions().routes(0).legs())},
+                                     {"legs", legs(api.directions().routes(0).legs())},
+                                     {"status_message", string("Found route between points")},
+                                     {"status", static_cast<uint64_t>(0)}, // 0 success
+                                     {"units", valhalla::Options_Units_Name(api.options().units())},
+                                     {"language", api.options().language()}})}});
+  if (api.options().has_id()) {
+    json->emplace("id", api.options().id());
   }
 
   std::stringstream ss;

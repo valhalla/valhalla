@@ -156,9 +156,9 @@ valhalla::TripLeg PathTest(GraphReader& reader,
   // Form trip path
   t1 = std::chrono::high_resolution_clock::now();
   AttributesController controller;
-  valhalla::TripLeg trip_path =
-      TripLegBuilder::Build(controller, reader, mode_costing, pathedges.begin(), pathedges.end(),
-                            origin, dest, std::list<valhalla::Location>{});
+  valhalla::TripLeg trip_path;
+  TripLegBuilder::Build(controller, reader, mode_costing, pathedges.begin(), pathedges.end(), origin,
+                        dest, std::list<valhalla::Location>{}, trip_path);
   t2 = std::chrono::high_resolution_clock::now();
   msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
   LOG_INFO("TripLegBuilder took " + std::to_string(msecs) + " ms");
@@ -316,7 +316,7 @@ std::string GetFormattedTime(uint32_t seconds) {
   return formattedTime;
 }
 
-valhalla::DirectionsLeg DirectionsTest(const valhalla::Options& options,
+valhalla::DirectionsLeg DirectionsTest(valhalla::Api& api,
                                        valhalla::TripLeg& trip_path,
                                        valhalla::Location& orig,
                                        valhalla::Location& dest,
@@ -325,9 +325,9 @@ valhalla::DirectionsLeg DirectionsTest(const valhalla::Options& options,
   const PathLocation& origin = PathLocation::fromPBF(orig);
   const PathLocation& destination = PathLocation::fromPBF(dest);
 
-  DirectionsBuilder directions;
-  valhalla::DirectionsLeg trip_directions = directions.Build(options, trip_path);
-  std::string units = (options.units() == valhalla::Options::kilometers ? "km" : "mi");
+  DirectionsBuilder::Build(api);
+  const auto& trip_directions = api.directions().routes(0).legs(0);
+  std::string units = (api.options().units() == valhalla::Options::kilometers ? "km" : "mi");
   int m = 1;
   valhalla::midgard::logging::Log("From: " + std::to_string(origin), " [NARRATIVE] ");
   valhalla::midgard::logging::Log("To: " + std::to_string(destination), " [NARRATIVE] ");
@@ -630,7 +630,7 @@ int main(int argc, char* argv[]) {
       // Try the the directions
       auto t1 = std::chrono::high_resolution_clock::now();
       valhalla::DirectionsLeg trip_directions =
-          DirectionsTest(options, trip_path, origin, dest, data);
+          DirectionsTest(request, trip_path, origin, dest, data);
       auto t2 = std::chrono::high_resolution_clock::now();
       auto msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
 

@@ -127,52 +127,58 @@ void remove_edges(const GraphId& edge_id, valhalla::Location& loc, GraphReader& 
 namespace valhalla {
 namespace thor {
 
-std::list<valhalla::TripLeg> thor_worker_t::route(Api& request) {
+void thor_worker_t::route(Api& request) {
   parse_locations(request);
   auto costing = parse_costing(request);
   auto& options = *request.mutable_options();
 
   // get all the legs
   auto* locations = options.mutable_locations();
-  auto trippaths = (options.has_date_time_type() && options.date_time_type() == Options::arrive_by)
-                       ? path_arrive_by(*locations, costing)
-                       : path_depart_at(*locations, costing);
+  auto* trip = request.mutable_trip();
+  if (options.has_date_time_type() && options.date_time_type() == Options::arrive_by)
+    path_arrive_by(*locations, costing, *trip);
+  else
+    path_depart_at(*locations, costing, *trip);
 
   // TODO: this wont be needed once we do the block comment above
+  // TODO: if we ever support multiple routes this wont work
   // cull unused edges
-  auto path = trippaths.begin();
-  GraphId left, right;
-  for (auto l = locations->begin(); l < locations->end(); ++l) {
-    // through and via will have been taken care of in the depart_at and arrive_by below
-    if (l->type() == valhalla::Location::kThrough || l->type() == valhalla::Location::kVia)
-      continue;
+  for (const auto& route : trip->routes()) {
+    auto path = route.legs().begin();
+    GraphId left, right;
+    for (auto l = locations->begin(); l < locations->end(); ++l) {
+      // through and via will have been taken care of in the depart_at and arrive_by below
+      if (l->type() == valhalla::Location::kThrough || l->type() == valhalla::Location::kVia)
+        continue;
 
-    // the edge on the right side of this node
-    right = GraphId(path != trippaths.end() ? static_cast<uint64_t>(path->node(0).edge().id())
-                                            : kInvalidGraphId);
-    // remove edges that we didnt use
-    auto end = std::partition(l->mutable_path_edges()->begin(), l->mutable_path_edges()->end(),
-                              [&left, &right](const valhalla::Location::PathEdge& e) {
-                                return e.graph_id() == left || e.graph_id() == right;
-                              });
-    auto shrink_to_size = end - l->mutable_path_edges()->begin();
-    while (l->path_edges_size() > shrink_to_size)
-      l->mutable_path_edges()->RemoveLast();
+      // the edge on the right side of this node
+      right = GraphId(path != route.legs().end() ? static_cast<uint64_t>(path->node(0).edge().id())
+                                                 : kInvalidGraphId);
+      // remove edges that we didnt use
+      auto end = std::partition(l->mutable_path_edges()->begin(), l->mutable_path_edges()->end(),
+                                [&left, &right](const valhalla::Location::PathEdge& e) {
+                                  return e.graph_id() == left || e.graph_id() == right;
+                                });
+      auto shrink_to_size = end - l->mutable_path_edges()->begin();
+      while (l->path_edges_size() > shrink_to_size)
+        l->mutable_path_edges()->RemoveLast();
 
-    // next leg
-    left = GraphId(path != trippaths.end()
-                       ? static_cast<uint64_t>(path->node(path->node_size() - 2).edge().id())
-                       : kInvalidGraphId);
-    ++path;
+      // next leg
+      left = GraphId(path != route.legs().end()
+                         ? static_cast<uint64_t>(path->node(path->node_size() - 2).edge().id())
+                         : kInvalidGraphId);
+      ++path;
+    }
   }
 
   // log admin areas
   if (!options.do_not_track()) {
-    for (const auto& tp : trippaths) {
-      log_admin(tp);
+    for (const auto& route : trip->routes()) {
+      for (const auto& leg : route.legs()) {
+        log_admin(leg);
+      }
     }
   }
-  return trippaths;
 }
 
 thor::PathAlgorithm* thor_worker_t::get_path_algorithm(const std::string& routetype,
@@ -277,14 +283,14 @@ std::vector<thor::PathInfo> thor_worker_t::get_path(PathAlgorithm* path_algorith
   return path;
 }
 
-std::list<valhalla::TripLeg>
-thor_worker_t::path_arrive_by(google::protobuf::RepeatedPtrField<valhalla::Location>& correlated,
-                              const std::string& costing) {
+void thor_worker_t::path_arrive_by(google::protobuf::RepeatedPtrField<valhalla::Location>& correlated,
+                                   const std::string& costing,
+                                   Trip& trip) {
   // Things we'll need
+  auto& route = *trip.mutable_routes()->Add();
   GraphId first_edge;
   std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>> vias;
   std::vector<thor::PathInfo> path;
-  std::list<valhalla::TripLeg> trip_paths;
   correlated.begin()->set_type(valhalla::Location::kBreak);
   correlated.rbegin()->set_type(valhalla::Location::kBreak);
 
@@ -352,25 +358,23 @@ thor_worker_t::path_arrive_by(google::protobuf::RepeatedPtrField<valhalla::Locat
       vias.swap(flipped);
 
       // Form output information based on path edges
-      auto trip_path =
-          thor::TripLegBuilder::Build(controller, *reader, mode_costing, path.begin(), path.end(),
-                                      *origin, *destination, throughs, interrupt, &vias);
+      auto& leg = *route.mutable_legs()->Add();
+      TripLegBuilder::Build(controller, *reader, mode_costing, path.begin(), path.end(), *origin,
+                            *destination, throughs, leg, interrupt, &vias);
       path.clear();
       vias.clear();
-
-      // Keep the protobuf path
-      trip_paths.emplace_front(std::move(trip_path));
     }
   }
 
-  // return the trip paths
-  return trip_paths;
+  // Reverse the legs because protobuf only has adding to the end
+  std::reverse(route.mutable_legs()->begin(), route.mutable_legs()->end());
 }
 
-std::list<valhalla::TripLeg>
-thor_worker_t::path_depart_at(google::protobuf::RepeatedPtrField<valhalla::Location>& correlated,
-                              const std::string& costing) {
+void thor_worker_t::path_depart_at(google::protobuf::RepeatedPtrField<valhalla::Location>& correlated,
+                                   const std::string& costing,
+                                   Trip& trip) {
   // Things we'll need
+  auto& route = *trip.mutable_routes()->Add();
   GraphId last_edge;
   std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>> vias;
   std::vector<thor::PathInfo> path;
@@ -437,19 +441,13 @@ thor_worker_t::path_depart_at(google::protobuf::RepeatedPtrField<valhalla::Locat
       AttributesController controller;
 
       // Form output information based on path edges. vias are a route discontinuity map
-      auto trip_path =
-          thor::TripLegBuilder::Build(controller, *reader, mode_costing, path.begin(), path.end(),
-                                      *origin, *destination, throughs, interrupt, &vias);
+      auto& leg = *route.mutable_legs()->Add();
+      thor::TripLegBuilder::Build(controller, *reader, mode_costing, path.begin(), path.end(),
+                                  *origin, *destination, throughs, leg, interrupt, &vias);
       path.clear();
       vias.clear();
-
-      // Keep the protobuf path
-      trip_paths.emplace_back(std::move(trip_path));
     }
   }
-
-  // return the trip paths
-  return trip_paths;
 }
 
 } // namespace thor
