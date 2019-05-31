@@ -20,6 +20,7 @@ namespace thor {
 std::list<valhalla::TripLeg> thor_worker_t::optimized_route(valhalla_request_t& request) {
   parse_locations(request);
   auto costing = parse_costing(request);
+  parse_filter_attributes(request, false);
 
   if (!request.options.do_not_track()) {
     valhalla::midgard::logging::Log("matrix_type::optimized_route", " [ANALYTICS] ");
@@ -61,9 +62,7 @@ std::list<valhalla::TripLeg> thor_worker_t::optimized_route(valhalla_request_t& 
     request.options.mutable_locations()->Add()->CopyFrom(correlated.Get(optimal_order[i]));
   }
 
-  // Create controller for default route attributes
-  AttributesController controller;
-  return path_depart_at(*request.options.mutable_locations(), costing, controller);
+  return path_depart_at(*request.options.mutable_locations(), costing);
 }
 
 } // namespace thor

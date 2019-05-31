@@ -65,31 +65,26 @@ protected:
   thor::PathAlgorithm* get_path_algorithm(const std::string& routetype,
                                           const valhalla::Location& origin,
                                           const valhalla::Location& destination);
-  std::list<TripLeg> route_match(valhalla_request_t& request, const AttributesController& controller);
+  std::list<TripLeg> route_match(valhalla_request_t& request);
   std::vector<std::tuple<float, float, std::vector<thor::MatchResult>, std::list<TripLeg>>>
   map_match(valhalla_request_t& request,
-            const AttributesController& controller,
             uint32_t best_paths = 1);
   TripLeg
   path_map_match(const std::vector<meili::MatchResult>& match_results,
-                 const AttributesController& controller,
                  const std::vector<PathInfo>& path_edges,
                  std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>>&
                      route_discontinuities);
   std::list<TripLeg>
   path_arrive_by(google::protobuf::RepeatedPtrField<valhalla::Location>& correlated,
-                 const std::string& costing,
-                 const AttributesController& controller);
+                 const std::string& costing);
   std::list<TripLeg>
   path_depart_at(google::protobuf::RepeatedPtrField<valhalla::Location>& correlated,
-                 const std::string& costing,
-                 const AttributesController& controller);
+                 const std::string& costing);
 
   void parse_locations(valhalla_request_t& request);
   void parse_measurements(const valhalla_request_t& request);
   std::string parse_costing(const valhalla_request_t& request);
-  void filter_attributes(const valhalla_request_t& request,
-                         AttributesController& controller,
+  void parse_filter_attributes(const valhalla_request_t& request,
                          bool is_strict_filter);
 
   sif::TravelMode mode;
@@ -110,6 +105,7 @@ protected:
   SOURCE_TO_TARGET_ALGORITHM source_to_target_algorithm;
   meili::MapMatcherFactory matcher_factory;
   std::shared_ptr<baldr::GraphReader> reader;
+  AttributesController controller;
 };
 
 } // namespace thor

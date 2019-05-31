@@ -47,6 +47,7 @@ std::string thor_worker_t::trace_attributes(valhalla_request_t& request) {
   parse_locations(request);
   parse_costing(request);
   parse_measurements(request);
+  parse_filter_attributes(request, true);
 
   /*
    * A flag indicating whether the input shape is a GPS trace or exact points from a
@@ -58,17 +59,12 @@ std::string thor_worker_t::trace_attributes(valhalla_request_t& request) {
   std::vector<std::tuple<float, float, std::vector<thor::MatchResult>, std::list<TripLeg>>>
       map_match_results;
 
-  // Initialize controller, enable all attributes by default
-  AttributesController controller;
-  controller.enable_all();
-  filter_attributes(request, controller, true);
-
   switch (request.options.shape_match()) {
     // If the exact points from a prior route that was run against the Valhalla road network,
     // then we can traverse the exact shape to form a path by using edge-walking algorithm
     case ShapeMatch::edge_walk:
       try {
-        trip_paths = route_match(request, controller);
+        trip_paths = route_match(request);
         map_match_results.emplace_back(1.0f, 0.0f, std::vector<thor::MatchResult>{}, trip_paths);
       } catch (const std::exception& e) {
         throw valhalla_exception_t{
@@ -81,7 +77,7 @@ std::string thor_worker_t::trace_attributes(valhalla_request_t& request) {
     // through the map-matching algorithm to snap the points to the correct shape
     case ShapeMatch::map_snap:
       try {
-        map_match_results = map_match(request, controller, request.options.best_paths());
+        map_match_results = map_match(request, request.options.best_paths());
       } catch (const std::exception& e) {
         throw valhalla_exception_t{
             444, ShapeMatch_Name(request.options.shape_match()) +
@@ -94,13 +90,13 @@ std::string thor_worker_t::trace_attributes(valhalla_request_t& request) {
     // available.
     case ShapeMatch::walk_or_snap:
       try {
-        trip_paths = route_match(request, controller);
+        trip_paths = route_match(request);
         map_match_results.emplace_back(1.0f, 0.0f, std::vector<thor::MatchResult>{}, trip_paths);
       } catch (...) {
         LOG_WARN(ShapeMatch_Name(request.options.shape_match()) +
                  " algorithm failed to find exact route match; Falling back to map_match...");
         try {
-          map_match_results = map_match(request, controller);
+          map_match_results = map_match(request);
         } catch (const std::exception& e) {
           throw valhalla_exception_t{
               444, ShapeMatch_Name(request.options.shape_match()) +

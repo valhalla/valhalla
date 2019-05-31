@@ -57,7 +57,7 @@ namespace thor {
 thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config,
                              const std::shared_ptr<baldr::GraphReader>& graph_reader)
     : mode(valhalla::sif::TravelMode::kPedestrian), matcher_factory(config, graph_reader),
-      reader(graph_reader), long_request(config.get<float>("thor.logging.long_request")) {
+      reader(graph_reader), controller{}, long_request(config.get<float>("thor.logging.long_request")) {
   // If we weren't provided with a graph reader make our own
   if (!reader)
     reader = matcher_factory.graphreader();
@@ -328,9 +328,10 @@ void thor_worker_t::log_admin(const valhalla::TripLeg& trip_path) {
  * allow including or excluding specific attributes from the response. These filters
  * are honored in route, trace_route, and trace_attributes actions.
  */
-void thor_worker_t::filter_attributes(const valhalla_request_t& request,
-                                      AttributesController& controller,
-                                      bool is_strict_filter) {
+void thor_worker_t::parse_filter_attributes(const valhalla_request_t& request, bool is_strict_filter=false) {
+  // Set default controller
+  controller = AttributesController();
+
   if (request.options.has_filter_action()) {
     switch (request.options.filter_action()) {
       case (FilterAction::include): {

@@ -64,10 +64,7 @@ std::list<TripLeg> thor_worker_t::trace_route(valhalla_request_t& request) {
   parse_locations(request);
   parse_costing(request);
   parse_measurements(request);
-
-  // Initialize the controller
-  AttributesController controller;
-  filter_attributes(request, controller, false);
+  parse_filter_attributes(request, false);
 
   std::list<TripLeg> trip_paths;
   switch (request.options.shape_match()) {
@@ -75,7 +72,7 @@ std::list<TripLeg> thor_worker_t::trace_route(valhalla_request_t& request) {
     // then we can traverse the exact shape to form a path by using edge-walking algorithm
     case ShapeMatch::edge_walk:
       try {
-        trip_paths = route_match(request, controller);
+        trip_paths = route_match(request);
       } catch (...) {
         throw valhalla_exception_t{
             443, ShapeMatch_Name(request.options.shape_match()) +
@@ -87,7 +84,7 @@ std::list<TripLeg> thor_worker_t::trace_route(valhalla_request_t& request) {
     // through the map-matching algorithm to snap the points to the correct shape
     case ShapeMatch::map_snap:
       try {
-        auto map_match_results = map_match(request, controller);
+        auto map_match_results = map_match(request);
         trip_paths = std::get<kTripLegIndex>(map_match_results.at(0));
       } catch (...) { throw valhalla_exception_t{442}; }
       break;
@@ -97,12 +94,12 @@ std::list<TripLeg> thor_worker_t::trace_route(valhalla_request_t& request) {
     // available.
     case ShapeMatch::walk_or_snap:
       try {
-        trip_paths = route_match(request, controller);
+        trip_paths = route_match(request);
       } catch (...) {
         LOG_WARN(ShapeMatch_Name(request.options.shape_match()) +
                  " algorithm failed to find exact route match; Falling back to map_match...");
         try {
-          auto map_match_results = map_match(request, controller);
+          auto map_match_results = map_match(request);
           trip_paths = std::get<kTripLegIndex>(map_match_results.at(0));
         } catch (...) { throw valhalla_exception_t{442}; }
       }
@@ -125,8 +122,7 @@ std::list<TripLeg> thor_worker_t::trace_route(valhalla_request_t& request) {
  * form the list of edges. It will return no nodes if path not found.
  *
  */
-std::list<TripLeg> thor_worker_t::route_match(valhalla_request_t& request,
-                                              const AttributesController& controller) {
+std::list<TripLeg> thor_worker_t::route_match(valhalla_request_t& request) {
   TripLeg trip_path;
   std::list<TripLeg> trip_paths;
   std::vector<PathInfo> path_infos;
@@ -155,7 +151,6 @@ std::list<TripLeg> thor_worker_t::route_match(valhalla_request_t& request,
 // the path. We will start with just using edge costs and will add transition costs.
 std::vector<std::tuple<float, float, std::vector<thor::MatchResult>, std::list<TripLeg>>>
 thor_worker_t::map_match(valhalla_request_t& request,
-                         const AttributesController& controller,
                          uint32_t best_paths) {
   std::vector<std::tuple<float, float, std::vector<thor::MatchResult>, std::list<TripLeg>>>
       map_match_results;
@@ -398,7 +393,7 @@ thor_worker_t::map_match(valhalla_request_t& request,
 
     // trace_attributes always returns a single trip path and may have discontinuities
     if (request.options.action() == DirectionsOptions::trace_attributes) {
-      trip_path = path_map_match(match_results, controller, path_edges, route_discontinuities);
+      trip_path = path_map_match(match_results, path_edges, route_discontinuities);
       trip_paths.emplace_back(trip_path);
       // trace_route can return multiple trip paths and cannot have discontinuities
     } else {
@@ -459,7 +454,6 @@ thor_worker_t::map_match(valhalla_request_t& request,
 // We need to add a test for that scenario and then we can merge the logic.
 TripLeg thor_worker_t::path_map_match(
     const std::vector<meili::MatchResult>& match_results,
-    const AttributesController& controller,
     const std::vector<PathInfo>& path_edges,
     std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>>&
         route_discontinuities) {
