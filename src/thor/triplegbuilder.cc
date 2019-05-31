@@ -162,7 +162,8 @@ void AssignAdmins(const AttributesController& controller,
 }
 
 void SetShapeAttributes(const AttributesController& controller,
-                  TripLeg& trip_path, std::vector<PointLL>& shape) {
+                        TripLeg& trip_path,
+                        std::vector<PointLL>& shape) {
   if (controller.category_attribute_enabled(kShapeAttributesCategory)) {
     // Set the shape attributes
     for (size_t i = 1; i < shape.size(); i++) {
@@ -184,7 +185,7 @@ void SetShapeAttributes(const AttributesController& controller,
 
       // Set shape attributes speed per shape point if requested
       if (controller.attributes.at(kShapeAttributesSpeed)) {
-        speed = distance/time;
+        speed = distance / time;
         trip_shape_attribute->set_speed(speed);
       }
     }
@@ -780,7 +781,7 @@ TripLegBuilder::Build(const AttributesController& controller,
     // Assign the trip path admins
     AssignAdmins(controller, trip_path, admin_info_list);
 
-    //Set shape attributes
+    // Set shape attributes
     SetShapeAttributes(controller, trip_path, shape);
 
     return trip_path;
