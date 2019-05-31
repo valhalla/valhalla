@@ -161,6 +161,36 @@ void AssignAdmins(const AttributesController& controller,
   }
 }
 
+void SetShapeAttributes(const AttributesController& controller,
+                  TripLeg& trip_path, std::vector<PointLL>& shape) {
+  if (controller.category_attribute_enabled(kShapeAttributesCategory)) {
+    // Set the shape attributes
+    for (size_t i = 1; i < shape.size(); i++) {
+      float time, distance, speed;
+      TripLeg_ShapeAttributes* trip_shape_attribute = trip_path.add_shape_attributes();
+      TripLeg_Node* node = trip_path.add_node();
+
+      // Set shape attributes time per shape point if requested
+      if (controller.attributes.at(kShapeAttributesTime)) {
+        time = node[1].elapsed_time() - node[0].elapsed_time();
+        trip_shape_attribute->set_time(time);
+      }
+
+      // Set shape attributes length per shape point if requested
+      if (controller.attributes.at(kShapeAttributesLength)) {
+        distance = shape[i].Distance(shape[i - 1]);
+        trip_shape_attribute->set_length(distance);
+      }
+
+      // Set shape attributes speed per shape point if requested
+      if (controller.attributes.at(kShapeAttributesSpeed)) {
+        speed = distance/time;
+        trip_shape_attribute->set_speed(speed);
+      }
+    }
+  }
+}
+
 // Set the bounding box (min,max lat,lon) for the shape
 void SetBoundingBox(TripLeg& trip_path, std::vector<PointLL>& shape) {
   AABB2<PointLL> bbox(shape);
@@ -749,6 +779,10 @@ TripLegBuilder::Build(const AttributesController& controller,
 
     // Assign the trip path admins
     AssignAdmins(controller, trip_path, admin_info_list);
+
+    //Set shape attributes
+    SetShapeAttributes(controller, trip_path, shape);
+
     return trip_path;
   }
 
@@ -1247,6 +1281,9 @@ TripLegBuilder::Build(const AttributesController& controller,
 
   // Set the bounding box of the shape
   SetBoundingBox(trip_path, trip_shape);
+
+  // Set the shape attributes
+  SetShapeAttributes(controller, trip_path, trip_shape);
 
   // Set shape if requested
   if (controller.attributes.at(kShape)) {
