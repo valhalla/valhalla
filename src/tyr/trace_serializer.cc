@@ -21,7 +21,6 @@ constexpr size_t kMatchResultsIndex = 2;
 constexpr size_t kTripLegIndex = 3;
 constexpr double MILLISECOND_TO_SEC = 1000.0;
 constexpr double DECIMETER_TO_KM = 0.0001;
-constexpr double DMS_TO_KMH = 0.36;
 
 json::ArrayPtr serialize_admins(const TripLeg& trip_path) {
   auto admin_array = json::array({});
@@ -409,10 +408,6 @@ json::ArrayPtr serialize_shape_attributes(const AttributesController& controller
     if (controller.attributes.at(kShapeAttributesLength) && attr.has_length()) {
       // decimeters (dm) to kilometer (km)
       attr_map->emplace("length", json::fp_t{attr.length() * DECIMETER_TO_KM, 3});
-    }
-    if (controller.attributes.at(kShapeAttributesSpeed) && attr.has_speed()) {
-      // dm/s to km/h
-      attr_map->emplace("speed", json::fp_t{attr.speed() * DMS_TO_KMH, 3});
     }
     attributes_array->push_back(attr_map);
   }

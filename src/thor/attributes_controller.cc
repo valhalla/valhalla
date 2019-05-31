@@ -110,9 +110,7 @@ const std::unordered_map<std::string, bool> AttributesController::kRouteAttribut
 
     // Per-shape attributes
     {kShapeAttributesTime, false},
-    {kShapeAttributesLength, false},
-    {kShapeAttributesSpeed, false},
-};
+    {kShapeAttributesLength, false}};
 
 AttributesController::AttributesController(
     const std::unordered_map<std::string, bool>& new_attributes) {

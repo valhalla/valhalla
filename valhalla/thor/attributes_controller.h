@@ -120,7 +120,6 @@ const std::string kRawScore = "raw_score";
 // Per-shape attributes
 const std::string kShapeAttributesTime = "shape_attributes.time";
 const std::string kShapeAttributesLength = "shape_attributes.length";
-const std::string kShapeAttributesSpeed = "shape_attributes.speed";
 
 // Categories
 const std::string kNodeCategory = "node.";

@@ -182,12 +182,6 @@ void SetShapeAttributes(const AttributesController& controller,
         distance = shape[i].Distance(shape[i - 1]);
         trip_shape_attribute->set_length(distance);
       }
-
-      // Set shape attributes speed per shape point if requested
-      if (controller.attributes.at(kShapeAttributesSpeed)) {
-        speed = distance / time;
-        trip_shape_attribute->set_speed(speed);
-      }
     }
   }
 }

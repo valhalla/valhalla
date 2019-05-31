@@ -262,7 +262,6 @@ message TripLeg {
   message ShapeAttributes {
     optional uint32 time = 1; // milliseconds
     optional uint32 length = 2; // decimeters
-    optional uint32 speed = 3; // decimeters per sec
   }
 
   optional uint64 osm_changeset = 1;
