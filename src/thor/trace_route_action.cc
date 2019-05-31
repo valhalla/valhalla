@@ -150,8 +150,7 @@ std::list<TripLeg> thor_worker_t::route_match(valhalla_request_t& request) {
 // of each edge. We will need to use the existing costing method to form the elapsed time
 // the path. We will start with just using edge costs and will add transition costs.
 std::vector<std::tuple<float, float, std::vector<thor::MatchResult>, std::list<TripLeg>>>
-thor_worker_t::map_match(valhalla_request_t& request,
-                         uint32_t best_paths) {
+thor_worker_t::map_match(valhalla_request_t& request, uint32_t best_paths) {
   std::vector<std::tuple<float, float, std::vector<thor::MatchResult>, std::list<TripLeg>>>
       map_match_results;
 

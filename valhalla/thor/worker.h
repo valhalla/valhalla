@@ -67,8 +67,7 @@ protected:
                                           const valhalla::Location& destination);
   std::list<TripLeg> route_match(valhalla_request_t& request);
   std::vector<std::tuple<float, float, std::vector<thor::MatchResult>, std::list<TripLeg>>>
-  map_match(valhalla_request_t& request,
-            uint32_t best_paths = 1);
+  map_match(valhalla_request_t& request, uint32_t best_paths = 1);
   TripLeg
   path_map_match(const std::vector<meili::MatchResult>& match_results,
                  const std::vector<PathInfo>& path_edges,
@@ -84,8 +83,7 @@ protected:
   void parse_locations(valhalla_request_t& request);
   void parse_measurements(const valhalla_request_t& request);
   std::string parse_costing(const valhalla_request_t& request);
-  void parse_filter_attributes(const valhalla_request_t& request,
-                         bool is_strict_filter);
+  void parse_filter_attributes(const valhalla_request_t& request, bool is_strict_filter);
 
   sif::TravelMode mode;
   std::vector<meili::Measurement> trace;
