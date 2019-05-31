@@ -830,7 +830,6 @@ void GraphTileBuilder::AddTurnLanes(const uint32_t idx, const uint32_t tl_idx) {
 // Add turn lanes
 void GraphTileBuilder::AddTurnLanes(const std::vector<TurnLanes>& turn_lanes) {
   turnlanes_builder_.clear();
-  // Add restrictions to the list
   turnlanes_builder_ = turn_lanes;
 }
 
