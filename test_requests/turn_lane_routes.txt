@@ -40,3 +40,4 @@
 -j '{"locations":[{"lat":40.290791,"lon":-76.666153,"street":"Hersheypark Drive"},{"lat":40.288006,"lon":-76.668114,"street":"Park Boulevard"}],"costing":"auto","directions_options":{"units":"miles"}}'
 -j '{"locations":[{"lat":40.290791,"lon":-76.666153,"street":"Hersheypark Drive"},{"lat":40.286987,"lon":-76.667831,"name":"Authorized Use Only"}],"costing":"auto","directions_options":{"units":"miles"}}'
 -j '{"locations":[{"lat":40.290791,"lon":-76.666153,"street":"Hersheypark Drive"},{"lat":40.285591,"lon":-76.666565,"street":"Park Boulevard"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":25.780157838625463,"lon":-80.20028159027787,"street":"Northwest 3rd Court"},{"lat":25.779022666983437,"lon":-80.20017430191729,"street":"Northwest 3rd Court"}],"costing":"auto","directions_options":{"units":"miles"}}'
