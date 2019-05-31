@@ -1,4 +1,4 @@
-## Release Date: UNRELEASED Valhalla 3.0.4
+## Release Date: 2019-05-31 Valhalla 3.0.4
 * **Bug Fix**
    * FIXED: Improved logic to decide between bear vs. continue [#1798](https://github.com/valhalla/valhalla/pull/1798)
    * FIXED: Bicycle costing allows use of roads with all surface values, but with a penalty based on bicycle type. However, the edge filter totally disallows bad surfaces for some bicycle types, creating situations where reroutes fail if a rider uses a road with a poor surface. [#1800](https://github.com/valhalla/valhalla/pull/1800)
