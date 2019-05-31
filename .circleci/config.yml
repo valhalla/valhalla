@@ -146,14 +146,13 @@ jobs:
       - run: npm install --ignore-scripts
       - run:
           command: |
-
+            npm version 3.0.1
             export PACKAGE_JSON_VERSION=$(node -e "console.log(require('./package.json').version)")
             export PUBLISH=$([[ "${CIRCLE_TAG:-}" == "${PACKAGE_JSON_VERSION}" ]] && echo "On" || echo "Off")
             export COMMIT_MESSAGE=$(git log --oneline --format=%B -n 1 ${CIRCLE_SHA1} | head -n 1)
             export BUILD_TYPE=Release
             ./scripts/node_install.sh&& ./scripts/publish.sh
             echo "//npm.loogia.tk/:_authToken=$NPM_TOKEN" >> ~/.npmrc
-            npm version 3.0.1
             npm publish --registry https://npm.loogia.tk
       - store_artifacts:
           path: ./lib
