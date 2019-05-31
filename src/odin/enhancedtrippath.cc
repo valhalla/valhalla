@@ -459,7 +459,7 @@ bool EnhancedTripLeg_Edge::HasActiveTurnLane() const {
 
 bool EnhancedTripLeg_Edge::HasNonDirectionalTurnLane() const {
   for (const auto& turn_lane : turn_lanes()) {
-    // Return true if directions mask is empty or none
+    // Return true if a directions mask is empty or none for a turn lane
     if ((turn_lane.directions_mask() == kTurnLaneEmpty) ||
         (turn_lane.directions_mask() & kTurnLaneNone)) {
       return true;

@@ -203,6 +203,34 @@ void TestHasActiveTurnLane_True() {
   TryHasActiveTurnLane(midgard::make_unique<EnhancedTripLeg_Edge>(&edge), true);
 }
 
+void TryHasNonDirectionalTurnLane(std::unique_ptr<EnhancedTripLeg_Edge> edge, bool expected) {
+
+  if (edge->HasNonDirectionalTurnLane() != expected) {
+    throw std::runtime_error("Incorrect value returned for HasNonDirectionalTurnLane - expected: " +
+                             std::string(expected ? "true" : "false"));
+  }
+}
+
+void TestHasNonDirectionalTurnLane_False() {
+  TripLeg_Edge edge;
+  edge.add_turn_lanes()->set_directions_mask(kTurnLaneLeft);
+  edge.add_turn_lanes()->set_directions_mask(kTurnLaneThrough);
+  edge.add_turn_lanes()->set_directions_mask(kTurnLaneRight);
+  TryHasNonDirectionalTurnLane(midgard::make_unique<EnhancedTripLeg_Edge>(&edge), false);
+}
+
+void TestHasNonDirectionalTurnLane_True() {
+  TripLeg_Edge edge_1;
+  edge_1.add_turn_lanes()->set_directions_mask(kTurnLaneLeft);
+  edge_1.add_turn_lanes()->set_directions_mask(kTurnLaneNone);
+  TryHasNonDirectionalTurnLane(midgard::make_unique<EnhancedTripLeg_Edge>(&edge_1), true);
+
+  TripLeg_Edge edge_2;
+  edge_2.add_turn_lanes()->set_directions_mask(kTurnLaneEmpty);
+  edge_2.add_turn_lanes()->set_directions_mask(kTurnLaneRight);
+  TryHasNonDirectionalTurnLane(midgard::make_unique<EnhancedTripLeg_Edge>(&edge_2), true);
+}
+
 void ClearActiveTurnLanes(::google::protobuf::RepeatedPtrField<::valhalla::TurnLane>* turn_lanes) {
   for (auto& turn_lane : *(turn_lanes)) {
     turn_lane.set_is_active(false);
@@ -344,6 +372,12 @@ int main() {
 
   // HasActiveTurnLane_True
   suite.test(TEST_CASE(TestHasActiveTurnLane_True));
+
+  // HasNonDirectionalTurnLane_False
+  suite.test(TEST_CASE(TestHasNonDirectionalTurnLane_False));
+
+  // HasNonDirectionalTurnLane_True
+  suite.test(TEST_CASE(TestHasNonDirectionalTurnLane_True));
 
   // ActivateTurnLanes
   suite.test(TEST_CASE(TestActivateTurnLanes));
