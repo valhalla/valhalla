@@ -1,3 +1,9 @@
+## Release Date: UNRELEASED Valhalla 3.0.5
+* **Bug Fix**
+
+* **Enhancement**
+   * ADDED: Add turn lane info at maneuver point [#1830](https://github.com/valhalla/valhalla/pull/1830)
+
 ## Release Date: 2019-05-31 Valhalla 3.0.4
 * **Bug Fix**
    * FIXED: Improved logic to decide between bear vs. continue [#1798](https://github.com/valhalla/valhalla/pull/1798)
@@ -7,9 +13,6 @@
    * FIXED: Replace the EnhancedTripPath class inheritance with aggregation [#1807](https://github.com/valhalla/valhalla/pull/1807)
    * FIXED: Replace the old timezone shape zip file every time valhalla_build_timezones is ran [#1817](https://github.com/valhalla/valhalla/pull/1817)
    * FIXED: Don't use island snapped edge candidates (from disconnected components or low reach edges) when we rejected other high reachability edges that were closer [#1835](https://github.com/valhalla/valhalla/pull/1835)
-
-* **Enhancement**
-   * ADDED: Add turn lane info at maneuver point [#1830](https://github.com/valhalla/valhalla/pull/1830)
 
 ## Release Date: 2019-05-08 Valhalla 3.0.3
 * **Bug Fix**
