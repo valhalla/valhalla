@@ -388,6 +388,7 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
     // NOTE: curr_edge does not exist for the arrive maneuver
     auto node = etp->GetEnhancedNode(i);
     auto curr_edge = etp->GetCurrEdge(i);
+    auto prev_edge = etp->GetPrevEdge(i);
 
     // Add the node location (lon, lat). Use the last shape point for
     // the arrive step
@@ -402,8 +403,8 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
     // the arrive step.
     std::vector<IntersectionEdges> edges;
     if (i > 0 && !arrive_maneuver) {
-      for (uint32_t n = 0; n < node->intersecting_edge_size(); n++) {
-        auto intersecting_edge = node->GetIntersectingEdge(n);
+      for (uint32_t m = 0; m < node->intersecting_edge_size(); m++) {
+        auto intersecting_edge = node->GetIntersectingEdge(m);
         bool routeable = intersecting_edge->IsTraversableOutbound(curr_edge->travel_mode());
         uint32_t bearing = static_cast<uint32_t>(intersecting_edge->begin_heading());
         edges.emplace_back(bearing, routeable, false, false);
@@ -420,7 +421,7 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
     // TODO - what if a true U-turn - need to set it to routeable.
     if (i > 0) {
       bool entry = (arrive_maneuver) ? true : false;
-      uint32_t prior_heading = etp->GetPrevEdge(i)->end_heading();
+      uint32_t prior_heading = prev_edge->end_heading();
       edges.emplace_back(((prior_heading + 180) % 360), entry, true, false);
     }
 
@@ -482,6 +483,66 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
         }
         intersection->emplace("classes", class_list);
       }
+    }
+
+    // Process turn lanes - which are stored on the previous edge to the node
+    // Check if there is an active turn lane
+    // Verify that turn lanes are not non-directional
+    if (prev_edge && (prev_edge->turn_lanes_size() > 0) && prev_edge->HasActiveTurnLane() &&
+        !prev_edge->HasNonDirectionalTurnLane()) {
+      auto lanes = json::array({});
+      for (const auto& turn_lane : prev_edge->turn_lanes()) {
+        auto lane = json::map({});
+        // Process 'valid' flag
+        lane->emplace("valid", turn_lane.is_active());
+
+        // Process 'indications' array - add indications from left to right
+        auto indications = json::array({});
+        uint16_t mask = turn_lane.directions_mask();
+
+        // TODO make map for lane mask to osrm indication string
+        // reverse (left u-turn)
+        if ((mask & kTurnLaneReverse) &&
+            (maneuver.type() == DirectionsLeg_Maneuver_Type_kUturnLeft)) {
+          indications->emplace_back(std::string("uturn"));
+        }
+        // sharp_left
+        if (mask & kTurnLaneSharpLeft) {
+          indications->emplace_back(std::string("sharp left"));
+        }
+        // left
+        if (mask & kTurnLaneLeft) {
+          indications->emplace_back(std::string("left"));
+        }
+        // slight_left
+        if (mask & kTurnLaneSlightLeft) {
+          indications->emplace_back(std::string("slight left"));
+        }
+        // through
+        if (mask & kTurnLaneThrough) {
+          indications->emplace_back(std::string("straight"));
+        }
+        // slight_right
+        if (mask & kTurnLaneSlightRight) {
+          indications->emplace_back(std::string("slight right"));
+        }
+        // right
+        if (mask & kTurnLaneRight) {
+          indications->emplace_back(std::string("right"));
+        }
+        // sharp_right
+        if (mask & kTurnLaneSharpRight) {
+          indications->emplace_back(std::string("sharp right"));
+        }
+        // reverse (right u-turn)
+        if ((mask & kTurnLaneReverse) &&
+            (maneuver.type() == DirectionsLeg_Maneuver_Type_kUturnRight)) {
+          indications->emplace_back(std::string("uturn"));
+        }
+        lane->emplace("indications", std::move(indications));
+        lanes->emplace_back(std::move(lane));
+      }
+      intersection->emplace("lanes", std::move(lanes));
     }
 
     // Add the intersection to the JSON array

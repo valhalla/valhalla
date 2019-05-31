@@ -191,6 +191,14 @@ protected:
    */
   void EnhanceSignlessInterchnages(std::list<Maneuver>& maneuvers);
 
+  /**
+   * Process the turn lanes at the maneuver point as well as within the maneuver.
+   * Activate the turn lane that matches the path traversal.
+   *
+   * @param maneuvers The list of maneuvers to process.
+   */
+  void ProcessTurnLanes(std::list<Maneuver>& maneuvers);
+
   const Options& options_;
   EnhancedTripLeg* trip_path_;
 };

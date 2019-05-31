@@ -2,6 +2,7 @@
 #include <cstdlib>
 #include <iostream>
 
+#include "baldr/turnlanes.h"
 #include "midgard/constants.h"
 #include "midgard/util.h"
 
@@ -13,6 +14,7 @@
 #include <valhalla/proto/trip.pb.h>
 
 using namespace valhalla::midgard;
+using namespace valhalla::baldr;
 
 namespace {
 const std::string& TripLeg_RoadClass_Name(int v) {
@@ -446,6 +448,37 @@ float EnhancedTripLeg_Edge::GetLength(const Options::Units& units) {
   return length();
 }
 
+bool EnhancedTripLeg_Edge::HasActiveTurnLane() const {
+  for (const auto& turn_lane : turn_lanes()) {
+    if (turn_lane.is_active()) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool EnhancedTripLeg_Edge::HasNonDirectionalTurnLane() const {
+  for (const auto& turn_lane : turn_lanes()) {
+    // Return true if directions mask is empty or none
+    if ((turn_lane.directions_mask() == kTurnLaneEmpty) ||
+        (turn_lane.directions_mask() & kTurnLaneNone)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool EnhancedTripLeg_Edge::ActivateTurnLanes(uint16_t turn_lane_direction) {
+  bool activated = false;
+  for (auto& turn_lane : *(mutable_turn_lanes())) {
+    if (turn_lane.directions_mask() & turn_lane_direction) {
+      turn_lane.set_is_active(true);
+      activated = true;
+    }
+  }
+  return activated;
+}
+
 #ifdef LOGGING_LEVEL_TRACE
 std::string EnhancedTripLeg_Edge::ToString() const {
   std::string str;
@@ -618,6 +651,11 @@ std::string EnhancedTripLeg_Edge::ToString() const {
 
   str += " | truck_route=";
   str += std::to_string(truck_route());
+
+  if (turn_lanes_size() > 0) {
+    str += " | turn_lanes=";
+    str += TurnLanesToString(turn_lanes());
+  }
 
   return str;
 }
@@ -889,6 +927,109 @@ std::string EnhancedTripLeg_Edge::SignElementsToParameterString(
   str += param_list;
   str += " }";
 
+  return str;
+}
+
+std::string EnhancedTripLeg_Edge::TurnLanesToString(
+    const ::google::protobuf::RepeatedPtrField<::valhalla::TurnLane>& turn_lanes) const {
+  std::string str;
+
+  for (const auto& turn_lane : turn_lanes) {
+    if (!str.empty()) {
+      str += "|";
+    }
+
+    uint16_t mask = turn_lane.directions_mask();
+
+    // Process the turn lanes - from left to right
+    // empty
+    if (mask == kTurnLaneEmpty) {
+      str += "empty";
+    }
+    // none
+    else if (mask == kTurnLaneNone) {
+      str += kTurnLaneNames.at(kTurnLaneNone);
+    } else {
+      bool prior_item = false;
+      // reverse (left u-turn)
+      if ((mask & kTurnLaneReverse) && drive_on_right()) {
+        if (prior_item)
+          str += ";";
+        str += kTurnLaneNames.at(kTurnLaneReverse);
+        prior_item = true;
+      }
+      // sharp_left
+      if (mask & kTurnLaneSharpLeft) {
+        if (prior_item)
+          str += ";";
+        str += kTurnLaneNames.at(kTurnLaneSharpLeft);
+        prior_item = true;
+      }
+      // left
+      if (mask & kTurnLaneLeft) {
+        if (prior_item)
+          str += ";";
+        str += kTurnLaneNames.at(kTurnLaneLeft);
+        prior_item = true;
+      }
+      // slight_left
+      if (mask & kTurnLaneSlightLeft) {
+        if (prior_item)
+          str += ";";
+        str += kTurnLaneNames.at(kTurnLaneSlightLeft);
+        prior_item = true;
+      }
+      // merge_to_left
+      if (mask & kTurnLaneMergeToLeft) {
+        if (prior_item)
+          str += ";";
+        str += kTurnLaneNames.at(kTurnLaneMergeToLeft);
+        prior_item = true;
+      }
+      // through
+      if (mask & kTurnLaneThrough) {
+        if (prior_item)
+          str += ";";
+        str += kTurnLaneNames.at(kTurnLaneThrough);
+        prior_item = true;
+      }
+      // merge_to_right
+      if (mask & kTurnLaneMergeToRight) {
+        if (prior_item)
+          str += ";";
+        str += kTurnLaneNames.at(kTurnLaneMergeToRight);
+        prior_item = true;
+      }
+      // slight_right
+      if (mask & kTurnLaneSlightRight) {
+        if (prior_item)
+          str += ";";
+        str += kTurnLaneNames.at(kTurnLaneSlightRight);
+        prior_item = true;
+      }
+      // right
+      if (mask & kTurnLaneRight) {
+        if (prior_item)
+          str += ";";
+        str += kTurnLaneNames.at(kTurnLaneRight);
+        prior_item = true;
+      }
+      // sharp_right
+      if (mask & kTurnLaneSharpRight) {
+        if (prior_item)
+          str += ";";
+        str += kTurnLaneNames.at(kTurnLaneSharpRight);
+        prior_item = true;
+      }
+      // reverse (right u-turn)
+      if ((mask & kTurnLaneReverse) && !drive_on_right()) {
+        if (prior_item)
+          str += ";";
+        str += kTurnLaneNames.at(kTurnLaneReverse);
+        prior_item = true;
+      }
+    }
+  }
   return str;
 }
 #endif
