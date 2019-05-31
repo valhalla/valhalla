@@ -19,6 +19,9 @@ constexpr size_t kConfidenceScoreIndex = 0;
 constexpr size_t kRawScoreIndex = 1;
 constexpr size_t kMatchResultsIndex = 2;
 constexpr size_t kTripLegIndex = 3;
+constexpr double MILLISECOND_TO_SEC = 1000.0;
+constexpr double DECIMETER_TO_KM = 0.0001;
+constexpr double DMS_TO_KMH = 0.36;
 
 json::ArrayPtr serialize_admins(const TripLeg& trip_path) {
   auto admin_array = json::array({});
@@ -400,13 +403,16 @@ json::ArrayPtr serialize_shape_attributes(const AttributesController& controller
   for (const auto& attr : trip_path.shape_attributes()) {
     auto attr_map = json::map({});
     if (controller.attributes.at(kShapeAttributesTime) && attr.has_time()) {
-      attr_map->emplace("time", attr.time());
+      // milliseconds (ms) to seconds (sec)
+      attr_map->emplace("time", json::fp_t{attr.time() * MILLISECOND_TO_SEC, 3});
     }
     if (controller.attributes.at(kShapeAttributesLength) && attr.has_length()) {
-      attr_map->emplace("length", attr.length());
+      // decimeters (dm) to kilometer (km)
+      attr_map->emplace("length", json::fp_t{attr.length() * DECIMETER_TO_KM, 3});
     }
     if (controller.attributes.at(kShapeAttributesSpeed) && attr.has_speed()) {
-      attr_map->emplace("speed", attr.speed());
+      // dm/s to km/h
+      attr_map->emplace("speed", json::fp_t{attr.speed() * DMS_TO_KMH, 3});
     }
     attributes_array->push_back(attr_map);
   }
