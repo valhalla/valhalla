@@ -316,6 +316,18 @@ public:
     return mutable_edge_->truck_route();
   }
 
+  int turn_lanes_size() const {
+    return mutable_edge_->turn_lanes_size();
+  }
+
+  const ::google::protobuf::RepeatedPtrField<::valhalla::TurnLane>& turn_lanes() const {
+    return mutable_edge_->turn_lanes();
+  }
+
+  ::google::protobuf::RepeatedPtrField<::valhalla::TurnLane>* mutable_turn_lanes() {
+    return mutable_edge_->mutable_turn_lanes();
+  }
+
   bool IsUnnamed() const;
 
   // Use
@@ -368,6 +380,11 @@ public:
 
   float GetLength(const DirectionsOptions::Units& units);
 
+  // Turn Lanes
+  bool HasActiveTurnLane() const;
+  bool HasNonDirectionalTurnLane() const;
+  bool ActivateTurnLanes(uint16_t turn_lane_direction);
+
   std::string ToString() const;
 
 #ifdef LOGGING_LEVEL_TRACE
@@ -391,6 +408,9 @@ protected:
   std::string SignElementsToParameterString(
       const ::google::protobuf::RepeatedPtrField<::valhalla::TripLeg_SignElement>& sign_elements)
       const;
+
+  std::string TurnLanesToString(
+      const ::google::protobuf::RepeatedPtrField<::valhalla::TurnLane>& turn_lanes) const;
 #endif
 };
 

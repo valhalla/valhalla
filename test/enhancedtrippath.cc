@@ -1,4 +1,5 @@
 #include "odin/enhancedtrippath.h"
+#include "baldr/turnlanes.h"
 #include "midgard/util.h"
 
 #include "test.h"
@@ -7,6 +8,7 @@
 using namespace std;
 using namespace valhalla;
 using namespace valhalla::odin;
+using namespace valhalla::baldr;
 
 namespace {
 
@@ -164,6 +166,43 @@ void TestCalculateRightLeftIntersectingEdgeCounts_SharpLeft_Right_Left() {
                                               IntersectingEdgeCounts(5, 0, 0, 0, 1, 1, 0, 0));
 }
 
+void TryHasActiveTurnLane(std::unique_ptr<EnhancedTripLeg_Edge> edge, bool expected) {
+
+  if (edge->HasActiveTurnLane() != expected) {
+    throw std::runtime_error("Incorrect value returned for HasActiveTurnLane - expected: " +
+                             std::string(expected ? "true" : "false"));
+  }
+}
+
+void TestHasActiveTurnLane_False() {
+  TripLeg_Edge edge;
+  edge.add_turn_lanes()->set_directions_mask(kTurnLaneLeft);
+  edge.add_turn_lanes()->set_directions_mask(kTurnLaneThrough);
+  edge.add_turn_lanes()->set_directions_mask(kTurnLaneRight);
+  TryHasActiveTurnLane(midgard::make_unique<EnhancedTripLeg_Edge>(&edge), false);
+}
+
+void TestHasActiveTurnLane_True() {
+  TripLeg_Edge edge;
+  edge.add_turn_lanes()->set_directions_mask(kTurnLaneLeft);
+  edge.add_turn_lanes()->set_directions_mask(kTurnLaneThrough);
+  edge.add_turn_lanes()->set_directions_mask(kTurnLaneRight);
+
+  // Left active
+  edge.mutable_turn_lanes(0)->set_is_active(true);
+  TryHasActiveTurnLane(midgard::make_unique<EnhancedTripLeg_Edge>(&edge), true);
+
+  // Straight active
+  edge.mutable_turn_lanes(0)->set_is_active(false);
+  edge.mutable_turn_lanes(1)->set_is_active(true);
+  TryHasActiveTurnLane(midgard::make_unique<EnhancedTripLeg_Edge>(&edge), true);
+
+  // Right active
+  edge.mutable_turn_lanes(1)->set_is_active(false);
+  edge.mutable_turn_lanes(2)->set_is_active(true);
+  TryHasActiveTurnLane(midgard::make_unique<EnhancedTripLeg_Edge>(&edge), true);
+}
+
 } // namespace
 
 int main() {
@@ -186,6 +225,12 @@ int main() {
 
   // CalculateRightLeftIntersectingEdgeCounts_SharpLeft_Right_Left
   suite.test(TEST_CASE(TestCalculateRightLeftIntersectingEdgeCounts_SharpLeft_Right_Left));
+
+  // HasActiveTurnLane_False
+  suite.test(TEST_CASE(TestHasActiveTurnLane_False));
+
+  // HasActiveTurnLane_True
+  suite.test(TEST_CASE(TestHasActiveTurnLane_True));
 
   return suite.tear_down();
 }

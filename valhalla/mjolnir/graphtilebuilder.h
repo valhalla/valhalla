@@ -46,12 +46,17 @@ public:
    * levels. If the deserialize flag is set then all objects are serialized
    * from memory into builders that can be added to and then stored using
    * StoreTileData.
-   * @param  tile_dir     Base directory path
-   * @param  graphid      GraphId used to determine the tileid and level
-   * @param  deserialize  If true the existing objects in the tile are
-   *                      converted into builders so they can be added to.
+   * @param  tile_dir               Base directory path
+   * @param  graphid                GraphId used to determine the tileid and level
+   * @param  deserialize            If true the existing objects in the tile are
+   *                                converted into builders so they can be added to.
+   * @param  serialize_turn_lanes   If true, the offsets are truely text offsets.
+   *                                If false, the offsets are indexes into unique name file
    */
-  GraphTileBuilder(const std::string& tile_dir, const GraphId& graphid, const bool deserialize);
+  GraphTileBuilder(const std::string& tile_dir,
+                   const GraphId& graphid,
+                   const bool deserialize,
+                   bool serialize_turn_lanes = true);
 
   /**
    * Output the tile to file. Stores as binary data.
@@ -407,6 +412,19 @@ public:
    * @param  str  Turn lane information.
    */
   void AddTurnLanes(const uint32_t idx, const std::string& str);
+
+  /**
+   * Add turn lane information for a directed edge.
+   * @param  idx      Directed edge index.
+   * @param  tl_idx   Turn lane index into the OSMData name_offset map
+   */
+  void AddTurnLanes(const uint32_t idx, const uint32_t tl_idx);
+
+  /**
+   * Add turn lanes
+   * @param  turn_lanes vector of turn lanes
+   */
+  void AddTurnLanes(const std::vector<TurnLanes>& turn_lanes);
 
   /**
    * Add a predicted speed profile for a directed edge.

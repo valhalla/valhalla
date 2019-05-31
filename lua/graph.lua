@@ -1482,20 +1482,20 @@ function filter_tags_generic(kv)
   end
 
   lane_count = numeric_prefix(kv["lanes"],false)
-  if lane_count and lane_count > 10 then
-    lane_count = 10
+  if lane_count and lane_count > 15 then
+    lane_count = nil
   end
   kv["lanes"] = lane_count
 
   lane_count = numeric_prefix(kv["lanes:forward"],false)
-  if lane_count and lane_count > 10 then
-    lane_count = 10
+  if lane_count and lane_count > 15 then
+    lane_count = nil
   end
   kv["forward_lanes"] = lane_count
 
   lane_count = numeric_prefix(kv["lanes:backward"],false)
-  if lane_count and lane_count > 10 then
-    lane_count = 10
+  if lane_count and lane_count > 15 then
+    lane_count = nil
   end
   kv["backward_lanes"] = lane_count
 
