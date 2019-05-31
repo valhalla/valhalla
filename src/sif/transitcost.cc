@@ -774,7 +774,7 @@ TransitCost* make_transitcost_from_json(const std::string& property, float testV
   std::stringstream ss;
   ss << R"({"costing_options":{"transit":{")" << property << R"(":)" << testVal << "}}}";
   Api request;
-ParseApi(ss.str(), valhalla::Options::route, request);
+  ParseApi(ss.str(), valhalla::Options::route, request);
   return new TransitCost(valhalla::Costing::transit, request.options());
 }
 

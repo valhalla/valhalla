@@ -932,7 +932,7 @@ make_pedestriancost_from_json(const std::string& property, float testVal, const 
   std::stringstream ss;
   ss << R"({"costing_options":{"pedestrian":{")" << property << R"(":)" << testVal << "}}}";
   Api request;
-ParseApi(ss.str(), valhalla::Options::route, request);
+  ParseApi(ss.str(), valhalla::Options::route, request);
   return new TestPedestrianCost(valhalla::Costing::pedestrian, request.options());
 }
 

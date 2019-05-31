@@ -1426,7 +1426,7 @@ TestAutoCost* make_autocost_from_json(const std::string& property, float testVal
   std::stringstream ss;
   ss << R"({"costing_options":{"auto":{")" << property << R"(":)" << testVal << "}}}";
   Api request;
-ParseApi(ss.str(), valhalla::Options::route, request);
+  ParseApi(ss.str(), valhalla::Options::route, request);
   return new TestAutoCost(valhalla::Costing::auto_, request.options());
 }
 

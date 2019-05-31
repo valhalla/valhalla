@@ -263,8 +263,7 @@ void TryBuild(const Options& options,
               std::list<Maneuver>& maneuvers,
               std::list<Maneuver>& expected_maneuvers,
               const EnhancedTripLeg* etp = nullptr) {
-  std::unique_ptr<NarrativeBuilder> narrative_builder =
-      NarrativeBuilderFactory::Create(options, etp);
+  std::unique_ptr<NarrativeBuilder> narrative_builder = NarrativeBuilderFactory::Create(options, etp);
   narrative_builder->Build(options, etp, maneuvers);
 
   // Check maneuver list sizes

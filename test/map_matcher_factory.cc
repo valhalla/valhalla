@@ -29,21 +29,17 @@ void create_costing_options(Options& options) {
   sif::ParseAutoCostOptions(doc, "/costing_options/auto", options.add_costing_options());
   sif::ParseAutoShorterCostOptions(doc, "/costing_options/auto_shorter",
                                    options.add_costing_options());
-  sif::ParseBicycleCostOptions(doc, "/costing_options/bicycle",
-                               options.add_costing_options());
+  sif::ParseBicycleCostOptions(doc, "/costing_options/bicycle", options.add_costing_options());
   sif::ParseBusCostOptions(doc, "/costing_options/bus", options.add_costing_options());
   sif::ParseHOVCostOptions(doc, "/costing_options/hov", options.add_costing_options());
   sif::ParseTaxiCostOptions(doc, "/costing_options/taxi", options.add_costing_options());
   sif::ParseMotorScooterCostOptions(doc, "/costing_options/motor_scooter",
                                     options.add_costing_options());
   options.add_costing_options();
-  sif::ParsePedestrianCostOptions(doc, "/costing_options/pedestrian",
-                                  options.add_costing_options());
-  sif::ParseTransitCostOptions(doc, "/costing_options/transit",
-                               options.add_costing_options());
+  sif::ParsePedestrianCostOptions(doc, "/costing_options/pedestrian", options.add_costing_options());
+  sif::ParseTransitCostOptions(doc, "/costing_options/transit", options.add_costing_options());
   sif::ParseTruckCostOptions(doc, "/costing_options/truck", options.add_costing_options());
-  sif::ParseMotorcycleCostOptions(doc, "/costing_options/motorcycle",
-                                  options.add_costing_options());
+  sif::ParseMotorcycleCostOptions(doc, "/costing_options/motorcycle", options.add_costing_options());
   sif::ParseAutoShorterCostOptions(doc, "/costing_options/auto_shorter",
                                    options.add_costing_options());
   sif::ParseAutoDataFixCostOptions(doc, "/costing_options/auto_data_fix",

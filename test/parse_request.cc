@@ -386,7 +386,7 @@ std::string get_filter_request_str(const std::string& costing,
 Api get_request(const std::string& request_str, const Options::Action action) {
   // std::cout << ">>>>> request_str=" << request_str << "<<<<<" << std::endl;
   Api request;
-ParseApi(request_str, action, request);
+  ParseApi(request_str, action, request);
   return request;
 }
 

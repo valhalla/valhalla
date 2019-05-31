@@ -261,7 +261,7 @@ void test_matrix() {
   loki_worker_t loki_worker(config);
 
   Api request;
-ParseApi(test_request, Options::sources_to_targets, request);
+  ParseApi(test_request, Options::sources_to_targets, request);
   loki_worker.matrix(request);
   adjust_scores(*request.mutable_options());
 
@@ -315,7 +315,7 @@ void test_matrix_osrm() {
   loki_worker_t loki_worker(config);
 
   Api request;
-ParseApi(test_request_osrm, Options::sources_to_targets, request);
+  ParseApi(test_request_osrm, Options::sources_to_targets, request);
 
   loki_worker.matrix(request);
   adjust_scores(*request.mutable_options());

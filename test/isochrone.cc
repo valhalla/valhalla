@@ -73,7 +73,7 @@ void try_isochrone(GraphReader& reader,
                    const char* test_request,
                    const std::string& expected) {
   Api request;
-ParseApi(test_request, Options::isochrone, request);
+  ParseApi(test_request, Options::isochrone, request);
   loki_worker.isochrones(request);
 
   // Process isochrone request

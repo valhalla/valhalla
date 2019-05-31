@@ -121,7 +121,8 @@ void test_mid_break(const std::string& date_time) {
     throw std::logic_error(
         "Should be a destination at the midpoint and reverse the route for the second leg");
 
-  mid_break_distance = directions.begin()->summary().length() + directions.rbegin()->summary().length();
+  mid_break_distance =
+      directions.begin()->summary().length() + directions.rbegin()->summary().length();
 }
 
 void test_mid_through(const std::string& date_time) {

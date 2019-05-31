@@ -10,9 +10,8 @@
 namespace valhalla {
 namespace odin {
 
-std::unique_ptr<NarrativeBuilder>
-NarrativeBuilderFactory::Create(const Options& options,
-                                const EnhancedTripLeg* trip_path) {
+std::unique_ptr<NarrativeBuilder> NarrativeBuilderFactory::Create(const Options& options,
+                                                                  const EnhancedTripLeg* trip_path) {
 
   // Get the locale dictionary
   const auto phrase_dictionary = get_locales().find(options.language());
@@ -39,8 +38,7 @@ NarrativeBuilderFactory::Create(const Options& options,
   }
 
   // otherwise just return pointer to NarrativeBuilder
-  return midgard::make_unique<NarrativeBuilder>(options, trip_path,
-                                                *phrase_dictionary->second);
+  return midgard::make_unique<NarrativeBuilder>(options, trip_path, *phrase_dictionary->second);
 }
 
 } // namespace odin

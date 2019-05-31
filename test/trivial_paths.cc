@@ -120,7 +120,7 @@ void try_path(GraphReader& reader,
               const char* test_request,
               const uint32_t expected_edgecount) {
   Api request;
-ParseApi(test_request, Options::route, request);
+  ParseApi(test_request, Options::route, request);
   loki_worker.route(request);
   adjust_scores(*request.mutable_options());
 

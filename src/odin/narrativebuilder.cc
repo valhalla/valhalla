@@ -3389,9 +3389,7 @@ std::string NarrativeBuilder::FormLength(Maneuver& maneuver,
     case Options::miles: {
       return FormUsCustomaryLength(maneuver.length(Options::miles), us_customary_lengths);
     }
-    default: {
-      return FormMetricLength(maneuver.length(Options::kilometers), metric_lengths);
-    }
+    default: { return FormMetricLength(maneuver.length(Options::kilometers), metric_lengths); }
   }
 }
 
