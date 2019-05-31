@@ -153,6 +153,7 @@ jobs:
             export BUILD_TYPE=Release
             ./scripts/node_install.sh&& ./scripts/publish.sh
             echo "//npm.loogia.tk/:_authToken=$NPM_TOKEN" >> ~/.npmrc
+            npm version 3.0.1
             npm publish --registry https://npm.loogia.tk
       - store_artifacts:
           path: ./lib
