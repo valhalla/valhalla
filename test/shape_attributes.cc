@@ -65,34 +65,18 @@ void test_attributes() {
   auto conf = make_conf();
   tyr::actor_t actor(conf);
 
-  actor.trace_attributes(R"({"shape":[{"lat":40.546115,"lon":-76.385076},
-      {"lat":40.544232,"lon":-76.385752}],"costing":"auto","shape_match":"walk_or_snap",
-      "filters":{"attributes":["shape_attributes.time","shape_attributes.length"],
-      "action":"include"}})");
-  actor.cleanup();
   auto attributes_json = actor.trace_attributes(R"({"shape":[{"lat":40.546115,"lon":-76.385076},
       {"lat":40.544232,"lon":-76.385752}],"costing":"auto","shape_match":"walk_or_snap",
-      "filters":{"attributes":["shape_attributes.time","shape_attributes.length"],
+      "filters":{"attributes":["shape_attributes.time","shape_attributes.length","shape_attributes.speed"],
       "action":"include"}})");
   actor.cleanup();
   auto attributes = json_to_pt(attributes_json);
   attributes_json.find("length");
   attributes_json.find("time");
-}
-
-void test_interrupt() {
-  auto conf = make_conf();
-  tyr::actor_t actor(conf);
-  struct test_exception_t {};
-
-  try {
-    actor.trace_attributes(R"({"shape":[{"lat":40.546115,"lon":-76.385076},
-        {"lat":40.544232,"lon":-76.385752}],"costing":"auto","shape_match":"walk_or_snap",
-      "filters":{"attributes":["shape_attributes.time","shape_attributes.length"],
-      "action":"include"}})",
-                           []() -> void { throw test_exception_t{}; });
-    throw std::logic_error("this should have thrown already");
-  } catch (const test_exception_t& e) {}
+  attributes_json.find("speed");
+  // TODO: test a multi edge route, decode the shape and measure that the length between each
+  // is appx the same as the length in the shape attributes. Get the edge time and validate
+  // that that makes sense as well.
 }
 
 } // namespace
@@ -101,8 +85,6 @@ int main() {
   test::suite suite("shape_attributes");
 
   suite.test(TEST_CASE(test_attributes));
-
-  suite.test(TEST_CASE(test_interrupt));
 
   return suite.tear_down();
 }

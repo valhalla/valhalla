@@ -655,6 +655,11 @@ TripLegBuilder::Build(const AttributesController& controller,
   std::unordered_map<AdminInfo, uint32_t, AdminInfo::AdminInfoHasher> admin_info_map;
   std::vector<AdminInfo> admin_info_list;
 
+  // initialize shape_attributes
+  if (controller.category_attribute_enabled(kShapeAttributesCategory)) {
+    trip_path.mutable_shape_attributes();
+  }
+
   // If the path was only one edge we have a special case
   if ((path_end - path_begin) == 1) {
     const GraphTile* tile = graphreader.GetGraphTile(path_begin->edgeid);
@@ -712,10 +717,7 @@ TripLegBuilder::Build(const AttributesController& controller,
     }
 
     // Set shape attributes
-    if (controller.category_attribute_enabled(kShapeAttributesCategory)) {
-      trip_path.mutable_shape_attributes();
-      SetShapeAttributes(controller, path_begin, trip_path, shape);
-    }
+    SetShapeAttributes(controller, path_begin, trip_path, shape);
 
     // Set begin and end heading if requested. Uses shape so
     // must be done after the edge's shape has been added.
@@ -809,9 +811,6 @@ TripLegBuilder::Build(const AttributesController& controller,
   // TODO: this is temp until we use transit stop type from transitland
   TransitPlatformInfo_Type prev_transit_node_type = TransitPlatformInfo_Type_kStop;
 
-  if (controller.category_attribute_enabled(kShapeAttributesCategory)) {
-    trip_path.mutable_shape_attributes();
-  }
   for (auto edge_itr = path_begin; edge_itr != path_end; ++edge_itr, ++edge_index) {
     const GraphId& edge = edge_itr->edgeid;
     const uint32_t trip_id = edge_itr->trip_id;
