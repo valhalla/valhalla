@@ -2347,17 +2347,11 @@ void ManeuversBuilder::ProcessTurnLanes(std::list<Maneuver>& maneuvers) {
       }
 
       // TODO
-      // If curr_man is short then specific lane activation
-      // Left-most left / through / right
-      // Right-most left / through / right
-
       // If curr_man is short ramp and prev_man is ramp special logic
       // (if curr_man is left or right subset of prev_man L|T|R is begin subset of L|T|R|R)
 
       // Assign turn lanes within step
       // Track remaining maneuver distance
-
-      // If remaining distance is short then specific lane activation
 
       // Handle any special `none` lanes
 
