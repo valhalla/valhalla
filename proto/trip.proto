@@ -261,9 +261,9 @@ message TripLeg {
   }
 
   message ShapeAttributes {
-    optional uint32 time = 1; // milliseconds
-    optional uint32 length = 2; // decimeters
-    optional uint32 speed = 3; // decimeters per sec
+    repeated uint32 time = 1 [packed=true]; // milliseconds
+    repeated uint32 length = 2 [packed=true]; // decimeters
+    repeated uint32 speed = 3 [packed=true]; // decimeters per sec
   }
 
   optional uint64 osm_changeset = 1;
@@ -275,7 +275,7 @@ message TripLeg {
   repeated Admin admin = 7;
   optional string shape = 8;
   optional BoundingBox bbox = 9;
-  repeated ShapeAttributes shape_attributes = 10;
+  optional ShapeAttributes shape_attributes = 10;
 }
 
 message TripRoute {

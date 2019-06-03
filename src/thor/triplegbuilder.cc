@@ -162,31 +162,35 @@ void AssignAdmins(const AttributesController& controller,
 }
 
 void SetShapeAttributes(const AttributesController& controller,
+                        std::vector<PathInfo>::const_iterator path_begin,
                         TripLeg& trip_path,
                         std::vector<PointLL>& shape) {
-  if (controller.category_attribute_enabled(kShapeAttributesCategory)) {
+  if (trip_path.has_shape_attributes()) {
+    // calculates total edge time and total edge length
+    double edge_time = path_begin->elapsed_time - trip_path.node().rbegin()->elapsed_time();
+    double edge_length = trip_path.node().rbegin()->edge().length();
+
     // Set the shape attributes
     for (size_t i = 1; i < shape.size(); i++) {
-      float time, distance, speed;
-      TripLeg_ShapeAttributes* trip_shape_attribute = trip_path.add_shape_attributes();
-      TripLeg_Node* node = trip_path.add_node();
-
+      double distance = shape[i].Distance(shape[i - 1]);
+      double distance_pct = distance / edge_length;
+      double time = edge_time * distance_pct;
       // Set shape attributes time per shape point if requested
       if (controller.attributes.at(kShapeAttributesTime)) {
-        time = node[1].elapsed_time() - node[0].elapsed_time();
-        trip_shape_attribute->set_time(time);
+        // convert time to milliseconds and then round to an integer
+        trip_path.mutable_shape_attributes()->add_time((time * 1000) + 0.5);
       }
 
       // Set shape attributes length per shape point if requested
       if (controller.attributes.at(kShapeAttributesLength)) {
-        distance = shape[i].Distance(shape[i - 1]);
-        trip_shape_attribute->set_length(distance);
+        // convert length to decimeters and then round to an integer
+        trip_path.mutable_shape_attributes()->add_length((distance * 10) + 0.5);
       }
 
       // Set shape attributes speed per shape point if requested
       if (controller.attributes.at(kShapeAttributesSpeed)) {
-        speed = distance / time;
-        trip_shape_attribute->set_speed(speed);
+        // convert speed to decimeters per sec and then round to an integer
+        trip_path.mutable_shape_attributes()->add_speed((distance * 10 / time) + 0.5);
       }
     }
   }
@@ -707,6 +711,12 @@ TripLegBuilder::Build(const AttributesController& controller,
       trip_edge->set_end_shape_index(shape.size() - 1);
     }
 
+    // Set shape attributes
+    if (controller.category_attribute_enabled(kShapeAttributesCategory)) {
+      //trip_path.add_shape_attributes();
+      SetShapeAttributes(controller, path_begin, trip_path, shape);
+    }
+
     // Set begin and end heading if requested. Uses shape so
     // must be done after the edge's shape has been added.
     SetHeadings(trip_edge, controller, edge, shape, 0);
@@ -781,9 +791,6 @@ TripLegBuilder::Build(const AttributesController& controller,
     // Assign the trip path admins
     AssignAdmins(controller, trip_path, admin_info_list);
 
-    // Set shape attributes
-    SetShapeAttributes(controller, trip_path, shape);
-
     return trip_path;
   }
 
@@ -801,6 +808,10 @@ TripLegBuilder::Build(const AttributesController& controller,
   const DirectedEdge* prev_de = nullptr;
   // TODO: this is temp until we use transit stop type from transitland
   TransitPlatformInfo_Type prev_transit_node_type = TransitPlatformInfo_Type_kStop;
+  if (controller.category_attribute_enabled(kShapeAttributesCategory)) {
+    // trip_path;
+  }
+
   for (auto edge_itr = path_begin; edge_itr != path_end; ++edge_itr, ++edge_index) {
     const GraphId& edge = edge_itr->edgeid;
     const uint32_t trip_id = edge_itr->trip_id;
@@ -1129,6 +1140,9 @@ TripLegBuilder::Build(const AttributesController& controller,
     // must be done after the edge's shape has been added.
     SetHeadings(trip_edge, controller, directededge, trip_shape, begin_index);
 
+    // Set shape attributes
+    SetShapeAttributes(controller, path_begin, trip_path, trip_shape);
+
     // Add connected edges from the start node. Do this after the first trip
     // edge is added
     //
@@ -1282,9 +1296,6 @@ TripLegBuilder::Build(const AttributesController& controller,
 
   // Set the bounding box of the shape
   SetBoundingBox(trip_path, trip_shape);
-
-  // Set the shape attributes
-  SetShapeAttributes(controller, trip_path, trip_shape);
 
   // Set shape if requested
   if (controller.attributes.at(kShape)) {
