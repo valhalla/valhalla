@@ -2335,30 +2335,34 @@ void ManeuversBuilder::ProcessTurnLanes(std::list<Maneuver>& maneuvers) {
   // Walk the maneuvers to activate turn lanes
   while (next_man != maneuvers.end()) {
 
-    // Walk maneuvers by node (prev_edge of node has the turn lane info)
-    // Assign turn lane at transition point
-    auto prev_edge = trip_path_->GetPrevEdge(curr_man->begin_node_index());
-    if (prev_edge && (prev_edge->turn_lanes_size() > 0)) {
-      prev_edge->ActivateTurnLanes(GetExpectedTurnLaneDirection(*(curr_man)));
+    // Only process driving maneuvers
+    if (curr_man->travel_mode() == TripLeg_TravelMode::TripLeg_TravelMode_kDrive) {
+
+      // Walk maneuvers by node (prev_edge of node has the turn lane info)
+      // Assign turn lane at transition point
+      auto prev_edge = trip_path_->GetPrevEdge(curr_man->begin_node_index());
+      if (prev_edge && (prev_edge->turn_lanes_size() > 0)) {
+        prev_edge->ActivateTurnLanes(GetExpectedTurnLaneDirection(*(curr_man)), curr_man->length(),
+                                     next_man->type());
+      }
+
+      // TODO
+      // If curr_man is short then specific lane activation
+      // Left-most left / through / right
+      // Right-most left / through / right
+
+      // If curr_man is short ramp and prev_man is ramp special logic
+      // (if curr_man is left or right subset of prev_man L|T|R is begin subset of L|T|R|R)
+
+      // Assign turn lanes within step
+      // Track remaining maneuver distance
+
+      // If remaining distance is short then specific lane activation
+
+      // Handle any special `none` lanes
+
+      // Do we mark maneuver?
     }
-
-    // TODO
-    // If curr_man is short then specific lane activation
-    // Left-most left / through / right
-    // Right-most left / through / right
-
-    // If curr_man is short ramp and prev_man is ramp special logic
-    // (if curr_man is left or right subset of prev_man L|T|R is begin subset of L|T|R|R)
-
-    // Assign turn lanes within step
-    // Track remaining maneuver distance
-
-    // If remaining distance is short then specific lane activation
-
-    // Handle any special `none` lanes
-
-    // Do we mark maneuver?
-
     // on to the next maneuver...
     curr_man = next_man;
     ++next_man;

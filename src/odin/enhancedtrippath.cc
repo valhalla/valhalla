@@ -17,6 +17,8 @@ using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 
 namespace {
+constexpr float kShortRemainingDistanceThreshold = 0.402f; // Kilometers (~quarter mile)
+
 const std::string& TripLeg_RoadClass_Name(int v) {
   static const std::unordered_map<int, std::string> values{
       {0, "kMotorway"}, {1, "kTrunk"},        {2, "kPrimary"},     {3, "kSecondary"},
@@ -468,15 +470,80 @@ bool EnhancedTripLeg_Edge::HasNonDirectionalTurnLane() const {
   return false;
 }
 
-uint16_t EnhancedTripLeg_Edge::ActivateTurnLanes(uint16_t turn_lane_direction) {
+uint16_t EnhancedTripLeg_Edge::ActivateTurnLanesFromLeft(uint16_t turn_lane_direction,
+                                                         uint16_t activated_max) {
   uint16_t activated_count = 0;
   for (auto& turn_lane : *(mutable_turn_lanes())) {
+    // Stop processing the lanes if the activated maximum has been reached
+    if (activated_count >= activated_max) {
+      break;
+    }
+
+    // If the turn lane is in the specified direction then activate the lane
+    // and increment the activated count
     if (turn_lane.directions_mask() & turn_lane_direction) {
       turn_lane.set_is_active(true);
       ++activated_count;
     }
   }
   return activated_count;
+}
+
+uint16_t EnhancedTripLeg_Edge::ActivateTurnLanesFromRight(uint16_t turn_lane_direction,
+                                                          uint16_t activated_max) {
+  uint16_t activated_count = 0;
+  for (auto turn_lane_iter = mutable_turn_lanes()->rbegin();
+       turn_lane_iter != mutable_turn_lanes()->rend(); ++turn_lane_iter) {
+    //    for (auto& turn_lane : *(mutable_turn_lanes())) {
+    // Stop processing the lanes if the activated maximum has been reached
+    if (activated_count >= activated_max) {
+      break;
+    }
+
+    // If the turn lane is in the specified direction then activate the lane
+    // and increment the activated count
+    if (turn_lane_iter->directions_mask() & turn_lane_direction) {
+      turn_lane_iter->set_is_active(true);
+      ++activated_count;
+    }
+  }
+  return activated_count;
+}
+
+uint16_t
+EnhancedTripLeg_Edge::ActivateTurnLanes(uint16_t turn_lane_direction,
+                                        float remaining_step_distance,
+                                        const DirectionsLeg_Maneuver_Type& next_maneuver_type) {
+  // If remaining step distance is less than short threshold
+  // and next maneuver is not a straight
+  if ((remaining_step_distance < kShortRemainingDistanceThreshold) &&
+      !((next_maneuver_type == DirectionsLeg_Maneuver_Type_kBecomes) ||
+        (next_maneuver_type == DirectionsLeg_Maneuver_Type_kContinue) ||
+        (next_maneuver_type == DirectionsLeg_Maneuver_Type_kRampStraight) ||
+        (next_maneuver_type == DirectionsLeg_Maneuver_Type_kStayStraight))) {
+    // Activate only specific matching turn lanes
+    switch (next_maneuver_type) {
+      case DirectionsLeg_Maneuver_Type_kUturnLeft:
+      case DirectionsLeg_Maneuver_Type_kSharpLeft:
+      case DirectionsLeg_Maneuver_Type_kLeft:
+      case DirectionsLeg_Maneuver_Type_kSlightLeft:
+      case DirectionsLeg_Maneuver_Type_kExitLeft:
+      case DirectionsLeg_Maneuver_Type_kRampLeft:
+        return ActivateTurnLanesFromLeft(turn_lane_direction, 1);
+      case DirectionsLeg_Maneuver_Type_kSlightRight:
+      case DirectionsLeg_Maneuver_Type_kExitRight:
+      case DirectionsLeg_Maneuver_Type_kRampRight:
+      case DirectionsLeg_Maneuver_Type_kRight:
+      case DirectionsLeg_Maneuver_Type_kSharpRight:
+      case DirectionsLeg_Maneuver_Type_kUturnRight:
+        return ActivateTurnLanesFromRight(turn_lane_direction, 1);
+      default:
+        return 0;
+    }
+  } else {
+    // Activate all matching turn lanes
+    return ActivateTurnLanesFromLeft(turn_lane_direction);
+  }
 }
 
 #ifdef LOGGING_LEVEL_TRACE
