@@ -1,14 +1,17 @@
 {
   "name": "valhalla",
-  "version": "3.0.2",
+  "version": "3.0.1",
   "main": "lib/index.js",
+  "files": [
+    "lib/binding/node_valhalla.node"
+  ],
   "directories": {
     "doc": "docs",
     "test": "test"
   },
   "scripts": {
     "test": "tape test/bindings/nodejs/*.test.js",
-    "install-valhalla-lib": "./scripts/node_install.sh"
+    "install-valhalla-lib": "node-pre-gyp install --fallback-to-build=false || ./scripts/node_install.sh"
   },
   "engines": {
     "node": ">=8.11.2"
