@@ -407,6 +407,7 @@ json::MapPtr serialize_shape_attributes(const AttributesController& controller,
       // milliseconds (ms) to seconds (sec)
       times_array->push_back(json::fp_t{time * MILLISECOND_TO_SEC, 3});
     }
+    attributes_map->emplace("time", times_array);
   }
   if (controller.attributes.at(kShapeAttributesLength)) {
     auto lengths_array = json::array({});
@@ -414,6 +415,7 @@ json::MapPtr serialize_shape_attributes(const AttributesController& controller,
       // decimeters (dm) to kilometer (km)
       lengths_array->push_back(json::fp_t{length * DECIMETER_TO_KM, 3});
     }
+    attributes_map->emplace("length", lengths_array);
   }
   if (controller.attributes.at(kShapeAttributesSpeed)) {
     auto speeds_array = json::array({});
@@ -421,6 +423,7 @@ json::MapPtr serialize_shape_attributes(const AttributesController& controller,
       // dm/s to km/h
       speeds_array->push_back(json::fp_t{speed * DMS_TO_KMH, 3});
     }
+    attributes_map->emplace("speed", speeds_array);
   }
   return attributes_map;
 }
