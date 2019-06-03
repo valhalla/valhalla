@@ -713,7 +713,7 @@ TripLegBuilder::Build(const AttributesController& controller,
 
     // Set shape attributes
     if (controller.category_attribute_enabled(kShapeAttributesCategory)) {
-      //trip_path.add_shape_attributes();
+      trip_path.mutable_shape_attributes();
       SetShapeAttributes(controller, path_begin, trip_path, shape);
     }
 
@@ -808,10 +808,10 @@ TripLegBuilder::Build(const AttributesController& controller,
   const DirectedEdge* prev_de = nullptr;
   // TODO: this is temp until we use transit stop type from transitland
   TransitPlatformInfo_Type prev_transit_node_type = TransitPlatformInfo_Type_kStop;
-  if (controller.category_attribute_enabled(kShapeAttributesCategory)) {
-    // trip_path;
-  }
 
+  if (controller.category_attribute_enabled(kShapeAttributesCategory)) {
+    trip_path.mutable_shape_attributes();
+  }
   for (auto edge_itr = path_begin; edge_itr != path_end; ++edge_itr, ++edge_index) {
     const GraphId& edge = edge_itr->edgeid;
     const uint32_t trip_id = edge_itr->trip_id;
