@@ -397,26 +397,32 @@ json::ArrayPtr serialize_matched_points(const AttributesController& controller,
   return match_points_array;
 }
 
-json::ArrayPtr serialize_shape_attributes(const AttributesController& controller,
-                                          const TripLeg& trip_path) {
-  auto attributes_array = json::array({});
-  for (const auto& attr : trip_path.shape_attributes()) {
-    auto attr_map = json::map({});
-    if (controller.attributes.at(kShapeAttributesTime) && attr.has_time()) {
+json::MapPtr serialize_shape_attributes(const AttributesController& controller,
+                                        const TripLeg& trip_path) {
+  auto attributes_map = json::map({});
+
+  if (controller.attributes.at(kShapeAttributesTime)) {
+    auto times_array = json::array({});
+    for (const auto& time : trip_path.shape_attributes().time()) {
       // milliseconds (ms) to seconds (sec)
-      attr_map->emplace("time", json::fp_t{attr.time() * MILLISECOND_TO_SEC, 3});
+      times_array->push_back(json::fp_t{time * MILLISECOND_TO_SEC, 3});
     }
-    if (controller.attributes.at(kShapeAttributesLength) && attr.has_length()) {
-      // decimeters (dm) to kilometer (km)
-      attr_map->emplace("length", json::fp_t{attr.length() * DECIMETER_TO_KM, 3});
-    }
-    if (controller.attributes.at(kShapeAttributesSpeed) && attr.has_speed()) {
-      // dm/s to km/h
-      attr_map->emplace("speed", json::fp_t{attr.speed() * DMS_TO_KMH, 3});
-    }
-    attributes_array->push_back(attr_map);
   }
-  return attributes_array;
+  if (controller.attributes.at(kShapeAttributesLength)) {
+    auto lengths_array = json::array({});
+    for (const auto& length : trip_path.shape_attributes().length()) {
+      // decimeters (dm) to kilometer (km)
+      lengths_array->push_back(json::fp_t{length * DECIMETER_TO_KM, 3});
+    }
+  }
+  if (controller.attributes.at(kShapeAttributesSpeed)) {
+    auto speeds_array = json::array({});
+    for (const auto& speed : trip_path.shape_attributes().speed()) {
+      // dm/s to km/h
+      speeds_array->push_back(json::fp_t{speed * DMS_TO_KMH, 3});
+    }
+  }
+  return attributes_map;
 }
 
 void append_trace_info(
