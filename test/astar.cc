@@ -355,7 +355,7 @@ void trivial_path_no_uturns(const std::string& config_file) {
   // Enhance the local level of the graph. This adds information to the local
   // level that is usable across all levels (density, administrative
   // information (and country based attribution), edge transition logic, etc.
-  vj::GraphEnhancer::Enhance(conf, access_file);
+  vj::GraphEnhancer::Enhance(conf, osmdata, access_file);
 
   // Validate the graph and add information that cannot be added until
   // full graph is formed.
