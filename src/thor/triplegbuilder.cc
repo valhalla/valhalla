@@ -1139,9 +1139,6 @@ TripLegBuilder::Build(const AttributesController& controller,
     // must be done after the edge's shape has been added.
     SetHeadings(trip_edge, controller, directededge, trip_shape, begin_index);
 
-    // Set shape attributes
-    SetShapeAttributes(controller, path_begin, trip_path, trip_shape);
-
     // Add connected edges from the start node. Do this after the first trip
     // edge is added
     //
@@ -1300,6 +1297,8 @@ TripLegBuilder::Build(const AttributesController& controller,
   if (controller.attributes.at(kShape)) {
     trip_path.set_shape(encode<std::vector<PointLL>>(trip_shape));
   }
+  // Set shape attributes
+  SetShapeAttributes(controller, path_begin, trip_path, trip_shape);
 
   if (osmchangeset != 0 && controller.attributes.at(kOsmChangeset)) {
     trip_path.set_osm_changeset(osmchangeset);
