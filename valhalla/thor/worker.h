@@ -56,10 +56,11 @@ public:
   std::string trace_attributes(Api& request);
 
 protected:
-  std::vector<thor::PathInfo> get_path(PathAlgorithm* path_algorithm,
-                                       Location& origin,
-                                       Location& destination,
-                                       const std::string& costing);
+  std::vector<std::vector<thor::PathInfo>> get_path(PathAlgorithm* path_algorithm,
+                                                    Location& origin,
+                                                    Location& destination,
+                                                    const std::string& costing,
+                                                    const Options& options);
   void log_admin(const TripLeg&);
   sif::cost_ptr_t get_costing(const Costing costing, const Options& options);
   thor::PathAlgorithm* get_path_algorithm(const std::string& routetype,
@@ -74,12 +75,8 @@ protected:
                       TripLeg& leg,
                       std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>>&
                           route_discontinuities);
-  void path_arrive_by(google::protobuf::RepeatedPtrField<Location>& correlated,
-                      const std::string& costing,
-                      Trip& trip);
-  void path_depart_at(google::protobuf::RepeatedPtrField<Location>& correlated,
-                      const std::string& costing,
-                      Trip& trip);
+  void path_arrive_by(Api& api, const std::string& costing);
+  void path_depart_at(Api& api, const std::string& costing);
 
   void parse_locations(Api& request);
   void parse_measurements(const Api& request);

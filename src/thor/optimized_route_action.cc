@@ -62,7 +62,7 @@ void thor_worker_t::optimized_route(Api& request) {
   }
 
   // run the route
-  path_depart_at(*options.mutable_locations(), costing, *request.mutable_trip());
+  path_depart_at(request, costing);
 }
 
 } // namespace thor

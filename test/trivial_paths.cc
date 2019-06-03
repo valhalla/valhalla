@@ -133,7 +133,7 @@ void try_path(GraphReader& reader,
   AStarPathAlgorithm astar;
   valhalla::Location origin = request.options().locations(0);
   valhalla::Location dest = request.options().locations(1);
-  auto pathedges = astar.GetBestPath(origin, dest, reader, mode_costing, mode);
+  auto pathedges = astar.GetBestPath(origin, dest, reader, mode_costing, mode).front();
   if (pathedges.size() != expected_edgecount) {
     throw std::runtime_error("Trivial path failed: expected edges: " +
                              std::to_string(expected_edgecount));

@@ -243,11 +243,14 @@ void assert_is_trivial_path(valhalla::Location& origin,
   assert(bool(costs[int(mode)]));
 
   vt::AStarPathAlgorithm astar;
-  auto path = astar.GetBestPath(origin, dest, reader, costs, mode);
+  auto paths = astar.GetBestPath(origin, dest, reader, costs, mode);
 
   uint32_t time = 0;
-  for (auto& p : path) {
-    time += p.elapsed_time;
+  for (const auto& path : paths) {
+    for (const auto& p : path) {
+      time += p.elapsed_time;
+    }
+    break;
   }
 
   const DirectedEdge* de = tile->directededge(expected_edge_index);
@@ -390,8 +393,10 @@ void trivial_path_no_uturns(const std::string& config_file) {
   }
 
   vt::AStarPathAlgorithm astar;
-  auto path = astar.GetBestPath(*options.mutable_locations(0), *options.mutable_locations(1),
-                                graph_reader, mode_costing, mode);
+  auto path = astar
+                  .GetBestPath(*options.mutable_locations(0), *options.mutable_locations(1),
+                               graph_reader, mode_costing, mode)
+                  .front();
 
   vt::AttributesController controller;
   auto& leg = *api.mutable_trip()->mutable_routes()->Add()->mutable_legs()->Add();

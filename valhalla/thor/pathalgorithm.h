@@ -10,7 +10,7 @@
 
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
-#include <valhalla/proto/tripcommon.pb.h>
+#include <valhalla/proto/api.pb.h>
 #include <valhalla/sif/dynamiccost.h>
 #include <valhalla/thor/pathinfo.h>
 
@@ -49,11 +49,13 @@ public:
    * @return Returns the path edges (and elapsed time/modes at end of
    *          each edge).
    */
-  virtual std::vector<PathInfo> GetBestPath(valhalla::Location& origin,
-                                            valhalla::Location& dest,
-                                            baldr::GraphReader& graphreader,
-                                            const std::shared_ptr<sif::DynamicCost>* mode_costing,
-                                            const sif::TravelMode mode) = 0;
+  virtual std::vector<std::vector<PathInfo>>
+  GetBestPath(valhalla::Location& origin,
+              valhalla::Location& dest,
+              baldr::GraphReader& graphreader,
+              const std::shared_ptr<sif::DynamicCost>* mode_costing,
+              const sif::TravelMode mode,
+              const Options& options = Options::default_instance()) = 0;
 
   /**
    * Clear the temporary information generated during path construction.

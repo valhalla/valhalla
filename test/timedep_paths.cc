@@ -136,14 +136,14 @@ void try_path(GraphReader& reader,
   valhalla::Location dest = request.options().locations(1);
   if (depart_at) {
     TimeDepForward alg;
-    auto pathedges = alg.GetBestPath(origin, dest, reader, mode_costing, mode);
+    auto pathedges = alg.GetBestPath(origin, dest, reader, mode_costing, mode).front();
     if (pathedges.size() != expected_edgecount) {
       throw std::runtime_error("Depart at path failed: expected edges: " +
                                std::to_string(expected_edgecount));
     }
   } else {
     TimeDepReverse alg;
-    auto pathedges = alg.GetBestPath(origin, dest, reader, mode_costing, mode);
+    auto pathedges = alg.GetBestPath(origin, dest, reader, mode_costing, mode).front();
     if (pathedges.size() != expected_edgecount) {
       throw std::runtime_error("Arrive by path failed: expected edges: " +
                                std::to_string(expected_edgecount));

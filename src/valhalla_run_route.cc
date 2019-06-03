@@ -119,8 +119,7 @@ valhalla::TripLeg PathTest(GraphReader& reader,
                            bool match_test,
                            const std::string& routetype) {
   auto t1 = std::chrono::high_resolution_clock::now();
-  std::vector<PathInfo> pathedges;
-  pathedges = pathalgorithm->GetBestPath(origin, dest, reader, mode_costing, mode);
+  auto paths = pathalgorithm->GetBestPath(origin, dest, reader, mode_costing, mode);
   cost_ptr_t cost = mode_costing[static_cast<uint32_t>(mode)];
 
   // If bidirectional A*, disable use of destination only edges on the first pass.
@@ -131,7 +130,7 @@ valhalla::TripLeg PathTest(GraphReader& reader,
 
   cost->set_pass(0);
   data.incPasses();
-  if (pathedges.size() == 0 || (routetype == "pedestrian" && pathalgorithm->has_ferry())) {
+  if (paths.empty() || (routetype == "pedestrian" && pathalgorithm->has_ferry())) {
     if (cost->AllowMultiPass()) {
       LOG_INFO("Try again with relaxed hierarchy limits");
       cost->set_pass(1);
@@ -140,14 +139,15 @@ valhalla::TripLeg PathTest(GraphReader& reader,
       float expansion_within_factor = (using_astar) ? 4.0f : 2.0f;
       cost->RelaxHierarchyLimits(using_astar, expansion_within_factor);
       cost->set_allow_destination_only(true);
-      pathedges = pathalgorithm->GetBestPath(origin, dest, reader, mode_costing, mode);
+      paths = pathalgorithm->GetBestPath(origin, dest, reader, mode_costing, mode);
       data.incPasses();
     }
   }
-  if (pathedges.size() == 0) {
+  if (paths.empty()) {
     // Return an empty trip path
     return valhalla::TripLeg();
   }
+  const auto& pathedges = paths.front();
 
   auto t2 = std::chrono::high_resolution_clock::now();
   uint32_t msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
@@ -211,7 +211,7 @@ valhalla::TripLeg PathTest(GraphReader& reader,
     uint32_t totalms = 0;
     for (uint32_t i = 0; i < iterations; i++) {
       t1 = std::chrono::high_resolution_clock::now();
-      pathedges = pathalgorithm->GetBestPath(origin, dest, reader, mode_costing, mode);
+      paths = pathalgorithm->GetBestPath(origin, dest, reader, mode_costing, mode);
       t2 = std::chrono::high_resolution_clock::now();
       totalms += std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
       pathalgorithm->Clear();
