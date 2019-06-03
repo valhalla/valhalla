@@ -8,7 +8,7 @@
   },
   "scripts": {
     "test": "tape test/bindings/nodejs/*.test.js",
-    "install": "node-pre-gyp install --fallback-to-build=false || ./scripts/node_install.sh"
+    "install-valhalla-lib": "./scripts/node_install.sh"
   },
   "engines": {
     "node": ">=8.11.2"
