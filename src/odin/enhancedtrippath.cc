@@ -529,6 +529,7 @@ EnhancedTripLeg_Edge::ActivateTurnLanes(uint16_t turn_lane_direction,
       case DirectionsLeg_Maneuver_Type_kSlightLeft:
       case DirectionsLeg_Maneuver_Type_kExitLeft:
       case DirectionsLeg_Maneuver_Type_kRampLeft:
+      case DirectionsLeg_Maneuver_Type_kDestinationLeft:
         return ActivateTurnLanesFromLeft(turn_lane_direction, 1);
       case DirectionsLeg_Maneuver_Type_kSlightRight:
       case DirectionsLeg_Maneuver_Type_kExitRight:
@@ -536,9 +537,23 @@ EnhancedTripLeg_Edge::ActivateTurnLanes(uint16_t turn_lane_direction,
       case DirectionsLeg_Maneuver_Type_kRight:
       case DirectionsLeg_Maneuver_Type_kSharpRight:
       case DirectionsLeg_Maneuver_Type_kUturnRight:
+      case DirectionsLeg_Maneuver_Type_kDestinationRight:
         return ActivateTurnLanesFromRight(turn_lane_direction, 1);
+      case DirectionsLeg_Maneuver_Type_kMerge: // TODO update when left/right assigned
+        return ActivateTurnLanesFromLeft(turn_lane_direction);
+      case DirectionsLeg_Maneuver_Type_kRoundaboutEnter:
+      case DirectionsLeg_Maneuver_Type_kRoundaboutExit:
+      case DirectionsLeg_Maneuver_Type_kFerryEnter:
+      case DirectionsLeg_Maneuver_Type_kFerryExit:
+        return ActivateTurnLanesFromLeft(turn_lane_direction);
+      case DirectionsLeg_Maneuver_Type_kDestination:
+        if (drive_on_right()) {
+          return ActivateTurnLanesFromRight(turn_lane_direction, 1);
+        } else {
+          return ActivateTurnLanesFromLeft(turn_lane_direction, 1);
+        }
       default:
-        return 0;
+        return ActivateTurnLanesFromLeft(turn_lane_direction);
     }
   } else {
     // Activate all matching turn lanes
