@@ -326,8 +326,8 @@ void thor_worker_t::log_admin(const valhalla::TripLeg& trip_path) {
 
 /*
  * Apply attribute filters from the request to the AttributesController. These filters
- * allow including or excluding specific attributes from the response. These filters
- * are honored in route, trace_route, and trace_attributes actions.
+ * allow including or excluding specific attributes from the response in route,
+ * trace_route, and trace_attributes actions.
  */
 void thor_worker_t::parse_filter_attributes(const valhalla_request_t& request,
                                             bool is_strict_filter = false) {
