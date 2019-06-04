@@ -105,19 +105,20 @@ public:
 /**
  * Test a single path from origin to destination.
  */
-valhalla::TripLeg PathTest(GraphReader& reader,
-                           valhalla::Location& origin,
-                           valhalla::Location& dest,
-                           PathAlgorithm* pathalgorithm,
-                           const std::shared_ptr<DynamicCost>* mode_costing,
-                           const TravelMode mode,
-                           PathStatistics& data,
-                           bool multi_run,
-                           uint32_t iterations,
-                           bool using_astar,
-                           bool using_bd,
-                           bool match_test,
-                           const std::string& routetype) {
+const valhalla::TripLeg* PathTest(GraphReader& reader,
+                                  valhalla::Location& origin,
+                                  valhalla::Location& dest,
+                                  PathAlgorithm* pathalgorithm,
+                                  const std::shared_ptr<DynamicCost>* mode_costing,
+                                  const TravelMode mode,
+                                  PathStatistics& data,
+                                  bool multi_run,
+                                  uint32_t iterations,
+                                  bool using_astar,
+                                  bool using_bd,
+                                  bool match_test,
+                                  const std::string& routetype,
+                                  valhalla::Api& request) {
   auto t1 = std::chrono::high_resolution_clock::now();
   auto paths = pathalgorithm->GetBestPath(origin, dest, reader, mode_costing, mode);
   cost_ptr_t cost = mode_costing[static_cast<uint32_t>(mode)];
@@ -145,7 +146,7 @@ valhalla::TripLeg PathTest(GraphReader& reader,
   }
   if (paths.empty()) {
     // Return an empty trip path
-    return valhalla::TripLeg();
+    return nullptr;
   }
   const auto& pathedges = paths.front();
 
@@ -156,7 +157,7 @@ valhalla::TripLeg PathTest(GraphReader& reader,
   // Form trip path
   t1 = std::chrono::high_resolution_clock::now();
   AttributesController controller;
-  valhalla::TripLeg trip_path;
+  auto& trip_path = *request.mutable_trip()->mutable_routes()->Add()->mutable_legs()->Add();
   TripLegBuilder::Build(controller, reader, mode_costing, pathedges.begin(), pathedges.end(), origin,
                         dest, std::list<valhalla::Location>{}, trip_path);
   t2 = std::chrono::high_resolution_clock::now();
@@ -219,7 +220,7 @@ valhalla::TripLeg PathTest(GraphReader& reader,
     msecs = totalms / iterations;
     LOG_INFO("PathAlgorithm GetBestPath average: " + std::to_string(msecs) + " ms");
   }
-  return trip_path;
+  return &request.trip().routes(0).legs(0);
 }
 
 namespace std {
@@ -317,7 +318,6 @@ std::string GetFormattedTime(uint32_t seconds) {
 }
 
 valhalla::DirectionsLeg DirectionsTest(valhalla::Api& api,
-                                       valhalla::TripLeg& trip_path,
                                        valhalla::Location& orig,
                                        valhalla::Location& dest,
                                        PathStatistics& data) {
@@ -541,7 +541,6 @@ int main(int argc, char* argv[]) {
   factory.RegisterStandardCostingModels();
 
   // Get the costing method - pass the JSON configuration
-  valhalla::TripLeg trip_path;
   TravelMode mode;
   std::shared_ptr<DynamicCost> mode_costing[4];
   if (routetype == "multimodal") {
@@ -620,17 +619,17 @@ int main(int argc, char* argv[]) {
     bool using_bd = pathalgorithm == &bd;
 
     // Get the best path
+    const valhalla::TripLeg* trip_path = nullptr;
     try {
       trip_path = PathTest(reader, origin, dest, pathalgorithm, mode_costing, mode, data, multi_run,
-                           iterations, using_astar, using_bd, match_test, routetype);
+                           iterations, using_astar, using_bd, match_test, routetype, request);
     } catch (std::runtime_error& rte) { LOG_ERROR("trip_path not found"); }
 
     // If successful get directions
-    if (trip_path.node().size() > 0) {
+    if (trip_path && trip_path->node_size() != 0) {
       // Try the the directions
       auto t1 = std::chrono::high_resolution_clock::now();
-      valhalla::DirectionsLeg trip_directions =
-          DirectionsTest(request, trip_path, origin, dest, data);
+      const auto& trip_directions = DirectionsTest(request, origin, dest, data);
       auto t2 = std::chrono::high_resolution_clock::now();
       auto msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
 
