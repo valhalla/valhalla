@@ -840,7 +840,6 @@ std::vector<PathInfo> MultiModalPathAlgorithm::FormPath(const uint32_t dest) {
 
   // Work backwards from the destination
   std::vector<PathInfo> path;
-  float cost = 0.f;
   for (auto edgelabel_index = dest; edgelabel_index != kInvalidLabel;
        edgelabel_index = edgelabels_[edgelabel_index].predecessor()) {
     const MMEdgeLabel& edgelabel = edgelabels_[edgelabel_index];
@@ -851,10 +850,6 @@ std::vector<PathInfo> MultiModalPathAlgorithm::FormPath(const uint32_t dest) {
     if (edgelabel.use() == Use::kFerry) {
       has_ferry_ = true;
     }
-
-    // Remember the cost
-    if (cost == 0.f)
-      cost = edgelabel.cost().cost;
   }
 
   // Reverse the list and return
