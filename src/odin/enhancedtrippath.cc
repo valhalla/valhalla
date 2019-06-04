@@ -1018,7 +1018,7 @@ std::string EnhancedTripLeg_Edge::TurnLanesToString(
 
   for (const auto& turn_lane : turn_lanes) {
     if (!str.empty()) {
-      str += "|";
+      str += " | ";
     }
 
     uint16_t mask = turn_lane.directions_mask();
@@ -1110,6 +1110,11 @@ std::string EnhancedTripLeg_Edge::TurnLanesToString(
         str += kTurnLaneNames.at(kTurnLaneReverse);
         prior_item = true;
       }
+    }
+
+    // Output if marked as active
+    if (turn_lane.is_active()) {
+      str += " ACTIVE";
     }
   }
   return str;
