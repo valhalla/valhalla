@@ -59,19 +59,27 @@ const auto conf = json_to_pt(R"({
 void test_parse_filter_attributes_excludes() {
   tyr::actor_t actor(conf, true);
 
-  std::vector<std::string> test_cases = {actor.trace_route(
-                                             R"({"costing":"auto","shape_match":"map_snap","shape":[
+  std::vector<std::string> test_cases = {
+      actor.trace_attributes(
+          R"({"costing":"auto","shape_match":"map_snap","shape":[
           {"lat":52.09110,"lon":5.09806},
           {"lat":52.09098,"lon":5.09679}],
           "filters":{"attributes":["shape"], "action":"exclude"}})"),
-                                         actor.trace_attributes(
-                                             R"({"costing":"auto","shape_match":"map_snap","shape":[
-          {"lat":52.09110,"lon":5.09806},
-          {"lat":52.09098,"lon":5.09679}],"filters":{"attributes":["shape"], "action":"exclude"}})"),
-                                         actor.route(R"({"costing":"auto","locations":[
-          {"lat":52.09110,"lon":5.09806},
-          {"lat":52.09098,"lon":5.09679}],"filters":{"attributes":["shape"], "action":"exclude"}})")};
-  std::vector<std::string> excluded_keys = {"trip.legs..shape", "shape", "trip.legs..shape"};
+      // TODO currently EnhancedTripPath sets any excluded fields to their default value
+      // so this test can't check for excluded keys. Come back and add tests for
+      // shape_attributes once we have them since those will be untouched by ETP.
+      // actor.trace_route(
+      //     R"({"costing":"auto","shape_match":"map_snap","shape":[
+      //     {"lat":52.09110,"lon":5.09806},
+      //     {"lat":52.09098,"lon":5.09679}],
+      //     "filters":{"attributes":["shape"], "action":"exclude"}})"),
+      // actor.route(
+      //     R"({"costing":"auto","locations":[
+      //     {"lat":52.09110,"lon":5.09806},
+      //     {"lat":52.09098,"lon":5.09679}],
+      //     "filters":{"attributes":["shape"], "action":"exclude"}})"),
+  };
+  std::vector<std::string> excluded_keys = {"shape", "trip.legs..shape", "trip.legs..shape"};
 
   for (size_t i = 0; i < test_cases.size(); ++i) {
     auto result = json_to_pt(test_cases[i]);
@@ -84,19 +92,23 @@ void test_parse_filter_attributes_excludes() {
 void test_parse_filter_attributes_includes() {
   tyr::actor_t actor(conf, true);
 
-  std::vector<std::string> test_cases = {actor.trace_route(
-                                             R"({"costing":"auto","shape_match":"map_snap","shape":[
+  std::vector<std::string> test_cases = {
+      actor.trace_attributes(
+          R"({"costing":"auto","shape_match":"map_snap","shape":[
+          {"lat":52.09110,"lon":5.09806},
+          {"lat":52.09098,"lon":5.09679}],"filters":{"attributes":["shape"], "action":"include"}})"),
+      actor.trace_route(
+          R"({"costing":"auto","shape_match":"map_snap","shape":[
           {"lat":52.09110,"lon":5.09806},
           {"lat":52.09098,"lon":5.09679}],
           "filters":{"attributes":["shape"], "action":"include"}})"),
-                                         actor.trace_attributes(
-                                             R"({"costing":"auto","shape_match":"map_snap","shape":[
+      actor.route(
+          R"({"costing":"auto","locations":[
           {"lat":52.09110,"lon":5.09806},
-          {"lat":52.09098,"lon":5.09679}],"filters":{"attributes":["shape"], "action":"include"}})"),
-                                         actor.route(R"({"costing":"auto","locations":[
-          {"lat":52.09110,"lon":5.09806},
-          {"lat":52.09098,"lon":5.09679}],"filters":{"attributes":["shape"], "action":"include"}})")};
-  std::vector<std::string> included_keys = {"trip.legs..shape", "shape", "trip.legs..shape"};
+          {"lat":52.09098,"lon":5.09679}],"filters":{"attributes":["shape"],
+          "action":"include"}})"),
+  };
+  std::vector<std::string> included_keys = {"shape", "trip.legs..shape", "trip.legs..shape"};
 
   for (size_t i = 0; i < test_cases.size(); ++i) {
     auto result = json_to_pt(test_cases[i]);
