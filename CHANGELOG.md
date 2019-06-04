@@ -1,5 +1,6 @@
-## Release Date: UNRELEASED Valhalla 3.0.5
+## Release Date: 2019-06-04 Valhalla 3.0.5
 * **Bug Fix**
+   * FIXED: Protect against unnamed rotaries and routes that end in roundabouts not turning off rotary logic [#1840](https://github.com/valhalla/valhalla/pull/1840)
 
 * **Enhancement**
    * ADDED: Add turn lane info at maneuver point [#1830](https://github.com/valhalla/valhalla/pull/1830)
