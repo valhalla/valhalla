@@ -31,7 +31,7 @@ using namespace valhalla::thor;
 namespace {
 
 constexpr double SEC_TO_MILLISECOND = 1000;
-constexpr double KM_TO_DECIMETER = 10000;
+constexpr double METER_TO_DECIMETER = 10;
 
 template <class iter>
 void AddPartialShape(std::vector<PointLL>& shape,
@@ -172,12 +172,12 @@ void SetShapeAttributes(const AttributesController& controller,
   if (trip_path.has_shape_attributes()) {
     // calculates total edge time and total edge length
     double edge_time = edge_itr->elapsed_time - trip_path.node().rbegin()->elapsed_time();
-    double edge_length = trip_path.node().rbegin()->edge().length();
+    double edge_length = trip_path.node().rbegin()->edge().length(); // kilometers
 
     // Set the shape attributes
     for (++shape_begin; shape_begin < shape_end; ++shape_begin) {
-      double distance = shape_begin->Distance(*(shape_begin - 1));
-      double distance_pct = (distance / 1000) / edge_length;
+      double distance = shape_begin->Distance(*(shape_begin - 1)); // meters
+      double distance_pct = (distance / 1000) / edge_length; // fraction of path length
       double time = edge_time * distance_pct;
       // Set shape attributes time per shape point if requested
       if (controller.attributes.at(kShapeAttributesTime)) {
@@ -188,13 +188,13 @@ void SetShapeAttributes(const AttributesController& controller,
       // Set shape attributes length per shape point if requested
       if (controller.attributes.at(kShapeAttributesLength)) {
         // convert length to decimeters and then round to an integer
-        trip_path.mutable_shape_attributes()->add_length((distance * KM_TO_DECIMETER) + 0.5);
+        trip_path.mutable_shape_attributes()->add_length((distance * METER_TO_DECIMETER) + 0.5);
       }
 
       // Set shape attributes speed per shape point if requested
       if (controller.attributes.at(kShapeAttributesSpeed)) {
         // convert speed to decimeters per sec and then round to an integer
-        trip_path.mutable_shape_attributes()->add_speed((distance * KM_TO_DECIMETER / time) + 0.5);
+        trip_path.mutable_shape_attributes()->add_speed((distance * METER_TO_DECIMETER / time) + 0.5);
       }
     }
   }
