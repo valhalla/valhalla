@@ -1091,8 +1091,6 @@ json::ArrayPtr serialize_legs(const std::list<valhalla::DirectionsLeg>& legs,
         auto name_ref_pair = names_and_refs(maneuver);
         name = name_ref_pair.first;
         ref = name_ref_pair.second;
-        rotary = ((maneuver.type() == DirectionsLeg_Maneuver_Type_kRoundaboutEnter) &&
-                  (maneuver.street_name_size() > 0));
         mode = get_mode(maneuver, arrive_maneuver, &etp);
         if (prev_mode.empty())
           prev_mode = mode;
@@ -1107,6 +1105,9 @@ json::ArrayPtr serialize_legs(const std::list<valhalla::DirectionsLeg>& legs,
       if (!ref.empty()) {
         step->emplace("ref", ref);
       }
+
+      rotary = ((maneuver.type() == DirectionsLeg_Maneuver_Type_kRoundaboutEnter) &&
+                (maneuver.street_name_size() > 0));
       if (rotary) {
         step->emplace("rotary_name", maneuver.street_name(0).value());
       }
