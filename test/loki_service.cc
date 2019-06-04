@@ -85,13 +85,13 @@ const std::vector<http_request_t> valhalla_requests{
     http_request_t(
         POST,
         "/trace_attributes",
-        R"({"shape":[{"lat":37.8077440,"lon":-122.4197010},{"lat":37.8077440,"lon":-122.4197560},{"lat":37.8077450,"lon":-122.4198180}],"shape_match":"map_snap","best_paths":0,"costing":"pedestrian","options":{"units":"miles"}})"),
+        R"({"shape":[{"lat":37.8077440,"lon":-122.4197010},{"lat":37.8077440,"lon":-122.4197560},{"lat":37.8077450,"lon":-122.4198180}],"shape_match":"map_snap","best_paths":0,"costing":"pedestrian","directions_options":{"units":"miles"}})"),
     http_request_t(
         POST,
         "/trace_attributes",
-        R"({"shape":[{"lat":37.8077440,"lon":-122.4197010},{"lat":37.8077440,"lon":-122.4197560},{"lat":37.8077450,"lon":-122.4198180}],"shape_match":"map_snap","best_paths":5,"costing":"pedestrian","options":{"units":"miles"}})"),
+        R"({"shape":[{"lat":37.8077440,"lon":-122.4197010},{"lat":37.8077440,"lon":-122.4197560},{"lat":37.8077450,"lon":-122.4198180}],"shape_match":"map_snap","best_paths":5,"costing":"pedestrian","directions_options":{"units":"miles"}})"),
     http_request_t(POST, "/trace_attributes", R"({"encoded_polyline":
-        "mx{ilAdxcupCdJm@v|@rG|n@dEz_AlUng@fMnDlAt}@zTdmAtZvx@`Rr_@~IlUnI`HtDjVnSdOhW|On^|JvXl^dmApGzUjGfYzAtOT~SUdYsFtmAmK~zBkAh`ArAdd@vDng@dEb\\nHvb@bQpp@~IjVbj@ngAjV`q@bL~g@nDjVpVbnBdAfCpeA`yL~CpRnCn]`C~g@l@zUGfx@m@x_AgCxiBe@xl@e@re@yBviCeAvkAe@vaBzArd@jFhb@|ZzgBjEjVzFtZxC`RlEdYz@~I~DxWtTxtA`Gn]fEjV~BzV^dDpBfY\\dZ?fNgDx~BrA~q@xB|^fIp{@lK~|@|T`oBbF|h@re@d_E|EtYvMrdAvCzUxMhaAnStwAnNls@xLjj@tlBr{HxQlt@lEr[jB`\\Gvl@oNjrCaCvm@|@vb@rAl_@~B|]pHvx@j`@lzC|Ez_@~Htn@|DrFzPlhAzFn^zApp@xGziA","shape_match":"map_snap","best_paths":3,"costing":"auto","options":{"units":"miles"}})"),
+        "mx{ilAdxcupCdJm@v|@rG|n@dEz_AlUng@fMnDlAt}@zTdmAtZvx@`Rr_@~IlUnI`HtDjVnSdOhW|On^|JvXl^dmApGzUjGfYzAtOT~SUdYsFtmAmK~zBkAh`ArAdd@vDng@dEb\\nHvb@bQpp@~IjVbj@ngAjV`q@bL~g@nDjVpVbnBdAfCpeA`yL~CpRnCn]`C~g@l@zUGfx@m@x_AgCxiBe@xl@e@re@yBviCeAvkAe@vaBzArd@jFhb@|ZzgBjEjVzFtZxC`RlEdYz@~I~DxWtTxtA`Gn]fEjV~BzV^dDpBfY\\dZ?fNgDx~BrA~q@xB|^fIp{@lK~|@|T`oBbF|h@re@d_E|EtYvMrdAvCzUxMhaAnStwAnNls@xLjj@tlBr{HxQlt@lEr[jB`\\Gvl@oNjrCaCvm@|@vb@rAl_@~B|]pHvx@j`@lzC|Ez_@~Htn@|DrFzPlhAzFn^zApp@xGziA","shape_match":"map_snap","best_paths":3,"costing":"auto","directions_options":{"units":"miles"}})"),
 };
 
 const std::vector<std::pair<uint16_t, std::string>> valhalla_responses{
@@ -176,99 +176,110 @@ const std::vector<std::pair<uint16_t, std::string>> valhalla_responses{
     {400,
      R"({"error_code":153,"error":"Too many shape points:(102). The best paths shape limit is 100","status_code":400,"status":"Bad Request"})"}};
 
-const std::vector<http_request_t> osrm_requests{
-    http_request_t(GET, R"(/route?json={"options":{"format":"osrm"}})"),
-    http_request_t(POST, "/route", R"({"options":{"format":"osrm"}})"),
-    http_request_t(GET, R"(/optimized_route?json={"options":{"format":"osrm"}})"),
-    http_request_t(POST, "/optimized_route", R"({"options":{"format":"osrm"}})"),
-    http_request_t(GET, R"(/locate?json={"locations":[{"lon":0}],"options":{"format":"osrm"}})"),
-    http_request_t(POST, "/locate", R"({"locations":[{"lon":0}],"options":{"format":"osrm"}})"),
-    http_request_t(GET,
-                   R"(/route?json={"locations":[{"lon":0,"lat":90}],"options":{"format":"osrm"}})"),
-    http_request_t(POST,
-                   "/route",
-                   R"({"locations":[{"lon":0,"lat":90}],"options":{"format":"osrm"}})"),
-    http_request_t(
-        GET,
-        R"(/route?json={"locations":[{"lon":0,"lat":90},{"lon":0,"lat":90}],"options":{"format":"osrm"}})"),
-    http_request_t(
-        POST,
-        "/route",
-        R"({"locations":[{"lon":0,"lat":90},{"lon":0,"lat":90}],"options":{"format":"osrm"}})"),
-    http_request_t(
-        GET,
-        R"(/route?json={"locations":[{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90}],"options":{"format":"osrm"}})"),
-    http_request_t(
-        POST,
-        "/route",
-        R"({"locations":[{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90}],"options":{"format":"osrm"}})"),
-    http_request_t(
-        GET,
-        R"(/route?json={"locations":[{"lon":0,"lat":90},{"lon":0,"lat":-90}], "costing": "pedestrian","options":{"format":"osrm"}})"),
-    http_request_t(
-        POST,
-        "/route",
-        R"({"locations":[{"lon":0,"lat":90},{"lon":0,"lat":-90}], "costing": "pedestrian","options":{"format":"osrm"}})"),
-    http_request_t(
-        GET,
-        R"(/locate?json={"locations":[{"lon":0,"lat":90}], "costing": "yak","options":{"format":"osrm"}})"),
-    http_request_t(
-        POST,
-        "/locate",
-        R"({"locations":[{"lon":0,"lat":90}], "costing": "yak","options":{"format":"osrm"}})"),
-    http_request_t(
-        GET,
-        R"(/route?json={"locations":[{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},
+const std::vector<http_request_t>
+    osrm_requests{http_request_t(GET, R"(/route?json={"directions_options":{"format":"osrm"}})"),
+                  http_request_t(POST, "/route", R"({"directions_options":{"format":"osrm"}})"),
+                  http_request_t(GET,
+                                 R"(/optimized_route?json={"directions_options":{"format":"osrm"}})"),
+                  http_request_t(POST,
+                                 "/optimized_route",
+                                 R"({"directions_options":{"format":"osrm"}})"),
+                  http_request_t(
+                      GET,
+                      R"(/locate?json={"locations":[{"lon":0}],"directions_options":{"format":"osrm"}})"),
+                  http_request_t(
+                      POST,
+                      "/locate",
+                      R"({"locations":[{"lon":0}],"directions_options":{"format":"osrm"}})"),
+                  http_request_t(
+                      GET,
+                      R"(/route?json={"locations":[{"lon":0,"lat":90}],"directions_options":{"format":"osrm"}})"),
+                  http_request_t(
+                      POST,
+                      "/route",
+                      R"({"locations":[{"lon":0,"lat":90}],"directions_options":{"format":"osrm"}})"),
+                  http_request_t(
+                      GET,
+                      R"(/route?json={"locations":[{"lon":0,"lat":90},{"lon":0,"lat":90}],"directions_options":{"format":"osrm"}})"),
+                  http_request_t(
+                      POST,
+                      "/route",
+                      R"({"locations":[{"lon":0,"lat":90},{"lon":0,"lat":90}],"directions_options":{"format":"osrm"}})"),
+                  http_request_t(
+                      GET,
+                      R"(/route?json={"locations":[{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90}],"directions_options":{"format":"osrm"}})"),
+                  http_request_t(
+                      POST,
+                      "/route",
+                      R"({"locations":[{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90}],"directions_options":{"format":"osrm"}})"),
+                  http_request_t(
+                      GET,
+                      R"(/route?json={"locations":[{"lon":0,"lat":90},{"lon":0,"lat":-90}], "costing": "pedestrian","directions_options":{"format":"osrm"}})"),
+                  http_request_t(
+                      POST,
+                      "/route",
+                      R"({"locations":[{"lon":0,"lat":90},{"lon":0,"lat":-90}], "costing": "pedestrian","directions_options":{"format":"osrm"}})"),
+                  http_request_t(
+                      GET,
+                      R"(/locate?json={"locations":[{"lon":0,"lat":90}], "costing": "yak","directions_options":{"format":"osrm"}})"),
+                  http_request_t(
+                      POST,
+                      "/locate",
+                      R"({"locations":[{"lon":0,"lat":90}], "costing": "yak","directions_options":{"format":"osrm"}})"),
+                  http_request_t(
+                      GET,
+                      R"(/route?json={"locations":[{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},
         {"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},
-        {"lon":0,"lat":90},{"lon":0,"lat":90}], "costing": "auto","options":{"format":"osrm"}})"),
-    http_request_t(
-        POST,
-        "/route",
-        R"({"locations":[{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},
+        {"lon":0,"lat":90},{"lon":0,"lat":90}], "costing": "auto","directions_options":{"format":"osrm"}})"),
+                  http_request_t(
+                      POST,
+                      "/route",
+                      R"({"locations":[{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},
         {"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},
-        {"lon":0,"lat":90},{"lon":0,"lat":90}], "costing": "auto","options":{"format":"osrm"}})"),
-    http_request_t(
-        GET,
-        R"(/optimized_route?json={"sources":[{"lon":0,"lat":90}],"options":{"format":"osrm"}})"),
-    http_request_t(
-        GET,
-        R"(/optimized_route?json={"targets":[{"lon":0,"lat":90}],"options":{"format":"osrm"}})"),
-    http_request_t(
-        GET,
-        R"(/optimized_route?json={"locations":[{"lon":0,"lat":90}],"options":{"format":"osrm"}})"),
-    http_request_t(
-        GET,
-        R"(/sources_to_targets?json={"targets":[{"lon":0,"lat":90}],"options":{"format":"osrm"}})"),
-    http_request_t(
-        GET,
-        R"(/sources_to_targets?json={"locations":[{"lon":0,"lat":90}],"options":{"format":"osrm"}})"),
-    http_request_t(
-        GET,
-        R"(/optimized_route?json={"locations":[{"lon":"NONE","lat":90}, {"lon":"NONE","lat":90}],"options":{"format":"osrm"}})"),
-    http_request_t(
-        GET,
-        R"(/optimized_route?json={"locations":[{"lon":0,"lat":-270}, {"lon":0,"lat":90}],"options":{"format":"osrm"}})"),
-    http_request_t(
-        GET,
-        R"(/optimized_route?json={"locations":[{"lon":0,"lat":90}, {"lon":0,"lat":90}], "costing": "NONE","options":{"format":"osrm"}})"),
-    http_request_t(GET,
-                   R"(/sources_to_targets?json={"sources":[{"lon":0}],"options":{"format":"osrm"}})"),
-    http_request_t(
-        GET,
-        R"(/sources_to_targets?json={"sources":[{"lon":0,"lat":90}],"targets":[{"lon":0}],"options":{"format":"osrm"}})"),
-    http_request_t(
-        GET,
-        R"(/route?json={"locations":[{"lon":0,"lat":0},{"lon":0,"lat":0}],"costing":"pedestrian","avoid_locations":[{"lon":0,"lat":0}],"options":{"format":"osrm"}})"),
-    http_request_t(
-        POST,
-        "/trace_attributes",
-        R"({"shape":[{"lat":37.8077440,"lon":-122.4197010},{"lat":37.8077440,"lon":-122.4197560},{"lat":37.8077450,"lon":-122.4198180}],"shape_match":"map_snap","best_paths":0,"costing":"pedestrian","options":{"units":"miles", "format":"osrm"}})"),
-    http_request_t(
-        POST,
-        "/trace_attributes",
-        R"({"shape":[{"lat":37.8077440,"lon":-122.4197010},{"lat":37.8077440,"lon":-122.4197560},{"lat":37.8077450,"lon":-122.4198180}],"shape_match":"map_snap","best_paths":5,"costing":"pedestrian","options":{"units":"miles", "format":"osrm"}})"),
-    http_request_t(POST, "/trace_attributes", R"({"encoded_polyline":
-        "mx{ilAdxcupCdJm@v|@rG|n@dEz_AlUng@fMnDlAt}@zTdmAtZvx@`Rr_@~IlUnI`HtDjVnSdOhW|On^|JvXl^dmApGzUjGfYzAtOT~SUdYsFtmAmK~zBkAh`ArAdd@vDng@dEb\\nHvb@bQpp@~IjVbj@ngAjV`q@bL~g@nDjVpVbnBdAfCpeA`yL~CpRnCn]`C~g@l@zUGfx@m@x_AgCxiBe@xl@e@re@yBviCeAvkAe@vaBzArd@jFhb@|ZzgBjEjVzFtZxC`RlEdYz@~I~DxWtTxtA`Gn]fEjV~BzV^dDpBfY\\dZ?fNgDx~BrA~q@xB|^fIp{@lK~|@|T`oBbF|h@re@d_E|EtYvMrdAvCzUxMhaAnStwAnNls@xLjj@tlBr{HxQlt@lEr[jB`\\Gvl@oNjrCaCvm@|@vb@rAl_@~B|]pHvx@j`@lzC|Ez_@~Htn@|DrFzPlhAzFn^zApp@xGziA","shape_match":"map_snap","best_paths":3,"costing":"auto","options":{"units":"miles","format":"osrm"}})")};
+        {"lon":0,"lat":90},{"lon":0,"lat":90}], "costing": "auto","directions_options":{"format":"osrm"}})"),
+                  http_request_t(
+                      GET,
+                      R"(/optimized_route?json={"sources":[{"lon":0,"lat":90}],"directions_options":{"format":"osrm"}})"),
+                  http_request_t(
+                      GET,
+                      R"(/optimized_route?json={"targets":[{"lon":0,"lat":90}],"directions_options":{"format":"osrm"}})"),
+                  http_request_t(
+                      GET,
+                      R"(/optimized_route?json={"locations":[{"lon":0,"lat":90}],"directions_options":{"format":"osrm"}})"),
+                  http_request_t(
+                      GET,
+                      R"(/sources_to_targets?json={"targets":[{"lon":0,"lat":90}],"directions_options":{"format":"osrm"}})"),
+                  http_request_t(
+                      GET,
+                      R"(/sources_to_targets?json={"locations":[{"lon":0,"lat":90}],"directions_options":{"format":"osrm"}})"),
+                  http_request_t(
+                      GET,
+                      R"(/optimized_route?json={"locations":[{"lon":"NONE","lat":90}, {"lon":"NONE","lat":90}],"directions_options":{"format":"osrm"}})"),
+                  http_request_t(
+                      GET,
+                      R"(/optimized_route?json={"locations":[{"lon":0,"lat":-270}, {"lon":0,"lat":90}],"directions_options":{"format":"osrm"}})"),
+                  http_request_t(
+                      GET,
+                      R"(/optimized_route?json={"locations":[{"lon":0,"lat":90}, {"lon":0,"lat":90}], "costing": "NONE","directions_options":{"format":"osrm"}})"),
+                  http_request_t(
+                      GET,
+                      R"(/sources_to_targets?json={"sources":[{"lon":0}],"directions_options":{"format":"osrm"}})"),
+                  http_request_t(
+                      GET,
+                      R"(/sources_to_targets?json={"sources":[{"lon":0,"lat":90}],"targets":[{"lon":0}],"directions_options":{"format":"osrm"}})"),
+                  http_request_t(
+                      GET,
+                      R"(/route?json={"locations":[{"lon":0,"lat":0},{"lon":0,"lat":0}],"costing":"pedestrian","avoid_locations":[{"lon":0,"lat":0}],"directions_options":{"format":"osrm"}})"),
+                  http_request_t(
+                      POST,
+                      "/trace_attributes",
+                      R"({"shape":[{"lat":37.8077440,"lon":-122.4197010},{"lat":37.8077440,"lon":-122.4197560},{"lat":37.8077450,"lon":-122.4198180}],"shape_match":"map_snap","best_paths":0,"costing":"pedestrian","directions_options":{"units":"miles", "format":"osrm"}})"),
+                  http_request_t(
+                      POST,
+                      "/trace_attributes",
+                      R"({"shape":[{"lat":37.8077440,"lon":-122.4197010},{"lat":37.8077440,"lon":-122.4197560},{"lat":37.8077450,"lon":-122.4198180}],"shape_match":"map_snap","best_paths":5,"costing":"pedestrian","directions_options":{"units":"miles", "format":"osrm"}})"),
+                  http_request_t(POST, "/trace_attributes", R"({"encoded_polyline":
+        "mx{ilAdxcupCdJm@v|@rG|n@dEz_AlUng@fMnDlAt}@zTdmAtZvx@`Rr_@~IlUnI`HtDjVnSdOhW|On^|JvXl^dmApGzUjGfYzAtOT~SUdYsFtmAmK~zBkAh`ArAdd@vDng@dEb\\nHvb@bQpp@~IjVbj@ngAjV`q@bL~g@nDjVpVbnBdAfCpeA`yL~CpRnCn]`C~g@l@zUGfx@m@x_AgCxiBe@xl@e@re@yBviCeAvkAe@vaBzArd@jFhb@|ZzgBjEjVzFtZxC`RlEdYz@~I~DxWtTxtA`Gn]fEjV~BzV^dDpBfY\\dZ?fNgDx~BrA~q@xB|^fIp{@lK~|@|T`oBbF|h@re@d_E|EtYvMrdAvCzUxMhaAnStwAnNls@xLjj@tlBr{HxQlt@lEr[jB`\\Gvl@oNjrCaCvm@|@vb@rAl_@~B|]pHvx@j`@lzC|Ez_@~Htn@|DrFzPlhAzFn^zApp@xGziA","shape_match":"map_snap","best_paths":3,"costing":"auto","directions_options":{"units":"miles","format":"osrm"}})")};
 
 const std::vector<std::pair<uint16_t, std::string>> osrm_responses{
     {400, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
@@ -355,7 +366,7 @@ void start_service() {
         "max_radius": 200,
         "max_alternates":2
       },
-      "costing_options": { "auto": {}, "pedestrian": {} }
+      "costing_directions_options": { "auto": {}, "pedestrian": {} }
     })";
   rapidjson::read_json(json, config);
 

@@ -7,7 +7,7 @@ import json
 
 valhalla.Configure(sys.argv[1] if len(sys.argv) > 1 else os.path.dirname(os.path.abspath(__file__)) + '/valhalla.json')
 actor = valhalla.Actor()
-query = '{"locations":[{"lat":52.08813,"lon":5.03231},{"lat":52.09987,"lon":5.14913}],"costing":"bicycle","options":{"language":"ru-RU"}}'
+query = '{"locations":[{"lat":52.08813,"lon":5.03231},{"lat":52.09987,"lon":5.14913}],"costing":"bicycle","directions_options":{"language":"ru-RU"}}'
 route = json.loads(actor.Route(query))
 
 assert('trip' in route)

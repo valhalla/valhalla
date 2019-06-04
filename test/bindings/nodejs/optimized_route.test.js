@@ -4,7 +4,7 @@ var Valhalla = require('../../../')(JSON.stringify(config));
 var valhalla = new Valhalla(JSON.stringify(config));
 
 test('optimizedRoute: can return info for locations', function(assert) {
-  var optimizedRouteRequest = '{"locations":[{"lat":40.546115,"lon":-76.385076},{"lat":40.544232,"lon":-76.385752},{"lat":40.543152,"lon":-76.385862},{"lat":40.543952,"lon":-76.386162}],"costing":"auto","options":{"units":"miles"}}';
+  var optimizedRouteRequest = '{"locations":[{"lat":40.546115,"lon":-76.385076},{"lat":40.544232,"lon":-76.385752},{"lat":40.543152,"lon":-76.385862},{"lat":40.543952,"lon":-76.386162}],"costing":"auto","directions_options":{"units":"miles"}}';
   valhalla.optimizedRoute(optimizedRouteRequest, (err, result) => {
     var optimizedRoute = JSON.parse(result);
     assert.ok(optimizedRoute);

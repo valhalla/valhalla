@@ -446,8 +446,8 @@ int main(int argc, char* argv[]) {
       "749231,\"lon\":-73.968703,\"type\":\"break\",\"name\":\"United Nations "
       "Headquarters\",\"street\":\"405 East 42nd Street\",\"city\":\"New "
       "York\",\"state\":\"NY\",\"postal_code\":\"10017-3507\",\"country\":\"US\"}],\"costing\":"
-      "\"auto\",\"options\":{\"units\":\"miles\"}}'")("match-test",
-                                                      "Test RouteMatcher with resulting shape.")(
+      "\"auto\",\"directions_options\":{\"units\":\"miles\"}}'")(
+      "match-test", "Test RouteMatcher with resulting shape.")(
       "multi-run", bpo::value<uint32_t>(&iterations),
       "Generate the route N additional times before exiting.")
       // positional arguments
