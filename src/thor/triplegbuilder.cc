@@ -30,6 +30,9 @@ using namespace valhalla::thor;
 
 namespace {
 
+constexpr double SEC_TO_MILLISECONDS = 1000;
+constexpr double KM_TO_DECIMETERS = 0.1;
+
 template <class iter>
 void AddPartialShape(std::vector<PointLL>& shape,
                      iter start,
@@ -164,33 +167,34 @@ void AssignAdmins(const AttributesController& controller,
 void SetShapeAttributes(const AttributesController& controller,
                         std::vector<PathInfo>::const_iterator path_begin,
                         TripLeg& trip_path,
-                        std::vector<PointLL>& shape) {
+                        std::vector<PointLL>::const_iterator shape_begin,
+                        std::vector<PointLL>::const_iterator shape_end) {
   if (trip_path.has_shape_attributes()) {
     // calculates total edge time and total edge length
     double edge_time = path_begin->elapsed_time - trip_path.node().rbegin()->elapsed_time();
     double edge_length = trip_path.node().rbegin()->edge().length();
 
     // Set the shape attributes
-    for (size_t i = 1; i < shape.size(); i++) {
-      double distance = shape[i].Distance(shape[i - 1]);
+    for (++shape_begin; shape_begin < shape_end; ++shape_begin) {
+      double distance = shape_begin->Distance(*(shape_begin - 1));
       double distance_pct = distance / edge_length;
       double time = edge_time * distance_pct;
       // Set shape attributes time per shape point if requested
       if (controller.attributes.at(kShapeAttributesTime)) {
         // convert time to milliseconds and then round to an integer
-        trip_path.mutable_shape_attributes()->add_time((time * 1000) + 0.5);
+        trip_path.mutable_shape_attributes()->add_time((time * SEC_TO_MILLISECONDS) + 0.5);
       }
 
       // Set shape attributes length per shape point if requested
       if (controller.attributes.at(kShapeAttributesLength)) {
         // convert length to decimeters and then round to an integer
-        trip_path.mutable_shape_attributes()->add_length((distance * 10) + 0.5);
+        trip_path.mutable_shape_attributes()->add_length((distance * KM_TO_DECIMETERS) + 0.5);
       }
 
       // Set shape attributes speed per shape point if requested
       if (controller.attributes.at(kShapeAttributesSpeed)) {
         // convert speed to decimeters per sec and then round to an integer
-        trip_path.mutable_shape_attributes()->add_speed((distance * 10 / time) + 0.5);
+        trip_path.mutable_shape_attributes()->add_speed((distance * KM_TO_DECIMETERS / time) + 0.5);
       }
     }
   }
@@ -717,7 +721,7 @@ TripLegBuilder::Build(const AttributesController& controller,
     }
 
     // Set shape attributes
-    SetShapeAttributes(controller, path_begin, trip_path, shape);
+    SetShapeAttributes(controller, path_begin, trip_path, shape.begin(), shape.end());
 
     // Set begin and end heading if requested. Uses shape so
     // must be done after the edge's shape has been added.
@@ -1140,7 +1144,8 @@ TripLegBuilder::Build(const AttributesController& controller,
     SetHeadings(trip_edge, controller, directededge, trip_shape, begin_index);
 
     // Set shape attributes
-    SetShapeAttributes(controller, path_begin, trip_path, trip_shape);
+    SetShapeAttributes(controller, path_begin, trip_path, trip_shape.begin() + begin_index,
+                       trip_shape.end());
 
     // Add connected edges from the start node. Do this after the first trip
     // edge is added

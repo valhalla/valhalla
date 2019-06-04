@@ -19,7 +19,7 @@ constexpr size_t kConfidenceScoreIndex = 0;
 constexpr size_t kRawScoreIndex = 1;
 constexpr size_t kMatchResultsIndex = 2;
 constexpr size_t kTripLegIndex = 3;
-constexpr double MILLISECOND_TO_SEC = 1000.0;
+constexpr double MILLISECOND_TO_SEC = 0.001;
 constexpr double DECIMETER_TO_KM = 0.0001;
 constexpr double DMS_TO_KMH = 0.36;
 
@@ -400,7 +400,6 @@ json::ArrayPtr serialize_matched_points(const AttributesController& controller,
 json::MapPtr serialize_shape_attributes(const AttributesController& controller,
                                         const TripLeg& trip_path) {
   auto attributes_map = json::map({});
-
   if (controller.attributes.at(kShapeAttributesTime)) {
     auto times_array = json::array({});
     for (const auto& time : trip_path.shape_attributes().time()) {
