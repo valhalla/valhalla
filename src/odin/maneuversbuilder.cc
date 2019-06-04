@@ -2338,12 +2338,15 @@ void ManeuversBuilder::ProcessTurnLanes(std::list<Maneuver>& maneuvers) {
     // Only process driving maneuvers
     if (curr_man->travel_mode() == TripLeg_TravelMode::TripLeg_TravelMode_kDrive) {
 
+      // Keep track of the remaining step distance in kilometers
+      float remaining_step_distance = curr_man->length();
+
       // Walk maneuvers by node (prev_edge of node has the turn lane info)
       // Assign turn lane at transition point
       auto prev_edge = trip_path_->GetPrevEdge(curr_man->begin_node_index());
       if (prev_edge && (prev_edge->turn_lanes_size() > 0)) {
-        prev_edge->ActivateTurnLanes(GetExpectedTurnLaneDirection(*(curr_man)), curr_man->length(),
-                                     next_man->type());
+        prev_edge->ActivateTurnLanes(GetExpectedTurnLaneDirection(*(curr_man)),
+                                     remaining_step_distance, next_man->type());
       }
 
       // TODO
@@ -2351,7 +2354,19 @@ void ManeuversBuilder::ProcessTurnLanes(std::list<Maneuver>& maneuvers) {
       // (if curr_man is left or right subset of prev_man L|T|R is begin subset of L|T|R|R)
 
       // Assign turn lanes within step
-      // Track remaining maneuver distance
+      for (auto index = (curr_man->begin_node_index() + 1); index < curr_man->end_node_index();
+           ++index) {
+        auto prev_edge = trip_path_->GetPrevEdge(index);
+        if (prev_edge) {
+          // Update the remaining step distance
+          remaining_step_distance -= prev_edge->length();
+
+          if (prev_edge->turn_lanes_size() > 0) {
+            // For now just assume 'through' - we can enhance if needed
+            prev_edge->ActivateTurnLanes(kTurnLaneThrough, remaining_step_distance, next_man->type());
+          }
+        }
+      }
 
       // Handle any special `none` lanes
 
