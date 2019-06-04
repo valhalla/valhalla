@@ -131,7 +131,7 @@ std::string GetJSONRequest(const Location& originloc, const Location& destloc) {
   str += "\"}],";
 
   // Add costing and return string
-  str += "\"costing\":\"auto\",\"options\":{\"units\":\"miles\"}}' --config "
+  str += "\"costing\":\"auto\",\"units\":\"miles\"}' --config "
          "../conf/valhalla.json\n";
   return str;
 }
