@@ -484,8 +484,8 @@ void from_json(rapidjson::Document& doc, Options& options) {
   bool track = !options.has_do_not_track() || !options.do_not_track();
 
   // TODO: stop doing this after a sufficient amount of time has passed
-  // move anything nested in deprecated options up to the top level
-  auto deprecated = get_child_optional(doc, "/options");
+  // move anything nested in deprecated directions_options up to the top level
+  auto deprecated = get_child_optional(doc, "/directions_options");
   auto& allocator = doc.GetAllocator();
   if (deprecated) {
     for (const auto& key : {"/units", "/narrative", "/format", "/language"}) {
@@ -495,7 +495,7 @@ void from_json(rapidjson::Document& doc, Options& options) {
       }
     }
     // delete options if it existed
-    doc.RemoveMember("options");
+    doc.RemoveMember("directions_options");
   }
 
   auto fmt = rapidjson::get_optional<std::string>(doc, "/format");
