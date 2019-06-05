@@ -511,14 +511,6 @@ void AddTransitNodes(TripLeg_Node* trip_node,
 namespace valhalla {
 namespace thor {
 
-// Default constructor
-TripLegBuilder::TripLegBuilder() {
-}
-
-// Destructor
-TripLegBuilder::~TripLegBuilder() {
-}
-
 // For now just find the length of the path!
 // TODO - probably need the location information passed in - to
 // add to the TripLeg
@@ -531,6 +523,7 @@ TripLegBuilder::Build(const AttributesController& controller,
                       valhalla::Location& origin,
                       valhalla::Location& dest,
                       const std::list<valhalla::Location>& through_loc,
+                      TripLeg& trip_path,
                       const std::function<void()>* interrupt_callback,
                       std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>>*
                           route_discontinuities) {
@@ -538,9 +531,6 @@ TripLegBuilder::Build(const AttributesController& controller,
   if (interrupt_callback) {
     (*interrupt_callback)();
   }
-
-  // TripLeg is a protocol buffer that contains information about the trip
-  TripLeg trip_path;
 
   // Set origin, any through locations, and destination. Origin and
   // destination are assumed to be breaks.

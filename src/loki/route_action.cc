@@ -46,25 +46,26 @@ void check_distance(const GraphReader& reader,
 namespace valhalla {
 namespace loki {
 
-void loki_worker_t::init_route(valhalla_request_t& request) {
-  parse_locations(request.options.mutable_locations());
+void loki_worker_t::init_route(Api& request) {
+  parse_locations(request.mutable_options()->mutable_locations());
   // need to check location size here instead of in parse_locations because of locate action needing
   // a different size
-  if (request.options.locations_size() < 2) {
+  if (request.options().locations_size() < 2) {
     throw valhalla_exception_t{120};
   };
   parse_costing(request);
 }
 
-void loki_worker_t::route(valhalla_request_t& request) {
+void loki_worker_t::route(Api& request) {
   init_route(request);
-  auto costing = Costing_Name(request.options.costing());
-  check_locations(request.options.locations_size(), max_locations.find(costing)->second);
-  check_distance(*reader, request.options.locations(), max_distance.find(costing)->second);
+  auto& options = *request.mutable_options();
+  auto costing = Costing_Name(options.costing());
+  check_locations(options.locations_size(), max_locations.find(costing)->second);
+  check_distance(*reader, options.locations(), max_distance.find(costing)->second);
 
   // Validate walking distances (make sure they are in the accepted range)
   if (costing == "multimodal" || costing == "transit") {
-    auto* ped_opts = request.options.mutable_costing_options(static_cast<int>(pedestrian));
+    auto* ped_opts = options.mutable_costing_options(static_cast<int>(pedestrian));
     if (!ped_opts->has_transit_start_end_max_distance())
       ped_opts->set_transit_start_end_max_distance(min_transit_walking_dis);
     auto transit_start_end_max_distance = ped_opts->transit_start_end_max_distance();
@@ -88,11 +89,11 @@ void loki_worker_t::route(valhalla_request_t& request) {
   // correlate the various locations to the underlying graph
   std::unordered_map<size_t, size_t> color_counts;
   try {
-    auto locations = PathLocation::fromPBF(request.options.locations());
+    auto locations = PathLocation::fromPBF(options.locations());
     const auto projections = loki::Search(locations, *reader, edge_filter, node_filter);
     for (size_t i = 0; i < locations.size(); ++i) {
       const auto& correlated = projections.at(locations[i]);
-      PathLocation::toPBF(correlated, request.options.mutable_locations(i), *reader);
+      PathLocation::toPBF(correlated, options.mutable_locations(i), *reader);
       // TODO: get transit level for transit costing
       // TODO: if transit send a non zero radius
       if (!connectivity_map) {
@@ -117,7 +118,7 @@ void loki_worker_t::route(valhalla_request_t& request) {
   }
   bool connected = false;
   for (const auto& c : color_counts) {
-    if (c.second == request.options.locations_size()) {
+    if (c.second == options.locations_size()) {
       connected = true;
       break;
     }

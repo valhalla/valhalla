@@ -237,12 +237,13 @@ void AStarPathAlgorithm::ExpandForward(GraphReader& graphreader,
 }
 
 // Calculate best path. This method is single mode, not time-dependent.
-std::vector<PathInfo>
+std::vector<std::vector<PathInfo>>
 AStarPathAlgorithm::GetBestPath(valhalla::Location& origin,
                                 valhalla::Location& destination,
                                 GraphReader& graphreader,
                                 const std::shared_ptr<DynamicCost>* mode_costing,
-                                const TravelMode mode) {
+                                const TravelMode mode,
+                                const Options& options) {
   // Set the mode and costing
   mode_ = mode;
   costing_ = mode_costing[static_cast<uint32_t>(mode_)];
@@ -301,10 +302,10 @@ AStarPathAlgorithm::GetBestPath(valhalla::Location& origin,
       // trivial (cannot reach destination along this one edge).
       if (pred.predecessor() == kInvalidLabel) {
         if (IsTrivial(pred.edgeid(), origin, destination)) {
-          return FormPath(predindex);
+          return {FormPath(predindex)};
         }
       } else {
-        return FormPath(predindex);
+        return {FormPath(predindex)};
       }
     }
 
@@ -322,7 +323,7 @@ AStarPathAlgorithm::GetBestPath(valhalla::Location& origin,
       nc = 0;
     } else if (nc++ > kMaxIterationsWithoutConvergence) {
       if (best_path.first >= 0) {
-        return FormPath(best_path.first);
+        return {FormPath(best_path.first)};
       } else {
         LOG_ERROR("No convergence to destination after = " + std::to_string(edgelabels_.size()));
         return {};
@@ -513,7 +514,8 @@ std::vector<PathInfo> AStarPathAlgorithm::FormPath(const uint32_t dest) {
   for (auto edgelabel_index = dest; edgelabel_index != kInvalidLabel;
        edgelabel_index = edgelabels_[edgelabel_index].predecessor()) {
     const EdgeLabel& edgelabel = edgelabels_[edgelabel_index];
-    path.emplace_back(edgelabel.mode(), edgelabel.cost().secs, edgelabel.edgeid(), 0);
+    path.emplace_back(edgelabel.mode(), edgelabel.cost().secs, edgelabel.edgeid(), 0,
+                      edgelabel.cost().cost);
 
     // Check if this is a ferry
     if (edgelabel.use() == Use::kFerry) {
