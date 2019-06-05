@@ -21,6 +21,7 @@
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
 #include "odin/directionsbuilder.h"
+#include "odin/enhancedtrippath.h"
 #include "odin/util.h"
 #include "sif/costfactory.h"
 #include "thor/astar.h"
@@ -327,6 +328,7 @@ valhalla::DirectionsLeg DirectionsTest(valhalla::Api& api,
 
   DirectionsBuilder::Build(api);
   const auto& trip_directions = api.directions().routes(0).legs(0);
+  EnhancedTripLeg etl(*api.mutable_trip()->mutable_routes(0)->mutable_legs(0));
   std::string units = (api.options().units() == valhalla::Options::kilometers ? "km" : "mi");
   int m = 1;
   valhalla::midgard::logging::Log("From: " + std::to_string(origin), " [NARRATIVE] ");
@@ -354,6 +356,16 @@ valhalla::DirectionsLeg DirectionsTest(valhalla::Api& api,
                                      maneuver.text_instruction() % maneuver.length() % units)
                                         .str(),
                                     " [NARRATIVE] ");
+
+    // Turn lanes
+    auto prev_edge = etl.GetPrevEdge(maneuver.begin_path_index());
+    if (prev_edge && (prev_edge->turn_lanes_size() > 0) && prev_edge->HasActiveTurnLane() &&
+        !prev_edge->HasNonDirectionalTurnLane()) {
+      valhalla::midgard::logging::Log((boost::format("   TURN_LANES: %s") %
+                                       prev_edge->TurnLanesToString(prev_edge->turn_lanes()))
+                                          .str(),
+                                      " [NARRATIVE] ");
+    }
 
     // Verbal transition alert instruction
     if (maneuver.has_verbal_transition_alert_instruction()) {
