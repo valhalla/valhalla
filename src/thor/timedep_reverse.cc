@@ -212,11 +212,13 @@ void TimeDepReverse::ExpandReverse(GraphReader& graphreader,
 
 // Calculate time-dependent best path using a reverse search. Supports
 // "arrive-by" routes.
-std::vector<PathInfo> TimeDepReverse::GetBestPath(valhalla::Location& origin,
-                                                  valhalla::Location& destination,
-                                                  GraphReader& graphreader,
-                                                  const std::shared_ptr<DynamicCost>* mode_costing,
-                                                  const TravelMode mode) {
+std::vector<std::vector<PathInfo>>
+TimeDepReverse::GetBestPath(valhalla::Location& origin,
+                            valhalla::Location& destination,
+                            GraphReader& graphreader,
+                            const std::shared_ptr<DynamicCost>* mode_costing,
+                            const TravelMode mode,
+                            const Options& options) {
   // Set the mode and costing
   mode_ = mode;
   costing_ = mode_costing[static_cast<uint32_t>(mode_)];
@@ -301,10 +303,10 @@ std::vector<PathInfo> TimeDepReverse::GetBestPath(valhalla::Location& origin,
       if (pred.predecessor() == kInvalidLabel) {
         // Use opposing edge.
         if (IsTrivial(pred.opp_edgeid(), origin, destination)) {
-          return FormPath(graphreader, predindex);
+          return {FormPath(graphreader, predindex)};
         }
       } else {
-        return FormPath(graphreader, predindex);
+        return {FormPath(graphreader, predindex)};
       }
     }
 
@@ -322,7 +324,7 @@ std::vector<PathInfo> TimeDepReverse::GetBestPath(valhalla::Location& origin,
       nc = 0;
     } else if (nc++ > 50000) {
       if (best_path.first >= 0) {
-        return FormPath(graphreader, best_path.first);
+        return {FormPath(graphreader, best_path.first)};
       } else {
         LOG_ERROR("No convergence to destination after = " + std::to_string(edgelabels_rev_.size()));
         return {};
@@ -518,12 +520,12 @@ std::vector<PathInfo> TimeDepReverse::FormPath(GraphReader& graphreader, const u
   LOG_DEBUG("path_iterations::" + std::to_string(edgelabels_rev_.size()));
 
   // Get the transition cost at the last edge of the reverse path
-  float tc = edgelabels_rev_[dest].transition_secs();
+  Cost tc(edgelabels_rev_[dest].transition_cost(), edgelabels_rev_[dest].transition_secs());
 
   // Form the reverse path from the destination (true origin) using opposing
   // edges.
-  float secs = 0.0f;
   std::vector<PathInfo> path;
+  Cost cost;
   uint32_t edgelabel_index = dest;
   while (edgelabel_index != kInvalidLabel) {
     const BDEdgeLabel& edgelabel = edgelabels_rev_[edgelabel_index];
@@ -532,12 +534,12 @@ std::vector<PathInfo> TimeDepReverse::FormPath(GraphReader& graphreader, const u
     // prior edge.
     uint32_t predidx = edgelabel.predecessor();
     if (predidx == kInvalidLabel) {
-      secs += edgelabel.cost().secs;
+      cost += edgelabel.cost();
     } else {
-      secs += edgelabel.cost().secs - edgelabels_rev_[predidx].cost().secs;
+      cost += edgelabel.cost() - edgelabels_rev_[predidx].cost();
     }
-    secs += tc;
-    path.emplace_back(edgelabel.mode(), secs, edgelabel.opp_edgeid(), 0);
+    cost += tc;
+    path.emplace_back(edgelabel.mode(), cost.secs, edgelabel.opp_edgeid(), 0, cost.cost);
 
     // Check if this is a ferry
     if (edgelabel.use() == Use::kFerry) {
@@ -546,8 +548,10 @@ std::vector<PathInfo> TimeDepReverse::FormPath(GraphReader& graphreader, const u
 
     // Update edgelabel_index and transition cost to apply at next iteration
     edgelabel_index = predidx;
-    tc = edgelabel.transition_secs();
+    tc.secs = edgelabel.transition_secs();
+    tc.cost = edgelabel.transition_cost();
   }
+
   return path;
 }
 

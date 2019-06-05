@@ -35,11 +35,13 @@ public:
    * @return Returns the path edges (and elapsed time/modes at end of
    *          each edge).
    */
-  virtual std::vector<PathInfo> GetBestPath(valhalla::Location& origin,
-                                            valhalla::Location& dest,
-                                            baldr::GraphReader& graphreader,
-                                            const std::shared_ptr<sif::DynamicCost>* mode_costing,
-                                            const sif::TravelMode mode);
+  std::vector<std::vector<PathInfo>>
+  GetBestPath(valhalla::Location& origin,
+              valhalla::Location& dest,
+              baldr::GraphReader& graphreader,
+              const std::shared_ptr<sif::DynamicCost>* mode_costing,
+              const sif::TravelMode mode,
+              const Options& options = Options::default_instance());
 
 protected:
   uint32_t origin_tz_index_;
@@ -102,11 +104,13 @@ public:
    * @return Returns the path edges (and elapsed time/modes at end of
    *          each edge).
    */
-  virtual std::vector<PathInfo> GetBestPath(valhalla::Location& origin,
-                                            valhalla::Location& dest,
-                                            baldr::GraphReader& graphreader,
-                                            const std::shared_ptr<sif::DynamicCost>* mode_costing,
-                                            const sif::TravelMode mode);
+  virtual std::vector<std::vector<PathInfo>>
+  GetBestPath(valhalla::Location& origin,
+              valhalla::Location& dest,
+              baldr::GraphReader& graphreader,
+              const std::shared_ptr<sif::DynamicCost>* mode_costing,
+              const sif::TravelMode mode,
+              const Options& options = Options::default_instance());
 
 protected:
   uint32_t dest_tz_index_;

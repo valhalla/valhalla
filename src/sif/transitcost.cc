@@ -62,7 +62,7 @@ public:
    * @param  costing specified costing type.
    * @param  options pbf with request options.
    */
-  TransitCost(const Costing costing, const DirectionsOptions& options);
+  TransitCost(const Costing costing, const Options& options);
 
   virtual ~TransitCost();
 
@@ -314,7 +314,7 @@ public:
 
 // Constructor. Parse pedestrian options from property tree. If option is
 // not present, set the default.
-TransitCost::TransitCost(const Costing costing, const DirectionsOptions& options)
+TransitCost::TransitCost(const Costing costing, const Options& options)
     : DynamicCost(options, TravelMode::kPublicTransit) {
 
   // Grab the costing options based on the specified costing type
@@ -754,7 +754,7 @@ void ParseTransitCostOptions(const rapidjson::Document& doc,
   }
 }
 
-cost_ptr_t CreateTransitCost(const Costing costing, const DirectionsOptions& options) {
+cost_ptr_t CreateTransitCost(const Costing costing, const Options& options) {
   return std::make_shared<TransitCost>(costing, options);
 }
 
@@ -773,9 +773,9 @@ namespace {
 TransitCost* make_transitcost_from_json(const std::string& property, float testVal) {
   std::stringstream ss;
   ss << R"({"costing_options":{"transit":{")" << property << R"(":)" << testVal << "}}}";
-  valhalla_request_t request;
-  request.parse(ss.str(), valhalla::DirectionsOptions::route);
-  return new TransitCost(valhalla::Costing::transit, request.options);
+  Api request;
+  ParseApi(ss.str(), valhalla::Options::route, request);
+  return new TransitCost(valhalla::Costing::transit, request.options());
 }
 
 std::uniform_real_distribution<float>*

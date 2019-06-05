@@ -27,7 +27,7 @@
 #include "odin/signs.h"
 
 #include <valhalla/proto/directions.pb.h>
-#include <valhalla/proto/directions_options.pb.h>
+#include <valhalla/proto/options.pb.h>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -104,8 +104,8 @@ uint16_t GetExpectedTurnLaneDirection(Maneuver& maneuver) {
 namespace valhalla {
 namespace odin {
 
-ManeuversBuilder::ManeuversBuilder(const DirectionsOptions& directions_options, EnhancedTripLeg* etp)
-    : directions_options_(directions_options), trip_path_(etp) {
+ManeuversBuilder::ManeuversBuilder(const Options& options, EnhancedTripLeg* etp)
+    : options_(options), trip_path_(etp) {
 }
 
 std::list<Maneuver> ManeuversBuilder::Build() {
@@ -186,13 +186,11 @@ std::list<Maneuver> ManeuversBuilder::Build() {
   std::string last_name = (trip_path_->GetCurrEdge(last_node_index)->name_size() == 0)
                               ? ""
                               : trip_path_->GetCurrEdge(last_node_index)->name(0).value();
-  std::string units = (directions_options_.units() == valhalla::DirectionsOptions::kilometers)
-                          ? "kilometers"
-                          : "miles";
+  std::string units = (options_.units() == valhalla::Options::kilometers) ? "kilometers" : "miles";
   LOG_DEBUG((boost::format("ROUTE_REQUEST|-j "
                            "'{\"locations\":[{\"lat\":%1$.6f,\"lon\":%2$.6f,\"street\":\"%3%\"},{"
                            "\"lat\":%4$.6f,\"lon\":%5$.6f,\"street\":\"%6%\"}],\"costing\":"
-                           "\"auto\",\"directions_options\":{\"units\":\"%7%\"}}'") %
+                           "\"auto\",\"units\":\"%7%\"}'") %
              orig.ll().lat() % orig.ll().lng() % first_name % dest.ll().lat() % dest.ll().lng() %
              last_name % units)
                 .str());
@@ -2335,30 +2333,43 @@ void ManeuversBuilder::ProcessTurnLanes(std::list<Maneuver>& maneuvers) {
   // Walk the maneuvers to activate turn lanes
   while (next_man != maneuvers.end()) {
 
-    // Walk maneuvers by node (prev_edge of node has the turn lane info)
-    // Assign turn lane at transition point
-    auto prev_edge = trip_path_->GetPrevEdge(curr_man->begin_node_index());
-    if (prev_edge && (prev_edge->turn_lanes_size() > 0)) {
-      prev_edge->ActivateTurnLanes(GetExpectedTurnLaneDirection(*(curr_man)));
+    // Only process driving maneuvers
+    if (curr_man->travel_mode() == TripLeg_TravelMode::TripLeg_TravelMode_kDrive) {
+
+      // Keep track of the remaining step distance in kilometers
+      float remaining_step_distance = curr_man->length();
+
+      // Walk maneuvers by node (prev_edge of node has the turn lane info)
+      // Assign turn lane at transition point
+      auto prev_edge = trip_path_->GetPrevEdge(curr_man->begin_node_index());
+      if (prev_edge && (prev_edge->turn_lanes_size() > 0)) {
+        prev_edge->ActivateTurnLanes(GetExpectedTurnLaneDirection(*(curr_man)),
+                                     remaining_step_distance, next_man->type());
+      }
+
+      // TODO
+      // If curr_man is short ramp and prev_man is ramp special logic
+      // (if curr_man is left or right subset of prev_man L|T|R is begin subset of L|T|R|R)
+
+      // Assign turn lanes within step
+      for (auto index = (curr_man->begin_node_index() + 1); index < curr_man->end_node_index();
+           ++index) {
+        auto prev_edge = trip_path_->GetPrevEdge(index);
+        if (prev_edge) {
+          // Update the remaining step distance
+          remaining_step_distance -= prev_edge->length();
+
+          if (prev_edge->turn_lanes_size() > 0) {
+            // For now just assume 'through' - we can enhance if needed
+            prev_edge->ActivateTurnLanes(kTurnLaneThrough, remaining_step_distance, next_man->type());
+          }
+        }
+      }
+
+      // Handle any special `none` lanes
+
+      // Do we mark maneuver?
     }
-
-    // TODO
-    // If curr_man is short then specific lane activation
-    // Left-most left / through / right
-    // Right-most left / through / right
-
-    // If curr_man is short ramp and prev_man is ramp special logic
-    // (if curr_man is left or right subset of prev_man L|T|R is begin subset of L|T|R|R)
-
-    // Assign turn lanes within step
-    // Track remaining maneuver distance
-
-    // If remaining distance is short then specific lane activation
-
-    // Handle any special `none` lanes
-
-    // Do we mark maneuver?
-
     // on to the next maneuver...
     curr_man = next_man;
     ++next_man;

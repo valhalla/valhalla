@@ -167,11 +167,13 @@ void TimeDepForward::ExpandForward(GraphReader& graphreader,
 
 // Calculate time-dependent best path using a forward search. Supports
 // "depart-at" routes.
-std::vector<PathInfo> TimeDepForward::GetBestPath(valhalla::Location& origin,
-                                                  valhalla::Location& destination,
-                                                  GraphReader& graphreader,
-                                                  const std::shared_ptr<DynamicCost>* mode_costing,
-                                                  const TravelMode mode) {
+std::vector<std::vector<PathInfo>>
+TimeDepForward::GetBestPath(valhalla::Location& origin,
+                            valhalla::Location& destination,
+                            GraphReader& graphreader,
+                            const std::shared_ptr<DynamicCost>* mode_costing,
+                            const TravelMode mode,
+                            const Options& options) {
   // Set the mode and costing
   mode_ = mode;
   costing_ = mode_costing[static_cast<uint32_t>(mode_)];
@@ -253,10 +255,10 @@ std::vector<PathInfo> TimeDepForward::GetBestPath(valhalla::Location& origin,
       // trivial (cannot reach destination along this one edge).
       if (pred.predecessor() == kInvalidLabel) {
         if (IsTrivial(pred.edgeid(), origin, destination)) {
-          return FormPath(predindex);
+          return {FormPath(predindex)};
         }
       } else {
-        return FormPath(predindex);
+        return {FormPath(predindex)};
       }
     }
 
@@ -276,7 +278,7 @@ std::vector<PathInfo> TimeDepForward::GetBestPath(valhalla::Location& origin,
       nc = 0;
     } else if (nc++ > kMaxIterationsWithoutConvergence) {
       if (best_path.first >= 0) {
-        return FormPath(best_path.first);
+        return {FormPath(best_path.first)};
       } else {
         LOG_ERROR("No convergence to destination after = " + std::to_string(edgelabels_.size()));
         return {};

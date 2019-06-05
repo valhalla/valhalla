@@ -2,13 +2,15 @@
 #define VALHALLA_ODIN_ENHANCEDTRIPPATH_H_
 
 #include <cstdint>
+#include <limits>
 #include <memory>
 #include <string>
 #include <unordered_map>
 #include <utility>
 #include <vector>
 
-#include <valhalla/proto/directions_options.pb.h>
+#include <valhalla/proto/directions.pb.h>
+#include <valhalla/proto/options.pb.h>
 #include <valhalla/proto/trip.pb.h>
 
 namespace valhalla {
@@ -109,7 +111,7 @@ public:
 
   const ::valhalla::Location& GetDestination() const;
 
-  float GetLength(const DirectionsOptions::Units& units);
+  float GetLength(const Options::Units& units);
 
 protected:
   TripLeg& trip_path_;
@@ -378,12 +380,18 @@ public:
 
   std::vector<std::pair<std::string, bool>> GetNameList() const;
 
-  float GetLength(const DirectionsOptions::Units& units);
+  float GetLength(const Options::Units& units);
 
   // Turn Lanes
   bool HasActiveTurnLane() const;
   bool HasNonDirectionalTurnLane() const;
-  bool ActivateTurnLanes(uint16_t turn_lane_direction);
+  uint16_t ActivateTurnLanes(uint16_t turn_lane_direction,
+                             float remaining_step_distance,
+                             const DirectionsLeg_Maneuver_Type& next_maneuver_type);
+  uint16_t ActivateTurnLanesFromLeft(uint16_t turn_lane_direction,
+                                     uint16_t activated_max = std::numeric_limits<uint16_t>::max());
+  uint16_t ActivateTurnLanesFromRight(uint16_t turn_lane_direction,
+                                      uint16_t activated_max = std::numeric_limits<uint16_t>::max());
 
   std::string ToString() const;
 
