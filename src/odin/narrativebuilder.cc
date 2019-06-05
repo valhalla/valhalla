@@ -38,14 +38,14 @@ constexpr uint32_t kRoundaboutExitCountUpperBound = 10;
 namespace valhalla {
 namespace odin {
 
-NarrativeBuilder::NarrativeBuilder(const DirectionsOptions& directions_options,
+NarrativeBuilder::NarrativeBuilder(const Options& options,
                                    const EnhancedTripLeg* trip_path,
                                    const NarrativeDictionary& dictionary)
-    : directions_options_(directions_options), trip_path_(trip_path), dictionary_(dictionary),
+    : options_(options), trip_path_(trip_path), dictionary_(dictionary),
       articulated_preposition_enabled_(false) {
 }
 
-void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
+void NarrativeBuilder::Build(const Options& options,
                              const EnhancedTripLeg* etp,
                              std::list<Maneuver>& maneuvers) {
   Maneuver* prev_maneuver = nullptr;
@@ -233,7 +233,7 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
 
         // Set verbal transition alert instruction if previous maneuver
         // is greater than 2 km
-        if (prev_maneuver && (prev_maneuver->length(DirectionsOptions::kilometers) >
+        if (prev_maneuver && (prev_maneuver->length(Options::kilometers) >
                               kVerbalAlertMergePriorManeuverMinimumLength)) {
           maneuver.set_verbal_transition_alert_instruction(FormVerbalAlertMergeInstruction(maneuver));
         }
@@ -442,7 +442,7 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
 
         // Set verbal pre transition instruction
         maneuver.set_verbal_pre_transition_instruction(
-            FormVerbalContinueInstruction(maneuver, directions_options.units()));
+            FormVerbalContinueInstruction(maneuver, options.units()));
         // NOTE: No verbal post transition instruction
         break;
       }
@@ -872,7 +872,7 @@ std::string NarrativeBuilder::FormVerbalAlertContinueInstruction(Maneuver& maneu
 }
 
 std::string NarrativeBuilder::FormVerbalContinueInstruction(Maneuver& maneuver,
-                                                            DirectionsOptions_Units units,
+                                                            Options_Units units,
                                                             uint32_t element_max_count,
                                                             const std::string& delim) {
   // "0": "Continue for <LENGTH>.",
@@ -3385,13 +3385,11 @@ std::string NarrativeBuilder::GetPluralCategory(size_t count) {
 std::string NarrativeBuilder::FormLength(Maneuver& maneuver,
                                          const std::vector<std::string>& metric_lengths,
                                          const std::vector<std::string>& us_customary_lengths) {
-  switch (directions_options_.units()) {
-    case DirectionsOptions::miles: {
-      return FormUsCustomaryLength(maneuver.length(DirectionsOptions::miles), us_customary_lengths);
+  switch (options_.units()) {
+    case Options::miles: {
+      return FormUsCustomaryLength(maneuver.length(Options::miles), us_customary_lengths);
     }
-    default: {
-      return FormMetricLength(maneuver.length(DirectionsOptions::kilometers), metric_lengths);
-    }
+    default: { return FormMetricLength(maneuver.length(Options::kilometers), metric_lengths); }
   }
 }
 

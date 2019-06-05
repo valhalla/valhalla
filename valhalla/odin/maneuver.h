@@ -13,7 +13,7 @@
 #include <valhalla/odin/signs.h>
 #include <valhalla/odin/transitrouteinfo.h>
 #include <valhalla/proto/directions.pb.h>
-#include <valhalla/proto/directions_options.pb.h>
+#include <valhalla/proto/options.pb.h>
 #include <valhalla/proto/trip.pb.h>
 #include <valhalla/proto/tripcommon.pb.h>
 
@@ -73,7 +73,7 @@ public:
   void set_instruction(std::string&& instruction);
 
   // Kilometers
-  float length(const DirectionsOptions::Units& units = DirectionsOptions::kilometers) const;
+  float length(const Options::Units& units = Options::kilometers) const;
   void set_length(float length);
 
   // Seconds

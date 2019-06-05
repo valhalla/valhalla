@@ -47,13 +47,13 @@ json::ArrayPtr serialize_admins(const TripLeg& trip_path) {
 }
 
 json::ArrayPtr serialize_edges(const AttributesController& controller,
-                               const DirectionsOptions& directions_options,
+                               const Options& options,
                                const TripLeg& trip_path) {
   json::ArrayPtr edge_array = json::array({});
 
   // Length and speed default to kilometers
   double scale = 1;
-  if (directions_options.has_units() && directions_options.units() == DirectionsOptions::miles) {
+  if (options.has_units() && options.units() == Options::miles) {
     scale = kMilePerKm;
   }
 
@@ -114,8 +114,7 @@ json::ArrayPtr serialize_edges(const AttributesController& controller,
       if (edge.has_mean_elevation()) {
         // Convert to feet if a valid elevation and units are miles
         float mean = edge.mean_elevation();
-        if (mean != kNoElevationData && directions_options.has_units() &&
-            directions_options.units() == DirectionsOptions::miles) {
+        if (mean != kNoElevationData && options.has_units() && options.units() == Options::miles) {
           mean *= kFeetPerMeter;
         }
         edge_map->emplace("mean_elevation", static_cast<int64_t>(mean));
@@ -430,12 +429,11 @@ json::MapPtr serialize_shape_attributes(const AttributesController& controller,
 void append_trace_info(
     const json::MapPtr& json,
     const AttributesController& controller,
-    const DirectionsOptions& directions_options,
-    const std::tuple<float, float, std::vector<thor::MatchResult>, std::list<TripLeg>>&
-        map_match_result) {
+    const Options& options,
+    const std::tuple<float, float, std::vector<thor::MatchResult>>& map_match_result,
+    const TripLeg& trip_path) {
   // Set trip path and match results
   const auto& match_results = std::get<kMatchResultsIndex>(map_match_result);
-  const auto& trip_path = std::get<kTripLegIndex>(map_match_result).front();
 
   // Add osm_changeset
   if (trip_path.has_osm_changeset()) {
@@ -464,7 +462,7 @@ void append_trace_info(
   }
 
   // Add edges
-  json->emplace("edges", serialize_edges(controller, directions_options, trip_path));
+  json->emplace("edges", serialize_edges(controller, options, trip_path));
 
   // Add matched points, if requested
   if (controller.category_attribute_enabled(kMatchedCategory) && !match_results.empty()) {
@@ -482,22 +480,21 @@ namespace valhalla {
 namespace tyr {
 
 std::string serializeTraceAttributes(
-    const valhalla_request_t& request,
+    const Api& request,
     const AttributesController& controller,
-    std::vector<std::tuple<float, float, std::vector<thor::MatchResult>, std::list<TripLeg>>>&
-        map_match_results) {
+    std::vector<std::tuple<float, float, std::vector<thor::MatchResult>>>& map_match_results) {
 
   // Create json map to return
   auto json = json::map({});
 
   // Add result id, if supplied
-  if (request.options.has_id()) {
-    json->emplace("id", request.options.id());
+  if (request.options().has_id()) {
+    json->emplace("id", request.options().id());
   }
 
   // Add units, if specified
-  if (request.options.has_units()) {
-    json->emplace("units", valhalla::DirectionsOptions_Units_Name(request.options.units()));
+  if (request.options().has_units()) {
+    json->emplace("units", valhalla::Options_Units_Name(request.options().units()));
   }
 
   // Loop over all results to process the best path
@@ -505,17 +502,20 @@ std::string serializeTraceAttributes(
   bool best_path = true;
   auto alt_paths_array = json::array({});
   json->emplace("alternate_paths", alt_paths_array);
+  auto route = request.trip().routes().begin();
   for (const auto& map_match_result : map_match_results) {
     if (best_path) {
       // Append the best path trace info
-      append_trace_info(json, controller, request.options, map_match_result);
+      append_trace_info(json, controller, request.options(), map_match_result, route->legs(0));
       best_path = false;
     } else {
       // Append alternate path trace info to alternate path array
       auto alt_path_json = json::map({});
-      append_trace_info(alt_path_json, controller, request.options, map_match_result);
+      append_trace_info(alt_path_json, controller, request.options(), map_match_result,
+                        route->legs(0));
       alt_paths_array->push_back(alt_path_json);
     }
+    ++route;
   }
   std::stringstream ss;
   ss << *json;

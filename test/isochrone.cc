@@ -72,8 +72,8 @@ void try_isochrone(GraphReader& reader,
                    thor_worker_t& thor_worker,
                    const char* test_request,
                    const std::string& expected) {
-  valhalla_request_t request;
-  request.parse(test_request, DirectionsOptions::isochrone);
+  Api request;
+  ParseApi(test_request, Options::isochrone, request);
   loki_worker.isochrones(request);
 
   // Process isochrone request

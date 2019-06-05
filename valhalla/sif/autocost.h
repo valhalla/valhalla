@@ -5,7 +5,7 @@
 
 #include <boost/property_tree/ptree.hpp>
 #include <valhalla/baldr/rapidjson_utils.h>
-#include <valhalla/proto/directions_options.pb.h>
+#include <valhalla/proto/options.pb.h>
 #include <valhalla/sif/dynamiccost.h>
 
 namespace valhalla {
@@ -28,7 +28,7 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
  * @param  costing specified costing type.
  * @param  options pbf with request options.
  */
-cost_ptr_t CreateAutoCost(const Costing costing, const DirectionsOptions& options);
+cost_ptr_t CreateAutoCost(const Costing costing, const Options& options);
 
 /**
  * Parses the auto_shorter cost options from json and stores values in pbf.
@@ -48,7 +48,7 @@ void ParseAutoShorterCostOptions(const rapidjson::Document& doc,
  * @param  costing specified costing type.
  * @param  options pbf with request options.
  */
-cost_ptr_t CreateAutoShorterCost(const Costing costing, const DirectionsOptions& options);
+cost_ptr_t CreateAutoShorterCost(const Costing costing, const Options& options);
 
 /**
  * Parses the auto_data_fix cost options from json and stores values in pbf.
@@ -69,7 +69,7 @@ void ParseAutoDataFixCostOptions(const rapidjson::Document& doc,
  * @param  costing specified costing type.
  * @param  options pbf with request options.
  */
-cost_ptr_t CreateAutoDataFixCost(const Costing costing, const DirectionsOptions& options);
+cost_ptr_t CreateAutoDataFixCost(const Costing costing, const Options& options);
 
 /**
  * Parses the bus cost options from json and stores values in pbf.
@@ -89,7 +89,7 @@ void ParseBusCostOptions(const rapidjson::Document& doc,
  * @param  costing specified costing type.
  * @param  options pbf with request options.
  */
-cost_ptr_t CreateBusCost(const Costing costing, const DirectionsOptions& options);
+cost_ptr_t CreateBusCost(const Costing costing, const Options& options);
 
 /**
  * Parses the hov cost options from json and stores values in pbf.
@@ -108,7 +108,7 @@ void ParseHOVCostOptions(const rapidjson::Document& doc,
  * @param  costing specified costing type.
  * @param  options pbf with request options.
  */
-cost_ptr_t CreateHOVCost(const Costing costing, const DirectionsOptions& options);
+cost_ptr_t CreateHOVCost(const Costing costing, const Options& options);
 
 /**
  * Parses the taxi cost options from json and stores values in pbf.
@@ -127,7 +127,7 @@ void ParseTaxiCostOptions(const rapidjson::Document& doc,
  * @param  costing specified costing type.
  * @param  options pbf with request options.
  */
-cost_ptr_t CreateTaxiCost(const Costing costing, const DirectionsOptions& options);
+cost_ptr_t CreateTaxiCost(const Costing costing, const Options& options);
 
 } // namespace sif
 } // namespace valhalla

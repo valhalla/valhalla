@@ -366,7 +366,7 @@ void start_service() {
         "max_radius": 200,
         "max_alternates":2
       },
-      "costing_options": { "auto": {}, "pedestrian": {} }
+      "costing_directions_options": { "auto": {}, "pedestrian": {} }
     })";
   rapidjson::read_json(json, config);
 

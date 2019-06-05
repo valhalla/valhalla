@@ -94,12 +94,13 @@ void MultiModalPathAlgorithm::Clear() {
 }
 
 // Calculate best path using multiple modes (e.g. transit).
-std::vector<PathInfo>
+std::vector<std::vector<PathInfo>>
 MultiModalPathAlgorithm::GetBestPath(valhalla::Location& origin,
                                      valhalla::Location& destination,
                                      GraphReader& graphreader,
                                      const std::shared_ptr<DynamicCost>* mode_costing,
-                                     const TravelMode mode) {
+                                     const TravelMode mode,
+                                     const Options& options) {
   // For pedestrian costing - set flag allowing use of transit connections
   // Set pedestrian costing to use max distance. TODO - need for other modes
   const auto& pc = mode_costing[static_cast<uint32_t>(TravelMode::kPedestrian)];
@@ -198,10 +199,10 @@ MultiModalPathAlgorithm::GetBestPath(valhalla::Location& origin,
       // trivial (cannot reach destination along this one edge).
       if (pred.predecessor() == kInvalidLabel) {
         if (IsTrivial(pred.edgeid(), origin, destination)) {
-          return FormPath(predindex);
+          return {FormPath(predindex)};
         }
       } else {
-        return FormPath(predindex);
+        return {FormPath(predindex)};
       }
     }
 
@@ -842,8 +843,8 @@ std::vector<PathInfo> MultiModalPathAlgorithm::FormPath(const uint32_t dest) {
   for (auto edgelabel_index = dest; edgelabel_index != kInvalidLabel;
        edgelabel_index = edgelabels_[edgelabel_index].predecessor()) {
     const MMEdgeLabel& edgelabel = edgelabels_[edgelabel_index];
-    path.emplace_back(edgelabel.mode(), edgelabel.cost().secs, edgelabel.edgeid(),
-                      edgelabel.tripid());
+    path.emplace_back(edgelabel.mode(), edgelabel.cost().secs, edgelabel.edgeid(), edgelabel.tripid(),
+                      edgelabel.cost().cost);
 
     // Check if this is a ferry
     if (edgelabel.use() == Use::kFerry) {

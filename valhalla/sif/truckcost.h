@@ -3,7 +3,7 @@
 
 #include <cstdint>
 #include <valhalla/baldr/rapidjson_utils.h>
-#include <valhalla/proto/directions_options.pb.h>
+#include <valhalla/proto/options.pb.h>
 #include <valhalla/sif/dynamiccost.h>
 
 namespace valhalla {
@@ -25,7 +25,7 @@ void ParseTruckCostOptions(const rapidjson::Document& doc,
  * @param  costing specified costing type.
  * @param  options pbf with request options.
  */
-cost_ptr_t CreateTruckCost(const Costing costing, const DirectionsOptions& options);
+cost_ptr_t CreateTruckCost(const Costing costing, const Options& options);
 
 } // namespace sif
 } // namespace valhalla

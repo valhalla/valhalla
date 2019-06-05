@@ -106,19 +106,18 @@ void walk_edges(const std::string& shape, GraphReader& reader, cost_ptr_t cost_p
   const auto projections =
       Search(locations, reader, cost_ptr->GetEdgeFilter(), cost_ptr->GetNodeFilter());
   std::vector<PathLocation> path_location;
-  valhalla::DirectionsOptions directions_options;
+  valhalla::Options options;
   for (const auto& loc : locations) {
     try {
       path_location.push_back(projections.at(loc));
-      PathLocation::toPBF(path_location.back(), directions_options.mutable_locations()->Add(),
-                          reader);
+      PathLocation::toPBF(path_location.back(), options.mutable_locations()->Add(), reader);
     } catch (...) { return; }
   }
 
   std::vector<PathInfo> path_infos;
   std::vector<PathLocation> correlated;
   bool rtn = RouteMatcher::FormPath(mode_costing, mode, reader, measurements, false,
-                                    directions_options.locations(), path_infos);
+                                    options.locations(), path_infos);
   if (!rtn) {
     std::cerr << "ERROR: RouteMatcher returned false - did not match complete shape." << std::endl;
   }
@@ -208,12 +207,12 @@ int main(int argc, char* argv[]) {
 
   // argument checking and verification
   boost::property_tree::ptree json_ptree;
-  valhalla_request_t request;
+  Api request;
   ////////////////////////////////////////////////////////////////////////////
   // Process json input
   bool map_match = true;
   if (vm.count("json")) {
-    request.parse(json, valhalla::DirectionsOptions::trace_route);
+    ParseApi(json, valhalla::Options::trace_route, request);
     std::stringstream stream(json);
     rapidjson::read_json(stream, json_ptree);
     try {
@@ -277,11 +276,11 @@ int main(int argc, char* argv[]) {
   factory.RegisterStandardCostingModels();
   valhalla::Costing costing;
   if (valhalla::Costing_Parse(routetype, &costing)) {
-    request.options.set_costing(costing);
+    request.mutable_options()->set_costing(costing);
   } else {
     throw std::runtime_error("No costing method found");
   }
-  cost_ptr_t cost_ptr = factory.Create(costing, request.options);
+  cost_ptr_t cost_ptr = factory.Create(costing, request.options());
 
   // If a shape is entered use edge walking
   if (!map_match) {
@@ -292,7 +291,7 @@ int main(int argc, char* argv[]) {
   // If JSON is entered we do map matching
   MapMatcherFactory map_matcher_factory(pt);
   std::shared_ptr<valhalla::meili::MapMatcher> matcher(
-      map_matcher_factory.Create(costing, request.options));
+      map_matcher_factory.Create(costing, request.options()));
 
   uint32_t i = 0;
   for (const auto& path : paths) {

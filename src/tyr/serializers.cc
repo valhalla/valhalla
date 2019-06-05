@@ -18,7 +18,7 @@
 #include "odin/util.h"
 #include "tyr/serializers.h"
 
-#include <valhalla/proto/directions_options.pb.h>
+#include <valhalla/proto/options.pb.h>
 
 using namespace valhalla;
 using namespace valhalla::baldr;
