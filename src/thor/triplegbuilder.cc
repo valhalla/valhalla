@@ -177,7 +177,7 @@ void SetShapeAttributes(const AttributesController& controller,
     // Set the shape attributes
     for (++shape_begin; shape_begin < shape_end; ++shape_begin) {
       double distance = shape_begin->Distance(*(shape_begin - 1)); // meters
-      double distance_pct = (distance / 1000) / edge_length; // fraction of path length
+      double distance_pct = (distance / 1000) / edge_length;       // fraction of path length
       double time = edge_time * distance_pct;
       // Set shape attributes time per shape point if requested
       if (controller.attributes.at(kShapeAttributesTime)) {

@@ -77,36 +77,60 @@ void test_shape_attributes_included() {
     throw std::logic_error("");
   }
 
-  auto shape =  midgard::decode<std::vector<PointLL>>(rapidjson::Pointer("/shape").Get(doc)->GetString());
-  auto shape_attributes_time =  rapidjson::Pointer("/shape_attributes/time").Get(doc)->GetArray();
-  auto shape_attributes_length =  rapidjson::Pointer("/shape_attributes/length").Get(doc)->GetArray();
-  auto shape_attributes_speed =  rapidjson::Pointer("/shape_attributes/speed").Get(doc)->GetArray();
-  auto edges =  rapidjson::Pointer("/edges").Get(doc)->GetArray();
+  auto shape =
+      midgard::decode<std::vector<PointLL>>(rapidjson::Pointer("/shape").Get(doc)->GetString());
+  auto shape_attributes_time = rapidjson::Pointer("/shape_attributes/time").Get(doc)->GetArray();
+  auto shape_attributes_length = rapidjson::Pointer("/shape_attributes/length").Get(doc)->GetArray();
+  auto shape_attributes_speed = rapidjson::Pointer("/shape_attributes/speed").Get(doc)->GetArray();
+  auto edges = rapidjson::Pointer("/edges").Get(doc)->GetArray();
 
   if (shape_attributes_time.Size() != shape.size() - 1)
-    throw std::logic_error("Expected: " + std::to_string(shape.size() - 1) + " | Found: " + std::to_string(shape_attributes_time.Size()));
+    throw std::logic_error("Expected: " + std::to_string(shape.size() - 1) +
+                           " | Found: " + std::to_string(shape_attributes_time.Size()));
   if (shape_attributes_length.Size() != shape.size() - 1)
-      throw std::logic_error("Expected: " + std::to_string(shape.size() - 1) + " | Found: " + std::to_string(shape_attributes_length.Size()));
+    throw std::logic_error("Expected: " + std::to_string(shape.size() - 1) +
+                           " | Found: " + std::to_string(shape_attributes_length.Size()));
   if (shape_attributes_speed.Size() != shape.size() - 1)
-        throw std::logic_error("Expected: " + std::to_string(shape.size() - 1) + " | Found: " + std::to_string(shape_attributes_speed.Size()));
+    throw std::logic_error("Expected: " + std::to_string(shape.size() - 1) +
+                           " | Found: " + std::to_string(shape_attributes_speed.Size()));
 
   // Measures the length between point
   for (int i = 1; i < shape.size(); i++) {
-    std::cout << "Time:: " + std::to_string(shape_attributes_time[i-1].GetDouble()) + "\n";
-    std::cout << "Length:: " + std::to_string(shape_attributes_length[i-1].GetFloat()) + "\n";
-    std::cout << "Speed:: " + std::to_string(shape_attributes_speed[i-1].GetDouble()) + "\n";
+    auto distance = shape[i].Distance(shape[i - 1]) * .001f;
+    std::cout << std::to_string(i) +
+                     " | Time:: " + std::to_string(shape_attributes_time[i - 1].GetDouble()) + "\n";
+    std::cout << std::to_string(i) +
+                     " | Length:: " + std::to_string(shape_attributes_length[i - 1].GetFloat()) +
+                     "\n";
+    std::cout << std::to_string(i) +
+                     " | Speed:: " + std::to_string(shape_attributes_speed[i - 1].GetDouble()) + "\n";
     // Measuring that the length between shape pts is approx. to the shape attributes length
-    if (!midgard::equal(shape[i].Distance(shape[i-1]) * .001f, shape_attributes_length[i-1].GetFloat(), .01f)) {
-      throw std::logic_error("Expected: " + std::to_string(shape_attributes_length[i-1].GetFloat()) + " | Found: " + std::to_string(shape[i].Distance(shape[i-1]) * .001f));
+    if (!midgard::equal(distance, shape_attributes_length[i - 1].GetFloat(), .01f)) {
+      throw std::logic_error(
+          "Expected: " + std::to_string(shape_attributes_length[i - 1].GetFloat()) +
+          " | Found: " + std::to_string(shape[i].Distance(shape[i - 1]) * .001f));
     }
   }
+
   for (int e = 1; e < edges.Size(); e++) {
+    auto edge_length = edges[e]["length"].GetFloat();
+    std::cout << std::to_string(e) + " | edge_length :: " + std::to_string(edge_length) + "\n";
+
+    auto edge_elapsed_time = edges[e]["end_node"]["elapsed_time"].GetDouble() * .1;
+    std::cout << std::to_string(e) + " | edge_elapsed_time :: " + std::to_string(edge_elapsed_time) +
+                     "\n";
+    if (!midgard::equal(edge_elapsed_time, shape_attributes_time[e - 1].GetDouble(), .3)) {
+      throw std::logic_error("Expected: " + std::to_string(shape_attributes_time[e - 1].GetFloat()) +
+                             " | Found: " + std::to_string(edge_elapsed_time));
+    }
+
     auto edge_speed = edges[e]["speed"].GetDouble();
-    std::cout << "edge_speed :: " + std::to_string(edge_speed) + "\n";
+    std::cout << std::to_string(e) + " | edge_speed :: " + std::to_string(edge_speed) + "\n";
+    if (!midgard::equal(edge_speed, shape_attributes_speed[e - 1].GetDouble())) {
+      throw std::logic_error("Expected: " + std::to_string(shape_attributes_speed[e - 1].GetFloat()) +
+                             " | Found: " + std::to_string(edge_speed));
+    }
   }
-  // TODO: test a multi edge route, decode the shape and measure that the length between each
-  // is appx the same as the length in the shape attributes. Get the edge time from request and validate
-  // that that makes sense as well.
 }
 
 } // namespace
