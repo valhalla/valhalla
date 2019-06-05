@@ -158,7 +158,7 @@ public:
    * @param  costing specified costing type.
    * @param  options pbf with request options.
    */
-  MotorScooterCost(const Costing costing, const DirectionsOptions& options);
+  MotorScooterCost(const Costing costing, const Options& options);
 
   // virtual destructor
   virtual ~MotorScooterCost() {
@@ -348,7 +348,7 @@ public:
 };
 
 // Constructor
-MotorScooterCost::MotorScooterCost(const Costing costing, const DirectionsOptions& options)
+MotorScooterCost::MotorScooterCost(const Costing costing, const Options& options)
     : DynamicCost(options, TravelMode::kDrive), trans_density_factor_{1.0f, 1.0f, 1.0f, 1.0f,
                                                                       1.0f, 1.1f, 1.2f, 1.3f,
                                                                       1.4f, 1.6f, 1.9f, 2.2f,
@@ -632,7 +632,7 @@ void ParseMotorScooterCostOptions(const rapidjson::Document& doc,
   }
 }
 
-cost_ptr_t CreateMotorScooterCost(const Costing costing, const DirectionsOptions& options) {
+cost_ptr_t CreateMotorScooterCost(const Costing costing, const Options& options) {
   return std::make_shared<MotorScooterCost>(costing, options);
 }
 
@@ -650,7 +650,7 @@ namespace {
 
 class TestMotorScooterCost : public MotorScooterCost {
 public:
-  TestMotorScooterCost(const Costing costing, const DirectionsOptions& options)
+  TestMotorScooterCost(const Costing costing, const Options& options)
       : MotorScooterCost(costing, options){};
 
   using MotorScooterCost::alley_penalty_;
@@ -664,9 +664,9 @@ public:
 TestMotorScooterCost* make_motorscootercost_from_json(const std::string& property, float testVal) {
   std::stringstream ss;
   ss << R"({"costing_options":{"motor_scooter":{")" << property << R"(":)" << testVal << "}}}";
-  valhalla_request_t request;
-  request.parse(ss.str(), valhalla::DirectionsOptions::route);
-  return new TestMotorScooterCost(valhalla::Costing::motor_scooter, request.options);
+  Api request;
+  ParseApi(ss.str(), valhalla::Options::route, request);
+  return new TestMotorScooterCost(valhalla::Costing::motor_scooter, request.options());
 }
 
 template <typename T>

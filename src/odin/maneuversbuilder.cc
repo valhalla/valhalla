@@ -27,7 +27,7 @@
 #include "odin/signs.h"
 
 #include <valhalla/proto/directions.pb.h>
-#include <valhalla/proto/directions_options.pb.h>
+#include <valhalla/proto/options.pb.h>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -104,8 +104,8 @@ uint16_t GetExpectedTurnLaneDirection(Maneuver& maneuver) {
 namespace valhalla {
 namespace odin {
 
-ManeuversBuilder::ManeuversBuilder(const DirectionsOptions& directions_options, EnhancedTripLeg* etp)
-    : directions_options_(directions_options), trip_path_(etp) {
+ManeuversBuilder::ManeuversBuilder(const Options& options, EnhancedTripLeg* etp)
+    : options_(options), trip_path_(etp) {
 }
 
 std::list<Maneuver> ManeuversBuilder::Build() {
@@ -186,13 +186,11 @@ std::list<Maneuver> ManeuversBuilder::Build() {
   std::string last_name = (trip_path_->GetCurrEdge(last_node_index)->name_size() == 0)
                               ? ""
                               : trip_path_->GetCurrEdge(last_node_index)->name(0).value();
-  std::string units = (directions_options_.units() == valhalla::DirectionsOptions::kilometers)
-                          ? "kilometers"
-                          : "miles";
+  std::string units = (options_.units() == valhalla::Options::kilometers) ? "kilometers" : "miles";
   LOG_DEBUG((boost::format("ROUTE_REQUEST|-j "
                            "'{\"locations\":[{\"lat\":%1$.6f,\"lon\":%2$.6f,\"street\":\"%3%\"},{"
                            "\"lat\":%4$.6f,\"lon\":%5$.6f,\"street\":\"%6%\"}],\"costing\":"
-                           "\"auto\",\"directions_options\":{\"units\":\"%7%\"}}'") %
+                           "\"auto\",\"units\":\"%7%\"}'") %
              orig.ll().lat() % orig.ll().lng() % first_name % dest.ll().lat() % dest.ll().lng() %
              last_name % units)
                 .str());

@@ -1,5 +1,13 @@
-## Release Date: UNRELEASED Valhalla 3.0.5
+## Release Date: Unreleased Valhalla 3.0.6
 * **Bug Fix**
+   *
+
+* **Enhancement**
+   * ADDED: Use the same protobuf object the entire way through the request process [#1837](https://github.com/valhalla/valhalla/pull/1837)
+
+## Release Date: 2019-06-04 Valhalla 3.0.5
+* **Bug Fix**
+   * FIXED: Protect against unnamed rotaries and routes that end in roundabouts not turning off rotary logic [#1840](https://github.com/valhalla/valhalla/pull/1840)
 
 * **Enhancement**
    * ADDED: Add turn lane info at maneuver point [#1830](https://github.com/valhalla/valhalla/pull/1830)

@@ -5,7 +5,7 @@
 #include <memory>
 
 #include <valhalla/baldr/rapidjson_utils.h>
-#include <valhalla/proto/directions_options.pb.h>
+#include <valhalla/proto/options.pb.h>
 #include <valhalla/sif/autocost.h>
 #include <valhalla/sif/bicyclecost.h>
 #include <valhalla/sif/motorcyclecost.h>
@@ -24,7 +24,7 @@ namespace sif {
 template <class cost_t> class CostFactory {
 public:
   typedef std::shared_ptr<cost_t> cost_ptr_t;
-  typedef cost_ptr_t (*factory_function_t)(const Costing costing, const DirectionsOptions& options);
+  typedef cost_ptr_t (*factory_function_t)(const Costing costing, const Options& options);
 
   /**
    * Constructor
@@ -47,7 +47,7 @@ public:
    * @param costing  the type of cost to create
    * @param options  pbf with request options
    */
-  cost_ptr_t Create(const Costing costing, const DirectionsOptions& options) const {
+  cost_ptr_t Create(const Costing costing, const Options& options) const {
     auto itr = factory_funcs_.find(costing);
     if (itr == factory_funcs_.end()) {
       auto costing_str = Costing_Name(costing);

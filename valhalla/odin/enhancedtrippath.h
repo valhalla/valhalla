@@ -10,7 +10,7 @@
 #include <vector>
 
 #include <valhalla/proto/directions.pb.h>
-#include <valhalla/proto/directions_options.pb.h>
+#include <valhalla/proto/options.pb.h>
 #include <valhalla/proto/trip.pb.h>
 
 namespace valhalla {
@@ -111,7 +111,7 @@ public:
 
   const ::valhalla::Location& GetDestination() const;
 
-  float GetLength(const DirectionsOptions::Units& units);
+  float GetLength(const Options::Units& units);
 
 protected:
   TripLeg& trip_path_;
@@ -380,7 +380,7 @@ public:
 
   std::vector<std::pair<std::string, bool>> GetNameList() const;
 
-  float GetLength(const DirectionsOptions::Units& units);
+  float GetLength(const Options::Units& units);
 
   // Turn Lanes
   bool HasActiveTurnLane() const;
