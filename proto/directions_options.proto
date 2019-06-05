@@ -44,7 +44,6 @@ enum Costing {
   motorcycle = 10;
   auto_data_fix = 11;
   taxi = 12;
-
 }
 
 message CostingOptions {
@@ -103,8 +102,6 @@ message CostingOptions {
   optional FilterAction filter_route_action = 53;
   repeated string filter_route_ids = 54;
   optional string maximum_candidate_road_class = 55;
-
-
 }
 
 message AvoidEdge {
