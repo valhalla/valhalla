@@ -19,9 +19,6 @@ constexpr size_t kConfidenceScoreIndex = 0;
 constexpr size_t kRawScoreIndex = 1;
 constexpr size_t kMatchResultsIndex = 2;
 constexpr size_t kTripLegIndex = 3;
-constexpr double MILLISECOND_TO_SEC = 0.001;
-constexpr double DECIMETER_TO_KM = 0.0001;
-constexpr double DMS_TO_KMH = 0.36;
 
 json::ArrayPtr serialize_admins(const TripLeg& trip_path) {
   auto admin_array = json::array({});
@@ -403,7 +400,7 @@ json::MapPtr serialize_shape_attributes(const AttributesController& controller,
     auto times_array = json::array({});
     for (const auto& time : trip_path.shape_attributes().time()) {
       // milliseconds (ms) to seconds (sec)
-      times_array->push_back(json::fp_t{time * MILLISECOND_TO_SEC, 3});
+      times_array->push_back(json::fp_t{time * kSecPerMillisecond, 3});
     }
     attributes_map->emplace("time", times_array);
   }
@@ -411,7 +408,7 @@ json::MapPtr serialize_shape_attributes(const AttributesController& controller,
     auto lengths_array = json::array({});
     for (const auto& length : trip_path.shape_attributes().length()) {
       // decimeters (dm) to kilometer (km)
-      lengths_array->push_back(json::fp_t{length * DECIMETER_TO_KM, 3});
+      lengths_array->push_back(json::fp_t{length * kKmPerDecimeter, 3});
     }
     attributes_map->emplace("length", lengths_array);
   }
@@ -419,7 +416,7 @@ json::MapPtr serialize_shape_attributes(const AttributesController& controller,
     auto speeds_array = json::array({});
     for (const auto& speed : trip_path.shape_attributes().speed()) {
       // dm/s to km/h
-      speeds_array->push_back(json::fp_t{speed * DMS_TO_KMH, 3});
+      speeds_array->push_back(json::fp_t{speed * kKMHtoDecimeterPerSec, 3});
     }
     attributes_map->emplace("speed", speeds_array);
   }

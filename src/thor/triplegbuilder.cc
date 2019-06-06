@@ -30,10 +30,6 @@ using namespace valhalla::thor;
 
 namespace {
 
-constexpr double SEC_TO_MILLISEC = 1000;
-constexpr double METER_TO_DECIMETER = 10;
-constexpr double KM_TO_METER = 1000;
-
 template <class iter>
 void AddPartialShape(std::vector<PointLL>& shape,
                      iter start,
@@ -187,19 +183,19 @@ void SetShapeAttributes(const AttributesController& controller,
       // Set shape attributes time per shape point if requested
       if (controller.attributes.at(kShapeAttributesTime)) {
         // convert time to milliseconds and then round to an integer
-        trip_path.mutable_shape_attributes()->add_time((time * SEC_TO_MILLISEC) + 0.5);
+        trip_path.mutable_shape_attributes()->add_time((time * kMillisecondPerSec) + 0.5);
       }
 
       // Set shape attributes length per shape point if requested
       if (controller.attributes.at(kShapeAttributesLength)) {
         // convert length to decimeters and then round to an integer
-        trip_path.mutable_shape_attributes()->add_length((distance * METER_TO_DECIMETER) + 0.5);
+        trip_path.mutable_shape_attributes()->add_length((distance * kDecimeterPerMeter) + 0.5);
       }
 
       // Set shape attributes speed per shape point if requested
       if (controller.attributes.at(kShapeAttributesSpeed)) {
         // convert speed to decimeters per sec and then round to an integer
-        trip_path.mutable_shape_attributes()->add_speed((distance * METER_TO_DECIMETER / time) + 0.5);
+        trip_path.mutable_shape_attributes()->add_speed((distance * kDecimeterPerMeter / time) + 0.5);
       }
     }
   }

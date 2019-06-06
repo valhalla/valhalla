@@ -12,6 +12,8 @@ constexpr float kSecPerMinute = 60.0f;
 constexpr float kMinPerSec = 1.0f / 60.0f;
 constexpr float kSecPerHour = 3600.0f;
 constexpr float kHourPerSec = 1.0f / 3600.0f;
+constexpr double kSecPerMillisecond = 0.001;
+constexpr double kMillisecondPerSec = 1000;
 constexpr uint32_t kSecondsPerMinute = 60;
 constexpr uint32_t kSecondsPerHour = 3600;
 constexpr uint32_t kSecondsPerDay = 86400;
@@ -25,9 +27,12 @@ constexpr float kMilePerKm = 0.621371f;
 constexpr float kKmPerMile = 1.60934f;
 constexpr float kRadEarthMeters = 6378160.187f;
 constexpr float kMetersPerDegreeLat = 110567.0f;
+constexpr double kKmPerDecimeter = 0.0001;
+constexpr double kDecimeterPerMeter = 10;
 
 // Speed conversion constants
 constexpr float kMPHtoMetersPerSec = 0.44704f;
+constexpr double kKMHtoDecimeterPerSec = 0.36;
 
 // Angular measures
 constexpr float kPi = 3.14159265f;
