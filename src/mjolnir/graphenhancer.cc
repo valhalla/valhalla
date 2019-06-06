@@ -301,7 +301,8 @@ void UpdateTurnLanes(const OSMData& osmdata,
 
     if (!bUpdated) {
 
-      // handle [left, [straight, left], none, straight] --> [left, [straight, left], straight, straight]
+      // handle [left, [straight, left], none, straight] --> [left, [straight, left], straight,
+      // straight]
       enhanced_tls = TurnLanes::lanemasks(str);
       previous = 0u;
       std::vector<uint16_t>::iterator it = enhanced_tls.begin();
@@ -319,7 +320,6 @@ void UpdateTurnLanes(const OSMData& osmdata,
           break;
         }
       }
-
     }
 
     if (!bUpdated) {
@@ -361,11 +361,11 @@ void UpdateTurnLanes(const OSMData& osmdata,
       // handle [none, none, right] --> [straight, straight, right]
       enhanced_tls = TurnLanes::lanemasks(str);
       previous = 0u;
-      std::vector<uint16_t>::reverse_iterator r_it = enhanced_tls.rbegin();// note reverse iterator
+      std::vector<uint16_t>::reverse_iterator r_it = enhanced_tls.rbegin(); // note reverse iterator
       for (; r_it != enhanced_tls.rend(); r_it++) {
 
-        if (((*r_it & kTurnLaneRight) || (*r_it & kTurnLaneSharpRight) || (*r_it & kTurnLaneSlightRight) ||
-             (*r_it & kTurnLaneThrough)) &&
+        if (((*r_it & kTurnLaneRight) || (*r_it & kTurnLaneSharpRight) ||
+             (*r_it & kTurnLaneSlightRight) || (*r_it & kTurnLaneThrough)) &&
             (previous == 0u || (previous & kTurnLaneRight) || (previous & kTurnLaneSharpRight) ||
              (previous & kTurnLaneSlightRight) || (previous & kTurnLaneThrough))) {
           previous = *r_it;
@@ -738,7 +738,8 @@ bool IsNextEdgeInternal(const DirectedEdge directededge,
 
     if (tilebuilder.edgeinfo(directededge.edgeinfo_offset()).wayid() ==
         tile.edgeinfo(diredge.edgeinfo_offset()).wayid()) {
-      return IsIntersectionInternal(&tile, reader, lock, directededge.endnode(), nodeinfo, diredge, i);
+      return IsIntersectionInternal(&tile, reader, lock, directededge.endnode(), nodeinfo, diredge,
+                                    i);
     }
   }
   return false;
@@ -1546,7 +1547,8 @@ void enhance(const boost::property_tree::ptree& pt,
           }
         }
 
-        // since the internal flag is set, we are at either the prior or the next edge and we need to see if we have an internal edge.
+        // since the internal flag is set, we are at either the prior or the next edge and we need to
+        // see if we have an internal edge.
         if (directededge.internal() && directededge.turnlanes()) {
 
           // get the outbound edges to the node
@@ -1558,7 +1560,7 @@ void enhance(const boost::property_tree::ptree& pt,
           }
         }
 
-        //may have been temporarily set in the builder.
+        // may have been temporarily set in the builder.
         directededge.set_internal(false);
 
         // Test if an internal intersection edge. Must do this after setting
@@ -1660,7 +1662,7 @@ void GraphEnhancer::Enhance(const boost::property_tree::ptree& pt,
   // A place to hold worker threads and their results, exceptions or otherwise
   std::vector<std::shared_ptr<std::thread>> threads(
       std::max(static_cast<unsigned int>(1),
-              pt.get<unsigned int>("concurrency", std::thread::hardware_concurrency())));
+               pt.get<unsigned int>("concurrency", std::thread::hardware_concurrency())));
 
   // A place to hold the results of those threads, exceptions or otherwise
   std::list<std::promise<enhancer_stats>> results;

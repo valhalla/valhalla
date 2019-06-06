@@ -185,8 +185,9 @@ void ConstructEdges(const OSMData& osmdata,
 
         uint32_t size = static_cast<uint32_t>(edges.size());
         if (!edge.attributes.way_begin)
-          size+=1;
-        nodes.push_back({way_node.node, static_cast<uint32_t>(-1),size, graph_id_predicate(way_node.node)});
+          size += 1;
+        nodes.push_back(
+            {way_node.node, static_cast<uint32_t>(-1), size, graph_id_predicate(way_node.node)});
 
         // Mark the edge as ending a way if this is the last node in the way
         edge.attributes.way_end = current_way_node_index == last_way_node_index;
@@ -760,7 +761,8 @@ void BuildTileSet(const std::string& ways_file,
           // and the backward index on the first edge in a way.  The turn lanes are populated
           // later in the enhancer phase.
           std::string turnlane_tags;
-          if (forward && w.fwd_turn_lanes_index() > 0 && (edge.attributes.way_end || edge.attributes.way_prior)) {
+          if (forward && w.fwd_turn_lanes_index() > 0 &&
+              (edge.attributes.way_end || edge.attributes.way_prior)) {
             turnlane_tags = osmdata.name_offset_map.name(w.fwd_turn_lanes_index());
             if (!turnlane_tags.empty()) {
               std::string str = TurnLanes::GetTurnLaneString(turnlane_tags);
@@ -768,13 +770,14 @@ void BuildTileSet(const std::string& ways_file,
                 directededge.set_turnlanes(true);
                 graphtile.AddTurnLanes(idx, w.fwd_turn_lanes_index());
 
-                // Temporarily use the internal flag so that in the enhancer we can properly check to see if we have an internal edge
+                // Temporarily use the internal flag so that in the enhancer we can properly check to
+                // see if we have an internal edge
                 if (edge.attributes.way_prior)
                   directededge.set_internal(true);
-
               }
             }
-          } else if (!forward && w.bwd_turn_lanes_index() > 0 && (edge.attributes.way_begin || edge.attributes.way_next)) {
+          } else if (!forward && w.bwd_turn_lanes_index() > 0 &&
+                     (edge.attributes.way_begin || edge.attributes.way_next)) {
             turnlane_tags = osmdata.name_offset_map.name(w.bwd_turn_lanes_index());
             if (!turnlane_tags.empty()) {
               std::string str = TurnLanes::GetTurnLaneString(turnlane_tags);
@@ -782,7 +785,8 @@ void BuildTileSet(const std::string& ways_file,
                 directededge.set_turnlanes(true);
                 graphtile.AddTurnLanes(idx, w.bwd_turn_lanes_index());
 
-                // Temporarily use the internal flag so that in the enhancer we can properly check to see if we have an internal edge
+                // Temporarily use the internal flag so that in the enhancer we can properly check to
+                // see if we have an internal edge
                 if (edge.attributes.way_next)
                   directededge.set_internal(true);
               }
