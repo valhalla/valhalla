@@ -97,13 +97,7 @@ void test_shape_attributes_included() {
   // Measures the length between point
   for (int i = 1; i < shape.size(); i++) {
     auto distance = shape[i].Distance(shape[i - 1]) * .001f;
-    std::cout << std::to_string(i) +
-                     " | Time:: " + std::to_string(shape_attributes_time[i - 1].GetDouble()) + "\n";
-    std::cout << std::to_string(i) +
-                     " | Length:: " + std::to_string(shape_attributes_length[i - 1].GetFloat()) +
-                     "\n";
-    std::cout << std::to_string(i) +
-                     " | Speed:: " + std::to_string(shape_attributes_speed[i - 1].GetDouble()) + "\n";
+
     // Measuring that the length between shape pts is approx. to the shape attributes length
     if (!midgard::equal(distance, shape_attributes_length[i - 1].GetFloat(), .01f)) {
       throw std::logic_error(
@@ -112,23 +106,37 @@ void test_shape_attributes_included() {
     }
   }
 
-  for (int e = 1; e < edges.Size(); e++) {
-    auto edge_length = edges[e]["length"].GetFloat();
-    std::cout << std::to_string(e) + " | edge_length :: " + std::to_string(edge_length) + "\n";
+  // Assert that the shape attributes (time, length, speed) are equal to their corresponding edge
+  // attributes
+  for (int e = 0; e < edges.Size(); e++) {
+    auto edge_length = edges[e]["length"].GetDouble();
+    auto edge_speed = edges[e]["speed"].GetDouble();
 
-    auto edge_elapsed_time = edges[e]["end_node"]["elapsed_time"].GetDouble() * .1;
-    std::cout << std::to_string(e) + " | edge_elapsed_time :: " + std::to_string(edge_elapsed_time) +
-                     "\n";
-    if (!midgard::equal(edge_elapsed_time, shape_attributes_time[e - 1].GetDouble(), .3)) {
-      throw std::logic_error("Expected: " + std::to_string(shape_attributes_time[e - 1].GetFloat()) +
-                             " | Found: " + std::to_string(edge_elapsed_time));
+    double sum_times = 0;
+    double sum_lengths = 0;
+    for (int j = edges[e]["begin_shape_index"].GetInt(); j < edges[e]["end_shape_index"].GetInt();
+         j++) {
+      sum_times += shape_attributes_time[j].GetDouble();
+      sum_lengths += shape_attributes_length[j].GetDouble();
+
+      if (!midgard::equal(edge_speed, shape_attributes_speed[j].GetDouble(), .15)) {
+        throw std::logic_error("Expected shape_attributes.speed to approx equal " +
+                               std::to_string(shape_attributes_speed[j].GetFloat()) +
+                               " | Found: " + std::to_string(edge_speed));
+      }
     }
 
-    auto edge_speed = edges[e]["speed"].GetDouble();
-    std::cout << std::to_string(e) + " | edge_speed :: " + std::to_string(edge_speed) + "\n";
-    if (!midgard::equal(edge_speed, shape_attributes_speed[e - 1].GetDouble())) {
-      throw std::logic_error("Expected: " + std::to_string(shape_attributes_speed[e - 1].GetFloat()) +
-                             " | Found: " + std::to_string(edge_speed));
+    // Can't assert that sum of shape times equals edge's elapsed_time because elapsed_time includes
+    // transition costs and shape times do not.
+    if (!midgard::equal(3600 * edge_length / edge_speed, sum_times, .1)) {
+      throw std::logic_error("Expected sum of shape_attributes.time to approx equal " +
+                             std::to_string(3600 * edge_length / edge_speed) +
+                             " | Found: " + std::to_string(sum_times));
+    }
+    if (!midgard::equal(edge_length, sum_lengths, .1)) {
+      throw std::logic_error("Expected sum of shape_attributes.length to approx equal " +
+                             std::to_string(edge_length) +
+                             " | Found: " + std::to_string(sum_lengths));
     }
   }
 }

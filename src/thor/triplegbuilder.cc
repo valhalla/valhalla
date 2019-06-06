@@ -176,13 +176,13 @@ void SetShapeAttributes(const AttributesController& controller,
     // calculates total edge time and total edge length
     double edge_time =
         costing->EdgeCost(directededge, graphtile->GetSpeed(directededge)).secs; // seconds
-    double edge_length = trip_path.node().rbegin()->edge().length() * KM_TO_METER;
+    double edge_length = directededge->length(); // meters
 
     // Set the shape attributes
     for (++shape_begin; shape_begin < shape_end; ++shape_begin) {
       double distance = shape_begin->Distance(*(shape_begin - 1)); // meters
-      double distance_pct = distance / edge_length;
-      double time = edge_time * distance_pct; // seconds
+      double distance_pct = distance / edge_length;                // fraction of edge length
+      double time = edge_time * distance_pct;                      // seconds
 
       // Set shape attributes time per shape point if requested
       if (controller.attributes.at(kShapeAttributesTime)) {
