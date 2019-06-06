@@ -11,8 +11,8 @@ namespace {
 
 void TryCtor() {
   AttributesController controller;
-  if (controller.attributes != AttributesController::kRouteAttributes)
-    throw runtime_error("Incorrect Constructor using default route attributes");
+  if (controller.attributes != AttributesController::kDefaultAttributes)
+    throw runtime_error("Incorrect Constructor using default attributes");
 }
 
 void TestCtor() {

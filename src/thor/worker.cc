@@ -319,7 +319,7 @@ void thor_worker_t::log_admin(const valhalla::TripLeg& trip_path) {
  * allow including or excluding specific attributes from the response in route,
  * trace_route, and trace_attributes actions.
  */
-void thor_worker_t::parse_filter_attributes(const Options& options, bool is_strict_filter = false) {
+void thor_worker_t::parse_filter_attributes(const Options& options, bool is_strict_filter) {
   // Set default controller
   controller = AttributesController();
 
@@ -336,8 +336,6 @@ void thor_worker_t::parse_filter_attributes(const Options& options, bool is_stri
         break;
       }
       case (FilterAction::exclude): {
-        if (is_strict_filter)
-          controller.enable_all();
         for (const auto& filter_attribute : options.filter_attributes()) {
           try {
             controller.attributes.at(filter_attribute) = false;

@@ -80,7 +80,7 @@ protected:
   void parse_locations(Api& request);
   void parse_measurements(const Api& request);
   std::string parse_costing(const Api& request);
-  void parse_filter_attributes(const Options& options, bool is_strict_filter);
+  void parse_filter_attributes(const Options& options, bool is_strict_filter = false);
   sif::TravelMode mode;
   std::vector<meili::Measurement> trace;
   sif::CostFactory<sif::DynamicCost> factory;
