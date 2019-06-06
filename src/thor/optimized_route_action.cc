@@ -19,9 +19,9 @@ namespace thor {
 
 void thor_worker_t::optimized_route(Api& request) {
   parse_locations(request);
+  parse_filter_attributes(request);
   auto costing = parse_costing(request);
   auto& options = *request.mutable_options();
-  parse_filter_attributes(options);
 
   if (!options.do_not_track()) {
     valhalla::midgard::logging::Log("matrix_type::optimized_route", " [ANALYTICS] ");

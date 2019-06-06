@@ -47,8 +47,8 @@ std::string thor_worker_t::trace_attributes(Api& request) {
   parse_locations(request);
   parse_costing(request);
   parse_measurements(request);
+  parse_filter_attributes(request, true);
   const auto& options = *request.mutable_options();
-  parse_filter_attributes(options, true);
 
   /*
    * A flag indicating whether the input shape is a GPS trace or exact points from a

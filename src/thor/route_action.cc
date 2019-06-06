@@ -129,9 +129,9 @@ namespace thor {
 
 void thor_worker_t::route(Api& request) {
   parse_locations(request);
+  parse_filter_attributes(request);
   auto costing = parse_costing(request);
   auto& options = *request.mutable_options();
-  parse_filter_attributes(options);
 
   // get all the legs
   if (options.has_date_time_type() && options.date_time_type() == Options::arrive_by)

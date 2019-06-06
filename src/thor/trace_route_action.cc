@@ -64,8 +64,9 @@ void thor_worker_t::trace_route(Api& request) {
   parse_locations(request);
   parse_costing(request);
   parse_measurements(request);
+  parse_filter_attributes(request);
+
   const auto& options = *request.mutable_options();
-  parse_filter_attributes(options);
 
   switch (options.shape_match()) {
     // If the exact points from a prior route that was run against the Valhalla road network,

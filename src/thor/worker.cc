@@ -319,9 +319,10 @@ void thor_worker_t::log_admin(const valhalla::TripLeg& trip_path) {
  * allow including or excluding specific attributes from the response in route,
  * trace_route, and trace_attributes actions.
  */
-void thor_worker_t::parse_filter_attributes(const Options& options, bool is_strict_filter) {
+void thor_worker_t::parse_filter_attributes(const Api& request, bool is_strict_filter) {
   // Set default controller
   controller = AttributesController();
+  const auto& options = request.options();
 
   if (options.has_filter_action()) {
     switch (options.filter_action()) {
