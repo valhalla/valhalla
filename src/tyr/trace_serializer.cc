@@ -416,7 +416,7 @@ json::MapPtr serialize_shape_attributes(const AttributesController& controller,
     auto speeds_array = json::array({});
     for (const auto& speed : trip_path.shape_attributes().speed()) {
       // dm/s to km/h
-      speeds_array->push_back(json::fp_t{speed * kKMHtoDecimeterPerSec, 3});
+      speeds_array->push_back(json::fp_t{speed * kDecimeterPerSectoKPH, 3});
     }
     attributes_map->emplace("speed", speeds_array);
   }
