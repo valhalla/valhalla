@@ -176,7 +176,7 @@ void SetShapeAttributes(const AttributesController& controller,
     // calculates total edge time and total edge length
     double edge_time =
         costing->EdgeCost(directededge, graphtile->GetSpeed(directededge)).secs; // seconds
-    double edge_length = directededge->length(); // meters
+    double edge_length = directededge->length();                                 // meters
 
     // Set the shape attributes
     for (++shape_begin; shape_begin < shape_end; ++shape_begin) {
