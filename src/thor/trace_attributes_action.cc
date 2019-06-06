@@ -35,35 +35,6 @@ constexpr size_t kTripLegIndex = 3;
 
 namespace valhalla {
 namespace thor {
-
-void thor_worker_t::filter_attributes(const Api& request, AttributesController& controller) {
-  const auto& options = request.options();
-  if (options.has_filter_action()) {
-    switch (options.filter_action()) {
-      case (FilterAction::include): {
-        controller.disable_all();
-        for (const auto& filter_attribute : options.filter_attributes()) {
-          try {
-            controller.attributes.at(filter_attribute) = true;
-          } catch (...) { LOG_ERROR("Invalid filter attribute " + filter_attribute); }
-        }
-        break;
-      }
-      case (FilterAction::exclude): {
-        controller.enable_all();
-        for (const auto& filter_attribute : options.filter_attributes()) {
-          try {
-            controller.attributes.at(filter_attribute) = false;
-          } catch (...) { LOG_ERROR("Invalid filter attribute " + filter_attribute); }
-        }
-        break;
-      }
-    }
-  } else {
-    controller.enable_all();
-  }
-}
-
 /*
  * The trace_attributes action takes a GPS trace or latitude, longitude positions
  * from a portion of an existing route and returns detailed attribution along the
@@ -76,6 +47,8 @@ std::string thor_worker_t::trace_attributes(Api& request) {
   parse_locations(request);
   parse_costing(request);
   parse_measurements(request);
+  parse_filter_attributes(request, true);
+  const auto& options = *request.mutable_options();
 
   /*
    * A flag indicating whether the input shape is a GPS trace or exact points from a
@@ -85,16 +58,13 @@ std::string thor_worker_t::trace_attributes(Api& request) {
    */
 
   std::vector<std::tuple<float, float, std::vector<thor::MatchResult>>> map_match_results;
-  AttributesController controller;
-  filter_attributes(request, controller);
-  const auto& options = *request.mutable_options();
 
   switch (options.shape_match()) {
     // If the exact points from a prior route that was run against the Valhalla road network,
     // then we can traverse the exact shape to form a path by using edge-walking algorithm
     case ShapeMatch::edge_walk:
       try {
-        route_match(request, controller);
+        route_match(request);
         map_match_results.emplace_back(1.0f, 0.0f, std::vector<thor::MatchResult>{});
       } catch (const std::exception& e) {
         throw valhalla_exception_t{
@@ -107,7 +77,7 @@ std::string thor_worker_t::trace_attributes(Api& request) {
     // through the map-matching algorithm to snap the points to the correct shape
     case ShapeMatch::map_snap:
       try {
-        map_match_results = map_match(request, controller, options.best_paths());
+        map_match_results = map_match(request, options.best_paths());
       } catch (const std::exception& e) {
         throw valhalla_exception_t{
             444, ShapeMatch_Name(options.shape_match()) +
@@ -120,13 +90,13 @@ std::string thor_worker_t::trace_attributes(Api& request) {
     // available.
     case ShapeMatch::walk_or_snap:
       try {
-        route_match(request, controller);
+        route_match(request);
         map_match_results.emplace_back(1.0f, 0.0f, std::vector<thor::MatchResult>{});
       } catch (...) {
         LOG_WARN(ShapeMatch_Name(options.shape_match()) +
                  " algorithm failed to find exact route match; Falling back to map_match...");
         try {
-          map_match_results = map_match(request, controller);
+          map_match_results = map_match(request);
         } catch (const std::exception& e) {
           throw valhalla_exception_t{
               444, ShapeMatch_Name(options.shape_match()) +

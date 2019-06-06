@@ -5,7 +5,12 @@
 namespace valhalla {
 namespace thor {
 
-const std::unordered_map<std::string, bool> AttributesController::kRouteAttributes = {
+/*
+ * Map of attributes that a user can request to enable or disable, and their defaults.
+ * Most attributes are enabled by default but a few additional attributes are disabled
+ * unless explicitly included with the filter attributes request option.
+ */
+const std::unordered_map<std::string, bool> AttributesController::kDefaultAttributes = {
     // Edge keys
     {kEdgeNames, true},
     {kEdgeLength, true},
@@ -110,15 +115,8 @@ const std::unordered_map<std::string, bool> AttributesController::kRouteAttribut
 
 };
 
-AttributesController::AttributesController(
-    const std::unordered_map<std::string, bool>& new_attributes) {
-  attributes = new_attributes;
-}
-
-void AttributesController::enable_all() {
-  for (auto& pair : attributes) {
-    pair.second = true;
-  }
+AttributesController::AttributesController() {
+  attributes = kDefaultAttributes;
 }
 
 void AttributesController::disable_all() {
