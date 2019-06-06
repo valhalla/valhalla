@@ -136,18 +136,12 @@ struct AttributesController {
   /*
    * Attributes that are required by the route action to make guidance instructions.
    */
-  static const std::unordered_map<std::string, bool> kRouteAttributes;
+  static const std::unordered_map<std::string, bool> kDefaultAttributes;
 
   /*
-   * Constructor that will use the route attributes by default.
+   * Constructor that will use the default values for all of the attributes.
    */
-  AttributesController(const std::unordered_map<std::string, bool>& new_attributes =
-                           AttributesController::kRouteAttributes);
-
-  /**
-   * Enable all of the attributes.
-   */
-  void enable_all();
+  AttributesController();
 
   /**
    * Disable all of the attributes.

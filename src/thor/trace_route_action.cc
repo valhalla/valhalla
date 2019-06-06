@@ -64,19 +64,19 @@ void thor_worker_t::trace_route(Api& request) {
   parse_locations(request);
   parse_costing(request);
   parse_measurements(request);
+  parse_filter_attributes(request);
 
-  // Initialize the controller
-  AttributesController controller;
+  const auto& options = *request.mutable_options();
 
-  switch (request.options().shape_match()) {
+  switch (options.shape_match()) {
     // If the exact points from a prior route that was run against the Valhalla road network,
     // then we can traverse the exact shape to form a path by using edge-walking algorithm
     case ShapeMatch::edge_walk:
       try {
-        route_match(request, controller);
+        route_match(request);
       } catch (...) {
         throw valhalla_exception_t{
-            443, ShapeMatch_Name(request.options().shape_match()) +
+            443, ShapeMatch_Name(options.shape_match()) +
                      " algorithm failed to find exact route match.  Try using "
                      "shape_match:'walk_or_snap' to fallback to map-matching algorithm"};
       }
@@ -85,7 +85,7 @@ void thor_worker_t::trace_route(Api& request) {
     // through the map-matching algorithm to snap the points to the correct shape
     case ShapeMatch::map_snap:
       try {
-        map_match(request, controller);
+        map_match(request);
       } catch (...) { throw valhalla_exception_t{442}; }
       break;
     // If we think that we have the exact shape but there ends up being no Valhalla route match,
@@ -94,19 +94,19 @@ void thor_worker_t::trace_route(Api& request) {
     // available.
     case ShapeMatch::walk_or_snap:
       try {
-        route_match(request, controller);
+        route_match(request);
       } catch (...) {
-        LOG_WARN(ShapeMatch_Name(request.options().shape_match()) +
+        LOG_WARN(ShapeMatch_Name(options.shape_match()) +
                  " algorithm failed to find exact route match; Falling back to map_match...");
         try {
-          map_match(request, controller);
+          map_match(request);
         } catch (...) { throw valhalla_exception_t{442}; }
       }
       break;
   }
 
   // log admin areas
-  if (!request.options().do_not_track()) {
+  if (!options.do_not_track()) {
     for (const auto& route : request.trip().routes()) {
       for (const auto& leg : route.legs()) {
         log_admin(leg);
@@ -122,7 +122,7 @@ void thor_worker_t::trace_route(Api& request) {
  * form the list of edges. It will return no nodes if path not found.
  *
  */
-void thor_worker_t::route_match(Api& request, const AttributesController& controller) {
+void thor_worker_t::route_match(Api& request) {
   // TODO - make sure the trace has timestamps..
   auto& options = *request.mutable_options();
   bool use_timestamps = options.use_timestamps();
@@ -145,7 +145,7 @@ void thor_worker_t::route_match(Api& request, const AttributesController& contro
 // of each edge. We will need to use the existing costing method to form the elapsed time
 // the path. We will start with just using edge costs and will add transition costs.
 std::vector<std::tuple<float, float, std::vector<thor::MatchResult>>>
-thor_worker_t::map_match(Api& request, const AttributesController& controller, uint32_t best_paths) {
+thor_worker_t::map_match(Api& request, uint32_t best_paths) {
   std::vector<std::tuple<float, float, std::vector<thor::MatchResult>>> map_match_results;
   auto& options = *request.mutable_options();
 
@@ -386,8 +386,7 @@ thor_worker_t::map_match(Api& request, const AttributesController& controller, u
     if (options.action() == Options::trace_attributes) {
       // we make a new route to hold the result of each iteraton of top k
       auto& route = *request.mutable_trip()->mutable_routes()->Add();
-      path_map_match(match_results, controller, path_edges, *route.mutable_legs()->Add(),
-                     route_discontinuities);
+      path_map_match(match_results, path_edges, *route.mutable_legs()->Add(), route_discontinuities);
     } // trace_route can return multiple trip paths and cannot have discontinuities
     else {
       // we make a new route to hold the result of each iteraton of top k
@@ -447,7 +446,6 @@ thor_worker_t::map_match(Api& request, const AttributesController& controller, u
 // We need to add a test for that scenario and then we can merge the logic.
 void thor_worker_t::path_map_match(
     const std::vector<meili::MatchResult>& match_results,
-    const AttributesController& controller,
     const std::vector<PathInfo>& path_edges,
     TripLeg& trip_path,
     std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>>&
