@@ -314,54 +314,55 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
 
     // Get best path and keep it
     auto temp_paths = get_path(path_algorithm, *origin, *destination, costing, api.options());
-    auto& temp_path = temp_paths.front();
-    first_edge = temp_path.front().edgeid;
-    temp_path.swap(path); // so we can append to path instead of prepend
+    for (auto& temp_path : temp_paths) {
+      first_edge = temp_path.front().edgeid;
+      temp_path.swap(path); // so we can append to path instead of prepend
 
-    // Merge through legs by updating the time and splicing the lists
-    if (!temp_path.empty()) {
-      auto offset = path.back().elapsed_time;
-      std::for_each(temp_path.begin(), temp_path.end(),
-                    [offset](PathInfo& i) { i.elapsed_time += offset; });
-      // Connects via the same edge so we only need it once
-      if (path.back().edgeid == temp_path.front().edgeid) {
-        path.pop_back();
-      } else if (destination->type() == valhalla::Location::kVia) {
-        // Insert a route discontinuity if the paths meet at opposing edges and not
-        // at a graph node. Use path size - 1 as the index where the discontinuity lies.
-        via_discontinuity(*reader, *destination, path.back().edgeid, temp_path.front().edgeid, vias,
-                          temp_path.size(), true);
-      }
-      path.insert(path.end(), temp_path.begin(), temp_path.end());
-    }
-
-    // Build trip path for this leg and add to the result if this
-    // location is a BREAK or if this is the last location
-    if (origin->type() == valhalla::Location::kBreak ||
-        origin->type() == valhalla::Location::kBreakThrough) {
-      // Move destination back to the last break and collect the throughs
-      std::list<valhalla::Location> throughs;
-      while (destination->type() != valhalla::Location::kBreak &&
-             destination->type() != valhalla::Location::kBreakThrough) {
-        throughs.push_back(*destination);
-        --destination;
+      // Merge through legs by updating the time and splicing the lists
+      if (!temp_path.empty()) {
+        auto offset = path.back().elapsed_time;
+        std::for_each(temp_path.begin(), temp_path.end(),
+                      [offset](PathInfo& i) { i.elapsed_time += offset; });
+        // Connects via the same edge so we only need it once
+        if (path.back().edgeid == temp_path.front().edgeid) {
+          path.pop_back();
+        } else if (destination->type() == valhalla::Location::kVia) {
+          // Insert a route discontinuity if the paths meet at opposing edges and not
+          // at a graph node. Use path size - 1 as the index where the discontinuity lies.
+          via_discontinuity(*reader, *destination, path.back().edgeid, temp_path.front().edgeid, vias,
+                            temp_path.size(), true);
+        }
+        path.insert(path.end(), temp_path.begin(), temp_path.end());
       }
 
-      // We have to flip the via indices because we built them in backwards order
-      decltype(vias) flipped;
-      flipped.reserve(vias.size());
-      for (const auto& kv : vias)
-        flipped.emplace(path.size() - kv.first, kv.second);
-      vias.swap(flipped);
+      // Build trip path for this leg and add to the result if this
+      // location is a BREAK or if this is the last location
+      if (origin->type() == valhalla::Location::kBreak ||
+          origin->type() == valhalla::Location::kBreakThrough) {
+        // Move destination back to the last break and collect the throughs
+        std::list<valhalla::Location> throughs;
+        while (destination->type() != valhalla::Location::kBreak &&
+               destination->type() != valhalla::Location::kBreakThrough) {
+          throughs.push_back(*destination);
+          --destination;
+        }
 
-      // Form output information based on path edges
-      if (api.trip().routes_size() == 0 || api.options().alternates() > 0)
-        route = api.mutable_trip()->mutable_routes()->Add();
-      auto& leg = *route->mutable_legs()->Add();
-      TripLegBuilder::Build(controller, *reader, mode_costing, path.begin(), path.end(), *origin,
-                            *destination, throughs, leg, interrupt, &vias);
-      path.clear();
-      vias.clear();
+        // We have to flip the via indices because we built them in backwards order
+        decltype(vias) flipped;
+        flipped.reserve(vias.size());
+        for (const auto& kv : vias)
+          flipped.emplace(path.size() - kv.first, kv.second);
+        vias.swap(flipped);
+
+        // Form output information based on path edges
+        if (api.trip().routes_size() == 0 || api.options().alternates() > 0)
+          route = api.mutable_trip()->mutable_routes()->Add();
+        auto& leg = *route->mutable_legs()->Add();
+        TripLegBuilder::Build(controller, *reader, mode_costing, path.begin(), path.end(), *origin,
+                              *destination, throughs, leg, interrupt, &vias);
+        path.clear();
+        vias.clear();
+      }
     }
   }
 
