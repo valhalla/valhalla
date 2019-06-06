@@ -435,9 +435,6 @@ void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
           --origin;
         }
 
-        // Create controller for default route attributes
-        AttributesController controller;
-
         // Form output information based on path edges. vias are a route discontinuity map
         if (api.trip().routes_size() == 0 || api.options().alternates() > 0)
           route = api.mutable_trip()->mutable_routes()->Add();
