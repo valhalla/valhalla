@@ -66,11 +66,10 @@ protected:
   thor::PathAlgorithm* get_path_algorithm(const std::string& routetype,
                                           const Location& origin,
                                           const Location& destination);
-  void route_match(Api& request, const AttributesController& controller);
+  void route_match(Api& request);
   std::vector<std::tuple<float, float, std::vector<thor::MatchResult>>>
-  map_match(Api& request, const AttributesController& controller, uint32_t best_paths = 1);
+  map_match(Api& request, uint32_t best_paths = 1);
   void path_map_match(const std::vector<meili::MatchResult>& match_results,
-                      const AttributesController& controller,
                       const std::vector<PathInfo>& path_edges,
                       TripLeg& leg,
                       std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>>&
@@ -81,8 +80,7 @@ protected:
   void parse_locations(Api& request);
   void parse_measurements(const Api& request);
   std::string parse_costing(const Api& request);
-  void filter_attributes(const Api& request, AttributesController& controller);
-
+  void parse_filter_attributes(const Api& request, bool is_strict_filter = false);
   sif::TravelMode mode;
   std::vector<meili::Measurement> trace;
   sif::CostFactory<sif::DynamicCost> factory;
@@ -101,6 +99,7 @@ protected:
   SOURCE_TO_TARGET_ALGORITHM source_to_target_algorithm;
   meili::MapMatcherFactory matcher_factory;
   std::shared_ptr<baldr::GraphReader> reader;
+  AttributesController controller;
 };
 
 } // namespace thor

@@ -129,6 +129,7 @@ namespace thor {
 
 void thor_worker_t::route(Api& request) {
   parse_locations(request);
+  parse_filter_attributes(request);
   auto costing = parse_costing(request);
   auto& options = *request.mutable_options();
 
@@ -345,9 +346,6 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
         throughs.push_back(*destination);
         --destination;
       }
-
-      // Create controller for default route attributes
-      AttributesController controller;
 
       // We have to flip the via indices because we built them in backwards order
       decltype(vias) flipped;
