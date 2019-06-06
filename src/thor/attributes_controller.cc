@@ -113,7 +113,10 @@ const std::unordered_map<std::string, bool> AttributesController::kDefaultAttrib
     {kConfidenceScore, true},
     {kRawScore, true},
 
-};
+    // Per-shape attributes
+    {kShapeAttributesTime, false},
+    {kShapeAttributesLength, false},
+    {kShapeAttributesSpeed, false}};
 
 AttributesController::AttributesController() {
   attributes = kDefaultAttributes;
@@ -125,6 +128,7 @@ void AttributesController::disable_all() {
   }
 }
 
+// Used to check if any keys starting with the `category` string are enabled.
 bool AttributesController::category_attribute_enabled(const std::string& category) const {
   for (const auto& pair : attributes) {
     // if the key starts with the specified category and it is enabled

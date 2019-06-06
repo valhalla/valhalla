@@ -100,7 +100,7 @@ const std::string kNodeTransitEgressInfoLatLon = "node.transit_egress_info.lat_l
 
 const std::string kNodeTimeZone = "node.time_zone";
 
-// Top level: osm chnageset, admin list, and full shape keys
+// Top level: osm changeset, admin list, and full shape keys
 const std::string kOsmChangeset = "osm_changeset";
 const std::string kAdminCountryCode = "admin.country_code";
 const std::string kAdminCountryText = "admin.country_text";
@@ -117,10 +117,16 @@ const std::string kMatchedDistanceFromTracePoint = "matched.distance_from_trace_
 const std::string kConfidenceScore = "confidence_score";
 const std::string kRawScore = "raw_score";
 
+// Per-shape attributes
+const std::string kShapeAttributesTime = "shape_attributes.time";
+const std::string kShapeAttributesLength = "shape_attributes.length";
+const std::string kShapeAttributesSpeed = "shape_attributes.speed";
+
 // Categories
 const std::string kNodeCategory = "node.";
 const std::string kAdminCategory = "admin.";
 const std::string kMatchedCategory = "matched.";
+const std::string kShapeAttributesCategory = "shape_attributes.";
 
 /**
  * Trip path controller for attributes
