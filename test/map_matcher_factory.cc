@@ -19,35 +19,31 @@ using namespace valhalla;
 using ptree = boost::property_tree::ptree;
 
 // TODO - is there a better way to set these?
-void create_costing_options(DirectionsOptions& directions_options) {
+void create_costing_options(Options& options) {
   // Add options in the order specified
   //  for (const auto costing : {auto_, auto_shorter, bicycle, bus, hov,
   //                              motor_scooter, multimodal, pedestrian, transit,
   //                              truck, motorcycle, auto_data_fix}) {
   // TODO - accept RapidJSON as argument.
   const rapidjson::Document doc;
-  sif::ParseAutoCostOptions(doc, "/costing_options/auto", directions_options.add_costing_options());
+  sif::ParseAutoCostOptions(doc, "/costing_options/auto", options.add_costing_options());
   sif::ParseAutoShorterCostOptions(doc, "/costing_options/auto_shorter",
-                                   directions_options.add_costing_options());
-  sif::ParseBicycleCostOptions(doc, "/costing_options/bicycle",
-                               directions_options.add_costing_options());
-  sif::ParseBusCostOptions(doc, "/costing_options/bus", directions_options.add_costing_options());
-  sif::ParseHOVCostOptions(doc, "/costing_options/hov", directions_options.add_costing_options());
-  sif::ParseTaxiCostOptions(doc, "/costing_options/taxi", directions_options.add_costing_options());
+                                   options.add_costing_options());
+  sif::ParseBicycleCostOptions(doc, "/costing_options/bicycle", options.add_costing_options());
+  sif::ParseBusCostOptions(doc, "/costing_options/bus", options.add_costing_options());
+  sif::ParseHOVCostOptions(doc, "/costing_options/hov", options.add_costing_options());
+  sif::ParseTaxiCostOptions(doc, "/costing_options/taxi", options.add_costing_options());
   sif::ParseMotorScooterCostOptions(doc, "/costing_options/motor_scooter",
-                                    directions_options.add_costing_options());
-  directions_options.add_costing_options();
-  sif::ParsePedestrianCostOptions(doc, "/costing_options/pedestrian",
-                                  directions_options.add_costing_options());
-  sif::ParseTransitCostOptions(doc, "/costing_options/transit",
-                               directions_options.add_costing_options());
-  sif::ParseTruckCostOptions(doc, "/costing_options/truck", directions_options.add_costing_options());
-  sif::ParseMotorcycleCostOptions(doc, "/costing_options/motorcycle",
-                                  directions_options.add_costing_options());
+                                    options.add_costing_options());
+  options.add_costing_options();
+  sif::ParsePedestrianCostOptions(doc, "/costing_options/pedestrian", options.add_costing_options());
+  sif::ParseTransitCostOptions(doc, "/costing_options/transit", options.add_costing_options());
+  sif::ParseTruckCostOptions(doc, "/costing_options/truck", options.add_costing_options());
+  sif::ParseMotorcycleCostOptions(doc, "/costing_options/motorcycle", options.add_costing_options());
   sif::ParseAutoShorterCostOptions(doc, "/costing_options/auto_shorter",
-                                   directions_options.add_costing_options());
+                                   options.add_costing_options());
   sif::ParseAutoDataFixCostOptions(doc, "/costing_options/auto_data_fix",
-                                   directions_options.add_costing_options());
+                                   options.add_costing_options());
 }
 
 void TestMapMatcherFactory() {
@@ -60,7 +56,7 @@ void TestMapMatcherFactory() {
     // Test configuration priority
     {
       // Copy it so we can change it
-      DirectionsOptions options;
+      Options options;
       create_costing_options(options);
       auto config = root;
       config.put<std::string>("meili.auto.hello", "world");
@@ -77,7 +73,7 @@ void TestMapMatcherFactory() {
 
     // Test configuration priority
     {
-      DirectionsOptions options;
+      Options options;
       create_costing_options(options);
       auto config = root;
       config.put<std::string>("meili.default.hello", "default world");
@@ -93,7 +89,7 @@ void TestMapMatcherFactory() {
 
     // Test configuration priority
     {
-      DirectionsOptions options;
+      Options options;
       create_costing_options(options);
       auto config = root;
       meili::MapMatcherFactory factory(config);
@@ -113,7 +109,7 @@ void TestMapMatcherFactory() {
 
     // Test configuration priority
     {
-      DirectionsOptions options;
+      Options options;
       create_costing_options(options);
       meili::MapMatcherFactory factory(root);
       float preferred_search_radius = 3;
@@ -128,7 +124,7 @@ void TestMapMatcherFactory() {
 
     // Test default mode
     {
-      DirectionsOptions options;
+      Options options;
       create_costing_options(options);
       meili::MapMatcherFactory factory(root);
       auto matcher = factory.Create(options);
@@ -139,7 +135,7 @@ void TestMapMatcherFactory() {
 
     // Test preferred mode
     {
-      DirectionsOptions options;
+      Options options;
       create_costing_options(options);
       meili::MapMatcherFactory factory(root);
       options.set_costing(Costing::pedestrian);
@@ -157,7 +153,7 @@ void TestMapMatcherFactory() {
 
     // Test custom costing
     {
-      DirectionsOptions options;
+      Options options;
       create_costing_options(options);
       meili::MapMatcherFactory factory(root);
       options.set_costing(Costing::pedestrian);
@@ -183,7 +179,7 @@ void TestMapMatcher() {
   // Nothing special to test for the moment
 
   meili::MapMatcherFactory factory(root);
-  DirectionsOptions options;
+  Options options;
   create_costing_options(options);
   auto auto_matcher = factory.Create(Costing::auto_, options);
   auto pedestrian_matcher = factory.Create(Costing::pedestrian, options);

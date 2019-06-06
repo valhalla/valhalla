@@ -2,7 +2,7 @@
 protobuf_generate_cpp(protobuff_srcs protobuff_hdrs
   api.proto
   directions.proto
-  directions_options.proto
+  options.proto
   tripcommon.proto
   trip.proto
   fileformat.proto

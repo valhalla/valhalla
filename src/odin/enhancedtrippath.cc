@@ -253,14 +253,14 @@ const ::valhalla::Location& EnhancedTripLeg::GetDestination() const {
   return location(location_size() - 1);
 }
 
-float EnhancedTripLeg::GetLength(const DirectionsOptions::Units& units) {
+float EnhancedTripLeg::GetLength(const Options::Units& units) {
   float length = 0.0f;
   for (const auto& n : node()) {
     if (n.has_edge()) {
       length += n.edge().length();
     }
   }
-  if (units == DirectionsOptions::miles) {
+  if (units == Options::miles) {
     return (length * kMilePerKm);
   }
   return length;
@@ -441,8 +441,8 @@ std::vector<std::pair<std::string, bool>> EnhancedTripLeg_Edge::GetNameList() co
   return name_list;
 }
 
-float EnhancedTripLeg_Edge::GetLength(const DirectionsOptions::Units& units) {
-  if (units == DirectionsOptions::miles) {
+float EnhancedTripLeg_Edge::GetLength(const Options::Units& units) {
+  if (units == Options::miles) {
     return (length() * kMilePerKm);
   }
   return length();
