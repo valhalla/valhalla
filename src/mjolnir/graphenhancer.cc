@@ -710,6 +710,31 @@ bool IsIntersectionInternal(const GraphTile* start_tile,
   return true;
 }
 
+void GetHeadings(GraphTileBuilder& tile, NodeInfo& nodeinfo, uint32_t ntrans) {
+  if (ntrans == 0) {
+    throw std::runtime_error("edge transitions set is empty");
+  }
+
+  std::vector<uint32_t> heading(ntrans);
+  nodeinfo.set_local_edge_count(ntrans);
+  for (uint32_t j = 0; j < ntrans; j++) {
+    DirectedEdge& de = tile.directededge_builder(nodeinfo.edge_index() + j);
+
+    auto e_offset = tile.edgeinfo(de.edgeinfo_offset());
+    auto shape = e_offset.shape();
+    if (!de.forward()) {
+      std::reverse(shape.begin(), shape.end());
+    }
+    heading[j] = std::round(
+        PointLL::HeadingAlongPolyline(shape, GetOffsetForHeading(de.classification(), de.use())));
+
+    // Set heading in NodeInfo. TODO - what if 2 edges have nearly the
+    // same heading - should one be "adjusted" so the relative direction
+    // is maintained.
+    nodeinfo.set_heading(j, heading[j]);
+  }
+}
+
 bool IsNextEdgeInternal(const DirectedEdge directededge,
                         GraphTileBuilder& tilebuilder,
                         GraphReader& reader,
@@ -718,13 +743,26 @@ bool IsNextEdgeInternal(const DirectedEdge directededge,
   GraphTileBuilder tile = tilebuilder;
   // Get the tile at the end node. and find inbound heading of the candidate
   // edge to the end node.
+  bool b_diff_tile = false;
   if (tile.id() != directededge.endnode().Tile_Base()) {
     lock.lock();
     tile = GraphTileBuilder(reader.tile_dir(), directededge.endnode(), true, false);
+    b_diff_tile = true;
     lock.unlock();
   }
-  bool b_found = false;
   NodeInfo& nodeinfo = tile.node_builder(directededge.endnode().id());
+
+  // this tile may not have beeen updated yet; therefore, we must
+  // compute the headings for the end node as they are needed for the
+  // IsIntersectionInternal function
+  if (b_diff_tile) {
+    // Get headings of the edges - set in NodeInfo. Set driveability info
+    // on the node as well.
+    uint32_t count = nodeinfo.edge_count();
+    uint32_t ntrans = std::min(count, kNumberOfEdgeTransitions);
+
+    GetHeadings(tile, nodeinfo, ntrans);
+  }
   // Iterate through outbound edges to find the next edge
   for (uint32_t i = 0; i < nodeinfo.edge_count(); i++) {
     DirectedEdge& diredge = tile.directededge_builder(nodeinfo.edge_index() + i);
