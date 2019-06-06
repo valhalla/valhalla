@@ -69,12 +69,15 @@ void test_shape_attributes_included() {
         {"lat":52.09110,"lon":5.09806},
         {"lat":52.09050,"lon":5.09769},
         {"lat":52.09098,"lon":5.09679}
-      ],"costing":"auto","shape_match":"map_snap"})");
+      ],"costing":"auto","shape_match":"map_snap",
+      "filters":{"attributes":["edge.length","edge.speed","edge.begin_shape_index",
+      "edge.end_shape_index","shape","shape_attributes.length","shape_attributes.time","shape_attributes.speed"],
+      "action":"include"}})");
 
   rapidjson::Document doc;
   doc.Parse(result_json);
   if (doc.HasParseError()) {
-    throw std::logic_error("");
+    throw std::logic_error("Could not parse json response");
   }
 
   auto shape =
@@ -147,12 +150,16 @@ void test_shape_attributes_no_turncosts() {
       R"({"shape":[
          {"lat":52.09110,"lon":5.09806},
          {"lat":52.091050,"lon":5.097556}
-        ],"costing":"auto","shape_match":"map_snap"})");
+        ],"costing":"auto","shape_match":"map_snap",
+        "filters":{"attributes":["edge.length","edge.speed","node.elapsed_time",
+          "edge.begin_shape_index","edge.end_shape_index","shape",
+          "shape_attributes.length","shape_attributes.time","shape_attributes.speed"],
+        "action":"include"}})");
 
   rapidjson::Document doc;
   doc.Parse(result_json);
   if (doc.HasParseError()) {
-    throw std::logic_error("");
+    throw std::logic_error("Could not parse json response");
   }
 
   auto shape =
