@@ -710,6 +710,40 @@ bool IsIntersectionInternal(const GraphTile* start_tile,
   return true;
 }
 
+bool IsNextEdgeInternal(const DirectedEdge directededge,
+                        GraphTileBuilder& tilebuilder,
+                        GraphReader& reader,
+                        std::mutex& lock) {
+  // Get the tile at the startnode
+  GraphTileBuilder tile = tilebuilder;
+  // Get the tile at the end node. and find inbound heading of the candidate
+  // edge to the end node.
+  if (tile.id() != directededge.endnode().Tile_Base()) {
+    lock.lock();
+    tile = GraphTileBuilder(reader.tile_dir(), directededge.endnode(), true, false);
+    lock.unlock();
+  }
+  bool b_found = false;
+  NodeInfo& nodeinfo = tile.node_builder(directededge.endnode().id());
+  // Iterate through outbound edges to find the next edge
+  for (uint32_t i = 0; i < nodeinfo.edge_count(); i++) {
+    DirectedEdge& diredge = tile.directededge_builder(nodeinfo.edge_index() + i);
+
+    // Skip opposing directed edge and any edge that is not a road. Skip any
+    // edges that are not driveable outbound.
+    if (i == directededge.opp_local_idx() || (diredge.use() != Use::kRoad) ||
+        !(diredge.forwardaccess() & kAutoAccess)) {
+      continue;
+    }
+
+    if (tilebuilder.edgeinfo(directededge.edgeinfo_offset()).wayid() ==
+        tile.edgeinfo(diredge.edgeinfo_offset()).wayid()) {
+      return IsIntersectionInternal(&tile, reader, lock, directededge.endnode(), nodeinfo, diredge, i);
+    }
+  }
+  return false;
+}
+
 /**
  * Get the road density around the specified lat,lng position. This is a
  * value from 0-15 indicating a relative road density. This can be used
@@ -1084,14 +1118,13 @@ void ProcessEdgeTransitions(const uint32_t idx,
                             DirectedEdge& directededge,
                             const DirectedEdge* edges,
                             const uint32_t ntrans,
-                            uint32_t* headings,
                             const NodeInfo& nodeinfo,
                             enhancer_stats& stats) {
   for (uint32_t i = 0; i < ntrans; i++) {
     // Get the turn type (reverse the heading of the from directed edge since
     // it is incoming
-    uint32_t from_heading = ((headings[i] + 180) % 360);
-    uint32_t turn_degree = GetTurnDegree(from_heading, headings[idx]);
+    uint32_t from_heading = ((nodeinfo.heading(i) + 180) % 360);
+    uint32_t turn_degree = GetTurnDegree(from_heading, nodeinfo.heading(idx));
     directededge.set_turntype(i, Turn::GetType(turn_degree));
 
     // Set the edge_to_left and edge_to_right flags
@@ -1106,7 +1139,7 @@ void ProcessEdgeTransitions(const uint32_t idx,
 
         // Get the turn degree from incoming edge i to j and check if right
         // or left of the turn degree from incoming edge i onto idx
-        uint32_t degree = GetTurnDegree(from_heading, headings[j]);
+        uint32_t degree = GetTurnDegree(from_heading, nodeinfo.heading(j));
         if (turn_degree > 180) {
           if (degree > turn_degree || degree < 180) {
             ++right_count;
@@ -1273,6 +1306,45 @@ void enhance(const boost::property_tree::ptree& pt,
       GraphId startnode(id, local_level, i);
       NodeInfo& nodeinfo = tilebuilder.node_builder(i);
 
+      // Get headings of the edges - set in NodeInfo. Set driveability info
+      // on the node as well.
+      uint32_t count = nodeinfo.edge_count();
+      uint32_t ntrans = std::min(count, kNumberOfEdgeTransitions);
+      if (ntrans == 0) {
+        throw std::runtime_error("edge transitions set is empty");
+      }
+
+      std::vector<uint32_t> heading(ntrans);
+      nodeinfo.set_local_edge_count(ntrans);
+      for (uint32_t j = 0; j < ntrans; j++) {
+        DirectedEdge& directededge = tilebuilder.directededge_builder(nodeinfo.edge_index() + j);
+
+        auto e_offset = tilebuilder.edgeinfo(directededge.edgeinfo_offset());
+        auto shape = e_offset.shape();
+        if (!directededge.forward()) {
+          std::reverse(shape.begin(), shape.end());
+        }
+        heading[j] = std::round(
+            PointLL::HeadingAlongPolyline(shape, GetOffsetForHeading(directededge.classification(),
+                                                                     directededge.use())));
+
+        // Set heading in NodeInfo. TODO - what if 2 edges have nearly the
+        // same heading - should one be "adjusted" so the relative direction
+        // is maintained.
+        nodeinfo.set_heading(j, heading[j]);
+
+        // Set traversability for autos
+        Traversability traversability;
+        if (directededge.forwardaccess() & kAutoAccess) {
+          traversability = (directededge.reverseaccess() & kAutoAccess) ? Traversability::kBoth
+                                                                        : Traversability::kForward;
+        } else {
+          traversability = (directededge.reverseaccess() & kAutoAccess) ? Traversability::kBackward
+                                                                        : Traversability::kNone;
+        }
+        nodeinfo.set_local_driveability(j, traversability);
+      }
+
       const DirectedEdge* edges = tile->directededge(nodeinfo.edge_index());
       for (uint32_t j = 0; j < nodeinfo.edge_count(); j++) {
         DirectedEdge& directededge = tilebuilder.directededge_builder(nodeinfo.edge_index() + j);
@@ -1319,45 +1391,6 @@ void enhance(const boost::property_tree::ptree& pt,
         country_code = tilebuilder.admins_builder(admin_index).country_iso();
       } else {
         stats.no_country_found++;
-      }
-
-      // Get headings of the edges - set in NodeInfo. Set driveability info
-      // on the node as well.
-      uint32_t count = nodeinfo.edge_count();
-      uint32_t ntrans = std::min(count, kNumberOfEdgeTransitions);
-      if (ntrans == 0) {
-        throw std::runtime_error("edge transitions set is empty");
-      }
-
-      std::vector<uint32_t> heading(ntrans);
-      nodeinfo.set_local_edge_count(ntrans);
-      for (uint32_t j = 0; j < ntrans; j++) {
-        DirectedEdge& directededge = tilebuilder.directededge_builder(nodeinfo.edge_index() + j);
-
-        auto e_offset = tilebuilder.edgeinfo(directededge.edgeinfo_offset());
-        auto shape = e_offset.shape();
-        if (!directededge.forward()) {
-          std::reverse(shape.begin(), shape.end());
-        }
-        heading[j] = std::round(
-            PointLL::HeadingAlongPolyline(shape, GetOffsetForHeading(directededge.classification(),
-                                                                     directededge.use())));
-
-        // Set heading in NodeInfo. TODO - what if 2 edges have nearly the
-        // same heading - should one be "adjusted" so the relative direction
-        // is maintained.
-        nodeinfo.set_heading(j, heading[j]);
-
-        // Set traversability for autos
-        Traversability traversability;
-        if (directededge.forwardaccess() & kAutoAccess) {
-          traversability = (directededge.reverseaccess() & kAutoAccess) ? Traversability::kBoth
-                                                                        : Traversability::kForward;
-        } else {
-          traversability = (directededge.reverseaccess() & kAutoAccess) ? Traversability::kBackward
-                                                                        : Traversability::kNone;
-        }
-        nodeinfo.set_local_driveability(j, traversability);
       }
 
       // Go through directed edges and "enhance" directed edge attributes
@@ -1485,15 +1518,12 @@ void enhance(const boost::property_tree::ptree& pt,
         // Update speed.
         UpdateSpeed(directededge, density, urban_rc_speed);
 
-        // Update turn lanes.
-        UpdateTurnLanes(osmdata, directededge, nodeinfo.edge_index() + j, nodeinfo, tilebuilder,
-                        reader, lock, turn_lanes);
-
         // Update the named flag
         auto names = tilebuilder.edgeinfo(directededge.edgeinfo_offset()).GetNamesAndTypes();
         directededge.set_named(names.size() > 0);
 
         // Name continuity - on the directededge.
+        uint32_t ntrans = nodeinfo.local_edge_count();
         for (uint32_t k = 0; k < ntrans; k++) {
           DirectedEdge& fromedge = tilebuilder.directededge(nodeinfo.edge_index() + k);
           if (ConsistentNames(country_code, names,
@@ -1504,7 +1534,7 @@ void enhance(const boost::property_tree::ptree& pt,
 
         // Set edge transitions.
         if (j < kNumberOfEdgeTransitions) {
-          ProcessEdgeTransitions(j, directededge, edges, ntrans, &heading[0], nodeinfo, stats);
+          ProcessEdgeTransitions(j, directededge, edges, ntrans, nodeinfo, stats);
         }
 
         // Check for not_thru edge (only on low importance edges). Exclude
@@ -1516,12 +1546,34 @@ void enhance(const boost::property_tree::ptree& pt,
           }
         }
 
+        // since the internal flag is set, we are at either the prior or the next edge and we need to see if we have an internal edge.
+        if (directededge.internal() && directededge.turnlanes()) {
+
+          // get the outbound edges to the node
+          // find the edge that has the same wayid as the current DE
+          // if it is internal, then add turn lanes for this edge and not the internal one
+          // if not internal, then do not add turn lanes for this DE.
+          if (!IsNextEdgeInternal(directededge, tilebuilder, reader, lock)) {
+            directededge.set_turnlanes(false);
+          }
+        }
+
+        //may have been temporarily set in the builder.
+        directededge.set_internal(false);
+
         // Test if an internal intersection edge. Must do this after setting
         // opposing edge index
         if (IsIntersectionInternal(&tilebuilder, reader, lock, startnode, nodeinfo, directededge,
                                    j)) {
           directededge.set_internal(true);
+          directededge.set_turnlanes(false);
           stats.internalcount++;
+        }
+
+        if (!directededge.internal() && directededge.turnlanes()) {
+          // Update turn lanes.
+          UpdateTurnLanes(osmdata, directededge, nodeinfo.edge_index() + j, nodeinfo, tilebuilder,
+                          reader, lock, turn_lanes);
         }
 
         // Update access restrictions (update weight units)
@@ -1567,7 +1619,7 @@ void enhance(const boost::property_tree::ptree& pt,
 
     // Replace turnlanes
     if (tl_before != turn_lanes.size()) {
-      LOG_ERROR("Mismatch in turn lane count before " + std::to_string(tl_before) +
+      LOG_TRACE("Mismatch in turn lane count before " + std::to_string(tl_before) +
                 ""
                 " and after " +
                 std::to_string(turn_lanes.size()) + " tileid = " + std::to_string(tile_id.tileid()));
@@ -1608,7 +1660,7 @@ void GraphEnhancer::Enhance(const boost::property_tree::ptree& pt,
   // A place to hold worker threads and their results, exceptions or otherwise
   std::vector<std::shared_ptr<std::thread>> threads(
       std::max(static_cast<unsigned int>(1),
-               pt.get<unsigned int>("concurrency", std::thread::hardware_concurrency())));
+              pt.get<unsigned int>("concurrency", std::thread::hardware_concurrency())));
 
   // A place to hold the results of those threads, exceptions or otherwise
   std::list<std::promise<enhancer_stats>> results;
