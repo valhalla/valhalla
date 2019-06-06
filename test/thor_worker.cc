@@ -56,6 +56,25 @@ const auto conf = json_to_pt(R"({
     }
   })");
 
+void test_parse_filter_attributes_defaults() {
+  tyr::actor_t actor(conf, true);
+
+  auto result = json_to_pt(actor.trace_attributes(
+      R"({"costing":"auto","shape_match":"map_snap","shape":[
+          {"lat":52.09110,"lon":5.09806},
+          {"lat":52.09098,"lon":5.09679}]})"));
+
+  if (result.get_child_optional("shape_attributes"))
+    throw std::logic_error("Expected excluded shape_attributes | found shape_attributes=" +
+                           result.get<std::string>("shape_attributes"));
+
+  if (!result.get_child_optional("edges"))
+    throw std::logic_error("Expected included edges");
+
+  if (!result.get_child_optional("shape"))
+    throw std::logic_error("Expected included shape");
+}
+
 void test_parse_filter_attributes_excludes() {
   tyr::actor_t actor(conf, true);
 
@@ -120,6 +139,8 @@ void test_parse_filter_attributes_includes() {
 
 int main(void) {
   test::suite suite("Thor Worker");
+
+  suite.test(TEST_CASE(test_parse_filter_attributes_defaults));
 
   suite.test(TEST_CASE(test_parse_filter_attributes_excludes));
 
