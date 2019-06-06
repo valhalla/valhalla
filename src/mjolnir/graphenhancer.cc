@@ -301,7 +301,8 @@ void UpdateTurnLanes(const OSMData& osmdata,
 
     if (!bUpdated) {
 
-      // handle [left, [straight, left], none, straight] --> [left, [straight, left], straight, straight]
+      // handle [left, [straight, left], none, straight] --> [left, [straight, left], straight,
+      // straight]
       enhanced_tls = TurnLanes::lanemasks(str);
       previous = 0u;
       std::vector<uint16_t>::iterator it = enhanced_tls.begin();
@@ -319,7 +320,6 @@ void UpdateTurnLanes(const OSMData& osmdata,
           break;
         }
       }
-
     }
 
     if (!bUpdated) {
@@ -361,11 +361,11 @@ void UpdateTurnLanes(const OSMData& osmdata,
       // handle [none, none, right] --> [straight, straight, right]
       enhanced_tls = TurnLanes::lanemasks(str);
       previous = 0u;
-      std::vector<uint16_t>::reverse_iterator r_it = enhanced_tls.rbegin();// note reverse iterator
+      std::vector<uint16_t>::reverse_iterator r_it = enhanced_tls.rbegin(); // note reverse iterator
       for (; r_it != enhanced_tls.rend(); r_it++) {
 
-        if (((*r_it & kTurnLaneRight) || (*r_it & kTurnLaneSharpRight) || (*r_it & kTurnLaneSlightRight) ||
-             (*r_it & kTurnLaneThrough)) &&
+        if (((*r_it & kTurnLaneRight) || (*r_it & kTurnLaneSharpRight) ||
+             (*r_it & kTurnLaneSlightRight) || (*r_it & kTurnLaneThrough)) &&
             (previous == 0u || (previous & kTurnLaneRight) || (previous & kTurnLaneSharpRight) ||
              (previous & kTurnLaneSlightRight) || (previous & kTurnLaneThrough))) {
           previous = *r_it;
@@ -710,6 +710,31 @@ bool IsIntersectionInternal(const GraphTile* start_tile,
   return true;
 }
 
+void GetHeadings(GraphTileBuilder& tile, NodeInfo& nodeinfo, uint32_t ntrans) {
+  if (ntrans == 0) {
+    throw std::runtime_error("edge transitions set is empty");
+  }
+
+  std::vector<uint32_t> heading(ntrans);
+  nodeinfo.set_local_edge_count(ntrans);
+  for (uint32_t j = 0; j < ntrans; j++) {
+    DirectedEdge& de = tile.directededge_builder(nodeinfo.edge_index() + j);
+
+    auto e_offset = tile.edgeinfo(de.edgeinfo_offset());
+    auto shape = e_offset.shape();
+    if (!de.forward()) {
+      std::reverse(shape.begin(), shape.end());
+    }
+    heading[j] = std::round(
+        PointLL::HeadingAlongPolyline(shape, GetOffsetForHeading(de.classification(), de.use())));
+
+    // Set heading in NodeInfo. TODO - what if 2 edges have nearly the
+    // same heading - should one be "adjusted" so the relative direction
+    // is maintained.
+    nodeinfo.set_heading(j, heading[j]);
+  }
+}
+
 bool IsNextEdgeInternal(const DirectedEdge directededge,
                         GraphTileBuilder& tilebuilder,
                         GraphReader& reader,
@@ -718,13 +743,26 @@ bool IsNextEdgeInternal(const DirectedEdge directededge,
   GraphTileBuilder tile = tilebuilder;
   // Get the tile at the end node. and find inbound heading of the candidate
   // edge to the end node.
+  bool b_diff_tile = false;
   if (tile.id() != directededge.endnode().Tile_Base()) {
     lock.lock();
     tile = GraphTileBuilder(reader.tile_dir(), directededge.endnode(), true, false);
+    b_diff_tile = true;
     lock.unlock();
   }
-  bool b_found = false;
   NodeInfo& nodeinfo = tile.node_builder(directededge.endnode().id());
+
+  // this tile may not have beeen updated yet; therefore, we must
+  // compute the headings for the end node as they are needed for the
+  // IsIntersectionInternal function
+  if (b_diff_tile) {
+    // Get headings of the edges - set in NodeInfo. Set driveability info
+    // on the node as well.
+    uint32_t count = nodeinfo.edge_count();
+    uint32_t ntrans = std::min(count, kNumberOfEdgeTransitions);
+
+    GetHeadings(tile, nodeinfo, ntrans);
+  }
   // Iterate through outbound edges to find the next edge
   for (uint32_t i = 0; i < nodeinfo.edge_count(); i++) {
     DirectedEdge& diredge = tile.directededge_builder(nodeinfo.edge_index() + i);
@@ -738,7 +776,8 @@ bool IsNextEdgeInternal(const DirectedEdge directededge,
 
     if (tilebuilder.edgeinfo(directededge.edgeinfo_offset()).wayid() ==
         tile.edgeinfo(diredge.edgeinfo_offset()).wayid()) {
-      return IsIntersectionInternal(&tile, reader, lock, directededge.endnode(), nodeinfo, diredge, i);
+      return IsIntersectionInternal(&tile, reader, lock, directededge.endnode(), nodeinfo, diredge,
+                                    i);
     }
   }
   return false;
@@ -1546,7 +1585,8 @@ void enhance(const boost::property_tree::ptree& pt,
           }
         }
 
-        // since the internal flag is set, we are at either the prior or the next edge and we need to see if we have an internal edge.
+        // since the internal flag is set, we are at either the prior or the next edge and we need to
+        // see if we have an internal edge.
         if (directededge.internal() && directededge.turnlanes()) {
 
           // get the outbound edges to the node
@@ -1558,7 +1598,7 @@ void enhance(const boost::property_tree::ptree& pt,
           }
         }
 
-        //may have been temporarily set in the builder.
+        // may have been temporarily set in the builder.
         directededge.set_internal(false);
 
         // Test if an internal intersection edge. Must do this after setting
@@ -1660,7 +1700,7 @@ void GraphEnhancer::Enhance(const boost::property_tree::ptree& pt,
   // A place to hold worker threads and their results, exceptions or otherwise
   std::vector<std::shared_ptr<std::thread>> threads(
       std::max(static_cast<unsigned int>(1),
-              pt.get<unsigned int>("concurrency", std::thread::hardware_concurrency())));
+               pt.get<unsigned int>("concurrency", std::thread::hardware_concurrency())));
 
   // A place to hold the results of those threads, exceptions or otherwise
   std::list<std::promise<enhancer_stats>> results;
