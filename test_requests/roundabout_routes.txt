@@ -27,3 +27,7 @@
 -j '{"locations":[{"lat":40.274254,"lon":-76.633461,"street":"Homestead Lane"},{"lat":40.275108,"lon":-76.635185,"street":"US 322"}],"costing":"auto","directions_options":{"units":"miles"}}'
 -j '{"locations":[{"lat":40.273319,"lon":-76.648346,"street":"Cocoa Avenue"},{"lat":40.289185,"lon":-76.573547,"street":"Airport Road"}],"costing":"auto","directions_options":{"units":"miles"}}'
 -j '{"locations":[{"lat":40.289185,"lon":-76.573547,"street":"Airport Road"},{"lat":40.273319,"lon":-76.648346,"street":"Cocoa Avenue"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":47.707066,"lon":-121.984596,"street":"Carnation-Duvall Road Northeast"},{"lat":47.709827,"lon":-121.981766,"street":"Northeast 124th Street"}],"costing":"auto","units":"miles"}'
+-j '{"locations":[{"lat":47.707066,"lon":-121.984596,"street":"Carnation-Duvall Road Northeast"},{"lat":47.710655,"lon":-121.984268,"street":"Carnation-Duvall Road Northeast"}],"costing":"auto","units":"miles"}'
+-j '{"locations":[{"lat":47.707066,"lon":-121.984596,"street":"Carnation-Duvall Road Northeast"},{"lat":47.709038,"lon":-121.987686,"street":"Northeast 124th Street"}],"costing":"auto","units":"miles"}'
+-j '{"locations":[{"lat":47.709045,"lon":-121.988289,"street":"Northeast 124th Street"},{"lat":47.709785,"lon":-121.981697,"street":"Northeast 124th Street"}],"costing":"auto","units":"miles"}'

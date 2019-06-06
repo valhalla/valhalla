@@ -395,6 +395,9 @@ public:
 
   std::string ToString() const;
 
+  std::string TurnLanesToString(
+      const ::google::protobuf::RepeatedPtrField<::valhalla::TurnLane>& turn_lanes) const;
+
 #ifdef LOGGING_LEVEL_TRACE
   std::string ToParameterString() const;
 #endif
@@ -402,23 +405,20 @@ public:
 protected:
   TripLeg_Edge* mutable_edge_;
 
-#ifdef LOGGING_LEVEL_TRACE
   std::string StreetNamesToString(
-      const ::google::protobuf::RepeatedPtrField<::valhalla::StreetName>& street_names) const;
-
-  std::string StreetNamesToParameterString(
       const ::google::protobuf::RepeatedPtrField<::valhalla::StreetName>& street_names) const;
 
   std::string SignElementsToString(
       const ::google::protobuf::RepeatedPtrField<::valhalla::TripLeg_SignElement>& sign_elements)
       const;
 
+#ifdef LOGGING_LEVEL_TRACE
+  std::string StreetNamesToParameterString(
+      const ::google::protobuf::RepeatedPtrField<::valhalla::StreetName>& street_names) const;
+
   std::string SignElementsToParameterString(
       const ::google::protobuf::RepeatedPtrField<::valhalla::TripLeg_SignElement>& sign_elements)
       const;
-
-  std::string TurnLanesToString(
-      const ::google::protobuf::RepeatedPtrField<::valhalla::TurnLane>& turn_lanes) const;
 #endif
 };
 
