@@ -172,8 +172,8 @@ void SetShapeAttributes(const AttributesController& controller,
     // calculates total edge time and total edge length
     double edge_time =
         costing->EdgeCost(directededge, graphtile->GetSpeed(directededge)).secs; // seconds
-    double edge_length = directededge->length();                                 // meters
-
+    // TODO: get the measured length from shape (full shape) to increase precision
+    double edge_length = directededge->length(); // meters
     // Set the shape attributes
     for (++shape_begin; shape_begin < shape_end; ++shape_begin) {
       double distance = shape_begin->Distance(*(shape_begin - 1)); // meters

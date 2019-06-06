@@ -141,12 +141,87 @@ void test_shape_attributes_included() {
   }
 }
 
+void test_shape_attributes_no_turncosts() {
+  tyr::actor_t actor(conf);
+  auto result_json = actor.trace_attributes(
+      R"({"shape":[
+         {"lat":52.09110,"lon":5.09806},
+         {"lat":52.091050,"lon":5.097556}
+        ],"costing":"auto","shape_match":"map_snap"})");
+
+  rapidjson::Document doc;
+  doc.Parse(result_json);
+  if (doc.HasParseError()) {
+    throw std::logic_error("");
+  }
+
+  auto shape =
+      midgard::decode<std::vector<PointLL>>(rapidjson::Pointer("/shape").Get(doc)->GetString());
+  auto shape_attributes_time = rapidjson::Pointer("/shape_attributes/time").Get(doc)->GetArray();
+  auto shape_attributes_length = rapidjson::Pointer("/shape_attributes/length").Get(doc)->GetArray();
+  auto shape_attributes_speed = rapidjson::Pointer("/shape_attributes/speed").Get(doc)->GetArray();
+  auto edges = rapidjson::Pointer("/edges").Get(doc)->GetArray();
+
+  if (shape_attributes_time.Size() != shape.size() - 1)
+    throw std::logic_error("Expected: " + std::to_string(shape.size() - 1) +
+                           " | Found: " + std::to_string(shape_attributes_time.Size()));
+  if (shape_attributes_length.Size() != shape.size() - 1)
+    throw std::logic_error("Expected: " + std::to_string(shape.size() - 1) +
+                           " | Found: " + std::to_string(shape_attributes_length.Size()));
+  if (shape_attributes_speed.Size() != shape.size() - 1)
+    throw std::logic_error("Expected: " + std::to_string(shape.size() - 1) +
+                           " | Found: " + std::to_string(shape_attributes_speed.Size()));
+
+  // Measures the length between point
+  for (int i = 1; i < shape.size(); i++) {
+    auto distance = shape[i].Distance(shape[i - 1]) * .001f;
+
+    // Measuring that the length between shape pts is approx. to the shape attributes length
+    if (!midgard::equal(distance, shape_attributes_length[i - 1].GetFloat(), .01f)) {
+      throw std::logic_error(
+          "Expected: " + std::to_string(shape_attributes_length[i - 1].GetFloat()) +
+          " | Found: " + std::to_string(shape[i].Distance(shape[i - 1]) * .001f));
+    }
+  }
+
+  // Assert that the shape attributes (time, length, speed) are equal to their corresponding edge
+  // attributes
+  auto edge_length = edges[0]["length"].GetDouble();
+  auto edge_speed = edges[0]["speed"].GetDouble();
+  auto edge_elapsed_time = edges[0]["end_node"]["elapsed_time"].GetDouble();
+
+  double sum_times = 0;
+  double sum_lengths = 0;
+
+  sum_times += shape_attributes_time[0].GetDouble();
+  sum_lengths += shape_attributes_length[0].GetDouble();
+
+  if (!midgard::equal(edge_speed, shape_attributes_speed[0].GetDouble(), .15)) {
+    throw std::logic_error("Expected shape_attributes.speed to approx equal " +
+                           std::to_string(shape_attributes_speed[0].GetFloat()) +
+                           " | Found: " + std::to_string(edge_speed));
+  }
+
+  // Can't assert that sum of shape times equals edge's elapsed_time because elapsed_time includes
+  // transition costs and shape times do not.
+  if (!midgard::equal(edge_elapsed_time, sum_times, .1)) {
+    throw std::logic_error("Expected sum of shape_attributes.time to approx equal " +
+                           std::to_string(edge_elapsed_time) +
+                           " | Found: " + std::to_string(sum_times));
+  }
+  if (!midgard::equal(edge_length, sum_lengths, .1)) {
+    throw std::logic_error("Expected sum of shape_attributes.length to approx equal " +
+                           std::to_string(edge_length) + " | Found: " + std::to_string(sum_lengths));
+  }
+}
+
 } // namespace
 
 int main() {
   test::suite suite("shape_attributes");
 
   suite.test(TEST_CASE(test_shape_attributes_included));
+  suite.test(TEST_CASE(test_shape_attributes_no_turncosts));
 
   return suite.tear_down();
 }
