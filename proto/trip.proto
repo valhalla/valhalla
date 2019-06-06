@@ -243,7 +243,7 @@ message TripLeg {
 
     optional Edge edge = 1;
     repeated IntersectingEdge intersecting_edge = 2;
-    optional uint32 elapsed_time = 3;        // seconds from start of leg
+    optional double elapsed_time = 3;        // milliseconds from start of leg
     optional uint32 admin_index = 4;         // index into the admin list
     optional Type type = 5;                  // The type of node
     optional bool fork = 6;                  // Fork

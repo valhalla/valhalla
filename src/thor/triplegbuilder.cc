@@ -30,8 +30,9 @@ using namespace valhalla::thor;
 
 namespace {
 
-constexpr double SEC_TO_MILLISECOND = 1000;
+constexpr double SEC_TO_MILLISEC = 1000;
 constexpr double METER_TO_DECIMETER = 10;
+constexpr double KM_TO_METER = 1000;
 
 template <class iter>
 void AddPartialShape(std::vector<PointLL>& shape,
@@ -165,24 +166,28 @@ void AssignAdmins(const AttributesController& controller,
 }
 
 void SetShapeAttributes(const AttributesController& controller,
-                        std::vector<PathInfo>::const_iterator edge_itr,
-                        TripLeg& trip_path,
+                        const GraphTile* graphtile,
+                        const DirectedEdge* directededge,
+                        const std::shared_ptr<sif::DynamicCost>& costing,
                         std::vector<PointLL>::const_iterator shape_begin,
-                        std::vector<PointLL>::const_iterator shape_end) {
+                        std::vector<PointLL>::const_iterator shape_end,
+                        TripLeg& trip_path) {
   if (trip_path.has_shape_attributes()) {
     // calculates total edge time and total edge length
-    double edge_time = edge_itr->elapsed_time - trip_path.node().rbegin()->elapsed_time();
-    double edge_length = trip_path.node().rbegin()->edge().length(); // kilometers
+    double edge_time =
+        costing->EdgeCost(directededge, graphtile->GetSpeed(directededge)).secs; // seconds
+    double edge_length = trip_path.node().rbegin()->edge().length() * KM_TO_METER;
 
     // Set the shape attributes
     for (++shape_begin; shape_begin < shape_end; ++shape_begin) {
       double distance = shape_begin->Distance(*(shape_begin - 1)); // meters
-      double distance_pct = (distance / 1000) / edge_length;       // fraction of path length
-      double time = edge_time * distance_pct;
+      double distance_pct = distance / edge_length;
+      double time = edge_time * distance_pct; // seconds
+
       // Set shape attributes time per shape point if requested
       if (controller.attributes.at(kShapeAttributesTime)) {
         // convert time to milliseconds and then round to an integer
-        trip_path.mutable_shape_attributes()->add_time((time * SEC_TO_MILLISECOND) + 0.5);
+        trip_path.mutable_shape_attributes()->add_time((time * SEC_TO_MILLISEC) + 0.5);
       }
 
       // Set shape attributes length per shape point if requested
@@ -711,7 +716,8 @@ TripLegBuilder::Build(const AttributesController& controller,
     }
 
     // Set shape attributes
-    SetShapeAttributes(controller, path_begin, trip_path, shape.begin(), shape.end());
+    SetShapeAttributes(controller, tile, edge, mode_costing[static_cast<int>(path_begin->mode)],
+                       shape.begin(), shape.end(), trip_path);
 
     // Set begin and end heading if requested. Uses shape so
     // must be done after the edge's shape has been added.
@@ -792,7 +798,7 @@ TripLegBuilder::Build(const AttributesController& controller,
 
   // Iterate through path
   bool is_first_edge = true;
-  uint32_t elapsedtime = 0;
+  double elapsedtime = 0;
   uint32_t block_id = 0;
   uint32_t prior_opp_local_index = -1;
   std::vector<PointLL> trip_shape;
@@ -834,7 +840,7 @@ TripLegBuilder::Build(const AttributesController& controller,
       }
     }
 
-    uint32_t current_time;
+    double current_time;
     if (origin.has_date_time()) {
       current_time = DateTime::seconds_from_midnight(origin.date_time());
       current_time += elapsedtime;
@@ -1134,8 +1140,8 @@ TripLegBuilder::Build(const AttributesController& controller,
     SetHeadings(trip_edge, controller, directededge, trip_shape, begin_index);
 
     // Set shape attributes
-    SetShapeAttributes(controller, edge_itr, trip_path, trip_shape.begin() + begin_index,
-                       trip_shape.end());
+    SetShapeAttributes(controller, graphtile, directededge, mode_costing[static_cast<uint32_t>(mode)],
+                       trip_shape.begin() + begin_index, trip_shape.end(), trip_path);
 
     // Add connected edges from the start node. Do this after the first trip
     // edge is added
@@ -1242,7 +1248,7 @@ TripLegBuilder::Build(const AttributesController& controller,
   auto* last_tile = graphreader.GetGraphTile(startnode);
   if (dest.has_date_time()) { // arrive by
 
-    uint64_t sec =
+    double sec =
         DateTime::seconds_since_epoch(dest.date_time(), DateTime::get_tz_db().from_index(
                                                             last_tile->node(startnode)->timezone()));
 
@@ -1258,7 +1264,7 @@ TripLegBuilder::Build(const AttributesController& controller,
     tp_dest->set_date_time(dest_date);
 
   } else if (origin.has_date_time()) { // leave at
-    uint64_t sec =
+    double sec =
         DateTime::seconds_since_epoch(origin.date_time(),
                                       DateTime::get_tz_db().from_index(first_node->timezone()));
 

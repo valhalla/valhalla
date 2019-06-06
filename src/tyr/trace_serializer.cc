@@ -283,7 +283,7 @@ json::ArrayPtr serialize_edges(const AttributesController& controller,
         }
 
         if (node.has_elapsed_time()) {
-          end_node_map->emplace("elapsed_time", static_cast<uint64_t>(node.elapsed_time()));
+          end_node_map->emplace("elapsed_time", json::fp_t{node.elapsed_time(), 3});
         }
         if (node.has_admin_index()) {
           end_node_map->emplace("admin_index", static_cast<uint64_t>(node.admin_index()));
