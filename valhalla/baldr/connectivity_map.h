@@ -54,6 +54,16 @@ public:
    */
   std::vector<size_t> to_image(const uint32_t hierarchy_level) const;
 
+  /**
+   * Does data exist for a level.
+   * @param level Tile hierarchy level.
+   * @return Returns true if the level has data, false if it does not (no tiles present)
+   */
+  bool has_data(const uint32_t level) const {
+    auto c = colors.find(level);
+    return (c == colors.end()) ? false : c->second.size() > 0;
+  }
+
 private:
   uint32_t transit_level;
   // this is a map(tile_level, map(tile_id, tile_color))
