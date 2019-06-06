@@ -59,3 +59,6 @@
 -j '{"locations":[{"lat":37.745979,"lon":-122.450424,"street":"Portola Drive"},{"lat":37.744282,"lon":-122.450348,"street":""}],"costing":"auto","units":"miles"}'
 -j '{"locations":[{"lat":37.745979,"lon":-122.450424,"street":"Portola Drive"},{"lat":37.744072,"lon":-122.450584,"street":""}],"costing":"auto","units":"miles"}'
 -j '{"locations":[{"lat":37.745979,"lon":-122.450424,"street":"Portola Drive"},{"lat":37.741634,"lon":-122.446129,"street":"O'Shaughnessy Boulevard"}],"costing":"auto","units":"miles"}'
+-j '{"locations":[{"lat":37.747505,"lon":-122.459015,"street":"Laguna Honda Boulevard"},{"lat":37.743618,"lon":-122.456085,"street":"Laguna Honda Boulevard"}],"costing":"auto","units":"miles"}'
+-j '{"locations":[{"lat":37.747505,"lon":-122.459015,"street":"Laguna Honda Boulevard"},{"lat":37.746620,"lon":-122.456696,"street":"Woodside Avenue"}],"costing":"auto","units":"miles"}'
+-j '{"locations":[{"lat":37.685925,"lon":-122.471558,"street":"I 280 South"},{"lat":37.673340,"lon":-122.474396,"street":"CA 1"}],"costing":"auto","units":"miles"}'
