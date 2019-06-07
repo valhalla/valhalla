@@ -192,6 +192,7 @@ void ConstructEdges(const OSMData& osmdata,
         // Mark the edge as ending a way if this is the last node in the way
         edge.attributes.way_end = current_way_node_index == last_way_node_index;
 
+        // Mark the previous edge as the prior one since we are processing the last edge
         if (edge.attributes.way_end) {
           prev_edge.attributes.way_prior = true;
         }
@@ -199,6 +200,7 @@ void ConstructEdges(const OSMData& osmdata,
         if (!edge.attributes.way_begin)
           edges.push_back(prev_edge);
 
+        // Mark the current edge as the next edge one since we processed the first edge
         if (prev_edge.attributes.way_begin)
           edge.attributes.way_next = true;
 
@@ -772,6 +774,9 @@ void BuildTileSet(const std::string& ways_file,
 
                 // Temporarily use the internal flag so that in the enhancer we can properly check to
                 // see if we have an internal edge
+                // Basically, we are setting turn lanes on the prior and last edge because we need
+                // to check if the last edge is internal or not.  If it is internal, we remove the
+                // turn lanes from the last edge and leave them on the prior.
                 if (edge.attributes.way_prior)
                   directededge.set_internal(true);
               }
@@ -787,6 +792,9 @@ void BuildTileSet(const std::string& ways_file,
 
                 // Temporarily use the internal flag so that in the enhancer we can properly check to
                 // see if we have an internal edge
+                // Basically, we are setting turn lanes on the next and first edge because we need
+                // to check if the fist edge is internal or not.  If it is internal, we remove the
+                // turn lanes from the first edge and leave them on the next.
                 if (edge.attributes.way_next)
                   directededge.set_internal(true);
               }
