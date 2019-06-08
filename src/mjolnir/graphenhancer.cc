@@ -187,6 +187,8 @@ void UpdateSpeed(DirectedEdge& directededge, const uint32_t density, const uint3
   }
 }
 
+// Get the turn types.  This is used the determine if we should enhance or update
+// Turn lanes based on the turns at this node.
 bool GetTurnTypes(const DirectedEdge directededge,
                   const uint32_t idx,
                   std::set<Turn::Type>& outgoing_turn_type,
@@ -251,6 +253,7 @@ bool GetTurnTypes(const DirectedEdge directededge,
   return true;
 }
 
+// Enhance the Turn lanes (if needed) and add them to the tile.
 void UpdateTurnLanes(const OSMData& osmdata,
                      const DirectedEdge directededge,
                      const uint32_t idx,
@@ -392,6 +395,7 @@ void UpdateTurnLanes(const OSMData& osmdata,
       }
     }
 
+    // if anything was updated, we have to get the new string from the updated vector.
     if (bUpdated)
       str = TurnLanes::GetTurnLaneString(TurnLanes::turnlane_string(enhanced_tls));
 
@@ -710,6 +714,7 @@ bool IsIntersectionInternal(const GraphTile* start_tile,
   return true;
 }
 
+// Get the Headings for the node.
 void GetHeadings(GraphTileBuilder& tile, NodeInfo& nodeinfo, uint32_t ntrans) {
   if (ntrans == 0) {
     throw std::runtime_error("edge transitions set is empty");
@@ -735,6 +740,7 @@ void GetHeadings(GraphTileBuilder& tile, NodeInfo& nodeinfo, uint32_t ntrans) {
   }
 }
 
+// Is the next edge from the end node of the directededge is internal or not.
 bool IsNextEdgeInternal(const DirectedEdge directededge,
                         GraphTileBuilder& tilebuilder,
                         GraphReader& reader,
@@ -752,12 +758,11 @@ bool IsNextEdgeInternal(const DirectedEdge directededge,
   }
   NodeInfo& nodeinfo = tile.node_builder(directededge.endnode().id());
 
-  // this tile may not have beeen updated yet; therefore, we must
+  // this tile may not have been updated yet; therefore, we must
   // compute the headings for the end node as they are needed for the
   // IsIntersectionInternal function
   if (b_diff_tile) {
-    // Get headings of the edges - set in NodeInfo. Set driveability info
-    // on the node as well.
+    // Get headings of the edges - set in NodeInfo.
     uint32_t count = nodeinfo.edge_count();
     uint32_t ntrans = std::min(count, kNumberOfEdgeTransitions);
 
@@ -774,6 +779,8 @@ bool IsNextEdgeInternal(const DirectedEdge directededge,
       continue;
     }
 
+    // if the edge from the endnode is the next edge for this way, then
+    // check if it is internal.
     if (tilebuilder.edgeinfo(directededge.edgeinfo_offset()).wayid() ==
         tile.edgeinfo(diredge.edgeinfo_offset()).wayid()) {
       return IsIntersectionInternal(&tile, reader, lock, directededge.endnode(), nodeinfo, diredge,
@@ -1353,6 +1360,8 @@ void enhance(const boost::property_tree::ptree& pt,
         throw std::runtime_error("edge transitions set is empty");
       }
 
+      // Headings must be done first so that we can check if a next edge is internal or not
+      // while processing turn lanes.
       std::vector<uint32_t> heading(ntrans);
       nodeinfo.set_local_edge_count(ntrans);
       for (uint32_t j = 0; j < ntrans; j++) {
@@ -1592,7 +1601,7 @@ void enhance(const boost::property_tree::ptree& pt,
           // get the outbound edges to the node
           // find the edge that has the same wayid as the current DE
           // if it is internal, then add turn lanes for this edge and not the internal one
-          // if not internal, then do not add turn lanes for this DE.
+          // if not internal, then do not add turn lanes for this DE and leave them on the next one.
           if (!IsNextEdgeInternal(directededge, tilebuilder, reader, lock)) {
             directededge.set_turnlanes(false);
           }
@@ -1606,10 +1615,12 @@ void enhance(const boost::property_tree::ptree& pt,
         if (IsIntersectionInternal(&tilebuilder, reader, lock, startnode, nodeinfo, directededge,
                                    j)) {
           directededge.set_internal(true);
+          // never set turnlanes on an internal edge.
           directededge.set_turnlanes(false);
           stats.internalcount++;
         }
 
+        // Enhance and add turn lanes if not an internal edge.
         if (!directededge.internal() && directededge.turnlanes()) {
           // Update turn lanes.
           UpdateTurnLanes(osmdata, directededge, nodeinfo.edge_index() + j, nodeinfo, tilebuilder,
