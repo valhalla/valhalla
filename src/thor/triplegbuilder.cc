@@ -1225,14 +1225,16 @@ TripLegBuilder::Build(const AttributesController& controller,
     // Set the endnode of this directed edge as the startnode of the next edge.
     startnode = directededge->endnode();
 
-    // Save the opposing edge as the previous DirectedEdge (for name consistency)
-    const GraphTile* t2 =
-        directededge->leaves_tile() ? graphreader.GetGraphTile(directededge->endnode()) : graphtile;
-    if (t2 == nullptr) {
-      continue;
+    if (!directededge->IsTransitLine()) {
+      // Save the opposing edge as the previous DirectedEdge (for name consistency)
+      const GraphTile* t2 =
+          directededge->leaves_tile() ? graphreader.GetGraphTile(directededge->endnode()) : graphtile;
+      if (t2 == nullptr) {
+        continue;
+      }
+      GraphId oppedge = t2->GetOpposingEdgeId(directededge);
+      prev_de = t2->directededge(oppedge);
     }
-    GraphId oppedge = t2->GetOpposingEdgeId(directededge);
-    prev_de = t2->directededge(oppedge);
 
     // Save the index of the opposing local directed edge at the end node
     prior_opp_local_index = directededge->opp_local_idx();
