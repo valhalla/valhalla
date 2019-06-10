@@ -139,38 +139,6 @@ void thor_worker_t::route(Api& request) {
   else
     path_depart_at(request, costing);
 
-  // TODO: this wont be needed once we do the block comment above
-  // TODO: if we ever support multiple routes this wont work
-  // cull unused edges
-  auto* locations = options.mutable_locations();
-  for (const auto& route : request.trip().routes()) {
-    auto path = route.legs().begin();
-    GraphId left, right;
-    for (auto l = locations->begin(); l < locations->end(); ++l) {
-      // through and via will have been taken care of in the depart_at and arrive_by below
-      if (l->type() == valhalla::Location::kThrough || l->type() == valhalla::Location::kVia)
-        continue;
-
-      // the edge on the right side of this node
-      right = GraphId(path != route.legs().end() ? static_cast<uint64_t>(path->node(0).edge().id())
-                                                 : kInvalidGraphId);
-      // remove edges that we didnt use
-      auto end = std::partition(l->mutable_path_edges()->begin(), l->mutable_path_edges()->end(),
-                                [&left, &right](const valhalla::Location::PathEdge& e) {
-                                  return e.graph_id() == left || e.graph_id() == right;
-                                });
-      auto shrink_to_size = end - l->mutable_path_edges()->begin();
-      while (l->path_edges_size() > shrink_to_size)
-        l->mutable_path_edges()->RemoveLast();
-
-      // next leg
-      left = GraphId(path != route.legs().end()
-                         ? static_cast<uint64_t>(path->node(path->node_size() - 2).edge().id())
-                         : kInvalidGraphId);
-      ++path;
-    }
-  }
-
   // log admin areas
   if (!options.do_not_track()) {
     for (const auto& route : request.trip().routes()) {
