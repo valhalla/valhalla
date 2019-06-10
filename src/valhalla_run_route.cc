@@ -359,10 +359,16 @@ valhalla::DirectionsLeg DirectionsTest(valhalla::Api& api,
 
     // Turn lanes
     auto prev_edge = etl.GetPrevEdge(maneuver.begin_path_index());
-    if (prev_edge && (prev_edge->turn_lanes_size() > 0) && prev_edge->HasActiveTurnLane() &&
-        !prev_edge->HasNonDirectionalTurnLane()) {
-      valhalla::midgard::logging::Log((boost::format("   TURN_LANES: %s") %
-                                       prev_edge->TurnLanesToString(prev_edge->turn_lanes()))
+    if (prev_edge && (prev_edge->turn_lanes_size() > 0)) {
+      std::string turn_lane_status = "ACTIVE_TURN_LANES";
+      if (prev_edge->HasNonDirectionalTurnLane()) {
+        turn_lane_status = "NON_DIRECTIONAL_TURN_LANES";
+      } else if (!prev_edge->HasActiveTurnLane()) {
+        turn_lane_status = "NO_ACTIVE_TURN_LANES";
+      }
+      valhalla::midgard::logging::Log((boost::format("   TURN_LANES: %s %s") %
+                                       prev_edge->TurnLanesToString(prev_edge->turn_lanes()) %
+                                       turn_lane_status)
                                           .str(),
                                       " [NARRATIVE] ");
     }
