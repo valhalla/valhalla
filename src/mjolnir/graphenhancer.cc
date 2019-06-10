@@ -388,7 +388,7 @@ void UpdateTurnLanes(const OSMData& osmdata,
           bUpdated = false;
         }
 
-        // Should have a right turn, but we should have a left.
+        // Should have a right turn, but we should not have a left.
         if (bUpdated && !has_turn_right(outgoing_turn_type) && has_turn_left(outgoing_turn_type)) {
           bUpdated = false;
         }
