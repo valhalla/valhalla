@@ -93,3 +93,5 @@
 -j '{"locations":[{"lat":39.389153,"lon":-84.215607,"street":"SR 48"},{"lat":39.389706,"lon":-84.214752,"street":"Nelson Road"}],"costing":"auto","units":"miles"}'
 -j '{"locations":[{"lat":39.390652,"lon":-84.214417,"street":"SR 48"},{"lat":39.390057,"lon":-84.216492,"street":"Kingsview Drive"}],"costing":"auto","units":"miles"}'
 -j '{"locations":[{"lat":39.390652,"lon":-84.214417,"street":"SR 48"},{"lat":39.389736,"lon":-84.214798,"street":"Nelson Road"}],"costing":"auto","units":"miles"}'
+-j '{"locations":[{"lat":40.089584,"lon":-75.406471,"street":"I 76 West"},{"lat":40.090881,"lon":-75.412621,"street":"I 76 West"}],"costing":"auto","units":"miles"}'
+-j '{"locations":[{"lat":40.089584,"lon":-75.406471,"street":"I 76 West"},{"lat":40.093231,"lon":-75.402039,"street":"I 276 East"}],"costing":"auto","units":"miles"}'
