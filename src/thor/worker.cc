@@ -108,7 +108,6 @@ thor_worker_t::work(const std::list<zmq::message_t>& job,
   Api request;
   try {
     // crack open the original request
-    valhalla::Api request;
     request.ParseFromArray(job.front().data(), job.front().size());
     const auto& options = request.options();
 
