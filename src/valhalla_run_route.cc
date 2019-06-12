@@ -352,7 +352,7 @@ valhalla::DirectionsLeg DirectionsTest(valhalla::Api& api,
     }
 
     // Instruction
-    valhalla::midgard::logging::Log((boost::format("%d: %s | %.1f %s") % m++ %
+    valhalla::midgard::logging::Log((boost::format("%d: %s | %.1f %s") % m %
                                      maneuver.text_instruction() % maneuver.length() % units)
                                         .str(),
                                     " [NARRATIVE] ");
@@ -366,7 +366,7 @@ valhalla::DirectionsLeg DirectionsTest(valhalla::Api& api,
       } else if (!prev_edge->HasActiveTurnLane()) {
         turn_lane_status = "NO_ACTIVE_TURN_LANES";
       }
-      valhalla::midgard::logging::Log((boost::format("   TURN_LANES: %s %s") %
+      valhalla::midgard::logging::Log((boost::format("   %d: TURN_LANES: %s %s") % m %
                                        prev_edge->TurnLanesToString(prev_edge->turn_lanes()) %
                                        turn_lane_status)
                                           .str(),
@@ -415,6 +415,9 @@ valhalla::DirectionsLeg DirectionsTest(valhalla::Api& api,
       valhalla::midgard::logging::Log("----------------------------------------------",
                                       " [NARRATIVE] ");
     }
+
+    // Increment maneuver number
+    ++m;
   }
   valhalla::midgard::logging::Log("==============================================", " [NARRATIVE] ");
   valhalla::midgard::logging::Log("Total time: " + GetFormattedTime(trip_directions.summary().time()),
