@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <stdint.h>
+#include <string>
 
 namespace valhalla {
 namespace baldr {
@@ -35,6 +36,14 @@ public:
    * @return the turn type based on the specified turn degree.
    */
   static Turn::Type GetType(uint32_t turn_degree);
+
+  /**
+   * Returns the turn type string.
+   *
+   * @param  turn_type  the specified turn type.
+   * @return the turn type string based on the specified turn type.
+   */
+  static std::string GetTypeString(Turn::Type turn_type);
 };
 
 } // namespace baldr

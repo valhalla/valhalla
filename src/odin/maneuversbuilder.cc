@@ -246,20 +246,21 @@ std::list<Maneuver> ManeuversBuilder::Produce() {
     auto prev_edge = trip_path_->GetPrevEdge(i);
     auto curr_edge = trip_path_->GetCurrEdge(i);
     auto next_edge = trip_path_->GetNextEdge(i);
+    auto prev2curr_turn_degree = GetTurnDegree(prev_edge->end_heading(), curr_edge->begin_heading());
     LOG_TRACE("---------------------------------------------");
     LOG_TRACE(std::to_string(i) + ":  ");
     LOG_TRACE(std::string("  curr_edge_PARAMETERS=") +
               (curr_edge ? curr_edge->ToParameterString() : "NONE"));
     LOG_TRACE(std::string("  curr_edge=") + (curr_edge ? curr_edge->ToString() : "NONE"));
-    LOG_TRACE(std::string("  prev2curr_turn_degree=") +
-              std::to_string(GetTurnDegree(prev_edge->end_heading(), curr_edge->begin_heading())));
+    LOG_TRACE(std::string("  prev2curr_turn_degree=") + std::to_string(prev2curr_turn_degree) +
+              " is a " + Turn::GetTypeString(Turn::GetType(prev2curr_turn_degree)));
     auto node = trip_path_->GetEnhancedNode(i);
     for (size_t z = 0; z < node->intersecting_edge_size(); ++z) {
       auto intersecting_edge = node->GetIntersectingEdge(z);
+      auto xturn_degree = GetTurnDegree(prev_edge->end_heading(), intersecting_edge->begin_heading());
       LOG_TRACE(std::string("    intersectingEdge=") + intersecting_edge->ToString());
-      LOG_TRACE(std::string("    prev2int_turn_degree=") +
-                std::to_string(
-                    GetTurnDegree(prev_edge->end_heading(), intersecting_edge->begin_heading())));
+      LOG_TRACE(std::string("    prev2int_turn_degree=") + std::to_string(xturn_degree) + " is a " +
+                Turn::GetTypeString(Turn::GetType(xturn_degree)));
     }
     LOG_TRACE(std::string("  node=") + node->ToString());
     IntersectingEdgeCounts xedge_counts;
