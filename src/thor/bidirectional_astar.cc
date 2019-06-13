@@ -718,7 +718,8 @@ std::vector<PathInfo> BidirectionalAStar::FormPath(GraphReader& graphreader) {
     if (path.size() > 1) {
       path.back().elapsed_time =
           path[path.size() - 2].elapsed_time + edgelabels_reverse_[idx2].cost().secs;
-      path[path.size() - 2].elapsed_cost + edgelabels_reverse_[idx2].cost().cost;
+      path.back().elapsed_cost =
+          path[path.size() - 2].elapsed_cost + edgelabels_reverse_[idx2].cost().cost;
     } // origin and destination on the same edge
     else {
       path.back().elapsed_time = edgelabels_reverse_[idx2].cost().secs;
