@@ -19,6 +19,7 @@ namespace thor {
 
 void thor_worker_t::optimized_route(Api& request) {
   parse_locations(request);
+  parse_filter_attributes(request);
   auto costing = parse_costing(request);
   auto& options = *request.mutable_options();
 

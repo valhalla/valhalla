@@ -11,43 +11,24 @@ namespace {
 
 void TryCtor() {
   AttributesController controller;
-  if (controller.attributes != AttributesController::kRouteAttributes)
-    throw runtime_error("Incorrect Constructor using default route attributes");
+  if (controller.attributes != AttributesController::kDefaultAttributes)
+    throw runtime_error("Incorrect Constructor using default attributes");
 }
 
 void TestCtor() {
   TryCtor();
 }
 
-void TryArgCtor(const std::unordered_map<std::string, bool>& new_attributes, size_t expected_size) {
-  AttributesController controller(new_attributes);
-  if (controller.attributes != new_attributes)
-    throw runtime_error("Incorrect Constructor using argument attributes");
+void TryArgCtor(size_t expected_size) {
+  AttributesController controller;
+  if (controller.attributes != AttributesController::kDefaultAttributes)
+    throw runtime_error("Incorrect Constructor");
   if (controller.attributes.size() != expected_size)
-    throw runtime_error("Incorrect Constructor using argument attributes size");
+    throw runtime_error("Incorrect Constructor size");
 }
 
 void TestArgCtor() {
-  const std::unordered_map<std::string, bool> attributes = {{kEdgeNames, true},
-                                                            {kEdgeLength, false},
-                                                            {kEdgeSpeed, true},
-                                                            {kEdgeRoadClass, false}};
-
-  TryArgCtor(attributes, attributes.size());
-}
-
-void TryEnableAll() {
-  AttributesController controller;
-  controller.enable_all();
-  for (auto& pair : controller.attributes) {
-    // If any pair value is false then throw error
-    if (!pair.second)
-      throw runtime_error("Incorrect enable_all value for " + pair.first);
-  }
-}
-
-void TestEnableAll() {
-  TryEnableAll();
+  TryArgCtor(AttributesController::kDefaultAttributes.size());
 }
 
 void TryDisableAll() {
@@ -80,10 +61,6 @@ void TestNodeAttributeEnabled() {
   // Test default
   TryCategoryAttributeEnabled(controller, kNodeCategory, true);
 
-  // Test all node enabled
-  controller.enable_all();
-  TryCategoryAttributeEnabled(controller, kNodeCategory, true);
-
   // Test all node disabled
   controller.disable_all();
   TryCategoryAttributeEnabled(controller, kNodeCategory, false);
@@ -105,10 +82,6 @@ void TestAdminAttributeEnabled() {
   AttributesController controller;
 
   // Test default
-  TryCategoryAttributeEnabled(controller, kAdminCategory, true);
-
-  // Test all admin enabled
-  controller.enable_all();
   TryCategoryAttributeEnabled(controller, kAdminCategory, true);
 
   // Test all admin disabled
@@ -137,9 +110,6 @@ int main() {
 
   // Test Constructor with argument
   suite.test(TEST_CASE(TestArgCtor));
-
-  // Test enable_all
-  suite.test(TEST_CASE(TestEnableAll));
 
   // Test disable_all
   suite.test(TEST_CASE(TestDisableAll));
