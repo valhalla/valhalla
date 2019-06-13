@@ -1166,16 +1166,15 @@ std::string serialize(valhalla::Api& api) {
   const auto& options = api.options();
   auto json = json::map({});
 
-  // If here then the route succeeded. Set status code to OK and serialize
-  // waypoints (locations).
+  // If here then the route succeeded. Set status code to OK and serialize waypoints (locations).
   std::string status("Ok");
   json->emplace("code", status);
   switch (options.action()) {
     case valhalla::Options::trace_route:
-      json->emplace("tracepoints", osrm::waypoints(options.locations(), true));
+      json->emplace("tracepoints", osrm::waypoints(options.shape(), true));
       break;
     case valhalla::Options::route:
-      json->emplace("waypoints", osrm::waypoints(options.locations()));
+      json->emplace("waypoints", osrm::waypoints(api.trip()));
       break;
     case valhalla::Options::optimized_route:
       json->emplace("waypoints", waypoints(options.locations()));

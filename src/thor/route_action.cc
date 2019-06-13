@@ -129,6 +129,7 @@ namespace thor {
 
 void thor_worker_t::route(Api& request) {
   parse_locations(request);
+  parse_filter_attributes(request);
   auto costing = parse_costing(request);
   auto& options = *request.mutable_options();
 
@@ -137,38 +138,6 @@ void thor_worker_t::route(Api& request) {
     path_arrive_by(request, costing);
   else
     path_depart_at(request, costing);
-
-  // TODO: this wont be needed once we do the block comment above
-  // TODO: if we ever support multiple routes this wont work
-  // cull unused edges
-  auto* locations = options.mutable_locations();
-  for (const auto& route : request.trip().routes()) {
-    auto path = route.legs().begin();
-    GraphId left, right;
-    for (auto l = locations->begin(); l < locations->end(); ++l) {
-      // through and via will have been taken care of in the depart_at and arrive_by below
-      if (l->type() == valhalla::Location::kThrough || l->type() == valhalla::Location::kVia)
-        continue;
-
-      // the edge on the right side of this node
-      right = GraphId(path != route.legs().end() ? static_cast<uint64_t>(path->node(0).edge().id())
-                                                 : kInvalidGraphId);
-      // remove edges that we didnt use
-      auto end = std::partition(l->mutable_path_edges()->begin(), l->mutable_path_edges()->end(),
-                                [&left, &right](const valhalla::Location::PathEdge& e) {
-                                  return e.graph_id() == left || e.graph_id() == right;
-                                });
-      auto shrink_to_size = end - l->mutable_path_edges()->begin();
-      while (l->path_edges_size() > shrink_to_size)
-        l->mutable_path_edges()->RemoveLast();
-
-      // next leg
-      left = GraphId(path != route.legs().end()
-                         ? static_cast<uint64_t>(path->node(path->node_size() - 2).edge().id())
-                         : kInvalidGraphId);
-      ++path;
-    }
-  }
 
   // log admin areas
   if (!options.do_not_track()) {
@@ -313,57 +282,55 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
 
     // Get best path and keep it
     auto temp_paths = get_path(path_algorithm, *origin, *destination, costing, api.options());
-    auto& temp_path = temp_paths.front();
-    first_edge = temp_path.front().edgeid;
-    temp_path.swap(path); // so we can append to path instead of prepend
+    for (auto& temp_path : temp_paths) {
+      first_edge = temp_path.front().edgeid;
+      temp_path.swap(path); // so we can append to path instead of prepend
 
-    // Merge through legs by updating the time and splicing the lists
-    if (!temp_path.empty()) {
-      auto offset = path.back().elapsed_time;
-      std::for_each(temp_path.begin(), temp_path.end(),
-                    [offset](PathInfo& i) { i.elapsed_time += offset; });
-      // Connects via the same edge so we only need it once
-      if (path.back().edgeid == temp_path.front().edgeid) {
-        path.pop_back();
-      } else if (destination->type() == valhalla::Location::kVia) {
-        // Insert a route discontinuity if the paths meet at opposing edges and not
-        // at a graph node. Use path size - 1 as the index where the discontinuity lies.
-        via_discontinuity(*reader, *destination, path.back().edgeid, temp_path.front().edgeid, vias,
-                          temp_path.size(), true);
-      }
-      path.insert(path.end(), temp_path.begin(), temp_path.end());
-    }
-
-    // Build trip path for this leg and add to the result if this
-    // location is a BREAK or if this is the last location
-    if (origin->type() == valhalla::Location::kBreak ||
-        origin->type() == valhalla::Location::kBreakThrough) {
-      // Move destination back to the last break and collect the throughs
-      std::list<valhalla::Location> throughs;
-      while (destination->type() != valhalla::Location::kBreak &&
-             destination->type() != valhalla::Location::kBreakThrough) {
-        throughs.push_back(*destination);
-        --destination;
+      // Merge through legs by updating the time and splicing the lists
+      if (!temp_path.empty()) {
+        auto offset = path.back().elapsed_time;
+        std::for_each(temp_path.begin(), temp_path.end(),
+                      [offset](PathInfo& i) { i.elapsed_time += offset; });
+        // Connects via the same edge so we only need it once
+        if (path.back().edgeid == temp_path.front().edgeid) {
+          path.pop_back();
+        } else if (destination->type() == valhalla::Location::kVia) {
+          // Insert a route discontinuity if the paths meet at opposing edges and not
+          // at a graph node. Use path size - 1 as the index where the discontinuity lies.
+          via_discontinuity(*reader, *destination, path.back().edgeid, temp_path.front().edgeid, vias,
+                            temp_path.size(), true);
+        }
+        path.insert(path.end(), temp_path.begin(), temp_path.end());
       }
 
-      // Create controller for default route attributes
-      AttributesController controller;
+      // Build trip path for this leg and add to the result if this
+      // location is a BREAK or if this is the last location
+      if (origin->type() == valhalla::Location::kBreak ||
+          origin->type() == valhalla::Location::kBreakThrough) {
+        // Move destination back to the last break and collect the throughs
+        std::list<valhalla::Location> throughs;
+        while (destination->type() != valhalla::Location::kBreak &&
+               destination->type() != valhalla::Location::kBreakThrough) {
+          throughs.push_back(*destination);
+          --destination;
+        }
 
-      // We have to flip the via indices because we built them in backwards order
-      decltype(vias) flipped;
-      flipped.reserve(vias.size());
-      for (const auto& kv : vias)
-        flipped.emplace(path.size() - kv.first, kv.second);
-      vias.swap(flipped);
+        // We have to flip the via indices because we built them in backwards order
+        decltype(vias) flipped;
+        flipped.reserve(vias.size());
+        for (const auto& kv : vias)
+          flipped.emplace(path.size() - kv.first, kv.second);
+        vias.swap(flipped);
 
-      // Form output information based on path edges
-      if (api.trip().routes_size() == 0 || api.options().alternates() > 0)
-        route = api.mutable_trip()->mutable_routes()->Add();
-      auto& leg = *route->mutable_legs()->Add();
-      TripLegBuilder::Build(controller, *reader, mode_costing, path.begin(), path.end(), *origin,
-                            *destination, throughs, leg, interrupt, &vias);
-      path.clear();
-      vias.clear();
+        // Form output information based on path edges
+        if (api.trip().routes_size() == 0 || api.options().alternates() > 0)
+          route = api.mutable_trip()->mutable_routes()->Add();
+        auto& leg = *route->mutable_legs()->Add();
+        TripLegBuilder::Build(controller, *reader, mode_costing, path.begin(), path.end(), *origin,
+                              *destination, throughs, leg, interrupt, &vias);
+        path.clear();
+        vias.clear();
+      }
     }
   }
 
@@ -435,9 +402,6 @@ void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
           throughs.push_front(*origin);
           --origin;
         }
-
-        // Create controller for default route attributes
-        AttributesController controller;
 
         // Form output information based on path edges. vias are a route discontinuity map
         if (api.trip().routes_size() == 0 || api.options().alternates() > 0)

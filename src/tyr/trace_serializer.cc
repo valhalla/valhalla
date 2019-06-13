@@ -280,7 +280,7 @@ json::ArrayPtr serialize_edges(const AttributesController& controller,
         }
 
         if (node.has_elapsed_time()) {
-          end_node_map->emplace("elapsed_time", static_cast<uint64_t>(node.elapsed_time()));
+          end_node_map->emplace("elapsed_time", json::fp_t{node.elapsed_time(), 3});
         }
         if (node.has_admin_index()) {
           end_node_map->emplace("admin_index", static_cast<uint64_t>(node.admin_index()));
@@ -393,6 +393,36 @@ json::ArrayPtr serialize_matched_points(const AttributesController& controller,
   return match_points_array;
 }
 
+json::MapPtr serialize_shape_attributes(const AttributesController& controller,
+                                        const TripLeg& trip_path) {
+  auto attributes_map = json::map({});
+  if (controller.attributes.at(kShapeAttributesTime)) {
+    auto times_array = json::array({});
+    for (const auto& time : trip_path.shape_attributes().time()) {
+      // milliseconds (ms) to seconds (sec)
+      times_array->push_back(json::fp_t{time * kSecPerMillisecond, 3});
+    }
+    attributes_map->emplace("time", times_array);
+  }
+  if (controller.attributes.at(kShapeAttributesLength)) {
+    auto lengths_array = json::array({});
+    for (const auto& length : trip_path.shape_attributes().length()) {
+      // decimeters (dm) to kilometer (km)
+      lengths_array->push_back(json::fp_t{length * kKmPerDecimeter, 3});
+    }
+    attributes_map->emplace("length", lengths_array);
+  }
+  if (controller.attributes.at(kShapeAttributesSpeed)) {
+    auto speeds_array = json::array({});
+    for (const auto& speed : trip_path.shape_attributes().speed()) {
+      // dm/s to km/h
+      speeds_array->push_back(json::fp_t{speed * kDecimeterPerSectoKPH, 3});
+    }
+    attributes_map->emplace("speed", speeds_array);
+  }
+  return attributes_map;
+}
+
 void append_trace_info(
     const json::MapPtr& json,
     const AttributesController& controller,
@@ -434,6 +464,11 @@ void append_trace_info(
   // Add matched points, if requested
   if (controller.category_attribute_enabled(kMatchedCategory) && !match_results.empty()) {
     json->emplace("matched_points", serialize_matched_points(controller, match_results));
+  }
+
+  // Add shape_attributes, if requested
+  if (controller.category_attribute_enabled(kShapeAttributesCategory)) {
+    json->emplace("shape_attributes", serialize_shape_attributes(controller, trip_path));
   }
 }
 } // namespace

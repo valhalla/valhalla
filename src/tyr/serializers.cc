@@ -97,4 +97,13 @@ json::ArrayPtr waypoints(const google::protobuf::RepeatedPtrField<valhalla::Loca
   return waypoints;
 }
 
+json::ArrayPtr waypoints(const valhalla::Trip& trip) {
+  auto waypoints = json::array({});
+  for (const auto& route : trip.routes())
+    for (const auto& leg : route.legs())
+      for (const auto& location : leg.location())
+        waypoints->emplace_back(waypoint(location, false));
+  return waypoints;
+}
+
 } // namespace osrm

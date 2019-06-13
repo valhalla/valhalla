@@ -117,6 +117,7 @@ valhalla::baldr::json::MapPtr waypoint(const valhalla::Location& location,
 valhalla::baldr::json::ArrayPtr
 waypoints(const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
           bool tracepoints = false);
+valhalla::baldr::json::ArrayPtr waypoints(const valhalla::Trip& locations);
 
 } // namespace osrm
 
