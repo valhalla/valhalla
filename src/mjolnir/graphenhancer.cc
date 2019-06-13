@@ -189,7 +189,7 @@ void UpdateSpeed(DirectedEdge& directededge, const uint32_t density, const uint3
 
 // Get the turn types.  This is used the determine if we should enhance or update
 // Turn lanes based on the turns at this node.
-bool GetTurnTypes(const DirectedEdge directededge,
+void GetTurnTypes(const DirectedEdge directededge,
                   const uint32_t idx,
                   std::set<Turn::Type>& outgoing_turn_type,
                   NodeInfo& startnodeinfo,
@@ -210,15 +210,31 @@ bool GetTurnTypes(const DirectedEdge directededge,
   }
   const NodeInfo* node = tile->node(directededge.endnode());
 
+  const DirectedEdge* diredge = tile->directededge(node->edge_index());
+  for (uint32_t i = 0; i < node->edge_count(); i++, diredge++) {
+    // Find the opposing directed edge and its heading
+    if (i == directededge.opp_local_idx()) {
+      auto shape = tile->edgeinfo(diredge->edgeinfo_offset()).shape();
+      if (!diredge->forward()) {
+        std::reverse(shape.begin(), shape.end());
+      }
+      uint32_t hdg = std::round(
+          PointLL::HeadingAlongPolyline(shape, GetOffsetForHeading(diredge->classification(),
+                                                                   diredge->use())));
+
+      // Convert to inbound heading
+      heading = ((hdg + 180) % 360);
+      break;
+    }
+  }
+
   // Iterate through outbound edges and get turn degrees from the candidate
   // edge onto outbound driveable edges.
-  bool oneway_outbound = false;
-  const DirectedEdge* diredge = tile->directededge(node->edge_index());
+  diredge = tile->directededge(node->edge_index());
   for (uint32_t i = 0; i < node->edge_count(); i++, diredge++) {
     // Skip opposing directed edge and any edge that is not a road. Skip any
     // edges that are not driveable outbound.
-    if (i == directededge.opp_local_idx() || (diredge->use() != Use::kRoad) ||
-        !(diredge->forwardaccess() & kAutoAccess)) {
+    if (i == directededge.opp_local_idx() || !(diredge->forwardaccess() & kAutoAccess)) {
       continue;
     }
 
@@ -231,32 +247,17 @@ bool GetTurnTypes(const DirectedEdge directededge,
     uint32_t to_heading =
         std::round(PointLL::HeadingAlongPolyline(shape, GetOffsetForHeading(diredge->classification(),
                                                                             diredge->use())));
-
     // Store outgoing turn type for any driveable edges
     uint32_t turndegree = GetTurnDegree(heading, to_heading);
     outgoing_turn_type.insert(Turn::GetType(turndegree));
-
-    // Flag if this is oneway, not a link, and not nearly straight turn
-    // from the candidate edge.
-    if (!(diredge->reverseaccess() & kAutoAccess) && !diredge->link() &&
-        !(turndegree < 30 || turndegree > 330)) {
-      oneway_outbound = true;
-    }
   }
-
-  // Must have outbound oneway at end node (exclude edges that are nearly
-  // straight turn from directed edge
-  if (!oneway_outbound) {
-    return false;
-  }
-
-  return true;
 }
 
 // Enhance the Turn lanes (if needed) and add them to the tile.
 void UpdateTurnLanes(const OSMData& osmdata,
-                     const DirectedEdge directededge,
                      const uint32_t idx,
+                     bool is_next_edge_internal,
+                     DirectedEdge& directededge,
                      NodeInfo& startnodeinfo,
                      GraphTileBuilder& tilebuilder,
                      GraphReader& reader,
@@ -265,12 +266,14 @@ void UpdateTurnLanes(const OSMData& osmdata,
 
   // Lambda to check if the turn set includes a right turn type
   const auto has_turn_right = [](std::set<Turn::Type>& turn_types) {
-    return turn_types.find(Turn::Type::kRight) != turn_types.end() ||
+    return turn_types.find(Turn::Type::kSlightRight) != turn_types.end() ||
+           turn_types.find(Turn::Type::kRight) != turn_types.end() ||
            turn_types.find(Turn::Type::kSharpRight) != turn_types.end();
   };
   // Lambda to check if the turn set includes a left turn type
   const auto has_turn_left = [](std::set<Turn::Type>& turn_types) {
-    return turn_types.find(Turn::Type::kLeft) != turn_types.end() ||
+    return turn_types.find(Turn::Type::kSlightLeft) != turn_types.end() ||
+           turn_types.find(Turn::Type::kLeft) != turn_types.end() ||
            turn_types.find(Turn::Type::kSharpLeft) != turn_types.end();
   };
 
@@ -279,36 +282,16 @@ void UpdateTurnLanes(const OSMData& osmdata,
     std::string turnlane_tags = osmdata.name_offset_map.name(index);
     std::string str = TurnLanes::GetTurnLaneString(turnlane_tags);
 
+    std::vector<uint16_t> enhanced_tls = TurnLanes::lanemasks(str);
+    std::vector<uint16_t>::iterator it = enhanced_tls.begin();
+    std::vector<uint16_t>::iterator it_e = enhanced_tls.end();
+    bool bUpdated = false;
+    uint16_t previous = 0u;
     // handle [left, none, none, right] --> [left, straight, straight, right]
     // handle [straight, none, [straight, right], right] --> [straight, straight, [straight, right],
     // right]
-    std::vector<uint16_t> enhanced_tls = TurnLanes::lanemasks(str);
-    uint16_t previous = 0u;
-    bool bUpdated = false;
-    std::vector<uint16_t>::iterator it = enhanced_tls.begin();
-    for (; it != enhanced_tls.end(); it++) {
-      if (((*it & kTurnLaneLeft) || (*it & kTurnLaneSharpLeft) || (*it & kTurnLaneSlightLeft) ||
-           (*it & kTurnLaneThrough)) &&
-          (previous == 0u || (previous & kTurnLaneLeft) || (previous & kTurnLaneSharpLeft) ||
-           (previous & kTurnLaneSlightLeft) || (previous & kTurnLaneThrough))) {
-        previous = *it;
-      } else if (previous && (*it == kTurnLaneEmpty || *it == kTurnLaneNone)) {
-        *it = kTurnLaneThrough;
-      } else if (previous && ((*it & kTurnLaneRight) || (*it & kTurnLaneSharpRight) ||
-                              (*it & kTurnLaneSlightRight))) {
-        bUpdated = true;
-        break;
-      } else
-        break;
-    }
-
-    if (!bUpdated) {
-
-      // handle [left, [straight, left], none, straight] --> [left, [straight, left], straight,
-      // straight]
-      enhanced_tls = TurnLanes::lanemasks(str);
-      previous = 0u;
-      std::vector<uint16_t>::iterator it = enhanced_tls.begin();
+    if ((*it != kTurnLaneEmpty && *it_e != kTurnLaneNone) &&
+        (*it_e != kTurnLaneEmpty && *it_e != kTurnLaneNone)) {
       for (; it != enhanced_tls.end(); it++) {
         if (((*it & kTurnLaneLeft) || (*it & kTurnLaneSharpLeft) || (*it & kTurnLaneSlightLeft) ||
              (*it & kTurnLaneThrough)) &&
@@ -317,10 +300,61 @@ void UpdateTurnLanes(const OSMData& osmdata,
           previous = *it;
         } else if (previous && (*it == kTurnLaneEmpty || *it == kTurnLaneNone)) {
           *it = kTurnLaneThrough;
+        } else if (previous && ((*it & kTurnLaneRight) || (*it & kTurnLaneSharpRight) ||
+                                (*it & kTurnLaneSlightRight))) {
           bUpdated = true;
-        } else {
-          bUpdated = false;
           break;
+        } else
+          break;
+      }
+    }
+
+    if (!bUpdated) {
+      // handle [left, [straight, left], none, straight] --> [left, [straight, left], straight,
+      // straight]
+      enhanced_tls = TurnLanes::lanemasks(str);
+      it = enhanced_tls.begin();
+      it_e = enhanced_tls.end();
+      if (((*it & kTurnLaneLeft) || (*it & kTurnLaneSharpLeft) || (*it & kTurnLaneSlightLeft)) &&
+          (*it_e != kTurnLaneEmpty && *it_e != kTurnLaneNone)) {
+        previous = 0u;
+        std::vector<uint16_t>::iterator it = enhanced_tls.begin();
+        for (; it != enhanced_tls.end(); it++) {
+          if (((*it & kTurnLaneLeft) || (*it & kTurnLaneSharpLeft) || (*it & kTurnLaneSlightLeft) ||
+               (*it & kTurnLaneThrough)) &&
+              (previous == 0u || (previous & kTurnLaneLeft) || (previous & kTurnLaneSharpLeft) ||
+               (previous & kTurnLaneSlightLeft) || (previous & kTurnLaneThrough))) {
+            previous = *it;
+          } else if (previous && (*it == kTurnLaneEmpty || *it == kTurnLaneNone)) {
+            *it = kTurnLaneThrough;
+            bUpdated = true;
+          } else {
+            bUpdated = false;
+            break;
+          }
+        }
+
+        if (bUpdated) {
+          std::set<Turn::Type> outgoing_turn_type;
+          GetTurnTypes(directededge, idx, outgoing_turn_type, startnodeinfo, tilebuilder, reader,
+                       lock);
+          if (outgoing_turn_type.empty()) {
+            directededge.set_turnlanes(false);
+            return;
+          }
+          // Should have a left.
+          if (has_turn_left(outgoing_turn_type)) {
+            size_t index = enhanced_tls.size() - 1;
+            uint16_t tl = enhanced_tls[index];
+
+            if (outgoing_turn_type.find(Turn::Type::kSlightRight) != outgoing_turn_type.end())
+              tl |= kTurnLaneSlightRight;
+            if (outgoing_turn_type.find(Turn::Type::kRight) != outgoing_turn_type.end())
+              tl |= kTurnLaneRight;
+            if (outgoing_turn_type.find(Turn::Type::kSharpRight) != outgoing_turn_type.end())
+              tl |= kTurnLaneSharpRight;
+            enhanced_tls[index] = tl;
+          }
         }
       }
     }
@@ -328,34 +362,48 @@ void UpdateTurnLanes(const OSMData& osmdata,
     if (!bUpdated) {
       // handle [left, none, none] --> [left, straight, straight]
       enhanced_tls = TurnLanes::lanemasks(str);
-      previous = 0u;
-      std::vector<uint16_t>::iterator it = enhanced_tls.begin();
-      for (; it != enhanced_tls.end(); it++) {
+      it = enhanced_tls.begin();
+      it_e = enhanced_tls.end();
+      if (((*it & kTurnLaneLeft) || (*it & kTurnLaneSharpLeft) || (*it & kTurnLaneSlightLeft)) &&
+          (*it_e == kTurnLaneEmpty || *it_e == kTurnLaneNone)) {
 
-        if (((*it & kTurnLaneLeft) || (*it & kTurnLaneSharpLeft) || (*it & kTurnLaneSlightLeft) ||
-             (*it & kTurnLaneThrough)) &&
-            (previous == 0u || (previous & kTurnLaneLeft) || (previous & kTurnLaneSharpLeft) ||
-             (previous & kTurnLaneSlightLeft) || (previous & kTurnLaneThrough))) {
-          previous = *it;
-        } else if (previous && (*it == kTurnLaneEmpty || *it == kTurnLaneNone)) {
-          *it = kTurnLaneThrough;
-          bUpdated = true;
-        } else { // if it is anything else then no update.
-          bUpdated = false;
-          break;
-        }
-      }
-
-      if (bUpdated) {
         std::set<Turn::Type> outgoing_turn_type;
-        if (!GetTurnTypes(directededge, idx, outgoing_turn_type, startnodeinfo, tilebuilder, reader,
-                          lock)) {
-          bUpdated = false;
+        GetTurnTypes(directededge, idx, outgoing_turn_type, startnodeinfo, tilebuilder, reader, lock);
+        if (outgoing_turn_type.empty()) {
+          directededge.set_turnlanes(false);
+          return;
+        }
+        previous = 0u;
+        for (; it != enhanced_tls.end(); it++) {
+
+          if (((*it & kTurnLaneLeft) || (*it & kTurnLaneSharpLeft) || (*it & kTurnLaneSlightLeft) ||
+               (*it & kTurnLaneThrough)) &&
+              (previous == 0u || (previous & kTurnLaneLeft) || (previous & kTurnLaneSharpLeft) ||
+               (previous & kTurnLaneSlightLeft) || (previous & kTurnLaneThrough))) {
+            previous = *it;
+          } else if (previous && (*it == kTurnLaneEmpty || *it == kTurnLaneNone)) {
+            *it = kTurnLaneThrough;
+            bUpdated = true;
+          } else { // if it is anything else then no update.
+            bUpdated = false;
+            break;
+          }
         }
 
-        // Should not have a right turn, but we should have a left.
-        if (bUpdated && has_turn_right(outgoing_turn_type) && !has_turn_left(outgoing_turn_type)) {
-          bUpdated = false;
+        if (bUpdated) {
+          // Should have a left.  check for a right.
+          if (has_turn_left(outgoing_turn_type)) {
+            size_t index = enhanced_tls.size() - 1;
+            uint16_t tl = enhanced_tls[index];
+
+            if (outgoing_turn_type.find(Turn::Type::kSlightRight) != outgoing_turn_type.end())
+              tl |= kTurnLaneSlightRight;
+            if (outgoing_turn_type.find(Turn::Type::kRight) != outgoing_turn_type.end())
+              tl |= kTurnLaneRight;
+            if (outgoing_turn_type.find(Turn::Type::kSharpRight) != outgoing_turn_type.end())
+              tl |= kTurnLaneSharpRight;
+            enhanced_tls[index] = tl;
+          }
         }
       }
     }
@@ -363,14 +411,113 @@ void UpdateTurnLanes(const OSMData& osmdata,
     if (!bUpdated) {
       // handle [none, none, right] --> [straight, straight, right]
       enhanced_tls = TurnLanes::lanemasks(str);
-      previous = 0u;
       std::vector<uint16_t>::reverse_iterator r_it = enhanced_tls.rbegin(); // note reverse iterator
-      for (; r_it != enhanced_tls.rend(); r_it++) {
+      std::vector<uint16_t>::reverse_iterator r_it_e = enhanced_tls.rend();
+      if (((*r_it & kTurnLaneRight) || (*r_it & kTurnLaneSharpRight) ||
+           (*r_it & kTurnLaneSlightRight)) &&
+          (*r_it_e == kTurnLaneEmpty || *r_it_e == kTurnLaneNone)) {
 
-        if (((*r_it & kTurnLaneRight) || (*r_it & kTurnLaneSharpRight) ||
-             (*r_it & kTurnLaneSlightRight) || (*r_it & kTurnLaneThrough)) &&
-            (previous == 0u || (previous & kTurnLaneRight) || (previous & kTurnLaneSharpRight) ||
-             (previous & kTurnLaneSlightRight) || (previous & kTurnLaneThrough))) {
+        std::set<Turn::Type> outgoing_turn_type;
+        GetTurnTypes(directededge, idx, outgoing_turn_type, startnodeinfo, tilebuilder, reader, lock);
+        if (outgoing_turn_type.empty()) {
+          directededge.set_turnlanes(false);
+          return;
+        }
+
+        previous = 0u;
+        for (; r_it != enhanced_tls.rend(); r_it++) {
+          if (((*r_it & kTurnLaneRight) || (*r_it & kTurnLaneSharpRight) ||
+               (*r_it & kTurnLaneSlightRight) || (*r_it & kTurnLaneThrough)) &&
+              (previous == 0u || (previous & kTurnLaneRight) || (previous & kTurnLaneSharpRight) ||
+               (previous & kTurnLaneSlightRight) || (previous & kTurnLaneThrough))) {
+            previous = *r_it;
+          } else if (previous && (*r_it == kTurnLaneEmpty || *r_it == kTurnLaneNone)) {
+            *r_it = kTurnLaneThrough;
+            bUpdated = true;
+          } else { // if it is anything else then no update.
+            bUpdated = false;
+            break;
+          }
+        }
+
+        if (bUpdated) {
+          // Should have a right.  check for a left.
+          if (has_turn_right(outgoing_turn_type)) {
+            uint16_t tl = enhanced_tls[0];
+            if (outgoing_turn_type.find(Turn::Type::kSlightLeft) != outgoing_turn_type.end())
+              tl |= kTurnLaneSlightLeft;
+            if (outgoing_turn_type.find(Turn::Type::kLeft) != outgoing_turn_type.end())
+              tl |= kTurnLaneLeft;
+            if (outgoing_turn_type.find(Turn::Type::kSharpLeft) != outgoing_turn_type.end())
+              tl |= kTurnLaneSharpLeft;
+            enhanced_tls[0] = tl;
+          }
+        }
+      }
+    }
+
+    if (!bUpdated) {
+      // handle [straight, straight, none] --> [straight, straight, straight]
+      enhanced_tls = TurnLanes::lanemasks(str);
+      it = enhanced_tls.begin();
+      it_e = enhanced_tls.end();
+      if ((*it & kTurnLaneThrough) &&
+          (*it_e == kTurnLaneEmpty || *it_e == kTurnLaneNone)) {
+        previous = 0u;
+        for (; it != enhanced_tls.end(); it++) {
+          if ((*it & kTurnLaneThrough) &&
+              (previous == 0u || (previous & kTurnLaneThrough))) {
+            previous = *it;
+          } else if (previous && (*it == kTurnLaneEmpty || *it == kTurnLaneNone)) {
+            *it = kTurnLaneThrough;
+            bUpdated = true;
+          } else { // if it is anything else then no update.
+            bUpdated = false;
+            break;
+          }
+        }
+
+        if (bUpdated) {
+          // check for a right.
+          size_t index = enhanced_tls.size() - 1;
+          uint16_t tl = enhanced_tls[index];
+
+          std::set<Turn::Type> outgoing_turn_type;
+          GetTurnTypes(directededge, idx, outgoing_turn_type, startnodeinfo, tilebuilder, reader, lock);
+
+          if (outgoing_turn_type.find(Turn::Type::kSlightRight) != outgoing_turn_type.end())
+            tl |= kTurnLaneSlightRight;
+          if (outgoing_turn_type.find(Turn::Type::kRight) != outgoing_turn_type.end())
+            tl |= kTurnLaneRight;
+          if (outgoing_turn_type.find(Turn::Type::kSharpRight) != outgoing_turn_type.end())
+            tl |= kTurnLaneSharpRight;
+          enhanced_tls[index] = tl;
+
+          tl = enhanced_tls[0];
+          if (outgoing_turn_type.find(Turn::Type::kSlightLeft) != outgoing_turn_type.end())
+            tl |= kTurnLaneSlightLeft;
+          if (outgoing_turn_type.find(Turn::Type::kLeft) != outgoing_turn_type.end())
+            tl |= kTurnLaneLeft;
+          if (outgoing_turn_type.find(Turn::Type::kSharpLeft) != outgoing_turn_type.end())
+            tl |= kTurnLaneSharpLeft;
+          enhanced_tls[0] = tl;
+        }
+      }
+    }
+
+    if (!bUpdated) {
+      // handle [none, straight, straight] --> [straight, straight, straight]
+      enhanced_tls = TurnLanes::lanemasks(str);
+
+      std::vector<uint16_t>::reverse_iterator r_it = enhanced_tls.rbegin(); // note reverse iterator
+      std::vector<uint16_t>::reverse_iterator r_it_e = enhanced_tls.rend();
+
+      previous = 0u;
+      if ((*r_it & kTurnLaneThrough) &&
+          (*r_it_e == kTurnLaneEmpty || *r_it_e == kTurnLaneNone)) {
+      for (; r_it != enhanced_tls.rend(); r_it++) {
+        if ((*r_it & kTurnLaneThrough) &&
+            (previous == 0u || (previous & kTurnLaneThrough))) {
           previous = *r_it;
         } else if (previous && (*r_it == kTurnLaneEmpty || *r_it == kTurnLaneNone)) {
           *r_it = kTurnLaneThrough;
@@ -382,19 +529,32 @@ void UpdateTurnLanes(const OSMData& osmdata,
       }
 
       if (bUpdated) {
-        std::set<Turn::Type> outgoing_turn_type;
-        if (!GetTurnTypes(directededge, idx, outgoing_turn_type, startnodeinfo, tilebuilder, reader,
-                          lock)) {
-          bUpdated = false;
-        }
+        // check for a right.
+        size_t index = enhanced_tls.size() - 1;
+        uint16_t tl = enhanced_tls[index];
 
-        // Should have a right turn, but we should not have a left.
-        if (bUpdated && !has_turn_right(outgoing_turn_type) && has_turn_left(outgoing_turn_type)) {
-          bUpdated = false;
-        }
+        std::set<Turn::Type> outgoing_turn_type;
+        GetTurnTypes(directededge, idx, outgoing_turn_type, startnodeinfo, tilebuilder, reader, lock);
+
+        if (outgoing_turn_type.find(Turn::Type::kSlightRight) != outgoing_turn_type.end())
+          tl |= kTurnLaneSlightRight;
+        if (outgoing_turn_type.find(Turn::Type::kRight) != outgoing_turn_type.end())
+          tl |= kTurnLaneRight;
+        if (outgoing_turn_type.find(Turn::Type::kSharpRight) != outgoing_turn_type.end())
+          tl |= kTurnLaneSharpRight;
+        enhanced_tls[index] = tl;
+
+        tl = enhanced_tls[0];
+        if (outgoing_turn_type.find(Turn::Type::kSlightLeft) != outgoing_turn_type.end())
+          tl |= kTurnLaneSlightLeft;
+        if (outgoing_turn_type.find(Turn::Type::kLeft) != outgoing_turn_type.end())
+          tl |= kTurnLaneLeft;
+        if (outgoing_turn_type.find(Turn::Type::kSharpLeft) != outgoing_turn_type.end())
+          tl |= kTurnLaneSharpLeft;
+        enhanced_tls[0] = tl;
       }
     }
-
+    }
     // if anything was updated, we have to get the new string from the updated vector.
     if (bUpdated)
       str = TurnLanes::GetTurnLaneString(TurnLanes::turnlane_string(enhanced_tls));
@@ -1596,6 +1756,7 @@ void enhance(const boost::property_tree::ptree& pt,
 
         // since the internal flag is set, we are at either the prior or the next edge and we need to
         // see if we have an internal edge.
+        bool is_next_edge_internal = false;
         if (directededge.internal() && directededge.turnlanes()) {
 
           // get the outbound edges to the node
@@ -1605,6 +1766,7 @@ void enhance(const boost::property_tree::ptree& pt,
           if (!IsNextEdgeInternal(directededge, tilebuilder, reader, lock)) {
             directededge.set_turnlanes(false);
           }
+          else is_next_edge_internal = true;
         }
 
         // may have been temporarily set in the builder.
@@ -1623,8 +1785,8 @@ void enhance(const boost::property_tree::ptree& pt,
         // Enhance and add turn lanes if not an internal edge.
         if (!directededge.internal() && directededge.turnlanes()) {
           // Update turn lanes.
-          UpdateTurnLanes(osmdata, directededge, nodeinfo.edge_index() + j, nodeinfo, tilebuilder,
-                          reader, lock, turn_lanes);
+          UpdateTurnLanes(osmdata, nodeinfo.edge_index() + j, is_next_edge_internal, directededge,
+                          nodeinfo, tilebuilder, reader, lock, turn_lanes);
         }
 
         // Update access restrictions (update weight units)
