@@ -181,6 +181,10 @@ void BidirectionalAStar::ExpandForward(GraphReader& graphreader,
                                      (pred.not_thru_pruning() || !directededge->not_thru()));
     adjacencylist_forward_->add(idx);
     *es = {EdgeSet::kTemporary, idx};
+
+    // setting this edge as reached
+    if (!track_expansion_)
+      TrackExpansion(graphreader, edgeid, "reached");
   }
 
   // Handle transitions - expand from the end node of each transition
@@ -290,6 +294,10 @@ void BidirectionalAStar::ExpandReverse(GraphReader& graphreader,
                                      (pred.not_thru_pruning() || !directededge->not_thru()));
     adjacencylist_reverse_->add(idx);
     *es = {EdgeSet::kTemporary, idx};
+
+    // setting this edge as reached, sending the opposing because this is the reverse tree
+    if (!track_expansion_)
+      TrackExpansion(graphreader, oppedge, "reached");
   }
 
   // Handle transitions - expand from the end node of each transition
@@ -320,6 +328,12 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
   costing_ = mode_costing[static_cast<uint32_t>(mode_)];
   travel_type_ = costing_->travel_type();
   access_mode_ = costing_->access_mode();
+
+  // Set up the expansion geojson
+  track_expansion_ = false;
+  expansion.SetObject();
+  rapidjson::Pointer("/type").Set(expansion, "FeatureCollection");
+  rapidjson::Pointer("/features").Create(expansion).SetArray();
 
   // Initialize - create adjacency list, edgestatus support, A*, etc.
   PointLL origin_new(origin.path_edges(0).ll().lng(), origin.path_edges(0).ll().lat());
@@ -366,7 +380,7 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
         // reverse search tree. Do not expand further past this edge since it will just
         // result in other connections.
         if (edgestatus_reverse_.Get(fwd_pred.opp_edgeid()).set() == EdgeSet::kPermanent) {
-          if (SetForwardConnection(fwd_pred)) {
+          if (SetForwardConnection(graphreader, fwd_pred)) {
             continue;
           }
         }
@@ -397,7 +411,7 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
         // forward search tree. Do not expand further past this edge since it will just
         // result in other connections.
         if (edgestatus_forward_.Get(rev_pred.opp_edgeid()).set() == EdgeSet::kPermanent) {
-          if (SetReverseConnection(rev_pred)) {
+          if (SetReverseConnection(graphreader, rev_pred)) {
             continue;
           }
         }
@@ -424,6 +438,10 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
       // Settle this edge.
       edgestatus_forward_.Update(fwd_pred.edgeid(), EdgeSet::kPermanent);
 
+      // setting this edge as settled
+      if (!track_expansion_)
+        TrackExpansion(graphreader, fwd_pred.edgeid(), "settled");
+
       // Prune path if predecessor is not a through edge or if the maximum
       // number of upward transitions has been exceeded on this hierarchy level.
       if ((fwd_pred.not_thru() && fwd_pred.not_thru_pruning()) ||
@@ -440,6 +458,10 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
 
       // Settle this edge
       edgestatus_reverse_.Update(rev_pred.edgeid(), EdgeSet::kPermanent);
+
+      // setting this edge as settled, sending the opposing because this is the reverse tree
+      if (!track_expansion_)
+        TrackExpansion(graphreader, rev_pred.opp_edgeid(), "settled");
 
       // Prune path if predecessor is not a through edge
       if ((rev_pred.not_thru() && rev_pred.not_thru_pruning()) ||
@@ -463,7 +485,7 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
 // The edge on the forward search connects to a reached edge on the reverse
 // search tree. Check if this is the best connection so far and set the
 // search threshold.
-bool BidirectionalAStar::SetForwardConnection(const BDEdgeLabel& pred) {
+bool BidirectionalAStar::SetForwardConnection(GraphReader& graphreader, const BDEdgeLabel& pred) {
   // Disallow connections that are part of a complex restriction.
   // TODO - validate that we do not need to "walk" the paths forward
   // and backward to see if they match a restriction.
@@ -499,13 +521,18 @@ bool BidirectionalAStar::SetForwardConnection(const BDEdgeLabel& pred) {
   if (threshold_ == std::numeric_limits<float>::max()) {
     threshold_ = pred.sortcost() + cost_diff_ + kThresholdDelta;
   }
+
+  // setting this edge as connected
+  if (!track_expansion_)
+    TrackExpansion(graphreader, pred.edgeid(), "connected");
+
   return true;
 }
 
 // The edge on the reverse search connects to a reached edge on the forward
 // search tree. Check if this is the best connection so far and set the
 // search threshold.
-bool BidirectionalAStar::SetReverseConnection(const BDEdgeLabel& pred) {
+bool BidirectionalAStar::SetReverseConnection(GraphReader& graphreader, const BDEdgeLabel& pred) {
   // Disallow connections that are part of a complex restriction.
   // TODO - validate that we do not need to "walk" the paths forward
   // and backward to see if they match a restriction.
@@ -541,6 +568,11 @@ bool BidirectionalAStar::SetReverseConnection(const BDEdgeLabel& pred) {
   if (threshold_ == std::numeric_limits<float>::max()) {
     threshold_ = pred.sortcost() + kThresholdDelta;
   }
+
+  // setting this edge as connected, sending the opposing because this is the reverse tree
+  if (!track_expansion_)
+    TrackExpansion(graphreader, oppedge, "connected");
+
   return true;
 }
 
@@ -604,6 +636,10 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader, valhalla::Location&
     edgelabels_forward_.emplace_back(kInvalidLabel, edgeid, directededge, cost, sortcost, dist,
                                      mode_);
     adjacencylist_forward_->add(idx);
+
+    // setting this edge as reached
+    if (!track_expansion_)
+      TrackExpansion(graphreader, edgeid, "reached");
 
     // Set the initial not_thru flag to false. There is an issue with not_thru
     // flags on small loops. Set this to false here to override this for now.
@@ -676,6 +712,10 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader, const valhalla
                                      dist, mode_, c, false);
     adjacencylist_reverse_->add(idx);
 
+    // setting this edge as settled, sending the opposing because this is the reverse tree
+    if (!track_expansion_)
+      TrackExpansion(graphreader, edgeid, "reached");
+
     // Set the initial not_thru flag to false. There is an issue with not_thru
     // flags on small loops. Set this to false here to override this for now.
     edgelabels_reverse_.back().set_not_thru(false);
@@ -742,7 +782,6 @@ std::vector<PathInfo> BidirectionalAStar::FormPath(GraphReader& graphreader) {
   uint32_t edgelabel_index = edgelabels_reverse_[idx2].predecessor();
   while (edgelabel_index != kInvalidLabel) {
     const BDEdgeLabel& edgelabel = edgelabels_reverse_[edgelabel_index];
-    GraphId oppedge = graphreader.GetOpposingEdgeId(edgelabel.edgeid());
 
     // Get elapsed time on the edge, then add the transition cost at
     // prior edge.
@@ -753,7 +792,7 @@ std::vector<PathInfo> BidirectionalAStar::FormPath(GraphReader& graphreader) {
       cost += edgelabel.cost() - edgelabels_reverse_[predidx].cost();
     }
     cost += tc;
-    path.emplace_back(edgelabel.mode(), cost.secs, oppedge, 0, cost.cost);
+    path.emplace_back(edgelabel.mode(), cost.secs, edgelabel.opp_edgeid(), 0, cost.cost);
 
     // Check if this is a ferry
     if (edgelabel.use() == Use::kFerry) {
