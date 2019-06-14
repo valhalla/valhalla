@@ -2,6 +2,7 @@
 #include <cstdint>
 
 #include "baldr/json.h"
+#include "baldr/rapidjson_utils.h"
 #include "midgard/constants.h"
 #include "midgard/logging.h"
 #include "sif/autocost.h"
@@ -128,24 +129,80 @@ namespace valhalla {
 namespace thor {
 
 std::string thor_worker_t::expansion(Api& request) {
-  // tell the path algorithms to track the expansion here
-  expansion_.reset(new rapidjson::Document);
-  // every algorithm gets a default one that is empty
-  expansion_->SetObject();
-  rapidjson::Pointer("/type").Set(*expansion_, "FeatureCollection");
-  rapidjson::Pointer("/properties/algorithm").Set(*expansion_, "none");
-  rapidjson::Pointer("/features/0/type").Set(*expansion_, "Feature");
-  rapidjson::Pointer("/features/0/geometry/type").Set(*expansion_, "MultiLineString");
-  rapidjson::Pointer("/features/0/geometry/coordinates").Create(*expansion_).SetArray();
-  rapidjson::Pointer("/features/0/properties/edge_ids").Create(*expansion_).SetArray();
-  rapidjson::Pointer("/features/0/properties/statuses").Create(*expansion_).SetArray();
-  // fill it out
+  // default the expansion geojson so its easy to add to as we go
+  rapidjson::Document dom;
+  dom.SetObject();
+  rapidjson::Pointer("/type").Set(dom, "FeatureCollection");
+  rapidjson::Pointer("/properties/algorithm").Set(dom, "none");
+  rapidjson::Pointer("/features/0/type").Set(dom, "Feature");
+  rapidjson::Pointer("/features/0/geometry/type").Set(dom, "MultiLineString");
+  rapidjson::Pointer("/features/0/geometry/coordinates").Create(dom).SetArray();
+  rapidjson::Pointer("/features/0/properties/edge_ids").Create(dom).SetArray();
+  rapidjson::Pointer("/features/0/properties/statuses").Create(dom).SetArray();
+
+  // a lambda that the path algorithm can call to add stuff to the dom
+  auto track_expansion = [&dom](baldr::GraphReader& reader, const char* algorithm,
+                                baldr::GraphId edgeid, const char* status, bool full_shape = false) {
+    // full shape might be overkill but meh, its trace
+    const auto* tile = reader.GetGraphTile(edgeid);
+    const auto* edge = tile->directededge(edgeid);
+    auto shape = tile->edgeinfo(edge->edgeinfo_offset()).shape();
+    if (!edge->forward())
+      std::reverse(shape.begin(), shape.end());
+    if (!full_shape && shape.size() > 2)
+      shape.erase(shape.begin() + 1, shape.end() - 1);
+
+    // make the geom
+    auto& a = dom.GetAllocator();
+    auto* coords = rapidjson::Pointer("/features/0/geometry/coordinates").Get(dom);
+    coords->GetArray().PushBack(rapidjson::Value(rapidjson::kArrayType), a);
+    auto& linestring = (*coords)[coords->Size() - 1];
+    for (const auto& p : shape) {
+      linestring.GetArray().PushBack(rapidjson::Value(rapidjson::kArrayType), a);
+      auto point = linestring[linestring.Size() - 1].GetArray();
+      point.PushBack(p.first, a);
+      point.PushBack(p.second, a);
+    }
+
+    // make the properties
+    rapidjson::Pointer("/properties/algorithm").Set(dom, algorithm);
+    rapidjson::Pointer("/features/0/properties/edge_ids")
+        .Get(dom)
+        ->GetArray()
+        .PushBack(static_cast<uint64_t>(edgeid), a);
+    rapidjson::Pointer("/features/0/properties/statuses")
+        .Get(dom)
+        ->GetArray()
+        .PushBack(rapidjson::Value{}.SetString(status, a), a);
+  };
+
+  // tell all the algorithms how to track expansion
+  for (auto* alg : std::vector<PathAlgorithm*>{
+           &multi_modal_astar,
+           &timedep_forward,
+           &timedep_reverse,
+           &astar,
+           &bidir_astar,
+       }) {
+    alg->set_track_expansion(track_expansion);
+  }
+
+  // track the expansion
   route(request);
+
+  // tell all the algorithms to stop tracking the expansion
+  for (auto* alg : std::vector<PathAlgorithm*>{
+           &multi_modal_astar,
+           &timedep_forward,
+           &timedep_reverse,
+           &astar,
+           &bidir_astar,
+       }) {
+    alg->set_track_expansion(nullptr);
+  }
+
   // serialize it
-  auto json = rapidjson::to_string(*expansion_, 5);
-  // tell the path algorithms to stop tracking the expansion at all
-  expansion_.reset();
-  return json;
+  return rapidjson::to_string(dom, 5);
 }
 
 void thor_worker_t::route(Api& request) {
@@ -173,14 +230,6 @@ void thor_worker_t::route(Api& request) {
 thor::PathAlgorithm* thor_worker_t::get_path_algorithm(const std::string& routetype,
                                                        const valhalla::Location& origin,
                                                        const valhalla::Location& destination) {
-  // Tell all the algorithms where to track the expansion
-  // If the pointer has been reset it will have no effect
-  multi_modal_astar.set_expansion(expansion_);
-  timedep_forward.set_expansion(expansion_);
-  timedep_reverse.set_expansion(expansion_);
-  astar.set_expansion(expansion_);
-  bidir_astar.set_expansion(expansion_);
-
   // Have to use multimodal for transit based routing
   if (routetype == "multimodal" || routetype == "transit") {
     multi_modal_astar.set_interrupt(interrupt);

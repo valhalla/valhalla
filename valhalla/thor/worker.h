@@ -12,7 +12,6 @@
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/graphtile.h>
 #include <valhalla/baldr/location.h>
-#include <valhalla/baldr/rapidjson_utils.h>
 #include <valhalla/meili/map_matcher_factory.h>
 #include <valhalla/proto/options.pb.h>
 #include <valhalla/proto/trip.pb.h>
@@ -102,7 +101,6 @@ protected:
   meili::MapMatcherFactory matcher_factory;
   std::shared_ptr<baldr::GraphReader> reader;
   AttributesController controller;
-  std::shared_ptr<rapidjson::Document> expansion_;
 };
 
 } // namespace thor

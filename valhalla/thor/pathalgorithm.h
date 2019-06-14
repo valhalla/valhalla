@@ -13,9 +13,6 @@
 #include <valhalla/sif/dynamiccost.h>
 #include <valhalla/thor/pathinfo.h>
 
-#include <rapidjson/document.h>
-#include <rapidjson/pointer.h>
-
 namespace valhalla {
 namespace thor {
 
@@ -31,7 +28,7 @@ public:
   /**
    * Constructor
    */
-  PathAlgorithm() : interrupt(nullptr), has_ferry_(false), expansion_() {
+  PathAlgorithm() : interrupt(nullptr), has_ferry_(false), expansion_callback_() {
   }
 
   /**
@@ -82,21 +79,15 @@ public:
   }
 
   /**
-   * Sets the geojson feature collection where each feature represents
-   * and edge that was visited by the algorithm. The order of the features
-   * is the same order in which the edges were visited. Each feature/edge
-   * will have properties describing the edge's id as well as the current
-   * state (reached, settled, connected) so that one can replay the expansion
-   * as a time series and visually inspect what the algorithm is doing.
+   * Sets the functor which will track the algorithms expansion.
    *
-   * This method will return a feature collection after a call to GetBestPath.
-   * If the underlying path algorithm doesn't implement this or GetBestPath
-   * has not been called an empty feature collection is returned.
-   *
-   * @return the feature collection
+   * @param  expansion_callback  the functor to call back when the algorithm makes progress
+   *                             on a given edge
    */
-  void set_expansion(const std::shared_ptr<rapidjson::Document>& expansion) {
-    expansion_ = expansion;
+  using expansion_callback_t =
+      std::function<void(baldr::GraphReader&, const char*, baldr::GraphId, const char*, bool)>;
+  void set_track_expansion(const expansion_callback_t& expansion_callback) {
+    expansion_callback_ = expansion_callback;
   }
 
 protected:
@@ -105,7 +96,7 @@ protected:
   bool has_ferry_; // Indicates whether the path has a ferry
 
   // for tracking the expansion of the algorithm visually
-  std::weak_ptr<rapidjson::Document> expansion_;
+  expansion_callback_t expansion_callback_;
 
   /**
    * Check for path completion along the same edge. Edge ID in question
@@ -141,50 +132,6 @@ protected:
   int GetTimezone(baldr::GraphReader& graphreader, const baldr::GraphId& node) {
     const baldr::GraphTile* tile = graphreader.GetGraphTile(node);
     return (tile == nullptr) ? 0 : tile->node(node)->timezone();
-  }
-
-  /**
-   * Adds an edge to the expansion history of the current pass of the algorithm
-   * There is no schema for the status, but loosely you should pass one of:
-   * reached, settled, connected so the person using this geojson can style accordingly
-   */
-  virtual inline void TrackExpansion(baldr::GraphReader& reader,
-                                     baldr::GraphId edgeid,
-                                     const char* status,
-                                     bool full_shape = false) {
-    // only do this if someone is looking for this on the outside
-    if (auto expansion = expansion_.lock()) {
-      // full shape might be overkill but meh, its trace
-      const auto* tile = reader.GetGraphTile(edgeid);
-      const auto* edge = tile->directededge(edgeid);
-      auto shape = tile->edgeinfo(edge->edgeinfo_offset()).shape();
-      if (!edge->forward())
-        std::reverse(shape.begin(), shape.end());
-      if (!full_shape && shape.size() > 2)
-        shape.erase(shape.begin() + 1, shape.end() - 1);
-
-      // make the geom
-      auto& a = expansion->GetAllocator();
-      auto* coords = rapidjson::Pointer("/features/0/geometry/coordinates").Get(*expansion);
-      coords->GetArray().PushBack(rapidjson::Value(rapidjson::kArrayType), a);
-      auto& linestring = (*coords)[coords->Size() - 1];
-      for (const auto& p : shape) {
-        linestring.GetArray().PushBack(rapidjson::Value(rapidjson::kArrayType), a);
-        auto point = linestring[linestring.Size() - 1].GetArray();
-        point.PushBack(p.first, a);
-        point.PushBack(p.second, a);
-      }
-
-      // make the properties
-      rapidjson::Pointer("/features/0/properties/edge_ids")
-          .Get(*expansion)
-          ->GetArray()
-          .PushBack(static_cast<uint64_t>(edgeid), a);
-      rapidjson::Pointer("/features/0/properties/statuses")
-          .Get(*expansion)
-          ->GetArray()
-          .PushBack(rapidjson::Value{}.SetString(status, a), a);
-    }
   }
 };
 
