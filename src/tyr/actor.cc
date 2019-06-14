@@ -50,6 +50,7 @@ std::string actor_t::route(const std::string& request_str, const std::function<v
   ParseApi(request_str, Options::route, request);
   // check the request and locate the locations in the graph
   pimpl->loki_worker.route(request);
+  // route between the locations in the graph to find the best path
   pimpl->thor_worker.route(request);
   // get some directions back from them
   pimpl->odin_worker.narrate(request);
@@ -214,6 +215,7 @@ std::string actor_t::expansion(const std::string& request_str,
   ParseApi(request_str, Options::expansion, request);
   // check the request and locate the locations in the graph
   pimpl->loki_worker.route(request);
+  // route between the locations in the graph to find the best path
   auto json = pimpl->thor_worker.expansion(request);
   // if they want you do to do the cleanup automatically
   if (auto_cleanup) {
