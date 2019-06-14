@@ -183,7 +183,7 @@ void BidirectionalAStar::ExpandForward(GraphReader& graphreader,
     *es = {EdgeSet::kTemporary, idx};
 
     // setting this edge as reached
-    TrackExpansion(graphreader, edgeid, "reached");
+    TrackExpansion(graphreader, edgeid, "r");
   }
 
   // Handle transitions - expand from the end node of each transition
@@ -295,7 +295,7 @@ void BidirectionalAStar::ExpandReverse(GraphReader& graphreader,
     *es = {EdgeSet::kTemporary, idx};
 
     // setting this edge as reached, sending the opposing because this is the reverse tree
-    TrackExpansion(graphreader, oppedge, "reached");
+    TrackExpansion(graphreader, oppedge, "r");
   }
 
   // Handle transitions - expand from the end node of each transition
@@ -435,8 +435,7 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
       edgestatus_forward_.Update(fwd_pred.edgeid(), EdgeSet::kPermanent);
 
       // setting this edge as settled
-
-      TrackExpansion(graphreader, fwd_pred.edgeid(), "settled");
+      TrackExpansion(graphreader, fwd_pred.edgeid(), "s");
 
       // Prune path if predecessor is not a through edge or if the maximum
       // number of upward transitions has been exceeded on this hierarchy level.
@@ -456,7 +455,7 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
       edgestatus_reverse_.Update(rev_pred.edgeid(), EdgeSet::kPermanent);
 
       // setting this edge as settled, sending the opposing because this is the reverse tree
-      TrackExpansion(graphreader, rev_pred.opp_edgeid(), "settled");
+      TrackExpansion(graphreader, rev_pred.opp_edgeid(), "s");
 
       // Prune path if predecessor is not a through edge
       if ((rev_pred.not_thru() && rev_pred.not_thru_pruning()) ||
@@ -518,7 +517,7 @@ bool BidirectionalAStar::SetForwardConnection(GraphReader& graphreader, const BD
   }
 
   // setting this edge as connected
-  TrackExpansion(graphreader, pred.edgeid(), "connected");
+  TrackExpansion(graphreader, pred.edgeid(), "c");
 
   return true;
 }
@@ -564,8 +563,7 @@ bool BidirectionalAStar::SetReverseConnection(GraphReader& graphreader, const BD
   }
 
   // setting this edge as connected, sending the opposing because this is the reverse tree
-
-  TrackExpansion(graphreader, oppedge, "connected");
+  TrackExpansion(graphreader, oppedge, "c");
 
   return true;
 }
@@ -632,7 +630,7 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader, valhalla::Location&
     adjacencylist_forward_->add(idx);
 
     // setting this edge as reached
-    TrackExpansion(graphreader, edgeid, "reached");
+    TrackExpansion(graphreader, edgeid, "r");
 
     // Set the initial not_thru flag to false. There is an issue with not_thru
     // flags on small loops. Set this to false here to override this for now.
@@ -706,7 +704,7 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader, const valhalla
     adjacencylist_reverse_->add(idx);
 
     // setting this edge as settled, sending the opposing because this is the reverse tree
-    TrackExpansion(graphreader, edgeid, "reached");
+    TrackExpansion(graphreader, edgeid, "r");
 
     // Set the initial not_thru flag to false. There is an issue with not_thru
     // flags on small loops. Set this to false here to override this for now.

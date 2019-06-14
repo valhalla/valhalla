@@ -134,7 +134,11 @@ std::string thor_worker_t::expansion(Api& request) {
   expansion_->SetObject();
   rapidjson::Pointer("/type").Set(*expansion_, "FeatureCollection");
   rapidjson::Pointer("/properties/algorithm").Set(*expansion_, "none");
-  rapidjson::Pointer("/features").Create(*expansion_).SetArray();
+  rapidjson::Pointer("/features/0/type").Set(*expansion_, "Feature");
+  rapidjson::Pointer("/features/0/geometry/type").Set(*expansion_, "MultiLineString");
+  rapidjson::Pointer("/features/0/geometry/coordinates").Create(*expansion_).SetArray();
+  rapidjson::Pointer("/features/0/properties/edge_ids").Create(*expansion_).SetArray();
+  rapidjson::Pointer("/features/0/properties/statuses").Create(*expansion_).SetArray();
   // fill it out
   route(request);
   // serialize it

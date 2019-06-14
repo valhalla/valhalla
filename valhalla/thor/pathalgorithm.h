@@ -163,26 +163,27 @@ protected:
       if (!full_shape && shape.size() > 2)
         shape.erase(shape.begin() + 1, shape.end() - 1);
 
-      // make the feature
-      auto& a = expansion->GetAllocator();
-      auto* features = rapidjson::Pointer("/features").Get(*expansion);
-      features->GetArray().PushBack(rapidjson::Value(rapidjson::kObjectType), a);
-      auto& feature = (*features)[features->Size() - 1];
-      rapidjson::Pointer("/type").Set(feature, "Feature", a);
-
       // make the geom
-      rapidjson::Pointer("/geometry/type").Set(feature, "LineString", a);
-      auto& coords = rapidjson::Pointer("/geometry/coordinates").Create(feature, a).SetArray();
+      auto& a = expansion->GetAllocator();
+      auto* coords = rapidjson::Pointer("/features/0/geometry/coordinates").Get(*expansion);
+      coords->GetArray().PushBack(rapidjson::Value(rapidjson::kArrayType), a);
+      auto& linestring = (*coords)[coords->Size() - 1];
       for (const auto& p : shape) {
-        coords.GetArray().PushBack(rapidjson::Value(rapidjson::kArrayType), a);
-        auto point = coords[coords.Size() - 1].GetArray();
+        linestring.GetArray().PushBack(rapidjson::Value(rapidjson::kArrayType), a);
+        auto point = linestring[linestring.Size() - 1].GetArray();
         point.PushBack(p.first, a);
         point.PushBack(p.second, a);
       }
 
       // make the properties
-      rapidjson::Pointer("/properties/edge").Set(feature, static_cast<uint64_t>(edgeid), a);
-      rapidjson::Pointer("/properties/status").Set(feature, status, a);
+      rapidjson::Pointer("/features/0/properties/edge_ids")
+          .Get(*expansion)
+          ->GetArray()
+          .PushBack(static_cast<uint64_t>(edgeid), a);
+      rapidjson::Pointer("/features/0/properties/statuses")
+          .Get(*expansion)
+          ->GetArray()
+          .PushBack(rapidjson::Value{}.SetString(status, a), a);
     }
   }
 };
