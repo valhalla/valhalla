@@ -205,5 +205,22 @@ std::string actor_t::transit_available(const std::string& request_str,
   return json;
 }
 
+std::string actor_t::expansion(const std::string& request_str,
+                               const std::function<void()>& interrupt) {
+  // set the interrupts
+  pimpl->set_interrupts(interrupt);
+  // parse the request
+  Api request;
+  ParseApi(request_str, Options::expansion, request);
+  // check the request and locate the locations in the graph
+  pimpl->loki_worker.route(request);
+  auto json = pimpl->thor_worker.expansion(request);
+  // if they want you do to do the cleanup automatically
+  if (auto_cleanup) {
+    cleanup();
+  }
+  return json;
+}
+
 } // namespace tyr
 } // namespace valhalla

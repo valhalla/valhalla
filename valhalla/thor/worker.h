@@ -12,6 +12,7 @@
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/graphtile.h>
 #include <valhalla/baldr/location.h>
+#include <valhalla/baldr/rapidjson_utils.h>
 #include <valhalla/meili/map_matcher_factory.h>
 #include <valhalla/proto/options.pb.h>
 #include <valhalla/proto/trip.pb.h>
@@ -54,6 +55,7 @@ public:
   std::string isochrones(Api& request);
   void trace_route(Api& request);
   std::string trace_attributes(Api& request);
+  std::string expansion(Api& request);
 
 protected:
   std::vector<std::vector<thor::PathInfo>> get_path(PathAlgorithm* path_algorithm,
@@ -100,6 +102,7 @@ protected:
   meili::MapMatcherFactory matcher_factory;
   std::shared_ptr<baldr::GraphReader> reader;
   AttributesController controller;
+  std::shared_ptr<rapidjson::Document> expansion_;
 };
 
 } // namespace thor

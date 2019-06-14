@@ -31,10 +31,7 @@ public:
   /**
    * Constructor
    */
-  PathAlgorithm() : interrupt(nullptr), has_ferry_(false), track_expansion_(false) {
-    expansion_.SetObject();
-    rapidjson::Pointer("/type").Set(expansion_, "FeatureCollection");
-    rapidjson::Pointer("/features").Create(expansion_).SetArray();
+  PathAlgorithm() : interrupt(nullptr), has_ferry_(false), expansion_() {
   }
 
   /**
@@ -85,7 +82,7 @@ public:
   }
 
   /**
-   * Returns a geojson feature collection where each feature represents
+   * Sets the geojson feature collection where each feature represents
    * and edge that was visited by the algorithm. The order of the features
    * is the same order in which the edges were visited. Each feature/edge
    * will have properties describing the edge's id as well as the current
@@ -98,8 +95,8 @@ public:
    *
    * @return the feature collection
    */
-  const rapidjson::Document& GetPathExpansionHistory() const {
-    return expansion_;
+  void set_expansion(const std::shared_ptr<rapidjson::Document>& expansion) {
+    expansion_ = expansion;
   }
 
 protected:
@@ -108,8 +105,7 @@ protected:
   bool has_ferry_; // Indicates whether the path has a ferry
 
   // for tracking the expansion of the algorithm visually
-  bool track_expansion_;
-  rapidjson::Document expansion_;
+  std::weak_ptr<rapidjson::Document> expansion_;
 
   /**
    * Check for path completion along the same edge. Edge ID in question
@@ -152,39 +148,42 @@ protected:
    * There is no schema for the status, but loosely you should pass one of:
    * reached, settled, connected so the person using this geojson can style accordingly
    */
-  virtual void TrackExpansion(baldr::GraphReader& reader,
-                              baldr::GraphId edgeid,
-                              const char* status,
-                              bool full_shape = false) {
-    // full shape might be overkill but meh, its trace
-    const auto* tile = reader.GetGraphTile(edgeid);
-    const auto* edge = tile->directededge(edgeid);
-    auto shape = tile->edgeinfo(edge->edgeinfo_offset()).shape();
-    if (!edge->forward())
-      std::reverse(shape.begin(), shape.end());
-    if (!full_shape && shape.size() > 2)
-      shape.erase(shape.begin() + 1, shape.end() - 1);
+  virtual inline void TrackExpansion(baldr::GraphReader& reader,
+                                     baldr::GraphId edgeid,
+                                     const char* status,
+                                     bool full_shape = false) {
+    // only do this if someone is looking for this on the outside
+    if (auto expansion = expansion_.lock()) {
+      // full shape might be overkill but meh, its trace
+      const auto* tile = reader.GetGraphTile(edgeid);
+      const auto* edge = tile->directededge(edgeid);
+      auto shape = tile->edgeinfo(edge->edgeinfo_offset()).shape();
+      if (!edge->forward())
+        std::reverse(shape.begin(), shape.end());
+      if (!full_shape && shape.size() > 2)
+        shape.erase(shape.begin() + 1, shape.end() - 1);
 
-    // make the feature
-    auto& a = expansion_.GetAllocator();
-    auto* features = rapidjson::Pointer("/features").Get(expansion_);
-    features->GetArray().PushBack(rapidjson::Value(rapidjson::kObjectType), a);
-    auto& feature = (*features)[features->Size() - 1];
-    rapidjson::Pointer("/type").Set(feature, "Feature", a);
+      // make the feature
+      auto& a = expansion->GetAllocator();
+      auto* features = rapidjson::Pointer("/features").Get(*expansion);
+      features->GetArray().PushBack(rapidjson::Value(rapidjson::kObjectType), a);
+      auto& feature = (*features)[features->Size() - 1];
+      rapidjson::Pointer("/type").Set(feature, "Feature", a);
 
-    // make the geom
-    rapidjson::Pointer("/geometry/type").Set(feature, "LineString", a);
-    auto& coords = rapidjson::Pointer("/geometry/coordinates").Create(feature, a).SetArray();
-    for (const auto& p : shape) {
-      coords.GetArray().PushBack(rapidjson::Value(rapidjson::kArrayType), a);
-      auto point = coords[coords.Size() - 1].GetArray();
-      point.PushBack(p.first, a);
-      point.PushBack(p.second, a);
+      // make the geom
+      rapidjson::Pointer("/geometry/type").Set(feature, "LineString", a);
+      auto& coords = rapidjson::Pointer("/geometry/coordinates").Create(feature, a).SetArray();
+      for (const auto& p : shape) {
+        coords.GetArray().PushBack(rapidjson::Value(rapidjson::kArrayType), a);
+        auto point = coords[coords.Size() - 1].GetArray();
+        point.PushBack(p.first, a);
+        point.PushBack(p.second, a);
+      }
+
+      // make the properties
+      rapidjson::Pointer("/properties/edge").Set(feature, static_cast<uint64_t>(edgeid), a);
+      rapidjson::Pointer("/properties/status").Set(feature, status, a);
     }
-
-    // make the properties
-    rapidjson::Pointer("/properties/edge").Set(feature, static_cast<uint64_t>(edgeid), a);
-    rapidjson::Pointer("/properties/status").Set(feature, status, a);
   }
 };
 

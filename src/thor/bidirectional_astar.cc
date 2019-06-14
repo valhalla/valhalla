@@ -183,8 +183,7 @@ void BidirectionalAStar::ExpandForward(GraphReader& graphreader,
     *es = {EdgeSet::kTemporary, idx};
 
     // setting this edge as reached
-    if (!track_expansion_)
-      TrackExpansion(graphreader, edgeid, "reached");
+    TrackExpansion(graphreader, edgeid, "reached");
   }
 
   // Handle transitions - expand from the end node of each transition
@@ -296,8 +295,7 @@ void BidirectionalAStar::ExpandReverse(GraphReader& graphreader,
     *es = {EdgeSet::kTemporary, idx};
 
     // setting this edge as reached, sending the opposing because this is the reverse tree
-    if (!track_expansion_)
-      TrackExpansion(graphreader, oppedge, "reached");
+    TrackExpansion(graphreader, oppedge, "reached");
   }
 
   // Handle transitions - expand from the end node of each transition
@@ -330,10 +328,8 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
   access_mode_ = costing_->access_mode();
 
   // Set up the expansion geojson
-  track_expansion_ = false;
-  expansion.SetObject();
-  rapidjson::Pointer("/type").Set(expansion, "FeatureCollection");
-  rapidjson::Pointer("/features").Create(expansion).SetArray();
+  if (auto expansion = expansion_.lock())
+    rapidjson::Pointer("/properties/algorithm").Set(*expansion, "bidirectional_astar");
 
   // Initialize - create adjacency list, edgestatus support, A*, etc.
   PointLL origin_new(origin.path_edges(0).ll().lng(), origin.path_edges(0).ll().lat());
@@ -439,8 +435,8 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
       edgestatus_forward_.Update(fwd_pred.edgeid(), EdgeSet::kPermanent);
 
       // setting this edge as settled
-      if (!track_expansion_)
-        TrackExpansion(graphreader, fwd_pred.edgeid(), "settled");
+
+      TrackExpansion(graphreader, fwd_pred.edgeid(), "settled");
 
       // Prune path if predecessor is not a through edge or if the maximum
       // number of upward transitions has been exceeded on this hierarchy level.
@@ -460,8 +456,7 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
       edgestatus_reverse_.Update(rev_pred.edgeid(), EdgeSet::kPermanent);
 
       // setting this edge as settled, sending the opposing because this is the reverse tree
-      if (!track_expansion_)
-        TrackExpansion(graphreader, rev_pred.opp_edgeid(), "settled");
+      TrackExpansion(graphreader, rev_pred.opp_edgeid(), "settled");
 
       // Prune path if predecessor is not a through edge
       if ((rev_pred.not_thru() && rev_pred.not_thru_pruning()) ||
@@ -523,8 +518,7 @@ bool BidirectionalAStar::SetForwardConnection(GraphReader& graphreader, const BD
   }
 
   // setting this edge as connected
-  if (!track_expansion_)
-    TrackExpansion(graphreader, pred.edgeid(), "connected");
+  TrackExpansion(graphreader, pred.edgeid(), "connected");
 
   return true;
 }
@@ -570,8 +564,8 @@ bool BidirectionalAStar::SetReverseConnection(GraphReader& graphreader, const BD
   }
 
   // setting this edge as connected, sending the opposing because this is the reverse tree
-  if (!track_expansion_)
-    TrackExpansion(graphreader, oppedge, "connected");
+
+  TrackExpansion(graphreader, oppedge, "connected");
 
   return true;
 }
@@ -638,8 +632,7 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader, valhalla::Location&
     adjacencylist_forward_->add(idx);
 
     // setting this edge as reached
-    if (!track_expansion_)
-      TrackExpansion(graphreader, edgeid, "reached");
+    TrackExpansion(graphreader, edgeid, "reached");
 
     // Set the initial not_thru flag to false. There is an issue with not_thru
     // flags on small loops. Set this to false here to override this for now.
@@ -713,8 +706,7 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader, const valhalla
     adjacencylist_reverse_->add(idx);
 
     // setting this edge as settled, sending the opposing because this is the reverse tree
-    if (!track_expansion_)
-      TrackExpansion(graphreader, edgeid, "reached");
+    TrackExpansion(graphreader, edgeid, "reached");
 
     // Set the initial not_thru flag to false. There is an issue with not_thru
     // flags on small loops. Set this to false here to override this for now.

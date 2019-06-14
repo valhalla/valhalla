@@ -131,6 +131,7 @@ message Options {
     trace_attributes = 10;
     height = 11;
     transit_available = 12;
+    expansion = 13;
   }
 
   enum DateTimeType {

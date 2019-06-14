@@ -127,6 +127,23 @@ void remove_edges(const GraphId& edge_id, valhalla::Location& loc, GraphReader& 
 namespace valhalla {
 namespace thor {
 
+std::string thor_worker_t::expansion(Api& request) {
+  // tell the path algorithms to track the expansion here
+  expansion_.reset(new rapidjson::Document);
+  // every algorithm gets a default one that is empty
+  expansion_->SetObject();
+  rapidjson::Pointer("/type").Set(*expansion_, "FeatureCollection");
+  rapidjson::Pointer("/properties/algorithm").Set(*expansion_, "none");
+  rapidjson::Pointer("/features").Create(*expansion_).SetArray();
+  // fill it out
+  route(request);
+  // serialize it
+  auto json = rapidjson::to_string(*expansion_, 5);
+  // tell the path algorithms to stop tracking the expansion at all
+  expansion_.reset();
+  return json;
+}
+
 void thor_worker_t::route(Api& request) {
   parse_locations(request);
   parse_filter_attributes(request);
@@ -152,6 +169,15 @@ void thor_worker_t::route(Api& request) {
 thor::PathAlgorithm* thor_worker_t::get_path_algorithm(const std::string& routetype,
                                                        const valhalla::Location& origin,
                                                        const valhalla::Location& destination) {
+  // Tell all the algorithms where to track the expansion
+  // If the pointer has been reset it will have no effect
+  multi_modal_astar.set_expansion(expansion_);
+  timedep_forward.set_expansion(expansion_);
+  timedep_reverse.set_expansion(expansion_);
+  astar.set_expansion(expansion_);
+  bidir_astar.set_expansion(expansion_);
+
+  // Have to use multimodal for transit based routing
   if (routetype == "multimodal" || routetype == "transit") {
     multi_modal_astar.set_interrupt(interrupt);
     return &multi_modal_astar;
