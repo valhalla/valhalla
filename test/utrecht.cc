@@ -28,6 +28,7 @@ std::string way_nodes_file = "test_way_nodes_utrecht.bin";
 std::string access_file = "test_access_utrecht.bin";
 std::string from_restriction_file = "test_from_complex_restrictions_utrecht.bin";
 std::string to_restriction_file = "test_to_complex_restrictions_utrecht.bin";
+std::string bss_file = "test_bss_nodes_utrecht.bin";
 
 const auto node_predicate = [](const OSMWayNode& a, const OSMWayNode& b) {
   return a.node.osmid_ < b.node.osmid_;
@@ -55,7 +56,7 @@ void Parse() {
   auto osmdata =
       PBFGraphParser::Parse(conf.get_child("mjolnir"),
                             {VALHALLA_SOURCE_DIR "test/data/utrecht_netherlands.osm.pbf"}, ways_file,
-                            way_nodes_file, access_file, from_restriction_file, to_restriction_file);
+                            way_nodes_file, access_file, from_restriction_file, to_restriction_file, bss_file);
 }
 
 void TestBike() {
