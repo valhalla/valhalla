@@ -893,6 +893,7 @@ bool Options_Action_Parse(const std::string& action, Options::Action* a) {
       {"trace_attributes", Options::trace_attributes},
       {"height", Options::height},
       {"transit_available", Options::transit_available},
+      {"expansion", Options::expansion},
   };
   auto i = actions.find(action);
   if (i == actions.cend())
@@ -913,6 +914,7 @@ const std::string& Options_Action_Name(const Options::Action action) {
       {Options::trace_attributes, "trace_attributes"},
       {Options::height, "height"},
       {Options::transit_available, "transit_available"},
+      {Options::expansion, "expansion"},
   };
   auto i = actions.find(action);
   return i == actions.cend() ? empty : i->second;
