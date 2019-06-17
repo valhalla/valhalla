@@ -26,6 +26,7 @@ option(ENABLE_NODE_BINDINGS "Build NodeJs bindings" ON)
 option(ENABLE_CCACHE "Speed up incremental rebuilds via ccache" ON)
 option(ENABLE_COVERAGE "Build with coverage instrumentalisation" OFF)
 option(ENABLE_SANITIZER "Use memory sanitizer for Debug build" OFF)
+option(ENABLE_TESTS "Enable Valhalla tests" ON)
 set(LOGGING_LEVEL "" CACHE STRING "Logging level, default is INFO")
 set_property(CACHE LOGGING_LEVEL PROPERTY STRINGS "NONE;ALL;ERROR;WARN;INFO;DEBUG;TRACE")
 
@@ -288,7 +289,9 @@ install(FILES COPYING ChangeLog
   DESTINATION "${CMAKE_INSTALL_DOCDIR}"
   COMPONENT runtime)
 
-add_subdirectory(test)
+if(ENABLE_TEST)
+  add_subdirectory(test)
+endif()
 
 ## Packaging via CPack
 include(CPackComponent)
