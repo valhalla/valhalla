@@ -260,8 +260,8 @@ if(ENABLE_DATA_TOOLS)
   target_link_libraries(valhalla_build_admins GEOS::GEOS)
   target_sources(valhalla_build_statistics
     PUBLIC
-      src/mjolnir/statistics.cc
-      src/mjolnir/statistics_database.cc)
+      ${VALHALLA_SOURCE_DIR}/src/mjolnir/statistics.cc
+      ${VALHALLA_SOURCE_DIR}/src/mjolnir/statistics_database.cc)
 endif()
 
 if(ENABLE_SERVICES)
