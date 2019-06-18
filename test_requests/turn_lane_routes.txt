@@ -102,3 +102,4 @@
 -j '{"locations":[{"lat":40.772270,"lon":-73.927025,"street":"Astoria Boulevard"},{"lat":40.772621,"lon":-73.926811,"street":"27th Avenue"}],"costing":"auto","units":"miles"}'
 -j '{"locations":[{"lat":40.772270,"lon":-73.927025,"street":"Astoria Boulevard"},{"lat":40.771759,"lon":-73.926315,"street":"21st Street"}],"costing":"auto","units":"miles"}'
 -j '{"locations":[{"lat":40.771099,"lon":-73.917679,"street":"Hoyt Avenue North"},{"lat":40.773598,"lon":-73.921577,"street":"I 278 East"}],"costing":"auto","units":"miles"}'
+-j '{"locations":[{"lat":42.497566,"lon":-83.418167,"street":"West 12 Mile Road"},{"lat":42.497086,"lon":-83.417206,"street":"Halsted Road"}],"costing":"auto","units":"miles"}'
