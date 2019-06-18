@@ -126,6 +126,14 @@ if(NOT Protobuf_FOUND)
   find_package(Protobuf REQUIRED)
 endif()
 
+message(STATUS "Using pbf headers from ${PROTOBUF_INCLUDE_DIR}")
+message(STATUS "Using pbf libs from ${PROTOBUF_LIBRARY}")
+message(STATUS "Using pbf release libs from ${PROTOBUF_LIBRARY_RELEASE}")
+message(STATUS "Using pbf debug libs from ${PROTOBUF_LIBRARY_DEBUG}")
+if(TARGET protobuf::libprotobuf-lite)
+  message(STATUS "Using pbf-lite")
+endif()
+
 # TODO: remove after switching to CMake >= 3.9
 if(CMAKE_VERSION VERSION_LESS 3.9)
   if(NOT TARGET protobuf::libprotobuf-lite)
