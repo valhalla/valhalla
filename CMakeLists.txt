@@ -297,7 +297,7 @@ install(FILES COPYING ChangeLog
   DESTINATION "${CMAKE_INSTALL_DOCDIR}"
   COMPONENT runtime)
 
-if(ENABLE_TEST)
+if(ENABLE_TESTS)
   add_subdirectory(test)
 endif()
 
