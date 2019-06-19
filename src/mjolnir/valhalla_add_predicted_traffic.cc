@@ -559,8 +559,8 @@ int main(int argc, char** argv) {
     totalpt += pred_road_class_edges[i];
     totalff += ff_road_class_edges[i];
   }
-  LOG_INFO("total driveable = " + std::to_string(totaldriveable) + " total driveable ramps/links = " +
-           std::to_string(totaldriveablelink));
+  LOG_INFO("total driveable = " + std::to_string(totaldriveable) +
+           " total driveable ramps/links = " + std::to_string(totaldriveablelink));
   LOG_INFO("total driveable non ramps/links = " +
            std::to_string(totaldriveable - totaldriveablelink));
   LOG_INFO("total pred " + std::to_string(totalpt));
