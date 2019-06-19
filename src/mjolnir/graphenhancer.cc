@@ -234,7 +234,8 @@ void GetTurnTypes(const DirectedEdge directededge,
   for (uint32_t i = 0; i < node->edge_count(); i++, diredge++) {
     // Skip opposing directed edge and any edge that is not a road. Skip any
     // edges that are not driveable outbound.
-    if (i == directededge.opp_local_idx() || !(diredge->forwardaccess() & kAutoAccess)) {
+    if (i == directededge.opp_local_idx() || !(diredge->forwardaccess() & kAutoAccess) ||
+        (directededge.restrictions() & (1 << diredge->localedgeidx())) != 0) {
       continue;
     }
 
