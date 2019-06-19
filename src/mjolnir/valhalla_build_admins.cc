@@ -634,7 +634,8 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
       continue;
     }
     LOG_ERROR("sqlite3_step() error: " + std::string(sqlite3_errmsg(db_handle)) +
-              ".  Ignore if not using a planet extract.");
+              ".  Ignore if not using a planet extract or check if there was a name change for " +
+              access.first.c_str());
   }
 
   sqlite3_finalize(stmt);

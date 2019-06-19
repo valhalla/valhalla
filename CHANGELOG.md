@@ -1,6 +1,6 @@
 ## Release Date: Unreleased Valhalla 3.0.6
 * **Bug Fix**
-   *
+   * FIXED:  Admin name changes. [#1853](https://github.com/valhalla/valhalla/pull/1853) Ref: [#1854](https://github.com/valhalla/valhalla/issues/1854)
 
 * **Enhancement**
    * ADDED: Use the same protobuf object the entire way through the request process [#1837](https://github.com/valhalla/valhalla/pull/1837)
