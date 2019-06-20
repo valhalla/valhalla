@@ -113,17 +113,17 @@ json::MapPtr serialize(const midgard::PointLL& ll, const std::string& reason, bo
 namespace valhalla {
 namespace tyr {
 
-std::string serializeLocate(const valhalla_request_t& request,
+std::string serializeLocate(const Api& request,
                             const std::vector<baldr::Location>& locations,
                             const std::unordered_map<baldr::Location, PathLocation>& projections,
                             GraphReader& reader) {
   auto json = json::array({});
   for (const auto& location : locations) {
     try {
-      json->emplace_back(serialize(projections.at(location), reader, request.options.verbose()));
+      json->emplace_back(serialize(projections.at(location), reader, request.options().verbose()));
     } catch (const std::exception& e) {
       json->emplace_back(
-          serialize(location.latlng_, "No data found for location", request.options.verbose()));
+          serialize(location.latlng_, "No data found for location", request.options().verbose()));
     }
   }
 

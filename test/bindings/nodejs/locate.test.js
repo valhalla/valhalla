@@ -4,7 +4,7 @@ var Valhalla = require('../../../')(JSON.stringify(config));
 var valhalla = new Valhalla(JSON.stringify(config));
 
 test('locate: can return info for locations', function(assert) {
-  var locateRequest = '{"verbose":true,"locations":[{"lat":40.546115,"lon":-76.385076,"type":"break"}, {"lat":40.544232,"lon":-76.385752,"type":"break"}],"costing":"bicycle","costing_options":{"bicycle":{"bicycle_type":"road"}},"directions_options":{"units":"miles"},"id":"12abc3afe23984fe"}';
+  var locateRequest = '{"verbose":true,"locations":[{"lat":40.546115,"lon":-76.385076,"type":"break"}, {"lat":40.544232,"lon":-76.385752,"type":"break"}],"costing":"bicycle","costing_directions_options":{"bicycle":{"bicycle_type":"road"}},"directions_options":{"units":"miles"},"id":"12abc3afe23984fe"}';
   valhalla.locate(locateRequest, (err, result) => {
     var locate = JSON.parse(result);
     assert.error(err, "should not error");

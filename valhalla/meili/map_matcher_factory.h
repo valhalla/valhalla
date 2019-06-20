@@ -33,15 +33,15 @@ public:
     return *candidatequery_;
   }
 
-  MapMatcher* Create(const Costing costing, const DirectionsOptions& options);
+  MapMatcher* Create(const Costing costing, const Options& options);
 
   MapMatcher* Create(const Costing costing) {
-    return Create(costing, DirectionsOptions());
+    return Create(costing, Options());
   }
 
-  MapMatcher* Create(const DirectionsOptions& options);
+  MapMatcher* Create(const Options& options);
 
-  boost::property_tree::ptree MergeConfig(const DirectionsOptions& options);
+  boost::property_tree::ptree MergeConfig(const Options& options);
 
   void ClearFullCache();
 

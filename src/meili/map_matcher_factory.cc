@@ -40,7 +40,7 @@ MapMatcherFactory::MapMatcherFactory(const boost::property_tree::ptree& root,
 MapMatcherFactory::~MapMatcherFactory() {
 }
 
-MapMatcher* MapMatcherFactory::Create(const Costing costing, const DirectionsOptions& options) {
+MapMatcher* MapMatcherFactory::Create(const Costing costing, const Options& options) {
   // Merge any customizable options with the config defaults
   const auto& config = MergeConfig(options);
 
@@ -53,11 +53,11 @@ MapMatcher* MapMatcherFactory::Create(const Costing costing, const DirectionsOpt
   return new MapMatcher(config, *graphreader_, *candidatequery_, mode_costing_, mode);
 }
 
-MapMatcher* MapMatcherFactory::Create(const DirectionsOptions& options) {
+MapMatcher* MapMatcherFactory::Create(const Options& options) {
   return Create(options.costing(), options);
 }
 
-boost::property_tree::ptree MapMatcherFactory::MergeConfig(const DirectionsOptions& options) {
+boost::property_tree::ptree MapMatcherFactory::MergeConfig(const Options& options) {
   // Copy the default child config
   auto config = config_.get_child("default");
 

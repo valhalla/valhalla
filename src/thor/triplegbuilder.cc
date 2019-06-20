@@ -161,6 +161,46 @@ void AssignAdmins(const AttributesController& controller,
   }
 }
 
+void SetShapeAttributes(const AttributesController& controller,
+                        const GraphTile* graphtile,
+                        const DirectedEdge* directededge,
+                        const std::shared_ptr<sif::DynamicCost>& costing,
+                        std::vector<PointLL>::const_iterator shape_begin,
+                        std::vector<PointLL>::const_iterator shape_end,
+                        TripLeg& trip_path) {
+  if (trip_path.has_shape_attributes()) {
+    // calculates total edge time and total edge length
+    double edge_time =
+        costing->EdgeCost(directededge, graphtile->GetSpeed(directededge)).secs; // seconds
+    // TODO: get the measured length from shape (full shape) to increase precision
+    double edge_length = directededge->length(); // meters
+    // Set the shape attributes
+    for (++shape_begin; shape_begin < shape_end; ++shape_begin) {
+      double distance = shape_begin->Distance(*(shape_begin - 1)); // meters
+      double distance_pct = distance / edge_length;                // fraction of edge length
+      double time = edge_time * distance_pct;                      // seconds
+
+      // Set shape attributes time per shape point if requested
+      if (controller.attributes.at(kShapeAttributesTime)) {
+        // convert time to milliseconds and then round to an integer
+        trip_path.mutable_shape_attributes()->add_time((time * kMillisecondPerSec) + 0.5);
+      }
+
+      // Set shape attributes length per shape point if requested
+      if (controller.attributes.at(kShapeAttributesLength)) {
+        // convert length to decimeters and then round to an integer
+        trip_path.mutable_shape_attributes()->add_length((distance * kDecimeterPerMeter) + 0.5);
+      }
+
+      // Set shape attributes speed per shape point if requested
+      if (controller.attributes.at(kShapeAttributesSpeed)) {
+        // convert speed to decimeters per sec and then round to an integer
+        trip_path.mutable_shape_attributes()->add_speed((distance * kDecimeterPerMeter / time) + 0.5);
+      }
+    }
+  }
+}
+
 // Set the bounding box (min,max lat,lon) for the shape
 void SetBoundingBox(TripLeg& trip_path, std::vector<PointLL>& shape) {
   AABB2<PointLL> bbox(shape);
@@ -511,14 +551,6 @@ void AddTransitNodes(TripLeg_Node* trip_node,
 namespace valhalla {
 namespace thor {
 
-// Default constructor
-TripLegBuilder::TripLegBuilder() {
-}
-
-// Destructor
-TripLegBuilder::~TripLegBuilder() {
-}
-
 // For now just find the length of the path!
 // TODO - probably need the location information passed in - to
 // add to the TripLeg
@@ -531,6 +563,7 @@ TripLegBuilder::Build(const AttributesController& controller,
                       valhalla::Location& origin,
                       valhalla::Location& dest,
                       const std::list<valhalla::Location>& through_loc,
+                      TripLeg& trip_path,
                       const std::function<void()>* interrupt_callback,
                       std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>>*
                           route_discontinuities) {
@@ -538,9 +571,6 @@ TripLegBuilder::Build(const AttributesController& controller,
   if (interrupt_callback) {
     (*interrupt_callback)();
   }
-
-  // TripLeg is a protocol buffer that contains information about the trip
-  TripLeg trip_path;
 
   // Set origin, any through locations, and destination. Origin and
   // destination are assumed to be breaks.
@@ -620,6 +650,11 @@ TripLegBuilder::Build(const AttributesController& controller,
   std::unordered_map<AdminInfo, uint32_t, AdminInfo::AdminInfoHasher> admin_info_map;
   std::vector<AdminInfo> admin_info_list;
 
+  // initialize shape_attributes
+  if (controller.category_attribute_enabled(kShapeAttributesCategory)) {
+    trip_path.mutable_shape_attributes();
+  }
+
   // If the path was only one edge we have a special case
   if ((path_end - path_begin) == 1) {
     const GraphTile* tile = graphreader.GetGraphTile(path_begin->edgeid);
@@ -675,6 +710,10 @@ TripLegBuilder::Build(const AttributesController& controller,
     if (controller.attributes.at(kEdgeEndShapeIndex)) {
       trip_edge->set_end_shape_index(shape.size() - 1);
     }
+
+    // Set shape attributes
+    SetShapeAttributes(controller, tile, edge, mode_costing[static_cast<int>(path_begin->mode)],
+                       shape.begin(), shape.end(), trip_path);
 
     // Set begin and end heading if requested. Uses shape so
     // must be done after the edge's shape has been added.
@@ -749,12 +788,13 @@ TripLegBuilder::Build(const AttributesController& controller,
 
     // Assign the trip path admins
     AssignAdmins(controller, trip_path, admin_info_list);
+
     return trip_path;
   }
 
   // Iterate through path
   bool is_first_edge = true;
-  uint32_t elapsedtime = 0;
+  double elapsedtime = 0;
   uint32_t block_id = 0;
   uint32_t prior_opp_local_index = -1;
   std::vector<PointLL> trip_shape;
@@ -766,6 +806,7 @@ TripLegBuilder::Build(const AttributesController& controller,
   const DirectedEdge* prev_de = nullptr;
   // TODO: this is temp until we use transit stop type from transitland
   TransitPlatformInfo_Type prev_transit_node_type = TransitPlatformInfo_Type_kStop;
+
   for (auto edge_itr = path_begin; edge_itr != path_end; ++edge_itr, ++edge_index) {
     const GraphId& edge = edge_itr->edgeid;
     const uint32_t trip_id = edge_itr->trip_id;
@@ -795,7 +836,7 @@ TripLegBuilder::Build(const AttributesController& controller,
       }
     }
 
-    uint32_t current_time;
+    double current_time;
     if (origin.has_date_time()) {
       current_time = DateTime::seconds_from_midnight(origin.date_time());
       current_time += elapsedtime;
@@ -1094,6 +1135,10 @@ TripLegBuilder::Build(const AttributesController& controller,
     // must be done after the edge's shape has been added.
     SetHeadings(trip_edge, controller, directededge, trip_shape, begin_index);
 
+    // Set shape attributes
+    SetShapeAttributes(controller, graphtile, directededge, mode_costing[static_cast<uint32_t>(mode)],
+                       trip_shape.begin() + begin_index, trip_shape.end(), trip_path);
+
     // Add connected edges from the start node. Do this after the first trip
     // edge is added
     //
@@ -1180,14 +1225,16 @@ TripLegBuilder::Build(const AttributesController& controller,
     // Set the endnode of this directed edge as the startnode of the next edge.
     startnode = directededge->endnode();
 
-    // Save the opposing edge as the previous DirectedEdge (for name consistency)
-    const GraphTile* t2 =
-        directededge->leaves_tile() ? graphreader.GetGraphTile(directededge->endnode()) : graphtile;
-    if (t2 == nullptr) {
-      continue;
+    if (!directededge->IsTransitLine()) {
+      // Save the opposing edge as the previous DirectedEdge (for name consistency)
+      const GraphTile* t2 =
+          directededge->leaves_tile() ? graphreader.GetGraphTile(directededge->endnode()) : graphtile;
+      if (t2 == nullptr) {
+        continue;
+      }
+      GraphId oppedge = t2->GetOpposingEdgeId(directededge);
+      prev_de = t2->directededge(oppedge);
     }
-    GraphId oppedge = t2->GetOpposingEdgeId(directededge);
-    prev_de = t2->directededge(oppedge);
 
     // Save the index of the opposing local directed edge at the end node
     prior_opp_local_index = directededge->opp_local_idx();
@@ -1199,7 +1246,7 @@ TripLegBuilder::Build(const AttributesController& controller,
   auto* last_tile = graphreader.GetGraphTile(startnode);
   if (dest.has_date_time()) { // arrive by
 
-    uint64_t sec =
+    double sec =
         DateTime::seconds_since_epoch(dest.date_time(), DateTime::get_tz_db().from_index(
                                                             last_tile->node(startnode)->timezone()));
 
@@ -1215,7 +1262,7 @@ TripLegBuilder::Build(const AttributesController& controller,
     tp_dest->set_date_time(dest_date);
 
   } else if (origin.has_date_time()) { // leave at
-    uint64_t sec =
+    double sec =
         DateTime::seconds_since_epoch(origin.date_time(),
                                       DateTime::get_tz_db().from_index(first_node->timezone()));
 
@@ -1344,7 +1391,10 @@ TripLeg_Edge* TripLegBuilder::AddTripEdge(const AttributesController& controller
   // If turn lanes exist
   if (directededge->turnlanes()) {
     auto turnlanes = graphtile->turnlanes(idx);
-    // TODO - add to TripLeg
+    for (auto tl : turnlanes) {
+      TurnLane* turn_lane = trip_edge->add_turn_lanes();
+      turn_lane->set_directions_mask(tl);
+    }
   }
 
   // Set road class if requested

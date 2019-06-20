@@ -114,7 +114,7 @@ message AvoidEdge {
   optional float percent_along = 2;
 }
 
-message DirectionsOptions {
+message Options {
 
   enum Units {
     kilometers = 0;

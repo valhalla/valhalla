@@ -551,6 +551,16 @@ bool OSMData::read_from_temp_files(const std::string& tile_dir) {
   return status;
 }
 
+// Read OSMData from temporary files
+bool OSMData::read_from_unique_names_file(const std::string& tile_dir) {
+  LOG_INFO("Read OSMData unique_names from temp file");
+
+  // Read the other data
+  bool status = read_unique_names(tile_dir + unique_names_file, name_offset_map);
+  LOG_INFO("Done");
+  return status;
+}
+
 // add the direction information to the forward or reverse map for relations.
 void OSMData::add_to_name_map(const uint32_t member_id,
                               const std::string& direction,

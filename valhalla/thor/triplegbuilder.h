@@ -25,16 +25,6 @@ namespace thor {
 class TripLegBuilder {
 public:
   /**
-   * Constructor.
-   */
-  TripLegBuilder();
-
-  /**
-   * Destructor
-   */
-  virtual ~TripLegBuilder();
-
-  /**
    * Format the trip path output given the edges on the path.
    * For now just return length. TODO - modify to return trip path.
    */
@@ -46,6 +36,7 @@ public:
                        valhalla::Location& origin,
                        valhalla::Location& dest,
                        const std::list<valhalla::Location>& through_loc,
+                       TripLeg& trip_path,
                        const std::function<void()>* interrupt_callback = nullptr,
                        std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>>*
                            route_discontinuities = nullptr);

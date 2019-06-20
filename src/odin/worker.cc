@@ -35,17 +35,11 @@ odin_worker_t::~odin_worker_t() {
 void odin_worker_t::cleanup() {
 }
 
-std::list<DirectionsLeg> odin_worker_t::narrate(const valhalla_request_t& request,
-                                                std::list<TripLeg>& legs) const {
+void odin_worker_t::narrate(Api& request) const {
   // get some annotated directions
-  std::list<DirectionsLeg> narrated;
   try {
-    for (auto& leg : legs) {
-      narrated.emplace_back(odin::DirectionsBuilder().Build(request.options, leg));
-      LOG_INFO("maneuver_count::" + std::to_string(narrated.back().maneuver_size()));
-    }
+    odin::DirectionsBuilder().Build(request);
   } catch (...) { throw valhalla_exception_t{202}; }
-  return narrated;
 }
 
 #ifdef HAVE_HTTP
@@ -55,30 +49,19 @@ odin_worker_t::work(const std::list<zmq::message_t>& job,
                     const std::function<void()>& interrupt_function) {
   auto& info = *static_cast<prime_server::http_request_info_t*>(request_info);
   LOG_INFO("Got Odin Request " + std::to_string(info.id));
-  valhalla_request_t request;
+  Api request;
   try {
-    // crack open the original request
-    std::string serialized_options(static_cast<const char*>(job.front().data()), job.front().size());
-    request.parse(serialized_options);
-
     // Set the interrupt function
     service_worker_t::set_interrupt(interrupt_function);
 
-    // parse each leg
-    std::list<TripLeg> legs;
-    for (auto leg = ++job.cbegin(); leg != job.cend(); ++leg) {
-      // crack open the path
-      legs.emplace_back();
-      try {
-        legs.back().ParseFromArray(leg->data(), static_cast<int>(leg->size()));
-      } catch (...) { return jsonify_error({201}, info, request); }
-    }
+    // crack open the in progress request
+    request.ParseFromArray(job.front().data(), job.front().size());
 
     // narrate them and serialize them along
-    auto narrated = narrate(request, legs);
-    auto response = tyr::serializeDirections(request, legs, narrated);
+    narrate(request);
+    auto response = tyr::serializeDirections(request);
     auto* to_response =
-        request.options.format() == DirectionsOptions::gpx ? to_response_xml : to_response_json;
+        request.options().format() == Options::gpx ? to_response_xml : to_response_json;
     return to_response(response, info, request);
   } catch (const std::exception& e) {
     return jsonify_error({299, std::string(e.what())}, info, request);

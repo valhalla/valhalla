@@ -18,7 +18,7 @@
 #include "odin/util.h"
 #include "tyr/serializers.h"
 
-#include <valhalla/proto/directions_options.pb.h>
+#include <valhalla/proto/options.pb.h>
 
 using namespace valhalla;
 using namespace valhalla::baldr;
@@ -94,6 +94,15 @@ json::ArrayPtr waypoints(const google::protobuf::RepeatedPtrField<valhalla::Loca
   for (const auto& location : locations) {
     waypoints->emplace_back(waypoint(location, tracepoints));
   }
+  return waypoints;
+}
+
+json::ArrayPtr waypoints(const valhalla::Trip& trip) {
+  auto waypoints = json::array({});
+  for (const auto& route : trip.routes())
+    for (const auto& leg : route.legs())
+      for (const auto& location : leg.location())
+        waypoints->emplace_back(waypoint(location, false));
   return waypoints;
 }
 

@@ -10,7 +10,7 @@
 #include <valhalla/baldr/rapidjson_utils.h>
 
 #include <valhalla/baldr/graphreader.h>
-#include <valhalla/proto/directions_options.pb.h>
+#include <valhalla/proto/options.pb.h>
 
 namespace valhalla {
 namespace baldr {

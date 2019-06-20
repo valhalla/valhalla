@@ -11,7 +11,8 @@ set(tests aabb2 access_restriction actor admin attributes_controller complexrest
 
 if(ENABLE_DATA_TOOLS)
   list(APPEND tests astar edgeinfobuilder graphbuilder graphparser graphtilebuilder graphreader isochrone predictive_traffic
-    idtable matrix multipoint_routes names node_search refs search servicedays signinfo timedep_paths timeparsing trivial_paths uniquenames utrecht)
+    idtable matrix multipoint_routes names node_search refs search servicedays shape_attributes signinfo thor_worker timedep_paths
+    timeparsing trivial_paths uniquenames utrecht)
 endif()
 
 if(ENABLE_SERVICES)
@@ -114,6 +115,8 @@ if(ENABLE_DATA_TOOLS)
   add_dependencies(run-trivial_paths utrecht_tiles)
   add_dependencies(predictive_traffic utrecht_tiles)
   add_dependencies(run-multipoint_routes utrecht_tiles)
+  add_dependencies(run-shape_attributes utrecht_tiles)
+  add_dependencies(run-thor_worker utrecht_tiles)
 endif()
 
 if(ENABLE_SERVICES)

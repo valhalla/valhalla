@@ -60,16 +60,17 @@ void loki_worker_t::parse_locations(google::protobuf::RepeatedPtrField<valhalla:
   }
 }
 
-void loki_worker_t::parse_costing(valhalla_request_t& request) {
+void loki_worker_t::parse_costing(Api& api) {
+  auto& options = *api.mutable_options();
   // using the costing we can determine what type of edge filtering to use
-  if (!request.options.has_costing()) {
+  if (!options.has_costing()) {
     throw valhalla_exception_t{124};
   }
 
-  auto costing = request.options.costing();
+  auto costing = options.costing();
   auto costing_str = Costing_Name(costing);
 
-  if (!request.options.do_not_track()) {
+  if (!options.do_not_track()) {
     valhalla::midgard::logging::Log("costing_type::" + costing_str, " [ANALYTICS] ");
   }
 
@@ -79,20 +80,20 @@ void loki_worker_t::parse_costing(valhalla_request_t& request) {
   }
 
   try {
-    cost_ptr_t c = factory.Create(costing, request.options);
+    cost_ptr_t c = factory.Create(costing, options);
     edge_filter = c->GetEdgeFilter();
     node_filter = c->GetNodeFilter();
   } catch (const std::runtime_error&) { throw valhalla_exception_t{125, "'" + costing_str + "'"}; }
 
   // See if we have avoids and take care of them
-  if (request.options.avoid_locations_size() > max_avoid_locations) {
+  if (options.avoid_locations_size() > max_avoid_locations) {
     throw valhalla_exception_t{157, std::to_string(max_avoid_locations)};
   }
 
   // Process avoid locations. Add to a list of edgeids and percent along the edge.
-  if (request.options.avoid_locations_size()) {
+  if (options.avoid_locations_size()) {
     try {
-      auto avoid_locations = PathLocation::fromPBF(request.options.avoid_locations());
+      auto avoid_locations = PathLocation::fromPBF(options.avoid_locations());
       auto results = loki::Search(avoid_locations, *reader, edge_filter, node_filter);
       std::unordered_set<uint64_t> avoids;
       for (const auto& result : results) {
@@ -103,7 +104,7 @@ void loki_worker_t::parse_costing(valhalla_request_t& request) {
           // Also insert shortcut edge if one includes this edge
           if (inserted.second) {
             // Add edge and percent along to pbf
-            auto* avoid = request.options.add_avoid_edges();
+            auto* avoid = options.add_avoid_edges();
             avoid->set_id(edge.id);
             avoid->set_percent_along(edge.percent_along);
 
@@ -116,7 +117,7 @@ void loki_worker_t::parse_costing(valhalla_request_t& request) {
                 avoids.insert(shortcut);
 
                 // Add to pbf (with 0 percent along)
-                auto* avoid = request.options.add_avoid_edges();
+                auto* avoid = options.add_avoid_edges();
                 avoid->set_id(shortcut);
                 avoid->set_percent_along(0);
               }
@@ -131,8 +132,8 @@ void loki_worker_t::parse_costing(valhalla_request_t& request) {
   }
 
   // If more alternates are requested than we support we cap it
-  if (request.options.alternates() > max_alternates)
-    request.options.set_alternates(max_alternates);
+  if (options.alternates() > max_alternates)
+    options.set_alternates(max_alternates);
 }
 
 loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
@@ -153,10 +154,10 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
     reader.reset(new baldr::GraphReader(config.get_child("mjolnir")));
 
   // Keep a string noting which actions we support, throw if one isnt supported
-  DirectionsOptions::Action action;
+  Options::Action action;
   for (const auto& kv : config.get_child("loki.actions")) {
     auto path = kv.second.get_value<std::string>();
-    if (!DirectionsOptions_Action_Parse(path, &action)) {
+    if (!Options_Action_Parse(path, &action)) {
       throw std::runtime_error("Action not supported " + path);
     }
     action_str.append("'/" + path + "' ");
@@ -246,16 +247,17 @@ loki_worker_t::work(const std::list<zmq::message_t>& job,
   auto s = std::chrono::system_clock::now();
   auto& info = *static_cast<prime_server::http_request_info_t*>(request_info);
   LOG_INFO("Got Loki Request " + std::to_string(info.id));
-  valhalla_request_t request;
+  Api request;
   try {
     // request parsing
     auto http_request =
         prime_server::http_request_t::from_string(static_cast<const char*>(job.front().data()),
                                                   job.front().size());
-    request.parse(http_request);
+    ParseApi(http_request, request);
+    const auto& options = request.options();
 
     // check there is a valid action
-    if (!request.options.has_action()) {
+    if (!options.has_action()) {
       return jsonify_error({106, action_str}, info, request);
     }
 
@@ -264,32 +266,32 @@ loki_worker_t::work(const std::list<zmq::message_t>& job,
 
     prime_server::worker_t::result_t result{true};
     // do request specific processing
-    switch (request.options.action()) {
-      case DirectionsOptions::route:
+    switch (options.action()) {
+      case Options::route:
         route(request);
-        result.messages.emplace_back(request.options.SerializeAsString());
+        result.messages.emplace_back(request.SerializeAsString());
         break;
-      case DirectionsOptions::locate:
+      case Options::locate:
         result = to_response_json(locate(request), info, request);
         break;
-      case DirectionsOptions::sources_to_targets:
-      case DirectionsOptions::optimized_route:
+      case Options::sources_to_targets:
+      case Options::optimized_route:
         matrix(request);
-        result.messages.emplace_back(request.options.SerializeAsString());
+        result.messages.emplace_back(request.SerializeAsString());
         break;
-      case DirectionsOptions::isochrone:
+      case Options::isochrone:
         isochrones(request);
-        result.messages.emplace_back(request.options.SerializeAsString());
+        result.messages.emplace_back(request.SerializeAsString());
         break;
-      case DirectionsOptions::trace_attributes:
-      case DirectionsOptions::trace_route:
+      case Options::trace_attributes:
+      case Options::trace_route:
         trace(request);
-        result.messages.emplace_back(request.options.SerializeAsString());
+        result.messages.emplace_back(request.SerializeAsString());
         break;
-      case DirectionsOptions::height:
+      case Options::height:
         result = to_response_json(height(request), info, request);
         break;
-      case DirectionsOptions::transit_available:
+      case Options::transit_available:
         result = to_response_json(transit_available(request), info, request);
         break;
       default:
@@ -300,12 +302,11 @@ loki_worker_t::work(const std::list<zmq::message_t>& job,
     auto e = std::chrono::system_clock::now();
     std::chrono::duration<float, std::milli> elapsed_time = e - s;
     // log request if greater than X (ms)
-    auto work_units = request.options.locations_size()
-                          ? request.options.locations_size()
-                          : (request.options.sources_size()
-                                 ? request.options.sources_size() + request.options.targets_size()
-                                 : request.options.shape_size() * 20);
-    if (!request.options.do_not_track() && elapsed_time.count() / work_units > long_request) {
+    auto work_units = options.locations_size()
+                          ? options.locations_size()
+                          : (options.sources_size() ? options.sources_size() + options.targets_size()
+                                                    : options.shape_size() * 20);
+    if (!options.do_not_track() && elapsed_time.count() / work_units > long_request) {
       LOG_WARN("loki::request elapsed time (ms)::" + std::to_string(elapsed_time.count()));
       LOG_WARN("loki::request exceeded threshold::" + std::to_string(info.id));
       midgard::logging::Log("valhalla_loki_long_request", " [ANALYTICS] ");

@@ -6,7 +6,7 @@
 
 #include <valhalla/odin/enhancedtrippath.h>
 #include <valhalla/odin/maneuver.h>
-#include <valhalla/proto/directions_options.pb.h>
+#include <valhalla/proto/options.pb.h>
 #include <valhalla/proto/trip.pb.h>
 
 namespace valhalla {
@@ -21,11 +21,11 @@ public:
   /**
    * Constructor that assigns the specified directions options and trip path.
    *
-   * @param directions_options The directions options such as: units and
+   * @param options The directions options such as: units and
    *                           language.
    * @param trip_path The trip path - list of nodes, edges, attributes and shape.
    */
-  ManeuversBuilder(const DirectionsOptions& directions_options, EnhancedTripLeg* trip_path);
+  ManeuversBuilder(const Options& options, EnhancedTripLeg* trip_path);
 
   std::list<Maneuver> Build();
 
@@ -191,7 +191,15 @@ protected:
    */
   void EnhanceSignlessInterchnages(std::list<Maneuver>& maneuvers);
 
-  const DirectionsOptions& directions_options_;
+  /**
+   * Process the turn lanes at the maneuver point as well as within the maneuver.
+   * Activate the turn lane that matches the path traversal.
+   *
+   * @param maneuvers The list of maneuvers to process.
+   */
+  void ProcessTurnLanes(std::list<Maneuver>& maneuvers);
+
+  const Options& options_;
   EnhancedTripLeg* trip_path_;
 };
 

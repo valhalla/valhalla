@@ -5,7 +5,12 @@
 namespace valhalla {
 namespace thor {
 
-const std::unordered_map<std::string, bool> AttributesController::kRouteAttributes = {
+/*
+ * Map of attributes that a user can request to enable or disable, and their defaults.
+ * Most attributes are enabled by default but a few additional attributes are disabled
+ * unless explicitly included with the filter attributes request option.
+ */
+const std::unordered_map<std::string, bool> AttributesController::kDefaultAttributes = {
     // Edge keys
     {kEdgeNames, true},
     {kEdgeLength, true},
@@ -108,17 +113,13 @@ const std::unordered_map<std::string, bool> AttributesController::kRouteAttribut
     {kConfidenceScore, true},
     {kRawScore, true},
 
-};
+    // Per-shape attributes
+    {kShapeAttributesTime, false},
+    {kShapeAttributesLength, false},
+    {kShapeAttributesSpeed, false}};
 
-AttributesController::AttributesController(
-    const std::unordered_map<std::string, bool>& new_attributes) {
-  attributes = new_attributes;
-}
-
-void AttributesController::enable_all() {
-  for (auto& pair : attributes) {
-    pair.second = true;
-  }
+AttributesController::AttributesController() {
+  attributes = kDefaultAttributes;
 }
 
 void AttributesController::disable_all() {
@@ -127,6 +128,7 @@ void AttributesController::disable_all() {
   }
 }
 
+// Used to check if any keys starting with the `category` string are enabled.
 bool AttributesController::category_attribute_enabled(const std::string& category) const {
   for (const auto& pair : attributes) {
     // if the key starts with the specified category and it is enabled
