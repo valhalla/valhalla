@@ -2,6 +2,7 @@
 #include <cstdlib>
 #include <iostream>
 
+#include "baldr/turn.h"
 #include "baldr/turnlanes.h"
 #include "midgard/constants.h"
 #include "midgard/util.h"
@@ -1335,6 +1336,22 @@ bool EnhancedTripLeg_Node::HasTraversableOutboundIntersectingEdge(
   return false;
 }
 
+bool EnhancedTripLeg_Node::HasSpecifiedTurnXEdge(const Turn::Type turn_type,
+                                                 uint32_t from_heading,
+                                                 const TripLeg_TravelMode travel_mode) {
+
+  for (int i = 0; i < intersecting_edge_size(); ++i) {
+    // Only process the traversable outbound edges
+    if (GetIntersectingEdge(i)->IsTraversableOutbound(travel_mode) &&
+        (Turn::GetType(GetTurnDegree(from_heading, intersecting_edge(i).begin_heading())) ==
+         turn_type)) {
+      // return true if an intersecting edge of the specified turn type exists
+      return true;
+    }
+  }
+  return false;
+}
+
 // TODO: refactor to clean up code
 uint32_t EnhancedTripLeg_Node::GetStraightestTraversableIntersectingEdgeTurnDegree(
     uint32_t from_heading,
@@ -1386,6 +1403,72 @@ uint32_t EnhancedTripLeg_Node::GetStraightestIntersectingEdgeTurnDegree(uint32_t
     }
   }
   return staightest_turn_degree;
+}
+
+uint32_t EnhancedTripLeg_Node::GetRightMostTurnDegree(uint32_t turn_degree,
+                                                      uint32_t from_heading,
+                                                      const TripLeg_TravelMode travel_mode) {
+
+  auto get_right_delta = [](uint32_t turn_degree) -> uint32_t {
+    if (turn_degree < 90) {
+      return (90 - turn_degree);
+    } else if (turn_degree > 270) {
+      return (360 - turn_degree + 90);
+    } else {
+      return (turn_degree - 90);
+    }
+  };
+
+  uint32_t right_most_turn_degree = turn_degree;
+  uint32_t right_most_delta = get_right_delta(turn_degree);
+
+  for (int i = 0; i < intersecting_edge_size(); ++i) {
+    // Only process traversable outbound edges
+    if (GetIntersectingEdge(i)->IsTraversableOutbound(travel_mode)) {
+      // Get the intersecting edge turn degree and right turn delta
+      uint32_t xturn_degree = GetTurnDegree(from_heading, intersecting_edge(i).begin_heading());
+      uint32_t right_delta = get_right_delta(xturn_degree);
+      // Determine if the intersecting edge turn degree is closer to true right (90)
+      if (right_delta < right_most_delta) {
+        right_most_delta = right_delta;
+        right_most_turn_degree = xturn_degree;
+      }
+    }
+  }
+  return right_most_turn_degree;
+}
+
+uint32_t EnhancedTripLeg_Node::GetLeftMostTurnDegree(uint32_t turn_degree,
+                                                     uint32_t from_heading,
+                                                     const TripLeg_TravelMode travel_mode) {
+
+  auto get_left_delta = [](uint32_t turn_degree) -> uint32_t {
+    if (turn_degree < 90) {
+      return (90 + turn_degree);
+    } else if (turn_degree < 270) {
+      return (270 - turn_degree);
+    } else {
+      return (turn_degree - 270);
+    }
+  };
+
+  uint32_t left_most_turn_degree = turn_degree;
+  uint32_t left_most_delta = get_left_delta(turn_degree);
+
+  for (int i = 0; i < intersecting_edge_size(); ++i) {
+    // Only process traversable outbound edges
+    if (GetIntersectingEdge(i)->IsTraversableOutbound(travel_mode)) {
+      // Get the intersecting edge turn degree and left turn delta
+      uint32_t xturn_degree = GetTurnDegree(from_heading, intersecting_edge(i).begin_heading());
+      uint32_t left_delta = get_left_delta(xturn_degree);
+      // Determine if the intersecting edge turn degree is closer to true left (270)
+      if (left_delta < left_most_delta) {
+        left_most_delta = left_delta;
+        left_most_turn_degree = xturn_degree;
+      }
+    }
+  }
+  return left_most_turn_degree;
 }
 
 bool EnhancedTripLeg_Node::IsStreetIntersection() const {

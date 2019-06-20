@@ -1409,6 +1409,29 @@ void ManeuversBuilder::SetSimpleDirectionalManeuverType(Maneuver& maneuver,
       break;
     }
     case Turn::Type::kRight: {
+      auto node = trip_path_->GetEnhancedNode(maneuver.begin_node_index());
+      if (node && node->HasTraversableOutboundIntersectingEdge(maneuver.travel_mode())) {
+        auto right_most_turn_degree =
+            node->GetRightMostTurnDegree(maneuver.turn_degree(), prev_edge->end_heading(),
+                                         maneuver.travel_mode());
+        if (maneuver.turn_degree() == right_most_turn_degree) {
+          maneuver.set_type(DirectionsLeg_Maneuver_Type_kRight);
+          LOG_TRACE("ManeuverType=RIGHT");
+          break;
+        } else if ((maneuver.turn_degree() < right_most_turn_degree) &&
+                   !node->HasSpecifiedTurnXEdge(Turn::Type::kSlightRight, prev_edge->end_heading(),
+                                                maneuver.travel_mode())) {
+          maneuver.set_type(DirectionsLeg_Maneuver_Type_kSlightRight);
+          LOG_TRACE("ManeuverType=SLIGHT_RIGHT");
+          break;
+        } else if ((maneuver.turn_degree() > right_most_turn_degree) &&
+                   !node->HasSpecifiedTurnXEdge(Turn::Type::kSharpRight, prev_edge->end_heading(),
+                                                maneuver.travel_mode())) {
+          maneuver.set_type(DirectionsLeg_Maneuver_Type_kSharpRight);
+          LOG_TRACE("ManeuverType=SHARP_RIGHT");
+          break;
+        }
+      }
       maneuver.set_type(DirectionsLeg_Maneuver_Type_kRight);
       LOG_TRACE("ManeuverType=RIGHT");
       break;
@@ -1456,6 +1479,29 @@ void ManeuversBuilder::SetSimpleDirectionalManeuverType(Maneuver& maneuver,
       break;
     }
     case Turn::Type::kLeft: {
+      auto node = trip_path_->GetEnhancedNode(maneuver.begin_node_index());
+      if (node && node->HasTraversableOutboundIntersectingEdge(maneuver.travel_mode())) {
+        auto left_most_turn_degree =
+            node->GetLeftMostTurnDegree(maneuver.turn_degree(), prev_edge->end_heading(),
+                                        maneuver.travel_mode());
+        if (maneuver.turn_degree() == left_most_turn_degree) {
+          maneuver.set_type(DirectionsLeg_Maneuver_Type_kLeft);
+          LOG_TRACE("ManeuverType=LEFT");
+          break;
+        } else if ((maneuver.turn_degree() > left_most_turn_degree) &&
+                   !node->HasSpecifiedTurnXEdge(Turn::Type::kSlightLeft, prev_edge->end_heading(),
+                                                maneuver.travel_mode())) {
+          maneuver.set_type(DirectionsLeg_Maneuver_Type_kSlightLeft);
+          LOG_TRACE("ManeuverType=SLIGHT_LEFT");
+          break;
+        } else if ((maneuver.turn_degree() < left_most_turn_degree) &&
+                   !node->HasSpecifiedTurnXEdge(Turn::Type::kSharpLeft, prev_edge->end_heading(),
+                                                maneuver.travel_mode())) {
+          maneuver.set_type(DirectionsLeg_Maneuver_Type_kSharpLeft);
+          LOG_TRACE("ManeuverType=SHARP_LEFT");
+          break;
+        }
+      }
       maneuver.set_type(DirectionsLeg_Maneuver_Type_kLeft);
       LOG_TRACE("ManeuverType=LEFT");
       break;

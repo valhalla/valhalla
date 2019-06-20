@@ -9,6 +9,7 @@
 #include <utility>
 #include <vector>
 
+#include <valhalla/baldr/turn.h>
 #include <valhalla/proto/directions.pb.h>
 #include <valhalla/proto/options.pb.h>
 #include <valhalla/proto/trip.pb.h>
@@ -572,6 +573,10 @@ public:
 
   bool HasTraversableOutboundIntersectingEdge(const TripLeg_TravelMode travel_mode);
 
+  bool HasSpecifiedTurnXEdge(const baldr::Turn::Type turn_type,
+                             uint32_t from_heading,
+                             const TripLeg_TravelMode travel_mode);
+
   uint32_t GetStraightestIntersectingEdgeTurnDegree(uint32_t from_heading);
 
   uint32_t GetStraightestTraversableIntersectingEdgeTurnDegree(uint32_t from_heading,
@@ -579,6 +584,14 @@ public:
 
   bool IsStraightestTraversableIntersectingEdgeReversed(uint32_t from_heading,
                                                         const TripLeg_TravelMode travel_mode);
+
+  uint32_t GetRightMostTurnDegree(uint32_t turn_degree,
+                                  uint32_t from_heading,
+                                  const TripLeg_TravelMode travel_mode);
+
+  uint32_t GetLeftMostTurnDegree(uint32_t turn_degree,
+                                 uint32_t from_heading,
+                                 const TripLeg_TravelMode travel_mode);
 
   // Type
   bool IsStreetIntersection() const;
