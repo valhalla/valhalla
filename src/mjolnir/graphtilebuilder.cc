@@ -149,6 +149,8 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
     EdgeInfoBuilder eib;
     eib.set_wayid(ei.wayid());
     eib.set_mean_elevation(ei.mean_elevation());
+    eib.set_bike_network(ei.bike_network());
+    eib.set_speed_limit(ei.speed_limit());
     for (uint32_t nm = 0; nm < ei.name_count(); nm++) {
       NameInfo info = ei.GetNameInfo(nm);
       name_info.insert(info);
