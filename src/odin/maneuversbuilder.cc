@@ -2077,6 +2077,16 @@ void ManeuversBuilder::DetermineRelativeDirection(Maneuver& maneuver) {
         maneuver.set_begin_relative_direction(Maneuver::RelativeDirection::kKeepLeft);
       }
     }
+  } else if ((relative_direction == Maneuver::RelativeDirection::kLeft) &&
+             (Turn::GetType(maneuver.turn_degree()) == Turn::Type::kSlightLeft) &&
+             node->HasSpecifiedTurnXEdge(Turn::Type::kLeft, prev_edge->end_heading(),
+                                         maneuver.travel_mode())) {
+    maneuver.set_begin_relative_direction(Maneuver::RelativeDirection::kKeepLeft);
+  } else if ((relative_direction == Maneuver::RelativeDirection::kRight) &&
+             (Turn::GetType(maneuver.turn_degree()) == Turn::Type::kSlightRight) &&
+             node->HasSpecifiedTurnXEdge(Turn::Type::kRight, prev_edge->end_heading(),
+                                         maneuver.travel_mode())) {
+    maneuver.set_begin_relative_direction(Maneuver::RelativeDirection::kKeepRight);
   }
 }
 
