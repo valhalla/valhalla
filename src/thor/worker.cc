@@ -108,7 +108,6 @@ thor_worker_t::work(const std::list<zmq::message_t>& job,
   Api request;
   try {
     // crack open the original request
-    valhalla::Api request;
     request.ParseFromArray(job.front().data(), job.front().size());
     const auto& options = request.options();
 
@@ -149,6 +148,11 @@ thor_worker_t::work(const std::list<zmq::message_t>& job,
         result = to_response_json(trace_attributes(request), info, request);
         denominator = trace.size() / 1100;
         break;
+      case Options::expansion: {
+        result = to_response_json(expansion(request), info, request);
+        denominator = options.locations_size();
+        break;
+      }
       default:
         throw valhalla_exception_t{400}; // this should never happen
     }

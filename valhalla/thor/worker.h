@@ -54,6 +54,7 @@ public:
   std::string isochrones(Api& request);
   void trace_route(Api& request);
   std::string trace_attributes(Api& request);
+  std::string expansion(Api& request);
 
 protected:
   std::vector<std::vector<thor::PathInfo>> get_path(PathAlgorithm* path_algorithm,

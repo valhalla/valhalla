@@ -1,5 +1,4 @@
-#ifndef VALHALLA_THOR_PATHALGORITHM_H_
-#define VALHALLA_THOR_PATHALGORITHM_H_
+#pragma once
 
 #include <functional>
 #include <map>
@@ -29,7 +28,7 @@ public:
   /**
    * Constructor
    */
-  PathAlgorithm() : interrupt(nullptr), has_ferry_(false) {
+  PathAlgorithm() : interrupt(nullptr), has_ferry_(false), expansion_callback_() {
   }
 
   /**
@@ -79,10 +78,25 @@ public:
     return has_ferry_;
   }
 
+  /**
+   * Sets the functor which will track the algorithms expansion.
+   *
+   * @param  expansion_callback  the functor to call back when the algorithm makes progress
+   *                             on a given edge
+   */
+  using expansion_callback_t =
+      std::function<void(baldr::GraphReader&, const char*, baldr::GraphId, const char*, bool)>;
+  void set_track_expansion(const expansion_callback_t& expansion_callback) {
+    expansion_callback_ = expansion_callback;
+  }
+
 protected:
   const std::function<void()>* interrupt;
 
   bool has_ferry_; // Indicates whether the path has a ferry
+
+  // for tracking the expansion of the algorithm visually
+  expansion_callback_t expansion_callback_;
 
   /**
    * Check for path completion along the same edge. Edge ID in question
@@ -123,5 +137,3 @@ protected:
 
 } // namespace thor
 } // namespace valhalla
-
-#endif // VALHALLA_THOR_PATHALGORITHM_H_
