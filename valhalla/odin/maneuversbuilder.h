@@ -192,6 +192,14 @@ protected:
   void EnhanceSignlessInterchnages(std::list<Maneuver>& maneuvers);
 
   /**
+   * Returns the expected turn lane direction based on the specified maneuver and the available turn
+   * lanes at the intersection.
+   *
+   * @param maneuver The maneuver at the intersection.
+   */
+  uint16_t GetExpectedTurnLaneDirection(Maneuver& maneuver) const;
+
+  /**
    * Process the turn lanes at the maneuver point as well as within the maneuver.
    * Activate the turn lane that matches the path traversal.
    *

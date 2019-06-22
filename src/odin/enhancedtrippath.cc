@@ -471,20 +471,33 @@ bool EnhancedTripLeg_Edge::HasNonDirectionalTurnLane() const {
   return false;
 }
 
+bool EnhancedTripLeg_Edge::HasTurnLane(uint16_t turn_lane_direction) const {
+  for (const auto& turn_lane : turn_lanes()) {
+    // Return true if the specified turn lane exists
+    if (turn_lane.directions_mask() & turn_lane_direction) {
+      return true;
+    }
+  }
+  return false;
+}
+
 uint16_t EnhancedTripLeg_Edge::ActivateTurnLanesFromLeft(uint16_t turn_lane_direction,
                                                          uint16_t activated_max) {
   uint16_t activated_count = 0;
-  for (auto& turn_lane : *(mutable_turn_lanes())) {
-    // Stop processing the lanes if the activated maximum has been reached
-    if (activated_count >= activated_max) {
-      break;
-    }
+  // Make sure turn lane has a direction
+  if (!HasNonDirectionalTurnLane()) {
+    for (auto& turn_lane : *(mutable_turn_lanes())) {
+      // Stop processing the lanes if the activated maximum has been reached
+      if (activated_count >= activated_max) {
+        break;
+      }
 
-    // If the turn lane is in the specified direction then activate the lane
-    // and increment the activated count
-    if (turn_lane.directions_mask() & turn_lane_direction) {
-      turn_lane.set_is_active(true);
-      ++activated_count;
+      // If the turn lane is in the specified direction then activate the lane
+      // and increment the activated count
+      if (turn_lane.directions_mask() & turn_lane_direction) {
+        turn_lane.set_is_active(true);
+        ++activated_count;
+      }
     }
   }
   return activated_count;
@@ -493,19 +506,22 @@ uint16_t EnhancedTripLeg_Edge::ActivateTurnLanesFromLeft(uint16_t turn_lane_dire
 uint16_t EnhancedTripLeg_Edge::ActivateTurnLanesFromRight(uint16_t turn_lane_direction,
                                                           uint16_t activated_max) {
   uint16_t activated_count = 0;
-  for (auto turn_lane_iter = mutable_turn_lanes()->rbegin();
-       turn_lane_iter != mutable_turn_lanes()->rend(); ++turn_lane_iter) {
-    //    for (auto& turn_lane : *(mutable_turn_lanes())) {
-    // Stop processing the lanes if the activated maximum has been reached
-    if (activated_count >= activated_max) {
-      break;
-    }
+  // Make sure turn lane has a direction
+  if (!HasNonDirectionalTurnLane()) {
+    for (auto turn_lane_iter = mutable_turn_lanes()->rbegin();
+         turn_lane_iter != mutable_turn_lanes()->rend(); ++turn_lane_iter) {
+      //    for (auto& turn_lane : *(mutable_turn_lanes())) {
+      // Stop processing the lanes if the activated maximum has been reached
+      if (activated_count >= activated_max) {
+        break;
+      }
 
-    // If the turn lane is in the specified direction then activate the lane
-    // and increment the activated count
-    if (turn_lane_iter->directions_mask() & turn_lane_direction) {
-      turn_lane_iter->set_is_active(true);
-      ++activated_count;
+      // If the turn lane is in the specified direction then activate the lane
+      // and increment the activated count
+      if (turn_lane_iter->directions_mask() & turn_lane_direction) {
+        turn_lane_iter->set_is_active(true);
+        ++activated_count;
+      }
     }
   }
   return activated_count;
@@ -514,14 +530,23 @@ uint16_t EnhancedTripLeg_Edge::ActivateTurnLanesFromRight(uint16_t turn_lane_dir
 uint16_t
 EnhancedTripLeg_Edge::ActivateTurnLanes(uint16_t turn_lane_direction,
                                         float remaining_step_distance,
+                                        const DirectionsLeg_Maneuver_Type& curr_maneuver_type,
                                         const DirectionsLeg_Maneuver_Type& next_maneuver_type) {
-  // If remaining step distance is less than short threshold
-  // and next maneuver is not a straight
-  if ((remaining_step_distance < kShortRemainingDistanceThreshold) &&
-      !((next_maneuver_type == DirectionsLeg_Maneuver_Type_kBecomes) ||
-        (next_maneuver_type == DirectionsLeg_Maneuver_Type_kContinue) ||
-        (next_maneuver_type == DirectionsLeg_Maneuver_Type_kRampStraight) ||
-        (next_maneuver_type == DirectionsLeg_Maneuver_Type_kStayStraight))) {
+  if ((curr_maneuver_type == DirectionsLeg_Maneuver_Type_kUturnLeft) &&
+      (turn_lane_direction != kTurnLaneReverse)) {
+    // Activate the left most turn lane
+    return ActivateTurnLanesFromLeft(turn_lane_direction, 1);
+  } else if ((curr_maneuver_type == DirectionsLeg_Maneuver_Type_kUturnRight) &&
+             (turn_lane_direction != kTurnLaneReverse)) {
+    // Activate the right most turn lane
+    return ActivateTurnLanesFromRight(turn_lane_direction, 1);
+  } else if ((remaining_step_distance < kShortRemainingDistanceThreshold) &&
+             !((next_maneuver_type == DirectionsLeg_Maneuver_Type_kBecomes) ||
+               (next_maneuver_type == DirectionsLeg_Maneuver_Type_kContinue) ||
+               (next_maneuver_type == DirectionsLeg_Maneuver_Type_kRampStraight) ||
+               (next_maneuver_type == DirectionsLeg_Maneuver_Type_kStayStraight))) {
+    // If remaining step distance is less than short threshold
+    // and next maneuver is not a straight
     // Activate only specific matching turn lanes
     switch (next_maneuver_type) {
       case DirectionsLeg_Maneuver_Type_kUturnLeft:

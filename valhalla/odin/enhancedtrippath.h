@@ -386,8 +386,10 @@ public:
   // Turn Lanes
   bool HasActiveTurnLane() const;
   bool HasNonDirectionalTurnLane() const;
+  bool HasTurnLane(uint16_t turn_lane_direction) const;
   uint16_t ActivateTurnLanes(uint16_t turn_lane_direction,
                              float remaining_step_distance,
+                             const DirectionsLeg_Maneuver_Type& curr_maneuver_type,
                              const DirectionsLeg_Maneuver_Type& next_maneuver_type);
   uint16_t ActivateTurnLanesFromLeft(uint16_t turn_lane_direction,
                                      uint16_t activated_max = std::numeric_limits<uint16_t>::max());

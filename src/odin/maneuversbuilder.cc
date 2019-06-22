@@ -56,49 +56,6 @@ void CountAndSortExitSignList(std::vector<Sign>* prev_signs, std::vector<Sign>* 
   SortExitSignList(curr_signs);
 }
 
-uint16_t GetExpectedTurnLaneDirection(Maneuver& maneuver) {
-  // TODO
-  // DirectionsLeg_Maneuver_Type_kStayLeft
-  // DirectionsLeg_Maneuver_Type_kStayRight
-  switch (maneuver.type()) {
-    case valhalla::DirectionsLeg_Maneuver_Type_kUturnLeft:
-      return kTurnLaneReverse;
-    case valhalla::DirectionsLeg_Maneuver_Type_kSharpLeft:
-      return kTurnLaneSharpLeft;
-    case valhalla::DirectionsLeg_Maneuver_Type_kLeft:
-      return kTurnLaneLeft;
-    case valhalla::DirectionsLeg_Maneuver_Type_kSlightLeft:
-    case valhalla::DirectionsLeg_Maneuver_Type_kExitLeft:
-      return kTurnLaneSlightLeft;
-    case valhalla::DirectionsLeg_Maneuver_Type_kRampLeft:
-      if (maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kLeft) {
-        return kTurnLaneLeft;
-      }
-      return kTurnLaneSlightLeft;
-    case valhalla::DirectionsLeg_Maneuver_Type_kBecomes:
-    case valhalla::DirectionsLeg_Maneuver_Type_kContinue:
-    case valhalla::DirectionsLeg_Maneuver_Type_kRampStraight:
-    case valhalla::DirectionsLeg_Maneuver_Type_kStayStraight:
-      return kTurnLaneThrough;
-    case valhalla::DirectionsLeg_Maneuver_Type_kSlightRight:
-    case valhalla::DirectionsLeg_Maneuver_Type_kExitRight:
-      return kTurnLaneSlightRight;
-    case valhalla::DirectionsLeg_Maneuver_Type_kRampRight:
-      if (maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kRight) {
-        return kTurnLaneRight;
-      }
-      return kTurnLaneSlightRight;
-    case valhalla::DirectionsLeg_Maneuver_Type_kRight:
-      return kTurnLaneRight;
-    case valhalla::DirectionsLeg_Maneuver_Type_kSharpRight:
-      return kTurnLaneSharpRight;
-    case valhalla::DirectionsLeg_Maneuver_Type_kUturnRight:
-      return kTurnLaneReverse;
-    default:
-      return kTurnLaneNone;
-  }
-}
-
 } // namespace
 
 namespace valhalla {
@@ -2382,6 +2339,122 @@ void ManeuversBuilder::EnhanceSignlessInterchnages(std::list<Maneuver>& maneuver
   }
 }
 
+uint16_t ManeuversBuilder::GetExpectedTurnLaneDirection(Maneuver& maneuver) const {
+  auto turn_lane_edge = trip_path_->GetPrevEdge(maneuver.begin_node_index());
+  if (turn_lane_edge) {
+    switch (maneuver.type()) {
+      case valhalla::DirectionsLeg_Maneuver_Type_kUturnLeft:
+        if (turn_lane_edge->HasTurnLane(kTurnLaneReverse)) {
+          return kTurnLaneReverse;
+        } else if (turn_lane_edge->HasTurnLane(kTurnLaneLeft)) {
+          return kTurnLaneLeft;
+        }
+        break;
+      case valhalla::DirectionsLeg_Maneuver_Type_kSharpLeft:
+        if (turn_lane_edge->HasTurnLane(kTurnLaneSharpLeft)) {
+          return kTurnLaneSharpLeft;
+        } else if (turn_lane_edge->HasTurnLane(kTurnLaneLeft)) {
+          return kTurnLaneLeft;
+        }
+        break;
+      case valhalla::DirectionsLeg_Maneuver_Type_kLeft:
+        if (turn_lane_edge->HasTurnLane(kTurnLaneLeft)) {
+          return kTurnLaneLeft;
+        } else if (turn_lane_edge->HasTurnLane(kTurnLaneSlightLeft) &&
+                   (maneuver.turn_degree() > 270)) {
+          return kTurnLaneSlightLeft;
+        } else if (turn_lane_edge->HasTurnLane(kTurnLaneSharpLeft) &&
+                   (maneuver.turn_degree() < 270)) {
+          return kTurnLaneSharpLeft;
+        }
+        break;
+      case valhalla::DirectionsLeg_Maneuver_Type_kSlightLeft:
+      case valhalla::DirectionsLeg_Maneuver_Type_kExitLeft:
+        if (turn_lane_edge->HasTurnLane(kTurnLaneSlightLeft)) {
+          return kTurnLaneSlightLeft;
+        } else if (turn_lane_edge->HasTurnLane(kTurnLaneLeft)) {
+          return kTurnLaneLeft;
+        }
+        break;
+      case valhalla::DirectionsLeg_Maneuver_Type_kRampLeft:
+        if ((maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kLeft) &&
+            turn_lane_edge->HasTurnLane(kTurnLaneLeft)) {
+          return kTurnLaneLeft;
+        } else if (turn_lane_edge->HasTurnLane(kTurnLaneSlightLeft)) {
+          return kTurnLaneSlightLeft;
+        } else if (turn_lane_edge->HasTurnLane(kTurnLaneLeft)) {
+          return kTurnLaneLeft;
+        }
+        break;
+      case valhalla::DirectionsLeg_Maneuver_Type_kStayLeft:
+        if (turn_lane_edge->HasTurnLane(kTurnLaneSlightLeft)) {
+          return kTurnLaneSlightLeft;
+        } else if (turn_lane_edge->HasTurnLane(kTurnLaneLeft)) {
+          return kTurnLaneLeft;
+        }
+        break;
+      case valhalla::DirectionsLeg_Maneuver_Type_kBecomes:
+      case valhalla::DirectionsLeg_Maneuver_Type_kContinue:
+      case valhalla::DirectionsLeg_Maneuver_Type_kRampStraight:
+      case valhalla::DirectionsLeg_Maneuver_Type_kStayStraight:
+        return kTurnLaneThrough;
+      case valhalla::DirectionsLeg_Maneuver_Type_kStayRight:
+        if (turn_lane_edge->HasTurnLane(kTurnLaneSlightRight)) {
+          return kTurnLaneSlightRight;
+        } else if (turn_lane_edge->HasTurnLane(kTurnLaneRight)) {
+          return kTurnLaneRight;
+        }
+        break;
+      case valhalla::DirectionsLeg_Maneuver_Type_kSlightRight:
+      case valhalla::DirectionsLeg_Maneuver_Type_kExitRight:
+        if (turn_lane_edge->HasTurnLane(kTurnLaneSlightRight)) {
+          return kTurnLaneSlightRight;
+        } else if (turn_lane_edge->HasTurnLane(kTurnLaneRight)) {
+          return kTurnLaneRight;
+        }
+        break;
+      case valhalla::DirectionsLeg_Maneuver_Type_kRampRight:
+        if ((maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kRight) &&
+            turn_lane_edge->HasTurnLane(kTurnLaneRight)) {
+          return kTurnLaneRight;
+        } else if (turn_lane_edge->HasTurnLane(kTurnLaneSlightRight)) {
+          return kTurnLaneSlightRight;
+        } else if (turn_lane_edge->HasTurnLane(kTurnLaneRight)) {
+          return kTurnLaneRight;
+        }
+        break;
+      case valhalla::DirectionsLeg_Maneuver_Type_kRight:
+        if (turn_lane_edge->HasTurnLane(kTurnLaneRight)) {
+          return kTurnLaneRight;
+        } else if (turn_lane_edge->HasTurnLane(kTurnLaneSlightRight) &&
+                   (maneuver.turn_degree() < 90)) {
+          return kTurnLaneSlightRight;
+        } else if (turn_lane_edge->HasTurnLane(kTurnLaneSharpRight) &&
+                   (maneuver.turn_degree() > 90)) {
+          return kTurnLaneSharpRight;
+        }
+        break;
+      case valhalla::DirectionsLeg_Maneuver_Type_kSharpRight:
+        if (turn_lane_edge->HasTurnLane(kTurnLaneSharpRight)) {
+          return kTurnLaneSharpRight;
+        } else if (turn_lane_edge->HasTurnLane(kTurnLaneRight)) {
+          return kTurnLaneRight;
+        }
+        break;
+      case valhalla::DirectionsLeg_Maneuver_Type_kUturnRight:
+        if (turn_lane_edge->HasTurnLane(kTurnLaneReverse)) {
+          return kTurnLaneReverse;
+        } else if (turn_lane_edge->HasTurnLane(kTurnLaneRight)) {
+          return kTurnLaneRight;
+        }
+        break;
+      default:
+        return kTurnLaneNone;
+    }
+  }
+  return kTurnLaneNone;
+}
+
 void ManeuversBuilder::ProcessTurnLanes(std::list<Maneuver>& maneuvers) {
   auto curr_man = maneuvers.begin();
   auto next_man = maneuvers.begin();
@@ -2404,7 +2477,7 @@ void ManeuversBuilder::ProcessTurnLanes(std::list<Maneuver>& maneuvers) {
       auto prev_edge = trip_path_->GetPrevEdge(curr_man->begin_node_index());
       if (prev_edge && (prev_edge->turn_lanes_size() > 0)) {
         prev_edge->ActivateTurnLanes(GetExpectedTurnLaneDirection(*(curr_man)),
-                                     remaining_step_distance, next_man->type());
+                                     remaining_step_distance, curr_man->type(), next_man->type());
       }
 
       // TODO
@@ -2421,12 +2494,11 @@ void ManeuversBuilder::ProcessTurnLanes(std::list<Maneuver>& maneuvers) {
 
           if (prev_edge->turn_lanes_size() > 0) {
             // For now just assume 'through' - we can enhance if needed
-            prev_edge->ActivateTurnLanes(kTurnLaneThrough, remaining_step_distance, next_man->type());
+            prev_edge->ActivateTurnLanes(kTurnLaneThrough, remaining_step_distance, curr_man->type(),
+                                         next_man->type());
           }
         }
       }
-
-      // Handle any special `none` lanes
 
       // Do we mark maneuver?
     }
