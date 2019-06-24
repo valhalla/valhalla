@@ -34,6 +34,9 @@ using namespace valhalla::baldr;
 using namespace valhalla::odin;
 
 namespace {
+
+constexpr float kShortForkThreshold = 0.05f; // Kilometers
+
 void SortExitSignList(std::vector<Sign>* signs) {
   // Sort signs by descending consecutive count order
   std::sort(signs->begin(), signs->end(),
@@ -2476,13 +2479,15 @@ void ManeuversBuilder::ProcessTurnLanes(std::list<Maneuver>& maneuvers) {
       // Assign turn lane at transition point
       auto prev_edge = trip_path_->GetPrevEdge(curr_man->begin_node_index());
       if (prev_edge && (prev_edge->turn_lanes_size() > 0)) {
-        prev_edge->ActivateTurnLanes(GetExpectedTurnLaneDirection(*(curr_man)),
-                                     remaining_step_distance, curr_man->type(), next_man->type());
+        // If not a short fork then process for turn lanes
+        if (!((remaining_step_distance < kShortForkThreshold) &&
+              ((curr_man->type() == DirectionsLeg_Maneuver_Type_kStayLeft) ||
+               (curr_man->type() == DirectionsLeg_Maneuver_Type_kStayRight) ||
+               (curr_man->type() == DirectionsLeg_Maneuver_Type_kStayStraight)))) {
+          prev_edge->ActivateTurnLanes(GetExpectedTurnLaneDirection(*(curr_man)),
+                                       remaining_step_distance, curr_man->type(), next_man->type());
+        }
       }
-
-      // TODO
-      // If curr_man is short ramp and prev_man is ramp special logic
-      // (if curr_man is left or right subset of prev_man L|T|R is begin subset of L|T|R|R)
 
       // Assign turn lanes within step
       for (auto index = (curr_man->begin_node_index() + 1); index < curr_man->end_node_index();
