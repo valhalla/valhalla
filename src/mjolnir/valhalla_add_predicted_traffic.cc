@@ -479,7 +479,6 @@ int main(int argc, char** argv) {
 
   LOG_INFO("Updated " + std::to_string(updated_count) + " directed edges.");
   LOG_INFO("Duplicate count " + std::to_string(duplicate_count) + ".");
-
   LOG_INFO("Finished");
 
   GraphReader reader(pt.get_child("mjolnir"));
@@ -493,6 +492,11 @@ int main(int argc, char** argv) {
   for (uint32_t level = 0; level < 3; level++) {
     auto tiles = reader.GetTileSet(level);
     for (const auto& tile_id : tiles) {
+
+      if (reader.OverCommitted()) {
+        reader.Clear();
+      }
+
       const GraphTile* tile = reader.GetGraphTile(tile_id);
       uint32_t n = tile->header()->directededgecount();
       if (n == 0)
@@ -522,7 +526,6 @@ int main(int argc, char** argv) {
         if (de->predicted_speed()) {
           pred_road_class_edges[rc]++;
         }
-        auto shape = tile->edgeinfo(de->edgeinfo_offset()).shape();
 
         // Presence of free flow and/or constrained flow speeds
         if (de->free_flow_speed() > 0 || de->constrained_flow_speed() > 0) {
@@ -539,7 +542,6 @@ int main(int argc, char** argv) {
   LOG_INFO("Stats - excluding shortcut edges");
   LOG_INFO("non driveable with speed = " + std::to_string(non_dr_with_speed));
   LOG_INFO("Shortcuts with speed = " + std::to_string(shortcuts_with_speed));
-  LOG_INFO("Transitions with speed = " + std::to_string(shortcuts_with_speed));
   uint32_t totaldriveable = 0, totalpt = 0, totalff = 0, totaldriveablelink = 0;
   for (uint32_t i = 0; i < 8; i++) {
     float pct1 = 100.0f * (float)pred_road_class_edges[i] / dr_road_class_edges[i];
@@ -557,10 +559,12 @@ int main(int argc, char** argv) {
     totalpt += pred_road_class_edges[i];
     totalff += ff_road_class_edges[i];
   }
-  LOG_INFO("total driveable = " + std::to_string(totaldriveable) + " total driveable ramps/links = " +
-           std::to_string(totaldriveablelink) + " total driveable non ramps/links = " +
-           std::to_string(totaldriveable - totaldriveablelink) + " total pred " +
-           std::to_string(totalpt) + " total ff " + std::to_string(totalff));
+  LOG_INFO("total driveable = " + std::to_string(totaldriveable) +
+           " total driveable ramps/links = " + std::to_string(totaldriveablelink));
+  LOG_INFO("total driveable non ramps/links = " +
+           std::to_string(totaldriveable - totaldriveablelink));
+  LOG_INFO("total pred " + std::to_string(totalpt));
+  LOG_INFO("total ff " + std::to_string(totalff));
 
   return EXIT_SUCCESS;
 }
