@@ -2394,6 +2394,10 @@ uint16_t ManeuversBuilder::GetExpectedTurnLaneDirection(Maneuver& maneuver) cons
           return kTurnLaneSlightLeft;
         } else if (turn_lane_edge->HasTurnLane(kTurnLaneLeft)) {
           return kTurnLaneLeft;
+        } else if (turn_lane_edge->HasTurnLane(kTurnLaneThrough) &&
+                   (turn_lane_edge->HasTurnLane(kTurnLaneRight) ||
+                    turn_lane_edge->HasTurnLane(kTurnLaneSlightRight))) {
+          return kTurnLaneThrough;
         }
         break;
       case valhalla::DirectionsLeg_Maneuver_Type_kBecomes:
@@ -2406,6 +2410,10 @@ uint16_t ManeuversBuilder::GetExpectedTurnLaneDirection(Maneuver& maneuver) cons
           return kTurnLaneSlightRight;
         } else if (turn_lane_edge->HasTurnLane(kTurnLaneRight)) {
           return kTurnLaneRight;
+        } else if (turn_lane_edge->HasTurnLane(kTurnLaneThrough) &&
+                   (turn_lane_edge->HasTurnLane(kTurnLaneLeft) ||
+                    turn_lane_edge->HasTurnLane(kTurnLaneSlightLeft))) {
+          return kTurnLaneThrough;
         }
         break;
       case valhalla::DirectionsLeg_Maneuver_Type_kSlightRight:
