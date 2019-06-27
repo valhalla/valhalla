@@ -6,6 +6,7 @@
 * **Enhancement**
    * ADDED: Use the same protobuf object the entire way through the request process [#1837](https://github.com/valhalla/valhalla/pull/1837)
    * ADDED: Enhanced turn lane processing [#1859](https://github.com/valhalla/valhalla/pull/1859)
+   * ADDED: Add global_synchronized_cache in valhalla_build_config [#1851](https://github.com/valhalla/valhalla/pull/1851)
 
 ## Release Date: 2019-06-04 Valhalla 3.0.5
 * **Bug Fix**
