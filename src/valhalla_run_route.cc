@@ -21,6 +21,7 @@
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
 #include "odin/directionsbuilder.h"
+#include "odin/enhancedtrippath.h"
 #include "odin/util.h"
 #include "sif/costfactory.h"
 #include "thor/astar.h"
@@ -327,6 +328,7 @@ valhalla::DirectionsLeg DirectionsTest(valhalla::Api& api,
 
   DirectionsBuilder::Build(api);
   const auto& trip_directions = api.directions().routes(0).legs(0);
+  EnhancedTripLeg etl(*api.mutable_trip()->mutable_routes(0)->mutable_legs(0));
   std::string units = (api.options().units() == valhalla::Options::kilometers ? "km" : "mi");
   int m = 1;
   valhalla::midgard::logging::Log("From: " + std::to_string(origin), " [NARRATIVE] ");
@@ -350,10 +352,35 @@ valhalla::DirectionsLeg DirectionsTest(valhalla::Api& api,
     }
 
     // Instruction
-    valhalla::midgard::logging::Log((boost::format("%d: %s | %.1f %s") % m++ %
+    valhalla::midgard::logging::Log((boost::format("%d: %s | %.1f %s") % m %
                                      maneuver.text_instruction() % maneuver.length() % units)
                                         .str(),
                                     " [NARRATIVE] ");
+
+    // Turn lanes
+    // Only for driving and no start/end maneuvers
+    if ((maneuver.travel_mode() == valhalla::DirectionsLeg_TravelMode_kDrive) &&
+        !((maneuver.type() == valhalla::DirectionsLeg_Maneuver_Type_kStart) ||
+          (maneuver.type() == valhalla::DirectionsLeg_Maneuver_Type_kStartRight) ||
+          (maneuver.type() == valhalla::DirectionsLeg_Maneuver_Type_kStartLeft) ||
+          (maneuver.type() == valhalla::DirectionsLeg_Maneuver_Type_kDestination) ||
+          (maneuver.type() == valhalla::DirectionsLeg_Maneuver_Type_kDestinationRight) ||
+          (maneuver.type() == valhalla::DirectionsLeg_Maneuver_Type_kDestinationLeft))) {
+      auto prev_edge = etl.GetPrevEdge(maneuver.begin_path_index());
+      if (prev_edge && (prev_edge->turn_lanes_size() > 0)) {
+        std::string turn_lane_status = "ACTIVE_TURN_LANES";
+        if (prev_edge->HasNonDirectionalTurnLane()) {
+          turn_lane_status = "NON_DIRECTIONAL_TURN_LANES";
+        } else if (!prev_edge->HasActiveTurnLane()) {
+          turn_lane_status = "NO_ACTIVE_TURN_LANES";
+        }
+        valhalla::midgard::logging::Log((boost::format("   %d: TURN_LANES: %s %s") % m %
+                                         prev_edge->TurnLanesToString(prev_edge->turn_lanes()) %
+                                         turn_lane_status)
+                                            .str(),
+                                        " [NARRATIVE] ");
+      }
+    }
 
     // Verbal transition alert instruction
     if (maneuver.has_verbal_transition_alert_instruction()) {
@@ -397,6 +424,9 @@ valhalla::DirectionsLeg DirectionsTest(valhalla::Api& api,
       valhalla::midgard::logging::Log("----------------------------------------------",
                                       " [NARRATIVE] ");
     }
+
+    // Increment maneuver number
+    ++m;
   }
   valhalla::midgard::logging::Log("==============================================", " [NARRATIVE] ");
   valhalla::midgard::logging::Log("Total time: " + GetFormattedTime(trip_directions.summary().time()),

@@ -199,7 +199,7 @@ bool build_tile_set(const boost::property_tree::ptree& config,
     OSMPBF::Parser::free();
 
     // Write the OSMData to files if parsing is the end stage
-    if (end_stage == BuildStage::kParse) {
+    if (end_stage <= BuildStage::kEnhance) {
       osm_data.write_to_temp_files(tile_dir);
     }
   }
