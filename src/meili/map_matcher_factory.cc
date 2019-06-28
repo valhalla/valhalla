@@ -81,7 +81,7 @@ boost::property_tree::ptree MapMatcherFactory::MergeConfig(const Options& option
   if (options.breakage_distance() && customizable.find("breakage_distance") != customizable.end()) {
     config.put<float>("breakage_distance", options.breakage_distance());
   }
-  if (options.interpolation_distance() &&
+  if (options.has_interpolation_distance() &&
       customizable.find("interpolation_distance") != customizable.end()) {
     config.put<float>("interpolation_distance", options.interpolation_distance());
   }
