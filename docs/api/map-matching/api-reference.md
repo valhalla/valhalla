@@ -2,7 +2,7 @@
 
 With the Mapbox Map Matching service, you can match coordinates, such as GPS locations, to roads and paths that have been mapped in OpenStreetMap. By doing this, you can turn a path into a route with narrative instructions and also get the attribute values from that matched line.
 
-You can view an [interactive demo](http://valhalla.github.io/demos/map_matching/) or use [Mobility Explorer](https://github.com/transitland/mobility-explorer). 
+You can view an [interactive demo](http://valhalla.github.io/demos/map_matching/) or use [Mobility Explorer](https://github.com/transitland/mobility-explorer).
 
 There are two separate Map Matching calls that perform different operations on an input set of latitude,longitude coordinates. The `trace_route` action returns the shape snapped to the road network and narrative directions, while `trace_attributes` returns detailed attribution along the portion of the route.
 
@@ -52,6 +52,11 @@ You can also set `directions_options` to specify output units, language, and whe
 | `begin_time` | Begin timestamp for the trace. This is used along with the `durations` so that timestamps can be specified for a trace that is specified using an encoded polyline. |
 | `durations` | List of durations (seconds) between each successive pair of input trace points. This allows trace points to be supplied as an encoded polyline and timestamps to be created by using this list of "delta" times along with the `begin_time` of the trace. |
 | `use_timestamps` | A boolean value indicating whether the input timestamps or durations should be used when computing elapsed time at each edge along the matched path. If true, timestamps are used. If false (default), internal costing is applied to compute elapsed times. |
+| `trace_options` | Additional options. |
+| `trace_options.search_radius` | Search radius in meters associated with supplied trace points. |
+| `trace_options.gps_accuracy` | GPS accuracy in meters associated with supplied trace points. |
+| `trace_options.breakage_distance` | Breaking distance in meters between trace points. |
+| `trace_options.interpolation_distance` | Interpolation distance in meters beyond which trace points are merged together. |
 
 ### Attribute filters (`trace_attributes` only)
 
@@ -271,7 +276,7 @@ Follow these guidelines to improve the Map Matching results.
 * Have each trace represent one continuous path.
 * Verify that there is a corresponding match with the OpenStreetMap network.
 
-You can use certain parameters to tune the response. Unless otherwise noted, each of these options is specified within a root-level `trace_options` object. 
+You can use certain parameters to tune the response. Unless otherwise noted, each of these options is specified within a root-level `trace_options` object.
 
 * Use `turn_penalty_factor` to penalize turns from one road segment to next. For a pedestrian `trace_route`, you may see a back-and-forth motion along the streets of your path. Try increasing the turn penalty factor to 500 to smooth out jittering of points. Note that if GPS accuracy is already good, increasing this will have a negative affect on your results.
 * Set the `gps_accuracy` to indicate the accuracy in meters.
