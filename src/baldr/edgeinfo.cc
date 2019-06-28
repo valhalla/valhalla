@@ -112,10 +112,11 @@ uint16_t EdgeInfo::GetTypes() const {
 }
 
 // Returns shape as a vector of PointLL
-const std::vector<PointLL>& EdgeInfo::shape() const {
+const std::vector<midgard::PointLL>& EdgeInfo::shape() const {
   // if we haven't yet decoded the shape, do so
   if (encoded_shape_ != nullptr && shape_.empty()) {
-    shape_ = midgard::decode7<std::vector<PointLL>>(encoded_shape_, item_->encoded_shape_size);
+    shape_ =
+        midgard::decode7<std::vector<midgard::PointLL>>(encoded_shape_, item_->encoded_shape_size);
   }
   return shape_;
 }

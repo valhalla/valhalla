@@ -1,8 +1,8 @@
 ## Lists tests
-set(tests aabb2 access_restriction actor admin attributes_controller complexrestriction datetime directededge
+set(tests aabb2 access_restriction actor admin attributes_controller complexrestriction countryaccess datetime directededge
   distanceapproximator double_bucket_queue edgecollapser edgestatus ellipse encode
   enhancedtrippath factory graphid graphtile graphtileheader gridded_data grid_range_query grid_traversal
-  json laneconnectivity linesegment2 location logging maneuversbuilder map_matcher_factory
+  json laneconnectivity linesegment2 location logging maneuversbuilder map_matcher_factory mapmatch
   narrative_dictionary nodeinfo nodetransition obb2 openlr optimizer pathlocation_serialization parse_request point2 pointll
   polyline2 predictedspeeds queue routing sample sequence sign signs streetname streetnames streetnames_factory
   streetnames_us streetname_us tilehierarchy tiles transitdeparture transitroute transitschedule
@@ -11,7 +11,8 @@ set(tests aabb2 access_restriction actor admin attributes_controller complexrest
 
 if(ENABLE_DATA_TOOLS)
   list(APPEND tests astar edgeinfobuilder graphbuilder graphparser graphtilebuilder graphreader isochrone predictive_traffic
-    idtable matrix multipoint_routes names node_search refs search servicedays signinfo timedep_paths timeparsing trivial_paths uniquenames utrecht)
+    idtable matrix multipoint_routes names node_search refs search servicedays shape_attributes signinfo thor_worker timedep_paths
+    timeparsing trivial_paths uniquenames utrecht)
 endif()
 
 if(ENABLE_SERVICES)
@@ -21,11 +22,6 @@ endif()
 ## TODO: fix apple tests!
 if(NOT APPLE)
   list(APPEND tests narrativebuilder util_odin)
-endif()
-
-## TODO: fix apple tests!
-if(ENABLE_DATA_TOOLS AND NOT APPLE)
-  list(APPEND tests countryaccess mapmatch)
 endif()
 
 ## Add executable targets
@@ -119,6 +115,8 @@ if(ENABLE_DATA_TOOLS)
   add_dependencies(run-trivial_paths utrecht_tiles)
   add_dependencies(predictive_traffic utrecht_tiles)
   add_dependencies(run-multipoint_routes utrecht_tiles)
+  add_dependencies(run-shape_attributes utrecht_tiles)
+  add_dependencies(run-thor_worker utrecht_tiles)
 endif()
 
 if(ENABLE_SERVICES)

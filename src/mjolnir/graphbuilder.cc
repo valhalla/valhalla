@@ -158,6 +158,7 @@ void ConstructEdges(const OSMData& osmdata,
     }
 
     // Remember this edge starts here
+    Edge prev_edge = Edge{0};
     Edge edge = Edge::make_edge(way_node.way_index, current_way_node_index, way);
     edge.attributes.way_begin = true;
 
@@ -181,24 +182,40 @@ void ConstructEdges(const OSMData& osmdata,
             (way.link() && Length(edge.llindex_, way_node.node) < kMaxInternalLength);
         way_node.node.link_edge_ = way.link();
         way_node.node.non_link_edge_ = !way.link() && (way.auto_forward() || way.auto_backward());
-        nodes.push_back({way_node.node, static_cast<uint32_t>(-1),
-                         static_cast<uint32_t>(edges.size()), graph_id_predicate(way_node.node)});
+
+        uint32_t size = static_cast<uint32_t>(edges.size());
+        if (!edge.attributes.way_begin)
+          size += 1;
+        nodes.push_back(
+            {way_node.node, static_cast<uint32_t>(-1), size, graph_id_predicate(way_node.node)});
 
         // Mark the edge as ending a way if this is the last node in the way
         edge.attributes.way_end = current_way_node_index == last_way_node_index;
 
-        // Add to the list of edges
-        edges.push_back(edge);
+        // Mark the previous edge as the prior one since we are processing the last edge
+        if (edge.attributes.way_end) {
+          prev_edge.attributes.way_prior = true;
+        }
+
+        if (!edge.attributes.way_begin)
+          edges.push_back(prev_edge);
+
+        // Mark the current edge as the next edge one since we processed the first edge
+        if (prev_edge.attributes.way_begin)
+          edge.attributes.way_next = true;
+
+        prev_edge = edge;
 
         // Start a new edge if this is not the last node in the way
         if (current_way_node_index != last_way_node_index) {
           edge = Edge::make_edge(way_node.way_index, current_way_node_index, way);
           sequence<Node>::iterator element = --nodes.end();
           auto node = *element;
-          node.start_of = edges.size();
+          node.start_of = edges.size() + 1; // + 1 because the edge has not been added yet
           element = node;
         } // This was the last shape point in the way
         else {
+          edges.push_back(prev_edge); // add the last edge
           ++current_way_node_index;
           break;
         }
@@ -742,22 +759,47 @@ void BuildTileSet(const std::string& ways_file,
             directededge.set_exitsign(true);
           }
 
-          // Add turn lanes if they exist. Store forward turn lanes on the last edge for a way
-          // and the backward turn lanes on the first edge in a way.
+          // Add turn lanes if they exist. Store forward index on the last edge for a way
+          // and the backward index on the first edge in a way.  The turn lanes are populated
+          // later in the enhancer phase.
           std::string turnlane_tags;
-          if (forward && w.fwd_turn_lanes_index() > 0 && edge.attributes.way_end) {
+          if (forward && w.fwd_turn_lanes_index() > 0 &&
+              (edge.attributes.way_end || edge.attributes.way_prior)) {
             turnlane_tags = osmdata.name_offset_map.name(w.fwd_turn_lanes_index());
-          } else if (!forward && w.bwd_turn_lanes_index() > 0 && edge.attributes.way_begin) {
+            if (!turnlane_tags.empty()) {
+              std::string str = TurnLanes::GetTurnLaneString(turnlane_tags);
+              if (!str.empty()) { // don't add if invalid.
+                directededge.set_turnlanes(true);
+                graphtile.AddTurnLanes(idx, w.fwd_turn_lanes_index());
+
+                // Temporarily use the internal flag so that in the enhancer we can properly check to
+                // see if we have an internal edge
+                // Basically, we are setting turn lanes on the prior and last edge because we need
+                // to check if the last edge is internal or not.  If it is internal, we remove the
+                // turn lanes from the last edge and leave them on the prior.
+                if (edge.attributes.way_prior)
+                  directededge.set_internal(true);
+              }
+            }
+          } else if (!forward && w.bwd_turn_lanes_index() > 0 &&
+                     (edge.attributes.way_begin || edge.attributes.way_next)) {
             turnlane_tags = osmdata.name_offset_map.name(w.bwd_turn_lanes_index());
-          }
-          if (!turnlane_tags.empty()) {
-            std::string str = TurnLanes::GetTurnLaneString(turnlane_tags);
-            if (!str.empty()) {
-              graphtile.AddTurnLanes(idx, str);
-              directededge.set_turnlanes(true);
+            if (!turnlane_tags.empty()) {
+              std::string str = TurnLanes::GetTurnLaneString(turnlane_tags);
+              if (!str.empty()) { // don't add if invalid.
+                directededge.set_turnlanes(true);
+                graphtile.AddTurnLanes(idx, w.bwd_turn_lanes_index());
+
+                // Temporarily use the internal flag so that in the enhancer we can properly check to
+                // see if we have an internal edge
+                // Basically, we are setting turn lanes on the next and first edge because we need
+                // to check if the fist edge is internal or not.  If it is internal, we remove the
+                // turn lanes from the first edge and leave them on the next.
+                if (edge.attributes.way_next)
+                  directededge.set_internal(true);
+              }
             }
           }
-
           // Add lane connectivity
           try {
             auto ei = osmdata.lane_connectivity_map.equal_range(w.way_id());

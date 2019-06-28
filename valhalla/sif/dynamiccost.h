@@ -10,7 +10,7 @@
 #include <valhalla/baldr/nodeinfo.h>
 #include <valhalla/baldr/timedomain.h>
 #include <valhalla/baldr/transitdeparture.h>
-#include <valhalla/proto/directions_options.pb.h>
+#include <valhalla/proto/options.pb.h>
 #include <valhalla/sif/costconstants.h>
 #include <valhalla/sif/edgelabel.h>
 #include <valhalla/sif/hierarchylimits.h>
@@ -44,11 +44,11 @@ constexpr uint32_t kDefaultUnitSize = 1;
 
 // Maximum penalty allowed. Cannot be too high because sometimes one cannot avoid a particular
 // attribute or condition to complete a route.
-constexpr float kMaxPenalty = 12.0f * kSecPerHour; // 12 hours
+constexpr float kMaxPenalty = 12.0f * midgard::kSecPerHour; // 12 hours
 
 // Maximum ferry penalty (when use_ferry == 0). Can't make this too large
 // since a ferry is sometimes required to complete a route.
-constexpr float kMaxFerryPenalty = 6.0f * kSecPerHour; // 6 hours
+constexpr float kMaxFerryPenalty = 6.0f * midgard::kSecPerHour; // 6 hours
 
 /**
  * Base class for dynamic edge costing. This class defines the interface for
@@ -70,7 +70,7 @@ public:
    * @param  options Request options in a pbf
    * @param  mode Travel mode
    */
-  DynamicCost(const odin::DirectionsOptions& options, const TravelMode mode);
+  DynamicCost(const Options& options, const TravelMode mode);
 
   virtual ~DynamicCost();
 
@@ -553,7 +553,7 @@ protected:
    * Get the base transition costs (and ferry factor) from the costing options.
    * @param costing_options Protocol buffer of costing options.
    */
-  void get_base_costs(const odin::CostingOptions& costing_options) {
+  void get_base_costs(const CostingOptions& costing_options) {
     // Cost only (no time) penalties
     alley_penalty_ = costing_options.alley_penalty();
     destination_only_penalty_ = costing_options.destination_only_penalty();

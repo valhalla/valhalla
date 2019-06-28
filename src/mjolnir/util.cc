@@ -23,6 +23,8 @@
 #include <boost/filesystem/operations.hpp>
 #include <boost/property_tree/ptree.hpp>
 
+using namespace valhalla::midgard;
+
 namespace {
 
 // Temporary files used during tile building
@@ -197,7 +199,7 @@ bool build_tile_set(const boost::property_tree::ptree& config,
     OSMPBF::Parser::free();
 
     // Write the OSMData to files if parsing is the end stage
-    if (end_stage == BuildStage::kParse) {
+    if (end_stage <= BuildStage::kEnhance) {
       osm_data.write_to_temp_files(tile_dir);
     }
   }
@@ -218,7 +220,11 @@ bool build_tile_set(const boost::property_tree::ptree& config,
   // level that is usable across all levels (density, administrative
   // information (and country based attribution), edge transition logic, etc.
   if (start_stage <= BuildStage::kEnhance && BuildStage::kEnhance <= end_stage) {
-    GraphEnhancer::Enhance(config, access_bin);
+    // Read OSMData names from file if building tiles is the first stage
+    if (start_stage == BuildStage::kEnhance) {
+      osm_data.read_from_unique_names_file(tile_dir);
+    }
+    GraphEnhancer::Enhance(config, osm_data, access_bin);
   }
 
   // Perform optional edge filtering (remove edges and nodes for specific access modes)

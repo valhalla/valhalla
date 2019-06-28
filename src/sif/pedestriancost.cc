@@ -11,6 +11,7 @@
 #include <random>
 #endif
 
+using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 
 namespace valhalla {
@@ -157,7 +158,7 @@ public:
    * @param  costing specified costing type.
    * @param  options pbf with request options.
    */
-  PedestrianCost(const odin::Costing costing, const odin::DirectionsOptions& options);
+  PedestrianCost(const Costing costing, const Options& options);
 
   // virtual destructor
   virtual ~PedestrianCost() {
@@ -509,10 +510,10 @@ public:
 
 // Constructor. Parse pedestrian options from property tree. If option is
 // not present, set the default.
-PedestrianCost::PedestrianCost(const odin::Costing costing, const odin::DirectionsOptions& options)
+PedestrianCost::PedestrianCost(const Costing costing, const Options& options)
     : DynamicCost(options, TravelMode::kPedestrian) {
   // Grab the costing options based on the specified costing type
-  const odin::CostingOptions& costing_options = options.costing_options(static_cast<int>(costing));
+  const CostingOptions& costing_options = options.costing_options(static_cast<int>(costing));
 
   // Set hierarchy to allow unlimited transitions
   for (auto& h : hierarchy_limits_) {
@@ -737,7 +738,7 @@ Cost PedestrianCost::TransitionCostReverse(const uint32_t idx,
 
 void ParsePedestrianCostOptions(const rapidjson::Document& doc,
                                 const std::string& costing_options_key,
-                                odin::CostingOptions* pbf_costing_options) {
+                                CostingOptions* pbf_costing_options) {
   auto json_costing_options = rapidjson::get_child_optional(doc, costing_options_key.c_str());
 
   if (json_costing_options) {
@@ -898,7 +899,7 @@ void ParsePedestrianCostOptions(const rapidjson::Document& doc,
   }
 }
 
-cost_ptr_t CreatePedestrianCost(const odin::Costing costing, const odin::DirectionsOptions& options) {
+cost_ptr_t CreatePedestrianCost(const Costing costing, const Options& options) {
   return std::make_shared<PedestrianCost>(costing, options);
 }
 
@@ -916,7 +917,7 @@ namespace {
 
 class TestPedestrianCost : public PedestrianCost {
 public:
-  TestPedestrianCost(const odin::Costing costing, const odin::DirectionsOptions& options)
+  TestPedestrianCost(const Costing costing, const Options& options)
       : PedestrianCost(costing, options){};
 
   using PedestrianCost::alley_penalty_;
@@ -931,9 +932,9 @@ TestPedestrianCost*
 make_pedestriancost_from_json(const std::string& property, float testVal, const std::string& type) {
   std::stringstream ss;
   ss << R"({"costing_options":{"pedestrian":{")" << property << R"(":)" << testVal << "}}}";
-  valhalla::valhalla_request_t request;
-  request.parse(ss.str(), valhalla::odin::DirectionsOptions::route);
-  return new TestPedestrianCost(valhalla::odin::Costing::pedestrian, request.options);
+  Api request;
+  ParseApi(ss.str(), valhalla::Options::route, request);
+  return new TestPedestrianCost(valhalla::Costing::pedestrian, request.options());
 }
 
 std::uniform_real_distribution<float>*

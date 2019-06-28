@@ -45,7 +45,7 @@ json::ArrayPtr serialize_height(const std::vector<double>& heights, const double
   return array;
 }
 
-json::ArrayPtr serialize_shape(const google::protobuf::RepeatedPtrField<odin::Location>& shape) {
+json::ArrayPtr serialize_shape(const google::protobuf::RepeatedPtrField<valhalla::Location>& shape) {
   auto array = json::array({});
   for (const auto& p : shape) {
     array->emplace_back(
@@ -65,7 +65,7 @@ namespace tyr {
   "range_height": [ [0,303], [8467,275], [25380,198] ]
 }
 */
-std::string serializeHeight(const valhalla_request_t& request,
+std::string serializeHeight(const Api& request,
                             const std::vector<double>& heights,
                             const std::vector<float>& ranges) {
   auto json = json::map({});
@@ -79,13 +79,13 @@ std::string serializeHeight(const valhalla_request_t& request,
     json = json::map({{"height", serialize_height(heights, skadi::sample::get_no_data_value())}});
   }
   // send back the shape as well
-  if (request.options.has_encoded_polyline()) {
-    json->emplace("encoded_polyline", request.options.encoded_polyline());
+  if (request.options().has_encoded_polyline()) {
+    json->emplace("encoded_polyline", request.options().encoded_polyline());
   } else {
-    json->emplace("shape", serialize_shape(request.options.shape()));
+    json->emplace("shape", serialize_shape(request.options().shape()));
   }
-  if (request.options.has_id()) {
-    json->emplace("id", request.options.id());
+  if (request.options().has_id()) {
+    json->emplace("id", request.options().id());
   }
 
   std::stringstream ss;

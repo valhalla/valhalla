@@ -2,13 +2,16 @@
 #define VALHALLA_ODIN_ENHANCEDTRIPPATH_H_
 
 #include <cstdint>
+#include <limits>
 #include <memory>
 #include <string>
 #include <unordered_map>
 #include <utility>
 #include <vector>
 
-#include <valhalla/proto/directions_options.pb.h>
+#include <valhalla/baldr/turn.h>
+#include <valhalla/proto/directions.pb.h>
+#include <valhalla/proto/options.pb.h>
 #include <valhalla/proto/trip.pb.h>
 
 namespace valhalla {
@@ -31,15 +34,15 @@ public:
     return trip_path_.node_size();
   }
 
-  const ::valhalla::odin::TripLeg_Node& node(int index) const {
+  const ::valhalla::TripLeg_Node& node(int index) const {
     return trip_path_.node(index);
   }
 
-  ::valhalla::odin::TripLeg_Node* mutable_node(int index) {
+  ::valhalla::TripLeg_Node* mutable_node(int index) {
     return trip_path_.mutable_node(index);
   }
 
-  const ::google::protobuf::RepeatedPtrField<::valhalla::odin::TripLeg_Node>& node() const {
+  const ::google::protobuf::RepeatedPtrField<::valhalla::TripLeg_Node>& node() const {
     return trip_path_.node();
   }
 
@@ -47,7 +50,7 @@ public:
     return trip_path_.location_size();
   }
 
-  const ::valhalla::odin::Location& location(int index) const {
+  const ::valhalla::Location& location(int index) const {
     return trip_path_.location(index);
   }
 
@@ -55,7 +58,7 @@ public:
     return trip_path_.admin_size();
   }
 
-  ::valhalla::odin::TripLeg_Admin* mutable_admin(int index) {
+  ::valhalla::TripLeg_Admin* mutable_admin(int index) {
     return trip_path_.mutable_admin(index);
   }
 
@@ -75,11 +78,11 @@ public:
     return trip_path_.leg_count();
   }
 
-  const ::google::protobuf::RepeatedPtrField<::valhalla::odin::Location>& location() const {
+  const ::google::protobuf::RepeatedPtrField<::valhalla::Location>& location() const {
     return trip_path_.location();
   }
 
-  const ::valhalla::odin::BoundingBox& bbox() const {
+  const ::valhalla::BoundingBox& bbox() const {
     return trip_path_.bbox();
   }
 
@@ -105,11 +108,11 @@ public:
 
   std::string GetStateCode(int node_index);
 
-  const ::valhalla::odin::Location& GetOrigin() const;
+  const ::valhalla::Location& GetOrigin() const;
 
-  const ::valhalla::odin::Location& GetDestination() const;
+  const ::valhalla::Location& GetDestination() const;
 
-  float GetLength(const DirectionsOptions::Units& units);
+  float GetLength(const Options::Units& units);
 
 protected:
   TripLeg& trip_path_;
@@ -123,11 +126,11 @@ public:
     return mutable_edge_->name_size();
   }
 
-  const ::valhalla::odin::StreetName& name(int index) const {
+  const ::valhalla::StreetName& name(int index) const {
     return mutable_edge_->name(index);
   }
 
-  const ::google::protobuf::RepeatedPtrField<::valhalla::odin::StreetName>& name() const {
+  const ::google::protobuf::RepeatedPtrField<::valhalla::StreetName>& name() const {
     return mutable_edge_->name();
   }
 
@@ -139,7 +142,7 @@ public:
     return mutable_edge_->speed();
   }
 
-  ::valhalla::odin::TripLeg_RoadClass road_class() const {
+  ::valhalla::TripLeg_RoadClass road_class() const {
     return mutable_edge_->road_class();
   }
 
@@ -167,11 +170,11 @@ public:
     return mutable_edge_->end_shape_index();
   }
 
-  ::valhalla::odin::TripLeg_Traversability traversability() const {
+  ::valhalla::TripLeg_Traversability traversability() const {
     return mutable_edge_->traversability();
   }
 
-  ::valhalla::odin::TripLeg_Use use() const {
+  ::valhalla::TripLeg_Use use() const {
     return mutable_edge_->use();
   }
 
@@ -179,7 +182,7 @@ public:
     return mutable_edge_->has_vehicle_type();
   }
 
-  ::valhalla::odin::TripLeg_VehicleType vehicle_type() const {
+  ::valhalla::TripLeg_VehicleType vehicle_type() const {
     return mutable_edge_->vehicle_type();
   }
 
@@ -187,7 +190,7 @@ public:
     return mutable_edge_->has_pedestrian_type();
   }
 
-  ::valhalla::odin::TripLeg_PedestrianType pedestrian_type() const {
+  ::valhalla::TripLeg_PedestrianType pedestrian_type() const {
     return mutable_edge_->pedestrian_type();
   }
 
@@ -195,7 +198,7 @@ public:
     return mutable_edge_->has_bicycle_type();
   }
 
-  ::valhalla::odin::TripLeg_BicycleType bicycle_type() const {
+  ::valhalla::TripLeg_BicycleType bicycle_type() const {
     return mutable_edge_->bicycle_type();
   }
 
@@ -203,7 +206,7 @@ public:
     return mutable_edge_->has_transit_type();
   }
 
-  ::valhalla::odin::TripLeg_TransitType transit_type() const {
+  ::valhalla::TripLeg_TransitType transit_type() const {
     return mutable_edge_->transit_type();
     return mutable_edge_->transit_type();
   }
@@ -236,7 +239,7 @@ public:
     return mutable_edge_->drive_on_right();
   }
 
-  ::valhalla::odin::TripLeg_Surface surface() const {
+  ::valhalla::TripLeg_Surface surface() const {
     return mutable_edge_->surface();
   }
 
@@ -244,7 +247,7 @@ public:
     return mutable_edge_->has_sign();
   }
 
-  const ::valhalla::odin::TripLeg_Sign& sign() const {
+  const ::valhalla::TripLeg_Sign& sign() const {
     return mutable_edge_->sign();
   }
 
@@ -252,7 +255,7 @@ public:
     return mutable_edge_->has_travel_mode();
   }
 
-  ::valhalla::odin::TripLeg_TravelMode travel_mode() const {
+  ::valhalla::TripLeg_TravelMode travel_mode() const {
     return mutable_edge_->travel_mode();
   }
 
@@ -260,7 +263,7 @@ public:
     return mutable_edge_->has_transit_route_info();
   }
 
-  const ::valhalla::odin::TripLeg_TransitRouteInfo& transit_route_info() const {
+  const ::valhalla::TripLeg_TransitRouteInfo& transit_route_info() const {
     return mutable_edge_->transit_route_info();
   }
 
@@ -288,7 +291,7 @@ public:
     return mutable_edge_->lane_count();
   }
 
-  ::valhalla::odin::TripLeg_CycleLane cycle_lane() const {
+  ::valhalla::TripLeg_CycleLane cycle_lane() const {
     return mutable_edge_->cycle_lane();
   }
 
@@ -296,7 +299,7 @@ public:
     return mutable_edge_->bicycle_network();
   }
 
-  ::valhalla::odin::TripLeg_Sidewalk sidewalk() const {
+  ::valhalla::TripLeg_Sidewalk sidewalk() const {
     return mutable_edge_->sidewalk();
   }
 
@@ -314,6 +317,18 @@ public:
 
   bool truck_route() const {
     return mutable_edge_->truck_route();
+  }
+
+  int turn_lanes_size() const {
+    return mutable_edge_->turn_lanes_size();
+  }
+
+  const ::google::protobuf::RepeatedPtrField<::valhalla::TurnLane>& turn_lanes() const {
+    return mutable_edge_->turn_lanes();
+  }
+
+  ::google::protobuf::RepeatedPtrField<::valhalla::TurnLane>* mutable_turn_lanes() {
+    return mutable_edge_->mutable_turn_lanes();
   }
 
   bool IsUnnamed() const;
@@ -366,9 +381,25 @@ public:
 
   std::vector<std::pair<std::string, bool>> GetNameList() const;
 
-  float GetLength(const DirectionsOptions::Units& units);
+  float GetLength(const Options::Units& units);
+
+  // Turn Lanes
+  bool HasActiveTurnLane() const;
+  bool HasNonDirectionalTurnLane() const;
+  bool HasTurnLane(uint16_t turn_lane_direction) const;
+  uint16_t ActivateTurnLanes(uint16_t turn_lane_direction,
+                             float remaining_step_distance,
+                             const DirectionsLeg_Maneuver_Type& curr_maneuver_type,
+                             const DirectionsLeg_Maneuver_Type& next_maneuver_type);
+  uint16_t ActivateTurnLanesFromLeft(uint16_t turn_lane_direction,
+                                     uint16_t activated_max = std::numeric_limits<uint16_t>::max());
+  uint16_t ActivateTurnLanesFromRight(uint16_t turn_lane_direction,
+                                      uint16_t activated_max = std::numeric_limits<uint16_t>::max());
 
   std::string ToString() const;
+
+  std::string TurnLanesToString(
+      const ::google::protobuf::RepeatedPtrField<::valhalla::TurnLane>& turn_lanes) const;
 
 #ifdef LOGGING_LEVEL_TRACE
   std::string ToParameterString() const;
@@ -377,20 +408,20 @@ public:
 protected:
   TripLeg_Edge* mutable_edge_;
 
-#ifdef LOGGING_LEVEL_TRACE
   std::string StreetNamesToString(
-      const ::google::protobuf::RepeatedPtrField<::valhalla::odin::StreetName>& street_names) const;
-
-  std::string StreetNamesToParameterString(
-      const ::google::protobuf::RepeatedPtrField<::valhalla::odin::StreetName>& street_names) const;
+      const ::google::protobuf::RepeatedPtrField<::valhalla::StreetName>& street_names) const;
 
   std::string SignElementsToString(
-      const ::google::protobuf::RepeatedPtrField<::valhalla::odin::TripLeg_SignElement>&
-          sign_elements) const;
+      const ::google::protobuf::RepeatedPtrField<::valhalla::TripLeg_SignElement>& sign_elements)
+      const;
+
+#ifdef LOGGING_LEVEL_TRACE
+  std::string StreetNamesToParameterString(
+      const ::google::protobuf::RepeatedPtrField<::valhalla::StreetName>& street_names) const;
 
   std::string SignElementsToParameterString(
-      const ::google::protobuf::RepeatedPtrField<::valhalla::odin::TripLeg_SignElement>&
-          sign_elements) const;
+      const ::google::protobuf::RepeatedPtrField<::valhalla::TripLeg_SignElement>& sign_elements)
+      const;
 #endif
 };
 
@@ -410,15 +441,15 @@ public:
     return mutable_intersecting_edge_->curr_name_consistency();
   }
 
-  ::valhalla::odin::TripLeg_Traversability driveability() const {
+  ::valhalla::TripLeg_Traversability driveability() const {
     return mutable_intersecting_edge_->driveability();
   }
 
-  ::valhalla::odin::TripLeg_Traversability cyclability() const {
+  ::valhalla::TripLeg_Traversability cyclability() const {
     return mutable_intersecting_edge_->cyclability();
   }
 
-  ::valhalla::odin::TripLeg_Traversability walkability() const {
+  ::valhalla::TripLeg_Traversability walkability() const {
     return mutable_intersecting_edge_->walkability();
   }
 
@@ -480,7 +511,7 @@ public:
     return mutable_node_->intersecting_edge_size();
   }
 
-  const ::valhalla::odin::TransitPlatformInfo& transit_platform_info() const {
+  const ::valhalla::TransitPlatformInfo& transit_platform_info() const {
     return mutable_node_->transit_platform_info();
   }
 
@@ -488,24 +519,24 @@ public:
     return mutable_node_->fork();
   }
 
-  const ::valhalla::odin::TripLeg_IntersectingEdge& intersecting_edge(int index) const {
+  const ::valhalla::TripLeg_IntersectingEdge& intersecting_edge(int index) const {
     return mutable_node_->intersecting_edge(index);
   }
 
-  ::valhalla::odin::TripLeg_IntersectingEdge* mutable_intersecting_edge(int index) {
+  ::valhalla::TripLeg_IntersectingEdge* mutable_intersecting_edge(int index) {
     return mutable_node_->mutable_intersecting_edge(index);
   }
 
-  const ::google::protobuf::RepeatedPtrField<::valhalla::odin::TripLeg_IntersectingEdge>&
+  const ::google::protobuf::RepeatedPtrField<::valhalla::TripLeg_IntersectingEdge>&
   intersecting_edge() const {
     return mutable_node_->intersecting_edge();
   }
 
-  const ::valhalla::odin::TripLeg_Edge& edge() const {
+  const ::valhalla::TripLeg_Edge& edge() const {
     return mutable_node_->edge();
   }
 
-  ::valhalla::odin::TripLeg_Node_Type type() const {
+  ::valhalla::TripLeg_Node_Type type() const {
     return mutable_node_->type();
   }
 
@@ -544,6 +575,10 @@ public:
 
   bool HasTraversableOutboundIntersectingEdge(const TripLeg_TravelMode travel_mode);
 
+  bool HasSpecifiedTurnXEdge(const baldr::Turn::Type turn_type,
+                             uint32_t from_heading,
+                             const TripLeg_TravelMode travel_mode);
+
   uint32_t GetStraightestIntersectingEdgeTurnDegree(uint32_t from_heading);
 
   uint32_t GetStraightestTraversableIntersectingEdgeTurnDegree(uint32_t from_heading,
@@ -551,6 +586,14 @@ public:
 
   bool IsStraightestTraversableIntersectingEdgeReversed(uint32_t from_heading,
                                                         const TripLeg_TravelMode travel_mode);
+
+  uint32_t GetRightMostTurnDegree(uint32_t turn_degree,
+                                  uint32_t from_heading,
+                                  const TripLeg_TravelMode travel_mode);
+
+  uint32_t GetLeftMostTurnDegree(uint32_t turn_degree,
+                                 uint32_t from_heading,
+                                 const TripLeg_TravelMode travel_mode);
 
   // Type
   bool IsStreetIntersection() const;

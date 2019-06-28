@@ -55,11 +55,13 @@ public:
    * @return  Returns the path edges (and elapsed time/modes at end of
    *          each edge).
    */
-  std::vector<PathInfo> GetBestPath(odin::Location& origin,
-                                    odin::Location& dest,
-                                    baldr::GraphReader& graphreader,
-                                    const std::shared_ptr<sif::DynamicCost>* mode_costing,
-                                    const sif::TravelMode mode);
+  std::vector<std::vector<PathInfo>>
+  GetBestPath(valhalla::Location& origin,
+              valhalla::Location& dest,
+              baldr::GraphReader& graphreader,
+              const std::shared_ptr<sif::DynamicCost>* mode_costing,
+              const sif::TravelMode mode,
+              const Options& options = Options::default_instance());
 
   /**
    * Clear the temporary information generated during path construction.
@@ -110,7 +112,7 @@ protected:
    * @param  origll  Lat,lng of the origin.
    * @param  destll  Lat,lng of the destination.
    */
-  void Init(const PointLL& origll, const PointLL& destll);
+  void Init(const midgard::PointLL& origll, const midgard::PointLL& destll);
 
   /**
    * Expand from the node along the forward search path.
@@ -136,14 +138,14 @@ protected:
    * @param  graphreader  Graph tile reader.
    * @param  origin       Location information of the destination
    */
-  void SetOrigin(baldr::GraphReader& graphreader, odin::Location& origin);
+  void SetOrigin(baldr::GraphReader& graphreader, valhalla::Location& origin);
 
   /**
    * Add destination edges to the reverse path adjacency list.
    * @param   graphreader  Graph tile reader.
    * @param   dest         Location information of the destination
    */
-  void SetDestination(baldr::GraphReader& graphreader, const odin::Location& dest);
+  void SetDestination(baldr::GraphReader& graphreader, const valhalla::Location& dest);
 
   /**
    * The edge on the forward search connects to a reached edge on the reverse
@@ -152,7 +154,7 @@ protected:
    * @param  pred  Edge label of the predecessor.
    * @return Returns true if a connection was set, false if not (if on a complex restriction).
    */
-  bool SetForwardConnection(const sif::BDEdgeLabel& pred);
+  bool SetForwardConnection(baldr::GraphReader& graphreader, const sif::BDEdgeLabel& pred);
 
   /**
    * The edge on the reverse search connects to a reached edge on the forward
@@ -161,7 +163,7 @@ protected:
    * @param  pred  Edge label of the predecessor.
    * @return Returns true if a connection was set, false if not (if on a complex restriction).
    */
-  bool SetReverseConnection(const sif::BDEdgeLabel& pred);
+  bool SetReverseConnection(baldr::GraphReader& graphreader, const sif::BDEdgeLabel& pred);
 
   /**
    * Form the path from the adjacency lists. Recovers the path from the

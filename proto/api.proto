@@ -1,0 +1,13 @@
+syntax = "proto2";
+option optimize_for = LITE_RUNTIME;
+package valhalla;
+import public "options.proto"; // the request, filled out by loki
+import public "trip.proto"; // the paths, filled out by thor
+import public "directions.proto"; // the directions, filled out by odin
+
+message Api {
+  optional Options options = 1;
+  optional Trip trip = 2;
+  optional Directions directions = 3;
+  //TODO: other outputs locate, isochrone, matrix, height
+}

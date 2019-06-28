@@ -1,4 +1,22 @@
-## Release Date: UNRELEASED Valhalla 3.0.4
+## Release Date: Unreleased Valhalla 3.0.6
+* **Bug Fix**
+   * FIXED: Admin name changes. [#1853](https://github.com/valhalla/valhalla/pull/1853) Ref: [#1854](https://github.com/valhalla/valhalla/issues/1854)
+   * FIXED: valhalla_add_predicted_traffic was overcommitted while gathering stats. Added a clear. [#1857](https://github.com/valhalla/valhalla/pull/1857)
+   * FIXED: regression in map matching when moving to valhalla v3.0.0 [#1863](https://github.com/valhalla/valhalla/pull/1863)
+
+* **Enhancement**
+   * ADDED: Use the same protobuf object the entire way through the request process [#1837](https://github.com/valhalla/valhalla/pull/1837)
+   * ADDED: Enhanced turn lane processing [#1859](https://github.com/valhalla/valhalla/pull/1859)
+   * ADDED: Add global_synchronized_cache in valhalla_build_config [#1851](https://github.com/valhalla/valhalla/pull/1851)
+
+## Release Date: 2019-06-04 Valhalla 3.0.5
+* **Bug Fix**
+   * FIXED: Protect against unnamed rotaries and routes that end in roundabouts not turning off rotary logic [#1840](https://github.com/valhalla/valhalla/pull/1840)
+
+* **Enhancement**
+   * ADDED: Add turn lane info at maneuver point [#1830](https://github.com/valhalla/valhalla/pull/1830)
+
+## Release Date: 2019-05-31 Valhalla 3.0.4
 * **Bug Fix**
    * FIXED: Improved logic to decide between bear vs. continue [#1798](https://github.com/valhalla/valhalla/pull/1798)
    * FIXED: Bicycle costing allows use of roads with all surface values, but with a penalty based on bicycle type. However, the edge filter totally disallows bad surfaces for some bicycle types, creating situations where reroutes fail if a rider uses a road with a poor surface. [#1800](https://github.com/valhalla/valhalla/pull/1800)
@@ -6,6 +24,7 @@
    * FIXED: Fix bicycle edge filter whan avoid_bad_surfaces = 1.0 [#1806](https://github.com/valhalla/valhalla/pull/1806)
    * FIXED: Replace the EnhancedTripPath class inheritance with aggregation [#1807](https://github.com/valhalla/valhalla/pull/1807)
    * FIXED: Replace the old timezone shape zip file every time valhalla_build_timezones is ran [#1817](https://github.com/valhalla/valhalla/pull/1817)
+   * FIXED: Don't use island snapped edge candidates (from disconnected components or low reach edges) when we rejected other high reachability edges that were closer [#1835](https://github.com/valhalla/valhalla/pull/1835)
 
 ## Release Date: 2019-05-08 Valhalla 3.0.3
 * **Bug Fix**

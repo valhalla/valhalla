@@ -10,11 +10,12 @@
 #include "odin/maneuver.h"
 #include "odin/maneuversbuilder.h"
 
-#include <valhalla/proto/directions_options.pb.h>
+#include <valhalla/proto/options.pb.h>
 
 #include "test.h"
 
 using namespace std;
+using namespace valhalla;
 using namespace valhalla::odin;
 using namespace valhalla::midgard;
 
@@ -27,11 +28,11 @@ constexpr size_t CONSECUTIVE_COUNT = 2;
 // Sub class to test protected methods
 class ManeuversBuilderTest : public ManeuversBuilder {
 public:
-  ManeuversBuilderTest() : ManeuversBuilder(DirectionsOptions(), nullptr) {
+  ManeuversBuilderTest() : ManeuversBuilder(Options(), nullptr) {
   }
 
-  ManeuversBuilderTest(const DirectionsOptions& directions_options, EnhancedTripLeg* etp)
-      : ManeuversBuilder(directions_options, etp) {
+  ManeuversBuilderTest(const Options& options, EnhancedTripLeg* etp)
+      : ManeuversBuilder(options, etp) {
   }
 
   void Combine(std::list<Maneuver>& maneuvers) {
@@ -70,7 +71,7 @@ public:
 };
 
 void TrySetSimpleDirectionalManeuverType(uint32_t turn_degree, DirectionsLeg_Maneuver_Type expected) {
-  DirectionsOptions directions_options;
+  Options options;
   TripLeg path;
   TripLeg_Node* node;
 
@@ -85,7 +86,7 @@ void TrySetSimpleDirectionalManeuverType(uint32_t turn_degree, DirectionsLeg_Man
   node = path.add_node();
 
   EnhancedTripLeg etp(path);
-  ManeuversBuilderTest mbTest(directions_options, &etp);
+  ManeuversBuilderTest mbTest(options, &etp);
   Maneuver maneuver;
   maneuver.set_begin_node_index(1);
   maneuver.set_turn_degree(turn_degree);
@@ -226,7 +227,7 @@ void TryDetermineRelativeDirection_Maneuver(uint32_t prev_heading,
                                             uint32_t curr_heading,
                                             const vector<uint32_t>& intersecting_headings,
                                             Maneuver::RelativeDirection expected) {
-  DirectionsOptions directions_options;
+  Options options;
   TripLeg path;
   TripLeg_Node* node;
 
@@ -247,7 +248,7 @@ void TryDetermineRelativeDirection_Maneuver(uint32_t prev_heading,
   node = path.add_node();
 
   EnhancedTripLeg etp(path);
-  ManeuversBuilderTest mbTest(directions_options, &etp);
+  ManeuversBuilderTest mbTest(options, &etp);
   Maneuver maneuver;
   maneuver.set_begin_node_index(1);
   maneuver.set_turn_degree(valhalla::midgard::GetTurnDegree(prev_heading, curr_heading));
@@ -575,7 +576,7 @@ void PopulateManeuver(Maneuver& maneuver,
 }
 
 void TestLeftInternalStraightCombine() {
-  DirectionsOptions directions_options;
+  Options options;
   TripLeg path;
   TripLeg_Node* node;
   TripLeg_Edge* edge;
@@ -636,7 +637,7 @@ void TestLeftInternalStraightCombine() {
                {}, {});
 
   EnhancedTripLeg etp(path);
-  ManeuversBuilderTest mbTest(directions_options, &etp);
+  ManeuversBuilderTest mbTest(options, &etp);
 
   ///////////////////////////////////////////////////////////////////////////
   // Create maneuver list
@@ -716,7 +717,7 @@ void TestLeftInternalStraightCombine() {
 }
 
 void TestStraightInternalLeftCombine() {
-  DirectionsOptions directions_options;
+  Options options;
   TripLeg path;
   TripLeg_Node* node;
   TripLeg_Edge* edge;
@@ -785,7 +786,7 @@ void TestStraightInternalLeftCombine() {
                0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
 
   EnhancedTripLeg etp(path);
-  ManeuversBuilderTest mbTest(directions_options, &etp);
+  ManeuversBuilderTest mbTest(options, &etp);
 
   ///////////////////////////////////////////////////////////////////////////
   // Create maneuver list
@@ -881,7 +882,7 @@ void TestStraightInternalLeftCombine() {
 }
 
 void TestStraightInternalLeftInternalCombine() {
-  DirectionsOptions directions_options;
+  Options options;
   TripLeg path;
   TripLeg_Node* node;
   TripLeg_Edge* edge;
@@ -923,7 +924,7 @@ void TestStraightInternalLeftInternalCombine() {
                {}, {});
 
   EnhancedTripLeg etp(path);
-  ManeuversBuilderTest mbTest(directions_options, &etp);
+  ManeuversBuilderTest mbTest(options, &etp);
 
   ///////////////////////////////////////////////////////////////////////////
   // Create maneuver list
@@ -986,7 +987,7 @@ void TestStraightInternalLeftInternalCombine() {
 }
 
 void TestStraightInternalStraightCombine() {
-  DirectionsOptions directions_options;
+  Options options;
   TripLeg path;
   TripLeg_Node* node;
   TripLeg_Edge* edge;
@@ -1063,7 +1064,7 @@ void TestStraightInternalStraightCombine() {
                0, 0, 0, 0, 0, 0, {}, {}, {}, {});
 
   EnhancedTripLeg etp(path);
-  ManeuversBuilderTest mbTest(directions_options, &etp);
+  ManeuversBuilderTest mbTest(options, &etp);
 
   ///////////////////////////////////////////////////////////////////////////
   // Create maneuver list
@@ -1136,7 +1137,7 @@ void TestStraightInternalStraightCombine() {
 }
 
 void TestLeftInternalUturnCombine() {
-  DirectionsOptions directions_options;
+  Options options;
   TripLeg path;
   TripLeg_Node* node;
   TripLeg_Edge* edge;
@@ -1164,7 +1165,7 @@ void TestLeftInternalUturnCombine() {
                0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
 
   EnhancedTripLeg etp(path);
-  ManeuversBuilderTest mbTest(directions_options, &etp);
+  ManeuversBuilderTest mbTest(options, &etp);
 
   ///////////////////////////////////////////////////////////////////////////
   // Create maneuver list
@@ -1230,7 +1231,7 @@ void TestLeftInternalUturnCombine() {
 }
 
 void TestLeftInternalUturnProperDirectionCombine() {
-  DirectionsOptions directions_options;
+  Options options;
   TripLeg path;
   TripLeg_Node* node;
   TripLeg_Edge* edge;
@@ -1265,7 +1266,7 @@ void TestLeftInternalUturnProperDirectionCombine() {
                0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
 
   EnhancedTripLeg etp(path);
-  ManeuversBuilderTest mbTest(directions_options, &etp);
+  ManeuversBuilderTest mbTest(options, &etp);
 
   ///////////////////////////////////////////////////////////////////////////
   // Create maneuver list
@@ -1331,7 +1332,7 @@ void TestLeftInternalUturnProperDirectionCombine() {
 }
 
 void TestStraightInternalLeftInternalStraightInternalUturnCombine() {
-  DirectionsOptions directions_options;
+  Options options;
   TripLeg path;
   TripLeg_Node* node;
   TripLeg_Edge* edge;
@@ -1373,7 +1374,7 @@ void TestStraightInternalLeftInternalStraightInternalUturnCombine() {
                0, 0, 0, 0, 0, 0, {}, {}, {}, {});
 
   EnhancedTripLeg etp(path);
-  ManeuversBuilderTest mbTest(directions_options, &etp);
+  ManeuversBuilderTest mbTest(options, &etp);
 
   ///////////////////////////////////////////////////////////////////////////
   // Create maneuver list
@@ -1440,7 +1441,7 @@ void TestStraightInternalLeftInternalStraightInternalUturnCombine() {
 }
 
 void TestInternalPencilPointUturnProperDirectionCombine() {
-  DirectionsOptions directions_options;
+  Options options;
   TripLeg path;
   TripLeg_Node* node;
   TripLeg_Edge* edge;
@@ -1475,7 +1476,7 @@ void TestInternalPencilPointUturnProperDirectionCombine() {
                0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
 
   EnhancedTripLeg etp(path);
-  ManeuversBuilderTest mbTest(directions_options, &etp);
+  ManeuversBuilderTest mbTest(options, &etp);
 
   ///////////////////////////////////////////////////////////////////////////
   // Create maneuver list
@@ -1540,7 +1541,7 @@ void TestInternalPencilPointUturnProperDirectionCombine() {
 }
 
 void TestSimpleRightTurnChannelCombine() {
-  DirectionsOptions directions_options;
+  Options options;
   TripLeg path;
   TripLeg_Node* node;
   TripLeg_Edge* edge;
@@ -1567,7 +1568,7 @@ void TestSimpleRightTurnChannelCombine() {
                {}, {}, {});
 
   EnhancedTripLeg etp(path);
-  ManeuversBuilderTest mbTest(directions_options, &etp);
+  ManeuversBuilderTest mbTest(options, &etp);
 
   ///////////////////////////////////////////////////////////////////////////
   // Create maneuver list
@@ -1761,7 +1762,7 @@ void TryIsIntersectingForwardEdge(ManeuversBuilderTest& mbTest, int node_index, 
 }
 
 void TestPathRightXStraightIsIntersectingForwardEdge() {
-  DirectionsOptions directions_options;
+  Options options;
   TripLeg path;
   TripLeg_Node* node;
   TripLeg_Edge* edge;
@@ -1787,13 +1788,13 @@ void TestPathRightXStraightIsIntersectingForwardEdge() {
   node = path.add_node();
 
   EnhancedTripLeg etp(path);
-  ManeuversBuilderTest mbTest(directions_options, &etp);
+  ManeuversBuilderTest mbTest(options, &etp);
 
   TryIsIntersectingForwardEdge(mbTest, 1, true);
 }
 
 void TestPathLeftXStraightIsIntersectingForwardEdge() {
-  DirectionsOptions directions_options;
+  Options options;
   TripLeg path;
   TripLeg_Node* node;
   TripLeg_Edge* edge;
@@ -1819,13 +1820,13 @@ void TestPathLeftXStraightIsIntersectingForwardEdge() {
   node = path.add_node();
 
   EnhancedTripLeg etp(path);
-  ManeuversBuilderTest mbTest(directions_options, &etp);
+  ManeuversBuilderTest mbTest(options, &etp);
 
   TryIsIntersectingForwardEdge(mbTest, 1, true);
 }
 
 void TestPathSlightRightXSlightLeftIsIntersectingForwardEdge() {
-  DirectionsOptions directions_options;
+  Options options;
   TripLeg path;
   TripLeg_Node* node;
   TripLeg_Edge* edge;
@@ -1851,7 +1852,7 @@ void TestPathSlightRightXSlightLeftIsIntersectingForwardEdge() {
   node = path.add_node();
 
   EnhancedTripLeg etp(path);
-  ManeuversBuilderTest mbTest(directions_options, &etp);
+  ManeuversBuilderTest mbTest(options, &etp);
 
   TryIsIntersectingForwardEdge(mbTest, 1, true);
 }

@@ -22,9 +22,9 @@ json::MapPtr serialize(const PathLocation& location, bool istransit) {
 namespace valhalla {
 namespace tyr {
 
-std::string serializeTransitAvailable(const valhalla_request_t& request,
-                                      const std::vector<Location>& locations,
-                                      const std::unordered_set<Location>& found) {
+std::string serializeTransitAvailable(const Api& request,
+                                      const std::vector<baldr::Location>& locations,
+                                      const std::unordered_set<baldr::Location>& found) {
   auto json = json::array({});
   for (const auto& location : locations) {
     json->emplace_back(serialize(location, found.find(location) != found.cend()));

@@ -5,7 +5,7 @@
 #include <valhalla/baldr/directededge.h>
 #include <valhalla/baldr/nodeinfo.h>
 #include <valhalla/baldr/rapidjson_utils.h>
-#include <valhalla/proto/directions_options.pb.h>
+#include <valhalla/proto/options.pb.h>
 #include <valhalla/sif/dynamiccost.h>
 
 namespace valhalla {
@@ -20,14 +20,14 @@ namespace sif {
  */
 void ParsePedestrianCostOptions(const rapidjson::Document& doc,
                                 const std::string& costing_options_key,
-                                odin::CostingOptions* pbf_costing_options);
+                                CostingOptions* pbf_costing_options);
 
 /**
  * Create a pedestriancost
  * @param  costing specified costing type.
  * @param  options pbf with request options.
  */
-cost_ptr_t CreatePedestrianCost(const odin::Costing costing, const odin::DirectionsOptions& options);
+cost_ptr_t CreatePedestrianCost(const Costing costing, const Options& options);
 
 } // namespace sif
 } // namespace valhalla

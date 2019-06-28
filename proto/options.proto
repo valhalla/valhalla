@@ -1,6 +1,6 @@
 syntax = "proto2";
 option optimize_for = LITE_RUNTIME;
-package valhalla.odin;
+package valhalla;
 import public "tripcommon.proto";
 
 message Contour {
@@ -108,7 +108,7 @@ message AvoidEdge {
   optional float percent_along = 2;
 }
 
-message DirectionsOptions {
+message Options {
 
   enum Units {
     kilometers = 0;
@@ -131,6 +131,7 @@ message DirectionsOptions {
     trace_attributes = 10;
     height = 11;
     transit_available = 12;
+    expansion = 13;
   }
 
   enum DateTimeType {

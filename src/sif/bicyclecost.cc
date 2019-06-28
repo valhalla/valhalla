@@ -13,6 +13,7 @@
 #include <random>
 #endif
 
+using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 
 namespace valhalla {
@@ -215,7 +216,7 @@ public:
    * @param  costing specified costing type.
    * @param  options pbf with request options.
    */
-  BicycleCost(const odin::Costing costing, const odin::DirectionsOptions& options);
+  BicycleCost(const Costing costing, const Options& options);
 
   // virtual destructor
   virtual ~BicycleCost() {
@@ -417,10 +418,10 @@ protected:
 // is modulated based on surface type and grade factors.
 
 // Constructor
-BicycleCost::BicycleCost(const odin::Costing costing, const odin::DirectionsOptions& options)
+BicycleCost::BicycleCost(const Costing costing, const Options& options)
     : DynamicCost(options, TravelMode::kBicycle) {
   // Grab the costing options based on the specified costing type
-  const odin::CostingOptions& costing_options = options.costing_options(static_cast<int>(costing));
+  const CostingOptions& costing_options = options.costing_options(static_cast<int>(costing));
 
   // Set hierarchy to allow unlimited transitions
   for (auto& h : hierarchy_limits_) {
@@ -857,7 +858,7 @@ Cost BicycleCost::TransitionCostReverse(const uint32_t idx,
 
 void ParseBicycleCostOptions(const rapidjson::Document& doc,
                              const std::string& costing_options_key,
-                             odin::CostingOptions* pbf_costing_options) {
+                             CostingOptions* pbf_costing_options) {
   auto json_costing_options = rapidjson::get_child_optional(doc, costing_options_key.c_str());
 
   if (json_costing_options) {
@@ -972,7 +973,7 @@ void ParseBicycleCostOptions(const rapidjson::Document& doc,
   }
 }
 
-cost_ptr_t CreateBicycleCost(const odin::Costing costing, const odin::DirectionsOptions& options) {
+cost_ptr_t CreateBicycleCost(const Costing costing, const Options& options) {
   return std::make_shared<BicycleCost>(costing, options);
 }
 
@@ -990,8 +991,7 @@ namespace {
 
 class TestBicycleCost : public BicycleCost {
 public:
-  TestBicycleCost(const odin::Costing costing, const odin::DirectionsOptions& options)
-      : BicycleCost(costing, options){};
+  TestBicycleCost(const Costing costing, const Options& options) : BicycleCost(costing, options){};
 
   using BicycleCost::alley_penalty_;
   using BicycleCost::country_crossing_cost_;
@@ -1004,9 +1004,9 @@ public:
 TestBicycleCost* make_bicyclecost_from_json(const std::string& property, float testVal) {
   std::stringstream ss;
   ss << R"({"costing_options":{"bicycle":{")" << property << R"(":)" << testVal << "}}}";
-  valhalla::valhalla_request_t request;
-  request.parse(ss.str(), valhalla::odin::DirectionsOptions::route);
-  return new TestBicycleCost(valhalla::odin::Costing::bicycle, request.options);
+  Api request;
+  ParseApi(ss.str(), valhalla::Options::route, request);
+  return new TestBicycleCost(valhalla::Costing::bicycle, request.options());
 }
 
 std::uniform_real_distribution<float>*

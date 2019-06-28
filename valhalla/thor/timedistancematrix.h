@@ -70,8 +70,8 @@ public:
    * @return time/distance from origin index to all other locations
    */
   std::vector<TimeDistance>
-  OneToMany(const odin::Location& origin,
-            const google::protobuf::RepeatedPtrField<odin::Location>& locations,
+  OneToMany(const valhalla::Location& origin,
+            const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
             baldr::GraphReader& graphreader,
             const std::shared_ptr<sif::DynamicCost>* mode_costing,
             const sif::TravelMode mode,
@@ -89,8 +89,8 @@ public:
    * @return time/distance to the destination index from all other locations
    */
   std::vector<TimeDistance>
-  ManyToOne(const odin::Location& dest,
-            const google::protobuf::RepeatedPtrField<odin::Location>& locations,
+  ManyToOne(const valhalla::Location& dest,
+            const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
             baldr::GraphReader& graphreader,
             const std::shared_ptr<sif::DynamicCost>* mode_costing,
             const sif::TravelMode mode,
@@ -107,7 +107,7 @@ public:
    * @return time/distance between all pairs of locations
    */
   std::vector<TimeDistance>
-  ManyToMany(const google::protobuf::RepeatedPtrField<odin::Location>& locations,
+  ManyToMany(const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
              baldr::GraphReader& graphreader,
              const std::shared_ptr<sif::DynamicCost>* mode_costing,
              const sif::TravelMode mode,
@@ -125,8 +125,8 @@ public:
    * @return time/distance from origin index to all other locations
    */
   std::vector<TimeDistance>
-  SourceToTarget(const google::protobuf::RepeatedPtrField<odin::Location>& source_location_list,
-                 const google::protobuf::RepeatedPtrField<odin::Location>& target_location_list,
+  SourceToTarget(const google::protobuf::RepeatedPtrField<valhalla::Location>& source_location_list,
+                 const google::protobuf::RepeatedPtrField<valhalla::Location>& target_location_list,
                  baldr::GraphReader& graphreader,
                  const std::shared_ptr<sif::DynamicCost>* mode_costing,
                  const sif::TravelMode mode,
@@ -217,14 +217,14 @@ protected:
    * @param  graphreader   Graph reader for accessing routing graph.
    * @param  origin        Origin location information.
    */
-  void SetOriginOneToMany(baldr::GraphReader& graphreader, const odin::Location& origin);
+  void SetOriginOneToMany(baldr::GraphReader& graphreader, const valhalla::Location& origin);
 
   /**
    * Sets the origin for a many to one time+distance matrix computation.
    * @param  graphreader   Graph reader for accessing routing graph.
    * @param  dest          Destination
    */
-  void SetOriginManyToOne(baldr::GraphReader& graphreader, const odin::Location& dest);
+  void SetOriginManyToOne(baldr::GraphReader& graphreader, const valhalla::Location& dest);
 
   /**
    * Add destinations.
@@ -232,15 +232,16 @@ protected:
    * @param  locations     List of locations.
    */
   void SetDestinations(baldr::GraphReader& graphreader,
-                       const google::protobuf::RepeatedPtrField<odin::Location>& locations);
+                       const google::protobuf::RepeatedPtrField<valhalla::Location>& locations);
 
   /**
    * Set destinations for the many to one time+distance matrix computation.
    * @param  graphreader   Graph reader for accessing routing graph.
    * @param  locations     List of locations.
    */
-  void SetDestinationsManyToOne(baldr::GraphReader& graphreader,
-                                const google::protobuf::RepeatedPtrField<odin::Location>& locations);
+  void
+  SetDestinationsManyToOne(baldr::GraphReader& graphreader,
+                           const google::protobuf::RepeatedPtrField<valhalla::Location>& locations);
 
   /**
    * Update destinations along an edge that has been settled (lowest cost path
@@ -253,8 +254,8 @@ protected:
    * @param   predindex     Predecessor index in EdgeLabels vector.
    * @return  Returns true if all destinations have been settled.
    */
-  bool UpdateDestinations(const odin::Location& origin,
-                          const google::protobuf::RepeatedPtrField<odin::Location>& locations,
+  bool UpdateDestinations(const valhalla::Location& origin,
+                          const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
                           std::vector<uint32_t>& destinations,
                           const baldr::DirectedEdge* edge,
                           const sif::EdgeLabel& pred,

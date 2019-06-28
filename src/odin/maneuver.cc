@@ -11,7 +11,7 @@
 #include "odin/transitrouteinfo.h"
 
 #include <valhalla/proto/directions.pb.h>
-#include <valhalla/proto/directions_options.pb.h>
+#include <valhalla/proto/options.pb.h>
 #include <valhalla/proto/tripcommon.pb.h>
 
 using namespace valhalla::odin;
@@ -243,8 +243,8 @@ void Maneuver::set_instruction(std::string&& instruction) {
   instruction_ = std::move(instruction);
 }
 
-float Maneuver::length(const DirectionsOptions::Units& units) const {
-  if (units == DirectionsOptions::miles) {
+float Maneuver::length(const Options::Units& units) const {
+  if (units == Options::miles) {
     return (length_ * midgard::kMilePerKm);
   }
   return length_;

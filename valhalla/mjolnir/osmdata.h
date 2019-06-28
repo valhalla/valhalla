@@ -71,6 +71,12 @@ struct OSMData {
   bool read_from_temp_files(const std::string& tile_dir);
 
   /**
+   * Read data from temporary unique name file.
+   * @return Returns true if successful, false if an error occurs.
+   */
+  bool read_from_unique_names_file(const std::string& tile_dir);
+
+  /**
    * add the direction information to the forward or reverse map for relations.
    */
   void add_to_name_map(const uint32_t member_id,

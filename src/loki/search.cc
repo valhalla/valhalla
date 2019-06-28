@@ -220,6 +220,7 @@ struct projector_t {
   double sq_radius;
   std::vector<candidate_t> unreachable;
   std::vector<candidate_t> reachable;
+  double closest_external_reachable = std::numeric_limits<double>::max();
 
   // critical data
   double lon_scale;
@@ -615,8 +616,8 @@ struct bin_handler_t {
       c_itr = bin_candidates.begin();
       for (p_itr = begin; p_itr != end; ++p_itr, ++c_itr) {
         // which batch of findings
-        auto* batch = reachability < p_itr->location.minimum_reachability_ ? &p_itr->unreachable
-                                                                           : &p_itr->reachable;
+        bool reachable = reachability >= p_itr->location.minimum_reachability_;
+        auto* batch = reachable ? &p_itr->reachable : &p_itr->unreachable;
 
         // if its empty append
         if (batch->empty()) {
@@ -632,6 +633,13 @@ struct bin_handler_t {
         bool in_radius = c_itr->sq_distance < p_itr->sq_radius;
         bool better = c_itr->sq_distance < batch->back().sq_distance;
         bool last_in_radius = batch->back().sq_distance < p_itr->sq_radius;
+        // TODO: this is a bit blunt in that any reachable edges between the best or ones within
+        // the radius will make unreachable edges that are even the tiniest bit further away unviable
+        // it seems like we should have a slightly looser radius to allow for unreachable edges but
+        // its unclear what that should be as in most cases we are working around not actually knowing
+        // the accuracy or even input modality of the incoming location
+        bool closer_external_reachable =
+            reachable && c_itr->sq_distance < p_itr->closest_external_reachable;
 
         // it has to either be better or in the radius to move on
         if (in_radius || better) {
@@ -642,16 +650,20 @@ struct bin_handler_t {
           // the last one wasnt in the radius so replace it with this one because its better or is
           // in the radius
           if (!last_in_radius) {
+            if (closer_external_reachable)
+              p_itr->closest_external_reachable = batch->back().sq_distance;
             batch->back() = std::move(*c_itr);
             // last one is in the radius but this one is better so put it on the end
           } else if (better) {
             batch->emplace_back(std::move(*c_itr));
-            // last one is in the radius and this one is not as good so put it on before it
+            // last one and this one are both in the radius but this one is not as good
           } else {
             batch->emplace_back(std::move(*c_itr));
             std::swap(*(batch->end() - 1), *(batch->end() - 2));
           }
-        }
+        } // not in radius or better and reachable and closer than closest one outside of radius
+        else if (closer_external_reachable)
+          p_itr->closest_external_reachable = c_itr->sq_distance;
       }
     }
 
@@ -697,6 +709,12 @@ struct bin_handler_t {
     // need to go get the actual correlated location with edge_id etc.
     std::unordered_map<Location, PathLocation> searched;
     for (auto& pp : pps) {
+      // remove non-sensical island candidates
+      auto new_end = std::remove_if(pp.unreachable.begin(), pp.unreachable.end(),
+                                    [&pp](const candidate_t& c) -> bool {
+                                      return c.sq_distance > pp.closest_external_reachable;
+                                    });
+      pp.unreachable.erase(new_end, pp.unreachable.end());
       // concatenate and sort
       pp.reachable.reserve(pp.reachable.size() + pp.unreachable.size());
       std::move(pp.unreachable.begin(), pp.unreachable.end(), std::back_inserter(pp.reachable));
@@ -787,18 +805,19 @@ struct bin_handler_t {
   }
 };
 
-}; // namespace
+} // namespace
 
 namespace valhalla {
 namespace loki {
 
-std::unordered_map<Location, PathLocation> Search(const std::vector<Location>& locations,
-                                                  GraphReader& reader,
-                                                  const EdgeFilter& edge_filter,
-                                                  const NodeFilter& node_filter) {
+std::unordered_map<valhalla::baldr::Location, PathLocation>
+Search(const std::vector<valhalla::baldr::Location>& locations,
+       GraphReader& reader,
+       const EdgeFilter& edge_filter,
+       const NodeFilter& node_filter) {
   // trivially finished already
   if (locations.empty()) {
-    return std::unordered_map<Location, PathLocation>{};
+    return std::unordered_map<valhalla::baldr::Location, PathLocation>{};
   };
   // setup the unique list of locations
   bin_handler_t handler(locations, reader, edge_filter, node_filter);
