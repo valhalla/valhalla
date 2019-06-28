@@ -12,6 +12,7 @@
 #include <boost/optional.hpp>
 
 // rapidjson loves to assert and crash programs, its more useful to throw and catch
+#define RAPIDJSON_ASSERT_THROWS
 #undef RAPIDJSON_ASSERT
 #define RAPIDJSON_ASSERT(x)                                                                          \
   if (!(x))                                                                                          \

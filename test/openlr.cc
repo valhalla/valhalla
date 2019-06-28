@@ -63,7 +63,7 @@ const testfixture testfixtures[] = {{"CwOa9yUQACODBQEqAL4jEw==", 5.069987, 52.11
 
 namespace {
 
-bool check_close(double value, double expected, const std::string& message, double abstol = 1e-5) {
+void check_close(double value, double expected, const std::string& message, double abstol = 1e-5) {
   if (std::abs(value - expected) > abstol) {
     throw std::runtime_error(message + "  Was " + std::to_string(value) + ", expected " +
                              std::to_string(expected));
