@@ -1,3 +1,4 @@
+#include "baldr/graphid.h"
 #include "midgard/encoded.h"
 #include "midgard/pointll.h"
 #include "midgard/util.h"
@@ -630,6 +631,22 @@ void test_varint() {
                   {58.26482, -169.02219}});
 }
 
+void test_ids() {
+  std::default_random_engine generator(21);
+  std::uniform_int_distribution<int> level(0, 3);
+  std::uniform_int_distribution<int> tile(0, 1 << 22 - 1);
+  std::uniform_int_distribution<int> id(0, 1 << 21 - 1);
+  for (size_t i = 0; i < 1; ++i) {
+    std::vector<valhalla::baldr::GraphId> ids;
+    for (size_t j = 0; j < 2; ++j)
+      ids.emplace_back(valhalla::baldr::GraphId(tile(generator), level(generator), id(generator)));
+    auto encoded_ids = encode7ids(ids);
+    auto decoded_ids = decode7ids<std::vector<valhalla::baldr::GraphId>>(encoded_ids);
+    if (decoded_ids != ids)
+      throw std::logic_error("Edge ids dont match");
+  }
+}
+
 } // namespace
 
 int main() {
@@ -638,6 +655,7 @@ int main() {
   suite.test(TEST_CASE(test_polyline));
   suite.test(TEST_CASE(test_polyline5));
   suite.test(TEST_CASE(test_varint));
+  suite.test(TEST_CASE(test_ids));
 
   return suite.tear_down();
 }

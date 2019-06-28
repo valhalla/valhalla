@@ -407,6 +407,7 @@ uint32_t AddShortcutEdges(GraphReader& reader,
       // forward - reverse the shape so the edge info stored is forward for
       // the first added edge info
       auto edgeinfo = tile->edgeinfo(directededge->edgeinfo_offset());
+      auto foo = valhalla::midgard::decode7<std::vector<PointLL>>(edgeinfo.encoded_shape());
       std::list<PointLL> shape =
           valhalla::midgard::decode7<std::list<PointLL>>(edgeinfo.encoded_shape());
       if (!directededge->forward()) {
@@ -432,7 +433,12 @@ uint32_t AddShortcutEdges(GraphReader& reader,
       uint32_t rst = 0;
       uint32_t opp_local_idx = 0;
       GraphId next_edge_id = edge_id;
+      std::vector<GraphId> edge_ids;
       while (true) {
+        // Remember this edge was superseded
+        edge_ids.push_back(next_edge_id);
+
+        // Check if we are done creating the shortcut
         EdgePairs edgepairs;
         const GraphTile* tile = reader.GetGraphTile(end_node);
         if (last_edge(tile, end_node, edgepairs)) {
@@ -462,6 +468,16 @@ uint32_t AddShortcutEdges(GraphReader& reader,
         length += ConnectEdges(reader, end_node, next_edge_id, shape, end_node, opp_local_idx, rst,
                                average_density);
       }
+
+      // compare size
+      auto encoded_shape = encode7(shape);
+      auto encoded_ids = encode7ids(edge_ids);
+      auto decoded_ids = decode7ids<std::vector<GraphId>>(encoded_ids);
+      if (decoded_ids != edge_ids)
+        throw std::logic_error("WTF");
+      auto ratio = double(encoded_ids.size()) / double(encoded_shape.size());
+      if (ratio > .8)
+        printf("ENCODING DONE %zu / %zu = %1.2f\n", encoded_ids.size(), encoded_shape.size(), ratio);
 
       // Do we need to force adding edgeinfo (opposing edge could have diff names)?
       // If end node is in the same tile and opposing edge does not have matching

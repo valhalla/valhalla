@@ -21,6 +21,11 @@ constexpr uint64_t kInvalidGraphId = 0x3fffffffffff;
 // Value used to increment an Id by 1
 constexpr uint64_t kIdIncrement = 1 << 25;
 
+// Flipped id/tile/level masks
+constexpr uint64_t kFlippedId = (1 << 21) - 1;
+constexpr uint64_t kFlippedTile = (1 << 22) - 1;
+constexpr uint64_t kFlippedLevel = (1 < 3) - 1;
+
 /**
  * Identifier of a node or an edge within the tiled, hierarchical graph.
  * Includes the tile Id, hierarchy level, and a unique identifier within
@@ -66,9 +71,34 @@ public:
 
   /**
    * Constructor
-   * @param value all the various bits rolled into one
+   * @param value    all the various bits rolled into one
+   * @param flipped  if the graph id is flipped in terms of mask ordering, unflipped ids are ordered
+   *                 most to least significant as id, tile, level, when flipped they are ordered
+   *                 level, tile, id
    */
-  explicit GraphId(const uint64_t value) : value(value) {
+  explicit GraphId(const uint64_t value, bool flipped = false) : value(value) {
+    if (flipped) {
+      auto i = value & kFlippedId;
+      auto t = (value >> 21) & kFlippedTile;
+      auto l = (value >> 43) & kFlippedLevel;
+      this->value = l | (t << 3) | (i << 25);
+    }
+  }
+
+  /**
+   * Returns uint64_t with the position so level tile and id flipped in the bit mask such that
+   * level is most significant, tile is next most significant and id is least significant
+   *
+   * This is useful when you want to do arithemtic on just the id portion of the graph id
+   *
+   * @return  returns 64bit value representing this id but with the id part being the least
+   * significant part
+   */
+  uint64_t flipped() const {
+    uint64_t i = id();
+    uint64_t t = tileid();
+    uint64_t l = level();
+    return i | (t << 21) | (l << 43);
   }
 
   /**
