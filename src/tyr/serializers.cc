@@ -92,8 +92,10 @@ json::ArrayPtr waypoints(const google::protobuf::RepeatedPtrField<valhalla::Loca
   auto waypoints = json::array({});
   int64_t waypoint_index = -1;
   for (const auto& location : locations) {
-    if (location.type() == valhalla::Location::kBreak ||
-        location.type() == valhalla::Location::kBreakThrough) {
+    if (location.path_edges().empty()) {
+      waypoints->emplace_back(static_cast<std::nullptr_t>(nullptr));
+    } else if (location.type() == valhalla::Location::kBreak ||
+               location.type() == valhalla::Location::kBreakThrough) {
       waypoints->emplace_back(waypoint(location, is_tracepoint, false, ++waypoint_index));
     } else {
       waypoints->emplace_back(waypoint(location, is_tracepoint));
