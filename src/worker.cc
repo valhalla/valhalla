@@ -851,6 +851,12 @@ void from_json(rapidjson::Document& doc, Options& options) {
     options.set_breakage_distance(*breakage_distance);
   }
 
+  // if specified, get the interpolation_distance value in there
+  auto interpolation_distance =
+      rapidjson::get_optional<float>(doc, "/trace_options/interpolation_distance");
+  if (interpolation_distance) {
+    options.set_interpolation_distance(*interpolation_distance);
+  }
   // if specified, get the filter_action value in there
   auto filter_action_str = rapidjson::get_optional<std::string>(doc, "/filters/action");
   FilterAction filter_action;
