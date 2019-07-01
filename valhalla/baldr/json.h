@@ -124,8 +124,7 @@ public:
     return ostream_ << "null";
   }
 
-  template <class Nullable>
-  std::ostream& operator()(const Nullable& value) const {
+  template <class Nullable> std::ostream& operator()(const Nullable& value) const {
     if (value) {
       return ostream_ << *value;
     } else {
