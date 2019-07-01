@@ -68,8 +68,6 @@ boost::property_tree::ptree MapMatcherFactory::MergeConfig(const Options& option
   }
 
   // Check for overrides of matcher related directions options. Override these values in config.
-  // TODO - there are several options listed as customizable that are not documented
-  // in the interface...either add them and document or remove them from config?
   if (options.search_radius() && customizable.find("search_radius") != customizable.end()) {
     config.put<float>("search_radius", options.search_radius());
   }
@@ -82,6 +80,10 @@ boost::property_tree::ptree MapMatcherFactory::MergeConfig(const Options& option
   }
   if (options.breakage_distance() && customizable.find("breakage_distance") != customizable.end()) {
     config.put<float>("breakage_distance", options.breakage_distance());
+  }
+  if (options.has_interpolation_distance() &&
+      customizable.find("interpolation_distance") != customizable.end()) {
+    config.put<float>("interpolation_distance", options.interpolation_distance());
   }
 
   // Give it back
