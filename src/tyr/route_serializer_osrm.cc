@@ -919,9 +919,14 @@ json::MapPtr osrm_maneuver(const valhalla::DirectionsLeg::Maneuver& maneuver,
 std::string maneuver_geometry(const uint32_t begin_idx,
                               const uint32_t end_idx,
                               const std::vector<PointLL>& shape,
+                              bool is_arrive_maneuver,
                               const valhalla::Options& options) {
   // Must add one to the end range since maneuver end shape index is exclusive
   std::vector<PointLL> maneuver_shape(shape.begin() + begin_idx, shape.begin() + end_idx + 1);
+  // Last maneuver shape is a linestring with two identical points at the destination
+  if (is_arrive_maneuver) {
+    maneuver_shape.push_back(shape.back());
+  }
   int precision = options.shape_format() == polyline6 ? 1e6 : 1e5;
   return midgard::encode(maneuver_shape, precision);
 }
@@ -1076,8 +1081,9 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
       // name change
 
       // Add geometry for this maneuver
-      step->emplace("geometry", maneuver_geometry(maneuver.begin_shape_index(),
-                                                  maneuver.end_shape_index(), shape, options));
+      step->emplace("geometry",
+                    maneuver_geometry(maneuver.begin_shape_index(), maneuver.end_shape_index(), shape,
+                                      arrive_maneuver, options));
 
       // Add mode, driving side, weight, distance, duration, name
       float distance = maneuver.length() * (imperial ? 1609.34f : 1000.0f);
