@@ -36,7 +36,7 @@ using Value =
 // the map value type in json
 class Jmap : public std::unordered_map<std::string, Value> {
 public:
-  // just specialize unoredered_map
+  // just specialize unordered_map
   using std::unordered_map<std::string, Value>::unordered_map;
   // and be able to spit out text
   friend std::ostream& operator<<(std::ostream&, const Jmap&);
@@ -123,11 +123,13 @@ public:
   std::ostream& operator()(std::nullptr_t value) const {
     return ostream_ << "null";
   }
-  std::ostream& operator()(const MapPtr& value) const {
-    return ostream_ << *value;
-  }
-  std::ostream& operator()(const ArrayPtr& value) const {
-    return ostream_ << *value;
+
+  template <class Nullable> std::ostream& operator()(const Nullable& value) const {
+    if (value) {
+      return ostream_ << *value;
+    } else {
+      return this->operator()(nullptr);
+    }
   }
 
 private:
