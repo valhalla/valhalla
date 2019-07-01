@@ -22,11 +22,11 @@
 #include "sif/pedestriancost.h"
 #include "thor/astar.h"
 #include "thor/attributes_controller.h"
-#include "thor/trippathbuilder.h"
+#include "thor/triplegbuilder.h"
 
-#include <valhalla/proto/directions_options.pb.h>
-#include <valhalla/proto/tripdirections.pb.h>
-#include <valhalla/proto/trippath.pb.h>
+#include <valhalla/proto/directions.pb.h>
+#include <valhalla/proto/options.pb.h>
+#include <valhalla/proto/trip.pb.h>
 
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
@@ -38,13 +38,13 @@
 
 namespace bpt = boost::property_tree;
 
+using namespace valhalla;
 namespace vm = valhalla::midgard;
 namespace vb = valhalla::baldr;
 namespace vs = valhalla::sif;
 namespace vt = valhalla::thor;
 namespace vk = valhalla::loki;
 namespace vj = valhalla::mjolnir;
-namespace vo = valhalla::odin;
 
 /*
  * to regenerate the test tile you'll want to:
@@ -204,21 +204,22 @@ void write_config(const std::string& filename) {
   file.close();
 }
 
-void create_costing_options(vo::DirectionsOptions& directions_options) {
-  for (const auto costing :
-       {vo::auto_, vo::auto_shorter, vo::bicycle, vo::bus, vo::hov, vo::motor_scooter, vo::multimodal,
-        vo::pedestrian, vo::transit, vo::truck, vo::motorcycle, vo::auto_data_fix}) {
-    if (costing == vo::pedestrian) {
+void create_costing_options(Options& options) {
+  for (const auto costing : {auto_, auto_shorter, bicycle, bus, hov, motor_scooter, multimodal,
+                             pedestrian, transit, truck, motorcycle, auto_data_fix}) {
+    if (costing == pedestrian) {
       const rapidjson::Document doc;
       vs::ParsePedestrianCostOptions(doc, "/costing_options/pedestrian",
-                                     directions_options.add_costing_options());
+                                     options.add_costing_options());
     } else {
-      directions_options.add_costing_options();
+      options.add_costing_options();
     }
   }
 }
 // check that a path from origin to dest goes along the edge with expected_edge_index
-void assert_is_trivial_path(vo::Location& origin, vo::Location& dest, uint32_t expected_edge_index) {
+void assert_is_trivial_path(valhalla::Location& origin,
+                            valhalla::Location& dest,
+                            uint32_t expected_edge_index) {
 
   // make the config file
   std::stringstream json;
@@ -233,20 +234,23 @@ void assert_is_trivial_path(vo::Location& origin, vo::Location& dest, uint32_t e
                              "file about generating the test tiles.");
   }
 
-  vo::DirectionsOptions directions_options;
-  create_costing_options(directions_options);
+  Options options;
+  create_costing_options(options);
   auto mode = vs::TravelMode::kPedestrian;
   vs::cost_ptr_t costs[int(vs::TravelMode::kMaxTravelMode)];
-  auto pedestrian = vs::CreatePedestrianCost(valhalla::odin::Costing::pedestrian, directions_options);
+  auto pedestrian = vs::CreatePedestrianCost(Costing::pedestrian, options);
   costs[int(mode)] = pedestrian;
   assert(bool(costs[int(mode)]));
 
   vt::AStarPathAlgorithm astar;
-  auto path = astar.GetBestPath(origin, dest, reader, costs, mode);
+  auto paths = astar.GetBestPath(origin, dest, reader, costs, mode);
 
   uint32_t time = 0;
-  for (auto& p : path) {
-    time += p.elapsed_time;
+  for (const auto& path : paths) {
+    for (const auto& p : path) {
+      time += p.elapsed_time;
+    }
+    break;
   }
 
   const DirectedEdge* de = tile->directededge(expected_edge_index);
@@ -259,7 +263,7 @@ void assert_is_trivial_path(vo::Location& origin, vo::Location& dest, uint32_t e
   }
 }
 
-void add(GraphId id, float dist, PointLL ll, vo::Location& l) {
+void add(GraphId id, float dist, PointLL ll, valhalla::Location& l) {
   l.mutable_path_edges()->Add()->set_graph_id(id);
   l.mutable_path_edges()->rbegin()->set_percent_along(dist);
   l.mutable_path_edges()->rbegin()->mutable_ll()->set_lng(ll.first);
@@ -273,7 +277,7 @@ void TestTrivialPath() {
   using node::a;
   using node::b;
 
-  vo::Location origin;
+  valhalla::Location origin;
   origin.mutable_ll()->set_lng(a.second.first);
   origin.mutable_ll()->set_lat(a.second.second);
   add(tile_id + uint64_t(1), 0.0f, a.second, origin);
@@ -281,7 +285,7 @@ void TestTrivialPath() {
   add(tile_id + uint64_t(0), 0.0f, a.second, origin);
   add(tile_id + uint64_t(2), 1.0f, a.second, origin);
 
-  vo::Location dest;
+  valhalla::Location dest;
   dest.mutable_ll()->set_lng(b.second.first);
   dest.mutable_ll()->set_lat(b.second.second);
   add(tile_id + uint64_t(3), 0.0f, b.second, dest);
@@ -299,7 +303,7 @@ void TestTrivialPathTriangle() {
   using node::e;
   using node::f;
 
-  vo::Location origin;
+  valhalla::Location origin;
   origin.mutable_ll()->set_lng(e.second.first);
   origin.mutable_ll()->set_lat(e.second.second);
   add(tile_id + uint64_t(9), 0.0f, e.second, origin);
@@ -307,7 +311,7 @@ void TestTrivialPathTriangle() {
   add(tile_id + uint64_t(8), 0.0f, e.second, origin);
   add(tile_id + uint64_t(10), 1.0f, e.second, origin);
 
-  vo::Location dest;
+  valhalla::Location dest;
   dest.mutable_ll()->set_lng(f.second.first);
   dest.mutable_ll()->set_lat(f.second.second);
   add(tile_id + uint64_t(11), 0.0f, f.second, dest);
@@ -354,7 +358,7 @@ void trivial_path_no_uturns(const std::string& config_file) {
   // Enhance the local level of the graph. This adds information to the local
   // level that is usable across all levels (density, administrative
   // information (and country based attribution), edge transition logic, etc.
-  vj::GraphEnhancer::Enhance(conf, access_file);
+  vj::GraphEnhancer::Enhance(conf, osmdata, access_file);
 
   // Validate the graph and add information that cannot be added until
   // full graph is formed.
@@ -362,16 +366,18 @@ void trivial_path_no_uturns(const std::string& config_file) {
 
   // Locations
   std::vector<valhalla::baldr::Location> locations;
-  Location origin(valhalla::midgard::PointLL(5.114587f, 52.095957f), Location::StopType::BREAK);
+  baldr::Location origin(valhalla::midgard::PointLL(5.114587f, 52.095957f),
+                         baldr::Location::StopType::BREAK);
   locations.push_back(origin);
-  Location dest(valhalla::midgard::PointLL(5.114506f, 52.096141f), Location::StopType::BREAK);
+  baldr::Location dest(valhalla::midgard::PointLL(5.114506f, 52.096141f),
+                       baldr::Location::StopType::BREAK);
   locations.push_back(dest);
 
-  vo::DirectionsOptions directions_options;
-  create_costing_options(directions_options);
+  Api api;
+  auto& options = *api.mutable_options();
+  create_costing_options(options);
   std::shared_ptr<vs::DynamicCost> mode_costing[4];
-  std::shared_ptr<vs::DynamicCost> cost =
-      vs::CreatePedestrianCost(valhalla::odin::Costing::pedestrian, directions_options);
+  std::shared_ptr<vs::DynamicCost> cost = vs::CreatePedestrianCost(Costing::pedestrian, options);
   auto mode = cost->travel_mode();
   mode_costing[static_cast<uint32_t>(mode)] = cost;
 
@@ -382,24 +388,25 @@ void trivial_path_no_uturns(const std::string& config_file) {
   for (auto loc : locations) {
     try {
       path_location.push_back(projections.at(loc));
-      PathLocation::toPBF(path_location.back(), directions_options.mutable_locations()->Add(),
-                          graph_reader);
+      PathLocation::toPBF(path_location.back(), options.mutable_locations()->Add(), graph_reader);
     } catch (...) { throw std::runtime_error("fail_invalid_origin"); }
   }
 
   vt::AStarPathAlgorithm astar;
-  auto path =
-      astar.GetBestPath(*directions_options.mutable_locations(0),
-                        *directions_options.mutable_locations(1), graph_reader, mode_costing, mode);
+  auto path = astar
+                  .GetBestPath(*options.mutable_locations(0), *options.mutable_locations(1),
+                               graph_reader, mode_costing, mode)
+                  .front();
 
   vt::AttributesController controller;
-  vo::TripPath trip_path =
-      vt::TripPathBuilder::Build(controller, graph_reader, mode_costing, path,
-                                 *directions_options.mutable_locations(0),
-                                 *directions_options.mutable_locations(1), std::list<vo::Location>{});
+  auto& leg = *api.mutable_trip()->mutable_routes()->Add()->mutable_legs()->Add();
+  TripLeg trip_path =
+      vt::TripLegBuilder::Build(controller, graph_reader, mode_costing, path.begin(), path.end(),
+                                *options.mutable_locations(0), *options.mutable_locations(1),
+                                std::list<valhalla::Location>{}, leg);
   // really could of got the total of the elapsed_time.
-  vo::DirectionsBuilder directions;
-  vo::TripDirections trip_directions = directions.Build(directions_options, trip_path);
+  odin::DirectionsBuilder::Build(api);
+  const auto& trip_directions = api.directions().routes(0).legs(0);
 
   if (trip_directions.summary().time() != 0) {
     std::ostringstream ostr;

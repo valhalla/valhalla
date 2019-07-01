@@ -1,6 +1,6 @@
 syntax = "proto2";
 option optimize_for = LITE_RUNTIME;
-package valhalla.odin;
+package valhalla;
 import public "tripcommon.proto";
 
 message Contour {
@@ -108,7 +108,7 @@ message AvoidEdge {
   optional float percent_along = 2;
 }
 
-message DirectionsOptions {
+message Options {
 
   enum Units {
     kilometers = 0;
@@ -131,6 +131,7 @@ message DirectionsOptions {
     trace_attributes = 10;
     height = 11;
     transit_available = 12;
+    expansion = 13;
   }
 
   enum DateTimeType {
@@ -168,13 +169,15 @@ message DirectionsOptions {
   repeated Location trace = 27;                                           // Trace points for map matching
   optional ShapeMatch shape_match = 28 [default = walk_or_snap];          // The matching algorithm based on the type of input
   optional uint32 best_paths = 29 [default = 1];                          // The number of top k paths
-  optional float gps_accuracy = 30;                                       // The gps accuracy associated with the suppplied trace points
-  optional float search_radius = 31;                                      // The search radius associated with the suppplied trace points
-  optional float turn_penalty_factor = 32;                                // The turn penalty factor associated with the suppplied trace points
+  optional float gps_accuracy = 30;                                       // The gps accuracy associated with the supplied trace points
+  optional float search_radius = 31;                                      // The search radius associated with the supplied trace points
+  optional float turn_penalty_factor = 32;                                // The turn penalty factor associated with the supplied trace points
   optional FilterAction filter_action = 33;                               // The trace filter action - either exclude or include
   repeated string filter_attributes = 34;                                 // The filter list for trace attributes
   repeated AvoidEdge avoid_edges = 35;                                    // Avoid edges for any costing - derived from avoid_locations
   optional float breakage_distance = 36;                                  // Map-matching breaking distance (distance between GPS trace points)
   optional bool use_timestamps = 37 [default = false];                    // Use timestamps to compute elapsed time for trace_route and trace_attributes
   optional ShapeFormat shape_format = 38 [default = polyline6];           // Shape format (defaults to polyline6 encoding)
+  optional uint32 alternates = 39;                                        // Maximum number of alternate routes that can be returned
+  optional float interpolation_distance = 40;                             // Map-matching interpolation distance beyond which trace points are merged
 }

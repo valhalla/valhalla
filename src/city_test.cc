@@ -23,11 +23,11 @@
 #include "sif/costfactory.h"
 #include "thor/bidirectional_astar.h"
 #include "thor/pathalgorithm.h"
-#include "thor/trippathbuilder.h"
+#include "thor/triplegbuilder.h"
 
-#include <valhalla/proto/directions_options.pb.h>
-#include <valhalla/proto/tripdirections.pb.h>
-#include <valhalla/proto/trippath.pb.h>
+#include <valhalla/proto/directions.pb.h>
+#include <valhalla/proto/options.pb.h>
+#include <valhalla/proto/trip.pb.h>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -131,7 +131,7 @@ std::string GetJSONRequest(const Location& originloc, const Location& destloc) {
   str += "\"}],";
 
   // Add costing and return string
-  str += "\"costing\":\"auto\",\"directions_options\":{\"units\":\"miles\"}}' --config "
+  str += "\"costing\":\"auto\",\"units\":\"miles\"}' --config "
          "../conf/valhalla.json\n";
   return str;
 }

@@ -17,6 +17,7 @@
 #include <valhalla/midgard/constants.h>
 #include <valhalla/midgard/distanceapproximator.h>
 #include <valhalla/midgard/pointll.h>
+#include <valhalla/midgard/tiles.h>
 
 namespace valhalla {
 namespace midgard {
@@ -545,6 +546,17 @@ std::vector<midgard::PointLL> simulate_gps(const std::vector<gps_segment_t>& seg
                                            size_t sample_rate = 1,
                                            unsigned seed = 0);
 
+/**
+ * Generate a polygon geometry from a list of tile ids within a tileset
+ *
+ * @param region  the list of tiles form the tile set to be joined into a single geometry
+ * @param tiles   the geometry defining the full set of tiles so we can gind the four conerers of
+ * individual tiles
+ * @return  a list of polygon rings
+ */
+using ring_t = std::list<PointLL>;
+using polygon_t = std::list<ring_t>;
+polygon_t to_boundary(const std::unordered_set<uint32_t>& region, const Tiles<PointLL>& tiles);
 } // namespace midgard
 } // namespace valhalla
 #endif // VALHALLA_MIDGARD_UTIL_H_

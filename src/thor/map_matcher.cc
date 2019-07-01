@@ -121,7 +121,7 @@ interpolate_matches(const std::vector<meili::MatchResult>& matches,
 }
 
 // Form the path from the map-matching results. This path gets sent to
-// TripPathBuilder.
+// TripLegBuilder.
 std::vector<PathInfo>
 MapMatcher::FormPath(meili::MapMatcher* matcher,
                      const std::vector<meili::MatchResult>& results,
@@ -129,13 +129,14 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
                      const std::shared_ptr<sif::DynamicCost>* mode_costing,
                      const sif::TravelMode mode,
                      std::vector<std::pair<GraphId, GraphId>>& disconnected_edges,
-                     const bool use_timestamps) {
+                     const Options options) {
   // Set costing based on the mode
   const auto& costing = mode_costing[static_cast<uint32_t>(mode)];
+  bool use_timestamps = options.use_timestamps();
 
   // Iterate through the matched path. Form PathInfo - populate elapsed time
   // Return an empty path (or throw exception) if path is not connected.
-  float elapsed_time = 0;
+  Cost elapsed;
   std::vector<PathInfo> path;
   GraphId prior_edge, prior_node;
   const NodeInfo* nodeinfo = nullptr;
@@ -143,7 +144,6 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
   EdgeLabel pred;
 
   // Interpolate match results if using timestamps for elapsed time
-  bool use_costing = !use_timestamps;
   std::list<std::vector<interpolation_t>> interpolations;
   size_t interpolated_index = 0;
   size_t last_interp_index = 0;
@@ -151,7 +151,7 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
     interpolations = interpolate_matches(results, edge_segments, matcher);
     if (interpolations.size() > 1) {
       // This means there is a discontinuity. If so, fallback to using costing
-      use_costing = true;
+      use_timestamps = false;
     }
     last_interp_index = interpolations.front().back().original_index;
   }
@@ -173,20 +173,20 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
       disconnected_edges.emplace_back(prior_edge, edge_id);
     }
 
-    if (use_costing) {
-      // TODO: slight difference in time between route and trace_route
-      if (nodeinfo) {
-        // Get time along the edge, handling partial distance along the first and last edge.
-        // Add the transition cost at the begin node.
-        elapsed_time += costing->EdgeCost(directededge, tile->GetSpeed(directededge)).secs *
-                            (edge_segment.target - edge_segment.source) +
-                        costing->TransitionCost(directededge, nodeinfo, pred).secs;
-      } else {
-        // Get time along the edge, handling partial distance along the first and last edge
-        elapsed_time += costing->EdgeCost(directededge, tile->GetSpeed(directededge)).secs *
-                        (edge_segment.target - edge_segment.source);
-      }
+    // TODO: slight difference in time between route and trace_route
+    if (nodeinfo) {
+      // Get time along the edge, handling partial distance along the first and last edge.
+      // Add the transition cost at the begin node.
+      elapsed += costing->EdgeCost(directededge, tile->GetSpeed(directededge)) *
+                     (edge_segment.target - edge_segment.source) +
+                 costing->TransitionCost(directededge, nodeinfo, pred);
     } else {
+      // Get time along the edge, handling partial distance along the first and last edge
+      elapsed += costing->EdgeCost(directededge, tile->GetSpeed(directededge)) *
+                 (edge_segment.target - edge_segment.source);
+    }
+
+    if (use_timestamps) {
       // Use timestamps to update elapsed time. Use the timestamp at the interpolation
       // that no longer matches the edge_id (or the last interpolation if the edge id
       // matches the rest of the interpolations).
@@ -200,7 +200,7 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
           break;
         }
       }
-      elapsed_time = results[idx].epoch_time - results[0].epoch_time;
+      elapsed.secs = results[idx].epoch_time - results[0].epoch_time;
     }
 
     // Update the prior_edge and nodeinfo. TODO (protect against invalid tile)
@@ -213,7 +213,7 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
     pred = {kInvalidLabel, edge_id, directededge, {}, 0, 0, mode, 0};
 
     // Add to the PathInfo
-    path.emplace_back(mode, elapsed_time, edge_id, 0);
+    path.emplace_back(mode, elapsed.secs, edge_id, 0, elapsed.cost);
   }
 
   return path;

@@ -4,6 +4,7 @@
 #include "meili/map_matcher_factory.h"
 #include "meili/measurement.h"
 
+using namespace valhalla::midgard;
 using namespace valhalla::meili;
 
 template <typename istream_t>
@@ -43,8 +44,8 @@ int main(int argc, char* argv[]) {
   boost::property_tree::ptree config;
   rapidjson::read_json(argv[1], config);
   const std::string modename = config.get<std::string>("meili.mode");
-  valhalla::odin::Costing costing;
-  if (!valhalla::odin::Costing_Parse(modename, &costing)) {
+  valhalla::Costing costing;
+  if (!valhalla::Costing_Parse(modename, &costing)) {
     throw std::runtime_error("No costing method found");
   }
 

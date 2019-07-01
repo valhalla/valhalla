@@ -1,9 +1,9 @@
 syntax = "proto2";
 option optimize_for = LITE_RUNTIME;
-package valhalla.odin;
+package valhalla;
 import public "tripcommon.proto";
 
-message TripPath {
+message TripLeg {
 
   message SignElement {
     optional string text = 1;               // The actual sign element text, examples: I 95 North or Derry Street
@@ -34,7 +34,7 @@ message TripPath {
     kResidential = 6;
     kServiceOther = 7;
   }
-  
+
   enum Use {
     kRoadUse = 0;
     kRampUse = 1;              // Link - exits/entrance ramps.
@@ -116,7 +116,7 @@ message TripPath {
     kHybrid = 2;
     kMountain = 3;
   }
-  
+
   enum TransitType {
     kTram = 0;
     kMetro = 1;
@@ -213,6 +213,7 @@ message TripPath {
     repeated LaneConnectivity lane_connectivity = 39;
     optional int32 mean_elevation = 40;
     repeated TrafficSegment traffic_segment = 41;
+    repeated TurnLane turn_lanes = 42;
   }
 
   message IntersectingEdge {
@@ -239,10 +240,10 @@ message TripPath {
       kMotorwayJunction = 9;        // Highway = motorway_junction
       kBorderControl = 10;          // Border control
     }
-    
+
     optional Edge edge = 1;
-    repeated IntersectingEdge intersecting_edge = 2; 
-    optional uint32 elapsed_time = 3;        // seconds from start of leg
+    repeated IntersectingEdge intersecting_edge = 2;
+    optional double elapsed_time = 3;        // seconds from start of leg
     optional uint32 admin_index = 4;         // index into the admin list
     optional Type type = 5;                  // The type of node
     optional bool fork = 6;                  // Fork
@@ -258,7 +259,13 @@ message TripPath {
     optional string state_code = 3;
     optional string state_text = 4;
   }
-  
+
+  message ShapeAttributes {
+    repeated uint32 time = 1 [packed=true]; // milliseconds
+    repeated uint32 length = 2 [packed=true]; // decimeters
+    repeated uint32 speed = 3 [packed=true]; // decimeters per sec
+  }
+
   optional uint64 osm_changeset = 1;
   optional uint64 trip_id = 2;
   optional uint32 leg_id = 3;
@@ -268,5 +275,13 @@ message TripPath {
   repeated Admin admin = 7;
   optional string shape = 8;
   optional BoundingBox bbox = 9;
+  optional ShapeAttributes shape_attributes = 10;
 }
 
+message TripRoute {
+  repeated TripLeg legs = 1;
+}
+
+message Trip {
+  repeated TripRoute routes = 1;
+}

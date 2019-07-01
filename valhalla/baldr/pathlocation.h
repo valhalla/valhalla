@@ -10,7 +10,7 @@
 #include <valhalla/baldr/rapidjson_utils.h>
 
 #include <valhalla/baldr/graphreader.h>
-#include <valhalla/proto/directions_options.pb.h>
+#include <valhalla/proto/options.pb.h>
 
 namespace valhalla {
 namespace baldr {
@@ -76,28 +76,23 @@ public:
    */
   bool shares_edges(const PathLocation& other) const;
 
-  /**
-   * Serializes this object to rapidjson
-   * @return rapidjson::Value
-   */
-  rapidjson::Value ToRapidJson(size_t index, rapidjson::Document::AllocatorType& allocator) const;
-
-  // Serialize this edge to rapidjson
-  rapidjson::Value PathEdgeToRapidJson(const PathEdge& edge,
-                                       rapidjson::Document::AllocatorType& allocator) const;
-
-  /**
-   * Serializes one of these objects from a ptree and a list of locations
-   * @return PathLocation
-   */
-  static PathLocation FromRapidJson(const std::vector<Location>& locations,
-                                    const rapidjson::Value& path_location);
-
-  static void toPBF(const PathLocation& pl, odin::Location* l, baldr::GraphReader& reader) {
+  static void toPBF(const PathLocation& pl, valhalla::Location* l, baldr::GraphReader& reader) {
     l->mutable_ll()->set_lng(pl.latlng_.first);
     l->mutable_ll()->set_lat(pl.latlng_.second);
-    l->set_type(pl.stoptype_ == Location::StopType::THROUGH ? odin::Location::kThrough
-                                                            : odin::Location::kBreak);
+    l->set_type(valhalla::Location::kBreak);
+    if (pl.stoptype_ == Location::StopType::THROUGH)
+      l->set_type(valhalla::Location::kThrough);
+    else if (pl.stoptype_ == Location::StopType::VIA)
+      l->set_type(valhalla::Location::kVia);
+    else if (pl.stoptype_ == Location::StopType::BREAK_THROUGH)
+      l->set_type(valhalla::Location::kBreakThrough);
+
+    l->set_preferred_side(valhalla::Location::either);
+    if (pl.preferred_side_ == Location::PreferredSide::SAME)
+      l->set_preferred_side(valhalla::Location::same);
+    else if (pl.preferred_side_ == Location::PreferredSide::OPPOSITE)
+      l->set_preferred_side(valhalla::Location::opposite);
+
     if (!pl.name_.empty()) {
       l->set_name(pl.name_);
     }
@@ -122,17 +117,15 @@ public:
     if (pl.heading_) {
       l->set_heading(*pl.heading_);
     }
-    if (pl.heading_tolerance_) {
-      l->set_heading_tolerance(*pl.heading_tolerance_);
-    }
-    if (pl.node_snap_tolerance_) {
-      l->set_node_snap_tolerance(*pl.node_snap_tolerance_);
-    }
+    l->set_heading_tolerance(pl.heading_tolerance_);
+    l->set_node_snap_tolerance(pl.node_snap_tolerance_);
     if (pl.way_id_) {
       l->set_way_id(*pl.way_id_);
     }
     l->set_minimum_reachability(pl.minimum_reachability_);
     l->set_radius(pl.radius_);
+    l->set_search_cutoff(pl.radius_ > pl.search_cutoff_ ? pl.radius_ : pl.search_cutoff_);
+    l->set_street_side_tolerance(pl.street_side_tolerance_);
 
     auto* path_edges = l->mutable_path_edges();
     for (const auto& e : pl.edges) {
@@ -141,10 +134,10 @@ public:
       edge->set_percent_along(e.percent_along);
       edge->mutable_ll()->set_lng(e.projected.first);
       edge->mutable_ll()->set_lat(e.projected.second);
-      edge->set_side_of_street(
-          e.sos == PathLocation::LEFT
-              ? odin::Location::kLeft
-              : (e.sos == PathLocation::RIGHT ? odin::Location::kRight : odin::Location::kNone));
+      edge->set_side_of_street(e.sos == PathLocation::LEFT
+                                   ? valhalla::Location::kLeft
+                                   : (e.sos == PathLocation::RIGHT ? valhalla::Location::kRight
+                                                                   : valhalla::Location::kNone));
       edge->set_distance(e.distance);
       edge->set_minimum_reachability(e.minimum_reachability);
       for (const auto& n : reader.edgeinfo(e.id).GetNames()) {
@@ -159,10 +152,10 @@ public:
       edge->set_percent_along(e.percent_along);
       edge->mutable_ll()->set_lng(e.projected.first);
       edge->mutable_ll()->set_lat(e.projected.second);
-      edge->set_side_of_street(
-          e.sos == PathLocation::LEFT
-              ? odin::Location::kLeft
-              : (e.sos == PathLocation::RIGHT ? odin::Location::kRight : odin::Location::kNone));
+      edge->set_side_of_street(e.sos == PathLocation::LEFT
+                                   ? valhalla::Location::kLeft
+                                   : (e.sos == PathLocation::RIGHT ? valhalla::Location::kRight
+                                                                   : valhalla::Location::kNone));
       edge->set_distance(e.distance);
       edge->set_minimum_reachability(e.minimum_reachability);
       for (const auto& n : reader.edgeinfo(e.id).GetNames()) {
@@ -171,11 +164,22 @@ public:
     }
   }
 
-  static Location fromPBF(const odin::Location& loc) {
-    Location l({loc.ll().lng(), loc.ll().lat()},
-               loc.type() == odin::Location::kThrough ? Location::StopType::THROUGH
-                                                      : Location::StopType::BREAK,
-               loc.minimum_reachability(), loc.radius());
+  static Location fromPBF(const valhalla::Location& loc) {
+    auto stop_type = Location::StopType::BREAK;
+    if (loc.type() == valhalla::Location::kThrough)
+      stop_type = Location::StopType::THROUGH;
+    else if (loc.type() == valhalla::Location::kVia)
+      stop_type = Location::StopType::VIA;
+    else if (loc.type() == valhalla::Location::kBreakThrough)
+      stop_type = Location::StopType::BREAK_THROUGH;
+    auto side = PreferredSide::EITHER;
+    if (loc.preferred_side() == valhalla::Location::same)
+      side = PreferredSide::SAME;
+    else if (loc.preferred_side() == valhalla::Location::opposite)
+      side = PreferredSide::OPPOSITE;
+    Location l({loc.ll().lng(), loc.ll().lat()}, stop_type, loc.minimum_reachability(), loc.radius(),
+               side);
+
     if (loc.has_name()) {
       l.name_ = loc.name();
     }
@@ -209,11 +213,17 @@ public:
     if (loc.has_way_id()) {
       l.way_id_ = loc.way_id();
     }
+    if (loc.has_search_cutoff()) {
+      l.search_cutoff_ = loc.search_cutoff();
+    }
+    if (loc.has_street_side_tolerance()) {
+      l.street_side_tolerance_ = loc.street_side_tolerance();
+    }
     return l;
   }
 
   static std::vector<Location>
-  fromPBF(const google::protobuf::RepeatedPtrField<odin::Location>& locations) {
+  fromPBF(const google::protobuf::RepeatedPtrField<valhalla::Location>& locations) {
     std::vector<Location> pls;
     for (const auto& l : locations) {
       pls.emplace_back(fromPBF(l));

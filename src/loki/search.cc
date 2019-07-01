@@ -16,21 +16,10 @@ using namespace valhalla::sif;
 using namespace valhalla::loki;
 
 namespace {
-// the cutoff at which we will assume the input is too far away from civilisation to be
-// worth correlating to the nearest graph elements
-constexpr float SEARCH_CUTOFF = 35000.f;
-// during edge correlation, if you end up < 5 meters from the beginning or end of the
-// edge we just assume you were at that node and not actually along the edge
-// we keep it small because point and click interfaces are more accurate than gps input
-constexpr float NODE_SNAP = 5.f;
-// during side of street computations we figured you're on the street if you are less than
-// 5 meters (16) feet from the centerline. this is actually pretty large (with accurate shape
-// data for the roads it might want half that) but its better to assume on street than not
-// this is 5 meters squared, the computation uses square distance
-constexpr float SIDE_OF_STREET_SNAP = 25.f;
 
-// cone width to use for cosine similarity comparisons for favoring heading
-constexpr float DEFAULT_ANGLE_WIDTH = 60.f;
+template <typename T> inline T square(T v) {
+  return v * v;
+}
 
 bool side_filter(const PathLocation::PathEdge& edge, const Location& location, GraphReader& reader) {
   // nothing to filter if you dont want to filter or if there is no side of street
@@ -72,10 +61,10 @@ bool heading_filter(const DirectedEdge* edge,
   // across 0 or between the two so we just need to know which is bigger
   if (*location.heading_ > angle) {
     return std::min(*location.heading_ - angle, (360.f - *location.heading_) + angle) >
-           location.heading_tolerance_.get_value_or(DEFAULT_ANGLE_WIDTH);
+           location.heading_tolerance_;
   }
   return std::min(angle - *location.heading_, (360.f - angle) + *location.heading_) >
-         location.heading_tolerance_.get_value_or(DEFAULT_ANGLE_WIDTH);
+         location.heading_tolerance_;
 }
 
 PathLocation::SideOfStreet flip_side(const PathLocation::SideOfStreet side) {
@@ -94,7 +83,7 @@ std::function<std::tuple<int32_t, unsigned short, float>()> make_binner(const Po
 
 // Model a segment (2 consecutive points in an edge in a bin).
 struct candidate_t {
-  float sq_distance;
+  double sq_distance;
   PointLL point;
   size_t index;
 
@@ -108,9 +97,10 @@ struct candidate_t {
     return sq_distance < c.sq_distance;
   }
 
-  PathLocation::SideOfStreet get_side(const PointLL& original, float sq_distance) const {
+  PathLocation::SideOfStreet
+  get_side(const PointLL& original, double sq_distance, double sq_tolerance) const {
     // its so close to the edge that its basically on the edge
-    if (sq_distance < SIDE_OF_STREET_SNAP) {
+    if (sq_distance < sq_tolerance) {
       return PathLocation::SideOfStreet::NONE;
     }
 
@@ -134,7 +124,7 @@ struct candidate_t {
 struct projector_t {
   projector_t(const Location& location, GraphReader& reader)
       : binner(make_binner(location.latlng_, reader)), location(location),
-        sq_radius(location.radius_ * location.radius_),
+        sq_radius(square(double(location.radius_))),
         lon_scale(cosf(location.latlng_.lat() * kRadPerDeg)), lat(location.latlng_.lat()),
         lng(location.latlng_.lng()), approx(location.latlng_) {
     // TODO: something more empirical based on radius
@@ -178,8 +168,9 @@ struct projector_t {
       int32_t tile_index;
       float distance;
       std::tie(tile_index, bin_index, distance) = binner();
-      if (distance > SEARCH_CUTOFF || (reachable.size() && distance > location.radius_ &&
-                                       distance > std::sqrt(reachable.back().sq_distance))) {
+      if (distance > location.search_cutoff_ ||
+          (reachable.size() && distance > location.radius_ &&
+           distance > std::sqrt(reachable.back().sq_distance))) {
         cur_tile = nullptr;
         break;
       }
@@ -201,8 +192,8 @@ struct projector_t {
 
     // project a onto b where b is the origin vector representing this segment
     // and a is the origin vector to the point we are projecting, (a.b/b.b)*b
-    auto bx = v.first - u.first;
-    auto by = v.second - u.second;
+    auto bx = double(v.first) - u.first;
+    auto by = double(v.second) - u.second;
 
     // Scale longitude when finding the projection
     auto bx2 = bx * lon_scale;
@@ -211,7 +202,7 @@ struct projector_t {
         (lng - u.lng()) * lon_scale * bx2 + (lat - u.lat()) * by; // only need the numerator at first
 
     // projects along the ray before u
-    if (scale <= 0.f) {
+    if (scale <= 0.0) {
       return u;
       // projects along the ray after v
     } else if (scale >= sq) {
@@ -229,11 +220,12 @@ struct projector_t {
   double sq_radius;
   std::vector<candidate_t> unreachable;
   std::vector<candidate_t> reachable;
+  double closest_external_reachable = std::numeric_limits<double>::max();
 
   // critical data
-  float lon_scale;
-  float lat;
-  float lng;
+  double lon_scale;
+  double lat;
+  double lng;
   DistanceApproximator approx;
 };
 
@@ -299,7 +291,7 @@ struct bin_handler_t {
                       PathLocation& correlated,
                       std::vector<PathLocation::PathEdge>& filtered) {
     // we need this because we might need to go to different levels
-    auto score = candidate.point.Distance(location.latlng_);
+    float distance = std::numeric_limits<float>::lowest();
     std::function<void(const GraphId& node_id, bool transition)> crawl;
     crawl = [&](const GraphId& node_id, bool follow_transitions) {
       // now that we have a node we can pass back all the edges leaving and entering it
@@ -311,6 +303,13 @@ struct bin_handler_t {
       const auto* start_edge = tile->directededge(node->edge_index());
       const auto* end_edge = start_edge + node->edge_count();
       PointLL node_ll = node->latlng(tile->header()->base_ll());
+      // cache the distance
+      if (distance == std::numeric_limits<float>::lowest())
+        distance = node_ll.Distance(location.latlng_);
+      // the search cutoff is a hard filter so skip any outside of that
+      if (distance > location.search_cutoff_)
+        return;
+      // add edges entering/leaving this node
       for (const auto* edge = start_edge; edge < end_edge; ++edge) {
         // get some info about this edge and the opposing
         GraphId id = tile->id();
@@ -319,7 +318,7 @@ struct bin_handler_t {
 
         // do we want this edge
         if (edge_filter(edge) != 0.0f) {
-          PathLocation::PathEdge path_edge{std::move(id),  0.f, node_ll, score, PathLocation::NONE,
+          PathLocation::PathEdge path_edge{std::move(id),  0.f, node_ll, distance, PathLocation::NONE,
                                            get_reach(edge)};
           auto index = edge->forward() ? 0 : info.shape().size() - 2;
           if (heading_filter(edge, info, location, candidate.point, index)) {
@@ -340,7 +339,7 @@ struct bin_handler_t {
           PathLocation::PathEdge path_edge{std::move(other_id),
                                            1.f,
                                            node_ll,
-                                           score,
+                                           distance,
                                            PathLocation::NONE,
                                            get_reach(other_edge)};
           auto index = other_edge->forward() ? 0 : info.shape().size() - 2;
@@ -370,8 +369,12 @@ struct bin_handler_t {
                       const candidate_t& candidate,
                       PathLocation& correlated,
                       std::vector<PathLocation::PathEdge>& filtered) {
+    // get the distance between the result
+    auto distance = candidate.point.Distance(location.latlng_);
+    // the search cutoff is a hard filter so skip any outside of that
+    if (distance > location.search_cutoff_)
+      return;
     // now that we have an edge we can pass back all the info about it
-    auto score = candidate.point.Distance(location.latlng_);
     if (candidate.edge != nullptr) {
       // we need the ratio in the direction of the edge we are correlated to
       double partial_length = 0;
@@ -387,13 +390,10 @@ struct bin_handler_t {
         length_ratio = 1.f - length_ratio;
       }
       // side of street
-      auto side = candidate.get_side(location.latlng_, candidate.sq_distance);
-      PathLocation::PathEdge path_edge{candidate.edge_id,
-                                       length_ratio,
-                                       candidate.point,
-                                       score,
-                                       side,
-                                       get_reach(candidate.edge)};
+      auto sq_tolerance = square(double(location.street_side_tolerance_));
+      auto side = candidate.get_side(location.latlng_, candidate.sq_distance, sq_tolerance);
+      PathLocation::PathEdge path_edge{candidate.edge_id, length_ratio, candidate.point,
+                                       distance,          side,         get_reach(candidate.edge)};
       // correlate the edge we found
       if (side_filter(path_edge, location, reader) ||
           heading_filter(candidate.edge, *candidate.edge_info, location, candidate.point,
@@ -409,7 +409,7 @@ struct bin_handler_t {
       if (opposing_edge_id.Is_Valid() && (other_edge = other_tile->directededge(opposing_edge_id)) &&
           edge_filter(other_edge) != 0.0f) {
         PathLocation::PathEdge other_path_edge{opposing_edge_id, 1 - length_ratio,
-                                               candidate.point,  score,
+                                               candidate.point,  distance,
                                                flip_side(side),  get_reach(other_edge)};
         if (side_filter(other_path_edge, location, reader) ||
             heading_filter(other_edge, *candidate.edge_info, location, candidate.point,
@@ -616,8 +616,8 @@ struct bin_handler_t {
       c_itr = bin_candidates.begin();
       for (p_itr = begin; p_itr != end; ++p_itr, ++c_itr) {
         // which batch of findings
-        auto* batch = reachability < p_itr->location.minimum_reachability_ ? &p_itr->unreachable
-                                                                           : &p_itr->reachable;
+        bool reachable = reachability >= p_itr->location.minimum_reachability_;
+        auto* batch = reachable ? &p_itr->reachable : &p_itr->unreachable;
 
         // if its empty append
         if (batch->empty()) {
@@ -633,6 +633,13 @@ struct bin_handler_t {
         bool in_radius = c_itr->sq_distance < p_itr->sq_radius;
         bool better = c_itr->sq_distance < batch->back().sq_distance;
         bool last_in_radius = batch->back().sq_distance < p_itr->sq_radius;
+        // TODO: this is a bit blunt in that any reachable edges between the best or ones within
+        // the radius will make unreachable edges that are even the tiniest bit further away unviable
+        // it seems like we should have a slightly looser radius to allow for unreachable edges but
+        // its unclear what that should be as in most cases we are working around not actually knowing
+        // the accuracy or even input modality of the incoming location
+        bool closer_external_reachable =
+            reachable && c_itr->sq_distance < p_itr->closest_external_reachable;
 
         // it has to either be better or in the radius to move on
         if (in_radius || better) {
@@ -643,16 +650,20 @@ struct bin_handler_t {
           // the last one wasnt in the radius so replace it with this one because its better or is
           // in the radius
           if (!last_in_radius) {
+            if (closer_external_reachable)
+              p_itr->closest_external_reachable = batch->back().sq_distance;
             batch->back() = std::move(*c_itr);
             // last one is in the radius but this one is better so put it on the end
           } else if (better) {
             batch->emplace_back(std::move(*c_itr));
-            // last one is in the radius and this one is not as good so put it on before it
+            // last one and this one are both in the radius but this one is not as good
           } else {
             batch->emplace_back(std::move(*c_itr));
             std::swap(*(batch->end() - 1), *(batch->end() - 2));
           }
-        }
+        } // not in radius or better and reachable and closer than closest one outside of radius
+        else if (closer_external_reachable)
+          p_itr->closest_external_reachable = c_itr->sq_distance;
       }
     }
 
@@ -698,6 +709,12 @@ struct bin_handler_t {
     // need to go get the actual correlated location with edge_id etc.
     std::unordered_map<Location, PathLocation> searched;
     for (auto& pp : pps) {
+      // remove non-sensical island candidates
+      auto new_end = std::remove_if(pp.unreachable.begin(), pp.unreachable.end(),
+                                    [&pp](const candidate_t& c) -> bool {
+                                      return c.sq_distance > pp.closest_external_reachable;
+                                    });
+      pp.unreachable.erase(new_end, pp.unreachable.end());
       // concatenate and sort
       pp.reachable.reserve(pp.reachable.size() + pp.unreachable.size());
       std::move(pp.unreachable.begin(), pp.unreachable.end(), std::back_inserter(pp.reachable));
@@ -707,15 +724,16 @@ struct bin_handler_t {
       correlated_edges.clear();
       // go through getting all the results for this one
       PathLocation correlated(pp.location);
+      // TODO: this is already in PathLocation, use it there
       std::vector<PathLocation::PathEdge> filtered;
       for (const auto& candidate : pp.reachable) {
         // this may be at a node, either because it was the closest thing or from snap tolerance
         bool front = candidate.point == candidate.edge_info->shape().front() ||
                      pp.location.latlng_.Distance(candidate.edge_info->shape().front()) <
-                         pp.location.node_snap_tolerance_.get_value_or(NODE_SNAP);
+                         pp.location.node_snap_tolerance_;
         bool back = candidate.point == candidate.edge_info->shape().back() ||
                     pp.location.latlng_.Distance(candidate.edge_info->shape().back()) <
-                        pp.location.node_snap_tolerance_.get_value_or(NODE_SNAP);
+                        pp.location.node_snap_tolerance_;
         // it was the begin node
         if ((front && candidate.edge->forward()) || (back && !candidate.edge->forward())) {
           const GraphTile* other_tile;
@@ -733,7 +751,26 @@ struct bin_handler_t {
         }
       }
 
-      // if we have nothing because of heading we'll just ignore it
+      // if it was a through location with a heading its pretty confusing.
+      // does the user want to come into and exit the location at the preferred
+      // angle? for now we are just saying that they want it to exit at the
+      // heading provided. this means that if it was node snapped we only
+      // want the outbound edges
+      if ((pp.location.stoptype_ == Location::StopType::THROUGH ||
+           pp.location.stoptype_ == Location::StopType::BREAK_THROUGH) &&
+          pp.location.heading_) {
+        // partition the ones we want to move to the end
+        auto new_end =
+            std::stable_partition(correlated.edges.begin(), correlated.edges.end(),
+                                  [](const PathLocation::PathEdge& e) { return !e.end_node(); });
+        // move them to the end
+        filtered.insert(filtered.end(), std::make_move_iterator(new_end),
+                        std::make_move_iterator(correlated.edges.end()));
+        // remove them from the original
+        correlated.edges.erase(new_end, correlated.edges.end());
+      }
+
+      // if we have nothing because of filtering (heading/side) we'll just ignore it
       if (correlated.edges.size() == 0 && filtered.size()) {
         for (auto& path_edge : filtered) {
           if (correlated_edges.insert(path_edge.id).second) {
@@ -743,18 +780,7 @@ struct bin_handler_t {
         filtered.clear();
       }
 
-      // if it was a through location with a heading its pretty confusing.
-      // does the user want to come into and exit the location at the preferred
-      // angle? for now we are just saying that they want it to exit at the
-      // heading provided. this means that if it was node snapped we only
-      // want the outbound edges
-      if (pp.location.stoptype_ == Location::StopType::THROUGH && pp.location.heading_) {
-        auto new_end = std::remove_if(correlated.edges.begin(), correlated.edges.end(),
-                                      [](const PathLocation::PathEdge& e) { return e.end_node(); });
-        correlated.edges.erase(new_end, correlated.edges.end());
-      }
-
-      // keep filtered edges for retry in case we cant find a route non filtered edges
+      // keep filtered edges for retry in case we cant find a route with non filtered edges
       // use the max score of the non filtered edges as a penalty increase on each of the
       // filtered edges so that when finding a route using non filtered edges fails the
       // use of filtered edges are always penalized higher than the non filtered ones
@@ -770,7 +796,7 @@ struct bin_handler_t {
                                        std::make_move_iterator(filtered.end()));
 
       // if we found nothing that is no good but if its batch maybe throwing makes no sense?
-      if (correlated.edges.size() != 0 || correlated.filtered_edges.size() != 0) {
+      if (correlated.edges.size() != 0) {
         searched.insert({pp.location, correlated});
       }
     }
@@ -779,18 +805,19 @@ struct bin_handler_t {
   }
 };
 
-}; // namespace
+} // namespace
 
 namespace valhalla {
 namespace loki {
 
-std::unordered_map<Location, PathLocation> Search(const std::vector<Location>& locations,
-                                                  GraphReader& reader,
-                                                  const EdgeFilter& edge_filter,
-                                                  const NodeFilter& node_filter) {
+std::unordered_map<valhalla::baldr::Location, PathLocation>
+Search(const std::vector<valhalla::baldr::Location>& locations,
+       GraphReader& reader,
+       const EdgeFilter& edge_filter,
+       const NodeFilter& node_filter) {
   // trivially finished already
   if (locations.empty()) {
-    return std::unordered_map<Location, PathLocation>{};
+    return std::unordered_map<valhalla::baldr::Location, PathLocation>{};
   };
   // setup the unique list of locations
   bin_handler_t handler(locations, reader, edge_filter, node_filter);

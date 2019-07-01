@@ -12,6 +12,7 @@
 #include <random>
 #endif
 
+using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 
 namespace valhalla {
@@ -34,6 +35,7 @@ constexpr float kDefaultCountryCrossingPenalty = 0.0f;   // Seconds
 
 // Other options
 constexpr float kDefaultLowClassPenalty = 30.0f; // Seconds
+constexpr float kDefaultUseTolls = 0.5f;         // Factor between 0 and 1
 
 // Default turn costs
 constexpr float kTCStraight = 0.5f;
@@ -95,6 +97,7 @@ constexpr ranged_default_t<float> kTruckAxleLoadRange{0, kDefaultTruckAxleLoad, 
 constexpr ranged_default_t<float> kTruckHeightRange{0, kDefaultTruckHeight, 10.0f};
 constexpr ranged_default_t<float> kTruckWidthRange{0, kDefaultTruckWidth, 10.0f};
 constexpr ranged_default_t<float> kTruckLengthRange{0, kDefaultTruckLength, 50.0f};
+constexpr ranged_default_t<float> kUseTollsRange{0, kDefaultUseTolls, 1.0f};
 
 } // namespace
 
@@ -108,7 +111,7 @@ public:
    * @param  costing specified costing type.
    * @param  options pbf with request options.
    */
-  TruckCost(const odin::Costing costing, const odin::DirectionsOptions& options);
+  TruckCost(const Costing costing, const Options& options);
 
   virtual ~TruckCost();
 
@@ -277,6 +280,7 @@ public:
   VehicleType type_; // Vehicle type: tractor trailer
   float speedfactor_[kMaxSpeedKph + 1];
   float density_factor_[16]; // Density factor
+  float toll_factor_;        // Factor applied when road has a toll
   float low_class_penalty_;  // Penalty (seconds) to go to residential or service road
 
   // Vehicle attributes (used for special restrictions and costing)
@@ -292,14 +296,14 @@ public:
 };
 
 // Constructor
-TruckCost::TruckCost(const odin::Costing costing, const odin::DirectionsOptions& options)
+TruckCost::TruckCost(const Costing costing, const Options& options)
     : DynamicCost(options, TravelMode::kDrive), trans_density_factor_{1.0f, 1.0f, 1.0f, 1.0f,
                                                                       1.0f, 1.1f, 1.2f, 1.3f,
                                                                       1.4f, 1.6f, 1.9f, 2.2f,
                                                                       2.5f, 2.8f, 3.1f, 3.5f} {
 
   // Grab the costing options based on the specified costing type
-  const odin::CostingOptions& costing_options = options.costing_options(static_cast<int>(costing));
+  const CostingOptions& costing_options = options.costing_options(static_cast<int>(costing));
 
   type_ = VehicleType::kTractorTrailer;
 
@@ -321,6 +325,15 @@ TruckCost::TruckCost(const odin::Costing costing, const odin::DirectionsOptions&
   for (uint32_t s = 1; s <= kMaxSpeedKph; s++) {
     speedfactor_[s] = (kSecPerHour * 0.001f) / static_cast<float>(s);
   }
+
+  // Preference to use toll roads (separate from toll booth penalty). Sets a toll
+  // factor. A toll factor of 0 would indicate no adjustment to weighting for toll roads.
+  // use_tolls = 1 would reduce weighting slightly (a negative delta) while
+  // use_tolls = 0 would penalize (positive delta to weighting factor).
+  float use_tolls = costing_options.use_tolls();
+  toll_factor_ = use_tolls < 0.5f ? (2.0f - 4 * use_tolls) : // ranges from 2 to 0
+                     (0.5f - use_tolls) * 0.03f;             // ranges from 0 to -0.15
+
   for (uint32_t d = 0; d < 16; d++) {
     density_factor_[d] = 0.85f + (d * 0.025f);
   }
@@ -507,6 +520,10 @@ Cost TruckCost::EdgeCost(const DirectedEdge* edge, const uint32_t speed) const {
     factor *= kTruckRouteFactor;
   }
 
+  if (edge->toll()) {
+    factor += toll_factor_;
+  }
+
   // Use the lower or truck speed (ir present) and speed
   uint32_t s = (edge->truck_speed() > 0) ? std::min(edge->truck_speed(), speed) : speed;
   float sec = edge->length() * speedfactor_[s];
@@ -599,7 +616,7 @@ uint8_t TruckCost::travel_type() const {
 
 void ParseTruckCostOptions(const rapidjson::Document& doc,
                            const std::string& costing_options_key,
-                           odin::CostingOptions* pbf_costing_options) {
+                           CostingOptions* pbf_costing_options) {
   auto json_costing_options = rapidjson::get_child_optional(doc, costing_options_key.c_str());
 
   if (json_costing_options) {
@@ -684,6 +701,11 @@ void ParseTruckCostOptions(const rapidjson::Document& doc,
         kTruckLengthRange(rapidjson::get_optional<float>(*json_costing_options, "/length")
                               .get_value_or(kDefaultTruckLength)));
 
+    // use_tolls
+    pbf_costing_options->set_use_tolls(
+        kUseTollsRange(rapidjson::get_optional<float>(*json_costing_options, "/use_tolls")
+                           .get_value_or(kDefaultUseTolls)));
+
   } else {
     // Set pbf values to defaults
     pbf_costing_options->set_maneuver_penalty(kDefaultManeuverPenalty);
@@ -702,10 +724,11 @@ void ParseTruckCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_height(kDefaultTruckHeight);
     pbf_costing_options->set_width(kDefaultTruckWidth);
     pbf_costing_options->set_length(kDefaultTruckLength);
+    pbf_costing_options->set_use_tolls(kDefaultUseTolls);
   }
 }
 
-cost_ptr_t CreateTruckCost(const odin::Costing costing, const odin::DirectionsOptions& options) {
+cost_ptr_t CreateTruckCost(const Costing costing, const Options& options) {
   return std::make_shared<TruckCost>(costing, options);
 }
 
@@ -723,8 +746,7 @@ namespace {
 
 class TestTruckCost : public TruckCost {
 public:
-  TestTruckCost(const odin::Costing costing, const odin::DirectionsOptions& options)
-      : TruckCost(costing, options){};
+  TestTruckCost(const Costing costing, const Options& options) : TruckCost(costing, options){};
 
   using TruckCost::alley_penalty_;
   using TruckCost::country_crossing_cost_;
@@ -738,9 +760,9 @@ public:
 TestTruckCost* make_truckcost_from_json(const std::string& property, float testVal) {
   std::stringstream ss;
   ss << R"({"costing_options":{"truck":{")" << property << R"(":)" << testVal << "}}}";
-  valhalla::valhalla_request_t request;
-  request.parse(ss.str(), valhalla::odin::DirectionsOptions::route);
-  return new TestTruckCost(valhalla::odin::Costing::truck, request.options);
+  Api request;
+  ParseApi(ss.str(), valhalla::Options::route, request);
+  return new TestTruckCost(valhalla::Costing::truck, request.options());
 }
 
 std::uniform_real_distribution<float>*

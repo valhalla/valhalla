@@ -10,7 +10,7 @@
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/pathlocation.h>
-#include <valhalla/proto/trippath.pb.h>
+#include <valhalla/proto/trip.pb.h>
 #include <valhalla/sif/costfactory.h>
 #include <valhalla/thor/attributes_controller.h>
 #include <valhalla/thor/match_result.h>
@@ -22,33 +22,24 @@ namespace thor {
 /**
  * Algorithm to create a trip path output from a list of directed edges.
  */
-class TripPathBuilder {
+class TripLegBuilder {
 public:
-  /**
-   * Constructor.
-   */
-  TripPathBuilder();
-
-  /**
-   * Destructor
-   */
-  virtual ~TripPathBuilder();
-
   /**
    * Format the trip path output given the edges on the path.
    * For now just return length. TODO - modify to return trip path.
    */
-  static odin::TripPath
-  Build(const AttributesController& controller,
-        baldr::GraphReader& graphreader,
-        const std::shared_ptr<sif::DynamicCost>* mode_costing,
-        const std::vector<PathInfo>& path,
-        odin::Location& origin,
-        odin::Location& dest,
-        const std::list<odin::Location>& through_loc,
-        const std::function<void()>* interrupt_callback = nullptr,
-        std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>>*
-            route_discontinuities = nullptr);
+  static TripLeg Build(const AttributesController& controller,
+                       baldr::GraphReader& graphreader,
+                       const std::shared_ptr<sif::DynamicCost>* mode_costing,
+                       const std::vector<PathInfo>::const_iterator path_begin,
+                       const std::vector<PathInfo>::const_iterator path_end,
+                       valhalla::Location& origin,
+                       valhalla::Location& dest,
+                       const std::list<valhalla::Location>& through_loc,
+                       TripLeg& trip_path,
+                       const std::function<void()>* interrupt_callback = nullptr,
+                       std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>>*
+                           route_discontinuities = nullptr);
 
   /**
    * Add trip edge. (TODO more comments)
@@ -65,18 +56,18 @@ public:
    * @param  length_percentage Scale for the edge length for the partial distance
    *                       at begin and end edges
    */
-  static odin::TripPath_Edge* AddTripEdge(const AttributesController& controller,
-                                          const baldr::GraphId& edge,
-                                          const uint32_t trip_id,
-                                          const uint32_t block_id,
-                                          const sif::TravelMode mode,
-                                          const uint8_t travel_type,
-                                          const baldr::DirectedEdge* directededge,
-                                          const bool drive_right,
-                                          odin::TripPath_Node* trip_node,
-                                          const baldr::GraphTile* graphtile,
-                                          const uint32_t current_time,
-                                          const float length_percentage = 1.f);
+  static TripLeg_Edge* AddTripEdge(const AttributesController& controller,
+                                   const baldr::GraphId& edge,
+                                   const uint32_t trip_id,
+                                   const uint32_t block_id,
+                                   const sif::TravelMode mode,
+                                   const uint8_t travel_type,
+                                   const baldr::DirectedEdge* directededge,
+                                   const bool drive_right,
+                                   TripLeg_Node* trip_node,
+                                   const baldr::GraphTile* graphtile,
+                                   const uint32_t current_time,
+                                   const float length_percentage = 1.f);
 
   /**
    * Add trip intersecting edge.
@@ -94,7 +85,7 @@ public:
                                       const baldr::DirectedEdge* prev_de,
                                       uint32_t local_edge_index,
                                       const baldr::NodeInfo* nodeinfo,
-                                      odin::TripPath_Node* trip_node,
+                                      TripLeg_Node* trip_node,
                                       const baldr::DirectedEdge* intersecting_de);
 };
 

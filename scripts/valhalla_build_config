@@ -21,6 +21,7 @@ config = {
     'include_bicycle': True,
     'include_pedestrian': True,
     'include_driving': True,
+    'global_synchronized_cache': False,
     'logging': {
       'type': 'std_out',
       'color': True,
@@ -35,7 +36,11 @@ config = {
     'use_connectivity': True,
     'service_defaults': {
       'radius': 0,
-      'minimum_reachability': 50
+      'minimum_reachability': 50,
+      'search_cutoff': 35000,
+      'node_snap_tolerance': 5,
+      'street_side_tolerance': 5,
+      'heading_tolerance': 60
     },
     'logging': {
       'type': 'std_out',
@@ -71,7 +76,7 @@ config = {
   },
   'meili': {
     'mode': 'auto',
-    'customizable': ['mode', 'search_radius', 'turn_penalty_factor', 'gps_accuracy', 'sigma_z', 'beta', 'max_route_distance_factor', 'max_route_time_factor'],
+    'customizable': ['mode', 'search_radius', 'turn_penalty_factor', 'gps_accuracy', 'interpolation_distance', 'sigma_z', 'beta', 'max_route_distance_factor', 'max_route_time_factor'],
     'verbose': False,
     'default': {
       'sigma_z': 4.07,
@@ -217,7 +222,8 @@ config = {
     'max_avoid_locations': 50,
     'max_reachability': 100,
     'max_radius': 200,
-    'max_timedep_distance': 500000
+    'max_timedep_distance': 500000,
+    'max_alternates': 2
   }
 }
 
@@ -237,6 +243,7 @@ help_text = {
     'include_bicycle': 'bool indicating whether cycling only ways are included - default to True',
     'include_pedestrian': 'bool indicating whether pedestrian only ways are included - default to True',
     'include_driving': 'bool indicating whether driving only ways are included - default to True',
+    'global_synchronized_cache': 'bool indicating whether global_synchronized_cache is used - default to False',
     'logging': {
       'type': 'Type of logger either std_out or file',
       'color': 'User colored log level in std_out logger',
@@ -252,6 +259,10 @@ help_text = {
     'service_defaults': {
       'radius': 'Default radius to apply to incoming locations should one not be supplied',
       'minimum_reachability': 'Default minimum reachability to apply to incoming locations should one not be supplied',
+      'search_cutoff': 'The cutoff at which we will assume the input is too far away from civilisation to be worth correlating to the nearest graph elements',
+      'node_snap_tolerance': 'During edge correlation this is the tolerance used to determine whether or not to snap to the intersection rather than along the street, if the snap location is within this distance from the intersection the intersection is used instead',
+      'street_side_tolerance': 'If your input coordinate is less than this tolerance away from the edge centerline then we set your side of street to none otherwise your side of street will be left or right depending on direction of travel',
+      'heading_tolerance': 'When a heading is supplied, this is the tolerance around that heading with which we determine whether an edges heading is similar enough to match the supplied heading'
     },
     'logging': {
       'type': 'Type of logger either std_out or file',
@@ -430,10 +441,11 @@ help_text = {
       'max_best_paths': 'Maximum number of best paths',
       'max_best_paths_shape': 'Maximum number of input shape points when requesting multiple paths'
     },
-    'max_avoid_locations': 'Maximum number of avoid locations to allow in request',
+    'max_avoid_locations': 'Maximum number of avoid locations to allow in a request',
     'max_reachability': 'Maximum reachability (number of nodes reachable) allowed on any one location',
     'max_radius': 'Maximum radius in meters allowed on any one location',
-    'max_timedep_distance': 'Maximum b-line distance between locations to allow a time-dependent route'
+    'max_timedep_distance': 'Maximum b-line distance between locations to allow a time-dependent route',
+    'max_alternates': 'Maximum number of alternate routes to allow in a request'
   }
 }
 

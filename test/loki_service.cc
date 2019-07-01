@@ -296,8 +296,8 @@ const std::vector<std::pair<uint16_t, std::string>> osrm_responses{
     {400, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
     {400, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
     {400, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
-    {400, R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
-    {400, R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
+    {400, R"({"code":"DistanceExceeded","message":"Path distance exceeds the max distance limit."})"},
+    {400, R"({"code":"DistanceExceeded","message":"Path distance exceeds the max distance limit."})"},
     {400, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
     {400, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
     {400,
@@ -349,7 +349,7 @@ void start_service() {
       "loki": { "actions": [ "locate", "route", "sources_to_targets", "optimized_route", "isochrone", "trace_route", "trace_attributes" ],
                   "logging": { "long_request": 100.0 },
                   "service": { "proxy": "ipc:///tmp/test_loki_proxy" }, 
-                "service_defaults": { "minimum_reachability": 50, "radius": 0} },
+                "service_defaults": { "minimum_reachability": 50, "radius": 0,"search_cutoff": 35000, "node_snap_tolerance": 5, "street_side_tolerance": 5, "heading_tolerance": 60} },
       "thor": { "service": { "proxy": "ipc:///tmp/test_thor_proxy" } },
       "httpd": { "service": { "loopback": "ipc:///tmp/test_loki_results", "interrupt": "ipc:///tmp/test_loki_interrupt" } }, 
       "service_limits": {
@@ -363,9 +363,10 @@ void start_service() {
         "trace": { "max_best_paths": 4, "max_best_paths_shape": 100, "max_distance": 200000.0, "max_gps_accuracy": 100.0, "max_search_radius": 100, "max_shape": 16000 },
         "max_avoid_locations": 0,
         "max_reachability": 100,
-        "max_radius": 200
+        "max_radius": 200,
+        "max_alternates":2
       },
-      "costing_options": { "auto": {}, "pedestrian": {} }
+      "costing_directions_options": { "auto": {}, "pedestrian": {} }
     })";
   rapidjson::read_json(json, config);
 

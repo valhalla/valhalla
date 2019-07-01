@@ -32,7 +32,7 @@ TimeDepReverse::~TimeDepReverse() {
 }
 
 // Initialize prior to finding best path
-void TimeDepReverse::Init(const PointLL& origll, const PointLL& destll) {
+void TimeDepReverse::Init(const midgard::PointLL& origll, const midgard::PointLL& destll) {
   // Set the origin lat,lon (since this is reverse path) and cost factor
   // in the A* heuristic
   astarheuristic_.Init(origll, costing_->AStarCostFactor());
@@ -72,7 +72,7 @@ void TimeDepReverse::ExpandReverse(GraphReader& graphreader,
                                    const bool from_transition,
                                    uint64_t localtime,
                                    int32_t seconds_of_week,
-                                   const odin::Location& destination,
+                                   const valhalla::Location& destination,
                                    std::pair<int32_t, float>& best_path) {
   // Get the tile and the node info. Skip if tile is null (can happen
   // with regional data sets) or if no access at the node.
@@ -212,11 +212,13 @@ void TimeDepReverse::ExpandReverse(GraphReader& graphreader,
 
 // Calculate time-dependent best path using a reverse search. Supports
 // "arrive-by" routes.
-std::vector<PathInfo> TimeDepReverse::GetBestPath(odin::Location& origin,
-                                                  odin::Location& destination,
-                                                  GraphReader& graphreader,
-                                                  const std::shared_ptr<DynamicCost>* mode_costing,
-                                                  const TravelMode mode) {
+std::vector<std::vector<PathInfo>>
+TimeDepReverse::GetBestPath(valhalla::Location& origin,
+                            valhalla::Location& destination,
+                            GraphReader& graphreader,
+                            const std::shared_ptr<DynamicCost>* mode_costing,
+                            const TravelMode mode,
+                            const Options& options) {
   // Set the mode and costing
   mode_ = mode;
   costing_ = mode_costing[static_cast<uint32_t>(mode_)];
@@ -233,8 +235,9 @@ std::vector<PathInfo> TimeDepReverse::GetBestPath(odin::Location& origin,
   // Note: because we can correlate to more than one place for a given PathLocation
   // using edges.front here means we are only setting the heuristics to one of them
   // alternate paths using the other correlated points to may be harder to find
-  PointLL origin_new(origin.path_edges(0).ll().lng(), origin.path_edges(0).ll().lat());
-  PointLL destination_new(destination.path_edges(0).ll().lng(), destination.path_edges(0).ll().lat());
+  midgard::PointLL origin_new(origin.path_edges(0).ll().lng(), origin.path_edges(0).ll().lat());
+  midgard::PointLL destination_new(destination.path_edges(0).ll().lng(),
+                                   destination.path_edges(0).ll().lat());
   Init(origin_new, destination_new);
   float mindist = astarheuristic_.GetDistance(origin_new);
 
@@ -260,7 +263,7 @@ std::vector<PathInfo> TimeDepReverse::GetBestPath(odin::Location& origin,
                                     DateTime::get_tz_db().from_index(dest_tz_index_));
 
   // Set seconds from beginning of the week
-  seconds_of_week_ = DateTime::day_of_week(destination.date_time()) * kSecondsPerDay +
+  seconds_of_week_ = DateTime::day_of_week(destination.date_time()) * midgard::kSecondsPerDay +
                      DateTime::seconds_from_midnight(destination.date_time());
 
   // Find shortest path
@@ -300,10 +303,10 @@ std::vector<PathInfo> TimeDepReverse::GetBestPath(odin::Location& origin,
       if (pred.predecessor() == kInvalidLabel) {
         // Use opposing edge.
         if (IsTrivial(pred.opp_edgeid(), origin, destination)) {
-          return FormPath(graphreader, predindex);
+          return {FormPath(graphreader, predindex)};
         }
       } else {
-        return FormPath(graphreader, predindex);
+        return {FormPath(graphreader, predindex)};
       }
     }
 
@@ -321,7 +324,7 @@ std::vector<PathInfo> TimeDepReverse::GetBestPath(odin::Location& origin,
       nc = 0;
     } else if (nc++ > 50000) {
       if (best_path.first >= 0) {
-        return FormPath(graphreader, best_path.first);
+        return {FormPath(graphreader, best_path.first)};
       } else {
         LOG_ERROR("No convergence to destination after = " + std::to_string(edgelabels_rev_.size()));
         return {};
@@ -354,17 +357,17 @@ std::vector<PathInfo> TimeDepReverse::GetBestPath(odin::Location& origin,
 // The origin of the reverse path is the destination location.
 // TODO - how do we set the
 void TimeDepReverse::SetOrigin(GraphReader& graphreader,
-                               odin::Location& origin,
-                               odin::Location& destination) {
+                               valhalla::Location& origin,
+                               valhalla::Location& destination) {
   // Only skip outbound edges if we have other options
   bool has_other_edges = false;
   std::for_each(origin.path_edges().begin(), origin.path_edges().end(),
-                [&has_other_edges](const odin::Location::PathEdge& e) {
+                [&has_other_edges](const valhalla::Location::PathEdge& e) {
                   has_other_edges = has_other_edges || !e.begin_node();
                 });
 
   // Check if the origin edge matches a destination edge at the node.
-  auto trivial_at_node = [this, &destination](const odin::Location::PathEdge& edge) {
+  auto trivial_at_node = [this, &destination](const valhalla::Location::PathEdge& edge) {
     auto p = destinations_.find(edge.graph_id());
     if (p != destinations_.end()) {
       for (const auto& destination_edge : destination.path_edges()) {
@@ -468,11 +471,11 @@ void TimeDepReverse::SetOrigin(GraphReader& graphreader,
 // Add destination edges at the origin location. If the location is at a node
 // skip any outbound edges since the path search is reversed.
 // TODO - test to make sure that excluding outbound edges is what we want!
-uint32_t TimeDepReverse::SetDestination(GraphReader& graphreader, const odin::Location& dest) {
+uint32_t TimeDepReverse::SetDestination(GraphReader& graphreader, const valhalla::Location& dest) {
   // Only skip outbound edges if we have other options
   bool has_other_edges = false;
   std::for_each(dest.path_edges().begin(), dest.path_edges().end(),
-                [&has_other_edges](const odin::Location::PathEdge& e) {
+                [&has_other_edges](const valhalla::Location::PathEdge& e) {
                   has_other_edges = has_other_edges || !e.begin_node();
                 });
 
@@ -517,12 +520,12 @@ std::vector<PathInfo> TimeDepReverse::FormPath(GraphReader& graphreader, const u
   LOG_DEBUG("path_iterations::" + std::to_string(edgelabels_rev_.size()));
 
   // Get the transition cost at the last edge of the reverse path
-  float tc = edgelabels_rev_[dest].transition_secs();
+  Cost tc(edgelabels_rev_[dest].transition_cost(), edgelabels_rev_[dest].transition_secs());
 
   // Form the reverse path from the destination (true origin) using opposing
   // edges.
-  float secs = 0.0f;
   std::vector<PathInfo> path;
+  Cost cost;
   uint32_t edgelabel_index = dest;
   while (edgelabel_index != kInvalidLabel) {
     const BDEdgeLabel& edgelabel = edgelabels_rev_[edgelabel_index];
@@ -531,12 +534,12 @@ std::vector<PathInfo> TimeDepReverse::FormPath(GraphReader& graphreader, const u
     // prior edge.
     uint32_t predidx = edgelabel.predecessor();
     if (predidx == kInvalidLabel) {
-      secs += edgelabel.cost().secs;
+      cost += edgelabel.cost();
     } else {
-      secs += edgelabel.cost().secs - edgelabels_rev_[predidx].cost().secs;
+      cost += edgelabel.cost() - edgelabels_rev_[predidx].cost();
     }
-    secs += tc;
-    path.emplace_back(edgelabel.mode(), secs, edgelabel.opp_edgeid(), 0);
+    cost += tc;
+    path.emplace_back(edgelabel.mode(), cost.secs, edgelabel.opp_edgeid(), 0, cost.cost);
 
     // Check if this is a ferry
     if (edgelabel.use() == Use::kFerry) {
@@ -545,8 +548,10 @@ std::vector<PathInfo> TimeDepReverse::FormPath(GraphReader& graphreader, const u
 
     // Update edgelabel_index and transition cost to apply at next iteration
     edgelabel_index = predidx;
-    tc = edgelabel.transition_secs();
+    tc.secs = edgelabel.transition_secs();
+    tc.cost = edgelabel.transition_cost();
   }
+
   return path;
 }
 

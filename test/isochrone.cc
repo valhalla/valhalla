@@ -13,6 +13,7 @@
 #include "thor/worker.h"
 #include <boost/property_tree/ptree.hpp>
 
+using namespace valhalla;
 using namespace valhalla::thor;
 using namespace valhalla::sif;
 using namespace valhalla::loki;
@@ -35,7 +36,7 @@ const auto config = json_to_pt(R"({
     "loki":{
       "actions":["sources_to_targets"],
       "logging":{"long_request": 100},
-      "service_defaults":{"minimum_reachability": 50,"radius": 0}
+      "service_defaults":{"minimum_reachability": 50,"radius": 0,"search_cutoff": 35000, "node_snap_tolerance": 5, "street_side_tolerance": 5, "heading_tolerance": 60}
     },
     "thor":{
       "logging":{"long_request": 100}
@@ -54,7 +55,7 @@ const auto config = json_to_pt(R"({
       "hov": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
       "taxi": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
       "isochrone": {"max_contours": 4,"max_distance": 25000.0,"max_locations": 1,"max_time": 120},
-      "max_avoid_locations": 50,"max_radius": 200,"max_reachability": 100,
+      "max_avoid_locations": 50,"max_radius": 200,"max_reachability": 100,"max_alternates":2,
       "multimodal": {"max_distance": 500000.0,"max_locations": 50,"max_matrix_distance": 0.0,"max_matrix_locations": 0},
       "pedestrian": {"max_distance": 250000.0,"max_locations": 50,"max_matrix_distance": 200000.0,"max_matrix_locations": 50,"max_transit_walking_distance": 10000,"min_transit_walking_distance": 1},
       "skadi": {"max_shape": 750000,"min_resample": 10.0},
@@ -71,8 +72,8 @@ void try_isochrone(GraphReader& reader,
                    thor_worker_t& thor_worker,
                    const char* test_request,
                    const std::string& expected) {
-  valhalla::valhalla_request_t request;
-  request.parse(test_request, valhalla::odin::DirectionsOptions::isochrone);
+  Api request;
+  ParseApi(test_request, Options::isochrone, request);
   loki_worker.isochrones(request);
 
   // Process isochrone request

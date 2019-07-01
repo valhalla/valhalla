@@ -40,7 +40,7 @@ public:
                        baldr::GraphReader& reader,
                        const std::vector<meili::Measurement>& shape,
                        const bool use_timestamps,
-                       const google::protobuf::RepeatedPtrField<odin::Location>& correlated,
+                       const google::protobuf::RepeatedPtrField<valhalla::Location>& correlated,
                        std::vector<PathInfo>& path_infos);
 };
 

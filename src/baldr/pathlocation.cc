@@ -46,7 +46,7 @@ bool PathLocation::shares_edges(const PathLocation& other) const {
     for (const auto& other_edge : other.edges) {
       if (edge.id == other_edge.id && edge.sos == other_edge.sos &&
           midgard::equal<float>(edge.percent_along, other_edge.percent_along) &&
-          midgard::similar<float>(edge.distance + 1, other_edge.distance + 1) &&
+          midgard::equal<float>(edge.distance, other_edge.distance, .1f) &&
           edge.projected.ApproximatelyEqual(other_edge.projected)) {
         found = true;
         break;
@@ -57,77 +57,6 @@ bool PathLocation::shares_edges(const PathLocation& other) const {
     }
   }
   return true;
-}
-
-rapidjson::Value PathLocation::ToRapidJson(size_t index,
-                                           rapidjson::Document::AllocatorType& allocator) const {
-  rapidjson::Value value{rapidjson::kObjectType};
-  rapidjson::Value array{rapidjson::kArrayType};
-  rapidjson::Value filtered_edges_array{rapidjson::kArrayType};
-
-  array.Reserve(edges.size(), allocator);
-  filtered_edges_array.Reserve(filtered_edges.size(), allocator);
-
-  for (const auto& edge : edges) {
-    rapidjson::Value e = PathEdgeToRapidJson(edge, allocator);
-    array.PushBack(e.Move(), allocator);
-  }
-  for (const auto& edge : filtered_edges) {
-    rapidjson::Value e = PathEdgeToRapidJson(edge, allocator);
-    filtered_edges_array.PushBack(e.Move(), allocator);
-  }
-
-  value.AddMember("edges", array.Move(), allocator)
-      .AddMember("location_index", static_cast<int>(index), allocator)
-      .AddMember("filtered_edges", filtered_edges_array.Move(), allocator);
-  return value;
-}
-
-PathLocation PathLocation::FromRapidJson(const std::vector<Location>& locations,
-                                         const rapidjson::Value& path_location) {
-  auto index = rapidjson::get<uint64_t>(path_location, "/location_index");
-  PathLocation p(locations[index]);
-  for (const auto& edge : rapidjson::get<rapidjson::Value::ConstArray>(path_location, "/edges")) {
-    p.edges.emplace_back(GraphId(rapidjson::get<uint64_t>(edge, "/id")),
-                         rapidjson::get<float>(edge, "/dist"),
-                         midgard::PointLL(rapidjson::get<double>(edge, "/projected/lon"),
-                                          rapidjson::get<double>(edge, "/projected/lat")),
-                         rapidjson::get<float>(edge, "/score"),
-                         static_cast<SideOfStreet>(rapidjson::get<int>(edge, "/sos")),
-                         rapidjson::get<unsigned int>(edge, "/minimum_reachability"));
-  }
-  for (const auto& edge :
-       rapidjson::get<rapidjson::Value::ConstArray>(path_location, "/filtered_edges")) {
-    p.filtered_edges.emplace_back(GraphId(rapidjson::get<uint64_t>(edge, "/id")),
-                                  rapidjson::get<float>(edge, "/dist"),
-                                  midgard::PointLL(rapidjson::get<double>(edge, "/projected/lon"),
-                                                   rapidjson::get<double>(edge, "/projected/lat")),
-                                  rapidjson::get<float>(edge, "/score"),
-                                  static_cast<SideOfStreet>(rapidjson::get<int>(edge, "/sos")),
-                                  rapidjson::get<unsigned int>(edge, "/minimum_reachability"));
-  }
-  return p;
-}
-
-rapidjson::Value
-PathLocation::PathEdgeToRapidJson(const PathEdge& edge,
-                                  rapidjson::Document::AllocatorType& allocator) const {
-  rapidjson::Value e{rapidjson::kObjectType};
-
-  e.AddMember("id", edge.id.value, allocator)
-      .AddMember("dist", edge.percent_along, allocator)
-      .AddMember("sos", static_cast<int>(edge.sos), allocator)
-      .AddMember("score", edge.distance, allocator)
-      .AddMember("minimum_reachability", edge.minimum_reachability, allocator);
-
-  // Serialize projected lat,lng as double (otherwise leads to shape
-  // artifacts at begin/end of routes as the float values are rounded
-  rapidjson::Value vtx{rapidjson::kObjectType};
-  vtx.AddMember("lon", static_cast<double>(edge.projected.first), allocator)
-      .AddMember("lat", static_cast<double>(edge.projected.second), allocator);
-  e.AddMember("projected", vtx.Move(), allocator);
-
-  return e;
 }
 
 } // namespace baldr

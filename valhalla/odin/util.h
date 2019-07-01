@@ -11,7 +11,7 @@
 
 #include <valhalla/baldr/rapidjson_utils.h>
 #include <valhalla/odin/narrative_dictionary.h>
-#include <valhalla/proto/directions_options.pb.h>
+#include <valhalla/proto/options.pb.h>
 
 namespace valhalla {
 namespace odin {
@@ -26,7 +26,7 @@ std::string GetQuotedString(const std::string& item);
 bool IsSimilarTurnDegree(uint32_t path_turn_degree,
                          uint32_t intersecting_turn_degree,
                          bool is_right,
-                         uint32_t turn_degree_threshold = 30);
+                         uint32_t turn_degree_threshold = 40);
 
 /**
  * Get the time from the inputed date.

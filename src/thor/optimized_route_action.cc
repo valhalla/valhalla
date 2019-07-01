@@ -17,24 +17,25 @@ using namespace valhalla::thor;
 namespace valhalla {
 namespace thor {
 
-std::list<valhalla::odin::TripPath> thor_worker_t::optimized_route(valhalla_request_t& request) {
+void thor_worker_t::optimized_route(Api& request) {
   parse_locations(request);
+  parse_filter_attributes(request);
   auto costing = parse_costing(request);
+  auto& options = *request.mutable_options();
 
-  if (!request.options.do_not_track()) {
+  if (!options.do_not_track()) {
     valhalla::midgard::logging::Log("matrix_type::optimized_route", " [ANALYTICS] ");
   }
 
   // Use CostMatrix to find costs from each location to every other location
   CostMatrix costmatrix;
   std::vector<thor::TimeDistance> td =
-      costmatrix.SourceToTarget(request.options.sources(), request.options.targets(), *reader,
-                                mode_costing, mode, max_matrix_distance.find(costing)->second);
+      costmatrix.SourceToTarget(options.sources(), options.targets(), *reader, mode_costing, mode,
+                                max_matrix_distance.find(costing)->second);
 
   // Return an error if any locations are totally unreachable
   const auto& correlated =
-      (request.options.sources_size() > request.options.targets_size() ? request.options.sources()
-                                                                       : request.options.targets());
+      (options.sources_size() > options.targets_size() ? options.sources() : options.targets());
 
   // Set time costs to send to Optimizer.
   std::vector<float> time_costs;
@@ -56,12 +57,13 @@ std::list<valhalla::odin::TripPath> thor_worker_t::optimized_route(valhalla_requ
   // returns the optimal order of the path_locations
   auto optimal_order = optimizer.Solve(correlated.size(), time_costs);
   // put the optimal order into the locations array
-  request.options.mutable_locations()->Clear();
+  options.mutable_locations()->Clear();
   for (size_t i = 0; i < optimal_order.size(); i++) {
-    request.options.mutable_locations()->Add()->CopyFrom(correlated.Get(optimal_order[i]));
+    options.mutable_locations()->Add()->CopyFrom(correlated.Get(optimal_order[i]));
   }
 
-  return path_depart_at(*request.options.mutable_locations(), costing);
+  // run the route
+  path_depart_at(request, costing);
 }
 
 } // namespace thor
