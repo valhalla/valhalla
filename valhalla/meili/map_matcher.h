@@ -82,8 +82,6 @@ private:
   std::unordered_map<StateId::Time, std::vector<Measurement>>
   AppendMeasurements(const std::vector<Measurement>& measurements);
 
-  StateId::Time AppendMeasurement(const Measurement& measurement, const float sq_max_search_radius);
-
   void RemoveRedundancies(const std::vector<StateId>& result);
   // void RemoveRedundancies(const MatchResults& path, std::vector<StateId>& result);
 

@@ -241,6 +241,7 @@ ConstructRoute(const MapMatcher& mapmatcher, match_iterator_t begin, match_itera
       // get the route between the two states by walking edge labels backwards
       // then reverse merge the segments together which are on the same edge so we have a
       // minimum number of segments. in this case we could at minimum end up with 1 segment
+      // if there is a valid route between states, otherwise we get 0 segments
       std::vector<EdgeSegment> segments;
       MergeRoute(segments, prev_state, state);
 

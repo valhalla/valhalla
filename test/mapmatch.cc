@@ -328,7 +328,7 @@ void test_trace_route_edge_walk_expected_error_code() {
 }
 
 void test_trace_route_map_snap_expected_error_code() {
-  // tests expected error_code for trace_route edge_walk
+  // tests expected error_code for trace_route map_snap
   auto expected_error_code = 442;
   tyr::actor_t actor(conf, true);
 
