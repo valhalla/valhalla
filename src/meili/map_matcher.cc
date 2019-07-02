@@ -660,13 +660,18 @@ MapMatcher::AppendMeasurements(const std::vector<Measurement>& measurements) {
               sq_interpolation_distance = interpolation_distance * interpolation_distance;
   std::unordered_map<StateId::Time, std::vector<Measurement>> interpolated;
 
-  // Always match the first measurement
-  auto last = measurements.cbegin();
-  auto time = AppendMeasurement(*last, sq_max_search_radius);
+  auto last = measurements.cbegin() - 1;
+  uint32_t time;
   double interpolated_epoch_time = -1;
   for (auto m = std::next(last); m != measurements.end(); ++m) {
-    const auto sq_distance = GreatCircleDistanceSquared(*last, *m);
-    // Always match the last measurement and if its far enough away
+    if (interrupt_) {
+      (*interrupt_)();
+    }
+    std::vector<baldr::PathLocation> candidates;
+    const auto sq_distance = m == measurements.cbegin()
+                                 ? sq_interpolation_distance + 1 // Always match the first measurement
+                                 : GreatCircleDistanceSquared(*last, *m);
+    // Always match the last measurement and if its far enough away to not interpolate
     if (sq_interpolation_distance < sq_distance || std::next(m) == measurements.end()) {
       // If there were interpolated points between these two points with time information
       if (interpolated_epoch_time != -1) {
@@ -680,15 +685,38 @@ MapMatcher::AppendMeasurements(const std::vector<Measurement>& measurements) {
           container_.SetMeasurementLeaveTime(time, interpolated_epoch_time);
         }
       }
-      // This one isnt interpolated so we make room for its state
-      time = AppendMeasurement(*m, sq_max_search_radius);
+
+      // Get the edge candidates for this measurement within a radius
+      auto sq_radius =
+          std::min(sq_max_search_radius, std::max(m->sq_search_radius(), m->sq_gps_accuracy()));
+      candidates = candidatequery_.Query(m->lnglat(), sq_radius, costing()->GetEdgeFilter());
+    }
+
+    if (!candidates.empty()) {
+      time = container_.AppendMeasurement(*m);
+
+      //  std::string fsep = "";
+      //  std::cout << std::endl << "Candidates at time " << time << std::endl <<
+      //  R"({"type":"FeatureCollection","features":[)";
+      for (const auto& candidate : candidates) {
+        const auto& stateid = container_.AppendCandidate(candidate);
+        vs_.AddStateId(stateid);
+
+        //    std::cout << fsep << container_.geojson(stateid);
+        //    fsep = ",";
+      }
+      //  std::cout << R"(]})" << std::endl;
       last = m;
       interpolated_epoch_time = -1;
-    } // TODO: if its the last measurement and it wants to be interpolated
+    }
+    // TODO: if its the last measurement and it wants to be interpolated
     // then what we need to do is make last match interpolated
     // and copy its epoch_time into the last measurements epoch time
     // else if(std::next(measurement) == measurements.end()) { }
     // This one is so close to the last match that we will just interpolate it
+
+    // If within interpolation distance, or if no edge candidates were found within a radius
+    // treat this as an interpolated measurement
     else {
       interpolated[time].push_back(*m);
       interpolated_epoch_time = m->epoch_time();
