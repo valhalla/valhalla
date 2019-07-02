@@ -85,7 +85,7 @@ config = {
       'max_route_distance_factor': 5,
       'max_route_time_factor': 5,
       'max_search_radius': 100,
-      'breakage_distance': 50,
+      'breakage_distance': 2000,
       'interpolation_distance': 10,
       'search_radius': 50,
       'geometry': False,
