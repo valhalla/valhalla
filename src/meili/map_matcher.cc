@@ -536,7 +536,8 @@ std::vector<MatchResults> MapMatcher::OfflineMatch(const std::vector<Measurement
   bool found_broken_path = false;
 
   // Separate the measurements we are using for matching from the ones we'll just interpolate
-  auto interpolated = AppendMeasurements(measurements);
+  std::unordered_map<StateId::Time, std::vector<Measurement>> interpolated;
+  AppendMeasurements(measurements, interpolated);
 
   // For k paths
   while (best_paths.size() < k && !found_broken_path) {
@@ -652,15 +653,15 @@ std::vector<MatchResults> MapMatcher::OfflineMatch(const std::vector<Measurement
   return best_paths;
 }
 
-std::unordered_map<StateId::Time, std::vector<Measurement>>
-MapMatcher::AppendMeasurements(const std::vector<Measurement>& measurements) {
+void MapMatcher::AppendMeasurements(
+    const std::vector<Measurement>& measurements,
+    std::unordered_map<StateId::Time, std::vector<Measurement>>& interpolated) {
   const float max_search_radius = config_.get<float>("max_search_radius"),
-              sq_max_search_radius = max_search_radius * max_search_radius,
               interpolation_distance = config_.get<float>("interpolation_distance"),
-              sq_interpolation_distance = interpolation_distance * interpolation_distance,
               breakage_distance = config_.get<float>("breakage_distance"),
+              sq_max_search_radius = max_search_radius * max_search_radius,
+              sq_interpolation_distance = interpolation_distance * interpolation_distance,
               sq_breakage_distance = breakage_distance * breakage_distance;
-  std::unordered_map<StateId::Time, std::vector<Measurement>> interpolated;
 
   auto last = measurements.cbegin() - 1;
   uint32_t time;
@@ -719,9 +720,6 @@ MapMatcher::AppendMeasurements(const std::vector<Measurement>& measurements) {
       interpolated_epoch_time = m->epoch_time();
     }
   }
-
-  // return just the interpolated measurements
-  return interpolated;
 }
 
 } // namespace meili

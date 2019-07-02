@@ -79,8 +79,8 @@ public:
   }
 
 private:
-  std::unordered_map<StateId::Time, std::vector<Measurement>>
-  AppendMeasurements(const std::vector<Measurement>& measurements);
+  void AppendMeasurements(const std::vector<Measurement>& measurements,
+                          std::unordered_map<StateId::Time, std::vector<Measurement>>& interpolated);
 
   void RemoveRedundancies(const std::vector<StateId>& result);
   // void RemoveRedundancies(const MatchResults& path, std::vector<StateId>& result);
