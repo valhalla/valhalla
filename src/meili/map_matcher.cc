@@ -677,7 +677,7 @@ void MapMatcher::AppendMeasurements(
     // Do not interpolate this point if:
     // - it's far enough away from the last uninterpolated measurement,
     // - it's closer to the last uninterpolated measurement than the max breakage distance,
-    // - but always match the last measurement
+    // - and never interpolate the last measurement
     if ((sq_distance >= sq_interpolation_distance && sq_distance < sq_breakage_distance) ||
         std::next(m) == measurements.end()) {
       // If there were interpolated points between these two points with time information
