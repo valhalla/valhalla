@@ -339,7 +339,7 @@ void test_trace_route_map_snap_expected_error_code() {
          {"lat":52.088627,"lon":5.153269,"radius":5},
          {"lat":52.08864,"lon":5.15298,"radius":5},
          {"lat":52.08861,"lon":5.15272,"radius":5},
-         {"lat":52.08863,"lon":5.15253,"radius":5},
+         {"lat":52.08860,"lon":5.15257,"radius":5},
          {"lat":52.08851,"lon":5.15249,"radius":5}]})"));
   } catch (const valhalla_exception_t& e) {
     if (e.code != expected_error_code) {
@@ -382,7 +382,7 @@ void test_trace_attributes_edge_walk_expected_error_code() {
 }
 
 void test_trace_attributes_map_snap_expected_error_code() {
-  // tests expected error_code for trace_attributes edge_walk
+  // tests expected error_code for trace_attributes map_snap
   auto expected_error_code = 444;
   tyr::actor_t actor(conf, true);
 
@@ -393,7 +393,7 @@ void test_trace_attributes_map_snap_expected_error_code() {
          {"lat":52.088627,"lon":5.153269,"radius":5},
          {"lat":52.08864,"lon":5.15298,"radius":5},
          {"lat":52.08861,"lon":5.15272,"radius":5},
-         {"lat":52.08863,"lon":5.15253,"radius":5},
+         {"lat":52.08860,"lon":5.15257,"radius":5},
          {"lat":52.08851,"lon":5.15249,"radius":5}]})"));
   } catch (const valhalla_exception_t& e) {
     if (e.code != expected_error_code) {
