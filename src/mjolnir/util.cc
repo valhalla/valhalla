@@ -6,6 +6,7 @@
 #include "midgard/logging.h"
 #include "midgard/point2.h"
 #include "midgard/polyline2.h"
+#include "mjolnir/bssbuilder.h"
 #include "mjolnir/elevationbuilder.h"
 #include "mjolnir/graphbuilder.h"
 #include "mjolnir/graphenhancer.h"
@@ -17,7 +18,6 @@
 #include "mjolnir/restrictionbuilder.h"
 #include "mjolnir/shortcutbuilder.h"
 #include "mjolnir/transitbuilder.h"
-#include "mjolnir/bssbuilder.h"
 
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
@@ -187,7 +187,7 @@ bool build_tile_set(const boost::property_tree::ptree& config,
   std::string cr_to_bin = tile_dir + cr_to_file;
   std::string new_to_old_bin = tile_dir + new_to_old_file;
   std::string old_to_new_bin = tile_dir + old_to_new_file;
-  
+
   // OSMData class
   OSMData osm_data;
 
@@ -195,8 +195,9 @@ bool build_tile_set(const boost::property_tree::ptree& config,
   if (start_stage <= BuildStage::kParse && BuildStage::kParse <= end_stage) {
     // Read the OSM protocol buffer file. Callbacks for nodes, ways, and
     // relations are defined within the PBFParser class
-    osm_data = PBFGraphParser::Parse(config.get_child("mjolnir"), input_files, ways_bin,
-                                     way_nodes_bin, access_bin, cr_from_bin, cr_to_bin, bss_nodes_bin);
+    osm_data =
+        PBFGraphParser::Parse(config.get_child("mjolnir"), input_files, ways_bin, way_nodes_bin,
+                              access_bin, cr_from_bin, cr_to_bin, bss_nodes_bin);
 
     // Free all protobuf memory - cannot use the protobuffer lib after this!
     OSMPBF::Parser::free();

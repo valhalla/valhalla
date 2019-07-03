@@ -1560,17 +1560,18 @@ public:
   std::unique_ptr<sequence<OSMRestriction>> complex_restrictions_to_;
 };
 
-
 struct bss_nodes_callback : public graph_callback {
   ~bss_nodes_callback() override = default;
 
   bss_nodes_callback(const boost::property_tree::ptree& pt, OSMData& osmdata)
-      :  graph_callback(pt, osmdata) {}
-  void  node_callback(const uint64_t osmid, const double lng, const double lat, const Tags& tags) override {
+      : graph_callback(pt, osmdata) {
+  }
+  void
+  node_callback(const uint64_t osmid, const double lng, const double lat, const Tags& tags) override {
     // Get tags
     Tags results = lua_.Transform(OSMType::kNode, tags);
-    for(auto& key_value : results) {
-      if(key_value.first == "amenity" && key_value.second == "bicycle_rental") {
+    for (auto& key_value : results) {
+      if (key_value.first == "amenity" && key_value.second == "bicycle_rental") {
         // Create a new node and set its attributes
         OSMNode n{osmid};
         n.set_latlng(static_cast<float>(lng), static_cast<float>(lat));
@@ -1580,9 +1581,12 @@ struct bss_nodes_callback : public graph_callback {
       }
     }
   };
-  void  way_callback(const uint64_t osmid, const Tags& tags, const std::vector<uint64_t>& nodes) override {};
-  void  relation_callback(const uint64_t osmid, const Tags& tags, const std::vector<OSMPBF::Member>& members) override {};
-  void  changeset_callback(const uint64_t changeset_id) override {};
+  void
+  way_callback(const uint64_t osmid, const Tags& tags, const std::vector<uint64_t>& nodes) override{};
+  void relation_callback(const uint64_t osmid,
+                         const Tags& tags,
+                         const std::vector<OSMPBF::Member>& members) override{};
+  void changeset_callback(const uint64_t changeset_id) override{};
 
   // lets the sequences be set and reset
   void reset(sequence<OSMNode>* nodes) {
@@ -1592,9 +1596,7 @@ struct bss_nodes_callback : public graph_callback {
   std::unique_ptr<sequence<OSMNode>> bss_nodes_;
 };
 
-
 } // namespace
-
 
 namespace valhalla {
 namespace mjolnir {
@@ -1642,8 +1644,7 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt,
     for (auto& file_handle : file_handles) {
       bss_nodes_cb.current_way_node_index_ = bss_nodes_cb.last_node_ = bss_nodes_cb.last_way_ =
           bss_nodes_cb.last_relation_ = 0;
-      OSMPBF::Parser::parse(file_handle,
-                            static_cast<OSMPBF::Interest>(OSMPBF::Interest::NODES),
+      OSMPBF::Parser::parse(file_handle, static_cast<OSMPBF::Interest>(OSMPBF::Interest::NODES),
                             bss_nodes_cb);
     }
   }

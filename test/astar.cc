@@ -350,7 +350,8 @@ void trivial_path_no_uturns(const std::string& config_file) {
   auto osmdata =
       vj::PBFGraphParser::Parse(conf.get_child("mjolnir"),
                                 {VALHALLA_SOURCE_DIR "test/data/utrecht_netherlands.osm.pbf"},
-                                ways_file, way_nodes_file, access_file, cr_from_file, cr_to_file, bss_nodes_file);
+                                ways_file, way_nodes_file, access_file, cr_from_file, cr_to_file,
+                                bss_nodes_file);
 
   // Build the graph using the OSMNodes and OSMWays from the parser
   vj::GraphBuilder::Build(conf, osmdata, ways_file, way_nodes_file, nodes_file, edges_file,
