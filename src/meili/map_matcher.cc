@@ -592,6 +592,15 @@ std::vector<MatchResults> MapMatcher::OfflineMatch(const std::vector<Measurement
 
     // Insert the interpolated results into the result list
     std::vector<MatchResult> best_path;
+
+    // If there were any interpolated results at the beginning of the route, add them first
+    const auto it_first = interpolated.find(-1);
+    if (it_first != interpolated.end()) {
+      for (const auto& measurement : it_first->second) {
+        best_path.push_back(CreateMatchResult(measurement));
+      }
+    }
+
     for (StateId::Time time = 0; time < original_state_ids.size(); time++) {
       // Add in this states result
       best_path.emplace_back(std::move(results[time]));
@@ -663,15 +672,15 @@ void MapMatcher::AppendMeasurements(
               sq_interpolation_distance = interpolation_distance * interpolation_distance,
               sq_breakage_distance = breakage_distance * breakage_distance;
 
-  auto last = measurements.cbegin() - 1;
-  uint32_t time;
+  const Measurement* last = nullptr;
+  uint32_t time = -1;
   double interpolated_epoch_time = -1;
-  for (auto m = std::next(last); m != measurements.end(); ++m) {
+  for (auto m = measurements.cbegin(); m != measurements.cend(); ++m) {
     if (interrupt_) {
       (*interrupt_)();
     }
     std::vector<baldr::PathLocation> candidates;
-    const auto sq_distance = m == measurements.cbegin()
+    const auto sq_distance = last == nullptr
                                  ? sq_interpolation_distance + 1 // Always match the first measurement
                                  : GreatCircleDistanceSquared(*last, *m);
     // Do not interpolate this point if:
@@ -681,7 +690,7 @@ void MapMatcher::AppendMeasurements(
     if ((sq_distance >= sq_interpolation_distance && sq_distance < sq_breakage_distance) ||
         std::next(m) == measurements.end()) {
       // If there were interpolated points between these two points with time information
-      if (interpolated_epoch_time != -1) {
+      if (interpolated_epoch_time != -1 && last != nullptr) {
         // Project the last interpolated point onto the line between the two match points
         auto p = interpolated[time].back().lnglat().Project(last->lnglat(), m->lnglat());
         // If its significantly closer to the previous match point then it looks like the trace
@@ -710,7 +719,7 @@ void MapMatcher::AppendMeasurements(
         const auto& stateid = container_.AppendCandidate(candidate);
         vs_.AddStateId(stateid);
       }
-      last = m;
+      last = &*m;
       interpolated_epoch_time = -1;
     }
     // If within interpolation distance, or if no edge candidates were found within a radius
