@@ -258,8 +258,25 @@ void test_trace_route_breaks() {
           {"lat":52.09110,"lon":5.09806},
           {"lat":52.09050,"lon":5.09769},
           {"lat":52.09098,"lon":5.09679}]})",
+      R"({"costing":"auto","shape_match":"map_snap","shape":[
+          {"lat":52.1021061,"lon":5.1185333},
+          {"lat":52.1023218,"lon":5.1188399},
+          {"lat":52.1020414,"lon":5.1189351}]})",
+      R"({"costing":"auto","shape_match":"map_snap","shape":[
+          {"lat":52.1022584,"lon":5.1187390},
+          {"lat":52.1020775,"lon":5.1187256},
+          {"lat":52.1020414,"lon":5.1189351}]})",
+      R"({"costing":"auto","shape_match":"map_snap","shape":[
+          {"lat":52.1021000,"lon":5.1185625},
+          {"lat":52.1020775,"lon":5.1187256},
+          {"lat":52.1022038,"lon":5.1189493}]})",
       R"({"costing":"auto","shape_match":"map_snap","encoded_polyline":"quijbBqpnwHfJxc@bBdJrDfSdAzFX|AHd@bG~[|AnIdArGbAo@z@m@`EuClO}MjE}E~NkPaAuC"})"};
-  std::vector<size_t> test_answers = {2, 1, 1, 1};
+  std::vector<size_t> test_answers = {2, 1, 1, 1, 1, 1, 1};
+
+  if (test_cases.size() != test_answers.size())
+    throw std::logic_error("Number of test_cases and test_answers must be equal " +
+                           std::to_string(test_cases.size()) +
+                           "!=" + std::to_string(test_answers.size()));
 
   tyr::actor_t actor(conf, true);
   for (size_t i = 0; i < test_cases.size(); ++i) {
@@ -267,7 +284,8 @@ void test_trace_route_breaks() {
     const auto& legs = matched.get_child("trip.legs");
     if (legs.size() != test_answers[i])
       throw std::logic_error("Expected " + std::to_string(test_answers[i]) + " legs but got " +
-                             std::to_string(legs.size()));
+                             std::to_string(legs.size()) + " for test_cases[" + std::to_string(i) +
+                             "]");
 
     for (const auto& leg : legs) {
       auto decoded_match =
