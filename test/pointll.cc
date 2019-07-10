@@ -47,7 +47,7 @@ void test_end(const std::vector<PointLL> l, float d, float a) {
 }
 
 void TestHeadingAlongPolyline() {
-  test_along({{-73.986392, 40.755800}, {-73.986438, 40.755819}}, 30.0f, 303);
+  test_along({{-73.986392, 40.755800}, {-73.986438, 40.755819}}, 30.0f, 299);
   test_along({{-73.986438, 40.755819}, {-73.986484, 40.755681}}, 30.0f, 194);
   test_along({{-73.985777, 40.755539}, {-73.986440, 40.755820}, {-73.986617, 40.755254}}, 30.0f, 299);
 
@@ -60,7 +60,7 @@ void TestHeadingAlongPolyline() {
               {-76.316444, 39.494209},
               {-76.316483, 39.494221},
               {-76.316521, 39.494228}},
-             30.0f, 314);
+             30.0f, 315);
 
   // north (0)
   test_along({{-76.612682, 39.294540}, {-76.612681, 39.294897}, {-76.612708, 39.295208}}, 30.0f, 0);
@@ -91,7 +91,7 @@ void TestHeadingAlongPolyline() {
 }
 
 void TestHeadingAtEndOfPolyline() {
-  test_end({{-73.986392, 40.755800}, {-73.986438, 40.755819}}, 30.0f, 303);
+  test_end({{-73.986392, 40.755800}, {-73.986438, 40.755819}}, 30.0f, 299);
   test_end({{-73.986438, 40.755819}, {-73.986484, 40.755681}}, 30.0f, 194);
   test_end({{-73.985777, 40.755539}, {-73.986440, 40.755820}, {-73.986617, 40.755254}}, 30.0f, 194);
 
@@ -104,7 +104,7 @@ void TestHeadingAtEndOfPolyline() {
             {-76.316444, 39.494209},
             {-76.316483, 39.494221},
             {-76.316521, 39.494228}},
-           30.0f, 314);
+           30.0f, 315);
 
   // north (356)
   test_end({{-76.612682, 39.294540}, {-76.612681, 39.294897}, {-76.612708, 39.295208}}, 30.0f, 356);
@@ -132,6 +132,16 @@ void TestHeadingAtEndOfPolyline() {
           {-76.613033, 39.294523},
       },
       30.0f, 266);
+}
+
+void TestHeadingPrecision() {
+  float actual = PointLL(11.6057196, 48.1032867).Heading(PointLL(11.6056538, 48.1035118));
+  float expected = 348.952393;
+  float difference = std::abs(actual - expected);
+  if (difference > 0.000001) {
+    throw std::logic_error("Heading outside of precision tolerance, difference: " +
+                           std::to_string(difference));
+  }
 }
 
 void TryClosestPoint(std::vector<PointLL> pts,
@@ -352,7 +362,7 @@ void TestDistance() {
 
 } // namespace
 
-int main(void) {
+int main() {
   test::suite suite("pointll");
 
   suite.test(TEST_CASE(test_invalid));
@@ -363,6 +373,8 @@ int main(void) {
 
   // HeadingAtEndOfPolyline
   suite.test(TEST_CASE(TestHeadingAtEndOfPolyline));
+
+  suite.test(TEST_CASE(TestHeadingPrecision));
 
   suite.test(TEST_CASE(TestClosestPoint));
 
