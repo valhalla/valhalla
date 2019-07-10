@@ -134,6 +134,16 @@ void TestHeadingAtEndOfPolyline() {
       30.0f, 266);
 }
 
+void TestHeadingPrecision() {
+  float actual = PointLL(11.6057196, 48.1032867).Heading(PointLL(11.6056538, 48.1035118));
+  float expected = 348.952393;
+  float difference = std::abs(actual - expected);
+  if (difference > 0.000001) {
+    throw std::logic_error("Heading outside of precision tolerance, difference: " +
+                           std::to_string(difference));
+  }
+}
+
 void TryClosestPoint(std::vector<PointLL> pts,
                      const PointLL& pt,
                      const PointLL& expected_pt,
@@ -352,7 +362,7 @@ void TestDistance() {
 
 } // namespace
 
-int main(void) {
+int main() {
   test::suite suite("pointll");
 
   suite.test(TEST_CASE(test_invalid));
@@ -363,6 +373,8 @@ int main(void) {
 
   // HeadingAtEndOfPolyline
   suite.test(TEST_CASE(TestHeadingAtEndOfPolyline));
+
+  suite.test(TEST_CASE(TestHeadingPrecision));
 
   suite.test(TEST_CASE(TestClosestPoint));
 
