@@ -108,17 +108,17 @@ float PointLL::Curvature(const PointLL& ll1, const PointLL& ll2) const {
 float PointLL::Heading(const PointLL& ll2) const {
   // If points are the same, return 0
   if (*this == ll2) {
-    return 0.0f;
+    return 0.0;
   }
 
   // Convert to radians and compute heading
-  float lat1 = lat() * kRadPerDeg;
-  float lat2 = ll2.lat() * kRadPerDeg;
-  float dlng = (ll2.lng() - lng()) * kRadPerDeg;
-  float y = sinf(dlng) * cosf(lat2);
-  float x = cosf(lat1) * sinf(lat2) - sinf(lat1) * cosf(lat2) * cosf(dlng);
-  float bearing = atan2f(y, x) * kDegPerRad;
-  return (bearing < 0.0f) ? bearing + 360.0f : bearing;
+  double lat1 = lat() * kRadPerDegD;
+  double lat2 = ll2.lat() * kRadPerDegD;
+  double dlng = (ll2.lng() - lng()) * kRadPerDegD;
+  double y = sin(dlng) * cos(lat2);
+  double x = cos(lat1) * sin(lat2) - sin(lat1) * cos(lat2) * cos(dlng);
+  double bearing = atan2(y, x) * kDegPerRadD;
+  return (bearing < 0.0) ? bearing + 360.0 : bearing;
 }
 
 // Finds the closest point to the supplied polyline as well as the distance
