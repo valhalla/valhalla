@@ -298,7 +298,7 @@ GriddedData<coord_t>::GenerateContours(const std::vector<float>& contour_interva
     for (auto& line : contour) {
       // TODO: generalizing makes self intersections which makes other libraries unhappy
       if (gen_factor > 0.f) {
-        Polyline2<coord_t>::Generalize(line, gen_factor);
+        Polyline2<coord_t>::Generalize(line, gen_factor, {});
       }
       // if this ends up as an inner we'll undo this later
       if (cache[&line] > 0) {
