@@ -30,45 +30,6 @@ using namespace valhalla::thor;
 
 namespace {
 
-template <class iter>
-void AddPartialShape(std::vector<PointLL>& shape,
-                     iter start,
-                     iter end,
-                     float partial_length,
-                     bool back_insert,
-                     const PointLL& last) {
-  auto push = [&shape, &back_insert](const PointLL& point) {
-    if (back_insert) {
-      shape.push_back(point);
-    } else {
-      shape.insert(shape.begin(), point);
-    }
-  };
-
-  // yeah we dont add shape if we dont have any length to add
-  if (partial_length > 0.f) {
-    // if we are adding on to a shape that already has points we dont want to actually add the first
-    // one
-    if (!back_insert) {
-      push(*start);
-    }
-    // for each segment
-    for (; start != end - 1; ++start) {
-      // is this segment longer than what we have left, then we found the segment the point lies on
-      const auto length = (start + 1)->Distance(*start);
-      if (length > partial_length) {
-        if (!last.ApproximatelyEqual(shape.back())) {
-          push(last);
-        }
-        return;
-      }
-      // just take the point from this segment
-      push(*(start + 1));
-      partial_length -= length;
-    }
-  }
-}
-
 void TrimShape(std::vector<PointLL>& shape,
                const float start,
                const PointLL& start_vertex,
@@ -1095,25 +1056,24 @@ TripLegBuilder::Build(const AttributesController& controller,
         ++begin_index;
       }
 
-    } else if (is_first_edge || is_last_edge) {
-      // We need to clip the shape if i its at the beginning or end and
-      // is not full length
-      float length = std::max(static_cast<float>(directededge->length()) * length_pct, 1.0f);
-      if (directededge->forward() == is_last_edge) {
-        AddPartialShape<std::vector<PointLL>::const_iterator>(trip_shape, edgeinfo.shape().begin(),
-                                                              edgeinfo.shape().end(), length,
-                                                              is_last_edge,
-                                                              is_last_edge ? end_vrt : start_vrt);
-      } else {
-        AddPartialShape<std::vector<PointLL>::const_reverse_iterator>(trip_shape,
-                                                                      edgeinfo.shape().rbegin(),
-                                                                      edgeinfo.shape().rend(), length,
-                                                                      is_last_edge,
-                                                                      is_last_edge ? end_vrt
-                                                                                   : start_vrt);
+    } // We need to clip the shape if its at the beginning or end
+    else if (is_first_edge || is_last_edge) {
+      // Get edge shape and reverse it if directed edge is not forward.
+      auto edge_shape = edgeinfo.shape();
+      if (!directededge->forward()) {
+        std::reverse(edge_shape.begin(), edge_shape.end());
       }
-    } else {
-      // Just get the shape in there in the right direction
+      // We need to clip the shape if its at the beginning or end and is not full length
+      float total = static_cast<float>(directededge->length());
+      // Trim the shape
+      TrimShape(edge_shape, is_first_edge ? start_pct * total : 0,
+                is_first_edge ? start_vrt : edge_shape.front(),
+                is_last_edge ? end_pct * total : total, is_last_edge ? end_vrt : edge_shape.back());
+      assert(edge_shape.size() > 1);
+      // Keep the shape
+      trip_shape.insert(trip_shape.end(), edge_shape.begin() + is_last_edge, edge_shape.end());
+    } // Just get the shape in there in the right direction no clipping needed
+    else {
       if (directededge->forward()) {
         trip_shape.insert(trip_shape.end(), edgeinfo.shape().begin() + 1, edgeinfo.shape().end());
       } else {

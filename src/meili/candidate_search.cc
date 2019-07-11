@@ -32,7 +32,7 @@ CandidateQuery::WithinSquaredDistance(const midgard::PointLL& location,
                                       sif::EdgeFilter edgefilter) const {
   std::vector<baldr::PathLocation> candidates;
   std::unordered_set<baldr::GraphId> visited_nodes;
-  DistanceApproximator approximator(location);
+  midgard::projector_t projector(location);
   const baldr::GraphTile* tile = nullptr;
 
   for (auto it = edgeid_begin; it != edgeid_end; it++) {
@@ -77,7 +77,7 @@ CandidateQuery::WithinSquaredDistance(const midgard::PointLL& location,
     const bool edge_included = !edgefilter || edgefilter(edge) != 0.f;
 
     if (edge_included) {
-      std::tie(point, sq_distance, segment, offset) = helpers::Project(location, shape, approximator);
+      std::tie(point, sq_distance, segment, offset) = helpers::Project(projector, shape);
 
       if (sq_distance <= sq_search_radius) {
         const float dist = edge->forward() ? offset : 1.f - offset;
@@ -95,8 +95,7 @@ CandidateQuery::WithinSquaredDistance(const midgard::PointLL& location,
     // Correlate its opp edge
     if (oppedge_included) {
       if (!edge_included) {
-        std::tie(point, sq_distance, segment, offset) =
-            helpers::Project(location, shape, approximator);
+        std::tie(point, sq_distance, segment, offset) = helpers::Project(projector, shape);
       }
       if (sq_distance <= sq_search_radius) {
         const float dist = opp_edge->forward() ? offset : 1.f - offset;
