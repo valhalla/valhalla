@@ -106,10 +106,16 @@ json::ArrayPtr waypoints(const google::protobuf::RepeatedPtrField<valhalla::Loca
 
 json::ArrayPtr waypoints(const valhalla::Trip& trip) {
   auto waypoints = json::array({});
-  for (const auto& route : trip.routes())
-    for (const auto& leg : route.legs())
-      for (const auto& location : leg.location())
-        waypoints->emplace_back(waypoint(location, false));
+  // For multi-route the same waypoints are used for all routes.
+  const auto& legs = trip.routes(0).legs();
+  for (const auto& leg : legs) {
+    for (const auto& location : leg.location()) {
+      if (&location == &leg.location(0) && &leg != &*legs.begin()) {
+        continue;
+      }
+      waypoints->emplace_back(waypoint(location, false));
+    }
+  }
   return waypoints;
 }
 
