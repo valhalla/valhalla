@@ -121,12 +121,10 @@ struct candidate_t {
 // When the bin is finished, next_bin() switch to the next possible
 // interesting bin.  if has_bin() is false, then the best projection
 // is found.
-struct projector_t {
-  projector_t(const Location& location, GraphReader& reader)
+struct projector_wrapper {
+  projector_wrapper(const Location& location, GraphReader& reader)
       : binner(make_binner(location.latlng_, reader)), location(location),
-        sq_radius(square(double(location.radius_))),
-        lon_scale(cosf(location.latlng_.lat() * kRadPerDeg)), lat(location.latlng_.lat()),
-        lng(location.latlng_.lng()), approx(location.latlng_) {
+        sq_radius(square(double(location.radius_))), project(location.latlng_) {
     // TODO: something more empirical based on radius
     unreachable.reserve(64);
     reachable.reserve(64);
@@ -135,15 +133,15 @@ struct projector_t {
   }
 
   // non default constructible and move only type
-  projector_t() = delete;
-  projector_t(const projector_t&) = delete;
-  projector_t& operator=(const projector_t&) = delete;
-  projector_t(projector_t&&) = default;
-  projector_t& operator=(projector_t&&) = default;
+  projector_wrapper() = delete;
+  projector_wrapper(const projector_wrapper&) = delete;
+  projector_wrapper& operator=(const projector_wrapper&) = delete;
+  projector_wrapper(projector_wrapper&&) = default;
+  projector_wrapper& operator=(projector_wrapper&&) = default;
 
   // the ones marked with null current tile are finished so put them on the end
   // otherwise we sort by bin so that ones with the same bin are next to each other
-  bool operator<(const projector_t& other) const {
+  bool operator<(const projector_wrapper& other) const {
     // the
     if (cur_tile != other.cur_tile) {
       return cur_tile > other.cur_tile;
@@ -151,7 +149,7 @@ struct projector_t {
     return bin_index < other.bin_index;
   }
 
-  bool has_same_bin(const projector_t& other) const {
+  bool has_same_bin(const projector_wrapper& other) const {
     return cur_tile == other.cur_tile && bin_index == other.bin_index;
   }
 
@@ -181,38 +179,6 @@ struct projector_t {
     } while (!cur_tile);
   }
 
-  // Test if a segment is a candidate to the projection.  This method
-  // is performance critical.  Copy, function call, cache locality and
-  // useless computation must be handled with care.
-  PointLL project(const PointLL& u, const PointLL& v) {
-    // we're done if this is a zero length segment
-    if (u == v) {
-      return u;
-    }
-
-    // project a onto b where b is the origin vector representing this segment
-    // and a is the origin vector to the point we are projecting, (a.b/b.b)*b
-    auto bx = double(v.first) - u.first;
-    auto by = double(v.second) - u.second;
-
-    // Scale longitude when finding the projection
-    auto bx2 = bx * lon_scale;
-    auto sq = bx2 * bx2 + by * by;
-    auto scale =
-        (lng - u.lng()) * lon_scale * bx2 + (lat - u.lat()) * by; // only need the numerator at first
-
-    // projects along the ray before u
-    if (scale <= 0.0) {
-      return u;
-      // projects along the ray after v
-    } else if (scale >= sq) {
-      return v;
-    }
-    // projects along the ray between u and v
-    scale /= sq;
-    return {u.first + bx * scale, u.second + by * scale};
-  }
-
   std::function<std::tuple<int32_t, unsigned short, float>()> binner;
   const GraphTile* cur_tile = nullptr;
   Location location;
@@ -223,14 +189,11 @@ struct projector_t {
   double closest_external_reachable = std::numeric_limits<double>::max();
 
   // critical data
-  double lon_scale;
-  double lat;
-  double lng;
-  DistanceApproximator approx;
+  projector_t project;
 };
 
 struct bin_handler_t {
-  std::vector<projector_t> pps;
+  std::vector<projector_wrapper> pps;
   valhalla::baldr::GraphReader& reader;
   const EdgeFilter& edge_filter;
   const NodeFilter& node_filter;
@@ -504,8 +467,8 @@ struct bin_handler_t {
   }
 
   // do a mini network expansion or maybe not
-  unsigned int check_reachability(std::vector<projector_t>::iterator begin,
-                                  std::vector<projector_t>::iterator end,
+  unsigned int check_reachability(std::vector<projector_wrapper>::iterator begin,
+                                  std::vector<projector_wrapper>::iterator end,
                                   const GraphTile* tile,
                                   const DirectedEdge* edge) {
     // no need when set to 0
@@ -550,7 +513,8 @@ struct bin_handler_t {
   }
 
   // handle a bin for the range of candidates that share it
-  void handle_bin(std::vector<projector_t>::iterator begin, std::vector<projector_t>::iterator end) {
+  void handle_bin(std::vector<projector_wrapper>::iterator begin,
+                  std::vector<projector_wrapper>::iterator end) {
     // iterate over the edges in the bin
     auto tile = begin->cur_tile;
     auto edges = tile->GetBin(begin->bin_index);
@@ -599,7 +563,7 @@ struct bin_handler_t {
         for (p_itr = begin; p_itr != end; ++p_itr, ++c_itr) {
           // how close is the input to this segment
           auto point = p_itr->project(u, v);
-          auto sq_distance = p_itr->approx.DistanceSquared(point);
+          auto sq_distance = p_itr->project.approx.DistanceSquared(point);
           // do we want to keep it
           if (sq_distance < c_itr->sq_distance) {
             c_itr->sq_distance = sq_distance;
@@ -676,13 +640,13 @@ struct bin_handler_t {
   // Find the best range to do.  The given vector should be sorted for
   // interesting grouping.  Returns the greatest range of non empty
   // equal bins.
-  std::pair<std::vector<projector_t>::iterator, std::vector<projector_t>::iterator>
-  find_best_range(std::vector<projector_t>& pps) const {
+  std::pair<std::vector<projector_wrapper>::iterator, std::vector<projector_wrapper>::iterator>
+  find_best_range(std::vector<projector_wrapper>& pps) const {
     auto best = std::make_pair(pps.begin(), pps.begin());
     auto cur = best;
     while (cur.second != pps.end()) {
       cur.first = cur.second;
-      cur.second = std::find_if_not(cur.first, pps.end(), [&cur](const projector_t& pp) {
+      cur.second = std::find_if_not(cur.first, pps.end(), [&cur](const projector_wrapper& pp) {
         return cur.first->has_same_bin(pp);
       });
       if (cur.first->has_bin() && cur.second - cur.first > best.second - best.first) {
