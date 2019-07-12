@@ -1359,9 +1359,10 @@ void ManeuversBuilder::SetSimpleDirectionalManeuverType(Maneuver& maneuver,
                                                        prev_edge->travel_mode(), xedge_counts);
       }
       if ((maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kKeepStraight) &&
+          !maneuver.intersecting_forward_edge() &&
           ((xedge_counts.right > 0) || ((xedge_counts.right == 0) && (xedge_counts.left == 0)))) {
         maneuver.set_type(DirectionsLeg_Maneuver_Type_kContinue);
-        LOG_TRACE("ManeuverType=CONTINUE");
+        LOG_TRACE("ManeuverType=CONTINUE (Turn::Type::kSlightRight)");
       } else {
         maneuver.set_type(DirectionsLeg_Maneuver_Type_kSlightRight);
         LOG_TRACE("ManeuverType=SLIGHT_RIGHT");
@@ -1475,9 +1476,10 @@ void ManeuversBuilder::SetSimpleDirectionalManeuverType(Maneuver& maneuver,
                                                        prev_edge->travel_mode(), xedge_counts);
       }
       if ((maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kKeepStraight) &&
+          !maneuver.intersecting_forward_edge() &&
           ((xedge_counts.left > 0) || ((xedge_counts.right == 0) && (xedge_counts.left == 0)))) {
         maneuver.set_type(DirectionsLeg_Maneuver_Type_kContinue);
-        LOG_TRACE("ManeuverType=CONTINUE");
+        LOG_TRACE("ManeuverType=CONTINUE (Turn::Type::kSlightLeft)");
       } else {
         maneuver.set_type(DirectionsLeg_Maneuver_Type_kSlightLeft);
         LOG_TRACE("ManeuverType=SLIGHT_LEFT");
