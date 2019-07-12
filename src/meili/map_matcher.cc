@@ -64,7 +64,7 @@ Interpolation InterpolateMeasurement(const MapMatcher& mapmatcher,
                                      float match_measurement_distance,
                                      float match_measurement_time) {
   const baldr::GraphTile* tile(nullptr);
-  midgard::DistanceApproximator approximator(measurement.lnglat());
+  midgard::projector_t projector(measurement.lnglat());
 
   // Route distance from each segment begin to the beginning segment
   float segment_begin_route_distance = 0.f;
@@ -88,8 +88,7 @@ Interpolation InterpolateMeasurement(const MapMatcher& mapmatcher,
 
     midgard::PointLL projected_point;
     float sq_distance, offset;
-    std::tie(projected_point, sq_distance, std::ignore, offset) =
-        helpers::Project(measurement.lnglat(), shape, approximator);
+    std::tie(projected_point, sq_distance, std::ignore, offset) = helpers::Project(projector, shape);
 
     // Find out the correct offset
     if (!directededge->forward()) {
