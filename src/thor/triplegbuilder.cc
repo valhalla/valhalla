@@ -1063,13 +1063,14 @@ TripLegBuilder::Build(const AttributesController& controller,
       if (!directededge->forward()) {
         std::reverse(edge_shape.begin(), edge_shape.end());
       }
-      // We need to clip the shape if its at the beginning or end and is not full length
       float total = static_cast<float>(directededge->length());
-      // Trim the shape
-      TrimShape(edge_shape, is_first_edge ? start_pct * total : 0,
-                is_first_edge ? start_vrt : edge_shape.front(),
-                is_last_edge ? end_pct * total : total, is_last_edge ? end_vrt : edge_shape.back());
-      assert(edge_shape.size() > 1);
+      // Note: that this cannot be both the first and last edge, that special case is handled above
+      // Trim the shape at the front for the first edge
+      if (is_first_edge)
+        TrimShape(edge_shape, start_pct * total, start_vrt, total, edge_shape.back());
+      // And at the back if its the last edge
+      else
+        TrimShape(edge_shape, 0, edge_shape.front(), end_pct * total, end_vrt);
       // Keep the shape
       trip_shape.insert(trip_shape.end(), edge_shape.begin() + is_last_edge, edge_shape.end());
     } // Just get the shape in there in the right direction no clipping needed
