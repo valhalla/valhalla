@@ -55,10 +55,8 @@ CandidateQuery::WithinSquaredDistance(const midgard::PointLL& location,
       continue;
     }
 
-    // NOTE a pointer to edgeinfo is needed here because it returns
-    // an unique ptr
-    const auto edgeinfo = tile->edgeinfo(edge->edgeinfo_offset());
-    const auto& shape = edgeinfo.shape();
+    // Get at the shape
+    auto shape = tile->edgeinfo(edge->edgeinfo_offset()).lazy_shape();
     if (shape.empty()) {
       // Otherwise Project will fail
       continue;
@@ -67,7 +65,7 @@ CandidateQuery::WithinSquaredDistance(const midgard::PointLL& location,
     // Projection information
     midgard::PointLL point;
     float sq_distance = 0.f;
-    decltype(shape.size()) segment;
+    size_t segment;
     float offset;
 
     baldr::GraphId snapped_node;
@@ -94,6 +92,7 @@ CandidateQuery::WithinSquaredDistance(const midgard::PointLL& location,
 
     // Correlate its opp edge
     if (oppedge_included) {
+      // No need to project again if we already did it above
       if (!edge_included) {
         std::tie(point, sq_distance, segment, offset) = helpers::Project(projector, shape);
       }
