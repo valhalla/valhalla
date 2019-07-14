@@ -63,7 +63,7 @@ void TimeDepReverse::Init(const midgard::PointLL& origll, const midgard::PointLL
 // Expand from the node along the forward search path. Immediately expands
 // from the end node of any transition edge (so no transition edges are added
 // to the adjacency list or BDEdgeLabel list). Does not expand transition
-// edges if from_transition is false.
+// edges if from_transitioExpandReversen is false.
 void TimeDepReverse::ExpandReverse(GraphReader& graphreader,
                                    const GraphId& node,
                                    const BDEdgeLabel& pred,
@@ -290,7 +290,7 @@ TimeDepReverse::GetBestPath(valhalla::Location& origin,
     // invalid label indicates there are no edges that can be expanded.
     uint32_t predindex = adjacencylist_->pop();
     if (predindex == kInvalidLabel) {
-      LOG_ERROR("Route failed after iterations = " + std::to_string(edgelabels_rev_.size()));
+      LOG_ERROR("Route failed fter iterations = " + std::to_string(edgelabels_rev_.size()));
       return {};
     }
 
