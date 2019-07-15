@@ -1,4 +1,4 @@
-## Release Date: Unreleased Valhalla 3.0.6
+## Release Date: 2019-7-15 Valhalla 3.0.6
 * **Bug Fix**
    * FIXED: Admin name changes. [#1853](https://github.com/valhalla/valhalla/pull/1853) Ref: [#1854](https://github.com/valhalla/valhalla/issues/1854)
    * FIXED: valhalla_add_predicted_traffic was overcommitted while gathering stats. Added a clear. [#1857](https://github.com/valhalla/valhalla/pull/1857)
