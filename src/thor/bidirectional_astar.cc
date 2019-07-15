@@ -347,17 +347,16 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
   // prevents one tree from expanding much more quickly (if in a sparser
   // portion of the graph) rather than strictly alternating.
   // TODO - CostMatrix alternates, maybe should try alternating here?
-  int n = 1;
+  int n = 0;
   uint32_t forward_pred_idx, reverse_pred_idx;
   BDEdgeLabel fwd_pred, rev_pred;
   bool expand_forward = true;
   bool expand_reverse = true;
   while (true) {
     // Allow this process to be aborted
-    if (interrupt && (n % kInterruptIterationsInterval) == 0) {
+    if (interrupt && (++n % kInterruptIterationsInterval) == 0) {
       (*interrupt)();
     }
-    n++;
 
     // Get the next predecessor (based on which direction was expanded in prior step)
     if (expand_forward) {
@@ -367,7 +366,7 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
 
         // Terminate if the cost threshold has been exceeded.
         if (fwd_pred.sortcost() + cost_diff_ > threshold_) {
-          return {FormPath(graphreader)};
+          return FormPath(graphreader, options);
         }
 
         // Check if the edge on the forward search connects to a settled edge on the
@@ -380,15 +379,14 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
         }
       } else {
         // Search is exhausted. If a connection has been found, return it
-        if (best_connection_.cost < std::numeric_limits<float>::max()) {
-          return {FormPath(graphreader)};
-        } else {
+        if (best_connection_.cost == std::numeric_limits<float>::max()) {
           // No route found.
           LOG_ERROR("Bi-directional route failure - forward search exhausted: n = " +
                     std::to_string(edgelabels_forward_.size()) + "," +
                     std::to_string(edgelabels_reverse_.size()));
           return {};
         }
+        return FormPath(graphreader, options);
       }
     }
     if (expand_reverse) {
@@ -398,7 +396,7 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
 
         // Terminate if the cost threshold has been exceeded.
         if (rev_pred.sortcost() > threshold_) {
-          return {FormPath(graphreader)};
+          return FormPath(graphreader, options);
         }
 
         // Check if the edge on the reverse search connects to a settled edge on the
@@ -411,15 +409,14 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
         }
       } else {
         // Search is exhausted. If a connection has been found, return it
-        if (best_connection_.cost < std::numeric_limits<float>::max()) {
-          return {FormPath(graphreader)};
-        } else {
+        if (best_connection_.cost == std::numeric_limits<float>::max()) {
           // No route found.
           LOG_ERROR("Bi-directional route failure - reverse search exhausted: n = " +
                     std::to_string(edgelabels_reverse_.size()) + "," +
                     std::to_string(edgelabels_forward_.size()));
           return {};
         }
+        return FormPath(graphreader, options);
       }
     }
 
@@ -717,7 +714,7 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader, const valhalla
 }
 
 // Form the path from the adjacency list.
-std::vector<PathInfo> BidirectionalAStar::FormPath(GraphReader& graphreader) {
+std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& graphreader, const valhalla::Options&) {
   // Get the indexes where the connection occurs.
   uint32_t idx1 = edgestatus_forward_.Get(best_connection_.edgeid).index();
   uint32_t idx2 = edgestatus_reverse_.Get(best_connection_.opp_edgeid).index();
@@ -729,7 +726,9 @@ std::vector<PathInfo> BidirectionalAStar::FormPath(GraphReader& graphreader) {
             std::to_string(edgelabels_reverse_.size()));
 
   // Work backwards on the forward path
-  std::vector<PathInfo> path;
+  std::vector<std::vector<PathInfo>> paths;
+  paths.emplace_back();
+  std::vector<PathInfo>& path = paths.back();
   for (auto edgelabel_index = idx1; edgelabel_index != kInvalidLabel;
        edgelabel_index = edgelabels_forward_[edgelabel_index].predecessor()) {
     const BDEdgeLabel& edgelabel = edgelabels_forward_[edgelabel_index];
@@ -759,7 +758,7 @@ std::vector<PathInfo> BidirectionalAStar::FormPath(GraphReader& graphreader) {
       path.back().elapsed_time = edgelabels_reverse_[idx2].cost().secs;
       path.back().elapsed_cost = edgelabels_reverse_[idx2].cost().cost;
     }
-    return path;
+    return paths;
   }
 
   // Get the elapsed time at the end of the forward path. NOTE: PathInfo
@@ -799,7 +798,7 @@ std::vector<PathInfo> BidirectionalAStar::FormPath(GraphReader& graphreader) {
     tc.secs = edgelabel.transition_secs();
     tc.cost = edgelabel.transition_cost();
   }
-  return path;
+  return paths;
 }
 
 } // namespace thor
