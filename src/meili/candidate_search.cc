@@ -47,10 +47,10 @@ CandidateQuery::WithinSquaredDistance(const midgard::PointLL& location,
     if (!opp_edgeid.Is_Valid()) {
       continue;
     }
-    const auto opp_edge = tile->directededge(opp_edgeid);
+    const auto* opp_edge = tile->directededge(opp_edgeid);
 
     // Make sure it's the last one since we need the tile of this edge
-    const auto edge = reader_.directededge(edgeid, tile);
+    const auto* edge = reader_.directededge(edgeid, tile);
     if (!edge) {
       continue;
     }
