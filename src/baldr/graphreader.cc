@@ -498,8 +498,8 @@ std::vector<GraphId> GraphReader::RecoverShortcut(const GraphId& shortcut_id) {
       // NOTE: this fails in about .05% of cases where there are two candidates and its not clear
       // which edge is the right one. looking at shortcut builder its not obvious how this is possible
       // as it seems to terminate a shortcut if more than one edge pair can be contracted...
-      // NOTE: because we change the speed of the edge in graph enhancer we cant use speed as a reliable
-      // determining factor
+      // NOTE: because we change the speed of the edge in graph enhancer we cant use speed as a
+      // reliable determining factor
       if (begin_node != edge.endnode() && !edge.is_shortcut() &&
           (edge.forwardaccess() & kAutoAccess) && edge.exitsign() == shortcut->exitsign() &&
           edge.use() == shortcut->use() && edge.classification() == shortcut->classification() &&

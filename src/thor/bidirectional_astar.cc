@@ -714,7 +714,8 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader, const valhalla
 }
 
 // Form the path from the adjacency list.
-std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& graphreader, const valhalla::Options&) {
+std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& graphreader,
+                                                                const valhalla::Options&) {
   // Get the indexes where the connection occurs.
   uint32_t idx1 = edgestatus_forward_.Get(best_connection_.edgeid).index();
   uint32_t idx2 = edgestatus_reverse_.Get(best_connection_.opp_edgeid).index();
