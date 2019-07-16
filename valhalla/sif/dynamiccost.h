@@ -43,7 +43,7 @@ using NodeFilter = std::function<bool(const baldr::NodeInfo*)>;
 constexpr uint32_t kDefaultUnitSize = 1;
 
 // Maximum penalty allowed. Cannot be too high because sometimes one cannot avoid a particular
-// attribute or condition to complete a route.
+// attribute or condition to complete a route.1
 constexpr float kMaxPenalty = 12.0f * midgard::kSecPerHour; // 12 hours
 
 // Maximum ferry penalty (when use_ferry == 0). Can't make this too large

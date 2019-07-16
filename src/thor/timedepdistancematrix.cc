@@ -1,5 +1,5 @@
-#include "thor/timedistancematrix.h"
 #include "midgard/logging.h"
+#include "thor/timedistancematrix.h"
 #include <algorithm>
 #include <omp.h>
 #include <vector>
@@ -164,6 +164,22 @@ TimeDistanceMatrix::OneToMany(const valhalla::Location& origin,
   SetOriginOneToMany(graphreader, origin);
   SetDestinations(graphreader, locations);
 
+  // Set the origin timezone to be the timezone at the end node
+  origin_tz_index_ = edgelabels_.size() == 0 ? 0 : GetTimezone(graphreader, edgelabels_[0].endnode());
+  if (origin_tz_index_ == 0) {
+    // TODO - do not throw exception at this time
+    LOG_ERROR("Could not get the timezone at the origin");
+  }
+
+  // Set route start time (seconds from epoch)
+  uint64_t start_time =
+      DateTime::seconds_since_epoch(origin.date_time(),
+                                    DateTime::get_tz_db().from_index(origin_tz_index_));
+
+  // Set seconds from beginning of the week
+  seconds_of_week_ = DateTime::day_of_week(origin.date_time()) * midgard::kSecondsPerDay +
+                     DateTime::seconds_from_midnight(origin.date_time());
+
   // Find shortest path
   const GraphTile* tile;
   while (true) {
@@ -201,9 +217,14 @@ TimeDistanceMatrix::OneToMany(const valhalla::Location& origin,
     if (pred.cost().cost > current_cost_threshold_) {
       return FormTimeDistanceMatrix();
     }
-
+    // Set local time and seconds of the week.
+    uint64_t localtime = start_time + static_cast<uint32_t>(pred.cost().secs);
+    int32_t seconds_of_week = seconds_of_week_ + static_cast<uint32_t>(pred.cost().secs);
+    if (seconds_of_week > midgard::kSecondsPerWeek) {
+      seconds_of_week -= midgard::kSecondsPerWeek;
+    }
     // Expand forward from the end node of the predecessor edge.
-    ExpandForward(graphreader, pred.endnode(), pred, predindex, false);
+    ExpandForward(graphreader, pred.endnode(), pred, predindex, false, localtime, seconds_of_week);
   }
   return {}; // Should never get here
 }

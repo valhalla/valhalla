@@ -139,6 +139,8 @@ public:
   void Clear();
 
 protected:
+    uint32_t origin_tz_index_;
+    uint32_t seconds_of_week_;
   // Number of destinations that have been found and settled (least cost path
   // computed).
   uint32_t settled_count_;

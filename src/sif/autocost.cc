@@ -655,6 +655,8 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_minimum_candidate_road_class(
         rapidjson::get_optional<std::string>(*json_costing_options, "/minimum_candidate_road_class")
             .get_value_or("kServiceOther"));
+    pbf_costing_options->set_transport_type(
+        rapidjson::get_optional<std::string>(*json_costing_options, "/type").get_value_or("car"));
 
   } else {
     // Set pbf values to defaults
