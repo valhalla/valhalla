@@ -1,5 +1,5 @@
-#ifndef VALHALLA_THOR_TIMEDISTANCEMATRIX_H_
-#define VALHALLA_THOR_TIMEDISTANCEMATRIX_H_
+#ifndef VALHALLA_THOR_TIMEDEPDISTANCEMATRIX_H_
+#define VALHALLA_THOR_TIMEDEPDISTANCEMATRIX_H_
 
 #include <cstdint>
 #include <map>
@@ -50,13 +50,13 @@ struct Destination {
 };
 
 // Class to compute time + distance matrices among locations.
-class TimeDistanceMatrix {
+class TimeDependentDistanceMatrix {
 public:
   /**
    * Default constructor. Most internal values are set when a query is made so
    * the constructor mainly just sets some internals to a default empty value.
    */
-  TimeDistanceMatrix();
+  TimeDependentDistanceMatrix();
 
   /**
    * One to many time and distance cost matrix. Computes time and distance
@@ -139,8 +139,9 @@ public:
   void Clear();
 
 protected:
-    uint32_t origin_tz_index_;
-    uint32_t seconds_of_week_;
+  uint32_t origin_tz_index_;
+  uint32_t seconds_of_week_;
+  uint32_t dest_tz_index_;
   // Number of destinations that have been found and settled (least cost path
   // computed).
   uint32_t settled_count_;
@@ -187,7 +188,9 @@ protected:
                      const baldr::GraphId& node,
                      const sif::EdgeLabel& pred,
                      const uint32_t pred_idx,
-                     const bool from_transition);
+                     const bool from_transition,
+                     uint64_t localtime,
+                     int32_t seconds_of_week);
 
   /**
    * Expand from the node along the reverse search path. Immediately expands
@@ -205,7 +208,9 @@ protected:
                      const baldr::GraphId& node,
                      const sif::EdgeLabel& pred,
                      const uint32_t pred_idx,
-                     const bool from_transition);
+                     const bool from_transition,
+                     uint64_t localtime,
+                     int32_t seconds_of_week);
 
   /**
    * Get the cost threshold based on the current mode and the max arc-length distance
@@ -267,10 +272,10 @@ protected:
    * Form a time/distance matrix from the results.
    * @return  Returns a time distance matrix among locations.
    */
-  std::vector<TimeDistance> FormTimeDistanceMatrix();
+  std::vector<TimeDistance> FormTimeDependentDistanceMatrix();
 };
 
 } // namespace thor
 } // namespace valhalla
 
-#endif // VALHALLA_THOR_TIMEDISTANCEMATRIX_H_
+#endif // VALHALLA_THOR_TIMEDEPDISTANCEMATRIX_H_

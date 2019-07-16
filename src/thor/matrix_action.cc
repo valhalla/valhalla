@@ -2,7 +2,7 @@
 #include "sif/bicyclecost.h"
 #include "sif/pedestriancost.h"
 #include "thor/costmatrix.h"
-#include "thor/timedistancematrix.h"
+#include "thor/timedepdistancematrix.h"
 #include "thor/worker.h"
 #include "tyr/serializers.h"
 
@@ -48,7 +48,7 @@ std::string thor_worker_t::matrix(Api& request) {
                                  max_matrix_distance.find(costing)->second);
   };
   auto timedistancematrix = [&]() {
-    thor::TimeDistanceMatrix matrix;
+    thor::TimeDependentDistanceMatrix matrix;
     return matrix.SourceToTarget(options.sources(), options.targets(), *reader, mode_costing, mode,
                                  max_matrix_distance.find(costing)->second);
   };
@@ -71,7 +71,7 @@ std::string thor_worker_t::matrix(Api& request) {
           time_distances = timedistancematrix();
           break;
         default:
-          time_distances = costmatrix();
+          time_distances = timedistancematrix();
       }
       break;
     case COST_MATRIX:
