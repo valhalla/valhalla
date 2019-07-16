@@ -302,9 +302,8 @@ public:
   RoadClass maximum_candidate_road_class_;
   RoadClass minimum_candidate_road_class_;
   float kRightSideTurnCosts_[8];
-
   float kLeftSideTurnCosts_[8];
-
+  float kTCCrossing_;
   // Density factor used in edge transition costing
   std::vector<float> trans_density_factor_;
 };
@@ -421,7 +420,7 @@ AutoCost::AutoCost(const Costing costing, const Options& options)
   kLeftSideTurnCosts_[5] = tc_favorable_sharp;
   kLeftSideTurnCosts_[6] = tc_favorable;
   kLeftSideTurnCosts_[7] = tc_slight;
-
+  kTCCrossing_ = tc_crossing;
   // Preference to use toll roads (separate from toll booth penalty). Sets a toll
   // factor. A toll factor of 0 would indicate no adjustment to weighting for toll roads.
   // use_tolls = 1 would reduce weighting slightly (a negative delta) while
@@ -549,7 +548,7 @@ Cost AutoCost::TransitionCost(const baldr::DirectedEdge* edge,
   if (edge->stopimpact(idx) > 0) {
     float turn_cost;
     if (edge->edge_to_right(idx) && edge->edge_to_left(idx)) {
-      turn_cost = kTCCrossing;
+      turn_cost = kTCCrossing_;
     } else {
       turn_cost = (node->drive_on_right())
                       ? kRightSideTurnCosts_[static_cast<uint32_t>(edge->turntype(idx))]
@@ -587,7 +586,7 @@ Cost AutoCost::TransitionCostReverse(const uint32_t idx,
   if (edge->stopimpact(idx) > 0) {
     float turn_cost;
     if (edge->edge_to_right(idx) && edge->edge_to_left(idx)) {
-      turn_cost = kTCCrossing;
+      turn_cost = kTCCrossing_;
     } else {
       turn_cost = (node->drive_on_right())
                       ? kRightSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))]
