@@ -1,9 +1,13 @@
-## Release Date: Unreleased Valhalla 3.0.6
+## Release Date: 2019-7-15 Valhalla 3.0.6
 * **Bug Fix**
    * FIXED: Admin name changes. [#1853](https://github.com/valhalla/valhalla/pull/1853) Ref: [#1854](https://github.com/valhalla/valhalla/issues/1854)
    * FIXED: valhalla_add_predicted_traffic was overcommitted while gathering stats. Added a clear. [#1857](https://github.com/valhalla/valhalla/pull/1857)
    * FIXED: regression in map matching when moving to valhalla v3.0.0 [#1863](https://github.com/valhalla/valhalla/pull/1863)
+   * FIXED: last step shape in osrm serializer should be 2 of the same point [#1867](https://github.com/valhalla/valhalla/pull/1867)
+   * FIXED: Shape trimming at the beginning and ending of the route to not be degenerate [#1876](https://github.com/valhalla/valhalla/pull/1876)
+   * FIXED: Duplicate waypoints in osrm serializer [#1880](https://github.com/valhalla/valhalla/pull/1880)
    * FIXED: Updates for heading precision [#1881](https://github.com/valhalla/valhalla/pull/1881)
+   * FIXED: Map matching allowed untraversable edges at start of route [#1884](https://github.com/valhalla/valhalla/pull/1884)
 
 * **Enhancement**
    * ADDED: Use the same protobuf object the entire way through the request process [#1837](https://github.com/valhalla/valhalla/pull/1837)
