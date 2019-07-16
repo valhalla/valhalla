@@ -301,6 +301,9 @@ public:
   float surface_factor_;     // How much the surface factors are applied.
   RoadClass maximum_candidate_road_class_;
   RoadClass minimum_candidate_road_class_;
+  float kRightSideTurnCosts_[8];
+
+  float kLeftSideTurnCosts_[8];
 
   // Density factor used in edge transition costing
   std::vector<float> trans_density_factor_;
@@ -392,6 +395,32 @@ AutoCost::AutoCost(const Costing costing, const Options& options)
   } else {
     minimum_candidate_road_class_ = RoadClass::kServiceOther;
   }
+  float tc_straight = costing_options.tc_straight();
+  float tc_slight = costing_options.tc_slight();
+  float tc_favorable = costing_options.tc_favorable();
+  float tc_favorable_sharp = costing_options.tc_favorable_sharp();
+  float tc_crossing = costing_options.tc_crossing();
+  float tc_unfavorable = costing_options.tc_unfavorable();
+  float tc_unfavorable_sharp = costing_options.tc_unfavorable_sharp();
+  float tc_reverse = costing_options.tc_reverse();
+
+  kRightSideTurnCosts_[0] = tc_straight;
+  kRightSideTurnCosts_[1] = tc_slight;
+  kRightSideTurnCosts_[2] = tc_favorable;
+  kRightSideTurnCosts_[3] = tc_favorable_sharp;
+  kRightSideTurnCosts_[4] = tc_reverse;
+  kRightSideTurnCosts_[5] = tc_unfavorable_sharp;
+  kRightSideTurnCosts_[6] = tc_unfavorable;
+  kRightSideTurnCosts_[7] = tc_slight;
+
+  kLeftSideTurnCosts_[0] = tc_straight;
+  kLeftSideTurnCosts_[1] = tc_slight;
+  kLeftSideTurnCosts_[2] = tc_unfavorable;
+  kLeftSideTurnCosts_[3] = tc_unfavorable_sharp;
+  kLeftSideTurnCosts_[4] = tc_reverse;
+  kLeftSideTurnCosts_[5] = tc_favorable_sharp;
+  kLeftSideTurnCosts_[6] = tc_favorable;
+  kLeftSideTurnCosts_[7] = tc_slight;
 
   // Preference to use toll roads (separate from toll booth penalty). Sets a toll
   // factor. A toll factor of 0 would indicate no adjustment to weighting for toll roads.
@@ -523,8 +552,8 @@ Cost AutoCost::TransitionCost(const baldr::DirectedEdge* edge,
       turn_cost = kTCCrossing;
     } else {
       turn_cost = (node->drive_on_right())
-                      ? kRightSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))]
-                      : kLeftSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))];
+                      ? kRightSideTurnCosts_[static_cast<uint32_t>(edge->turntype(idx))]
+                      : kLeftSideTurnCosts_[static_cast<uint32_t>(edge->turntype(idx))];
     }
 
     // Separate time and penalty when traffic is present. With traffic, edge speeds account for
@@ -655,8 +684,38 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_minimum_candidate_road_class(
         rapidjson::get_optional<std::string>(*json_costing_options, "/minimum_candidate_road_class")
             .get_value_or("kServiceOther"));
-    pbf_costing_options->set_transport_type(
-        rapidjson::get_optional<std::string>(*json_costing_options, "/type").get_value_or("car"));
+
+    // tc_straight
+    pbf_costing_options->set_tc_straight(
+        rapidjson::get_optional<float>(*json_costing_options, "/tc_straight")
+            .get_value_or(kTCStraight));
+    // tc_slight
+    pbf_costing_options->set_tc_slight(
+        rapidjson::get_optional<float>(*json_costing_options, "/tc_slight").get_value_or(kTCSlight));
+    // tc_favorable
+    pbf_costing_options->set_tc_favorable(
+        rapidjson::get_optional<float>(*json_costing_options, "/tc_favorable")
+            .get_value_or(kTCFavorable));
+    // tc_favorable_sharp
+    pbf_costing_options->set_tc_favorable_sharp(
+        rapidjson::get_optional<float>(*json_costing_options, "/tc_favorable_sharp")
+            .get_value_or(kTCFavorableSharp));
+    // tc_crossing
+    pbf_costing_options->set_tc_crossing(
+        rapidjson::get_optional<float>(*json_costing_options, "/tc_crossing")
+            .get_value_or(kTCCrossing));
+    // tc_unfavorable
+    pbf_costing_options->set_tc_unfavorable(
+        rapidjson::get_optional<float>(*json_costing_options, "/tc_unfavorable")
+            .get_value_or(kTCUnfavorable));
+    // tc_unfavorable_sharp
+    pbf_costing_options->set_tc_unfavorable_sharp(
+        rapidjson::get_optional<float>(*json_costing_options, "/tc_unfavorable_sharp")
+            .get_value_or(kTCUnfavorableSharp));
+    // tc_reverse
+    pbf_costing_options->set_tc_reverse(
+        rapidjson::get_optional<float>(*json_costing_options, "/tc_reverse")
+            .get_value_or(kTCReverse));
 
   } else {
     // Set pbf values to defaults
@@ -676,6 +735,21 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_use_tolls(kDefaultUseTolls);
     pbf_costing_options->set_maximum_candidate_road_class("trunk");
     pbf_costing_options->set_minimum_candidate_road_class("kServiceOther");
+    pbf_costing_options->set_tc_straight(kTCStraight);
+    // tc_slight
+    pbf_costing_options->set_tc_slight(kTCSlight);
+    // tc_favorable
+    pbf_costing_options->set_tc_favorable(kTCFavorable);
+    // tc_favorable_sharp
+    pbf_costing_options->set_tc_favorable_sharp(kTCFavorableSharp);
+    // tc_crossing
+    pbf_costing_options->set_tc_crossing(kTCCrossing);
+    // tc_unfavorable
+    pbf_costing_options->set_tc_unfavorable(kTCUnfavorable);
+    // tc_unfavorable_sharp
+    pbf_costing_options->set_tc_unfavorable_sharp(kTCUnfavorableSharp);
+    // tc_reverse
+    pbf_costing_options->set_tc_reverse(kTCReverse);
   }
 }
 
