@@ -25,7 +25,7 @@ namespace {
 boost::property_tree::ptree get_conf() {
   std::stringstream ss;
   ss << R"({
-      "mjolnir":{"tile_dir":"foo/test/data/utrecht_tiles", "tile_extract": "/home/kkreiser/sandbox/planet_2019_05_29-00_00_23.tar", "concurrency": 1},
+      "mjolnir":{"tile_dir":"test/data/utrecht_tiles", "concurrency": 1},
       "loki":{
         "actions":["route"],
         "logging":{"long_request": 100},
