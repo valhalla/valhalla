@@ -80,44 +80,47 @@ GraphTile::GraphTile(const std::string& tile_dir, const GraphId& graphid) : head
       // read the compressed file into memory
       std::vector<char> compressed(std::istreambuf_iterator<char>(file),
                                    (std::istreambuf_iterator<char>()));
-
-      // for setting where to read compressed data from
-      auto src_func = [&compressed](z_stream& s) -> void {
-        s.next_in = static_cast<Byte*>(static_cast<void*>(compressed.data()));
-        s.avail_in = static_cast<unsigned int>(compressed.size());
-      };
-
-      // for setting where to write the uncompressed data to
-      graphtile_.reset(new std::vector<char>(0, 0));
-      auto dst_func = [this, &compressed](z_stream& s) -> int {
-        // if the whole buffer wasn't used we are done
-        auto size = graphtile_->size();
-        if (s.total_out < size)
-          graphtile_->resize(s.total_out);
-        // we need more space
-        else {
-          // assume we need 3.5x the space
-          graphtile_->resize(size + (compressed.size() * COMPRESSION_HINT));
-          // set the pointer to the next spot
-          s.next_out = static_cast<Byte*>(static_cast<void*>(graphtile_->data() + size));
-          s.avail_out = compressed.size() * COMPRESSION_HINT;
-        }
-        return Z_NO_FLUSH;
-      };
-
-      // Decompress tile into memory
-      if (!baldr::inflate(src_func, dst_func)) {
-        LOG_WARN("Failed to gunzip: " + file_location + ".gz");
-        graphtile_.reset();
-        return;
-      }
-
-      // Set pointers to internal data structures
-      Initialize(graphid, graphtile_->data(), graphtile_->size());
-    } else {
-      LOG_DEBUG("Tile " + file_location + " was not found");
+      // try to decompress it
+      DecompressTile(graphid, compressed);
     }
   }
+}
+
+bool GraphTile::DecompressTile(const GraphId& graphid, std::vector<char>& compressed) {
+  // for setting where to read compressed data from
+  auto src_func = [&compressed](z_stream& s) -> void {
+    s.next_in = static_cast<Byte*>(static_cast<void*>(compressed.data()));
+    s.avail_in = static_cast<unsigned int>(compressed.size());
+  };
+
+  // for setting where to write the uncompressed data to
+  graphtile_.reset(new std::vector<char>(0, 0));
+  auto dst_func = [this, &compressed](z_stream& s) -> int {
+    // if the whole buffer wasn't used we are done
+    auto size = graphtile_->size();
+    if (s.total_out < size)
+      graphtile_->resize(s.total_out);
+    // we need more space
+    else {
+      // assume we need 3.5x the space
+      graphtile_->resize(size + (compressed.size() * COMPRESSION_HINT));
+      // set the pointer to the next spot
+      s.next_out = static_cast<Byte*>(static_cast<void*>(graphtile_->data() + size));
+      s.avail_out = compressed.size() * COMPRESSION_HINT;
+    }
+    return Z_NO_FLUSH;
+  };
+
+  // Decompress tile into memory
+  if (!baldr::inflate(src_func, dst_func)) {
+    LOG_ERROR("Failed to gunzip " + FileSuffix(graphid, true));
+    graphtile_.reset();
+    return false;
+  }
+
+  // Set pointers to internal data structures
+  Initialize(graphid, graphtile_->data(), graphtile_->size());
+  return true;
 }
 
 GraphTile::GraphTile(const GraphId& graphid, char* ptr, size_t size) : header_(nullptr) {
@@ -148,12 +151,16 @@ GraphTile GraphTile::CacheTileURL(const std::string& tile_url,
     auto disk_location = cache_location + filesystem::path::preferred_separator + suffix;
     auto dir = filesystem::path(cache_location + filesystem::path::preferred_separator + suffix);
     dir.replace_filename("");
+    // try to cache it on disk so we dont have to keep doing this
     if (filesystem::create_directories(dir)) {
       std::ofstream file(disk_location, std::ios::out | std::ios::binary | std::ios::ate);
       file.write(&tile_data[0], tile_data.size());
       return GraphTile(cache_location, graphid);
-    } else
-      LOG_ERROR("Could not cache tile at " + disk_location);
+    } // try to decompress it in memory
+    else {
+      auto tile = GraphTile();
+      tile.DecompressTile(graphid, tile_data);
+    }
   }
   return {};
 }
