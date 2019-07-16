@@ -58,7 +58,7 @@ GraphTile::GraphTile(const std::string& tile_dir, const GraphId& graphid) : head
     return;
   }
 
-  // Open to the end of the file so we can immediately get size;
+  // Open to the end of the file so we can immediately get size
   std::string file_location =
       tile_dir + filesystem::path::preferred_separator + FileSuffix(graphid.Tile_Base());
   std::ifstream file(file_location, std::ios::in | std::ios::binary | std::ios::ate);
@@ -126,24 +126,36 @@ GraphTile::GraphTile(const GraphId& graphid, char* ptr, size_t size) : header_(n
   Initialize(graphid, ptr, size);
 }
 
-GraphTile::GraphTile(const std::string& tile_url, const GraphId& graphid, curler_t& curler) {
+GraphTile GraphTile::CacheTileURL(const std::string& tile_url,
+                                  const GraphId& graphid,
+                                  curler_t& curler,
+                                  bool gzipped,
+                                  const std::string& cache_location) {
   // Don't bother with invalid ids
   if (!graphid.Is_Valid() || graphid.level() > TileHierarchy::get_max_level()) {
-    return;
+    return {};
   }
 
-  // Get the response returned from curl
-  std::string uri =
-      tile_url + filesystem::path::preferred_separator + FileSuffix(graphid.Tile_Base());
+  // Get the response returned from curl, notice that when we expect zipped
+  // we tell curl not to unzip it, so that we can store it on the disk unzipped
+  auto suffix = FileSuffix(graphid.Tile_Base(), gzipped);
+  auto uri = tile_url + '/' + FileSuffix(graphid.Tile_Base(), gzipped);
   long http_code;
-  auto tile_data = curler(uri, http_code);
+  auto tile_data = curler(uri, http_code, !gzipped);
 
   // If its good try to use it
   if (http_code == 200) {
-    graphtile_ = std::make_shared<std::vector<char>>(std::move(tile_data));
-    Initialize(graphid, graphtile_->data(), graphtile_->size());
-    // TODO: optionally write the tile to disk?
+    auto disk_location = cache_location + filesystem::path::preferred_separator + suffix;
+    auto dir = filesystem::path(cache_location + filesystem::path::preferred_separator + suffix);
+    dir.replace_filename("");
+    if (filesystem::create_directories(dir)) {
+      std::ofstream file(disk_location, std::ios::out | std::ios::binary | std::ios::ate);
+      file.write(&tile_data[0], tile_data.size());
+      return GraphTile(cache_location, graphid);
+    } else
+      LOG_ERROR("Could not cache tile at " + disk_location);
   }
+  return {};
 }
 
 GraphTile::~GraphTile() {
@@ -303,7 +315,7 @@ void GraphTile::AssociateOneStopIds(const GraphId& graphid) {
   }
 }
 
-std::string GraphTile::FileSuffix(const GraphId& graphid) {
+std::string GraphTile::FileSuffix(const GraphId& graphid, bool gzipped) {
   /*
   if you have a graphid where level == 8 and tileid == 24134109851 you should get:
   8/024/134/109/851.gph since the number of levels is likely to be very small this limits the total
@@ -339,14 +351,15 @@ std::string GraphTile::FileSuffix(const GraphId& graphid) {
 
   // if it starts with a zero the pow trick doesn't work
   if (graphid.level() == 0) {
-    stream << static_cast<uint32_t>(std::pow(10, max_length)) + graphid.tileid() << ".gph";
+    stream << static_cast<uint32_t>(std::pow(10, max_length)) + graphid.tileid() << ".gph"
+           << (gzipped ? ".gz" : "");
     std::string suffix = stream.str();
     suffix[0] = '0';
     return suffix;
   }
   // it was something else
   stream << graphid.level() * static_cast<uint32_t>(std::pow(10, max_length)) + graphid.tileid()
-         << ".gph";
+         << ".gph" << (gzipped ? ".gz" : "");
   return stream.str();
 }
 

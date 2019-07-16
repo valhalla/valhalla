@@ -559,12 +559,14 @@ protected:
   static std::shared_ptr<const GraphReader::tile_extract_t>
   get_extract_instance(const boost::property_tree::ptree& pt);
 
+  // Information about where the tiles are kept
+  std::string tile_dir_;
+
   // Stuff for getting at remote tiles
   curler_t curler;
   std::string tile_url_;
+  bool tile_url_gz_;
   std::unordered_set<GraphId> _404s;
-  // Information about where the tiles are kept
-  std::string tile_dir_;
 
   std::unique_ptr<TileCache> cache_;
 };

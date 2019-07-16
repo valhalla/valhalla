@@ -60,12 +60,18 @@ public:
   GraphTile(const GraphId& graphid, char* ptr, size_t size);
 
   /**
-   * Constructor given the graph Id, in memory tile data
+   * Construct a tile given a url for the tile using curl
    * @param  tile_url URL of tile
    * @param  graphid Tile Id
    * @param  curler curler that will handle tile downloading
+   * @param  gzipped whether the file url will need the .gz extension
+   * @return whether or not the tile could be cached to disk
    */
-  GraphTile(const std::string& tile_url, const GraphId& graphid, curler_t& curler);
+  static GraphTile CacheTileURL(const std::string& tile_url,
+                                const GraphId& graphid,
+                                curler_t& curler,
+                                bool gzipped,
+                                const std::string& cache_location);
 
   /**
    * Destructor
@@ -75,9 +81,10 @@ public:
   /**
    * Gets the directory like filename suffix given the graphId
    * @param  graphid  Graph Id to construct filename.
+   * @param  gzipped  Modifies the suffix if you expect gzipped file names
    * @return  Returns a filename including directory path as a suffix to be appended to another uri
    */
-  static std::string FileSuffix(const GraphId& graphid);
+  static std::string FileSuffix(const GraphId& graphid, bool gzipped = false);
 
   /**
    * Get the tile Id given the full path to the file.

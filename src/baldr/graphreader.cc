@@ -171,8 +171,10 @@ TileCache* TileCacheFactory::createTileCache(const boost::property_tree::ptree& 
 
 // Constructor using separate tile files
 GraphReader::GraphReader(const boost::property_tree::ptree& pt)
-    : tile_url_(pt.get<std::string>("tile_url", "")), tile_dir_(pt.get<std::string>("tile_dir")),
-      tile_extract_(get_extract_instance(pt)), cache_(TileCacheFactory::createTileCache(pt)) {
+    : tile_extract_(get_extract_instance(pt)), tile_dir_(pt.get<std::string>("tile_dir")),
+      tile_url_(pt.get<std::string>("tile_url", "")),
+      tile_url_gz_(pt.get<bool>("tile_url_gz", false)),
+      cache_(TileCacheFactory::createTileCache(pt)) {
   // Reserve cache (based on whether using individual tile files or shared,
   // mmap'd file
   cache_->Reserve(tile_extract_->tiles.empty() ? AVERAGE_TILE_SIZE : AVERAGE_MM_TILE_SIZE);
@@ -229,6 +231,7 @@ const GraphTile* GraphReader::GetGraphTile(const GraphId& graphid) {
   // Check if the level/tileid combination is in the cache
   auto base = graphid.Tile_Base();
   if (auto cached = cache_->Get(base)) {
+    LOG_DEBUG("Memory cache hit " + GraphTile::FileSuffix(base));
     return cached;
   }
 
@@ -237,14 +240,17 @@ const GraphTile* GraphReader::GetGraphTile(const GraphId& graphid) {
     // Do we have this tile
     auto t = tile_extract_->tiles.find(base);
     if (t == tile_extract_->tiles.cend()) {
+      LOG_DEBUG("Memory map cache miss " + GraphTile::FileSuffix(base));
       return nullptr;
     }
 
     // This initializes the tile from mmap
     GraphTile tile(base, t->second.first, t->second.second);
     if (!tile.header()) {
+      LOG_DEBUG("Memory map cache miss " + GraphTile::FileSuffix(base));
       return nullptr;
     }
+    LOG_DEBUG("Memory map cache hit " + GraphTile::FileSuffix(base));
 
     // Keep a copy in the cache and return it
     size_t size = AVERAGE_MM_TILE_SIZE; // tile.end_offset();  // TODO what size??
@@ -252,18 +258,24 @@ const GraphTile* GraphReader::GetGraphTile(const GraphId& graphid) {
     return inserted;
   } // Try getting it from flat file
   else {
-    // This reads the tile from disk
+    // Try to get it from disk and if we cant..
     GraphTile tile(tile_dir_, base);
     if (!tile.header()) {
+      // See if we are configured for a url and if we are
       if (tile_url_.empty() || _404s.find(base) != _404s.end()) {
+        LOG_DEBUG("Url cache miss " + GraphTile::FileSuffix(base));
         return nullptr;
       }
-      tile = GraphTile(tile_url_, base, curler);
+      // Get it from the url and cache it to disk if you can
+      tile = GraphTile::CacheTileURL(tile_url_, base, curler, tile_url_gz_, tile_dir_);
       if (!tile.header()) {
         _404s.insert(base);
+        LOG_DEBUG("Url cache miss " + GraphTile::FileSuffix(base));
         return nullptr;
       }
-    }
+      LOG_DEBUG("Url cache hit " + GraphTile::FileSuffix(base));
+    } else
+      LOG_DEBUG("Disk cache hit " + GraphTile::FileSuffix(base));
 
     // Keep a copy in the cache and return it
     size_t size = tile.header()->end_offset();
