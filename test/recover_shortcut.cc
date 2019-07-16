@@ -143,18 +143,13 @@ void test_recover_shortcut_edges() {
             break;
           }
         }
-
         ++total;
-        if (bad == 100)
-          break;
       }
-      if (bad == 100)
-        break;
     }
-    if (bad == 100)
-      break;
   }
   printf("bad: %zu, total: %zu\n", bad, total);
+  if (double(bad) / double(total) > .001)
+    throw std::logic_error("More than 0.1% is too much");
 }
 
 } // namespace
