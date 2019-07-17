@@ -1380,20 +1380,25 @@ bool EnhancedTripLeg_Node::HasSpecifiedTurnXEdge(const Turn::Type turn_type,
 // TODO: refactor to clean up code
 uint32_t EnhancedTripLeg_Node::GetStraightestTraversableIntersectingEdgeTurnDegree(
     uint32_t from_heading,
-    const TripLeg_TravelMode travel_mode) {
+    const TripLeg_TravelMode travel_mode,
+    TripLeg_Use* use) {
 
   uint32_t staightest_turn_degree = 180; // Initialize to reverse turn degree
   uint32_t staightest_delta = 180;       // Initialize to reverse delta
 
   for (int i = 0; i < intersecting_edge_size(); ++i) {
-    uint32_t intersecting_turn_degree =
-        GetTurnDegree(from_heading, intersecting_edge(i).begin_heading());
-    bool xedge_traversable_outbound = GetIntersectingEdge(i)->IsTraversableOutbound(travel_mode);
+    auto xedge = GetIntersectingEdge(i);
+    uint32_t intersecting_turn_degree = GetTurnDegree(from_heading, xedge->begin_heading());
+    bool xedge_traversable_outbound = xedge->IsTraversableOutbound(travel_mode);
     uint32_t straight_delta = (intersecting_turn_degree > 180) ? (360 - intersecting_turn_degree)
                                                                : intersecting_turn_degree;
     if (xedge_traversable_outbound && (straight_delta < staightest_delta)) {
       staightest_delta = straight_delta;
       staightest_turn_degree = intersecting_turn_degree;
+      // If a use pointer was passed in and the intersecting edge has a use then set
+      if ((use != nullptr) && xedge->has_use()) {
+        *use = xedge->use();
+      }
     }
   }
   return staightest_turn_degree;
