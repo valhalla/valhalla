@@ -13,6 +13,9 @@ if(ENABLE_DATA_TOOLS)
   list(APPEND tests astar edgeinfobuilder graphbuilder graphparser graphtilebuilder graphreader isochrone predictive_traffic
     idtable matrix multipoint_routes names node_search recover_shortcut refs search servicedays shape_attributes signinfo thor_worker timedep_paths
     timeparsing trivial_paths uniquenames utrecht)
+  if(ENABLE_HTTP)
+    list(APPEND tests http_tiles)
+  endif()
 endif()
 
 if(ENABLE_SERVICES)
@@ -118,6 +121,9 @@ if(ENABLE_DATA_TOOLS)
   add_dependencies(run-shape_attributes utrecht_tiles)
   add_dependencies(run-thor_worker utrecht_tiles)
   add_dependencies(run-recover_shortcut utrecht_tiles)
+  if(ENABLE_HTTP)
+    add_dependencies(run-http_tiles utrecht_tiles)
+  endif()
 endif()
 
 if(ENABLE_SERVICES)

@@ -209,6 +209,7 @@ add_subdirectory(src)
 
 ## Python bindings
 if(ENABLE_PYTHON_BINDINGS)
+  #TODO: need to make sure they actually have python
   add_subdirectory(src/bindings/python)
   install(FILES COPYING ChangeLog
     DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/doc/python-valhalla"
