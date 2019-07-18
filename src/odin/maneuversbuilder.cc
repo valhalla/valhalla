@@ -1820,21 +1820,28 @@ bool ManeuversBuilder::IsPedestrianFork(int node_index,
 
   // Must be pedestrian travel mode
   // and the path turn degree is relative straight
-  if (is_pedestrian_travel_mode && is_relative_straight(path_turn_degree)) {
+  // and less than 3 intersecting edges
+  if (is_pedestrian_travel_mode && is_relative_straight(path_turn_degree) &&
+      (node->intersecting_edge_size() < 3)) {
     // If the above criteria is met then check the following criteria...
     IntersectingEdgeCounts xedge_counts;
     node->CalculateRightLeftIntersectingEdgeCounts(prev_edge->end_heading(), prev_edge->travel_mode(),
                                                    xedge_counts);
+
+    TripLeg_Use xedge_use;
     uint32_t straightest_traversable_xedge_turn_degree =
         node->GetStraightestTraversableIntersectingEdgeTurnDegree(prev_edge->end_heading(),
-                                                                  prev_edge->travel_mode());
+                                                                  prev_edge->travel_mode(),
+                                                                  &xedge_use);
     // if there is a similar traversable intersecting edge
-    // or there is a relative straight traversable intersecting edge
-    // previous edge is a roundabout and the current edge is not a roundabout
+    //    or there is a relative straight traversable intersecting edge
+    //    and the current edge use has to be the same as the intersecting edge use
+    // or the previous edge is a roundabout and the current edge is not a roundabout
     // then we have a pedestrian fork
-    if (((xedge_counts.left_similar_traversable_outbound > 0) ||
-         (xedge_counts.right_similar_traversable_outbound > 0)) ||
-        is_relative_straight(straightest_traversable_xedge_turn_degree) ||
+    if (((((xedge_counts.left_similar_traversable_outbound > 0) ||
+           (xedge_counts.right_similar_traversable_outbound > 0)) ||
+          is_relative_straight(straightest_traversable_xedge_turn_degree)) &&
+         (curr_edge->use() == xedge_use)) ||
         (prev_edge->roundabout() && !curr_edge->roundabout())) {
       return true;
     }
