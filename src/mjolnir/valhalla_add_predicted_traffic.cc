@@ -247,6 +247,8 @@ void update_valhalla_tiles(
     // Get the tile
     vj::GraphTileBuilder tile_builder(tile_dir, tile_start->first, false);
 
+    std::cout << tile_start->first << " " << tile_start->first.value << std::endl;
+
     // Update directed edges as needed
     uint32_t idx = 0;
     uint32_t count = 0;
@@ -299,7 +301,7 @@ int main(int argc, char** argv) {
 
   bpo::options_description options("valhalla_add_predicted_traffic " VALHALLA_VERSION "\n"
                                    "\n"
-                                   " Usage: valhalla_add_predicted_traffice [options]\n"
+                                   " Usage: valhalla_add_predicted_traffic [options]\n"
                                    "\n"
                                    "adds predicted traffic to valhalla tiles. "
                                    "\n"
