@@ -1,32 +1,23 @@
+#include "baldr/graphconstants.h"
+#include "baldr/graphid.h"
 #include "baldr/graphreader.h"
-#include "baldr/predictedspeeds.h"
-#include "midgard/logging.h"
-#include "mjolnir/graphtilebuilder.h"
-#include "mjolnir/util.h"
+#include "baldr/graphtile.h"
+#include "baldr/graphtileheader.h"
+
 #include <cmath>
 #include <cstdint>
 
 #include "baldr/rapidjson_utils.h"
-#include <boost/archive/iterators/base64_from_binary.hpp>
-#include <boost/archive/iterators/binary_from_base64.hpp>
-#include <boost/archive/iterators/transform_width.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/tokenizer.hpp>
-
-#include <deque>
-#include <future>
-#include <mutex>
-#include <queue>
 #include <string>
-#include <thread>
 
 #include "config.h"
 
 namespace vm = valhalla::midgard;
 namespace vb = valhalla::baldr;
-namespace vj = valhalla::mjolnir;
 
 namespace bpo = boost::program_options;
 namespace bpt = boost::property_tree;
@@ -49,18 +40,16 @@ int main(int argc, char** argv) {
                                    "\n");
 
   options.add_options()("help,h", "Print this help message.")("version,v",
-                                                              "Print the version of this software.")
-                                                              ("config,c",
-                                   boost::program_options::value<boost::filesystem::path>(
-                                       &config_file_path),
-                                   "Path to the json configuration file.")("inline-config,i",
-                                                                           boost::program_options::
-                                                                               value<std::string>(
-                                                                                   &inline_config),
-                                                                           "Inline json config.")
+                                                              "Print the version of this software.")(
+      "config,c", boost::program_options::value<boost::filesystem::path>(&config_file_path),
+      "Path to the json configuration file.")("inline-config,i",
+                                              boost::program_options::value<std::string>(
+                                                  &inline_config),
+                                              "Inline json config.")
       // positional arguments
-      ("bounding-box,b", bpo::value<std::string>(&bbox), "Bounding box to expand. The format is lower "
-          "left lng/lat and upper right lng/lat or min_x,min_y,max_x,max_y");
+      ("bounding-box,b", bpo::value<std::string>(&bbox),
+       "Bounding box to expand. The format is lower "
+       "left lng/lat and upper right lng/lat or min_x,min_y,max_x,max_y");
 
   bpo::positional_options_description pos_options;
   pos_options.add("bounding-box", 1);
@@ -116,10 +105,10 @@ int main(int argc, char** argv) {
   std::stringstream ss(bbox);
   std::vector<float> result;
 
-  while(ss.good()) {
-      std::string substr;
-      getline( ss, substr,',');
-      result.push_back(std::stof(substr));
+  while (ss.good()) {
+    std::string substr;
+    getline(ss, substr, ',');
+    result.push_back(std::stof(substr));
   }
 
   if (result.size() != 4) {
@@ -127,26 +116,26 @@ int main(int argc, char** argv) {
     return EXIT_FAILURE;
   }
 
-  AABB2<PointLL> bb{{result[0], result[1]}, {result[2], result[3]}};
-  AABB2<PointLL> expanded_bb = bb;
+  vm::AABB2<vm::PointLL> bb{{result[0], result[1]}, {result[2], result[3]}};
+  vm::AABB2<vm::PointLL> expanded_bb = bb;
 
   const auto& ids = vb::TileHierarchy::GetGraphIds(bb);
-  GraphReader reader(pt.get_child("mjolnir"));
+  vb::GraphReader reader(pt.get_child("mjolnir"));
   // Iterate through the tiles
   for (const auto& tile_id : ids) {
     if (reader.OverCommitted()) {
       reader.Clear();
     }
-    const GraphTile* tile = reader.GetGraphTile(tile_id);
+    const vb::GraphTile* tile = reader.GetGraphTile(tile_id);
     for (uint32_t i = 0; i < tile->header()->nodecount(); i++) {
-      const NodeInfo* node = tile->node(i);
+      const vb::NodeInfo* node = tile->node(i);
       if (bb.Contains(node->latlng(tile->header()->base_ll()))) {
         // Iterate through outbound driveable edges.
-        const DirectedEdge* diredge = tile->directededge(node->edge_index());
+        const vb::DirectedEdge* diredge = tile->directededge(node->edge_index());
         for (uint32_t i = 0; i < node->edge_count(); i++, diredge++) {
           // Skip opposing directed edge and any edge that is not a road. Skip any
           // edges that are not driveable outbound.
-          if (!(diredge->forwardaccess() & kAutoAccess)) {
+          if (!(diredge->forwardaccess() & vb::kAutoAccess)) {
             continue;
           }
 
@@ -158,7 +147,8 @@ int main(int argc, char** argv) {
       }
     }
   }
-  std::cout << std::to_string(expanded_bb.minx()) << "," << expanded_bb.miny() << "," << expanded_bb.maxx() << "," << expanded_bb.maxy() << std::endl;
+  std::cout << std::to_string(expanded_bb.minx()) << "," << expanded_bb.miny() << ","
+            << expanded_bb.maxx() << "," << expanded_bb.maxy() << std::endl;
 
   return EXIT_SUCCESS;
 }
