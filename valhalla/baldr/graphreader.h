@@ -376,6 +376,13 @@ public:
   GraphId GetShortcut(const GraphId& edgeid);
 
   /**
+   * Recovers the edges comprising a shortcut edge.
+   * @param  shortcutid  Graph Id of the shortcut edge.
+   * @return Returns the edgeids of the directed edges this shortcut represents.
+   */
+  std::vector<GraphId> RecoverShortcut(const GraphId& shortcutid);
+
+  /**
    * Convenience method to get the relative edge density (from the
    * begin node of an edge).
    * @param   edgeid  Graph Id of the directed edge.
