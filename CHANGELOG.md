@@ -1,8 +1,6 @@
-## Release Date: UNRELEASED Valhalla 3.0.7
+## Release Date: 2019-7-18 Valhalla 3.0.7
 * **Bug Fix**
    * FIXED: Fix pedestrian fork [#1886](https://github.com/valhalla/valhalla/pull/1886)
-
-* **Enhancement**
 
 ## Release Date: 2019-7-15 Valhalla 3.0.6
 * **Bug Fix**
