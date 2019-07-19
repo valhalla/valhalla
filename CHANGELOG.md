@@ -1,3 +1,7 @@
+## Release Date: 2019-7-18 Valhalla 3.0.7
+* **Bug Fix**
+   * FIXED: Fix pedestrian fork [#1886](https://github.com/valhalla/valhalla/pull/1886)
+
 ## Release Date: 2019-7-15 Valhalla 3.0.6
 * **Bug Fix**
    * FIXED: Admin name changes. [#1853](https://github.com/valhalla/valhalla/pull/1853) Ref: [#1854](https://github.com/valhalla/valhalla/issues/1854)

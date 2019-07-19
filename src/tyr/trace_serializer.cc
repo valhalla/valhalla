@@ -274,6 +274,10 @@ json::ArrayPtr serialize_edges(const AttributesController& controller,
                                static_cast<bool>(xedge.curr_name_consistency()));
             xedge_map->emplace("begin_heading", static_cast<uint64_t>(xedge.begin_heading()));
 
+            if (xedge.has_use()) {
+              xedge_map->emplace("use", to_string(static_cast<baldr::Use>(xedge.use())));
+            }
+
             intersecting_edge_array->emplace_back(xedge_map);
           }
           end_node_map->emplace("intersecting_edges", intersecting_edge_array);
