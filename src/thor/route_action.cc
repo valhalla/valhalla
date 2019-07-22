@@ -319,7 +319,7 @@ std::vector<std::vector<thor::PathInfo>> thor_worker_t::get_path(PathAlgorithm* 
 
     // Get the best path. Return if not empty (else return the original path)
     auto relaxed_paths =
-        path_algorithm->GetBestPath(origin, destination, *reader, mode_costing, mode);
+        path_algorithm->GetBestPath(origin, destination, *reader, mode_costing, mode, options);
     if (!relaxed_paths.empty()) {
       return relaxed_paths;
     }
