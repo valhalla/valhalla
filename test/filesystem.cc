@@ -52,11 +52,6 @@ void recursive_directory_listing() {
   std::vector<std::string> dirs{"foo", "foo" + s + "qux", "foo" + s + "quux"};
   std::vector<std::string> files{"foo" + s + "bar", "foo" + s + "bar",
                                  "foo" + s + "quux" + s + "corge"};
-  // cleanup from last run
-  for (const auto& f : files)
-    filesystem::remove(f);
-  for (auto d = dirs.rbegin(); d != dirs.rend(); ++d)
-    filesystem::remove(*d);
 
   // create them
   for (const auto& d : dirs)
@@ -85,6 +80,10 @@ void recursive_directory_listing() {
   // if we didnt get everything we have a problem
   if (!dirs.empty() || !files.empty())
     throw std::logic_error("we could find all files or dirs");
+
+  // cleanup the stuff we made, 2 tests in one ;o)
+  if (!filesystem::remove_all("foo"))
+    throw std::logic_error("why cant we delete the stuff we just made");
 }
 
 void remove_any() {
