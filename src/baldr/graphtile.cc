@@ -142,9 +142,9 @@ GraphTile GraphTile::CacheTileURL(const std::string& tile_url,
   // Get the response returned from curl, notice that when we expect zipped
   // we tell curl not to unzip it, so that we can store it on the disk unzipped
   auto suffix = FileSuffix(graphid.Tile_Base(), gzipped);
-  auto uri = tile_url + '/' + FileSuffix(graphid.Tile_Base(), gzipped);
+  auto uri = tile_url + '/' + suffix;
   long http_code;
-  auto tile_data = curler(uri, http_code, !gzipped);
+  auto tile_data = curler(uri, http_code, false);
 
   // If its good try to use it
   if (http_code == 200) {

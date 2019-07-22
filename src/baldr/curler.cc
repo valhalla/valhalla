@@ -68,7 +68,7 @@ struct curler_t::pimpl_t {
   // TODO: retries?
   std::vector<char> fetch(const std::string& url, long& http_code, bool allow_compression) {
     // sending content encoding as "" makes curl automatically handle identity, gzip or deflate
-    // sending nullptr tells curl to only accept identity (no decoding needed)
+    // sending nullptr tells curl to accept anything and do no automatic decoding of the content
     assert_curl(curl_easy_setopt(connection.get(), CURLOPT_ACCEPT_ENCODING,
                                  allow_compression ? ALL_ENCODINGS : nullptr),
                 "Failed to set content encoding header ");

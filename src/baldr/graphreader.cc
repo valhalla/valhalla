@@ -274,8 +274,9 @@ const GraphTile* GraphReader::GetGraphTile(const GraphId& graphid) {
         return nullptr;
       }
       LOG_DEBUG("Url cache hit " + GraphTile::FileSuffix(base));
-    } else
+    } else {
       LOG_DEBUG("Disk cache hit " + GraphTile::FileSuffix(base));
+    }
 
     // Keep a copy in the cache and return it
     size_t size = tile.header()->end_offset();

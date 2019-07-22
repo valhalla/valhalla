@@ -12,24 +12,84 @@
 #include <stdexcept>
 #include <thread>
 
+#include "baldr/compression_utils.h"
 #include "baldr/rapidjson_utils.h"
+#include "filesystem.h"
 #include "tyr/actor.h"
 
 using namespace prime_server;
 using namespace valhalla;
 
+std::string gzip(std::string& uncompressed) {
+  auto deflate_src = [&uncompressed](z_stream& s) {
+    s.next_in = static_cast<Byte*>(static_cast<void*>(&uncompressed[0]));
+    s.avail_in = static_cast<unsigned int>(uncompressed.size() * sizeof(std::string::value_type));
+    return Z_FINISH;
+  };
+
+  std::string compressed;
+  auto deflate_dst = [&compressed](z_stream& s) {
+    // if the whole buffer wasn't used we are done
+    auto size = compressed.size();
+    if (s.total_out < size)
+      compressed.resize(s.total_out);
+    // we need more space
+    else {
+      // set the pointer to the next spot
+      compressed.resize(size + 16);
+      s.next_out = static_cast<Byte*>(static_cast<void*>(&compressed[0] + size));
+      s.avail_out = 16;
+    }
+  };
+
+  if (!baldr::deflate(deflate_src, deflate_dst))
+    throw std::logic_error("Can't write gzipped string");
+
+  return compressed;
+}
+
 worker_t::result_t
 disk_work(const std::list<zmq::message_t>& job, void* request_info, worker_t::interrupt_function_t&) {
   worker_t::result_t result{false};
+  auto* info = static_cast<http_request_info_t*>(request_info);
   try {
-    // check the disk
-    auto request =
+    // parse request
+    const auto request =
         http_request_t::from_string(static_cast<const char*>(job.front().data()), job.front().size());
-    return http::disk_result(request, *static_cast<http_request_info_t*>(request_info),
-                             "test/data/utrecht_tiles");
+
+    // ends with gz
+    auto path = request.path;
+    auto gz = path.find("gz");
+    if (gz == path.size() - 2) {
+      gz = true;
+      path.pop_back();
+      path.pop_back();
+    } else
+      gz = false;
+
+    // load the file and gzip it if we have to
+    std::string full_path =
+        "test/data/utrecht_tiles" + (filesystem::path::preferred_separator + path);
+    std::fstream input(full_path, std::ios::in | std::ios::binary);
+    if (input) {
+      std::string buffer((std::istreambuf_iterator<char>(input)), std::istreambuf_iterator<char>());
+      if (gz)
+        buffer = gzip(buffer);
+      http_response_t response(200, "OK", buffer,
+                               headers_t{{"Content-Encoding", gz ? "gzip" : "identity"}});
+      response.from_info(*info);
+      result.messages = {response.to_string()};
+    }
   } catch (const std::exception& e) {
     http_response_t response(400, "Bad Request", e.what());
     response.from_info(*static_cast<http_request_info_t*>(request_info));
+    result.messages = {response.to_string()};
+  }
+
+  // 404 if its not there
+  if (result.messages.empty()) {
+    http_response_t response(404, "Not Found", "Not Found");
+    response.from_info(*info);
     result.messages = {response.to_string()};
   }
   return result;
@@ -45,7 +105,7 @@ void start_server() {
   // server
   std::thread server(std::bind(&http_server_t::serve,
                                http_server_t(context, "tcp://*:8004", proxy_endpoint + "_upstream",
-                                             result_endpoint, request_interrupt, true)));
+                                             result_endpoint, request_interrupt, false)));
   server.detach();
 
   // load balancer for file serving
@@ -107,13 +167,9 @@ boost::property_tree::ptree make_conf(const std::string& tile_dir, bool tile_url
     })");
 
   conf.get_child("mjolnir").put("tile_dir", tile_dir);
-  conf.get_child("mjolnir").put("tile_cache_gz", tile_url_gz);
+  conf.get_child("mjolnir").put("tile_url_gz", tile_url_gz);
   conf.get_child("loki").put("use_connectivity", false);
   return conf;
-}
-
-void clear_cache(const std::string& cache_dir) {
-  // TODO: get this from filesystem test sample code
 }
 
 void test_route(const std::string& tile_dir, bool tile_url_gz) {
@@ -132,21 +188,23 @@ void test_route(const std::string& tile_dir, bool tile_url_gz) {
 }
 
 void test_no_cache_no_gz() {
-  test_route("", false);
+  test_route("*", false);
 }
 
 void test_cache_no_gz() {
+  filesystem::remove_all("url_tile_cache");
   test_route("url_tile_cache", false);
-  clear_cache("url_tile_cache");
+  filesystem::remove_all("url_tile_cache");
 }
 
 void test_no_cache_gz() {
-  test_route("", true);
+  test_route("*", true);
 }
 
 void test_cache_gz() {
+  filesystem::remove_all("url_tile_cache");
   test_route("url_tile_cache", true);
-  clear_cache("url_tile_cache");
+  filesystem::remove_all("url_tile_cache");
 }
 
 int main() {
