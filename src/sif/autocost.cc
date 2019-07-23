@@ -589,8 +589,8 @@ Cost AutoCost::TransitionCostReverse(const uint32_t idx,
       turn_cost = kTCCrossing_;
     } else {
       turn_cost = (node->drive_on_right())
-                      ? kRightSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))]
-                      : kLeftSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))];
+                      ? kRightSideTurnCosts_[static_cast<uint32_t>(edge->turntype(idx))]
+                      : kLeftSideTurnCosts_[static_cast<uint32_t>(edge->turntype(idx))];
     }
     float seconds = trans_density_factor_[node->density()] * edge->stopimpact(idx) * turn_cost;
     c.secs += seconds;

@@ -56,10 +56,10 @@ namespace vj = valhalla::mjolnir;
 
 // #define MAKE_TEST_TILES
 
-#ifdef MAKE_TEST_TILES
+//#ifdef MAKE_TEST_TILES
 #include "mjolnir/directededgebuilder.h"
 #include "mjolnir/graphtilebuilder.h"
-#endif /* MAKE_TEST_TILES */
+//#endif /* MAKE_TEST_TILES */
 
 namespace {
 
@@ -89,7 +89,7 @@ namespace {
 //      \ /
 //       g
 //
-std::string test_dir = "test/fake_tiles_astar";
+std::string test_dir = VALHALLA_SOURCE_DIR "test/fake_tiles_astar";
 vb::GraphId tile_id = vb::TileHierarchy::GetGraphId({.125, .125}, 2);
 
 namespace node {
@@ -103,7 +103,7 @@ std::pair<vb::GraphId, vm::PointLL> f({tile_id.tileid(), tile_id.level(), 5}, {0
 std::pair<vb::GraphId, vm::PointLL> g({tile_id.tileid(), tile_id.level(), 6}, {0.05, 0.11});
 } // namespace node
 
-#ifdef MAKE_TEST_TILES
+//#ifdef MAKE_TEST_TILES
 void make_tile() {
   using namespace valhalla::mjolnir;
 
@@ -131,8 +131,8 @@ void make_tile() {
   auto add_edge = [&](const std::pair<vb::GraphId, vm::PointLL>& u,
                       const std::pair<vb::GraphId, vm::PointLL>& v, const uint32_t name,
                       const uint32_t opposing, const bool forward) {
-    DirectedEdgeBuilder edge_builder({}, v.first, forward, u.second.Distance(v.second) + .5, 1, 1, 1,
-                                     {}, {}, 0, false, 0, 0);
+    DirectedEdgeBuilder edge_builder({}, v.first, forward, u.second.Distance(v.second) + .5, 1, 1, {},
+                                     {}, 0, false, 0, 0);
     edge_builder.set_opp_index(opposing);
     edge_builder.set_forwardaccess(vb::kAllAccess);
     std::vector<vm::PointLL> shape = {u.second, u.second.MidPoint(v.second), v.second};
@@ -142,7 +142,7 @@ void make_tile() {
     // make more complex edge geom so that there are 3 segments, affine combination doesnt properly
     // handle arcs but who cares
     uint32_t edge_info_offset =
-        tile.AddEdgeInfo(name, u.first, v.first, 123, 0, 0, shape, {std::to_string(name)}, 0, add);
+        tile.AddEdgeInfo(name, u.first, v.first, 123, 0, 0, 0, shape, {std::to_string(name)}, 0, add);
     edge_builder.set_edgeinfo_offset(edge_info_offset);
     tile.directededges().emplace_back(std::move(edge_builder));
   };
@@ -184,7 +184,7 @@ void make_tile() {
   auto bins = GraphTileBuilder::BinEdges(&reloaded, tweeners);
   GraphTileBuilder::AddBins(test_dir, &reloaded, bins);
 }
-#endif /* MAKE_TEST_TILES */
+//#endif /* MAKE_TEST_TILES */
 
 const std::string config_file = "test/test_trivial_path";
 
@@ -437,10 +437,10 @@ void DoConfig() {
 int main() {
   test::suite suite("astar");
 
-#ifdef MAKE_TEST_TILES
+  //#ifdef MAKE_TEST_TILES
   // TODO: move to mjolnir?
   suite.test(TEST_CASE(make_tile));
-#endif /* MAKE_TEST_TILES */
+  //#endif /* MAKE_TEST_TILES */
 
   suite.test(TEST_CASE(TestTrivialPath));
   suite.test(TEST_CASE(TestTrivialPathTriangle));
