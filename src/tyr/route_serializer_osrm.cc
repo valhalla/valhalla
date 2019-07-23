@@ -693,9 +693,33 @@ std::string turn_modifier(const uint32_t in_brg, const uint32_t out_brg) {
   }
 }
 
+// Get the merge turn modifier based on intersecting edges
+// TODO: Handles most cases now - in the future we can have separate merge maneuver types
+std::string merge_turn_modifier(const valhalla::DirectionsLeg::Maneuver& maneuver,
+                                valhalla::odin::EnhancedTripLeg* etp) {
+  auto prev_edge = etp->GetPrevEdge(maneuver.begin_path_index());
+  auto curr_edge = etp->GetCurrEdge(maneuver.begin_path_index());
+
+  IntersectingEdgeCounts xedge_counts;
+  auto node = etp->GetEnhancedNode(maneuver.begin_path_index());
+  node->CalculateRightLeftIntersectingEdgeCounts(prev_edge->end_heading(), prev_edge->travel_mode(),
+                                                 xedge_counts);
+  if ((xedge_counts.left > 0) && (xedge_counts.left_similar == 0) && (xedge_counts.right == 0)) {
+    // If intersecting edge to the left and not the right then merge to the left
+    return "slight left";
+  } else if ((xedge_counts.right > 0) && (xedge_counts.right_similar == 0) &&
+             (xedge_counts.left == 0)) {
+    // If intersecting edge to the right and not the left then merge to the right
+    return "slight right";
+  }
+  // default to straight for now
+  return "straight";
+}
+
 // Get the turn modifier based on the maneuver type
 // or if needed, the incoming edge bearing and outgoing edge bearing.
 std::string turn_modifier(const valhalla::DirectionsLeg::Maneuver& maneuver,
+                          valhalla::odin::EnhancedTripLeg* etp,
                           const uint32_t in_brg,
                           const uint32_t out_brg,
                           const bool arrive_maneuver) {
@@ -740,6 +764,7 @@ std::string turn_modifier(const valhalla::DirectionsLeg::Maneuver& maneuver,
       else
         return "slight left";
     case valhalla::DirectionsLeg_Maneuver_Type_kMerge:
+      return merge_turn_modifier(maneuver, etp);
     case valhalla::DirectionsLeg_Maneuver_Type_kRoundaboutEnter:
     case valhalla::DirectionsLeg_Maneuver_Type_kRoundaboutExit:
     case valhalla::DirectionsLeg_Maneuver_Type_kFerryEnter:
@@ -801,7 +826,7 @@ json::MapPtr osrm_maneuver(const valhalla::DirectionsLeg::Maneuver& maneuver,
 
   std::string modifier;
   if (!depart_maneuver) {
-    modifier = turn_modifier(maneuver, in_brg, out_brg, arrive_maneuver);
+    modifier = turn_modifier(maneuver, etp, in_brg, out_brg, arrive_maneuver);
     if (!modifier.empty())
       osrm_man->emplace("modifier", modifier);
   }
