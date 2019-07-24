@@ -23,6 +23,41 @@ namespace bpo = boost::program_options;
 namespace bpt = boost::property_tree;
 namespace bfs = boost::filesystem;
 
+// expand the bb
+vm::AABB2<vm::PointLL> expand(const vm::AABB2<vm::PointLL>& bb, const bpt::ptree& pt) {
+  vm::AABB2<vm::PointLL> expanded_bb = bb;
+
+  const auto& ids = vb::TileHierarchy::GetGraphIds(bb);
+  vb::GraphReader reader(pt.get_child("mjolnir"));
+  // Iterate through the tiles
+  for (const auto& tile_id : ids) {
+    if (reader.OverCommitted()) {
+      reader.Clear();
+    }
+    const vb::GraphTile* tile = reader.GetGraphTile(tile_id);
+    for (uint32_t i = 0; i < tile->header()->nodecount(); i++) {
+      const vb::NodeInfo* node = tile->node(i);
+      if (bb.Contains(node->latlng(tile->header()->base_ll()))) {
+        // Iterate through outbound driveable edges.
+        const vb::DirectedEdge* diredge = tile->directededge(node->edge_index());
+        for (uint32_t i = 0; i < node->edge_count(); i++, diredge++) {
+          // Skip opposing directed edge and any edge that is not a road. Skip any
+          // edges that are not driveable outbound.
+          if (!(diredge->forwardaccess() & vb::kAutoAccess)) {
+            continue;
+          }
+
+          auto shape = tile->edgeinfo(diredge->edgeinfo_offset()).shape();
+          for (const auto& s : shape) {
+            expanded_bb.Expand(s);
+          }
+        }
+      }
+    }
+  }
+  return expanded_bb;
+}
+
 int main(int argc, char** argv) {
   std::string config, bbox;
   std::string inline_config;
@@ -117,38 +152,10 @@ int main(int argc, char** argv) {
   }
 
   vm::AABB2<vm::PointLL> bb{{result[0], result[1]}, {result[2], result[3]}};
-  vm::AABB2<vm::PointLL> expanded_bb = bb;
+  bb = expand(bb, pt);
 
-  const auto& ids = vb::TileHierarchy::GetGraphIds(bb);
-  vb::GraphReader reader(pt.get_child("mjolnir"));
-  // Iterate through the tiles
-  for (const auto& tile_id : ids) {
-    if (reader.OverCommitted()) {
-      reader.Clear();
-    }
-    const vb::GraphTile* tile = reader.GetGraphTile(tile_id);
-    for (uint32_t i = 0; i < tile->header()->nodecount(); i++) {
-      const vb::NodeInfo* node = tile->node(i);
-      if (bb.Contains(node->latlng(tile->header()->base_ll()))) {
-        // Iterate through outbound driveable edges.
-        const vb::DirectedEdge* diredge = tile->directededge(node->edge_index());
-        for (uint32_t i = 0; i < node->edge_count(); i++, diredge++) {
-          // Skip opposing directed edge and any edge that is not a road. Skip any
-          // edges that are not driveable outbound.
-          if (!(diredge->forwardaccess() & vb::kAutoAccess)) {
-            continue;
-          }
-
-          auto shape = tile->edgeinfo(diredge->edgeinfo_offset()).shape();
-          for (const auto& s : shape) {
-            expanded_bb.Expand(s);
-          }
-        }
-      }
-    }
-  }
-  std::cout << std::to_string(expanded_bb.minx()) << "," << expanded_bb.miny() << ","
-            << expanded_bb.maxx() << "," << expanded_bb.maxy() << std::endl;
+  std::cout << std::to_string(bb.minx()) << "," << bb.miny() << ","
+            << bb.maxx() << "," << bb.maxy() << std::endl;
 
   return EXIT_SUCCESS;
 }
