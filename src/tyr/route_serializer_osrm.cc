@@ -728,10 +728,10 @@ std::string turn_modifier(const valhalla::DirectionsLeg::Maneuver& maneuver,
     case valhalla::DirectionsLeg_Maneuver_Type_kDestination:
       return "";
     case valhalla::DirectionsLeg_Maneuver_Type_kSlightRight:
+    case valhalla::DirectionsLeg_Maneuver_Type_kStayRight:
     case valhalla::DirectionsLeg_Maneuver_Type_kExitRight:
       return "slight right";
     case valhalla::DirectionsLeg_Maneuver_Type_kRight:
-    case valhalla::DirectionsLeg_Maneuver_Type_kStayRight:
     case valhalla::DirectionsLeg_Maneuver_Type_kStartRight:
     case valhalla::DirectionsLeg_Maneuver_Type_kDestinationRight:
       return "right";
@@ -746,11 +746,11 @@ std::string turn_modifier(const valhalla::DirectionsLeg::Maneuver& maneuver,
     case valhalla::DirectionsLeg_Maneuver_Type_kSharpLeft:
       return "sharp left";
     case valhalla::DirectionsLeg_Maneuver_Type_kLeft:
-    case valhalla::DirectionsLeg_Maneuver_Type_kStayLeft:
     case valhalla::DirectionsLeg_Maneuver_Type_kStartLeft:
     case valhalla::DirectionsLeg_Maneuver_Type_kDestinationLeft:
       return "left";
     case valhalla::DirectionsLeg_Maneuver_Type_kSlightLeft:
+    case valhalla::DirectionsLeg_Maneuver_Type_kStayLeft:
     case valhalla::DirectionsLeg_Maneuver_Type_kExitLeft:
       return "slight left";
     case valhalla::DirectionsLeg_Maneuver_Type_kRampRight:
