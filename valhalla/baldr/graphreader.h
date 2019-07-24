@@ -11,6 +11,8 @@
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphtile.h>
 #include <valhalla/baldr/tilehierarchy.h>
+#include <valhalla/midgard/aabb2.h>
+#include <valhalla/midgard/pointll.h>
 
 namespace valhalla {
 namespace baldr {
@@ -558,6 +560,16 @@ public:
   const std::string& tile_dir() const {
     return tile_dir_;
   }
+
+  /**
+   * Given an input bounding box, the reader will query the tile set to find the minimum
+   * bounding box which entirely encloses all the edges who have begin nodes in the input
+   * bounding box. If there is no data enclosed in the region the bounding box will have
+   * invalid coordinates.
+   *
+   * @param bb   the input bounding box which is used to find begin nodes of edges
+   */
+  midgard::AABB2<midgard::PointLL> GetMinimumBoundingBox(const midgard::AABB2<midgard::PointLL>& bb);
 
 protected:
   // (Tar) extract of tiles - the contents are empty if not being used

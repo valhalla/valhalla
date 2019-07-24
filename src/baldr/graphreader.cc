@@ -11,7 +11,7 @@
 #include "baldr/connectivity_map.h"
 #include "filesystem.h"
 
-using namespace valhalla::baldr;
+using namespace valhalla::midgard;
 
 namespace {
 constexpr size_t DEFAULT_MAX_CACHE_SIZE = 1073741824; // 1 gig
@@ -643,6 +643,44 @@ std::unordered_set<GraphId> GraphReader::GetTileSet(const uint8_t level) const {
     }
   }
   return tiles;
+}
+
+AABB2<PointLL> GraphReader::GetMinimumBoundingBox(const AABB2<PointLL>& bb) {
+  // Iterate through all the tiles that intersect this bounding box
+  const auto& ids = TileHierarchy::GetGraphIds(bb);
+  AABB2<PointLL> min_bb{PointLL{}, PointLL{}};
+  for (const auto& tile_id : ids) {
+    // Don't take too much ram
+    if (OverCommitted())
+      Clear();
+
+    // Look at every node in the tile
+    const auto* tile = GetGraphTile(tile_id);
+    for (uint32_t i = 0; i < tile->header()->nodecount(); i++) {
+
+      // If the node is within the input bounding box
+      const auto* node = tile->node(i);
+      auto node_ll = node->latlng(tile->header()->base_ll());
+      if (bb.Contains(node_ll)) {
+
+        // If we havent done anything with our bbox yet initialize it
+        if (!min_bb.minpt().IsValid())
+          min_bb = AABB2<PointLL>(node_ll, node_ll);
+
+        // Look at the shape of each edge leaving the node
+        const auto* diredge = tile->directededge(node->edge_index());
+        for (uint32_t i = 0; i < node->edge_count(); i++, diredge++) {
+          auto shape = tile->edgeinfo(diredge->edgeinfo_offset()).lazy_shape();
+          while (!shape.empty()) {
+            min_bb.Expand(shape.pop());
+          }
+        }
+      }
+    }
+  }
+
+  // give back the expanded box
+  return min_bb;
 }
 
 } // namespace baldr

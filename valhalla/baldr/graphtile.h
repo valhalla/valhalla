@@ -239,6 +239,15 @@ public:
   }
 
   /**
+   * Get an iterable set of transitions from a node in this tile
+   * @param  node  GraphId of the node from which the transitions leave
+   * @return returns an iterable collection of node transitions
+   */
+  midgard::iterable_t<const NodeInfo> GetNodes() const {
+    return midgard::iterable_t<const NodeInfo>{nodes_, header_->nodecount()};
+  }
+
+  /**
    * Get a pointer to edge info.
    * @return  Returns edge info.
    */

@@ -1,69 +1,20 @@
-#include "baldr/graphconstants.h"
-#include "baldr/graphid.h"
 #include "baldr/graphreader.h"
-#include "baldr/graphtile.h"
-#include "baldr/graphtileheader.h"
-
-#include <cmath>
-#include <cstdint>
-
 #include "baldr/rapidjson_utils.h"
-#include <boost/filesystem.hpp>
+#include "filesystem.h"
+
 #include <boost/program_options.hpp>
 #include <boost/property_tree/ptree.hpp>
-#include <boost/tokenizer.hpp>
 #include <string>
 
 #include "config.h"
 
-namespace vm = valhalla::midgard;
-namespace vb = valhalla::baldr;
-
 namespace bpo = boost::program_options;
 namespace bpt = boost::property_tree;
-namespace bfs = boost::filesystem;
-
-// expand the bb
-vm::AABB2<vm::PointLL> expand(const vm::AABB2<vm::PointLL>& bb, const bpt::ptree& pt) {
-  vm::AABB2<vm::PointLL> expanded_bb = bb;
-
-  const auto& ids = vb::TileHierarchy::GetGraphIds(bb);
-  vb::GraphReader reader(pt.get_child("mjolnir"));
-  // Iterate through the tiles
-  for (const auto& tile_id : ids) {
-    if (reader.OverCommitted()) {
-      reader.Clear();
-    }
-    const vb::GraphTile* tile = reader.GetGraphTile(tile_id);
-    for (uint32_t i = 0; i < tile->header()->nodecount(); i++) {
-      const vb::NodeInfo* node = tile->node(i);
-      if (bb.Contains(node->latlng(tile->header()->base_ll()))) {
-        // Iterate through outbound driveable edges.
-        const vb::DirectedEdge* diredge = tile->directededge(node->edge_index());
-        for (uint32_t i = 0; i < node->edge_count(); i++, diredge++) {
-          // Skip opposing directed edge and any edge that is not a road. Skip any
-          // edges that are not driveable outbound.
-          if (!(diredge->forwardaccess() & vb::kAutoAccess)) {
-            continue;
-          }
-
-          auto shape = tile->edgeinfo(diredge->edgeinfo_offset()).shape();
-          for (const auto& s : shape) {
-            expanded_bb.Expand(s);
-          }
-        }
-      }
-    }
-  }
-  return expanded_bb;
-}
 
 int main(int argc, char** argv) {
   std::string config, bbox;
   std::string inline_config;
-  boost::filesystem::path config_file_path;
-
-  unsigned int num_threads = 1;
+  std::string config_file_path;
 
   bpo::options_description options("valhalla_expand_bounding_box " VALHALLA_VERSION "\n"
                                    "\n"
@@ -74,17 +25,15 @@ int main(int argc, char** argv) {
                                    "\n"
                                    "\n");
 
-  options.add_options()("help,h", "Print this help message.")("version,v",
-                                                              "Print the version of this software.")(
-      "config,c", boost::program_options::value<boost::filesystem::path>(&config_file_path),
-      "Path to the json configuration file.")("inline-config,i",
-                                              boost::program_options::value<std::string>(
-                                                  &inline_config),
-                                              "Inline json config.")
-      // positional arguments
-      ("bounding-box,b", bpo::value<std::string>(&bbox),
-       "Bounding box to expand. The format is lower "
-       "left lng/lat and upper right lng/lat or min_x,min_y,max_x,max_y");
+  auto adder = options.add_options();
+  adder("help,h", "Print this help message.");
+  adder("version,v", "Print the version of this software.");
+  adder("config,c", bpo::value<std::string>(&config_file_path),
+        "Path to the json configuration file.");
+  adder("inline-config,i", bpo::value<std::string>(&inline_config), "Inline json config.");
+  adder(
+      "bounding-box,b", bpo::value<std::string>(&bbox),
+      "Bounding box to expand. The format is lower left lng/lat and upper right lng/lat or min_x,min_y,max_x,max_y");
 
   bpo::positional_options_description pos_options;
   pos_options.add("bounding-box", 1);
@@ -120,8 +69,8 @@ int main(int argc, char** argv) {
     std::stringstream ss;
     ss << inline_config;
     rapidjson::read_json(ss, pt);
-  } else if (vm.count("config") && boost::filesystem::is_regular_file(config_file_path)) {
-    rapidjson::read_json(config_file_path.string(), pt);
+  } else if (vm.count("config") && filesystem::exists(config_file_path)) {
+    rapidjson::read_json(config_file_path, pt);
   } else {
     std::cerr << "Configuration is required\n\n" << options << "\n\n";
     return EXIT_FAILURE;
@@ -151,11 +100,13 @@ int main(int argc, char** argv) {
     return EXIT_FAILURE;
   }
 
-  vm::AABB2<vm::PointLL> bb{{result[0], result[1]}, {result[2], result[3]}};
-  bb = expand(bb, pt);
+  valhalla::midgard::AABB2<valhalla::midgard::PointLL> bb{{result[0], result[1]},
+                                                          {result[2], result[3]}};
+  valhalla::baldr::GraphReader reader(pt.get_child("mjolnir"));
+  bb = reader.GetMinimumBoundingBox(bb);
 
-  std::cout << std::to_string(bb.minx()) << "," << bb.miny() << ","
-            << bb.maxx() << "," << bb.maxy() << std::endl;
+  std::cout << std::fixed << std::setprecision(6) << bb.minx() << "," << bb.miny() << "," << bb.maxx()
+            << "," << bb.maxy() << std::endl;
 
   return EXIT_SUCCESS;
 }
