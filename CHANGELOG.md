@@ -1,3 +1,7 @@
+## Release Date: UNRELEASED Valhalla 3.0.8
+* **Bug Fix**
+   * FIXED: Added logic to detect if user is to merge to the left or right [#1892](https://github.com/valhalla/valhalla/pull/1892)
+
 ## Release Date: 2019-7-18 Valhalla 3.0.7
 * **Bug Fix**
    * FIXED: Fix pedestrian fork [#1886](https://github.com/valhalla/valhalla/pull/1886)
