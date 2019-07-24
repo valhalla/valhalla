@@ -247,8 +247,6 @@ void update_valhalla_tiles(
     // Get the tile
     vj::GraphTileBuilder tile_builder(tile_dir, tile_start->first, false);
 
-    std::cout << tile_start->first << " " << tile_start->first.value << std::endl;
-
     // Update directed edges as needed
     uint32_t idx = 0;
     uint32_t count = 0;
