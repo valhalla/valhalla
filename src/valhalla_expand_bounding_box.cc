@@ -24,7 +24,7 @@ namespace bpt = boost::property_tree;
 namespace bfs = boost::filesystem;
 
 // expand the bb
-void expand(const vm::AABB2<vm::PointLL>& bb, const bpt::ptree& pt) {
+vm::AABB2<vm::PointLL> expand(const vm::AABB2<vm::PointLL>& bb, const bpt::ptree& pt) {
   vm::AABB2<vm::PointLL> expanded_bb = bb;
 
   const auto& ids = vb::TileHierarchy::GetGraphIds(bb);
@@ -55,8 +55,7 @@ void expand(const vm::AABB2<vm::PointLL>& bb, const bpt::ptree& pt) {
       }
     }
   }
-  std::cout << std::to_string(expanded_bb.minx()) << "," << expanded_bb.miny() << ","
-            << expanded_bb.maxx() << "," << expanded_bb.maxy() << std::endl;
+  return expanded_bb;
 }
 
 int main(int argc, char** argv) {
@@ -153,7 +152,10 @@ int main(int argc, char** argv) {
   }
 
   vm::AABB2<vm::PointLL> bb{{result[0], result[1]}, {result[2], result[3]}};
-  expand(bb, pt);
+  bb = expand(bb, pt);
+
+  std::cout << std::to_string(bb.minx()) << "," << bb.miny() << ","
+            << bb.maxx() << "," << bb.maxy() << std::endl;
 
   return EXIT_SUCCESS;
 }
