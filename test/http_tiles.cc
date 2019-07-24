@@ -59,13 +59,11 @@ disk_work(const std::list<zmq::message_t>& job, void* request_info, worker_t::in
 
     // ends with gz
     auto path = request.path;
-    auto gz = path.find("gz");
-    if (gz == path.size() - 2) {
-      gz = true;
-      path.pop_back();
-      path.pop_back();
-    } else
-      gz = false;
+    auto gz = path.find(".gz");
+    if (gz == path.size() - 3)
+      path = path.substr(0, gz);
+    else
+      gz = 0;
 
     // load the file and gzip it if we have to
     std::string full_path =
@@ -166,7 +164,8 @@ boost::property_tree::ptree make_conf(const std::string& tile_dir, bool tile_url
       }
     })");
 
-  conf.get_child("mjolnir").put("tile_dir", tile_dir);
+  if (!tile_dir.empty())
+    conf.get_child("mjolnir").put("tile_dir", tile_dir);
   conf.get_child("mjolnir").put("tile_url_gz", tile_url_gz);
   conf.get_child("loki").put("use_connectivity", false);
   return conf;
@@ -188,7 +187,7 @@ void test_route(const std::string& tile_dir, bool tile_url_gz) {
 }
 
 void test_no_cache_no_gz() {
-  test_route("*", false);
+  test_route("", false);
 }
 
 void test_cache_no_gz() {
@@ -198,7 +197,7 @@ void test_cache_no_gz() {
 }
 
 void test_no_cache_gz() {
-  test_route("*", true);
+  test_route("", true);
 }
 
 void test_cache_gz() {

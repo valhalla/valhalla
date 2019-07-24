@@ -54,7 +54,7 @@ GraphTile::GraphTile()
 GraphTile::GraphTile(const std::string& tile_dir, const GraphId& graphid) : header_(nullptr) {
 
   // Don't bother with invalid ids
-  if (!graphid.Is_Valid() || graphid.level() > TileHierarchy::get_max_level()) {
+  if (!graphid.Is_Valid() || graphid.level() > TileHierarchy::get_max_level() || tile_dir.empty()) {
     return;
   }
 
@@ -148,19 +148,30 @@ GraphTile GraphTile::CacheTileURL(const std::string& tile_url,
 
   // If its good try to use it
   if (http_code == 200) {
-    auto disk_location = cache_location + filesystem::path::preferred_separator + suffix;
-    auto dir = filesystem::path(cache_location + filesystem::path::preferred_separator + suffix);
-    dir.replace_filename("");
     // try to cache it on disk so we dont have to keep doing this
-    if (filesystem::create_directories(dir)) {
-      std::ofstream file(disk_location, std::ios::out | std::ios::binary | std::ios::ate);
-      file.write(&tile_data[0], tile_data.size());
-      return GraphTile(cache_location, graphid);
-    } // try to decompress it in memory
-    else {
-      auto tile = GraphTile();
-      tile.DecompressTile(graphid, tile_data);
+    if (!cache_location.empty()) {
+      auto disk_location = cache_location + filesystem::path::preferred_separator + suffix;
+      auto dir = filesystem::path(cache_location + filesystem::path::preferred_separator + suffix);
+      dir.replace_filename("");
+      if (filesystem::create_directories(dir)) {
+        std::ofstream file(disk_location, std::ios::out | std::ios::binary | std::ios::ate);
+        file.write(&tile_data[0], tile_data.size());
+        return GraphTile(cache_location, graphid);
+      }
     }
+
+    // and if we cant cache to disk try to use it in-memory
+    auto tile = GraphTile();
+    if (gzipped) {
+      tile.DecompressTile(graphid, tile_data);
+    } // we dont need to decompress so just take ownership of the data
+    else {
+      tile.graphtile_.reset(new std::vector<char>(0, 0));
+      *tile.graphtile_ = std::move(tile_data);
+      tile.Initialize(graphid, tile.graphtile_->data(), tile.graphtile_->size());
+    }
+
+    return tile;
   }
   return {};
 }
