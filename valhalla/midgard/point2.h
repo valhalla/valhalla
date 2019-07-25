@@ -8,7 +8,7 @@
 #include <vector>
 
 namespace {
-  constexpr float LL_EPSILON = .00002f;
+constexpr float LL_EPSILON = .00002f;
 }
 
 namespace valhalla {
