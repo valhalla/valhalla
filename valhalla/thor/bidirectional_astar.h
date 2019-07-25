@@ -9,7 +9,7 @@
 #include <vector>
 
 #include <valhalla/baldr/double_bucket_queue.h>
-#include <valhalla/proto/tripcommon.pb.h>
+#include <valhalla/proto/api.pb.h>
 #include <valhalla/sif/edgelabel.h>
 #include <valhalla/sif/hierarchylimits.h>
 #include <valhalla/thor/astarheuristic.h>
