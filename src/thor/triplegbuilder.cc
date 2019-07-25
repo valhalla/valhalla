@@ -1745,6 +1745,10 @@ void TripLegBuilder::AddTripIntersectingEdge(const AttributesController& control
   if (controller.attributes.at(kNodeIntersectingEdgeToEdgeNameConsistency)) {
     itersecting_edge->set_curr_name_consistency(directededge->name_consistency(local_edge_index));
   }
+
+  if ((intersecting_de != nullptr) && controller.attributes.at(kNodeIntersectingEdgeUse)) {
+    itersecting_edge->set_use(GetTripLegUse(intersecting_de->use()));
+  }
 }
 
 } // namespace thor

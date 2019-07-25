@@ -453,6 +453,14 @@ public:
     return mutable_intersecting_edge_->walkability();
   }
 
+  bool has_use() const {
+    return mutable_intersecting_edge_->has_use();
+  }
+
+  ::valhalla::TripLeg_Use use() const {
+    return mutable_intersecting_edge_->use();
+  }
+
   bool IsTraversable(const TripLeg_TravelMode travel_mode) const;
 
   bool IsTraversableOutbound(const TripLeg_TravelMode travel_mode) const;
@@ -582,7 +590,8 @@ public:
   uint32_t GetStraightestIntersectingEdgeTurnDegree(uint32_t from_heading);
 
   uint32_t GetStraightestTraversableIntersectingEdgeTurnDegree(uint32_t from_heading,
-                                                               const TripLeg_TravelMode travel_mode);
+                                                               const TripLeg_TravelMode travel_mode,
+                                                               TripLeg_Use* use = nullptr);
 
   bool IsStraightestTraversableIntersectingEdgeReversed(uint32_t from_heading,
                                                         const TripLeg_TravelMode travel_mode);
