@@ -30,6 +30,7 @@ set(sources
   countryaccess.cc
   dataquality.cc
   directededgebuilder.cc
+  directededgeextbuilder.cc
   graphtilebuilder.cc
   edgeinfobuilder.cc
   elevationbuilder.cc

@@ -70,6 +70,8 @@ void TimeDepForward::ExpandForward(GraphReader& graphreader,
   GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
   EdgeStatusInfo* es = edgestatus_.GetPtr(edgeid, tile);
   const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
+  const DirectedEdgeExt* ext_directededge = tile->ext_directededge(nodeinfo->edge_index());
+
   for (uint32_t i = 0; i < nodeinfo->edge_count(); ++i, ++directededge, ++edgeid, ++es) {
     // Skip shortcut edges for time dependent routes. Also skip this edge if permanently labeled
     // (best path already found to this directed edge), if no access is allowed to this edge
@@ -86,7 +88,7 @@ void TimeDepForward::ExpandForward(GraphReader& graphreader,
     bool has_traffic = directededge->predicted_speed() || directededge->constrained_flow_speed() > 0;
     Cost newcost =
         pred.cost() +
-        costing_->EdgeCost(directededge, tile->GetSpeed(directededge, edgeid, seconds_of_week)) +
+        costing_->EdgeCost(directededge, tile->GetSpeed(ext_directededge, edgeid, seconds_of_week)) +
         costing_->TransitionCost(directededge, nodeinfo, pred, has_traffic);
 
     // If this edge is a destination, subtract the partial/remainder cost

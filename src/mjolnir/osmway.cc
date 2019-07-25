@@ -46,6 +46,35 @@ void OSMWay::set_speed_limit(const float speed_limit) {
   }
 }
 
+
+// Sets the speed limit in KPH.
+void OSMWay::set_morning_speed(const float speed) {
+  if (speed > kMaxOSMSpeed) {
+    LOG_WARN("Exceeded max speed for way id: " + std::to_string(osmwayid_));
+    speed_limit_ = 255;
+  } else {
+    speed_limit_ = static_cast<unsigned char>(speed + 0.5f);
+  }
+}
+// Sets the speed limit in KPH.
+void OSMWay::set_general_speed(const float speed) {
+  if (speed > kMaxOSMSpeed) {
+    LOG_WARN("Exceeded max speed for way id: " + std::to_string(osmwayid_));
+    speed_limit_ = 255;
+  } else {
+    speed_limit_ = static_cast<unsigned char>(speed + 0.5f);
+  }
+}
+// Sets the speed limit in KPH.
+void OSMWay::set_evening_speed(const float speed) {
+  if (speed > kMaxOSMSpeed) {
+    LOG_WARN("Exceeded max speed for way id: " + std::to_string(osmwayid_));
+    speed_limit_ = 255;
+  } else {
+    speed_limit_ = static_cast<unsigned char>(speed + 0.5f);
+  }
+}
+
 // Sets the backward speed in KPH.
 void OSMWay::set_backward_speed(const float backward_speed) {
   if (backward_speed > kMaxOSMSpeed) {

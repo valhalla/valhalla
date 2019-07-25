@@ -24,6 +24,7 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
                                          const uint32_t restrictions,
                                          const uint32_t bike_network)
     : DirectedEdge() {
+
   set_endnode(endnode);
   set_use(use);
   set_speed(speed);             // KPH

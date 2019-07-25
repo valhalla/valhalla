@@ -49,6 +49,25 @@ struct OSMWay {
    */
   void set_speed(const float speed);
 
+
+  /**
+  * Sets the morning_speed
+  * @param  speed   Speed in KPH.
+  */
+  void set_morning_speed(const float speed);
+
+  /**
+  * Sets the general_speed
+  * @param  speed   Speed in KPH.
+  */
+  void set_general_speed(const float speed);
+
+  /**
+  * Sets the evening_speed
+  * @param  speed   Speed in KPH.
+  */
+  void set_evening_speed(const float speed);
+
   /**
    * Gets the speed in KPH.
    * @return  Returns speed.
