@@ -148,7 +148,7 @@ GraphTile GraphTile::CacheTileURL(const std::string& tile_url,
 
   // If its good try to use it
   if (http_code == 200) {
-    // try to cache it on disk so we dont have to keep doing this
+    // try to cache it on disk so we dont have to keep fetching it from url
     if (!cache_location.empty()) {
       auto disk_location = cache_location + filesystem::path::preferred_separator + suffix;
       auto dir = filesystem::path(cache_location + filesystem::path::preferred_separator + suffix);
@@ -156,11 +156,10 @@ GraphTile GraphTile::CacheTileURL(const std::string& tile_url,
       if (filesystem::create_directories(dir)) {
         std::ofstream file(disk_location, std::ios::out | std::ios::binary | std::ios::ate);
         file.write(&tile_data[0], tile_data.size());
-        return GraphTile(cache_location, graphid);
       }
     }
 
-    // and if we cant cache to disk try to use it in-memory
+    // turn the memory into a tile
     auto tile = GraphTile();
     if (gzipped) {
       tile.DecompressTile(graphid, tile_data);
