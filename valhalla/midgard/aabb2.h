@@ -70,15 +70,6 @@ public:
   }
 
   /**
-   * Inequality operator.
-   * @param   r2  Bounding box to compare to.
-   * @return  Returns true if the 2 bounding boxes are not equal.
-   */
-  bool operator!=(const AABB2& r2) const {
-    return minx_ != r2.minx_ || maxx_ != r2.maxx_ || miny_ != r2.miny_ || maxy_ != r2.maxy_;
-  }
-
-  /**
    * Get the minimum x
    * @return  Returns minimum x.
    */

@@ -7,15 +7,11 @@
 #include "midgard/util.h"
 #include "midgard/vector2.h"
 
-namespace {
-constexpr float EPSILON = .00002f;
-}
-
 namespace valhalla {
 namespace midgard {
 
-bool Point2::ApproximatelyEqual(const Point2& p) const {
-  return equal<first_type>(first, p.first, EPSILON) && equal<second_type>(second, p.second, EPSILON);
+bool Point2::ApproximatelyEqual(const Point2& p, float e) const {
+  return equal<first_type>(first, p.first, e) && equal<second_type>(second, p.second, e);
 }
 
 float Point2::DistanceSquared(const Point2& p) const {

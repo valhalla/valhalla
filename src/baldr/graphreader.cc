@@ -656,7 +656,7 @@ AABB2<PointLL> GraphReader::GetMinimumBoundingBox(const AABB2<PointLL>& bb) {
 
     // Look at every node in the tile
     const auto* tile = GetGraphTile(tile_id);
-    for (uint32_t i = 0; i < tile->header()->nodecount(); i++) {
+    for (uint32_t i = 0; tile && i < tile->header()->nodecount(); i++) {
 
       // If the node is within the input bounding box
       const auto* node = tile->node(i);
