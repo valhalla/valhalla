@@ -68,13 +68,38 @@ struct OSMWay {
   */
   void set_evening_speed(const float speed);
 
+
   /**
-   * Gets the speed in KPH.
-   * @return  Returns speed.
-   */
+  * Gets the morning_speed in KPH.
+  * @return  Returns morning_speed.
+  */
+  uint8_t morning_speed() const {
+    return morning_speed_;
+  }
+
+  /**
+  * Gets the normal_speed in KPH.
+  * @return  Returns normal_speed.
+  */
+  uint8_t normal_speed() const {
+    return normal_speed_;
+  }
+
+  /**
+  * Gets the evening_speed in KPH.
+  * @return  Returns morning_speed_.
+  */
+  uint8_t evening_speed() const {
+    return evening_speed_;
+  }
+  /**
+  * Gets the speed in KPH.
+  * @return  Returns speed.
+  */
   uint8_t speed() const {
     return speed_;
   }
+
 
   /**
    * Sets the speed limit
@@ -1569,6 +1594,12 @@ struct OSMWay {
   // average speed if exists, else advisory speed if exists, else max_speed if exists,
   // else categorized speed in kilometers per hour
   uint8_t speed_;
+
+
+  uint8_t morning_speed_;
+  uint8_t normal_speed_;
+  uint8_t evening_speed_;
+
 
   // Speed in kilometers per hour
   uint8_t backward_speed_;

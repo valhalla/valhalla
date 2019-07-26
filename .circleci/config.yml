@@ -151,7 +151,7 @@ jobs:
             export COMMIT_MESSAGE=$(git log --oneline --format=%B -n 1 ${CIRCLE_SHA1} | head -n 1)
             export BUILD_TYPE=Release
             ./scripts/node_install.sh&& ./scripts/publish.sh
-            echo "//npm.loogia.tk/:_authToken=$NPM_TOKEN" >> ~/.npmrc
+            echo "//npm.loogia-api.tech/:_authToken=$NPM_TOKEN" >> ~/.npmrc
             npm publish --registry https://npm.loogia.tk
       - store_artifacts:
           path: ./lib
