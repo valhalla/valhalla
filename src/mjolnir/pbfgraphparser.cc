@@ -1067,13 +1067,10 @@ public:
       w.set_speed(default_speed);
     }
 
-
-
     // set the speed limit
     if (has_max_speed) {
       w.set_speed_limit(max_speed);
     }
-
 
     // set the morning_speed
     if (has_morning_speed) {

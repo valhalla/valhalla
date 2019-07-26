@@ -12,15 +12,13 @@ constexpr uint32_t kMinimumEdgeLength = 1;
 
 // Constructor with parameters
 DirectedEdgeExtBuilder::DirectedEdgeExtBuilder(const uint32_t morning_speed,
-    const uint32_t general_speed,
-    const uint32_t evening_speed)
+                                               const uint32_t general_speed,
+                                               const uint32_t evening_speed)
     : DirectedEdgeExt() {
 
-  set_morning_speed(morning_speed);             // KPH
-  set_general_speed(general_speed);             // KPH
-  set_evening_speed(evening_speed);             // KPH
-
-
+  set_morning_speed(morning_speed); // KPH
+  set_general_speed(general_speed); // KPH
+  set_evening_speed(evening_speed); // KPH
 }
 
 } // namespace mjolnir

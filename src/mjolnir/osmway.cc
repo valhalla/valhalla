@@ -46,7 +46,6 @@ void OSMWay::set_speed_limit(const float speed_limit) {
   }
 }
 
-
 // Sets the speed limit in KPH.
 void OSMWay::set_morning_speed(const float speed) {
   if (speed > kMaxOSMSpeed) {

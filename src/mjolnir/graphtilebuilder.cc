@@ -67,7 +67,8 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
 
   // Add extended directededge attributes (if available)
   ext_directededges_builder_.reserve(n);
-  std::copy(ext_directededges_, ext_directededges_ + n, std::back_inserter(ext_directededges_builder_));
+  std::copy(ext_directededges_, ext_directededges_ + n,
+            std::back_inserter(ext_directededges_builder_));
 
   // Create access restriction list
   for (uint32_t i = 0; i < header_->access_restriction_count(); i++) {

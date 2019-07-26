@@ -183,10 +183,10 @@ public:
     if (idx < header_->directededgecount()) {
       return &ext_directededges_[idx];
     }
-    throw std::runtime_error(
-        "GraphTile DirectedEdge Extension index out of bounds: " + std::to_string(header_->graphid().tileid()) +
-        "," + std::to_string(header_->graphid().level()) + "," + std::to_string(idx) +
-        " directededgecount= " + std::to_string(header_->directededgecount()));
+    throw std::runtime_error("GraphTile DirectedEdge Extension index out of bounds: " +
+                             std::to_string(header_->graphid().tileid()) + "," +
+                             std::to_string(header_->graphid().level()) + "," + std::to_string(idx) +
+                             " directededgecount= " + std::to_string(header_->directededgecount()));
   }
   /**
    * Get an iterable set of directed edges from a node in this tile

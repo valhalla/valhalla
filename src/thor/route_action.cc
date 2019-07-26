@@ -176,12 +176,12 @@ std::string thor_worker_t::expansion(Api& request) {
 
   // tell all the algorithms how to track expansion
   for (auto* alg : std::vector<PathAlgorithm*>{
-      &multi_modal_astar,
-      &timedep_forward,
-      &timedep_reverse,
-      &astar,
-      &bidir_astar,
-  }) {
+           &multi_modal_astar,
+           &timedep_forward,
+           &timedep_reverse,
+           &astar,
+           &bidir_astar,
+       }) {
     alg->set_track_expansion(track_expansion);
   }
 
@@ -190,12 +190,12 @@ std::string thor_worker_t::expansion(Api& request) {
 
   // tell all the algorithms to stop tracking the expansion
   for (auto* alg : std::vector<PathAlgorithm*>{
-      &multi_modal_astar,
-      &timedep_forward,
-      &timedep_reverse,
-      &astar,
-      &bidir_astar,
-  }) {
+           &multi_modal_astar,
+           &timedep_forward,
+           &timedep_reverse,
+           &astar,
+           &bidir_astar,
+       }) {
     alg->set_track_expansion(nullptr);
   }
 
@@ -293,7 +293,7 @@ std::vector<std::vector<thor::PathInfo>> thor_worker_t::get_path(PathAlgorithm* 
   if (!paths.empty() && (costing == "pedestrian" && path_algorithm->has_ferry())) {
     // DO NOT run a second pass on long routes due to performance issues
     float d = PointLL(origin.ll().lng(), origin.ll().lat())
-        .Distance(PointLL(destination.ll().lng(), destination.ll().lat()));
+                  .Distance(PointLL(destination.ll().lng(), destination.ll().lat()));
     if (d < kPedestrianMultipassThreshold) {
       ped_second_pass = true;
     }
