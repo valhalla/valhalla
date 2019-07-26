@@ -21,8 +21,7 @@ void check_locations(const size_t location_count, const size_t max_locations) {
   };
 }
 
-void check_distance(const GraphReader& reader,
-                    const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
+void check_distance(const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
                     float max_distance) {
   // test if total distance along a polyline formed by connecting locations exceeds the maximum
   float total_path_distance = 0.0f;
@@ -61,7 +60,7 @@ void loki_worker_t::route(Api& request) {
   auto& options = *request.mutable_options();
   auto costing = Costing_Name(options.costing());
   check_locations(options.locations_size(), max_locations.find(costing)->second);
-  check_distance(*reader, options.locations(), max_distance.find(costing)->second);
+  check_distance(options.locations(), max_distance.find(costing)->second);
 
   // Validate walking distances (make sure they are in the accepted range)
   if (costing == "multimodal" || costing == "transit") {

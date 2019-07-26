@@ -54,11 +54,11 @@ GraphTile::GraphTile()
 GraphTile::GraphTile(const std::string& tile_dir, const GraphId& graphid) : header_(nullptr) {
 
   // Don't bother with invalid ids
-  if (!graphid.Is_Valid() || graphid.level() > TileHierarchy::get_max_level()) {
+  if (!graphid.Is_Valid() || graphid.level() > TileHierarchy::get_max_level() || tile_dir.empty()) {
     return;
   }
 
-  // Open to the end of the file so we can immediately get size;
+  // Open to the end of the file so we can immediately get size
   std::string file_location =
       tile_dir + filesystem::path::preferred_separator + FileSuffix(graphid.Tile_Base());
   std::ifstream file(file_location, std::ios::in | std::ios::binary | std::ios::ate);
@@ -80,44 +80,47 @@ GraphTile::GraphTile(const std::string& tile_dir, const GraphId& graphid) : head
       // read the compressed file into memory
       std::vector<char> compressed(std::istreambuf_iterator<char>(file),
                                    (std::istreambuf_iterator<char>()));
-
-      // for setting where to read compressed data from
-      auto src_func = [&compressed](z_stream& s) -> void {
-        s.next_in = static_cast<Byte*>(static_cast<void*>(compressed.data()));
-        s.avail_in = static_cast<unsigned int>(compressed.size());
-      };
-
-      // for setting where to write the uncompressed data to
-      graphtile_.reset(new std::vector<char>(0, 0));
-      auto dst_func = [this, &compressed](z_stream& s) -> int {
-        // if the whole buffer wasn't used we are done
-        auto size = graphtile_->size();
-        if (s.total_out < size)
-          graphtile_->resize(s.total_out);
-        // we need more space
-        else {
-          // assume we need 3.5x the space
-          graphtile_->resize(size + (compressed.size() * COMPRESSION_HINT));
-          // set the pointer to the next spot
-          s.next_out = static_cast<Byte*>(static_cast<void*>(graphtile_->data() + size));
-          s.avail_out = compressed.size() * COMPRESSION_HINT;
-        }
-        return Z_NO_FLUSH;
-      };
-
-      // Decompress tile into memory
-      if (!baldr::inflate(src_func, dst_func)) {
-        LOG_WARN("Failed to gunzip: " + file_location + ".gz");
-        graphtile_.reset();
-        return;
-      }
-
-      // Set pointers to internal data structures
-      Initialize(graphid, graphtile_->data(), graphtile_->size());
-    } else {
-      LOG_DEBUG("Tile " + file_location + " was not found");
+      // try to decompress it
+      DecompressTile(graphid, compressed);
     }
   }
+}
+
+bool GraphTile::DecompressTile(const GraphId& graphid, std::vector<char>& compressed) {
+  // for setting where to read compressed data from
+  auto src_func = [&compressed](z_stream& s) -> void {
+    s.next_in = static_cast<Byte*>(static_cast<void*>(compressed.data()));
+    s.avail_in = static_cast<unsigned int>(compressed.size());
+  };
+
+  // for setting where to write the uncompressed data to
+  graphtile_.reset(new std::vector<char>(0, 0));
+  auto dst_func = [this, &compressed](z_stream& s) -> int {
+    // if the whole buffer wasn't used we are done
+    auto size = graphtile_->size();
+    if (s.total_out < size)
+      graphtile_->resize(s.total_out);
+    // we need more space
+    else {
+      // assume we need 3.5x the space
+      graphtile_->resize(size + (compressed.size() * COMPRESSION_HINT));
+      // set the pointer to the next spot
+      s.next_out = static_cast<Byte*>(static_cast<void*>(graphtile_->data() + size));
+      s.avail_out = compressed.size() * COMPRESSION_HINT;
+    }
+    return Z_NO_FLUSH;
+  };
+
+  // Decompress tile into memory
+  if (!baldr::inflate(src_func, dst_func)) {
+    LOG_ERROR("Failed to gunzip " + FileSuffix(graphid, true));
+    graphtile_.reset();
+    return false;
+  }
+
+  // Set pointers to internal data structures
+  Initialize(graphid, graphtile_->data(), graphtile_->size());
+  return true;
 }
 
 GraphTile::GraphTile(const GraphId& graphid, char* ptr, size_t size) : header_(nullptr) {
@@ -126,24 +129,50 @@ GraphTile::GraphTile(const GraphId& graphid, char* ptr, size_t size) : header_(n
   Initialize(graphid, ptr, size);
 }
 
-GraphTile::GraphTile(const std::string& tile_url, const GraphId& graphid, curler_t& curler) {
+GraphTile GraphTile::CacheTileURL(const std::string& tile_url,
+                                  const GraphId& graphid,
+                                  curler_t& curler,
+                                  bool gzipped,
+                                  const std::string& cache_location) {
   // Don't bother with invalid ids
   if (!graphid.Is_Valid() || graphid.level() > TileHierarchy::get_max_level()) {
-    return;
+    return {};
   }
 
-  // Get the response returned from curl
-  std::string uri =
-      tile_url + filesystem::path::preferred_separator + FileSuffix(graphid.Tile_Base());
+  // Get the response returned from curl, notice that when we expect zipped
+  // we tell curl not to unzip it, so that we can store it on the disk unzipped
+  auto suffix = FileSuffix(graphid.Tile_Base(), gzipped);
+  auto uri = tile_url + '/' + suffix;
   long http_code;
-  auto tile_data = curler(uri, http_code);
+  auto tile_data = curler(uri, http_code, false);
 
   // If its good try to use it
   if (http_code == 200) {
-    graphtile_ = std::make_shared<std::vector<char>>(std::move(tile_data));
-    Initialize(graphid, graphtile_->data(), graphtile_->size());
-    // TODO: optionally write the tile to disk?
+    // try to cache it on disk so we dont have to keep fetching it from url
+    if (!cache_location.empty()) {
+      auto disk_location = cache_location + filesystem::path::preferred_separator + suffix;
+      auto dir = filesystem::path(cache_location + filesystem::path::preferred_separator + suffix);
+      dir.replace_filename("");
+      if (filesystem::create_directories(dir)) {
+        std::ofstream file(disk_location, std::ios::out | std::ios::binary | std::ios::ate);
+        file.write(&tile_data[0], tile_data.size());
+      }
+    }
+
+    // turn the memory into a tile
+    auto tile = GraphTile();
+    if (gzipped) {
+      tile.DecompressTile(graphid, tile_data);
+    } // we dont need to decompress so just take ownership of the data
+    else {
+      tile.graphtile_.reset(new std::vector<char>(0, 0));
+      *tile.graphtile_ = std::move(tile_data);
+      tile.Initialize(graphid, tile.graphtile_->data(), tile.graphtile_->size());
+    }
+
+    return tile;
   }
+  return {};
 }
 
 GraphTile::~GraphTile() {
@@ -303,7 +332,7 @@ void GraphTile::AssociateOneStopIds(const GraphId& graphid) {
   }
 }
 
-std::string GraphTile::FileSuffix(const GraphId& graphid) {
+std::string GraphTile::FileSuffix(const GraphId& graphid, bool gzipped) {
   /*
   if you have a graphid where level == 8 and tileid == 24134109851 you should get:
   8/024/134/109/851.gph since the number of levels is likely to be very small this limits the total
@@ -339,14 +368,15 @@ std::string GraphTile::FileSuffix(const GraphId& graphid) {
 
   // if it starts with a zero the pow trick doesn't work
   if (graphid.level() == 0) {
-    stream << static_cast<uint32_t>(std::pow(10, max_length)) + graphid.tileid() << ".gph";
+    stream << static_cast<uint32_t>(std::pow(10, max_length)) + graphid.tileid() << ".gph"
+           << (gzipped ? ".gz" : "");
     std::string suffix = stream.str();
     suffix[0] = '0';
     return suffix;
   }
   // it was something else
   stream << graphid.level() * static_cast<uint32_t>(std::pow(10, max_length)) + graphid.tileid()
-         << ".gph";
+         << ".gph" << (gzipped ? ".gz" : "");
   return stream.str();
 }
 

@@ -2,6 +2,11 @@
 * **Bug Fix**
    * FIXED: Added logic to detect if user is to merge to the left or right [#1892](https://github.com/valhalla/valhalla/pull/1892)
 
+* **Enhancement**
+   * ADDED: Caching url fetched tiles to disk [#1887](https://github.com/valhalla/valhalla/pull/1887)
+   * ADDED: filesystem::remove_all [#1887](https://github.com/valhalla/valhalla/pull/1887)
+   * ADDED: Minimum enclosing bounding box tool [#1887](https://github.com/valhalla/valhalla/pull/1887)
+
 ## Release Date: 2019-7-18 Valhalla 3.0.7
 * **Bug Fix**
    * FIXED: Fix pedestrian fork [#1886](https://github.com/valhalla/valhalla/pull/1886)

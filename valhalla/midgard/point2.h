@@ -7,6 +7,10 @@
 #include <utility>
 #include <vector>
 
+namespace {
+constexpr float LL_EPSILON = .00002f;
+}
+
 namespace valhalla {
 namespace midgard {
 
@@ -76,9 +80,10 @@ public:
   /**
    * Equality approximation.
    * @param   p  Point to compare to the current point.
+   * @param   e  An epsilon which determines how close they must be to be considered equal
    * @return  Returns true if two points are approximately equal, false otherwise.
    */
-  bool ApproximatelyEqual(const Point2& p) const;
+  bool ApproximatelyEqual(const Point2& p, float e = LL_EPSILON) const;
 
   /**
    * Get the distance squared from this point to point p.

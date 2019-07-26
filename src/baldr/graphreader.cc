@@ -11,7 +11,7 @@
 #include "baldr/connectivity_map.h"
 #include "filesystem.h"
 
-using namespace valhalla::baldr;
+using namespace valhalla::midgard;
 
 namespace {
 constexpr size_t DEFAULT_MAX_CACHE_SIZE = 1073741824; // 1 gig
@@ -171,8 +171,10 @@ TileCache* TileCacheFactory::createTileCache(const boost::property_tree::ptree& 
 
 // Constructor using separate tile files
 GraphReader::GraphReader(const boost::property_tree::ptree& pt)
-    : tile_url_(pt.get<std::string>("tile_url", "")), tile_dir_(pt.get<std::string>("tile_dir")),
-      tile_extract_(get_extract_instance(pt)), cache_(TileCacheFactory::createTileCache(pt)) {
+    : tile_extract_(get_extract_instance(pt)), tile_dir_(pt.get<std::string>("tile_dir", "")),
+      tile_url_(pt.get<std::string>("tile_url", "")),
+      tile_url_gz_(pt.get<bool>("tile_url_gz", false)),
+      cache_(TileCacheFactory::createTileCache(pt)) {
   // Reserve cache (based on whether using individual tile files or shared,
   // mmap'd file
   cache_->Reserve(tile_extract_->tiles.empty() ? AVERAGE_TILE_SIZE : AVERAGE_MM_TILE_SIZE);
@@ -191,6 +193,8 @@ bool GraphReader::DoesTileExist(const GraphId& graphid) const {
   if (cache_->Contains(graphid)) {
     return true;
   }
+  if (tile_dir_.empty())
+    return false;
   std::string file_location =
       tile_dir_ + filesystem::path::preferred_separator + GraphTile::FileSuffix(graphid.Tile_Base());
   struct stat buffer;
@@ -229,6 +233,7 @@ const GraphTile* GraphReader::GetGraphTile(const GraphId& graphid) {
   // Check if the level/tileid combination is in the cache
   auto base = graphid.Tile_Base();
   if (auto cached = cache_->Get(base)) {
+    // LOG_DEBUG("Memory cache hit " + GraphTile::FileSuffix(base));
     return cached;
   }
 
@@ -237,14 +242,17 @@ const GraphTile* GraphReader::GetGraphTile(const GraphId& graphid) {
     // Do we have this tile
     auto t = tile_extract_->tiles.find(base);
     if (t == tile_extract_->tiles.cend()) {
+      // LOG_DEBUG("Memory map cache miss " + GraphTile::FileSuffix(base));
       return nullptr;
     }
 
     // This initializes the tile from mmap
     GraphTile tile(base, t->second.first, t->second.second);
     if (!tile.header()) {
+      // LOG_DEBUG("Memory map cache miss " + GraphTile::FileSuffix(base));
       return nullptr;
     }
+    // LOG_DEBUG("Memory map cache hit " + GraphTile::FileSuffix(base));
 
     // Keep a copy in the cache and return it
     size_t size = AVERAGE_MM_TILE_SIZE; // tile.end_offset();  // TODO what size??
@@ -252,17 +260,24 @@ const GraphTile* GraphReader::GetGraphTile(const GraphId& graphid) {
     return inserted;
   } // Try getting it from flat file
   else {
-    // This reads the tile from disk
+    // Try to get it from disk and if we cant..
     GraphTile tile(tile_dir_, base);
     if (!tile.header()) {
+      // See if we are configured for a url and if we are
       if (tile_url_.empty() || _404s.find(base) != _404s.end()) {
+        // LOG_DEBUG("Url cache miss " + GraphTile::FileSuffix(base));
         return nullptr;
       }
-      tile = GraphTile(tile_url_, base, curler);
+      // Get it from the url and cache it to disk if you can
+      tile = GraphTile::CacheTileURL(tile_url_, base, curler, tile_url_gz_, tile_dir_);
       if (!tile.header()) {
         _404s.insert(base);
+        // LOG_DEBUG("Url cache miss " + GraphTile::FileSuffix(base));
         return nullptr;
       }
+      // LOG_DEBUG("Url cache hit " + GraphTile::FileSuffix(base));
+    } else {
+      // LOG_DEBUG("Disk cache hit " + GraphTile::FileSuffix(base));
     }
 
     // Keep a copy in the cache and return it
@@ -577,7 +592,7 @@ std::unordered_set<GraphId> GraphReader::GetTileSet() const {
       tiles.emplace(t.first);
     }
   } // or individually on disk
-  else {
+  else if (!tile_dir_.empty()) {
     // for each level
     for (uint8_t level = 0; level <= TileHierarchy::levels().rbegin()->first + 1; ++level) {
       // crack open this level of tiles directory
@@ -611,7 +626,7 @@ std::unordered_set<GraphId> GraphReader::GetTileSet(const uint8_t level) const {
         tiles.emplace(t.first);
       }
     } // or individually on disk
-  } else {
+  } else if (!tile_dir_.empty()) {
     // crack open this level of tiles directory
     filesystem::path root_dir(tile_dir_ + filesystem::path::preferred_separator +
                               std::to_string(level) + filesystem::path::preferred_separator);
@@ -628,6 +643,44 @@ std::unordered_set<GraphId> GraphReader::GetTileSet(const uint8_t level) const {
     }
   }
   return tiles;
+}
+
+AABB2<PointLL> GraphReader::GetMinimumBoundingBox(const AABB2<PointLL>& bb) {
+  // Iterate through all the tiles that intersect this bounding box
+  const auto& ids = TileHierarchy::GetGraphIds(bb);
+  AABB2<PointLL> min_bb{PointLL{}, PointLL{}};
+  for (const auto& tile_id : ids) {
+    // Don't take too much ram
+    if (OverCommitted())
+      Clear();
+
+    // Look at every node in the tile
+    const auto* tile = GetGraphTile(tile_id);
+    for (uint32_t i = 0; tile && i < tile->header()->nodecount(); i++) {
+
+      // If the node is within the input bounding box
+      const auto* node = tile->node(i);
+      auto node_ll = node->latlng(tile->header()->base_ll());
+      if (bb.Contains(node_ll)) {
+
+        // If we havent done anything with our bbox yet initialize it
+        if (!min_bb.minpt().IsValid())
+          min_bb = AABB2<PointLL>(node_ll, node_ll);
+
+        // Look at the shape of each edge leaving the node
+        const auto* diredge = tile->directededge(node->edge_index());
+        for (uint32_t i = 0; i < node->edge_count(); i++, diredge++) {
+          auto shape = tile->edgeinfo(diredge->edgeinfo_offset()).lazy_shape();
+          while (!shape.empty()) {
+            min_bb.Expand(shape.pop());
+          }
+        }
+      }
+    }
+  }
+
+  // give back the expanded box
+  return min_bb;
 }
 
 } // namespace baldr

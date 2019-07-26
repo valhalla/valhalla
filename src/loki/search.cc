@@ -429,12 +429,12 @@ struct bin_handler_t {
       const NodeTransition* trans = start_tile->transition(node->transition_index());
       for (uint32_t i = 0; reaches.back() < max_reach_limit && i < node->transition_count();
            ++i, ++trans) {
-        const GraphTile* tile = reader.GetGraphTile(trans->endnode());
-        if (tile == nullptr) {
+        const auto* trans_tile = reader.GetGraphTile(trans->endnode());
+        if (trans_tile == nullptr) {
           // Protect against missing tile
           continue;
         }
-        const NodeInfo* n = tile->node(trans->endnode());
+        const NodeInfo* n = trans_tile->node(trans->endnode());
         if (!node_filter(n)) {
           // try to mark the node
           auto inserted = reach_indices.emplace(trans->endnode(), reach_index);
@@ -455,7 +455,7 @@ struct bin_handler_t {
 
           // For transitions, recurse but don't increment so we don't double count nodes
           size_t previous = reach_index;
-          depth_first(tile, n, reach_index);
+          depth_first(trans_tile, n, reach_index);
 
           // if we saw the edge in a previous run we want to be done completely
           if (reach_index != previous) {

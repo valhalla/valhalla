@@ -299,7 +299,7 @@ int main(int argc, char** argv) {
 
   bpo::options_description options("valhalla_add_predicted_traffic " VALHALLA_VERSION "\n"
                                    "\n"
-                                   " Usage: valhalla_add_predicted_traffice [options]\n"
+                                   " Usage: valhalla_add_predicted_traffic [options]\n"
                                    "\n"
                                    "adds predicted traffic to valhalla tiles. "
                                    "\n"
