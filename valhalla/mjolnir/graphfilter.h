@@ -4,7 +4,7 @@
 #include <boost/property_tree/ptree.hpp>
 #include <cstdint>
 
-#include "baldr/graphreader.h"
+#include <valhalla/baldr/graphreader.h>
 
 namespace valhalla {
 namespace mjolnir {
