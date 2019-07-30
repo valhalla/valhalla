@@ -191,6 +191,10 @@ if(ENABLE_DATA_TOOLS)
   find_package(Boost 1.51 REQUIRED COMPONENTS date_time filesystem system program_options)
   find_package(SQLite3 REQUIRED)
   find_package(SpatiaLite REQUIRED)
+  add_library(SpatialLite::SpatialLite INTERFACE IMPORTED)
+  set_target_properties(SpatialLite::SpatialLite PROPERTIES
+    INTERFACE_LINK_LIBRARIES "${SPATIALITE_LIBRARIES}"
+    INTERFACE_INCLUDE_DIRECTORIES "${SPATIALITE_INCLUDE_DIR}")
   find_package(Lua REQUIRED)
   add_library(Lua::Lua INTERFACE IMPORTED)
   set_target_properties(Lua::Lua PROPERTIES
@@ -203,6 +207,7 @@ elseif(ENABLE_TOOLS)
 elseif(NOT Boost_FOUND)
   find_package(Boost 1.51 REQUIRED)
 endif()
+add_definitions(-DBOOST_NO_CXX11_SCOPED_ENUMS)
 
 ## libvalhalla
 add_subdirectory(src)
