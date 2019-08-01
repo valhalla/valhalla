@@ -4,18 +4,22 @@ import argparse
 import json
 import pprint
 
+class optional:
+  def __init__(self, t=None):
+    self.type = t
+
 #global default configuration
 config = {
   'mjolnir': {
     'max_cache_size': 1000000000,
-    'tile_url': None,
-    'tile_url_gz': None,
+    'tile_url': optional(str),
+    'tile_url_gz': optional(bool),
     'tile_dir': '/data/valhalla',
     'tile_extract': '/data/valhalla/tiles.tar',
     'admin': '/data/valhalla/admin.sqlite',
     'timezone': '/data/valhalla/tz_world.sqlite',
     'transit_dir': '/data/valhalla/transit',
-    'transit_bounding_box': None,
+    'transit_bounding_box': optional(str),
     'hierarchy': True,
     'shortcuts': True,
     'include_driveways': True,
@@ -479,9 +483,9 @@ def add_leaf_args(path, tree, leaves, parser):
     h = help_text
     for k in keys:
       h = h[k]
-    t = comma_separated_list if type(tree) == type([]) else type(tree)
+    t = comma_separated_list if type(tree) == type([]) else (type(tree) if type(tree) != type(optional()) else tree.type)
     arg = '--' + path.replace('_', '-').replace('\0', '-')
-    parser.add_argument(arg, type = t if t != type(False) else parse_bool, help=h, default=tree)
+    parser.add_argument(arg, type = t if t != type(bool()) else parse_bool, help=h, default=tree)
     leaves.append(path)
 
 #entry point to program
@@ -501,7 +505,7 @@ if __name__ == '__main__':
     for k in keys[:-1]:
       v = v[k]
     v[keys[-1]] = getattr(args, leaf.replace('\0', '_'))
-    if v[keys[-1]] is None:
+    if isinstance(v[keys[-1]], type(optional())):
       del v[keys[-1]]
 
   #show the config
