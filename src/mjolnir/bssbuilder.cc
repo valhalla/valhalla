@@ -116,8 +116,9 @@ std::vector<OSMConnectionEdge> project(const GraphTile& local_tile,
             directededge->use() == Use::kPlatformConnection) {
           continue;
         }
-        if (!(directededge->forwardaccess() & kBicycleAccess) ||
-            !(directededge->forwardaccess() & kPedestrianAccess) || directededge->is_shortcut()) {
+        if ((!(directededge->forwardaccess() & kBicycleAccess) &&
+             !(directededge->forwardaccess() & kPedestrianAccess)) ||
+            directededge->is_shortcut()) {
           continue;
         }
 
