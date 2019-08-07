@@ -104,6 +104,9 @@ int main(int argc, char** argv) {
                                                           {result[2], result[3]}};
   valhalla::baldr::GraphReader reader(pt.get_child("mjolnir"));
   bb = reader.GetMinimumBoundingBox(bb);
+  
+  if (!bb.minpt().IsValid() || !bb.maxpt().IsValid())
+    return EXIT_FAILURE;  
 
   std::cout << std::fixed << std::setprecision(6) << bb.minx() << "," << bb.miny() << "," << bb.maxx()
             << "," << bb.maxy() << std::endl;
