@@ -25,6 +25,7 @@ drive_on_right = {
 ["Hong Kong"] = "false",
 ["India"] = "false",
 ["Indonesia"] = "false",
+["Ireland"] = "false",
 ["Isle of Man"] = "false",
 ["Jamaica"] = "false",
 ["Japan"] = "false",
