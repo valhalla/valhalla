@@ -207,6 +207,73 @@ void search(valhalla::baldr::Location location, size_t result_count, int reachab
       throw std::logic_error("Wrong reachability");
 }
 
+void search_with_edge_headings(valhalla::baldr::Location location,
+                               bool expected_node,
+                               const valhalla::midgard::PointLL& expected_point,
+                               const std::vector<PathLocation::PathEdge>& expected_edges,
+                               double expected_heading,
+                               bool exact = false) {
+  // make the config file
+  boost::property_tree::ptree conf;
+  conf.put("tile_dir", tile_dir);
+  valhalla::baldr::GraphReader reader(conf);
+
+  // send it to pbf and back just in case something is wrong with that conversion
+  valhalla::Location pbf;
+  PathLocation::toPBF(location, &pbf, reader);
+  location = PathLocation::fromPBF(pbf);
+
+  const auto results = Search({location}, reader, PassThroughEdgeFilter, PassThroughNodeFilter);
+  const auto p = results.at(location);
+
+  if ((p.edges.front().begin_node() || p.edges.front().end_node()) != expected_node)
+    throw std::runtime_error(expected_node ? "Should've snapped to node"
+                                           : "Shouldn't've snapped to node");
+  if (!p.edges.size())
+    throw std::runtime_error("Didn't find any node/edges");
+  if (!p.edges.front().projected.ApproximatelyEqual(expected_point))
+    throw std::runtime_error("Found wrong point");
+
+  valhalla::baldr::PathLocation answer(location);
+  for (const auto& expected_edge : expected_edges) {
+    answer.edges.emplace_back(
+        PathLocation::PathEdge{expected_edge.id, expected_edge.percent_along, expected_point,
+                               expected_point.Distance(location.latlng_), expected_edge.sos,
+                               expected_edge.minimum_reachability, expected_edge.edge_heading});
+  }
+  // note that this just checks that p has the edges that answer has
+  // p can have more edges than answer has and that wont fail this check!
+  if (!answer.shares_edges(p))
+    throw std::runtime_error("Did not find expected edges");
+  // if you want to enforce that the result didnt have more then expected
+  if (exact && answer.edges.size() != p.edges.size())
+    throw std::logic_error("Got more edges than expected");
+}
+void search_with_edge_headings(valhalla::baldr::Location location,
+                               size_t result_count,
+                               int reachability) {
+  // make the config file
+  boost::property_tree::ptree conf;
+  conf.put("tile_dir", tile_dir);
+  valhalla::baldr::GraphReader reader(conf);
+
+  // send it to pbf and back just in case something is wrong with that conversion
+  valhalla::Location pbf;
+  PathLocation::toPBF(location, &pbf, reader);
+  location = PathLocation::fromPBF(pbf);
+
+  const auto results = Search({location}, reader, PassThroughEdgeFilter, PassThroughNodeFilter);
+  if (results.empty() && result_count == 0)
+    return;
+  const auto& p = results.at(location);
+
+  if (p.edges.size() != result_count)
+    throw std::logic_error("Wrong number of edges");
+  for (const auto& e : p.edges)
+    if (e.minimum_reachability != reachability)
+      throw std::logic_error("Wrong reachability");
+}
+
 void test_edge_search() {
   auto t = a.first.tileid();
   auto l = a.first.level();
@@ -369,6 +436,22 @@ void test_search_cutoff() {
   search(x, 2, 0);
 }
 
+void test_search_with_edge_headings() {
+  auto t = a.first.tileid();
+  auto l = a.first.level();
+  using S = PathLocation::SideOfStreet;
+  using PE = PathLocation::PathEdge;
+  using ST = Location::StopType;
+  using PS = Location::PreferredSide;
+
+  // snap to node searches
+  search_with_edge_headings({a.second}, true, a.second,
+                            {PE{{t, l, 2}, 0, a.second, 0, S::NONE},
+                             PE{{t, l, 3}, 0, a.second, 0, S::NONE},
+                             PE{{t, l, 4}, 0, a.second, 0, S::NONE}},
+                            30.0);
+}
+
 } // namespace
 
 int main() {
@@ -381,6 +464,8 @@ int main() {
   suite.test(TEST_CASE(test_reachability_radius));
 
   suite.test(TEST_CASE(test_search_cutoff));
+
+  suite.test(TEST_CASE(test_search_with_edge_headings));
 
   return suite.tear_down();
 }

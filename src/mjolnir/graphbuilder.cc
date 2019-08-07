@@ -715,6 +715,7 @@ void BuildTileSet(const std::string& ways_file,
                                  static_cast<uint32_t>(std::get<0>(found->second) + .5), speed,
                                  truck_speed, use, static_cast<RoadClass>(edge.attributes.importance),
                                  n, has_signal, restrictions, bike_network);
+          //          DirectedEdgeExtBuilder ext_de(w.mo);
           graphtile.directededges().emplace_back(de);
           DirectedEdge& directededge = graphtile.directededges().back();
 

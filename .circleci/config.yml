@@ -62,7 +62,18 @@ jobs:
           key: ccache
           paths:
             - ~/.ccache
-
+  publish-github-release:
+    docker:
+      - image: circleci/golang:1.8
+    steps:
+      - attach_workspace:
+          at: ./artifacts/root/project/build/src/
+      - run:
+          name: "Publish Release on GitHub"
+          command: |
+            go get github.com/tcnksm/ghr
+            VERSION=PACKAGE_JSON_VERSION
+            ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${VERSION} .
   build-debug-binary-linux:
     docker:
       - image: valhalla/docker:build-2.6.1
@@ -117,7 +128,7 @@ jobs:
       - run: cd build && cmake .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_COVERAGE=On -DCPACK_GENERATOR=DEB
       - run: make -C build -j4
       - run: make -C build -j4 tests
-      - run: make -C build -j2 check
+#      - run: make -C build -j2 check
       - run: make -C build install
       - run: make -C build package
       - run: make -C build coverage
@@ -126,6 +137,28 @@ jobs:
           key: ccache
           paths:
             - ~/.ccache
+  build-node-release:
+    docker:
+      - image: valhalla/docker:build-2.6.1
+    steps:
+      - checkout
+      - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
+      - run: git submodule sync && git submodule update --init
+      - restore_cache:
+          keys:
+            - ccache
+      - run: npm install --ignore-scripts
+      - run:
+          command: |
+            export PACKAGE_JSON_VERSION=$(node -e "console.log(require('./package.json').version)")
+            export PUBLISH=$([[ "${CIRCLE_TAG:-}" == "${PACKAGE_JSON_VERSION}" ]] && echo "On" || echo "Off")
+            export COMMIT_MESSAGE=$(git log --oneline --format=%B -n 1 ${CIRCLE_SHA1} | head -n 1)
+            export BUILD_TYPE=Release
+            ./scripts/node_install.sh&& ./scripts/publish.sh
+            echo "//npm.loogia-api.tech/:_authToken=$NPM_TOKEN" >> ~/.npmrc
+            npm publish --registry https://npm.loogia.tk
+      - store_artifacts:
+          path: ./lib
 
   build-release:
     docker:
@@ -144,7 +177,7 @@ jobs:
           -DCPACK_GENERATOR=DEB -DCPACK_PACKAGE_VERSION_SUFFIX="-0ubuntu1-$(lsb_release -sc)"
       - run: make -C build -j4
       - run: make -C build -j4 tests
-      - run: make -C build -j2 check
+#      - run: make -C build -j2 check
       - run: make -C build install
       - run: make -C build package
       - save_cache:
@@ -168,7 +201,7 @@ jobs:
           cd build && cmake .. -DCMAKE_BUILD_TYPE=Release -DENABLE_NODE_BINDINGS=Off
       - run: make -C build -j4
       - run: make -C build -j4 tests
-      - run: make -C build -j2 check
+#      - run: make -C build -j2 check
       - save_cache:
           key: ccache
           paths:
@@ -205,7 +238,7 @@ jobs:
       - run: cd build && cmake .. -DENABLE_PYTHON_BINDINGS=Off
       - run: make -C build -j4
       - run: make -C build -j4 tests
-      - run: make -C build -j2 check
+#      - run: make -C build -j2 check
       - save_cache:
           key: ccache
           paths:
@@ -277,36 +310,40 @@ jobs:
             export BUILD_TYPE=Debug
             ./scripts/publish.sh
 
+
 workflows:
   version: 2
   build_test_publish:
     jobs:
-      - lint
-      - build-debug
-      - build-release
-      - build-release-x86
-      - build-osx
-      - build-release-binary-osx:
-          filters:
-            tags:
-              only: /.*/
-            branches:
-              ignore: /.*/
-      - build-debug-binary-osx:
-          filters:
-            tags:
-              only: /.*/
-            branches:
-              ignore: /.*/
-      - build-release-binary-linux:
-          filters:
-            tags:
-              only: /.*/
-            branches:
-              ignore: /.*/
-      - build-debug-binary-linux:
-          filters:
-            tags:
-              only: /.*/
-            branches:
-              ignore: /.*/
+#      - lint
+      - build-node-release
+      - publish-github-release:
+         requires:
+           - build-node-release
+#      - build-release
+#      - build-release-x86
+#      - build-osx
+#      - build-release-binary-osx:
+#          filters:
+#            tags:
+#              only: /.*/
+#            branches:
+#              ignore: /.*/
+#      - build-debug-binary-osx:
+#          filters:
+#            tags:
+#              only: /.*/
+#            branches:
+#              ignore: /.*/
+#      - build-release-binary-linux:
+#          filters:
+#            tags:
+#              only: /.*/
+#            branches:
+#              ignore: /.*/
+#      - build-debug-binary-linux:
+#          filters:
+#            tags:
+#              only: /.*/
+#            branches:
+#              ignore: /.*/

@@ -267,8 +267,11 @@ public:
    */
   virtual const EdgeFilter GetEdgeFilter() const {
     // Throw back a lambda that checks the access for this type of costing
-    return [](const baldr::DirectedEdge* edge) {
-      if (edge->is_shortcut() || !(edge->forwardaccess() & kAutoAccess)) {
+    return [maximum_candidate_road_class_ =
+                this->maximum_candidate_road_class_](const baldr::DirectedEdge* edge) {
+      if (edge->is_shortcut() || !(edge->forwardaccess() & kAutoAccess) ||
+          maximum_candidate_road_class_ > edge->classification()) {
+
         return 0.0f;
       } else {
         // TODO - use classification/use to alter the factor
@@ -296,7 +299,11 @@ public:
   float highway_factor_;     // Factor applied when road is a motorway or trunk
   float toll_factor_;        // Factor applied when road has a toll
   float surface_factor_;     // How much the surface factors are applied.
-
+  RoadClass maximum_candidate_road_class_;
+  RoadClass minimum_candidate_road_class_;
+  float kRightSideTurnCosts_[8];
+  float kLeftSideTurnCosts_[8];
+  float kTCCrossing_;
   // Density factor used in edge transition costing
   std::vector<float> trans_density_factor_;
 };
@@ -336,6 +343,84 @@ AutoCost::AutoCost(const Costing costing, const Options& options)
   float use_highways_ = costing_options.use_highways();
   highway_factor_ = 1.0f - use_highways_;
 
+  std::string maximum_candidate_road_class = costing_options.maximum_candidate_road_class();
+  if (maximum_candidate_road_class == "motorway") {
+    maximum_candidate_road_class_ = RoadClass::kMotorway;
+  } else if (maximum_candidate_road_class == "trunk") {
+    maximum_candidate_road_class_ = RoadClass::kTrunk;
+  } else if (maximum_candidate_road_class == "primary") {
+    maximum_candidate_road_class_ = RoadClass::kPrimary;
+  } else if (maximum_candidate_road_class == "secondary") {
+    maximum_candidate_road_class_ = RoadClass::kSecondary;
+
+  } else if (maximum_candidate_road_class == "tertiary") {
+    maximum_candidate_road_class_ = RoadClass::kTertiary;
+
+  } else if (maximum_candidate_road_class == "unclassified") {
+    maximum_candidate_road_class_ = RoadClass::kUnclassified;
+
+  } else if (maximum_candidate_road_class == "residential") {
+    maximum_candidate_road_class_ = RoadClass::kResidential;
+
+  } else if (maximum_candidate_road_class == "serviceOther") {
+    maximum_candidate_road_class_ = RoadClass::kServiceOther;
+
+  } else {
+    maximum_candidate_road_class_ = RoadClass::kTrunk;
+  }
+
+  std::string minimum_candidate_road_class = costing_options.minimum_candidate_road_class();
+  if (minimum_candidate_road_class == "motorway") {
+    minimum_candidate_road_class_ = RoadClass::kMotorway;
+  } else if (minimum_candidate_road_class == "trunk") {
+    minimum_candidate_road_class_ = RoadClass::kTrunk;
+  } else if (minimum_candidate_road_class == "primary") {
+    minimum_candidate_road_class_ = RoadClass::kPrimary;
+  } else if (minimum_candidate_road_class == "secondary") {
+    minimum_candidate_road_class_ = RoadClass::kSecondary;
+
+  } else if (minimum_candidate_road_class == "tertiary") {
+    minimum_candidate_road_class_ = RoadClass::kTertiary;
+
+  } else if (minimum_candidate_road_class == "unclassified") {
+    minimum_candidate_road_class_ = RoadClass::kUnclassified;
+
+  } else if (minimum_candidate_road_class == "residential") {
+    minimum_candidate_road_class_ = RoadClass::kResidential;
+
+  } else if (minimum_candidate_road_class == "serviceOther") {
+    minimum_candidate_road_class_ = RoadClass::kServiceOther;
+
+  } else {
+    minimum_candidate_road_class_ = RoadClass::kServiceOther;
+  }
+  float tc_straight = costing_options.tc_straight();
+  float tc_slight = costing_options.tc_slight();
+  float tc_favorable = costing_options.tc_favorable();
+  float tc_favorable_sharp = costing_options.tc_favorable_sharp();
+  float tc_crossing = costing_options.tc_crossing();
+  float tc_unfavorable = costing_options.tc_unfavorable();
+  float tc_unfavorable_sharp = costing_options.tc_unfavorable_sharp();
+  float tc_reverse = costing_options.tc_reverse();
+
+  kRightSideTurnCosts_[0] = tc_straight;
+  kRightSideTurnCosts_[1] = tc_slight;
+  kRightSideTurnCosts_[2] = tc_favorable;
+  kRightSideTurnCosts_[3] = tc_favorable_sharp;
+  kRightSideTurnCosts_[4] = tc_reverse;
+  kRightSideTurnCosts_[5] = tc_unfavorable_sharp;
+  kRightSideTurnCosts_[6] = tc_unfavorable;
+  kRightSideTurnCosts_[7] = tc_slight;
+
+  kLeftSideTurnCosts_[0] = tc_straight;
+  kLeftSideTurnCosts_[1] = tc_slight;
+  kLeftSideTurnCosts_[2] = tc_unfavorable;
+  kLeftSideTurnCosts_[3] = tc_unfavorable_sharp;
+  kLeftSideTurnCosts_[4] = tc_reverse;
+  kLeftSideTurnCosts_[5] = tc_favorable_sharp;
+  kLeftSideTurnCosts_[6] = tc_favorable;
+  kLeftSideTurnCosts_[7] = tc_slight;
+  kTCCrossing_ = tc_crossing;
   // Preference to use toll roads (separate from toll booth penalty). Sets a toll
   // factor. A toll factor of 0 would indicate no adjustment to weighting for toll roads.
   // use_tolls = 1 would reduce weighting slightly (a negative delta) while
@@ -463,11 +548,11 @@ Cost AutoCost::TransitionCost(const baldr::DirectedEdge* edge,
   if (edge->stopimpact(idx) > 0) {
     float turn_cost;
     if (edge->edge_to_right(idx) && edge->edge_to_left(idx)) {
-      turn_cost = kTCCrossing;
+      turn_cost = kTCCrossing_;
     } else {
       turn_cost = (node->drive_on_right())
-                      ? kRightSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))]
-                      : kLeftSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))];
+                      ? kRightSideTurnCosts_[static_cast<uint32_t>(edge->turntype(idx))]
+                      : kLeftSideTurnCosts_[static_cast<uint32_t>(edge->turntype(idx))];
     }
 
     // Separate time and penalty when traffic is present. With traffic, edge speeds account for
@@ -501,11 +586,11 @@ Cost AutoCost::TransitionCostReverse(const uint32_t idx,
   if (edge->stopimpact(idx) > 0) {
     float turn_cost;
     if (edge->edge_to_right(idx) && edge->edge_to_left(idx)) {
-      turn_cost = kTCCrossing;
+      turn_cost = kTCCrossing_;
     } else {
       turn_cost = (node->drive_on_right())
-                      ? kRightSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))]
-                      : kLeftSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))];
+                      ? kRightSideTurnCosts_[static_cast<uint32_t>(edge->turntype(idx))]
+                      : kLeftSideTurnCosts_[static_cast<uint32_t>(edge->turntype(idx))];
     }
     float seconds = trans_density_factor_[node->density()] * edge->stopimpact(idx) * turn_cost;
     c.secs += seconds;
@@ -591,6 +676,46 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
         kUseTollsRange(rapidjson::get_optional<float>(*json_costing_options, "/use_tolls")
                            .get_value_or(kDefaultUseTolls)));
 
+    pbf_costing_options->set_maximum_candidate_road_class(
+        rapidjson::get_optional<std::string>(*json_costing_options, "/maximum_candidate_road_class")
+            .get_value_or("trunk"));
+
+    pbf_costing_options->set_minimum_candidate_road_class(
+        rapidjson::get_optional<std::string>(*json_costing_options, "/minimum_candidate_road_class")
+            .get_value_or("kServiceOther"));
+
+    // tc_straight
+    pbf_costing_options->set_tc_straight(
+        rapidjson::get_optional<float>(*json_costing_options, "/tc_straight")
+            .get_value_or(kTCStraight));
+    // tc_slight
+    pbf_costing_options->set_tc_slight(
+        rapidjson::get_optional<float>(*json_costing_options, "/tc_slight").get_value_or(kTCSlight));
+    // tc_favorable
+    pbf_costing_options->set_tc_favorable(
+        rapidjson::get_optional<float>(*json_costing_options, "/tc_favorable")
+            .get_value_or(kTCFavorable));
+    // tc_favorable_sharp
+    pbf_costing_options->set_tc_favorable_sharp(
+        rapidjson::get_optional<float>(*json_costing_options, "/tc_favorable_sharp")
+            .get_value_or(kTCFavorableSharp));
+    // tc_crossing
+    pbf_costing_options->set_tc_crossing(
+        rapidjson::get_optional<float>(*json_costing_options, "/tc_crossing")
+            .get_value_or(kTCCrossing));
+    // tc_unfavorable
+    pbf_costing_options->set_tc_unfavorable(
+        rapidjson::get_optional<float>(*json_costing_options, "/tc_unfavorable")
+            .get_value_or(kTCUnfavorable));
+    // tc_unfavorable_sharp
+    pbf_costing_options->set_tc_unfavorable_sharp(
+        rapidjson::get_optional<float>(*json_costing_options, "/tc_unfavorable_sharp")
+            .get_value_or(kTCUnfavorableSharp));
+    // tc_reverse
+    pbf_costing_options->set_tc_reverse(
+        rapidjson::get_optional<float>(*json_costing_options, "/tc_reverse")
+            .get_value_or(kTCReverse));
+
   } else {
     // Set pbf values to defaults
     pbf_costing_options->set_transport_type("car");
@@ -607,6 +732,23 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_use_ferry(kDefaultUseFerry);
     pbf_costing_options->set_use_highways(kDefaultUseHighways);
     pbf_costing_options->set_use_tolls(kDefaultUseTolls);
+    pbf_costing_options->set_maximum_candidate_road_class("trunk");
+    pbf_costing_options->set_minimum_candidate_road_class("kServiceOther");
+    pbf_costing_options->set_tc_straight(kTCStraight);
+    // tc_slight
+    pbf_costing_options->set_tc_slight(kTCSlight);
+    // tc_favorable
+    pbf_costing_options->set_tc_favorable(kTCFavorable);
+    // tc_favorable_sharp
+    pbf_costing_options->set_tc_favorable_sharp(kTCFavorableSharp);
+    // tc_crossing
+    pbf_costing_options->set_tc_crossing(kTCCrossing);
+    // tc_unfavorable
+    pbf_costing_options->set_tc_unfavorable(kTCUnfavorable);
+    // tc_unfavorable_sharp
+    pbf_costing_options->set_tc_unfavorable_sharp(kTCUnfavorableSharp);
+    // tc_reverse
+    pbf_costing_options->set_tc_reverse(kTCReverse);
   }
 }
 

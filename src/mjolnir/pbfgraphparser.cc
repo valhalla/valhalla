@@ -323,6 +323,9 @@ public:
 
     float default_speed = 0.0f, max_speed = 0.0f;
     float average_speed = 0.0f, advisory_speed = 0.0f;
+    float morning_speed = 0.0f, general_speed = 0.0f, evening_speed = 0.0f;
+    bool has_morning_speed = false, has_general_speed = false, has_evening_speed = false;
+
     bool has_default_speed = false, has_max_speed = false;
     bool has_average_speed = false, has_advisory_speed = false;
     bool has_surface = true;
@@ -592,6 +595,33 @@ public:
         } catch (const std::out_of_range& oor) {
           LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid));
         }
+      } else if (tag.first == "morning_speed") {
+        // Optimind time split
+        try {
+          morning_speed = std::stof(tag.second);
+          has_morning_speed = true;
+          w.set_tagged_speed(true);
+        } catch (const std::out_of_range& oor) {
+          LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid));
+        }
+      } else if (tag.first == "general_speed") {
+        // Optimind time split
+        try {
+          general_speed = std::stof(tag.second);
+          has_general_speed = true;
+          w.set_tagged_speed(true);
+        } catch (const std::out_of_range& oor) {
+          LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid));
+        }
+      } else if (tag.first == "evening_speed") {
+        // Optimind time split
+        try {
+          evening_speed = std::stof(tag.second);
+          has_evening_speed = true;
+          w.set_tagged_speed(true);
+        } catch (const std::out_of_range& oor) {
+          LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid));
+        }
       } else if (tag.first == "average_speed") {
         try {
           average_speed = std::stof(tag.second);
@@ -758,7 +788,6 @@ public:
         w.set_ref_index(osmdata_.name_offset_map.index(tag.second));
       } else if (tag.first == "int_ref" && !tag.second.empty()) {
         w.set_int_ref_index(osmdata_.name_offset_map.index(tag.second));
-
       } else if (tag.first == "sac_scale") {
         std::string value = tag.second;
         boost::algorithm::to_lower(value);
@@ -930,7 +959,6 @@ public:
         w.set_bridge(tag.second == "true" ? true : false);
       } else if (tag.first == "seasonal") {
         w.set_seasonal(tag.second == "true" ? true : false);
-
       } else if (tag.first == "bike_network_mask") {
         w.set_bike_network(std::stoi(tag.second));
       } else if (tag.first == "bike_national_ref" && !tag.second.empty()) {
@@ -939,7 +967,6 @@ public:
         w.set_bike_regional_ref_index(osmdata_.name_offset_map.index(tag.second));
       } else if (tag.first == "bike_local_ref" && !tag.second.empty()) {
         w.set_bike_local_ref_index(osmdata_.name_offset_map.index(tag.second));
-
       } else if (tag.first == "destination" && !tag.second.empty()) {
         w.set_destination_index(osmdata_.name_offset_map.index(tag.second));
         w.set_exit(true);
@@ -1043,6 +1070,19 @@ public:
     // set the speed limit
     if (has_max_speed) {
       w.set_speed_limit(max_speed);
+    }
+
+    // set the morning_speed
+    if (has_morning_speed) {
+      w.set_morning_speed(morning_speed);
+    }
+    // set the general_speed
+    if (has_general_speed) {
+      w.set_general_speed(general_speed);
+    }
+    // set the evening_speed
+    if (has_evening_speed) {
+      w.set_evening_speed(evening_speed);
     }
 
     // I hope this does not happen, but it probably will (i.e., user sets forward speed
@@ -1451,8 +1491,8 @@ public:
               restriction.set_from(from_way_id);
               restriction.set_vias(vias);
               // for bi-directional we need to create the restriction in reverse.  flip the to and
-              // from. also in order to avoid duplicate data in the from and to restrictions, we only
-              // need to store the mode, from, and to for the to_restrictions.
+              // from. also in order to avoid duplicate data in the from and to restrictions, we
+              // only need to store the mode, from, and to for the to_restrictions.
               to_restriction.set_from(restriction.to());
               to_restriction.set_to(from_way_id);
               to_restriction.set_modes(restriction.modes());
@@ -1536,8 +1576,8 @@ public:
   OSMData& osmdata_;
 
   // Mark the OSM Node Ids used by ways
-  // TODO: remove interesection_ as you already know it if you
-  // encounter more than one consecutive OSMWayNode with the same id
+  // TODO: remove interesection_ as you already know it if you　
+  //  encounter more than one consecutive OSMWayNode with the same id
   IdTable shape_, intersection_;
 
   // Ways and nodes written to file, nodes are written in the order they appear in way (shape)

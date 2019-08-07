@@ -34,7 +34,8 @@ public:
              const midgard::PointLL& projected,
              const float score,
              const SideOfStreet sos = NONE,
-             const unsigned int minimum_reachability = 0);
+             const unsigned int minimum_reachability = 0,
+             const double edge_heading = 0);
     // the directed edge it appears on
     GraphId id;
     // how far along the edge it is (as a percentage  from 0 - 1)
@@ -54,6 +55,9 @@ public:
     // minimum number of edges reachable from this edge, this is a lower limit
     // it could be reachable from many many more edges than are reported here
     unsigned int minimum_reachability;
+
+    // Heading of this PathEdge
+    double edge_heading;
   };
 
   // list of edges this location appears on within the graph
@@ -139,6 +143,7 @@ public:
                                    : (e.sos == PathLocation::RIGHT ? valhalla::Location::kRight
                                                                    : valhalla::Location::kNone));
       edge->set_distance(e.distance);
+      edge->set_edge_heading(e.edge_heading);
       edge->set_minimum_reachability(e.minimum_reachability);
       for (const auto& n : reader.edgeinfo(e.id).GetNames()) {
         edge->mutable_names()->Add()->assign(n);
@@ -157,6 +162,7 @@ public:
                                    : (e.sos == PathLocation::RIGHT ? valhalla::Location::kRight
                                                                    : valhalla::Location::kNone));
       edge->set_distance(e.distance);
+      edge->set_edge_heading(e.edge_heading);
       edge->set_minimum_reachability(e.minimum_reachability);
       for (const auto& n : reader.edgeinfo(e.id).GetNames()) {
         edge->mutable_names()->Add()->assign(n);

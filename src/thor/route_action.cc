@@ -101,7 +101,6 @@ void remove_edges(const GraphId& edge_id, valhalla::Location& loc, GraphReader& 
     }
     return;
   }
-
   // if its at the begin node lets center our sights on that
   const GraphTile* tile = reader.GetGraphTile(edge_id);
   const auto* edge = tile->directededge(edge_id);
@@ -110,7 +109,6 @@ void remove_edges(const GraphId& edge_id, valhalla::Location& loc, GraphReader& 
     const auto* opp_edge = tile->directededge(node->edge_index() + edge->opp_index());
     node = reader.GetEndNode(opp_edge, tile);
   }
-
   // TODO: nuke any edges that aren't connected to this node
   GraphId start_edge = tile->header()->graphid();
   start_edge.set_id(node->edge_index);

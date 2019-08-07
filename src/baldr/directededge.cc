@@ -57,6 +57,10 @@ DirectedEdge::DirectedEdge() {
   memset(this, 0, sizeof(DirectedEdge));
   weighted_grade_ = 6;
 }
+// Default constructor
+DirectedEdgeExt::DirectedEdgeExt() {
+  memset(this, 0, sizeof(DirectedEdgeExt));
+}
 
 // Sets the end node of this directed edge.
 void DirectedEdge::set_endnode(const GraphId& endnode) {
@@ -318,6 +322,36 @@ void DirectedEdge::set_speed(const uint32_t speed) {
     speed_ = kMaxSpeedKph;
   } else {
     speed_ = speed;
+  }
+}
+
+// Sets the morning_speed in KPH.
+void DirectedEdgeExt::set_morning_speed(const uint32_t speed) {
+  if (speed > kMaxSpeedKph) {
+    LOG_WARN("Exceeding maximum.  Average speed: " + std::to_string(speed));
+    morning_speed_ = kMaxSpeedKph;
+  } else {
+    morning_speed_ = speed;
+  }
+}
+
+// Sets the general_speed in KPH.
+void DirectedEdgeExt::set_general_speed(const uint32_t speed) {
+  if (speed > kMaxSpeedKph) {
+    LOG_WARN("Exceeding maximum.  Average speed: " + std::to_string(speed));
+    general_speed_ = kMaxSpeedKph;
+  } else {
+    general_speed_ = speed;
+  }
+}
+
+// Sets the evening_speed in KPH.
+void DirectedEdgeExt::set_evening_speed(const uint32_t speed) {
+  if (speed > kMaxSpeedKph) {
+    LOG_WARN("Exceeding maximum.  Average speed: " + std::to_string(speed));
+    evening_speed_ = kMaxSpeedKph;
+  } else {
+    evening_speed_ = speed;
   }
 }
 

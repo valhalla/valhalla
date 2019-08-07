@@ -41,6 +41,7 @@ message Location {
     optional int32 minimum_reachability = 6;
     optional bool begin_node = 7;
     optional bool end_node = 8;
+    optional double edge_heading=9;
     repeated string names = 10;
   }
 

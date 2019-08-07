@@ -1131,9 +1131,60 @@ protected:
  * is unused.
  */
 class DirectedEdgeExt {
+public:
+  /**
+   * Constructor
+   */
+  DirectedEdgeExt();
+
+  /**
+   * Gets the morning_speed in KPH.
+   * @return  Returns the morning_speed in KPH.
+   */
+  uint32_t morning_speed() const {
+    return morning_speed_;
+  }
+
+  /**
+   * Sets the morning_speed in KPH.
+   * @param  speed  Speed in KPH.
+   */
+  void set_morning_speed(const uint32_t speed);
+
+  /**
+   * Gets the general_speed in KPH.
+   * @return  Returns the general_speed in KPH.
+   */
+  uint32_t general_speed() const {
+    return general_speed_;
+  }
+
+  /**
+   * Sets the general_speed in KPH.
+   * @param  speed  Speed in KPH.
+   */
+  void set_general_speed(const uint32_t speed);
+
+  /**
+   * Gets the evening_speed in KPH.
+   * @return  Returns the evening_speed in KPH.
+   */
+  uint32_t evening_speed() const {
+    return evening_speed_;
+  }
+
+  /**
+   * Sets the evening_speed in KPH.
+   * @param  speed  Speed in KPH.
+   */
+  void set_evening_speed(const uint32_t speed);
 
 protected:
-  uint64_t spare0_ : 64;
+  // 1st 8-byte word. Note: speed values above 250 for special cases (closures, construction)
+  uint64_t morning_speed_ : 8; // morning_speed (kph)
+  uint64_t general_speed_ : 8; // general_speed (kph)
+  uint64_t evening_speed_ : 8; // evening_speed (kph)
+  uint64_t spare0 : 40;
 };
 
 } // namespace baldr

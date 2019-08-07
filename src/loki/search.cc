@@ -67,6 +67,17 @@ bool heading_filter(const DirectedEdge* edge,
          location.heading_tolerance_;
 }
 
+double
+get_edge_heading(const DirectedEdge* edge, const EdgeInfo& info, const PointLL& point, size_t index) {
+
+  // get the angle of the shape from this point
+  auto angle =
+      tangent_angle(index, point, info.shape(),
+                    GetOffsetForHeading(edge->classification(), edge->use()), edge->forward());
+
+  return angle;
+}
+
 PathLocation::SideOfStreet flip_side(const PathLocation::SideOfStreet side) {
   if (side != PathLocation::SideOfStreet::NONE) {
     return side == PathLocation::SideOfStreet::LEFT ? PathLocation::SideOfStreet::RIGHT
@@ -281,8 +292,15 @@ struct bin_handler_t {
 
         // do we want this edge
         if (edge_filter(edge) != 0.0f) {
-          PathLocation::PathEdge path_edge{std::move(id),  0.f, node_ll, distance, PathLocation::NONE,
-                                           get_reach(edge)};
+          auto edge_heading = get_edge_heading(candidate.edge, *candidate.edge_info, candidate.point,
+                                               candidate.index);
+          PathLocation::PathEdge path_edge{std::move(id),
+                                           0.f,
+                                           node_ll,
+                                           distance,
+                                           PathLocation::NONE,
+                                           get_reach(edge),
+                                           edge_heading};
           auto index = edge->forward() ? 0 : info.shape().size() - 2;
           if (heading_filter(edge, info, location, candidate.point, index)) {
             filtered.emplace_back(std::move(path_edge));
@@ -299,13 +317,18 @@ struct bin_handler_t {
         }
         const auto* other_edge = other_tile->directededge(other_id);
         if (edge_filter(other_edge) != 0.0f) {
+
+          auto index = other_edge->forward() ? 0 : info.shape().size() - 2;
+          // Heading of the edge
+          auto edge_heading = get_edge_heading(other_edge, tile->edgeinfo(edge->edgeinfo_offset()),
+                                               candidate.point, index);
           PathLocation::PathEdge path_edge{std::move(other_id),
                                            1.f,
                                            node_ll,
                                            distance,
                                            PathLocation::NONE,
-                                           get_reach(other_edge)};
-          auto index = other_edge->forward() ? 0 : info.shape().size() - 2;
+                                           get_reach(other_edge),
+                                           edge_heading};
           if (heading_filter(other_edge, tile->edgeinfo(edge->edgeinfo_offset()), location,
                              candidate.point, index)) {
             filtered.emplace_back(std::move(path_edge));
@@ -355,8 +378,12 @@ struct bin_handler_t {
       // side of street
       auto sq_tolerance = square(double(location.street_side_tolerance_));
       auto side = candidate.get_side(location.latlng_, candidate.sq_distance, sq_tolerance);
+      // Heading of the edge
+      auto edge_heading =
+          get_edge_heading(candidate.edge, *candidate.edge_info, candidate.point, candidate.index);
       PathLocation::PathEdge path_edge{candidate.edge_id, length_ratio, candidate.point,
-                                       distance,          side,         get_reach(candidate.edge)};
+                                       distance,          side,         get_reach(candidate.edge),
+                                       edge_heading};
       // correlate the edge we found
       if (side_filter(path_edge, location, reader) ||
           heading_filter(candidate.edge, *candidate.edge_info, location, candidate.point,
@@ -371,9 +398,16 @@ struct bin_handler_t {
       const DirectedEdge* other_edge;
       if (opposing_edge_id.Is_Valid() && (other_edge = other_tile->directededge(opposing_edge_id)) &&
           edge_filter(other_edge) != 0.0f) {
+        // Heading of the edge
+
+        // Heading of the edge
+        auto edge_heading =
+            get_edge_heading(other_edge, *candidate.edge_info, candidate.point, candidate.index);
         PathLocation::PathEdge other_path_edge{opposing_edge_id, 1 - length_ratio,
                                                candidate.point,  distance,
-                                               flip_side(side),  get_reach(other_edge)};
+                                               flip_side(side),  get_reach(other_edge),
+                                               edge_heading};
+
         if (side_filter(other_path_edge, location, reader) ||
             heading_filter(other_edge, *candidate.edge_info, location, candidate.point,
                            candidate.index)) {

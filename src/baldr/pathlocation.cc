@@ -9,9 +9,10 @@ PathLocation::PathEdge::PathEdge(const GraphId& id,
                                  const midgard::PointLL& projected,
                                  const float score,
                                  const SideOfStreet sos,
-                                 const unsigned int minimum_reachability)
+                                 const unsigned int minimum_reachability,
+                                 const double edge_heading)
     : id(id), percent_along(dist), projected(projected), sos(sos), distance(score),
-      minimum_reachability(minimum_reachability) {
+      minimum_reachability(minimum_reachability), edge_heading(edge_heading) {
 }
 bool PathLocation::PathEdge::begin_node() const {
   return percent_along == 0.f;

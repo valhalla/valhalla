@@ -16,32 +16,34 @@ json::ArrayPtr serialize_edges(const PathLocation& location, GraphReader& reader
       auto edge_info = tile->edgeinfo(directed_edge->edgeinfo_offset());
       // they want MOAR!
       if (verbose) {
-        array->emplace_back(json::map({
-            {"correlated_lat", json::fp_t{edge.projected.lat(), 6}},
-            {"correlated_lon", json::fp_t{edge.projected.lng(), 6}},
-            {"side_of_street",
-             edge.sos == PathLocation::LEFT
-                 ? std::string("left")
-                 : (edge.sos == PathLocation::RIGHT ? std::string("right") : std::string("neither"))},
-            {"percent_along", json::fp_t{edge.percent_along, 5}},
-            {"distance", json::fp_t{edge.distance, 1}},
-            {"minimum_reachability", static_cast<int64_t>(edge.minimum_reachability)},
-            {"edge_id", edge.id.json()},
-            {"edge", directed_edge->json()},
-            {"edge_info", edge_info.json()},
-        }));
+        array->emplace_back(json::map(
+            {{"correlated_lat", json::fp_t{edge.projected.lat(), 6}},
+             {"correlated_lon", json::fp_t{edge.projected.lng(), 6}},
+             {"side_of_street", edge.sos == PathLocation::LEFT
+                                    ? std::string("left")
+                                    : (edge.sos == PathLocation::RIGHT ? std::string("right")
+                                                                       : std::string("neither"))},
+             {"percent_along", json::fp_t{edge.percent_along, 5}},
+             {"distance", json::fp_t{edge.distance, 1}},
+             {"minimum_reachability", static_cast<int64_t>(edge.minimum_reachability)},
+             {"edge_id", edge.id.json()},
+             {"edge", directed_edge->json()},
+             {"edge_info", edge_info.json()},
+             {"edge_heading", json::fp_t{edge.edge_heading, 2}}
+
+            }));
       } // they want it lean and mean
       else {
-        array->emplace_back(json::map({
-            {"way_id", static_cast<uint64_t>(edge_info.wayid())},
-            {"correlated_lat", json::fp_t{edge.projected.lat(), 6}},
-            {"correlated_lon", json::fp_t{edge.projected.lng(), 6}},
-            {"side_of_street",
-             edge.sos == PathLocation::LEFT
-                 ? std::string("left")
-                 : (edge.sos == PathLocation::RIGHT ? std::string("right") : std::string("neither"))},
-            {"percent_along", json::fp_t{edge.percent_along, 5}},
-        }));
+        array->emplace_back(json::map(
+            {{"way_id", static_cast<uint64_t>(edge_info.wayid())},
+             {"correlated_lat", json::fp_t{edge.projected.lat(), 6}},
+             {"correlated_lon", json::fp_t{edge.projected.lng(), 6}},
+             {"side_of_street", edge.sos == PathLocation::LEFT
+                                    ? std::string("left")
+                                    : (edge.sos == PathLocation::RIGHT ? std::string("right")
+                                                                       : std::string("neither"))},
+             {"percent_along", json::fp_t{edge.percent_along, 5}},
+             {"edge_heading", json::fp_t{edge.edge_heading, 2}}}));
       }
     } catch (...) {
       // this really shouldnt ever get hit

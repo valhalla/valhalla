@@ -1,14 +1,17 @@
 {
   "name": "valhalla",
-  "version": "3.0.0-rc.4",
+  "version": "3.0.3",
   "main": "lib/index.js",
+  "files": [
+    "lib/binding/node_valhalla.node"
+  ],
   "directories": {
     "doc": "docs",
     "test": "test"
   },
   "scripts": {
     "test": "tape test/bindings/nodejs/*.test.js",
-    "install": "node-pre-gyp install --fallback-to-build=false || ./scripts/node_install.sh"
+    "install-valhalla-lib": "node-pre-gyp install --fallback-to-build=false || ./scripts/node_install.sh"
   },
   "engines": {
     "node": ">=8.11.2"
@@ -32,7 +35,7 @@
   "binary": {
     "module_name": "node_valhalla",
     "module_path": "./lib/binding",
-    "host": "https://mapbox-node-binary.s3.amazonaws.com",
+    "host": "https://amapbox-node-binary.s3.amazonaws.com",
     "remote_path": "./valhalla/v{version}/{configuration}/",
     "package_name": "{platform}-{arch}-napi-v{napi_version}.tar.gz"
   },

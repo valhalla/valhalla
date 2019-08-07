@@ -181,7 +181,20 @@ public:
         "," + std::to_string(header_->graphid().level()) + "," + std::to_string(idx) +
         " directededgecount= " + std::to_string(header_->directededgecount()));
   }
-
+  /**
+   * Get a pointer to a edge extension.
+   * @param  idx  Index of the directed edge within the current tile.
+   * @return  Returns a pointer to the edge.
+   */
+  const DirectedEdgeExt* ext_directededge(const size_t idx) const {
+    if (idx < header_->directededgecount()) {
+      return &ext_directededges_[idx];
+    }
+    throw std::runtime_error("GraphTile DirectedEdge Extension index out of bounds: " +
+                             std::to_string(header_->graphid().tileid()) + "," +
+                             std::to_string(header_->graphid().level()) + "," + std::to_string(idx) +
+                             " directededgecount= " + std::to_string(header_->directededgecount()));
+  }
   /**
    * Get an iterable set of directed edges from a node in this tile
    * @param  node  GraphId of the node from which the edges leave
@@ -465,6 +478,25 @@ public:
 
   /**
    * Convenience method to get the speed for an edge given the directed
+   * edge index.
+   * @param  de              Directed edge information.
+   * @param  seconds_of_day  Seconds since midnight.
+   * @return Returns the speed for the edge.
+   */
+  uint32_t GetSpeed(const DirectedEdgeExt* dex, const uint32_t seconds_of_day) const {
+    // if time dependent route and we are routing between 7 AM and 7 PM local time.
+    if (25200 < seconds_of_day && seconds_of_day < 68400) {
+      return (dex->morning_speed() > 0) ? dex->morning_speed() : 0.0;
+    } else if (25200 < seconds_of_day && seconds_of_day < 68400) {
+      return (dex->general_speed() > 0) ? dex->general_speed() : 0.0;
+    } else if (25200 < seconds_of_day && seconds_of_day < 68400) {
+      return (dex->evening_speed() > 0) ? dex->evening_speed() : 0.0;
+    }
+    return 0;
+  }
+
+  /**
+   * Convenience method to get the speed for an edge given the directed
    * edge index and a time (seconds since start of the week).
    * @param  de               Directed edge information.
    * @param  seconds_of_week  Seconds since midnight.
@@ -484,6 +516,18 @@ public:
 
     // Fallback if no predicted speed
     return GetSpeed(de, seconds_of_week % midgard::kSecondsPerDay);
+  }
+  /**
+   * Convenience method to get the Optimind defined speed for an edge given the directed
+   * edge index and a time (seconds since start of the week).
+   * @param  dex               Directed edge Extension information.
+   * @param  seconds_of_week  Seconds since midnight.
+   * @return Returns the speed for the edge.
+   */
+  uint32_t
+  GetSpeed(const DirectedEdgeExt* dex, const GraphId& edgeid, const uint32_t seconds_of_week) const {
+
+    return GetSpeed(dex, seconds_of_week % midgard::kSecondsPerDay);
   }
 
   /**

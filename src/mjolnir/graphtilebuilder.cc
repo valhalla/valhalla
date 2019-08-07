@@ -66,6 +66,9 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
   std::copy(directededges_, directededges_ + n, std::back_inserter(directededges_builder_));
 
   // Add extended directededge attributes (if available)
+  ext_directededges_builder_.reserve(n);
+  std::copy(ext_directededges_, ext_directededges_ + n,
+            std::back_inserter(ext_directededges_builder_));
 
   // Create access restriction list
   for (uint32_t i = 0; i < header_->access_restriction_count(); i++) {
@@ -221,13 +224,13 @@ void GraphTileBuilder::StoreTileData() {
                  directededges_builder_.size() * sizeof(DirectedEdge));
 
     // Write extended directed edge attributes if they exist.
-    if (directededges_ext_builder_.size() > 0) {
-      if (directededges_ext_builder_.size() != directededges_builder_.size()) {
+    if (ext_directededges_builder_.size() > 0) {
+      if (ext_directededges_builder_.size() != directededges_builder_.size()) {
         LOG_ERROR("DirectedEdge extended attributes not same size as directed edges");
       } else {
         header_builder_.set_has_ext_directededge(true);
-        in_mem.write(reinterpret_cast<const char*>(directededges_ext_builder_.data()),
-                     directededges_ext_builder_.size() * sizeof(DirectedEdgeExt));
+        in_mem.write(reinterpret_cast<const char*>(ext_directededges_builder_.data()),
+                     ext_directededges_builder_.size() * sizeof(DirectedEdgeExt));
       }
     }
 
@@ -283,7 +286,7 @@ void GraphTileBuilder::StoreTileData() {
         (sizeof(GraphTileHeader)) + (nodes_builder_.size() * sizeof(NodeInfo)) +
         (transitions_builder_.size() * sizeof(NodeTransition)) +
         (directededges_builder_.size() * sizeof(DirectedEdge)) +
-        (directededges_ext_builder_.size() * sizeof(DirectedEdgeExt)) +
+        (ext_directededges_builder_.size() * sizeof(DirectedEdgeExt)) +
         (access_restriction_builder_.size() * sizeof(AccessRestriction)) +
         (departure_builder_.size() * sizeof(TransitDeparture)) +
         (stop_builder_.size() * sizeof(TransitStop)) +

@@ -485,7 +485,7 @@ protected:
 
   // Optional list of directed edge extended attributes. If this is used it must be the same size
   // as the directededges_builder.
-  std::vector<DirectedEdgeExt> directededges_ext_builder_;
+  std::vector<DirectedEdgeExt> ext_directededges_builder_;
 
   // List of node transitions. This is a fixed size structure so it can be
   // indexed directly.

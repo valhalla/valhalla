@@ -14,6 +14,7 @@ set(sources
   timedep_forward.cc
   timedep_reverse.cc
   timedistancematrix.cc
+  timedepdistancematrix.cc
   worker.cc
   isochrone_action.cc
   matrix_action.cc
