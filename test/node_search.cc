@@ -233,7 +233,7 @@ void graph_builder::write_tiles(uint8_t level) const {
     vm::PointLL end_point = writer.node_latlng(e.second);
 
     DirectedEdgeBuilder edge_builder({}, e.second, forward, start_point.Distance(end_point), 1, 1, {},
-                                     {}, 0, false, 0, 0);
+                                     {}, 0, false, 0, 0, true);
 
     auto opp = std::make_pair(e.second, e.first);
     auto itr =
