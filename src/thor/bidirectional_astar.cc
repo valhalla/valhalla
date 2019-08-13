@@ -605,7 +605,7 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader, valhalla::Location&
     // Get cost and sort cost (based on distance from endnode of this edge
     // to the destination
     nodeinfo = endtile->node(directededge->endnode());
-    Cost cost = costing_->EdgeCost(directededge, tile->GetSpeed(directededge)) *
+    Cost cost = costing_->EdgeCost(directededge, tile->GetConstrainedFlowSpeed(directededge)) *
                 (1.0f - edge.percent_along());
 
     // Store the closest node info
@@ -684,7 +684,8 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader, const valhalla
     // directed edge for costing, as this is the forward direction along the
     // destination edge. Note that the end node of the opposing edge is in the
     // same tile as the directed edge.
-    Cost cost = costing_->EdgeCost(directededge, tile->GetSpeed(directededge)) * edge.percent_along();
+    Cost cost = costing_->EdgeCost(directededge, tile->GetConstrainedFlowSpeed(directededge)) *
+                edge.percent_along();
 
     // We need to penalize this location based on its score (distance in meters from input)
     // We assume the slowest speed you could travel to cover that distance to start/end the route
