@@ -117,11 +117,10 @@ uint32_t ShortestPath(const uint32_t start_node_idx,
         continue;
       }
 
-      // Skip destination only and uses other than road / other (service?)
+      // Skip uses other than road / other (service?)
       const OSMWay w = *ways[edge.wayindex_];
-      if (w.destination_only() ||
-          (w.use() != baldr::Use::kOther &&
-           static_cast<int>(w.use()) > static_cast<int>(baldr::Use::kTurnChannel))) {
+      if (w.use() != baldr::Use::kOther &&
+           static_cast<int>(w.use()) > static_cast<int>(baldr::Use::kTurnChannel)) {
         continue;
       }
 
@@ -146,9 +145,11 @@ uint32_t ShortestPath(const uint32_t start_node_idx,
         continue;
       }
 
-      // Get cost - need the length and speed of the edge
+      // Get cost - need the length and speed of the edge; Use a penalty if an edge is
+      // destination_only and calculate it in the cost
+      float penalty = w.destination_only() ? 300 : 0;
       auto shape = EdgeShape(edge.llindex_, edge.attributes.llcount);
-      float cost = current_cost + (valhalla::midgard::length(shape) * 3.6f) / w.speed();
+      float cost = current_cost + ((valhalla::midgard::length(shape) * 3.6f) / w.speed()) + penalty;
 
       // Check if already in adj set - skip if cost is higher than prior path
       if (node_status[endnode].set == kTemporary) {

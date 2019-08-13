@@ -49,11 +49,12 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
 
   set_truck_route(way.truck_route());
 
-  // Set destination only to true if either destination only or no thru traffic is set and
-  // the reclass_ferry is set to false.  Adding the reclass_ferry check fixes the issue
-  // https://github.com/valhalla/valhalla/issues/1889.
+  // Set destination only to true if the reclass_ferry is set to false and either destination only or
+  // no thru traffic is set. Adding the reclass_ferry check allows us to know if we should override
+  // the destination only attribution
   set_dest_only(!reclass_ferry && (way.destination_only() || way.no_thru_traffic()));
-
+  if (reclass_ferry && (way.destination_only() || way.no_thru_traffic()))
+    LOG_DEBUG("Overriding dest_only attribution to false for ferry.");
   set_dismount(way.dismount());
   set_use_sidepath(way.use_sidepath());
   set_sac_scale(way.sac_scale());
