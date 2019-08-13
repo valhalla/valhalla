@@ -145,7 +145,8 @@ void BidirectionalAStar::ExpandForward(GraphReader& graphreader,
 
     // Get cost. Separate out transition cost.
     Cost tc = costing_->TransitionCost(directededge, nodeinfo, pred);
-    Cost newcost = pred.cost() + tc + costing_->EdgeCost(directededge, tile->GetSpeed(directededge));
+    Cost newcost = pred.cost() + tc +
+                   costing_->EdgeCost(directededge, tile->GetConstrainedFlowSpeed(directededge));
 
     // Check if edge is temporarily labeled and this path has less cost. If
     // less cost the predecessor is updated and the sort cost is decremented
@@ -265,7 +266,8 @@ void BidirectionalAStar::ExpandReverse(GraphReader& graphreader,
     // can properly recover elapsed time on the reverse path.
     Cost tc = costing_->TransitionCostReverse(directededge->localedgeidx(), nodeinfo, opp_edge,
                                               opp_pred_edge);
-    Cost newcost = pred.cost() + costing_->EdgeCost(opp_edge, tile->GetSpeed(opp_edge));
+    Cost newcost =
+        pred.cost() + costing_->EdgeCost(opp_edge, tile->GetConstrainedFlowSpeed(opp_edge));
     newcost.cost += tc.cost;
 
     // Check if edge is temporarily labeled and this path has less cost. If
