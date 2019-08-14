@@ -444,12 +444,31 @@ public:
    * @return  Returns the speed for the edge.
    */
   uint32_t GetSpeed(const DirectedEdge* de) const {
+    return GetFreeFlowSpeed(de);
+  }
+
+  /**
+   * Get the freeflow speed for an edge given the directed
+   * edge index.
+   * @param  de  Directed edge information.
+   * @return  Returns the speed for the edge.
+   */
+  uint32_t GetFreeFlowSpeed(const DirectedEdge* de) const {
     return (de->free_flow_speed() > 0) ? de->free_flow_speed() : de->speed();
   }
 
   /**
+   * Get the constrained flow speed for an edge given the directed edge index.
+   * @param  de  Directed edge information.
+   * @return  Returns the speed for the edge.
+   */
+  uint32_t GetConstrainedFlowSpeed(const DirectedEdge* de) const {
+    return (de->constrained_flow_speed() > 0) ? de->constrained_flow_speed() : de->speed();
+  }
+
+  /**
    * Convenience method to get the speed for an edge given the directed
-   * edge index.
+   * edge index and a time (seconds since midnight).
    * @param  de              Directed edge information.
    * @param  seconds_of_day  Seconds since midnight.
    * @return Returns the speed for the edge.
@@ -457,9 +476,9 @@ public:
   uint32_t GetSpeed(const DirectedEdge* de, const uint32_t seconds_of_day) const {
     // if time dependent route and we are routing between 7 AM and 7 PM local time.
     if (25200 < seconds_of_day && seconds_of_day < 68400) {
-      return (de->constrained_flow_speed() > 0) ? de->constrained_flow_speed() : de->speed();
+      return GetConstrainedFlowSpeed(de);
     } else {
-      return (de->free_flow_speed() > 0) ? de->free_flow_speed() : de->speed();
+      return GetFreeFlowSpeed(de);
     }
   }
 
