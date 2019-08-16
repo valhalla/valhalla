@@ -1217,6 +1217,12 @@ std::string EnhancedTripLeg_IntersectingEdge::ToString() const {
   str += " | walkability=";
   str += std::to_string(walkability());
 
+  str += " | use=";
+  str += std::to_string(use());
+
+  str += " | road_class=";
+  str += std::to_string(road_class());
+
   return str;
 }
 
@@ -1374,6 +1380,23 @@ bool EnhancedTripLeg_Node::HasSpecifiedTurnXEdge(const Turn::Type turn_type,
       return true;
     }
   }
+  return false;
+}
+
+bool EnhancedTripLeg_Node::HasSpecifiedRoadClassXEdge(const TripLeg_RoadClass road_class) {
+
+  // If no intersecting edges then return false
+  if (!HasIntersectingEdges()) {
+    return false;
+  }
+
+  for (int i = 0; i < intersecting_edge_size(); ++i) {
+    if (GetIntersectingEdge(i)->road_class() == road_class) {
+      // Return true there is a match
+      return true;
+    }
+  }
+  // No match found return false
   return false;
 }
 

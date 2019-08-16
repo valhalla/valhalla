@@ -278,6 +278,11 @@ json::ArrayPtr serialize_edges(const AttributesController& controller,
               xedge_map->emplace("use", to_string(static_cast<baldr::Use>(xedge.use())));
             }
 
+            if (xedge.has_road_class()) {
+              xedge_map->emplace("road_class",
+                                 to_string(static_cast<baldr::RoadClass>(xedge.road_class())));
+            }
+
             intersecting_edge_array->emplace_back(xedge_map);
           }
           end_node_map->emplace("intersecting_edges", intersecting_edge_array);

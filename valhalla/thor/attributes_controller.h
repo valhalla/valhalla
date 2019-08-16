@@ -74,6 +74,7 @@ const std::string kNodeIntersectingEdgeDriveability = "node.intersecting_edge.dr
 const std::string kNodeIntersectingEdgeCyclability = "node.intersecting_edge.cyclability";
 const std::string kNodeIntersectingEdgeWalkability = "node.intersecting_edge.walkability";
 const std::string kNodeIntersectingEdgeUse = "node.intersecting_edge.use";
+const std::string kNodeIntersectingEdgeRoadClass = "node.intersecting_edge.road_class";
 const std::string kNodeElapsedTime = "node.elapsed_time";
 const std::string kNodeaAdminIndex = "node.admin_index";
 const std::string kNodeType = "node.type";

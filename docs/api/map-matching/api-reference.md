@@ -118,6 +118,7 @@ node.intersecting_edge.driveability
 node.intersecting_edge.cyclability
 node.intersecting_edge.walkability
 node.intersecting_edge.use
+node.intersecting_edge.road_class
 node.elapsed_time
 node.admin_index
 node.type
@@ -242,6 +243,7 @@ Each `intersecting_edge` may include:
 | `cyclability` | Cyclability values, if available:<ul><li>`forward`</li><li>`backward`</li><li>`both`</li></ul> |
 | `walkability` | Walkability values, if available:<ul><li>`forward`</li><li>`backward`</li><li>`both`</li></ul> |
 | `use` | Use values: <ul><li>`tram`</li><li>`road`</li><li>`ramp`</li><li>`turn_channel`</li><li>`track`</li><li>`driveway`</li><li>`alley`</li><li>`parking_aisle`</li><li>`emergency_access`</li><li>`drive_through`</li><li>`culdesac`</li><li>`cycleway`</li><li>`mountain_bike`</li><li>`sidewalk`</li><li>`footway`</li><li>`steps`</li><li>`other`</li><li>`rail-ferry`</li><li>`ferry`</li><li>`rail`</li><li>`bus`</li><li>`rail_connection`</li><li>`bus_connnection`</li><li>`transit_connection`</li></ul> |
+| `road_class` | Road class values:<ul><li>`motorway`</li><li>`trunk`</li><li>`primary`</li><li>`secondary`</li><li>`tertiary`</li><li>`unclassified`</li><li>`residential`</li><li>`service_other`</li></ul> |
 
 #### Admin items
 
