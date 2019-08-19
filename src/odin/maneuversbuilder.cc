@@ -1785,6 +1785,15 @@ bool ManeuversBuilder::IsFork(int node_index,
   if (node->fork() && ((turn_degree > 315) || (turn_degree < 45))) {
     // If the above criteria is met then check the following criteria...
 
+    // If node is a motorway junction
+    // and current edge is not a service road class
+    // and an intersecting edge is a service road class
+    // then not a fork
+    if (node->IsMotorwayJunction() && (curr_edge->road_class() != TripLeg_RoadClass_kServiceOther) &&
+        node->HasSpecifiedRoadClassXEdge(TripLeg_RoadClass_kServiceOther)) {
+      return false;
+    }
+
     IntersectingEdgeCounts xedge_counts;
     // TODO: update to pass similar turn threshold
     node->CalculateRightLeftIntersectingEdgeCounts(prev_edge->end_heading(), prev_edge->travel_mode(),

@@ -461,6 +461,10 @@ public:
     return mutable_intersecting_edge_->use();
   }
 
+  ::valhalla::TripLeg_RoadClass road_class() const {
+    return mutable_intersecting_edge_->road_class();
+  }
+
   bool IsTraversable(const TripLeg_TravelMode travel_mode) const;
 
   bool IsTraversableOutbound(const TripLeg_TravelMode travel_mode) const;
@@ -586,6 +590,8 @@ public:
   bool HasSpecifiedTurnXEdge(const baldr::Turn::Type turn_type,
                              uint32_t from_heading,
                              const TripLeg_TravelMode travel_mode);
+
+  bool HasSpecifiedRoadClassXEdge(const TripLeg_RoadClass road_class);
 
   uint32_t GetStraightestIntersectingEdgeTurnDegree(uint32_t from_heading);
 
