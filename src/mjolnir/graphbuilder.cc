@@ -502,8 +502,9 @@ void BuildTileSet(const std::string& ways_file,
         PointLL node_ll{node.lng_, node.lat_};
 
         // Get the admin index
-        uint32_t admin_index = (tile_within_one_admin) ? admin_polys.begin()->first
-                                                       : GetMultiPolyId(admin_polys, node_ll);
+        uint32_t admin_index = (tile_within_one_admin)
+                                   ? admin_polys.begin()->first
+                                   : GetMultiPolyId(admin_polys, node_ll, graphtile);
 
         // Look for potential duplicates
         // CheckForDuplicates(nodeid, node, edgelengths, nodes, edges, osmdata.ways, stats);
@@ -981,6 +982,14 @@ void BuildTileSet(const std::string& ways_file,
             (tile_within_one_tz) ? tz_polys.begin()->first : GetMultiPolyId(tz_polys, node_ll);
 
         graphtile.nodes().back().set_timezone(tz_index);
+
+        // if you need to look at the attributes for nodes, grab the LL and update the if statement.
+        // if (equal(node_ll.lng(), 120.99157f) && equal(node_ll.lat(), 14.584733f)) {
+        //  std::cout <<
+        //  std::to_string(GraphId(tile_id.id(),tile_id.level(),graphtile.nodes().size()).value) <<
+        //  std::endl; std::cout << std::to_string(tile_within_one_admin) << " " <<
+        //  std::to_string(tile_id.tileid()) << std::endl;
+        // }
 
         // Increment the counts in the histogram
         stats.nodecount++;
