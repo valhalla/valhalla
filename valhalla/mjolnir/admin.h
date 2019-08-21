@@ -34,8 +34,19 @@ sqlite3* GetDBHandle(const std::string& database);
 /**
  * Get the polygon index.  Used by tz and admin areas.  Checks if the pointLL is covered_by the
  * poly.
- * @param  polys   unordered map of polys.
- * @param  ll      point that needs to be checked.
+ * @param  polys      unordered map of polys.
+ * @param  ll         point that needs to be checked.
+ * @param  graphtile  graphtilebuilder that is used to determine if we are a country poly or not.
+ */
+uint32_t GetMultiPolyId(const std::unordered_multimap<uint32_t, multi_polygon_type>& polys,
+                        const PointLL& ll,
+                        GraphTileBuilder& graphtile);
+
+/**
+ * Get the polygon index.  Used by tz and admin areas.  Checks if the pointLL is covered_by the
+ * poly.
+ * @param  polys      unordered map of polys.
+ * @param  ll         point that needs to be checked.
  */
 uint32_t GetMultiPolyId(const std::unordered_multimap<uint32_t, multi_polygon_type>& polys,
                         const PointLL& ll);
