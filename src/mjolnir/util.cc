@@ -6,6 +6,7 @@
 #include "midgard/logging.h"
 #include "midgard/point2.h"
 #include "midgard/polyline2.h"
+#include "mjolnir/bssbuilder.h"
 #include "mjolnir/elevationbuilder.h"
 #include "mjolnir/graphbuilder.h"
 #include "mjolnir/graphenhancer.h"
@@ -33,6 +34,7 @@ const std::string way_nodes_file = "way_nodes.bin";
 const std::string nodes_file = "nodes.bin";
 const std::string edges_file = "edges.bin";
 const std::string access_file = "access.bin";
+const std::string bss_nodes_file = "bss_nodes.bin";
 const std::string cr_from_file = "complex_from_restrictions.bin";
 const std::string cr_to_file = "complex_to_restrictions.bin";
 const std::string new_to_old_file = "new_nodes_to_old_nodes.bin";
@@ -180,6 +182,7 @@ bool build_tile_set(const boost::property_tree::ptree& config,
   std::string nodes_bin = tile_dir + nodes_file;
   std::string edges_bin = tile_dir + edges_file;
   std::string access_bin = tile_dir + access_file;
+  std::string bss_nodes_bin = tile_dir + bss_nodes_file;
   std::string cr_from_bin = tile_dir + cr_from_file;
   std::string cr_to_bin = tile_dir + cr_to_file;
   std::string new_to_old_bin = tile_dir + new_to_old_file;
@@ -192,8 +195,9 @@ bool build_tile_set(const boost::property_tree::ptree& config,
   if (start_stage <= BuildStage::kParse && BuildStage::kParse <= end_stage) {
     // Read the OSM protocol buffer file. Callbacks for nodes, ways, and
     // relations are defined within the PBFParser class
-    osm_data = PBFGraphParser::Parse(config.get_child("mjolnir"), input_files, ways_bin,
-                                     way_nodes_bin, access_bin, cr_from_bin, cr_to_bin);
+    osm_data =
+        PBFGraphParser::Parse(config.get_child("mjolnir"), input_files, ways_bin, way_nodes_bin,
+                              access_bin, cr_from_bin, cr_to_bin, bss_nodes_bin);
 
     // Free all protobuf memory - cannot use the protobuffer lib after this!
     OSMPBF::Parser::free();
@@ -235,6 +239,11 @@ bool build_tile_set(const boost::property_tree::ptree& config,
   // Add transit
   if (start_stage <= BuildStage::kTransit && BuildStage::kTransit <= end_stage) {
     TransitBuilder::Build(config);
+  }
+
+  // Build bike share stations
+  if (start_stage <= BuildStage::kBss && BuildStage::kBss <= end_stage) {
+    BssBuilder::Build(config, bss_nodes_bin);
   }
 
   // Builds additional hierarchies if specified within config file. Connections
@@ -285,6 +294,7 @@ bool build_tile_set(const boost::property_tree::ptree& config,
     remove_temp_file(nodes_bin);
     remove_temp_file(edges_bin);
     remove_temp_file(access_bin);
+    remove_temp_file(bss_nodes_bin);
     remove_temp_file(cr_from_bin);
     remove_temp_file(cr_to_bin);
     remove_temp_file(new_to_old_bin);

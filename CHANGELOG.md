@@ -3,12 +3,14 @@
    * FIXED: Added logic to detect if user is to merge to the left or right [#1892](https://github.com/valhalla/valhalla/pull/1892)
    * FIXED: Overriding the destination_only flag when reclassifying ferries; Also penalizing ferries with a 5 min. penalty in the cost to allow us to avoid destination_only the majority of the time except when it is necessary. [#1895](https://github.com/valhalla/valhalla/pull/1905)
    * FIXED: Suppress forks at motorway junctions and intersecting service roads [#1909](https://github.com/valhalla/valhalla/pull/1909)
+   * FIXED: Enhanced fork assignment logic [#1912](https://github.com/valhalla/valhalla/pull/1912)
 
 * **Enhancement**
    * ADDED: Caching url fetched tiles to disk [#1887](https://github.com/valhalla/valhalla/pull/1887)
    * ADDED: filesystem::remove_all [#1887](https://github.com/valhalla/valhalla/pull/1887)
    * ADDED: Minimum enclosing bounding box tool [#1887](https://github.com/valhalla/valhalla/pull/1887)
    * ADDED: Use constrained flow speeds in bidirectional_astar.cc [#1907](https://github.com/valhalla/valhalla/pull/1907)
+   * ADDED: Bike Share Stations are now in the graph which should set us up to do multimodal walk/bike scenarios [#1852](https://github.com/valhalla/valhalla/pull/1852)
 
 ## Release Date: 2019-7-18 Valhalla 3.0.7
 * **Bug Fix**

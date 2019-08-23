@@ -275,7 +275,9 @@ enum class Use : uint8_t {
   kBus = 51,                // Bus line
   kEgressConnection = 52,   // Connection to a egress node
   kPlatformConnection = 53, // Connection to a platform node
-  kTransitConnection = 54   // Connection to multi-use transit stop
+  kTransitConnection = 54,  // Connection to multi-use transit stop
+  kBikeShareConnection = 55 // Connection to multi-use transit stop
+
 };
 inline std::string to_string(Use u) {
   static const std::unordered_map<uint8_t, std::string> UseStrings = {
@@ -306,6 +308,7 @@ inline std::string to_string(Use u) {
       {static_cast<uint8_t>(Use::kEgressConnection), "egress_connection"},
       {static_cast<uint8_t>(Use::kPlatformConnection), "platform_connnection"},
       {static_cast<uint8_t>(Use::kTransitConnection), "transit_connection"},
+      {static_cast<uint8_t>(Use::kBikeShareConnection), "bike_share_connection"},
   };
 
   auto i = UseStrings.find(static_cast<uint8_t>(u));
