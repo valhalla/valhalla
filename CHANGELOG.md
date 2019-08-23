@@ -9,6 +9,7 @@
    * ADDED: filesystem::remove_all [#1887](https://github.com/valhalla/valhalla/pull/1887)
    * ADDED: Minimum enclosing bounding box tool [#1887](https://github.com/valhalla/valhalla/pull/1887)
    * ADDED: Use constrained flow speeds in bidirectional_astar.cc [#1907](https://github.com/valhalla/valhalla/pull/1907)
+   * ADDED: Bike Share Stations are now in the graph which should set us up to do multimodal walk/bike scenarios [#1852](https://github.com/valhalla/valhalla/pull/1852)
 
 ## Release Date: 2019-7-18 Valhalla 3.0.7
 * **Bug Fix**
