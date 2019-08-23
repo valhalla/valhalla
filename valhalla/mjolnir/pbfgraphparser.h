@@ -34,7 +34,8 @@ public:
                        const std::string& way_nodes_file,
                        const std::string& access_file,
                        const std::string& complex_restriction_from_file,
-                       const std::string& complex_restriction_to_file);
+                       const std::string& complex_restriction_to_file,
+                       const std::string& bss_nodes_file);
 };
 
 } // namespace mjolnir

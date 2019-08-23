@@ -26,6 +26,7 @@ config = {
     'include_bicycle': True,
     'include_pedestrian': True,
     'include_driving': True,
+    'import_bike_share_stations': False,
     'global_synchronized_cache': False,
     'logging': {
       'type': 'std_out',
@@ -249,6 +250,7 @@ help_text = {
     'include_bicycle': 'bool indicating whether cycling only ways are included - default to True',
     'include_pedestrian': 'bool indicating whether pedestrian only ways are included - default to True',
     'include_driving': 'bool indicating whether driving only ways are included - default to True',
+    'import_bike_share_stations': 'bool indicating whether importing bike share stations(BSS). Set to True when using multimodal - default to False',
     'global_synchronized_cache': 'bool indicating whether global_synchronized_cache is used - default to False',
     'logging': {
       'type': 'Type of logger either std_out or file',
