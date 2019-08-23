@@ -585,6 +585,9 @@ public:
   bool HasForwardTraversableIntersectingEdge(uint32_t from_heading,
                                              const TripLeg_TravelMode travel_mode);
 
+  bool HasWiderForwardTraversableIntersectingEdge(uint32_t from_heading,
+                                                  const TripLeg_TravelMode travel_mode);
+
   bool HasTraversableOutboundIntersectingEdge(const TripLeg_TravelMode travel_mode);
 
   bool HasSpecifiedTurnXEdge(const baldr::Turn::Type turn_type,
