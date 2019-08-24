@@ -1139,6 +1139,9 @@ public:
 
     for (const auto& tag : results) {
 
+      if (osmid == 3075583)
+        std::cout << tag.first << " " << tag.second << std::endl;
+
       if (tag.first == "type") {
         if (tag.second == "restriction") {
           isRestriction = true;
@@ -1260,6 +1263,19 @@ public:
       }
     } // for (const auto& tag : results)
 
+    std::vector<std::string> net = GetTagTokens(network, ':');
+    bool special_network = false;
+    if (net.size() == 3) {
+      std::string value = net.at(2);
+      boost::algorithm::to_lower(value);
+
+      if (value == "turnpike" || value == "tp" || value == "fm" || value == "loop" ||
+          value == "spur" || value == "truck" || value == "business" || value == "bypass" ||
+          value == "belt" || value == "alternate" || value == "alt" || value == "toll" ||
+          value == "cr" || value == "byway" || value == "scenic" || value == "connector" || value == "county")
+        special_network = true;
+    }
+
     if (isBicycle && isRoute && !network.empty()) {
       OSMBike bike;
       const uint32_t name_index = osmdata_.name_offset_map.index(name);
@@ -1278,21 +1294,33 @@ public:
         osmdata_.bike_relations.insert(BikeMultiMap::value_type(member.member_id, bike));
       }
 
-    } else if (isRoad && isRoute && !ref.empty() && !network.empty()) {
+    } else if (isRoad && isRoute && !network.empty() && ((net.size() == 2 && !ref.empty()) || (net.size() == 3 &&
+        net.at(0) == "US" && special_network))) {
 
-      std::vector<std::string> net = GetTagTokens(network, ':');
+      if (net.size() == 3 && net.at(2) == "Turnpike")
+        net[2] = "TP";
 
-      if (net.size() != 2) {
-        return;
-      }
+      std::string reference;
+      if (net.size() == 2 && !ref.empty()) {
+        if (ref.size() == 4 && net.at(1).size() == 2) { //NJTP
+          if (net.at(1) + "TP" == ref)
+            reference = ref;
+          else return;
+        } else reference = net.at(1) + " " + ref; // US 51 or I 95
+      } else if (special_network) reference = net.at(2) + " " + ref;
+      else reference = net.at(1) + net.at(2); //PATP
 
-      std::string reference = net.at(1) + " " + ref; // US 51 or I 95
       bool bfound = false;
       for (const auto& member : members) {
         if (member.role.empty() || member.role == "forward" || member.role == "backward") {
           continue;
         }
         direction = member.role;
+
+        if (member.member_id == 122095951) {
+          std::cout << "dir1 " << member.member_id << " " << direction << " " << reference << std::endl;
+        }
+
         osmdata_.add_to_name_map(member.member_id, direction, reference);
         bfound = true;
       }
@@ -1300,6 +1328,12 @@ public:
       // direction is already set via a direction tag and not at the member level.
       if (!direction.empty() && !bfound) {
         for (const auto& member : members) {
+
+          if (osmid == 3075583) {
+            std::cout << "dir2 " << direction << std::endl;
+          }
+
+
           if (member.role == "forward") {
             osmdata_.add_to_name_map(member.member_id, direction, reference);
           } else if (member.role == "backward") {

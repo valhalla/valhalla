@@ -644,13 +644,29 @@ void BuildTileSet(const std::string& ways_file,
             if (dual_refs && !forward) {
               if (iter_rev != osmdata.way_ref_rev.end()) {
                 // Replace the ref with the reverse ref
+
+
+
                 ref = GraphBuilder::GetRef(osmdata.name_offset_map.name(w.ref_index()),
                                            osmdata.name_offset_map.name(iter_rev->second));
+
               }
             } else {
               if (iter != osmdata.way_ref.end()) {
+
+                if (w.way_id() == 122095951)
+                {
+                  std::cout << "asdf" << std::endl;
+                }
+
+
                 ref = GraphBuilder::GetRef(osmdata.name_offset_map.name(w.ref_index()),
                                            osmdata.name_offset_map.name(iter->second));
+
+                if (w.way_id() == 122095951)
+                  std::cout << "ref: " << ref << " index: " << osmdata.name_offset_map.name(w.ref_index()) << " name: " <<
+                                                                          osmdata.name_offset_map.name(iter->second) << std::endl;
+
               }
             }
           }
@@ -1165,6 +1181,20 @@ std::string GraphBuilder::GetRef(const std::string& way_ref, const std::string& 
           }
           found = true;
           break;
+        } else if (tmp[0].find(" ") != std::string::npos && ref.find(" ") != std::string::npos) { // SR 747 vs OH 747
+          std::vector<std::string> sign1 = GetTagTokens(tmp[0], ' ');
+          std::vector<std::string> sign2 = GetTagTokens(ref, ' ');
+          if (sign1.size() == 2 && sign2.size() == 2) {
+            if (sign1[1] == sign1[1]) { // 747 == 747
+              if (!refs.empty()) {
+                refs += ";" + ref + " " + tmp[1]; // ref order of the way wins.
+              } else {
+                refs = ref + " " + tmp[1];
+              }
+              found = true;
+              break;
+            }
+          }
         }
       }
     }
