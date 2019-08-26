@@ -1203,6 +1203,10 @@ bool EnhancedTripLeg_IntersectingEdge::IsTraversableOutbound(
   return false;
 }
 
+bool EnhancedTripLeg_IntersectingEdge::IsHighway() const {
+  return ((road_class() == TripLeg_RoadClass_kMotorway) && !(use() == TripLeg_Use_kRampUse));
+}
+
 std::string EnhancedTripLeg_IntersectingEdge::ToString() const {
   std::string str;
   str.reserve(128);
@@ -1366,6 +1370,20 @@ bool EnhancedTripLeg_Node::HasWiderForwardTraversableIntersectingEdge(
   for (int i = 0; i < intersecting_edge_size(); ++i) {
     if (is_wider_forward(GetTurnDegree(from_heading, intersecting_edge(i).begin_heading())) &&
         GetIntersectingEdge(i)->IsTraversableOutbound(travel_mode)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool EnhancedTripLeg_Node::HasWiderForwardTraversableHighwayXEdge(
+    uint32_t from_heading,
+    const TripLeg_TravelMode travel_mode) {
+
+  for (int i = 0; i < intersecting_edge_size(); ++i) {
+    auto xedge = GetIntersectingEdge(i);
+    if (is_wider_forward(GetTurnDegree(from_heading, xedge->begin_heading())) &&
+        xedge->IsTraversableOutbound(travel_mode) && xedge->IsHighway()) {
       return true;
     }
   }
