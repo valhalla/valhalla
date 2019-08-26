@@ -1836,6 +1836,13 @@ bool ManeuversBuilder::IsFork(int node_index,
                                                                  prev_edge->travel_mode()))) {
       return true;
     }
+  } else if (prev_edge->IsHighway() && curr_edge->IsHighway() &&
+             curr_edge->IsWiderForward(
+                 GetTurnDegree(prev_edge->end_heading(), curr_edge->begin_heading())) &&
+             (node->intersecting_edge_size() < 3) &&
+             node->HasWiderForwardTraversableHighwayXEdge(prev_edge->end_heading(),
+                                                          curr_edge->travel_mode())) {
+    return true;
   }
 
   return false;
