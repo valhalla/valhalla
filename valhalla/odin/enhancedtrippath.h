@@ -469,6 +469,8 @@ public:
 
   bool IsTraversableOutbound(const TripLeg_TravelMode travel_mode) const;
 
+  bool IsHighway() const;
+
   std::string ToString() const;
 
 protected:
@@ -587,6 +589,9 @@ public:
 
   bool HasWiderForwardTraversableIntersectingEdge(uint32_t from_heading,
                                                   const TripLeg_TravelMode travel_mode);
+
+  bool HasWiderForwardTraversableHighwayXEdge(uint32_t from_heading,
+                                              const TripLeg_TravelMode travel_mode);
 
   bool HasTraversableOutboundIntersectingEdge(const TripLeg_TravelMode travel_mode);
 
