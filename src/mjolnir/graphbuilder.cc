@@ -653,20 +653,8 @@ void BuildTileSet(const std::string& ways_file,
               }
             } else {
               if (iter != osmdata.way_ref.end()) {
-
-                if (w.way_id() == 122095951)
-                {
-                  std::cout << "asdf" << std::endl;
-                }
-
-
                 ref = GraphBuilder::GetRef(osmdata.name_offset_map.name(w.ref_index()),
                                            osmdata.name_offset_map.name(iter->second));
-
-                if (w.way_id() == 122095951)
-                  std::cout << "ref: " << ref << " index: " << osmdata.name_offset_map.name(w.ref_index()) << " name: " <<
-                                                                          osmdata.name_offset_map.name(iter->second) << std::endl;
-
               }
             }
           }
@@ -1185,7 +1173,7 @@ std::string GraphBuilder::GetRef(const std::string& way_ref, const std::string& 
           std::vector<std::string> sign1 = GetTagTokens(tmp[0], ' ');
           std::vector<std::string> sign2 = GetTagTokens(ref, ' ');
           if (sign1.size() == 2 && sign2.size() == 2) {
-            if (sign1[1] == sign1[1]) { // 747 == 747
+            if (sign1[1] == sign2[1]) { // 747 == 747
               if (!refs.empty()) {
                 refs += ";" + ref + " " + tmp[1]; // ref order of the way wins.
               } else {
