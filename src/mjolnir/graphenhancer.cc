@@ -102,7 +102,11 @@ struct enhancer_stats {
  * @param  density       Relative road density.
  * @param  urban_rc_speed Array of default speeds vs. road class for urban areas
  */
-void UpdateSpeed(DirectedEdge& directededge, const uint32_t density, const uint32_t* urban_rc_speed) {
+void UpdateSpeed(DirectedEdge& directededge, const uint32_t density, const uint32_t* urban_rc_speed, const uint64_t wayid) {
+
+  if (wayid == 125845719 || wayid == 255755067 || wayid == 190319701 || wayid == 255754881)
+    std::cout << "before " << wayid << " " << directededge.speed() << std::endl;
+
 
   // Update speed on ramps (if not a tagged speed) and turn channels
   if (directededge.link()) {
@@ -114,6 +118,20 @@ void UpdateSpeed(DirectedEdge& directededge, const uint32_t density, const uint3
       // If no tagged speed set ramp speed to slightly lower than speed
       // for roads of this classification
       RoadClass rc = directededge.classification();
+
+      /*
+      if (rc == RoadClass::kMotorway)
+          speed = 45;
+      else if (rc == RoadClass::kTrunk)
+        speed = 40;
+      else if (rc == RoadClass::kPrimary)
+        speed = 30;
+      else if (rc == RoadClass::kSecondary)
+        speed = 25;
+      else if (rc == RoadClass::kTertiary)
+        speed = 20;
+*/
+
       if ((rc == RoadClass::kMotorway) || (rc == RoadClass::kTrunk) || (rc == RoadClass::kPrimary)) {
         speed = (density > 8) ? static_cast<uint32_t>((speed * kRampDensityFactor) + 0.5f)
                               : static_cast<uint32_t>((speed * kRampFactor) + 0.5f);
@@ -121,7 +139,11 @@ void UpdateSpeed(DirectedEdge& directededge, const uint32_t density, const uint3
         speed = static_cast<uint32_t>((speed * kRampFactor) + 0.5f);
       }
     }
+
     directededge.set_speed(speed);
+
+    if (wayid == 125845719 || wayid == 255755067 || wayid == 190319701 || wayid == 255754881)
+      std::cout << "after link " << wayid << " " << directededge.speed() << std::endl;
 
     // Done processing links so return...
     return;
@@ -130,6 +152,10 @@ void UpdateSpeed(DirectedEdge& directededge, const uint32_t density, const uint3
   // If speed is assigned from an OSM max_speed tag we only update it based
   // on surface type.
   if (directededge.speed_type() == SpeedType::kTagged) {
+
+    if (wayid == 125845719 || wayid == 255755067 || wayid == 190319701 || wayid == 255754881)
+      std::cout << "tagged " << wayid << " " << directededge.speed() << std::endl;
+
     // Reduce speed on rough pavements. TODO - do we want to increase
     // more on worse surface types?
     if (directededge.surface() >= Surface::kPavedRough) {
@@ -167,6 +193,10 @@ void UpdateSpeed(DirectedEdge& directededge, const uint32_t density, const uint3
     if (density > 8) {
       uint32_t rc = static_cast<uint32_t>(directededge.classification());
       directededge.set_speed(urban_rc_speed[rc]);
+
+      if (wayid == 125845719 || wayid == 255755067 || wayid == 190319701 || wayid == 255754881)
+        std::cout << "after density " << wayid << " " << directededge.speed() << std::endl;
+
     }
 
     // Reduce speeds on parking aisles, driveways, and drive-thrus. These uses are
@@ -1676,7 +1706,7 @@ void enhance(const boost::property_tree::ptree& pt,
         }
 
         // Update speed.
-        UpdateSpeed(directededge, density, urban_rc_speed);
+        UpdateSpeed(directededge, density, urban_rc_speed, tilebuilder.edgeinfo(directededge.edgeinfo_offset()).wayid());
 
         // Update the named flag
         auto names = tilebuilder.edgeinfo(directededge.edgeinfo_offset()).GetNamesAndTypes();
