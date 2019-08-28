@@ -1138,10 +1138,6 @@ public:
     uint32_t modes = 0;
 
     for (const auto& tag : results) {
-
-      if (osmid == 3075583)
-        std::cout << tag.first << " " << tag.second << std::endl;
-
       if (tag.first == "type") {
         if (tag.second == "restriction") {
           isRestriction = true;
@@ -1269,7 +1265,7 @@ public:
       std::string value = net.at(2);
       boost::algorithm::to_lower(value);
 
-      if (value == "turnpike" || value == "tp" || value == "fm" || value == "loop" ||
+      if (value == "turnpike" || value == "tp" || value == "fm" || value == "rm" || value == "loop" ||
           value == "spur" || value == "truck" || value == "business" || value == "bypass" ||
           value == "belt" || value == "alternate" || value == "alt" || value == "toll" ||
           value == "cr" || value == "byway" || value == "scenic" || value == "connector" || value == "county")
@@ -1307,7 +1303,7 @@ public:
             reference = ref;
           else return;
         } else reference = net.at(1) + " " + ref; // US 51 or I 95
-      } else if (special_network) reference = net.at(2) + " " + ref;
+      } else if (special_network && !ref.empty()) reference = net.at(2) + " " + ref;
       else reference = net.at(1) + net.at(2); //PATP
 
       bool bfound = false;
@@ -1317,10 +1313,6 @@ public:
         }
         direction = member.role;
 
-        if (member.member_id == 122095951) {
-          std::cout << "dir1 " << member.member_id << " " << direction << " " << reference << std::endl;
-        }
-
         osmdata_.add_to_name_map(member.member_id, direction, reference);
         bfound = true;
       }
@@ -1328,12 +1320,6 @@ public:
       // direction is already set via a direction tag and not at the member level.
       if (!direction.empty() && !bfound) {
         for (const auto& member : members) {
-
-          if (osmid == 3075583) {
-            std::cout << "dir2 " << direction << std::endl;
-          }
-
-
           if (member.role == "forward") {
             osmdata_.add_to_name_map(member.member_id, direction, reference);
           } else if (member.role == "backward") {
