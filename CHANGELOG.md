@@ -6,6 +6,7 @@
    * FIXED: Enhanced fork assignment logic [#1912](https://github.com/valhalla/valhalla/pull/1912)
    * FIXED: Added logic to fall back to return country poly if no state and updated lua for Metro Manila and Ireland [#1910](https://github.com/valhalla/valhalla/pull/1910)
    * FIXED: Added missing motorway fork instruction [#1914](https://github.com/valhalla/valhalla/pull/1914)
+   * FIXED: Use begin street name for osrm compat mode [#1916](https://github.com/valhalla/valhalla/pull/1916)
 
 * **Enhancement**
    * ADDED: Caching url fetched tiles to disk [#1887](https://github.com/valhalla/valhalla/pull/1887)
