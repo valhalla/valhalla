@@ -1580,6 +1580,42 @@ public:
   std::unique_ptr<sequence<OSMRestriction>> complex_restrictions_to_;
 };
 
+struct bss_nodes_callback : public graph_callback {
+  ~bss_nodes_callback() override = default;
+
+  bss_nodes_callback(const boost::property_tree::ptree& pt, OSMData& osmdata)
+      : graph_callback(pt, osmdata) {
+  }
+  void
+  node_callback(const uint64_t osmid, const double lng, const double lat, const Tags& tags) override {
+    // Get tags
+    Tags results = lua_.Transform(OSMType::kNode, tags);
+    for (auto& key_value : results) {
+      if (key_value.first == "amenity" && key_value.second == "bicycle_rental") {
+        // Create a new node and set its attributes
+        OSMNode n{osmid};
+        n.set_latlng(static_cast<float>(lng), static_cast<float>(lat));
+        n.set_type(NodeType::kBikeShare);
+        bss_nodes_->push_back(n);
+        ++osmdata_.node_count;
+      }
+    }
+  };
+  void
+  way_callback(const uint64_t osmid, const Tags& tags, const std::vector<uint64_t>& nodes) override{};
+  void relation_callback(const uint64_t osmid,
+                         const Tags& tags,
+                         const std::vector<OSMPBF::Member>& members) override{};
+  void changeset_callback(const uint64_t changeset_id) override{};
+
+  // lets the sequences be set and reset
+  void reset(sequence<OSMNode>* nodes) {
+    // reset the pointers (either null them out or set them to something valid)
+    bss_nodes_.reset(nodes);
+  }
+  std::unique_ptr<sequence<OSMNode>> bss_nodes_;
+};
+
 } // namespace
 
 namespace valhalla {
@@ -1591,7 +1627,8 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt,
                               const std::string& way_nodes_file,
                               const std::string& access_file,
                               const std::string& complex_restriction_from_file,
-                              const std::string& complex_restriction_to_file) {
+                              const std::string& complex_restriction_to_file,
+                              const std::string& bss_nodes_file) {
   // TODO: option 1: each one threads makes an osmdata and we splice them together at the end
   // option 2: synchronize around adding things to a single osmdata. will have to test to see
   // which is the least expensive (memory and speed). leaning towards option 2
@@ -1607,6 +1644,7 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt,
                  new sequence<OSMAccess>(access_file, true),
                  new sequence<OSMRestriction>(complex_restriction_from_file, true),
                  new sequence<OSMRestriction>(complex_restriction_to_file, true));
+
   LOG_INFO("Parsing files: " + boost::algorithm::join(input_files, ", "));
 
   // hold open all the files so that if something else (like diff application)
@@ -1616,6 +1654,18 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt,
     file_handles.emplace_back(input_file, std::ios::binary);
     if (!file_handles.back().is_open()) {
       throw std::runtime_error("Unable to open: " + input_file);
+    }
+  }
+
+  if (pt.get<bool>("import_bike_share_stations", false)) {
+    LOG_INFO("Parsing bss nodes...");
+    bss_nodes_callback bss_nodes_cb(pt, osmdata);
+    bss_nodes_cb.reset(new sequence<OSMNode>(bss_nodes_file, true));
+    for (auto& file_handle : file_handles) {
+      bss_nodes_cb.current_way_node_index_ = bss_nodes_cb.last_node_ = bss_nodes_cb.last_way_ =
+          bss_nodes_cb.last_relation_ = 0;
+      OSMPBF::Parser::parse(file_handle, static_cast<OSMPBF::Interest>(OSMPBF::Interest::NODES),
+                            bss_nodes_cb);
     }
   }
 

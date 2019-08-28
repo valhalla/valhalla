@@ -1243,6 +1243,21 @@ void ManeuversBuilder::SetManeuverType(Maneuver& maneuver, bool none_type_allowe
         LOG_TRACE("ManeuverType=RAMP_STRAIGHT");
         break;
       }
+      case Maneuver::RelativeDirection::KReverse: {
+        switch (Turn::GetType(maneuver.turn_degree())) {
+          case Turn::Type::kSharpLeft: {
+            maneuver.set_type(DirectionsLeg_Maneuver_Type_kRampLeft);
+            LOG_TRACE("ManeuverType=RAMP_LEFT");
+            break;
+          }
+          // For now default to right
+          default: {
+            maneuver.set_type(DirectionsLeg_Maneuver_Type_kRampRight);
+            LOG_TRACE("ManeuverType=RAMP_RIGHT");
+          }
+        }
+        break;
+      }
       default: {
         LOG_TRACE(std::string("RAMP RelativeDirection=") +
                   std::to_string(static_cast<int>(maneuver.begin_relative_direction())));
@@ -1645,6 +1660,10 @@ bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver, int node_i
     return false;
   }
   if (maneuver.ramp() && prev_edge->IsRampUse()) {
+    // Do not combine if ramp to ramp is not forward
+    if (!curr_edge->IsForward(GetTurnDegree(prev_edge->end_heading(), curr_edge->begin_heading()))) {
+      return false;
+    }
     return true;
   }
 
@@ -1778,11 +1797,17 @@ bool ManeuversBuilder::IsFork(int node_index,
                               EnhancedTripLeg_Edge* curr_edge) const {
 
   auto node = trip_path_->GetEnhancedNode(node_index);
-  uint32_t turn_degree = GetTurnDegree(prev_edge->end_heading(), curr_edge->begin_heading());
 
   // If node is fork
   // and prev to curr edge is relative straight
-  if (node->fork() && ((turn_degree > 315) || (turn_degree < 45))) {
+  // and the intersecting edge count is less than 3
+  // and there is a relative straight intersecting edge
+  if (node->fork() &&
+      curr_edge->IsWiderForward(
+          GetTurnDegree(prev_edge->end_heading(), curr_edge->begin_heading())) &&
+      (node->intersecting_edge_size() < 3) &&
+      node->HasWiderForwardTraversableIntersectingEdge(prev_edge->end_heading(),
+                                                       curr_edge->travel_mode())) {
     // If the above criteria is met then check the following criteria...
 
     // If node is a motorway junction
@@ -1811,6 +1836,19 @@ bool ManeuversBuilder::IsFork(int node_index,
                                                                  prev_edge->travel_mode()))) {
       return true;
     }
+  }
+  // Possibly move some logic to data processing in the future
+  // Verify that both previous and current edges are highways
+  // and the path is in the forward direction
+  // and there are at most 2 intersecting edges
+  // and there is an intersecting highway edge in the forward direction
+  else if (prev_edge->IsHighway() && curr_edge->IsHighway() &&
+           curr_edge->IsWiderForward(
+               GetTurnDegree(prev_edge->end_heading(), curr_edge->begin_heading())) &&
+           (node->intersecting_edge_size() < 3) &&
+           node->HasWiderForwardTraversableHighwayXEdge(prev_edge->end_heading(),
+                                                        curr_edge->travel_mode())) {
+    return true;
   }
 
   return false;
@@ -2195,7 +2233,8 @@ bool ManeuversBuilder::AreRampManeuversCombinable(std::list<Maneuver>::iterator 
     auto node = trip_path_->GetEnhancedNode(next_man->begin_node_index());
     if (!node->HasTraversableOutboundIntersectingEdge(next_man->travel_mode()) ||
         node->IsStraightestTraversableIntersectingEdgeReversed(curr_man->end_heading(),
-                                                               next_man->travel_mode())) {
+                                                               next_man->travel_mode()) ||
+        (next_man->type() == DirectionsLeg_Maneuver_Type_kRampStraight)) {
       return true;
     }
   }

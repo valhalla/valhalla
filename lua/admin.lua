@@ -125,7 +125,7 @@ function rels_proc (kv, nokeys)
          kv["name"] ~= "Saint-Barthélemy" and  kv["name"] ~= "Saint-Martin" and kv["name"] ~= "Polynésie Française" and 
          kv["name"] ~= "Wallis-et-Futuna" and kv["name"] ~= "Nouvelle-Calédonie" and kv["name"] ~= "Île de Clipperton" and 
          kv["name"] ~= "Terres australes et antarctiques françaises" and kv["name:en"] ~= "Metropolitan France" and
-         kv["name:en"] ~= "Hong Kong") then
+         kv["name:en"] ~= "Hong Kong" and kv["name"] ~= "Metro Manila") then
         return 1, kv
      end
 
@@ -139,6 +139,10 @@ function rels_proc (kv, nokeys)
         elseif kv["name:en"] == "Abkhazia" or kv["name:en"] == "South Ossetia" then
           kv["admin_level"] = "4"
         end
+     end
+
+     if kv["name"] == "Metro Manila" then
+        kv["admin_level"] = "4"
      end
 
      if kv["admin_level"] == "3" then

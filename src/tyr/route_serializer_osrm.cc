@@ -989,9 +989,13 @@ names_and_refs(const valhalla::DirectionsLeg::Maneuver& maneuver) {
   std::string names, refs;
 
   // Roundabouts need to use the roundabout_exit_street_names
+  // if a maneuver begin street name exists then use it otherwise use the maneuver street name
+  // TODO: in the future we may switch to use both
   auto& street_names = (maneuver.type() == DirectionsLeg_Maneuver_Type_kRoundaboutEnter)
                            ? maneuver.roundabout_exit_street_names()
-                           : maneuver.street_name();
+                           : (maneuver.begin_street_name_size() > 0) ? maneuver.begin_street_name()
+                                                                     : maneuver.street_name();
+
   for (const auto& name : street_names) {
     // Check if the name is a ref
     if (name.is_route_number()) {
