@@ -103,6 +103,7 @@ struct enhancer_stats {
  * @param  urban_rc_speed Array of default speeds vs. road class for urban areas
  */
 void UpdateSpeed(DirectedEdge& directededge, const uint32_t density, const uint32_t* urban_rc_speed) {
+
   // Update speed on ramps (if not a tagged speed) and turn channels
   if (directededge.link()) {
     uint32_t speed = directededge.speed();
@@ -113,19 +114,15 @@ void UpdateSpeed(DirectedEdge& directededge, const uint32_t density, const uint3
       // If no tagged speed set ramp speed to slightly lower than speed
       // for roads of this classification
       RoadClass rc = directededge.classification();
-      if (rc == RoadClass::kMotorway)
-          speed = 45;
-      else if (rc == RoadClass::kTrunk)
-        speed = 40;
-      else if (rc == RoadClass::kPrimary)
-        speed = 30;
-      else if (rc == RoadClass::kSecondary)
-        speed = 25;
-      else if (rc == RoadClass::kTertiary)
-        speed = 20;
+      if ((rc == RoadClass::kMotorway) || (rc == RoadClass::kTrunk) || (rc == RoadClass::kPrimary)) {
+        speed = (density > 8) ? static_cast<uint32_t>((speed * kRampDensityFactor) + 0.5f)
+                              : static_cast<uint32_t>((speed * kRampFactor) + 0.5f);
+      } else {
+        speed = static_cast<uint32_t>((speed * kRampFactor) + 0.5f);
+      }
     }
-
     directededge.set_speed(speed);
+
     // Done processing links so return...
     return;
   }
