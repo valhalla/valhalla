@@ -1318,7 +1318,6 @@ public:
           continue;
         }
         direction = member.role;
-
         osmdata_.add_to_name_map(member.member_id, direction, reference);
         bfound = true;
       }
