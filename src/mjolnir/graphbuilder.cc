@@ -645,12 +645,8 @@ void BuildTileSet(const std::string& ways_file,
             if (dual_refs && !forward) {
               if (iter_rev != osmdata.way_ref_rev.end()) {
                 // Replace the ref with the reverse ref
-
-
-
                 ref = GraphBuilder::GetRef(osmdata.name_offset_map.name(w.ref_index()),
                                            osmdata.name_offset_map.name(iter_rev->second));
-
               }
             } else {
               if (iter != osmdata.way_ref.end()) {
