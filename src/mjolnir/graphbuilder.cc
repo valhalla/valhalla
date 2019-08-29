@@ -1174,7 +1174,8 @@ std::string GraphBuilder::GetRef(const std::string& way_ref, const std::string& 
           }
           found = true;
           break;
-        } else if (tmp[0].find(" ") != std::string::npos && ref.find(" ") != std::string::npos) { // SR 747 vs OH 747
+        } else if (tmp[0].find(" ") != std::string::npos &&
+                   ref.find(" ") != std::string::npos) { // SR 747 vs OH 747
           std::vector<std::string> sign1 = GetTagTokens(tmp[0], ' ');
           std::vector<std::string> sign2 = GetTagTokens(ref, ' ');
           if (sign1.size() == 2 && sign2.size() == 2) {
