@@ -18,6 +18,7 @@
 #include <valhalla/sif/costfactory.h>
 #include <valhalla/sif/edgelabel.h>
 #include <valhalla/thor/astar.h>
+#include <valhalla/thor/astar_bss.h>
 #include <valhalla/thor/attributes_controller.h>
 #include <valhalla/thor/bidirectional_astar.h>
 #include <valhalla/thor/isochrone.h>
@@ -97,6 +98,8 @@ protected:
   // Path algorithms (TODO - perhaps use a map?))
   AStarPathAlgorithm astar;
   BidirectionalAStar bidir_astar;
+  AStarBSSAlgorithm bss_astar;
+
   MultiModalPathAlgorithm multi_modal_astar;
   TimeDepForward timedep_forward;
   TimeDepReverse timedep_reverse;

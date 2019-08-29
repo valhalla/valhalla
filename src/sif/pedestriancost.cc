@@ -459,6 +459,9 @@ public:
     if (edge->use() == baldr::Use::kFerry && pred.use() != baldr::Use::kFerry) {
       c += ferry_transition_cost_;
     }
+    if (node->type() == baldr::NodeType::kBikeShare) {
+      c += bike_share_cost_;
+    }
 
     // Additional penalties without any time cost
     if (edge->destonly() && !pred.destonly()) {

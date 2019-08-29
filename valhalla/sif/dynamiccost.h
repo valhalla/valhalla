@@ -562,6 +562,7 @@ protected:
   sif::Cost gate_cost_;
   sif::Cost toll_booth_cost_;
   sif::Cost ferry_transition_cost_;
+  sif::Cost bike_share_cost_;
 
   // Penalties that all costing methods support
   float maneuver_penalty_;         // Penalty (seconds) when inconsistent names
@@ -589,6 +590,9 @@ protected:
                               costing_options.country_crossing_cost()};
     gate_cost_ = {costing_options.gate_cost() + costing_options.gate_penalty(),
                   costing_options.gate_cost()};
+
+    bike_share_cost_ = {costing_options.bike_share_cost() + costing_options.bike_share_penalty(),
+                        costing_options.bike_share_cost()};
 
     // Set the cost (seconds) to enter a ferry (only apply entering since
     // a route must exit a ferry (except artificial test routes ending on

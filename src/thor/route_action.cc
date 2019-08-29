@@ -223,6 +223,7 @@ std::string thor_worker_t::expansion(Api& request) {
            &timedep_reverse,
            &astar,
            &bidir_astar,
+           &bss_astar,
        }) {
     alg->set_track_expansion(track_expansion);
   }
@@ -237,6 +238,7 @@ std::string thor_worker_t::expansion(Api& request) {
            &timedep_reverse,
            &astar,
            &bidir_astar,
+           &bss_astar,
        }) {
     alg->set_track_expansion(nullptr);
   }
@@ -272,8 +274,9 @@ thor::PathAlgorithm* thor_worker_t::get_path_algorithm(const std::string& routet
                                                        const valhalla::Location& destination) {
   // Have to use multimodal for transit based routing
   if (routetype == "multimodal" || routetype == "transit") {
-    multi_modal_astar.set_interrupt(interrupt);
-    return &multi_modal_astar;
+    std::cout << "use bss astar" << std::endl;
+    bss_astar.set_interrupt(interrupt);
+    return &bss_astar;
   }
 
   // If the origin has date_time set use timedep_forward method if the distance
@@ -387,6 +390,9 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
     thor::PathAlgorithm* path_algorithm = get_path_algorithm(costing, *origin, *destination);
     path_algorithm->Clear();
 
+    if (path_algorithm->has_bss()) {
+      std::cout << "Yessssssssss" << std::endl;
+    }
     // TODO: delete this and send all cases to the function above
     // If we are continuing through a location we need to make sure we
     // only allow the edge that was used previously (avoid u-turns)

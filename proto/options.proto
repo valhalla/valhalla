@@ -103,6 +103,8 @@ message CostingOptions {
   optional FilterAction filter_route_action = 53;
   repeated string filter_route_ids = 54;
   optional uint32 flow_mask = 55;
+  optional float bike_share_cost = 56;
+  optional float bike_share_penalty = 57;
 }
 
 message AvoidEdge {
