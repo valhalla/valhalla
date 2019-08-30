@@ -1210,7 +1210,7 @@ uint32_t GetStopImpact(uint32_t from,
   // the other edge a low class road (walkways often intersect
   // turn channels)
   if (edges[from].use() == Use::kTurnChannel && edges[to].use() == Use::kTurnChannel &&
-      bestrc < RoadClass::kUnclassified) {
+      bestrc <= RoadClass::kResidential) {
     return 7;
   }
 
@@ -1237,7 +1237,7 @@ uint32_t GetStopImpact(uint32_t from,
       stop_impact -= 1;
     }
   } else if (edges[from].use() == Use::kRamp && edges[to].use() == Use::kRamp &&
-             bestrc < RoadClass::kUnclassified) {
+             bestrc <= RoadClass::kResidential) {
     // Ramp may be crossing a road (not a path or service road)
     if (nodeinfo.traffic_signal()) {
       stop_impact = 4;
