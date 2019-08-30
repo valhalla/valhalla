@@ -1138,7 +1138,6 @@ public:
     uint32_t modes = 0;
 
     for (const auto& tag : results) {
-
       if (tag.first == "type") {
         if (tag.second == "restriction") {
           isRestriction = true;
@@ -1260,6 +1259,20 @@ public:
       }
     } // for (const auto& tag : results)
 
+    std::vector<std::string> net = GetTagTokens(network, ':');
+    bool special_network = false;
+    if (net.size() == 3) {
+      std::string value = net.at(2);
+      boost::algorithm::to_lower(value);
+
+      if (value == "turnpike" || value == "tp" || value == "fm" || value == "rm" || value == "loop" ||
+          value == "spur" || value == "truck" || value == "business" || value == "bypass" ||
+          value == "belt" || value == "alternate" || value == "alt" || value == "toll" ||
+          value == "cr" || value == "byway" || value == "scenic" || value == "connector" ||
+          value == "county")
+        special_network = true;
+    }
+
     if (isBicycle && isRoute && !network.empty()) {
       OSMBike bike;
       const uint32_t name_index = osmdata_.name_offset_map.index(name);
@@ -1278,15 +1291,27 @@ public:
         osmdata_.bike_relations.insert(BikeMultiMap::value_type(member.member_id, bike));
       }
 
-    } else if (isRoad && isRoute && !ref.empty() && !network.empty()) {
+    } else if (isRoad && isRoute && !network.empty() &&
+               ((net.size() == 2 && !ref.empty()) ||
+                (net.size() == 3 && net.at(0) == "US" && special_network))) {
 
-      std::vector<std::string> net = GetTagTokens(network, ':');
+      if (net.size() == 3 && net.at(2) == "Turnpike")
+        net[2] = "TP";
 
-      if (net.size() != 2) {
-        return;
-      }
+      std::string reference;
+      if (net.size() == 2 && !ref.empty()) {
+        if (ref.size() == 4 && net.at(1).size() == 2) { // NJTP
+          if (net.at(1) + "TP" == ref)
+            reference = ref;
+          else
+            return;
+        } else
+          reference = net.at(1) + " " + ref; // US 51 or I 95
+      } else if (special_network && !ref.empty())
+        reference = net.at(2) + " " + ref;
+      else
+        reference = net.at(1) + net.at(2); // PATP
 
-      std::string reference = net.at(1) + " " + ref; // US 51 or I 95
       bool bfound = false;
       for (const auto& member : members) {
         if (member.role.empty() || member.role == "forward" || member.role == "backward") {
