@@ -108,6 +108,9 @@ void UpdateSpeed(DirectedEdge& directededge, const uint32_t density, const uint3
     uint32_t speed = directededge.speed();
     Use use = directededge.use();
     if (use == Use::kTurnChannel) {
+      RoadClass rc = directededge.classification();
+      if (rc == RoadClass::kUnclassified || rc == RoadClass::kResidential)
+        speed = 10;
       speed = static_cast<uint32_t>((speed * kTurnChannelFactor) + 0.5f);
     } else if ((use == Use::kRamp) && (directededge.speed_type() != SpeedType::kTagged)) {
       // If no tagged speed set ramp speed to slightly lower than speed
@@ -123,6 +126,8 @@ void UpdateSpeed(DirectedEdge& directededge, const uint32_t density, const uint3
         speed = 25;
       else if (rc == RoadClass::kTertiary)
         speed = 20;
+      else if (rc == RoadClass::kUnclassified || rc == RoadClass::kResidential)
+        speed = 10;
     }
     directededge.set_speed(speed);
     // Done processing links so return...
