@@ -161,10 +161,10 @@
       ], 
       "example_phrases": {
         "0": [
-          "Continuar por 300 pies."
+          "Continuar en 300 pies."
         ], 
         "1": [
-          "Continuar en 10th Avenue por 3 décimas de una milla."
+          "Continuar en la décima Avenue por 3 décimas de una milla."
         ]
       }
     }, 
@@ -183,7 +183,7 @@
           "Continuar."
         ], 
         "1": [
-          "Continuar en 10th Avenue."
+          "Continuar en la décima Avenue."
         ]
       }
     }, 
@@ -219,8 +219,8 @@
       "phrases": {
         "0": "Has llegado a tu destino.", 
         "1": "Has llegado a <DESTINATION>.", 
-        "2": "Tu destino está hacia la <RELATIVE_DIRECTION>.", 
-        "3": "<DESTINATION> está hacia la <RELATIVE_DIRECTION>."
+        "2": "Tu destino está en  <RELATIVE_DIRECTION>.", 
+        "3": "<DESTINATION> está en  <RELATIVE_DIRECTION>."
       }, 
       "relative_directions": [
         "izquierda", 
@@ -228,14 +228,14 @@
       ], 
       "example_phrases": {
         "0": [
-          "Has llegado a destino."
+          "Has llegado a tu destino."
         ], 
         "1": [
           "Has llegado a 3206 Powelton Avenue."
         ], 
         "2": [
-          "Tu destino está hacia la izquierda.", 
-          "Tu destino está hacia la derecha."
+          "Tu destino está a la izquierda.", 
+          "Tu destino está a la derecha."
         ], 
         "3": [
           "Lancaster Brewing Company está a tu izquierda."
@@ -347,76 +347,76 @@
     "enter_roundabout": {
       "phrases": {
         "0": "Entre en la rotonda.", 
-        "1": "Entre en la rotonda y tome la salida <ORDINAL_VALUE>."
+        "1": "Entre en la rotonda y tome la <ORDINAL_VALUE> salida."
       }, 
       "ordinal_values": [
-        "1er", 
-        "2da", 
-        "3er", 
-        "4ta", 
-        "5ta", 
-        "6ta", 
-        "7º", 
-        "8º", 
-        "9º", 
-        "10º"
+        "primera", 
+        "segunda", 
+        "tercera", 
+        "cuarta", 
+        "quinta", 
+        "sexta", 
+        "séptima", 
+        "octava", 
+        "novena", 
+        "décima"
       ], 
       "example_phrases": {
         "0": [
           "Entre en la rotonda."
         ], 
         "1": [
-          "Entre en la rotonda y tome la 1er salida.", 
-          "Entre en la rotonda y tome la 2da salida.", 
-          "Entre en la rotonda y tome la 3er salida.", 
-          "Entre en la rotonda y tome la 4ta salida.", 
-          "Entre en la rotonda y tome la 5ta salida.", 
-          "Entre en la rotonda y tome la 6ta salida.", 
-          "Entre en la rotonda y tome la 7º salida.", 
-          "Entre en la rotonda y tome la 8º salida.", 
-          "Entre en la rotonda y tome la 9º salida.", 
-          "Entre en la rotonda y tome la 10º salida."
+          "Entre en la rotonda y tome la primera salida.", 
+          "Entre en la rotonda y tome la segunda salida.", 
+          "Entre en la rotonda y tome la tercera salida.", 
+          "Entre en la rotonda y tome la cuarta salida.", 
+          "Entre en la rotonda y tome la quinta salida.", 
+          "Entre en la rotonda y tome la sexta salida.", 
+          "Entre en la rotonda y tome la séptima salida.", 
+          "Entre en la rotonda y tome la octava salida.", 
+          "Entre en la rotonda y tome la novena salida.", 
+          "Entre en la rotonda y tome la décima salida."
         ]
       }
     }, 
     "enter_roundabout_verbal": {
       "phrases": {
         "0": "Entre en la rotonda.", 
-        "1": "Entre en la rotonda y tome la salida <ORDINAL_VALUE>."
+        "1": "Entre en la rotonda y tome la <ORDINAL_VALUE> salida."
       }, 
       "ordinal_values": [
-        "1er", 
-        "2da", 
-        "3er", 
-        "4ta", 
-        "5ta", 
-        "6ta", 
-        "7º", 
-        "8º", 
-        "9º", 
-        "10º"
+        "primera", 
+        "segunda", 
+        "tercera", 
+        "cuarta", 
+        "quinta", 
+        "sexta", 
+        "séptima", 
+        "octava", 
+        "novena", 
+        "décima"
       ], 
       "example_phrases": {
         "0": [
           "Entre en la rotonda."
         ], 
         "1": [
-          "Entre en la rotonda y tome la 1er salida.", 
-          "Entre en la rotonda y tome la 2da salida.", 
-          "Entre en la rotonda y toma la 3er salida.", 
-          "Entre en la rotonda y tome la 4ta salida.", 
-          "Entre en la rotonda y tome la 5ta salida.", 
-          "Entre en la rotonda y tome la 6ta salida.", 
-          "Entre en la rotonda y tome la 7º salida.", 
-          "Entre en la rotonda y tome la 8º salida.", 
-          "Entre en la rotonda y tome la 9º salida.", 
-          "Entre en la rotonda y tome la 10º salida."
+          "Entre en la rotonda y tome la primera salida.", 
+          "Entre en la rotonda y tome la segunda salida.", 
+          "Entre en la rotonda y toma la tercera salida.", 
+          "Entre en la rotonda y tome la cuarta salida.", 
+          "Entre en la rotonda y tome la quinta salida.", 
+          "Entre en la rotonda y tome la sexta salida.", 
+          "Entre en la rotonda y tome la séptima salida.", 
+          "Entre en la rotonda y tome la octava salida.", 
+          "Entre en la rotonda y tome la novena salida.", 
+          "Entre en la rotonda y tome la décima salida."
         ]
       }
     }, 
     "exit": {
       "phrases": {
-        "0": "Tomar la salida sobre la <RELATIVE_DIRECTION>.", 
+        "0": "Tomar la salida a la <RELATIVE_DIRECTION>.", 
         "1": "Tomar la salida <NUMBER_SIGN> a la <RELATIVE_DIRECTION>.", 
         "2": "Tomar la salida <BRANCH_SIGN> a la <RELATIVE_DIRECTION>.", 
         "3": "Tomar la salida <NUMBER_SIGN> a la <RELATIVE_DIRECTION> en <BRANCH_SIGN>.", 
@@ -435,11 +435,11 @@
       ], 
       "example_phrases": {
         "0": [
-          "Tomar la salida sobre la izquierda.", 
-          "Tomar la salida sobre la derecha."
+          "Tomar la salida a la izquierda.", 
+          "Tomar la salida a la derecha."
         ], 
         "1": [
-          "Tomar la salida 67 B-A sobre la derecha."
+          "Tomar la salida 67 B-A a la derecha."
         ], 
         "2": [
           "Tomar la salida de Take the US 322 oeste sobre la derecha."
@@ -734,13 +734,13 @@
       ], 
       "relative_directions": [
         "izquierda", 
-        "derecho", 
+        "recto", 
         "derecha"
       ], 
       "example_phrases": {
         "0": [
           "En la bifurcación manténgase a la izquierda.", 
-          "Siga derecho en la bifurcación.", 
+          "Siga recto en la bifurcación.", 
           "En la bifurcación manténgase a la derecha."
         ], 
         "1": [
@@ -780,13 +780,13 @@
       ], 
       "relative_directions": [
         "izquierda", 
-        "derecho", 
+        "recto", 
         "derecha"
       ], 
       "example_phrases": {
         "0": [
           "Manténgase a la izquierda para quedar en I 95 sur.", 
-          "Siga derecho para quedar en I 95 sur.", 
+          "Siga recto para quedar en I 95 sur.", 
           "Manténgase a la derecha para quedar en I 95 sur."
         ], 
         "1": [
@@ -814,13 +814,13 @@
       ], 
       "relative_directions": [
         "izquierda", 
-        "derecho", 
+        "recto", 
         "derecha"
       ], 
       "example_phrases": {
         "0": [
           "Manténgase a la izquierda para quedar en Interstate 95 sur.", 
-          "Siga derecho para quedar en Interstate 95 sur.", 
+          "Siga recto para quedar en Interstate 95 sur.", 
           "Manténgase a la derecha para quedar en Interstate 95 sur."
         ], 
         "1": [
@@ -852,13 +852,13 @@
       ], 
       "relative_directions": [
         "izquierda", 
-        "derecho", 
+        "recto", 
         "derecha"
       ], 
       "example_phrases": {
         "0": [
           "En la bifurcación manténgase a la izquierda.", 
-          "En la bifurcación siga derecho.", 
+          "En la bifurcación siga recto.", 
           "En la bifurcación manténgase a la derecha."
         ], 
         "1": [
@@ -1114,16 +1114,16 @@
     }, 
     "ramp": {
       "phrases": {
-        "0": "Tomar el repecho a la <RELATIVE_DIRECTION>.", 
-        "1": "Tomar el repecho <BRANCH_SIGN> a la <RELATIVE_DIRECTION>.", 
-        "2": "Tomar el repecho a la <RELATIVE_DIRECTION> hacia <TOWARD_SIGN>.", 
-        "3": "Tomar el repecho <BRANCH_SIGN> a la <RELATIVE_DIRECTION> hacia <TOWARD_SIGN>.", 
-        "4": "Tomar el repecho <NAME_SIGN> a la <RELATIVE_DIRECTION>.", 
-        "5": "Girar a la <RELATIVE_DIRECTION> para tomar el repecho.", 
+        "0": "Tomar la rampa a <RELATIVE_DIRECTION>.", 
+        "1": "Tomar la rampa <BRANCH_SIGN> a la <RELATIVE_DIRECTION>.", 
+        "2": "Tomar la rampa a la <RELATIVE_DIRECTION> hacia <TOWARD_SIGN>.", 
+        "3": "Tomar la rampa <BRANCH_SIGN> a la <RELATIVE_DIRECTION> hacia <TOWARD_SIGN>.", 
+        "4": "Tomar la rampa <NAME_SIGN> a la <RELATIVE_DIRECTION>.", 
+        "5": "Girar a la <RELATIVE_DIRECTION> para tomar la rampa.", 
         "6": "Girar a la <RELATIVE_DIRECTION> para tomar la rampa <BRANCH_SIGN>.", 
-        "7": "Girar a la <RELATIVE_DIRECTION> para tomar el repecho hacia la <TOWARD_SIGN>.", 
-        "8": "Girar a la <RELATIVE_DIRECTION> para tomar el repecho <BRANCH_SIGN> hacia <TOWARD_SIGN>.", 
-        "9": "Girar a la <RELATIVE_DIRECTION> para tomar el repecho <NAME_SIGN>."
+        "7": "Girar a la <RELATIVE_DIRECTION> para tomar la rampa hacia la <TOWARD_SIGN>.", 
+        "8": "Girar a la <RELATIVE_DIRECTION> para tomar la rampa <BRANCH_SIGN> hacia <TOWARD_SIGN>.", 
+        "9": "Girar a la <RELATIVE_DIRECTION> para tomar la rampa <NAME_SIGN>."
       }, 
       "relative_directions": [
         "izquierda", 
@@ -1131,103 +1131,103 @@
       ], 
       "example_phrases": {
         "0": [
-          "Tomar el repecho a la izquierda.", 
-          "Tomar el repecho a la derecha."
+          "Tomar la rampa a la izquierda.", 
+          "Tomar la rampa a la derecha."
         ], 
         "1": [
-          "Tomar el repecho a la derecha en la I 95ramp."
+          "Tomar la rampa a la derecha en la I 95ramp."
         ], 
         "2": [
-          "Tomar el repecho a la izquierda hacia JFK."
+          "Tomar la rampa a la izquierda hacia JFK."
         ], 
         "3": [
-          "Tomar el repecho a la izquierda de sur Conduit Avenue hacia JFK."
+          "Tomar la rampa a la izquierda de sur Conduit Avenue hacia JFK."
         ], 
         "4": [
-          "Tomar el repecho a la derecha de Gettysburg Pike."
+          "Tomar la rampa a la derecha de Gettysburg Pike."
         ], 
         "5": [
-          "Girar a la izquierda para tomar el repecho.", 
-          "Gire a la derecha para tomar el repecho."
+          "Girar a la izquierda para tomar la rampa.", 
+          "Gire a la derecha para tomar la rampa."
         ], 
         "6": [
-          "Girar a la izquierda para tomar el repecho de PA 283 oeste."
+          "Girar a la izquierda para tomar la rampa de PA 283 oeste."
         ], 
         "7": [
-          "Girar a la izquierda para tomar el repecho hacia Harrisburg/Harrisburg International Airport."
+          "Girar a la izquierda para tomar la rampa hacia Harrisburg/Harrisburg International Airport."
         ], 
         "8": [
-          "Girar a la izquierda para tomar el repecho de PA 283 oeste hacia Harrisburg/Harrisburg International Airport."
+          "Girar a la izquierda para tomar la rampa de PA 283 oeste hacia Harrisburg/Harrisburg International Airport."
         ], 
         "9": [
-          "Girar a la derecha para tomar el repecho de Gettysburg Pike."
+          "Girar a la derecha para tomar la rampa de Gettysburg Pike."
         ]
       }
     }, 
     "ramp_straight": {
       "phrases": {
-        "0": "Siga derecho para tomar el repecho.", 
-        "1": "Siga derecho para tomar la <BRANCH_SIGN> del repecho.", 
-        "2": "Siga derecho para tomar el repecho hacia <TOWARD_SIGN>.", 
-        "3": "Siga derecho para tomar el repecho <BRANCH_SIGN> hacia <TOWARD_SIGN>.", 
-        "4": "Siga derecho para tomar el repecho <NAME_SIGN>."
+        "0": "Siga derecho para tomar la rampa.", 
+        "1": "Siga derecho para tomar la <BRANCH_SIGN> dla rampa.", 
+        "2": "Siga derecho para tomar la rampa hacia <TOWARD_SIGN>.", 
+        "3": "Siga derecho para tomar la rampa <BRANCH_SIGN> hacia <TOWARD_SIGN>.", 
+        "4": "Siga derecho para tomar la rampa <NAME_SIGN>."
       }, 
       "example_phrases": {
         "0": [
-          "Siga derecho para tomar el repecho."
+          "Siga derecho para tomar la rampa."
         ], 
         "1": [
-          "Siga derecho para tomar el repecho de US 322 East."
+          "Siga derecho para tomar la rampa de US 322 East."
         ], 
         "2": [
-          "Siga derecho para tomar el repecho hacia Hershey."
+          "Siga derecho para tomar la rampa hacia Hershey."
         ], 
         "3": [
-          "Siga derecho para tomar el repecho de US 322 East/US 422 East/US 522 East/US 622 East hacia Hershey/Palmdale/Palmyra/Campbelltown."
+          "Siga derecho para tomar la rampa de US 322 East/US 422 East/US 522 East/US 622 East hacia Hershey/Palmdale/Palmyra/Campbelltown."
         ], 
         "4": [
-          "Siga derecho para tomar el repecho de Gettysburg Pike."
+          "Siga derecho para tomar la rampa de Gettysburg Pike."
         ]
       }
     }, 
     "ramp_straight_verbal": {
       "phrases": {
-        "0": "Siga derecho para tomar el repecho.", 
-        "1": "Siga derecho para tomar el repecho <BRANCH_SIGN>.", 
-        "2": "Siga derecho para tomar el repecho hacia <TOWARD_SIGN>.", 
-        "3": "Siga derecho para tomar el repecho <BRANCH_SIGN> hacia <TOWARD_SIGN>.", 
-        "4": "Siga derecho para tomar el repecho <NAME_SIGN>."
+        "0": "Siga derecho para tomar la rampa.", 
+        "1": "Siga derecho para tomar la rampa <BRANCH_SIGN>.", 
+        "2": "Siga derecho para tomar la rampa hacia <TOWARD_SIGN>.", 
+        "3": "Siga derecho para tomar la rampa <BRANCH_SIGN> hacia <TOWARD_SIGN>.", 
+        "4": "Siga derecho para tomar la rampa <NAME_SIGN>."
       }, 
       "example_phrases": {
         "0": [
-          "Siga derecho para tomar el repecho."
+          "Siga derecho para tomar la rampa."
         ], 
         "1": [
-          "Siga derecho para tomar el repecho de U.S. 3 22 East."
+          "Siga derecho para tomar la rampa de U.S. 3 22 East."
         ], 
         "2": [
-          "Siga derecho para tomar el repecho hacia Hershey."
+          "Siga derecho para tomar la rampa hacia Hershey."
         ], 
         "3": [
-          "Siga derecho para tomar el repecho de U.S. 3 22 East, U.S. 4 22 East ramp toward Hershey, Palmdale."
+          "Siga derecho para tomar la rampa de U.S. 3 22 East, U.S. 4 22 East ramp toward Hershey, Palmdale."
         ], 
         "4": [
-          "Siga derecho para tomar el repecho de Gettysburg Pike."
+          "Siga derecho para tomar la rampa de Gettysburg Pike."
         ]
       }
     }, 
     "ramp_verbal": {
       "phrases": {
-        "0": "Tomar el repecho a la <RELATIVE_DIRECTION>.", 
-        "1": "Tomar el repecho <BRANCH_SIGN> a la <RELATIVE_DIRECTION>.", 
-        "2": "Tomar el repecho a la <RELATIVE_DIRECTION> hacia <TOWARD_SIGN>.", 
-        "3": "Tomar el repecho <BRANCH_SIGN> a la <RELATIVE_DIRECTION> hacia <TOWARD_SIGN>.", 
-        "4": "Tomar el repecho <NAME_SIGN> a la <RELATIVE_DIRECTION>.", 
-        "5": "Girar a la <RELATIVE_DIRECTION> para tomar el repecho.", 
-        "6": "Girar a la <RELATIVE_DIRECTION> para tomar el repecho <BRANCH_SIGN>.", 
-        "7": "Girar a la <RELATIVE_DIRECTION> para tomar el repecho hacia <TOWARD_SIGN>.", 
-        "8": "Girar a la <RELATIVE_DIRECTION> para tomar el repecho <BRANCH_SIGN> hacia la <TOWARD_SIGN>.", 
-        "9": "Girar a la <RELATIVE_DIRECTION> para tomar el repecho <NAME_SIGN> ramp."
+        "0": "Tomar la rampa a la <RELATIVE_DIRECTION>.", 
+        "1": "Tomar la rampa <BRANCH_SIGN> a la <RELATIVE_DIRECTION>.", 
+        "2": "Tomar la rampa a la <RELATIVE_DIRECTION> hacia <TOWARD_SIGN>.", 
+        "3": "Tomar la rampa <BRANCH_SIGN> a la <RELATIVE_DIRECTION> hacia <TOWARD_SIGN>.", 
+        "4": "Tomar la rampa <NAME_SIGN> a la <RELATIVE_DIRECTION>.", 
+        "5": "Girar a la <RELATIVE_DIRECTION> para tomar la rampa.", 
+        "6": "Girar a la <RELATIVE_DIRECTION> para tomar la rampa <BRANCH_SIGN>.", 
+        "7": "Girar a la <RELATIVE_DIRECTION> para tomar la rampa hacia <TOWARD_SIGN>.", 
+        "8": "Girar a la <RELATIVE_DIRECTION> para tomar la rampa <BRANCH_SIGN> hacia la <TOWARD_SIGN>.", 
+        "9": "Girar a la <RELATIVE_DIRECTION> para tomar la rampa <NAME_SIGN> ramp."
       }, 
       "relative_directions": [
         "izquierda", 
@@ -1235,36 +1235,36 @@
       ], 
       "example_phrases": {
         "0": [
-          "Tomar el repecho a la izquierda.", 
-          "Tomar el repecho a la derecha."
+          "Tomar la rampa a la izquierda.", 
+          "Tomar la rampa a la derecha."
         ], 
         "1": [
-          "Tomar el repecho de la Interstate 95 sobre la derecha."
+          "Tomar la rampa de la Interstate 95 sobre la derecha."
         ], 
         "2": [
-          "Tomar el repecho sobre la izquierda hacia JFK."
+          "Tomar la rampa sobre la izquierda hacia JFK."
         ], 
         "3": [
-          "Tomar el repecho a la izquierda de sur Conduit Avenue hacia JFK."
+          "Tomar la rampa a la izquierda de sur Conduit Avenue hacia JFK."
         ], 
         "4": [
-          "Tomar el repecho de la Gettysburg Pike ramp a la derecha."
+          "Tomar la rampa de la Gettysburg Pike ramp a la derecha."
         ], 
         "5": [
-          "Girar a la izquierda para tomar el repecho.", 
-          "Girar a la derecha para tomar el repecho."
+          "Girar a la izquierda para tomar la rampa.", 
+          "Girar a la derecha para tomar la rampa."
         ], 
         "6": [
-          "Girar a la izquierda para tomar el repecho de la Pennsylvania 2 83 oeste."
+          "Girar a la izquierda para tomar la rampa de la Pennsylvania 2 83 oeste."
         ], 
         "7": [
-          "Girar a la izquierda para tomar el repecho hacia Harrisburg/Harrisburg International Airport."
+          "Girar a la izquierda para tomar la rampa hacia Harrisburg/Harrisburg International Airport."
         ], 
         "8": [
-          "Girar a la izquierda para tomar el repecho de Pennsylvania 2 83 oeste hacia Harrisburg, Harrisburg International Airport."
+          "Girar a la izquierda para tomar la rampa de Pennsylvania 2 83 oeste hacia Harrisburg, Harrisburg International Airport."
         ], 
         "9": [
-          "Girar a la derecha para tomar el repecho de Gettysburg Pike."
+          "Girar a la derecha para tomar la rampa de Gettysburg Pike."
         ]
       }
     }, 
@@ -1450,7 +1450,7 @@
         "<MILES> millas", 
         "1 milla", 
         "media milla", 
-        "<TENTHS_OF_MILE> décimas de una milla", 
+        "<TENTHS_OF_MILE> décimas de milla", 
         "1 décima de milla", 
         "<FEET> pies", 
         "menos de 10 pies"
@@ -1461,24 +1461,24 @@
           "Ir hacia el norte por 1 kilómetro."
         ], 
         "1": [
-          "Ir hacia el soroeste en 5º Avenue por 1 décima de milla."
+          "Ir hacia el soroeste en quinta Avenue por 1 décima de milla."
         ], 
         "2": [
           "Ir hacia el sur en North Prince Street, U.S. 2 22."
         ], 
         "4": [
           "Conducir hacia el este por media milla.", 
-          "Conducir hacia el norte por 1 kilómetro."
+          "Conducir hacia el norte durante 1 kilómetro."
         ], 
         "5": [
-          "Conducir hacia el suroeste en 5th Avenue por 1 décima de milla."
+          "Conducir hacia el suroeste en quinta Avenue por 1 décima de milla."
         ], 
         "6": [
           "Conducir hacia el sur en North Prince Street, U.S. 2 22."
         ], 
         "8": [
           "Caminar hacia el este por media milla.", 
-          "Caminar hacia el norte por 1 kilómetro."
+          "Caminar hacia el norte durante 1 kilómetro."
         ], 
         "9": [
           "Caminar hacia el suroeste en 5º Avenue por 1 décima de milla."
