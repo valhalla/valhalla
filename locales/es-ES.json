@@ -347,19 +347,19 @@
     "enter_roundabout": {
       "phrases": {
         "0": "Entre en la rotonda.", 
-        "1": "Entre en la rotonda y tome la salida <ORDINAL_VALUE>."
+        "1": "Entre en la rotonda y tome la <ORDINAL_VALUE> salida."
       }, 
       "ordinal_values": [
-        "1er", 
-        "2da", 
-        "3er", 
-        "4ta", 
-        "5ta", 
-        "6ta", 
-        "7º", 
-        "8º", 
-        "9º", 
-        "10º"
+        "primera", 
+        "segunda", 
+        "tercera", 
+        "cuarta", 
+        "quinta", 
+        "sexta", 
+        "séptima", 
+        "octava", 
+        "novena", 
+        "décima"
       ], 
       "example_phrases": {
         "0": [
@@ -382,19 +382,19 @@
     "enter_roundabout_verbal": {
       "phrases": {
         "0": "Entre en la rotonda.", 
-        "1": "Entre en la rotonda y tome la salida <ORDINAL_VALUE>."
+        "1": "Entre en la rotonda y tome la <ORDINAL_VALUE> salida."
       }, 
       "ordinal_values": [
-        "1er", 
-        "2da", 
-        "3er", 
-        "4ta", 
-        "5ta", 
-        "6ta", 
-        "7º", 
-        "8º", 
-        "9º", 
-        "10º"
+        "primera", 
+        "segunda", 
+        "tercera", 
+        "cuarta", 
+        "quinta", 
+        "sexta", 
+        "séptima", 
+        "octava", 
+        "novena", 
+        "décima"
       ], 
       "example_phrases": {
         "0": [
@@ -814,7 +814,7 @@
       ], 
       "relative_directions": [
         "izquierda", 
-        "derecho", 
+        "recto", 
         "derecha"
       ], 
       "example_phrases": {
@@ -852,7 +852,7 @@
       ], 
       "relative_directions": [
         "izquierda", 
-        "derecho", 
+        "recto", 
         "derecha"
       ], 
       "example_phrases": {
@@ -1114,16 +1114,16 @@
     }, 
     "ramp": {
       "phrases": {
-        "0": "Tomar el repecho a la <RELATIVE_DIRECTION>.", 
-        "1": "Tomar el repecho <BRANCH_SIGN> a la <RELATIVE_DIRECTION>.", 
-        "2": "Tomar el repecho a la <RELATIVE_DIRECTION> hacia <TOWARD_SIGN>.", 
-        "3": "Tomar el repecho <BRANCH_SIGN> a la <RELATIVE_DIRECTION> hacia <TOWARD_SIGN>.", 
-        "4": "Tomar el repecho <NAME_SIGN> a la <RELATIVE_DIRECTION>.", 
-        "5": "Girar a la <RELATIVE_DIRECTION> para tomar el repecho.", 
+        "0": "Tomar la rampa a la <RELATIVE_DIRECTION>.", 
+        "1": "Tomar la rampa <BRANCH_SIGN> a la <RELATIVE_DIRECTION>.", 
+        "2": "Tomar la rampa a la <RELATIVE_DIRECTION> hacia <TOWARD_SIGN>.", 
+        "3": "Tomar la rampa <BRANCH_SIGN> a la <RELATIVE_DIRECTION> hacia <TOWARD_SIGN>.", 
+        "4": "Tomar la rampa <NAME_SIGN> a la <RELATIVE_DIRECTION>.", 
+        "5": "Girar a la <RELATIVE_DIRECTION> para tomar la rampa.", 
         "6": "Girar a la <RELATIVE_DIRECTION> para tomar la rampa <BRANCH_SIGN>.", 
-        "7": "Girar a la <RELATIVE_DIRECTION> para tomar el repecho hacia la <TOWARD_SIGN>.", 
-        "8": "Girar a la <RELATIVE_DIRECTION> para tomar el repecho <BRANCH_SIGN> hacia <TOWARD_SIGN>.", 
-        "9": "Girar a la <RELATIVE_DIRECTION> para tomar el repecho <NAME_SIGN>."
+        "7": "Girar a la <RELATIVE_DIRECTION> para tomar la rampa hacia la <TOWARD_SIGN>.", 
+        "8": "Girar a la <RELATIVE_DIRECTION> para tomar la rampa <BRANCH_SIGN> hacia <TOWARD_SIGN>.", 
+        "9": "Girar a la <RELATIVE_DIRECTION> para tomar la rampa <NAME_SIGN>."
       }, 
       "relative_directions": [
         "izquierda", 
@@ -1192,11 +1192,11 @@
     }, 
     "ramp_straight_verbal": {
       "phrases": {
-        "0": "Siga derecho para tomar el repecho.", 
-        "1": "Siga derecho para tomar el repecho <BRANCH_SIGN>.", 
-        "2": "Siga derecho para tomar el repecho hacia <TOWARD_SIGN>.", 
-        "3": "Siga derecho para tomar el repecho <BRANCH_SIGN> hacia <TOWARD_SIGN>.", 
-        "4": "Siga derecho para tomar el repecho <NAME_SIGN>."
+        "0": "Siga derecho para tomar la rampa.", 
+        "1": "Siga derecho para tomar la rampa <BRANCH_SIGN>.", 
+        "2": "Siga derecho para tomar la rampa hacia <TOWARD_SIGN>.", 
+        "3": "Siga derecho para tomar la rampa <BRANCH_SIGN> hacia <TOWARD_SIGN>.", 
+        "4": "Siga derecho para tomar la rampa <NAME_SIGN>."
       }, 
       "example_phrases": {
         "0": [
@@ -1218,16 +1218,16 @@
     }, 
     "ramp_verbal": {
       "phrases": {
-        "0": "Tomar el repecho a la <RELATIVE_DIRECTION>.", 
-        "1": "Tomar el repecho <BRANCH_SIGN> a la <RELATIVE_DIRECTION>.", 
-        "2": "Tomar el repecho a la <RELATIVE_DIRECTION> hacia <TOWARD_SIGN>.", 
-        "3": "Tomar el repecho <BRANCH_SIGN> a la <RELATIVE_DIRECTION> hacia <TOWARD_SIGN>.", 
-        "4": "Tomar el repecho <NAME_SIGN> a la <RELATIVE_DIRECTION>.", 
-        "5": "Girar a la <RELATIVE_DIRECTION> para tomar el repecho.", 
-        "6": "Girar a la <RELATIVE_DIRECTION> para tomar el repecho <BRANCH_SIGN>.", 
-        "7": "Girar a la <RELATIVE_DIRECTION> para tomar el repecho hacia <TOWARD_SIGN>.", 
-        "8": "Girar a la <RELATIVE_DIRECTION> para tomar el repecho <BRANCH_SIGN> hacia la <TOWARD_SIGN>.", 
-        "9": "Girar a la <RELATIVE_DIRECTION> para tomar el repecho <NAME_SIGN> ramp."
+        "0": "Tomar la rampa a la <RELATIVE_DIRECTION>.", 
+        "1": "Tomar la rampa <BRANCH_SIGN> a la <RELATIVE_DIRECTION>.", 
+        "2": "Tomar la rampa a la <RELATIVE_DIRECTION> hacia <TOWARD_SIGN>.", 
+        "3": "Tomar la rampa <BRANCH_SIGN> a la <RELATIVE_DIRECTION> hacia <TOWARD_SIGN>.", 
+        "4": "Tomar la rampa <NAME_SIGN> a la <RELATIVE_DIRECTION>.", 
+        "5": "Girar a la <RELATIVE_DIRECTION> para tomar la rampa.", 
+        "6": "Girar a la <RELATIVE_DIRECTION> para tomar la rampa <BRANCH_SIGN>.", 
+        "7": "Girar a la <RELATIVE_DIRECTION> para tomar la rampa hacia <TOWARD_SIGN>.", 
+        "8": "Girar a la <RELATIVE_DIRECTION> para tomar la rampa <BRANCH_SIGN> hacia la <TOWARD_SIGN>.", 
+        "9": "Girar a la <RELATIVE_DIRECTION> para tomar la rampa <NAME_SIGN> ramp."
       }, 
       "relative_directions": [
         "izquierda", 
