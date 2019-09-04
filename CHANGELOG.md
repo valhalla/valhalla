@@ -8,6 +8,7 @@
    * FIXED: Added missing motorway fork instruction [#1914](https://github.com/valhalla/valhalla/pull/1914)
    * FIXED: Use begin street name for osrm compat mode [#1916](https://github.com/valhalla/valhalla/pull/1916)
    * FIXED: Added logic to fix missing highway cardinal directions in the US [#1917](https://github.com/valhalla/valhalla/pull/1917)
+   * FIXED: Handle forward traversable significant road class intersecting edges [#1928](https://github.com/valhalla/valhalla/pull/1928)
 
 * **Enhancement**
    * ADDED: Caching url fetched tiles to disk [#1887](https://github.com/valhalla/valhalla/pull/1887)
