@@ -68,6 +68,7 @@ constexpr float kDensityLatDeg = (kDensityRadius * kMetersPerKm) / kMetersPerDeg
 constexpr float kTurnChannelFactor = 1.25f;
 constexpr float kRampDensityFactor = 0.8f;
 constexpr float kRampFactor = 0.85f;
+constexpr float kRoundaboutFactor = 0.5f;
 
 // A little struct to hold stats information during each threads work
 struct enhancer_stats {
@@ -101,35 +102,29 @@ struct enhancer_stats {
  * @param  directededge  Directed edge to update.
  * @param  density       Relative road density.
  * @param  urban_rc_speed Array of default speeds vs. road class for urban areas
+ * @param  rc_speed Array of default speeds vs. road class
+ *
  */
-void UpdateSpeed(DirectedEdge& directededge, const uint32_t density, const uint32_t* urban_rc_speed) {
+void UpdateSpeed(DirectedEdge& directededge,
+                 const uint32_t density,
+                 const uint32_t* urban_rc_speed,
+                 const uint32_t* rc_speed) {
+
   // Update speed on ramps (if not a tagged speed) and turn channels
   if (directededge.link()) {
     uint32_t speed = directededge.speed();
     Use use = directededge.use();
     if (use == Use::kTurnChannel) {
-      RoadClass rc = directededge.classification();
-      if (rc == RoadClass::kUnclassified || rc == RoadClass::kResidential)
-        speed = 10;
       speed = static_cast<uint32_t>((speed * kTurnChannelFactor) + 0.5f);
     } else if ((use == Use::kRamp) && (directededge.speed_type() != SpeedType::kTagged)) {
       // If no tagged speed set ramp speed to slightly lower than speed
       // for roads of this classification
-      RoadClass rc = directededge.classification();
-      if (rc == RoadClass::kMotorway)
-          speed = 45;
-      else if (rc == RoadClass::kTrunk)
-        speed = 40;
-      else if (rc == RoadClass::kPrimary)
-        speed = 30;
-      else if (rc == RoadClass::kSecondary)
-        speed = 25;
-      else if (rc == RoadClass::kTertiary)
-        speed = 20;
-      else if (rc == RoadClass::kUnclassified || rc == RoadClass::kResidential)
-        speed = 10;
+      uint32_t rc = static_cast<uint32_t>(directededge.classification());
+      speed = (density > 8) ? static_cast<uint32_t>((urban_rc_speed[rc] * kRampDensityFactor) + 0.5f)
+                            : static_cast<uint32_t>((rc_speed[rc] * kRampFactor) + 0.5f);
     }
     directededge.set_speed(speed);
+
     // Done processing links so return...
     return;
   }
@@ -174,6 +169,11 @@ void UpdateSpeed(DirectedEdge& directededge, const uint32_t density, const uint3
     if (density > 8) {
       uint32_t rc = static_cast<uint32_t>(directededge.classification());
       directededge.set_speed(urban_rc_speed[rc]);
+    }
+
+    if (directededge.roundabout()) {
+      uint32_t speed = directededge.speed(); // could be default or urban speed
+      directededge.set_speed(static_cast<uint32_t>((speed * kRoundaboutFactor) + 0.5f));
     }
 
     // Reduce speeds on parking aisles, driveways, and drive-thrus. These uses are
@@ -1210,7 +1210,7 @@ uint32_t GetStopImpact(uint32_t from,
   // the other edge a low class road (walkways often intersect
   // turn channels)
   if (edges[from].use() == Use::kTurnChannel && edges[to].use() == Use::kTurnChannel &&
-      bestrc <= RoadClass::kResidential) {
+      bestrc < RoadClass::kUnclassified) {
     return 7;
   }
 
@@ -1237,7 +1237,7 @@ uint32_t GetStopImpact(uint32_t from,
       stop_impact -= 1;
     }
   } else if (edges[from].use() == Use::kRamp && edges[to].use() == Use::kRamp &&
-             bestrc <= RoadClass::kResidential) {
+             bestrc < RoadClass::kUnclassified) {
     // Ramp may be crossing a road (not a path or service road)
     if (nodeinfo.traffic_signal()) {
       stop_impact = 4;
@@ -1423,7 +1423,10 @@ void enhance(const boost::property_tree::ptree& pt,
   // 25 MPH - tertiary
   // 20 MPH - residential and unclassified
   // 15 MPH - service/other
-  uint32_t urban_rc_speed[] = {89, 73, 57, 49, 40, 35, 35, 25};
+  uint32_t urban_rc_speed[] = {89, 73, 57, 49, 40, 35, 30, 20};
+
+  // default speeds based on rc from lua
+  uint32_t rc_speed[] = {105, 90, 75, 60, 50, 40, 35, 25};
 
   // Get some things we need throughout
   enhancer_stats stats{std::numeric_limits<float>::min(), 0};
@@ -1683,7 +1686,7 @@ void enhance(const boost::property_tree::ptree& pt,
         }
 
         // Update speed.
-        UpdateSpeed(directededge, density, urban_rc_speed);
+        UpdateSpeed(directededge, density, urban_rc_speed, rc_speed);
 
         // Update the named flag
         auto names = tilebuilder.edgeinfo(directededge.edgeinfo_offset()).GetNamesAndTypes();
