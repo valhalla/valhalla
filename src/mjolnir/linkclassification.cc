@@ -227,7 +227,11 @@ std::pair<uint32_t, uint32_t> Reclassify(LinkTreeNode& root,
       sequence<Edge>::iterator element = edges[idx];
       auto edge = *element;
       if (rc > edge.attributes.importance) {
-        edge.attributes.importance = rc;
+        if (rc < static_cast<uint32_t>(RoadClass::kUnclassified))
+          edge.attributes.importance = rc;
+        else
+          edge.attributes.importance = static_cast<uint32_t>(RoadClass::kTertiary);
+
         counts.first++;
       }
       if (turn_channel) {
