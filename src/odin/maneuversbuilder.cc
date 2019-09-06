@@ -2029,12 +2029,13 @@ bool ManeuversBuilder::IsIntersectingForwardEdge(int node_index,
       return true;
     }
     // if path edge is forward
-    // and forward traversable intersecting edge exists
+    // and forward traversable significant road class intersecting edge exists
     // and path edge is not the straightest
     // then return true
     else if (curr_edge->IsForward(turn_degree) &&
-             node->HasForwardTraversableIntersectingEdge(prev_edge->end_heading(),
-                                                         prev_edge->travel_mode()) &&
+             node->HasForwardTraversableSignificantRoadClassXEdge(prev_edge->end_heading(),
+                                                                  prev_edge->travel_mode(),
+                                                                  prev_edge->road_class()) &&
              !curr_edge->IsStraightest(turn_degree,
                                        node->GetStraightestTraversableIntersectingEdgeTurnDegree(
                                            prev_edge->end_heading(), prev_edge->travel_mode()))) {
