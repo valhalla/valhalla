@@ -385,16 +385,16 @@
         "1": "Entre en la rotonda y tome la <ORDINAL_VALUE> salida."
       }, 
       "ordinal_values": [
-        "primera", 
-        "segunda", 
-        "tercera", 
-        "cuarta", 
-        "quinta", 
-        "sexta", 
-        "séptima", 
-        "octava", 
-        "novena", 
-        "décima"
+        "1ª", 
+        "2ª", 
+        "3ª", 
+        "4ª", 
+        "5ª", 
+        "6ª", 
+        "7ª", 
+        "8ª", 
+        "9ª", 
+        "10ª"
       ], 
       "example_phrases": {
         "0": [
