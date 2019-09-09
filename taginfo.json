@@ -17,21 +17,21 @@
       "object_types": [
         "relation"
       ],
-      "description": ""
+      "description": "Country code"
     },
     {
       "key": "ISO3166-1:alpha2",
       "object_types": [
         "relation"
       ],
-      "description": ""
+      "description": "2 letter country code"
     },
     {
       "key": "ISO3166-2",
       "object_types": [
         "relation"
       ],
-      "description": ""
+      "description": "Principal subdivision codes (state or province)"
     },
     {
       "key": "access",
@@ -210,7 +210,7 @@
       "object_types": [
         "relation"
       ],
-      "description": ""
+      "description": "State/province level boundary, depending on containing country"
     },
     {
       "key": "admin_level",
@@ -241,7 +241,7 @@
       "object_types": [
         "way"
       ],
-      "description": ""
+      "description": "Alternative name for the way, frequently used when a street has another official or locally preferred name"
     },
     {
       "key": "area",
@@ -691,7 +691,7 @@
       "object_types": [
         "relation"
       ],
-      "description": ""
+      "description": "Denotes a boarder between administrative territories"
     },
     {
       "key": "bridge",
@@ -3862,7 +3862,7 @@
         "way",
         "relation"
       ],
-      "description": ""
+      "description": "The name of the feature, street names, river names, POI names etc."
     },
     {
       "key": "name:en",
@@ -3870,7 +3870,7 @@
         "way",
         "relation"
       ],
-      "description": ""
+      "description": "The english name of the feature"
     },
     {
       "key": "ncn",
@@ -3930,7 +3930,7 @@
       "object_types": [
         "way"
       ],
-      "description": ""
+      "description": "Official name for a country used in that country if it differs from what is in the name tag"
     },
     {
       "key": "oneway",
@@ -6448,7 +6448,7 @@
       "object_types": [
         "relation"
       ],
-      "description": ""
+      "description": "Used in combination with boundary=administrative to denote a boarder between territories"
     },
     {
       "key": "wheelchair",
