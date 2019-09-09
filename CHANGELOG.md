@@ -1,4 +1,4 @@
-## Release Date: UNRELEASED Valhalla 3.0.8
+## Release Date: 2019-09-06 Valhalla 3.0.8
 * **Bug Fix**
    * FIXED: Added logic to detect if user is to merge to the left or right [#1892](https://github.com/valhalla/valhalla/pull/1892)
    * FIXED: Overriding the destination_only flag when reclassifying ferries; Also penalizing ferries with a 5 min. penalty in the cost to allow us to avoid destination_only the majority of the time except when it is necessary. [#1895](https://github.com/valhalla/valhalla/pull/1905)
