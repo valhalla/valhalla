@@ -560,7 +560,7 @@ void from_json(rapidjson::Document& doc, Options& options) {
     parse_locations(doc, options, "shape", 134, false);
 
     // if no shape then try 'trace'
-    if (options.shape().empty()) {
+    if (options.shape().size() > 0) {
       parse_locations(doc, options, "trace", 135, false);
     }
   }
