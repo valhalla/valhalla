@@ -382,19 +382,19 @@
     "enter_roundabout_verbal": {
       "phrases": {
         "0": "Entre en la rotonda.", 
-        "1": "Entre en la rotonda y tome la salida <ORDINAL_VALUE>."
+        "1": "Entre en la rotonda y tome la <ORDINAL_VALUE> salida."
       }, 
       "ordinal_values": [
-        "1er", 
-        "2da", 
-        "3er", 
-        "4ta", 
-        "5ta", 
-        "6ta", 
-        "7º", 
-        "8º", 
-        "9º", 
-        "10º"
+        "1ª", 
+        "2ª", 
+        "3ª", 
+        "4ª", 
+        "5ª", 
+        "6ª", 
+        "7ª", 
+        "8ª", 
+        "9ª", ª
+        "10ª"
       ], 
       "example_phrases": {
         "0": [
