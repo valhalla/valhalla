@@ -2986,7 +2986,7 @@
          "object_types": [
             "node"
          ],
-         "description": "Branch route number/road name.  And/or...Toward route number/road name.  And/or...Toward location."
+         "description": "Branch route number/road name.  And/or...Toward route number/road name.  And/or...Toward location. Form more information see: https://wiki.openstreetmap.org/wiki/Exit_Info"
       },
       {
          "key": "footway",
@@ -4158,42 +4158,42 @@
       },
       {
          "key": "destination",
-         "description": "Toward location.  Used for exit information.",
+         "description": "Toward location.  Used for exit information, see: https://wiki.openstreetmap.org/wiki/Exit_Info",
          "object_types": [
             "way"
          ]
       },
       {
          "key": "destination:ref",
-         "description": "Branch route number.  Used for exit information.",
+         "description": "Branch route number.  Used for exit information, see: https://wiki.openstreetmap.org/wiki/Exit_Info",
          "object_types": [
             "way"
          ]
       },
       {
          "key": "destination:ref:to",
-         "description": "Toward route number.  Used for exit information.",
+         "description": "Toward route number.  Used for exit information, see: https://wiki.openstreetmap.org/wiki/Exit_Info",
          "object_types": [
             "way"
          ]
       },
       {
          "key": "destination:street",
-         "description": "Branch road name.  Used for exit information.",
+         "description": "Branch road name.  Used for exit information, see: https://wiki.openstreetmap.org/wiki/Exit_Info",
          "object_types": [
             "way"
          ]
       },
       {
          "key": "destination:street:to",
-         "description": "Toward road name.  Used for exit information.",
+         "description": "Toward road name.  Used for exit information, see: https://wiki.openstreetmap.org/wiki/Exit_Info",
          "object_types": [
             "way"
          ]
       },
       {
          "key": "junction:ref",
-         "description": "Junction/exit number.  Used for exit information.",
+         "description": "Junction/exit number.  Used for exit information, see: https://wiki.openstreetmap.org/wiki/Exit_Info",
          "object_types": [
             "way"
          ]
@@ -4348,7 +4348,7 @@
             "way",
             "relation"
          ],
-         "description": "Route network and number.  Junction/exit number."
+         "description": "Route network and number.  Junction/exit number, see: https://wiki.openstreetmap.org/wiki/Exit_Info"
       },
       {
          "key": "int_ref",
