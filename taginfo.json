@@ -6137,7 +6137,6 @@
     },
     {
       "description": "Adds sinage information to the given edge in the graph which is helpful to know to where a given road leads. Forward and backward allow for distinct values based on the direction the way is drawn specifically useful for single carriageways.",
-      "value": "*",
       "key": "turn:lanes",
       "object_types": [
         "way"
@@ -6145,7 +6144,6 @@
     },
     {
       "description": "Adds sinage information to the given edge in the graph which is helpful to know to where a given road leads. Forward and backward allow for distinct values based on the direction the way is drawn specifically useful for single carriageways.",
-      "value": "*",
       "key": "turn:lanes:backward",
       "object_types": [
         "way"
@@ -6153,7 +6151,6 @@
     },
     {
       "description": "Adds sinage information to the given edge in the graph which is helpful to know to where a given road leads. Forward and backward allow for distinct values based on the direction the way is drawn specifically useful for single carriageways.",
-      "value": "*",
       "key": "turn:lanes:forward",
       "object_types": [
         "way"
