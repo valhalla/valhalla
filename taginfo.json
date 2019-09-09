@@ -4296,6 +4296,1254 @@
             "relation"
          ]
       },
+{
+    "value": "no_right_turn",
+    "object_types": [
+      "relation"
+    ],
+    "key": "restriction:hgv",
+    "description": "Mode specific turn restrictions"
+  },
+  {
+    "value": "no_left_turn",
+    "object_types": [
+      "relation"
+    ],
+    "key": "restriction:hgv",
+    "description": "Mode specific turn restrictions"
+  },
+  {
+    "value": "no_u_turn",
+    "object_types": [
+      "relation"
+    ],
+    "key": "restriction:hgv",
+    "description": "Mode specific turn restrictions"
+  },
+  {
+    "value": "no_straight_on",
+    "object_types": [
+      "relation"
+    ],
+    "key": "restriction:hgv",
+    "description": "Mode specific turn restrictions"
+  },
+  {
+    "value": "only_right_turn",
+    "object_types": [
+      "relation"
+    ],
+    "key": "restriction:hgv",
+    "description": "Mode specific turn restrictions"
+  },
+  {
+    "value": "only_left_turn",
+    "object_types": [
+      "relation"
+    ],
+    "key": "restriction:hgv",
+    "description": "Mode specific turn restrictions"
+  },
+  {
+    "value": "only_straight_on",
+    "object_types": [
+      "relation"
+    ],
+    "key": "restriction:hgv",
+    "description": "Mode specific turn restrictions"
+  },
+  {
+    "value": "no_entry",
+    "object_types": [
+      "relation"
+    ],
+    "key": "restriction:hgv",
+    "description": "Mode specific turn restrictions"
+  },
+  {
+    "value": "no_exit",
+    "object_types": [
+      "relation"
+    ],
+    "key": "restriction:hgv",
+    "description": "Mode specific turn restrictions"
+  },
+  {
+    "value": "no_right_turn",
+    "object_types": [
+      "relation"
+    ],
+    "key": "restriction:caravan",
+    "description": "Mode specific turn restrictions"
+  },
+  {
+    "value": "no_left_turn",
+    "object_types": [
+      "relation"
+    ],
+    "key": "restriction:caravan",
+    "description": "Mode specific turn restrictions"
+  },
+  {
+    "value": "no_u_turn",
+    "object_types": [
+      "relation"
+    ],
+    "key": "restriction:caravan",
+    "description": "Mode specific turn restrictions"
+  },
+  {
+    "value": "no_straight_on",
+    "object_types": [
+      "relation"
+    ],
+    "key": "restriction:caravan",
+    "description": "Mode specific turn restrictions"
+  },
+  {
+    "value": "only_right_turn",
+    "object_types": [
+      "relation"
+    ],
+    "key": "restriction:caravan",
+    "description": "Mode specific turn restrictions"
+  },
+  {
+    "value": "only_left_turn",
+    "object_types": [
+      "relation"
+    ],
+    "key": "restriction:caravan",
+    "description": "Mode specific turn restrictions"
+  },
+  {
+    "value": "only_straight_on",
+    "object_types": [
+      "relation"
+    ],
+    "key": "restriction:caravan",
+    "description": "Mode specific turn restrictions"
+  },
+  {
+    "value": "no_entry",
+    "object_types": [
+      "relation"
+    ],
+    "key": "restriction:caravan",
+    "description": "Mode specific turn restrictions"
+  },
+  {
+    "value": "no_exit",
+    "object_types": [
+      "relation"
+    ],
+    "key": "restriction:caravan",
+    "description": "Mode specific turn restrictions"
+  },
+  {
+    "value": "no_right_turn",
+    "object_types": [
+      "relation"
+    ],
+    "key": "restriction:motorcar",
+    "description": "Mode specific turn restrictions"
+  },
+  {
+    "value": "no_left_turn",
+    "object_types": [
+      "relation"
+    ],
+    "key": "restriction:motorcar",
+    "description": "Mode specific turn restrictions"
+  },
+  {
+    "value": "no_u_turn",
+    "object_types": [
+      "relation"
+    ],
+    "key": "restriction:motorcar",
+    "description": "Mode specific turn restrictions"
+  },
+  {
+    "value": "no_straight_on",
+    "object_types": [
+      "relation"
+    ],
+    "key": "restriction:motorcar",
+    "description": "Mode specific turn restrictions"
+  },
+  {
+    "value": "only_right_turn",
+    "object_types": [
+      "relation"
+    ],
+    "key": "restriction:motorcar",
+    "description": "Mode specific turn restrictions"
+  },
+  {
+    "value": "only_left_turn",
+    "object_types": [
+      "relation"
+    ],
+    "key": "restriction:motorcar",
+    "description": "Mode specific turn restrictions"
+  },
+  {
+    "value": "only_straight_on",
+    "object_types": [
+      "relation"
+    ],
+    "key": "restriction:motorcar",
+    "description": "Mode specific turn restrictions"
+  },
+  {
+    "value": "no_entry",
+    "object_types": [
+      "relation"
+    ],
+    "key": "restriction:motorcar",
+    "description": "Mode specific turn restrictions"
+  },
+  {
+    "value": "no_exit",
+    "object_types": [
+      "relation"
+    ],
+    "key": "restriction:motorcar",
+    "description": "Mode specific turn restrictions"
+  },
+  {
+    "value": "no_right_turn",
+    "object_types": [
+      "relation"
+    ],
+    "key": "restriction:bus",
+    "description": "Mode specific turn restrictions"
+  },
+  {
+    "value": "no_left_turn",
+    "object_types": [
+      "relation"
+    ],
+    "key": "restriction:bus",
+    "description": "Mode specific turn restrictions"
+  },
+  {
+    "value": "no_u_turn",
+    "object_types": [
+      "relation"
+    ],
+    "key": "restriction:bus",
+    "description": "Mode specific turn restrictions"
+  },
+  {
+    "value": "no_straight_on",
+    "object_types": [
+      "relation"
+    ],
+    "key": "restriction:bus",
+    "description": "Mode specific turn restrictions"
+  },
+  {
+    "value": "only_right_turn",
+    "object_types": [
+      "relation"
+    ],
+    "key": "restriction:bus",
+    "description": "Mode specific turn restrictions"
+  },
+  {
+    "value": "only_left_turn",
+    "object_types": [
+      "relation"
+    ],
+    "key": "restriction:bus",
+    "description": "Mode specific turn restrictions"
+  },
+  {
+    "value": "only_straight_on",
+    "object_types": [
+      "relation"
+    ],
+    "key": "restriction:bus",
+    "description": "Mode specific turn restrictions"
+  },
+  {
+    "value": "no_entry",
+    "object_types": [
+      "relation"
+    ],
+    "key": "restriction:bus",
+    "description": "Mode specific turn restrictions"
+  },
+  {
+    "value": "no_exit",
+    "object_types": [
+      "relation"
+    ],
+    "key": "restriction:bus",
+    "description": "Mode specific turn restrictions"
+  },
+  {
+    "value": "no_right_turn",
+    "object_types": [
+      "relation"
+    ],
+    "key": "restriction:agricultural",
+    "description": "Mode specific turn restrictions"
+  },
+  {
+    "value": "no_left_turn",
+    "object_types": [
+      "relation"
+    ],
+    "key": "restriction:agricultural",
+    "description": "Mode specific turn restrictions"
+  },
+  {
+    "value": "no_u_turn",
+    "object_types": [
+      "relation"
+    ],
+    "key": "restriction:agricultural",
+    "description": "Mode specific turn restrictions"
+  },
+  {
+    "value": "no_straight_on",
+    "object_types": [
+      "relation"
+    ],
+    "key": "restriction:agricultural",
+    "description": "Mode specific turn restrictions"
+  },
+  {
+    "value": "only_right_turn",
+    "object_types": [
+      "relation"
+    ],
+    "key": "restriction:agricultural",
+    "description": "Mode specific turn restrictions"
+  },
+  {
+    "value": "only_left_turn",
+    "object_types": [
+      "relation"
+    ],
+    "key": "restriction:agricultural",
+    "description": "Mode specific turn restrictions"
+  },
+  {
+    "value": "only_straight_on",
+    "object_types": [
+      "relation"
+    ],
+    "key": "restriction:agricultural",
+    "description": "Mode specific turn restrictions"
+  },
+  {
+    "value": "no_entry",
+    "object_types": [
+      "relation"
+    ],
+    "key": "restriction:agricultural",
+    "description": "Mode specific turn restrictions"
+  },
+  {
+    "value": "no_exit",
+    "object_types": [
+      "relation"
+    ],
+    "key": "restriction:agricultural",
+    "description": "Mode specific turn restrictions"
+  },
+  {
+    "value": "no_right_turn",
+    "object_types": [
+      "relation"
+    ],
+    "key": "restriction:motorcycle",
+    "description": "Mode specific turn restrictions"
+  },
+  {
+    "value": "no_left_turn",
+    "object_types": [
+      "relation"
+    ],
+    "key": "restriction:motorcycle",
+    "description": "Mode specific turn restrictions"
+  },
+  {
+    "value": "no_u_turn",
+    "object_types": [
+      "relation"
+    ],
+    "key": "restriction:motorcycle",
+    "description": "Mode specific turn restrictions"
+  },
+  {
+    "value": "no_straight_on",
+    "object_types": [
+      "relation"
+    ],
+    "key": "restriction:motorcycle",
+    "description": "Mode specific turn restrictions"
+  },
+  {
+    "value": "only_right_turn",
+    "object_types": [
+      "relation"
+    ],
+    "key": "restriction:motorcycle",
+    "description": "Mode specific turn restrictions"
+  },
+  {
+    "value": "only_left_turn",
+    "object_types": [
+      "relation"
+    ],
+    "key": "restriction:motorcycle",
+    "description": "Mode specific turn restrictions"
+  },
+  {
+    "value": "only_straight_on",
+    "object_types": [
+      "relation"
+    ],
+    "key": "restriction:motorcycle",
+    "description": "Mode specific turn restrictions"
+  },
+  {
+    "value": "no_entry",
+    "object_types": [
+      "relation"
+    ],
+    "key": "restriction:motorcycle",
+    "description": "Mode specific turn restrictions"
+  },
+  {
+    "value": "no_exit",
+    "object_types": [
+      "relation"
+    ],
+    "key": "restriction:motorcycle",
+    "description": "Mode specific turn restrictions"
+  },
+  {
+    "value": "no_right_turn",
+    "object_types": [
+      "relation"
+    ],
+    "key": "restriction:bicycle",
+    "description": "Mode specific turn restrictions"
+  },
+  {
+    "value": "no_left_turn",
+    "object_types": [
+      "relation"
+    ],
+    "key": "restriction:bicycle",
+    "description": "Mode specific turn restrictions"
+  },
+  {
+    "value": "no_u_turn",
+    "object_types": [
+      "relation"
+    ],
+    "key": "restriction:bicycle",
+    "description": "Mode specific turn restrictions"
+  },
+  {
+    "value": "no_straight_on",
+    "object_types": [
+      "relation"
+    ],
+    "key": "restriction:bicycle",
+    "description": "Mode specific turn restrictions"
+  },
+  {
+    "value": "only_right_turn",
+    "object_types": [
+      "relation"
+    ],
+    "key": "restriction:bicycle",
+    "description": "Mode specific turn restrictions"
+  },
+  {
+    "value": "only_left_turn",
+    "object_types": [
+      "relation"
+    ],
+    "key": "restriction:bicycle",
+    "description": "Mode specific turn restrictions"
+  },
+  {
+    "value": "only_straight_on",
+    "object_types": [
+      "relation"
+    ],
+    "key": "restriction:bicycle",
+    "description": "Mode specific turn restrictions"
+  },
+  {
+    "value": "no_entry",
+    "object_types": [
+      "relation"
+    ],
+    "key": "restriction:bicycle",
+    "description": "Mode specific turn restrictions"
+  },
+  {
+    "value": "no_exit",
+    "object_types": [
+      "relation"
+    ],
+    "key": "restriction:bicycle",
+    "description": "Mode specific turn restrictions"
+  },
+  {
+    "value": "no_right_turn",
+    "object_types": [
+      "relation"
+    ],
+    "key": "restriction:hazmat",
+    "description": "Mode specific turn restrictions"
+  },
+  {
+    "value": "no_left_turn",
+    "object_types": [
+      "relation"
+    ],
+    "key": "restriction:hazmat",
+    "description": "Mode specific turn restrictions"
+  },
+  {
+    "value": "no_u_turn",
+    "object_types": [
+      "relation"
+    ],
+    "key": "restriction:hazmat",
+    "description": "Mode specific turn restrictions"
+  },
+  {
+    "value": "no_straight_on",
+    "object_types": [
+      "relation"
+    ],
+    "key": "restriction:hazmat",
+    "description": "Mode specific turn restrictions"
+  },
+  {
+    "value": "only_right_turn",
+    "object_types": [
+      "relation"
+    ],
+    "key": "restriction:hazmat",
+    "description": "Mode specific turn restrictions"
+  },
+  {
+    "value": "only_left_turn",
+    "object_types": [
+      "relation"
+    ],
+    "key": "restriction:hazmat",
+    "description": "Mode specific turn restrictions"
+  },
+  {
+    "value": "only_straight_on",
+    "object_types": [
+      "relation"
+    ],
+    "key": "restriction:hazmat",
+    "description": "Mode specific turn restrictions"
+  },
+  {
+    "value": "no_entry",
+    "object_types": [
+      "relation"
+    ],
+    "key": "restriction:hazmat",
+    "description": "Mode specific turn restrictions"
+  },
+  {
+    "value": "no_exit",
+    "object_types": [
+      "relation"
+    ],
+    "key": "restriction:hazmat",
+    "description": "Mode specific turn restrictions"
+  },
+  {
+    "description": "Exceptions for a specific mode of transport on a turn restriction where all other modes are restricted",
+    "value": "psv",
+    "key": "except",
+    "object_types": [
+      "relation"
+    ]
+  },
+  {
+    "description": "Exceptions for a specific mode of transport on a turn restriction where all other modes are restricted",
+    "value": "bicycle",
+    "key": "except",
+    "object_types": [
+      "relation"
+    ]
+  },
+  {
+    "description": "Exceptions for a specific mode of transport on a turn restriction where all other modes are restricted",
+    "value": "hgv",
+    "key": "except",
+    "object_types": [
+      "relation"
+    ]
+  },
+  {
+    "description": "Exceptions for a specific mode of transport on a turn restriction where all other modes are restricted",
+    "value": "motorcar",
+    "key": "except",
+    "object_types": [
+      "relation"
+    ]
+  },
+  {
+    "description": "Exceptions for a specific mode of transport on a turn restriction where all other modes are restricted",
+    "value": "emergency",
+    "key": "except",
+    "object_types": [
+      "relation"
+    ]
+  },
+{
+    "description": "Mode specific conditional turn restrictions. See opening_hours format for the time component: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+    "value": "no_right_turn @ (opening_hours format);",
+    "key": "restriction:hgv:conditional",
+    "object_types": [
+      "relation"
+    ]
+  },
+  {
+    "description": "Mode specific conditional turn restrictions. See opening_hours format for the time component: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+    "value": "no_left_turn @ (opening_hours format);",
+    "key": "restriction:hgv:conditional",
+    "object_types": [
+      "relation"
+    ]
+  },
+  {
+    "description": "Mode specific conditional turn restrictions. See opening_hours format for the time component: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+    "value": "no_u_turn @ (opening_hours format);",
+    "key": "restriction:hgv:conditional",
+    "object_types": [
+      "relation"
+    ]
+  },
+  {
+    "description": "Mode specific conditional turn restrictions. See opening_hours format for the time component: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+    "value": "no_straight_on @ (opening_hours format);",
+    "key": "restriction:hgv:conditional",
+    "object_types": [
+      "relation"
+    ]
+  },
+  {
+    "description": "Mode specific conditional turn restrictions. See opening_hours format for the time component: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+    "value": "only_right_turn @ (opening_hours format);",
+    "key": "restriction:hgv:conditional",
+    "object_types": [
+      "relation"
+    ]
+  },
+  {
+    "description": "Mode specific conditional turn restrictions. See opening_hours format for the time component: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+    "value": "only_left_turn @ (opening_hours format);",
+    "key": "restriction:hgv:conditional",
+    "object_types": [
+      "relation"
+    ]
+  },
+  {
+    "description": "Mode specific conditional turn restrictions. See opening_hours format for the time component: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+    "value": "only_straight_on @ (opening_hours format);",
+    "key": "restriction:hgv:conditional",
+    "object_types": [
+      "relation"
+    ]
+  },
+  {
+    "description": "Mode specific conditional turn restrictions. See opening_hours format for the time component: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+    "value": "no_entry @ (opening_hours format);",
+    "key": "restriction:hgv:conditional",
+    "object_types": [
+      "relation"
+    ]
+  },
+  {
+    "description": "Mode specific conditional turn restrictions. See opening_hours format for the time component: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+    "value": "no_exit @ (opening_hours format);",
+    "key": "restriction:hgv:conditional",
+    "object_types": [
+      "relation"
+    ]
+  },
+  {
+    "description": "Mode specific conditional turn restrictions. See opening_hours format for the time component: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+    "value": "no_right_turn @ (opening_hours format);",
+    "key": "restriction:caravan:conditional",
+    "object_types": [
+      "relation"
+    ]
+  },
+  {
+    "description": "Mode specific conditional turn restrictions. See opening_hours format for the time component: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+    "value": "no_left_turn @ (opening_hours format);",
+    "key": "restriction:caravan:conditional",
+    "object_types": [
+      "relation"
+    ]
+  },
+  {
+    "description": "Mode specific conditional turn restrictions. See opening_hours format for the time component: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+    "value": "no_u_turn @ (opening_hours format);",
+    "key": "restriction:caravan:conditional",
+    "object_types": [
+      "relation"
+    ]
+  },
+  {
+    "description": "Mode specific conditional turn restrictions. See opening_hours format for the time component: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+    "value": "no_straight_on @ (opening_hours format);",
+    "key": "restriction:caravan:conditional",
+    "object_types": [
+      "relation"
+    ]
+  },
+  {
+    "description": "Mode specific conditional turn restrictions. See opening_hours format for the time component: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+    "value": "only_right_turn @ (opening_hours format);",
+    "key": "restriction:caravan:conditional",
+    "object_types": [
+      "relation"
+    ]
+  },
+  {
+    "description": "Mode specific conditional turn restrictions. See opening_hours format for the time component: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+    "value": "only_left_turn @ (opening_hours format);",
+    "key": "restriction:caravan:conditional",
+    "object_types": [
+      "relation"
+    ]
+  },
+  {
+    "description": "Mode specific conditional turn restrictions. See opening_hours format for the time component: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+    "value": "only_straight_on @ (opening_hours format);",
+    "key": "restriction:caravan:conditional",
+    "object_types": [
+      "relation"
+    ]
+  },
+  {
+    "description": "Mode specific conditional turn restrictions. See opening_hours format for the time component: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+    "value": "no_entry @ (opening_hours format);",
+    "key": "restriction:caravan:conditional",
+    "object_types": [
+      "relation"
+    ]
+  },
+  {
+    "description": "Mode specific conditional turn restrictions. See opening_hours format for the time component: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+    "value": "no_exit @ (opening_hours format);",
+    "key": "restriction:caravan:conditional",
+    "object_types": [
+      "relation"
+    ]
+  },
+  {
+    "description": "Mode specific conditional turn restrictions. See opening_hours format for the time component: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+    "value": "no_right_turn @ (opening_hours format);",
+    "key": "restriction:motorcar:conditional",
+    "object_types": [
+      "relation"
+    ]
+  },
+  {
+    "description": "Mode specific conditional turn restrictions. See opening_hours format for the time component: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+    "value": "no_left_turn @ (opening_hours format);",
+    "key": "restriction:motorcar:conditional",
+    "object_types": [
+      "relation"
+    ]
+  },
+  {
+    "description": "Mode specific conditional turn restrictions. See opening_hours format for the time component: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+    "value": "no_u_turn @ (opening_hours format);",
+    "key": "restriction:motorcar:conditional",
+    "object_types": [
+      "relation"
+    ]
+  },
+  {
+    "description": "Mode specific conditional turn restrictions. See opening_hours format for the time component: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+    "value": "no_straight_on @ (opening_hours format);",
+    "key": "restriction:motorcar:conditional",
+    "object_types": [
+      "relation"
+    ]
+  },
+  {
+    "description": "Mode specific conditional turn restrictions. See opening_hours format for the time component: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+    "value": "only_right_turn @ (opening_hours format);",
+    "key": "restriction:motorcar:conditional",
+    "object_types": [
+      "relation"
+    ]
+  },
+  {
+    "description": "Mode specific conditional turn restrictions. See opening_hours format for the time component: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+    "value": "only_left_turn @ (opening_hours format);",
+    "key": "restriction:motorcar:conditional",
+    "object_types": [
+      "relation"
+    ]
+  },
+  {
+    "description": "Mode specific conditional turn restrictions. See opening_hours format for the time component: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+    "value": "only_straight_on @ (opening_hours format);",
+    "key": "restriction:motorcar:conditional",
+    "object_types": [
+      "relation"
+    ]
+  },
+  {
+    "description": "Mode specific conditional turn restrictions. See opening_hours format for the time component: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+    "value": "no_entry @ (opening_hours format);",
+    "key": "restriction:motorcar:conditional",
+    "object_types": [
+      "relation"
+    ]
+  },
+  {
+    "description": "Mode specific conditional turn restrictions. See opening_hours format for the time component: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+    "value": "no_exit @ (opening_hours format);",
+    "key": "restriction:motorcar:conditional",
+    "object_types": [
+      "relation"
+    ]
+  },
+  {
+    "description": "Mode specific conditional turn restrictions. See opening_hours format for the time component: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+    "value": "no_right_turn @ (opening_hours format);",
+    "key": "restriction:bus:conditional",
+    "object_types": [
+      "relation"
+    ]
+  },
+  {
+    "description": "Mode specific conditional turn restrictions. See opening_hours format for the time component: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+    "value": "no_left_turn @ (opening_hours format);",
+    "key": "restriction:bus:conditional",
+    "object_types": [
+      "relation"
+    ]
+  },
+  {
+    "description": "Mode specific conditional turn restrictions. See opening_hours format for the time component: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+    "value": "no_u_turn @ (opening_hours format);",
+    "key": "restriction:bus:conditional",
+    "object_types": [
+      "relation"
+    ]
+  },
+  {
+    "description": "Mode specific conditional turn restrictions. See opening_hours format for the time component: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+    "value": "no_straight_on @ (opening_hours format);",
+    "key": "restriction:bus:conditional",
+    "object_types": [
+      "relation"
+    ]
+  },
+  {
+    "description": "Mode specific conditional turn restrictions. See opening_hours format for the time component: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+    "value": "only_right_turn @ (opening_hours format);",
+    "key": "restriction:bus:conditional",
+    "object_types": [
+      "relation"
+    ]
+  },
+  {
+    "description": "Mode specific conditional turn restrictions. See opening_hours format for the time component: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+    "value": "only_left_turn @ (opening_hours format);",
+    "key": "restriction:bus:conditional",
+    "object_types": [
+      "relation"
+    ]
+  },
+  {
+    "description": "Mode specific conditional turn restrictions. See opening_hours format for the time component: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+    "value": "only_straight_on @ (opening_hours format);",
+    "key": "restriction:bus:conditional",
+    "object_types": [
+      "relation"
+    ]
+  },
+  {
+    "description": "Mode specific conditional turn restrictions. See opening_hours format for the time component: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+    "value": "no_entry @ (opening_hours format);",
+    "key": "restriction:bus:conditional",
+    "object_types": [
+      "relation"
+    ]
+  },
+  {
+    "description": "Mode specific conditional turn restrictions. See opening_hours format for the time component: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+    "value": "no_exit @ (opening_hours format);",
+    "key": "restriction:bus:conditional",
+    "object_types": [
+      "relation"
+    ]
+  },
+  {
+    "description": "Mode specific conditional turn restrictions. See opening_hours format for the time component: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+    "value": "no_right_turn @ (opening_hours format);",
+    "key": "restriction:agricultural:conditional",
+    "object_types": [
+      "relation"
+    ]
+  },
+  {
+    "description": "Mode specific conditional turn restrictions. See opening_hours format for the time component: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+    "value": "no_left_turn @ (opening_hours format);",
+    "key": "restriction:agricultural:conditional",
+    "object_types": [
+      "relation"
+    ]
+  },
+  {
+    "description": "Mode specific conditional turn restrictions. See opening_hours format for the time component: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+    "value": "no_u_turn @ (opening_hours format);",
+    "key": "restriction:agricultural:conditional",
+    "object_types": [
+      "relation"
+    ]
+  },
+  {
+    "description": "Mode specific conditional turn restrictions. See opening_hours format for the time component: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+    "value": "no_straight_on @ (opening_hours format);",
+    "key": "restriction:agricultural:conditional",
+    "object_types": [
+      "relation"
+    ]
+  },
+  {
+    "description": "Mode specific conditional turn restrictions. See opening_hours format for the time component: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+    "value": "only_right_turn @ (opening_hours format);",
+    "key": "restriction:agricultural:conditional",
+    "object_types": [
+      "relation"
+    ]
+  },
+  {
+    "description": "Mode specific conditional turn restrictions. See opening_hours format for the time component: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+    "value": "only_left_turn @ (opening_hours format);",
+    "key": "restriction:agricultural:conditional",
+    "object_types": [
+      "relation"
+    ]
+  },
+  {
+    "description": "Mode specific conditional turn restrictions. See opening_hours format for the time component: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+    "value": "only_straight_on @ (opening_hours format);",
+    "key": "restriction:agricultural:conditional",
+    "object_types": [
+      "relation"
+    ]
+  },
+  {
+    "description": "Mode specific conditional turn restrictions. See opening_hours format for the time component: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+    "value": "no_entry @ (opening_hours format);",
+    "key": "restriction:agricultural:conditional",
+    "object_types": [
+      "relation"
+    ]
+  },
+  {
+    "description": "Mode specific conditional turn restrictions. See opening_hours format for the time component: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+    "value": "no_exit @ (opening_hours format);",
+    "key": "restriction:agricultural:conditional",
+    "object_types": [
+      "relation"
+    ]
+  },
+  {
+    "description": "Mode specific conditional turn restrictions. See opening_hours format for the time component: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+    "value": "no_right_turn @ (opening_hours format);",
+    "key": "restriction:motorcycle:conditional",
+    "object_types": [
+      "relation"
+    ]
+  },
+  {
+    "description": "Mode specific conditional turn restrictions. See opening_hours format for the time component: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+    "value": "no_left_turn @ (opening_hours format);",
+    "key": "restriction:motorcycle:conditional",
+    "object_types": [
+      "relation"
+    ]
+  },
+  {
+    "description": "Mode specific conditional turn restrictions. See opening_hours format for the time component: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+    "value": "no_u_turn @ (opening_hours format);",
+    "key": "restriction:motorcycle:conditional",
+    "object_types": [
+      "relation"
+    ]
+  },
+  {
+    "description": "Mode specific conditional turn restrictions. See opening_hours format for the time component: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+    "value": "no_straight_on @ (opening_hours format);",
+    "key": "restriction:motorcycle:conditional",
+    "object_types": [
+      "relation"
+    ]
+  },
+  {
+    "description": "Mode specific conditional turn restrictions. See opening_hours format for the time component: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+    "value": "only_right_turn @ (opening_hours format);",
+    "key": "restriction:motorcycle:conditional",
+    "object_types": [
+      "relation"
+    ]
+  },
+  {
+    "description": "Mode specific conditional turn restrictions. See opening_hours format for the time component: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+    "value": "only_left_turn @ (opening_hours format);",
+    "key": "restriction:motorcycle:conditional",
+    "object_types": [
+      "relation"
+    ]
+  },
+  {
+    "description": "Mode specific conditional turn restrictions. See opening_hours format for the time component: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+    "value": "only_straight_on @ (opening_hours format);",
+    "key": "restriction:motorcycle:conditional",
+    "object_types": [
+      "relation"
+    ]
+  },
+  {
+    "description": "Mode specific conditional turn restrictions. See opening_hours format for the time component: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+    "value": "no_entry @ (opening_hours format);",
+    "key": "restriction:motorcycle:conditional",
+    "object_types": [
+      "relation"
+    ]
+  },
+  {
+    "description": "Mode specific conditional turn restrictions. See opening_hours format for the time component: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+    "value": "no_exit @ (opening_hours format);",
+    "key": "restriction:motorcycle:conditional",
+    "object_types": [
+      "relation"
+    ]
+  },
+  {
+    "description": "Mode specific conditional turn restrictions. See opening_hours format for the time component: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+    "value": "no_right_turn @ (opening_hours format);",
+    "key": "restriction:bicycle:conditional",
+    "object_types": [
+      "relation"
+    ]
+  },
+  {
+    "description": "Mode specific conditional turn restrictions. See opening_hours format for the time component: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+    "value": "no_left_turn @ (opening_hours format);",
+    "key": "restriction:bicycle:conditional",
+    "object_types": [
+      "relation"
+    ]
+  },
+  {
+    "description": "Mode specific conditional turn restrictions. See opening_hours format for the time component: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+    "value": "no_u_turn @ (opening_hours format);",
+    "key": "restriction:bicycle:conditional",
+    "object_types": [
+      "relation"
+    ]
+  },
+  {
+    "description": "Mode specific conditional turn restrictions. See opening_hours format for the time component: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+    "value": "no_straight_on @ (opening_hours format);",
+    "key": "restriction:bicycle:conditional",
+    "object_types": [
+      "relation"
+    ]
+  },
+  {
+    "description": "Mode specific conditional turn restrictions. See opening_hours format for the time component: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+    "value": "only_right_turn @ (opening_hours format);",
+    "key": "restriction:bicycle:conditional",
+    "object_types": [
+      "relation"
+    ]
+  },
+  {
+    "description": "Mode specific conditional turn restrictions. See opening_hours format for the time component: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+    "value": "only_left_turn @ (opening_hours format);",
+    "key": "restriction:bicycle:conditional",
+    "object_types": [
+      "relation"
+    ]
+  },
+  {
+    "description": "Mode specific conditional turn restrictions. See opening_hours format for the time component: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+    "value": "only_straight_on @ (opening_hours format);",
+    "key": "restriction:bicycle:conditional",
+    "object_types": [
+      "relation"
+    ]
+  },
+  {
+    "description": "Mode specific conditional turn restrictions. See opening_hours format for the time component: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+    "value": "no_entry @ (opening_hours format);",
+    "key": "restriction:bicycle:conditional",
+    "object_types": [
+      "relation"
+    ]
+  },
+  {
+    "description": "Mode specific conditional turn restrictions. See opening_hours format for the time component: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+    "value": "no_exit @ (opening_hours format);",
+    "key": "restriction:bicycle:conditional",
+    "object_types": [
+      "relation"
+    ]
+  },
+  {
+    "description": "Mode specific conditional turn restrictions. See opening_hours format for the time component: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+    "value": "no_right_turn @ (opening_hours format);",
+    "key": "restriction:hazmat:conditional",
+    "object_types": [
+      "relation"
+    ]
+  },
+  {
+    "description": "Mode specific conditional turn restrictions. See opening_hours format for the time component: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+    "value": "no_left_turn @ (opening_hours format);",
+    "key": "restriction:hazmat:conditional",
+    "object_types": [
+      "relation"
+    ]
+  },
+  {
+    "description": "Mode specific conditional turn restrictions. See opening_hours format for the time component: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+    "value": "no_u_turn @ (opening_hours format);",
+    "key": "restriction:hazmat:conditional",
+    "object_types": [
+      "relation"
+    ]
+  },
+  {
+    "description": "Mode specific conditional turn restrictions. See opening_hours format for the time component: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+    "value": "no_straight_on @ (opening_hours format);",
+    "key": "restriction:hazmat:conditional",
+    "object_types": [
+      "relation"
+    ]
+  },
+  {
+    "description": "Mode specific conditional turn restrictions. See opening_hours format for the time component: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+    "value": "only_right_turn @ (opening_hours format);",
+    "key": "restriction:hazmat:conditional",
+    "object_types": [
+      "relation"
+    ]
+  },
+  {
+    "description": "Mode specific conditional turn restrictions. See opening_hours format for the time component: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+    "value": "only_left_turn @ (opening_hours format);",
+    "key": "restriction:hazmat:conditional",
+    "object_types": [
+      "relation"
+    ]
+  },
+  {
+    "description": "Mode specific conditional turn restrictions. See opening_hours format for the time component: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+    "value": "only_straight_on @ (opening_hours format);",
+    "key": "restriction:hazmat:conditional",
+    "object_types": [
+      "relation"
+    ]
+  },
+  {
+    "description": "Mode specific conditional turn restrictions. See opening_hours format for the time component: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+    "value": "no_entry @ (opening_hours format);",
+    "key": "restriction:hazmat:conditional",
+    "object_types": [
+      "relation"
+    ]
+  },
+  {
+    "description": "Mode specific conditional turn restrictions. See opening_hours format for the time component: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+    "value": "no_exit @ (opening_hours format);",
+    "key": "restriction:hazmat:conditional",
+    "object_types": [
+      "relation"
+    ]
+  },
+  {
+    "description": "Alternate means of specifying mode specific turn restrictions",
+    "value": "restriction:hgv",
+    "key": "type",
+    "object_types": [
+      "relation"
+    ]
+  },
+  {
+    "description": "Alternate means of specifying mode specific turn restrictions",
+    "value": "restriction:caravan",
+    "key": "type",
+    "object_types": [
+      "relation"
+    ]
+  },
+  {
+    "description": "Alternate means of specifying mode specific turn restrictions",
+    "value": "restriction:motorcar",
+    "key": "type",
+    "object_types": [
+      "relation"
+    ]
+  },
+  {
+    "description": "Alternate means of specifying mode specific turn restrictions",
+    "value": "restriction:bus",
+    "key": "type",
+    "object_types": [
+      "relation"
+    ]
+  },
+  {
+    "description": "Alternate means of specifying mode specific turn restrictions",
+    "value": "restriction:agricultural",
+    "key": "type",
+    "object_types": [
+      "relation"
+    ]
+  },
+  {
+    "description": "Alternate means of specifying mode specific turn restrictions",
+    "value": "restriction:bicycle",
+    "key": "type",
+    "object_types": [
+      "relation"
+    ]
+  },
+  {
+    "description": "Alternate means of specifying mode specific turn restrictions",
+    "value": "restriction:hazmat",
+    "key": "type",
+    "object_types": [
+      "relation"
+    ]
+  },
       {
          "key": "day_off",
          "object_types": [
