@@ -75,7 +75,7 @@ GraphTile::GraphTile(const std::string& tile_dir, const GraphId& graphid) : head
     Initialize(graphid, graphtile_->data(), graphtile_->size());
   } else {
     // try to load a gzipped tile
-    std::ifstream file(file_location + ".gz", std::ios::binary | std::ios::ate);
+    std::ifstream file(file_location + ".gz", std::ios::in | std::ios::binary | std::ios::ate);
     if (file.is_open()) {
       // read the compressed file into memory
       size_t filesize = file.tellg();
