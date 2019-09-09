@@ -73,13 +73,17 @@ GraphTile::GraphTile(const std::string& tile_dir, const GraphId& graphid) : head
 
     // Set pointers to internal data structures
     Initialize(graphid, graphtile_->data(), graphtile_->size());
-  } // try to load a gzipped tile
-  else {
-    std::ifstream file(file_location + ".gz", std::ios::in | std::ios::binary);
+  } else {
+    // try to load a gzipped tile
+    std::ifstream file(file_location + ".gz", std::ios::binary | std::ios::ate);
     if (file.is_open()) {
       // read the compressed file into memory
-      std::vector<char> compressed(std::istreambuf_iterator<char>(file),
-                                   (std::istreambuf_iterator<char>()));
+      size_t filesize = file.tellg();
+      file.seekg(0, std::ios::beg);
+      std::vector<char> compressed(filesize);
+      file.read(&compressed[0], filesize);
+      file.close();
+
       // try to decompress it
       DecompressTile(graphid, compressed);
     }
