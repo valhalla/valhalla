@@ -210,7 +210,7 @@
       "object_types": [
         "relation"
       ],
-      "description": "State/province level boundary, depending on containing country"
+      "description": "Country level boundary"
     },
     {
       "key": "admin_level",
@@ -218,7 +218,7 @@
       "object_types": [
         "relation"
       ],
-      "description": ""
+      "description": "Special cases of state/provinces in eg France and the Phillipines"
     },
     {
       "key": "admin_level",
@@ -226,7 +226,7 @@
       "object_types": [
         "relation"
       ],
-      "description": ""
+      "description": "State/province level boundary"
     },
     {
       "key": "admin_level",
@@ -234,7 +234,7 @@
       "object_types": [
         "relation"
       ],
-      "description": ""
+      "description": "Government territories such as Washington DC"
     },
     {
       "key": "alt_name",
