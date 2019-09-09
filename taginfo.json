@@ -193,15 +193,6 @@
         "node",
         "way"
       ],
-      "description": "Sets access flag to false"
-    },
-    {
-      "key": "access",
-      "value": "emergency",
-      "object_types": [
-        "node",
-        "way"
-      ],
       "description": "Overrides access flags for emergency vehicles.  Emergency Routing is allowed."
     },
     {
@@ -1448,14 +1439,13 @@
     },
     {
       "key": "destination",
-      "description": "Toward location.  Used for exit information, see: https://wiki.openstreetmap.org/wiki/Exit_Info",
+      "description": "Toward location. Used for exit information, see: https://wiki.openstreetmap.org/wiki/Exit_Info",
       "object_types": [
         "way"
       ]
     },
     {
       "description": "Adds sinage information to the given edge in the graph which is helpful to know to where a given road leads. Forward and backward allow for distinct values based on the direction the way is drawn specifically useful for single carriageways.",
-      "value": "*",
       "key": "destination:backward",
       "object_types": [
         "way"
@@ -1463,68 +1453,35 @@
     },
     {
       "description": "Adds sinage information to the given edge in the graph which is helpful to know to where a given road leads. Forward and backward allow for distinct values based on the direction the way is drawn specifically useful for single carriageways.",
-      "value": "*",
       "key": "destination:forward",
       "object_types": [
         "way"
       ]
     },
     {
-      "description": "Adds sinage information to the given edge in the graph which is helpful to know to where a given road leads. Forward and backward allow for distinct values based on the direction the way is drawn specifically useful for single carriageways.",
-      "value": "*",
       "key": "destination:ref",
-      "object_types": [
-        "way"
-      ]
-    },
-    {
-      "key": "destination:ref",
-      "description": "Branch route number.  Used for exit information, see: https://wiki.openstreetmap.org/wiki/Exit_Info",
-      "object_types": [
-        "way"
-      ]
-    },
-    {
-      "description": "Adds sinage information to the given edge in the graph which is helpful to know to where a given road leads. Forward and backward allow for distinct values based on the direction the way is drawn specifically useful for single carriageways.",
-      "value": "*",
-      "key": "destination:ref:to",
+      "description": "Branch route number for sinage ie. exit information, see: https://wiki.openstreetmap.org/wiki/Exit_Info",
       "object_types": [
         "way"
       ]
     },
     {
       "key": "destination:ref:to",
-      "description": "Toward route number.  Used for exit information, see: https://wiki.openstreetmap.org/wiki/Exit_Info",
-      "object_types": [
-        "way"
-      ]
-    },
-    {
-      "description": "Adds sinage information to the given edge in the graph which is helpful to know to where a given road leads. Forward and backward allow for distinct values based on the direction the way is drawn specifically useful for single carriageways.",
-      "value": "*",
-      "key": "destination:street",
+      "description": "Toward route number for sinage ie. exit information, see: https://wiki.openstreetmap.org/wiki/Exit_Info",
       "object_types": [
         "way"
       ]
     },
     {
       "key": "destination:street",
-      "description": "Branch road name.  Used for exit information, see: https://wiki.openstreetmap.org/wiki/Exit_Info",
-      "object_types": [
-        "way"
-      ]
-    },
-    {
-      "description": "Adds sinage information to the given edge in the graph which is helpful to know to where a given road leads. Forward and backward allow for distinct values based on the direction the way is drawn specifically useful for single carriageways.",
-      "value": "*",
-      "key": "destination:street:to",
+      "description": "Branch road name for sinage ie. exit information, see: https://wiki.openstreetmap.org/wiki/Exit_Info",
       "object_types": [
         "way"
       ]
     },
     {
       "key": "destination:street:to",
-      "description": "Toward road name.  Used for exit information, see: https://wiki.openstreetmap.org/wiki/Exit_Info",
+      "description": "Toward road name for sinage ie. exit information, see: https://wiki.openstreetmap.org/wiki/Exit_Info",
       "object_types": [
         "way"
       ]
@@ -2140,7 +2097,7 @@
         "node",
         "way"
       ],
-      "description": "Overrides access flags for hgv.  Hgv Routing is allowed."
+      "description": "Overrides access flags for hgv.  Hgv Routing is allowed. Sets the truck_route flag to true."
     },
     {
       "key": "hgv",
@@ -2185,7 +2142,7 @@
         "node",
         "way"
       ],
-      "description": "Overrides access flags for hgv.  Hgv Routing is allowed."
+      "description": "Overrides access flags for hgv.  Hgv Routing is allowed. Sets the truck_route flag to true."
     },
     {
       "key": "hgv",
@@ -2267,22 +2224,6 @@
         "way"
       ],
       "description": "Overrides access flags for hgv.  Hgv Routing is not allowed."
-    },
-    {
-      "key": "hgv",
-      "value": "local",
-      "object_types": [
-        "way"
-      ],
-      "description": "Sets the truck_route flag to true."
-    },
-    {
-      "key": "hgv",
-      "value": "designated",
-      "object_types": [
-        "way"
-      ],
-      "description": "Sets the truck_route flag to true."
     },
     {
       "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
@@ -2657,16 +2598,8 @@
       "description": "Sets auto backward to false."
     },
     {
-      "description": "Adds sinage information to the given edge in the graph which is helpful to know to where a given road leads. Forward and backward allow for distinct values based on the direction the way is drawn specifically useful for single carriageways.",
-      "value": "*",
       "key": "junction:ref",
-      "object_types": [
-        "way"
-      ]
-    },
-    {
-      "key": "junction:ref",
-      "description": "Junction/exit number.  Used for exit information, see: https://wiki.openstreetmap.org/wiki/Exit_Info",
+      "description": "Junction/exit number for sinage ie. exit information, see: https://wiki.openstreetmap.org/wiki/Exit_Info",
       "object_types": [
         "way"
       ]
