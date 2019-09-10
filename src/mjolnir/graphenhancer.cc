@@ -1154,9 +1154,9 @@ uint32_t GetStopImpact(uint32_t from,
   uint64_t wf = tilebuilder.edgeinfo(edges[from].edgeinfo_offset()).wayid();
   uint64_t wt = tilebuilder.edgeinfo(edges[to].edgeinfo_offset()).wayid();
 
-  if ((wf == 280788820 && wt == 103473545) || (wf == 103473545 && wt == 103473550))
+  if ((wf == 310439885 && wt == 280788619))
   {
-    std::cout << "ramp" << std::endl;
+    std::cout << "here" << std::endl;
   }
 
   if ((wf == 280788619 && wt == 103473561) || (wf == 103473561 && wt == 103473506))
@@ -1192,7 +1192,7 @@ uint32_t GetStopImpact(uint32_t from,
   ///////////////////////////////////////////////////////////////////////////
 
   // Get the highest classification of other roads at the intersection
-  bool allramps = true;
+  bool all_ramps = true, all_intersecting_ramps = true;
   const DirectedEdge* edge = &edges[0];
   // kUnclassified,  kResidential, and kServiceOther are grouped
   // together for the stop_impact logic.
@@ -1214,7 +1214,11 @@ uint32_t GetStopImpact(uint32_t from,
 
     // Check if not a ramp or turn channel
     if (!edge->link()) {
-      allramps = false;
+      all_ramps = false;
+
+      // are all edges ramps?  no need to look if they are oneway.
+      if (i != to && i != from)
+        all_intersecting_ramps = false;
     }
   }
 
@@ -1236,7 +1240,7 @@ uint32_t GetStopImpact(uint32_t from,
   // Set stop impact to the difference in road class (make it non-negative)
   int impact = static_cast<int>(from_rc) - static_cast<int>(bestrc);
   uint32_t stop_impact = (impact < -3) ? 0 : impact + 3;
-  uint32_t prev_stop_impact = stop_impact;
+  //uint32_t prev_stop_impact = stop_impact;
 
   // TODO: possibly increase stop impact at large intersections (more edges)
   // or if several are high class
@@ -1248,12 +1252,12 @@ uint32_t GetStopImpact(uint32_t from,
                    turn_type == Turn::Type::kReverse);
   bool is_slight = (turn_type == Turn::Type::kStraight || turn_type == Turn::Type::kSlightRight ||
                     turn_type == Turn::Type::kSlightLeft);
-  if (allramps) {
+  if (all_ramps) {
     if (is_sharp) {
       stop_impact += 2;
     } else if (is_slight) {
       stop_impact /= 2;
-    } else if (stop_impact != 0) {
+    } else if (stop_impact != 0) { // make sure we do not subtract 1 from 0
       stop_impact -= 1;
     }
   } else if (edges[from].use() == Use::kRamp && edges[to].use() == Use::kRamp &&
@@ -1281,24 +1285,29 @@ uint32_t GetStopImpact(uint32_t from,
       stop_impact += 1;
     } else if (is_slight) {
       stop_impact /= 2;
-    } else if (stop_impact != 0) {
+    } else if (stop_impact != 0) { // make sure we do not subtract 1 from 0
       stop_impact -= 1;
     }
   }
 
   // no special case found and all edges have the same rc then lower the stop impact
-  if (prev_stop_impact == stop_impact && impact == 0) {
+  /*if (prev_stop_impact == stop_impact && impact == 0) {
     if (stop_impact != 0) {
+      stop_impact -= 1;
+    }
+  }*/
+
+  if (all_intersecting_ramps) {
+    if (stop_impact != 0) { // make sure we do not subtract 1 from 0
       stop_impact -= 1;
     }
   }
 
-/*
-  uint64_t way = tilebuilder.edgeinfo(edges[from].edgeinfo_offset()).wayid();
+  /*uint64_t way = tilebuilder.edgeinfo(edges[from].edgeinfo_offset()).wayid();
 
   if (way == 310439885 || way == 103473561 || way == 103473506 || way == 103473545 || way == 280788820 || way == 103473550 || way == 280788619)
     std::cout << "from " << tilebuilder.edgeinfo(edges[from].edgeinfo_offset()).wayid() << " to " <<
-    tilebuilder.edgeinfo(edges[to].edgeinfo_offset()).wayid() << " " << stop_impact << " " << static_cast<int>(turn_type) << std::endl;
+    tilebuilder.edgeinfo(edges[to].edgeinfo_offset()).wayid() << " " << stop_impact << " " << impact << " " << all_intersecting_ramps << " " << static_cast<int>(turn_type) << std::endl;
 */
   // Clamp to kMaxStopImpact
   return (stop_impact <= kMaxStopImpact) ? stop_impact : kMaxStopImpact;
@@ -1318,8 +1327,8 @@ void ProcessEdgeTransitions(const uint32_t idx,
                             const DirectedEdge* edges,
                             const uint32_t ntrans,
                             const NodeInfo& nodeinfo,
-                            enhancer_stats& stats,
-                            const GraphTileBuilder& tilebuilder) {
+                            enhancer_stats& stats) {
+                            //const GraphTileBuilder& tilebuilder) {
   for (uint32_t i = 0; i < ntrans; i++) {
     // Get the turn type (reverse the heading of the from directed edge since
     // it is incoming
@@ -1739,7 +1748,7 @@ void enhance(const boost::property_tree::ptree& pt,
 
         // Set edge transitions.
         if (j < kNumberOfEdgeTransitions) {
-          ProcessEdgeTransitions(j, directededge, edges, ntrans, nodeinfo, stats, tilebuilder);
+          ProcessEdgeTransitions(j, directededge, edges, ntrans, nodeinfo, stats);//, tilebuilder);
         }
 
         // Check for not_thru edge (only on low importance edges). Exclude
