@@ -113,7 +113,7 @@ Maneuver::Maneuver()
       begin_intersecting_edge_name_consistency_(false), intersecting_forward_edge_(false),
       tee_(false), unnamed_walkway_(false), unnamed_cycleway_(false),
       unnamed_mountain_bike_trail_(false), verbal_multi_cue_(false), to_stay_on_(false),
-      drive_on_right_(true) {
+      drive_on_right_(true), bss_maneuver_type_(DirectionsLeg_Maneuver_BssManeuverType_kNoneAction) {
   street_names_ = midgard::make_unique<StreetNames>();
   begin_street_names_ = midgard::make_unique<StreetNames>();
   cross_street_names_ = midgard::make_unique<StreetNames>();
@@ -831,6 +831,14 @@ const VerbalTextFormatter* Maneuver::verbal_formatter() const {
 
 void Maneuver::set_verbal_formatter(std::unique_ptr<VerbalTextFormatter>&& verbal_formatter) {
   verbal_formatter_ = std::move(verbal_formatter);
+}
+
+const DirectionsLeg_Maneuver_BssManeuverType Maneuver::bss_maneuver_type() const {
+  return bss_maneuver_type_;
+}
+
+void Maneuver::set_bss_maneuver_type(DirectionsLeg_Maneuver_BssManeuverType type) {
+  bss_maneuver_type_ = type;
 }
 
 #ifdef LOGGING_LEVEL_TRACE

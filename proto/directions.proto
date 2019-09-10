@@ -134,6 +134,12 @@ message DirectionsLeg {
       repeated SignElement exit_names = 4;            // The list of exit names - not used much in US, example: Gettysburg Pike
     }
 
+    enum BssManeuverType{
+      kNoneAction = 1;	
+      kRentBikeAtBikeShare = 2;
+      kReturnBikeAtBikeShare = 3;
+    }
+
     optional Type type = 1;                                  // Maneuver type
     optional string text_instruction = 2;                    // text instruction
     repeated StreetName street_name = 3;                     // street names
@@ -167,6 +173,7 @@ message DirectionsLeg {
     optional bool to_stay_on = 31;                           // True if same name as previous maneuver
     repeated StreetName roundabout_exit_street_names = 32;   // Outbound street names from roundabout
     optional uint32 turn_degree = 33;                        // Turn degree of maneuver
+    optional BssManeuverType bss_maneuver_type = 34;
   }
   
   optional uint64 trip_id = 1;

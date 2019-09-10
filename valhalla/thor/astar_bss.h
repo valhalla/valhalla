@@ -77,7 +77,8 @@ protected:
   uint8_t travel_type_;      // Current travel type
 
   // Hierarchy limits.
-  std::vector<sif::HierarchyLimits> hierarchy_limits_;
+  std::vector<sif::HierarchyLimits> pedestrian_hierarchy_limits_;
+  std::vector<sif::HierarchyLimits> bicycle_hierarchy_limits_;
 
   // A* heuristic
   AStarHeuristic pedestrian_astarheuristic_;
@@ -136,6 +137,8 @@ protected:
                      const sif::EdgeLabel& pred,
                      const uint32_t pred_idx,
                      const bool from_transition,
+                     const bool from_bss,
+                     const sif::TravelMode mode,
                      const valhalla::Location& dest,
                      std::pair<int32_t, float>& best_path);
 
@@ -145,9 +148,9 @@ protected:
    * @param  origin       Location information of the origin.
    * @param  dest         Location information of the destination.
    */
-  virtual void SetOrigin(baldr::GraphReader& graphreader,
-                         valhalla::Location& origin,
-                         const valhalla::Location& dest);
+  void SetOrigin(baldr::GraphReader& graphreader,
+                 valhalla::Location& origin,
+                 const valhalla::Location& dest);
 
   /**
    * Set the destination edge(s).
@@ -155,7 +158,7 @@ protected:
    * @param   dest         Location information of the destination.
    * @return  Returns the relative density near the destination (0-15)
    */
-  virtual uint32_t SetDestination(baldr::GraphReader& graphreader, const valhalla::Location& dest);
+  uint32_t SetDestination(baldr::GraphReader& graphreader, const valhalla::Location& dest);
 
   /**
    * Form the path from the adjacency list. Recovers the path from the
@@ -165,7 +168,7 @@ protected:
    *          directed edges along the path - ordered from origin to
    *          destination - along with travel modes and elapsed time.
    */
-  virtual std::vector<PathInfo> FormPath(const uint32_t dest);
+  std::vector<PathInfo> FormPath(baldr::GraphReader& graphreader, const uint32_t dest);
 };
 
 } // namespace thor

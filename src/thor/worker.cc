@@ -43,7 +43,7 @@ const std::unordered_map<std::string, float> kMaxDistances = {
     {"bicycle", 7200.0f},        {"bus", 43200.0f},           {"hov", 43200.0f},
     {"motor_scooter", 14400.0f}, {"motorcycle", 14400.0f},    {"multimodal", 7200.0f},
     {"pedestrian", 7200.0f},     {"transit", 14400.0f},       {"truck", 43200.0f},
-    {"taxi", 43200.0f},
+    {"taxi", 43200.0f},          {"bikeshare", 7200.0f},
 };
 // a scale factor to apply to the score so that we bias towards closer results more
 constexpr float kDistanceScale = 10.f;
@@ -216,7 +216,8 @@ std::string thor_worker_t::parse_costing(const Api& request) {
   auto costing_str = Costing_Enum_Name(costing);
 
   // Set travel mode and construct costing
-  if (costing == Costing::multimodal || costing == Costing::transit) {
+  if (costing == Costing::multimodal || costing == Costing::transit ||
+      costing == Costing::bikeshare) {
     // For multi-modal we construct costing for all modes and set the
     // initial mode to pedestrian. (TODO - allow other initial modes)
     mode_costing[0] = get_costing(Costing::auto_, options);

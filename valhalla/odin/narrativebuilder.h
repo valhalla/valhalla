@@ -504,6 +504,7 @@ protected:
    */
   bool IsVerbalMultiCuePossible(Maneuver* maneuver, Maneuver& next_maneuver);
 
+  std::string FormBssManeuverType(DirectionsLeg_Maneuver_BssManeuverType);
   /**
    * Combines a simple preposition and a definite article for certain languages.
    */

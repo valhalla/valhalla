@@ -279,13 +279,14 @@ enum class Use : uint8_t {
   kFerry = 41,
   kRailFerry = 42,
 
+  kBikeShareConnection = 43, // Connection to multi-use transit stop
+
   // Transit specific uses. Must be last in the list
   kRail = 50,               // Rail line
   kBus = 51,                // Bus line
   kEgressConnection = 52,   // Connection to a egress node
   kPlatformConnection = 53, // Connection to a platform node
   kTransitConnection = 54,  // Connection to multi-use transit stop
-  kBikeShareConnection = 55 // Connection to multi-use transit stop
 
 };
 inline std::string to_string(Use u) {

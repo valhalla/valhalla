@@ -75,7 +75,7 @@ void loki_worker_t::parse_costing(Api& api) {
   }
 
   // TODO - have a way of specifying mode at the location
-  if (costing_type == Costing::multimodal) {
+  if (costing_type == Costing::multimodal || costing_type == Costing::bikeshare) {
     costing_type = Costing::pedestrian;
   }
 
@@ -236,7 +236,6 @@ void loki_worker_t::cleanup() {
 }
 
 #ifdef HAVE_HTTP
-
 prime_server::worker_t::result_t
 loki_worker_t::work(const std::list<zmq::message_t>& job,
                     void* request_info,

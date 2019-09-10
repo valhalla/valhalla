@@ -79,14 +79,6 @@ public:
   }
 
   /**
-   * Does the path include a bss?
-   * @return  Returns true if the path includes a ferry.
-   */
-  bool has_bss() const {
-    return has_bss_;
-  }
-
-  /**
    * Sets the functor which will track the algorithms expansion.
    *
    * @param  expansion_callback  the functor to call back when the algorithm makes progress
@@ -103,7 +95,6 @@ protected:
 
   bool has_ferry_; // Indicates whether the path has a ferry
 
-  bool has_bss_;
   // for tracking the expansion of the algorithm visually
   expansion_callback_t expansion_callback_;
 

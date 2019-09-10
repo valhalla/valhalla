@@ -282,6 +282,9 @@ public:
   const VerbalTextFormatter* verbal_formatter() const;
   void set_verbal_formatter(std::unique_ptr<VerbalTextFormatter>&& verbal_formatter);
 
+  const DirectionsLeg_Maneuver_BssManeuverType bss_maneuver_type() const;
+  void set_bss_maneuver_type(DirectionsLeg_Maneuver_BssManeuverType);
+
 #ifdef LOGGING_LEVEL_TRACE
   std::string ToString() const;
 
@@ -364,6 +367,8 @@ protected:
   TripLeg_PedestrianType pedestrian_type_;
   TripLeg_BicycleType bicycle_type_;
   TripLeg_TransitType transit_type_;
+
+  DirectionsLeg_Maneuver_BssManeuverType bss_maneuver_type_;
 
   std::unique_ptr<VerbalTextFormatter> verbal_formatter_;
 };

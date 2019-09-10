@@ -533,6 +533,8 @@ public:
     return flow_mask_;
   }
 
+  virtual Cost BSSCost() const;
+
 protected:
   // Algorithm pass
   uint32_t pass_;
@@ -644,6 +646,9 @@ protected:
     if (node->type() == baldr::NodeType::kTollBooth || (edge->toll() && !pred.toll())) {
       c += toll_booth_cost_;
     }
+    if (node->type() == baldr::NodeType::kBikeShare) {
+      c += bike_share_cost_;
+    }
     if (edge->use() == baldr::Use::kFerry && pred.use() != baldr::Use::kFerry) {
       c += ferry_transition_cost_;
     }
@@ -683,6 +688,9 @@ protected:
     }
     if (node->type() == baldr::NodeType::kGate) {
       c += gate_cost_;
+    }
+    if (node->type() == baldr::NodeType::kBikeShare) {
+      c += bike_share_cost_;
     }
     if (node->type() == baldr::NodeType::kTollBooth || (edge->toll() && !pred->toll())) {
       c += toll_booth_cost_;

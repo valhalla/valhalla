@@ -440,6 +440,29 @@ void SetHeadings(TripLeg_Edge* trip_edge,
   }
 }
 
+
+void AddBssNode(TripLeg_Node* trip_node,
+                const NodeInfo* node,
+                const GraphId& startnode,
+                const GraphTile* start_tile,
+                const GraphTile* graphtile,
+                const std::shared_ptr<sif::DynamicCost>* mode_costing,
+                const AttributesController& controller) {
+  if (node->type() == NodeType::kBikeShare) {
+    auto* bss_station_info = trip_node->mutable_bss_info();
+    // TODO: import more BSS data, can be used to display capacity in real time
+    bss_station_info->set_name("BSS 42");
+    bss_station_info->set_ref("BSS 42 ref");
+    bss_station_info->set_capacity("42");
+    bss_station_info->set_network("universe");
+    bss_station_info->set_operator_("Douglas");
+    bss_station_info->set_rent_cost(
+        mode_costing[static_cast<size_t>(TravelMode::kPedestrian)]->BSSCost().secs);
+    bss_station_info->set_return_cost(
+        mode_costing[static_cast<size_t>(TravelMode::kBicycle)]->BSSCost().secs);
+  }
+}
+
 /**
  * @param trip_node   Trip node to add transit nodes.
  * @param node        Start nodeinfo of the current edge.
@@ -1318,6 +1341,7 @@ TripLegBuilder::Build(const AttributesController& controller,
       }
     }
 
+    AddBssNode(trip_node, node, startnode, start_tile, graphtile, mode_costing, controller);
     AddTransitNodes(trip_node, node, startnode, start_tile, graphtile, controller);
 
     ///////////////////////////////////////////////////////////////////////////

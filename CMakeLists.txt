@@ -12,6 +12,7 @@ project(valhalla LANGUAGES CXX C)
 
 include(FindPkgConfig)
 include(GNUInstallDirs)
+set(BOOSTROOT /home/xiaolong/dev/boost_1_62_0/)
 
 set(VALHALLA_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 list(INSERT CMAKE_MODULE_PATH 0 ${VALHALLA_SOURCE_DIR}/cmake)
@@ -192,7 +193,7 @@ endif()
 
 ## Mjolnir and associated executables
 if(ENABLE_DATA_TOOLS)
-  find_package(Boost 1.51 REQUIRED COMPONENTS date_time filesystem system program_options)
+  find_package(Boost 1.62 REQUIRED COMPONENTS date_time filesystem system program_options)
   find_package(SQLite3 REQUIRED)
   find_package(SpatiaLite REQUIRED)
   find_package(Lua REQUIRED)
@@ -202,10 +203,10 @@ if(ENABLE_DATA_TOOLS)
     INTERFACE_INCLUDE_DIRECTORIES "${LUA_INCLUDE_DIR}")
 ## Top level executables
 elseif(ENABLE_TOOLS)
-  find_package(Boost 1.51 REQUIRED COMPONENTS filesystem system program_options)
+  find_package(Boost 1.62 REQUIRED COMPONENTS filesystem system program_options)
 ## Header only boost for the library without mjolnir
 elseif(NOT Boost_FOUND)
-  find_package(Boost 1.51 REQUIRED)
+  find_package(Boost 1.62 REQUIRED)
 endif()
 add_definitions(-DBOOST_NO_CXX11_SCOPED_ENUMS)
 

@@ -33,6 +33,8 @@ constexpr float kDefaultGatePenalty = 600.0f;            // Seconds
 constexpr float kDefaultFerryCost = 300.0f;              // Seconds
 constexpr float kDefaultCountryCrossingCost = 600.0f;    // Seconds
 constexpr float kDefaultCountryCrossingPenalty = 0.0f;   // Seconds
+constexpr float kDefaultBssCost = 120.0f;                // Seconds
+constexpr float kDefaultBssPenalty = 0.0f;               // Seconds
 
 // Other options
 constexpr float kDefaultDrivewayPenalty = 300.0f; // Seconds
@@ -205,6 +207,9 @@ constexpr ranged_default_t<float> kUseRoadRange{0.0f, kDefaultUseRoad, 1.0f};
 constexpr ranged_default_t<float> kUseFerryRange{0.0f, kDefaultUseFerry, 1.0f};
 constexpr ranged_default_t<float> kUseHillsRange{0.0f, kDefaultUseHills, 1.0f};
 constexpr ranged_default_t<float> kAvoidBadSurfacesRange{0.0f, kDefaultAvoidBadSurfaces, 1.0f};
+
+constexpr ranged_default_t<float> kBSSCostRange{0, kDefaultBssCost, kMaxPenalty};
+constexpr ranged_default_t<float> kBSSPenaltyRange{0, kDefaultBssPenalty, kMaxPenalty};
 } // namespace
 
 /**
@@ -361,6 +366,10 @@ public:
   virtual uint8_t travel_type() const {
     return static_cast<uint8_t>(type_);
   }
+
+  virtual Cost BSSCost() const override {
+    return {kDefaultBssCost, kDefaultBssPenalty};
+  };
 
   // Hidden in source file so we don't need it to be protected
   // We expose it within the source file for testing purposes
@@ -521,7 +530,8 @@ bool BicycleCost::Allowed(const baldr::DirectedEdge* edge,
   // vehicular turn restrictions. Allow Uturns at dead ends only.
   // Skip impassable edges and shortcut edges.
   if (!(edge->forwardaccess() & kBicycleAccess) || edge->is_shortcut() ||
-      (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
+      (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx() &&
+       pred.mode() == TravelMode::kBicycle) ||
       (pred.restrictions() & (1 << edge->localedgeidx())) || IsUserAvoidEdge(edgeid)) {
     return false;
   }
@@ -570,7 +580,8 @@ bool BicycleCost::AllowedReverse(const baldr::DirectedEdge* edge,
   if (!(opp_edge->forwardaccess() & kBicycleAccess) || opp_edge->is_shortcut() ||
       opp_edge->use() == Use::kTransitConnection || opp_edge->use() == Use::kEgressConnection ||
       opp_edge->use() == Use::kPlatformConnection ||
-      (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
+      (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx() &&
+       pred.mode() == TravelMode::kBicycle) ||
       (opp_edge->restrictions() & (1 << pred.opp_local_idx())) || IsUserAvoidEdge(opp_edgeid)) {
     return false;
   }
@@ -971,6 +982,13 @@ void ParseBicycleCostOptions(const rapidjson::Document& doc,
         kCycleSpeedRange(rapidjson::get_optional<float>(*json_costing_options, "/cycling_speed")
                              .get_value_or(kDefaultCyclingSpeed[t])));
 
+    // bss return cost
+    pbf_costing_options->set_bike_share_cost(
+        kBSSCostRange(rapidjson::get_optional<uint32_t>(*json_costing_options, "/bss_rent_cost")
+                          .get_value_or(kDefaultBssCost)));
+    pbf_costing_options->set_bike_share_penalty(
+        kBSSPenaltyRange(rapidjson::get_optional<uint32_t>(*json_costing_options, "/bss_rent_cost")
+                             .get_value_or(kDefaultBssPenalty)));
   } else {
     // Set pbf values to defaults
     pbf_costing_options->set_maneuver_penalty(kDefaultManeuverPenalty);
@@ -989,6 +1007,8 @@ void ParseBicycleCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_cycling_speed(
         kDefaultCyclingSpeed[static_cast<uint32_t>(BicycleType::kHybrid)]);
     pbf_costing_options->set_flow_mask(kDefaultFlowMask);
+    pbf_costing_options->set_bike_share_cost(kDefaultBssCost);
+    pbf_costing_options->set_bike_share_penalty(kDefaultBssPenalty);
   }
 }
 

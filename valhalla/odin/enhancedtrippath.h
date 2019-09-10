@@ -569,6 +569,10 @@ public:
     return mutable_node_->time_zone();
   }
 
+  bool HasBssInfo() const {
+    return mutable_node_->has_bss_info();
+  };
+
   bool HasIntersectingEdges() const;
 
   bool HasIntersectingEdgeNameConsistency() const;

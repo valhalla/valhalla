@@ -229,6 +229,14 @@ config = {
       'max_best_paths': 4,
       'max_best_paths_shape': 100
     },
+    'bikeshare': {
+      'max_distance': 250000.0,
+      'max_locations': 50,
+      'max_matrix_distance': 200000.0,
+      'max_matrix_locations': 50,
+      'min_transit_walking_distance': 1,
+      'max_transit_walking_distance': 10000
+    },
     'max_avoid_locations': 50,
     'max_reachability': 100,
     'max_radius': 200,

@@ -198,6 +198,10 @@ void DynamicCost::AddUserAvoidEdges(const std::vector<AvoidEdge>& avoid_edges) {
   }
 }
 
+Cost DynamicCost::BSSCost() const {
+  return kNoCost;
+};
+
 void ParseCostOptions(const rapidjson::Value& value, CostingOptions* pbf_costing_options) {
   auto speed_types = rapidjson::get_child_optional(value, "/speed_types");
   pbf_costing_options->set_flow_mask(SpeedMask_Parse(speed_types));

@@ -344,6 +344,7 @@ struct bin_handler_t {
             candidate.edge_info->shape()[i].Distance(candidate.edge_info->shape()[i + 1]);
       }
       partial_length += candidate.edge_info->shape()[candidate.index].Distance(candidate.point);
+
       partial_length = std::min(partial_length, static_cast<double>(candidate.edge->length()));
       float length_ratio =
           static_cast<float>(partial_length / static_cast<double>(candidate.edge->length()));
