@@ -84,7 +84,7 @@ sudo apt-get install -y valhalla-bin
 Building from Source
 --------------------
 
-Valhalla uses CMake as build system.
+Valhalla uses CMake as build system. When compiling with gcc (GNU Compiler Collection), version 5 or newer is supported.
 
 To install on a Debian or Ubuntu system you need to install its dependencies with:
 
