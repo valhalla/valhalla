@@ -470,6 +470,11 @@ Cost AutoCost::TransitionCost(const baldr::DirectedEdge* edge,
                       : kLeftSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))];
     }
 
+    if ((edge->use() != Use::kRamp && pred.use() == Use::kRamp) ||
+        (edge->use() == Use::kRamp && pred.use() != Use::kRamp)) {
+      turn_cost += 1.5f;
+    }
+
     // Separate time and penalty when traffic is present. With traffic, edge speeds account for
     // much of the intersection transition time (TODO - evaluate different elapsed time settings).
     // Still want to add a penalty so routes avoid high cost intersections.
@@ -507,6 +512,11 @@ Cost AutoCost::TransitionCostReverse(const uint32_t idx,
                       ? kRightSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))]
                       : kLeftSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))];
     }
+    if ((edge->use() != Use::kRamp && pred->use() == Use::kRamp) ||
+        (edge->use() == Use::kRamp && pred->use() != Use::kRamp)) {
+      turn_cost += 1.5f;
+    }
+
     float seconds = trans_density_factor_[node->density()] * edge->stopimpact(idx) * turn_cost;
     c.secs += seconds;
     c.cost += seconds;
