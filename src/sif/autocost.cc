@@ -473,6 +473,8 @@ Cost AutoCost::TransitionCost(const baldr::DirectedEdge* edge,
     if ((edge->use() != Use::kRamp && pred.use() == Use::kRamp) ||
         (edge->use() == Use::kRamp && pred.use() != Use::kRamp)) {
       turn_cost += 1.5f;
+      if (edge->roundabout())
+        turn_cost += 0.5f;
     }
 
     // Separate time and penalty when traffic is present. With traffic, edge speeds account for
@@ -515,6 +517,8 @@ Cost AutoCost::TransitionCostReverse(const uint32_t idx,
     if ((edge->use() != Use::kRamp && pred->use() == Use::kRamp) ||
         (edge->use() == Use::kRamp && pred->use() != Use::kRamp)) {
       turn_cost += 1.5f;
+      if (edge->roundabout())
+        turn_cost += 0.5f;
     }
 
     float seconds = trans_density_factor_[node->density()] * edge->stopimpact(idx) * turn_cost;
