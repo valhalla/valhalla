@@ -1257,14 +1257,6 @@ uint32_t GetStopImpact(uint32_t from,
     } else {
       stop_impact += 2;
     }
-  } else if (edges[to].roundabout()) {
-    // add to the stop impact when entering a roundabout.
-    // Penalize sharp turns
-    if (is_sharp) {
-      stop_impact += 2;
-    } else {
-      stop_impact += 1;
-    }
   } else if (edges[from].use() == Use::kTurnChannel) {
     // Penalize sharp turns
     if (is_sharp) {
