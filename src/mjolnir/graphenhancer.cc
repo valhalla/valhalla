@@ -107,8 +107,7 @@ struct enhancer_stats {
  */
 void UpdateSpeed(DirectedEdge& directededge,
                  const uint32_t density,
-                 const uint32_t* urban_rc_speed,
-                 const uint32_t* rc_speed) {
+                 const uint32_t* urban_rc_speed) {
 
   // Update speed on ramps (if not a tagged speed) and turn channels
   if (directededge.link()) {
@@ -1428,9 +1427,6 @@ void enhance(const boost::property_tree::ptree& pt,
   // 15 MPH - service/other
   uint32_t urban_rc_speed[] = {89, 73, 57, 49, 40, 35, 30, 20};
 
-  // default speeds based on rc from lua
-  uint32_t rc_speed[] = {105, 90, 75, 60, 50, 40, 35, 25};
-
   // Get some things we need throughout
   enhancer_stats stats{std::numeric_limits<float>::min(), 0};
   const auto& local_level = TileHierarchy::levels().rbegin()->second.level;
@@ -1689,7 +1685,7 @@ void enhance(const boost::property_tree::ptree& pt,
         }
 
         // Update speed.
-        UpdateSpeed(directededge, density, urban_rc_speed, rc_speed);
+        UpdateSpeed(directededge, density, urban_rc_speed);
 
         // Update the named flag
         auto names = tilebuilder.edgeinfo(directededge.edgeinfo_offset()).GetNamesAndTypes();
