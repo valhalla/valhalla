@@ -105,9 +105,7 @@ struct enhancer_stats {
  * @param  rc_speed Array of default speeds vs. road class
  *
  */
-void UpdateSpeed(DirectedEdge& directededge,
-                 const uint32_t density,
-                 const uint32_t* urban_rc_speed) {
+void UpdateSpeed(DirectedEdge& directededge, const uint32_t density, const uint32_t* urban_rc_speed) {
 
   // Update speed on ramps (if not a tagged speed) and turn channels
   if (directededge.link()) {
