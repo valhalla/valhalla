@@ -556,6 +556,13 @@ Cost TruckCost::TransitionCost(const baldr::DirectedEdge* edge,
                       ? kRightSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))]
                       : kLeftSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))];
     }
+    if ((edge->use() != Use::kRamp && pred.use() == Use::kRamp) ||
+        (edge->use() == Use::kRamp && pred.use() != Use::kRamp)) {
+      turn_cost += 1.5f;
+      if (edge->roundabout())
+        turn_cost += 0.5f;
+    }
+
     float seconds = trans_density_factor_[node->density()] * edge->stopimpact(idx) * turn_cost;
     c.cost += seconds;
     c.secs += seconds;
@@ -592,6 +599,13 @@ Cost TruckCost::TransitionCostReverse(const uint32_t idx,
                       ? kRightSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))]
                       : kLeftSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))];
     }
+    if ((edge->use() != Use::kRamp && pred->use() == Use::kRamp) ||
+        (edge->use() == Use::kRamp && pred->use() != Use::kRamp)) {
+      turn_cost += 1.5f;
+      if (edge->roundabout())
+        turn_cost += 0.5f;
+    }
+
     float seconds = trans_density_factor_[node->density()] * edge->stopimpact(idx) * turn_cost;
     c.cost += seconds;
     c.secs += seconds;
