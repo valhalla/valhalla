@@ -1366,7 +1366,8 @@ public:
           from_way_id = member.member_id;
         } else if (member.role == "to" &&
                    member.member_type == OSMPBF::Relation::MemberType::Relation_MemberType_WAY) {
-          restriction.set_to(member.member_id);
+          if (!restriction.to())
+            restriction.set_to(member.member_id);
         } else if (member.role == "via" &&
                    member.member_type == OSMPBF::Relation::MemberType::Relation_MemberType_NODE) {
           if (vias.size()) { // mix of nodes and ways.  Not supported yet.

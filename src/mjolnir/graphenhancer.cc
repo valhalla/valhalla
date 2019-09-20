@@ -68,6 +68,7 @@ constexpr float kDensityLatDeg = (kDensityRadius * kMetersPerKm) / kMetersPerDeg
 constexpr float kTurnChannelFactor = 1.25f;
 constexpr float kRampDensityFactor = 0.8f;
 constexpr float kRampFactor = 0.85f;
+constexpr float kRoundaboutFactor = 0.5f;
 
 // A little struct to hold stats information during each threads work
 struct enhancer_stats {
@@ -101,6 +102,8 @@ struct enhancer_stats {
  * @param  directededge  Directed edge to update.
  * @param  density       Relative road density.
  * @param  urban_rc_speed Array of default speeds vs. road class for urban areas
+ * @param  rc_speed Array of default speeds vs. road class
+ *
  */
 void UpdateSpeed(DirectedEdge& directededge, const uint32_t density, const uint32_t* urban_rc_speed) {
 
@@ -167,6 +170,11 @@ void UpdateSpeed(DirectedEdge& directededge, const uint32_t density, const uint3
     if (density > 8) {
       uint32_t rc = static_cast<uint32_t>(directededge.classification());
       directededge.set_speed(urban_rc_speed[rc]);
+    }
+
+    if (directededge.roundabout()) {
+      uint32_t speed = directededge.speed(); // could be default or urban speed
+      directededge.set_speed(static_cast<uint32_t>((speed * kRoundaboutFactor) + 0.5f));
     }
 
     // Reduce speeds on parking aisles, driveways, and drive-thrus. These uses are
@@ -1166,7 +1174,7 @@ uint32_t GetStopImpact(uint32_t from,
   ///////////////////////////////////////////////////////////////////////////
 
   // Get the highest classification of other roads at the intersection
-  bool allramps = true;
+  bool all_ramps = true;
   const DirectedEdge* edge = &edges[0];
   // kUnclassified,  kResidential, and kServiceOther are grouped
   // together for the stop_impact logic.
@@ -1188,7 +1196,7 @@ uint32_t GetStopImpact(uint32_t from,
 
     // Check if not a ramp or turn channel
     if (!edge->link()) {
-      allramps = false;
+      all_ramps = false;
     }
   }
 
@@ -1221,12 +1229,12 @@ uint32_t GetStopImpact(uint32_t from,
                    turn_type == Turn::Type::kReverse);
   bool is_slight = (turn_type == Turn::Type::kStraight || turn_type == Turn::Type::kSlightRight ||
                     turn_type == Turn::Type::kSlightLeft);
-  if (allramps) {
+  if (all_ramps) {
     if (is_sharp) {
       stop_impact += 2;
     } else if (is_slight) {
       stop_impact /= 2;
-    } else {
+    } else if (stop_impact != 0) { // make sure we do not subtract 1 from 0
       stop_impact -= 1;
     }
   } else if (edges[from].use() == Use::kRamp && edges[to].use() == Use::kRamp &&
@@ -1254,11 +1262,10 @@ uint32_t GetStopImpact(uint32_t from,
       stop_impact += 1;
     } else if (is_slight) {
       stop_impact /= 2;
-    } else {
+    } else if (stop_impact != 0) { // make sure we do not subtract 1 from 0
       stop_impact -= 1;
     }
   }
-
   // Clamp to kMaxStopImpact
   return (stop_impact <= kMaxStopImpact) ? stop_impact : kMaxStopImpact;
 }
@@ -1416,7 +1423,7 @@ void enhance(const boost::property_tree::ptree& pt,
   // 25 MPH - tertiary
   // 20 MPH - residential and unclassified
   // 15 MPH - service/other
-  uint32_t urban_rc_speed[] = {89, 73, 57, 49, 40, 35, 35, 25};
+  uint32_t urban_rc_speed[] = {89, 73, 57, 49, 40, 35, 30, 20};
 
   // Get some things we need throughout
   enhancer_stats stats{std::numeric_limits<float>::min(), 0};
