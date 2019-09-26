@@ -243,8 +243,7 @@ public:
    *                   Distance in meters of the closest point,
    *                   Index of the segment of the polyline which contains the closest point >
    */
-  std::tuple<PointLL, float, int>
-  Project(const std::vector<PointLL>& pts) const;
+  std::tuple<PointLL, float, int> Project(const std::vector<PointLL>& pts) const;
 
 private:
   static constexpr float INVALID = 0xBADBADBAD;
