@@ -9,6 +9,7 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/format.hpp>
+#include <boost/optional.hpp>
 #include <boost/range/algorithm/remove_if.hpp>
 #include <future>
 #include <thread>
@@ -78,14 +79,12 @@ public:
 
   virtual void
   node_callback(uint64_t osmid, double lng, double lat, const OSMPBF::Tags& tags) override {
-    // Get tags
-    Tags results = lua_.Transform(OSMType::kNode, tags);
-    if (results.size() == 0) {
-      return;
-    }
-
+    boost::optional<Tags> results = boost::none;
     if (bss_nodes_) {
-      for (auto& key_value : results) {
+      // Get tags
+      results = lua_.Transform(OSMType::kNode, tags);
+
+      for (auto& key_value : *results) {
         if (key_value.first == "amenity" && key_value.second == "bicycle_rental") {
           // Create a new node and set its attributes
           OSMNode n{osmid};
@@ -102,15 +101,21 @@ public:
       return;
     }
 
+    // Get tags if not already available
+    results = results ? results : lua_.Transform(OSMType::kNode, tags);
+    if (results->size() == 0) {
+      return;
+    }
+
     // unsorted extracts are just plain nasty, so they can bugger off!
     if (osmid < last_node_) {
       throw std::runtime_error("Detected unsorted input data");
     }
     last_node_ = osmid;
 
-    const auto& highway_junction = results.find("highway");
+    const auto& highway_junction = results->find("highway");
     bool is_highway_junction =
-        ((highway_junction != results.end()) && (highway_junction->second == "motorway_junction"));
+        ((highway_junction != results->end()) && (highway_junction->second == "motorway_junction"));
 
     // Create a new node and set its attributes
     OSMNode n;
@@ -120,7 +125,7 @@ public:
       n.set_type(NodeType::kMotorWayJunction);
     }
 
-    for (const auto& tag : results) {
+    for (const auto& tag : *results) {
 
       if (tag.first == "highway") {
         n.set_traffic_signal(tag.second == "traffic_signals" ? true : false);
