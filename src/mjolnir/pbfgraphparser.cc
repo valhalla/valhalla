@@ -78,14 +78,27 @@ public:
 
   virtual void
   node_callback(uint64_t osmid, double lng, double lat, const OSMPBF::Tags& tags) override {
-    // Check if it is in the list of nodes used by ways
-    if (!shape_.get(osmid)) {
-      return;
-    }
-
     // Get tags
     Tags results = lua_.Transform(OSMType::kNode, tags);
     if (results.size() == 0) {
+      return;
+    }
+
+    if (bss_nodes_) {
+      for (auto& key_value : results) {
+        if (key_value.first == "amenity" && key_value.second == "bicycle_rental") {
+          // Create a new node and set its attributes
+          OSMNode n{osmid};
+          n.set_latlng(static_cast<float>(lng), static_cast<float>(lat));
+          n.set_type(NodeType::kBikeShare);
+          bss_nodes_->push_back(n);
+          ++osmdata_.node_count;
+        }
+      }
+    }
+
+    // Check if it is in the list of nodes used by ways
+    if (!shape_.get(osmid)) {
       return;
     }
 
@@ -1528,13 +1541,15 @@ public:
              sequence<OSMWayNode>* way_nodes,
              sequence<OSMAccess>* access,
              sequence<OSMRestriction>* complex_restrictions_from,
-             sequence<OSMRestriction>* complex_restrictions_to) {
+             sequence<OSMRestriction>* complex_restrictions_to,
+             sequence<OSMNode>* bss_nodes) {
     // reset the pointers (either null them out or set them to something valid)
     ways_.reset(ways);
     way_nodes_.reset(way_nodes);
     access_.reset(access);
     complex_restrictions_from_.reset(complex_restrictions_from);
     complex_restrictions_to_.reset(complex_restrictions_to);
+    bss_nodes_.reset(bss_nodes);
   }
 
   // Output list of wayids that have loops
@@ -1584,41 +1599,8 @@ public:
   std::unique_ptr<sequence<OSMRestriction>> complex_restrictions_from_;
   //  used to find out if a wayid is the to edge for a complex restriction
   std::unique_ptr<sequence<OSMRestriction>> complex_restrictions_to_;
-};
 
-struct bss_nodes_callback : public graph_callback {
-  ~bss_nodes_callback() override = default;
-
-  bss_nodes_callback(const boost::property_tree::ptree& pt, OSMData& osmdata)
-      : graph_callback(pt, osmdata) {
-  }
-  void
-  node_callback(const uint64_t osmid, const double lng, const double lat, const Tags& tags) override {
-    // Get tags
-    Tags results = lua_.Transform(OSMType::kNode, tags);
-    for (auto& key_value : results) {
-      if (key_value.first == "amenity" && key_value.second == "bicycle_rental") {
-        // Create a new node and set its attributes
-        OSMNode n{osmid};
-        n.set_latlng(static_cast<float>(lng), static_cast<float>(lat));
-        n.set_type(NodeType::kBikeShare);
-        bss_nodes_->push_back(n);
-        ++osmdata_.node_count;
-      }
-    }
-  };
-  void
-  way_callback(const uint64_t osmid, const Tags& tags, const std::vector<uint64_t>& nodes) override{};
-  void relation_callback(const uint64_t osmid,
-                         const Tags& tags,
-                         const std::vector<OSMPBF::Member>& members) override{};
-  void changeset_callback(const uint64_t changeset_id) override{};
-
-  // lets the sequences be set and reset
-  void reset(sequence<OSMNode>* nodes) {
-    // reset the pointers (either null them out or set them to something valid)
-    bss_nodes_.reset(nodes);
-  }
+  // bss nodes
   std::unique_ptr<sequence<OSMNode>> bss_nodes_;
 };
 
@@ -1645,11 +1627,6 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt,
   // Create OSM data. Set the member pointer so that the parsing callback methods can use it.
   OSMData osmdata{};
   graph_callback callback(pt, osmdata);
-  callback.reset(new sequence<OSMWay>(ways_file, true),
-                 new sequence<OSMWayNode>(way_nodes_file, true),
-                 new sequence<OSMAccess>(access_file, true),
-                 new sequence<OSMRestriction>(complex_restriction_from_file, true),
-                 new sequence<OSMRestriction>(complex_restriction_to_file, true));
 
   LOG_INFO("Parsing files: " + boost::algorithm::join(input_files, ", "));
 
@@ -1665,16 +1642,21 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt,
 
   if (pt.get<bool>("import_bike_share_stations", false)) {
     LOG_INFO("Parsing bss nodes...");
-    bss_nodes_callback bss_nodes_cb(pt, osmdata);
-    bss_nodes_cb.reset(new sequence<OSMNode>(bss_nodes_file, true));
     for (auto& file_handle : file_handles) {
-      bss_nodes_cb.current_way_node_index_ = bss_nodes_cb.last_node_ = bss_nodes_cb.last_way_ =
-          bss_nodes_cb.last_relation_ = 0;
+      callback.current_way_node_index_ = callback.last_node_ = callback.last_way_ =
+          callback.last_relation_ = 0;
+      callback.reset(nullptr, nullptr, nullptr, nullptr, nullptr,
+                     new sequence<OSMNode>(bss_nodes_file, true));
       OSMPBF::Parser::parse(file_handle, static_cast<OSMPBF::Interest>(OSMPBF::Interest::NODES),
-                            bss_nodes_cb);
+                            callback);
     }
   }
 
+  callback.reset(new sequence<OSMWay>(ways_file, true),
+                 new sequence<OSMWayNode>(way_nodes_file, true),
+                 new sequence<OSMAccess>(access_file, true),
+                 new sequence<OSMRestriction>(complex_restriction_from_file, true),
+                 new sequence<OSMRestriction>(complex_restriction_to_file, true), nullptr);
   // Parse the ways and find all node Ids needed (those that are part of a
   // way's node list. Iterate through each pbf input file.
   LOG_INFO("Parsing ways...");
@@ -1710,7 +1692,7 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt,
   LOG_INFO("Finished with " + std::to_string(osmdata.restrictions.size()) + " simple restrictions");
   LOG_INFO("Finished with " + std::to_string(osmdata.lane_connectivity_map.size()) +
            " lane connections");
-  callback.reset(nullptr, nullptr, nullptr, nullptr, nullptr);
+  callback.reset(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
 
   // Sort complex restrictions. Keep this scoped so the file handles are closed when done sorting.
   LOG_INFO("Sorting complex restrictions by from id...");
@@ -1747,7 +1729,7 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt,
     // each time we parse nodes we have to run through the way nodes file from the beginning because
     // because osm node ids are only sorted at the single pbf file level
     callback.reset(nullptr, new sequence<OSMWayNode>(way_nodes_file, false), nullptr, nullptr,
-                   nullptr);
+                   nullptr, nullptr);
     callback.current_way_node_index_ = callback.last_node_ = callback.last_way_ =
         callback.last_relation_ = 0;
     OSMPBF::Parser::parse(file_handle,
@@ -1756,7 +1738,7 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt,
                           callback);
   }
   uint64_t max_osm_id = callback.last_node_;
-  callback.reset(nullptr, nullptr, nullptr, nullptr, nullptr);
+  callback.reset(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
   LOG_INFO("Finished with " + std::to_string(osmdata.osm_node_count) +
            " nodes contained in routable ways");
 
