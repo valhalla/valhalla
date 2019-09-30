@@ -540,7 +540,7 @@ void DirectedEdge::set_max_down_slope(const float slope) {
 }
 
 void DirectedEdge::set_bss_connection(const bool is_bss_connection) {
-	is_bss_connection_ = is_bss_connection;
+  is_bss_connection_ = is_bss_connection;
 }
 
 // Json representation
