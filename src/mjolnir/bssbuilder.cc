@@ -87,13 +87,15 @@ std::vector<OSMConnectionEdge> project(const GraphTile& local_tile,
   // In this loop, we try to find the way on which to project the bss node by iterating all nodes in
   // its corresponding tile... Not a good idea in term of performance... any better idea???
   for (const auto& bss : osm_bss) {
-    OSMConnectionEdge osm_conn{};
+    OSMConnectionEdge osm_conn = {};
 
     auto latlng = bss.latlng();
     osm_conn.bss_ll = PointLL{latlng.first, latlng.second};
 
     float mindist = 10000000.0f;
 
+    const DirectedEdge* best_directededge = nullptr;
+    uint32_t best_startnode_index = 0;
     std::vector<PointLL> closest_shape;
     std::tuple<PointLL, float, int> closest;
 
@@ -125,19 +127,26 @@ std::vector<OSMConnectionEdge> project(const GraphTile& local_tile,
           mindist = std::get<1>(this_closest);
           closest = this_closest;
           closest_shape = this_shape;
-
-          osm_conn.startnode = {local_tile.id().tileid(), local_level, i};
-          osm_conn.endnode = directededge->endnode();
-          osm_conn.wayid = edgeinfo.wayid();
-          osm_conn.speed = local_tile.GetSpeed(directededge);
-          osm_conn.names = edgeinfo.GetNames();
-          osm_conn.surface = directededge->surface();
-          osm_conn.cycle_lane = directededge->cyclelane();
-          osm_conn.road_class = directededge->classification();
-          osm_conn.use = directededge->use();
+          best_directededge = directededge;
+          best_startnode_index = i;
         }
       }
     }
+
+    // store the attributes of the best directed edge where to project the bss
+    {
+      auto edgeinfo = local_tile.edgeinfo(best_directededge->edgeinfo_offset());
+      osm_conn.startnode = {local_tile.id().tileid(), local_level, best_startnode_index};
+      osm_conn.endnode = best_directededge->endnode();
+      osm_conn.wayid = edgeinfo.wayid();
+      osm_conn.speed = local_tile.GetSpeed(best_directededge);
+      osm_conn.names = edgeinfo.GetNames();
+      osm_conn.surface = best_directededge->surface();
+      osm_conn.cycle_lane = best_directededge->cyclelane();
+      osm_conn.road_class = best_directededge->classification();
+      osm_conn.use = best_directededge->use();
+    }
+
     if (!osm_conn.startnode.Is_Valid() && !osm_conn.endnode.Is_Valid()) {
       LOG_ERROR("Cannot find any edge to project");
       continue;
@@ -145,7 +154,6 @@ std::vector<OSMConnectionEdge> project(const GraphTile& local_tile,
     // Create a temporary connection which starts from a existing way node in the tile and point to
     // the bss node
     {
-
       auto closest_point = std::get<0>(closest);
       auto cloest_index = std::get<2>(closest);
 
@@ -322,7 +330,7 @@ void create_bss_node_and_edges(GraphTileBuilder& tilebuilder_local,
 
     size_t edge_index = tilebuilder_local.directededges().size();
     NodeInfo new_bss_node{tile.header()->base_ll(), conn.bss_ll,
-                          RoadClass::kServiceOther, (kPedestrianAccess | kBicycleAccess),
+                          conn.road_class,          (kPedestrianAccess | kBicycleAccess),
                           NodeType::kBikeShare,     false};
     new_bss_node.set_mode_change(true);
     new_bss_node.set_edge_index(edge_index);
@@ -383,7 +391,7 @@ void create_bss_node_and_edges(GraphTileBuilder& tilebuilder_local,
     {
       auto& oppo_directededge = tilebuilder_local.directededges()[conn.end_to_bss_edge_idx];
       uint32_t local_idx = 1;
-      auto directededge = make_directed_edge(conn.endnode, conn.endshape, conn, local_idx, false,
+      auto directededge = make_directed_edge(conn.endnode, conn.endshape, conn, false, local_idx,
                                              oppo_directededge.localedgeidx());
       bool added;
       uint32_t edge_info_offset =
