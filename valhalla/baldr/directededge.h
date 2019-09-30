@@ -1026,11 +1026,20 @@ public:
    */
   void set_leaves_tile(const bool leaves_tile);
 
-  void set_bss_connection(const bool is_bss_connection);
+  /**
+   * Set the flag indicating whether this edge is a bike share station's connection
+   * @param  bss_connection  True if the edge is a bike share station's connection
+   */
+  void set_bss_connection(const bool bss_connection);
 
+  /**
+   * If this edge is a bike share station's connection?
+   * @return  Returns true if this edge is a bike share station's connection
+   */
   bool bss_connection() const {
-    return is_bss_connection_;
+    return bss_connection_;
   }
+
   /**
    * Create a json object representing this edge
    * @return  Returns the json object
@@ -1093,7 +1102,7 @@ protected:
   uint64_t traffic_signal_ : 1; // Traffic signal at end of the directed edge
   uint64_t seasonal_ : 1;       // Seasonal access (ex. no access in winter)
   uint64_t deadend_ : 1;        // Leads to a dead-end (no other driveable roads) TODO
-  uint64_t is_bss_connection_ : 1;
+  uint64_t bss_connection_ : 1; // Does this lead to(come out from) a bike share station?
   uint64_t spare4_ : 9;
 
   // 5th 8-byte word
