@@ -48,11 +48,9 @@ struct OSMConnectionEdge {
   CycleLane cycle_lane = CycleLane::kNone;
   RoadClass road_class = RoadClass::kUnclassified;
   Use use = Use::kOther;
-  bool use_sidepath = false;
 
   uint32_t start_to_bss_edge_idx = -1;
   uint32_t end_to_bss_edge_idx = -1;
-
 
   // operator < for sorting
   bool operator<(const OSMConnectionEdge& other) const {
@@ -91,14 +89,13 @@ std::vector<OSMConnectionEdge> project(const GraphTile& local_tile,
   for (const auto& bss : osm_bss) {
     OSMConnectionEdge osm_conn{};
 
-	auto latlng = bss.latlng();
+    auto latlng = bss.latlng();
     osm_conn.bss_ll = PointLL{latlng.first, latlng.second};
 
     float mindist = 10000000.0f;
 
     std::vector<PointLL> closest_shape;
     std::tuple<PointLL, float, int> closest;
-
 
     // Loop over all nodes in the tile to find the nearest edge
     for (uint32_t i = 0; i < local_tile.header()->nodecount(); ++i) {
@@ -138,7 +135,6 @@ std::vector<OSMConnectionEdge> project(const GraphTile& local_tile,
           osm_conn.cycle_lane = directededge->cyclelane();
           osm_conn.road_class = directededge->classification();
           osm_conn.use = directededge->use();
-          osm_conn.use_sidepath = directededge->use_sidepath();
         }
       }
     }
@@ -173,29 +169,22 @@ std::vector<OSMConnectionEdge> project(const GraphTile& local_tile,
 
 DirectedEdge make_directed_edge(const GraphId endnode,
                                 const std::vector<PointLL>& shape,
-                                const uint32_t speed,
-                                Surface surface,
-                                CycleLane cycle_lane,
-                                RoadClass road_class,
-                                Use use,
-                                bool use_sidepath,
-                                const uint32_t localedgeidx,
-                                const bool is_named,
+                                const OSMConnectionEdge& conn,
                                 const bool is_forward,
+                                const uint32_t localedgeidx,
                                 const uint32_t oppo_local_idx) {
   DirectedEdge directededge;
   directededge.set_endnode(endnode);
   directededge.set_length(std::max(1.0f, valhalla::midgard::length(shape)));
-  directededge.set_use(use);
-  directededge.set_speed(speed);
-  directededge.set_surface(surface);
-  directededge.set_cyclelane(cycle_lane);
-  directededge.set_classification(road_class);
-  directededge.set_use_sidepath(use_sidepath);
+  directededge.set_use(conn.use);
+  directededge.set_speed(conn.speed);
+  directededge.set_surface(conn.surface);
+  directededge.set_cyclelane(conn.cycle_lane);
+  directededge.set_classification(conn.road_class);
   directededge.set_localedgeidx(localedgeidx);
   directededge.set_forwardaccess(kPedestrianAccess | kBicycleAccess);
   directededge.set_reverseaccess(kPedestrianAccess | kBicycleAccess);
-  directededge.set_named(is_named);
+  directededge.set_named(conn.names.size());
   directededge.set_forward(is_forward);
   directededge.set_opp_local_idx(oppo_local_idx);
   directededge.set_bss_connection(true);
@@ -297,11 +286,10 @@ void create_bss_node_and_edges(GraphTileBuilder& tilebuilder_local,
         // incorrectly considered as a U turn.
         // we assume 0 for bss->startnode and 1 for bss->endnode
         uint32_t oppo_local_idx = 0;
+        uint32_t local_idx = tilebuilder_local.directededges().size() - edge_index;
+
         auto directededge =
-            make_directed_edge({}, conn.startshape, conn.speed, conn.surface, conn.cycle_lane,
-                               conn.road_class, conn.use, conn.use_sidepath,
-                               tilebuilder_local.directededges().size() - edge_index,
-                               conn.names.size(), true, oppo_local_idx);
+            make_directed_edge({}, conn.startshape, conn, true, local_idx, oppo_local_idx);
         conn.start_to_bss_edge_idx = tilebuilder_local.directededges().size();
         tilebuilder_local.directededges().emplace_back(std::move(directededge));
         ++added_edges;
@@ -315,11 +303,10 @@ void create_bss_node_and_edges(GraphTileBuilder& tilebuilder_local,
         // incorrectly considered as a U turn.
         // we assume 0 for bss->startnode and 1 for bss->endnode
         uint32_t oppo_local_idx = 1;
+        uint32_t local_idx = tilebuilder_local.directededges().size() - edge_index;
+
         auto directededge =
-            make_directed_edge({}, conn.endshape, conn.speed, conn.surface, conn.cycle_lane,
-                               conn.road_class, conn.use, conn.use_sidepath,
-                               tilebuilder_local.directededges().size() - edge_index,
-                               conn.names.size(), true, oppo_local_idx);
+            make_directed_edge({}, conn.endshape, conn, true, local_idx, oppo_local_idx);
         conn.end_to_bss_edge_idx = tilebuilder_local.directededges().size();
         tilebuilder_local.directededges().emplace_back(std::move(directededge));
         ++added_edges;
@@ -377,10 +364,10 @@ void create_bss_node_and_edges(GraphTileBuilder& tilebuilder_local,
     // create bssnode -> startnode
     {
       const auto& oppo_directededge = tilebuilder_local.directededges()[conn.start_to_bss_edge_idx];
-      auto directededge =
-          make_directed_edge(conn.startnode, conn.startshape, conn.speed, conn.surface,
-                             conn.cycle_lane, conn.road_class, conn.use, conn.use_sidepath, 0,
-                             conn.names.size(), false, oppo_directededge.localedgeidx());
+      uint32_t local_idx = 0;
+
+      auto directededge = make_directed_edge(conn.startnode, conn.startshape, conn, false, local_idx,
+                                             oppo_directededge.localedgeidx());
       bool added;
       uint32_t edge_info_offset =
           tilebuilder_local.AddEdgeInfo(0, new_bss_node_graphid, conn.startnode, conn.wayid, 0, 0, 0,
@@ -395,10 +382,9 @@ void create_bss_node_and_edges(GraphTileBuilder& tilebuilder_local,
     // create bssnode -> endnode
     {
       auto& oppo_directededge = tilebuilder_local.directededges()[conn.end_to_bss_edge_idx];
-      auto directededge =
-          make_directed_edge(conn.endnode, conn.endshape, conn.speed, conn.surface, conn.cycle_lane,
-                             conn.road_class, conn.use, conn.use_sidepath, 1, conn.names.size(),
-                             false, oppo_directededge.localedgeidx());
+      uint32_t local_idx = 1;
+      auto directededge = make_directed_edge(conn.endnode, conn.endshape, conn, local_idx, false,
+                                             oppo_directededge.localedgeidx());
       bool added;
       uint32_t edge_info_offset =
           tilebuilder_local.AddEdgeInfo(0, new_bss_node_graphid, conn.endnode, conn.wayid, 0, 0, 0,
