@@ -397,8 +397,8 @@ void UpdateTurnLanes(const OSMData& osmdata,
     auto index = tilebuilder.turnlanes_offset(idx);
     std::string turnlane_tags = osmdata.name_offset_map.name(index);
     std::string str = TurnLanes::GetTurnLaneString(turnlane_tags);
-
     std::vector<uint16_t> enhanced_tls = TurnLanes::lanemasks(str);
+
     bool bUpdated = false;
     // handle [left, none, none, right] --> [left, straight, straight, right]
     // handle [straight, none, [straight, right], right] --> [straight, straight, [straight, right],
@@ -432,11 +432,9 @@ void UpdateTurnLanes(const OSMData& osmdata,
     if (!bUpdated) {
       // handle [none, none, right] --> [straight, straight, right]
       enhanced_tls = TurnLanes::lanemasks(str);
-      std::vector<uint16_t>::reverse_iterator r_it = enhanced_tls.rbegin(); // note reverse iterator
-      std::vector<uint16_t>::reverse_iterator r_it_e = enhanced_tls.rend();
-      if (((*r_it & kTurnLaneRight) || (*r_it & kTurnLaneSharpRight) ||
-           (*r_it & kTurnLaneSlightRight)) &&
-          (*r_it_e == kTurnLaneEmpty || *r_it_e == kTurnLaneNone)) {
+      if (((enhanced_tls.back() & kTurnLaneRight) || (enhanced_tls.back() & kTurnLaneSharpRight) ||
+           (enhanced_tls.back() & kTurnLaneSlightRight)) &&
+          (enhanced_tls.front() == kTurnLaneEmpty || enhanced_tls.front() == kTurnLaneNone)) {
 
         std::set<Turn::Type> outgoing_turn_type;
         GetTurnTypes(directededge, idx, outgoing_turn_type, startnodeinfo, tilebuilder, reader, lock);
@@ -461,11 +459,10 @@ void UpdateTurnLanes(const OSMData& osmdata,
     if (!bUpdated) {
       // handle [straight, straight, none] --> [straight, straight, straight]
       enhanced_tls = TurnLanes::lanemasks(str);
-      std::vector<uint16_t>::iterator it = enhanced_tls.begin();
-      std::vector<uint16_t>::iterator it_e = enhanced_tls.end();
-      if ((*it & kTurnLaneThrough) && (*it_e == kTurnLaneEmpty || *it_e == kTurnLaneNone)) {
+      if ((enhanced_tls.front() & kTurnLaneThrough) &&
+          (enhanced_tls.back() == kTurnLaneEmpty || enhanced_tls.back() == kTurnLaneNone)) {
         uint16_t previous = 0u;
-        for (; it != enhanced_tls.end(); it++) {
+        for (auto it = enhanced_tls.begin(); it != enhanced_tls.end(); it++) {
           if ((*it & kTurnLaneThrough) && (previous == 0u || (previous & kTurnLaneThrough))) {
             previous = *it;
           } else if (previous && (*it == kTurnLaneEmpty || *it == kTurnLaneNone)) {
@@ -489,14 +486,12 @@ void UpdateTurnLanes(const OSMData& osmdata,
     if (!bUpdated) {
       // handle [none, straight, straight] --> [straight, straight, straight]
       enhanced_tls = TurnLanes::lanemasks(str);
-
-      std::vector<uint16_t>::reverse_iterator r_it = enhanced_tls.rbegin(); // note reverse iterator
-      std::vector<uint16_t>::reverse_iterator r_it_e = enhanced_tls.rend();
-
       uint16_t previous = 0u;
-      if ((*r_it & kTurnLaneThrough) && (*r_it_e == kTurnLaneEmpty || *r_it_e == kTurnLaneNone)) {
-        for (; r_it != enhanced_tls.rend(); r_it++) {
-          if ((*r_it & kTurnLaneThrough) && (previous == 0u || (previous & kTurnLaneThrough))) {
+      if ((enhanced_tls.back() & kTurnLaneThrough) &&
+          (enhanced_tls.front() == kTurnLaneEmpty || enhanced_tls.front() == kTurnLaneNone)) {
+        for (auto r_it = enhanced_tls.rbegin(); r_it != enhanced_tls.rend(); r_it++) {
+          if ((enhanced_tls.back() & kTurnLaneThrough) &&
+              (previous == 0u || (previous & kTurnLaneThrough))) {
             previous = *r_it;
           } else if (previous && (*r_it == kTurnLaneEmpty || *r_it == kTurnLaneNone)) {
             *r_it = kTurnLaneThrough;
