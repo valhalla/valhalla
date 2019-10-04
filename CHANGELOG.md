@@ -1,3 +1,7 @@
+## Release Date: 2019-XX-XX Valhalla 3.0.9
+* **Bug Fix**
+   * FIXED: toss ways where access=private and highway=service and service != driveway. [#1960](https://github.com/valhalla/valhalla/pull/1960)
+
 ## Release Date: 2019-09-06 Valhalla 3.0.8
 * **Bug Fix**
    * FIXED: Added logic to detect if user is to merge to the left or right [#1892](https://github.com/valhalla/valhalla/pull/1892)
