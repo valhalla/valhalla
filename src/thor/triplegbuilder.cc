@@ -803,7 +803,7 @@ TripLegBuilder::Build(const AttributesController& controller,
       }
     }
 
-    double current_time;
+    double current_time = 0;
     if (origin.has_date_time()) {
       current_time = DateTime::seconds_from_midnight(origin.date_time());
       current_time += elapsedtime;
