@@ -30,11 +30,12 @@ directed_reach SimpleReach(const DirectedEdge* edge,
   // helper lambda to enqueue a node
   const GraphTile* tile = nullptr;
   auto enqueue = [&](const GraphId& node_id) {
-    // skip nodes which are done
-    if (done.find(node_id) != done.cend())
+    // skip nodes which are done or invalid
+    if (!node_id.Is_Valid() || done.find(node_id) != done.cend())
       return;
     // if the node isnt accessable bail
-    reader.GetGraphTile(node_id, tile);
+    if (!reader.GetGraphTile(node_id, tile))
+      return;
     const auto* node = tile->node(node_id);
     if (node_filter(node))
       return;
@@ -60,7 +61,8 @@ directed_reach SimpleReach(const DirectedEdge* edge,
     // pop the node from the queue
     queue.erase(queue.begin());
     // expand from the node
-    reader.GetGraphTile(node_id, tile);
+    if (!reader.GetGraphTile(node_id, tile))
+      continue;
     for (const auto& edge : tile->GetDirectedEdges(node_id)) {
       // if this edge is traversable we enqueue its end node
       if (edge_filter(&edge) > 0)
@@ -71,9 +73,10 @@ directed_reach SimpleReach(const DirectedEdge* edge,
 
   // TODO: move to graphreader
   // helper lambdas to get the begin node of an edge by using its opposing edges end node
-  auto begin_node = [&](const DirectedEdge* edge) {
+  auto begin_node = [&](const DirectedEdge* edge) -> GraphId {
     // grab the node
-    reader.GetGraphTile(edge->endnode(), tile);
+    if (!reader.GetGraphTile(edge->endnode(), tile))
+      return {};
     const auto* node = tile->node(edge->endnode());
     // grab the opp edges end node
     const auto* opp_edge = tile->directededge(node->edge_index() + edge->opp_index());
@@ -96,10 +99,13 @@ directed_reach SimpleReach(const DirectedEdge* edge,
     // pop the node from the queue
     queue.erase(queue.begin());
     // expand from the node
-    reader.GetGraphTile(node_id, tile);
-    const auto* node = tile->node(node_id);
-    for (const auto& edge : tile->GetDirectedEdges(node)) {
+    if (!reader.GetGraphTile(node_id, tile))
+      continue;
+    for (const auto& edge : tile->GetDirectedEdges(node_id)) {
       // get the opposing edge
+      if (!reader.GetGraphTile(edge.endnode(), tile))
+        continue;
+      const auto* node = tile->node(edge.endnode());
       const auto* opp_edge = tile->directededge(node->edge_index() + edge.opp_index());
       // if this edge is traversable we enqueue its end node
       if (edge_filter(opp_edge) > 0)
