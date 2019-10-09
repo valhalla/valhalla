@@ -3,8 +3,10 @@
 #include "baldr/graphreader.h"
 #include "baldr/rapidjson_utils.h"
 #include "loki/reach.h"
+#include "midgard/encoded.h"
 #include "midgard/logging.h"
 
+#include <algorithm>
 #include <boost/property_tree/ptree.hpp>
 
 using namespace valhalla;
@@ -52,11 +54,25 @@ boost::property_tree::ptree get_conf() {
   return conf;
 }
 
-void gather_tests() {
-  // loop over the tiles
+GraphId begin_node(GraphReader& reader, const DirectedEdge* edge) {
+  // grab the node
+  const auto* tile = reader.GetGraphTile(edge->endnode());
+  const auto* node = tile->node(edge->endnode());
+  // grab the opp edges end node
+  const auto* opp_edge = tile->directededge(node->edge_index() + edge->opp_index());
+  return opp_edge->endnode();
+}
+
+void check_all_reach() {
+  // get tile access
   auto conf = get_conf();
   GraphReader reader(conf.get_child("mjolnir"));
-  size_t edges = 0;
+
+  // use basic car filters
+  auto edge_filter = [](const DirectedEdge* e) { return e->forwardaccess() & kAutoAccess; };
+  auto node_filter = [](const NodeInfo* n) { return !(n->access() & kAutoAccess); };
+
+  // look at all the edges
   for (auto tile_id : reader.GetTileSet()) {
     const auto* tile = reader.GetGraphTile(tile_id);
     // loop over edges
@@ -64,11 +80,45 @@ void gather_tests() {
          edge_id.id() < tile->header()->directededgecount(); ++edge_id) {
       // use the simple method to find the reach for the edge in both directions
       const auto* edge = tile->directededge(edge_id);
-      auto reach = SimpleReach(edge, 50, reader);
-      // TODO: store it as a test case if its an interesting one, we want:
-      // 10 edges that are oneways, 10 edges that have no access, 10 that have low inbound reach
-      // 10 that have low outbound reach, 10 that are on an island where direction doesnt matter
-      ++edges;
+      auto reach = SimpleReach(edge, 50, reader, kInbound | kOutbound, edge_filter, node_filter);
+
+      // shape is nice to have
+      auto shape = tile->edgeinfo(edge->edgeinfo_offset()).shape();
+      if (!edge->forward())
+        std::reverse(shape.begin(), shape.end());
+      auto shape_str = midgard::encode(shape);
+
+      // begin and end nodes are nice to check
+      auto node_id = begin_node(reader, edge);
+      const auto* t = reader.GetGraphTile(node_id);
+      const auto* begin = t->node(node_id);
+      t = reader.GetGraphTile(edge->endnode());
+      const auto* end = t->node(edge->endnode());
+
+      // if you have non zero reach but you dont have access, something is wrong
+      if ((reach.outbound_reach > 0 || reach.inbound_reach > 0) &&
+          !(edge->forwardaccess() & kAutoAccess) && !(edge->reverseaccess() & kAutoAccess)) {
+        throw std::logic_error("This edge should have 0 reach as its not accessable: " +
+                               std::to_string(edge_id.value) + " " + shape_str);
+      }
+
+      // if inbound is 0 and outbound is not then it must be an edge leaving a dead end
+      // meaning a begin node that is not accessable
+      // NOTE: but if the outbound is just 1 then we know this is an orphaned edge, meaning its a dead
+      // end on both sides but one of the sides has access at the node. this means that the opposing
+      // edge also heads toward a dead end, but its allow to make a uturn at the node and so it gets
+      // reach 1
+      if (reach.inbound_reach == 0 && reach.outbound_reach > 0 && !node_filter(begin)) {
+        throw std::logic_error("Only outbound reach should mean an edge that leaves a dead end: " +
+                               std::to_string(edge_id.value) + " " + shape_str);
+      }
+
+      // if outbound is 0 and inbound is not then it must be an edge entering a dead end
+      // meaning an end node that is not accessable
+      if (reach.inbound_reach > 0 && reach.outbound_reach == 0 && !node_filter(end)) {
+        throw std::logic_error("Only inbound reach should mean an edge that enters a dead end: " +
+                               std::to_string(edge_id.value) + " " + shape_str);
+      }
     }
   }
 
@@ -82,7 +132,7 @@ int main(int argc, char* argv[]) {
 
   logging::Configure({{"type", ""}});
 
-  suite.test(TEST_CASE(gather_tests));
+  suite.test(TEST_CASE(check_all_reach));
 
   return suite.tear_down();
 }

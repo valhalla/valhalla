@@ -4,6 +4,9 @@
 #include <valhalla/baldr/directededge.h>
 #include <valhalla/loki/search.h>
 
+constexpr uint8_t kInbound = 1;
+constexpr uint8_t kOutbound = 2;
+
 namespace valhalla {
 namespace loki {
 
@@ -18,9 +21,6 @@ struct reach_cache {
   // but will only count edges which are reachable in both directions, ie not on a
   // path where direction of travel matters when it comes to edge/opp edge pairs
 };
-
-const uint8_t kInbound = 1;
-const uint8_t kOutbound = 2;
 
 directed_reach SimpleReach(const valhalla::baldr::DirectedEdge* edge,
                            uint32_t max_reach,

@@ -12,6 +12,8 @@ directed_reach SimpleReach(const DirectedEdge* edge,
                            const sif::EdgeFilter& edge_filter,
                            const sif::NodeFilter& node_filter,
                            reach_cache* cache) {
+  // TODO: harden against incomplete tile sets
+
   // no reach to start with
   directed_reach reach{};
 
@@ -46,7 +48,8 @@ directed_reach SimpleReach(const DirectedEdge* edge,
   };
 
   // seed the expansion with a place to start expanding from
-  enqueue(edge->endnode());
+  if (edge_filter(edge) > 0)
+    enqueue(edge->endnode());
 
   // get outbound reach by doing a simple forward expansion until you either hit the max_reach
   // or you can no longer expand
@@ -67,12 +70,12 @@ directed_reach SimpleReach(const DirectedEdge* edge,
   reach.outbound_reach = queue.size() + done.size() - transitions;
 
   // TODO: move to graphreader
-  // helper lambda to get the begin node of an edge
+  // helper lambdas to get the begin node of an edge by using its opposing edges end node
   auto begin_node = [&](const DirectedEdge* edge) {
     // grab the node
     reader.GetGraphTile(edge->endnode(), tile);
     const auto* node = tile->node(edge->endnode());
-    // grab the opp edge
+    // grab the opp edges end node
     const auto* opp_edge = tile->directededge(node->edge_index() + edge->opp_index());
     return opp_edge->endnode();
   };
@@ -81,7 +84,8 @@ directed_reach SimpleReach(const DirectedEdge* edge,
   done.clear();
   queue.clear();
   transitions = 0;
-  enqueue(begin_node(edge));
+  if (edge_filter(edge) > 0)
+    enqueue(begin_node(edge));
 
   // get inbound reach by doing a simple reverse expansion until you either hit the max_reach
   // or you can no longer expand
@@ -161,6 +165,7 @@ directed_reach Reach(const DirectedEdge* edge,
   // TODO: when the single direction search hits a bidirectional island we can immediately increment
   // that search to include that islands size
 
+  throw std::logic_error("Optimized reach is not yet implemented");
   return reach;
 }
 
