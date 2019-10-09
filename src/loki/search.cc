@@ -1,5 +1,6 @@
 #include "loki/search.h"
 #include "baldr/tilehierarchy.h"
+#include "loki/reach.h"
 #include "midgard/distanceapproximator.h"
 #include "midgard/linesegment2.h"
 #include "midgard/util.h"
@@ -209,6 +210,7 @@ struct bin_handler_t {
   // reverse direction reachability
   std::vector<unsigned int> reaches;
   std::unordered_map<uint64_t, size_t> reach_indices;
+  std::unordered_map<uint64_t, directed_reach> directed_reaches;
 
   // TODO: keep track of a reachability object per node
   struct reachability_t {
@@ -241,6 +243,8 @@ struct bin_handler_t {
 
   // returns 0 when we dont know it
   unsigned int get_reach(const DirectedEdge* edge) {
+    // TODO: check directed reach cache
+
     auto itr = reach_indices.find(edge->endnode());
     if (itr == reach_indices.cend()) {
       return 0; // TODO: if we didnt find it should we run the reachability check
@@ -466,6 +470,7 @@ struct bin_handler_t {
     }
   }
 
+  // TODO: update to use directional reach
   // do a mini network expansion or maybe not
   unsigned int check_reachability(std::vector<projector_wrapper>::iterator begin,
                                   std::vector<projector_wrapper>::iterator end,
@@ -475,6 +480,8 @@ struct bin_handler_t {
     if (max_reach_limit == 0) {
       return 0;
     }
+
+    // TODO: check directed reach cache
 
     // do we already know about this one?
     auto found = reach_indices.find(edge->endnode());
@@ -495,6 +502,8 @@ struct bin_handler_t {
     if (!check) {
       return max_reach_limit;
     }
+
+    // TODO: compute, cache and return directional reach
 
     // if you cant get through the end node then its not reachable since you cant leave the edge
     const auto* node = reader.GetEndNode(edge, tile);
@@ -579,6 +588,7 @@ struct bin_handler_t {
       // keep the best point along this edge if it makes sense
       c_itr = bin_candidates.begin();
       for (p_itr = begin; p_itr != end; ++p_itr, ++c_itr) {
+        // TODO: update to use directional reach
         // which batch of findings
         bool reachable = reachability >= p_itr->location.minimum_reachability_;
         auto* batch = reachable ? &p_itr->reachable : &p_itr->unreachable;

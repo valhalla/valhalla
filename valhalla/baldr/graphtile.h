@@ -184,6 +184,13 @@ public:
 
   /**
    * Get an iterable set of directed edges from a node in this tile
+   * @param  node  Node from which the edges leave
+   * @return returns an iterable collection of directed edges
+   */
+  midgard::iterable_t<const DirectedEdge> GetDirectedEdges(const NodeInfo* node) const;
+
+  /**
+   * Get an iterable set of directed edges from a node in this tile
    * @param  node  GraphId of the node from which the edges leave
    * @return returns an iterable collection of directed edges
    */
@@ -191,6 +198,9 @@ public:
 
   /**
    * Get an iterable set of directed edges from a node in this tile
+   * WARNING: this only returns edges in this tile, edges at this node on another level
+   *          will not be returned by this method, node transitions must be used
+   *
    * @param  idx  Index of the node within the current tile
    * @return returns an iterable collection of directed edges
    */
@@ -212,7 +222,7 @@ public:
    * @param  idx  Index of the directed edge within the current tile.
    * @return  Returns a pointer to the edge.
    */
-  const NodeTransition* transition(const size_t idx) const {
+  const NodeTransition* transition(const uint32_t idx) const {
     if (idx < header_->transitioncount())
       return &transitions_[idx];
     throw std::runtime_error("GraphTile NodeTransition index out of bounds: " +
@@ -223,14 +233,23 @@ public:
 
   /**
    * Get an iterable set of transitions from a node in this tile
+   * @param  node  Node from which the transitions leave
+   * @return returns an iterable collection of node transitions
+   */
+  midgard::iterable_t<const NodeTransition> GetNodeTransitions(const NodeInfo* node) const {
+    const auto* trans = transition(node->transition_index());
+    return midgard::iterable_t<const NodeTransition>{trans, node->transition_count()};
+  }
+
+  /**
+   * Get an iterable set of transitions from a node in this tile
    * @param  node  GraphId of the node from which the transitions leave
    * @return returns an iterable collection of node transitions
    */
   midgard::iterable_t<const NodeTransition> GetNodeTransitions(const GraphId& node) const {
     if (node.id() < header_->nodecount()) {
-      const auto& nodeinfo = nodes_[node.id()];
-      const auto* trans = transition(nodeinfo.transition_index());
-      return midgard::iterable_t<const NodeTransition>{trans, nodeinfo.transition_count()};
+      const auto* nodeinfo = nodes_ + node.id();
+      return GetNodeTransitions(nodeinfo);
     }
     throw std::runtime_error(
         "GraphTile NodeInfo index out of bounds: " + std::to_string(node.tileid()) + "," +

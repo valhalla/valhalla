@@ -56,6 +56,7 @@ void gather_tests() {
   // loop over the tiles
   auto conf = get_conf();
   GraphReader reader(conf.get_child("mjolnir"));
+  size_t edges = 0;
   for (auto tile_id : reader.GetTileSet()) {
     const auto* tile = reader.GetGraphTile(tile_id);
     // loop over edges
@@ -63,12 +64,15 @@ void gather_tests() {
          edge_id.id() < tile->header()->directededgecount(); ++edge_id) {
       // use the simple method to find the reach for the edge in both directions
       const auto* edge = tile->directededge(edge_id);
-      auto reach = SimpleReach(edge, reader);
+      auto reach = SimpleReach(edge, 50, reader);
       // TODO: store it as a test case if its an interesting one, we want:
       // 10 edges that are oneways, 10 edges that have no access, 10 that have low inbound reach
       // 10 that have low outbound reach, 10 that are on an island where direction doesnt matter
+      ++edges;
     }
   }
+
+  // throw std::runtime_error(std::to_string(edges));
 }
 
 } // namespace
@@ -76,7 +80,7 @@ void gather_tests() {
 int main(int argc, char* argv[]) {
   test::suite suite("reach");
 
-  logging::Configure({{"type", "null"}});
+  logging::Configure({{"type", ""}});
 
   suite.test(TEST_CASE(gather_tests));
 
