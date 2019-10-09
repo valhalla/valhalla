@@ -39,4 +39,4 @@ directed_reach Reach(const valhalla::baldr::DirectedEdge* edge,
                      reach_cache* cache = nullptr);
 
 } // namespace loki
-}
+} // namespace valhalla

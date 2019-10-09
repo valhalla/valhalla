@@ -176,4 +176,4 @@ directed_reach Reach(const DirectedEdge* edge,
 }
 
 } // namespace loki
-}
+} // namespace valhalla
