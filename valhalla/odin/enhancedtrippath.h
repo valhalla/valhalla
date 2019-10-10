@@ -398,8 +398,7 @@ public:
 
   std::string ToString() const;
 
-  std::string TurnLanesToString(
-      const ::google::protobuf::RepeatedPtrField<::valhalla::TurnLane>& turn_lanes) const;
+  std::string TurnLanesToString() const;
 
 #ifdef LOGGING_LEVEL_TRACE
   std::string ToParameterString() const;
