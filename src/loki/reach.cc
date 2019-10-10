@@ -10,13 +10,13 @@ directed_reach SimpleReach(const DirectedEdge* edge,
                            GraphReader& reader,
                            uint8_t direction,
                            const sif::EdgeFilter& edge_filter,
-                           const sif::NodeFilter& node_filter,
-                           reach_cache* cache) {
+                           const sif::NodeFilter& node_filter) {
   // TODO: harden against incomplete tile sets
 
   // no reach to start with
   directed_reach reach{};
 
+  // TODO: throw these vectors into a cache that we reuse
   // we keep a queue of nodes to expand from, to prevent duplicate expansion we use a set
   // each node we pop from the set will increase the reach and be added to the done set
   // the done set is used to avoid duplicate expansion of already dequeued nodes
@@ -69,7 +69,7 @@ directed_reach SimpleReach(const DirectedEdge* edge,
         enqueue(edge.endnode());
     }
   }
-  reach.outbound_reach = queue.size() + done.size() - transitions;
+  reach.outbound = queue.size() + done.size() - transitions;
 
   // TODO: move to graphreader
   // helper lambdas to get the begin node of an edge by using its opposing edges end node
@@ -112,11 +112,12 @@ directed_reach SimpleReach(const DirectedEdge* edge,
         enqueue(opp_edge->endnode());
     }
   }
-  reach.inbound_reach = queue.size() + done.size() - transitions;
+  reach.inbound = queue.size() + done.size() - transitions;
 
   return reach;
 }
 
+/*
 directed_reach Reach(const DirectedEdge* edge,
                      uint32_t max_reach,
                      GraphReader& reader,
@@ -173,7 +174,7 @@ directed_reach Reach(const DirectedEdge* edge,
 
   throw std::logic_error("Optimized reach is not yet implemented");
   return reach;
-}
+}*/
 
 } // namespace loki
 } // namespace valhalla

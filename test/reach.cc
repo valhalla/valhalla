@@ -96,8 +96,8 @@ void check_all_reach() {
       const auto* end = t->node(edge->endnode());
 
       // if you have non zero reach but you dont have access, something is wrong
-      if ((reach.outbound_reach > 0 || reach.inbound_reach > 0) &&
-          !(edge->forwardaccess() & kAutoAccess) && !(edge->reverseaccess() & kAutoAccess)) {
+      if ((reach.outbound > 0 || reach.inbound > 0) && !(edge->forwardaccess() & kAutoAccess) &&
+          !(edge->reverseaccess() & kAutoAccess)) {
         throw std::logic_error("This edge should have 0 reach as its not accessable: " +
                                std::to_string(edge_id.value) + " " + shape_str);
       }
@@ -108,14 +108,14 @@ void check_all_reach() {
       // end on both sides but one of the sides has access at the node. this means that the opposing
       // edge also heads toward a dead end, but its allow to make a uturn at the node and so it gets
       // reach 1
-      if (reach.inbound_reach == 0 && reach.outbound_reach > 0 && !node_filter(begin)) {
+      if (reach.inbound == 0 && reach.outbound > 0 && !node_filter(begin)) {
         throw std::logic_error("Only outbound reach should mean an edge that leaves a dead end: " +
                                std::to_string(edge_id.value) + " " + shape_str);
       }
 
       // if outbound is 0 and inbound is not then it must be an edge entering a dead end
       // meaning an end node that is not accessable
-      if (reach.inbound_reach > 0 && reach.outbound_reach == 0 && !node_filter(end)) {
+      if (reach.inbound > 0 && reach.outbound == 0 && !node_filter(end)) {
         throw std::logic_error("Only inbound reach should mean an edge that enters a dead end: " +
                                std::to_string(edge_id.value) + " " + shape_str);
       }

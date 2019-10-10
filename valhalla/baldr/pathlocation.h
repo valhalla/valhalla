@@ -34,7 +34,8 @@ public:
              const midgard::PointLL& projected,
              const float score,
              const SideOfStreet sos = NONE,
-             const unsigned int minimum_reachability = 0);
+             const unsigned int outbound_reach = 0,
+             const unsigned int inbound_reach = 0);
     // the directed edge it appears on
     GraphId id;
     // how far along the edge it is (as a percentage  from 0 - 1)
@@ -51,9 +52,10 @@ public:
     // a measure of how close the result is to the original input where the
     // lower the score the better the match, maybe there's a better word for this?
     float distance;
-    // minimum number of edges reachable from this edge, this is a lower limit
-    // it could be reachable from many many more edges than are reported here
-    unsigned int minimum_reachability;
+    // minimum number of nodes reachable from this edge
+    unsigned int outbound_reach;
+    // minimum number of nodes that can reach this edge
+    unsigned int inbound_reach;
   };
 
   // list of edges this location appears on within the graph
@@ -122,7 +124,7 @@ public:
     if (pl.way_id_) {
       l->set_way_id(*pl.way_id_);
     }
-    l->set_minimum_reachability(pl.minimum_reachability_);
+    l->set_minimum_reachability(std::max(pl.min_outbound_reach_, pl.min_inbound_reach_));
     l->set_radius(pl.radius_);
     l->set_search_cutoff(pl.radius_ > pl.search_cutoff_ ? pl.radius_ : pl.search_cutoff_);
     l->set_street_side_tolerance(pl.street_side_tolerance_);
@@ -139,7 +141,8 @@ public:
                                    : (e.sos == PathLocation::RIGHT ? valhalla::Location::kRight
                                                                    : valhalla::Location::kNone));
       edge->set_distance(e.distance);
-      edge->set_minimum_reachability(e.minimum_reachability);
+      edge->set_outbound_reach(e.outbound_reach);
+      edge->set_inbound_reach(e.inbound_reach);
       for (const auto& n : reader.edgeinfo(e.id).GetNames()) {
         edge->mutable_names()->Add()->assign(n);
       }
@@ -157,7 +160,8 @@ public:
                                    : (e.sos == PathLocation::RIGHT ? valhalla::Location::kRight
                                                                    : valhalla::Location::kNone));
       edge->set_distance(e.distance);
-      edge->set_minimum_reachability(e.minimum_reachability);
+      edge->set_outbound_reach(e.outbound_reach);
+      edge->set_inbound_reach(e.inbound_reach);
       for (const auto& n : reader.edgeinfo(e.id).GetNames()) {
         edge->mutable_names()->Add()->assign(n);
       }
@@ -177,8 +181,8 @@ public:
       side = PreferredSide::SAME;
     else if (loc.preferred_side() == valhalla::Location::opposite)
       side = PreferredSide::OPPOSITE;
-    Location l({loc.ll().lng(), loc.ll().lat()}, stop_type, loc.minimum_reachability(), loc.radius(),
-               side);
+    Location l({loc.ll().lng(), loc.ll().lat()}, stop_type, loc.minimum_reachability(),
+               loc.minimum_reachability(), loc.radius(), side);
 
     if (loc.has_name()) {
       l.name_ = loc.name();
@@ -222,11 +226,26 @@ public:
     return l;
   }
 
+  /**
+   * Converts a list of pbf locations into a vector of custom class because loki hasnt moved to pbf
+   * yet
+   * @param locations
+   * @param route_reach   whether or not we should treat reach differently for the first and last
+   * locations
+   * @return
+   */
   static std::vector<Location>
-  fromPBF(const google::protobuf::RepeatedPtrField<valhalla::Location>& locations) {
+  fromPBF(const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
+          bool route_reach = false) {
     std::vector<Location> pls;
     for (const auto& l : locations) {
       pls.emplace_back(fromPBF(l));
+    }
+    // for regular routing we dont really care about inbound reach for the origin or outbound reach
+    // for the destination so we remove that requirement
+    if (route_reach && pls.size() > 1) {
+      pls.front().min_inbound_reach_ = 0;
+      pls.back().min_outbound_reach_ = 0;
     }
     return pls;
   }

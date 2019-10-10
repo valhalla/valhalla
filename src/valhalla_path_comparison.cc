@@ -246,7 +246,8 @@ int main(int argc, char* argv[]) {
           loc.node_snap_tolerance_ = pt.get<float>("node_snap_tolerance", loc.node_snap_tolerance_);
           loc.way_id_ = pt.get_optional<long double>("way_id");
 
-          loc.minimum_reachability_ = pt.get<unsigned int>("minimum_reachability", 50);
+          loc.min_outbound_reach = loc.min_inbound_reach =
+              pt.get<unsigned int>("minimum_reachability", 50);
           loc.radius_ = pt.get<unsigned long>("radius", 0);
           locations.emplace_back(std::move(loc));
         }
