@@ -1,13 +1,24 @@
 #include <algorithm>
 #include <cstdint>
+#include <fstream>
 #include <iostream>
 #include <sstream>
 #include <string>
 #include <vector>
 
 #include "baldr/turnlanes.h"
+#include "odin/directionsbuilder.h"
+
+#include <valhalla/proto/api.pb.h>
+#include <valhalla/proto/directions.pb.h>
+#include <valhalla/proto/options.pb.h>
+#include <valhalla/proto/trip.pb.h>
 
 #include "test.h"
+
+#if !defined(VALHALLA_SOURCE_DIR)
+#define VALHALLA_SOURCE_DIR
+#endif
 
 using namespace std;
 using namespace valhalla::baldr;
@@ -91,6 +102,39 @@ void test_static_methods() {
   }
 }
 
+void test_right_active() {
+  // Load pinpoint test
+  std::string pbf_filename = {VALHALLA_SOURCE_DIR
+                              "test/pinpoints/turn_lanes/right_active_pinpoint.pbf"};
+  std::cout << "pbf_filename=" << pbf_filename << std::endl;
+  std::string path_bytes;
+  std::ifstream input_pbf(pbf_filename, std::ios::in | std::ios::binary);
+  if (input_pbf.is_open()) {
+    input_pbf.seekg(0, std::ios::end);
+    path_bytes.resize(input_pbf.tellg());
+    input_pbf.seekg(0, std::ios::beg);
+    input_pbf.read(&path_bytes[0], path_bytes.size());
+    input_pbf.close();
+  } else {
+    throw std::runtime_error("Failed to read " + pbf_filename);
+  }
+
+  valhalla::Api request;
+  request.ParseFromString(path_bytes);
+
+  if (path_bytes.size() == 0) {
+    throw std::runtime_error("path_bytes is empty");
+  }
+
+  valhalla::odin::DirectionsBuilder().Build(request);
+  std::string expected = "[ left | through | through;right ACTIVE ]";
+
+  // Validate route size
+  if (request.directions().routes_size() != 1) {
+    throw std::runtime_error("Invalid route size");
+  }
+}
+
 } // namespace
 
 int main() {
@@ -104,6 +148,9 @@ int main() {
 
   // Test static methods
   suite.test(TEST_CASE(test_static_methods));
+
+  // Test right active
+  suite.test(TEST_CASE(test_right_active));
 
   return suite.tear_down();
 }
