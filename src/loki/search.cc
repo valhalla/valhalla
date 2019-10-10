@@ -412,7 +412,10 @@ struct bin_handler_t {
     }
 
     // notice we do both directions here because in the end we use this reach for all input locations
-    return SimpleReach(edge, max_reach_limit, reader, kInbound | kOutbound, edge_filter, node_filter);
+    auto reach =
+        SimpleReach(edge, max_reach_limit, reader, kInbound | kOutbound, edge_filter, node_filter);
+    directed_reaches[edge] = reach;
+    return reach;
   }
 
   // handle a bin for the range of candidates that share it

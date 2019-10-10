@@ -237,7 +237,7 @@ public:
    * @return returns an iterable collection of node transitions
    */
   midgard::iterable_t<const NodeTransition> GetNodeTransitions(const NodeInfo* node) const {
-    const auto* trans = transition(node->transition_index());
+    const auto* trans = transitions_ + node->transition_index();
     return midgard::iterable_t<const NodeTransition>{trans, node->transition_count()};
   }
 

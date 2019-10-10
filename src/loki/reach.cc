@@ -42,7 +42,7 @@ directed_reach SimpleReach(const DirectedEdge* edge,
     // otherwise we enqueue it
     queue.insert(node_id);
     // and we enqueue it on the other levels
-    for (auto& transition : tile->GetNodeTransitions(node))
+    for (const auto& transition : tile->GetNodeTransitions(node))
       queue.insert(transition.endnode());
     // and we remember how many duplicates we enqueued
     transitions += node->transition_count();
