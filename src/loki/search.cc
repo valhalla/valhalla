@@ -228,12 +228,6 @@ struct bin_handler_t {
     directed_reaches.reserve(reservation * 1024);
   }
 
-  // simple cache check, purposely reports 0 if we havent cached it
-  directed_reach get_reach(const DirectedEdge* edge) {
-    auto itr = directed_reaches.find(edge);
-    return itr == directed_reaches.cend() ? directed_reach{} : itr->second;
-  }
-
   void correlate_node(const Location& location,
                       const GraphId& found_node,
                       const candidate_t& candidate,
@@ -382,15 +376,27 @@ struct bin_handler_t {
     }
   }
 
+  directed_reach get_reach(const DirectedEdge* edge) {
+    // if its in cache return it
+    auto itr = directed_reaches.find(edge);
+    if (itr != directed_reaches.cend())
+      return itr->second;
+
+    // notice we do both directions here because in the end we use this reach for all input locations
+    auto reach =
+        SimpleReach(edge, max_reach_limit, reader, kInbound | kOutbound, edge_filter, node_filter);
+    directed_reaches[edge] = reach;
+    return reach;
+  }
+
   // do a mini network expansion or maybe not
   directed_reach check_reachability(std::vector<projector_wrapper>::iterator begin,
                                     std::vector<projector_wrapper>::iterator end,
                                     const GraphTile* tile,
                                     const DirectedEdge* edge) {
     // no need when set to 0
-    if (max_reach_limit == 0) {
+    if (max_reach_limit == 0)
       return {};
-    }
 
     // do we already know about this one?
     auto found = directed_reaches.find(edge);
@@ -407,9 +413,8 @@ struct bin_handler_t {
     }
 
     // assume its reachable
-    if (!check) {
+    if (!check)
       return {max_reach_limit, max_reach_limit};
-    }
 
     // notice we do both directions here because in the end we use this reach for all input locations
     auto reach =

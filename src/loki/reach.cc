@@ -15,6 +15,8 @@ directed_reach SimpleReach(const DirectedEdge* edge,
 
   // no reach to start with
   directed_reach reach{};
+  if (max_reach == 0)
+    return reach;
 
   // TODO: throw these vectors into a cache that we reuse
   // we keep a queue of nodes to expand from, to prevent duplicate expansion we use a set
@@ -69,7 +71,9 @@ directed_reach SimpleReach(const DirectedEdge* edge,
         enqueue(edge.endnode());
     }
   }
-  reach.outbound = queue.size() + done.size() - transitions;
+  // settled nodes + will be settled nodes - duplicated transitions nodes
+  reach.outbound =
+      std::min(static_cast<uint32_t>(queue.size() + done.size() - transitions), max_reach);
 
   // TODO: move to graphreader
   // helper lambdas to get the begin node of an edge by using its opposing edges end node
@@ -107,12 +111,14 @@ directed_reach SimpleReach(const DirectedEdge* edge,
         continue;
       const auto* node = tile->node(edge.endnode());
       const auto* opp_edge = tile->directededge(node->edge_index() + edge.opp_index());
-      // if this edge is traversable we enqueue its end node
+      // if this opposing edge is traversable we enqueue its begin node
       if (edge_filter(opp_edge) > 0)
-        enqueue(opp_edge->endnode());
+        enqueue(edge.endnode());
     }
   }
-  reach.inbound = queue.size() + done.size() - transitions;
+  // settled nodes + will be settled nodes - duplicated transitions nodes
+  reach.inbound =
+      std::min(static_cast<uint32_t>(queue.size() + done.size() - transitions), max_reach);
 
   return reach;
 }
