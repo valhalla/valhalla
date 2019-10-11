@@ -8,6 +8,7 @@
 
 #include "baldr/turnlanes.h"
 #include "odin/directionsbuilder.h"
+#include "odin/enhancedtrippath.h"
 
 #include <valhalla/proto/api.pb.h>
 #include <valhalla/proto/directions.pb.h>
@@ -106,7 +107,6 @@ void test_right_active() {
   // Load pinpoint test
   std::string pbf_filename = {VALHALLA_SOURCE_DIR
                               "test/pinpoints/turn_lanes/right_active_pinpoint.pbf"};
-  std::cout << "pbf_filename=" << pbf_filename << std::endl;
   std::string path_bytes;
   std::ifstream input_pbf(pbf_filename, std::ios::in | std::ios::binary);
   if (input_pbf.is_open()) {
@@ -127,11 +127,31 @@ void test_right_active() {
   }
 
   valhalla::odin::DirectionsBuilder().Build(request);
+
+  // Validate routes size
+  if (request.directions().routes_size() != 1) {
+    throw std::runtime_error("Invalid routes size");
+  }
+
+  // Validate legs size
+  if (request.directions().routes(0).legs_size() != 1) {
+    throw std::runtime_error("Invalid legs size");
+  }
+
+  // Validate maneuvers size
+  if (request.directions().routes(0).legs(0).maneuver_size() != 3) {
+    throw std::runtime_error("Invalid maneuvers size");
+  }
+
+  valhalla::odin::EnhancedTripLeg etl(*request.mutable_trip()->mutable_routes(0)->mutable_legs(0));
+  auto prev_edge =
+      etl.GetPrevEdge(request.directions().routes(0).legs(0).maneuver(1).begin_path_index());
+  std::string found = prev_edge->TurnLanesToString();
   std::string expected = "[ left | through | through;right ACTIVE ]";
 
-  // Validate route size
-  if (request.directions().routes_size() != 1) {
-    throw std::runtime_error("Invalid route size");
+  // Validate turn lanes
+  if (expected != found) {
+    throw std::runtime_error("Invalid turn lanes - found: " + found + " | expected: " + expected);
   }
 }
 
