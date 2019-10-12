@@ -423,12 +423,10 @@ struct bin_handler_t {
 
     // if the inbound reach is not 0 and the outbound reach is not 0 and the opposing edge is not
     // filtered then the reaches of both edges are the same
-    if (reach.outbound > 0 && reach.inbound > 0 && reader.GetGraphTile(edge->endnode(), tile)) {
-      const auto* node = tile->node(edge->endnode());
-      const auto* opp_edge = tile->directededge(node->edge_index() + edge->opp_index());
-      if (edge_filter(opp_edge) > 0.f)
-        directed_reaches[opp_edge] = reach;
-    }
+    const DirectedEdge* opp_edge = nullptr;
+    if (reach.outbound > 0 && reach.inbound > 0 && (opp_edge = reader.GetOpposingEdge(edge, tile)) &&
+        edge_filter(opp_edge) > 0.f)
+      directed_reaches[opp_edge] = reach;
 
     return reach;
   }
@@ -500,10 +498,24 @@ struct bin_handler_t {
       // keep the best point along this edge if it makes sense
       c_itr = bin_candidates.begin();
       for (p_itr = begin; p_itr != end; ++p_itr, ++c_itr) {
-        // which batch of findings
+        // is this edge reachable in the right way
         bool reachable = reach.outbound >= p_itr->location.min_outbound_reach_ &&
                          reach.inbound >= p_itr->location.min_inbound_reach_;
-        // TODO: It's possible that this isnt reachable but the opposing is, switch to that if so
+        // it's possible that it isnt reachable but the opposing is, switch to that if so
+        const GraphTile* opp_tile = tile;
+        const DirectedEdge* opp_edge = nullptr;
+        if (!reachable && (opp_edge = reader.GetOpposingEdge(edge, opp_tile)) &&
+            edge_filter(opp_edge) > 0.f) {
+          auto opp_reach = check_reachability(begin, end, opp_tile, opp_edge);
+          if (opp_reach.outbound >= p_itr->location.min_outbound_reach_ &&
+              opp_reach.inbound >= p_itr->location.min_inbound_reach_) {
+            tile = opp_tile;
+            edge = opp_edge;
+            reach = opp_reach;
+          }
+        }
+
+        // which batch of findings will this go into
         auto* batch = reachable ? &p_itr->reachable : &p_itr->unreachable;
 
         // if its empty append
