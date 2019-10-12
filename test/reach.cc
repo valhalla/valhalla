@@ -104,10 +104,6 @@ void check_all_reach() {
 
       // if inbound is 0 and outbound is not then it must be an edge leaving a dead end
       // meaning a begin node that is not accessable
-      // NOTE: but if the outbound is just 1 then we know this is an orphaned edge, meaning its a dead
-      // end on both sides but one of the sides has access at the node. this means that the opposing
-      // edge also heads toward a dead end, but its allow to make a uturn at the node and so it gets
-      // reach 1
       if (reach.inbound == 0 && reach.outbound > 0 && !node_filter(begin)) {
         throw std::logic_error("Only outbound reach should mean an edge that leaves a dead end: " +
                                std::to_string(edge_id.value) + " " + shape_str);
@@ -121,8 +117,6 @@ void check_all_reach() {
       }
     }
   }
-
-  // throw std::runtime_error(std::to_string(edges));
 }
 
 } // namespace
