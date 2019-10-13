@@ -103,56 +103,69 @@ void test_static_methods() {
   }
 }
 
-void test_right_active() {
+void test_turn_lanes(const std::string filename,
+                     int expected_routes_size,
+                     int expected_legs_size,
+                     int expected_maneuvers_size,
+                     int maneuver_index,
+                     const std::string expected_turn_lanes) {
   // Load pinpoint test
-  std::string pbf_filename = {VALHALLA_SOURCE_DIR
-                              "test/pinpoints/turn_lanes/right_active_pinpoint.pbf"};
-  std::string path_bytes;
-  std::ifstream input_pbf(pbf_filename, std::ios::in | std::ios::binary);
-  if (input_pbf.is_open()) {
-    input_pbf.seekg(0, std::ios::end);
-    path_bytes.resize(input_pbf.tellg());
-    input_pbf.seekg(0, std::ios::beg);
-    input_pbf.read(&path_bytes[0], path_bytes.size());
-    input_pbf.close();
-  } else {
-    throw std::runtime_error("Failed to read " + pbf_filename);
-  }
-
-  valhalla::Api request;
-  request.ParseFromString(path_bytes);
-
+  std::string path_bytes = test::load_binary_file(filename);
   if (path_bytes.size() == 0) {
     throw std::runtime_error("path_bytes is empty");
   }
 
+  // Create the request from the path bytes
+  valhalla::Api request;
+  request.ParseFromString(path_bytes);
+
+  // Build the directions
   valhalla::odin::DirectionsBuilder().Build(request);
 
   // Validate routes size
-  if (request.directions().routes_size() != 1) {
-    throw std::runtime_error("Invalid routes size");
+  int found_routes_size = request.directions().routes_size();
+  if (found_routes_size != expected_routes_size) {
+    throw std::runtime_error("Invalid routes size - found: " + std::to_string(found_routes_size) +
+                             " | expected: " + std::to_string(expected_routes_size));
   }
 
   // Validate legs size
-  if (request.directions().routes(0).legs_size() != 1) {
-    throw std::runtime_error("Invalid legs size");
+  int found_legs_size = request.directions().routes(0).legs_size();
+  if (found_legs_size != expected_legs_size) {
+    throw std::runtime_error("Invalid legs size - found: " + std::to_string(found_legs_size) +
+                             " | expected: " + std::to_string(expected_legs_size));
   }
 
   // Validate maneuvers size
-  if (request.directions().routes(0).legs(0).maneuver_size() != 3) {
-    throw std::runtime_error("Invalid maneuvers size");
+  int found_maneuvers_size = request.directions().routes(0).legs(0).maneuver_size();
+  if (found_maneuvers_size != expected_maneuvers_size) {
+    throw std::runtime_error(
+        "Invalid maneuvers size - found: " + std::to_string(found_maneuvers_size) +
+        " | expected: " + std::to_string(expected_maneuvers_size));
   }
 
+  // Validate turn lanes - get turn lanes from the prev edge of the specified maneuver index
   valhalla::odin::EnhancedTripLeg etl(*request.mutable_trip()->mutable_routes(0)->mutable_legs(0));
-  auto prev_edge =
-      etl.GetPrevEdge(request.directions().routes(0).legs(0).maneuver(1).begin_path_index());
-  std::string found = prev_edge->TurnLanesToString();
-  std::string expected = "[ left | through | through;right ACTIVE ]";
-
-  // Validate turn lanes
-  if (expected != found) {
-    throw std::runtime_error("Invalid turn lanes - found: " + found + " | expected: " + expected);
+  auto prev_edge = etl.GetPrevEdge(
+      request.directions().routes(0).legs(0).maneuver(maneuver_index).begin_path_index());
+  std::string found_turn_lanes = prev_edge->TurnLanesToString();
+  if (found_turn_lanes != expected_turn_lanes) {
+    throw std::runtime_error("Invalid turn lanes - found: " + found_turn_lanes +
+                             " | expected: " + expected_turn_lanes);
   }
+}
+
+void validate_turn_lanes() {
+
+  int expected_routes_size = 1;
+  int expected_legs_size = 1;
+  int expected_maneuvers_size = 3;
+  int maneuver_index = 1;
+
+  // Test right active
+  test_turn_lanes({VALHALLA_SOURCE_DIR "test/pinpoints/turn_lanes/right_active_pinpoint.pbf"},
+                  expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
+                  "[ left | through | through;right ACTIVE ]");
 }
 
 } // namespace
@@ -169,8 +182,8 @@ int main() {
   // Test static methods
   suite.test(TEST_CASE(test_static_methods));
 
-  // Test right active
-  suite.test(TEST_CASE(test_right_active));
+  // Test turn lanes
+  suite.test(TEST_CASE(validate_turn_lanes));
 
   return suite.tear_down();
 }
