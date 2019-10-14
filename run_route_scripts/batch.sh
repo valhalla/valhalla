@@ -64,19 +64,3 @@ rm -f ${RESULTS_OUTDIR}/*_statistics.csv
 
 echo ${OUTDIR} > outdir.txt
 
-###############################################
-# Move the pat.pbf file to INPUT_FILE_PREFIX.pbf if it exists
-INPUT_PATH=$(dirname ${INPUT})
-INPUT_BASENAME=$(basename ${INPUT})
-INPUT_FILE_PREFIX=${INPUT_BASENAME%.*}
-INPUT_FILE_EXT=${INPUT_BASENAME##*.}
-#echo;echo path=${INPUT_PATH};echo pref=${INPUT_FILE_PREFIX};echo ext=${INPUT_FILE_EXT}
-PBF_IN_PATH="."
-PBF_FILE_PREFIX="path"
-PBF_FILE_EXT="pbf"
-PBF_OUT_PATH=${INPUT_PATH}
-if [ -f "${PBF_IN_PATH}/${PBF_FILE_PREFIX}.${PBF_FILE_EXT}" ]
-then
-  mv ${PBF_IN_PATH}/${PBF_FILE_PREFIX}.${PBF_FILE_EXT} ${PBF_OUT_PATH}/${INPUT_FILE_PREFIX}.${PBF_FILE_EXT}
-fi
-
