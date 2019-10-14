@@ -166,6 +166,11 @@ void validate_turn_lanes() {
   test_turn_lanes({VALHALLA_SOURCE_DIR "test/pinpoints/turn_lanes/right_active_pinpoint.pbf"},
                   expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
                   "[ left | through | through;right ACTIVE ]");
+
+  // Test left active
+  test_turn_lanes({VALHALLA_SOURCE_DIR "test/pinpoints/turn_lanes/left_active_pinpoint.pbf"},
+                  expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
+                  "[ left ACTIVE | through | through;right ]");
 }
 
 } // namespace
