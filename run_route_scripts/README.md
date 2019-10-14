@@ -1,4 +1,4 @@
-# How to run  
+# How to run the the `valhalla_run_route` application  
 Run the valhalla_run_route application using the `requests/demo_routes.txt` route request file and the `../../conf/valhalla.json` config file:
 ```
 #Usage:
@@ -15,3 +15,8 @@ Run the valhalla_run_route application using all of the country specific route r
 #Example:
 ./run_city_routes.sh
 ```
+
+# How to create a `path.pbf` that will be used as input for pinpoint tests
+- Create a one line route request and save in the target pinpoint test directory - for example: `../test/pinpoints/turn_lanes/right_active_pinpoint.txt`
+- Run the `create_path_pbf.sh` script that will read the specified route request and save a corresponding path pbf file - for example: `./create_path_pbf.sh ../test/pinpoints/turn_lanes/right_active_pinpoint.txt`
+- Use the generated pbf file as the input path for a directions pinpoint test - example pbf file: `../test/pinpoints/turn_lanes/right_active_pinpoint.pbf`
