@@ -172,6 +172,12 @@ void validate_turn_lanes() {
                   expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
                   "[ left ACTIVE | through | through;right ]");
 
+  // Test right most slight left active
+  test_turn_lanes({VALHALLA_SOURCE_DIR
+                   "test/pinpoints/turn_lanes/right_most_slight_left_active_pinpoint.pbf"},
+                  expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
+                  "[ slight_left | slight_left ACTIVE | slight_right | right ]");
+
   expected_maneuvers_size = 4;
   // Test right most left active
   test_turn_lanes({VALHALLA_SOURCE_DIR
