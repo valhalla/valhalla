@@ -1,3 +1,9 @@
+## Release Date: NOT RELEASED - TBD
+* **Bug Fix**
+
+* **Enhancement**
+   * ADDED: Establish pinpoint test pattern [#1969](https://github.com/valhalla/valhalla/pull/1969)
+
 ## Release Date: 2019-09-06 Valhalla 3.0.8
 * **Bug Fix**
    * FIXED: Added logic to detect if user is to merge to the left or right [#1892](https://github.com/valhalla/valhalla/pull/1892)
