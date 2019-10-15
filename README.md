@@ -124,7 +124,7 @@ git submodule update --init --recursive
 mkdir build
 cd build
 cmake .. -DCMAKE_BUILD_TYPE=Release
-make -j$(nproc)
+make -j$(nproc) # for macos, use: make -j$(sysctl -n hw.physicalcpu) 
 sudo make install
 ```
 
