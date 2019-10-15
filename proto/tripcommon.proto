@@ -38,10 +38,12 @@ message Location {
     optional LatLng ll = 3;
     optional SideOfStreet side_of_street = 4;
     optional float distance = 5;
-    optional int32 minimum_reachability = 6;
+    optional int32 minimum_reachability = 6; //deprecated
     optional bool begin_node = 7;
     optional bool end_node = 8;
     repeated string names = 10;
+    optional int32 outbound_reach = 11;
+    optional int32 inbound_reach = 12;
   }
 
   //inputs

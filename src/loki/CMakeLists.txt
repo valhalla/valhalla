@@ -5,6 +5,7 @@ set(sources
   worker.cc
   height_action.cc
   locate_action.cc
+  reach.cc
   route_action.cc
   matrix_action.cc
   isochrone_action.cc
