@@ -512,6 +512,7 @@ struct bin_handler_t {
             tile = opp_tile;
             edge = opp_edge;
             reach = opp_reach;
+            reachable = true;
           }
         }
 
