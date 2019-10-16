@@ -4,6 +4,8 @@
 #include <boost/property_tree/ptree.hpp>
 #include <cmath>
 #include <cstdint>
+#include <cstdlib>
+#include <fstream>
 #include <iostream>
 #include <queue>
 #include <string>
@@ -33,6 +35,7 @@
 #include "thor/triplegbuilder.h"
 #include "worker.h"
 
+#include <valhalla/proto/api.pb.h>
 #include <valhalla/proto/directions.pb.h>
 #include <valhalla/proto/options.pb.h>
 #include <valhalla/proto/trip.pb.h>
@@ -50,6 +53,11 @@ using namespace valhalla::meili;
 namespace bpo = boost::program_options;
 
 namespace {
+
+std::string get_env(const std::string& key) {
+  char* val = std::getenv(key.c_str());
+  return val == nullptr ? std::string("") : std::string(val);
+}
 
 // Default maximum distance between locations to choose a time dependent path algorithm
 const float kDefaultMaxTimeDependentDistance = 500000.0f;
@@ -395,8 +403,7 @@ valhalla::DirectionsLeg DirectionsTest(valhalla::Api& api,
           turn_lane_status = "NO_ACTIVE_TURN_LANES";
         }
         valhalla::midgard::logging::Log((boost::format("   %d: TURN_LANES: %s %s") % m %
-                                         prev_edge->TurnLanesToString(prev_edge->turn_lanes()) %
-                                         turn_lane_status)
+                                         prev_edge->TurnLanesToString() % turn_lane_status)
                                             .str(),
                                         " [NARRATIVE] ");
       }
@@ -677,6 +684,21 @@ int main(int argc, char* argv[]) {
 
     // If successful get directions
     if (trip_path && trip_path->node_size() != 0) {
+
+      // Write the path.pbf if requested
+      if (get_env("SAVE_PATH_PBF") == "true") {
+        std::string path_bytes = request.SerializeAsString();
+        std::string pbf_filename = "path.pbf";
+        std::ofstream output_pbf(pbf_filename, std::ios::out | std::ios::trunc | std::ios::binary);
+        if (output_pbf.is_open() && path_bytes.size() > 0) {
+          output_pbf.write(&path_bytes[0], path_bytes.size());
+          output_pbf.close();
+        } else {
+          std::cerr << "Failed to write " << pbf_filename << std::endl;
+          return EXIT_FAILURE;
+        }
+      }
+
       // Try the the directions
       auto t1 = std::chrono::high_resolution_clock::now();
       const auto& trip_directions = DirectionsTest(request, origin, dest, data);

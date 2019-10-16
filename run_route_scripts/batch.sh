@@ -42,6 +42,7 @@ fi
 RESULTS_OUTDIR="results/${OUTDIR}"
 mkdir -p "${RESULTS_OUTDIR}"
 
+
 #turn the nice input into something parallel can parse for args
 TMP="$(mktemp)"
 cp -rp "${INPUT}" "${TMP}"
