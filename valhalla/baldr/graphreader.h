@@ -326,6 +326,22 @@ public:
   }
 
   /**
+   * Convenience method to get an opposing directed edge.
+   * @param  edge    edge of the directed edge.
+   * @param  tile    Reference to a pointer to a const tile.
+   * @return  Returns the opposing directed edge or nullptr if the
+   *          opposing edge does not exist (can occur with a regional extract
+   *          where the adjacent tile is missing)
+   */
+  const DirectedEdge* GetOpposingEdge(const DirectedEdge* edge, const GraphTile*& tile) {
+    if (GetGraphTile(edge->endnode(), tile)) {
+      const auto* node = tile->node(edge->endnode());
+      return tile->directededge(node->edge_index() + edge->opp_index());
+    }
+    return nullptr;
+  }
+
+  /**
    * Convenience method to get an end node.
    * @param edge  the edge whose end node you want
    * @param  tile    Reference to a pointer to a const tile.

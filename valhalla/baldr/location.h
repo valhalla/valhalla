@@ -38,7 +38,8 @@ public:
    */
   Location(const midgard::PointLL& latlng,
            const StopType& stoptype = StopType::BREAK,
-           unsigned int minimum_reachability = 0,
+           unsigned int min_outbound_reach = 0,
+           unsigned int min_inbound_reach = 0,
            unsigned long radius = 0,
            const PreferredSide& side = PreferredSide::EITHER);
 
@@ -66,11 +67,12 @@ public:
   boost::optional<float> heading_;
   boost::optional<uint64_t> way_id_;
 
-  // try to find candidates who are reachable from this many or more nodes
-  // if a given candidate edge reaches less than this number of nodes its considered to be a
-  // disconnected island and we'll search for more candidates until we find at least one that isnt
-  // considered a disconnected island
-  unsigned int minimum_reachability_;
+  // try to find candidates who are reachable from/to this many or more nodes
+  // if a given candidate edge is reachable to/from less than this number of nodes its considered to
+  // be a disconnected island and we'll search for more candidates until we find at least one that
+  // isnt considered a disconnected island
+  unsigned int min_outbound_reach_;
+  unsigned int min_inbound_reach_;
   // dont return results further away than this (meters) unless there is nothing this close
   unsigned long radius_;
 

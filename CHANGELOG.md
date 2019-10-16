@@ -1,5 +1,6 @@
-## Release Date: NOT RELEASED - TBD
+## Release Date: 2019-??-?? Valhalla 3.0.9
 * **Bug Fix**
+   * FIXED: Changed reachability computation to consider both directions of travel wrt candidate edges [#1965](https://github.com/valhalla/valhalla/pull/1965)
 
 * **Enhancement**
    * ADDED: Establish pinpoint test pattern [#1969](https://github.com/valhalla/valhalla/pull/1969)
