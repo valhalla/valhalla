@@ -104,7 +104,7 @@ thor_worker_t::work(const std::list<zmq::message_t>& job,
   // get time for start of request
   auto s = std::chrono::system_clock::now();
   auto& info = *static_cast<prime_server::http_request_info_t*>(request_info);
-  LOG_INFO("Got Thor Request " + std::to_string(info.id));
+  LOG_INFO("Got Thor Request foo" + std::to_string(info.id));
   Api request;
   try {
     // crack open the original request
