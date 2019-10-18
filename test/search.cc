@@ -157,7 +157,7 @@ void search(valhalla::baldr::Location location,
   PathLocation::toPBF(location, &pbf, reader);
   location = PathLocation::fromPBF(pbf);
 
-  const auto results = Search({location}, reader, PassThroughEdgeFilter, PassThroughNodeFilter);
+  const auto results = Search({location}, reader);
   const auto p = results.at(location);
 
   if ((p.edges.front().begin_node() || p.edges.front().end_node()) != expected_node)
@@ -195,7 +195,7 @@ void search(valhalla::baldr::Location location, size_t result_count, int reachab
   PathLocation::toPBF(location, &pbf, reader);
   location = PathLocation::fromPBF(pbf);
 
-  const auto results = Search({location}, reader, PassThroughEdgeFilter, PassThroughNodeFilter);
+  const auto results = Search({location}, reader);
   if (results.empty() && result_count == 0)
     return;
   const auto& p = results.at(location);

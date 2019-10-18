@@ -18,17 +18,9 @@ struct directed_reach {
 directed_reach SimpleReach(const valhalla::baldr::DirectedEdge* edge,
                            uint32_t max_reach,
                            valhalla::baldr::GraphReader& reader,
-                           uint8_t direction = kInbound | kOutbound,
-                           const sif::EdgeFilter& edge_filter = PassThroughEdgeFilter,
-                           const sif::NodeFilter& node_filter = PassThroughNodeFilter);
-/*
-directed_reach Reach(const valhalla::baldr::DirectedEdge* edge,
-                     uint32_t max_reach,
-                     valhalla::baldr::GraphReader& reader,
-                     uint8_t direction = kInbound | kOutbound,
-                     const sif::EdgeFilter& edge_filter = PassThroughEdgeFilter,
-                     const sif::NodeFilter& node_filter = PassThroughNodeFilter,
-                     reach_cache* cache = nullptr);*/
+                           const sif::EdgeFilter& edge_filter,
+                           const sif::NodeFilter& node_filter,
+                           uint8_t direction = kInbound | kOutbound);
 
 } // namespace loki
 } // namespace valhalla

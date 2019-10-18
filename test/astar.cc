@@ -383,8 +383,7 @@ void trivial_path_no_uturns(const std::string& config_file) {
   auto mode = cost->travel_mode();
   mode_costing[static_cast<uint32_t>(mode)] = cost;
 
-  const auto projections =
-      vk::Search(locations, graph_reader, cost->GetEdgeFilter(), cost->GetNodeFilter());
+  const auto projections = vk::Search(locations, graph_reader, cost.get());
   std::vector<PathLocation> path_location;
 
   for (auto loc : locations) {
