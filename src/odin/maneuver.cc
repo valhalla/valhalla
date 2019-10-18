@@ -624,6 +624,14 @@ void Maneuver::ClearRoundaboutExitStreetNames() {
   roundabout_exit_street_names_->clear();
 }
 
+Maneuver::RelativeDirection Maneuver::merge_to_relative_direction() const {
+  return merge_to_relative_direction_;
+}
+
+void Maneuver::set_merge_to_relative_direction(RelativeDirection merge_to_relative_direction) {
+  merge_to_relative_direction_ = merge_to_relative_direction;
+}
+
 TripLeg_TravelMode Maneuver::travel_mode() const {
   return travel_mode_;
 }
