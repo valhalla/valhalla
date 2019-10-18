@@ -1366,16 +1366,26 @@ std::string NarrativeBuilder::FormVerbalRampStraightInstruction(uint8_t phrase_i
 std::string NarrativeBuilder::FormRampInstruction(Maneuver& maneuver,
                                                   bool limit_by_consecutive_count,
                                                   uint32_t element_max_count) {
+  // non-turn types
   // "0": "Take the ramp on the <RELATIVE_DIRECTION>.",
   // "1": "Take the <BRANCH_SIGN> ramp on the <RELATIVE_DIRECTION>.",
   // "2": "Take the ramp on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
   // "3": "Take the <BRANCH_SIGN> ramp on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
   // "4": "Take the <NAME_SIGN> ramp on the <RELATIVE_DIRECTION>.",
+
+  // turn types
   // "5": "Turn <RELATIVE_DIRECTION> to take the ramp.",
   // "6": "Turn <RELATIVE_DIRECTION> to take the <BRANCH_SIGN> ramp.",
   // "7": "Turn <RELATIVE_DIRECTION> to take the ramp toward <TOWARD_SIGN>.",
   // "8": "Turn <RELATIVE_DIRECTION> to take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>.",
   // "9": "Turn <RELATIVE_DIRECTION> to take the <NAME_SIGN> ramp."
+
+  // non-directional non-turn types
+  // "10": "Take the ramp.",
+  // "11": "Take the <BRANCH_SIGN> ramp.",
+  // "12": "Take the ramp toward <TOWARD_SIGN>.",
+  // "13": "Take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>.",
+  // "14": "Take the <NAME_SIGN> ramp."
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
@@ -1386,9 +1396,16 @@ std::string NarrativeBuilder::FormRampInstruction(Maneuver& maneuver,
   std::string exit_toward_sign;
   std::string exit_name_sign;
 
+  bool drive_on_right = trip_path_->GetCurrEdge(maneuver.begin_node_index())->drive_on_right();
+
+  // Determine if driving side matches relative direction
+  if (((maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kRight) && drive_on_right) ||
+      ((maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kLeft) && !drive_on_right)) {
+    phrase_id = 10;
+  }
   // Determine if turn
-  if ((maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kRight) ||
-      (maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kLeft)) {
+  else if ((maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kRight) ||
+           (maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kLeft)) {
     phrase_id = 5;
   }
   if (maneuver.HasExitBranchSign()) {
