@@ -84,6 +84,14 @@ protected:
   void parse_filter_attributes(const Api& request, bool is_strict_filter = false);
   sif::TravelMode mode;
   std::vector<meili::Measurement> trace;
+  std::vector<PathInfo> m_path_infos;
+  std::vector<meili::MatchResults> m_temp_offline_results;
+  std::vector<thor::MatchResult> m_temp_enhanced_match_results;
+  std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>>
+      m_temp_route_discontinuities;
+  std::vector<std::pair<baldr::GraphId, baldr::GraphId>> m_temp_disconnected_edges;
+  std::vector<PathInfo> m_temp_path_edges;
+  std::vector<std::tuple<float, float, std::vector<thor::MatchResult>>> m_map_match_results;
   sif::CostFactory<sif::DynamicCost> factory;
   sif::cost_ptr_t mode_costing[static_cast<int>(sif::TravelMode::kMaxTravelMode)];
   // Path algorithms (TODO - perhaps use a map?))
