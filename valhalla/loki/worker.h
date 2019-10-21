@@ -62,8 +62,7 @@ protected:
 
   boost::property_tree::ptree config;
   sif::CostFactory<sif::DynamicCost> factory;
-  sif::EdgeFilter edge_filter;
-  sif::NodeFilter node_filter;
+  sif::cost_ptr_t costing;
   std::shared_ptr<baldr::GraphReader> reader;
   std::shared_ptr<baldr::connectivity_map_t> connectivity_map;
   std::string action_str;

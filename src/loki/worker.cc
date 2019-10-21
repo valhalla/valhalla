@@ -67,22 +67,20 @@ void loki_worker_t::parse_costing(Api& api) {
     throw valhalla_exception_t{124};
   }
 
-  auto costing = options.costing();
-  auto costing_str = Costing_Name(costing);
+  auto costing_type = options.costing();
+  auto costing_str = Costing_Name(costing_type);
 
   if (!options.do_not_track()) {
     valhalla::midgard::logging::Log("costing_type::" + costing_str, " [ANALYTICS] ");
   }
 
   // TODO - have a way of specifying mode at the location
-  if (costing == Costing::multimodal) {
-    costing = Costing::pedestrian;
+  if (costing_type == Costing::multimodal) {
+    costing_type = Costing::pedestrian;
   }
 
   try {
-    cost_ptr_t c = factory.Create(costing, options);
-    edge_filter = c->GetEdgeFilter();
-    node_filter = c->GetNodeFilter();
+    costing = factory.Create(costing_type, options);
   } catch (const std::runtime_error&) { throw valhalla_exception_t{125, "'" + costing_str + "'"}; }
 
   // See if we have avoids and take care of them
@@ -94,7 +92,7 @@ void loki_worker_t::parse_costing(Api& api) {
   if (options.avoid_locations_size()) {
     try {
       auto avoid_locations = PathLocation::fromPBF(options.avoid_locations());
-      auto results = loki::Search(avoid_locations, *reader, edge_filter, node_filter);
+      auto results = loki::Search(avoid_locations, *reader, costing.get());
       std::unordered_set<uint64_t> avoids;
       for (const auto& result : results) {
         for (const auto& edge : result.second.edges) {

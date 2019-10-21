@@ -80,7 +80,7 @@ void check_all_reach() {
          edge_id.id() < tile->header()->directededgecount(); ++edge_id) {
       // use the simple method to find the reach for the edge in both directions
       const auto* edge = tile->directededge(edge_id);
-      auto reach = SimpleReach(edge, 50, reader, kInbound | kOutbound, edge_filter, node_filter);
+      auto reach = SimpleReach(edge, 50, reader, edge_filter, node_filter, kInbound | kOutbound);
 
       // shape is nice to have
       auto shape = tile->edgeinfo(edge->edgeinfo_offset()).shape();
