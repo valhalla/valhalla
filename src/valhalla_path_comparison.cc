@@ -103,8 +103,7 @@ void walk_edges(const std::string& shape, GraphReader& reader, cost_ptr_t cost_p
   std::vector<baldr::Location> locations;
   locations.push_back({shape_pts.front()});
   locations.push_back({shape_pts.back()});
-  const auto projections =
-      Search(locations, reader, cost_ptr->GetEdgeFilter(), cost_ptr->GetNodeFilter());
+  const auto projections = Search(locations, reader, cost_ptr.get());
   std::vector<PathLocation> path_location;
   valhalla::Options options;
   for (const auto& loc : locations) {
