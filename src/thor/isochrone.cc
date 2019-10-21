@@ -173,6 +173,30 @@ template void
 Isochrone::Initialize<decltype(Isochrone::mmedgelabels_)>(decltype(Isochrone::mmedgelabels_)&,
                                                           const uint32_t);
 
+// Initializes the time of the expansion if there is one
+std::pair<uint64_t, uint32_t>
+Isochrone::SetTime(const valhalla::Location& location, const GraphId& node_id, GraphReader& reader) {
+  // No time for this expansion
+  has_date_time_ = false;
+  if (!location.has_date_time() || !node_id.Is_Valid())
+    return {};
+
+  // Set the timezone to be the timezone at the end node
+  start_tz_index_ = GetTimezone(reader, node_id);
+  if (start_tz_index_ == 0)
+    LOG_ERROR("Could not get the timezone at the destination location");
+
+  // Set route start time (seconds from epoch)
+  auto start_time = DateTime::seconds_since_epoch(location.date_time(),
+                                                  DateTime::get_tz_db().from_index(start_tz_index_));
+
+  // Set seconds from beginning of the week
+  auto start_seconds_of_week = DateTime::day_of_week(location.date_time()) * kSecondsPerDay +
+                               DateTime::seconds_from_midnight(location.date_time());
+  has_date_time_ = true;
+  return {start_time, start_seconds_of_week};
+}
+
 // Expand from a node in the forward direction
 void Isochrone::ExpandForward(GraphReader& graphreader,
                               const GraphId& node,
@@ -283,43 +307,26 @@ Isochrone::Compute(google::protobuf::RepeatedPtrField<valhalla::Location>& origi
                    GraphReader& graphreader,
                    const std::shared_ptr<DynamicCost>* mode_costing,
                    const TravelMode mode) {
+
+  // Initialize and create the isotile
+  auto max_seconds = max_minutes * 60;
+  ConstructIsoTile(false, max_minutes, origin_locations);
+
   // Set the mode and costing
   mode_ = mode;
   costing_ = mode_costing[static_cast<uint32_t>(mode_)];
   access_mode_ = costing_->access_mode();
 
-  // Initialize and create the isotile
-  auto max_seconds = max_minutes * 60;
+  // Prepare for a graph traversal
   Initialize(edgelabels_, costing_->UnitSize());
-  ConstructIsoTile(false, max_minutes, origin_locations);
-
-  // Set the origin locations
   SetOriginLocations(graphreader, origin_locations, costing_);
 
   // Check if date_time is set on the origin location. Set the seconds_of_week if it is set
-  has_date_time_ = false;
-  int32_t start_seconds_of_week = 0;
-  uint64_t start_time = 0;
-  const auto& origin = origin_locations.Get(0);
-  if (origin.has_date_time() && edgelabels_.size() > 0) {
-    // Set the origin timezone to be the timezone at the end node
-    start_tz_index_ =
-        edgelabels_.size() == 0 ? 0 : GetTimezone(graphreader, edgelabels_[0].endnode());
-    if (start_tz_index_ == 0) {
-      // TODO - should we throw an exception and return an error
-      LOG_ERROR("Could not get the timezone at the origin");
-      // return isotile_;
-    }
-
-    // Set route start time (seconds from epoch)
-    start_time = DateTime::seconds_since_epoch(origin.date_time(),
-                                               DateTime::get_tz_db().from_index(start_tz_index_));
-
-    // Set seconds from beginning of the week
-    start_seconds_of_week = DateTime::day_of_week(origin.date_time()) * kSecondsPerDay +
-                            DateTime::seconds_from_midnight(origin.date_time());
-    has_date_time_ = true;
-  }
+  uint64_t start_time;
+  uint32_t start_seconds_of_week;
+  auto node_id = edgelabels_.empty() ? GraphId{} : edgelabels_[0].endnode();
+  std::tie(start_time, start_seconds_of_week) =
+      SetTime(origin_locations.Get(0), node_id, graphreader);
 
   // Compute the isotile
   uint32_t n = 0;
@@ -479,43 +486,25 @@ Isochrone::ComputeReverse(google::protobuf::RepeatedPtrField<valhalla::Location>
                           GraphReader& graphreader,
                           const std::shared_ptr<DynamicCost>* mode_costing,
                           const TravelMode mode) {
+
+  // Initialize and create the isotile
+  auto max_seconds = max_minutes * 60;
+  ConstructIsoTile(false, max_minutes, dest_locations);
+
   // Set the mode and costing
   mode_ = mode;
   costing_ = mode_costing[static_cast<uint32_t>(mode_)];
   access_mode_ = costing_->access_mode();
 
-  // Initialize and create the isotile
-  auto max_seconds = max_minutes * 60;
+  // Prepare for graph traversal
   Initialize(bdedgelabels_, costing_->UnitSize());
-  ConstructIsoTile(false, max_minutes, dest_locations);
-
-  // Set the locations (call them destinations - routing to them)
   SetDestinationLocations(graphreader, dest_locations, costing_);
 
   // Check if date_time is set on the destination location. Set the seconds_of_week if it is set
-  has_date_time_ = false;
-  int32_t start_seconds_of_week = 0;
-  uint64_t start_time = 0;
-  const auto& dest = dest_locations.Get(0);
-  if (dest.has_date_time() && bdedgelabels_.size() > 0) {
-    // Set the timezone to be the timezone at the end node
-    start_tz_index_ =
-        bdedgelabels_.size() == 0 ? 0 : GetTimezone(graphreader, bdedgelabels_[0].endnode());
-    if (start_tz_index_ == 0) {
-      // TODO - should we throw an exception and return an error
-      LOG_ERROR("Could not get the timezone at the destination location");
-      // return isotile_;
-    }
-
-    // Set route start time (seconds from epoch)
-    start_time = DateTime::seconds_since_epoch(dest.date_time(),
-                                               DateTime::get_tz_db().from_index(start_tz_index_));
-
-    // Set seconds from beginning of the week
-    start_seconds_of_week = DateTime::day_of_week(dest.date_time()) * kSecondsPerDay +
-                            DateTime::seconds_from_midnight(dest.date_time());
-    has_date_time_ = true;
-  }
+  uint64_t start_time;
+  uint32_t start_seconds_of_week;
+  auto node_id = bdedgelabels_.empty() ? GraphId{} : bdedgelabels_[0].endnode();
+  std::tie(start_time, start_seconds_of_week) = SetTime(dest_locations.Get(0), node_id, graphreader);
 
   // Compute the isotile
   uint32_t n = 0;

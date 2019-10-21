@@ -92,7 +92,8 @@ public:
 
 protected:
   bool has_date_time_;
-  int start_tz_index_;   // Timezone at the start of the isochrone
+  int start_tz_index_; // Timezone at the start of the isochrone
+
   float shape_interval_; // Interval along shape to mark time
   sif::TravelMode mode_; // Current travel mode
   uint32_t access_mode_; // Access mode used by the costing method
@@ -103,10 +104,10 @@ protected:
   uint32_t date_;
   uint32_t dow_;
   uint32_t day_;
-  uint32_t start_time_;
   uint32_t max_seconds_;
   uint32_t max_transfer_distance_;
   std::string origin_date_time_;
+  uint32_t start_time_;
   std::unordered_map<std::string, uint32_t> operators_;
   std::unordered_set<uint32_t> processed_tiles_;
 
@@ -134,6 +135,21 @@ protected:
    */
   template <typename label_container_t>
   void Initialize(label_container_t& labels, const uint32_t bucketsize);
+
+  /**
+   * Sets the start time for forward expansion or end time for reverse expansion based on the
+   * locations date time string and the edge candidates timezone
+   *
+   * @param location           which location to use for the date time information
+   * @param node_id            the node from which to get timezone information
+   * @param reader             the reader for looking up timezone information
+   * @returns                  a pair with the first being the epoch seconds for the date time at that
+   *                           timezone and the second being the ordinal second from the beginning of
+   *                           the week
+   */
+  std::pair<uint64_t, uint32_t> SetTime(const valhalla::Location& location,
+                                        const baldr::GraphId& node_id,
+                                        baldr::GraphReader& reader);
 
   /**
    * Constructs the isotile - 2-D gridded data containing the time
