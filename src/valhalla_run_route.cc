@@ -203,7 +203,7 @@ const valhalla::TripLeg* PathTest(GraphReader& reader,
     locations.back().heading_ = std::round(PointLL::HeadingAtEndOfPolyline(shape, 30.f));
 
     std::shared_ptr<DynamicCost> cost = mode_costing[static_cast<uint32_t>(mode)];
-    const auto projections = Search(locations, reader, cost->GetEdgeFilter(), cost->GetNodeFilter());
+    const auto projections = Search(locations, reader, cost.get());
     std::vector<PathLocation> path_location;
     valhalla::Options options;
     for (const auto& loc : locations) {
