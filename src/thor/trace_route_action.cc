@@ -399,7 +399,6 @@ thor_worker_t::map_match(Api& request, uint32_t best_paths) {
       auto origin = match_results.begin();
       auto destination = match_results.begin();
       int last_leg_index = 0;
-      // auto destination = match_results.begin();
 
       for (int i = 0, n = static_cast<int>(m_temp_path_edges.size()); i < n; ++i) {
         const auto& path_edge = m_temp_path_edges[i];
