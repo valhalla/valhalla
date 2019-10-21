@@ -152,42 +152,26 @@ void Isochrone::ConstructIsoTile(
 
 // Initialize - create adjacency list, edgestatus support, and reserve
 // edgelabels
-void Isochrone::Initialize(const uint32_t bucketsize) {
-  edgelabels_.reserve(kInitialEdgeLabelCount);
+template <typename label_container_t>
+void Isochrone::Initialize(label_container_t& labels, const uint32_t bucketsize) {
+  labels.reserve(kInitialEdgeLabelCount);
 
   // Set up lambda to get sort costs
-  const auto edgecost = [this](const uint32_t label) { return edgelabels_[label].sortcost(); };
+  const auto edgecost = [&labels](const uint32_t label) { return labels[label].sortcost(); };
 
   float range = kBucketCount * bucketsize;
   adjacencylist_.reset(new DoubleBucketQueue(0.0f, range, bucketsize, edgecost));
   edgestatus_.clear();
 }
-
-// Initialize - create adjacency list, edgestatus support, and reserve
-// edgelabels
-void Isochrone::InitializeReverse(const uint32_t bucketsize) {
-  bdedgelabels_.reserve(kInitialEdgeLabelCount);
-
-  // Set up lambda to get sort costs
-  const auto edgecost = [this](const uint32_t label) { return bdedgelabels_[label].sortcost(); };
-
-  float range = kBucketCount * bucketsize;
-  adjacencylist_.reset(new DoubleBucketQueue(0.0f, range, bucketsize, edgecost));
-  edgestatus_.clear();
-}
-
-// Initialize - create adjacency list, edgestatus support, and reserve
-// edgelabels
-void Isochrone::InitializeMultiModal(const uint32_t bucketsize) {
-  mmedgelabels_.reserve(kInitialEdgeLabelCount);
-
-  // Set up lambda to get sort costs
-  const auto edgecost = [this](const uint32_t label) { return mmedgelabels_[label].sortcost(); };
-
-  float range = kBucketCount * bucketsize;
-  adjacencylist_.reset(new DoubleBucketQueue(0.0f, range, bucketsize, edgecost));
-  edgestatus_.clear();
-}
+template void
+Isochrone::Initialize<decltype(Isochrone::edgelabels_)>(decltype(Isochrone::edgelabels_)&,
+                                                        const uint32_t);
+template void
+Isochrone::Initialize<decltype(Isochrone::bdedgelabels_)>(decltype(Isochrone::bdedgelabels_)&,
+                                                          const uint32_t);
+template void
+Isochrone::Initialize<decltype(Isochrone::mmedgelabels_)>(decltype(Isochrone::mmedgelabels_)&,
+                                                          const uint32_t);
 
 // Expand from a node in the forward direction
 void Isochrone::ExpandForward(GraphReader& graphreader,
@@ -306,7 +290,7 @@ Isochrone::Compute(google::protobuf::RepeatedPtrField<valhalla::Location>& origi
 
   // Initialize and create the isotile
   auto max_seconds = max_minutes * 60;
-  Initialize(costing_->UnitSize());
+  Initialize(edgelabels_, costing_->UnitSize());
   ConstructIsoTile(false, max_minutes, origin_locations);
 
   // Set the origin locations
@@ -502,7 +486,7 @@ Isochrone::ComputeReverse(google::protobuf::RepeatedPtrField<valhalla::Location>
 
   // Initialize and create the isotile
   auto max_seconds = max_minutes * 60;
-  InitializeReverse(costing_->UnitSize());
+  Initialize(bdedgelabels_, costing_->UnitSize());
   ConstructIsoTile(false, max_minutes, dest_locations);
 
   // Set the locations (call them destinations - routing to them)
@@ -871,7 +855,7 @@ Isochrone::ComputeMultiModal(google::protobuf::RepeatedPtrField<valhalla::Locati
 
   // Initialize and create the isotile
   max_seconds_ = max_minutes * 60;
-  InitializeMultiModal(mode_costing[static_cast<uint8_t>(mode_)]->UnitSize());
+  Initialize(mmedgelabels_, mode_costing[static_cast<uint8_t>(mode_)]->UnitSize());
   ConstructIsoTile(true, max_minutes, origin_locations);
 
   // Set the origin locations.

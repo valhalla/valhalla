@@ -132,21 +132,8 @@ protected:
    * edgestatus support, and reserves edgelabels.
    * @param bucketsize  Adjacency list bucket size.
    */
-  void Initialize(const uint32_t bucketsize);
-
-  /**
-   * Initialize prior to computing reverse isochrones. Creates adjacency list,
-   * edgestatus support, and reserves edgelabels.
-   * @param bucketsize  Adjacency list bucket size.
-   */
-  void InitializeReverse(const uint32_t bucketsize);
-
-  /**
-   * Initialize prior to computing mulit-modal isochrones. Creates adjacency
-   * list, edgestatus support, and reserves edgelabels.
-   * @param bucketsize  Adjacency list bucket size.
-   */
-  void InitializeMultiModal(const uint32_t bucketsize);
+  template <typename label_container_t>
+  void Initialize(label_container_t& labels, const uint32_t bucketsize);
 
   /**
    * Constructs the isotile - 2-D gridded data containing the time
