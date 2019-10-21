@@ -887,8 +887,14 @@
     "merge": {
       "phrases": {
         "0": "Empalme.", 
-        "1": "Empalme en <STREET_NAMES>."
+        "1": "Empalme a la <RELATIVE_DIRECTION>.", 
+        "2": "Empalme en <STREET_NAMES>.", 
+        "3": "Empalme a la <RELATIVE_DIRECTION> en <STREET_NAMES>."
       }, 
+      "relative_directions": [
+        "izquierda", 
+        "derecha"
+      ], 
       "empty_street_name_labels": [
         "la acera", 
         "la ciclovía", 
@@ -899,15 +905,27 @@
           "Empalme."
         ], 
         "1": [
-          "Empalme en la I 76 oeste/Pennsylvania Turnpike."
+          "Empalme a la izquierda."
+        ], 
+        "2": [
+          "Empalme en I 76 oeste/Pennsylvania Turnpike."
+        ], 
+        "3": [
+          "Empalme a la derecha en I 83 South."
         ]
       }
     }, 
     "merge_verbal": {
       "phrases": {
         "0": "Empalme.", 
-        "1": "Empalme en <STREET_NAMES>."
+        "1": "Empalme a la <RELATIVE_DIRECTION>.", 
+        "2": "Empalme en <STREET_NAMES>.", 
+        "3": "Empalme a la <RELATIVE_DIRECTION> en <STREET_NAMES>."
       }, 
+      "relative_directions": [
+        "izquierda", 
+        "derecha"
+      ], 
       "empty_street_name_labels": [
         "la acera", 
         "la ciclovía", 
@@ -918,7 +936,13 @@
           "Empalme."
         ], 
         "1": [
-          "Empalme en Interstate 76 oeste, Pennsylvania Turnpike."
+          "Empalme a la izquierda."
+        ], 
+        "2": [
+          "Empalme en I 76 oeste/Pennsylvania Turnpike."
+        ], 
+        "3": [
+          "Empalme a la derecha en I 83 South."
         ]
       }
     }, 

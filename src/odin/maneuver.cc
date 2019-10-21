@@ -73,6 +73,8 @@ const std::string& DirectionsLeg_Maneuver_Type_Name(int v) {
       {34, "kTransitConnectionTransfer"},
       {35, "kTransitConnectionDestination"},
       {36, "kPostTransitConnectionDestination"},
+      {37, "kMergeRight"},
+      {38, "kMergeLeft"},
   };
   auto f = values.find(v);
   if (f == values.cend())
@@ -129,6 +131,12 @@ bool Maneuver::IsDestinationType() const {
   return ((type_ == DirectionsLeg_Maneuver_Type_kDestination) ||
           (type_ == DirectionsLeg_Maneuver_Type_kDestinationLeft) ||
           (type_ == DirectionsLeg_Maneuver_Type_kDestinationRight));
+}
+
+bool Maneuver::IsMergeType() const {
+  return ((type_ == DirectionsLeg_Maneuver_Type_kMerge) ||
+          (type_ == DirectionsLeg_Maneuver_Type_kMergeLeft) ||
+          (type_ == DirectionsLeg_Maneuver_Type_kMergeRight));
 }
 
 const StreetNames& Maneuver::street_names() const {

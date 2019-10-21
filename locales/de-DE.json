@@ -887,8 +887,14 @@
     "merge": {
       "phrases": {
         "0": "Einfädeln.", 
-        "1": "Auf <STREET_NAMES> einfädeln."
+        "1": "<RELATIVE_DIRECTION> einfädeln.", 
+        "2": "Auf <STREET_NAMES> einfädeln.", 
+        "3": "<RELATIVE_DIRECTION> auf <STREET_NAMES> einfädeln."
       }, 
+      "relative_directions": [
+        "Links", 
+        "Rechts"
+      ], 
       "empty_street_name_labels": [
         "Fußweg", 
         "Radweg", 
@@ -897,17 +903,29 @@
       "example_phrases": {
         "0": [
           "Merge."
-        ], 
+        ],
         "1": [
+          "Merge left."
+        ],
+        "2": [
           "Merge onto I 76 West/Pennsylvania Turnpike."
+        ],
+        "3": [
+          "Merge right onto I 83 South."
         ]
       }
     }, 
     "merge_verbal": {
       "phrases": {
         "0": "Einfädeln.", 
-        "1": "Auf <STREET_NAMES> einfädeln."
+        "1": "<RELATIVE_DIRECTION> einfädeln.", 
+        "2": "Auf <STREET_NAMES> einfädeln.", 
+        "3": "<RELATIVE_DIRECTION> auf <STREET_NAMES> einfädeln."
       }, 
+      "relative_directions": [
+        "Links", 
+        "Rechts"
+      ], 
       "empty_street_name_labels": [
         "Fußweg", 
         "Radweg", 
@@ -916,9 +934,15 @@
       "example_phrases": {
         "0": [
           "Merge."
-        ], 
+        ],
         "1": [
-          "Merge onto Interstate 76 West, Pennsylvania Turnpike."
+          "Merge left."
+        ],
+        "2": [
+          "Merge onto I 76 West/Pennsylvania Turnpike."
+        ],
+        "3": [
+          "Merge right onto I 83 South."
         ]
       }
     }, 

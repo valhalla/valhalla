@@ -887,8 +887,14 @@
     "merge": {
       "phrases": {
         "0": "मिलें.", 
-        "1": "<STREET_NAMES> पर मिलें."
+        "1": "<RELATIVE_DIRECTION> मिलें.", 
+        "2": "<STREET_NAMES> पर मिलें.", 
+        "3": "<STREET_NAMES> पर <RELATIVE_DIRECTION> मिलें."
       }, 
+      "relative_directions": [
+        "बाएं", 
+        "दाएँ"
+      ], 
       "empty_street_name_labels": [
         "रास्ते", 
         "साइकिल रास्ते", 
@@ -899,15 +905,27 @@
           "मिलें."
         ], 
         "1": [
+          "बाएं मिलें."
+        ], 
+        "2": [
           "I 76 West/Pennsylvania Turnpike पर मिलें."
+        ], 
+        "3": [
+          "I 83 South पर दाएँ मिलें."
         ]
       }
     }, 
     "merge_verbal": {
       "phrases": {
         "0": "मिलें.", 
-        "1": "<STREET_NAMES> पर मिलें."
+        "1": "<RELATIVE_DIRECTION> मिलें.", 
+        "2": "<STREET_NAMES> पर मिलें.", 
+        "3": "<STREET_NAMES> पर <RELATIVE_DIRECTION> मिलें."
       }, 
+      "relative_directions": [
+        "बाएं", 
+        "दाएँ"
+      ], 
       "empty_street_name_labels": [
         "रास्ते", 
         "साइकिल रास्ते", 
@@ -918,7 +936,13 @@
           "मिलें."
         ], 
         "1": [
-          "Interstate 76 West, Pennsylvania Turnpike पर मिलें."
+          "बाएं मिलें."
+        ], 
+        "2": [
+          "I 76 West/Pennsylvania Turnpike पर मिलें."
+        ], 
+        "3": [
+          "I 83 South पर दाएँ मिलें."
         ]
       }
     }, 
