@@ -175,8 +175,12 @@ Isochrone::Initialize<decltype(Isochrone::mmedgelabels_)>(decltype(Isochrone::mm
 
 // Initializes the time of the expansion if there is one
 std::pair<uint64_t, uint32_t>
-Isochrone::SetTime(const valhalla::Location& location, const GraphId& node_id, GraphReader& reader) {
+Isochrone::SetTime(google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
+                   const GraphId& node_id,
+                   GraphReader& reader) {
+
   // No time for this expansion
+  const auto& location = locations.Get(0);
   has_date_time_ = false;
   if (!location.has_date_time() || !node_id.Is_Valid())
     return {};
@@ -194,6 +198,35 @@ Isochrone::SetTime(const valhalla::Location& location, const GraphId& node_id, G
   auto start_seconds_of_week = DateTime::day_of_week(location.date_time()) * kSecondsPerDay +
                                DateTime::seconds_from_midnight(location.date_time());
   has_date_time_ = true;
+
+  // loop over all locations setting the date time with timezone
+  for (auto& location : locations) {
+    // no time skip
+    if (!location.has_date_time())
+      continue;
+    // find a node
+    for (const auto& e : location.path_edges()) {
+      // get the edge and then the end node
+      GraphId edge_id(e.graph_id());
+      const auto* tile = reader.GetGraphTile(edge_id);
+      GraphId node_id = tile ? tile->directededge(edge_id)->endnode() : GraphId{};
+      if (reader.GetGraphTile(node_id, tile)) {
+        // if its current time  use that otherwise use the time provided
+        const auto* node = tile->node(node_id);
+        auto tz_index = DateTime::get_tz_db().from_index(node->timezone());
+        auto date_time =
+            location.date_time() == "current"
+                ? DateTime::iso_date_time(tz_index)
+                : DateTime::seconds_to_date(DateTime::seconds_since_epoch(location.date_time(),
+                                                                          tz_index),
+                                            tz_index);
+        location.set_date_time(date_time);
+        break;
+      }
+    }
+  }
+
+  // Hand back the start time and second of the week
   return {start_time, start_seconds_of_week};
 }
 
@@ -325,8 +358,7 @@ Isochrone::Compute(google::protobuf::RepeatedPtrField<valhalla::Location>& origi
   uint64_t start_time;
   uint32_t start_seconds_of_week;
   auto node_id = edgelabels_.empty() ? GraphId{} : edgelabels_[0].endnode();
-  std::tie(start_time, start_seconds_of_week) =
-      SetTime(origin_locations.Get(0), node_id, graphreader);
+  std::tie(start_time, start_seconds_of_week) = SetTime(origin_locations, node_id, graphreader);
 
   // Compute the isotile
   uint32_t n = 0;
@@ -504,7 +536,7 @@ Isochrone::ComputeReverse(google::protobuf::RepeatedPtrField<valhalla::Location>
   uint64_t start_time;
   uint32_t start_seconds_of_week;
   auto node_id = bdedgelabels_.empty() ? GraphId{} : bdedgelabels_[0].endnode();
-  std::tie(start_time, start_seconds_of_week) = SetTime(dest_locations.Get(0), node_id, graphreader);
+  std::tie(start_time, start_seconds_of_week) = SetTime(dest_locations, node_id, graphreader);
 
   // Compute the isotile
   uint32_t n = 0;
@@ -1017,7 +1049,6 @@ void Isochrone::SetOriginLocations(
                   });
 
     // Iterate through edges and add to adjacency list
-    const NodeInfo* nodeinfo = nullptr;
     for (const auto& edge : (origin.path_edges())) {
       // If origin is at a node - skip any inbound edge (dist = 1)
       if (has_other_edges && edge.end_node()) {
@@ -1042,7 +1073,6 @@ void Isochrone::SetOriginLocations(
       }
 
       // Get cost
-      nodeinfo = endtile->node(directededge->endnode());
       Cost cost = costing->EdgeCost(directededge, tile->GetSpeed(directededge)) *
                   (1.0f - edge.percent_along());
 
@@ -1064,12 +1094,6 @@ void Isochrone::SetOriginLocations(
       edgelabels_.push_back(std::move(edge_label));
       adjacencylist_->add(idx);
       edgestatus_.Set(edgeid, EdgeSet::kTemporary, idx, tile);
-    }
-
-    // Set the origin timezone
-    if (nodeinfo != nullptr && origin.has_date_time() && origin.date_time() == "current") {
-      origin.set_date_time(
-          DateTime::iso_date_time(DateTime::get_tz_db().from_index(nodeinfo->timezone())));
     }
   }
 }
@@ -1093,7 +1117,6 @@ void Isochrone::SetOriginLocationsMM(
                   });
 
     // Iterate through edges and add to adjacency list
-    const NodeInfo* nodeinfo = nullptr;
     for (const auto& edge : (origin.path_edges())) {
       // If origin is at a node - skip any inbound edge (dist = 1)
       if (has_other_edges && edge.end_node()) {
@@ -1118,8 +1141,7 @@ void Isochrone::SetOriginLocationsMM(
       }
 
       // Get cost
-      nodeinfo = endtile->node(directededge->endnode());
-      Cost cost = costing->EdgeCost(directededge, endtile->GetSpeed(directededge)) *
+      Cost cost = costing->EdgeCost(directededge, tile->GetSpeed(directededge)) *
                   (1.0f - edge.percent_along());
 
       // We need to penalize this location based on its score (distance in meters from input)
@@ -1133,7 +1155,6 @@ void Isochrone::SetOriginLocationsMM(
       // of the path.
       uint32_t idx = mmedgelabels_.size();
       uint32_t d = static_cast<uint32_t>(directededge->length() * (1.0f - edge.percent_along()));
-      edgestatus_.Set(edgeid, EdgeSet::kTemporary, idx, tile);
       MMEdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost, cost.cost, 0.0f, mode_, d, 0,
                              GraphId(), 0, 0, false);
 
@@ -1143,12 +1164,7 @@ void Isochrone::SetOriginLocationsMM(
       // Add EdgeLabel to the adjacency list
       mmedgelabels_.push_back(std::move(edge_label));
       adjacencylist_->add(idx);
-    }
-
-    // Set the origin timezone
-    if (nodeinfo != nullptr && origin.has_date_time() && origin.date_time() == "current") {
-      origin.set_date_time(
-          DateTime::iso_date_time(DateTime::get_tz_db().from_index(nodeinfo->timezone())));
+      edgestatus_.Set(edgeid, EdgeSet::kTemporary, idx, tile);
     }
   }
 }
@@ -1172,7 +1188,6 @@ void Isochrone::SetDestinationLocations(
                   });
 
     // Iterate through edges and add to adjacency list
-    Cost c;
     for (const auto& edge : (dest.path_edges())) {
       // If the destination is at a node, skip any outbound edges (so any
       // opposing inbound edges are not considered)
@@ -1211,7 +1226,7 @@ void Isochrone::SetDestinationLocations(
       uint32_t idx = bdedgelabels_.size();
       edgestatus_.Set(opp_edge_id, EdgeSet::kTemporary, idx, graphreader.GetGraphTile(opp_edge_id));
       bdedgelabels_.emplace_back(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, cost.cost,
-                                 0.0f, mode_, c, false);
+                                 0.0f, mode_, Cost{}, false);
       adjacencylist_->add(idx);
     }
   }

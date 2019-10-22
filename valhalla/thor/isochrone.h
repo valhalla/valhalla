@@ -147,9 +147,10 @@ protected:
    *                           timezone and the second being the ordinal second from the beginning of
    *                           the week
    */
-  std::pair<uint64_t, uint32_t> SetTime(const valhalla::Location& location,
-                                        const baldr::GraphId& node_id,
-                                        baldr::GraphReader& reader);
+  std::pair<uint64_t, uint32_t>
+  SetTime(google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
+          const baldr::GraphId& node_id,
+          baldr::GraphReader& reader);
 
   /**
    * Constructs the isotile - 2-D gridded data containing the time
