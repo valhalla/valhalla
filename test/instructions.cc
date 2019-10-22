@@ -1,14 +1,9 @@
-#include <algorithm>
-#include <cstdint>
 #include <fstream>
 #include <iostream>
 #include <sstream>
 #include <string>
-#include <vector>
 
-#include "baldr/turnlanes.h"
 #include "odin/directionsbuilder.h"
-#include "odin/enhancedtrippath.h"
 
 #include <valhalla/proto/api.pb.h>
 #include <valhalla/proto/directions.pb.h>
@@ -31,7 +26,10 @@ void test_instructions(const std::string filename,
                        int expected_legs_size,
                        int expected_maneuvers_size,
                        int maneuver_index,
-                       const std::string expected_text_instruction) {
+                       const std::string expected_text_instruction,
+                       const std::string expected_verbal_transition_alert_instruction = "",
+                       const std::string verbal_pre_transition_instruction = "",
+                       const std::string verbal_post_transition_instruction = "") {
   // Load pinpoint test
   std::string path_bytes = test::load_binary_file(filename);
   if (path_bytes.size() == 0) {
@@ -74,6 +72,21 @@ void test_instructions(const std::string filename,
     throw std::runtime_error("Invalid text instruction - found: " + found_text_instruction +
                              " | expected: " + expected_text_instruction);
   }
+
+  // Validate the verbal_transition_alert_instruction for the specified maneuver index, if requested
+  if (!expected_verbal_transition_alert_instruction.empty()) {
+    std::string found_verbal_transition_alert_instruction =
+        request.directions()
+            .routes(0)
+            .legs(0)
+            .maneuver(maneuver_index)
+            .verbal_transition_alert_instruction();
+    if (found_verbal_transition_alert_instruction != expected_verbal_transition_alert_instruction) {
+      throw std::runtime_error("Invalid verbaltransition_alert_instruction - found: " +
+                               found_verbal_transition_alert_instruction +
+                               " | expected: " + expected_verbal_transition_alert_instruction);
+    }
+  }
 }
 
 void validate_merge_instructions() {
@@ -86,12 +99,15 @@ void validate_merge_instructions() {
   // Test merge right
   test_instructions({VALHALLA_SOURCE_DIR "test/pinpoints/instructions/merge_right.pbf"},
                     expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
-                    "Merge right onto I 695 West/Baltimore Beltway.");
+                    "Merge right onto I 695 West/Baltimore Beltway.", "",
+                    "Merge right onto Interstate 6 95 West, Baltimore Beltway.",
+                    "Continue for 2 tenths of a mile.");
 
   // Test merge left
   test_instructions({VALHALLA_SOURCE_DIR "test/pinpoints/instructions/merge_left.pbf"},
                     expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
-                    "Merge left onto US 322 East.");
+                    "Merge left onto US 322 East.", "", "Merge left onto U.S. 3 22 East.",
+                    "Continue for 2 tenths of a mile.");
 }
 
 } // namespace
@@ -99,7 +115,7 @@ void validate_merge_instructions() {
 int main() {
   test::suite suite("instructions");
 
-  // Test turn lanes
+  // Validate the merge instructions
   suite.test(TEST_CASE(validate_merge_instructions));
 
   return suite.tear_down();
