@@ -846,7 +846,9 @@ json::MapPtr osrm_maneuver(const valhalla::DirectionsLeg::Maneuver& maneuver,
     bool fork = ((maneuver.type() == DirectionsLeg_Maneuver_Type_kStayStraight) ||
                  (maneuver.type() == DirectionsLeg_Maneuver_Type_kStayRight) ||
                  (maneuver.type() == DirectionsLeg_Maneuver_Type_kStayLeft));
-    if (maneuver.type() == DirectionsLeg_Maneuver_Type_kMerge) {
+    if ((maneuver.type() == DirectionsLeg_Maneuver_Type_kMerge) ||
+        (maneuver.type() == DirectionsLeg_Maneuver_Type_kMergeLeft) ||
+        (maneuver.type() == DirectionsLeg_Maneuver_Type_kMergeRight)) {
       maneuver_type = "merge";
     } else if (fork) {
       maneuver_type = "fork";
