@@ -860,9 +860,9 @@ void test_en_US_ramp() {
   const auto& phrase_13 = dictionary.ramp_subset.phrases.at("13");
   validate(phrase_13, "Take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>.");
 
-  // "14": "Take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>."
+  // "14": "Take the <NAME_SIGN> ramp."
   const auto& phrase_14 = dictionary.ramp_subset.phrases.at("14");
-  validate(phrase_14, "Take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>.");
+  validate(phrase_14, "Take the <NAME_SIGN> ramp.");
 
   // relative_directions
   const auto& relative_directions = dictionary.ramp_subset.relative_directions;
@@ -929,9 +929,9 @@ void test_en_US_ramp_verbal() {
   const auto& phrase_13 = dictionary.ramp_verbal_subset.phrases.at("13");
   validate(phrase_13, "Take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>.");
 
-  // "14": "Take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>."
+  // "14": "Take the <NAME_SIGN> ramp."
   const auto& phrase_14 = dictionary.ramp_verbal_subset.phrases.at("14");
-  validate(phrase_14, "Take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>.");
+  validate(phrase_14, "Take the <NAME_SIGN> ramp.");
 
   // relative_directions
   const auto& relative_directions = dictionary.ramp_verbal_subset.relative_directions;
