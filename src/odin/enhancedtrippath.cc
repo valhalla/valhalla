@@ -566,6 +566,7 @@ EnhancedTripLeg_Edge::ActivateTurnLanes(uint16_t turn_lane_direction,
       case DirectionsLeg_Maneuver_Type_kExitLeft:
       case DirectionsLeg_Maneuver_Type_kRampLeft:
       case DirectionsLeg_Maneuver_Type_kDestinationLeft:
+      case DirectionsLeg_Maneuver_Type_kMergeLeft:
         return ActivateTurnLanesFromLeft(turn_lane_direction, 1);
       case DirectionsLeg_Maneuver_Type_kSlightRight:
       case DirectionsLeg_Maneuver_Type_kExitRight:
@@ -574,9 +575,14 @@ EnhancedTripLeg_Edge::ActivateTurnLanes(uint16_t turn_lane_direction,
       case DirectionsLeg_Maneuver_Type_kSharpRight:
       case DirectionsLeg_Maneuver_Type_kUturnRight:
       case DirectionsLeg_Maneuver_Type_kDestinationRight:
+      case DirectionsLeg_Maneuver_Type_kMergeRight:
         return ActivateTurnLanesFromRight(turn_lane_direction, 1);
-      case DirectionsLeg_Maneuver_Type_kMerge: // TODO update when left/right assigned
-        return ActivateTurnLanesFromLeft(turn_lane_direction);
+      case DirectionsLeg_Maneuver_Type_kMerge:
+        if (drive_on_right()) {
+          return ActivateTurnLanesFromLeft(turn_lane_direction, 1);
+        } else {
+          return ActivateTurnLanesFromRight(turn_lane_direction, 1);
+        }
       case DirectionsLeg_Maneuver_Type_kRoundaboutEnter:
       case DirectionsLeg_Maneuver_Type_kRoundaboutExit:
       case DirectionsLeg_Maneuver_Type_kFerryEnter:

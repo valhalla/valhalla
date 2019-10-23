@@ -983,8 +983,14 @@
     "merge": {
       "phrases": {
         "0": "Rejoignez.",
-        "1": "Rejoignez <STREET_NAMES>."
+        "1": "Rejoignez à <RELATIVE_DIRECTION>.",
+        "2": "Rejoignez <STREET_NAMES>.",
+        "3": "Rejoignez à <RELATIVE_DIRECTION> <STREET_NAMES>."
       },
+      "relative_directions": [
+        "gauche",
+        "droite"
+      ],
       "empty_street_name_labels": [
         "l'allée",
         "la piste cyclable",
@@ -995,15 +1001,27 @@
           "Rejoignez."
         ],
         "1": [
+          "Rejoignez à gauche."
+        ],
+        "2": [
           "Rejoignez I 76 West/Pennsylvania Turnpike."
+        ],
+        "3": [
+          "Rejoignez à droite I 83 South."
         ]
       }
     },
     "merge_verbal": {
       "phrases": {
         "0": "Rejoignez.",
-        "1": "Rejoignez <STREET_NAMES>."
+        "1": "Rejoignez à <RELATIVE_DIRECTION>.",
+        "2": "Rejoignez <STREET_NAMES>.",
+        "3": "Rejoignez à <RELATIVE_DIRECTION> <STREET_NAMES>."
       },
+      "relative_directions": [
+        "gauche",
+        "droite"
+      ],
       "empty_street_name_labels": [
         "l'allée",
         "la piste cyclable",
@@ -1014,7 +1032,13 @@
           "Rejoignez."
         ],
         "1": [
-          "Rejoignez Interstate 76 West, Pennsylvania Turnpike."
+          "Rejoignez à gauche."
+        ],
+        "2": [
+          "Rejoignez I 76 West/Pennsylvania Turnpike."
+        ],
+        "3": [
+          "Rejoignez à droite I 83 South."
         ]
       }
     },

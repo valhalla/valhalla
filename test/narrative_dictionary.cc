@@ -144,12 +144,17 @@ const std::map<std::string, std::string> kExpectedKeepToStayOnVerbalPhrases =
      {"3", "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> to stay on <STREET_NAMES> toward "
            "<TOWARD_SIGN>."}};
 
-const std::map<std::string, std::string> kExpectedMergePhrases = {{"0", "Merge."},
-                                                                  {"1",
-                                                                   "Merge onto <STREET_NAMES>."}};
+const std::map<std::string, std::string> kExpectedMergePhrases =
+    {{"0", "Merge."},
+     {"1", "Merge <RELATIVE_DIRECTION>."},
+     {"2", "Merge onto <STREET_NAMES>."},
+     {"3", "Merge <RELATIVE_DIRECTION> onto <STREET_NAMES>."}};
 
 const std::map<std::string, std::string> kExpectedMergeVerbalPhrases =
-    {{"0", "Merge."}, {"1", "Merge onto <STREET_NAMES>."}};
+    {{"0", "Merge."},
+     {"1", "Merge <RELATIVE_DIRECTION>."},
+     {"2", "Merge onto <STREET_NAMES>."},
+     {"3", "Merge <RELATIVE_DIRECTION> onto <STREET_NAMES>."}};
 
 const std::map<std::string, std::string> kExpectedEnterRoundaboutPhrases =
     {{"0", "Enter the roundabout."},

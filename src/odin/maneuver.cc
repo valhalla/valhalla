@@ -73,6 +73,8 @@ const std::string& DirectionsLeg_Maneuver_Type_Name(int v) {
       {34, "kTransitConnectionTransfer"},
       {35, "kTransitConnectionDestination"},
       {36, "kPostTransitConnectionDestination"},
+      {37, "kMergeRight"},
+      {38, "kMergeLeft"},
   };
   auto f = values.find(v);
   if (f == values.cend())
@@ -129,6 +131,12 @@ bool Maneuver::IsDestinationType() const {
   return ((type_ == DirectionsLeg_Maneuver_Type_kDestination) ||
           (type_ == DirectionsLeg_Maneuver_Type_kDestinationLeft) ||
           (type_ == DirectionsLeg_Maneuver_Type_kDestinationRight));
+}
+
+bool Maneuver::IsMergeType() const {
+  return ((type_ == DirectionsLeg_Maneuver_Type_kMerge) ||
+          (type_ == DirectionsLeg_Maneuver_Type_kMergeLeft) ||
+          (type_ == DirectionsLeg_Maneuver_Type_kMergeRight));
 }
 
 const StreetNames& Maneuver::street_names() const {
@@ -622,6 +630,14 @@ bool Maneuver::HasRoundaboutExitStreetNames() const {
 
 void Maneuver::ClearRoundaboutExitStreetNames() {
   roundabout_exit_street_names_->clear();
+}
+
+Maneuver::RelativeDirection Maneuver::merge_to_relative_direction() const {
+  return merge_to_relative_direction_;
+}
+
+void Maneuver::set_merge_to_relative_direction(RelativeDirection merge_to_relative_direction) {
+  merge_to_relative_direction_ = merge_to_relative_direction;
 }
 
 TripLeg_TravelMode Maneuver::travel_mode() const {

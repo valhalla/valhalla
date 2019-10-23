@@ -983,8 +983,14 @@
     "merge": {
       "phrases": {
         "0": "Anslut.",
-        "1": "Anslut till <STREET_NAMES>."
+        "1": "Anslut <RELATIVE_DIRECTION>.",
+        "2": "Anslut till <STREET_NAMES>.",
+        "3": "Anslut <RELATIVE_DIRECTION> till <STREET_NAMES>."
       },
+      "relative_directions": [
+        "vänster",
+        "höger"
+      ],
       "empty_street_name_labels": [
         "gångbanan",
         "cykelbanan",
@@ -995,15 +1001,27 @@
           "Anslut."
         ],
         "1": [
+          "Anslut vänster."
+        ],
+        "2": [
           "Anslut till I 76 West/Pennsylvania Turnpike."
+        ],
+        "3": [
+          "Anslut höger till I 83 South."
         ]
       }
     },
     "merge_verbal": {
       "phrases": {
         "0": "Anslut.",
-        "1": "Anslut till <STREET_NAMES>."
+        "1": "Anslut <RELATIVE_DIRECTION>.",
+        "2": "Anslut till <STREET_NAMES>.",
+        "3": "Anslut <RELATIVE_DIRECTION> till <STREET_NAMES>."
       },
+      "relative_directions": [
+        "vänster",
+        "höger"
+      ],
       "empty_street_name_labels": [
         "gångbanan",
         "cykelbanan",
@@ -1014,7 +1032,13 @@
           "Anslut."
         ],
         "1": [
-          "Anslut till Interstate 76 West, Pennsylvania Turnpike."
+          "Anslut vänster."
+        ],
+        "2": [
+          "Anslut till I 76 West/Pennsylvania Turnpike."
+        ],
+        "3": [
+          "Anslut höger till I 83 South."
         ]
       }
     },

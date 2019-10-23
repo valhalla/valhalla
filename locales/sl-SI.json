@@ -983,8 +983,14 @@
     "merge": {
       "phrases": {
         "0": "Zapeljite na sosednjo pot.",
-        "1": "Zapeljite na <STREET_NAMES>."
+        "1": "Zapeljite <RELATIVE_DIRECTION> na sosednjo pot.",
+        "2": "Zapeljite na <STREET_NAMES>.",
+        "3": "Zapeljite <RELATIVE_DIRECTION> na <STREET_NAMES>."
       },
+      "relative_directions": [
+        "levo",
+        "desno"
+      ],
       "empty_street_name_labels": [
         "pešpot",
         "kolesarsko stezo",
@@ -995,15 +1001,27 @@
           "Zapeljite na sosednjo pot."
         ],
         "1": [
+          "Zapeljite levo na sosednjo pot."
+        ],
+        "2": [
           "Zapeljite na I 76 West/Pennsylvania Turnpike."
+        ],
+        "3": [
+          "Zapeljite desno na I 83 South."
         ]
       }
     },
     "merge_verbal": {
       "phrases": {
         "0": "Zapeljite na sosednjo pot.",
-        "1": "Zapeljite na <STREET_NAMES>."
+        "1": "Zapeljite <RELATIVE_DIRECTION> na sosednjo pot.",
+        "2": "Zapeljite na <STREET_NAMES>.",
+        "3": "Zapeljite <RELATIVE_DIRECTION> na <STREET_NAMES>."
       },
+      "relative_directions": [
+        "levo",
+        "desno"
+      ],
       "empty_street_name_labels": [
         "pešpot",
         "kolesarsko stezo",
@@ -1014,7 +1032,13 @@
           "Zapeljite na sosednjo pot."
         ],
         "1": [
-          "Zapeljite na Interstate 76 West, Pennsylvania Turnpike."
+          "Zapeljite levo na sosednjo pot."
+        ],
+        "2": [
+          "Zapeljite na I 76 West/Pennsylvania Turnpike."
+        ],
+        "3": [
+          "Zapeljite desno na I 83 South."
         ]
       }
     },

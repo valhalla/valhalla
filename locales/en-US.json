@@ -983,8 +983,14 @@
     "merge": {
       "phrases": {
         "0": "Merge.",
-        "1": "Merge onto <STREET_NAMES>."
+        "1": "Merge <RELATIVE_DIRECTION>.",
+        "2": "Merge onto <STREET_NAMES>.",
+        "3": "Merge <RELATIVE_DIRECTION> onto <STREET_NAMES>."
       },
+      "relative_directions": [
+        "left",
+        "right"
+      ],
       "empty_street_name_labels": [
         "the walkway",
         "the cycleway",
@@ -995,15 +1001,27 @@
           "Merge."
         ],
         "1": [
+          "Merge left."
+        ],
+        "2": [
           "Merge onto I 76 West/Pennsylvania Turnpike."
+        ],
+        "3": [
+          "Merge right onto I 83 South."
         ]
       }
     },
     "merge_verbal": {
       "phrases": {
         "0": "Merge.",
-        "1": "Merge onto <STREET_NAMES>."
+        "1": "Merge <RELATIVE_DIRECTION>.",
+        "2": "Merge onto <STREET_NAMES>.",
+        "3": "Merge <RELATIVE_DIRECTION> onto <STREET_NAMES>."
       },
+      "relative_directions": [
+        "left",
+        "right"
+      ],
       "empty_street_name_labels": [
         "the walkway",
         "the cycleway",
@@ -1014,7 +1032,13 @@
           "Merge."
         ],
         "1": [
-          "Merge onto Interstate 76 West, Pennsylvania Turnpike."
+          "Merge left."
+        ],
+        "2": [
+          "Merge onto I 76 West/Pennsylvania Turnpike."
+        ],
+        "3": [
+          "Merge right onto I 83 South."
         ]
       }
     },

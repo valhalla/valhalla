@@ -227,7 +227,9 @@ void NarrativeBuilder::Build(const Options& options,
         }
         break;
       }
-      case DirectionsLeg_Maneuver_Type_kMerge: {
+      case DirectionsLeg_Maneuver_Type_kMerge:
+      case DirectionsLeg_Maneuver_Type_kMergeRight:
+      case DirectionsLeg_Maneuver_Type_kMergeLeft: {
         // Set instruction
         maneuver.set_instruction(FormMergeInstruction(maneuver));
 
@@ -2174,27 +2176,39 @@ std::string NarrativeBuilder::FormVerbalKeepToStayOnInstruction(uint8_t phrase_i
 }
 
 std::string NarrativeBuilder::FormMergeInstruction(Maneuver& maneuver) {
-  // "0": "Merge.",
-  // "1": "Merge onto <STREET_NAMES>."
+  // "0", "Merge.",
+  // "1", "Merge <RELATIVE_DIRECTION>.",
+  // "2", "Merge onto <STREET_NAMES>.",
+  // "3", "Merge <RELATIVE_DIRECTION> onto <STREET_NAMES>."
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
+
+  // Determine which phrase to use
+  uint8_t phrase_id = 0;
+
+  // Check for merge relative direction
+  std::string relative_direction;
+  if ((maneuver.type() == DirectionsLeg_Maneuver_Type_kMergeLeft) ||
+      (maneuver.type() == DirectionsLeg_Maneuver_Type_kMergeRight)) {
+    phrase_id += 1;
+    relative_direction =
+        FormRelativeTwoDirection(maneuver.type(), dictionary_.merge_subset.relative_directions);
+  }
 
   // Assign the street names
   std::string street_names =
       FormStreetNames(maneuver, maneuver.street_names(),
                       &dictionary_.merge_subset.empty_street_name_labels, true);
-
-  // Determine which phrase to use
-  uint8_t phrase_id = 0;
   if (!street_names.empty()) {
-    phrase_id = 1;
+    phrase_id += 2;
   }
 
   // Set instruction to the determined tagged phrase
   instruction = dictionary_.merge_subset.phrases.at(std::to_string(phrase_id));
 
   // Replace phrase tags with values
+  boost::replace_all(instruction, kRelativeDirectionTag, relative_direction);
   boost::replace_all(instruction, kStreetNamesTag, street_names);
 
   // If enabled, form articulated prepositions
@@ -2208,8 +2222,10 @@ std::string NarrativeBuilder::FormMergeInstruction(Maneuver& maneuver) {
 std::string NarrativeBuilder::FormVerbalAlertMergeInstruction(Maneuver& maneuver,
                                                               uint32_t element_max_count,
                                                               const std::string& delim) {
-  // "0": "Merge.",
-  // "1": "Merge onto <STREET_NAMES>."
+  // "0", "Merge.",
+  // "1", "Merge <RELATIVE_DIRECTION>.",
+  // "2", "Merge onto <STREET_NAMES>.",
+  // "3", "Merge <RELATIVE_DIRECTION> onto <STREET_NAMES>."
 
   return FormVerbalMergeInstruction(maneuver, element_max_count, delim);
 }
@@ -2217,28 +2233,41 @@ std::string NarrativeBuilder::FormVerbalAlertMergeInstruction(Maneuver& maneuver
 std::string NarrativeBuilder::FormVerbalMergeInstruction(Maneuver& maneuver,
                                                          uint32_t element_max_count,
                                                          const std::string& delim) {
-  // "0": "Merge.",
-  // "1": "Merge onto <STREET_NAMES>."
+  // "0", "Merge.",
+  // "1", "Merge <RELATIVE_DIRECTION>.",
+  // "2", "Merge onto <STREET_NAMES>.",
+  // "3", "Merge <RELATIVE_DIRECTION> onto <STREET_NAMES>."
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
+
+  // Determine which phrase to use
+  uint8_t phrase_id = 0;
+
+  // Check for merge relative direction
+  std::string relative_direction;
+  if ((maneuver.type() == DirectionsLeg_Maneuver_Type_kMergeLeft) ||
+      (maneuver.type() == DirectionsLeg_Maneuver_Type_kMergeRight)) {
+    phrase_id += 1;
+    relative_direction =
+        FormRelativeTwoDirection(maneuver.type(),
+                                 dictionary_.merge_verbal_subset.relative_directions);
+  }
 
   // Assign the street names
   std::string street_names =
       FormStreetNames(maneuver, maneuver.street_names(),
                       &dictionary_.merge_verbal_subset.empty_street_name_labels, true,
                       element_max_count, delim, maneuver.verbal_formatter());
-
-  // Determine which phrase to use
-  uint8_t phrase_id = 0;
   if (!street_names.empty()) {
-    phrase_id = 1;
+    phrase_id += 2;
   }
 
   // Set instruction to the determined tagged phrase
   instruction = dictionary_.merge_verbal_subset.phrases.at(std::to_string(phrase_id));
 
   // Replace phrase tags with values
+  boost::replace_all(instruction, kRelativeDirectionTag, relative_direction);
   boost::replace_all(instruction, kStreetNamesTag, street_names);
 
   // If enabled, form articulated prepositions
@@ -3156,9 +3185,9 @@ std::string NarrativeBuilder::FormVerbalTransitRemainOnInstruction(Maneuver& man
 }
 
 std::string NarrativeBuilder::FormTransitTransferInstruction(Maneuver& maneuver) {
-  // "0": "Transfer to take the <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
-  // "1": "Transfer to take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT>
-  // <TRANSIT_STOP_COUNT_LABEL>)"
+  // "0": "Transfer to take the <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT>
+  // <TRANSIT_STOP_COUNT_LABEL>)", "1": "Transfer to take the <TRANSIT_NAME> toward
+  // <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
@@ -3582,6 +3611,7 @@ NarrativeBuilder::FormRelativeTwoDirection(DirectionsLeg_Maneuver_Type type,
     case DirectionsLeg_Maneuver_Type_kUturnLeft:
     case DirectionsLeg_Maneuver_Type_kRampLeft:
     case DirectionsLeg_Maneuver_Type_kExitLeft:
+    case DirectionsLeg_Maneuver_Type_kMergeLeft:
     case DirectionsLeg_Maneuver_Type_kDestinationLeft: {
       return relative_directions.at(0); // "left"
     }
@@ -3591,6 +3621,7 @@ NarrativeBuilder::FormRelativeTwoDirection(DirectionsLeg_Maneuver_Type type,
     case DirectionsLeg_Maneuver_Type_kUturnRight:
     case DirectionsLeg_Maneuver_Type_kRampRight:
     case DirectionsLeg_Maneuver_Type_kExitRight:
+    case DirectionsLeg_Maneuver_Type_kMergeRight:
     case DirectionsLeg_Maneuver_Type_kDestinationRight: {
       return relative_directions.at(1); // "right"
     }
@@ -3754,10 +3785,10 @@ bool NarrativeBuilder::IsVerbalMultiCuePossible(Maneuver* maneuver, Maneuver& ne
   if (maneuver->HasVerbalPreTransitionInstruction() &&
       (next_maneuver.HasVerbalTransitionAlertInstruction() ||
        next_maneuver.HasVerbalPreTransitionInstruction()) &&
-      maneuver->basic_time() < kVerbalMultiCueTimeThreshold &&
-      (next_maneuver.type() != DirectionsLeg_Maneuver_Type_kMerge) && !maneuver->roundabout() &&
-      !next_maneuver.roundabout() && !maneuver->IsTransit() && !next_maneuver.IsTransit() &&
-      !maneuver->transit_connection() && !next_maneuver.transit_connection()) {
+      maneuver->basic_time() < kVerbalMultiCueTimeThreshold && !next_maneuver.IsMergeType() &&
+      !maneuver->roundabout() && !next_maneuver.roundabout() && !maneuver->IsTransit() &&
+      !next_maneuver.IsTransit() && !maneuver->transit_connection() &&
+      !next_maneuver.transit_connection()) {
     return true;
   }
   return false;

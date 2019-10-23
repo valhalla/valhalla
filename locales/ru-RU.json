@@ -983,8 +983,14 @@
     "merge": {
       "phrases": {
         "0": "Выезжайте.",
-        "1": "Выезжайте на <STREET_NAMES>."
+        "1": "Выезжайте <RELATIVE_DIRECTION>.",
+        "2": "Выезжайте на <STREET_NAMES>.",
+        "3": "Выезжайте <RELATIVE_DIRECTION> на <STREET_NAMES>."
       },
+      "relative_directions": [
+        "слева",
+        "справа"
+      ],
       "empty_street_name_labels": [
         "аллее",
         "велосипедной дорожке",
@@ -995,15 +1001,27 @@
           "Выезжайте."
         ],
         "1": [
+          "Выезжайте слева."
+        ],
+        "2": [
           "Выезжайте на I 76 West/Pennsylvania Turnpike."
+        ],
+        "3": [
+          "Выезжайте справа на I 83 South."
         ]
       }
     },
     "merge_verbal": {
       "phrases": {
         "0": "Выезжайте.",
-        "1": "Выезжайте на <STREET_NAMES>."
+        "1": "Выезжайте <RELATIVE_DIRECTION>.",
+        "2": "Выезжайте на <STREET_NAMES>.",
+        "3": "Выезжайте <RELATIVE_DIRECTION> на <STREET_NAMES>."
       },
+      "relative_directions": [
+        "слева",
+        "справа"
+      ],
       "empty_street_name_labels": [
         "аллее",
         "велосипедной дорожке",
@@ -1014,7 +1032,13 @@
           "Выезжайте."
         ],
         "1": [
+          "Выезжайте слева."
+        ],
+        "2": [
           "Выезжайте на I 76 West/Pennsylvania Turnpike."
+        ],
+        "3": [
+          "Выезжайте справа на I 83 South."
         ]
       }
     },

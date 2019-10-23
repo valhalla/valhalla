@@ -43,6 +43,7 @@ public:
   const DirectionsLeg_Maneuver_Type& type() const;
   void set_type(const DirectionsLeg_Maneuver_Type& type);
   bool IsDestinationType() const;
+  bool IsMergeType() const;
 
   const StreetNames& street_names() const;
   void set_street_names(const std::vector<std::pair<std::string, bool>>& names);
@@ -207,6 +208,9 @@ public:
   bool HasRoundaboutExitStreetNames() const;
   void ClearRoundaboutExitStreetNames();
 
+  RelativeDirection merge_to_relative_direction() const;
+  void set_merge_to_relative_direction(RelativeDirection merge_to_relative_direction);
+
   TripLeg_TravelMode travel_mode() const;
   void set_travel_mode(TripLeg_TravelMode travel_mode);
 
@@ -325,6 +329,7 @@ protected:
   bool verbal_multi_cue_;
   bool to_stay_on_;
   std::unique_ptr<StreetNames> roundabout_exit_street_names_;
+  RelativeDirection merge_to_relative_direction_;
 
   ////////////////////////////////////////////////////////////////////////////
   // Transit support

@@ -983,8 +983,14 @@
     "merge": {
       "phrases": {
         "0": "Připojte se.",
-        "1": "Připojte se na <STREET_NAMES>."
+        "1": "Připojte se <RELATIVE_DIRECTION>.",
+        "2": "Připojte se na <STREET_NAMES>.",
+        "3": "Připojte se <RELATIVE_DIRECTION> na <STREET_NAMES>."
       },
+      "relative_directions": [
+        "vlevo",
+        "vpravo"
+      ],
       "empty_street_name_labels": [
         "chodník",
         "cyklostezku",
@@ -995,15 +1001,27 @@
           "Připojte se."
         ],
         "1": [
+          "Připojte se vlevo."
+        ],
+        "2": [
           "Připojte se na I 76 West/Pennsylvania Turnpike."
+        ],
+        "3": [
+          "Připojte se vpravo na I 83 South."
         ]
       }
     },
     "merge_verbal": {
       "phrases": {
         "0": "Připojte se.",
-        "1": "Připojte se na <STREET_NAMES>."
+        "1": "Připojte se <RELATIVE_DIRECTION>.",
+        "2": "Připojte se na <STREET_NAMES>.",
+        "3": "Připojte se <RELATIVE_DIRECTION> na <STREET_NAMES>."
       },
+      "relative_directions": [
+        "vlevo",
+        "vpravo"
+      ],
       "empty_street_name_labels": [
         "chodník",
         "cyklostezku",
@@ -1014,7 +1032,13 @@
           "Připojte se."
         ],
         "1": [
-          "Připojte se na Interstate 76 West, Pennsylvania Turnpike."
+          "Připojte se vlevo."
+        ],
+        "2": [
+          "Připojte se na I 76 West/Pennsylvania Turnpike."
+        ],
+        "3": [
+          "Připojte se vpravo na I 83 South."
         ]
       }
     },

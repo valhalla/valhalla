@@ -5,6 +5,7 @@
 * **Enhancement**
    * ADDED: Establish pinpoint test pattern [#1969](https://github.com/valhalla/valhalla/pull/1969)
    * ADDED: Suppress relative direction in ramp/exit instructions if it matches driving side of street [#1990](https://github.com/valhalla/valhalla/pull/1990)
+   * ADDED: Added relative direction to the merge maneuver [#1989](https://github.com/valhalla/valhalla/pull/1989)
 
 ## Release Date: 2019-09-06 Valhalla 3.0.8
 * **Bug Fix**
@@ -18,7 +19,7 @@
    * FIXED: Added logic to fix missing highway cardinal directions in the US [#1917](https://github.com/valhalla/valhalla/pull/1917)
    * FIXED: Handle forward traversable significant road class intersecting edges [#1928](https://github.com/valhalla/valhalla/pull/1928)
    * FIXED: Fixed bug with shape trimming that impacted Uturns at Via locations. [#1935](https://github.com/valhalla/valhalla/pull/1935)
-   * FIXED: Dive bomb updates.  Updated default speeds for urban areas based on roadclass for the enhancer.  Also, updated default speeds based on roadclass in lua.  Fixed an issue where we were subtracting 1 from uint32_t when 0 for stop impact.  Updated reclassify link logic to allow residential roads to be added to the tree, but we only downgrade the links to tertiary.  Updated TransitionCost functions to add 1.5 to the turncost when transitioning from a ramp to a non ramp and vice versa.  Also, added 0.5f to the turncost if the edge is a roundabout. [#1931](https://github.com/valhalla/valhalla/pull/1931) 
+   * FIXED: Dive bomb updates.  Updated default speeds for urban areas based on roadclass for the enhancer.  Also, updated default speeds based on roadclass in lua.  Fixed an issue where we were subtracting 1 from uint32_t when 0 for stop impact.  Updated reclassify link logic to allow residential roads to be added to the tree, but we only downgrade the links to tertiary.  Updated TransitionCost functions to add 1.5 to the turncost when transitioning from a ramp to a non ramp and vice versa.  Also, added 0.5f to the turncost if the edge is a roundabout. [#1931](https://github.com/valhalla/valhalla/pull/1931)
 
 * **Enhancement**
    * ADDED: Caching url fetched tiles to disk [#1887](https://github.com/valhalla/valhalla/pull/1887)

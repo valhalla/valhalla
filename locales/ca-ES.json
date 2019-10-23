@@ -983,8 +983,14 @@
     "merge": {
       "phrases": {
         "0": "Enllaça.",
-        "1": "Enllaça amb <STREET_NAMES>."
+        "1": "Enllaça a <RELATIVE_DIRECTION>.",
+        "2": "Enllaça amb <STREET_NAMES>.",
+        "3": "Enllaça a <RELATIVE_DIRECTION> amb <STREET_NAMES>."
       },
+      "relative_directions": [
+        "l'esquerra",
+        "la dreta"
+      ],
       "empty_street_name_labels": [
         "la vorera",
         "el carril bici",
@@ -995,15 +1001,27 @@
           "Enllaça."
         ],
         "1": [
+          "Enllaça a l'esquerra."
+        ],
+        "2": [
           "Enllaça amb I 76 West/Pennsylvania Turnpike."
+        ],
+        "3": [
+          "Enllaça a la dreta amb I 83 South."
         ]
       }
     },
     "merge_verbal": {
       "phrases": {
         "0": "Enllaça.",
-        "1": "Enllaça amb <STREET_NAMES>."
+        "1": "Enllaça a <RELATIVE_DIRECTION>.",
+        "2": "Enllaça amb <STREET_NAMES>.",
+        "3": "Enllaça a <RELATIVE_DIRECTION> amb <STREET_NAMES>."
       },
+      "relative_directions": [
+        "l'esquerra",
+        "la dreta"
+      ],
       "empty_street_name_labels": [
         "la vorera",
         "el carril bici",
@@ -1014,7 +1032,13 @@
           "Enllaça."
         ],
         "1": [
-          "Enllaça amb Interstate 76 West, Pennsylvania Turnpike."
+          "Enllaça a l'esquerra."
+        ],
+        "2": [
+          "Enllaça amb I 76 West/Pennsylvania Turnpike."
+        ],
+        "3": [
+          "Enllaça a la dreta amb I 83 South."
         ]
       }
     },

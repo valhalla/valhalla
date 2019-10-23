@@ -983,8 +983,14 @@
     "merge": {
       "phrases": {
         "0": "Avast ye, merge.",
-        "1": "Merge onto <STREET_NAMES> me matey."
+        "1": "Avast ye, merge to th' <RELATIVE_DIRECTION>.",
+        "2": "Merge onto <STREET_NAMES> me matey.",
+        "3": "Merge to th' <RELATIVE_DIRECTION> onto <STREET_NAMES> me matey."
       },
+      "relative_directions": [
+        "port",
+        "starboard"
+      ],
       "empty_street_name_labels": [
         "solid ground",
         "th' bike pirate way",
@@ -995,15 +1001,27 @@
           "Avast ye, merge."
         ],
         "1": [
+          "Avast ye, merge to th' port."
+        ],
+        "2": [
           "Merge onto I 76 West/Pennsylvania Turnpike me matey."
+        ],
+        "3": [
+          "Merge to th' starboard onto I 83 South me matey."
         ]
       }
     },
     "merge_verbal": {
       "phrases": {
         "0": "Avast ye, merge.",
-        "1": "Merge onto <STREET_NAMES> me matey."
+        "1": "Avast ye, merge to th' <RELATIVE_DIRECTION>.",
+        "2": "Merge onto <STREET_NAMES> me matey.",
+        "3": "Merge to th' <RELATIVE_DIRECTION> onto <STREET_NAMES> me matey."
       },
+      "relative_directions": [
+        "port",
+        "starboard"
+      ],
       "empty_street_name_labels": [
         "solid ground",
         "th' bike pirate way",
@@ -1014,7 +1032,13 @@
           "Avast ye, merge."
         ],
         "1": [
-          "Merge onto Interstate 76 West, Pennsylvania Turnpike me matey."
+          "Avast ye, merge to th' port."
+        ],
+        "2": [
+          "Merge onto I 76 West/Pennsylvania Turnpike me matey."
+        ],
+        "3": [
+          "Merge to th' starboard onto I 83 South me matey."
         ]
       }
     },
