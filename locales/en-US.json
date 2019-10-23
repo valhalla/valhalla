@@ -891,14 +891,14 @@
         "2": "Merge onto <STREET_NAMES>.",
         "3": "Merge <RELATIVE_DIRECTION> onto <STREET_NAMES>."
       }, 
+      "relative_directions": [
+        "left",
+        "right"
+      ], 
       "empty_street_name_labels": [
         "the walkway", 
         "the cycleway", 
         "the mountain bike trail"
-      ], 
-      "relative_directions": [
-        "left",
-        "right"
       ], 
       "example_phrases": {
         "0": [
@@ -922,14 +922,14 @@
         "2": "Merge onto <STREET_NAMES>.",
         "3": "Merge <RELATIVE_DIRECTION> onto <STREET_NAMES>."
       }, 
+      "relative_directions": [
+        "left",
+        "right"
+      ], 
       "empty_street_name_labels": [
         "the walkway", 
         "the cycleway", 
         "the mountain bike trail"
-      ], 
-      "relative_directions": [
-        "left",
-        "right"
       ], 
       "example_phrases": {
         "0": [
