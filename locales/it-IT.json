@@ -888,7 +888,7 @@
       "phrases": {
         "0": "Entra.",
         "1": "Entra a <RELATIVE_DIRECTION>.",
-        "2": "Entra in <STREET_NAMES>.", 
+        "2": "Entra in <STREET_NAMES>.",
         "3": "Entra a <RELATIVE_DIRECTION> in <STREET_NAMES>."
       },
       "relative_directions": [
@@ -909,7 +909,7 @@
         ],
         "2": [
           "Entra in I 76 West/Pennsylvania Turnpike."
-        ], 
+        ],
         "3": [
           "Entra a destra in I 83 South."
         ]
@@ -919,7 +919,7 @@
       "phrases": {
         "0": "Entra.",
         "1": "Entra a <RELATIVE_DIRECTION>.",
-        "2": "Entra in <STREET_NAMES>.", 
+        "2": "Entra in <STREET_NAMES>.",
         "3": "Entra a <RELATIVE_DIRECTION> in <STREET_NAMES>."
       },
       "relative_directions": [
@@ -940,7 +940,7 @@
         ],
         "2": [
           "Entra in I 76 West/Pennsylvania Turnpike."
-        ], 
+        ],
         "3": [
           "Entra a destra in I 83 South."
         ]
