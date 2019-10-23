@@ -343,6 +343,8 @@ kTransitConnectionStart = 33;
 kTransitConnectionTransfer = 34;
 kTransitConnectionDestination = 35;
 kPostTransitConnectionDestination = 36;
+kMergeRight = 37;
+kMergeLeft = 38;
 ```
 
 The maneuver `sign` may contain four lists of interchange sign elements as follows:
