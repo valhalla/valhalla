@@ -3,7 +3,9 @@
 #include <sstream>
 #include <string>
 
+#include "baldr/rapidjson_utils.h"
 #include "odin/directionsbuilder.h"
+#include "tyr/serializers.h"
 
 #include <valhalla/proto/api.pb.h>
 #include <valhalla/proto/directions.pb.h>
@@ -89,6 +91,60 @@ void test_instructions(const std::string filename,
   }
 }
 
+void test_osrm_maneuver(const std::string filename,
+                        int routes_index,
+                        int legs_index,
+                        int steps_index,
+                        const std::string expected_maneuver_type,
+                        const std::string expected_maneuver_modifier) {
+  // Load pinpoint test
+  std::string path_bytes = test::load_binary_file(filename);
+  if (path_bytes.size() == 0) {
+    throw std::runtime_error("path_bytes is empty");
+  }
+
+  // Create the request from the path bytes
+  valhalla::Api request;
+  request.ParseFromString(path_bytes);
+
+  // Set osrm format
+  request.mutable_options()->set_format(valhalla::Options_Format_osrm);
+
+  // Build the directions
+  valhalla::odin::DirectionsBuilder().Build(request);
+
+  // Serialize to osrm json string
+  auto json_str = valhalla::tyr::serializeDirections(request);
+
+  rapidjson::Document doc;
+  doc.Parse(json_str.c_str());
+  if (doc.HasParseError()) {
+    throw std::runtime_error("Parse JSON error");
+  }
+
+  // Set the maneuver path
+  std::string maneuver_path = "/routes/" + std::to_string(routes_index) + "/legs/" +
+                              std::to_string(legs_index) + "/steps/" + std::to_string(steps_index) +
+                              "/maneuver";
+
+  // Validate maneuver type
+  std::string maneuver_type_path = maneuver_path + "/type";
+  std::string found_maneuver_type = rapidjson::get<std::string>(doc, maneuver_type_path.c_str());
+  if (found_maneuver_type != expected_maneuver_type) {
+    throw std::runtime_error("Invalid maneuver type - found: " + found_maneuver_type +
+                             " | expected: " + expected_maneuver_type);
+  }
+
+  // Validate maneuver modifier
+  std::string maneuver_midifier_path = maneuver_path + "/modifier";
+  std::string found_maneuver_modifier =
+      rapidjson::get<std::string>(doc, maneuver_midifier_path.c_str());
+  if (found_maneuver_modifier != expected_maneuver_modifier) {
+    throw std::runtime_error("Invalid maneuver modifier - found: " + found_maneuver_modifier +
+                             " | expected: " + expected_maneuver_modifier);
+  }
+}
+
 void validate_merge_instructions() {
 
   int expected_routes_size = 1;
@@ -110,6 +166,21 @@ void validate_merge_instructions() {
                     "Continue for 2 tenths of a mile.");
 }
 
+void validate_osrm_merge_maneuver() {
+
+  int routes_index = 0;
+  int legs_index = 0;
+  int steps_index = 2;
+
+  // Test osrm merge right
+  test_osrm_maneuver({VALHALLA_SOURCE_DIR "test/pinpoints/instructions/merge_right.pbf"},
+                     routes_index, legs_index, steps_index, "merge", "slight right");
+
+  // Test osrm merge left
+  test_osrm_maneuver({VALHALLA_SOURCE_DIR "test/pinpoints/instructions/merge_left.pbf"}, routes_index,
+                     legs_index, steps_index, "merge", "slight left");
+}
+
 } // namespace
 
 int main() {
@@ -117,6 +188,9 @@ int main() {
 
   // Validate the merge instructions
   suite.test(TEST_CASE(validate_merge_instructions));
+
+  // Validate the osrm merge maneuver
+  suite.test(TEST_CASE(validate_osrm_merge_maneuver));
 
   return suite.tear_down();
 }
