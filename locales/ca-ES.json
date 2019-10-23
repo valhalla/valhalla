@@ -484,40 +484,40 @@
           "Pren la sortida White Marsh Boulevard de l'esquerra a MD 43 East cap a White Marsh."
         ],
         "15": [
-          "Take the exit."
+          "Pren la sortida."
         ],
         "16": [
-          "Take exit 67 B-A."
+          "Pren la sortida 67 B-A."
         ],
         "17": [
-          "Take the US 322 West exit."
+          "Pren la sortida US 322 West."
         ],
         "18": [
-          "Take exit 67 B-A onto US 322 West."
+          "Pren la sortida 67 B-A cap a US 322 West."
         ],
         "19": [
-          "Take the exit toward Lewistown."
+          "Pren la sortida cap a Lewistown."
         ],
         "20": [
-          "Take exit 67 B-A toward Lewistown."
+          "Pren la sortida 67 B-A cap a Lewistown."
         ],
         "21": [
-          "Take the US 322 West exit toward Lewistown."
+          "Pren la sortida US 322 West cap a Lewistown."
         ],
         "22": [
-          "Take exit 67 B-A onto US 322 West toward Lewistown/State College."
+          "Pren la sortida 67 B-A cap a US 322 West cap a Lewistown/State College."
         ],
         "23": [
-          "Take the White Marsh Boulevard exit."
+          "Pren la sortida White Marsh Boulevard."
         ],
         "25": [
-          "Take the White Marsh Boulevard exit onto MD 43 East."
+          "Pren la sortida White Marsh Boulevard cap a MD 43 East."
         ],
         "27": [
-          "Take the White Marsh Boulevard exit toward White Marsh."
+          "Pren la sortida White Marsh Boulevard cap a White Marsh."
         ],
         "29": [
-          "Take the White Marsh Boulevard exit onto MD 43 East toward White Marsh."
+          "Pren la sortida White Marsh Boulevard cap a MD 43 East cap a White Marsh."
         ]
       }
     },
@@ -1220,11 +1220,11 @@
         "7": "Gira cap a <RELATIVE_DIRECTION> per prendre l'accés cap a <TOWARD_SIGN>.",
         "8": "Gira cap a <RELATIVE_DIRECTION> per prendre l'accés <BRANCH_SIGN> cap a <TOWARD_SIGN>.",
         "9": "Gira cap a <RELATIVE_DIRECTION> per prendre l'accés <NAME_SIGN>.",
-        "10": "Take the ramp.",
-        "11": "Take the <BRANCH_SIGN> ramp.",
-        "12": "Take the ramp toward <TOWARD_SIGN>.",
-        "13": "Take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>.",
-        "14": "Take the <NAME_SIGN> ramp."
+        "10": "Pren l'accés.",
+        "11": "Pren l'accés <BRANCH_SIGN>.",
+        "12": "Pren l'accés cap a <TOWARD_SIGN>.",
+        "13": "Pren l'accés <BRANCH_SIGN> cap a <TOWARD_SIGN>.",
+        "14": "Pren l'accés <NAME_SIGN>."
       },
       "relative_directions": [
         "l'esquerra",
@@ -1264,19 +1264,19 @@
           "Gira cap a la dreta per prendre l'accés Gettysburg Pike."
         ],
         "10": [
-          "Take the ramp."
+          "Pren l'accés."
         ],
         "11": [
-          "Take the I 95 ramp."
+          "Pren l'accés I 95."
         ],
         "12": [
-          "Take the ramp toward JFK."
+          "Pren l'accés cap a JFK."
         ],
         "13": [
-          "Take the Soutch Conduit Avenue ramp toward JFK."
+          "Pren l'accés South Conduit Avenue cap a JFK."
         ],
         "14": [
-          "Take the Gettysburg ramp."
+          "Pren l'accés Gettysburg."
         ]
       }
     },
@@ -1344,11 +1344,11 @@
         "7": "Gira cap a <RELATIVE_DIRECTION> per prendre l'accés cap a <TOWARD_SIGN>.",
         "8": "Gira cap a <RELATIVE_DIRECTION> per prendre l'accés <BRANCH_SIGN> cap a <TOWARD_SIGN>.",
         "9": "Gira cap a <RELATIVE_DIRECTION> per prendre l'accés <NAME_SIGN>.",
-        "10": "Take the ramp.",
-        "11": "Take the <BRANCH_SIGN> ramp.",
-        "12": "Take the ramp toward <TOWARD_SIGN>.",
-        "13": "Take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>.",
-        "14": "Take the <NAME_SIGN> ramp."
+        "10": "Pren l'accés.",
+        "11": "Pren l'accés <BRANCH_SIGN>.",
+        "12": "Pren l'accés cap a <TOWARD_SIGN>.",
+        "13": "Pren l'accés <BRANCH_SIGN> cap a <TOWARD_SIGN>.",
+        "14": "Pren l'accés <NAME_SIGN>."
       },
       "relative_directions": [
         "l'esquerra",
@@ -1388,19 +1388,19 @@
           "Gira cap a la dreta per prendre l'accés Gettysburg Pike."
         ],
         "10": [
-          "Take the ramp."
+          "Pren l'accés."
         ],
         "11": [
-          "Take the Interstate 95 ramp."
+          "Pren l'accés Interstate 95."
         ],
         "12": [
-          "Take the ramp toward JFK."
+          "Pren l'accés cap a JFK."
         ],
         "13": [
-          "Take the South Conduit Avenue ramp toward JFK."
+          "Pren l'accés South Conduit Avenue cap a JFK."
         ],
         "14": [
-          "Take the Gettysburg Pike ramp."
+          "Pren l'accés Gettysburg Pike."
         ]
       }
     },
