@@ -4,6 +4,7 @@
 
 * **Enhancement**
    * ADDED: Establish pinpoint test pattern [#1969](https://github.com/valhalla/valhalla/pull/1969)
+   * ADDED: Suppress relative direction in ramp/exit instructions if it matches driving side of street [#1990](https://github.com/valhalla/valhalla/pull/1990)
 
 ## Release Date: 2019-09-06 Valhalla 3.0.8
 * **Bug Fix**
