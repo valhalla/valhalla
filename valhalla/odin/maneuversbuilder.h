@@ -88,6 +88,10 @@ protected:
                               EnhancedTripLeg_Edge* prev_edge,
                               EnhancedTripLeg_Edge* curr_edge) const;
 
+  Maneuver::RelativeDirection
+  DetermineMergeToRelativeDirection(EnhancedTripLeg_Node* node,
+                                    EnhancedTripLeg_Edge* prev_edge) const;
+
   bool IsMergeManeuverType(Maneuver& maneuver,
                            EnhancedTripLeg_Edge* prev_edge,
                            EnhancedTripLeg_Edge* curr_edge) const;

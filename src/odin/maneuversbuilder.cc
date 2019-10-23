@@ -1269,8 +1269,22 @@ void ManeuversBuilder::SetManeuverType(Maneuver& maneuver, bool none_type_allowe
   }
   // Process merge
   else if (IsMergeManeuverType(maneuver, prev_edge.get(), curr_edge.get())) {
-    maneuver.set_type(DirectionsLeg_Maneuver_Type_kMerge);
-    LOG_TRACE("ManeuverType=MERGE");
+    switch (maneuver.merge_to_relative_direction()) {
+      case Maneuver::RelativeDirection::kKeepRight: {
+        maneuver.set_type(DirectionsLeg_Maneuver_Type_kMergeRight);
+        LOG_TRACE("ManeuverType=MERGE_RIGHT");
+        break;
+      }
+      case Maneuver::RelativeDirection::kKeepLeft: {
+        maneuver.set_type(DirectionsLeg_Maneuver_Type_kMergeLeft);
+        LOG_TRACE("ManeuverType=MERGE_LEFT");
+        break;
+      }
+      default: {
+        maneuver.set_type(DirectionsLeg_Maneuver_Type_kMerge);
+        LOG_TRACE("ManeuverType=MERGE");
+      }
+    }
   }
   // Process enter ferry
   else if (maneuver.ferry() || maneuver.rail_ferry()) {
@@ -1772,6 +1786,25 @@ bool ManeuversBuilder::IncludeUnnamedPrevEdge(int node_index,
   return false;
 }
 
+Maneuver::RelativeDirection
+ManeuversBuilder::DetermineMergeToRelativeDirection(EnhancedTripLeg_Node* node,
+                                                    EnhancedTripLeg_Edge* prev_edge) const {
+
+  IntersectingEdgeCounts xedge_counts;
+  node->CalculateRightLeftIntersectingEdgeCounts(prev_edge->end_heading(), prev_edge->travel_mode(),
+                                                 xedge_counts);
+  if ((xedge_counts.left > 0) && (xedge_counts.left_similar == 0) && (xedge_counts.right == 0)) {
+    // If intersecting edge to the left and not the right then merge to the left
+    return Maneuver::RelativeDirection::kKeepLeft;
+  } else if ((xedge_counts.right > 0) && (xedge_counts.right_similar == 0) &&
+             (xedge_counts.left == 0)) {
+    // If intersecting edge to the right and not the left then merge to the right
+    return Maneuver::RelativeDirection::kKeepRight;
+  }
+  // default to none
+  return Maneuver::RelativeDirection::kNone;
+}
+
 bool ManeuversBuilder::IsMergeManeuverType(Maneuver& maneuver,
                                            EnhancedTripLeg_Edge* prev_edge,
                                            EnhancedTripLeg_Edge* curr_edge) const {
@@ -1786,6 +1819,8 @@ bool ManeuversBuilder::IsMergeManeuverType(Maneuver& maneuver,
          (curr_edge->road_class() == TripLeg_RoadClass_kPrimary)) &&
         curr_edge->IsOneway() && curr_edge->IsForward(maneuver.turn_degree()) &&
         node->HasIntersectingEdgeCurrNameConsistency()))) {
+    maneuver.set_merge_to_relative_direction(
+        DetermineMergeToRelativeDirection(node.get(), prev_edge));
     return true;
   }
 
@@ -2385,8 +2420,7 @@ void ManeuversBuilder::EnhanceSignlessInterchnages(std::list<Maneuver>& maneuver
     // to the current maneuver branch sign list
     if ((curr_man->ramp() || (curr_man->fork() && !curr_man->HasStreetNames())) &&
         !curr_man->HasExitSign() && !(prev_man->ramp() || prev_man->fork()) &&
-        (next_man->type() == DirectionsLeg_Maneuver_Type::DirectionsLeg_Maneuver_Type_kMerge) &&
-        next_man->HasStreetNames()) {
+        next_man->IsMergeType() && next_man->HasStreetNames()) {
       curr_man->mutable_signs()
           ->mutable_exit_branch_list()
           ->emplace_back(next_man->street_names().front()->value(),
