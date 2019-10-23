@@ -439,7 +439,7 @@
         "24": "An der Ausfahrt <NAME_SIGN> abfahren.",
         "26": "Auf <BRANCH_SIGN> über die Ausfahrt <NAME_SIGN> abfahren.",
         "27": "An der Ausfahrt <NAME_SIGN> abfahren Richtung <TOWARD_SIGN>.",
-        "29": "Auf <BRANCH_SIGN> Richtung <TOWARD_SIGN> über die Ausfahrt <NAME_SIGN> abfahren.",
+        "29": "Auf <BRANCH_SIGN> Richtung <TOWARD_SIGN> über die Ausfahrt <NAME_SIGN> abfahren."
       },
       "relative_directions": [
         "links",
@@ -730,7 +730,7 @@
         "24": "An der Ausfahrt <NAME_SIGN> abfahren.",
         "26": "Auf <BRANCH_SIGN> über die Ausfahrt <NAME_SIGN> abfahren.",
         "27": "An der Ausfahrt <NAME_SIGN> abfahren Richtung <TOWARD_SIGN>.",
-        "29": "Auf <BRANCH_SIGN> Richtung <TOWARD_SIGN> über die Ausfahrt <NAME_SIGN> abfahren.",
+        "29": "Auf <BRANCH_SIGN> Richtung <TOWARD_SIGN> über die Ausfahrt <NAME_SIGN> abfahren."
       },
       "relative_directions": [
         "links",
