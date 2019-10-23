@@ -201,7 +201,8 @@ std::unique_ptr<EnhancedTripLeg_Edge> EnhancedTripLeg::GetCurrEdge(const int nod
   return GetNextEdge(node_index, 0);
 }
 
-std::unique_ptr<EnhancedTripLeg_Edge> EnhancedTripLeg::GetNextEdge(const int node_index, int delta) const {
+std::unique_ptr<EnhancedTripLeg_Edge> EnhancedTripLeg::GetNextEdge(const int node_index,
+                                                                   int delta) const {
   int index = node_index + delta;
   if (IsValidNodeIndex(index) && !IsLastNodeIndex(index)) {
     return midgard::make_unique<EnhancedTripLeg_Edge>(mutable_node(index)->mutable_edge());
