@@ -428,18 +428,18 @@
         "10": "<RELATIVE_DIRECTION> तरफ <NAME_SIGN> निकास से <BRANCH_SIGN> पर बाहर निकलें",
         "12": "<TOWARD_SIGN> की ओर <RELATIVE_DIRECTION> तरफ <NAME_SIGN> से बाहर निकलें.",
         "14": "<TOWARD_SIGN> की ओर <RELATIVE_DIRECTION> तरफ <NAME_SIGN> से बाहर निकलें.",
-        "15": "Take the exit.",
-        "16": "Take exit <NUMBER_SIGN>.",
-        "17": "Take the <BRANCH_SIGN> exit.",
-        "18": "Take exit <NUMBER_SIGN> onto <BRANCH_SIGN>.",
-        "19": "Take the exit toward <TOWARD_SIGN>.",
-        "20": "Take exit <NUMBER_SIGN> toward <TOWARD_SIGN>.",
-        "21": "Take the <BRANCH_SIGN> exit toward <TOWARD_SIGN>.",
-        "22": "Take exit <NUMBER_SIGN> onto <BRANCH_SIGN> toward <TOWARD_SIGN>.",
-        "23": "Take the <NAME_SIGN> exit.",
-        "25": "Take the <NAME_SIGN> exit onto <BRANCH_SIGN>.",
-        "27": "Take the <NAME_SIGN> exit toward <TOWARD_SIGN>.",
-        "29": "Take the <NAME_SIGN> exit onto <BRANCH_SIGN> toward <TOWARD_SIGN>."
+        "15": "निकलें.",
+        "16": "निकास <NUMBER_SIGN> लें.",
+        "17": "निकास <BRANCH_SIGN> लें.",
+        "18": "<BRANCH_SIGN> पर निकास <NUMBER_SIGN> लें.",
+        "19": "<TOWARD_SIGN> की ओर जाने के लिए निकलें.",
+        "20": "<TOWARD_SIGN> की ओर जाने के लिए निकास <NUMBER_SIGN> लें.",
+        "21": "<TOWARD_SIGN> की ओर निकास <BRANCH_SIGN> लें.",
+        "22": "<BRANCH_SIGN> पर <TOWARD_SIGN> की ओर निकास <NUMBER_SIGN> लें.",
+        "23": "<NAME_SIGN> से बाहर निकलें.",
+        "25": "<NAME_SIGN> निकास से <BRANCH_SIGN> पर बाहर निकलें",
+        "27": "<TOWARD_SIGN> की ओर <NAME_SIGN> से बाहर निकलें.",
+        "29": "<TOWARD_SIGN> की ओर <NAME_SIGN> से बाहर निकलें."
       },
       "relative_directions": [
         "बाएं",
@@ -484,40 +484,40 @@
           "बाईं तरफ निकास White Marsh Boulevard लेकर White Marsh की ओर MD 43 East पर बाहर निकलें."
         ],
         "15": [
-          "Take the exit."
+          "निकलें."
         ],
         "16": [
-          "Take exit 67 B-A."
+          "निकलें 67 B-A लें."
         ],
         "17": [
-          "Take the US 322 West exit."
+          "निकलें US 322 West लें."
         ],
         "18": [
-          "Take exit 67 B-A onto US 322 West."
+          "निकलें 67 B-A onto US 322 West."
         ],
         "19": [
-          "Take the exit toward Lewistown."
+          "निकलें toward Lewistown ."
         ],
         "20": [
-          "Take exit 67 B-A toward Lewistown."
+          "निकलें 67 B-A toward Lewistown."
         ],
         "21": [
-          "Take the US 322 West exit toward Lewistown."
+          "निकलें US 322 West exit toward Lewistown."
         ],
         "22": [
-          "Take exit 67 B-A onto US 322 West toward Lewistown/State College."
+          "निकलें 67 B-A onto US 322 West toward Lewistown/State College."
         ],
         "23": [
-          "Take the White Marsh Boulevard exit."
+          "निकलें White Marsh Boulevard exit."
         ],
         "25": [
-          "Take the White Marsh Boulevard exit onto MD 43 East."
+          "निकलें White Marsh Boulevard exit onto MD 43 East."
         ],
         "27": [
-          "Take the White Marsh Boulevard exit toward White Marsh."
+          "निकलें White Marsh Boulevard exit toward White Marsh."
         ],
         "29": [
-          "Take the White Marsh Boulevard exit onto MD 43 East toward White Marsh."
+          "निकलें White Marsh Boulevard exit onto MD 43 East toward White Marsh."
         ]
       }
     },
@@ -719,18 +719,18 @@
         "10": "<RELATIVE_DIRECTION> तरफ <NAME_SIGN> निकास से <BRANCH_SIGN> पर बाहर निकलें",
         "12": "<TOWARD_SIGN> की ओर <RELATIVE_DIRECTION> तरफ <NAME_SIGN> से बाहर निकलें.",
         "14": "<TOWARD_SIGN> की ओर <RELATIVE_DIRECTION> तरफ <NAME_SIGN> से बाहर निकलें.",
-        "15": "Take the exit.",
-        "16": "Take exit <NUMBER_SIGN>.",
-        "17": "Take the <BRANCH_SIGN> exit.",
-        "18": "Take exit <NUMBER_SIGN> onto <BRANCH_SIGN>.",
-        "19": "Take the exit toward <TOWARD_SIGN>.",
-        "20": "Take exit <NUMBER_SIGN> toward <TOWARD_SIGN>.",
-        "21": "Take the <BRANCH_SIGN> exit toward <TOWARD_SIGN>.",
-        "22": "Take exit <NUMBER_SIGN> onto <BRANCH_SIGN> toward <TOWARD_SIGN>.",
-        "23": "Take the <NAME_SIGN> exit.",
-        "25": "Take the <NAME_SIGN> exit onto <BRANCH_SIGN>.",
-        "27": "Take the <NAME_SIGN> exit toward <TOWARD_SIGN>.",
-        "29": "Take the <NAME_SIGN> exit onto <BRANCH_SIGN> toward <TOWARD_SIGN>."
+        "15": "निकलें.",
+        "16": "निकास <NUMBER_SIGN> लें.",
+        "17": "निकास <BRANCH_SIGN> लें.",
+        "18": "<BRANCH_SIGN> पर निकास <NUMBER_SIGN> लें.",
+        "19": "<TOWARD_SIGN> की ओर जाने के लिए निकलें.",
+        "20": "<TOWARD_SIGN> की ओर जाने के लिए निकास <NUMBER_SIGN> लें.",
+        "21": "<TOWARD_SIGN> की ओर निकास <BRANCH_SIGN> लें.",
+        "22": "<BRANCH_SIGN> पर <TOWARD_SIGN> की ओर निकास <NUMBER_SIGN> लें.",
+        "23": "<NAME_SIGN> से बाहर निकलें.",
+        "25": "<NAME_SIGN> निकास से <BRANCH_SIGN> पर बाहर निकलें",
+        "27": "<TOWARD_SIGN> की ओर <NAME_SIGN> से बाहर निकलें.",
+        "29": "<TOWARD_SIGN> की ओर <NAME_SIGN> से बाहर निकलें."
       },
       "relative_directions": [
         "बाएं",
@@ -775,28 +775,28 @@
           "बाईं तरफ निकास White Marsh Boulevard लेकर White Marsh की ओर Maryland 43 East पर बाहर निकलें."
         ],
         "15": [
-          "Take the exit."
+          "निकलें."
         ],
         "16": [
-          "Take exit 67 B-A."
+          "निकलें 67 B-A."
         ],
         "17": [
           "Take the US 322 West exit."
         ],
         "18": [
-          "Take exit 67 B-A onto US 322 West."
+          "निकलें 67 B-A onto US 322 West."
         ],
         "19": [
           "Take the exit toward Lewistown."
         ],
         "20": [
-          "Take exit 67 B-A toward Lewistown."
+          "निकलें 67 B-A toward Lewistown."
         ],
         "21": [
           "Take the US 322 West exit toward Lewistown."
         ],
         "22": [
-          "Take exit 67 B-A onto US 322 West toward Lewistown/State College."
+          "निकलें 67 B-A onto US 322 West toward Lewistown/State College."
         ],
         "23": [
           "Take the White Marsh Boulevard exit."
@@ -1220,11 +1220,11 @@
         "7": "<TOWARD_SIGN> की ओर रैंप पकड़ने के लिए <RELATIVE_DIRECTION> मुड़ें.",
         "8": "<TOWARD_SIGN> की ओर <BRANCH_SIGN> रैंप पकड़ने के लिए <RELATIVE_DIRECTION> मुड़ें.",
         "9": "<NAME_SIGN> रैंप पकड़ने के लिए <RELATIVE_DIRECTION> मुड़ें.",
-        "10": "Take the ramp.",
-        "11": "Take the <BRANCH_SIGN> ramp.",
-        "12": "Take the ramp toward <TOWARD_SIGN>.",
-        "13": "Take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>.",
-        "14": "Take the <NAME_SIGN> ramp."
+        "10": "रैंप लें.",
+        "11": "<BRANCH_SIGN> रैंप लें.",
+        "12": "<TOWARD_SIGN> की ओर रैंप लें.",
+        "13": "<TOWARD_SIGN> की ओर <BRANCH_SIGN> रैंप लें.",
+        "14": "<NAME_SIGN> रैंप लें."
       },
       "relative_directions": [
         "बाएं",
@@ -1344,11 +1344,11 @@
         "7": "<TOWARD_SIGN> की ओर रैंप पकड़ने के लिए <RELATIVE_DIRECTION> मुड़ें.",
         "8": "<TOWARD_SIGN> की ओर <BRANCH_SIGN> रैंप पकड़ने के लिए <RELATIVE_DIRECTION> मुड़ें.",
         "9": "<NAME_SIGN> रैंप पकड़ने के लिए <RELATIVE_DIRECTION> मुड़ें.",
-        "10": "Take the ramp.",
-        "11": "Take the <BRANCH_SIGN> ramp.",
-        "12": "Take the ramp toward <TOWARD_SIGN>.",
-        "13": "Take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>.",
-        "14": "Take the <NAME_SIGN> ramp."
+        "10": "रैंप लें.",
+        "11": "<BRANCH_SIGN> रैंप लें.",
+        "12": "<TOWARD_SIGN> की ओर रैंप लें.",
+        "13": "<TOWARD_SIGN> की ओर <BRANCH_SIGN> रैंप लें.",
+        "14": "<NAME_SIGN> रैंप लें."
       },
       "relative_directions": [
         "बाएं",

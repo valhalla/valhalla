@@ -428,18 +428,18 @@
         "10": "Pegue a saída <NAME_SIGN> <RELATIVE_DIRECTION> para <BRANCH_SIGN>.",
         "12": "Pegue a saída <NAME_SIGN> <RELATIVE_DIRECTION> em direção a <TOWARD_SIGN>.",
         "14": "Pegue a saída <NAME_SIGN> <RELATIVE_DIRECTION> para <BRANCH_SIGN> em direção a <TOWARD_SIGN>.",
-        "15": "Take the exit.",
-        "16": "Take exit <NUMBER_SIGN>.",
-        "17": "Take the <BRANCH_SIGN> exit.",
-        "18": "Take exit <NUMBER_SIGN> onto <BRANCH_SIGN>.",
-        "19": "Take the exit toward <TOWARD_SIGN>.",
-        "20": "Take exit <NUMBER_SIGN> toward <TOWARD_SIGN>.",
-        "21": "Take the <BRANCH_SIGN> exit toward <TOWARD_SIGN>.",
-        "22": "Take exit <NUMBER_SIGN> onto <BRANCH_SIGN> toward <TOWARD_SIGN>.",
-        "23": "Take the <NAME_SIGN> exit.",
-        "25": "Take the <NAME_SIGN> exit onto <BRANCH_SIGN>.",
-        "27": "Take the <NAME_SIGN> exit toward <TOWARD_SIGN>.",
-        "29": "Take the <NAME_SIGN> exit onto <BRANCH_SIGN> toward <TOWARD_SIGN>."
+        "15": "Pegue a saída.",
+        "16": "Pegue a saída <NUMBER_SIGN>.",
+        "17": "Pegue a saída <BRANCH_SIGN>.",
+        "18": "Pegue a saída <NUMBER_SIGN> para <BRANCH_SIGN>.",
+        "19": "Pegue a saída em direção a <TOWARD_SIGN>.",
+        "20": "Pegue a saída <NUMBER_SIGN> em direção a <TOWARD_SIGN>.",
+        "21": "Pegue a saída <BRANCH_SIGN> em direção a <TOWARD_SIGN>.",
+        "22": "Pegue a saída <NUMBER_SIGN> para <BRANCH_SIGN> em direção a <TOWARD_SIGN>.",
+        "23": "Pegue a saída <NAME_SIGN>.",
+        "25": "Pegue a saída <NAME_SIGN> para <BRANCH_SIGN>.",
+        "27": "Pegue a saída <NAME_SIGN> em direção a <TOWARD_SIGN>.",
+        "29": "Pegue a saída <NAME_SIGN> para <BRANCH_SIGN> em direção a <TOWARD_SIGN>."
       },
       "relative_directions": [
         "à esquerda",
@@ -484,40 +484,40 @@
           "Pegue a saída Calçada de Carriche à esquerda para CRIL em direção a Odivelas."
         ],
         "15": [
-          "Take the exit."
+          "Pegue a saída."
         ],
         "16": [
-          "Take exit 67 B-A."
+          "Pegue a saída 67 B-A."
         ],
         "17": [
-          "Take the US 322 West exit."
+          "Pegue a saída A1-Norte."
         ],
         "18": [
-          "Take exit 67 B-A onto US 322 West."
+          "Pegue a saída 67 B-A para A1-Norte."
         ],
         "19": [
-          "Take the exit toward Lewistown."
+          "Pegue a saída em direção a Lisboa."
         ],
         "20": [
-          "Take exit 67 B-A toward Lewistown."
+          "Pegue a saída 67 B-A em direção a Lisboa."
         ],
         "21": [
-          "Take the US 322 West exit toward Lewistown."
+          "Pegue a saída A1-Norte em direção a Lisboa."
         ],
         "22": [
-          "Take exit 67 B-A onto US 322 West toward Lewistown/State College."
+          "Pegue a saída 67 B-A para A1-Norte em direção a Lisboa, Centro."
         ],
         "23": [
-          "Take the White Marsh Boulevard exit."
+          "Pegue a saída Calçada de Carriche."
         ],
         "25": [
-          "Take the White Marsh Boulevard exit onto MD 43 East."
+          "Pegue a saída Calçada de Carriche para Odivelas, Norte."
         ],
         "27": [
-          "Take the White Marsh Boulevard exit toward White Marsh."
+          "Pegue a saída Calçada de Carriche em direção a Odivelas."
         ],
         "29": [
-          "Take the White Marsh Boulevard exit onto MD 43 East toward White Marsh."
+          "Pegue a saída Calçada de Carriche para Odivelas, Norte em direção a Loures."
         ]
       }
     },
@@ -719,18 +719,18 @@
         "10": "Pegue a saída <NAME_SIGN> <RELATIVE_DIRECTION> para <BRANCH_SIGN>.",
         "12": "Pegue a saída <NAME_SIGN> <RELATIVE_DIRECTION> em direção a <TOWARD_SIGN>.",
         "14": "Pegue a saída <NAME_SIGN> <RELATIVE_DIRECTION> para <BRANCH_SIGN> em direção a <TOWARD_SIGN>.",
-        "15": "Take the exit.",
-        "16": "Take exit <NUMBER_SIGN>.",
-        "17": "Take the <BRANCH_SIGN> exit.",
-        "18": "Take exit <NUMBER_SIGN> onto <BRANCH_SIGN>.",
-        "19": "Take the exit toward <TOWARD_SIGN>.",
-        "20": "Take exit <NUMBER_SIGN> toward <TOWARD_SIGN>.",
-        "21": "Take the <BRANCH_SIGN> exit toward <TOWARD_SIGN>.",
-        "22": "Take exit <NUMBER_SIGN> onto <BRANCH_SIGN> toward <TOWARD_SIGN>.",
-        "23": "Take the <NAME_SIGN> exit.",
-        "25": "Take the <NAME_SIGN> exit onto <BRANCH_SIGN>.",
-        "27": "Take the <NAME_SIGN> exit toward <TOWARD_SIGN>.",
-        "29": "Take the <NAME_SIGN> exit onto <BRANCH_SIGN> toward <TOWARD_SIGN>."
+        "15": "Pegue a saída.",
+        "16": "Pegue a saída <NUMBER_SIGN>.",
+        "17": "Pegue a saída <BRANCH_SIGN>.",
+        "18": "Pegue a saída <NUMBER_SIGN> para <BRANCH_SIGN>.",
+        "19": "Pegue a saída em direção a <TOWARD_SIGN>.",
+        "20": "Pegue a saída <NUMBER_SIGN> em direção a <TOWARD_SIGN>.",
+        "21": "Pegue a saída <BRANCH_SIGN> em direção a <TOWARD_SIGN>.",
+        "22": "Pegue a saída <NUMBER_SIGN> para <BRANCH_SIGN> em direção a <TOWARD_SIGN>.",
+        "23": "Pegue a saída <NAME_SIGN>.",
+        "25": "Pegue a saída <NAME_SIGN> para <BRANCH_SIGN>.",
+        "27": "Pegue a saída <NAME_SIGN> em direção a <TOWARD_SIGN>.",
+        "29": "Pegue a saída <NAME_SIGN> para <BRANCH_SIGN> em direção a <TOWARD_SIGN>."
       },
       "relative_directions": [
         "à esquerda",
@@ -775,40 +775,40 @@
           "Pegue a saída Calçada de Carriche à esquerda para Odivelas, Norte em direção a Loures."
         ],
         "15": [
-          "Take the exit."
+          "Pegue a saída."
         ],
         "16": [
-          "Take exit 67 B-A."
+          "Pegue a saída 67 B-A."
         ],
         "17": [
-          "Take the US 322 West exit."
+          "Pegue a saída A1-Norte."
         ],
         "18": [
-          "Take exit 67 B-A onto US 322 West."
+          "Pegue a saída 67 B-A para A1-Norte."
         ],
         "19": [
-          "Take the exit toward Lewistown."
+          "Pegue a saída em direção a Lisboa."
         ],
         "20": [
-          "Take exit 67 B-A toward Lewistown."
+          "Pegue a saída 67 B-A em direção a Lisboa."
         ],
         "21": [
-          "Take the US 322 West exit toward Lewistown."
+          "Pegue a saída A1-Norte em direção a Lisboa."
         ],
         "22": [
-          "Take exit 67 B-A onto US 322 West toward Lewistown/State College."
+          "Pegue a saída 67 B-A para A1-Norte em direção a Lisboa, Centro."
         ],
         "23": [
-          "Take the White Marsh Boulevard exit."
+          "Pegue a saída Calçada de Carriche."
         ],
         "25": [
-          "Take the White Marsh Boulevard exit onto MD 43 East."
+          "Pegue a saída Calçada de Carriche para Odivelas, Norte."
         ],
         "27": [
-          "Take the White Marsh Boulevard exit toward White Marsh."
+          "Pegue a saída Calçada de Carriche em direção a Odivelas."
         ],
         "29": [
-          "Take the White Marsh Boulevard exit onto MD 43 East toward White Marsh."
+          "Pegue a saída Calçada de Carriche para Odivelas, Norte em direção a Loures."
         ]
       }
     },
@@ -1220,11 +1220,11 @@
         "7": "Vire <RELATIVE_DIRECTION> para pegar a rampa em direção a <TOWARD_SIGN>.",
         "8": "Vire <RELATIVE_DIRECTION> para pegar a rampa <BRANCH_SIGN> em direção a <TOWARD_SIGN>.",
         "9": "Vire <RELATIVE_DIRECTION> para pegar a rampa <NAME_SIGN>.",
-        "10": "Take the ramp.",
-        "11": "Take the <BRANCH_SIGN> ramp.",
-        "12": "Take the ramp toward <TOWARD_SIGN>.",
-        "13": "Take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>.",
-        "14": "Take the <NAME_SIGN> ramp."
+        "10": "Pegue a rampa.",
+        "11": "Pegue a rampa <BRANCH_SIGN>.",
+        "12": "Pegue a rampa em direção a <TOWARD_SIGN>.",
+        "13": "Pegue a rampa <BRANCH_SIGN> em direção a <TOWARD_SIGN>.",
+        "14": "Pegue a rampa <NAME_SIGN>."
       },
       "relative_directions": [
         "à esquerda",
@@ -1264,19 +1264,19 @@
           "Vire à direita para pegar a rampa Matosinhos."
         ],
         "10": [
-          "Take the ramp."
+          "Pegue a rampa."
         ],
         "11": [
-          "Take the I 95 ramp."
+          "Pegue a rampa A2."
         ],
         "12": [
-          "Take the ramp toward JFK."
+          "Pegue a rampa em direção a Aeroporto."
         ],
         "13": [
-          "Take the Soutch Conduit Avenue ramp toward JFK."
+          "Pegue a rampa Eixo Norte/Sul em direção a Aeroporto."
         ],
         "14": [
-          "Take the Gettysburg ramp."
+          "Pegue a rampa Alcochete."
         ]
       }
     },
@@ -1344,11 +1344,11 @@
         "7": "Vire <RELATIVE_DIRECTION> para pegar a rampa em direção a <TOWARD_SIGN>.",
         "8": "Vire <RELATIVE_DIRECTION> para pegar a rampa <BRANCH_SIGN> em direção a <TOWARD_SIGN>.",
         "9": "Vire <RELATIVE_DIRECTION> para pegar a rampa <NAME_SIGN>.",
-        "10": "Take the ramp.",
-        "11": "Take the <BRANCH_SIGN> ramp.",
-        "12": "Take the ramp toward <TOWARD_SIGN>.",
-        "13": "Take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>.",
-        "14": "Take the <NAME_SIGN> ramp."
+        "10": "Pegue a rampa.",
+        "11": "Pegue a rampa <BRANCH_SIGN>.",
+        "12": "Pegue a rampa em direção a <TOWARD_SIGN>.",
+        "13": "Pegue a rampa <BRANCH_SIGN> em direção a <TOWARD_SIGN>.",
+        "14": "Pegue a rampa <NAME_SIGN>."
       },
       "relative_directions": [
         "à esquerda",
@@ -1388,19 +1388,19 @@
           "Vire à direita para pegar a rampa Alcochete."
         ],
         "10": [
-          "Take the ramp."
+          "Pegue a rampa."
         ],
         "11": [
-          "Take the Interstate 95 ramp."
+          "Pegue a rampa A2."
         ],
         "12": [
-          "Take the ramp toward JFK."
+          "Pegue a rampa em direção a Aeroporto."
         ],
         "13": [
-          "Take the South Conduit Avenue ramp toward JFK."
+          "Pegue a rampa Eixo Norte/Sul em direção a Aeroporto."
         ],
         "14": [
-          "Take the Gettysburg Pike ramp."
+          "Pegue a rampa Alcochete."
         ]
       }
     },
