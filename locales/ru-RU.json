@@ -428,22 +428,22 @@
         "10": "Выезжайте <RELATIVE_DIRECTION> через <NAME_SIGN> на <BRANCH_SIGN>.",
         "12": "Выезжайте <RELATIVE_DIRECTION> через <NAME_SIGN> в сторону <TOWARD_SIGN>.",
         "14": "Выезжайте <RELATIVE_DIRECTION> через <NAME_SIGN> на <BRANCH_SIGN> в сторону <TOWARD_SIGN>.",
-        "15": "Take the exit.",
-        "16": "Take exit <NUMBER_SIGN>.",
-        "17": "Take the <BRANCH_SIGN> exit.",
-        "18": "Take exit <NUMBER_SIGN> onto <BRANCH_SIGN>.",
-        "19": "Take the exit toward <TOWARD_SIGN>.",
-        "20": "Take exit <NUMBER_SIGN> toward <TOWARD_SIGN>.",
-        "21": "Take the <BRANCH_SIGN> exit toward <TOWARD_SIGN>.",
-        "22": "Take exit <NUMBER_SIGN> onto <BRANCH_SIGN> toward <TOWARD_SIGN>.",
-        "23": "Take the <NAME_SIGN> exit.",
-        "25": "Take the <NAME_SIGN> exit onto <BRANCH_SIGN>.",
-        "27": "Take the <NAME_SIGN> exit toward <TOWARD_SIGN>.",
-        "29": "Take the <NAME_SIGN> exit onto <BRANCH_SIGN> toward <TOWARD_SIGN>."
+        "15": "Выезжайте.",
+        "16": "Выезжайте через <NUMBER_SIGN>.",
+        "17": "Выезжайте через <BRANCH_SIGN>.",
+        "18": "Выезжайте через <NUMBER_SIGN> на <BRANCH_SIGN>.",
+        "19": "Выезжайте в строну <TOWARD_SIGN>.",
+        "20": "Выезжайте через <NUMBER_SIGN> в строну <TOWARD_SIGN>.",
+        "21": "Выезжайте через <BRANCH_SIGN> в строну <TOWARD_SIGN>.",
+        "22": "Выезжайте через <NUMBER_SIGN> на <BRANCH_SIGN> в строну <TOWARD_SIGN>.",
+        "23": "Выезжайте через <NAME_SIGN>.",
+        "25": "Выезжайте через <NAME_SIGN> на <BRANCH_SIGN>.",
+        "27": "Выезжайте через <NAME_SIGN> в сторону <TOWARD_SIGN>.",
+        "29": "Выезжайте через <NAME_SIGN> на <BRANCH_SIGN> в сторону <TOWARD_SIGN>."
       },
       "relative_directions": [
-        "left",
-        "right"
+        "слева",
+        "справа"
       ],
       "example_phrases": {
         "0": [
@@ -719,18 +719,18 @@
         "10": "Выезжайте <RELATIVE_DIRECTION> через <NAME_SIGN> на <BRANCH_SIGN>.",
         "12": "Выезжайте <RELATIVE_DIRECTION> через <NAME_SIGN> в сторону <TOWARD_SIGN>.",
         "14": "Выезжайте <RELATIVE_DIRECTION> через <NAME_SIGN> на <BRANCH_SIGN> в сторону <TOWARD_SIGN>.",
-        "15": "Take the exit.",
-        "16": "Take exit <NUMBER_SIGN>.",
-        "17": "Take the <BRANCH_SIGN> exit.",
-        "18": "Take exit <NUMBER_SIGN> onto <BRANCH_SIGN>.",
-        "19": "Take the exit toward <TOWARD_SIGN>.",
-        "20": "Take exit <NUMBER_SIGN> toward <TOWARD_SIGN>.",
-        "21": "Take the <BRANCH_SIGN> exit toward <TOWARD_SIGN>.",
-        "22": "Take exit <NUMBER_SIGN> onto <BRANCH_SIGN> toward <TOWARD_SIGN>.",
-        "23": "Take the <NAME_SIGN> exit.",
-        "25": "Take the <NAME_SIGN> exit onto <BRANCH_SIGN>.",
-        "27": "Take the <NAME_SIGN> exit toward <TOWARD_SIGN>.",
-        "29": "Take the <NAME_SIGN> exit onto <BRANCH_SIGN> toward <TOWARD_SIGN>."
+        "15": "Выезжайте.",
+        "16": "Выезжайте через <NUMBER_SIGN>.",
+        "17": "Выезжайте через <BRANCH_SIGN>.",
+        "18": "Выезжайте через <NUMBER_SIGN> на <BRANCH_SIGN>.",
+        "19": "Выезжайте в строну <TOWARD_SIGN>.",
+        "20": "Выезжайте через <NUMBER_SIGN> в строну <TOWARD_SIGN>.",
+        "21": "Выезжайте через <BRANCH_SIGN> в строну <TOWARD_SIGN>.",
+        "22": "Выезжайте через <NUMBER_SIGN> на <BRANCH_SIGN> в строну <TOWARD_SIGN>.",
+        "23": "Выезжайте через <NAME_SIGN>.",
+        "25": "Выезжайте через <NAME_SIGN> на <BRANCH_SIGN>.",
+        "27": "Выезжайте через <NAME_SIGN> в сторону <TOWARD_SIGN>.",
+        "29": "Выезжайте через <NAME_SIGN> на <BRANCH_SIGN> в сторону <TOWARD_SIGN>."
       },
       "relative_directions": [
         "left",
@@ -1221,11 +1221,11 @@
         "7": "Поверните <RELATIVE_DIRECTION> чтобы попасть на съезд в строну <TOWARD_SIGN>.",
         "8": "Поверните <RELATIVE_DIRECTION> чтобы попасть на съезд <BRANCH_SIGN> ramp в строну <TOWARD_SIGN>.",
         "9": "Поверните <RELATIVE_DIRECTION> чтобы попасть на съезд <NAME_SIGN>.",
-        "10": "Take the ramp.",
-        "11": "Take the <BRANCH_SIGN> ramp.",
-        "12": "Take the ramp toward <TOWARD_SIGN>.",
-        "13": "Take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>.",
-        "14": "Take the <NAME_SIGN> ramp."
+        "10": "Двигайтесь в сторону съезда.",
+        "11": "Двигайтесь в сторону съезда <BRANCH_SIGN>, который находится.",
+        "12": "Двигайтесь в сторону съезда в строну <TOWARD_SIGN>.",
+        "13": "Двигайтесь в сторону съезда <BRANCH_SIGN> в строну <TOWARD_SIGN>.",
+        "14": "Двигайтесь в сторону съезда <NAME_SIGN>."
       },
       "relative_directions": [
         "слева",
@@ -1345,11 +1345,11 @@
         "7": "Поверните <RELATIVE_DIRECTION> чтобы попасть на съезд в строну <TOWARD_SIGN>.",
         "8": "Поверните <RELATIVE_DIRECTION> чтобы попасть на съезд <BRANCH_SIGN> в строну <TOWARD_SIGN>.",
         "9": "Поверните <RELATIVE_DIRECTION> чтобы попасть на съезд <NAME_SIGN>.",
-        "10": "Take the ramp.",
-        "11": "Take the <BRANCH_SIGN> ramp.",
-        "12": "Take the ramp toward <TOWARD_SIGN>.",
-        "13": "Take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>.",
-        "14": "Take the <NAME_SIGN> ramp."
+        "10": "Двигайтесь в сторону съезда.",
+        "11": "Двигайтесь в сторону съезда <BRANCH_SIGN>, который находится.",
+        "12": "Двигайтесь в сторону съезда в строну <TOWARD_SIGN>.",
+        "13": "Двигайтесь в сторону съезда <BRANCH_SIGN> в строну <TOWARD_SIGN>.",
+        "14": "Двигайтесь в сторону съезда <NAME_SIGN>."
       },
       "relative_directions": [
         "слева",
