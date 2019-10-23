@@ -333,7 +333,7 @@ protected:
   bool to_stay_on_;
   std::unique_ptr<StreetNames> roundabout_exit_street_names_;
   RelativeDirection merge_to_relative_direction_;
-  bool drive_on_right_;
+  bool drive_on_right_; // Defaults to true
 
   ////////////////////////////////////////////////////////////////////////////
   // Transit support

@@ -112,7 +112,8 @@ Maneuver::Maneuver()
       transit_connection_(false), rail_(false), bus_(false), fork_(false),
       begin_intersecting_edge_name_consistency_(false), intersecting_forward_edge_(false),
       tee_(false), unnamed_walkway_(false), unnamed_cycleway_(false),
-      unnamed_mountain_bike_trail_(false), verbal_multi_cue_(false), to_stay_on_(false) {
+      unnamed_mountain_bike_trail_(false), verbal_multi_cue_(false), to_stay_on_(false),
+      drive_on_right_(true) {
   street_names_ = midgard::make_unique<StreetNames>();
   begin_street_names_ = midgard::make_unique<StreetNames>();
   cross_street_names_ = midgard::make_unique<StreetNames>();
