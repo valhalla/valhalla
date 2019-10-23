@@ -428,18 +428,18 @@
         "10": "Blow me down! Take thee <NAME_SIGN> exit on th' <RELATIVE_DIRECTION> onto <BRANCH_SIGN>.",
         "12": "Blow me down! Take thee <NAME_SIGN> exit on th' <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
         "14": "Blow me down! Take thee <NAME_SIGN> exit on th' <RELATIVE_DIRECTION> onto <BRANCH_SIGN> toward <TOWARD_SIGN>.",
-        "15": "Take the exit.",
-        "16": "Take exit <NUMBER_SIGN>.",
-        "17": "Take the <BRANCH_SIGN> exit.",
-        "18": "Take exit <NUMBER_SIGN> onto <BRANCH_SIGN>.",
-        "19": "Take the exit toward <TOWARD_SIGN>.",
-        "20": "Take exit <NUMBER_SIGN> toward <TOWARD_SIGN>.",
-        "21": "Take the <BRANCH_SIGN> exit toward <TOWARD_SIGN>.",
-        "22": "Take exit <NUMBER_SIGN> onto <BRANCH_SIGN> toward <TOWARD_SIGN>.",
-        "23": "Take the <NAME_SIGN> exit.",
-        "25": "Take the <NAME_SIGN> exit onto <BRANCH_SIGN>.",
-        "27": "Take the <NAME_SIGN> exit toward <TOWARD_SIGN>.",
-        "29": "Take the <NAME_SIGN> exit onto <BRANCH_SIGN> toward <TOWARD_SIGN>."
+        "15": "Blimey! Take thee exit.",
+        "16": "Shiver me timbers! Take exit <NUMBER_SIGN>.",
+        "17": "Blow me down! Take thee <BRANCH_SIGN> exit.",
+        "18": "Yo ho ho! Take exit <NUMBER_SIGN> onto <BRANCH_SIGN>.",
+        "19": "Sink me! Take thee exit toward <TOWARD_SIGN>.",
+        "20": "Avast ye, take exit <NUMBER_SIGN> toward <TOWARD_SIGN>.",
+        "21": "Blimey! Take thee <BRANCH_SIGN> exit toward <TOWARD_SIGN>.",
+        "22": "Sink me! Take exit <NUMBER_SIGN> onto <BRANCH_SIGN> toward <TOWARD_SIGN>.",
+        "23": "Blow me down! Take thee <NAME_SIGN> exit.",
+        "25": "Blow me down! Take thee <NAME_SIGN> exit onto <BRANCH_SIGN>.",
+        "27": "Blow me down! Take thee <NAME_SIGN> exit toward <TOWARD_SIGN>.",
+        "29": "Blow me down! Take thee <NAME_SIGN> exit onto <BRANCH_SIGN> toward <TOWARD_SIGN>."
       },
       "relative_directions": [
         "port",
@@ -484,40 +484,40 @@
           "Blow me down! Take thee White Marsh Boulevard exit on th' port onto MD 43 East toward White Marsh."
         ],
         "15": [
-          "Take the exit."
+          "Blimey! Take thee exit."
         ],
         "16": [
-          "Take exit 67 B-A."
+          "Shiver me timbers! Take exit 67 B-A."
         ],
         "17": [
-          "Take the US 322 West exit."
+          "Blow me down! Take thee US 322 West exit."
         ],
         "18": [
-          "Take exit 67 B-A onto US 322 West."
+          "Yo ho ho! Take exit 67 B-A onto US 322 West."
         ],
         "19": [
-          "Take the exit toward Lewistown."
+          "Sink me! Take thee exit toward Lewistown."
         ],
         "20": [
-          "Take exit 67 B-A toward Lewistown."
+          "Avast ye, take exit 67 B-A toward Lewistown."
         ],
         "21": [
-          "Take the US 322 West exit toward Lewistown."
+          "Blimey! Take thee US 322 West exit toward Lewistown."
         ],
         "22": [
-          "Take exit 67 B-A onto US 322 West toward Lewistown/State College."
+          "Sink me! Take exit 67 B-A onto US 322 West toward Lewistown/State College."
         ],
         "23": [
-          "Take the White Marsh Boulevard exit."
+          "Blow me down! Take thee White Marsh Boulevard exit."
         ],
         "25": [
-          "Take the White Marsh Boulevard exit onto MD 43 East."
+          "Blow me down! Take thee White Marsh Boulevard exit onto MD 43 East."
         ],
         "27": [
-          "Take the White Marsh Boulevard exit toward White Marsh."
+          "Blow me down! Take thee White Marsh Boulevard exit toward White Marsh."
         ],
         "29": [
-          "Take the White Marsh Boulevard exit onto MD 43 East toward White Marsh."
+          "Blow me down! Take thee White Marsh Boulevard exit onto MD 43 East toward White Marsh."
         ]
       }
     },
@@ -719,18 +719,18 @@
         "10": "Blow me down! Take thee <NAME_SIGN> exit on th' <RELATIVE_DIRECTION> onto <BRANCH_SIGN>.",
         "12": "Blow me down! Take thee <NAME_SIGN> exit on th' <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
         "14": "Blow me down! Take thee <NAME_SIGN> exit on th' <RELATIVE_DIRECTION> onto <BRANCH_SIGN> toward <TOWARD_SIGN>.",
-        "15": "Take the exit.",
-        "16": "Take exit <NUMBER_SIGN>.",
-        "17": "Take the <BRANCH_SIGN> exit.",
-        "18": "Take exit <NUMBER_SIGN> onto <BRANCH_SIGN>.",
-        "19": "Take the exit toward <TOWARD_SIGN>.",
-        "20": "Take exit <NUMBER_SIGN> toward <TOWARD_SIGN>.",
-        "21": "Take the <BRANCH_SIGN> exit toward <TOWARD_SIGN>.",
-        "22": "Take exit <NUMBER_SIGN> onto <BRANCH_SIGN> toward <TOWARD_SIGN>.",
-        "23": "Take the <NAME_SIGN> exit.",
-        "25": "Take the <NAME_SIGN> exit onto <BRANCH_SIGN>.",
-        "27": "Take the <NAME_SIGN> exit toward <TOWARD_SIGN>.",
-        "29": "Take the <NAME_SIGN> exit onto <BRANCH_SIGN> toward <TOWARD_SIGN>."
+        "15": "Blimey! Take thee exit.",
+        "16": "Shiver me timbers! Take exit <NUMBER_SIGN>.",
+        "17": "Blow me down! Take thee <BRANCH_SIGN> exit.",
+        "18": "Yo ho ho! Take exit <NUMBER_SIGN> onto <BRANCH_SIGN>.",
+        "19": "Sink me! Take thee exit toward <TOWARD_SIGN>.",
+        "20": "Avast ye, take exit <NUMBER_SIGN> toward <TOWARD_SIGN>.",
+        "21": "Blimey! Take thee <BRANCH_SIGN> exit toward <TOWARD_SIGN>.",
+        "22": "Sink me! Take exit <NUMBER_SIGN> onto <BRANCH_SIGN> toward <TOWARD_SIGN>.",
+        "23": "Blow me down! Take thee <NAME_SIGN> exit.",
+        "25": "Blow me down! Take thee <NAME_SIGN> exit onto <BRANCH_SIGN>.",
+        "27": "Blow me down! Take thee <NAME_SIGN> exit toward <TOWARD_SIGN>.",
+        "29": "Blow me down! Take thee <NAME_SIGN> exit onto <BRANCH_SIGN> toward <TOWARD_SIGN>."
       },
       "relative_directions": [
         "port",
@@ -775,40 +775,40 @@
           "Blow me down! Take thee White Marsh Boulevard exit on th' port onto Maryland 43 East toward White Marsh."
         ],
         "15": [
-          "Take the exit."
+          "Blimey! Take thee exit."
         ],
         "16": [
-          "Take exit 67 B-A."
+          "Shiver me timbers! Take exit 67 B-A."
         ],
         "17": [
-          "Take the US 322 West exit."
+          "Blow me down! Take thee US 322 West exit."
         ],
         "18": [
-          "Take exit 67 B-A onto US 322 West."
+          "Yo ho ho! Take exit 67 B-A onto US 322 West."
         ],
         "19": [
-          "Take the exit toward Lewistown."
+          "Sink me! Take thee exit exit toward Lewistown."
         ],
         "20": [
-          "Take exit 67 B-A toward Lewistown."
+          "Avast ye, take exit 67 B-A toward Lewistown."
         ],
         "21": [
-          "Take the US 322 West exit toward Lewistown."
+          "Blimey! Take thee US 322 West exit toward Lewistown."
         ],
         "22": [
-          "Take exit 67 B-A onto US 322 West toward Lewistown/State College."
+          "Sink me! Take exit 67 B-A onto US 322 West toward Lewistown/State College."
         ],
         "23": [
-          "Take the White Marsh Boulevard exit."
+          "Blow me down! Take thee White Marsh Boulevard exit."
         ],
         "25": [
-          "Take the White Marsh Boulevard exit onto MD 43 East."
+          "Blow me down! Take thee White Marsh Boulevard exit onto MD 43 East."
         ],
         "27": [
-          "Take the White Marsh Boulevard exit toward White Marsh."
+          "Blow me down! Take thee White Marsh Boulevard exit toward White Marsh."
         ],
         "29": [
-          "Take the White Marsh Boulevard exit onto MD 43 East toward White Marsh."
+          "Blow me down! Take thee White Marsh Boulevard exit onto MD 43 East toward White Marsh."
         ]
       }
     },
@@ -1220,11 +1220,11 @@
         "7": "Turn <RELATIVE_DIRECTION> to take th' gangplank toward <TOWARD_SIGN>.",
         "8": "Turn <RELATIVE_DIRECTION> to take th' <BRANCH_SIGN> gangplank toward <TOWARD_SIGN>.",
         "9": "Turn <RELATIVE_DIRECTION> to take th' <NAME_SIGN> gangplank.",
-        "10": "Take the ramp.",
-        "11": "Take the <BRANCH_SIGN> ramp.",
-        "12": "Take the ramp toward <TOWARD_SIGN>.",
-        "13": "Take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>.",
-        "14": "Take the <NAME_SIGN> ramp."
+        "10": "Take thee gangplank.",
+        "11": "Take thee <BRANCH_SIGN> gangplank.",
+        "12": "Take thee gangplank toward <TOWARD_SIGN>.",
+        "13": "Take thee <BRANCH_SIGN> gangplank toward <TOWARD_SIGN>.",
+        "14": "Take thee <NAME_SIGN> gangplank."
       },
       "relative_directions": [
         "port",
@@ -1264,19 +1264,19 @@
           "Turn starboard to take th' Gettysburg Pike gangplank."
         ],
         "10": [
-          "Take the ramp."
+          "Take thee gangplank."
         ],
         "11": [
-          "Take the I 95 ramp."
+          "Take thee I 95 gangplank."
         ],
         "12": [
-          "Take the ramp toward JFK."
+          "Take thee gangplank toward JFK."
         ],
         "13": [
-          "Take the Soutch Conduit Avenue ramp toward JFK."
+          "Take thee Soutch Conduit Avenue gangplank toward JFK."
         ],
         "14": [
-          "Take the Gettysburg ramp."
+          "Take thee Gettysburg gangplank."
         ]
       }
     },
@@ -1344,11 +1344,11 @@
         "7": "Turn <RELATIVE_DIRECTION> to take th' gangplank toward <TOWARD_SIGN>.",
         "8": "Turn <RELATIVE_DIRECTION> to take th' <BRANCH_SIGN> gangplank toward <TOWARD_SIGN>.",
         "9": "Turn <RELATIVE_DIRECTION> to take th' <NAME_SIGN> gangplank.",
-        "10": "Take the ramp.",
-        "11": "Take the <BRANCH_SIGN> ramp.",
-        "12": "Take the ramp toward <TOWARD_SIGN>.",
-        "13": "Take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>.",
-        "14": "Take the <NAME_SIGN> ramp."
+        "10": "Take thee gangplank.",
+        "11": "Take thee <BRANCH_SIGN> gangplank.",
+        "12": "Take thee gangplank toward <TOWARD_SIGN>.",
+        "13": "Take thee <BRANCH_SIGN> gangplank toward <TOWARD_SIGN>.",
+        "14": "Take thee <NAME_SIGN> gangplank."
       },
       "relative_directions": [
         "port",
@@ -1388,19 +1388,19 @@
           "Turn starboard to take th' Gettysburg Pike gangplank."
         ],
         "10": [
-          "Take the ramp."
+          "Take thee gangplank."
         ],
         "11": [
-          "Take the Interstate 95 ramp."
+          "Take thee Interstate 95 gangplank."
         ],
         "12": [
-          "Take the ramp toward JFK."
+          "Take thee gangplank toward JFK."
         ],
         "13": [
-          "Take the South Conduit Avenue ramp toward JFK."
+          "Take thee South Conduit Avenue gangplank toward JFK."
         ],
         "14": [
-          "Take the Gettysburg Pike ramp."
+          "Take thee Gettysburg Pike gangplank."
         ]
       }
     },

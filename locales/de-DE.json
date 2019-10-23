@@ -436,8 +436,8 @@
         "20": "An der Ausfahrt <NUMBER_SIGN> abfahren Richtung <TOWARD_SIGN>.",
         "21": "Auf <BRANCH_SIGN> Richtung <TOWARD_SIGN> über die Ausfahrt abfahren.",
         "22": "Auf <BRANCH_SIGN> Richtung <TOWARD_SIGN> über die Ausfahrt <NUMBER_SIGN> abfahren.",
-        "24": "An der Ausfahrt <NAME_SIGN> abfahren.",
-        "26": "Auf <BRANCH_SIGN> über die Ausfahrt <NAME_SIGN> abfahren.",
+        "23": "An der Ausfahrt <NAME_SIGN> abfahren.",
+        "25": "Auf <BRANCH_SIGN> über die Ausfahrt <NAME_SIGN> abfahren.",
         "27": "An der Ausfahrt <NAME_SIGN> abfahren Richtung <TOWARD_SIGN>.",
         "29": "Auf <BRANCH_SIGN> Richtung <TOWARD_SIGN> über die Ausfahrt <NAME_SIGN> abfahren."
       },
@@ -727,8 +727,8 @@
         "20": "An der Ausfahrt <NUMBER_SIGN> abfahren Richtung <TOWARD_SIGN>.",
         "21": "Auf <BRANCH_SIGN> Richtung <TOWARD_SIGN> über die Ausfahrt abfahren.",
         "22": "Auf <BRANCH_SIGN> Richtung <TOWARD_SIGN> über die Ausfahrt <NUMBER_SIGN> abfahren.",
-        "24": "An der Ausfahrt <NAME_SIGN> abfahren.",
-        "26": "Auf <BRANCH_SIGN> über die Ausfahrt <NAME_SIGN> abfahren.",
+        "23": "An der Ausfahrt <NAME_SIGN> abfahren.",
+        "25": "Auf <BRANCH_SIGN> über die Ausfahrt <NAME_SIGN> abfahren.",
         "27": "An der Ausfahrt <NAME_SIGN> abfahren Richtung <TOWARD_SIGN>.",
         "29": "Auf <BRANCH_SIGN> Richtung <TOWARD_SIGN> über die Ausfahrt <NAME_SIGN> abfahren."
       },
