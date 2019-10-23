@@ -640,6 +640,14 @@ void Maneuver::set_merge_to_relative_direction(RelativeDirection merge_to_relati
   merge_to_relative_direction_ = merge_to_relative_direction;
 }
 
+bool Maneuver::drive_on_right() const {
+  return drive_on_right_;
+}
+
+void Maneuver::set_drive_on_right(bool drive_on_right) {
+  drive_on_right_ = drive_on_right;
+}
+
 TripLeg_TravelMode Maneuver::travel_mode() const {
   return travel_mode_;
 }
