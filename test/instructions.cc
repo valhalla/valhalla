@@ -216,17 +216,17 @@ void validate_ramp_instructions() {
   int maneuver_index = 1;
 
   // Test take toward driving side right
-  test_instructions({VALHALLA_SOURCE_DIR "test/pinpoints/instructions/ramp_take_toward_driving_side_right.pbf"},
+  test_instructions({VALHALLA_SOURCE_DIR
+                     "test/pinpoints/instructions/ramp_take_toward_driving_side_right.pbf"},
                     expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
                     "Take the ramp toward Pennsylvania Avenue.", "",
                     "Take the ramp toward Pennsylvania Avenue.", "");
 
   // Test take toward driving side left
-  test_instructions({VALHALLA_SOURCE_DIR "test/pinpoints/instructions/ramp_take_toward_driving_side_left.pbf"},
+  test_instructions({VALHALLA_SOURCE_DIR
+                     "test/pinpoints/instructions/ramp_take_toward_driving_side_left.pbf"},
                     expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
-                    "Take the M11 ramp toward London.", "",
-                    "Take the M11 ramp toward London.", "");
-
+                    "Take the M11 ramp toward London.", "", "Take the M11 ramp toward London.", "");
 }
 
 void validate_exit_instructions() {
@@ -236,16 +236,18 @@ void validate_exit_instructions() {
   int maneuver_index = 1;
 
   // Test exit left on right driving side
-  test_instructions({VALHALLA_SOURCE_DIR "test/pinpoints/instructions/exit_left_driving_side_right.pbf"},
+  test_instructions({VALHALLA_SOURCE_DIR
+                     "test/pinpoints/instructions/exit_left_driving_side_right.pbf"},
                     expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
                     "Take the I 66 East exit on the left toward Washington.", "",
                     "Take the Interstate 66 East exit on the left toward Washington.", "");
 
   // Test exit left on left driving side
-  test_instructions({VALHALLA_SOURCE_DIR "test/pinpoints/instructions/exit_left_driving_side_left.pbf"},
+  test_instructions({VALHALLA_SOURCE_DIR
+                     "test/pinpoints/instructions/exit_left_driving_side_left.pbf"},
                     expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
-                    "Take exit 8 onto A120(W)|A120(W).", "",
-                    "Take exit 8 onto A1 20(W)|A1 20(W).", "");
+                    "Take exit 8 onto A120(W)|A120(W).", "", "Take exit 8 onto A1 20(W)|A1 20(W).",
+                    "");
 }
 
 } // namespace
