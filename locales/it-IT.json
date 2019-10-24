@@ -887,8 +887,14 @@
     "merge": {
       "phrases": {
         "0": "Entra.",
-        "1": "Entra in <STREET_NAMES>."
+        "1": "Entra a <RELATIVE_DIRECTION>.",
+        "2": "Entra in <STREET_NAMES>.",
+        "3": "Entra a <RELATIVE_DIRECTION> in <STREET_NAMES>."
       },
+      "relative_directions": [
+        "sinistra",
+        "destra"
+      ],
       "empty_street_name_labels": [
         "il marciapiedi",
         "la pista per ciclismo",
@@ -899,15 +905,27 @@
           "Entra."
         ],
         "1": [
+          "Entra a sinistra."
+        ],
+        "2": [
           "Entra in I 76 West/Pennsylvania Turnpike."
+        ],
+        "3": [
+          "Entra a destra in I 83 South."
         ]
       }
     },
     "merge_verbal": {
       "phrases": {
         "0": "Entra.",
-        "1": "Entra in <STREET_NAMES>."
+        "1": "Entra a <RELATIVE_DIRECTION>.",
+        "2": "Entra in <STREET_NAMES>.",
+        "3": "Entra a <RELATIVE_DIRECTION> in <STREET_NAMES>."
       },
+      "relative_directions": [
+        "sinistra",
+        "destra"
+      ],
       "empty_street_name_labels": [
         "il marciapiedi",
         "la pista per ciclismo",
@@ -918,7 +936,13 @@
           "Entra."
         ],
         "1": [
-          "Entra in Interstate 76 West, Pennsylvania Turnpike."
+          "Entra a sinistra."
+        ],
+        "2": [
+          "Entra in I 76 West/Pennsylvania Turnpike."
+        ],
+        "3": [
+          "Entra a destra in I 83 South."
         ]
       }
     },

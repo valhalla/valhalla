@@ -286,8 +286,8 @@ public:
   KeepSubset keep_to_stay_on_verbal_subset;
 
   // Merge
-  ContinueSubset merge_subset;
-  ContinueSubset merge_verbal_subset;
+  TurnSubset merge_subset;
+  TurnSubset merge_verbal_subset;
 
   // EnterRoundabout
   EnterRoundaboutSubset enter_roundabout_subset;
