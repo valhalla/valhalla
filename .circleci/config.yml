@@ -10,6 +10,8 @@ executors:
 commands:
   install_macos_dependencies:
     steps:
+      - run: brew install protobuf --without-python@2
+      - run: brew upgrade python
       - run: brew install protobuf cmake libtool boost-python libspatialite pkg-config lua curl wget czmq lz4
       - run:
           name: Install Node
