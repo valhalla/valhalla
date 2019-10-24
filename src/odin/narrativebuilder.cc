@@ -1637,10 +1637,8 @@ std::string NarrativeBuilder::FormExitInstruction(Maneuver& maneuver,
   std::string exit_name_sign;
 
   // Determine if driving side matches relative direction
-  if (((maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kKeepRight) &&
-       maneuver.drive_on_right()) ||
-      ((maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kKeepLeft) &&
-       !maneuver.drive_on_right())) {
+  if (((maneuver.type() == DirectionsLeg_Maneuver_Type_kExitRight) && maneuver.drive_on_right()) ||
+      ((maneuver.type() == DirectionsLeg_Maneuver_Type_kExitLeft) && !maneuver.drive_on_right())) {
     phrase_id = 15;
   }
 
@@ -1711,10 +1709,8 @@ std::string NarrativeBuilder::FormVerbalAlertExitInstruction(Maneuver& maneuver,
   std::string exit_name_sign;
 
   // Determine if driving side matches relative direction
-  if (((maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kKeepRight) &&
-       maneuver.drive_on_right()) ||
-      ((maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kKeepLeft) &&
-       !maneuver.drive_on_right())) {
+  if (((maneuver.type() == DirectionsLeg_Maneuver_Type_kExitRight) && maneuver.drive_on_right()) ||
+      ((maneuver.type() == DirectionsLeg_Maneuver_Type_kExitLeft) && !maneuver.drive_on_right())) {
     phrase_id = 15;
   }
 
@@ -1787,10 +1783,8 @@ std::string NarrativeBuilder::FormVerbalExitInstruction(Maneuver& maneuver,
   std::string exit_name_sign;
 
   // Determine if driving side matches relative direction
-  if (((maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kKeepRight) &&
-       maneuver.drive_on_right()) ||
-      ((maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kKeepLeft) &&
-       !maneuver.drive_on_right())) {
+  if (((maneuver.type() == DirectionsLeg_Maneuver_Type_kExitRight) && maneuver.drive_on_right()) ||
+      ((maneuver.type() == DirectionsLeg_Maneuver_Type_kExitLeft) && !maneuver.drive_on_right())) {
     phrase_id = 15;
   }
 

@@ -1230,8 +1230,13 @@ void ManeuversBuilder::SetManeuverType(Maneuver& maneuver, bool none_type_allowe
         LOG_TRACE(std::string("EXIT RelativeDirection=") +
                   std::to_string(static_cast<int>(maneuver.begin_relative_direction())));
         // TODO: determine how to handle, for now set to right
-        maneuver.set_type(DirectionsLeg_Maneuver_Type_kExitRight);
-        LOG_TRACE("ManeuverType=EXIT_RIGHT");
+        if (maneuver.drive_on_right()) {
+          maneuver.set_type(DirectionsLeg_Maneuver_Type_kExitRight);
+          LOG_TRACE("ManeuverType=EXIT_RIGHT");
+        } else {
+          maneuver.set_type(DirectionsLeg_Maneuver_Type_kExitLeft);
+          LOG_TRACE("ManeuverType=EXIT_LEFT");
+        }
       }
     }
   }
