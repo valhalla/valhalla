@@ -16,7 +16,7 @@ include(GNUInstallDirs)
 set(VALHALLA_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 list(INSERT CMAKE_MODULE_PATH 0 ${VALHALLA_SOURCE_DIR}/cmake)
 
-set(CMAKE_CXX_STANDARD 11 CACHE STRING "C++ language version to use (default is 11)")
+set(CMAKE_CXX_STANDARD 14 CACHE STRING "C++ language version to use (default is 14)")
 option(ENABLE_TOOLS "Enable Valhalla tools" ON)
 option(ENABLE_DATA_TOOLS "Enable Valhalla data tools" ON)
 option(ENABLE_SERVICES "Enable Valhalla services" ON)
