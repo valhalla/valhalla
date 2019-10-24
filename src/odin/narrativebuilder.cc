@@ -1368,21 +1368,16 @@ std::string NarrativeBuilder::FormVerbalRampStraightInstruction(uint8_t phrase_i
 std::string NarrativeBuilder::FormRampInstruction(Maneuver& maneuver,
                                                   bool limit_by_consecutive_count,
                                                   uint32_t element_max_count) {
-  // non-turn types
   // "0": "Take the ramp on the <RELATIVE_DIRECTION>.",
   // "1": "Take the <BRANCH_SIGN> ramp on the <RELATIVE_DIRECTION>.",
   // "2": "Take the ramp on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
   // "3": "Take the <BRANCH_SIGN> ramp on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
   // "4": "Take the <NAME_SIGN> ramp on the <RELATIVE_DIRECTION>.",
-
-  // turn types
   // "5": "Turn <RELATIVE_DIRECTION> to take the ramp.",
   // "6": "Turn <RELATIVE_DIRECTION> to take the <BRANCH_SIGN> ramp.",
   // "7": "Turn <RELATIVE_DIRECTION> to take the ramp toward <TOWARD_SIGN>.",
   // "8": "Turn <RELATIVE_DIRECTION> to take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>.",
   // "9": "Turn <RELATIVE_DIRECTION> to take the <NAME_SIGN> ramp."
-
-  // non-directional non-turn types
   // "10": "Take the ramp.",
   // "11": "Take the <BRANCH_SIGN> ramp.",
   // "12": "Take the ramp toward <TOWARD_SIGN>.",
@@ -1398,17 +1393,15 @@ std::string NarrativeBuilder::FormRampInstruction(Maneuver& maneuver,
   std::string exit_toward_sign;
   std::string exit_name_sign;
 
-  bool drive_on_right = trip_path_->GetCurrEdge(maneuver.begin_node_index())->drive_on_right();
-
   // Determine if turn, else it's a "Take" instruction
   if ((maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kRight) ||
       (maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kLeft)) {
     phrase_id = 5;
     // Determine if driving side matches relative direction
   } else if (((maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kKeepRight) &&
-              drive_on_right) ||
+              maneuver.drive_on_right()) ||
              ((maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kKeepLeft) &&
-              !drive_on_right)) {
+              !maneuver.drive_on_right())) {
     phrase_id = 10;
   }
   if (maneuver.HasExitBranchSign()) {
@@ -1463,15 +1456,28 @@ std::string NarrativeBuilder::FormVerbalAlertRampInstruction(Maneuver& maneuver,
   // "7": "Turn <RELATIVE_DIRECTION> to take the ramp toward <TOWARD_SIGN>.",
   // "8": "Turn <RELATIVE_DIRECTION> to take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>.",
   // "9": "Turn <RELATIVE_DIRECTION> to take the <NAME_SIGN> ramp."
+  // "10": "Take the ramp.",
+  // "11": "Take the <BRANCH_SIGN> ramp.",
+  // "12": "Take the ramp toward <TOWARD_SIGN>.",
+  // "13": "Take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>.",
+  // "14": "Take the <NAME_SIGN> ramp."
 
   // Determine which phrase to use
   uint8_t phrase_id = 0;
   std::string exit_branch_sign;
   std::string exit_toward_sign;
   std::string exit_name_sign;
+
+  // Determine if turn, else it's a "Take" instruction
   if ((maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kRight) ||
       (maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kLeft)) {
     phrase_id = 5;
+    // Determine if driving side matches relative direction
+  } else if (((maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kKeepRight) &&
+              maneuver.drive_on_right()) ||
+             ((maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kKeepLeft) &&
+              !maneuver.drive_on_right())) {
+    phrase_id = 10;
   }
 
   if (maneuver.HasExitBranchSign()) {
@@ -1514,15 +1520,28 @@ std::string NarrativeBuilder::FormVerbalRampInstruction(Maneuver& maneuver,
   // "7": "Turn <RELATIVE_DIRECTION> to take the ramp toward <TOWARD_SIGN>.",
   // "8": "Turn <RELATIVE_DIRECTION> to take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>.",
   // "9": "Turn <RELATIVE_DIRECTION> to take the <NAME_SIGN> ramp."
+  // "10": "Take the ramp.",
+  // "11": "Take the <BRANCH_SIGN> ramp.",
+  // "12": "Take the ramp toward <TOWARD_SIGN>.",
+  // "13": "Take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>.",
+  // "14": "Take the <NAME_SIGN> ramp."
 
   // Determine which phrase to use
   uint8_t phrase_id = 0;
   std::string exit_branch_sign;
   std::string exit_toward_sign;
   std::string exit_name_sign;
+
+  // Determine if turn, else it's a "Take" instruction
   if ((maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kRight) ||
       (maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kLeft)) {
     phrase_id = 5;
+    // Determine if driving side matches relative direction
+  } else if (((maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kKeepRight) &&
+              maneuver.drive_on_right()) ||
+             ((maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kKeepLeft) &&
+              !maneuver.drive_on_right())) {
+    phrase_id = 10;
   }
 
   if (maneuver.HasExitBranchSign()) {
@@ -1617,13 +1636,11 @@ std::string NarrativeBuilder::FormExitInstruction(Maneuver& maneuver,
   std::string exit_toward_sign;
   std::string exit_name_sign;
 
-  bool drive_on_right = trip_path_->GetCurrEdge(maneuver.begin_node_index())->drive_on_right();
-
   // Determine if driving side matches relative direction
   if (((maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kKeepRight) &&
-       drive_on_right) ||
+       maneuver.drive_on_right()) ||
       ((maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kKeepLeft) &&
-       !drive_on_right)) {
+       !maneuver.drive_on_right())) {
     phrase_id = 15;
   }
 
@@ -1680,6 +1697,11 @@ std::string NarrativeBuilder::FormVerbalAlertExitInstruction(Maneuver& maneuver,
   // "2": "Take the <BRANCH_SIGN> exit on the <RELATIVE_DIRECTION>.",
   // "4": "Take the exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
   // "8": "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION>.",
+  // "15": "Take the exit.",
+  // "16": "Take exit <NUMBER_SIGN>.",
+  // "17": "Take the <BRANCH_SIGN> exit.",
+  // "19": "Take the exit toward <TOWARD_SIGN>.",
+  // "23": "Take the <NAME_SIGN> exit.",
 
   // Determine which phrase to use
   uint8_t phrase_id = 0;
@@ -1687,6 +1709,15 @@ std::string NarrativeBuilder::FormVerbalAlertExitInstruction(Maneuver& maneuver,
   std::string exit_branch_sign;
   std::string exit_toward_sign;
   std::string exit_name_sign;
+
+  // Determine if driving side matches relative direction
+  if (((maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kKeepRight) &&
+       maneuver.drive_on_right()) ||
+      ((maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kKeepLeft) &&
+       !maneuver.drive_on_right())) {
+    phrase_id = 15;
+  }
+
   if (maneuver.HasExitNumberSign()) {
     phrase_id += 1;
     // Assign number sign
@@ -1755,13 +1786,11 @@ std::string NarrativeBuilder::FormVerbalExitInstruction(Maneuver& maneuver,
   std::string exit_toward_sign;
   std::string exit_name_sign;
 
-  bool drive_on_right = trip_path_->GetCurrEdge(maneuver.begin_node_index())->drive_on_right();
-
   // Determine if driving side matches relative direction
   if (((maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kKeepRight) &&
-       drive_on_right) ||
+       maneuver.drive_on_right()) ||
       ((maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kKeepLeft) &&
-       !drive_on_right)) {
+       !maneuver.drive_on_right())) {
     phrase_id = 15;
   }
 
