@@ -1,3 +1,11 @@
+## Release Date: 2019-??-?? Valhalla 3.0.9
+* **Bug Fix**
+   * FIXED: Changed reachability computation to consider both directions of travel wrt candidate edges [#1965](https://github.com/valhalla/valhalla/pull/1965)
+
+* **Enhancement**
+   * ADDED: Establish pinpoint test pattern [#1969](https://github.com/valhalla/valhalla/pull/1969)
+   * ADDED: Added relative direction to the merge maneuver [#1989](https://github.com/valhalla/valhalla/pull/1989)
+
 ## Release Date: 2019-09-06 Valhalla 3.0.8
 * **Bug Fix**
    * FIXED: Added logic to detect if user is to merge to the left or right [#1892](https://github.com/valhalla/valhalla/pull/1892)

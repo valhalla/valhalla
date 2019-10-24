@@ -887,8 +887,14 @@
     "merge": {
       "phrases": {
         "0": "Junte-se.",
-        "1": "Junte-se a <STREET_NAMES>."
+        "1": "Junte-se <RELATIVE_DIRECTION>.",
+        "2": "Junte-se a <STREET_NAMES>.",
+        "3": "Junte-se <RELATIVE_DIRECTION> a <STREET_NAMES>."
       },
+      "relative_directions": [
+        "à esquerda",
+        "à direita"
+      ],
       "empty_street_name_labels": [
         "via pedonal",
         "ciclovia",
@@ -899,15 +905,27 @@
           "Junte-se."
         ],
         "1": [
+          "Junte-se à esquerda."
+        ],
+        "2": [
           "Junte-se a A22 Oeste/Marinha Grande."
+        ],
+        "3": [
+          "Junte-se à direita a A22 Oeste/Marinha Grande."
         ]
       }
     },
     "merge_verbal": {
       "phrases": {
         "0": "Junte-se.",
-        "1": "Junte-se a <STREET_NAMES>."
+        "1": "Junte-se <RELATIVE_DIRECTION>.",
+        "2": "Junte-se a <STREET_NAMES>.",
+        "3": "Junte-se <RELATIVE_DIRECTION> a <STREET_NAMES>."
       },
+      "relative_directions": [
+        "à esquerda",
+        "à direita"
+      ],
       "empty_street_name_labels": [
         "via pedonal",
         "ciclovia",
@@ -918,7 +936,13 @@
           "Junte-se."
         ],
         "1": [
+          "Junte-se à esquerda."
+        ],
+        "2": [
           "Junte-se a A22 Oeste/Marinha Grande."
+        ],
+        "3": [
+          "Junte-se à direita a A22 Oeste/Marinha Grande."
         ]
       }
     },

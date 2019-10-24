@@ -503,11 +503,15 @@ AABB2<PointLL> GraphTile::BoundingBox() const {
   return tiles.TileBounds(header_->graphid().tileid());
 }
 
+iterable_t<const DirectedEdge> GraphTile::GetDirectedEdges(const NodeInfo* node) const {
+  const auto* edge = directededges_ + node->edge_index();
+  return iterable_t<const DirectedEdge>{edge, node->edge_count()};
+}
+
 iterable_t<const DirectedEdge> GraphTile::GetDirectedEdges(const GraphId& node) const {
   if (node.id() < header_->nodecount()) {
-    const auto& nodeinfo = nodes_[node.id()];
-    const auto* edge = directededge(nodeinfo.edge_index());
-    return iterable_t<const DirectedEdge>{edge, nodeinfo.edge_count()};
+    const auto* nodeinfo = nodes_ + node.id();
+    return GetDirectedEdges(nodeinfo);
   }
   throw std::runtime_error(
       "GraphTile NodeInfo index out of bounds: " + std::to_string(node.tileid()) + "," +
