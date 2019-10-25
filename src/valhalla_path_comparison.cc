@@ -275,7 +275,7 @@ int main(int argc, char* argv[]) {
   CostFactory<DynamicCost> factory;
   factory.RegisterStandardCostingModels();
   valhalla::Costing costing;
-  if (valhalla::Costing_Parse(routetype, &costing)) {
+  if (valhalla::Costing_Enum_Parse(routetype, &costing)) {
     request.mutable_options()->set_costing(costing);
   } else {
     throw std::runtime_error("No costing method found");
