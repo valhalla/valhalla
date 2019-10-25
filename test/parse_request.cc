@@ -227,8 +227,8 @@ void validate(const std::string& key,
   }
   if (pbf_value != expected_value) {
     throw std::runtime_error("Incorrect " + key +
-                             " ShapeMatch | expected_value=" + ShapeMatch_Name(expected_value) +
-                             " | found=" + ShapeMatch_Name(pbf_value));
+                             " ShapeMatch | expected_value=" + ShapeMatch_Enum_Name(expected_value) +
+                             " | found=" + ShapeMatch_Enum_Name(pbf_value));
   }
 }
 
@@ -240,9 +240,9 @@ void validate(const std::string& key,
     throw std::runtime_error("FilterAction value not found in pbf for key=" + key);
   }
   if (pbf_value != expected_value) {
-    throw std::runtime_error("Incorrect " + key +
-                             " FilterAction | expected_value=" + FilterAction_Name(expected_value) +
-                             " | found=" + FilterAction_Name(pbf_value));
+    throw std::runtime_error("Incorrect " + key + " FilterAction | expected_value=" +
+                             FilterAction_Enum_Name(expected_value) +
+                             " | found=" + FilterAction_Enum_Name(pbf_value));
   }
 }
 
@@ -340,11 +340,11 @@ std::string get_request_str(const std::string& key, const std::string& expected_
 }
 
 std::string get_request_str(const std::string& key, const ShapeMatch expected_value) {
-  return R"({")" + key + R"(":")" + ShapeMatch_Name(expected_value) + R"("})";
+  return R"({")" + key + R"(":")" + ShapeMatch_Enum_Name(expected_value) + R"("})";
 }
 
 std::string get_kv_str(const std::string& key, const valhalla::FilterAction value) {
-  return R"(")" + key + R"(":")" + FilterAction_Name(value) + R"(")";
+  return R"(")" + key + R"(":")" + FilterAction_Enum_Name(value) + R"(")";
 }
 
 std::string get_request_str(const std::string& parent_key,
@@ -394,7 +394,7 @@ Api get_request(const std::string& request_str, const Options::Action action) {
 // test parsing methods
 std::string get_costing_str(Costing costing) {
   // Create the costing string
-  auto costing_str = Costing_Name(costing);
+  auto costing_str = Costing_Enum_Name(costing);
   return costing_str;
 }
 
