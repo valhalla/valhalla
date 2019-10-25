@@ -424,7 +424,7 @@ void parse_locations(const rapidjson::Document& doc,
         }
         auto preferred_side = rapidjson::get_optional<std::string>(r_loc, "/preferred_side");
         valhalla::Location::PreferredSide side;
-        if (preferred_side && PreferredSide_Parse(*preferred_side, &side)) {
+        if (preferred_side && PreferredSide_Enum_Parse(*preferred_side, &side)) {
           location->set_preferred_side(side);
         }
         auto search_cutoff = rapidjson::get_optional<unsigned int>(r_loc, "/search_cutoff");
@@ -500,7 +500,7 @@ void from_json(rapidjson::Document& doc, Options& options) {
 
   auto fmt = rapidjson::get_optional<std::string>(doc, "/format");
   Options::Format format;
-  if (fmt && Options_Format_Parse(*fmt, &format)) {
+  if (fmt && Options_Format_Enum_Parse(*fmt, &format)) {
     options.set_format(format);
   }
 
@@ -536,7 +536,7 @@ void from_json(rapidjson::Document& doc, Options& options) {
 
   auto dir_type = rapidjson::get_optional<std::string>(doc, "/directions_type");
   DirectionsType directions_type;
-  if (dir_type && DirectionsType_Parse(*dir_type, &directions_type)) {
+  if (dir_type && DirectionsType_Enum_Parse(*dir_type, &directions_type)) {
     options.set_directions_type(directions_type);
   }
 
@@ -638,7 +638,7 @@ void from_json(rapidjson::Document& doc, Options& options) {
   if (costing_str) {
     // try the string directly, some strings are keywords so add an underscore
     Costing costing;
-    if (valhalla::Costing_Parse(*costing_str, &costing)) {
+    if (valhalla::Costing_Enum_Parse(*costing_str, &costing)) {
       options.set_costing(costing);
     } else {
       throw valhalla_exception_t{125, "'" + *costing_str + "'"};
@@ -650,7 +650,7 @@ void from_json(rapidjson::Document& doc, Options& options) {
   for (const auto& costing : {auto_, auto_shorter, bicycle, bus, hov, motor_scooter, multimodal,
                               pedestrian, transit, truck, motorcycle, auto_data_fix, taxi}) {
     // Create the costing string
-    auto costing_str = valhalla::Costing_Name(costing);
+    auto costing_str = valhalla::Costing_Enum_Name(costing);
     // Create the costing options key
     const auto costing_options_key = "/costing_options/" + costing_str;
 
@@ -813,7 +813,7 @@ void from_json(rapidjson::Document& doc, Options& options) {
   auto shape_match_str = rapidjson::get_optional<std::string>(doc, "/shape_match");
   ShapeMatch shape_match;
   if (shape_match_str) {
-    if (valhalla::ShapeMatch_Parse(*shape_match_str, &shape_match)) {
+    if (valhalla::ShapeMatch_Enum_Parse(*shape_match_str, &shape_match)) {
       options.set_shape_match(shape_match);
     } else {
       throw valhalla_exception_t{445};
@@ -860,7 +860,7 @@ void from_json(rapidjson::Document& doc, Options& options) {
   // if specified, get the filter_action value in there
   auto filter_action_str = rapidjson::get_optional<std::string>(doc, "/filters/action");
   FilterAction filter_action;
-  if (filter_action_str && valhalla::FilterAction_Parse(*filter_action_str, &filter_action)) {
+  if (filter_action_str && valhalla::FilterAction_Enum_Parse(*filter_action_str, &filter_action)) {
     options.set_filter_action(filter_action);
   }
 
@@ -880,7 +880,7 @@ void from_json(rapidjson::Document& doc, Options& options) {
 
   // force these into the output so its obvious what we did to the user
   doc.AddMember({"language", allocator}, {options.language(), allocator}, allocator);
-  doc.AddMember({"format", allocator}, {valhalla::Options_Format_Name(options.format()), allocator},
+  doc.AddMember({"format", allocator}, {valhalla::Options_Format_Enum_Name(options.format()), allocator},
                 allocator);
 }
 
@@ -888,7 +888,7 @@ void from_json(rapidjson::Document& doc, Options& options) {
 
 namespace valhalla {
 
-bool Options_Action_Parse(const std::string& action, Options::Action* a) {
+bool Options_Action_Enum_Parse(const std::string& action, Options::Action* a) {
   static const std::unordered_map<std::string, Options::Action> actions{
       {"route", Options::route},
       {"locate", Options::locate},
@@ -908,7 +908,7 @@ bool Options_Action_Parse(const std::string& action, Options::Action* a) {
   return true;
 }
 
-const std::string& Options_Action_Name(const Options::Action action) {
+const std::string& Options_Action_Enum_Name(const Options::Action action) {
   static const std::string empty;
   static const std::unordered_map<int, std::string> actions{
       {Options::route, "route"},
@@ -926,7 +926,7 @@ const std::string& Options_Action_Name(const Options::Action action) {
   return i == actions.cend() ? empty : i->second;
 }
 
-bool Costing_Parse(const std::string& costing, Costing* c) {
+bool Costing_Enum_Parse(const std::string& costing, Costing* c) {
   static const std::unordered_map<std::string, Costing> costings{
       {"auto", Costing::auto_},
       {"auto_shorter", Costing::auto_shorter},
@@ -949,7 +949,7 @@ bool Costing_Parse(const std::string& costing, Costing* c) {
   return true;
 }
 
-const std::string& Costing_Name(const Costing costing) {
+const std::string& Costing_Enum_Name(const Costing costing) {
   static const std::string empty;
   static const std::unordered_map<int, std::string> costings{
       {Costing::auto_, "auto"},
@@ -970,7 +970,7 @@ const std::string& Costing_Name(const Costing costing) {
   return i == costings.cend() ? empty : i->second;
 }
 
-bool ShapeMatch_Parse(const std::string& match, ShapeMatch* s) {
+bool ShapeMatch_Enum_Parse(const std::string& match, ShapeMatch* s) {
   static const std::unordered_map<std::string, ShapeMatch> matches{
       {"edge_walk", ShapeMatch::edge_walk},
       {"map_snap", ShapeMatch::map_snap},
@@ -983,7 +983,7 @@ bool ShapeMatch_Parse(const std::string& match, ShapeMatch* s) {
   return true;
 }
 
-const std::string& ShapeMatch_Name(const ShapeMatch match) {
+const std::string& ShapeMatch_Enum_Name(const ShapeMatch match) {
   static const std::string empty;
   static const std::unordered_map<int, std::string> matches{
       {ShapeMatch::edge_walk, "edge_walk"},
@@ -994,7 +994,7 @@ const std::string& ShapeMatch_Name(const ShapeMatch match) {
   return i == matches.cend() ? empty : i->second;
 }
 
-bool Options_Format_Parse(const std::string& format, Options::Format* f) {
+bool Options_Format_Enum_Parse(const std::string& format, Options::Format* f) {
   static const std::unordered_map<std::string, Options::Format> formats{
       {"json", Options::json},
       {"gpx", Options::gpx},
@@ -1007,7 +1007,7 @@ bool Options_Format_Parse(const std::string& format, Options::Format* f) {
   return true;
 }
 
-const std::string& Options_Format_Name(const Options::Format match) {
+const std::string& Options_Format_Enum_Name(const Options::Format match) {
   static const std::string empty;
   static const std::unordered_map<int, std::string> formats{
       {Options::json, "json"},
@@ -1018,7 +1018,7 @@ const std::string& Options_Format_Name(const Options::Format match) {
   return i == formats.cend() ? empty : i->second;
 }
 
-const std::string& Options_Units_Name(const Options::Units unit) {
+const std::string& Options_Units_Enum_Name(const Options::Units unit) {
   static const std::string empty;
   static const std::unordered_map<int, std::string> units{
       {Options::kilometers, "kilometers"},
@@ -1028,7 +1028,7 @@ const std::string& Options_Units_Name(const Options::Units unit) {
   return i == units.cend() ? empty : i->second;
 }
 
-bool FilterAction_Parse(const std::string& action, FilterAction* a) {
+bool FilterAction_Enum_Parse(const std::string& action, FilterAction* a) {
   static const std::unordered_map<std::string, FilterAction> actions{
       {"exclude", FilterAction::exclude},
       {"include", FilterAction::include},
@@ -1040,7 +1040,7 @@ bool FilterAction_Parse(const std::string& action, FilterAction* a) {
   return true;
 }
 
-const std::string& FilterAction_Name(const FilterAction action) {
+const std::string& FilterAction_Enum_Name(const FilterAction action) {
   static const std::string empty;
   static const std::unordered_map<int, std::string> actions{
       {FilterAction::exclude, "exclude"},
@@ -1050,7 +1050,7 @@ const std::string& FilterAction_Name(const FilterAction action) {
   return i == actions.cend() ? empty : i->second;
 }
 
-bool DirectionsType_Parse(const std::string& dtype, DirectionsType* t) {
+bool DirectionsType_Enum_Parse(const std::string& dtype, DirectionsType* t) {
   static const std::unordered_map<std::string, DirectionsType> types{
       {"none", DirectionsType::none},
       {"maneuvers", DirectionsType::maneuvers},
@@ -1063,7 +1063,7 @@ bool DirectionsType_Parse(const std::string& dtype, DirectionsType* t) {
   return true;
 }
 
-bool PreferredSide_Parse(const std::string& pside, valhalla::Location::PreferredSide* p) {
+bool PreferredSide_Enum_Parse(const std::string& pside, valhalla::Location::PreferredSide* p) {
   static const std::unordered_map<std::string, valhalla::Location::PreferredSide> types{
       {"either", valhalla::Location::either},
       {"same", valhalla::Location::same},
@@ -1146,7 +1146,7 @@ void ParseApi(const http_request_t& request, valhalla::Api& api) {
 
   // set the action
   Options::Action action;
-  if (!request.path.empty() && Options_Action_Parse(request.path.substr(1), &action)) {
+  if (!request.path.empty() && Options_Action_Enum_Parse(request.path.substr(1), &action)) {
     options.set_action(action);
   }
 
