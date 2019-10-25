@@ -416,7 +416,7 @@
     },
     "exit": {
       "phrases": {
-        "0": "Pren la soritda de <RELATIVE_DIRECTION>.",
+        "0": "Pren la sortida de <RELATIVE_DIRECTION>.",
         "1": "Pren la sortida <NUMBER_SIGN> de <RELATIVE_DIRECTION>.",
         "2": "Pren la sortida <BRANCH_SIGN> de <RELATIVE_DIRECTION>.",
         "3": "Pren la sortida <NUMBER_SIGN> de <RELATIVE_DIRECTION> cap a <BRANCH_SIGN>.",
@@ -427,7 +427,19 @@
         "8": "Pren la sortida <NAME_SIGN> de <RELATIVE_DIRECTION>.",
         "10": "Pren la sortida <NAME_SIGN> de <RELATIVE_DIRECTION> cap a <BRANCH_SIGN>.",
         "12": "Pren la sortida <NAME_SIGN> de <RELATIVE_DIRECTION> cap a <TOWARD_SIGN>.",
-        "14": "Pren la sortida <NAME_SIGN> de <RELATIVE_DIRECTION> a <BRANCH_SIGN> cap a <TOWARD_SIGN>."
+        "14": "Pren la sortida <NAME_SIGN> de <RELATIVE_DIRECTION> a <BRANCH_SIGN> cap a <TOWARD_SIGN>.",
+        "15": "Pren la sortida.",
+        "16": "Pren la sortida <NUMBER_SIGN>.",
+        "17": "Pren la sortida <BRANCH_SIGN>.",
+        "18": "Pren la sortida <NUMBER_SIGN> a <BRANCH_SIGN>.",
+        "19": "Pren la sortida cap a <TOWARD_SIGN>.",
+        "20": "Pren la sortida <NUMBER_SIGN> cap a <TOWARD_SIGN>.",
+        "21": "Pren la sortida <BRANCH_SIGN> cap a <TOWARD_SIGN>.",
+        "22": "Pren la sortida <NUMBER_SIGN> a <BRANCH_SIGN> cap a <TOWARD_SIGN>.",
+        "23": "Pren la sortida <NAME_SIGN>.",
+        "25": "Pren la sortida <NAME_SIGN> a <BRANCH_SIGN>.",
+        "27": "Pren la sortida <NAME_SIGN> cap a <TOWARD_SIGN>.",
+        "29": "Pren la sortida <NAME_SIGN> a <BRANCH_SIGN> cap a <TOWARD_SIGN>."
       },
       "relative_directions": [
         "l'esquerra",
@@ -470,6 +482,42 @@
         ],
         "14": [
           "Pren la sortida White Marsh Boulevard de l'esquerra a MD 43 East cap a White Marsh."
+        ],
+        "15": [
+          "Pren la sortida."
+        ],
+        "16": [
+          "Pren la sortida 67 B-A."
+        ],
+        "17": [
+          "Pren la sortida US 322 West."
+        ],
+        "18": [
+          "Pren la sortida 67 B-A cap a US 322 West."
+        ],
+        "19": [
+          "Pren la sortida cap a Lewistown."
+        ],
+        "20": [
+          "Pren la sortida 67 B-A cap a Lewistown."
+        ],
+        "21": [
+          "Pren la sortida US 322 West cap a Lewistown."
+        ],
+        "22": [
+          "Pren la sortida 67 B-A cap a US 322 West cap a Lewistown/State College."
+        ],
+        "23": [
+          "Pren la sortida White Marsh Boulevard."
+        ],
+        "25": [
+          "Pren la sortida White Marsh Boulevard cap a MD 43 East."
+        ],
+        "27": [
+          "Pren la sortida White Marsh Boulevard cap a White Marsh."
+        ],
+        "29": [
+          "Pren la sortida White Marsh Boulevard cap a MD 43 East cap a White Marsh."
         ]
       }
     },
@@ -670,7 +718,19 @@
         "8": "Pren la sortida <NAME_SIGN> de <RELATIVE_DIRECTION>.",
         "10": "Pren la sortida <NAME_SIGN> de <RELATIVE_DIRECTION> cap a <BRANCH_SIGN>.",
         "12": "Pen la sortida <NAME_SIGN> de <RELATIVE_DIRECTION> cap a <TOWARD_SIGN>.",
-        "14": "Pren la sortida <NAME_SIGN> de <RELATIVE_DIRECTION> a <BRANCH_SIGN> cap a <TOWARD_SIGN>."
+        "14": "Pren la sortida <NAME_SIGN> de <RELATIVE_DIRECTION> a <BRANCH_SIGN> cap a <TOWARD_SIGN>.",
+        "15": "Pren la sortida",
+        "16": "Pren la sortida <NUMBER_SIGN>.",
+        "17": "Pren la sortida <BRANCH_SIGN>.",
+        "18": "Pren la sortida <NUMBER_SIGN> cap a <BRANCH_SIGN>.",
+        "19": "Pren la sortida cap a <TOWARD_SIGN>.",
+        "20": "Pren la sortida <NUMBER_SIGN> cap a <TOWARD_SIGN>.",
+        "21": "Pren la sortida <BRANCH_SIGN> cap a <TOWARD_SIGN>.",
+        "22": "Pren la sortida <NUMBER_SIGN> a <BRANCH_SIGN> cap a <TOWARD_SIGN>.",
+        "23": "Pren la sortida <NAME_SIGN>.",
+        "25": "Pren la sortida <NAME_SIGN> cap a <BRANCH_SIGN>.",
+        "27": "Pren la sortida <NAME_SIGN> cap a <TOWARD_SIGN>.",
+        "29": "Pren la sortida <NAME_SIGN> a <BRANCH_SIGN> cap a <TOWARD_SIGN>."
       },
       "relative_directions": [
         "l'esquerra",
@@ -713,6 +773,42 @@
         ],
         "14": [
           "Pren la sortida White Marsh Boulevard de l'esquerra a Maryland 43 East cap a White Marsh."
+        ],
+        "15": [
+          "Pren la sortida."
+        ],
+        "16": [
+          "Pren la sortida 67 B-A."
+        ],
+        "17": [
+          "Pren la sortida US 322 West."
+        ],
+        "18": [
+          "Pren la sortida 67 B-A cap a US 322 West."
+        ],
+        "19": [
+          "Pren la sortida cap a Lewistown."
+        ],
+        "20": [
+          "Pren la sortida 67 B-A cap a Lewistown."
+        ],
+        "21": [
+          "Pren la sortida US 322 West cap a Lewistown."
+        ],
+        "22": [
+          "Pren la sortida 67 B-A a US 322 West cap a Lewistown/State College."
+        ],
+        "23": [
+          "Pren la sortida White Marsh Boulevard."
+        ],
+        "25": [
+          "Pren la sortida White Marsh Boulevard onto MD 43 East."
+        ],
+        "27": [
+          "Pren la sortida White Marsh Boulevard cap a White Marsh."
+        ],
+        "29": [
+          "Pren la sortida White Marsh Boulevard a MD 43 East cap a White Marsh."
         ]
       }
     },
@@ -1147,7 +1243,12 @@
         "6": "Gira cap a <RELATIVE_DIRECTION> per prendre l'accés <BRANCH_SIGN>.",
         "7": "Gira cap a <RELATIVE_DIRECTION> per prendre l'accés cap a <TOWARD_SIGN>.",
         "8": "Gira cap a <RELATIVE_DIRECTION> per prendre l'accés <BRANCH_SIGN> cap a <TOWARD_SIGN>.",
-        "9": "Gira cap a <RELATIVE_DIRECTION> per prendre l'accés <NAME_SIGN>."
+        "9": "Gira cap a <RELATIVE_DIRECTION> per prendre l'accés <NAME_SIGN>.",
+        "10": "Pren l'accés.",
+        "11": "Pren l'accés <BRANCH_SIGN>.",
+        "12": "Pren l'accés cap a <TOWARD_SIGN>.",
+        "13": "Pren l'accés <BRANCH_SIGN> cap a <TOWARD_SIGN>.",
+        "14": "Pren l'accés <NAME_SIGN>."
       },
       "relative_directions": [
         "l'esquerra",
@@ -1185,6 +1286,21 @@
         ],
         "9": [
           "Gira cap a la dreta per prendre l'accés Gettysburg Pike."
+        ],
+        "10": [
+          "Pren l'accés."
+        ],
+        "11": [
+          "Pren l'accés I 95."
+        ],
+        "12": [
+          "Pren l'accés cap a JFK."
+        ],
+        "13": [
+          "Pren l'accés South Conduit Avenue cap a JFK."
+        ],
+        "14": [
+          "Pren l'accés Gettysburg."
         ]
       }
     },
@@ -1251,7 +1367,12 @@
         "6": "Gira cap a <RELATIVE_DIRECTION> per prendre l'accés <BRANCH_SIGN>.",
         "7": "Gira cap a <RELATIVE_DIRECTION> per prendre l'accés cap a <TOWARD_SIGN>.",
         "8": "Gira cap a <RELATIVE_DIRECTION> per prendre l'accés <BRANCH_SIGN> cap a <TOWARD_SIGN>.",
-        "9": "Gira cap a <RELATIVE_DIRECTION> per prendre l'accés <NAME_SIGN>."
+        "9": "Gira cap a <RELATIVE_DIRECTION> per prendre l'accés <NAME_SIGN>.",
+        "10": "Pren l'accés.",
+        "11": "Pren l'accés <BRANCH_SIGN>.",
+        "12": "Pren l'accés cap a <TOWARD_SIGN>.",
+        "13": "Pren l'accés <BRANCH_SIGN> cap a <TOWARD_SIGN>.",
+        "14": "Pren l'accés <NAME_SIGN>."
       },
       "relative_directions": [
         "l'esquerra",
@@ -1289,6 +1410,21 @@
         ],
         "9": [
           "Gira cap a la dreta per prendre l'accés Gettysburg Pike."
+        ],
+        "10": [
+          "Pren l'accés."
+        ],
+        "11": [
+          "Pren l'accés Interstate 95."
+        ],
+        "12": [
+          "Pren l'accés cap a JFK."
+        ],
+        "13": [
+          "Pren l'accés South Conduit Avenue cap a JFK."
+        ],
+        "14": [
+          "Pren l'accés Gettysburg Pike."
         ]
       }
     },
