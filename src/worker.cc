@@ -880,8 +880,8 @@ void from_json(rapidjson::Document& doc, Options& options) {
 
   // force these into the output so its obvious what we did to the user
   doc.AddMember({"language", allocator}, {options.language(), allocator}, allocator);
-  doc.AddMember({"format", allocator}, {valhalla::Options_Format_Enum_Name(options.format()), allocator},
-                allocator);
+  doc.AddMember({"format", allocator},
+                {valhalla::Options_Format_Enum_Name(options.format()), allocator}, allocator);
 }
 
 } // namespace
