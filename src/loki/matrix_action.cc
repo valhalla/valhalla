@@ -89,10 +89,10 @@ void loki_worker_t::init_matrix(Api& request) {
 void loki_worker_t::matrix(Api& request) {
   init_matrix(request);
   auto& options = *request.mutable_options();
-  auto costing_name = Costing_Name(options.costing());
+  auto costing_name = Costing_Enum_Name(options.costing());
 
   if (costing_name == "multimodal") {
-    throw valhalla_exception_t{140, Options_Action_Name(options.action())};
+    throw valhalla_exception_t{140, Options_Action_Enum_Name(options.action())};
   };
 
   // check that location size does not exceed max.

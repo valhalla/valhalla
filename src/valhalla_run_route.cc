@@ -550,7 +550,7 @@ int main(int argc, char* argv[]) {
   const auto& options = request.options();
 
   // Get type of route - this provides the costing method to use.
-  std::string routetype = valhalla::Costing_Name(options.costing());
+  std::string routetype = valhalla::Costing_Enum_Name(options.costing());
   LOG_INFO("routetype: " + routetype);
 
   // Locations
