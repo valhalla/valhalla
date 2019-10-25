@@ -692,7 +692,8 @@ void ParseTransitCostOptions(const rapidjson::Document& doc,
     auto filter_stop_action_str =
         rapidjson::get_optional<std::string>(*json_costing_options, "/filters/stops/action");
     FilterAction filter_stop_action;
-    if (filter_stop_action_str && FilterAction_Enum_Parse(*filter_stop_action_str, &filter_stop_action)) {
+    if (filter_stop_action_str &&
+        FilterAction_Enum_Parse(*filter_stop_action_str, &filter_stop_action)) {
       pbf_costing_options->set_filter_stop_action(filter_stop_action);
       // filter_stop_ids
       auto filter_stop_ids_json =
