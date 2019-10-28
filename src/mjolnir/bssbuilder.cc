@@ -191,7 +191,7 @@ void create_bss_node_and_edges(GraphTileBuilder& tilebuilder_local,
   // GraphTileBuilder tilebuilder_local(reader.tile_dir(), tile.header()->graphid(), true);
   auto local_level = TileHierarchy::levels().rbegin()->first;
 
-  auto _finally = make_finally([&tilebuilder_local, &tile, &lock]() {
+  auto scoped_finally = make_finally([&tilebuilder_local, &tile, &lock]() {
     LOG_INFO("Storing local tile data with bss nodes, tile id: " +
              std::to_string(tile.id().tileid()));
     std::lock_guard<std::mutex> l(lock);
@@ -414,7 +414,7 @@ void BssBuilder::Build(const boost::property_tree::ptree& pt, const std::string&
 
   auto t1 = std::chrono::high_resolution_clock::now();
 
-  auto _finally = make_finally([&t1]() {
+  auto scoped_finally = make_finally([&t1]() {
     auto t2 = std::chrono::high_resolution_clock::now();
     uint32_t secs = std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
     LOG_INFO("Finished - BssBuilder took " + std::to_string(secs) + " secs");
