@@ -393,37 +393,40 @@ thor_worker_t::map_match(Api& request, uint32_t best_paths) {
     } // trace_route can return multiple trip paths and cannot have discontinuities
     else {
 
-      // we make a new route to hold the result of each iteraton of top k
       auto& route = *request.mutable_trip()->mutable_routes()->Add();
-      auto origin = match_results.begin();
-      auto destination = match_results.begin();
+      auto origin_iter = match_results.begin();
+
+      // to ensure origin starts on the first edge returned by meli
+      while (origin_iter->edgeid != m_temp_path_edges.front().edgeid) {
+        ++origin_iter;
+      }
+
       int last_leg_index = 0;
-
-      // turn the origin and locations into real ones with a path edge on them
-      // its possible that meili has a path edge for this one but its also possible
-      // that it doesnt because its interpolated
-
       for (int i = 0, n = static_cast<int>(m_temp_path_edges.size()); i < n; ++i) {
         const auto& path_edge = m_temp_path_edges[i];
-        for (auto iter = origin + 1; iter != match_results.end(); ++iter) {
-          if (path_edge.edgeid == iter->edgeid &&
-              options.shape(iter - match_results.begin()).type() == valhalla::Location::kBreak) {
-            auto* o_loc = options.mutable_shape(origin - match_results.begin());
-            auto* d_loc = options.mutable_shape(destination - match_results.begin());
-            add_path_edge(o_loc, *origin);
-            add_path_edge(d_loc, *destination);
 
-            // build the leg
-            TripLegBuilder::Build(controller, matcher->graphreader(), mode_costing,
-                                  m_temp_path_edges.begin() + last_leg_index,
-                                  m_temp_path_edges.begin() + i + 1, *o_loc, *d_loc,
-                                  std::list<valhalla::Location>{}, *route.mutable_legs()->Add(),
-                                  interrupt, &m_temp_route_discontinuities);
-            // beginning of next leg will be the end of this leg
-            origin = destination;
-            // store the starting index of the path_edges
-            last_leg_index = i;
+        for (auto iter = origin_iter + 1; iter != match_results.end(); ++iter) {
+          if (path_edge.edgeid != iter->edgeid ||
+              options.shape(iter - match_results.begin()).type() != valhalla::Location::kBreak) {
+            continue;
           }
+
+          Location* origin_location = options.mutable_shape(origin_iter - match_results.begin());
+          Location* destination_location = options.mutable_shape(iter - match_results.begin());
+          add_path_edge(origin_location, *origin_iter);
+          add_path_edge(destination_location, *iter);
+
+          // build the leg
+          TripLegBuilder::Build(controller, matcher->graphreader(), mode_costing,
+                                m_temp_path_edges.begin() + last_leg_index,
+                                m_temp_path_edges.begin() + i + 1, *origin_location,
+                                *destination_location, std::list<valhalla::Location>{},
+                                *route.mutable_legs()->Add(), interrupt,
+                                &m_temp_route_discontinuities);
+          // beginning of next leg will be the end of this leg
+          origin_iter = iter;
+          // store the starting index of the path_edges
+          last_leg_index = i;
         }
       }
     }
