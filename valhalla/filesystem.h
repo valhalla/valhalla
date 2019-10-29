@@ -22,6 +22,8 @@
 #endif
 #include <vector>
 
+#include <boost/io/detail/quoted_manip.hpp> // for filesystem::path I/O, required for boost::program_options
+
 namespace filesystem {
 
 class path {
@@ -92,6 +94,25 @@ private:
   std::string path_name_;
   std::vector<size_t> separators_;
 };
+
+// NOTE: I/O operators copied from Boost.Filesystem, required path for use with boost::program_options
+//  inserters and extractors
+//    use boost::io::quoted() to handle spaces in paths
+//    use '&' as escape character to ease use for Windows paths
+template <class Char, class Traits>
+inline std::basic_ostream<Char, Traits>& operator<<(std::basic_ostream<Char, Traits>& os, const path& p)
+{
+  return os << boost::io::quoted(p.template string<std::basic_string<Char>>(), static_cast<Char>('&'));
+}
+
+template <class Char, class Traits>
+inline std::basic_istream<Char, Traits>& operator>>(std::basic_istream<Char, Traits>& is, path& p)
+{
+  std::basic_string<Char> str;
+  is >> boost::io::quoted(str, static_cast<Char>('&'));
+  p = str;
+  return is;
+}
 
 class directory_iterator;
 class recursive_directory_iterator;
