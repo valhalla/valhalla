@@ -1,11 +1,13 @@
 #!/bin/bash
+set -ex
 
 # Default config
 DEFAULT_CONFIG="../../conf/valhalla.json"
 
 function usage() {
-	echo "Usage: $0 path_test_request_file [conf=../../conf/valhalla.json"
+	echo "Usage: $0 path_test_request_file [conf=../../conf/valhalla.json]"
 	echo "Example: $0 ../test/pinpoints/turn_lanes/right_active_pinpoint.txt"
+	echo "Example: $0 ../test/pinpoints/turn_lanes/right_active_pinpoint.txt ../conf/valhalla.json"
 	exit 1
 }
 
@@ -29,12 +31,9 @@ if [ ! -f "${CONF}" ]; then
 	usage
 fi
 
-# Set concurrency to one
-CONCURRENCY=1
-
 # Set env to save the path pbf and run the specified route
 export SAVE_PATH_PBF=true
-PATH=../build/:$PATH ./batch.sh ${INPUT} ${CONF} ${CONCURRENCY}
+cat ${INPUT} | xargs -I {} ../build/valhalla_run_route {} --config ${CONF}
 
 ###############################################
 # Move the path.pbf file to INPUT_FILE_PREFIX.pbf if it exists
