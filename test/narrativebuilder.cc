@@ -117,7 +117,8 @@ void PopulateManeuver(Maneuver& maneuver,
                       bool unnamed_cycleway = false,
                       bool unnamed_mountain_bike_trail = false,
                       float basic_time = 0.0f,
-                      bool verbal_multi_cue = false) {
+                      bool verbal_multi_cue = false,
+                      bool drive_on_right = true) {
 
   maneuver.set_verbal_formatter(VerbalTextFormatterFactory::Create(country_code, state_code));
 
@@ -153,6 +154,7 @@ void PopulateManeuver(Maneuver& maneuver,
   maneuver.set_portions_unpaved(portions_unpaved);
   maneuver.set_portions_highway(portions_highway);
   maneuver.set_internal_intersection(internal_intersection);
+  maneuver.set_drive_on_right(drive_on_right);
 
   // exit_numbers
   std::vector<Sign>* exit_number_list = maneuver.mutable_signs()->mutable_exit_number_list();
@@ -954,7 +956,8 @@ void PopulateRampManeuverList_0(std::list<Maneuver>& maneuvers,
   PopulateManeuver(maneuver, country_code, state_code, DirectionsLeg_Maneuver_Type_kRampRight, {}, {},
                    {}, "", 0.234000, 9, 10, Maneuver::RelativeDirection::kKeepRight,
                    DirectionsLeg_Maneuver_CardinalDirection_kEast, 99, 137, 14, 15, 61, 71, 1, 0, 0,
-                   0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 9, 0);
+                   0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 9, 0,
+                   false);
 }
 
 void PopulateRampManeuverList_1(std::list<Maneuver>& maneuvers,
@@ -966,7 +969,7 @@ void PopulateRampManeuverList_1(std::list<Maneuver>& maneuvers,
                    {}, "", 0.234000, 9, 10, Maneuver::RelativeDirection::kKeepRight,
                    DirectionsLeg_Maneuver_CardinalDirection_kEast, 99, 137, 14, 15, 61, 71, 1, 0, 0,
                    0, 0, 0, 0, 0, 0, {}, {std::make_tuple("I 95", 1, 0)}, {}, {}, 0, 0, 0, 0, 1, 0,
-                   "", "", "", 0, 0, 0, 0, 9, 0);
+                   "", "", "", 0, 0, 0, 0, 9, 0, false);
 }
 
 void PopulateRampManeuverList_2(std::list<Maneuver>& maneuvers,
@@ -979,7 +982,7 @@ void PopulateRampManeuverList_2(std::list<Maneuver>& maneuvers,
                    Maneuver::RelativeDirection::kKeepLeft,
                    DirectionsLeg_Maneuver_CardinalDirection_kEast, 105, 102, 24, 25, 204, 206, 1, 0,
                    0, 0, 0, 0, 0, 0, 0, {}, {}, {std::make_tuple("JFK", 0, 0)}, {}, 0, 0, 0, 0, 1, 0,
-                   "", "", "", 0, 0, 0, 0, 6, 0);
+                   "", "", "", 0, 0, 0, 0, 6, 0, true);
 }
 
 void PopulateRampManeuverList_3(std::list<Maneuver>& maneuvers,
@@ -992,8 +995,8 @@ void PopulateRampManeuverList_3(std::list<Maneuver>& maneuvers,
                    Maneuver::RelativeDirection::kKeepLeft,
                    DirectionsLeg_Maneuver_CardinalDirection_kEast, 105, 102, 24, 25, 204, 206, 1, 0,
                    0, 0, 0, 0, 0, 0, 0, {}, {std::make_tuple("South Conduit Avenue", 0, 0)},
-                   {std::make_tuple("JFK", 0, 0)}, {}, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 6,
-                   0);
+                   {std::make_tuple("JFK", 0, 0)}, {}, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 6, 0,
+                   true);
 }
 
 void PopulateRampManeuverList_4(std::list<Maneuver>& maneuvers,
@@ -1005,7 +1008,7 @@ void PopulateRampManeuverList_4(std::list<Maneuver>& maneuvers,
                    {}, "", 0.234000, 9, 10, Maneuver::RelativeDirection::kKeepRight,
                    DirectionsLeg_Maneuver_CardinalDirection_kEast, 99, 137, 14, 15, 61, 71, 1, 0, 0,
                    0, 0, 0, 0, 0, 0, {}, {}, {}, {std::make_tuple("Gettysburg Pike", 0, 0)}, 0, 0, 0,
-                   0, 1, 0, "", "", "", 0, 0, 0, 0, 9, 0);
+                   0, 1, 0, "", "", "", 0, 0, 0, 0, 9, 0, false);
 }
 
 void PopulateRampManeuverList_5(std::list<Maneuver>& maneuvers,
@@ -1071,6 +1074,69 @@ void PopulateRampManeuverList_9(std::list<Maneuver>& maneuvers,
                    0, 1, 0, "", "", "", 0, 0, 0, 0, 23, 0);
 }
 
+void PopulateRampManeuverList_10(std::list<Maneuver>& maneuvers,
+                                 const std::string& country_code,
+                                 const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code, DirectionsLeg_Maneuver_Type_kRampRight, {}, {},
+                   {}, "", 0.234000, 9, 10, Maneuver::RelativeDirection::kKeepRight,
+                   DirectionsLeg_Maneuver_CardinalDirection_kEast, 99, 137, 14, 15, 61, 71, 1, 0, 0,
+                   0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 9, 0);
+}
+
+void PopulateRampManeuverList_11(std::list<Maneuver>& maneuvers,
+                                 const std::string& country_code,
+                                 const std::string& state_code,
+                                 bool drive_on_right = true) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code, DirectionsLeg_Maneuver_Type_kRampRight, {}, {},
+                   {}, "", 0.234000, 9, 10, Maneuver::RelativeDirection::kKeepRight,
+                   DirectionsLeg_Maneuver_CardinalDirection_kEast, 99, 137, 14, 15, 61, 71, 1, 0, 0,
+                   0, 0, 0, 0, 0, 0, {}, {std::make_tuple("I 95", 1, 0)}, {}, {}, 0, 0, 0, 0, 1, 0,
+                   "", "", "", 0, 0, 0, 0, 9, 0, drive_on_right);
+}
+
+void PopulateRampManeuverList_12(std::list<Maneuver>& maneuvers,
+                                 const std::string& country_code,
+                                 const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code, DirectionsLeg_Maneuver_Type_kRampRight,
+                   {{"NY 27 East", 1}, {"South Conduit Avenue", 0}}, {}, {}, "", 0.124000, 6, 353,
+                   Maneuver::RelativeDirection::kKeepRight,
+                   DirectionsLeg_Maneuver_CardinalDirection_kEast, 105, 102, 24, 25, 204, 206, 1, 0,
+                   0, 0, 0, 0, 0, 0, 0, {}, {}, {std::make_tuple("JFK", 0, 0)}, {}, 0, 0, 0, 0, 1, 0,
+                   "", "", "", 0, 0, 0, 0, 6, 0);
+}
+
+void PopulateRampManeuverList_13(std::list<Maneuver>& maneuvers,
+                                 const std::string& country_code,
+                                 const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code, DirectionsLeg_Maneuver_Type_kRampLeft,
+                   {{"NY 27 East", 1}, {"South Conduit Avenue", 0}}, {}, {}, "", 0.124000, 6, 353,
+                   Maneuver::RelativeDirection::kKeepLeft,
+                   DirectionsLeg_Maneuver_CardinalDirection_kEast, 105, 102, 24, 25, 204, 206, 1, 0,
+                   0, 0, 0, 0, 0, 0, 0, {}, {std::make_tuple("South Conduit Avenue", 0, 0)},
+                   {std::make_tuple("JFK", 0, 0)}, {}, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 6,
+                   0);
+}
+
+void PopulateRampManeuverList_14(std::list<Maneuver>& maneuvers,
+                                 const std::string& country_code,
+                                 const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code, DirectionsLeg_Maneuver_Type_kRampRight, {}, {},
+                   {}, "", 0.234000, 9, 10, Maneuver::RelativeDirection::kKeepRight,
+                   DirectionsLeg_Maneuver_CardinalDirection_kEast, 99, 137, 14, 15, 61, 71, 1, 0, 0,
+                   0, 0, 0, 0, 0, 0, {}, {}, {}, {std::make_tuple("Gettysburg Pike", 0, 0)}, 0, 0, 0,
+                   0, 1, 0, "", "", "", 0, 0, 0, 0, 9, 0);
+}
+
 void PopulateExitManeuverList_0(std::list<Maneuver>& maneuvers,
                                 const std::string& country_code,
                                 const std::string& state_code) {
@@ -1081,7 +1147,7 @@ void PopulateExitManeuverList_0(std::list<Maneuver>& maneuvers,
                    Maneuver::RelativeDirection::kKeepRight,
                    DirectionsLeg_Maneuver_CardinalDirection_kWest, 272, 278, 42, 43, 260, 264, 1, 0,
                    0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 23,
-                   0);
+                   0, false);
 }
 
 void PopulateExitManeuverList_1(std::list<Maneuver>& maneuvers,
@@ -1094,7 +1160,7 @@ void PopulateExitManeuverList_1(std::list<Maneuver>& maneuvers,
                    Maneuver::RelativeDirection::kKeepRight,
                    DirectionsLeg_Maneuver_CardinalDirection_kWest, 272, 278, 42, 43, 260, 264, 1, 0,
                    0, 0, 0, 0, 0, 0, 0, {std::make_tuple("67 B-A", 0, 0)}, {}, {}, {}, 0, 0, 0, 0, 1,
-                   0, "", "", "", 0, 0, 0, 0, 23, 0);
+                   0, "", "", "", 0, 0, 0, 0, 23, 0, false);
 }
 
 void PopulateExitManeuverList_2(std::list<Maneuver>& maneuvers,
@@ -1107,7 +1173,7 @@ void PopulateExitManeuverList_2(std::list<Maneuver>& maneuvers,
                    Maneuver::RelativeDirection::kKeepRight,
                    DirectionsLeg_Maneuver_CardinalDirection_kWest, 272, 278, 42, 43, 260, 264, 1, 0,
                    0, 0, 0, 0, 0, 0, 0, {}, {std::make_tuple("US 322 West", 1, 2)}, {}, {}, 0, 0, 0,
-                   0, 1, 0, "", "", "", 0, 0, 0, 0, 23, 0);
+                   0, 1, 0, "", "", "", 0, 0, 0, 0, 23, 0, false);
 }
 
 void PopulateExitManeuverList_3(std::list<Maneuver>& maneuvers,
@@ -1121,7 +1187,7 @@ void PopulateExitManeuverList_3(std::list<Maneuver>& maneuvers,
                    DirectionsLeg_Maneuver_CardinalDirection_kWest, 272, 278, 42, 43, 260, 264, 1, 0,
                    0, 0, 0, 0, 0, 0, 0, {std::make_tuple("67 B-A", 0, 0)},
                    {std::make_tuple("US 322 West", 1, 2)}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0,
-                   0, 0, 23, 0);
+                   0, 0, 23, 0, false);
 }
 
 void PopulateExitManeuverList_4(std::list<Maneuver>& maneuvers,
@@ -1134,7 +1200,7 @@ void PopulateExitManeuverList_4(std::list<Maneuver>& maneuvers,
                    Maneuver::RelativeDirection::kKeepRight,
                    DirectionsLeg_Maneuver_CardinalDirection_kWest, 272, 278, 42, 43, 260, 264, 1, 0,
                    0, 0, 0, 0, 0, 0, 0, {}, {}, {std::make_tuple("Lewistown", 0, 1)}, {}, 0, 0, 0, 0,
-                   1, 0, "", "", "", 0, 0, 0, 0, 23, 0);
+                   1, 0, "", "", "", 0, 0, 0, 0, 23, 0, false);
 }
 
 void PopulateExitManeuverList_5(std::list<Maneuver>& maneuvers,
@@ -1148,7 +1214,7 @@ void PopulateExitManeuverList_5(std::list<Maneuver>& maneuvers,
                    DirectionsLeg_Maneuver_CardinalDirection_kWest, 272, 278, 42, 43, 260, 264, 1, 0,
                    0, 0, 0, 0, 0, 0, 0, {std::make_tuple("67 B-A", 0, 0)}, {},
                    {std::make_tuple("Lewistown", 0, 1)}, {}, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0,
-                   23, 0);
+                   23, 0, false);
 }
 
 void PopulateExitManeuverList_6(std::list<Maneuver>& maneuvers,
@@ -1162,7 +1228,7 @@ void PopulateExitManeuverList_6(std::list<Maneuver>& maneuvers,
                    DirectionsLeg_Maneuver_CardinalDirection_kWest, 272, 278, 42, 43, 260, 264, 1, 0,
                    0, 0, 0, 0, 0, 0, 0, {}, {std::make_tuple("US 322 West", 1, 2)},
                    {std::make_tuple("Lewistown", 0, 1)}, {}, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0,
-                   23, 0);
+                   23, 0, false);
 }
 
 void PopulateExitManeuverList_7(std::list<Maneuver>& maneuvers,
@@ -1180,7 +1246,7 @@ void PopulateExitManeuverList_7(std::list<Maneuver>& maneuvers,
                     std::make_tuple("Cameron Street", 0, 0)},
                    {std::make_tuple("Lewistown", 0, 1), std::make_tuple("State College", 0, 1),
                     std::make_tuple("Harrisburg", 0, 0)},
-                   {}, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 23, 0);
+                   {}, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 23, 0, false);
 }
 
 void PopulateExitManeuverList_8(std::list<Maneuver>& maneuvers,
@@ -1238,6 +1304,175 @@ void PopulateExitManeuverList_14(std::list<Maneuver>& maneuvers,
                    {std::make_tuple("White Marsh", 0, 0)},
                    {std::make_tuple("White Marsh Boulevard", 0, 0)}, 0, 0, 0, 0, 1, 0, "", "", "", 0,
                    0, 0, 0, 46, 0);
+}
+
+void PopulateExitManeuverList_15(std::list<Maneuver>& maneuvers,
+                                 const std::string& country_code,
+                                 const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code, DirectionsLeg_Maneuver_Type_kExitRight,
+                   {{"US 322 West", 1}}, {}, {}, "", 0.561000, 23, 2,
+                   Maneuver::RelativeDirection::kKeepRight,
+                   DirectionsLeg_Maneuver_CardinalDirection_kWest, 272, 278, 42, 43, 260, 264, 1, 0,
+                   0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 23,
+                   0, true);
+}
+
+void PopulateExitManeuverList_16(std::list<Maneuver>& maneuvers,
+                                 const std::string& country_code,
+                                 const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code, DirectionsLeg_Maneuver_Type_kExitRight,
+                   {{"US 322 West", 1}}, {}, {}, "", 0.561000, 23, 2,
+                   Maneuver::RelativeDirection::kKeepRight,
+                   DirectionsLeg_Maneuver_CardinalDirection_kWest, 272, 278, 42, 43, 260, 264, 1, 0,
+                   0, 0, 0, 0, 0, 0, 0, {std::make_tuple("67 B-A", 0, 0)}, {}, {}, {}, 0, 0, 0, 0, 1,
+                   0, "", "", "", 0, 0, 0, 0, 23, 0, true);
+}
+
+void PopulateExitManeuverList_17(std::list<Maneuver>& maneuvers,
+                                 const std::string& country_code,
+                                 const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code, DirectionsLeg_Maneuver_Type_kExitRight,
+                   {{"US 322 West", 1}}, {}, {}, "", 0.561000, 23, 2,
+                   Maneuver::RelativeDirection::kKeepRight,
+                   DirectionsLeg_Maneuver_CardinalDirection_kWest, 272, 278, 42, 43, 260, 264, 1, 0,
+                   0, 0, 0, 0, 0, 0, 0, {}, {std::make_tuple("US 322 West", 1, 2)}, {}, {}, 0, 0, 0,
+                   0, 1, 0, "", "", "", 0, 0, 0, 0, 23, 0, true);
+}
+
+void PopulateExitManeuverList_18(std::list<Maneuver>& maneuvers,
+                                 const std::string& country_code,
+                                 const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code, DirectionsLeg_Maneuver_Type_kExitRight,
+                   {{"US 322 West", 1}}, {}, {}, "", 0.561000, 23, 2,
+                   Maneuver::RelativeDirection::kKeepRight,
+                   DirectionsLeg_Maneuver_CardinalDirection_kWest, 272, 278, 42, 43, 260, 264, 1, 0,
+                   0, 0, 0, 0, 0, 0, 0, {std::make_tuple("67 B-A", 0, 0)},
+                   {std::make_tuple("US 322 West", 1, 2)}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0,
+                   0, 0, 23, 0, true);
+}
+
+void PopulateExitManeuverList_19(std::list<Maneuver>& maneuvers,
+                                 const std::string& country_code,
+                                 const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code, DirectionsLeg_Maneuver_Type_kExitRight,
+                   {{"US 322 West", 1}}, {}, {}, "", 0.561000, 23, 2,
+                   Maneuver::RelativeDirection::kKeepRight,
+                   DirectionsLeg_Maneuver_CardinalDirection_kWest, 272, 278, 42, 43, 260, 264, 1, 0,
+                   0, 0, 0, 0, 0, 0, 0, {}, {}, {std::make_tuple("Lewistown", 0, 1)}, {}, 0, 0, 0, 0,
+                   1, 0, "", "", "", 0, 0, 0, 0, 23, 0, true);
+}
+
+void PopulateExitManeuverList_20(std::list<Maneuver>& maneuvers,
+                                 const std::string& country_code,
+                                 const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code, DirectionsLeg_Maneuver_Type_kExitRight,
+                   {{"US 322 West", 1}}, {}, {}, "", 0.561000, 23, 2,
+                   Maneuver::RelativeDirection::kKeepRight,
+                   DirectionsLeg_Maneuver_CardinalDirection_kWest, 272, 278, 42, 43, 260, 264, 1, 0,
+                   0, 0, 0, 0, 0, 0, 0, {std::make_tuple("67 B-A", 0, 0)}, {},
+                   {std::make_tuple("Lewistown", 0, 1)}, {}, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0,
+                   23, 0, true);
+}
+
+void PopulateExitManeuverList_21(std::list<Maneuver>& maneuvers,
+                                 const std::string& country_code,
+                                 const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code, DirectionsLeg_Maneuver_Type_kExitRight,
+                   {{"US 322 West", 1}}, {}, {}, "", 0.561000, 23, 2,
+                   Maneuver::RelativeDirection::kKeepRight,
+                   DirectionsLeg_Maneuver_CardinalDirection_kWest, 272, 278, 42, 43, 260, 264, 1, 0,
+                   0, 0, 0, 0, 0, 0, 0, {}, {std::make_tuple("US 322 West", 1, 2)},
+                   {std::make_tuple("Lewistown", 0, 1)}, {}, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0,
+                   23, 0, true);
+}
+
+void PopulateExitManeuverList_22(std::list<Maneuver>& maneuvers,
+                                 const std::string& country_code,
+                                 const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code, DirectionsLeg_Maneuver_Type_kExitRight,
+                   {{"US 322 West", 1}}, {}, {}, "", 0.561000, 23, 2,
+                   Maneuver::RelativeDirection::kKeepRight,
+                   DirectionsLeg_Maneuver_CardinalDirection_kWest, 272, 278, 42, 43, 260, 264, 1, 0,
+                   0, 0, 0, 0, 0, 0, 0, {std::make_tuple("67 B-A", 0, 0)},
+                   {std::make_tuple("US 322 West", 1, 2), std::make_tuple("US 22 West", 1, 1),
+                    std::make_tuple("US 22 East", 1, 0), std::make_tuple("PA 230 East", 1, 0),
+                    std::make_tuple("Cameron Street", 0, 0)},
+                   {std::make_tuple("Lewistown", 0, 1), std::make_tuple("State College", 0, 1),
+                    std::make_tuple("Harrisburg", 0, 0)},
+                   {}, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 23, 0, true);
+}
+
+void PopulateExitManeuverList_23(std::list<Maneuver>& maneuvers,
+                                 const std::string& country_code,
+                                 const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code, DirectionsLeg_Maneuver_Type_kExitLeft,
+                   {{"MD 43 East", 1}}, {}, {}, "", 1.002000, 45, 356,
+                   Maneuver::RelativeDirection::kKeepLeft,
+                   DirectionsLeg_Maneuver_CardinalDirection_kSouthEast, 135, 83, 158, 160, 1420, 1444,
+                   1, 0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {},
+                   {std::make_tuple("White Marsh Boulevard", 0, 0)}, 0, 0, 0, 0, 1, 0, "", "", "", 0,
+                   0, 0, 0, 46, 0, false);
+}
+
+void PopulateExitManeuverList_25(std::list<Maneuver>& maneuvers,
+                                 const std::string& country_code,
+                                 const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code, DirectionsLeg_Maneuver_Type_kExitLeft,
+                   {{"MD 43 East", 1}}, {}, {}, "", 1.002000, 45, 356,
+                   Maneuver::RelativeDirection::kKeepLeft,
+                   DirectionsLeg_Maneuver_CardinalDirection_kSouthEast, 135, 83, 158, 160, 1420, 1444,
+                   1, 0, 0, 0, 0, 0, 0, 0, 0, {}, {std::make_tuple("MD 43 East", 1, 1)}, {},
+                   {std::make_tuple("White Marsh Boulevard", 0, 0)}, 0, 0, 0, 0, 1, 0, "", "", "", 0,
+                   0, 0, 0, 46, 0, false);
+}
+
+void PopulateExitManeuverList_27(std::list<Maneuver>& maneuvers,
+                                 const std::string& country_code,
+                                 const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code, DirectionsLeg_Maneuver_Type_kExitLeft,
+                   {{"MD 43 East", 1}}, {}, {}, "", 1.002000, 45, 356,
+                   Maneuver::RelativeDirection::kKeepLeft,
+                   DirectionsLeg_Maneuver_CardinalDirection_kSouthEast, 135, 83, 158, 160, 1420, 1444,
+                   1, 0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {std::make_tuple("White Marsh", 0, 0)},
+                   {std::make_tuple("White Marsh Boulevard", 0, 0)}, 0, 0, 0, 0, 1, 0, "", "", "", 0,
+                   0, 0, 0, 46, 0, false);
+}
+
+void PopulateExitManeuverList_29(std::list<Maneuver>& maneuvers,
+                                 const std::string& country_code,
+                                 const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code, DirectionsLeg_Maneuver_Type_kExitLeft,
+                   {{"MD 43 East", 1}}, {}, {}, "", 1.002000, 45, 356,
+                   Maneuver::RelativeDirection::kKeepLeft,
+                   DirectionsLeg_Maneuver_CardinalDirection_kSouthEast, 135, 83, 158, 160, 1420, 1444,
+                   1, 0, 0, 0, 0, 0, 0, 0, 0, {}, {std::make_tuple("MD 43 East", 1, 1)},
+                   {std::make_tuple("White Marsh", 0, 0)},
+                   {std::make_tuple("White Marsh Boulevard", 0, 0)}, 0, 0, 0, 0, 1, 0, "", "", "", 0,
+                   0, 0, 0, 46, 0, false);
 }
 
 void PopulateKeepManeuverList_0(std::list<Maneuver>& maneuvers,
@@ -4341,6 +4576,144 @@ void TestBuildRamp_9_miles_en_US() {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// FormRampInstruction
+// "10": "Take the ramp.",
+// "10": "Take the ramp.",
+// "10": "Take the ramp.",
+void TestBuildRamp_10_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateRampManeuverList_10(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateRampManeuverList_10(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(expected_maneuvers, "Take the ramp.", "Take the ramp.",
+                                  "Take the ramp.", "");
+
+  TryBuild(options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormRampInstruction
+// "11": "Take the <BRANCH_SIGN> ramp.",
+// "11": "Take the <BRANCH_SIGN> ramp.",
+// "11": "Take the <BRANCH_SIGN> ramp.",
+void TestBuildRamp_11_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateRampManeuverList_11(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateRampManeuverList_11(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(expected_maneuvers, "Take the I 95 ramp.",
+                                  "Take the Interstate 95 ramp.", "Take the Interstate 95 ramp.", "");
+
+  TryBuild(options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormRampInstruction
+// "12": "Take the ramp toward <TOWARD_SIGN>.",
+// "12": "Take the ramp toward <TOWARD_SIGN>.",
+// "12": "Take the ramp toward <TOWARD_SIGN>.",
+void TestBuildRamp_12_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateRampManeuverList_12(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateRampManeuverList_12(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(expected_maneuvers, "Take the ramp toward JFK.",
+                                  "Take the ramp toward JFK.", "Take the ramp toward JFK.", "");
+
+  TryBuild(options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormRampInstruction
+// "13": "Take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>.",
+// "10": "Take the <BRANCH_SIGN> ramp",
+// "13": "Take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>.",
+void TestBuildRamp_13_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateRampManeuverList_13(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateRampManeuverList_13(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(expected_maneuvers,
+                                  "Take the South Conduit Avenue ramp on the left toward JFK.",
+                                  "Take the South Conduit Avenue ramp on the left.",
+                                  "Take the South Conduit Avenue ramp on the left toward JFK.", "");
+
+  TryBuild(options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormRampInstruction
+// "14": "Take the <NAME_SIGN> ramp.",
+// "14": "Take the <NAME_SIGN> ramp.",
+// "14": "Take the <NAME_SIGN> ramp.",
+void TestBuildRamp_14_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateRampManeuverList_14(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateRampManeuverList_14(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(expected_maneuvers, "Take the Gettysburg Pike ramp.",
+                                  "Take the Gettysburg Pike ramp.", "Take the Gettysburg Pike ramp.",
+                                  "");
+
+  TryBuild(options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // FormExitInstruction
 // "0": "Take the exit on the <RELATIVE_DIRECTION>.",
 // "0": "Take the exit on the <RELATIVE_DIRECTION>.",
@@ -4682,6 +5055,342 @@ void TestBuildExit_14_miles_en_US() {
       "Take the Maryland 43 East exit on the left.",
       "Take the White Marsh Boulevard exit on the left onto Maryland 43 East toward White Marsh.",
       "");
+
+  TryBuild(options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormExitInstruction
+// "15": "Take the exit.",
+// "15": "Take the exit.",
+// "15": "Take the exit.",
+void TestBuildExit_15_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateExitManeuverList_15(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateExitManeuverList_15(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(expected_maneuvers, "Take the exit.", "Take the exit.",
+                                  "Take the exit.", "");
+
+  TryBuild(options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormExitInstruction
+// "16": "Take exit <NUMBER_SIGN>.",
+// "16": "Take exit <NUMBER_SIGN>.",
+// "16": "Take exit <NUMBER_SIGN>.",
+void TestBuildExit_16_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateExitManeuverList_16(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateExitManeuverList_16(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(expected_maneuvers, "Take exit 67 B-A.", "Take exit 67 B-A.",
+                                  "Take exit 67 B-A.", "");
+
+  TryBuild(options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormExitInstruction
+// "17": "Take the <BRANCH_SIGN> exit.",
+// "17": "Take the <BRANCH_SIGN> exit.",
+// "17": "Take the <BRANCH_SIGN> exit.",
+void TestBuildExit_17_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateExitManeuverList_17(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateExitManeuverList_17(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(expected_maneuvers, "Take the US 322 West exit.",
+                                  "Take the U.S. 3 22 West exit.", "Take the U.S. 3 22 West exit.",
+                                  "");
+
+  TryBuild(options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormExitInstruction
+// "18": "Take exit <NUMBER_SIGN> onto <BRANCH_SIGN>.",
+// "15": "Take exit <NUMBER_SIGN>.",
+// "18": "Take exit <NUMBER_SIGN> onto <BRANCH_SIGN>.",
+void TestBuildExit_18_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateExitManeuverList_18(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateExitManeuverList_18(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(expected_maneuvers, "Take exit 67 B-A onto US 322 West.",
+                                  "Take exit 67 B-A.", "Take exit 67 B-A onto U.S. 3 22 West.", "");
+
+  TryBuild(options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormExitInstruction
+// "19": "Take the exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
+// "19": "Take the exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
+// "19": "Take the exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
+void TestBuildExit_19_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateExitManeuverList_19(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateExitManeuverList_19(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(expected_maneuvers, "Take the exit toward Lewistown.",
+                                  "Take the exit toward Lewistown.",
+                                  "Take the exit toward Lewistown.", "");
+
+  TryBuild(options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormExitInstruction
+// "20": "Take exit <NUMBER_SIGN> toward <TOWARD_SIGN>.",
+// "16": "Take exit <NUMBER_SIGN>.",
+// "20": "Take exit <NUMBER_SIGN> toward <TOWARD_SIGN>.",
+void TestBuildExit_20_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateExitManeuverList_20(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateExitManeuverList_20(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(expected_maneuvers, "Take exit 67 B-A toward Lewistown.",
+                                  "Take exit 67 B-A.", "Take exit 67 B-A toward Lewistown.", "");
+
+  TryBuild(options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormExitInstruction
+// "21": "Take the <BRANCH_SIGN> exit toward <TOWARD_SIGN>.",
+// "17": "Take the <BRANCH_SIGN> exit.",
+// "21": "Take the <BRANCH_SIGN> exit toward <TOWARD_SIGN>.",
+void TestBuildExit_21_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateExitManeuverList_21(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateExitManeuverList_21(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(expected_maneuvers, "Take the US 322 West exit toward Lewistown.",
+                                  "Take the U.S. 3 22 West exit.",
+                                  "Take the U.S. 3 22 West exit toward Lewistown.", "");
+
+  TryBuild(options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormExitInstruction
+// "22": "Take exit <NUMBER_SIGN> onto <BRANCH_SIGN> toward <TOWARD_SIGN>.",
+// "16": "Take exit <NUMBER_SIGN>.",
+// "22": "Take exit <NUMBER_SIGN> onto <BRANCH_SIGN> toward <TOWARD_SIGN>.",
+void TestBuildExit_22_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateExitManeuverList_22(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateExitManeuverList_22(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(
+      expected_maneuvers, "Take exit 67 B-A onto US 322 West toward Lewistown/State College.",
+      "Take exit 67 B-A.", "Take exit 67 B-A onto U.S. 3 22 West toward Lewistown, State College.",
+      "");
+
+  TryBuild(options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormExitInstruction
+// "23": "Take the <NAME_SIGN> exit.",
+// "23": "Take the <NAME_SIGN> exit.",
+// "23": "Take the <NAME_SIGN> exit.",
+void TestBuildExit_23_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateExitManeuverList_23(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateExitManeuverList_23(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(expected_maneuvers, "Take the White Marsh Boulevard exit.",
+                                  "Take the White Marsh Boulevard exit.",
+                                  "Take the White Marsh Boulevard exit.", "");
+
+  TryBuild(options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormExitInstruction
+// "25": "Take the <NAME_SIGN> exit onto <BRANCH_SIGN>.",
+// "17": "Take the <BRANCH_SIGN> exit.",
+// "25": "Take the <NAME_SIGN> exit onto <BRANCH_SIGN>.",
+void TestBuildExit_25_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateExitManeuverList_25(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateExitManeuverList_25(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(expected_maneuvers,
+                                  "Take the White Marsh Boulevard exit onto MD 43 East.",
+                                  "Take the Maryland 43 East exit.",
+                                  "Take the White Marsh Boulevard exit onto Maryland 43 East.", "");
+
+  TryBuild(options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormExitInstruction
+// "27": "Take the <NAME_SIGN> exit toward <TOWARD_SIGN>.",
+// "19": "Take the exit toward <TOWARD_SIGN>.",
+// "27": "Take the <NAME_SIGN> exit toward <TOWARD_SIGN>.",
+void TestBuildExit_27_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateExitManeuverList_27(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateExitManeuverList_27(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(expected_maneuvers,
+                                  "Take the White Marsh Boulevard exit toward White Marsh.",
+                                  "Take the exit toward White Marsh.",
+                                  "Take the White Marsh Boulevard exit toward White Marsh.", "");
+
+  TryBuild(options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormExitInstruction
+// "29": "Take the <NAME_SIGN> exit onto <BRANCH_SIGN> toward <TOWARD_SIGN>.",
+// "17": "Take the <BRANCH_SIGN> exit.",
+// "29": "Take the <NAME_SIGN> exit onto <BRANCH_SIGN> toward <TOWARD_SIGN>.",
+void TestBuildExit_29_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  Options options;
+  options.set_units(Options::miles);
+  options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateExitManeuverList_29(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateExitManeuverList_29(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(
+      expected_maneuvers, "Take the White Marsh Boulevard exit onto MD 43 East toward White Marsh.",
+      "Take the Maryland 43 East exit.",
+      "Take the White Marsh Boulevard exit onto Maryland 43 East toward White Marsh.", "");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -5076,10 +5785,10 @@ void TestBuildMerge_0_miles_en_US() {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateMergeManeuverList_0(expected_maneuvers, country_code, state_code);
-  SetExpectedPreviousManeuverInstructions(
-      expected_maneuvers, "Take the I 76 West exit on the right toward Pittsburgh.",
-      "Take the Interstate 76 West exit on the right.",
-      "Take the Interstate 76 West exit on the right toward Pittsburgh.", "");
+  SetExpectedPreviousManeuverInstructions(expected_maneuvers,
+                                          "Take the I 76 West exit toward Pittsburgh.",
+                                          "Take the Interstate 76 West exit.",
+                                          "Take the Interstate 76 West exit toward Pittsburgh.", "");
   SetExpectedManeuverInstructions(expected_maneuvers, "Merge.", "", "Merge.",
                                   "Continue for 4.7 miles.");
 
@@ -5107,10 +5816,10 @@ void TestBuildMerge_1_1_miles_en_US() {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateMergeManeuverList_1_1(expected_maneuvers, country_code, state_code);
-  SetExpectedPreviousManeuverInstructions(
-      expected_maneuvers, "Take the I 76 West exit on the right toward Pittsburgh.",
-      "Take the Interstate 76 West exit on the right.",
-      "Take the Interstate 76 West exit on the right toward Pittsburgh.", "");
+  SetExpectedPreviousManeuverInstructions(expected_maneuvers,
+                                          "Take the I 76 West exit toward Pittsburgh.",
+                                          "Take the Interstate 76 West exit.",
+                                          "Take the Interstate 76 West exit toward Pittsburgh.", "");
   SetExpectedManeuverInstructions(expected_maneuvers, "Merge onto I 76 West/Pennsylvania Turnpike.",
                                   "", "Merge onto Interstate 76 West, Pennsylvania Turnpike.",
                                   "Continue for 4.7 miles.");
@@ -5139,10 +5848,11 @@ void TestBuildMerge_1_2_miles_en_US() {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateMergeManeuverList_1_2(expected_maneuvers, country_code, state_code);
-  SetExpectedPreviousManeuverInstructions(
-      expected_maneuvers, "Take the I 76 West exit on the right toward Pittsburgh.",
-      "Take the Interstate 76 West exit on the right.",
-      "Take the Interstate 76 West exit on the right toward Pittsburgh.", "Continue for 1.3 miles.");
+  SetExpectedPreviousManeuverInstructions(expected_maneuvers,
+                                          "Take the I 76 West exit toward Pittsburgh.",
+                                          "Take the Interstate 76 West exit.",
+                                          "Take the Interstate 76 West exit toward Pittsburgh.",
+                                          "Continue for 1.3 miles.");
   SetExpectedManeuverInstructions(expected_maneuvers, "Merge onto I 76 West/Pennsylvania Turnpike.",
                                   "Merge onto Interstate 76 West.",
                                   "Merge onto Interstate 76 West, Pennsylvania Turnpike.",
@@ -7241,6 +7951,7 @@ void TestFormVerbalPostTransitionInstruction() {
 
 Maneuver CreateSignManeuver(DirectionsLeg_Maneuver_Type type,
                             Maneuver::RelativeDirection relative_direction,
+                            bool drive_on_right,
                             const std::vector<std::tuple<std::string, bool, uint32_t>>& exit_numbers,
                             const std::vector<std::tuple<std::string, bool, uint32_t>>& exit_branches,
                             const std::vector<std::tuple<std::string, bool, uint32_t>>& exit_towards,
@@ -7248,6 +7959,7 @@ Maneuver CreateSignManeuver(DirectionsLeg_Maneuver_Type type,
   Maneuver maneuver;
   maneuver.set_type(type);
   maneuver.set_begin_relative_direction(relative_direction);
+  maneuver.set_drive_on_right(drive_on_right);
   auto* signs = maneuver.mutable_signs();
   auto* exit_number_list = signs->mutable_exit_number_list();
   auto* exit_branch_list = signs->mutable_exit_branch_list();
@@ -7304,53 +8016,54 @@ void TestFormRampStraightInstruction() {
   // phrase_id = 0
   TryFormRampStraightInstruction(nbt,
                                  CreateSignManeuver(DirectionsLeg_Maneuver_Type_kRampStraight,
-                                                    Maneuver::RelativeDirection::kKeepStraight, {},
-                                                    {}, {}, {}),
+                                                    Maneuver::RelativeDirection::kKeepStraight, true,
+                                                    {}, {}, {}, {}),
                                  "Stay straight to take the ramp.");
 
   // phrase_id = 1
   TryFormRampStraightInstruction(nbt,
                                  CreateSignManeuver(DirectionsLeg_Maneuver_Type_kRampStraight,
-                                                    Maneuver::RelativeDirection::kKeepStraight, {},
-                                                    {std::make_tuple("I 95 South", 1, 0)}, {}, {}),
+                                                    Maneuver::RelativeDirection::kKeepStraight, true,
+                                                    {}, {std::make_tuple("I 95 South", 1, 0)}, {},
+                                                    {}),
                                  "Stay straight to take the I 95 South ramp.");
 
   // phrase_id = 1; Test that exit name is not used when a branch exists
   TryFormRampStraightInstruction(nbt,
                                  CreateSignManeuver(DirectionsLeg_Maneuver_Type_kRampStraight,
-                                                    Maneuver::RelativeDirection::kKeepStraight, {},
-                                                    {std::make_tuple("I 95 South", 1, 0)}, {},
+                                                    Maneuver::RelativeDirection::kKeepStraight, true,
+                                                    {}, {std::make_tuple("I 95 South", 1, 0)}, {},
                                                     {std::make_tuple("Gettysburg Pike", 0, 0)}),
                                  "Stay straight to take the I 95 South ramp.");
 
   // phrase_id = 2
   TryFormRampStraightInstruction(nbt,
                                  CreateSignManeuver(DirectionsLeg_Maneuver_Type_kRampStraight,
-                                                    Maneuver::RelativeDirection::kKeepStraight, {},
-                                                    {}, {std::make_tuple("Baltimore", 0, 0)}, {}),
+                                                    Maneuver::RelativeDirection::kKeepStraight, true,
+                                                    {}, {}, {std::make_tuple("Baltimore", 0, 0)}, {}),
                                  "Stay straight to take the ramp toward Baltimore.");
 
   // phrase_id = 2; Test that exit name is not used when a toward exists
   TryFormRampStraightInstruction(nbt,
                                  CreateSignManeuver(DirectionsLeg_Maneuver_Type_kRampStraight,
-                                                    Maneuver::RelativeDirection::kKeepStraight, {},
-                                                    {}, {std::make_tuple("Baltimore", 0, 0)},
+                                                    Maneuver::RelativeDirection::kKeepStraight, true,
+                                                    {}, {}, {std::make_tuple("Baltimore", 0, 0)},
                                                     {std::make_tuple("Gettysburg Pike", 0, 0)}),
                                  "Stay straight to take the ramp toward Baltimore.");
 
   // phrase_id = 3
   TryFormRampStraightInstruction(nbt,
                                  CreateSignManeuver(DirectionsLeg_Maneuver_Type_kRampStraight,
-                                                    Maneuver::RelativeDirection::kKeepStraight, {},
-                                                    {std::make_tuple("I 95 South", 1, 0)},
+                                                    Maneuver::RelativeDirection::kKeepStraight, true,
+                                                    {}, {std::make_tuple("I 95 South", 1, 0)},
                                                     {std::make_tuple("Baltimore", 0, 0)}, {}),
                                  "Stay straight to take the I 95 South ramp toward Baltimore.");
 
   // phrase_id = 3; Test that exit name is not used when a branch or toward exists
   TryFormRampStraightInstruction(nbt,
                                  CreateSignManeuver(DirectionsLeg_Maneuver_Type_kRampStraight,
-                                                    Maneuver::RelativeDirection::kKeepStraight, {},
-                                                    {std::make_tuple("I 95 South", 1, 0)},
+                                                    Maneuver::RelativeDirection::kKeepStraight, true,
+                                                    {}, {std::make_tuple("I 95 South", 1, 0)},
                                                     {std::make_tuple("Baltimore", 0, 0)},
                                                     {std::make_tuple("Gettysburg Pike", 0, 0)}),
                                  "Stay straight to take the I 95 South ramp toward Baltimore.");
@@ -7358,8 +8071,8 @@ void TestFormRampStraightInstruction() {
   // phrase_id = 4
   TryFormRampStraightInstruction(nbt,
                                  CreateSignManeuver(DirectionsLeg_Maneuver_Type_kRampStraight,
-                                                    Maneuver::RelativeDirection::kKeepStraight, {},
-                                                    {}, {},
+                                                    Maneuver::RelativeDirection::kKeepStraight, true,
+                                                    {}, {}, {},
                                                     {std::make_tuple("Gettysburg Pike", 0, 0)}),
                                  "Stay straight to take the Gettysburg Pike ramp.");
 }
@@ -7367,7 +8080,8 @@ void TestFormRampStraightInstruction() {
 void TryFormRampRightInstruction(NarrativeBuilderTest& nbt, Maneuver maneuver, std::string expected) {
   std::string instruction = nbt.FormRampInstruction(maneuver);
   if (instruction != expected)
-    throw std::runtime_error("Incorrect FormRampRightInstruction");
+    throw std::runtime_error("Incorrect FormRampRightInstruction | actual=" + instruction +
+                             " | expected=" + expected);
 }
 
 void TestFormRampRightInstruction() {
@@ -7382,21 +8096,21 @@ void TestFormRampRightInstruction() {
   // phrase_id = 0
   TryFormRampRightInstruction(nbt,
                               CreateSignManeuver(DirectionsLeg_Maneuver_Type_kRampRight,
-                                                 Maneuver::RelativeDirection::kKeepRight, {}, {}, {},
-                                                 {}),
+                                                 Maneuver::RelativeDirection::kKeepRight, false, {},
+                                                 {}, {}, {}),
                               "Take the ramp on the right.");
 
   // phrase_id = 1
   TryFormRampRightInstruction(nbt,
                               CreateSignManeuver(DirectionsLeg_Maneuver_Type_kRampRight,
-                                                 Maneuver::RelativeDirection::kKeepRight, {},
+                                                 Maneuver::RelativeDirection::kKeepRight, false, {},
                                                  {std::make_tuple("I 95 South", 1, 0)}, {}, {}),
                               "Take the I 95 South ramp on the right.");
 
   // phrase_id = 1; Test that exit name is not used when a branch exists
   TryFormRampRightInstruction(nbt,
                               CreateSignManeuver(DirectionsLeg_Maneuver_Type_kRampRight,
-                                                 Maneuver::RelativeDirection::kKeepRight, {},
+                                                 Maneuver::RelativeDirection::kKeepRight, false, {},
                                                  {std::make_tuple("I 95 South", 1, 0)}, {},
                                                  {std::make_tuple("Gettysburg Pike", 0, 0)}),
                               "Take the I 95 South ramp on the right.");
@@ -7404,22 +8118,22 @@ void TestFormRampRightInstruction() {
   // phrase_id = 2
   TryFormRampRightInstruction(nbt,
                               CreateSignManeuver(DirectionsLeg_Maneuver_Type_kRampRight,
-                                                 Maneuver::RelativeDirection::kKeepRight, {}, {},
-                                                 {std::make_tuple("Baltimore", 0, 0)}, {}),
+                                                 Maneuver::RelativeDirection::kKeepRight, false, {},
+                                                 {}, {std::make_tuple("Baltimore", 0, 0)}, {}),
                               "Take the ramp on the right toward Baltimore.");
 
   // phrase_id = 2; Test that exit name is not used when a toward exists
   TryFormRampRightInstruction(nbt,
                               CreateSignManeuver(DirectionsLeg_Maneuver_Type_kRampRight,
-                                                 Maneuver::RelativeDirection::kKeepRight, {}, {},
-                                                 {std::make_tuple("Baltimore", 0, 0)},
+                                                 Maneuver::RelativeDirection::kKeepRight, false, {},
+                                                 {}, {std::make_tuple("Baltimore", 0, 0)},
                                                  {std::make_tuple("Gettysburg Pike", 0, 0)}),
                               "Take the ramp on the right toward Baltimore.");
 
   // phrase_id = 3
   TryFormRampRightInstruction(nbt,
                               CreateSignManeuver(DirectionsLeg_Maneuver_Type_kRampRight,
-                                                 Maneuver::RelativeDirection::kKeepRight, {},
+                                                 Maneuver::RelativeDirection::kKeepRight, false, {},
                                                  {std::make_tuple("I 95 South", 1, 0)},
                                                  {std::make_tuple("Baltimore", 0, 0)}, {}),
                               "Take the I 95 South ramp on the right toward Baltimore.");
@@ -7428,7 +8142,7 @@ void TestFormRampRightInstruction() {
   // exists
   TryFormRampRightInstruction(nbt,
                               CreateSignManeuver(DirectionsLeg_Maneuver_Type_kRampRight,
-                                                 Maneuver::RelativeDirection::kKeepRight, {},
+                                                 Maneuver::RelativeDirection::kKeepRight, false, {},
                                                  {std::make_tuple("I 95 South", 1, 0)},
                                                  {std::make_tuple("Baltimore", 0, 0)},
                                                  {std::make_tuple("Gettysburg Pike", 0, 0)}),
@@ -7437,34 +8151,35 @@ void TestFormRampRightInstruction() {
   // phrase_id = 4
   TryFormRampRightInstruction(nbt,
                               CreateSignManeuver(DirectionsLeg_Maneuver_Type_kRampRight,
-                                                 Maneuver::RelativeDirection::kKeepRight, {}, {}, {},
-                                                 {std::make_tuple("Gettysburg Pike", 0, 0)}),
+                                                 Maneuver::RelativeDirection::kKeepRight, false, {},
+                                                 {}, {}, {std::make_tuple("Gettysburg Pike", 0, 0)}),
                               "Take the Gettysburg Pike ramp on the right.");
 
   // phrase_id = 5
   TryFormRampRightInstruction(nbt,
                               CreateSignManeuver(DirectionsLeg_Maneuver_Type_kRampRight,
-                                                 Maneuver::RelativeDirection::kRight, {}, {}, {}, {}),
+                                                 Maneuver::RelativeDirection::kRight, true, {}, {},
+                                                 {}, {}),
                               "Turn right to take the ramp.");
 
   // phrase_id = 6
   TryFormRampRightInstruction(nbt,
                               CreateSignManeuver(DirectionsLeg_Maneuver_Type_kRampRight,
-                                                 Maneuver::RelativeDirection::kRight, {},
+                                                 Maneuver::RelativeDirection::kRight, true, {},
                                                  {std::make_tuple("I 95 South", 1, 0)}, {}, {}),
                               "Turn right to take the I 95 South ramp.");
 
   // phrase_id = 7
   TryFormRampRightInstruction(nbt,
                               CreateSignManeuver(DirectionsLeg_Maneuver_Type_kRampRight,
-                                                 Maneuver::RelativeDirection::kRight, {}, {},
+                                                 Maneuver::RelativeDirection::kRight, true, {}, {},
                                                  {std::make_tuple("Baltimore", 0, 0)}, {}),
                               "Turn right to take the ramp toward Baltimore.");
 
   // phrase_id = 8
   TryFormRampRightInstruction(nbt,
                               CreateSignManeuver(DirectionsLeg_Maneuver_Type_kRampRight,
-                                                 Maneuver::RelativeDirection::kRight, {},
+                                                 Maneuver::RelativeDirection::kRight, true, {},
                                                  {std::make_tuple("I 95 South", 1, 0)},
                                                  {std::make_tuple("Baltimore", 0, 0)}, {}),
                               "Turn right to take the I 95 South ramp toward Baltimore.");
@@ -7472,9 +8187,71 @@ void TestFormRampRightInstruction() {
   // phrase_id = 9
   TryFormRampRightInstruction(nbt,
                               CreateSignManeuver(DirectionsLeg_Maneuver_Type_kRampRight,
-                                                 Maneuver::RelativeDirection::kRight, {}, {}, {},
-                                                 {std::make_tuple("Gettysburg Pike", 0, 0)}),
+                                                 Maneuver::RelativeDirection::kRight, true, {}, {},
+                                                 {}, {std::make_tuple("Gettysburg Pike", 0, 0)}),
                               "Turn right to take the Gettysburg Pike ramp.");
+
+  // phrase_id = 10
+  TryFormRampRightInstruction(nbt,
+                              CreateSignManeuver(DirectionsLeg_Maneuver_Type_kRampRight,
+                                                 Maneuver::RelativeDirection::kKeepRight, true, {},
+                                                 {}, {}, {}),
+                              "Take the ramp.");
+
+  // phrase_id = 11
+  TryFormRampRightInstruction(nbt,
+                              CreateSignManeuver(DirectionsLeg_Maneuver_Type_kRampRight,
+                                                 Maneuver::RelativeDirection::kKeepRight, true, {},
+                                                 {std::make_tuple("I 95 South", 1, 0)}, {}, {}),
+                              "Take the I 95 South ramp.");
+
+  // phrase_id = 11; Test that exit name is not used when a branch exists
+  TryFormRampRightInstruction(nbt,
+                              CreateSignManeuver(DirectionsLeg_Maneuver_Type_kRampRight,
+                                                 Maneuver::RelativeDirection::kKeepRight, true, {},
+                                                 {std::make_tuple("I 95 South", 1, 0)}, {},
+                                                 {std::make_tuple("Gettysburg Pike", 0, 0)}),
+                              "Take the I 95 South ramp.");
+
+  // phrase_id = 12
+  TryFormRampRightInstruction(nbt,
+                              CreateSignManeuver(DirectionsLeg_Maneuver_Type_kRampRight,
+                                                 Maneuver::RelativeDirection::kKeepRight, true, {},
+                                                 {}, {std::make_tuple("Baltimore", 0, 0)}, {}),
+                              "Take the ramp toward Baltimore.");
+
+  // phrase_id = 12; Test that exit name is not used when a toward exists
+  TryFormRampRightInstruction(nbt,
+                              CreateSignManeuver(DirectionsLeg_Maneuver_Type_kRampRight,
+                                                 Maneuver::RelativeDirection::kKeepRight, true, {},
+                                                 {}, {std::make_tuple("Baltimore", 0, 0)},
+                                                 {std::make_tuple("Gettysburg Pike", 0, 0)}),
+                              "Take the ramp toward Baltimore.");
+
+  // phrase_id = 13
+  TryFormRampRightInstruction(nbt,
+                              CreateSignManeuver(DirectionsLeg_Maneuver_Type_kRampRight,
+                                                 Maneuver::RelativeDirection::kKeepRight, true, {},
+                                                 {std::make_tuple("I 95 South", 1, 0)},
+                                                 {std::make_tuple("Baltimore", 0, 0)}, {}),
+                              "Take the I 95 South ramp toward Baltimore.");
+
+  // phrase_id = 13; Test that exit name is not used when a branch or toward
+  // exists
+  TryFormRampRightInstruction(nbt,
+                              CreateSignManeuver(DirectionsLeg_Maneuver_Type_kRampRight,
+                                                 Maneuver::RelativeDirection::kKeepRight, true, {},
+                                                 {std::make_tuple("I 95 South", 1, 0)},
+                                                 {std::make_tuple("Baltimore", 0, 0)},
+                                                 {std::make_tuple("Gettysburg Pike", 0, 0)}),
+                              "Take the I 95 South ramp toward Baltimore.");
+
+  // phrase_id = 14
+  TryFormRampRightInstruction(nbt,
+                              CreateSignManeuver(DirectionsLeg_Maneuver_Type_kRampRight,
+                                                 Maneuver::RelativeDirection::kKeepRight, true, {},
+                                                 {}, {}, {std::make_tuple("Gettysburg Pike", 0, 0)}),
+                              "Take the Gettysburg Pike ramp.");
 }
 
 void TryFormRampLeftInstruction(NarrativeBuilderTest& nbt, Maneuver maneuver, std::string expected) {
@@ -7495,21 +8272,21 @@ void TestFormRampLeftInstruction() {
   // phrase_id = 0
   TryFormRampLeftInstruction(nbt,
                              CreateSignManeuver(DirectionsLeg_Maneuver_Type_kRampLeft,
-                                                Maneuver::RelativeDirection::kKeepLeft, {}, {}, {},
-                                                {}),
+                                                Maneuver::RelativeDirection::kKeepLeft, true, {}, {},
+                                                {}, {}),
                              "Take the ramp on the left.");
 
   // phrase_id = 1
   TryFormRampLeftInstruction(nbt,
                              CreateSignManeuver(DirectionsLeg_Maneuver_Type_kRampLeft,
-                                                Maneuver::RelativeDirection::kKeepLeft, {},
+                                                Maneuver::RelativeDirection::kKeepLeft, true, {},
                                                 {std::make_tuple("I 95 South", 1, 0)}, {}, {}),
                              "Take the I 95 South ramp on the left.");
 
   // phrase_id = 1; Test that exit name is not used when a branch exists
   TryFormRampLeftInstruction(nbt,
                              CreateSignManeuver(DirectionsLeg_Maneuver_Type_kRampLeft,
-                                                Maneuver::RelativeDirection::kKeepLeft, {},
+                                                Maneuver::RelativeDirection::kKeepLeft, true, {},
                                                 {std::make_tuple("I 95 South", 1, 0)}, {},
                                                 {std::make_tuple("Gettysburg Pike", 0, 0)}),
                              "Take the I 95 South ramp on the left.");
@@ -7517,14 +8294,14 @@ void TestFormRampLeftInstruction() {
   // phrase_id = 2
   TryFormRampLeftInstruction(nbt,
                              CreateSignManeuver(DirectionsLeg_Maneuver_Type_kRampLeft,
-                                                Maneuver::RelativeDirection::kKeepLeft, {}, {},
+                                                Maneuver::RelativeDirection::kKeepLeft, true, {}, {},
                                                 {std::make_tuple("Baltimore", 0, 0)}, {}),
                              "Take the ramp on the left toward Baltimore.");
 
   // phrase_id = 2; Test that exit name is not used when a toward exists
   TryFormRampLeftInstruction(nbt,
                              CreateSignManeuver(DirectionsLeg_Maneuver_Type_kRampLeft,
-                                                Maneuver::RelativeDirection::kKeepLeft, {}, {},
+                                                Maneuver::RelativeDirection::kKeepLeft, true, {}, {},
                                                 {std::make_tuple("Baltimore", 0, 0)},
                                                 {std::make_tuple("Gettysburg Pike", 0, 0)}),
                              "Take the ramp on the left toward Baltimore.");
@@ -7532,7 +8309,7 @@ void TestFormRampLeftInstruction() {
   // phrase_id = 3
   TryFormRampLeftInstruction(nbt,
                              CreateSignManeuver(DirectionsLeg_Maneuver_Type_kRampLeft,
-                                                Maneuver::RelativeDirection::kKeepLeft, {},
+                                                Maneuver::RelativeDirection::kKeepLeft, true, {},
                                                 {std::make_tuple("I 95 South", 1, 0)},
                                                 {std::make_tuple("Baltimore", 0, 0)}, {}),
                              "Take the I 95 South ramp on the left toward Baltimore.");
@@ -7541,7 +8318,7 @@ void TestFormRampLeftInstruction() {
   // exists
   TryFormRampLeftInstruction(nbt,
                              CreateSignManeuver(DirectionsLeg_Maneuver_Type_kRampLeft,
-                                                Maneuver::RelativeDirection::kKeepLeft, {},
+                                                Maneuver::RelativeDirection::kKeepLeft, true, {},
                                                 {std::make_tuple("I 95 South", 1, 0)},
                                                 {std::make_tuple("Baltimore", 0, 0)},
                                                 {std::make_tuple("Gettysburg Pike", 0, 0)}),
@@ -7550,34 +8327,35 @@ void TestFormRampLeftInstruction() {
   // phrase_id = 4
   TryFormRampLeftInstruction(nbt,
                              CreateSignManeuver(DirectionsLeg_Maneuver_Type_kRampLeft,
-                                                Maneuver::RelativeDirection::kKeepLeft, {}, {}, {},
-                                                {std::make_tuple("Gettysburg Pike", 0, 0)}),
+                                                Maneuver::RelativeDirection::kKeepLeft, true, {}, {},
+                                                {}, {std::make_tuple("Gettysburg Pike", 0, 0)}),
                              "Take the Gettysburg Pike ramp on the left.");
 
   // phrase_id = 5
   TryFormRampLeftInstruction(nbt,
                              CreateSignManeuver(DirectionsLeg_Maneuver_Type_kRampLeft,
-                                                Maneuver::RelativeDirection::kLeft, {}, {}, {}, {}),
+                                                Maneuver::RelativeDirection::kLeft, true, {}, {}, {},
+                                                {}),
                              "Turn left to take the ramp.");
 
   // phrase_id = 6
   TryFormRampLeftInstruction(nbt,
                              CreateSignManeuver(DirectionsLeg_Maneuver_Type_kRampLeft,
-                                                Maneuver::RelativeDirection::kLeft, {},
+                                                Maneuver::RelativeDirection::kLeft, true, {},
                                                 {std::make_tuple("I 95 South", 1, 0)}, {}, {}),
                              "Turn left to take the I 95 South ramp.");
 
   // phrase_id = 7
   TryFormRampLeftInstruction(nbt,
                              CreateSignManeuver(DirectionsLeg_Maneuver_Type_kRampLeft,
-                                                Maneuver::RelativeDirection::kLeft, {}, {},
+                                                Maneuver::RelativeDirection::kLeft, true, {}, {},
                                                 {std::make_tuple("Baltimore", 0, 0)}, {}),
                              "Turn left to take the ramp toward Baltimore.");
 
   // phrase_id = 8
   TryFormRampLeftInstruction(nbt,
                              CreateSignManeuver(DirectionsLeg_Maneuver_Type_kRampLeft,
-                                                Maneuver::RelativeDirection::kLeft, {},
+                                                Maneuver::RelativeDirection::kLeft, true, {},
                                                 {std::make_tuple("I 95 South", 1, 0)},
                                                 {std::make_tuple("Baltimore", 0, 0)}, {}),
                              "Turn left to take the I 95 South ramp toward Baltimore.");
@@ -7585,15 +8363,78 @@ void TestFormRampLeftInstruction() {
   // phrase_id = 9
   TryFormRampLeftInstruction(nbt,
                              CreateSignManeuver(DirectionsLeg_Maneuver_Type_kRampLeft,
-                                                Maneuver::RelativeDirection::kLeft, {}, {}, {},
+                                                Maneuver::RelativeDirection::kLeft, true, {}, {}, {},
                                                 {std::make_tuple("Gettysburg Pike", 0, 0)}),
                              "Turn left to take the Gettysburg Pike ramp.");
+
+  // phrase_id = 10
+  TryFormRampLeftInstruction(nbt,
+                             CreateSignManeuver(DirectionsLeg_Maneuver_Type_kRampLeft,
+                                                Maneuver::RelativeDirection::kKeepLeft, false, {}, {},
+                                                {}, {}),
+                             "Take the ramp.");
+
+  // phrase_id = 11
+  TryFormRampLeftInstruction(nbt,
+                             CreateSignManeuver(DirectionsLeg_Maneuver_Type_kRampLeft,
+                                                Maneuver::RelativeDirection::kKeepLeft, false, {},
+                                                {std::make_tuple("I 95 South", 1, 0)}, {}, {}),
+                             "Take the I 95 South ramp.");
+
+  // phrase_id = 11; Test that exit name is not used when a branch exists
+  TryFormRampLeftInstruction(nbt,
+                             CreateSignManeuver(DirectionsLeg_Maneuver_Type_kRampLeft,
+                                                Maneuver::RelativeDirection::kKeepLeft, false, {},
+                                                {std::make_tuple("I 95 South", 1, 0)}, {},
+                                                {std::make_tuple("Gettysburg Pike", 0, 0)}),
+                             "Take the I 95 South ramp.");
+
+  // phrase_id = 12
+  TryFormRampLeftInstruction(nbt,
+                             CreateSignManeuver(DirectionsLeg_Maneuver_Type_kRampLeft,
+                                                Maneuver::RelativeDirection::kKeepLeft, false, {}, {},
+                                                {std::make_tuple("Baltimore", 0, 0)}, {}),
+                             "Take the ramp toward Baltimore.");
+
+  // phrase_id = 12; Test that exit name is not used when a toward exists
+  TryFormRampLeftInstruction(nbt,
+                             CreateSignManeuver(DirectionsLeg_Maneuver_Type_kRampLeft,
+                                                Maneuver::RelativeDirection::kKeepLeft, false, {}, {},
+                                                {std::make_tuple("Baltimore", 0, 0)},
+                                                {std::make_tuple("Gettysburg Pike", 0, 0)}),
+                             "Take the ramp toward Baltimore.");
+
+  // phrase_id = 13
+  TryFormRampLeftInstruction(nbt,
+                             CreateSignManeuver(DirectionsLeg_Maneuver_Type_kRampLeft,
+                                                Maneuver::RelativeDirection::kKeepLeft, false, {},
+                                                {std::make_tuple("I 95 South", 1, 0)},
+                                                {std::make_tuple("Baltimore", 0, 0)}, {}),
+                             "Take the I 95 South ramp toward Baltimore.");
+
+  // phrase_id = 13; Test that exit name is not used when a branch or toward
+  // exists
+  TryFormRampLeftInstruction(nbt,
+                             CreateSignManeuver(DirectionsLeg_Maneuver_Type_kRampLeft,
+                                                Maneuver::RelativeDirection::kKeepLeft, false, {},
+                                                {std::make_tuple("I 95 South", 1, 0)},
+                                                {std::make_tuple("Baltimore", 0, 0)},
+                                                {std::make_tuple("Gettysburg Pike", 0, 0)}),
+                             "Take the I 95 South ramp toward Baltimore.");
+
+  // phrase_id = 14
+  TryFormRampLeftInstruction(nbt,
+                             CreateSignManeuver(DirectionsLeg_Maneuver_Type_kRampLeft,
+                                                Maneuver::RelativeDirection::kKeepLeft, false, {}, {},
+                                                {}, {std::make_tuple("Gettysburg Pike", 0, 0)}),
+                             "Take the Gettysburg Pike ramp.");
 }
 
 void TryFormExitRightInstruction(NarrativeBuilderTest& nbt, Maneuver maneuver, std::string expected) {
   std::string instruction = nbt.FormExitInstruction(maneuver);
   if (instruction != expected)
-    throw std::runtime_error("Incorrect FormExitRightInstruction");
+    throw std::runtime_error("Incorrect FormExitRightInstruction | actual=" + instruction +
+                             " | expected=" + expected);
 }
 
 void TestFormExitRightInstruction() {
@@ -7608,21 +8449,21 @@ void TestFormExitRightInstruction() {
   // phrase_id = 0
   TryFormExitRightInstruction(nbt,
                               CreateSignManeuver(DirectionsLeg_Maneuver_Type_kExitRight,
-                                                 Maneuver::RelativeDirection::kKeepRight, {}, {}, {},
-                                                 {}),
+                                                 Maneuver::RelativeDirection::kKeepRight, false, {},
+                                                 {}, {}, {}),
                               "Take the exit on the right.");
 
   // phrase_id = 1
   TryFormExitRightInstruction(nbt,
                               CreateSignManeuver(DirectionsLeg_Maneuver_Type_kExitRight,
-                                                 Maneuver::RelativeDirection::kKeepRight,
+                                                 Maneuver::RelativeDirection::kKeepRight, false,
                                                  {std::make_tuple("67A", 0, 0)}, {}, {}, {}),
                               "Take exit 67A on the right.");
 
   // phrase_id = 1; Test that name is ignored when number is present
   TryFormExitRightInstruction(nbt,
                               CreateSignManeuver(DirectionsLeg_Maneuver_Type_kExitRight,
-                                                 Maneuver::RelativeDirection::kKeepRight,
+                                                 Maneuver::RelativeDirection::kKeepRight, false,
                                                  {std::make_tuple("67A", 0, 0)}, {}, {},
                                                  {std::make_tuple("Gettysburg Pike", 0, 0)}),
                               "Take exit 67A on the right.");
@@ -7630,14 +8471,14 @@ void TestFormExitRightInstruction() {
   // phrase_id = 2
   TryFormExitRightInstruction(nbt,
                               CreateSignManeuver(DirectionsLeg_Maneuver_Type_kExitRight,
-                                                 Maneuver::RelativeDirection::kKeepRight, {},
+                                                 Maneuver::RelativeDirection::kKeepRight, false, {},
                                                  {std::make_tuple("I 95 South", 1, 0)}, {}, {}),
                               "Take the I 95 South exit on the right.");
 
   // phrase_id = 3
   TryFormExitRightInstruction(nbt,
                               CreateSignManeuver(DirectionsLeg_Maneuver_Type_kExitRight,
-                                                 Maneuver::RelativeDirection::kKeepRight,
+                                                 Maneuver::RelativeDirection::kKeepRight, false,
                                                  {std::make_tuple("67A", 0, 0)},
                                                  {std::make_tuple("I 95 South", 1, 0)}, {}, {}),
                               "Take exit 67A on the right onto I 95 South.");
@@ -7645,14 +8486,14 @@ void TestFormExitRightInstruction() {
   // phrase_id = 4
   TryFormExitRightInstruction(nbt,
                               CreateSignManeuver(DirectionsLeg_Maneuver_Type_kExitRight,
-                                                 Maneuver::RelativeDirection::kKeepRight, {}, {},
-                                                 {std::make_tuple("Baltimore", 0, 0)}, {}),
+                                                 Maneuver::RelativeDirection::kKeepRight, false, {},
+                                                 {}, {std::make_tuple("Baltimore", 0, 0)}, {}),
                               "Take the exit on the right toward Baltimore.");
 
   // phrase_id = 5
   TryFormExitRightInstruction(nbt,
                               CreateSignManeuver(DirectionsLeg_Maneuver_Type_kExitRight,
-                                                 Maneuver::RelativeDirection::kKeepRight,
+                                                 Maneuver::RelativeDirection::kKeepRight, false,
                                                  {std::make_tuple("67A", 0, 0)}, {},
                                                  {std::make_tuple("Baltimore", 0, 0)}, {}),
                               "Take exit 67A on the right toward Baltimore.");
@@ -7660,7 +8501,7 @@ void TestFormExitRightInstruction() {
   // phrase_id = 6
   TryFormExitRightInstruction(nbt,
                               CreateSignManeuver(DirectionsLeg_Maneuver_Type_kExitRight,
-                                                 Maneuver::RelativeDirection::kKeepRight, {},
+                                                 Maneuver::RelativeDirection::kKeepRight, false, {},
                                                  {std::make_tuple("I 95 South", 1, 0)},
                                                  {std::make_tuple("Baltimore", 0, 0)}, {}),
                               "Take the I 95 South exit on the right toward Baltimore.");
@@ -7668,7 +8509,7 @@ void TestFormExitRightInstruction() {
   // phrase_id = 7
   TryFormExitRightInstruction(nbt,
                               CreateSignManeuver(DirectionsLeg_Maneuver_Type_kExitRight,
-                                                 Maneuver::RelativeDirection::kKeepRight,
+                                                 Maneuver::RelativeDirection::kKeepRight, false,
                                                  {std::make_tuple("67A", 0, 0)},
                                                  {std::make_tuple("I 95 South", 1, 0)},
                                                  {std::make_tuple("Baltimore", 0, 0)}, {}),
@@ -7677,14 +8518,14 @@ void TestFormExitRightInstruction() {
   // phrase_id = 8
   TryFormExitRightInstruction(nbt,
                               CreateSignManeuver(DirectionsLeg_Maneuver_Type_kExitRight,
-                                                 Maneuver::RelativeDirection::kKeepRight, {}, {}, {},
-                                                 {std::make_tuple("Gettysburg Pike", 0, 0)}),
+                                                 Maneuver::RelativeDirection::kKeepRight, false, {},
+                                                 {}, {}, {std::make_tuple("Gettysburg Pike", 0, 0)}),
                               "Take the Gettysburg Pike exit on the right.");
 
   // phrase_id = 10
   TryFormExitRightInstruction(nbt,
                               CreateSignManeuver(DirectionsLeg_Maneuver_Type_kExitRight,
-                                                 Maneuver::RelativeDirection::kKeepRight, {},
+                                                 Maneuver::RelativeDirection::kKeepRight, false, {},
                                                  {std::make_tuple("US 15", 1, 0)}, {},
                                                  {std::make_tuple("Gettysburg Pike", 0, 0)}),
                               "Take the Gettysburg Pike exit on the right onto US 15.");
@@ -7693,7 +8534,7 @@ void TestFormExitRightInstruction() {
   TryFormExitRightInstruction(
       nbt,
       CreateSignManeuver(DirectionsLeg_Maneuver_Type_kExitRight,
-                         Maneuver::RelativeDirection::kKeepRight, {}, {},
+                         Maneuver::RelativeDirection::kKeepRight, false, {}, {},
                          {std::make_tuple("Harrisburg", 0, 0), std::make_tuple("Gettysburg", 0, 0)},
                          {std::make_tuple("Gettysburg Pike", 0, 0)}),
       "Take the Gettysburg Pike exit on the right toward Harrisburg/Gettysburg.");
@@ -7702,17 +8543,122 @@ void TestFormExitRightInstruction() {
   TryFormExitRightInstruction(
       nbt,
       CreateSignManeuver(DirectionsLeg_Maneuver_Type_kExitRight,
-                         Maneuver::RelativeDirection::kKeepRight, {},
+                         Maneuver::RelativeDirection::kKeepRight, false, {},
                          {std::make_tuple("US 15", 1, 0)},
                          {std::make_tuple("Harrisburg", 0, 0), std::make_tuple("Gettysburg", 0, 0)},
                          {std::make_tuple("Gettysburg Pike", 0, 0)}),
       "Take the Gettysburg Pike exit on the right onto US 15 toward Harrisburg/Gettysburg.");
+
+  // phrase_id = 15
+  TryFormExitRightInstruction(nbt,
+                              CreateSignManeuver(DirectionsLeg_Maneuver_Type_kExitRight,
+                                                 Maneuver::RelativeDirection::kKeepRight, true, {},
+                                                 {}, {}, {}),
+                              "Take the exit.");
+
+  // phrase_id = 16
+  TryFormExitRightInstruction(nbt,
+                              CreateSignManeuver(DirectionsLeg_Maneuver_Type_kExitRight,
+                                                 Maneuver::RelativeDirection::kKeepRight, true,
+                                                 {std::make_tuple("67A", 0, 0)}, {}, {}, {}),
+                              "Take exit 67A.");
+
+  // phrase_id = 16; Test that name is ignored when number is present
+  TryFormExitRightInstruction(nbt,
+                              CreateSignManeuver(DirectionsLeg_Maneuver_Type_kExitRight,
+                                                 Maneuver::RelativeDirection::kKeepRight, true,
+                                                 {std::make_tuple("67A", 0, 0)}, {}, {},
+                                                 {std::make_tuple("Gettysburg Pike", 0, 0)}),
+                              "Take exit 67A.");
+
+  // phrase_id = 17
+  TryFormExitRightInstruction(nbt,
+                              CreateSignManeuver(DirectionsLeg_Maneuver_Type_kExitRight,
+                                                 Maneuver::RelativeDirection::kKeepRight, true, {},
+                                                 {std::make_tuple("I 95 South", 1, 0)}, {}, {}),
+                              "Take the I 95 South exit.");
+
+  // phrase_id = 18
+  TryFormExitRightInstruction(nbt,
+                              CreateSignManeuver(DirectionsLeg_Maneuver_Type_kExitRight,
+                                                 Maneuver::RelativeDirection::kKeepRight, true,
+                                                 {std::make_tuple("67A", 0, 0)},
+                                                 {std::make_tuple("I 95 South", 1, 0)}, {}, {}),
+                              "Take exit 67A onto I 95 South.");
+
+  // phrase_id = 19
+  TryFormExitRightInstruction(nbt,
+                              CreateSignManeuver(DirectionsLeg_Maneuver_Type_kExitRight,
+                                                 Maneuver::RelativeDirection::kKeepRight, true, {},
+                                                 {}, {std::make_tuple("Baltimore", 0, 0)}, {}),
+                              "Take the exit toward Baltimore.");
+
+  // phrase_id = 20
+  TryFormExitRightInstruction(nbt,
+                              CreateSignManeuver(DirectionsLeg_Maneuver_Type_kExitRight,
+                                                 Maneuver::RelativeDirection::kKeepRight, true,
+                                                 {std::make_tuple("67A", 0, 0)}, {},
+                                                 {std::make_tuple("Baltimore", 0, 0)}, {}),
+                              "Take exit 67A toward Baltimore.");
+
+  // phrase_id = 21
+  TryFormExitRightInstruction(nbt,
+                              CreateSignManeuver(DirectionsLeg_Maneuver_Type_kExitRight,
+                                                 Maneuver::RelativeDirection::kKeepRight, true, {},
+                                                 {std::make_tuple("I 95 South", 1, 0)},
+                                                 {std::make_tuple("Baltimore", 0, 0)}, {}),
+                              "Take the I 95 South exit toward Baltimore.");
+
+  // phrase_id = 22
+  TryFormExitRightInstruction(nbt,
+                              CreateSignManeuver(DirectionsLeg_Maneuver_Type_kExitRight,
+                                                 Maneuver::RelativeDirection::kKeepRight, true,
+                                                 {std::make_tuple("67A", 0, 0)},
+                                                 {std::make_tuple("I 95 South", 1, 0)},
+                                                 {std::make_tuple("Baltimore", 0, 0)}, {}),
+                              "Take exit 67A onto I 95 South toward Baltimore.");
+
+  // phrase_id = 23
+  TryFormExitRightInstruction(nbt,
+                              CreateSignManeuver(DirectionsLeg_Maneuver_Type_kExitRight,
+                                                 Maneuver::RelativeDirection::kKeepRight, true, {},
+                                                 {}, {}, {std::make_tuple("Gettysburg Pike", 0, 0)}),
+                              "Take the Gettysburg Pike exit.");
+
+  // phrase_id = 25
+  TryFormExitRightInstruction(nbt,
+                              CreateSignManeuver(DirectionsLeg_Maneuver_Type_kExitRight,
+                                                 Maneuver::RelativeDirection::kKeepRight, true, {},
+                                                 {std::make_tuple("US 15", 1, 0)}, {},
+                                                 {std::make_tuple("Gettysburg Pike", 0, 0)}),
+                              "Take the Gettysburg Pike exit onto US 15.");
+
+  // phrase_id = 27
+  TryFormExitRightInstruction(nbt,
+                              CreateSignManeuver(DirectionsLeg_Maneuver_Type_kExitRight,
+                                                 Maneuver::RelativeDirection::kKeepRight, true, {},
+                                                 {},
+                                                 {std::make_tuple("Harrisburg", 0, 0),
+                                                  std::make_tuple("Gettysburg", 0, 0)},
+                                                 {std::make_tuple("Gettysburg Pike", 0, 0)}),
+                              "Take the Gettysburg Pike exit toward Harrisburg/Gettysburg.");
+
+  // phrase_id = 29
+  TryFormExitRightInstruction(
+      nbt,
+      CreateSignManeuver(DirectionsLeg_Maneuver_Type_kExitRight,
+                         Maneuver::RelativeDirection::kKeepRight, true, {},
+                         {std::make_tuple("US 15", 1, 0)},
+                         {std::make_tuple("Harrisburg", 0, 0), std::make_tuple("Gettysburg", 0, 0)},
+                         {std::make_tuple("Gettysburg Pike", 0, 0)}),
+      "Take the Gettysburg Pike exit onto US 15 toward Harrisburg/Gettysburg.");
 }
 
 void TryFormExitLeftInstruction(NarrativeBuilderTest& nbt, Maneuver maneuver, std::string expected) {
   std::string instruction = nbt.FormExitInstruction(maneuver);
   if (instruction != expected)
-    throw std::runtime_error("Incorrect FormExitLeftInstruction");
+    throw std::runtime_error("Incorrect FormExitLeftInstruction | actual=" + instruction +
+                             " | expected=" + expected);
 }
 
 void TestFormExitLeftInstruction() {
@@ -7727,21 +8673,21 @@ void TestFormExitLeftInstruction() {
   // phrase_id = 0
   TryFormExitLeftInstruction(nbt,
                              CreateSignManeuver(DirectionsLeg_Maneuver_Type_kExitLeft,
-                                                Maneuver::RelativeDirection::kKeepLeft, {}, {}, {},
-                                                {}),
+                                                Maneuver::RelativeDirection::kKeepLeft, true, {}, {},
+                                                {}, {}),
                              "Take the exit on the left.");
 
   // phrase_id = 1
   TryFormExitLeftInstruction(nbt,
                              CreateSignManeuver(DirectionsLeg_Maneuver_Type_kExitLeft,
-                                                Maneuver::RelativeDirection::kKeepLeft,
+                                                Maneuver::RelativeDirection::kKeepLeft, true,
                                                 {std::make_tuple("67A", 0, 0)}, {}, {}, {}),
                              "Take exit 67A on the left.");
 
   // phrase_id = 1; Test that name is ignored when number is present
   TryFormExitLeftInstruction(nbt,
                              CreateSignManeuver(DirectionsLeg_Maneuver_Type_kExitLeft,
-                                                Maneuver::RelativeDirection::kKeepLeft,
+                                                Maneuver::RelativeDirection::kKeepLeft, true,
                                                 {std::make_tuple("67A", 0, 0)}, {}, {},
                                                 {std::make_tuple("Gettysburg Pike", 0, 0)}),
                              "Take exit 67A on the left.");
@@ -7749,14 +8695,14 @@ void TestFormExitLeftInstruction() {
   // phrase_id = 2
   TryFormExitLeftInstruction(nbt,
                              CreateSignManeuver(DirectionsLeg_Maneuver_Type_kExitLeft,
-                                                Maneuver::RelativeDirection::kKeepLeft, {},
+                                                Maneuver::RelativeDirection::kKeepLeft, true, {},
                                                 {std::make_tuple("I 95 South", 1, 0)}, {}, {}),
                              "Take the I 95 South exit on the left.");
 
   // phrase_id = 3
   TryFormExitLeftInstruction(nbt,
                              CreateSignManeuver(DirectionsLeg_Maneuver_Type_kExitLeft,
-                                                Maneuver::RelativeDirection::kKeepLeft,
+                                                Maneuver::RelativeDirection::kKeepLeft, true,
                                                 {std::make_tuple("67A", 0, 0)},
                                                 {std::make_tuple("I 95 South", 1, 0)}, {}, {}),
                              "Take exit 67A on the left onto I 95 South.");
@@ -7764,14 +8710,14 @@ void TestFormExitLeftInstruction() {
   // phrase_id = 4
   TryFormExitLeftInstruction(nbt,
                              CreateSignManeuver(DirectionsLeg_Maneuver_Type_kExitLeft,
-                                                Maneuver::RelativeDirection::kKeepLeft, {}, {},
+                                                Maneuver::RelativeDirection::kKeepLeft, true, {}, {},
                                                 {std::make_tuple("Baltimore", 0, 0)}, {}),
                              "Take the exit on the left toward Baltimore.");
 
   // phrase_id = 5
   TryFormExitLeftInstruction(nbt,
                              CreateSignManeuver(DirectionsLeg_Maneuver_Type_kExitLeft,
-                                                Maneuver::RelativeDirection::kKeepLeft,
+                                                Maneuver::RelativeDirection::kKeepLeft, true,
                                                 {std::make_tuple("67A", 0, 0)}, {},
                                                 {std::make_tuple("Baltimore", 0, 0)}, {}),
                              "Take exit 67A on the left toward Baltimore.");
@@ -7779,7 +8725,7 @@ void TestFormExitLeftInstruction() {
   // phrase_id = 6
   TryFormExitLeftInstruction(nbt,
                              CreateSignManeuver(DirectionsLeg_Maneuver_Type_kExitLeft,
-                                                Maneuver::RelativeDirection::kKeepLeft, {},
+                                                Maneuver::RelativeDirection::kKeepLeft, true, {},
                                                 {std::make_tuple("I 95 South", 1, 0)},
                                                 {std::make_tuple("Baltimore", 0, 0)}, {}),
                              "Take the I 95 South exit on the left toward Baltimore.");
@@ -7787,7 +8733,7 @@ void TestFormExitLeftInstruction() {
   // phrase_id = 7
   TryFormExitLeftInstruction(nbt,
                              CreateSignManeuver(DirectionsLeg_Maneuver_Type_kExitLeft,
-                                                Maneuver::RelativeDirection::kKeepLeft,
+                                                Maneuver::RelativeDirection::kKeepLeft, true,
                                                 {std::make_tuple("67A", 0, 0)},
                                                 {std::make_tuple("I 95 South", 1, 0)},
                                                 {std::make_tuple("Baltimore", 0, 0)}, {}),
@@ -7796,14 +8742,14 @@ void TestFormExitLeftInstruction() {
   // phrase_id = 8
   TryFormExitLeftInstruction(nbt,
                              CreateSignManeuver(DirectionsLeg_Maneuver_Type_kExitLeft,
-                                                Maneuver::RelativeDirection::kKeepLeft, {}, {}, {},
-                                                {std::make_tuple("Gettysburg Pike", 0, 0)}),
+                                                Maneuver::RelativeDirection::kKeepLeft, true, {}, {},
+                                                {}, {std::make_tuple("Gettysburg Pike", 0, 0)}),
                              "Take the Gettysburg Pike exit on the left.");
 
   // phrase_id = 10
   TryFormExitLeftInstruction(nbt,
                              CreateSignManeuver(DirectionsLeg_Maneuver_Type_kExitLeft,
-                                                Maneuver::RelativeDirection::kKeepLeft, {},
+                                                Maneuver::RelativeDirection::kKeepLeft, true, {},
                                                 {std::make_tuple("US 15", 1, 0)}, {},
                                                 {std::make_tuple("Gettysburg Pike", 0, 0)}),
                              "Take the Gettysburg Pike exit on the left onto US 15.");
@@ -7812,7 +8758,7 @@ void TestFormExitLeftInstruction() {
   TryFormExitLeftInstruction(
       nbt,
       CreateSignManeuver(DirectionsLeg_Maneuver_Type_kExitLeft,
-                         Maneuver::RelativeDirection::kKeepLeft, {}, {},
+                         Maneuver::RelativeDirection::kKeepLeft, true, {}, {},
                          {std::make_tuple("Harrisburg", 0, 0), std::make_tuple("Gettysburg", 0, 0)},
                          {std::make_tuple("Gettysburg Pike", 0, 0)}),
       "Take the Gettysburg Pike exit on the left toward Harrisburg/Gettysburg.");
@@ -7821,10 +8767,114 @@ void TestFormExitLeftInstruction() {
   TryFormExitLeftInstruction(
       nbt,
       CreateSignManeuver(DirectionsLeg_Maneuver_Type_kExitLeft,
-                         Maneuver::RelativeDirection::kKeepLeft, {}, {std::make_tuple("US 15", 1, 0)},
+                         Maneuver::RelativeDirection::kKeepLeft, true, {},
+                         {std::make_tuple("US 15", 1, 0)},
                          {std::make_tuple("Harrisburg", 0, 0), std::make_tuple("Gettysburg", 0, 0)},
                          {std::make_tuple("Gettysburg Pike", 0, 0)}),
       "Take the Gettysburg Pike exit on the left onto US 15 toward Harrisburg/Gettysburg.");
+
+  // phrase_id = 15
+  TryFormExitLeftInstruction(nbt,
+                             CreateSignManeuver(DirectionsLeg_Maneuver_Type_kExitLeft,
+                                                Maneuver::RelativeDirection::kKeepLeft, false, {}, {},
+                                                {}, {}),
+                             "Take the exit.");
+
+  // phrase_id = 16
+  TryFormExitLeftInstruction(nbt,
+                             CreateSignManeuver(DirectionsLeg_Maneuver_Type_kExitLeft,
+                                                Maneuver::RelativeDirection::kKeepLeft, false,
+                                                {std::make_tuple("67A", 0, 0)}, {}, {}, {}),
+                             "Take exit 67A.");
+
+  // phrase_id = 16; Test that name is ignored when number is present
+  TryFormExitLeftInstruction(nbt,
+                             CreateSignManeuver(DirectionsLeg_Maneuver_Type_kExitLeft,
+                                                Maneuver::RelativeDirection::kKeepLeft, false,
+                                                {std::make_tuple("67A", 0, 0)}, {}, {},
+                                                {std::make_tuple("Gettysburg Pike", 0, 0)}),
+                             "Take exit 67A.");
+
+  // phrase_id = 17
+  TryFormExitLeftInstruction(nbt,
+                             CreateSignManeuver(DirectionsLeg_Maneuver_Type_kExitLeft,
+                                                Maneuver::RelativeDirection::kKeepLeft, false, {},
+                                                {std::make_tuple("I 95 South", 1, 0)}, {}, {}),
+                             "Take the I 95 South exit.");
+
+  // phrase_id = 18
+  TryFormExitLeftInstruction(nbt,
+                             CreateSignManeuver(DirectionsLeg_Maneuver_Type_kExitLeft,
+                                                Maneuver::RelativeDirection::kKeepLeft, false,
+                                                {std::make_tuple("67A", 0, 0)},
+                                                {std::make_tuple("I 95 South", 1, 0)}, {}, {}),
+                             "Take exit 67A onto I 95 South.");
+
+  // phrase_id = 19
+  TryFormExitLeftInstruction(nbt,
+                             CreateSignManeuver(DirectionsLeg_Maneuver_Type_kExitLeft,
+                                                Maneuver::RelativeDirection::kKeepLeft, false, {}, {},
+                                                {std::make_tuple("Baltimore", 0, 0)}, {}),
+                             "Take the exit toward Baltimore.");
+
+  // phrase_id = 20
+  TryFormExitLeftInstruction(nbt,
+                             CreateSignManeuver(DirectionsLeg_Maneuver_Type_kExitLeft,
+                                                Maneuver::RelativeDirection::kKeepLeft, false,
+                                                {std::make_tuple("67A", 0, 0)}, {},
+                                                {std::make_tuple("Baltimore", 0, 0)}, {}),
+                             "Take exit 67A toward Baltimore.");
+
+  // phrase_id = 21
+  TryFormExitLeftInstruction(nbt,
+                             CreateSignManeuver(DirectionsLeg_Maneuver_Type_kExitLeft,
+                                                Maneuver::RelativeDirection::kKeepLeft, false, {},
+                                                {std::make_tuple("I 95 South", 1, 0)},
+                                                {std::make_tuple("Baltimore", 0, 0)}, {}),
+                             "Take the I 95 South exit toward Baltimore.");
+
+  // phrase_id = 22
+  TryFormExitLeftInstruction(nbt,
+                             CreateSignManeuver(DirectionsLeg_Maneuver_Type_kExitLeft,
+                                                Maneuver::RelativeDirection::kKeepLeft, false,
+                                                {std::make_tuple("67A", 0, 0)},
+                                                {std::make_tuple("I 95 South", 1, 0)},
+                                                {std::make_tuple("Baltimore", 0, 0)}, {}),
+                             "Take exit 67A onto I 95 South toward Baltimore.");
+
+  // phrase_id = 23
+  TryFormExitLeftInstruction(nbt,
+                             CreateSignManeuver(DirectionsLeg_Maneuver_Type_kExitLeft,
+                                                Maneuver::RelativeDirection::kKeepLeft, false, {}, {},
+                                                {}, {std::make_tuple("Gettysburg Pike", 0, 0)}),
+                             "Take the Gettysburg Pike exit.");
+
+  // phrase_id = 25
+  TryFormExitLeftInstruction(nbt,
+                             CreateSignManeuver(DirectionsLeg_Maneuver_Type_kExitLeft,
+                                                Maneuver::RelativeDirection::kKeepLeft, false, {},
+                                                {std::make_tuple("US 15", 1, 0)}, {},
+                                                {std::make_tuple("Gettysburg Pike", 0, 0)}),
+                             "Take the Gettysburg Pike exit onto US 15.");
+
+  // phrase_id = 27
+  TryFormExitLeftInstruction(nbt,
+                             CreateSignManeuver(DirectionsLeg_Maneuver_Type_kExitLeft,
+                                                Maneuver::RelativeDirection::kKeepLeft, false, {}, {},
+                                                {std::make_tuple("Harrisburg", 0, 0),
+                                                 std::make_tuple("Gettysburg", 0, 0)},
+                                                {std::make_tuple("Gettysburg Pike", 0, 0)}),
+                             "Take the Gettysburg Pike exit toward Harrisburg/Gettysburg.");
+
+  // phrase_id = 29
+  TryFormExitLeftInstruction(
+      nbt,
+      CreateSignManeuver(DirectionsLeg_Maneuver_Type_kExitLeft,
+                         Maneuver::RelativeDirection::kKeepLeft, false, {},
+                         {std::make_tuple("US 15", 1, 0)},
+                         {std::make_tuple("Harrisburg", 0, 0), std::make_tuple("Gettysburg", 0, 0)},
+                         {std::make_tuple("Gettysburg Pike", 0, 0)}),
+      "Take the Gettysburg Pike exit onto US 15 toward Harrisburg/Gettysburg.");
 }
 
 } // namespace
@@ -8035,6 +9085,21 @@ int main() {
 
   // BuildRamp_9_miles_en_US
   suite.test(TEST_CASE(TestBuildRamp_9_miles_en_US));
+
+  // BuildRamp_10_miles_en_US
+  suite.test(TEST_CASE(TestBuildRamp_10_miles_en_US));
+
+  // BuildRamp_11_miles_en_US
+  suite.test(TEST_CASE(TestBuildRamp_11_miles_en_US));
+
+  // BuildRamp_12_miles_en_US
+  suite.test(TEST_CASE(TestBuildRamp_12_miles_en_US));
+
+  // BuildRamp_13_miles_en_US
+  suite.test(TEST_CASE(TestBuildRamp_13_miles_en_US));
+
+  // BuildRamp_14_miles_en_US
+  suite.test(TEST_CASE(TestBuildRamp_14_miles_en_US));
 
   // BuildExit_0_miles_en_US
   suite.test(TEST_CASE(TestBuildExit_0_miles_en_US));

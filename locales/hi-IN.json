@@ -427,7 +427,19 @@
         "8": "<RELATIVE_DIRECTION> तरफ <NAME_SIGN> से बाहर निकलें.",
         "10": "<RELATIVE_DIRECTION> तरफ <NAME_SIGN> निकास से <BRANCH_SIGN> पर बाहर निकलें",
         "12": "<TOWARD_SIGN> की ओर <RELATIVE_DIRECTION> तरफ <NAME_SIGN> से बाहर निकलें.",
-        "14": "<TOWARD_SIGN> की ओर <RELATIVE_DIRECTION> तरफ <NAME_SIGN> से बाहर निकलें."
+        "14": "<TOWARD_SIGN> की ओर <RELATIVE_DIRECTION> तरफ <NAME_SIGN> से बाहर निकलें.",
+        "15": "निकलें.",
+        "16": "निकास <NUMBER_SIGN> लें.",
+        "17": "निकास <BRANCH_SIGN> लें.",
+        "18": "<BRANCH_SIGN> पर निकास <NUMBER_SIGN> लें.",
+        "19": "<TOWARD_SIGN> की ओर जाने के लिए निकलें.",
+        "20": "<TOWARD_SIGN> की ओर जाने के लिए निकास <NUMBER_SIGN> लें.",
+        "21": "<TOWARD_SIGN> की ओर निकास <BRANCH_SIGN> लें.",
+        "22": "<BRANCH_SIGN> पर <TOWARD_SIGN> की ओर निकास <NUMBER_SIGN> लें.",
+        "23": "<NAME_SIGN> से बाहर निकलें.",
+        "25": "<NAME_SIGN> निकास से <BRANCH_SIGN> पर बाहर निकलें",
+        "27": "<TOWARD_SIGN> की ओर <NAME_SIGN> से बाहर निकलें.",
+        "29": "<TOWARD_SIGN> की ओर <NAME_SIGN> से बाहर निकलें."
       },
       "relative_directions": [
         "बाएं",
@@ -470,6 +482,42 @@
         ],
         "14": [
           "बाईं तरफ निकास White Marsh Boulevard लेकर White Marsh की ओर MD 43 East पर बाहर निकलें."
+        ],
+        "15": [
+          "निकलें."
+        ],
+        "16": [
+          "निकलें 67 B-A लें."
+        ],
+        "17": [
+          "निकलें US 322 West लें."
+        ],
+        "18": [
+          "निकलें 67 B-A onto US 322 West."
+        ],
+        "19": [
+          "निकलें toward Lewistown ."
+        ],
+        "20": [
+          "निकलें 67 B-A toward Lewistown."
+        ],
+        "21": [
+          "निकलें US 322 West exit toward Lewistown."
+        ],
+        "22": [
+          "निकलें 67 B-A onto US 322 West toward Lewistown/State College."
+        ],
+        "23": [
+          "निकलें White Marsh Boulevard exit."
+        ],
+        "25": [
+          "निकलें White Marsh Boulevard exit onto MD 43 East."
+        ],
+        "27": [
+          "निकलें White Marsh Boulevard exit toward White Marsh."
+        ],
+        "29": [
+          "निकलें White Marsh Boulevard exit onto MD 43 East toward White Marsh."
         ]
       }
     },
@@ -670,7 +718,19 @@
         "8": "<RELATIVE_DIRECTION> तरफ <NAME_SIGN> से बाहर निकलें.",
         "10": "<RELATIVE_DIRECTION> तरफ <NAME_SIGN> निकास से <BRANCH_SIGN> पर बाहर निकलें",
         "12": "<TOWARD_SIGN> की ओर <RELATIVE_DIRECTION> तरफ <NAME_SIGN> से बाहर निकलें.",
-        "14": "<TOWARD_SIGN> की ओर <RELATIVE_DIRECTION> तरफ <NAME_SIGN> से बाहर निकलें."
+        "14": "<TOWARD_SIGN> की ओर <RELATIVE_DIRECTION> तरफ <NAME_SIGN> से बाहर निकलें.",
+        "15": "निकलें.",
+        "16": "निकास <NUMBER_SIGN> लें.",
+        "17": "निकास <BRANCH_SIGN> लें.",
+        "18": "<BRANCH_SIGN> पर निकास <NUMBER_SIGN> लें.",
+        "19": "<TOWARD_SIGN> की ओर जाने के लिए निकलें.",
+        "20": "<TOWARD_SIGN> की ओर जाने के लिए निकास <NUMBER_SIGN> लें.",
+        "21": "<TOWARD_SIGN> की ओर निकास <BRANCH_SIGN> लें.",
+        "22": "<BRANCH_SIGN> पर <TOWARD_SIGN> की ओर निकास <NUMBER_SIGN> लें.",
+        "23": "<NAME_SIGN> से बाहर निकलें.",
+        "25": "<NAME_SIGN> निकास से <BRANCH_SIGN> पर बाहर निकलें",
+        "27": "<TOWARD_SIGN> की ओर <NAME_SIGN> से बाहर निकलें.",
+        "29": "<TOWARD_SIGN> की ओर <NAME_SIGN> से बाहर निकलें."
       },
       "relative_directions": [
         "बाएं",
@@ -713,6 +773,42 @@
         ],
         "14": [
           "बाईं तरफ निकास White Marsh Boulevard लेकर White Marsh की ओर Maryland 43 East पर बाहर निकलें."
+        ],
+        "15": [
+          "निकलें."
+        ],
+        "16": [
+          "निकलें 67 B-A."
+        ],
+        "17": [
+          "Take the US 322 West exit."
+        ],
+        "18": [
+          "निकलें 67 B-A onto US 322 West."
+        ],
+        "19": [
+          "Take the exit toward Lewistown."
+        ],
+        "20": [
+          "निकलें 67 B-A toward Lewistown."
+        ],
+        "21": [
+          "Take the US 322 West exit toward Lewistown."
+        ],
+        "22": [
+          "निकलें 67 B-A onto US 322 West toward Lewistown/State College."
+        ],
+        "23": [
+          "Take the White Marsh Boulevard exit."
+        ],
+        "25": [
+          "Take the White Marsh Boulevard exit onto MD 43 East."
+        ],
+        "27": [
+          "Take the White Marsh Boulevard exit toward White Marsh."
+        ],
+        "29": [
+          "Take the White Marsh Boulevard exit onto MD 43 East toward White Marsh."
         ]
       }
     },
@@ -1147,7 +1243,12 @@
         "6": "<BRANCH_SIGN> रैंप पकड़ने के लिए <RELATIVE_DIRECTION> मुड़ें.",
         "7": "<TOWARD_SIGN> की ओर रैंप पकड़ने के लिए <RELATIVE_DIRECTION> मुड़ें.",
         "8": "<TOWARD_SIGN> की ओर <BRANCH_SIGN> रैंप पकड़ने के लिए <RELATIVE_DIRECTION> मुड़ें.",
-        "9": "<NAME_SIGN> रैंप पकड़ने के लिए <RELATIVE_DIRECTION> मुड़ें."
+        "9": "<NAME_SIGN> रैंप पकड़ने के लिए <RELATIVE_DIRECTION> मुड़ें.",
+        "10": "रैंप लें.",
+        "11": "<BRANCH_SIGN> रैंप लें.",
+        "12": "<TOWARD_SIGN> की ओर रैंप लें.",
+        "13": "<TOWARD_SIGN> की ओर <BRANCH_SIGN> रैंप लें.",
+        "14": "<NAME_SIGN> रैंप लें."
       },
       "relative_directions": [
         "बाएं",
@@ -1185,6 +1286,21 @@
         ],
         "9": [
           "Gettysburg Pike रैंप पकड़ने के लिए दाएँ मुड़ें."
+        ],
+        "10": [
+          "Take the ramp."
+        ],
+        "11": [
+          "Take the I 95 ramp."
+        ],
+        "12": [
+          "Take the ramp toward JFK."
+        ],
+        "13": [
+          "Take the Soutch Conduit Avenue ramp toward JFK."
+        ],
+        "14": [
+          "Take the Gettysburg ramp."
         ]
       }
     },
@@ -1251,7 +1367,12 @@
         "6": "<BRANCH_SIGN> रैंप पकड़ने के लिए <RELATIVE_DIRECTION> मुड़ें.",
         "7": "<TOWARD_SIGN> की ओर रैंप पकड़ने के लिए <RELATIVE_DIRECTION> मुड़ें.",
         "8": "<TOWARD_SIGN> की ओर <BRANCH_SIGN> रैंप पकड़ने के लिए <RELATIVE_DIRECTION> मुड़ें.",
-        "9": "<NAME_SIGN> रैंप पकड़ने के लिए <RELATIVE_DIRECTION> मुड़ें."
+        "9": "<NAME_SIGN> रैंप पकड़ने के लिए <RELATIVE_DIRECTION> मुड़ें.",
+        "10": "रैंप लें.",
+        "11": "<BRANCH_SIGN> रैंप लें.",
+        "12": "<TOWARD_SIGN> की ओर रैंप लें.",
+        "13": "<TOWARD_SIGN> की ओर <BRANCH_SIGN> रैंप लें.",
+        "14": "<NAME_SIGN> रैंप लें."
       },
       "relative_directions": [
         "बाएं",
@@ -1289,6 +1410,21 @@
         ],
         "9": [
           "Gettysburg Pike रैंप पकड़ने के लिए दाएँ मुड़ें."
+        ],
+        "10": [
+          "Take the ramp."
+        ],
+        "11": [
+          "Take the Interstate 95 ramp."
+        ],
+        "12": [
+          "Take the ramp toward JFK."
+        ],
+        "13": [
+          "Take the South Conduit Avenue ramp toward JFK."
+        ],
+        "14": [
+          "Take the Gettysburg Pike ramp."
         ]
       }
     },

@@ -334,6 +334,15 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
         ++next_man;
       }
       // Do not combine
+      // if driving side is different
+      else if (curr_man->drive_on_right() != next_man->drive_on_right()) {
+        LOG_TRACE("+++ Do Not Combine: if driving side is different +++");
+        // Update with no combine
+        prev_man = curr_man;
+        curr_man = next_man;
+        ++next_man;
+      }
+      // Do not combine
       // if travel mode is different
       // OR next maneuver is destination
       else if ((curr_man->travel_mode() != next_man->travel_mode()) ||
@@ -854,6 +863,9 @@ void ManeuversBuilder::InitializeManeuver(Maneuver& maneuver, int node_index) {
   // Travel mode
   maneuver.set_travel_mode(prev_edge->travel_mode());
 
+  // Driving side
+  maneuver.set_drive_on_right(prev_edge->drive_on_right());
+
   // Vehicle type
   if (prev_edge->has_vehicle_type()) {
     maneuver.set_vehicle_type(prev_edge->vehicle_type());
@@ -1218,8 +1230,13 @@ void ManeuversBuilder::SetManeuverType(Maneuver& maneuver, bool none_type_allowe
         LOG_TRACE(std::string("EXIT RelativeDirection=") +
                   std::to_string(static_cast<int>(maneuver.begin_relative_direction())));
         // TODO: determine how to handle, for now set to right
-        maneuver.set_type(DirectionsLeg_Maneuver_Type_kExitRight);
-        LOG_TRACE("ManeuverType=EXIT_RIGHT");
+        if (maneuver.drive_on_right()) {
+          maneuver.set_type(DirectionsLeg_Maneuver_Type_kExitRight);
+          LOG_TRACE("ManeuverType=EXIT_RIGHT");
+        } else {
+          maneuver.set_type(DirectionsLeg_Maneuver_Type_kExitLeft);
+          LOG_TRACE("ManeuverType=EXIT_LEFT");
+        }
       }
     }
   }
@@ -1597,6 +1614,12 @@ bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver, int node_i
     // then do not combine
     return false;
   } else if (maneuver.transit_connection() || prev_edge->IsTransitConnection()) {
+    return false;
+  }
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Process driving side
+  if (maneuver.drive_on_right() != prev_edge->drive_on_right()) {
     return false;
   }
 

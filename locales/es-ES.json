@@ -427,7 +427,19 @@
         "8": "Tomar la salida <NAME_SIGN> a la <RELATIVE_DIRECTION>.",
         "10": "Tomar la salida <NAME_SIGN> a la <RELATIVE_DIRECTION> en <BRANCH_SIGN>.",
         "12": "Tomar la salida <NAME_SIGN> a la <RELATIVE_DIRECTION> hacia <TOWARD_SIGN>.",
-        "14": "Tomar la salida <NAME_SIGN> a la <RELATIVE_DIRECTION> en <BRANCH_SIGN> hacia <TOWARD_SIGN>."
+        "14": "Tomar la salida <NAME_SIGN> a la <RELATIVE_DIRECTION> en <BRANCH_SIGN> hacia <TOWARD_SIGN>.",
+        "15": "Tomar la salida.",
+        "16": "Tomar la salida <NUMBER_SIGN>.",
+        "17": "Tomar la salida <BRANCH_SIGN>.",
+        "18": "Tomar la salida <NUMBER_SIGN> en <BRANCH_SIGN>.",
+        "19": "Tomar la salida hacia <TOWARD_SIGN>.",
+        "20": "Tomar la salida <NUMBER_SIGN> hacia <TOWARD_SIGN>.",
+        "21": "Tomar la salida <BRANCH_SIGN> hacia <TOWARD_SIGN>.",
+        "22": "Tomar la salida <NUMBER_SIGN> en <BRANCH_SIGN> hacia <TOWARD_SIGN>.",
+        "23": "Tomar la salida <NAME_SIGN>.",
+        "25": "Tomar la salida <NAME_SIGN> en <BRANCH_SIGN>.",
+        "27": "Tomar la salida <NAME_SIGN> hacia <TOWARD_SIGN>.",
+        "29": "Tomar la salida <NAME_SIGN> en <BRANCH_SIGN> hacia <TOWARD_SIGN>."
       },
       "relative_directions": [
         "izquierda",
@@ -442,7 +454,7 @@
           "Tomar la salida 67 B-A sobre la derecha."
         ],
         "2": [
-          "Tomar la salida de Take the US 322 oeste sobre la derecha."
+          "Tomar la salida de US 322 oeste sobre la derecha."
         ],
         "3": [
           "Tomar la salida 67 B-A  sobre la derecha hacia US 322 oeste."
@@ -470,6 +482,42 @@
         ],
         "14": [
           "Tomar la salida White Marsh Boulevard sobre la izquierda en MD 43 East hacia White Marsh."
+        ],
+        "15": [
+          "Tomar la salida."
+        ],
+        "16": [
+          "Tomar la salida 67 B-A."
+        ],
+        "17": [
+          "Tomar la salida US 322 West."
+        ],
+        "18": [
+          "Tomar la salida 67 B-A en US 322 West."
+        ],
+        "19": [
+          "Tomar la salida hacia Lewistown."
+        ],
+        "20": [
+          "Tomar la salida 67 B-A hacia Lewistown."
+        ],
+        "21": [
+          "Tomar la salida US 322 West hacia Lewistown."
+        ],
+        "22": [
+          "Tomar la salida 67 B-A en US 322 West hacia Lewistown/State College."
+        ],
+        "23": [
+          "Tomar la salida White Marsh Boulevard."
+        ],
+        "25": [
+          "Tomar la salida White Marsh Boulevard en MD 43 East."
+        ],
+        "27": [
+          "Tomar la salida White Marsh Boulevard hacia White Marsh."
+        ],
+        "29": [
+          "Tomar la salida White Marsh Boulevard en MD 43 East hacia White Marsh."
         ]
       }
     },
@@ -670,7 +718,19 @@
         "8": "Tomar la salida <NAME_SIGN> a la <RELATIVE_DIRECTION>.",
         "10": "Tomar la salida <NAME_SIGN> a la <RELATIVE_DIRECTION> en <BRANCH_SIGN>.",
         "12": "Tomar la salida <NAME_SIGN> a la <RELATIVE_DIRECTION> hacia <TOWARD_SIGN>.",
-        "14": "Tomar la salida <NAME_SIGN> a la <RELATIVE_DIRECTION> en <BRANCH_SIGN> hacia <TOWARD_SIGN>."
+        "14": "Tomar la salida <NAME_SIGN> a la <RELATIVE_DIRECTION> en <BRANCH_SIGN> hacia <TOWARD_SIGN>.",
+        "15": "Tomar la salida.",
+        "16": "Tomar la salida <NUMBER_SIGN>.",
+        "17": "Tomar la salida <BRANCH_SIGN>.",
+        "18": "Tomar la salida <NUMBER_SIGN> en <BRANCH_SIGN>.",
+        "19": "Tomar la salida hacia <TOWARD_SIGN>.",
+        "20": "Tomar la salida <NUMBER_SIGN> hacia <TOWARD_SIGN>.",
+        "21": "Tomar la salida <BRANCH_SIGN> hacia <TOWARD_SIGN>.",
+        "22": "Tomar la salida <NUMBER_SIGN> en <BRANCH_SIGN> hacia <TOWARD_SIGN>.",
+        "23": "Tomar la salida <NAME_SIGN>.",
+        "25": "Tomar la salida <NAME_SIGN> en <BRANCH_SIGN>.",
+        "27": "Tomar la salida <NAME_SIGN> hacia <TOWARD_SIGN>.",
+        "29": "Tomar la salida <NAME_SIGN> en <BRANCH_SIGN> hacia <TOWARD_SIGN>."
       },
       "relative_directions": [
         "izquierda",
@@ -713,6 +773,42 @@
         ],
         "14": [
           "Tomar la salida White Marsh Boulevard a la izquierda sobre Maryland 43 East hacia White Marsh."
+        ],
+        "15": [
+          "Tomar la salida."
+        ],
+        "16": [
+          "Tomar la salida 67 B-A."
+        ],
+        "17": [
+          "Tomar la salida US 322 West."
+        ],
+        "18": [
+          "Tomar la salida 67 B-A en US 322 West."
+        ],
+        "19": [
+          "Tomar la salida hacia Lewistown."
+        ],
+        "20": [
+          "Tomar la salida 67 B-A hacia Lewistown."
+        ],
+        "21": [
+          "Tomar la salida US 322 West hacia Lewistown."
+        ],
+        "22": [
+          "Tomar la salida 67 B-A en US 322 West hacia Lewistown/State College."
+        ],
+        "23": [
+          "Tomar la salida White Marsh Boulevard."
+        ],
+        "25": [
+          "Tomar la salida White Marsh Boulevard en MD 43 East."
+        ],
+        "27": [
+          "Tomar la salida White Marsh Boulevard hacia White Marsh."
+        ],
+        "29": [
+          "Tomar la salida White Marsh Boulevard en MD 43 East hacia White Marsh."
         ]
       }
     },
@@ -827,7 +923,7 @@
           "Manténgase a la izquierda para tomar la salida 62 para quedar en Interstate 95 sur."
         ],
         "2": [
-          "Manténgase a la izquierda para quedar en I 95 sur toward Baltimore."
+          "Manténgase a la izquierda para quedar en I 95 sur hacia Baltimore."
         ],
         "3": [
           "Manténgase a la izquierda para tomar la salida 62 para quedar en Interstate 95 sur hacia Baltimore."
@@ -1147,7 +1243,12 @@
         "6": "Girar a la <RELATIVE_DIRECTION> para tomar la rampa <BRANCH_SIGN>.",
         "7": "Girar a la <RELATIVE_DIRECTION> para tomar el repecho hacia la <TOWARD_SIGN>.",
         "8": "Girar a la <RELATIVE_DIRECTION> para tomar el repecho <BRANCH_SIGN> hacia <TOWARD_SIGN>.",
-        "9": "Girar a la <RELATIVE_DIRECTION> para tomar el repecho <NAME_SIGN>."
+        "9": "Girar a la <RELATIVE_DIRECTION> para tomar el repecho <NAME_SIGN>.",
+        "10": "Tomar el repecho.",
+        "11": "Tomar el repecho <BRANCH_SIGN>.",
+        "12": "Tomar el repecho hacia <TOWARD_SIGN>.",
+        "13": "Tomar el repecho <BRANCH_SIGN> hacia <TOWARD_SIGN>.",
+        "14": "Tomar el repecho <NAME_SIGN>."
       },
       "relative_directions": [
         "izquierda",
@@ -1185,6 +1286,21 @@
         ],
         "9": [
           "Girar a la derecha para tomar el repecho de Gettysburg Pike."
+        ],
+        "10": [
+          "Tomar el repecho."
+        ],
+        "11": [
+          "Tomar el repecho I 95."
+        ],
+        "12": [
+          "Tomar el repecho hacia JFK."
+        ],
+        "13": [
+          "Tomar el repecho Soutch Conduit Avenue hacia JFK."
+        ],
+        "14": [
+          "Tomar el repecho Gettysburg."
         ]
       }
     },
@@ -1233,7 +1349,7 @@
           "Siga derecho para tomar el repecho hacia Hershey."
         ],
         "3": [
-          "Siga derecho para tomar el repecho de U.S. 3 22 East, U.S. 4 22 East ramp toward Hershey, Palmdale."
+          "Siga derecho para tomar el repecho de U.S. 3 22 East, U.S. 4 22 East ramp hacia Hershey, Palmdale."
         ],
         "4": [
           "Siga derecho para tomar el repecho de Gettysburg Pike."
@@ -1251,7 +1367,12 @@
         "6": "Girar a la <RELATIVE_DIRECTION> para tomar el repecho <BRANCH_SIGN>.",
         "7": "Girar a la <RELATIVE_DIRECTION> para tomar el repecho hacia <TOWARD_SIGN>.",
         "8": "Girar a la <RELATIVE_DIRECTION> para tomar el repecho <BRANCH_SIGN> hacia la <TOWARD_SIGN>.",
-        "9": "Girar a la <RELATIVE_DIRECTION> para tomar el repecho <NAME_SIGN> ramp."
+        "9": "Girar a la <RELATIVE_DIRECTION> para tomar el repecho <NAME_SIGN> ramp.",
+        "10": "Tomar el repecho.",
+        "11": "Tomar el repecho <BRANCH_SIGN>.",
+        "12": "Tomar el repecho hacia <TOWARD_SIGN>.",
+        "13": "Tomar el repecho <BRANCH_SIGN> hacia <TOWARD_SIGN>.",
+        "14": "Tomar el repecho <NAME_SIGN>."
       },
       "relative_directions": [
         "izquierda",
@@ -1289,6 +1410,21 @@
         ],
         "9": [
           "Girar a la derecha para tomar el repecho de Gettysburg Pike."
+        ],
+        "10": [
+          "Tomar el repecho."
+        ],
+        "11": [
+          "Tomar el repecho Interstate 95."
+        ],
+        "12": [
+          "Tomar el repecho hacia JFK."
+        ],
+        "13": [
+          "Tomar el repecho South Conduit Avenue hacia JFK."
+        ],
+        "14": [
+          "Tomar el repecho Gettysburg Pike."
         ]
       }
     },
@@ -1548,7 +1684,7 @@
           "Tomar el ómnibus. (12 paradas)"
         ],
         "1": [
-          "Tomar la F toward JAMAICA - 179 ST. (10 paradas)",
+          "Tomar la F hacia JAMAICA - 179 ST. (10 paradas)",
           "Tomar el ferry hacia Staten Island. (1 parada)"
         ]
       }
@@ -1670,7 +1806,7 @@
     "transit_remain_on": {
       "phrases": {
         "0": "Permanecer en la <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
-        "1": "Permanecer en la <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+        "1": "Permanecer en la <TRANSIT_NAME> hacia <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
       },
       "empty_transit_name_labels": [
         "tranvía",
@@ -1692,7 +1828,7 @@
           "Permanecer en el tren. (3 paradas)"
         ],
         "1": [
-          "Permanecer en F toward JAMAICA - 179 ST. (10 paradas)"
+          "Permanecer en F hacia JAMAICA - 179 ST. (10 paradas)"
         ]
       }
     },
@@ -1716,14 +1852,14 @@
           "Permanecer en la New Haven."
         ],
         "1": [
-          "Permanecer en F toward JAMAICA - 179 ST."
+          "Permanecer en F hacia JAMAICA - 179 ST."
         ]
       }
     },
     "transit_transfer": {
       "phrases": {
         "0": "Trasladarse para tomar la <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
-        "1": "Trasladarse para tomar la <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+        "1": "Trasladarse para tomar la <TRANSIT_NAME> hacia <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
       },
       "empty_transit_name_labels": [
         "tranvía",
@@ -1745,7 +1881,7 @@
           "Trasladarse para tomar el tranvía. (4 paradas)"
         ],
         "1": [
-          "Trasladarse para tomar F toward JAMAICA - 179 ST. (10 paradas)"
+          "Trasladarse para tomar F hacia JAMAICA - 179 ST. (10 paradas)"
         ]
       }
     },
@@ -1769,7 +1905,7 @@
           "Trasladarse para tomar la New Haven."
         ],
         "1": [
-          "Trasladarse para tomar la F toward JAMAICA - 179 ST."
+          "Trasladarse para tomar la F hacia JAMAICA - 179 ST."
         ]
       }
     },
@@ -1793,7 +1929,7 @@
           "Tomar la New Haven."
         ],
         "1": [
-          "Tomar la F toward JAMAICA - 179 ST."
+          "Tomar la F hacia JAMAICA - 179 ST."
         ]
       }
     },

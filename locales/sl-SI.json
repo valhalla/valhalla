@@ -427,7 +427,19 @@
         "8": "Zapeljite na izhod <NAME_SIGN> na <RELATIVE_DIRECTION>.",
         "10": "Zapeljite na izhod <NAME_SIGN> na <RELATIVE_DIRECTION> in nato na <BRANCH_SIGN>.",
         "12": "Zapeljite na izhod <NAME_SIGN> na <RELATIVE_DIRECTION> proti <TOWARD_SIGN>.",
-        "14": "Zapeljite na izhod <NAME_SIGN> na <RELATIVE_DIRECTION> in nato na <BRANCH_SIGN> proti <TOWARD_SIGN>."
+        "14": "Zapeljite na izhod <NAME_SIGN> na <RELATIVE_DIRECTION> in nato na <BRANCH_SIGN> proti <TOWARD_SIGN>.",
+        "15": "Zapeljite na izhod.",
+        "16": "Zapeljite na izhod <NUMBER_SIGN>.",
+        "17": "Zapeljite na izhod <BRANCH_SIGN>.",
+        "18": "Zapeljite na izhod <NUMBER_SIGN> in nato na <BRANCH_SIGN>.",
+        "19": "Zapeljite na izhod proti <TOWARD_SIGN>.",
+        "20": "Zapeljite na izhod <NUMBER_SIGN> proti <TOWARD_SIGN>.",
+        "21": "Zapeljite na izhod <BRANCH_SIGN> proti <TOWARD_SIGN>.",
+        "22": "Zapeljite na izhod <NUMBER_SIGN> in nato na <BRANCH_SIGN> proti <TOWARD_SIGN>.",
+        "23": "Zapeljite na izhod <NAME_SIGN>.",
+        "25": "Zapeljite na izhod <NAME_SIGN> in nato na <BRANCH_SIGN>.",
+        "27": "Zapeljite na izhod <NAME_SIGN> proti <TOWARD_SIGN>.",
+        "29": "Zapeljite na izhod <NAME_SIGN> in nato na <BRANCH_SIGN> proti <TOWARD_SIGN>."
       },
       "relative_directions": [
         "levi",
@@ -470,6 +482,42 @@
         ],
         "14": [
           "Zapeljite na izhod White Marsh Boulevard na levi in nato na MD 43 East proti White Marsh."
+        ],
+        "15": [
+          "Take the exit."
+        ],
+        "16": [
+          "Take exit 67 B-A."
+        ],
+        "17": [
+          "Take the US 322 West exit."
+        ],
+        "18": [
+          "Take exit 67 B-A onto US 322 West."
+        ],
+        "19": [
+          "Take the exit toward Lewistown."
+        ],
+        "20": [
+          "Take exit 67 B-A toward Lewistown."
+        ],
+        "21": [
+          "Take the US 322 West exit toward Lewistown."
+        ],
+        "22": [
+          "Take exit 67 B-A onto US 322 West toward Lewistown/State College."
+        ],
+        "23": [
+          "Take the White Marsh Boulevard exit."
+        ],
+        "25": [
+          "Take the White Marsh Boulevard exit onto MD 43 East."
+        ],
+        "27": [
+          "Take the White Marsh Boulevard exit toward White Marsh."
+        ],
+        "29": [
+          "Take the White Marsh Boulevard exit onto MD 43 East toward White Marsh."
         ]
       }
     },
@@ -670,7 +718,19 @@
         "8": "Zapeljite na izhod <NAME_SIGN> na <RELATIVE_DIRECTION>.",
         "10": "Zapeljite na izhod <NAME_SIGN> na <RELATIVE_DIRECTION> in nato na <BRANCH_SIGN>.",
         "12": "Zapeljite na izhod <NAME_SIGN> na <RELATIVE_DIRECTION> proti <TOWARD_SIGN>.",
-        "14": "Zapeljite na izhod <NAME_SIGN> na <RELATIVE_DIRECTION> in nato na <BRANCH_SIGN> proti <TOWARD_SIGN>."
+        "14": "Zapeljite na izhod <NAME_SIGN> na <RELATIVE_DIRECTION> in nato na <BRANCH_SIGN> proti <TOWARD_SIGN>.",
+        "15": "Zapeljite na izhod.",
+        "16": "Zapeljite na izhod <NUMBER_SIGN>.",
+        "17": "Zapeljite na izhod <BRANCH_SIGN>.",
+        "18": "Zapeljite na izhod <NUMBER_SIGN> in nato na <BRANCH_SIGN>.",
+        "19": "Zapeljite na izhod proti <TOWARD_SIGN>.",
+        "20": "Zapeljite na izhod <NUMBER_SIGN> proti <TOWARD_SIGN>.",
+        "21": "Zapeljite na izhod <BRANCH_SIGN> proti <TOWARD_SIGN>.",
+        "22": "Zapeljite na izhod <NUMBER_SIGN> in nato na <BRANCH_SIGN> proti <TOWARD_SIGN>.",
+        "23": "Zapeljite na izhod <NAME_SIGN>.",
+        "25": "Zapeljite na izhod <NAME_SIGN> in nato na <BRANCH_SIGN>.",
+        "27": "Zapeljite na izhod <NAME_SIGN> proti <TOWARD_SIGN>.",
+        "29": "Zapeljite na izhod <NAME_SIGN> in nato na <BRANCH_SIGN> proti <TOWARD_SIGN>."
       },
       "relative_directions": [
         "left",
@@ -713,6 +773,42 @@
         ],
         "14": [
           "Zapeljite na izhod White Marsh Boulevard na levi in nato na Maryland 43 East proti White Marsh."
+        ],
+        "15": [
+          "Take the exit."
+        ],
+        "16": [
+          "Take exit 67 B-A."
+        ],
+        "17": [
+          "Take the US 322 West exit."
+        ],
+        "18": [
+          "Take exit 67 B-A onto US 322 West."
+        ],
+        "19": [
+          "Take the exit toward Lewistown."
+        ],
+        "20": [
+          "Take exit 67 B-A toward Lewistown."
+        ],
+        "21": [
+          "Take the US 322 West exit toward Lewistown."
+        ],
+        "22": [
+          "Take exit 67 B-A onto US 322 West toward Lewistown/State College."
+        ],
+        "23": [
+          "Take the White Marsh Boulevard exit."
+        ],
+        "25": [
+          "Take the White Marsh Boulevard exit onto MD 43 East."
+        ],
+        "27": [
+          "Take the White Marsh Boulevard exit toward White Marsh."
+        ],
+        "29": [
+          "Take the White Marsh Boulevard exit onto MD 43 East toward White Marsh."
         ]
       }
     },
@@ -1149,7 +1245,12 @@
         "6": "Zavijte <RELATIVE_DIRECTION>, da zapeljete na priključek <BRANCH_SIGN>.",
         "7": "Zavijte <RELATIVE_DIRECTION>, da zapeljete na priključek proti <TOWARD_SIGN>.",
         "8": "Zavijte <RELATIVE_DIRECTION>, da zapeljete na priključek <BRANCH_SIGN> proti <TOWARD_SIGN>.",
-        "9": "Zavijte <RELATIVE_DIRECTION>, da zapeljete na priključek <NAME_SIGN>."
+        "9": "Zavijte <RELATIVE_DIRECTION>, da zapeljete na priključek <NAME_SIGN>.",
+        "10": "Zapeljite na priključek.",
+        "11": "Zapeljite na priključek <BRANCH_SIGN>.",
+        "12": "Zapeljite na priključek proti <TOWARD_SIGN>.",
+        "13": "Zapeljite na priključek <BRANCH_SIGN> proti <TOWARD_SIGN>.",
+        "14": "Zapeljite na priključek <NAME_SIGN>."
       },
       "relative_directions": [
         "levo",
@@ -1187,6 +1288,21 @@
         ],
         "9": [
           "Zavijte desno, da zapeljete na priključek Gettysburg Pike."
+        ],
+        "10": [
+          "Take the ramp."
+        ],
+        "11": [
+          "Take the I 95 ramp."
+        ],
+        "12": [
+          "Take the ramp toward JFK."
+        ],
+        "13": [
+          "Take the Soutch Conduit Avenue ramp toward JFK."
+        ],
+        "14": [
+          "Take the Gettysburg ramp."
         ]
       }
     },
@@ -1253,7 +1369,12 @@
         "6": "Zavijte <RELATIVE_DIRECTION>, da zapeljete na priključek <BRANCH_SIGN>.",
         "7": "Zavijte <RELATIVE_DIRECTION>, da zapeljete na priključek proti <TOWARD_SIGN>.",
         "8": "Zavijte <RELATIVE_DIRECTION>, da zapeljete na priključek <BRANCH_SIGN> proti <TOWARD_SIGN>.",
-        "9": "Zavijte <RELATIVE_DIRECTION>, da zapeljete na priključek <NAME_SIGN>."
+        "9": "Zavijte <RELATIVE_DIRECTION>, da zapeljete na priključek <NAME_SIGN>.",
+        "10": "Zapeljite na priključek.",
+        "11": "Zapeljite na priključek <BRANCH_SIGN>.",
+        "12": "Zapeljite na priključek proti <TOWARD_SIGN>.",
+        "13": "Zapeljite na priključek <BRANCH_SIGN> proti <TOWARD_SIGN>.",
+        "14": "Zapeljite na priključek <NAME_SIGN>."
       },
       "relative_directions": [
         "levo",
@@ -1291,6 +1412,21 @@
         ],
         "9": [
           "Zavijte desno, da zapeljete na priključek Gettysburg Pike."
+        ],
+        "10": [
+          "Take the ramp."
+        ],
+        "11": [
+          "Take the Interstate 95 ramp."
+        ],
+        "12": [
+          "Take the ramp toward JFK."
+        ],
+        "13": [
+          "Take the South Conduit Avenue ramp toward JFK."
+        ],
+        "14": [
+          "Take the Gettysburg Pike ramp."
         ]
       }
     },

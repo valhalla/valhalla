@@ -76,7 +76,7 @@ void thor_worker_t::trace_route(Api& request) {
         route_match(request);
       } catch (...) {
         throw valhalla_exception_t{
-            443, ShapeMatch_Name(options.shape_match()) +
+            443, ShapeMatch_Enum_Name(options.shape_match()) +
                      " algorithm failed to find exact route match.  Try using "
                      "shape_match:'walk_or_snap' to fallback to map-matching algorithm"};
       }
@@ -96,7 +96,7 @@ void thor_worker_t::trace_route(Api& request) {
       try {
         route_match(request);
       } catch (...) {
-        LOG_WARN(ShapeMatch_Name(options.shape_match()) +
+        LOG_WARN(ShapeMatch_Enum_Name(options.shape_match()) +
                  " algorithm failed to find exact route match; Falling back to map_match...");
         try {
           map_match(request);

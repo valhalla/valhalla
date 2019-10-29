@@ -692,7 +692,8 @@ void ParseTransitCostOptions(const rapidjson::Document& doc,
     auto filter_stop_action_str =
         rapidjson::get_optional<std::string>(*json_costing_options, "/filters/stops/action");
     FilterAction filter_stop_action;
-    if (filter_stop_action_str && FilterAction_Parse(*filter_stop_action_str, &filter_stop_action)) {
+    if (filter_stop_action_str &&
+        FilterAction_Enum_Parse(*filter_stop_action_str, &filter_stop_action)) {
       pbf_costing_options->set_filter_stop_action(filter_stop_action);
       // filter_stop_ids
       auto filter_stop_ids_json =
@@ -710,7 +711,7 @@ void ParseTransitCostOptions(const rapidjson::Document& doc,
         rapidjson::get_optional<std::string>(*json_costing_options, "/filters/operators/action");
     FilterAction filter_operator_action;
     if (filter_operator_action_str &&
-        FilterAction_Parse(*filter_operator_action_str, &filter_operator_action)) {
+        FilterAction_Enum_Parse(*filter_operator_action_str, &filter_operator_action)) {
       pbf_costing_options->set_filter_operator_action(filter_operator_action);
       // filter_operator_ids
       auto filter_operator_ids_json =
@@ -728,7 +729,7 @@ void ParseTransitCostOptions(const rapidjson::Document& doc,
         rapidjson::get_optional<std::string>(*json_costing_options, "/filters/routes/action");
     FilterAction filter_route_action;
     if (filter_route_action_str &&
-        FilterAction_Parse(*filter_route_action_str, &filter_route_action)) {
+        FilterAction_Enum_Parse(*filter_route_action_str, &filter_route_action)) {
       pbf_costing_options->set_filter_route_action(filter_route_action);
       // filter_route_ids
       auto filter_route_ids_json =
