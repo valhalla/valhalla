@@ -348,7 +348,7 @@ void TestActivateTurnLanes() {
 
   // Merge-to-right active
   TryActivateTurnLanes(midgard::make_unique<EnhancedTripLeg_Edge>(&edge_2), kTurnLaneMergeToRight,
-                       remaining_step_distance, DirectionsLeg_Maneuver_Type_kMerge,
+                       remaining_step_distance, DirectionsLeg_Maneuver_Type_kMergeRight,
                        next_maneuver_type, 1);
   ClearActiveTurnLanes(edge_2.mutable_turn_lanes());
 
@@ -365,7 +365,7 @@ void TestActivateTurnLanes() {
 
   // Merge-to-left active
   TryActivateTurnLanes(midgard::make_unique<EnhancedTripLeg_Edge>(&edge_3), kTurnLaneMergeToLeft,
-                       remaining_step_distance, DirectionsLeg_Maneuver_Type_kMerge,
+                       remaining_step_distance, DirectionsLeg_Maneuver_Type_kMergeLeft,
                        next_maneuver_type, 1);
   ClearActiveTurnLanes(edge_3.mutable_turn_lanes());
 
@@ -511,7 +511,7 @@ void TestActivateTurnLanesShortNextRight() {
 
   // Merge-to-right active
   TryActivateTurnLanes(midgard::make_unique<EnhancedTripLeg_Edge>(&edge_2), kTurnLaneMergeToRight,
-                       remaining_step_distance, DirectionsLeg_Maneuver_Type_kMerge,
+                       remaining_step_distance, DirectionsLeg_Maneuver_Type_kMergeRight,
                        next_maneuver_type, 1);
   ClearActiveTurnLanes(edge_2.mutable_turn_lanes());
 
@@ -528,7 +528,7 @@ void TestActivateTurnLanesShortNextRight() {
 
   // Merge-to-left active
   TryActivateTurnLanes(midgard::make_unique<EnhancedTripLeg_Edge>(&edge_3), kTurnLaneMergeToLeft,
-                       remaining_step_distance, DirectionsLeg_Maneuver_Type_kMerge,
+                       remaining_step_distance, DirectionsLeg_Maneuver_Type_kMergeLeft,
                        next_maneuver_type, 1);
   ClearActiveTurnLanes(edge_3.mutable_turn_lanes());
 
@@ -638,7 +638,7 @@ void TestActivateTurnLanesShortNextLeft() {
 
   // Merge-to-right active
   TryActivateTurnLanes(midgard::make_unique<EnhancedTripLeg_Edge>(&edge_2), kTurnLaneMergeToRight,
-                       remaining_step_distance, DirectionsLeg_Maneuver_Type_kMerge,
+                       remaining_step_distance, DirectionsLeg_Maneuver_Type_kMergeRight,
                        next_maneuver_type, 1);
   ClearActiveTurnLanes(edge_2.mutable_turn_lanes());
 
@@ -655,7 +655,7 @@ void TestActivateTurnLanesShortNextLeft() {
 
   // Merge-to-left active
   TryActivateTurnLanes(midgard::make_unique<EnhancedTripLeg_Edge>(&edge_3), kTurnLaneMergeToLeft,
-                       remaining_step_distance, DirectionsLeg_Maneuver_Type_kMerge,
+                       remaining_step_distance, DirectionsLeg_Maneuver_Type_kMergeLeft,
                        next_maneuver_type, 1);
   ClearActiveTurnLanes(edge_3.mutable_turn_lanes());
 

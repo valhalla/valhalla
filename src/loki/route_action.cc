@@ -58,12 +58,12 @@ void loki_worker_t::init_route(Api& request) {
 void loki_worker_t::route(Api& request) {
   init_route(request);
   auto& options = *request.mutable_options();
-  auto costing = Costing_Name(options.costing());
-  check_locations(options.locations_size(), max_locations.find(costing)->second);
-  check_distance(options.locations(), max_distance.find(costing)->second);
+  auto costing_name = Costing_Enum_Name(options.costing());
+  check_locations(options.locations_size(), max_locations.find(costing_name)->second);
+  check_distance(options.locations(), max_distance.find(costing_name)->second);
 
   // Validate walking distances (make sure they are in the accepted range)
-  if (costing == "multimodal" || costing == "transit") {
+  if (costing_name == "multimodal" || costing_name == "transit") {
     auto* ped_opts = options.mutable_costing_options(static_cast<int>(pedestrian));
     if (!ped_opts->has_transit_start_end_max_distance())
       ped_opts->set_transit_start_end_max_distance(min_transit_walking_dis);
@@ -88,8 +88,8 @@ void loki_worker_t::route(Api& request) {
   // correlate the various locations to the underlying graph
   std::unordered_map<size_t, size_t> color_counts;
   try {
-    auto locations = PathLocation::fromPBF(options.locations());
-    const auto projections = loki::Search(locations, *reader, edge_filter, node_filter);
+    auto locations = PathLocation::fromPBF(options.locations(), true);
+    const auto projections = loki::Search(locations, *reader, costing.get());
     for (size_t i = 0; i < locations.size(); ++i) {
       const auto& correlated = projections.at(locations[i]);
       PathLocation::toPBF(correlated, options.mutable_locations(i), *reader);

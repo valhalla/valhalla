@@ -1,13 +1,25 @@
 #include <algorithm>
 #include <cstdint>
+#include <fstream>
 #include <iostream>
 #include <sstream>
 #include <string>
 #include <vector>
 
 #include "baldr/turnlanes.h"
+#include "odin/directionsbuilder.h"
+#include "odin/enhancedtrippath.h"
+
+#include <valhalla/proto/api.pb.h>
+#include <valhalla/proto/directions.pb.h>
+#include <valhalla/proto/options.pb.h>
+#include <valhalla/proto/trip.pb.h>
 
 #include "test.h"
+
+#if !defined(VALHALLA_SOURCE_DIR)
+#define VALHALLA_SOURCE_DIR
+#endif
 
 using namespace std;
 using namespace valhalla::baldr;
@@ -91,6 +103,116 @@ void test_static_methods() {
   }
 }
 
+void test_turn_lanes(const std::string filename,
+                     int expected_routes_size,
+                     int expected_legs_size,
+                     int expected_maneuvers_size,
+                     int maneuver_index,
+                     const std::string expected_turn_lanes) {
+  // Load pinpoint test
+  std::string path_bytes = test::load_binary_file(filename);
+  if (path_bytes.size() == 0) {
+    throw std::runtime_error("path_bytes is empty");
+  }
+
+  // Create the request from the path bytes
+  valhalla::Api request;
+  request.ParseFromString(path_bytes);
+
+  // Build the directions
+  valhalla::odin::DirectionsBuilder().Build(request);
+
+  // Validate routes size
+  int found_routes_size = request.directions().routes_size();
+  if (found_routes_size != expected_routes_size) {
+    throw std::runtime_error("Invalid routes size - found: " + std::to_string(found_routes_size) +
+                             " | expected: " + std::to_string(expected_routes_size));
+  }
+
+  // Validate legs size
+  int found_legs_size = request.directions().routes(0).legs_size();
+  if (found_legs_size != expected_legs_size) {
+    throw std::runtime_error("Invalid legs size - found: " + std::to_string(found_legs_size) +
+                             " | expected: " + std::to_string(expected_legs_size));
+  }
+
+  // Validate maneuvers size
+  int found_maneuvers_size = request.directions().routes(0).legs(0).maneuver_size();
+  if (found_maneuvers_size != expected_maneuvers_size) {
+    throw std::runtime_error(
+        "Invalid maneuvers size - found: " + std::to_string(found_maneuvers_size) +
+        " | expected: " + std::to_string(expected_maneuvers_size));
+  }
+
+  // Validate turn lanes - get turn lanes from the prev edge of the specified maneuver index
+  valhalla::odin::EnhancedTripLeg etl(*request.mutable_trip()->mutable_routes(0)->mutable_legs(0));
+  auto prev_edge = etl.GetPrevEdge(
+      request.directions().routes(0).legs(0).maneuver(maneuver_index).begin_path_index());
+  std::string found_turn_lanes = prev_edge->TurnLanesToString();
+  if (found_turn_lanes != expected_turn_lanes) {
+    throw std::runtime_error("Invalid turn lanes - found: " + found_turn_lanes +
+                             " | expected: " + expected_turn_lanes);
+  }
+}
+
+void validate_turn_lanes() {
+
+  int expected_routes_size = 1;
+  int expected_legs_size = 1;
+  int expected_maneuvers_size = 3;
+  int maneuver_index = 1;
+
+  // Test right active
+  test_turn_lanes({VALHALLA_SOURCE_DIR "test/pinpoints/turn_lanes/right_active_pinpoint.pbf"},
+                  expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
+                  "[ left | through | through;right ACTIVE ]");
+
+  // Test left active
+  test_turn_lanes({VALHALLA_SOURCE_DIR "test/pinpoints/turn_lanes/left_active_pinpoint.pbf"},
+                  expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
+                  "[ left ACTIVE | through | through;right ]");
+
+  // Test right most slight left active
+  test_turn_lanes({VALHALLA_SOURCE_DIR
+                   "test/pinpoints/turn_lanes/right_most_slight_left_active_pinpoint.pbf"},
+                  expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
+                  "[ slight_left | slight_left ACTIVE | slight_right | right ]");
+
+  // Test slight right active
+  test_turn_lanes({VALHALLA_SOURCE_DIR "test/pinpoints/turn_lanes/slight_right_active_pinpoint.pbf"},
+                  expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
+                  "[ slight_left | slight_left | slight_right ACTIVE | right ]");
+
+  // Test left most left u-turn active
+  test_turn_lanes({VALHALLA_SOURCE_DIR
+                   "test/pinpoints/turn_lanes/left_most_left_uturn_active_pinpoint.pbf"},
+                  expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
+                  "[ left ACTIVE | left | left | through | through;right ]");
+
+  // Test left reverse active
+  test_turn_lanes({VALHALLA_SOURCE_DIR "test/pinpoints/turn_lanes/left_reverse_active_pinpoint.pbf"},
+                  expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
+                  "[ reverse ACTIVE | through | through | right ]");
+
+  expected_maneuvers_size = 4;
+  // Test right most left active
+  test_turn_lanes({VALHALLA_SOURCE_DIR
+                   "test/pinpoints/turn_lanes/right_most_left_active_pinpoint.pbf"},
+                  expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
+                  "[ left | left;through ACTIVE | through;right ]");
+
+  // Test both left active
+  test_turn_lanes({VALHALLA_SOURCE_DIR "test/pinpoints/turn_lanes/both_left_active_pinpoint.pbf"},
+                  expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
+                  "[ left ACTIVE | left;through ACTIVE | through;right ]");
+
+  // Test left most left active
+  test_turn_lanes({VALHALLA_SOURCE_DIR
+                   "test/pinpoints/turn_lanes/left_most_left_active_pinpoint.pbf"},
+                  expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
+                  "[ left ACTIVE | left;through | through;right ]");
+}
+
 } // namespace
 
 int main() {
@@ -104,6 +226,9 @@ int main() {
 
   // Test static methods
   suite.test(TEST_CASE(test_static_methods));
+
+  // Test turn lanes
+  suite.test(TEST_CASE(validate_turn_lanes));
 
   return suite.tear_down();
 }
