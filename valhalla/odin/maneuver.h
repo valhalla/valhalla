@@ -211,6 +211,9 @@ public:
   RelativeDirection merge_to_relative_direction() const;
   void set_merge_to_relative_direction(RelativeDirection merge_to_relative_direction);
 
+  bool drive_on_right() const;
+  void set_drive_on_right(bool drive_on_right);
+
   TripLeg_TravelMode travel_mode() const;
   void set_travel_mode(TripLeg_TravelMode travel_mode);
 
@@ -330,6 +333,7 @@ protected:
   bool to_stay_on_;
   std::unique_ptr<StreetNames> roundabout_exit_street_names_;
   RelativeDirection merge_to_relative_direction_;
+  bool drive_on_right_; // Defaults to true
 
   ////////////////////////////////////////////////////////////////////////////
   // Transit support

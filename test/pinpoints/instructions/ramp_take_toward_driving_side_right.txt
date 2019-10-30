@@ -1,0 +1,1 @@
+-j '{"locations":[{"lat":37.750150,"lon":-122.390779},{"lat":37.751083,"lon":-122.392475}],"costing":"auto","directions_options":{"units":"miles"}}'

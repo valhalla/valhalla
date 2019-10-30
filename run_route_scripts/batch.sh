@@ -1,4 +1,5 @@
 #!/bin/bash
+set -ex
 
 which parallel &> /dev/null
 if [ $? != 0 ]; then
@@ -29,9 +30,10 @@ fi
 CONF="${2}"
 
 #how many threads do you want, default to max
-CONCURRENCY=$(nproc)
 if [ "${3}" ]; then
 	CONCURRENCY="${3}"
+else
+    CONCURRENCY=$(nproc)
 fi
 
 #where do you want the output, default to current time

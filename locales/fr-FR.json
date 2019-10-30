@@ -427,7 +427,19 @@
         "8": "Prenez la sortie <NAME_SIGN> sur la <RELATIVE_DIRECTION>.",
         "10": "Prenez la sortie <NAME_SIGN> sur la <RELATIVE_DIRECTION> dans <BRANCH_SIGN>.",
         "12": "Prenez la sortie <NAME_SIGN> sur la <RELATIVE_DIRECTION> vers <TOWARD_SIGN>.",
-        "14": "Prenez la sortie <NAME_SIGN> sur la <RELATIVE_DIRECTION> dans <BRANCH_SIGN> vers <TOWARD_SIGN>."
+        "14": "Prenez la sortie <NAME_SIGN> sur la <RELATIVE_DIRECTION> dans <BRANCH_SIGN> vers <TOWARD_SIGN>.",
+        "15": "Prenez la sortie.",
+        "16": "Prenez la sortie <NUMBER_SIGN>.",
+        "17": "Prenez la sortie <BRANCH_SIGN>.",
+        "18": "Prenez la sortie <NUMBER_SIGN> dans <BRANCH_SIGN>.",
+        "19": "Prenez la sortie toward <TOWARD_SIGN>.",
+        "20": "Prenez la sortie <NUMBER_SIGN> toward <TOWARD_SIGN>.",
+        "21": "Prenez la sortie <BRANCH_SIGN> toward <TOWARD_SIGN>.",
+        "22": "Prenez la sortie <NUMBER_SIGN> dans <BRANCH_SIGN> toward <TOWARD_SIGN>.",
+        "23": "Prenez la sortie <NAME_SIGN>.",
+        "25": "Prenez la sortie <NAME_SIGN> dans <BRANCH_SIGN>.",
+        "27": "Prenez la sortie <NAME_SIGN> toward <TOWARD_SIGN>.",
+        "29": "Prenez la sortie <NAME_SIGN> dans <BRANCH_SIGN> toward <TOWARD_SIGN>."
       },
       "relative_directions": [
         "gauche",
@@ -470,6 +482,42 @@
         ],
         "14": [
           "Prenez la sortie White Marsh Boulevard sur la gauche dans MD 43 East vers White Marsh."
+        ],
+        "15": [
+          "Prenez la sortie."
+        ],
+        "16": [
+          "Prenez la sortie 67 B-A."
+        ],
+        "17": [
+          "Prenez la sortie US 322 West."
+        ],
+        "18": [
+          "Prenez la sortie 67 B-A dans US 322 West."
+        ],
+        "19": [
+          "Prenez la sortie toward Lewistown."
+        ],
+        "20": [
+          "Prenez la sortie 67 B-A toward Lewistown."
+        ],
+        "21": [
+          "Prenez la sortie US 322 West toward Lewistown."
+        ],
+        "22": [
+          "Prenez la sortie 67 B-A dans US 322 West toward Lewistown/State College."
+        ],
+        "23": [
+          "Prenez la sortie White Marsh Boulevard."
+        ],
+        "25": [
+          "Prenez la sortie White Marsh Boulevard dans MD 43 East."
+        ],
+        "27": [
+          "Prenez la sortie White Marsh Boulevard toward White Marsh."
+        ],
+        "29": [
+          "Prenez la sortie White Marsh Boulevard dans MD 43 East toward White Marsh."
         ]
       }
     },
@@ -670,7 +718,19 @@
         "8": "Prenez la sortie <NAME_SIGN> sur la <RELATIVE_DIRECTION>.",
         "10": "Prenez la sortie <NAME_SIGN> sur la <RELATIVE_DIRECTION> dans <BRANCH_SIGN>.",
         "12": "Prenez la sortie <NAME_SIGN> sur la <RELATIVE_DIRECTION> vers <TOWARD_SIGN>.",
-        "14": "Prenez la sortie <NAME_SIGN> sur la <RELATIVE_DIRECTION> dans <BRANCH_SIGN> vers <TOWARD_SIGN>."
+        "14": "Prenez la sortie <NAME_SIGN> sur la <RELATIVE_DIRECTION> dans <BRANCH_SIGN> vers <TOWARD_SIGN>.",
+        "15": "Prenez la sortie.",
+        "16": "Prenez la sortie <NUMBER_SIGN>.",
+        "17": "Prenez la sortie <BRANCH_SIGN>.",
+        "18": "Prenez la sortie <NUMBER_SIGN> dans <BRANCH_SIGN>.",
+        "19": "Prenez la sortie vers <TOWARD_SIGN>.",
+        "20": "Prenez la sortie <NUMBER_SIGN> vers <TOWARD_SIGN>.",
+        "21": "Prenez la sortie <BRANCH_SIGN> vers <TOWARD_SIGN>.",
+        "22": "Prenez la sortie <NUMBER_SIGN> dans <BRANCH_SIGN> vers <TOWARD_SIGN>.",
+        "23": "Prenez la sortie <NAME_SIGN>.",
+        "25": "Prenez la sortie <NAME_SIGN> dans <BRANCH_SIGN>.",
+        "27": "Prenez la sortie <NAME_SIGN> vers <TOWARD_SIGN>.",
+        "29": "Prenez la sortie <NAME_SIGN> dans <BRANCH_SIGN> vers <TOWARD_SIGN>."
       },
       "relative_directions": [
         "gauche",
@@ -713,6 +773,42 @@
         ],
         "14": [
           "Prenez la sortie White Marsh Boulevard sur la gauche dans Maryland 43 East vers White Marsh."
+        ],
+        "15": [
+          "Prenez la sortie."
+        ],
+        "16": [
+          "Prenez la sortie 67 B-A."
+        ],
+        "17": [
+          "Prenez la sortie US 322 West."
+        ],
+        "18": [
+          "Prenez la sortie 67 B-A dans US 322 West."
+        ],
+        "19": [
+          "Prenez la sortie vers Lewistown."
+        ],
+        "20": [
+          "Prenez la sortie 67 B-A vers Lewistown."
+        ],
+        "21": [
+          "Prenez la sortie US 322 West vers Lewistown."
+        ],
+        "22": [
+          "Prenez la sortie 67 B-A dans US 322 West vers Lewistown/State College."
+        ],
+        "23": [
+          "Prenez la sortie White Marsh Boulevard."
+        ],
+        "25": [
+          "Prenez la sortie White Marsh Boulevard dans MD 43 East."
+        ],
+        "27": [
+          "Prenez la sortie White Marsh Boulevard vers White Marsh."
+        ],
+        "29": [
+          "Prenez la sortie White Marsh Boulevard dans MD 43 East vers White Marsh."
         ]
       }
     },
@@ -1147,7 +1243,12 @@
         "6": "Tournez à <RELATIVE_DIRECTION> pour prendre la bretelle <BRANCH_SIGN>.",
         "7": "Tournez à <RELATIVE_DIRECTION> pour prendre la bretelle vers <TOWARD_SIGN>.",
         "8": "Tournez à <RELATIVE_DIRECTION> pour prendre la bretelle <BRANCH_SIGN> vers <TOWARD_SIGN>.",
-        "9": "Tournez à <RELATIVE_DIRECTION> pour prendre la bretelle <NAME_SIGN>."
+        "9": "Tournez à <RELATIVE_DIRECTION> pour prendre la bretelle <NAME_SIGN>.",
+        "10": "Prenez la bretelle.",
+        "11": "Prenez la bretelle <BRANCH_SIGN>.",
+        "12": "Prenez la bretelle vers <TOWARD_SIGN>.",
+        "13": "Prenez la bretelle <BRANCH_SIGN> vers <TOWARD_SIGN>.",
+        "14": "Prenez la bretelle <NAME_SIGN>."
       },
       "relative_directions": [
         "gauche",
@@ -1185,6 +1286,21 @@
         ],
         "9": [
           "Tournez à droite pour prendre la bretelle Gettysburg Pike."
+        ],
+        "10": [
+          "Prenez la bretelle."
+        ],
+        "11": [
+          "Prenez la bretelle I 95."
+        ],
+        "12": [
+          "Prenez la bretelle vers JFK."
+        ],
+        "13": [
+          "Prenez la bretelle Soutch Conduit Avenue vers JFK."
+        ],
+        "14": [
+          "Prenez la bretelle Gettysburg."
         ]
       }
     },
@@ -1251,7 +1367,12 @@
         "6": "Tournez à <RELATIVE_DIRECTION> pour prendre la bretelle <BRANCH_SIGN>.",
         "7": "Tournez à <RELATIVE_DIRECTION> pour prendre la bretelle vers <TOWARD_SIGN>.",
         "8": "Tournez à <RELATIVE_DIRECTION> pour prendre la bretelle <BRANCH_SIGN> vers <TOWARD_SIGN>.",
-        "9": "Tournez à <RELATIVE_DIRECTION> pour prendre la bretelle <NAME_SIGN>."
+        "9": "Tournez à <RELATIVE_DIRECTION> pour prendre la bretelle <NAME_SIGN>.",
+        "10": "Prenez la bretelle.",
+        "11": "Prenez la bretelle <BRANCH_SIGN>.",
+        "12": "Prenez la bretelle vers <TOWARD_SIGN>.",
+        "13": "Prenez la bretelle <BRANCH_SIGN> vers <TOWARD_SIGN>.",
+        "14": "Prenez la bretelle <NAME_SIGN>."
       },
       "relative_directions": [
         "gauche",
@@ -1289,6 +1410,21 @@
         ],
         "9": [
           "Tournez à droite pour prendre la bretelle Gettysburg Pike."
+        ],
+        "10": [
+          "Prenez la bretelle."
+        ],
+        "11": [
+          "Prenez la bretelle Interstate 95."
+        ],
+        "12": [
+          "Prenez la bretelle vers JFK."
+        ],
+        "13": [
+          "Prenez la bretelle South Conduit Avenue vers JFK."
+        ],
+        "14": [
+          "Prenez la bretelle Gettysburg Pike."
         ]
       }
     },

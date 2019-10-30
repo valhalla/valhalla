@@ -160,11 +160,12 @@ thor_worker_t::work(const std::list<zmq::message_t>& job,
     double elapsed_time =
         std::chrono::duration<float, std::milli>(std::chrono::system_clock::now() - s).count();
     if (!options.do_not_track() && elapsed_time / denominator > long_request) {
-      LOG_WARN("thor::" + Options_Action_Name(options.action()) +
+      LOG_WARN("thor::" + Options_Action_Enum_Name(options.action()) +
                " request elapsed time (ms)::" + std::to_string(elapsed_time));
-      LOG_WARN("thor::" + Options_Action_Name(options.action()) +
+      LOG_WARN("thor::" + Options_Action_Enum_Name(options.action()) +
                " request exceeded threshold::" + std::to_string(info.id));
-      midgard::logging::Log("valhalla_thor_long_request_" + Options_Action_Name(options.action()),
+      midgard::logging::Log("valhalla_thor_long_request_" +
+                                Options_Action_Enum_Name(options.action()),
                             " [ANALYTICS] ");
     }
 
@@ -212,7 +213,7 @@ std::string thor_worker_t::parse_costing(const Api& request) {
   // Parse out the type of route - this provides the costing method to use
   const auto& options = request.options();
   auto costing = options.costing();
-  auto costing_str = Costing_Name(costing);
+  auto costing_str = Costing_Enum_Name(costing);
 
   // Set travel mode and construct costing
   if (costing == Costing::multimodal || costing == Costing::transit) {
@@ -257,7 +258,7 @@ void thor_worker_t::parse_locations(Api& request) {
       }
 
       // subtract off the min score and cap at max so that path algorithm doesnt go too far
-      auto max_score = kMaxDistances.find(Costing_Name(options.costing()));
+      auto max_score = kMaxDistances.find(Costing_Enum_Name(options.costing()));
       for (auto* candidates : {location.mutable_path_edges(), location.mutable_filtered_edges()}) {
         for (auto& candidate : *candidates) {
           candidate.set_distance(candidate.distance() - minScore);
