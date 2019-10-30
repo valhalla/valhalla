@@ -1,5 +1,6 @@
-#!/bin/bash
-set -ex
+#!/usr/bin/env bash
+
+set -o errexit -o pipefail -o nounset
 
 which parallel &> /dev/null
 if [ $? != 0 ]; then
@@ -18,36 +19,28 @@ function usage() {
 }
 
 #set the input file
-if [ -z "${1}" ]; then
+if [ -z "${1:-}" ]; then
 	usage
-elif [ ! -f "${1}" ]; then
+elif [ ! -f "${1:-}" ]; then
 	usage
 else
-	INPUT="${1}"
+	readonly INPUT="${1}"
 fi
 
 #set config file
-CONF="${2}"
+readonly CONF="${2:-}"
 
 #how many threads do you want, default to max
-if [ "${3}" ]; then
-	CONCURRENCY="${3}"
-else
-    CONCURRENCY=$(nproc)
-fi
+readonly CONCURRENCY="${3:-$(nproc)}"
 
 #where do you want the output, default to current time
-OUTDIR=$(date +%Y%m%d_%H%M%S)_$(basename "${INPUT%.*}")
-if [ "${4}" ]; then
-	OUTDIR="${4}"
-fi
-RESULTS_OUTDIR="results/${OUTDIR}"
-mkdir -p "${RESULTS_OUTDIR}"
-
+readonly DEFAULT_OUTDIR=$(date +%Y%m%d_%H%M%S)_$(basename "${INPUT%.*}")
+readonly RESULTS_OUTDIR="results/${4:-$DEFAULT_OUTDIR}"
+mkdir --parent "${RESULTS_OUTDIR}"
 
 #turn the nice input into something parallel can parse for args
 TMP="$(mktemp)"
-cp -rp "${INPUT}" "${TMP}"
+cp --recursive --preserve=mode,ownership,timestamps "${INPUT}" "${TMP}"
 for arg in $(valhalla_run_route --help | grep -o '\-[a-z\-]\+' | sort | uniq); do
     sed -i -e "s/^${arg}[ ]\+/${arg}|/g" "${TMP}"
     sed -i -e "s/[ ]\+${arg}[ ]\+/|${arg}|/g" "${TMP}"
@@ -57,12 +50,11 @@ sed -i -e "s;$;|--config|${CONF};g" -e "s/\([^\\]\)'|/\1|/g" -e "s/|'/|/g" "${TM
 #run all of the paths, make sure to cut off the timestamps
 #from the log messages otherwise every line will be a diff
 #TODO: add leading zeros to output files so they sort nicely
-echo -e "\x1b[32;1mWriting routes from ${INPUT} with a concurrency of ${CONCURRENCY} into ${OUTDIR}\x1b[0m"
+echo -e "\x1b[32;1mWriting routes from ${INPUT} with a concurrency of ${CONCURRENCY} into ${RESULTS_OUTDIR}\x1b[0m"
 cat "${TMP}" | parallel --progress -k -C '\|' -P "${CONCURRENCY}" "valhalla_run_route {} 2>&1 | tee -a ${RESULTS_OUTDIR}/{#}.tmp | grep -F NARRATIVE | sed -e 's/^[^\[]*\[NARRATIVE\] //' &> ${RESULTS_OUTDIR}/{#}.txt; grep -F STATISTICS ${RESULTS_OUTDIR}/{#}.tmp | sed -e 's/^[^\[]*\[STATISTICS\] //' &>> ${RESULTS_OUTDIR}/{#}_statistics.csv; rm -f ${RESULTS_OUTDIR}/{#}.tmp"
 rm -f "${TMP}"
 echo "orgLat, orgLng, destLat, destLng, result, #Passes, runtime, trip time, length, arcDistance, #Manuevers" > ${RESULTS_OUTDIR}/statistics.csv
 cat `ls -1v ${RESULTS_OUTDIR}/*_statistics.csv` >> ${RESULTS_OUTDIR}/statistics.csv
 rm -f ${RESULTS_OUTDIR}/*_statistics.csv
 
-echo ${OUTDIR} > outdir.txt
-
+echo ${RESULTS_OUTDIR} > outdir.txt
