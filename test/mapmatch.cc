@@ -277,8 +277,13 @@ void test_trace_route_breaks() {
           {"lat":52.09110,"lon":5.09806},
           {"lat":52.09050,"lon":5.09769},
           {"lat":52.09098,"lon":5.09679}]})",
+      R"({"costing":"auto","shape_match":"map_snap","shape":[
+          {"lat":52.09110,"lon":5.09806,"type":"break","radius":5},
+          {"lat":52.0911006,"lon":5.0972905,"type":"break","radius":5},
+          {"lat":52.0909933,"lon":5.0969919,"type":"break","radius":5},
+          {"lat":52.0909707,"lon":5.0967710,"type":"break","radius":5}]})",
       R"({"costing":"auto","shape_match":"map_snap","encoded_polyline":"quijbBqpnwHfJxc@bBdJrDfSdAzFX|AHd@bG~[|AnIdArGbAo@z@m@`EuClO}MjE}E~NkPaAuC"})"};
-  std::vector<size_t> test_answers = {2, 1, 1, 1};
+  std::vector<size_t> test_answers = {2, 1, 1, 1, 1};
 
   tyr::actor_t actor(conf, true);
   for (size_t i = 0; i < test_cases.size(); ++i) {
