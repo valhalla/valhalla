@@ -266,8 +266,7 @@ void BidirectionalAStar::ExpandReverse(GraphReader& graphreader,
     // can properly recover elapsed time on the reverse path.
     Cost tc = costing_->TransitionCostReverse(directededge->localedgeidx(), nodeinfo, opp_edge,
                                               opp_pred_edge);
-    Cost newcost =
-        pred.cost() + costing_->EdgeCost(opp_edge, tile->GetConstrainedFlowSpeed(opp_edge));
+    Cost newcost = pred.cost() + costing_->EdgeCost(opp_edge, t2->GetConstrainedFlowSpeed(opp_edge));
     newcost.cost += tc.cost;
 
     // Check if edge is temporarily labeled and this path has less cost. If
