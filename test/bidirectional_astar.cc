@@ -221,9 +221,9 @@ int main() {
   // Current workaround is to build tiles separately as a input artifact in CMake
   // build_tiles(get_conf());
 
-  test::suite suite("bidirectional-a-star-whitelion");
+  test::suite suite("BidirectionalAStar");
 
-  //suite.test(TEST_CASE(test_deadend));
+  suite.test(TEST_CASE(test_deadend));
   suite.test(TEST_CASE(test_oneway));
   suite.test(TEST_CASE(test_oneway_wrong_way));
 

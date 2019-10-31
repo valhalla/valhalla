@@ -125,7 +125,7 @@ protected:
   /**
    * Expand from the node along the forward search path.
    */
-  void ExpandForward(baldr::GraphReader& graphreader,
+  bool ExpandForward(baldr::GraphReader& graphreader,
                      const baldr::GraphId& node,
                      sif::BDEdgeLabel& pred,
                      const uint32_t pred_idx,
@@ -142,7 +142,7 @@ protected:
   /**
    * Expand from the node along the reverse search path.
    */
-  void ExpandReverse(baldr::GraphReader& graphreader,
+  bool ExpandReverse(baldr::GraphReader& graphreader,
                      const baldr::GraphId& node,
                      sif::BDEdgeLabel& pred,
                      const uint32_t pred_idx,
