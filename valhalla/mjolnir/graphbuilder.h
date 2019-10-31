@@ -46,12 +46,12 @@ public:
   static std::string GetRef(const std::string& way_ref, const std::string& relation_ref);
 
   static bool CreateExitSignInfoList(const OSMNode& node,
-                               const OSMWay& way,
-                               const OSMData& osmdata,
-                               std::vector<baldr::SignInfo>& exits,
-                               bool fork,
-                               bool forward,
-                               bool link);
+                                     const OSMWay& way,
+                                     const OSMData& osmdata,
+                                     std::vector<baldr::SignInfo>& exits,
+                                     bool fork,
+                                     bool forward,
+                                     bool link);
 };
 
 } // namespace mjolnir
