@@ -76,7 +76,7 @@ valhalla_module(NAME mjolnir
     Boost::filesystem
     Boost::system
     Boost::date_time
-    Spatialite::Spatialite
+    SpatiaLite::SpatiaLite
     SQLite3::SQLite3
     Lua::Lua
     Threads::Threads)
