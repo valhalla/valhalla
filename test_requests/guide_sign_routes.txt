@@ -15,3 +15,6 @@
 -j '{"locations":[{"lat":39.384178,"lon":-76.509758,"street":"Walther Boulevard"},{"lat":39.385513,"lon":-76.524498,"street":"I 695 West"}],"costing":"auto","units":"miles"}'
 -j '{"locations":[{"lat":40.287384,"lon":-76.667847,"street":"Park Boulevard"},{"lat":40.284599,"lon":-76.668526,"street":""}],"costing":"auto","units":"miles"}'
 -j '{"locations":[{"lat":38.870739,"lon":-77.154732,"street":"Leesburg Pike"},{"lat":38.871666,"lon":-77.163300,"street":"US 50"}],"costing":"auto","units":"miles"}'
+-j '{"locations":[{"lat":51.409519,"lon":-0.228519,"street":"Raynes Park Bridge"},{"lat":51.409473,"lon":-0.227331,"street":"Approach Road"}],"costing":"auto","units":"miles"}'
+-j '{"locations":[{"lat":51.409519,"lon":-0.228519,"street":"Raynes Park Bridge"},{"lat":51.408947,"lon":-0.229391,"street":"Approach Road"}],"costing":"auto","units":"miles"}'
+-j '{"locations":[{"lat":51.414509,"lon":0.113702,"street":"Cray Road"},{"lat":51.410812,"lon":0.124581,"street":"A20"}],"costing":"auto","units":"miles"}'
