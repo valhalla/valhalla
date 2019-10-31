@@ -126,7 +126,6 @@ void thor_worker_t::route_match(Api& request) {
   // TODO - make sure the trace has timestamps..
   auto& options = *request.mutable_options();
   bool use_timestamps = options.use_timestamps();
-  m_path_infos.clear();
   if (RouteMatcher::FormPath(mode_costing, mode, *reader, trace, use_timestamps, options.locations(),
                              m_path_infos)) {
     // Form the trip path based on mode costing, origin, destination, and path edges
@@ -146,21 +145,18 @@ void thor_worker_t::route_match(Api& request) {
 // the path. We will start with just using edge costs and will add transition costs.
 std::vector<std::tuple<float, float, std::vector<thor::MatchResult>>>
 thor_worker_t::map_match(Api& request, uint32_t best_paths) {
-  m_map_match_results.clear();
   auto& options = *request.mutable_options();
-
   // Call Meili for map matching to get a collection of Location Edges
   matcher->set_interrupt(interrupt);
   // Create the vector of matched path results
-  m_temp_offline_results.clear();
   if (trace.size() == 0) {
     return {};
   }
 
-  m_temp_offline_results = matcher->OfflineMatch(trace, best_paths);
+  m_offline_results = matcher->OfflineMatch(trace, best_paths);
 
   // Process each score/match result
-  for (const auto& result : m_temp_offline_results) {
+  for (const auto& result : m_offline_results) {
     const auto& match_results = result.results;
     const auto& edge_segments = result.segments;
     m_temp_enhanced_match_results.clear();
@@ -250,7 +246,7 @@ thor_worker_t::map_match(Api& request, uint32_t best_paths) {
         }
       }
 
-      // Mark the disconnected route boundarie
+      // Mark the disconnected route boundaries
       auto curr_match_result = m_temp_enhanced_match_results.begin();
       auto prev_match_result = curr_match_result;
       for (auto& disconnected_edge_pair : m_temp_disconnected_edges) {

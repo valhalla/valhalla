@@ -85,7 +85,7 @@ protected:
   sif::TravelMode mode;
   std::vector<meili::Measurement> trace;
   std::vector<PathInfo> m_path_infos;
-  std::vector<meili::MatchResults> m_temp_offline_results;
+  std::vector<meili::MatchResults> m_offline_results;
   std::vector<thor::MatchResult> m_temp_enhanced_match_results;
   std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>>
       m_temp_route_discontinuities;
