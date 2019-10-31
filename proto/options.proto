@@ -28,6 +28,7 @@ enum DirectionsType {
 enum ShapeFormat {
   polyline5 = 0;
   polyline6 = 1;
+  geojson = 2;
 }
 
 enum Costing {
