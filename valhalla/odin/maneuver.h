@@ -150,6 +150,10 @@ public:
   bool HasExitTowardSign() const;
   bool HasExitNameSign() const;
 
+  bool HasGuideSign() const;
+  bool HasGuideBranchSign() const;
+  bool HasGuideTowardSign() const;
+
   uint32_t internal_right_turn_count() const;
   void set_internal_right_turn_count(uint32_t internal_right_turn_count);
 

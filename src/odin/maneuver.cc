@@ -460,6 +460,18 @@ bool Maneuver::HasExitNameSign() const {
   return signs_.HasExitName();
 }
 
+bool Maneuver::HasGuideSign() const {
+  return signs_.HasGuide();
+}
+
+bool Maneuver::HasGuideBranchSign() const {
+  return signs_.HasGuideBranch();
+}
+
+bool Maneuver::HasGuideTowardSign() const {
+  return signs_.HasGuideToward();
+}
+
 uint32_t Maneuver::internal_right_turn_count() const {
   return internal_right_turn_count_;
 }
