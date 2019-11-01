@@ -77,9 +77,40 @@ const std::string Signs::GetExitNameString(uint32_t max_count,
                       verbal_formatter);
 }
 
+const std::vector<Sign>& Signs::guide_branch_list() const {
+  return guide_branch_list_;
+}
+
+std::vector<Sign>* Signs::mutable_guide_branch_list() {
+  return &guide_branch_list_;
+}
+
+const std::string Signs::GetGuideBranchString(uint32_t max_count,
+                                              bool limit_by_consecutive_count,
+                                              std::string delim,
+                                              const VerbalTextFormatter* verbal_formatter) const {
+  return ListToString(guide_branch_list_, max_count, limit_by_consecutive_count, std::move(delim),
+                      verbal_formatter);
+}
+
+const std::vector<Sign>& Signs::guide_toward_list() const {
+  return guide_toward_list_;
+}
+
+std::vector<Sign>* Signs::mutable_guide_toward_list() {
+  return &guide_toward_list_;
+}
+
+const std::string Signs::GetGuideTowardString(uint32_t max_count,
+                                              bool limit_by_consecutive_count,
+                                              std::string delim,
+                                              const VerbalTextFormatter* verbal_formatter) const {
+  return ListToString(guide_toward_list_, max_count, limit_by_consecutive_count, std::move(delim),
+                      verbal_formatter);
+}
+
 bool Signs::HasExit() const {
-  return ((exit_number_list_.size() > 0) || (exit_branch_list_.size() > 0) ||
-          (exit_toward_list_.size() > 0) || (exit_name_list_.size() > 0));
+  return (HasExitNumber() || HasExitBranch() || HasExitToward() || HasExitName());
 }
 
 bool Signs::HasExitNumber() const {
@@ -98,6 +129,18 @@ bool Signs::HasExitName() const {
   return (exit_name_list_.size() > 0);
 }
 
+bool Signs::HasGuide() const {
+  return (HasGuideBranch() || HasGuideToward());
+}
+
+bool Signs::HasGuideBranch() const {
+  return (guide_branch_list_.size() > 0);
+}
+
+bool Signs::HasGuideToward() const {
+  return (guide_toward_list_.size() > 0);
+}
+
 std::string Signs::ToString() const {
   std::string signs_string;
 
@@ -112,6 +155,12 @@ std::string Signs::ToString() const {
 
   signs_string += " | exit_names=";
   signs_string += GetExitNameString();
+
+  signs_string += " | guide_onto_streets=";
+  signs_string += GetGuideBranchString();
+
+  signs_string += " | guide_toward_locations=";
+  signs_string += GetGuideTowardString();
 
   return signs_string;
 }
@@ -131,6 +180,12 @@ std::string Signs::ToParameterString() const {
 
   signs_string += delim;
   signs_string += ListToParameterString(exit_name_list_);
+
+  signs_string += delim;
+  signs_string += ListToParameterString(guide_branch_list_);
+
+  signs_string += delim;
+  signs_string += ListToParameterString(guide_toward_list_);
 
   return signs_string;
 }
@@ -201,7 +256,9 @@ const std::string Signs::ListToParameterString(const std::vector<Sign>& signs) c
 bool Signs::operator==(const Signs& rhs) const {
   return ((exit_number_list_ == rhs.exit_number_list_) &&
           (exit_branch_list_ == rhs.exit_branch_list_) &&
-          (exit_toward_list_ == rhs.exit_toward_list_) && (exit_name_list_ == rhs.exit_name_list_));
+          (exit_toward_list_ == rhs.exit_toward_list_) && (exit_name_list_ == rhs.exit_name_list_) &&
+          (guide_branch_list_ == rhs.guide_branch_list_) &&
+          (guide_toward_list_ == rhs.guide_toward_list_));
 }
 
 } // namespace odin

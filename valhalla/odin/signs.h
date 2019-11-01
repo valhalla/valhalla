@@ -52,11 +52,31 @@ public:
                                       std::string delim = "/",
                                       const VerbalTextFormatter* verbal_formatter = nullptr) const;
 
+  const std::vector<Sign>& guide_branch_list() const;
+  std::vector<Sign>* mutable_guide_branch_list();
+
+  const std::string GetGuideBranchString(uint32_t max_count = 0,
+                                         bool limit_by_consecutive_count = false,
+                                         std::string delim = "/",
+                                         const VerbalTextFormatter* verbal_formatter = nullptr) const;
+
+  const std::vector<Sign>& guide_toward_list() const;
+  std::vector<Sign>* mutable_guide_toward_list();
+
+  const std::string GetGuideTowardString(uint32_t max_count = 0,
+                                         bool limit_by_consecutive_count = false,
+                                         std::string delim = "/",
+                                         const VerbalTextFormatter* verbal_formatter = nullptr) const;
+
   bool HasExit() const;
   bool HasExitNumber() const;
   bool HasExitBranch() const;
   bool HasExitToward() const;
   bool HasExitName() const;
+
+  bool HasGuide() const;
+  bool HasGuideBranch() const;
+  bool HasGuideToward() const;
 
   std::string ToString() const;
 
@@ -81,6 +101,8 @@ protected:
   std::vector<Sign> exit_branch_list_;
   std::vector<Sign> exit_toward_list_;
   std::vector<Sign> exit_name_list_;
+  std::vector<Sign> guide_branch_list_;
+  std::vector<Sign> guide_toward_list_;
 };
 
 } // namespace odin
