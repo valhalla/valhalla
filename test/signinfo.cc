@@ -23,7 +23,11 @@ void ExitToTest() {
   node.set_exit_to_index(osmdata.node_names.index("US 11;To I 81;Carlisle;Harrisburg"));
 
   std::vector<SignInfo> exitsigns;
-  exitsigns = GraphBuilder::CreateExitSignInfoList(node, way, osmdata, fork, forward);
+  bool has_guide =
+      GraphBuilder::CreateExitSignInfoList(node, way, osmdata, exitsigns, fork, forward, true);
+
+  if (has_guide)
+    throw std::runtime_error("Exits should not be Guides");
 
   if (exitsigns.size() == 4) {
     for (auto& exitsign : exitsigns) {
@@ -41,7 +45,11 @@ void ExitToTest() {
   exitsigns.clear();
   node.set_exit_to_index(osmdata.node_names.index("US 11;Toward I 81;Carlisle;Harrisburg"));
 
-  exitsigns = GraphBuilder::CreateExitSignInfoList(node, way, osmdata, fork, forward);
+  has_guide =
+      GraphBuilder::CreateExitSignInfoList(node, way, osmdata, exitsigns, fork, forward, true);
+
+  if (has_guide)
+    throw std::runtime_error("Exits should not be Guides");
 
   if (exitsigns.size() == 4) {
     for (auto& exitsign : exitsigns) {
@@ -57,7 +65,11 @@ void ExitToTest() {
   exitsigns.clear();
   node.set_exit_to_index(osmdata.node_names.index("I 95 To I 695"));
 
-  exitsigns = GraphBuilder::CreateExitSignInfoList(node, way, osmdata, fork, forward);
+  has_guide =
+      GraphBuilder::CreateExitSignInfoList(node, way, osmdata, exitsigns, fork, forward, true);
+
+  if (has_guide)
+    throw std::runtime_error("Exits should not be Guides");
 
   if (exitsigns.size() == 2) {
     if (exitsigns[0].type() != Sign::Type::kExitBranch)
@@ -74,7 +86,11 @@ void ExitToTest() {
   exitsigns.clear();
   node.set_exit_to_index(osmdata.node_names.index("I 495 Toward I 270"));
 
-  exitsigns = GraphBuilder::CreateExitSignInfoList(node, way, osmdata, fork, forward);
+  has_guide =
+      GraphBuilder::CreateExitSignInfoList(node, way, osmdata, exitsigns, fork, forward, true);
+
+  if (has_guide)
+    throw std::runtime_error("Exits should not be Guides");
 
   if (exitsigns.size() == 2) {
     if (exitsigns[0].type() != Sign::Type::kExitBranch)
@@ -92,7 +108,11 @@ void ExitToTest() {
   node.set_exit_to_index(
       osmdata.node_names.index("I 495 Toward I 270 To I 95")); // default to toward.  Punt on parsing.
 
-  exitsigns = GraphBuilder::CreateExitSignInfoList(node, way, osmdata, fork, forward);
+  has_guide =
+      GraphBuilder::CreateExitSignInfoList(node, way, osmdata, exitsigns, fork, forward, true);
+
+  if (has_guide)
+    throw std::runtime_error("Exits should not be Guides");
 
   if (exitsigns.size() == 1) {
     if (exitsigns[0].type() != Sign::Type::kExitToward)
@@ -107,7 +127,12 @@ void ExitToTest() {
   exitsigns.clear();
   auto index = osmdata.name_offset_map.index("I 495 North");
   way.set_destination_ref_index(index);
-  exitsigns = GraphBuilder::CreateExitSignInfoList(node, way, osmdata, fork, forward);
+  has_guide =
+      GraphBuilder::CreateExitSignInfoList(node, way, osmdata, exitsigns, fork, forward, true);
+
+  if (has_guide)
+    throw std::runtime_error("Exits should not be Guides");
+
   if (exitsigns.size() == 1) {
     if (exitsigns[0].type() != Sign::Type::kExitBranch)
       throw std::runtime_error("I 495 North should be a branch.");
@@ -126,7 +151,12 @@ void ExitToTest() {
   exitsigns.clear();
   auto index2 = osmdata.name_offset_map.index("I 695 North");
   way2.set_destination_ref_to_index(index2);
-  exitsigns = GraphBuilder::CreateExitSignInfoList(node, way2, osmdata, fork, forward);
+  has_guide =
+      GraphBuilder::CreateExitSignInfoList(node, way2, osmdata, exitsigns, fork, forward, true);
+
+  if (has_guide)
+    throw std::runtime_error("Exits should not be Guides");
+
   if (exitsigns.size() == 1) {
     if (exitsigns[0].type() != Sign::Type::kExitToward)
       throw std::runtime_error("I 695 North should be a toward.");

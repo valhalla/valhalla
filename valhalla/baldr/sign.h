@@ -16,7 +16,14 @@ namespace baldr {
  */
 class Sign {
 public:
-  enum class Type : uint8_t { kExitNumber, kExitBranch, kExitToward, kExitName };
+  enum class Type : uint8_t {
+    kExitNumber,
+    kExitBranch,
+    kExitToward,
+    kExitName,
+    kGuideBranch,
+    kGuideToward
+  };
 
   /**
    * Constructor given arguments.
