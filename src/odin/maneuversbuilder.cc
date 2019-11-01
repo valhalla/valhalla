@@ -1106,6 +1106,23 @@ void ManeuversBuilder::FinalizeManeuver(Maneuver& maneuver, int node_index) {
       VerbalTextFormatterFactory::Create(trip_path_->GetCountryCode(node_index),
                                          trip_path_->GetStateCode(node_index)));
 
+  // Guide signs
+  if (curr_edge->has_sign()) {
+    // Guide branch
+    for (const auto& guide_onto_street : curr_edge->sign().guide_onto_streets()) {
+      maneuver.mutable_signs()
+          ->mutable_guide_branch_list()
+          ->emplace_back(guide_onto_street.text(), guide_onto_street.is_route_number());
+    }
+
+    // Guide toward
+    for (const auto& guide_toward_location : curr_edge->sign().guide_toward_locations()) {
+      maneuver.mutable_signs()
+          ->mutable_guide_toward_list()
+          ->emplace_back(guide_toward_location.text(), guide_toward_location.is_route_number());
+    }
+  }
+
   // Set the maneuver type
   SetManeuverType(maneuver);
 }
@@ -1661,7 +1678,7 @@ bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver, int node_i
   }
 
   /////////////////////////////////////////////////////////////////////////////
-  // Process signs
+  // Process exit signs
   if (maneuver.HasExitSign()) {
     return false;
   }
