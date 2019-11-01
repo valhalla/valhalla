@@ -1,9 +1,10 @@
+#include <algorithm>
+#include <utility>
+
 #include "baldr/verbal_text_formatter.h"
 #include "baldr/verbal_text_formatter_us.h"
 
 #include "odin/signs.h"
-
-#include <utility>
 
 using namespace valhalla::baldr;
 
@@ -11,6 +12,28 @@ namespace valhalla {
 namespace odin {
 
 Signs::Signs() {
+}
+
+void Signs::Sort(std::vector<Sign>* signs) {
+  // Sort signs by descending consecutive count order
+  std::sort(signs->begin(), signs->end(),
+            [](Sign a, Sign b) { return b.consecutive_count() < a.consecutive_count(); });
+}
+
+void Signs::CountAndSort(std::vector<Sign>* prev_signs, std::vector<Sign>* curr_signs) {
+  // Increment count for consecutive exit signs
+  for (Sign& curr_sign : *curr_signs) {
+    for (Sign& prev_sign : *prev_signs) {
+      if (curr_sign.text() == prev_sign.text()) {
+        curr_sign.set_consecutive_count(curr_sign.consecutive_count() + 1);
+        prev_sign.set_consecutive_count(curr_sign.consecutive_count());
+      }
+    }
+  }
+
+  // Sort the previous and current exit signs by descending consecutive count
+  Sort(prev_signs);
+  Sort(curr_signs);
 }
 
 const std::vector<Sign>& Signs::exit_number_list() const {

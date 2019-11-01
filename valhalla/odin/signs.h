@@ -20,6 +20,10 @@ class Signs {
 public:
   Signs();
 
+  static void Sort(std::vector<Sign>* signs);
+
+  static void CountAndSort(std::vector<Sign>* prev_signs, std::vector<Sign>* curr_signs);
+
   const std::vector<Sign>& exit_number_list() const;
   std::vector<Sign>* mutable_exit_number_list();
 

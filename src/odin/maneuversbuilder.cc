@@ -37,28 +37,6 @@ namespace {
 
 constexpr float kShortForkThreshold = 0.05f; // Kilometers
 
-void SortExitSignList(std::vector<Sign>* signs) {
-  // Sort signs by descending consecutive count order
-  std::sort(signs->begin(), signs->end(),
-            [](Sign a, Sign b) { return b.consecutive_count() < a.consecutive_count(); });
-}
-
-void CountAndSortExitSignList(std::vector<Sign>* prev_signs, std::vector<Sign>* curr_signs) {
-  // Increment count for consecutive exit signs
-  for (Sign& curr_sign : *curr_signs) {
-    for (Sign& prev_sign : *prev_signs) {
-      if (curr_sign.text() == prev_sign.text()) {
-        curr_sign.set_consecutive_count(curr_sign.consecutive_count() + 1);
-        prev_sign.set_consecutive_count(curr_sign.consecutive_count());
-      }
-    }
-  }
-
-  // Sort the previous and current exit signs by descending consecutive count
-  SortExitSignList(prev_signs);
-  SortExitSignList(curr_signs);
-}
-
 } // namespace
 
 namespace valhalla {
@@ -694,26 +672,26 @@ void ManeuversBuilder::CountAndSortExitSigns(std::list<Maneuver>& maneuvers) {
           }
         }
       }
-      SortExitSignList(prev_man->mutable_signs()->mutable_exit_number_list());
+      Signs::Sort(prev_man->mutable_signs()->mutable_exit_number_list());
     }
     // Increase the consecutive count of signs that match their neighbor
     else if (prev_man->HasExitSign() && curr_man->HasExitSign()) {
 
       // Process the exit number signs
-      CountAndSortExitSignList(prev_man->mutable_signs()->mutable_exit_number_list(),
-                               curr_man->mutable_signs()->mutable_exit_number_list());
+      Signs::CountAndSort(prev_man->mutable_signs()->mutable_exit_number_list(),
+                          curr_man->mutable_signs()->mutable_exit_number_list());
 
       // Process the exit branch signs
-      CountAndSortExitSignList(prev_man->mutable_signs()->mutable_exit_branch_list(),
-                               curr_man->mutable_signs()->mutable_exit_branch_list());
+      Signs::CountAndSort(prev_man->mutable_signs()->mutable_exit_branch_list(),
+                          curr_man->mutable_signs()->mutable_exit_branch_list());
 
       // Process the exit toward signs
-      CountAndSortExitSignList(prev_man->mutable_signs()->mutable_exit_toward_list(),
-                               curr_man->mutable_signs()->mutable_exit_toward_list());
+      Signs::CountAndSort(prev_man->mutable_signs()->mutable_exit_toward_list(),
+                          curr_man->mutable_signs()->mutable_exit_toward_list());
 
       // Process the exit name signs
-      CountAndSortExitSignList(prev_man->mutable_signs()->mutable_exit_name_list(),
-                               curr_man->mutable_signs()->mutable_exit_name_list());
+      Signs::CountAndSort(prev_man->mutable_signs()->mutable_exit_name_list(),
+                          curr_man->mutable_signs()->mutable_exit_name_list());
     }
 
     // Update iterators
