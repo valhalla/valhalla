@@ -212,7 +212,7 @@ add_subdirectory(src)
 if(ENABLE_PYTHON_BINDINGS)
   #TODO: need to make sure they actually have python
   add_subdirectory(src/bindings/python)
-  install(FILES COPYING ChangeLog
+  install(FILES COPYING CHANGELOG.md
     DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/doc/python-valhalla"
     COMPONENT python)
 endif()
@@ -296,7 +296,7 @@ install(
     WORLD_READ WORLD_EXECUTE
   COMPONENT runtime)
 
-install(FILES COPYING ChangeLog
+install(FILES COPYING CHANGELOG.md
   DESTINATION "${CMAKE_INSTALL_DOCDIR}"
   COMPONENT runtime)
 
