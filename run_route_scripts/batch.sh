@@ -10,10 +10,10 @@ fi
 
 function usage() {
         echo "Usage: $0 route_request_file conf [concurrency] [outDir]"
-        echo "Example: $0 requests/demo_routes.txt"
-        echo "Example: $0 requests/demo_routes.txt ~/valhalla.json"
-        echo "Example: $0 requests/demo_routes.txt ~/valhalla.json 8"
-        echo "Example: $0 requests/demo_routes.txt ~/valhalla.json 8 my_special_dir"
+        echo "Example: $0 ../test_requests/demo_routes.txt"
+        echo "Example: $0 ../test_requests/demo_routes.txt ~/valhalla.json"
+        echo "Example: $0 ../test_requests/demo_routes.txt ~/valhalla.json 8"
+        echo "Example: $0 ../test_requests/demo_routes.txt ~/valhalla.json 8 my_special_dir"
         exit 1
 }
 
