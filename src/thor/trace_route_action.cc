@@ -371,7 +371,7 @@ thor_worker_t::map_match(Api& request, uint32_t best_paths) {
                match_result.lnglat.lng(), match_result.lnglat.lat(), marker_color.c_str(),
                marker_size.c_str(), index++, matched_point_type.c_str(), match_result.edge_index,
                match_result.distance_along, match_result.distance_from,
-               ((index != enhanced_match_results.size() - 1) ? "," : ""));
+               ((index != m_temp_enhanced_match_results.size() - 1) ? "," : ""));
       }
 
       // Print geojson footer
