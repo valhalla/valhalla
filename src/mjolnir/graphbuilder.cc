@@ -748,18 +748,15 @@ void BuildTileSet(const std::string& ways_file,
                                                                 forward,
                                                                 (directededge.use() == Use::kRamp),
                                                                 (directededge.use() == Use::kTurnChannel));
-
-          // Add guide signs when we are not on a exit
           // Else, add signs if signs exist
           // and directed edge if forward access and auto use
           // and directed edge is a link and not (link count=2 and driveforward count=1)
           //    OR node is a fork
-          if (has_guide && !exits.empty() && !directededge.link()) {
-            graphtile.AddSigns(idx, exits);
-          } else if (!exits.empty() && (directededge.forwardaccess() & kAutoAccess) &&
+          //    OR we added guide signs
+          if (!exits.empty() && (directededge.forwardaccess() & kAutoAccess) &&
                      ((directededge.link() &&
                        (!((bundle.link_count == 2) && (bundle.driveforward_count == 1)))) ||
-                      fork) &&
+                      fork || has_guide) &&
                      ((edge.attributes.driveableforward && edge.attributes.way_begin) ||
                       (edge.attributes.driveablereverse && edge.attributes.way_end))) {
             graphtile.AddSigns(idx, exits);
