@@ -151,8 +151,8 @@ void ExitToTest() {
   exitsigns.clear();
   auto index2 = osmdata.name_offset_map.index("I 695 North");
   way2.set_destination_ref_to_index(index2);
-  has_guide =
-      GraphBuilder::CreateExitSignInfoList(node, way2, osmdata, exitsigns, fork, forward, true, false);
+  has_guide = GraphBuilder::CreateExitSignInfoList(node, way2, osmdata, exitsigns, fork, forward,
+                                                   true, false);
 
   if (has_guide)
     throw std::runtime_error("Exits should not be Guides");
