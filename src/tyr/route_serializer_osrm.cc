@@ -723,6 +723,7 @@ std::string turn_modifier(const uint32_t in_brg, const uint32_t out_brg) {
     case baldr::Turn::Type::kSlightLeft:
       return "slight left";
   }
+  throw std::runtime_error("Unhandled case");
 }
 
 // Get the turn modifier based on the maneuver type
@@ -997,6 +998,7 @@ std::string get_mode(const valhalla::DirectionsLeg::Maneuver& maneuver,
       return "transit";
     }
   }
+  throw std::runtime_error("Unhandled case");
 }
 
 // Get the names and ref names

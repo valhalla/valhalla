@@ -455,7 +455,7 @@ void TimeDepReverse::SetOrigin(GraphReader& graphreader,
     // DO NOT SET EdgeStatus - it messes up trivial paths with oneways
     uint32_t idx = edgelabels_rev_.size();
     edgelabels_rev_.emplace_back(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, sortcost,
-                                 dist, mode_, c, false);
+                                 dist, mode_, c, false, false);
     adjacencylist_->add(idx);
 
     // Set the initial not_thru flag to false. There is an issue with not_thru

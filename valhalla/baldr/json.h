@@ -120,7 +120,7 @@ public:
   std::ostream& operator()(bool value) const {
     return ostream_ << (value ? "true" : "false");
   }
-  std::ostream& operator()(std::nullptr_t value) const {
+  std::ostream& operator()(std::nullptr_t) const {
     return ostream_ << "null";
   }
 

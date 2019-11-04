@@ -10,6 +10,7 @@ template <typename Point> class Shape7Decoder {
 public:
   Shape7Decoder(const char* begin, const size_t size, const int precision = 7)
       : begin(begin), end(begin + size) {
+    (void)(precision); // Unused variable
   }
   Point pop() noexcept(false) {
     lat = next(lat);
