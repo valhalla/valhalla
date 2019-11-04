@@ -268,7 +268,7 @@ private:
   std::vector<std::vector<StateId>> unreached_states_;
   SPQueue<StateLabel> queue_;
   std::unordered_map<StateId, StateLabel> scanned_labels_;
-  StateId::Time earliest_time_;
+  StateId::Time earliest_time_{0};
 };
 } // namespace meili
 } // namespace valhalla
