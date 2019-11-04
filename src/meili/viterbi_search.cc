@@ -60,6 +60,18 @@ template <bool Maximize> bool NaiveViterbiSearch<Maximize>::AddStateId(const Sta
   return true;
 }
 
+template <bool Maximize> bool NaiveViterbiSearch<Maximize>::RemoveStateId(const StateId& stateid) {
+  const auto removed = IViterbiSearch::RemoveStateId(stateid);
+  if (!removed) {
+    return false;
+  }
+  // remove it from columns
+  auto& column = states_[stateid.time()];
+  const auto it = std::find(column.begin(), column.end(), stateid);
+  column.erase(it);
+  return true;
+}
+
 template <bool Maximize>
 inline double NaiveViterbiSearch<Maximize>::AccumulatedCost(const StateId& stateid) const {
   return stateid.IsValid() ? GetLabel(stateid).costsofar() : kInvalidCost;

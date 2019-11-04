@@ -206,21 +206,11 @@ public:
   ~NaiveViterbiSearch() {
     Clear();
   }
+
   void Clear() override;
   void ClearSearch() override;
   bool AddStateId(const StateId& stateid) override;
-  bool RemoveStateId(const StateId& stateid) override {
-    const auto removed = IViterbiSearch::RemoveStateId(stateid);
-    if (!removed) {
-      return false;
-    }
-    // remove it from columns
-    auto& column = states_[stateid.time()];
-    const auto it = std::find(column.begin(), column.end(), stateid);
-    column.erase(it);
-    return true;
-  }
-
+  bool RemoveStateId(const StateId& stateid) override;
   StateId SearchWinner(StateId::Time time) override;
   StateId Predecessor(const StateId& stateid) const override;
   double AccumulatedCost(const StateId& stateid) const override;
