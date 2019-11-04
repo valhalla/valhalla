@@ -72,6 +72,7 @@ public:
   }
   StateIdIterator(IViterbiSearch& vs) : StateIdIterator(vs, kInvalidTime, StateId()) {
   }
+
   // Postfix increment
   StateIdIterator operator++(int) {
     auto copy = *this;
