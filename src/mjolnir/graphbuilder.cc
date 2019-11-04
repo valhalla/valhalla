@@ -744,21 +744,21 @@ void BuildTileSet(const std::string& ways_file,
           // TODO - update logic so we limit the CreateExitSignInfoList calls
           // Any exits for this directed edge? is auto and oneway?
           std::vector<SignInfo> exits;
-          bool has_guide = GraphBuilder::CreateExitSignInfoList(node, w, osmdata, exits, fork,
-                                                                forward,
-                                                                (directededge.use() == Use::kRamp),
-                                                                (directededge.use() == Use::kTurnChannel));
+          bool has_guide =
+              GraphBuilder::CreateExitSignInfoList(node, w, osmdata, exits, fork, forward,
+                                                   (directededge.use() == Use::kRamp),
+                                                   (directededge.use() == Use::kTurnChannel));
           // add signs if signs exist
           // and directed edge if forward access and auto use
           // and directed edge is a link and not (link count=2 and driveforward count=1)
           //    OR node is a fork
           //    OR we added guide signs
           if (!exits.empty() && (directededge.forwardaccess() & kAutoAccess) &&
-                     ((directededge.link() &&
-                       (!((bundle.link_count == 2) && (bundle.driveforward_count == 1)))) ||
-                      fork || has_guide) &&
-                     ((edge.attributes.driveableforward && edge.attributes.way_begin) ||
-                      (edge.attributes.driveablereverse && edge.attributes.way_end))) {
+              ((directededge.link() &&
+                (!((bundle.link_count == 2) && (bundle.driveforward_count == 1)))) ||
+               fork || has_guide) &&
+              ((edge.attributes.driveableforward && edge.attributes.way_begin) ||
+               (edge.attributes.driveablereverse && edge.attributes.way_end))) {
             graphtile.AddSigns(idx, exits);
             directededge.set_exitsign(true);
           }
@@ -1239,7 +1239,7 @@ bool GraphBuilder::CreateExitSignInfoList(const OSMNode& node,
 
   bool has_branch = false;
 
-  // Exit sign branch refs
+  // Guide or Exit sign branch refs
   if (way.destination_ref_index() != 0) {
     has_branch = true;
     std::vector<std::string> branch_refs =
@@ -1253,7 +1253,7 @@ bool GraphBuilder::CreateExitSignInfoList(const OSMNode& node,
     }
   }
 
-  // Exit sign branch road names
+  // Guide or Exit sign branch road names
   if (way.destination_street_index() != 0) {
     has_branch = true;
     std::vector<std::string> branch_streets =
@@ -1272,7 +1272,7 @@ bool GraphBuilder::CreateExitSignInfoList(const OSMNode& node,
 
   bool has_toward = false;
 
-  // Exit sign toward refs
+  // Guide or Exit sign toward refs
   if (way.destination_ref_to_index() != 0) {
     has_toward = true;
     std::vector<std::string> toward_refs =
@@ -1286,7 +1286,7 @@ bool GraphBuilder::CreateExitSignInfoList(const OSMNode& node,
     }
   }
 
-  // Exit sign toward streets
+  // Guide or Exit sign toward streets
   if (way.destination_street_to_index() != 0) {
     has_toward = true;
     std::vector<std::string> toward_streets =

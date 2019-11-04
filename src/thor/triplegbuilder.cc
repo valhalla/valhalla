@@ -1306,38 +1306,56 @@ TripLeg_Edge* TripLegBuilder::AddTripEdge(const AttributesController& controller
   if (directededge->exitsign()) {
     std::vector<SignInfo> signs = graphtile->GetSigns(idx);
     if (!signs.empty()) {
-      TripLeg_Sign* trip_exit = trip_edge->mutable_sign();
+      TripLeg_Sign* trip_sign = trip_edge->mutable_sign();
       for (const auto& sign : signs) {
         switch (sign.type()) {
           case Sign::Type::kExitNumber: {
             if (controller.attributes.at(kEdgeSignExitNumber)) {
-              auto* trip_exit_number = trip_exit->mutable_exit_numbers()->Add();
-              trip_exit_number->set_text(sign.text());
-              trip_exit_number->set_is_route_number(sign.is_route_num());
+              auto* trip_sign_exit_number = trip_sign->mutable_exit_numbers()->Add();
+              trip_sign_exit_number->set_text(sign.text());
+              trip_sign_exit_number->set_is_route_number(sign.is_route_num());
             }
             break;
           }
           case Sign::Type::kExitBranch: {
             if (controller.attributes.at(kEdgeSignExitBranch)) {
-              auto* trip_exit_onto_street = trip_exit->mutable_exit_onto_streets()->Add();
-              trip_exit_onto_street->set_text(sign.text());
-              trip_exit_onto_street->set_is_route_number(sign.is_route_num());
+              auto* trip_sign_exit_onto_street = trip_sign->mutable_exit_onto_streets()->Add();
+              trip_sign_exit_onto_street->set_text(sign.text());
+              trip_sign_exit_onto_street->set_is_route_number(sign.is_route_num());
             }
             break;
           }
           case Sign::Type::kExitToward: {
             if (controller.attributes.at(kEdgeSignExitToward)) {
-              auto* trip_exit_toward_location = trip_exit->mutable_exit_toward_locations()->Add();
-              trip_exit_toward_location->set_text(sign.text());
-              trip_exit_toward_location->set_is_route_number(sign.is_route_num());
+              auto* trip_sign_exit_toward_location =
+                  trip_sign->mutable_exit_toward_locations()->Add();
+              trip_sign_exit_toward_location->set_text(sign.text());
+              trip_sign_exit_toward_location->set_is_route_number(sign.is_route_num());
             }
             break;
           }
           case Sign::Type::kExitName: {
             if (controller.attributes.at(kEdgeSignExitName)) {
-              auto* trip_exit_name = trip_exit->mutable_exit_names()->Add();
-              trip_exit_name->set_text(sign.text());
-              trip_exit_name->set_is_route_number(sign.is_route_num());
+              auto* trip_sign_exit_name = trip_sign->mutable_exit_names()->Add();
+              trip_sign_exit_name->set_text(sign.text());
+              trip_sign_exit_name->set_is_route_number(sign.is_route_num());
+            }
+            break;
+          }
+          case Sign::Type::kGuideBranch: {
+            if (controller.attributes.at(kEdgeSignGuideBranch)) {
+              auto* trip_sign_guide_onto_street = trip_sign->mutable_exit_onto_streets()->Add();
+              trip_sign_guide_onto_street->set_text(sign.text());
+              trip_sign_guide_onto_street->set_is_route_number(sign.is_route_num());
+            }
+            break;
+          }
+          case Sign::Type::kGuideToward: {
+            if (controller.attributes.at(kEdgeSignGuideToward)) {
+              auto* trip_sign_guide_toward_location =
+                  trip_sign->mutable_exit_toward_locations()->Add();
+              trip_sign_guide_toward_location->set_text(sign.text());
+              trip_sign_guide_toward_location->set_is_route_number(sign.is_route_num());
             }
             break;
           }

@@ -34,6 +34,8 @@ const std::unordered_map<std::string, bool> AttributesController::kDefaultAttrib
     {kEdgeSignExitBranch, true},
     {kEdgeSignExitToward, true},
     {kEdgeSignExitName, true},
+    {kEdgeSignGuideBranch, true},
+    {kEdgeSignGuideToward, true},
     {kEdgeTravelMode, true},
     {kEdgeVehicleType, true},
     {kEdgePedestrianType, true},
