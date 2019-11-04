@@ -748,7 +748,7 @@ void BuildTileSet(const std::string& ways_file,
                                                                 forward,
                                                                 (directededge.use() == Use::kRamp),
                                                                 (directededge.use() == Use::kTurnChannel));
-          // Else, add signs if signs exist
+          // add signs if signs exist
           // and directed edge if forward access and auto use
           // and directed edge is a link and not (link count=2 and driveforward count=1)
           //    OR node is a fork
