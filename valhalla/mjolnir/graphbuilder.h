@@ -51,7 +51,8 @@ public:
                                      std::vector<baldr::SignInfo>& exits,
                                      bool fork,
                                      bool forward,
-                                     bool link);
+                                     bool ramp,
+                                     bool tc);
 };
 
 } // namespace mjolnir
