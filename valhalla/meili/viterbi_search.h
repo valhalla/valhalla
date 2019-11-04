@@ -105,13 +105,10 @@ private:
 };
 
 using IEmissionCostModel = std::function<float(const StateId& stateid)>;
-
+using ITransitionCostModel = std::function<float(const StateId& lhs, const StateId& rhs)>;
 constexpr float DefaultEmissionCostModel(const StateId&) {
   return 0.0;
 }
-
-using ITransitionCostModel = std::function<float(const StateId& lhs, const StateId& rhs)>;
-
 constexpr float DefaultTransitionCostModel(const StateId&, const StateId&) {
   return 1.0;
 }
@@ -254,7 +251,6 @@ public:
   void ClearSearch() override;
   bool AddStateId(const StateId& stateid) override;
   bool RemoveStateId(const StateId& stateid) override;
-
   StateId SearchWinner(StateId::Time time) override;
   StateId Predecessor(const StateId& stateid) const override;
   virtual bool IsInvalidCost(double cost) const {
