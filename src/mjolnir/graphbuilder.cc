@@ -1245,7 +1245,7 @@ bool GraphBuilder::CreateExitSignInfoList(const OSMNode& node,
     std::vector<std::string> branch_refs =
         GetTagTokens(osmdata.name_offset_map.name(way.destination_ref_index()));
     for (auto& branch_ref : branch_refs) {
-      if (!link) {
+      if (!link && !fork) {
         exit_list.emplace_back(Sign::Type::kGuideBranch, true, branch_ref);
         has_guide = true;
       } else
@@ -1259,7 +1259,7 @@ bool GraphBuilder::CreateExitSignInfoList(const OSMNode& node,
     std::vector<std::string> branch_streets =
         GetTagTokens(osmdata.name_offset_map.name(way.destination_street_index()));
     for (auto& branch_street : branch_streets) {
-      if (!link) {
+      if (!link && !fork) {
         exit_list.emplace_back(Sign::Type::kGuideBranch, false, branch_street);
         has_guide = true;
       } else
@@ -1278,7 +1278,7 @@ bool GraphBuilder::CreateExitSignInfoList(const OSMNode& node,
     std::vector<std::string> toward_refs =
         GetTagTokens(osmdata.name_offset_map.name(way.destination_ref_to_index()));
     for (auto& toward_ref : toward_refs) {
-      if (!link) {
+      if (!link && !fork) {
         exit_list.emplace_back(Sign::Type::kGuideToward, true, toward_ref);
         has_guide = true;
       } else
@@ -1292,7 +1292,7 @@ bool GraphBuilder::CreateExitSignInfoList(const OSMNode& node,
     std::vector<std::string> toward_streets =
         GetTagTokens(osmdata.name_offset_map.name(way.destination_street_to_index()));
     for (auto& toward_street : toward_streets) {
-      if (!link) {
+      if (!link && !fork) {
         exit_list.emplace_back(Sign::Type::kGuideToward, false, toward_street);
         has_guide = true;
       } else
@@ -1309,7 +1309,7 @@ bool GraphBuilder::CreateExitSignInfoList(const OSMNode& node,
                                                         : way.destination_backward_index());
     std::vector<std::string> toward_names = GetTagTokens(osmdata.name_offset_map.name(index));
     for (auto& toward_name : toward_names) {
-      if (!link) {
+      if (!link && !fork) {
         exit_list.emplace_back(Sign::Type::kGuideToward, false, toward_name);
         has_guide = true;
       } else
