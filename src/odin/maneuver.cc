@@ -440,6 +440,10 @@ Signs* Maneuver::mutable_signs() {
   return &signs_;
 }
 
+bool Maneuver::HasSigns() const {
+  return (HasExitSign() || HasGuideSign());
+}
+
 bool Maneuver::HasExitSign() const {
   return signs_.HasExit();
 }

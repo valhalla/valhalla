@@ -144,6 +144,8 @@ public:
   const Signs& signs() const;
   Signs* mutable_signs();
 
+  bool HasSigns() const;
+
   bool HasExitSign() const;
   bool HasExitNumberSign() const;
   bool HasExitBranchSign() const;
