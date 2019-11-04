@@ -745,7 +745,9 @@ void BuildTileSet(const std::string& ways_file,
           // Any exits for this directed edge? is auto and oneway?
           std::vector<SignInfo> exits;
           bool has_guide = GraphBuilder::CreateExitSignInfoList(node, w, osmdata, exits, fork,
-                                                                forward, directededge.link());
+                                                                forward,
+                                                                (directededge.use() == Use::kRamp),
+                                                                (directededge.use() == Use::kTurnChannel));
 
           // Add guide signs when we are not on a exit
           // Else, add signs if signs exist
@@ -753,6 +755,8 @@ void BuildTileSet(const std::string& ways_file,
           // and directed edge is a link and not (link count=2 and driveforward count=1)
           //    OR node is a fork
           if (has_guide && !exits.empty() && !directededge.link()) {
+            if (w.way_id() == 60616056)
+              std::cout << "Duane**************" << std::endl;
             graphtile.AddSigns(idx, exits);
           } else if (!exits.empty() && (directededge.forwardaccess() & kAutoAccess) &&
                      ((directededge.link() &&
@@ -1214,7 +1218,8 @@ bool GraphBuilder::CreateExitSignInfoList(const OSMNode& node,
                                           std::vector<SignInfo>& exit_list,
                                           bool fork,
                                           bool forward,
-                                          bool link) {
+                                          bool ramp,
+                                          bool tc) {
 
   bool has_guide = false;
   ////////////////////////////////////////////////////////////////////////////
@@ -1245,7 +1250,7 @@ bool GraphBuilder::CreateExitSignInfoList(const OSMNode& node,
     std::vector<std::string> branch_refs =
         GetTagTokens(osmdata.name_offset_map.name(way.destination_ref_index()));
     for (auto& branch_ref : branch_refs) {
-      if (!link) {
+      if (tc || (!ramp && !fork)) {
         exit_list.emplace_back(Sign::Type::kGuideBranch, true, branch_ref);
         has_guide = true;
       } else
@@ -1259,7 +1264,7 @@ bool GraphBuilder::CreateExitSignInfoList(const OSMNode& node,
     std::vector<std::string> branch_streets =
         GetTagTokens(osmdata.name_offset_map.name(way.destination_street_index()));
     for (auto& branch_street : branch_streets) {
-      if (!link) {
+      if (tc || (!ramp && !fork)) {
         exit_list.emplace_back(Sign::Type::kGuideBranch, false, branch_street);
         has_guide = true;
       } else
@@ -1278,7 +1283,7 @@ bool GraphBuilder::CreateExitSignInfoList(const OSMNode& node,
     std::vector<std::string> toward_refs =
         GetTagTokens(osmdata.name_offset_map.name(way.destination_ref_to_index()));
     for (auto& toward_ref : toward_refs) {
-      if (!link) {
+      if (tc || (!ramp && !fork)) {
         exit_list.emplace_back(Sign::Type::kGuideToward, true, toward_ref);
         has_guide = true;
       } else
@@ -1292,7 +1297,7 @@ bool GraphBuilder::CreateExitSignInfoList(const OSMNode& node,
     std::vector<std::string> toward_streets =
         GetTagTokens(osmdata.name_offset_map.name(way.destination_street_to_index()));
     for (auto& toward_street : toward_streets) {
-      if (!link) {
+      if (tc || (!ramp && !fork)) {
         exit_list.emplace_back(Sign::Type::kGuideToward, false, toward_street);
         has_guide = true;
       } else
@@ -1309,7 +1314,7 @@ bool GraphBuilder::CreateExitSignInfoList(const OSMNode& node,
                                                         : way.destination_backward_index());
     std::vector<std::string> toward_names = GetTagTokens(osmdata.name_offset_map.name(index));
     for (auto& toward_name : toward_names) {
-      if (!link) {
+      if (tc || (!ramp && !fork)) {
         exit_list.emplace_back(Sign::Type::kGuideToward, false, toward_name);
         has_guide = true;
       } else
