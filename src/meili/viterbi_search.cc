@@ -27,12 +27,12 @@ void StateIdIterator::Next() {
 }
 
 void StateIdIterator::ValidateStateId(const StateId::Time time, const StateId& stateid) {
-  if (stateid.IsValid()) {
-    if (time == kInvalidTime) {
-      throw std::runtime_error("expect invalid stateid");
-    } else if (stateid.time() != time) {
-      throw std::runtime_error("time is not matched");
-    }
+  if (!stateid.IsValid()) {
+    return;
+  } else if (time == kInvalidTime) {
+    throw std::runtime_error("expect invalid stateid");
+  } else if (stateid.time() != time) {
+    throw std::runtime_error("time is not matched");
   }
 }
 
