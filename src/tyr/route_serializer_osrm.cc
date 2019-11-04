@@ -270,12 +270,25 @@ void route_summary(json::MapPtr& route,
   route->emplace("weight_name", std::string("Valhalla default"));
 }
 
+// Generate leg shape in geojson format.
+json::MapPtr geojson_shape(const std::vector<PointLL> shape) {
+  auto geojson = json::map({});
+  auto coords = json::array({});
+  for (auto p : shape) {
+    coords->emplace_back(json::array({json::fp_t{p.lng(), 6}, json::fp_t{p.lat(), 6}}));
+  }
+  geojson->emplace("type", std::string("LineString"));
+  geojson->emplace("coordinates", coords);
+  return geojson;
+}
+
 // Generate full shape of the route.
-std::string full_shape(const google::protobuf::RepeatedPtrField<valhalla::DirectionsLeg>& legs,
-                       const valhalla::Options& options) {
+std::vector<PointLL>
+full_shape(const google::protobuf::RepeatedPtrField<valhalla::DirectionsLeg>& legs,
+           const valhalla::Options& options) {
   // If just one leg and it we want polyline6 then we just return the encoded leg shape
   if (legs.size() == 1 && options.shape_format() == polyline6) {
-    return legs.begin()->shape();
+    return midgard::decode<std::vector<PointLL>>(legs.begin()->shape());
   }
 
   // TODO: there is a tricky way to do this... since the end of each leg is the same as the
@@ -290,17 +303,17 @@ std::string full_shape(const google::protobuf::RepeatedPtrField<valhalla::Direct
     decoded.insert(decoded.end(), decoded.size() ? decoded_leg.begin() + 1 : decoded_leg.begin(),
                    decoded_leg.end());
   }
-  int precision = options.shape_format() == polyline6 ? 1e6 : 1e5;
-  return midgard::encode(decoded, precision);
+  return decoded;
 }
 
 // Generate simplified shape of the route.
-std::string simplified_shape(const google::protobuf::RepeatedPtrField<valhalla::DirectionsLeg>& legs,
-                             const valhalla::Options& options) {
+std::vector<PointLL>
+simplified_shape(const google::protobuf::RepeatedPtrField<valhalla::DirectionsLeg>& legs,
+                 const valhalla::Options& options) {
   Coordinate south_west(std::numeric_limits<int>::max(), std::numeric_limits<int>::max());
   Coordinate north_east(std::numeric_limits<int>::min(), std::numeric_limits<int>::min());
 
-  std::vector<PointLL> full_shape;
+  std::vector<PointLL> simple_shape;
   std::unordered_set<size_t> indices;
 
   for (const auto& leg : legs) {
@@ -313,20 +326,39 @@ std::string simplified_shape(const google::protobuf::RepeatedPtrField<valhalla::
     }
 
     for (const auto& maneuver : leg.maneuver()) {
-      indices.emplace(full_shape.size() ? ((full_shape.size() - 1) + maneuver.begin_shape_index())
-                                        : maneuver.begin_shape_index());
+      indices.emplace(simple_shape.size() ? ((simple_shape.size() - 1) + maneuver.begin_shape_index())
+                                          : maneuver.begin_shape_index());
     }
 
-    full_shape.insert(full_shape.end(),
-                      full_shape.size() ? decoded_leg.begin() + 1 : decoded_leg.begin(),
-                      decoded_leg.end());
+    simple_shape.insert(simple_shape.end(),
+                        simple_shape.size() ? decoded_leg.begin() + 1 : decoded_leg.begin(),
+                        decoded_leg.end());
   }
 
   const auto zoom_level = std::min(MAX_ZOOM, getFittedZoom(south_west, north_east));
-  Polyline2<PointLL>::Generalize(full_shape, DOUGLAS_PEUCKER_THRESHOLDS[zoom_level], indices);
-  int precision = options.shape_format() == polyline6 ? 1e6 : 1e5;
+  Polyline2<PointLL>::Generalize(simple_shape, DOUGLAS_PEUCKER_THRESHOLDS[zoom_level], indices);
+  return simple_shape;
+}
 
-  return midgard::encode(full_shape, precision);
+void route_geometry(json::MapPtr& route,
+                    const google::protobuf::RepeatedPtrField<valhalla::DirectionsLeg>& legs,
+                    const valhalla::Options& options) {
+  // full geom = !has_generalize()
+  // simplified geom = has_generalize && generalize == 0
+  // no geom = has_generalize && generalize == -1
+  std::vector<PointLL> shape;
+  if (options.has_generalize() && options.generalize() == 0.0f) {
+    shape = simplified_shape(legs, options);
+  } else if (!options.has_generalize() || (options.has_generalize() && options.generalize() > 0.0f)) {
+    shape = full_shape(legs, options);
+  }
+
+  if (options.shape_format() == geojson) {
+    route->emplace("geometry", geojson_shape(shape));
+  } else {
+    int precision = options.shape_format() == polyline6 ? 1e6 : 1e5;
+    route->emplace("geometry", midgard::encode(shape, precision));
+  }
 }
 
 // Serialize waypoints for optimized route. Note that OSRM retains the
@@ -919,20 +951,25 @@ json::MapPtr osrm_maneuver(const valhalla::DirectionsLeg::Maneuver& maneuver,
 }
 
 // Method to get the geometry string for a maneuver.
-// TODO - encoding options
-std::string maneuver_geometry(const uint32_t begin_idx,
-                              const uint32_t end_idx,
-                              const std::vector<PointLL>& shape,
-                              bool is_arrive_maneuver,
-                              const valhalla::Options& options) {
+void maneuver_geometry(json::MapPtr& step,
+                       const uint32_t begin_idx,
+                       const uint32_t end_idx,
+                       const std::vector<PointLL>& shape,
+                       bool is_arrive_maneuver,
+                       const valhalla::Options& options) {
   // Must add one to the end range since maneuver end shape index is exclusive
   std::vector<PointLL> maneuver_shape(shape.begin() + begin_idx, shape.begin() + end_idx + 1);
   // Last maneuver shape is a linestring with two identical points at the destination
   if (is_arrive_maneuver) {
     maneuver_shape.push_back(shape.back());
   }
-  int precision = options.shape_format() == polyline6 ? 1e6 : 1e5;
-  return midgard::encode(maneuver_shape, precision);
+
+  if (options.shape_format() == geojson) {
+    step->emplace("geometry", geojson_shape(maneuver_shape));
+  } else {
+    int precision = options.shape_format() == polyline6 ? 1e6 : 1e5;
+    step->emplace("geometry", midgard::encode(maneuver_shape, precision));
+  }
 }
 
 // Get the mode
@@ -1089,9 +1126,8 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
       // name change
 
       // Add geometry for this maneuver
-      step->emplace("geometry",
-                    maneuver_geometry(maneuver.begin_shape_index(), maneuver.end_shape_index(), shape,
-                                      arrive_maneuver, options));
+      maneuver_geometry(step, maneuver.begin_shape_index(), maneuver.end_shape_index(), shape,
+                        arrive_maneuver, options);
 
       // Add mode, driving side, weight, distance, duration, name
       float distance = maneuver.length() * (imperial ? 1609.34f : 1000.0f);
@@ -1206,16 +1242,8 @@ std::string serialize(valhalla::Api& api) {
     // Create a route to add to the array
     auto route = json::map({});
 
-    // full geom = !has_generalize()
-    // simplified geom = has_generalize && generalize == 0
-    // no geom = has_generalize && generalize == -1
-    if (options.has_generalize() && options.generalize() == 0.0f) {
-      route->emplace("geometry", simplified_shape(api.directions().routes(i).legs(), options));
-    } else if (!options.has_generalize() ||
-               (options.has_generalize() && options.generalize() > 0.0f)) {
-      // Get full shape for the route.
-      route->emplace("geometry", full_shape(api.directions().routes(i).legs(), options));
-    }
+    // Concatenated route geometry
+    route_geometry(route, api.directions().routes(i).legs(), options);
 
     // Other route summary information
     route_summary(route, api.directions().routes(i).legs(), imperial);
