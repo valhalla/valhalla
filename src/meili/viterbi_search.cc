@@ -26,6 +26,16 @@ void StateIdIterator::Next() {
   }
 }
 
+void StateIdIterator::ValidateStateId(const StateId::Time time, const StateId& stateid) {
+  if (stateid.IsValid()) {
+    if (time == kInvalidTime) {
+      throw std::runtime_error("expect invalid stateid");
+    } else if (stateid.time() != time) {
+      throw std::runtime_error("time is not matched");
+    }
+  }
+}
+
 template <bool Maximize> void NaiveViterbiSearch<Maximize>::Clear() {
   IViterbiSearch::Clear();
   states_.clear();
@@ -198,6 +208,18 @@ bool ViterbiSearch::AddStateId(const StateId& stateid) {
   }
   unreached_states_[stateid.time()].push_back(stateid);
 
+  return true;
+}
+
+bool ViterbiSearch::RemoveStateId(const StateId& stateid) {
+  const auto removed = IViterbiSearch::RemoveStateId(stateid);
+  if (!removed) {
+    return false;
+  }
+  // remove it from columns
+  auto& column = states_[stateid.time()];
+  const auto it = std::find(column.begin(), column.end(), stateid);
+  column.erase(it);
   return true;
 }
 
