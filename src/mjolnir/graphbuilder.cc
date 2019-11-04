@@ -755,8 +755,6 @@ void BuildTileSet(const std::string& ways_file,
           // and directed edge is a link and not (link count=2 and driveforward count=1)
           //    OR node is a fork
           if (has_guide && !exits.empty() && !directededge.link()) {
-            if (w.way_id() == 60616056)
-              std::cout << "Duane**************" << std::endl;
             graphtile.AddSigns(idx, exits);
           } else if (!exits.empty() && (directededge.forwardaccess() & kAutoAccess) &&
                      ((directededge.link() &&
