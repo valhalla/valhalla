@@ -115,7 +115,6 @@ protected:
   std::shared_ptr<sif::DynamicCost> costing_;
 
   // Vector of edge labels (requires access by index).
-  std::vector<sif::EdgeLabel> edgelabels_;
   std::vector<sif::BDEdgeLabel> bdedgelabels_;
   std::vector<sif::MMEdgeLabel> mmedgelabels_;
 
@@ -247,11 +246,11 @@ protected:
   /**
    * Add edge(s) at each origin location to the adjacency list.
    * @param  graphreader       Graph tile reader.
-   * @param  origin_locations  Location information for origins.
+   * @param  locations  Location information for origins.
    * @param  costing           Dynamic costing.
    */
   void SetOriginLocations(baldr::GraphReader& graphreader,
-                          google::protobuf::RepeatedPtrField<valhalla::Location>& origin_locations,
+                          google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
                           const std::shared_ptr<sif::DynamicCost>& costing);
 
   /**
@@ -267,11 +266,11 @@ protected:
   /**
    * Add edge(s) at each destination location to the adjacency list.
    * @param  graphreader       Graph tile reader.
-   * @param  dest_locations    Location information for destinations.
+   * @param  locations    Location information for destinations.
    * @param  costing           Dynamic costing.
    */
   void SetDestinationLocations(baldr::GraphReader& graphreader,
-                               google::protobuf::RepeatedPtrField<valhalla::Location>& dest_locations,
+                               google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
                                const std::shared_ptr<sif::DynamicCost>& costing);
 
   /**

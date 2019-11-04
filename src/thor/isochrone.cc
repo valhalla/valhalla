@@ -58,7 +58,6 @@ Isochrone::~Isochrone() {
 void Isochrone::Clear() {
   // Clear the edge labels, edge status flags, and adjacency list
   // TODO - clear only the edge label set that was used?
-  edgelabels_.clear();
   bdedgelabels_.clear();
   mmedgelabels_.clear();
   adjacencylist_.reset();
@@ -164,9 +163,6 @@ void Isochrone::Initialize(label_container_t& labels, const uint32_t bucketsize)
   edgestatus_.clear();
 }
 template void
-Isochrone::Initialize<decltype(Isochrone::edgelabels_)>(decltype(Isochrone::edgelabels_)&,
-                                                        const uint32_t);
-template void
 Isochrone::Initialize<decltype(Isochrone::bdedgelabels_)>(decltype(Isochrone::bdedgelabels_)&,
                                                           const uint32_t);
 template void
@@ -249,7 +245,7 @@ void Isochrone::ExpandForward(GraphReader& graphreader,
   const NodeInfo* nodeinfo = tile->node(node);
   if (!from_transition) {
     uint32_t idx = pred.predecessor();
-    float secs0 = (idx == kInvalidLabel) ? 0 : edgelabels_[idx].cost().secs;
+    float secs0 = (idx == kInvalidLabel) ? 0 : bdedgelabels_[idx].cost().secs;
     UpdateIsoTile(pred, graphreader, tile->get_node_ll(node), secs0);
   }
   if (!costing_->Allowed(nodeinfo)) {
@@ -287,14 +283,14 @@ void Isochrone::ExpandForward(GraphReader& graphreader,
       // With date time we check time dependent restrictions and access as well as get
       // traffic based speed if it exists
       if (!costing_->Allowed(directededge, pred, tile, edgeid, localtime, nodeinfo->timezone()) ||
-          costing_->Restricted(directededge, pred, edgelabels_, tile, edgeid, true, localtime,
+          costing_->Restricted(directededge, pred, bdedgelabels_, tile, edgeid, true, localtime,
                                nodeinfo->timezone())) {
         continue;
       }
       speed = tile->GetSpeed(directededge, edgeid, seconds_of_week);
     } else {
       if (!costing_->Allowed(directededge, pred, tile, edgeid, 0, 0) ||
-          costing_->Restricted(directededge, pred, edgelabels_, tile, edgeid, true)) {
+          costing_->Restricted(directededge, pred, bdedgelabels_, tile, edgeid, true)) {
         continue;
       }
       speed = tile->GetSpeed(directededge);
@@ -308,7 +304,7 @@ void Isochrone::ExpandForward(GraphReader& graphreader,
     // less cost the predecessor is updated and the sort cost is decremented
     // by the difference in real cost (A* heuristic doesn't change)
     if (es->set() == EdgeSet::kTemporary) {
-      EdgeLabel& lab = edgelabels_[es->index()];
+      EdgeLabel& lab = bdedgelabels_[es->index()];
       if (newcost.cost < lab.cost().cost) {
         float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
         adjacencylist_->decrease(es->index(), newsortcost);
@@ -317,10 +313,16 @@ void Isochrone::ExpandForward(GraphReader& graphreader,
       continue;
     }
 
+    // Only needed if you want to connect with a reverse path
+    const GraphTile* t2 = tile;
+    GraphId oppedgeid = graphreader.GetOpposingEdgeId(edgeid, t2);
+
     // Add edge label, add to the adjacency list and set edge status
-    uint32_t idx = edgelabels_.size();
+    uint32_t idx = bdedgelabels_.size();
     *es = {EdgeSet::kTemporary, idx};
-    edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, 0.0f, mode_, 0);
+    bdedgelabels_.emplace_back(pred_idx, edgeid, oppedgeid, directededge, newcost, mode_, Cost{}, 0.f,
+                               false);
+    // kInvalidLabel, edgeid, opp_edge_id, directededge, cost, mode_, Cost{}, d, false
     adjacencylist_->add(idx);
   }
 
@@ -351,13 +353,13 @@ Isochrone::Compute(google::protobuf::RepeatedPtrField<valhalla::Location>& origi
   access_mode_ = costing_->access_mode();
 
   // Prepare for a graph traversal
-  Initialize(edgelabels_, costing_->UnitSize());
+  Initialize(bdedgelabels_, costing_->UnitSize());
   SetOriginLocations(graphreader, origin_locations, costing_);
 
   // Check if date_time is set on the origin location. Set the seconds_of_week if it is set
   uint64_t start_time;
   uint32_t start_seconds_of_week;
-  auto node_id = edgelabels_.empty() ? GraphId{} : edgelabels_[0].endnode();
+  auto node_id = bdedgelabels_.empty() ? GraphId{} : bdedgelabels_[0].endnode();
   std::tie(start_time, start_seconds_of_week) = SetTime(origin_locations, node_id, graphreader);
 
   // Compute the isotile
@@ -371,7 +373,7 @@ Isochrone::Compute(google::protobuf::RepeatedPtrField<valhalla::Location>& origi
     }
 
     // Copy the EdgeLabel for use in costing and settle the edge.
-    EdgeLabel pred = edgelabels_[predindex];
+    EdgeLabel pred = bdedgelabels_[predindex];
     edgestatus_.Update(pred.edgeid(), EdgeSet::kPermanent);
 
     // Update local time and seconds from beginning of the week
@@ -444,12 +446,11 @@ void Isochrone::ExpandReverse(GraphReader& graphreader,
     }
 
     // Get end node tile, opposing edge Id, and opposing directed edge.
-    const GraphTile* t2 =
-        directededge->leaves_tile() ? graphreader.GetGraphTile(directededge->endnode()) : tile;
+    const GraphTile* t2 = tile;
+    auto oppedge = graphreader.GetOpposingEdgeId(edgeid, t2);
     if (t2 == nullptr) {
       continue;
     }
-    GraphId oppedge = t2->GetOpposingEdgeId(directededge);
     const DirectedEdge* opp_edge = t2->directededge(oppedge);
 
     // Check if the edge is allowed or if a restriction occurs. Get the edge speed.
@@ -1031,25 +1032,24 @@ void Isochrone::UpdateIsoTile(const EdgeLabel& pred,
 }
 
 // Add edge(s) at each origin to the adjacency list
-void Isochrone::SetOriginLocations(
-    GraphReader& graphreader,
-    google::protobuf::RepeatedPtrField<valhalla::Location>& origin_locations,
-    const std::shared_ptr<DynamicCost>& costing) {
+void Isochrone::SetOriginLocations(GraphReader& graphreader,
+                                   google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
+                                   const std::shared_ptr<DynamicCost>& costing) {
   // Add edges for each location to the adjacency list
-  for (auto& origin : origin_locations) {
-    PointLL ll(origin.ll().lng(), origin.ll().lat());
-    // Set time at the origin lat, lon grid to 0
+  for (auto& location : locations) {
+    PointLL ll(location.ll().lng(), location.ll().lat());
+    // Set time at the lat, lon grid to 0
     isotile_->Set(ll, 0);
 
     // Only skip inbound edges if we have other options
     bool has_other_edges = false;
-    std::for_each(origin.path_edges().begin(), origin.path_edges().end(),
+    std::for_each(location.path_edges().begin(), location.path_edges().end(),
                   [&has_other_edges](const valhalla::Location::PathEdge& e) {
                     has_other_edges = has_other_edges || !e.end_node();
                   });
 
     // Iterate through edges and add to adjacency list
-    for (const auto& edge : (origin.path_edges())) {
+    for (const auto& edge : (location.path_edges())) {
       // If origin is at a node - skip any inbound edge (dist = 1)
       if (has_other_edges && edge.end_node()) {
         continue;
@@ -1065,12 +1065,13 @@ void Isochrone::SetOriginLocations(
       const GraphTile* tile = graphreader.GetGraphTile(edgeid);
       const DirectedEdge* directededge = tile->directededge(edgeid);
 
-      // Get the tile at the end node. Skip if tile not found as we won't be
-      // able to expand from this origin edge.
-      const GraphTile* endtile = graphreader.GetGraphTile(directededge->endnode());
-      if (endtile == nullptr) {
+      // Get the opposing directed edge, continue if we cannot get it
+      const GraphTile* opp_tile = nullptr;
+      GraphId opp_edge_id = graphreader.GetOpposingEdgeId(edgeid, opp_tile);
+      if (!opp_edge_id.Is_Valid()) {
         continue;
       }
+      const DirectedEdge* opp_dir_edge = opp_tile->directededge(edgeid);
 
       // Get cost
       Cost cost = costing->EdgeCost(directededge, tile->GetSpeed(directededge)) *
@@ -1084,16 +1085,83 @@ void Isochrone::SetOriginLocations(
 
       // Construct the edge label. Set the predecessor edge index to invalid
       // to indicate the origin of the path.
-      uint32_t idx = edgelabels_.size();
+      uint32_t idx = bdedgelabels_.size();
       uint32_t d = static_cast<uint32_t>(directededge->length() * (1.0f - edge.percent_along()));
-      EdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost, cost.cost, 0.0f, mode_, d);
+      bdedgelabels_.emplace_back(kInvalidLabel, edgeid, opp_edge_id, directededge, cost, mode_,
+                                 Cost{}, d, false);
       // Set the origin flag
-      edge_label.set_origin();
+      bdedgelabels_.back().set_origin();
 
       // Add EdgeLabel to the adjacency list
-      edgelabels_.push_back(std::move(edge_label));
       adjacencylist_->add(idx);
       edgestatus_.Set(edgeid, EdgeSet::kTemporary, idx, tile);
+    }
+  }
+}
+
+// Add destination edges to the reverse path adjacency list.
+void Isochrone::SetDestinationLocations(
+    GraphReader& graphreader,
+    google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
+    const std::shared_ptr<DynamicCost>& costing) {
+  // Add edges for each location to the adjacency list
+  for (auto& location : locations) {
+    PointLL ll(location.ll().lng(), location.ll().lat());
+    // Set time at the lat, lon grid to 0
+    isotile_->Set(ll, 0);
+
+    // Only skip outbound edges if we have other options
+    bool has_other_edges = false;
+    std::for_each(location.path_edges().begin(), location.path_edges().end(),
+                  [&has_other_edges](const valhalla::Location::PathEdge& e) {
+                    has_other_edges = has_other_edges || !e.begin_node();
+                  });
+
+    // Iterate through edges and add to adjacency list
+    for (const auto& edge : (location.path_edges())) {
+      // If the destination is at a node, skip any outbound edges (so any
+      // opposing inbound edges are not considered)
+      if (has_other_edges && edge.begin_node()) {
+        continue;
+      }
+
+      // Disallow any user avoid edges if the avoid location is ahead of the origin along the edge
+      GraphId edgeid(edge.graph_id());
+      if (costing_->AvoidAsDestinationEdge(edgeid, edge.percent_along())) {
+        continue;
+      }
+
+      // Get the directed edge
+      const GraphTile* tile = graphreader.GetGraphTile(edgeid);
+      const DirectedEdge* directededge = tile->directededge(edgeid);
+
+      // Get the opposing directed edge, continue if we cannot get it
+      const GraphTile* opp_tile = nullptr;
+      GraphId opp_edge_id = graphreader.GetOpposingEdgeId(edgeid, opp_tile);
+      if (!opp_edge_id.Is_Valid()) {
+        continue;
+      }
+      const DirectedEdge* opp_dir_edge = opp_tile->directededge(edgeid);
+
+      // Get the cost
+      Cost cost =
+          costing->EdgeCost(directededge, tile->GetSpeed(directededge)) * edge.percent_along();
+
+      // We need to penalize this location based on its score (distance in meters from input)
+      // We assume the slowest speed you could travel to cover that distance to start/end the route
+      // TODO: high edge scores cause issues as there is code to limit cost so
+      // that large penalties (e.g., ferries) are excluded.
+      cost.cost += edge.distance() * 0.005f;
+
+      // Add EdgeLabel to the adjacency list. Set the predecessor edge index
+      // to invalid to indicate the origin of the path. Make sure the opposing
+      // edge (edgeid) is set.
+      uint32_t idx = bdedgelabels_.size();
+      uint32_t d = static_cast<uint32_t>(directededge->length() * edge.percent_along());
+      bdedgelabels_.emplace_back(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, mode_,
+                                 Cost{}, d, false);
+      adjacencylist_->add(idx);
+      edgestatus_.Set(opp_edge_id, EdgeSet::kTemporary, idx, graphreader.GetGraphTile(opp_edge_id));
     }
   }
 }
@@ -1163,70 +1231,6 @@ void Isochrone::SetOriginLocationsMM(
 
       // Add EdgeLabel to the adjacency list
       mmedgelabels_.push_back(std::move(edge_label));
-      adjacencylist_->add(idx);
-      edgestatus_.Set(edgeid, EdgeSet::kTemporary, idx, tile);
-    }
-  }
-}
-
-// Add destination edges to the reverse path adjacency list.
-void Isochrone::SetDestinationLocations(
-    GraphReader& graphreader,
-    google::protobuf::RepeatedPtrField<valhalla::Location>& dest_locations,
-    const std::shared_ptr<DynamicCost>& costing) {
-  // Add edges for each location to the adjacency list
-  for (auto& dest : dest_locations) {
-    PointLL ll(dest.ll().lng(), dest.ll().lat());
-    // Set time at the origin lat, lon grid to 0
-    isotile_->Set(ll, 0);
-
-    // Only skip outbound edges if we have other options
-    bool has_other_edges = false;
-    std::for_each(dest.path_edges().begin(), dest.path_edges().end(),
-                  [&has_other_edges](const valhalla::Location::PathEdge& e) {
-                    has_other_edges = has_other_edges || !e.begin_node();
-                  });
-
-    // Iterate through edges and add to adjacency list
-    for (const auto& edge : (dest.path_edges())) {
-      // If the destination is at a node, skip any outbound edges (so any
-      // opposing inbound edges are not considered)
-      if (has_other_edges && edge.begin_node()) {
-        continue;
-      }
-
-      // Get the directed edge
-      GraphId edgeid(edge.graph_id());
-      const GraphTile* tile = graphreader.GetGraphTile(edgeid);
-      const DirectedEdge* directededge = tile->directededge(edgeid);
-
-      // Get the opposing directed edge, continue if we cannot get it
-      GraphId opp_edge_id = graphreader.GetOpposingEdgeId(edgeid);
-      if (!opp_edge_id.Is_Valid()) {
-        continue;
-      }
-      const DirectedEdge* opp_dir_edge = graphreader.GetOpposingEdge(edgeid);
-
-      // Get cost and sort cost (based on distance from endnode of this edge
-      // to the origin. Make sure we use the reverse A* heuristic. Note that
-      // the end node of the opposing edge is in the same tile as the directed
-      // edge.  Use the directed edge for costing, as this is the forward
-      // direction along the destination edge.
-      Cost cost =
-          costing->EdgeCost(directededge, tile->GetSpeed(directededge)) * edge.percent_along();
-
-      // We need to penalize this location based on its score (distance in meters from input)
-      // We assume the slowest speed you could travel to cover that distance to start/end the route
-      // TODO: assumes 1m/s which is a maximum penalty this could vary per costing model
-      cost.cost += edge.distance();
-
-      // Add EdgeLabel to the adjacency list. Set the predecessor edge index
-      // to invalid to indicate the origin of the path. Make sure the opposing
-      // edge (edgeid) is set.
-      uint32_t idx = bdedgelabels_.size();
-      edgestatus_.Set(opp_edge_id, EdgeSet::kTemporary, idx, graphreader.GetGraphTile(opp_edge_id));
-      bdedgelabels_.emplace_back(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, cost.cost,
-                                 0.0f, mode_, Cost{}, false);
       adjacencylist_->add(idx);
     }
   }
