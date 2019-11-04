@@ -214,7 +214,7 @@ void DirectionsBuilder::PopulateDirectionsLeg(const Options& options,
     }
 
     // Populate sign information
-    if (maneuver.HasExitSign()) {
+    if (maneuver.HasExitSign() || maneuver.HasGuideSign()) {
       auto* trip_sign = trip_maneuver->mutable_sign();
 
       // Process exit number info
@@ -254,6 +254,26 @@ void DirectionsBuilder::PopulateDirectionsLeg(const Options& options,
           trip_exit_name->set_text(exit_name.text());
           trip_exit_name->set_is_route_number(exit_name.is_route_number());
           trip_exit_name->set_consecutive_count(exit_name.consecutive_count());
+        }
+      }
+
+      // Process guide branch info
+      if (maneuver.HasGuideBranchSign()) {
+        for (const auto& guide_branch : maneuver.signs().guide_branch_list()) {
+          auto* trip_guide_onto_street = trip_sign->mutable_guide_onto_streets()->Add();
+          trip_guide_onto_street->set_text(guide_branch.text());
+          trip_guide_onto_street->set_is_route_number(guide_branch.is_route_number());
+          trip_guide_onto_street->set_consecutive_count(guide_branch.consecutive_count());
+        }
+      }
+
+      // Process guide toward info
+      if (maneuver.HasGuideTowardSign()) {
+        for (const auto& guide_toward : maneuver.signs().guide_toward_list()) {
+          auto* trip_guide_toward_location = trip_sign->mutable_guide_toward_locations()->Add();
+          trip_guide_toward_location->set_text(guide_toward.text());
+          trip_guide_toward_location->set_is_route_number(guide_toward.is_route_number());
+          trip_guide_toward_location->set_consecutive_count(guide_toward.consecutive_count());
         }
       }
     }

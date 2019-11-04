@@ -37,28 +37,6 @@ namespace {
 
 constexpr float kShortForkThreshold = 0.05f; // Kilometers
 
-void SortExitSignList(std::vector<Sign>* signs) {
-  // Sort signs by descending consecutive count order
-  std::sort(signs->begin(), signs->end(),
-            [](Sign a, Sign b) { return b.consecutive_count() < a.consecutive_count(); });
-}
-
-void CountAndSortExitSignList(std::vector<Sign>* prev_signs, std::vector<Sign>* curr_signs) {
-  // Increment count for consecutive exit signs
-  for (Sign& curr_sign : *curr_signs) {
-    for (Sign& prev_sign : *prev_signs) {
-      if (curr_sign.text() == prev_sign.text()) {
-        curr_sign.set_consecutive_count(curr_sign.consecutive_count() + 1);
-        prev_sign.set_consecutive_count(curr_sign.consecutive_count());
-      }
-    }
-  }
-
-  // Sort the previous and current exit signs by descending consecutive count
-  SortExitSignList(prev_signs);
-  SortExitSignList(curr_signs);
-}
-
 } // namespace
 
 namespace valhalla {
@@ -554,6 +532,11 @@ ManeuversBuilder::CombineInternalManeuver(std::list<Maneuver>& maneuvers,
   // Set begin shape index
   next_man->set_begin_shape_index(curr_man->begin_shape_index());
 
+  // Set signs, if needed
+  if (curr_man->HasSigns() && !next_man->HasSigns()) {
+    *(next_man->mutable_signs()) = curr_man->signs();
+  }
+
   if (start_man) {
     next_man->set_type(DirectionsLeg_Maneuver_Type_kStart);
   } else {
@@ -599,6 +582,11 @@ ManeuversBuilder::CombineTurnChannelManeuver(std::list<Maneuver>& maneuvers,
 
   // Set begin shape index
   next_man->set_begin_shape_index(curr_man->begin_shape_index());
+
+  // Set signs, if needed
+  if (curr_man->HasSigns() && !next_man->HasSigns()) {
+    *(next_man->mutable_signs()) = curr_man->signs();
+  }
 
   if (start_man) {
     next_man->set_type(DirectionsLeg_Maneuver_Type_kStart);
@@ -694,26 +682,26 @@ void ManeuversBuilder::CountAndSortExitSigns(std::list<Maneuver>& maneuvers) {
           }
         }
       }
-      SortExitSignList(prev_man->mutable_signs()->mutable_exit_number_list());
+      Signs::Sort(prev_man->mutable_signs()->mutable_exit_number_list());
     }
     // Increase the consecutive count of signs that match their neighbor
     else if (prev_man->HasExitSign() && curr_man->HasExitSign()) {
 
       // Process the exit number signs
-      CountAndSortExitSignList(prev_man->mutable_signs()->mutable_exit_number_list(),
-                               curr_man->mutable_signs()->mutable_exit_number_list());
+      Signs::CountAndSort(prev_man->mutable_signs()->mutable_exit_number_list(),
+                          curr_man->mutable_signs()->mutable_exit_number_list());
 
       // Process the exit branch signs
-      CountAndSortExitSignList(prev_man->mutable_signs()->mutable_exit_branch_list(),
-                               curr_man->mutable_signs()->mutable_exit_branch_list());
+      Signs::CountAndSort(prev_man->mutable_signs()->mutable_exit_branch_list(),
+                          curr_man->mutable_signs()->mutable_exit_branch_list());
 
       // Process the exit toward signs
-      CountAndSortExitSignList(prev_man->mutable_signs()->mutable_exit_toward_list(),
-                               curr_man->mutable_signs()->mutable_exit_toward_list());
+      Signs::CountAndSort(prev_man->mutable_signs()->mutable_exit_toward_list(),
+                          curr_man->mutable_signs()->mutable_exit_toward_list());
 
       // Process the exit name signs
-      CountAndSortExitSignList(prev_man->mutable_signs()->mutable_exit_name_list(),
-                               curr_man->mutable_signs()->mutable_exit_name_list());
+      Signs::CountAndSort(prev_man->mutable_signs()->mutable_exit_name_list(),
+                          curr_man->mutable_signs()->mutable_exit_name_list());
     }
 
     // Update iterators
@@ -1127,6 +1115,23 @@ void ManeuversBuilder::FinalizeManeuver(Maneuver& maneuver, int node_index) {
   maneuver.set_verbal_formatter(
       VerbalTextFormatterFactory::Create(trip_path_->GetCountryCode(node_index),
                                          trip_path_->GetStateCode(node_index)));
+
+  // Guide signs
+  if (curr_edge->has_sign()) {
+    // Guide branch
+    for (const auto& guide_onto_street : curr_edge->sign().guide_onto_streets()) {
+      maneuver.mutable_signs()
+          ->mutable_guide_branch_list()
+          ->emplace_back(guide_onto_street.text(), guide_onto_street.is_route_number());
+    }
+
+    // Guide toward
+    for (const auto& guide_toward_location : curr_edge->sign().guide_toward_locations()) {
+      maneuver.mutable_signs()
+          ->mutable_guide_toward_list()
+          ->emplace_back(guide_toward_location.text(), guide_toward_location.is_route_number());
+    }
+  }
 
   // Set the maneuver type
   SetManeuverType(maneuver);
@@ -1683,7 +1688,7 @@ bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver, int node_i
   }
 
   /////////////////////////////////////////////////////////////////////////////
-  // Process signs
+  // Process exit signs
   if (maneuver.HasExitSign()) {
     return false;
   }
