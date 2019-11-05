@@ -163,7 +163,6 @@ public:
   bool RemoveStateId(const StateId& stateid) override;
   StateId SearchWinner(StateId::Time time) override;
   StateId Predecessor(const StateId& stateid) const override;
-  using IViterbiSearch::AccumulatedCost;
   double AccumulatedCost(const StateId& stateid) const override;
 
 private:

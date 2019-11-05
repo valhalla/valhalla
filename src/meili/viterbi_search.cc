@@ -108,7 +108,7 @@ void StateIdIterator::ValidateStateId(const StateId::Time time, const StateId& s
 IViterbiSearch::IViterbiSearch(const IEmissionCostModel& emission_cost_model,
                                const ITransitionCostModel& transition_cost_model)
     : emission_cost_model_(emission_cost_model), transition_cost_model_(transition_cost_model),
-      path_end_(stateid_iterator(*this)) {
+      path_end_(*this) {
 }
 
 IViterbiSearch::IViterbiSearch()
