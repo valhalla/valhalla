@@ -1,10 +1,53 @@
+#include "meili/viterbi_search.h"
+
 #include <algorithm>
 #include <string>
 
-#include "meili/viterbi_search.h"
-
 namespace valhalla {
 namespace meili {
+
+StateLabel::StateLabel(double costsofar, const StateId& stateid, const StateId& predecessor)
+    : costsofar_(costsofar), stateid_(stateid), predecessor_(predecessor) {
+  if (!stateid.IsValid()) {
+    throw std::invalid_argument("expect valid stateid");
+  }
+}
+
+const StateId StateLabel::id() const {
+  return stateid_;
+}
+double StateLabel::costsofar() const {
+  return costsofar_;
+}
+const StateId StateLabel::stateid() const {
+  return stateid_;
+}
+const StateId StateLabel::predecessor() const {
+  return predecessor_;
+}
+// Required by SPQueue
+bool StateLabel::operator<(const StateLabel& rhs) const {
+  return costsofar_ < rhs.costsofar_;
+}
+// Required by SPQueue
+bool StateLabel::operator>(const StateLabel& rhs) const {
+  return costsofar_ > rhs.costsofar_;
+}
+// Required by SPQueue
+bool StateLabel::operator==(const StateLabel& rhs) const {
+  return costsofar_ == rhs.costsofar_;
+}
+
+StateIdIterator::StateIdIterator(IViterbiSearch& vs,
+                                 StateId::Time time,
+                                 const StateId& stateid,
+                                 bool allow_breaks)
+    : vs_(vs), time_(time), stateid_(stateid), allow_breaks_(allow_breaks) {
+  ValidateStateId(time, stateid);
+}
+
+StateIdIterator::StateIdIterator(IViterbiSearch& vs) : StateIdIterator(vs, kInvalidTime, StateId()) {
+}
 
 void StateIdIterator::Next() {
   ValidateStateId(time_, stateid_);
@@ -26,6 +69,29 @@ void StateIdIterator::Next() {
   }
 }
 
+StateIdIterator StateIdIterator::operator++(int) {
+  auto copy = *this;
+  Next();
+  return copy;
+}
+// Prefix increment
+StateIdIterator StateIdIterator::operator++() {
+  Next();
+  return *this;
+}
+
+bool StateIdIterator::operator==(const StateIdIterator& other) const {
+  return &vs_ == &(other.vs_) && time_ == other.time_ && stateid_ == other.stateid_;
+}
+
+bool StateIdIterator::operator!=(const StateIdIterator& other) const {
+  return !(*this == other);
+}
+
+const StateId& StateIdIterator::operator*() const {
+  return stateid_;
+}
+
 void StateIdIterator::ValidateStateId(const StateId::Time time, const StateId& stateid) {
   if (!stateid.IsValid()) {
     return;
@@ -34,6 +100,77 @@ void StateIdIterator::ValidateStateId(const StateId::Time time, const StateId& s
   } else if (stateid.time() != time) {
     throw std::runtime_error("time is not matched");
   }
+}
+
+IViterbiSearch::IViterbiSearch(const IEmissionCostModel& emission_cost_model,
+                               const ITransitionCostModel& transition_cost_model)
+    : emission_cost_model_(emission_cost_model), transition_cost_model_(transition_cost_model),
+      path_end_(stateid_iterator(*this)) {
+}
+
+IViterbiSearch::IViterbiSearch()
+    : IViterbiSearch(DefaultEmissionCostModel, DefaultTransitionCostModel) {
+}
+
+IViterbiSearch::~IViterbiSearch() {
+  Clear();
+};
+
+void IViterbiSearch::Clear() {
+  added_states_.clear();
+}
+
+bool IViterbiSearch::AddStateId(const StateId& stateid) {
+  return added_states_.insert(stateid).second;
+}
+
+bool IViterbiSearch::RemoveStateId(const StateId& stateid) {
+  return 0 < added_states_.erase(stateid);
+}
+
+bool IViterbiSearch::HasStateId(const StateId& stateid) const {
+  return added_states_.find(stateid) != added_states_.end();
+}
+
+StateIdIterator IViterbiSearch::SearchPath(StateId::Time time, bool allow_breaks) {
+  return stateid_iterator(*this, time, SearchWinner(time), allow_breaks);
+}
+
+StateIdIterator IViterbiSearch::PathEnd() const {
+  return path_end_;
+}
+
+const IEmissionCostModel& IViterbiSearch::emission_cost_model() const {
+  return emission_cost_model_;
+}
+
+void IViterbiSearch::set_emission_cost_model(const IEmissionCostModel cost_model) {
+  emission_cost_model_ = cost_model;
+}
+
+const ITransitionCostModel& IViterbiSearch::transition_cost_model() const {
+  return transition_cost_model_;
+}
+
+void IViterbiSearch::set_transition_cost_model(const ITransitionCostModel cost_model) {
+  transition_cost_model_ = cost_model;
+}
+
+float IViterbiSearch::TransitionCost(const StateId& lhs, const StateId& rhs) const {
+  return transition_cost_model_(lhs, rhs);
+}
+
+float IViterbiSearch::EmissionCost(const StateId& stateid) const {
+  return emission_cost_model_(stateid);
+}
+
+constexpr double
+IViterbiSearch::CostSofar(double prev_costsofar, float transition_cost, float emission_cost) {
+  return prev_costsofar + transition_cost + emission_cost;
+}
+
+template <bool Maximize> NaiveViterbiSearch<Maximize>::~NaiveViterbiSearch() {
+  Clear();
 }
 
 template <bool Maximize> void NaiveViterbiSearch<Maximize>::Clear() {
@@ -73,7 +210,7 @@ template <bool Maximize> bool NaiveViterbiSearch<Maximize>::RemoveStateId(const 
 }
 
 template <bool Maximize>
-inline double NaiveViterbiSearch<Maximize>::AccumulatedCost(const StateId& stateid) const {
+double NaiveViterbiSearch<Maximize>::AccumulatedCost(const StateId& stateid) const {
   return stateid.IsValid() ? GetLabel(stateid).costsofar() : kInvalidCost;
 }
 
@@ -114,7 +251,7 @@ template <bool Maximize> StateId NaiveViterbiSearch<Maximize>::SearchWinner(Stat
 }
 
 template <bool Maximize>
-inline StateId NaiveViterbiSearch<Maximize>::Predecessor(const StateId& stateid) const {
+StateId NaiveViterbiSearch<Maximize>::Predecessor(const StateId& stateid) const {
   return stateid.IsValid() ? GetLabel(stateid).predecessor() : StateId();
 }
 
@@ -204,6 +341,18 @@ const StateLabel& NaiveViterbiSearch<Maximize>::GetLabel(const StateId& stateid)
 
 template class NaiveViterbiSearch<true>;
 template class NaiveViterbiSearch<false>;
+
+ViterbiSearch::ViterbiSearch(const IEmissionCostModel& emission_cost_model,
+                             const ITransitionCostModel& transition_cost_model)
+    : IViterbiSearch(emission_cost_model, transition_cost_model) {
+}
+
+ViterbiSearch::ViterbiSearch() : ViterbiSearch(DefaultEmissionCostModel, DefaultTransitionCostModel) {
+}
+
+ViterbiSearch::~ViterbiSearch() {
+  Clear();
+}
 
 bool ViterbiSearch::AddStateId(const StateId& stateid) {
   if (!IViterbiSearch::AddStateId(stateid)) {
@@ -451,6 +600,10 @@ StateId::Time ViterbiSearch::IterativeSearch(StateId::Time target, bool request_
   // to the column at search_time + 1
 
   return searched_time;
+}
+
+constexpr bool ViterbiSearch::IsInvalidCost(double cost) {
+  return cost < 0.f;
 }
 
 } // namespace meili
