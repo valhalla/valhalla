@@ -16,12 +16,15 @@ StateLabel::StateLabel(double costsofar, const StateId& stateid, const StateId& 
 const StateId StateLabel::id() const {
   return stateid_;
 }
+
 double StateLabel::costsofar() const {
   return costsofar_;
 }
+
 const StateId StateLabel::stateid() const {
   return stateid_;
 }
+
 const StateId StateLabel::predecessor() const {
   return predecessor_;
 }
@@ -594,7 +597,6 @@ StateId::Time ViterbiSearch::IterativeSearch(StateId::Time target, bool request_
   }
 
   // Postcondition: searched_time == winner_.size() - 1 && search_time <= target
-
   // If search_time < target it implies that there is a breakage,
   // i.e. unable to find any connection from the column at search_time
   // to the column at search_time + 1
