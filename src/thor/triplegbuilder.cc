@@ -1344,7 +1344,7 @@ TripLeg_Edge* TripLegBuilder::AddTripEdge(const AttributesController& controller
           }
           case Sign::Type::kGuideBranch: {
             if (controller.attributes.at(kEdgeSignGuideBranch)) {
-              auto* trip_sign_guide_onto_street = trip_sign->mutable_exit_onto_streets()->Add();
+              auto* trip_sign_guide_onto_street = trip_sign->mutable_guide_onto_streets()->Add();
               trip_sign_guide_onto_street->set_text(sign.text());
               trip_sign_guide_onto_street->set_is_route_number(sign.is_route_num());
             }
@@ -1353,7 +1353,7 @@ TripLeg_Edge* TripLegBuilder::AddTripEdge(const AttributesController& controller
           case Sign::Type::kGuideToward: {
             if (controller.attributes.at(kEdgeSignGuideToward)) {
               auto* trip_sign_guide_toward_location =
-                  trip_sign->mutable_exit_toward_locations()->Add();
+                  trip_sign->mutable_guide_toward_locations()->Add();
               trip_sign_guide_toward_location->set_text(sign.text());
               trip_sign_guide_toward_location->set_is_route_number(sign.is_route_num());
             }
