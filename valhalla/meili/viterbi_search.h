@@ -112,8 +112,8 @@ protected:
   constexpr static double
   CostSofar(double prev_costsofar, float transition_cost, float emission_cost);
 
-  std::vector<std::vector<StateId>> states_;
-  std::vector<StateId> winner_;
+  std::vector<std::vector<StateId>> states_by_time;
+  std::vector<StateId> winner_by_time;
 
 private:
   std::unordered_set<StateId> added_states_;
@@ -172,7 +172,7 @@ private:
   StateId::Time IterativeSearch(StateId::Time target, bool request_new_start);
   constexpr static bool IsInvalidCost(double cost);
 
-  std::vector<std::vector<StateId>> unreached_states_;
+  std::vector<std::vector<StateId>> unreached_states_by_time;
   std::unordered_map<StateId, StateLabel> scanned_labels_;
   SPQueue<StateLabel> queue_;
   StateId::Time earliest_time_{0};

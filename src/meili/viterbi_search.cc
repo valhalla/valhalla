@@ -178,13 +178,13 @@ template <bool Maximize> NaiveViterbiSearch<Maximize>::~NaiveViterbiSearch() {
 
 template <bool Maximize> void NaiveViterbiSearch<Maximize>::Clear() {
   IViterbiSearch::Clear();
-  states_.clear();
+  states_by_time.clear();
   ClearSearch();
 }
 
 template <bool Maximize> void NaiveViterbiSearch<Maximize>::ClearSearch() {
   history_.clear();
-  winner_.clear();
+  winner_by_time.clear();
 }
 
 template <bool Maximize> bool NaiveViterbiSearch<Maximize>::AddStateId(const StateId& stateid) {
@@ -192,11 +192,11 @@ template <bool Maximize> bool NaiveViterbiSearch<Maximize>::AddStateId(const Sta
     return false;
   }
 
-  if (states_.size() <= stateid.time()) {
-    states_.resize(stateid.time() + 1);
+  if (states_by_time.size() <= stateid.time()) {
+    states_by_time.resize(stateid.time() + 1);
   }
 
-  states_[stateid.time()].push_back(stateid);
+  states_by_time[stateid.time()].push_back(stateid);
 
   return true;
 }
@@ -207,7 +207,7 @@ template <bool Maximize> bool NaiveViterbiSearch<Maximize>::RemoveStateId(const 
     return false;
   }
   // remove it from columns
-  auto& column = states_[stateid.time()];
+  auto& column = states_by_time[stateid.time()];
   const auto it = std::find(column.begin(), column.end(), stateid);
   if (it == column.end()) {
     throw std::logic_error("the state must exist in the column");
@@ -223,17 +223,17 @@ double NaiveViterbiSearch<Maximize>::AccumulatedCost(const StateId& stateid) con
 }
 
 template <bool Maximize> StateId NaiveViterbiSearch<Maximize>::SearchWinner(StateId::Time target) {
-  if (states_.size() <= target) {
+  if (states_by_time.size() <= target) {
     return {};
   }
 
   // Use the cache
-  if (target < winner_.size()) {
-    return winner_[target];
+  if (target < winner_by_time.size()) {
+    return winner_by_time[target];
   }
 
-  for (StateId::Time time = winner_.size(); time <= target; ++time) {
-    const auto& column = states_[time];
+  for (StateId::Time time = winner_by_time.size(); time <= target; ++time) {
+    const auto& column = states_by_time[time];
     std::vector<StateLabel> labels;
 
     // Update labels
@@ -251,11 +251,11 @@ template <bool Maximize> StateId NaiveViterbiSearch<Maximize>::SearchWinner(Stat
       labels = InitLabels(column, true);
       winner = FindWinner(labels);
     }
-    winner_.push_back(winner);
+    winner_by_time.push_back(winner);
     history_.push_back(move(labels));
   }
 
-  return winner_[target];
+  return winner_by_time[target];
 }
 
 template <bool Maximize>
@@ -367,15 +367,15 @@ bool ViterbiSearch::AddStateId(const StateId& stateid) {
     return false;
   }
 
-  if (states_.size() <= stateid.time()) {
-    states_.resize(stateid.time() + 1);
+  if (states_by_time.size() <= stateid.time()) {
+    states_by_time.resize(stateid.time() + 1);
   }
-  states_[stateid.time()].push_back(stateid);
+  states_by_time[stateid.time()].push_back(stateid);
 
-  if (unreached_states_.size() <= stateid.time()) {
-    unreached_states_.resize(stateid.time() + 1);
+  if (unreached_states_by_time.size() <= stateid.time()) {
+    unreached_states_by_time.resize(stateid.time() + 1);
   }
-  unreached_states_[stateid.time()].push_back(stateid);
+  unreached_states_by_time[stateid.time()].push_back(stateid);
 
   return true;
 }
@@ -386,7 +386,7 @@ bool ViterbiSearch::RemoveStateId(const StateId& stateid) {
     return false;
   }
   // remove it from columns
-  auto& column = states_[stateid.time()];
+  auto& column = states_by_time[stateid.time()];
   const auto it = std::find(column.begin(), column.end(), stateid);
   if (it == column.end()) {
     throw std::logic_error("the state must exist in the column");
@@ -397,15 +397,15 @@ bool ViterbiSearch::RemoveStateId(const StateId& stateid) {
 
 StateId ViterbiSearch::SearchWinner(StateId::Time time) {
   // Use the cache
-  if (time < winner_.size()) {
-    return winner_[time];
+  if (time < winner_by_time.size()) {
+    return winner_by_time[time];
   }
 
-  if (unreached_states_.empty()) {
+  if (unreached_states_by_time.empty()) {
     return {};
   }
 
-  const StateId::Time max_allowed_time = unreached_states_.size() - 1;
+  const StateId::Time max_allowed_time = unreached_states_by_time.size() - 1;
   const auto target = std::min(time, max_allowed_time);
 
   // Continue last search if possible
@@ -415,11 +415,12 @@ StateId ViterbiSearch::SearchWinner(StateId::Time time) {
     // searched_time < target implies that there was a breakage during
     // last search, so we request a new start
     searched_time = IterativeSearch(target, true);
-    // Guarantee that that winner_.size() is increasing and searched_time == winner_.size() - 1
+    // Guarantee that that winner_by_time.size() is increasing and searched_time ==
+    // winner_by_time.size() - 1
   }
 
-  if (time < winner_.size()) {
-    return winner_[time];
+  if (time < winner_by_time.size()) {
+    return winner_by_time[time];
   }
 
   return {};
@@ -445,7 +446,7 @@ double ViterbiSearch::AccumulatedCost(const StateId& stateid) const {
 
 void ViterbiSearch::Clear() {
   IViterbiSearch::Clear();
-  states_.clear();
+  states_by_time.clear();
   ClearSearch();
 }
 
@@ -453,8 +454,8 @@ void ViterbiSearch::ClearSearch() {
   earliest_time_ = 0;
   queue_.clear();
   scanned_labels_.clear();
-  winner_.clear();
-  unreached_states_ = states_;
+  winner_by_time.clear();
+  unreached_states_by_time = states_by_time;
 }
 
 void ViterbiSearch::InitQueue(const std::vector<StateId>& column) {
@@ -469,7 +470,7 @@ void ViterbiSearch::InitQueue(const std::vector<StateId>& column) {
 }
 
 void ViterbiSearch::AddSuccessorsToQueue(const StateId& stateid) {
-  if (!(stateid.time() + 1 < unreached_states_.size())) {
+  if (!(stateid.time() + 1 < unreached_states_by_time.size())) {
     throw std::logic_error("the state at time " + std::to_string(stateid.time()) +
                            " is impossible to have successors");
   }
@@ -485,9 +486,9 @@ void ViterbiSearch::AddSuccessorsToQueue(const StateId& stateid) {
     throw std::logic_error("impossible to get invalid cost from scanned labels");
   }
 
-  // Optimal states have been removed from unreached_states_ so no
+  // Optimal states have been removed from unreached_states_by_time so no
   // worry about optimality
-  for (const auto& next_stateid : unreached_states_[stateid.time() + 1]) {
+  for (const auto& next_stateid : unreached_states_by_time[stateid.time() + 1]) {
     const auto emission_cost = EmissionCost(next_stateid);
     if (IsInvalidCost(emission_cost)) {
       continue;
@@ -508,30 +509,31 @@ void ViterbiSearch::AddSuccessorsToQueue(const StateId& stateid) {
 }
 
 StateId::Time ViterbiSearch::IterativeSearch(StateId::Time target, bool request_new_start) {
-  if (unreached_states_.size() <= target) {
-    if (unreached_states_.empty()) {
+  if (unreached_states_by_time.size() <= target) {
+    if (unreached_states_by_time.empty()) {
       throw std::runtime_error("empty states: add some states at least before searching");
     } else {
       throw std::runtime_error("the target time is beyond the maximum allowed time " +
-                               std::to_string(unreached_states_.size() - 1));
+                               std::to_string(unreached_states_by_time.size() - 1));
     }
   }
 
   // Do nothing since the winner at the target time is already known
-  if (target < winner_.size()) {
+  if (target < winner_by_time.size()) {
     return target;
   }
 
-  // Clearly here we have precondition: winner_.size() <= target < unreached_states_.size()
+  // Clearly here we have precondition: winner_by_time.size() <= target <
+  // unreached_states_by_time.size()
 
   StateId::Time source;
   // Either continue last search, or start a new search
-  if (!request_new_start && !winner_.empty() && winner_.back().IsValid()) {
-    source = winner_.size() - 1;
-    AddSuccessorsToQueue(winner_[source]);
+  if (!request_new_start && !winner_by_time.empty() && winner_by_time.back().IsValid()) {
+    source = winner_by_time.size() - 1;
+    AddSuccessorsToQueue(winner_by_time[source]);
   } else {
-    source = winner_.size();
-    InitQueue(unreached_states_[source]);
+    source = winner_by_time.size();
+    InitQueue(unreached_states_by_time[source]);
   }
 
   // Start with the source time, which will be searched anyhow
@@ -559,7 +561,7 @@ StateId::Time ViterbiSearch::IterativeSearch(StateId::Time target, bool request_
     }
 
     // Remove it from its column
-    auto& column = unreached_states_[stateid.time()];
+    auto& column = unreached_states_by_time[stateid.time()];
     const auto it = std::find(column.begin(), column.end(), stateid);
     if (it == column.end()) {
       throw std::logic_error("the state must exist in the column");
@@ -575,14 +577,14 @@ StateId::Time ViterbiSearch::IterativeSearch(StateId::Time target, bool request_
 
     // If it's the first state that arrives at this column, mark it as
     // the winner at this time
-    if (winner_.size() <= stateid.time()) {
-      if (!(stateid.time() == winner_.size())) {
-        // Should check if states at unreached_states_[time] are all
+    if (winner_by_time.size() <= stateid.time()) {
+      if (!(stateid.time() == winner_by_time.size())) {
+        // Should check if states at unreached_states_by_time[time] are all
         // at the same TIME
         throw std::logic_error("found a state from the future time " +
                                std::to_string(stateid.time()));
       }
-      winner_.push_back(stateid);
+      winner_by_time.push_back(stateid);
     }
 
     // Update searched time
@@ -599,11 +601,11 @@ StateId::Time ViterbiSearch::IterativeSearch(StateId::Time target, bool request_
 
   // Guarantee that either winner (if found) or invalid stateid (not
   // found) is saved at searched_time
-  if (winner_.size() <= searched_time) {
-    winner_.resize(searched_time + 1);
+  if (winner_by_time.size() <= searched_time) {
+    winner_by_time.resize(searched_time + 1);
   }
 
-  // Postcondition: searched_time == winner_.size() - 1 && search_time <= target
+  // Postcondition: searched_time == winner_by_time.size() - 1 && search_time <= target
   // If search_time < target it implies that there is a breakage,
   // i.e. unable to find any connection from the column at search_time
   // to the column at search_time + 1
