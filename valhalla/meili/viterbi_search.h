@@ -65,7 +65,7 @@ private:
   void Next();
 
   IViterbiSearch& vs_;
-  StateId::Time time_{0};
+  StateId::Time time_{kInvalidTime};
   StateId stateid_{};
   bool allow_breaks_{true};
 };
