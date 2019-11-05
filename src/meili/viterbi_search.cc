@@ -210,7 +210,7 @@ template <bool Maximize> bool NaiveViterbiSearch<Maximize>::RemoveStateId(const 
   auto& column = states_[stateid.time()];
   const auto it = std::find(column.begin(), column.end(), stateid);
   if (it == column.end()) {
-    throw std::runtime_error{"could not find StateId in column"};
+    return false;
   }
   column.erase(it);
 
@@ -389,7 +389,7 @@ bool ViterbiSearch::RemoveStateId(const StateId& stateid) {
   auto& column = states_[stateid.time()];
   const auto it = std::find(column.begin(), column.end(), stateid);
   if (it == column.end()) {
-    throw std::runtime_error{"could not find StateId in column"};
+    return false;
   }
   column.erase(it);
   return true;
