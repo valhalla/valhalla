@@ -637,14 +637,16 @@ std::string get_sign_element_nonrefs(
   return nonrefs;
 }
 
-// Add destinations along a step/maneuver. Constructs a destinations string.
-// Here are the destinations formats:
-//   1. <ref>
-//   2. <non-ref>
-//   3. <ref>: <non-ref>
-// Each <ref> or <non-ref> could have one or more items and will separated with ", "
-//   for example: "I 99, US 220, US 30: Altoona, Johnstown"
-std::string destinations(const valhalla::DirectionsLeg_Maneuver_Sign& sign) {
+bool exit_destinations_exist(const valhalla::DirectionsLeg_Maneuver_Sign& sign) {
+  if ((sign.exit_onto_streets_size() > 0) || (sign.exit_toward_locations_size() > 0) ||
+      (sign.exit_names_size() > 0)) {
+    return true;
+  }
+  return false;
+}
+
+// Return the exit destinations
+std::string exit_destinations(const valhalla::DirectionsLeg_Maneuver_Sign& sign) {
 
   /////////////////////////////////////////////////////////////////////////////
   // Process the refs
@@ -698,6 +700,66 @@ std::string destinations(const valhalla::DirectionsLeg_Maneuver_Sign& sign) {
   destinations += nonrefs;
 
   return destinations;
+}
+
+// Return the guide destinations
+std::string guide_destinations(const valhalla::DirectionsLeg_Maneuver_Sign& sign) {
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Process the refs
+  // Get the branch refs
+  std::string branch_refs = get_sign_element_refs(sign.guide_onto_streets());
+
+  // Get the toward refs
+  std::string toward_refs = get_sign_element_refs(sign.guide_toward_locations());
+
+  // Create the refs by combining the branch and toward ref lists
+  std::string refs = branch_refs;
+  // If needed, add the delimiter between the lists
+  if (!refs.empty() && !toward_refs.empty()) {
+    refs += kSignElementDelimiter;
+  }
+  refs += toward_refs;
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Process the nonrefs
+  // Get the branch nonrefs
+  std::string branch_nonrefs = get_sign_element_nonrefs(sign.guide_onto_streets());
+
+  // Get the towards nonrefs
+  std::string toward_nonrefs = get_sign_element_nonrefs(sign.guide_toward_locations());
+
+  // Create nonrefs by combining the branch, toward, name nonref lists
+  std::string nonrefs = branch_nonrefs;
+  // If needed, add the delimiter between the lists
+  if (!nonrefs.empty() && !toward_nonrefs.empty()) {
+    nonrefs += kSignElementDelimiter;
+  }
+  nonrefs += toward_nonrefs;
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Process the destinations
+  std::string destinations = refs;
+  if (!refs.empty() && !nonrefs.empty()) {
+    destinations += kDestinationsDelimiter;
+  }
+  destinations += nonrefs;
+
+  return destinations;
+}
+
+// Add destinations along a step/maneuver. Constructs a destinations string.
+// Here are the destinations formats:
+//   1. <ref>
+//   2. <non-ref>
+//   3. <ref>: <non-ref>
+// Each <ref> or <non-ref> could have one or more items and will separated with ", "
+//   for example: "I 99, US 220, US 30: Altoona, Johnstown"
+std::string destinations(const valhalla::DirectionsLeg_Maneuver_Sign& sign) {
+  if (exit_destinations_exist(sign)) {
+    return exit_destinations(sign);
+  }
+  return guide_destinations(sign);
 }
 
 // Get the turn modifier based on incoming edge bearing and outgoing edge
