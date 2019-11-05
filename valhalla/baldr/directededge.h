@@ -66,8 +66,16 @@ public:
    * Flag indicating the edge has predicted speed records.
    * @return  Returns true if this edge has predicted speed records.
    */
-  bool predicted_speed() const {
-    return predicted_speed_;
+  bool has_predicted_speed() const {
+    return has_predicted_speed_;
+  }
+
+  /**
+   * Indicates whether the edge has either predicted, free or constrained flow speeds.
+   * @return  Returns true if this edge has any flow speeds.
+   */
+  bool has_flow_speed() const {
+    return free_flow_speed_ > 0 || constrained_flow_speed_ > 0 || has_predicted_speed_;
   }
 
   /**
@@ -90,7 +98,7 @@ public:
    * Set the flag indicating the edge has predicted speed records.
    * @param p  True if this edge has predicted speed records
    */
-  void set_predicted_speed(const bool p);
+  void set_has_predicted_speed(const bool p);
 
   /**
    * Offset to the common edge data. The offset is from the start
@@ -1064,7 +1072,7 @@ protected:
   uint64_t toll_ : 1;                   // Edge is part of a toll road
   uint64_t roundabout_ : 1;             // Edge is part of a roundabout
   uint64_t truck_route_ : 1;            // Edge that is part of a truck route/network
-  uint64_t predicted_speed_ : 1;        // Does this edge have a predicted speed records?
+  uint64_t has_predicted_speed_ : 1;    // Does this edge have a predicted speed records?
 
   // 4th 8-byte word
   uint64_t forwardaccess_ : 12; // Access (bit mask) in forward direction (see graphconstants.h)

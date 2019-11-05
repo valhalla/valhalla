@@ -240,8 +240,6 @@ void Isochrone::ExpandForward(GraphReader& graphreader,
     }
 
     // Check if the edge is allowed or if a restriction occurs. Get the edge speed.
-    uint32_t speed;
-    bool has_traffic = directededge->predicted_speed() || directededge->constrained_flow_speed() > 0;
     if (has_date_time_) {
       // With date time we check time dependent restrictions and access as well as get
       // traffic based speed if it exists
@@ -250,18 +248,19 @@ void Isochrone::ExpandForward(GraphReader& graphreader,
                                nodeinfo->timezone())) {
         continue;
       }
-      speed = tile->GetSpeed(directededge, edgeid, seconds_of_week);
     } else {
       if (!costing_->Allowed(directededge, pred, tile, edgeid, 0, 0) ||
           costing_->Restricted(directededge, pred, edgelabels_, tile, edgeid, true)) {
         continue;
       }
-      speed = tile->GetSpeed(directededge);
     }
 
     // Compute the cost to the end of this edge
-    Cost newcost = pred.cost() + costing_->EdgeCost(directededge, speed) +
-                   costing_->TransitionCost(directededge, nodeinfo, pred, has_traffic);
+    Cost newcost =
+        pred.cost() +
+        costing_->EdgeCost(directededge, tile,
+                           has_date_time_ ? seconds_of_week : kConstrainedFlowSecondOfDay) +
+        costing_->TransitionCost(directededge, nodeinfo, pred);
 
     // Check if edge is temporarily labeled and this path has less cost. If
     // less cost the predecessor is updated and the sort cost is decremented
@@ -430,7 +429,6 @@ void Isochrone::ExpandReverse(GraphReader& graphreader,
     const DirectedEdge* opp_edge = t2->directededge(oppedge);
 
     // Check if the edge is allowed or if a restriction occurs. Get the edge speed.
-    uint32_t speed;
     if (has_date_time_) {
       // With date time we check time dependent restrictions and access as well as get
       // traffic based speed if it exists
@@ -440,21 +438,19 @@ void Isochrone::ExpandReverse(GraphReader& graphreader,
                                nodeinfo->timezone())) {
         continue;
       }
-      speed = t2->GetSpeed(opp_edge, oppedge, seconds_of_week);
     } else {
       if (!costing_->AllowedReverse(directededge, pred, opp_edge, t2, oppedge, 0, 0) ||
           costing_->Restricted(directededge, pred, bdedgelabels_, tile, edgeid, false)) {
         continue;
       }
-      speed = t2->GetSpeed(opp_edge);
     }
 
     // Compute the cost to the end of this edge with separate transition cost
-    bool has_traffic =
-        opp_pred_edge->predicted_speed() || opp_pred_edge->constrained_flow_speed() > 0;
     Cost tc = costing_->TransitionCostReverse(directededge->localedgeidx(), nodeinfo, opp_edge,
-                                              opp_pred_edge, has_traffic);
-    Cost newcost = pred.cost() + costing_->EdgeCost(opp_edge, speed);
+                                              opp_pred_edge);
+    Cost newcost = pred.cost() +
+                   costing_->EdgeCost(opp_edge, t2,
+                                      has_date_time_ ? seconds_of_week : kConstrainedFlowSecondOfDay);
     newcost.cost += tc.cost;
 
     // Check if edge is temporarily labeled and this path has less cost. If
@@ -768,8 +764,7 @@ bool Isochrone::ExpandForwardMM(GraphReader& graphreader,
         continue;
       }
 
-      Cost c = mode_costing[static_cast<uint32_t>(mode_)]->EdgeCost(directededge,
-                                                                    tile->GetSpeed(directededge));
+      Cost c = mode_costing[static_cast<uint32_t>(mode_)]->EdgeCost(directededge, tile);
       c.cost *= mode_costing[static_cast<uint32_t>(mode_)]->GetModeFactor();
       newcost += c;
 
@@ -1070,8 +1065,7 @@ void Isochrone::SetOriginLocations(
 
       // Get cost
       nodeinfo = endtile->node(directededge->endnode());
-      Cost cost = costing->EdgeCost(directededge, tile->GetSpeed(directededge)) *
-                  (1.0f - edge.percent_along());
+      Cost cost = costing->EdgeCost(directededge, tile) * (1.0f - edge.percent_along());
 
       // We need to penalize this location based on its score (distance in meters from input)
       // We assume the slowest speed you could travel to cover that distance to start/end the route
@@ -1146,8 +1140,7 @@ void Isochrone::SetOriginLocationsMM(
 
       // Get cost
       nodeinfo = endtile->node(directededge->endnode());
-      Cost cost = costing->EdgeCost(directededge, endtile->GetSpeed(directededge)) *
-                  (1.0f - edge.percent_along());
+      Cost cost = costing->EdgeCost(directededge, endtile) * (1.0f - edge.percent_along());
 
       // We need to penalize this location based on its score (distance in meters from input)
       // We assume the slowest speed you could travel to cover that distance to start/end the route
@@ -1224,8 +1217,7 @@ void Isochrone::SetDestinationLocations(
       // the end node of the opposing edge is in the same tile as the directed
       // edge.  Use the directed edge for costing, as this is the forward
       // direction along the destination edge.
-      Cost cost =
-          costing->EdgeCost(directededge, tile->GetSpeed(directededge)) * edge.percent_along();
+      Cost cost = costing->EdgeCost(directededge, tile) * edge.percent_along();
 
       // We need to penalize this location based on its score (distance in meters from input)
       // We assume the slowest speed you could travel to cover that distance to start/end the route

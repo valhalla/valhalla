@@ -258,6 +258,7 @@ protected:
                           const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
                           std::vector<uint32_t>& destinations,
                           const baldr::DirectedEdge* edge,
+                          const baldr::GraphTile* tile,
                           const sif::EdgeLabel& pred,
                           const uint32_t predindex);
 

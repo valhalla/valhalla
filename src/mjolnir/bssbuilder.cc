@@ -380,7 +380,7 @@ void build(const boost::property_tree::ptree& pt,
            bss_by_tile_t::const_iterator tile_start,
            bss_by_tile_t::const_iterator tile_end) {
 
-  auto reader_local_level = GraphReader{pt};
+  GraphReader reader_local_level(pt);
   for (; tile_start != tile_end; ++tile_start) {
 
     const GraphTile* local_tile = nullptr;
@@ -425,7 +425,7 @@ void BssBuilder::Build(const boost::property_tree::ptree& pt, const std::string&
   // bss_by_tile_t bss_by_tile;
   bss_by_tile_t bss_by_tile;
 
-  auto reader = GraphReader{pt.get_child("mjolnir")};
+  GraphReader reader(pt.get_child("mjolnir"));
   auto local_level = TileHierarchy::levels().rbegin()->first;
   // Group the nodes by their tiles. In the next step, we will work on each tile only once
   for (const auto& node : osm_nodes) {

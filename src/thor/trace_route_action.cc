@@ -18,6 +18,7 @@ using namespace valhalla;
 using namespace valhalla::baldr;
 using namespace valhalla::sif;
 using namespace valhalla::thor;
+using std::vector;
 
 namespace {
 
@@ -126,6 +127,7 @@ void thor_worker_t::route_match(Api& request) {
   // TODO - make sure the trace has timestamps..
   auto& options = *request.mutable_options();
   bool use_timestamps = options.use_timestamps();
+
   if (RouteMatcher::FormPath(mode_costing, mode, *reader, trace, use_timestamps, options.locations(),
                              m_path_infos)) {
     // Form the trip path based on mode costing, origin, destination, and path edges
@@ -152,7 +154,6 @@ thor_worker_t::map_match(Api& request, uint32_t best_paths) {
   if (trace.size() == 0) {
     return {};
   }
-
   m_offline_results = matcher->OfflineMatch(trace, best_paths);
 
   // Process each score/match result
@@ -388,7 +389,6 @@ thor_worker_t::map_match(Api& request, uint32_t best_paths) {
                      m_temp_route_discontinuities);
     } // trace_route can return multiple trip paths and cannot have discontinuities
     else {
-
       auto& route = *request.mutable_trip()->mutable_routes()->Add();
       auto origin_iter = match_results.begin();
 

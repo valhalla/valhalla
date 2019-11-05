@@ -27,6 +27,12 @@ struct CandidateConnection {
   baldr::GraphId edgeid;
   baldr::GraphId opp_edgeid;
   float cost;
+  bool operator<(const CandidateConnection& o) const {
+    return cost < o.cost;
+  }
+  bool operator<(float c) const {
+    return cost < c;
+  }
 };
 
 /**

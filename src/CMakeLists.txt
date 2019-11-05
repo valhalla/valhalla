@@ -110,10 +110,21 @@ configure_file(../valhalla/valhalla.h.in ${CMAKE_CURRENT_BINARY_DIR}/valhalla/va
 configure_file(../valhalla/config.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/valhalla/config.h @ONLY)
 
 set(valhalla_hdrs
-  ${CMAKE_CURRENT_BINARY_DIR}/valhalla/valhalla.h
-  ${VALHALLA_SOURCE_DIR}/valhalla/worker.h)
+    ${CMAKE_CURRENT_BINARY_DIR}/valhalla/valhalla.h
+    ${VALHALLA_SOURCE_DIR}/valhalla/worker.h)
 
-add_library(valhalla worker.cc ${CMAKE_CURRENT_BINARY_DIR}/valhalla/config.h ${valhalla_hdrs} ${libvalhalla_link_objects})
+set(valhalla_src
+    worker.cc
+    ${CMAKE_CURRENT_BINARY_DIR}/valhalla/config.h
+    ${valhalla_hdrs}
+    ${libvalhalla_link_objects})
+
+if (ENABLE_SERVICES)
+  set(valahlla_hdrs ${valhalla_hdrs} ${VALHALLA_SOURCE_DIR}/valhalla/tile_server.h)
+  set(valhalla_src ${valhalla_src} tile_server.cc)
+endif()
+
+add_library(valhalla ${valhalla_src})
 
 target_compile_definitions(valhalla
   PUBLIC

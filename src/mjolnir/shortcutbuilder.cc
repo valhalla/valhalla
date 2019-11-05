@@ -689,7 +689,7 @@ uint32_t FormShortcuts(GraphReader& reader, const TileLevel& level) {
 
     // Check if we need to clear the tile cache.
     if (reader.OverCommitted()) {
-      reader.Clear();
+      reader.Trim();
     }
   }
   return shortcut_count;

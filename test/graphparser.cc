@@ -574,7 +574,7 @@ void TestImportBssNode() {
                             ways_file, way_nodes_file, access_file, from_restriction_file,
                             to_restriction_file, bss_nodes_file);
 
-  auto reader = GraphReader{conf.get_child("mjolnir")};
+  GraphReader reader(conf.get_child("mjolnir"));
 
   GraphBuilder::Build(conf, osmdata, ways_file, way_nodes_file, nodes_file, edges_file,
                       from_restriction_file, to_restriction_file);

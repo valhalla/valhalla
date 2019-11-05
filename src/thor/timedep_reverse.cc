@@ -125,12 +125,9 @@ void TimeDepReverse::ExpandReverse(GraphReader& graphreader,
       continue;
     }
 
-    bool has_traffic =
-        opp_pred_edge->predicted_speed() || opp_pred_edge->constrained_flow_speed() > 0;
     Cost tc = costing_->TransitionCostReverse(directededge->localedgeidx(), nodeinfo, opp_edge,
-                                              opp_pred_edge, has_traffic);
-    Cost newcost = pred.cost() +
-                   costing_->EdgeCost(opp_edge, t2->GetSpeed(directededge, edgeid, seconds_of_week));
+                                              opp_pred_edge);
+    Cost newcost = pred.cost() + costing_->EdgeCost(opp_edge, t2, seconds_of_week);
     newcost.cost += tc.cost;
 
     // If this edge is a destination, subtract the partial/remainder cost
@@ -348,8 +345,8 @@ TimeDepReverse::GetBestPath(valhalla::Location& origin,
         graphreader.GetGraphTile(pred.opp_edgeid())->directededge(pred.opp_edgeid());
 
     // Expand forward from the end node of the predecessor edge.
-    ExpandReverse(graphreader, pred.endnode(), pred, predindex, opp_pred_edge, false, seconds_of_week,
-                  localtime, destination, best_path);
+    ExpandReverse(graphreader, pred.endnode(), pred, predindex, opp_pred_edge, false, localtime,
+                  seconds_of_week, destination, best_path);
   }
   return {}; // Should never get here
 }
@@ -404,7 +401,7 @@ void TimeDepReverse::SetOrigin(GraphReader& graphreader,
     const DirectedEdge* opp_dir_edge = graphreader.GetOpposingEdge(edgeid);
 
     // Get cost
-    Cost cost = costing_->EdgeCost(directededge, tile->GetSpeed(directededge)) * edge.percent_along();
+    Cost cost = costing_->EdgeCost(directededge, tile) * edge.percent_along();
     float dist = astarheuristic_.GetDistance(tile->get_node_ll(opp_dir_edge->endnode()));
 
     // We need to penalize this location based on its score (distance in meters from input)
@@ -430,8 +427,8 @@ void TimeDepReverse::SetOrigin(GraphReader& graphreader,
             // remaining must be zero.
             GraphId id(destination_edge.graph_id());
             const DirectedEdge* dest_diredge = tile->directededge(id);
-            Cost dest_cost = costing_->EdgeCost(dest_diredge, tile->GetSpeed(dest_diredge)) *
-                             (1.0f - destination_edge.percent_along());
+            Cost dest_cost =
+                costing_->EdgeCost(dest_diredge, tile) * (1.0f - destination_edge.percent_along());
             cost.secs -= p->second.secs;
             cost.cost -= dest_cost.cost;
             cost.cost += destination_edge.distance();
@@ -502,8 +499,7 @@ uint32_t TimeDepReverse::SetDestination(GraphReader& graphreader, const valhalla
       continue;
     }
     GraphId oppedge = t2->GetOpposingEdgeId(directededge);
-    destinations_[oppedge] = costing_->EdgeCost(directededge, tile->GetSpeed(directededge)) *
-                             (1.0f - edge.percent_along());
+    destinations_[oppedge] = costing_->EdgeCost(directededge, tile) * (1.0f - edge.percent_along());
 
     // Edge score (penalty) is handled within GetPath. Do not add score here.
 
