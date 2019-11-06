@@ -426,6 +426,110 @@ StateId ViterbiSearch::SearchWinner(StateId::Time time) {
   return {};
 }
 
+StateId::Time ViterbiSearch::IterativeSearch(StateId::Time target, bool request_new_start) {
+  if (unreached_states_by_time.size() <= target) {
+    if (unreached_states_by_time.empty()) {
+      throw std::runtime_error("empty states: add some states at least before searching");
+    } else {
+      throw std::runtime_error("the target time is beyond the maximum allowed time " +
+                               std::to_string(unreached_states_by_time.size() - 1));
+    }
+  }
+
+  // Do nothing since the winner at the target time is already known
+  if (target < winner_by_time.size()) {
+    return target;
+  }
+
+  // Clearly here we have precondition: winner_by_time.size() <= target <
+  // unreached_states_by_time.size()
+
+  StateId::Time searched_time;
+  // Either continue last search, or start a new search
+  if (!request_new_start && !winner_by_time.empty() && winner_by_time.back().IsValid()) {
+    searched_time = winner_by_time.size() - 1;
+    AddSuccessorsToQueue(winner_by_time[searched_time]);
+  } else {
+    searched_time = winner_by_time.size();
+    InitQueue(unreached_states_by_time[searched_time]);
+  }
+
+  // Start with the source time, which will be searched anyhow
+
+  while (!queue_.empty()) {
+    // Pop up the state with the optimal cost. Note it is not
+    // necessarily to be the winner at its time yet, unless it is the
+    // first one found at the time
+    const auto label = queue_.top();
+    const auto& stateid = label.stateid();
+    queue_.pop();
+
+    // Skip labels that are earlier than the earliest time, since they
+    // are impossible to be part of the path to future winners
+    if (stateid.time() < earliest_time_) {
+      continue;
+    }
+
+    // Mark it as scanned and remember its cost and predecessor
+    const auto& inserted = scanned_labels_.emplace(stateid, label);
+    if (!inserted.second) {
+      throw std::logic_error("the principle of optimality is violated in the viterbi search,"
+                             " probably negative costs occurred");
+    }
+
+    // Remove it from its column
+    auto& column = unreached_states_by_time[stateid.time()];
+    const auto it = std::find(column.begin(), column.end(), stateid);
+    if (it == column.end()) {
+      throw std::logic_error("the state must exist in the column");
+    }
+    column.erase(it);
+
+    // Since current column is empty now, earlier labels can't reach
+    // future winners in a optimal way any more, so we mark time + 1
+    // as the earliest time to skip all earlier labels
+    if (column.empty()) {
+      earliest_time_ = stateid.time() + 1;
+    }
+
+    // If it's the first state that arrives at this column, mark it as
+    // the winner at this time
+    if (winner_by_time.size() <= stateid.time()) {
+      if (stateid.time() != winner_by_time.size()) {
+        // Should check if states at unreached_states_by_time[time] are all
+        // at the same TIME
+        throw std::logic_error("found a state from the future time " +
+                               std::to_string(stateid.time()));
+      }
+      winner_by_time.push_back(stateid);
+    }
+
+    // Update searched time
+    searched_time = std::max(stateid.time(), searched_time);
+
+    // Break immediately when the winner at the target time is found.
+    // We will add its successors to queue at next search
+    if (target <= searched_time) {
+      break;
+    }
+
+    AddSuccessorsToQueue(stateid);
+  }
+
+  // Guarantee that either winner (if found) or invalid stateid (not
+  // found) is saved at searched_time
+  if (winner_by_time.size() <= searched_time) {
+    winner_by_time.resize(searched_time + 1);
+  }
+
+  // Postcondition: searched_time == winner_by_time.size() - 1 && search_time <= target
+  // If search_time < target it implies that there is a breakage,
+  // i.e. unable to find any connection from the column at search_time
+  // to the column at search_time + 1
+
+  return searched_time;
+}
+
 StateId ViterbiSearch::Predecessor(const StateId& stateid) const {
   const auto it = scanned_labels_.find(stateid);
   if (it == scanned_labels_.end()) {
@@ -506,111 +610,6 @@ void ViterbiSearch::AddSuccessorsToQueue(const StateId& stateid) {
 
     queue_.push(StateLabel(next_costsofar, next_stateid, stateid));
   }
-}
-
-StateId::Time ViterbiSearch::IterativeSearch(StateId::Time target, bool request_new_start) {
-  if (unreached_states_by_time.size() <= target) {
-    if (unreached_states_by_time.empty()) {
-      throw std::runtime_error("empty states: add some states at least before searching");
-    } else {
-      throw std::runtime_error("the target time is beyond the maximum allowed time " +
-                               std::to_string(unreached_states_by_time.size() - 1));
-    }
-  }
-
-  // Do nothing since the winner at the target time is already known
-  if (target < winner_by_time.size()) {
-    return target;
-  }
-
-  // Clearly here we have precondition: winner_by_time.size() <= target <
-  // unreached_states_by_time.size()
-
-  StateId::Time source;
-  // Either continue last search, or start a new search
-  if (!request_new_start && !winner_by_time.empty() && winner_by_time.back().IsValid()) {
-    source = winner_by_time.size() - 1;
-    AddSuccessorsToQueue(winner_by_time[source]);
-  } else {
-    source = winner_by_time.size();
-    InitQueue(unreached_states_by_time[source]);
-  }
-
-  // Start with the source time, which will be searched anyhow
-  auto searched_time = source;
-
-  while (!queue_.empty()) {
-    // Pop up the state with the optimal cost. Note it is not
-    // necessarily to be the winner at its time yet, unless it is the
-    // first one found at the time
-    const auto label = queue_.top();
-    const auto& stateid = label.stateid();
-    queue_.pop();
-
-    // Skip labels that are earlier than the earliest time, since they
-    // are impossible to be part of the path to future winners
-    if (stateid.time() < earliest_time_) {
-      continue;
-    }
-
-    // Mark it as scanned and remember its cost and predecessor
-    const auto& inserted = scanned_labels_.emplace(stateid, label);
-    if (!inserted.second) {
-      throw std::logic_error("the principle of optimality is violated in the viterbi search,"
-                             " probably negative costs occurred");
-    }
-
-    // Remove it from its column
-    auto& column = unreached_states_by_time[stateid.time()];
-    const auto it = std::find(column.begin(), column.end(), stateid);
-    if (it == column.end()) {
-      throw std::logic_error("the state must exist in the column");
-    }
-    column.erase(it);
-
-    // Since current column is empty now, earlier labels can't reach
-    // future winners in a optimal way any more, so we mark time + 1
-    // as the earliest time to skip all earlier labels
-    if (column.empty()) {
-      earliest_time_ = stateid.time() + 1;
-    }
-
-    // If it's the first state that arrives at this column, mark it as
-    // the winner at this time
-    if (winner_by_time.size() <= stateid.time()) {
-      if (!(stateid.time() == winner_by_time.size())) {
-        // Should check if states at unreached_states_by_time[time] are all
-        // at the same TIME
-        throw std::logic_error("found a state from the future time " +
-                               std::to_string(stateid.time()));
-      }
-      winner_by_time.push_back(stateid);
-    }
-
-    // Update searched time
-    searched_time = std::max(stateid.time(), searched_time);
-
-    // Break immediately when the winner at the target time is found.
-    // We will add its successors to queue at next search
-    if (target <= searched_time) {
-      break;
-    }
-
-    AddSuccessorsToQueue(stateid);
-  }
-
-  // Guarantee that either winner (if found) or invalid stateid (not
-  // found) is saved at searched_time
-  if (winner_by_time.size() <= searched_time) {
-    winner_by_time.resize(searched_time + 1);
-  }
-
-  // Postcondition: searched_time == winner_by_time.size() - 1 && search_time <= target
-  // If search_time < target it implies that there is a breakage,
-  // i.e. unable to find any connection from the column at search_time
-  // to the column at search_time + 1
-
-  return searched_time;
 }
 
 constexpr bool ViterbiSearch::IsInvalidCost(double cost) {
