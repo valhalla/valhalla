@@ -77,6 +77,8 @@ void test_recover_shortcut_edges() {
     auto tileset = graphreader.GetTileSet(level.first);
     for (const auto tileid : tileset) {
       printf("bad: %zu, total: %zu\n", bad, total);
+      if (graphreader.OverCommitted())
+        graphreader.Trim();
 
       // for each edge in the tile
       const auto* tile = graphreader.GetGraphTile(tileid);

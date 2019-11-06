@@ -467,7 +467,7 @@ void validate(
 
     // Check if we need to clear the tile cache
     if (graph_reader.OverCommitted()) {
-      graph_reader.Clear();
+      graph_reader.Trim();
     }
     lock.unlock();
 

@@ -188,7 +188,7 @@ void FormTilesInNewLevel(GraphReader& reader,
 
       // Check if we need to clear the base/local tile cache
       if (reader.OverCommitted()) {
-        reader.Clear();
+        reader.Trim();
       }
     }
 
@@ -475,7 +475,7 @@ void CreateNodeAssociations(GraphReader& reader,
 
     // Check if we need to clear the tile cache
     if (reader.OverCommitted()) {
-      reader.Clear();
+      reader.Trim();
     }
   }
 }

@@ -49,9 +49,9 @@ add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/utrecht_tiles/0/003/196.
   COMMAND ${CMAKE_BINARY_DIR}/valhalla_build_tiles
       --inline-config '{"mjolnir":{"tile_dir":"test/data/utrecht_tiles","hierarchy":true,"shortcuts":true,"concurrency":4,"logging":{"type":""}}}'
       ${VALHALLA_SOURCE_DIR}/test/data/utrecht_netherlands.osm.pbf
-#  COMMAND ${CMAKE_BINARY_DIR}/valhalla_add_predicted_traffic
-#      --inline-config '{"mjolnir":{"tile_dir":"test/data/utrecht_tiles","hierarchy":true,"shortcuts":true,"concurrency":4,"logging":{"type":""}}}'
-#      -t ${VALHALLA_SOURCE_DIR}/test/data/
+  COMMAND ${CMAKE_BINARY_DIR}/valhalla_add_predicted_traffic
+      --inline-config '{"mjolnir":{"tile_dir":"test/data/utrecht_tiles","hierarchy":true,"shortcuts":true,"concurrency":4,"logging":{"type":""}}}'
+      -t ${VALHALLA_SOURCE_DIR}/test/data/traffic_tiles/
   COMMENT "Building Utrecht Tiles..."
   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
   DEPENDS valhalla_build_tiles valhalla_add_predicted_traffic ${VALHALLA_SOURCE_DIR}/test/data/utrecht_netherlands.osm.pbf)

@@ -75,7 +75,7 @@ void print_edge(GraphReader& reader,
   std::cout << "----------Edge----------\n";
   std::cout << "Edge GraphId: " << current_id << std::endl;
   std::cout << "Edge length: " << edge->length() << std::endl;
-  Cost edge_cost = costing->EdgeCost(edge, tile->GetSpeed(edge));
+  Cost edge_cost = costing->EdgeCost(edge, tile);
   edge_total += edge_cost;
   std::cout << "EdgeCost cost: " << edge_cost.cost << " secs: " << edge_cost.secs << "\n";
   std::cout << "------------------------\n\n";

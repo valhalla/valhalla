@@ -5,9 +5,11 @@
 #include <valhalla/baldr/datetime.h>
 #include <valhalla/baldr/directededge.h>
 #include <valhalla/baldr/double_bucket_queue.h> // For kInvalidLabel
+#include <valhalla/baldr/graphconstants.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphtile.h>
 #include <valhalla/baldr/nodeinfo.h>
+#include <valhalla/baldr/rapidjson_utils.h>
 #include <valhalla/baldr/timedomain.h>
 #include <valhalla/baldr/transitdeparture.h>
 #include <valhalla/proto/options.pb.h>
@@ -16,6 +18,7 @@
 #include <valhalla/sif/hierarchylimits.h>
 
 #include <memory>
+#include <third_party/rapidjson/include/rapidjson/document.h>
 #include <unordered_map>
 
 namespace valhalla {
@@ -194,16 +197,28 @@ public:
    */
   virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
                         const baldr::TransitDeparture* departure,
-                        const uint32_t curr_time) const;
+                        const uint32_t curr_time) const = 0;
 
   /**
    * Get the cost to traverse the specified directed edge. Cost includes
    * the time (seconds) to traverse the edge.
-   * @param   edge  Pointer to a directed edge.
-   * @param   speed A speed for a road segment/edge.
-   * @return  Returns the cost and speed.
+   * @param   edge    Pointer to a directed edge.
+   * @param   tile    Pointer to the tile which contains the directed edge for speed lookup
+   * @param   seconds Seconds of week for predicted speed or free and constrained speed lookup
+   * @return  Returns the cost and time (seconds).
    */
-  virtual Cost EdgeCost(const baldr::DirectedEdge* edge, const uint32_t speed) const;
+  virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
+                        const baldr::GraphTile* tile,
+                        const uint32_t seconds) const = 0;
+
+  /**
+   * Get the cost to traverse the specified directed edge. Cost includes
+   * the time (seconds) to traverse the edge.
+   * @param   edge    Pointer to a directed edge.
+   * @param   tile    Pointer to the tile which contains the directed edge for speed lookup
+   * @return  Returns the cost and time (seconds).
+   */
+  virtual Cost EdgeCost(const baldr::DirectedEdge* edge, const baldr::GraphTile* tile) const;
 
   /**
    * Returns the cost to make the transition from the predecessor edge.
@@ -212,13 +227,11 @@ public:
    * @param   edge  Directed edge (the to edge)
    * @param   node  Node (intersection) where transition occurs.
    * @param   pred  Predecessor edge information.
-   * @param   has_traffic  Does the transition have traffic information.
    * @return  Returns the cost and time (seconds)
    */
   virtual Cost TransitionCost(const baldr::DirectedEdge* edge,
                               const baldr::NodeInfo* node,
-                              const EdgeLabel& pred,
-                              const bool has_traffic = false) const;
+                              const EdgeLabel& pred) const;
 
   /**
    * Returns the cost to make the transition from the predecessor edge
@@ -231,14 +244,12 @@ public:
    *                   "from" or predecessor edge in the transition.
    * @param  opp_pred_edge  Pointer to the opposing directed edge to the
    *                        predecessor. This is the "to" edge.
-   * @param   has_traffic  Does the transition have traffic information.
    * @return  Returns the cost and time (seconds)
    */
   virtual Cost TransitionCostReverse(const uint32_t idx,
                                      const baldr::NodeInfo* node,
                                      const baldr::DirectedEdge* opp_edge,
-                                     const baldr::DirectedEdge* opp_pred_edge,
-                                     const bool has_traffic = false) const;
+                                     const baldr::DirectedEdge* opp_pred_edge) const;
 
   /**
    * Test if an edge should be restricted due to a complex restriction.
@@ -514,6 +525,14 @@ public:
     return (avoid != user_avoid_edges_.end() && avoid->second <= percent_along);
   }
 
+  /**
+   * Get the flow mask used for accessing traffic flow data from the tile
+   * @return the flow mask used
+   */
+  uint8_t flow_mask() const {
+    return flow_mask_;
+  }
+
 protected:
   // Algorithm pass
   uint32_t pass_;
@@ -548,6 +567,9 @@ protected:
   float maneuver_penalty_;         // Penalty (seconds) when inconsistent names
   float alley_penalty_;            // Penalty (seconds) to use a alley
   float destination_only_penalty_; // Penalty (seconds) using private road, driveway, or parking aisle
+
+  // A mask which determines which flow data the costing should use from the tile
+  uint8_t flow_mask_;
 
   /**
    * Get the base transition costs (and ferry factor) from the costing options.
@@ -587,6 +609,9 @@ protected:
       ferry_factor_ = 1.5f - use_ferry;
     }
     ferry_transition_cost_ = {costing_options.ferry_cost() + penalty, costing_options.ferry_cost()};
+
+    // Set the speed mask to determine which speed data types are allowed
+    flow_mask_ = costing_options.flow_mask();
   }
 
   /**
@@ -687,9 +712,17 @@ protected:
   }
 };
 
-typedef std::shared_ptr<DynamicCost> cost_ptr_t;
+using cost_ptr_t = std::shared_ptr<DynamicCost>;
+
+/**
+ * Parses the cost options from json and stores values in pbf.
+ * @param object The json request represented as a DOM tree.
+ * @param pbf_costing_options A mutable protocol buffer where the parsed json values will be stored.
+ */
+void ParseCostOptions(const rapidjson::Value& obj, CostingOptions* pbf_costing_options);
 
 } // namespace sif
+
 } // namespace valhalla
 
 #endif // VALHALLA_SIF_DYNAMICCOST_H_

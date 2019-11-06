@@ -16,7 +16,7 @@ namespace baldr {
 // something to the tile simply subtract one from this number and add it
 // just before the empty_slots_ array below. NOTE that it can ONLY be an
 // offset in bytes and NOT a bitfield or union or anything of that sort
-constexpr size_t kEmptySlots = 12;
+constexpr size_t kEmptySlots = 11;
 
 // Maximum size of the version string (stored as a fixed size
 // character array so the GraphTileHeader size remains fixed).
@@ -571,7 +571,7 @@ public:
    * @return the number of bytes in the tile, unless the last slot is used
    */
   uint32_t end_offset() const {
-    return empty_slots_[0];
+    return tile_size_;
   }
 
   /**
@@ -579,9 +579,7 @@ public:
    * @param offset the offset in bytes to the end of the tile
    */
   void set_end_offset(uint32_t offset) {
-    for (size_t i = 0; i < kEmptySlots; i++) {
-      empty_slots_[i] = offset;
-    }
+    tile_size_ = offset;
   }
 
 protected:
@@ -677,6 +675,9 @@ protected:
 
   // Offset to the beginning of the predicted speed data
   uint32_t predictedspeeds_offset_;
+
+  // GraphTile data size in bytes
+  uint32_t tile_size_;
 
   // Marks the end of this version of the tile with the rest of the slots
   // being available for growth. If you want to use one of the empty slots,

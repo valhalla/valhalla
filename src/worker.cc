@@ -3,6 +3,7 @@
 #include <unordered_map>
 
 #include "baldr/datetime.h"
+#include "baldr/graphconstants.h"
 #include "baldr/location.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
@@ -775,6 +776,13 @@ void from_json(rapidjson::Document& doc, Options& options) {
         break;
       default:
         throw valhalla_exception_t{163};
+    }
+  } // if we arent doing a time dependent route disable time dependent edge speed/flow data sources
+  else {
+    for (auto& costing : *options.mutable_costing_options()) {
+      costing.set_flow_mask(
+          static_cast<uint8_t>(costing.flow_mask()) &
+          ~(valhalla::baldr::kPredictedFlowMask | valhalla::baldr::kCurrentFlowMask));
     }
   }
 

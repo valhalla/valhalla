@@ -81,13 +81,9 @@ void TimeDepForward::ExpandForward(GraphReader& graphreader,
       continue;
     }
 
-    // Compute the cost to the end of this edge. Transition cost will vary based on whether
-    // there is traffic information.
-    bool has_traffic = directededge->predicted_speed() || directededge->constrained_flow_speed() > 0;
-    Cost newcost =
-        pred.cost() +
-        costing_->EdgeCost(directededge, tile->GetSpeed(directededge, edgeid, seconds_of_week)) +
-        costing_->TransitionCost(directededge, nodeinfo, pred, has_traffic);
+    // Compute the cost to the end of this edge
+    Cost newcost = pred.cost() + costing_->EdgeCost(directededge, tile, seconds_of_week) +
+                   costing_->TransitionCost(directededge, nodeinfo, pred);
 
     // If this edge is a destination, subtract the partial/remainder cost
     // (cost from the dest. location to the end of the edge).

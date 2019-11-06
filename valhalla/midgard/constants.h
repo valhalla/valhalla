@@ -28,6 +28,7 @@ constexpr float kKmPerMile = 1.60934f;
 constexpr float kRadEarthMeters = 6378160.187f;
 constexpr float kMetersPerDegreeLat = 110567.0f;
 constexpr double kKmPerDecimeter = 0.0001;
+constexpr double kMeterPerDecimeter = 0.1;
 constexpr double kDecimeterPerMeter = 10;
 
 // Speed conversion constants

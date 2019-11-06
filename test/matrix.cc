@@ -80,23 +80,25 @@ public:
     return (node->access() & kAutoAccess);
   }
 
-  Cost EdgeCost(const DirectedEdge* edge, const uint32_t speed) const {
+  Cost EdgeCost(const baldr::DirectedEdge* edge,
+                const baldr::TransitDeparture* departure,
+                const uint32_t curr_time) const {
+    throw std::runtime_error("We shouldnt be testing transit edges");
+  }
+
+  Cost EdgeCost(const DirectedEdge* edge, const GraphTile* tile, const uint32_t seconds) const {
     float sec = static_cast<float>(edge->length());
     return {sec / 10.0f, sec};
   }
 
-  Cost TransitionCost(const DirectedEdge* edge,
-                      const NodeInfo* node,
-                      const EdgeLabel& pred,
-                      const bool has_traffic) const {
+  Cost TransitionCost(const DirectedEdge* edge, const NodeInfo* node, const EdgeLabel& pred) const {
     return {5.0f, 5.0f};
   }
 
   Cost TransitionCostReverse(const uint32_t idx,
                              const NodeInfo* node,
                              const DirectedEdge* opp_edge,
-                             const DirectedEdge* opp_pred_edge,
-                             const bool has_traffic) const {
+                             const DirectedEdge* opp_pred_edge) const {
     return {5.0f, 5.0f};
   }
 
