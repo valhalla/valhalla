@@ -8,7 +8,11 @@
 #include "midgard/tiles.h"
 
 #include <boost/algorithm/string.hpp>
+#include <boost/filesystem.hpp>
+#include <chrono>
 #include <cmath>
+#include <cstdio>
+#include <cstring>
 #include <ctime>
 #include <fstream>
 #include <iomanip>
@@ -133,6 +137,35 @@ GraphTile::GraphTile(const GraphId& graphid, char* ptr, size_t size) : header_(n
   Initialize(graphid, ptr, size);
 }
 
+std::string MakeSingleTileUrl(const std::string& tile_url, const GraphId& graphid) {
+  auto id_pos = tile_url.find(GraphTile::kTilePathPattern);
+  return tile_url.substr(0, id_pos) + GraphTile::FileSuffix(graphid.Tile_Base()) +
+         tile_url.substr(id_pos + std::strlen(GraphTile::kTilePathPattern));
+}
+
+void GraphTile::SaveTileToFile(const std::vector<char>& tile_data, const std::string& disk_location) {
+  // At first we save tile to a temporary file and then move it
+  // so we can avoid cases when another thread could read partially written file.
+  auto tmp_location = disk_location + boost::filesystem::unique_path().string();
+  auto dir = filesystem::path(disk_location);
+  dir.replace_filename("");
+
+  bool success = true;
+  if (filesystem::create_directories(dir)) {
+    std::ofstream file(tmp_location, std::ios::out | std::ios::binary | std::ios::ate);
+    file.write(tile_data.data(), tile_data.size());
+    file.close();
+    if (file.fail())
+      success = false;
+    int err = std::rename(tmp_location.c_str(), disk_location.c_str());
+    if (err)
+      success = false;
+  }
+
+  if (!success)
+    filesystem::remove(tmp_location);
+}
+
 GraphTile GraphTile::CacheTileURL(const std::string& tile_url,
                                   const GraphId& graphid,
                                   curler_t& curler,
@@ -143,40 +176,32 @@ GraphTile GraphTile::CacheTileURL(const std::string& tile_url,
     return {};
   }
 
-  // Get the response returned from curl, notice that when we expect zipped
-  // we tell curl not to unzip it, so that we can store it on the disk unzipped
-  auto suffix = FileSuffix(graphid.Tile_Base(), gzipped);
-  auto uri = tile_url + '/' + suffix;
+  auto uri = MakeSingleTileUrl(tile_url, graphid);
   long http_code;
-  auto tile_data = curler(uri, http_code, false);
+  auto tile_data = curler(uri, http_code, gzipped);
 
-  // If its good try to use it
-  if (http_code == 200) {
-    // try to cache it on disk so we dont have to keep fetching it from url
-    if (!cache_location.empty()) {
-      auto disk_location = cache_location + filesystem::path::preferred_separator + suffix;
-      auto dir = filesystem::path(cache_location + filesystem::path::preferred_separator + suffix);
-      dir.replace_filename("");
-      if (filesystem::create_directories(dir)) {
-        std::ofstream file(disk_location, std::ios::out | std::ios::binary | std::ios::ate);
-        file.write(&tile_data[0], tile_data.size());
-      }
-    }
+  if (http_code != 200)
+    return {};
 
-    // turn the memory into a tile
-    auto tile = GraphTile();
-    if (gzipped) {
-      tile.DecompressTile(graphid, tile_data);
-    } // we dont need to decompress so just take ownership of the data
-    else {
-      tile.graphtile_.reset(new std::vector<char>(0, 0));
-      *tile.graphtile_ = std::move(tile_data);
-      tile.Initialize(graphid, tile.graphtile_->data(), tile.graphtile_->size());
-    }
-
-    return tile;
+  // try to cache it on disk so we dont have to keep fetching it from url
+  if (!cache_location.empty()) {
+    auto suffix = FileSuffix(graphid.Tile_Base(), gzipped);
+    auto disk_location = cache_location + filesystem::path::preferred_separator + suffix;
+    SaveTileToFile(tile_data, disk_location);
   }
-  return {};
+
+  // turn the memory into a tile
+  auto tile = GraphTile();
+  if (gzipped) {
+    tile.DecompressTile(graphid, tile_data);
+  } // we dont need to decompress so just take ownership of the data
+  else {
+    tile.graphtile_.reset(new std::vector<char>(0, 0));
+    *tile.graphtile_ = std::move(tile_data);
+    tile.Initialize(graphid, tile.graphtile_->data(), tile.graphtile_->size());
+  }
+
+  return tile;
 }
 
 GraphTile::~GraphTile() {
@@ -184,9 +209,18 @@ GraphTile::~GraphTile() {
 
 // Set pointers to internal tile data structures
 void GraphTile::Initialize(const GraphId& graphid, char* tile_ptr, const size_t tile_size) {
+  if (tile_size < sizeof(GraphTileHeader))
+    throw std::runtime_error("Invalid tile data size = " + std::to_string(tile_size) +
+                             ". Tile file might me corrupted");
+
   char* ptr = tile_ptr;
   header_ = reinterpret_cast<GraphTileHeader*>(ptr);
   ptr += sizeof(GraphTileHeader);
+
+  if (header_->end_offset() != tile_size)
+    throw std::runtime_error("Mismatch in end offset = " + std::to_string(header_->end_offset()) +
+                             " vs raw tile data size = " + std::to_string(tile_size) +
+                             ". Tile file might me corrupted");
 
   // TODO check version
 

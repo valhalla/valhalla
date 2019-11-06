@@ -177,13 +177,13 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
     if (nodeinfo) {
       // Get time along the edge, handling partial distance along the first and last edge.
       // Add the transition cost at the begin node.
-      elapsed += costing->EdgeCost(directededge, tile->GetSpeed(directededge)) *
-                     (edge_segment.target - edge_segment.source) +
-                 costing->TransitionCost(directededge, nodeinfo, pred);
+      elapsed +=
+          costing->EdgeCost(directededge, tile, 0) * (edge_segment.target - edge_segment.source) +
+          costing->TransitionCost(directededge, nodeinfo, pred);
     } else {
       // Get time along the edge, handling partial distance along the first and last edge
-      elapsed += costing->EdgeCost(directededge, tile->GetSpeed(directededge)) *
-                 (edge_segment.target - edge_segment.source);
+      elapsed +=
+          costing->EdgeCost(directededge, tile, 0) * (edge_segment.target - edge_segment.source);
     }
 
     if (use_timestamps) {

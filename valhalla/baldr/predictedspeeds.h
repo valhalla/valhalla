@@ -10,8 +10,6 @@ namespace baldr {
 constexpr uint32_t kSpeedBucketSizeMinutes = 5;
 constexpr uint32_t kSpeedBucketSizeSeconds = kSpeedBucketSizeMinutes * 60;
 constexpr uint32_t kBucketsPerWeek = (7 * 24 * 60) / kSpeedBucketSizeMinutes;
-constexpr float kSecondsPerWeek = 7.0f * 24.0f * 60.0f * 60.0f;
-constexpr float kPiConstant = 3.14159265f / static_cast<float>(kBucketsPerWeek);
 
 // DCT-III constants for speed decoding and normalization
 constexpr uint32_t kCoefficientCount = 200;
@@ -99,7 +97,7 @@ public:
     // Get a pointer to the compressed speed profile for this edge. Assume the edge Id is valid
     // (otherwise an exception would be thrown when getting the directed edge) and the profile
     // offset is valid. If there is no predicted speed profile this method will not be called due
-    // to DirectedEdge::predicted_speed being false.
+    // to DirectedEdge::has_predicted_speed being false.
     const int16_t* coefficients = profiles_ + offset_[idx];
 
     // Get a pointer to the precomputed cos values for this bucket

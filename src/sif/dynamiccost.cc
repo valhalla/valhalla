@@ -1,12 +1,46 @@
 #include "sif/dynamiccost.h"
+#include "baldr/graphconstants.h"
 
 using namespace valhalla::baldr;
+
+namespace {
+
+uint8_t SpeedMask_Parse(const boost::optional<const rapidjson::Value&>& speed_types) {
+  static const std::unordered_map<std::string, uint8_t> types{
+      {"freeflow", kFreeFlowMask},
+      {"constrained", kConstrainedFlowMask},
+      {"predicted", kPredictedFlowMask},
+      {"current", kCurrentFlowMask},
+  };
+
+  if (!speed_types)
+    return kDefaultFlowMask;
+
+  bool had_value = false;
+  uint8_t mask = 0;
+  if (speed_types->IsArray()) {
+    had_value = true;
+    for (const auto& speed_type : speed_types->GetArray()) {
+      if (speed_type.IsString()) {
+        auto i = types.find(speed_type.GetString());
+        if (i != types.cend()) {
+          mask |= i->second;
+        }
+      }
+    }
+  }
+
+  return had_value ? mask : kDefaultFlowMask;
+}
+
+} // namespace
 
 namespace valhalla {
 namespace sif {
 
 DynamicCost::DynamicCost(const Options& options, const TravelMode mode)
-    : pass_(0), allow_transit_connections_(false), allow_destination_only_(true), travel_mode_(mode) {
+    : pass_(0), allow_transit_connections_(false), allow_destination_only_(true), travel_mode_(mode),
+      flow_mask_(kDefaultFlowMask) {
   // Parse property tree to get hierarchy limits
   // TODO - get the number of levels
   uint32_t n_levels = sizeof(kDefaultMaxUpTransitions) / sizeof(kDefaultMaxUpTransitions[0]);
@@ -30,21 +64,12 @@ bool DynamicCost::AllowMultiPass() const {
   return false;
 }
 
-// Get the cost to traverse the specified directed edge using a transit
-// departure (schedule based edge traversal). Cost includes
-// the time (seconds) to traverse the edge. Only transit cost models override
-// this method.
-Cost DynamicCost::EdgeCost(const baldr::DirectedEdge* edge,
-                           const baldr::TransitDeparture* departure,
-                           const uint32_t curr_time) const {
-  return {0.0f, 0.0f};
-}
-
-// Get the cost to traverse the specified directed edge and gather/pass
-// the speed along for use within costing in the PathAlgorithm. Cost
-// includes the time (seconds) to traverse the edge.
-Cost DynamicCost::EdgeCost(const baldr::DirectedEdge* edge, const uint32_t speed) const {
-  return {0.0f, 0.0f};
+// We provide a convenience method for those algorithms which dont have time components or aren't
+// using them for the current route. Here we just call out to the derived classes costing function
+// with a time that tells the function that we aren't using time. This avoids having to worry about
+// default parameters and inheritance (which are a bad mix)
+Cost DynamicCost::EdgeCost(const baldr::DirectedEdge* edge, const baldr::GraphTile* tile) const {
+  return EdgeCost(edge, tile, kInvalidSecondsOfWeek);
 }
 
 // Returns the cost to make the transition from the predecessor edge.
@@ -52,8 +77,7 @@ Cost DynamicCost::EdgeCost(const baldr::DirectedEdge* edge, const uint32_t speed
 // costs (i.e., intersection/turn costs) must override this method.
 Cost DynamicCost::TransitionCost(const DirectedEdge* edge,
                                  const NodeInfo* node,
-                                 const EdgeLabel& pred,
-                                 const bool has_traffic) const {
+                                 const EdgeLabel& pred) const {
   return {0.0f, 0.0f};
 }
 
@@ -64,8 +88,7 @@ Cost DynamicCost::TransitionCost(const DirectedEdge* edge,
 Cost DynamicCost::TransitionCostReverse(const uint32_t idx,
                                         const baldr::NodeInfo* node,
                                         const baldr::DirectedEdge* opp_edge,
-                                        const baldr::DirectedEdge* opp_pred_edge,
-                                        const bool has_traffic) const {
+                                        const baldr::DirectedEdge* opp_pred_edge) const {
   return {0.0f, 0.0f};
 }
 
@@ -114,7 +137,6 @@ float DynamicCost::GetModeFactor() {
 // meters per segment (e.g. from origin to a transit stop or from the last
 // transit stop to the destination).
 void DynamicCost::UseMaxMultiModalDistance() {
-  ;
 }
 
 // Gets the hierarchy limits.
@@ -174,6 +196,11 @@ void DynamicCost::AddUserAvoidEdges(const std::vector<AvoidEdge>& avoid_edges) {
   for (auto edge : avoid_edges) {
     user_avoid_edges_.insert({edge.id, edge.percent_along});
   }
+}
+
+void ParseCostOptions(const rapidjson::Value& value, CostingOptions* pbf_costing_options) {
+  auto speed_types = rapidjson::get_child_optional(value, "/speed_types");
+  pbf_costing_options->set_flow_mask(SpeedMask_Parse(speed_types));
 }
 
 } // namespace sif

@@ -100,7 +100,7 @@ void TimeDistanceMatrix::ExpandForward(GraphReader& graphreader,
     }
 
     // Get cost and update distance
-    Cost newcost = pred.cost() + costing_->EdgeCost(directededge, tile->GetSpeed(directededge)) +
+    Cost newcost = pred.cost() + costing_->EdgeCost(directededge, tile) +
                    costing_->TransitionCost(directededge, nodeinfo, pred);
     uint32_t distance = pred.path_distance() + directededge->length();
 
@@ -191,7 +191,7 @@ TimeDistanceMatrix::OneToMany(const valhalla::Location& origin,
       // have been settled.
       tile = graphreader.GetGraphTile(pred.edgeid());
       const DirectedEdge* edge = tile->directededge(pred.edgeid());
-      if (UpdateDestinations(origin, locations, destedge->second, edge, pred, predindex)) {
+      if (UpdateDestinations(origin, locations, destedge->second, edge, tile, pred, predindex)) {
         return FormTimeDistanceMatrix();
       }
     }
@@ -259,7 +259,7 @@ void TimeDistanceMatrix::ExpandReverse(GraphReader& graphreader,
     }
 
     // Get cost. Use the opposing edge for EdgeCost.
-    Cost newcost = pred.cost() + costing_->EdgeCost(opp_edge, t2->GetSpeed(opp_edge)) +
+    Cost newcost = pred.cost() + costing_->EdgeCost(opp_edge, t2) +
                    costing_->TransitionCostReverse(directededge->localedgeidx(), nodeinfo, opp_edge,
                                                    opp_pred_edge);
     uint32_t distance = pred.path_distance() + directededge->length();
@@ -350,7 +350,7 @@ TimeDistanceMatrix::ManyToOne(const valhalla::Location& dest,
       // have been settled.
       tile = graphreader.GetGraphTile(pred.edgeid());
       const DirectedEdge* edge = tile->directededge(pred.edgeid());
-      if (UpdateDestinations(dest, locations, destedge->second, edge, pred, predindex)) {
+      if (UpdateDestinations(dest, locations, destedge->second, edge, tile, pred, predindex)) {
         return FormTimeDistanceMatrix();
       }
     }
@@ -440,8 +440,7 @@ void TimeDistanceMatrix::SetOriginOneToMany(GraphReader& graphreader,
 
     // Get cost. Use this as sortcost since A* is not used for time+distance
     // matrix computations. . Get distance along the remainder of this edge.
-    Cost cost = costing_->EdgeCost(directededge, tile->GetSpeed(directededge)) *
-                (1.0f - edge.percent_along());
+    Cost cost = costing_->EdgeCost(directededge, tile) * (1.0f - edge.percent_along());
     uint32_t d = static_cast<uint32_t>(directededge->length() * (1.0f - edge.percent_along()));
 
     // We need to penalize this location based on its score (distance in meters from input)
@@ -490,8 +489,7 @@ void TimeDistanceMatrix::SetOriginManyToOne(GraphReader& graphreader,
 
     // Get cost. Use this as sortcost since A* is not used for time
     // distance matrix computations. Get the distance along the edge.
-    Cost cost =
-        costing_->EdgeCost(opp_dir_edge, endtile->GetSpeed(opp_dir_edge)) * edge.percent_along();
+    Cost cost = costing_->EdgeCost(opp_dir_edge, endtile) * edge.percent_along();
     uint32_t d = static_cast<uint32_t>(directededge->length() * edge.percent_along());
 
     // We need to penalize this location based on its score (distance in meters from input)
@@ -541,7 +539,7 @@ void TimeDistanceMatrix::SetDestinations(
       GraphId id(static_cast<GraphId>(edge.graph_id()));
       const GraphTile* tile = graphreader.GetGraphTile(id);
       const DirectedEdge* directededge = tile->directededge(id);
-      float c = costing_->EdgeCost(directededge, tile->GetSpeed(directededge)).cost;
+      float c = costing_->EdgeCost(directededge, tile).cost;
 
       // We need to penalize this location based on its score (distance in meters from input)
       // We assume the slowest speed you could travel to cover that distance to start/end the route
@@ -587,7 +585,7 @@ void TimeDistanceMatrix::SetDestinationsManyToOne(
       GraphId id(static_cast<GraphId>(edge.graph_id()));
       const GraphTile* tile = graphreader.GetGraphTile(id);
       const DirectedEdge* directededge = tile->directededge(id);
-      float c = costing_->EdgeCost(directededge, tile->GetSpeed(directededge)).cost;
+      float c = costing_->EdgeCost(directededge, tile).cost;
 
       // We need to penalize this location based on its score (distance in meters from input)
       // We assume the slowest speed you could travel to cover that distance to start/end the route
@@ -612,6 +610,7 @@ bool TimeDistanceMatrix::UpdateDestinations(
     const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
     std::vector<uint32_t>& destinations,
     const DirectedEdge* edge,
+    const GraphTile* tile,
     const EdgeLabel& pred,
     const uint32_t predindex) {
   // For each destination along this edge
@@ -647,7 +646,7 @@ bool TimeDistanceMatrix::UpdateDestinations(
     // Get the cost. The predecessor cost is cost to the end of the edge.
     // Subtract the partial remaining cost and distance along the edge.
     float remainder = dest_edge->second;
-    Cost newcost = pred.cost() - (costing_->EdgeCost(edge, edge->speed()) * remainder);
+    Cost newcost = pred.cost() - (costing_->EdgeCost(edge, tile) * remainder);
     if (newcost.cost < dest.best_cost.cost) {
       dest.best_cost = newcost;
       dest.distance = pred.path_distance() - (edge->length() * remainder);

@@ -112,15 +112,19 @@ endif()
 find_package(Threads REQUIRED)
 find_package(ZLIB REQUIRED)
 
-add_library(CURL::CURL INTERFACE IMPORTED)
-if(ENABLE_HTTP OR ENABLE_DATA_TOOLS)
-  if(NOT CURL_FOUND)
-    find_package(CURL REQUIRED)
+if(NOT TARGET CURL::CURL)
+  add_library(CURL::CURL INTERFACE IMPORTED)
+  if(ENABLE_HTTP OR ENABLE_DATA_TOOLS)
+    if(NOT CURL_FOUND)
+      find_package(CURL REQUIRED)
+    endif()
+    set_target_properties(CURL::CURL PROPERTIES
+      INTERFACE_LINK_LIBRARIES "${CURL_LIBRARIES}"
+      INTERFACE_INCLUDE_DIRECTORIES "${CURL_INCLUDE_DIR}"
+      INTERFACE_COMPILE_DEFINITIONS CURL_STATICLIB)
   endif()
-  set_target_properties(CURL::CURL PROPERTIES
-    INTERFACE_LINK_LIBRARIES "${CURL_LIBRARIES}"
-    INTERFACE_INCLUDE_DIRECTORIES "${CURL_INCLUDE_DIR}"
-    INTERFACE_COMPILE_DEFINITIONS CURL_STATICLIB)
+else()
+  message(STATUS "Using curl from the outside")
 endif()
 
 if(NOT Protobuf_FOUND)
@@ -212,7 +216,7 @@ add_subdirectory(src)
 if(ENABLE_PYTHON_BINDINGS)
   #TODO: need to make sure they actually have python
   add_subdirectory(src/bindings/python)
-  install(FILES COPYING ChangeLog
+  install(FILES COPYING CHANGELOG.md
     DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/doc/python-valhalla"
     COMPONENT python)
 endif()
@@ -296,7 +300,7 @@ install(
     WORLD_READ WORLD_EXECUTE
   COMPONENT runtime)
 
-install(FILES COPYING ChangeLog
+install(FILES COPYING CHANGELOG.md
   DESTINATION "${CMAKE_INSTALL_DOCDIR}"
   COMPONENT runtime)
 

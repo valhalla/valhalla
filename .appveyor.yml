@@ -27,18 +27,8 @@ cache:
 clone_depth: 1
 
 install:
-  - ps: 'Write-Host "Fix symlinks to third-party .proto files" -ForegroundColor Magenta'
-  - cmd: |
-      git config core.symlinks true
-      git reset --hard
-
   - ps: 'Write-Host "Pull submodules" -ForegroundColor Magenta'
   - cmd: git submodule update --init --recursive
-
-  - ps: 'Write-Host "Check symlinks to third-party .proto files" -ForegroundColor Magenta'
-  - ps: |
-      Get-Content -TotalCount 1 -Path .\proto\fileformat.proto
-      Get-Content -TotalCount 1 -Path .\proto\osmformat.proto
 
   - ps: 'Write-Host "Install vcpkg" -ForegroundColor Magenta'
   - cmd: |
