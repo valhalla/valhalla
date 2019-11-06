@@ -173,6 +173,49 @@ void test_osrm_maneuver(const std::string filename,
   }
 }
 
+void test_osrm_destinations(const std::string filename,
+                            int routes_index,
+                            int legs_index,
+                            int steps_index,
+                            const std::string expected_destinations) {
+  // Load pinpoint test
+  std::string path_bytes = test::load_binary_file(filename);
+  if (path_bytes.size() == 0) {
+    throw std::runtime_error("path_bytes is empty");
+  }
+
+  // Create the request from the path bytes
+  valhalla::Api request;
+  request.ParseFromString(path_bytes);
+
+  // Set osrm format
+  request.mutable_options()->set_format(valhalla::Options_Format_osrm);
+
+  // Build the directions
+  valhalla::odin::DirectionsBuilder().Build(request);
+
+  // Serialize to osrm json string
+  auto json_str = valhalla::tyr::serializeDirections(request);
+
+  rapidjson::Document doc;
+  doc.Parse(json_str.c_str());
+  if (doc.HasParseError()) {
+    throw std::runtime_error("Parse JSON error");
+  }
+
+  // Set the destination path
+  std::string destinations_path = "/routes/" + std::to_string(routes_index) + "/legs/" +
+                                  std::to_string(legs_index) + "/steps/" +
+                                  std::to_string(steps_index) + "/destinations";
+
+  // Validate destinations
+  std::string found_destinations = rapidjson::get<std::string>(doc, destinations_path.c_str());
+  if (found_destinations != expected_destinations) {
+    throw std::runtime_error("Invalid destinations - found: " + found_destinations +
+                             " | expected: " + expected_destinations);
+  }
+}
+
 void validate_merge_instructions() {
 
   int expected_routes_size = 1;
@@ -207,6 +250,22 @@ void validate_osrm_merge_maneuver() {
   // Test osrm merge left
   test_osrm_maneuver({VALHALLA_SOURCE_DIR "test/pinpoints/instructions/merge_left.pbf"}, routes_index,
                      legs_index, steps_index, "merge", "slight left");
+}
+
+void validate_osrm_destinations() {
+
+  int routes_index = 0;
+  int legs_index = 0;
+  int steps_index = 1;
+
+  // Test osrm turn right guide sign
+  test_osrm_destinations({VALHALLA_SOURCE_DIR
+                          "test/pinpoints/instructions/turn_right_guide_sign.pbf"},
+                         routes_index, legs_index, steps_index, "A 95: München");
+
+  // Test osrm turn left guide sign
+  test_osrm_destinations({VALHALLA_SOURCE_DIR "test/pinpoints/instructions/turn_left_guide_sign.pbf"},
+                         routes_index, legs_index, steps_index, "Germering, Planegg");
 }
 
 void validate_ramp_instructions() {
@@ -266,6 +325,9 @@ int main() {
 
   // Validate the exit instructions
   suite.test(TEST_CASE(validate_exit_instructions));
+
+  // Validate the osrm destinations
+  suite.test(TEST_CASE(validate_osrm_destinations));
 
   return suite.tear_down();
 }
