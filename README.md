@@ -123,9 +123,6 @@ Now, clone the Valhalla repository
 git clone --recurse-submodules https://github.com/valhalla/valhalla.git
 ```
 
-On Windows, you will need to run [Git 2.10.2 or later with symlinks support enabled](https://stackoverflow.com/a/11664406/151641)
-and pass `-c core.symlinks=true` to `git clone` command line.
-
 Then, build [`prime_server`](https://github.com/kevinkreiser/prime_server#build-and-install).
 
 After getting the dependencies install it with:
