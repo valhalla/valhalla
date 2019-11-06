@@ -150,6 +150,9 @@ void FormTilesInNewLevel(GraphReader& reader,
         lowest_level = 0;
       }
       return (lowest_level == current_level);
+    } else if (directededge->bss_connection()) {
+      // Despite the road class, Bike Share Stations' connections are always at local level
+      return (2 == current_level);
     } else {
       return (TileHierarchy::get_level(directededge->classification()) == current_level);
     }
@@ -430,9 +433,12 @@ void CreateNodeAssociations(GraphReader& reader,
         // Update the flag for the level of this edge (skip transit
         // connection edges)
         const DirectedEdge* directededge = tile->directededge(edgeid);
-        if (directededge->use() != Use::kTransitConnection &&
-            directededge->use() != Use::kEgressConnection &&
-            directededge->use() != Use::kPlatformConnection) {
+        if (directededge->bss_connection()) {
+          // Despite the road class, Bike Share Stations' connections are always at local level
+          levels[2] = true;
+        } else if (directededge->use() != Use::kTransitConnection &&
+                   directededge->use() != Use::kEgressConnection &&
+                   directededge->use() != Use::kPlatformConnection) {
           levels[TileHierarchy::get_level(directededge->classification())] = true;
         }
       }

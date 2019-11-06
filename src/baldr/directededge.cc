@@ -539,6 +539,10 @@ void DirectedEdge::set_max_down_slope(const float slope) {
   }
 }
 
+void DirectedEdge::set_bss_connection(const bool bss_connection) {
+  bss_connection_ = bss_connection;
+}
+
 // Json representation
 json::MapPtr DirectedEdge::json() const {
   return json::map({

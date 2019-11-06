@@ -1,10 +1,10 @@
 # How to run the the `valhalla_run_route` application
-Run the valhalla_run_route application using the `requests/demo_routes.txt` route request file and the `../../conf/valhalla.json` config file:
+Run the valhalla_run_route application using the `../test_requests/demo_routes.txt` route request file and the `../../conf/valhalla.json` config file:
 ```
 #Usage:
 ./run.sh <ROUTE_REQUEST_FILE> <CONFIG_FILE>
 #Example#1:
-./run.sh requests/demo_routes.txt ../../conf/valhalla.json
+./run.sh ../test_requests/demo_routes.txt ../../conf/valhalla.json
 ```
 The results will be stored in the `<TIMESTAMP>_<ROUTE_REQUEST_FILE_BASENAME>` directory, e.g. `20160112_181443_demo_routes`
 

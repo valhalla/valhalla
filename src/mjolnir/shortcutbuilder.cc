@@ -383,7 +383,7 @@ uint32_t AddShortcutEdges(GraphReader& reader,
     const DirectedEdge* directededge = tile->directededge(edge_id);
     if (directededge->use() == Use::kTransitConnection ||
         directededge->use() == Use::kEgressConnection ||
-        directededge->use() == Use::kPlatformConnection) {
+        directededge->use() == Use::kPlatformConnection || directededge->bss_connection()) {
       continue;
     }
 
