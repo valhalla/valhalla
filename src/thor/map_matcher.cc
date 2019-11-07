@@ -169,11 +169,10 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
   size_t last_interp_index = 0;
   if (use_timestamps) {
     interpolations = interpolate_matches(results, edge_segments, matcher);
-    if (interpolations.size() > 1) {
-      // This means there is a discontinuity. If so, fallback to using costing
+    // This means there is a discontinuity. If so, fallback to using costing
+    if (interpolations.size() != 1)
       use_timestamps = false;
-    }
-    if (!interpolations.empty())
+    else
       last_interp_index = interpolations.front().back().original_index;
   }
 
