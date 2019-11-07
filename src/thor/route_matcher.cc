@@ -192,7 +192,7 @@ bool expand_from_node(const std::shared_ptr<DynamicCost>* mode_costing,
         elapsed += cost;
         // overwrite time with timestamps
         if (use_timestamps)
-          elapsed.secs = shape.back().epoch_time() - shape[0].epoch_time();
+          elapsed.secs = shape[index].epoch_time() - shape[0].epoch_time();
 
         // Add edge and update correlated index
         path_infos.emplace_back(mode, elapsed.secs, edge_id, 0, elapsed.cost);
