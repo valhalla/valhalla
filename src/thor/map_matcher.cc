@@ -156,8 +156,9 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
       directededge = tile->directededge(s.edgeid);
       if (matcher->graphreader().GetGraphTile(directededge->endnode(), tile)) {
         nodeinfo = tile->node(directededge->endnode());
-        DateTime::seconds_since_epoch(options.date_time(),
-                                      DateTime::get_tz_db().from_index(nodeinfo->timezone()));
+        origin_epoch =
+            DateTime::seconds_since_epoch(options.date_time(),
+                                          DateTime::get_tz_db().from_index(nodeinfo->timezone()));
         nodeinfo = nullptr;
       }
     }

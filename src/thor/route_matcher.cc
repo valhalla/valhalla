@@ -291,9 +291,10 @@ bool RouteMatcher::FormPath(const std::shared_ptr<DynamicCost>* mode_costing,
       directededge = tile->directededge(edgeid);
       if (reader.GetGraphTile(directededge->endnode(), tile)) {
         nodeinfo = tile->node(directededge->endnode());
-        DateTime::seconds_since_epoch(options.date_time(),
-                                      DateTime::get_tz_db().from_index(nodeinfo->timezone()));
-        nodeinfo = nullptr;
+        origin_epoch =
+            DateTime::seconds_since_epoch(options.date_time(),
+                                          DateTime::get_tz_db().from_index(nodeinfo->timezone()));
+        // NOTE: we leave nodeinfo intact so the first edge has a timezone to get seconds of week
       }
     }
   }

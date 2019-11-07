@@ -310,6 +310,7 @@ void parse_locations(const rapidjson::Document& doc,
     return;
   }
 
+  bool had_date_time = false;
   auto request_locations =
       rapidjson::get_optional<rapidjson::Value::ConstArray>(doc, std::string("/" + node).c_str());
   if (request_locations) {
@@ -385,6 +386,7 @@ void parse_locations(const rapidjson::Document& doc,
         auto date_time = rapidjson::get_optional<std::string>(r_loc, "/date_time");
         if (date_time) {
           location->set_date_time(*date_time);
+          had_date_time = true;
         }
         auto heading = rapidjson::get_optional<int>(r_loc, "/heading");
         if (heading) {
@@ -439,6 +441,7 @@ void parse_locations(const rapidjson::Document& doc,
         }
       } catch (...) { throw valhalla_exception_t{location_parse_error_code}; }
     }
+
     // first and last locations get the default type of break no matter what
     if (locations->size()) {
       locations->Mutable(0)->set_type(valhalla::Location::kBreak);
@@ -447,6 +450,23 @@ void parse_locations(const rapidjson::Document& doc,
     if (track) {
       midgard::logging::Log(node + "_count::" + std::to_string(request_locations->Size()),
                             " [ANALYTICS] ");
+    }
+
+    // push the date time information down into the locations
+    if (!had_date_time && options.has_date_time() && locations->size()) {
+      switch (options.date_time_type()) {
+        case Options::current:
+          locations->Mutable(0)->set_date_time("current");
+          break;
+        case Options::depart_at:
+          locations->Mutable(0)->set_date_time(options.date_time());
+          break;
+        case Options::arrive_by:
+          locations->Mutable(0)->set_date_time(options.date_time());
+          break;
+        default:
+          break;
+      }
     }
   }
 }
@@ -541,6 +561,37 @@ void from_json(rapidjson::Document& doc, Options& options) {
     options.set_directions_type(directions_type);
   }
 
+  // date_time
+  auto date_time_type = rapidjson::get_optional<unsigned int>(doc, "/date_time/type");
+  auto date_time_value = rapidjson::get_optional<std::string>(doc, "/date_time/value");
+  if (date_time_type && Options::DateTimeType_IsValid(*date_time_type)) {
+    // check the type is in bounds
+    auto const v = static_cast<Options::DateTimeType>(*date_time_type);
+    if (v >= Options::DateTimeType_ARRAYSIZE)
+      throw valhalla_exception_t{163};
+    options.set_date_time_type(static_cast<Options::DateTimeType>(v));
+    // check the value exists for depart at and arrive by
+    if (!date_time_value) {
+      if (v == Options::depart_at)
+        throw valhalla_exception_t{160};
+      else if (v == Options::arrive_by)
+        throw valhalla_exception_t{161};
+    }
+    // check the value is sane for depart at and arrive by
+    if (v != Options::current && !baldr::DateTime::is_iso_valid(*date_time_value))
+      throw valhalla_exception_t{162};
+    if (v != Options::current)
+      options.set_date_time(*date_time_value);
+    else
+      options.set_date_time("current");
+  } // not specified but you want transit, then we default to current
+  else if (options.has_costing() &&
+           (options.costing() == multimodal || options.costing() == transit)) {
+    options.set_date_time_type(Options::current);
+    options.set_date_time("current");
+  }
+
+  // parse map matching location input
   auto encoded_polyline = rapidjson::get_optional<std::string>(doc, "/encoded_polyline");
   if (encoded_polyline) {
     options.set_encoded_polyline(*encoded_polyline);
@@ -557,7 +608,8 @@ void from_json(rapidjson::Document& doc, Options& options) {
       options.mutable_shape(0)->set_type(valhalla::Location::kBreak);
       options.mutable_shape(options.shape_size() - 1)->set_type(valhalla::Location::kBreak);
     }
-  } else {
+  } // fall back from encoded polyline to array of locations
+  else {
     parse_locations(doc, options, "shape", 134, false);
 
     // if no shape then try 'trace'
@@ -725,60 +777,8 @@ void from_json(rapidjson::Document& doc, Options& options) {
   // get the avoids in there
   parse_locations(doc, options, "avoid_locations", 133, track);
 
-  // time type
-  auto date_time_type = rapidjson::get_optional<float>(doc, "/date_time/type");
-  if (date_time_type && Options::DateTimeType_IsValid(*date_time_type)) {
-    auto const v = static_cast<int>(*date_time_type);
-    options.set_date_time_type(static_cast<Options::DateTimeType>(v));
-  } // not specified but you want transit, then we default to current
-  else if (options.has_costing() &&
-           (options.costing() == multimodal || options.costing() == transit)) {
-    options.set_date_time_type(Options::current);
-  }
-
-  // time value
-  if (options.has_date_time_type()) {
-    auto date_time_value = rapidjson::get_optional<std::string>(doc, "/date_time/value");
-    switch (options.date_time_type()) {
-      case Options::current:
-        options.set_date_time("current");
-        if (options.locations_size() > 0) {
-          options.mutable_locations(0)->set_date_time("current");
-        }
-        break;
-      case Options::depart_at:
-        if (!date_time_value) {
-          throw valhalla_exception_t{160};
-        };
-        if (!baldr::DateTime::is_iso_valid(*date_time_value)) {
-          throw valhalla_exception_t{162};
-        };
-        options.set_date_time(*date_time_value);
-        if (options.locations_size() > 0) {
-          options.mutable_locations(0)->set_date_time(*date_time_value);
-        }
-        break;
-      case Options::arrive_by:
-        // not yet for transit
-        if (options.costing() == multimodal || options.costing() == transit) {
-          throw valhalla_exception_t{141};
-        };
-        if (!date_time_value) {
-          throw valhalla_exception_t{161};
-        };
-        if (!baldr::DateTime::is_iso_valid(*date_time_value)) {
-          throw valhalla_exception_t{162};
-        };
-        options.set_date_time(*date_time_value);
-        if (options.locations_size() > 0) {
-          options.mutable_locations()->rbegin()->set_date_time(*date_time_value);
-        }
-        break;
-      default:
-        throw valhalla_exception_t{163};
-    }
-  } // if we arent doing a time dependent route disable time dependent edge speed/flow data sources
-  else {
+  // if we arent doing a time dependent route disable time dependent edge speed/flow data sources
+  if (!options.has_date_time_type()) {
     for (auto& costing : *options.mutable_costing_options()) {
       costing.set_flow_mask(
           static_cast<uint8_t>(costing.flow_mask()) &
