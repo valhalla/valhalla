@@ -15,7 +15,10 @@
 #include <date/tz.h>
 
 #include <valhalla/baldr/graphconstants.h>
+#include <valhalla/baldr/nodeinfo.h>
 #include <valhalla/midgard/constants.h>
+
+#include <valhalla/proto/tripcommon.pb.h>
 
 namespace valhalla {
 namespace baldr {
@@ -162,6 +165,15 @@ bool is_restricted(const bool type,
                    const uint8_t end_day_dow,
                    const uint64_t current_time,
                    const date::time_zone* time_zone);
+
+/**
+ * Gets the second of the week from an epoch time, timezone information and an offset
+ * @param epoch_time   the time from which to offset
+ * @param node         the node where the offset is happening
+ * @param elapsedtime  how many seconds to offset by
+ * @return the second of the week accounting for timezone transformation from epoch time
+ */
+uint32_t second_of_week(uint32_t epoch_time, const NodeInfo* node, double elapsedtime);
 
 /**
  * Convert ISO 8601 time into std::tm.

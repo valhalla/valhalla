@@ -44,10 +44,11 @@ float round_up(float val, int multiple) {
   return int((val + multiple - 1) / multiple) * multiple;
 }
 
-std::string
-to_locations(const std::vector<PointLL>& shape, const std::vector<float>& accuracies, int frequency) {
+std::string to_locations(const std::vector<PointLL>& shape,
+                         const std::vector<float>& accuracies,
+                         int frequency = 0,
+                         int start_time = 8 * 60 * 60) {
   std::string locations = "[";
-  int freq = 0;
   for (size_t i = 0; i < shape.size(); ++i) {
     // round accuracy up to nearest 5m
     int accuracy = round_up(accuracies[i] + 1.f, 5);
@@ -57,9 +58,9 @@ to_locations(const std::vector<PointLL>& shape, const std::vector<float>& accura
     locations +=
         R"({"lat":)" + std::to_string(p.second) + R"(,"lon":)" + std::to_string(p.first) + acc;
     // get the time component
-    freq += frequency;
-    if (freq > 0)
-      locations += R"(,"time":)" + std::to_string(freq);
+    start_time += frequency;
+    if (frequency > 0)
+      locations += R"(,"time":)" + std::to_string(start_time);
     locations += "},";
   }
   locations.back() = ']';
@@ -170,9 +171,10 @@ void test_matcher() {
     // get the edges along that route shape
     boost::property_tree::ptree walked;
     std::string walked_json;
+
     try {
       walked_json = actor.trace_attributes(
-          R"({"costing":"auto","shape_match":"edge_walk","encoded_polyline":")" +
+          R"({"date_time":{"type":1,"value":"2019-10-31T18:30"},"costing":"auto","shape_match":"edge_walk","encoded_polyline":")" +
           json_escape(encoded_shape) + "\"}");
       walked = json_to_pt(walked_json);
     } catch (...) {
@@ -200,8 +202,6 @@ void test_matcher() {
       auto b = edge.second.get<size_t>("begin_shape_index");
       auto e = edge.second.get<size_t>("end_shape_index") + 1;
 
-      printf("%zu %zu %zu %.1f\n", b, e - 1, e - b,
-             (walked_shape.cbegin() + b)->Distance(*(walked_shape.cbegin() + e - 1)));
       segments.emplace_back(
           gps_segment_t{std::vector<PointLL>(walked_shape.cbegin() + b, walked_shape.cbegin() + e),
                         static_cast<float>(edge.second.get<float>("speed") * 1e3) / 3600.f});
@@ -332,12 +332,12 @@ void test_trace_route_edge_walk_expected_error_code() {
   try {
     auto response = json_to_pt(actor.trace_route(
         R"({"costing":"auto","shape_match":"edge_walk","shape":[
-         {"lat":52.088548,"lon":5.15357,"accuracy":30},
-         {"lat":52.088627,"lon":5.153269,"accuracy":30},
-         {"lat":52.08864,"lon":5.15298,"accuracy":30},
-         {"lat":52.08861,"lon":5.15272,"accuracy":30},
-         {"lat":52.08863,"lon":5.15253,"accuracy":30},
-         {"lat":52.08851,"lon":5.15249,"accuracy":30}]})"));
+         {"lat":52.088548,"lon":5.15357,"accuracy":30,"time":2},
+         {"lat":52.088627,"lon":5.153269,"accuracy":30,"time":4},
+         {"lat":52.08864,"lon":5.15298,"accuracy":30,"time":6},
+         {"lat":52.08861,"lon":5.15272,"accuracy":30,"time":8},
+         {"lat":52.08863,"lon":5.15253,"accuracy":30,"time":10},
+         {"lat":52.08851,"lon":5.15249,"accuracy":30,"time":12}]})"));
   } catch (const valhalla_exception_t& e) {
     if (e.code != expected_error_code) {
       throw std::logic_error("Expected error code=" + std::to_string(expected_error_code) +
@@ -359,12 +359,12 @@ void test_trace_route_map_snap_expected_error_code() {
   try {
     auto response = json_to_pt(actor.trace_route(
         R"({"costing":"auto","shape_match":"map_snap","shape":[
-         {"lat":52.088548,"lon":5.15357,"radius":5},
-         {"lat":52.088627,"lon":5.153269,"radius":5},
-         {"lat":52.08864,"lon":5.15298,"radius":5},
-         {"lat":52.08861,"lon":5.15272,"radius":5},
-         {"lat":52.08863,"lon":5.15253,"radius":5},
-         {"lat":52.08851,"lon":5.15249,"radius":5}]})"));
+         {"lat":52.088548,"lon":5.15357,"radius":5,"time":2},
+         {"lat":52.088627,"lon":5.153269,"radius":5,"time":4},
+         {"lat":52.08864,"lon":5.15298,"radius":5,"time":6},
+         {"lat":52.08861,"lon":5.15272,"radius":5,"time":8},
+         {"lat":52.08863,"lon":5.15253,"radius":5,"time":10},
+         {"lat":52.08851,"lon":5.15249,"radius":5,"time":12}]})"));
   } catch (const valhalla_exception_t& e) {
     if (e.code != expected_error_code) {
       throw std::logic_error("Expected error code=" + std::to_string(expected_error_code) +
@@ -386,12 +386,12 @@ void test_trace_attributes_edge_walk_expected_error_code() {
   try {
     auto response = json_to_pt(actor.trace_attributes(
         R"({"costing":"auto","shape_match":"edge_walk","shape":[
-         {"lat":52.088548,"lon":5.15357,"accuracy":30},
-         {"lat":52.088627,"lon":5.153269,"accuracy":30},
-         {"lat":52.08864,"lon":5.15298,"accuracy":30},
-         {"lat":52.08861,"lon":5.15272,"accuracy":30},
-         {"lat":52.08863,"lon":5.15253,"accuracy":30},
-         {"lat":52.08851,"lon":5.15249,"accuracy":30}]})"));
+         {"lat":52.088548,"lon":5.15357,"accuracy":30,"time":2},
+         {"lat":52.088627,"lon":5.153269,"accuracy":30,"time":4},
+         {"lat":52.08864,"lon":5.15298,"accuracy":30,"time":6},
+         {"lat":52.08861,"lon":5.15272,"accuracy":30,"time":8},
+         {"lat":52.08863,"lon":5.15253,"accuracy":30,"time":10},
+         {"lat":52.08851,"lon":5.15249,"accuracy":30,"time":12}]})"));
   } catch (const valhalla_exception_t& e) {
     if (e.code != expected_error_code) {
       throw std::logic_error("Expected error code=" + std::to_string(expected_error_code) +
@@ -413,12 +413,12 @@ void test_trace_attributes_map_snap_expected_error_code() {
   try {
     auto response = json_to_pt(actor.trace_attributes(
         R"({"costing":"auto","shape_match":"map_snap","shape":[
-         {"lat":52.088548,"lon":5.15357,"radius":5},
-         {"lat":52.088627,"lon":5.153269,"radius":5},
-         {"lat":52.08864,"lon":5.15298,"radius":5},
-         {"lat":52.08861,"lon":5.15272,"radius":5},
-         {"lat":52.08863,"lon":5.15253,"radius":5},
-         {"lat":52.08851,"lon":5.15249,"radius":5}]})"));
+         {"lat":52.088548,"lon":5.15357,"radius":5,"time":2},
+         {"lat":52.088627,"lon":5.153269,"radius":5,"time":4},
+         {"lat":52.08864,"lon":5.15298,"radius":5,"time":6},
+         {"lat":52.08861,"lon":5.15272,"radius":5,"time":8},
+         {"lat":52.08863,"lon":5.15253,"radius":5,"time":10},
+         {"lat":52.08851,"lon":5.15249,"radius":5,"time":12}]})"));
   } catch (const valhalla_exception_t& e) {
     if (e.code != expected_error_code) {
       throw std::logic_error("Expected error code=" + std::to_string(expected_error_code) +
@@ -439,18 +439,18 @@ void test_topk_validate() {
   // tests a previous segfault due to using a claimed state
   auto matched = json_to_pt(actor.trace_attributes(
       R"({"costing":"auto","best_paths":2,"shape_match":"map_snap","shape":[
-         {"lat":52.088548,"lon":5.15357,"accuracy":30},
-         {"lat":52.088627,"lon":5.153269,"accuracy":30},
-         {"lat":52.08864,"lon":5.15298,"accuracy":30},
-         {"lat":52.08861,"lon":5.15272,"accuracy":30},
-         {"lat":52.08863,"lon":5.15253,"accuracy":30},
-         {"lat":52.08851,"lon":5.15249,"accuracy":30}]})"));
+         {"lat":52.088548,"lon":5.15357,"accuracy":30,"time":2},
+         {"lat":52.088627,"lon":5.153269,"accuracy":30,"time":4},
+         {"lat":52.08864,"lon":5.15298,"accuracy":30,"time":6},
+         {"lat":52.08861,"lon":5.15272,"accuracy":30,"time":8},
+         {"lat":52.08863,"lon":5.15253,"accuracy":30,"time":10},
+         {"lat":52.08851,"lon":5.15249,"accuracy":30,"time":12}]})"));
 
   // this tests a fix for an infinite loop because there is only 1 result and we ask for 4
   matched = json_to_pt(actor.trace_attributes(
       R"({"costing":"auto","best_paths":4,"shape_match":"map_snap","shape":[
-         {"lat":52.09579,"lon":5.13137,"accuracy":5},
-         {"lat":52.09652,"lon":5.13184,"accuracy":5}]})"));
+         {"lat":52.09579,"lon":5.13137,"accuracy":5,"time":2},
+         {"lat":52.09652,"lon":5.13184,"accuracy":5,"time":4}]})"));
   if (matched.get_child("alternate_paths").size() > 0)
     throw std::logic_error("There should be only one result");
 }
@@ -460,9 +460,9 @@ void test_topk_fork_alternate() {
   tyr::actor_t actor(conf, true);
   auto matched = json_to_pt(actor.trace_attributes(
       R"({"trace_options":{"search_radius":0},"costing":"auto","best_paths":2,"shape_match":"map_snap","shape":[
-          {"lat":52.08511,"lon":5.15085,"accuracy":10},
-          {"lat":52.08533,"lon":5.15109,"accuracy":20},
-          {"lat":52.08539,"lon":5.15100,"accuracy":20}]})"));
+          {"lat":52.08511,"lon":5.15085,"accuracy":10,"time":2},
+          {"lat":52.08533,"lon":5.15109,"accuracy":20,"time":4},
+          {"lat":52.08539,"lon":5.15100,"accuracy":20,"time":6}]})"));
 
   /*** Primary path - left at the fork
     {"type":"FeatureCollection","features":[
@@ -597,13 +597,13 @@ void test_topk_frontage_alternate() {
   tyr::actor_t actor(conf, true);
   auto matched = json_to_pt(actor.trace_attributes(
       R"({"costing":"auto","best_paths":2,"shape_match":"map_snap","shape":[
-           {"lat":52.07956040090567,"lon":5.138160288333893,"accuracy":10},
-           {"lat":52.07957358807355,"lon":5.138508975505829,"accuracy":10},
-           {"lat":52.07959666560798,"lon":5.138905942440034,"accuracy":10},
-           {"lat":52.0796213915245,"lon":5.139262676239015,"accuracy":10},
-           {"lat":52.079637875461195,"lon":5.139581859111787,"accuracy":10},
-           {"lat":52.07964776582031,"lon":5.139828622341157,"accuracy":10},
-           {"lat":52.07985600778458,"lon":5.1404121782302865,"accuracy":10}]})"));
+           {"lat":52.07956040090567,"lon":5.138160288333893,"accuracy":10,"time":2},
+           {"lat":52.07957358807355,"lon":5.138508975505829,"accuracy":10,"time":4},
+           {"lat":52.07959666560798,"lon":5.138905942440034,"accuracy":10,"time":6},
+           {"lat":52.0796213915245,"lon":5.139262676239015,"accuracy":10,"time":8},
+           {"lat":52.079637875461195,"lon":5.139581859111787,"accuracy":10,"time":10},
+           {"lat":52.07964776582031,"lon":5.139828622341157,"accuracy":10,"time":12},
+           {"lat":52.07985600778458,"lon":5.1404121782302865,"accuracy":10,"time":14}]})"));
 
   /*** Primary path - use main road
     {"type":"FeatureCollection","features":[

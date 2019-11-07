@@ -1,3 +1,4 @@
+#include "baldr/datetime.h"
 #include "baldr/tilehierarchy.h"
 #include "midgard/logging.h"
 #include "midgard/util.h"
@@ -102,6 +103,7 @@ bool expand_from_node(const std::shared_ptr<DynamicCost>* mode_costing,
                       GraphReader& reader,
                       const std::vector<meili::Measurement>& shape,
                       std::vector<std::pair<float, float>>& distances,
+                      uint32_t origin_epoch,
                       const bool use_timestamps,
                       size_t& correlated_index,
                       const GraphTile* tile,
@@ -128,10 +130,10 @@ bool expand_from_node(const std::shared_ptr<DynamicCost>* mode_costing,
   uint32_t start_de = followed_edges[correlated_index][level].first;
 
   // Iterate through directed edges from this node
-  const NodeInfo* node_info = tile->node(node);
-  GraphId edge_id(node.tileid(), level, node_info->edge_index());
-  const DirectedEdge* de = tile->directededge(node_info->edge_index());
-  for (uint32_t i = start_de; i < node_info->edge_count(); i++, de++, ++edge_id) {
+  const NodeInfo* nodeinfo = tile->node(node);
+  GraphId edge_id(node.tileid(), level, nodeinfo->edge_index());
+  const DirectedEdge* de = tile->directededge(nodeinfo->edge_index());
+  for (uint32_t i = start_de; i < nodeinfo->edge_count(); i++, de++, ++edge_id) {
     // Mark the directed edge as already followed
     followed_edges[correlated_index][level].first = i;
 
@@ -170,12 +172,28 @@ bool expand_from_node(const std::shared_ptr<DynamicCost>* mode_costing,
       // Found a match if shape equals directed edge LL within tolerance
       if (shape.at(index).lnglat().ApproximatelyEqual(de_end_ll) &&
           de->length() < length_comparison(length, true)) {
-        // Update the elapsed time based on transition cost and edge cost
+
+        // get the cost of traversing the node
         auto& costing = mode_costing[static_cast<int>(mode)];
-        elapsed += costing->TransitionCost(de, node_info, prev_edge_label) +
-                   costing->EdgeCost(de, end_node_tile);
+        auto cost = costing->TransitionCost(de, nodeinfo, prev_edge_label);
+
+        // Set seconds from beginning of the week
+        uint32_t second_of_week = kInvalidSecondsOfWeek;
+        // have to always compute the offset in case the timezone changes along the path
+        // we could cache the timezone and just add seconds when the timezone doesnt change
+        // we wont have a valid node on the first pass but then again we also wont have any
+        // elapsed time so this would be irrelevant anyway
+        if (origin_epoch != 0 && nodeinfo) {
+          second_of_week = DateTime::second_of_week(origin_epoch, nodeinfo, elapsed.secs + cost.secs);
+          ;
+        }
+
+        // Get time along the edge, handling partial distance along the first and last edge.
+        cost += costing->EdgeCost(de, end_node_tile, second_of_week);
+        elapsed += cost;
+        // overwrite time with timestamps
         if (use_timestamps)
-          elapsed.secs = shape[index].epoch_time() - shape[0].epoch_time();
+          elapsed.secs = shape.back().epoch_time() - shape[0].epoch_time();
 
         // Add edge and update correlated index
         path_infos.emplace_back(mode, elapsed.secs, edge_id, 0, elapsed.cost);
@@ -184,12 +202,14 @@ bool expand_from_node(const std::shared_ptr<DynamicCost>* mode_costing,
         prev_edge_label = {kInvalidLabel, edge_id, de, {}, 0, 0, mode, 0};
 
         // Continue walking shape to find the end edge...
-        if (expand_from_node(mode_costing, mode, reader, shape, distances, use_timestamps, index,
-                             end_node_tile, de->endnode(), end_nodes, prev_edge_label, elapsed,
-                             path_infos, false, end_node, followed_edges)) {
+        if (expand_from_node(mode_costing, mode, reader, shape, distances, origin_epoch,
+                             use_timestamps, index, end_node_tile, de->endnode(), end_nodes,
+                             prev_edge_label, elapsed, path_infos, false, end_node, followed_edges)) {
           return true;
         } else {
-          // Match failed along this edge, pop the last entry off path_infos and try the next edge
+          // Match failed along this edge, pop the last entry off path_infos as well as what it
+          // contributed to the elapsed cost/time and try to keep going on the next edge
+          elapsed -= cost;
           path_infos.pop_back();
           break;
         }
@@ -202,15 +222,15 @@ bool expand_from_node(const std::shared_ptr<DynamicCost>* mode_costing,
   uint32_t start_trans = followed_edges[correlated_index][level].second;
 
   // Handle transitions - expand from the transition end nodes
-  if (!from_transition && node_info->transition_count() > 0) {
-    const NodeTransition* trans = tile->transition(node_info->transition_index());
-    for (uint32_t i = start_trans; i < node_info->transition_count(); ++i, ++trans) {
+  if (!from_transition && nodeinfo->transition_count() > 0) {
+    const NodeTransition* trans = tile->transition(nodeinfo->transition_index());
+    for (uint32_t i = start_trans; i < nodeinfo->transition_count(); ++i, ++trans) {
       followed_edges[correlated_index][level].second = i;
       const GraphTile* end_node_tile = reader.GetGraphTile(trans->endnode());
       if (end_node_tile == nullptr) {
         continue;
       }
-      if (expand_from_node(mode_costing, mode, reader, shape, distances, use_timestamps,
+      if (expand_from_node(mode_costing, mode, reader, shape, distances, origin_epoch, use_timestamps,
                            correlated_index, end_node_tile, trans->endnode(), end_nodes,
                            prev_edge_label, elapsed, path_infos, true, end_node, followed_edges)) {
         return true;
@@ -227,9 +247,9 @@ bool RouteMatcher::FormPath(const std::shared_ptr<DynamicCost>* mode_costing,
                             const sif::TravelMode& mode,
                             GraphReader& reader,
                             const std::vector<meili::Measurement>& shape,
-                            const bool use_timestamps,
-                            const google::protobuf::RepeatedPtrField<valhalla::Location>& correlated,
+                            const valhalla::Options& options,
                             std::vector<PathInfo>& path_infos) {
+
   if (shape.size() < 2) {
     throw std::runtime_error("Invalid shape - less than 2 points");
   }
@@ -254,11 +274,34 @@ bool RouteMatcher::FormPath(const std::shared_ptr<DynamicCost>* mode_costing,
 
   // Process and validate end edges (can be more than 1). Create a map of
   // the end edges' start nodes and the edge information.
-  auto end_nodes = GetEndEdges(reader, correlated);
+  auto end_nodes = GetEndEdges(reader, options.locations());
 
-  // Iterate through start edges
-  Cost elapsed;
-  for (const auto& edge : correlated.begin()->path_edges()) {
+  // We support either the epoch timestamp that came with the trace point or
+  // a local date time which we convert to epoch by finding the first timezone
+  const GraphTile* tile = nullptr;
+  const DirectedEdge* directededge = nullptr;
+  const NodeInfo* nodeinfo = nullptr;
+  uint32_t origin_epoch = 0;
+  if (options.shape().begin()->time() != -1.0) {
+    origin_epoch = options.shape().begin()->time();
+  } else if (options.shape().begin()->has_date_time()) {
+    for (const auto& e : options.locations().begin()->path_edges()) {
+      GraphId edgeid(e.graph_id());
+      if (!edgeid.Is_Valid() || !reader.GetGraphTile(edgeid, tile))
+        continue;
+      directededge = tile->directededge(edgeid);
+      if (reader.GetGraphTile(directededge->endnode(), tile)) {
+        nodeinfo = tile->node(directededge->endnode());
+        DateTime::seconds_since_epoch(options.date_time(),
+                                      DateTime::get_tz_db().from_index(nodeinfo->timezone()));
+        nodeinfo = nullptr;
+      }
+    }
+  }
+
+  // Perform the edge walk by starting with one of the candidate edges and walking from it
+  // if that walk fails we fall back to another candidate edge until we exhaust the candidates
+  for (const auto& edge : options.locations().begin()->path_edges()) {
     // If origin is at a node - skip any inbound edge
     if (edge.end_node()) {
       continue;
@@ -288,6 +331,7 @@ bool RouteMatcher::FormPath(const std::shared_ptr<DynamicCost>* mode_costing,
     float de_remaining_length = de->length() * (1 - edge.percent_along());
     float de_length = length_comparison(de_remaining_length, true);
     EdgeLabel prev_edge_label;
+    Cost elapsed;
 
     // Loop over shape to form path from matching edges
     while (index < shape.size()) {
@@ -299,10 +343,22 @@ bool RouteMatcher::FormPath(const std::shared_ptr<DynamicCost>* mode_costing,
       // Check if shape is within tolerance at the end node
       if (shape.at(index).lnglat().ApproximatelyEqual(de_end_ll) &&
           de_remaining_length < length_comparison(length, true)) {
-        // Update the elapsed time edge cost at begin edge
-        elapsed += mode_costing[static_cast<int>(mode)]->EdgeCost(de, end_node_tile) *
+
+        // Set seconds from beginning of the week
+        uint32_t second_of_week = kInvalidSecondsOfWeek;
+        // have to always compute the offset in case the timezone changes along the path
+        // we could cache the timezone and just add seconds when the timezone doesnt change
+        // we wont have a valid node on the first pass but then again we also wont have any
+        // elapsed time so this would be irrelevant anyway
+        if (origin_epoch != 0 && nodeinfo) {
+          second_of_week = DateTime::second_of_week(origin_epoch, nodeinfo, elapsed.secs);
+        }
+
+        // Get the cost of traversing the edge
+        elapsed += mode_costing[static_cast<int>(mode)]->EdgeCost(de, end_node_tile, second_of_week) *
                    (1 - edge.percent_along());
-        if (use_timestamps)
+        // overwrite time with timestamps
+        if (options.use_timestamps())
           elapsed.secs = shape[index].epoch_time() - shape[0].epoch_time();
 
         // Add begin edge
@@ -313,9 +369,9 @@ bool RouteMatcher::FormPath(const std::shared_ptr<DynamicCost>* mode_costing,
 
         // Continue walking shape to find the end node
         GraphId end_node;
-        if (expand_from_node(mode_costing, mode, reader, shape, distances, use_timestamps, index,
-                             end_node_tile, de->endnode(), end_nodes, prev_edge_label, elapsed,
-                             path_infos, false, end_node, followed_edges)) {
+        if (expand_from_node(mode_costing, mode, reader, shape, distances, origin_epoch,
+                             options.use_timestamps(), index, end_node_tile, de->endnode(), end_nodes,
+                             prev_edge_label, elapsed, path_infos, false, end_node, followed_edges)) {
           // If node equals stop node then when are done expanding - get the matching end edge
           auto n = end_nodes.find(end_node);
           if (n == end_nodes.end()) {
@@ -338,12 +394,26 @@ bool RouteMatcher::FormPath(const std::shared_ptr<DynamicCost>* mode_costing,
           }
           const DirectedEdge* end_de = end_edge_tile->directededge(end_edge_graphid);
 
-          // Update the elapsed time based on transition cost and edge cost
+          // get the cost of traversing the node
           auto& costing = mode_costing[static_cast<int>(mode)];
-          elapsed += costing->TransitionCost(end_de, end_edge_tile->node(n->first), prev_edge_label) +
-                     costing->EdgeCost(end_de, end_edge_tile) * end_edge.percent_along();
+          nodeinfo = end_edge_tile->node(n->first);
+          elapsed += costing->TransitionCost(end_de, nodeinfo, prev_edge_label);
 
-          if (use_timestamps)
+          // Set seconds from beginning of the week
+          uint32_t second_of_week = kInvalidSecondsOfWeek;
+          // have to always compute the offset in case the timezone changes along the path
+          // we could cache the timezone and just add seconds when the timezone doesnt change
+          // we wont have a valid node on the first pass but then again we also wont have any
+          // elapsed time so this would be irrelevant anyway
+          if (origin_epoch != 0 && nodeinfo) {
+            second_of_week = DateTime::second_of_week(origin_epoch, nodeinfo, elapsed.secs);
+          }
+
+          // Get time along the edge, handling partial distance along the first and last edge.
+          elapsed +=
+              costing->EdgeCost(end_de, end_edge_tile, second_of_week) * end_edge.percent_along();
+          // overwrite time with timestamps
+          if (options.use_timestamps())
             elapsed.secs = shape.back().epoch_time() - shape[0].epoch_time();
 
           // Add end edge
@@ -364,7 +434,7 @@ bool RouteMatcher::FormPath(const std::shared_ptr<DynamicCost>* mode_costing,
         // Update the elapsed time based on edge cost
         elapsed += mode_costing[static_cast<int>(mode)]->EdgeCost(de, end_node_tile) *
                    (end.second.first.percent_along() - edge.percent_along());
-        if (use_timestamps)
+        if (options.use_timestamps())
           elapsed.secs = shape.back().epoch_time() - shape[0].epoch_time();
 
         // Add end edge

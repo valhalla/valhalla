@@ -442,6 +442,13 @@ bool is_restricted(const bool type,
   return (dow_in_range && dt_in_range);
 }
 
+uint32_t second_of_week(uint32_t epoch_time, const NodeInfo* node, double elapsedtime) {
+  // get the date time in this timezone
+  auto dt = seconds_to_date(epoch_time + elapsedtime, get_tz_db().from_index(node->timezone()));
+  // get the seconds from the start of the week from the date time
+  return day_of_week(dt) * midgard::kSecondsPerDay + seconds_from_midnight(dt);
+}
+
 } // namespace DateTime
 } // namespace baldr
 } // namespace valhalla

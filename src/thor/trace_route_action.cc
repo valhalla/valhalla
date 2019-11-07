@@ -126,10 +126,7 @@ void thor_worker_t::trace_route(Api& request) {
 void thor_worker_t::route_match(Api& request) {
   // TODO - make sure the trace has timestamps..
   auto& options = *request.mutable_options();
-  bool use_timestamps = options.use_timestamps();
-
-  if (RouteMatcher::FormPath(mode_costing, mode, *reader, trace, use_timestamps, options.locations(),
-                             m_path_infos)) {
+  if (RouteMatcher::FormPath(mode_costing, mode, *reader, trace, options, m_path_infos)) {
     // Form the trip path based on mode costing, origin, destination, and path edges
     auto& leg = *request.mutable_trip()->mutable_routes()->Add()->mutable_legs()->Add();
     thor::TripLegBuilder::Build(controller, *reader, mode_costing, m_path_infos.begin(),
