@@ -462,7 +462,7 @@ void parse_locations(const rapidjson::Document& doc,
           locations->Mutable(0)->set_date_time(options.date_time());
           break;
         case Options::arrive_by:
-          locations->Mutable(0)->set_date_time(options.date_time());
+          locations->Mutable(locations->size() - 1)->set_date_time(options.date_time());
           break;
         default:
           break;
