@@ -55,7 +55,7 @@ void BidirectionalAStar::Clear() {
 // and reverse search.
 void BidirectionalAStar::Init(const PointLL& origll, const PointLL& destll) {
   // Initialize the A* heuristics
-  float factor = 0;
+  float factor = costing_->AStarCostFactor();
   astarheuristic_forward_.Init(destll, factor);
   astarheuristic_reverse_.Init(origll, factor);
 
