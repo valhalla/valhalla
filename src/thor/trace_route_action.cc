@@ -145,7 +145,7 @@ void thor_worker_t::route_match(Api& request) {
 // PathInfo is primarily a list of edge Ids but it also include elapsed time to the end
 // of each edge. We will need to use the existing costing method to form the elapsed time
 // the path. We will start with just using edge costs and will add transition costs.
-std::vector<std::tuple<float, float, std::vector<thor::MatchResult>>>
+vector<std::tuple<float, float, vector<thor::MatchResult>>>
 thor_worker_t::map_match(Api& request, uint32_t best_paths) {
   auto& options = *request.mutable_options();
   // Call Meili for map matching to get a collection of Location Edges
@@ -447,8 +447,8 @@ thor_worker_t::map_match(Api& request, uint32_t best_paths) {
 // logic is similar but handles discontinuities at the origin/destination.
 // We need to add a test for that scenario and then we can merge the logic.
 void thor_worker_t::path_map_match(
-    const std::vector<meili::MatchResult>& match_results,
-    const std::vector<PathInfo>& path_edges,
+    const vector<meili::MatchResult>& match_results,
+    const vector<PathInfo>& path_edges,
     TripLeg& trip_path,
     std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>>&
         route_discontinuities) {
@@ -527,6 +527,5 @@ void thor_worker_t::path_map_match(
     throw valhalla_exception_t{442};
   }
 }
-
 } // namespace thor
 } // namespace valhalla

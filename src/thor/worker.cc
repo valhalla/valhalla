@@ -60,7 +60,7 @@ thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config,
       reader(graph_reader), controller{},
       long_request(config.get<float>("thor.logging.long_request")) {
   // If we weren't provided with a graph reader make our own
-  if (!reader)
+  if (reader == nullptr)
     reader = matcher_factory.graphreader();
 
   // Register standard edge/node costing methods
