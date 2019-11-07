@@ -300,6 +300,30 @@ void test_trace_route_breaks() {
   }
 }
 
+void test_disconnected_edges() {
+  std::vector<std::string> test_cases = {
+      R"({"costing":"auto","shape_match":"map_snap","shape":[
+          {"lat":38.8536598,"lon":-104.8237421,"type":"break"},
+          {"lat":38.8538699,"lon":-104.8233878,"type":"break"},
+          {"lat":38.8536786,"lon":-104.8227061,"type":"break"},
+          {"lat":38.8536815,"lon":-104.8223734,"type":"break"}]})"};
+  std::vector<size_t> test_answers = {0};
+
+  tyr::actor_t actor(conf, true);
+  for (size_t i = 0; i < test_cases.size(); ++i) {
+    auto matched = json_to_pt(actor.trace_route(test_cases[i]));
+    const auto& legs = matched.get_child("trip.legs");
+    if (legs.size() != test_answers[i])
+      throw std::logic_error("Expected " + std::to_string(test_answers[i]) + " legs but got " +
+                             std::to_string(legs.size()));
+
+    for (const auto& leg : legs) {
+      auto decoded_match =
+          midgard::decode<std::vector<PointLL>>(leg.second.get<std::string>("shape"));
+    }
+  }
+}
+
 void test_time_rejection() {
   tyr::actor_t actor(conf, true);
   auto matched = json_to_pt(actor.trace_attributes(
@@ -695,6 +719,8 @@ int main(int argc, char* argv[]) {
   suite.test(TEST_CASE(test_matcher));
 
   suite.test(TEST_CASE(test_trace_route_breaks));
+
+  suite.test(TEST_CASE(test_disconnected_edges));
 
   suite.test(TEST_CASE(test_distance_only));
 
