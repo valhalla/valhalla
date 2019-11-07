@@ -440,7 +440,6 @@ void SetHeadings(TripLeg_Edge* trip_edge,
   }
 }
 
-
 void AddBssNode(TripLeg_Node* trip_node,
                 const NodeInfo* node,
                 const GraphId& startnode,
