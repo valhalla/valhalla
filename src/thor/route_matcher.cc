@@ -185,7 +185,6 @@ bool expand_from_node(const std::shared_ptr<DynamicCost>* mode_costing,
         // elapsed time so this would be irrelevant anyway
         if (origin_epoch != 0 && nodeinfo) {
           second_of_week = DateTime::second_of_week(origin_epoch, nodeinfo, elapsed.secs + cost.secs);
-          ;
         }
 
         // Get time along the edge, handling partial distance along the first and last edge.
