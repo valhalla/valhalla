@@ -408,9 +408,19 @@ StateId ViterbiSearch::SearchWinner(StateId::Time time) {
   const StateId::Time max_allowed_time = unreached_states_by_time.size() - 1;
   const auto target = std::min(time, max_allowed_time);
 
-  // Continue last search if possible
-  StateId::Time searched_time = IterativeSearch(target, false);
+  /**
+   * Two situations could be possible here:
+   * 1. Time is smaller than max_allowed_time, the safest strategy is to continue with the last search
+   *    in case we miss any time point. If logic detects any breakage (search stops in middle and
+   *    could not push more candidates into the Queue before target), we lunch new start on iterative
+   *    search and force the searching till searched_time exceeds target.
+   *
+   * 2. Time is greater than max_allowed_time, the search is not expected to find anything, however,
+   *    we still want the algorithm to explore as much as possible to fill up winner_by_time caching
+   *    for future searches.
+   **/
 
+  StateId::Time searched_time = IterativeSearch(target, false);
   while (searched_time < target) {
     // searched_time < target implies that there was a breakage during
     // last search, so we request a new start
