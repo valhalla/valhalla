@@ -18,4 +18,4 @@ std::string get_shape(valhalla::baldr::GraphReader& graphreader,
   }
   return valhalla::midgard::encode(shape);
 }
-}
+} // namespace test
