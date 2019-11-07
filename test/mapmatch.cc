@@ -303,10 +303,10 @@ void test_trace_route_breaks() {
 void test_disconnected_edges() {
   std::vector<std::string> test_cases = {
       R"({"costing":"auto","shape_match":"map_snap","shape":[
-          {"lat":38.8536598,"lon":-104.8237421,"type":"break"},
-          {"lat":38.8538699,"lon":-104.8233878,"type":"break"},
-          {"lat":38.8536786,"lon":-104.8227061,"type":"break"},
-          {"lat":38.8536815,"lon":-104.8223734,"type":"break"}]})"};
+          {"lat":52.0630834,"lon":5.1037046,"type":"break"},
+          {"lat":52.0633099,"lon":5.1047193,"type":"break"},
+          {"lat":52.0640117,"lon":5.1040429,"type":"break"},
+          {"lat":52.0644313,"lon":5.1047193,"type":"break"}]})"};
   std::vector<size_t> test_answers = {0};
 
   tyr::actor_t actor(conf, true);
@@ -714,9 +714,9 @@ int main(int argc, char* argv[]) {
   if (argc > 2)
     bound = std::stoi(argv[2]);
 
-  suite.test(TEST_CASE(test32bit));
+  // suite.test(TEST_CASE(test32bit));
 
-  suite.test(TEST_CASE(test_matcher));
+  // suite.test(TEST_CASE(test_matcher));
 
   suite.test(TEST_CASE(test_trace_route_breaks));
 
