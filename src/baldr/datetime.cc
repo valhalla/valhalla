@@ -121,7 +121,8 @@ int timezone_diff(const uint64_t seconds,
   }
 }
 
-std::string seconds_to_date(const uint64_t seconds, const date::time_zone* time_zone) {
+std::string
+seconds_to_date(const uint64_t seconds, const date::time_zone* time_zone, bool tz_format) {
 
   std::string iso_date;
   if (seconds == 0 || !time_zone) {
@@ -133,9 +134,13 @@ std::string seconds_to_date(const uint64_t seconds, const date::time_zone* time_
   std::ostringstream iso_date_time;
 
   const auto date = date::make_zoned(time_zone, tp);
-  iso_date_time << date::format("%FT%R%z", date);
+  if (tz_format)
+    iso_date_time << date::format("%FT%R%z", date);
+  else
+    iso_date_time << date::format("%FT%R", date);
   iso_date = iso_date_time.str();
-  iso_date.insert(19, 1, ':');
+  if (tz_format)
+    iso_date.insert(19, 1, ':');
   return iso_date;
 }
 
@@ -444,7 +449,8 @@ bool is_restricted(const bool type,
 
 uint32_t second_of_week(uint32_t epoch_time, const NodeInfo* node, double elapsedtime) {
   // get the date time in this timezone
-  auto dt = seconds_to_date(epoch_time + elapsedtime, get_tz_db().from_index(node->timezone()));
+  auto dt =
+      seconds_to_date(epoch_time + elapsedtime, get_tz_db().from_index(node->timezone()), false);
   // get the seconds from the start of the week from the date time
   return day_of_week(dt) * midgard::kSecondsPerDay + seconds_from_midnight(dt);
 }
