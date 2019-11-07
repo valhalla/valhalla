@@ -147,20 +147,19 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
   // We support either the epoch timestamp that came with the trace point or
   // a local date time which we convert to epoch by finding the first timezone
   uint32_t origin_epoch = 0;
-  if (options.shape().begin()->time() != -1.0) {
-    origin_epoch = options.shape().begin()->time();
-  } else if (options.shape().begin()->has_date_time()) {
-    for (const auto& s : edge_segments) {
-      if (!s.edgeid.Is_Valid() || !matcher->graphreader().GetGraphTile(s.edgeid, tile))
-        continue;
-      directededge = tile->directededge(s.edgeid);
-      if (matcher->graphreader().GetGraphTile(directededge->endnode(), tile)) {
-        nodeinfo = tile->node(directededge->endnode());
+  for (const auto& s : edge_segments) {
+    if (!s.edgeid.Is_Valid() || !matcher->graphreader().GetGraphTile(s.edgeid, tile))
+      continue;
+    directededge = tile->directededge(s.edgeid);
+    if (matcher->graphreader().GetGraphTile(directededge->endnode(), tile)) {
+      nodeinfo = tile->node(directededge->endnode());
+      if (options.shape().begin()->time() != -1.0)
+        origin_epoch = options.shape().begin()->time();
+      else if (options.shape().begin()->has_date_time())
         origin_epoch =
-            DateTime::seconds_since_epoch(options.date_time(),
+            DateTime::seconds_since_epoch(options.shape().begin()->date_time(),
                                           DateTime::get_tz_db().from_index(nodeinfo->timezone()));
-        nodeinfo = nullptr;
-      }
+      break;
     }
   }
 
@@ -193,15 +192,12 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
       disconnected_edges.emplace_back(prior_edge, edge_id);
     }
 
-    // get the cost of traversing the node
-    elapsed += !nodeinfo ? Cost{} : costing->TransitionCost(directededge, nodeinfo, pred);
+    // get the cost of traversing the node, there is no turn cost the first time
+    if (elapsed.secs > 0)
+      elapsed += costing->TransitionCost(directededge, nodeinfo, pred);
 
-    // Set seconds from beginning of the week
+    // Get seconds from beginning of the week accounting for any changes to timezone on the path
     uint32_t second_of_week = kInvalidSecondsOfWeek;
-    // have to always compute the offset in case the timezone changes along the path
-    // we could cache the timezone and just add seconds when the timezone doesnt change
-    // we wont have a valid node on the first pass but then again we also wont have any
-    // elapsed time so this would be irrelevant anyway
     if (origin_epoch != 0 && nodeinfo) {
       second_of_week = DateTime::second_of_week(origin_epoch, nodeinfo, elapsed.secs);
     }

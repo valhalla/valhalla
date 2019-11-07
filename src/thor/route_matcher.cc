@@ -281,21 +281,20 @@ bool RouteMatcher::FormPath(const std::shared_ptr<DynamicCost>* mode_costing,
   const DirectedEdge* directededge = nullptr;
   const NodeInfo* nodeinfo = nullptr;
   uint32_t origin_epoch = 0;
-  if (options.shape().begin()->time() != -1.0) {
-    origin_epoch = options.shape().begin()->time();
-  } else if (options.shape().begin()->has_date_time()) {
-    for (const auto& e : options.locations().begin()->path_edges()) {
-      GraphId edgeid(e.graph_id());
-      if (!edgeid.Is_Valid() || !reader.GetGraphTile(edgeid, tile))
-        continue;
-      directededge = tile->directededge(edgeid);
-      if (reader.GetGraphTile(directededge->endnode(), tile)) {
-        nodeinfo = tile->node(directededge->endnode());
+  for (const auto& e : options.locations().begin()->path_edges()) {
+    GraphId edgeid(e.graph_id());
+    if (!edgeid.Is_Valid() || !reader.GetGraphTile(edgeid, tile))
+      continue;
+    directededge = tile->directededge(edgeid);
+    if (reader.GetGraphTile(directededge->endnode(), tile)) {
+      nodeinfo = tile->node(directededge->endnode());
+      if (options.shape().begin()->time() != -1.0)
+        origin_epoch = options.shape().begin()->time();
+      else if (options.shape().begin()->has_date_time())
         origin_epoch =
-            DateTime::seconds_since_epoch(options.date_time(),
+            DateTime::seconds_since_epoch(options.shape().begin()->date_time(),
                                           DateTime::get_tz_db().from_index(nodeinfo->timezone()));
-        // NOTE: we leave nodeinfo intact so the first edge has a timezone to get seconds of week
-      }
+      break;
     }
   }
 
@@ -320,7 +319,7 @@ bool RouteMatcher::FormPath(const std::shared_ptr<DynamicCost>* mode_costing,
     // Process directed edge and info
     const DirectedEdge* de = begin_edge_tile->directededge(graphid);
     const GraphTile* end_node_tile = reader.GetGraphTile(de->endnode());
-    if (begin_edge_tile == nullptr) {
+    if (end_node_tile == nullptr) {
       throw std::runtime_error("End node tile is null");
     }
     midgard::PointLL de_end_ll = end_node_tile->get_node_ll(de->endnode());
@@ -344,12 +343,8 @@ bool RouteMatcher::FormPath(const std::shared_ptr<DynamicCost>* mode_costing,
       if (shape.at(index).lnglat().ApproximatelyEqual(de_end_ll) &&
           de_remaining_length < length_comparison(length, true)) {
 
-        // Set seconds from beginning of the week
+        // Get seconds from beginning of the week accounting for any changes to timezone on the path
         uint32_t second_of_week = kInvalidSecondsOfWeek;
-        // have to always compute the offset in case the timezone changes along the path
-        // we could cache the timezone and just add seconds when the timezone doesnt change
-        // we wont have a valid node on the first pass but then again we also wont have any
-        // elapsed time so this would be irrelevant anyway
         if (origin_epoch != 0 && nodeinfo) {
           second_of_week = DateTime::second_of_week(origin_epoch, nodeinfo, elapsed.secs);
         }
