@@ -1280,7 +1280,8 @@ TripLegBuilder::Build(const AttributesController& controller,
     // we could cache the timezone and just add seconds when the timezone doesnt change
     uint32_t second_of_week = kInvalidSecondsOfWeek;
     if (origin_epoch != 0) {
-      second_of_week = DateTime::second_of_week(origin_epoch, node, elapsedtime);
+      second_of_week = DateTime::second_of_week(origin_epoch + static_cast<uint32_t>(elapsedtime),
+                                                DateTime::get_tz_db().from_index(node->timezone()));
     }
 
     // Add a node to the trip path and set its attributes.

@@ -184,7 +184,9 @@ bool expand_from_node(const std::shared_ptr<DynamicCost>* mode_costing,
         // we wont have a valid node on the first pass but then again we also wont have any
         // elapsed time so this would be irrelevant anyway
         if (origin_epoch != 0 && nodeinfo) {
-          second_of_week = DateTime::second_of_week(origin_epoch, nodeinfo, elapsed.secs + cost.secs);
+          second_of_week =
+              DateTime::second_of_week(origin_epoch + static_cast<uint32_t>(elapsed.secs + cost.secs),
+                                       DateTime::get_tz_db().from_index(nodeinfo->timezone()));
         }
 
         // Get time along the edge, handling partial distance along the first and last edge.
@@ -246,7 +248,7 @@ bool RouteMatcher::FormPath(const std::shared_ptr<DynamicCost>* mode_costing,
                             const sif::TravelMode& mode,
                             GraphReader& reader,
                             const std::vector<meili::Measurement>& shape,
-                            const valhalla::Options& options,
+                            valhalla::Options& options,
                             std::vector<PathInfo>& path_infos) {
 
   if (shape.size() < 2) {
@@ -287,13 +289,17 @@ bool RouteMatcher::FormPath(const std::shared_ptr<DynamicCost>* mode_costing,
       continue;
     directededge = tile->directededge(edgeid);
     if (reader.GetGraphTile(directededge->endnode(), tile)) {
+      // get the timezone
       nodeinfo = tile->node(directededge->endnode());
-      if (options.shape().begin()->time() != -1.0)
-        origin_epoch = options.shape().begin()->time();
-      else if (options.shape().begin()->has_date_time())
-        origin_epoch =
-            DateTime::seconds_since_epoch(options.shape().begin()->date_time(),
-                                          DateTime::get_tz_db().from_index(nodeinfo->timezone()));
+      const auto* tz = DateTime::get_tz_db().from_index(nodeinfo->timezone());
+      // if its timestamp based need to signal that out to trip leg builder
+      if (options.shape(0).time() != -1.0) {
+        options.mutable_shape(0)->set_date_time(
+            DateTime::seconds_to_date(options.shape(0).time(), tz, false));
+      }
+      // remember where we are starting
+      if (options.shape(0).has_date_time())
+        origin_epoch = DateTime::seconds_since_epoch(options.shape(0).date_time(), tz);
       break;
     }
   }
@@ -346,7 +352,9 @@ bool RouteMatcher::FormPath(const std::shared_ptr<DynamicCost>* mode_costing,
         // Get seconds from beginning of the week accounting for any changes to timezone on the path
         uint32_t second_of_week = kInvalidSecondsOfWeek;
         if (origin_epoch != 0 && nodeinfo) {
-          second_of_week = DateTime::second_of_week(origin_epoch, nodeinfo, elapsed.secs);
+          second_of_week =
+              DateTime::second_of_week(origin_epoch + static_cast<uint32_t>(elapsed.secs),
+                                       DateTime::get_tz_db().from_index(nodeinfo->timezone()));
         }
 
         // Get the cost of traversing the edge
@@ -401,7 +409,9 @@ bool RouteMatcher::FormPath(const std::shared_ptr<DynamicCost>* mode_costing,
           // we wont have a valid node on the first pass but then again we also wont have any
           // elapsed time so this would be irrelevant anyway
           if (origin_epoch != 0 && nodeinfo) {
-            second_of_week = DateTime::second_of_week(origin_epoch, nodeinfo, elapsed.secs);
+            second_of_week =
+                DateTime::second_of_week(origin_epoch + static_cast<uint32_t>(elapsed.secs),
+                                         DateTime::get_tz_db().from_index(nodeinfo->timezone()));
           }
 
           // Get time along the edge, handling partial distance along the first and last edge.

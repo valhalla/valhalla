@@ -131,9 +131,9 @@ seconds_to_date(const uint64_t seconds, const date::time_zone* time_zone, bool t
 
   std::chrono::seconds dur(seconds);
   std::chrono::time_point<std::chrono::system_clock> tp(dur);
-  std::ostringstream iso_date_time;
-
   const auto date = date::make_zoned(time_zone, tp);
+
+  std::ostringstream iso_date_time;
   if (tz_format)
     iso_date_time << date::format("%FT%R%z", date);
   else
@@ -447,12 +447,20 @@ bool is_restricted(const bool type,
   return (dow_in_range && dt_in_range);
 }
 
-uint32_t second_of_week(uint32_t epoch_time, const NodeInfo* node, double elapsedtime) {
+uint32_t second_of_week(uint32_t epoch_time, const date::time_zone* time_zone) {
   // get the date time in this timezone
-  auto dt =
-      seconds_to_date(epoch_time + elapsedtime, get_tz_db().from_index(node->timezone()), false);
-  // get the seconds from the start of the week from the date time
-  return day_of_week(dt) * midgard::kSecondsPerDay + seconds_from_midnight(dt);
+  std::chrono::seconds dur(epoch_time);
+  std::chrono::time_point<std::chrono::system_clock> utp(dur);
+  const auto tp = date::make_zoned(time_zone, utp).get_local_time();
+  // floor to midnight of that day
+  auto days = date::floor<date::days>(tp);
+  // get the ordinal day of the week
+  uint32_t day = (date::year_month_weekday(days).weekday() - date::Sunday).count();
+  // subtract midnight from the time to get just the time since midnight
+  auto since_midnight =
+      std::chrono::duration_cast<std::chrono::seconds>(date::make_time(tp - days).to_duration());
+  // get the seconds of the week
+  return day * midgard::kSecondsPerDay + since_midnight.count();
 }
 
 } // namespace DateTime

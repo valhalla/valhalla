@@ -130,7 +130,7 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
                      const std::shared_ptr<sif::DynamicCost>* mode_costing,
                      const sif::TravelMode mode,
                      std::vector<std::pair<GraphId, GraphId>>& disconnected_edges,
-                     const Options options) {
+                     Options& options) {
   // Set costing based on the mode
   const auto& costing = mode_costing[static_cast<uint32_t>(mode)];
   bool use_timestamps = options.use_timestamps();
@@ -152,13 +152,17 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
       continue;
     directededge = tile->directededge(s.edgeid);
     if (matcher->graphreader().GetGraphTile(directededge->endnode(), tile)) {
+      // get the timezone
       nodeinfo = tile->node(directededge->endnode());
-      if (options.shape().begin()->time() != -1.0)
-        origin_epoch = options.shape().begin()->time();
-      else if (options.shape().begin()->has_date_time())
-        origin_epoch =
-            DateTime::seconds_since_epoch(options.shape().begin()->date_time(),
-                                          DateTime::get_tz_db().from_index(nodeinfo->timezone()));
+      const auto* tz = DateTime::get_tz_db().from_index(nodeinfo->timezone());
+      // if its timestamp based need to signal that out to trip leg builder
+      if (options.shape(0).time() != -1.0) {
+        options.mutable_shape(0)->set_date_time(
+            DateTime::seconds_to_date(options.shape(0).time(), tz, false));
+      }
+      // remember where we are starting
+      if (options.shape(0).has_date_time())
+        origin_epoch = DateTime::seconds_since_epoch(options.shape(0).date_time(), tz);
       break;
     }
   }
@@ -199,7 +203,9 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
     // Get seconds from beginning of the week accounting for any changes to timezone on the path
     uint32_t second_of_week = kInvalidSecondsOfWeek;
     if (origin_epoch != 0 && nodeinfo) {
-      second_of_week = DateTime::second_of_week(origin_epoch, nodeinfo, elapsed.secs);
+      second_of_week =
+          DateTime::second_of_week(origin_epoch + static_cast<uint32_t>(elapsed.secs),
+                                   DateTime::get_tz_db().from_index(nodeinfo->timezone()));
     }
 
     // Get time along the edge, handling partial distance along the first and last edge.

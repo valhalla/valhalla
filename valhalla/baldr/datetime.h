@@ -95,7 +95,7 @@ int timezone_diff(const uint64_t seconds,
  * Get the iso date time from seconds since epoch and timezone.
  * @param   seconds      seconds since epoch
  * @param   tz           timezone
- * @param   tz_format    whether or not to include the timezone in the formatted string
+ * @param   tz_format    whether or not to include the tz in the formatted string
  */
 std::string seconds_to_date(const uint64_t seconds, const date::time_zone* tz, bool tz_format = true);
 
@@ -168,13 +168,12 @@ bool is_restricted(const bool type,
                    const date::time_zone* time_zone);
 
 /**
- * Gets the second of the week from an epoch time, timezone information and an offset
+ * Gets the second of the week in local time from an epoch time and timezone
  * @param epoch_time   the time from which to offset
- * @param node         the node where the offset is happening
- * @param elapsedtime  how many seconds to offset by
+ * @param time_zone
  * @return the second of the week accounting for timezone transformation from epoch time
  */
-uint32_t second_of_week(uint32_t epoch_time, const NodeInfo* node, double elapsedtime);
+uint32_t second_of_week(uint32_t epoch_time, const date::time_zone* time_zone);
 
 /**
  * Convert ISO 8601 time into std::tm.

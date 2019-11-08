@@ -39,7 +39,7 @@ public:
                        const sif::TravelMode& mode,
                        baldr::GraphReader& reader,
                        const std::vector<meili::Measurement>& shape,
-                       const valhalla::Options& options,
+                       valhalla::Options& options,
                        std::vector<PathInfo>& path_infos);
 };
 
