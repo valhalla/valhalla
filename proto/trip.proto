@@ -214,6 +214,7 @@ message TripLeg {
     optional int32 mean_elevation = 40;
     repeated TrafficSegment traffic_segment = 41;
     repeated TurnLane turn_lanes = 42;
+    optional bool has_time_restrictions = 43;
   }
 
   message IntersectingEdge {

@@ -1,6 +1,7 @@
 #ifndef VALHALLA_SIF_DYNAMICCOST_H_
 #define VALHALLA_SIF_DYNAMICCOST_H_
 
+#include "baldr/accessrestriction.h"
 #include <cstdint>
 #include <valhalla/baldr/datetime.h>
 #include <valhalla/baldr/directededge.h>
@@ -150,7 +151,8 @@ public:
                        const baldr::GraphTile*& tile,
                        const baldr::GraphId& edgeid,
                        const uint64_t current_time,
-                       const uint32_t tz_index) const = 0;
+                       const uint32_t tz_index,
+                       bool& time_restricted) const = 0;
 
   /**
    * Checks if access is allowed for an edge on the reverse path
@@ -176,7 +178,8 @@ public:
                               const baldr::GraphTile*& tile,
                               const baldr::GraphId& opp_edgeid,
                               const uint64_t current_time,
-                              const uint32_t tz_index) const = 0;
+                              const uint32_t tz_index,
+                              bool& has_time_restrictions) const = 0;
 
   /**
    * Checks if access is allowed for the provided node. Node access can
@@ -186,6 +189,9 @@ public:
    */
   virtual bool Allowed(const baldr::NodeInfo* node) const = 0;
 
+  inline virtual bool ModeSpecificAllowed(const baldr::AccessRestriction& restriction) const {
+    return true;
+  };
   /**
    * Get the cost to traverse the specified directed edge using a transit
    * departure (schedule based edge traversal). Cost includes
@@ -346,9 +352,8 @@ public:
    *                      indicates the route is not time dependent.
    * @param  tz_index     timezone index for the node
    */
-  bool IsRestricted(const uint64_t restriction,
-                    const uint64_t current_time,
-                    const uint32_t tz_index) const {
+  static bool
+  IsRestricted(const uint64_t restriction, const uint64_t current_time, const uint32_t tz_index) {
 
     baldr::TimeDomain td(restriction);
     return baldr::DateTime::is_restricted(td.type(), td.begin_hrs(), td.begin_mins(), td.end_hrs(),
@@ -356,6 +361,58 @@ public:
                                           td.begin_day_dow(), td.end_week(), td.end_month(),
                                           td.end_day_dow(), current_time,
                                           baldr::DateTime::get_tz_db().from_index(tz_index));
+  }
+
+  inline static bool IsRestricted(const uint64_t restriction,
+                                  const uint64_t current_time,
+                                  const uint32_t tz_index,
+                                  baldr::AccessType access_type) {
+
+    if (access_type == baldr::AccessType::kTimedAllowed) {
+      return IsRestricted(restriction, current_time, tz_index);
+    } else if (access_type == baldr::AccessType::kTimedDenied) {
+      return !IsRestricted(restriction, current_time, tz_index);
+    }
+    return true;
+  }
+
+  inline bool EvaluateRestrictions(uint16_t auto_type,
+                                   const baldr::DirectedEdge* edge,
+                                   const baldr::GraphTile*& tile,
+                                   const baldr::GraphId& edgeid,
+                                   const uint64_t current_time,
+                                   const uint32_t tz_index,
+                                   bool& has_time_restrictions) const {
+    if (edge->access_restriction()) {
+      const std::vector<baldr::AccessRestriction>& restrictions =
+          tile->GetAccessRestrictions(edgeid.id(), auto_type);
+      for (const auto& restriction : restrictions) {
+        // Compare the time to the time-based restrictions
+        baldr::AccessType access_type = restriction.type();
+        if (access_type == baldr::AccessType::kTimedAllowed ||
+            access_type == baldr::AccessType::kTimedDenied) {
+          has_time_restrictions = true;
+          if (current_time == 0) {
+            // No time supplied so ignore time-based restrictions
+            // (but mark the edge  (`has_time_restrictions`)
+            continue;
+          } else {
+            // allowed at this range or allowed all the time
+            if (DynamicCost::IsRestricted(restriction.value(), current_time, tz_index, access_type)) {
+              // If edge really is restricted at this time, we can exit early.
+              // If not, we should keep looking
+              return false;
+            }
+          }
+        }
+        // In case there are additional restriction checks for a particular  mode,
+        // check them now
+        if (!ModeSpecificAllowed(restriction)) {
+          return false;
+        }
+      }
+    }
+    return true;
   }
 
   /**

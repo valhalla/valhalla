@@ -162,9 +162,11 @@ inline bool IsEdgeAllowed(const baldr::DirectedEdge* edge,
                           const sif::cost_ptr_t& costing,
                           const Label& pred_edgelabel,
                           const baldr::GraphTile* tile) {
+  bool i_dont_care_about_time_restrictions_here = false;
   return (!pred_edgelabel.edgeid().Is_Valid() && costing->GetEdgeFilter()(edge) != 0.f) ||
          edgeid == pred_edgelabel.edgeid() ||
-         costing->Allowed(edge, pred_edgelabel, tile, edgeid, 0, 0);
+         costing->Allowed(edge, pred_edgelabel, tile, edgeid, 0, 0,
+                          i_dont_care_about_time_restrictions_here);
 }
 
 /**
