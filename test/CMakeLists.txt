@@ -10,7 +10,7 @@ set(tests aabb2 access_restriction actor admin attributes_controller complexrest
   verbal_text_formatter_us_co verbal_text_formatter_us_tx viterbi_search compression filesystem)
 
 if(ENABLE_DATA_TOOLS)
-  list(APPEND tests astar edgeinfobuilder graphbuilder graphparser graphtilebuilder graphreader isochrone predictive_traffic
+  list(APPEND tests astar bidirectional_astar edgeinfobuilder graphbuilder graphparser graphtilebuilder graphreader isochrone predictive_traffic
     idtable matrix minbb multipoint_routes names node_search reach recover_shortcut refs search servicedays shape_attributes signinfo thor_worker timedep_paths timeparsing trivial_paths uniquenames utrecht)
   if(ENABLE_HTTP)
     list(APPEND tests http_tiles)
@@ -56,6 +56,15 @@ add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/utrecht_tiles/0/003/196.
   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
   DEPENDS valhalla_build_tiles valhalla_add_predicted_traffic ${VALHALLA_SOURCE_DIR}/test/data/utrecht_netherlands.osm.pbf)
 add_custom_target(utrecht_tiles DEPENDS ${CMAKE_BINARY_DIR}/test/data/utrecht_tiles/0/003/196.gph)
+
+add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/whitelion_tiles/2/000/814/309.gph
+  COMMAND ${CMAKE_BINARY_DIR}/valhalla_build_tiles
+      --inline-config '{"mjolnir":{"tile_dir":"test/data/whitelion_tiles","hierarchy":true,"shortcuts":true,"concurrency":4,"logging":{"type":""}}}'
+      ${VALHALLA_SOURCE_DIR}/test/data/whitelion_bristol_uk.osm.pbf
+  COMMENT "Building Whitelion Tiles..."
+  WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+  DEPENDS valhalla_build_tiles ${VALHALLA_SOURCE_DIR}/test/data/whitelion_bristol_uk.osm.pbf)
+add_custom_target(whitelion_tiles DEPENDS ${CMAKE_BINARY_DIR}/test/data/whitelion_tiles/2/000/814/309.gph)
 
 add_custom_command(OUTPUT .locales.timestamp
   COMMAND /bin/bash -c "for loc in $(jq --raw-output .posix_locale *.json); do \
@@ -122,6 +131,7 @@ if(ENABLE_DATA_TOOLS)
   add_dependencies(run-thor_worker utrecht_tiles)
   add_dependencies(run-recover_shortcut utrecht_tiles)
   add_dependencies(run-minbb utrecht_tiles)
+  add_dependencies(run-bidirectional_astar whitelion_tiles)
   if(ENABLE_HTTP)
     add_dependencies(run-http_tiles utrecht_tiles)
   endif()
