@@ -276,9 +276,9 @@ void validate_osrm_roundabout_destinations() {
   int exit_steps_index = 2;
 
   // Test osrm roundabout enter guide sign
-  //  test_osrm_destinations({VALHALLA_SOURCE_DIR
-  //                          "test/pinpoints/instructions/roundabout_guide_sign_1.pbf"},
-  //                         routes_index, legs_index, enter_steps_index, "Kürten, Dhünn");
+  test_osrm_destinations({VALHALLA_SOURCE_DIR
+                          "test/pinpoints/instructions/roundabout_guide_sign_1.pbf"},
+                         routes_index, legs_index, enter_steps_index, "Kürten, Dhünn");
 
   // Test osrm roundabout exit guide sign
   test_osrm_destinations({VALHALLA_SOURCE_DIR
@@ -286,9 +286,9 @@ void validate_osrm_roundabout_destinations() {
                          routes_index, legs_index, exit_steps_index, "Kürten, Dhünn");
 
   // Test osrm roundabout enter guide sign
-  //  test_osrm_destinations({VALHALLA_SOURCE_DIR
-  //                          "test/pinpoints/instructions/roundabout_guide_sign_2.pbf"},
-  //                         routes_index, legs_index, enter_steps_index, "Hückeswagen");
+  test_osrm_destinations({VALHALLA_SOURCE_DIR
+                          "test/pinpoints/instructions/roundabout_guide_sign_2.pbf"},
+                         routes_index, legs_index, enter_steps_index, "Hückeswagen");
 
   // Test osrm roundabout exit guide sign
   test_osrm_destinations({VALHALLA_SOURCE_DIR
@@ -296,10 +296,10 @@ void validate_osrm_roundabout_destinations() {
                          routes_index, legs_index, exit_steps_index, "Hückeswagen");
 
   // Test osrm roundabout enter guide sign
-  //  test_osrm_destinations({VALHALLA_SOURCE_DIR
-  //                          "test/pinpoints/instructions/roundabout_guide_sign_3.pbf"},
-  //                         routes_index, legs_index, enter_steps_index, "A 1: Remscheid,
-  //                         Wermelskirchen");
+  test_osrm_destinations({VALHALLA_SOURCE_DIR
+                          "test/pinpoints/instructions/roundabout_guide_sign_3.pbf"},
+                         routes_index, legs_index, enter_steps_index,
+                         "A 1: Remscheid, Wermelskirchen");
 
   // Test osrm roundabout exit guide sign
   test_osrm_destinations({VALHALLA_SOURCE_DIR
