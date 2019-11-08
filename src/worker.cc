@@ -777,8 +777,9 @@ void from_json(rapidjson::Document& doc, Options& options) {
   // get the avoids in there
   parse_locations(doc, options, "avoid_locations", 133, track);
 
-  // if we arent doing a time dependent route disable time dependent edge speed/flow data sources
-  if (!options.has_date_time_type()) {
+  // if not a time dependent route/mapmatch disable time dependent edge speed/flow data sources
+  // TODO: this is because bidirectional a* defaults to middle of the day time for speed lookup
+  if (!options.has_date_time_type() && (options.shape_size() == 0 || options.shape(0).time() == -1)) {
     for (auto& costing : *options.mutable_costing_options()) {
       costing.set_flow_mask(
           static_cast<uint8_t>(costing.flow_mask()) &

@@ -196,10 +196,6 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
       disconnected_edges.emplace_back(prior_edge, edge_id);
     }
 
-    // get the cost of traversing the node, there is no turn cost the first time
-    if (elapsed.secs > 0)
-      elapsed += costing->TransitionCost(directededge, nodeinfo, pred);
-
     // Get seconds from beginning of the week accounting for any changes to timezone on the path
     uint32_t second_of_week = kInvalidSecondsOfWeek;
     if (origin_epoch != 0 && nodeinfo) {
@@ -207,6 +203,10 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
           DateTime::second_of_week(origin_epoch + static_cast<uint32_t>(elapsed.secs),
                                    DateTime::get_tz_db().from_index(nodeinfo->timezone()));
     }
+
+    // get the cost of traversing the node, there is no turn cost the first time
+    if (elapsed.secs > 0)
+      elapsed += costing->TransitionCost(directededge, nodeinfo, pred);
 
     // Get time along the edge, handling partial distance along the first and last edge.
     elapsed += costing->EdgeCost(directededge, tile, second_of_week) *

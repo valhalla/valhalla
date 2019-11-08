@@ -173,24 +173,18 @@ bool expand_from_node(const std::shared_ptr<DynamicCost>* mode_costing,
       if (shape.at(index).lnglat().ApproximatelyEqual(de_end_ll) &&
           de->length() < length_comparison(length, true)) {
 
-        // get the cost of traversing the node
-        auto& costing = mode_costing[static_cast<int>(mode)];
-        auto cost = costing->TransitionCost(de, nodeinfo, prev_edge_label);
-
-        // Set seconds from beginning of the week
+        // Get seconds from beginning of the week accounting for any changes to timezone on the path
         uint32_t second_of_week = kInvalidSecondsOfWeek;
-        // have to always compute the offset in case the timezone changes along the path
-        // we could cache the timezone and just add seconds when the timezone doesnt change
-        // we wont have a valid node on the first pass but then again we also wont have any
-        // elapsed time so this would be irrelevant anyway
         if (origin_epoch != 0 && nodeinfo) {
           second_of_week =
-              DateTime::second_of_week(origin_epoch + static_cast<uint32_t>(elapsed.secs + cost.secs),
+              DateTime::second_of_week(origin_epoch + static_cast<uint32_t>(elapsed.secs),
                                        DateTime::get_tz_db().from_index(nodeinfo->timezone()));
         }
 
-        // Get time along the edge, handling partial distance along the first and last edge.
-        cost += costing->EdgeCost(de, end_node_tile, second_of_week);
+        // get the cost of traversing the node and the edge
+        auto& costing = mode_costing[static_cast<int>(mode)];
+        auto cost = costing->TransitionCost(de, nodeinfo, prev_edge_label) +
+                    costing->EdgeCost(de, end_node_tile, second_of_week);
         elapsed += cost;
         // overwrite time with timestamps
         if (use_timestamps)
@@ -397,25 +391,19 @@ bool RouteMatcher::FormPath(const std::shared_ptr<DynamicCost>* mode_costing,
           }
           const DirectedEdge* end_de = end_edge_tile->directededge(end_edge_graphid);
 
-          // get the cost of traversing the node
-          auto& costing = mode_costing[static_cast<int>(mode)];
-          nodeinfo = end_edge_tile->node(n->first);
-          elapsed += costing->TransitionCost(end_de, nodeinfo, prev_edge_label);
-
-          // Set seconds from beginning of the week
+          // Get seconds from beginning of the week accounting for any changes to timezone on the path
           uint32_t second_of_week = kInvalidSecondsOfWeek;
-          // have to always compute the offset in case the timezone changes along the path
-          // we could cache the timezone and just add seconds when the timezone doesnt change
-          // we wont have a valid node on the first pass but then again we also wont have any
-          // elapsed time so this would be irrelevant anyway
           if (origin_epoch != 0 && nodeinfo) {
             second_of_week =
                 DateTime::second_of_week(origin_epoch + static_cast<uint32_t>(elapsed.secs),
                                          DateTime::get_tz_db().from_index(nodeinfo->timezone()));
           }
 
-          // Get time along the edge, handling partial distance along the first and last edge.
+          // get the cost of traversing the node and the remaining part of the edge
+          auto& costing = mode_costing[static_cast<int>(mode)];
+          nodeinfo = end_edge_tile->node(n->first);
           elapsed +=
+              costing->TransitionCost(end_de, nodeinfo, prev_edge_label) +
               costing->EdgeCost(end_de, end_edge_tile, second_of_week) * end_edge.percent_along();
           // overwrite time with timestamps
           if (options.use_timestamps())
