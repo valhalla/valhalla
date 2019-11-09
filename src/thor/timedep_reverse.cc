@@ -135,7 +135,7 @@ void TimeDepReverse::ExpandReverse(GraphReader& graphreader,
     auto p = destinations_.find(edgeid);
     if (p != destinations_.end()) {
       // Subtract partial cost and time
-      newcost -= p->second;
+      newcost *= p->second;
 
       // Find the destination edge and update cost to include the edge score.
       // Note - with high edge scores the convergence test fails some routes
@@ -429,8 +429,7 @@ void TimeDepReverse::SetOrigin(GraphReader& graphreader,
             const DirectedEdge* dest_diredge = tile->directededge(id);
             Cost dest_cost =
                 costing_->EdgeCost(dest_diredge, tile) * (1.0f - destination_edge.percent_along());
-            cost.secs -= p->second.secs;
-            cost.cost -= dest_cost.cost;
+            cost -= dest_cost;
             cost.cost += destination_edge.distance();
             cost.cost = std::max(0.0f, cost.cost);
             dist = 0.0;
@@ -499,7 +498,7 @@ uint32_t TimeDepReverse::SetDestination(GraphReader& graphreader, const valhalla
       continue;
     }
     GraphId oppedge = t2->GetOpposingEdgeId(directededge);
-    destinations_[oppedge] = costing_->EdgeCost(directededge, tile) * (1.0f - edge.percent_along());
+    destinations_[oppedge] = edge.percent_along();
 
     // Edge score (penalty) is handled within GetPath. Do not add score here.
 

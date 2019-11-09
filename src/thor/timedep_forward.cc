@@ -90,7 +90,7 @@ void TimeDepForward::ExpandForward(GraphReader& graphreader,
     auto p = destinations_.find(edgeid);
     if (p != destinations_.end()) {
       // Subtract partial cost and time
-      newcost -= p->second;
+      newcost *= p->second;
 
       // Find the destination edge and update cost to include the edge score.
       // Note - with high edge scores the convergence test fails some routes

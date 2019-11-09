@@ -167,7 +167,7 @@ void AStarPathAlgorithm::ExpandForward(GraphReader& graphreader,
     auto p = destinations_.find(edgeid);
     if (p != destinations_.end()) {
       // Subtract partial cost and time
-      newcost -= p->second;
+      newcost *= p->second;
 
       // Find the destination edge and update cost to include the edge score.
       // Note - with high edge scores the convergence test fails some routes
@@ -422,8 +422,7 @@ void AStarPathAlgorithm::SetOrigin(GraphReader& graphreader,
             const DirectedEdge* dest_diredge = tile->directededge(id);
             Cost dest_cost =
                 costing_->EdgeCost(dest_diredge, tile, 0) * (1.0f - destination_edge.percent_along());
-            cost.secs -= p->second.secs;
-            cost.cost -= dest_cost.cost;
+            cost -= dest_cost;
             cost.cost += destination_edge.distance();
             cost.cost = std::max(0.0f, cost.cost);
             dist = 0.0;
@@ -487,16 +486,12 @@ uint32_t AStarPathAlgorithm::SetDestination(GraphReader& graphreader,
       continue;
     }
 
-    // Keep the cost to traverse the partial distance for the remainder of the edge. This cost
-    // is subtracted from the total cost up to the end of the destination edge.
-    const GraphTile* tile = graphreader.GetGraphTile(edgeid);
-    const DirectedEdge* directededge = tile->directededge(edgeid);
-    destinations_[edge.graph_id()] =
-        costing_->EdgeCost(directededge, tile) * (1.0f - edge.percent_along());
-
-    // Edge score (penalty) is handled within GetPath. Do not add score here.
+    // Keep the partial distance (as a percent) for the remainder of the edge.
+    // Use this to modify the total cost up to the end of the destination edge.
+    destinations_[edge.graph_id()] = edge.percent_along();
 
     // Get the tile relative density
+    const GraphTile* tile = graphreader.GetGraphTile(edgeid);
     density = tile->header()->density();
   }
   return density;

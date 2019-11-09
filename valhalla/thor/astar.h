@@ -99,8 +99,8 @@ protected:
   // Edge status. Mark edges that are in adjacency list or settled.
   EdgeStatus edgestatus_;
 
-  // Destinations, id and cost
-  std::map<uint64_t, sif::Cost> destinations_;
+  // Destinations, id and percentage of the cost of the edge that should be used
+  std::map<uint64_t, float> destinations_;
 
   /**
    * Initializes the hierarchy limits, A* heuristic, and adjacency list.
