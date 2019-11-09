@@ -66,7 +66,7 @@ public:
    * @return  Returns true if the 2 bounding boxes are equal.
    */
   bool operator==(const AABB2& r2) const {
-    return (minx_ == r2.minx() && maxx_ == r2.maxx() && miny_ == r2.miny() && maxy_ == r2.maxy());
+    return minx_ == r2.minx_ && maxx_ == r2.maxx_ && miny_ == r2.miny_ && maxy_ == r2.maxy_;
   }
 
   /**

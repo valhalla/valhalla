@@ -223,6 +223,8 @@ message TripLeg {
     optional Traversability driveability = 4;
     optional Traversability cyclability = 5;
     optional Traversability walkability = 6;
+    optional Use use = 7;
+    optional RoadClass road_class = 8;
   }
 
   message Node {

@@ -104,15 +104,16 @@ std::string serializeTraceAttributes(
 namespace osrm {
 
 /*
- *
+ * Serialize a location into a osrm waypoint
+ * http://project-osrm.org/docs/v5.5.1/api/#waypoint-object
  */
 valhalla::baldr::json::MapPtr waypoint(const valhalla::Location& location,
-                                       bool tracepoint = false,
-                                       const bool optimized = false,
-                                       const uint32_t waypoint_index = 0);
+                                       bool is_tracepoint = false,
+                                       const bool is_optimized = false,
+                                       const int64_t waypoint_index = -1);
 
 /*
- *
+ * Serialize locations into osrm waypoints
  */
 valhalla::baldr::json::ArrayPtr
 waypoints(const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,

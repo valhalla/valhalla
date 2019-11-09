@@ -2,12 +2,15 @@
 #define VALHALLA_ODIN_ENHANCEDTRIPPATH_H_
 
 #include <cstdint>
+#include <limits>
 #include <memory>
 #include <string>
 #include <unordered_map>
 #include <utility>
 #include <vector>
 
+#include <valhalla/baldr/turn.h>
+#include <valhalla/proto/directions.pb.h>
 #include <valhalla/proto/options.pb.h>
 #include <valhalla/proto/trip.pb.h>
 
@@ -35,7 +38,7 @@ public:
     return trip_path_.node(index);
   }
 
-  ::valhalla::TripLeg_Node* mutable_node(int index) {
+  ::valhalla::TripLeg_Node* mutable_node(int index) const {
     return trip_path_.mutable_node(index);
   }
 
@@ -87,9 +90,9 @@ public:
 
   std::unique_ptr<EnhancedTripLeg_Edge> GetPrevEdge(const int node_index, int delta = 1);
 
-  std::unique_ptr<EnhancedTripLeg_Edge> GetCurrEdge(const int node_index);
+  std::unique_ptr<EnhancedTripLeg_Edge> GetCurrEdge(const int node_index) const;
 
-  std::unique_ptr<EnhancedTripLeg_Edge> GetNextEdge(const int node_index, int delta = 1);
+  std::unique_ptr<EnhancedTripLeg_Edge> GetNextEdge(const int node_index, int delta = 1) const;
 
   bool IsValidNodeIndex(int node_index) const;
 
@@ -383,9 +386,19 @@ public:
   // Turn Lanes
   bool HasActiveTurnLane() const;
   bool HasNonDirectionalTurnLane() const;
-  bool ActivateTurnLanes(uint16_t turn_lane_direction);
+  bool HasTurnLane(uint16_t turn_lane_direction) const;
+  uint16_t ActivateTurnLanes(uint16_t turn_lane_direction,
+                             float remaining_step_distance,
+                             const DirectionsLeg_Maneuver_Type& curr_maneuver_type,
+                             const DirectionsLeg_Maneuver_Type& next_maneuver_type);
+  uint16_t ActivateTurnLanesFromLeft(uint16_t turn_lane_direction,
+                                     uint16_t activated_max = std::numeric_limits<uint16_t>::max());
+  uint16_t ActivateTurnLanesFromRight(uint16_t turn_lane_direction,
+                                      uint16_t activated_max = std::numeric_limits<uint16_t>::max());
 
   std::string ToString() const;
+
+  std::string TurnLanesToString() const;
 
 #ifdef LOGGING_LEVEL_TRACE
   std::string ToParameterString() const;
@@ -394,23 +407,20 @@ public:
 protected:
   TripLeg_Edge* mutable_edge_;
 
-#ifdef LOGGING_LEVEL_TRACE
   std::string StreetNamesToString(
-      const ::google::protobuf::RepeatedPtrField<::valhalla::StreetName>& street_names) const;
-
-  std::string StreetNamesToParameterString(
       const ::google::protobuf::RepeatedPtrField<::valhalla::StreetName>& street_names) const;
 
   std::string SignElementsToString(
       const ::google::protobuf::RepeatedPtrField<::valhalla::TripLeg_SignElement>& sign_elements)
       const;
 
+#ifdef LOGGING_LEVEL_TRACE
+  std::string StreetNamesToParameterString(
+      const ::google::protobuf::RepeatedPtrField<::valhalla::StreetName>& street_names) const;
+
   std::string SignElementsToParameterString(
       const ::google::protobuf::RepeatedPtrField<::valhalla::TripLeg_SignElement>& sign_elements)
       const;
-
-  std::string TurnLanesToString(
-      const ::google::protobuf::RepeatedPtrField<::valhalla::TurnLane>& turn_lanes) const;
 #endif
 };
 
@@ -442,9 +452,23 @@ public:
     return mutable_intersecting_edge_->walkability();
   }
 
+  bool has_use() const {
+    return mutable_intersecting_edge_->has_use();
+  }
+
+  ::valhalla::TripLeg_Use use() const {
+    return mutable_intersecting_edge_->use();
+  }
+
+  ::valhalla::TripLeg_RoadClass road_class() const {
+    return mutable_intersecting_edge_->road_class();
+  }
+
   bool IsTraversable(const TripLeg_TravelMode travel_mode) const;
 
   bool IsTraversableOutbound(const TripLeg_TravelMode travel_mode) const;
+
+  bool IsHighway() const;
 
   std::string ToString() const;
 
@@ -562,15 +586,40 @@ public:
   bool HasForwardTraversableIntersectingEdge(uint32_t from_heading,
                                              const TripLeg_TravelMode travel_mode);
 
+  bool HasForwardTraversableSignificantRoadClassXEdge(uint32_t from_heading,
+                                                      const TripLeg_TravelMode travel_mode,
+                                                      TripLeg_RoadClass path_road_class);
+
+  bool HasWiderForwardTraversableIntersectingEdge(uint32_t from_heading,
+                                                  const TripLeg_TravelMode travel_mode);
+
+  bool HasWiderForwardTraversableHighwayXEdge(uint32_t from_heading,
+                                              const TripLeg_TravelMode travel_mode);
+
   bool HasTraversableOutboundIntersectingEdge(const TripLeg_TravelMode travel_mode);
+
+  bool HasSpecifiedTurnXEdge(const baldr::Turn::Type turn_type,
+                             uint32_t from_heading,
+                             const TripLeg_TravelMode travel_mode);
+
+  bool HasSpecifiedRoadClassXEdge(const TripLeg_RoadClass road_class);
 
   uint32_t GetStraightestIntersectingEdgeTurnDegree(uint32_t from_heading);
 
   uint32_t GetStraightestTraversableIntersectingEdgeTurnDegree(uint32_t from_heading,
-                                                               const TripLeg_TravelMode travel_mode);
+                                                               const TripLeg_TravelMode travel_mode,
+                                                               TripLeg_Use* use = nullptr);
 
   bool IsStraightestTraversableIntersectingEdgeReversed(uint32_t from_heading,
                                                         const TripLeg_TravelMode travel_mode);
+
+  uint32_t GetRightMostTurnDegree(uint32_t turn_degree,
+                                  uint32_t from_heading,
+                                  const TripLeg_TravelMode travel_mode);
+
+  uint32_t GetLeftMostTurnDegree(uint32_t turn_degree,
+                                 uint32_t from_heading,
+                                 const TripLeg_TravelMode travel_mode);
 
   // Type
   bool IsStreetIntersection() const;

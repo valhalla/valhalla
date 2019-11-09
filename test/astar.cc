@@ -254,7 +254,7 @@ void assert_is_trivial_path(valhalla::Location& origin,
   }
 
   const DirectedEdge* de = tile->directededge(expected_edge_index);
-  auto cost = pedestrian->EdgeCost(de, tile->GetSpeed(de));
+  auto cost = pedestrian->EdgeCost(de, tile);
   uint32_t expected_time = cost.cost;
   if (time != expected_time) {
     std::ostringstream ostr;
@@ -344,12 +344,14 @@ void trivial_path_no_uturns(const std::string& config_file) {
   std::string access_file = "test_access_trivial.bin";
   std::string cr_from_file = "test_from_complex_restrictions_trivial.bin";
   std::string cr_to_file = "test_to_complex_restrictions_trivial.bin";
+  std::string bss_nodes_file = "test_bss_nodes_file_trivial.bin";
 
   // Parse Utrecht OSM data
   auto osmdata =
       vj::PBFGraphParser::Parse(conf.get_child("mjolnir"),
                                 {VALHALLA_SOURCE_DIR "test/data/utrecht_netherlands.osm.pbf"},
-                                ways_file, way_nodes_file, access_file, cr_from_file, cr_to_file);
+                                ways_file, way_nodes_file, access_file, cr_from_file, cr_to_file,
+                                bss_nodes_file);
 
   // Build the graph using the OSMNodes and OSMWays from the parser
   vj::GraphBuilder::Build(conf, osmdata, ways_file, way_nodes_file, nodes_file, edges_file,
@@ -381,8 +383,7 @@ void trivial_path_no_uturns(const std::string& config_file) {
   auto mode = cost->travel_mode();
   mode_costing[static_cast<uint32_t>(mode)] = cost;
 
-  const auto projections =
-      vk::Search(locations, graph_reader, cost->GetEdgeFilter(), cost->GetNodeFilter());
+  const auto projections = vk::Search(locations, graph_reader, cost.get());
   std::vector<PathLocation> path_location;
 
   for (auto loc : locations) {

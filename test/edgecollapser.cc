@@ -50,6 +50,7 @@ struct graph_tile_builder {
     header->set_graphid(id);
     header->set_nodecount(nodes.size());
     header->set_directededgecount(edges.size());
+    header->set_end_offset(mem.size());
 
     ptr += sizeof(vb::GraphTileHeader);
     memcpy(ptr, nodes.data(), nodes_size);

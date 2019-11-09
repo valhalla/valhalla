@@ -158,6 +158,7 @@ void ConstructEdges(const OSMData& osmdata,
     }
 
     // Remember this edge starts here
+    Edge prev_edge = Edge{0};
     Edge edge = Edge::make_edge(way_node.way_index, current_way_node_index, way);
     edge.attributes.way_begin = true;
 
@@ -181,24 +182,40 @@ void ConstructEdges(const OSMData& osmdata,
             (way.link() && Length(edge.llindex_, way_node.node) < kMaxInternalLength);
         way_node.node.link_edge_ = way.link();
         way_node.node.non_link_edge_ = !way.link() && (way.auto_forward() || way.auto_backward());
-        nodes.push_back({way_node.node, static_cast<uint32_t>(-1),
-                         static_cast<uint32_t>(edges.size()), graph_id_predicate(way_node.node)});
+
+        uint32_t size = static_cast<uint32_t>(edges.size());
+        if (!edge.attributes.way_begin)
+          size += 1;
+        nodes.push_back(
+            {way_node.node, static_cast<uint32_t>(-1), size, graph_id_predicate(way_node.node)});
 
         // Mark the edge as ending a way if this is the last node in the way
         edge.attributes.way_end = current_way_node_index == last_way_node_index;
 
-        // Add to the list of edges
-        edges.push_back(edge);
+        // Mark the previous edge as the prior one since we are processing the last edge
+        if (edge.attributes.way_end) {
+          prev_edge.attributes.way_prior = true;
+        }
+
+        if (!edge.attributes.way_begin)
+          edges.push_back(prev_edge);
+
+        // Mark the current edge as the next edge one since we processed the first edge
+        if (prev_edge.attributes.way_begin)
+          edge.attributes.way_next = true;
+
+        prev_edge = edge;
 
         // Start a new edge if this is not the last node in the way
         if (current_way_node_index != last_way_node_index) {
           edge = Edge::make_edge(way_node.way_index, current_way_node_index, way);
           sequence<Node>::iterator element = --nodes.end();
           auto node = *element;
-          node.start_of = edges.size();
+          node.start_of = edges.size() + 1; // + 1 because the edge has not been added yet
           element = node;
         } // This was the last shape point in the way
         else {
+          edges.push_back(prev_edge); // add the last edge
           ++current_way_node_index;
           break;
         }
@@ -485,8 +502,9 @@ void BuildTileSet(const std::string& ways_file,
         PointLL node_ll{node.lng_, node.lat_};
 
         // Get the admin index
-        uint32_t admin_index = (tile_within_one_admin) ? admin_polys.begin()->first
-                                                       : GetMultiPolyId(admin_polys, node_ll);
+        uint32_t admin_index = (tile_within_one_admin)
+                                   ? admin_polys.begin()->first
+                                   : GetMultiPolyId(admin_polys, node_ll, graphtile);
 
         // Look for potential duplicates
         // CheckForDuplicates(nodeid, node, edgelengths, nodes, edges, osmdata.ways, stats);
@@ -697,10 +715,10 @@ void BuildTileSet(const std::string& ways_file,
           DirectedEdgeBuilder de(w, (*nodes[target]).graph_id, forward,
                                  static_cast<uint32_t>(std::get<0>(found->second) + .5), speed,
                                  truck_speed, use, static_cast<RoadClass>(edge.attributes.importance),
-                                 n, has_signal, restrictions, bike_network);
+                                 n, has_signal, restrictions, bike_network,
+                                 edge.attributes.reclass_ferry);
           graphtile.directededges().emplace_back(de);
           DirectedEdge& directededge = graphtile.directededges().back();
-
           // temporarily set the leaves tile flag to indicate when we need to search the access.bin
           // file. ferries don't have overrides in country access logic, so use this bit to indicate
           // if the speed has been set via the duration and length
@@ -746,22 +764,40 @@ void BuildTileSet(const std::string& ways_file,
           // and the backward index on the first edge in a way.  The turn lanes are populated
           // later in the enhancer phase.
           std::string turnlane_tags;
-          if (forward && w.fwd_turn_lanes_index() > 0 && edge.attributes.way_end) {
+          if (forward && w.fwd_turn_lanes_index() > 0 &&
+              (edge.attributes.way_end || edge.attributes.way_prior)) {
             turnlane_tags = osmdata.name_offset_map.name(w.fwd_turn_lanes_index());
             if (!turnlane_tags.empty()) {
               std::string str = TurnLanes::GetTurnLaneString(turnlane_tags);
               if (!str.empty()) { // don't add if invalid.
                 directededge.set_turnlanes(true);
                 graphtile.AddTurnLanes(idx, w.fwd_turn_lanes_index());
+
+                // Temporarily use the internal flag so that in the enhancer we can properly check to
+                // see if we have an internal edge
+                // Basically, we are setting turn lanes on the prior and last edge because we need
+                // to check if the last edge is internal or not.  If it is internal, we remove the
+                // turn lanes from the last edge and leave them on the prior.
+                if (edge.attributes.way_prior)
+                  directededge.set_internal(true);
               }
             }
-          } else if (!forward && w.bwd_turn_lanes_index() > 0 && edge.attributes.way_begin) {
+          } else if (!forward && w.bwd_turn_lanes_index() > 0 &&
+                     (edge.attributes.way_begin || edge.attributes.way_next)) {
             turnlane_tags = osmdata.name_offset_map.name(w.bwd_turn_lanes_index());
             if (!turnlane_tags.empty()) {
               std::string str = TurnLanes::GetTurnLaneString(turnlane_tags);
               if (!str.empty()) { // don't add if invalid.
                 directededge.set_turnlanes(true);
                 graphtile.AddTurnLanes(idx, w.bwd_turn_lanes_index());
+
+                // Temporarily use the internal flag so that in the enhancer we can properly check to
+                // see if we have an internal edge
+                // Basically, we are setting turn lanes on the next and first edge because we need
+                // to check if the fist edge is internal or not.  If it is internal, we remove the
+                // turn lanes from the first edge and leave them on the next.
+                if (edge.attributes.way_next)
+                  directededge.set_internal(true);
               }
             }
           }
@@ -947,6 +983,14 @@ void BuildTileSet(const std::string& ways_file,
 
         graphtile.nodes().back().set_timezone(tz_index);
 
+        // if you need to look at the attributes for nodes, grab the LL and update the if statement.
+        // if (equal(node_ll.lng(), 120.99157f) && equal(node_ll.lat(), 14.584733f)) {
+        //  std::cout <<
+        //  std::to_string(GraphId(tile_id.id(),tile_id.level(),graphtile.nodes().size()).value) <<
+        //  std::endl; std::cout << std::to_string(tile_within_one_admin) << " " <<
+        //  std::to_string(tile_id.tileid()) << std::endl;
+        // }
+
         // Increment the counts in the histogram
         stats.nodecount++;
         stats.directededge_count += bundle.node_edges.size();
@@ -1130,6 +1174,21 @@ std::string GraphBuilder::GetRef(const std::string& way_ref, const std::string& 
           }
           found = true;
           break;
+        } else if (tmp[0].find(" ") != std::string::npos &&
+                   ref.find(" ") != std::string::npos) { // SR 747 vs OH 747
+          std::vector<std::string> sign1 = GetTagTokens(tmp[0], ' ');
+          std::vector<std::string> sign2 = GetTagTokens(ref, ' ');
+          if (sign1.size() == 2 && sign2.size() == 2) {
+            if (sign1[1] == sign2[1]) { // 747 == 747
+              if (!refs.empty()) {
+                refs += ";" + ref + " " + tmp[1]; // ref order of the way wins.
+              } else {
+                refs = ref + " " + tmp[1];
+              }
+              found = true;
+              break;
+            }
+          }
         }
       }
     }

@@ -88,6 +88,10 @@ protected:
                               EnhancedTripLeg_Edge* prev_edge,
                               EnhancedTripLeg_Edge* curr_edge) const;
 
+  Maneuver::RelativeDirection
+  DetermineMergeToRelativeDirection(EnhancedTripLeg_Node* node,
+                                    EnhancedTripLeg_Edge* prev_edge) const;
+
   bool IsMergeManeuverType(Maneuver& maneuver,
                            EnhancedTripLeg_Edge* prev_edge,
                            EnhancedTripLeg_Edge* curr_edge) const;
@@ -190,6 +194,14 @@ protected:
    * @param maneuvers The list of maneuvers to process.
    */
   void EnhanceSignlessInterchnages(std::list<Maneuver>& maneuvers);
+
+  /**
+   * Returns the expected turn lane direction based on the specified maneuver and the available turn
+   * lanes at the intersection.
+   *
+   * @param maneuver The maneuver at the intersection.
+   */
+  uint16_t GetExpectedTurnLaneDirection(Maneuver& maneuver) const;
 
   /**
    * Process the turn lanes at the maneuver point as well as within the maneuver.

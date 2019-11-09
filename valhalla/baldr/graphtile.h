@@ -1,7 +1,7 @@
 #ifndef VALHALLA_BALDR_GRAPHTILE_H_
 #define VALHALLA_BALDR_GRAPHTILE_H_
 
-#include <cstdint>
+#include "filesystem.h"
 #include <valhalla/baldr/accessrestriction.h>
 #include <valhalla/baldr/admininfo.h>
 #include <valhalla/baldr/complexrestriction.h>
@@ -9,6 +9,7 @@
 #include <valhalla/baldr/datetime.h>
 #include <valhalla/baldr/directededge.h>
 #include <valhalla/baldr/edgeinfo.h>
+#include <valhalla/baldr/graphconstants.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphtileheader.h>
 #include <valhalla/baldr/laneconnectivity.h>
@@ -16,6 +17,7 @@
 #include <valhalla/baldr/nodetransition.h>
 #include <valhalla/baldr/predictedspeeds.h>
 #include <valhalla/baldr/sign.h>
+#include <valhalla/baldr/signinfo.h>
 #include <valhalla/baldr/transitdeparture.h>
 #include <valhalla/baldr/transitroute.h>
 #include <valhalla/baldr/transitschedule.h>
@@ -26,8 +28,8 @@
 #include <valhalla/midgard/logging.h>
 #include <valhalla/midgard/util.h>
 
+#include <cstdint>
 #include <memory>
-#include <valhalla/baldr/signinfo.h>
 
 namespace valhalla {
 namespace baldr {
@@ -37,6 +39,8 @@ namespace baldr {
  */
 class GraphTile {
 public:
+  static const constexpr char* kTilePathPattern = "{tilePath}";
+
   /**
    * Constructor
    */
@@ -60,12 +64,25 @@ public:
   GraphTile(const GraphId& graphid, char* ptr, size_t size);
 
   /**
-   * Constructor given the graph Id, in memory tile data
+   * Construct a tile given a url for the tile using curl
    * @param  tile_url URL of tile
    * @param  graphid Tile Id
    * @param  curler curler that will handle tile downloading
+   * @param  gzipped whether the file url will need the .gz extension
+   * @return whether or not the tile could be cached to disk
    */
-  GraphTile(const std::string& tile_url, const GraphId& graphid, curler_t& curler);
+  static GraphTile CacheTileURL(const std::string& tile_url,
+                                const GraphId& graphid,
+                                curler_t& curler,
+                                bool gzipped,
+                                const std::string& cache_location);
+
+  /**
+   * Construct a tile given a url for the tile using curl
+   * @param  tile_data graph tile raw bytes
+   * @param  disk_location tile filesystem path
+   */
+  static void SaveTileToFile(const std::vector<char>& tile_data, const std::string& disk_location);
 
   /**
    * Destructor
@@ -75,9 +92,10 @@ public:
   /**
    * Gets the directory like filename suffix given the graphId
    * @param  graphid  Graph Id to construct filename.
+   * @param  gzipped  Modifies the suffix if you expect gzipped file names
    * @return  Returns a filename including directory path as a suffix to be appended to another uri
    */
-  static std::string FileSuffix(const GraphId& graphid);
+  static std::string FileSuffix(const GraphId& graphid, bool gzipped = false);
 
   /**
    * Get the tile Id given the full path to the file.
@@ -117,7 +135,8 @@ public:
       return &nodes_[node.id()];
     }
     throw std::runtime_error(
-        "GraphTile NodeInfo index out of bounds: " + std::to_string(node.tileid()) + "," +
+        std::string(__FILE__) + ":" + std::to_string(__LINE__) +
+        " GraphTile NodeInfo index out of bounds: " + std::to_string(node.tileid()) + "," +
         std::to_string(node.level()) + "," + std::to_string(node.id()) +
         " nodecount= " + std::to_string(header_->nodecount()));
   }
@@ -132,7 +151,8 @@ public:
       return &nodes_[idx];
     }
     throw std::runtime_error(
-        "GraphTile NodeInfo index out of bounds: " + std::to_string(header_->graphid().tileid()) +
+        std::string(__FILE__) + ":" + std::to_string(__LINE__) +
+        " GraphTile NodeInfo index out of bounds: " + std::to_string(header_->graphid().tileid()) +
         "," + std::to_string(header_->graphid().level()) + "," + std::to_string(idx) +
         " nodecount= " + std::to_string(header_->nodecount()));
   }
@@ -177,6 +197,13 @@ public:
 
   /**
    * Get an iterable set of directed edges from a node in this tile
+   * @param  node  Node from which the edges leave
+   * @return returns an iterable collection of directed edges
+   */
+  midgard::iterable_t<const DirectedEdge> GetDirectedEdges(const NodeInfo* node) const;
+
+  /**
+   * Get an iterable set of directed edges from a node in this tile
    * @param  node  GraphId of the node from which the edges leave
    * @return returns an iterable collection of directed edges
    */
@@ -184,6 +211,9 @@ public:
 
   /**
    * Get an iterable set of directed edges from a node in this tile
+   * WARNING: this only returns edges in this tile, edges at this node on another level
+   *          will not be returned by this method, node transitions must be used
+   *
    * @param  idx  Index of the node within the current tile
    * @return returns an iterable collection of directed edges
    */
@@ -205,7 +235,7 @@ public:
    * @param  idx  Index of the directed edge within the current tile.
    * @return  Returns a pointer to the edge.
    */
-  const NodeTransition* transition(const size_t idx) const {
+  const NodeTransition* transition(const uint32_t idx) const {
     if (idx < header_->transitioncount())
       return &transitions_[idx];
     throw std::runtime_error("GraphTile NodeTransition index out of bounds: " +
@@ -216,19 +246,38 @@ public:
 
   /**
    * Get an iterable set of transitions from a node in this tile
+   * @param  node  Node from which the transitions leave
+   * @return returns an iterable collection of node transitions
+   */
+  midgard::iterable_t<const NodeTransition> GetNodeTransitions(const NodeInfo* node) const {
+    const auto* trans = transitions_ + node->transition_index();
+    return midgard::iterable_t<const NodeTransition>{trans, node->transition_count()};
+  }
+
+  /**
+   * Get an iterable set of transitions from a node in this tile
    * @param  node  GraphId of the node from which the transitions leave
    * @return returns an iterable collection of node transitions
    */
   midgard::iterable_t<const NodeTransition> GetNodeTransitions(const GraphId& node) const {
     if (node.id() < header_->nodecount()) {
-      const auto& nodeinfo = nodes_[node.id()];
-      const auto* trans = transition(nodeinfo.transition_index());
-      return midgard::iterable_t<const NodeTransition>{trans, nodeinfo.transition_count()};
+      const auto* nodeinfo = nodes_ + node.id();
+      return GetNodeTransitions(nodeinfo);
     }
     throw std::runtime_error(
-        "GraphTile NodeInfo index out of bounds: " + std::to_string(node.tileid()) + "," +
+        std::string(__FILE__) + ":" + std::to_string(__LINE__) +
+        " GraphTile NodeInfo index out of bounds: " + std::to_string(node.tileid()) + "," +
         std::to_string(node.level()) + "," + std::to_string(node.id()) +
         " nodecount= " + std::to_string(header_->nodecount()));
+  }
+
+  /**
+   * Get an iterable set of transitions from a node in this tile
+   * @param  node  GraphId of the node from which the transitions leave
+   * @return returns an iterable collection of node transitions
+   */
+  midgard::iterable_t<const NodeInfo> GetNodes() const {
+    return midgard::iterable_t<const NodeInfo>{nodes_, header_->nodecount()};
   }
 
   /**
@@ -423,51 +472,78 @@ public:
 
   /**
    * Convenience method to get the speed for an edge given the directed
-   * edge index.
-   * @param  de  Directed edge information.
-   * @return  Returns the speed for the edge.
-   */
-  uint32_t GetSpeed(const DirectedEdge* de) const {
-    return (de->free_flow_speed() > 0) ? de->free_flow_speed() : de->speed();
-  }
-
-  /**
-   * Convenience method to get the speed for an edge given the directed
-   * edge index.
-   * @param  de              Directed edge information.
-   * @param  seconds_of_day  Seconds since midnight.
+   * edge and a time (seconds since start of the week).
+   * @param  de            Directed edge information.
+   * @param  traffic_mask  A mask denoting which types of traffic data should be used to get the speed
+   * @param  seconds       Seconds of the week since midnight (ie Monday morning). Defaults to noon
+   *                       Monday. Note that for free and constrained flow there is no concept of a
+   *                       week so we modulus the time to day based seconds
+   * @param  flow_sources  Which speed sources were used in this speed calculation. Optional pointer,
+   *                       if nullptr is passed in flow_sources does nothing.
    * @return Returns the speed for the edge.
    */
-  uint32_t GetSpeed(const DirectedEdge* de, const uint32_t seconds_of_day) const {
-    // if time dependent route and we are routing between 7 AM and 7 PM local time.
-    if (25200 < seconds_of_day && seconds_of_day < 68400) {
-      return (de->constrained_flow_speed() > 0) ? de->constrained_flow_speed() : de->speed();
-    } else {
-      return (de->free_flow_speed() > 0) ? de->free_flow_speed() : de->speed();
-    }
-  }
+  inline uint32_t GetSpeed(const DirectedEdge* de,
+                           uint8_t flow_mask = kConstrainedFlowMask,
+                           uint32_t seconds = kInvalidSecondsOfWeek,
+                           uint8_t* flow_sources = nullptr) const {
+    // if they dont want source info we bind it to a temp and no one will miss it
+    uint8_t temp_sources;
+    if (!flow_sources)
+      flow_sources = &temp_sources;
+    *flow_sources = kNoFlowMask;
 
-  /**
-   * Convenience method to get the speed for an edge given the directed
-   * edge index and a time (seconds since start of the week).
-   * @param  de               Directed edge information.
-   * @param  seconds_of_week  Seconds since midnight.
-   * @return Returns the speed for the edge.
-   */
-  uint32_t
-  GetSpeed(const DirectedEdge* de, const GraphId& edgeid, const uint32_t seconds_of_week) const {
-    if (de->predicted_speed()) {
-      float spd = predictedspeeds_.speed(edgeid.id(), seconds_of_week);
-      if (spd > 0.0f && spd < kMaxSpeedKph) {
-        return static_cast<uint32_t>(spd);
-      } else if (spd < 0) {
-        LOG_ERROR("Predicted speed = " + std::to_string(spd) +
-                  " for edge Id: " + std::to_string(edgeid.value));
+    // TODO: current with coefficient based on distance in time from start of route
+
+    // use predicted speed if a time was passed in, the predicted speed layer was requested, and if
+    // the edge has predicted speed
+    auto invalid_time = seconds == kInvalidSecondsOfWeek;
+    if (!invalid_time && (flow_mask & kPredictedFlowMask) && de->has_predicted_speed()) {
+      seconds %= midgard::kSecondsPerWeek;
+      uint32_t idx = de - directededges_;
+      float speed = predictedspeeds_.speed(idx, seconds);
+      if (valid_speed(speed)) {
+        *flow_sources |= kPredictedFlowMask;
+        return static_cast<uint32_t>(speed + .5f);
       }
+#ifdef LOGGING_LEVEL_TRACE
+      else
+        LOG_TRACE("Predicted speed = " + std::to_string(speed) + " for edge index: " +
+                  std::to_string(idx) + " of tile: " + std::to_string(header_->graphid()));
+#endif
     }
 
-    // Fallback if no predicted speed
-    return GetSpeed(de, seconds_of_week % midgard::kSecondsPerDay);
+    // fallback to constrained if time of week is within 7am to 7pm (or if no time was passed in) and
+    // if the edge has constrained speed
+    seconds %= midgard::kSecondsPerDay;
+    auto is_daytime = (25200 < seconds && seconds < 68400);
+    if ((invalid_time || is_daytime) && (flow_mask & kConstrainedFlowMask) &&
+        valid_speed(de->constrained_flow_speed())) {
+      *flow_sources |= kConstrainedFlowMask;
+      return de->constrained_flow_speed();
+    }
+#ifdef LOGGING_LEVEL_TRACE
+    else if (de->constrained_flow_speed() != 0)
+      LOG_TRACE("Constrained flow speed = " + std::to_string(de->constrained_flow_speed()) +
+                " for edge index: " + std::to_string(de - directededges_) +
+                " of tile: " + std::to_string(header_->graphid()));
+#endif
+
+    // fallback to freeflow if time of week is not within 7am to 7pm (or if no time was passed in) and
+    // the edge has freeflow speed
+    if ((invalid_time || !is_daytime) && (flow_mask & kFreeFlowMask) &&
+        valid_speed(de->free_flow_speed())) {
+      *flow_sources |= kFreeFlowMask;
+      return de->free_flow_speed();
+    }
+#ifdef LOGGING_LEVEL_TRACE
+    else if (de->free_flow_speed() != 0)
+      LOG_TRACE("Freeflow speed = " + std::to_string(de->constrained_flow_speed()) +
+                " for edge index: " + std::to_string(de - directededges_) +
+                " of tile: " + std::to_string(header_->graphid()));
+#endif
+
+    // Fallback further to specified or derived speed
+    return de->speed();
   }
 
   /**
@@ -603,6 +679,14 @@ protected:
    * @param  graphid  Tile Id.
    */
   void AssociateOneStopIds(const GraphId& graphid);
+
+  /** Decrompresses tile bytes into the internal graphtile byte buffer
+   * @param  graphid     the id of the tile to be decompressed
+   * @param  compressed  the compressed bytes
+   * @return whether or not the graphtile has been successfully initialized with
+   *         the uncompressed data
+   */
+  bool DecompressTile(const GraphId& graphid, std::vector<char>& compressed);
 };
 
 } // namespace baldr

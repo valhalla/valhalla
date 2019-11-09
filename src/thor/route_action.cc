@@ -123,6 +123,46 @@ void remove_edges(const GraphId& edge_id, valhalla::Location& loc, GraphReader& 
   }
 }*/
 
+/**
+ * offset a time in one timezone by some number of seconds to a time in another timezone
+ *
+ * @param reader   graphreader for tile/edge/node access
+ * @param in_dt    the input date time string
+ * @param in_edge  the input edgeid (used for timezone lookup)
+ * @param offset   the offset in seconds from the input date time string
+ * @param out_edge the output edgeid (used for timezone lookup)
+ * @return out_dt  the time at the out_edge in local time after the offset is applied to the in_dt
+ */
+std::string offset_date(GraphReader& reader,
+                        const std::string& in_dt,
+                        const GraphId& in_edge,
+                        float offset,
+                        const GraphId& out_edge) {
+  // get the timezone of the input location
+  const GraphTile* tile = nullptr;
+  auto in_nodes = reader.GetDirectedEdgeNodes(in_edge, tile);
+  uint32_t in_tz = 0;
+  if (const auto* node = reader.nodeinfo(in_nodes.first, tile))
+    in_tz = node->timezone();
+  else if (const auto* node = reader.nodeinfo(in_nodes.second, tile))
+    in_tz = node->timezone();
+
+  // get the timezone of the output location
+  auto out_nodes = reader.GetDirectedEdgeNodes(in_edge, tile);
+  uint32_t out_tz = 0;
+  if (const auto* node = reader.nodeinfo(out_nodes.first, tile))
+    out_tz = node->timezone();
+  else if (const auto* node = reader.nodeinfo(out_nodes.second, tile))
+    out_tz = node->timezone();
+
+  // offset the time
+  uint64_t in_epoch = DateTime::seconds_since_epoch(in_dt, DateTime::get_tz_db().from_index(in_tz));
+  double out_epoch = static_cast<double>(in_epoch) + offset;
+  auto out_dt = DateTime::seconds_to_date(static_cast<uint64_t>(out_epoch + .5),
+                                          DateTime::get_tz_db().from_index(out_tz));
+  return out_dt;
+}
+
 } // namespace
 
 namespace valhalla {
@@ -319,7 +359,7 @@ std::vector<std::vector<thor::PathInfo>> thor_worker_t::get_path(PathAlgorithm* 
 
     // Get the best path. Return if not empty (else return the original path)
     auto relaxed_paths =
-        path_algorithm->GetBestPath(origin, destination, *reader, mode_costing, mode);
+        path_algorithm->GetBestPath(origin, destination, *reader, mode_costing, mode, options);
     if (!relaxed_paths.empty()) {
       return relaxed_paths;
     }
@@ -362,6 +402,13 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
     // Get best path and keep it
     auto temp_paths = get_path(path_algorithm, *origin, *destination, costing, api.options());
     for (auto& temp_path : temp_paths) {
+      // back propagate time information
+      if (destination->has_date_time()) {
+        auto origin_dt = offset_date(*reader, destination->date_time(), temp_path.back().edgeid,
+                                     -temp_path.back().elapsed_time, temp_path.front().edgeid);
+        origin->set_date_time(origin_dt);
+      }
+
       first_edge = temp_path.front().edgeid;
       temp_path.swap(path); // so we can append to path instead of prepend
 
@@ -448,6 +495,13 @@ void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
     // Get best path and keep it
     auto temp_paths = get_path(path_algorithm, *origin, *destination, costing, api.options());
     for (auto& temp_path : temp_paths) {
+      // forward propagate time information
+      if (origin->has_date_time()) {
+        auto destination_dt = offset_date(*reader, origin->date_time(), temp_path.front().edgeid,
+                                          temp_path.back().elapsed_time, temp_path.back().edgeid);
+        destination->set_date_time(destination_dt);
+      }
+
       last_edge = temp_path.back().edgeid;
 
       // Merge through legs by updating the time and splicing the lists

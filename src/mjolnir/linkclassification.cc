@@ -227,7 +227,11 @@ std::pair<uint32_t, uint32_t> Reclassify(LinkTreeNode& root,
       sequence<Edge>::iterator element = edges[idx];
       auto edge = *element;
       if (rc > edge.attributes.importance) {
-        edge.attributes.importance = rc;
+        if (rc < static_cast<uint32_t>(RoadClass::kUnclassified))
+          edge.attributes.importance = rc;
+        else
+          edge.attributes.importance = static_cast<uint32_t>(RoadClass::kTertiary);
+
         counts.first++;
       }
       if (turn_channel) {
@@ -263,7 +267,6 @@ void ReclassifyLinks(const std::string& ways_file,
   std::queue<LinkTreeNode*> leaves;      // Leaf nodes of the link tree
   sequence<Edge> edges(edges_file, false);
   sequence<Node> nodes(nodes_file, false);
-
   // Lambda to expand from the end node of an edge. Adds the link edge and
   // end node to the link tree. Possibly adds the end node to the expandset.
   // Where no expansion occurs a leaf node is identified.
@@ -295,7 +298,7 @@ void ReclassifyLinks(const std::string& ways_file,
     // Do not continue if this link intersects a "major" road
     // TODO - might need to continue to expand...but will need to determine
     // if the link enters back onto the same road that was exited.
-    if (bundle.node.non_link_edge_ && rc < static_cast<uint32_t>(RoadClass::kUnclassified)) {
+    if (bundle.node.non_link_edge_ && rc <= static_cast<uint32_t>(RoadClass::kResidential)) {
       leaves.push(&tree_node->children.back());
       return;
     }

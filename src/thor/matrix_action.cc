@@ -29,7 +29,7 @@ std::string thor_worker_t::matrix(Api& request) {
   const auto& options = request.options();
 
   if (!options.do_not_track()) {
-    valhalla::midgard::logging::Log("matrix_type::" + Options_Action_Name(options.action()),
+    valhalla::midgard::logging::Log("matrix_type::" + Options_Action_Enum_Name(options.action()),
                                     " [ANALYTICS] ");
   }
 

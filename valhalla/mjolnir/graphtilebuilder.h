@@ -430,8 +430,11 @@ public:
    * Add a predicted speed profile for a directed edge.
    * @param  idx  Edge Id within the tile.
    * @param  profile  Compressed profile (200 short int)
+   * @param  predicted_count_hint  How many predicted speeds should we expect to add
    */
-  void AddPredictedSpeed(const uint32_t idx, const std::vector<int16_t>& profile);
+  void AddPredictedSpeed(const uint32_t idx,
+                         const std::vector<int16_t>& profile,
+                         const size_t predicted_count_hint = 256);
 
   /**
    * Updates a tile with predictive speed data. Also updates directed edges with

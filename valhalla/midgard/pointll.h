@@ -235,6 +235,16 @@ public:
    */
   PointLL Project(const PointLL& u, const PointLL& v, float lon_scale) const;
 
+  /**
+   * Project this point to the supplied polyline as well as the distance
+   * to that point and the (floor) index of the segment where the projected location lies.
+   * @param  pts                  List of points on the polyline.
+   * @return tuple of <Closest point along the polyline,
+   *                   Distance in meters of the closest point,
+   *                   Index of the segment of the polyline which contains the closest point >
+   */
+  std::tuple<PointLL, float, int> Project(const std::vector<PointLL>& pts) const;
+
 private:
   static constexpr float INVALID = 0xBADBADBAD;
 };

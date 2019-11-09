@@ -9,6 +9,7 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/format.hpp>
+#include <boost/optional.hpp>
 #include <boost/range/algorithm/remove_if.hpp>
 #include <future>
 #include <thread>
@@ -78,14 +79,31 @@ public:
 
   virtual void
   node_callback(uint64_t osmid, double lng, double lat, const OSMPBF::Tags& tags) override {
+    boost::optional<Tags> results = boost::none;
+    if (bss_nodes_) {
+      // Get tags
+      results = lua_.Transform(OSMType::kNode, tags);
+
+      for (auto& key_value : *results) {
+        if (key_value.first == "amenity" && key_value.second == "bicycle_rental") {
+          // Create a new node and set its attributes
+          OSMNode n{osmid};
+          n.set_latlng(static_cast<float>(lng), static_cast<float>(lat));
+          n.set_type(NodeType::kBikeShare);
+          bss_nodes_->push_back(n);
+          ++osmdata_.node_count;
+        }
+      }
+    }
+
     // Check if it is in the list of nodes used by ways
     if (!shape_.get(osmid)) {
       return;
     }
 
-    // Get tags
-    Tags results = lua_.Transform(OSMType::kNode, tags);
-    if (results.size() == 0) {
+    // Get tags if not already available
+    results = results ? results : lua_.Transform(OSMType::kNode, tags);
+    if (results->size() == 0) {
       return;
     }
 
@@ -95,9 +113,9 @@ public:
     }
     last_node_ = osmid;
 
-    const auto& highway_junction = results.find("highway");
+    const auto& highway_junction = results->find("highway");
     bool is_highway_junction =
-        ((highway_junction != results.end()) && (highway_junction->second == "motorway_junction"));
+        ((highway_junction != results->end()) && (highway_junction->second == "motorway_junction"));
 
     // Create a new node and set its attributes
     OSMNode n;
@@ -107,7 +125,7 @@ public:
       n.set_type(NodeType::kMotorWayJunction);
     }
 
-    for (const auto& tag : results) {
+    for (const auto& tag : *results) {
 
       if (tag.first == "highway") {
         n.set_traffic_signal(tag.second == "traffic_signals" ? true : false);
@@ -1138,7 +1156,6 @@ public:
     uint32_t modes = 0;
 
     for (const auto& tag : results) {
-
       if (tag.first == "type") {
         if (tag.second == "restriction") {
           isRestriction = true;
@@ -1260,6 +1277,20 @@ public:
       }
     } // for (const auto& tag : results)
 
+    std::vector<std::string> net = GetTagTokens(network, ':');
+    bool special_network = false;
+    if (net.size() == 3) {
+      std::string value = net.at(2);
+      boost::algorithm::to_lower(value);
+
+      if (value == "turnpike" || value == "tp" || value == "fm" || value == "rm" || value == "loop" ||
+          value == "spur" || value == "truck" || value == "business" || value == "bypass" ||
+          value == "belt" || value == "alternate" || value == "alt" || value == "toll" ||
+          value == "cr" || value == "byway" || value == "scenic" || value == "connector" ||
+          value == "county")
+        special_network = true;
+    }
+
     if (isBicycle && isRoute && !network.empty()) {
       OSMBike bike;
       const uint32_t name_index = osmdata_.name_offset_map.index(name);
@@ -1278,15 +1309,27 @@ public:
         osmdata_.bike_relations.insert(BikeMultiMap::value_type(member.member_id, bike));
       }
 
-    } else if (isRoad && isRoute && !ref.empty() && !network.empty()) {
+    } else if (isRoad && isRoute && !network.empty() &&
+               ((net.size() == 2 && !ref.empty()) ||
+                (net.size() == 3 && net.at(0) == "US" && special_network))) {
 
-      std::vector<std::string> net = GetTagTokens(network, ':');
+      if (net.size() == 3 && net.at(2) == "Turnpike")
+        net[2] = "TP";
 
-      if (net.size() != 2) {
-        return;
-      }
+      std::string reference;
+      if (net.size() == 2 && !ref.empty()) {
+        if (ref.size() == 4 && net.at(1).size() == 2) { // NJTP
+          if (net.at(1) + "TP" == ref)
+            reference = ref;
+          else
+            return;
+        } else
+          reference = net.at(1) + " " + ref; // US 51 or I 95
+      } else if (special_network && !ref.empty())
+        reference = net.at(2) + " " + ref;
+      else
+        reference = net.at(1) + net.at(2); // PATP
 
-      std::string reference = net.at(1) + " " + ref; // US 51 or I 95
       bool bfound = false;
       for (const auto& member : members) {
         if (member.role.empty() || member.role == "forward" || member.role == "backward") {
@@ -1341,7 +1384,8 @@ public:
           from_way_id = member.member_id;
         } else if (member.role == "to" &&
                    member.member_type == OSMPBF::Relation::MemberType::Relation_MemberType_WAY) {
-          restriction.set_to(member.member_id);
+          if (!restriction.to())
+            restriction.set_to(member.member_id);
         } else if (member.role == "via" &&
                    member.member_type == OSMPBF::Relation::MemberType::Relation_MemberType_NODE) {
           if (vias.size()) { // mix of nodes and ways.  Not supported yet.
@@ -1502,13 +1546,15 @@ public:
              sequence<OSMWayNode>* way_nodes,
              sequence<OSMAccess>* access,
              sequence<OSMRestriction>* complex_restrictions_from,
-             sequence<OSMRestriction>* complex_restrictions_to) {
+             sequence<OSMRestriction>* complex_restrictions_to,
+             sequence<OSMNode>* bss_nodes) {
     // reset the pointers (either null them out or set them to something valid)
     ways_.reset(ways);
     way_nodes_.reset(way_nodes);
     access_.reset(access);
     complex_restrictions_from_.reset(complex_restrictions_from);
     complex_restrictions_to_.reset(complex_restrictions_to);
+    bss_nodes_.reset(bss_nodes);
   }
 
   // Output list of wayids that have loops
@@ -1558,6 +1604,9 @@ public:
   std::unique_ptr<sequence<OSMRestriction>> complex_restrictions_from_;
   //  used to find out if a wayid is the to edge for a complex restriction
   std::unique_ptr<sequence<OSMRestriction>> complex_restrictions_to_;
+
+  // bss nodes
+  std::unique_ptr<sequence<OSMNode>> bss_nodes_;
 };
 
 } // namespace
@@ -1571,7 +1620,8 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt,
                               const std::string& way_nodes_file,
                               const std::string& access_file,
                               const std::string& complex_restriction_from_file,
-                              const std::string& complex_restriction_to_file) {
+                              const std::string& complex_restriction_to_file,
+                              const std::string& bss_nodes_file) {
   // TODO: option 1: each one threads makes an osmdata and we splice them together at the end
   // option 2: synchronize around adding things to a single osmdata. will have to test to see
   // which is the least expensive (memory and speed). leaning towards option 2
@@ -1582,11 +1632,7 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt,
   // Create OSM data. Set the member pointer so that the parsing callback methods can use it.
   OSMData osmdata{};
   graph_callback callback(pt, osmdata);
-  callback.reset(new sequence<OSMWay>(ways_file, true),
-                 new sequence<OSMWayNode>(way_nodes_file, true),
-                 new sequence<OSMAccess>(access_file, true),
-                 new sequence<OSMRestriction>(complex_restriction_from_file, true),
-                 new sequence<OSMRestriction>(complex_restriction_to_file, true));
+
   LOG_INFO("Parsing files: " + boost::algorithm::join(input_files, ", "));
 
   // hold open all the files so that if something else (like diff application)
@@ -1599,6 +1645,23 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt,
     }
   }
 
+  if (pt.get<bool>("import_bike_share_stations", false)) {
+    LOG_INFO("Parsing bss nodes...");
+    for (auto& file_handle : file_handles) {
+      callback.current_way_node_index_ = callback.last_node_ = callback.last_way_ =
+          callback.last_relation_ = 0;
+      callback.reset(nullptr, nullptr, nullptr, nullptr, nullptr,
+                     new sequence<OSMNode>(bss_nodes_file, true));
+      OSMPBF::Parser::parse(file_handle, static_cast<OSMPBF::Interest>(OSMPBF::Interest::NODES),
+                            callback);
+    }
+  }
+
+  callback.reset(new sequence<OSMWay>(ways_file, true),
+                 new sequence<OSMWayNode>(way_nodes_file, true),
+                 new sequence<OSMAccess>(access_file, true),
+                 new sequence<OSMRestriction>(complex_restriction_from_file, true),
+                 new sequence<OSMRestriction>(complex_restriction_to_file, true), nullptr);
   // Parse the ways and find all node Ids needed (those that are part of a
   // way's node list. Iterate through each pbf input file.
   LOG_INFO("Parsing ways...");
@@ -1634,7 +1697,7 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt,
   LOG_INFO("Finished with " + std::to_string(osmdata.restrictions.size()) + " simple restrictions");
   LOG_INFO("Finished with " + std::to_string(osmdata.lane_connectivity_map.size()) +
            " lane connections");
-  callback.reset(nullptr, nullptr, nullptr, nullptr, nullptr);
+  callback.reset(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
 
   // Sort complex restrictions. Keep this scoped so the file handles are closed when done sorting.
   LOG_INFO("Sorting complex restrictions by from id...");
@@ -1671,7 +1734,7 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt,
     // each time we parse nodes we have to run through the way nodes file from the beginning because
     // because osm node ids are only sorted at the single pbf file level
     callback.reset(nullptr, new sequence<OSMWayNode>(way_nodes_file, false), nullptr, nullptr,
-                   nullptr);
+                   nullptr, nullptr);
     callback.current_way_node_index_ = callback.last_node_ = callback.last_way_ =
         callback.last_relation_ = 0;
     OSMPBF::Parser::parse(file_handle,
@@ -1680,7 +1743,7 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt,
                           callback);
   }
   uint64_t max_osm_id = callback.last_node_;
-  callback.reset(nullptr, nullptr, nullptr, nullptr, nullptr);
+  callback.reset(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
   LOG_INFO("Finished with " + std::to_string(osmdata.osm_node_count) +
            " nodes contained in routable ways");
 

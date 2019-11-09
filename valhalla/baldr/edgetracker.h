@@ -71,7 +71,7 @@ template <typename TileSet> edge_tracker edge_tracker::create(TileSet& tiles, Gr
     edge_count += tile->header()->directededgecount();
     // clear the cache if it is overcommitted to avoid running out of memory.
     if (reader.OverCommitted()) {
-      reader.Clear();
+      reader.Trim();
     }
   }
 

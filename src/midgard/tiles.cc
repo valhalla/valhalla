@@ -229,9 +229,18 @@ template <class coord_t> std::vector<int> Tiles<coord_t>::TileList(const AABB2<c
 // Any 2 tiles that have a connected path between them will have the same
 // value in the connectivity map.
 template <class coord_t>
-void Tiles<coord_t>::ColorMap(std::unordered_map<uint32_t, size_t>& connectivity_map) const {
+void Tiles<coord_t>::ColorMap(std::unordered_map<uint32_t, size_t>& connectivity_map,
+                              const std::unordered_map<uint32_t, uint32_t>& not_neighbors) const {
   // Connectivity map - all connected regions will have a unique Id. If any 2
   // tile Ids have a different Id they are judged to be not-connected.
+
+  auto are_feuding = [&not_neighbors](uint32_t a, uint32_t b) {
+    auto found = not_neighbors.find(a);
+    if (found != not_neighbors.cend() && found->second == b)
+      return true;
+    found = not_neighbors.find(b);
+    return found != not_neighbors.cend() && found->second == a;
+  };
 
   // Iterate through tiles
   size_t color = 1;
@@ -244,34 +253,38 @@ void Tiles<coord_t>::ColorMap(std::unordered_map<uint32_t, size_t>& connectivity
     // Mark this tile Id with the current color and find all its
     // accessible neighbors
     tile.second = color;
-    std::list<uint32_t> checklist{tile.first};
+    std::unordered_set<uint32_t> checklist{tile.first};
     while (!checklist.empty()) {
-      uint32_t next_tile = checklist.front();
-      checklist.pop_front();
+      uint32_t next_tile = *checklist.begin();
+      checklist.erase(checklist.begin());
 
       // Check neighbors.
       uint32_t neighbor = LeftNeighbor(next_tile);
       auto neighbor_itr = connectivity_map.find(neighbor);
-      if (neighbor_itr != connectivity_map.cend() && neighbor_itr->second == 0) {
-        checklist.push_back(neighbor);
+      if (neighbor_itr != connectivity_map.cend() && neighbor_itr->second == 0 &&
+          !are_feuding(next_tile, neighbor)) {
+        checklist.emplace(neighbor);
         neighbor_itr->second = color;
       }
       neighbor = RightNeighbor(next_tile);
       neighbor_itr = connectivity_map.find(neighbor);
-      if (neighbor_itr != connectivity_map.cend() && neighbor_itr->second == 0) {
-        checklist.push_back(neighbor);
+      if (neighbor_itr != connectivity_map.cend() && neighbor_itr->second == 0 &&
+          !are_feuding(next_tile, neighbor)) {
+        checklist.emplace(neighbor);
         neighbor_itr->second = color;
       }
       neighbor = TopNeighbor(next_tile);
       neighbor_itr = connectivity_map.find(neighbor);
-      if (neighbor_itr != connectivity_map.cend() && neighbor_itr->second == 0) {
-        checklist.push_back(neighbor);
+      if (neighbor_itr != connectivity_map.cend() && neighbor_itr->second == 0 &&
+          !are_feuding(next_tile, neighbor)) {
+        checklist.emplace(neighbor);
         neighbor_itr->second = color;
       }
       neighbor = BottomNeighbor(next_tile);
       neighbor_itr = connectivity_map.find(neighbor);
-      if (neighbor_itr != connectivity_map.cend() && neighbor_itr->second == 0) {
-        checklist.push_back(neighbor);
+      if (neighbor_itr != connectivity_map.cend() && neighbor_itr->second == 0 &&
+          !are_feuding(next_tile, neighbor)) {
+        checklist.emplace(neighbor);
         neighbor_itr->second = color;
       }
     }

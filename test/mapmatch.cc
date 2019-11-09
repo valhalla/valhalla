@@ -116,7 +116,7 @@ std::string json_escape(const std::string& unescaped) {
   return escaped;
 }
 
-int seed = 520;
+int seed = 521;
 int bound = 81;
 std::string make_test_case(PointLL& start, PointLL& end) {
   static std::mt19937 generator(seed);
@@ -146,8 +146,10 @@ void test_matcher() {
     auto test_case = make_test_case(start, end);
     std::cout << test_case << std::endl;
     boost::property_tree::ptree route;
+    std::string route_json;
     try {
-      route = json_to_pt(actor.route(test_case));
+      route_json = actor.route(test_case);
+      route = json_to_pt(route_json);
     } catch (...) {
       std::cout << "route failed" << std::endl;
       continue;
@@ -167,10 +169,12 @@ void test_matcher() {
     }
     // get the edges along that route shape
     boost::property_tree::ptree walked;
+    std::string walked_json;
     try {
-      walked = json_to_pt(actor.trace_attributes(
+      walked_json = actor.trace_attributes(
           R"({"costing":"auto","shape_match":"edge_walk","encoded_polyline":")" +
-          json_escape(encoded_shape) + "\"}"));
+          json_escape(encoded_shape) + "\"}");
+      walked = json_to_pt(walked_json);
     } catch (...) {
       std::cout << test_case << std::endl;
       std::cout << R"({"costing":"auto","shape_match":"edge_walk","encoded_polyline":")" +
@@ -178,16 +182,31 @@ void test_matcher() {
                 << std::endl;
       throw std::logic_error("Edge walk failed with exact shape");
     }
+
+    // check the shape makes sense
+    auto walked_encoded_shape = walked.get<std::string>("shape");
+    auto walked_shape = midgard::decode<std::vector<midgard::PointLL>>(walked_encoded_shape);
+    /*if (walked_shape.size() != shape.size()) {
+      throw std::logic_error("Differing shape lengths " + std::to_string(shape.size()) +
+                             " != " + std::to_string(walked_shape.size()) + "\n" + encoded_shape +
+                             "\n" + walked_encoded_shape);
+    }*/
+
+    // build up some gps segments for simulation from the real shape
     std::vector<uint64_t> walked_edges;
     std::vector<gps_segment_t> segments;
     for (const auto& edge : walked.get_child("edges")) {
       walked_edges.push_back(edge.second.get<uint64_t>("id"));
       auto b = edge.second.get<size_t>("begin_shape_index");
       auto e = edge.second.get<size_t>("end_shape_index") + 1;
+
+      printf("%zu %zu %zu %.1f\n", b, e - 1, e - b,
+             (walked_shape.cbegin() + b)->Distance(*(walked_shape.cbegin() + e - 1)));
       segments.emplace_back(
-          gps_segment_t{std::vector<PointLL>(shape.cbegin() + b, shape.cbegin() + e),
+          gps_segment_t{std::vector<PointLL>(walked_shape.cbegin() + b, walked_shape.cbegin() + e),
                         static_cast<float>(edge.second.get<float>("speed") * 1e3) / 3600.f});
     }
+
     // simulate gps from the route shape
     std::vector<float> accuracies;
     auto simulation = simulate_gps(segments, accuracies, 50, 75.f, 1);
@@ -258,8 +277,13 @@ void test_trace_route_breaks() {
           {"lat":52.09110,"lon":5.09806},
           {"lat":52.09050,"lon":5.09769},
           {"lat":52.09098,"lon":5.09679}]})",
+      R"({"costing":"auto","shape_match":"map_snap","shape":[
+          {"lat":52.09110,"lon":5.09806,"type":"break","radius":5},
+          {"lat":52.0911006,"lon":5.0972905,"type":"break","radius":5},
+          {"lat":52.0909933,"lon":5.0969919,"type":"break","radius":5},
+          {"lat":52.0909707,"lon":5.0967710,"type":"break","radius":5}]})",
       R"({"costing":"auto","shape_match":"map_snap","encoded_polyline":"quijbBqpnwHfJxc@bBdJrDfSdAzFX|AHd@bG~[|AnIdArGbAo@z@m@`EuClO}MjE}E~NkPaAuC"})"};
-  std::vector<size_t> test_answers = {2, 1, 1, 1};
+  std::vector<size_t> test_answers = {2, 1, 1, 1, 1};
 
   tyr::actor_t actor(conf, true);
   for (size_t i = 0; i < test_cases.size(); ++i) {

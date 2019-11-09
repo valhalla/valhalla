@@ -107,9 +107,9 @@ protected:
    * @param  origin       Origin path location information.
    * @param  destination  Destination path location information.
    */
-  bool IsTrivial(const baldr::GraphId& edgeid,
-                 const valhalla::Location& origin,
-                 const valhalla::Location& destination) const {
+  virtual bool IsTrivial(const baldr::GraphId& edgeid,
+                         const valhalla::Location& origin,
+                         const valhalla::Location& destination) const {
     for (const auto& destination_edge : destination.path_edges()) {
       if (destination_edge.graph_id() == edgeid) {
         for (const auto& origin_edge : origin.path_edges()) {

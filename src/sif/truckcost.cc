@@ -2,6 +2,7 @@
 
 #include "baldr/accessrestriction.h"
 #include "baldr/directededge.h"
+#include "baldr/graphconstants.h"
 #include "baldr/nodeinfo.h"
 #include "midgard/constants.h"
 #include "midgard/util.h"
@@ -192,13 +193,29 @@ public:
   virtual bool Allowed(const baldr::NodeInfo* node) const;
 
   /**
+   * Only transit costings are valid for this method call, hence we throw
+   * @param edge
+   * @param departure
+   * @param curr_time
+   * @return
+   */
+  virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
+                        const baldr::TransitDeparture* departure,
+                        const uint32_t curr_time) const {
+    throw std::runtime_error("TruckCost::EdgeCost does not support transit edges");
+  }
+
+  /**
    * Get the cost to traverse the specified directed edge. Cost includes
    * the time (seconds) to traverse the edge.
-   * @param   edge  Pointer to a directed edge.
-   * @param   speed A speed for a road segment/edge.
+   * @param  edge      Pointer to a directed edge.
+   * @param  tile      Current tile.
+   * @param  seconds   Time of week in seconds.
    * @return  Returns the cost and time (seconds)
    */
-  virtual Cost EdgeCost(const baldr::DirectedEdge* edge, const uint32_t speed) const;
+  virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
+                        const baldr::GraphTile* tile,
+                        const uint32_t seconds) const;
 
   /**
    * Returns the cost to make the transition from the predecessor edge.
@@ -207,13 +224,11 @@ public:
    * @param  edge  Directed edge (the to edge)
    * @param  node  Node (intersection) where transition occurs.
    * @param  pred  Predecessor edge information.
-   * @param  has_traffic  Does the transition have traffic information.
    * @return  Returns the cost and time (seconds)
    */
   virtual Cost TransitionCost(const baldr::DirectedEdge* edge,
                               const baldr::NodeInfo* node,
-                              const EdgeLabel& pred,
-                              const bool has_traffic = false) const;
+                              const EdgeLabel& pred) const;
 
   /**
    * Returns the cost to make the transition from the predecessor edge
@@ -222,14 +237,12 @@ public:
    * @param  node  Node (intersection) where transition occurs.
    * @param  pred  the opposing current edge in the reverse tree.
    * @param  edge  the opposing predecessor in the reverse tree
-   * @param  has_traffic  Does the transition have traffic information.
    * @return  Returns the cost and time (seconds)
    */
   virtual Cost TransitionCostReverse(const uint32_t idx,
                                      const baldr::NodeInfo* node,
                                      const baldr::DirectedEdge* pred,
-                                     const baldr::DirectedEdge* edge,
-                                     const bool has_traffic = false) const;
+                                     const baldr::DirectedEdge* edge) const;
 
   /**
    * Get the cost factor for A* heuristics. This factor is multiplied
@@ -514,7 +527,10 @@ bool TruckCost::Allowed(const baldr::NodeInfo* node) const {
 }
 
 // Get the cost to traverse the edge in seconds
-Cost TruckCost::EdgeCost(const DirectedEdge* edge, const uint32_t speed) const {
+Cost TruckCost::EdgeCost(const baldr::DirectedEdge* edge,
+                         const baldr::GraphTile* tile,
+                         const uint32_t seconds) const {
+  auto speed = tile->GetSpeed(edge, flow_mask_, seconds);
   float factor = density_factor_[edge->density()];
   if (edge->truck_route() > 0) {
     factor *= kTruckRouteFactor;
@@ -533,8 +549,7 @@ Cost TruckCost::EdgeCost(const DirectedEdge* edge, const uint32_t speed) const {
 // Returns the time (in seconds) to make the transition from the predecessor
 Cost TruckCost::TransitionCost(const baldr::DirectedEdge* edge,
                                const baldr::NodeInfo* node,
-                               const EdgeLabel& pred,
-                               const bool has_traffic) const {
+                               const EdgeLabel& pred) const {
   // Get the transition cost for country crossing, ferry, gate, toll booth,
   // destination only, alley, maneuver penalty
   uint32_t idx = pred.opp_local_idx();
@@ -556,7 +571,22 @@ Cost TruckCost::TransitionCost(const baldr::DirectedEdge* edge,
                       ? kRightSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))]
                       : kLeftSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))];
     }
-    float seconds = trans_density_factor_[node->density()] * edge->stopimpact(idx) * turn_cost;
+
+    if ((edge->use() != Use::kRamp && pred.use() == Use::kRamp) ||
+        (edge->use() == Use::kRamp && pred.use() != Use::kRamp)) {
+      turn_cost += 1.5f;
+      if (edge->roundabout())
+        turn_cost += 0.5f;
+    }
+
+    // Separate time and penalty when traffic is present. With traffic, edge speeds account for
+    // much of the intersection transition time (TODO - evaluate different elapsed time settings).
+    // Still want to add a penalty so routes avoid high cost intersections.
+    float seconds = turn_cost * edge->stopimpact(idx);
+    // Apply density factor penality if there isnt traffic on this edge or youre not using traffic
+    if (!edge->has_flow_speed() && flow_mask_ != 0)
+      seconds *= trans_density_factor_[node->density()];
+
     c.cost += seconds;
     c.secs += seconds;
   }
@@ -570,8 +600,7 @@ Cost TruckCost::TransitionCost(const baldr::DirectedEdge* edge,
 Cost TruckCost::TransitionCostReverse(const uint32_t idx,
                                       const baldr::NodeInfo* node,
                                       const baldr::DirectedEdge* pred,
-                                      const baldr::DirectedEdge* edge,
-                                      const bool has_traffic) const {
+                                      const baldr::DirectedEdge* edge) const {
   // Get the transition cost for country crossing, ferry, gate, toll booth,
   // destination only, alley, maneuver penalty
   Cost c = base_transition_cost(node, edge, pred, idx);
@@ -592,7 +621,22 @@ Cost TruckCost::TransitionCostReverse(const uint32_t idx,
                       ? kRightSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))]
                       : kLeftSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))];
     }
-    float seconds = trans_density_factor_[node->density()] * edge->stopimpact(idx) * turn_cost;
+
+    if ((edge->use() != Use::kRamp && pred->use() == Use::kRamp) ||
+        (edge->use() == Use::kRamp && pred->use() != Use::kRamp)) {
+      turn_cost += 1.5f;
+      if (edge->roundabout())
+        turn_cost += 0.5f;
+    }
+
+    // Separate time and penalty when traffic is present. With traffic, edge speeds account for
+    // much of the intersection transition time (TODO - evaluate different elapsed time settings).
+    // Still want to add a penalty so routes avoid high cost intersections.
+    float seconds = turn_cost * edge->stopimpact(idx);
+    // Apply density factor penality if there isnt traffic on this edge or youre not using traffic
+    if (!edge->has_flow_speed() && flow_mask_ != 0)
+      seconds *= trans_density_factor_[node->density()];
+
     c.cost += seconds;
     c.secs += seconds;
   }
@@ -620,6 +664,9 @@ void ParseTruckCostOptions(const rapidjson::Document& doc,
   auto json_costing_options = rapidjson::get_child_optional(doc, costing_options_key.c_str());
 
   if (json_costing_options) {
+    // TODO: farm more common stuff out to parent class
+    ParseCostOptions(*json_costing_options, pbf_costing_options);
+
     // If specified, parse json and set pbf values
 
     // maneuver_penalty
@@ -705,7 +752,6 @@ void ParseTruckCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_use_tolls(
         kUseTollsRange(rapidjson::get_optional<float>(*json_costing_options, "/use_tolls")
                            .get_value_or(kDefaultUseTolls)));
-
   } else {
     // Set pbf values to defaults
     pbf_costing_options->set_maneuver_penalty(kDefaultManeuverPenalty);
@@ -725,6 +771,7 @@ void ParseTruckCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_width(kDefaultTruckWidth);
     pbf_costing_options->set_length(kDefaultTruckLength);
     pbf_costing_options->set_use_tolls(kDefaultUseTolls);
+    pbf_costing_options->set_flow_mask(kDefaultFlowMask);
   }
 }
 

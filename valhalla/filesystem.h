@@ -93,6 +93,7 @@ private:
   std::vector<size_t> separators_;
 };
 
+class directory_iterator;
 class recursive_directory_iterator;
 class directory_entry {
 public:
@@ -118,6 +119,7 @@ public:
   }
 
 private:
+  friend directory_iterator;
   friend recursive_directory_iterator;
   directory_entry(const filesystem::path& path, bool iterate)
       : dir_(nullptr), entry_(nullptr), path_(path) {
@@ -142,7 +144,10 @@ private:
       entry_->d_type = mode_to_type(s.st_mode);
     }
   }
-  unsigned char mode_to_type(decltype(stat::st_mode) mode) {
+
+  // On POXIX, d_type is char.
+  // On Windows, d_type is int (values are larger than 8-bit integer).
+  decltype(::dirent::d_type) mode_to_type(decltype(::stat::st_mode) mode) {
     if (S_ISREG(mode))
       return DT_REG;
     else if (S_ISDIR(mode))
@@ -187,16 +192,47 @@ private:
   filesystem::path path_;
 };
 
+class directory_iterator {
+public:
+  directory_iterator(const filesystem::path& path) : entry_(new directory_entry(path, true)) {
+    // if its not a dir or it is empty
+    if (!entry_->dir_ || !entry_->next())
+      entry_.reset();
+  }
+  directory_iterator() : entry_() {
+  }
+  const directory_entry& operator*() const {
+    return *entry_;
+  }
+  const directory_entry* operator->() const {
+    return entry_.get();
+  }
+  directory_iterator& operator++() {
+    if (entry_ && !entry_->next())
+      entry_.reset();
+    return *this;
+  }
+
+private:
+  std::shared_ptr<directory_entry> entry_;
+  friend bool operator==(const directory_iterator& lhs, const directory_iterator& rhs);
+};
+
+inline bool operator==(const directory_iterator& lhs, const directory_iterator& rhs) {
+  return (lhs.entry_ && rhs.entry_ && *lhs.entry_ == *rhs.entry_) || (lhs.entry_ == rhs.entry_);
+}
+
+inline bool operator!=(const directory_iterator& lhs, const directory_iterator& rhs) {
+  return !(lhs == rhs);
+}
+
 // NOTE: follows links by default..
 class recursive_directory_iterator {
 public:
   recursive_directory_iterator(const filesystem::path& path) : stack_() {
     stack_.emplace_back(new directory_entry(path, true));
-    // if this was an iteratable directory go to the first entry
-    if (stack_.back()->dir_)
-      stack_.back()->next();
-    // if we cant iterate then its an end itr
-    else
+    // if wasn't an iterable directory or it was empty then we are at the end
+    if (!stack_.back()->dir_ || !stack_.back()->next())
       stack_.clear();
   }
   recursive_directory_iterator() : stack_() {
@@ -306,6 +342,21 @@ inline void resize_file(const path& p, std::uintmax_t new_size) {
 
 inline bool remove(const path& p) {
   return ::remove(p.c_str()) == 0;
+}
+
+inline bool remove_all(const path& p) {
+  // for each entry in this directory
+  for (directory_iterator i(p), end; i != end; ++i) {
+    // if its a directory we recurse depth first
+    if (i->is_directory()) {
+      if (!remove_all(i->path()))
+        return false;
+    } // otherwise its a file or link try to delete it
+    else if (!remove(i->path()))
+      return false;
+  }
+  // delete the root
+  return remove(p);
 }
 
 } // namespace filesystem

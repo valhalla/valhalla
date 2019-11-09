@@ -9,7 +9,7 @@
 #include <vector>
 
 #include <valhalla/baldr/double_bucket_queue.h>
-#include <valhalla/proto/tripcommon.pb.h>
+#include <valhalla/proto/api.pb.h>
 #include <valhalla/sif/edgelabel.h>
 #include <valhalla/sif/hierarchylimits.h>
 #include <valhalla/thor/astarheuristic.h>
@@ -27,7 +27,15 @@ struct CandidateConnection {
   baldr::GraphId edgeid;
   baldr::GraphId opp_edgeid;
   float cost;
+  bool operator<(const CandidateConnection& o) const {
+    return cost < o.cost;
+  }
+  bool operator<(float c) const {
+    return cost < c;
+  }
 };
+
+struct EdgeMetadata;
 
 /**
  * Bidirectional A* algorithm. Method for finding least-cost path.
@@ -117,22 +125,39 @@ protected:
   /**
    * Expand from the node along the forward search path.
    */
-  void ExpandForward(baldr::GraphReader& graphreader,
+  bool ExpandForward(baldr::GraphReader& graphreader,
                      const baldr::GraphId& node,
-                     const sif::BDEdgeLabel& pred,
+                     sif::BDEdgeLabel& pred,
                      const uint32_t pred_idx,
                      const bool from_transition);
+  // Private helper function for `ExpandForward`
+  bool ExpandForwardInner(baldr::GraphReader& graphreader,
+                          const sif::BDEdgeLabel& pred,
+                          const baldr::NodeInfo* nodeinfo,
+                          const uint32_t pred_idx,
+                          const EdgeMetadata& meta,
+                          uint32_t& shortcuts,
+                          const baldr::GraphTile* tile);
 
   /**
    * Expand from the node along the reverse search path.
    */
-  void ExpandReverse(baldr::GraphReader& graphreader,
+  bool ExpandReverse(baldr::GraphReader& graphreader,
                      const baldr::GraphId& node,
-                     const sif::BDEdgeLabel& pred,
+                     sif::BDEdgeLabel& pred,
                      const uint32_t pred_idx,
                      const baldr::DirectedEdge* opp_pred_edge,
                      const bool from_transition);
 
+  // Private helper function for `ExpandReverse`
+  bool ExpandReverseInner(baldr::GraphReader& graphreader,
+                          const sif::BDEdgeLabel& pred,
+                          const baldr::DirectedEdge* opp_pred_edge,
+                          const baldr::NodeInfo* nodeinfo,
+                          const uint32_t pred_idx,
+                          const EdgeMetadata& meta,
+                          uint32_t& shortcuts,
+                          const baldr::GraphTile* tile);
   /**
    * Add edges at the origin to the forward adjacency list.
    * @param  graphreader  Graph tile reader.
@@ -171,11 +196,13 @@ protected:
    * The path from where the paths meet to the destination is then appended
    * using the opposing edges (so the path is traversed forward).
    * @param   graphreader  Graph tile reader (for getting opposing edges).
-   * @return  Returns the path info, a list of GraphIds representing the
+   * @param   options      Controls whether or not we get alternatives
+   * @return  Returns the path infos, a list of GraphIds representing the
    *          directed edges along the path - ordered from origin to
    *          destination - along with travel modes and elapsed time.
    */
-  std::vector<PathInfo> FormPath(baldr::GraphReader& graphreader);
+  std::vector<std::vector<PathInfo>> FormPath(baldr::GraphReader& graphreader,
+                                              const Options& options);
 };
 
 } // namespace thor

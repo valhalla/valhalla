@@ -2,6 +2,7 @@
 #define VALHALLA_MJOLNIR_OSMNODE_H
 
 #include <cstdint>
+#include <cstring>
 #include <string>
 #include <vector>
 

@@ -70,8 +70,8 @@ default_speed = {
 [3] = 60,
 [4] = 50,
 [5] = 40,
-[6] = 30,
-[7] = 20
+[6] = 35,
+[7] = 25
 }
 
 access = {
@@ -1266,6 +1266,11 @@ function filter_tags_generic(kv)
 
    --toss actual areas
    if kv["area"] == "yes" then
+     return 1
+   end
+
+   --toss where access=private and highway=service and service != driveway
+   if (kv["access"] == "private" and kv["highway"] == "service" and (kv["service"] == nil or kv["service"] ~= "driveway")) then
      return 1
    end
 

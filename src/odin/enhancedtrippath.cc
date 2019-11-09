@@ -2,6 +2,7 @@
 #include <cstdlib>
 #include <iostream>
 
+#include "baldr/turn.h"
 #include "baldr/turnlanes.h"
 #include "midgard/constants.h"
 #include "midgard/util.h"
@@ -17,6 +18,9 @@ using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 
 namespace {
+constexpr float kShortRemainingDistanceThreshold = 0.402f; // Kilometers (~quarter mile)
+constexpr int kSignificantRoadClassThreshold = 2;          // Max lower road class delta
+
 const std::string& TripLeg_RoadClass_Name(int v) {
   static const std::unordered_map<int, std::string> values{
       {0, "kMotorway"}, {1, "kTrunk"},        {2, "kPrimary"},     {3, "kSecondary"},
@@ -161,6 +165,14 @@ const std::string& TripLeg_Sidewalk_Name(int v) {
   return f->second;
 }
 
+bool is_forward(uint32_t turn_degree) {
+  return ((turn_degree > 314) || (turn_degree < 46));
+}
+
+bool is_wider_forward(uint32_t turn_degree) {
+  return ((turn_degree > 304) || (turn_degree < 56));
+}
+
 } // namespace
 
 namespace valhalla {
@@ -185,11 +197,12 @@ std::unique_ptr<EnhancedTripLeg_Edge> EnhancedTripLeg::GetPrevEdge(const int nod
   }
 }
 
-std::unique_ptr<EnhancedTripLeg_Edge> EnhancedTripLeg::GetCurrEdge(const int node_index) {
+std::unique_ptr<EnhancedTripLeg_Edge> EnhancedTripLeg::GetCurrEdge(const int node_index) const {
   return GetNextEdge(node_index, 0);
 }
 
-std::unique_ptr<EnhancedTripLeg_Edge> EnhancedTripLeg::GetNextEdge(const int node_index, int delta) {
+std::unique_ptr<EnhancedTripLeg_Edge> EnhancedTripLeg::GetNextEdge(const int node_index,
+                                                                   int delta) const {
   int index = node_index + delta;
   if (IsValidNodeIndex(index) && !IsLastNodeIndex(index)) {
     return midgard::make_unique<EnhancedTripLeg_Edge>(mutable_node(index)->mutable_edge());
@@ -406,11 +419,11 @@ bool EnhancedTripLeg_Edge::IsOneway() const {
 }
 
 bool EnhancedTripLeg_Edge::IsForward(uint32_t prev2curr_turn_degree) const {
-  return ((prev2curr_turn_degree > 314) || (prev2curr_turn_degree < 46));
+  return is_forward(prev2curr_turn_degree);
 }
 
 bool EnhancedTripLeg_Edge::IsWiderForward(uint32_t prev2curr_turn_degree) const {
-  return ((prev2curr_turn_degree > 304) || (prev2curr_turn_degree < 56));
+  return is_wider_forward(prev2curr_turn_degree);
 }
 
 bool EnhancedTripLeg_Edge::IsStraightest(uint32_t prev2curr_turn_degree,
@@ -459,7 +472,7 @@ bool EnhancedTripLeg_Edge::HasActiveTurnLane() const {
 
 bool EnhancedTripLeg_Edge::HasNonDirectionalTurnLane() const {
   for (const auto& turn_lane : turn_lanes()) {
-    // Return true if directions mask is empty or none
+    // Return true if a directions mask is empty or none for a turn lane
     if ((turn_lane.directions_mask() == kTurnLaneEmpty) ||
         (turn_lane.directions_mask() & kTurnLaneNone)) {
       return true;
@@ -468,18 +481,128 @@ bool EnhancedTripLeg_Edge::HasNonDirectionalTurnLane() const {
   return false;
 }
 
-bool EnhancedTripLeg_Edge::ActivateTurnLanes(uint16_t turn_lane_direction) {
-  bool activated = false;
-  for (auto& turn_lane : *(mutable_turn_lanes())) {
+bool EnhancedTripLeg_Edge::HasTurnLane(uint16_t turn_lane_direction) const {
+  for (const auto& turn_lane : turn_lanes()) {
+    // Return true if the specified turn lane exists
     if (turn_lane.directions_mask() & turn_lane_direction) {
-      turn_lane.set_is_active(true);
-      activated = true;
+      return true;
     }
   }
-  return activated;
+  return false;
 }
 
-#ifdef LOGGING_LEVEL_TRACE
+uint16_t EnhancedTripLeg_Edge::ActivateTurnLanesFromLeft(uint16_t turn_lane_direction,
+                                                         uint16_t activated_max) {
+  uint16_t activated_count = 0;
+  // Make sure turn lane has a direction
+  if (!HasNonDirectionalTurnLane()) {
+    for (auto& turn_lane : *(mutable_turn_lanes())) {
+      // Stop processing the lanes if the activated maximum has been reached
+      if (activated_count >= activated_max) {
+        break;
+      }
+
+      // If the turn lane is in the specified direction then activate the lane
+      // and increment the activated count
+      if (turn_lane.directions_mask() & turn_lane_direction) {
+        turn_lane.set_is_active(true);
+        ++activated_count;
+      }
+    }
+  }
+  return activated_count;
+}
+
+uint16_t EnhancedTripLeg_Edge::ActivateTurnLanesFromRight(uint16_t turn_lane_direction,
+                                                          uint16_t activated_max) {
+  uint16_t activated_count = 0;
+  // Make sure turn lane has a direction
+  if (!HasNonDirectionalTurnLane()) {
+    for (auto turn_lane_iter = mutable_turn_lanes()->rbegin();
+         turn_lane_iter != mutable_turn_lanes()->rend(); ++turn_lane_iter) {
+      //    for (auto& turn_lane : *(mutable_turn_lanes())) {
+      // Stop processing the lanes if the activated maximum has been reached
+      if (activated_count >= activated_max) {
+        break;
+      }
+
+      // If the turn lane is in the specified direction then activate the lane
+      // and increment the activated count
+      if (turn_lane_iter->directions_mask() & turn_lane_direction) {
+        turn_lane_iter->set_is_active(true);
+        ++activated_count;
+      }
+    }
+  }
+  return activated_count;
+}
+
+uint16_t
+EnhancedTripLeg_Edge::ActivateTurnLanes(uint16_t turn_lane_direction,
+                                        float remaining_step_distance,
+                                        const DirectionsLeg_Maneuver_Type& curr_maneuver_type,
+                                        const DirectionsLeg_Maneuver_Type& next_maneuver_type) {
+  if ((curr_maneuver_type == DirectionsLeg_Maneuver_Type_kUturnLeft) &&
+      (turn_lane_direction != kTurnLaneReverse)) {
+    // Activate the left most turn lane
+    return ActivateTurnLanesFromLeft(turn_lane_direction, 1);
+  } else if ((curr_maneuver_type == DirectionsLeg_Maneuver_Type_kUturnRight) &&
+             (turn_lane_direction != kTurnLaneReverse)) {
+    // Activate the right most turn lane
+    return ActivateTurnLanesFromRight(turn_lane_direction, 1);
+  } else if ((remaining_step_distance < kShortRemainingDistanceThreshold) &&
+             !((next_maneuver_type == DirectionsLeg_Maneuver_Type_kBecomes) ||
+               (next_maneuver_type == DirectionsLeg_Maneuver_Type_kContinue) ||
+               (next_maneuver_type == DirectionsLeg_Maneuver_Type_kRampStraight) ||
+               (next_maneuver_type == DirectionsLeg_Maneuver_Type_kStayStraight))) {
+    // If remaining step distance is less than short threshold
+    // and next maneuver is not a straight
+    // Activate only specific matching turn lanes
+    switch (next_maneuver_type) {
+      case DirectionsLeg_Maneuver_Type_kUturnLeft:
+      case DirectionsLeg_Maneuver_Type_kSharpLeft:
+      case DirectionsLeg_Maneuver_Type_kLeft:
+      case DirectionsLeg_Maneuver_Type_kSlightLeft:
+      case DirectionsLeg_Maneuver_Type_kExitLeft:
+      case DirectionsLeg_Maneuver_Type_kRampLeft:
+      case DirectionsLeg_Maneuver_Type_kDestinationLeft:
+      case DirectionsLeg_Maneuver_Type_kMergeLeft:
+        return ActivateTurnLanesFromLeft(turn_lane_direction, 1);
+      case DirectionsLeg_Maneuver_Type_kSlightRight:
+      case DirectionsLeg_Maneuver_Type_kExitRight:
+      case DirectionsLeg_Maneuver_Type_kRampRight:
+      case DirectionsLeg_Maneuver_Type_kRight:
+      case DirectionsLeg_Maneuver_Type_kSharpRight:
+      case DirectionsLeg_Maneuver_Type_kUturnRight:
+      case DirectionsLeg_Maneuver_Type_kDestinationRight:
+      case DirectionsLeg_Maneuver_Type_kMergeRight:
+        return ActivateTurnLanesFromRight(turn_lane_direction, 1);
+      case DirectionsLeg_Maneuver_Type_kMerge:
+        if (drive_on_right()) {
+          return ActivateTurnLanesFromLeft(turn_lane_direction, 1);
+        } else {
+          return ActivateTurnLanesFromRight(turn_lane_direction, 1);
+        }
+      case DirectionsLeg_Maneuver_Type_kRoundaboutEnter:
+      case DirectionsLeg_Maneuver_Type_kRoundaboutExit:
+      case DirectionsLeg_Maneuver_Type_kFerryEnter:
+      case DirectionsLeg_Maneuver_Type_kFerryExit:
+        return ActivateTurnLanesFromLeft(turn_lane_direction);
+      case DirectionsLeg_Maneuver_Type_kDestination:
+        if (drive_on_right()) {
+          return ActivateTurnLanesFromRight(turn_lane_direction, 1);
+        } else {
+          return ActivateTurnLanesFromLeft(turn_lane_direction, 1);
+        }
+      default:
+        return ActivateTurnLanesFromLeft(turn_lane_direction);
+    }
+  } else {
+    // Activate all matching turn lanes
+    return ActivateTurnLanesFromLeft(turn_lane_direction);
+  }
+}
+
 std::string EnhancedTripLeg_Edge::ToString() const {
   std::string str;
   str.reserve(256);
@@ -654,12 +777,150 @@ std::string EnhancedTripLeg_Edge::ToString() const {
 
   if (turn_lanes_size() > 0) {
     str += " | turn_lanes=";
-    str += TurnLanesToString(turn_lanes());
+    str += TurnLanesToString();
   }
 
   return str;
 }
 
+std::string EnhancedTripLeg_Edge::TurnLanesToString() const {
+  std::string str;
+
+  for (const auto& turn_lane : turn_lanes()) {
+    if (str.empty()) {
+      str = "[ ";
+    } else {
+      str += " | ";
+    }
+
+    uint16_t mask = turn_lane.directions_mask();
+
+    // Process the turn lanes - from left to right
+    // empty
+    if (mask == kTurnLaneEmpty) {
+      str += "empty";
+    }
+    // none
+    else if (mask == kTurnLaneNone) {
+      str += kTurnLaneNames.at(kTurnLaneNone);
+    } else {
+      bool prior_item = false;
+      // reverse (left u-turn)
+      if ((mask & kTurnLaneReverse) && drive_on_right()) {
+        if (prior_item)
+          str += ";";
+        str += kTurnLaneNames.at(kTurnLaneReverse);
+        prior_item = true;
+      }
+      // sharp_left
+      if (mask & kTurnLaneSharpLeft) {
+        if (prior_item)
+          str += ";";
+        str += kTurnLaneNames.at(kTurnLaneSharpLeft);
+        prior_item = true;
+      }
+      // left
+      if (mask & kTurnLaneLeft) {
+        if (prior_item)
+          str += ";";
+        str += kTurnLaneNames.at(kTurnLaneLeft);
+        prior_item = true;
+      }
+      // slight_left
+      if (mask & kTurnLaneSlightLeft) {
+        if (prior_item)
+          str += ";";
+        str += kTurnLaneNames.at(kTurnLaneSlightLeft);
+        prior_item = true;
+      }
+      // merge_to_left
+      if (mask & kTurnLaneMergeToLeft) {
+        if (prior_item)
+          str += ";";
+        str += kTurnLaneNames.at(kTurnLaneMergeToLeft);
+        prior_item = true;
+      }
+      // through
+      if (mask & kTurnLaneThrough) {
+        if (prior_item)
+          str += ";";
+        str += kTurnLaneNames.at(kTurnLaneThrough);
+        prior_item = true;
+      }
+      // merge_to_right
+      if (mask & kTurnLaneMergeToRight) {
+        if (prior_item)
+          str += ";";
+        str += kTurnLaneNames.at(kTurnLaneMergeToRight);
+        prior_item = true;
+      }
+      // slight_right
+      if (mask & kTurnLaneSlightRight) {
+        if (prior_item)
+          str += ";";
+        str += kTurnLaneNames.at(kTurnLaneSlightRight);
+        prior_item = true;
+      }
+      // right
+      if (mask & kTurnLaneRight) {
+        if (prior_item)
+          str += ";";
+        str += kTurnLaneNames.at(kTurnLaneRight);
+        prior_item = true;
+      }
+      // sharp_right
+      if (mask & kTurnLaneSharpRight) {
+        if (prior_item)
+          str += ";";
+        str += kTurnLaneNames.at(kTurnLaneSharpRight);
+        prior_item = true;
+      }
+      // reverse (right u-turn)
+      if ((mask & kTurnLaneReverse) && !drive_on_right()) {
+        if (prior_item)
+          str += ";";
+        str += kTurnLaneNames.at(kTurnLaneReverse);
+        prior_item = true;
+      }
+    }
+
+    // Output if marked as active
+    if (turn_lane.is_active()) {
+      str += " ACTIVE";
+    }
+  }
+  str += " ]";
+  return str;
+}
+
+std::string EnhancedTripLeg_Edge::StreetNamesToString(
+    const ::google::protobuf::RepeatedPtrField<::valhalla::StreetName>& street_names) const {
+  std::string str;
+
+  for (const auto& street_name : street_names) {
+    if (!str.empty()) {
+      str += "/";
+    }
+    str += street_name.value();
+  }
+  return str;
+}
+
+std::string EnhancedTripLeg_Edge::SignElementsToString(
+    const ::google::protobuf::RepeatedPtrField<::valhalla::TripLeg_SignElement>& sign_elements)
+    const {
+  std::string str;
+
+  for (const auto& sign_element : sign_elements) {
+    if (!str.empty()) {
+      str += "/";
+    }
+    str += sign_element.text();
+  }
+  return str;
+}
+
+#ifdef LOGGING_LEVEL_TRACE
 std::string EnhancedTripLeg_Edge::ToParameterString() const {
   const std::string delim = ", ";
   std::string str;
@@ -856,19 +1117,6 @@ std::string EnhancedTripLeg_Edge::ToParameterString() const {
   return str;
 }
 
-std::string EnhancedTripLeg_Edge::StreetNamesToString(
-    const ::google::protobuf::RepeatedPtrField<::valhalla::StreetName>& street_names) const {
-  std::string str;
-
-  for (const auto& street_name : street_names) {
-    if (!str.empty()) {
-      str += "/";
-    }
-    str += street_name.value();
-  }
-  return str;
-}
-
 std::string EnhancedTripLeg_Edge::StreetNamesToParameterString(
     const ::google::protobuf::RepeatedPtrField<::valhalla::StreetName>& street_names) const {
   std::string str;
@@ -889,20 +1137,6 @@ std::string EnhancedTripLeg_Edge::StreetNamesToParameterString(
   str += param_list;
   str += " }";
 
-  return str;
-}
-
-std::string EnhancedTripLeg_Edge::SignElementsToString(
-    const ::google::protobuf::RepeatedPtrField<::valhalla::TripLeg_SignElement>& sign_elements)
-    const {
-  std::string str;
-
-  for (const auto& sign_element : sign_elements) {
-    if (!str.empty()) {
-      str += "/";
-    }
-    str += sign_element.text();
-  }
   return str;
 }
 
@@ -927,109 +1161,6 @@ std::string EnhancedTripLeg_Edge::SignElementsToParameterString(
   str += param_list;
   str += " }";
 
-  return str;
-}
-
-std::string EnhancedTripLeg_Edge::TurnLanesToString(
-    const ::google::protobuf::RepeatedPtrField<::valhalla::TurnLane>& turn_lanes) const {
-  std::string str;
-
-  for (const auto& turn_lane : turn_lanes) {
-    if (!str.empty()) {
-      str += "|";
-    }
-
-    uint16_t mask = turn_lane.directions_mask();
-
-    // Process the turn lanes - from left to right
-    // empty
-    if (mask == kTurnLaneEmpty) {
-      str += "empty";
-    }
-    // none
-    else if (mask == kTurnLaneNone) {
-      str += kTurnLaneNames.at(kTurnLaneNone);
-    } else {
-      bool prior_item = false;
-      // reverse (left u-turn)
-      if ((mask & kTurnLaneReverse) && drive_on_right()) {
-        if (prior_item)
-          str += ";";
-        str += kTurnLaneNames.at(kTurnLaneReverse);
-        prior_item = true;
-      }
-      // sharp_left
-      if (mask & kTurnLaneSharpLeft) {
-        if (prior_item)
-          str += ";";
-        str += kTurnLaneNames.at(kTurnLaneSharpLeft);
-        prior_item = true;
-      }
-      // left
-      if (mask & kTurnLaneLeft) {
-        if (prior_item)
-          str += ";";
-        str += kTurnLaneNames.at(kTurnLaneLeft);
-        prior_item = true;
-      }
-      // slight_left
-      if (mask & kTurnLaneSlightLeft) {
-        if (prior_item)
-          str += ";";
-        str += kTurnLaneNames.at(kTurnLaneSlightLeft);
-        prior_item = true;
-      }
-      // merge_to_left
-      if (mask & kTurnLaneMergeToLeft) {
-        if (prior_item)
-          str += ";";
-        str += kTurnLaneNames.at(kTurnLaneMergeToLeft);
-        prior_item = true;
-      }
-      // through
-      if (mask & kTurnLaneThrough) {
-        if (prior_item)
-          str += ";";
-        str += kTurnLaneNames.at(kTurnLaneThrough);
-        prior_item = true;
-      }
-      // merge_to_right
-      if (mask & kTurnLaneMergeToRight) {
-        if (prior_item)
-          str += ";";
-        str += kTurnLaneNames.at(kTurnLaneMergeToRight);
-        prior_item = true;
-      }
-      // slight_right
-      if (mask & kTurnLaneSlightRight) {
-        if (prior_item)
-          str += ";";
-        str += kTurnLaneNames.at(kTurnLaneSlightRight);
-        prior_item = true;
-      }
-      // right
-      if (mask & kTurnLaneRight) {
-        if (prior_item)
-          str += ";";
-        str += kTurnLaneNames.at(kTurnLaneRight);
-        prior_item = true;
-      }
-      // sharp_right
-      if (mask & kTurnLaneSharpRight) {
-        if (prior_item)
-          str += ";";
-        str += kTurnLaneNames.at(kTurnLaneSharpRight);
-        prior_item = true;
-      }
-      // reverse (right u-turn)
-      if ((mask & kTurnLaneReverse) && !drive_on_right()) {
-        if (prior_item)
-          str += ";";
-        str += kTurnLaneNames.at(kTurnLaneReverse);
-        prior_item = true;
-      }
-    }
-  }
   return str;
 }
 #endif
@@ -1079,6 +1210,10 @@ bool EnhancedTripLeg_IntersectingEdge::IsTraversableOutbound(
   return false;
 }
 
+bool EnhancedTripLeg_IntersectingEdge::IsHighway() const {
+  return ((road_class() == TripLeg_RoadClass_kMotorway) && !(use() == TripLeg_Use_kRampUse));
+}
+
 std::string EnhancedTripLeg_IntersectingEdge::ToString() const {
   std::string str;
   str.reserve(128);
@@ -1100,6 +1235,12 @@ std::string EnhancedTripLeg_IntersectingEdge::ToString() const {
 
   str += " | walkability=";
   str += std::to_string(walkability());
+
+  str += " | use=";
+  str += std::to_string(use());
+
+  str += " | road_class=";
+  str += std::to_string(road_class());
 
   return str;
 }
@@ -1209,9 +1350,7 @@ void EnhancedTripLeg_Node::CalculateRightLeftIntersectingEdgeCounts(
 bool EnhancedTripLeg_Node::HasFowardIntersectingEdge(uint32_t from_heading) {
 
   for (int i = 0; i < intersecting_edge_size(); ++i) {
-    uint32_t intersecting_turn_degree =
-        GetTurnDegree(from_heading, intersecting_edge(i).begin_heading());
-    if ((intersecting_turn_degree > 314) || (intersecting_turn_degree < 46)) {
+    if (is_forward(GetTurnDegree(from_heading, intersecting_edge(i).begin_heading()))) {
       return true;
     }
   }
@@ -1223,11 +1362,54 @@ bool EnhancedTripLeg_Node::HasForwardTraversableIntersectingEdge(
     const TripLeg_TravelMode travel_mode) {
 
   for (int i = 0; i < intersecting_edge_size(); ++i) {
-    uint32_t intersecting_turn_degree =
-        GetTurnDegree(from_heading, intersecting_edge(i).begin_heading());
-    bool xedge_traversable_outbound = GetIntersectingEdge(i)->IsTraversableOutbound(travel_mode);
-    if (((intersecting_turn_degree > 314) || (intersecting_turn_degree < 46)) &&
-        xedge_traversable_outbound) {
+    if (is_forward(GetTurnDegree(from_heading, intersecting_edge(i).begin_heading())) &&
+        GetIntersectingEdge(i)->IsTraversableOutbound(travel_mode)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool EnhancedTripLeg_Node::HasForwardTraversableSignificantRoadClassXEdge(
+    uint32_t from_heading,
+    const TripLeg_TravelMode travel_mode,
+    TripLeg_RoadClass path_road_class) {
+
+  for (int i = 0; i < intersecting_edge_size(); ++i) {
+    auto xedge = GetIntersectingEdge(i);
+    // if the intersecting edge is forward
+    // and is traversable based on mode
+    // and is a significant road class as compared to the path road class
+    if (is_forward(GetTurnDegree(from_heading, intersecting_edge(i).begin_heading())) &&
+        xedge->IsTraversableOutbound(travel_mode) &&
+        ((xedge->road_class() - path_road_class) <= kSignificantRoadClassThreshold)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool EnhancedTripLeg_Node::HasWiderForwardTraversableIntersectingEdge(
+    uint32_t from_heading,
+    const TripLeg_TravelMode travel_mode) {
+
+  for (int i = 0; i < intersecting_edge_size(); ++i) {
+    if (is_wider_forward(GetTurnDegree(from_heading, intersecting_edge(i).begin_heading())) &&
+        GetIntersectingEdge(i)->IsTraversableOutbound(travel_mode)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool EnhancedTripLeg_Node::HasWiderForwardTraversableHighwayXEdge(
+    uint32_t from_heading,
+    const TripLeg_TravelMode travel_mode) {
+
+  for (int i = 0; i < intersecting_edge_size(); ++i) {
+    auto xedge = GetIntersectingEdge(i);
+    if (is_wider_forward(GetTurnDegree(from_heading, xedge->begin_heading())) &&
+        xedge->IsTraversableOutbound(travel_mode) && xedge->IsHighway()) {
       return true;
     }
   }
@@ -1245,23 +1427,61 @@ bool EnhancedTripLeg_Node::HasTraversableOutboundIntersectingEdge(
   return false;
 }
 
+bool EnhancedTripLeg_Node::HasSpecifiedTurnXEdge(const Turn::Type turn_type,
+                                                 uint32_t from_heading,
+                                                 const TripLeg_TravelMode travel_mode) {
+
+  for (int i = 0; i < intersecting_edge_size(); ++i) {
+    // Only process the traversable outbound edges
+    if (GetIntersectingEdge(i)->IsTraversableOutbound(travel_mode) &&
+        (Turn::GetType(GetTurnDegree(from_heading, intersecting_edge(i).begin_heading())) ==
+         turn_type)) {
+      // return true if an intersecting edge of the specified turn type exists
+      return true;
+    }
+  }
+  return false;
+}
+
+bool EnhancedTripLeg_Node::HasSpecifiedRoadClassXEdge(const TripLeg_RoadClass road_class) {
+
+  // If no intersecting edges then return false
+  if (!HasIntersectingEdges()) {
+    return false;
+  }
+
+  for (int i = 0; i < intersecting_edge_size(); ++i) {
+    if (GetIntersectingEdge(i)->road_class() == road_class) {
+      // Return true there is a match
+      return true;
+    }
+  }
+  // No match found return false
+  return false;
+}
+
 // TODO: refactor to clean up code
 uint32_t EnhancedTripLeg_Node::GetStraightestTraversableIntersectingEdgeTurnDegree(
     uint32_t from_heading,
-    const TripLeg_TravelMode travel_mode) {
+    const TripLeg_TravelMode travel_mode,
+    TripLeg_Use* use) {
 
   uint32_t staightest_turn_degree = 180; // Initialize to reverse turn degree
   uint32_t staightest_delta = 180;       // Initialize to reverse delta
 
   for (int i = 0; i < intersecting_edge_size(); ++i) {
-    uint32_t intersecting_turn_degree =
-        GetTurnDegree(from_heading, intersecting_edge(i).begin_heading());
-    bool xedge_traversable_outbound = GetIntersectingEdge(i)->IsTraversableOutbound(travel_mode);
+    auto xedge = GetIntersectingEdge(i);
+    uint32_t intersecting_turn_degree = GetTurnDegree(from_heading, xedge->begin_heading());
+    bool xedge_traversable_outbound = xedge->IsTraversableOutbound(travel_mode);
     uint32_t straight_delta = (intersecting_turn_degree > 180) ? (360 - intersecting_turn_degree)
                                                                : intersecting_turn_degree;
     if (xedge_traversable_outbound && (straight_delta < staightest_delta)) {
       staightest_delta = straight_delta;
       staightest_turn_degree = intersecting_turn_degree;
+      // If a use pointer was passed in and the intersecting edge has a use then set
+      if ((use != nullptr) && xedge->has_use()) {
+        *use = xedge->use();
+      }
     }
   }
   return staightest_turn_degree;
@@ -1296,6 +1516,72 @@ uint32_t EnhancedTripLeg_Node::GetStraightestIntersectingEdgeTurnDegree(uint32_t
     }
   }
   return staightest_turn_degree;
+}
+
+uint32_t EnhancedTripLeg_Node::GetRightMostTurnDegree(uint32_t turn_degree,
+                                                      uint32_t from_heading,
+                                                      const TripLeg_TravelMode travel_mode) {
+
+  auto get_right_delta = [](uint32_t turn_degree) -> uint32_t {
+    if (turn_degree < 90) {
+      return (90 - turn_degree);
+    } else if (turn_degree > 270) {
+      return (360 - turn_degree + 90);
+    } else {
+      return (turn_degree - 90);
+    }
+  };
+
+  uint32_t right_most_turn_degree = turn_degree;
+  uint32_t right_most_delta = get_right_delta(turn_degree);
+
+  for (int i = 0; i < intersecting_edge_size(); ++i) {
+    // Only process traversable outbound edges
+    if (GetIntersectingEdge(i)->IsTraversableOutbound(travel_mode)) {
+      // Get the intersecting edge turn degree and right turn delta
+      uint32_t xturn_degree = GetTurnDegree(from_heading, intersecting_edge(i).begin_heading());
+      uint32_t right_delta = get_right_delta(xturn_degree);
+      // Determine if the intersecting edge turn degree is closer to true right (90)
+      if (right_delta < right_most_delta) {
+        right_most_delta = right_delta;
+        right_most_turn_degree = xturn_degree;
+      }
+    }
+  }
+  return right_most_turn_degree;
+}
+
+uint32_t EnhancedTripLeg_Node::GetLeftMostTurnDegree(uint32_t turn_degree,
+                                                     uint32_t from_heading,
+                                                     const TripLeg_TravelMode travel_mode) {
+
+  auto get_left_delta = [](uint32_t turn_degree) -> uint32_t {
+    if (turn_degree < 90) {
+      return (90 + turn_degree);
+    } else if (turn_degree < 270) {
+      return (270 - turn_degree);
+    } else {
+      return (turn_degree - 270);
+    }
+  };
+
+  uint32_t left_most_turn_degree = turn_degree;
+  uint32_t left_most_delta = get_left_delta(turn_degree);
+
+  for (int i = 0; i < intersecting_edge_size(); ++i) {
+    // Only process traversable outbound edges
+    if (GetIntersectingEdge(i)->IsTraversableOutbound(travel_mode)) {
+      // Get the intersecting edge turn degree and left turn delta
+      uint32_t xturn_degree = GetTurnDegree(from_heading, intersecting_edge(i).begin_heading());
+      uint32_t left_delta = get_left_delta(xturn_degree);
+      // Determine if the intersecting edge turn degree is closer to true left (270)
+      if (left_delta < left_most_delta) {
+        left_most_delta = left_delta;
+        left_most_turn_degree = xturn_degree;
+      }
+    }
+  }
+  return left_most_turn_degree;
 }
 
 bool EnhancedTripLeg_Node::IsStreetIntersection() const {

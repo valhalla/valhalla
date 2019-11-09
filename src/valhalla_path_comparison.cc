@@ -75,7 +75,7 @@ void print_edge(GraphReader& reader,
   std::cout << "----------Edge----------\n";
   std::cout << "Edge GraphId: " << current_id << std::endl;
   std::cout << "Edge length: " << edge->length() << std::endl;
-  Cost edge_cost = costing->EdgeCost(edge, tile->GetSpeed(edge));
+  Cost edge_cost = costing->EdgeCost(edge, tile);
   edge_total += edge_cost;
   std::cout << "EdgeCost cost: " << edge_cost.cost << " secs: " << edge_cost.secs << "\n";
   std::cout << "------------------------\n\n";
@@ -103,8 +103,7 @@ void walk_edges(const std::string& shape, GraphReader& reader, cost_ptr_t cost_p
   std::vector<baldr::Location> locations;
   locations.push_back({shape_pts.front()});
   locations.push_back({shape_pts.back()});
-  const auto projections =
-      Search(locations, reader, cost_ptr->GetEdgeFilter(), cost_ptr->GetNodeFilter());
+  const auto projections = Search(locations, reader, cost_ptr.get());
   std::vector<PathLocation> path_location;
   valhalla::Options options;
   for (const auto& loc : locations) {
@@ -246,7 +245,8 @@ int main(int argc, char* argv[]) {
           loc.node_snap_tolerance_ = pt.get<float>("node_snap_tolerance", loc.node_snap_tolerance_);
           loc.way_id_ = pt.get_optional<long double>("way_id");
 
-          loc.minimum_reachability_ = pt.get<unsigned int>("minimum_reachability", 50);
+          loc.min_outbound_reach_ = loc.min_inbound_reach_ =
+              pt.get<unsigned int>("minimum_reachability", 50);
           loc.radius_ = pt.get<unsigned long>("radius", 0);
           locations.emplace_back(std::move(loc));
         }
@@ -275,7 +275,7 @@ int main(int argc, char* argv[]) {
   CostFactory<DynamicCost> factory;
   factory.RegisterStandardCostingModels();
   valhalla::Costing costing;
-  if (valhalla::Costing_Parse(routetype, &costing)) {
+  if (valhalla::Costing_Enum_Parse(routetype, &costing)) {
     request.mutable_options()->set_costing(costing);
   } else {
     throw std::runtime_error("No costing method found");

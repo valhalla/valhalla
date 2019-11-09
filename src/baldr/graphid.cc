@@ -20,7 +20,7 @@ json::Value GraphId::json() const {
 
 // Stream output
 std::ostream& operator<<(std::ostream& os, const GraphId& id) {
-  return os << id.level() << '/' << id.tileid() << '/' << id.id();
+  return os << std::to_string(id);
 }
 
 } // namespace baldr
