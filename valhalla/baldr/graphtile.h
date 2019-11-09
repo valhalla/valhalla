@@ -135,7 +135,8 @@ public:
       return &nodes_[node.id()];
     }
     throw std::runtime_error(
-        "GraphTile NodeInfo index out of bounds: " + std::to_string(node.tileid()) + "," +
+        std::string(__FILE__) + ":" + std::to_string(__LINE__) +
+        " GraphTile NodeInfo index out of bounds: " + std::to_string(node.tileid()) + "," +
         std::to_string(node.level()) + "," + std::to_string(node.id()) +
         " nodecount= " + std::to_string(header_->nodecount()));
   }
@@ -150,7 +151,8 @@ public:
       return &nodes_[idx];
     }
     throw std::runtime_error(
-        "GraphTile NodeInfo index out of bounds: " + std::to_string(header_->graphid().tileid()) +
+        std::string(__FILE__) + ":" + std::to_string(__LINE__) +
+        " GraphTile NodeInfo index out of bounds: " + std::to_string(header_->graphid().tileid()) +
         "," + std::to_string(header_->graphid().level()) + "," + std::to_string(idx) +
         " nodecount= " + std::to_string(header_->nodecount()));
   }
@@ -263,7 +265,8 @@ public:
       return GetNodeTransitions(nodeinfo);
     }
     throw std::runtime_error(
-        "GraphTile NodeInfo index out of bounds: " + std::to_string(node.tileid()) + "," +
+        std::string(__FILE__) + ":" + std::to_string(__LINE__) +
+        " GraphTile NodeInfo index out of bounds: " + std::to_string(node.tileid()) + "," +
         std::to_string(node.level()) + "," + std::to_string(node.id()) +
         " nodecount= " + std::to_string(header_->nodecount()));
   }

@@ -6,7 +6,7 @@ Trying to run more than one errand in the day or start your own delivery service
 
 If you want only a table of the times and distances, start with the **matrix** service. See the [api documentation](/matrix/api-reference.md).
 
-Use the **isocrhone** service to get a computation of areas that are reachable within specified time periods from a location or set of locations. See the [api documentation](/isochrone/api-reference.md).
+Use the **isochrone** service to get a computation of areas that are reachable within specified time periods from a location or set of locations. See the [api documentation](/isochrone/api-reference.md).
 
 The **map-matching** service matches coordinates to known roads so you can turn a path into a route with narrative instructions and get the attribute values from that matched line. See the [api documentation](/map-matching/api-reference.md).
 

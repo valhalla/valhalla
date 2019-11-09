@@ -1,6 +1,10 @@
 #include "thor/bidirectional_astar.h"
 #include "baldr/datetime.h"
+#include "baldr/directededge.h"
+#include "baldr/graphid.h"
+#include "midgard/encoded.h"
 #include "midgard/logging.h"
+#include "sif/edgelabel.h"
 #include <algorithm>
 #include <map>
 
@@ -9,6 +13,10 @@ using namespace valhalla::baldr;
 using namespace valhalla::sif;
 
 namespace {
+
+// Enable runtime derive of deadend
+constexpr bool derive_deadend = true;
+
 constexpr uint64_t kInitialEdgeLabelCountBD = 1000000;
 
 // Threshold (seconds) to extend search once the first connection has been found.
@@ -100,95 +108,71 @@ void BidirectionalAStar::Init(const PointLL& origll, const PointLL& destll) {
   hierarchy_limits_reverse_ = costing_->GetHierarchyLimits();
 }
 
+// Container for the data we iterate over in Expand* function
+struct EdgeMetadata {
+  const DirectedEdge* edge;
+  GraphId edge_id;
+  EdgeStatusInfo* edge_status;
+
+  inline static EdgeMetadata make(const GraphId& node,
+                                  const NodeInfo* nodeinfo,
+                                  const GraphTile* tile,
+                                  EdgeStatus& edge_status_) {
+    GraphId edge_id = {node.tileid(), node.level(), nodeinfo->edge_index()};
+    EdgeStatusInfo* edge_status = edge_status_.GetPtr(edge_id, tile);
+    const DirectedEdge* directededge = tile->directededge(edge_id);
+    return {directededge, edge_id, edge_status};
+  }
+
+  inline void increment_pointers() {
+    ++edge;
+    ++edge_id;
+    ++edge_status;
+  }
+};
+
 // Expand from a node in the forward direction
-void BidirectionalAStar::ExpandForward(GraphReader& graphreader,
+//
+// Returns true if function ended up adding an edge for expansion
+bool BidirectionalAStar::ExpandForward(GraphReader& graphreader,
                                        const GraphId& node,
-                                       const BDEdgeLabel& pred,
+                                       BDEdgeLabel& pred,
                                        const uint32_t pred_idx,
                                        const bool from_transition) {
   // Get the tile and the node info. Skip if tile is null (can happen
   // with regional data sets) or if no access at the node.
   const GraphTile* tile = graphreader.GetGraphTile(node);
   if (tile == nullptr) {
-    return;
+    return false;
   }
   const NodeInfo* nodeinfo = tile->node(node);
   if (!costing_->Allowed(nodeinfo)) {
-    return;
+    return false;
   }
 
-  // Expand from end node in forward direction.
   uint32_t shortcuts = 0;
-  GraphId edgeid = {node.tileid(), node.level(), nodeinfo->edge_index()};
-  EdgeStatusInfo* es = edgestatus_forward_.GetPtr(edgeid, tile);
-  const DirectedEdge* directededge = tile->directededge(edgeid);
-  for (uint32_t i = 0; i < nodeinfo->edge_count(); ++i, ++directededge, ++edgeid, ++es) {
-    // Skip shortcut edges until we have stopped expanding on the next level. Use regular
-    // edges while still expanding on the next level since we can still transition down to
-    // that level. If using a shortcut, set the shortcuts mask. Skip if this is a regular
-    // edge superseded by a shortcut.
-    if (directededge->is_shortcut()) {
-      if (hierarchy_limits_forward_[edgeid.level() + 1].StopExpanding()) {
-        shortcuts |= directededge->shortcut();
-      } else {
-        continue;
-      }
-    } else if (shortcuts & directededge->superseded()) {
+  EdgeMetadata meta = EdgeMetadata::make(node, nodeinfo, tile, edgestatus_forward_);
+
+  bool found_valid_edge = false;
+  bool found_uturn = false;
+  EdgeMetadata uturn_meta = {};
+
+  // Expand from end node in forward direction.
+  for (uint32_t i = 0; i < nodeinfo->edge_count(); ++i, meta.increment_pointers()) {
+
+    // Begin by checking if this is the opposing edge to pred.
+    // If so, it means we are attempting a u-turn. In that case, lets wait with evaluating
+    // this edge until last. If any other edges were emplaced, it means we should not
+    // even try to evaluate a u-turn since u-turns should only happen for deadends
+    if (pred.opp_local_idx() == meta.edge->localedgeidx()) {
+      uturn_meta = meta;
+      found_uturn = true;
       continue;
     }
 
-    // Skip this edge if edge is permanently labeled (best path already found
-    // to this directed edge), if no access is allowed (based on costing method),
-    // or if a complex restriction prevents transition onto this edge.
-    if (es->set() == EdgeSet::kPermanent ||
-        !costing_->Allowed(directededge, pred, tile, edgeid, 0, 0) ||
-        costing_->Restricted(directededge, pred, edgelabels_forward_, tile, edgeid, true)) {
-      continue;
-    }
-
-    // Get cost. Separate out transition cost.
-    Cost tc = costing_->TransitionCost(directededge, nodeinfo, pred);
-    Cost newcost =
-        pred.cost() + tc + costing_->EdgeCost(directededge, tile, kConstrainedFlowSecondOfDay);
-
-    // Check if edge is temporarily labeled and this path has less cost. If
-    // less cost the predecessor is updated and the sort cost is decremented
-    // by the difference in real cost (A* heuristic doesn't change)
-    if (es->set() == EdgeSet::kTemporary) {
-      BDEdgeLabel& lab = edgelabels_forward_[es->index()];
-      if (newcost.cost < lab.cost().cost) {
-        float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
-        adjacencylist_forward_->decrease(es->index(), newsortcost);
-        lab.Update(pred_idx, newcost, newsortcost, tc);
-      }
-      continue;
-    }
-
-    // Get end node tile (skip if tile is not found) and opposing edge Id
-    const GraphTile* t2 =
-        directededge->leaves_tile() ? graphreader.GetGraphTile(directededge->endnode()) : tile;
-    if (t2 == nullptr) {
-      continue;
-    }
-    GraphId oppedge = t2->GetOpposingEdgeId(directededge);
-
-    // Find the sort cost (with A* heuristic) using the lat,lng at the
-    // end node of the directed edge.
-    float dist = 0.0f;
-    float sortcost =
-        newcost.cost + astarheuristic_forward_.Get(t2->get_node_ll(directededge->endnode()), dist);
-
-    // Add edge label, add to the adjacency list and set edge status
-    uint32_t idx = edgelabels_forward_.size();
-    edgelabels_forward_.emplace_back(pred_idx, edgeid, oppedge, directededge, newcost, sortcost, dist,
-                                     mode_, tc,
-                                     (pred.not_thru_pruning() || !directededge->not_thru()));
-    adjacencylist_forward_->add(idx);
-    *es = {EdgeSet::kTemporary, idx};
-
-    // setting this edge as reached
-    if (expansion_callback_)
-      expansion_callback_(graphreader, "bidirectional_astar", edgeid, "r", false);
+    found_valid_edge =
+        ExpandForwardInner(graphreader, pred, nodeinfo, pred_idx, meta, shortcuts, tile) ||
+        found_valid_edge;
   }
 
   // Handle transitions - expand from the end node of each transition
@@ -197,18 +181,135 @@ void BidirectionalAStar::ExpandForward(GraphReader& graphreader,
     for (uint32_t i = 0; i < nodeinfo->transition_count(); ++i, ++trans) {
       if (trans->up()) {
         hierarchy_limits_forward_[node.level()].up_transition_count++;
-        ExpandForward(graphreader, trans->endnode(), pred, pred_idx, true);
+        found_valid_edge =
+            ExpandForward(graphreader, trans->endnode(), pred, pred_idx, true) || found_valid_edge;
       } else if (!hierarchy_limits_forward_[trans->endnode().level()].StopExpanding()) {
-        ExpandForward(graphreader, trans->endnode(), pred, pred_idx, true);
+        found_valid_edge =
+            ExpandForward(graphreader, trans->endnode(), pred, pred_idx, true) || found_valid_edge;
       }
     }
   }
+
+  if (!from_transition) {
+    // Now, after having looked at all the edges, including edges on other levels,
+    // we can say if this is a deadend or not, and if so, evaluate the uturn-edge (if it exists)
+    if (!found_valid_edge && found_uturn) {
+      // If we found no suitable edge to add, it means we're at a deadend
+      // so lets go back and re-evaluate a potential u-turn
+
+      if (derive_deadend) { // We can toggle static and runtime definition of deadend here
+        pred.set_deadend(true);
+      }
+
+      // Decide if we should expand a shortcut or the non-shortcut edge...
+      bool was_uturn_shortcut_added = false;
+
+      // TODO Is there a shortcut that supersedes our u-turn?
+      if (was_uturn_shortcut_added) {
+        found_valid_edge = true;
+      } else {
+        // We didn't add any shortcut of the uturn, therefore evaluate the regular uturn instead
+        bool uturn_added =
+            ExpandForwardInner(graphreader, pred, nodeinfo, pred_idx, uturn_meta, shortcuts, tile);
+        found_valid_edge = found_valid_edge || uturn_added;
+      }
+    }
+  }
+  return found_valid_edge;
+}
+
+// Runs in the inner loop of `ExpandForward`, essentially evaluating if
+// the edge described in `meta` should be placed on the stack
+// as well as doing just that.
+//
+// TODO: Merge this with ExpandReverseInner
+//
+// Returns true if any edge _could_ have been expanded after restrictions etc.
+inline bool BidirectionalAStar::ExpandForwardInner(GraphReader& graphreader,
+                                                   const BDEdgeLabel& pred,
+                                                   const NodeInfo* nodeinfo,
+                                                   const uint32_t pred_idx,
+                                                   const EdgeMetadata& meta,
+                                                   uint32_t& shortcuts,
+                                                   const GraphTile* tile) {
+  // Skip shortcut edges until we have stopped expanding on the next level. Use regular
+  // edges while still expanding on the next level since we can still transition down to
+  // that level. If using a shortcut, set the shortcuts mask. Skip if this is a regular
+  // edge superseded by a shortcut.
+  if (meta.edge->is_shortcut()) {
+    if (hierarchy_limits_forward_[meta.edge_id.level() + 1].StopExpanding()) {
+      shortcuts |= meta.edge->shortcut();
+    } else {
+      return false;
+    }
+  } else if (shortcuts & meta.edge->superseded()) {
+    return false;
+  }
+
+  // Skip this edge if edge is permanently labeled (best path already found
+  // to this directed edge), if no access is allowed (based on costing method),
+  // or if a complex restriction prevents transition onto this edge.
+  if (meta.edge_status->set() == EdgeSet::kPermanent) {
+    return true; // This is an edge we _could_ have expanded, so return true
+  }
+  if (!costing_->Allowed(meta.edge, pred, tile, meta.edge_id, 0, 0) ||
+      costing_->Restricted(meta.edge, pred, edgelabels_forward_, tile, meta.edge_id, true)) {
+    return false;
+  }
+
+  // Get cost. Separate out transition cost.
+  Cost tc = costing_->TransitionCost(meta.edge, nodeinfo, pred);
+  Cost newcost = pred.cost() + tc + costing_->EdgeCost(meta.edge, tile, kConstrainedFlowSecondOfDay);
+
+  // Check if edge is temporarily labeled and this path has less cost. If
+  // less cost the predecessor is updated and the sort cost is decremented
+  // by the difference in real cost (A* heuristic doesn't change)
+  if (meta.edge_status->set() == EdgeSet::kTemporary) {
+    BDEdgeLabel& lab = edgelabels_forward_[meta.edge_status->index()];
+    if (newcost.cost < lab.cost().cost) {
+      float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
+      adjacencylist_forward_->decrease(meta.edge_status->index(), newsortcost);
+      lab.Update(pred_idx, newcost, newsortcost, tc);
+    }
+    return true; // Returning true since this means we approved the edge
+  }
+
+  // Get end node tile (skip if tile is not found) and opposing edge Id
+  const GraphTile* t2 =
+      meta.edge->leaves_tile() ? graphreader.GetGraphTile(meta.edge->endnode()) : tile;
+  if (t2 == nullptr) {
+    return false;
+  }
+  GraphId opp_edge_id = t2->GetOpposingEdgeId(meta.edge);
+
+  // Find the sort cost (with A* heuristic) using the lat,lng at the
+  // end node of the directed edge.
+  float dist = 0.0f;
+  float sortcost =
+      newcost.cost + astarheuristic_forward_.Get(t2->get_node_ll(meta.edge->endnode()), dist);
+
+  // Add edge label, add to the adjacency list and set edge status
+  uint32_t idx = edgelabels_forward_.size();
+  edgelabels_forward_.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, newcost, sortcost,
+                                   dist, mode_, tc,
+                                   (pred.not_thru_pruning() || !meta.edge->not_thru()));
+
+  adjacencylist_forward_->add(idx);
+  *meta.edge_status = {EdgeSet::kTemporary, idx};
+
+  // setting this edge as reached
+  if (expansion_callback_) {
+    expansion_callback_(graphreader, "bidirectional_astar", meta.edge_id, "r", false);
+  }
+  return true;
 }
 
 // Expand from a node in reverse direction.
-void BidirectionalAStar::ExpandReverse(GraphReader& graphreader,
+//
+// Returns true if function ended up adding an edge for expansion
+bool BidirectionalAStar::ExpandReverse(GraphReader& graphreader,
                                        const GraphId& node,
-                                       const BDEdgeLabel& pred,
+                                       BDEdgeLabel& pred,
                                        const uint32_t pred_idx,
                                        const DirectedEdge* opp_pred_edge,
                                        const bool from_transition) {
@@ -216,92 +317,36 @@ void BidirectionalAStar::ExpandReverse(GraphReader& graphreader,
   // with regional data sets) or if no access at the node.
   const GraphTile* tile = graphreader.GetGraphTile(node);
   if (tile == nullptr) {
-    return;
+    return false;
   }
   const NodeInfo* nodeinfo = tile->node(node);
   if (!costing_->Allowed(nodeinfo)) {
-    return;
+    return false;
   }
 
-  // Expand from end node in reverse direction.
   uint32_t shortcuts = 0;
-  GraphId edgeid = {node.tileid(), node.level(), nodeinfo->edge_index()};
-  EdgeStatusInfo* es = edgestatus_reverse_.GetPtr(edgeid, tile);
-  const DirectedEdge* directededge = tile->directededge(edgeid);
-  for (uint32_t i = 0; i < nodeinfo->edge_count(); ++i, ++directededge, ++edgeid, ++es) {
-    // Skip shortcut edges until we have stopped expanding on the next level. Use regular
-    // edges while still expanding on the next level since we can still transition down to
-    // that level. If using a shortcut, set the shortcuts mask. Skip if this is a regular
-    // edge superseded by a shortcut.
-    if (directededge->is_shortcut()) {
-      if (hierarchy_limits_reverse_[edgeid.level() + 1].StopExpanding()) {
-        shortcuts |= directededge->shortcut();
-      } else {
-        continue;
-      }
-    } else if (shortcuts & directededge->superseded()) {
+  EdgeMetadata meta = EdgeMetadata::make(node, nodeinfo, tile, edgestatus_reverse_);
+
+  bool edge_was_added = false;
+  bool found_uturn = false;
+  EdgeMetadata uturn_meta = {};
+
+  // Expand from end node in reverse direction.
+  for (uint32_t i = 0; i < nodeinfo->edge_count(); ++i, meta.increment_pointers()) {
+
+    // Begin by checking if this is the opposing edge to pred.
+    // If so, it means we are attempting a u-turn. In that case, lets wait with evaluating
+    // this edge until last. If any other edges were emplaced, it means we should not
+    // even try to evaluate a u-turn since u-turns should only happen for deadends
+    if (pred.opp_local_idx() == meta.edge->localedgeidx()) {
+      uturn_meta = meta;
+      found_uturn = true;
       continue;
     }
 
-    // Skip this edge if permanently labeled (best path already found to this
-    // directed edge) or if no access for this mode.
-    if (es->set() == EdgeSet::kPermanent || !(directededge->reverseaccess() & access_mode_)) {
-      continue;
-    }
-
-    // Get end node tile, opposing edge Id, and opposing directed edge.
-    const GraphTile* t2 =
-        directededge->leaves_tile() ? graphreader.GetGraphTile(directededge->endnode()) : tile;
-    if (t2 == nullptr) {
-      continue;
-    }
-    GraphId oppedge = t2->GetOpposingEdgeId(directededge);
-    const DirectedEdge* opp_edge = t2->directededge(oppedge);
-
-    // Skip this edge if no access is allowed (based on costing method)
-    // or if a complex restriction prevents transition onto this edge.
-    if (!costing_->AllowedReverse(directededge, pred, opp_edge, t2, oppedge, 0, 0) ||
-        costing_->Restricted(directededge, pred, edgelabels_reverse_, tile, edgeid, false)) {
-      continue;
-    }
-
-    // Get cost. Use opposing edge for EdgeCost. Separate the transition seconds so we
-    // can properly recover elapsed time on the reverse path.
-    Cost tc = costing_->TransitionCostReverse(directededge->localedgeidx(), nodeinfo, opp_edge,
-                                              opp_pred_edge);
-    Cost newcost = pred.cost() + costing_->EdgeCost(opp_edge, t2, kConstrainedFlowSecondOfDay);
-    newcost.cost += tc.cost;
-
-    // Check if edge is temporarily labeled and this path has less cost. If
-    // less cost the predecessor is updated and the sort cost is decremented
-    // by the difference in real cost (A* heuristic doesn't change)
-    if (es->set() != EdgeSet::kUnreached) {
-      BDEdgeLabel& lab = edgelabels_reverse_[es->index()];
-      if (newcost.cost < lab.cost().cost) {
-        float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
-        adjacencylist_reverse_->decrease(es->index(), newsortcost);
-        lab.Update(pred_idx, newcost, newsortcost, tc);
-      }
-      continue;
-    }
-
-    // Find the sort cost (with A* heuristic) using the lat,lng at the
-    // end node of the directed edge.
-    float dist = 0.0f;
-    float sortcost =
-        newcost.cost + astarheuristic_reverse_.Get(t2->get_node_ll(directededge->endnode()), dist);
-
-    // Add edge label, add to the adjacency list and set edge status
-    uint32_t idx = edgelabels_reverse_.size();
-    edgelabels_reverse_.emplace_back(pred_idx, edgeid, oppedge, directededge, newcost, sortcost, dist,
-                                     mode_, tc,
-                                     (pred.not_thru_pruning() || !directededge->not_thru()));
-    adjacencylist_reverse_->add(idx);
-    *es = {EdgeSet::kTemporary, idx};
-
-    // setting this edge as reached, sending the opposing because this is the reverse tree
-    if (expansion_callback_)
-      expansion_callback_(graphreader, "bidirectional_astar", oppedge, "r", false);
+    edge_was_added = ExpandReverseInner(graphreader, pred, opp_pred_edge, nodeinfo, pred_idx, meta,
+                                        shortcuts, tile) ||
+                     edge_was_added;
   }
 
   // Handle transitions - expand from the end node of each transition
@@ -310,12 +355,136 @@ void BidirectionalAStar::ExpandReverse(GraphReader& graphreader,
     for (uint32_t i = 0; i < nodeinfo->transition_count(); ++i, ++trans) {
       if (trans->up()) {
         hierarchy_limits_reverse_[node.level()].up_transition_count++;
-        ExpandReverse(graphreader, trans->endnode(), pred, pred_idx, opp_pred_edge, true);
+        edge_was_added =
+            ExpandReverse(graphreader, trans->endnode(), pred, pred_idx, opp_pred_edge, true) ||
+            edge_was_added;
       } else if (!hierarchy_limits_reverse_[trans->endnode().level()].StopExpanding()) {
-        ExpandReverse(graphreader, trans->endnode(), pred, pred_idx, opp_pred_edge, true);
+        edge_was_added =
+            ExpandReverse(graphreader, trans->endnode(), pred, pred_idx, opp_pred_edge, true) ||
+            edge_was_added;
       }
     }
   }
+
+  if (!from_transition) {
+    // Now, after having looked at all the edges, including edges on other levels,
+    // we can say if this is a deadend or not, and if so, evaluate the uturn-edge (if it exists)
+    if (!edge_was_added && found_uturn) {
+      // If we found no suitable edge to add, it means we're at a deadend
+      // so lets go back and re-evaluate a potential u-turn
+
+      if (derive_deadend) { // We can toggle static and runtime definition of deadend here
+        pred.set_deadend(true);
+      }
+
+      // Decide if we should expand a shortcut or the non-shortcut edge...
+      bool was_uturn_shortcut_added = false;
+
+      // TODO Is there a shortcut that supersedes our u-turn?
+      if (was_uturn_shortcut_added) {
+        edge_was_added = true;
+      } else {
+        // We didn't add any shortcut of the uturn, therefore evaluate the regular uturn instead
+        edge_was_added = ExpandReverseInner(graphreader, pred, opp_pred_edge, nodeinfo, pred_idx,
+                                            uturn_meta, shortcuts, tile) ||
+                         edge_was_added;
+      }
+    }
+  }
+  return edge_was_added;
+}
+// Runs in the inner loop of `ExpandReverse`, essentially evaluating if
+// the edge described in `meta` should be placed on the stack
+// as well as doing just that.
+//
+// TODO: Merge this with ExpandForwardInner
+//
+// Returns true if any edge _could_ have been expanded after restrictions etc.
+inline bool BidirectionalAStar::ExpandReverseInner(GraphReader& graphreader,
+                                                   const BDEdgeLabel& pred,
+                                                   const DirectedEdge* opp_pred_edge,
+                                                   const NodeInfo* nodeinfo,
+                                                   const uint32_t pred_idx,
+                                                   const EdgeMetadata& meta,
+                                                   uint32_t& shortcuts,
+                                                   const GraphTile* tile) {
+  // Skip shortcut edges until we have stopped expanding on the next level. Use regular
+  // edges while still expanding on the next level since we can still transition down to
+  // that level. If using a shortcut, set the shortcuts mask. Skip if this is a regular
+  // edge superseded by a shortcut.
+  if (meta.edge->is_shortcut()) {
+    if (hierarchy_limits_reverse_[meta.edge_id.level() + 1].StopExpanding()) {
+      shortcuts |= meta.edge->shortcut();
+    } else {
+      return false;
+    }
+  } else if (shortcuts & meta.edge->superseded()) {
+    return false;
+  }
+
+  // Skip this edge if permanently labeled (best path already found to this
+  // directed edge)
+  if (meta.edge_status->set() == EdgeSet::kPermanent) {
+    return true; // This is an edge we _could_ have expanded, so return true
+  }
+  // TODO Why is this check necessary? opp_edge.forwardaccess() is checked in Allowed(...)
+  if (!(meta.edge->reverseaccess() & access_mode_)) {
+    return false;
+  }
+
+  // Get end node tile, opposing edge Id, and opposing directed edge.
+  const GraphTile* t2 =
+      meta.edge->leaves_tile() ? graphreader.GetGraphTile(meta.edge->endnode()) : tile;
+  GraphId opp_edge_id = t2->GetOpposingEdgeId(meta.edge);
+  const DirectedEdge* opp_edge = t2->directededge(opp_edge_id);
+
+  // Skip this edge if no access is allowed (based on costing method)
+  // or if a complex restriction prevents transition onto this edge.
+  if (!costing_->AllowedReverse(meta.edge, pred, opp_edge, t2, opp_edge_id, 0, 0) ||
+      costing_->Restricted(meta.edge, pred, edgelabels_reverse_, tile, meta.edge_id, false)) {
+    return false;
+  }
+
+  // Get cost. Use opposing edge for EdgeCost. Separate the transition seconds so we
+  // can properly recover elapsed time on the reverse path.
+  Cost tc =
+      costing_->TransitionCostReverse(meta.edge->localedgeidx(), nodeinfo, opp_edge, opp_pred_edge);
+  Cost newcost = pred.cost() + costing_->EdgeCost(opp_edge, t2, kConstrainedFlowSecondOfDay);
+  newcost.cost += tc.cost;
+
+  // Check if edge is temporarily labeled and this path has less cost. If
+  // less cost the predecessor is updated and the sort cost is decremented
+  // by the difference in real cost (A* heuristic doesn't change)
+  if (meta.edge_status->set() == EdgeSet::kTemporary) {
+    BDEdgeLabel& lab = edgelabels_reverse_[meta.edge_status->index()];
+    if (newcost.cost < lab.cost().cost) {
+      float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
+      adjacencylist_reverse_->decrease(meta.edge_status->index(), newsortcost);
+      lab.Update(pred_idx, newcost, newsortcost, tc);
+    }
+    return true; // Returning true since this means we approved the edge
+  }
+
+  // Find the sort cost (with A* heuristic) using the lat,lng at the
+  // end node of the directed edge.
+  float dist = 0.0f;
+  float sortcost =
+      newcost.cost + astarheuristic_reverse_.Get(t2->get_node_ll(meta.edge->endnode()), dist);
+
+  // Add edge label, add to the adjacency list and set edge status
+  uint32_t idx = edgelabels_reverse_.size();
+  edgelabels_reverse_.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, newcost, sortcost,
+                                   dist, mode_, tc,
+                                   (pred.not_thru_pruning() || !meta.edge->not_thru()));
+
+  adjacencylist_reverse_->add(idx);
+  *meta.edge_status = {EdgeSet::kTemporary, idx};
+
+  // setting this edge as reached, sending the opposing because this is the reverse tree
+  if (expansion_callback_) {
+    expansion_callback_(graphreader, "bidirectional_astar", opp_edge_id, "r", false);
+  }
+  return true;
 }
 
 // Calculate best path using bi-directional A*. No hierarchies or time
@@ -434,8 +603,9 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
       edgestatus_forward_.Update(fwd_pred.edgeid(), EdgeSet::kPermanent);
 
       // setting this edge as settled
-      if (expansion_callback_)
+      if (expansion_callback_) {
         expansion_callback_(graphreader, "bidirectional_astar", fwd_pred.edgeid(), "s", false);
+      }
 
       // Prune path if predecessor is not a through edge or if the maximum
       // number of upward transitions has been exceeded on this hierarchy level.
@@ -455,8 +625,9 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
       edgestatus_reverse_.Update(rev_pred.edgeid(), EdgeSet::kPermanent);
 
       // setting this edge as settled, sending the opposing because this is the reverse tree
-      if (expansion_callback_)
+      if (expansion_callback_) {
         expansion_callback_(graphreader, "bidirectional_astar", rev_pred.opp_edgeid(), "s", false);
+      }
 
       // Prune path if predecessor is not a through edge
       if ((rev_pred.not_thru() && rev_pred.not_thru_pruning()) ||
@@ -518,8 +689,9 @@ bool BidirectionalAStar::SetForwardConnection(GraphReader& graphreader, const BD
   }
 
   // setting this edge as connected
-  if (expansion_callback_)
+  if (expansion_callback_) {
     expansion_callback_(graphreader, "bidirectional_astar", pred.edgeid(), "c", false);
+  }
 
   return true;
 }
@@ -565,8 +737,9 @@ bool BidirectionalAStar::SetReverseConnection(GraphReader& graphreader, const BD
   }
 
   // setting this edge as connected, sending the opposing because this is the reverse tree
-  if (expansion_callback_)
+  if (expansion_callback_) {
     expansion_callback_(graphreader, "bidirectional_astar", oppedge, "c", false);
+  }
 
   return true;
 }
@@ -633,8 +806,9 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader, valhalla::Location&
     adjacencylist_forward_->add(idx);
 
     // setting this edge as reached
-    if (expansion_callback_)
+    if (expansion_callback_) {
       expansion_callback_(graphreader, "bidirectional_astar", edgeid, "r", false);
+    }
 
     // Set the initial not_thru flag to false. There is an issue with not_thru
     // flags on small loops. Set this to false here to override this for now.
@@ -666,7 +840,8 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader, const valhalla
       continue;
     }
 
-    // Disallow any user avoided edges if the avoid location is behind the destination along the edge
+    // Disallow any user avoided edges if the avoid location is behind the destination along the
+    // edge
     GraphId edgeid(edge.graph_id());
     if (costing_->AvoidAsDestinationEdge(edgeid, edge.percent_along())) {
       continue;
@@ -709,8 +884,9 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader, const valhalla
     adjacencylist_reverse_->add(idx);
 
     // setting this edge as settled, sending the opposing because this is the reverse tree
-    if (expansion_callback_)
+    if (expansion_callback_) {
       expansion_callback_(graphreader, "bidirectional_astar", edgeid, "r", false);
+    }
 
     // Set the initial not_thru flag to false. There is an issue with not_thru
     // flags on small loops. Set this to false here to override this for now.
