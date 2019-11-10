@@ -266,6 +266,12 @@ void validate_osrm_turn_destinations() {
   // Test osrm turn left guide sign
   test_osrm_destinations({VALHALLA_SOURCE_DIR "test/pinpoints/instructions/turn_left_guide_sign.pbf"},
                          routes_index, legs_index, steps_index, "Germering, Planegg");
+
+  // Test osrm bear right guide sign
+  test_osrm_destinations({VALHALLA_SOURCE_DIR
+                          "test/pinpoints/instructions/bear_right_guide_sign.pbf"},
+                         routes_index, legs_index, steps_index,
+                         "Hersheypark, Arena, Stadium, Giant Center");
 }
 
 void validate_osrm_roundabout_destinations() {
