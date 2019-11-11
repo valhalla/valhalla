@@ -21,7 +21,6 @@ valhalla_module(NAME loki
         ${VALHALLA_SOURCE_DIR}
         ${VALHALLA_SOURCE_DIR}/valhalla
         ${VALHALLA_SOURCE_DIR}/third_party/date/include
-        $<$<BOOL:${MSVC}>:${VALHALLA_SOURCE_DIR}/third_party/dirent/include>
         PRIVATE
         ${VALHALLA_SOURCE_DIR}/third_party/rapidjson/include
         ${CMAKE_BINARY_DIR}
