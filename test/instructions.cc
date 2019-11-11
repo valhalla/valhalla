@@ -272,6 +272,10 @@ void validate_osrm_turn_destinations() {
                           "test/pinpoints/instructions/bear_right_guide_sign.pbf"},
                          routes_index, legs_index, steps_index,
                          "Hersheypark, Arena, Stadium, Giant Center");
+
+  // Test osrm bear left guide sign
+  test_osrm_destinations({VALHALLA_SOURCE_DIR "test/pinpoints/instructions/bear_left_guide_sign.pbf"},
+                         routes_index, legs_index, steps_index, "US 50 West: Fairfax");
 }
 
 void validate_osrm_roundabout_destinations() {
