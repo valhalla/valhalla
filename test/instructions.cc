@@ -276,6 +276,13 @@ void validate_osrm_turn_destinations() {
   // Test osrm bear left guide sign
   test_osrm_destinations({VALHALLA_SOURCE_DIR "test/pinpoints/instructions/bear_left_guide_sign.pbf"},
                          routes_index, legs_index, steps_index, "US 50 West: Fairfax");
+
+  steps_index = 3;
+
+  // Test osrm bear right guide sign
+  test_osrm_destinations({VALHALLA_SOURCE_DIR
+                          "test/pinpoints/instructions/roundabout_and_bear_right_guide_sign.pbf"},
+                         routes_index, legs_index, steps_index, "A20: Dover, Channel Tunnel");
 }
 
 void validate_osrm_roundabout_destinations() {
@@ -316,6 +323,16 @@ void validate_osrm_roundabout_destinations() {
                           "test/pinpoints/instructions/roundabout_guide_sign_3.pbf"},
                          routes_index, legs_index, exit_steps_index,
                          "A 1: Remscheid, Wermelskirchen");
+
+  // Test osrm roundabout enter guide sign
+  test_osrm_destinations({VALHALLA_SOURCE_DIR
+                          "test/pinpoints/instructions/roundabout_and_bear_right_guide_sign.pbf"},
+                         routes_index, legs_index, enter_steps_index, "Bexley");
+
+  // Test osrm roundabout exit guide sign
+  test_osrm_destinations({VALHALLA_SOURCE_DIR
+                          "test/pinpoints/instructions/roundabout_and_bear_right_guide_sign.pbf"},
+                         routes_index, legs_index, exit_steps_index, "Bexley");
 }
 
 void validate_ramp_instructions() {
