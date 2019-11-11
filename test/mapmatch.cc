@@ -300,7 +300,7 @@ void test_trace_route_breaks() {
   }
 }
 
-void test_disconnected_edges() {
+void test_disconnected_edges_expect_no_route() {
   std::vector<std::string> test_cases = {
       R"({"costing":"auto","shape_match":"map_snap","shape":[
           {"lat":52.0630834,"lon":5.1037227,"type":"break"},
@@ -711,13 +711,13 @@ int main(int argc, char* argv[]) {
   if (argc > 2)
     bound = std::stoi(argv[2]);
 
-  // suite.test(TEST_CASE(test32bit));
+  suite.test(TEST_CASE(test32bit));
 
-  // suite.test(TEST_CASE(test_matcher));
+  suite.test(TEST_CASE(test_matcher));
 
   suite.test(TEST_CASE(test_trace_route_breaks));
 
-  suite.test(TEST_CASE(test_disconnected_edges));
+  suite.test(TEST_CASE(test_disconnected_edges_expect_no_route));
 
   suite.test(TEST_CASE(test_distance_only));
 
