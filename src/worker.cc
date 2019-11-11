@@ -287,6 +287,25 @@ rapidjson::Document from_string(const std::string& json, const valhalla_exceptio
   return d;
 }
 
+void add_date_to_locations(Options& options,
+                           google::protobuf::RepeatedPtrField<valhalla::Location>& locations) {
+  if (options.has_date_time() && locations.size()) {
+    switch (options.date_time_type()) {
+      case Options::current:
+        locations.Mutable(0)->set_date_time("current");
+        break;
+      case Options::depart_at:
+        locations.Mutable(0)->set_date_time(options.date_time());
+        break;
+      case Options::arrive_by:
+        locations.Mutable(locations.size() - 1)->set_date_time(options.date_time());
+        break;
+      default:
+        break;
+    }
+  }
+}
+
 void parse_locations(const rapidjson::Document& doc,
                      Options& options,
                      const std::string& node,
@@ -453,20 +472,8 @@ void parse_locations(const rapidjson::Document& doc,
     }
 
     // push the date time information down into the locations
-    if (!had_date_time && options.has_date_time() && locations->size()) {
-      switch (options.date_time_type()) {
-        case Options::current:
-          locations->Mutable(0)->set_date_time("current");
-          break;
-        case Options::depart_at:
-          locations->Mutable(0)->set_date_time(options.date_time());
-          break;
-        case Options::arrive_by:
-          locations->Mutable(locations->size() - 1)->set_date_time(options.date_time());
-          break;
-        default:
-          break;
-      }
+    if (!had_date_time) {
+      add_date_to_locations(options, *locations);
     }
   }
 }
@@ -608,6 +615,8 @@ void from_json(rapidjson::Document& doc, Options& options) {
       options.mutable_shape(0)->set_type(valhalla::Location::kBreak);
       options.mutable_shape(options.shape_size() - 1)->set_type(valhalla::Location::kBreak);
     }
+    // add the date time
+    add_date_to_locations(options, *options.mutable_shape());
   } // fall back from encoded polyline to array of locations
   else {
     parse_locations(doc, options, "shape", 134, false);
