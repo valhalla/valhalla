@@ -682,7 +682,20 @@ void ManeuversBuilder::CountAndSortSigns(std::list<Maneuver>& maneuvers) {
           }
         }
       }
-      Signs::Sort(prev_man->mutable_signs()->mutable_exit_number_list());
+      Signs::Sort(prev_man->mutable_signs()->mutable_exit_branch_list());
+    }
+    // Increase the branch guide sign consecutive count
+    // if it matches the succeeding named maneuver
+    else if (prev_man->HasGuideBranchSign() && !curr_man->HasGuideSign() &&
+             curr_man->HasStreetNames()) {
+      for (Sign& sign : *(prev_man->mutable_signs()->mutable_guide_branch_list())) {
+        for (const auto& street_name : curr_man->street_names()) {
+          if (sign.text() == street_name->value()) {
+            sign.set_consecutive_count(sign.consecutive_count() + 1);
+          }
+        }
+      }
+      Signs::Sort(prev_man->mutable_signs()->mutable_guide_branch_list());
     }
     // Increase the consecutive count of signs that match their neighbor
     else if (prev_man->HasSigns() && curr_man->HasSigns()) {
