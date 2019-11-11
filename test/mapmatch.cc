@@ -319,8 +319,13 @@ void test_time_rejection() {
 
 void test32bit() {
   tyr::actor_t actor(conf, true);
-  std::string test_case = "{\"costing\":\"auto\",\"locations\":[{\"lat\":52.096672,\"lon\":5."
-                          "110825},{\"lat\":52.081371,\"lon\":5.125671}]}";
+  std::string test_case =
+      R"({"costing":"auto","locations":[{"lat":52.096672,"lon":5.110825},
+          {"lat":52.081371,"lon":5.125671,"name":"foo","street":"bar","city":"baz",
+          "state":"qux","postal_code":"corge","country":"quux","url":"zoinks",
+          "date_time":"2001-06-07T15:17","heading_tolerance":90,"node_snap_tolerance":5,
+          "way_id":1234,"minimum_reachability":50,"rank_candidates":false,
+          "preferred_side":"neither","search_cutoff":100,"street_side_tolerance":5}],"date_time":{"type":0}})";
   actor.route(test_case);
 }
 
