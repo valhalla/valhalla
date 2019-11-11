@@ -455,7 +455,7 @@ inline bool BidirectionalAStar::ExpandReverseInner(GraphReader& graphreader,
   // Check if edge is temporarily labeled and this path has less cost. If
   // less cost the predecessor is updated and the sort cost is decremented
   // by the difference in real cost (A* heuristic doesn't change)
-  if (meta.edge_status->set() != EdgeSet::kUnreached) {
+  if (meta.edge_status->set() == EdgeSet::kTemporary) {
     BDEdgeLabel& lab = edgelabels_reverse_[meta.edge_status->index()];
     if (newcost.cost < lab.cost().cost) {
       float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
