@@ -169,7 +169,8 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
     directededge = tile->directededge(edge_id);
 
     // Check if connected to prior edge
-    if (prior_edge.Is_Valid() && !matcher->graphreader().AreEdgesConnected(prior_edge, edge_id)) {
+    if (prior_edge.Is_Valid() &&
+        !matcher->graphreader().AreEdgesConnectedForward(prior_edge, edge_id)) {
       disconnected_edges.emplace_back(prior_edge, edge_id);
     }
 

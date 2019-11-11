@@ -300,6 +300,27 @@ void test_trace_route_breaks() {
   }
 }
 
+void test_disconnected_edges_expect_no_route() {
+  std::vector<std::string> test_cases = {
+      R"({"costing":"auto","shape_match":"map_snap","shape":[
+          {"lat":52.0630834,"lon":5.1037227,"type":"break"},
+          {"lat":52.0633099,"lon":5.1047193,"type":"break"},
+          {"lat":52.0640117,"lon":5.1040429,"type":"break"},
+          {"lat":52.0644313,"lon":5.1041697,"type":"break"}]})"};
+  std::vector<size_t> test_answers = {0};
+  size_t illegal_path = 0;
+  tyr::actor_t actor(conf, true);
+  for (size_t i = 0; i < test_cases.size(); ++i) {
+    try {
+      auto matched = json_to_pt(actor.trace_route(test_cases[i]));
+    } catch (...) {
+      if (illegal_path++ != i) {
+        throw std::logic_error("Expected no route but got one");
+      }
+    }
+  }
+}
+
 void test_time_rejection() {
   tyr::actor_t actor(conf, true);
   auto matched = json_to_pt(actor.trace_attributes(
@@ -695,6 +716,8 @@ int main(int argc, char* argv[]) {
   suite.test(TEST_CASE(test_matcher));
 
   suite.test(TEST_CASE(test_trace_route_breaks));
+
+  suite.test(TEST_CASE(test_disconnected_edges_expect_no_route));
 
   suite.test(TEST_CASE(test_distance_only));
 
