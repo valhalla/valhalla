@@ -78,7 +78,7 @@ std::list<Maneuver> ManeuversBuilder::Build() {
 #endif
 
   // Calculate the consecutive exit sign count and then sort
-  CountAndSortExitSigns(maneuvers);
+  CountAndSortSigns(maneuvers);
 
   // Confirm maneuver type assignment
   ConfirmManeuverTypeAssignment(maneuvers);
@@ -660,7 +660,7 @@ ManeuversBuilder::CombineManeuvers(std::list<Maneuver>& maneuvers,
   return maneuvers.erase(next_man);
 }
 
-void ManeuversBuilder::CountAndSortExitSigns(std::list<Maneuver>& maneuvers) {
+void ManeuversBuilder::CountAndSortSigns(std::list<Maneuver>& maneuvers) {
 
   auto prev_man = maneuvers.rbegin();
   auto curr_man = maneuvers.rbegin();
@@ -685,7 +685,7 @@ void ManeuversBuilder::CountAndSortExitSigns(std::list<Maneuver>& maneuvers) {
       Signs::Sort(prev_man->mutable_signs()->mutable_exit_number_list());
     }
     // Increase the consecutive count of signs that match their neighbor
-    else if (prev_man->HasExitSign() && curr_man->HasExitSign()) {
+    else if (prev_man->HasSigns() && curr_man->HasSigns()) {
 
       // Process the exit number signs
       Signs::CountAndSort(prev_man->mutable_signs()->mutable_exit_number_list(),
@@ -702,6 +702,14 @@ void ManeuversBuilder::CountAndSortExitSigns(std::list<Maneuver>& maneuvers) {
       // Process the exit name signs
       Signs::CountAndSort(prev_man->mutable_signs()->mutable_exit_name_list(),
                           curr_man->mutable_signs()->mutable_exit_name_list());
+
+      // Process the guide branch signs
+      Signs::CountAndSort(prev_man->mutable_signs()->mutable_guide_branch_list(),
+                          curr_man->mutable_signs()->mutable_guide_branch_list());
+
+      // Process the guide toward signs
+      Signs::CountAndSort(prev_man->mutable_signs()->mutable_guide_toward_list(),
+                          curr_man->mutable_signs()->mutable_guide_toward_list());
     }
 
     // Update iterators

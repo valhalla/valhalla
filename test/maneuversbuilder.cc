@@ -39,8 +39,8 @@ public:
     ManeuversBuilder::Combine(maneuvers);
   }
 
-  void CountAndSortExitSigns(std::list<Maneuver>& maneuvers) {
-    ManeuversBuilder::CountAndSortExitSigns(maneuvers);
+  void CountAndSortSigns(std::list<Maneuver>& maneuvers) {
+    ManeuversBuilder::CountAndSortSigns(maneuvers);
   }
 
   void SetSimpleDirectionalManeuverType(Maneuver& maneuver) {
@@ -1635,7 +1635,7 @@ void TestSimpleRightTurnChannelCombine() {
 void TryCountAndSortExitSigns(std::list<Maneuver>& maneuvers,
                               std::list<Maneuver>& expected_maneuvers) {
   ManeuversBuilderTest mbTest;
-  mbTest.CountAndSortExitSigns(maneuvers);
+  mbTest.CountAndSortSigns(maneuvers);
 
   if (maneuvers.size() != expected_maneuvers.size())
     throw std::runtime_error("Incorrect maneuver count");
