@@ -15,7 +15,10 @@
 #include <date/tz.h>
 
 #include <valhalla/baldr/graphconstants.h>
+#include <valhalla/baldr/nodeinfo.h>
 #include <valhalla/midgard/constants.h>
+
+#include <valhalla/proto/tripcommon.pb.h>
 
 namespace valhalla {
 namespace baldr {
@@ -92,8 +95,9 @@ int timezone_diff(const uint64_t seconds,
  * Get the iso date time from seconds since epoch and timezone.
  * @param   seconds      seconds since epoch
  * @param   tz           timezone
+ * @param   tz_format    whether or not to include the tz in the formatted string
  */
-std::string seconds_to_date(const uint64_t seconds, const date::time_zone* tz);
+std::string seconds_to_date(const uint64_t seconds, const date::time_zone* tz, bool tz_format = true);
 
 /**
  * Get the iso date time from seconds since epoch and timezone.
@@ -164,8 +168,16 @@ bool is_restricted(const bool type,
                    const date::time_zone* time_zone);
 
 /**
+ * Gets the second of the week in local time from an epoch time and timezone
+ * @param epoch_time   the time from which to offset
+ * @param time_zone
+ * @return the second of the week accounting for timezone transformation from epoch time
+ */
+uint32_t second_of_week(uint32_t epoch_time, const date::time_zone* time_zone);
+
+/**
  * Convert ISO 8601 time into std::tm.
- * @param iso  ISO time string (YYYY-mm-ddTmi:sec")
+ * @param iso  ISO time string (YYYY-mm-ddTHH:MM)
  * @return Returns std::tm time structure. If the input string is not valid this method
  *         sets tm_year to 0.
  */
@@ -206,6 +218,7 @@ static inline bool is_iso_valid(const std::string& date_time) {
 
 /**
  * Get the day of the week given a time string
+ * Time string must be of the format: YYYY-mm-ddTHH:MM
  * @param dt Date time string.
  */
 static inline uint32_t day_of_week(const std::string& dt) {
