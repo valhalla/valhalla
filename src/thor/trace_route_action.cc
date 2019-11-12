@@ -167,9 +167,9 @@ thor_worker_t::map_match(Api& request, uint32_t best_paths) {
     const auto& edge_segments = result.segments;
     m_temp_enhanced_match_results.clear();
     m_temp_route_discontinuities.clear();
+    m_temp_disconnected_edges.clear();
 
     // Form the path edges based on the matched points and populate disconnected edges
-    m_temp_disconnected_edges.clear();
     m_temp_path_edges = MapMatcher::FormPath(matcher.get(), match_results, edge_segments,
                                              mode_costing, mode, m_temp_disconnected_edges, options);
 

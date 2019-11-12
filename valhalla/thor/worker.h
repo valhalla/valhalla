@@ -89,7 +89,7 @@ protected:
   std::vector<thor::MatchResult> m_temp_enhanced_match_results;
   std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>>
       m_temp_route_discontinuities;
-  std::vector<std::pair<baldr::GraphId, baldr::GraphId>> m_temp_disconnected_edges;
+  std::unordered_map<baldr::GraphId, baldr::GraphId> m_temp_disconnected_edges;
   std::vector<PathInfo> m_temp_path_edges;
   std::vector<std::tuple<float, float, std::vector<thor::MatchResult>>> m_map_match_results;
   sif::CostFactory<sif::DynamicCost> factory;

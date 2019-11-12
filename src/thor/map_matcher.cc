@@ -123,14 +123,13 @@ interpolate_matches(const std::vector<meili::MatchResult>& matches,
 
 // Form the path from the map-matching results. This path gets sent to
 // TripLegBuilder.
-std::vector<PathInfo>
-MapMatcher::FormPath(meili::MapMatcher* matcher,
-                     const std::vector<meili::MatchResult>& results,
-                     const std::vector<meili::EdgeSegment>& edge_segments,
-                     const std::shared_ptr<sif::DynamicCost>* mode_costing,
-                     const sif::TravelMode mode,
-                     std::vector<std::pair<GraphId, GraphId>>& disconnected_edges,
-                     Options& options) {
+std::vector<PathInfo> MapMatcher::FormPath(meili::MapMatcher* matcher,
+                                           const std::vector<meili::MatchResult>& results,
+                                           const std::vector<meili::EdgeSegment>& edge_segments,
+                                           const std::shared_ptr<sif::DynamicCost>* mode_costing,
+                                           const sif::TravelMode mode,
+                                           std::unordered_map<GraphId, GraphId>& disconnected_edges,
+                                           Options& options) {
   // Set costing based on the mode
   const auto& costing = mode_costing[static_cast<uint32_t>(mode)];
   bool use_timestamps = options.use_timestamps();
@@ -194,7 +193,7 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
     // Check if connected to prior edge
     if (prior_edge.Is_Valid() &&
         !matcher->graphreader().AreEdgesConnectedForward(prior_edge, edge_id)) {
-      disconnected_edges.emplace_back(prior_edge, edge_id);
+      disconnected_edges.insert({prior_edge, edge_id});
     }
 
     // Get seconds from beginning of the week accounting for any changes to timezone on the path
