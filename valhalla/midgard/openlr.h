@@ -129,10 +129,10 @@ struct LineLocation {
     const auto size = reference.size();
     std::size_t index = 0;
 
-    // Status
+    // Status, version 3, has attributes, ArF 'Circle or no area location'
     auto status = raw[index++] & 0x7f;
-    (void)status;
-    assert(status == 0x0b); // version 3, has attributes, ArF 'Circle or no area location'
+    if (status != 0x0b)
+      throw std::invalid_argument("OpenLR reference ");
 
     // First location reference point
     auto longitude = integer2decimal(fixed<std::int32_t, 3>(raw, index));

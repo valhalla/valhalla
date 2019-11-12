@@ -25,7 +25,7 @@ Build Status
 
 | Linux/MacOs | Windows | Code Coverage |
 | ----------- | ------- | ------------- |
-| [![Circle CI](https://circleci.com/gh/valhalla/valhalla.svg?style=svg)](https://circleci.com/gh/valhalla/valhalla) | [![Build status](https://ci.appveyor.com/api/projects/status/6w7emulgcjweu457/branch/master?svg=true)](https://ci.appveyor.com/project/kevinkreiser/valhalla/branch/master) | [![codecov](https://codecov.io/gh/valhalla/valhalla/branch/master/graph/badge.svg)](https://codecov.io/gh/valhalla/valhalla) |
+| [![Circle CI](https://circleci.com/gh/valhalla/valhalla.svg?style=svg)](https://circleci.com/gh/valhalla/valhalla) | [![Build Status](https://dev.azure.com/valhalla1/valhalla/_apis/build/status/valhalla.valhalla?branchName=master)](https://dev.azure.com/valhalla1/valhalla/_build/latest?definitionId=1&branchName=master) | [![codecov](https://codecov.io/gh/valhalla/valhalla/branch/master/graph/badge.svg)](https://codecov.io/gh/valhalla/valhalla) |
 
 
 
@@ -122,9 +122,6 @@ Now, clone the Valhalla repository
 ```bash
 git clone --recurse-submodules https://github.com/valhalla/valhalla.git
 ```
-
-On Windows, you will need to run [Git 2.10.2 or later with symlinks support enabled](https://stackoverflow.com/a/11664406/151641)
-and pass `-c core.symlinks=true` to `git clone` command line.
 
 Then, build [`prime_server`](https://github.com/kevinkreiser/prime_server#build-and-install).
 

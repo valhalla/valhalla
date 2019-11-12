@@ -154,7 +154,7 @@ void add_elevation(const boost::property_tree::ptree& pt,
     // Check if we need to clear the tile cache
     if (graphreader.OverCommitted()) {
       lock.lock();
-      graphreader.Clear();
+      graphreader.Trim();
       lock.unlock();
     }
   }

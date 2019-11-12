@@ -39,8 +39,7 @@ public:
                        const sif::TravelMode& mode,
                        baldr::GraphReader& reader,
                        const std::vector<meili::Measurement>& shape,
-                       const bool use_timestamps,
-                       const google::protobuf::RepeatedPtrField<valhalla::Location>& correlated,
+                       valhalla::Options& options,
                        std::vector<PathInfo>& path_infos);
 };
 

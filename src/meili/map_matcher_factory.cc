@@ -92,7 +92,7 @@ boost::property_tree::ptree MapMatcherFactory::MergeConfig(const Options& option
 
 void MapMatcherFactory::ClearFullCache() {
   if (graphreader_->OverCommitted()) {
-    graphreader_->Clear();
+    graphreader_->Trim();
   }
 
   if (candidatequery_->size() > max_grid_cache_size_) {

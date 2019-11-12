@@ -589,7 +589,7 @@ void build(const std::string& complex_restriction_from_file,
 
     // Check if we need to clear the tile cache
     if (reader.OverCommitted()) {
-      reader.Clear();
+      reader.Trim();
     }
     lock.unlock();
   }

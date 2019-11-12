@@ -1315,6 +1315,10 @@ std::string serialize(valhalla::Api& api) {
     // Create a route to add to the array
     auto route = json::map({});
 
+    // TODO: phase 1, just hardcode score. phase 2: do real implementation
+    if (options.action() == valhalla::Options::trace_route)
+      route->emplace("confidence", json::fp_t{1, 1});
+
     // Concatenated route geometry
     route_geometry(route, api.directions().routes(i).legs(), options);
 

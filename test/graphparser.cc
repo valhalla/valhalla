@@ -574,7 +574,7 @@ void TestImportBssNode() {
                             ways_file, way_nodes_file, access_file, from_restriction_file,
                             to_restriction_file, bss_nodes_file);
 
-  auto reader = GraphReader{conf.get_child("mjolnir")};
+  GraphReader reader(conf.get_child("mjolnir"));
 
   GraphBuilder::Build(conf, osmdata, ways_file, way_nodes_file, nodes_file, edges_file,
                       from_restriction_file, to_restriction_file);
@@ -594,28 +594,41 @@ void TestImportBssNode() {
     throw std::runtime_error("The bike share node must have 2 outbound edges");
   }
 
+  auto check_edge_attribute = [](const DirectedEdge* directededge) {
+    if (!directededge->bss_connection()) {
+      throw std::runtime_error("The bike share node's edges is not a bss connection");
+    }
+    if (directededge->surface() != Surface::kPavedRough) {
+      throw std::runtime_error("The edges' surface is incorrect");
+    }
+    if (directededge->cyclelane() != CycleLane::kNone) {
+      throw std::runtime_error("The edges' cyclelane is incorrect");
+    }
+
+    if (directededge->classification() != RoadClass::kResidential) {
+      throw std::runtime_error("The edges' road calss is incorrect");
+    }
+    if (directededge->use() != Use::kRoad) {
+      throw std::runtime_error("The edges' use is incorrect");
+    }
+  };
+
   auto bss_edge_idx = local_tile->node(count - 1)->edge_index();
 
-  if (local_tile->directededge(bss_edge_idx)->use() != Use::kBikeShareConnection ||
-      local_tile->directededge(bss_edge_idx + 1)->use() != Use::kBikeShareConnection) {
-    throw std::runtime_error("The bike share node's edges' use is incorrect");
-  }
+  check_edge_attribute(local_tile->directededge(bss_edge_idx));
+  check_edge_attribute(local_tile->directededge(bss_edge_idx + 1));
 
   auto endnode_1 = local_tile->directededge(bss_edge_idx)->endnode();
   auto count_1 = local_tile->node(endnode_1)->edge_count();
   auto edge_idx_1 = local_tile->node(endnode_1)->edge_index();
   // in this case the bike share edge should be the last edge of this node
-  if (local_tile->directededge(edge_idx_1 + count_1 - 1)->use() != Use::kBikeShareConnection) {
-    throw std::runtime_error("the opposing edge's use is incorrect");
-  }
+  check_edge_attribute(local_tile->directededge(edge_idx_1 + count_1 - 1));
 
   auto endnode_2 = local_tile->directededge(bss_edge_idx + 1)->endnode();
   auto count_2 = local_tile->node(endnode_2)->edge_count();
   auto edge_idx_2 = local_tile->node(endnode_2)->edge_index();
   // in this case the bike share edge should be the last edge of this node
-  if (local_tile->directededge(edge_idx_2 + count_2 - 1)->use() != Use::kBikeShareConnection) {
-    throw std::runtime_error("the opposing edge's use is incorrect");
-  }
+  check_edge_attribute(local_tile->directededge(edge_idx_2 + count_2 - 1));
 
   boost::filesystem::remove(ways_file);
   boost::filesystem::remove(way_nodes_file);

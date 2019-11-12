@@ -10,6 +10,7 @@
 #include "baldr/datetime.h"
 #include "baldr/graphconstants.h"
 #include "baldr/timedomain.h"
+#include "midgard/constants.h"
 
 using namespace std;
 using namespace valhalla::baldr;
@@ -554,6 +555,36 @@ void TestDayOfWeek() {
   if (dow != 4) {
     throw std::runtime_error("DateTime::day_of_week failed: 4 expected");
   }
+
+  date = "2019-11-06T17:15";
+  dow = DateTime::day_of_week(date);
+  if (dow != 3) {
+    throw std::runtime_error("DateTime::day_of_week failed: 3 expected");
+  }
+}
+
+void TestSecondOfWeek() {
+  auto tz = DateTime::get_tz_db().from_index(DateTime::get_tz_db().to_index("America/New_York"));
+  // 2019-11-06T17:15
+  auto a = DateTime::second_of_week(1573078500, tz);
+  auto e = 3 * valhalla::midgard::kSecondsPerDay + 17 * valhalla::midgard::kSecondsPerHour +
+           15 * valhalla::midgard::kSecondsPerMinute;
+  if (a != e)
+    throw std::logic_error("Wrong second of week");
+
+  // 1982-12-08T06:07:42
+  a = DateTime::second_of_week(408193662, tz);
+  e = 3 * valhalla::midgard::kSecondsPerDay + 6 * valhalla::midgard::kSecondsPerHour +
+      7 * valhalla::midgard::kSecondsPerMinute + 42;
+  if (a != e)
+    throw std::logic_error("Wrong second of week");
+
+  // 2077-02-14T11:11:11
+  a = DateTime::second_of_week(3380544671, tz);
+  e = 0 * valhalla::midgard::kSecondsPerDay + 11 * valhalla::midgard::kSecondsPerHour +
+      11 * valhalla::midgard::kSecondsPerMinute + 11;
+  if (a != e)
+    throw std::logic_error("Wrong second of week");
 }
 
 int main(void) {
@@ -569,6 +600,7 @@ int main(void) {
   suite.test(TEST_CASE(TestDST));
   suite.test(TEST_CASE(TestTimezoneDiff));
   suite.test(TEST_CASE(TestDayOfWeek));
+  suite.test(TEST_CASE(TestSecondOfWeek));
 
   return suite.tear_down();
 }

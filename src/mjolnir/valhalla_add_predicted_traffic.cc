@@ -1,20 +1,22 @@
 #include "baldr/graphreader.h"
 #include "baldr/predictedspeeds.h"
+#include "baldr/rapidjson_utils.h"
+#include "filesystem.h"
 #include "midgard/logging.h"
 #include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/util.h"
+
 #include <cmath>
 #include <cstdint>
 
-#include "baldr/rapidjson_utils.h"
 #include <boost/archive/iterators/base64_from_binary.hpp>
 #include <boost/archive/iterators/binary_from_base64.hpp>
 #include <boost/archive/iterators/transform_width.hpp>
-#include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/tokenizer.hpp>
 
+#include <algorithm>
 #include <deque>
 #include <future>
 #include <mutex>
@@ -30,7 +32,6 @@ namespace vj = valhalla::mjolnir;
 
 namespace bpo = boost::program_options;
 namespace bpt = boost::property_tree;
-namespace bfs = boost::filesystem;
 
 namespace {
 
@@ -53,18 +54,9 @@ struct stats {
 };
 
 struct TrafficSpeeds {
-  uint32_t id;
   uint8_t constrained_flow_speed;
   uint8_t free_flow_speed;
   std::vector<int16_t> coefficients;
-
-  bool operator<(const TrafficSpeeds& other) const {
-    return id < other.id;
-  }
-};
-
-struct unique_data_t {
-  std::unordered_map<vb::GraphId, std::vector<TrafficSpeeds>> tile_speeds;
 };
 
 // Convert big endian bytes to little endian
@@ -82,133 +74,160 @@ std::string decode64(const std::string& val) {
 /**
  * Read speed CSV file and update the tile_speeds in unique_data
  */
-void ParseTrafficFile(const std::string& directory,
-                      const std::string& filename,
-                      unique_data_t& unique_data,
-                      std::mutex& lock,
-                      stats& stat) {
+std::unordered_map<uint32_t, TrafficSpeeds>
+ParseTrafficFile(const std::vector<std::string>& filenames, stats& stat) {
   typedef boost::tokenizer<boost::char_separator<char>> tokenizer;
   boost::char_separator<char> sep{","};
+  std::unordered_map<uint32_t, TrafficSpeeds> ts;
 
-  // Open file
-  std::string line;
-  const std::string& full_filename = directory + "/" + filename + "." + "csv";
-  std::ifstream file(full_filename);
-  uint32_t line_num = 1;
-  if (file.is_open()) {
-    GraphId last_tile_id;
-    std::vector<TrafficSpeeds> ts;
-    while (getline(file, line)) {
-      TrafficSpeeds traffic{};
-      tokenizer tok{line, sep};
-      uint32_t field_num = 0;
-      GraphId tile_id;
-      bool has_error = false;
-      for (const auto& t : tok) {
-        switch (field_num) {
-          case 0: {
-            try {
-              GraphId tmp(std::stoull(t));
-              tile_id = tmp.Tile_Base();
-              // only need to save the unique id in the tile as
-              // our key in tile_speeds is the tileID.
-              traffic.id = tmp.id();
-            } catch (std::exception& e) {
-              LOG_WARN("Invalid GraphId in file: " + full_filename + " line number " +
-                       std::to_string(line_num));
-              has_error = true;
-            }
-          } break;
-          case 1: {
-            if (has_error)
-              break;
-            try {
-              traffic.free_flow_speed = std::stoi(t);
-              stat.free_flow_count++;
-            } catch (std::exception& e) {
-              LOG_WARN("Invalid free flow speed in file: " + full_filename + " line number " +
-                       std::to_string(line_num));
-              has_error = true;
-            }
-          } break;
-          case 2: {
-            if (has_error)
-              break;
-            try {
-              traffic.constrained_flow_speed = std::stoi(t);
-              stat.constrained_count++;
-            } catch (std::exception& e) {
-              LOG_WARN("Invalid constrained flow speed in file: " + full_filename + " line number " +
-                       std::to_string(line_num));
-              has_error = true;
-            }
-          } break;
-          case 3: {
-            if (has_error)
-              break;
-            if (t.size()) {
-              // Decode the base64 predicted speeds
-              // Decode the base64 string and cast the data to a raw string of signed bytes
-              auto decoded_str = decode64(t);
-              if (decoded_str.size() != 402) {
-                throw std::runtime_error("Decoded speed string size should be 402 but is " +
-                                         std::to_string(decoded_str.size()));
+  // for each traffic tile
+  for (const auto& full_filename : filenames) {
+    // Open file
+    std::string line;
+    std::ifstream file(full_filename);
+    uint32_t line_num = 0;
+    if (file.is_open()) {
+      // for each row in the file
+      while (getline(file, line) && ++line_num) {
+        decltype(ts)::iterator traffic = ts.end();
+        tokenizer tok{line, sep};
+        uint32_t field_num = 0;
+        bool has_error = false;
+        // for each column in the row
+        for (const auto& t : tok) {
+          if (has_error)
+            break;
+          // parse each column
+          switch (field_num) {
+            case 0: {
+              try {
+                auto inserted = ts.insert(decltype(ts)::value_type(GraphId(t).id(), {}));
+                traffic = inserted.first;
+                // skip duplicates
+                if (!inserted.second) {
+                  ++stat.dup_count;
+                  has_error = true;
+                  traffic = ts.end();
+                }
+              } catch (std::exception& e) {
+                LOG_WARN("Invalid GraphId in file: " + full_filename + " line number " +
+                         std::to_string(line_num));
+                has_error = true;
               }
-              auto raw = reinterpret_cast<const int8_t*>(decoded_str.data());
+            } break;
+            case 1: {
+              try {
+                traffic->second.free_flow_speed = std::stoi(t);
+                stat.free_flow_count++;
+              } catch (std::exception& e) {
+                LOG_WARN("Invalid free flow speed in file: " + full_filename + " line number " +
+                         std::to_string(line_num));
+                has_error = true;
+              }
+            } break;
+            case 2: {
+              try {
+                traffic->second.constrained_flow_speed = std::stoi(t);
+                stat.constrained_count++;
+              } catch (std::exception& e) {
+                LOG_WARN("Invalid constrained flow speed in file: " + full_filename +
+                         " line number " + std::to_string(line_num));
+                has_error = true;
+              }
+            } break;
+            case 3: {
+              if (t.size()) {
+                try {
+                  // Decode the base64 predicted speeds
+                  // Decode the base64 string and cast the data to a raw string of signed bytes
+                  auto decoded_str = decode64(t);
+                  if (decoded_str.size() != 402) {
+                    throw std::runtime_error("Decoded speed string size should be 402 but is " +
+                                             std::to_string(decoded_str.size()));
+                  }
+                  auto raw = reinterpret_cast<const int8_t*>(decoded_str.data());
 
-              // Check that the first value pair == 1
-              if (static_cast<std::int8_t>(raw[0]) != 1) {
-                throw std::runtime_error("First value should be 1");
+                  // Create the coefficients. Each group of 2 bytes represents a signed, int16 number
+                  // (big endian). Convert to little endian.
+                  traffic->second.coefficients.reserve(kCoefficientCount);
+                  for (uint32_t i = 0, idx = 0; i < kCoefficientCount; ++i, idx += 2) {
+                    traffic->second.coefficients.push_back(
+                        to_little_endian(*(reinterpret_cast<const int16_t*>(&raw[idx]))));
+                  }
+                  stat.compressed_count++;
+                } catch (std::exception& e) {
+                  LOG_WARN("Invalid compressed speeds in file: " + full_filename + " line number " +
+                           std::to_string(line_num));
+                  has_error = true;
+                }
               }
-
-              // Create the coefficients. Each group of 2 bytes represents a signed, int16 number (big
-              // endian). Convert to little endian.
-              int idx = 1;
-              traffic.coefficients.reserve(kCoefficientCount);
-              for (uint32_t i = 0; i < kCoefficientCount; ++i, idx += 2) {
-                traffic.coefficients.push_back(
-                    to_little_endian(*(reinterpret_cast<const int16_t*>(&raw[idx]))));
-              }
-              stat.compressed_count++;
-            }
-          } break;
+            } break;
+            default:
+              break;
+          }
+          field_num++;
         }
-        field_num++;
+        // if this one was erroneous lets not keep it
+        if (has_error && traffic != ts.end())
+          ts.erase(traffic);
       }
-
-      // assume that we are in the same tile.
-      // trying to save on looking up/finding a vector for a tile.
-      if (last_tile_id == tile_id) {
-        ts.emplace_back(traffic);
-      } else {
-        if (last_tile_id != kInvalidGraphId) {
-          lock.lock();
-          auto it = unique_data.tile_speeds.find(last_tile_id);
-          if (it != unique_data.tile_speeds.end())
-            it->second.insert(std::end(it->second), std::begin(ts), std::end(ts));
-          else
-            unique_data.tile_speeds.insert({last_tile_id, ts});
-          lock.unlock();
-          ts.clear();
-        }
-        last_tile_id = tile_id;
-        ts.emplace_back(traffic);
-      }
-      line_num++;
+      file.close();
+    } else {
+      LOG_ERROR("Could not open file: " + full_filename);
     }
-    if (last_tile_id != kInvalidGraphId) {
-      lock.lock();
-      auto it = unique_data.tile_speeds.find(last_tile_id);
-      if (it != unique_data.tile_speeds.end())
-        it->second.insert(std::end(it->second), std::begin(ts), std::end(ts));
-      else
-        unique_data.tile_speeds.insert({last_tile_id, ts});
-      lock.unlock();
-    }
-    file.close();
-  } else {
-    LOG_ERROR("Could not open file: " + directory + filename + "." + "csv");
   }
+
+  return ts;
+}
+
+void update_tile(const std::string& tile_dir,
+                 const GraphId& tile_id,
+                 const std::unordered_map<uint32_t, TrafficSpeeds>& speeds,
+                 stats& stat) {
+  auto tile_path = tile_dir + filesystem::path::preferred_separator + GraphTile::FileSuffix(tile_id);
+  if (!filesystem::exists(tile_path)) {
+    LOG_ERROR("No tile at " + tile_path);
+    return;
+  }
+
+  // Get the tile
+  vj::GraphTileBuilder tile_builder(tile_dir, tile_id, false);
+
+  // Get a count of how many predicted speed edges there will be this avoids reallocs
+  size_t pred_count = 0;
+  for (uint32_t j = 0; j < tile_builder.header()->directededgecount(); ++j) {
+    auto found = speeds.find(j);
+    pred_count += found != speeds.cend() && found->second.coefficients.size() == kCoefficientCount;
+  }
+
+  // Update directed edges as needed
+  std::vector<DirectedEdge> directededges;
+  directededges.reserve(tile_builder.header()->directededgecount());
+  for (uint32_t j = 0; j < tile_builder.header()->directededgecount(); ++j) {
+    // skip edges for which we dont have speed data
+    DirectedEdge& directededge = tile_builder.directededge(j);
+    auto found = speeds.find(j);
+    if (found != speeds.end()) {
+      const auto& speed = found->second;
+      if (speed.constrained_flow_speed) {
+        directededge.set_constrained_flow_speed(speed.constrained_flow_speed);
+      }
+      if (speed.free_flow_speed) {
+        directededge.set_free_flow_speed(speed.free_flow_speed);
+      }
+      if (speed.coefficients.size() == kCoefficientCount) {
+        tile_builder.AddPredictedSpeed(j, speed.coefficients, pred_count);
+        directededge.set_has_predicted_speed(true);
+      }
+      ++stat.updated_count;
+    }
+
+    // Add the directed edge to the local list
+    directededges.emplace_back(std::move(directededge));
+  }
+
+  // Write the new tile with updated directed edges and the predicted speeds
+  tile_builder.UpdatePredictedSpeeds(directededges);
 }
 
 /**
@@ -216,86 +235,39 @@ void ParseTrafficFile(const std::string& directory,
  * We expect the files to be named as <quadtreeID>.constrained.csv and
  * <quadtreeID>.freeflow.csv. (e.g., 1202021.constrained.csv and 1202021.freeflow.csv)
  */
-void parse_traffic_tiles(const std::string& traffic_dir,
-                         std::mutex& lock,
-                         std::unordered_set<std::string>::const_iterator tile_start,
-                         std::unordered_set<std::string>::const_iterator tile_end,
-                         unique_data_t& unique_data,
-                         std::promise<stats>& result) {
-
-  // Iterate through the tiles and parse them
-  stats stat{};
-  for (; tile_start != tile_end; ++tile_start)
-    ParseTrafficFile(traffic_dir, *tile_start, unique_data, lock, stat);
-
-  result.set_value(stat);
-}
-
-void update_valhalla_tiles(
-    const bpt::ptree& pt,
-    std::unordered_map<vb::GraphId, std::vector<TrafficSpeeds>>::const_iterator tile_start,
-    std::unordered_map<vb::GraphId, std::vector<TrafficSpeeds>>::const_iterator tile_end,
-    const unique_data_t& unique_data,
+void update_tiles(
+    const std::string& tile_dir,
+    std::vector<std::pair<GraphId, std::vector<std::string>>>::const_iterator tile_start,
+    std::vector<std::pair<GraphId, std::vector<std::string>>>::const_iterator tile_end,
     std::promise<stats>& result) {
 
+  std::stringstream thread_name;
+  thread_name << std::this_thread::get_id();
+
   // Iterate through the tiles and parse them
+  size_t total = tile_end - tile_start;
+  double count = 0;
   stats stat{};
-  // Get the tile dir
-  std::string tile_dir = pt.get<std::string>("mjolnir.tile_dir");
-  // Iterate through the tiles in the queue and perform enhancements
   for (; tile_start != tile_end; ++tile_start) {
-    // Get the tile
-    vj::GraphTileBuilder tile_builder(tile_dir, tile_start->first, false);
-
-    // Update directed edges as needed
-    uint32_t idx = 0;
-    uint32_t count = 0;
-    uint32_t duplicates = 0;
-    std::vector<DirectedEdge> directededges;
-    for (uint32_t j = 0; j < tile_builder.header()->directededgecount(); ++j, ++idx) {
-      DirectedEdge& directededge = tile_builder.directededge(idx);
-      for (const auto& speeds : tile_start->second) {
-        if (speeds.id == idx) {
-
-          if (directededge.constrained_flow_speed() || directededge.free_flow_speed() ||
-              directededge.predicted_speed()) {
-            duplicates++;
-          }
-
-          if (speeds.constrained_flow_speed) {
-            directededge.set_constrained_flow_speed(speeds.constrained_flow_speed);
-          }
-          if (speeds.free_flow_speed) {
-            directededge.set_free_flow_speed(speeds.free_flow_speed);
-          }
-          if (speeds.coefficients.size() > 0) {
-            tile_builder.AddPredictedSpeed(idx, speeds.coefficients);
-            directededge.set_predicted_speed(true);
-          }
-          count++;
-        }
-      }
-
-      // Add the directed edge to the local list
-      directededges.emplace_back(std::move(directededge));
-    }
-    stat.updated_count += count;
-    stat.dup_count += duplicates;
-
-    // Write the new tile with updated directed edges and the predicted speeds
-    tile_builder.UpdatePredictedSpeeds(directededges);
+    LOG_INFO(thread_name.str() + " parsing traffic data for " + std::to_string(tile_start->first));
+    auto traffic = ParseTrafficFile(tile_start->second, stat);
+    LOG_INFO(thread_name.str() + " add traffic data to " + std::to_string(tile_start->first));
+    update_tile(tile_dir, tile_start->first, traffic, stat);
+    LOG_INFO(thread_name.str() + " finished " + std::to_string(tile_start->first) + "(" +
+             std::to_string(++count / total * 100.0) + ")");
   }
+
   result.set_value(stat);
 }
 
 } // anonymous namespace
 
 int main(int argc, char** argv) {
-  std::string config, tile_dir;
+  std::string config, traffic_tile_dir;
   std::string inline_config;
-  boost::filesystem::path config_file_path;
-
-  unsigned int num_threads = 1;
+  std::string config_file_path;
+  unsigned int num_threads = std::thread::hardware_concurrency();
+  bool summary = false;
 
   bpo::options_description options("valhalla_add_predicted_traffic " VALHALLA_VERSION "\n"
                                    "\n"
@@ -309,15 +281,14 @@ int main(int argc, char** argv) {
                                                               "Print the version of this software.")(
       "concurrency,j", bpo::value<unsigned int>(&num_threads),
       "Number of threads to use.")("config,c",
-                                   boost::program_options::value<boost::filesystem::path>(
-                                       &config_file_path),
-                                   "Path to the json configuration file.")("inline-config,i",
-                                                                           boost::program_options::
-                                                                               value<std::string>(
-                                                                                   &inline_config),
-                                                                           "Inline json config.")
+                                   boost::program_options::value<std::string>(&config_file_path),
+                                   "Path to the json configuration file.")(
+      "inline-config,i", boost::program_options::value<std::string>(&inline_config),
+      "Inline json config.")("summary,s", bpo::value<bool>(&summary),
+                             "Output summary information about traffic coverage for the tile set")
       // positional arguments
-      ("traffic-tile-dir,t", bpo::value<std::string>(&tile_dir), "Location of traffic csv tiles.");
+      ("traffic-tile-dir,t", bpo::value<std::string>(&traffic_tile_dir),
+       "Location of traffic csv tiles.");
 
   bpo::positional_options_description pos_options;
   pos_options.add("traffic-tile-dir", 1);
@@ -348,19 +319,23 @@ int main(int argc, char** argv) {
   }
 
   // queue up all the work we'll be doing
-  std::unordered_set<std::string> traffic_tiles;
-  auto itr = bfs::recursive_directory_iterator(tile_dir);
-  auto end = bfs::recursive_directory_iterator();
-  for (; itr != end; ++itr) {
-    auto dir_entry = *itr;
-    if (bfs::is_regular_file(dir_entry)) {
-      auto ext = dir_entry.path().extension();
-      if (ext == ".csv") {
-        std::string file_name = dir_entry.path().filename().stem().string();
-        traffic_tiles.emplace(file_name);
-      }
+  std::unordered_map<GraphId, std::vector<std::string>> files_per_tile;
+  for (filesystem::recursive_directory_iterator i(traffic_tile_dir), end; i != end; ++i) {
+    if (i->is_regular_file()) {
+      // remove any extension
+      auto file_name = i->path().string();
+      auto pos = file_name.rfind(filesystem::path::preferred_separator);
+      file_name = file_name.substr(0, file_name.find('.', pos == std::string::npos ? 0 : pos));
+      try {
+        // parse it into a tile id and store the file path with it
+        auto id = GraphTile::GetTileId(file_name);
+        files_per_tile[id].push_back(i->path().string());
+      } catch (...) {}
     }
   }
+  std::vector<std::pair<GraphId, std::vector<std::string>>> traffic_tiles(files_per_tile.begin(),
+                                                                          files_per_tile.end());
+  std::random_shuffle(traffic_tiles.begin(), traffic_tiles.end());
 
   // Read the config file
   boost::property_tree::ptree pt;
@@ -368,8 +343,8 @@ int main(int argc, char** argv) {
     std::stringstream ss;
     ss << inline_config;
     rapidjson::read_json(ss, pt);
-  } else if (vm.count("config") && boost::filesystem::is_regular_file(config_file_path)) {
-    rapidjson::read_json(config_file_path.string(), pt);
+  } else if (vm.count("config") && filesystem::is_regular_file(config_file_path)) {
+    rapidjson::read_json(config_file_path, pt);
   } else {
     std::cerr << "Configuration is required\n\n" << options << "\n\n";
     return EXIT_FAILURE;
@@ -388,40 +363,40 @@ int main(int argc, char** argv) {
   LOG_INFO("Adding predicted traffic with " + std::to_string(num_threads) + " threads");
   std::vector<std::shared_ptr<std::thread>> threads(num_threads);
 
-  LOG_INFO("Parsing speeds from " + std::to_string(traffic_tiles.size()) + " quadkey tiles.");
+  LOG_INFO("Parsing speeds from " + std::to_string(traffic_tiles.size()) + " tiles.");
   size_t floor = traffic_tiles.size() / threads.size();
   size_t at_ceiling = traffic_tiles.size() - (threads.size() * floor);
-  std::unordered_set<std::string>::const_iterator tile_start, tile_end = traffic_tiles.begin();
-  uint32_t constrained_count = 0, free_flow_count = 0, compressed_count = 0;
-  unique_data_t unique_data;
-  std::mutex lock;
+  decltype(traffic_tiles)::const_iterator tile_start, tile_end = traffic_tiles.begin();
+  auto tile_dir = pt.get<std::string>("mjolnir.tile_dir");
   // A place to hold the results of those threads (exceptions, stats)
   std::list<std::promise<stats>> results;
   // Atomically pass around stats info
   for (size_t i = 0; i < threads.size(); ++i) {
-    // Figure out how many this thread will work on (either ceiling or floor)
-    size_t tile_count = (i < at_ceiling ? floor + 1 : floor);
     // Where the range begins
     tile_start = tile_end;
     // Where the range ends
-    std::advance(tile_end, tile_count);
+    tile_end += (i < at_ceiling ? floor + 1 : floor);
     // Make the thread
     results.emplace_back();
-    threads[i].reset(new std::thread(parse_traffic_tiles, tile_dir, std::ref(lock), tile_start,
-                                     tile_end, std::ref(unique_data), std::ref(results.back())));
+    threads[i].reset(
+        new std::thread(update_tiles, tile_dir, tile_start, tile_end, std::ref(results.back())));
   }
 
   // wait for it to finish
   for (auto& thread : threads)
     thread->join();
 
+  // collect some stats
+  uint32_t constrained_count = 0, free_flow_count = 0, compressed_count = 0, updated_count = 0,
+           duplicate_count = 0;
   for (auto& result : results) {
     try {
       auto thread_stats = result.get_future().get();
       constrained_count += thread_stats.constrained_count;
       free_flow_count += thread_stats.free_flow_count;
       compressed_count += thread_stats.compressed_count;
-
+      updated_count += thread_stats.updated_count;
+      duplicate_count += thread_stats.dup_count;
     } catch (std::exception& e) {
       // TODO: throw further up the chain?
     }
@@ -430,56 +405,12 @@ int main(int argc, char** argv) {
   LOG_INFO("Parsed " + std::to_string(constrained_count) + " constrained traffic speeds.");
   LOG_INFO("Parsed " + std::to_string(free_flow_count) + " free flow traffic speeds.");
   LOG_INFO("Parsed " + std::to_string(compressed_count) + " compressed records.");
-
-  // Sort the Traffic speeds within each tile. Wanted to do this so that the linear search
-  // for speeds attached to an edge would be faster...but the data seemed to be corrupted?
-  //  for (auto& tile : unique_data.tile_speeds) {
-  //    std::sort(tile.second.begin(), tile.second.end());
-  //  }
-
-  LOG_INFO("Updating speeds for " + std::to_string(unique_data.tile_speeds.size()) +
-           " Valhalla tiles.");
-  floor = unique_data.tile_speeds.size() / threads.size();
-  at_ceiling = unique_data.tile_speeds.size() - (threads.size() * floor);
-  std::unordered_map<vb::GraphId, std::vector<TrafficSpeeds>>::const_iterator t_start,
-      t_end = unique_data.tile_speeds.cbegin();
-  uint32_t updated_count = 0;
-  uint32_t duplicate_count = 0;
-
-  // A place to hold the results of those threads (exceptions, stats)
-  results.clear();
-  // Atomically pass around stats info
-  for (size_t i = 0; i < threads.size(); ++i) {
-    // Figure out how many this thread will work on (either ceiling or floor)
-    size_t tile_count = (i < at_ceiling ? floor + 1 : floor);
-    // Where the range begins
-    t_start = t_end;
-    // Where the range ends
-    std::advance(t_end, tile_count);
-    // Make the thread
-    results.emplace_back();
-    threads[i].reset(new std::thread(update_valhalla_tiles, std::cref(pt), t_start, t_end,
-                                     std::ref(unique_data), std::ref(results.back())));
-  }
-
-  // wait for it to finish
-  for (auto& thread : threads)
-    thread->join();
-
-  for (auto& result : results) {
-    try {
-      auto thread_stats = result.get_future().get();
-      updated_count += thread_stats.updated_count;
-      duplicate_count += thread_stats.dup_count;
-
-    } catch (std::exception& e) {
-      // TODO: throw further up the chain?
-    }
-  }
-
   LOG_INFO("Updated " + std::to_string(updated_count) + " directed edges.");
   LOG_INFO("Duplicate count " + std::to_string(duplicate_count) + ".");
   LOG_INFO("Finished");
+
+  if (!summary)
+    return EXIT_SUCCESS;
 
   GraphReader reader(pt.get_child("mjolnir"));
   // Iterate through the tiles
@@ -494,7 +425,7 @@ int main(int argc, char** argv) {
     for (const auto& tile_id : tiles) {
 
       if (reader.OverCommitted()) {
-        reader.Clear();
+        reader.Trim();
       }
 
       const GraphTile* tile = reader.GetGraphTile(tile_id);
@@ -523,7 +454,7 @@ int main(int argc, char** argv) {
         }
 
         // Presence of predicted speeds
-        if (de->predicted_speed()) {
+        if (de->has_predicted_speed()) {
           pred_road_class_edges[rc]++;
         }
 
@@ -532,7 +463,7 @@ int main(int argc, char** argv) {
           ff_road_class_edges[rc]++;
         }
 
-        if (de->predicted_speed() && de->free_flow_speed() == 0 &&
+        if (de->has_predicted_speed() && de->free_flow_speed() == 0 &&
             de->constrained_flow_speed() == 0) {
           LOG_WARN("Edge has predicted speed but no ff or constrained speed");
         }

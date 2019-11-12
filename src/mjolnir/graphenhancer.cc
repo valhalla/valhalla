@@ -1801,7 +1801,7 @@ void enhance(const boost::property_tree::ptree& pt,
 
     // Check if we need to clear the tile cache
     if (reader.OverCommitted()) {
-      reader.Clear();
+      reader.Trim();
     }
     lock.unlock();
   }

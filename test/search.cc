@@ -230,6 +230,18 @@ void test_edge_search() {
              PE{{t, l, 0}, 1, d.second, 0, S::NONE}, PE{{t, l, 3}, 1, d.second, 0, S::NONE},
              PE{{t, l, 6}, 1, d.second, 0, S::NONE} // arriving edges
          });
+
+  // regression test for #2023, displace the point beyond search_cutoff but within node_snap_tolerance
+  Location near_node{a.second};
+  near_node.latlng_.second += 0.00001; // 1.11 meters
+  near_node.search_cutoff_ = 1.0;
+  near_node.node_snap_tolerance_ = 2.0;
+  search(near_node, true, a.second,
+         {PE{{t, l, 2}, 0, a.second, 0, S::NONE}, PE{{t, l, 3}, 0, a.second, 0, S::NONE},
+          PE{{t, l, 4}, 0, a.second, 0, S::NONE}, PE{{t, l, 1}, 1, a.second, 0, S::NONE},
+          PE{{t, l, 8}, 1, a.second, 0, S::NONE}, PE{{t, l, 5}, 1, a.second, 0, S::NONE}},
+         true);
+
   // snap to node as through location should be all edges
   Location x{a.second, Location::StopType::THROUGH};
   search(x, true, a.second,

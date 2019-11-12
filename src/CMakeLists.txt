@@ -110,10 +110,21 @@ configure_file(../valhalla/valhalla.h.in ${CMAKE_CURRENT_BINARY_DIR}/valhalla/va
 configure_file(../valhalla/config.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/valhalla/config.h @ONLY)
 
 set(valhalla_hdrs
-  ${CMAKE_CURRENT_BINARY_DIR}/valhalla/valhalla.h
-  ${VALHALLA_SOURCE_DIR}/valhalla/worker.h)
+    ${CMAKE_CURRENT_BINARY_DIR}/valhalla/valhalla.h
+    ${VALHALLA_SOURCE_DIR}/valhalla/worker.h)
 
-add_library(valhalla worker.cc ${CMAKE_CURRENT_BINARY_DIR}/valhalla/config.h ${valhalla_hdrs} ${libvalhalla_link_objects})
+set(valhalla_src
+    worker.cc
+    ${CMAKE_CURRENT_BINARY_DIR}/valhalla/config.h
+    ${valhalla_hdrs}
+    ${libvalhalla_link_objects})
+
+if (ENABLE_SERVICES)
+  set(valahlla_hdrs ${valhalla_hdrs} ${VALHALLA_SOURCE_DIR}/valhalla/tile_server.h)
+  set(valhalla_src ${valhalla_src} tile_server.cc)
+endif()
+
+add_library(valhalla ${valhalla_src})
 
 target_compile_definitions(valhalla
   PUBLIC
@@ -160,7 +171,7 @@ install(TARGETS valhalla
   ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT development)
 
 if(BUILD_SHARED_LIBS)
-  install(FILES ${VALHALLA_SOURCE_DIR}/COPYING ${VALHALLA_SOURCE_DIR}/ChangeLog
+  install(FILES ${VALHALLA_SOURCE_DIR}/COPYING ${VALHALLA_SOURCE_DIR}/CHANGELOG.md
     DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/doc/libvalhalla0"
     COMPONENT shared)
 else()
@@ -170,7 +181,7 @@ else()
   endif()
 endif()
 
-install(FILES ${VALHALLA_SOURCE_DIR}/COPYING ${VALHALLA_SOURCE_DIR}/ChangeLog ${VALHALLA_SOURCE_DIR}/README.md
+install(FILES ${VALHALLA_SOURCE_DIR}/COPYING ${VALHALLA_SOURCE_DIR}/CHANGELOG.md ${VALHALLA_SOURCE_DIR}/README.md
   DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/doc/libvalhalla-dev"
   COMPONENT development)
 

@@ -106,9 +106,7 @@ Interpolation InterpolateMeasurement(const MapMatcher& mapmatcher,
 
     // Get the amount of time spent on this segment
     auto edge_percent = segment->target - segment->source;
-    auto route_time =
-        mapmatcher.costing()->EdgeCost(directededge, tile->GetSpeed(directededge)).secs *
-        edge_percent;
+    auto route_time = mapmatcher.costing()->EdgeCost(directededge, tile).secs * edge_percent;
 
     Interpolation interp{projected_point, segment->edgeid, sq_distance,
                          route_distance,  route_time,      offset};
