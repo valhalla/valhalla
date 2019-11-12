@@ -9,6 +9,8 @@
 #include <string>
 #include <unordered_map>
 
+#include <valhalla/midgard/isatty.h>
+
 namespace valhalla {
 namespace midgard {
 
@@ -44,7 +46,7 @@ protected:
 };
 
 // statically get a logger using the factory
-Logger& GetLogger(const LoggingConfig& config = {{"type", "std_out"}, {"color", "true"}});
+Logger& GetLogger(const LoggingConfig& config = {{"type", "std_out"}, {"color", IsStdoutATTY() ? "true" : "false" }});
 
 // statically log manually without the macros below
 void Log(const std::string&, const LogLevel);
