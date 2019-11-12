@@ -16,15 +16,15 @@
 
 #include <cstdio>
 
-namespace valhalla
-{
-namespace midgard
-{
+namespace valhalla {
+namespace midgard {
 
 // Returns true if stdout is a tty, false otherwise
 //   Useful for when you want to do something different when
 //   output is redirected to a logfile
-inline bool IsStdoutATTY() { return isatty(fileno(stdout)); }
+inline bool IsStdoutATTY() {
+  return isatty(fileno(stdout));
+}
 
 } // namespace midgard
 } // namespace valhalla
