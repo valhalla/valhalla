@@ -168,15 +168,21 @@ thor_worker_t::map_match(Api& request, uint32_t best_paths) {
     m_temp_enhanced_match_results.clear();
     m_temp_route_discontinuities.clear();
     m_temp_disconnected_edges.clear();
+    m_temp_disjoint_edge_groups = {{}};
 
     // Form the path edges based on the matched points and populate disconnected edges
     m_temp_path_edges = MapMatcher::FormPath(matcher.get(), match_results, edge_segments,
                                              mode_costing, mode, m_temp_disconnected_edges, options);
+    for (const auto& edge : m_temp_path_edges) {
+      m_temp_disjoint_edge_groups.back().emplace_back(edge);
+      if (m_temp_disconnected_edges.count(edge.edgeid) > 0) {
+        m_temp_disjoint_edge_groups.emplace_back();
+      }
+    }
 
-    // Throw exception if not trace attributes action and disconnected path.
+    // Throw exception if not trace attributes action.
     // TODO - perhaps also throw exception if use_timestamps and disconnected path?
-    if (options.action() == Options::trace_route &&
-        (!m_temp_disconnected_edges.empty() || m_temp_path_edges.empty())) {
+    if (options.action() == Options::trace_route && m_temp_path_edges.empty()) {
       throw std::exception{};
     };
 
@@ -392,7 +398,7 @@ thor_worker_t::map_match(Api& request, uint32_t best_paths) {
       auto& route = *request.mutable_trip()->mutable_routes()->Add();
       path_map_match(match_results, m_temp_path_edges, *route.mutable_legs()->Add(),
                      m_temp_route_discontinuities);
-    } // trace_route can return multiple trip paths and cannot have discontinuities
+    } // trace_route can return multiple trip paths
     else {
       auto& route = *request.mutable_trip()->mutable_routes()->Add();
       auto origin_iter = match_results.begin();
