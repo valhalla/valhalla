@@ -300,6 +300,27 @@ void test_trace_route_breaks() {
   }
 }
 
+void test_edges_discontinuity_with_multi_routes() {
+  std::vector<std::string> test_cases = {
+      R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
+          {"lat":52.0609632,"lon":5.0917676,"type":"break"},
+          {"lat":52.0607180,"lon":5.0950566,"type":"break"},
+          {"lat":52.0797372,"lon":5.1293068,"type":"break"},
+          {"lat":52.0792731,"lon":5.1343818,"type":"break"},
+          {"lat":52.0763011,"lon":5.1574637,"type":"break"},
+          {"lat":52.0782167,"lon":5.1592370,"type":"break"}]})"};
+  std::vector<size_t> test_answers = {3};
+
+  tyr::actor_t actor(conf, true);
+  for (size_t i = 0; i < test_cases.size(); ++i) {
+    auto matched = json_to_pt(actor.trace_route(test_cases[i]));
+    const auto& trips = matched.get_child("matchings");
+    if (trips.size() != test_answers[i])
+      throw std::logic_error("Expected " + std::to_string(test_answers[i]) + " routes but got " +
+                             std::to_string(trips.size()));
+  }
+}
+
 void test_disconnected_edges_expect_no_route() {
   std::vector<std::string> test_cases = {
       R"({"costing":"auto","shape_match":"map_snap","shape":[
@@ -723,6 +744,8 @@ int main(int argc, char* argv[]) {
   suite.test(TEST_CASE(test_trace_route_breaks));
 
   suite.test(TEST_CASE(test_disconnected_edges_expect_no_route));
+
+  suite.test(TEST_CASE(test_edges_discontinuity_with_multi_routes));
 
   suite.test(TEST_CASE(test_distance_only));
 
