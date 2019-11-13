@@ -96,6 +96,8 @@ public:
         admin.set_admin_level(std::stoi(tag.second));
       } else if (tag.first == "drive_on_right") {
         admin.set_drive_on_right(tag.second == "true" ? true : false);
+      } else if (tag.first == "allow_intersection_names") {
+        admin.set_allow_intersection_names(tag.second == "true" ? true : false);
       } else if (tag.first == "iso_code" && !tag.second.empty()) {
         admin.set_iso_code_index(osm_admin_data_.name_offset_map.index(tag.second));
       }
