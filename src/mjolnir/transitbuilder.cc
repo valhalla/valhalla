@@ -236,9 +236,8 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
   // Get the directed edge index of the first sign. If no signs are
   // present in this tile set a value > number of directed edges
   signidx = 0;
-  nextsignidx = (tilebuilder_transit.header()->signcount() > 0)
-                    ? tilebuilder_transit.sign(0).index()
-                    : currentedges.size() + 1;
+  nextsignidx = (tilebuilder_transit.header()->signcount() > 0) ? tilebuilder_transit.sign(0).index()
+                                                                : currentedges.size() + 1;
   signcount = tilebuilder_transit.header()->signcount();
 
   // Get the directed edge index of the first access restriction.

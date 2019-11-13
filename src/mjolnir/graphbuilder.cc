@@ -461,7 +461,8 @@ void BuildTileSet(const std::string& ways_file,
       std::unordered_map<uint32_t, bool> allow_intersection_names;
 
       if (admin_db_handle) {
-        admin_polys = GetAdminInfo(admin_db_handle, drive_on_right, allow_intersection_names, tiling.TileBounds(id), graphtile);
+        admin_polys = GetAdminInfo(admin_db_handle, drive_on_right, allow_intersection_names,
+                                   tiling.TileBounds(id), graphtile);
         if (admin_polys.size() == 1) {
           // TODO - check if tile bounding box is entirely inside the polygon...
           tile_within_one_admin = true;
@@ -748,8 +749,8 @@ void BuildTileSet(const std::string& ways_file,
           std::vector<SignInfo> signs;
           bool has_guide =
               GraphBuilder::CreateSignInfoList(node, w, osmdata, signs, fork, forward,
-                                                   (directededge.use() == Use::kRamp),
-                                                   (directededge.use() == Use::kTurnChannel));
+                                               (directededge.use() == Use::kRamp),
+                                               (directededge.use() == Use::kTurnChannel));
           // add signs if signs exist
           // and directed edge if forward access and auto use
           // and directed edge is a link and not (link count=2 and driveforward count=1)
@@ -761,8 +762,8 @@ void BuildTileSet(const std::string& ways_file,
                fork || has_guide) &&
               ((edge.attributes.driveableforward && edge.attributes.way_begin) ||
                (edge.attributes.driveablereverse && edge.attributes.way_end))) {
-              graphtile.AddSigns(idx, signs);
-              directededge.set_sign(true);
+            graphtile.AddSigns(idx, signs);
+            directededge.set_sign(true);
           }
 
           // Add turn lanes if they exist. Store forward index on the last edge for a way
@@ -987,7 +988,7 @@ void BuildTileSet(const std::string& ways_file,
           }
           if (signs.size()) {
             graphtile.nodes().back().set_named_intersection(true);
-            graphtile.AddSigns(graphtile.nodes().size()-1, signs);
+            graphtile.AddSigns(graphtile.nodes().size() - 1, signs);
           }
         }
         // Set drive on right flag
@@ -1223,13 +1224,13 @@ std::string GraphBuilder::GetRef(const std::string& way_ref, const std::string& 
 }
 
 bool GraphBuilder::CreateSignInfoList(const OSMNode& node,
-                                          const OSMWay& way,
-                                          const OSMData& osmdata,
-                                          std::vector<SignInfo>& exit_list,
-                                          bool fork,
-                                          bool forward,
-                                          bool ramp,
-                                          bool tc) {
+                                      const OSMWay& way,
+                                      const OSMData& osmdata,
+                                      std::vector<SignInfo>& exit_list,
+                                      bool fork,
+                                      bool forward,
+                                      bool ramp,
+                                      bool tc) {
 
   bool has_guide = false;
   ////////////////////////////////////////////////////////////////////////////

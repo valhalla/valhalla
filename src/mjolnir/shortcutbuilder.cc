@@ -681,13 +681,13 @@ uint32_t FormShortcuts(GraphReader& reader, const TileLevel& level) {
       // Get named signs from the base node
       if (nodeinfo.named_intersection()) {
 
-        std::vector<SignInfo> signs = tile->GetSigns(n,true);
+        std::vector<SignInfo> signs = tile->GetSigns(n, true);
         if (signs.size() == 0) {
           LOG_ERROR("Base node should have signs, but none found");
         }
         tilebuilder.AddSigns(tilebuilder.nodes().size(), signs);
-        }
-        tilebuilder.nodes().emplace_back(std::move(nodeinfo));
+      }
+      tilebuilder.nodes().emplace_back(std::move(nodeinfo));
     }
 
     // Store the new tile

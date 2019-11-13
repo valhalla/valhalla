@@ -516,7 +516,8 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
                     osm_admin_data.name_offset_map.name(admin.name_en_index()));
           LOG_ERROR("sqlite3_step() Admin Level: " + std::to_string(admin.admin_level()));
           LOG_ERROR("sqlite3_step() Drive on Right: " + std::to_string(admin.drive_on_right()));
-          LOG_ERROR("sqlite3_step() Allow Intersection Names: " + std::to_string(admin.allow_intersection_names()));
+          LOG_ERROR("sqlite3_step() Allow Intersection Names: " +
+                    std::to_string(admin.allow_intersection_names()));
         }
       } // has data
     }   // admins

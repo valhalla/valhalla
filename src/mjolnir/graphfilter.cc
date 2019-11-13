@@ -173,12 +173,12 @@ void FilterTiles(GraphReader& reader,
 
         // Get named signs from the base node
         if (nodeinfo->named_intersection()) {
-          std::vector<SignInfo> signs = tile->GetSigns(nodeid.id(),true);
+          std::vector<SignInfo> signs = tile->GetSigns(nodeid.id(), true);
           if (signs.size() == 0) {
             LOG_ERROR("Base node should have signs, but none found");
           }
           node.set_named_intersection(true);
-          tilebuilder.AddSigns(tilebuilder.nodes().size()-1, signs);
+          tilebuilder.AddSigns(tilebuilder.nodes().size() - 1, signs);
         }
 
         // Associate the old node to the new node.

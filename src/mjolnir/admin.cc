@@ -222,7 +222,8 @@ GetAdminInfo(sqlite3* db_handle,
   sqlite3_stmt* stmt = 0;
   // state query
   std::string sql = "SELECT country.name, state.name, country.iso_code, ";
-  sql += "state.iso_code, state.drive_on_right, state.allow_intersection_names, st_astext(state.geom) ";
+  sql +=
+      "state.iso_code, state.drive_on_right, state.allow_intersection_names, st_astext(state.geom) ";
   sql += "from admins state, admins country where ";
   sql += "ST_Intersects(state.geom, BuildMBR(" + std::to_string(aabb.minx()) + ",";
   sql += std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) + ",";
@@ -235,7 +236,8 @@ GetAdminInfo(sqlite3* db_handle,
   GetData(db_handle, stmt, sql, tilebuilder, polys, drive_on_right, allow_intersection_names);
 
   // country query
-  sql = "SELECT name, \"\", iso_code, \"\", drive_on_right, allow_intersection_names, st_astext(geom) from ";
+  sql =
+      "SELECT name, \"\", iso_code, \"\", drive_on_right, allow_intersection_names, st_astext(geom) from ";
   sql += " admins where ST_Intersects(geom, BuildMBR(" + std::to_string(aabb.minx()) + ",";
   sql += std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) + ",";
   sql += std::to_string(aabb.maxy()) + ")) and admin_level=2 ";

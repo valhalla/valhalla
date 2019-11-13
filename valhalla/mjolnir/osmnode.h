@@ -270,7 +270,6 @@ struct OSMNode {
   bool named_intersection() const {
     return named_intersection_;
   }
-
 };
 
 } // namespace mjolnir
