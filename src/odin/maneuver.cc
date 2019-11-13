@@ -114,10 +114,10 @@ Maneuver::Maneuver()
       tee_(false), unnamed_walkway_(false), unnamed_cycleway_(false),
       unnamed_mountain_bike_trail_(false), verbal_multi_cue_(false), to_stay_on_(false),
       drive_on_right_(true) {
-  street_names_ = midgard::make_unique<StreetNames>();
-  begin_street_names_ = midgard::make_unique<StreetNames>();
-  cross_street_names_ = midgard::make_unique<StreetNames>();
-  roundabout_exit_street_names_ = midgard::make_unique<StreetNames>();
+  street_names_ = std::make_unique<StreetNames>();
+  begin_street_names_ = std::make_unique<StreetNames>();
+  cross_street_names_ = std::make_unique<StreetNames>();
+  roundabout_exit_street_names_ = std::make_unique<StreetNames>();
 }
 
 const DirectionsLeg_Maneuver_Type& Maneuver::type() const {
@@ -145,7 +145,7 @@ const StreetNames& Maneuver::street_names() const {
 }
 
 void Maneuver::set_street_names(const std::vector<std::pair<std::string, bool>>& names) {
-  street_names_ = midgard::make_unique<StreetNamesUs>(names);
+  street_names_ = std::make_unique<StreetNamesUs>(names);
 }
 
 void Maneuver::set_street_names(std::unique_ptr<StreetNames>&& street_names) {
@@ -205,7 +205,7 @@ const StreetNames& Maneuver::begin_street_names() const {
 }
 
 void Maneuver::set_begin_street_names(const std::vector<std::pair<std::string, bool>>& names) {
-  begin_street_names_ = midgard::make_unique<StreetNamesUs>(names);
+  begin_street_names_ = std::make_unique<StreetNamesUs>(names);
 }
 
 void Maneuver::set_begin_street_names(std::unique_ptr<StreetNames>&& begin_street_names) {
@@ -225,7 +225,7 @@ const StreetNames& Maneuver::cross_street_names() const {
 }
 
 void Maneuver::set_cross_street_names(const std::vector<std::pair<std::string, bool>>& names) {
-  cross_street_names_ = midgard::make_unique<StreetNamesUs>(names);
+  cross_street_names_ = std::make_unique<StreetNamesUs>(names);
 }
 
 void Maneuver::set_cross_street_names(std::unique_ptr<StreetNames>&& cross_street_names) {
@@ -617,7 +617,7 @@ const StreetNames& Maneuver::roundabout_exit_street_names() const {
 
 void Maneuver::set_roundabout_exit_street_names(
     const std::vector<std::pair<std::string, bool>>& names) {
-  roundabout_exit_street_names_ = midgard::make_unique<StreetNamesUs>(names);
+  roundabout_exit_street_names_ = std::make_unique<StreetNamesUs>(names);
 }
 
 void Maneuver::set_roundabout_exit_street_names(
