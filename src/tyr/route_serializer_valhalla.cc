@@ -116,8 +116,8 @@ json::MapPtr summary(const google::protobuf::RepeatedPtrField<valhalla::Directio
   route_summary->emplace("min_lon", json::fp_t{bbox.minx(), 6});
   route_summary->emplace("max_lat", json::fp_t{bbox.maxy(), 6});
   route_summary->emplace("max_lon", json::fp_t{bbox.maxx(), 6});
-  LOG_DEBUG("trip_time::" + std::to_string(time) + "s");
   route_summary->emplace("has_time_restrictions", json::Value{has_time_restrictions});
+  LOG_DEBUG("trip_time::" + std::to_string(time) + "s");
   return route_summary;
 }
 
@@ -256,6 +256,7 @@ legs(const google::protobuf::RepeatedPtrField<valhalla::DirectionsLeg>& directio
     auto leg = json::map({});
     auto summary = json::map({});
     auto maneuvers = json::array({});
+    bool has_time_restrictions = false;
 
     for (const auto& maneuver : directions_leg.maneuver()) {
 
@@ -312,6 +313,7 @@ legs(const google::protobuf::RepeatedPtrField<valhalla::DirectionsLeg>& directio
       }
       if (maneuver.has_time_restrictions()) {
         man->emplace("has_time_restrictions", maneuver.has_time_restrictions());
+        has_time_restrictions = true;
       }
 
       // Process sign
@@ -549,6 +551,7 @@ legs(const google::protobuf::RepeatedPtrField<valhalla::DirectionsLeg>& directio
     summary->emplace("min_lon", json::fp_t{directions_leg.summary().bbox().min_ll().lng(), 6});
     summary->emplace("max_lat", json::fp_t{directions_leg.summary().bbox().max_ll().lat(), 6});
     summary->emplace("max_lon", json::fp_t{directions_leg.summary().bbox().max_ll().lng(), 6});
+    summary->emplace("has_time_restrictions", json::Value{has_time_restrictions});
     leg->emplace("summary", summary);
     leg->emplace("shape", directions_leg.shape());
 

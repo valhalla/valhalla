@@ -16,6 +16,7 @@
 #include "sif/autocost.h"
 #include "thor/astar.h"
 #include "thor/worker.h"
+#include "tyr/serializers.h"
 
 using namespace valhalla;
 using namespace valhalla::thor;
@@ -88,7 +89,6 @@ struct route_tester {
     Api request;
     ParseApi(request_json, valhalla::Options::route, request);
     loki_worker.route(request);
-    std::pair<std::list<TripLeg>, std::list<DirectionsLeg>> results;
     thor_worker.route(request);
     odin_worker.narrate(request);
     return request;
@@ -211,7 +211,7 @@ void test_time_restricted_road() {
   auto conf = get_conf("roma_tiles");
   route_tester tester(conf);
   std::string request =
-      R"({"locations":[{"lat":41.90592,"lon":12.50070},{"lat":41.90477,"lon":12.49914}],"costing":"auto"})";
+      R"({"locations":[{"lat":41.90550,"lon":12.50090},{"lat":41.90477,"lon":12.49914}],"costing":"auto"})";
 
   auto response = tester.test(request);
 
@@ -241,7 +241,7 @@ void test_time_restricted_road() {
     }
   }
 
-  auto correct_route = std::vector<std::string>{"Via Montebello", ""};
+  auto correct_route = std::vector<std::string>{"Via Goito", "Via Montebello", ""};
   if (names != correct_route) {
     throw std::logic_error("Incorrect route, got: \n" + boost::algorithm::join(names, ", ") +
                            ", expected: \n" + boost::algorithm::join(correct_route, ", "));
@@ -251,16 +251,37 @@ void test_time_restricted_road() {
     throw std::logic_error("Expected leg to have time_restriction");
   }
 
-  // TODO Should `has_time_restriction` show up in maneuver too?
-  // auto correct_restricted_streets =
-  //    std::vector<std::string>{"Via Montebello"};
-
-  // if (restricted_streets != correct_restricted_streets) {
-  //  throw std::logic_error("Incorrect restricted tagging: \n" +
-  //  boost::algorithm::join(restricted_streets, ", ") +
-  //                         ", expected: \n" + boost::algorithm::join(correct_restricted_streets, ",
-  //                         "));
-  //}
+  // Verify JSON payload
+  const std::string payload = tyr::serializeDirections(response);
+  rapidjson::Document response_json;
+  response_json.Parse(payload);
+  std::cout << payload << std::endl;
+  {
+    const char key[] = "/trip/legs/0/maneuvers/0/has_time_restrictions";
+    if (GetValueByPointerWithDefault(response_json, key, false) == true) {
+      throw std::logic_error(
+          std::string("Via Goito is marked as time-restricted which is incorrect! JSON does have ") +
+          key + " set to true");
+    }
+  }
+  {
+    const char key[] = "/trip/legs/0/maneuvers/1/has_time_restrictions";
+    if (GetValueByPointerWithDefault(response_json, key, false) != true) {
+      throw std::logic_error(std::string("JSON does not have ") + key + " set to true");
+    }
+  }
+  {
+    const char key[] = "/trip/legs/0/summary/has_time_restrictions";
+    if (GetValueByPointerWithDefault(response_json, key, false) != true) {
+      throw std::logic_error(std::string("JSON does not have ") + key + " set to true");
+    }
+  }
+  {
+    const char key[] = "/trip/summary/has_time_restrictions";
+    if (GetValueByPointerWithDefault(response_json, key, false) != true) {
+      throw std::logic_error(std::string("JSON does not have ") + key + " set to true");
+    }
+  }
 }
 
 void TearDown() {
