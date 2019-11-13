@@ -80,12 +80,15 @@ void GetData(sqlite3* db_handle,
  * @param  db_handle        sqlite3 db handle
  * @param  drive_on_right   unordered map that indicates if a country drives on right side of the
  * road
+ * @param  allow_intersection_names   unordered map that indicates if we call out intersections
+ * names for this country
  * @param  aabb             bb of the tile
  * @param  tilebuilder      Graph tile builder
  */
 std::unordered_multimap<uint32_t, multi_polygon_type>
 GetAdminInfo(sqlite3* db_handle,
              std::unordered_map<uint32_t, bool>& drive_on_right,
+             std::unordered_map<uint32_t, bool>& allow_intersection_names,
              const AABB2<PointLL>& aabb,
              GraphTileBuilder& tilebuilder);
 
