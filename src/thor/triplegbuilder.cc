@@ -1269,22 +1269,19 @@ TripLegBuilder::Build(const AttributesController& controller,
       osmchangeset = start_tile->header()->dataset_id();
     }
 
+    // cache this the first time
+    if (origin.has_date_time() && origin_epoch == 0) {
+      origin_epoch =
+          DateTime::seconds_since_epoch(origin.date_time(),
+                                        DateTime::get_tz_db().from_index(node->timezone()));
+    }
+
     // have to always compute the offset in case the timezone changes along the path
     // we could cache the timezone and just add seconds when the timezone doesnt change
     uint32_t second_of_week = kInvalidSecondsOfWeek;
-    if (origin.has_date_time()) {
-      // cache the epoch time at the origin
-      if (origin_epoch == 0) {
-        origin_epoch =
-            DateTime::seconds_since_epoch(origin.date_time(),
-                                          DateTime::get_tz_db().from_index(node->timezone()));
-      }
-      // get the date time in this timezone
-      auto dt = DateTime::seconds_to_date(origin_epoch + elapsedtime,
-                                          DateTime::get_tz_db().from_index(node->timezone()));
-      // get the seconds from the start of the week from the date time
-      second_of_week =
-          DateTime::day_of_week(dt) * kSecondsPerDay + DateTime::seconds_from_midnight(dt);
+    if (origin_epoch != 0) {
+      second_of_week = DateTime::second_of_week(origin_epoch + static_cast<uint32_t>(elapsedtime),
+                                                DateTime::get_tz_db().from_index(node->timezone()));
     }
 
     // Add a node to the trip path and set its attributes.

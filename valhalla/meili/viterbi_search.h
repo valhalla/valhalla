@@ -29,10 +29,10 @@ public:
   StateLabel(double costsofar, const StateId& stateid, const StateId& predecessor);
 
   double costsofar() const;
-  const StateId stateid() const;
-  const StateId predecessor() const;
+  StateId stateid() const;
+  StateId predecessor() const;
   /* The following operator overloading and member functions are Required by SPQueue */
-  const StateId id() const;
+  StateId id() const;
   bool operator<(const StateLabel& rhs) const;
   bool operator>(const StateLabel& rhs) const;
   bool operator==(const StateLabel& rhs) const;
