@@ -99,7 +99,7 @@ void FilterTiles(GraphReader& reader,
         newedge.set_opp_index(0);
 
         // Get signs from the base directed edge
-        if (directededge->exitsign()) {
+        if (directededge->sign()) {
           std::vector<SignInfo> signs = tile->GetSigns(edgeid.id());
           if (signs.size() == 0) {
             LOG_ERROR("Base edge should have signs, but none found");
@@ -170,6 +170,16 @@ void FilterTiles(GraphReader& reader,
         const auto& admin = tile->admininfo(nodeinfo->admin_index());
         node.set_admin_index(tilebuilder.AddAdmin(admin.country_text(), admin.state_text(),
                                                   admin.country_iso(), admin.state_iso()));
+
+        // Get named signs from the base node
+        if (nodeinfo->named_intersection()) {
+          std::vector<SignInfo> signs = tile->GetSigns(nodeid.id(),true);
+          if (signs.size() == 0) {
+            LOG_ERROR("Base node should have signs, but none found");
+          }
+          node.set_named_intersection(true);
+          tilebuilder.AddSigns(tilebuilder.nodes().size()-1, signs);
+        }
 
         // Associate the old node to the new node.
         old_to_new[nodeid] = new_node;
