@@ -2,6 +2,8 @@
 #include "baldr/compression_utils.h"
 #include "baldr/datetime.h"
 #include "baldr/tilehierarchy.h"
+#include "baldr/sign.h"
+
 #include "filesystem.h"
 #include "midgard/aabb2.h"
 #include "midgard/pointll.h"
@@ -614,7 +616,7 @@ std::string GraphTile::GetName(const uint32_t textlist_offset) const {
 
 // Convenience method to get the signs for an edge given the
 // directed edge index.
-std::vector<SignInfo> GraphTile::GetSigns(const uint32_t idx) const {
+std::vector<SignInfo> GraphTile::GetSigns(const uint32_t idx, bool signs_on_node) const {
   uint32_t count = header_->signcount();
   std::vector<SignInfo> signs;
   if (count == 0) {
@@ -650,8 +652,13 @@ std::vector<SignInfo> GraphTile::GetSigns(const uint32_t idx) const {
       if (signs_[found].tagged()) {
         continue;
       }
-      signs.emplace_back(signs_[found].type(), signs_[found].is_route_num(),
-                         (textlist_ + signs_[found].text_offset()));
+
+      // only add named signs when asking for signs at the node and
+      // only add edge signs when asking for signs at the edges.
+      if ((signs_[found].type() == Sign::Type::kNamed && signs_on_node) ||
+          (signs_[found].type() != Sign::Type::kNamed && !signs_on_node))
+        signs.emplace_back(signs_[found].type(), signs_[found].is_route_num(),
+                           (textlist_ + signs_[found].text_offset()));
     } else {
       throw std::runtime_error("GetSigns: offset exceeds size of text list");
     }
