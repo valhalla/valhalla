@@ -286,7 +286,9 @@ TripLeg_Node_Type GetTripLegNodeType(const NodeType node_type) {
     case NodeType::kBorderControl:
       return TripLeg_Node_Type_kBorderControl;
   }
-  throw std::runtime_error("Unhandled case");
+  auto num = static_cast<uint8_t>(node_type);
+  throw std::runtime_error(std::string(__FILE__) + ":" + std::to_string(__LINE__) +
+                           " Unhandled NodeType: " + std::to_string(num));
 }
 
 // Associate cycle lane values to TripLeg proto

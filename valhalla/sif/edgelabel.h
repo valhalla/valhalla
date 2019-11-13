@@ -407,8 +407,8 @@ public:
               const sif::Cost& tc,
               const bool not_thru_pruning,
               const bool has_time_restrictions)
-      : EdgeLabel(predecessor, edgeid, edge, cost, sortcost, dist, mode, 0, has_time_restrictions), opp_edgeid_(oppedgeid),
-        not_thru_pruning_(not_thru_pruning), transition_cost_(tc) {
+      : EdgeLabel(predecessor, edgeid, edge, cost, sortcost, dist, mode, 0, has_time_restrictions),
+        opp_edgeid_(oppedgeid), not_thru_pruning_(not_thru_pruning), transition_cost_(tc) {
   }
 
   /**
@@ -435,7 +435,14 @@ public:
               const uint32_t path_distance,
               const bool not_thru_pruning,
               const bool has_time_restrictions)
-      : EdgeLabel(predecessor, edgeid, edge, cost, cost.cost, 0, mode, path_distance,
+      : EdgeLabel(predecessor,
+                  edgeid,
+                  edge,
+                  cost,
+                  cost.cost,
+                  0,
+                  mode,
+                  path_distance,
                   has_time_restrictions),
         opp_edgeid_(oppedgeid), not_thru_pruning_(not_thru_pruning), transition_cost_(tc) {
   }

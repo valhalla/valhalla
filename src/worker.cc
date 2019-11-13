@@ -1286,8 +1286,7 @@ to_response_json(const std::string& json, http_request_info_t& request_info, con
 }
 
 worker_t::result_t
-to_response_xml(const std::string& xml, http_request_info_t& request_info, const Api& request) {
-  (void)(request); // Unused variable
+to_response_xml(const std::string& xml, http_request_info_t& request_info, const Api&) {
   worker_t::result_t result{false, std::list<std::string>(), ""};
   http_response_t response(200, "OK", xml, headers_t{CORS, GPX_MIME, ATTACHMENT});
   response.from_info(request_info);
