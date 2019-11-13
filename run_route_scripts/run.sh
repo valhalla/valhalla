@@ -6,7 +6,7 @@ DEFAULT_CONFIG="../../conf/valhalla.json"
 function usage() {
 	echo "Usage: $0 path_test_request_file [conf=../../conf/valhalla.json]"
         echo "Example: $0 requests/demo_routes.txt"
-	echo "Example: $0 requests/demo_routes.txt ~/valhalla.json"
+	echo "Example: $0 ../test_requests/demo_routes.txt ~/valhalla.json"
 	exit 1
 }
 

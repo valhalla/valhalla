@@ -383,7 +383,7 @@ uint32_t AddShortcutEdges(GraphReader& reader,
     const DirectedEdge* directededge = tile->directededge(edge_id);
     if (directededge->use() == Use::kTransitConnection ||
         directededge->use() == Use::kEgressConnection ||
-        directededge->use() == Use::kPlatformConnection) {
+        directededge->use() == Use::kPlatformConnection || directededge->bss_connection()) {
       continue;
     }
 
@@ -698,7 +698,7 @@ uint32_t FormShortcuts(GraphReader& reader, const TileLevel& level) {
 
     // Check if we need to clear the tile cache.
     if (reader.OverCommitted()) {
-      reader.Clear();
+      reader.Trim();
     }
   }
   return shortcut_count;

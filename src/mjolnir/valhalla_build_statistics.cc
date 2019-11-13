@@ -494,7 +494,7 @@ void build(const boost::property_tree::ptree& pt,
     // Check if we need to clear the tile cache
     lock.lock();
     if (graph_reader.OverCommitted()) {
-      graph_reader.Clear();
+      graph_reader.Trim();
     }
     lock.unlock();
   }

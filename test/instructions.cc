@@ -252,7 +252,7 @@ void validate_osrm_merge_maneuver() {
                      legs_index, steps_index, "merge", "slight left");
 }
 
-void validate_osrm_destinations() {
+void validate_osrm_turn_destinations() {
 
   int routes_index = 0;
   int legs_index = 0;
@@ -266,6 +266,73 @@ void validate_osrm_destinations() {
   // Test osrm turn left guide sign
   test_osrm_destinations({VALHALLA_SOURCE_DIR "test/pinpoints/instructions/turn_left_guide_sign.pbf"},
                          routes_index, legs_index, steps_index, "Germering, Planegg");
+
+  // Test osrm bear right guide sign
+  test_osrm_destinations({VALHALLA_SOURCE_DIR
+                          "test/pinpoints/instructions/bear_right_guide_sign.pbf"},
+                         routes_index, legs_index, steps_index,
+                         "Hersheypark, Arena, Stadium, Giant Center");
+
+  // Test osrm bear left guide sign
+  test_osrm_destinations({VALHALLA_SOURCE_DIR "test/pinpoints/instructions/bear_left_guide_sign.pbf"},
+                         routes_index, legs_index, steps_index, "US 50 West: Fairfax");
+
+  steps_index = 3;
+
+  // Test osrm bear right guide sign
+  test_osrm_destinations({VALHALLA_SOURCE_DIR
+                          "test/pinpoints/instructions/roundabout_and_bear_right_guide_sign.pbf"},
+                         routes_index, legs_index, steps_index, "A20: Dover, Channel Tunnel");
+}
+
+void validate_osrm_roundabout_destinations() {
+
+  int routes_index = 0;
+  int legs_index = 0;
+  int enter_steps_index = 1;
+  int exit_steps_index = 2;
+
+  // Test osrm roundabout enter guide sign
+  test_osrm_destinations({VALHALLA_SOURCE_DIR
+                          "test/pinpoints/instructions/roundabout_guide_sign_1.pbf"},
+                         routes_index, legs_index, enter_steps_index, "Kürten, Dhünn");
+
+  // Test osrm roundabout exit guide sign
+  test_osrm_destinations({VALHALLA_SOURCE_DIR
+                          "test/pinpoints/instructions/roundabout_guide_sign_1.pbf"},
+                         routes_index, legs_index, exit_steps_index, "Kürten, Dhünn");
+
+  // Test osrm roundabout enter guide sign
+  test_osrm_destinations({VALHALLA_SOURCE_DIR
+                          "test/pinpoints/instructions/roundabout_guide_sign_2.pbf"},
+                         routes_index, legs_index, enter_steps_index, "Hückeswagen");
+
+  // Test osrm roundabout exit guide sign
+  test_osrm_destinations({VALHALLA_SOURCE_DIR
+                          "test/pinpoints/instructions/roundabout_guide_sign_2.pbf"},
+                         routes_index, legs_index, exit_steps_index, "Hückeswagen");
+
+  // Test osrm roundabout enter guide sign
+  test_osrm_destinations({VALHALLA_SOURCE_DIR
+                          "test/pinpoints/instructions/roundabout_guide_sign_3.pbf"},
+                         routes_index, legs_index, enter_steps_index,
+                         "A 1: Remscheid, Wermelskirchen");
+
+  // Test osrm roundabout exit guide sign
+  test_osrm_destinations({VALHALLA_SOURCE_DIR
+                          "test/pinpoints/instructions/roundabout_guide_sign_3.pbf"},
+                         routes_index, legs_index, exit_steps_index,
+                         "A 1: Remscheid, Wermelskirchen");
+
+  // Test osrm roundabout enter guide sign
+  test_osrm_destinations({VALHALLA_SOURCE_DIR
+                          "test/pinpoints/instructions/roundabout_and_bear_right_guide_sign.pbf"},
+                         routes_index, legs_index, enter_steps_index, "Bexley");
+
+  // Test osrm roundabout exit guide sign
+  test_osrm_destinations({VALHALLA_SOURCE_DIR
+                          "test/pinpoints/instructions/roundabout_and_bear_right_guide_sign.pbf"},
+                         routes_index, legs_index, exit_steps_index, "Bexley");
 }
 
 void validate_ramp_instructions() {
@@ -326,8 +393,11 @@ int main() {
   // Validate the exit instructions
   suite.test(TEST_CASE(validate_exit_instructions));
 
-  // Validate the osrm destinations
-  suite.test(TEST_CASE(validate_osrm_destinations));
+  // Validate the osrm turn destinations
+  suite.test(TEST_CASE(validate_osrm_turn_destinations));
+
+  // Validate the osrm roundabout destinations
+  suite.test(TEST_CASE(validate_osrm_roundabout_destinations));
 
   return suite.tear_down();
 }

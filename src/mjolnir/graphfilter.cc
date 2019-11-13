@@ -206,7 +206,7 @@ void FilterTiles(GraphReader& reader,
     }
 
     if (reader.OverCommitted()) {
-      reader.Clear();
+      reader.Trim();
     }
   }
   LOG_INFO("Filtered " + std::to_string(n_filtered_nodes) + " nodes out of " +
@@ -273,7 +273,7 @@ void UpdateEndNodes(GraphReader& reader, std::unordered_map<GraphId, GraphId>& o
     tilebuilder.Update(nodes, directededges);
 
     if (reader.OverCommitted()) {
-      reader.Clear();
+      reader.Trim();
     }
   }
 }

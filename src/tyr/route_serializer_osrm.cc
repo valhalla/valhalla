@@ -1178,6 +1178,8 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
     bool rotary = false;
     bool prev_rotary = false;
     auto steps = json::array({});
+    const DirectionsLeg_Maneuver* prev_maneuver = nullptr;
+    json::MapPtr prev_step;
     for (const auto& maneuver : leg->maneuver()) {
       auto step = json::map({});
       bool depart_maneuver = (maneuver_index == 0);
@@ -1234,6 +1236,13 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
       std::string dest = destinations(sign);
       if (!dest.empty()) {
         step->emplace("destinations", dest);
+        // If the maneuver is an exit roundabout
+        // and the previous maneuver is an enter roundabout
+        // then set the destinations on the previous step
+        if ((maneuver.type() == DirectionsLeg_Maneuver_Type_kRoundaboutExit) && prev_maneuver &&
+            (prev_maneuver->type() == DirectionsLeg_Maneuver_Type_kRoundaboutEnter) && prev_step) {
+          prev_step->emplace("destinations", dest);
+        }
       }
       std::string ex = exits(sign);
       if (!ex.empty()) {
@@ -1248,6 +1257,8 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
       steps->emplace_back(step);
       prev_rotary = rotary;
       prev_mode = mode;
+      prev_step = step;
+      prev_maneuver = &maneuver;
       maneuver_index++;
     } // end maneuver loop
     //#########################################################################
@@ -1303,6 +1314,10 @@ std::string serialize(valhalla::Api& api) {
   for (int i = 0; i < api.trip().routes_size(); ++i) {
     // Create a route to add to the array
     auto route = json::map({});
+
+    // TODO: phase 1, just hardcode score. phase 2: do real implementation
+    if (options.action() == valhalla::Options::trace_route)
+      route->emplace("confidence", json::fp_t{1, 1});
 
     // Concatenated route geometry
     route_geometry(route, api.directions().routes(i).legs(), options);

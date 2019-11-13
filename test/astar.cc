@@ -254,7 +254,7 @@ void assert_is_trivial_path(valhalla::Location& origin,
   }
 
   const DirectedEdge* de = tile->directededge(expected_edge_index);
-  auto cost = pedestrian->EdgeCost(de, tile->GetSpeed(de));
+  auto cost = pedestrian->EdgeCost(de, tile);
   uint32_t expected_time = cost.cost;
   if (time != expected_time) {
     std::ostringstream ostr;

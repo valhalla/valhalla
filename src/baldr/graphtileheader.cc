@@ -16,7 +16,7 @@ GraphTileHeader::GraphTileHeader() {
   memset(this, 0, sizeof(GraphTileHeader));
   strncpy(version_, PACKAGE_VERSION, kMaxVersionSize);
   version_[kMaxVersionSize - 1] = 0;
-  empty_slots_[0] = 0;
+  tile_size_ = 0;
 }
 
 // Set the version string.

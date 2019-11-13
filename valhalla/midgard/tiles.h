@@ -348,7 +348,8 @@ public:
    * value in the connectivity map.
    * @param  connectivity_map  map of tileid to color value
    */
-  void ColorMap(std::unordered_map<uint32_t, size_t>& connectivity_map) const;
+  void ColorMap(std::unordered_map<uint32_t, size_t>& connectivity_map,
+                const std::unordered_map<uint32_t, uint32_t>& not_neighbors = {}) const;
 
   /**
    * Intersect the linestring with the tiles to see which tiles and sub cells it intersects

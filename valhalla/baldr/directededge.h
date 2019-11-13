@@ -66,8 +66,16 @@ public:
    * Flag indicating the edge has predicted speed records.
    * @return  Returns true if this edge has predicted speed records.
    */
-  bool predicted_speed() const {
-    return predicted_speed_;
+  bool has_predicted_speed() const {
+    return has_predicted_speed_;
+  }
+
+  /**
+   * Indicates whether the edge has either predicted, free or constrained flow speeds.
+   * @return  Returns true if this edge has any flow speeds.
+   */
+  bool has_flow_speed() const {
+    return free_flow_speed_ > 0 || constrained_flow_speed_ > 0 || has_predicted_speed_;
   }
 
   /**
@@ -90,7 +98,7 @@ public:
    * Set the flag indicating the edge has predicted speed records.
    * @param p  True if this edge has predicted speed records
    */
-  void set_predicted_speed(const bool p);
+  void set_has_predicted_speed(const bool p);
 
   /**
    * Offset to the common edge data. The offset is from the start
@@ -1027,6 +1035,20 @@ public:
   void set_leaves_tile(const bool leaves_tile);
 
   /**
+   * Set the flag indicating whether this edge is a bike share station's connection
+   * @param  bss_connection  True if the edge is a bike share station's connection
+   */
+  void set_bss_connection(const bool bss_connection);
+
+  /**
+   * If this edge is a bike share station's connection?
+   * @return  Returns true if this edge is a bike share station's connection
+   */
+  bool bss_connection() const {
+    return bss_connection_;
+  }
+
+  /**
    * Create a json object representing this edge
    * @return  Returns the json object
    */
@@ -1064,7 +1086,7 @@ protected:
   uint64_t toll_ : 1;                   // Edge is part of a toll road
   uint64_t roundabout_ : 1;             // Edge is part of a roundabout
   uint64_t truck_route_ : 1;            // Edge that is part of a truck route/network
-  uint64_t predicted_speed_ : 1;        // Does this edge have a predicted speed records?
+  uint64_t has_predicted_speed_ : 1;    // Does this edge have a predicted speed records?
 
   // 4th 8-byte word
   uint64_t forwardaccess_ : 12; // Access (bit mask) in forward direction (see graphconstants.h)
@@ -1088,7 +1110,8 @@ protected:
   uint64_t traffic_signal_ : 1; // Traffic signal at end of the directed edge
   uint64_t seasonal_ : 1;       // Seasonal access (ex. no access in winter)
   uint64_t deadend_ : 1;        // Leads to a dead-end (no other driveable roads) TODO
-  uint64_t spare4_ : 10;
+  uint64_t bss_connection_ : 1; // Does this lead to(come out from) a bike share station?
+  uint64_t spare4_ : 9;
 
   // 5th 8-byte word
   uint64_t turntype_ : 24;      // Turn type (see graphconstants.h)

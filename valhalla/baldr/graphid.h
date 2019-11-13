@@ -4,6 +4,8 @@
 #include <cstdint>
 #include <functional>
 #include <iostream>
+#include <string>
+#include <vector>
 
 #include <valhalla/baldr/graphconstants.h>
 #include <valhalla/baldr/json.h>
@@ -69,6 +71,23 @@ public:
    * @param value all the various bits rolled into one
    */
   explicit GraphId(const uint64_t value) : value(value) {
+  }
+
+  /**
+   * Constructor
+   * @param value a string of the form level/tile_id/id
+   */
+  explicit GraphId(const std::string& value) {
+    std::vector<uint32_t> values;
+    std::string::size_type pos = 0;
+    while (pos != std::string::npos) {
+      auto next = value.find('/', pos + (pos > 0));
+      values.push_back(std::stoul(value.substr(pos + (pos > 0), next)));
+      pos = next;
+    }
+    if (values.size() != 3)
+      throw std::logic_error("Tile string format does not match level/tile/id");
+    *this = GraphId(values[1], values[0], values[2]);
   }
 
   /**
@@ -208,6 +227,10 @@ template <> struct hash<valhalla::baldr::GraphId> {
     return static_cast<size_t>(k.value);
   }
 };
+inline std::string to_string(const valhalla::baldr::GraphId& id) {
+  return std::to_string(id.level()) + "/" + std::to_string(id.tileid()) + "/" +
+         std::to_string(id.id());
+}
 } // namespace std
 
 #endif // VALHALLA_BALDR_GRAPHID_H_

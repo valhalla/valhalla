@@ -361,7 +361,7 @@ void thor_worker_t::cleanup() {
   isochrone_gen.Clear();
   matcher_factory.ClearFullCache();
   if (reader->OverCommitted()) {
-    reader->Clear();
+    reader->Trim();
   }
   m_path_infos.clear();
   m_map_match_results.clear();

@@ -84,8 +84,8 @@ void DirectedEdge::set_constrained_flow_speed(const uint32_t speed) {
 }
 
 // Set the flag indicating the edge has predicted speed records.
-void DirectedEdge::set_predicted_speed(const bool p) {
-  predicted_speed_ = p;
+void DirectedEdge::set_has_predicted_speed(const bool p) {
+  has_predicted_speed_ = p;
 }
 
 // ------------------  Data offsets and flags for extended data -------------//
@@ -539,6 +539,10 @@ void DirectedEdge::set_max_down_slope(const float slope) {
   }
 }
 
+void DirectedEdge::set_bss_connection(const bool bss_connection) {
+  bss_connection_ = bss_connection;
+}
+
 // Json representation
 json::MapPtr DirectedEdge::json() const {
   return json::map({
@@ -548,7 +552,7 @@ json::MapPtr DirectedEdge::json() const {
                      {"type", to_string(static_cast<SpeedType>(speed_type_))},
                      {"free_flow", static_cast<uint64_t>(free_flow_speed_)},
                      {"constrained_flow", static_cast<uint64_t>(constrained_flow_speed_)},
-                     {"predicted", static_cast<bool>(predicted_speed_)},
+                     {"predicted", static_cast<bool>(has_predicted_speed_)},
                  })},
       //{"opp_index", static_cast<bool>(opp_index_)},
       //{"edge_info_offset", static_cast<uint64_t>(edgeinfo_offset_)},
