@@ -262,6 +262,7 @@ void GraphTileBuilder::StoreTileData() {
     header_builder_.set_transfercount(0);
 
     // Write the signs
+    std::sort(signs_builder_.begin(), signs_builder_.end());
     header_builder_.set_signcount(signs_builder_.size());
     in_mem.write(reinterpret_cast<const char*>(signs_builder_.data()),
                  signs_builder_.size() * sizeof(Sign));
