@@ -633,11 +633,11 @@ std::vector<SignInfo> GraphTile::GetSigns(const uint32_t idx, bool signs_on_node
     mid = (low + high) / 2;
     const auto& sign = signs_[mid];
     // matching edge index
-    if (idx == sign.edgeindex()) {
+    if (idx == sign.index()) {
       found = mid;
       high = mid - 1;
     } // need a smaller index
-    else if (idx < sign.edgeindex()) {
+    else if (idx < sign.index()) {
       high = mid - 1;
     } // need a bigger index
     else {
@@ -646,7 +646,7 @@ std::vector<SignInfo> GraphTile::GetSigns(const uint32_t idx, bool signs_on_node
   }
 
   // Add signs
-  for (; found < count && signs_[found].edgeindex() == idx; ++found) {
+  for (; found < count && signs_[found].index() == idx; ++found) {
     if (signs_[found].text_offset() < textlist_size_) {
       // Skip tagged text strings (Future code is needed to handle tagged strings)
       if (signs_[found].tagged()) {

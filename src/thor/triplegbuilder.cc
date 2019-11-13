@@ -1303,7 +1303,7 @@ TripLeg_Edge* TripLegBuilder::AddTripEdge(const AttributesController& controller
 #endif
 
   // Set the exits (if the directed edge has exit sign information) and if requested
-  if (directededge->exitsign()) {
+  if (directededge->sign()) {
     std::vector<SignInfo> signs = graphtile->GetSigns(idx);
     if (!signs.empty()) {
       TripLeg_Sign* trip_sign = trip_edge->mutable_sign();

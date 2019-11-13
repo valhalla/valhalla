@@ -106,9 +106,9 @@ void DirectedEdge::set_access_restriction(const uint32_t access) {
   access_restriction_ = access;
 }
 
-// Sets the exit flag.
-void DirectedEdge::set_exitsign(const bool exit) {
-  exitsign_ = exit;
+// Sets the sign flag.
+void DirectedEdge::set_sign(const bool exit) {
+  sign_ = exit;
 }
 
 // ------------------------- Geographic attributes ------------------------- //
@@ -557,7 +557,7 @@ json::MapPtr DirectedEdge::json() const {
       {"start_restriction", access_json(start_restriction_)},
       {"end_restriction", access_json(end_restriction_)},
       {"part_of_complex_restriction", static_cast<bool>(complex_restriction_)},
-      {"has_exit_sign", static_cast<bool>(exitsign_)},
+      {"has_sign", static_cast<bool>(sign_)},
       {"toll", static_cast<bool>(toll_)},
       {"seasonal", static_cast<bool>(seasonal_)},
       {"destination_only", static_cast<bool>(dest_only_)},

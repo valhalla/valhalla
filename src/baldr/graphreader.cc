@@ -517,7 +517,7 @@ std::vector<GraphId> GraphReader::RecoverShortcut(const GraphId& shortcut_id) {
       // NOTE: because we change the speed of the edge in graph enhancer we cant use speed as a
       // reliable determining factor
       if (begin_node != edge.endnode() && !edge.is_shortcut() &&
-          (edge.forwardaccess() & kAutoAccess) && edge.exitsign() == shortcut->exitsign() &&
+          (edge.forwardaccess() & kAutoAccess) && edge.sign() == shortcut->sign() &&
           edge.use() == shortcut->use() && edge.classification() == shortcut->classification() &&
           edge.roundabout() == shortcut->roundabout() && edge.link() == shortcut->link() &&
           edge.toll() == shortcut->toll() && edge.destonly() == shortcut->destonly() &&
