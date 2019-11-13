@@ -334,10 +334,12 @@ public:
   /**
    * Convenience method to get the signs for an edge given the directed
    * edge index.
-   * @param  idx  Directed edge index. Used to lookup list of signs.
+   * @param  idx  Directed edge or node index. Used to lookup list of signs.
+   * @param  signs_on_node Are we looking for signs at the node?  These are the
+   *                       intersection names.
    * @return  Returns a list (vector) of signs.
    */
-  std::vector<SignInfo> GetSigns(const uint32_t idx) const;
+  std::vector<SignInfo> GetSigns(const uint32_t idx, bool signs_on_node = false) const;
 
   /**
    * Get the next departure given the directed edge Id and the current
