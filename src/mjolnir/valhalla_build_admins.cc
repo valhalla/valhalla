@@ -324,7 +324,8 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
   sql += "parent_admin INTEGER,";
   sql += "name TEXT NOT NULL,";
   sql += "name_en TEXT,";
-  sql += "drive_on_right INTEGER NOT NULL)";
+  sql += "drive_on_right INTEGER NOT NULL,";
+  sql += "allow_intersection_names INTEGER NOT NULL)";
 
   ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
   if (ret != SQLITE_OK) {
@@ -401,7 +402,7 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
    * this time too we'll use a Prepared Statement
    */
   sql = "INSERT INTO admins (admin_level, iso_code, parent_admin, name, name_en, ";
-  sql += "drive_on_right, geom) VALUES (?, ?, ?, ?, ?, ?, ";
+  sql += "drive_on_right, allow_intersection_names, geom) VALUES (?, ?, ?, ?, ?, ? ,?, ";
   sql += "CastToMulti(GeomFromText(?, 4326)))";
 
   ret = sqlite3_prepare_v2(db_handle, sql.c_str(), strlen(sql.c_str()), &stmt, NULL);
@@ -501,7 +502,8 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
           }
 
           sqlite3_bind_int(stmt, 6, admin.drive_on_right());
-          sqlite3_bind_text(stmt, 7, wkt.c_str(), wkt.length(), SQLITE_STATIC);
+          sqlite3_bind_int(stmt, 7, admin.allow_intersection_names());
+          sqlite3_bind_text(stmt, 8, wkt.c_str(), wkt.length(), SQLITE_STATIC);
           /* performing INSERT INTO */
           ret = sqlite3_step(stmt);
           if (ret == SQLITE_DONE || ret == SQLITE_ROW) {
@@ -514,6 +516,7 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
                     osm_admin_data.name_offset_map.name(admin.name_en_index()));
           LOG_ERROR("sqlite3_step() Admin Level: " + std::to_string(admin.admin_level()));
           LOG_ERROR("sqlite3_step() Drive on Right: " + std::to_string(admin.drive_on_right()));
+          LOG_ERROR("sqlite3_step() Allow Intersection Names: " + std::to_string(admin.allow_intersection_names()));
         }
       } // has data
     }   // admins
@@ -561,6 +564,16 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
   }
   LOG_INFO("Created Drive On Right index");
 
+  sql = "CREATE INDEX IdxAllowIntersectionNames ON admins (allow_intersection_names)";
+  ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
+  if (ret != SQLITE_OK) {
+    LOG_ERROR("Error: " + std::string(err_msg));
+    sqlite3_free(err_msg);
+    sqlite3_close(db_handle);
+    return;
+  }
+  LOG_INFO("Created allow intersection names index");
+
   sql = "update admins set drive_on_right = (select a.drive_on_right from admins";
   sql += " a where ST_Covers(a.geom, admins.geom) and admins.admin_level != ";
   sql += "a.admin_level and a.drive_on_right=0) where rowid = ";
@@ -574,6 +587,20 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
     return;
   }
   LOG_INFO("Done updating drive on right column.");
+
+  sql = "update admins set allow_intersection_names = (select a.allow_intersection_names from admins";
+  sql += " a where ST_Covers(a.geom, admins.geom) and admins.admin_level != ";
+  sql += "a.admin_level and a.allow_intersection_names=1) where rowid = ";
+  sql += "(select admins.rowid from admins a where ST_Covers(a.geom, admins.geom) ";
+  sql += "and admins.admin_level != a.admin_level and a.allow_intersection_names=1)";
+  ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
+  if (ret != SQLITE_OK) {
+    LOG_ERROR("Error: " + std::string(err_msg));
+    sqlite3_free(err_msg);
+    sqlite3_close(db_handle);
+    return;
+  }
+  LOG_INFO("Done updating allow intersection names column.");
 
   sql = "update admins set parent_admin = (select a.rowid from admins";
   sql += " a where ST_Covers(a.geom, admins.geom) and admins.admin_level != ";
