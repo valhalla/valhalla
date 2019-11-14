@@ -211,6 +211,65 @@ void test_deadend() {
   }
 }
 
+void test_deadend_timedep_forward() {
+  auto conf = get_conf();
+  route_tester tester(conf);
+  std::string request =
+      R"({
+      "locations":[
+        {"lat":51.45562646682483,"lon":-2.5952598452568054},
+        {"lat":51.455143447135974,"lon":-2.5958767533302307}
+      ],
+      "costing":"auto",
+      "date_time":{
+        "type":1,
+        "value":"2019-11-21T11:05"
+      }
+    })";
+
+  auto response = tester.test(request);
+
+  const auto& legs = response.trip().routes(0).legs();
+  const auto& directions = response.directions().routes(0).legs();
+
+  if (legs.size() != 1) {
+    throw std::logic_error("Should have 1 leg");
+  }
+
+  std::vector<std::string> names;
+  std::string uturn_street;
+
+  for (const auto& d : directions) {
+    for (const auto& m : d.maneuver()) {
+      std::string name;
+      for (const auto& n : m.street_name()) {
+        name += n.value() + " ";
+      }
+      if (!name.empty()) {
+        name.pop_back();
+      }
+      bool is_uturn = false;
+      if (m.type() == DirectionsLeg_Maneuver_Type_kUturnRight ||
+          m.type() == DirectionsLeg_Maneuver_Type_kUturnLeft) {
+        is_uturn = true;
+        uturn_street = name;
+      }
+      names.push_back(name);
+    }
+  }
+
+  auto correct_route =
+      std::vector<std::string>{"Bell Lane",   "Small Street",
+                               "Quay Street", // The u-turn on Quay Street is optimized away
+                               "Quay Street", "Small Street", "", ""};
+  if (names != correct_route) {
+    throw std::logic_error("Incorrect route, got: \n" + boost::algorithm::join(names, ", ") +
+                           ", expected: \n" + boost::algorithm::join(correct_route, ", "));
+  }
+  if (uturn_street != "Quay Street") {
+    throw std::logic_error("We did not find the expected u-turn");
+  }
+}
 void test_deadend_timedep_reverse() {
   auto conf = get_conf("whitelion_tiles_reverse");
   route_tester tester(conf);
@@ -359,6 +418,7 @@ int main() {
   test::suite suite("BidirectionalAStar");
 
   suite.test(TEST_CASE(test_deadend));
+  suite.test(TEST_CASE(test_deadend_timedep_forward));
   suite.test(TEST_CASE(test_deadend_timedep_reverse));
   suite.test(TEST_CASE(test_oneway));
   suite.test(TEST_CASE(test_oneway_wrong_way));
