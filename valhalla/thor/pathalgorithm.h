@@ -12,6 +12,7 @@
 #include <valhalla/proto/api.pb.h>
 #include <valhalla/sif/dynamiccost.h>
 #include <valhalla/thor/pathinfo.h>
+#include <valhalla/thor/edgestatus.h>
 
 namespace valhalla {
 namespace thor {
@@ -134,6 +135,30 @@ protected:
     return (tile == nullptr) ? 0 : tile->node(node)->timezone();
   }
 };
+
+// Container for the data we iterate over in Expand* function
+struct EdgeMetadata {
+  const baldr::DirectedEdge* edge;
+  baldr::GraphId edge_id;
+  EdgeStatusInfo* edge_status;
+
+  inline static EdgeMetadata make(const baldr::GraphId& node,
+                                  const baldr::NodeInfo* nodeinfo,
+                                  const baldr::GraphTile* tile,
+                                  EdgeStatus& edge_status_) {
+    baldr::GraphId edge_id = {node.tileid(), node.level(), nodeinfo->edge_index()};
+    EdgeStatusInfo* edge_status = edge_status_.GetPtr(edge_id, tile);
+    const baldr::DirectedEdge* directededge = tile->directededge(edge_id);
+    return {directededge, edge_id, edge_status};
+  }
+
+  inline void increment_pointers() {
+    ++edge;
+    ++edge_id;
+    ++edge_status;
+  }
+};
+
 
 } // namespace thor
 } // namespace valhalla
