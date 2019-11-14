@@ -267,7 +267,8 @@ inline bool TimeDepReverse::ExpandReverseInner(GraphReader& graphreader,
   // Add edge label, add to the adjacency list and set edge status
   uint32_t idx = edgelabels_rev_.size();
   edgelabels_rev_.emplace_back(pred_idx, meta.edge_id, oppedge, meta.edge, newcost, sortcost, dist,
-                               mode_, tc, (pred.not_thru_pruning() || !meta.edge->not_thru()), has_time_restrictions);
+                               mode_, tc, (pred.not_thru_pruning() || !meta.edge->not_thru()),
+                               has_time_restrictions);
   adjacencylist_->add(idx);
   *meta.edge_status = {EdgeSet::kTemporary, idx};
 

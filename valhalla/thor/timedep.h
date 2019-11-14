@@ -64,15 +64,27 @@ protected:
    * @param  best_path    Best path found so far. Includes the index into
    *                      EdgeLabels and the cost.
    */
-  void ExpandForward(baldr::GraphReader& graphreader,
+  bool ExpandForward(baldr::GraphReader& graphreader,
                      const baldr::GraphId& node,
-                     const sif::EdgeLabel& pred,
+                     sif::EdgeLabel& pred,
                      const uint32_t pred_idx,
                      const bool from_transition,
                      uint64_t localtime,
                      int32_t seconds_of_week,
                      const valhalla::Location& dest,
                      std::pair<int32_t, float>& best_path);
+
+  // Private helper function for `ExpandReverse`
+  inline bool ExpandForwardInner(baldr::GraphReader& graphreader,
+                                 const sif::EdgeLabel& pred,
+                                 const baldr::NodeInfo* nodeinfo,
+                                 const uint32_t pred_idx,
+                                 const EdgeMetadata& meta,
+                                 const baldr::GraphTile* tile,
+                                 uint64_t localtime,
+                                 uint32_t seconds_of_week,
+                                 const valhalla::Location& destination,
+                                 std::pair<int32_t, float>& best_path);
 };
 
 /**

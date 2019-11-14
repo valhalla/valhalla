@@ -212,7 +212,7 @@ void test_deadend() {
 }
 
 void test_deadend_timedep_forward() {
-  auto conf = get_conf();
+  auto conf = get_conf("whitelion_tiles_reverse");
   route_tester tester(conf);
   std::string request =
       R"({
@@ -266,12 +266,14 @@ void test_deadend_timedep_forward() {
     throw std::logic_error("Incorrect route, got: \n" + boost::algorithm::join(names, ", ") +
                            ", expected: \n" + boost::algorithm::join(correct_route, ", "));
   }
+  // TODO Why did it not happen on Quay Street?
+  // if (uturn_street != "Small Street") {
   if (uturn_street != "Quay Street") {
     throw std::logic_error("We did not find the expected u-turn");
   }
 }
 void test_deadend_timedep_reverse() {
-  auto conf = get_conf("whitelion_tiles_reverse");
+  auto conf = get_conf("whitelion_tiles");
   route_tester tester(conf);
   std::string request =
       R"({
@@ -417,12 +419,12 @@ void TearDown() {
 int main() {
   test::suite suite("BidirectionalAStar");
 
-  suite.test(TEST_CASE(test_deadend));
+   suite.test(TEST_CASE(test_deadend));
   suite.test(TEST_CASE(test_deadend_timedep_forward));
-  suite.test(TEST_CASE(test_deadend_timedep_reverse));
-  suite.test(TEST_CASE(test_oneway));
-  suite.test(TEST_CASE(test_oneway_wrong_way));
-  suite.test(TEST_CASE(test_time_restricted_road));
+   suite.test(TEST_CASE(test_deadend_timedep_reverse));
+   suite.test(TEST_CASE(test_oneway));
+   suite.test(TEST_CASE(test_oneway_wrong_way));
+   suite.test(TEST_CASE(test_time_restricted_road));
 
   return suite.tear_down();
 }
