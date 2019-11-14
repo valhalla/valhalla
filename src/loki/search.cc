@@ -306,8 +306,8 @@ struct bin_handler_t {
           // index is opposite the logic above, plus we need to use the edgeinfo and shape
           // from the other tile since we use the other_edge forward flag
           auto index = other_edge->forward() ? info.shape().size() - 2 : 0;
-          if (heading_filter(other_edge, other_tile->edgeinfo(other_edge->edgeinfo_offset()), location,
-                             candidate.point, index)) {
+          if (heading_filter(other_edge, other_tile->edgeinfo(other_edge->edgeinfo_offset()),
+                             location, candidate.point, index)) {
             filtered.emplace_back(std::move(path_edge));
           } else if (correlated_edges.insert(path_edge.id).second) {
             correlated.edges.push_back(std::move(path_edge));
