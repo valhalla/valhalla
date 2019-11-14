@@ -66,7 +66,7 @@ void TimeDepForward::ExpandForward(GraphReader& graphreader,
     seconds_of_week = DateTime::normalize_seconds_of_week(seconds_of_week + tz_diff);
   }
 
-  // Expand from end node.
+  // Expand from start node.
   EdgeMetadata meta = EdgeMetadata::make(node, nodeinfo, tile, edgestatus_);
 
   bool found_valid_edge = false;

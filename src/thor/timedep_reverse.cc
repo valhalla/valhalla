@@ -96,44 +96,47 @@ void TimeDepReverse::ExpandReverse(GraphReader& graphreader,
   }
 
   // Expand from end node.
-  GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
-  EdgeStatusInfo* es = edgestatus_.GetPtr(edgeid, tile);
-  const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
-  for (uint32_t i = 0; i < nodeinfo->edge_count(); ++i, ++directededge, ++edgeid, ++es) {
+  EdgeMetadata meta = EdgeMetadata::make(node, nodeinfo, tile, edgestatus_);
+
+  bool found_valid_edge = false;
+  bool found_uturn = false;
+  EdgeMetadata uturn_meta = {};
+
+  for (uint32_t i = 0; i < nodeinfo->edge_count(); ++i, meta.increment_pointers()) {
     // Skip shortcut edges for time dependent routes. Also skip this edge if permanently labeled (best
     // path already found to this directed edge) or if no access for this mode.
-    if (directededge->is_shortcut() || es->set() == EdgeSet::kPermanent ||
-        !(directededge->reverseaccess() & access_mode_)) {
+    if (meta.edge->is_shortcut() || meta.edge_status->set() == EdgeSet::kPermanent ||
+        !(meta.edge->reverseaccess() & access_mode_)) {
       continue;
     }
 
     // Get end node tile, opposing edge Id, and opposing directed edge.
     const GraphTile* t2 =
-        directededge->leaves_tile() ? graphreader.GetGraphTile(directededge->endnode()) : tile;
+        meta.edge->leaves_tile() ? graphreader.GetGraphTile(meta.edge->endnode()) : tile;
     if (t2 == nullptr) {
       continue;
     }
-    GraphId oppedge = t2->GetOpposingEdgeId(directededge);
+    GraphId oppedge = t2->GetOpposingEdgeId(meta.edge);
     const DirectedEdge* opp_edge = t2->directededge(oppedge);
 
     // Skip this edge if no access is allowed (based on costing method)
     // or if a complex restriction prevents transition onto this edge.
     bool has_time_restrictions = false;
-    if (!costing_->AllowedReverse(directededge, pred, opp_edge, t2, oppedge, localtime,
+    if (!costing_->AllowedReverse(meta.edge, pred, opp_edge, t2, oppedge, localtime,
                                   nodeinfo->timezone(), has_time_restrictions) ||
-        costing_->Restricted(directededge, pred, edgelabels_rev_, tile, edgeid, false, localtime,
+        costing_->Restricted(meta.edge, pred, edgelabels_rev_, tile, meta.edge_id, false, localtime,
                              nodeinfo->timezone())) {
       continue;
     }
 
-    Cost tc = costing_->TransitionCostReverse(directededge->localedgeidx(), nodeinfo, opp_edge,
+    Cost tc = costing_->TransitionCostReverse(meta.edge->localedgeidx(), nodeinfo, opp_edge,
                                               opp_pred_edge);
     Cost newcost = pred.cost() + costing_->EdgeCost(opp_edge, t2, seconds_of_week);
     newcost.cost += tc.cost;
 
     // If this edge is a destination, subtract the partial/remainder cost
     // (cost from the dest. location to the end of the edge).
-    auto p = destinations_.find(edgeid);
+    auto p = destinations_.find(meta.edge_id);
     if (p != destinations_.end()) {
       // Subtract partial cost and time
       newcost -= p->second;
@@ -142,7 +145,7 @@ void TimeDepReverse::ExpandReverse(GraphReader& graphreader,
       // Note - with high edge scores the convergence test fails some routes
       // so reduce the edge score.
       for (const auto& destination_edge : destination.path_edges()) {
-        if (destination_edge.graph_id() == edgeid) {
+        if (destination_edge.graph_id() == meta.edge_id) {
           newcost.cost += destination_edge.distance();
         }
       }
@@ -152,7 +155,7 @@ void TimeDepReverse::ExpandReverse(GraphReader& graphreader,
       // a path to be formed even if the convergence test fails (can
       // happen with large edge scores)
       if (best_path.first == -1 || newcost.cost < best_path.second) {
-        best_path.first = (es->set() == EdgeSet::kTemporary) ? es->index() : edgelabels_rev_.size();
+        best_path.first = (meta.edge_status->set() == EdgeSet::kTemporary) ? meta.edge_status->index() : edgelabels_rev_.size();
         best_path.second = newcost.cost;
       }
     }
@@ -160,11 +163,11 @@ void TimeDepReverse::ExpandReverse(GraphReader& graphreader,
     // Check if edge is temporarily labeled and this path has less cost. If
     // less cost the predecessor is updated and the sort cost is decremented
     // by the difference in real cost (A* heuristic doesn't change)
-    if (es->set() == EdgeSet::kTemporary) {
-      BDEdgeLabel& lab = edgelabels_rev_[es->index()];
+    if (meta.edge_status->set() == EdgeSet::kTemporary) {
+      BDEdgeLabel& lab = edgelabels_rev_[meta.edge_status->index()];
       if (newcost.cost < lab.cost().cost) {
         float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
-        adjacencylist_->decrease(es->index(), newsortcost);
+        adjacencylist_->decrease(meta.edge_status->index(), newsortcost);
         lab.Update(pred_idx, newcost, newsortcost, tc, has_time_restrictions);
       }
       continue;
@@ -177,20 +180,19 @@ void TimeDepReverse::ExpandReverse(GraphReader& graphreader,
     float sortcost = newcost.cost;
     if (p == destinations_.end()) {
       const GraphTile* t2 =
-          directededge->leaves_tile() ? graphreader.GetGraphTile(directededge->endnode()) : tile;
+          meta.edge->leaves_tile() ? graphreader.GetGraphTile(meta.edge->endnode()) : tile;
       if (t2 == nullptr) {
         continue;
       }
-      sortcost += astarheuristic_.Get(t2->get_node_ll(directededge->endnode()), dist);
+      sortcost += astarheuristic_.Get(t2->get_node_ll(meta.edge->endnode()), dist);
     }
 
     // Add edge label, add to the adjacency list and set edge status
     uint32_t idx = edgelabels_rev_.size();
-    edgelabels_rev_.emplace_back(pred_idx, edgeid, oppedge, directededge, newcost, sortcost, dist,
-                                 mode_, tc, (pred.not_thru_pruning() || !directededge->not_thru()),
-                                 has_time_restrictions);
+    edgelabels_rev_.emplace_back(pred_idx, meta.edge_id, oppedge, meta.edge, newcost, sortcost, dist,
+                                 mode_, tc, (pred.not_thru_pruning() || !meta.edge->not_thru()), has_time_restrictions);
     adjacencylist_->add(idx);
-    *es = {EdgeSet::kTemporary, idx};
+    *meta.edge_status = {EdgeSet::kTemporary, idx};
   }
 
   // Handle transitions - expand from the end node of each transition

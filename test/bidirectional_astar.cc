@@ -212,7 +212,7 @@ void test_deadend() {
 }
 
 void test_deadend_timedep_reverse() {
-  auto conf = get_conf();
+  auto conf = get_conf("whitelion_tiles_reverse");
   route_tester tester(conf);
   std::string request =
     R"({
