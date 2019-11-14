@@ -330,13 +330,6 @@ struct memory_status {
 };
 std::ostream& operator<<(std::ostream& stream, const memory_status& s);
 
-/**
- * Implement the missing make_unique for C++11.
- */
-template <typename T, typename... Args> std::unique_ptr<T> make_unique(Args&&... args) {
-  return std::unique_ptr<T>{new T{std::forward<Args>(args)...}};
-}
-
 /* circular range clamp
  */
 template <class T> T circular_range_clamp(T value, T lower, T upper) {

@@ -13,7 +13,7 @@ StateLabel::StateLabel(double costsofar, const StateId& stateid, const StateId& 
   }
 }
 
-const StateId StateLabel::id() const {
+StateId StateLabel::id() const {
   return stateid_;
 }
 
@@ -21,11 +21,11 @@ double StateLabel::costsofar() const {
   return costsofar_;
 }
 
-const StateId StateLabel::stateid() const {
+StateId StateLabel::stateid() const {
   return stateid_;
 }
 
-const StateId StateLabel::predecessor() const {
+StateId StateLabel::predecessor() const {
   return predecessor_;
 }
 // Required by SPQueue
