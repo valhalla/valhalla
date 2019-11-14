@@ -159,6 +159,19 @@ protected:
                      const valhalla::Location& dest,
                      std::pair<int32_t, float>& best_path);
 
+  // Private helper function for `ExpandReverse`
+  bool ExpandReverseInner(baldr::GraphReader& graphreader,
+                          const sif::BDEdgeLabel& pred,
+                          const baldr::DirectedEdge* opp_pred_edge,
+                          const baldr::NodeInfo* nodeinfo,
+                          const uint32_t pred_idx,
+                          const EdgeMetadata& meta,
+                          const baldr::GraphTile* tile,
+                          uint64_t localtime,
+                          uint32_t seconds_of_week,
+                          const valhalla::Location& destination,
+                          std::pair<int32_t, float>& best_path);
+
   /**
    * The origin of the reverse path is the destination location. Add edges at the
    * destination to the adjacency list to start the reverse path search.

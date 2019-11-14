@@ -110,7 +110,8 @@ void TimeDepForward::ExpandForward(GraphReader& graphreader,
       // a path to be formed even if the convergence test fails (can
       // happen with large edge scores)
       if (best_path.first == -1 || newcost.cost < best_path.second) {
-        best_path.first = (meta.edge_status->set() == EdgeSet::kTemporary) ? meta.edge_status->index() : edgelabels_.size();
+        best_path.first = (meta.edge_status->set() == EdgeSet::kTemporary) ? meta.edge_status->index()
+                                                                           : edgelabels_.size();
         best_path.second = newcost.cost;
       }
     }

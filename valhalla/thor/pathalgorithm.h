@@ -11,8 +11,8 @@
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/proto/api.pb.h>
 #include <valhalla/sif/dynamiccost.h>
-#include <valhalla/thor/pathinfo.h>
 #include <valhalla/thor/edgestatus.h>
+#include <valhalla/thor/pathinfo.h>
 
 namespace valhalla {
 namespace thor {
@@ -158,7 +158,6 @@ struct EdgeMetadata {
     ++edge_status;
   }
 };
-
 
 } // namespace thor
 } // namespace valhalla

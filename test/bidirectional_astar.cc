@@ -159,7 +159,7 @@ void test_deadend() {
   auto conf = get_conf("whitelion_tiles");
   route_tester tester(conf);
   std::string request =
-    R"({
+      R"({
       "locations":[
         {"lat":51.45562646682483,"lon":-2.5952598452568054},
         {"lat":51.455143447135974,"lon":-2.5958767533302307}
@@ -215,7 +215,7 @@ void test_deadend_timedep_reverse() {
   auto conf = get_conf("whitelion_tiles_reverse");
   route_tester tester(conf);
   std::string request =
-    R"({
+      R"({
       "locations":[
         {"lat":51.45562646682483,"lon":-2.5952598452568054},
         {"lat":51.455143447135974,"lon":-2.5958767533302307}
