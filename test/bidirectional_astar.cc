@@ -222,7 +222,7 @@ void test_deadend_timedep_reverse() {
       ],
       "costing":"auto",
       "date_time":{
-        "type":1,
+        "type":2,
         "value":"2019-11-21T11:05"
       }
     })";

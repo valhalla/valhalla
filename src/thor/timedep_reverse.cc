@@ -64,9 +64,9 @@ void TimeDepReverse::Init(const midgard::PointLL& origll, const midgard::PointLL
 // from the end node of any transition edge (so no transition edges are added
 // to the adjacency list or BDEdgeLabel list). Does not expand transition
 // edges if from_transition is false.
-void TimeDepReverse::ExpandReverse(GraphReader& graphreader,
+bool TimeDepReverse::ExpandReverse(GraphReader& graphreader,
                                    const GraphId& node,
-                                   const BDEdgeLabel& pred,
+                                   BDEdgeLabel& pred,
                                    const uint32_t pred_idx,
                                    const DirectedEdge* opp_pred_edge,
                                    const bool from_transition,
@@ -78,11 +78,11 @@ void TimeDepReverse::ExpandReverse(GraphReader& graphreader,
   // with regional data sets) or if no access at the node.
   const GraphTile* tile = graphreader.GetGraphTile(node);
   if (tile == nullptr) {
-    return;
+    return false;
   }
   const NodeInfo* nodeinfo = tile->node(node);
   if (!costing_->Allowed(nodeinfo)) {
-    return;
+    return false;
   }
 
   // Adjust for time zone (if different from timezone at the destination).
@@ -124,14 +124,42 @@ void TimeDepReverse::ExpandReverse(GraphReader& graphreader,
     for (uint32_t i = 0; i < nodeinfo->transition_count(); ++i, ++trans) {
       if (trans->up()) {
         hierarchy_limits_[node.level()].up_transition_count++;
-        ExpandReverse(graphreader, trans->endnode(), pred, pred_idx, opp_pred_edge, true,
-                      seconds_of_week, localtime, destination, best_path);
-      } else if (!hierarchy_limits_[trans->endnode().level()].StopExpanding(pred.distance())) {
-        ExpandReverse(graphreader, trans->endnode(), pred, pred_idx, opp_pred_edge, true,
-                      seconds_of_week, localtime, destination, best_path);
+        found_valid_edge = ExpandReverse(graphreader, trans->endnode(), pred, pred_idx, opp_pred_edge,
+                                         true, seconds_of_week, localtime, destination, best_path) ||
+                           found_valid_edge;
+      } else if (!hierarchy_limits_[trans->endnode().level()].StopExpanding()) {
+        found_valid_edge = ExpandReverse(graphreader, trans->endnode(), pred, pred_idx, opp_pred_edge,
+                                         true, seconds_of_week, localtime, destination, best_path) ||
+                           found_valid_edge;
       }
     }
   }
+
+  if (!from_transition) {
+    // Now, after having looked at all the edges, including edges on other levels,
+    // we can say if this is a deadend or not, and if so, evaluate the uturn-edge (if it exists)
+    if (!found_valid_edge && found_uturn) {
+      // If we found no suitable edge to add, it means we're at a deadend
+      // so lets go back and re-evaluate a potential u-turn
+
+      pred.set_deadend(true);
+
+      // Decide if we should expand a shortcut or the non-shortcut edge...
+      bool was_uturn_shortcut_added = false;
+
+      // TODO Is there a shortcut that supersedes our u-turn?
+      if (was_uturn_shortcut_added) {
+        found_valid_edge = true;
+      } else {
+        // We didn't add any shortcut of the uturn, therefore evaluate the regular uturn instead
+        found_valid_edge =
+            ExpandReverseInner(graphreader, pred, opp_pred_edge, nodeinfo, pred_idx, uturn_meta, tile,
+                               localtime, seconds_of_week, destination, best_path) ||
+            found_valid_edge;
+      }
+    }
+  }
+  return found_valid_edge;
 }
 
 // Runs in the inner loop of `ExpandForward`, essentially evaluating if

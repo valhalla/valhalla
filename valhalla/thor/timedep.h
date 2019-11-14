@@ -148,9 +148,9 @@ protected:
    * @param  best_path    Best path found so far. Includes the index into
    *                      EdgeLabels and the cost.
    */
-  void ExpandReverse(baldr::GraphReader& graphreader,
+  bool ExpandReverse(baldr::GraphReader& graphreader,
                      const baldr::GraphId& node,
-                     const sif::BDEdgeLabel& pred,
+                     sif::BDEdgeLabel& pred,
                      const uint32_t pred_idx,
                      const baldr::DirectedEdge* opp_pred_edge,
                      const bool from_transition,
