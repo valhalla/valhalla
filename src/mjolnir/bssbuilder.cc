@@ -226,7 +226,7 @@ void create_bss_node_and_edges(GraphTileBuilder& tilebuilder_local,
   // present in this tile set a value > number of directed edges
   uint32_t signidx = 0;
   uint32_t nextsignidx = (tilebuilder_local.header()->signcount() > 0)
-                             ? tilebuilder_local.sign(0).edgeindex()
+                             ? tilebuilder_local.sign(0).index()
                              : currentedges.size() + 1;
   uint32_t signcount = tilebuilder_local.header()->signcount();
 
@@ -256,14 +256,14 @@ void create_bss_node_and_edges(GraphTileBuilder& tilebuilder_local,
         // Update any signs that use this idx - increment their index by the
         // number of added edges
         while (idx == nextsignidx && signidx < signcount) {
-          if (!currentedges[idx].exitsign()) {
+          if (!currentedges[idx].sign()) {
             LOG_ERROR("Signs for this index but directededge says no sign");
           }
-          tilebuilder_local.sign_builder(signidx).set_edgeindex(idx + added_edges);
+          tilebuilder_local.sign_builder(signidx).set_index(idx + added_edges);
 
           // Increment to the next sign and update next signidx
           signidx++;
-          nextsignidx = (signidx >= signcount) ? 0 : tilebuilder_local.sign(signidx).edgeindex();
+          nextsignidx = (signidx >= signcount) ? 0 : tilebuilder_local.sign(signidx).index();
         }
 
         // Add any restrictions that use this idx - increment their index by the

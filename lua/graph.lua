@@ -1820,10 +1820,28 @@ function nodes_proc (kv, nokeys)
 
   if kv["traffic_signals:direction"] == "forward" then
     kv["forward_signal"] = "true"
+
+    if kv["public_transport"] == nil and kv["name"] then
+       kv["junction"] = "named"
+    end
   end
 
   if kv["traffic_signals:direction"] == "backward" then
     kv["backward_signal"] = "true"
+
+    if kv["public_transport"] == nil and kv["name"] then
+       kv["junction"] = "named"
+    end
+  end
+
+  if kv["public_transport"] == nil and kv["name"] then
+    if kv["highway"] == "traffic_signals" then
+       if kv["junction"] ~= "yes" then
+          kv["junction"] = "named"
+       end
+    elseif kv["junction"] == "yes" or kv["reference_point"] == "yes" then
+       kv["junction"] = "named"
+    end
   end
 
   --store a mask denoting access

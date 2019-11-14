@@ -145,6 +145,22 @@ struct OSMAdmin {
     return drive_on_right_;
   }
 
+  /**
+   * Set allow intersection names
+   * @param   allow_intersection_names
+   */
+  void set_allow_intersection_names(const bool allow_intersection_names) {
+    allow_intersection_names_ = allow_intersection_names;
+  }
+
+  /**
+   * Get the allow intersection names flag.
+   * @return  allow intersection names?
+   */
+  bool allow_intersection_names() const {
+    return allow_intersection_names_;
+  }
+
   // OSM admin/relation id
   uint64_t osmrelationid_;
 
@@ -166,6 +182,9 @@ struct OSMAdmin {
 
   // drive on right side of the road in this country?
   bool drive_on_right_;
+
+  // do we call out intersection names at intersections?
+  bool allow_intersection_names_;
 };
 
 } // namespace mjolnir

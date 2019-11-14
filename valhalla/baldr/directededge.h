@@ -131,19 +131,19 @@ public:
   void set_access_restriction(const uint32_t access);
 
   /**
-   * Does this directed edge have exit signs?
-   * @return  Returns true if the directed edge has exit signs,
+   * Does this directed edge have signs?
+   * @return  Returns true if the directed edge has signs,
    *          false if not.
    */
-  bool exitsign() const {
-    return exitsign_;
+  bool sign() const {
+    return sign_;
   }
 
   /**
-   * Sets the exit sign flag.
-   * @param  exit  True if this directed edge has exit signs, false if not.
+   * Sets the sign flag.
+   * @param  sign  True if this directed edge has signs, false if not.
    */
-  void set_exitsign(const bool exit);
+  void set_sign(const bool sign);
 
   /**
    * Does this directed edge have the lane connectivity?
@@ -1103,7 +1103,7 @@ protected:
   uint64_t shoulder_ : 1;       // Does the edge have a shoulder?
   uint64_t lane_conn_ : 1;      // 1 if has lane connectivity, 0 otherwise
   uint64_t turnlanes_ : 1;      // Does this edge have turn lanes (end of edge)
-  uint64_t exitsign_ : 1;       // Exit signs exist for this edge
+  uint64_t sign_ : 1;           // Exit signs exist for this edge
   uint64_t internal_ : 1;       // Edge that is internal to an intersection
   uint64_t tunnel_ : 1;         // Is this edge part of a tunnel
   uint64_t bridge_ : 1;         // Is this edge part of a bridge?

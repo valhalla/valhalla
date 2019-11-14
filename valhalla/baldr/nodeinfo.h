@@ -269,6 +269,20 @@ public:
   void set_mode_change(const bool mc);
 
   /**
+   * Is this a named intersection?
+   * @return  Returns true if this is a named intersection.
+   */
+  bool named_intersection() const {
+    return named_;
+  }
+
+  /**
+   * Sets the flag indicating if this is a named intersection.
+   * @param  named  named flag.
+   */
+  void set_named_intersection(const bool named);
+
+  /**
    * Is there a traffic signal at this node?
    * @return  Returns true if there is a traffic signal at the node.
    */
@@ -387,7 +401,7 @@ protected:
   uint64_t density_ : 4;        // Relative road density
   uint64_t traffic_signal_ : 1; // Traffic signal
   uint64_t mode_change_ : 1;    // Mode change allowed?
-  uint64_t spare1_ : 1;
+  uint64_t named_ : 1;          // Is this a named intersection?
 
   uint64_t transition_index_ : 21;   // Index into the node transitions to the first transition
                                      // (used to store transit stop index for transit level)

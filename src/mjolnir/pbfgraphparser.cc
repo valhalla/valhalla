@@ -117,6 +117,10 @@ public:
     bool is_highway_junction =
         ((highway_junction != results->end()) && (highway_junction->second == "motorway_junction"));
 
+    const auto& named_junction = results->find("junction");
+    bool is_named_junction =
+        ((named_junction != results->end()) && (named_junction->second == "named"));
+
     // Create a new node and set its attributes
     OSMNode n;
     n.set_id(osmid);
@@ -147,7 +151,7 @@ public:
           n.set_ref_index(osmdata_.node_names.index(tag.second));
           ++osmdata_.node_ref_count;
         }
-      } else if (is_highway_junction && (tag.first == "name")) {
+      } else if ((is_highway_junction || is_named_junction) && (tag.first == "name")) {
         bool hasTag = (tag.second.length() ? true : false);
         if (hasTag) {
           // Add the name to the unique node names list and store its index in the OSM node
@@ -188,6 +192,8 @@ public:
         }
       } else if (tag.first == "access_mask") {
         n.set_access(std::stoi(tag.second));
+      } else if (is_named_junction) {
+        n.set_named_intersection(true);
       }
 
       /* TODO: payment type.
@@ -364,7 +370,6 @@ public:
         ((highway_junction != results.end()) && (highway_junction->second == "motorway_junction"));
 
     for (const auto& tag : results) {
-
       if (tag.first == "road_class") {
         RoadClass roadclass = (RoadClass)std::stoi(tag.second);
         switch (roadclass) {
