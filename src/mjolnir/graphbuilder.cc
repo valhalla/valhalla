@@ -751,6 +751,7 @@ void BuildTileSet(const std::string& ways_file,
               GraphBuilder::CreateSignInfoList(node, w, osmdata, signs, fork, forward,
                                                (directededge.use() == Use::kRamp),
                                                (directededge.use() == Use::kTurnChannel));
+
           // add signs if signs exist
           // and directed edge if forward access and auto use
           // and directed edge is a link and not (link count=2 and driveforward count=1)
@@ -1243,7 +1244,7 @@ bool GraphBuilder::CreateSignInfoList(const OSMNode& node,
     for (auto& j_ref : j_refs) {
       exit_list.emplace_back(Sign::Type::kExitNumber, false, j_ref);
     }
-  } else if (node.has_ref() && !fork) {
+  } else if (node.has_ref() && !fork && ramp) {
     std::vector<std::string> n_refs = GetTagTokens(osmdata.node_names.name(node.ref_index()));
     for (auto& n_ref : n_refs) {
       exit_list.emplace_back(Sign::Type::kExitNumber, false, n_ref);
@@ -1393,7 +1394,7 @@ bool GraphBuilder::CreateSignInfoList(const OSMNode& node,
   // NAME
 
   // Exit sign name
-  if (node.has_name() && !node.named_intersection() && !fork) {
+  if (node.has_name() && !node.named_intersection() && !fork && ramp) {
     // Get the name from OSMData using the name index
     std::vector<std::string> names = GetTagTokens(osmdata.node_names.name(node.name_index()));
     for (auto& name : names) {
