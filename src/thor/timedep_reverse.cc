@@ -118,8 +118,9 @@ void TimeDepReverse::ExpandReverse(GraphReader& graphreader,
 
     // Skip this edge if no access is allowed (based on costing method)
     // or if a complex restriction prevents transition onto this edge.
+    bool has_time_restrictions = false;
     if (!costing_->AllowedReverse(directededge, pred, opp_edge, t2, oppedge, localtime,
-                                  nodeinfo->timezone()) ||
+                                  nodeinfo->timezone(), has_time_restrictions) ||
         costing_->Restricted(directededge, pred, edgelabels_rev_, tile, edgeid, false, localtime,
                              nodeinfo->timezone())) {
       continue;
@@ -164,7 +165,7 @@ void TimeDepReverse::ExpandReverse(GraphReader& graphreader,
       if (newcost.cost < lab.cost().cost) {
         float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
         adjacencylist_->decrease(es->index(), newsortcost);
-        lab.Update(pred_idx, newcost, newsortcost, tc);
+        lab.Update(pred_idx, newcost, newsortcost, tc, has_time_restrictions);
       }
       continue;
     }
@@ -186,7 +187,8 @@ void TimeDepReverse::ExpandReverse(GraphReader& graphreader,
     // Add edge label, add to the adjacency list and set edge status
     uint32_t idx = edgelabels_rev_.size();
     edgelabels_rev_.emplace_back(pred_idx, edgeid, oppedge, directededge, newcost, sortcost, dist,
-                                 mode_, tc, (pred.not_thru_pruning() || !directededge->not_thru()));
+                                 mode_, tc, (pred.not_thru_pruning() || !directededge->not_thru()),
+                                 has_time_restrictions);
     adjacencylist_->add(idx);
     *es = {EdgeSet::kTemporary, idx};
   }
@@ -535,7 +537,8 @@ std::vector<PathInfo> TimeDepReverse::FormPath(GraphReader& graphreader, const u
       cost += edgelabel.cost() - edgelabels_rev_[predidx].cost();
     }
     cost += tc;
-    path.emplace_back(edgelabel.mode(), cost.secs, edgelabel.opp_edgeid(), 0, cost.cost);
+    path.emplace_back(edgelabel.mode(), cost.secs, edgelabel.opp_edgeid(), 0, cost.cost,
+                      edgelabel.has_time_restriction());
 
     // Check if this is a ferry
     if (edgelabel.use() == Use::kFerry) {
