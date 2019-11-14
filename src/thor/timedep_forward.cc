@@ -67,29 +67,31 @@ void TimeDepForward::ExpandForward(GraphReader& graphreader,
   }
 
   // Expand from end node.
-  GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
-  EdgeStatusInfo* es = edgestatus_.GetPtr(edgeid, tile);
-  const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
-  for (uint32_t i = 0; i < nodeinfo->edge_count(); ++i, ++directededge, ++edgeid, ++es) {
+  EdgeMetadata meta = EdgeMetadata::make(node, nodeinfo, tile, edgestatus_);
+
+  bool found_valid_edge = false;
+  bool found_uturn = false;
+  EdgeMetadata uturn_meta = {};
+
+  for (uint32_t i = 0; i < nodeinfo->edge_count(); ++i, meta.increment_pointers()) {
     // Skip shortcut edges for time dependent routes. Also skip this edge if permanently labeled
     // (best path already found to this directed edge), if no access is allowed to this edge
     // (based on costing method), or if a complex restriction exists.
     bool has_time_restrictions = false;
-    if (directededge->is_shortcut() || es->set() == EdgeSet::kPermanent ||
-        !costing_->Allowed(directededge, pred, tile, edgeid, localtime, nodeinfo->timezone(),
-                           has_time_restrictions) ||
-        costing_->Restricted(directededge, pred, edgelabels_, tile, edgeid, true, localtime,
+    if (meta.edge->is_shortcut() || meta.edge_status->set() == EdgeSet::kPermanent ||
+        !costing_->Allowed(meta.edge, pred, tile, meta.edge_id, localtime, nodeinfo->timezone(), has_time_restrictions) ||
+        costing_->Restricted(meta.edge, pred, edgelabels_, tile, meta.edge_id, true, localtime,
                              nodeinfo->timezone())) {
       continue;
     }
 
     // Compute the cost to the end of this edge
-    Cost newcost = pred.cost() + costing_->EdgeCost(directededge, tile, seconds_of_week) +
-                   costing_->TransitionCost(directededge, nodeinfo, pred);
+    Cost newcost = pred.cost() + costing_->EdgeCost(meta.edge, tile, seconds_of_week) +
+                   costing_->TransitionCost(meta.edge, nodeinfo, pred);
 
     // If this edge is a destination, subtract the partial/remainder cost
     // (cost from the dest. location to the end of the edge).
-    auto p = destinations_.find(edgeid);
+    auto p = destinations_.find(meta.edge_id);
     if (p != destinations_.end()) {
       // Subtract partial cost and time
       newcost -= p->second;
@@ -98,7 +100,7 @@ void TimeDepForward::ExpandForward(GraphReader& graphreader,
       // Note - with high edge scores the convergence test fails some routes
       // so reduce the edge score.
       for (const auto& destination_edge : destination.path_edges()) {
-        if (destination_edge.graph_id() == edgeid) {
+        if (destination_edge.graph_id() == meta.edge_id) {
           newcost.cost += destination_edge.distance();
         }
       }
@@ -108,7 +110,7 @@ void TimeDepForward::ExpandForward(GraphReader& graphreader,
       // a path to be formed even if the convergence test fails (can
       // happen with large edge scores)
       if (best_path.first == -1 || newcost.cost < best_path.second) {
-        best_path.first = (es->set() == EdgeSet::kTemporary) ? es->index() : edgelabels_.size();
+        best_path.first = (meta.edge_status->set() == EdgeSet::kTemporary) ? meta.edge_status->index() : edgelabels_.size();
         best_path.second = newcost.cost;
       }
     }
@@ -116,11 +118,11 @@ void TimeDepForward::ExpandForward(GraphReader& graphreader,
     // Check if edge is temporarily labeled and this path has less cost. If
     // less cost the predecessor is updated and the sort cost is decremented
     // by the difference in real cost (A* heuristic doesn't change)
-    if (es->set() == EdgeSet::kTemporary) {
-      EdgeLabel& lab = edgelabels_[es->index()];
+    if (meta.edge_status->set() == EdgeSet::kTemporary) {
+      EdgeLabel& lab = edgelabels_[meta.edge_status->index()];
       if (newcost.cost < lab.cost().cost) {
         float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
-        adjacencylist_->decrease(es->index(), newsortcost);
+        adjacencylist_->decrease(meta.edge_status->index(), newsortcost);
         lab.Update(pred_idx, newcost, newsortcost, has_time_restrictions);
       }
       continue;
@@ -133,18 +135,17 @@ void TimeDepForward::ExpandForward(GraphReader& graphreader,
     float sortcost = newcost.cost;
     if (p == destinations_.end()) {
       const GraphTile* t2 =
-          directededge->leaves_tile() ? graphreader.GetGraphTile(directededge->endnode()) : tile;
+          meta.edge->leaves_tile() ? graphreader.GetGraphTile(meta.edge->endnode()) : tile;
       if (t2 == nullptr) {
         continue;
       }
-      sortcost += astarheuristic_.Get(t2->get_node_ll(directededge->endnode()), dist);
+      sortcost += astarheuristic_.Get(t2->get_node_ll(meta.edge->endnode()), dist);
     }
 
     // Add to the adjacency list and edge labels.
     uint32_t idx = edgelabels_.size();
-    edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, sortcost, dist, mode_, 0,
-                             has_time_restrictions);
-    *es = {EdgeSet::kTemporary, idx};
+    edgelabels_.emplace_back(pred_idx, meta.edge_id, meta.edge, newcost, sortcost, dist, mode_, 0, has_time_restrictions);
+    *meta.edge_status = {EdgeSet::kTemporary, idx};
     adjacencylist_->add(idx);
   }
 
