@@ -15,16 +15,39 @@ namespace {
 
 void ExitToTest() {
   OSMNode node{1234};
+  OSMNode exit_node{1234};
+
   OSMWay way{};
   OSMData osmdata{};
   bool fork = false;
   bool forward = true;
 
-  node.set_exit_to_index(osmdata.node_names.index("US 11;To I 81;Carlisle;Harrisburg"));
+  exit_node.set_ref_index(osmdata.node_names.index("5"));
+  exit_node.set_name_index(osmdata.node_names.index("PATP West Exit"));
 
   std::vector<SignInfo> signs;
   bool has_guide =
-      GraphBuilder::CreateSignInfoList(node, way, osmdata, signs, fork, forward, true, false);
+      GraphBuilder::CreateSignInfoList(exit_node, way, osmdata, signs, fork, forward, true, false);
+
+  if (has_guide)
+    throw std::runtime_error("Exits should not be Guides");
+
+  if (signs.size() == 2) {
+    if (signs[0].type() != Sign::Type::kExitNumber)
+      throw std::runtime_error("Exit 5 is not an exit Number");
+    if (signs[0].text() != "5")
+      throw std::runtime_error("Exitsign text is bad for Exit 5.");
+    if (signs[1].type() != Sign::Type::kExitName)
+      throw std::runtime_error("PATP West Exit is not an exit Name");
+    if (signs[1].text() != "PATP West Exit")
+      throw std::runtime_error("Exitsign text is bad for PATP West Exit.");
+
+  } else
+    throw std::runtime_error("Exit 5 failed to parse.  " + std::to_string(signs.size()));
+
+  node.set_exit_to_index(osmdata.node_names.index("US 11;To I 81;Carlisle;Harrisburg"));
+  signs.clear();
+  has_guide = GraphBuilder::CreateSignInfoList(node, way, osmdata, signs, fork, forward, true, false);
 
   if (has_guide)
     throw std::runtime_error("Exits should not be Guides");
@@ -208,6 +231,29 @@ void ExitToTest() {
       throw std::runtime_error("Exitsign text is bad for I 695 North destination to ref");
   } else {
     throw std::runtime_error("destination ref I 695 North failed to create exist sign.");
+  }
+
+  // Add a ref toward guide sign and we should not add a exit number or exit name.  note: using
+  // exit_node
+  signs.clear();
+  has_guide =
+      GraphBuilder::CreateSignInfoList(exit_node, way2, osmdata, signs, fork, forward, false, true);
+
+  if (!has_guide)
+    throw std::runtime_error("Guides should not be Exits");
+
+  if (signs.size() == 1) {
+    if (signs[0].type() != Sign::Type::kGuideToward)
+      throw std::runtime_error("I 695 North should be a toward. No exit 5 should exist.");
+
+    if (!signs[0].is_route_num())
+      throw std::runtime_error("I 695 North should be flagged as a route num");
+
+    if (signs[0].text() != "I 695 North")
+      throw std::runtime_error("Exitsign text is bad for I 695 North destination to ref");
+  } else {
+    throw std::runtime_error(
+        "destination ref I 695 North failed to create exist sign.  No exit 5 should exist.");
   }
 }
 
