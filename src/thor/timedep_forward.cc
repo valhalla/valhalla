@@ -74,8 +74,10 @@ void TimeDepForward::ExpandForward(GraphReader& graphreader,
     // Skip shortcut edges for time dependent routes. Also skip this edge if permanently labeled
     // (best path already found to this directed edge), if no access is allowed to this edge
     // (based on costing method), or if a complex restriction exists.
+    bool has_time_restrictions = false;
     if (directededge->is_shortcut() || es->set() == EdgeSet::kPermanent ||
-        !costing_->Allowed(directededge, pred, tile, edgeid, localtime, nodeinfo->timezone()) ||
+        !costing_->Allowed(directededge, pred, tile, edgeid, localtime, nodeinfo->timezone(),
+                           has_time_restrictions) ||
         costing_->Restricted(directededge, pred, edgelabels_, tile, edgeid, true, localtime,
                              nodeinfo->timezone())) {
       continue;
@@ -119,7 +121,7 @@ void TimeDepForward::ExpandForward(GraphReader& graphreader,
       if (newcost.cost < lab.cost().cost) {
         float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
         adjacencylist_->decrease(es->index(), newsortcost);
-        lab.Update(pred_idx, newcost, newsortcost);
+        lab.Update(pred_idx, newcost, newsortcost, has_time_restrictions);
       }
       continue;
     }
@@ -140,7 +142,8 @@ void TimeDepForward::ExpandForward(GraphReader& graphreader,
 
     // Add to the adjacency list and edge labels.
     uint32_t idx = edgelabels_.size();
-    edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, sortcost, dist, mode_, 0);
+    edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, sortcost, dist, mode_, 0,
+                             has_time_restrictions);
     *es = {EdgeSet::kTemporary, idx};
     adjacencylist_->add(idx);
   }

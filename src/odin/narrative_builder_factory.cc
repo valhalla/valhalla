@@ -24,21 +24,17 @@ std::unique_ptr<NarrativeBuilder> NarrativeBuilderFactory::Create(const Options&
   // if a NarrativeBuilder is derived with specific code for a particular
   // language then add logic here and return derived NarrativeBuilder
   if (phrase_dictionary->second->GetLanguageTag() == "cs-CZ") {
-    return midgard::make_unique<NarrativeBuilder_csCZ>(options, trip_path,
-                                                       *phrase_dictionary->second);
+    return std::make_unique<NarrativeBuilder_csCZ>(options, trip_path, *phrase_dictionary->second);
   } else if (phrase_dictionary->second->GetLanguageTag() == "hi-IN") {
-    return midgard::make_unique<NarrativeBuilder_hiIN>(options, trip_path,
-                                                       *phrase_dictionary->second);
+    return std::make_unique<NarrativeBuilder_hiIN>(options, trip_path, *phrase_dictionary->second);
   } else if (phrase_dictionary->second->GetLanguageTag() == "it-IT") {
-    return midgard::make_unique<NarrativeBuilder_itIT>(options, trip_path,
-                                                       *phrase_dictionary->second);
+    return std::make_unique<NarrativeBuilder_itIT>(options, trip_path, *phrase_dictionary->second);
   } else if (phrase_dictionary->second->GetLanguageTag() == "ru-RU") {
-    return midgard::make_unique<NarrativeBuilder_ruRU>(options, trip_path,
-                                                       *phrase_dictionary->second);
+    return std::make_unique<NarrativeBuilder_ruRU>(options, trip_path, *phrase_dictionary->second);
   }
 
   // otherwise just return pointer to NarrativeBuilder
-  return midgard::make_unique<NarrativeBuilder>(options, trip_path, *phrase_dictionary->second);
+  return std::make_unique<NarrativeBuilder>(options, trip_path, *phrase_dictionary->second);
 }
 
 } // namespace odin
