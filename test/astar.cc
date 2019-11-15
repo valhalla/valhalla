@@ -54,7 +54,7 @@ namespace vj = valhalla::mjolnir;
  *  copy the generated test file to test/fake_tiles_astar/2/000/519/120.gph
  */
 
-// #define MAKE_TEST_TILES
+#define MAKE_TEST_TILES
 
 #ifdef MAKE_TEST_TILES
 #include "mjolnir/directededgebuilder.h"
@@ -131,18 +131,20 @@ void make_tile() {
   auto add_edge = [&](const std::pair<vb::GraphId, vm::PointLL>& u,
                       const std::pair<vb::GraphId, vm::PointLL>& v, const uint32_t name,
                       const uint32_t opposing, const bool forward) {
-    DirectedEdgeBuilder edge_builder({}, v.first, forward, u.second.Distance(v.second) + .5, 1, 1, 1,
-                                     {}, {}, 0, false, 0, 0);
+    DirectedEdgeBuilder edge_builder({}, v.first, forward, u.second.Distance(v.second) + .5, 50, 50,
+                                     Use::kRoad, RoadClass::kPrimary, 0, false, 0, 0, false);
     edge_builder.set_opp_index(opposing);
     edge_builder.set_forwardaccess(vb::kAllAccess);
+    edge_builder.set_free_flow_speed(100);
+    edge_builder.set_constrained_flow_speed(10);
     std::vector<vm::PointLL> shape = {u.second, u.second.MidPoint(v.second), v.second};
     if (!forward)
       std::reverse(shape.begin(), shape.end());
     bool add;
     // make more complex edge geom so that there are 3 segments, affine combination doesnt properly
     // handle arcs but who cares
-    uint32_t edge_info_offset =
-        tile.AddEdgeInfo(name, u.first, v.first, 123, 0, 0, shape, {std::to_string(name)}, 0, add);
+    uint32_t edge_info_offset = tile.AddEdgeInfo(name, u.first, v.first, 123, 0.0, 0, 0, shape,
+                                                 {std::to_string(name)}, 0, add);
     edge_builder.set_edgeinfo_offset(edge_info_offset);
     tile.directededges().emplace_back(std::move(edge_builder));
   };
@@ -433,6 +435,9 @@ void DoConfig() {
   write_config(config_file);
 }
 
+void TestPartialDuration() {
+}
+
 } // anonymous namespace
 
 int main() {
@@ -445,6 +450,7 @@ int main() {
 
   suite.test(TEST_CASE(TestTrivialPath));
   suite.test(TEST_CASE(TestTrivialPathTriangle));
+  suite.test(TEST_CASE(TestPartialDuration));
 
   suite.test(TEST_CASE(DoConfig));
   suite.test(TEST_CASE(TestTrivialPathNoUturns));
