@@ -151,7 +151,7 @@ void thor_worker_t::route_match(Api& request) {
 // of each edge. We will need to use the existing costing method to form the elapsed time
 // the path. We will start with just using edge costs and will add transition costs.
 std::vector<std::tuple<float, float, std::vector<thor::MatchResult>>>
-thor_worker_t::map_match(Api& request, uint32_t best_paths) {
+thor_worker_t::map_match(Api& request) {
   auto& options = *request.mutable_options();
   // Call Meili for map matching to get a collection of Location Edges
   matcher->set_interrupt(interrupt);
@@ -159,7 +159,12 @@ thor_worker_t::map_match(Api& request, uint32_t best_paths) {
   if (trace.size() == 0) {
     return {};
   }
-  m_offline_results = matcher->OfflineMatch(trace, best_paths);
+
+  // we don't allow multi path for trace route
+  // TODO::we have to get back for alternitives for trace route
+  int best_path =
+      request.options().action() == Options::trace_attributes ? request.options().best_paths() : 1;
+  m_offline_results = matcher->OfflineMatch(trace, best_path);
 
   // Process each score/match result
   for (const auto& result : m_offline_results) {
@@ -168,16 +173,25 @@ thor_worker_t::map_match(Api& request, uint32_t best_paths) {
     m_temp_enhanced_match_results.clear();
     m_temp_route_discontinuities.clear();
     m_temp_disconnected_edges.clear();
-    m_temp_disjoint_edge_groups = {{}};
 
     // Form the path edges based on the matched points and populate disconnected edges
     m_temp_path_edges = MapMatcher::FormPath(matcher.get(), match_results, edge_segments,
                                              mode_costing, mode, m_temp_disconnected_edges, options);
-    for (const auto& edge : m_temp_path_edges) {
-      m_temp_disjoint_edge_groups.back().emplace_back(edge);
-      if (m_temp_disconnected_edges.count(edge.edgeid) > 0) {
+
+    // we bin the candidate edges into seperate groups when discontinuity occurs
+    m_temp_disjoint_edge_groups = {{m_temp_path_edges.front()}};
+    auto discontinuity_iter = m_temp_disconnected_edges.begin();
+    for (int i = 1, n = static_cast<int>(m_temp_path_edges.size()); i < n; ++i) {
+      const auto& front_edge_info = m_temp_path_edges[i - 1];
+      const auto& back_edge_info = m_temp_path_edges[i];
+      // make a new groups (divide when discontinuity occurs)
+      if (discontinuity_iter != m_temp_disconnected_edges.end() &&
+          discontinuity_iter->first == front_edge_info.edgeid &&
+          discontinuity_iter->second == back_edge_info.edgeid) {
         m_temp_disjoint_edge_groups.emplace_back();
+        ++discontinuity_iter;
       }
+      m_temp_disjoint_edge_groups.back().emplace_back(back_edge_info);
     }
 
     // Throw exception if not trace attributes action.

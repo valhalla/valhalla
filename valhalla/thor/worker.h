@@ -68,8 +68,7 @@ protected:
                                           const Location& origin,
                                           const Location& destination);
   void route_match(Api& request);
-  std::vector<std::tuple<float, float, std::vector<thor::MatchResult>>>
-  map_match(Api& request, uint32_t best_paths = 1);
+  std::vector<std::tuple<float, float, std::vector<thor::MatchResult>>> map_match(Api& request);
   void path_map_match(const std::vector<meili::MatchResult>& match_results,
                       const std::vector<PathInfo>& path_edges,
                       TripLeg& leg,
@@ -89,7 +88,7 @@ protected:
   std::vector<thor::MatchResult> m_temp_enhanced_match_results;
   std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>>
       m_temp_route_discontinuities;
-  std::unordered_map<baldr::GraphId, baldr::GraphId> m_temp_disconnected_edges;
+  std::vector<std::pair<baldr::GraphId, baldr::GraphId>> m_temp_disconnected_edges;
   std::vector<PathInfo> m_temp_path_edges;
   std::vector<std::vector<PathInfo>> m_temp_disjoint_edge_groups;
   std::vector<std::tuple<float, float, std::vector<thor::MatchResult>>> m_map_match_results;
