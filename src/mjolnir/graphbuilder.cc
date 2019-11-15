@@ -759,9 +759,7 @@ void BuildTileSet(const std::string& ways_file,
           if (!signs.empty() && (directededge.forwardaccess() & kAutoAccess) &&
               ((directededge.link() &&
                 (!((bundle.link_count == 2) && (bundle.driveforward_count == 1)))) ||
-               fork || has_guide) &&
-              ((edge.attributes.driveableforward && edge.attributes.way_begin) ||
-               (edge.attributes.driveablereverse && edge.attributes.way_end))) {
+               fork || has_guide)) {
             graphtile.AddSigns(idx, signs);
             directededge.set_sign(true);
           }
