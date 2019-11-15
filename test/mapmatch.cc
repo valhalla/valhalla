@@ -309,7 +309,7 @@ void test_edges_discontinuity_with_multi_routes() {
           {"lat":52.0792731,"lon":5.1343818,"type":"break"},
           {"lat":52.0763011,"lon":5.1574637,"type":"break"},
           {"lat":52.0782167,"lon":5.1592370,"type":"break"}]})"};
-  std::vector<size_t> test_answers = {1};
+  std::vector<size_t> test_answers = {3};
 
   tyr::actor_t actor(conf, true);
   for (size_t i = 0; i < test_cases.size(); ++i) {
