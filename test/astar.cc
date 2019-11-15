@@ -325,6 +325,20 @@ void TestTrivialPathTriangle() {
   assert_is_trivial_path(origin, dest, 8);
 }
 
+void TestPartialDuration() {
+  using node::d;
+
+  valhalla::Location origin;
+  origin.mutable_ll()->set_lng(d.second.first);
+  origin.mutable_ll()->set_lat(d.second.second);
+  add(tile_id + uint64_t(5), 0.9f, d.second, origin);
+
+  valhalla::Location dest;
+  dest.mutable_ll()->set_lng(f.second.first);
+  dest.mutable_ll()->set_lat(f.second.second);
+  add(tile_id + uint64_t(7), 0.1f, f.second, dest);
+}
+
 void trivial_path_no_uturns(const std::string& config_file) {
   boost::property_tree::ptree conf;
   rapidjson::read_json(config_file, conf);
