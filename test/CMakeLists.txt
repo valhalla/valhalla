@@ -10,7 +10,7 @@ set(tests aabb2 access_restriction actor admin attributes_controller complexrest
   verbal_text_formatter_us_co verbal_text_formatter_us_tx viterbi_search compression filesystem)
 
 if(ENABLE_DATA_TOOLS)
-  list(APPEND tests astar bidirectional_astar edgeinfobuilder graphbuilder graphparser graphtilebuilder graphreader isochrone predictive_traffic
+  list(APPEND tests astar edgeinfobuilder graphbuilder graphparser graphtilebuilder graphreader isochrone predictive_traffic
     idtable matrix minbb multipoint_routes names node_search reach recover_shortcut refs search servicedays shape_attributes signinfo thor_worker timedep_paths timeparsing trivial_paths uniquenames utrecht)
   if(ENABLE_HTTP)
     list(APPEND tests http_tiles)
@@ -149,7 +149,7 @@ if(ENABLE_DATA_TOOLS)
   add_dependencies(run-thor_worker utrecht_tiles)
   add_dependencies(run-recover_shortcut utrecht_tiles)
   add_dependencies(run-minbb utrecht_tiles)
-  add_dependencies(run-bidirectional_astar whitelion_tiles roma_tiles reversed_whitelion_tiles)
+  add_dependencies(run-astar whitelion_tiles roma_tiles reversed_whitelion_tiles)
   if(ENABLE_HTTP)
     add_dependencies(run-http_tiles utrecht_tiles)
   endif()
