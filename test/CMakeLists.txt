@@ -46,7 +46,7 @@ endforeach()
 set_target_properties(logging PROPERTIES COMPILE_DEFINITIONS LOGGING_LEVEL_ALL)
 
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/utrecht_tiles/0/003/196.gph
-  COMMAND ${VALHALLA_SOURCE_DIR}/scripts/valhalla_build_timezones 2>/dev/null > test/data/utrecht_tiles/tz.sqlite
+  COMMAND ${VALHALLA_SOURCE_DIR}/scripts/valhalla_build_timezones > test/data/utrecht_tiles/tz.sqlite
   COMMAND ${CMAKE_BINARY_DIR}/valhalla_build_tiles
       --inline-config '{"mjolnir":{"tile_dir":"test/data/utrecht_tiles","timezone":"test/data/utrecht_tiles/tz.sqlite","hierarchy":true,"shortcuts":true,"concurrency":4,"logging":{"type":""}}}'
       ${VALHALLA_SOURCE_DIR}/test/data/utrecht_netherlands.osm.pbf
