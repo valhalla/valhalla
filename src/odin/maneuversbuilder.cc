@@ -647,6 +647,10 @@ ManeuversBuilder::CombineManeuvers(std::list<Maneuver>& maneuvers,
     curr_man->set_portions_toll(true);
   }
 
+  if (next_man->has_time_restrictions()) {
+    curr_man->set_has_time_restrictions(true);
+  }
+
   // If needed, set portions_unpaved
   if (next_man->portions_unpaved()) {
     curr_man->set_portions_unpaved(true);
@@ -976,6 +980,9 @@ void ManeuversBuilder::UpdateManeuver(Maneuver& maneuver, int node_index) {
   // Portions Toll
   if (prev_edge->toll()) {
     maneuver.set_portions_toll(true);
+  }
+  if (prev_edge->has_time_restrictions()) {
+    maneuver.set_has_time_restrictions(true);
   }
 
   // Portions unpaved

@@ -194,6 +194,9 @@ void DirectionsBuilder::PopulateDirectionsLeg(const Options& options,
     if (maneuver.portions_toll()) {
       trip_maneuver->set_portions_toll(maneuver.portions_toll());
     }
+
+    trip_maneuver->set_has_time_restrictions(maneuver.has_time_restrictions());
+
     if (maneuver.portions_unpaved()) {
       trip_maneuver->set_portions_unpaved(maneuver.portions_unpaved());
     }
@@ -390,6 +393,13 @@ void DirectionsBuilder::PopulateDirectionsLeg(const Options& options,
 
   // Populate shape
   trip_directions.set_shape(etp->shape());
+
+  // Populate has_time_restrictions
+  bool has_time_restrictions = false;
+  for (const auto& node : etp->node()) {
+    has_time_restrictions = node.edge().has_time_restrictions() || has_time_restrictions;
+  }
+  trip_directions.mutable_summary()->set_has_time_restrictions(has_time_restrictions);
 }
 
 } // namespace odin

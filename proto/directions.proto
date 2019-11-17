@@ -9,6 +9,7 @@ message DirectionsLeg {
     optional float length = 1;          // kilometers or miles based on units
     optional uint32 time = 2;           // seconds
     optional BoundingBox bbox = 3;      // Bounding box of the shape
+    optional bool has_time_restrictions = 4; // Does the route contain any time restrictions?
   }
 
   message TransitInfo {
@@ -169,6 +170,7 @@ message DirectionsLeg {
     optional bool to_stay_on = 31;                           // True if same name as previous maneuver
     repeated StreetName roundabout_exit_street_names = 32;   // Outbound street names from roundabout
     optional uint32 turn_degree = 33;                        // Turn degree of maneuver
+    optional bool has_time_restrictions = 34;                // Whether edge has any time restrictions or not
   }
   
   optional uint64 trip_id = 1;

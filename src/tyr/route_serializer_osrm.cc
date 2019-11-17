@@ -785,6 +785,9 @@ std::string turn_modifier(const uint32_t in_brg, const uint32_t out_brg) {
     case baldr::Turn::Type::kSlightLeft:
       return "slight left";
   }
+  auto num = static_cast<uint32_t>(turn_type);
+  throw std::runtime_error(std::string(__FILE__) + ":" + std::to_string(__LINE__) +
+                           " Unhandled Turn::Type: " + std::to_string(num));
 }
 
 // Get the turn modifier based on the maneuver type
@@ -1059,6 +1062,9 @@ std::string get_mode(const valhalla::DirectionsLeg::Maneuver& maneuver,
       return "transit";
     }
   }
+  auto num = static_cast<int>(maneuver.travel_mode());
+  throw std::runtime_error(std::string(__FILE__) + ":" + std::to_string(__LINE__) +
+                           " Unhandled travel_mode: " + std::to_string(num));
 }
 
 // Get the names and ref names

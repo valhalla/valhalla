@@ -240,7 +240,7 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
     pred = {kInvalidLabel, edge_id, directededge, {}, 0, 0, mode, 0};
 
     // Add to the PathInfo
-    path.emplace_back(mode, elapsed.secs, edge_id, 0, elapsed.cost);
+    path.emplace_back(mode, elapsed.secs, edge_id, 0, elapsed.cost, false);
   }
 
   return path;
