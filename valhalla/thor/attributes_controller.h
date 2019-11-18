@@ -32,6 +32,7 @@ const std::string kEdgeSignExitToward = "edge.sign.exit_toward";
 const std::string kEdgeSignExitName = "edge.sign.exit_name";
 const std::string kEdgeSignGuideBranch = "edge.sign.guide_branch";
 const std::string kEdgeSignGuideToward = "edge.sign.guide_toward";
+const std::string kEdgeSignNamedJunction = "edge.sign.named_junction";
 const std::string kEdgeTravelMode = "edge.travel_mode";
 const std::string kEdgeVehicleType = "edge.vehicle_type";
 const std::string kEdgePedestrianType = "edge.pedestrian_type";

@@ -622,6 +622,14 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
             }
             break;
           }
+          case Sign::Type::kNamedJunction: {
+            if (controller.attributes.at(kEdgeSignNamedJunction)) {
+              auto* trip_sign_named_junction = trip_sign->mutable_named_junctions()->Add();
+              trip_sign_named_junction->set_text(sign.text());
+              trip_sign_named_junction->set_is_route_number(sign.is_route_num());
+            }
+            break;
+          }
         }
       }
     }
