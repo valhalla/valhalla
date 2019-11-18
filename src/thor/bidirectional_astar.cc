@@ -860,7 +860,7 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader, const valhalla
     edgestatus_reverse_.Set(opp_edge_id, EdgeSet::kTemporary, idx,
                             graphreader.GetGraphTile(opp_edge_id));
     edgelabels_reverse_.emplace_back(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, sortcost,
-                                     dist, mode_, c, false);
+                                     dist, mode_, c, false, false);
     adjacencylist_reverse_->add(idx);
 
     // setting this edge as settled, sending the opposing because this is the reverse tree

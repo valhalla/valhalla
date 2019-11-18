@@ -189,7 +189,7 @@ public:
    */
   virtual bool Allowed(const baldr::NodeInfo* node) const = 0;
 
-  inline virtual bool ModeSpecificAllowed(const baldr::AccessRestriction& restriction) const {
+  inline virtual bool ModeSpecificAllowed(const baldr::AccessRestriction&) const {
     return true;
   };
   /**

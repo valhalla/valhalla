@@ -245,6 +245,7 @@ travel_mode_type(const valhalla::DirectionsLeg_Maneuver& maneuver) {
                                            : make_pair("transit", i->second);
     }
   }
+  throw std::runtime_error("Unhandled case");
 }
 
 json::ArrayPtr

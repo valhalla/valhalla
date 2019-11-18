@@ -1238,7 +1238,7 @@ void Isochrone::SetDestinationLocations(
       uint32_t idx = bdedgelabels_.size();
       edgestatus_.Set(opp_edge_id, EdgeSet::kTemporary, idx, graphreader.GetGraphTile(opp_edge_id));
       bdedgelabels_.emplace_back(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, cost.cost,
-                                 0.0f, mode_, c, false);
+                                 0.0f, mode_, c, false, false);
       adjacencylist_->add(idx);
     }
   }
