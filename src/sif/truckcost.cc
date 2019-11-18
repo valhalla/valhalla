@@ -156,7 +156,8 @@ public:
                        const baldr::GraphTile*& tile,
                        const baldr::GraphId& edgeid,
                        const uint64_t current_time,
-                       const uint32_t tz_index) const;
+                       const uint32_t tz_index,
+                       bool& time_restricted) const;
 
   /**
    * Checks if access is allowed for an edge on the reverse path
@@ -182,7 +183,8 @@ public:
                               const baldr::GraphTile*& tile,
                               const baldr::GraphId& opp_edgeid,
                               const uint64_t current_time,
-                              const uint32_t tz_index) const;
+                              const uint32_t tz_index,
+                              bool& has_time_restrictions) const;
 
   /**
    * Checks if access is allowed for the provided node. Node access can
@@ -191,6 +193,11 @@ public:
    * @return  Returns true if access is allowed, false if not.
    */
   virtual bool Allowed(const baldr::NodeInfo* node) const;
+
+  /**
+   * Callback for Allowed doing mode  specific restriction checks
+   */
+  virtual bool ModeSpecificAllowed(const baldr::AccessRestriction& restriction) const;
 
   /**
    * Only transit costings are valid for this method call, hence we throw
@@ -372,13 +379,52 @@ uint32_t TruckCost::access_mode() const {
   return kTruckAccess;
 }
 
+bool TruckCost::ModeSpecificAllowed(const baldr::AccessRestriction& restriction) const {
+  switch (restriction.type()) {
+    case AccessType::kHazmat:
+      if (hazmat_ != restriction.value()) {
+        return false;
+      }
+      break;
+    case AccessType::kMaxAxleLoad:
+      if (axle_load_ > static_cast<float>(restriction.value() * 0.01)) {
+        return false;
+      }
+      break;
+    case AccessType::kMaxHeight:
+      if (height_ > static_cast<float>(restriction.value() * 0.01)) {
+        return false;
+      }
+      break;
+    case AccessType::kMaxLength:
+      if (length_ > static_cast<float>(restriction.value() * 0.01)) {
+        return false;
+      }
+      break;
+    case AccessType::kMaxWeight:
+      if (weight_ > static_cast<float>(restriction.value() * 0.01)) {
+        return false;
+      }
+      break;
+    case AccessType::kMaxWidth:
+      if (width_ > static_cast<float>(restriction.value() * 0.01)) {
+        return false;
+      }
+      break;
+    default:
+      return true;
+  };
+  return true;
+}
+
 // Check if access is allowed on the specified edge.
-bool TruckCost::Allowed(const baldr::DirectedEdge* edge,
-                        const EdgeLabel& pred,
-                        const baldr::GraphTile*& tile,
-                        const baldr::GraphId& edgeid,
-                        const uint64_t current_time,
-                        const uint32_t tz_index) const {
+inline bool TruckCost::Allowed(const baldr::DirectedEdge* edge,
+                               const EdgeLabel& pred,
+                               const baldr::GraphTile*& tile,
+                               const baldr::GraphId& edgeid,
+                               const uint64_t current_time,
+                               const uint32_t tz_index,
+                               bool& has_time_restrictions) const {
   // Check access, U-turn, and simple turn restriction.
   // TODO - perhaps allow U-turns at dead-end nodes?
   if (!(edge->forwardaccess() & kTruckAccess) || (pred.opp_local_idx() == edge->localedgeidx()) ||
@@ -388,61 +434,8 @@ bool TruckCost::Allowed(const baldr::DirectedEdge* edge,
     return false;
   }
 
-  if (edge->access_restriction()) {
-    const std::vector<baldr::AccessRestriction>& restrictions =
-        tile->GetAccessRestrictions(edgeid.id(), kTruckAccess);
-
-    for (const auto& restriction : restrictions) {
-      switch (restriction.type()) {
-        case AccessType::kTimedAllowed:
-          // allowed at this range or allowed all the time
-          return (current_time && restriction.value())
-                     ? IsRestricted(restriction.value(), current_time, tz_index)
-                     : true;
-          break;
-        case AccessType::kTimedDenied:
-          // not allowed at this range or restricted all the time
-          return (current_time && restriction.value())
-                     ? !IsRestricted(restriction.value(), current_time, tz_index)
-                     : false;
-          break;
-        case AccessType::kHazmat:
-          if (hazmat_ != restriction.value()) {
-            return false;
-          }
-          break;
-        case AccessType::kMaxAxleLoad:
-          if (axle_load_ > static_cast<float>(restriction.value() * 0.01)) {
-            return false;
-          }
-          break;
-        case AccessType::kMaxHeight:
-          if (height_ > static_cast<float>(restriction.value() * 0.01)) {
-            return false;
-          }
-          break;
-        case AccessType::kMaxLength:
-          if (length_ > static_cast<float>(restriction.value() * 0.01)) {
-            return false;
-          }
-          break;
-        case AccessType::kMaxWeight:
-          if (weight_ > static_cast<float>(restriction.value() * 0.01)) {
-            return false;
-          }
-          break;
-        case AccessType::kMaxWidth:
-          if (width_ > static_cast<float>(restriction.value() * 0.01)) {
-            return false;
-          }
-          break;
-        default:
-          break;
-      }
-    }
-  }
-
-  return true;
+  return DynamicCost::EvaluateRestrictions(kTruckAccess, edge, tile, edgeid, current_time, tz_index,
+                                           has_time_restrictions);
 }
 
 // Checks if access is allowed for an edge on the reverse path (from
@@ -453,7 +446,8 @@ bool TruckCost::AllowedReverse(const baldr::DirectedEdge* edge,
                                const baldr::GraphTile*& tile,
                                const baldr::GraphId& opp_edgeid,
                                const uint64_t current_time,
-                               const uint32_t tz_index) const {
+                               const uint32_t tz_index,
+                               bool& has_time_restrictions) const {
   // Check access, U-turn, and simple turn restriction.
   // TODO - perhaps allow U-turns at dead-end nodes?
   if (!(opp_edge->forwardaccess() & kTruckAccess) || (pred.opp_local_idx() == edge->localedgeidx()) ||
@@ -463,62 +457,8 @@ bool TruckCost::AllowedReverse(const baldr::DirectedEdge* edge,
     return false;
   }
 
-  if (edge->access_restriction()) {
-    const std::vector<baldr::AccessRestriction>& restrictions =
-        tile->GetAccessRestrictions(opp_edgeid.id(), kTruckAccess);
-
-    for (const auto& restriction : restrictions) {
-      if (restriction.modes() & kTruckAccess) {
-        switch (restriction.type()) {
-          case AccessType::kTimedAllowed:
-            // allowed at this range or allowed all the time
-            return (current_time && restriction.value())
-                       ? IsRestricted(restriction.value(), current_time, tz_index)
-                       : true;
-            break;
-          case AccessType::kTimedDenied:
-            // not allowed at this range or restricted all the time
-            return (current_time && restriction.value())
-                       ? !IsRestricted(restriction.value(), current_time, tz_index)
-                       : false;
-            break;
-          case AccessType::kHazmat:
-            if (hazmat_ != restriction.value()) {
-              return false;
-            }
-            break;
-          case AccessType::kMaxAxleLoad:
-            if (axle_load_ > static_cast<float>(restriction.value() * 0.01)) {
-              return false;
-            }
-            break;
-          case AccessType::kMaxHeight:
-            if (height_ > static_cast<float>(restriction.value() * 0.01)) {
-              return false;
-            }
-            break;
-          case AccessType::kMaxLength:
-            if (length_ > static_cast<float>(restriction.value() * 0.01)) {
-              return false;
-            }
-            break;
-          case AccessType::kMaxWeight:
-            if (weight_ > static_cast<float>(restriction.value() * 0.01)) {
-              return false;
-            }
-            break;
-          case AccessType::kMaxWidth:
-            if (width_ > static_cast<float>(restriction.value() * 0.01)) {
-              return false;
-            }
-            break;
-          default:
-            break;
-        }
-      }
-    }
-  }
-  return true;
+  return DynamicCost::EvaluateRestrictions(kTruckAccess, edge, tile, opp_edgeid, current_time,
+                                           tz_index, has_time_restrictions);
 }
 
 // Check if access is allowed at the specified node.
