@@ -155,14 +155,19 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
       // get the timezone
       nodeinfo = tile->node(directededge->endnode());
       const auto* tz = DateTime::get_tz_db().from_index(nodeinfo->timezone());
+      if (!tz)
+        continue;
       // if its timestamp based need to signal that out to trip leg builder
-      if (options.shape(0).time() != -1.0) {
+      if (!options.shape(0).has_date_time() && options.shape(0).time() != -1.0) {
         options.mutable_shape(0)->set_date_time(
             DateTime::seconds_to_date(options.shape(0).time(), tz, false));
       }
       // remember where we are starting
-      if (options.shape(0).has_date_time())
+      if (options.shape(0).has_date_time()) {
+        if (options.shape(0).date_time() == "current")
+          options.mutable_shape(0)->set_date_time(DateTime::iso_date_time(tz));
         origin_epoch = DateTime::seconds_since_epoch(options.shape(0).date_time(), tz);
+      }
       break;
     }
   }
