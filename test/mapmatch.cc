@@ -727,6 +727,24 @@ void test_topk_frontage_alternate() {
         "The raw score of the first result is always less than that of the second");
 }
 
+void test_now_matches() {
+  tyr::actor_t actor(conf, true);
+
+  // once with map matching
+  std::string test_case =
+      R"({"date_time":{"type":0},"shape_match":"map_snap","costing":"auto",
+         "encoded_polyline":"oeyjbBqfjwHeO~M}x@`u@wDmh@oCcd@sAiVcAaKe@cBaNe[u^qg@qH`u@cL{Tmr@c{AtTu_@xVsd@"})";
+  auto route_json = actor.trace_route(test_case);
+
+  // again with walking
+  auto route = json_to_pt(route_json);
+  auto encoded_shape = route.get_child("trip.legs").front().second.get<std::string>("shape");
+  test_case =
+      R"({"date_time":{"type":0},"shape_match":"edge_walk","costing":"auto","encoded_polyline":")" +
+      json_escape(encoded_shape) + "\"}";
+  actor.trace_route(test_case);
+}
+
 } // namespace
 
 int main(int argc, char* argv[]) {
@@ -766,6 +784,8 @@ int main(int argc, char* argv[]) {
   suite.test(TEST_CASE(test_topk_loop_alternate));
 
   suite.test(TEST_CASE(test_topk_frontage_alternate));
+
+  suite.test(TEST_CASE(test_now_matches));
 
   return suite.tear_down();
 }
