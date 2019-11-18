@@ -152,9 +152,8 @@ void AStarPathAlgorithm::ExpandForward(GraphReader& graphreader,
     // Skip this edge if permanently labeled (best path already found to this
     // directed edge), if no access is allowed to this edge (based on costing method),
     // or if a complex restriction exists.
-    bool has_time_restrictions = false;
     if (es->set() == EdgeSet::kPermanent ||
-        !costing_->Allowed(directededge, pred, tile, edgeid, 0, 0, has_time_restrictions) ||
+        !costing_->Allowed(directededge, pred, tile, edgeid, 0, 0) ||
         costing_->Restricted(directededge, pred, edgelabels_, tile, edgeid, true)) {
       continue;
     }
@@ -197,7 +196,7 @@ void AStarPathAlgorithm::ExpandForward(GraphReader& graphreader,
       if (newcost.cost < lab.cost().cost) {
         float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
         adjacencylist_->decrease(es->index(), newsortcost);
-        lab.Update(pred_idx, newcost, newsortcost, has_time_restrictions);
+        lab.Update(pred_idx, newcost, newsortcost);
       }
       continue;
     }
@@ -515,7 +514,7 @@ std::vector<PathInfo> AStarPathAlgorithm::FormPath(const uint32_t dest) {
        edgelabel_index = edgelabels_[edgelabel_index].predecessor()) {
     const EdgeLabel& edgelabel = edgelabels_[edgelabel_index];
     path.emplace_back(edgelabel.mode(), edgelabel.cost().secs, edgelabel.edgeid(), 0,
-                      edgelabel.cost().cost, edgelabel.has_time_restriction());
+                      edgelabel.cost().cost);
 
     // Check if this is a ferry
     if (edgelabel.use() == Use::kFerry) {

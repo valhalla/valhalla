@@ -229,8 +229,7 @@ public:
                        const baldr::GraphTile*& tile,
                        const baldr::GraphId& edgeid,
                        const uint64_t current_time,
-                       const uint32_t tz_index,
-                       bool& time_restricted) const;
+                       const uint32_t tz_index) const;
 
   /**
    * Checks if access is allowed for an edge on the reverse path
@@ -256,8 +255,7 @@ public:
                               const baldr::GraphTile*& tile,
                               const baldr::GraphId& opp_edgeid,
                               const uint64_t current_time,
-                              const uint32_t tz_index,
-                              bool& has_time_restrictions) const;
+                              const uint32_t tz_index) const;
 
   /**
    * Checks if access is allowed for the provided node. Node access can
@@ -590,8 +588,7 @@ bool PedestrianCost::Allowed(const baldr::DirectedEdge* edge,
                              const baldr::GraphTile*& tile,
                              const baldr::GraphId& edgeid,
                              const uint64_t current_time,
-                             const uint32_t tz_index,
-                             bool& has_time_restrictions) const {
+                             const uint32_t tz_index) const {
   if (!(edge->forwardaccess() & access_mask_) || (edge->surface() > minimal_allowed_surface_) ||
       edge->is_shortcut() || IsUserAvoidEdge(edgeid) || edge->sac_scale() > max_hiking_difficulty_ ||
       //      (edge->max_up_slope() > max_grade_ || edge->max_down_slope() > max_grade_) ||
@@ -605,8 +602,25 @@ bool PedestrianCost::Allowed(const baldr::DirectedEdge* edge,
     return false;
   }
 
-  return DynamicCost::EvaluateRestrictions(access_mask_, edge, tile, edgeid, current_time, tz_index,
-                                           has_time_restrictions);
+  if (edge->access_restriction()) {
+    const std::vector<baldr::AccessRestriction>& restrictions =
+        tile->GetAccessRestrictions(edgeid.id(), access_mask_);
+    for (const auto& restriction : restrictions) {
+      if (restriction.type() == AccessType::kTimedAllowed) {
+        // allowed at this range or allowed all the time
+        return (current_time && restriction.value())
+                   ? IsRestricted(restriction.value(), current_time, tz_index)
+                   : true;
+      } else if (restriction.type() == AccessType::kTimedDenied) {
+        // not allowed at this range or restricted all the time
+        return (current_time && restriction.value())
+                   ? !IsRestricted(restriction.value(), current_time, tz_index)
+                   : false;
+      }
+    }
+  }
+
+  return true;
 }
 
 // Checks if access is allowed for an edge on the reverse path (from
@@ -617,8 +631,7 @@ bool PedestrianCost::AllowedReverse(const baldr::DirectedEdge* edge,
                                     const baldr::GraphTile*& tile,
                                     const baldr::GraphId& opp_edgeid,
                                     const uint64_t current_time,
-                                    const uint32_t tz_index,
-                                    bool& has_time_restrictions) const {
+                                    const uint32_t tz_index) const {
   // TODO - obtain and check the access restrictions.
 
   // Do not check max walking distance and assume we are not allowing
@@ -633,8 +646,25 @@ bool PedestrianCost::AllowedReverse(const baldr::DirectedEdge* edge,
     return false;
   }
 
-  return DynamicCost::EvaluateRestrictions(access_mask_, edge, tile, opp_edgeid, current_time,
-                                           tz_index, has_time_restrictions);
+  if (edge->access_restriction()) {
+    const std::vector<baldr::AccessRestriction>& restrictions =
+        tile->GetAccessRestrictions(opp_edgeid.id(), access_mask_);
+    for (const auto& restriction : restrictions) {
+      if (restriction.type() == AccessType::kTimedAllowed) {
+        // allowed at this range or allowed all the time
+        return (current_time && restriction.value())
+                   ? IsRestricted(restriction.value(), current_time, tz_index)
+                   : true;
+      } else if (restriction.type() == AccessType::kTimedDenied) {
+        // not allowed at this range or restricted all the time
+        return (current_time && restriction.value())
+                   ? !IsRestricted(restriction.value(), current_time, tz_index)
+                   : false;
+      }
+    }
+  }
+
+  return true;
 }
 
 // Returns the cost to traverse the edge and an estimate of the actual time

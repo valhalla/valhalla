@@ -137,7 +137,7 @@ jobs:
             - ccache
       - run: npm install --ignore-scripts
       - run: mkdir build
-      - run: cd build && cmake .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_COVERAGE=On -DCPACK_GENERATOR=DEB -DENABLE_COMPILER_WARNINGS=On
+      - run: cd build && cmake .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_COVERAGE=On -DCPACK_GENERATOR=DEB
       - run: make -C build -j4
       - run: make -C build -j4 tests
       - run: make -C build -j2 check

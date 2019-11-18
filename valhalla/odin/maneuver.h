@@ -130,8 +130,6 @@ public:
 
   bool portions_toll() const;
   void set_portions_toll(bool portionsToll);
-  bool has_time_restrictions() const;
-  void set_has_time_restrictions(bool has_time_restrictions);
 
   bool portions_unpaved() const;
   void set_portions_unpaved(bool portionsUnpaved);
@@ -342,7 +340,6 @@ protected:
   std::unique_ptr<StreetNames> roundabout_exit_street_names_;
   RelativeDirection merge_to_relative_direction_;
   bool drive_on_right_; // Defaults to true
-  bool has_time_restrictions_;
 
   ////////////////////////////////////////////////////////////////////////////
   // Transit support

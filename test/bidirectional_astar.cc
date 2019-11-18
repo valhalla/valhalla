@@ -16,7 +16,6 @@
 #include "sif/autocost.h"
 #include "thor/astar.h"
 #include "thor/worker.h"
-#include "tyr/serializers.h"
 
 using namespace valhalla;
 using namespace valhalla::thor;
@@ -41,11 +40,10 @@ std::string from_restriction_file = "test_from_complex_restrictions_whitelion.bi
 std::string to_restriction_file = "test_to_complex_restrictions_whitelion.bin";
 std::string bss_file = "test_bss_nodes_whitelion.bin";
 
-boost::property_tree::ptree get_conf(const char* tiles) {
+boost::property_tree::ptree get_conf() {
   std::stringstream ss;
   ss << R"({
-      "mjolnir":{"tile_dir":"test/data/)"
-     << tiles << R"(", "concurrency": 1},
+      "mjolnir":{"tile_dir":"test/data/whitelion_tiles", "concurrency": 1},
       "loki":{
         "actions":["route"],
         "logging":{"long_request": 100},
@@ -89,6 +87,7 @@ struct route_tester {
     Api request;
     ParseApi(request_json, valhalla::Options::route, request);
     loki_worker.route(request);
+    std::pair<std::list<TripLeg>, std::list<DirectionsLeg>> results;
     thor_worker.route(request);
     odin_worker.narrate(request);
     return request;
@@ -100,8 +99,13 @@ struct route_tester {
   odin_worker_t odin_worker;
 };
 
+void build_tiles(const boost::property_tree::ptree& conf) {
+  valhalla::mjolnir::build_tile_set(conf,
+                                    {VALHALLA_SOURCE_DIR "test/data/whitelion_bristol_uk.osm.pbf"});
+}
+
 void test_oneway() {
-  auto conf = get_conf("whitelion_tiles");
+  auto conf = get_conf();
   route_tester tester(conf);
   // Test onewayness with this route - oneway works, South-West to North-East
   std::string request =
@@ -139,7 +143,7 @@ void test_oneway() {
 }
 
 void test_oneway_wrong_way() {
-  auto conf = get_conf("whitelion_tiles");
+  auto conf = get_conf();
   route_tester tester(conf);
   // Test onewayness with this route - oneway wrong way, North-east to South-West
   // Should produce no-route
@@ -156,7 +160,7 @@ void test_oneway_wrong_way() {
 }
 
 void test_deadend() {
-  auto conf = get_conf("whitelion_tiles");
+  auto conf = get_conf();
   route_tester tester(conf);
   std::string request =
       R"({"locations":[{"lat":51.45562646682483,"lon":-2.5952598452568054},{"lat":51.455143447135974,"lon":-2.5958767533302307}],"costing":"auto"})";
@@ -204,85 +208,6 @@ void test_deadend() {
     throw std::logic_error("We did not find the expected u-turn");
   }
 }
-void test_time_restricted_road() {
-  // Try routing over "Via Montebello" in Rome which is a time restricted road
-  // We should receive a route for a time-independent query but have the response
-  // note that it is time restricted
-  auto conf = get_conf("roma_tiles");
-  route_tester tester(conf);
-  std::string request =
-      R"({"locations":[{"lat":41.90550,"lon":12.50090},{"lat":41.90477,"lon":12.49914}],"costing":"auto"})";
-
-  auto response = tester.test(request);
-
-  const auto& legs = response.trip().routes(0).legs();
-  const auto& directions = response.directions().routes(0).legs();
-
-  if (legs.size() != 1) {
-    throw std::logic_error("Should have 1 leg");
-  }
-
-  std::vector<std::string> names;
-  std::vector<std::string> restricted_streets;
-
-  for (const auto& d : directions) {
-    for (const auto& m : d.maneuver()) {
-      std::string name;
-      for (const auto& n : m.street_name()) {
-        name += n.value() + " ";
-      }
-      if (!name.empty()) {
-        name.pop_back();
-      }
-      if (m.has_time_restrictions()) {
-        restricted_streets.push_back(name);
-      }
-      names.push_back(name);
-    }
-  }
-
-  auto correct_route = std::vector<std::string>{"Via Goito", "Via Montebello", ""};
-  if (names != correct_route) {
-    throw std::logic_error("Incorrect route, got: \n" + boost::algorithm::join(names, ", ") +
-                           ", expected: \n" + boost::algorithm::join(correct_route, ", "));
-  }
-
-  if (!response.trip().routes(0).legs(0).node(1).edge().has_time_restrictions()) {
-    throw std::logic_error("Expected leg to have time_restriction");
-  }
-
-  // Verify JSON payload
-  const std::string payload = tyr::serializeDirections(response);
-  rapidjson::Document response_json;
-  response_json.Parse(payload);
-  std::cout << payload << std::endl;
-  {
-    const char key[] = "/trip/legs/0/maneuvers/0/has_time_restrictions";
-    if (GetValueByPointerWithDefault(response_json, key, false) == true) {
-      throw std::logic_error(
-          std::string("Via Goito is marked as time-restricted which is incorrect! JSON does have ") +
-          key + " set to true");
-    }
-  }
-  {
-    const char key[] = "/trip/legs/0/maneuvers/1/has_time_restrictions";
-    if (GetValueByPointerWithDefault(response_json, key, false) != true) {
-      throw std::logic_error(std::string("JSON does not have ") + key + " set to true");
-    }
-  }
-  {
-    const char key[] = "/trip/legs/0/summary/has_time_restrictions";
-    if (GetValueByPointerWithDefault(response_json, key, false) != true) {
-      throw std::logic_error(std::string("JSON does not have ") + key + " set to true");
-    }
-  }
-  {
-    const char key[] = "/trip/summary/has_time_restrictions";
-    if (GetValueByPointerWithDefault(response_json, key, false) != true) {
-      throw std::logic_error(std::string("JSON does not have ") + key + " set to true");
-    }
-  }
-}
 
 void TearDown() {
 }
@@ -290,12 +215,17 @@ void TearDown() {
 } // namespace
 
 int main() {
+  // TODO The below call builds the tiles, but the test fails when this runs.
+  // Test passes the _next_ time after tiles were built...
+  // Disk syncing issues? Race condition?
+  // Current workaround is to build tiles separately as a input artifact in CMake
+  // build_tiles(get_conf());
+
   test::suite suite("BidirectionalAStar");
 
   suite.test(TEST_CASE(test_deadend));
   suite.test(TEST_CASE(test_oneway));
   suite.test(TEST_CASE(test_oneway_wrong_way));
-  suite.test(TEST_CASE(test_time_restricted_road));
 
   return suite.tear_down();
 }

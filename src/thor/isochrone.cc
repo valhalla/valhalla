@@ -239,20 +239,17 @@ void Isochrone::ExpandForward(GraphReader& graphreader,
       continue;
     }
 
-    bool has_time_restrictions = false;
     // Check if the edge is allowed or if a restriction occurs. Get the edge speed.
     if (has_date_time_) {
       // With date time we check time dependent restrictions and access as well as get
       // traffic based speed if it exists
-      if (!costing_->Allowed(directededge, pred, tile, edgeid, localtime, nodeinfo->timezone(),
-                             has_time_restrictions) ||
+      if (!costing_->Allowed(directededge, pred, tile, edgeid, localtime, nodeinfo->timezone()) ||
           costing_->Restricted(directededge, pred, edgelabels_, tile, edgeid, true, localtime,
                                nodeinfo->timezone())) {
         continue;
       }
     } else {
-      // TODO merge these two branches
-      if (!costing_->Allowed(directededge, pred, tile, edgeid, 0, 0, has_time_restrictions) ||
+      if (!costing_->Allowed(directededge, pred, tile, edgeid, 0, 0) ||
           costing_->Restricted(directededge, pred, edgelabels_, tile, edgeid, true)) {
         continue;
       }
@@ -273,7 +270,7 @@ void Isochrone::ExpandForward(GraphReader& graphreader,
       if (newcost.cost < lab.cost().cost) {
         float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
         adjacencylist_->decrease(es->index(), newsortcost);
-        lab.Update(pred_idx, newcost, newsortcost, has_time_restrictions);
+        lab.Update(pred_idx, newcost, newsortcost);
       }
       continue;
     }
@@ -281,8 +278,7 @@ void Isochrone::ExpandForward(GraphReader& graphreader,
     // Add edge label, add to the adjacency list and set edge status
     uint32_t idx = edgelabels_.size();
     *es = {EdgeSet::kTemporary, idx};
-    edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, 0.0f, mode_, 0,
-                             has_time_restrictions);
+    edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, 0.0f, mode_, 0);
     adjacencylist_->add(idx);
   }
 
@@ -433,19 +429,17 @@ void Isochrone::ExpandReverse(GraphReader& graphreader,
     const DirectedEdge* opp_edge = t2->directededge(oppedge);
 
     // Check if the edge is allowed or if a restriction occurs. Get the edge speed.
-    bool has_time_restrictions = false;
     if (has_date_time_) {
       // With date time we check time dependent restrictions and access as well as get
       // traffic based speed if it exists
       if (!costing_->AllowedReverse(directededge, pred, opp_edge, t2, oppedge, localtime,
-                                    nodeinfo->timezone(), has_time_restrictions) ||
+                                    nodeinfo->timezone()) ||
           costing_->Restricted(directededge, pred, bdedgelabels_, tile, edgeid, false, localtime,
                                nodeinfo->timezone())) {
         continue;
       }
     } else {
-      if (!costing_->AllowedReverse(directededge, pred, opp_edge, t2, oppedge, 0, 0,
-                                    has_time_restrictions) ||
+      if (!costing_->AllowedReverse(directededge, pred, opp_edge, t2, oppedge, 0, 0) ||
           costing_->Restricted(directededge, pred, bdedgelabels_, tile, edgeid, false)) {
         continue;
       }
@@ -467,7 +461,7 @@ void Isochrone::ExpandReverse(GraphReader& graphreader,
       if (newcost.cost < lab.cost().cost) {
         float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
         adjacencylist_->decrease(es->index(), newsortcost);
-        lab.Update(pred_idx, newcost, newsortcost, tc, has_time_restrictions);
+        lab.Update(pred_idx, newcost, newsortcost, tc);
       }
       continue;
     }
@@ -476,7 +470,7 @@ void Isochrone::ExpandReverse(GraphReader& graphreader,
     uint32_t idx = bdedgelabels_.size();
     *es = {EdgeSet::kTemporary, idx};
     bdedgelabels_.emplace_back(pred_idx, edgeid, oppedge, directededge, newcost, newcost.cost, 0.0f,
-                               mode_, tc, false, has_time_restrictions);
+                               mode_, tc, false);
     adjacencylist_->add(idx);
   }
 
@@ -688,10 +682,9 @@ bool Isochrone::ExpandForwardMM(GraphReader& graphreader,
     // costing - assume if you get a transit edge you walked to the transit stop
     uint32_t tripid = 0;
     uint32_t blockid = 0;
-    bool has_time_restrictions = false;
     if (directededge->IsTransitLine()) {
       // Check if transit costing allows this edge
-      if (!tc->Allowed(directededge, pred, tile, edgeid, 0, 0, has_time_restrictions)) {
+      if (!tc->Allowed(directededge, pred, tile, edgeid, 0, 0)) {
         continue;
       }
 
@@ -766,8 +759,8 @@ bool Isochrone::ExpandForwardMM(GraphReader& graphreader,
       // Regular edge - use the appropriate costing and check if access
       // is allowed. If mode is pedestrian this will validate walking
       // distance has not been exceeded.
-      if (!mode_costing[static_cast<uint32_t>(mode_)]->Allowed(directededge, pred, tile, edgeid, 0, 0,
-                                                               has_time_restrictions)) {
+      if (!mode_costing[static_cast<uint32_t>(mode_)]->Allowed(directededge, pred, tile, edgeid, 0,
+                                                               0)) {
         continue;
       }
 
@@ -826,8 +819,7 @@ bool Isochrone::ExpandForwardMM(GraphReader& graphreader,
       if (newcost.cost < lab.cost().cost) {
         float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
         adjacencylist_->decrease(es->index(), newsortcost);
-        lab.Update(pred_idx, newcost, newsortcost, walking_distance, tripid, blockid,
-                   has_time_restrictions);
+        lab.Update(pred_idx, newcost, newsortcost, walking_distance, tripid, blockid);
       }
       continue;
     }
@@ -837,7 +829,7 @@ bool Isochrone::ExpandForwardMM(GraphReader& graphreader,
     *es = {EdgeSet::kTemporary, idx};
     mmedgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, 0.0f, mode_,
                                walking_distance, tripid, prior_stop, blockid, operator_id,
-                               has_transit, has_time_restrictions);
+                               has_transit);
     adjacencylist_->add(idx);
   }
 
@@ -1238,7 +1230,7 @@ void Isochrone::SetDestinationLocations(
       uint32_t idx = bdedgelabels_.size();
       edgestatus_.Set(opp_edge_id, EdgeSet::kTemporary, idx, graphreader.GetGraphTile(opp_edge_id));
       bdedgelabels_.emplace_back(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, cost.cost,
-                                 0.0f, mode_, c, false, false);
+                                 0.0f, mode_, c, false);
       adjacencylist_->add(idx);
     }
   }

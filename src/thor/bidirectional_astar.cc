@@ -252,8 +252,7 @@ inline bool BidirectionalAStar::ExpandForwardInner(GraphReader& graphreader,
   if (meta.edge_status->set() == EdgeSet::kPermanent) {
     return true; // This is an edge we _could_ have expanded, so return true
   }
-  bool has_time_restrictions = false;
-  if (!costing_->Allowed(meta.edge, pred, tile, meta.edge_id, 0, 0, has_time_restrictions) ||
+  if (!costing_->Allowed(meta.edge, pred, tile, meta.edge_id, 0, 0) ||
       costing_->Restricted(meta.edge, pred, edgelabels_forward_, tile, meta.edge_id, true)) {
     return false;
   }
@@ -270,7 +269,7 @@ inline bool BidirectionalAStar::ExpandForwardInner(GraphReader& graphreader,
     if (newcost.cost < lab.cost().cost) {
       float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
       adjacencylist_forward_->decrease(meta.edge_status->index(), newsortcost);
-      lab.Update(pred_idx, newcost, newsortcost, tc, has_time_restrictions);
+      lab.Update(pred_idx, newcost, newsortcost, tc);
     }
     return true; // Returning true since this means we approved the edge
   }
@@ -293,8 +292,7 @@ inline bool BidirectionalAStar::ExpandForwardInner(GraphReader& graphreader,
   uint32_t idx = edgelabels_forward_.size();
   edgelabels_forward_.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, newcost, sortcost,
                                    dist, mode_, tc,
-                                   (pred.not_thru_pruning() || !meta.edge->not_thru()),
-                                   has_time_restrictions);
+                                   (pred.not_thru_pruning() || !meta.edge->not_thru()));
 
   adjacencylist_forward_->add(idx);
   *meta.edge_status = {EdgeSet::kTemporary, idx};
@@ -442,9 +440,7 @@ inline bool BidirectionalAStar::ExpandReverseInner(GraphReader& graphreader,
 
   // Skip this edge if no access is allowed (based on costing method)
   // or if a complex restriction prevents transition onto this edge.
-  bool has_time_restrictions = false;
-  if (!costing_->AllowedReverse(meta.edge, pred, opp_edge, t2, opp_edge_id, 0, 0,
-                                has_time_restrictions) ||
+  if (!costing_->AllowedReverse(meta.edge, pred, opp_edge, t2, opp_edge_id, 0, 0) ||
       costing_->Restricted(meta.edge, pred, edgelabels_reverse_, tile, meta.edge_id, false)) {
     return false;
   }
@@ -464,7 +460,7 @@ inline bool BidirectionalAStar::ExpandReverseInner(GraphReader& graphreader,
     if (newcost.cost < lab.cost().cost) {
       float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
       adjacencylist_reverse_->decrease(meta.edge_status->index(), newsortcost);
-      lab.Update(pred_idx, newcost, newsortcost, tc, has_time_restrictions);
+      lab.Update(pred_idx, newcost, newsortcost, tc);
     }
     return true; // Returning true since this means we approved the edge
   }
@@ -479,8 +475,7 @@ inline bool BidirectionalAStar::ExpandReverseInner(GraphReader& graphreader,
   uint32_t idx = edgelabels_reverse_.size();
   edgelabels_reverse_.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, newcost, sortcost,
                                    dist, mode_, tc,
-                                   (pred.not_thru_pruning() || !meta.edge->not_thru()),
-                                   has_time_restrictions);
+                                   (pred.not_thru_pruning() || !meta.edge->not_thru()));
 
   adjacencylist_reverse_->add(idx);
   *meta.edge_status = {EdgeSet::kTemporary, idx};
@@ -806,8 +801,8 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader, valhalla::Location&
     // to invalid to indicate the origin of the path.
     uint32_t idx = edgelabels_forward_.size();
     edgestatus_forward_.Set(edgeid, EdgeSet::kTemporary, idx, tile);
-    edgelabels_forward_.emplace_back(kInvalidLabel, edgeid, directededge, cost, sortcost, dist, mode_,
-                                     false);
+    edgelabels_forward_.emplace_back(kInvalidLabel, edgeid, directededge, cost, sortcost, dist,
+                                     mode_);
     adjacencylist_forward_->add(idx);
 
     // setting this edge as reached
@@ -885,7 +880,7 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader, const valhalla
     edgestatus_reverse_.Set(opp_edge_id, EdgeSet::kTemporary, idx,
                             graphreader.GetGraphTile(opp_edge_id));
     edgelabels_reverse_.emplace_back(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, sortcost,
-                                     dist, mode_, c, false, false);
+                                     dist, mode_, c, false);
     adjacencylist_reverse_->add(idx);
 
     // setting this edge as settled, sending the opposing because this is the reverse tree
@@ -920,7 +915,7 @@ std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& gra
        edgelabel_index = edgelabels_forward_[edgelabel_index].predecessor()) {
     const BDEdgeLabel& edgelabel = edgelabels_forward_[edgelabel_index];
     path.emplace_back(edgelabel.mode(), edgelabel.cost().secs, edgelabel.edgeid(), 0,
-                      edgelabel.cost().cost, edgelabel.has_time_restriction());
+                      edgelabel.cost().cost);
 
     // Check if this is a ferry
     if (edgelabel.use() == Use::kFerry) {
@@ -973,8 +968,7 @@ std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& gra
       cost += edgelabel.cost() - edgelabels_reverse_[predidx].cost();
     }
     cost += tc;
-    path.emplace_back(edgelabel.mode(), cost.secs, edgelabel.opp_edgeid(), 0, cost.cost,
-                      edgelabel.has_time_restriction());
+    path.emplace_back(edgelabel.mode(), cost.secs, edgelabel.opp_edgeid(), 0, cost.cost);
 
     // Check if this is a ferry
     if (edgelabel.use() == Use::kFerry) {

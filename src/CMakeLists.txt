@@ -139,10 +139,7 @@ target_compile_definitions(valhalla
 
 target_compile_options(valhalla
   PUBLIC
-    ${libvalhalla_compile_options}
-  PRIVATE
-  $<$<BOOL:${ENABLE_COMPILER_WARNINGS}>:-Wall -Wextra -Werror>
-  )
+    ${libvalhalla_compile_options})
 
 target_include_directories(valhalla
   PUBLIC

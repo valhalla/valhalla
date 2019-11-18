@@ -163,8 +163,7 @@ public:
                        const baldr::GraphTile*& tile,
                        const baldr::GraphId& edgeid,
                        const uint64_t current_time,
-                       const uint32_t tz_index,
-                       bool& time_restricted) const;
+                       const uint32_t tz_index) const;
 
   /**
    * Checks if access is allowed for an edge on the reverse path
@@ -190,8 +189,7 @@ public:
                               const baldr::GraphTile*& tile,
                               const baldr::GraphId& opp_edgeid,
                               const uint64_t current_time,
-                              const uint32_t tz_index,
-                              bool& has_time_restrictions) const;
+                              const uint32_t tz_index) const;
 
   /**
    * Checks if access is allowed for the provided node. Node access can
@@ -401,8 +399,7 @@ bool MotorcycleCost::Allowed(const baldr::DirectedEdge* edge,
                              const baldr::GraphTile*& tile,
                              const baldr::GraphId& edgeid,
                              const uint64_t current_time,
-                             const uint32_t tz_index,
-                             bool& has_time_restrictions) const {
+                             const uint32_t tz_index) const {
   // Check access, U-turn, and simple turn restriction.
   // Allow U-turns at dead-end nodes.
   if (!(edge->forwardaccess() & kMotorcycleAccess) ||
@@ -411,11 +408,26 @@ bool MotorcycleCost::Allowed(const baldr::DirectedEdge* edge,
       (!allow_destination_only_ && !pred.destonly() && edge->destonly())) {
     return false;
   }
-  if (edge->surface() > kMinimumMotorcycleSurface) {
-    return false;
+  if (edge->access_restriction()) {
+    const std::vector<baldr::AccessRestriction>& restrictions =
+        tile->GetAccessRestrictions(edgeid.id(), kMotorcycleAccess);
+    for (const auto& restriction : restrictions) {
+      if (restriction.type() == AccessType::kTimedAllowed) {
+        // allowed at this range or allowed all the time
+        return (current_time && restriction.value())
+                   ? (edge->surface() <= kMinimumMotorcycleSurface &&
+                      IsRestricted(restriction.value(), current_time, tz_index))
+                   : true;
+      } else if (restriction.type() == AccessType::kTimedDenied) {
+        // not allowed at this range or restricted all the time
+        return (current_time && restriction.value())
+                   ? (edge->surface() <= kMinimumMotorcycleSurface &&
+                      !IsRestricted(restriction.value(), current_time, tz_index))
+                   : false;
+      }
+    }
   }
-  return DynamicCost::EvaluateRestrictions(kMotorcycleAccess, edge, tile, edgeid, current_time,
-                                           tz_index, has_time_restrictions);
+  return edge->surface() <= kMinimumMotorcycleSurface;
 }
 
 // Checks if access is allowed for an edge on the reverse path (from
@@ -426,8 +438,7 @@ bool MotorcycleCost::AllowedReverse(const baldr::DirectedEdge* edge,
                                     const baldr::GraphTile*& tile,
                                     const baldr::GraphId& opp_edgeid,
                                     const uint64_t current_time,
-                                    const uint32_t tz_index,
-                                    bool& has_time_restrictions) const {
+                                    const uint32_t tz_index) const {
   // Check access, U-turn, and simple turn restriction.
   // Allow U-turns at dead-end nodes.
   if (!(opp_edge->forwardaccess() & kMotorcycleAccess) ||
@@ -437,11 +448,26 @@ bool MotorcycleCost::AllowedReverse(const baldr::DirectedEdge* edge,
     return false;
   }
 
-  if (opp_edge->surface() > kMinimumMotorcycleSurface) {
-    return false;
+  if (edge->access_restriction()) {
+    const std::vector<baldr::AccessRestriction>& restrictions =
+        tile->GetAccessRestrictions(opp_edgeid.id(), kMotorcycleAccess);
+    for (const auto& restriction : restrictions) {
+      if (restriction.type() == AccessType::kTimedAllowed) {
+        // allowed at this range or allowed all the time
+        return (current_time && restriction.value())
+                   ? (edge->surface() <= kMinimumMotorcycleSurface &&
+                      IsRestricted(restriction.value(), current_time, tz_index))
+                   : true;
+      } else if (restriction.type() == AccessType::kTimedDenied) {
+        // not allowed at this range or restricted all the time
+        return (current_time && restriction.value())
+                   ? (edge->surface() <= kMinimumMotorcycleSurface &&
+                      !IsRestricted(restriction.value(), current_time, tz_index))
+                   : false;
+      }
+    }
   }
-  return DynamicCost::EvaluateRestrictions(kMotorcycleAccess, edge, tile, opp_edgeid, current_time,
-                                           tz_index, has_time_restrictions);
+  return opp_edge->surface() <= kMinimumMotorcycleSurface;
 }
 
 Cost MotorcycleCost::EdgeCost(const baldr::DirectedEdge* edge,

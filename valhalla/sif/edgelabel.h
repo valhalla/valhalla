@@ -25,8 +25,10 @@ class EdgeLabel {
 public:
   /**
    * Default constructor.
+   * TODO - without memset it warns of uninitialized data members
    */
   EdgeLabel() {
+    memset(this, 0, sizeof(EdgeLabel));
   }
 
   /**
@@ -48,12 +50,11 @@ public:
             const float sortcost,
             const float dist,
             const TravelMode mode,
-            const uint32_t path_distance,
-            bool has_time_restrictions = false)
+            const uint32_t path_distance)
       : predecessor_(predecessor), path_distance_(path_distance), restrictions_(edge->restrictions()),
         edgeid_(edgeid), opp_index_(edge->opp_index()), opp_local_idx_(edge->opp_local_idx()),
         mode_(static_cast<uint32_t>(mode)), endnode_(edge->endnode()),
-        has_time_restrictions_(has_time_restrictions), use_(static_cast<uint32_t>(edge->use())),
+        use_(static_cast<uint32_t>(edge->use())),
         classification_(static_cast<uint32_t>(edge->classification())), shortcut_(edge->shortcut()),
         dest_only_(edge->destonly()), origin_(0), toll_(edge->toll()), not_thru_(edge->not_thru()),
         deadend_(edge->deadend()), on_complex_rest_(edge->part_of_complex_restriction()), cost_(cost),
@@ -67,14 +68,10 @@ public:
    * @param cost        True cost (and elapsed time in seconds) to the edge.
    * @param sortcost    Cost for sorting (includes A* heuristic).
    */
-  void Update(const uint32_t predecessor,
-              const Cost& cost,
-              const float sortcost,
-              const bool has_time_restrictions) {
+  void Update(const uint32_t predecessor, const Cost& cost, const float sortcost) {
     predecessor_ = predecessor;
     cost_ = cost;
     sortcost_ = sortcost;
-    has_time_restrictions_ = has_time_restrictions;
   }
 
   /**
@@ -90,13 +87,11 @@ public:
   void Update(const uint32_t predecessor,
               const Cost& cost,
               const float sortcost,
-              const uint32_t path_distance,
-              const bool has_time_restrictions) {
+              const uint32_t path_distance) {
     predecessor_ = predecessor;
     cost_ = cost;
     sortcost_ = sortcost;
     path_distance_ = path_distance;
-    has_time_restrictions_ = has_time_restrictions;
   }
 
   /**
@@ -234,18 +229,6 @@ public:
   void set_origin() {
     origin_ = true;
   }
-  /**
-   * Does this edge have any time restrictions?
-   */
-  bool has_time_restriction() const {
-    return has_time_restrictions_;
-  }
-  /**
-   * Sets whether this edge has any time restrictions or not
-   */
-  void set_has_time_restriction(bool has_time_restrictions) {
-    has_time_restrictions_ = has_time_restrictions;
-  }
 
   /**
    * Does this edge have a toll?
@@ -353,9 +336,7 @@ protected:
    * deadend_:        Flag indicating edge is a dead-end.
    * on_complex_rest: Part of a complex restriction.
    */
-  uint64_t endnode_ : 46;
-  uint64_t spare_ : 1; // Unused  bit
-  uint64_t has_time_restrictions_ : 1;
+  uint64_t endnode_ : 48; // Could be 46 (2 spare)
   uint64_t use_ : 6;
   uint64_t classification_ : 3;
   uint64_t shortcut_ : 1;
@@ -380,6 +361,7 @@ class BDEdgeLabel : public EdgeLabel {
 public:
   // Default constructor
   BDEdgeLabel() {
+    memset(this, 0, sizeof(BDEdgeLabel));
   }
 
   /**
@@ -405,10 +387,9 @@ public:
               const float dist,
               const sif::TravelMode mode,
               const sif::Cost& tc,
-              const bool not_thru_pruning,
-              const bool has_time_restrictions)
-      : EdgeLabel(predecessor, edgeid, edge, cost, sortcost, dist, mode, 0, has_time_restrictions),
-        opp_edgeid_(oppedgeid), not_thru_pruning_(not_thru_pruning), transition_cost_(tc) {
+              const bool not_thru_pruning)
+      : EdgeLabel(predecessor, edgeid, edge, cost, sortcost, dist, mode, 0), opp_edgeid_(oppedgeid),
+        transition_cost_(tc), not_thru_pruning_(not_thru_pruning) {
   }
 
   /**
@@ -433,18 +414,9 @@ public:
               const sif::TravelMode mode,
               const sif::Cost& tc,
               const uint32_t path_distance,
-              const bool not_thru_pruning,
-              const bool has_time_restrictions)
-      : EdgeLabel(predecessor,
-                  edgeid,
-                  edge,
-                  cost,
-                  cost.cost,
-                  0,
-                  mode,
-                  path_distance,
-                  has_time_restrictions),
-        opp_edgeid_(oppedgeid), not_thru_pruning_(not_thru_pruning), transition_cost_(tc) {
+              const bool not_thru_pruning)
+      : EdgeLabel(predecessor, edgeid, edge, cost, cost.cost, 0, mode, path_distance),
+        opp_edgeid_(oppedgeid), transition_cost_(tc), not_thru_pruning_(not_thru_pruning) {
   }
 
   /**
@@ -464,9 +436,8 @@ public:
               const sif::Cost& cost,
               const float sortcost,
               const float dist,
-              const sif::TravelMode mode,
-              const bool has_time_restrictions)
-      : EdgeLabel(predecessor, edgeid, edge, cost, sortcost, dist, mode, 0, has_time_restrictions),
+              const sif::TravelMode mode)
+      : EdgeLabel(predecessor, edgeid, edge, cost, sortcost, dist, mode, 0),
         not_thru_pruning_(false) {
     opp_edgeid_ = {};
     transition_cost_ = {};
@@ -483,13 +454,11 @@ public:
   void Update(const uint32_t predecessor,
               const sif::Cost& cost,
               const float sortcost,
-              const sif::Cost& tc,
-              const bool has_time_restrictions) {
+              const sif::Cost& tc) {
     predecessor_ = predecessor;
     cost_ = cost;
     sortcost_ = sortcost;
     transition_cost_ = tc;
-    has_time_restrictions_ = has_time_restrictions;
   }
 
   /**
@@ -505,14 +474,12 @@ public:
               const sif::Cost& cost,
               const float sortcost,
               const sif::Cost& tc,
-              const uint32_t path_distance,
-              const bool has_time_restrictions) {
+              const uint32_t path_distance) {
     predecessor_ = predecessor;
     cost_ = cost;
     sortcost_ = sortcost;
     transition_cost_ = tc;
     path_distance_ = path_distance;
-    has_time_restrictions_ = has_time_restrictions;
   }
 
   /**
@@ -595,17 +562,8 @@ public:
               const baldr::GraphId& prior_stopid,
               const uint32_t blockid,
               const uint32_t transit_operator,
-              const bool has_transit,
-              const bool has_time_restrictions = false)
-      : EdgeLabel(predecessor,
-                  edgeid,
-                  edge,
-                  cost,
-                  sortcost,
-                  dist,
-                  mode,
-                  path_distance,
-                  has_time_restrictions),
+              const bool has_transit)
+      : EdgeLabel(predecessor, edgeid, edge, cost, sortcost, dist, mode, path_distance),
         prior_stopid_(prior_stopid), tripid_(tripid), blockid_(blockid),
         transit_operator_(transit_operator), has_transit_(has_transit) {
   }
@@ -627,15 +585,13 @@ public:
               const float sortcost,
               const uint32_t path_distance,
               const uint32_t tripid,
-              const uint32_t blockid,
-              const bool has_time_restrictions) {
+              const uint32_t blockid) {
     predecessor_ = predecessor;
     cost_ = cost;
     sortcost_ = sortcost;
     path_distance_ = path_distance;
     tripid_ = tripid;
     blockid_ = blockid;
-    has_time_restrictions_ = has_time_restrictions;
   }
 
   /**

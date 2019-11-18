@@ -144,7 +144,6 @@ Important build options include:
 | `-DENABLE_SERVICES` (`On` / `Off`) | Build the HTTP service|
 | `-DBUILD_SHARED_LIBS` (`On` / `Off`) | Build static or shared libraries|
 | `-DENABLE_NODE_BINDINGS` (`ON` / `OFF`) | Build the node bindings (defaults to on)|
-| `-DENABLE_COMPILER_WARNINGS` (`ON` / `OFF`) | Build with common compiler warnings as errors (defaults to off)|
 
 For more build options run the interactive GUI:
 

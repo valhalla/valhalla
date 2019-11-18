@@ -251,8 +251,7 @@ public:
                        const baldr::GraphTile*& tile,
                        const baldr::GraphId& edgeid,
                        const uint64_t current_time,
-                       const uint32_t tz_index,
-                       bool& time_restricted) const;
+                       const uint32_t tz_index) const;
 
   /**
    * Checks if access is allowed for an edge on the reverse path
@@ -278,8 +277,7 @@ public:
                               const baldr::GraphTile*& tile,
                               const baldr::GraphId& opp_edgeid,
                               const uint64_t current_time,
-                              const uint32_t tz_index,
-                              bool& has_time_restrictions) const;
+                              const uint32_t tz_index) const;
 
   /**
    * Checks if access is allowed for the provided node. Node access can
@@ -518,8 +516,7 @@ bool BicycleCost::Allowed(const baldr::DirectedEdge* edge,
                           const baldr::GraphTile*& tile,
                           const baldr::GraphId& edgeid,
                           const uint64_t current_time,
-                          const uint32_t tz_index,
-                          bool& has_time_restrictions) const {
+                          const uint32_t tz_index) const {
   // Check bicycle access and turn restrictions. Bicycles should obey
   // vehicular turn restrictions. Allow Uturns at dead ends only.
   // Skip impassable edges and shortcut edges.
@@ -536,12 +533,27 @@ bool BicycleCost::Allowed(const baldr::DirectedEdge* edge,
     return false;
   }
 
-  // Prohibit certain roads based on surface type and bicycle type
-  if (edge->surface() > worst_allowed_surface_) {
-    return false;
+  if (edge->access_restriction()) {
+    const std::vector<baldr::AccessRestriction>& restrictions =
+        tile->GetAccessRestrictions(edgeid.id(), kBicycleAccess);
+    for (const auto& restriction : restrictions) {
+      if (restriction.type() == AccessType::kTimedAllowed) {
+        // allowed at this range or allowed all the time
+        return (current_time && restriction.value())
+                   ? (edge->surface() <= worst_allowed_surface_ &&
+                      IsRestricted(restriction.value(), current_time, tz_index))
+                   : true;
+      } else if (restriction.type() == AccessType::kTimedDenied) {
+        // not allowed at this range or restricted all the time
+        return (current_time && restriction.value())
+                   ? (edge->surface() <= worst_allowed_surface_ &&
+                      !IsRestricted(restriction.value(), current_time, tz_index))
+                   : false;
+      }
+    }
   }
-  return DynamicCost::EvaluateRestrictions(kBicycleAccess, edge, tile, edgeid, current_time, tz_index,
-                                           has_time_restrictions);
+  // Prohibit certain roads based on surface type and bicycle type
+  return edge->surface() <= worst_allowed_surface_;
 }
 
 // Checks if access is allowed for an edge on the reverse path (from
@@ -552,8 +564,7 @@ bool BicycleCost::AllowedReverse(const baldr::DirectedEdge* edge,
                                  const baldr::GraphTile*& tile,
                                  const baldr::GraphId& opp_edgeid,
                                  const uint64_t current_time,
-                                 const uint32_t tz_index,
-                                 bool& has_time_restrictions) const {
+                                 const uint32_t tz_index) const {
   // Check access, U-turn (allow at dead-ends), and simple turn restriction.
   // Do not allow transit connection edges.
   if (!(opp_edge->forwardaccess() & kBicycleAccess) || opp_edge->is_shortcut() ||
@@ -564,12 +575,27 @@ bool BicycleCost::AllowedReverse(const baldr::DirectedEdge* edge,
     return false;
   }
 
-  // Prohibit certain roads based on surface type and bicycle type
-  if (edge->surface() > worst_allowed_surface_) {
-    return false;
+  if (edge->access_restriction()) {
+    const std::vector<baldr::AccessRestriction>& restrictions =
+        tile->GetAccessRestrictions(opp_edgeid.id(), kBicycleAccess);
+    for (const auto& restriction : restrictions) {
+      if (restriction.type() == AccessType::kTimedAllowed) {
+        // allowed at this range or allowed all the time
+        return (current_time && restriction.value())
+                   ? (edge->surface() <= worst_allowed_surface_ &&
+                      IsRestricted(restriction.value(), current_time, tz_index))
+                   : true;
+      } else if (restriction.type() == AccessType::kTimedDenied) {
+        // not allowed at this range or restricted all the time
+        return (current_time && restriction.value())
+                   ? (edge->surface() <= worst_allowed_surface_ &&
+                      !IsRestricted(restriction.value(), current_time, tz_index))
+                   : false;
+      }
+    }
   }
-  return DynamicCost::EvaluateRestrictions(kBicycleAccess, edge, tile, opp_edgeid, current_time,
-                                           tz_index, has_time_restrictions);
+  // Prohibit certain roads based on surface type and bicycle type
+  return opp_edge->surface() <= worst_allowed_surface_;
 }
 
 // Returns the cost to traverse the edge and an estimate of the actual time

@@ -58,7 +58,7 @@ worker_t::result_t disk_work(const std::list<zmq::message_t>& job,
                              void* request_info,
                              worker_t::interrupt_function_t&,
                              const std::string& tile_source_dir) {
-  worker_t::result_t result{false, std::list<std::string>(), ""};
+  worker_t::result_t result{false};
   auto* info = static_cast<http_request_info_t*>(request_info);
   try {
     // parse request
@@ -74,9 +74,8 @@ worker_t::result_t disk_work(const std::list<zmq::message_t>& job,
     std::fstream input(full_path, std::ios::in | std::ios::binary);
     if (input) {
       std::string buffer((std::istreambuf_iterator<char>(input)), std::istreambuf_iterator<char>());
-      if (gz) {
+      if (gz)
         buffer = gzip(buffer);
-      }
       http_response_t response(200, "OK", buffer,
                                headers_t{{"Content-Encoding", gz ? "gzip" : "identity"}});
       response.from_info(*info);
