@@ -303,7 +303,8 @@ struct bin_handler_t {
                                            PathLocation::NONE,
                                            reach.outbound,
                                            reach.inbound};
-          auto index = other_edge->forward() ? 0 : info.shape().size() - 2;
+          // index is opposite the logic above
+          auto index = other_edge->forward() ? info.shape().size() - 2 : 0;
           if (heading_filter(other_edge, tile->edgeinfo(edge->edgeinfo_offset()), location,
                              candidate.point, index)) {
             filtered.emplace_back(std::move(path_edge));
