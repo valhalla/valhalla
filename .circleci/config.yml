@@ -10,7 +10,7 @@ executors:
 commands:
   install_macos_dependencies:
     steps:
-      - run: brew install protobuf cmake libtool boost-python libspatialite pkg-config lua curl wget czmq lz4 spatialite-bin unzip
+      - run: brew install protobuf cmake libtool boost-python libspatialite pkg-config lua curl wget czmq lz4 spatialite-tools unzip
       - run:
           name: Install Node
           command: |
