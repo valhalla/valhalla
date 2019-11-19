@@ -531,6 +531,7 @@ void AddTransitNodes(TripLeg_Node* trip_node,
  */
 TripLeg_Edge* AddTripEdge(const AttributesController& controller,
                           const GraphId& edge,
+                          const uint32_t start_node_idx,
                           const uint32_t trip_id,
                           const uint32_t block_id,
                           const sif::TravelMode mode,
@@ -567,10 +568,11 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
 
   // Set the exits (if the directed edge has exit sign information) and if requested
   if (directededge->sign()) {
-    std::vector<SignInfo> signs = graphtile->GetSigns(idx);
-    if (!signs.empty()) {
+    // Add the edge signs
+    std::vector<SignInfo> edge_signs = graphtile->GetSigns(idx);
+    if (!edge_signs.empty()) {
       TripLeg_Sign* trip_sign = trip_edge->mutable_sign();
-      for (const auto& sign : signs) {
+      for (const auto& sign : edge_signs) {
         switch (sign.type()) {
           case Sign::Type::kExitNumber: {
             if (controller.attributes.at(kEdgeSignExitNumber)) {
@@ -622,6 +624,15 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
             }
             break;
           }
+        }
+      }
+    }
+    // Add the node signs
+    std::vector<SignInfo> node_signs = graphtile->GetSigns(start_node_idx, true);
+    if (!node_signs.empty()) {
+      TripLeg_Sign* trip_sign = trip_edge->mutable_sign();
+      for (const auto& sign : node_signs) {
+        switch (sign.type()) {
           case Sign::Type::kNamedJunction: {
             if (controller.attributes.at(kEdgeSignNamedJunction)) {
               auto* trip_sign_named_junction = trip_sign->mutable_named_junctions()->Add();
@@ -1203,8 +1214,8 @@ TripLegBuilder::Build(const AttributesController& controller,
 
     // Add trip edge
     auto trip_edge =
-        AddTripEdge(controller, path_begin->edgeid, path_begin->trip_id, 0, path_begin->mode,
-                    travel_types[static_cast<int>(path_begin->mode)],
+        AddTripEdge(controller, path_begin->edgeid, startnode.id(), path_begin->trip_id, 0,
+                    path_begin->mode, travel_types[static_cast<int>(path_begin->mode)],
                     mode_costing[static_cast<uint32_t>(path_begin->mode)], edge, drive_on_right,
                     trip_path.add_node(), tile, origin_second_of_week, std::abs(end_pct - start_pct));
 
@@ -1518,9 +1529,9 @@ TripLegBuilder::Build(const AttributesController& controller,
     // Add edge to the trip node and set its attributes
     auto is_last_edge = edge_itr == (path_end - 1);
     float length_pct = (is_first_edge ? 1.f - start_pct : (is_last_edge ? end_pct : 1.f));
-    TripLeg_Edge* trip_edge =
-        AddTripEdge(controller, edge, trip_id, block_id, mode, travel_type, costing, directededge,
-                    node->drive_on_right(), trip_node, graphtile, second_of_week, length_pct);
+    TripLeg_Edge* trip_edge = AddTripEdge(controller, edge, startnode.id(), trip_id, block_id, mode,
+                                          travel_type, costing, directededge, node->drive_on_right(),
+                                          trip_node, graphtile, second_of_week, length_pct);
 
     // Get the shape and set shape indexes (directed edge forward flag
     // determines whether shape is traversed forward or reverse).

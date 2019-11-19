@@ -132,6 +132,22 @@ const std::string Signs::GetGuideTowardString(uint32_t max_count,
                       verbal_formatter);
 }
 
+const std::vector<Sign>& Signs::named_junction_list() const {
+  return named_junction_list_;
+}
+
+std::vector<Sign>* Signs::mutable_named_junction_list() {
+  return &named_junction_list_;
+}
+
+const std::string Signs::GetNamedJunctionString(uint32_t max_count,
+                                                bool limit_by_consecutive_count,
+                                                std::string delim,
+                                                const VerbalTextFormatter* verbal_formatter) const {
+  return ListToString(named_junction_list_, max_count, limit_by_consecutive_count, std::move(delim),
+                      verbal_formatter);
+}
+
 bool Signs::HasExit() const {
   return (HasExitNumber() || HasExitBranch() || HasExitToward() || HasExitName());
 }
@@ -164,6 +180,10 @@ bool Signs::HasGuideToward() const {
   return (guide_toward_list_.size() > 0);
 }
 
+bool Signs::HasNamedJunction() const {
+  return (named_junction_list_.size() > 0);
+}
+
 std::string Signs::ToString() const {
   std::string signs_string;
 
@@ -184,6 +204,9 @@ std::string Signs::ToString() const {
 
   signs_string += " | guide_toward_locations=";
   signs_string += GetGuideTowardString();
+
+  signs_string += " | named_junctions=";
+  signs_string += GetNamedJunctionString();
 
   return signs_string;
 }
@@ -209,6 +232,9 @@ std::string Signs::ToParameterString() const {
 
   signs_string += delim;
   signs_string += ListToParameterString(guide_toward_list_);
+
+  signs_string += delim;
+  signs_string += ListToParameterString(named_junction_list_);
 
   return signs_string;
 }
