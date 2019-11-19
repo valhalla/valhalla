@@ -515,24 +515,26 @@ void AddTransitNodes(TripLeg_Node* trip_node,
 
 /**
  * Add trip edge. (TODO more comments)
- * @param  controller        Controller to determine which attributes to set.
- * @param  edge              Identifier of an edge within the tiled, hierarchical graph.
- * @param  trip_id           Trip Id (0 if not a transit edge).
- * @param  block_id          Transit block Id (0 if not a transit edge)
- * @param  mode              Travel mode for the edge: Biking, walking, etc.
- * @param  directededge      Directed edge information.
- * @param  drive_right       Right side driving for this edge.
- * @param  trip_node         Trip node to add the edge information to.
- * @param  graphtile         Graph tile for accessing data.
- * @param  second_of_week    The time, from the beginning of the week in seconds at which
- *                           the path entered this edge
- * @param  length_percentage Scale for the edge length for the partial distance
- *                       at begin and end edges
+ * @param  controller         Controller to determine which attributes to set.
+ * @param  edge               Identifier of an edge within the tiled, hierarchical graph.
+ * @param  trip_id            Trip Id (0 if not a transit edge).
+ * @param  block_id           Transit block Id (0 if not a transit edge)
+ * @param  mode               Travel mode for the edge: Biking, walking, etc.
+ * @param  directededge       Directed edge information.
+ * @param  drive_right        Right side driving for this edge.
+ * @param  trip_node          Trip node to add the edge information to.
+ * @param  graphtile          Graph tile for accessing data.
+ * @param  second_of_week     The time, from the beginning of the week in seconds at which
+ *                               the path entered this edge
+ * @param  length_percentage  Scale for the edge length for the partial distance
+ *                               at begin and end edges
+ * @param  start_node_idx     The start node index
+ * @param  has_named_junction True if named junction exists, false otherwise
+ * @param  start_tile         The start tile of the start node
+ *
  */
 TripLeg_Edge* AddTripEdge(const AttributesController& controller,
                           const GraphId& edge,
-                          const uint32_t start_node_idx,
-                          const bool has_named_junction,
                           const uint32_t trip_id,
                           const uint32_t block_id,
                           const sif::TravelMode mode,
@@ -543,7 +545,10 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
                           TripLeg_Node* trip_node,
                           const GraphTile* graphtile,
                           const uint32_t second_of_week,
-                          const float length_percentage) {
+                          const float length_percentage,
+                          const uint32_t start_node_idx,
+                          const bool has_named_junction,
+                          const GraphTile* start_tile) {
 
   // Index of the directed edge within the tile
   uint32_t idx = edge.id();
@@ -631,9 +636,9 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
   }
 
   // Process the named junctions
-  if (has_named_junction) {
+  if (has_named_junction && start_tile) {
     // Add the node signs
-    std::vector<SignInfo> node_signs = graphtile->GetSigns(start_node_idx, true);
+    std::vector<SignInfo> node_signs = start_tile->GetSigns(start_node_idx, true);
     if (!node_signs.empty()) {
       TripLeg_Sign* trip_sign = trip_edge->mutable_sign();
       for (const auto& sign : node_signs) {
@@ -1218,11 +1223,11 @@ TripLegBuilder::Build(const AttributesController& controller,
     bool drive_on_right = graphreader.nodeinfo(start_node)->drive_on_right();
 
     // Add trip edge
-    auto trip_edge =
-        AddTripEdge(controller, path_begin->edgeid, startnode.id(), false, path_begin->trip_id, 0,
-                    path_begin->mode, travel_types[static_cast<int>(path_begin->mode)],
-                    mode_costing[static_cast<uint32_t>(path_begin->mode)], edge, drive_on_right,
-                    trip_path.add_node(), tile, origin_second_of_week, std::abs(end_pct - start_pct));
+    auto trip_edge = AddTripEdge(controller, path_begin->edgeid, path_begin->trip_id, 0,
+                                 path_begin->mode, travel_types[static_cast<int>(path_begin->mode)],
+                                 mode_costing[static_cast<uint32_t>(path_begin->mode)], edge,
+                                 drive_on_right, trip_path.add_node(), tile, origin_second_of_week,
+                                 std::abs(end_pct - start_pct), startnode.id(), false, nullptr);
 
     // Set begin shape index if requested
     if (controller.attributes.at(kEdgeBeginShapeIndex)) {
@@ -1535,9 +1540,9 @@ TripLegBuilder::Build(const AttributesController& controller,
     auto is_last_edge = edge_itr == (path_end - 1);
     float length_pct = (is_first_edge ? 1.f - start_pct : (is_last_edge ? end_pct : 1.f));
     TripLeg_Edge* trip_edge =
-        AddTripEdge(controller, edge, startnode.id(), node->named_intersection(), trip_id, block_id,
-                    mode, travel_type, costing, directededge, node->drive_on_right(), trip_node,
-                    graphtile, second_of_week, length_pct);
+        AddTripEdge(controller, edge, trip_id, block_id, mode, travel_type, costing, directededge,
+                    node->drive_on_right(), trip_node, graphtile, second_of_week, length_pct,
+                    startnode.id(), node->named_intersection(), start_tile);
 
     // Get the shape and set shape indexes (directed edge forward flag
     // determines whether shape is traversed forward or reverse).
