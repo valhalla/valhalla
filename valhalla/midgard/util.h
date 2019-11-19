@@ -132,6 +132,9 @@ inline float normalize(const float num, const float den) {
 // Avoids having to copy the points into a polyline, polyline should really just extend
 // A container class like vector or list
 template <class container_t> float length(const container_t& pts) {
+  if (pts.size() < 2) {
+    return 0.0f;
+  }
   float length = 0.0f;
   for (auto p = std::next(pts.cbegin()); p != pts.end(); ++p) {
     length += p->Distance(*std::prev(p));
