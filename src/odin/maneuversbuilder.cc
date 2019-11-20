@@ -725,8 +725,8 @@ void ManeuversBuilder::CountAndSortSigns(std::list<Maneuver>& maneuvers) {
                           curr_man->mutable_signs()->mutable_guide_toward_list());
 
       // Process the named junction signs
-      Signs::CountAndSort(prev_man->mutable_signs()->mutable_named_junction_list(),
-                          curr_man->mutable_signs()->mutable_named_junction_list());
+      Signs::CountAndSort(prev_man->mutable_signs()->mutable_junction_name_list(),
+                          curr_man->mutable_signs()->mutable_junction_name_list());
     }
 
     // Update iterators
@@ -1157,11 +1157,11 @@ void ManeuversBuilder::FinalizeManeuver(Maneuver& maneuver, int node_index) {
           ->emplace_back(guide_toward_location.text(), guide_toward_location.is_route_number());
     }
 
-    // Named junction
-    for (const auto& named_junction : curr_edge->sign().named_junctions()) {
+    // Junction name
+    for (const auto& junction_name : curr_edge->sign().junction_names()) {
       maneuver.mutable_signs()
-          ->mutable_named_junction_list()
-          ->emplace_back(named_junction.text(), named_junction.is_route_number());
+          ->mutable_junction_name_list()
+          ->emplace_back(junction_name.text(), junction_name.is_route_number());
     }
   }
 

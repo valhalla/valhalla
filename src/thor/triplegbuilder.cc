@@ -529,7 +529,7 @@ void AddTransitNodes(TripLeg_Node* trip_node,
  * @param  length_percentage  Scale for the edge length for the partial distance
  *                               at begin and end edges
  * @param  start_node_idx     The start node index
- * @param  has_named_junction True if named junction exists, false otherwise
+ * @param  has_junction_name  True if named junction exists, false otherwise
  * @param  start_tile         The start tile of the start node
  *
  */
@@ -547,7 +547,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
                           const uint32_t second_of_week,
                           const float length_percentage,
                           const uint32_t start_node_idx,
-                          const bool has_named_junction,
+                          const bool has_junction_name,
                           const GraphTile* start_tile) {
 
   // Index of the directed edge within the tile
@@ -636,18 +636,18 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
   }
 
   // Process the named junctions
-  if (has_named_junction && start_tile) {
+  if (has_junction_name && start_tile) {
     // Add the node signs
     std::vector<SignInfo> node_signs = start_tile->GetSigns(start_node_idx, true);
     if (!node_signs.empty()) {
       TripLeg_Sign* trip_sign = trip_edge->mutable_sign();
       for (const auto& sign : node_signs) {
         switch (sign.type()) {
-          case Sign::Type::kNamedJunction: {
-            if (controller.attributes.at(kEdgeSignNamedJunction)) {
-              auto* trip_sign_named_junction = trip_sign->mutable_named_junctions()->Add();
-              trip_sign_named_junction->set_text(sign.text());
-              trip_sign_named_junction->set_is_route_number(sign.is_route_num());
+          case Sign::Type::kJunctionName: {
+            if (controller.attributes.at(kEdgeSignJunctionName)) {
+              auto* trip_sign_junction_name = trip_sign->mutable_junction_names()->Add();
+              trip_sign_junction_name->set_text(sign.text());
+              trip_sign_junction_name->set_is_route_number(sign.is_route_num());
             }
             break;
           }

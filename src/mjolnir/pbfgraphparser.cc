@@ -117,9 +117,9 @@ public:
     bool is_highway_junction =
         ((highway_junction != results->end()) && (highway_junction->second == "motorway_junction"));
 
-    const auto& named_junction = results->find("junction");
-    bool is_named_junction =
-        ((named_junction != results->end()) && (named_junction->second == "named"));
+    const auto& junction_name = results->find("junction");
+    bool has_junction_name =
+        ((junction_name != results->end()) && (junction_name->second == "named"));
 
     // Create a new node and set its attributes
     OSMNode n;
@@ -151,7 +151,7 @@ public:
           n.set_ref_index(osmdata_.node_names.index(tag.second));
           ++osmdata_.node_ref_count;
         }
-      } else if ((is_highway_junction || is_named_junction) && (tag.first == "name")) {
+      } else if ((is_highway_junction || has_junction_name) && (tag.first == "name")) {
         bool hasTag = (tag.second.length() ? true : false);
         if (hasTag) {
           // Add the name to the unique node names list and store its index in the OSM node
@@ -192,7 +192,7 @@ public:
         }
       } else if (tag.first == "access_mask") {
         n.set_access(std::stoi(tag.second));
-      } else if (is_named_junction) {
+      } else if (has_junction_name) {
         n.set_named_intersection(true);
       }
 

@@ -134,7 +134,7 @@ message DirectionsLeg {
       repeated SignElement exit_names = 4;            // The list of exit names - not used much in US, example: Gettysburg Pike
       repeated SignElement guide_onto_streets = 5;    // The list of guide branch street names, examples: US 22 West or Baltimore-Washington Parkway
       repeated SignElement guide_toward_locations = 6;// The list of guide toward locations, examples: Lewistown or US 15
-      repeated SignElement named_junctions = 7;       // The list of named junctions, example: 万年橋東 or Mannenbashi East
+      repeated SignElement junction_names = 7;        // The list of junction names, example: 万年橋東 or Mannenbashi East
     }
 
     optional Type type = 1;                                  // Maneuver type

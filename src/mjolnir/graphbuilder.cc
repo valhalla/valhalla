@@ -983,7 +983,7 @@ void BuildTileSet(const std::string& ways_file,
 
           std::vector<SignInfo> signs;
           for (auto& name : node_names) {
-            signs.emplace_back(Sign::Type::kNamedJunction, false, name);
+            signs.emplace_back(Sign::Type::kJunctionName, false, name);
           }
           if (signs.size()) {
             graphtile.nodes().back().set_named_intersection(true);

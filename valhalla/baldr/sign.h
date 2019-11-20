@@ -23,7 +23,7 @@ public:
     kExitName,
     kGuideBranch,
     kGuideToward,
-    kNamedJunction
+    kJunctionName
   };
 
   /**
