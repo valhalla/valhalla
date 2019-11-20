@@ -409,52 +409,52 @@ thor_worker_t::map_match(Api& request) {
 
       // populate disjoint edge groups with edges
       m_temp_disjoint_edge_groups = {{{m_temp_path_edges.front()}, {}}};
-      auto discontinuity_iter = m_temp_disconnected_edges.begin();
+      auto discontinuity_edges_iter = m_temp_disconnected_edges.begin();
       for (int i = 1, n = static_cast<int>(m_temp_path_edges.size()); i < n; ++i) {
         const auto& front_edge_info = m_temp_path_edges[i - 1];
         const auto& back_edge_info = m_temp_path_edges[i];
         // make a new group when discontinuity occurs
-        if (discontinuity_iter != m_temp_disconnected_edges.end() &&
-            discontinuity_iter->first == front_edge_info.edgeid &&
-            discontinuity_iter->second == back_edge_info.edgeid) {
+        if (discontinuity_edges_iter != m_temp_disconnected_edges.end() &&
+            discontinuity_edges_iter->first == front_edge_info.edgeid &&
+            discontinuity_edges_iter->second == back_edge_info.edgeid) {
           m_temp_disjoint_edge_groups.emplace_back();
-          ++discontinuity_iter;
+          ++discontinuity_edges_iter;
         }
         m_temp_disjoint_edge_groups.back().first.emplace_back(back_edge_info);
       }
 
       // populate disjoint edge groups with break points
-      auto break_point_iter = match_results.cbegin();
+      auto discontinuity_point_iter = match_results.cbegin();
       for (auto& disjoint_edge_group : m_temp_disjoint_edge_groups) {
-        const auto& last_edge = disjoint_edge_group.first.back();
+        const auto& last_edge_in_group = disjoint_edge_group.first.back();
         auto& disjoint_break = disjoint_edge_group.second;
         // in each edge group, we only care about the last edge where the discontinuity happens
-        while (break_point_iter->edgeid != last_edge.edgeid) {
-          ++break_point_iter;
+        while (discontinuity_point_iter->edgeid != last_edge_in_group.edgeid) {
+          ++discontinuity_point_iter;
         }
         // for the last edge, the last match result on this edge is where discontinuity happens
-        while (break_point_iter->edgeid == last_edge.edgeid) {
-          ++break_point_iter;
+        while (discontinuity_point_iter->edgeid == last_edge_in_group.edgeid) {
+          ++discontinuity_point_iter;
         }
 
-        disjoint_break = break_point_iter - 1;
+        disjoint_break = discontinuity_point_iter - 1;
       }
 
-      auto origin_iter = match_results.cbegin();
       // The following logic put break points (matches results) on edge candidates to form legs
       // logic assumes the both match results and edge candidates are topologically sorted in correct
       // order
-
+      auto leg_origin_iter = match_results.cbegin();
       for (const auto& disjoint_edge_group : m_temp_disjoint_edge_groups) {
         // for each disjoint edge group, we make a new route for it.
         // We use multi-route to handle discontinuity
         const auto& edges = disjoint_edge_group.first;
         const auto& disjoint_break = disjoint_edge_group.second;
         auto* route = request.mutable_trip()->mutable_routes()->Add();
-        while (origin_iter != match_results.end() && origin_iter->edgeid != edges.front().edgeid) {
-          ++origin_iter;
+        while (leg_origin_iter != match_results.end() &&
+               leg_origin_iter->edgeid != edges.front().edgeid) {
+          ++leg_origin_iter;
         }
-        if (origin_iter == match_results.cend()) {
+        if (leg_origin_iter == match_results.cend()) {
           break;
         }
 
@@ -462,21 +462,24 @@ thor_worker_t::map_match(Api& request) {
         for (int i = 0, n = static_cast<int>(edges.size()); i < n; ++i) {
           const auto& path_edge = edges[i];
 
-          for (auto iter = origin_iter + 1; iter != match_results.cend(); ++iter) {
-            if (path_edge.edgeid != iter->edgeid) {
+          for (auto leg_destination_iter = leg_origin_iter + 1;
+               leg_destination_iter != match_results.cend(); ++leg_destination_iter) {
+            if (path_edge.edgeid != leg_destination_iter->edgeid) {
               continue;
-            } else if (options.shape(iter - match_results.begin()).type() !=
+            } else if (options.shape(leg_destination_iter - match_results.begin()).type() !=
                            valhalla::Location::kBreak &&
-                       options.shape(iter - match_results.begin()).type() !=
+                       options.shape(leg_destination_iter - match_results.begin()).type() !=
                            valhalla::Location::kBreakThrough &&
-                       iter != disjoint_break) {
+                       leg_destination_iter != disjoint_break) {
               continue;
             }
 
-            Location* origin_location = options.mutable_shape(origin_iter - match_results.cbegin());
-            Location* destination_location = options.mutable_shape(iter - match_results.cbegin());
-            add_path_edge(origin_location, *origin_iter);
-            add_path_edge(destination_location, *iter);
+            Location* origin_location =
+                options.mutable_shape(leg_origin_iter - match_results.cbegin());
+            Location* destination_location =
+                options.mutable_shape(leg_destination_iter - match_results.cbegin());
+            add_path_edge(origin_location, *leg_origin_iter);
+            add_path_edge(destination_location, *leg_destination_iter);
 
             TripLegBuilder::Build(controller, matcher->graphreader(), mode_costing,
                                   edges.begin() + last_leg_index, edges.begin() + i + 1,
@@ -485,7 +488,7 @@ thor_worker_t::map_match(Api& request) {
                                   interrupt, &m_temp_route_discontinuities);
 
             // beginning of next leg will be the end of this leg
-            origin_iter = iter;
+            leg_origin_iter = leg_destination_iter;
             // store the starting index of the path_edges
             last_leg_index = i;
           }
