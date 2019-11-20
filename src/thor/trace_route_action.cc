@@ -458,7 +458,7 @@ thor_worker_t::map_match(Api& request) {
           break;
         }
 
-        int last_leg_index = 0;
+        int last_edge_index = 0;
         for (int i = 0, n = static_cast<int>(edges.size()); i < n; ++i) {
           const auto& path_edge = edges[i];
 
@@ -482,7 +482,7 @@ thor_worker_t::map_match(Api& request) {
             add_path_edge(destination_location, *leg_destination_iter);
 
             TripLegBuilder::Build(controller, matcher->graphreader(), mode_costing,
-                                  edges.begin() + last_leg_index, edges.begin() + i + 1,
+                                  edges.begin() + last_edge_index, edges.begin() + i + 1,
                                   *origin_location, *destination_location,
                                   std::list<valhalla::Location>{}, *route->mutable_legs()->Add(),
                                   interrupt, &m_temp_route_discontinuities);
@@ -490,7 +490,7 @@ thor_worker_t::map_match(Api& request) {
             // beginning of next leg will be the end of this leg
             leg_origin_iter = leg_destination_iter;
             // store the starting index of the path_edges
-            last_leg_index = i;
+            last_edge_index = i;
           }
         }
       }
