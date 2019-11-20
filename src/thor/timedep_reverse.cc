@@ -127,7 +127,7 @@ bool TimeDepReverse::ExpandReverse(GraphReader& graphreader,
         found_valid_edge = ExpandReverse(graphreader, trans->endnode(), pred, pred_idx, opp_pred_edge,
                                          true, seconds_of_week, localtime, destination, best_path) ||
                            found_valid_edge;
-      } else if (!hierarchy_limits_[trans->endnode().level()].StopExpanding()) {
+      } else if (!hierarchy_limits_[trans->endnode().level()].StopExpanding(pred.distance())) {
         found_valid_edge = ExpandReverse(graphreader, trans->endnode(), pred, pred_idx, opp_pred_edge,
                                          true, seconds_of_week, localtime, destination, best_path) ||
                            found_valid_edge;

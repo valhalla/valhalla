@@ -99,7 +99,7 @@ bool TimeDepForward::ExpandForward(GraphReader& graphreader,
         found_valid_edge = ExpandForward(graphreader, trans->endnode(), pred, pred_idx, true,
                                          seconds_of_week, localtime, destination, best_path) ||
                            found_valid_edge;
-      } else if (!hierarchy_limits_[trans->endnode().level()].StopExpanding()) {
+      } else if (!hierarchy_limits_[trans->endnode().level()].StopExpanding(pred.distance())) {
         found_valid_edge = ExpandForward(graphreader, trans->endnode(), pred, pred_idx, true,
                                          seconds_of_week, localtime, destination, best_path) ||
                            found_valid_edge;
