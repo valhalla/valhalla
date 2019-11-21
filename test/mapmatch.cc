@@ -355,10 +355,32 @@ void test_edges_discontinuity_with_multi_routes() {
           {"lat": 52.073489, "lon": 5.122880, "type": "through"},
           {"lat": 52.074554, "lon": 5.122955, "type": "through"},
           {"lat": 52.075190, "lon": 5.123067, "type": "through"},
+          {"lat": 52.075718, "lon": 5.123121, "type": "break"}]})",
+      R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
+          {"lat": 52.068882, "lon": 5.120852, "type": "break"},
+          {"lat": 52.069671, "lon": 5.121185, "type": "break"},
+          {"lat": 52.070380, "lon": 5.121523, "type": "break"},
+          {"lat": 52.070947, "lon": 5.121828, "type": "break"},
+          {"lat": 52.071827, "lon": 5.1227, "type": "break", "radius": 1},
+          {"lat": 52.072526, "lon": 5.122553, "type": "break"},
+          {"lat": 52.073489, "lon": 5.122880, "type": "break"},
+          {"lat": 52.074554, "lon": 5.122955, "type": "break"},
+          {"lat": 52.075190, "lon": 5.123067, "type": "break"},
+          {"lat": 52.075718, "lon": 5.123121, "type": "break"}]})",
+      R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
+          {"lat": 52.068882, "lon": 5.120852, "type": "break"},
+          {"lat": 52.069671, "lon": 5.121185, "type": "through"},
+          {"lat": 52.070380, "lon": 5.121523, "type": "through"},
+          {"lat": 52.070947, "lon": 5.121828, "type": "through"},
+          {"lat": 52.071827, "lon": 5.1227, "type": "through", "radius": 1},
+          {"lat": 52.072526, "lon": 5.122553, "type": "through"},
+          {"lat": 52.073489, "lon": 5.122880, "type": "through"},
+          {"lat": 52.074554, "lon": 5.122955, "type": "through"},
+          {"lat": 52.075190, "lon": 5.123067, "type": "through"},
           {"lat": 52.075718, "lon": 5.123121, "type": "break"}]})"};
 
-  std::vector<std::pair<size_t, size_t>> test_answers = {{3, 3}, {3, 3}, {3, 4},
-                                                         {3, 3}, {1, 9}, {1, 1}};
+  std::vector<std::pair<size_t, size_t>> test_answers = {{3, 3}, {3, 3}, {3, 4}, {3, 3},
+                                                         {1, 9}, {1, 1}, {2, 7}, {2, 2}};
   tyr::actor_t actor(conf, true);
   for (size_t i = 0; i < test_cases.size(); ++i) {
     auto json_match = actor.trace_route(test_cases[i]);
@@ -809,38 +831,38 @@ int main(int argc, char* argv[]) {
     seed = std::stoi(argv[1]);
   if (argc > 2)
     bound = std::stoi(argv[2]);
-  /*
-    suite.test(TEST_CASE(test32bit));
 
-    suite.test(TEST_CASE(test_matcher));
+  suite.test(TEST_CASE(test32bit));
 
-    suite.test(TEST_CASE(test_trace_route_breaks));
+  suite.test(TEST_CASE(test_matcher));
 
-    suite.test(TEST_CASE(test_disconnected_edges_expect_no_route));*/
+  suite.test(TEST_CASE(test_trace_route_breaks));
+
+  suite.test(TEST_CASE(test_disconnected_edges_expect_no_route));
 
   suite.test(TEST_CASE(test_edges_discontinuity_with_multi_routes));
-  /*
-    suite.test(TEST_CASE(test_distance_only));
 
-    suite.test(TEST_CASE(test_time_rejection));
+  suite.test(TEST_CASE(test_distance_only));
 
-    suite.test(TEST_CASE(test_trace_route_edge_walk_expected_error_code));
+  suite.test(TEST_CASE(test_time_rejection));
 
-    suite.test(TEST_CASE(test_trace_route_map_snap_expected_error_code));
+  suite.test(TEST_CASE(test_trace_route_edge_walk_expected_error_code));
 
-    suite.test(TEST_CASE(test_trace_attributes_edge_walk_expected_error_code));
+  suite.test(TEST_CASE(test_trace_route_map_snap_expected_error_code));
 
-    suite.test(TEST_CASE(test_trace_attributes_map_snap_expected_error_code));
+  suite.test(TEST_CASE(test_trace_attributes_edge_walk_expected_error_code));
 
-    suite.test(TEST_CASE(test_topk_validate));
+  suite.test(TEST_CASE(test_trace_attributes_map_snap_expected_error_code));
 
-    suite.test(TEST_CASE(test_topk_fork_alternate));
+  suite.test(TEST_CASE(test_topk_validate));
 
-    suite.test(TEST_CASE(test_topk_loop_alternate));
+  suite.test(TEST_CASE(test_topk_fork_alternate));
 
-    suite.test(TEST_CASE(test_topk_frontage_alternate));
+  suite.test(TEST_CASE(test_topk_loop_alternate));
 
-    suite.test(TEST_CASE(test_now_matches));*/
+  suite.test(TEST_CASE(test_topk_frontage_alternate));
+
+  suite.test(TEST_CASE(test_now_matches));
 
   return suite.tear_down();
 }
