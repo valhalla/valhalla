@@ -163,8 +163,7 @@ thor_worker_t::map_match(Api& request) {
     return {};
   }
 
-  // we don't allow multi path for trace route
-  // TODO::we have to get back for alternitives for trace route
+  // we don't allow multi path for trace route at the moment, discontinuities force multi route
   int best_path =
       request.options().action() == Options::trace_attributes ? request.options().best_paths() : 1;
   m_offline_results = matcher->OfflineMatch(trace, best_path);
@@ -181,6 +180,7 @@ thor_worker_t::map_match(Api& request) {
     m_temp_path_edges = MapMatcher::FormPath(matcher.get(), match_results, edge_segments,
                                              mode_costing, mode, m_temp_disconnected_edges, options);
 
+    // If we want a route but there actually isnt a path, we cant give you one
     if (m_temp_path_edges.empty() && options.action() == Options::trace_route) {
       throw std::exception{};
     }
@@ -400,14 +400,8 @@ thor_worker_t::map_match(Api& request) {
     } // trace_route can return multiple trip paths
     else {
 
-      /*
-       * The following logic put edges into disjoint groups accordiningly
-       * m_temp_disjoint_edge_groups a vector contains the following std::pairs:
-       * first: disjoint edges (group edges that are connected);
-       * second: break point where discontinuity occurs
-       */
-
-      // populate disjoint edge groups with edges
+      // here we break the path edges into groups of contiguous ones so that
+      // where they are discontinuous we can make them into separate routes
       m_temp_disjoint_edge_groups = {{{m_temp_path_edges.front()}, {}}};
       auto discontinuity_edges_iter = m_temp_disconnected_edges.begin();
       for (int i = 1, n = static_cast<int>(m_temp_path_edges.size()); i < n; ++i) {
@@ -423,7 +417,8 @@ thor_worker_t::map_match(Api& request) {
         m_temp_disjoint_edge_groups.back().first.emplace_back(back_edge_info);
       }
 
-      // populate disjoint edge groups with break points
+      // here we mark edges in the path that get "upgraded" to break points
+      // because they occur just before a discontinuity
       auto discontinuity_point_iter = match_results.cbegin();
       for (auto& disjoint_edge_group : m_temp_disjoint_edge_groups) {
         const auto& last_edge_in_group = disjoint_edge_group.first.back();
@@ -449,6 +444,7 @@ thor_worker_t::map_match(Api& request) {
         const auto& edges = disjoint_edge_group.first;
         const auto& disjoint_point = disjoint_edge_group.second;
         auto* route = request.mutable_trip()->mutable_routes()->Add();
+        // first we find where this leg is going to begin
         while (leg_origin_iter != match_results.end() &&
                leg_origin_iter->edgeid != edges.front().edgeid) {
           ++leg_origin_iter;
@@ -461,13 +457,13 @@ thor_worker_t::map_match(Api& request) {
         int last_edge_index = 0;
         for (int i = 0, n = static_cast<int>(edges.size()); i < n; ++i) {
           const auto& path_edge = edges[i];
-          // find first valid destination matched points after origin matched points and
-          // build legs between them
+          // then we find where each leg is going to end by finding the
+          // first valid destination matched points after origin matched points
           for (auto leg_destination_iter = leg_origin_iter + 1;
                leg_destination_iter != match_results.cend(); ++leg_destination_iter) {
-            // we skip destination points that:
-            // 1. not on the edge
-            // 2. neither break points nor the disjoint points
+            // we skip input location points that are:
+            // 1. not on the match results edge
+            // 2. neither break points nor the disjoint (upgraded break) points
             if (path_edge.edgeid != leg_destination_iter->edgeid ||
                 (options.shape(leg_destination_iter - match_results.begin()).type() !=
                      valhalla::Location::kBreak &&
@@ -477,6 +473,8 @@ thor_worker_t::map_match(Api& request) {
               continue;
             }
 
+            // for trip leg builder to work it needs to have origin and destination locations
+            // so we fake them here before calling it
             Location* origin_location =
                 options.mutable_shape(leg_origin_iter - match_results.cbegin());
             Location* destination_location =
@@ -484,6 +482,7 @@ thor_worker_t::map_match(Api& request) {
             add_path_edge(origin_location, *leg_origin_iter);
             add_path_edge(destination_location, *leg_destination_iter);
 
+            // add a new leg to the current route
             TripLegBuilder::Build(controller, matcher->graphreader(), mode_costing,
                                   edges.begin() + last_edge_index, edges.begin() + i + 1,
                                   *origin_location, *destination_location,
