@@ -5,6 +5,16 @@ error_exit() {
   exit 1
 }
 
+if [ -z "$1" ]; then
+    echo "No config supplied.  Usage: valhalla_build_timezones /data/valhalla/mjolnir/conf/valhalla.json"
+    exit 1
+fi
+
+if  ! which jq >/dev/null; then
+    echo "jq not found which is required.  Please install via:  sudo apt-get install jq"
+    exit 1
+fi
+
 if  ! which spatialite >/dev/null; then
     echo "spatialite not found which is required.  Please install via:  sudo apt-get install spatialite-bin"
     exit 1
@@ -13,6 +23,17 @@ fi
 rm -rf dist
 rm -f ./timezones-with-oceans.shapefile.zip
 
+config=$1
+if [ ! -f $config ]; then
+    echo "Config file not found $config"
+    exit 1
+fi
+tz_file=$(jq -r '.mjolnir.timezone' $config)
+if [ ! -d $(dirname $tz_file) ]; then
+    echo "Timezone directory not found $(dirname $tz_file)"
+    exit 1
+fi
+rm -f $tz_file
 url="https://github.com/evansiroky/timezone-boundary-builder/releases/download/2018d/timezones-with-oceans.shapefile.zip"
 
 cat << EOF > alias_tz.csv
@@ -222,21 +243,18 @@ Africa/Timbuktu,Africa/Abidjan
 Atlantic/St_Helena,Africa/Abidjan
 EOF
 
-echo "downloading timezone polygon file." 1>&2 
-curl -L -s -o ./timezones-with-oceans.shapefile.zip ${url} || error_exit "wget failed for " ${url}
-unzip ./timezones-with-oceans.shapefile.zip 1>&2 || error_exit "unzip failed"
+echo "downloading timezone polygon file."
+wget -q $url || error_exit "wget failed for " $url
+unzip ./timezones-with-oceans.shapefile.zip || error_exit "unzip failed"
+spatialite_tool -i -shp ./dist/combined-shapefile-with-oceans -d $tz_file -t tz_world -s 4326 -g geom -c UTF-8 || error_exit "spatialite_tool import failed"
+spatialite $tz_file "SELECT CreateSpatialIndex('tz_world', 'geom');" || error_exit "SpatialIndex failed" 
 
-tz_file=$(mktemp)
-spatialite_tool -i -shp ./dist/combined-shapefile-with-oceans -d ${tz_file} -t tz_world -s 4326 -g geom -c UTF-8 1>&2 || error_exit "spatialite_tool import failed"
-spatialite ${tz_file} "SELECT CreateSpatialIndex('tz_world', 'geom');" 1>&2 || error_exit "SpatialIndex failed" 
-
-spatialite ${tz_file} "DROP TABLE IF EXISTS "alias";" 1>&2 || error_exit "drop table alias failed"
-spatialite ${tz_file} "CREATE TABLE "alias" (alias_TZID text,alias_new_TZID text);" 1>&2 || error_exit "create table alias failed"
-spatialite -csv ${tz_file} ".import alias_tz.csv alias" 1>&2 || error_exit "alias table import failed"
-spatialite ${tz_file} "update tz_world set TZID = (select alias_new_TZID from alias where TZID = alias_TZID) where TZID in (select alias_TZID from alias);" 1>&2 || error_exit "updating tz_world failed"
-spatialite ${tz_file} "VACUUM;" 1>&2 || error_exit "VACUUM failed"
-spatialite ${tz_file} "ANALYZE;" 1>&2 || error_exit "ANALYZE failed"
+spatialite $tz_file "DROP TABLE IF EXISTS "alias";" || error_exit "drop table alias failed"
+spatialite $tz_file "CREATE TABLE "alias" (alias_TZID text,alias_new_TZID text);" || error_exit "create table alias failed"
+spatialite -csv $tz_file ".import alias_tz.csv alias" || error_exit "alias table import failed"
+spatialite $tz_file "update tz_world set TZID = (select alias_new_TZID from alias where TZID = alias_TZID) where TZID in (select alias_TZID from alias);" || error_exit "updating tz_world failed"
+spatialite $tz_file "VACUUM;" || error_exit "VACUUM failed"
+spatialite $tz_file "ANALYZE;" || error_exit "ANALYZE failed"
 
 rm -rf dist
 rm -f ./timezones-with-oceans.shapefile.zip alias_tz.csv
-cat ${tz_file}

@@ -127,16 +127,13 @@ void thor_worker_t::route_match(Api& request) {
   // TODO - make sure the trace has timestamps..
   auto& options = *request.mutable_options();
   if (RouteMatcher::FormPath(mode_costing, mode, *reader, trace, options, m_path_infos)) {
-    // TODO: we dont support multileg here as it ignores location types but...
-    // if this were a time dependent match you need to propogate the date time
-    // information to each legs origin location because triplegbuilder relies on it.
-    // form path set the first one but on the subsequent legs we will need to set them
-    // by doing time offsetting like is done in route_action.cc thor_worker_t::depart_at
+    // TODO: we dont support multileg here as it ignores location types
 
-    // For now we ignore multileg complications and just make sure the searched locations
-    // get the same data information the shape informations had
-    if (options.shape(0).has_date_time())
-      options.mutable_locations(0)->set_date_time(options.shape(0).date_time());
+    // TODO: if this were a time dependent match and you werent use_timestamps
+    // you need to propogate the date information to each legs origin location
+    // because triplegbuilder relies on it. form path set the first one but
+    // on the subsequent legs we will need to set them by doing time offsetting
+    // like is done in route_action.cc thor_worker_t::depart_at
 
     // Form the trip path based on mode costing, origin, destination, and path edges
     auto& leg = *request.mutable_trip()->mutable_routes()->Add()->mutable_legs()->Add();

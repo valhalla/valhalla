@@ -35,6 +35,8 @@ struct CandidateConnection {
   }
 };
 
+struct EdgeMetadata;
+
 /**
  * Bidirectional A* algorithm. Method for finding least-cost path.
  */

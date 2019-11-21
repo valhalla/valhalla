@@ -584,7 +584,7 @@ Cost TruckCost::TransitionCost(const baldr::DirectedEdge* edge,
     // Still want to add a penalty so routes avoid high cost intersections.
     float seconds = turn_cost * edge->stopimpact(idx);
     // Apply density factor penality if there isnt traffic on this edge or youre not using traffic
-    if (!edge->has_flow_speed() || flow_mask_ == 0)
+    if (!edge->has_flow_speed() && flow_mask_ != 0)
       seconds *= trans_density_factor_[node->density()];
 
     c.cost += seconds;
@@ -634,7 +634,7 @@ Cost TruckCost::TransitionCostReverse(const uint32_t idx,
     // Still want to add a penalty so routes avoid high cost intersections.
     float seconds = turn_cost * edge->stopimpact(idx);
     // Apply density factor penality if there isnt traffic on this edge or youre not using traffic
-    if (!edge->has_flow_speed() || flow_mask_ == 0)
+    if (!edge->has_flow_speed() && flow_mask_ != 0)
       seconds *= trans_density_factor_[node->density()];
 
     c.cost += seconds;

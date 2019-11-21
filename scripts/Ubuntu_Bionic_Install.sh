@@ -66,8 +66,6 @@ git submodule update --init --recursive
 make test -j8
 sudo make install
 
-echo -e "\nexport LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib/" >> /etc/profile
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib/
 
 cd $HOME/valhalla
 

@@ -10,7 +10,7 @@ executors:
 commands:
   install_macos_dependencies:
     steps:
-      - run: brew install protobuf cmake libtool boost-python libspatialite pkg-config lua curl wget czmq lz4 spatialite-tools unzip
+      - run: brew install protobuf cmake libtool boost-python libspatialite pkg-config lua curl wget czmq lz4
       - run:
           name: Install Node
           command: |
@@ -25,7 +25,7 @@ commands:
 jobs:
   lint:
     docker:
-      - image: valhalla/docker:build-3.0.1
+      - image: valhalla/docker:build-2.6.1
     steps:
       - checkout
       - run: apt-get update && apt-get -y install clang-tidy-5.0 clang-5.0 curl git nodejs
@@ -47,7 +47,7 @@ jobs:
 
   build-release-binary-linux:
     docker:
-      - image: valhalla/docker:build-3.0.1
+      - image: valhalla/docker:build-2.6.1
     steps:
       - checkout
       - run:
@@ -88,7 +88,7 @@ jobs:
 
   build-debug-binary-linux:
     docker:
-      - image: valhalla/docker:build-3.0.1
+      - image: valhalla/docker:build-2.6.1
     steps:
       - checkout
       - run:
@@ -127,7 +127,7 @@ jobs:
 
   build-debug:
     docker:
-      - image: valhalla/docker:build-3.0.1
+      - image: valhalla/docker:build-2.6.1
     steps:
       - checkout
       - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
@@ -152,7 +152,7 @@ jobs:
 
   build-release:
     docker:
-      - image: valhalla/docker:build-3.0.1
+      - image: valhalla/docker:build-2.6.1
     steps:
       - checkout
       - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
@@ -177,7 +177,7 @@ jobs:
 
   build-release-x86:
     docker:
-      - image: valhalla/docker:build-x86-3.0.1
+      - image: valhalla/docker:build-x86-3.0.0
     steps:
       - checkout
       #- run: ./scripts/format.sh && ./scripts/error_on_dirty.sh

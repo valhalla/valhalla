@@ -108,6 +108,31 @@ void BidirectionalAStar::Init(const PointLL& origll, const PointLL& destll) {
   hierarchy_limits_reverse_ = costing_->GetHierarchyLimits();
 }
 
+// Container for the data we iterate over in Expand* function
+struct EdgeMetadata {
+  const DirectedEdge* edge;
+  GraphId edge_id;
+  EdgeStatusInfo* edge_status;
+
+  inline static EdgeMetadata make(const GraphId& node,
+                                  const NodeInfo* nodeinfo,
+                                  const GraphTile* tile,
+                                  EdgeStatus& edge_status_) {
+    GraphId edge_id = {node.tileid(), node.level(), nodeinfo->edge_index()};
+    EdgeStatusInfo* edge_status = edge_status_.GetPtr(edge_id, tile);
+    const DirectedEdge* directededge = tile->directededge(edge_id);
+    return {directededge, edge_id, edge_status};
+  }
+
+  inline void increment_pointers() {
+    ++edge;
+    ++edge_id;
+    ++edge_status;
+  }
+};
+
+// Expand from a node in the forward direction
+//
 // Returns true if function ended up adding an edge for expansion
 bool BidirectionalAStar::ExpandForward(GraphReader& graphreader,
                                        const GraphId& node,
