@@ -755,35 +755,35 @@ int main(int argc, char* argv[]) {
   if (argc > 2)
     bound = std::stoi(argv[2]);
 
-  //  suite.test(TEST_CASE(test32bit));
-  //
-  //  suite.test(TEST_CASE(test_matcher));
-  //
-  //  suite.test(TEST_CASE(test_trace_route_breaks));
-  //
-  //  suite.test(TEST_CASE(test_disconnected_edges_expect_no_route));
-  //
-  //  suite.test(TEST_CASE(test_edges_discontinuity_with_multi_routes));
-  //
-  //  suite.test(TEST_CASE(test_distance_only));
-  //
-  //  suite.test(TEST_CASE(test_time_rejection));
-  //
-  //  suite.test(TEST_CASE(test_trace_route_edge_walk_expected_error_code));
-  //
-  //  suite.test(TEST_CASE(test_trace_route_map_snap_expected_error_code));
-  //
-  //  suite.test(TEST_CASE(test_trace_attributes_edge_walk_expected_error_code));
-  //
-  //  suite.test(TEST_CASE(test_trace_attributes_map_snap_expected_error_code));
-  //
-  //  suite.test(TEST_CASE(test_topk_validate));
-  //
-  //  suite.test(TEST_CASE(test_topk_fork_alternate));
-  //
-  //  suite.test(TEST_CASE(test_topk_loop_alternate));
-  //
-  //  suite.test(TEST_CASE(test_topk_frontage_alternate));
+  suite.test(TEST_CASE(test32bit));
+
+  suite.test(TEST_CASE(test_matcher));
+
+  suite.test(TEST_CASE(test_trace_route_breaks));
+
+  suite.test(TEST_CASE(test_disconnected_edges_expect_no_route));
+
+  suite.test(TEST_CASE(test_edges_discontinuity_with_multi_routes));
+
+  suite.test(TEST_CASE(test_distance_only));
+
+  suite.test(TEST_CASE(test_time_rejection));
+
+  suite.test(TEST_CASE(test_trace_route_edge_walk_expected_error_code));
+
+  suite.test(TEST_CASE(test_trace_route_map_snap_expected_error_code));
+
+  suite.test(TEST_CASE(test_trace_attributes_edge_walk_expected_error_code));
+
+  suite.test(TEST_CASE(test_trace_attributes_map_snap_expected_error_code));
+
+  suite.test(TEST_CASE(test_topk_validate));
+
+  suite.test(TEST_CASE(test_topk_fork_alternate));
+
+  suite.test(TEST_CASE(test_topk_loop_alternate));
+
+  suite.test(TEST_CASE(test_topk_frontage_alternate));
 
   suite.test(TEST_CASE(test_now_matches));
 
