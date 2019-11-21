@@ -427,7 +427,6 @@ thor_worker_t::map_match(Api& request) {
       auto discontinuity_point_iter = match_results.cbegin();
       for (auto& disjoint_edge_group : m_temp_disjoint_edge_groups) {
         const auto& last_edge_in_group = disjoint_edge_group.first.back();
-        auto& disjoint_break = disjoint_edge_group.second;
         // in each edge group, we only care about the last edge where the discontinuity happens
         while (discontinuity_point_iter->edgeid != last_edge_in_group.edgeid) {
           ++discontinuity_point_iter;
@@ -437,7 +436,7 @@ thor_worker_t::map_match(Api& request) {
           ++discontinuity_point_iter;
         }
 
-        disjoint_break = discontinuity_point_iter - 1;
+        disjoint_edge_group.second = discontinuity_point_iter - 1;
       }
 
       // The following logic put break points (matches results) on edge candidates to form legs
@@ -448,7 +447,7 @@ thor_worker_t::map_match(Api& request) {
         // for each disjoint edge group, we make a new route for it.
         // We use multi-route to handle discontinuity
         const auto& edges = disjoint_edge_group.first;
-        const auto& disjoint_break = disjoint_edge_group.second;
+        const auto& disjoint_point = disjoint_edge_group.second;
         auto* route = request.mutable_trip()->mutable_routes()->Add();
         while (leg_origin_iter != match_results.end() &&
                leg_origin_iter->edgeid != edges.front().edgeid) {
@@ -458,19 +457,23 @@ thor_worker_t::map_match(Api& request) {
           break;
         }
 
+        // loop through each edge in the group, build legs accordingly
         int last_edge_index = 0;
         for (int i = 0, n = static_cast<int>(edges.size()); i < n; ++i) {
           const auto& path_edge = edges[i];
-
+          // find first valid destination matched points after origin matched points and
+          // build legs between them
           for (auto leg_destination_iter = leg_origin_iter + 1;
                leg_destination_iter != match_results.cend(); ++leg_destination_iter) {
-            if (path_edge.edgeid != leg_destination_iter->edgeid) {
-              continue;
-            } else if (options.shape(leg_destination_iter - match_results.begin()).type() !=
-                           valhalla::Location::kBreak &&
-                       options.shape(leg_destination_iter - match_results.begin()).type() !=
-                           valhalla::Location::kBreakThrough &&
-                       leg_destination_iter != disjoint_break) {
+            // we skip destination points that:
+            // 1. not on the edge
+            // 2. neither break points nor the disjoint points
+            if (path_edge.edgeid != leg_destination_iter->edgeid ||
+                (options.shape(leg_destination_iter - match_results.begin()).type() !=
+                     valhalla::Location::kBreak &&
+                 options.shape(leg_destination_iter - match_results.begin()).type() !=
+                     valhalla::Location::kBreakThrough &&
+                 leg_destination_iter != disjoint_point)) {
               continue;
             }
 
