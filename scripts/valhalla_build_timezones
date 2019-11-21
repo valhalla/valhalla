@@ -10,6 +10,11 @@ if  ! which spatialite >/dev/null; then
     exit 1
 fi
 
+if  ! which unzip >/dev/null; then
+    echo "unzip not found which is required.  Please install via:  sudo apt-get install unzip"
+    exit 1
+fi
+
 rm -rf dist
 rm -f ./timezones-with-oceans.shapefile.zip
 
