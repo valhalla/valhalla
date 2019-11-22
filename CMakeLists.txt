@@ -204,9 +204,9 @@ if(ENABLE_DATA_TOOLS)
 ## Top level executables
 elseif(ENABLE_TOOLS)
   find_package(Boost 1.51 REQUIRED COMPONENTS filesystem system program_options)
-## Header only boost for the library without mjolnir
+## Boost for the library without mjolnir
 elseif(NOT Boost_FOUND)
-  find_package(Boost 1.51 REQUIRED)
+  find_package(Boost 1.51 REQUIRED COMPONENTS filesystem)
 endif()
 add_definitions(-DBOOST_NO_CXX11_SCOPED_ENUMS)
 
