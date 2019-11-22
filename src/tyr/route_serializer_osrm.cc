@@ -364,7 +364,7 @@ void route_geometry(json::MapPtr& route,
 // Serialize waypoints for optimized route. Note that OSRM retains the
 // original location order, and stores an index for the waypoint index in
 // the optimized sequence.
-json::ArrayPtr waypoints(const google::protobuf::RepeatedPtrField<valhalla::Location>& locs) {
+json::ArrayPtr waypoints(google::protobuf::RepeatedPtrField<valhalla::Location>& locs) {
   // Create a vector of indexes.
   uint32_t i = 0;
   std::vector<uint32_t> indexes;
@@ -381,7 +381,8 @@ json::ArrayPtr waypoints(const google::protobuf::RepeatedPtrField<valhalla::Loca
   // waypoint index (which is the index in the optimized order).
   auto waypoints = json::array({});
   for (const auto& index : indexes) {
-    waypoints->emplace_back(osrm::waypoint(locs.Get(index), false, true, index));
+    locs.Mutable(index)->set_shape_index(index);
+    waypoints->emplace_back(osrm::waypoint(locs.Get(index), false, true));
   }
   return waypoints;
 }
@@ -1219,7 +1220,7 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
 //     TripLeg protocol buffer
 //     DirectionsLeg protocol buffer
 std::string serialize(valhalla::Api& api) {
-  const auto& options = api.options();
+  auto& options = *api.mutable_options();
   auto json = json::map({});
 
   // If here then the route succeeded. Set status code to OK and serialize waypoints (locations).
@@ -1233,7 +1234,7 @@ std::string serialize(valhalla::Api& api) {
       json->emplace("waypoints", osrm::waypoints(api.trip()));
       break;
     case valhalla::Options::optimized_route:
-      json->emplace("waypoints", waypoints(options.locations()));
+      json->emplace("waypoints", waypoints(*options.mutable_locations()));
       break;
   }
 

@@ -475,12 +475,19 @@ thor_worker_t::map_match(Api& request) {
 
             // for trip leg builder to work it needs to have origin and destination locations
             // so we fake them here before calling it
-            Location* origin_location =
-                options.mutable_shape(leg_origin_iter - match_results.cbegin());
-            Location* destination_location =
-                options.mutable_shape(leg_destination_iter - match_results.cbegin());
-            add_path_edge(origin_location, *leg_origin_iter);
-            add_path_edge(destination_location, *leg_destination_iter);
+            auto origin_location =
+                options.mutable_shape()->begin() + (leg_origin_iter - match_results.cbegin());
+            auto destination_location =
+                options.mutable_shape()->begin() + (leg_destination_iter - match_results.cbegin());
+
+            // osrm serilizer requires to know both the route idx and the shap index
+            for (auto iter = origin_location; iter < destination_location; ++iter) {
+              iter->set_route_index(request.trip().routes_size() - 1);
+              iter->set_shape_index(iter - origin_location);
+            }
+
+            add_path_edge(&*origin_location, *leg_origin_iter);
+            add_path_edge(&*destination_location, *leg_destination_iter);
 
             // add a new leg to the current route
             TripLegBuilder::Build(controller, matcher->graphreader(), mode_costing,
