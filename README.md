@@ -217,7 +217,7 @@ var hersheyRequest = '{"locations":[{"lat":40.546115,"lon":-76.385076,"type":"br
 var route = valhalla.route(hersheyRequest); // returns a string, other actions also available
 ```
 
-Please see the releasing docs for information on releasing a new version.
+Please see the [releasing docs](docs/releasing.md) for information on releasing a new version.
 
 Tests
 -----
