@@ -34,6 +34,11 @@ TimeDepReverse::~TimeDepReverse() {
   Clear();
 }
 
+void TimeDepReverse::Clear() {
+  AStarPathAlgorithm::Clear();
+  edgelabels_rev_.clear();
+}
+
 // Initialize prior to finding best path
 void TimeDepReverse::Init(const midgard::PointLL& origll, const midgard::PointLL& destll) {
   // Set the origin lat,lon (since this is reverse path) and cost factor
