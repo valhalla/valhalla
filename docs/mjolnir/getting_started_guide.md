@@ -44,7 +44,7 @@ If you would like administrative information within the route graph, please foll
 1. Download your osm data.
 2. If needed, update the admin value under mjolnir in your valhalla.json config.  Default filename and directory is `/data/valhalla/admin.sqlite`.
 3. Run `valhalla_build_admins` under the valhalla directory. `./valhalla_build_admins --config  /path_to_your_config/valhalla.json /data/osm_data/your_osm_extract.pbf`
-4. The next time you run `valhalla_build_admins`, admin information will be added to the route graph.
+4. The next time you run `valhalla_build_tiles`, admin information will be added to the route graph.
 
 ### Timezones
 
