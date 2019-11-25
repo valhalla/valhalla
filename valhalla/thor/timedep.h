@@ -124,6 +124,11 @@ public:
               const sif::TravelMode mode,
               const Options& options = Options::default_instance());
 
+  /**
+   * Clear the temporary information generated during path construction.
+   */
+  virtual void Clear();
+
 protected:
   uint32_t dest_tz_index_;
   uint32_t seconds_of_week_;
