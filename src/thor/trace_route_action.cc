@@ -455,6 +455,7 @@ thor_worker_t::map_match(Api& request) {
 
         // loop through each edge in the group, build legs accordingly
         int last_edge_index = 0;
+        auto shape_begin_iter = leg_origin_iter;
         for (int i = 0, n = static_cast<int>(edges.size()); i < n; ++i) {
           const auto& path_edge = edges[i];
           // then we find where each leg is going to end by finding the
@@ -475,20 +476,19 @@ thor_worker_t::map_match(Api& request) {
 
             // for trip leg builder to work it needs to have origin and destination locations
             // so we fake them here before calling it
-            auto origin_location =
-                options.mutable_shape()->begin() + (leg_origin_iter - match_results.cbegin());
-            auto destination_location =
-                options.mutable_shape()->begin() + (leg_destination_iter - match_results.cbegin());
-
-            // osrm serilizer requires to know both the route idx and the shap index
-            for (auto iter = origin_location; iter < destination_location; ++iter) {
-              iter->set_route_index(request.trip().routes_size() - 1);
-              iter->set_shape_index(iter - origin_location);
-            }
-
+            uint64_t route_index = request.trip().routes_size() - 1;
+            Location* origin_location =
+                options.mutable_shape(leg_origin_iter - match_results.cbegin());
+            origin_location->set_route_index(route_index);
+            origin_location->set_shape_index(leg_origin_iter - shape_begin_iter);
+            Location* destination_location =
+                options.mutable_shape(leg_destination_iter - match_results.cbegin());
+            destination_location->set_route_index(route_index);
+            destination_location->set_shape_index(leg_destination_iter - shape_begin_iter);
+            int debug_idx = leg_destination_iter - shape_begin_iter;
             add_path_edge(&*origin_location, *leg_origin_iter);
             add_path_edge(&*destination_location, *leg_destination_iter);
-            
+          
             // add a new leg to the current route
             TripLegBuilder::Build(controller, matcher->graphreader(), mode_costing,
                                   edges.begin() + last_edge_index, edges.begin() + i + 1,
