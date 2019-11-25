@@ -477,6 +477,8 @@ thor_worker_t::map_match(Api& request) {
 
             // for trip leg builder to work it needs to have origin and destination locations
             // so we fake them here before calling it
+            // when handling multi routes, orsm serializer need to know both the
+            // matching_index(route_index) and the waypoint_index.
             uint64_t route_index = request.trip().routes_size() - 1;
             Location* origin_location =
                 options.mutable_shape(leg_origin_iter - match_results.cbegin());
