@@ -397,7 +397,7 @@ void test_edges_discontinuity_with_multi_routes() {
       throw std::logic_error("Expected " + std::to_string(test_answers[i].second) +
                              " legs in total but got " + std::to_string(leg_count));
 
-    // this compare indices will be build on number of routes and number of legs on each route.
+    // this compare indices will be build base on number of routes and number of legs on each route.
     std::vector<int> compare_indices;
     for (const auto& trip : trips) {
       int num_legs = trip.second.get_child("legs").size();
@@ -410,6 +410,7 @@ void test_edges_discontinuity_with_multi_routes() {
     const auto& tracepoints = matched.get_child("tracepoints");
     for (const auto& tracepoint : tracepoints) {
       try {
+        // this try catch block handles tracepoints of null from the match result.
         waypoint_indices.push_back(tracepoint.second.get<int>("waypoint_index"));
         if (waypoint_indices.size() > 1 && waypoint_indices.end()[-1] == waypoint_indices.end()[-2] &&
             waypoint_indices.end()[-1] == 0) {
