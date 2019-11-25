@@ -485,10 +485,9 @@ thor_worker_t::map_match(Api& request) {
                 options.mutable_shape(leg_destination_iter - match_results.cbegin());
             destination_location->set_route_index(route_index);
             destination_location->set_shape_index(leg_destination_iter - shape_begin_iter);
-            int debug_idx = leg_destination_iter - shape_begin_iter;
             add_path_edge(&*origin_location, *leg_origin_iter);
             add_path_edge(&*destination_location, *leg_destination_iter);
-          
+
             // add a new leg to the current route
             TripLegBuilder::Build(controller, matcher->graphreader(), mode_costing,
                                   edges.begin() + last_edge_index, edges.begin() + i + 1,
