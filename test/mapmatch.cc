@@ -397,6 +397,7 @@ void test_edges_discontinuity_with_multi_routes() {
       throw std::logic_error("Expected " + std::to_string(test_answers[i].second) +
                              " legs in total but got " + std::to_string(leg_count));
 
+    // this compare indices will be build on number of routes and number of legs on each route.
     std::vector<int> compare_indices;
     for (const auto& trip : trips) {
       int num_legs = trip.second.get_child("legs").size();
