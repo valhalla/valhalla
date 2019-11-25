@@ -455,6 +455,7 @@ thor_worker_t::map_match(Api& request) {
 
         // loop through each edge in the group, build legs accordingly
         int last_edge_index = 0;
+        int way_point_index = 0;
         auto shape_begin_iter = leg_origin_iter;
         for (int i = 0, n = static_cast<int>(edges.size()); i < n; ++i) {
           const auto& path_edge = edges[i];
@@ -480,11 +481,13 @@ thor_worker_t::map_match(Api& request) {
             Location* origin_location =
                 options.mutable_shape(leg_origin_iter - match_results.cbegin());
             origin_location->set_route_index(route_index);
-            origin_location->set_shape_index(leg_origin_iter - shape_begin_iter);
+            origin_location->set_shape_index(way_point_index);
+
             Location* destination_location =
                 options.mutable_shape(leg_destination_iter - match_results.cbegin());
             destination_location->set_route_index(route_index);
-            destination_location->set_shape_index(leg_destination_iter - shape_begin_iter);
+            destination_location->set_shape_index(++way_point_index);
+
             add_path_edge(&*origin_location, *leg_origin_iter);
             add_path_edge(&*destination_location, *leg_destination_iter);
 
