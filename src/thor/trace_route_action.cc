@@ -456,7 +456,6 @@ thor_worker_t::map_match(Api& request) {
         // loop through each edge in the group, build legs accordingly
         int last_edge_index = 0;
         int way_point_index = 0;
-        auto shape_begin_iter = leg_origin_iter;
         for (int i = 0, n = static_cast<int>(edges.size()); i < n; ++i) {
           const auto& path_edge = edges[i];
           // then we find where each leg is going to end by finding the

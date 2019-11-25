@@ -412,7 +412,7 @@ void test_edges_discontinuity_with_multi_routes() {
         waypoint_indices.push_back(tracepoint.second.get<int>("waypoint_index"));
         if (waypoint_indices.size() > 1 && waypoint_indices.end()[-1] == waypoint_indices.end()[-2] &&
             waypoint_indices.end()[-1] == 0) {
-          // "via" and through points has waypoint index 0.
+          // "via" and "through" points has waypoint index 0.
           waypoint_indices.pop_back();
         }
       } catch (...) {}
