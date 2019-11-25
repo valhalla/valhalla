@@ -66,6 +66,13 @@ Signs GetGuideTowardSigns(const std::vector<std::tuple<std::string, bool, uint32
   return signs;
 }
 
+Signs GetJunctionNameSigns(const std::vector<std::tuple<std::string, bool, uint32_t>>& sign_items) {
+  Signs signs;
+  PopulateSigns(sign_items, signs.mutable_junction_name_list());
+
+  return signs;
+}
+
 void TryGetExitNumberString(const Signs& signs,
                             uint32_t max_count,
                             bool limit_by_consecutive_count,
@@ -123,6 +130,16 @@ void TryGetGuideTowardString(const Signs& signs,
 
   if (signs.GetGuideTowardString(max_count, limit_by_consecutive_count) != expectedString) {
     throw std::runtime_error("Incorrect Guide Toward String - expected: " + expectedString);
+  }
+}
+
+void TryGetJunctionNameString(const Signs& signs,
+                              uint32_t max_count,
+                              bool limit_by_consecutive_count,
+                              const std::string& expectedString) {
+
+  if (signs.GetJunctionNameString(max_count, limit_by_consecutive_count) != expectedString) {
+    throw std::runtime_error("Incorrect Junction Name String - expected: " + expectedString);
   }
 }
 
@@ -240,6 +257,21 @@ void TestGetGuideTowardString_roundabout_toward_A1() {
   TryGetGuideTowardString(signs, 1, true, "A 1");
 }
 
+void TestGetJunctionNameString() {
+  // Create named junction sign
+  // Specify input in descending consecutive count order
+  Signs signs = GetJunctionNameSigns(
+      {std::make_tuple("万年橋東", 0, 1), std::make_tuple("Mannenbashi East", 0, 0)});
+
+  TryGetJunctionNameString(signs, 4, false, "万年橋東/Mannenbashi East");
+  TryGetJunctionNameString(signs, 2, false, "万年橋東/Mannenbashi East");
+  TryGetJunctionNameString(signs, 1, false, "万年橋東");
+
+  TryGetJunctionNameString(signs, 4, true, "万年橋東");
+  TryGetJunctionNameString(signs, 2, true, "万年橋東");
+  TryGetJunctionNameString(signs, 1, true, "万年橋東");
+}
+
 } // namespace
 
 int main() {
@@ -265,6 +297,9 @@ int main() {
 
   // GetGuideTowardString_roundabout_toward_A1
   suite.test(TEST_CASE(TestGetGuideTowardString_roundabout_toward_A1));
+
+  // GetJunctionNameString
+  suite.test(TEST_CASE(TestGetJunctionNameString));
 
   return suite.tear_down();
 }

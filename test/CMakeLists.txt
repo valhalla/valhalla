@@ -116,10 +116,7 @@ endif()
 
 add_dependencies(run-sample test_directories)
 if(ENABLE_DATA_TOOLS)
-  ## TODO: fix apple tests!
-  if(NOT APPLE)
-    add_dependencies(run-mapmatch utrecht_tiles)
-  endif()
+  add_dependencies(run-mapmatch utrecht_tiles)
   add_dependencies(run-isochrone utrecht_tiles)
   add_dependencies(run-matrix utrecht_tiles)
   add_dependencies(run-timedep_paths utrecht_tiles)
