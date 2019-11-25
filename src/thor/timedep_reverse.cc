@@ -15,6 +15,9 @@ namespace thor {
 // TODO - compute initial label count based on estimated route length
 constexpr uint64_t kInitialEdgeLabelCount = 500000;
 
+// Number of iterations to allow with no convergence to the destination
+constexpr uint32_t kMaxIterationsWithoutConvergence = 800000;
+
 // Default constructor
 TimeDepReverse::TimeDepReverse() : AStarPathAlgorithm() {
   mode_ = TravelMode::kDrive;
@@ -29,6 +32,11 @@ TimeDepReverse::TimeDepReverse() : AStarPathAlgorithm() {
 // Destructor
 TimeDepReverse::~TimeDepReverse() {
   Clear();
+}
+
+void TimeDepReverse::Clear() {
+  AStarPathAlgorithm::Clear();
+  edgelabels_rev_.clear();
 }
 
 // Initialize prior to finding best path
@@ -387,7 +395,7 @@ TimeDepReverse::GetBestPath(valhalla::Location& origin,
     if (dist2dest < mindist) {
       mindist = dist2dest;
       nc = 0;
-    } else if (nc++ > 50000) {
+    } else if (nc++ > kMaxIterationsWithoutConvergence) {
       if (best_path.first >= 0) {
         return {FormPath(graphreader, best_path.first)};
       } else {
