@@ -3,6 +3,7 @@ file(GLOB headers ${VALHALLA_SOURCE_DIR}/valhalla/sif/*.h)
 set(sources
   autocost.cc
   bicyclecost.cc
+  hierarchylimits.cc
   motorcyclecost.cc
   motorscootercost.cc
   pedestriancost.cc

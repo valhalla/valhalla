@@ -412,6 +412,10 @@ inline bool BidirectionalAStar::ExpandReverseInner(GraphReader& graphreader,
   // Get end node tile, opposing edge Id, and opposing directed edge.
   const GraphTile* t2 =
       meta.edge->leaves_tile() ? graphreader.GetGraphTile(meta.edge->endnode()) : tile;
+  if (t2 == nullptr) {
+    return false;
+  }
+
   GraphId opp_edge_id = t2->GetOpposingEdgeId(meta.edge);
   const DirectedEdge* opp_edge = t2->directededge(opp_edge_id);
 
