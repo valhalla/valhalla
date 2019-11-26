@@ -192,7 +192,7 @@ public:
    * @param  wayid  The target edge is part of this the way id.
    * @param  elev   Mean elevation.
    * @param  bn     Bike network.
-   * @param  spd    Speed limit.
+   * @param  spd    Speed limit. [kph]
    * @param  lls    The shape of the target edge.
    * @param  names  The names of the target edge.
    * @param  types  Bits indicating if the name is a ref vs a name.
