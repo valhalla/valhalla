@@ -35,10 +35,8 @@ namespace osrm {
 
 // Serialize a location (waypoint) in OSRM compatible format. Waypoint format is described here:
 //     http://project-osrm.org/docs/v5.5.1/api/#waypoint-object
-valhalla::baldr::json::MapPtr waypoint(const valhalla::Location& location,
-                                       bool is_tracepoint,
-                                       const bool is_optimized,
-                                       const int64_t waypoint_index) {
+valhalla::baldr::json::MapPtr
+waypoint(const valhalla::Location& location, bool is_tracepoint, bool is_optimized) {
   // Create a waypoint to add to the array
   auto waypoint = json::map({});
 
@@ -65,13 +63,8 @@ valhalla::baldr::json::MapPtr waypoint(const valhalla::Location& location,
   // If the location was used for a tracepoint we trigger extra serialization
   if (is_tracepoint) {
     waypoint->emplace("alternatives_count", static_cast<uint64_t>(location.path_edges_size() - 1));
-    if (waypoint_index > -1) {
-      waypoint->emplace("waypoint_index", static_cast<int64_t>(waypoint_index));
-    } else {
-      waypoint->emplace("waypoint_index", static_cast<std::nullptr_t>(nullptr));
-    }
-    waypoint->emplace("matchings_index",
-                      static_cast<uint64_t>(0)); // we only have one matching for now
+    waypoint->emplace("waypoint_index", static_cast<uint64_t>(location.shape_index()));
+    waypoint->emplace("matchings_index", static_cast<uint64_t>(location.route_index()));
   }
 
   // If the location was used for optimized route we add trips_index and waypoint
@@ -79,7 +72,7 @@ valhalla::baldr::json::MapPtr waypoint(const valhalla::Location& location,
   if (is_optimized) {
     int trips_index = 0; // TODO
     waypoint->emplace("trips_index", static_cast<uint64_t>(trips_index));
-    waypoint->emplace("waypoint_index", static_cast<uint64_t>(waypoint_index));
+    waypoint->emplace("waypoint_index", static_cast<uint64_t>(location.shape_index()));
   }
 
   return waypoint;
@@ -94,9 +87,6 @@ json::ArrayPtr waypoints(const google::protobuf::RepeatedPtrField<valhalla::Loca
   for (const auto& location : locations) {
     if (location.path_edges().size() == 0) {
       waypoints->emplace_back(static_cast<std::nullptr_t>(nullptr));
-    } else if (location.type() == valhalla::Location::kBreak ||
-               location.type() == valhalla::Location::kBreakThrough) {
-      waypoints->emplace_back(waypoint(location, is_tracepoint, false, ++waypoint_index));
     } else {
       waypoints->emplace_back(waypoint(location, is_tracepoint));
     }

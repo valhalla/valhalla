@@ -1,3 +1,10 @@
+## Release Date: 2019-??-?? Valhalla 3.0.10
+* **Bug Fix**
+
+* **Enhancement**
+   * ADDED: Allows more complicated routes in timedependent a-star before timing out [#2068](https://github.com/valhalla/valhalla/pull/2068)
+
+
 ## Release Date: 2019-11-21 Valhalla 3.0.9
 * **Bug Fix**
    * FIXED: Changed reachability computation to consider both directions of travel wrt candidate edges [#1965](https://github.com/valhalla/valhalla/pull/1965)
