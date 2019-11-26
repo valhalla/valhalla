@@ -455,6 +455,7 @@ thor_worker_t::map_match(Api& request) {
 
         // loop through each edge in the group, build legs accordingly
         int last_edge_index = 0;
+        int way_point_index = 0;
         for (int i = 0, n = static_cast<int>(edges.size()); i < n; ++i) {
           const auto& path_edge = edges[i];
           // then we find where each leg is going to end by finding the
@@ -475,12 +476,21 @@ thor_worker_t::map_match(Api& request) {
 
             // for trip leg builder to work it needs to have origin and destination locations
             // so we fake them here before calling it
+            // when handling multi routes, orsm serializer need to know both the
+            // matching_index(route_index) and the waypoint_index.
+            uint64_t route_index = request.trip().routes_size() - 1;
             Location* origin_location =
                 options.mutable_shape(leg_origin_iter - match_results.cbegin());
+            origin_location->set_route_index(route_index);
+            origin_location->set_shape_index(way_point_index);
+
             Location* destination_location =
                 options.mutable_shape(leg_destination_iter - match_results.cbegin());
-            add_path_edge(origin_location, *leg_origin_iter);
-            add_path_edge(destination_location, *leg_destination_iter);
+            destination_location->set_route_index(route_index);
+            destination_location->set_shape_index(++way_point_index);
+
+            add_path_edge(&*origin_location, *leg_origin_iter);
+            add_path_edge(&*destination_location, *leg_destination_iter);
 
             // add a new leg to the current route
             TripLegBuilder::Build(controller, matcher->graphreader(), mode_costing,

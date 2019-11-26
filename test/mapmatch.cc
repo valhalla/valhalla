@@ -381,6 +381,7 @@ void test_edges_discontinuity_with_multi_routes() {
 
   std::vector<std::pair<size_t, size_t>> test_answers = {{3, 3}, {3, 3}, {3, 4}, {3, 3},
                                                          {1, 9}, {1, 1}, {2, 7}, {2, 2}};
+
   tyr::actor_t actor(conf, true);
   for (size_t i = 0; i < test_cases.size(); ++i) {
     auto json_match = actor.trace_route(test_cases[i]);
@@ -395,6 +396,33 @@ void test_edges_discontinuity_with_multi_routes() {
     if (leg_count != test_answers[i].second)
       throw std::logic_error("Expected " + std::to_string(test_answers[i].second) +
                              " legs in total but got " + std::to_string(leg_count));
+
+    // this compare indices will be build base on number of routes and number of legs on each route.
+    std::vector<int> compare_indices;
+    for (const auto& trip : trips) {
+      int num_legs = trip.second.get_child("legs").size();
+      for (int waypoint_index = 0; waypoint_index < num_legs + 1; ++waypoint_index) {
+        compare_indices.push_back(waypoint_index);
+      }
+    }
+
+    std::vector<int> waypoint_indices;
+    const auto& tracepoints = matched.get_child("tracepoints");
+    for (const auto& tracepoint : tracepoints) {
+      try {
+        // this try catch block handles tracepoints of null from the match result.
+        waypoint_indices.push_back(tracepoint.second.get<int>("waypoint_index"));
+        if (waypoint_indices.size() > 1 && waypoint_indices.end()[-1] == waypoint_indices.end()[-2] &&
+            waypoint_indices.end()[-1] == 0) {
+          // "via" and "through" points has waypoint index 0.
+          waypoint_indices.pop_back();
+        }
+      } catch (...) {}
+    }
+
+    if (compare_indices != waypoint_indices) {
+      throw std::logic_error("way point indices does not match");
+    }
   }
 }
 
