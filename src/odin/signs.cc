@@ -307,7 +307,8 @@ bool Signs::operator==(const Signs& rhs) const {
           (exit_branch_list_ == rhs.exit_branch_list_) &&
           (exit_toward_list_ == rhs.exit_toward_list_) && (exit_name_list_ == rhs.exit_name_list_) &&
           (guide_branch_list_ == rhs.guide_branch_list_) &&
-          (guide_toward_list_ == rhs.guide_toward_list_));
+          (guide_toward_list_ == rhs.guide_toward_list_) &&
+          (junction_name_list_ == rhs.junction_name_list_));
 }
 
 } // namespace odin
