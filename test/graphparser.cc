@@ -1,16 +1,16 @@
 #include "baldr/graphreader.h"
+#include "baldr/rapidjson_utils.h"
 #include "baldr/tilehierarchy.h"
+#include "filesystem.h"
 #include "midgard/sequence.h"
 #include "mjolnir/bssbuilder.h"
 #include "mjolnir/graphbuilder.h"
 #include "mjolnir/osmnode.h"
 #include "mjolnir/pbfgraphparser.h"
 #include "test.h"
-#include <cstdint>
 
-#include "baldr/rapidjson_utils.h"
-#include <boost/filesystem.hpp>
 #include <boost/property_tree/ptree.hpp>
+#include <cstdint>
 #include <fstream>
 
 #include "baldr/directededge.h"
@@ -183,11 +183,11 @@ void BollardsGatesAndAccess(const std::string& config_file) {
   if ((!(bike_network & kMcn) || !(bike_network & kRcn)) || way.bike_network() != 0)
     throw std::runtime_error("rcn and mtb not marked on way 75786176.");
 
-  boost::filesystem::remove(ways_file);
-  boost::filesystem::remove(way_nodes_file);
-  boost::filesystem::remove(access_file);
-  boost::filesystem::remove(from_restriction_file);
-  boost::filesystem::remove(to_restriction_file);
+  filesystem::remove(ways_file);
+  filesystem::remove(way_nodes_file);
+  filesystem::remove(access_file);
+  filesystem::remove(from_restriction_file);
+  filesystem::remove(to_restriction_file);
 }
 
 void RemovableBollards(const std::string& config_file) {
@@ -216,11 +216,11 @@ void RemovableBollards(const std::string& config_file) {
            kPedestrianAccess | kWheelchairAccess | kBicycleAccess | kMopedAccess | kMotorcycleAccess))
     throw std::runtime_error("Rising Bollard not marked as intersection.");
 
-  boost::filesystem::remove(ways_file);
-  boost::filesystem::remove(way_nodes_file);
-  boost::filesystem::remove(access_file);
-  boost::filesystem::remove(from_restriction_file);
-  boost::filesystem::remove(to_restriction_file);
+  filesystem::remove(ways_file);
+  filesystem::remove(way_nodes_file);
+  filesystem::remove(access_file);
+  filesystem::remove(from_restriction_file);
+  filesystem::remove(to_restriction_file);
 }
 
 void Exits(const std::string& config_file) {
@@ -257,11 +257,11 @@ void Exits(const std::string& config_file) {
   if (!node.intersection() || osmdata.node_names.name(node.exit_to_index()) != "PA441")
     throw std::runtime_error("node exit_to not set correctly .");
 
-  boost::filesystem::remove(ways_file);
-  boost::filesystem::remove(way_nodes_file);
-  boost::filesystem::remove(access_file);
-  boost::filesystem::remove(from_restriction_file);
-  boost::filesystem::remove(to_restriction_file);
+  filesystem::remove(ways_file);
+  filesystem::remove(way_nodes_file);
+  filesystem::remove(access_file);
+  filesystem::remove(from_restriction_file);
+  filesystem::remove(to_restriction_file);
 }
 
 void Baltimore(const std::string& config_file) {
@@ -345,11 +345,11 @@ void Baltimore(const std::string& config_file) {
       throw std::runtime_error("98040438 restriction test failed.");
   }
 
-  boost::filesystem::remove(ways_file);
-  boost::filesystem::remove(way_nodes_file);
-  boost::filesystem::remove(access_file);
-  boost::filesystem::remove(from_restriction_file);
-  boost::filesystem::remove(to_restriction_file);
+  filesystem::remove(ways_file);
+  filesystem::remove(way_nodes_file);
+  filesystem::remove(access_file);
+  filesystem::remove(from_restriction_file);
+  filesystem::remove(to_restriction_file);
 }
 
 void Bike(const std::string& config_file) {
@@ -407,11 +407,11 @@ void Bike(const std::string& config_file) {
     throw std::runtime_error("Access is not correct for way 156539491.");
   }
 
-  boost::filesystem::remove(ways_file);
-  boost::filesystem::remove(way_nodes_file);
-  boost::filesystem::remove(access_file);
-  boost::filesystem::remove(from_restriction_file);
-  boost::filesystem::remove(to_restriction_file);
+  filesystem::remove(ways_file);
+  filesystem::remove(way_nodes_file);
+  filesystem::remove(access_file);
+  filesystem::remove(from_restriction_file);
+  filesystem::remove(to_restriction_file);
 }
 
 void Bus(const std::string& config_file) {
@@ -459,11 +459,11 @@ void Bus(const std::string& config_file) {
     throw std::runtime_error("Access is not correct for way 225895737.");
   }
 
-  boost::filesystem::remove(ways_file);
-  boost::filesystem::remove(way_nodes_file);
-  boost::filesystem::remove(access_file);
-  boost::filesystem::remove(from_restriction_file);
-  boost::filesystem::remove(to_restriction_file);
+  filesystem::remove(ways_file);
+  filesystem::remove(way_nodes_file);
+  filesystem::remove(access_file);
+  filesystem::remove(from_restriction_file);
+  filesystem::remove(to_restriction_file);
 }
 
 void BicycleTrafficSignals(const std::string& config_file) {
@@ -499,11 +499,11 @@ void BicycleTrafficSignals(const std::string& config_file) {
       throw std::runtime_error("Bike rental at a shop not marked as intersection.");
   */
 
-  boost::filesystem::remove(ways_file);
-  boost::filesystem::remove(way_nodes_file);
-  boost::filesystem::remove(access_file);
-  boost::filesystem::remove(from_restriction_file);
-  boost::filesystem::remove(to_restriction_file);
+  filesystem::remove(ways_file);
+  filesystem::remove(way_nodes_file);
+  filesystem::remove(access_file);
+  filesystem::remove(from_restriction_file);
+  filesystem::remove(to_restriction_file);
 }
 
 void DoConfig() {
@@ -630,12 +630,12 @@ void TestImportBssNode() {
   // in this case the bike share edge should be the last edge of this node
   check_edge_attribute(local_tile->directededge(edge_idx_2 + count_2 - 1));
 
-  boost::filesystem::remove(ways_file);
-  boost::filesystem::remove(way_nodes_file);
-  boost::filesystem::remove(bss_nodes_file);
-  boost::filesystem::remove(access_file);
-  boost::filesystem::remove(from_restriction_file);
-  boost::filesystem::remove(to_restriction_file);
+  filesystem::remove(ways_file);
+  filesystem::remove(way_nodes_file);
+  filesystem::remove(bss_nodes_file);
+  filesystem::remove(access_file);
+  filesystem::remove(from_restriction_file);
+  filesystem::remove(to_restriction_file);
 }
 
 } // namespace

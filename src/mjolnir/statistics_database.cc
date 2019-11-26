@@ -1,12 +1,14 @@
 #include "statistics.h"
 #include <cstdint>
 
+#include "filesystem.h"
 #include "midgard/logging.h"
+#include "mjolnir/util.h"
 
-#include <boost/filesystem/operations.hpp>
-#include <boost/property_tree/ptree.hpp>
+// sqlite is included in util.h and must be before spatialite
 #include <spatialite.h>
-#include <sqlite3.h>
+
+#include <boost/property_tree/ptree.hpp>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -17,8 +19,8 @@ namespace mjolnir {
 
 void statistics::build_db(const boost::property_tree::ptree& pt) {
   std::string database = "statistics.sqlite";
-  if (boost::filesystem::exists(database)) {
-    boost::filesystem::remove(database);
+  if (filesystem::exists(database)) {
+    filesystem::remove(database);
   }
 
   spatialite_init(0);
@@ -34,21 +36,11 @@ void statistics::build_db(const boost::property_tree::ptree& pt) {
   if (ret != SQLITE_OK) {
     LOG_ERROR("cannot open " + database);
     sqlite3_close(db_handle);
-    db_handle = NULL;
     return;
   }
 
   // loading SpatiaLite as an extension
-  sqlite3_enable_load_extension(db_handle, 1);
-#if SQLITE_VERSION_NUMBER > 3008007
-  sql = "SELECT load_extension('mod_spatialite')";
-#else
-  sql = "SELECT load_extension('libspatialite')";
-#endif
-  ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
-  if (ret != SQLITE_OK) {
-    LOG_ERROR("load_extension() error: " + std::string(err_msg));
-    sqlite3_free(err_msg);
+  if (!load_spatialite(db_handle)) {
     sqlite3_close(db_handle);
     return;
   }

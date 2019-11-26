@@ -8,7 +8,6 @@
 #include "midgard/tiles.h"
 
 #include <boost/algorithm/string.hpp>
-#include <boost/filesystem.hpp>
 #include <chrono>
 #include <cmath>
 #include <cstdio>
@@ -146,7 +145,7 @@ std::string MakeSingleTileUrl(const std::string& tile_url, const GraphId& graphi
 void GraphTile::SaveTileToFile(const std::vector<char>& tile_data, const std::string& disk_location) {
   // At first we save tile to a temporary file and then move it
   // so we can avoid cases when another thread could read partially written file.
-  auto tmp_location = disk_location + boost::filesystem::unique_path().string();
+  auto tmp_location = disk_location + filesystem::unique_path().string();
   auto dir = filesystem::path(disk_location);
   dir.replace_filename("");
 

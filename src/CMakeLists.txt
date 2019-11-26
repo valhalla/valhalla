@@ -111,7 +111,8 @@ configure_file(../valhalla/config.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/valhalla/c
 
 set(valhalla_hdrs
     ${CMAKE_CURRENT_BINARY_DIR}/valhalla/valhalla.h
-    ${VALHALLA_SOURCE_DIR}/valhalla/worker.h)
+    ${VALHALLA_SOURCE_DIR}/valhalla/worker.h
+    ${VALHALLA_SOURCE_DIR}/valhalla/filesystem.h)
 
 set(valhalla_src
     worker.cc

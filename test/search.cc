@@ -2,7 +2,6 @@
 #include "test.h"
 #include <cstdint>
 
-#include <boost/filesystem.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <unordered_set>
 
@@ -11,6 +10,7 @@
 #include "baldr/location.h"
 #include "baldr/pathlocation.h"
 #include "baldr/tilehierarchy.h"
+#include "filesystem.h"
 #include "midgard/pointll.h"
 #include "midgard/vector2.h"
 
@@ -50,8 +50,8 @@ void make_tile() {
   using namespace valhalla::baldr;
 
   // make sure that all the old tiles are gone before trying to make new ones.
-  if (boost::filesystem::is_directory(tile_dir)) {
-    boost::filesystem::remove_all(tile_dir);
+  if (filesystem::is_directory(tile_dir)) {
+    filesystem::remove_all(tile_dir);
   }
 
   // basic tile information
