@@ -1209,7 +1209,7 @@ TripLegBuilder::Build(const AttributesController& controller,
 
     auto* node = trip_path.add_node();
     if (controller.attributes.at(kNodeElapsedTime)) {
-      node->set_elapsed_time(path_begin->elapsed_time);
+      node->set_elapsed_time(path_begin->elapsed_time * (end_pct - start_pct));
     }
 
     const GraphTile* end_tile = graphreader.GetGraphTile(edge->endnode());
@@ -1267,7 +1267,6 @@ TripLegBuilder::Build(const AttributesController& controller,
     const sif::TravelMode mode = edge_itr->mode;
     const uint8_t travel_type = travel_types[static_cast<uint32_t>(mode)];
     const auto& costing = mode_costing[static_cast<uint32_t>(mode)];
-
     // Set node attributes - only set if they are true since they are optional
     const GraphTile* start_tile = graphtile;
     start_tile = graphreader.GetGraphTile(startnode, start_tile);
@@ -1671,7 +1670,19 @@ TripLegBuilder::Build(const AttributesController& controller,
     }
 
     // Update elapsed time at the end of the edge, store this at the next node.
-    elapsedtime = edge_itr->elapsed_time;
+    if (edge_itr == path_begin) {
+      elapsedtime += edge_itr->elapsed_time * (1.f - start_pct);
+      std::cout << "edge duration: " << edge_itr->elapsed_time << ", at start + 1, thus trimmed to "
+                << edge_itr->elapsed_time * (1.f - start_pct) << std::endl;
+    } else if (edge_itr == path_end - 1) {
+      std::cout << "edge duration: " << edge_itr->elapsed_time << ", at end - 1, thus trimmed to "
+                << edge_itr->elapsed_time * end_pct << std::endl;
+      elapsedtime += edge_itr->elapsed_time * end_pct;
+    } else {
+      std::cout << "edge duration: " << edge_itr->elapsed_time << ", middle thus no trimmed"
+                << std::endl;
+      elapsedtime += edge_itr->elapsed_time;
+    }
 
     // Set the endnode of this directed edge as the startnode of the next edge.
     startnode = directededge->endnode();
