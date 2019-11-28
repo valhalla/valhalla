@@ -63,7 +63,14 @@ waypoint(const valhalla::Location& location, bool is_tracepoint, bool is_optimiz
   // If the location was used for a tracepoint we trigger extra serialization
   if (is_tracepoint) {
     waypoint->emplace("alternatives_count", static_cast<uint64_t>(location.path_edges_size() - 1));
-    waypoint->emplace("waypoint_index", static_cast<uint64_t>(location.shape_index()));
+    uint32_t waypoint_index = location.shape_index();
+    if (waypoint_index == numeric_limits<uint32_t>::max()) {
+      // when tracepoint is neither a break nor leg's starting/ending
+      // point (shape_index is uint32_t max), we assign null to its waypoint_index
+      waypoint->emplace("waypoint_index", static_cast<std::nullptr_t>(nullptr));
+    } else {
+      waypoint->emplace("waypoint_index", static_cast<uint64_t>(waypoint_index));
+    }
     waypoint->emplace("matchings_index", static_cast<uint64_t>(location.route_index()));
   }
 
@@ -83,7 +90,6 @@ waypoint(const valhalla::Location& location, bool is_tracepoint, bool is_optimiz
 json::ArrayPtr waypoints(const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
                          bool is_tracepoint) {
   auto waypoints = json::array({});
-  int64_t waypoint_index = -1;
   for (const auto& location : locations) {
     if (location.path_edges().size() == 0) {
       waypoints->emplace_back(static_cast<std::nullptr_t>(nullptr));

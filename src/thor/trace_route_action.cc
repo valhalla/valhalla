@@ -1,6 +1,7 @@
 #include "thor/worker.h"
 
 #include <algorithm>
+#include <limits>
 #include <memory>
 #include <unordered_map>
 #include <utility>
@@ -444,6 +445,7 @@ thor_worker_t::map_match(Api& request) {
         const auto& edges = disjoint_edge_group.first;
         const auto& disjoint_point = disjoint_edge_group.second;
         auto* route = request.mutable_trip()->mutable_routes()->Add();
+        uint64_t route_index = request.trip().routes_size() - 1;
         // first we find where this leg is going to begin
         while (leg_origin_iter != match_results.end() &&
                leg_origin_iter->edgeid != edges.front().edgeid) {
@@ -465,12 +467,20 @@ thor_worker_t::map_match(Api& request) {
             // we skip input location points that are:
             // 1. not on the match results edge
             // 2. neither break points nor the disjoint (upgraded break) points
-            if (path_edge.edgeid != leg_destination_iter->edgeid ||
-                (options.shape(leg_destination_iter - match_results.begin()).type() !=
-                     valhalla::Location::kBreak &&
-                 options.shape(leg_destination_iter - match_results.begin()).type() !=
-                     valhalla::Location::kBreakThrough &&
-                 leg_destination_iter != disjoint_point)) {
+            if (path_edge.edgeid != leg_destination_iter->edgeid) {
+              continue;
+            } else if (options.shape(leg_destination_iter - match_results.begin()).type() !=
+                           valhalla::Location::kBreak &&
+                       options.shape(leg_destination_iter - match_results.begin()).type() !=
+                           valhalla::Location::kBreakThrough &&
+                       leg_destination_iter != disjoint_point) {
+              // for locations that matched but are neither breaks nor leg's starting/ending point
+              // we set its waypoint_index to limits::max to notify the serializer thus distinguish
+              // them from the first waypoint of the route whose waypoint_index is 0.
+              Location* via_location =
+                  options.mutable_shape(leg_destination_iter - match_results.cbegin());
+              via_location->set_route_index(route_index);
+              via_location->set_shape_index(std::numeric_limits<uint32_t>::max());
               continue;
             }
 
@@ -478,7 +488,6 @@ thor_worker_t::map_match(Api& request) {
             // so we fake them here before calling it
             // when handling multi routes, orsm serializer need to know both the
             // matching_index(route_index) and the waypoint_index.
-            uint64_t route_index = request.trip().routes_size() - 1;
             Location* origin_location =
                 options.mutable_shape(leg_origin_iter - match_results.cbegin());
             origin_location->set_route_index(route_index);
