@@ -10,7 +10,7 @@ executors:
 commands:
   install_macos_dependencies:
     steps:
-      - run: brew install protobuf cmake libtool boost-python libspatialite pkg-config lua curl wget czmq lz4 spatialite-tools unzip
+      - run: brew install protobuf cmake libtool boost-python libspatialite pkg-config lua curl wget czmq lz4 spatialite-tools unzip ninja
       - run:
           name: Install Node
           command: |
@@ -46,11 +46,11 @@ jobs:
       - run: npm install --ignore-scripts
       - run: mkdir build
       - run: |
-          cd build && cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=Off -DENABLE_PYTHON_BINDINGS=On \
+          cd build && cmake .. -GNinja -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=Off -DENABLE_PYTHON_BINDINGS=On \
           -DCPACK_GENERATOR=DEB -DCPACK_PACKAGE_VERSION_SUFFIX="-0ubuntu1-$(lsb_release -sc)" -DENABLE_SERVICES=OFF
-      - run: make -C build -j4
-      - run: make -C build install
-      - run: make -C build package
+      - run: ninja -C build
+      - run: ninja -C build install
+      - run: ninja -C build package
       - run:
           command: |
             export PACKAGE_JSON_VERSION=$(node -e "console.log(require('./package.json').version)")
@@ -87,11 +87,11 @@ jobs:
       - run: npm install --ignore-scripts
       - run: mkdir build
       - run: |
-          cd build && cmake .. -DCMAKE_BUILD_TYPE=Debug -DBUILD_SHARED_LIBS=Off -DENABLE_PYTHON_BINDINGS=On \
+          cd build && cmake .. -GNinja -DCMAKE_BUILD_TYPE=Debug -DBUILD_SHARED_LIBS=Off -DENABLE_PYTHON_BINDINGS=On \
           -DCPACK_GENERATOR=DEB -DCPACK_PACKAGE_VERSION_SUFFIX="-0ubuntu1-$(lsb_release -sc)" -DENABLE_SERVICES=OFF
-      - run: make -C build -j4
-      - run: make -C build install
-      - run: make -C build package
+      - run: ninja -C build
+      - run: ninja -C build install
+      - run: ninja -C build package
       - run:
           command: |
             export PACKAGE_JSON_VERSION=$(node -e "console.log(require('./package.json').version)")
@@ -116,14 +116,14 @@ jobs:
             - ccache
       - run: npm install --ignore-scripts
       - run: mkdir build
-      - run: cd build && cmake .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_COVERAGE=On -DCPACK_GENERATOR=DEB -DENABLE_COMPILER_WARNINGS=On -DCMAKE_EXPORT_COMPILE_COMMANDS=On
+      - run: cd build && cmake .. -GNinja -DCMAKE_BUILD_TYPE=Debug -DENABLE_COVERAGE=On -DCPACK_GENERATOR=DEB -DENABLE_COMPILER_WARNINGS=On -DCMAKE_EXPORT_COMPILE_COMMANDS=On
       - run: scripts/clang-tidy-only-diff.sh
-      - run: make -C build -j4
-      - run: make -C build -j4 tests
-      - run: make -C build -j2 check
-      - run: make -C build install
-      - run: make -C build package
-      - run: make -C build coverage
+      - run: ninja -C build
+      - run: ninja -C build tests
+      - run: ninja -C build check
+      - run: ninja -C build install
+      - run: ninja -C build package
+      - run: ninja -C build coverage
       - run: /bin/bash <(curl -s https://codecov.io/bash) || echo "Codecov did not collect coverage reports"
       - save_cache:
           key: ccache
@@ -143,13 +143,13 @@ jobs:
       - run: npm install --ignore-scripts
       - run: mkdir build
       - run: |
-          cd build && cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=On -DENABLE_PYTHON_BINDINGS=On \
+          cd build && cmake .. -GNinja -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=On -DENABLE_PYTHON_BINDINGS=On \
           -DCPACK_GENERATOR=DEB -DCPACK_PACKAGE_VERSION_SUFFIX="-0ubuntu1-$(lsb_release -sc)"
-      - run: make -C build -j4
-      - run: make -C build -j4 tests
-      - run: make -C build -j2 check
-      - run: make -C build install
-      - run: make -C build package
+      - run: ninja -C build
+      - run: ninja -C build tests
+      - run: ninja -C build check
+      - run: ninja -C build install
+      - run: ninja -C build package
       - save_cache:
           key: ccache
           paths:
@@ -168,10 +168,10 @@ jobs:
       - run: npm install --ignore-scripts
       - run: mkdir build
       - run: |
-          cd build && cmake .. -DCMAKE_BUILD_TYPE=Release -DENABLE_NODE_BINDINGS=Off
-      - run: make -C build -j4
-      - run: make -C build -j4 tests
-      - run: make -C build -j2 check
+          cd build && cmake .. -GNinja -DCMAKE_BUILD_TYPE=Release -DENABLE_NODE_BINDINGS=Off
+      - run: ninja -C build
+      - run: ninja -C build tests
+      - run: ninja -C build check
       - save_cache:
           key: ccache
           paths:
@@ -191,10 +191,10 @@ jobs:
       - run: brew install --build-from-source ./prime_server.rb
       - run: npm install --ignore-scripts
       - run: mkdir -p build
-      - run: cd build && cmake .. -DENABLE_PYTHON_BINDINGS=Off
-      - run: make -C build -j4
-      - run: make -C build -j4 tests
-      - run: make -C build -j2 check
+      - run: cd build && cmake .. -GNinja -DENABLE_PYTHON_BINDINGS=Off
+      - run: ninja -C build
+      - run: ninja -C build tests
+      - run: ninja -C build check
       - save_cache:
           key: ccache
           paths:
@@ -209,8 +209,8 @@ jobs:
       - run: git submodule sync && git submodule update --init
       - run: npm install --ignore-scripts
       - run: mkdir -p build
-      - run: cd build && cmake .. -DBUILD_SHARED_LIBS=Off -DENABLE_PYTHON_BINDINGS=Off -DENABLE_DATA_TOOLS=OFF -DENABLE_SERVICES=OFF -DBoost_USE_STATIC_LIBS=ON -DProtobuf_USE_STATIC_LIBS=ON -DLZ4_USE_STATIC_LIBS=ON
-      - run: make -C build -j4
+      - run: cd build && cmake .. -GNinja -DBUILD_SHARED_LIBS=Off -DENABLE_PYTHON_BINDINGS=Off -DENABLE_DATA_TOOLS=OFF -DENABLE_SERVICES=OFF -DBoost_USE_STATIC_LIBS=ON -DProtobuf_USE_STATIC_LIBS=ON -DLZ4_USE_STATIC_LIBS=ON
+      - run: ninja -C build
       - run:
           command: |
             export PACKAGE_JSON_VERSION=$(node -e "console.log(require('./package.json').version)")
@@ -228,8 +228,8 @@ jobs:
       - run: git submodule sync && git submodule update --init
       - run: npm install --ignore-scripts
       - run: mkdir -p build
-      - run: cd build && cmake .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_PYTHON_BINDINGS=Off -DBUILD_SHARED_LIBS=Off -DENABLE_DATA_TOOLS=OFF -DENABLE_SERVICES=OFF -DBoost_USE_STATIC_LIBS=ON -DProtobuf_USE_STATIC_LIBS=ON -DLZ4_USE_STATIC_LIBS=ON
-      - run: make -C build -j4
+      - run: cd build && cmake .. -GNinja -DCMAKE_BUILD_TYPE=Debug -DENABLE_PYTHON_BINDINGS=Off -DBUILD_SHARED_LIBS=Off -DENABLE_DATA_TOOLS=OFF -DENABLE_SERVICES=OFF -DBoost_USE_STATIC_LIBS=ON -DProtobuf_USE_STATIC_LIBS=ON -DLZ4_USE_STATIC_LIBS=ON
+      - run: ninja -C build
       - run:
           command: |
             export PACKAGE_JSON_VERSION=$(node -e "console.log(require('./package.json').version)")
