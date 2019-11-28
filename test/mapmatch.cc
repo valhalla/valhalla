@@ -407,7 +407,6 @@ void test_edges_discontinuity_with_multi_routes() {
     }
 
     std::vector<int> waypoint_indices;
-    std::vector<int> matching_indices;
     const auto& tracepoints = matched.get_child("tracepoints");
     for (const auto& tracepoint : tracepoints) {
       try {
