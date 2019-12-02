@@ -468,15 +468,16 @@ thor_worker_t::map_match(Api& request) {
             if (path_edge.edgeid != leg_destination_iter->edgeid) {
               continue;
             }
-            // ship when not break points nor the disjoint (upgraded break) points
+            // we only build legs on 3 types of locations:
+            // break, breakthrough and disjoint points (if there is disconnect edges)
+            // for locations that matched but are break types nor disjoint points
+            // we set its waypoint_index to limits::max to notify the serializer thus distinguish
+            // them from the first waypoint of the route whose waypoint_index is 0.
             if (options.shape(leg_destination_iter - match_results.begin()).type() !=
                     valhalla::Location::kBreak &&
                 options.shape(leg_destination_iter - match_results.begin()).type() !=
                     valhalla::Location::kBreakThrough &&
                 leg_destination_iter != disjoint_point) {
-              // for locations that matched but are neither breaks nor leg's starting/ending point
-              // we set its waypoint_index to limits::max to notify the serializer thus distinguish
-              // them from the first waypoint of the route whose waypoint_index is 0.
               Location* via_location =
                   options.mutable_shape(leg_destination_iter - match_results.cbegin());
               via_location->set_route_index(route_index);
