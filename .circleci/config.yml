@@ -48,9 +48,9 @@ jobs:
       - run: |
           cd build && cmake .. -GNinja -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=Off -DENABLE_PYTHON_BINDINGS=On \
           -DCPACK_GENERATOR=DEB -DCPACK_PACKAGE_VERSION_SUFFIX="-0ubuntu1-$(lsb_release -sc)" -DENABLE_SERVICES=OFF
-      - run: ninja -C build
-      - run: ninja -C build install
-      - run: ninja -C build package
+      - run: ninja -j 3 -C build
+      - run: ninja -j 3 -C build install
+      - run: ninja -j 3 -C build package
       - run:
           command: |
             export PACKAGE_JSON_VERSION=$(node -e "console.log(require('./package.json').version)")
@@ -89,9 +89,9 @@ jobs:
       - run: |
           cd build && cmake .. -GNinja -DCMAKE_BUILD_TYPE=Debug -DBUILD_SHARED_LIBS=Off -DENABLE_PYTHON_BINDINGS=On \
           -DCPACK_GENERATOR=DEB -DCPACK_PACKAGE_VERSION_SUFFIX="-0ubuntu1-$(lsb_release -sc)" -DENABLE_SERVICES=OFF
-      - run: ninja -C build
-      - run: ninja -C build install
-      - run: ninja -C build package
+      - run: ninja -j 3 -C build
+      - run: ninja -j 3 -C build install
+      - run: ninja -j 3 -C build package
       - run:
           command: |
             export PACKAGE_JSON_VERSION=$(node -e "console.log(require('./package.json').version)")
@@ -118,12 +118,12 @@ jobs:
       - run: mkdir build
       - run: cd build && cmake .. -GNinja -DCMAKE_BUILD_TYPE=Debug -DENABLE_COVERAGE=On -DCPACK_GENERATOR=DEB -DENABLE_COMPILER_WARNINGS=On -DCMAKE_EXPORT_COMPILE_COMMANDS=On
       - run: scripts/clang-tidy-only-diff.sh
-      - run: ninja -C build
-      - run: ninja -C build tests
-      - run: ninja -C build check
-      - run: ninja -C build install
-      - run: ninja -C build package
-      - run: ninja -C build coverage
+      - run: ninja -j 3 -C build
+      - run: ninja -j 3 -C build tests
+      - run: ninja -j 3 -C build check
+      - run: ninja -j 3 -C build install
+      - run: ninja -j 3 -C build package
+      - run: ninja -j 3 -C build coverage
       - run: /bin/bash <(curl -s https://codecov.io/bash) || echo "Codecov did not collect coverage reports"
       - save_cache:
           key: ccache
@@ -145,11 +145,11 @@ jobs:
       - run: |
           cd build && cmake .. -GNinja -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=On -DENABLE_PYTHON_BINDINGS=On \
           -DCPACK_GENERATOR=DEB -DCPACK_PACKAGE_VERSION_SUFFIX="-0ubuntu1-$(lsb_release -sc)"
-      - run: ninja -C build
-      - run: ninja -C build tests
-      - run: ninja -C build check
-      - run: ninja -C build install
-      - run: ninja -C build package
+      - run: ninja -j 3 -C build
+      - run: ninja -j 3 -C build tests
+      - run: ninja -j 3 -C build check
+      - run: ninja -j 3 -C build install
+      - run: ninja -j 3 -C build package
       - save_cache:
           key: ccache
           paths:
@@ -169,9 +169,9 @@ jobs:
       - run: mkdir build
       - run: |
           cd build && cmake .. -GNinja -DCMAKE_BUILD_TYPE=Release -DENABLE_NODE_BINDINGS=Off
-      - run: ninja -C build
-      - run: ninja -C build tests
-      - run: ninja -C build check
+      - run: ninja -j 3 -C build
+      - run: ninja -j 3 -C build tests
+      - run: ninja -j 3 -C build check
       - save_cache:
           key: ccache
           paths:
@@ -192,9 +192,9 @@ jobs:
       - run: npm install --ignore-scripts
       - run: mkdir -p build
       - run: cd build && cmake .. -GNinja -DENABLE_PYTHON_BINDINGS=Off
-      - run: ninja -C build
-      - run: ninja -C build tests
-      - run: ninja -C build check
+      - run: ninja -j 3 -C build
+      - run: ninja -j 3 -C build tests
+      - run: ninja -j 3 -C build check
       - save_cache:
           key: ccache
           paths:
@@ -210,7 +210,7 @@ jobs:
       - run: npm install --ignore-scripts
       - run: mkdir -p build
       - run: cd build && cmake .. -GNinja -DBUILD_SHARED_LIBS=Off -DENABLE_PYTHON_BINDINGS=Off -DENABLE_DATA_TOOLS=OFF -DENABLE_SERVICES=OFF -DBoost_USE_STATIC_LIBS=ON -DProtobuf_USE_STATIC_LIBS=ON -DLZ4_USE_STATIC_LIBS=ON
-      - run: ninja -C build
+      - run: ninja -j 3 -C build
       - run:
           command: |
             export PACKAGE_JSON_VERSION=$(node -e "console.log(require('./package.json').version)")
@@ -229,7 +229,7 @@ jobs:
       - run: npm install --ignore-scripts
       - run: mkdir -p build
       - run: cd build && cmake .. -GNinja -DCMAKE_BUILD_TYPE=Debug -DENABLE_PYTHON_BINDINGS=Off -DBUILD_SHARED_LIBS=Off -DENABLE_DATA_TOOLS=OFF -DENABLE_SERVICES=OFF -DBoost_USE_STATIC_LIBS=ON -DProtobuf_USE_STATIC_LIBS=ON -DLZ4_USE_STATIC_LIBS=ON
-      - run: ninja -C build
+      - run: ninja -j 3 -C build
       - run:
           command: |
             export PACKAGE_JSON_VERSION=$(node -e "console.log(require('./package.json').version)")
