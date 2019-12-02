@@ -86,6 +86,7 @@ add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/roma_tiles/1/047/352.gph
   DEPENDS valhalla_build_tiles ${VALHALLA_SOURCE_DIR}/test/data/via_montebello_roma_italy.osm.pbf)
 add_custom_target(roma_tiles DEPENDS ${CMAKE_BINARY_DIR}/test/data/roma_tiles/1/047/352.gph)
 
+file(GLOB locales "${VALHALLA_SOURCE_DIR}/locales/*.json")
 add_custom_command(OUTPUT .locales.timestamp
   COMMAND /bin/bash -c "for loc in $(jq --raw-output .posix_locale *.json); do \
        $<$<NOT:$<BOOL:${APPLE}>>:  localedef -i $\{loc\%.\*\} -f $\{loc\#\#\*.\} ./$\{loc\}   ; > \
@@ -93,7 +94,7 @@ add_custom_command(OUTPUT .locales.timestamp
      done \
      && touch ${CMAKE_CURRENT_BINARY_DIR}/.locales.timestamp"
   WORKING_DIRECTORY ${VALHALLA_SOURCE_DIR}/locales
-  DEPENDS ${VALHALLA_SOURCE_DIR}/locales/*.json
+  DEPENDS ${locales}
   COMMENT "Compile locale definition files..."
   VERBATIM)
 add_custom_target(localedef DEPENDS .locales.timestamp)
