@@ -434,12 +434,6 @@ thor_worker_t::map_match(Api& request) {
         disjoint_edge_group.second = discontinuity_point_iter - 1;
       }
 
-      std::cout << '\n' << "edge durations are: ";
-      for (const auto& path_info : m_temp_path_edges) {
-        std::cout << path_info.elapsed_time << " ";
-      }
-      std::cout << '\n';
-
       // The following logic put break points (matches results) on edge candidates to form legs
       // logic assumes the both match results and edge candidates are topologically sorted in correct
       // order
@@ -497,10 +491,6 @@ thor_worker_t::map_match(Api& request) {
 
             add_path_edge(&*origin_location, *leg_origin_iter);
             add_path_edge(&*destination_location, *leg_destination_iter);
-
-            std::cout << '\n';
-            std::cout << "build" << way_point_index << "th leg"
-                      << "on edge " << last_edge_index << " and " << i << std::endl;
 
             // add a new leg to the current route
             TripLegBuilder::Build(controller, matcher->graphreader(), mode_costing,

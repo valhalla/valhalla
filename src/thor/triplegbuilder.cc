@@ -1208,6 +1208,12 @@ TripLegBuilder::Build(const AttributesController& controller,
     SetHeadings(trip_edge, controller, edge, shape, 0);
 
     auto* node = trip_path.add_node();
+    // when both start and end point are on the same edge, the duration of the leg should be
+    // set according to the difference of the percentage along the edge
+    //                start_node     end_node
+    // edge start =======0=============0==== edge end
+    //                   |_____________|
+    //                      duration
     if (controller.attributes.at(kNodeElapsedTime)) {
       node->set_elapsed_time(path_begin->elapsed_time * (end_pct - start_pct));
     }
@@ -1307,6 +1313,32 @@ TripLegBuilder::Build(const AttributesController& controller,
     // Assign the elapsed time from the start of the leg
     if (controller.attributes.at(kNodeElapsedTime)) {
       trip_node->set_elapsed_time(elapsedtime);
+    }
+
+    // Update elapsed time at the end of the edge, store this at the next node.
+    // scenario 1: edge is the first edge
+    //                   trip_node
+    // edge start ==========O========== edge end
+    //                      |__________|
+    //                       duration
+    if (edge_itr == path_begin) {
+      elapsedtime += edge_itr->elapsed_time * (1.f - start_pct);
+    }
+    // scenario 2: edge is int the middle
+    //                              trip_node
+    // edge start =====================0 edge end
+    //           |_____________________|
+    //                  duration
+    if (edge_itr > path_begin && edge_itr < path_end - 1) {
+      elapsedtime += edge_itr->elapsed_time;
+    }
+    // scenario 3: edge is the last edge
+    //                   trip_node
+    // edge start ==========O========== edge end
+    //           |__________|
+    //             duration
+    if (edge_itr == path_end - 1) {
+      elapsedtime += edge_itr->elapsed_time * end_pct;
     }
 
     // Assign the admin index
@@ -1667,21 +1699,6 @@ TripLegBuilder::Build(const AttributesController& controller,
           }
         }
       }
-    }
-
-    // Update elapsed time at the end of the edge, store this at the next node.
-    if (edge_itr == path_begin) {
-      elapsedtime += edge_itr->elapsed_time * (1.f - start_pct);
-      std::cout << "edge duration: " << edge_itr->elapsed_time << ", at start + 1, thus trimmed to "
-                << edge_itr->elapsed_time * (1.f - start_pct) << std::endl;
-    } else if (edge_itr == path_end - 1) {
-      std::cout << "edge duration: " << edge_itr->elapsed_time << ", at end - 1, thus trimmed to "
-                << edge_itr->elapsed_time * end_pct << std::endl;
-      elapsedtime += edge_itr->elapsed_time * end_pct;
-    } else {
-      std::cout << "edge duration: " << edge_itr->elapsed_time << ", middle thus no trimmed"
-                << std::endl;
-      elapsedtime += edge_itr->elapsed_time;
     }
 
     // Set the endnode of this directed edge as the startnode of the next edge.

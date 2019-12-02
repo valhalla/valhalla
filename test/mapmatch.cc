@@ -851,10 +851,23 @@ void test_now_matches() {
 }
 
 void test_leg_duration_trimming() {
-  std::vector<std::string> test_cases =
-      {
-          R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[{"lat": 52.0957652, "lon": 5.1101366, "type": "break"},{"lat": 52.0959457, "lon": 5.1106847, "type": "break"},{"lat": 52.0962535, "lon": 5.1116988, "type": "break"}]})",
-      };// R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[{"lat": 52.0826293, "lon": 5.1267623, "type": "break"},{"lat": 52.0835867, "lon": 5.1276355, "type": "break"},{"lat": 52.0837127, "lon": 5.1277763, "type": "break"},{"lat": 52.0840813, "lon": 5.1281688, "type": "break"}]})"};
+  std::vector<std::string> test_cases = {
+        R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
+          {"lat": 52.0957652, "lon": 5.1101366, "type": "break"},
+          {"lat": 52.0959457, "lon": 5.1106847, "type": "break"},
+          {"lat": 52.0962535, "lon": 5.1116988, "type": "break"}]})",
+        R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
+          {"lat": 52.0826293, "lon": 5.1267623, "type": "break"},
+          {"lat": 52.0835867, "lon": 5.1276355, "type": "break"},
+          {"lat": 52.0837127, "lon": 5.1277763, "type": "break"},
+          {"lat": 52.0839615, "lon": 5.1280204, "type": "break"},
+          {"lat": 52.0841756, "lon": 5.1282906, "type": "break"}]})",
+        R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
+          {"lat": 52.0609108, "lon": 5.0924059, "type": "break"},
+          {"lat": 52.0605926, "lon": 5.0962937, "type": "break"},
+          {"lat": 52.0604866, "lon": 5.0975675, "type": "break"},
+          {"lat": 52.0601766, "lon": 5.1005663, "type": "break"}]})"};
+
   std::unordered_set<float> leg_durations;
   tyr::actor_t actor(conf, true);
   for (size_t i = 0; i < test_cases.size(); ++i) {
@@ -865,7 +878,6 @@ void test_leg_duration_trimming() {
       for (const auto& leg : trip.second.get_child("legs")) {
         double duration = leg.second.get<float>("duration");
         auto iter = leg_durations.insert(duration);
-        std::cout << duration << std::endl;
         if (!iter.second) {
           throw std::logic_error{"leg duration not trimmed correctly"};
         }
@@ -878,42 +890,43 @@ void test_leg_duration_trimming() {
 int main(int argc, char* argv[]) {
   test::suite suite("map matcher");
   midgard::logging::Configure({{"type", ""}}); // silence logs
+  midgard::logging::Configure({{"type", ""}}); // silence logs
   if (argc > 1)
     seed = std::stoi(argv[1]);
   if (argc > 2)
     bound = std::stoi(argv[2]);
 
-  //  suite.test(TEST_CASE(test32bit));
-  //
-  //  suite.test(TEST_CASE(test_matcher));
-  //
-  //  suite.test(TEST_CASE(test_trace_route_breaks));
-  //
-  //  suite.test(TEST_CASE(test_disconnected_edges_expect_no_route));
-  //
-  //  suite.test(TEST_CASE(test_edges_discontinuity_with_multi_routes));
-  //
-  //  suite.test(TEST_CASE(test_distance_only));
-  //
-  //  suite.test(TEST_CASE(test_time_rejection));
-  //
-  //  suite.test(TEST_CASE(test_trace_route_edge_walk_expected_error_code));
-  //
-  //  suite.test(TEST_CASE(test_trace_route_map_snap_expected_error_code));
-  //
-  //  suite.test(TEST_CASE(test_trace_attributes_edge_walk_expected_error_code));
-  //
-  //  suite.test(TEST_CASE(test_trace_attributes_map_snap_expected_error_code));
-  //
-  //  suite.test(TEST_CASE(test_topk_validate));
-  //
-  //  suite.test(TEST_CASE(test_topk_fork_alternate));
-  //
-  //  suite.test(TEST_CASE(test_topk_loop_alternate));
-  //
-  //  suite.test(TEST_CASE(test_topk_frontage_alternate));
-  //
-  //  suite.test(TEST_CASE(test_now_matches));
+  suite.test(TEST_CASE(test32bit));
+
+  suite.test(TEST_CASE(test_matcher));
+
+  suite.test(TEST_CASE(test_trace_route_breaks));
+
+  suite.test(TEST_CASE(test_disconnected_edges_expect_no_route));
+
+  suite.test(TEST_CASE(test_edges_discontinuity_with_multi_routes));
+
+  suite.test(TEST_CASE(test_distance_only));
+
+  suite.test(TEST_CASE(test_time_rejection));
+
+  suite.test(TEST_CASE(test_trace_route_edge_walk_expected_error_code));
+
+  suite.test(TEST_CASE(test_trace_route_map_snap_expected_error_code));
+
+  suite.test(TEST_CASE(test_trace_attributes_edge_walk_expected_error_code));
+
+  suite.test(TEST_CASE(test_trace_attributes_map_snap_expected_error_code));
+
+  suite.test(TEST_CASE(test_topk_validate));
+
+  suite.test(TEST_CASE(test_topk_fork_alternate));
+
+  suite.test(TEST_CASE(test_topk_loop_alternate));
+
+  suite.test(TEST_CASE(test_topk_frontage_alternate));
+
+  suite.test(TEST_CASE(test_now_matches));
 
   suite.test(TEST_CASE(test_leg_duration_trimming));
 
