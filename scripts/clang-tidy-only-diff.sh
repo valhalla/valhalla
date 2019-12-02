@@ -46,7 +46,7 @@ fi
 # `{}` specifies where `parallel` adds the command-line arguments.
 # `:::` separates the command `parallel` should execute from the arguments it should pass to the commands.
 parallel -m \
-  clang-tidy \
+  ${CLANG_TIDY} \
   -p $tidy_dir \
   -header-filter "^$(pwd)/valhalla/[^/]+$" \
   -fix \
