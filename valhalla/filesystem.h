@@ -37,14 +37,12 @@ public:
     // TODO: squash repeated separators
     // delineate the path
     for (size_t npos = path_name_.find_first_of(preferred_separator); npos != std::string::npos;
-         npos = path_name_.find_first_of(preferred_separator, npos + 1)) {
+         npos = path_name_.find_first_of(preferred_separator, npos + 1))
       separators_.push_back(npos);
-    }
   }
   path filename() const {
-    if (separators_.empty()) {
+    if (separators_.empty())
       return *this;
-    }
     return path(path_name_.substr(separators_.back() + 1));
   }
   const char* c_str() const {
@@ -55,9 +53,8 @@ public:
   }
   path& replace_filename(const path& filename) {
     // empty or just a file name then copy
-    if (separators_.empty()) {
+    if (separators_.empty())
       return *this = filename;
-    }
 
     // TODO: if its just the root_name we replace that
 
@@ -83,9 +80,8 @@ public:
       // update the parts bookkeeping
       auto sep_len = separators_.size();
       separators_.insert(separators_.end(), rhs.separators_.begin(), rhs.separators_.end());
-      for (auto i = separators_.begin() + sep_len; i != separators_.end(); ++i) {
+      for (auto i = separators_.begin() + sep_len; i != separators_.end(); ++i)
         (*i) += len;
-      }
     }
     return *this;
   }
@@ -152,23 +148,22 @@ private:
   // On POXIX, d_type is char.
   // On Windows, d_type is int (values are larger than 8-bit integer).
   decltype(::dirent::d_type) mode_to_type(decltype(::stat::st_mode) mode) {
-    if (S_ISREG(mode)) {
+    if (S_ISREG(mode))
       return DT_REG;
-    } else if (S_ISDIR(mode)) {
+    else if (S_ISDIR(mode))
       return DT_DIR;
-    } else if (S_ISFIFO(mode)) {
+    else if (S_ISFIFO(mode))
       return DT_FIFO;
-    } else if (S_ISSOCK(mode)) {
+    else if (S_ISSOCK(mode))
       return DT_SOCK;
-    } else if (S_ISCHR(mode)) {
+    else if (S_ISCHR(mode))
       return DT_CHR;
-    } else if (S_ISBLK(mode)) {
+    else if (S_ISBLK(mode))
       return DT_BLK;
-    } else if (S_ISLNK(mode)) {
+    else if (S_ISLNK(mode))
       return DT_LNK;
-    } else {
+    else
       return DT_UNKNOWN;
-    }
   }
   dirent* next() {
     // if we can scan
@@ -180,16 +175,14 @@ private:
       } while (entry_ && (strcmp(entry_->d_name, ".") == 0 || strcmp(entry_->d_name, "..") == 0));
       // update the path
       if (entry_) {
-        if (first_entry) {
+        if (first_entry)
           path_ /= entry_->d_name;
-        } else {
+        else
           path_.replace_filename(entry_->d_name);
-        }
         // fix the type if its unknown
         struct stat s;
-        if (entry_->d_type == DT_UNKNOWN && stat(path_.c_str(), &s) == 0) {
+        if (entry_->d_type == DT_UNKNOWN && stat(path_.c_str(), &s) == 0)
           entry_->d_type = mode_to_type(s.st_mode);
-        }
       }
     }
     return entry_.get();
@@ -203,9 +196,8 @@ class directory_iterator {
 public:
   directory_iterator(const filesystem::path& path) : entry_(new directory_entry(path, true)) {
     // if its not a dir or it is empty
-    if (!entry_->dir_ || !entry_->next()) {
+    if (!entry_->dir_ || !entry_->next())
       entry_.reset();
-    }
   }
   directory_iterator() : entry_() {
   }
@@ -216,9 +208,8 @@ public:
     return entry_.get();
   }
   directory_iterator& operator++() {
-    if (entry_ && !entry_->next()) {
+    if (entry_ && !entry_->next())
       entry_.reset();
-    }
     return *this;
   }
 
@@ -241,9 +232,8 @@ public:
   recursive_directory_iterator(const filesystem::path& path) : stack_() {
     stack_.emplace_back(new directory_entry(path, true));
     // if wasn't an iterable directory or it was empty then we are at the end
-    if (!stack_.back()->dir_ || !stack_.back()->next()) {
+    if (!stack_.back()->dir_ || !stack_.back()->next())
       stack_.clear();
-    }
   }
   recursive_directory_iterator() : stack_() {
   }
@@ -257,13 +247,11 @@ public:
     // if we have something to iterate
     if (!stack_.empty()) {
       // if its a directory we deepen our depth first search
-      if (stack_.back()->is_directory()) {
+      if (stack_.back()->is_directory())
         stack_.emplace_back(new directory_entry(stack_.back()->path_, true));
-      }
       // try to go horizontally and if not go up
-      while (!stack_.empty() && !stack_.back()->next()) {
+      while (!stack_.empty() && !stack_.back()->next())
         stack_.pop_back();
-      }
     }
     return *this;
   }
@@ -300,9 +288,8 @@ inline bool is_regular_file(const path& p) {
 
 inline bool create_directories(const path& p) {
   // name no work to do
-  if (p.path_name_.empty()) {
+  if (p.path_name_.empty())
     return true;
-  }
 
   // for each piece of the path
   struct stat s;
@@ -349,9 +336,8 @@ inline void resize_file(const path& p, std::uintmax_t new_size) {
   };
 #endif
 
-  if (truncate(p.c_str(), new_size)) {
+  if (truncate(p.c_str(), new_size))
     throw std::runtime_error(std::string("Failed to resize path: ") + strerror(errno));
-  }
 }
 
 inline bool remove(const path& p) {
@@ -363,13 +349,11 @@ inline bool remove_all(const path& p) {
   for (directory_iterator i(p), end; i != end; ++i) {
     // if its a directory we recurse depth first
     if (i->is_directory()) {
-      if (!remove_all(i->path())) {
+      if (!remove_all(i->path()))
         return false;
-      }
     } // otherwise its a file or link try to delete it
-    else if (!remove(i->path())) {
+    else if (!remove(i->path()))
       return false;
-    }
   }
   // delete the root
   return remove(p);
