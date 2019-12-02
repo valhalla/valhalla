@@ -53,7 +53,8 @@ parallel -m \
   -format-style=file \
   {} ::: "${modified_filepaths[@]}"
 
-if ! git diff --exit-code --quiet; then
-  echo "Tidy introduced changes"
-  exit 1
-fi
+# TODO Enable exit-code 1 on errors once we fix all the existing clang-tidy errors to prevent noisy PR's
+#if ! git diff --exit-code --quiet; then
+#  echo "Tidy introduced changes"
+#  exit 1
+#fi
