@@ -23,27 +23,6 @@ commands:
             echo 'nvm alias default v8.11.2' >> $BASH_ENV
 
 jobs:
-  lint:
-    docker:
-      - image: valhalla/docker:build-3.0.1
-    steps:
-      - checkout
-      - run: apt-get update && apt-get -y install clang-tidy-5.0 clang-5.0 curl git nodejs
-      - run: nodejs ./scripts/validate_changelog.js
-      - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
-      - run: git submodule sync && git submodule update --init
-      - restore_cache:
-          keys:
-            - ccache
-      - run: npm install --ignore-scripts
-      - run: mkdir build
-      - run: cd build && cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXPORT_COMPILE_COMMANDS=On
-      - run: make -C build -j4
-      - run: cd build && ../scripts/tidy.sh && ../scripts/error_on_dirty.sh
-      - save_cache:
-          key: ccache
-          paths:
-            - ~/.ccache
 
   build-release-binary-linux:
     docker:
@@ -125,7 +104,7 @@ jobs:
           paths:
             - ~/.ccache
 
-  build-debug:
+  lint-build-debug:
     docker:
       - image: valhalla/docker:build-3.0.1
     steps:
@@ -137,7 +116,8 @@ jobs:
             - ccache
       - run: npm install --ignore-scripts
       - run: mkdir build
-      - run: cd build && cmake .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_COVERAGE=On -DCPACK_GENERATOR=DEB -DENABLE_COMPILER_WARNINGS=On
+      - run: cd build && cmake .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_COVERAGE=On -DCPACK_GENERATOR=DEB -DENABLE_COMPILER_WARNINGS=On -DCMAKE_EXPORT_COMPILE_COMMANDS=On
+      - run: scripts/clang-tidy-only-diff.sh
       - run: make -C build -j4
       - run: make -C build -j4 tests
       - run: make -C build -j2 check
@@ -262,8 +242,7 @@ workflows:
   version: 2
   build_test_publish:
     jobs:
-      - lint
-      - build-debug
+      - lint-build-debug
       - build-release
       - build-release-x86
       - build-osx
