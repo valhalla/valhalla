@@ -444,8 +444,8 @@ thor_worker_t::map_match(Api& request) {
         // We use multi-route to handle discontinuity
         const auto& edges = disjoint_edge_group.first;
         const auto& disjoint_point = disjoint_edge_group.second;
+        uint64_t route_index = request.trip().routes_size();
         auto* route = request.mutable_trip()->mutable_routes()->Add();
-        uint64_t route_index = request.trip().routes_size() - 1;
         // first we find where this leg is going to begin
         while (leg_origin_iter != match_results.end() &&
                leg_origin_iter->edgeid != edges.front().edgeid) {
@@ -464,16 +464,16 @@ thor_worker_t::map_match(Api& request) {
           // first valid destination matched points after origin matched points
           for (auto leg_destination_iter = leg_origin_iter + 1;
                leg_destination_iter != match_results.cend(); ++leg_destination_iter) {
-            // we skip input location points that are:
-            // 1. not on the match results edge
-            // 2. neither break points nor the disjoint (upgraded break) points
+            // skip input location points that are not on the match results edge
             if (path_edge.edgeid != leg_destination_iter->edgeid) {
               continue;
-            } else if (options.shape(leg_destination_iter - match_results.begin()).type() !=
-                           valhalla::Location::kBreak &&
-                       options.shape(leg_destination_iter - match_results.begin()).type() !=
-                           valhalla::Location::kBreakThrough &&
-                       leg_destination_iter != disjoint_point) {
+            }
+            // ship when not break points nor the disjoint (upgraded break) points
+            if (options.shape(leg_destination_iter - match_results.begin()).type() !=
+                    valhalla::Location::kBreak &&
+                options.shape(leg_destination_iter - match_results.begin()).type() !=
+                    valhalla::Location::kBreakThrough &&
+                leg_destination_iter != disjoint_point) {
               // for locations that matched but are neither breaks nor leg's starting/ending point
               // we set its waypoint_index to limits::max to notify the serializer thus distinguish
               // them from the first waypoint of the route whose waypoint_index is 0.
