@@ -1329,7 +1329,7 @@ TripLegBuilder::Build(const AttributesController& controller,
     // edge start =====================0 edge end
     //           |_____________________|
     //                  duration
-    if (edge_itr > path_begin && edge_itr < path_end - 1) {
+    else if (edge_itr > path_begin && edge_itr < path_end - 1) {
       elapsedtime += edge_itr->elapsed_time;
     }
     // scenario 3: edge is the last edge
@@ -1337,7 +1337,7 @@ TripLegBuilder::Build(const AttributesController& controller,
     // edge start ==========O========== edge end
     //           |__________|
     //             duration
-    if (edge_itr == path_end - 1) {
+    else {
       elapsedtime += edge_itr->elapsed_time * end_pct;
     }
 
