@@ -39,7 +39,8 @@ public:
                        TripLeg& trip_path,
                        const std::function<void()>* interrupt_callback = nullptr,
                        std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>>*
-                           route_discontinuities = nullptr);
+                           route_discontinuities = nullptr,
+                       bool trim_duration = false);
 };
 
 } // namespace thor

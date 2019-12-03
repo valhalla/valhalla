@@ -507,7 +507,7 @@ thor_worker_t::map_match(Api& request) {
                                   edges.begin() + last_edge_index, edges.begin() + i + 1,
                                   *origin_location, *destination_location,
                                   std::list<valhalla::Location>{}, *route->mutable_legs()->Add(),
-                                  interrupt, &m_temp_route_discontinuities);
+                                  interrupt, &m_temp_route_discontinuities, true);
 
             // beginning of next leg will be the end of this leg
             leg_origin_iter = leg_destination_iter;

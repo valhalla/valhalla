@@ -1058,7 +1058,8 @@ TripLegBuilder::Build(const AttributesController& controller,
                       TripLeg& trip_path,
                       const std::function<void()>* interrupt_callback,
                       std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>>*
-                          route_discontinuities) {
+                          route_discontinuities,
+                      bool trim_duration) {
   // Test interrupt prior to building trip path
   if (interrupt_callback) {
     (*interrupt_callback)();
@@ -1208,14 +1209,18 @@ TripLegBuilder::Build(const AttributesController& controller,
     SetHeadings(trip_edge, controller, edge, shape, 0);
 
     auto* node = trip_path.add_node();
-    // when both start and end point are on the same edge, the duration of the leg should be
-    // set according to the difference of the percentage along the edge
-    //                start_node     end_node
-    // edge start =======0=============0==== edge end
-    //                   |_____________|
-    //                      duration
     if (controller.attributes.at(kNodeElapsedTime)) {
-      node->set_elapsed_time(path_begin->elapsed_time * (end_pct - start_pct));
+      // For mapmatching when both start and end point are on the same edge, the duration of the leg
+      // should be set according to the difference of the percentage along the edge
+      //                start_node     end_node
+      // edge start =======0=============0==== edge end
+      //                   |_____________|
+      //                      duration
+      if (trim_duration) {
+        node->set_elapsed_time(path_begin->elapsed_time * (end_pct - start_pct));
+      } else {
+        node->set_elapsed_time(path_begin->elapsed_time);
+      }
     }
 
     const GraphTile* end_tile = graphreader.GetGraphTile(edge->endnode());
@@ -1315,30 +1320,34 @@ TripLegBuilder::Build(const AttributesController& controller,
       trip_node->set_elapsed_time(elapsedtime);
     }
 
-    // Update elapsed time at the end of the edge, store this at the next node.
-    // scenario 1: edge is the first edge
-    //                   trip_node
-    // edge start ==========O========== edge end
-    //                      |__________|
-    //                       duration
-    if (edge_itr == path_begin) {
-      elapsedtime += edge_itr->elapsed_time * (1.f - start_pct);
-    }
-    // scenario 2: edge is int the middle
-    //                              trip_node
-    // edge start =====================0 edge end
-    //           |_____________________|
-    //                  duration
-    else if (edge_itr > path_begin && edge_itr < path_end - 1) {
-      elapsedtime += edge_itr->elapsed_time;
-    }
-    // scenario 3: edge is the last edge
-    //                   trip_node
-    // edge start ==========O========== edge end
-    //           |__________|
-    //             duration
-    else {
-      elapsedtime += edge_itr->elapsed_time * end_pct;
+    if (trim_duration) {
+      // Update elapsed time at the end of the edge, store this at the next node.
+      // scenario 1: edge is the first edge
+      //                   trip_node
+      // edge start ==========O========== edge end
+      //                      |__________|
+      //                       duration
+      if (edge_itr == path_begin) {
+        elapsedtime += edge_itr->elapsed_time * (1.f - start_pct);
+      }
+      // scenario 2: edge is int the middle
+      //                              trip_node
+      // edge start =====================0 edge end
+      //           |_____________________|
+      //                  duration
+      else if (edge_itr > path_begin && edge_itr < path_end - 1) {
+        elapsedtime += edge_itr->elapsed_time;
+      }
+      // scenario 3: edge is the last edge
+      //                   trip_node
+      // edge start ==========O========== edge end
+      //           |__________|
+      //             duration
+      else {
+        elapsedtime += edge_itr->elapsed_time * end_pct;
+      }
+    } else {
+      elapsedtime = edge_itr->elapsed_time;
     }
 
     // Assign the admin index
