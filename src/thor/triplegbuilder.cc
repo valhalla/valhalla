@@ -1202,7 +1202,6 @@ TripLegBuilder::Build(const AttributesController& controller,
       trip_edge->set_end_shape_index(shape.size() - 1);
     }
 
-    // Set shape attributes
     // For mapmatching when both start and end point are on the same edge, the duration of the leg
     // should be set according to the difference of the percentage along the edge
     //                start_node     end_node
@@ -1322,8 +1321,8 @@ TripLegBuilder::Build(const AttributesController& controller,
     }
 
     double edge_pct = 1.0;
+    // Update elapsed time at the end of the edge, store this at the next node.
     if (trim_duration) {
-      // Update elapsed time at the end of the edge, store this at the next node.
       // scenario 1: edge is the first edge
       //                   trip_node
       // edge start ==========O========== edge end
@@ -1332,7 +1331,7 @@ TripLegBuilder::Build(const AttributesController& controller,
       if (edge_itr == path_begin) {
         edge_pct = 1.f - start_pct;
       }
-      // scenario 3: edge is the last edge
+      // scenario 2: edge is the last edge
       //                   trip_node
       // edge start ==========O========== edge end
       //           |__________|
