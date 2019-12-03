@@ -928,6 +928,8 @@ void test_leg_duration_trimming() {
           {"lat": 52.0604866, "lon": 5.0975675, "type": "break"},
           {"lat": 52.0601766, "lon": 5.1005663, "type": "break"}]})"};
 
+  // in these test cases, if the same leg duration appears more than once, the duration is not
+  // trimmed correctly, we use unordered_set to catch this behavior
   std::unordered_set<float> leg_durations;
   tyr::actor_t actor(conf, true);
   for (size_t i = 0; i < test_cases.size(); ++i) {
@@ -950,7 +952,6 @@ void test_leg_duration_trimming() {
 int main(int argc, char* argv[]) {
   test::suite suite("map matcher");
   midgard::logging::Configure({{"type", ""}}); // silence logs
-
   if (argc > 1)
     seed = std::stoi(argv[1]);
   if (argc > 2)
