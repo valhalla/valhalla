@@ -410,18 +410,14 @@ void test_edges_discontinuity_with_multi_routes() {
     const auto& tracepoints = matched.get_child("tracepoints");
     for (const auto& tracepoint : tracepoints) {
       try {
-        // this try catch block handles tracepoints of null from the match result.
+        // this try catch block handles tracepoints of null or tracepoint waypooint_index of null from
+        // the match result.
         waypoint_indices.push_back(tracepoint.second.get<int>("waypoint_index"));
-        if (waypoint_indices.size() > 1 && waypoint_indices.end()[-1] == waypoint_indices.end()[-2] &&
-            waypoint_indices.end()[-1] == 0) {
-          // "via" and "through" points has waypoint index 0.
-          waypoint_indices.pop_back();
-        }
       } catch (...) {}
     }
 
     if (compare_indices != waypoint_indices) {
-      throw std::logic_error("way point indices does not match");
+      throw std::logic_error("leg shape waypoint indices does not match");
     }
   }
 }
@@ -429,10 +425,10 @@ void test_edges_discontinuity_with_multi_routes() {
 void test_disconnected_edges_expect_no_route() {
   std::vector<std::string> test_cases = {
       R"({"costing":"auto","shape_match":"map_snap","shape":[
-          {"lat":52.0630834,"lon":5.1037227,"type":"break"},
-          {"lat":52.0633099,"lon":5.1047193,"type":"break"},
-          {"lat":52.0640117,"lon":5.1040429,"type":"break"},
-          {"lat":52.0644313,"lon":5.1041697,"type":"break"}]})"};
+        {"lat":52.0630834,"lon":5.1037227,"type":"break"},
+        {"lat":52.0633099,"lon":5.1047193,"type":"break"},
+        {"lat":52.0640117,"lon":5.1040429,"type":"break"},
+        {"lat":52.0644313,"lon":5.1041697,"type":"break"}]})"};
   std::vector<size_t> test_answers = {0};
   size_t illegal_path = 0;
   tyr::actor_t actor(conf, true);
@@ -446,6 +442,70 @@ void test_disconnected_edges_expect_no_route() {
     }
   }
 }
+
+void test_matching_indices_and_waypoint_indices() {
+  std::vector<std::string> test_cases = {
+      R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
+        {"lat": 52.068882, "lon": 5.120852, "type": "break"},
+        {"lat": 52.069671, "lon": 5.121185, "type": "via"},
+        {"lat": 52.070380, "lon": 5.121523, "type": "via"},
+        {"lat": 52.070947, "lon": 5.121828, "type": "via"},
+        {"lat": 52.071827, "lon": 5.1227, "type": "via"},
+        {"lat": 52.072526, "lon": 5.122553, "type": "via"},
+        {"lat": 52.073489, "lon": 5.122880, "type": "via"},
+        {"lat": 52.074554, "lon": 5.122955, "type": "via"},
+        {"lat": 52.075190, "lon": 5.123067, "type": "via"},
+        {"lat": 52.075718, "lon": 5.123121, "type": "break"}]})",
+      R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
+        {"lat": 52.0609632, "lon": 5.0917676, "type": "break"},
+        {"lat": 52.0607180, "lon": 5.0950566, "type": "break"},
+        {"lat": 52.0797372, "lon": 5.1293068, "type": "break"},
+        {"lat": 52.0792731, "lon": 5.1343818, "type": "break"},
+        {"lat": 52.0763011, "lon": 5.1574637, "type": "break"},
+        {"lat": 52.0782167, "lon": 5.1592370, "type": "via"},
+        {"lat": 52.0801357, "lon": 5.1605372, "type": "break"}]})"};
+  std::vector<std::vector<std::pair<std::string, std::string>>> answers{{{"0", "0"},
+                                                                         {"0", "null"},
+                                                                         {"0", "null"},
+                                                                         {"0", "1"},
+                                                                         {"1", "0"},
+                                                                         {"1", "null"},
+                                                                         {"1", "null"},
+                                                                         {"1", "null"},
+                                                                         {"1", "1"}},
+                                                                        {
+                                                                            {"0", "0"},
+                                                                            {"0", "1"},
+                                                                            {"1", "0"},
+                                                                            {"1", "1"},
+                                                                            {"2", "0"},
+                                                                            {"2", "null"},
+                                                                            {"2", "1"},
+                                                                        }};
+
+  tyr::actor_t actor(conf, true);
+  for (size_t i = 0; i < test_cases.size(); ++i) {
+    auto matched = json_to_pt(actor.trace_route(test_cases[i]));
+    const auto& tracepoints = matched.get_child("tracepoints");
+    int j = 0;
+    for (const auto& tracepoint : tracepoints) {
+      std::pair<std::string, std::string> result;
+      try {
+        result = {tracepoint.second.get<std::string>("matchings_index"),
+                  tracepoint.second.get<std::string>("waypoint_index")};
+      } catch (...) {
+        // handle the tracepoint null case
+        continue;
+      }
+      if (result != answers[i][j]) {
+        throw std::logic_error{"expect matching_index and waypoint_index: (" + answers[i][j].first +
+                               "," + answers[i][j].second + "), " + "but got: (" + result.first +
+                               "," + result.second + ")"};
+      }
+      ++j;
+    }
+  }
+} // namespace
 
 void test_time_rejection() {
   tyr::actor_t actor(conf, true);
@@ -927,8 +987,10 @@ int main(int argc, char* argv[]) {
   suite.test(TEST_CASE(test_topk_frontage_alternate));
 
   suite.test(TEST_CASE(test_now_matches));
-
+  
   suite.test(TEST_CASE(test_leg_duration_trimming));
 
+  suite.test(TEST_CASE(test_matching_indices_and_waypoint_indices));
+  
   return suite.tear_down();
 }

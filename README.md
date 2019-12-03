@@ -196,7 +196,7 @@ If you would like to make an improvement to the code, please be aware that all v
 
 Note that our CI system checks that code formatting is consistent, and the build will fail if formatting rules aren't followed.  Please run `./scripts/format.sh` over your code before committing, to auto-format it in the projects preferred style.
 
-Also note that we run some `clang-tidy` linting over the code as well (see `.clang-tidy` for the list of rules enforced).  You can run `./scripts/tidy.sh` over the code before committing to ensure you haven't added any of the common problems we check for (Note: `./scripts/tidy.sh` requires the exitence of a `compile_commands.json` database.  You can generate this file by running `bear make` instead of just `make`.  The `bear` tool is installable on Ubuntu-based systems with `apt-get install bear`, and on macOS with `brew install bear`).
+Also note that we run some `clang-tidy` linting over the code as well (see `.clang-tidy` for the list of rules enforced).  You can run `./scripts/clang-tidy-only-diff.sh` over the code before committing to ensure you haven't added any of the common problems we check for (Note: `./scripts/clang-tidy-only-diff.sh` requires the exitence of a `compile_commands.json` database.  You can generate this file by running `cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=On ... && make`.
 
 Using the Node.js Bindings
 --------------------------
