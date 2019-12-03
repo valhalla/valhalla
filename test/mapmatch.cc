@@ -912,17 +912,17 @@ void test_now_matches() {
 
 void test_leg_duration_trimming() {
   std::vector<std::string> test_cases = {
-        R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
+      R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
           {"lat": 52.0957652, "lon": 5.1101366, "type": "break"},
           {"lat": 52.0959457, "lon": 5.1106847, "type": "break"},
           {"lat": 52.0962535, "lon": 5.1116988, "type": "break"}]})",
-        R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
+      R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
           {"lat": 52.0826293, "lon": 5.1267623, "type": "break"},
           {"lat": 52.0835867, "lon": 5.1276355, "type": "break"},
           {"lat": 52.0837127, "lon": 5.1277763, "type": "break"},
           {"lat": 52.0839615, "lon": 5.1280204, "type": "break"},
           {"lat": 52.0841756, "lon": 5.1282906, "type": "break"}]})",
-        R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
+      R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
           {"lat": 52.0609108, "lon": 5.0924059, "type": "break"},
           {"lat": 52.0605926, "lon": 5.0962937, "type": "break"},
           {"lat": 52.0604866, "lon": 5.0975675, "type": "break"},
@@ -950,7 +950,7 @@ void test_leg_duration_trimming() {
 int main(int argc, char* argv[]) {
   test::suite suite("map matcher");
   midgard::logging::Configure({{"type", ""}}); // silence logs
-  midgard::logging::Configure({{"type", ""}}); // silence logs
+
   if (argc > 1)
     seed = std::stoi(argv[1]);
   if (argc > 2)
@@ -987,10 +987,10 @@ int main(int argc, char* argv[]) {
   suite.test(TEST_CASE(test_topk_frontage_alternate));
 
   suite.test(TEST_CASE(test_now_matches));
-  
+
   suite.test(TEST_CASE(test_leg_duration_trimming));
 
   suite.test(TEST_CASE(test_matching_indices_and_waypoint_indices));
-  
+
   return suite.tear_down();
 }
