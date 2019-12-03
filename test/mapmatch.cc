@@ -930,17 +930,15 @@ void test_leg_duration_trimming() {
 
   // in these test cases, if the same leg duration appears more than once, the duration is not
   // trimmed correctly, we use unordered_set to catch this behavior
-  std::unordered_set<float> leg_durations;
+  std::vector<std::vector<int>> answers{{3, 8}, {4, 3, 6, 10}, {8, 6, 14}};
   tyr::actor_t actor(conf, true);
   for (size_t i = 0; i < test_cases.size(); ++i) {
     auto matched = json_to_pt(actor.trace_route(test_cases[i]));
     const auto& trips = matched.get_child(("matchings"));
+    int j = 0;
     for (const auto& trip : trips) {
-      leg_durations.clear();
       for (const auto& leg : trip.second.get_child("legs")) {
-        double duration = leg.second.get<float>("duration");
-        auto iter = leg_durations.insert(duration);
-        if (!iter.second) {
+        if (leg.second.get<int>("duration") != answers[i][j++]) {
           throw std::logic_error{"leg duration not trimmed correctly"};
         }
       }
