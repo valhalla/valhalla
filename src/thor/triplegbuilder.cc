@@ -135,12 +135,14 @@ void SetShapeAttributes(const AttributesController& controller,
                         std::vector<PointLL>::const_iterator shape_begin,
                         std::vector<PointLL>::const_iterator shape_end,
                         TripLeg& trip_path,
-                        uint32_t second_of_week) {
+                        uint32_t second_of_week,
+                        double edge_percentage) {
   if (trip_path.has_shape_attributes()) {
     // calculates total edge time and total edge length
-    double edge_time = costing->EdgeCost(edge, tile, second_of_week).secs; // seconds
+    double edge_time =
+        costing->EdgeCost(edge, tile, second_of_week).secs * edge_percentage; // seconds
     // TODO: get the measured length from shape (full shape) to increase precision
-    double edge_length = edge->length(); // meters
+    double edge_length = edge->length() * edge_percentage; // meters
     // Set the shape attributes
     for (++shape_begin; shape_begin < shape_end; ++shape_begin) {
       double distance = shape_begin->Distance(*(shape_begin - 1)); // meters
@@ -1058,7 +1060,8 @@ TripLegBuilder::Build(const AttributesController& controller,
                       TripLeg& trip_path,
                       const std::function<void()>* interrupt_callback,
                       std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>>*
-                          route_discontinuities) {
+                          route_discontinuities,
+                      bool trim_duration) {
   // Test interrupt prior to building trip path
   if (interrupt_callback) {
     (*interrupt_callback)();
@@ -1199,9 +1202,17 @@ TripLegBuilder::Build(const AttributesController& controller,
       trip_edge->set_end_shape_index(shape.size() - 1);
     }
 
+    // For mapmatching when both start and end point are on the same edge, the duration of the leg
+    // should be set according to the difference of the percentage along the edge
+    //                start_node     end_node
+    // edge start =======0=============0==== edge end
+    //                   |_____________|
+    //                      duration
+    double edge_pct = trim_duration ? end_pct - start_pct : 1.0;
+
     // Set shape attributes
     SetShapeAttributes(controller, tile, edge, mode_costing[static_cast<int>(path_begin->mode)],
-                       shape.begin(), shape.end(), trip_path, origin_second_of_week);
+                       shape.begin(), shape.end(), trip_path, origin_second_of_week, edge_pct);
 
     // Set begin and end heading if requested. Uses shape so
     // must be done after the edge's shape has been added.
@@ -1209,7 +1220,7 @@ TripLegBuilder::Build(const AttributesController& controller,
 
     auto* node = trip_path.add_node();
     if (controller.attributes.at(kNodeElapsedTime)) {
-      node->set_elapsed_time(path_begin->elapsed_time);
+      node->set_elapsed_time(path_begin->elapsed_time * edge_pct);
     }
 
     const GraphTile* end_tile = graphreader.GetGraphTile(edge->endnode());
@@ -1267,7 +1278,6 @@ TripLegBuilder::Build(const AttributesController& controller,
     const sif::TravelMode mode = edge_itr->mode;
     const uint8_t travel_type = travel_types[static_cast<uint32_t>(mode)];
     const auto& costing = mode_costing[static_cast<uint32_t>(mode)];
-
     // Set node attributes - only set if they are true since they are optional
     const GraphTile* start_tile = graphtile;
     start_tile = graphreader.GetGraphTile(startnode, start_tile);
@@ -1309,6 +1319,28 @@ TripLegBuilder::Build(const AttributesController& controller,
     if (controller.attributes.at(kNodeElapsedTime)) {
       trip_node->set_elapsed_time(elapsedtime);
     }
+
+    double edge_pct = 1.0;
+    if (trim_duration) {
+      // scenario 1: edge is the first edge
+      //                   trip_node
+      // edge start ==========O========== edge end
+      //                      |__________|
+      //                       duration
+      if (edge_itr == path_begin) {
+        edge_pct = 1.f - start_pct;
+      }
+      // scenario 2: edge is the last edge
+      //                   trip_node
+      // edge start ==========O========== edge end
+      //           |__________|
+      //             duration
+      else if (edge_itr == path_end - 1) {
+        edge_pct = end_pct;
+      }
+    }
+    // Update elapsed time at the end of the edge, store this at the next node.
+    elapsedtime += edge_itr->elapsed_time * edge_pct;
 
     // Assign the admin index
     if (controller.attributes.at(kNodeaAdminIndex)) {
@@ -1600,7 +1632,7 @@ TripLegBuilder::Build(const AttributesController& controller,
 
     // Set shape attributes
     SetShapeAttributes(controller, graphtile, directededge, costing, trip_shape.begin() + begin_index,
-                       trip_shape.end(), trip_path, second_of_week);
+                       trip_shape.end(), trip_path, second_of_week, edge_pct);
 
     // Set begin and end heading if requested. Uses trip_shape so
     // must be done after the edge's shape has been added.
@@ -1669,9 +1701,6 @@ TripLegBuilder::Build(const AttributesController& controller,
         }
       }
     }
-
-    // Update elapsed time at the end of the edge, store this at the next node.
-    elapsedtime = edge_itr->elapsed_time;
 
     // Set the endnode of this directed edge as the startnode of the next edge.
     startnode = directededge->endnode();

@@ -910,6 +910,41 @@ void test_now_matches() {
   actor.trace_route(test_case);
 }
 
+void test_leg_duration_trimming() {
+  std::vector<std::string> test_cases = {
+      R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
+          {"lat": 52.0957652, "lon": 5.1101366, "type": "break"},
+          {"lat": 52.0959457, "lon": 5.1106847, "type": "break"},
+          {"lat": 52.0962535, "lon": 5.1116988, "type": "break"}]})",
+      R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
+          {"lat": 52.0826293, "lon": 5.1267623, "type": "break"},
+          {"lat": 52.0835867, "lon": 5.1276355, "type": "break"},
+          {"lat": 52.0837127, "lon": 5.1277763, "type": "break"},
+          {"lat": 52.0839615, "lon": 5.1280204, "type": "break"},
+          {"lat": 52.0841756, "lon": 5.1282906, "type": "break"}]})",
+      R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
+          {"lat": 52.0609108, "lon": 5.0924059, "type": "break"},
+          {"lat": 52.0605926, "lon": 5.0962937, "type": "break"},
+          {"lat": 52.0604866, "lon": 5.0975675, "type": "break"},
+          {"lat": 52.0601766, "lon": 5.1005663, "type": "break"}]})"};
+
+  // in these test cases, if the same leg duration appears more than once, the duration is not
+  // trimmed correctly, we use unordered_set to catch this behavior
+  std::vector<std::vector<int>> answers{{3, 8}, {4, 3, 6, 10}, {8, 6, 14}};
+  tyr::actor_t actor(conf, true);
+  for (size_t i = 0; i < test_cases.size(); ++i) {
+    auto matched = json_to_pt(actor.trace_route(test_cases[i]));
+    const auto& trips = matched.get_child(("matchings"));
+    int j = 0;
+    for (const auto& trip : trips) {
+      for (const auto& leg : trip.second.get_child("legs")) {
+        if (leg.second.get<int>("duration") != answers[i][j++]) {
+          throw std::logic_error{"leg duration not trimmed correctly"};
+        }
+      }
+    }
+  }
+}
 } // namespace
 
 int main(int argc, char* argv[]) {
@@ -951,6 +986,8 @@ int main(int argc, char* argv[]) {
   suite.test(TEST_CASE(test_topk_frontage_alternate));
 
   suite.test(TEST_CASE(test_now_matches));
+
+  suite.test(TEST_CASE(test_leg_duration_trimming));
 
   suite.test(TEST_CASE(test_matching_indices_and_waypoint_indices));
 
