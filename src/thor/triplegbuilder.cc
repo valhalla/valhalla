@@ -1321,7 +1321,6 @@ TripLegBuilder::Build(const AttributesController& controller,
     }
 
     double edge_pct = 1.0;
-    // Update elapsed time at the end of the edge, store this at the next node.
     if (trim_duration) {
       // scenario 1: edge is the first edge
       //                   trip_node
@@ -1340,7 +1339,7 @@ TripLegBuilder::Build(const AttributesController& controller,
         edge_pct = end_pct;
       }
     }
-
+    // Update elapsed time at the end of the edge, store this at the next node.
     elapsedtime += edge_itr->elapsed_time * edge_pct;
 
     // Assign the admin index
