@@ -160,7 +160,7 @@ jobs:
       - image: valhalla/docker:build-x86-3.0.2
     steps:
       - checkout
-      #- run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
+      - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
       - run: git submodule sync && git submodule update --init
       - restore_cache:
           keys:
