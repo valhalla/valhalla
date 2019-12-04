@@ -1,6 +1,5 @@
 #include "mjolnir/util.h"
 
-#include <boost/filesystem/operations.hpp>
 #include <boost/format.hpp>
 #include <future>
 #include <set>
@@ -10,6 +9,7 @@
 #include "baldr/graphconstants.h"
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
+#include "filesystem.h"
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
 #include "midgard/polyline2.h"
@@ -173,7 +173,7 @@ void ElevationBuilder::Build(const boost::property_tree::ptree& pt) {
   // Crack open some elevation data if its there. Return if it is not.
   boost::optional<std::string> elevation = pt.get_optional<std::string>("additional_data.elevation");
   std::unique_ptr<const skadi::sample> sample;
-  if (elevation && boost::filesystem::exists(*elevation)) {
+  if (elevation && filesystem::exists(*elevation)) {
     sample.reset(new skadi::sample(*elevation));
   } else {
     LOG_INFO("ElevationBuilder: no elevation data, skipping");

@@ -102,6 +102,33 @@ void remove_any() {
     throw std::logic_error(".foobar dir should have been deleted");
 }
 
+void parent_path() {
+  std::vector<filesystem::path> in{{"/"},   {"/foo/bar"}, {"/foo/../"}, {"/foo/bar/../f"},
+                                   {"./f"}, {"foo/bar/f"}};
+  std::vector<filesystem::path> out{
+      {""}, {"/foo"}, {"/foo/.."}, {"/foo/bar/.."}, {"."}, {"foo/bar"},
+  };
+  for (const auto& i : in) {
+    auto a = i.parent_path();
+    if (a.string() != out[&i - &in.front()].string())
+      throw std::logic_error("wrong parent path");
+  }
+}
+
+void extension() {
+  std::vector<filesystem::path>
+      in{{"/foo/bar.txt"},      {"/foo/bar."},        {"/foo/bar"},         {"/foo/bar.txt/bar.cc"},
+         {"/foo/bar.txt/bar."}, {"/foo/bar.txt/bar"}, {"/foo/."},           {"/foo/.."},
+         {"/foo/.hidden"},      {"/foo/..bar"},       {"/foo/bar.baz.qux"}, {"..."},
+         {"/baz/.foo.bar"}};
+  std::vector<filesystem::path> out{{".txt"}, {"."}, {""},     {".cc"},  {"."}, {""},    {""},
+                                    {""},     {""},  {".bar"}, {".qux"}, {"."}, {".bar"}};
+  for (const auto& i : in) {
+    auto a = i.extension();
+    if (a.string() != out[&i - &in.front()].string())
+      throw std::logic_error("wrong extension");
+  }
+}
 } // namespace
 
 int main() {
@@ -116,6 +143,10 @@ int main() {
   suite.test(TEST_CASE(recursive_directory_listing));
 
   suite.test(TEST_CASE(remove_any));
+
+  suite.test(TEST_CASE(parent_path));
+
+  suite.test(TEST_CASE(extension));
 
   return suite.tear_down();
 }

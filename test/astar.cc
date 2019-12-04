@@ -28,12 +28,11 @@
 #include "thor/worker.h"
 #include "tyr/serializers.h"
 
-#include <valhalla/proto/directions.pb.h>
-#include <valhalla/proto/options.pb.h>
-#include <valhalla/proto/trip.pb.h>
+#include "valhalla/proto/directions.pb.h"
+#include "valhalla/proto/options.pb.h"
+#include "valhalla/proto/trip.pb.h"
 
 #include <boost/algorithm/string/join.hpp>
-#include <boost/filesystem.hpp>
 #include <boost/format.hpp>
 #include <boost/property_tree/ptree.hpp>
 
@@ -337,8 +336,8 @@ void trivial_path_no_uturns(const std::string& config_file) {
   vb::GraphReader graph_reader(conf.get_child("mjolnir"));
   for (const auto& level : vb::TileHierarchy::levels()) {
     auto level_dir = graph_reader.tile_dir() + "/" + std::to_string(level.first);
-    if (boost::filesystem::exists(level_dir) && !boost::filesystem::is_empty(level_dir)) {
-      boost::filesystem::remove_all(level_dir);
+    if (filesystem::exists(level_dir) && !filesystem::is_empty(level_dir)) {
+      filesystem::remove_all(level_dir);
     }
   }
 
@@ -421,13 +420,13 @@ void trivial_path_no_uturns(const std::string& config_file) {
     throw std::runtime_error(ostr.str());
   }
 
-  boost::filesystem::remove(ways_file);
-  boost::filesystem::remove(way_nodes_file);
-  boost::filesystem::remove(nodes_file);
-  boost::filesystem::remove(edges_file);
-  boost::filesystem::remove(access_file);
-  boost::filesystem::remove(cr_from_file);
-  boost::filesystem::remove(cr_to_file);
+  filesystem::remove(ways_file);
+  filesystem::remove(way_nodes_file);
+  filesystem::remove(nodes_file);
+  filesystem::remove(edges_file);
+  filesystem::remove(access_file);
+  filesystem::remove(cr_from_file);
+  filesystem::remove(cr_to_file);
 }
 
 void TestTrivialPathNoUturns() {

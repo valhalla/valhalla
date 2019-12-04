@@ -1,7 +1,6 @@
 #include "mjolnir/hierarchybuilder.h"
 #include "mjolnir/graphtilebuilder.h"
 
-#include <boost/filesystem/operations.hpp>
 #include <boost/format.hpp>
 #include <boost/property_tree/ptree.hpp>
 
@@ -601,8 +600,7 @@ void HierarchyBuilder::Build(const boost::property_tree::ptree& pt,
   // Update the end nodes to all transit connections in the transit hierarchy
   auto hierarchy_properties = pt.get_child("mjolnir");
   auto transit_dir = hierarchy_properties.get_optional<std::string>("transit_dir");
-  if (transit_dir && boost::filesystem::exists(*transit_dir) &&
-      boost::filesystem::is_directory(*transit_dir)) {
+  if (transit_dir && filesystem::exists(*transit_dir) && filesystem::is_directory(*transit_dir)) {
     UpdateTransitConnections(reader, old_to_new_file);
   }
 

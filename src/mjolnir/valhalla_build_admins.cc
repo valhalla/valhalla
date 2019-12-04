@@ -3,16 +3,16 @@
 #include <vector>
 
 #include "baldr/graphconstants.h"
+#include "filesystem.h"
 #include "mjolnir/adminconstants.h"
 #include "mjolnir/osmpbfparser.h"
 #include "mjolnir/pbfadminparser.h"
+#include "mjolnir/util.h"
+
+// sqlite is included in util.h and must be before spatialite
+#include <spatialite.h>
 
 #include "config.h"
-
-// sqlite must be included before spatialite
-#include <sqlite3.h>
-
-#include <spatialite.h>
 
 /* Need to know which geos version we have to work out which headers to include */
 #include <geos/version.h>
@@ -31,7 +31,6 @@
 #include <geos/opLinemerge.h>
 #include <geos/util/GEOSException.h>
 
-#include <boost/filesystem/operations.hpp>
 #include <boost/optional.hpp>
 #include <boost/program_options.hpp>
 #include <boost/property_tree/ptree.hpp>
@@ -52,7 +51,7 @@ using namespace valhalla::baldr;
 namespace bpo = boost::program_options;
 using namespace valhalla::midgard;
 
-boost::filesystem::path config_file_path;
+filesystem::path config_file_path;
 std::vector<std::string> input_files;
 
 bool ParseArguments(int argc, char* argv[]) {
@@ -71,8 +70,7 @@ bool ParseArguments(int argc, char* argv[]) {
 
   options.add_options()("help,h", "Print this help message.")("version,v",
                                                               "Print the version of this software.")(
-      "config,c",
-      boost::program_options::value<boost::filesystem::path>(&config_file_path)->required(),
+      "config,c", boost::program_options::value<filesystem::path>(&config_file_path)->required(),
       "Path to the json configuration file.")
       // positional arguments
       ("input_files",
@@ -104,7 +102,7 @@ bool ParseArguments(int argc, char* argv[]) {
   }
 
   if (vm.count("config")) {
-    if (boost::filesystem::is_regular_file(config_file_path)) {
+    if (filesystem::is_regular_file(config_file_path)) {
       return true;
     } else {
       std::cerr << "Configuration file is required\n\n" << options << "\n\n";
@@ -272,17 +270,17 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
     return;
   }
 
-  if (!boost::filesystem::exists(boost::filesystem::path(*database).parent_path())) {
-    boost::filesystem::create_directories(boost::filesystem::path(*database).parent_path());
+  if (!filesystem::exists(filesystem::path(*database).parent_path())) {
+    filesystem::create_directories(filesystem::path(*database).parent_path());
   }
 
-  if (!boost::filesystem::exists(boost::filesystem::path(*database).parent_path())) {
+  if (!filesystem::exists(filesystem::path(*database).parent_path())) {
     LOG_INFO("Admin directory not found. Admins will not be created.");
     return;
   }
 
-  if (boost::filesystem::exists(*database)) {
-    boost::filesystem::remove(*database);
+  if (filesystem::exists(*database)) {
+    filesystem::remove(*database);
   }
 
   spatialite_init(0);
@@ -298,21 +296,11 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
   if (ret != SQLITE_OK) {
     LOG_ERROR("cannot open " + (*database));
     sqlite3_close(db_handle);
-    db_handle = NULL;
     return;
   }
 
   // loading SpatiaLite as an extension
-  sqlite3_enable_load_extension(db_handle, 1);
-#if SQLITE_VERSION_NUMBER > 3008007
-  sql = "SELECT load_extension('mod_spatialite')";
-#else
-  sql = "SELECT load_extension('libspatialite')";
-#endif
-  ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
-  if (ret != SQLITE_OK) {
-    LOG_ERROR("load_extension() error: " + std::string(err_msg));
-    sqlite3_free(err_msg);
+  if (!valhalla::mjolnir::load_spatialite(db_handle)) {
     sqlite3_close(db_handle);
     return;
   }

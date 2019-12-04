@@ -3,7 +3,6 @@
 #include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/util.h"
 
-#include <boost/filesystem/operations.hpp>
 #include <boost/format.hpp>
 #include <future>
 #include <iostream>

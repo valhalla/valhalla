@@ -6,7 +6,6 @@
 #include "mjolnir/util.h"
 
 #include <boost/algorithm/string.hpp>
-#include <boost/filesystem/operations.hpp>
 #include <boost/format.hpp>
 #include <future>
 #include <set>

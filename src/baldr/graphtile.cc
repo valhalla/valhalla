@@ -8,7 +8,6 @@
 #include "midgard/tiles.h"
 
 #include <boost/algorithm/string.hpp>
-#include <boost/filesystem.hpp>
 #include <chrono>
 #include <cmath>
 #include <cstdio>
