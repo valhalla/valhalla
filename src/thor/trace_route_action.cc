@@ -438,7 +438,7 @@ thor_worker_t::map_match(Api& request) {
       // The following logic put break points (matches results) on edge candidates to form legs
       // logic assumes the both match results and edge candidates are topologically sorted in correct
       // order
-      std::string date_time;
+      std::string date_time = options.has_date_time() ? options.date_time() : "";
       GraphId prev_edge_id, curr_edge_id;
       const TripLeg* last_leg = nullptr;
       auto leg_origin_iter = match_results.cbegin();
@@ -465,11 +465,10 @@ thor_worker_t::map_match(Api& request) {
         Location* origin_location = options.mutable_shape(leg_origin_iter - match_results.cbegin());
         origin_location->set_route_index(route_index);
         origin_location->set_shape_index(way_point_index);
-        if (origin_location->has_date_time() && last_leg == nullptr) {
+        if (date_time.empty() && origin_location->has_date_time()) {
           date_time = origin_location->date_time();
-        } else if (!date_time.empty()) {
-          origin_location->set_date_time(date_time);
         }
+        origin_location->set_date_time(date_time);
         prev_edge_id = leg_origin_iter->edgeid;
 
         for (int i = 0, n = static_cast<int>(edges.size()); i < n; ++i) {
@@ -487,9 +486,6 @@ thor_worker_t::map_match(Api& request) {
             // for locations that matched but are break types nor disjoint points
             // we set its waypoint_index to limits::max to notify the serializer thus distinguish
             // them from the first waypoint of the route whose waypoint_index is 0.
-            std::cout << "index: " << leg_destination_iter - match_results.begin() << ","
-                      << "number of matched locations: " << match_results.size() << ","
-                      << "but shape size is " << options.shape().size() << std::endl;
             auto break_type = options.shape(leg_destination_iter - match_results.begin()).type();
             if (break_type != valhalla::Location::kBreak &&
                 break_type != valhalla::Location::kBreakThrough &&
@@ -505,7 +501,6 @@ thor_worker_t::map_match(Api& request) {
             // so we fake them here before calling it
             // when handling multi routes, orsm serializer need to know both the
             // matching_index(route_index) and the waypoint_index.
-
             Location* destination_location =
                 options.mutable_shape(leg_destination_iter - match_results.cbegin());
             destination_location->set_route_index(route_index);
