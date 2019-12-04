@@ -122,20 +122,35 @@ void Configure(const LoggingConfig& config);
 #ifdef LOGGING_LEVEL_ERROR
 #define LOG_ERROR(x)                                                                                 \
   ::valhalla::midgard::logging::GetLogger().Log(x, ::valhalla::midgard::logging::LogLevel::ERROR)
+#define LOGLN_ERROR(x)                                                                               \
+  ::valhalla::midgard::logging::GetLogger().Log(std::string(__FILE__) + ": " +                       \
+                                                    std::to_string(__LINE__) + ": " + x,             \
+                                                ::valhalla::midgard::logging::LogLevel::ERROR)
 #else
 #define LOG_ERROR(x)
+#define LOGLN_ERROR(x)
 #endif
 #ifdef LOGGING_LEVEL_WARN
 #define LOG_WARN(x)                                                                                  \
   ::valhalla::midgard::logging::GetLogger().Log(x, ::valhalla::midgard::logging::LogLevel::WARN)
+#define LOGLN_WARN(x)                                                                                \
+  ::valhalla::midgard::logging::GetLogger().Log(std::string(__FILE__) + ":" +                        \
+                                                    std::to_string(__LINE__) + ": " + x,             \
+                                                ::valhalla::midgard::logging::LogLevel::WARN)
 #else
 #define LOG_WARN(x)
+#define LOGLN_WARN(x)
 #endif
 #ifdef LOGGING_LEVEL_INFO
 #define LOG_INFO(x)                                                                                  \
   ::valhalla::midgard::logging::GetLogger().Log(x, ::valhalla::midgard::logging::LogLevel::INFO)
+#define LOGLN_INFO(x)                                                                                \
+  ::valhalla::midgard::logging::GetLogger().Log(std::string(__FILE__) + ":" +                        \
+                                                    std::to_string(__LINE__) + ": " + x,             \
+                                                ::valhalla::midgard::logging::LogLevel::INFO)
 #else
 #define LOG_INFO(x) ;
+#define LOGLN_INFO(x) ;
 #endif
 #ifdef LOGGING_LEVEL_DEBUG
 #define LOG_DEBUG(x)                                                                                 \
@@ -145,7 +160,9 @@ void Configure(const LoggingConfig& config);
 #endif
 #ifdef LOGGING_LEVEL_TRACE
 #define LOG_TRACE(x)                                                                                 \
-  ::valhalla::midgard::logging::GetLogger().Log(x, ::valhalla::midgard::logging::LogLevel::TRACE)
+  ::valhalla::midgard::logging::GetLogger().Log(std::string(__FILE__) + ":" +                        \
+                                                    std::to_string(__LINE__) + ": " + x,             \
+                                                ::valhalla::midgard::logging::LogLevel::TRACE)
 #else
 #define LOG_TRACE(x)
 #endif
