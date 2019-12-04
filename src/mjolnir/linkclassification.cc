@@ -58,7 +58,7 @@ bool IsTurnChannel(sequence<OSMWay>& ways,
     std::list<PointLL> shape;
     for (size_t i = 0; i < count; ++i) {
       auto node = (*way_nodes[idx++]).node;
-      shape.emplace_back(node.lng, node.lat);
+      shape.emplace_back(node.lng_, node.lat_);
     }
     return shape;
   };
@@ -110,7 +110,7 @@ nodelist_t FormExitNodes(sequence<Node>& nodes, sequence<Edge>& edges) {
   while (node_itr != nodes.end()) {
     // If the node has a both links and non links at it
     auto bundle = collect_node_edges(node_itr, nodes, edges);
-    if (bundle.node.attributes_.link_edge && bundle.node.attributes_.non_link_edge) {
+    if (bundle.node.link_edge_ && bundle.node.non_link_edge_) {
       // Check if this node has a link edge that is driveable from the node
       for (const auto& edge : bundle.node_edges) {
         if (edge.first.attributes.link && edge.first.attributes.driveforward) {
@@ -227,7 +227,11 @@ std::pair<uint32_t, uint32_t> Reclassify(LinkTreeNode& root,
       sequence<Edge>::iterator element = edges[idx];
       auto edge = *element;
       if (rc > edge.attributes.importance) {
-        edge.attributes.importance = rc;
+        if (rc < static_cast<uint32_t>(RoadClass::kUnclassified))
+          edge.attributes.importance = rc;
+        else
+          edge.attributes.importance = static_cast<uint32_t>(RoadClass::kTertiary);
+
         counts.first++;
       }
       if (turn_channel) {
@@ -263,7 +267,6 @@ void ReclassifyLinks(const std::string& ways_file,
   std::queue<LinkTreeNode*> leaves;      // Leaf nodes of the link tree
   sequence<Edge> edges(edges_file, false);
   sequence<Node> nodes(nodes_file, false);
-
   // Lambda to expand from the end node of an edge. Adds the link edge and
   // end node to the link tree. Possibly adds the end node to the expandset.
   // Where no expansion occurs a leaf node is identified.
@@ -283,7 +286,7 @@ void ReclassifyLinks(const std::string& ways_file,
       throw std::runtime_error("Exceeding kMaxLinkEdges in ReclassifyLinks");
     }
     tree_node->link_edge_index.push_back(link_edge_index);
-    tree_node->children.emplace_back((bundle.node.ref() || bundle.node.exit_to()),
+    tree_node->children.emplace_back((bundle.node.has_ref() || bundle.node.has_exit_to()),
                                      bundle.non_link_count, bundle.link_count, rc,
                                      end_node.position(), tree_node);
 
@@ -295,8 +298,7 @@ void ReclassifyLinks(const std::string& ways_file,
     // Do not continue if this link intersects a "major" road
     // TODO - might need to continue to expand...but will need to determine
     // if the link enters back onto the same road that was exited.
-    if (bundle.node.attributes_.non_link_edge &&
-        rc < static_cast<uint32_t>(RoadClass::kUnclassified)) {
+    if (bundle.node.non_link_edge_ && rc <= static_cast<uint32_t>(RoadClass::kResidential)) {
       leaves.push(&tree_node->children.back());
       return;
     }
@@ -339,8 +341,9 @@ void ReclassifyLinks(const std::string& ways_file,
       auto bundle = collect_node_edges(node, nodes, edges);
 
       // Form the link tree from this exit node. Add the root exit node.
-      LinkTreeNode exit_node((bundle.node.ref() || bundle.node.exit_to()), bundle.non_link_count,
-                             bundle.link_count, classification, node.position(), nullptr);
+      LinkTreeNode exit_node((bundle.node.has_ref() || bundle.node.has_exit_to()),
+                             bundle.non_link_count, bundle.link_count, classification,
+                             node.position(), nullptr);
       visitedset.insert(node.position());
 
       // Expand link edges from the exit node

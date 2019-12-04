@@ -9,6 +9,7 @@
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
 #include "baldr/location.h"
+#include "baldr/pathlocation.h"
 #include "baldr/tilehierarchy.h"
 #include "midgard/pointll.h"
 #include "midgard/vector2.h"
@@ -38,6 +39,7 @@ namespace {
 //    c
 std::string tile_dir = "test/search_tiles";
 GraphId tile_id = TileHierarchy::GetGraphId({.125, .125}, 2);
+PointLL base_ll = TileHierarchy::get_tiling(tile_id.level()).Base(tile_id.tileid());
 std::pair<GraphId, PointLL> b({tile_id.tileid(), tile_id.level(), 0}, {.01, .2});
 std::pair<GraphId, PointLL> a({tile_id.tileid(), tile_id.level(), 1}, {.01, .1});
 std::pair<GraphId, PointLL> c({tile_id.tileid(), tile_id.level(), 2}, {.01, .01});
@@ -58,7 +60,7 @@ void make_tile() {
 
   auto add_node = [&edge_index](const std::pair<GraphId, PointLL>& v, const uint32_t edge_count) {
     NodeInfo node_builder;
-    node_builder.set_latlng(v.second);
+    node_builder.set_latlng(base_ll, v.second);
     node_builder.set_edge_count(edge_count);
     node_builder.set_edge_index(edge_index);
     edge_index += edge_count;
@@ -66,8 +68,8 @@ void make_tile() {
   };
   auto add_edge = [&tile](const std::pair<GraphId, PointLL>& u, const std::pair<GraphId, PointLL>& v,
                           const uint32_t name, const uint32_t opposing, const bool forward) {
-    DirectedEdgeBuilder edge_builder({}, v.first, forward, u.second.Distance(v.second) + .5, 1, 1, 1,
-                                     {}, {}, 0, false, 0, 0);
+    DirectedEdgeBuilder edge_builder({}, v.first, forward, u.second.Distance(v.second) + .5, 1, 1, {},
+                                     {}, 0, false, 0, 0, false);
     edge_builder.set_opp_index(opposing);
     std::vector<PointLL> shape = {u.second, u.second.MidPoint(v.second), v.second};
     if (!forward)
@@ -76,8 +78,8 @@ void make_tile() {
     bool add;
     // make more complex edge geom so that there are 3 segments, affine combination doesnt properly
     // handle arcs but who cares
-    uint32_t edge_info_offset =
-        tile.AddEdgeInfo(name, u.first, v.first, 123, shape, {std::to_string(name)}, 0, add);
+    uint32_t edge_info_offset = tile.AddEdgeInfo(name, u.first, v.first, 123, 456, 0, 55, shape,
+                                                 {std::to_string(name)}, 0, add);
     edge_builder.set_edgeinfo_offset(edge_info_offset);
     return edge_builder;
   };
@@ -140,7 +142,7 @@ void make_tile() {
   GraphTileBuilder::AddBins(tile_dir, &reloaded, bins);
 }
 
-void search(const valhalla::baldr::Location& location,
+void search(valhalla::baldr::Location location,
             bool expected_node,
             const valhalla::midgard::PointLL& expected_point,
             const std::vector<PathLocation::PathEdge>& expected_edges,
@@ -148,9 +150,14 @@ void search(const valhalla::baldr::Location& location,
   // make the config file
   boost::property_tree::ptree conf;
   conf.put("tile_dir", tile_dir);
-
   valhalla::baldr::GraphReader reader(conf);
-  const auto results = Search({location}, reader, PassThroughEdgeFilter, PassThroughNodeFilter);
+
+  // send it to pbf and back just in case something is wrong with that conversion
+  valhalla::Location pbf;
+  PathLocation::toPBF(location, &pbf, reader);
+  location = PathLocation::fromPBF(pbf);
+
+  const auto results = Search({location}, reader);
   const auto p = results.at(location);
 
   if ((p.edges.front().begin_node() || p.edges.front().end_node()) != expected_node)
@@ -176,19 +183,27 @@ void search(const valhalla::baldr::Location& location,
     throw std::logic_error("Got more edges than expected");
 }
 
-void search(const valhalla::baldr::Location& location, size_t result_count, int reachability) {
+void search(valhalla::baldr::Location location, size_t result_count, int reachability) {
+
   // make the config file
   boost::property_tree::ptree conf;
   conf.put("tile_dir", tile_dir);
-
   valhalla::baldr::GraphReader reader(conf);
-  const auto p =
-      Search({location}, reader, PassThroughEdgeFilter, PassThroughNodeFilter).at(location);
+
+  // send it to pbf and back just in case something is wrong with that conversion
+  valhalla::Location pbf;
+  PathLocation::toPBF(location, &pbf, reader);
+  location = PathLocation::fromPBF(pbf);
+
+  const auto results = Search({location}, reader);
+  if (results.empty() && result_count == 0)
+    return;
+  const auto& p = results.at(location);
 
   if (p.edges.size() != result_count)
     throw std::logic_error("Wrong number of edges");
   for (const auto& e : p.edges)
-    if (e.minimum_reachability != reachability)
+    if (e.outbound_reach != reachability || e.inbound_reach != reachability)
       throw std::logic_error("Wrong reachability");
 }
 
@@ -197,6 +212,8 @@ void test_edge_search() {
   auto l = a.first.level();
   using S = PathLocation::SideOfStreet;
   using PE = PathLocation::PathEdge;
+  using ST = Location::StopType;
+  using PS = Location::PreferredSide;
 
   // snap to node searches
   search({a.second}, true, a.second,
@@ -213,6 +230,18 @@ void test_edge_search() {
              PE{{t, l, 0}, 1, d.second, 0, S::NONE}, PE{{t, l, 3}, 1, d.second, 0, S::NONE},
              PE{{t, l, 6}, 1, d.second, 0, S::NONE} // arriving edges
          });
+
+  // regression test for #2023, displace the point beyond search_cutoff but within node_snap_tolerance
+  Location near_node{a.second};
+  near_node.latlng_.second += 0.00001; // 1.11 meters
+  near_node.search_cutoff_ = 1.0;
+  near_node.node_snap_tolerance_ = 2.0;
+  search(near_node, true, a.second,
+         {PE{{t, l, 2}, 0, a.second, 0, S::NONE}, PE{{t, l, 3}, 0, a.second, 0, S::NONE},
+          PE{{t, l, 4}, 0, a.second, 0, S::NONE}, PE{{t, l, 1}, 1, a.second, 0, S::NONE},
+          PE{{t, l, 8}, 1, a.second, 0, S::NONE}, PE{{t, l, 5}, 1, a.second, 0, S::NONE}},
+         true);
+
   // snap to node as through location should be all edges
   Location x{a.second, Location::StopType::THROUGH};
   search(x, true, a.second,
@@ -251,6 +280,20 @@ void test_edge_search() {
   search({test}, false, answer,
          {PE{{t, l, 3}, ratio, answer, 0, S::RIGHT}, PE{{t, l, 8}, 1.f - ratio, answer, 0, S::LEFT}});
 
+  // check that the side of street tolerance works
+  Location sst_huge(test);
+  sst_huge.street_side_tolerance_ = 2000;
+  search(sst_huge, false, answer,
+         {PE{{t, l, 3}, ratio, answer, 0, S::NONE}, PE{{t, l, 8}, 1.f - ratio, answer, 0, S::NONE}});
+
+  // we only want opposite driving side, tiles are left hand driving
+  search({test, ST::BREAK, 0, 0, 0, PS::OPPOSITE}, false, answer,
+         {PE{{t, l, 3}, ratio, answer, 0, S::RIGHT}}, true);
+
+  // we only want same driving side, tiles are left hand driving
+  search({test, ST::BREAK, 0, 0, 0, PS::SAME}, false, answer,
+         {PE{{t, l, 8}, 1.f - ratio, answer, 0, S::LEFT}}, true);
+
   // set a point 40% along the edge that runs in reverse of the shape
   answer = b.second.AffineCombination(.6f, .4f, d.second);
   ratio = b.second.Distance(answer) / b.second.Distance(d.second);
@@ -263,6 +306,19 @@ void test_edge_search() {
   search({test}, false, answer,
          {PE{{t, l, 0}, ratio, answer, 0, S::LEFT}, PE{{t, l, 7}, 1.f - ratio, answer, 0, S::RIGHT}});
 
+  // check that the side of street tolerance works
+  sst_huge.latlng_ = test;
+  search(sst_huge, false, answer,
+         {PE{{t, l, 0}, ratio, answer, 0, S::NONE}, PE{{t, l, 7}, 1.f - ratio, answer, 0, S::NONE}});
+
+  // we only want opposite driving side, tiles are left hand driving
+  search({test, ST::BREAK, 0, 0, 0, PS::OPPOSITE}, false, answer,
+         {PE{{t, l, 7}, 1.f - ratio, answer, 0, S::RIGHT}}, true);
+
+  // we only want same driving side, tiles are left hand driving
+  search({test, ST::BREAK, 0, 0, 0, PS::SAME}, false, answer,
+         {PE{{t, l, 0}, ratio, answer, 0, S::LEFT}}, true);
+
   // TODO: add more tests
 }
 
@@ -272,22 +328,57 @@ void test_reachability_radius() {
   unsigned int shortest = ob.Distance(a.second);
 
   // zero everything should be a single closest result
-  search({ob, Location::StopType::BREAK, 0, 0}, 2, 0);
+  search({ob, Location::StopType::BREAK, 0, 0, 0}, 2, 0);
 
   // set radius high to get them all
-  search({b.second, Location::StopType::BREAK, 0, longest + 100}, 10, 0);
+  search({b.second, Location::StopType::BREAK, 0, 0, longest + 100}, 10, 0);
 
   // set radius mid to get just some
-  search({b.second, Location::StopType::BREAK, 0, shortest - 100}, 4, 0);
+  search({b.second, Location::StopType::BREAK, 0, 0, shortest - 100}, 4, 0);
 
   // set reachability high to see it gets all nodes reachable
-  search({ob, Location::StopType::BREAK, 5, 0}, 2, 4);
+  search({ob, Location::StopType::BREAK, 5, 5, 0}, 2, 4);
 
   // set reachability right on to see we arent off by one
-  search({ob, Location::StopType::BREAK, 4, 0}, 2, 4);
+  search({ob, Location::StopType::BREAK, 4, 4, 0}, 2, 4);
 
   // set reachability lower to see we give up early
-  search({ob, Location::StopType::BREAK, 3, 0}, 2, 3);
+  search({ob, Location::StopType::BREAK, 3, 3, 0}, 2, 3);
+}
+
+void test_search_cutoff() {
+  // test default cutoff of 35km showing no results
+  search({{-77, -77}}, 0, 0);
+
+  // test limits of cut off
+  auto t = c.second;
+  t.first -= 1;
+  t.second -= 1;
+  auto dist = t.Distance(c.second);
+
+  // set the cut off just too small and get nothing
+  Location x(t);
+  x.search_cutoff_ = dist - 1;
+  search(x, 0, 0);
+
+  // set the cut off just big enough and get one node snap result with 4 edges at it
+  x.search_cutoff_ = dist + 1;
+  search(x, 4, 0);
+
+  // lets try an edge snap
+  t = c.second;
+  t.first -= .00005;
+  t.second += .00005;
+  dist = t.Distance({0.01, 0.01005});
+
+  // just out of reach
+  x.latlng_ = t;
+  x.search_cutoff_ = dist - 1;
+  search(x, 0, 0);
+
+  // just within reach
+  x.search_cutoff_ = dist + 1;
+  search(x, 2, 0);
 }
 
 } // namespace
@@ -300,6 +391,8 @@ int main() {
   suite.test(TEST_CASE(test_edge_search));
 
   suite.test(TEST_CASE(test_reachability_radius));
+
+  suite.test(TEST_CASE(test_search_cutoff));
 
   return suite.tear_down();
 }

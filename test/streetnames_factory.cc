@@ -14,7 +14,7 @@ using namespace valhalla::baldr;
 namespace {
 
 void TryCreate(const std::string& country_code,
-               const std::vector<std::string>& names,
+               const std::vector<std::pair<std::string, bool>>& names,
                const std::string& expected) {
   std::unique_ptr<StreetNames> street_names = StreetNamesFactory::Create(country_code, names);
 
@@ -26,16 +26,14 @@ void TryCreate(const std::string& country_code,
 
 void TestCreate() {
   // US - should be StreetNamesUs
-  TryCreate("US", {"Main Street"}, "N8valhalla5baldr13StreetNamesUsE");
-  TryCreate("US", {"Hershey Road", "PA 743 North"}, "N8valhalla5baldr13StreetNamesUsE");
+  TryCreate("US", {{"Main Street", false}}, "N8valhalla5baldr13StreetNamesUsE");
+  TryCreate("US", {{"Hershey Road", false}, {"PA 743 North", true}},
+            "N8valhalla5baldr13StreetNamesUsE");
 
   // DE - should be default StreetNames
-  TryCreate("DE",
-            {
-                "Mittelstraße",
-            },
+  TryCreate("DE", {{"Mittelstraße", false}}, "N8valhalla5baldr11StreetNamesE");
+  TryCreate("DE", {{"Unter den Linden", false}, {"B 2", true}, {"B 5", true}},
             "N8valhalla5baldr11StreetNamesE");
-  TryCreate("DE", {"Unter den Linden", "B 2", "B 5"}, "N8valhalla5baldr11StreetNamesE");
 }
 
 } // namespace

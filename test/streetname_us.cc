@@ -11,40 +11,42 @@ using namespace valhalla::baldr;
 
 namespace {
 
-void TryCtor(const std::string& text) {
-  StreetNameUs street_name(text);
+void TryCtor(const std::string& text, const bool is_route_number) {
+  StreetNameUs street_name(text, is_route_number);
 
   if (text != street_name.value())
     throw std::runtime_error("Incorrect street name text");
+  if (is_route_number != street_name.is_route_number())
+    throw std::runtime_error("Incorrect street name is_route_number");
 }
 
 void TestCtor() {
   // Street name
-  TryCtor("Main Street");
+  TryCtor("Main Street", false);
 
   // Ref
-  TryCtor("PA 743");
+  TryCtor("PA 743", true);
 
   // Ref with post modifier
-  TryCtor("US 220 Business");
+  TryCtor("US 220 Business", true);
 
   // Ref with directional
-  TryCtor("I 81 South");
+  TryCtor("I 81 South", true);
 }
 
-void TryEquals(const std::string& text) {
-  StreetNameUs lhs(text);
-  StreetNameUs rhs(text);
+void TryEquals(const std::string& text, const bool is_route_number) {
+  StreetNameUs lhs(text, is_route_number);
+  StreetNameUs rhs(text, is_route_number);
 
   if (!(lhs == rhs))
     throw std::runtime_error("Incorrect equals return");
 }
 
 void TestEquals() {
-  TryEquals("Main Street");
-  TryEquals("PA 743");
-  TryEquals("US 220 Business");
-  TryEquals("I 81 South");
+  TryEquals("Main Street", false);
+  TryEquals("PA 743", true);
+  TryEquals("US 220 Business", true);
+  TryEquals("I 81 South", true);
 }
 
 void TryStartsWith(const StreetNameUs& street_name, const std::string& prefix) {
@@ -53,8 +55,8 @@ void TryStartsWith(const StreetNameUs& street_name, const std::string& prefix) {
 }
 
 void TestStartsWith() {
-  TryStartsWith(StreetNameUs("I 81 South"), "I ");
-  TryStartsWith(StreetNameUs("North Main Street"), "North");
+  TryStartsWith(StreetNameUs("I 81 South", true), "I ");
+  TryStartsWith(StreetNameUs("North Main Street", false), "North");
 }
 
 void TryEndsWith(const StreetNameUs& street_name, const std::string& suffix) {
@@ -63,8 +65,8 @@ void TryEndsWith(const StreetNameUs& street_name, const std::string& suffix) {
 }
 
 void TestEndsWith() {
-  TryEndsWith(StreetNameUs("I 81 South"), "South");
-  TryEndsWith(StreetNameUs("Main Street"), "Street");
+  TryEndsWith(StreetNameUs("I 81 South", true), "South");
+  TryEndsWith(StreetNameUs("Main Street", false), "Street");
 }
 
 void TryGetPreDir(const StreetNameUs& street_name, const std::string& pre_dir) {
@@ -73,11 +75,11 @@ void TryGetPreDir(const StreetNameUs& street_name, const std::string& pre_dir) {
 }
 
 void TestGetPreDir() {
-  TryGetPreDir(StreetNameUs("North Main Street"), "North ");
-  TryGetPreDir(StreetNameUs("East Chestnut Avenue"), "East ");
-  TryGetPreDir(StreetNameUs("South Main Street"), "South ");
-  TryGetPreDir(StreetNameUs("West 26th Street"), "West ");
-  TryGetPreDir(StreetNameUs("Main Street"), "");
+  TryGetPreDir(StreetNameUs("North Main Street", false), "North ");
+  TryGetPreDir(StreetNameUs("East Chestnut Avenue", false), "East ");
+  TryGetPreDir(StreetNameUs("South Main Street", false), "South ");
+  TryGetPreDir(StreetNameUs("West 26th Street", false), "West ");
+  TryGetPreDir(StreetNameUs("Main Street", false), "");
 }
 
 void TryGetPostDir(const StreetNameUs& street_name, const std::string& post_dir) {
@@ -86,15 +88,15 @@ void TryGetPostDir(const StreetNameUs& street_name, const std::string& post_dir)
 }
 
 void TestGetPostDir() {
-  TryGetPostDir(StreetNameUs("US 220 North"), " North");
-  TryGetPostDir(StreetNameUs("US 22 East"), " East");
-  TryGetPostDir(StreetNameUs("I 81 South"), " South");
-  TryGetPostDir(StreetNameUs("PA 283 West"), " West");
-  TryGetPostDir(StreetNameUs("Constitution Avenue Northeast"), " Northeast");
-  TryGetPostDir(StreetNameUs("Constitution Avenue Northwest"), " Northwest");
-  TryGetPostDir(StreetNameUs("Independence Avenue Southeast"), " Southeast");
-  TryGetPostDir(StreetNameUs("Independence Avenue Southwest"), " Southwest");
-  TryGetPostDir(StreetNameUs("Main Street"), "");
+  TryGetPostDir(StreetNameUs("US 220 North", true), " North");
+  TryGetPostDir(StreetNameUs("US 22 East", true), " East");
+  TryGetPostDir(StreetNameUs("I 81 South", true), " South");
+  TryGetPostDir(StreetNameUs("PA 283 West", true), " West");
+  TryGetPostDir(StreetNameUs("Constitution Avenue Northeast", false), " Northeast");
+  TryGetPostDir(StreetNameUs("Constitution Avenue Northwest", false), " Northwest");
+  TryGetPostDir(StreetNameUs("Independence Avenue Southeast", false), " Southeast");
+  TryGetPostDir(StreetNameUs("Independence Avenue Southwest", false), " Southwest");
+  TryGetPostDir(StreetNameUs("Main Street", false), "");
 }
 
 void TryGetPostCardinalDir(const StreetNameUs& street_name, const std::string& post_dir) {
@@ -103,11 +105,11 @@ void TryGetPostCardinalDir(const StreetNameUs& street_name, const std::string& p
 }
 
 void TestGetPostCardinalDir() {
-  TryGetPostCardinalDir(StreetNameUs("US 220 North"), " North");
-  TryGetPostCardinalDir(StreetNameUs("US 22 East"), " East");
-  TryGetPostCardinalDir(StreetNameUs("I 81 South"), " South");
-  TryGetPostCardinalDir(StreetNameUs("PA 283 West"), " West");
-  TryGetPostCardinalDir(StreetNameUs("Main Street"), "");
+  TryGetPostCardinalDir(StreetNameUs("US 220 North", true), " North");
+  TryGetPostCardinalDir(StreetNameUs("US 22 East", true), " East");
+  TryGetPostCardinalDir(StreetNameUs("I 81 South", true), " South");
+  TryGetPostCardinalDir(StreetNameUs("PA 283 West", true), " West");
+  TryGetPostCardinalDir(StreetNameUs("Main Street", false), "");
 }
 
 void TryGetBaseName(const StreetNameUs& street_name, const std::string& base_name) {
@@ -116,23 +118,23 @@ void TryGetBaseName(const StreetNameUs& street_name, const std::string& base_nam
 }
 
 void TestGetBaseName() {
-  TryGetBaseName(StreetNameUs("North Main Street"), "Main Street");
-  TryGetBaseName(StreetNameUs("East Chestnut Avenue"), "Chestnut Avenue");
-  TryGetBaseName(StreetNameUs("South Main Street"), "Main Street");
-  TryGetBaseName(StreetNameUs("West 26th Street"), "26th Street");
-  TryGetBaseName(StreetNameUs("US 220 North"), "US 220");
-  TryGetBaseName(StreetNameUs("US 22 East"), "US 22");
-  TryGetBaseName(StreetNameUs("I 81 South"), "I 81");
-  TryGetBaseName(StreetNameUs("PA 283 West"), "PA 283");
-  TryGetBaseName(StreetNameUs("Constitution Avenue Northeast"), "Constitution Avenue");
-  TryGetBaseName(StreetNameUs("Constitution Avenue Northwest"), "Constitution Avenue");
-  TryGetBaseName(StreetNameUs("Independence Avenue Southeast"), "Independence Avenue");
-  TryGetBaseName(StreetNameUs("Independence Avenue Southwest"), "Independence Avenue");
-  TryGetBaseName(StreetNameUs("North South Street Northwest"), "South Street");
-  TryGetBaseName(StreetNameUs("East North Avenue Southwest"), "North Avenue");
-  TryGetBaseName(StreetNameUs("Main Street"), "Main Street");
-  TryGetBaseName(StreetNameUs("Broadway"), "Broadway");
-  TryGetBaseName(StreetNameUs(""), "");
+  TryGetBaseName(StreetNameUs("North Main Street", false), "Main Street");
+  TryGetBaseName(StreetNameUs("East Chestnut Avenue", false), "Chestnut Avenue");
+  TryGetBaseName(StreetNameUs("South Main Street", false), "Main Street");
+  TryGetBaseName(StreetNameUs("West 26th Street", false), "26th Street");
+  TryGetBaseName(StreetNameUs("US 220 North", true), "US 220");
+  TryGetBaseName(StreetNameUs("US 22 East", true), "US 22");
+  TryGetBaseName(StreetNameUs("I 81 South", true), "I 81");
+  TryGetBaseName(StreetNameUs("PA 283 West", true), "PA 283");
+  TryGetBaseName(StreetNameUs("Constitution Avenue Northeast", false), "Constitution Avenue");
+  TryGetBaseName(StreetNameUs("Constitution Avenue Northwest", false), "Constitution Avenue");
+  TryGetBaseName(StreetNameUs("Independence Avenue Southeast", false), "Independence Avenue");
+  TryGetBaseName(StreetNameUs("Independence Avenue Southwest", false), "Independence Avenue");
+  TryGetBaseName(StreetNameUs("North South Street Northwest", false), "South Street");
+  TryGetBaseName(StreetNameUs("East North Avenue Southwest", false), "North Avenue");
+  TryGetBaseName(StreetNameUs("Main Street", false), "Main Street");
+  TryGetBaseName(StreetNameUs("Broadway", false), "Broadway");
+  TryGetBaseName(StreetNameUs("", false), "");
 }
 
 void TryHasSameBaseName(const StreetNameUs& street_name, const StreetNameUs& rhs) {
@@ -142,30 +144,32 @@ void TryHasSameBaseName(const StreetNameUs& street_name, const StreetNameUs& rhs
 }
 
 void TestHasSameBaseName() {
-  TryHasSameBaseName(StreetNameUs("North Main Street"), StreetNameUs("Main Street"));
-  TryHasSameBaseName(StreetNameUs("East Chestnut Avenue"), StreetNameUs("Chestnut Avenue"));
-  TryHasSameBaseName(StreetNameUs("South Main Street"), StreetNameUs("Main Street"));
-  TryHasSameBaseName(StreetNameUs("West 26th Street"), StreetNameUs("East 26th Street"));
-  TryHasSameBaseName(StreetNameUs("I 695 West"), StreetNameUs("I 695 South"));
-  TryHasSameBaseName(StreetNameUs("US 220 North"), StreetNameUs("US 220"));
-  TryHasSameBaseName(StreetNameUs("US 22 East"), StreetNameUs("US 22"));
-  TryHasSameBaseName(StreetNameUs("I 81 South"), StreetNameUs("I 81"));
-  TryHasSameBaseName(StreetNameUs("PA 283 West"), StreetNameUs("PA 283"));
-  TryHasSameBaseName(StreetNameUs("Constitution Avenue Northeast"),
-                     StreetNameUs("Constitution Avenue"));
-  TryHasSameBaseName(StreetNameUs("Constitution Avenue Northwest"),
-                     StreetNameUs("Constitution Avenue"));
-  TryHasSameBaseName(StreetNameUs("Constitution Avenue Northwest"),
-                     StreetNameUs("Constitution Avenue Northeast"));
-  TryHasSameBaseName(StreetNameUs("Independence Avenue Southeast"),
-                     StreetNameUs("Independence Avenue"));
-  TryHasSameBaseName(StreetNameUs("Independence Avenue Southwest"),
-                     StreetNameUs("Independence Avenue"));
-  TryHasSameBaseName(StreetNameUs("Independence Avenue Southwest"),
-                     StreetNameUs("Independence Avenue Southeast"));
-  TryHasSameBaseName(StreetNameUs("Main Street"), StreetNameUs("Main Street"));
-  TryHasSameBaseName(StreetNameUs("Broadway"), StreetNameUs("Broadway"));
-  TryHasSameBaseName(StreetNameUs(""), StreetNameUs(""));
+  TryHasSameBaseName(StreetNameUs("North Main Street", false), StreetNameUs("Main Street", false));
+  TryHasSameBaseName(StreetNameUs("East Chestnut Avenue", false),
+                     StreetNameUs("Chestnut Avenue", false));
+  TryHasSameBaseName(StreetNameUs("South Main Street", false), StreetNameUs("Main Street", false));
+  TryHasSameBaseName(StreetNameUs("West 26th Street", false),
+                     StreetNameUs("East 26th Street", false));
+  TryHasSameBaseName(StreetNameUs("I 695 West", true), StreetNameUs("I 695 South", true));
+  TryHasSameBaseName(StreetNameUs("US 220 North", true), StreetNameUs("US 220", true));
+  TryHasSameBaseName(StreetNameUs("US 22 East", true), StreetNameUs("US 22", true));
+  TryHasSameBaseName(StreetNameUs("I 81 South", true), StreetNameUs("I 81", true));
+  TryHasSameBaseName(StreetNameUs("PA 283 West", true), StreetNameUs("PA 283", true));
+  TryHasSameBaseName(StreetNameUs("Constitution Avenue Northeast", false),
+                     StreetNameUs("Constitution Avenue", false));
+  TryHasSameBaseName(StreetNameUs("Constitution Avenue Northwest", false),
+                     StreetNameUs("Constitution Avenue", false));
+  TryHasSameBaseName(StreetNameUs("Constitution Avenue Northwest", false),
+                     StreetNameUs("Constitution Avenue Northeast", false));
+  TryHasSameBaseName(StreetNameUs("Independence Avenue Southeast", false),
+                     StreetNameUs("Independence Avenue", false));
+  TryHasSameBaseName(StreetNameUs("Independence Avenue Southwest", false),
+                     StreetNameUs("Independence Avenue", false));
+  TryHasSameBaseName(StreetNameUs("Independence Avenue Southwest", false),
+                     StreetNameUs("Independence Avenue Southeast", false));
+  TryHasSameBaseName(StreetNameUs("Main Street", false), StreetNameUs("Main Street", false));
+  TryHasSameBaseName(StreetNameUs("Broadway", false), StreetNameUs("Broadway", false));
+  TryHasSameBaseName(StreetNameUs("", false), StreetNameUs("", false));
 }
 
 } // namespace

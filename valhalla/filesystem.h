@@ -1,19 +1,27 @@
 #pragma once
 /**
- * NOTE: This is a slim version of std::filesystem (boost::filesytem) containing just
+ * NOTE: This is a slim version of std::filesystem (boost::filesystem) containing just
  * the parts that we need for recursive directory listing, file types and exists check
  * we've just stubbed out the interface such that its basically a subset of the official
  * version missing the stuff we dont make use of. it should work on posix and windows
  */
 
 #include <cerrno>
+#include <cstdio>
 #include <cstring>
 #include <dirent.h>
 #include <memory>
 #include <string>
 #include <sys/stat.h>
-#include <unistd.h>
 #include <vector>
+
+#ifdef _MSC_VER
+#include <direct.h> // _mkdir
+#include <fcntl.h>
+#include <io.h> // _chsize
+#else
+#include <unistd.h>
+#endif
 
 namespace filesystem {
 
@@ -24,9 +32,11 @@ public:
 #else
   static constexpr char preferred_separator = L'/';
 #endif
+  path() : path_name_(), separators_() {
+  }
   path(const char* path_name) : path(std::string(path_name)) {
   }
-  path(const std::string& path_name) : path_name_(path_name) {
+  path(const std::string& path_name) : path_name_(path_name), separators_() {
     // TODO: squash repeated separators
     // delineate the path
     for (size_t npos = path_name_.find_first_of(preferred_separator); npos != std::string::npos;
@@ -55,6 +65,21 @@ public:
     path_name_.erase(separators_.back());
     separators_.pop_back();
     return *this /= filename;
+  }
+  path parent_path() const {
+    if (separators_.empty())
+      return path("");
+    return path(path_name_.substr(0, separators_.back()));
+  }
+  path extension() const {
+    // get the file name part and look for a .
+    auto file_name = filename().string();
+    auto pos = file_name.rfind('.');
+    // if we didnt find a . or the one we found was . or .. or .bashrc, then no extension
+    if (pos == std::string::npos || pos == 0 || file_name == "..")
+      return path("");
+    // otherwise we just take the last bit from the .
+    return path(file_name.substr(pos));
   }
   bool operator==(const path& rhs) const {
     return path_name_ == rhs.path_name_;
@@ -86,6 +111,23 @@ private:
   std::vector<size_t> separators_;
 };
 
+template <class CharT, class Traits>
+std::basic_ostream<CharT, Traits>& operator<<(std::basic_ostream<CharT, Traits>& os, const path& p) {
+  // TODO: quote the string for space
+  os << p.string();
+  return os;
+}
+
+template <class CharT, class Traits>
+std::basic_istream<CharT, Traits>& operator>>(std::basic_istream<CharT, Traits>& is, path& p) {
+  std::string tmp;
+  // TODO: quote the string for space
+  is >> tmp;
+  p = path(tmp);
+  return is;
+}
+
+class directory_iterator;
 class recursive_directory_iterator;
 class directory_entry {
 public:
@@ -95,13 +137,13 @@ public:
     return entry_ != nullptr;
   }
   bool is_directory() const {
-    return exists() && entry_->d_type == DT_DIR;
+    return entry_ && entry_->d_type == DT_DIR;
   }
   bool is_regular_file() const {
-    return exists() && entry_->d_type == DT_REG;
+    return entry_ && entry_->d_type == DT_REG;
   }
   bool is_symlink() const {
-    return exists() && entry_->d_type == DT_LNK;
+    return entry_ && entry_->d_type == DT_LNK;
   }
   const filesystem::path& path() const {
     return path_;
@@ -109,8 +151,22 @@ public:
   bool operator==(const directory_entry& rhs) const {
     return (!entry_ && !rhs.entry_) || memcmp(entry_.get(), rhs.entry_.get(), sizeof(dirent)) == 0;
   }
+  std::uintmax_t file_size() {
+    if (entry_ && entry_->d_type == DT_DIR)
+      throw std::runtime_error("Cannot get the file_size of a directory");
+    // if we know the inode then we stat'd the file already and cached the size
+    if (entry_->d_ino)
+      return file_size_;
+    struct stat s;
+    if (stat(path_.c_str(), &s) == 0)
+      return s.st_size;
+    throw std::runtime_error("Cannot get the file_size of this directory_entry");
+  }
+
+  friend bool is_empty(const class path&);
 
 private:
+  friend directory_iterator;
   friend recursive_directory_iterator;
   directory_entry(const filesystem::path& path, bool iterate)
       : dir_(nullptr), entry_(nullptr), path_(path) {
@@ -133,9 +189,13 @@ private:
       entry_->d_namlen = filename.string().size();
 #endif
       entry_->d_type = mode_to_type(s.st_mode);
+      file_size_ = s.st_size;
     }
   }
-  int mode_to_type(decltype(stat::st_mode) mode) {
+
+  // On POSIX, d_type is char.
+  // On Windows, d_type is int (values are larger than 8-bit integer).
+  decltype(::dirent::d_type) mode_to_type(decltype(::stat::st_mode) mode) {
     if (S_ISREG(mode))
       return DT_REG;
     else if (S_ISDIR(mode))
@@ -169,8 +229,13 @@ private:
           path_.replace_filename(entry_->d_name);
         // fix the type if its unknown
         struct stat s;
-        if (entry_->d_type == DT_UNKNOWN && stat(path_.c_str(), &s) == 0)
+        if (entry_->d_type == DT_UNKNOWN && stat(path_.c_str(), &s) == 0) {
           entry_->d_type = mode_to_type(s.st_mode);
+          entry_->d_ino = s.st_ino;
+          file_size_ = s.st_size;
+        } // if we didnt stat it then we dont set the inode and we dont know the size
+        else
+          entry_->d_ino = 0;
       }
     }
     return entry_.get();
@@ -178,21 +243,53 @@ private:
   std::shared_ptr<DIR> dir_;
   std::shared_ptr<dirent> entry_;
   filesystem::path path_;
+  std::uintmax_t file_size_;
 };
+
+class directory_iterator {
+public:
+  directory_iterator(const filesystem::path& path) : entry_(new directory_entry(path, true)) {
+    // if its not a dir or it is empty
+    if (!entry_->dir_ || !entry_->next())
+      entry_.reset();
+  }
+  directory_iterator() : entry_() {
+  }
+  const directory_entry& operator*() const {
+    return *entry_;
+  }
+  const directory_entry* operator->() const {
+    return entry_.get();
+  }
+  directory_iterator& operator++() {
+    if (entry_ && !entry_->next())
+      entry_.reset();
+    return *this;
+  }
+
+private:
+  std::shared_ptr<directory_entry> entry_;
+  friend bool operator==(const directory_iterator& lhs, const directory_iterator& rhs);
+};
+
+inline bool operator==(const directory_iterator& lhs, const directory_iterator& rhs) {
+  return (lhs.entry_ && rhs.entry_ && *lhs.entry_ == *rhs.entry_) || (lhs.entry_ == rhs.entry_);
+}
+
+inline bool operator!=(const directory_iterator& lhs, const directory_iterator& rhs) {
+  return !(lhs == rhs);
+}
 
 // NOTE: follows links by default..
 class recursive_directory_iterator {
 public:
-  recursive_directory_iterator(const filesystem::path& path) {
+  recursive_directory_iterator(const filesystem::path& path) : stack_() {
     stack_.emplace_back(new directory_entry(path, true));
-    // if this was an iteratable directory go to the first entry
-    if (stack_.back()->dir_)
-      stack_.back()->next();
-    // if we cant iterate then its an end itr
-    else
+    // if wasn't an iterable directory or it was empty then we are at the end
+    if (!stack_.back()->dir_ || !stack_.back()->next())
       stack_.clear();
   }
-  recursive_directory_iterator() {
+  recursive_directory_iterator() : stack_() {
   }
   const directory_entry& operator*() const {
     return *stack_.back();
@@ -243,6 +340,18 @@ inline bool is_regular_file(const path& p) {
   return directory_entry(p).is_regular_file();
 }
 
+inline bool is_empty(const path& p) {
+  try {
+    // if its a directory and we cant iterate then its empty OR
+    // its a file and it has no size
+    directory_entry entry(p);
+    return (entry.is_directory() && !entry.next()) || entry.file_size() == 0;
+  } // it can throw if the path is bogus
+  catch (...) {
+    return false;
+  }
+}
+
 inline bool create_directories(const path& p) {
   // name no work to do
   if (p.path_name_.empty())
@@ -256,7 +365,11 @@ inline bool create_directories(const path& p) {
     auto partial = p.path_name_.substr(0, sep);
     if (stat(partial.c_str(), &s) != 0) {
       // create this piece with filesystem::permissions::all
+#ifdef _MSC_VER
+      if (_mkdir(partial.c_str()) != 0) {
+#else
       if (mkdir(partial.c_str(), S_IRWXU | S_IRWXG | S_IRWXO) != 0) {
+#endif
         return false;
         // throw std::runtime_error(std::string("Failed to create path: ") + strerror(errno));
       }
@@ -272,8 +385,43 @@ inline bool create_directories(const path& p) {
 }
 
 inline void resize_file(const path& p, std::uintmax_t new_size) {
+#ifdef _MSC_VER
+  auto truncate = [](char const* filepath, std::uintmax_t length) -> int {
+    // _chsize expects value in range of signed long
+    if (length > (std::numeric_limits<long>::max)())
+      return false;
+
+    int fd{0};
+    if (::_sopen_s(&fd, filepath, _O_RDWR | _O_CREAT, _SH_DENYNO, _S_IREAD | _S_IWRITE) != 0)
+      return false;
+
+    int const rc = ::_chsize(fd, static_cast<long>(length));
+    _close(fd);
+    return rc == 0;
+  };
+#endif
+
   if (truncate(p.c_str(), new_size))
     throw std::runtime_error(std::string("Failed to resize path: ") + strerror(errno));
+}
+
+inline bool remove(const path& p) {
+  return ::remove(p.c_str()) == 0;
+}
+
+inline bool remove_all(const path& p) {
+  // for each entry in this directory
+  for (directory_iterator i(p), end; i != end; ++i) {
+    // if its a directory we recurse depth first
+    if (i->is_directory()) {
+      if (!remove_all(i->path()))
+        return false;
+    } // otherwise its a file or link try to delete it
+    else if (!remove(i->path()))
+      return false;
+  }
+  // delete the root
+  return remove(p);
 }
 
 } // namespace filesystem

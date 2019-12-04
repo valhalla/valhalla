@@ -54,8 +54,8 @@ public:
    * @param  mode_costing List of costing objects
    * @param  mode         Travel mode
    */
-  std::shared_ptr<const GriddedData<midgard::PointLL>>
-  Compute(google::protobuf::RepeatedPtrField<valhalla::odin::Location>& origin_locs,
+  std::shared_ptr<const midgard::GriddedData<midgard::PointLL>>
+  Compute(google::protobuf::RepeatedPtrField<valhalla::Location>& origin_locs,
           const unsigned int max_minutes,
           baldr::GraphReader& graphreader,
           const std::shared_ptr<sif::DynamicCost>* mode_costing,
@@ -64,8 +64,8 @@ public:
   // Compute iso-tile that we can use to generate isochrones. This is used for
   // the reverse direction - construct times for gridded data indicating how
   // long it takes to reach the destination location.
-  std::shared_ptr<const GriddedData<midgard::PointLL>>
-  ComputeReverse(google::protobuf::RepeatedPtrField<valhalla::odin::Location>& dest_locations,
+  std::shared_ptr<const midgard::GriddedData<midgard::PointLL>>
+  ComputeReverse(google::protobuf::RepeatedPtrField<valhalla::Location>& dest_locations,
                  const unsigned int max_minutes,
                  baldr::GraphReader& graphreader,
                  const std::shared_ptr<sif::DynamicCost>* mode_costing,
@@ -83,8 +83,8 @@ public:
    * @param  mode_costing List of costing objects
    * @param  mode         Travel mode
    */
-  std::shared_ptr<const GriddedData<midgard::PointLL>>
-  ComputeMultiModal(google::protobuf::RepeatedPtrField<valhalla::odin::Location>& origin_locations,
+  std::shared_ptr<const midgard::GriddedData<midgard::PointLL>>
+  ComputeMultiModal(google::protobuf::RepeatedPtrField<valhalla::Location>& origin_locations,
                     const unsigned int max_minutes,
                     baldr::GraphReader& graphreader,
                     const std::shared_ptr<sif::DynamicCost>* mode_costing,
@@ -96,6 +96,19 @@ protected:
   float shape_interval_; // Interval along shape to mark time
   sif::TravelMode mode_; // Current travel mode
   uint32_t access_mode_; // Access mode used by the costing method
+
+  // For multimodal isochrones
+  bool date_set_;
+  bool date_before_tile_;
+  uint32_t date_;
+  uint32_t dow_;
+  uint32_t day_;
+  uint32_t start_time_;
+  uint32_t max_seconds_;
+  uint32_t max_transfer_distance_;
+  std::string origin_date_time_;
+  std::unordered_map<std::string, uint32_t> operators_;
+  std::unordered_set<uint32_t> processed_tiles_;
 
   // Current costing mode
   std::shared_ptr<sif::DynamicCost> costing_;
@@ -112,7 +125,7 @@ protected:
   EdgeStatus edgestatus_;
 
   // Isochrone gridded time data
-  std::shared_ptr<GriddedData<midgard::PointLL>> isotile_;
+  std::shared_ptr<midgard::GriddedData<midgard::PointLL>> isotile_;
 
   /**
    * Initialize prior to computing the isochrones. Creates adjacency list,
@@ -142,10 +155,9 @@ protected:
    * @param  max_minutes Maximum time (minutes) for computing isochrones.
    * @param  origin_locations  List of origin locations.
    */
-  void
-  ConstructIsoTile(const bool multimodal,
-                   const unsigned int max_minutes,
-                   google::protobuf::RepeatedPtrField<valhalla::odin::Location>& origin_locations);
+  void ConstructIsoTile(const bool multimodal,
+                        const unsigned int max_minutes,
+                        google::protobuf::RepeatedPtrField<valhalla::Location>& origin_locations);
 
   /**
    * Expand from the node along the forward search path.
@@ -185,6 +197,37 @@ protected:
                      int32_t seconds_of_week);
 
   /**
+   * Expand from the node using multimodal algorithm.
+   * @param graphreader  Graph reader.
+   * @param node Graph Id of the node to expand.
+   * @param pred Edge label of the predecessor edge leading to the node.
+   * @param pred_idx Index in the edge label list of the predecessor edge.
+   * @param from_transition Boolean indicating if this expansion is from a transition edge.
+   * @param pc Pedestrian costing.
+   * @param tc Transit costing.
+   * @param mode_costing Array of all costing models.
+   * @return Returns true if the isochrone is done.
+   */
+  bool ExpandForwardMM(baldr::GraphReader& graphreader,
+                       const baldr::GraphId& node,
+                       const sif::MMEdgeLabel& pred,
+                       const uint32_t pred_idx,
+                       const bool from_transition,
+                       const std::shared_ptr<sif::DynamicCost>& pc,
+                       const std::shared_ptr<sif::DynamicCost>& tc,
+                       const std::shared_ptr<sif::DynamicCost>* mode_costing);
+
+  /**
+   * Expand from the node for a multi-modal path.
+   */
+  void ExpandMM(baldr::GraphReader& graphreader,
+                const baldr::GraphId& node,
+                const sif::MMEdgeLabel& pred,
+                const sif::DynamicCost* costing,
+                const sif::DynamicCost* tc,
+                const std::shared_ptr<sif::DynamicCost>* mode_costing);
+
+  /**
    * Updates the isotile using the edge information from the predecessor edge
    * label. This is the edge being settled (lowest cost found to the edge).
    * @param  pred         Predecessor edge label (edge being settled).
@@ -203,10 +246,9 @@ protected:
    * @param  origin_locations  Location information for origins.
    * @param  costing           Dynamic costing.
    */
-  void
-  SetOriginLocations(baldr::GraphReader& graphreader,
-                     google::protobuf::RepeatedPtrField<valhalla::odin::Location>& origin_locations,
-                     const std::shared_ptr<sif::DynamicCost>& costing);
+  void SetOriginLocations(baldr::GraphReader& graphreader,
+                          google::protobuf::RepeatedPtrField<valhalla::Location>& origin_locations,
+                          const std::shared_ptr<sif::DynamicCost>& costing);
 
   /**
    * Add edge(s) at each origin location to the adjacency list.
@@ -214,10 +256,9 @@ protected:
    * @param  origin_locations  Location information for origins.
    * @param  costing           Dynamic costing.
    */
-  void
-  SetOriginLocationsMM(baldr::GraphReader& graphreader,
-                       google::protobuf::RepeatedPtrField<valhalla::odin::Location>& origin_locations,
-                       const std::shared_ptr<sif::DynamicCost>& costing);
+  void SetOriginLocationsMM(baldr::GraphReader& graphreader,
+                            google::protobuf::RepeatedPtrField<valhalla::Location>& origin_locations,
+                            const std::shared_ptr<sif::DynamicCost>& costing);
 
   /**
    * Add edge(s) at each destination location to the adjacency list.
@@ -225,10 +266,9 @@ protected:
    * @param  dest_locations    Location information for destinations.
    * @param  costing           Dynamic costing.
    */
-  void SetDestinationLocations(
-      baldr::GraphReader& graphreader,
-      google::protobuf::RepeatedPtrField<valhalla::odin::Location>& dest_locations,
-      const std::shared_ptr<sif::DynamicCost>& costing);
+  void SetDestinationLocations(baldr::GraphReader& graphreader,
+                               google::protobuf::RepeatedPtrField<valhalla::Location>& dest_locations,
+                               const std::shared_ptr<sif::DynamicCost>& costing);
 
   /**
    * Convenience method to get the timezone index at a node.

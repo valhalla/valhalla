@@ -14,10 +14,6 @@ An elevation service request takes the form of `servername/height?json={}`, wher
 
 There is an option to name your elevation request. You can do this by appending the following to your request `&id=`.  The `id` is returned with the response so a user could match to the corresponding request.
 
-## Using the hosted Mapbox Elevation Service
-
-The Mapbox elevation service requires an access token. In a request, you must append your own access_token to the URL, following access_token=. See the [Mapbox API documentation](https://www.mapbox.com/api-documentation/#access-tokens) for more on access tokens. Contact Mapbox for instructions on accessing this API.
-
 ### Use a shape list for input locations
 
 The elevation request run locally takes the form of `localhost:8002/height?json={}`, where the JSON inputs inside the `{}` are described below.
@@ -51,7 +47,7 @@ Without the `range`, the result looks something like this, with only a `height`:
 
 ### Use an encoded polyline for input locations
 
-The `encoded_polyline` parameter is a string of a polyline-encoded, with **six degrees of precision**, shape and has the following parameters. Details on polyline encoding and decoding can be found [here](/decoding.md).
+The `encoded_polyline` parameter is a string of a polyline-encoded, with **six degrees of precision**, shape and has the following parameters. Details on polyline encoding and decoding can be found [here](../../decoding.md).
 
 | Encoded polyline parameters | Description |
 | :--------- | :----------- |

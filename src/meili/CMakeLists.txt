@@ -8,8 +8,7 @@ set(sources
   transition_cost_model.cc
   map_matcher.cc
   map_matcher_factory.cc
-  match_route.cc
-  traffic_segment_matcher.cc)
+  match_route.cc)
 
 valhalla_module(NAME meili
   SOURCES ${sources}
@@ -19,8 +18,11 @@ valhalla_module(NAME meili
       ${VALHALLA_SOURCE_DIR}
       ${VALHALLA_SOURCE_DIR}/valhalla
       ${VALHALLA_SOURCE_DIR}/third_party/date/include
+      $<$<BOOL:${MSVC}>:${VALHALLA_SOURCE_DIR}/third_party/dirent/include>
     PRIVATE
       ${VALHALLA_SOURCE_DIR}/third_party/rapidjson/include
       ${CMAKE_BINARY_DIR}
   DEPENDS
-    valhalla::sif)
+    valhalla::sif
+    ${valhalla_protobuf_targets}
+    Boost::boost)

@@ -8,6 +8,7 @@
 #include <valhalla/midgard/pointll.h>
 
 #include <tuple>
+#include <unordered_set>
 
 namespace valhalla {
 namespace midgard {
@@ -24,7 +25,7 @@ public:
    * Constructor given a list of points.
    * @param  pts  List of points.
    */
-  Polyline2(std::vector<coord_t>& pts);
+  Polyline2(const std::vector<coord_t>& pts);
 
   /**
    * Gets the list of points.
@@ -68,27 +69,31 @@ public:
 
   /**
    * Generalize this polyline.
-   * @param  t   Generalization tolerance.
-   * @return  Returns the number of points in the generalized polyline.
+   * @param   t         Generalization tolerance.
+   * @param   indices   List of indices of points not to generalize
+   * @return  returns the number of points in the generalized polyline.
    */
-  uint32_t Generalize(const float t);
+  uint32_t Generalize(const float t, const std::unordered_set<size_t>& indices = {});
 
   /**
    * Get a generalized polyline from this polyline. This polyline remains
    * unchanged.
-   * @param  t   Generalization tolerance.
-   * @return   Returns the generalized polyline.
+   * @param    t   Generalization tolerance.
+   * @param    indices   List of indices of points not to generalize
+   * @return   returns the generalized polyline.
    */
-  Polyline2 GeneralizedPolyline(const float t);
+  Polyline2 GeneralizedPolyline(const float t, const std::unordered_set<size_t>& indices = {});
 
   /**
    * Generalize the given list of points
    *
    * @param polyline    the list of points
    * @param epsilon     the tolerance used in removing points
-   *
+   * @param  indices    list of indices of points not to generalize
    */
-  template <class container_t> static void Generalize(container_t& polyline, float epsilon);
+  template <class container_t>
+  static void
+  Generalize(container_t& polyline, float epsilon, const std::unordered_set<size_t>& indices = {});
 
   /**
    * Clip this polyline to the specified bounding box.
@@ -103,6 +108,13 @@ public:
    * @param  box  AABB (rectangle) to which the polyline is clipped.
    */
   Polyline2 ClippedPolyline(const AABB2<coord_t>& box);
+
+  /**
+   * Checks if the polylines are equal
+   * @param   other  the other polyline to check against this one
+   * @return         true if they are equal false otherwise
+   */
+  bool operator==(const Polyline2<coord_t>& other) const;
 
 protected:
   // Polyline points

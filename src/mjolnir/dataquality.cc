@@ -10,14 +10,16 @@ namespace mjolnir {
 
 // Constructor
 DataQuality::DataQuality()
-    : nodecount(0), directededge_count(0), simplerestrictions(0), timedrestrictions(0),
-      culdesaccount(0), forward_restrictions_count(0), reverse_restrictions_count(0), node_counts{} {
+    : nodecount(0), directededge_count(0), edgeinfocount(0), simplerestrictions(0),
+      timedrestrictions(0), culdesaccount(0), forward_restrictions_count(0),
+      reverse_restrictions_count(0), node_counts{} {
 }
 
 // Add statistics (accumulate from several DataQuality objects)
 void DataQuality::AddStatistics(const DataQuality& stats) {
   nodecount += stats.nodecount;
   directededge_count += stats.directededge_count;
+  edgeinfocount += stats.edgeinfocount;
   simplerestrictions += stats.simplerestrictions;
   timedrestrictions += stats.timedrestrictions;
   culdesaccount += stats.culdesaccount;
@@ -29,10 +31,10 @@ void DataQuality::AddStatistics(const DataQuality& stats) {
 // Adds an issue.
 void DataQuality::AddIssue(const DataIssueType issuetype,
                            const GraphId& graphid,
-                           const uint64_t wayid1,
-                           const uint64_t wayid2) {
+                           const uint32_t wayid1,
+                           const uint32_t wayid2) {
   if (issuetype == kDuplicateWays) {
-    std::pair<uint64_t, uint64_t> wayids = std::make_pair(wayid1, wayid2);
+    std::pair<uint32_t, uint32_t> wayids = std::make_pair(wayid1, wayid2);
     auto it = duplicateways_.find(wayids);
     if (it == duplicateways_.end()) {
       duplicateways_.emplace(wayids, 1);
@@ -48,8 +50,9 @@ void DataQuality::AddIssue(const DataIssueType issuetype,
 
 // Logs statistics and issues
 void DataQuality::LogStatistics() const {
-  LOG_DEBUG("Node Count = " + std::to_string(nodecount));
-  LOG_DEBUG("Directed Edge Count = " + std::to_string(directededge_count));
+  LOG_INFO("Node Count = " + std::to_string(nodecount));
+  LOG_INFO("Directed Edge Count = " + std::to_string(directededge_count));
+  LOG_INFO("EdgeInfo Count = " + std::to_string(edgeinfocount));
   LOG_DEBUG("Simple Restriction Count = " + std::to_string(simplerestrictions));
   LOG_DEBUG("Timed  Restriction Count = " + std::to_string(timedrestrictions));
   LOG_DEBUG("Cul-de-Sac Count = " + std::to_string(culdesaccount));

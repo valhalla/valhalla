@@ -1,1 +1,0 @@
-Valhalla services are moving to Mapbox infrastructure effictive in late January 2018. To avoid service interruptions or if you are interested in getting started with Valhalla please reach out to the Mapbox sales: https://www.mapbox.com/contact/sales/

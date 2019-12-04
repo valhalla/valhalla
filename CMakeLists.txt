@@ -16,6 +16,7 @@ include(GNUInstallDirs)
 set(VALHALLA_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 list(INSERT CMAKE_MODULE_PATH 0 ${VALHALLA_SOURCE_DIR}/cmake)
 
+set(CMAKE_CXX_STANDARD 14 CACHE STRING "C++ language version to use (default is 14)")
 option(ENABLE_TOOLS "Enable Valhalla tools" ON)
 option(ENABLE_DATA_TOOLS "Enable Valhalla data tools" ON)
 option(ENABLE_SERVICES "Enable Valhalla services" ON)
@@ -24,12 +25,14 @@ option(ENABLE_PYTHON_BINDINGS "Enable Python bindings" ON)
 option(ENABLE_NODE_BINDINGS "Build NodeJs bindings" ON)
 option(ENABLE_CCACHE "Speed up incremental rebuilds via ccache" ON)
 option(ENABLE_COVERAGE "Build with coverage instrumentalisation" OFF)
+option(ENABLE_COMPILER_WARNINGS "Build with compiler warnings as errors" OFF)
 option(ENABLE_SANITIZER "Use memory sanitizer for Debug build" OFF)
+option(ENABLE_TESTS "Enable Valhalla tests" ON)
 set(LOGGING_LEVEL "" CACHE STRING "Logging level, default is INFO")
 set_property(CACHE LOGGING_LEVEL PROPERTY STRINGS "NONE;ALL;ERROR;WARN;INFO;DEBUG;TRACE")
 
-set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 
 # colorize output
@@ -110,41 +113,69 @@ endif()
 find_package(Threads REQUIRED)
 find_package(ZLIB REQUIRED)
 
-add_library(CURL::CURL INTERFACE IMPORTED)
-if(ENABLE_HTTP OR ENABLE_DATA_TOOLS)
-  if(NOT CURL_FOUND)
-    find_package(CURL REQUIRED)
+if(NOT TARGET CURL::CURL)
+  add_library(CURL::CURL INTERFACE IMPORTED)
+  if(ENABLE_HTTP OR ENABLE_DATA_TOOLS)
+    if(NOT CURL_FOUND)
+      find_package(CURL REQUIRED)
+    endif()
+    set_target_properties(CURL::CURL PROPERTIES
+      INTERFACE_LINK_LIBRARIES "${CURL_LIBRARIES}"
+      INTERFACE_INCLUDE_DIRECTORIES "${CURL_INCLUDE_DIR}"
+      INTERFACE_COMPILE_DEFINITIONS CURL_STATICLIB)
   endif()
-  set_target_properties(CURL::CURL PROPERTIES
-    INTERFACE_LINK_LIBRARIES "${CURL_LIBRARIES}"
-    INTERFACE_INCLUDE_DIRECTORIES "${CURL_INCLUDE_DIR}"
-    INTERFACE_COMPILE_DEFINITIONS CURL_STATICLIB)
+else()
+  message(STATUS "Using curl from the outside")
 endif()
 
 if(NOT Protobuf_FOUND)
   find_package(Protobuf REQUIRED)
 endif()
-# TODO: remove after switching to CMake >= 3.7
-if(NOT TARGET protobuf::libprotobuf-lite)
-  add_library(protobuf::libprotobuf-lite UNKNOWN IMPORTED)
-  set_target_properties(protobuf::libprotobuf-lite PROPERTIES
-    INTERFACE_INCLUDE_DIRECTORIES "${PROTOBUF_INCLUDE_DIR}")
-  if(EXISTS "${PROTOBUF_LIBRARY}")
+
+message(STATUS "Using pbf headers from ${PROTOBUF_INCLUDE_DIR}")
+message(STATUS "Using pbf libs from ${PROTOBUF_LIBRARY}")
+message(STATUS "Using pbf release libs from ${PROTOBUF_LIBRARY_RELEASE}")
+message(STATUS "Using pbf debug libs from ${PROTOBUF_LIBRARY_DEBUG}")
+if(TARGET protobuf::libprotobuf-lite)
+  message(STATUS "Using pbf-lite")
+endif()
+
+# TODO: remove after switching to CMake >= 3.9
+if(CMAKE_VERSION VERSION_LESS 3.9)
+  if(NOT TARGET protobuf::libprotobuf-lite)
+    add_library(protobuf::libprotobuf-lite UNKNOWN IMPORTED)
     set_target_properties(protobuf::libprotobuf-lite PROPERTIES
-      IMPORTED_LOCATION "${PROTOBUF_LIBRARY}")
+      INTERFACE_INCLUDE_DIRECTORIES "${PROTOBUF_INCLUDE_DIR}")
+
+    if(EXISTS "${PROTOBUF_LIBRARY}")
+      set_target_properties(protobuf::libprotobuf-lite PROPERTIES
+        IMPORTED_LOCATION "${PROTOBUF_LIBRARY}")
+    endif()
+    if(EXISTS "${PROTOBUF_LIBRARY_RELEASE}")
+      set_property(TARGET protobuf::libprotobuf-lite APPEND PROPERTY
+        IMPORTED_CONFIGURATIONS RELEASE)
+      set_target_properties(protobuf::libprotobuf-lite PROPERTIES
+        IMPORTED_LOCATION_RELEASE "${PROTOBUF_LIBRARY_RELEASE}")
+    endif()
+    if(EXISTS "${PROTOBUF_LIBRARY_DEBUG}")
+      set_property(TARGET protobuf::libprotobuf-lite APPEND PROPERTY
+        IMPORTED_CONFIGURATIONS DEBUG)
+      set_target_properties(protobuf::libprotobuf-lite PROPERTIES
+        IMPORTED_LOCATION_DEBUG "${PROTOBUF_LIBRARY_DEBUG}")
+    endif()
   endif()
-  if(EXISTS "${PROTOBUF_LIBRARY_RELEASE}")
-    set_property(TARGET protobuf::libprotobuf-lite APPEND PROPERTY
-      IMPORTED_CONFIGURATIONS RELEASE)
-    set_target_properties(protobuf::libprotobuf-lite PROPERTIES
-      IMPORTED_LOCATION_RELEASE "${PROTOBUF_LIBRARY_RELEASE}")
-  endif()
-  if(EXISTS "${PROTOBUF_LIBRARY_DEBUG}")
-    set_property(TARGET protobuf::libprotobuf-lite APPEND PROPERTY
-      IMPORTED_CONFIGURATIONS DEBUG)
-    set_target_properties(protobuf::libprotobuf-lite PROPERTIES
-      IMPORTED_LOCATION_DEBUG "${PROTOBUF_LIBRARY_DEBUG}")
-  endif()
+endif()
+
+# Allow linking against full or lite version of Protobuf library
+# TODO: After switching to CMake 3.12+, replace with
+#       $<TARGET_EXISTS:protobuf::libprotobuf
+#       $<TARGET_EXISTS:protobuf::libprotobuf-lite 
+if(TARGET protobuf::libprotobuf-lite)
+  set(valhalla_protobuf_targets protobuf::libprotobuf-lite)
+elseif(TARGET protobuf::libprotobuf)
+  set(valhalla_protobuf_targets protobuf::libprotobuf)
+else()
+  message(FATAL_ERROR "Required target protobuf::libprotobuf-lite or protobuf::libprotobuf is not defined")
 endif()
 
 add_library(libprime_server INTERFACE IMPORTED)
@@ -177,14 +208,16 @@ elseif(ENABLE_TOOLS)
 elseif(NOT Boost_FOUND)
   find_package(Boost 1.51 REQUIRED)
 endif()
+add_definitions(-DBOOST_NO_CXX11_SCOPED_ENUMS)
 
 ## libvalhalla
 add_subdirectory(src)
 
 ## Python bindings
 if(ENABLE_PYTHON_BINDINGS)
+  #TODO: need to make sure they actually have python
   add_subdirectory(src/bindings/python)
-  install(FILES COPYING ChangeLog
+  install(FILES COPYING CHANGELOG.md
     DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/doc/python-valhalla"
     COMPONENT python)
 endif()
@@ -210,13 +243,13 @@ endfunction()
 ## Valhalla programs
 set(valhalla_programs valhalla_run_map_match valhalla_benchmark_loki valhalla_benchmark_skadi
   valhalla_run_isochrone valhalla_run_route valhalla_benchmark_adjacency_list valhalla_run_matrix
-  valhalla_path_comparison valhalla_export_edges)
+  valhalla_path_comparison valhalla_export_edges valhalla_expand_bounding_box)
 
 ## Valhalla data tools
 set(valhalla_data_tools valhalla_build_statistics valhalla_ways_to_edges valhalla_validate_transit
   valhalla_benchmark_admins	valhalla_build_connectivity	valhalla_build_tiles
   valhalla_build_admins valhalla_convert_transit valhalla_fetch_transit valhalla_query_transit
-  valhalla_build_speeds  valhalla_associate_segments	valhalla_add_predicted_traffic)
+  valhalla_add_predicted_traffic)
 
 ## Valhalla services
 set(valhalla_services	valhalla_service valhalla_loki_worker	valhalla_odin_worker valhalla_thor_worker)
@@ -243,8 +276,8 @@ if(ENABLE_DATA_TOOLS)
   target_link_libraries(valhalla_build_admins GEOS::GEOS)
   target_sources(valhalla_build_statistics
     PUBLIC
-      src/mjolnir/statistics.cc
-      src/mjolnir/statistics_database.cc)
+      ${VALHALLA_SOURCE_DIR}/src/mjolnir/statistics.cc
+      ${VALHALLA_SOURCE_DIR}/src/mjolnir/statistics_database.cc)
 endif()
 
 if(ENABLE_SERVICES)
@@ -268,11 +301,13 @@ install(
     WORLD_READ WORLD_EXECUTE
   COMPONENT runtime)
 
-install(FILES COPYING ChangeLog
+install(FILES COPYING CHANGELOG.md
   DESTINATION "${CMAKE_INSTALL_DOCDIR}"
   COMPONENT runtime)
 
-add_subdirectory(test)
+if(ENABLE_TESTS)
+  add_subdirectory(test)
+endif()
 
 ## Packaging via CPack
 include(CPackComponent)

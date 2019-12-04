@@ -4,8 +4,6 @@
 
 #include "baldr/graphconstants.h"
 #include "mjolnir/adminconstants.h"
-#include "mjolnir/graphbuilder.h"
-#include "mjolnir/hierarchybuilder.h"
 #include "mjolnir/osmpbfparser.h"
 #include "mjolnir/pbfadminparser.h"
 
@@ -33,6 +31,15 @@
 #include <geos/opLinemerge.h>
 #include <geos/util/GEOSException.h>
 
+#include <boost/filesystem/operations.hpp>
+#include <boost/optional.hpp>
+#include <boost/program_options.hpp>
+#include <boost/property_tree/ptree.hpp>
+
+#include "baldr/rapidjson_utils.h"
+#include "midgard/logging.h"
+#include "midgard/util.h"
+
 using namespace geos::geom;
 using namespace geos::io;
 using namespace geos::util;
@@ -41,15 +48,6 @@ using namespace geos::operation::linemerge;
 // For OSM pbf reader
 using namespace valhalla::mjolnir;
 using namespace valhalla::baldr;
-
-#include "baldr/rapidjson_utils.h"
-#include <boost/filesystem/operations.hpp>
-#include <boost/optional.hpp>
-#include <boost/program_options.hpp>
-#include <boost/property_tree/ptree.hpp>
-#include <ostream>
-
-#include "midgard/logging.h"
 
 namespace bpo = boost::program_options;
 using namespace valhalla::midgard;
@@ -144,7 +142,7 @@ std::vector<std::string> GetWkts(std::unique_ptr<Geometry>& mline) {
   std::vector<std::string> wkts;
 
 #if 3 == GEOS_VERSION_MAJOR && 6 <= GEOS_VERSION_MINOR
-  GeometryFactory::unique_ptr gf = GeometryFactory::create();
+  auto gf = GeometryFactory::create();
 #else
   std::unique_ptr<GeometryFactory> gf(new GeometryFactory());
 #endif
@@ -261,7 +259,7 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
 
   // Read the OSM protocol buffer file. Callbacks for nodes, ways, and
   // relations are defined within the PBFParser class
-  OSMData osmdata = PBFAdminParser::Parse(pt, input_files);
+  OSMAdminData osm_admin_data = PBFAdminParser::Parse(pt, input_files);
 
   // done with the protobuffer library, cant use it again after this
   OSMPBF::Parser::free();
@@ -423,14 +421,14 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
   uint64_t nodeid;
   bool has_data;
 #if 3 == GEOS_VERSION_MAJOR && 6 <= GEOS_VERSION_MINOR
-  GeometryFactory::unique_ptr gf = GeometryFactory::create();
+  auto gf = GeometryFactory::create();
 #else
   std::unique_ptr<GeometryFactory> gf(new GeometryFactory());
 #endif
 
   try {
 
-    for (const auto& admin : osmdata.admins_) {
+    for (const auto& admin : osm_admin_data.admins_) {
 
       std::unique_ptr<Geometry> geom;
       std::unique_ptr<std::vector<Geometry*>> lines(new std::vector<Geometry*>);
@@ -438,11 +436,11 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
 
       for (const auto memberid : admin.ways()) {
 
-        auto itr = osmdata.way_map.find(memberid);
+        auto itr = osm_admin_data.way_map.find(memberid);
 
         // A relation may be included in an extract but it's members may not.
         // Example:  PA extract can contain a NY relation.
-        if (itr == osmdata.way_map.end()) {
+        if (itr == osm_admin_data.way_map.end()) {
           has_data = false;
           break;
         }
@@ -453,7 +451,7 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
 
         for (const auto ref_id : itr->second) {
 
-          const PointLL ll = osmdata.shape_map.at(ref_id);
+          const PointLL ll = osm_admin_data.shape_map.at(ref_id);
 
           Coordinate c;
           c.x = ll.lng();
@@ -484,7 +482,7 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
           sqlite3_bind_int(stmt, 1, admin.admin_level());
 
           if (admin.iso_code_index()) {
-            iso = osmdata.name_offset_map.name(admin.iso_code_index());
+            iso = osm_admin_data.name_offset_map.name(admin.iso_code_index());
             sqlite3_bind_text(stmt, 2, iso.c_str(), iso.length(), SQLITE_STATIC);
           } else {
             sqlite3_bind_null(stmt, 2);
@@ -492,11 +490,11 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
 
           sqlite3_bind_null(stmt, 3);
 
-          name = osmdata.name_offset_map.name(admin.name_index());
+          name = osm_admin_data.name_offset_map.name(admin.name_index());
           sqlite3_bind_text(stmt, 4, name.c_str(), name.length(), SQLITE_STATIC);
 
           if (admin.name_en_index()) {
-            name_en = osmdata.name_offset_map.name(admin.name_en_index());
+            name_en = osm_admin_data.name_offset_map.name(admin.name_en_index());
             sqlite3_bind_text(stmt, 5, name_en.c_str(), name_en.length(), SQLITE_STATIC);
           } else {
             sqlite3_bind_null(stmt, 5);
@@ -510,8 +508,10 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
             continue;
           }
           LOG_ERROR("sqlite3_step() error: " + std::string(sqlite3_errmsg(db_handle)));
-          LOG_ERROR("sqlite3_step() Name: " + osmdata.name_offset_map.name(admin.name_index()));
-          LOG_ERROR("sqlite3_step() Name:en: " + osmdata.name_offset_map.name(admin.name_en_index()));
+          LOG_ERROR("sqlite3_step() Name: " +
+                    osm_admin_data.name_offset_map.name(admin.name_index()));
+          LOG_ERROR("sqlite3_step() Name:en: " +
+                    osm_admin_data.name_offset_map.name(admin.name_en_index()));
           LOG_ERROR("sqlite3_step() Admin Level: " + std::to_string(admin.admin_level()));
           LOG_ERROR("sqlite3_step() Drive on Right: " + std::to_string(admin.drive_on_right()));
         }
@@ -634,7 +634,8 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
       continue;
     }
     LOG_ERROR("sqlite3_step() error: " + std::string(sqlite3_errmsg(db_handle)) +
-              ".  Ignore if not using a planet extract.");
+              ".  Ignore if not using a planet extract or check if there was a name change for " +
+              access.first.c_str());
   }
 
   sqlite3_finalize(stmt);

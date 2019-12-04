@@ -17,6 +17,7 @@
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
 #include "baldr/tilehierarchy.h"
+#include "filesystem.h"
 
 #if !defined(VALHALLA_SOURCE_DIR)
 #define VALHALLA_SOURCE_DIR
@@ -29,6 +30,13 @@ using namespace valhalla::baldr;
 namespace {
 
 const std::string config_file = "test/test_config_country";
+
+// Remove a temporary file if it exists
+void remove_temp_file(const std::string& fname) {
+  if (boost::filesystem::exists(fname)) {
+    boost::filesystem::remove(fname);
+  }
+}
 
 void write_config(const std::string& filename) {
   std::ofstream file;
@@ -47,7 +55,7 @@ void write_config(const std::string& filename) {
 }
 
 const auto node_predicate = [](const OSMWayNode& a, const OSMWayNode& b) {
-  return a.node.osmid < b.node.osmid;
+  return a.node.osmid_ < b.node.osmid_;
 };
 
 OSMNode GetNode(uint64_t node_id, sequence<OSMWayNode>& way_nodes) {
@@ -59,7 +67,7 @@ OSMNode GetNode(uint64_t node_id, sequence<OSMWayNode>& way_nodes) {
 
 auto way_predicate = [](const OSMWay& a, const OSMWay& b) { return a.osmwayid_ < b.osmwayid_; };
 
-OSMWay GetWay(uint64_t way_id, sequence<OSMWay>& ways) {
+OSMWay GetWay(uint32_t way_id, sequence<OSMWay>& ways) {
   auto found = ways.find({way_id}, way_predicate);
   if (found == ways.end())
     throw std::runtime_error("Couldn't find way: " + std::to_string(way_id));
@@ -79,15 +87,24 @@ void CountryAccess(const std::string& config_file) {
     }
   }
 
+  // Set up the temporary (*.bin) files used during processing
   std::string ways_file = "test_ways_amsterdam.bin";
   std::string way_nodes_file = "test_way_nodes_amsterdam.bin";
+  std::string nodes_file = "test_nodes_amsterdam.bin";
+  std::string edges_file = "test_edges_amsterdam.bin";
   std::string access_file = "test_access_amsterdam.bin";
-  std::string restriction_file = "test_complex_restrictions_amsterdam.bin";
-  auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"),
-                                       {VALHALLA_SOURCE_DIR "test/data/amsterdam.osm.pbf"}, ways_file,
-                                       way_nodes_file, access_file, restriction_file);
+  std::string cr_from_file = "test_from_cr_amsterdam.bin";
+  std::string cr_to_file = "test_to_cr_amsterdam.bin";
+  std::string bss_nodes_file = "test_bss_nodes_amsterdam.bin";
+  // Parse Amsterdam OSM data
+  auto osmdata =
+      PBFGraphParser::Parse(conf.get_child("mjolnir"),
+                            {VALHALLA_SOURCE_DIR "test/data/amsterdam.osm.pbf"}, ways_file,
+                            way_nodes_file, access_file, cr_from_file, cr_to_file, bss_nodes_file);
+
   // Build the graph using the OSMNodes and OSMWays from the parser
-  GraphBuilder::Build(conf, osmdata, ways_file, way_nodes_file, restriction_file);
+  GraphBuilder::Build(conf, osmdata, ways_file, way_nodes_file, nodes_file, edges_file, cr_from_file,
+                      cr_to_file);
 
   // load a tile and test the default access.
   GraphId id(820099, 2, 0);
@@ -130,27 +147,27 @@ void CountryAccess(const std::string& config_file) {
       } else if (e_offset.wayid() == 139156014) {
         if (directededge.forward()) {
           if (forward !=
-              (kAutoAccess | kHOVAccess | kPedestrianAccess | kWheelchairAccess | kBicycleAccess |
-               kTruckAccess | kBusAccess | kMopedAccess | kMotorcycleAccess))
+              (kAutoAccess | kHOVAccess | kTaxiAccess | kPedestrianAccess | kWheelchairAccess |
+               kBicycleAccess | kTruckAccess | kBusAccess | kMopedAccess | kMotorcycleAccess))
             throw std::runtime_error("Defaults:  Forward access is not correct for way 139156014.");
           if (reverse != (kPedestrianAccess | kWheelchairAccess))
             throw std::runtime_error("Defaults:  Reverse access is not correct for way 139156014.");
         } else {
           if (reverse !=
-              (kAutoAccess | kHOVAccess | kPedestrianAccess | kWheelchairAccess | kBicycleAccess |
-               kTruckAccess | kBusAccess | kMopedAccess | kMotorcycleAccess))
+              (kAutoAccess | kHOVAccess | kTaxiAccess | kPedestrianAccess | kWheelchairAccess |
+               kBicycleAccess | kTruckAccess | kBusAccess | kMopedAccess | kMotorcycleAccess))
             throw std::runtime_error("Defaults:  Reverse access is not correct for way 139156014.");
           if (forward != (kPedestrianAccess | kWheelchairAccess))
             throw std::runtime_error("Defaults:  Forward access is not correct for way 139156014.");
         }
       } else if (e_offset.wayid() == 512688404) { // motorroad key test
         if (directededge.forward()) {
-          if (forward != (kAutoAccess | kHOVAccess | kTruckAccess | kBusAccess))
+          if (forward != (kAutoAccess | kHOVAccess | kTaxiAccess | kTruckAccess | kBusAccess))
             throw std::runtime_error("Defaults:  Forward access is not correct for way 512688404.");
           if (reverse != 0)
             throw std::runtime_error("Defaults:  Reverse access is not correct for way 512688404.");
         } else {
-          if (reverse != (kAutoAccess | kHOVAccess | kTruckAccess | kBusAccess))
+          if (reverse != (kAutoAccess | kHOVAccess | kTaxiAccess | kTruckAccess | kBusAccess))
             throw std::runtime_error("Defaults:  Reverse access is not correct for way 512688404.");
           if (forward != 0)
             throw std::runtime_error("Defaults:  Forward access is not correct for way 512688404.");
@@ -162,7 +179,7 @@ void CountryAccess(const std::string& config_file) {
   // Enhance the local level of the graph. This adds information to the local
   // level that is usable across all levels (density, administrative
   // information (and country based attribution), edge transition logic, etc.
-  GraphEnhancer::Enhance(conf, access_file);
+  GraphEnhancer::Enhance(conf, osmdata, access_file);
 
   // load a tile and test that the country level access is set.
   GraphId id2(820099, 2, 0);
@@ -206,12 +223,14 @@ void CountryAccess(const std::string& config_file) {
         // trunk should have no kPedestrianAccess
       } else if (e_offset.wayid() == 139156014) {
         if (directededge.forward()) {
-          if (forward != (kAutoAccess | kHOVAccess | kTruckAccess | kBusAccess | kMotorcycleAccess))
+          if (forward != (kAutoAccess | kHOVAccess | kTaxiAccess | kTruckAccess | kBusAccess |
+                          kMotorcycleAccess))
             throw std::runtime_error("Enhanced:  Forward access is not correct for way 139156014.");
           if (reverse != 0)
             throw std::runtime_error("Enhanced:  Reverse access is not correct for way 139156014.");
         } else {
-          if (reverse != (kAutoAccess | kHOVAccess | kTruckAccess | kBusAccess | kMotorcycleAccess))
+          if (reverse != (kAutoAccess | kHOVAccess | kTaxiAccess | kTruckAccess | kBusAccess |
+                          kMotorcycleAccess))
             throw std::runtime_error("Enhanced:  Reverse access is not correct for way 139156014.");
           if (forward != 0)
             throw std::runtime_error("Enhanced:  Forward access is not correct for way 139156014.");
@@ -220,9 +239,14 @@ void CountryAccess(const std::string& config_file) {
     }
   }
 
-  boost::filesystem::remove(ways_file);
-  boost::filesystem::remove(way_nodes_file);
-  boost::filesystem::remove(access_file);
+  // Remove temporary files
+  remove_temp_file(ways_file);
+  remove_temp_file(way_nodes_file);
+  remove_temp_file(nodes_file);
+  remove_temp_file(edges_file);
+  remove_temp_file(access_file);
+  remove_temp_file(cr_from_file);
+  remove_temp_file(cr_to_file);
 }
 
 void TestCountryAccess() {

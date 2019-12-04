@@ -28,9 +28,12 @@
 
 namespace rapidjson {
 
-template <typename T> inline std::string to_string(const T& document_or_value) {
+template <typename T>
+inline std::string to_string(const T& document_or_value, int decimal_places = -1) {
   rapidjson::StringBuffer buffer;
   rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+  if (decimal_places >= 0)
+    writer.SetMaxDecimalPlaces(decimal_places);
   document_or_value.Accept(writer);
   return std::string(buffer.GetString(), buffer.GetSize());
 }

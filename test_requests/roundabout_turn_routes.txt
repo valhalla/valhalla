@@ -1,0 +1,8 @@
+-j '{"locations":[{"lat":37.330242,"lon":-121.915977,"street":"Hanchett Avenue"},{"lat":37.329685,"lon":-121.916031,"street":"Tillman Avenue"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":37.329659,"lon":-121.916000,"street":"Tillman Avenue"},{"lat":37.328930,"lon":-121.916061,"street":"Martin Avenue"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":39.080448,"lon":-84.346107,"street":"Cohasset Drive"},{"lat":39.081001,"lon":-84.346573,"street":"Pawtucket Drive"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":39.080448,"lon":-84.346107,"street":"Cohasset Drive"},{"lat":39.080502,"lon":-84.346878,"street":"Cohasset Drive"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":39.165279,"lon":-84.729271,"street":"Indian Brave Trail"},{"lat":39.164871,"lon":-84.728851,"street":"Fallen Timbers Way"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":39.165279,"lon":-84.729271,"street":"Indian Brave Trail"},{"lat":39.164970,"lon":-84.728264,"street":"Indian Brave Trail"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":39.279869,"lon":-84.252739,"street":"Bonnie Heath Circle"},{"lat":39.279221,"lon":-84.252472,"street":"County Down Lane"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":39.279869,"lon":-84.252739,"street":"Bonnie Heath Circle"},{"lat":39.279358,"lon":-84.253654,"street":"County Down Lane"}],"costing":"auto","directions_options":{"units":"miles"}}'

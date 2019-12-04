@@ -1,7 +1,6 @@
 #include "mjolnir/transitbuilder.h"
 #include "mjolnir/graphtilebuilder.h"
 
-#include <boost/filesystem/operations.hpp>
 #include <fstream>
 #include <future>
 #include <iostream>
@@ -15,7 +14,6 @@
 #include <vector>
 
 #include <boost/algorithm/string.hpp>
-#include <boost/foreach.hpp>
 
 #include "baldr/datetime.h"
 #include "baldr/graphreader.h"
@@ -98,11 +96,6 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
   uint32_t edgecount = currentedges.size();
   tilebuilder_local.directededges().clear();
 
-  // Make sure we have associated edge elevations
-  std::vector<EdgeElevation> current_elevations(std::move(tilebuilder_local.edge_elevations()));
-  bool has_elevation = tilebuilder_local.header()->has_edge_elevation();
-  tilebuilder_local.edge_elevations().clear();
-
   // Get the directed edge index of the first sign. If no signs are
   // present in this tile set a value > number of directed edges
   uint32_t signidx = 0;
@@ -130,9 +123,6 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
     size_t edge_index = tilebuilder_local.directededges().size();
     for (uint32_t i = 0, idx = nb.edge_index(); i < nb.edge_count(); i++, idx++) {
       tilebuilder_local.directededges().emplace_back(std::move(currentedges[idx]));
-      if (has_elevation) {
-        tilebuilder_local.edge_elevations().emplace_back(std::move(current_elevations[idx]));
-      }
 
       // Update any signs that use this idx - increment their index by the
       // number of added edges
@@ -206,17 +196,12 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
 
       // Add edge info to the tile and set the offset in the directed edge
       bool added = false;
-      uint32_t edge_info_offset = tilebuilder_local.AddEdgeInfo(0, conn.osm_node, endnode, conn.wayid,
-                                                                conn.shape, conn.names, 0, added);
+      uint32_t edge_info_offset =
+          tilebuilder_local.AddEdgeInfo(0, conn.osm_node, endnode, conn.wayid, 0, 0, 0, conn.shape,
+                                        conn.names, 0, added);
       directededge.set_edgeinfo_offset(edge_info_offset);
       directededge.set_forward(true);
       tilebuilder_local.directededges().emplace_back(std::move(directededge));
-
-      // Add edge elevation. TODO - should we associate elevation
-      // information to transit connection edges?
-      if (has_elevation) {
-        tilebuilder_local.edge_elevations().emplace_back(0.0f, 0.0f, 0.0f);
-      }
 
       LOG_DEBUG("Add conn from OSM to stop: ei offset = " + std::to_string(edge_info_offset));
 
@@ -328,8 +313,8 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
         std::list<PointLL> r_shape = conn.shape;
         std::reverse(r_shape.begin(), r_shape.end());
         uint32_t edge_info_offset =
-            tilebuilder_transit.AddEdgeInfo(0, origin_node, conn.osm_node, conn.wayid, r_shape,
-                                            conn.names, 0, added);
+            tilebuilder_transit.AddEdgeInfo(0, origin_node, conn.osm_node, conn.wayid, 0, 0, 0,
+                                            r_shape, conn.names, 0, added);
         LOG_DEBUG("Add conn from stop to OSM: ei offset = " + std::to_string(edge_info_offset));
         directededge.set_edgeinfo_offset(edge_info_offset);
         directededge.set_forward(true);
@@ -419,11 +404,12 @@ void FindOSMConnection(const PointLL& stop_ll,
     }
 
     // Use distance approximator for all distance checks
+    PointLL base_ll = newtile->header()->base_ll();
     DistanceApproximator approximator(stop_ll);
     for (uint32_t i = 0; i < newtile->header()->nodecount(); i++) {
       const NodeInfo* node = newtile->node(i);
       // Check if within radius
-      if (approximator.DistanceSquared(node->latlng()) < mr2) {
+      if (approximator.DistanceSquared(node->latlng(base_ll)) < mr2) {
         for (uint32_t j = 0, n = node->edge_count(); j < n; j++) {
           const DirectedEdge* directededge = newtile->directededge(node->edge_index() + j);
           auto edgeinfo = newtile->edgeinfo(directededge->edgeinfo_offset());
@@ -468,7 +454,7 @@ void AddOSMConnection(const GraphId& transit_stop_node,
                       std::mutex& lock,
                       std::vector<OSMConnectionEdge>& connection_edges) {
 
-  const PointLL& stop_ll = transit_node->latlng();
+  const PointLL& stop_ll = transit_node->latlng(tile->header()->base_ll());
   uint64_t wayid = transit_node->connecting_wayid();
 
   float mindist = 10000000.0f;
@@ -596,11 +582,11 @@ void build(const std::string& transit_dir,
   for (; tile_start != tile_end; ++tile_start) {
     // Get the next tile Id from the queue and get a tile builder
     if (reader_local_level.OverCommitted()) {
-      reader_local_level.Clear();
+      reader_local_level.Trim();
     }
 
     if (reader_transit_level.OverCommitted()) {
-      reader_transit_level.Clear();
+      reader_transit_level.Trim();
     }
 
     GraphId tile_id = tile_start->Tile_Base();
@@ -680,8 +666,7 @@ void TransitBuilder::Build(const boost::property_tree::ptree& pt) {
   // Bail if nothing
   auto hierarchy_properties = pt.get_child("mjolnir");
   auto transit_dir = hierarchy_properties.get_optional<std::string>("transit_dir");
-  if (!transit_dir || !boost::filesystem::exists(*transit_dir) ||
-      !boost::filesystem::is_directory(*transit_dir)) {
+  if (!transit_dir || !filesystem::exists(*transit_dir) || !filesystem::is_directory(*transit_dir)) {
     LOG_INFO("Transit directory not found. Transit will not be added.");
     return;
   }
@@ -690,14 +675,15 @@ void TransitBuilder::Build(const boost::property_tree::ptree& pt) {
   transit_dir->push_back(filesystem::path::preferred_separator);
   GraphReader reader(hierarchy_properties);
   auto local_level = TileHierarchy::levels().rbegin()->first;
-  if (boost::filesystem::is_directory(*transit_dir + std::to_string(local_level + 1) +
-                                      filesystem::path::preferred_separator)) {
-    boost::filesystem::recursive_directory_iterator transit_file_itr(
+  if (filesystem::is_directory(*transit_dir + std::to_string(local_level + 1) +
+                               filesystem::path::preferred_separator)) {
+    filesystem::recursive_directory_iterator transit_file_itr(
         *transit_dir + std::to_string(local_level + 1) + filesystem::path::preferred_separator),
         end_file_itr;
     for (; transit_file_itr != end_file_itr; ++transit_file_itr) {
-      if (boost::filesystem::is_regular(transit_file_itr->path()) &&
-          transit_file_itr->path().extension() == ".gph") {
+      if (filesystem::is_regular_file(transit_file_itr->path()) &&
+          transit_file_itr->path().string().find(".gph") ==
+              (transit_file_itr->path().string().size() - 4)) {
         auto graph_id = GraphTile::GetTileId(transit_file_itr->path().string());
         GraphId local_graph_id(graph_id.tileid(), graph_id.level() - 1, graph_id.id());
         if (GraphReader::DoesTileExist(hierarchy_properties, local_graph_id)) {
@@ -706,13 +692,18 @@ void TransitBuilder::Build(const boost::property_tree::ptree& pt) {
           const std::string destination_path = pt.get<std::string>("mjolnir.tile_dir") +
                                                filesystem::path::preferred_separator +
                                                GraphTile::FileSuffix(graph_id);
-          boost::filesystem::path filename = destination_path;
+          filesystem::path root = destination_path;
+          root.replace_filename("");
           // Make sure the directory exists on the system and copy to the tile_dir
-          if (!boost::filesystem::exists(filename.parent_path())) {
-            boost::filesystem::create_directories(filename.parent_path());
+          if (!filesystem::exists(root)) {
+            filesystem::create_directories(root);
           }
-          boost::filesystem::copy_file(transit_file_itr->path(), destination_path,
-                                       boost::filesystem::copy_option::overwrite_if_exists);
+          std::ifstream in(transit_file_itr->path().string(),
+                           std::ios_base::in | std::ios_base::binary);
+          std::ofstream out(destination_path,
+                            std::ios_base::out | std::ios_base::trunc | std::ios_base::binary);
+
+          out << in.rdbuf();
         }
       }
     }

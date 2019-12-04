@@ -1,0 +1,64 @@
+# Azure Pipelines for Valhalla
+#
+# TODO: Shallow clone blocked by
+#       https://developercommunity.visualstudio.com/content/problem/294872/yaml-build-ignores-fetchdepth.html
+# TODO: Once CMake 3.13 is available replace -H with -S option
+#
+jobs:
+  - job: VS2017
+    displayName: 'Windows 2016 | VS2017'
+
+    pool:
+      vmImage: 'vs2017-win2016'
+
+    strategy:
+      matrix:
+        x86:
+          PLATFORM: 'x86'
+          GENERATOR: 'Visual Studio 15 2017'
+        x64:
+          PLATFORM: 'x64'
+          GENERATOR: 'Visual Studio 15 2017 Win64'
+
+    variables:
+      BUILD_CFG: 'Release'
+      BUILD_DIR: '$(Agent.WorkFolder)\build'
+      VCPKG_DIR: '$(Agent.WorkFolder)\vcpkg'
+
+    steps:
+      - script: git submodule update --init --recursive
+        displayName: 'Pull submodules'
+
+      - script: |
+          git clone --depth 1 https://github.com/microsoft/vcpkg %VCPKG_DIR%
+          echo.set(VCPKG_BUILD_TYPE release)>> %VCPKG_DIR%\triplets\%PLATFORM%-windows.cmake
+          call %VCPKG_DIR%\bootstrap-vcpkg.bat
+          %VCPKG_DIR%\vcpkg.exe version
+        displayName: 'Install vcpkg'
+
+      - script: |
+          %VCPKG_DIR%\vcpkg.exe install boost-algorithm boost-config boost-core boost-heap boost-lexical-cast boost-property-tree boost-variant protobuf zlib --triplet %PLATFORM%-windows
+          %VCPKG_DIR%\vcpkg.exe list
+          if exist %VCPKG_DIR%\downloads rmdir /S /Q %VCPKG_DIR%\downloads
+          if exist %VCPKG_DIR%\packages rmdir /S /Q %VCPKG_DIR%\packages
+        displayName: 'Install vcpkg packages'
+
+      - script: |
+          move /Y third_party\OSM-binary\src\fileformat.proto third_party\OSM-binary\src\fileformat.proto.orig
+          move /Y third_party\OSM-binary\src\osmformat.proto third_party\OSM-binary\src\osmformat.proto.orig
+          echo syntax = "proto2"; > third_party\OSM-binary\src\fileformat.proto
+          type third_party\OSM-binary\src\fileformat.proto.orig >> third_party\OSM-binary\src\fileformat.proto
+          echo syntax = "proto2"; > third_party\OSM-binary\src\osmformat.proto
+          type third_party\OSM-binary\src\osmformat.proto.orig >> third_party\OSM-binary\src\osmformat.proto
+          del /Q third_party\OSM-binary\src\fileformat.proto.orig
+          del /Q third_party\OSM-binary\src\osmformat.proto.orig
+        displayName: 'Patch .proto files of OSMPBF with syntax=proto2'
+
+      - script: |
+          cmake --version
+          cmake -H$(Build.SourcesDirectory) -B%BUILD_DIR% -G "%GENERATOR%" -DCMAKE_TOOLCHAIN_FILE=%VCPKG_DIR%\scripts\buildsystems\vcpkg.cmake -DVCPKG_APPLOCAL_DEPS=ON -DENABLE_CCACHE=OFF -DENABLE_DATA_TOOLS=OFF -DENABLE_HTTP=OFF -DENABLE_NODE_BINDINGS=OFF -DENABLE_PYTHON_BINDINGS=OFF -DENABLE_SERVICES=OFF -DENABLE_TOOLS=OFF
+        displayName: 'Run CMake to configure build'
+
+      - script: |
+          cmake --build %BUILD_DIR% --config %BUILD_CFG%
+        displayName: 'Run CMake to build'

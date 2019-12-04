@@ -54,6 +54,13 @@ public:
   static GraphId GetGraphId(const midgard::PointLL& pointll, const uint8_t level);
 
   /**
+   * Returns bounding box for the given GraphId .
+   * @param id corresponding GraphId.
+   * @return Bounding box of the tile which corresponding GraphId stands for.
+   */
+  static midgard::AABB2<midgard::PointLL> GetGraphIdBoundingBox(const GraphId& id);
+
+  /**
    * Returns all the GraphIds of the tiles which intersect the given bounding
    * box at that level.
    * @param bbox  Bounding box of tiles to find.
@@ -81,6 +88,13 @@ public:
    * @return  Returns the max. level.
    */
   static uint8_t get_max_level();
+
+  /**
+   * Get the tiling system for a specified level.
+   * @param level  Level Id.
+   * @return Returns a const reference to the tiling system for this level.
+   */
+  static const midgard::Tiles<midgard::PointLL>& get_tiling(const uint8_t level);
 };
 
 } // namespace baldr

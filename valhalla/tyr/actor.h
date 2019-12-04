@@ -30,6 +30,8 @@ public:
                      const std::function<void()>& interrupt = []() -> void {});
   std::string transit_available(const std::string& request_str,
                                 const std::function<void()>& interrupt = []() -> void {});
+  std::string expansion(const std::string& request_str,
+                        const std::function<void()>& interrupt = []() -> void {});
 
 protected:
   struct pimpl_t;

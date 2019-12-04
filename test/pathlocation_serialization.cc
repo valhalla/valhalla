@@ -27,7 +27,7 @@ const boost::property_tree::ptree fake_config = generate_dummy_config();
 
 void TryLocationSerializeAndDeserialize(const PathLocation& loc) {
   GraphReader reader(fake_config);
-  valhalla::odin::Location odinLoc;
+  valhalla::Location odinLoc;
 
   // Serialize the passed in location
   PathLocation::toPBF(loc, &odinLoc, reader);

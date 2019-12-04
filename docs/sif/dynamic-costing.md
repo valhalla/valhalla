@@ -49,7 +49,3 @@ A good example of how edge transition costs can affect a route path is a driving
 SIF costing for driving routes (auto) penalizes left hand turns more than right hand turns by default (in countries where driving occurs on the left hand side of the road the opposite occurs). The simple example below shows a case where a longer path is taken so that left turns are avoided. In this case, two right hand turns are made and the route is much longer (almost 700 meters rather than 100 meters).
 
 ![AvoidLeftTurns](images/avoid_left_turns.png "Costing to avoid left turns")
-
-#### Check it out!
-
-You can try out our open source routing via the [Mapzen instance of Valhalla](https://mapzen.com/projects/valhalla). You can also [browse the code](https://github.com/valhalla) and reach out if you have questions or suggestions!

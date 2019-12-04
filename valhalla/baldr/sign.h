@@ -26,7 +26,7 @@ public:
    * @param  text_offset  Offset to text in the names/text table.
    */
   Sign(const uint32_t idx, const Sign::Type& type, const bool rn, const uint32_t text_offset)
-      : edgeindex_(idx), type_(static_cast<uint32_t>(type)), is_route_num_(rn), spare_(0),
+      : edgeindex_(idx), type_(static_cast<uint32_t>(type)), is_route_num_(rn), tagged_(0),
         text_offset_(text_offset) {
   }
 
@@ -64,6 +64,14 @@ public:
   }
 
   /**
+   * Is the sign text tagged (Future use for special tagging such as language code)
+   * @return Returns true if the sign text is tagged.
+   */
+  bool tagged() const {
+    return tagged_;
+  }
+
+  /**
    * Get the offset into the GraphTile text list for the text associated
    * with the sign.
    * @return  Returns the text offset.
@@ -76,7 +84,9 @@ protected:
   uint32_t edgeindex_ : 22; // kMaxTileEdgeCount in nodeinfo.h: 22 bits
   uint32_t type_ : 8;
   uint32_t is_route_num_ : 1;
-  uint32_t spare_ : 1;
+  uint32_t tagged_ : 1; // For future use to support "tagged" text strings.
+                        // Similar to EdgeInfo, for compatibility any tagged strings
+                        // will be skipped until code is available to properly use them.
 
   uint32_t text_offset_;
 };

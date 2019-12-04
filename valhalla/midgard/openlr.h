@@ -129,10 +129,10 @@ struct LineLocation {
     const auto size = reference.size();
     std::size_t index = 0;
 
-    // Status
+    // Status, version 3, has attributes, ArF 'Circle or no area location'
     auto status = raw[index++] & 0x7f;
-    (void)status;
-    assert(status == 0x0b); // version 3, has attributes, ArF 'Circle or no area location'
+    if (status != 0x0b)
+      throw std::invalid_argument("OpenLR reference ");
 
     // First location reference point
     auto longitude = integer2decimal(fixed<std::int32_t, 3>(raw, index));
@@ -206,7 +206,7 @@ struct LineLocation {
     append3(decimal2integer(longitude));
     append3(decimal2integer(latitude));
     result.push_back(((first.frc & 0x7) << 3) | (first.fow & 0x7));
-    result.push_back(((first.lfrcnp & 0x7) << 5) | bearing2integer(first.bearing) & 0x1f);
+    result.push_back(((first.lfrcnp & 0x7) << 5) | (bearing2integer(first.bearing) & 0x1f));
     result.push_back(distance2integer(first.distance));
 
     for (const auto& lrp : intermediate) {
@@ -214,7 +214,7 @@ struct LineLocation {
       append2(static_cast<std::int32_t>(std::round(100000 * (lrp.longitude - longitude))));
       append2(static_cast<std::int32_t>(std::round(100000 * (lrp.latitude - latitude))));
       result.push_back(((lrp.frc & 0x7) << 3) | (lrp.fow & 0x7));
-      result.push_back(((lrp.lfrcnp & 0x7) << 5) | bearing2integer(lrp.bearing) & 0x1f);
+      result.push_back(((lrp.lfrcnp & 0x7) << 5) | (bearing2integer(lrp.bearing) & 0x1f));
       result.push_back(distance2integer(lrp.distance));
 
       longitude = lrp.longitude;
@@ -227,7 +227,7 @@ struct LineLocation {
     append2(static_cast<std::int32_t>(std::round(100000 * (last.longitude - longitude))));
     append2(static_cast<std::int32_t>(std::round(100000 * (last.latitude - latitude))));
     result.push_back(((last.frc & 0x7) << 3) | (last.fow & 0x7));
-    result.push_back((pofff << 6) | (nofff << 5) | bearing2integer(last.bearing) & 0x1f);
+    result.push_back((pofff << 6) | (nofff << 5) | (bearing2integer(last.bearing) & 0x1f));
 
     // Offsets
     if (pofff) {

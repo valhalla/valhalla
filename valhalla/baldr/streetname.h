@@ -9,11 +9,22 @@ namespace baldr {
 
 class StreetName {
 public:
-  StreetName(const std::string& value);
+  /**
+   * Constructor.
+   * @param  value  Street name string.
+   * @param  is_route_number   boolean indicating if street name is a reference route number.
+   */
+  StreetName(const std::string& value, const bool is_route_number);
 
   virtual ~StreetName();
 
   const std::string& value() const;
+
+  /**
+   * Returns true if street name is a reference route number such as: I 81 South or US 322 West.
+   * @return true if street name is a reference route number such as: I 81 South or US 322 West.
+   */
+  bool is_route_number() const;
 
   bool operator==(const StreetName& rhs) const;
 
@@ -33,6 +44,7 @@ public:
 
 protected:
   std::string value_;
+  bool is_route_number_;
 };
 
 } // namespace baldr

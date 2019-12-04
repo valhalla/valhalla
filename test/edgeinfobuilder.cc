@@ -50,6 +50,26 @@ void TestWriteRead() {
   // Make a builder to write the info to disk
   EdgeInfoBuilder eibuilder;
 
+  eibuilder.set_mean_elevation(kMinElevation - 100.0f);
+  if (eibuilder.mean_elevation() != kMinElevation) {
+    throw runtime_error("EdgeInfoBuilder mean_elevation test 1 failed");
+  }
+
+  eibuilder.set_mean_elevation(kMaxElevation + 100.0f);
+  if (eibuilder.mean_elevation() != kMaxElevation) {
+    throw runtime_error("EdgeInfoBuilder mean_elevation test 2 failed");
+  }
+
+  eibuilder.set_mean_elevation(0.0f);
+  if (std::abs(eibuilder.mean_elevation()) > kElevationBinSize) {
+    throw runtime_error("EdgeInfoBuilder mean_elevation test 3 failed");
+  }
+
+  eibuilder.set_mean_elevation(100.0f);
+  if (std::abs(eibuilder.mean_elevation() - 100.0f) > kElevationBinSize) {
+    throw runtime_error("EdgeInfoBuilder mean_elevation test 4 failed");
+  }
+
   // Name
   std::vector<NameInfo> name_info_list;
   name_info_list.push_back({963});

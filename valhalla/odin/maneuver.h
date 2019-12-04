@@ -12,10 +12,10 @@
 
 #include <valhalla/odin/signs.h>
 #include <valhalla/odin/transitrouteinfo.h>
-#include <valhalla/proto/directions_options.pb.h>
+#include <valhalla/proto/directions.pb.h>
+#include <valhalla/proto/options.pb.h>
+#include <valhalla/proto/trip.pb.h>
 #include <valhalla/proto/tripcommon.pb.h>
-#include <valhalla/proto/tripdirections.pb.h>
-#include <valhalla/proto/trippath.pb.h>
 
 using namespace valhalla::baldr;
 
@@ -40,13 +40,16 @@ public:
 
   Maneuver();
 
-  const TripDirections_Maneuver_Type& type() const;
-  void set_type(const TripDirections_Maneuver_Type& type);
+  const DirectionsLeg_Maneuver_Type& type() const;
+  void set_type(const DirectionsLeg_Maneuver_Type& type);
+  bool IsDestinationType() const;
+  bool IsMergeType() const;
 
   const StreetNames& street_names() const;
-  void set_street_names(const std::vector<std::string>& names);
+  void set_street_names(const std::vector<std::pair<std::string, bool>>& names);
   void set_street_names(std::unique_ptr<StreetNames>&& street_names);
   bool HasStreetNames() const;
+  void ClearStreetNames();
 
   bool HasSameNames(const Maneuver* other_maneuver,
                     bool allow_begin_intersecting_edge_name_consistency = false) const;
@@ -55,21 +58,23 @@ public:
                        bool allow_begin_intersecting_edge_name_consistency = false) const;
 
   const StreetNames& begin_street_names() const;
-  void set_begin_street_names(const std::vector<std::string>& names);
+  void set_begin_street_names(const std::vector<std::pair<std::string, bool>>& names);
   void set_begin_street_names(std::unique_ptr<StreetNames>&& begin_street_names);
   bool HasBeginStreetNames() const;
+  void ClearBeginStreetNames();
 
   const StreetNames& cross_street_names() const;
-  void set_cross_street_names(const std::vector<std::string>& names);
+  void set_cross_street_names(const std::vector<std::pair<std::string, bool>>& names);
   void set_cross_street_names(std::unique_ptr<StreetNames>&& cross_street_names);
   bool HasCrossStreetNames() const;
+  void ClearCrossStreetNames();
 
   const std::string& instruction() const;
   void set_instruction(const std::string& instruction);
   void set_instruction(std::string&& instruction);
 
   // Kilometers
-  float length(const DirectionsOptions::Units& units = DirectionsOptions::kilometers) const;
+  float length(const Options::Units& units = Options::kilometers) const;
   void set_length(float length);
 
   // Seconds
@@ -86,9 +91,9 @@ public:
   RelativeDirection begin_relative_direction() const;
   void set_begin_relative_direction(RelativeDirection begin_relative_direction);
 
-  TripDirections_Maneuver_CardinalDirection begin_cardinal_direction() const;
+  DirectionsLeg_Maneuver_CardinalDirection begin_cardinal_direction() const;
   void
-  set_begin_cardinal_direction(TripDirections_Maneuver_CardinalDirection begin_cardinal_direction);
+  set_begin_cardinal_direction(DirectionsLeg_Maneuver_CardinalDirection begin_cardinal_direction);
 
   uint32_t begin_heading() const;
   void set_begin_heading(uint32_t beginHeading);
@@ -125,6 +130,8 @@ public:
 
   bool portions_toll() const;
   void set_portions_toll(bool portionsToll);
+  bool has_time_restrictions() const;
+  void set_has_time_restrictions(bool has_time_restrictions);
 
   bool portions_unpaved() const;
   void set_portions_unpaved(bool portionsUnpaved);
@@ -194,8 +201,23 @@ public:
   bool verbal_multi_cue() const;
   void set_verbal_multi_cue(bool verbal_multi_cue);
 
-  TripPath_TravelMode travel_mode() const;
-  void set_travel_mode(TripPath_TravelMode travel_mode);
+  bool to_stay_on() const;
+  void set_to_stay_on(bool to_stay_on);
+
+  const StreetNames& roundabout_exit_street_names() const;
+  void set_roundabout_exit_street_names(const std::vector<std::pair<std::string, bool>>& names);
+  void set_roundabout_exit_street_names(std::unique_ptr<StreetNames>&& roundabout_exit_street_names);
+  bool HasRoundaboutExitStreetNames() const;
+  void ClearRoundaboutExitStreetNames();
+
+  RelativeDirection merge_to_relative_direction() const;
+  void set_merge_to_relative_direction(RelativeDirection merge_to_relative_direction);
+
+  bool drive_on_right() const;
+  void set_drive_on_right(bool drive_on_right);
+
+  TripLeg_TravelMode travel_mode() const;
+  void set_travel_mode(TripLeg_TravelMode travel_mode);
 
   bool rail() const;
   void set_rail(bool rail);
@@ -203,17 +225,17 @@ public:
   bool bus() const;
   void set_bus(bool bus);
 
-  TripPath_VehicleType vehicle_type() const;
-  void set_vehicle_type(TripPath_VehicleType vehicle_type);
+  TripLeg_VehicleType vehicle_type() const;
+  void set_vehicle_type(TripLeg_VehicleType vehicle_type);
 
-  TripPath_PedestrianType pedestrian_type() const;
-  void set_pedestrian_type(TripPath_PedestrianType pedestrian_type);
+  TripLeg_PedestrianType pedestrian_type() const;
+  void set_pedestrian_type(TripLeg_PedestrianType pedestrian_type);
 
-  TripPath_BicycleType bicycle_type() const;
-  void set_bicycle_type(TripPath_BicycleType bicycle_type);
+  TripLeg_BicycleType bicycle_type() const;
+  void set_bicycle_type(TripLeg_BicycleType bicycle_type);
 
-  TripPath_TransitType transit_type() const;
-  void set_transit_type(TripPath_TransitType transit_type);
+  TripLeg_TransitType transit_type() const;
+  void set_transit_type(TripLeg_TransitType transit_type);
 
   bool transit_connection() const;
   void set_transit_connection(bool transit_connection);
@@ -269,7 +291,7 @@ public:
 #endif
 
 protected:
-  TripDirections_Maneuver_Type type_;
+  DirectionsLeg_Maneuver_Type type_;
   std::unique_ptr<StreetNames> street_names_;
   std::unique_ptr<StreetNames> begin_street_names_;
   std::unique_ptr<StreetNames> cross_street_names_;
@@ -279,7 +301,7 @@ protected:
   uint32_t basic_time_; // len/speed on each edge with no stop impact in seconds
   uint32_t turn_degree_;
   RelativeDirection begin_relative_direction_;
-  TripDirections_Maneuver_CardinalDirection begin_cardinal_direction_;
+  DirectionsLeg_Maneuver_CardinalDirection begin_cardinal_direction_;
   uint32_t begin_heading_;
   uint32_t end_heading_;
   uint32_t begin_node_index_;
@@ -310,6 +332,11 @@ protected:
   bool unnamed_cycleway_;
   bool unnamed_mountain_bike_trail_;
   bool verbal_multi_cue_;
+  bool to_stay_on_;
+  std::unique_ptr<StreetNames> roundabout_exit_street_names_;
+  RelativeDirection merge_to_relative_direction_;
+  bool drive_on_right_; // Defaults to true
+  bool has_time_restrictions_;
 
   ////////////////////////////////////////////////////////////////////////////
   // Transit support
@@ -331,15 +358,15 @@ protected:
   ////////////////////////////////////////////////////////////////////////////
 
   // Travel mode
-  TripPath_TravelMode travel_mode_;
+  TripLeg_TravelMode travel_mode_;
   bool rail_;
   bool bus_;
 
   // Travel types
-  TripPath_VehicleType vehicle_type_;
-  TripPath_PedestrianType pedestrian_type_;
-  TripPath_BicycleType bicycle_type_;
-  TripPath_TransitType transit_type_;
+  TripLeg_VehicleType vehicle_type_;
+  TripLeg_PedestrianType pedestrian_type_;
+  TripLeg_BicycleType bicycle_type_;
+  TripLeg_TransitType transit_type_;
 
   std::unique_ptr<VerbalTextFormatter> verbal_formatter_;
 };

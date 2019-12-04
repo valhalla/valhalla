@@ -1,0 +1,185 @@
+syntax = "proto2";
+option optimize_for = LITE_RUNTIME;
+package valhalla;
+import public "tripcommon.proto";
+
+message Contour {
+  optional float time = 1;     // minutes
+  optional string color = 2;   // hex color with out # - for example: "ff0000" for red
+}
+
+enum ShapeMatch {
+  edge_walk = 0;
+  map_snap = 1;
+  walk_or_snap = 2;
+}
+
+enum FilterAction {
+  exclude = 0;
+  include = 1;
+}
+
+enum DirectionsType {
+  none = 0;
+  maneuvers = 1;
+  instructions = 2;
+}
+
+enum ShapeFormat {
+  polyline5 = 0;
+  polyline6 = 1;
+  geojson = 2;
+}
+
+enum Costing {
+  auto_ = 0;
+  auto_shorter = 1;
+  bicycle = 2;
+  bus = 3;
+  hov = 4;
+  motor_scooter = 5;
+  multimodal = 6;
+  pedestrian = 7;
+  transit = 8;
+  truck = 9;
+  motorcycle = 10;
+  auto_data_fix = 11;
+  taxi = 12;
+}
+
+message CostingOptions {
+  optional float maneuver_penalty = 1;
+  optional float destination_only_penalty = 2;
+  optional float gate_cost = 3;
+  optional float gate_penalty = 4;
+  optional float toll_booth_cost = 5;
+  optional float toll_booth_penalty = 6;
+  optional float alley_penalty = 7;
+  optional float country_crossing_cost = 8;
+  optional float country_crossing_penalty = 9;
+  optional float ferry_cost = 10;
+  optional float avoid_bad_surfaces = 11;
+  optional float use_ferry = 12;
+  optional float use_highways = 13;
+  optional float use_tolls = 14;
+  optional float use_roads = 15;
+  optional uint32 max_distance = 16;
+  optional float walking_speed = 17;
+  optional float step_penalty = 18;
+  optional uint32 max_grade = 19;
+  optional uint32 max_hiking_difficulty = 20;
+  optional float mode_factor = 21;
+  optional float walkway_factor = 22;
+  optional float sidewalk_factor = 23;
+  optional float alley_factor = 24;
+  optional float driveway_factor = 25;
+  optional float driveway_penalty = 26;
+  optional uint32 transit_start_end_max_distance = 27;
+  optional uint32 transit_transfer_max_distance = 28;
+  optional string transport_type = 29;
+  optional float top_speed = 30;
+  optional float use_hills = 31;
+  optional float use_primary = 32;
+  optional float use_trails = 33;
+  optional float low_class_penalty = 34;
+  optional bool hazmat = 35;
+  optional float weight = 36;
+  optional float axle_load = 37;
+  optional float height = 38;
+  optional float width = 39;
+  optional float length = 40;
+  optional float cycling_speed = 41;
+  optional bool wheelchair = 42;
+  optional bool bicycle = 43;
+  optional float use_bus = 44;
+  optional float use_rail = 45;
+  optional float use_transfers = 46;
+  optional float transfer_cost = 47;
+  optional float transfer_penalty = 48;
+  optional FilterAction filter_stop_action = 49;
+  repeated string filter_stop_ids = 50;
+  optional FilterAction filter_operator_action = 51;
+  repeated string filter_operator_ids = 52;
+  optional FilterAction filter_route_action = 53;
+  repeated string filter_route_ids = 54;
+  optional uint32 flow_mask = 55;
+}
+
+message AvoidEdge {
+  optional uint64 id = 1;
+  optional float percent_along = 2;
+}
+
+message Options {
+
+  enum Units {
+    kilometers = 0;
+    miles = 1;
+  }
+
+  enum Format {
+    json = 0;
+    gpx = 1;
+    osrm = 2;
+  }
+
+  enum Action {
+    route = 1;
+    locate = 2;
+    sources_to_targets = 6;
+    optimized_route = 7;
+    isochrone = 8;
+    trace_route = 9;
+    trace_attributes = 10;
+    height = 11;
+    transit_available = 12;
+    expansion = 13;
+  }
+
+  enum DateTimeType {
+    current = 0;
+    depart_at = 1;
+    arrive_by = 2;
+  }
+
+  optional Units units = 1;                                               // kilometers or miles
+  optional string language = 2 [default = "en-US"];                       // Based on IETF BCP 47 language tag string
+  optional DirectionsType directions_type = 3 [default = instructions];   // Enable/disable narrative production
+  optional Format format = 4 [default = json];                            // What the response format should be
+  optional string id = 5;                                                 // Optional id for the request
+  optional string jsonp = 6;                                              // Optional javascript callback for the request
+  optional string encoded_polyline = 7;                                   // Optional polyline 6 encoded shape used in /height /trace_*
+  optional Action action = 8;                                             // Action signifying the request type
+  optional bool do_not_track = 9 [default = false];                       // Disable analytics for this request
+  optional bool range = 10 [default = false];                             // Used in /height if the range between points should be serialized
+  optional bool verbose = 11 [default = false];                           // Used in /locate request to give back extensive information
+  optional Costing costing = 12;                                          // Used to tell what type of costing to use
+  repeated CostingOptions costing_options = 13;                           // A list of costing options for each costing model
+  repeated Location locations = 14;                                       // Locations for /route /optimized /locate /isochrone
+  repeated Location avoid_locations = 15;                                 // Avoids for any costing
+  repeated Location sources = 16;                                         // Sources for /sources_to_targets
+  repeated Location targets = 17;                                         // Targets for /sources_to_targets
+  optional DateTimeType date_time_type = 18;                              // Are you leaving now or then or arriving then
+  optional string date_time = 19;                                         // And what day and time
+  repeated Location shape = 20;                                           // Raw shape for map matching
+  optional double resample_distance = 21;                                 // Resampling shape at regular intervals
+  repeated Contour contours = 22;                                         // List of isochrone contours
+  optional bool polygons = 23;                                            // Boolean value to determine whether to return geojson polygons or linestrings as the contours
+  optional float denoise = 24 [default = 1.0];                            // A floating point value from 0 to 1 which can be used to remove smaller contours
+  optional float generalize = 25;                                         // Meters used as the tolerance for Douglas-Peucker generalization
+  optional bool show_locations = 26;                                      // Add original locations to the isochrone geojson response
+  repeated Location trace = 27;                                           // Trace points for map matching
+  optional ShapeMatch shape_match = 28 [default = walk_or_snap];          // The matching algorithm based on the type of input
+  optional uint32 best_paths = 29 [default = 1];                          // The number of top k paths
+  optional float gps_accuracy = 30;                                       // The gps accuracy associated with the supplied trace points
+  optional float search_radius = 31;                                      // The search radius associated with the supplied trace points
+  optional float turn_penalty_factor = 32;                                // The turn penalty factor associated with the supplied trace points
+  optional FilterAction filter_action = 33;                               // The trace filter action - either exclude or include
+  repeated string filter_attributes = 34;                                 // The filter list for trace attributes
+  repeated AvoidEdge avoid_edges = 35;                                    // Avoid edges for any costing - derived from avoid_locations
+  optional float breakage_distance = 36;                                  // Map-matching breaking distance (distance between GPS trace points)
+  optional bool use_timestamps = 37 [default = false];                    // Use timestamps to compute elapsed time for trace_route and trace_attributes
+  optional ShapeFormat shape_format = 38 [default = polyline6];           // Shape format (defaults to polyline6 encoding)
+  optional uint32 alternates = 39;                                        // Maximum number of alternate routes that can be returned
+  optional float interpolation_distance = 40;                             // Map-matching interpolation distance beyond which trace points are merged
+}

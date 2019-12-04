@@ -15,7 +15,7 @@ public:
   StreetNamesFactory() = delete;
 
   static std::unique_ptr<StreetNames> Create(const std::string& country_code,
-                                             const std::vector<std::string>& names);
+                                             const std::vector<std::pair<std::string, bool>>& names);
 };
 
 } // namespace baldr

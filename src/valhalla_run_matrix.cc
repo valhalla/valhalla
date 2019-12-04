@@ -24,6 +24,7 @@
 #include "thor/timedistancematrix.h"
 #include "worker.h"
 
+using namespace valhalla;
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 using namespace valhalla::loki;
@@ -45,12 +46,12 @@ std::string GetFormattedTime(uint32_t secs) {
 
 // Log results
 void LogResults(const bool optimize,
-                const valhalla::valhalla_request_t& request,
+                const valhalla::Options& options,
                 const std::vector<TimeDistance>& res) {
   LOG_INFO("Results:");
   uint32_t idx1 = 0;
   uint32_t idx2 = 0;
-  uint32_t nlocs = request.options.sources_size();
+  uint32_t nlocs = options.sources_size();
   for (auto& td : res) {
     LOG_INFO(std::to_string(idx1) + "," + std::to_string(idx2) +
              ": Distance= " + std::to_string(td.dist) + " Time= " + GetFormattedTime(td.time) +
@@ -84,7 +85,7 @@ void LogResults(const bool optimize,
 
 // Main method for testing time and distance matrix methods
 int main(int argc, char* argv[]) {
-  bpo::options_description options(
+  bpo::options_description poptions(
       "valhalla_run_matrix " VALHALLA_VERSION "\n"
       "\n"
       " Usage: valhalla_run_matrix [options]\n"
@@ -97,8 +98,8 @@ int main(int argc, char* argv[]) {
 
   std::string json, config;
   uint32_t iterations = 1;
-  options.add_options()("help,h", "Print this help message.")("version,v",
-                                                              "Print the version of this software.")(
+  poptions.add_options()("help,h", "Print this help message.")("version,v",
+                                                               "Print the version of this software.")(
       // TODO - update example
       "json,j", boost::program_options::value<std::string>(&json),
       "JSON Example: "
@@ -118,7 +119,7 @@ int main(int argc, char* argv[]) {
   pos_options.add("config", 1);
   bpo::variables_map vm;
   try {
-    bpo::store(bpo::command_line_parser(argc, argv).options(options).positional(pos_options).run(),
+    bpo::store(bpo::command_line_parser(argc, argv).options(poptions).positional(pos_options).run(),
                vm);
     bpo::notify(vm);
   } catch (std::exception& e) {
@@ -128,7 +129,7 @@ int main(int argc, char* argv[]) {
   }
 
   if (vm.count("help")) {
-    std::cout << options << "\n";
+    std::cout << poptions << "\n";
     return EXIT_SUCCESS;
   }
   if (vm.count("version")) {
@@ -136,8 +137,9 @@ int main(int argc, char* argv[]) {
     return EXIT_SUCCESS;
   }
 
-  valhalla::valhalla_request_t request;
-  request.parse(json, valhalla::odin::DirectionsOptions::sources_to_targets);
+  Api request;
+  ParseApi(json, valhalla::Options::sources_to_targets, request);
+  const auto& options = request.options();
 
   // parse the config
   boost::property_tree::ptree pt;
@@ -161,7 +163,7 @@ int main(int argc, char* argv[]) {
   factory.RegisterStandardCostingModels();
 
   // Get type of route - this provides the costing method to use.
-  std::string routetype = valhalla::odin::Costing_Name(request.options.costing());
+  std::string routetype = valhalla::Costing_Enum_Name(options.costing());
   LOG_INFO("routetype: " + routetype);
 
   // Get the costing method - pass the JSON configuration
@@ -170,14 +172,14 @@ int main(int argc, char* argv[]) {
   if (routetype == "multimodal") {
     // Create array of costing methods per mode and set initial mode to
     // pedestrian
-    mode_costing[0] = factory.Create(valhalla::odin::Costing::auto_, request.options);
-    mode_costing[1] = factory.Create(valhalla::odin::Costing::pedestrian, request.options);
-    mode_costing[2] = factory.Create(valhalla::odin::Costing::bicycle, request.options);
-    mode_costing[3] = factory.Create(valhalla::odin::Costing::transit, request.options);
+    mode_costing[0] = factory.Create(valhalla::Costing::auto_, options);
+    mode_costing[1] = factory.Create(valhalla::Costing::pedestrian, options);
+    mode_costing[2] = factory.Create(valhalla::Costing::bicycle, options);
+    mode_costing[3] = factory.Create(valhalla::Costing::transit, options);
     mode = TravelMode::kPedestrian;
   } else {
     // Assign costing method
-    std::shared_ptr<DynamicCost> cost = factory.Create(request.options.costing(), request.options);
+    std::shared_ptr<DynamicCost> cost = factory.Create(options.costing(), options);
     mode = cost->travel_mode();
     mode_costing[static_cast<uint32_t>(mode)] = cost;
   }
@@ -193,14 +195,14 @@ int main(int argc, char* argv[]) {
   // Get the max matrix distances for construction of the CostMatrix and TimeDistanceMatrix classes
   std::unordered_map<std::string, float> max_matrix_distance;
   for (const auto& kv : pt.get_child("service_limits")) {
+    // Skip over any service limits that are not for a costing method
     if (kv.first == "max_avoid_locations" || kv.first == "max_reachability" ||
-        kv.first == "max_radius") {
+        kv.first == "max_radius" || kv.first == "max_timedep_distance" || kv.first == "skadi" ||
+        kv.first == "trace" || kv.first == "isochrone") {
       continue;
     }
-    if (kv.first != "skadi" && kv.first != "trace" && kv.first != "isochrone") {
-      max_matrix_distance.emplace(kv.first, pt.get<float>("service_limits." + kv.first +
-                                                          ".max_matrix_distance"));
-    }
+    max_matrix_distance.emplace(kv.first,
+                                pt.get<float>("service_limits." + kv.first + ".max_matrix_distance"));
   }
 
   if (max_matrix_distance.empty()) {
@@ -217,10 +219,10 @@ int main(int argc, char* argv[]) {
 
   // If the sources and targets are equal we can run optimize
   bool optimize = true;
-  if (request.options.sources_size() == request.options.targets_size()) {
-    for (uint32_t i = 0; i < request.options.sources_size(); ++i) {
-      if (request.options.sources(i).ll().lat() != request.options.targets(i).ll().lat() ||
-          request.options.sources(i).ll().lng() != request.options.targets(i).ll().lng()) {
+  if (options.sources_size() == options.targets_size()) {
+    for (uint32_t i = 0; i < options.sources_size(); ++i) {
+      if (options.sources(i).ll().lat() != options.targets(i).ll().lat() ||
+          options.sources(i).ll().lng() != options.targets(i).ll().lng()) {
         optimize = false;
         break;
       }
@@ -238,29 +240,29 @@ int main(int argc, char* argv[]) {
   for (uint32_t n = 0; n < iterations; n++) {
     res.clear();
     CostMatrix matrix;
-    res = matrix.SourceToTarget(request.options.sources(), request.options.targets(), reader,
-                                mode_costing, mode, max_distance);
+    res = matrix.SourceToTarget(options.sources(), options.targets(), reader, mode_costing, mode,
+                                max_distance);
     matrix.Clear();
   }
   t1 = std::chrono::high_resolution_clock::now();
   ms = std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count();
   float avg = (static_cast<float>(ms) / static_cast<float>(iterations)) * 0.001f;
   LOG_INFO("CostMatrix average time to compute: " + std::to_string(avg) + " sec");
-  LogResults(optimize, request, res);
+  LogResults(optimize, options, res);
 
   // Run with TimeDistanceMatrix
   for (uint32_t n = 0; n < iterations; n++) {
     res.clear();
     TimeDistanceMatrix tdm;
-    res = tdm.SourceToTarget(request.options.sources(), request.options.targets(), reader,
-                             mode_costing, mode, max_distance);
+    res = tdm.SourceToTarget(options.sources(), options.targets(), reader, mode_costing, mode,
+                             max_distance);
     tdm.Clear();
   }
   t1 = std::chrono::high_resolution_clock::now();
   ms = std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count();
   avg = (static_cast<float>(ms) / static_cast<float>(iterations)) * 0.001f;
   LOG_INFO("TimeDistanceMatrix average time to compute: " + std::to_string(avg) + " sec");
-  LogResults(optimize, request, res);
+  LogResults(optimize, options, res);
 
   // Shutdown protocol buffer library
   google::protobuf::ShutdownProtobufLibrary();

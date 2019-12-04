@@ -23,6 +23,7 @@
 #include "thor/pathinfo.h"
 #include "thor/route_matcher.h"
 
+using namespace valhalla;
 using namespace valhalla::sif;
 using namespace valhalla::meili;
 using namespace valhalla::baldr;
@@ -74,7 +75,7 @@ void print_edge(GraphReader& reader,
   std::cout << "----------Edge----------\n";
   std::cout << "Edge GraphId: " << current_id << std::endl;
   std::cout << "Edge length: " << edge->length() << std::endl;
-  Cost edge_cost = costing->EdgeCost(edge, tile->GetSpeed(edge));
+  Cost edge_cost = costing->EdgeCost(edge, tile);
   edge_total += edge_cost;
   std::cout << "EdgeCost cost: " << edge_cost.cost << " secs: " << edge_cost.secs << "\n";
   std::cout << "------------------------\n\n";
@@ -99,25 +100,22 @@ void walk_edges(const std::string& shape, GraphReader& reader, cost_ptr_t cost_p
 
   // Add a location for the origin (first shape point) and destination (last
   // shape point)
-  std::vector<Location> locations;
+  std::vector<baldr::Location> locations;
   locations.push_back({shape_pts.front()});
   locations.push_back({shape_pts.back()});
-  const auto projections =
-      Search(locations, reader, cost_ptr->GetEdgeFilter(), cost_ptr->GetNodeFilter());
+  const auto projections = Search(locations, reader, cost_ptr.get());
   std::vector<PathLocation> path_location;
-  valhalla::odin::DirectionsOptions directions_options;
+  valhalla::Options options;
   for (const auto& loc : locations) {
     try {
       path_location.push_back(projections.at(loc));
-      PathLocation::toPBF(path_location.back(), directions_options.mutable_locations()->Add(),
-                          reader);
+      PathLocation::toPBF(path_location.back(), options.mutable_locations()->Add(), reader);
     } catch (...) { return; }
   }
 
   std::vector<PathInfo> path_infos;
   std::vector<PathLocation> correlated;
-  bool rtn = RouteMatcher::FormPath(mode_costing, mode, reader, measurements,
-                                    directions_options.locations(), path_infos);
+  bool rtn = RouteMatcher::FormPath(mode_costing, mode, reader, measurements, options, path_infos);
   if (!rtn) {
     std::cerr << "ERROR: RouteMatcher returned false - did not match complete shape." << std::endl;
   }
@@ -207,12 +205,12 @@ int main(int argc, char* argv[]) {
 
   // argument checking and verification
   boost::property_tree::ptree json_ptree;
-  valhalla::valhalla_request_t request;
+  Api request;
   ////////////////////////////////////////////////////////////////////////////
   // Process json input
   bool map_match = true;
   if (vm.count("json")) {
-    request.parse(json, valhalla::odin::DirectionsOptions::trace_route);
+    ParseApi(json, valhalla::Options::trace_route, request);
     std::stringstream stream(json);
     rapidjson::read_json(stream, json_ptree);
     try {
@@ -229,9 +227,9 @@ int main(int argc, char* argv[]) {
           }
           float lon = valhalla::midgard::circular_range_clamp<float>(pt.get<float>("lon"), -180, 180);
 
-          Location loc({lon, lat}, (pt.get<std::string>("type", "break") == "through"
-                                        ? Location::StopType::THROUGH
-                                        : Location::StopType::BREAK));
+          baldr::Location loc({lon, lat}, (pt.get<std::string>("type", "break") == "through"
+                                               ? baldr::Location::StopType::THROUGH
+                                               : baldr::Location::StopType::BREAK));
 
           loc.name_ = pt.get<std::string>("name", "");
           loc.street_ = pt.get<std::string>("street", "");
@@ -242,11 +240,12 @@ int main(int argc, char* argv[]) {
 
           loc.date_time_ = pt.get_optional<std::string>("date_time");
           loc.heading_ = pt.get_optional<float>("heading");
-          loc.heading_tolerance_ = pt.get_optional<float>("heading_tolerance");
-          loc.node_snap_tolerance_ = pt.get_optional<float>("node_snap_tolerance");
+          loc.heading_tolerance_ = pt.get<float>("heading_tolerance", loc.heading_tolerance_);
+          loc.node_snap_tolerance_ = pt.get<float>("node_snap_tolerance", loc.node_snap_tolerance_);
           loc.way_id_ = pt.get_optional<long double>("way_id");
 
-          loc.minimum_reachability_ = pt.get<unsigned int>("minimum_reachability", 50);
+          loc.min_outbound_reach_ = loc.min_inbound_reach_ =
+              pt.get<unsigned int>("minimum_reachability", 50);
           loc.radius_ = pt.get<unsigned long>("radius", 0);
           locations.emplace_back(std::move(loc));
         }
@@ -274,13 +273,13 @@ int main(int argc, char* argv[]) {
   // Construct costing
   CostFactory<DynamicCost> factory;
   factory.RegisterStandardCostingModels();
-  valhalla::odin::Costing costing;
-  if (valhalla::odin::Costing_Parse(routetype, &costing)) {
-    request.options.set_costing(costing);
+  valhalla::Costing costing;
+  if (valhalla::Costing_Enum_Parse(routetype, &costing)) {
+    request.mutable_options()->set_costing(costing);
   } else {
     throw std::runtime_error("No costing method found");
   }
-  cost_ptr_t cost_ptr = factory.Create(costing, request.options);
+  cost_ptr_t cost_ptr = factory.Create(costing, request.options());
 
   // If a shape is entered use edge walking
   if (!map_match) {
@@ -291,7 +290,7 @@ int main(int argc, char* argv[]) {
   // If JSON is entered we do map matching
   MapMatcherFactory map_matcher_factory(pt);
   std::shared_ptr<valhalla::meili::MapMatcher> matcher(
-      map_matcher_factory.Create(costing, request.options));
+      map_matcher_factory.Create(costing, request.options()));
 
   uint32_t i = 0;
   for (const auto& path : paths) {

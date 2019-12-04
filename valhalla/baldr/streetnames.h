@@ -17,7 +17,7 @@ class StreetNames : public std::list<std::unique_ptr<StreetName>> {
 public:
   StreetNames();
 
-  StreetNames(const std::vector<std::string>& names);
+  StreetNames(const std::vector<std::pair<std::string, bool>>& names);
 
   virtual ~StreetNames();
 
@@ -35,6 +35,9 @@ public:
 
   virtual std::unique_ptr<StreetNames>
   FindCommonBaseNames(const StreetNames& other_street_names) const;
+
+  virtual std::unique_ptr<StreetNames> GetRouteNumbers() const;
+  virtual std::unique_ptr<StreetNames> GetNonRouteNumbers() const;
 };
 
 } // namespace baldr

@@ -1,8 +1,16 @@
 #ifndef VALHALLA_SIF_COST_CONSTANTS_H_
 #define VALHALLA_SIF_COST_CONSTANTS_H_
 
+#include <valhalla/baldr/graphid.h>
+
 namespace valhalla {
 namespace sif {
+
+// Transition factor to use when traffic data is available. This multiplies the
+// turn cost * stop impact (rather than using the density factor). When traffic
+// is available, the edge speeds account for some of the intersection costing
+// due to deceleration and acceleration into and out of an intersection.
+const float kTrafficTransitionFactor = 0.25f;
 
 // Travel modes
 enum class TravelMode : uint8_t {
@@ -47,6 +55,16 @@ enum class BicycleType : uint8_t {
 //  kGondola = 6,
 //  kFunicular = 7
 //};
+
+/**
+ * Simple structure to denote edge locations to avoid. Includes the edge Id and percent
+ * along the edge. The percent along is used when checking origin and destination locations
+ * to see if the avoided location can be traveled along the "partial" edge.
+ */
+struct AvoidEdge {
+  baldr::GraphId id;
+  float percent_along;
+};
 
 /**
  * Simple structure for returning costs. Includes cost and true elapsed time

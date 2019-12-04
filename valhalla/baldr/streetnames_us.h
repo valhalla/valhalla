@@ -14,7 +14,7 @@ class StreetNamesUs : public StreetNames {
 public:
   StreetNamesUs();
 
-  StreetNamesUs(const std::vector<std::string>& names);
+  StreetNamesUs(const std::vector<std::pair<std::string, bool>>& names);
 
   ~StreetNamesUs();
 
@@ -25,6 +25,9 @@ public:
 
   std::unique_ptr<StreetNames>
   FindCommonBaseNames(const StreetNames& other_street_names) const override;
+
+  std::unique_ptr<StreetNames> GetRouteNumbers() const override;
+  std::unique_ptr<StreetNames> GetNonRouteNumbers() const override;
 
 protected:
 };

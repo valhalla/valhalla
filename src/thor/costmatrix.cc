@@ -19,7 +19,7 @@ int GetThreshold(const TravelMode mode, const int n) {
   return (mode == TravelMode::kDrive) ? std::min(2700, std::max(100, n / 3)) : 500;
 }
 
-bool equals(const valhalla::odin::LatLng& a, const valhalla::odin::LatLng& b) {
+bool equals(const valhalla::LatLng& a, const valhalla::LatLng& b) {
   return a.has_lat() == b.has_lat() && a.has_lng() == b.has_lng() &&
          (!a.has_lat() || a.lat() == b.lat()) && (!a.has_lng() || a.lng() == b.lng());
 }
@@ -50,7 +50,9 @@ float CostMatrix::GetCostThreshold(const float max_matrix_distance) {
       cost_threshold = max_matrix_distance / kCostThresholdAutoDivisor;
   }
 
-  return cost_threshold;
+  // Increase the cost threshold to make sure requests near the max distance succeed.
+  // Some costing models and locations require higher thresholds to succeed.
+  return cost_threshold * 2.0f;
 }
 
 // Clear the temporary information generated during time + distance matrix
@@ -100,8 +102,8 @@ void CostMatrix::Clear() {
 // Form a time distance matrix from the set of source locations
 // to the set of target locations.
 std::vector<TimeDistance> CostMatrix::SourceToTarget(
-    const google::protobuf::RepeatedPtrField<odin::Location>& source_location_list,
-    const google::protobuf::RepeatedPtrField<odin::Location>& target_location_list,
+    const google::protobuf::RepeatedPtrField<valhalla::Location>& source_location_list,
+    const google::protobuf::RepeatedPtrField<valhalla::Location>& target_location_list,
     GraphReader& graphreader,
     const std::shared_ptr<DynamicCost>* mode_costing,
     const TravelMode mode,
@@ -184,8 +186,8 @@ std::vector<TimeDistance> CostMatrix::SourceToTarget(
 // are the same get set to 0 time, distance and do not add to the
 // remaining locations set.
 void CostMatrix::Initialize(
-    const google::protobuf::RepeatedPtrField<odin::Location>& source_locations,
-    const google::protobuf::RepeatedPtrField<odin::Location>& target_locations) {
+    const google::protobuf::RepeatedPtrField<valhalla::Location>& source_locations,
+    const google::protobuf::RepeatedPtrField<valhalla::Location>& target_locations) {
   // Add initial status
   const uint32_t kMaxThreshold = std::numeric_limits<int>::max();
   for (uint32_t i = 0; i < source_count_; i++) {
@@ -284,54 +286,37 @@ void CostMatrix::ForwardSearch(const uint32_t index, const uint32_t n, GraphRead
     EdgeStatusInfo* es = edgestate.GetPtr(edgeid, tile);
     const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
     for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++, ++edgeid, ++es) {
-      // Handle transition edges
-      if (directededge->IsTransition()) {
-        // Do not take transition edges if this is called from a transition.
-        // Also skip transition edges onto a level no longer being expanded.
-        if (from_transition || (directededge->trans_down() &&
-                                hierarchy_limits[directededge->endnode().level()].StopExpanding())) {
+      // Skip shortcut edges until we have stopped expanding on the next level. Use regular
+      // edges while still expanding on the next level since we can still transition down to
+      // that level. If using a shortcut, set the shortcuts mask. Skip if this is a regular
+      // edge superseded by a shortcut.
+      if (directededge->is_shortcut()) {
+        if (hierarchy_limits[edgeid.level() + 1].StopExpanding()) {
+          shortcuts |= directededge->shortcut();
+        } else {
           continue;
         }
-
-        // Increment upwards transition count
-        if (directededge->trans_up()) {
-          hierarchy_limits[node.level()].up_transition_count++;
-        }
-
-        // Expand from end node of this transition edge.
-        GraphId node = directededge->endnode();
-        const GraphTile* endtile = graphreader.GetGraphTile(node);
-        if (endtile != nullptr) {
-          expand(endtile, node, endtile->node(node), pred, pred_idx, true);
-        }
+      } else if (shortcuts & directededge->superseded()) {
         continue;
       }
 
       // Skip this edge if permanently labeled (best path already found to this
-      // directed edge), if no access for this mode or if edge is superseded by
-      // a shortcut edge that was taken.
-      if (es->set() == EdgeSet::kPermanent || !(directededge->forwardaccess() & access_mode_) ||
-          (shortcuts & directededge->superseded())) {
+      // directed edge) or if no access for this mode.
+      if (es->set() == EdgeSet::kPermanent || !(directededge->forwardaccess() & access_mode_)) {
         continue;
       }
 
       // Skip this edge if no access is allowed (based on costing method)
       // or if a complex restriction prevents transition onto this edge.
-      if (!costing_->Allowed(directededge, pred, tile, edgeid, 0, 0) ||
+      bool has_time_restrictions = false;
+      if (!costing_->Allowed(directededge, pred, tile, edgeid, 0, 0, has_time_restrictions) ||
           costing_->Restricted(directededge, pred, edgelabels, tile, edgeid, true)) {
         continue;
       }
 
-      // Get cost. Separate out transition cost. Update the_shortcuts mask.
-      // to supersede any regular edge, but only do this once we have stopped
-      // expanding on the next lower level (so we can still transition down to
-      // that level).
-      if (directededge->is_shortcut() && hierarchy_limits[edgeid.level() + 1].StopExpanding()) {
-        shortcuts |= directededge->shortcut();
-      }
+      // Get cost. Separate out transition cost.
       Cost tc = costing_->TransitionCost(directededge, nodeinfo, pred);
-      Cost newcost =
-          pred.cost() + tc + costing_->EdgeCost(directededge, tile->GetSpeed(directededge));
+      Cost newcost = pred.cost() + tc + costing_->EdgeCost(directededge, tile);
 
       // Check if edge is temporarily labeled and this path has less cost. If
       // less cost the predecessor is updated along with new cost and distance.
@@ -340,7 +325,7 @@ void CostMatrix::ForwardSearch(const uint32_t index, const uint32_t n, GraphRead
         if (newcost.cost < lab.cost().cost) {
           adj->decrease(es->index(), newcost.cost);
           lab.Update(pred_idx, newcost, newcost.cost, tc,
-                     pred.path_distance() + directededge->length());
+                     pred.path_distance() + directededge->length(), has_time_restrictions);
         }
         continue;
       }
@@ -358,8 +343,28 @@ void CostMatrix::ForwardSearch(const uint32_t index, const uint32_t n, GraphRead
       *es = {EdgeSet::kTemporary, idx};
       edgelabels.emplace_back(pred_idx, edgeid, oppedge, directededge, newcost, mode_, tc,
                               pred.path_distance() + directededge->length(),
-                              (pred.not_thru_pruning() || !directededge->not_thru()));
+                              (pred.not_thru_pruning() || !directededge->not_thru()),
+                              has_time_restrictions);
       adj->add(idx);
+    }
+
+    // Handle transitions - expand from the end node of the transition
+    if (!from_transition && nodeinfo->transition_count() > 0) {
+      const NodeTransition* trans = tile->transition(nodeinfo->transition_index());
+      for (uint32_t i = 0; i < nodeinfo->transition_count(); ++i, ++trans) {
+        if (trans->up()) {
+          hierarchy_limits[node.level()].up_transition_count++;
+        } else if (hierarchy_limits[trans->endnode().level()].StopExpanding()) {
+          continue;
+        }
+
+        // Expand from end node of this transition.
+        GraphId node = trans->endnode();
+        const GraphTile* endtile = graphreader.GetGraphTile(node);
+        if (endtile != nullptr) {
+          expand(endtile, node, endtile->node(node), pred, pred_idx, true);
+        }
+      }
     }
   };
 
@@ -543,39 +548,24 @@ void CostMatrix::BackwardSearch(const uint32_t index, GraphReader& graphreader) 
     EdgeStatusInfo* es = edgestate.GetPtr(edgeid, tile);
     const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
     for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++, ++edgeid, ++es) {
-      // Handle transition edges.
-      if (directededge->IsTransition()) {
-        // Do not take transition edges if this is called from a transition.
-        // Also skip transition edges onto a level no longer being expanded.
-        if (from_transition || (directededge->trans_down() &&
-                                hierarchy_limits[directededge->endnode().level()].StopExpanding())) {
+      // Skip shortcut edges until we have stopped expanding on the next level. Use regular
+      // edges while still expanding on the next level since we can still transition down to
+      // that level. If using a shortcut, set the shortcuts mask. Skip if this is a regular
+      // edge superseded by a shortcut.
+      if (directededge->is_shortcut()) {
+        if (hierarchy_limits[edgeid.level() + 1].StopExpanding()) {
+          shortcuts |= directededge->shortcut();
+        } else {
           continue;
         }
-
-        // Increment upwards transition count
-        if (directededge->trans_up()) {
-          hierarchy_limits[node.level()].up_transition_count++;
-        }
-
-        // Expand from end node of this transition edge.
-        GraphId node = directededge->endnode();
-        const GraphTile* endtile = graphreader.GetGraphTile(node);
-        if (endtile != nullptr) {
-          expand(endtile, node, endtile->node(node), index, pred, pred_idx, opp_pred_edge, true);
-        }
+      } else if (shortcuts & directededge->superseded()) {
         continue;
       }
 
       // Skip edges not allowed by the access mode. Do this here to avoid having
-      // to get opposing edge. Also skip edges superseded by a shortcut.
-      if (!(directededge->reverseaccess() & access_mode_) ||
-          (shortcuts & directededge->superseded())) {
-        continue;
-      }
-
-      // Get the current set. Skip this edge if permanently labeled (best
-      // path already found to this directed edge).
-      if (es->set() == EdgeSet::kPermanent) {
+      // to get opposing edge. Also skip edges that are permanently labeled (
+      // best path already found to this directed edge).
+      if (!(directededge->reverseaccess() & access_mode_) || es->set() == EdgeSet::kPermanent) {
         continue;
       }
 
@@ -590,22 +580,18 @@ void CostMatrix::BackwardSearch(const uint32_t index, GraphReader& graphreader) 
       // Skip this edge if no access is allowed (based on costing method)
       // or if a complex restriction prevents transition onto this edge.
       const DirectedEdge* opp_edge = t2->directededge(oppedge);
-      if (!costing_->AllowedReverse(directededge, pred, opp_edge, t2, oppedge, 0, 0) ||
+      bool has_time_restrictions = false;
+      if (!costing_->AllowedReverse(directededge, pred, opp_edge, t2, oppedge, 0, 0,
+                                    has_time_restrictions) ||
           costing_->Restricted(directededge, pred, edgelabels, tile, edgeid, false)) {
         continue;
       }
 
-      // Get cost. Use opposing edge for EdgeCost. Update the_shortcuts mask
-      // to supersede any regular edge, but only do this once we have stopped
-      // expanding on the next lower level (so we can still transition down to
-      // that level). Separate the transition seconds so we can properly recover
-      // elapsed time on the reverse path.
-      if (directededge->is_shortcut() && hierarchy_limits[edgeid.level() + 1].StopExpanding()) {
-        shortcuts |= directededge->shortcut();
-      }
+      // Get cost. Use opposing edge for EdgeCost. Separate the transition seconds so
+      // we can properly recover elapsed time on the reverse path.
       Cost tc = costing_->TransitionCostReverse(directededge->localedgeidx(), nodeinfo, opp_edge,
                                                 opp_pred_edge);
-      Cost newcost = pred.cost() + tc + costing_->EdgeCost(opp_edge, tile->GetSpeed(opp_edge));
+      Cost newcost = pred.cost() + tc + costing_->EdgeCost(opp_edge, tile);
 
       // Check if edge is temporarily labeled and this path has less cost. If
       // less cost the predecessor is updated along with new cost and distance.
@@ -614,7 +600,7 @@ void CostMatrix::BackwardSearch(const uint32_t index, GraphReader& graphreader) 
         if (newcost.cost < lab.cost().cost) {
           adj->decrease(es->index(), newcost.cost);
           lab.Update(pred_idx, newcost, newcost.cost, tc,
-                     pred.path_distance() + directededge->length());
+                     pred.path_distance() + directededge->length(), has_time_restrictions);
         }
         continue;
       }
@@ -624,11 +610,32 @@ void CostMatrix::BackwardSearch(const uint32_t index, GraphReader& graphreader) 
       *es = {EdgeSet::kTemporary, idx};
       edgelabels.emplace_back(pred_idx, edgeid, oppedge, directededge, newcost, mode_, tc,
                               pred.path_distance() + directededge->length(),
-                              (pred.not_thru_pruning() || !directededge->not_thru()));
+                              (pred.not_thru_pruning() || !directededge->not_thru()),
+                              has_time_restrictions);
       adj->add(idx);
 
       // Add to the list of targets that have reached this edge
       targets_[edgeid].push_back(index);
+    }
+
+    // Handle transitions - expand from the end node of the transition
+    if (!from_transition && nodeinfo->transition_count() > 0) {
+      const NodeTransition* trans = tile->transition(nodeinfo->transition_index());
+      for (uint32_t i = 0; i < nodeinfo->transition_count(); ++i, ++trans) {
+        if (trans->up()) {
+          hierarchy_limits[node.level()].up_transition_count++;
+        } else if (hierarchy_limits[trans->endnode().level()].StopExpanding()) {
+          continue;
+        }
+
+        // Expand from end node of this transition edge.
+        GraphId node = trans->endnode();
+        const GraphTile* endtile = graphreader.GetGraphTile(node);
+        if (endtile != nullptr) {
+          expand(endtile, node, endtile->node(node), index, pred, pred_idx, opp_pred_edge, true);
+        }
+        continue;
+      }
     }
   };
 
@@ -655,7 +662,7 @@ void CostMatrix::BackwardSearch(const uint32_t index, GraphReader& graphreader) 
 // Sets the source/origin locations. Search expands forward from these
 // locations.
 void CostMatrix::SetSources(GraphReader& graphreader,
-                            const google::protobuf::RepeatedPtrField<odin::Location>& sources) {
+                            const google::protobuf::RepeatedPtrField<valhalla::Location>& sources) {
   // Allocate edge labels and edge status
   source_count_ = sources.size();
   source_edgelabel_.resize(source_count_);
@@ -685,14 +692,19 @@ void CostMatrix::SetSources(GraphReader& graphreader,
         continue;
       }
 
+      // Disallow any user avoid edges if the avoid location is ahead of the origin along the edge
+      GraphId edgeid(edge.graph_id());
+      if (costing_->AvoidAsOriginEdge(edgeid, edge.percent_along())) {
+        continue;
+      }
+
       // Get the directed edge and the opposing edge Id
-      GraphId edgeid = static_cast<GraphId>(edge.graph_id());
       const GraphTile* tile = graphreader.GetGraphTile(edgeid);
       const DirectedEdge* directededge = tile->directededge(edgeid);
       GraphId oppedge = graphreader.GetOpposingEdgeId(edgeid);
 
       // Get cost. Get distance along the remainder of this edge.
-      Cost edgecost = costing_->EdgeCost(directededge, tile->GetSpeed(directededge));
+      Cost edgecost = costing_->EdgeCost(directededge, tile);
       Cost cost = edgecost * (1.0f - edge.percent_along());
       uint32_t d = std::round(directededge->length() * (1.0f - edge.percent_along()));
 
@@ -708,7 +720,8 @@ void CostMatrix::SetSources(GraphReader& graphreader,
 
       // Set the initial not_thru flag to false. There is an issue with not_thru
       // flags on small loops. Set this to false here to override this for now.
-      BDEdgeLabel edge_label(kInvalidLabel, edgeid, oppedge, directededge, cost, mode_, ec, d, false);
+      BDEdgeLabel edge_label(kInvalidLabel, edgeid, oppedge, directededge, cost, mode_, ec, d, false,
+                             false);
       edge_label.set_not_thru(false);
 
       // Add EdgeLabel to the adjacency list (but do not set its status).
@@ -726,7 +739,7 @@ void CostMatrix::SetSources(GraphReader& graphreader,
 // Set the target/destination locations. Search expands backwards from
 // these locations.
 void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
-                            const google::protobuf::RepeatedPtrField<odin::Location>& targets) {
+                            const google::protobuf::RepeatedPtrField<valhalla::Location>& targets) {
   // Allocate target edge labels and edge status
   target_count_ = targets.size();
   target_edgelabel_.resize(targets.size());
@@ -757,8 +770,14 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
         continue;
       }
 
+      // Disallow any user avoided edges if the avoid location is behind the destination along the
+      // edge
+      GraphId edgeid(edge.graph_id());
+      if (costing_->AvoidAsDestinationEdge(edgeid, edge.percent_along())) {
+        continue;
+      }
+
       // Get the directed edge
-      GraphId edgeid = static_cast<GraphId>(edge.graph_id());
       const GraphTile* tile = graphreader.GetGraphTile(edgeid);
       const DirectedEdge* directededge = tile->directededge(edgeid);
 
@@ -772,7 +791,7 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
       // Get cost. Get distance along the remainder of this edge.
       // Use the directed edge for costing, as this is the forward direction
       // along the destination edge.
-      Cost edgecost = costing_->EdgeCost(directededge, tile->GetSpeed(directededge));
+      Cost edgecost = costing_->EdgeCost(directededge, tile);
       Cost cost = edgecost * edge.percent_along();
       uint32_t d = std::round(directededge->length() * edge.percent_along());
 
@@ -789,7 +808,7 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
       // Set the initial not_thru flag to false. There is an issue with not_thru
       // flags on small loops. Set this to false here to override this for now.
       BDEdgeLabel edge_label(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, mode_, ec, d,
-                             false);
+                             false, false);
       edge_label.set_not_thru(false);
 
       // Add EdgeLabel to the adjacency list (but do not set its status).

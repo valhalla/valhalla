@@ -11,8 +11,8 @@
 #include <sstream>
 #include <string>
 
-#include "meili/traffic_segment_matcher.h"
 #include "midgard/logging.h"
+#include "midgard/util.h"
 #include "tyr/actor.h"
 
 namespace {
@@ -62,22 +62,13 @@ BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(trace_route_overloads, trace_route, 1, 1)
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(trace_attributes_overloads, trace_attributes, 1, 1);
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(height_overloads, height, 1, 1);
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(transit_available_overloads, transit_available, 1, 1);
+BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(expansion_overloads, expansion, 1, 1);
 } // namespace
 
 BOOST_PYTHON_MODULE(valhalla) {
 
   // python interface for configuring the system, always call this first in your python program
   boost::python::def("Configure", py_configure);
-
-  // class for doing matching to traffic segments. Pass in the config to the constructor
-  boost::python::class_<
-      valhalla::meili::TrafficSegmentMatcher, boost::noncopyable,
-      boost::shared_ptr<valhalla::meili::TrafficSegmentMatcher>>("SegmentMatcher",
-                                                                 boost::python::no_init)
-      .def("__init__", boost::python::make_constructor(+[]() {
-             return boost::make_shared<valhalla::meili::TrafficSegmentMatcher>(configure());
-           }))
-      .def("Match", &valhalla::meili::TrafficSegmentMatcher::match);
 
   boost::python::class_<valhalla::tyr::actor_t, boost::noncopyable,
                         boost::shared_ptr<valhalla::tyr::actor_t>>("Actor", boost::python::no_init)
@@ -93,6 +84,7 @@ BOOST_PYTHON_MODULE(valhalla) {
       .def("TraceAttributes", &valhalla::tyr::actor_t::route, trace_attributes_overloads())
       .def("Height", &valhalla::tyr::actor_t::route, height_overloads())
       .def("TransitAvailable", &valhalla::tyr::actor_t::route, transit_available_overloads())
+      .def("Expansion", &valhalla::tyr::actor_t::route, expansion_overloads())
 
       ;
 }

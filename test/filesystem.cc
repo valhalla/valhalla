@@ -52,6 +52,7 @@ void recursive_directory_listing() {
   std::vector<std::string> dirs{"foo", "foo" + s + "qux", "foo" + s + "quux"};
   std::vector<std::string> files{"foo" + s + "bar", "foo" + s + "bar",
                                  "foo" + s + "quux" + s + "corge"};
+
   // create them
   for (const auto& d : dirs)
     try_mkdir(d.c_str());
@@ -79,6 +80,26 @@ void recursive_directory_listing() {
   // if we didnt get everything we have a problem
   if (!dirs.empty() || !files.empty())
     throw std::logic_error("we could find all files or dirs");
+
+  // cleanup the stuff we made, 2 tests in one ;o)
+  if (!filesystem::remove_all("foo"))
+    throw std::logic_error("why cant we delete the stuff we just made");
+}
+
+void remove_any() {
+  // delete non existant thing
+  if (filesystem::remove(".foobar"))
+    throw std::logic_error(".foobar should not exist");
+
+  // make and delete a file
+  { std::fstream fs(".foobar", std::ios::out); }
+  if (!filesystem::remove(".foobar") || filesystem::exists(".foobar"))
+    throw std::logic_error(".foobar file should have been deleted");
+
+  // make and delete a file
+  try_mkdir(".foobar");
+  if (!filesystem::remove(".foobar") || filesystem::exists(".foobar"))
+    throw std::logic_error(".foobar dir should have been deleted");
 }
 
 } // namespace
@@ -93,6 +114,8 @@ int main() {
   suite.test(TEST_CASE(regular_file));
 
   suite.test(TEST_CASE(recursive_directory_listing));
+
+  suite.test(TEST_CASE(remove_any));
 
   return suite.tear_down();
 }

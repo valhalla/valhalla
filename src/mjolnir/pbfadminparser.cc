@@ -21,12 +21,14 @@ using namespace valhalla::baldr;
 using namespace valhalla::mjolnir;
 
 namespace {
-// Will throw an error if this is exceeded. Then we can increase.
-constexpr uint64_t kMaxOSMNodeId = 5500000000;
+// This value controls the initial size of the Id table. If this is exceeded
+// the table will be resized and a warning is generated (indicating we should
+// increase this value).
+constexpr uint64_t kMaxOSMNodeId = 6800000000;
 
 // Node equality
 const auto WayNodeEquals = [](const OSMWayNode& a, const OSMWayNode& b) {
-  return a.node.osmid == b.node.osmid;
+  return a.node.osmid_ == b.node.osmid_;
 };
 
 struct admin_callback : public OSMPBF::Callback {
@@ -36,8 +38,8 @@ public:
   virtual ~admin_callback() {
   }
   // Construct PBFAdminParser based on properties file and input PBF extract
-  admin_callback(const boost::property_tree::ptree& pt, OSMData& osmdata)
-      : shape_(kMaxOSMNodeId), members_(kMaxOSMNodeId), osmdata_(osmdata),
+  admin_callback(const boost::property_tree::ptree& pt, OSMAdminData& osmdata)
+      : shape_(kMaxOSMNodeId), members_(kMaxOSMNodeId), osm_admin_data_(osmdata),
         lua_(std::string(lua_admin_lua, lua_admin_lua + lua_admin_lua_len)) {
   }
 
@@ -48,12 +50,12 @@ public:
       return;
     }
 
-    ++osmdata_.osm_node_count;
+    ++osm_admin_data_.osm_node_count;
 
-    osmdata_.shape_map.emplace(osmid, PointLL(lng, lat));
+    osm_admin_data_.shape_map.emplace(osmid, PointLL(lng, lat));
 
-    if (osmdata_.shape_map.size() % 500000 == 0) {
-      LOG_INFO("Processed " + std::to_string(osmdata_.shape_map.size()) + " nodes on ways");
+    if (osm_admin_data_.shape_map.size() % 500000 == 0) {
+      LOG_INFO("Processed " + std::to_string(osm_admin_data_.shape_map.size()) + " nodes on ways");
     }
   }
 
@@ -67,12 +69,12 @@ public:
     }
 
     for (const auto node : nodes) {
-      ++osmdata_.node_count;
+      ++osm_admin_data_.node_count;
       // Mark the nodes that we will care about when processing nodes
       shape_.set(node);
     }
 
-    osmdata_.way_map.emplace(osmid, std::list<uint64_t>(nodes.begin(), nodes.end()));
+    osm_admin_data_.way_map.emplace(osmid, std::list<uint64_t>(nodes.begin(), nodes.end()));
   }
 
   virtual void relation_callback(const uint64_t osmid,
@@ -89,15 +91,15 @@ public:
     for (const auto& tag : results) {
       // TODO:  Store multiple all the names
       if (tag.first == "name" && !tag.second.empty()) {
-        admin.set_name_index(osmdata_.name_offset_map.index(tag.second));
+        admin.set_name_index(osm_admin_data_.name_offset_map.index(tag.second));
       } else if (tag.first == "name:en" && !tag.second.empty()) {
-        admin.set_name_en_index(osmdata_.name_offset_map.index(tag.second));
+        admin.set_name_en_index(osm_admin_data_.name_offset_map.index(tag.second));
       } else if (tag.first == "admin_level") {
         admin.set_admin_level(std::stoi(tag.second));
       } else if (tag.first == "drive_on_right") {
         admin.set_drive_on_right(tag.second == "true" ? true : false);
       } else if (tag.first == "iso_code" && !tag.second.empty()) {
-        admin.set_iso_code_index(osmdata_.name_offset_map.index(tag.second));
+        admin.set_iso_code_index(osm_admin_data_.name_offset_map.index(tag.second));
       }
     }
 
@@ -108,7 +110,7 @@ public:
       if (member.member_type == OSMPBF::Relation::MemberType::Relation_MemberType_WAY) {
         members_.set(member.member_id);
         member_ids.push_back(member.member_id);
-        ++osmdata_.osm_way_count;
+        ++osm_admin_data_.osm_way_count;
       }
     }
 
@@ -118,11 +120,11 @@ public:
 
     admin.set_ways(member_ids);
 
-    osmdata_.admins_.push_back(std::move(admin));
+    osm_admin_data_.admins_.push_back(std::move(admin));
   }
 
   virtual void changeset_callback(const uint64_t changeset_id) override {
-    osmdata_.max_changeset_id_ = std::max(osmdata_.max_changeset_id_, changeset_id);
+    osm_admin_data_.max_changeset_id_ = std::max(osm_admin_data_.max_changeset_id_, changeset_id);
   }
 
   // Lua Tag Transformation class
@@ -132,7 +134,7 @@ public:
   IdTable shape_, members_;
 
   // Pointer to all the OSM data (for use by callbacks)
-  OSMData& osmdata_;
+  OSMAdminData& osm_admin_data_;
 };
 
 } // namespace
@@ -140,11 +142,11 @@ public:
 namespace valhalla {
 namespace mjolnir {
 
-OSMData PBFAdminParser::Parse(const boost::property_tree::ptree& pt,
-                              const std::vector<std::string>& input_files) {
+OSMAdminData PBFAdminParser::Parse(const boost::property_tree::ptree& pt,
+                                   const std::vector<std::string>& input_files) {
   // Create OSM data. Set the member pointer so that the parsing callback
   // methods can use it.
-  OSMData osmdata{};
+  OSMAdminData osmdata{};
   admin_callback callback(pt, osmdata);
 
   LOG_INFO("Parsing files: " + boost::algorithm::join(input_files, ", "));

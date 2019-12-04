@@ -1,6 +1,7 @@
 #include "sif/transitcost.h"
 
 #include "baldr/accessrestriction.h"
+#include "baldr/graphconstants.h"
 #include "midgard/constants.h"
 #include "midgard/logging.h"
 #include "worker.h"
@@ -10,6 +11,7 @@
 #include <random>
 #endif
 
+using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 
 namespace valhalla {
@@ -40,17 +42,13 @@ Cost kImpossibleCost = {10000000.0f, 10000000.0f};
 constexpr float kMinFactor = 0.1f;
 constexpr float kMaxFactor = 100000.0f;
 
-// Maximum amount of seconds that will be allowed to be passed in to influence paths
-// This can't be too high because sometimes a certain kind of path is required to be taken
-constexpr float kMaxSeconds = 12.0f * kSecPerHour; // 12 hours
-
 // Valid ranges and defaults
 constexpr ranged_default_t<float> kModeFactorRange{kMinFactor, kModeFactor, kMaxFactor};
 constexpr ranged_default_t<float> kUseBusRange{0, kDefaultUseBus, 1.0f};
 constexpr ranged_default_t<float> kUseRailRange{0, kDefaultUseRail, 1.0f};
 constexpr ranged_default_t<float> kUseTransfersRange{0, kDefaultUseTransfers, 1.0f};
-constexpr ranged_default_t<float> kTransferCostRange{0, kDefaultTransferCost, kMaxSeconds};
-constexpr ranged_default_t<float> kTransferPenaltyRange{0, kDefaultTransferPenalty, kMaxSeconds};
+constexpr ranged_default_t<float> kTransferCostRange{0, kDefaultTransferCost, kMaxPenalty};
+constexpr ranged_default_t<float> kTransferPenaltyRange{0, kDefaultTransferPenalty, kMaxPenalty};
 
 } // namespace
 
@@ -65,7 +63,7 @@ public:
    * @param  costing specified costing type.
    * @param  options pbf with request options.
    */
-  TransitCost(const odin::Costing costing, const odin::DirectionsOptions& options);
+  TransitCost(const Costing costing, const Options& options);
 
   virtual ~TransitCost();
 
@@ -112,7 +110,8 @@ public:
                        const baldr::GraphTile*& tile,
                        const baldr::GraphId& edgeid,
                        const uint64_t current_time,
-                       const uint32_t tz_index) const;
+                       const uint32_t tz_index,
+                       bool& time_restricted) const;
 
   /**
    * Checks if access is allowed for an edge on the reverse path
@@ -137,7 +136,8 @@ public:
                               const baldr::GraphTile*& tile,
                               const baldr::GraphId& opp_edgeid,
                               const uint64_t current_time,
-                              const uint32_t tz_index) const;
+                              const uint32_t tz_index,
+                              bool& has_time_restrictions) const;
 
   /**
    * Checks if access is allowed for the provided node. Node access can
@@ -146,15 +146,6 @@ public:
    * @return  Returns true if access is allowed, false if not.
    */
   virtual bool Allowed(const baldr::NodeInfo* node) const;
-
-  /**
-   * Get the cost to traverse the specified directed edge. Cost includes
-   * the time (seconds) to traverse the edge.
-   * @param   edge  Pointer to a directed edge.
-   * @param   speed A speed for a road segment/edge.
-   * @return  Returns the cost and time (seconds)
-   */
-  virtual Cost EdgeCost(const baldr::DirectedEdge* edge, const uint32_t speed) const;
 
   /**
    * Get the cost to traverse the specified directed edge using a transit
@@ -168,6 +159,19 @@ public:
   virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
                         const baldr::TransitDeparture* departure,
                         const uint32_t curr_time) const;
+
+  /**
+   * Transit costing only works on transit edges, hence we throw
+   * @param edge
+   * @param tile
+   * @param seconds
+   * @return
+   */
+  virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
+                        const baldr::GraphTile* tile,
+                        const uint32_t seconds) const {
+    throw std::runtime_error("TransitCost::EdgeCost only supports transit edges");
+  }
 
   /**
    * Returns the cost to make the transition from the predecessor edge.
@@ -222,7 +226,7 @@ public:
   virtual const EdgeFilter GetEdgeFilter() const {
     // Throw back a lambda that checks the access for this type of costing
     return [](const baldr::DirectedEdge* edge) {
-      if (edge->IsTransition() || edge->is_shortcut() || edge->use() >= Use::kFerry ||
+      if (edge->is_shortcut() || edge->use() >= Use::kFerry ||
           !(edge->forwardaccess() & kPedestrianAccess)) {
         return 0.0f;
       } else {
@@ -315,11 +319,11 @@ public:
 
 // Constructor. Parse pedestrian options from property tree. If option is
 // not present, set the default.
-TransitCost::TransitCost(const odin::Costing costing, const odin::DirectionsOptions& options)
+TransitCost::TransitCost(const Costing costing, const Options& options)
     : DynamicCost(options, TravelMode::kPublicTransit) {
 
   // Grab the costing options based on the specified costing type
-  const odin::CostingOptions& costing_options = options.costing_options(static_cast<int>(costing));
+  const CostingOptions& costing_options = options.costing_options(static_cast<int>(costing));
 
   mode_factor_ = costing_options.mode_factor();
 
@@ -354,9 +358,9 @@ TransitCost::TransitCost(const odin::Costing costing, const odin::DirectionsOpti
   if (costing_options.has_filter_stop_action()) {
     auto stop_action = costing_options.filter_stop_action();
     for (const auto& id : costing_options.filter_stop_ids()) {
-      if (stop_action == odin::FilterAction::exclude) {
+      if (stop_action == FilterAction::exclude) {
         stop_exclude_onestops_.emplace(id);
-      } else if (stop_action == odin::FilterAction::include) {
+      } else if (stop_action == FilterAction::include) {
         stop_include_onestops_.emplace(id);
       }
     }
@@ -366,9 +370,9 @@ TransitCost::TransitCost(const odin::Costing costing, const odin::DirectionsOpti
   if (costing_options.has_filter_operator_action()) {
     auto operator_action = costing_options.filter_operator_action();
     for (const auto& id : costing_options.filter_operator_ids()) {
-      if (operator_action == odin::FilterAction::exclude) {
+      if (operator_action == FilterAction::exclude) {
         operator_exclude_onestops_.emplace(id);
-      } else if (operator_action == odin::FilterAction::include) {
+      } else if (operator_action == FilterAction::include) {
         operator_include_onestops_.emplace(id);
       }
     }
@@ -378,9 +382,9 @@ TransitCost::TransitCost(const odin::Costing costing, const odin::DirectionsOpti
   if (costing_options.has_filter_route_action()) {
     auto route_action = costing_options.filter_route_action();
     for (const auto& id : costing_options.filter_route_ids()) {
-      if (route_action == odin::FilterAction::exclude) {
+      if (route_action == FilterAction::exclude) {
         route_exclude_onestops_.emplace(id);
-      } else if (route_action == odin::FilterAction::include) {
+      } else if (route_action == FilterAction::include) {
         route_include_onestops_.emplace(id);
       }
     }
@@ -532,7 +536,8 @@ bool TransitCost::Allowed(const baldr::DirectedEdge* edge,
                           const baldr::GraphTile*& tile,
                           const baldr::GraphId& edgeid,
                           const uint64_t current_time,
-                          const uint32_t tz_index) const {
+                          const uint32_t tz_index,
+                          bool& has_time_restrictions) const {
   // TODO - obtain and check the access restrictions.
 
   if (exclude_stops_.size()) {
@@ -562,7 +567,8 @@ bool TransitCost::AllowedReverse(const baldr::DirectedEdge* edge,
                                  const baldr::GraphTile*& tile,
                                  const baldr::GraphId& opp_edgeid,
                                  const uint64_t current_time,
-                                 const uint32_t tz_index) const {
+                                 const uint32_t tz_index,
+                                 bool& has_time_restrictions) const {
   // This method should not be called since time based routes do not use
   // bidirectional A*
   return false;
@@ -571,13 +577,6 @@ bool TransitCost::AllowedReverse(const baldr::DirectedEdge* edge,
 // Check if access is allowed at the specified node.
 bool TransitCost::Allowed(const baldr::NodeInfo* node) const {
   return true;
-}
-
-// Returns the cost to traverse the edge and an estimate of the actual time
-// (in seconds) to traverse the edge.
-Cost TransitCost::EdgeCost(const baldr::DirectedEdge* edge, const uint32_t speed) const {
-  LOG_ERROR("Wrong transit edge cost called");
-  return {0.0f, 0.0f};
 }
 
 // Get the cost to traverse the specified directed edge using a transit
@@ -644,10 +643,13 @@ uint32_t TransitCost::UnitSize() const {
 
 void ParseTransitCostOptions(const rapidjson::Document& doc,
                              const std::string& costing_options_key,
-                             odin::CostingOptions* pbf_costing_options) {
+                             CostingOptions* pbf_costing_options) {
   auto json_costing_options = rapidjson::get_child_optional(doc, costing_options_key.c_str());
 
   if (json_costing_options) {
+    // TODO: farm more common stuff out to parent class
+    ParseCostOptions(*json_costing_options, pbf_costing_options);
+
     // If specified, parse json and set pbf values
 
     // mode_factor
@@ -691,9 +693,9 @@ void ParseTransitCostOptions(const rapidjson::Document& doc,
     // filter_stop_action
     auto filter_stop_action_str =
         rapidjson::get_optional<std::string>(*json_costing_options, "/filters/stops/action");
-    odin::FilterAction filter_stop_action;
+    FilterAction filter_stop_action;
     if (filter_stop_action_str &&
-        odin::FilterAction_Parse(*filter_stop_action_str, &filter_stop_action)) {
+        FilterAction_Enum_Parse(*filter_stop_action_str, &filter_stop_action)) {
       pbf_costing_options->set_filter_stop_action(filter_stop_action);
       // filter_stop_ids
       auto filter_stop_ids_json =
@@ -709,9 +711,9 @@ void ParseTransitCostOptions(const rapidjson::Document& doc,
     // filter_operator_action
     auto filter_operator_action_str =
         rapidjson::get_optional<std::string>(*json_costing_options, "/filters/operators/action");
-    odin::FilterAction filter_operator_action;
+    FilterAction filter_operator_action;
     if (filter_operator_action_str &&
-        odin::FilterAction_Parse(*filter_operator_action_str, &filter_operator_action)) {
+        FilterAction_Enum_Parse(*filter_operator_action_str, &filter_operator_action)) {
       pbf_costing_options->set_filter_operator_action(filter_operator_action);
       // filter_operator_ids
       auto filter_operator_ids_json =
@@ -727,9 +729,9 @@ void ParseTransitCostOptions(const rapidjson::Document& doc,
     // filter_route_action
     auto filter_route_action_str =
         rapidjson::get_optional<std::string>(*json_costing_options, "/filters/routes/action");
-    odin::FilterAction filter_route_action;
+    FilterAction filter_route_action;
     if (filter_route_action_str &&
-        odin::FilterAction_Parse(*filter_route_action_str, &filter_route_action)) {
+        FilterAction_Enum_Parse(*filter_route_action_str, &filter_route_action)) {
       pbf_costing_options->set_filter_route_action(filter_route_action);
       // filter_route_ids
       auto filter_route_ids_json =
@@ -755,7 +757,7 @@ void ParseTransitCostOptions(const rapidjson::Document& doc,
   }
 }
 
-cost_ptr_t CreateTransitCost(const odin::Costing costing, const odin::DirectionsOptions& options) {
+cost_ptr_t CreateTransitCost(const Costing costing, const Options& options) {
   return std::make_shared<TransitCost>(costing, options);
 }
 
@@ -774,9 +776,9 @@ namespace {
 TransitCost* make_transitcost_from_json(const std::string& property, float testVal) {
   std::stringstream ss;
   ss << R"({"costing_options":{"transit":{")" << property << R"(":)" << testVal << "}}}";
-  valhalla::valhalla_request_t request;
-  request.parse(ss.str(), valhalla::odin::DirectionsOptions::route);
-  return new TransitCost(valhalla::odin::Costing::transit, request.options);
+  Api request;
+  ParseApi(ss.str(), valhalla::Options::route, request);
+  return new TransitCost(valhalla::Costing::transit, request.options());
 }
 
 std::uniform_real_distribution<float>*
@@ -788,7 +790,7 @@ make_distributor_from_range(const ranged_default_t<float>& range) {
 void testTransitCostParams() {
   constexpr unsigned testIterations = 250;
   constexpr unsigned seed = 0;
-  std::default_random_engine generator(seed);
+  std::mt19937 generator(seed);
   std::shared_ptr<std::uniform_real_distribution<float>> distributor;
   std::shared_ptr<TransitCost> ctorTester;
 

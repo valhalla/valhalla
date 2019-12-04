@@ -20,7 +20,10 @@ public:
   /**
    * Constructor.
    */
-  UniqueNames();
+  UniqueNames() {
+    // Insert dummy so index 0 is never used
+    index("");
+  }
 
   /**
    * Get an index for the specified name. If the name is not already used
@@ -28,30 +31,46 @@ public:
    * @param  name  Name.
    * @return  Returns an index into the unique list of names.
    */
-  uint32_t index(const std::string& name);
+  uint32_t index(const std::string& name) {
+    // Find the name in the map. If it is there return the index.
+    auto it = names_.find(name);
+    if (it != names_.end()) {
+      return it->second;
+    } else {
+      // Not in the map, add index and update
+      it = names_.insert(it, NamesMap::value_type(name, 0));
+      indexes_.push_back(it);
+      uint32_t index = indexes_.size() - 1;
+      it->second = index;
+      return index;
+    }
+  }
 
   /**
-   * Get a name given an index.
+   * Get a name given an index. Returns an empty string if the index is out of range.
    * @param  index  Index into the unique name list.
    * @return  Returns the name
    */
-  const std::string& name(const uint32_t index) const;
+  const std::string& name(const uint32_t index) const {
+    return (index < (uint32_t)indexes_.size()) ? indexes_[index]->first : indexes_[0]->first;
+  }
 
   /**
    * Clear the names and indexes.
    */
-  void Clear();
+  void Clear() {
+    names_.clear();
+    indexes_.clear();
+  }
 
   /**
-   * Get the size - number of names.
+   * Get the size - number of names. Since a blank name is added as the first unique name this
+   * returns the size of the map - 1.
    * @return  Returns the number of unique names.
    */
-  size_t Size() const;
-
-  /**
-   * Log information about the number of unique names, size of the vector, etc.
-   */
-  void Log() const;
+  size_t Size() const {
+    return names_.size() - 1;
+  }
 
 protected:
   // Map of names to indexes

@@ -26,24 +26,24 @@ set(sources
   ${CMAKE_CURRENT_BINARY_DIR}/admin_lua_proc.h
 
   admin.cc
+  bssbuilder.cc
   complexrestrictionbuilder.cc
   countryaccess.cc
   dataquality.cc
   directededgebuilder.cc
   graphtilebuilder.cc
   edgeinfobuilder.cc
-  uniquenames.cc
+  elevationbuilder.cc
   ferry_connections.cc
   graphbuilder.cc
   graphenhancer.cc
+  graphfilter.cc
   graphvalidator.cc
   hierarchybuilder.cc
   linkclassification.cc
   luatagtransform.cc
   node_expander.cc
-  osmaccess.cc
-  osmadmin.cc
-  osmnode.cc
+  osmdata.cc
   osmpbfparser.cc
   osmaccessrestriction.cc
   osmrestriction.cc
@@ -66,6 +66,8 @@ valhalla_module(NAME mjolnir
       ${VALHALLA_SOURCE_DIR}
       ${VALHALLA_SOURCE_DIR}/valhalla
       ${VALHALLA_SOURCE_DIR}/third_party/date/include
+      $<$<BOOL:${MSVC}>:${VALHALLA_SOURCE_DIR}/third_party/dirent/include>
+      ${PROTOBUF_INCLUDE_DIR}
    PRIVATE
       ${CMAKE_CURRENT_BINARY_DIR}
       ${CMAKE_CURRENT_BINARY_DIR}/valhalla
@@ -75,7 +77,8 @@ valhalla_module(NAME mjolnir
     Boost::filesystem
     Boost::system
     Boost::date_time
-    Spatialite::Spatialite
+    SpatiaLite::SpatiaLite
     SQLite3::SQLite3
     Lua::Lua
-    Threads::Threads)
+    Threads::Threads
+    ZLIB::ZLIB)

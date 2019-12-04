@@ -12,8 +12,6 @@
 #include <valhalla/baldr/json.h>
 #include <valhalla/midgard/util.h>
 
-using namespace valhalla::midgard;
-
 namespace valhalla {
 namespace baldr {
 

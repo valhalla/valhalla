@@ -1,5 +1,4 @@
-#ifndef VALHALLA_MIDGARD_UTIL_H_
-#define VALHALLA_MIDGARD_UTIL_H_
+#pragma once
 
 #include <cstdint>
 #include <limits>
@@ -17,6 +16,7 @@
 #include <valhalla/midgard/constants.h>
 #include <valhalla/midgard/distanceapproximator.h>
 #include <valhalla/midgard/pointll.h>
+#include <valhalla/midgard/tiles.h>
 
 namespace valhalla {
 namespace midgard {
@@ -132,6 +132,9 @@ inline float normalize(const float num, const float den) {
 // Avoids having to copy the points into a polyline, polyline should really just extend
 // A container class like vector or list
 template <class container_t> float length(const container_t& pts) {
+  if (pts.size() < 2) {
+    return 0.0f;
+  }
   float length = 0.0f;
   for (auto p = std::next(pts.cbegin()); p != pts.end(); ++p) {
     length += p->Distance(*std::prev(p));
@@ -329,13 +332,6 @@ struct memory_status {
   friend std::ostream& operator<<(std::ostream&, const memory_status&);
 };
 std::ostream& operator<<(std::ostream& stream, const memory_status& s);
-
-/**
- * Implement the missing make_unique for C++11.
- */
-template <typename T, typename... Args> std::unique_ptr<T> make_unique(Args&&... args) {
-  return std::unique_ptr<T>{new T{std::forward<Args>(args)...}};
-}
 
 /* circular range clamp
  */
@@ -545,6 +541,72 @@ std::vector<midgard::PointLL> simulate_gps(const std::vector<gps_segment_t>& seg
                                            size_t sample_rate = 1,
                                            unsigned seed = 0);
 
+/**
+ * Generate a polygon geometry from a list of tile ids within a tileset
+ *
+ * @param region  the list of tiles form the tile set to be joined into a single geometry
+ * @param tiles   the geometry defining the full set of tiles so we can gind the four conerers of
+ * individual tiles
+ * @return  a list of polygon rings
+ */
+using ring_t = std::list<PointLL>;
+using polygon_t = std::list<ring_t>;
+polygon_t to_boundary(const std::unordered_set<uint32_t>& region, const Tiles<PointLL>& tiles);
+
+/**
+ * A place where we can share the projecting of a single point onto any number of geometries
+ * where the point is long lived and we survey many many shape segments such as is done in
+ * both loki and in meili
+ * */
+struct projector_t {
+  projector_t(const PointLL& ll)
+      : lon_scale(cos(ll.lat() * kRadPerDegD)), lat(ll.lat()), lng(ll.lng()), approx(ll) {
+  }
+
+  // non default constructible and move only type
+  projector_t() = delete;
+  projector_t(const projector_t&) = delete;
+  projector_t& operator=(const projector_t&) = delete;
+  projector_t(projector_t&&) = default;
+  projector_t& operator=(projector_t&&) = default;
+
+  // Test if a segment is a candidate to the projection.  This method
+  // is performance critical.  Copy, function call, cache locality and
+  // useless computation must be handled with care.
+  inline PointLL operator()(const PointLL& u, const PointLL& v) const {
+    // we're done if this is a zero length segment
+    if (u == v) {
+      return u;
+    }
+
+    // project a onto b where b is the origin vector representing this segment
+    // and a is the origin vector to the point we are projecting, (a.b/b.b)*b
+    auto bx = double(v.first) - u.first;
+    auto by = double(v.second) - u.second;
+
+    // Scale longitude when finding the projection
+    auto bx2 = bx * lon_scale;
+    auto sq = bx2 * bx2 + by * by;
+    auto scale =
+        (lng - u.lng()) * lon_scale * bx2 + (lat - u.lat()) * by; // only need the numerator at first
+
+    // projects along the ray before u
+    if (scale <= 0.0) {
+      return u;
+      // projects along the ray after v
+    } else if (scale >= sq) {
+      return v;
+    }
+    // projects along the ray between u and v
+    scale /= sq;
+    return {u.first + bx * scale, u.second + by * scale};
+  }
+
+  // critical data
+  double lon_scale;
+  double lat;
+  double lng;
+  DistanceApproximator approx;
+};
 } // namespace midgard
 } // namespace valhalla
-#endif // VALHALLA_MIDGARD_UTIL_H_

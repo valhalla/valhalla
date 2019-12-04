@@ -70,22 +70,22 @@ struct OSMRestriction {
   /**
    * Set the from way id
    */
-  void set_from(uint64_t from);
+  void set_from(uint32_t from);
 
   /**
    * Get the from way id
    */
-  uint64_t from() const;
+  uint32_t from() const;
 
   /**
    * Set the to way id
    */
-  void set_to(uint64_t to);
+  void set_to(uint32_t to);
 
   /**
    * Get the to way id
    */
-  uint64_t to() const;
+  uint32_t to() const;
 
   /**
    * Set the time domain
@@ -129,7 +129,10 @@ struct OSMRestriction {
   }
 
   // from is a way - uses OSM way Id.
-  uint64_t from_;
+  uint32_t from_;
+
+  // to is a way - uses OSM way Id.
+  uint32_t to_;
 
   // Via is a node. When parsing OSM this is stored as an OSM node Id.
   // It later gets changed into a GraphId.
@@ -143,9 +146,6 @@ struct OSMRestriction {
 
   // fixed size of vias.
   uint64_t vias_[valhalla::baldr::kMaxViasPerRestriction];
-
-  // to is a way - uses OSM way Id.
-  uint64_t to_;
 
   // timed restriction information
   uint64_t time_domain_;

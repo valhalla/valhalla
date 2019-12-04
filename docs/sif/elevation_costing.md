@@ -39,7 +39,3 @@ For a novice bicyclist or one who wishes to avoid hills, we can try a use_hills 
 ![Avoid Hills](images/Illchester3.png "use_hills = 0.0")
 
 The sample images here were created using a combination of Valhalla routing including the elevation influenced bicycle route API as well as the new [Mapzen Elevation Service](https://mapzen.com/blog/moving-on-up) API to get the range/height profile information to create the elevation chart. The output route path information (an encoded string of latitude,longitude positions along the path) is sent directly to the elevation service to get the heights along the path for charting.
-
-#### Check it out!
-
-You can try out our open source routing via the [Mapzen instance of Valhalla](https://mapzen.com/projects/valhalla). You can also [browse the code](https://github.com/valhalla) and reach out if you have questions or suggestions!

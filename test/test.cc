@@ -32,10 +32,11 @@ void suite::test(const string& test_name, test_function function) {
 
 int suite::tear_down() {
   cout << "=== Failed " << failed << " tests ===" << endl;
-  if (failed > 0)
+  if (failed > 0) {
     return EXIT_FAILURE;
-  else
+  } else {
     return EXIT_SUCCESS;
+  }
 }
 
 } // namespace test

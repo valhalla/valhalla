@@ -8,10 +8,6 @@ This is an example of isochrones showing the travel times by driving from a loca
 
 ![Isochrones for travel times by walking in Lancaster, PA](/images/isochrone.png)
 
-## Using the hosted Mapbox Isochrone Service
-
-The Mapbox isochrone service requires an access token. In a request, you must append your own access_token to the request URL, following access_token=. See the [Mapbox API documentation](https://www.mapbox.com/api-documentation/#access-tokens) for more on access tokens. Contact Mapbox for instructions on accessing this API.
-
 ## Inputs of the Isochrone service
 
 An isochrone request run locally takes the form of `localhost:8002/isochrone?json={}`, where the JSON inputs inside the `{}` includes an array of at least one location and options for the [route costing model](/turn-by-turn/api-reference/#costing-models).
@@ -45,7 +41,7 @@ The isochrone service uses the `auto`, `bicycle`, `pedestrian`, and `multimodal`
 | :------------------ | :----------- |
 | `date_time` | The local date and time at the location. These parameters apply only for multimodal requests and are not used with other costing methods.<ul><li>`type`<ul><li>0 - Current departure time for multimodal requests.</li><li>1 - Specified departure time for multimodal requests.</li><li>2 - Specified arrival time. Note: This is not yet implemented.</li></ul></li><li>`value` - the date and time specified in ISO 8601 format (YYYY-MM-DDThh:mm) in the local time zone of departure or arrival. For example, "2016-07-03T08:06"</li></ul> |
 | `id` | Name of the isochrone request. If `id` is specified, the name is returned with the response. |
-| `contours` | A JSON array of contour objects with the time in minutes and color to use for each isochrone contour. You can specify up to four contours. <ul><li>`time` - The time in minutes for the contour.<li>`color` - The color for the output of the contour. Specify it as a [Hex value](http://www.w3schools.com/colors/colors_hexadecimal.asp), but without the `#`, such as `"color":"ff0000"` for red. If no color is specified, the isochrone service will assign a default color to the output.</li></ul>  |
+| `contours` | A JSON array of contour objects with the time in minutes and color to use for each isochrone contour. You can specify up to four contours. <ul><li>`time` - A floating point value specifying the time in minutes for the contour.<li>`color` - The color for the output of the contour. Specify it as a [Hex value](http://www.w3schools.com/colors/colors_hexadecimal.asp), but without the `#`, such as `"color":"ff0000"` for red. If no color is specified, the isochrone service will assign a default color to the output.</li></ul>  |
 | `polygons` | A Boolean value to determine whether to return geojson polygons or linestrings as the contours. The default is `false`, which returns lines; when `true`, polygons are returned. Note: When `polygons` is `true`, any contour that forms a ring is returned as a polygon. |
 | `denoise` | A floating point value from `0` to `1` (default of `1`) which can be used to remove smaller contours. A value of `1` will only return the largest contour for a given time value. A value of `0.5` drops any contours that are less than half the area of the largest contour in the set of contours for that same time value. |
 | `generalize` | A floating point value in meters used as the tolerance for [Douglas-Peucker](https://en.wikipedia.org/wiki/Ramer%E2%80%93Douglas%E2%80%93Peucker_algorithm) generalization. Note: Generalization of contours can lead to self-intersections, as well as intersections of adjacent contours. |

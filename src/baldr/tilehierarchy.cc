@@ -36,6 +36,12 @@ const TileLevel& TileHierarchy::GetTransitLevel() {
   return transit_level_;
 }
 
+midgard::AABB2<midgard::PointLL> TileHierarchy::GetGraphIdBoundingBox(const GraphId& id) {
+  assert(id.Is_Valid());
+  auto const& tileLevel = levels().at(id.level());
+  return tileLevel.tiles.TileBounds(id.tileid());
+}
+
 // Returns the GraphId of the requested tile based on a lat,lng and a level.
 // If the level is not supported an invalid id will be returned.
 GraphId TileHierarchy::GetGraphId(const midgard::PointLL& pointll, const uint8_t level) {
@@ -95,5 +101,17 @@ std::vector<GraphId> TileHierarchy::GetGraphIds(const midgard::AABB2<midgard::Po
   return ids;
 }
 
+/**
+ * Get the tiling system for a specified level.
+ * @param level  Level Id.
+ * @return Returns a const reference to the tiling system for this level.
+ */
+const midgard::Tiles<midgard::PointLL>& TileHierarchy::get_tiling(const uint8_t level) {
+  const auto& tl = levels().find(level);
+  if (tl != levels().end()) {
+    return tl->second.tiles;
+  }
+  throw std::runtime_error("Invalid level Id for TileHierarchy::get_tiling");
+}
 } // namespace baldr
 } // namespace valhalla

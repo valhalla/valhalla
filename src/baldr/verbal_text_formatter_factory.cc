@@ -12,14 +12,14 @@ std::unique_ptr<VerbalTextFormatter>
 VerbalTextFormatterFactory::Create(const std::string& country_code, const std::string& state_code) {
   if (country_code == "US") {
     if (state_code == "TX") {
-      return midgard::make_unique<VerbalTextFormatterUsTx>(country_code, state_code);
+      return std::make_unique<VerbalTextFormatterUsTx>(country_code, state_code);
     } else if (state_code == "CO") {
-      return midgard::make_unique<VerbalTextFormatterUsCo>(country_code, state_code);
+      return std::make_unique<VerbalTextFormatterUsCo>(country_code, state_code);
     }
-    return midgard::make_unique<VerbalTextFormatterUs>(country_code, state_code);
+    return std::make_unique<VerbalTextFormatterUs>(country_code, state_code);
   }
 
-  return midgard::make_unique<VerbalTextFormatter>(country_code, state_code);
+  return std::make_unique<VerbalTextFormatter>(country_code, state_code);
 }
 
 } // namespace baldr

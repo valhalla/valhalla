@@ -58,6 +58,9 @@ void id_from_string() {
       GraphId(1000002, 3, 0))
     throw std::logic_error("Unexpected graphtile id");
 
+  if (GraphTile::GetTileId("2/000/791/317.gph.gz") != GraphId(791317, 2, 0))
+    throw std::logic_error("Unexpected graphtile id");
+
   try {
     GraphTile::GetTileId("foo2/8675309/bar/1baz2/qux42corge/1/000/002/.gph");
     throw std::logic_error("Should fail to get graphtile id");
@@ -115,6 +118,39 @@ void bin() {
   }
 }
 
+void integrity() {
+  auto test_tile_from_array = [&](size_t tile_size) {
+    std::vector<char> tile_data(tile_size);
+    GraphTile tile(GraphId(), tile_data.data(), tile_size);
+  };
+
+  try {
+    test_tile_from_array(0);
+    throw std::logic_error("Should fail to initialize graphitle");
+  } catch (const std::runtime_error&) {}
+
+  try {
+    test_tile_from_array(sizeof(GraphTileHeader) - 1);
+    throw std::logic_error("Should fail to initialize graphitle");
+  } catch (const std::runtime_error&) {}
+
+  {
+    size_t tile_size = 10000;
+
+    GraphTileHeader header;
+    // set offset not equal to data size
+    header.set_end_offset(tile_size - 1);
+
+    std::vector<char> tile_data(tile_size);
+    memcpy(tile_data.data(), &header, sizeof(header));
+
+    try {
+      GraphTile tile(GraphId(), tile_data.data(), tile_size);
+      throw std::logic_error("Should fail to initialize graphitle");
+    } catch (const std::runtime_error&) {}
+  }
+}
+
 } // namespace
 
 int main() {
@@ -125,6 +161,8 @@ int main() {
   suite.test(TEST_CASE(id_from_string));
 
   suite.test(TEST_CASE(bin));
+
+  suite.test(TEST_CASE(integrity));
 
   return suite.tear_down();
 }

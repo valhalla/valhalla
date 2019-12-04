@@ -4,6 +4,7 @@
 
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
+#include "baldr/nodetransition.h"
 #include "baldr/pathlocation.h"
 #include "midgard/distanceapproximator.h"
 #include "sif/costconstants.h"
@@ -161,8 +162,12 @@ inline bool IsEdgeAllowed(const baldr::DirectedEdge* edge,
                           const sif::cost_ptr_t& costing,
                           const Label& pred_edgelabel,
                           const baldr::GraphTile* tile) {
-  return !pred_edgelabel.edgeid().Is_Valid() || edgeid == pred_edgelabel.edgeid() ||
-         costing->Allowed(edge, pred_edgelabel, tile, edgeid, 0, 0);
+  // TODO We may want to optionally have map matching take time restrictions into account here
+  bool i_dont_care_about_time_restrictions_here = false;
+  return (!pred_edgelabel.edgeid().Is_Valid() && costing->GetEdgeFilter()(edge) != 0.f) ||
+         edgeid == pred_edgelabel.edgeid() ||
+         costing->Allowed(edge, pred_edgelabel, tile, edgeid, 0, 0,
+                          i_dont_care_about_time_restrictions_here);
 }
 
 /**
@@ -363,7 +368,8 @@ find_shortest_path(baldr::GraphReader& reader,
 
   // Lambda for heuristic
   float search_rad2 = search_radius * search_radius;
-  const auto heuristic = [&approximator, &search_radius, &search_rad2](const PointLL& lnglat) {
+  const auto heuristic = [&approximator, &search_radius,
+                          &search_rad2](const midgard::PointLL& lnglat) {
     float d2 = approximator.DistanceSquared(lnglat);
     return (d2 < search_rad2) ? 0.0f : sqrtf(d2) - search_radius;
   };
@@ -397,15 +403,6 @@ find_shortest_path(baldr::GraphReader& reader,
         continue;
       }
 
-      // Immediately expand from end node of transition edges unless expand is
-      // called from a transition edge (disallow 2 successive transition edges)
-      if (directededge->IsTransition()) {
-        if (!from_transition) {
-          expand(directededge->endnode(), label_idx, true);
-        }
-        continue;
-      }
-
       // Skip it if its not allowed
       if (!IsEdgeAllowed(directededge, edgeid, costing, label, tile)) {
         continue;
@@ -431,8 +428,7 @@ find_shortest_path(baldr::GraphReader& reader,
               // to itself must be 0, so sortcost = cost
               sif::Cost cost(label.cost().cost + directededge->length() * edge.percent_along,
                              label.cost().secs +
-                                 costing->EdgeCost(directededge, tile->GetSpeed(directededge)).secs *
-                                     edge.percent_along);
+                                 costing->EdgeCost(directededge, tile).secs * edge.percent_along);
               // We only add the labels if we are under the limits for distance and for time or time
               // limit is 0
               if (cost.cost < max_dist && (max_time < 0 || cost.secs < max_time)) {
@@ -451,16 +447,22 @@ find_shortest_path(baldr::GraphReader& reader,
         // Get cost - use EdgeCost to get time along the edge. Override
         // cost portion to be distance. Add heuristic to get sort cost.
         sif::Cost cost(label.cost().cost + directededge->length(),
-                       label.cost().secs +
-                           costing->EdgeCost(directededge, tile->GetSpeed(directededge)).secs);
+                       label.cost().secs + costing->EdgeCost(directededge, tile).secs);
         // We only add the labels if we are under the limits for distance and for time or time limit
         // is 0
         if (cost.cost < max_dist && (max_time < 0 || cost.secs < max_time)) {
-          const auto end_nodeinfo = endtile->node(directededge->endnode());
-          float sortcost = cost.cost + heuristic(end_nodeinfo->latlng());
+          float sortcost = cost.cost + heuristic(endtile->get_node_ll(directededge->endnode()));
           labelset->put(directededge->endnode(), edgeid, 0.0f, 1.0f, cost, turn_cost, sortcost,
                         label_idx, directededge, travelmode);
         }
+      }
+    }
+
+    // Handle transitions - expand from the end node each transition
+    if (!from_transition && nodeinfo->transition_count() > 0) {
+      const baldr::NodeTransition* trans = tile->transition(nodeinfo->transition_index());
+      for (uint32_t i = 0; i < nodeinfo->transition_count(); ++i, ++trans) {
+        expand(trans->endnode(), label_idx, true);
       }
     }
   };
@@ -551,10 +553,8 @@ find_shortest_path(baldr::GraphReader& reader,
                 // cost portion to be distance. The heuristic cost from a
                 // destination to itself must be 0
                 float f = (other_edge.percent_along - origin_edge.percent_along);
-                sif::Cost
-                    cost(label.cost().cost + directededge->length() * f,
-                         label.cost().secs +
-                             costing->EdgeCost(directededge, tile->GetSpeed(directededge)).secs * f);
+                sif::Cost cost(label.cost().cost + directededge->length() * f,
+                               label.cost().secs + costing->EdgeCost(directededge, tile).secs * f);
                 // We only add the labels if we are under the limits for distance and for time or
                 // time limit is 0
                 if (cost.cost < max_dist && (max_time < 0 || cost.secs < max_time)) {
@@ -571,17 +571,16 @@ find_shortest_path(baldr::GraphReader& reader,
           // destination to itself must be 0
           float f = (1.0f - origin_edge.percent_along);
           sif::Cost cost(label.cost().cost + directededge->length() * f,
-                         label.cost().secs +
-                             costing->EdgeCost(directededge, tile->GetSpeed(directededge)).secs * f);
+                         label.cost().secs + costing->EdgeCost(directededge, tile).secs * f);
           // We only add the labels if we are under the limits for distance and for time or time
           // limit is 0
           if (cost.cost < max_dist && (max_time < 0 || cost.secs < max_time)) {
-            // Get the end node tile and nodeinfo (to compute heuristic)
-            const auto* nodeinfo = reader.GetEndNode(directededge, tile);
-            if (nodeinfo == nullptr) {
+            // Get the end node tile and node lat,lon to compute heuristic
+            const baldr::GraphTile* endtile = reader.GetGraphTile(directededge->endnode());
+            if (endtile == nullptr) {
               continue;
             }
-            float sortcost = cost.cost + heuristic(nodeinfo->latlng());
+            float sortcost = cost.cost + heuristic(endtile->get_node_ll(directededge->endnode()));
             labelset->put(directededge->endnode(), origin_edge.id, origin_edge.percent_along, 1.f,
                           cost, turn_cost, sortcost, label_idx, directededge, travelmode);
           }

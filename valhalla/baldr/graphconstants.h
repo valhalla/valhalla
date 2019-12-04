@@ -7,6 +7,10 @@
 namespace valhalla {
 namespace baldr {
 
+// OSM Ids can exceed 32 bits, but these are currently only Node Ids. Way Ids should still have
+// room to grow before exceeding an unsigned 32 bit word.
+constexpr uint32_t kMaxOSMWayId = 4294967295;
+
 // Maximum tile id/index supported. 22 bits
 constexpr uint32_t kMaxGraphTileId = 4194303;
 // Maximum id/index within a tile. 21 bits
@@ -24,6 +28,7 @@ constexpr uint16_t kHOVAccess = 128;
 constexpr uint16_t kWheelchairAccess = 256;
 constexpr uint16_t kMopedAccess = 512;
 constexpr uint16_t kMotorcycleAccess = 1024;
+constexpr uint16_t kSpareAccess = 2048; // Unused so far
 constexpr uint16_t kAllAccess = 4095;
 
 // Constant representing vehicular access types
@@ -72,6 +77,15 @@ constexpr uint32_t kMaxDensity = 15;
 // so it should be set as low as is reasonable. Speeds above this in OSM are
 // clamped to this maximum value.
 constexpr uint32_t kMaxSpeedKph = 140; // ~85 MPH
+
+// Minimum speed. This is a stop gap for dubious traffic data. While its possible
+// to measure a probe going this slow via stop and go traffic over a long enough
+// stretch, its unlikely to be good signal below this value
+constexpr uint32_t kMinSpeedKph = 5; // ~3 MPH
+
+inline bool valid_speed(float speed) {
+  return speed > kMinSpeedKph && speed < kMaxSpeedKph;
+}
 
 // Maximum ferry speed
 constexpr uint32_t kMaxFerrySpeedKph = 40; // 21 knots
@@ -163,6 +177,9 @@ constexpr uint32_t kMaxCurvatureFactor = 15;
 // Maximum added time along shortcuts to approximate transition costs
 constexpr uint32_t kMaxAddedTime = 255;
 
+// Elevation constants
+constexpr float kNoElevationData = 32768.0f;
+
 // Node types.
 enum class NodeType : uint8_t {
   kStreetIntersection = 0, // Regular intersection of 2 roads
@@ -201,7 +218,7 @@ inline std::string to_string(NodeType n) {
 }
 
 // Intersection types. Classifications of various intersections.
-// Maximum value = 31 (DO NOT EXCEED!)
+// Maximum value = 15 (DO NOT EXCEED!)
 enum class IntersectionType : uint8_t {
   kRegular = 0, // Regular, unclassified intersection
   kFalse = 1,   // False intersection. Only 2 edges connect. Typically
@@ -255,10 +272,6 @@ enum class Use : uint8_t {
   kPedestrian = 28,
   kBridleway = 29,
 
-  // Hierarchy transitions
-  kTransitionUp = 38,
-  kTransitionDown = 39,
-
   // Other...
   kOther = 40,
 
@@ -271,7 +284,9 @@ enum class Use : uint8_t {
   kBus = 51,                // Bus line
   kEgressConnection = 52,   // Connection to a egress node
   kPlatformConnection = 53, // Connection to a platform node
-  kTransitConnection = 54   // Connection to multi-use transit stop
+  kTransitConnection = 54,  // Connection to multi-use transit stop
+  kBikeShareConnection = 55 // Connection to multi-use transit stop
+
 };
 inline std::string to_string(Use u) {
   static const std::unordered_map<uint8_t, std::string> UseStrings = {
@@ -302,6 +317,7 @@ inline std::string to_string(Use u) {
       {static_cast<uint8_t>(Use::kEgressConnection), "egress_connection"},
       {static_cast<uint8_t>(Use::kPlatformConnection), "platform_connnection"},
       {static_cast<uint8_t>(Use::kTransitConnection), "transit_connection"},
+      {static_cast<uint8_t>(Use::kBikeShareConnection), "bike_share_connection"},
   };
 
   auto i = UseStrings.find(static_cast<uint8_t>(u));
@@ -313,17 +329,13 @@ inline std::string to_string(Use u) {
 
 // Speed type
 enum class SpeedType : uint8_t {
-  kTagged = 0,          // Tagged maximum speed
-  kClassified = 1,      // Speed assigned based on highway classification
-  kClassifiedUrban = 2, // Classified speed in urban area
-  kClassifiedRural = 3  // Classified speed in rural area
+  kTagged = 0,    // Tagged maximum speed
+  kClassified = 1 // Speed assigned based on highway classification
 };
 inline std::string to_string(SpeedType s) {
   static const std::unordered_map<uint8_t, std::string> SpeedTypeStrings = {
       {static_cast<uint8_t>(SpeedType::kTagged), "tagged"},
       {static_cast<uint8_t>(SpeedType::kClassified), "classified"},
-      {static_cast<uint8_t>(SpeedType::kClassifiedUrban), "classified_urban"},
-      {static_cast<uint8_t>(SpeedType::kClassifiedRural), "classified_rural"},
   };
 
   auto i = SpeedTypeStrings.find(static_cast<uint8_t>(s));
@@ -508,7 +520,8 @@ inline float GetOffsetForHeading(RoadClass road_class, Use use) {
     case Use::kBridleway: {
       offset *= 0.5f;
     }
-    default: { break; }
+    default:
+      break;
   }
 
   return offset;
@@ -532,6 +545,20 @@ enum class CalendarExceptionType : uint8_t {
   kAdded = 1,  // Service added for the specified date
   kRemoved = 2 // Service removed for the specified date
 };
+
+// --------------------- Traffic information ------------------------ //
+
+// Traffic type constants
+constexpr uint8_t kNoFlowMask = 0;
+constexpr uint8_t kFreeFlowMask = 1;
+constexpr uint8_t kConstrainedFlowMask = 2;
+constexpr uint8_t kPredictedFlowMask = 4;
+constexpr uint8_t kCurrentFlowMask = 8;
+constexpr uint8_t kDefaultFlowMask =
+    kFreeFlowMask | kConstrainedFlowMask | kPredictedFlowMask | kCurrentFlowMask;
+constexpr uint32_t kFreeFlowSecondOfDay = 60 * 60 * 0;         // midnight
+constexpr uint32_t kConstrainedFlowSecondOfDay = 60 * 60 * 12; // noon
+constexpr uint32_t kInvalidSecondsOfWeek = -1;                 // invalid
 
 } // namespace baldr
 } // namespace valhalla

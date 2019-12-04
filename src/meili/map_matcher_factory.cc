@@ -40,8 +40,7 @@ MapMatcherFactory::MapMatcherFactory(const boost::property_tree::ptree& root,
 MapMatcherFactory::~MapMatcherFactory() {
 }
 
-MapMatcher* MapMatcherFactory::Create(const odin::Costing costing,
-                                      const odin::DirectionsOptions& options) {
+MapMatcher* MapMatcherFactory::Create(const Costing costing, const Options& options) {
   // Merge any customizable options with the config defaults
   const auto& config = MergeConfig(options);
 
@@ -54,11 +53,11 @@ MapMatcher* MapMatcherFactory::Create(const odin::Costing costing,
   return new MapMatcher(config, *graphreader_, *candidatequery_, mode_costing_, mode);
 }
 
-MapMatcher* MapMatcherFactory::Create(const odin::DirectionsOptions& options) {
+MapMatcher* MapMatcherFactory::Create(const Options& options) {
   return Create(options.costing(), options);
 }
 
-boost::property_tree::ptree MapMatcherFactory::MergeConfig(const odin::DirectionsOptions& options) {
+boost::property_tree::ptree MapMatcherFactory::MergeConfig(const Options& options) {
   // Copy the default child config
   auto config = config_.get_child("default");
 
@@ -69,8 +68,6 @@ boost::property_tree::ptree MapMatcherFactory::MergeConfig(const odin::Direction
   }
 
   // Check for overrides of matcher related directions options. Override these values in config.
-  // TODO - there are several options listed as customizable that are not documented
-  // in the interface...either add them and document or remove them from config?
   if (options.search_radius() && customizable.find("search_radius") != customizable.end()) {
     config.put<float>("search_radius", options.search_radius());
   }
@@ -84,6 +81,10 @@ boost::property_tree::ptree MapMatcherFactory::MergeConfig(const odin::Direction
   if (options.breakage_distance() && customizable.find("breakage_distance") != customizable.end()) {
     config.put<float>("breakage_distance", options.breakage_distance());
   }
+  if (options.has_interpolation_distance() &&
+      customizable.find("interpolation_distance") != customizable.end()) {
+    config.put<float>("interpolation_distance", options.interpolation_distance());
+  }
 
   // Give it back
   return config;
@@ -91,7 +92,7 @@ boost::property_tree::ptree MapMatcherFactory::MergeConfig(const odin::Direction
 
 void MapMatcherFactory::ClearFullCache() {
   if (graphreader_->OverCommitted()) {
-    graphreader_->Clear();
+    graphreader_->Trim();
   }
 
   if (candidatequery_->size() > max_grid_cache_size_) {

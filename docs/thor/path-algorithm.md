@@ -74,7 +74,3 @@ An AdjacencyList is contructed using a minimum cost (based on the A* heuristic d
 - **Clear** - Clear all labels from from the adjacency list. Called at the start of the path finding algorithm,
 - **Remove** - Removes the lowest cost label index from the sorted list.
 - **EmptyOverflow** - Empties the overflow bucket by placing the label indexes into the low level buckets. This method is private and is called from the Remove method when needed.
-
-#### Check it out!
-
-You can try out our open source routing via the [Mapzen instance of Valhalla](https://mapzen.com/projects/valhalla). You can also [browse the code](https://github.com/valhalla) and reach out if you have questions or suggestions!

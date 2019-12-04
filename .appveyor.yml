@@ -1,0 +1,66 @@
+# AppVeyor for Valhalla
+#
+# TODO: Build and run tests and/or tools
+#
+version: 1.0.{build}
+
+image:
+  - Visual Studio 2017
+
+environment:
+  BUILD_CFG: Release
+  BUILD_DIR: '%APPVEYOR_BUILD_FOLDER%\build'
+  VCPKG_DIR: 'C:\Tools\vcpkg'
+
+  matrix:
+    - PLATFORM: x64
+      GENERATOR: 'Visual Studio 15 2017 Win64'
+      TOOLSET: 'v141,host=x64'
+    - PLATFORM: x86
+      GENERATOR: 'Visual Studio 15 2017'
+      TOOLSET: v141
+
+cache:
+  # Invalidate vcpkg cache whenever top-level build configuration is changed
+  - C:\Tools\vcpkg -> CMakeLists.txt, .appveyor.yml
+
+clone_depth: 1
+
+install:
+  - ps: 'Write-Host "Pull submodules" -ForegroundColor Magenta'
+  - cmd: git submodule update --init --recursive
+
+  - ps: 'Write-Host "Install vcpkg" -ForegroundColor Magenta'
+  - cmd: |
+      %VCPKG_DIR%\vcpkg.exe version
+      %VCPKG_DIR%\vcpkg.exe remove --outdated --recurse
+      cd %VCPKG_DIR% & git pull > NUL & cd ..
+      echo set(VCPKG_BUILD_TYPE release) >> %VCPKG_DIR%\triplets\x64-windows.cmake
+      call %VCPKG_DIR%\bootstrap-vcpkg.bat
+      %VCPKG_DIR%\vcpkg.exe version
+
+  - ps: 'Write-Host "Install vcpkg packages" -ForegroundColor Magenta'
+  - cmd: |
+      %VCPKG_DIR%\vcpkg.exe install protobuf zlib --triplet %PLATFORM%-windows
+      %VCPKG_DIR%\vcpkg.exe list
+      if exist %VCPKG_DIR%\downloads rmdir /S /Q %VCPKG_DIR%\downloads
+      if exist %VCPKG_DIR%\packages rmdir /S /Q %VCPKG_DIR%\packages
+
+before_build:
+  - ps: 'Write-Host "Patch .proto files of OSMPBF with syntax=proto2" -ForegroundColor Magenta'
+  - cmd: |
+      cd %APPVEYOR_BUILD_FOLDER%
+      move /Y third_party\OSM-binary\src\fileformat.proto third_party\OSM-binary\src\fileformat.proto.orig
+      move /Y third_party\OSM-binary\src\osmformat.proto third_party\OSM-binary\src\osmformat.proto.orig
+      echo syntax = "proto2"; > third_party\OSM-binary\src\fileformat.proto
+      type third_party\OSM-binary\src\fileformat.proto.orig >> third_party\OSM-binary\src\fileformat.proto
+      echo syntax = "proto2"; > third_party\OSM-binary\src\osmformat.proto
+      type third_party\OSM-binary\src\osmformat.proto.orig >> third_party\OSM-binary\src\osmformat.proto
+      del /Q third_party\OSM-binary\src\*.orig
+
+build_script:
+  - cmd: cmake --version
+  - ps: 'Write-Host "Run CMake to configure build" -ForegroundColor Magenta'
+  - cmd: cmake -H%APPVEYOR_BUILD_FOLDER% -B%BUILD_DIR% -G "%GENERATOR%" -T "%TOOLSET%" -DCMAKE_TOOLCHAIN_FILE=%VCPKG_DIR%\scripts\buildsystems\vcpkg.cmake -DVCPKG_APPLOCAL_DEPS=ON -DBOOST_ROOT=C:\Libraries\boost_1_67_0 -DENABLE_CCACHE=OFF -DENABLE_DATA_TOOLS=OFF -DENABLE_HTTP=OFF -DENABLE_NODE_BINDINGS=OFF -DENABLE_PYTHON_BINDINGS=OFF -DENABLE_SERVICES=OFF -DENABLE_TOOLS=OFF
+  - ps: 'Write-Host "Run CMake to build" -ForegroundColor Magenta'
+  - cmd: cmake --build %BUILD_DIR% --config %BUILD_CFG%

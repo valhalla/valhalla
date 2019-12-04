@@ -10,9 +10,9 @@
 #include "odin/maneuver.h"
 #include "odin/transitrouteinfo.h"
 
-#include <valhalla/proto/directions_options.pb.h>
+#include <valhalla/proto/directions.pb.h>
+#include <valhalla/proto/options.pb.h>
 #include <valhalla/proto/tripcommon.pb.h>
-#include <valhalla/proto/tripdirections.pb.h>
 
 using namespace valhalla::odin;
 using namespace valhalla::baldr;
@@ -34,7 +34,7 @@ const std::unordered_map<int, std::string>
                               {static_cast<int>(Maneuver::RelativeDirection::kKeepLeft),
                                "Maneuver::RelativeDirection::kKeepLeft"}};
 
-const std::string& TripDirections_Maneuver_Type_Name(int v) {
+const std::string& DirectionsLeg_Maneuver_Type_Name(int v) {
   static const std::unordered_map<int, std::string> values{
       {0, "kNone"},
       {1, "kStart"},
@@ -73,6 +73,8 @@ const std::string& TripDirections_Maneuver_Type_Name(int v) {
       {34, "kTransitConnectionTransfer"},
       {35, "kTransitConnectionDestination"},
       {36, "kPostTransitConnectionDestination"},
+      {37, "kMergeRight"},
+      {38, "kMergeLeft"},
   };
   auto f = values.find(v);
   if (f == values.cend())
@@ -80,7 +82,7 @@ const std::string& TripDirections_Maneuver_Type_Name(int v) {
   return f->second;
 }
 
-const std::string& TripDirections_Maneuver_CardinalDirection_Name(int v) {
+const std::string& DirectionsLeg_Maneuver_CardinalDirection_Name(int v) {
   static const std::unordered_map<int, std::string> values{
       {0, "kNorth"}, {1, "kNorthEast"}, {2, "kEast"}, {3, "kSouthEast"},
       {4, "kSouth"}, {5, "kSouthWest"}, {6, "kWest"}, {7, "kNorthWest"},
@@ -97,39 +99,53 @@ namespace valhalla {
 namespace odin {
 
 Maneuver::Maneuver()
-    : type_(TripDirections_Maneuver_Type_kNone), length_(0.0f), time_(0), basic_time_(0),
+    : type_(DirectionsLeg_Maneuver_Type_kNone), length_(0.0f), time_(0), basic_time_(0),
       turn_degree_(0), begin_relative_direction_(RelativeDirection::kNone),
-      begin_cardinal_direction_(TripDirections_Maneuver_CardinalDirection_kNorth), begin_heading_(0),
+      begin_cardinal_direction_(DirectionsLeg_Maneuver_CardinalDirection_kNorth), begin_heading_(0),
       end_heading_(0), begin_node_index_(0), end_node_index_(0), begin_shape_index_(0),
       end_shape_index_(0), ramp_(false), turn_channel_(false), ferry_(false), rail_ferry_(false),
       roundabout_(false), portions_toll_(false), portions_unpaved_(false), portions_highway_(false),
       internal_intersection_(false), internal_right_turn_count_(0), internal_left_turn_count_(0),
-      roundabout_exit_count_(0), travel_mode_(TripPath_TravelMode_kDrive),
-      vehicle_type_(TripPath_VehicleType_kCar), pedestrian_type_(TripPath_PedestrianType_kFoot),
-      bicycle_type_(TripPath_BicycleType_kRoad), transit_type_(TripPath_TransitType_kRail),
+      roundabout_exit_count_(0), travel_mode_(TripLeg_TravelMode_kDrive),
+      vehicle_type_(TripLeg_VehicleType_kCar), pedestrian_type_(TripLeg_PedestrianType_kFoot),
+      bicycle_type_(TripLeg_BicycleType_kRoad), transit_type_(TripLeg_TransitType_kRail),
       transit_connection_(false), rail_(false), bus_(false), fork_(false),
       begin_intersecting_edge_name_consistency_(false), intersecting_forward_edge_(false),
       tee_(false), unnamed_walkway_(false), unnamed_cycleway_(false),
-      unnamed_mountain_bike_trail_(false), verbal_multi_cue_(false) {
-  street_names_ = midgard::make_unique<StreetNames>();
-  begin_street_names_ = midgard::make_unique<StreetNames>();
-  cross_street_names_ = midgard::make_unique<StreetNames>();
+      unnamed_mountain_bike_trail_(false), verbal_multi_cue_(false), to_stay_on_(false),
+      drive_on_right_(true), has_time_restrictions_(false) {
+  street_names_ = std::make_unique<StreetNames>();
+  begin_street_names_ = std::make_unique<StreetNames>();
+  cross_street_names_ = std::make_unique<StreetNames>();
+  roundabout_exit_street_names_ = std::make_unique<StreetNames>();
 }
 
-const TripDirections_Maneuver_Type& Maneuver::type() const {
+const DirectionsLeg_Maneuver_Type& Maneuver::type() const {
   return type_;
 }
 
-void Maneuver::set_type(const TripDirections_Maneuver_Type& type) {
+void Maneuver::set_type(const DirectionsLeg_Maneuver_Type& type) {
   type_ = type;
+}
+
+bool Maneuver::IsDestinationType() const {
+  return ((type_ == DirectionsLeg_Maneuver_Type_kDestination) ||
+          (type_ == DirectionsLeg_Maneuver_Type_kDestinationLeft) ||
+          (type_ == DirectionsLeg_Maneuver_Type_kDestinationRight));
+}
+
+bool Maneuver::IsMergeType() const {
+  return ((type_ == DirectionsLeg_Maneuver_Type_kMerge) ||
+          (type_ == DirectionsLeg_Maneuver_Type_kMergeLeft) ||
+          (type_ == DirectionsLeg_Maneuver_Type_kMergeRight));
 }
 
 const StreetNames& Maneuver::street_names() const {
   return *street_names_;
 }
 
-void Maneuver::set_street_names(const std::vector<std::string>& names) {
-  street_names_ = midgard::make_unique<StreetNamesUs>(names);
+void Maneuver::set_street_names(const std::vector<std::pair<std::string, bool>>& names) {
+  street_names_ = std::make_unique<StreetNamesUs>(names);
 }
 
 void Maneuver::set_street_names(std::unique_ptr<StreetNames>&& street_names) {
@@ -138,6 +154,10 @@ void Maneuver::set_street_names(std::unique_ptr<StreetNames>&& street_names) {
 
 bool Maneuver::HasStreetNames() const {
   return (!street_names_->empty());
+}
+
+void Maneuver::ClearStreetNames() {
+  street_names_->clear();
 }
 
 bool Maneuver::HasSameNames(const Maneuver* other_maneuver,
@@ -184,8 +204,8 @@ const StreetNames& Maneuver::begin_street_names() const {
   return *begin_street_names_;
 }
 
-void Maneuver::set_begin_street_names(const std::vector<std::string>& names) {
-  begin_street_names_ = midgard::make_unique<StreetNamesUs>(names);
+void Maneuver::set_begin_street_names(const std::vector<std::pair<std::string, bool>>& names) {
+  begin_street_names_ = std::make_unique<StreetNamesUs>(names);
 }
 
 void Maneuver::set_begin_street_names(std::unique_ptr<StreetNames>&& begin_street_names) {
@@ -196,12 +216,16 @@ bool Maneuver::HasBeginStreetNames() const {
   return (!begin_street_names_->empty());
 }
 
+void Maneuver::ClearBeginStreetNames() {
+  begin_street_names_->clear();
+}
+
 const StreetNames& Maneuver::cross_street_names() const {
   return *cross_street_names_;
 }
 
-void Maneuver::set_cross_street_names(const std::vector<std::string>& names) {
-  cross_street_names_ = midgard::make_unique<StreetNamesUs>(names);
+void Maneuver::set_cross_street_names(const std::vector<std::pair<std::string, bool>>& names) {
+  cross_street_names_ = std::make_unique<StreetNamesUs>(names);
 }
 
 void Maneuver::set_cross_street_names(std::unique_ptr<StreetNames>&& cross_street_names) {
@@ -210,6 +234,10 @@ void Maneuver::set_cross_street_names(std::unique_ptr<StreetNames>&& cross_stree
 
 bool Maneuver::HasCrossStreetNames() const {
   return (!cross_street_names_->empty());
+}
+
+void Maneuver::ClearCrossStreetNames() {
+  cross_street_names_->clear();
 }
 
 const std::string& Maneuver::instruction() const {
@@ -224,8 +252,8 @@ void Maneuver::set_instruction(std::string&& instruction) {
   instruction_ = std::move(instruction);
 }
 
-float Maneuver::length(const DirectionsOptions::Units& units) const {
-  if (units == DirectionsOptions::miles) {
+float Maneuver::length(const Options::Units& units) const {
+  if (units == Options::miles) {
     return (length_ * midgard::kMilePerKm);
   }
   return length_;
@@ -267,12 +295,12 @@ void Maneuver::set_begin_relative_direction(RelativeDirection begin_relative_dir
   begin_relative_direction_ = begin_relative_direction;
 }
 
-TripDirections_Maneuver_CardinalDirection Maneuver::begin_cardinal_direction() const {
+DirectionsLeg_Maneuver_CardinalDirection Maneuver::begin_cardinal_direction() const {
   return begin_cardinal_direction_;
 }
 
 void Maneuver::set_begin_cardinal_direction(
-    TripDirections_Maneuver_CardinalDirection begin_cardinal_direction) {
+    DirectionsLeg_Maneuver_CardinalDirection begin_cardinal_direction) {
   begin_cardinal_direction_ = begin_cardinal_direction;
 }
 
@@ -370,6 +398,13 @@ bool Maneuver::portions_toll() const {
 
 void Maneuver::set_portions_toll(bool portionsToll) {
   portions_toll_ = portionsToll;
+}
+
+bool Maneuver::has_time_restrictions() const {
+  return has_time_restrictions_;
+}
+void Maneuver::set_has_time_restrictions(bool has_time_restrictions) {
+  has_time_restrictions_ = has_time_restrictions;
 }
 
 bool Maneuver::portions_unpaved() const {
@@ -575,43 +610,89 @@ void Maneuver::set_verbal_multi_cue(bool verbal_multi_cue) {
   verbal_multi_cue_ = verbal_multi_cue;
 }
 
-TripPath_TravelMode Maneuver::travel_mode() const {
+bool Maneuver::to_stay_on() const {
+  return to_stay_on_;
+}
+
+void Maneuver::set_to_stay_on(bool to_stay_on) {
+  to_stay_on_ = to_stay_on;
+}
+
+const StreetNames& Maneuver::roundabout_exit_street_names() const {
+  return *roundabout_exit_street_names_;
+}
+
+void Maneuver::set_roundabout_exit_street_names(
+    const std::vector<std::pair<std::string, bool>>& names) {
+  roundabout_exit_street_names_ = std::make_unique<StreetNamesUs>(names);
+}
+
+void Maneuver::set_roundabout_exit_street_names(
+    std::unique_ptr<StreetNames>&& roundabout_exit_street_names) {
+  roundabout_exit_street_names_ = std::move(roundabout_exit_street_names);
+}
+
+bool Maneuver::HasRoundaboutExitStreetNames() const {
+  return (!roundabout_exit_street_names_->empty());
+}
+
+void Maneuver::ClearRoundaboutExitStreetNames() {
+  roundabout_exit_street_names_->clear();
+}
+
+Maneuver::RelativeDirection Maneuver::merge_to_relative_direction() const {
+  return merge_to_relative_direction_;
+}
+
+void Maneuver::set_merge_to_relative_direction(RelativeDirection merge_to_relative_direction) {
+  merge_to_relative_direction_ = merge_to_relative_direction;
+}
+
+bool Maneuver::drive_on_right() const {
+  return drive_on_right_;
+}
+
+void Maneuver::set_drive_on_right(bool drive_on_right) {
+  drive_on_right_ = drive_on_right;
+}
+
+TripLeg_TravelMode Maneuver::travel_mode() const {
   return travel_mode_;
 }
 
-void Maneuver::set_travel_mode(TripPath_TravelMode travel_mode) {
+void Maneuver::set_travel_mode(TripLeg_TravelMode travel_mode) {
   travel_mode_ = travel_mode;
 }
 
-TripPath_VehicleType Maneuver::vehicle_type() const {
+TripLeg_VehicleType Maneuver::vehicle_type() const {
   return vehicle_type_;
 }
 
-void Maneuver::set_vehicle_type(TripPath_VehicleType vehicle_type) {
+void Maneuver::set_vehicle_type(TripLeg_VehicleType vehicle_type) {
   vehicle_type_ = vehicle_type;
 }
 
-TripPath_PedestrianType Maneuver::pedestrian_type() const {
+TripLeg_PedestrianType Maneuver::pedestrian_type() const {
   return pedestrian_type_;
 }
 
-void Maneuver::set_pedestrian_type(TripPath_PedestrianType pedestrian_type) {
+void Maneuver::set_pedestrian_type(TripLeg_PedestrianType pedestrian_type) {
   pedestrian_type_ = pedestrian_type;
 }
 
-TripPath_BicycleType Maneuver::bicycle_type() const {
+TripLeg_BicycleType Maneuver::bicycle_type() const {
   return bicycle_type_;
 }
 
-void Maneuver::set_bicycle_type(TripPath_BicycleType bicycle_type) {
+void Maneuver::set_bicycle_type(TripLeg_BicycleType bicycle_type) {
   bicycle_type_ = bicycle_type;
 }
 
-TripPath_TransitType Maneuver::transit_type() const {
+TripLeg_TransitType Maneuver::transit_type() const {
   return transit_type_;
 }
 
-void Maneuver::set_transit_type(TripPath_TransitType transit_type) {
+void Maneuver::set_transit_type(TripLeg_TransitType transit_type) {
   transit_type_ = transit_type;
 }
 
@@ -667,9 +748,9 @@ void Maneuver::set_bus(bool bus) {
 }
 
 bool Maneuver::IsTransit() const {
-  return ((type_ == TripDirections_Maneuver_Type_kTransit) ||
-          (type_ == TripDirections_Maneuver_Type_kTransitTransfer) ||
-          (type_ == TripDirections_Maneuver_Type_kTransitRemainOn));
+  return ((type_ == DirectionsLeg_Maneuver_Type_kTransit) ||
+          (type_ == DirectionsLeg_Maneuver_Type_kTransitTransfer) ||
+          (type_ == DirectionsLeg_Maneuver_Type_kTransitRemainOn));
 }
 
 const TransitRouteInfo& Maneuver::transit_info() const {
@@ -918,8 +999,8 @@ std::string Maneuver::ToParameterString() const {
   std::string man_str;
   man_str.reserve(256);
 
-  man_str += "TripDirections_Maneuver_Type_";
-  man_str += TripDirections_Maneuver_Type_Name(type_);
+  man_str += "DirectionsLeg_Maneuver_Type_";
+  man_str += DirectionsLeg_Maneuver_Type_Name(type_);
 
   man_str += delim;
   man_str += street_names_->ToParameterString();
@@ -948,8 +1029,8 @@ std::string Maneuver::ToParameterString() const {
   man_str += relative_direction_string.find(static_cast<int>(begin_relative_direction_))->second;
 
   man_str += delim;
-  man_str += "TripDirections_Maneuver_CardinalDirection_";
-  man_str += TripDirections_Maneuver_CardinalDirection_Name(begin_cardinal_direction_);
+  man_str += "DirectionsLeg_Maneuver_CardinalDirection_";
+  man_str += DirectionsLeg_Maneuver_CardinalDirection_Name(begin_cardinal_direction_);
 
   man_str += delim;
   man_str += std::to_string(begin_heading_);
@@ -1051,8 +1132,8 @@ std::string Maneuver::ToParameterString() const {
   man_str += std::to_string(verbal_multi_cue_);
 
   //  man_str += delim;
-  //  man_str += "TripPath_TravelMode_";
-  //  man_str += TripPath_TravelMode_descriptor()
+  //  man_str += "TripLeg_TravelMode_";
+  //  man_str += TripLeg_TravelMode_descriptor()
   //      ->FindValueByNumber(travel_mode_)->name();
   //  bool rail_;
   //  bool bus_;

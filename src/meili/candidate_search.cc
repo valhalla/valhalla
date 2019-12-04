@@ -2,6 +2,8 @@
 #include "baldr/tilehierarchy.h"
 #include "meili/geometry_helpers.h"
 
+using namespace valhalla::midgard;
+
 namespace valhalla {
 
 namespace meili {
@@ -30,7 +32,7 @@ CandidateQuery::WithinSquaredDistance(const midgard::PointLL& location,
                                       sif::EdgeFilter edgefilter) const {
   std::vector<baldr::PathLocation> candidates;
   std::unordered_set<baldr::GraphId> visited_nodes;
-  DistanceApproximator approximator(location);
+  midgard::projector_t projector(location);
   const baldr::GraphTile* tile = nullptr;
 
   for (auto it = edgeid_begin; it != edgeid_end; it++) {
@@ -45,18 +47,16 @@ CandidateQuery::WithinSquaredDistance(const midgard::PointLL& location,
     if (!opp_edgeid.Is_Valid()) {
       continue;
     }
-    const auto opp_edge = tile->directededge(opp_edgeid);
+    const auto* opp_edge = tile->directededge(opp_edgeid);
 
     // Make sure it's the last one since we need the tile of this edge
-    const auto edge = reader_.directededge(edgeid, tile);
+    const auto* edge = reader_.directededge(edgeid, tile);
     if (!edge) {
       continue;
     }
 
-    // NOTE a pointer to edgeinfo is needed here because it returns
-    // an unique ptr
-    const auto edgeinfo = tile->edgeinfo(edge->edgeinfo_offset());
-    const auto& shape = edgeinfo.shape();
+    // Get at the shape
+    auto shape = tile->edgeinfo(edge->edgeinfo_offset()).lazy_shape();
     if (shape.empty()) {
       // Otherwise Project will fail
       continue;
@@ -65,7 +65,7 @@ CandidateQuery::WithinSquaredDistance(const midgard::PointLL& location,
     // Projection information
     midgard::PointLL point;
     float sq_distance = 0.f;
-    decltype(shape.size()) segment;
+    size_t segment;
     float offset;
 
     baldr::GraphId snapped_node;
@@ -75,7 +75,7 @@ CandidateQuery::WithinSquaredDistance(const midgard::PointLL& location,
     const bool edge_included = !edgefilter || edgefilter(edge) != 0.f;
 
     if (edge_included) {
-      std::tie(point, sq_distance, segment, offset) = helpers::Project(location, shape, approximator);
+      std::tie(point, sq_distance, segment, offset) = helpers::Project(projector, shape);
 
       if (sq_distance <= sq_search_radius) {
         const float dist = edge->forward() ? offset : 1.f - offset;
@@ -92,9 +92,9 @@ CandidateQuery::WithinSquaredDistance(const midgard::PointLL& location,
 
     // Correlate its opp edge
     if (oppedge_included) {
+      // No need to project again if we already did it above
       if (!edge_included) {
-        std::tie(point, sq_distance, segment, offset) =
-            helpers::Project(location, shape, approximator);
+        std::tie(point, sq_distance, segment, offset) = helpers::Project(projector, shape);
       }
       if (sq_distance <= sq_search_radius) {
         const float dist = opp_edge->forward() ? offset : 1.f - offset;

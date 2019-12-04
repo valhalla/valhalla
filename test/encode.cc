@@ -12,11 +12,12 @@ namespace {
 
 using container_t = std::vector<std::pair<double, double>>;
 
-bool appx_equal(const container_t& a, const container_t& b) {
+bool appx_equal(const container_t& a, const container_t& b, const float epsilon = 0.00001f) {
   if (a.size() != b.size())
     return false;
   for (size_t i = 0; i < a.size(); ++i) {
-    if (!equal(a[i].first, b[i].first) || !equal(a[i].second, b[i].second))
+    if (!equal<float>(a[i].first, b[i].first, epsilon) ||
+        !equal<float>(a[i].second, b[i].second, epsilon))
       return false;
   }
   return true;
@@ -51,12 +52,46 @@ void do_polyline_pair(const container_t& points, const std::string& encoded) {
     throw std::runtime_error("Nested polyline decoding of an encoding failed");*/
 }
 
+void do_polyline_pair5(const container_t& points, const std::string& encoded) {
+  auto enc_answer = encode<container_t>(points, 1e5);
+  if (enc_answer != encoded)
+    throw std::runtime_error("Simple polyline encoding failed. Expected: " + encoded +
+                             " Got: " + enc_answer);
+
+  // Decode the answer, use a lower epsilon when comparing
+  auto dec_answer = decode<container_t>(enc_answer, 1e-5);
+  if (!appx_equal(dec_answer, points, 0.00005f))
+    throw std::runtime_error("Simple polyline decoding failed. Expected: " + to_string(points) +
+                             " Got: " + to_string(dec_answer));
+}
+
 void do_varint_pair(const container_t& points) {
   auto enc_answer = encode7<container_t>(points);
   auto dec_answer = decode7<container_t>(enc_answer);
   if (!appx_equal(dec_answer, points))
     throw std::runtime_error("Simple varint encode decode loop failed. Expected: " +
                              to_string(points) + " Got: " + to_string(dec_answer));
+}
+
+void test_polyline5() {
+  // check an easy case first just to be sure its working
+  auto encoded = encode<container_t>({{-76.3002, 40.0433}, {-76.3036, 40.043}}, 1e5);
+  if (encoded != "s}ksFfkupMz@fT")
+    throw std::runtime_error("Expected: s}ksFfkupMz@fT but got: " + encoded);
+
+  do_polyline_pair5({{41.37084, -5.03016}, {76.8342, 42.01251}}, "pmu]wfo{Fw_c~G_mmwE");
+
+  do_polyline_pair5(
+      {{-9.42372, 152.03805},
+       {-1.82375, 116.05687},
+       {-71.41203, -66.66489},
+       {65.64729, 68.17239},
+       {34.2284, -77.90916},
+       {-72.90402, -47.25247},
+       {-78.55439, -25.28158},
+       {-31.92992, 103.20477},
+       {58.26482, -169.02219}},
+      "y|}~[fqox@jqrzEyjkm@~yfza@vmvgL}k~uXwkpcYrprzZ`ow~DisbzDrh{lSaebeCxqna@u~eoW}iq{Gnip|r@cdoeP");
 }
 
 void test_polyline() {
@@ -601,6 +636,7 @@ int main() {
   test::suite suite("encode_decode");
 
   suite.test(TEST_CASE(test_polyline));
+  suite.test(TEST_CASE(test_polyline5));
   suite.test(TEST_CASE(test_varint));
 
   return suite.tear_down();

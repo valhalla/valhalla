@@ -16,6 +16,7 @@
 #endif
 
 using namespace std;
+using namespace valhalla::midgard;
 using namespace valhalla::mjolnir;
 using namespace valhalla::baldr;
 
@@ -25,10 +26,12 @@ const std::string config_file = "test/test_config_ut";
 std::string ways_file = "test_ways_utrecht.bin";
 std::string way_nodes_file = "test_way_nodes_utrecht.bin";
 std::string access_file = "test_access_utrecht.bin";
-std::string restriction_file = "test_complex_restrictions_utrecht.bin";
+std::string from_restriction_file = "test_from_complex_restrictions_utrecht.bin";
+std::string to_restriction_file = "test_to_complex_restrictions_utrecht.bin";
+std::string bss_file = "test_bss_nodes_utrecht.bin";
 
 const auto node_predicate = [](const OSMWayNode& a, const OSMWayNode& b) {
-  return a.node.osmid < b.node.osmid;
+  return a.node.osmid_ < b.node.osmid_;
 };
 
 OSMNode GetNode(uint64_t node_id, sequence<OSMWayNode>& way_nodes) {
@@ -40,7 +43,7 @@ OSMNode GetNode(uint64_t node_id, sequence<OSMWayNode>& way_nodes) {
 
 auto way_predicate = [](const OSMWay& a, const OSMWay& b) { return a.osmwayid_ < b.osmwayid_; };
 
-OSMWay GetWay(uint64_t way_id, sequence<OSMWay>& ways) {
+OSMWay GetWay(uint32_t way_id, sequence<OSMWay>& ways) {
   auto found = ways.find({way_id}, way_predicate);
   if (found == ways.end())
     throw std::runtime_error("Couldn't find way: " + std::to_string(way_id));
@@ -52,7 +55,8 @@ void Parse() {
   conf.put<std::string>("mjolnir.tile_dir", "test/data/parser_tiles");
   auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"),
                                        {VALHALLA_SOURCE_DIR "test/data/utrecht_netherlands.osm.pbf"},
-                                       ways_file, way_nodes_file, access_file, restriction_file);
+                                       ways_file, way_nodes_file, access_file, from_restriction_file,
+                                       to_restriction_file, bss_file);
 }
 
 void TestBike() {
@@ -157,6 +161,8 @@ void TearDown() {
   boost::filesystem::remove(ways_file);
   boost::filesystem::remove(way_nodes_file);
   boost::filesystem::remove(access_file);
+  boost::filesystem::remove(from_restriction_file);
+  boost::filesystem::remove(to_restriction_file);
 }
 
 } // namespace

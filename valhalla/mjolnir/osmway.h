@@ -18,7 +18,7 @@ struct OSMWay {
    * Set way id.
    * @param   id  way id
    */
-  void set_way_id(const uint64_t id) {
+  void set_way_id(const uint32_t id) {
     osmwayid_ = id;
   }
 
@@ -26,7 +26,7 @@ struct OSMWay {
    * Get the way id
    * @return  Returns way id.
    */
-  uint64_t way_id() const {
+  uint32_t way_id() const {
     return osmwayid_;
   }
 
@@ -373,48 +373,48 @@ struct OSMWay {
    * @param  idx  Index for the name of the national bike network.
    */
   void set_bike_national_ref_index(const uint32_t idx) {
-    bike_national_ref_index_ = idx;
+    ; // bike_national_ref_index_ = idx; UNUSED - future
   }
 
   /**
    * Get the bike national ref index.
    * @return  Returns the index for the national bike network name.
    */
-  uint32_t bike_national_ref_index() const {
-    return bike_national_ref_index_;
-  }
+  //  uint32_t bike_national_ref_index() const {
+  //    return bike_national_ref_index_;
+  //  }
 
   /**
    * Sets the index for bike regional ref.
    * @param  idx  Index for the name of the regional bike network.
    */
   void set_bike_regional_ref_index(const uint32_t idx) {
-    bike_regional_ref_index_ = idx;
+    ; // bike_regional_ref_index_ = idx; UNUSED - future
   }
 
   /**
    * Get the bike regional ref index.
    * @return  Returns the index for the regional bike network name.
    */
-  uint32_t bike_regional_ref_index() const {
-    return bike_regional_ref_index_;
-  }
+  //  uint32_t bike_regional_ref_index() const {
+  //    return bike_regional_ref_index_;
+  //  }
 
   /**
    * Sets the index for bike local ref.
    * @param  idx  Index for the name of the local bike network.
    */
   void set_bike_local_ref_index(const uint32_t idx) {
-    bike_local_ref_index_ = idx;
+    ; // bike_local_ref_index_ = idx; UNUSED - future
   }
 
   /**
    * Get the bike local ref index.
    * @return  Returns the index for the local bike network name.
    */
-  uint32_t bike_local_ref_index() const {
-    return bike_local_ref_index_;
-  }
+  //  uint32_t bike_local_ref_index() const {
+  //    return bike_local_ref_index_;
+  //  }
 
   /**
    * Sets the duration for ferries.
@@ -437,7 +437,7 @@ struct OSMWay {
    * @param  auto_forward   Can you drive in the forward direction?
    */
   void set_auto_forward(const bool auto_forward) {
-    access_.fields.auto_forward = auto_forward;
+    auto_forward_ = auto_forward;
   }
 
   /**
@@ -445,7 +445,7 @@ struct OSMWay {
    * @return  Returns auto forward flag.
    */
   bool auto_forward() const {
-    return access_.fields.auto_forward;
+    return auto_forward_;
   }
 
   /**
@@ -453,7 +453,7 @@ struct OSMWay {
    * @param  bus_forward   Can a bus drive in the forward direction?
    */
   void set_bus_forward(const bool bus_forward) {
-    access_.fields.bus_forward = bus_forward;
+    bus_forward_ = bus_forward;
   }
 
   /**
@@ -461,7 +461,7 @@ struct OSMWay {
    * @return  Returns bus forward flag.
    */
   bool bus_forward() const {
-    return access_.fields.bus_forward;
+    return bus_forward_;
   }
 
   /**
@@ -469,7 +469,7 @@ struct OSMWay {
    * @param  taxi_forward   Can a taxi drive in the forward direction?
    */
   void set_taxi_forward(const bool taxi_forward) {
-    access_.fields.taxi_forward = taxi_forward;
+    taxi_forward_ = taxi_forward;
   }
 
   /**
@@ -477,7 +477,7 @@ struct OSMWay {
    * @return  Returns taxi forward flag.
    */
   bool taxi_forward() const {
-    return access_.fields.taxi_forward;
+    return taxi_forward_;
   }
 
   /**
@@ -485,7 +485,7 @@ struct OSMWay {
    * @param  hov_forward   hov in the forward direction?
    */
   void set_hov_forward(const bool hov_forward) {
-    access_.fields.hov_forward = hov_forward;
+    hov_forward_ = hov_forward;
   }
 
   /**
@@ -493,7 +493,7 @@ struct OSMWay {
    * @return  Returns hov forward flag.
    */
   bool hov_forward() const {
-    return access_.fields.hov_forward;
+    return hov_forward_;
   }
 
   /**
@@ -501,7 +501,7 @@ struct OSMWay {
    * @param  truck_forward   Can a truck drive in the forward direction?
    */
   void set_truck_forward(const bool truck_forward) {
-    access_.fields.truck_forward = truck_forward;
+    truck_forward_ = truck_forward;
   }
 
   /**
@@ -509,7 +509,7 @@ struct OSMWay {
    * @return  Returns truck forward flag.
    */
   bool truck_forward() const {
-    return access_.fields.truck_forward;
+    return truck_forward_;
   }
 
   /**
@@ -517,7 +517,7 @@ struct OSMWay {
    * @param  bike_forward   Can you bike in the forward direction?
    */
   void set_bike_forward(const bool bike_forward) {
-    bike_info_.fields.bike_forward = bike_forward;
+    bike_forward_ = bike_forward;
   }
 
   /**
@@ -525,7 +525,7 @@ struct OSMWay {
    * @return  Returns bike forward flag.
    */
   bool bike_forward() const {
-    return bike_info_.fields.bike_forward;
+    return bike_forward_;
   }
 
   /**
@@ -534,7 +534,7 @@ struct OSMWay {
    *                             the forward direction?
    */
   void set_emergency_forward(const bool emergency_forward) {
-    access_.fields.emergency_forward = emergency_forward;
+    emergency_forward_ = emergency_forward;
   }
 
   /**
@@ -542,7 +542,7 @@ struct OSMWay {
    * @return  Returns emergency forward flag.
    */
   bool emergency_forward() const {
-    return access_.fields.emergency_forward;
+    return emergency_forward_;
   }
 
   /**
@@ -550,7 +550,7 @@ struct OSMWay {
    * @param  moped_forward  Can a moped drive in the forward direction?
    */
   void set_moped_forward(const bool moped_forward) {
-    access_.fields.moped_forward = moped_forward;
+    moped_forward_ = moped_forward;
   }
 
   /**
@@ -558,7 +558,7 @@ struct OSMWay {
    * @return  Returns the moped forward flag
    */
   bool moped_forward() const {
-    return access_.fields.moped_forward;
+    return moped_forward_;
   }
 
   /**
@@ -566,7 +566,7 @@ struct OSMWay {
    * @param  motorcycle_forward  Can a motorcycle drive in the forward direction?
    */
   void set_motorcycle_forward(const bool motorcycle_forward) {
-    access_.fields.motorcycle_forward = motorcycle_forward;
+    motorcycle_forward_ = motorcycle_forward;
   }
 
   /**
@@ -574,7 +574,7 @@ struct OSMWay {
    * @return  Returns the motorcycle forward flag
    */
   bool motorcycle_forward() const {
-    return access_.fields.motorcycle_forward;
+    return motorcycle_forward_;
   }
 
   /**
@@ -582,7 +582,7 @@ struct OSMWay {
    * @param  auto_backward   Can you drive in the reverse direction?
    */
   void set_auto_backward(const bool auto_backward) {
-    access_.fields.auto_backward = auto_backward;
+    auto_backward_ = auto_backward;
   }
 
   /**
@@ -590,7 +590,7 @@ struct OSMWay {
    * @return  Returns auto backward flag.
    */
   bool auto_backward() const {
-    return access_.fields.auto_backward;
+    return auto_backward_;
   }
 
   /**
@@ -598,7 +598,7 @@ struct OSMWay {
    * @param  bus_backward   Can you take a bus in the reverse direction?
    */
   void set_bus_backward(const bool bus_backward) {
-    access_.fields.bus_backward = bus_backward;
+    bus_backward_ = bus_backward;
   }
 
   /**
@@ -606,7 +606,7 @@ struct OSMWay {
    * @return  Returns bus backward flag.
    */
   bool bus_backward() const {
-    return access_.fields.bus_backward;
+    return bus_backward_;
   }
 
   /**
@@ -614,7 +614,7 @@ struct OSMWay {
    * @param  taxi_backward   Can take a taxi in the reverse direction?
    */
   void set_taxi_backward(const bool taxi_backward) {
-    access_.fields.taxi_backward = taxi_backward;
+    taxi_backward_ = taxi_backward;
   }
 
   /**
@@ -622,7 +622,7 @@ struct OSMWay {
    * @return  Returns taxi backward flag.
    */
   bool taxi_backward() const {
-    return access_.fields.taxi_backward;
+    return taxi_backward_;
   }
 
   /**
@@ -630,7 +630,7 @@ struct OSMWay {
    * @param  hov_backward   hov in the reverse direction?
    */
   void set_hov_backward(const bool hov_backward) {
-    access_.fields.hov_backward = hov_backward;
+    hov_backward_ = hov_backward;
   }
 
   /**
@@ -638,7 +638,7 @@ struct OSMWay {
    * @return  Returns hov backward flag.
    */
   bool hov_backward() const {
-    return access_.fields.hov_backward;
+    return hov_backward_;
   }
 
   /**
@@ -646,7 +646,7 @@ struct OSMWay {
    * @param  truck_backward   Can you drive in the reverse direction?
    */
   void set_truck_backward(const bool truck_backward) {
-    access_.fields.truck_backward = truck_backward;
+    truck_backward_ = truck_backward;
   }
 
   /**
@@ -654,7 +654,7 @@ struct OSMWay {
    * @return  Returns truck backward flag.
    */
   bool truck_backward() const {
-    return access_.fields.truck_backward;
+    return truck_backward_;
   }
 
   /**
@@ -662,7 +662,7 @@ struct OSMWay {
    * @param  bike_backward   Can you bike in the reverse direction?
    */
   void set_bike_backward(const bool bike_backward) {
-    bike_info_.fields.bike_backward = bike_backward;
+    bike_backward_ = bike_backward;
   }
 
   /**
@@ -670,7 +670,7 @@ struct OSMWay {
    * @return  Returns bike backward flag.
    */
   bool bike_backward() const {
-    return bike_info_.fields.bike_backward;
+    return bike_backward_;
   }
 
   /**
@@ -679,7 +679,7 @@ struct OSMWay {
    *                              in the reverse direction?
    */
   void set_emergency_backward(const bool emergency_backward) {
-    access_.fields.emergency_backward = emergency_backward;
+    emergency_backward_ = emergency_backward;
   }
 
   /**
@@ -687,7 +687,7 @@ struct OSMWay {
    * @return  Returns emergency backward flag.
    */
   bool emergency_backward() const {
-    return access_.fields.emergency_backward;
+    return emergency_backward_;
   }
 
   /**
@@ -696,7 +696,7 @@ struct OSMWay {
    *                         reverse direction?
    */
   void set_moped_backward(const bool moped_backward) {
-    access_.fields.moped_backward = moped_backward;
+    moped_backward_ = moped_backward;
   }
 
   /**
@@ -704,7 +704,7 @@ struct OSMWay {
    * @return  Returns moped backward flag.
    */
   bool moped_backward() const {
-    return access_.fields.moped_backward;
+    return moped_backward_;
   }
 
   /**
@@ -713,7 +713,7 @@ struct OSMWay {
    *                              reverse direction?
    */
   void set_motorcycle_backward(const bool motorcycle_backward) {
-    access_.fields.motorcycle_backward = motorcycle_backward;
+    motorcycle_backward_ = motorcycle_backward;
   }
 
   /**
@@ -721,7 +721,7 @@ struct OSMWay {
    * @return  Returns motorcycle backward flag.
    */
   bool motorcycle_backward() const {
-    return access_.fields.motorcycle_backward;
+    return motorcycle_backward_;
   }
 
   /**
@@ -729,7 +729,7 @@ struct OSMWay {
    * @param  destination_only   Is private?
    */
   void set_destination_only(const bool destination_only) {
-    attributes_.fields.destination_only = destination_only;
+    destination_only_ = destination_only;
   }
 
   /**
@@ -737,7 +737,7 @@ struct OSMWay {
    * @return  Returns private flag.
    */
   bool destination_only() const {
-    return attributes_.fields.destination_only;
+    return destination_only_;
   }
 
   /**
@@ -745,7 +745,7 @@ struct OSMWay {
    * @param  pedestrian   Are pedestrians allowed?
    */
   void set_pedestrian(const bool pedestrian) {
-    classification_.fields.pedestrian = pedestrian;
+    pedestrian_ = pedestrian;
   }
 
   /**
@@ -753,7 +753,7 @@ struct OSMWay {
    * @return  Returns pedestrian flag.
    */
   bool pedestrian() const {
-    return classification_.fields.pedestrian;
+    return pedestrian_;
   }
 
   /**
@@ -761,7 +761,7 @@ struct OSMWay {
    * @param  has_user_tags   Did a user enter the access tags?
    */
   void set_has_user_tags(const bool has_user_tags) {
-    classification_.fields.has_user_tags = has_user_tags;
+    has_user_tags_ = has_user_tags;
   }
 
   /**
@@ -769,7 +769,7 @@ struct OSMWay {
    * @return  Returns has_user_tags flag.
    */
   bool has_user_tags() const {
-    return classification_.fields.has_user_tags;
+    return has_user_tags_;
   }
 
   /**
@@ -777,7 +777,7 @@ struct OSMWay {
    * @param  no_thru_traffic   Traffic allowed?
    */
   void set_no_thru_traffic(const bool no_thru_traffic) {
-    attributes_.fields.no_thru_traffic = no_thru_traffic;
+    no_thru_traffic_ = no_thru_traffic;
   }
 
   /**
@@ -785,7 +785,7 @@ struct OSMWay {
    * @return  Returns no thru traffic flag.
    */
   bool no_thru_traffic() const {
-    return attributes_.fields.no_thru_traffic;
+    return no_thru_traffic_;
   }
 
   /**
@@ -793,7 +793,7 @@ struct OSMWay {
    * @param  oneway   Is oneway?
    */
   void set_oneway(const bool oneway) {
-    attributes_.fields.oneway = oneway;
+    oneway_ = oneway;
   }
 
   /**
@@ -801,7 +801,7 @@ struct OSMWay {
    * @return  Returns oneway flag.
    */
   bool oneway() const {
-    return attributes_.fields.oneway;
+    return oneway_;
   }
 
   /**
@@ -809,7 +809,7 @@ struct OSMWay {
    * @param  oneway_reverse
    */
   void set_oneway_reverse(const bool oneway_reverse) {
-    attributes_.fields.oneway_reverse = oneway_reverse;
+    oneway_reverse_ = oneway_reverse;
   }
 
   /**
@@ -817,7 +817,7 @@ struct OSMWay {
    * @return  Returns if oneway is reversed
    */
   bool oneway_reverse() const {
-    return attributes_.fields.oneway_reverse;
+    return oneway_reverse_;
   }
 
   /**
@@ -825,7 +825,7 @@ struct OSMWay {
    * @param  roundabout   Is a roundabout?
    */
   void set_roundabout(const bool roundabout) {
-    attributes_.fields.roundabout = roundabout;
+    roundabout_ = roundabout;
   }
 
   /**
@@ -833,7 +833,7 @@ struct OSMWay {
    * @return  Returns roundabout flag.
    */
   bool roundabout() const {
-    return attributes_.fields.roundabout;
+    return roundabout_;
   }
 
   /**
@@ -841,7 +841,7 @@ struct OSMWay {
    * @param  ferry   Is a ferry?
    */
   void set_ferry(const bool ferry) {
-    attributes_.fields.ferry = ferry;
+    ferry_ = ferry;
   }
 
   /**
@@ -849,7 +849,7 @@ struct OSMWay {
    * @return  Returns ferry flag.
    */
   bool ferry() const {
-    return attributes_.fields.ferry;
+    return ferry_;
   }
 
   /**
@@ -857,7 +857,7 @@ struct OSMWay {
    * @param  rail   Is a auto train?
    */
   void set_rail(const bool rail) {
-    attributes_.fields.rail = rail;
+    rail_ = rail;
   }
 
   /**
@@ -865,7 +865,7 @@ struct OSMWay {
    * @return  Returns rail flag.
    */
   bool rail() const {
-    return attributes_.fields.rail;
+    return rail_;
   }
 
   /**
@@ -873,7 +873,7 @@ struct OSMWay {
    * @param  surface
    */
   void set_surface(const baldr::Surface surface) {
-    attributes_.fields.surface = static_cast<uint8_t>(surface);
+    surface_ = static_cast<uint8_t>(surface);
   }
 
   /**
@@ -881,7 +881,7 @@ struct OSMWay {
    * @return  Returns Surface.
    */
   baldr::Surface surface() const {
-    return static_cast<baldr::Surface>(attributes_.fields.surface);
+    return static_cast<baldr::Surface>(surface_);
   }
 
   /**
@@ -889,7 +889,7 @@ struct OSMWay {
    * @param  sac_scale
    */
   void set_sac_scale(const baldr::SacScale sac_scale) {
-    attributes_.fields.sac_scale = static_cast<uint8_t>(sac_scale);
+    sac_scale_ = static_cast<uint8_t>(sac_scale);
   }
 
   /**
@@ -897,7 +897,7 @@ struct OSMWay {
    * @return  Returns sac_scale
    */
   baldr::SacScale sac_scale() const {
-    return static_cast<baldr::SacScale>(attributes_.fields.sac_scale);
+    return static_cast<baldr::SacScale>(sac_scale_);
   }
 
   /**
@@ -905,7 +905,7 @@ struct OSMWay {
    * @param  cyclelane
    */
   void set_cyclelane_right(const baldr::CycleLane cyclelane) {
-    bike_info_.fields.cycle_lane_right = static_cast<uint8_t>(cyclelane);
+    cycle_lane_right_ = static_cast<uint8_t>(cyclelane);
   }
 
   /**
@@ -913,7 +913,7 @@ struct OSMWay {
    * @return  Returns CycleLane on right.
    */
   baldr::CycleLane cyclelane_right() const {
-    return static_cast<baldr::CycleLane>(bike_info_.fields.cycle_lane_right);
+    return static_cast<baldr::CycleLane>(cycle_lane_right_);
   }
 
   /**
@@ -921,7 +921,7 @@ struct OSMWay {
    * @param  cyclelane
    */
   void set_cyclelane_left(const baldr::CycleLane cyclelane) {
-    bike_info_.fields.cycle_lane_left = static_cast<uint8_t>(cyclelane);
+    cycle_lane_left_ = static_cast<uint8_t>(cyclelane);
   }
 
   /**
@@ -929,7 +929,7 @@ struct OSMWay {
    * @return  Returns CycleLane on left.
    */
   baldr::CycleLane cyclelane_left() const {
-    return static_cast<baldr::CycleLane>(bike_info_.fields.cycle_lane_left);
+    return static_cast<baldr::CycleLane>(cycle_lane_left_);
   }
 
   /**
@@ -937,7 +937,7 @@ struct OSMWay {
    * @param  cyclelane_opposite
    */
   void set_cyclelane_right_opposite(const bool cyclelane_opposite) {
-    bike_info_.fields.cycle_lane_right_opposite = cyclelane_opposite;
+    cycle_lane_right_opposite_ = cyclelane_opposite;
   }
 
   /**
@@ -945,7 +945,7 @@ struct OSMWay {
    * @return  Returns cycle_lane_right_opposite
    */
   bool cyclelane_right_opposite() const {
-    return bike_info_.fields.cycle_lane_right_opposite;
+    return cycle_lane_right_opposite_;
   }
 
   /**
@@ -953,7 +953,7 @@ struct OSMWay {
    * @param  cyclelane_opposite
    */
   void set_cyclelane_left_opposite(const bool cyclelane_opposite) {
-    bike_info_.fields.cycle_lane_left_opposite = cyclelane_opposite;
+    cycle_lane_left_opposite_ = cyclelane_opposite;
   }
 
   /**
@@ -961,7 +961,7 @@ struct OSMWay {
    * @return  Returns cycle_lane_left_opposite
    */
   bool cyclelane_left_opposite() const {
-    return bike_info_.fields.cycle_lane_left_opposite;
+    return cycle_lane_left_opposite_;
   }
 
   /**
@@ -969,7 +969,7 @@ struct OSMWay {
    * @param  shoulder  True if edge has shoulder on right
    */
   void set_shoulder_right(const bool shoulder_right) {
-    bike_info_.fields.shoulder_right = shoulder_right;
+    shoulder_right_ = shoulder_right;
   }
 
   /**
@@ -977,7 +977,7 @@ struct OSMWay {
    * @return  Returns if edge has a shoulder on right
    */
   bool shoulder_right() const {
-    return bike_info_.fields.shoulder_right;
+    return shoulder_right_;
   }
 
   /**
@@ -985,7 +985,7 @@ struct OSMWay {
    * @param  shoulder  True if edge has shoulder on left
    */
   void set_shoulder_left(const bool shoulder_left) {
-    bike_info_.fields.shoulder_left = shoulder_left;
+    shoulder_left_ = shoulder_left;
   }
 
   /**
@@ -993,7 +993,7 @@ struct OSMWay {
    * @return  Returns if edge has a shoulder on left
    */
   bool shoulder_left() const {
-    return bike_info_.fields.shoulder_left;
+    return shoulder_left_;
   }
 
   /**
@@ -1001,7 +1001,7 @@ struct OSMWay {
    * @param  dismount  Whether a cyclist needs to dismount or not
    */
   void set_dismount(const bool dismount) {
-    bike_info_.fields.dismount = dismount;
+    dismount_ = dismount;
   }
 
   /**
@@ -1009,7 +1009,7 @@ struct OSMWay {
    * @return  Returns dismount
    */
   bool dismount() const {
-    return bike_info_.fields.dismount;
+    return dismount_;
   }
 
   /**
@@ -1018,7 +1018,7 @@ struct OSMWay {
    * @param  use_sidepath
    */
   void set_use_sidepath(const bool use_sidepath) {
-    bike_info_.fields.use_sidepath = use_sidepath;
+    use_sidepath_ = use_sidepath;
   }
 
   /*
@@ -1027,7 +1027,7 @@ struct OSMWay {
    * @return  Returns if using a sidepath is preffered
    */
   bool use_sidepath() const {
-    return bike_info_.fields.use_sidepath;
+    return use_sidepath_;
   }
 
   /**
@@ -1041,7 +1041,7 @@ struct OSMWay {
    * @return  Returns number of lanes.
    */
   uint32_t lanes() const {
-    return classification_.fields.lanes;
+    return lanes_;
   }
 
   /**
@@ -1055,7 +1055,7 @@ struct OSMWay {
    * @return  Returns number of backward lanes.
    */
   uint32_t backward_lanes() const {
-    return classification_.fields.backward_lanes;
+    return backward_lanes_;
   }
 
   /**
@@ -1069,7 +1069,7 @@ struct OSMWay {
    * @return  Returns number of forward lanes.
    */
   uint32_t forward_lanes() const {
-    return classification_.fields.forward_lanes;
+    return forward_lanes_;
   }
 
   /**
@@ -1077,7 +1077,7 @@ struct OSMWay {
    * @param  tunnel   Is a tunnel road?
    */
   void set_tunnel(const bool tunnel) {
-    attributes_.fields.tunnel = tunnel;
+    tunnel_ = tunnel;
   }
 
   /**
@@ -1085,7 +1085,7 @@ struct OSMWay {
    * @return  Returns tunnel flag.
    */
   bool tunnel() const {
-    return attributes_.fields.tunnel;
+    return tunnel_;
   }
 
   /**
@@ -1093,7 +1093,7 @@ struct OSMWay {
    * @param  toll   Is a toll road?
    */
   void set_toll(const bool toll) {
-    attributes_.fields.toll = toll;
+    toll_ = toll;
   }
 
   /**
@@ -1101,7 +1101,7 @@ struct OSMWay {
    * @return  Returns toll flag.
    */
   bool toll() const {
-    return attributes_.fields.toll;
+    return toll_;
   }
 
   /**
@@ -1109,7 +1109,7 @@ struct OSMWay {
    * @param  bridge   Is a bridge?
    */
   void set_bridge(const bool bridge) {
-    attributes_.fields.bridge = bridge;
+    bridge_ = bridge;
   }
 
   /**
@@ -1117,7 +1117,7 @@ struct OSMWay {
    * @return  Returns bridge flag.
    */
   bool bridge() const {
-    return attributes_.fields.bridge;
+    return bridge_;
   }
 
   /**
@@ -1125,7 +1125,7 @@ struct OSMWay {
    * @param  seasonal   Is this seasonal?
    */
   void set_seasonal(const bool seasonal) {
-    attributes_.fields.seasonal = seasonal;
+    seasonal_ = seasonal;
   }
 
   /**
@@ -1133,7 +1133,7 @@ struct OSMWay {
    * @return  Returns seasonal flag.
    */
   bool seasonal() const {
-    return attributes_.fields.seasonal;
+    return seasonal_;
   }
 
   /**
@@ -1141,7 +1141,7 @@ struct OSMWay {
    * @param  wheelchair   Is this wheelchair?
    */
   void set_wheelchair(const bool wheelchair) {
-    classification_.fields.wheelchair = wheelchair;
+    wheelchair_ = wheelchair;
   }
 
   /**
@@ -1149,7 +1149,7 @@ struct OSMWay {
    * @return  Returns wheelchair flag.
    */
   bool wheelchair() const {
-    return classification_.fields.wheelchair;
+    return wheelchair_;
   }
 
   /**
@@ -1157,7 +1157,7 @@ struct OSMWay {
    * @param  wheelchair_tag   Did the user set the wheelchair_tag?
    */
   void set_wheelchair_tag(const bool wheelchair_tag) {
-    classification_.fields.wheelchair_tag = wheelchair_tag;
+    wheelchair_tag_ = wheelchair_tag;
   }
 
   /**
@@ -1165,7 +1165,7 @@ struct OSMWay {
    * @return  Returns wheelchair_tag flag.
    */
   bool wheelchair_tag() const {
-    return classification_.fields.wheelchair_tag;
+    return wheelchair_tag_;
   }
 
   /**
@@ -1173,7 +1173,7 @@ struct OSMWay {
    * @param  sidewalk_left   Is there a sidewalk on the left?
    */
   void set_sidewalk_left(const bool sidewalk_left) {
-    attributes_.fields.sidewalk_left = sidewalk_left;
+    sidewalk_left_ = sidewalk_left;
   }
 
   /**
@@ -1181,7 +1181,7 @@ struct OSMWay {
    * @return  Returns sidewalk_left flag.
    */
   bool sidewalk_left() const {
-    return attributes_.fields.sidewalk_left;
+    return sidewalk_left_;
   }
 
   /**
@@ -1189,7 +1189,7 @@ struct OSMWay {
    * @param  sidewalk_right   Is there a sidewalk on the right?
    */
   void set_sidewalk_right(const bool sidewalk_right) {
-    attributes_.fields.sidewalk_right = sidewalk_right;
+    sidewalk_right_ = sidewalk_right;
   }
 
   /**
@@ -1197,7 +1197,7 @@ struct OSMWay {
    * @return  Returns sidewalk_right flag.
    */
   bool sidewalk_right() const {
-    return attributes_.fields.sidewalk_right;
+    return sidewalk_right_;
   }
 
   /**
@@ -1205,7 +1205,7 @@ struct OSMWay {
    * @param  drive_on_right   Is a country that we drive on the right?
    */
   void set_drive_on_right(const bool drive_on_right) {
-    attributes_.fields.drive_on_right = drive_on_right;
+    drive_on_right_ = drive_on_right;
   }
 
   /**
@@ -1213,7 +1213,7 @@ struct OSMWay {
    * @return  Returns drive on right flag.
    */
   bool drive_on_right() const {
-    return attributes_.fields.drive_on_right;
+    return drive_on_right_;
   }
 
   /**
@@ -1221,7 +1221,7 @@ struct OSMWay {
    * @param  bike_network Mask of the bike networks (ncn/rcn/lcn).
    */
   void set_bike_network(const uint32_t bike_network) {
-    attributes_.fields.bike_network = bike_network;
+    bike_network_ = bike_network;
   }
 
   /**
@@ -1229,7 +1229,7 @@ struct OSMWay {
    * @return  Returns the bike network mask.
    */
   uint32_t bike_network() const {
-    return attributes_.fields.bike_network;
+    return bike_network_;
   }
 
   /**
@@ -1237,7 +1237,7 @@ struct OSMWay {
    * @param  exit       Exit flag.
    */
   void set_exit(const bool exit) {
-    attributes_.fields.exit = exit;
+    exit_ = exit;
   }
 
   /**
@@ -1245,7 +1245,7 @@ struct OSMWay {
    * @return  Returns exit flag.
    */
   bool exit() const {
-    return attributes_.fields.exit;
+    return exit_;
   }
 
   /**
@@ -1253,7 +1253,7 @@ struct OSMWay {
    * @param  tagged_speed  User specified speed?
    */
   void set_tagged_speed(const bool tagged_speed) {
-    attributes_.fields.tagged_speed = tagged_speed;
+    tagged_speed_ = tagged_speed;
   }
 
   /**
@@ -1261,7 +1261,7 @@ struct OSMWay {
    * @return  Returns tagged_speed flag.
    */
   bool tagged_speed() const {
-    return attributes_.fields.tagged_speed;
+    return tagged_speed_;
   }
 
   /**
@@ -1269,7 +1269,7 @@ struct OSMWay {
    * @param  forward_tagged_speed  User specified speed?
    */
   void set_forward_tagged_speed(const bool forward_tagged_speed) {
-    attributes_.fields.forward_tagged_speed = forward_tagged_speed;
+    forward_tagged_speed_ = forward_tagged_speed;
   }
 
   /**
@@ -1277,7 +1277,7 @@ struct OSMWay {
    * @return  Returns forward_tagged_speed flag.
    */
   bool forward_tagged_speed() const {
-    return attributes_.fields.forward_tagged_speed;
+    return forward_tagged_speed_;
   }
 
   /**
@@ -1285,7 +1285,7 @@ struct OSMWay {
    * @param  backward_tagged_speed  User specified speed?
    */
   void set_backward_tagged_speed(const bool backward_tagged_speed) {
-    attributes_.fields.backward_tagged_speed = backward_tagged_speed;
+    backward_tagged_speed_ = backward_tagged_speed;
   }
 
   /**
@@ -1293,7 +1293,7 @@ struct OSMWay {
    * @return  Returns backward_tagged_speed flag.
    */
   bool backward_tagged_speed() const {
-    return attributes_.fields.backward_tagged_speed;
+    return backward_tagged_speed_;
   }
 
   /**
@@ -1301,7 +1301,7 @@ struct OSMWay {
    * @param  tagged_lanes  User specified lanes?
    */
   void set_tagged_lanes(const bool tagged_lanes) {
-    attributes_.fields.tagged_lanes = tagged_lanes;
+    tagged_lanes_ = tagged_lanes;
   }
 
   /**
@@ -1309,7 +1309,7 @@ struct OSMWay {
    * @return  Returns tagged_lanes flag.
    */
   bool tagged_lanes() const {
-    return attributes_.fields.tagged_lanes;
+    return tagged_lanes_;
   }
 
   /**
@@ -1317,7 +1317,7 @@ struct OSMWay {
    * @param  forward_tagged_lanes  User specified lanes?
    */
   void set_forward_tagged_lanes(const bool forward_tagged_lanes) {
-    attributes_.fields.forward_tagged_lanes = forward_tagged_lanes;
+    forward_tagged_lanes_ = forward_tagged_lanes;
   }
 
   /**
@@ -1325,7 +1325,7 @@ struct OSMWay {
    * @return  Returns forward_tagged_lanes flag.
    */
   bool forward_tagged_lanes() const {
-    return attributes_.fields.forward_tagged_lanes;
+    return forward_tagged_lanes_;
   }
 
   /**
@@ -1333,7 +1333,7 @@ struct OSMWay {
    * @param  backward_tagged_lanes  User specified lanes?
    */
   void set_backward_tagged_lanes(const bool backward_tagged_lanes) {
-    attributes_.fields.backward_tagged_lanes = backward_tagged_lanes;
+    backward_tagged_lanes_ = backward_tagged_lanes;
   }
 
   /**
@@ -1341,7 +1341,7 @@ struct OSMWay {
    * @return  Returns backward_tagged_lanes flag.
    */
   bool backward_tagged_lanes() const {
-    return attributes_.fields.backward_tagged_lanes;
+    return backward_tagged_lanes_;
   }
 
   /**
@@ -1350,7 +1350,7 @@ struct OSMWay {
    *                      or state truck network or designated truck way?
    */
   void set_truck_route(const bool truck_route) {
-    attributes_.fields.truck_route = truck_route;
+    truck_route_ = truck_route;
   }
 
   /**
@@ -1358,7 +1358,7 @@ struct OSMWay {
    * @return  Returns truck_route flag.
    */
   bool truck_route() const {
-    return attributes_.fields.truck_route;
+    return truck_route_;
   }
 
   /**
@@ -1366,7 +1366,7 @@ struct OSMWay {
    * @param  roadclass  Road Class/highway type.
    */
   void set_road_class(const baldr::RoadClass roadclass) {
-    classification_.fields.road_class = static_cast<uint8_t>(roadclass);
+    road_class_ = static_cast<uint8_t>(roadclass);
   }
 
   /**
@@ -1374,7 +1374,7 @@ struct OSMWay {
    * @return  Returns road class.
    */
   baldr::RoadClass road_class() const {
-    return static_cast<baldr::RoadClass>(classification_.fields.road_class);
+    return static_cast<baldr::RoadClass>(road_class_);
   }
 
   /**
@@ -1383,7 +1383,7 @@ struct OSMWay {
    *                        EmergencyAccess, DriveThru, Steps, and Other
    */
   void set_use(const baldr::Use use) {
-    classification_.fields.use = static_cast<uint8_t>(use);
+    use_ = static_cast<uint8_t>(use);
   }
 
   /**
@@ -1391,7 +1391,7 @@ struct OSMWay {
    * @return  Returns use.
    */
   baldr::Use use() const {
-    return static_cast<baldr::Use>(classification_.fields.use);
+    return static_cast<baldr::Use>(use_);
   }
 
   /**
@@ -1399,7 +1399,7 @@ struct OSMWay {
    * @param  link       Link.  Ramp or turn channel.
    */
   void set_link(const bool link) {
-    classification_.fields.link = link;
+    link_ = link;
   }
 
   /**
@@ -1407,7 +1407,7 @@ struct OSMWay {
    * @return  Returns link flag.
    */
   bool link() const {
-    return classification_.fields.link;
+    return link_;
   }
 
   /**
@@ -1415,7 +1415,7 @@ struct OSMWay {
    * @param  turn channel       Turn channel.
    */
   void set_turn_channel(const bool turn_channel) {
-    classification_.fields.turn_channel = turn_channel;
+    turn_channel_ = turn_channel;
   }
 
   /**
@@ -1423,23 +1423,20 @@ struct OSMWay {
    * @return  Returns turn channel flag.
    */
   bool turn_channel() const {
-    return classification_.fields.turn_channel;
+    return turn_channel_;
   }
 
   /**
    * Get the names for the edge info based on the road class.
    * @param  ref              updated refs from relations.
-   * @param  ref_offset_map   map of unique refs from ways.
-   * @param  name_offset_map  map of unique names from ways.
+   * @param  name_offset_map  map of unique names and refs from ways.
    * @return  Returns vector of strings
    */
-  std::vector<std::string> GetNames(const std::string& ref,
-                                    const UniqueNames& ref_offset_map,
-                                    const UniqueNames& name_offset_map,
-                                    uint16_t& types) const;
+  std::vector<std::string>
+  GetNames(const std::string& ref, const UniqueNames& name_offset_map, uint16_t& types) const;
 
   // OSM way Id
-  uint64_t osmwayid_;
+  uint32_t osmwayid_;
 
   // Reference name (highway numbers)
   uint32_t ref_index_;
@@ -1465,108 +1462,85 @@ struct OSMWay {
   uint32_t destination_street_to_index_;
   uint32_t junction_ref_index_;
 
-  // Bike network information
-  uint32_t bike_national_ref_index_;
-  uint32_t bike_regional_ref_index_;
-  uint32_t bike_local_ref_index_;
+  // Bike network information. TODO - these are not yet used.
+  //  uint32_t bike_national_ref_index_;
+  //  uint32_t bike_regional_ref_index_;
+  //  uint32_t bike_local_ref_index_;
 
   // duration of a ferry in seconds
   uint32_t duration_;
 
   // Way attributes
-  union WayAttributes {
-    struct Fields {
-      uint32_t destination_only : 1;
-      uint32_t no_thru_traffic : 1;
-      uint32_t oneway : 1;
-      uint32_t oneway_reverse : 1;
-      uint32_t roundabout : 1;
-      uint32_t ferry : 1;
-      uint32_t rail : 1;
-      uint32_t surface : 3;
-      uint32_t tunnel : 1;
-      uint32_t toll : 1;
-      uint32_t bridge : 1;
-      uint32_t seasonal : 1;
-      uint32_t drive_on_right : 1;
-      uint32_t bike_network : 4;
-      uint32_t exit : 1;
-      uint32_t tagged_speed : 1;
-      uint32_t forward_tagged_speed : 1;
-      uint32_t backward_tagged_speed : 1;
-      uint32_t tagged_lanes : 1;
-      uint32_t forward_tagged_lanes : 1;
-      uint32_t backward_tagged_lanes : 1;
-      uint32_t truck_route : 1;
-      uint32_t sidewalk_right : 1;
-      uint32_t sidewalk_left : 1;
-      uint32_t sac_scale : 3;
-    } fields;
-    uint32_t v;
-  };
-  WayAttributes attributes_;
+  uint32_t destination_only_ : 1;
+  uint32_t no_thru_traffic_ : 1;
+  uint32_t oneway_ : 1;
+  uint32_t oneway_reverse_ : 1;
+  uint32_t roundabout_ : 1;
+  uint32_t ferry_ : 1;
+  uint32_t rail_ : 1;
+  uint32_t surface_ : 3;
+  uint32_t tunnel_ : 1;
+  uint32_t toll_ : 1;
+  uint32_t bridge_ : 1;
+  uint32_t seasonal_ : 1;
+  uint32_t drive_on_right_ : 1;
+  uint32_t bike_network_ : 4;
+  uint32_t exit_ : 1;
+  uint32_t tagged_speed_ : 1;
+  uint32_t forward_tagged_speed_ : 1;
+  uint32_t backward_tagged_speed_ : 1;
+  uint32_t tagged_lanes_ : 1;
+  uint32_t forward_tagged_lanes_ : 1;
+  uint32_t backward_tagged_lanes_ : 1;
+  uint32_t truck_route_ : 1;
+  uint32_t sidewalk_right_ : 1;
+  uint32_t sidewalk_left_ : 1;
+  uint32_t sac_scale_ : 3;
 
-  union Classification {
-    struct Fields {
-      uint32_t road_class : 3; // Importance of the road/path
-      uint32_t link : 1;       // *link tag - Ramp or turn channel
-      uint32_t use : 6;        // Use / form
-      uint32_t lanes : 4;
-      uint32_t forward_lanes : 4;
-      uint32_t backward_lanes : 4;
-      uint32_t turn_channel : 1; // *link tag - turn channel (no ramp)
-      uint16_t wheelchair : 1;
-      uint16_t wheelchair_tag : 1;
-      uint32_t pedestrian : 1;
-      uint32_t has_user_tags : 1;
-      uint32_t spare : 5; // Spare
-    } fields;
-    uint32_t v;
-  };
-  Classification classification_;
+  // Classification
+  uint32_t road_class_ : 3; // Importance of the road/path
+  uint32_t link_ : 1;       // *link tag - Ramp or turn channel
+  uint32_t use_ : 6;        // Use / form
+  uint32_t lanes_ : 4;
+  uint32_t forward_lanes_ : 4;
+  uint32_t backward_lanes_ : 4;
+  uint32_t turn_channel_ : 1; // *link tag - turn channel (no ramp)
+  uint16_t wheelchair_ : 1;
+  uint16_t wheelchair_tag_ : 1;
+  uint32_t pedestrian_ : 1;
+  uint32_t has_user_tags_ : 1;
+  uint32_t spare0_ : 5; // Spare
 
   // Access
-  union WayAccess {
-    struct Fields {
-      uint16_t auto_forward : 1;
-      uint16_t bus_forward : 1;
-      uint16_t taxi_forward : 1;
-      uint16_t truck_forward : 1;
-      uint16_t motorcycle_forward : 1;
-      uint16_t emergency_forward : 1;
-      uint16_t hov_forward : 1;
-      uint16_t moped_forward : 1;
-      uint16_t auto_backward : 1;
-      uint16_t bus_backward : 1;
-      uint16_t taxi_backward : 1;
-      uint16_t truck_backward : 1;
-      uint16_t motorcycle_backward : 1;
-      uint16_t emergency_backward : 1;
-      uint16_t hov_backward : 1;
-      uint16_t moped_backward : 1;
-    } fields;
-    uint16_t v;
-  };
-  WayAccess access_;
+  uint16_t auto_forward_ : 1;
+  uint16_t bus_forward_ : 1;
+  uint16_t taxi_forward_ : 1;
+  uint16_t truck_forward_ : 1;
+  uint16_t motorcycle_forward_ : 1;
+  uint16_t emergency_forward_ : 1;
+  uint16_t hov_forward_ : 1;
+  uint16_t moped_forward_ : 1;
+  uint16_t auto_backward_ : 1;
+  uint16_t bus_backward_ : 1;
+  uint16_t taxi_backward_ : 1;
+  uint16_t truck_backward_ : 1;
+  uint16_t motorcycle_backward_ : 1;
+  uint16_t emergency_backward_ : 1;
+  uint16_t hov_backward_ : 1;
+  uint16_t moped_backward_ : 1;
 
   // Attributes specific to biking
-  union BikeInfo {
-    struct Fields {
-      uint16_t cycle_lane_right : 2;
-      uint16_t cycle_lane_left : 2;
-      uint16_t cycle_lane_right_opposite : 1;
-      uint16_t cycle_lane_left_opposite : 1;
-      uint16_t shoulder_right : 1;
-      uint16_t shoulder_left : 1;
-      uint16_t dismount : 1;
-      uint16_t use_sidepath : 1;
-      uint16_t bike_forward : 1;
-      uint16_t bike_backward : 1;
-      uint16_t spare : 4;
-    } fields;
-    uint16_t v;
-  };
-  BikeInfo bike_info_;
+  uint16_t cycle_lane_right_ : 2;
+  uint16_t cycle_lane_left_ : 2;
+  uint16_t cycle_lane_right_opposite_ : 1;
+  uint16_t cycle_lane_left_opposite_ : 1;
+  uint16_t shoulder_right_ : 1;
+  uint16_t shoulder_left_ : 1;
+  uint16_t dismount_ : 1;
+  uint16_t use_sidepath_ : 1;
+  uint16_t bike_forward_ : 1;
+  uint16_t bike_backward_ : 1;
+  uint16_t spare1_ : 4;
 
   uint16_t nodecount_;
 

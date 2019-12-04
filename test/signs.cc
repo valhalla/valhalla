@@ -12,62 +12,42 @@ using namespace valhalla::odin;
 
 namespace {
 
-void PopulateSigns(const std::vector<std::string>& sign_text_list,
-                   const std::vector<int>& consecutive_count_list,
+constexpr size_t TEXT = 0;
+constexpr size_t IS_ROUTE_NUMBER = 1;
+constexpr size_t CONSECUTIVE_COUNT = 2;
+
+void PopulateSigns(const std::vector<std::tuple<std::string, bool, uint32_t>>& sign_items,
                    std::vector<Sign>* sign_list) {
-  if (sign_text_list.size() != consecutive_count_list.size())
-    throw std::runtime_error("Invalid test input");
-
-  for (auto& sign_text : sign_text_list) {
-    sign_list->emplace_back(sign_text);
-  }
-
-  int i = 0;
-  for (auto& consecutive_count : consecutive_count_list) {
-    sign_list->at(i++).set_consecutive_count(consecutive_count);
+  for (auto& sign_item : sign_items) {
+    sign_list->emplace_back(std::get<TEXT>(sign_item), std::get<IS_ROUTE_NUMBER>(sign_item));
+    sign_list->back().set_consecutive_count(std::get<CONSECUTIVE_COUNT>(sign_item));
   }
 }
 
-Signs GetNumberSigns(const std::vector<std::string>& sign_text_list,
-                     const std::vector<int>& consecutive_count_list) {
-  if (sign_text_list.size() != consecutive_count_list.size())
-    throw std::runtime_error("Invalid test input");
-
+Signs GetNumberSigns(const std::vector<std::tuple<std::string, bool, uint32_t>>& sign_items) {
   Signs signs;
-  PopulateSigns(sign_text_list, consecutive_count_list, signs.mutable_exit_number_list());
+  PopulateSigns(sign_items, signs.mutable_exit_number_list());
 
   return signs;
 }
 
-Signs GetBranchSigns(const std::vector<std::string>& sign_text_list,
-                     const std::vector<int>& consecutive_count_list) {
-  if (sign_text_list.size() != consecutive_count_list.size())
-    throw std::runtime_error("Invalid test input");
-
+Signs GetBranchSigns(const std::vector<std::tuple<std::string, bool, uint32_t>>& sign_items) {
   Signs signs;
-  PopulateSigns(sign_text_list, consecutive_count_list, signs.mutable_exit_branch_list());
+  PopulateSigns(sign_items, signs.mutable_exit_branch_list());
 
   return signs;
 }
 
-Signs GetTowardSigns(const std::vector<std::string>& sign_text_list,
-                     const std::vector<int>& consecutive_count_list) {
-  if (sign_text_list.size() != consecutive_count_list.size())
-    throw std::runtime_error("Invalid test input");
-
+Signs GetTowardSigns(const std::vector<std::tuple<std::string, bool, uint32_t>>& sign_items) {
   Signs signs;
-  PopulateSigns(sign_text_list, consecutive_count_list, signs.mutable_exit_toward_list());
+  PopulateSigns(sign_items, signs.mutable_exit_toward_list());
 
   return signs;
 }
 
-Signs GetNameSigns(const std::vector<std::string>& sign_text_list,
-                   const std::vector<int>& consecutive_count_list) {
-  if (sign_text_list.size() != consecutive_count_list.size())
-    throw std::runtime_error("Invalid test input");
-
+Signs GetNameSigns(const std::vector<std::tuple<std::string, bool, uint32_t>>& sign_items) {
   Signs signs;
-  PopulateSigns(sign_text_list, consecutive_count_list, signs.mutable_exit_name_list());
+  PopulateSigns(sign_items, signs.mutable_exit_name_list());
 
   return signs;
 }
@@ -115,7 +95,8 @@ void TryGetExitNameString(const Signs& signs,
 void TestGetExitTowardString_PA283_onto_PA743() {
   // Create toward sign
   // Specify input in descending consecutive count order
-  Signs signs = GetTowardSigns({"Elizabethtown", "Hershey"}, {1, 0});
+  Signs signs =
+      GetTowardSigns({std::make_tuple("Elizabethtown", 0, 1), std::make_tuple("Hershey", 0, 0)});
 
   TryGetExitTowardString(signs, 4, false, "Elizabethtown/Hershey");
   TryGetExitTowardString(signs, 2, false, "Elizabethtown/Hershey");
@@ -128,7 +109,7 @@ void TestGetExitTowardString_PA283_onto_PA743() {
 void TestGetExitNumberString_I81S_onto_US322W() {
   // Create number sign
   // Specify input in descending consecutive count order
-  Signs signs = GetNumberSigns({"67B", "67A"}, {1, 0});
+  Signs signs = GetNumberSigns({std::make_tuple("67B", 0, 1), std::make_tuple("67A", 0, 0)});
 
   TryGetExitNumberString(signs, 4, false, "67B/67A");
   TryGetExitNumberString(signs, 2, false, "67B/67A");
@@ -143,8 +124,9 @@ void TestGetExitBranchString_I81S_onto_US322W() {
   // Create branch sign
   // Specify input in descending consecutive count order
   Signs signs =
-      GetBranchSigns({"US 322 West", "US 22 West", "US 22 East", "PA 230 East", "Cameron Street"},
-                     {2, 1, 0, 0, 0});
+      GetBranchSigns({std::make_tuple("US 322 West", 1, 2), std::make_tuple("US 22 West", 1, 1),
+                      std::make_tuple("US 22 East", 1, 0), std::make_tuple("PA 230 East", 1, 0),
+                      std::make_tuple("Cameron Street", 0, 0)});
 
   TryGetExitBranchString(signs, 0, false,
                          "US 322 West/US 22 West/US 22 East/PA 230 East/Cameron Street");
@@ -164,7 +146,9 @@ void TestGetExitBranchString_I81S_onto_US322W() {
 void TestGetExitTowardString_I81S_onto_US322W() {
   // Create toward sign
   // Specify input in descending consecutive count order
-  Signs signs = GetTowardSigns({"Lewistown", "State College", "Harrisburg"}, {1, 1, 0});
+  Signs signs =
+      GetTowardSigns({std::make_tuple("Lewistown", 0, 1), std::make_tuple("State College", 0, 1),
+                      std::make_tuple("Harrisburg", 0, 0)});
 
   TryGetExitTowardString(signs, 4, false, "Lewistown/State College/Harrisburg");
   TryGetExitTowardString(signs, 2, false, "Lewistown/State College");
@@ -178,7 +162,8 @@ void TestGetExitTowardString_I81S_onto_US322W() {
 void TestGetExitNameString() {
   // Create name sign
   // Specify input in descending consecutive count order
-  Signs signs = GetNameSigns({"Gettysburg Pike", "Harrisburg Pike"}, {1, 0});
+  Signs signs = GetNameSigns(
+      {std::make_tuple("Gettysburg Pike", 0, 1), std::make_tuple("Harrisburg Pike", 0, 0)});
 
   TryGetExitNameString(signs, 4, false, "Gettysburg Pike/Harrisburg Pike");
   TryGetExitNameString(signs, 2, false, "Gettysburg Pike/Harrisburg Pike");

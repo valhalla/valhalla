@@ -198,7 +198,7 @@ void start_service(zmq::context_t& context) {
       "loki": { "actions": [ "height" ],
                   "logging": { "long_request": 100.0 },
                   "service": { "proxy": "ipc:///tmp/test_skadi_proxy" },
-                "service_defaults": { "minimum_reachability": 50, "radius": 0} },
+                "service_defaults": { "minimum_reachability": 50, "radius": 0,"search_cutoff": 35000, "node_snap_tolerance": 5, "street_side_tolerance": 5, "heading_tolerance": 60} },
       "thor": { "service": { "proxy": "ipc:///tmp/test_skadi_thor_proxy" } },
       "httpd": { "service": { "loopback": "ipc:///tmp/test_skadi_results", "interrupt": "ipc:///tmp/test_skadi_interrupt" } },
       "additional_data": { "elevation": "test/data/service" },
@@ -213,7 +213,8 @@ void start_service(zmq::context_t& context) {
         "trace": { "max_best_paths": 4, "max_best_paths_shape": 100, "max_distance": 200000.0, "max_gps_accuracy": 100.0, "max_search_radius": 100, "max_shape": 16000 },
         "max_avoid_locations": 0,
         "max_reachability": 100,
-        "max_radius": 200
+        "max_radius": 200,
+        "max_alternates":2
       },
       "costing_options": { "auto": {}, "pedestrian": {} }
     })";

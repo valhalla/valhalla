@@ -50,11 +50,13 @@ public:
    * @return  Returns the path edges (and elapsed time/modes at end of
    *          each edge).
    */
-  std::vector<PathInfo> GetBestPath(odin::Location& origin,
-                                    odin::Location& dest,
-                                    baldr::GraphReader& graphreader,
-                                    const std::shared_ptr<sif::DynamicCost>* mode_costing,
-                                    const sif::TravelMode mode);
+  std::vector<std::vector<PathInfo>>
+  GetBestPath(valhalla::Location& origin,
+              valhalla::Location& dest,
+              baldr::GraphReader& graphreader,
+              const std::shared_ptr<sif::DynamicCost>* mode_costing,
+              const sif::TravelMode mode,
+              const Options& options = Options::default_instance());
 
   /**
    * Clear the temporary information generated during path construction.
@@ -64,10 +66,25 @@ public:
 protected:
   // Current walking distance.
   uint32_t walking_distance_;
+  bool has_date_time_;
+  int start_tz_index_; // Timezone at the start of the mm route
 
   uint32_t max_label_count_; // Max label count to allow
   sif::TravelMode mode_;     // Current travel mode
   uint8_t travel_type_;      // Current travel type
+
+  bool date_set_;
+  bool date_before_tile_;
+  bool disable_transit_;
+  uint32_t date_;
+  uint32_t dow_;
+  uint32_t day_;
+  uint32_t start_time_;
+  uint32_t max_seconds_;
+  uint32_t max_transfer_distance_;
+  std::string origin_date_time_;
+  std::unordered_map<std::string, uint32_t> operators_;
+  std::unordered_set<uint32_t> processed_tiles_;
 
   // Hierarchy limits.
   std::vector<sif::HierarchyLimits> hierarchy_limits_;
@@ -93,8 +110,8 @@ protected:
    * @param  destll  Lat,lng of the destination.
    * @param  costing Dynamic costing method.
    */
-  void Init(const PointLL& origll,
-            const PointLL& destll,
+  void Init(const midgard::PointLL& origll,
+            const midgard::PointLL& destll,
             const std::shared_ptr<sif::DynamicCost>& costing);
 
   /**
@@ -105,8 +122,8 @@ protected:
    * @param  costing      Dynamic costing.
    */
   void SetOrigin(baldr::GraphReader& graphreader,
-                 odin::Location& origin,
-                 const odin::Location& dest,
+                 valhalla::Location& origin,
+                 const valhalla::Location& dest,
                  const std::shared_ptr<sif::DynamicCost>& costing);
 
   /**
@@ -117,8 +134,55 @@ protected:
    * @return  Returns the relative density near the destination (0-15)
    */
   uint32_t SetDestination(baldr::GraphReader& graphreader,
-                          const odin::Location& dest,
+                          const valhalla::Location& dest,
                           const std::shared_ptr<sif::DynamicCost>& costing);
+
+  /**
+   * Expand from the node along the forward search path. Immediately expands
+   * from the end node of any transition edge (so no transition edges are added
+   * to the adjacency list or EdgeLabel list). Does not expand transition edges if
+   * from_transition is false. This method is only used in CanReachDestination.
+   * @param  graphreader  Graph tile reader.
+   * @param  node         Graph Id of the node being expanded.
+   * @param  pred         Predecessor edge label (for costing).
+   * @param  pred_idx     Predecessor index into the EdgeLabel list.
+   * @param  costing      Current costing method.
+   * @param  edgestatus   Local edge status information.
+   * @param  edgelabels   Local edge label list.
+   * @param  adjlist      Local adjacency list/priority queue.
+   * @param  from_transition True if this method is called from a transition edge.
+   * @return Returns true if a transit stop has been reached. False, otherwise.
+   */
+  bool ExpandFromNode(baldr::GraphReader& graphreader,
+                      const baldr::GraphId& node,
+                      const sif::EdgeLabel& pred,
+                      const uint32_t pred_idx,
+                      const std::shared_ptr<sif::DynamicCost>& costing,
+                      EdgeStatus& edgestatus,
+                      std::vector<sif::EdgeLabel>& edgelabels,
+                      baldr::DoubleBucketQueue& adjlist,
+                      const bool from_transition);
+
+  /**
+   * Expand from the node using multimodal algorithm.
+   * @param graphreader  Graph reader.
+   * @param node Graph Id of the node to expand.
+   * @param pred Edge label of the predecessor edge leading to the node.
+   * @param pred_idx Index in the edge label list of the predecessor edge.
+   * @param from_transition Boolean indicating if this expansion is from a transition edge.
+   * @param pc Pedestrian costing.
+   * @param tc Transit costing.
+   * @param mode_costing Array of all costing models.
+   * @return Returns true if the isochrone is done.
+   */
+  bool ExpandForward(baldr::GraphReader& graphreader,
+                     const baldr::GraphId& node,
+                     const sif::MMEdgeLabel& pred,
+                     const uint32_t pred_idx,
+                     const bool from_transition,
+                     const std::shared_ptr<sif::DynamicCost>& pc,
+                     const std::shared_ptr<sif::DynamicCost>& tc,
+                     const std::shared_ptr<sif::DynamicCost>* mode_costing);
 
   /**
    * Check if destination can be reached if walking is the last mode. Checks
@@ -128,7 +192,7 @@ protected:
    * TODO - once auto/bicycle are allowed modes we need to check if parking
    * or bikeshare locations are within walking distance.
    */
-  bool CanReachDestination(const odin::Location& destination,
+  bool CanReachDestination(const valhalla::Location& destination,
                            baldr::GraphReader& graphreader,
                            const sif::TravelMode dest_mode,
                            const std::shared_ptr<sif::DynamicCost>& costing);

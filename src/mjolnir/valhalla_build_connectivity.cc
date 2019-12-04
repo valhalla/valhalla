@@ -119,6 +119,10 @@ int main(int argc, char** argv) {
 
   uint32_t transit_level = TileHierarchy::levels().rbegin()->second.level + 1;
   for (uint32_t level = 0; level <= transit_level; level++) {
+    if (!connectivity_map.has_data(level)) {
+      continue;
+    }
+
     // Make the vector representation of it
     std::string fname = "connectivity" + std::to_string(level) + ".geojson";
     std::ofstream geojson_file(fname, std::ios::out);

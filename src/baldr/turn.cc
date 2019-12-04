@@ -1,8 +1,20 @@
 #include "baldr/turn.h"
 #include <stdexcept>
+#include <string>
+#include <unordered_map>
 
 namespace valhalla {
 namespace baldr {
+
+const std::unordered_map<int, std::string>
+    turn_type_to_string{{static_cast<int>(Turn::Type::kStraight), "straight"},
+                        {static_cast<int>(Turn::Type::kSlightRight), "slight right"},
+                        {static_cast<int>(Turn::Type::kRight), "right"},
+                        {static_cast<int>(Turn::Type::kSharpRight), "sharp right"},
+                        {static_cast<int>(Turn::Type::kReverse), "reverse"},
+                        {static_cast<int>(Turn::Type::kSharpLeft), "sharp left"},
+                        {static_cast<int>(Turn::Type::kLeft), "left"},
+                        {static_cast<int>(Turn::Type::kSlightLeft), "slight left"}};
 
 // Returns the turn type based on the specified turn degree.
 Turn::Type Turn::GetType(uint32_t turn_degree) {
@@ -25,6 +37,11 @@ Turn::Type Turn::GetType(uint32_t turn_degree) {
     return Turn::Type::kSlightLeft;
   }
   throw std::runtime_error("Turn degree out of range");
+}
+
+std::string Turn::GetTypeString(Turn::Type turn_type) {
+  auto it_type = turn_type_to_string.find(static_cast<int>(turn_type));
+  return (it_type != turn_type_to_string.cend()) ? it_type->second : "undefined";
 }
 
 } // namespace baldr
