@@ -438,11 +438,11 @@ thor_worker_t::map_match(Api& request) {
       // The following logic put break points (matches results) on edge candidates to form legs
       // logic assumes the both match results and edge candidates are topologically sorted in correct
       // order
-      std::string date_time = options.has_date_time() ? options.date_time() : "";
+      std::string date_time =
+          (options.has_date_time() && options.date_time() != "current") ? options.date_time() : "";
       GraphId prev_edge_id, curr_edge_id;
       const TripLeg* last_leg = nullptr;
       auto leg_origin_iter = match_results.cbegin();
-
       for (const auto& disjoint_edge_group : m_temp_disjoint_edge_groups) {
         // for each disjoint edge group, we make a new route for it.
         // We use multi-route to handle discontinuity
@@ -459,18 +459,22 @@ thor_worker_t::map_match(Api& request) {
           break;
         }
 
-        // loop through each edge in the group, build legs accordingly
+        // intialize the origin location for route and set date time
         int last_edge_index = 0;
         int way_point_index = 0;
-        Location* origin_location = options.mutable_shape(leg_origin_iter - match_results.cbegin());
-        origin_location->set_route_index(route_index);
-        origin_location->set_shape_index(way_point_index);
-        if (date_time.empty() && origin_location->has_date_time()) {
-          date_time = origin_location->date_time();
+        // for trip leg builder to work it needs to have origin and destination locations
+        // so we fake them before calling it
+        Location* leg_origin_location =
+            options.mutable_shape(leg_origin_iter - match_results.cbegin());
+        leg_origin_location->set_route_index(route_index);
+        leg_origin_location->set_shape_index(way_point_index);
+        if (date_time.empty() && leg_origin_location->has_date_time()) {
+          date_time = leg_origin_location->date_time();
         }
-        origin_location->set_date_time(date_time);
+        leg_origin_location->set_date_time(date_time);
         prev_edge_id = leg_origin_iter->edgeid;
 
+        // loop through each edge in the group, build legs accordingly
         for (int i = 0, n = static_cast<int>(edges.size()); i < n; ++i) {
           const auto& path_edge = edges[i];
           // then we find where each leg is going to end by finding the
@@ -497,38 +501,40 @@ thor_worker_t::map_match(Api& request) {
               continue;
             }
 
-            // for trip leg builder to work it needs to have origin and destination locations
-            // so we fake them here before calling it
             // when handling multi routes, orsm serializer need to know both the
             // matching_index(route_index) and the waypoint_index.
-            Location* destination_location =
+            // for trip leg builder to work it needs to have origin and destination locations
+            // so we fake them before calling it
+            Location* leg_destination_location =
                 options.mutable_shape(leg_destination_iter - match_results.cbegin());
-            destination_location->set_route_index(route_index);
-            destination_location->set_shape_index(++way_point_index);
+            leg_destination_location->set_route_index(route_index);
+            leg_destination_location->set_shape_index(++way_point_index);
             curr_edge_id = leg_destination_iter->edgeid;
 
-            add_path_edge(&*origin_location, *leg_origin_iter);
-            add_path_edge(&*destination_location, *leg_destination_iter);
+            add_path_edge(&*leg_origin_location, *leg_origin_iter);
+            add_path_edge(&*leg_destination_location, *leg_destination_iter);
 
             // add a new leg to the current route
             TripLegBuilder::Build(controller, matcher->graphreader(), mode_costing,
                                   edges.begin() + last_edge_index, edges.begin() + i + 1,
-                                  *origin_location, *destination_location,
+                                  *leg_origin_location, *leg_destination_location,
                                   std::list<valhalla::Location>{}, *route->mutable_legs()->Add(),
                                   interrupt, &m_temp_route_discontinuities, true);
 
             // store last leg
             last_leg = &*request.trip().routes().rbegin()->legs().rbegin();
             // update date_time and set the last location date_time with leg duration offset.
+            // after build a leg, we take the date time from this leg's starting point and convert to
+            // local time then set this time as the time for the last point in this new leg
             if (!date_time.empty()) {
               date_time = offset_date(*reader, date_time, prev_edge_id,
                                       last_leg->node().rbegin()->elapsed_time(), curr_edge_id);
-              destination_location->set_date_time(date_time);
+              leg_destination_location->set_date_time(date_time);
             }
 
             // beginning of next leg will be the end of this leg
             leg_origin_iter = leg_destination_iter;
-            origin_location = destination_location;
+            leg_origin_location = leg_destination_location;
             // update prev_edge_id for the next iteration's date_time offset.
             prev_edge_id = curr_edge_id;
             // store the starting index of the path_edges

@@ -334,7 +334,7 @@ void test_edges_discontinuity_with_multi_routes() {
                  {"lat":52.0763011,"lon":5.1574637,"type":"break"},
                  {"lat":52.0782167,"lon":5.1592370,"type":"break"}]})",
        R"({"date_time":{"type":0},
-                        "costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
+                  "costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
                         {"lat":52.0609632,"lon":5.0917676,"type":"break"},
                         {"lat":52.0607180,"lon":5.0950566,"type":"via"},
                         {"lat":52.0797372,"lon":5.1293068,"type":"via"},
@@ -349,15 +349,15 @@ void test_edges_discontinuity_with_multi_routes() {
                        {"lat":52.0792731,"lon":5.1343818,"type":"break_through","time":23},
                        {"lat":52.0763011,"lon":5.1574637,"type":"break_through","time":27},
                        {"lat":52.0782167,"lon":5.1592370,"type":"break","time":13}]})",
-       //                       R"({"date_time":{"type":2,"value":"2019-11-10T09:00"},
-       //                 "costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
-       //                 {"lat":52.0609632,"lon":5.0917676,"type":"break"},
-       //                 {"lat":52.0607185,"lon":5.0940566,"type":"via"},
-       //                 {"lat":52.0607180,"lon":5.0950566,"type":"via"},
-       //                 {"lat":52.0797372,"lon":5.1293068,"type":"via"},
-       //                 {"lat":52.0792731,"lon":5.1343818,"type":"via"},
-       //                 {"lat":52.0763011,"lon":5.1574637,"type":"via"},
-       //                 {"lat":52.0782167,"lon":5.1592370,"type":"break"}]})",
+       R"({"date_time":{"type":2,"value":"2019-11-10T09:00"},
+                        "costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
+                        {"lat":52.0609632,"lon":5.0917676,"type":"break"},
+                        {"lat":52.0607185,"lon":5.0940566,"type":"via"},
+                        {"lat":52.0607180,"lon":5.0950566,"type":"via"},
+                        {"lat":52.0797372,"lon":5.1293068,"type":"via"},
+                        {"lat":52.0792731,"lon":5.1343818,"type":"via"},
+                        {"lat":52.0763011,"lon":5.1574637,"type":"via"},
+                        {"lat":52.0782167,"lon":5.1592370,"type":"break"}]})",
        R"({"date_time":{"type":1,"value":"2019-11-10T09:00"},
                  "costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
                  {"lat": 52.068882, "lon": 5.120852, "type": "break"},
@@ -371,7 +371,7 @@ void test_edges_discontinuity_with_multi_routes() {
                  {"lat": 52.075190, "lon": 5.123067, "type": "break"},
                  {"lat": 52.075718, "lon": 5.123121, "type": "break"}]})",
        R"({"date_time":{"type":0},
-                               "costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
+          "costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
                                {"lat": 52.068882, "lon": 5.120852, "type": "break"},
                                {"lat": 52.069671, "lon": 5.121185, "type": "through"},
                                {"lat": 52.070380, "lon": 5.121523, "type": "through"},
@@ -407,13 +407,14 @@ void test_edges_discontinuity_with_multi_routes() {
                       {"lat": 52.075718, "lon": 5.123121, "type": "break"}]})"};
 
   using a_t = std::tuple<size_t, size_t, bool>;
-  std::vector<a_t> test_answers = {a_t{3, 3, true}, a_t{3, 3, true}, a_t{2, 3, true},
-                                   // a_t{3, 3, false},
-                                   a_t{1, 9, true}, a_t{1, 1, true}, a_t{2, 7, true},
-                                   a_t{2, 2, true}};
+  std::vector<a_t> test_answers = {a_t{3, 3, true},  a_t{3, 3, true}, a_t{2, 3, true},
+                                   a_t{3, 3, false}, a_t{1, 9, true}, a_t{1, 1, true},
+                                   a_t{2, 7, true},  a_t{2, 2, true}};
 
+  std::cout << '\n';
   for (size_t i = 0; i < test_cases.size(); ++i) {
     trace_tester tester;
+    std::cout << "test case #" << i << std::endl;
     auto response = tester.test(test_cases[i]);
 
     std::string error_message;
@@ -980,41 +981,41 @@ int main(int argc, char* argv[]) {
   if (argc > 2)
     bound = std::stoi(argv[2]);
 
-  //  suite.test(TEST_CASE(test32bit));
-  //
-  //  suite.test(TEST_CASE(test_matcher));
-  //
-  //  suite.test(TEST_CASE(test_trace_route_breaks));
-  //
-  //  suite.test(TEST_CASE(test_disconnected_edges_expect_no_route));
+  suite.test(TEST_CASE(test32bit));
 
-  // suite.test(TEST_CASE(test_edges_discontinuity_with_multi_routes));
+  suite.test(TEST_CASE(test_matcher));
 
-  //  suite.test(TEST_CASE(test_distance_only));
-  //
-  //  suite.test(TEST_CASE(test_time_rejection));
-  //
-  //  suite.test(TEST_CASE(test_trace_route_edge_walk_expected_error_code));
-  //
-  //  suite.test(TEST_CASE(test_trace_route_map_snap_expected_error_code));
-  //
-  //  suite.test(TEST_CASE(test_trace_attributes_edge_walk_expected_error_code));
-  //
-  //  suite.test(TEST_CASE(test_trace_attributes_map_snap_expected_error_code));
-  //
-  //  suite.test(TEST_CASE(test_topk_validate));
-  //
-  //  suite.test(TEST_CASE(test_topk_fork_alternate));
-  //
-  //  suite.test(TEST_CASE(test_topk_loop_alternate));
-  //
-  //  suite.test(TEST_CASE(test_topk_frontage_alternate));
-  //
+  suite.test(TEST_CASE(test_trace_route_breaks));
+
+  suite.test(TEST_CASE(test_disconnected_edges_expect_no_route));
+
+  suite.test(TEST_CASE(test_distance_only));
+
+  suite.test(TEST_CASE(test_time_rejection));
+
+  suite.test(TEST_CASE(test_trace_route_edge_walk_expected_error_code));
+
+  suite.test(TEST_CASE(test_trace_route_map_snap_expected_error_code));
+
+  suite.test(TEST_CASE(test_trace_attributes_edge_walk_expected_error_code));
+
+  suite.test(TEST_CASE(test_trace_attributes_map_snap_expected_error_code));
+
+  suite.test(TEST_CASE(test_topk_validate));
+
+  suite.test(TEST_CASE(test_topk_fork_alternate));
+
+  suite.test(TEST_CASE(test_topk_loop_alternate));
+
+  suite.test(TEST_CASE(test_topk_frontage_alternate));
+
+  suite.test(TEST_CASE(test_leg_duration_trimming));
+
+  suite.test(TEST_CASE(test_matching_indices_and_waypoint_indices));
+
   suite.test(TEST_CASE(test_now_matches));
-  //
-  //  suite.test(TEST_CASE(test_leg_duration_trimming));
-  //
-  //  suite.test(TEST_CASE(test_matching_indices_and_waypoint_indices));
+
+  suite.test(TEST_CASE(test_edges_discontinuity_with_multi_routes));
 
   return suite.tear_down();
 }
