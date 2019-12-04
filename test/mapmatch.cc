@@ -32,9 +32,8 @@ namespace {
 
 template <class container_t> std::string print(const container_t& container) {
   std::string output;
-  for (const auto& e : container) {
+  for (const auto& e : container)
     output += std::to_string(e) + ",";
-  }
   if (container.size())
     output.pop_back();
   return output;
@@ -187,9 +186,8 @@ void test_matcher() {
     for (const auto& maneuver : maneuvers) {
       if (maneuver.second.find("street_names") == maneuver.second.not_found())
         continue;
-      for (const auto& name : maneuver.second.get_child("street_names")) {
+      for (const auto& name : maneuver.second.get_child("street_names"))
         looped = looped || !names.insert(name.second.get_value<std::string>()).second;
-      }
     }
     // get the edges along that route shape
     boost::property_tree::ptree walked;
@@ -238,9 +236,8 @@ void test_matcher() {
     auto matched = json_to_pt(actor.trace_attributes(
         R"({"costing":"auto","shape_match":"map_snap","shape":)" + locations + "}"));
     std::vector<uint64_t> matched_edges;
-    for (const auto& edge : matched.get_child("edges")) {
+    for (const auto& edge : matched.get_child("edges"))
       matched_edges.push_back(edge.second.get<uint64_t>("id"));
-    }
     // because of noise we can have off by 1 happen at the beginning or end so we trim to make sure
     auto walked_it = std::search(walked_edges.begin(), walked_edges.end(), matched_edges.begin() + 1,
                                  matched_edges.end() - 1);
@@ -280,11 +277,9 @@ void test_distance_only() {
           {"lat":52.09050,"lon":5.09769,"accuracy":100},
           {"lat":52.09098,"lon":5.09679,"accuracy":10}]})"));
   std::unordered_set<std::string> names;
-  for (const auto& edge : matched.get_child("edges")) {
-    for (const auto& name : edge.second.get_child("names")) {
+  for (const auto& edge : matched.get_child("edges"))
+    for (const auto& name : edge.second.get_child("names"))
       names.insert(name.second.get_value<std::string>());
-    }
-  }
   if (names.find("Jan Pieterszoon Coenstraat") == names.end())
     throw std::logic_error("Using distance only it should have taken a small detour");
 }
@@ -474,8 +469,8 @@ void test_disconnected_edges_expect_no_route() {
 }
 
 void test_matching_indices_and_waypoint_indices() {
-  std::vector<std::string> test_cases =
-      {R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
+  std::vector<std::string> test_cases = {
+      R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
         {"lat": 52.068882, "lon": 5.120852, "type": "break"},
         {"lat": 52.069671, "lon": 5.121185, "type": "via"},
         {"lat": 52.070380, "lon": 5.121523, "type": "via"},
@@ -486,7 +481,7 @@ void test_matching_indices_and_waypoint_indices() {
         {"lat": 52.074554, "lon": 5.122955, "type": "via"},
         {"lat": 52.075190, "lon": 5.123067, "type": "via"},
         {"lat": 52.075718, "lon": 5.123121, "type": "break"}]})",
-       R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
+      R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
         {"lat": 52.0609632, "lon": 5.0917676, "type": "break"},
         {"lat": 52.0607180, "lon": 5.0950566, "type": "break"},
         {"lat": 52.0797372, "lon": 5.1293068, "type": "break"},
@@ -546,11 +541,9 @@ void test_time_rejection() {
           {"lat":52.09050,"lon":5.09769,"accuracy":100,"time":4},
           {"lat":52.09098,"lon":5.09679,"accuracy":10,"time":6}]})"));
   std::unordered_set<std::string> names;
-  for (const auto& edge : matched.get_child("edges")) {
-    for (const auto& name : edge.second.get_child("names")) {
+  for (const auto& edge : matched.get_child("edges"))
+    for (const auto& name : edge.second.get_child("names"))
       names.insert(name.second.get_value<std::string>());
-    }
-  }
   if (names.find("Jan Pieterszoon Coenstraat") != names.end()) {
     throw std::logic_error("Using time it should not take a small detour");
   }
@@ -558,7 +551,8 @@ void test_time_rejection() {
 
 void test32bit() {
   tyr::actor_t actor(conf, true);
-  std::string test_case = R"({"costing":"auto","locations":[{"lat":52.096672,"lon":5.110825},
+  std::string test_case =
+      R"({"costing":"auto","locations":[{"lat":52.096672,"lon":5.110825},
           {"lat":52.081371,"lon":5.125671,"name":"foo","street":"bar","city":"baz",
           "state":"qux","postal_code":"corge","country":"quux","url":"zoinks",
           "date_time":"2001-06-07T15:17","heading_tolerance":90,"node_snap_tolerance":5,
@@ -573,8 +567,8 @@ void test_trace_route_edge_walk_expected_error_code() {
   tyr::actor_t actor(conf, true);
 
   try {
-    auto response =
-        json_to_pt(actor.trace_route(R"({"costing":"auto","shape_match":"edge_walk","shape":[
+    auto response = json_to_pt(actor.trace_route(
+        R"({"costing":"auto","shape_match":"edge_walk","shape":[
          {"lat":52.088548,"lon":5.15357,"accuracy":30,"time":2},
          {"lat":52.088627,"lon":5.153269,"accuracy":30,"time":4},
          {"lat":52.08864,"lon":5.15298,"accuracy":30,"time":6},
@@ -600,8 +594,8 @@ void test_trace_route_map_snap_expected_error_code() {
   tyr::actor_t actor(conf, true);
 
   try {
-    auto response =
-        json_to_pt(actor.trace_route(R"({"costing":"auto","shape_match":"map_snap","shape":[
+    auto response = json_to_pt(actor.trace_route(
+        R"({"costing":"auto","shape_match":"map_snap","shape":[
          {"lat":52.088548,"lon":5.15357,"radius":5,"time":2},
          {"lat":52.088627,"lon":5.153269,"radius":5,"time":4},
          {"lat":52.08864,"lon":5.15298,"radius":5,"time":6},
@@ -627,8 +621,8 @@ void test_trace_attributes_edge_walk_expected_error_code() {
   tyr::actor_t actor(conf, true);
 
   try {
-    auto response =
-        json_to_pt(actor.trace_attributes(R"({"costing":"auto","shape_match":"edge_walk","shape":[
+    auto response = json_to_pt(actor.trace_attributes(
+        R"({"costing":"auto","shape_match":"edge_walk","shape":[
          {"lat":52.088548,"lon":5.15357,"accuracy":30,"time":2},
          {"lat":52.088627,"lon":5.153269,"accuracy":30,"time":4},
          {"lat":52.08864,"lon":5.15298,"accuracy":30,"time":6},
@@ -654,8 +648,8 @@ void test_trace_attributes_map_snap_expected_error_code() {
   tyr::actor_t actor(conf, true);
 
   try {
-    auto response =
-        json_to_pt(actor.trace_attributes(R"({"costing":"auto","shape_match":"map_snap","shape":[
+    auto response = json_to_pt(actor.trace_attributes(
+        R"({"costing":"auto","shape_match":"map_snap","shape":[
          {"lat":52.088548,"lon":5.15357,"radius":5,"time":2},
          {"lat":52.088627,"lon":5.153269,"radius":5,"time":4},
          {"lat":52.08864,"lon":5.15298,"radius":5,"time":6},
@@ -680,8 +674,8 @@ void test_topk_validate() {
   tyr::actor_t actor(conf, true);
 
   // tests a previous segfault due to using a claimed state
-  auto matched = json_to_pt(
-      actor.trace_attributes(R"({"costing":"auto","best_paths":2,"shape_match":"map_snap","shape":[
+  auto matched = json_to_pt(actor.trace_attributes(
+      R"({"costing":"auto","best_paths":2,"shape_match":"map_snap","shape":[
          {"lat":52.088548,"lon":5.15357,"accuracy":30,"time":2},
          {"lat":52.088627,"lon":5.153269,"accuracy":30,"time":4},
          {"lat":52.08864,"lon":5.15298,"accuracy":30,"time":6},
@@ -690,8 +684,8 @@ void test_topk_validate() {
          {"lat":52.08851,"lon":5.15249,"accuracy":30,"time":12}]})"));
 
   // this tests a fix for an infinite loop because there is only 1 result and we ask for 4
-  matched = json_to_pt(
-      actor.trace_attributes(R"({"costing":"auto","best_paths":4,"shape_match":"map_snap","shape":[
+  matched = json_to_pt(actor.trace_attributes(
+      R"({"costing":"auto","best_paths":4,"shape_match":"map_snap","shape":[
          {"lat":52.09579,"lon":5.13137,"accuracy":5,"time":2},
          {"lat":52.09652,"lon":5.13184,"accuracy":5,"time":4}]})"));
   if (matched.get_child("alternate_paths").size() > 0)
@@ -718,16 +712,13 @@ void test_topk_fork_alternate() {
     ]}
    */
   std::vector<std::string> names;
-  for (const auto& edge : matched.get_child("edges")) {
-    for (const auto& name : edge.second.get_child("names")) {
+  for (const auto& edge : matched.get_child("edges"))
+    for (const auto& name : edge.second.get_child("names"))
       names.push_back(name.second.get_value<std::string>());
-    }
-  }
   if (names != std::vector<std::string>{"Louis Saalbornlaan", "Cor Ruyslaan"}) {
     std::string streets;
-    for (const auto& n : names) {
+    for (const auto& n : names)
       streets += n + ", ";
-    }
     throw std::logic_error("The most obvious result is stay left but got: " + streets);
   }
   if (matched.get<float>("confidence_score") != 1.0f)
@@ -745,16 +736,13 @@ void test_topk_fork_alternate() {
    */
   names.clear();
   auto alternate = matched.get_child("alternate_paths").front().second;
-  for (const auto& edge : alternate.get_child("edges")) {
-    for (const auto& name : edge.second.get_child("names")) {
+  for (const auto& edge : alternate.get_child("edges"))
+    for (const auto& name : edge.second.get_child("names"))
       names.push_back(name.second.get_value<std::string>());
-    }
-  }
   if (names != std::vector<std::string>{"Louis Saalbornlaan", "Louis Saalbornlaan"}) {
     std::string streets;
-    for (const auto& n : names) {
+    for (const auto& n : names)
       streets += n + ", ";
-    }
     throw std::logic_error("The second most obvious result is stay right but got: " + streets);
   }
   if (alternate.get<float>("confidence_score") >= 1.0f)
@@ -767,8 +755,8 @@ void test_topk_fork_alternate() {
 void test_topk_loop_alternate() {
   // tests a loop in the road
   tyr::actor_t actor(conf, true);
-  auto matched = json_to_pt(
-      actor.trace_attributes(R"({"costing":"auto","best_paths":2,"shape_match":"map_snap","shape":[
+  auto matched = json_to_pt(actor.trace_attributes(
+      R"({"costing":"auto","best_paths":2,"shape_match":"map_snap","shape":[
            {"lat":52.0886,"lon":5.1535,"accuracy":10},
            {"lat":52.088619,"lon":5.15315,"accuracy":20},
            {"lat":52.08855,"lon":5.152652,"accuracy":25},
@@ -790,18 +778,15 @@ void test_topk_loop_alternate() {
     ]}
    */
   std::vector<std::string> names;
-  for (const auto& edge : matched.get_child("edges")) {
-    for (const auto& name : edge.second.get_child("names")) {
+  for (const auto& edge : matched.get_child("edges"))
+    for (const auto& name : edge.second.get_child("names"))
       names.push_back(name.second.get_value<std::string>());
-    }
-  }
   if (names != std::vector<std::string>{"Louis Bouwmeesterlaan", "Louis Bouwmeesterlaan",
                                         "Louis Bouwmeesterlaan", "Louis Bouwmeesterlaan",
                                         "Louis Bouwmeesterlaan", "Louis Bouwmeesterlaan"}) {
     std::string streets;
-    for (const auto& n : names) {
+    for (const auto& n : names)
       streets += n + ", ";
-    }
     throw std::logic_error("The most obvious result is stay left on the same road - but got: " +
                            streets);
   }
@@ -824,19 +809,16 @@ void test_topk_loop_alternate() {
    */
   names.clear();
   auto alternate = matched.get_child("alternate_paths").front().second;
-  for (const auto& edge : alternate.get_child("edges")) {
-    for (const auto& name : edge.second.get_child("names")) {
+  for (const auto& edge : alternate.get_child("edges"))
+    for (const auto& name : edge.second.get_child("names"))
       names.push_back(name.second.get_value<std::string>());
-    }
-  }
   if (names != std::vector<std::string>{"Louis Bouwmeesterlaan", "Louis Bouwmeesterlaan",
                                         "Eduard Verkadelaan", "Eduard Verkadelaan",
                                         "Eduard Verkadelaan", "Eduard Verkadelaan",
                                         "Louis Bouwmeesterlaan"}) {
     std::string streets;
-    for (const auto& n : names) {
+    for (const auto& n : names)
       streets += n + ", ";
-    }
     throw std::logic_error("The second most obvious result is loop around to the right - but got: " +
                            streets);
   }
@@ -850,8 +832,8 @@ void test_topk_loop_alternate() {
 void test_topk_frontage_alternate() {
   // tests a parallel frontage road
   tyr::actor_t actor(conf, true);
-  auto matched = json_to_pt(
-      actor.trace_attributes(R"({"costing":"auto","best_paths":2,"shape_match":"map_snap","shape":[
+  auto matched = json_to_pt(actor.trace_attributes(
+      R"({"costing":"auto","best_paths":2,"shape_match":"map_snap","shape":[
            {"lat":52.07956040090567,"lon":5.138160288333893,"accuracy":10,"time":2},
            {"lat":52.07957358807355,"lon":5.138508975505829,"accuracy":10,"time":4},
            {"lat":52.07959666560798,"lon":5.138905942440034,"accuracy":10,"time":6},
@@ -879,16 +861,13 @@ void test_topk_frontage_alternate() {
     ]}
    */
   std::vector<std::string> names;
-  for (const auto& edge : matched.get_child("edges")) {
-    for (const auto& name : edge.second.get_child("names")) {
+  for (const auto& edge : matched.get_child("edges"))
+    for (const auto& name : edge.second.get_child("names"))
       names.push_back(name.second.get_value<std::string>());
-    }
-  }
   if (names != std::vector<std::string>{"Rubenslaan", "Rubenslaan"}) {
     std::string streets;
-    for (const auto& n : names) {
+    for (const auto& n : names)
       streets += n + ", ";
-    }
     throw std::logic_error("The most obvious result is stay straight on the same road - but got: " +
                            streets);
   }
@@ -918,18 +897,16 @@ void test_topk_frontage_alternate() {
   for (const auto& edge : alternate.get_child("edges")) {
     const auto json_names = edge.second.get_child_optional("names");
     if (json_names) {
-      for (const auto& name : json_names.get()) {
+      for (const auto& name : json_names.get())
         names.push_back(name.second.get_value<std::string>());
-      }
     } else {
       names.push_back("<empty>");
     }
   }
   if (names != std::vector<std::string>{"Rubenslaan", "Rubenslaan", "Rubenslaan"}) {
     std::string streets;
-    for (const auto& n : names) {
+    for (const auto& n : names)
       streets += n + ", ";
-    }
     throw std::logic_error(
         "The second most obvious result is frontage road to the right - but got: " + streets);
   }
@@ -944,7 +921,8 @@ void test_now_matches() {
   tyr::actor_t actor(conf, true);
 
   // once with map matching
-  std::string test_case = R"({"date_time":{"type":0},"shape_match":"map_snap","costing":"auto",
+  std::string test_case =
+      R"({"date_time":{"type":0},"shape_match":"map_snap","costing":"auto",
          "encoded_polyline":"oeyjbBqfjwHeO~M}x@`u@wDmh@oCcd@sAiVcAaKe@cBaNe[u^qg@qH`u@cL{Tmr@c{AtTu_@xVsd@"})";
   auto route_json = actor.trace_route(test_case);
 
@@ -958,18 +936,18 @@ void test_now_matches() {
 }
 
 void test_leg_duration_trimming() {
-  std::vector<std::string> test_cases =
-      {R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
+  std::vector<std::string> test_cases = {
+      R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
           {"lat": 52.0957652, "lon": 5.1101366, "type": "break"},
           {"lat": 52.0959457, "lon": 5.1106847, "type": "break"},
           {"lat": 52.0962535, "lon": 5.1116988, "type": "break"}]})",
-       R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
+      R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
           {"lat": 52.0826293, "lon": 5.1267623, "type": "break"},
           {"lat": 52.0835867, "lon": 5.1276355, "type": "break"},
           {"lat": 52.0837127, "lon": 5.1277763, "type": "break"},
           {"lat": 52.0839615, "lon": 5.1280204, "type": "break"},
           {"lat": 52.0841756, "lon": 5.1282906, "type": "break"}]})",
-       R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
+      R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
           {"lat": 52.0609108, "lon": 5.0924059, "type": "break"},
           {"lat": 52.0605926, "lon": 5.0962937, "type": "break"},
           {"lat": 52.0604866, "lon": 5.0975675, "type": "break"},
@@ -1010,7 +988,7 @@ int main(int argc, char* argv[]) {
   //
   //  suite.test(TEST_CASE(test_disconnected_edges_expect_no_route));
 
-  suite.test(TEST_CASE(test_edges_discontinuity_with_multi_routes));
+  // suite.test(TEST_CASE(test_edges_discontinuity_with_multi_routes));
 
   //  suite.test(TEST_CASE(test_distance_only));
   //
@@ -1032,7 +1010,7 @@ int main(int argc, char* argv[]) {
   //
   //  suite.test(TEST_CASE(test_topk_frontage_alternate));
   //
-  //  suite.test(TEST_CASE(test_now_matches));
+  suite.test(TEST_CASE(test_now_matches));
   //
   //  suite.test(TEST_CASE(test_leg_duration_trimming));
   //
