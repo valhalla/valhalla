@@ -520,19 +520,23 @@ void AddTransitNodes(TripLeg_Node* trip_node,
 
 /**
  * Add trip edge. (TODO more comments)
- * @param  controller        Controller to determine which attributes to set.
- * @param  edge              Identifier of an edge within the tiled, hierarchical graph.
- * @param  trip_id           Trip Id (0 if not a transit edge).
- * @param  block_id          Transit block Id (0 if not a transit edge)
- * @param  mode              Travel mode for the edge: Biking, walking, etc.
- * @param  directededge      Directed edge information.
- * @param  drive_right       Right side driving for this edge.
- * @param  trip_node         Trip node to add the edge information to.
- * @param  graphtile         Graph tile for accessing data.
- * @param  second_of_week    The time, from the beginning of the week in seconds at which
- *                           the path entered this edge
- * @param  length_percentage Scale for the edge length for the partial distance
- *                       at begin and end edges
+ * @param  controller         Controller to determine which attributes to set.
+ * @param  edge               Identifier of an edge within the tiled, hierarchical graph.
+ * @param  trip_id            Trip Id (0 if not a transit edge).
+ * @param  block_id           Transit block Id (0 if not a transit edge)
+ * @param  mode               Travel mode for the edge: Biking, walking, etc.
+ * @param  directededge       Directed edge information.
+ * @param  drive_right        Right side driving for this edge.
+ * @param  trip_node          Trip node to add the edge information to.
+ * @param  graphtile          Graph tile for accessing data.
+ * @param  second_of_week     The time, from the beginning of the week in seconds at which
+ *                               the path entered this edge
+ * @param  length_percentage  Scale for the edge length for the partial distance
+ *                               at begin and end edges
+ * @param  start_node_idx     The start node index
+ * @param  has_junction_name  True if named junction exists, false otherwise
+ * @param  start_tile         The start tile of the start node
+ *
  */
 TripLeg_Edge* AddTripEdge(const AttributesController& controller,
                           const GraphId& edge,
@@ -547,6 +551,9 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
                           const GraphTile* graphtile,
                           const uint32_t second_of_week,
                           const float length_percentage,
+                          const uint32_t start_node_idx,
+                          const bool has_junction_name,
+                          const GraphTile* start_tile,
                           const bool has_time_restrictions) {
 
   // Index of the directed edge within the tile
@@ -572,41 +579,81 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
 #endif
 
   // Set the exits (if the directed edge has exit sign information) and if requested
-  if (directededge->exitsign()) {
-    std::vector<SignInfo> signs = graphtile->GetSigns(idx);
-    if (!signs.empty()) {
-      TripLeg_Sign* trip_exit = trip_edge->mutable_sign();
-      for (const auto& sign : signs) {
+  if (directededge->sign()) {
+    // Add the edge signs
+    std::vector<SignInfo> edge_signs = graphtile->GetSigns(idx);
+    if (!edge_signs.empty()) {
+      TripLeg_Sign* trip_sign = trip_edge->mutable_sign();
+      for (const auto& sign : edge_signs) {
         switch (sign.type()) {
           case Sign::Type::kExitNumber: {
             if (controller.attributes.at(kEdgeSignExitNumber)) {
-              auto* trip_exit_number = trip_exit->mutable_exit_numbers()->Add();
-              trip_exit_number->set_text(sign.text());
-              trip_exit_number->set_is_route_number(sign.is_route_num());
+              auto* trip_sign_exit_number = trip_sign->mutable_exit_numbers()->Add();
+              trip_sign_exit_number->set_text(sign.text());
+              trip_sign_exit_number->set_is_route_number(sign.is_route_num());
             }
             break;
           }
           case Sign::Type::kExitBranch: {
             if (controller.attributes.at(kEdgeSignExitBranch)) {
-              auto* trip_exit_onto_street = trip_exit->mutable_exit_onto_streets()->Add();
-              trip_exit_onto_street->set_text(sign.text());
-              trip_exit_onto_street->set_is_route_number(sign.is_route_num());
+              auto* trip_sign_exit_onto_street = trip_sign->mutable_exit_onto_streets()->Add();
+              trip_sign_exit_onto_street->set_text(sign.text());
+              trip_sign_exit_onto_street->set_is_route_number(sign.is_route_num());
             }
             break;
           }
           case Sign::Type::kExitToward: {
             if (controller.attributes.at(kEdgeSignExitToward)) {
-              auto* trip_exit_toward_location = trip_exit->mutable_exit_toward_locations()->Add();
-              trip_exit_toward_location->set_text(sign.text());
-              trip_exit_toward_location->set_is_route_number(sign.is_route_num());
+              auto* trip_sign_exit_toward_location =
+                  trip_sign->mutable_exit_toward_locations()->Add();
+              trip_sign_exit_toward_location->set_text(sign.text());
+              trip_sign_exit_toward_location->set_is_route_number(sign.is_route_num());
             }
             break;
           }
           case Sign::Type::kExitName: {
             if (controller.attributes.at(kEdgeSignExitName)) {
-              auto* trip_exit_name = trip_exit->mutable_exit_names()->Add();
-              trip_exit_name->set_text(sign.text());
-              trip_exit_name->set_is_route_number(sign.is_route_num());
+              auto* trip_sign_exit_name = trip_sign->mutable_exit_names()->Add();
+              trip_sign_exit_name->set_text(sign.text());
+              trip_sign_exit_name->set_is_route_number(sign.is_route_num());
+            }
+            break;
+          }
+          case Sign::Type::kGuideBranch: {
+            if (controller.attributes.at(kEdgeSignGuideBranch)) {
+              auto* trip_sign_guide_onto_street = trip_sign->mutable_guide_onto_streets()->Add();
+              trip_sign_guide_onto_street->set_text(sign.text());
+              trip_sign_guide_onto_street->set_is_route_number(sign.is_route_num());
+            }
+            break;
+          }
+          case Sign::Type::kGuideToward: {
+            if (controller.attributes.at(kEdgeSignGuideToward)) {
+              auto* trip_sign_guide_toward_location =
+                  trip_sign->mutable_guide_toward_locations()->Add();
+              trip_sign_guide_toward_location->set_text(sign.text());
+              trip_sign_guide_toward_location->set_is_route_number(sign.is_route_num());
+            }
+            break;
+          }
+        }
+      }
+    }
+  }
+
+  // Process the named junctions
+  if (has_junction_name && start_tile) {
+    // Add the node signs
+    std::vector<SignInfo> node_signs = start_tile->GetSigns(start_node_idx, true);
+    if (!node_signs.empty()) {
+      TripLeg_Sign* trip_sign = trip_edge->mutable_sign();
+      for (const auto& sign : node_signs) {
+        switch (sign.type()) {
+          case Sign::Type::kJunctionName: {
+            if (controller.attributes.at(kEdgeSignJunctionName)) {
+              auto* trip_sign_junction_name = trip_sign->mutable_junction_names()->Add();
+              trip_sign_junction_name->set_text(sign.text());
+              trip_sign_junction_name->set_is_route_number(sign.is_route_num());
             }
             break;
           }
@@ -1191,7 +1238,8 @@ TripLegBuilder::Build(const AttributesController& controller,
                                  path_begin->mode, travel_types[static_cast<int>(path_begin->mode)],
                                  mode_costing[static_cast<uint32_t>(path_begin->mode)], edge,
                                  drive_on_right, trip_path.add_node(), tile, origin_second_of_week,
-                                 std::abs(end_pct - start_pct), path_begin->has_time_restrictions);
+                                 std::abs(end_pct - start_pct), startnode.id(), false, nullptr,
+                                 path_begin->has_time_restrictions);
 
     // Set begin shape index if requested
     if (controller.attributes.at(kEdgeBeginShapeIndex)) {
@@ -1278,6 +1326,7 @@ TripLegBuilder::Build(const AttributesController& controller,
     const sif::TravelMode mode = edge_itr->mode;
     const uint8_t travel_type = travel_types[static_cast<uint32_t>(mode)];
     const auto& costing = mode_costing[static_cast<uint32_t>(mode)];
+
     // Set node attributes - only set if they are true since they are optional
     const GraphTile* start_tile = graphtile;
     start_tile = graphreader.GetGraphTile(startnode, start_tile);
@@ -1339,6 +1388,7 @@ TripLegBuilder::Build(const AttributesController& controller,
         edge_pct = end_pct;
       }
     }
+
     // Update elapsed time at the end of the edge, store this at the next node.
     elapsedtime += edge_itr->elapsed_time * edge_pct;
 
@@ -1535,6 +1585,7 @@ TripLegBuilder::Build(const AttributesController& controller,
     TripLeg_Edge* trip_edge =
         AddTripEdge(controller, edge, trip_id, block_id, mode, travel_type, costing, directededge,
                     node->drive_on_right(), trip_node, graphtile, second_of_week, length_pct,
+                    startnode.id(), node->named_intersection(), start_tile,
                     edge_itr->has_time_restrictions);
 
     // Get the shape and set shape indexes (directed edge forward flag
@@ -1604,8 +1655,7 @@ TripLegBuilder::Build(const AttributesController& controller,
       // Trim the shape at the front for the first edge
       if (is_first_edge) {
         TrimShape(edge_shape, start_pct * total, start_vrt, total, edge_shape.back());
-      }
-      // And at the back if its the last edge
+      }// And at the back if its the last edge
       else {
         TrimShape(edge_shape, 0, edge_shape.front(), end_pct * total, end_vrt);
       }

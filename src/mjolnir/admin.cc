@@ -139,10 +139,11 @@ void GetData(sqlite3* db_handle,
              const std::string& sql,
              GraphTileBuilder& tilebuilder,
              std::unordered_multimap<uint32_t, multi_polygon_type>& polys,
-             std::unordered_map<uint32_t, bool>& drive_on_right) {
+             std::unordered_map<uint32_t, bool>& drive_on_right,
+             std::unordered_map<uint32_t, bool>& allow_intersection_names) {
   uint32_t result = 0;
   bool dor = true;
-
+  bool intersection_name = false;
   uint32_t ret = sqlite3_prepare_v2(db_handle, sql.c_str(), sql.length(), &stmt, 0);
 
   if (ret == SQLITE_OK || ret == SQLITE_ERROR) {
@@ -180,9 +181,14 @@ void GetData(sqlite3* db_handle,
       dor = sqlite3_column_int(stmt, 4);
     }
 
+    intersection_name = false;
+    if (sqlite3_column_type(stmt, 5) == SQLITE_INTEGER) {
+      intersection_name = sqlite3_column_int(stmt, 5);
+    }
+
     std::string geom;
-    if (sqlite3_column_type(stmt, 5) == SQLITE_TEXT) {
-      geom = (char*)sqlite3_column_text(stmt, 5);
+    if (sqlite3_column_type(stmt, 6) == SQLITE_TEXT) {
+      geom = (char*)sqlite3_column_text(stmt, 6);
     }
 
     uint32_t index = tilebuilder.AddAdmin(country_name, state_name, country_iso, state_iso);
@@ -190,6 +196,7 @@ void GetData(sqlite3* db_handle,
     boost::geometry::read_wkt(geom, multi_poly);
     polys.emplace(index, multi_poly);
     drive_on_right.emplace(index, dor);
+    allow_intersection_names.emplace(index, intersection_name);
 
     result = sqlite3_step(stmt);
   }
@@ -204,6 +211,7 @@ void GetData(sqlite3* db_handle,
 std::unordered_multimap<uint32_t, multi_polygon_type>
 GetAdminInfo(sqlite3* db_handle,
              std::unordered_map<uint32_t, bool>& drive_on_right,
+             std::unordered_map<uint32_t, bool>& allow_intersection_names,
              const AABB2<PointLL>& aabb,
              GraphTileBuilder& tilebuilder) {
   std::unordered_multimap<uint32_t, multi_polygon_type> polys;
@@ -214,7 +222,8 @@ GetAdminInfo(sqlite3* db_handle,
   sqlite3_stmt* stmt = 0;
   // state query
   std::string sql = "SELECT country.name, state.name, country.iso_code, ";
-  sql += "state.iso_code, state.drive_on_right, st_astext(state.geom) ";
+  sql +=
+      "state.iso_code, state.drive_on_right, state.allow_intersection_names, st_astext(state.geom) ";
   sql += "from admins state, admins country where ";
   sql += "ST_Intersects(state.geom, BuildMBR(" + std::to_string(aabb.minx()) + ",";
   sql += std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) + ",";
@@ -224,10 +233,11 @@ GetAdminInfo(sqlite3* db_handle,
   sql += "'admins' AND search_frame = BuildMBR(" + std::to_string(aabb.minx()) + ",";
   sql += std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) + ",";
   sql += std::to_string(aabb.maxy()) + "));";
-  GetData(db_handle, stmt, sql, tilebuilder, polys, drive_on_right);
+  GetData(db_handle, stmt, sql, tilebuilder, polys, drive_on_right, allow_intersection_names);
 
   // country query
-  sql = "SELECT name, \"\", iso_code, \"\", drive_on_right, st_astext(geom) from ";
+  sql =
+      "SELECT name, \"\", iso_code, \"\", drive_on_right, allow_intersection_names, st_astext(geom) from ";
   sql += " admins where ST_Intersects(geom, BuildMBR(" + std::to_string(aabb.minx()) + ",";
   sql += std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) + ",";
   sql += std::to_string(aabb.maxy()) + ")) and admin_level=2 ";
@@ -235,7 +245,7 @@ GetAdminInfo(sqlite3* db_handle,
   sql += "'admins' AND search_frame = BuildMBR(" + std::to_string(aabb.minx()) + ",";
   sql += std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) + ",";
   sql += std::to_string(aabb.maxy()) + "));";
-  GetData(db_handle, stmt, sql, tilebuilder, polys, drive_on_right);
+  GetData(db_handle, stmt, sql, tilebuilder, polys, drive_on_right, allow_intersection_names);
 
   if (stmt) { // just in case something bad happened.
     sqlite3_finalize(stmt);

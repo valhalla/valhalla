@@ -1,0 +1,1 @@
+-j '{"locations":[{"lat":48.089798,"lon":11.469246,"street":"M 4"},{"lat":48.089909,"lon":11.472476,"street":"Forstenrieder Straße"}],"costing":"auto","units":"kilometers"}'

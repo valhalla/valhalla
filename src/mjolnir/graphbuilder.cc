@@ -458,8 +458,11 @@ void BuildTileSet(const std::string& ways_file,
       bool tile_within_one_admin = false;
       std::unordered_multimap<uint32_t, multi_polygon_type> admin_polys;
       std::unordered_map<uint32_t, bool> drive_on_right;
+      std::unordered_map<uint32_t, bool> allow_intersection_names;
+
       if (admin_db_handle) {
-        admin_polys = GetAdminInfo(admin_db_handle, drive_on_right, tiling.TileBounds(id), graphtile);
+        admin_polys = GetAdminInfo(admin_db_handle, drive_on_right, allow_intersection_names,
+                                   tiling.TileBounds(id), graphtile);
         if (admin_polys.size() == 1) {
           // TODO - check if tile bounding box is entirely inside the polygon...
           tile_within_one_admin = true;
@@ -741,23 +744,25 @@ void BuildTileSet(const std::string& ways_file,
           // Update the node's best class
           bestclass = std::min(bestclass, directededge.classification());
 
-          // TODO - update logic so we limit the CreateExitSignInfoList calls
+          // TODO - update logic so we limit the CreateSignInfoList calls
           // Any exits for this directed edge? is auto and oneway?
-          std::vector<SignInfo> exits =
-              GraphBuilder::CreateExitSignInfoList(node, w, osmdata, fork, forward);
+          std::vector<SignInfo> signs;
+          bool has_guide =
+              GraphBuilder::CreateSignInfoList(node, w, osmdata, signs, fork, forward,
+                                               (directededge.use() == Use::kRamp),
+                                               (directededge.use() == Use::kTurnChannel));
 
-          // Add signs if signs exist
+          // add signs if signs exist
           // and directed edge if forward access and auto use
           // and directed edge is a link and not (link count=2 and driveforward count=1)
           //    OR node is a fork
-          if (!exits.empty() && (directededge.forwardaccess() & kAutoAccess) &&
+          //    OR we added guide signs
+          if (!signs.empty() && (directededge.forwardaccess() & kAutoAccess) &&
               ((directededge.link() &&
                 (!((bundle.link_count == 2) && (bundle.driveforward_count == 1)))) ||
-               fork) &&
-              ((edge.attributes.driveableforward && edge.attributes.way_begin) ||
-               (edge.attributes.driveablereverse && edge.attributes.way_end))) {
-            graphtile.AddSigns(idx, exits);
-            directededge.set_exitsign(true);
+               fork || has_guide)) {
+            graphtile.AddSigns(idx, signs);
+            directededge.set_sign(true);
           }
 
           // Add turn lanes if they exist. Store forward index on the last edge for a way
@@ -972,6 +977,19 @@ void BuildTileSet(const std::string& ways_file,
         // Set admin index
         graphtile.nodes().back().set_admin_index(admin_index);
 
+        if (admin_index != 0 && node.named_intersection() && allow_intersection_names[admin_index]) {
+          std::vector<std::string> node_names;
+          node_names = GetTagTokens(osmdata.node_names.name(node.name_index()));
+
+          std::vector<SignInfo> signs;
+          for (auto& name : node_names) {
+            signs.emplace_back(Sign::Type::kJunctionName, false, name);
+          }
+          if (signs.size()) {
+            graphtile.nodes().back().set_named_intersection(true);
+            graphtile.AddSigns(graphtile.nodes().size() - 1, signs);
+          }
+        }
         // Set drive on right flag
         if (admin_index != 0) {
           graphtile.nodes().back().set_drive_on_right(drive_on_right[admin_index]);
@@ -1204,14 +1222,16 @@ std::string GraphBuilder::GetRef(const std::string& way_ref, const std::string& 
   return refs;
 }
 
-std::vector<SignInfo> GraphBuilder::CreateExitSignInfoList(const OSMNode& node,
-                                                           const OSMWay& way,
-                                                           const OSMData& osmdata,
-                                                           bool fork,
-                                                           bool forward) {
+bool GraphBuilder::CreateSignInfoList(const OSMNode& node,
+                                      const OSMWay& way,
+                                      const OSMData& osmdata,
+                                      std::vector<SignInfo>& exit_list,
+                                      bool fork,
+                                      bool forward,
+                                      bool ramp,
+                                      bool tc) {
 
-  std::vector<SignInfo> exit_list;
-
+  bool has_guide = false;
   ////////////////////////////////////////////////////////////////////////////
   // NUMBER
   // Exit sign number
@@ -1222,7 +1242,7 @@ std::vector<SignInfo> GraphBuilder::CreateExitSignInfoList(const OSMNode& node,
     for (auto& j_ref : j_refs) {
       exit_list.emplace_back(Sign::Type::kExitNumber, false, j_ref);
     }
-  } else if (node.has_ref() && !fork) {
+  } else if (node.has_ref() && !fork && ramp) {
     std::vector<std::string> n_refs = GetTagTokens(osmdata.node_names.name(node.ref_index()));
     for (auto& n_ref : n_refs) {
       exit_list.emplace_back(Sign::Type::kExitNumber, false, n_ref);
@@ -1234,23 +1254,31 @@ std::vector<SignInfo> GraphBuilder::CreateExitSignInfoList(const OSMNode& node,
 
   bool has_branch = false;
 
-  // Exit sign branch refs
+  // Guide or Exit sign branch refs
   if (way.destination_ref_index() != 0) {
     has_branch = true;
     std::vector<std::string> branch_refs =
         GetTagTokens(osmdata.name_offset_map.name(way.destination_ref_index()));
     for (auto& branch_ref : branch_refs) {
-      exit_list.emplace_back(Sign::Type::kExitBranch, true, branch_ref);
+      if (tc || (!ramp && !fork)) {
+        exit_list.emplace_back(Sign::Type::kGuideBranch, true, branch_ref);
+        has_guide = true;
+      } else
+        exit_list.emplace_back(Sign::Type::kExitBranch, true, branch_ref);
     }
   }
 
-  // Exit sign branch road names
+  // Guide or Exit sign branch road names
   if (way.destination_street_index() != 0) {
     has_branch = true;
     std::vector<std::string> branch_streets =
         GetTagTokens(osmdata.name_offset_map.name(way.destination_street_index()));
     for (auto& branch_street : branch_streets) {
-      exit_list.emplace_back(Sign::Type::kExitBranch, false, branch_street);
+      if (tc || (!ramp && !fork)) {
+        exit_list.emplace_back(Sign::Type::kGuideBranch, false, branch_street);
+        has_guide = true;
+      } else
+        exit_list.emplace_back(Sign::Type::kExitBranch, false, branch_street);
     }
   }
 
@@ -1259,23 +1287,31 @@ std::vector<SignInfo> GraphBuilder::CreateExitSignInfoList(const OSMNode& node,
 
   bool has_toward = false;
 
-  // Exit sign toward refs
+  // Guide or Exit sign toward refs
   if (way.destination_ref_to_index() != 0) {
     has_toward = true;
     std::vector<std::string> toward_refs =
         GetTagTokens(osmdata.name_offset_map.name(way.destination_ref_to_index()));
     for (auto& toward_ref : toward_refs) {
-      exit_list.emplace_back(Sign::Type::kExitToward, true, toward_ref);
+      if (tc || (!ramp && !fork)) {
+        exit_list.emplace_back(Sign::Type::kGuideToward, true, toward_ref);
+        has_guide = true;
+      } else
+        exit_list.emplace_back(Sign::Type::kExitToward, true, toward_ref);
     }
   }
 
-  // Exit sign toward streets
+  // Guide or Exit sign toward streets
   if (way.destination_street_to_index() != 0) {
     has_toward = true;
     std::vector<std::string> toward_streets =
         GetTagTokens(osmdata.name_offset_map.name(way.destination_street_to_index()));
     for (auto& toward_street : toward_streets) {
-      exit_list.emplace_back(Sign::Type::kExitToward, false, toward_street);
+      if (tc || (!ramp && !fork)) {
+        exit_list.emplace_back(Sign::Type::kGuideToward, false, toward_street);
+        has_guide = true;
+      } else
+        exit_list.emplace_back(Sign::Type::kExitToward, false, toward_street);
     }
   }
 
@@ -1288,7 +1324,11 @@ std::vector<SignInfo> GraphBuilder::CreateExitSignInfoList(const OSMNode& node,
                                                         : way.destination_backward_index());
     std::vector<std::string> toward_names = GetTagTokens(osmdata.name_offset_map.name(index));
     for (auto& toward_name : toward_names) {
-      exit_list.emplace_back(Sign::Type::kExitToward, false, toward_name);
+      if (tc || (!ramp && !fork)) {
+        exit_list.emplace_back(Sign::Type::kGuideToward, false, toward_name);
+        has_guide = true;
+      } else
+        exit_list.emplace_back(Sign::Type::kExitToward, false, toward_name);
     }
   }
 
@@ -1352,7 +1392,7 @@ std::vector<SignInfo> GraphBuilder::CreateExitSignInfoList(const OSMNode& node,
   // NAME
 
   // Exit sign name
-  if (node.has_name() && !fork) {
+  if (node.has_name() && !node.named_intersection() && !fork && ramp) {
     // Get the name from OSMData using the name index
     std::vector<std::string> names = GetTagTokens(osmdata.node_names.name(node.name_index()));
     for (auto& name : names) {
@@ -1360,7 +1400,7 @@ std::vector<SignInfo> GraphBuilder::CreateExitSignInfoList(const OSMNode& node,
     }
   }
 
-  return exit_list;
+  return has_guide;
 }
 
 } // namespace mjolnir

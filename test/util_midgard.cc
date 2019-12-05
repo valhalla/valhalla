@@ -390,18 +390,6 @@ void TestTrimFront() {
   }
 }
 
-void TestLengthWithEmptyVector() {
-  std::vector<PointLL> empty;
-  if (length(empty) != 0.0f) {
-    throw std::logic_error("empty polyline returns non-zero length");
-  }
-  // Test with only 1 point, should still return 0
-  empty.emplace_back(-70.0f, 30.0f);
-  if (length(empty) != 0.0f) {
-    throw std::logic_error("one point polyline returns non-zero length");
-  }
-}
-
 void TestTangentAngle() {
   PointLL point{-122.839554f, 38.3990479f};
   std::vector<PointLL> shape{{-122.839104f, 38.3988266f},
@@ -490,9 +478,6 @@ int main() {
 
   // trim_front of a polyline
   suite.test(TEST_CASE(TestTrimFront));
-
-  // Test that length with empty container (or only 1 point) returns 0
-  suite.test(TEST_CASE(TestLengthWithEmptyVector));
 
   // tangent angle
   suite.test(TEST_CASE(TestTangentAngle));
