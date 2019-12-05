@@ -76,14 +76,11 @@ bool IsTurnChannel(sequence<OSMWay>& ways,
       return false;
     }
 
-    // Check if an exit sign exists.
-    /*OSMWay way = *ways[edge.wayindex_];
-    if (way.junction_ref_index() != 0 || way.destination_ref_index() != 0 ||
-        way.destination_street_index() != 0 || way.destination_ref_to_index() != 0 ||
-        way.destination_street_to_index() != 0 || way.destination_index() != 0 ||
-        way.destination_forward_index() != 0 || way.destination_backward_index() != 0) {
+    // Can not be bidirectional
+    OSMWay way = *ways[edge.wayindex_];
+    if (way.auto_forward() && way.auto_backward()) {
       return false;
-    }*/
+    }
   }
   return true;
 }
