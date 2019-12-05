@@ -1234,12 +1234,12 @@ TripLegBuilder::Build(const AttributesController& controller,
     bool drive_on_right = graphreader.nodeinfo(start_node)->drive_on_right();
 
     // Add trip edge
-    auto trip_edge = AddTripEdge(controller, path_begin->edgeid, path_begin->trip_id, 0,
-                                 path_begin->mode, travel_types[static_cast<int>(path_begin->mode)],
-                                 mode_costing[static_cast<uint32_t>(path_begin->mode)], edge,
-                                 drive_on_right, trip_path.add_node(), tile, origin_second_of_week,
-                                 std::abs(end_pct - start_pct), startnode.id(), false, nullptr,
-                                 path_begin->has_time_restrictions);
+    auto trip_edge =
+        AddTripEdge(controller, path_begin->edgeid, path_begin->trip_id, 0, path_begin->mode,
+                    travel_types[static_cast<int>(path_begin->mode)],
+                    mode_costing[static_cast<uint32_t>(path_begin->mode)], edge, drive_on_right,
+                    trip_path.add_node(), tile, origin_second_of_week, std::abs(end_pct - start_pct),
+                    startnode.id(), false, nullptr, path_begin->has_time_restrictions);
 
     // Set begin shape index if requested
     if (controller.attributes.at(kEdgeBeginShapeIndex)) {
@@ -1655,7 +1655,7 @@ TripLegBuilder::Build(const AttributesController& controller,
       // Trim the shape at the front for the first edge
       if (is_first_edge) {
         TrimShape(edge_shape, start_pct * total, start_vrt, total, edge_shape.back());
-      }// And at the back if its the last edge
+      } // And at the back if its the last edge
       else {
         TrimShape(edge_shape, 0, edge_shape.front(), end_pct * total, end_vrt);
       }
