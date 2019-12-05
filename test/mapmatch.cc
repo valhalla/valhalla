@@ -324,8 +324,8 @@ void test_trace_route_breaks() {
 void test_edges_discontinuity_with_multi_routes() {
   // here everything is a leg and the discontinuities are the routes
   // we have to use osrm format because valhalla format doesnt support multi route
-  std::vector<std::string> test_cases =
-      {R"({"date_time":{"type":1,"value":"2019-11-10T09:00"},
+  std::vector<std::string> test_cases = {
+      R"({"date_time":{"type":1,"value":"2019-11-10T09:00"},
                  "costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
                  {"lat":52.0609632,"lon":5.0917676,"type":"break"},
                  {"lat":52.0607180,"lon":5.0950566,"type":"break"},
@@ -333,118 +333,107 @@ void test_edges_discontinuity_with_multi_routes() {
                  {"lat":52.0792731,"lon":5.1343818,"type":"break"},
                  {"lat":52.0763011,"lon":5.1574637,"type":"break"},
                  {"lat":52.0782167,"lon":5.1592370,"type":"break"}]})",
-       R"({"date_time":{"type":0},
+      R"({"date_time":{"type":0},
                   "costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
-                        {"lat":52.0609632,"lon":5.0917676,"type":"break"},
-                        {"lat":52.0607180,"lon":5.0950566,"type":"via"},
-                        {"lat":52.0797372,"lon":5.1293068,"type":"via"},
-                        {"lat":52.0792731,"lon":5.1343818,"type":"via"},
-                        {"lat":52.0763011,"lon":5.1574637,"type":"via"},
-                        {"lat":52.0782167,"lon":5.1592370,"type":"break"}]})",
-       R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
-                       {"lat":52.0609632,"lon":5.0917676,"type":"break","time":7},
-                       {"lat":52.0607185,"lon":5.0940566,"type":"break_through","time":11},
-                       {"lat":52.0607180,"lon":5.0950566,"type":"break_through","time":15},
-                       {"lat":52.0797372,"lon":5.1293068,"type":"break_through","time":19},
-                       {"lat":52.0792731,"lon":5.1343818,"type":"break_through","time":23},
-                       {"lat":52.0763011,"lon":5.1574637,"type":"break_through","time":27},
-                       {"lat":52.0782167,"lon":5.1592370,"type":"break","time":13}]})",
-       R"({"date_time":{"type":2,"value":"2019-11-10T09:00"},
-                        "costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
-                        {"lat":52.0609632,"lon":5.0917676,"type":"break"},
-                        {"lat":52.0607185,"lon":5.0940566,"type":"via"},
-                        {"lat":52.0607180,"lon":5.0950566,"type":"via"},
-                        {"lat":52.0797372,"lon":5.1293068,"type":"via"},
-                        {"lat":52.0792731,"lon":5.1343818,"type":"via"},
-                        {"lat":52.0763011,"lon":5.1574637,"type":"via"},
-                        {"lat":52.0782167,"lon":5.1592370,"type":"break"}]})",
-       R"({"date_time":{"type":1,"value":"2019-11-10T09:00"},
-                 "costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
-                 {"lat": 52.068882, "lon": 5.120852, "type": "break"},
-                 {"lat": 52.069671, "lon": 5.121185, "type": "break"},
-                 {"lat": 52.070380, "lon": 5.121523, "type": "break"},
-                 {"lat": 52.070947, "lon": 5.121828, "type": "break"},
-                 {"lat": 52.071827, "lon": 5.122220, "type": "break"},
-                 {"lat": 52.072526, "lon": 5.122553, "type": "break"},
-                 {"lat": 52.073489, "lon": 5.122880, "type": "break"},
-                 {"lat": 52.074554, "lon": 5.122955, "type": "break"},
-                 {"lat": 52.075190, "lon": 5.123067, "type": "break"},
-                 {"lat": 52.075718, "lon": 5.123121, "type": "break"}]})",
-       R"({"date_time":{"type":0},
+                  {"lat":52.0609632,"lon":5.0917676,"type":"break"},
+                  {"lat":52.0607180,"lon":5.0950566,"type":"via"},
+                  {"lat":52.0797372,"lon":5.1293068,"type":"via"},
+                  {"lat":52.0792731,"lon":5.1343818,"type":"via"},
+                  {"lat":52.0763011,"lon":5.1574637,"type":"via"},
+                  {"lat":52.0782167,"lon":5.1592370,"type":"break"}]})",
+      R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
+                  {"lat":52.0609632,"lon":5.0917676,"type":"break","time":7},
+                  {"lat":52.0607185,"lon":5.0940566,"type":"break_through","time":11},
+                  {"lat":52.0607180,"lon":5.0950566,"type":"break_through","time":15},
+                  {"lat":52.0797372,"lon":5.1293068,"type":"break_through","time":19},
+                  {"lat":52.0792731,"lon":5.1343818,"type":"break_through","time":23},
+                  {"lat":52.0763011,"lon":5.1574637,"type":"break_through","time":27},
+                  {"lat":52.0782167,"lon":5.1592370,"type":"break","time":13}]})",
+      R"({"date_time":{"type":2,"value":"2019-11-10T09:00"},
           "costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
-                               {"lat": 52.068882, "lon": 5.120852, "type": "break"},
-                               {"lat": 52.069671, "lon": 5.121185, "type": "through"},
-                               {"lat": 52.070380, "lon": 5.121523, "type": "through"},
-                               {"lat": 52.070947, "lon": 5.121828, "type": "through"},
-                               {"lat": 52.071827, "lon": 5.122220, "type": "through"},
-                               {"lat": 52.072526, "lon": 5.122553, "type": "through"},
-                               {"lat": 52.073489, "lon": 5.122880, "type": "through"},
-                               {"lat": 52.074554, "lon": 5.122955, "type": "through"},
-                               {"lat": 52.075190, "lon": 5.123067, "type": "through"},
-                               {"lat": 52.075718, "lon": 5.123121, "type": "break"}]})",
-       R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
-                      {"lat": 52.068882, "lon": 5.120852, "type": "break","time":7},
-                      {"lat": 52.069671, "lon": 5.121185, "type": "break","time":9},
-                      {"lat": 52.070380, "lon": 5.121523, "type": "break","time":11},
-                      {"lat": 52.070947, "lon": 5.121828, "type": "break","time":13},
-                      {"lat": 52.071827, "lon": 5.1227, "type": "break", "radius": 1,"time":15},
-                      {"lat": 52.072526, "lon": 5.122553, "type": "break","time":17},
-                      {"lat": 52.073489, "lon": 5.122880, "type": "break","time":19},
-                      {"lat": 52.074554, "lon": 5.122955, "type": "break","time":21},
-                      {"lat": 52.075190, "lon": 5.123067, "type": "break","time":23},
-                      {"lat": 52.075718, "lon": 5.123121, "type": "break","time":25}]})",
-       R"({"date_time":{"type":2,"value":"2019-11-10T09:00"},
-                      "costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
-                      {"lat": 52.068882, "lon": 5.120852, "type": "break"},
-                      {"lat": 52.069671, "lon": 5.121185, "type": "through"},
-                      {"lat": 52.070380, "lon": 5.121523, "type": "through"},
-                      {"lat": 52.070947, "lon": 5.121828, "type": "through"},
-                      {"lat": 52.071827, "lon": 5.1227, "type": "through", "radius": 1},
-                      {"lat": 52.072526, "lon": 5.122553, "type": "through"},
-                      {"lat": 52.073489, "lon": 5.122880, "type": "through"},
-                      {"lat": 52.074554, "lon": 5.122955, "type": "through"},
-                      {"lat": 52.075190, "lon": 5.123067, "type": "through"},
-                      {"lat": 52.075718, "lon": 5.123121, "type": "break"}]})"};
+                  {"lat":52.0609632,"lon":5.0917676,"type":"break"},
+                  {"lat":52.0607185,"lon":5.0940566,"type":"via"},
+                  {"lat":52.0607180,"lon":5.0950566,"type":"via"},
+                  {"lat":52.0797372,"lon":5.1293068,"type":"via"},
+                  {"lat":52.0792731,"lon":5.1343818,"type":"via"},
+                  {"lat":52.0763011,"lon":5.1574637,"type":"via"},
+                  {"lat":52.0782167,"lon":5.1592370,"type":"break"}]})",
+      R"({"date_time":{"type":1,"value":"2019-11-10T09:00"},
+          "costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
+                  {"lat": 52.068882, "lon": 5.120852, "type": "break"},
+                  {"lat": 52.069671, "lon": 5.121185, "type": "break"},
+                  {"lat": 52.070380, "lon": 5.121523, "type": "break"},
+                  {"lat": 52.070947, "lon": 5.121828, "type": "break"},
+                  {"lat": 52.071827, "lon": 5.122220, "type": "break"},
+                  {"lat": 52.072526, "lon": 5.122553, "type": "break"},
+                  {"lat": 52.073489, "lon": 5.122880, "type": "break"},
+                  {"lat": 52.074554, "lon": 5.122955, "type": "break"},
+                  {"lat": 52.075190, "lon": 5.123067, "type": "break"},
+                  {"lat": 52.075718, "lon": 5.123121, "type": "break"}]})",
+      R"({"date_time":{"type":0},
+        "costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
+                  {"lat": 52.068882, "lon": 5.120852, "type": "break"},
+                  {"lat": 52.069671, "lon": 5.121185, "type": "through"},
+                  {"lat": 52.070380, "lon": 5.121523, "type": "through"},
+                  {"lat": 52.070947, "lon": 5.121828, "type": "through"},
+                  {"lat": 52.071827, "lon": 5.122220, "type": "through"},
+                  {"lat": 52.072526, "lon": 5.122553, "type": "through"},
+                  {"lat": 52.073489, "lon": 5.122880, "type": "through"},
+                  {"lat": 52.074554, "lon": 5.122955, "type": "through"},
+                  {"lat": 52.075190, "lon": 5.123067, "type": "through"},
+                  {"lat": 52.075718, "lon": 5.123121, "type": "break"}]})",
+      R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
+                  {"lat": 52.068882, "lon": 5.120852, "type": "break","time":7},
+                  {"lat": 52.069671, "lon": 5.121185, "type": "break","time":9},
+                  {"lat": 52.070380, "lon": 5.121523, "type": "break","time":11},
+                  {"lat": 52.070947, "lon": 5.121828, "type": "break","time":13},
+                  {"lat": 52.071827, "lon": 5.1227, "type": "break", "radius":1,"time":15},
+                  {"lat": 52.072526, "lon": 5.122553, "type": "break","time":17},
+                  {"lat": 52.073489, "lon": 5.122880, "type": "break","time":19},
+                  {"lat": 52.074554, "lon": 5.122955, "type": "break","time":21},
+                  {"lat": 52.075190, "lon": 5.123067, "type": "break","time":23},
+                  {"lat": 52.075718, "lon": 5.123121, "type": "break","time":25}]})",
+      R"({"date_time":{"type":2,"value":"2019-11-10T09:00"},
+        "costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
+                  {"lat": 52.068882, "lon": 5.120852, "type": "break"},
+                  {"lat": 52.069671, "lon": 5.121185, "type": "through"},
+                  {"lat": 52.070380, "lon": 5.121523, "type": "through"},
+                  {"lat": 52.070947, "lon": 5.121828, "type": "through"},
+                  {"lat": 52.071827, "lon": 5.1227, "type": "through", "radius": 1},
+                  {"lat": 52.072526, "lon": 5.122553, "type": "through"},
+                  {"lat": 52.073489, "lon": 5.122880, "type": "through"},
+                  {"lat": 52.074554, "lon": 5.122955, "type": "through"},
+                  {"lat": 52.075190, "lon": 5.123067, "type": "through"},
+                  {"lat": 52.075718, "lon": 5.123121, "type": "break"}]})"};
 
   using a_t = std::tuple<size_t, size_t, bool>;
   std::vector<a_t> test_answers = {a_t{3, 3, true},  a_t{3, 3, true}, a_t{2, 3, true},
                                    a_t{3, 3, false}, a_t{1, 9, true}, a_t{1, 1, true},
-                                   a_t{2, 7, true},  a_t{2, 2, true}};
-
-  std::cout << '\n';
+                                   a_t{2, 7, true},  a_t{2, 2, false}};
+  // for type 2, we currently do not support them, thus we are not expecting any time stamp
   for (size_t i = 0; i < test_cases.size(); ++i) {
     trace_tester tester;
-    std::cout << "test case #" << i << std::endl;
     auto response = tester.test(test_cases[i]);
-
     std::string error_message;
     if (response.trip().routes_size() != std::get<0>(test_answers[i])) {
-      error_message = "Expected " + std::to_string(std::get<0>(test_answers[i])) +
-                      " routes but got " + std::to_string(response.trip().routes_size());
-      // throw std::logic_error(error_message);
-      std::cout << error_message << std::endl;
+      throw std::logic_error("Expected " + std::to_string(std::get<0>(test_answers[i])) +
+                             " routes but got " + std::to_string(response.trip().routes_size()));
     }
     size_t leg_count = 0;
     for (const auto& route : response.trip().routes()) {
       leg_count += route.legs_size();
       for (const auto& leg : route.legs()) {
         if (leg.location(0).has_date_time() && !std::get<2>(test_answers[i])) {
-          error_message = "Found a leg with a start time when it shouldnt have had one";
-          // throw std::logic_error("Found a leg with a start time when it shouldnt have had one");
-          std::cout << error_message << std::endl;
+          throw std::logic_error("Found a leg with a start time when it shouldnt have had one");
         }
         if (!leg.location(0).has_date_time() && std::get<2>(test_answers[i])) {
-          error_message = "Found a leg without a start time when it should have had one";
-          // throw std::logic_error("Found a leg without a start time when it should have had one");
-          std::cout << error_message << std::endl;
+          throw std::logic_error("Found a leg without a start time when it should have had one");
         }
       }
     }
     if (leg_count != std::get<1>(test_answers[i])) {
-      error_message = "Expected " + std::to_string(std::get<1>(test_answers[i])) +
-                      " legs in total but got " + std::to_string(leg_count);
-      // throw std::logic_error(error_message);
-      std::cout << error_message << std::endl;
+      throw std::logic_error("Expected " + std::to_string(std::get<1>(test_answers[i])) +
+                             " legs in total but got " + std::to_string(leg_count));
     }
   }
 }
