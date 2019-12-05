@@ -468,8 +468,15 @@ thor_worker_t::map_match(Api& request) {
         leg_origin_location->set_route_index(route_index);
         leg_origin_location->set_shape_index(way_point_index);
         // populate date time for the first location if it does not have date time in case of
-        // route discontinuity
+        // route discontinuity,
         if (!leg_origin_location->has_date_time() && !date_time.empty()) {
+          // if there was a leg built in the previous route, we have to
+          // offset the date time for this new route before assign it to current leg
+          if (last_leg != nullptr) {
+            date_time =
+                offset_date(*reader, date_time, prev_edge_id,
+                            last_leg->node().rbegin()->elapsed_time(), leg_origin_iter->edgeid);
+          }
           leg_origin_location->set_date_time(date_time);
         }
         prev_edge_id = leg_origin_iter->edgeid;
