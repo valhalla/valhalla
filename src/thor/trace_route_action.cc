@@ -460,7 +460,7 @@ thor_worker_t::map_match(Api& request) {
 
         int last_edge_index = 0;
         int way_point_index = 0;
-        // intialize the origin location for route
+        // initialize the origin location for route
         // for trip leg builder to work it needs to have origin and destination locations
         // so we fake them before calling it
         Location* leg_origin_location =
@@ -478,6 +478,12 @@ thor_worker_t::map_match(Api& request) {
                             last_leg->node().rbegin()->elapsed_time(), leg_origin_iter->edgeid);
           }
           leg_origin_location->set_date_time(date_time);
+        }
+        // populate date time when options do not contain date time but the first location has it
+        // TODO: modify the way we populate option, if we detect locations has date_time,
+        // options.has_date_time() should return true
+        else if (date_time.empty() && leg_origin_location->has_date_time()) {
+          date_time = leg_origin_location->date_time();
         }
         prev_edge_id = leg_origin_iter->edgeid;
         add_path_edge(&*leg_origin_location, *leg_origin_iter);

@@ -414,7 +414,6 @@ void test_edges_discontinuity_with_multi_routes() {
   for (size_t i = 0; i < test_cases.size(); ++i) {
     trace_tester tester;
     auto response = tester.test(test_cases[i]);
-    std::string error_message;
     if (response.trip().routes_size() != std::get<0>(test_answers[i])) {
       throw std::logic_error("Expected " + std::to_string(std::get<0>(test_answers[i])) +
                              " routes but got " + std::to_string(response.trip().routes_size()));
