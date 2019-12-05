@@ -438,7 +438,7 @@ thor_worker_t::map_match(Api& request) {
       // The following logic put break points (matches results) on edge candidates to form legs
       // logic assumes the both match results and edge candidates are topologically sorted in correct
       // order. Only the first location will be populated with corresponding input date_time
-      std::string date_time = options.mutable_shape(0)->date_time();
+      std::string date_time = options.has_date_time() ? options.mutable_shape(0)->date_time() : "";
       GraphId prev_edge_id, curr_edge_id;
       const TripLeg* last_leg = nullptr;
       auto leg_origin_iter = match_results.cbegin();
