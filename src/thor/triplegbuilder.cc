@@ -1340,7 +1340,7 @@ TripLegBuilder::Build(const AttributesController& controller,
       }
     }
     // Update elapsed time at the end of the edge, store this at the next node.
-    elapsedtime += edge_itr->elapsed_time * edge_pct;
+    elapsedtime = edge_itr->elapsed_time * edge_pct;
 
     // Assign the admin index
     if (controller.attributes.at(kNodeaAdminIndex)) {
