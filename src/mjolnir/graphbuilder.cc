@@ -982,6 +982,7 @@ void BuildTileSet(const std::string& ways_file,
           node_names = GetTagTokens(osmdata.node_names.name(node.name_index()));
 
           std::vector<SignInfo> signs;
+          signs.reserve(node_names.size());
           for (auto& name : node_names) {
             signs.emplace_back(Sign::Type::kJunctionName, false, name);
           }
@@ -1192,8 +1193,8 @@ std::string GraphBuilder::GetRef(const std::string& way_ref, const std::string& 
           }
           found = true;
           break;
-        } else if (tmp[0].find(" ") != std::string::npos &&
-                   ref.find(" ") != std::string::npos) { // SR 747 vs OH 747
+        } else if (tmp[0].find(' ') != std::string::npos &&
+                   ref.find(' ') != std::string::npos) { // SR 747 vs OH 747
           std::vector<std::string> sign1 = GetTagTokens(tmp[0], ' ');
           std::vector<std::string> sign2 = GetTagTokens(ref, ' ');
           if (sign1.size() == 2 && sign2.size() == 2) {
