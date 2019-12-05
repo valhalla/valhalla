@@ -381,6 +381,7 @@ void test_edges_discontinuity_with_multi_routes() {
 
   std::vector<std::pair<size_t, size_t>> test_answers = {{3, 3}, {3, 3}, {3, 4}, {3, 3},
                                                          {1, 9}, {1, 1}, {2, 7}, {2, 2}};
+
   tyr::actor_t actor(conf, true);
   for (size_t i = 0; i < test_cases.size(); ++i) {
     auto json_match = actor.trace_route(test_cases[i]);
@@ -395,16 +396,39 @@ void test_edges_discontinuity_with_multi_routes() {
     if (leg_count != test_answers[i].second)
       throw std::logic_error("Expected " + std::to_string(test_answers[i].second) +
                              " legs in total but got " + std::to_string(leg_count));
+
+    // this compare indices will be build base on number of routes and number of legs on each route.
+    std::vector<int> compare_indices;
+    for (const auto& trip : trips) {
+      int num_legs = trip.second.get_child("legs").size();
+      for (int waypoint_index = 0; waypoint_index < num_legs + 1; ++waypoint_index) {
+        compare_indices.push_back(waypoint_index);
+      }
+    }
+
+    std::vector<int> waypoint_indices;
+    const auto& tracepoints = matched.get_child("tracepoints");
+    for (const auto& tracepoint : tracepoints) {
+      try {
+        // this try catch block handles tracepoints of null or tracepoint waypooint_index of null from
+        // the match result.
+        waypoint_indices.push_back(tracepoint.second.get<int>("waypoint_index"));
+      } catch (...) {}
+    }
+
+    if (compare_indices != waypoint_indices) {
+      throw std::logic_error("leg shape waypoint indices does not match");
+    }
   }
 }
 
 void test_disconnected_edges_expect_no_route() {
   std::vector<std::string> test_cases = {
       R"({"costing":"auto","shape_match":"map_snap","shape":[
-          {"lat":52.0630834,"lon":5.1037227,"type":"break"},
-          {"lat":52.0633099,"lon":5.1047193,"type":"break"},
-          {"lat":52.0640117,"lon":5.1040429,"type":"break"},
-          {"lat":52.0644313,"lon":5.1041697,"type":"break"}]})"};
+        {"lat":52.0630834,"lon":5.1037227,"type":"break"},
+        {"lat":52.0633099,"lon":5.1047193,"type":"break"},
+        {"lat":52.0640117,"lon":5.1040429,"type":"break"},
+        {"lat":52.0644313,"lon":5.1041697,"type":"break"}]})"};
   std::vector<size_t> test_answers = {0};
   size_t illegal_path = 0;
   tyr::actor_t actor(conf, true);
@@ -418,6 +442,70 @@ void test_disconnected_edges_expect_no_route() {
     }
   }
 }
+
+void test_matching_indices_and_waypoint_indices() {
+  std::vector<std::string> test_cases = {
+      R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
+        {"lat": 52.068882, "lon": 5.120852, "type": "break"},
+        {"lat": 52.069671, "lon": 5.121185, "type": "via"},
+        {"lat": 52.070380, "lon": 5.121523, "type": "via"},
+        {"lat": 52.070947, "lon": 5.121828, "type": "via"},
+        {"lat": 52.071827, "lon": 5.1227, "type": "via"},
+        {"lat": 52.072526, "lon": 5.122553, "type": "via"},
+        {"lat": 52.073489, "lon": 5.122880, "type": "via"},
+        {"lat": 52.074554, "lon": 5.122955, "type": "via"},
+        {"lat": 52.075190, "lon": 5.123067, "type": "via"},
+        {"lat": 52.075718, "lon": 5.123121, "type": "break"}]})",
+      R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
+        {"lat": 52.0609632, "lon": 5.0917676, "type": "break"},
+        {"lat": 52.0607180, "lon": 5.0950566, "type": "break"},
+        {"lat": 52.0797372, "lon": 5.1293068, "type": "break"},
+        {"lat": 52.0792731, "lon": 5.1343818, "type": "break"},
+        {"lat": 52.0763011, "lon": 5.1574637, "type": "break"},
+        {"lat": 52.0782167, "lon": 5.1592370, "type": "via"},
+        {"lat": 52.0801357, "lon": 5.1605372, "type": "break"}]})"};
+  std::vector<std::vector<std::pair<std::string, std::string>>> answers{{{"0", "0"},
+                                                                         {"0", "null"},
+                                                                         {"0", "null"},
+                                                                         {"0", "1"},
+                                                                         {"1", "0"},
+                                                                         {"1", "null"},
+                                                                         {"1", "null"},
+                                                                         {"1", "null"},
+                                                                         {"1", "1"}},
+                                                                        {
+                                                                            {"0", "0"},
+                                                                            {"0", "1"},
+                                                                            {"1", "0"},
+                                                                            {"1", "1"},
+                                                                            {"2", "0"},
+                                                                            {"2", "null"},
+                                                                            {"2", "1"},
+                                                                        }};
+
+  tyr::actor_t actor(conf, true);
+  for (size_t i = 0; i < test_cases.size(); ++i) {
+    auto matched = json_to_pt(actor.trace_route(test_cases[i]));
+    const auto& tracepoints = matched.get_child("tracepoints");
+    int j = 0;
+    for (const auto& tracepoint : tracepoints) {
+      std::pair<std::string, std::string> result;
+      try {
+        result = {tracepoint.second.get<std::string>("matchings_index"),
+                  tracepoint.second.get<std::string>("waypoint_index")};
+      } catch (...) {
+        // handle the tracepoint null case
+        continue;
+      }
+      if (result != answers[i][j]) {
+        throw std::logic_error{"expect matching_index and waypoint_index: (" + answers[i][j].first +
+                               "," + answers[i][j].second + "), " + "but got: (" + result.first +
+                               "," + result.second + ")"};
+      }
+      ++j;
+    }
+  }
+} // namespace
 
 void test_time_rejection() {
   tyr::actor_t actor(conf, true);
@@ -804,6 +892,59 @@ void test_topk_frontage_alternate() {
         "The raw score of the first result is always less than that of the second");
 }
 
+void test_now_matches() {
+  tyr::actor_t actor(conf, true);
+
+  // once with map matching
+  std::string test_case =
+      R"({"date_time":{"type":0},"shape_match":"map_snap","costing":"auto",
+         "encoded_polyline":"oeyjbBqfjwHeO~M}x@`u@wDmh@oCcd@sAiVcAaKe@cBaNe[u^qg@qH`u@cL{Tmr@c{AtTu_@xVsd@"})";
+  auto route_json = actor.trace_route(test_case);
+
+  // again with walking
+  auto route = json_to_pt(route_json);
+  auto encoded_shape = route.get_child("trip.legs").front().second.get<std::string>("shape");
+  test_case =
+      R"({"date_time":{"type":0},"shape_match":"edge_walk","costing":"auto","encoded_polyline":")" +
+      json_escape(encoded_shape) + "\"}";
+  actor.trace_route(test_case);
+}
+
+void test_leg_duration_trimming() {
+  std::vector<std::string> test_cases = {
+      R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
+          {"lat": 52.0957652, "lon": 5.1101366, "type": "break"},
+          {"lat": 52.0959457, "lon": 5.1106847, "type": "break"},
+          {"lat": 52.0962535, "lon": 5.1116988, "type": "break"}]})",
+      R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
+          {"lat": 52.0826293, "lon": 5.1267623, "type": "break"},
+          {"lat": 52.0835867, "lon": 5.1276355, "type": "break"},
+          {"lat": 52.0837127, "lon": 5.1277763, "type": "break"},
+          {"lat": 52.0839615, "lon": 5.1280204, "type": "break"},
+          {"lat": 52.0841756, "lon": 5.1282906, "type": "break"}]})",
+      R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
+          {"lat": 52.0609108, "lon": 5.0924059, "type": "break"},
+          {"lat": 52.0605926, "lon": 5.0962937, "type": "break"},
+          {"lat": 52.0604866, "lon": 5.0975675, "type": "break"},
+          {"lat": 52.0601766, "lon": 5.1005663, "type": "break"}]})"};
+
+  // in these test cases, if the same leg duration appears more than once, the duration is not
+  // trimmed correctly, we use unordered_set to catch this behavior
+  std::vector<std::vector<int>> answers{{3, 8}, {4, 3, 6, 10}, {8, 6, 14}};
+  tyr::actor_t actor(conf, true);
+  for (size_t i = 0; i < test_cases.size(); ++i) {
+    auto matched = json_to_pt(actor.trace_route(test_cases[i]));
+    const auto& trips = matched.get_child(("matchings"));
+    int j = 0;
+    for (const auto& trip : trips) {
+      for (const auto& leg : trip.second.get_child("legs")) {
+        if (leg.second.get<int>("duration") != answers[i][j++]) {
+          throw std::logic_error{"leg duration not trimmed correctly"};
+        }
+      }
+    }
+  }
+}
 } // namespace
 
 int main(int argc, char* argv[]) {
@@ -843,6 +984,12 @@ int main(int argc, char* argv[]) {
   suite.test(TEST_CASE(test_topk_loop_alternate));
 
   suite.test(TEST_CASE(test_topk_frontage_alternate));
+
+  suite.test(TEST_CASE(test_now_matches));
+
+  suite.test(TEST_CASE(test_leg_duration_trimming));
+
+  suite.test(TEST_CASE(test_matching_indices_and_waypoint_indices));
 
   return suite.tear_down();
 }
