@@ -950,6 +950,10 @@ void test_now_matches() {
 void test_leg_duration_trimming() {
   std::vector<std::string> test_cases = {
       R"([{"lat": 52.0957652, "lon": 5.1101366, "type": "break", "node_snap_tolerance":0},
+          {"lat": 52.0959457, "lon": 5.1106847, "type": "break", "node_snap_tolerance":0}]})",
+      R"([{"lat": 52.0959457, "lon": 5.1106847, "type": "break", "node_snap_tolerance":0},
+          {"lat": 52.0962535, "lon": 5.1116988, "type": "break", "node_snap_tolerance":0}]})",
+      R"([{"lat": 52.0957652, "lon": 5.1101366, "type": "break", "node_snap_tolerance":0},
           {"lat": 52.0959457, "lon": 5.1106847, "type": "break", "node_snap_tolerance":0},
           {"lat": 52.0962535, "lon": 5.1116988, "type": "break", "node_snap_tolerance":0}]})",
       R"([{"lat": 52.0826293, "lon": 5.1267623, "type": "break", "node_snap_tolerance":0},
@@ -967,28 +971,36 @@ void test_leg_duration_trimming() {
     // do the map match for this test and record each routes legs times
     auto match_test_case = R"({"costing":"auto","shape":)" + test_case;
     auto match_api = tester.match(match_test_case);
-    std::vector<std::vector<double>> match_times;
+    std::vector<std::vector<std::pair<double, std::string>>> match_times;
     for (const auto& route : match_api.trip().routes()) {
       match_times.emplace_back();
       for (const auto& leg : route.legs()) {
-        match_times.back().push_back(leg.node().rbegin()->elapsed_time());
+        match_times.back().emplace_back(leg.node().rbegin()->elapsed_time(), leg.shape());
       }
     }
 
     // do the same thing for the route api
     auto route_test_case = R"({"costing":"auto","locations":)" + test_case;
     auto route_api = tester.route(route_test_case);
-    std::vector<std::vector<double>> route_times;
+    std::vector<std::vector<std::pair<double, std::string>>> route_times;
     for (const auto& route : route_api.trip().routes()) {
       route_times.emplace_back();
       for (const auto& leg : route.legs()) {
-        route_times.back().push_back(leg.node().rbegin()->elapsed_time());
+        route_times.back().emplace_back(leg.node().rbegin()->elapsed_time(), leg.shape());
       }
     }
 
     // they should not disagree (unless the map match is very vague)
-    if (match_times != route_times)
-      throw std::logic_error("Multileg map match times didnt match multileg route times");
+    if (match_times.size() != route_times.size())
+      throw std::logic_error("Number of routes differs");
+    for (size_t i = 0; i < match_times.size(); ++i) {
+      if (match_times[i].size() != route_times[i].size())
+        throw std::logic_error("Number of legs differs");
+      for (size_t j = 0; j < match_times[i].size(); ++j) {
+        if (!valhalla::midgard::equal(match_times[i][j].first, route_times[i][j].first, 0.01))
+          throw std::logic_error("Leg time differs");
+      }
+    }
   }
 }
 } // namespace

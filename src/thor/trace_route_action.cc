@@ -40,6 +40,7 @@ constexpr size_t kMatchResultsIndex = 2;
 constexpr size_t kTripLegIndex = 3;
 
 void add_path_edge(valhalla::Location* l, const meili::MatchResult& m) {
+  l->mutable_path_edges()->Clear();
   auto* edge = l->mutable_path_edges()->Add();
   edge->set_graph_id(m.edgeid);
   edge->set_percent_along(m.distance_along);
@@ -178,11 +179,11 @@ thor_worker_t::map_match(Api& request) {
     m_temp_disconnected_edges.clear();
 
     // Form the path edges based on the matched points and populate disconnected edges
-    m_temp_path_edges = MapMatcher::FormPath(matcher.get(), match_results, edge_segments,
-                                             mode_costing, mode, m_temp_disconnected_edges, options);
+    auto path_edges = MapMatcher::FormPath(matcher.get(), match_results, edge_segments, mode_costing,
+                                           mode, m_temp_disconnected_edges, options);
 
     // If we want a route but there actually isnt a path, we cant give you one
-    if (m_temp_path_edges.empty() && options.action() == Options::trace_route) {
+    if (path_edges.empty() && options.action() == Options::trace_route) {
       throw std::exception{};
     }
 
@@ -229,7 +230,7 @@ thor_worker_t::map_match(Api& request) {
       // Iterate over results to set edge_index, if found
       int edge_index = 0;
       int last_matched_edge_index = edge_index;
-      auto edge = m_temp_path_edges.cbegin();
+      auto edge = path_edges.cbegin();
       auto last_matched_edge = edge;
       for (auto& enhanced_match_result : m_temp_enhanced_match_results) {
         // Reset edge and edge_index to last matched for every matched result
@@ -239,7 +240,7 @@ thor_worker_t::map_match(Api& request) {
         // Check for result for valid edge id
         if (enhanced_match_result.edgeid.Is_Valid()) {
           // Walk edges to find matching id
-          while (edge != m_temp_path_edges.cend()) {
+          while (edge != path_edges.cend()) {
             // Find matching edge id in path
             if (enhanced_match_result.edgeid == edge->edgeid) {
               // Set match result with matched edge index and break out of the loop
@@ -394,61 +395,65 @@ thor_worker_t::map_match(Api& request) {
 
     // trace_attributes always returns a single trip path and may have discontinuities
     if (options.action() == Options::trace_attributes) {
-      // we make a new route to hold the result of each iteraton of top k
+      // we make a new route to hold the result of each iteration of top k
       auto& route = *request.mutable_trip()->mutable_routes()->Add();
-      path_map_match(match_results, m_temp_path_edges, *route.mutable_legs()->Add(),
+      path_map_match(match_results, path_edges, *route.mutable_legs()->Add(),
                      m_temp_route_discontinuities);
     } // trace_route can return multiple trip paths
     else {
 
       // here we break the path edges into groups of contiguous ones so that
       // where they are discontinuous we can make them into separate routes
-      m_temp_disjoint_edge_groups = {{{m_temp_path_edges.front()}, {}}};
+      using edge_group_t =
+          std::tuple<std::vector<PathInfo>::const_iterator, std::vector<PathInfo>::const_iterator,
+                     std::vector<meili::MatchResult>::const_iterator>;
+      std::vector<edge_group_t> disjoint_edge_groups{
+          edge_group_t{path_edges.cbegin(), path_edges.cbegin(), {}}};
       auto discontinuity_edges_iter = m_temp_disconnected_edges.begin();
-      for (int i = 1, n = static_cast<int>(m_temp_path_edges.size()); i < n; ++i) {
-        const auto& front_edge_info = m_temp_path_edges[i - 1];
-        const auto& back_edge_info = m_temp_path_edges[i];
+      for (auto path_edge_itr = std::next(path_edges.cbegin()); path_edge_itr != path_edges.cend();
+           ++path_edge_itr) {
+        auto prev_path_edge_itr = std::prev(path_edge_itr);
         // make a new group when discontinuity occurs
         if (discontinuity_edges_iter != m_temp_disconnected_edges.end() &&
-            discontinuity_edges_iter->first == front_edge_info.edgeid &&
-            discontinuity_edges_iter->second == back_edge_info.edgeid) {
-          m_temp_disjoint_edge_groups.emplace_back();
+            discontinuity_edges_iter->first == prev_path_edge_itr->edgeid &&
+            discontinuity_edges_iter->second == path_edge_itr->edgeid) {
+          // start a new one
+          disjoint_edge_groups.emplace_back(edge_group_t{path_edge_itr, path_edge_itr, {}});
           ++discontinuity_edges_iter;
         }
-        m_temp_disjoint_edge_groups.back().first.emplace_back(back_edge_info);
+        // remember where the last one ended
+        std::get<1>(disjoint_edge_groups.back()) = path_edge_itr;
       }
 
       // here we mark edges in the path that get "upgraded" to break points
       // because they occur just before a discontinuity
       auto discontinuity_point_iter = match_results.cbegin();
-      for (auto& disjoint_edge_group : m_temp_disjoint_edge_groups) {
-        const auto& last_edge_in_group = disjoint_edge_group.first.back();
+      for (auto& disjoint_edge_group : disjoint_edge_groups) {
+        const auto& last_edge_in_group = std::get<1>(disjoint_edge_group);
         // in each edge group, we only care about the last edge where the discontinuity happens
-        while (discontinuity_point_iter->edgeid != last_edge_in_group.edgeid) {
+        while (discontinuity_point_iter->edgeid != last_edge_in_group->edgeid) {
           ++discontinuity_point_iter;
         }
         // for the last edge, the last match result on this edge is where discontinuity happens
-        while (discontinuity_point_iter->edgeid == last_edge_in_group.edgeid) {
+        while (discontinuity_point_iter->edgeid == last_edge_in_group->edgeid) {
           ++discontinuity_point_iter;
         }
 
-        disjoint_edge_group.second = discontinuity_point_iter - 1;
+        std::get<2>(disjoint_edge_group) = discontinuity_point_iter - 1;
       }
 
       // The following logic put break points (matches results) on edge candidates to form legs
       // logic assumes the both match results and edge candidates are topologically sorted in correct
       // order
       auto leg_origin_iter = match_results.cbegin();
-      for (const auto& disjoint_edge_group : m_temp_disjoint_edge_groups) {
+      for (const auto& disjoint_edge_group : disjoint_edge_groups) {
         // for each disjoint edge group, we make a new route for it.
         // We use multi-route to handle discontinuity
-        const auto& edges = disjoint_edge_group.first;
-        const auto& disjoint_point = disjoint_edge_group.second;
         uint64_t route_index = request.trip().routes_size();
         auto* route = request.mutable_trip()->mutable_routes()->Add();
         // first we find where this leg is going to begin
         while (leg_origin_iter != match_results.end() &&
-               leg_origin_iter->edgeid != edges.front().edgeid) {
+               leg_origin_iter->edgeid != std::get<0>(disjoint_edge_group)->edgeid) {
           ++leg_origin_iter;
         }
         if (leg_origin_iter == match_results.cend()) {
@@ -458,14 +463,14 @@ thor_worker_t::map_match(Api& request) {
         // loop through each edge in the group, build legs accordingly
         int last_edge_index = 0;
         int way_point_index = 0;
-        for (int i = 0, n = static_cast<int>(edges.size()); i < n; ++i) {
-          const auto& path_edge = edges[i];
+        for (auto path_edge_itr = std::get<0>(disjoint_edge_group);
+             path_edge_itr != std::next(std::get<1>(disjoint_edge_group)); ++path_edge_itr) {
           // then we find where each leg is going to end by finding the
           // first valid destination matched points after origin matched points
           for (auto leg_destination_iter = leg_origin_iter + 1;
                leg_destination_iter != match_results.cend(); ++leg_destination_iter) {
             // skip input location points that are not on the match results edge
-            if (path_edge.edgeid != leg_destination_iter->edgeid) {
+            if (path_edge_itr->edgeid != leg_destination_iter->edgeid) {
               continue;
             }
             // we only build legs on 3 types of locations:
@@ -477,7 +482,7 @@ thor_worker_t::map_match(Api& request) {
                     valhalla::Location::kBreak &&
                 options.shape(leg_destination_iter - match_results.begin()).type() !=
                     valhalla::Location::kBreakThrough &&
-                leg_destination_iter != disjoint_point) {
+                leg_destination_iter != std::get<2>(disjoint_edge_group)) {
               Location* via_location =
                   options.mutable_shape(leg_destination_iter - match_results.cbegin());
               via_location->set_route_index(route_index);
@@ -499,20 +504,52 @@ thor_worker_t::map_match(Api& request) {
             destination_location->set_route_index(route_index);
             destination_location->set_shape_index(++way_point_index);
 
+            // we fake up something that looks like the output of loki
             add_path_edge(&*origin_location, *leg_origin_iter);
             add_path_edge(&*destination_location, *leg_destination_iter);
 
+            // mark the beginning and end of the edges on the path for this leg
+            auto leg_begin = std::next(std::get<0>(disjoint_edge_group), last_edge_index);
+            auto leg_end = path_edge_itr;
+
+            // "handling partial edges will be the death of us" -- Confucius 404 BC
+            // trip leg builder expects the leg to start with 0 elapsed time, however map matches
+            // dont care about legs, their path is for the whole match. so we need to trim off any
+            // prior legs elapsed time. also because map matching returns full edge path infos we
+            // will have to deal with partial edges wherever discontinuities or legs occur except..
+            // on the first and last path info, form path takes care of those for time tracking
+
+            // we start with the first edge in the this leg making sure to account for any previous
+            // leg (prev_elapsed_time) and any partial distance on this edge (except the very first)
+            auto prev_elapsed_time =
+                leg_begin == path_edges.cbegin() ? 0.f : std::prev(leg_begin)->elapsed_time;
+            float trim_begin = 0.f;
+            if (leg_begin != path_edges.cbegin()) {
+              trim_begin = (leg_begin->elapsed_time - prev_elapsed_time) *
+                               origin_location->path_edges(0).percent_along() +
+                           prev_elapsed_time;
+            }
+
+            // then we do the last edge in the this leg making sure to account for any previous
+            // leg (prev_elapsed_time) and any partial distance on this edge (except the very last)
+            prev_elapsed_time =
+                leg_end == path_edges.cbegin() ? 0.f : std::prev(leg_end)->elapsed_time;
+            float trim_end = 0.f;
+            if (leg_end + 1 != path_edges.cend()) {
+              trim_end = (leg_end->elapsed_time - prev_elapsed_time) *
+                         (1.f - destination_location->path_edges(0).percent_along());
+            }
+
             // add a new leg to the current route
-            TripLegBuilder::Build(controller, matcher->graphreader(), mode_costing,
-                                  edges.begin() + last_edge_index, edges.begin() + i + 1,
-                                  *origin_location, *destination_location,
+            TripLegBuilder::Build(controller, matcher->graphreader(), mode_costing, leg_begin,
+                                  leg_end + 1, *origin_location, *destination_location,
                                   std::list<valhalla::Location>{}, *route->mutable_legs()->Add(),
-                                  interrupt, &m_temp_route_discontinuities, true);
+                                  interrupt, &m_temp_route_discontinuities, trim_begin, trim_end);
 
             // beginning of next leg will be the end of this leg
             leg_origin_iter = leg_destination_iter;
             // store the starting index of the path_edges
-            last_edge_index = i;
+            last_edge_index = std::distance(std::get<0>(disjoint_edge_group), path_edge_itr);
           }
         }
       }
