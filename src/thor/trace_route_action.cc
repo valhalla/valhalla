@@ -517,7 +517,24 @@ thor_worker_t::map_match(Api& request) {
             // dont care about legs, their path is for the whole match. so we need to trim off any
             // prior legs elapsed time. also because map matching returns full edge path infos we
             // will have to deal with partial edges wherever discontinuities or legs occur except..
-            // on the first and last path info, form path takes care of those for time tracking
+            // on the first and last path info or on any discontinuities (because edge segments will
+            // have source and target that are not 0 or 1 respectively), FormPath takes care of those
+            // for time tracking. to take care of trimming off elapsed time at the front we keep track
+            // of the accumulated amount of previous legs' elapsed times. however this is not enough
+            // the last edge of every match or the edge where a discontinuity starts will also already
+            // be trimmed so we need to take care not to trim it more
+
+            // TODO: this trimming computation is wrong for more complex cases
+            // we need to first account for whatever elapsed time happened up to the previous path
+            // edge the prev_elapsed_time below does this well enough but then it gets complicated for
+            // the partial distance on the current edge because we can have multiple legs on the same
+            // edge but the beginning of the first one already accounts for any partial distance. its
+            // possible that the easiest thing to do would be to track two elapsed times in FormPath
+            // so that we can do all the partial times here... Might just shift the problem though
+
+            // for the begin time we could just accumulate the elapsed times of all previous legs.
+            // that should work however we still run into the problem where we wont be properly
+            // trimming the end.. more thought needed
 
             // we start with the first edge in the this leg making sure to account for any previous
             // leg (prev_elapsed_time) and any partial distance on this edge (except the very first)

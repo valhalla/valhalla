@@ -950,10 +950,6 @@ void test_now_matches() {
 void test_leg_duration_trimming() {
   std::vector<std::string> test_cases = {
       R"([{"lat": 52.0957652, "lon": 5.1101366, "type": "break", "node_snap_tolerance":0},
-          {"lat": 52.0959457, "lon": 5.1106847, "type": "break", "node_snap_tolerance":0}]})",
-      R"([{"lat": 52.0959457, "lon": 5.1106847, "type": "break", "node_snap_tolerance":0},
-          {"lat": 52.0962535, "lon": 5.1116988, "type": "break", "node_snap_tolerance":0}]})",
-      R"([{"lat": 52.0957652, "lon": 5.1101366, "type": "break", "node_snap_tolerance":0},
           {"lat": 52.0959457, "lon": 5.1106847, "type": "break", "node_snap_tolerance":0},
           {"lat": 52.0962535, "lon": 5.1116988, "type": "break", "node_snap_tolerance":0}]})",
       R"([{"lat": 52.0826293, "lon": 5.1267623, "type": "break", "node_snap_tolerance":0},
@@ -964,7 +960,12 @@ void test_leg_duration_trimming() {
       R"([{"lat": 52.0609108, "lon": 5.0924059, "type": "break", "node_snap_tolerance":0},
           {"lat": 52.0605926, "lon": 5.0962937, "type": "break", "node_snap_tolerance":0},
           {"lat": 52.0604866, "lon": 5.0975675, "type": "break", "node_snap_tolerance":0},
-          {"lat": 52.0601766, "lon": 5.1005663, "type": "break", "node_snap_tolerance":0}]})"};
+          {"lat": 52.0601766, "lon": 5.1005663, "type": "break", "node_snap_tolerance":0}]})",
+      R"([{"lat": 52.0957652, "lon": 5.1101366, "type": "break", "node_snap_tolerance":0},
+          {"lat": 52.0959457, "lon": 5.1106847, "type": "break", "node_snap_tolerance":0}]})",
+      R"([{"lat": 52.0959457, "lon": 5.1106847, "type": "break", "node_snap_tolerance":0},
+          {"lat": 52.0962535, "lon": 5.1116988, "type": "break", "node_snap_tolerance":0}]})",
+  };
 
   api_tester tester;
   for (const auto& test_case : test_cases) {
