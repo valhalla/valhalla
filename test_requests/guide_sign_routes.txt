@@ -18,3 +18,5 @@
 -j '{"locations":[{"lat":51.409519,"lon":-0.228519,"street":"Raynes Park Bridge"},{"lat":51.409473,"lon":-0.227331,"street":"Approach Road"}],"costing":"auto","units":"miles"}'
 -j '{"locations":[{"lat":51.409519,"lon":-0.228519,"street":"Raynes Park Bridge"},{"lat":51.408947,"lon":-0.229391,"street":"Approach Road"}],"costing":"auto","units":"miles"}'
 -j '{"locations":[{"lat":51.414509,"lon":0.113702,"street":"Cray Road"},{"lat":51.410812,"lon":0.124581,"street":"A20"}],"costing":"auto","units":"miles"}'
+-j '{"locations":[{"lat":40.520210,"lon":-78.396530,"street":"Chestnut Avenue"},{"lat":40.518085,"lon":-78.396141,"street":"8th Street"}],"costing":"auto","units":"miles"}'
+-j '{"locations":[{"lat":40.520210,"lon":-78.396530,"street":"Chestnut Avenue"},{"lat":40.517551,"lon":-78.396782,"street":"10th Avenue"}],"costing":"auto","units":"miles"}'
