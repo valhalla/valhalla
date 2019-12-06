@@ -1070,12 +1070,18 @@ public:
 
     // I hope this does not happen, but it probably will (i.e., user sets forward speed
     // and not the backward speed and vice versa.)
-    if (w.forward_tagged_speed() && !w.backward_tagged_speed() && !w.oneway()) {
-      w.set_backward_speed(w.forward_speed());
-      w.set_backward_tagged_speed(true);
-    } else if (!w.forward_tagged_speed() && w.backward_tagged_speed() && !w.oneway()) {
-      w.set_forward_speed(w.backward_speed());
-      w.set_forward_tagged_speed(true);
+    if (w.forward_tagged_speed() && !w.backward_tagged_speed()) {
+      if (!w.oneway()) {
+        w.set_backward_speed(w.forward_speed());
+        w.set_backward_tagged_speed(true);
+      } else // fallback to default speed.
+        w.set_speed(default_speed);
+    } else if (!w.forward_tagged_speed() && w.backward_tagged_speed()) {
+      if (!w.oneway()) {
+        w.set_forward_speed(w.backward_speed());
+        w.set_forward_tagged_speed(true);
+      } else // fallback to default speed.
+        w.set_speed(default_speed);
     }
 
     // default to drive on right.
