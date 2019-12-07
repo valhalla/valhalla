@@ -952,6 +952,20 @@ void test_leg_duration_trimming() {
       R"([{"lat": 52.0957652, "lon": 5.1101366, "type": "break", "node_snap_tolerance":0},
           {"lat": 52.0959457, "lon": 5.1106847, "type": "break", "node_snap_tolerance":0},
           {"lat": 52.0962535, "lon": 5.1116988, "type": "break", "node_snap_tolerance":0}]})",
+      R"([{"lat": 52.0957652, "lon": 5.1101366, "type": "break", "node_snap_tolerance":0},
+          {"lat": 52.0959457, "lon": 5.1106847, "type": "break", "node_snap_tolerance":0}]})",
+      R"([{"lat": 52.0959457, "lon": 5.1106847, "type": "break", "node_snap_tolerance":0},
+          {"lat": 52.0962535, "lon": 5.1116988, "type": "break", "node_snap_tolerance":0}]})",
+      R"([{"lat": 52.108781, "lon": 5.1057369, "type": "break", "node_snap_tolerance":0},
+          {"lat": 52.108982, "lon": 5.1054472, "type": "break", "node_snap_tolerance":0},
+          {"lat": 52.109180, "lon": 5.1051449, "type": "break", "node_snap_tolerance":0},
+          {"lat": 52.109407, "lon": 5.1047962, "type": "break", "node_snap_tolerance":0},
+          {"lat": 52.109589, "lon": 5.1044422, "type": "break", "node_snap_tolerance":0},
+          {"lat": 52.109806, "lon": 5.1041525, "type": "break", "node_snap_tolerance":0},
+          {"lat": 52.110030, "lon": 5.1038306, "type": "break", "node_snap_tolerance":0},
+          {"lat": 52.110244, "lon": 5.1034766, "type": "break", "node_snap_tolerance":0},
+          {"lat": 52.110521, "lon": 5.1031029, "type": "break", "node_snap_tolerance":0},
+          {"lat": 52.110735, "lon": 5.1027846, "type": "break", "node_snap_tolerance":0}]})",
       R"([{"lat": 52.0826293, "lon": 5.1267623, "type": "break", "node_snap_tolerance":0},
           {"lat": 52.0835867, "lon": 5.1276355, "type": "break", "node_snap_tolerance":0},
           {"lat": 52.0837127, "lon": 5.1277763, "type": "break", "node_snap_tolerance":0},
@@ -961,33 +975,40 @@ void test_leg_duration_trimming() {
           {"lat": 52.0605926, "lon": 5.0962937, "type": "break", "node_snap_tolerance":0},
           {"lat": 52.0604866, "lon": 5.0975675, "type": "break", "node_snap_tolerance":0},
           {"lat": 52.0601766, "lon": 5.1005663, "type": "break", "node_snap_tolerance":0}]})",
-      R"([{"lat": 52.0957652, "lon": 5.1101366, "type": "break", "node_snap_tolerance":0},
-          {"lat": 52.0959457, "lon": 5.1106847, "type": "break", "node_snap_tolerance":0}]})",
-      R"([{"lat": 52.0959457, "lon": 5.1106847, "type": "break", "node_snap_tolerance":0},
-          {"lat": 52.0962535, "lon": 5.1116988, "type": "break", "node_snap_tolerance":0}]})",
   };
+
+  // TODO: not enough tests, add more. specifically add some with discontinuities and then run two
+  // routes for those
 
   api_tester tester;
   for (const auto& test_case : test_cases) {
-    // do the map match for this test and record each routes legs times
-    auto match_test_case = R"({"costing":"auto","shape":)" + test_case;
-    auto match_api = tester.match(match_test_case);
-    std::vector<std::vector<std::pair<double, std::string>>> match_times;
-    for (const auto& route : match_api.trip().routes()) {
-      match_times.emplace_back();
-      for (const auto& leg : route.legs()) {
-        match_times.back().emplace_back(leg.node().rbegin()->elapsed_time(), leg.shape());
-      }
-    }
-
+    printf("\nroute:\n");
     // do the same thing for the route api
     auto route_test_case = R"({"costing":"auto","locations":)" + test_case;
     auto route_api = tester.route(route_test_case);
     std::vector<std::vector<std::pair<double, std::string>>> route_times;
     for (const auto& route : route_api.trip().routes()) {
+      printf("leg:\n");
       route_times.emplace_back();
       for (const auto& leg : route.legs()) {
         route_times.back().emplace_back(leg.node().rbegin()->elapsed_time(), leg.shape());
+        printf("%.2f %s\n", route_times.back().back().first,
+               route_times.back().back().second.c_str());
+      }
+    }
+
+    printf("match:\n");
+    // do the map match for this test and record each routes legs times
+    auto match_test_case = R"({"costing":"auto", "shape_match":"map_snap","shape":)" + test_case;
+    auto match_api = tester.match(match_test_case);
+    std::vector<std::vector<std::pair<double, std::string>>> match_times;
+    for (const auto& route : match_api.trip().routes()) {
+      printf("leg:\n");
+      match_times.emplace_back();
+      for (const auto& leg : route.legs()) {
+        match_times.back().emplace_back(leg.node().rbegin()->elapsed_time(), leg.shape());
+        printf("%.2f %s\n", match_times.back().back().first,
+               match_times.back().back().second.c_str());
       }
     }
 
@@ -998,7 +1019,7 @@ void test_leg_duration_trimming() {
       if (match_times[i].size() != route_times[i].size())
         throw std::logic_error("Number of legs differs");
       for (size_t j = 0; j < match_times[i].size(); ++j) {
-        if (!valhalla::midgard::equal(match_times[i][j].first, route_times[i][j].first, 0.01))
+        if (!valhalla::midgard::equal(match_times[i][j].first, route_times[i][j].first, 0.1))
           throw std::logic_error("Leg time differs");
       }
     }
