@@ -17,7 +17,11 @@
 /* Need to know which geos version we have to work out which headers to include */
 #include <geos/version.h>
 
+#if GEOS_VERSION_MAJOR == 3 && GEOS_VERSION_MINOR >= 8
+#include <geos/geom/CoordinateArraySequence.h>
+#else
 #include <geos/geom/CoordinateSequenceFactory.h>
+#endif
 #include <geos/geom/Geometry.h>
 #include <geos/geom/GeometryFactory.h>
 #include <geos/geom/LineString.h>
@@ -159,8 +163,14 @@ std::vector<std::string> GetWkts(std::unique_ptr<Geometry>& mline) {
   for (unsigned i = 0; i < merged->size(); ++i) {
     std::unique_ptr<LineString> pline((*merged)[i]);
     if (pline->getNumPoints() > 3 && pline->isClosed()) {
+#if GEOS_VERSION_MAJOR == 3 && GEOS_VERSION_MINOR >= 8
+      polys[totalpolys].polygon =
+          gf->createPolygon(gf->createLinearRing(pline->getCoordinates())).release();
+      polys[totalpolys].ring = gf->createLinearRing(pline->getCoordinates()).release();
+#else
       polys[totalpolys].polygon = gf->createPolygon(gf->createLinearRing(pline->getCoordinates()), 0);
       polys[totalpolys].ring = gf->createLinearRing(pline->getCoordinates());
+#endif
       polys[totalpolys].area = polys[totalpolys].polygon->getArea();
       polys[totalpolys].iscontained = 0;
       polys[totalpolys].containedbyid = 0;
@@ -218,14 +228,26 @@ std::vector<std::string> GetWkts(std::unique_ptr<Geometry>& mline) {
       }
 
       // List of holes for this top level polygon
+#if GEOS_VERSION_MAJOR == 3 && GEOS_VERSION_MINOR >= 8
+      std::unique_ptr<std::vector<LinearRing*>> interior(new std::vector<LinearRing*>);
+#else
       std::unique_ptr<std::vector<Geometry*>> interior(new std::vector<Geometry*>);
+#endif
       for (unsigned j = i + 1; j < totalpolys; ++j) {
         if (polys[j].iscontained == 1 && polys[j].containedbyid == i) {
+#if GEOS_VERSION_MAJOR == 3 && GEOS_VERSION_MINOR >= 8
           interior->push_back(polys[j].ring);
+#else
+          interior->push_back(polys[j].ring);
+#endif
         }
       }
 
+#if GEOS_VERSION_MAJOR == 3 && GEOS_VERSION_MINOR >= 8
       Polygon* poly(gf->createPolygon(polys[i].ring, interior.release()));
+#else
+      Polygon* poly(gf->createPolygon(polys[i].ring, interior.release()));
+#endif
       poly->normalize();
       polygons->push_back(poly);
     }
@@ -421,7 +443,7 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
   uint32_t count = 0;
   uint64_t nodeid;
   bool has_data;
-#if 3 == GEOS_VERSION_MAJOR && 6 <= GEOS_VERSION_MINOR
+#if GEOS_VERSION_MAJOR == 3 && GEOS_VERSION_MINOR >= 6
   auto gf = GeometryFactory::create();
 #else
   std::unique_ptr<GeometryFactory> gf(new GeometryFactory());
@@ -446,8 +468,12 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
           break;
         }
 
+#if GEOS_VERSION_MAJOR == 3 && GEOS_VERSION_MINOR >= 8
+        auto coords = std::unique_ptr<CoordinateArraySequence>(new CoordinateArraySequence);
+#else
         std::unique_ptr<CoordinateSequence> coords(
             gf->getCoordinateSequenceFactory()->create((size_t)0, (size_t)2));
+#endif
         size_t j = 0;
 
         for (const auto ref_id : itr->second) {
