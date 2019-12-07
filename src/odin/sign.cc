@@ -42,7 +42,8 @@ std::string Sign::ToParameterString() const {
 #endif
 
 bool Sign::operator==(const Sign& rhs) const {
-  return ((consecutive_count_ == rhs.consecutive_count_) && (text_ == rhs.text_));
+  return ((consecutive_count_ == rhs.consecutive_count_) &&
+          (is_route_number_ == rhs.is_route_number_) && (text_ == rhs.text_));
 }
 
 } // namespace odin

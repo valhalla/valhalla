@@ -146,11 +146,19 @@ public:
   const Signs& signs() const;
   Signs* mutable_signs();
 
+  bool HasSigns() const;
+
   bool HasExitSign() const;
   bool HasExitNumberSign() const;
   bool HasExitBranchSign() const;
   bool HasExitTowardSign() const;
   bool HasExitNameSign() const;
+
+  bool HasGuideSign() const;
+  bool HasGuideBranchSign() const;
+  bool HasGuideTowardSign() const;
+
+  bool HasJunctionNameSign() const;
 
   uint32_t internal_right_turn_count() const;
   void set_internal_right_turn_count(uint32_t internal_right_turn_count);
