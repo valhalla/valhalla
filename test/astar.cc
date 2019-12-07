@@ -407,10 +407,9 @@ void trivial_path_no_uturns(const std::string& config_file) {
 
   vt::AttributesController controller;
   auto& leg = *api.mutable_trip()->mutable_routes()->Add()->mutable_legs()->Add();
-  TripLeg trip_path =
-      vt::TripLegBuilder::Build(controller, graph_reader, mode_costing, path.begin(), path.end(),
-                                *options.mutable_locations(0), *options.mutable_locations(1),
-                                std::list<valhalla::Location>{}, leg);
+  vt::TripLegBuilder::Build(controller, graph_reader, mode_costing, path.begin(), path.end(),
+                            *options.mutable_locations(0), *options.mutable_locations(1),
+                            std::list<valhalla::Location>{}, leg);
   // really could of got the total of the elapsed_time.
   odin::DirectionsBuilder::Build(api);
   const auto& trip_directions = api.directions().routes(0).legs(0);

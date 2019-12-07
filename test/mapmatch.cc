@@ -1034,7 +1034,7 @@ int main(int argc, char* argv[]) {
     seed = std::stoi(argv[1]);
   if (argc > 2)
     bound = std::stoi(argv[2]);
-  
+
   suite.test(TEST_CASE(test32bit));
 
   suite.test(TEST_CASE(test_matcher));
