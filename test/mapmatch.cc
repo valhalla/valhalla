@@ -964,11 +964,11 @@ void test_leg_duration_trimming() {
           {"lat": 52.1267117, "lon": 5.0898420, "type": "break", "node_snap_tolerance":0},
           {"lat": 52.1261379, "lon": 5.0907894, "type": "break", "node_snap_tolerance":0}])"},
       // 2 routes close together in space
-      {R"([{"lat": 52.0940515, "lon": 5.1133290, "type": "break", "node_snap_tolerance":0},
+      /*{R"([{"lat": 52.0940515, "lon": 5.1133290, "type": "break", "node_snap_tolerance":0},
           {"lat": 52.0939743, "lon": 5.1133408, "type": "break", "node_snap_tolerance":0},
           {"lat": 52.09356, "lon": 5.1133722, "type": "break", "node_snap_tolerance":0}])",
        R"([{"lat": 52.0939187, "lon": 5.1134787, "type": "break", "node_snap_tolerance":0},
-          {"lat": 52.0939248, "lon": 5.1135103, "type": "break", "node_snap_tolerance":0}])"},
+          {"lat": 52.0939248, "lon": 5.1135103, "type": "break", "node_snap_tolerance":0}])"},*/
       // 1 route with 1 leg across 2 edges and then another leg on the same second edge
       {R"([{"lat": 52.0957652, "lon": 5.1101366, "type": "break", "node_snap_tolerance":0},
           {"lat": 52.0959457, "lon": 5.1106847, "type": "break", "node_snap_tolerance":0},
@@ -1052,41 +1052,41 @@ int main(int argc, char* argv[]) {
     seed = std::stoi(argv[1]);
   if (argc > 2)
     bound = std::stoi(argv[2]);
-  /*
-    suite.test(TEST_CASE(test32bit));
 
-    suite.test(TEST_CASE(test_matcher));
+  suite.test(TEST_CASE(test32bit));
+  
+  suite.test(TEST_CASE(test_matcher));
 
-    suite.test(TEST_CASE(test_trace_route_breaks));
+  suite.test(TEST_CASE(test_trace_route_breaks));
 
-    suite.test(TEST_CASE(test_disconnected_edges_expect_no_route));
+  suite.test(TEST_CASE(test_disconnected_edges_expect_no_route));
 
-    suite.test(TEST_CASE(test_edges_discontinuity_with_multi_routes));
+  suite.test(TEST_CASE(test_edges_discontinuity_with_multi_routes));
 
-    suite.test(TEST_CASE(test_distance_only));
+  suite.test(TEST_CASE(test_distance_only));
 
-    suite.test(TEST_CASE(test_time_rejection));
+  suite.test(TEST_CASE(test_time_rejection));
 
-    suite.test(TEST_CASE(test_trace_route_edge_walk_expected_error_code));
+  suite.test(TEST_CASE(test_trace_route_edge_walk_expected_error_code));
 
-    suite.test(TEST_CASE(test_trace_route_map_snap_expected_error_code));
+  suite.test(TEST_CASE(test_trace_route_map_snap_expected_error_code));
 
-    suite.test(TEST_CASE(test_trace_attributes_edge_walk_expected_error_code));
+  suite.test(TEST_CASE(test_trace_attributes_edge_walk_expected_error_code));
 
-    suite.test(TEST_CASE(test_trace_attributes_map_snap_expected_error_code));
+  suite.test(TEST_CASE(test_trace_attributes_map_snap_expected_error_code));
 
-    suite.test(TEST_CASE(test_topk_validate));
+  suite.test(TEST_CASE(test_topk_validate));
 
-    suite.test(TEST_CASE(test_topk_fork_alternate));
+  suite.test(TEST_CASE(test_topk_fork_alternate));
 
-    suite.test(TEST_CASE(test_topk_loop_alternate));
+  suite.test(TEST_CASE(test_topk_loop_alternate));
 
-    suite.test(TEST_CASE(test_topk_frontage_alternate));
+  suite.test(TEST_CASE(test_topk_frontage_alternate));
 
-    suite.test(TEST_CASE(test_now_matches));
+  suite.test(TEST_CASE(test_now_matches));
 
-    suite.test(TEST_CASE(test_matching_indices_and_waypoint_indices));
-  */
+  suite.test(TEST_CASE(test_matching_indices_and_waypoint_indices));
+
   suite.test(TEST_CASE(test_leg_duration_trimming));
 
   return suite.tear_down();
