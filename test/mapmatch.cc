@@ -964,11 +964,11 @@ void test_leg_duration_trimming() {
           {"lat": 52.1267117, "lon": 5.0898420, "type": "break", "node_snap_tolerance":0},
           {"lat": 52.1261379, "lon": 5.0907894, "type": "break", "node_snap_tolerance":0}])"},
       // 2 routes close together in space
-      /*{R"([{"lat": 52.0940515, "lon": 5.1133290, "type": "break", "node_snap_tolerance":0},
-          {"lat": 52.0939743, "lon": 5.1133408, "type": "break", "node_snap_tolerance":0},
-          {"lat": 52.09356, "lon": 5.1133722, "type": "break", "node_snap_tolerance":0}])",
-       R"([{"lat": 52.0939187, "lon": 5.1134787, "type": "break", "node_snap_tolerance":0},
-          {"lat": 52.0939248, "lon": 5.1135103, "type": "break", "node_snap_tolerance":0}])"},*/
+      {R"([{"lat": 52.0940283, "lon": 5.1133286, "type": "break", "node_snap_tolerance":0},
+          {"lat": 52.0938604, "lon": 5.1133609, "type": "break", "node_snap_tolerance":0},
+          {"lat": 52.0935827, "lon": 5.1133893, "type": "break", "node_snap_tolerance":0}])",
+       R"([{"lat": 52.0939489, "lon": 5.1136976, "type": "break", "node_snap_tolerance":0},
+          {"lat": 52.0939837, "lon": 5.1139511, "type": "break", "node_snap_tolerance":0}])"},
       // 1 route with 1 leg across 2 edges and then another leg on the same second edge
       {R"([{"lat": 52.0957652, "lon": 5.1101366, "type": "break", "node_snap_tolerance":0},
           {"lat": 52.0959457, "lon": 5.1106847, "type": "break", "node_snap_tolerance":0},
