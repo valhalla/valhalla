@@ -1,8 +1,0 @@
-valhalla:
-  #build: .
-  #dockerfile: Dockerfile-ppa
-  image: valhalla/docker:ppa-1.1.20
-  ports:
-    - "8002:8002"
-  volumes:
-    - ${VALHALLA_DOCKER_DATAPATH}:/data/valhalla
