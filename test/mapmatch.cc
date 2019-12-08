@@ -1054,7 +1054,7 @@ int main(int argc, char* argv[]) {
     bound = std::stoi(argv[2]);
 
   suite.test(TEST_CASE(test32bit));
-  
+
   suite.test(TEST_CASE(test_matcher));
 
   suite.test(TEST_CASE(test_trace_route_breaks));
