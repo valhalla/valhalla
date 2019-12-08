@@ -453,7 +453,8 @@ thor_worker_t::map_match(Api& request) {
 
       // The following logic put break points (matches results) on edge candidates to form legs
       // logic assumes the both match results and edge candidates are topologically sorted in correct
-      // order
+      // order. Only the first location will be populated with corresponding input date_time
+      std::string date_time = options.shape(0).has_date_time() ? options.shape(0).date_time() : "";
       auto origin_match_result = match_results.cbegin();
       for (const auto& edge_group : edge_groups) {
         // for each disjoint edge group, we make a new route for it.
@@ -487,10 +488,9 @@ thor_worker_t::map_match(Api& request) {
             // for locations that matched but are break types nor disjoint points
             // we set its waypoint_index to limits::max to notify the serializer thus distinguish
             // them from the first waypoint of the route whose waypoint_index is 0.
-            if (options.shape(destination_match_result - match_results.begin()).type() !=
-                    valhalla::Location::kBreak &&
-                options.shape(destination_match_result - match_results.begin()).type() !=
-                    valhalla::Location::kBreakThrough &&
+            auto break_type = options.shape(destination_match_result - match_results.begin()).type();
+            if (break_type != valhalla::Location::kBreak &&
+                break_type != valhalla::Location::kBreakThrough &&
                 destination_match_result != std::get<3>(edge_group)) {
               Location* via_location =
                   options.mutable_shape(destination_match_result - match_results.cbegin());
@@ -499,17 +499,22 @@ thor_worker_t::map_match(Api& request) {
               continue;
             }
 
-            // for trip leg builder to work it needs to have origin and destination locations
-            // so we fake them here before calling it
-            // when handling multi routes, orsm serializer need to know both the
-            // matching_index(route_index) and the waypoint_index.
+            // initialize the origin and destination location for route
             Location* origin_location =
                 options.mutable_shape(origin_match_result - match_results.cbegin());
-            origin_location->set_route_index(route_index);
-            origin_location->set_shape_index(way_point_index);
-
             Location* destination_location =
                 options.mutable_shape(destination_match_result - match_results.cbegin());
+
+            // populate date time for the first location, either with the start time of the route
+            // or with the offset datetime of the previous leg in case of multiple legs.
+            if (!date_time.empty()) {
+              origin_location->set_date_time(date_time);
+            }
+
+            // when handling multi routes, orsm serializer need to know both the
+            // matching_index(route_index) and the waypoint_index(shape_index).
+            origin_location->set_route_index(route_index);
+            origin_location->set_shape_index(way_point_index);
             destination_location->set_route_index(route_index);
             destination_location->set_shape_index(++way_point_index);
 
@@ -570,6 +575,14 @@ thor_worker_t::map_match(Api& request) {
                                   leg_end + 1, *origin_location, *destination_location,
                                   std::list<valhalla::Location>{}, *route->mutable_legs()->Add(),
                                   interrupt, &route_discontinuities, trim_begin, trim_end);
+
+            // we remember the datetime at the end of this leg, to use as the datetime at the start
+            // of the next leg.
+            if (!date_time.empty()) {
+              date_time = offset_date(*reader, date_time, leg_begin->edgeid,
+                                      route->legs().rbegin()->node().rbegin()->elapsed_time(),
+                                      leg_end->edgeid);
+            }
 
             // beginning of next leg will be the end of this leg
             origin_match_result = destination_match_result;
