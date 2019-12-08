@@ -199,10 +199,13 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
     GraphId edge_id = edge_segment.edgeid;
     matcher->graphreader().GetGraphTile(edge_id, tile);
     directededge = tile->directededge(edge_id);
+
     // Check if connected to prior edge
+    bool disconnected = false;
     if (prior_edge.Is_Valid() &&
         !matcher->graphreader().AreEdgesConnectedForward(prior_edge, edge_id)) {
       disconnected_edges.emplace_back(prior_edge, edge_id);
+      disconnected = true;
     }
 
     // Get seconds from beginning of the week accounting for any changes to timezone on the path
@@ -215,7 +218,7 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
 
     // get the cost of traversing the node, there is no turn cost the first time
     Cost turn_cost{};
-    if (elapsed.secs > 0) {
+    if (elapsed.secs > 0 && !disconnected) {
       turn_cost = costing->TransitionCost(directededge, nodeinfo, pred);
       elapsed += turn_cost;
     }

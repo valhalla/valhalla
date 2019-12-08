@@ -128,7 +128,8 @@ void thor_worker_t::trace_route(Api& request) {
 void thor_worker_t::route_match(Api& request) {
   // TODO - make sure the trace has timestamps..
   auto& options = *request.mutable_options();
-  if (RouteMatcher::FormPath(mode_costing, mode, *reader, trace, options, m_path_infos)) {
+  std::vector<PathInfo> path;
+  if (RouteMatcher::FormPath(mode_costing, mode, *reader, trace, options, path)) {
     // TODO: we dont support multileg here as it ignores location types but...
     // if this were a time dependent match you need to propogate the date time
     // information to each legs origin location because triplegbuilder relies on it.
@@ -142,8 +143,8 @@ void thor_worker_t::route_match(Api& request) {
 
     // Form the trip path based on mode costing, origin, destination, and path edges
     auto& leg = *request.mutable_trip()->mutable_routes()->Add()->mutable_legs()->Add();
-    thor::TripLegBuilder::Build(controller, *reader, mode_costing, m_path_infos.begin(),
-                                m_path_infos.end(), *options.mutable_locations()->begin(),
+    thor::TripLegBuilder::Build(controller, *reader, mode_costing, path.begin(), path.end(),
+                                *options.mutable_locations()->begin(),
                                 *options.mutable_locations()->rbegin(),
                                 std::list<valhalla::Location>{}, leg, interrupt);
   } else {
@@ -166,21 +167,20 @@ thor_worker_t::map_match(Api& request) {
   }
 
   // we don't allow multi path for trace route at the moment, discontinuities force multi route
-  int best_path =
+  int topk =
       request.options().action() == Options::trace_attributes ? request.options().best_paths() : 1;
-  m_offline_results = matcher->OfflineMatch(trace, best_path);
+  auto topk_match_results = matcher->OfflineMatch(trace, topk);
 
   // Process each score/match result
-  for (const auto& result : m_offline_results) {
+  std::vector<std::tuple<float, float, std::vector<thor::MatchResult>>> map_match_results;
+  for (const auto& result : topk_match_results) {
     const auto& match_results = result.results;
     const auto& edge_segments = result.segments;
-    m_temp_enhanced_match_results.clear();
-    m_temp_route_discontinuities.clear();
-    m_temp_disconnected_edges.clear();
 
     // Form the path edges based on the matched points and populate disconnected edges
+    std::vector<std::pair<GraphId, GraphId>> disconnected_edges;
     auto path_edges = MapMatcher::FormPath(matcher.get(), match_results, edge_segments, mode_costing,
-                                           mode, m_temp_disconnected_edges, options);
+                                           mode, disconnected_edges, options);
 
     // If we want a route but there actually isnt a path, we cant give you one
     if (path_edges.empty() && options.action() == Options::trace_route) {
@@ -219,12 +219,15 @@ thor_worker_t::map_match(Api& request) {
     }
 
     // Associate match points to edges, if enabled
+    std::vector<thor::MatchResult> enhanced_match_results;
+    std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>>
+        route_discontinuities;
     if (options.action() == Options::trace_attributes &&
         controller.category_attribute_enabled(kMatchedCategory)) {
       // Populate for matched points so we have 1:1 with trace points
       for (const auto& match_result : match_results) {
         // Matched type is set in constructor
-        m_temp_enhanced_match_results.emplace_back(match_result);
+        enhanced_match_results.emplace_back(match_result);
       }
 
       // Iterate over results to set edge_index, if found
@@ -232,7 +235,7 @@ thor_worker_t::map_match(Api& request) {
       int last_matched_edge_index = edge_index;
       auto edge = path_edges.cbegin();
       auto last_matched_edge = edge;
-      for (auto& enhanced_match_result : m_temp_enhanced_match_results) {
+      for (auto& enhanced_match_result : enhanced_match_results) {
         // Reset edge and edge_index to last matched for every matched result
         edge = last_matched_edge;
         edge_index = last_matched_edge_index;
@@ -260,12 +263,12 @@ thor_worker_t::map_match(Api& request) {
       }
 
       // Mark the disconnected route boundaries
-      auto curr_match_result = m_temp_enhanced_match_results.begin();
+      auto curr_match_result = enhanced_match_results.begin();
       auto prev_match_result = curr_match_result;
-      for (auto& disconnected_edge_pair : m_temp_disconnected_edges) {
+      for (auto& disconnected_edge_pair : disconnected_edges) {
 
         // Find previous(first) edge within the match results
-        while (curr_match_result != m_temp_enhanced_match_results.end()) {
+        while (curr_match_result != enhanced_match_results.end()) {
           if (curr_match_result->edgeid == disconnected_edge_pair.first.value) {
             // Found previous edge therefore stop looking
             break;
@@ -276,24 +279,23 @@ thor_worker_t::map_match(Api& request) {
         }
 
         // Find the last match result of the previous edge
-        while (curr_match_result != m_temp_enhanced_match_results.end()) {
+        while (curr_match_result != enhanced_match_results.end()) {
           if (curr_match_result->edgeid != disconnected_edge_pair.first.value) {
             // Set previous match result as disconnected path and break
             prev_match_result->begin_route_discontinuity = true;
 
             // The begin route discontinuity is the edge end info
             // therefore the second item in the pair
-            if (m_temp_route_discontinuities.count(prev_match_result->edge_index) > 0) {
+            if (route_discontinuities.count(prev_match_result->edge_index) > 0) {
               // Update edge_end_info values
-              auto& edge_end_info =
-                  m_temp_route_discontinuities.at(prev_match_result->edge_index).second;
+              auto& edge_end_info = route_discontinuities.at(prev_match_result->edge_index).second;
               edge_end_info.exists = true;
               edge_end_info.vertex = prev_match_result->lnglat;
               edge_end_info.distance_along = prev_match_result->distance_along;
             } else {
               // Add new item
               // Begin distance along defaulted to 0
-              m_temp_route_discontinuities.insert(
+              route_discontinuities.insert(
                   {prev_match_result->edge_index,
                    {{false, {}, 0.f},
                     {true, prev_match_result->lnglat, prev_match_result->distance_along}}});
@@ -306,24 +308,23 @@ thor_worker_t::map_match(Api& request) {
         }
 
         // Find the current(second) edge within the match results
-        while (curr_match_result != m_temp_enhanced_match_results.end()) {
+        while (curr_match_result != enhanced_match_results.end()) {
           if (curr_match_result->edgeid == disconnected_edge_pair.second.value) {
             // Set current match result as disconnected and break
             curr_match_result->end_route_discontinuity = true;
 
             // The end route discontinuity is the edge begin info
             // therefore the first item in the pair
-            if (m_temp_route_discontinuities.count(curr_match_result->edge_index) > 0) {
+            if (route_discontinuities.count(curr_match_result->edge_index) > 0) {
               // Update edge_begin_info values
-              auto& edge_begin_info =
-                  m_temp_route_discontinuities.at(curr_match_result->edge_index).first;
+              auto& edge_begin_info = route_discontinuities.at(curr_match_result->edge_index).first;
               edge_begin_info.exists = true;
               edge_begin_info.vertex = curr_match_result->lnglat;
               edge_begin_info.distance_along = curr_match_result->distance_along;
             } else {
               // Add new item
               // End distance along defaulted to 1
-              m_temp_route_discontinuities.insert(
+              route_discontinuities.insert(
                   {curr_match_result->edge_index,
                    {{true, curr_match_result->lnglat, curr_match_result->distance_along},
                     {false, {}, 1.f}}});
@@ -356,7 +357,7 @@ thor_worker_t::map_match(Api& request) {
       std::string marker_color;
       std::string marker_size;
       std::string matched_point_type;
-      for (const auto& match_result : m_temp_enhanced_match_results) {
+      for (const auto& match_result : enhanced_match_results) {
         if (match_result.begin_route_discontinuity || match_result.end_route_discontinuity) {
           marker_color = "#d7191c"; // red
           marker_size = "large";
@@ -384,7 +385,7 @@ thor_worker_t::map_match(Api& request) {
                match_result.lnglat.lng(), match_result.lnglat.lat(), marker_color.c_str(),
                marker_size.c_str(), index++, matched_point_type.c_str(), match_result.edge_index,
                match_result.distance_along, match_result.distance_from,
-               ((index != m_temp_enhanced_match_results.size() - 1) ? "," : ""));
+               ((index != enhanced_match_results.size() - 1) ? "," : ""));
       }
 
       // Print geojson footer
@@ -397,8 +398,7 @@ thor_worker_t::map_match(Api& request) {
     if (options.action() == Options::trace_attributes) {
       // we make a new route to hold the result of each iteration of top k
       auto& route = *request.mutable_trip()->mutable_routes()->Add();
-      path_map_match(match_results, path_edges, *route.mutable_legs()->Add(),
-                     m_temp_route_discontinuities);
+      path_map_match(match_results, path_edges, *route.mutable_legs()->Add(), route_discontinuities);
     } // trace_route can return multiple trip paths
     else {
 
@@ -410,12 +410,12 @@ thor_worker_t::map_match(Api& request) {
                      std::vector<meili::MatchResult>::const_iterator>;
       std::vector<edge_group_t> edge_groups{
           edge_group_t{path_edges.cbegin(), path_edges.cbegin(), {}, {}}};
-      auto discontinuity_edges_iter = m_temp_disconnected_edges.begin();
+      auto discontinuity_edges_iter = disconnected_edges.begin();
       for (auto path_edge_itr = std::next(path_edges.cbegin()); path_edge_itr != path_edges.cend();
            ++path_edge_itr) {
         auto prev_path_edge_itr = std::prev(path_edge_itr);
         // make a new group when discontinuity occurs
-        if (discontinuity_edges_iter != m_temp_disconnected_edges.end() &&
+        if (discontinuity_edges_iter != disconnected_edges.end() &&
             discontinuity_edges_iter->first == prev_path_edge_itr->edgeid &&
             discontinuity_edges_iter->second == path_edge_itr->edgeid) {
           // start a new one
@@ -568,7 +568,7 @@ thor_worker_t::map_match(Api& request) {
             TripLegBuilder::Build(controller, matcher->graphreader(), mode_costing, leg_begin,
                                   leg_end + 1, *origin_location, *destination_location,
                                   std::list<valhalla::Location>{}, *route->mutable_legs()->Add(),
-                                  interrupt, &m_temp_route_discontinuities, trim_begin, trim_end);
+                                  interrupt, &route_discontinuities, trim_begin, trim_end);
 
             // beginning of next leg will be the end of this leg
             origin_match_result = destination_match_result;
@@ -580,14 +580,14 @@ thor_worker_t::map_match(Api& request) {
     }
     // TODO: move this info to the trip leg
     // Keep the result
-    m_map_match_results.emplace_back(m_map_match_results.empty()
-                                         ? 1.0f
-                                         : std::get<kRawScoreIndex>(m_map_match_results.front()) /
-                                               result.score,
-                                     result.score, std::move(m_temp_enhanced_match_results));
+    map_match_results.emplace_back(map_match_results.empty()
+                                       ? 1.0f
+                                       : std::get<kRawScoreIndex>(map_match_results.front()) /
+                                             result.score,
+                                   result.score, std::move(enhanced_match_results));
   }
 
-  return m_map_match_results;
+  return map_match_results;
 }
 
 // Function that returns a trip path for a trace_attributes map match.

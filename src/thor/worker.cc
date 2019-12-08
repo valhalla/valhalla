@@ -365,9 +365,6 @@ void thor_worker_t::cleanup() {
   if (reader->OverCommitted()) {
     reader->Trim();
   }
-  m_path_infos.clear();
-  m_map_match_results.clear();
-  m_offline_results.clear();
 }
 
 } // namespace thor
