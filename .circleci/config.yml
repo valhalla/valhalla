@@ -27,7 +27,8 @@ jobs:
     docker:
       - image: docker:18.06.3-ce-git
     steps:
-      - setup_remote_docker
+      - setup_remote_docker:
+          docker_layer_caching: true
       - checkout
       - restore_cache:
           keys:
