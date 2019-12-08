@@ -23,7 +23,35 @@ commands:
             echo 'nvm alias default v8.11.2' >> $BASH_ENV
 
 jobs:
-
+  build-base:
+    docker:
+      - image: docker:18.06.3-ce-git
+    steps:
+      - setup_remote_docker
+      - checkout
+      - restore_cache:
+          keys:
+            - ccache
+      - run:
+          name: Build Valhalla base Dockerfile
+          command: |
+            docker build -f ./docker/Dockerfile-build --tag valhalla/docker:build-3.0.2 ./docker
+      - run:
+          name: Build Valhalla base Dockerfile x86
+          command: |
+            docker build -f ./docker/Dockerfile-build-x86 --tag valhalla/docker:build-x86-3.0.2 ./docker
+      - save_cache:
+          key: ccache
+          paths:
+            - ~/.ccache
+      - run:
+          name: Push Valhalla Docker image
+          command: |
+            if [ "${CIRCLE_BRANCH}" == "master" ]; then
+              echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+              docker push valhalla/docker:build-3.0.2
+              docker push valhalla/docker:build-x86-3.0.2
+            fi
   build-release-binary-linux:
     docker:
       - image: valhalla/docker:build-3.0.2
@@ -242,29 +270,46 @@ workflows:
   version: 2
   build_test_publish:
     jobs:
-      - lint-build-debug
-      - build-release
-      - build-release-x86
-      - build-osx
+      - build-base
+      - lint-build-debug:
+          requires:
+            - build-base
+      - build-release:
+          requires:
+            - build-base
+      - build-release-x86:
+          requires:
+            - build-base
+      - build-osx:
+          requires:
+            - build-base
       - build-release-binary-osx:
+          requires:
+            - build-base
           filters:
             tags:
               only: /.*/
             branches:
               ignore: /.*/
       - build-debug-binary-osx:
+          requires:
+            - build-base
           filters:
             tags:
               only: /.*/
             branches:
               ignore: /.*/
       - build-release-binary-linux:
+          requires:
+            - build-base
           filters:
             tags:
               only: /.*/
             branches:
               ignore: /.*/
       - build-debug-binary-linux:
+          requires:
+            - build-base
           filters:
             tags:
               only: /.*/
