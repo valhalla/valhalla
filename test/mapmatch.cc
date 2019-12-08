@@ -964,9 +964,9 @@ void test_leg_duration_trimming() {
           {"lat": 52.1267117, "lon": 5.0898420, "type": "break", "node_snap_tolerance":0},
           {"lat": 52.1261379, "lon": 5.0907894, "type": "break", "node_snap_tolerance":0}])"},
       // 2 routes close together in space
-      {R"([{"lat": 52.0937648, "lon": 5.1133722, "type": "break", "node_snap_tolerance":0},
+      {R"([{"lat": 52.0940515, "lon": 5.1133290, "type": "break", "node_snap_tolerance":0},
           {"lat": 52.0939743, "lon": 5.1133408, "type": "break", "node_snap_tolerance":0},
-          {"lat": 52.0940515, "lon": 5.1133290, "type": "break", "node_snap_tolerance":0}])",
+          {"lat": 52.09356, "lon": 5.1133722, "type": "break", "node_snap_tolerance":0}])",
        R"([{"lat": 52.0939187, "lon": 5.1134787, "type": "break", "node_snap_tolerance":0},
           {"lat": 52.0939248, "lon": 5.1135103, "type": "break", "node_snap_tolerance":0}])"},
       // 1 route with 1 leg across 2 edges and then another leg on the same second edge

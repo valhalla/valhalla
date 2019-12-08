@@ -547,8 +547,9 @@ thor_worker_t::map_match(Api& request) {
 
             // we get the time up to the last edge before this begin edge if any. we also remove
             // the turn cost at the begging of this edge if there is any
-            double trim_begin =
-                begin_trimmed ? 0 : std::prev(leg_begin)->elapsed_time + leg_begin->turn_cost;
+            double trim_begin = leg_begin == path_edges.cbegin()
+                                    ? 0
+                                    : std::prev(leg_begin)->elapsed_time + leg_begin->turn_cost;
             // then we scale the elapsed time on the edge based on the distance along the edge but
             // we need to scale that distance down in the case FormPath knew it was a partial edge
             trim_begin += (leg_begin->elapsed_time - trim_begin) *
