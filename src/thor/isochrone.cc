@@ -239,6 +239,7 @@ void Isochrone::ExpandForward(GraphReader& graphreader,
       continue;
     }
 
+    auto todo = nullptr;
     bool has_time_restrictions = false;
     // Check if the edge is allowed or if a restriction occurs. Get the edge speed.
     if (has_date_time_) {
@@ -246,7 +247,7 @@ void Isochrone::ExpandForward(GraphReader& graphreader,
       // traffic based speed if it exists
       if (!costing_->Allowed(directededge, pred, tile, edgeid, localtime, nodeinfo->timezone(),
                              has_time_restrictions) ||
-          costing_->Restricted(directededge, pred, edgelabels_, tile, edgeid, true, localtime,
+          costing_->Restricted(directededge, pred, edgelabels_, tile, edgeid, true, todo, localtime,
                                nodeinfo->timezone())) {
         continue;
       }
@@ -433,14 +434,15 @@ void Isochrone::ExpandReverse(GraphReader& graphreader,
     const DirectedEdge* opp_edge = t2->directededge(oppedge);
 
     // Check if the edge is allowed or if a restriction occurs. Get the edge speed.
+    auto todo = nullptr;
     bool has_time_restrictions = false;
     if (has_date_time_) {
       // With date time we check time dependent restrictions and access as well as get
       // traffic based speed if it exists
       if (!costing_->AllowedReverse(directededge, pred, opp_edge, t2, oppedge, localtime,
                                     nodeinfo->timezone(), has_time_restrictions) ||
-          costing_->Restricted(directededge, pred, bdedgelabels_, tile, edgeid, false, localtime,
-                               nodeinfo->timezone())) {
+          costing_->Restricted(directededge, pred, bdedgelabels_, tile, edgeid, false, nullptr,
+                               localtime, nodeinfo->timezone())) {
         continue;
       }
     } else {

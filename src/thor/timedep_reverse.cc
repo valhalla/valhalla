@@ -212,8 +212,8 @@ inline bool TimeDepReverse::ExpandReverseInner(GraphReader& graphreader,
   bool has_time_restrictions = false;
   if (!costing_->AllowedReverse(meta.edge, pred, opp_edge, t2, oppedge, localtime,
                                 nodeinfo->timezone(), has_time_restrictions) ||
-      costing_->Restricted(meta.edge, pred, edgelabels_rev_, tile, meta.edge_id, false, localtime,
-                           nodeinfo->timezone())) {
+      costing_->Restricted(meta.edge, pred, edgelabels_rev_, tile, meta.edge_id, false, &edgestatus_,
+                           localtime, nodeinfo->timezone())) {
     return false;
   }
 

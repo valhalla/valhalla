@@ -1,3 +1,4 @@
+#include "midgard/logging.h"
 #include "test.h"
 #include <cstdint>
 #include <fstream>
@@ -102,7 +103,7 @@ std::pair<vb::GraphId, vm::PointLL> g({tile_id.tileid(), tile_id.level(), 6}, {0
 
 void make_tile() {
   // Don't recreate tiles if they already exist (leads to silent corruption of tiles)
-  if (filesystem::exists(test_dir + "/2/000/519/120.gph")) {
+  if (filesystem::exists(test_dir)) {
     return;
   }
 
@@ -586,24 +587,36 @@ void DoConfig() {
   write_config(config_file);
 }
 
-std::string ways_file = "test_ways_whitelion.bin";
-std::string way_nodes_file = "test_way_nodes_whitelion.bin";
-std::string access_file = "test_access_whitelion.bin";
-std::string from_restriction_file = "test_from_complex_restrictions_whitelion.bin";
-std::string to_restriction_file = "test_to_complex_restrictions_whitelion.bin";
-std::string bss_file = "test_bss_nodes_whitelion.bin";
-
 boost::property_tree::ptree get_conf(const char* tiles) {
   std::stringstream ss;
   ss << R"({
-      "mjolnir":{"tile_dir":"test/data/)"
-     << tiles << R"(", "concurrency": 1},
+      "mjolnir":{
+        "tile_dir":"test/data/)"
+     << tiles << R"(",
+        "concurrency": 1
+      },
       "loki":{
         "actions":["route"],
         "logging":{"long_request": 100},
-        "service_defaults":{"minimum_reachability": 2,"radius": 10,"search_cutoff": 35000, "node_snap_tolerance": 5, "street_side_tolerance": 5, "heading_tolerance": 60}
+        "service_defaults":{
+          "minimum_reachability": 50,
+          "radius": 0,
+          "search_cutoff": 35000,
+          "node_snap_tolerance": 5,
+          "street_side_tolerance": 5,
+          "heading_tolerance": 60
+        }
       },
-      "thor":{"logging":{"long_request": 100}},
+      "thor":{"logging":{
+        "long_request": 100,
+        "type": "std_out"
+        }
+      },
+      "midgard":{
+        "logging":{
+          "type": "std_out"
+        }
+      },
       "odin":{"logging":{"long_request": 100}},
       "skadi":{"actons":["height"],"logging":{"long_request": 5}},
       "meili":{"customizable": ["turn_penalty_factor","max_route_distance_factor","max_route_time_factor","search_radius"],
@@ -1102,6 +1115,143 @@ void test_time_restricted_road_allowed_on_timedep() {
   }
 }
 
+
+void test_backtrack_complex_restriction(int date_time_type) {
+  // Regression test for backtracking complex restriction behaviour.
+  //
+  // Test-case documented in https://github.com/valhalla/valhalla/issues/2103
+  //
+  auto conf = get_conf("bayfront_singapore_tiles");
+  route_tester tester(conf);
+  std::string request;
+  switch (date_time_type) {
+    case 0:
+      // Bidir search
+      request = R"({
+        "locations": [
+          {
+            "lat":1.282185,
+            "lon":103.859650,
+            "street":"Sheares Link"
+          },
+          {
+            "lat":1.282493,
+            "lon":103.859421,
+            "street":"Sheares Link"
+          }
+        ],
+        "costing":"auto"
+      })";
+      break;
+    case 1:
+      // Forward search
+      request = R"({
+        "locations": [
+          {
+            "lat":1.282185,
+            "lon":103.859650,
+            "street":"Sheares Link"
+          },
+          {
+            "lat":1.282493,
+            "lon":103.859421,
+            "street":"Sheares Link"
+          }
+        ],
+        "costing":"auto",
+        "date_time": {
+          "type": 1,
+          "value": "2019-05-02T15:00"
+        }
+      })";
+      break;
+    case 2:
+      // Backward search with slightly different coordinates
+      request = R"({
+        "locations": [
+          {
+            "lat":1.282366,
+            "lon":-256.140661,
+            "street":"Sheares Link"
+          },
+          {
+            "lat":1.282355,
+            "lon":-256.140414,
+            "street":"Sheares Link"
+          }
+        ],
+        "costing":"auto",
+        "date_time": {
+          "type": 2,
+          "value": "2019-05-02T15:00"
+        }
+      })";
+      break;
+    default:
+      throw std::runtime_error("Unhandled case");
+  };
+
+  LOGLN_WARN(request);
+  auto response = tester.test(request);
+
+  const auto& leg = response.trip().routes(0).legs(0);
+  std::string correct_shape;
+  switch (date_time_type) {
+    case 0:
+    case 1:
+      correct_shape =
+          "iggmAa{abeEyD~HaBvCn@^`e@tYdGhCr]nRnCzArDjB{CbFsDyBwC{AsYsP_LcGqA{@wJsGeU{Km@]qFgDz@{A";
+      break;
+    case 2:
+      correct_shape =
+          R"(qrgmA_habeE}@xBqFgDkB{@_WiNiB{@mXwNqJcFcIeFeViL}Z_JoVeE\cFw@kBb@NxQdEzb@zKfIvDb`@|Sh\rQ`YdOdB|@tCeF)";
+      break;
+    default:
+      throw std::runtime_error("unhandled case");
+  }
+  if (leg.shape() != correct_shape) {
+    throw std::runtime_error("Did not find expected shape. Found \n" + leg.shape() +
+                             "\nbut expected \n" + correct_shape);
+  }
+
+  std::vector<std::string> names;
+  const auto& directions = response.directions().routes(0).legs();
+
+  for (const auto& d : directions) {
+    for (const auto& m : d.maneuver()) {
+      std::string name;
+      for (const auto& n : m.street_name()) {
+        name += n.value() + " ";
+      }
+      if (!name.empty()) {
+        name.pop_back();
+      }
+      names.push_back(name);
+    }
+  }
+  auto correct_route = std::vector<std::string>{"Sheares Link", "Bayfront Avenue", "Bayfront Avenue",
+                                                "Sheares Link", ""};
+  if (names != correct_route) {
+    throw std::logic_error("Incorrect route, got: \n" + boost::algorithm::join(names, ", ") +
+                           ", expected: \n" + boost::algorithm::join(correct_route, ", "));
+  }
+}
+
+void TestBacktrackComplexRestrictionForward() {
+  test_backtrack_complex_restriction(1);
+}
+
+void TestBacktrackComplexRestrictionReverse() {
+  // Reverse direction condition is triggered via use of slightly tweaked start/end coordinates
+  test_backtrack_complex_restriction(2);
+}
+
+void TestBacktrackComplexRestrictionBidirectional() {
+  // Bidirectional routed before via the reverse direction search
+  // So this becomes more of a regression test
+  test_backtrack_complex_restriction(0);
+}
+
 } // anonymous namespace
 
 int main() {
@@ -1129,6 +1279,10 @@ int main() {
   suite.test(TEST_CASE(test_time_restricted_road_allowed_on_timedep));
 
   suite.test(TEST_CASE(test_time_dep_forward_with_current_time));
+
+  suite.test(TEST_CASE(TestBacktrackComplexRestrictionForward));
+  suite.test(TEST_CASE(TestBacktrackComplexRestrictionReverse));
+  suite.test(TEST_CASE(TestBacktrackComplexRestrictionBidirectional));
 
   return suite.tear_down();
 }
