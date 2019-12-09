@@ -189,11 +189,13 @@ inline bool TimeDepReverse::ExpandReverseInner(GraphReader& graphreader,
 
   // Skip shortcut edges for time dependent routes. Also skip this edge if permanently labeled (best
   // path already found to this directed edge) or if no access for this mode.
-  if (meta.edge->is_shortcut() || meta.edge_status->set() == EdgeSet::kPermanent) {
+  if (meta.edge->is_shortcut() || !(meta.edge->reverseaccess() & access_mode_)) {
     return false;
   }
-  if (!(meta.edge->reverseaccess() & access_mode_)) {
-    return false;
+  // Skip this edge if permanently labeled (best path already found to this
+  // directed edge)
+  if (meta.edge_status->set() == EdgeSet::kPermanent) {
+    return true; // This is an edge we _could_ have expanded, so return true
   }
 
   // Get end node tile, opposing edge Id, and opposing directed edge.

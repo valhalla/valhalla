@@ -148,16 +148,19 @@ inline bool TimeDepForward::ExpandForwardInner(GraphReader& graphreader,
                                                const valhalla::Location& destination,
                                                std::pair<int32_t, float>& best_path) {
 
-  // Skip shortcut edges for time dependent routes. Also skip this edge if permanently labeled
-  // (best path already found to this directed edge), if no access is allowed to this edge
-  // (based on costing method), or if a complex restriction exists.
+  // Skip shortcut edges for time dependent routes, or if a complex restriction exists.
   bool has_time_restrictions = false;
-  if (meta.edge->is_shortcut() || meta.edge_status->set() == EdgeSet::kPermanent ||
+  if (meta.edge->is_shortcut() ||
       !costing_->Allowed(meta.edge, pred, tile, meta.edge_id, localtime, nodeinfo->timezone(),
                          has_time_restrictions) ||
       costing_->Restricted(meta.edge, pred, edgelabels_, tile, meta.edge_id, true, localtime,
                            nodeinfo->timezone())) {
     return false;
+  }
+  // Skip this edge if permanently labeled (best path already found to this
+  // directed edge)
+  if (meta.edge_status->set() == EdgeSet::kPermanent) {
+    return true; // This is an edge we _could_ have expanded, so return true
   }
 
   // Compute the cost to the end of this edge
