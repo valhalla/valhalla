@@ -1060,6 +1060,8 @@ void Isochrone::SetOriginLocations(
         continue;
       }
 
+      isotile_->set_current_center(edge.ll());
+
       // Get the directed edge
       const GraphTile* tile = graphreader.GetGraphTile(edgeid);
       const DirectedEdge* directededge = tile->directededge(edgeid);
