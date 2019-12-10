@@ -1,6 +1,7 @@
 #ifndef VALHALLA_MIDGARD_GRIDDEDDATA_H_
 #define VALHALLA_MIDGARD_GRIDDEDDATA_H_
 
+#include "valhalla/proto/tripcommon.pb.h"
 #include <limits>
 #include <list>
 #include <map>
@@ -105,9 +106,18 @@ public:
                               const float denoise = 1.f,
                               const float generalize = 200.f) const;
 
+  inline void set_current_center(const valhalla::LatLng center_ll) {
+    snapped_centers_.push_back(center_ll);
+  }
+
+  inline std::vector<valhalla::LatLng> snapped_centers() const {
+    return snapped_centers_;
+  }
+
 protected:
   float max_value_;         // Maximum value stored in the tile
   std::vector<float> data_; // Data value within each tile
+  std::vector<valhalla::LatLng> snapped_centers_;
 };
 
 } // namespace midgard
