@@ -114,7 +114,7 @@ Maneuver::Maneuver()
       tee_(false), unnamed_walkway_(false), unnamed_cycleway_(false),
       unnamed_mountain_bike_trail_(false), verbal_multi_cue_(false), to_stay_on_(false),
       drive_on_right_(true), has_time_restrictions_(false),
-      bss_maneuver_type_(DirectionsLeg_Maneuver_BssManeuverType_kNoneAction)  {
+      bss_maneuver_type_(DirectionsLeg_Maneuver_BssManeuverType_kNoneAction) {
   street_names_ = std::make_unique<StreetNames>();
   begin_street_names_ = std::make_unique<StreetNames>();
   cross_street_names_ = std::make_unique<StreetNames>();
