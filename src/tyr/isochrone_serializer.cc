@@ -29,6 +29,8 @@ serializeIsochrones(const Api& request,
   // for each contour interval
   int i = 0;
   auto features = array({});
+  // no support for multiple locations per request currently
+  valhalla::LatLng snapped_center = snapped_centers.at(0);
   for (const auto& interval : grid_contours) {
     auto color_itr = colors.find(interval.first);
     // color was supplied
@@ -47,7 +49,6 @@ serializeIsochrones(const Api& request,
           << static_cast<int>(std::get<1>(color) * 255 + .5f) << std::hex
           << static_cast<int>(std::get<2>(color) * 255 + .5f);
     }
-    valhalla::LatLng snapped_center = snapped_centers.at(i);
     ++i;
 
     // for each feature on that interval
