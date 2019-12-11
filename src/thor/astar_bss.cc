@@ -187,8 +187,9 @@ void AStarBSSAlgorithm::ExpandForward(GraphReader& graphreader,
     // Skip this edge if permanently labeled (best path already found to this
     // directed edge), if no access is allowed to this edge (based on costing method),
     // or if a complex restriction exists.
+    bool has_time_restrictions = false;
     if (current_es->set() == EdgeSet::kPermanent ||
-        !current_costing->Allowed(directededge, pred, tile, edgeid, 0, 0) ||
+        !current_costing->Allowed(directededge, pred, tile, edgeid, 0, 0, has_time_restrictions) ||
         current_costing->Restricted(directededge, pred, edgelabels_, tile, edgeid, true)) {
       continue;
     }
