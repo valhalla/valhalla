@@ -120,7 +120,7 @@ public:
   std::ostream& operator()(bool value) const {
     return ostream_ << (value ? "true" : "false");
   }
-  std::ostream& operator()(std::nullptr_t value) const {
+  std::ostream& operator()(std::nullptr_t) const {
     return ostream_ << "null";
   }
 
@@ -146,6 +146,15 @@ inline std::ostream& operator<<(std::ostream& stream, const fp_t& fp) {
   return stream;
 }
 
+template <typename Visitable>
+inline void applyOutputVisitor(std::ostream& stream, Visitable& visitable) {
+  // Cannot use boost::apply_visitor with C++14 due to
+  // ambiguity introduced in boost_1_58 and fixed in the latest
+  // https://lists.boost.org/boost-bugs/2015/05/41067.php
+  OstreamVisitor visitor(stream);
+  visitable.apply_visitor(visitor);
+}
+
 inline std::ostream& operator<<(std::ostream& stream, const Jmap& json) {
   stream << '{';
   bool seprator = false;
@@ -155,7 +164,7 @@ inline std::ostream& operator<<(std::ostream& stream, const Jmap& json) {
     }
     seprator = true;
     stream << '"' << key_value.first << "\":";
-    boost::apply_visitor(OstreamVisitor(stream), key_value.second);
+    applyOutputVisitor(stream, key_value.second);
   }
   stream << '}';
   return stream;
@@ -169,7 +178,7 @@ inline std::ostream& operator<<(std::ostream& stream, const Jarray& json) {
       stream << ',';
     }
     seprator = true;
-    boost::apply_visitor(OstreamVisitor(stream), element);
+    applyOutputVisitor(stream, element);
   }
   stream << ']';
   return stream;

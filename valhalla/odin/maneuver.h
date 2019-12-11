@@ -130,6 +130,8 @@ public:
 
   bool portions_toll() const;
   void set_portions_toll(bool portionsToll);
+  bool has_time_restrictions() const;
+  void set_has_time_restrictions(bool has_time_restrictions);
 
   bool portions_unpaved() const;
   void set_portions_unpaved(bool portionsUnpaved);
@@ -144,11 +146,19 @@ public:
   const Signs& signs() const;
   Signs* mutable_signs();
 
+  bool HasSigns() const;
+
   bool HasExitSign() const;
   bool HasExitNumberSign() const;
   bool HasExitBranchSign() const;
   bool HasExitTowardSign() const;
   bool HasExitNameSign() const;
+
+  bool HasGuideSign() const;
+  bool HasGuideBranchSign() const;
+  bool HasGuideTowardSign() const;
+
+  bool HasJunctionNameSign() const;
 
   uint32_t internal_right_turn_count() const;
   void set_internal_right_turn_count(uint32_t internal_right_turn_count);
@@ -337,6 +347,7 @@ protected:
   std::unique_ptr<StreetNames> roundabout_exit_street_names_;
   RelativeDirection merge_to_relative_direction_;
   bool drive_on_right_; // Defaults to true
+  bool has_time_restrictions_;
 
   ////////////////////////////////////////////////////////////////////////////
   // Transit support

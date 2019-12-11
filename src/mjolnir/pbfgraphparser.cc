@@ -117,6 +117,10 @@ public:
     bool is_highway_junction =
         ((highway_junction != results->end()) && (highway_junction->second == "motorway_junction"));
 
+    const auto& junction_name = results->find("junction");
+    bool has_junction_name =
+        ((junction_name != results->end()) && (junction_name->second == "named"));
+
     // Create a new node and set its attributes
     OSMNode n;
     n.set_id(osmid);
@@ -147,7 +151,7 @@ public:
           n.set_ref_index(osmdata_.node_names.index(tag.second));
           ++osmdata_.node_ref_count;
         }
-      } else if (is_highway_junction && (tag.first == "name")) {
+      } else if ((is_highway_junction || has_junction_name) && (tag.first == "name")) {
         bool hasTag = (tag.second.length() ? true : false);
         if (hasTag) {
           // Add the name to the unique node names list and store its index in the OSM node
@@ -188,6 +192,8 @@ public:
         }
       } else if (tag.first == "access_mask") {
         n.set_access(std::stoi(tag.second));
+      } else if (has_junction_name) {
+        n.set_named_intersection(true);
       }
 
       /* TODO: payment type.
@@ -364,7 +370,6 @@ public:
         ((highway_junction != results.end()) && (highway_junction->second == "motorway_junction"));
 
     for (const auto& tag : results) {
-
       if (tag.first == "road_class") {
         RoadClass roadclass = (RoadClass)std::stoi(tag.second);
         switch (roadclass) {
@@ -1065,12 +1070,18 @@ public:
 
     // I hope this does not happen, but it probably will (i.e., user sets forward speed
     // and not the backward speed and vice versa.)
-    if (w.forward_tagged_speed() && !w.backward_tagged_speed() && !w.oneway()) {
-      w.set_backward_speed(w.forward_speed());
-      w.set_backward_tagged_speed(true);
-    } else if (!w.forward_tagged_speed() && w.backward_tagged_speed() && !w.oneway()) {
-      w.set_forward_speed(w.backward_speed());
-      w.set_forward_tagged_speed(true);
+    if (w.forward_tagged_speed() && !w.backward_tagged_speed()) {
+      if (!w.oneway()) {
+        w.set_backward_speed(w.forward_speed());
+        w.set_backward_tagged_speed(true);
+      } else // fallback to default speed.
+        w.set_speed(default_speed);
+    } else if (!w.forward_tagged_speed() && w.backward_tagged_speed()) {
+      if (!w.oneway()) {
+        w.set_forward_speed(w.backward_speed());
+        w.set_forward_tagged_speed(true);
+      } else // fallback to default speed.
+        w.set_speed(default_speed);
     }
 
     // default to drive on right.

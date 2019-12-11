@@ -64,15 +64,27 @@ protected:
    * @param  best_path    Best path found so far. Includes the index into
    *                      EdgeLabels and the cost.
    */
-  void ExpandForward(baldr::GraphReader& graphreader,
+  bool ExpandForward(baldr::GraphReader& graphreader,
                      const baldr::GraphId& node,
-                     const sif::EdgeLabel& pred,
+                     sif::EdgeLabel& pred,
                      const uint32_t pred_idx,
                      const bool from_transition,
                      uint64_t localtime,
                      int32_t seconds_of_week,
                      const valhalla::Location& dest,
                      std::pair<int32_t, float>& best_path);
+
+  // Private helper function for `ExpandReverse`
+  inline bool ExpandForwardInner(baldr::GraphReader& graphreader,
+                                 const sif::EdgeLabel& pred,
+                                 const baldr::NodeInfo* nodeinfo,
+                                 const uint32_t pred_idx,
+                                 const EdgeMetadata& meta,
+                                 const baldr::GraphTile* tile,
+                                 uint64_t localtime,
+                                 uint32_t seconds_of_week,
+                                 const valhalla::Location& destination,
+                                 std::pair<int32_t, float>& best_path);
 };
 
 /**
@@ -112,6 +124,11 @@ public:
               const sif::TravelMode mode,
               const Options& options = Options::default_instance());
 
+  /**
+   * Clear the temporary information generated during path construction.
+   */
+  virtual void Clear();
+
 protected:
   uint32_t dest_tz_index_;
   uint32_t seconds_of_week_;
@@ -148,9 +165,9 @@ protected:
    * @param  best_path    Best path found so far. Includes the index into
    *                      EdgeLabels and the cost.
    */
-  void ExpandReverse(baldr::GraphReader& graphreader,
+  bool ExpandReverse(baldr::GraphReader& graphreader,
                      const baldr::GraphId& node,
-                     const sif::BDEdgeLabel& pred,
+                     sif::BDEdgeLabel& pred,
                      const uint32_t pred_idx,
                      const baldr::DirectedEdge* opp_pred_edge,
                      const bool from_transition,
@@ -158,6 +175,19 @@ protected:
                      int32_t seconds_of_week,
                      const valhalla::Location& dest,
                      std::pair<int32_t, float>& best_path);
+
+  // Private helper function for `ExpandReverse`
+  bool ExpandReverseInner(baldr::GraphReader& graphreader,
+                          const sif::BDEdgeLabel& pred,
+                          const baldr::DirectedEdge* opp_pred_edge,
+                          const baldr::NodeInfo* nodeinfo,
+                          const uint32_t pred_idx,
+                          const EdgeMetadata& meta,
+                          const baldr::GraphTile* tile,
+                          uint64_t localtime,
+                          uint32_t seconds_of_week,
+                          const valhalla::Location& destination,
+                          std::pair<int32_t, float>& best_path);
 
   /**
    * The origin of the reverse path is the destination location. Add edges at the

@@ -79,6 +79,13 @@ drive_on_right = {
 ["Zimbabwe"] = "false"
 }
 
+allow_intersection_names = {
+["Japan"] = "true",
+["North Korea"] = "true",
+["South Korea"] = "true",
+["Nicaragua"] = "true"
+}
+
 --returns 1 if you should filter this way 0 otherwise
 function filter_tags_generic(kv)
 --  if (kv["boundary"] == "administrative" and
@@ -184,6 +191,7 @@ function rels_proc (kv, nokeys)
      end
 
      kv["drive_on_right"] = drive_on_right[kv["name"]] or drive_on_right[kv["name:en"]] or "true"
+     kv["allow_intersection_names"] = allow_intersection_names[kv["name"]] or allow_intersection_names[kv["name:en"]] or "false"
 
      delete_tags = { 'FIXME', 'note', 'source' }
 

@@ -215,6 +215,10 @@ public:
     return mutable_edge_->toll();
   }
 
+  bool has_time_restrictions() const {
+    return mutable_edge_->has_time_restrictions();
+  }
+
   bool unpaved() const {
     return mutable_edge_->unpaved();
   }

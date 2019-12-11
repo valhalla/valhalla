@@ -77,7 +77,7 @@ std::string thor_worker_t::trace_attributes(Api& request) {
     // through the map-matching algorithm to snap the points to the correct shape
     case ShapeMatch::map_snap:
       try {
-        map_match_results = map_match(request, options.best_paths());
+        map_match_results = map_match(request);
       } catch (const std::exception& e) {
         throw valhalla_exception_t{
             444, ShapeMatch_Enum_Name(options.shape_match()) +

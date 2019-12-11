@@ -144,6 +144,7 @@ Important build options include:
 | `-DENABLE_SERVICES` (`On` / `Off`) | Build the HTTP service|
 | `-DBUILD_SHARED_LIBS` (`On` / `Off`) | Build static or shared libraries|
 | `-DENABLE_NODE_BINDINGS` (`ON` / `OFF`) | Build the node bindings (defaults to on)|
+| `-DENABLE_COMPILER_WARNINGS` (`ON` / `OFF`) | Build with common compiler warnings as errors (defaults to off)|
 
 For more build options run the interactive GUI:
 
@@ -195,7 +196,7 @@ If you would like to make an improvement to the code, please be aware that all v
 
 Note that our CI system checks that code formatting is consistent, and the build will fail if formatting rules aren't followed.  Please run `./scripts/format.sh` over your code before committing, to auto-format it in the projects preferred style.
 
-Also note that we run some `clang-tidy` linting over the code as well (see `.clang-tidy` for the list of rules enforced).  You can run `./scripts/tidy.sh` over the code before committing to ensure you haven't added any of the common problems we check for (Note: `./scripts/tidy.sh` requires the exitence of a `compile_commands.json` database.  You can generate this file by running `bear make` instead of just `make`.  The `bear` tool is installable on Ubuntu-based systems with `apt-get install bear`, and on macOS with `brew install bear`).
+Also note that we run some `clang-tidy` linting over the code as well (see `.clang-tidy` for the list of rules enforced).  You can run `./scripts/clang-tidy-only-diff.sh` over the code before committing to ensure you haven't added any of the common problems we check for (Note: `./scripts/clang-tidy-only-diff.sh` requires the exitence of a `compile_commands.json` database.  You can generate this file by running `cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=On ... && make`.
 
 Using the Node.js Bindings
 --------------------------
@@ -216,7 +217,7 @@ var hersheyRequest = '{"locations":[{"lat":40.546115,"lon":-76.385076,"type":"br
 var route = valhalla.route(hersheyRequest); // returns a string, other actions also available
 ```
 
-Please see the releasing docs for information on releasing a new version.
+Please see the [releasing docs](docs/releasing.md) for information on releasing a new version.
 
 Tests
 -----

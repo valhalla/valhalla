@@ -306,8 +306,8 @@ TileCache* TileCacheFactory::createTileCache(const boost::property_tree::ptree& 
 // Constructor using separate tile files
 GraphReader::GraphReader(const boost::property_tree::ptree& pt)
     : tile_extract_(get_extract_instance(pt)), tile_dir_(pt.get<std::string>("tile_dir", "")),
-      curlers_(midgard::make_unique<curler_pool_t>(pt.get<size_t>("max_concurrent_reader_users", 1),
-                                                   pt.get<std::string>("user_agent", ""))),
+      curlers_(std::make_unique<curler_pool_t>(pt.get<size_t>("max_concurrent_reader_users", 1),
+                                               pt.get<std::string>("user_agent", ""))),
       tile_url_(pt.get<std::string>("tile_url", "")),
       tile_url_gz_(pt.get<bool>("tile_url_gz", false)),
       cache_(TileCacheFactory::createTileCache(pt)) {
@@ -665,7 +665,7 @@ std::vector<GraphId> GraphReader::RecoverShortcut(const GraphId& shortcut_id) {
       // NOTE: because we change the speed of the edge in graph enhancer we cant use speed as a
       // reliable determining factor
       if (begin_node != edge.endnode() && !edge.is_shortcut() &&
-          (edge.forwardaccess() & kAutoAccess) && edge.exitsign() == shortcut->exitsign() &&
+          (edge.forwardaccess() & kAutoAccess) && edge.sign() == shortcut->sign() &&
           edge.use() == shortcut->use() && edge.classification() == shortcut->classification() &&
           edge.roundabout() == shortcut->roundabout() && edge.link() == shortcut->link() &&
           edge.toll() == shortcut->toll() && edge.destonly() == shortcut->destonly() &&

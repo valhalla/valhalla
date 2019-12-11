@@ -132,6 +132,9 @@ inline float normalize(const float num, const float den) {
 // Avoids having to copy the points into a polyline, polyline should really just extend
 // A container class like vector or list
 template <class container_t> float length(const container_t& pts) {
+  if (pts.size() < 2) {
+    return 0.0f;
+  }
   float length = 0.0f;
   for (auto p = std::next(pts.cbegin()); p != pts.end(); ++p) {
     length += p->Distance(*std::prev(p));
@@ -329,13 +332,6 @@ struct memory_status {
   friend std::ostream& operator<<(std::ostream&, const memory_status&);
 };
 std::ostream& operator<<(std::ostream& stream, const memory_status& s);
-
-/**
- * Implement the missing make_unique for C++11.
- */
-template <typename T, typename... Args> std::unique_ptr<T> make_unique(Args&&... args) {
-  return std::unique_ptr<T>{new T{std::forward<Args>(args)...}};
-}
 
 /* circular range clamp
  */

@@ -47,6 +47,18 @@ void test_end(const std::vector<PointLL> l, float d, float a) {
 }
 
 void TestHeadingAlongPolyline() {
+  // Test with empty (or 1 point) polyline
+  std::vector<PointLL> empty;
+  auto r = PointLL::HeadingAlongPolyline(empty, 30.0f);
+  if (!valhalla::midgard::equal(r, 0.0f, 1.0f)) {
+    throw std::logic_error("HeadingAlongPolyline with empty polyline failed");
+  }
+  empty.emplace_back(-70.0f, 30.0f);
+  r = PointLL::HeadingAlongPolyline(empty, 30.0f);
+  if (!valhalla::midgard::equal(r, 0.0f, 1.0f)) {
+    throw std::logic_error("HeadingAlongPolyline with one point polyline failed");
+  }
+
   test_along({{-73.986392, 40.755800}, {-73.986438, 40.755819}}, 30.0f, 299);
   test_along({{-73.986438, 40.755819}, {-73.986484, 40.755681}}, 30.0f, 194);
   test_along({{-73.985777, 40.755539}, {-73.986440, 40.755820}, {-73.986617, 40.755254}}, 30.0f, 299);
@@ -91,6 +103,18 @@ void TestHeadingAlongPolyline() {
 }
 
 void TestHeadingAtEndOfPolyline() {
+  // Test with empty (or 1 point) polyline
+  std::vector<PointLL> empty;
+  auto r = PointLL::HeadingAtEndOfPolyline(empty, 30.0f);
+  if (!valhalla::midgard::equal(r, 0.0f, 1.0f)) {
+    throw std::logic_error("HeadingAtEndOfPolyline with empty polyline failed");
+  }
+  empty.emplace_back(-70.0f, 30.0f);
+  r = PointLL::HeadingAtEndOfPolyline(empty, 30.0f);
+  if (!valhalla::midgard::equal(r, 0.0f, 1.0f)) {
+    throw std::logic_error("HeadingAtEndOfPolyline with one point polyline failed");
+  }
+
   test_end({{-73.986392, 40.755800}, {-73.986438, 40.755819}}, 30.0f, 299);
   test_end({{-73.986438, 40.755819}, {-73.986484, 40.755681}}, 30.0f, 194);
   test_end({{-73.985777, 40.755539}, {-73.986440, 40.755820}, {-73.986617, 40.755254}}, 30.0f, 194);

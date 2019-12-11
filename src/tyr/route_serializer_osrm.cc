@@ -364,7 +364,7 @@ void route_geometry(json::MapPtr& route,
 // Serialize waypoints for optimized route. Note that OSRM retains the
 // original location order, and stores an index for the waypoint index in
 // the optimized sequence.
-json::ArrayPtr waypoints(const google::protobuf::RepeatedPtrField<valhalla::Location>& locs) {
+json::ArrayPtr waypoints(google::protobuf::RepeatedPtrField<valhalla::Location>& locs) {
   // Create a vector of indexes.
   uint32_t i = 0;
   std::vector<uint32_t> indexes;
@@ -381,7 +381,8 @@ json::ArrayPtr waypoints(const google::protobuf::RepeatedPtrField<valhalla::Loca
   // waypoint index (which is the index in the optimized order).
   auto waypoints = json::array({});
   for (const auto& index : indexes) {
-    waypoints->emplace_back(osrm::waypoint(locs.Get(index), false, true, index));
+    locs.Mutable(index)->set_shape_index(index);
+    waypoints->emplace_back(osrm::waypoint(locs.Get(index), false, true));
   }
   return waypoints;
 }
@@ -637,14 +638,33 @@ std::string get_sign_element_nonrefs(
   return nonrefs;
 }
 
-// Add destinations along a step/maneuver. Constructs a destinations string.
-// Here are the destinations formats:
-//   1. <ref>
-//   2. <non-ref>
-//   3. <ref>: <non-ref>
-// Each <ref> or <non-ref> could have one or more items and will separated with ", "
-//   for example: "I 99, US 220, US 30: Altoona, Johnstown"
-std::string destinations(const valhalla::DirectionsLeg_Maneuver_Sign& sign) {
+// Compile and return the sign elements of the specified list
+// TODO we could enhance by limiting results by using consecutive count
+std::string get_sign_elements(const google::protobuf::RepeatedPtrField<
+                                  ::valhalla::DirectionsLeg_Maneuver_SignElement>& sign_elements,
+                              const std::string& delimiter = kSignElementDelimiter) {
+  std::string sign_elements_string;
+  for (const auto& sign_element : sign_elements) {
+    // If the sign_elements_string is not empty, append specified delimiter
+    if (!sign_elements_string.empty()) {
+      sign_elements_string += delimiter;
+    }
+    // Append sign element
+    sign_elements_string += sign_element.text();
+  }
+  return sign_elements_string;
+}
+
+bool exit_destinations_exist(const valhalla::DirectionsLeg_Maneuver_Sign& sign) {
+  if ((sign.exit_onto_streets_size() > 0) || (sign.exit_toward_locations_size() > 0) ||
+      (sign.exit_names_size() > 0)) {
+    return true;
+  }
+  return false;
+}
+
+// Return the exit destinations
+std::string exit_destinations(const valhalla::DirectionsLeg_Maneuver_Sign& sign) {
 
   /////////////////////////////////////////////////////////////////////////////
   // Process the refs
@@ -700,6 +720,66 @@ std::string destinations(const valhalla::DirectionsLeg_Maneuver_Sign& sign) {
   return destinations;
 }
 
+// Return the guide destinations
+std::string guide_destinations(const valhalla::DirectionsLeg_Maneuver_Sign& sign) {
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Process the refs
+  // Get the branch refs
+  std::string branch_refs = get_sign_element_refs(sign.guide_onto_streets());
+
+  // Get the toward refs
+  std::string toward_refs = get_sign_element_refs(sign.guide_toward_locations());
+
+  // Create the refs by combining the branch and toward ref lists
+  std::string refs = branch_refs;
+  // If needed, add the delimiter between the lists
+  if (!refs.empty() && !toward_refs.empty()) {
+    refs += kSignElementDelimiter;
+  }
+  refs += toward_refs;
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Process the nonrefs
+  // Get the branch nonrefs
+  std::string branch_nonrefs = get_sign_element_nonrefs(sign.guide_onto_streets());
+
+  // Get the towards nonrefs
+  std::string toward_nonrefs = get_sign_element_nonrefs(sign.guide_toward_locations());
+
+  // Create nonrefs by combining the branch, toward, name nonref lists
+  std::string nonrefs = branch_nonrefs;
+  // If needed, add the delimiter between the lists
+  if (!nonrefs.empty() && !toward_nonrefs.empty()) {
+    nonrefs += kSignElementDelimiter;
+  }
+  nonrefs += toward_nonrefs;
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Process the destinations
+  std::string destinations = refs;
+  if (!refs.empty() && !nonrefs.empty()) {
+    destinations += kDestinationsDelimiter;
+  }
+  destinations += nonrefs;
+
+  return destinations;
+}
+
+// Add destinations along a step/maneuver. Constructs a destinations string.
+// Here are the destinations formats:
+//   1. <ref>
+//   2. <non-ref>
+//   3. <ref>: <non-ref>
+// Each <ref> or <non-ref> could have one or more items and will separated with ", "
+//   for example: "I 99, US 220, US 30: Altoona, Johnstown"
+std::string destinations(const valhalla::DirectionsLeg_Maneuver_Sign& sign) {
+  if (exit_destinations_exist(sign)) {
+    return exit_destinations(sign);
+  }
+  return guide_destinations(sign);
+}
+
 // Get the turn modifier based on incoming edge bearing and outgoing edge
 // bearing.
 std::string turn_modifier(const uint32_t in_brg, const uint32_t out_brg) {
@@ -723,6 +803,9 @@ std::string turn_modifier(const uint32_t in_brg, const uint32_t out_brg) {
     case baldr::Turn::Type::kSlightLeft:
       return "slight left";
   }
+  auto num = static_cast<uint32_t>(turn_type);
+  throw std::runtime_error(std::string(__FILE__) + ":" + std::to_string(__LINE__) +
+                           " Unhandled Turn::Type: " + std::to_string(num));
 }
 
 // Get the turn modifier based on the maneuver type
@@ -997,6 +1080,9 @@ std::string get_mode(const valhalla::DirectionsLeg::Maneuver& maneuver,
       return "transit";
     }
   }
+  auto num = static_cast<int>(maneuver.travel_mode());
+  throw std::runtime_error(std::string(__FILE__) + ":" + std::to_string(__LINE__) +
+                           " Unhandled travel_mode: " + std::to_string(num));
 }
 
 // Get the names and ref names
@@ -1116,6 +1202,8 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
     bool rotary = false;
     bool prev_rotary = false;
     auto steps = json::array({});
+    const DirectionsLeg_Maneuver* prev_maneuver = nullptr;
+    json::MapPtr prev_step;
     for (const auto& maneuver : leg->maneuver()) {
       auto step = json::map({});
       bool depart_maneuver = (maneuver_index == 0);
@@ -1167,15 +1255,30 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
                                   depart_maneuver, arrive_maneuver, prev_intersection_count, mode,
                                   prev_mode, rotary, prev_rotary));
 
-      // Add destinations and exits
+      // Add destinations
       const auto& sign = maneuver.sign();
       std::string dest = destinations(sign);
       if (!dest.empty()) {
         step->emplace("destinations", dest);
+        // If the maneuver is an exit roundabout
+        // and the previous maneuver is an enter roundabout
+        // then set the destinations on the previous step
+        if ((maneuver.type() == DirectionsLeg_Maneuver_Type_kRoundaboutExit) && prev_maneuver &&
+            (prev_maneuver->type() == DirectionsLeg_Maneuver_Type_kRoundaboutEnter) && prev_step) {
+          prev_step->emplace("destinations", dest);
+        }
       }
+
+      // Add exits
       std::string ex = exits(sign);
       if (!ex.empty()) {
         step->emplace("exits", ex);
+      }
+
+      // Add junction_name
+      std::string junction_name = get_sign_elements(sign.junction_names());
+      if (!junction_name.empty()) {
+        step->emplace("junction_name", junction_name);
       }
 
       // Add intersections
@@ -1186,6 +1289,8 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
       steps->emplace_back(step);
       prev_rotary = rotary;
       prev_mode = mode;
+      prev_step = step;
+      prev_maneuver = &maneuver;
       maneuver_index++;
     } // end maneuver loop
     //#########################################################################
@@ -1213,7 +1318,7 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
 //     TripLeg protocol buffer
 //     DirectionsLeg protocol buffer
 std::string serialize(valhalla::Api& api) {
-  const auto& options = api.options();
+  auto& options = *api.mutable_options();
   auto json = json::map({});
 
   // If here then the route succeeded. Set status code to OK and serialize waypoints (locations).
@@ -1227,7 +1332,7 @@ std::string serialize(valhalla::Api& api) {
       json->emplace("waypoints", osrm::waypoints(api.trip()));
       break;
     case valhalla::Options::optimized_route:
-      json->emplace("waypoints", waypoints(options.locations()));
+      json->emplace("waypoints", waypoints(*options.mutable_locations()));
       break;
   }
 
