@@ -769,7 +769,7 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader, valhalla::Location&
     Cost cost = costing_->EdgeCost(directededge, tile, kConstrainedFlowSecondOfDay) *
                 (1.0f - edge.percent_along());
 
-    // Store the closest node info
+    // Store a node-info for later timezone retrieval (approximate for closest)
     if (closest_ni == nullptr) {
       closest_ni = nodeinfo;
     }
