@@ -588,7 +588,7 @@ std::vector<PathInfo> AStarBSSAlgorithm::FormPath(baldr::GraphReader& graphreade
        edgelabel_index = edgelabels_[edgelabel_index].predecessor()) {
     const EdgeLabel& edgelabel = edgelabels_[edgelabel_index];
     path.emplace_back(edgelabel.mode(), edgelabel.cost().secs, edgelabel.edgeid(), 0,
-                      edgelabel.cost().cost);
+                      edgelabel.cost().cost, edgelabel.has_time_restriction());
 
     const GraphTile* tile = graphreader.GetGraphTile(edgelabel.edgeid());
     const DirectedEdge* directededge = tile->directededge(edgelabel.edgeid());
