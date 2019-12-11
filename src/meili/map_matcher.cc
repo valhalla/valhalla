@@ -235,10 +235,10 @@ MatchResult FindMatchResult(const MapMatcher& mapmatcher,
   }
 
   // If we failed to get a valid edge or can't find it
-  // At least we know which point it matches
+  // At least we know which point it matches. we set distance_along
+  // to 1 which will match the last valid edge's end
   const auto& edge = state.candidate().edges.front();
-  return {edge.projected,     std::sqrt(edge.distance), edgeid,
-          edge.percent_along, measurement.epoch_time(), stateid};
+  return {edge.projected, std::sqrt(edge.distance), edgeid, 1, measurement.epoch_time(), stateid};
 }
 
 // Find the corresponding match results of a list of states
