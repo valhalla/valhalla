@@ -188,7 +188,8 @@ std::vector<MatchResult> InterpolateMeasurements(const MapMatcher& mapmatcher,
 // state
 MatchResult FindMatchResult(const MapMatcher& mapmatcher,
                             const std::vector<StateId>& stateids,
-                            StateId::Time time) {
+                            StateId::Time time,
+                            baldr::GraphReader* graph_reader) {
   if (!(time < stateids.size())) {
     throw std::runtime_error("reading stateid at time out of bounds");
   }
@@ -202,52 +203,84 @@ MatchResult FindMatchResult(const MapMatcher& mapmatcher,
   }
 
   const auto& state = mapmatcher.state_container().state(stateid);
-  baldr::GraphId edgeid;
-
   // Construct the route from previous state to current state, and
   // find out which edge it matches
+  baldr::GraphId prev_edge_end;
+  baldr::GraphId prev_edgeid;
   if (prev_stateid.IsValid()) {
     const auto& prev_state = mapmatcher.state_container().state(prev_stateid);
     // It must stay on the last edge of the route
     const auto rbegin = prev_state.RouteBegin(state), rend = prev_state.RouteEnd();
-    if (rbegin != rend) {
-      edgeid = rbegin->edgeid();
+    if (rbegin != rend && rbegin->edgeid().Is_Valid()) {
+      prev_edgeid = rbegin->edgeid();
+      prev_edge_end = graph_reader->directededge(prev_edgeid)->endnode();
     }
   }
 
   // Do the same from current state to next state
-  if (!edgeid.Is_Valid() && next_stateid.IsValid()) {
+  baldr::GraphId next_edge_start;
+  baldr::GraphId next_edgeid;
+  if (next_stateid.IsValid()) {
     const auto& next_state = mapmatcher.state_container().state(next_stateid);
-    // It must stay on the first edge of the route
     for (auto label = state.RouteBegin(next_state); label != state.RouteEnd(); label++) {
       if (label->edgeid().Is_Valid()) {
-        edgeid = label->edgeid();
+        next_edgeid = label->edgeid();
+        next_edge_start = graph_reader->GetOpposingEdge(next_edgeid)->endnode();
       }
     }
   }
 
-  // If we get a valid edge and find it in the state that's good
   for (const auto& edge : state.candidate().edges) {
-    if (edge.id == edgeid) {
-      return {edge.projected,     std::sqrt(edge.distance), edgeid,
+    baldr::GraphId curr_edge_start = graph_reader->GetOpposingEdge(edge.id)->endnode();
+    baldr::GraphId curr_edge_end = graph_reader->directededge(edge.id)->endnode();
+    // matched locations are on the same edge with prev edge or the next edge
+    if ((prev_edgeid.Is_Valid() && prev_edge_end == curr_edge_end) ||
+        (next_edgeid.Is_Valid() && next_edge_start == curr_edge_start)) {
+      return {edge.projected,     std::sqrt(edge.distance), edge.id,
               edge.percent_along, measurement.epoch_time(), stateid};
+    }
+    // intersection match handling:
+    //      E1             E2
+    // ------------>N1------------->N2
+    //              X
+
+    // When matched location is on a intersection and precentage along current edge is 0.0.
+    // If there is a valid previous edge. For leg builder to work properly in intersections
+    // (where edgeid maye not be continuious), we snap the matched location to the previous
+    // edge's end and set the percentage along previous edge to 1.0
+    // before snap: edgeid is E2's edgeid, percentage along E2 is 0.0
+    // after snap : edgeid is E1's edgeid, percentage along E1 is 1.0
+    // such operation will handle the last matched location is on intersection
+    else if (prev_edgeid.Is_Valid() && prev_edge_end == curr_edge_start &&
+             edge.percent_along == 0.0) {
+      return {edge.projected, std::sqrt(edge.distance), prev_edgeid, 1.0, measurement.epoch_time(),
+              stateid};
+    }
+    // When matched location is on a intersection and precentage along current edge is 1.0.
+    // If there is a valid next edge. For leg builder to work properly in intersections (where
+    // edgeid maye not be continuious), we snap the matched location to the next
+    // edge's start and set the percentage along next edge to 0.0
+    // before snap: edgeid is E1's edgeid, percentage along is 1.0
+    // after snap : edgeid is E2's edgeid, percentage along is 0.0
+    // such operation will handle the first matched location is on intersection
+    else if (next_edgeid.Is_Valid() && next_edge_start == curr_edge_end &&
+             edge.percent_along == 1.0) {
+      return {edge.projected, std::sqrt(edge.distance), next_edgeid, 0.0, measurement.epoch_time(),
+              stateid};
     }
   }
 
-  // If we failed to get a valid edge or can't find it
-  // At least we know which point it matches, to make leg builder
-  // work properly we snap the node at the end of the previous state
-  const auto& edge = state.candidate().edges.front();
-  return {edge.projected, std::sqrt(edge.distance), edgeid, 1.0, measurement.epoch_time(), stateid};
+  // TODO: verify if there are scenarios that could lead us here
+  return {};
 }
 
 // Find the corresponding match results of a list of states
 std::vector<MatchResult> FindMatchResults(const MapMatcher& mapmatcher,
-                                          const std::vector<StateId>& stateids) {
+                                          const std::vector<StateId>& stateids,
+                                          baldr::GraphReader* graph_reader) {
   std::vector<MatchResult> results;
-
   for (StateId::Time time = 0; time < stateids.size(); time++) {
-    results.push_back(FindMatchResult(mapmatcher, stateids, time));
+    results.push_back(FindMatchResult(mapmatcher, stateids, time, graph_reader));
   }
 
   return results;
@@ -584,7 +617,7 @@ std::vector<MatchResults> MapMatcher::OfflineMatch(const std::vector<Measurement
     }
 
     // Get the match result for each of the states
-    auto results = FindMatchResults(*this, original_state_ids);
+    auto results = FindMatchResults(*this, original_state_ids, &graphreader_);
 
     // Insert the interpolated results into the result list
     std::vector<MatchResult> best_path;
