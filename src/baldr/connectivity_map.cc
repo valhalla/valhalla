@@ -93,7 +93,7 @@ json::MapPtr to_feature(const std::pair<size_t, polygon_t>& boundary, const std:
 template <class T>
 std::string to_feature_collection(const std::unordered_map<size_t, polygon_t>& boundaries,
                                   const std::multimap<size_t, size_t, T>& arities) {
-  std::mt19937 generator;
+  std::mt19937 generator(17);
   std::uniform_int_distribution<int> distribution(64, 192);
   auto features = json::array({});
   for (const auto& arity : arities) {
@@ -118,6 +118,19 @@ connectivity_map_t::connectivity_map_t(const boost::property_tree::ptree& pt) {
   auto tiles = reader.GetTileSet();
   transit_level = TileHierarchy::levels().rbegin()->second.level + 1;
 
+  // Quick hack to remove connectivity between known unconnected regions
+  // The only land connection from north to south america is through
+  // parque nacional de darien which has no passable ways, there are no ferries either
+  // x = 409, y=391 = (391*1440 + 409)
+  std::unordered_map<uint32_t, uint32_t> not_neighbors{{563449, 563450},
+                                                       {563450, 563451},
+                                                       {563451, 564891},
+                                                       {564891, 564892},
+                                                       {566331, 566332}};
+  // TODO: actually check what neighbor tiles are reachable via looking at
+  // edges end nodes instead of just doing a coloring based on proximity
+  // then use this map as input to this singleton (via geojson?)
+
   // Populate a map for each level of the tiles that exist
   for (const auto& t : tiles) {
     auto& level_colors =
@@ -129,9 +142,12 @@ connectivity_map_t::connectivity_map_t(const boost::property_tree::ptree& pt) {
   // (build the ColorMap). Transit level uses local hierarchy tiles
   for (auto& color : colors) {
     if (color.first == transit_level) {
-      TileHierarchy::levels().rbegin()->second.tiles.ColorMap(color.second);
+      TileHierarchy::levels().rbegin()->second.tiles.ColorMap(color.second, not_neighbors);
     } else {
-      TileHierarchy::levels().find(color.first)->second.tiles.ColorMap(color.second);
+      TileHierarchy::levels()
+          .find(color.first)
+          ->second.tiles.ColorMap(color.second,
+                                  color.first == 2 ? not_neighbors : decltype(not_neighbors){});
     }
   }
 }

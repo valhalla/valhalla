@@ -78,7 +78,19 @@ const std::map<std::string, std::string> kExpectedExitPhrases =
      {"10", "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN>."},
      {"12", "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."},
      {"14", "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN> toward "
-            "<TOWARD_SIGN>."}};
+            "<TOWARD_SIGN>."},
+     {"15", "Take the exit."},
+     {"16", "Take exit <NUMBER_SIGN>."},
+     {"17", "Take the <BRANCH_SIGN> exit."},
+     {"18", "Take exit <NUMBER_SIGN> onto <BRANCH_SIGN>."},
+     {"19", "Take the exit toward <TOWARD_SIGN>."},
+     {"20", "Take exit <NUMBER_SIGN> toward <TOWARD_SIGN>."},
+     {"21", "Take the <BRANCH_SIGN> exit toward <TOWARD_SIGN>."},
+     {"22", "Take exit <NUMBER_SIGN> onto <BRANCH_SIGN> toward <TOWARD_SIGN>."},
+     {"23", "Take the <NAME_SIGN> exit."},
+     {"25", "Take the <NAME_SIGN> exit onto <BRANCH_SIGN>."},
+     {"27", "Take the <NAME_SIGN> exit toward <TOWARD_SIGN>."},
+     {"29", "Take the <NAME_SIGN> exit onto <BRANCH_SIGN> toward <TOWARD_SIGN>."}};
 
 const std::map<std::string, std::string> kExpectedExitVerbalPhrases =
     {{"0", "Take the exit on the <RELATIVE_DIRECTION>."},
@@ -132,12 +144,17 @@ const std::map<std::string, std::string> kExpectedKeepToStayOnVerbalPhrases =
      {"3", "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> to stay on <STREET_NAMES> toward "
            "<TOWARD_SIGN>."}};
 
-const std::map<std::string, std::string> kExpectedMergePhrases = {{"0", "Merge."},
-                                                                  {"1",
-                                                                   "Merge onto <STREET_NAMES>."}};
+const std::map<std::string, std::string> kExpectedMergePhrases =
+    {{"0", "Merge."},
+     {"1", "Merge <RELATIVE_DIRECTION>."},
+     {"2", "Merge onto <STREET_NAMES>."},
+     {"3", "Merge <RELATIVE_DIRECTION> onto <STREET_NAMES>."}};
 
 const std::map<std::string, std::string> kExpectedMergeVerbalPhrases =
-    {{"0", "Merge."}, {"1", "Merge onto <STREET_NAMES>."}};
+    {{"0", "Merge."},
+     {"1", "Merge <RELATIVE_DIRECTION>."},
+     {"2", "Merge onto <STREET_NAMES>."},
+     {"3", "Merge <RELATIVE_DIRECTION> onto <STREET_NAMES>."}};
 
 const std::map<std::string, std::string> kExpectedEnterRoundaboutPhrases =
     {{"0", "Enter the roundabout."},
@@ -832,6 +849,26 @@ void test_en_US_ramp() {
   const auto& phrase_9 = dictionary.ramp_subset.phrases.at("9");
   validate(phrase_9, "Turn <RELATIVE_DIRECTION> to take the <NAME_SIGN> ramp.");
 
+  // "10": "Take the ramp."
+  const auto& phrase_10 = dictionary.ramp_subset.phrases.at("10");
+  validate(phrase_10, "Take the ramp.");
+
+  // "11": "Take the <BRANCH_SIGN> ramp."
+  const auto& phrase_11 = dictionary.ramp_subset.phrases.at("11");
+  validate(phrase_11, "Take the <BRANCH_SIGN> ramp.");
+
+  // "12": "Take the ramp toward <TOWARD_SIGN>."
+  const auto& phrase_12 = dictionary.ramp_subset.phrases.at("12");
+  validate(phrase_12, "Take the ramp toward <TOWARD_SIGN>.");
+
+  // "13": "Take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>."
+  const auto& phrase_13 = dictionary.ramp_subset.phrases.at("13");
+  validate(phrase_13, "Take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>.");
+
+  // "14": "Take the <NAME_SIGN> ramp."
+  const auto& phrase_14 = dictionary.ramp_subset.phrases.at("14");
+  validate(phrase_14, "Take the <NAME_SIGN> ramp.");
+
   // relative_directions
   const auto& relative_directions = dictionary.ramp_subset.relative_directions;
   validate(relative_directions, kExpectedRelativeTwoDirections);
@@ -880,6 +917,26 @@ void test_en_US_ramp_verbal() {
   // "9": "Turn <RELATIVE_DIRECTION> to take the <NAME_SIGN> ramp."
   const auto& phrase_9 = dictionary.ramp_verbal_subset.phrases.at("9");
   validate(phrase_9, "Turn <RELATIVE_DIRECTION> to take the <NAME_SIGN> ramp.");
+
+  // "10": "Take the ramp."
+  const auto& phrase_10 = dictionary.ramp_verbal_subset.phrases.at("10");
+  validate(phrase_10, "Take the ramp.");
+
+  // "11": "Take the <BRANCH_SIGN> ramp."
+  const auto& phrase_11 = dictionary.ramp_verbal_subset.phrases.at("11");
+  validate(phrase_11, "Take the <BRANCH_SIGN> ramp.");
+
+  // "12": "Take the ramp toward <TOWARD_SIGN>."
+  const auto& phrase_12 = dictionary.ramp_verbal_subset.phrases.at("12");
+  validate(phrase_12, "Take the ramp toward <TOWARD_SIGN>.");
+
+  // "13": "Take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>."
+  const auto& phrase_13 = dictionary.ramp_verbal_subset.phrases.at("13");
+  validate(phrase_13, "Take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>.");
+
+  // "14": "Take the <NAME_SIGN> ramp."
+  const auto& phrase_14 = dictionary.ramp_verbal_subset.phrases.at("14");
+  validate(phrase_14, "Take the <NAME_SIGN> ramp.");
 
   // relative_directions
   const auto& relative_directions = dictionary.ramp_verbal_subset.relative_directions;

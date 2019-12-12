@@ -99,7 +99,7 @@ void FilterTiles(GraphReader& reader,
         newedge.set_opp_index(0);
 
         // Get signs from the base directed edge
-        if (directededge->exitsign()) {
+        if (directededge->sign()) {
           std::vector<SignInfo> signs = tile->GetSigns(edgeid.id());
           if (signs.size() == 0) {
             LOG_ERROR("Base edge should have signs, but none found");
@@ -171,6 +171,16 @@ void FilterTiles(GraphReader& reader,
         node.set_admin_index(tilebuilder.AddAdmin(admin.country_text(), admin.state_text(),
                                                   admin.country_iso(), admin.state_iso()));
 
+        // Get named signs from the base node
+        if (nodeinfo->named_intersection()) {
+          std::vector<SignInfo> signs = tile->GetSigns(nodeid.id(), true);
+          if (signs.size() == 0) {
+            LOG_ERROR("Base node should have signs, but none found");
+          }
+          node.set_named_intersection(true);
+          tilebuilder.AddSigns(tilebuilder.nodes().size() - 1, signs);
+        }
+
         // Associate the old node to the new node.
         old_to_new[nodeid] = new_node;
 
@@ -196,7 +206,7 @@ void FilterTiles(GraphReader& reader,
     }
 
     if (reader.OverCommitted()) {
-      reader.Clear();
+      reader.Trim();
     }
   }
   LOG_INFO("Filtered " + std::to_string(n_filtered_nodes) + " nodes out of " +
@@ -263,7 +273,7 @@ void UpdateEndNodes(GraphReader& reader, std::unordered_map<GraphId, GraphId>& o
     tilebuilder.Update(nodes, directededges);
 
     if (reader.OverCommitted()) {
-      reader.Clear();
+      reader.Trim();
     }
   }
 }

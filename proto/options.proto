@@ -28,6 +28,7 @@ enum DirectionsType {
 enum ShapeFormat {
   polyline5 = 0;
   polyline6 = 1;
+  geojson = 2;
 }
 
 enum Costing {
@@ -101,6 +102,7 @@ message CostingOptions {
   repeated string filter_operator_ids = 52;
   optional FilterAction filter_route_action = 53;
   repeated string filter_route_ids = 54;
+  optional uint32 flow_mask = 55;
 }
 
 message AvoidEdge {

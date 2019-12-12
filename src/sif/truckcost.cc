@@ -2,6 +2,7 @@
 
 #include "baldr/accessrestriction.h"
 #include "baldr/directededge.h"
+#include "baldr/graphconstants.h"
 #include "baldr/nodeinfo.h"
 #include "midgard/constants.h"
 #include "midgard/util.h"
@@ -155,7 +156,8 @@ public:
                        const baldr::GraphTile*& tile,
                        const baldr::GraphId& edgeid,
                        const uint64_t current_time,
-                       const uint32_t tz_index) const;
+                       const uint32_t tz_index,
+                       bool& time_restricted) const;
 
   /**
    * Checks if access is allowed for an edge on the reverse path
@@ -181,7 +183,8 @@ public:
                               const baldr::GraphTile*& tile,
                               const baldr::GraphId& opp_edgeid,
                               const uint64_t current_time,
-                              const uint32_t tz_index) const;
+                              const uint32_t tz_index,
+                              bool& has_time_restrictions) const;
 
   /**
    * Checks if access is allowed for the provided node. Node access can
@@ -192,13 +195,34 @@ public:
   virtual bool Allowed(const baldr::NodeInfo* node) const;
 
   /**
+   * Callback for Allowed doing mode  specific restriction checks
+   */
+  virtual bool ModeSpecificAllowed(const baldr::AccessRestriction& restriction) const;
+
+  /**
+   * Only transit costings are valid for this method call, hence we throw
+   * @param edge
+   * @param departure
+   * @param curr_time
+   * @return
+   */
+  virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
+                        const baldr::TransitDeparture* departure,
+                        const uint32_t curr_time) const {
+    throw std::runtime_error("TruckCost::EdgeCost does not support transit edges");
+  }
+
+  /**
    * Get the cost to traverse the specified directed edge. Cost includes
    * the time (seconds) to traverse the edge.
-   * @param   edge  Pointer to a directed edge.
-   * @param   speed A speed for a road segment/edge.
+   * @param  edge      Pointer to a directed edge.
+   * @param  tile      Current tile.
+   * @param  seconds   Time of week in seconds.
    * @return  Returns the cost and time (seconds)
    */
-  virtual Cost EdgeCost(const baldr::DirectedEdge* edge, const uint32_t speed) const;
+  virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
+                        const baldr::GraphTile* tile,
+                        const uint32_t seconds) const;
 
   /**
    * Returns the cost to make the transition from the predecessor edge.
@@ -207,13 +231,11 @@ public:
    * @param  edge  Directed edge (the to edge)
    * @param  node  Node (intersection) where transition occurs.
    * @param  pred  Predecessor edge information.
-   * @param  has_traffic  Does the transition have traffic information.
    * @return  Returns the cost and time (seconds)
    */
   virtual Cost TransitionCost(const baldr::DirectedEdge* edge,
                               const baldr::NodeInfo* node,
-                              const EdgeLabel& pred,
-                              const bool has_traffic = false) const;
+                              const EdgeLabel& pred) const;
 
   /**
    * Returns the cost to make the transition from the predecessor edge
@@ -222,14 +244,12 @@ public:
    * @param  node  Node (intersection) where transition occurs.
    * @param  pred  the opposing current edge in the reverse tree.
    * @param  edge  the opposing predecessor in the reverse tree
-   * @param  has_traffic  Does the transition have traffic information.
    * @return  Returns the cost and time (seconds)
    */
   virtual Cost TransitionCostReverse(const uint32_t idx,
                                      const baldr::NodeInfo* node,
                                      const baldr::DirectedEdge* pred,
-                                     const baldr::DirectedEdge* edge,
-                                     const bool has_traffic = false) const;
+                                     const baldr::DirectedEdge* edge) const;
 
   /**
    * Get the cost factor for A* heuristics. This factor is multiplied
@@ -359,13 +379,52 @@ uint32_t TruckCost::access_mode() const {
   return kTruckAccess;
 }
 
+bool TruckCost::ModeSpecificAllowed(const baldr::AccessRestriction& restriction) const {
+  switch (restriction.type()) {
+    case AccessType::kHazmat:
+      if (hazmat_ != restriction.value()) {
+        return false;
+      }
+      break;
+    case AccessType::kMaxAxleLoad:
+      if (axle_load_ > static_cast<float>(restriction.value() * 0.01)) {
+        return false;
+      }
+      break;
+    case AccessType::kMaxHeight:
+      if (height_ > static_cast<float>(restriction.value() * 0.01)) {
+        return false;
+      }
+      break;
+    case AccessType::kMaxLength:
+      if (length_ > static_cast<float>(restriction.value() * 0.01)) {
+        return false;
+      }
+      break;
+    case AccessType::kMaxWeight:
+      if (weight_ > static_cast<float>(restriction.value() * 0.01)) {
+        return false;
+      }
+      break;
+    case AccessType::kMaxWidth:
+      if (width_ > static_cast<float>(restriction.value() * 0.01)) {
+        return false;
+      }
+      break;
+    default:
+      return true;
+  };
+  return true;
+}
+
 // Check if access is allowed on the specified edge.
-bool TruckCost::Allowed(const baldr::DirectedEdge* edge,
-                        const EdgeLabel& pred,
-                        const baldr::GraphTile*& tile,
-                        const baldr::GraphId& edgeid,
-                        const uint64_t current_time,
-                        const uint32_t tz_index) const {
+inline bool TruckCost::Allowed(const baldr::DirectedEdge* edge,
+                               const EdgeLabel& pred,
+                               const baldr::GraphTile*& tile,
+                               const baldr::GraphId& edgeid,
+                               const uint64_t current_time,
+                               const uint32_t tz_index,
+                               bool& has_time_restrictions) const {
   // Check access, U-turn, and simple turn restriction.
   // TODO - perhaps allow U-turns at dead-end nodes?
   if (!(edge->forwardaccess() & kTruckAccess) || (pred.opp_local_idx() == edge->localedgeidx()) ||
@@ -375,61 +434,8 @@ bool TruckCost::Allowed(const baldr::DirectedEdge* edge,
     return false;
   }
 
-  if (edge->access_restriction()) {
-    const std::vector<baldr::AccessRestriction>& restrictions =
-        tile->GetAccessRestrictions(edgeid.id(), kTruckAccess);
-
-    for (const auto& restriction : restrictions) {
-      switch (restriction.type()) {
-        case AccessType::kTimedAllowed:
-          // allowed at this range or allowed all the time
-          return (current_time && restriction.value())
-                     ? IsRestricted(restriction.value(), current_time, tz_index)
-                     : true;
-          break;
-        case AccessType::kTimedDenied:
-          // not allowed at this range or restricted all the time
-          return (current_time && restriction.value())
-                     ? !IsRestricted(restriction.value(), current_time, tz_index)
-                     : false;
-          break;
-        case AccessType::kHazmat:
-          if (hazmat_ != restriction.value()) {
-            return false;
-          }
-          break;
-        case AccessType::kMaxAxleLoad:
-          if (axle_load_ > static_cast<float>(restriction.value() * 0.01)) {
-            return false;
-          }
-          break;
-        case AccessType::kMaxHeight:
-          if (height_ > static_cast<float>(restriction.value() * 0.01)) {
-            return false;
-          }
-          break;
-        case AccessType::kMaxLength:
-          if (length_ > static_cast<float>(restriction.value() * 0.01)) {
-            return false;
-          }
-          break;
-        case AccessType::kMaxWeight:
-          if (weight_ > static_cast<float>(restriction.value() * 0.01)) {
-            return false;
-          }
-          break;
-        case AccessType::kMaxWidth:
-          if (width_ > static_cast<float>(restriction.value() * 0.01)) {
-            return false;
-          }
-          break;
-        default:
-          break;
-      }
-    }
-  }
-
-  return true;
+  return DynamicCost::EvaluateRestrictions(kTruckAccess, edge, tile, edgeid, current_time, tz_index,
+                                           has_time_restrictions);
 }
 
 // Checks if access is allowed for an edge on the reverse path (from
@@ -440,7 +446,8 @@ bool TruckCost::AllowedReverse(const baldr::DirectedEdge* edge,
                                const baldr::GraphTile*& tile,
                                const baldr::GraphId& opp_edgeid,
                                const uint64_t current_time,
-                               const uint32_t tz_index) const {
+                               const uint32_t tz_index,
+                               bool& has_time_restrictions) const {
   // Check access, U-turn, and simple turn restriction.
   // TODO - perhaps allow U-turns at dead-end nodes?
   if (!(opp_edge->forwardaccess() & kTruckAccess) || (pred.opp_local_idx() == edge->localedgeidx()) ||
@@ -450,62 +457,8 @@ bool TruckCost::AllowedReverse(const baldr::DirectedEdge* edge,
     return false;
   }
 
-  if (edge->access_restriction()) {
-    const std::vector<baldr::AccessRestriction>& restrictions =
-        tile->GetAccessRestrictions(opp_edgeid.id(), kTruckAccess);
-
-    for (const auto& restriction : restrictions) {
-      if (restriction.modes() & kTruckAccess) {
-        switch (restriction.type()) {
-          case AccessType::kTimedAllowed:
-            // allowed at this range or allowed all the time
-            return (current_time && restriction.value())
-                       ? IsRestricted(restriction.value(), current_time, tz_index)
-                       : true;
-            break;
-          case AccessType::kTimedDenied:
-            // not allowed at this range or restricted all the time
-            return (current_time && restriction.value())
-                       ? !IsRestricted(restriction.value(), current_time, tz_index)
-                       : false;
-            break;
-          case AccessType::kHazmat:
-            if (hazmat_ != restriction.value()) {
-              return false;
-            }
-            break;
-          case AccessType::kMaxAxleLoad:
-            if (axle_load_ > static_cast<float>(restriction.value() * 0.01)) {
-              return false;
-            }
-            break;
-          case AccessType::kMaxHeight:
-            if (height_ > static_cast<float>(restriction.value() * 0.01)) {
-              return false;
-            }
-            break;
-          case AccessType::kMaxLength:
-            if (length_ > static_cast<float>(restriction.value() * 0.01)) {
-              return false;
-            }
-            break;
-          case AccessType::kMaxWeight:
-            if (weight_ > static_cast<float>(restriction.value() * 0.01)) {
-              return false;
-            }
-            break;
-          case AccessType::kMaxWidth:
-            if (width_ > static_cast<float>(restriction.value() * 0.01)) {
-              return false;
-            }
-            break;
-          default:
-            break;
-        }
-      }
-    }
-  }
-  return true;
+  return DynamicCost::EvaluateRestrictions(kTruckAccess, edge, tile, opp_edgeid, current_time,
+                                           tz_index, has_time_restrictions);
 }
 
 // Check if access is allowed at the specified node.
@@ -514,7 +467,10 @@ bool TruckCost::Allowed(const baldr::NodeInfo* node) const {
 }
 
 // Get the cost to traverse the edge in seconds
-Cost TruckCost::EdgeCost(const DirectedEdge* edge, const uint32_t speed) const {
+Cost TruckCost::EdgeCost(const baldr::DirectedEdge* edge,
+                         const baldr::GraphTile* tile,
+                         const uint32_t seconds) const {
+  auto speed = tile->GetSpeed(edge, flow_mask_, seconds);
   float factor = density_factor_[edge->density()];
   if (edge->truck_route() > 0) {
     factor *= kTruckRouteFactor;
@@ -533,8 +489,7 @@ Cost TruckCost::EdgeCost(const DirectedEdge* edge, const uint32_t speed) const {
 // Returns the time (in seconds) to make the transition from the predecessor
 Cost TruckCost::TransitionCost(const baldr::DirectedEdge* edge,
                                const baldr::NodeInfo* node,
-                               const EdgeLabel& pred,
-                               const bool has_traffic) const {
+                               const EdgeLabel& pred) const {
   // Get the transition cost for country crossing, ferry, gate, toll booth,
   // destination only, alley, maneuver penalty
   uint32_t idx = pred.opp_local_idx();
@@ -556,7 +511,22 @@ Cost TruckCost::TransitionCost(const baldr::DirectedEdge* edge,
                       ? kRightSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))]
                       : kLeftSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))];
     }
-    float seconds = trans_density_factor_[node->density()] * edge->stopimpact(idx) * turn_cost;
+
+    if ((edge->use() != Use::kRamp && pred.use() == Use::kRamp) ||
+        (edge->use() == Use::kRamp && pred.use() != Use::kRamp)) {
+      turn_cost += 1.5f;
+      if (edge->roundabout())
+        turn_cost += 0.5f;
+    }
+
+    // Separate time and penalty when traffic is present. With traffic, edge speeds account for
+    // much of the intersection transition time (TODO - evaluate different elapsed time settings).
+    // Still want to add a penalty so routes avoid high cost intersections.
+    float seconds = turn_cost * edge->stopimpact(idx);
+    // Apply density factor penality if there isnt traffic on this edge or youre not using traffic
+    if (!edge->has_flow_speed() || flow_mask_ == 0)
+      seconds *= trans_density_factor_[node->density()];
+
     c.cost += seconds;
     c.secs += seconds;
   }
@@ -570,8 +540,7 @@ Cost TruckCost::TransitionCost(const baldr::DirectedEdge* edge,
 Cost TruckCost::TransitionCostReverse(const uint32_t idx,
                                       const baldr::NodeInfo* node,
                                       const baldr::DirectedEdge* pred,
-                                      const baldr::DirectedEdge* edge,
-                                      const bool has_traffic) const {
+                                      const baldr::DirectedEdge* edge) const {
   // Get the transition cost for country crossing, ferry, gate, toll booth,
   // destination only, alley, maneuver penalty
   Cost c = base_transition_cost(node, edge, pred, idx);
@@ -592,7 +561,22 @@ Cost TruckCost::TransitionCostReverse(const uint32_t idx,
                       ? kRightSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))]
                       : kLeftSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))];
     }
-    float seconds = trans_density_factor_[node->density()] * edge->stopimpact(idx) * turn_cost;
+
+    if ((edge->use() != Use::kRamp && pred->use() == Use::kRamp) ||
+        (edge->use() == Use::kRamp && pred->use() != Use::kRamp)) {
+      turn_cost += 1.5f;
+      if (edge->roundabout())
+        turn_cost += 0.5f;
+    }
+
+    // Separate time and penalty when traffic is present. With traffic, edge speeds account for
+    // much of the intersection transition time (TODO - evaluate different elapsed time settings).
+    // Still want to add a penalty so routes avoid high cost intersections.
+    float seconds = turn_cost * edge->stopimpact(idx);
+    // Apply density factor penality if there isnt traffic on this edge or youre not using traffic
+    if (!edge->has_flow_speed() || flow_mask_ == 0)
+      seconds *= trans_density_factor_[node->density()];
+
     c.cost += seconds;
     c.secs += seconds;
   }
@@ -620,6 +604,9 @@ void ParseTruckCostOptions(const rapidjson::Document& doc,
   auto json_costing_options = rapidjson::get_child_optional(doc, costing_options_key.c_str());
 
   if (json_costing_options) {
+    // TODO: farm more common stuff out to parent class
+    ParseCostOptions(*json_costing_options, pbf_costing_options);
+
     // If specified, parse json and set pbf values
 
     // maneuver_penalty
@@ -705,7 +692,6 @@ void ParseTruckCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_use_tolls(
         kUseTollsRange(rapidjson::get_optional<float>(*json_costing_options, "/use_tolls")
                            .get_value_or(kDefaultUseTolls)));
-
   } else {
     // Set pbf values to defaults
     pbf_costing_options->set_maneuver_penalty(kDefaultManeuverPenalty);
@@ -725,6 +711,7 @@ void ParseTruckCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_width(kDefaultTruckWidth);
     pbf_costing_options->set_length(kDefaultTruckLength);
     pbf_costing_options->set_use_tolls(kDefaultUseTolls);
+    pbf_costing_options->set_flow_mask(kDefaultFlowMask);
   }
 }
 

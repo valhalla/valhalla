@@ -26,6 +26,14 @@ Czech `aliases` entry example:
 
 7. Submit a pull request for review. Thank you!
 
+## Adding new instruction strings
+
+1. First add the new strings in en-US.json. The JSON keys are used by narrative_builder to select the instruction template string.
+
+2. Sync the new strings to each new narrative language file by running `./merge-en.sh`. This will copy the new English strings to each new language.
+
+3. Update the English strings in each language file.
+
 #### Instruction descriptions
 `TODO`
 

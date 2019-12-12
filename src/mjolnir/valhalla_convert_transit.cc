@@ -987,7 +987,7 @@ void build_tiles(const boost::property_tree::ptree& pt,
   for (; tile_start != tile_end; ++tile_start) {
     // Get the next tile Id from the queue and get a tile builder
     if (reader_transit_level.OverCommitted()) {
-      reader_transit_level.Clear();
+      reader_transit_level.Trim();
     }
     GraphId tile_id = tile_start->Tile_Base();
 

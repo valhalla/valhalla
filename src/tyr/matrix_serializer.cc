@@ -123,7 +123,7 @@ json::MapPtr serialize(const Api& request,
   }
   auto json = json::map({
       {"sources_to_targets", matrix},
-      {"units", Options_Units_Name(options.units())},
+      {"units", Options_Units_Enum_Name(options.units())},
   });
   json->emplace("targets", json::array({locations(options.targets())}));
   json->emplace("sources", json::array({locations(options.sources())}));

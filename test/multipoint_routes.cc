@@ -72,9 +72,11 @@ struct route_tester {
     Api request;
     ParseApi(request_json, Options::route, request);
     loki_worker.route(request);
-    std::pair<std::list<TripLeg>, std::list<DirectionsLeg>> results;
     thor_worker.route(request);
     odin_worker.narrate(request);
+    loki_worker.cleanup();
+    thor_worker.cleanup();
+    odin_worker.cleanup();
     return request;
   }
   boost::property_tree::ptree conf;
@@ -86,6 +88,35 @@ struct route_tester {
 
 float mid_break_distance;
 float mid_through_distance;
+
+void check_dates(bool time_dependent,
+                 const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
+                 baldr::GraphReader& reader) {
+  // non-time dependent should get no dates, time dependent should all have dates that increase
+  uint64_t epoch = 0;
+  for (const auto& l : locations) {
+    if (l.has_date_time() && !time_dependent)
+      throw std::logic_error("Routes without time dependency should have not dates attached");
+    if (!l.has_date_time() && time_dependent)
+      throw std::logic_error("Routes with time dependency should have dates attached");
+    if (l.has_date_time()) {
+      // get the timezone
+      baldr::GraphId edge_id(l.path_edges().begin()->graph_id());
+      const auto* tile = reader.GetGraphTile(edge_id);
+      const auto* edge = tile->directededge(edge_id);
+      tile = reader.GetGraphTile(edge->endnode(), tile);
+      const auto* node = tile->node(edge->endnode());
+      // get the epoch time
+      uint64_t ltime =
+          DateTime::seconds_since_epoch(l.date_time(),
+                                        DateTime::get_tz_db().from_index(node->timezone()));
+      // check it
+      if (ltime < epoch)
+        throw std::logic_error("Date time should be increasing with each route leg");
+      epoch = ltime;
+    }
+  }
+}
 
 void test_mid_break(const std::string& date_time) {
   route_tester tester;
@@ -120,6 +151,9 @@ void test_mid_break(const std::string& date_time) {
                                         "Korianderstraat", ""})
     throw std::logic_error(
         "Should be a destination at the midpoint and reverse the route for the second leg");
+
+  check_dates(date_time.find(R"("type":)") != std::string::npos, response.options().locations(),
+              *tester.reader);
 
   mid_break_distance =
       directions.begin()->summary().length() + directions.rbegin()->summary().length();
@@ -157,6 +191,9 @@ void test_mid_through(const std::string& date_time) {
   if (names != std::vector<std::string>{"Korianderstraat", "Maanzaadstraat", "Pimpernelstraat",
                                         "Selderiestraat", "Korianderstraat", ""})
     throw std::logic_error("Should continue through the midpoint and around the block");
+
+  check_dates(date_time.find(R"("type":)") != std::string::npos, response.options().locations(),
+              *tester.reader);
 
   mid_through_distance = directions.begin()->summary().length();
 }
@@ -201,6 +238,9 @@ void test_mid_via(const std::string& date_time) {
   if (names != std::vector<std::string>{"Korianderstraat", "Maanzaadstraat", "Maanzaadstraat",
                                         "Korianderstraat", ""})
     throw std::logic_error("Should be a uturn at the mid point");
+
+  check_dates(date_time.find(R"("type":)") != std::string::npos, response.options().locations(),
+              *tester.reader);
 }
 
 void test_mid_break_through(const std::string& date_time) {
@@ -241,6 +281,9 @@ void test_mid_break_through(const std::string& date_time) {
   if (names != std::vector<std::string>{"Korianderstraat", "Maanzaadstraat", "", "Maanzaadstraat",
                                         "Pimpernelstraat", "Selderiestraat", "Korianderstraat", ""})
     throw std::logic_error("Should be a destination at the midpoint and continue around the block");
+
+  check_dates(date_time.find(R"("type":)") != std::string::npos, response.options().locations(),
+              *tester.reader);
 }
 
 void test_mid_break_no_time() {

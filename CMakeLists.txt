@@ -16,7 +16,7 @@ include(GNUInstallDirs)
 set(VALHALLA_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 list(INSERT CMAKE_MODULE_PATH 0 ${VALHALLA_SOURCE_DIR}/cmake)
 
-set(CMAKE_CXX_STANDARD 11 CACHE STRING "C++ language version to use (default is 11)")
+set(CMAKE_CXX_STANDARD 14 CACHE STRING "C++ language version to use (default is 14)")
 option(ENABLE_TOOLS "Enable Valhalla tools" ON)
 option(ENABLE_DATA_TOOLS "Enable Valhalla data tools" ON)
 option(ENABLE_SERVICES "Enable Valhalla services" ON)
@@ -25,6 +25,7 @@ option(ENABLE_PYTHON_BINDINGS "Enable Python bindings" ON)
 option(ENABLE_NODE_BINDINGS "Build NodeJs bindings" ON)
 option(ENABLE_CCACHE "Speed up incremental rebuilds via ccache" ON)
 option(ENABLE_COVERAGE "Build with coverage instrumentalisation" OFF)
+option(ENABLE_COMPILER_WARNINGS "Build with compiler warnings as errors" OFF)
 option(ENABLE_SANITIZER "Use memory sanitizer for Debug build" OFF)
 option(ENABLE_TESTS "Enable Valhalla tests" ON)
 set(LOGGING_LEVEL "" CACHE STRING "Logging level, default is INFO")
@@ -33,6 +34,7 @@ set_property(CACHE LOGGING_LEVEL PROPERTY STRINGS "NONE;ALL;ERROR;WARN;INFO;DEBU
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 
 # colorize output
@@ -113,15 +115,19 @@ endif()
 find_package(Threads REQUIRED)
 find_package(ZLIB REQUIRED)
 
-add_library(CURL::CURL INTERFACE IMPORTED)
-if(ENABLE_HTTP OR ENABLE_DATA_TOOLS)
-  if(NOT CURL_FOUND)
-    find_package(CURL REQUIRED)
+if(NOT TARGET CURL::CURL)
+  add_library(CURL::CURL INTERFACE IMPORTED)
+  if(ENABLE_HTTP OR ENABLE_DATA_TOOLS)
+    if(NOT CURL_FOUND)
+      find_package(CURL REQUIRED)
+    endif()
+    set_target_properties(CURL::CURL PROPERTIES
+      INTERFACE_LINK_LIBRARIES "${CURL_LIBRARIES}"
+      INTERFACE_INCLUDE_DIRECTORIES "${CURL_INCLUDE_DIR}"
+      INTERFACE_COMPILE_DEFINITIONS CURL_STATICLIB)
   endif()
-  set_target_properties(CURL::CURL PROPERTIES
-    INTERFACE_LINK_LIBRARIES "${CURL_LIBRARIES}"
-    INTERFACE_INCLUDE_DIRECTORIES "${CURL_INCLUDE_DIR}"
-    INTERFACE_COMPILE_DEFINITIONS CURL_STATICLIB)
+else()
+  message(STATUS "Using curl from the outside")
 endif()
 
 if(NOT Protobuf_FOUND)
@@ -204,14 +210,16 @@ elseif(ENABLE_TOOLS)
 elseif(NOT Boost_FOUND)
   find_package(Boost 1.51 REQUIRED)
 endif()
+add_definitions(-DBOOST_NO_CXX11_SCOPED_ENUMS)
 
 ## libvalhalla
 add_subdirectory(src)
 
 ## Python bindings
 if(ENABLE_PYTHON_BINDINGS)
+  #TODO: need to make sure they actually have python
   add_subdirectory(src/bindings/python)
-  install(FILES COPYING ChangeLog
+  install(FILES COPYING CHANGELOG.md
     DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/doc/python-valhalla"
     COMPONENT python)
 endif()
@@ -237,7 +245,7 @@ endfunction()
 ## Valhalla programs
 set(valhalla_programs valhalla_run_map_match valhalla_benchmark_loki valhalla_benchmark_skadi
   valhalla_run_isochrone valhalla_run_route valhalla_benchmark_adjacency_list valhalla_run_matrix
-  valhalla_path_comparison valhalla_export_edges)
+  valhalla_path_comparison valhalla_export_edges valhalla_expand_bounding_box)
 
 ## Valhalla data tools
 set(valhalla_data_tools valhalla_build_statistics valhalla_ways_to_edges valhalla_validate_transit
@@ -295,7 +303,7 @@ install(
     WORLD_READ WORLD_EXECUTE
   COMPONENT runtime)
 
-install(FILES COPYING ChangeLog
+install(FILES COPYING CHANGELOG.md
   DESTINATION "${CMAKE_INSTALL_DOCDIR}"
   COMPONENT runtime)
 

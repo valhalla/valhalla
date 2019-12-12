@@ -1,7 +1,7 @@
 ## Lists tests
 set(tests aabb2 access_restriction actor admin attributes_controller complexrestriction countryaccess datetime directededge
   distanceapproximator double_bucket_queue edgecollapser edgestatus ellipse encode
-  enhancedtrippath factory graphid graphtile graphtileheader gridded_data grid_range_query grid_traversal
+  enhancedtrippath factory graphid graphtile graphtileheader gridded_data grid_range_query grid_traversal instructions
   json laneconnectivity linesegment2 location logging maneuversbuilder map_matcher_factory mapmatch
   narrative_dictionary nodeinfo nodetransition obb2 openlr optimizer pathlocation_serialization parse_request point2 pointll
   polyline2 predictedspeeds queue routing sample sequence sign signs streetname streetnames streetnames_factory
@@ -11,8 +11,10 @@ set(tests aabb2 access_restriction actor admin attributes_controller complexrest
 
 if(ENABLE_DATA_TOOLS)
   list(APPEND tests astar edgeinfobuilder graphbuilder graphparser graphtilebuilder graphreader isochrone predictive_traffic
-    idtable matrix multipoint_routes names node_search refs search servicedays shape_attributes signinfo thor_worker timedep_paths
-    timeparsing trivial_paths uniquenames utrecht)
+    idtable matrix minbb multipoint_routes names node_search reach recover_shortcut refs search servicedays shape_attributes signinfo thor_worker timedep_paths timeparsing trivial_paths uniquenames utrecht)
+  if(ENABLE_HTTP)
+    list(APPEND tests http_tiles)
+  endif()
 endif()
 
 if(ENABLE_SERVICES)
@@ -44,17 +46,47 @@ endforeach()
 set_target_properties(logging PROPERTIES COMPILE_DEFINITIONS LOGGING_LEVEL_ALL)
 
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/utrecht_tiles/0/003/196.gph
+  COMMAND ${CMAKE_COMMAND} -E make_directory test/data/utrecht_tiles/
+  COMMAND ${VALHALLA_SOURCE_DIR}/scripts/valhalla_build_timezones 2>/dev/null > test/data/utrecht_tiles/tz.sqlite
   COMMAND ${CMAKE_BINARY_DIR}/valhalla_build_tiles
-      --inline-config '{"mjolnir":{"tile_dir":"test/data/utrecht_tiles","hierarchy":true,"shortcuts":true,"concurrency":4,"logging":{"type":""}}}'
+      --inline-config '{"mjolnir":{"tile_dir":"test/data/utrecht_tiles","timezone":"test/data/utrecht_tiles/tz.sqlite","hierarchy":true,"shortcuts":true,"concurrency":4,"logging":{"type":""}}}'
       ${VALHALLA_SOURCE_DIR}/test/data/utrecht_netherlands.osm.pbf
-#  COMMAND ${CMAKE_BINARY_DIR}/valhalla_add_predicted_traffic
-#      --inline-config '{"mjolnir":{"tile_dir":"test/data/utrecht_tiles","hierarchy":true,"shortcuts":true,"concurrency":4,"logging":{"type":""}}}'
-#      -t ${VALHALLA_SOURCE_DIR}/test/data/
+  COMMAND ${CMAKE_BINARY_DIR}/valhalla_add_predicted_traffic
+      --inline-config '{"mjolnir":{"tile_dir":"test/data/utrecht_tiles","concurrency":4,"logging":{"type":""}}}'
+      -t ${VALHALLA_SOURCE_DIR}/test/data/traffic_tiles/
   COMMENT "Building Utrecht Tiles..."
   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
   DEPENDS valhalla_build_tiles valhalla_add_predicted_traffic ${VALHALLA_SOURCE_DIR}/test/data/utrecht_netherlands.osm.pbf)
 add_custom_target(utrecht_tiles DEPENDS ${CMAKE_BINARY_DIR}/test/data/utrecht_tiles/0/003/196.gph)
 
+add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/whitelion_tiles/2/000/814/309.gph
+  COMMAND ${CMAKE_BINARY_DIR}/valhalla_build_tiles
+      --inline-config '{"mjolnir":{"tile_dir":"test/data/whitelion_tiles","hierarchy":true,"shortcuts":true,"concurrency":4,"logging":{"type":""}}}'
+      ${VALHALLA_SOURCE_DIR}/test/data/whitelion_bristol_uk.osm.pbf
+  COMMENT "Building Whitelion Tiles..."
+  WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+  DEPENDS valhalla_build_tiles ${VALHALLA_SOURCE_DIR}/test/data/whitelion_bristol_uk.osm.pbf)
+add_custom_target(whitelion_tiles DEPENDS ${CMAKE_BINARY_DIR}/test/data/whitelion_tiles/2/000/814/309.gph)
+
+add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/whitelion_tiles_reverse/2/000/814/309.gph
+  COMMAND ${CMAKE_BINARY_DIR}/valhalla_build_tiles
+      --inline-config '{"mjolnir":{"tile_dir":"test/data/whitelion_tiles_reverse","hierarchy":true,"shortcuts":true,"concurrency":4,"logging":{"type":""}}}'
+      ${VALHALLA_SOURCE_DIR}/test/data/whitelion_bristol_uk_reversed_oneway.osm.pbf
+  COMMENT "Building reversed Whitelion Tiles..."
+  WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+  DEPENDS valhalla_build_tiles ${VALHALLA_SOURCE_DIR}/test/data/whitelion_bristol_uk_reversed_oneway.osm.pbf)
+add_custom_target(reversed_whitelion_tiles DEPENDS ${CMAKE_BINARY_DIR}/test/data/whitelion_tiles_reverse/2/000/814/309.gph)
+
+add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/roma_tiles/1/047/352.gph
+  COMMAND ${CMAKE_BINARY_DIR}/valhalla_build_tiles
+      --inline-config '{"mjolnir":{"tile_dir":"test/data/roma_tiles","hierarchy":true,"shortcuts":true,"concurrency":4,"logging":{"type":""}}}'
+      ${VALHALLA_SOURCE_DIR}/test/data/via_montebello_roma_italy.osm.pbf
+  COMMENT "Building Roma Tiles..."
+  WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+  DEPENDS valhalla_build_tiles ${VALHALLA_SOURCE_DIR}/test/data/via_montebello_roma_italy.osm.pbf)
+add_custom_target(roma_tiles DEPENDS ${CMAKE_BINARY_DIR}/test/data/roma_tiles/1/047/352.gph)
+
+file(GLOB locales "${VALHALLA_SOURCE_DIR}/locales/*.json")
 add_custom_command(OUTPUT .locales.timestamp
   COMMAND /bin/bash -c "for loc in $(jq --raw-output .posix_locale *.json); do \
        $<$<NOT:$<BOOL:${APPLE}>>:  localedef -i $\{loc\%.\*\} -f $\{loc\#\#\*.\} ./$\{loc\}   ; > \
@@ -62,7 +94,7 @@ add_custom_command(OUTPUT .locales.timestamp
      done \
      && touch ${CMAKE_CURRENT_BINARY_DIR}/.locales.timestamp"
   WORKING_DIRECTORY ${VALHALLA_SOURCE_DIR}/locales
-  DEPENDS ${VALHALLA_SOURCE_DIR}/locales/*.json
+  DEPENDS ${locales}
   COMMENT "Compile locale definition files..."
   VERBATIM)
 add_custom_target(localedef DEPENDS .locales.timestamp)
@@ -105,18 +137,22 @@ endif()
 
 add_dependencies(run-sample test_directories)
 if(ENABLE_DATA_TOOLS)
-  ## TODO: fix apple tests!
-  if(NOT APPLE)
-    add_dependencies(run-mapmatch utrecht_tiles)
-  endif()
+  add_dependencies(run-mapmatch utrecht_tiles)
   add_dependencies(run-isochrone utrecht_tiles)
   add_dependencies(run-matrix utrecht_tiles)
   add_dependencies(run-timedep_paths utrecht_tiles)
   add_dependencies(run-trivial_paths utrecht_tiles)
   add_dependencies(predictive_traffic utrecht_tiles)
   add_dependencies(run-multipoint_routes utrecht_tiles)
+  add_dependencies(run-reach utrecht_tiles)
   add_dependencies(run-shape_attributes utrecht_tiles)
   add_dependencies(run-thor_worker utrecht_tiles)
+  add_dependencies(run-recover_shortcut utrecht_tiles)
+  add_dependencies(run-minbb utrecht_tiles)
+  add_dependencies(run-astar whitelion_tiles roma_tiles reversed_whitelion_tiles)
+  if(ENABLE_HTTP)
+    add_dependencies(run-http_tiles utrecht_tiles)
+  endif()
 endif()
 
 if(ENABLE_SERVICES)

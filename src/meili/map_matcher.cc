@@ -64,7 +64,7 @@ Interpolation InterpolateMeasurement(const MapMatcher& mapmatcher,
                                      float match_measurement_distance,
                                      float match_measurement_time) {
   const baldr::GraphTile* tile(nullptr);
-  midgard::DistanceApproximator approximator(measurement.lnglat());
+  midgard::projector_t projector(measurement.lnglat());
 
   // Route distance from each segment begin to the beginning segment
   float segment_begin_route_distance = 0.f;
@@ -81,15 +81,14 @@ Interpolation InterpolateMeasurement(const MapMatcher& mapmatcher,
 
     const auto edgeinfo = tile->edgeinfo(directededge->edgeinfo_offset());
 
-    const auto& shape = edgeinfo.shape();
+    auto shape = edgeinfo.lazy_shape();
     if (shape.empty()) {
       continue;
     }
 
     midgard::PointLL projected_point;
     float sq_distance, offset;
-    std::tie(projected_point, sq_distance, std::ignore, offset) =
-        helpers::Project(measurement.lnglat(), shape, approximator);
+    std::tie(projected_point, sq_distance, std::ignore, offset) = helpers::Project(projector, shape);
 
     // Find out the correct offset
     if (!directededge->forward()) {
@@ -107,9 +106,7 @@ Interpolation InterpolateMeasurement(const MapMatcher& mapmatcher,
 
     // Get the amount of time spent on this segment
     auto edge_percent = segment->target - segment->source;
-    auto route_time =
-        mapmatcher.costing()->EdgeCost(directededge, tile->GetSpeed(directededge)).secs *
-        edge_percent;
+    auto route_time = mapmatcher.costing()->EdgeCost(directededge, tile).secs * edge_percent;
 
     Interpolation interp{projected_point, segment->edgeid, sq_distance,
                          route_distance,  route_time,      offset};

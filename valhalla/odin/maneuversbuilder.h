@@ -60,7 +60,7 @@ protected:
                                                  std::list<Maneuver>::iterator curr_man,
                                                  std::list<Maneuver>::iterator next_man);
 
-  void CountAndSortExitSigns(std::list<Maneuver>& maneuvers);
+  void CountAndSortSigns(std::list<Maneuver>& maneuvers);
 
   void ConfirmManeuverTypeAssignment(std::list<Maneuver>& maneuvers);
 
@@ -87,6 +87,10 @@ protected:
   bool IncludeUnnamedPrevEdge(int node_index,
                               EnhancedTripLeg_Edge* prev_edge,
                               EnhancedTripLeg_Edge* curr_edge) const;
+
+  Maneuver::RelativeDirection
+  DetermineMergeToRelativeDirection(EnhancedTripLeg_Node* node,
+                                    EnhancedTripLeg_Edge* prev_edge) const;
 
   bool IsMergeManeuverType(Maneuver& maneuver,
                            EnhancedTripLeg_Edge* prev_edge,

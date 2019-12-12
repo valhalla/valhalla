@@ -99,7 +99,7 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
   // Create sign builders
   for (uint32_t i = 0; i < header_->signcount(); i++) {
     name_info.insert({signs_[i].text_offset()});
-    signs_builder_.emplace_back(signs_[i].edgeindex(), signs_[i].type(), signs_[i].is_route_num(),
+    signs_builder_.emplace_back(signs_[i].index(), signs_[i].type(), signs_[i].is_route_num(),
                                 signs_[i].text_offset());
   }
 
@@ -262,6 +262,7 @@ void GraphTileBuilder::StoreTileData() {
     header_builder_.set_transfercount(0);
 
     // Write the signs
+    std::stable_sort(signs_builder_.begin(), signs_builder_.end());
     header_builder_.set_signcount(signs_builder_.size());
     in_mem.write(reinterpret_cast<const char*>(signs_builder_.data()),
                  signs_builder_.size() * sizeof(Sign));
@@ -978,28 +979,27 @@ void GraphTileBuilder::AddBins(const std::string& tile_dir,
 }
 
 // Add a predicted speed profile for a directed edge.
-void GraphTileBuilder::AddPredictedSpeed(const uint32_t idx, const std::vector<int16_t>& profile) {
-  // Create the index builder on the first profile added. Resize to equal the count of
-  // directed edges
+void GraphTileBuilder::AddPredictedSpeed(const uint32_t idx,
+                                         const std::vector<int16_t>& profile,
+                                         const size_t predicted_count_hint) {
+  if (profile.size() != kCoefficientCount)
+    throw std::runtime_error("GraphTileBuilder AddPredictedSpeed profile is not correct size: " +
+                             std::to_string(profile.size()));
+  if (idx >= header_->directededgecount())
+    throw std::runtime_error("GraphTileBuilder AddPredictedSpeed index is out of bounds");
+
+  // On the first call, create both the place to store the indices for each edge into the speed data
+  // But also preallocate space to hold the actual predicted data so the insert doesnt do reallocs
   if (speed_profile_offset_builder_.size() == 0) {
     speed_profile_offset_builder_.resize(header_->directededgecount());
+    speed_profile_builder_.reserve(predicted_count_hint * kCoefficientCount);
   }
 
-  if (idx < header_->directededgecount()) {
-    // Set the offset to the predicted speed profile for this directed edge
-    speed_profile_offset_builder_[idx] = speed_profile_builder_.size();
+  // Set the offset to the predicted speed profile for this directed edge
+  speed_profile_offset_builder_[idx] = speed_profile_builder_.size();
 
-    // Append the profile
-    if (profile.size() == kCoefficientCount) {
-      speed_profile_builder_.reserve(speed_profile_builder_.size() + kCoefficientCount);
-      speed_profile_builder_.insert(speed_profile_builder_.end(), profile.begin(), profile.end());
-    } else {
-      throw std::runtime_error("GraphTileBuilder AddPredictedSpeed profile is not correct size: " +
-                               std::to_string(profile.size()));
-    }
-  } else {
-    throw std::runtime_error("GraphTileBuilder AddPredictedSpeed index is out of bounds");
-  }
+  // Append the profile
+  speed_profile_builder_.insert(speed_profile_builder_.end(), profile.begin(), profile.end());
 }
 
 // Updates a tile with predictive speed data. Also updates directed edges with

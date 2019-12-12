@@ -25,7 +25,7 @@ Build Status
 
 | Linux/MacOs | Windows | Code Coverage |
 | ----------- | ------- | ------------- |
-| [![Circle CI](https://circleci.com/gh/valhalla/valhalla.svg?style=svg)](https://circleci.com/gh/valhalla/valhalla) | [![Build status](https://ci.appveyor.com/api/projects/status/6w7emulgcjweu457/branch/master?svg=true)](https://ci.appveyor.com/project/kevinkreiser/valhalla/branch/master) | [![codecov](https://codecov.io/gh/valhalla/valhalla/branch/master/graph/badge.svg)](https://codecov.io/gh/valhalla/valhalla) |
+| [![Circle CI](https://circleci.com/gh/valhalla/valhalla.svg?style=svg)](https://circleci.com/gh/valhalla/valhalla) | [![Build Status](https://dev.azure.com/valhalla1/valhalla/_apis/build/status/valhalla.valhalla?branchName=master)](https://dev.azure.com/valhalla1/valhalla/_build/latest?definitionId=1&branchName=master) | [![codecov](https://codecov.io/gh/valhalla/valhalla/branch/master/graph/badge.svg)](https://codecov.io/gh/valhalla/valhalla) |
 
 
 
@@ -84,22 +84,24 @@ sudo apt-get install -y valhalla-bin
 Building from Source
 --------------------
 
-Valhalla uses CMake as build system.
+Valhalla uses CMake as build system. When compiling with gcc (GNU Compiler Collection), version 5 or newer is supported.
 
 To install on a Debian or Ubuntu system you need to install its dependencies with:
 
 ```bash
 sudo add-apt-repository -y ppa:valhalla-core/valhalla
 sudo apt-get update
-sudo apt-get install -y cmake make libtool pkg-config g++ gcc jq lcov protobuf-compiler vim-common libboost-all-dev libboost-all-dev libcurl4-openssl-dev zlib1g-dev liblz4-dev libprime-server0.6.3-dev libprotobuf-dev prime-server0.6.3-bin nodejs npm
+sudo apt-get install -y cmake make libtool pkg-config g++ gcc jq lcov protobuf-compiler vim-common locales libboost-all-dev libcurl4-openssl-dev zlib1g-dev liblz4-dev libprime-server-dev libprotobuf-dev prime-server-bin
 #if you plan to compile with data building support, see below for more info
 sudo apt-get install -y libgeos-dev libgeos++-dev liblua5.2-dev libspatialite-dev libsqlite3-dev lua5.2 wget
-if [[ $(grep -cF xenial /etc/lsb-release) > 0 ]]; then sudo apt-get install -y libsqlite3-mod-spatialite; fi
+source /etc/lsb-release
+if [[ $(python -c "print int($DISTRIB_RELEASE > 15)") > 0 ]]; then sudo apt-get install -y libsqlite3-mod-spatialite; fi
 #if you plan to compile with python bindings, see below for more info
 sudo apt-get install -y python-all-dev
-#if you plan to compile with node bindings, run
-curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.11/install.sh | bash
-nvm use install 10 && nvm use 10 # must use node 8.11.1 and up because of N-API
+#if you plan to compile with node bindings
+curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.11/install.sh | bash #follow instructions in output to use nvm without starting a new bash session
+nvm install 10
+nvm use 10
 npm install --ignore-scripts
 ```
 
@@ -115,16 +117,21 @@ nvm use 10 # must use node 8.11.1 and up because of N-API
 npm install --ignore-scripts
 ```
 
-Then clone and build [`prime_server`](https://github.com/kevinkreiser/prime_server#build-and-install).
+Now, clone the Valhalla repository
+
+```bash
+git clone --recurse-submodules https://github.com/valhalla/valhalla.git
+```
+
+Then, build [`prime_server`](https://github.com/kevinkreiser/prime_server#build-and-install).
 
 After getting the dependencies install it with:
 
 ```bash
-git submodule update --init --recursive
 mkdir build
 cd build
 cmake .. -DCMAKE_BUILD_TYPE=Release
-make -j$(nproc)
+make -j$(nproc) # for macos, use: make -j$(sysctl -n hw.physicalcpu) 
 sudo make install
 ```
 
@@ -137,6 +144,7 @@ Important build options include:
 | `-DENABLE_SERVICES` (`On` / `Off`) | Build the HTTP service|
 | `-DBUILD_SHARED_LIBS` (`On` / `Off`) | Build static or shared libraries|
 | `-DENABLE_NODE_BINDINGS` (`ON` / `OFF`) | Build the node bindings (defaults to on)|
+| `-DENABLE_COMPILER_WARNINGS` (`ON` / `OFF`) | Build with common compiler warnings as errors (defaults to off)|
 
 For more build options run the interactive GUI:
 
@@ -188,7 +196,7 @@ If you would like to make an improvement to the code, please be aware that all v
 
 Note that our CI system checks that code formatting is consistent, and the build will fail if formatting rules aren't followed.  Please run `./scripts/format.sh` over your code before committing, to auto-format it in the projects preferred style.
 
-Also note that we run some `clang-tidy` linting over the code as well (see `.clang-tidy` for the list of rules enforced).  You can run `./scripts/tidy.sh` over the code before committing to ensure you haven't added any of the common problems we check for (Note: `./scripts/tidy.sh` requires the exitence of a `compile_commands.json` database.  You can generate this file by running `bear make` instead of just `make`.  The `bear` tool is installable on Ubuntu-based systems with `apt-get install bear`, and on macOS with `brew install bear`).
+Also note that we run some `clang-tidy` linting over the code as well (see `.clang-tidy` for the list of rules enforced).  You can run `./scripts/clang-tidy-only-diff.sh` over the code before committing to ensure you haven't added any of the common problems we check for (Note: `./scripts/clang-tidy-only-diff.sh` requires the exitence of a `compile_commands.json` database.  You can generate this file by running `cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=On ... && make`.
 
 Using the Node.js Bindings
 --------------------------
@@ -209,7 +217,7 @@ var hersheyRequest = '{"locations":[{"lat":40.546115,"lon":-76.385076,"type":"br
 var route = valhalla.route(hersheyRequest); // returns a string, other actions also available
 ```
 
-Please see the releasing docs for information on releasing a new version.
+Please see the [releasing docs](docs/releasing.md) for information on releasing a new version.
 
 Tests
 -----

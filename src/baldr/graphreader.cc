@@ -11,7 +11,7 @@
 #include "baldr/connectivity_map.h"
 #include "filesystem.h"
 
-using namespace valhalla::baldr;
+using namespace valhalla::midgard;
 
 namespace {
 constexpr size_t DEFAULT_MAX_CACHE_SIZE = 1073741824; // 1 gig
@@ -68,6 +68,10 @@ GraphReader::get_extract_instance(const boost::property_tree::ptree& pt) {
   return tile_extract;
 }
 
+// ----------------------------------------------------------------------------
+// SimpleTileCache implementation
+// ----------------------------------------------------------------------------
+
 // Constructor.
 SimpleTileCache::SimpleTileCache(size_t max_size) : cache_size_(0), max_cache_size_(max_size) {
 }
@@ -84,7 +88,7 @@ bool SimpleTileCache::Contains(const GraphId& graphid) const {
 
 // Lets you know if the cache is too large.
 bool SimpleTileCache::OverCommitted() const {
-  return max_cache_size_ < cache_size_;
+  return cache_size_ > max_cache_size_;
 }
 
 // Clears the cache.
@@ -107,6 +111,120 @@ const GraphTile* SimpleTileCache::Put(const GraphId& graphid, const GraphTile& t
   cache_size_ += size;
   return &cache_.emplace(graphid, tile).first->second;
 }
+
+void SimpleTileCache::Trim() {
+  Clear();
+}
+
+// ----------------------------------------------------------------------------
+// TileCacheLRU implementation
+// ----------------------------------------------------------------------------
+
+// Constructor.
+TileCacheLRU::TileCacheLRU(size_t max_size, MemoryLimitControl mem_control)
+    : cache_size_(0), max_cache_size_(max_size), mem_control_(mem_control) {
+}
+
+void TileCacheLRU::Reserve(size_t tile_size) {
+  assert(tile_size != 0);
+  cache_.reserve(max_cache_size_ / tile_size);
+}
+
+bool TileCacheLRU::Contains(const GraphId& graphid) const {
+  // todo: real experiments are needed to check if we need to
+  // promote the entry in LRU list to the head here
+  return cache_.find(graphid) != cache_.cend();
+}
+
+bool TileCacheLRU::OverCommitted() const {
+  return cache_size_ > max_cache_size_;
+}
+
+void TileCacheLRU::Clear() {
+  cache_size_ = 0;
+  cache_.clear();
+  key_val_lru_list_.clear();
+}
+
+void TileCacheLRU::Trim() {
+  TrimToFit(0);
+}
+
+const GraphTile* TileCacheLRU::Get(const GraphId& graphid) const {
+  auto cached = cache_.find(graphid);
+  if (cached == cache_.cend()) {
+    return nullptr;
+  }
+
+  const KeyValueIter& entry_iter = cached->second;
+  MoveToLruHead(entry_iter);
+
+  return &entry_iter->tile;
+}
+
+size_t TileCacheLRU::TrimToFit(const size_t required_size) {
+  size_t freed_space = 0;
+  while ((OverCommitted() || (max_cache_size_ - cache_size_) < required_size) &&
+         !key_val_lru_list_.empty()) {
+    const KeyValue& entry_to_evict = key_val_lru_list_.back();
+    const auto tile_size = entry_to_evict.tile.header()->end_offset();
+    cache_size_ -= tile_size;
+    freed_space += tile_size;
+    cache_.erase(entry_to_evict.id);
+    key_val_lru_list_.pop_back();
+  }
+  return freed_space;
+}
+
+void TileCacheLRU::MoveToLruHead(const KeyValueIter& entry_iter) const {
+  key_val_lru_list_.splice(key_val_lru_list_.begin(), key_val_lru_list_, entry_iter);
+}
+
+const GraphTile*
+TileCacheLRU::Put(const GraphId& graphid, const GraphTile& tile, size_t new_tile_size) {
+  if (new_tile_size > max_cache_size_) {
+    throw std::runtime_error("TileCacheLRU: tile size is bigger than max cache size");
+  }
+
+  auto cached = cache_.find(graphid);
+  if (cached == cache_.end()) {
+    if (mem_control_ == MemoryLimitControl::HARD) {
+      TrimToFit(new_tile_size);
+    }
+    key_val_lru_list_.emplace_front(KeyValue{graphid, tile});
+    cache_.emplace(graphid, key_val_lru_list_.begin());
+  } else {
+    // Value update; the new size may be different form the previous
+    // TODO: in practice tile size for a specific id never changes
+    //  if tile set is changed (e.g. new version), the cache should be cleared
+    //  do we need to take it into account here? (can dramatically simplify the code)
+    // note: SimpleTileCache does not handle the overwrite at the moment
+    auto& entry_iter = cached->second;
+    const auto old_tile_size = entry_iter->tile.header()->end_offset();
+
+    // do it before TrimToFit avoid its eviction to free space
+    MoveToLruHead(entry_iter);
+
+    if (mem_control_ == MemoryLimitControl::HARD) {
+      if (new_tile_size > old_tile_size) {
+        const auto extra_size_required = new_tile_size - old_tile_size;
+        // We do not allow insertion of items greater than the cache size
+        // Thus it's not possible the current value will be evicted.
+        TrimToFit(extra_size_required);
+      }
+    }
+
+    entry_iter->tile = tile;
+    cache_size_ -= old_tile_size;
+  }
+  cache_size_ += new_tile_size;
+
+  return &key_val_lru_list_.front().tile;
+}
+
+// ----------------------------------------------------------------------------
+// SynchronizedTileCache implementation
+// ----------------------------------------------------------------------------
 
 // Constructor.
 SynchronizedTileCache::SynchronizedTileCache(TileCache& cache, std::mutex& mutex)
@@ -137,6 +255,11 @@ void SynchronizedTileCache::Clear() {
   cache_.Clear();
 }
 
+void SynchronizedTileCache::Trim() {
+  std::lock_guard<std::mutex> lock(mutex_ref_);
+  cache_.Trim();
+}
+
 // Get a pointer to a graph tile object given a GraphId.
 const GraphTile* SynchronizedTileCache::Get(const GraphId& graphid) const {
   std::lock_guard<std::mutex> lock(mutex_ref_);
@@ -157,22 +280,40 @@ TileCache* TileCacheFactory::createTileCache(const boost::property_tree::ptree& 
 
   size_t max_cache_size = pt.get<size_t>("max_cache_size", DEFAULT_MAX_CACHE_SIZE);
 
+  bool use_lru_cache = pt.get<bool>("use_lru_mem_cache", false);
+  auto lru_mem_control = pt.get<bool>("lru_mem_cache_hard_control", false)
+                             ? TileCacheLRU::MemoryLimitControl::HARD
+                             : TileCacheLRU::MemoryLimitControl::SOFT;
+
   // wrap tile cache with thread-safe version
   if (pt.get<bool>("global_synchronized_cache", false)) {
     if (!globalTileCache_) {
-      globalTileCache_.reset(new SimpleTileCache(max_cache_size));
+      if (use_lru_cache) {
+        globalTileCache_.reset(new TileCacheLRU(max_cache_size, lru_mem_control));
+      } else {
+        globalTileCache_.reset(new SimpleTileCache(max_cache_size));
+      }
     }
     return new SynchronizedTileCache(*globalTileCache_, globalCacheMutex_);
   }
 
-  // default
+  if (use_lru_cache) {
+    return new TileCacheLRU(max_cache_size, lru_mem_control);
+  }
   return new SimpleTileCache(max_cache_size);
 }
 
 // Constructor using separate tile files
 GraphReader::GraphReader(const boost::property_tree::ptree& pt)
-    : tile_url_(pt.get<std::string>("tile_url", "")), tile_dir_(pt.get<std::string>("tile_dir")),
-      tile_extract_(get_extract_instance(pt)), cache_(TileCacheFactory::createTileCache(pt)) {
+    : tile_extract_(get_extract_instance(pt)), tile_dir_(pt.get<std::string>("tile_dir", "")),
+      curlers_(std::make_unique<curler_pool_t>(pt.get<size_t>("max_concurrent_reader_users", 1),
+                                               pt.get<std::string>("user_agent", ""))),
+      tile_url_(pt.get<std::string>("tile_url", "")),
+      tile_url_gz_(pt.get<bool>("tile_url_gz", false)),
+      cache_(TileCacheFactory::createTileCache(pt)) {
+  // validate tile url
+  if (!tile_url_.empty() && tile_url_.find(GraphTile::kTilePathPattern) == std::string::npos)
+    throw std::runtime_error("Not found tilePath pattern in tile url");
   // Reserve cache (based on whether using individual tile files or shared,
   // mmap'd file
   cache_->Reserve(tile_extract_->tiles.empty() ? AVERAGE_TILE_SIZE : AVERAGE_MM_TILE_SIZE);
@@ -191,6 +332,8 @@ bool GraphReader::DoesTileExist(const GraphId& graphid) const {
   if (cache_->Contains(graphid)) {
     return true;
   }
+  if (tile_dir_.empty())
+    return false;
   std::string file_location =
       tile_dir_ + filesystem::path::preferred_separator + GraphTile::FileSuffix(graphid.Tile_Base());
   struct stat buffer;
@@ -229,6 +372,7 @@ const GraphTile* GraphReader::GetGraphTile(const GraphId& graphid) {
   // Check if the level/tileid combination is in the cache
   auto base = graphid.Tile_Base();
   if (auto cached = cache_->Get(base)) {
+    // LOG_DEBUG("Memory cache hit " + GraphTile::FileSuffix(base));
     return cached;
   }
 
@@ -237,14 +381,17 @@ const GraphTile* GraphReader::GetGraphTile(const GraphId& graphid) {
     // Do we have this tile
     auto t = tile_extract_->tiles.find(base);
     if (t == tile_extract_->tiles.cend()) {
+      // LOG_DEBUG("Memory map cache miss " + GraphTile::FileSuffix(base));
       return nullptr;
     }
 
     // This initializes the tile from mmap
     GraphTile tile(base, t->second.first, t->second.second);
     if (!tile.header()) {
+      // LOG_DEBUG("Memory map cache miss " + GraphTile::FileSuffix(base));
       return nullptr;
     }
+    // LOG_DEBUG("Memory map cache hit " + GraphTile::FileSuffix(base));
 
     // Keep a copy in the cache and return it
     size_t size = AVERAGE_MM_TILE_SIZE; // tile.end_offset();  // TODO what size??
@@ -252,17 +399,33 @@ const GraphTile* GraphReader::GetGraphTile(const GraphId& graphid) {
     return inserted;
   } // Try getting it from flat file
   else {
-    // This reads the tile from disk
+    // Try to get it from disk and if we cant..
     GraphTile tile(tile_dir_, base);
     if (!tile.header()) {
-      if (tile_url_.empty() || _404s.find(base) != _404s.end()) {
-        return nullptr;
+      {
+        std::lock_guard<std::mutex> lock(_404s_lock);
+        // See if we are configured for a url and if we are
+        if (tile_url_.empty() || _404s.find(base) != _404s.end()) {
+          // LOG_DEBUG("Url cache miss " + GraphTile::FileSuffix(base));
+          return nullptr;
+        }
       }
-      tile = GraphTile(tile_url_, base, curler);
+
+      {
+        scoped_curler_t curler(*curlers_);
+        // Get it from the url and cache it to disk if you can
+        tile = GraphTile::CacheTileURL(tile_url_, base, curler.get(), tile_url_gz_, tile_dir_);
+      }
+
       if (!tile.header()) {
+        std::lock_guard<std::mutex> lock(_404s_lock);
         _404s.insert(base);
+        // LOG_DEBUG("Url cache miss " + GraphTile::FileSuffix(base));
         return nullptr;
       }
+      // LOG_DEBUG("Url cache hit " + GraphTile::FileSuffix(base));
+    } else {
+      // LOG_DEBUG("Disk cache hit " + GraphTile::FileSuffix(base));
     }
 
     // Keep a copy in the cache and return it
@@ -328,15 +491,16 @@ bool GraphReader::AreEdgesConnected(const GraphId& edge1, const GraphId& edge2) 
 
   // Get opposing edge to de1
   const DirectedEdge* de1_opp = GetOpposingEdge(edge1, t1);
-  if (de1_opp->endnode() == de2->endnode() || is_transition(de1_opp->endnode(), de2->endnode())) {
+  if (de1_opp &&
+      (de1_opp->endnode() == de2->endnode() || is_transition(de1_opp->endnode(), de2->endnode()))) {
     return true;
   }
 
   // Get opposing edge to de2 and compare to both edge1 endnodes
   const DirectedEdge* de2_opp = GetOpposingEdge(edge2, t2);
-  if (de2_opp->endnode() == de1->endnode() || de2_opp->endnode() == de1_opp->endnode() ||
-      is_transition(de2_opp->endnode(), de1->endnode()) ||
-      is_transition(de2_opp->endnode(), de1_opp->endnode())) {
+  if (de2_opp && (de2_opp->endnode() == de1->endnode() || de2_opp->endnode() == de1_opp->endnode() ||
+                  is_transition(de2_opp->endnode(), de1->endnode()) ||
+                  is_transition(de2_opp->endnode(), de1_opp->endnode()))) {
     return true;
   }
   return false;
@@ -446,6 +610,101 @@ GraphId GraphReader::GetShortcut(const GraphId& id) {
   return {};
 }
 
+// Unpack edges for a given shortcut edge
+std::vector<GraphId> GraphReader::RecoverShortcut(const GraphId& shortcut_id) {
+  // grab the shortcut edge
+  const GraphTile* tile = GetGraphTile(shortcut_id);
+  const DirectedEdge* shortcut = tile->directededge(shortcut_id);
+
+  // bail if this isnt a shortcut
+  if (!shortcut->is_shortcut()) {
+    return {shortcut_id};
+  }
+
+  // loop over the edges leaving its begin node and find the superseded edge
+  GraphId begin_node = edge_startnode(shortcut_id);
+  if (!begin_node)
+    return {shortcut_id};
+
+  // loop over the edges leaving its begin node and find the superseded edge
+  std::vector<GraphId> edges;
+  for (const DirectedEdge& de : tile->GetDirectedEdges(begin_node.id())) {
+    if (shortcut->shortcut() & de.superseded()) {
+      edges.push_back(tile->header()->graphid());
+      edges.back().set_id(&de - tile->directededge(0));
+      break;
+    }
+  }
+
+  // bail if we couldnt find it
+  if (edges.empty()) {
+    LOG_ERROR("Unable to recover shortcut for edgeid " + std::to_string(shortcut_id) +
+              " | no superseded edge");
+    return {shortcut_id};
+  }
+
+  // seed the edge walking with the first edge
+  const DirectedEdge* current_edge = tile->directededge(edges.back());
+  uint32_t accumulated_length = current_edge->length();
+
+  // walk edges until we find the same ending node as the shortcut
+  while (current_edge->endnode() != shortcut->endnode()) {
+    // get the node at the end of the last edge we added
+    const NodeInfo* node = GetEndNode(current_edge, tile);
+    if (!node)
+      return {shortcut_id};
+    auto node_index = node - tile->node(0);
+
+    // check the edges leaving this node to see if we can find the one that is part of the shortcut
+    current_edge = nullptr;
+    for (const DirectedEdge& edge : tile->GetDirectedEdges(node_index)) {
+      // are they the same enough that its part of the shortcut
+      // NOTE: this fails in about .05% of cases where there are two candidates and its not clear
+      // which edge is the right one. looking at shortcut builder its not obvious how this is possible
+      // as it seems to terminate a shortcut if more than one edge pair can be contracted...
+      // NOTE: because we change the speed of the edge in graph enhancer we cant use speed as a
+      // reliable determining factor
+      if (begin_node != edge.endnode() && !edge.is_shortcut() &&
+          (edge.forwardaccess() & kAutoAccess) && edge.sign() == shortcut->sign() &&
+          edge.use() == shortcut->use() && edge.classification() == shortcut->classification() &&
+          edge.roundabout() == shortcut->roundabout() && edge.link() == shortcut->link() &&
+          edge.toll() == shortcut->toll() && edge.destonly() == shortcut->destonly() &&
+          edge.unpaved() == shortcut->unpaved() && edge.surface() == shortcut->surface()/* &&
+          edge.speed() == shortcut->speed()*/) {
+        // we are going to keep this edge
+        edges.emplace_back(tile->header()->graphid());
+        edges.back().set_id(&edge - tile->directededge(0));
+        // and keep expanding from the end of it
+        current_edge = &edge;
+        begin_node = tile->header()->graphid();
+        begin_node.set_id(node_index);
+        accumulated_length += edge.length();
+        break;
+      }
+    }
+
+    // if we didnt add an edge or we went over the length we failed
+    if (current_edge == nullptr || accumulated_length > shortcut->length()) {
+      LOG_ERROR("Unable to recover shortcut for edgeid " + std::to_string(shortcut_id) +
+                " | accumulated_length: " + std::to_string(accumulated_length) +
+                " | shortcut_length: " + std::to_string(shortcut->length()));
+      return {shortcut_id};
+    }
+  }
+
+  // we somehow got to the end via a shorter path
+  if (accumulated_length < shortcut->length()) {
+    LOG_ERROR("Unable to recover shortcut for edgeid (accumulated_length < shortcut->length()) " +
+              std::to_string(shortcut_id) +
+              " | accumulated_length: " + std::to_string(accumulated_length) +
+              " | shortcut_length: " + std::to_string(shortcut->length()));
+    return {shortcut_id};
+  }
+
+  // these edges make up this shortcut
+  return edges;
+}
+
 // Convenience method to get the relative edge density (from the
 // begin node of an edge).
 uint32_t GraphReader::GetEdgeDensity(const GraphId& edgeid) {
@@ -482,7 +741,7 @@ std::unordered_set<GraphId> GraphReader::GetTileSet() const {
       tiles.emplace(t.first);
     }
   } // or individually on disk
-  else {
+  else if (!tile_dir_.empty()) {
     // for each level
     for (uint8_t level = 0; level <= TileHierarchy::levels().rbegin()->first + 1; ++level) {
       // crack open this level of tiles directory
@@ -516,7 +775,7 @@ std::unordered_set<GraphId> GraphReader::GetTileSet(const uint8_t level) const {
         tiles.emplace(t.first);
       }
     } // or individually on disk
-  } else {
+  } else if (!tile_dir_.empty()) {
     // crack open this level of tiles directory
     filesystem::path root_dir(tile_dir_ + filesystem::path::preferred_separator +
                               std::to_string(level) + filesystem::path::preferred_separator);
@@ -533,6 +792,44 @@ std::unordered_set<GraphId> GraphReader::GetTileSet(const uint8_t level) const {
     }
   }
   return tiles;
+}
+
+AABB2<PointLL> GraphReader::GetMinimumBoundingBox(const AABB2<PointLL>& bb) {
+  // Iterate through all the tiles that intersect this bounding box
+  const auto& ids = TileHierarchy::GetGraphIds(bb);
+  AABB2<PointLL> min_bb{PointLL{}, PointLL{}};
+  for (const auto& tile_id : ids) {
+    // Don't take too much ram
+    if (OverCommitted())
+      Trim();
+
+    // Look at every node in the tile
+    const auto* tile = GetGraphTile(tile_id);
+    for (uint32_t i = 0; tile && i < tile->header()->nodecount(); i++) {
+
+      // If the node is within the input bounding box
+      const auto* node = tile->node(i);
+      auto node_ll = node->latlng(tile->header()->base_ll());
+      if (bb.Contains(node_ll)) {
+
+        // If we havent done anything with our bbox yet initialize it
+        if (!min_bb.minpt().IsValid())
+          min_bb = AABB2<PointLL>(node_ll, node_ll);
+
+        // Look at the shape of each edge leaving the node
+        const auto* diredge = tile->directededge(node->edge_index());
+        for (uint32_t i = 0; i < node->edge_count(); i++, diredge++) {
+          auto shape = tile->edgeinfo(diredge->edgeinfo_offset()).lazy_shape();
+          while (!shape.empty()) {
+            min_bb.Expand(shape.pop());
+          }
+        }
+      }
+    }
+  }
+
+  // give back the expanded box
+  return min_bb;
 }
 
 } // namespace baldr

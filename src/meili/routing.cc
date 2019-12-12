@@ -162,8 +162,12 @@ inline bool IsEdgeAllowed(const baldr::DirectedEdge* edge,
                           const sif::cost_ptr_t& costing,
                           const Label& pred_edgelabel,
                           const baldr::GraphTile* tile) {
-  return !pred_edgelabel.edgeid().Is_Valid() || edgeid == pred_edgelabel.edgeid() ||
-         costing->Allowed(edge, pred_edgelabel, tile, edgeid, 0, 0);
+  // TODO We may want to optionally have map matching take time restrictions into account here
+  bool i_dont_care_about_time_restrictions_here = false;
+  return (!pred_edgelabel.edgeid().Is_Valid() && costing->GetEdgeFilter()(edge) != 0.f) ||
+         edgeid == pred_edgelabel.edgeid() ||
+         costing->Allowed(edge, pred_edgelabel, tile, edgeid, 0, 0,
+                          i_dont_care_about_time_restrictions_here);
 }
 
 /**
@@ -424,8 +428,7 @@ find_shortest_path(baldr::GraphReader& reader,
               // to itself must be 0, so sortcost = cost
               sif::Cost cost(label.cost().cost + directededge->length() * edge.percent_along,
                              label.cost().secs +
-                                 costing->EdgeCost(directededge, tile->GetSpeed(directededge)).secs *
-                                     edge.percent_along);
+                                 costing->EdgeCost(directededge, tile).secs * edge.percent_along);
               // We only add the labels if we are under the limits for distance and for time or time
               // limit is 0
               if (cost.cost < max_dist && (max_time < 0 || cost.secs < max_time)) {
@@ -444,8 +447,7 @@ find_shortest_path(baldr::GraphReader& reader,
         // Get cost - use EdgeCost to get time along the edge. Override
         // cost portion to be distance. Add heuristic to get sort cost.
         sif::Cost cost(label.cost().cost + directededge->length(),
-                       label.cost().secs +
-                           costing->EdgeCost(directededge, tile->GetSpeed(directededge)).secs);
+                       label.cost().secs + costing->EdgeCost(directededge, tile).secs);
         // We only add the labels if we are under the limits for distance and for time or time limit
         // is 0
         if (cost.cost < max_dist && (max_time < 0 || cost.secs < max_time)) {
@@ -551,10 +553,8 @@ find_shortest_path(baldr::GraphReader& reader,
                 // cost portion to be distance. The heuristic cost from a
                 // destination to itself must be 0
                 float f = (other_edge.percent_along - origin_edge.percent_along);
-                sif::Cost
-                    cost(label.cost().cost + directededge->length() * f,
-                         label.cost().secs +
-                             costing->EdgeCost(directededge, tile->GetSpeed(directededge)).secs * f);
+                sif::Cost cost(label.cost().cost + directededge->length() * f,
+                               label.cost().secs + costing->EdgeCost(directededge, tile).secs * f);
                 // We only add the labels if we are under the limits for distance and for time or
                 // time limit is 0
                 if (cost.cost < max_dist && (max_time < 0 || cost.secs < max_time)) {
@@ -571,8 +571,7 @@ find_shortest_path(baldr::GraphReader& reader,
           // destination to itself must be 0
           float f = (1.0f - origin_edge.percent_along);
           sif::Cost cost(label.cost().cost + directededge->length() * f,
-                         label.cost().secs +
-                             costing->EdgeCost(directededge, tile->GetSpeed(directededge)).secs * f);
+                         label.cost().secs + costing->EdgeCost(directededge, tile).secs * f);
           // We only add the labels if we are under the limits for distance and for time or time
           // limit is 0
           if (cost.cost < max_dist && (max_time < 0 || cost.secs < max_time)) {

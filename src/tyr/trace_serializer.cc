@@ -274,6 +274,15 @@ json::ArrayPtr serialize_edges(const AttributesController& controller,
                                static_cast<bool>(xedge.curr_name_consistency()));
             xedge_map->emplace("begin_heading", static_cast<uint64_t>(xedge.begin_heading()));
 
+            if (xedge.has_use()) {
+              xedge_map->emplace("use", to_string(static_cast<baldr::Use>(xedge.use())));
+            }
+
+            if (xedge.has_road_class()) {
+              xedge_map->emplace("road_class",
+                                 to_string(static_cast<baldr::RoadClass>(xedge.road_class())));
+            }
+
             intersecting_edge_array->emplace_back(xedge_map);
           }
           end_node_map->emplace("intersecting_edges", intersecting_edge_array);
@@ -491,7 +500,7 @@ std::string serializeTraceAttributes(
 
   // Add units, if specified
   if (request.options().has_units()) {
-    json->emplace("units", valhalla::Options_Units_Name(request.options().units()));
+    json->emplace("units", valhalla::Options_Units_Enum_Name(request.options().units()));
   }
 
   // Loop over all results to process the best path

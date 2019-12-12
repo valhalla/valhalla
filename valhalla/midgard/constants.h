@@ -28,6 +28,7 @@ constexpr float kKmPerMile = 1.60934f;
 constexpr float kRadEarthMeters = 6378160.187f;
 constexpr float kMetersPerDegreeLat = 110567.0f;
 constexpr double kKmPerDecimeter = 0.0001;
+constexpr double kMeterPerDecimeter = 0.1;
 constexpr double kDecimeterPerMeter = 10;
 
 // Speed conversion constants
@@ -36,10 +37,13 @@ constexpr double kDecimeterPerSectoKPH = 0.36; // dm/s to km/h
 
 // Angular measures
 constexpr float kPi = 3.14159265f;
+constexpr double kPiD = 3.14159265358979323846264338327950288;
 constexpr float kPiOver2 = (kPi * 0.5f);
 constexpr float kPiOver4 = (kPi * 0.25f);
-constexpr float kDegPerRad = (180.0f / kPi); // Radians to degrees conversion
-constexpr float kRadPerDeg = (kPi / 180.0f); // Degrees to radians conversion
+constexpr float kDegPerRad = (180.0f / kPi);   // Radians to degrees conversion
+constexpr double kDegPerRadD = (180.0 / kPiD); // Radians to degrees conversion in double precision
+constexpr float kRadPerDeg = (kPi / 180.0f);   // Degrees to radians conversion
+constexpr double kRadPerDegD = (kPiD / 180.0); // Degrees to radians conversion in double precision
 constexpr float kEpsilon = 0.000001f;
 
 // To avoid using M_PI

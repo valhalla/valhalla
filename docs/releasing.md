@@ -43,12 +43,13 @@ We may introduce forward-compatible changes: query parameters and response prope
 2. Make sure `CHANGELOG.md` is up to date.
 3. Make sure the `package.json` on branch `x.y` has been committed.
 4. Make sure all tests are passing (e.g. Circle CI gives you a :green_apple:)
-5. Use an annotated tag to mark the release: `git tag x.y.z -a` Body of the tag description should be the changelog entries.
-6. Push tags and commits: `git push; git push --tags`
-7. On https://github.com/valhalla/valhalla/releases press `Draft a new release`,
+5. Make sure the [`valhalla/valhalla.h.in`](../valhalla/valhalla.h.in) has been updated.
+6. Use an annotated tag to mark the release: `git tag x.y.z -a` Body of the tag description should be the changelog entries.
+7. Push tags and commits: `git push; git push --tags`
+8. On https://github.com/valhalla/valhalla/releases press `Draft a new release`,
    write the release tag `x.y.z` in the `Tag version` field, write the changelog entries in the `Describe this release` field
    and press `Publish release`.
-8. If you are publishing to npm:
+9. If you are publishing to npm:
     - your binaries will get published to s3 by circle when you push a tag that matches the package.json version
     - Locally you can now test binaries. Cleanup, re-install, and run the tests like:
        ```

@@ -158,7 +158,7 @@ void work(const boost::property_tree::ptree& config, std::promise<results_t>& pr
       auto start = std::chrono::high_resolution_clock::now();
       try {
         // TODO: actually save the result
-        auto result = valhalla::loki::Search(job, reader, valhalla::loki::PassThroughEdgeFilter);
+        auto result = valhalla::loki::Search(job, reader);
         auto end = std::chrono::high_resolution_clock::now();
         (*r) = result_t{std::chrono::duration_cast<std::chrono::milliseconds>(end - start), true, job,
                         cached};
@@ -225,7 +225,7 @@ int main(int argc, char** argv) {
       float lon = valhalla::midgard::circular_range_clamp<float>(std::stof(parts[1]), -180, 180);
       valhalla::midgard::PointLL ll(lat, lon);
       valhalla::baldr::Location loc(ll);
-      loc.minimum_reachability_ = isolated;
+      loc.min_inbound_reach_ = loc.min_outbound_reach_ = isolated;
       loc.radius_ = radius;
       job.emplace_back(std::move(loc));
       if (job.size() == batch) {

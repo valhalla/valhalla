@@ -1,6 +1,7 @@
 #include "sif/transitcost.h"
 
 #include "baldr/accessrestriction.h"
+#include "baldr/graphconstants.h"
 #include "midgard/constants.h"
 #include "midgard/logging.h"
 #include "worker.h"
@@ -109,7 +110,8 @@ public:
                        const baldr::GraphTile*& tile,
                        const baldr::GraphId& edgeid,
                        const uint64_t current_time,
-                       const uint32_t tz_index) const;
+                       const uint32_t tz_index,
+                       bool& time_restricted) const;
 
   /**
    * Checks if access is allowed for an edge on the reverse path
@@ -134,7 +136,8 @@ public:
                               const baldr::GraphTile*& tile,
                               const baldr::GraphId& opp_edgeid,
                               const uint64_t current_time,
-                              const uint32_t tz_index) const;
+                              const uint32_t tz_index,
+                              bool& has_time_restrictions) const;
 
   /**
    * Checks if access is allowed for the provided node. Node access can
@@ -143,15 +146,6 @@ public:
    * @return  Returns true if access is allowed, false if not.
    */
   virtual bool Allowed(const baldr::NodeInfo* node) const;
-
-  /**
-   * Get the cost to traverse the specified directed edge. Cost includes
-   * the time (seconds) to traverse the edge.
-   * @param   edge  Pointer to a directed edge.
-   * @param   speed A speed for a road segment/edge.
-   * @return  Returns the cost and time (seconds)
-   */
-  virtual Cost EdgeCost(const baldr::DirectedEdge* edge, const uint32_t speed) const;
 
   /**
    * Get the cost to traverse the specified directed edge using a transit
@@ -167,19 +161,30 @@ public:
                         const uint32_t curr_time) const;
 
   /**
+   * Transit costing only works on transit edges, hence we throw
+   * @param edge
+   * @param tile
+   * @param seconds
+   * @return
+   */
+  virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
+                        const baldr::GraphTile* tile,
+                        const uint32_t seconds) const {
+    throw std::runtime_error("TransitCost::EdgeCost only supports transit edges");
+  }
+
+  /**
    * Returns the cost to make the transition from the predecessor edge.
    * Defaults to 0. Costing models that wish to include edge transition
    * costs (i.e., intersection/turn costs) must override this method.
    * @param  edge  Directed edge (the to edge)
    * @param  node  Node (intersection) where transition occurs.
    * @param  pred  Predecessor edge information.
-   * @param  has_traffic  Does the transition have traffic information.
    * @return  Returns the cost and time (seconds)
    */
   virtual Cost TransitionCost(const baldr::DirectedEdge* edge,
                               const baldr::NodeInfo* node,
-                              const EdgeLabel& pred,
-                              const bool has_traffic = false) const;
+                              const EdgeLabel& pred) const;
 
   /**
    * Returns the transfer cost between 2 transit stops.
@@ -531,7 +536,8 @@ bool TransitCost::Allowed(const baldr::DirectedEdge* edge,
                           const baldr::GraphTile*& tile,
                           const baldr::GraphId& edgeid,
                           const uint64_t current_time,
-                          const uint32_t tz_index) const {
+                          const uint32_t tz_index,
+                          bool& has_time_restrictions) const {
   // TODO - obtain and check the access restrictions.
 
   if (exclude_stops_.size()) {
@@ -561,7 +567,8 @@ bool TransitCost::AllowedReverse(const baldr::DirectedEdge* edge,
                                  const baldr::GraphTile*& tile,
                                  const baldr::GraphId& opp_edgeid,
                                  const uint64_t current_time,
-                                 const uint32_t tz_index) const {
+                                 const uint32_t tz_index,
+                                 bool& has_time_restrictions) const {
   // This method should not be called since time based routes do not use
   // bidirectional A*
   return false;
@@ -570,13 +577,6 @@ bool TransitCost::AllowedReverse(const baldr::DirectedEdge* edge,
 // Check if access is allowed at the specified node.
 bool TransitCost::Allowed(const baldr::NodeInfo* node) const {
   return true;
-}
-
-// Returns the cost to traverse the edge and an estimate of the actual time
-// (in seconds) to traverse the edge.
-Cost TransitCost::EdgeCost(const baldr::DirectedEdge* edge, const uint32_t speed) const {
-  LOG_ERROR("Wrong transit edge cost called");
-  return {0.0f, 0.0f};
 }
 
 // Get the cost to traverse the specified directed edge using a transit
@@ -602,8 +602,7 @@ Cost TransitCost::EdgeCost(const baldr::DirectedEdge* edge,
 // Returns the time (in seconds) to make the transition from the predecessor
 Cost TransitCost::TransitionCost(const baldr::DirectedEdge* edge,
                                  const baldr::NodeInfo* node,
-                                 const EdgeLabel& pred,
-                                 const bool has_traffic) const {
+                                 const EdgeLabel& pred) const {
   if (pred.mode() == TravelMode::kPedestrian) {
     // Apply any mode-based penalties when boarding transit
     // Do we want any time cost to board?
@@ -648,6 +647,9 @@ void ParseTransitCostOptions(const rapidjson::Document& doc,
   auto json_costing_options = rapidjson::get_child_optional(doc, costing_options_key.c_str());
 
   if (json_costing_options) {
+    // TODO: farm more common stuff out to parent class
+    ParseCostOptions(*json_costing_options, pbf_costing_options);
+
     // If specified, parse json and set pbf values
 
     // mode_factor
@@ -692,7 +694,8 @@ void ParseTransitCostOptions(const rapidjson::Document& doc,
     auto filter_stop_action_str =
         rapidjson::get_optional<std::string>(*json_costing_options, "/filters/stops/action");
     FilterAction filter_stop_action;
-    if (filter_stop_action_str && FilterAction_Parse(*filter_stop_action_str, &filter_stop_action)) {
+    if (filter_stop_action_str &&
+        FilterAction_Enum_Parse(*filter_stop_action_str, &filter_stop_action)) {
       pbf_costing_options->set_filter_stop_action(filter_stop_action);
       // filter_stop_ids
       auto filter_stop_ids_json =
@@ -710,7 +713,7 @@ void ParseTransitCostOptions(const rapidjson::Document& doc,
         rapidjson::get_optional<std::string>(*json_costing_options, "/filters/operators/action");
     FilterAction filter_operator_action;
     if (filter_operator_action_str &&
-        FilterAction_Parse(*filter_operator_action_str, &filter_operator_action)) {
+        FilterAction_Enum_Parse(*filter_operator_action_str, &filter_operator_action)) {
       pbf_costing_options->set_filter_operator_action(filter_operator_action);
       // filter_operator_ids
       auto filter_operator_ids_json =
@@ -728,7 +731,7 @@ void ParseTransitCostOptions(const rapidjson::Document& doc,
         rapidjson::get_optional<std::string>(*json_costing_options, "/filters/routes/action");
     FilterAction filter_route_action;
     if (filter_route_action_str &&
-        FilterAction_Parse(*filter_route_action_str, &filter_route_action)) {
+        FilterAction_Enum_Parse(*filter_route_action_str, &filter_route_action)) {
       pbf_costing_options->set_filter_route_action(filter_route_action);
       // filter_route_ids
       auto filter_route_ids_json =

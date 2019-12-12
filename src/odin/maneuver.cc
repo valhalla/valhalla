@@ -73,6 +73,8 @@ const std::string& DirectionsLeg_Maneuver_Type_Name(int v) {
       {34, "kTransitConnectionTransfer"},
       {35, "kTransitConnectionDestination"},
       {36, "kPostTransitConnectionDestination"},
+      {37, "kMergeRight"},
+      {38, "kMergeLeft"},
   };
   auto f = values.find(v);
   if (f == values.cend())
@@ -110,11 +112,12 @@ Maneuver::Maneuver()
       transit_connection_(false), rail_(false), bus_(false), fork_(false),
       begin_intersecting_edge_name_consistency_(false), intersecting_forward_edge_(false),
       tee_(false), unnamed_walkway_(false), unnamed_cycleway_(false),
-      unnamed_mountain_bike_trail_(false), verbal_multi_cue_(false), to_stay_on_(false) {
-  street_names_ = midgard::make_unique<StreetNames>();
-  begin_street_names_ = midgard::make_unique<StreetNames>();
-  cross_street_names_ = midgard::make_unique<StreetNames>();
-  roundabout_exit_street_names_ = midgard::make_unique<StreetNames>();
+      unnamed_mountain_bike_trail_(false), verbal_multi_cue_(false), to_stay_on_(false),
+      drive_on_right_(true), has_time_restrictions_(false) {
+  street_names_ = std::make_unique<StreetNames>();
+  begin_street_names_ = std::make_unique<StreetNames>();
+  cross_street_names_ = std::make_unique<StreetNames>();
+  roundabout_exit_street_names_ = std::make_unique<StreetNames>();
 }
 
 const DirectionsLeg_Maneuver_Type& Maneuver::type() const {
@@ -131,12 +134,18 @@ bool Maneuver::IsDestinationType() const {
           (type_ == DirectionsLeg_Maneuver_Type_kDestinationRight));
 }
 
+bool Maneuver::IsMergeType() const {
+  return ((type_ == DirectionsLeg_Maneuver_Type_kMerge) ||
+          (type_ == DirectionsLeg_Maneuver_Type_kMergeLeft) ||
+          (type_ == DirectionsLeg_Maneuver_Type_kMergeRight));
+}
+
 const StreetNames& Maneuver::street_names() const {
   return *street_names_;
 }
 
 void Maneuver::set_street_names(const std::vector<std::pair<std::string, bool>>& names) {
-  street_names_ = midgard::make_unique<StreetNamesUs>(names);
+  street_names_ = std::make_unique<StreetNamesUs>(names);
 }
 
 void Maneuver::set_street_names(std::unique_ptr<StreetNames>&& street_names) {
@@ -196,7 +205,7 @@ const StreetNames& Maneuver::begin_street_names() const {
 }
 
 void Maneuver::set_begin_street_names(const std::vector<std::pair<std::string, bool>>& names) {
-  begin_street_names_ = midgard::make_unique<StreetNamesUs>(names);
+  begin_street_names_ = std::make_unique<StreetNamesUs>(names);
 }
 
 void Maneuver::set_begin_street_names(std::unique_ptr<StreetNames>&& begin_street_names) {
@@ -216,7 +225,7 @@ const StreetNames& Maneuver::cross_street_names() const {
 }
 
 void Maneuver::set_cross_street_names(const std::vector<std::pair<std::string, bool>>& names) {
-  cross_street_names_ = midgard::make_unique<StreetNamesUs>(names);
+  cross_street_names_ = std::make_unique<StreetNamesUs>(names);
 }
 
 void Maneuver::set_cross_street_names(std::unique_ptr<StreetNames>&& cross_street_names) {
@@ -391,6 +400,13 @@ void Maneuver::set_portions_toll(bool portionsToll) {
   portions_toll_ = portionsToll;
 }
 
+bool Maneuver::has_time_restrictions() const {
+  return has_time_restrictions_;
+}
+void Maneuver::set_has_time_restrictions(bool has_time_restrictions) {
+  has_time_restrictions_ = has_time_restrictions;
+}
+
 bool Maneuver::portions_unpaved() const {
   return portions_unpaved_;
 }
@@ -431,6 +447,10 @@ Signs* Maneuver::mutable_signs() {
   return &signs_;
 }
 
+bool Maneuver::HasSigns() const {
+  return (HasExitSign() || HasGuideSign() || HasJunctionNameSign());
+}
+
 bool Maneuver::HasExitSign() const {
   return signs_.HasExit();
 }
@@ -449,6 +469,22 @@ bool Maneuver::HasExitTowardSign() const {
 
 bool Maneuver::HasExitNameSign() const {
   return signs_.HasExitName();
+}
+
+bool Maneuver::HasGuideSign() const {
+  return signs_.HasGuide();
+}
+
+bool Maneuver::HasGuideBranchSign() const {
+  return signs_.HasGuideBranch();
+}
+
+bool Maneuver::HasGuideTowardSign() const {
+  return signs_.HasGuideToward();
+}
+
+bool Maneuver::HasJunctionNameSign() const {
+  return signs_.HasJunctionName();
 }
 
 uint32_t Maneuver::internal_right_turn_count() const {
@@ -608,7 +644,7 @@ const StreetNames& Maneuver::roundabout_exit_street_names() const {
 
 void Maneuver::set_roundabout_exit_street_names(
     const std::vector<std::pair<std::string, bool>>& names) {
-  roundabout_exit_street_names_ = midgard::make_unique<StreetNamesUs>(names);
+  roundabout_exit_street_names_ = std::make_unique<StreetNamesUs>(names);
 }
 
 void Maneuver::set_roundabout_exit_street_names(
@@ -622,6 +658,22 @@ bool Maneuver::HasRoundaboutExitStreetNames() const {
 
 void Maneuver::ClearRoundaboutExitStreetNames() {
   roundabout_exit_street_names_->clear();
+}
+
+Maneuver::RelativeDirection Maneuver::merge_to_relative_direction() const {
+  return merge_to_relative_direction_;
+}
+
+void Maneuver::set_merge_to_relative_direction(RelativeDirection merge_to_relative_direction) {
+  merge_to_relative_direction_ = merge_to_relative_direction;
+}
+
+bool Maneuver::drive_on_right() const {
+  return drive_on_right_;
+}
+
+void Maneuver::set_drive_on_right(bool drive_on_right) {
+  drive_on_right_ = drive_on_right;
 }
 
 TripLeg_TravelMode Maneuver::travel_mode() const {

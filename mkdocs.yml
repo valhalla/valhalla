@@ -3,7 +3,7 @@
 site_name: Valhalla
 repo_url: https://github.com/valhalla/valhalla/
 nav:
-  - Introduction for Developers: index.md
+  - Introduction for Developers: README.md
   - Introduction for Users: valhalla-intro.md
   - Terminology: terminology.md
   - Public APIs:
@@ -59,7 +59,7 @@ nav:
     - Administrative data: mjolnir/admins.md
     - Attribution requirements: mjolnir/attribution.md
   - Development:
-    - Changelog: changelog.md
+    - Changelog: CHANGELOG.md
     - releasing.md
   
 theme: readthedocs

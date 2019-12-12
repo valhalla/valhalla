@@ -67,22 +67,20 @@ void loki_worker_t::parse_costing(Api& api) {
     throw valhalla_exception_t{124};
   }
 
-  auto costing = options.costing();
-  auto costing_str = Costing_Name(costing);
+  auto costing_type = options.costing();
+  auto costing_str = Costing_Enum_Name(costing_type);
 
   if (!options.do_not_track()) {
     valhalla::midgard::logging::Log("costing_type::" + costing_str, " [ANALYTICS] ");
   }
 
   // TODO - have a way of specifying mode at the location
-  if (costing == Costing::multimodal) {
-    costing = Costing::pedestrian;
+  if (costing_type == Costing::multimodal) {
+    costing_type = Costing::pedestrian;
   }
 
   try {
-    cost_ptr_t c = factory.Create(costing, options);
-    edge_filter = c->GetEdgeFilter();
-    node_filter = c->GetNodeFilter();
+    costing = factory.Create(costing_type, options);
   } catch (const std::runtime_error&) { throw valhalla_exception_t{125, "'" + costing_str + "'"}; }
 
   // See if we have avoids and take care of them
@@ -94,7 +92,7 @@ void loki_worker_t::parse_costing(Api& api) {
   if (options.avoid_locations_size()) {
     try {
       auto avoid_locations = PathLocation::fromPBF(options.avoid_locations());
-      auto results = loki::Search(avoid_locations, *reader, edge_filter, node_filter);
+      auto results = loki::Search(avoid_locations, *reader, costing.get());
       std::unordered_set<uint64_t> avoids;
       for (const auto& result : results) {
         for (const auto& edge : result.second.edges) {
@@ -157,7 +155,7 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
   Options::Action action;
   for (const auto& kv : config.get_child("loki.actions")) {
     auto path = kv.second.get_value<std::string>();
-    if (!Options_Action_Parse(path, &action)) {
+    if (!Options_Action_Enum_Parse(path, &action)) {
       throw std::runtime_error("Action not supported " + path);
     }
     action_str.append("'/" + path + "' ");
@@ -233,7 +231,7 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
 
 void loki_worker_t::cleanup() {
   if (reader->OverCommitted()) {
-    reader->Clear();
+    reader->Trim();
   }
 }
 

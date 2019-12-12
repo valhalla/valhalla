@@ -107,10 +107,8 @@ namespace osrm {
  * Serialize a location into a osrm waypoint
  * http://project-osrm.org/docs/v5.5.1/api/#waypoint-object
  */
-valhalla::baldr::json::MapPtr waypoint(const valhalla::Location& location,
-                                       bool is_tracepoint = false,
-                                       const bool is_optimized = false,
-                                       const int64_t waypoint_index = -1);
+valhalla::baldr::json::MapPtr
+waypoint(const valhalla::Location& location, bool is_tracepoint = false, bool is_optimized = false);
 
 /*
  * Serialize locations into osrm waypoints

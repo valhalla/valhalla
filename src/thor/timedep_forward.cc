@@ -15,7 +15,7 @@ namespace thor {
 constexpr uint64_t kInitialEdgeLabelCount = 500000;
 
 // Number of iterations to allow with no convergence to the destination
-constexpr uint32_t kMaxIterationsWithoutConvergence = 200000;
+constexpr uint32_t kMaxIterationsWithoutConvergence = 800000;
 
 // Default constructor
 TimeDepForward::TimeDepForward() : AStarPathAlgorithm() {
@@ -36,9 +36,9 @@ TimeDepForward::~TimeDepForward() {
 // from the end node of any transition edge (so no transition edges are added
 // to the adjacency list or EdgeLabel list). Does not expand transition
 // edges if from_transition is false.
-void TimeDepForward::ExpandForward(GraphReader& graphreader,
+bool TimeDepForward::ExpandForward(GraphReader& graphreader,
                                    const GraphId& node,
-                                   const EdgeLabel& pred,
+                                   EdgeLabel& pred,
                                    const uint32_t pred_idx,
                                    const bool from_transition,
                                    uint64_t localtime,
@@ -49,11 +49,11 @@ void TimeDepForward::ExpandForward(GraphReader& graphreader,
   // with regional data sets) or if no access at the node.
   const GraphTile* tile = graphreader.GetGraphTile(node);
   if (tile == nullptr) {
-    return;
+    return false;
   }
   const NodeInfo* nodeinfo = tile->node(node);
   if (!costing_->Allowed(nodeinfo)) {
-    return;
+    return false;
   }
 
   // Adjust for time zone (if different from timezone at the start).
@@ -66,87 +66,28 @@ void TimeDepForward::ExpandForward(GraphReader& graphreader,
     seconds_of_week = DateTime::normalize_seconds_of_week(seconds_of_week + tz_diff);
   }
 
-  // Expand from end node.
-  GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
-  EdgeStatusInfo* es = edgestatus_.GetPtr(edgeid, tile);
-  const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
-  for (uint32_t i = 0; i < nodeinfo->edge_count(); ++i, ++directededge, ++edgeid, ++es) {
-    // Skip shortcut edges for time dependent routes. Also skip this edge if permanently labeled
-    // (best path already found to this directed edge), if no access is allowed to this edge
-    // (based on costing method), or if a complex restriction exists.
-    if (directededge->is_shortcut() || es->set() == EdgeSet::kPermanent ||
-        !costing_->Allowed(directededge, pred, tile, edgeid, localtime, nodeinfo->timezone()) ||
-        costing_->Restricted(directededge, pred, edgelabels_, tile, edgeid, true, localtime,
-                             nodeinfo->timezone())) {
+  // Expand from start node.
+  EdgeMetadata meta = EdgeMetadata::make(node, nodeinfo, tile, edgestatus_);
+
+  bool found_valid_edge = false;
+  bool found_uturn = false;
+  EdgeMetadata uturn_meta = {};
+
+  for (uint32_t i = 0; i < nodeinfo->edge_count(); ++i, meta.increment_pointers()) {
+
+    // Begin by checking if this is the opposing edge to pred.
+    // If so, it means we are attempting a u-turn. In that case, lets wait with evaluating
+    // this edge until last. If any other edges were emplaced, it means we should not
+    // even try to evaluate a u-turn since u-turns should only happen for deadends
+    if (pred.opp_local_idx() == meta.edge->localedgeidx()) {
+      uturn_meta = meta;
+      found_uturn = true;
       continue;
     }
 
-    // Compute the cost to the end of this edge. Transition cost will vary based on whether
-    // there is traffic information.
-    bool has_traffic = directededge->predicted_speed() || directededge->constrained_flow_speed() > 0;
-    Cost newcost =
-        pred.cost() +
-        costing_->EdgeCost(directededge, tile->GetSpeed(directededge, edgeid, seconds_of_week)) +
-        costing_->TransitionCost(directededge, nodeinfo, pred, has_traffic);
-
-    // If this edge is a destination, subtract the partial/remainder cost
-    // (cost from the dest. location to the end of the edge).
-    auto p = destinations_.find(edgeid);
-    if (p != destinations_.end()) {
-      // Subtract partial cost and time
-      newcost -= p->second;
-
-      // Find the destination edge and update cost to include the edge score.
-      // Note - with high edge scores the convergence test fails some routes
-      // so reduce the edge score.
-      for (const auto& destination_edge : destination.path_edges()) {
-        if (destination_edge.graph_id() == edgeid) {
-          newcost.cost += destination_edge.distance();
-        }
-      }
-      newcost.cost = std::max(0.0f, newcost.cost);
-
-      // Mark this as the best connection if that applies. This allows
-      // a path to be formed even if the convergence test fails (can
-      // happen with large edge scores)
-      if (best_path.first == -1 || newcost.cost < best_path.second) {
-        best_path.first = (es->set() == EdgeSet::kTemporary) ? es->index() : edgelabels_.size();
-        best_path.second = newcost.cost;
-      }
-    }
-
-    // Check if edge is temporarily labeled and this path has less cost. If
-    // less cost the predecessor is updated and the sort cost is decremented
-    // by the difference in real cost (A* heuristic doesn't change)
-    if (es->set() == EdgeSet::kTemporary) {
-      EdgeLabel& lab = edgelabels_[es->index()];
-      if (newcost.cost < lab.cost().cost) {
-        float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
-        adjacencylist_->decrease(es->index(), newsortcost);
-        lab.Update(pred_idx, newcost, newsortcost);
-      }
-      continue;
-    }
-
-    // If this is a destination edge the A* heuristic is 0. Otherwise the
-    // sort cost (with A* heuristic) is found using the lat,lng at the
-    // end node of the directed edge.
-    float dist = 0.0f;
-    float sortcost = newcost.cost;
-    if (p == destinations_.end()) {
-      const GraphTile* t2 =
-          directededge->leaves_tile() ? graphreader.GetGraphTile(directededge->endnode()) : tile;
-      if (t2 == nullptr) {
-        continue;
-      }
-      sortcost += astarheuristic_.Get(t2->get_node_ll(directededge->endnode()), dist);
-    }
-
-    // Add to the adjacency list and edge labels.
-    uint32_t idx = edgelabels_.size();
-    edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, sortcost, dist, mode_, 0);
-    *es = {EdgeSet::kTemporary, idx};
-    adjacencylist_->add(idx);
+    found_valid_edge = ExpandForwardInner(graphreader, pred, nodeinfo, pred_idx, meta, tile,
+                                          localtime, seconds_of_week, destination, best_path) ||
+                       found_valid_edge;
   }
 
   // Handle transitions - expand from the end node of each transition
@@ -155,14 +96,136 @@ void TimeDepForward::ExpandForward(GraphReader& graphreader,
     for (uint32_t i = 0; i < nodeinfo->transition_count(); ++i, ++trans) {
       if (trans->up()) {
         hierarchy_limits_[node.level()].up_transition_count++;
-        ExpandForward(graphreader, trans->endnode(), pred, pred_idx, true, localtime, seconds_of_week,
-                      destination, best_path);
+        found_valid_edge = ExpandForward(graphreader, trans->endnode(), pred, pred_idx, true,
+                                         localtime, seconds_of_week, destination, best_path) ||
+                           found_valid_edge;
       } else if (!hierarchy_limits_[trans->endnode().level()].StopExpanding(pred.distance())) {
-        ExpandForward(graphreader, trans->endnode(), pred, pred_idx, true, localtime, seconds_of_week,
-                      destination, best_path);
+        found_valid_edge = ExpandForward(graphreader, trans->endnode(), pred, pred_idx, true,
+                                         localtime, seconds_of_week, destination, best_path) ||
+                           found_valid_edge;
       }
     }
   }
+
+  if (!from_transition) {
+    // Now, after having looked at all the edges, including edges on other levels,
+    // we can say if this is a deadend or not, and if so, evaluate the uturn-edge (if it exists)
+    if (!found_valid_edge && found_uturn) {
+      // If we found no suitable edge to add, it means we're at a deadend
+      // so lets go back and re-evaluate a potential u-turn
+
+      pred.set_deadend(true);
+
+      // Decide if we should expand a shortcut or the non-shortcut edge...
+      bool was_uturn_shortcut_added = false;
+
+      // TODO Is there a shortcut that supersedes our u-turn?
+      if (was_uturn_shortcut_added) {
+        found_valid_edge = true;
+      } else {
+        // We didn't add any shortcut of the uturn, therefore evaluate the regular uturn instead
+        found_valid_edge = ExpandForwardInner(graphreader, pred, nodeinfo, pred_idx, uturn_meta, tile,
+                                              localtime, seconds_of_week, destination, best_path) ||
+                           found_valid_edge;
+      }
+    }
+  }
+  return found_valid_edge;
+}
+
+// Runs in the inner loop of `ExpandForward`, essentially evaluating if
+// the edge described in `meta` should be placed on the stack
+// as well as doing just that.
+//
+// Returns true if any edge _could_ have been expanded after restrictions etc.
+inline bool TimeDepForward::ExpandForwardInner(GraphReader& graphreader,
+                                               const EdgeLabel& pred,
+                                               const NodeInfo* nodeinfo,
+                                               const uint32_t pred_idx,
+                                               const EdgeMetadata& meta,
+                                               const GraphTile* tile,
+                                               uint64_t localtime,
+                                               uint32_t seconds_of_week,
+                                               const valhalla::Location& destination,
+                                               std::pair<int32_t, float>& best_path) {
+
+  // Skip shortcut edges for time dependent routes. Also skip this edge if permanently labeled
+  // (best path already found to this directed edge), if no access is allowed to this edge
+  // (based on costing method), or if a complex restriction exists.
+  bool has_time_restrictions = false;
+  if (meta.edge->is_shortcut() || meta.edge_status->set() == EdgeSet::kPermanent ||
+      !costing_->Allowed(meta.edge, pred, tile, meta.edge_id, localtime, nodeinfo->timezone(),
+                         has_time_restrictions) ||
+      costing_->Restricted(meta.edge, pred, edgelabels_, tile, meta.edge_id, true, localtime,
+                           nodeinfo->timezone())) {
+    return false;
+  }
+
+  // Compute the cost to the end of this edge
+  Cost newcost = pred.cost() + costing_->EdgeCost(meta.edge, tile, seconds_of_week) +
+                 costing_->TransitionCost(meta.edge, nodeinfo, pred);
+
+  // If this edge is a destination, subtract the partial/remainder cost
+  // (cost from the dest. location to the end of the edge).
+  auto p = destinations_.find(meta.edge_id);
+  if (p != destinations_.end()) {
+    // Subtract partial cost and time
+    newcost -= p->second;
+
+    // Find the destination edge and update cost to include the edge score.
+    // Note - with high edge scores the convergence test fails some routes
+    // so reduce the edge score.
+    for (const auto& destination_edge : destination.path_edges()) {
+      if (destination_edge.graph_id() == meta.edge_id) {
+        newcost.cost += destination_edge.distance();
+      }
+    }
+    newcost.cost = std::max(0.0f, newcost.cost);
+
+    // Mark this as the best connection if that applies. This allows
+    // a path to be formed even if the convergence test fails (can
+    // happen with large edge scores)
+    if (best_path.first == -1 || newcost.cost < best_path.second) {
+      best_path.first = (meta.edge_status->set() == EdgeSet::kTemporary) ? meta.edge_status->index()
+                                                                         : edgelabels_.size();
+      best_path.second = newcost.cost;
+    }
+  }
+
+  // Check if edge is temporarily labeled and this path has less cost. If
+  // less cost the predecessor is updated and the sort cost is decremented
+  // by the difference in real cost (A* heuristic doesn't change)
+  if (meta.edge_status->set() == EdgeSet::kTemporary) {
+    EdgeLabel& lab = edgelabels_[meta.edge_status->index()];
+    if (newcost.cost < lab.cost().cost) {
+      float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
+      adjacencylist_->decrease(meta.edge_status->index(), newsortcost);
+      lab.Update(pred_idx, newcost, newsortcost, has_time_restrictions);
+    }
+    return true;
+  }
+
+  // If this is a destination edge the A* heuristic is 0. Otherwise the
+  // sort cost (with A* heuristic) is found using the lat,lng at the
+  // end node of the directed edge.
+  float dist = 0.0f;
+  float sortcost = newcost.cost;
+  if (p == destinations_.end()) {
+    const GraphTile* t2 =
+        meta.edge->leaves_tile() ? graphreader.GetGraphTile(meta.edge->endnode()) : tile;
+    if (t2 == nullptr) {
+      return false;
+    }
+    sortcost += astarheuristic_.Get(t2->get_node_ll(meta.edge->endnode()), dist);
+  }
+
+  // Add to the adjacency list and edge labels.
+  uint32_t idx = edgelabels_.size();
+  edgelabels_.emplace_back(pred_idx, meta.edge_id, meta.edge, newcost, sortcost, dist, mode_, 0,
+                           has_time_restrictions);
+  *meta.edge_status = {EdgeSet::kTemporary, idx};
+  adjacencylist_->add(idx);
+  return true;
 }
 
 // Calculate time-dependent best path using a forward search. Supports
