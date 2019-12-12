@@ -284,16 +284,12 @@ workflows:
           requires:
             - build-base
       - build-release-binary-osx:
-          requires:
-            - build-base
           filters:
             tags:
               only: /.*/
             branches:
               ignore: /.*/
       - build-debug-binary-osx:
-          requires:
-            - build-base
           filters:
             tags:
               only: /.*/
