@@ -314,6 +314,10 @@ public:
           if (edgestatus != nullptr) {
             auto first = edge_ids_in_complex_restriction.cbegin();
             auto last = edge_ids_in_complex_restriction.cend();
+            // Reset all but the last edge since there is
+            // no point in possibly expanding from A a second time and could lead
+            // to infinite loops
+            --last;
             std::for_each(first, last, [&edgestatus](baldr::GraphId edge_id) {
               edgestatus->Update(edge_id, thor::EdgeSet::kUnreached);
             });
