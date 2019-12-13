@@ -205,27 +205,27 @@ MatchResult FindMatchResult(const MapMatcher& mapmatcher,
   const auto& state = mapmatcher.state_container().state(stateid);
   // Construct the route from previous state to current state, and
   // find out which edge it matches
-  baldr::GraphId prev_edge_end;
-  baldr::GraphId prev_edgeid;
+  baldr::GraphId prev_end;
+  baldr::GraphId prev_state_edgeid;
   if (prev_stateid.IsValid()) {
     const auto& prev_state = mapmatcher.state_container().state(prev_stateid);
     // It must stay on the last edge of the route
     const auto rbegin = prev_state.RouteBegin(state), rend = prev_state.RouteEnd();
     if (rbegin != rend && rbegin->edgeid().Is_Valid()) {
-      prev_edgeid = rbegin->edgeid();
-      prev_edge_end = graph_reader->directededge(prev_edgeid)->endnode();
+      prev_state_edgeid = rbegin->edgeid();
+      prev_end = graph_reader->directededge(prev_state_edgeid)->endnode();
     }
   }
 
   // Do the same from current state to next state
-  baldr::GraphId next_edge_start;
-  baldr::GraphId next_edgeid;
+  baldr::GraphId next_start;
+  baldr::GraphId next_state_edgeid;
   if (next_stateid.IsValid()) {
     const auto& next_state = mapmatcher.state_container().state(next_stateid);
     for (auto label = state.RouteBegin(next_state); label != state.RouteEnd(); label++) {
       if (label->edgeid().Is_Valid()) {
-        next_edgeid = label->edgeid();
-        next_edge_start = graph_reader->GetOpposingEdge(next_edgeid)->endnode();
+        next_state_edgeid = label->edgeid();
+        next_start = graph_reader->GetOpposingEdge(next_state_edgeid)->endnode();
       }
     }
   }
@@ -233,45 +233,55 @@ MatchResult FindMatchResult(const MapMatcher& mapmatcher,
   for (const auto& edge : state.candidate().edges) {
     baldr::GraphId curr_edge_start = graph_reader->GetOpposingEdge(edge.id)->endnode();
     baldr::GraphId curr_edge_end = graph_reader->directededge(edge.id)->endnode();
-    // matched locations are on the same edge with prev edge or the next edge
-    if ((prev_edgeid.Is_Valid() && prev_edge_end == curr_edge_end) ||
-        (next_edgeid.Is_Valid() && next_edge_start == curr_edge_start)) {
+    if (!edge.id.Is_Valid()) {
+      continue;
+    }
+    // intersection match handling:
+    //                      |
+    //                      |
+    //   edge (prev_state)  |   edge (next state)
+    // -------------------->N1------------------>N2
+    //                      |
+    //                      |
+    //                      |
+
+    bool at_intersection = edge.percent_along == 0.0 || edge.percent_along == 1.0;
+    if (!at_intersection && (edge.id == prev_state_edgeid || edge.id == next_state_edgeid)) {
       return {edge.projected,     std::sqrt(edge.distance), edge.id,
               edge.percent_along, measurement.epoch_time(), stateid};
     }
-    // intersection match handling:
-    //      E1             E2
-    // ------------>N1------------->N2
-    //              X
-
-    // When matched location is on a intersection and precentage along current edge is 0.0.
-    // If there is a valid previous edge. For leg builder to work properly in intersections
-    // (where edgeid maye not be continuious), we snap the matched location to the previous
-    // edge's end and set the percentage along previous edge to 1.0
-    // before snap: edgeid is E2's edgeid, percentage along E2 is 0.0
-    // after snap : edgeid is E1's edgeid, percentage along E1 is 1.0
-    // such operation will handle the last matched location is on intersection
-    else if (prev_edgeid.Is_Valid() && prev_edge_end == curr_edge_start &&
-             edge.percent_along == 0.0) {
-      return {edge.projected, std::sqrt(edge.distance), prev_edgeid, 1.0, measurement.epoch_time(),
-              stateid};
+    // last matched location is on intersection:
+    // If there is a valid edge in previous state. For leg builder to work properly in
+    // intersections (where edge candidates may not be correct), we snap the matched
+    // location to the previous edge's end and set the percentage along to 1.0
+    // p.s: this also handles any middle point that are matched on intersections
+    else if (prev_state_edgeid.Is_Valid() && at_intersection &&
+             (prev_end == curr_edge_start || prev_end == curr_edge_end)) {
+      // curr rout could be one way with edge ending at the same node with previous edge
+      return {edge.projected,           std::sqrt(edge.distance),
+              prev_state_edgeid,        1.0,
+              measurement.epoch_time(), stateid};
     }
-    // When matched location is on a intersection and precentage along current edge is 1.0.
-    // If there is a valid next edge. For leg builder to work properly in intersections (where
-    // edgeid maye not be continuious), we snap the matched location to the next
-    // edge's start and set the percentage along next edge to 0.0
-    // before snap: edgeid is E1's edgeid, percentage along is 1.0
-    // after snap : edgeid is E2's edgeid, percentage along is 0.0
-    // such operation will handle the first matched location is on intersection
-    else if (next_edgeid.Is_Valid() && next_edge_start == curr_edge_end &&
-             edge.percent_along == 1.0) {
-      return {edge.projected, std::sqrt(edge.distance), next_edgeid, 0.0, measurement.epoch_time(),
-              stateid};
+    // first matched location is on intersection:
+    // If there is a valid edge in next state. For leg builder to work properly in
+    // intersections (where edge candidates may not be correct), we snap the matched
+    // location to the next edge's start and set the percentage along to 0.0
+    else if (next_state_edgeid.Is_Valid() && at_intersection &&
+             (next_start == curr_edge_end || next_start == curr_edge_start)) {
+      return {edge.projected,           std::sqrt(edge.distance),
+              next_state_edgeid,        0.0,
+              measurement.epoch_time(), stateid};
     }
   }
 
   // TODO: verify if there are scenarios that could lead us here
-  return {};
+  const auto& edge = mapmatcher.state_container().state(stateid).candidate().edges.front();
+  return {edge.projected,
+          std::sqrt(edge.distance),
+          prev_state_edgeid.Is_Valid() ? prev_state_edgeid : next_state_edgeid,
+          edge.percent_along,
+          measurement.epoch_time(),
+          stateid};
 }
 
 // Find the corresponding match results of a list of states

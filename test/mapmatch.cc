@@ -1033,6 +1033,49 @@ void test_leg_duration_trimming() {
     }
   }
 }
+
+void test_intersection_matching() {
+  std::vector<std::string> test_cases = {
+      R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
+          {"lat": 52.0981267, "lon": 5.1296180, "type": "break"},
+          {"lat": 52.0981280, "lon": 5.1297250, "type": "break"}]})",
+      R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
+          {"lat": 52.0981346, "lon": 5.1300437, "type": "break"},
+          {"lat": 52.0981145, "lon": 5.1309431, "type": "break"},
+          {"lat": 52.0980642, "lon": 5.1314993, "type": "break"},
+          {"lat": 52.0971149, "lon": 5.1311002, "type": "break"}]})",
+      R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
+          {"lat": 52.0951641, "lon": 5.1285609, "type": "break"},
+          {"lat": 52.0952055, "lon": 5.1292756, "type": "break"},
+          {"lat": 52.0953289, "lon": 5.1301092, "type": "break"},
+          {"lat": 52.0952939, "lon": 5.1309020, "type": "break"},
+          {"lat": 52.0944788, "lon": 5.1304066, "type": "break"}]})"};
+  std::vector<std::pair<int, std::vector<float>>> test_answers = {{1, {7.3}},
+                                                                  {3, {61.7, 41.6, 109.4}},
+                                                                  {4, {49.3, 59, 55, 98}}};
+
+  tyr::actor_t actor(conf, true);
+  for (size_t i = 0; i < test_cases.size(); ++i) {
+    auto matched = json_to_pt(actor.trace_route(test_cases[i]));
+    const auto& routes = matched.get_child("matchings");
+    for (const auto& route : routes) {
+      const auto& legs = route.second.get_child("legs");
+      if (legs.size() != test_answers[i].first)
+        throw std::logic_error("Expected " + std::to_string(test_answers[i].first) +
+                               " legs but got " + std::to_string(legs.size()));
+
+      int j = 0;
+      for (const auto& leg : legs) {
+        float distance = leg.second.get<float>("distance");
+        if (distance != test_answers[i].second[j++]) {
+          throw std::logic_error("Expected legs with distance" +
+                                 std::to_string(test_answers[i].second[j - 1]) + " but got " +
+                                 std::to_string(distance));
+        }
+      }
+    }
+  }
+}
 } // namespace
 
 int main(int argc, char* argv[]) {
@@ -1078,6 +1121,8 @@ int main(int argc, char* argv[]) {
   suite.test(TEST_CASE(test_now_matches));
 
   suite.test(TEST_CASE(test_edges_discontinuity_with_multi_routes));
+
+  suite.test(TEST_CASE(test_intersection_matching));
 
   return suite.tear_down();
 }
