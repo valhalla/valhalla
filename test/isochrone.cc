@@ -104,12 +104,6 @@ void test_isochrones() {
   const auto test_request2 =
       R"({"locations":[{"lat":52.078937,"lon":5.115321}],"costing":"bicycle","contours":[{"time":15}],"polygons":true,"denoise":0.2})";
   try_isochrone(reader, loki_worker, thor_worker, test_request2, expected2);
-
-  // Try pedestrian isochrone with one contour, polygon=true
-  std::string expected3 = "\"center_lat\":52.078941";
-  const auto test_request3 =
-      R"({"locations":[{"lat":52.078937,"lon":5.115321}],"costing":"bicycle","contours":[{"time":15}],"polygons":true,"denoise":0.2})";
-  try_isochrone(reader, loki_worker, thor_worker, test_request3, expected3);
 #endif
 }
 

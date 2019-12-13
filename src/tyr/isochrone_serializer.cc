@@ -22,15 +22,12 @@ template <class coord_t>
 std::string
 serializeIsochrones(const Api& request,
                     const typename midgard::GriddedData<coord_t>::contours_t& grid_contours,
-                    const std::vector<valhalla::LatLng>& snapped_centers,
                     bool polygons,
                     const std::unordered_map<float, std::string>& colors,
                     bool show_locations) {
   // for each contour interval
   int i = 0;
   auto features = array({});
-  // no support for multiple locations per request currently
-  valhalla::LatLng snapped_center = snapped_centers.at(0);
   for (const auto& interval : grid_contours) {
     auto color_itr = colors.find(interval.first);
     // color was supplied
@@ -78,8 +75,6 @@ serializeIsochrones(const Api& request,
                        })},
           {"properties", map({
                              {"contour", static_cast<uint64_t>(interval.first)},
-                             {"center_lat", fp_t{snapped_center.lat(), 6}},
-                             {"center_lon", fp_t{snapped_center.lng(), 6}},
                              {"color", hex.str()},            // lines
                              {"fill", hex.str()},             // geojson.io polys
                              {"fillColor", hex.str()},        // leaflet polys
@@ -119,14 +114,12 @@ serializeIsochrones(const Api& request,
 template std::string
 serializeIsochrones<midgard::Point2>(const Api&,
                                      const midgard::GriddedData<midgard::Point2>::contours_t&,
-                                     const std::vector<valhalla::LatLng>&,
                                      bool,
                                      const std::unordered_map<float, std::string>&,
                                      bool);
 template std::string
 serializeIsochrones<midgard::PointLL>(const Api&,
                                       const midgard::GriddedData<midgard::PointLL>::contours_t&,
-                                      const std::vector<valhalla::LatLng>&,
                                       bool,
                                       const std::unordered_map<float, std::string>&,
                                       bool);
