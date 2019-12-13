@@ -266,9 +266,8 @@ int main(int argc, char* argv[]) {
   LOG_INFO("Contour Generation took " + std::to_string(msecs) + " ms");
 
   // Serialize to GeoJSON
-  std::string geojson =
-      valhalla::tyr::serializeIsochrones<PointLL>(request, contours, isotile->snapped_centers(),
-                                                  polygons, colors, show_locations);
+  std::string geojson = valhalla::tyr::serializeIsochrones<PointLL>(request, contours, polygons,
+                                                                    colors, show_locations);
 
   auto t4 = std::chrono::high_resolution_clock::now();
   msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t4 - t3).count();

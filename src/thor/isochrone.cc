@@ -1033,13 +1033,6 @@ void Isochrone::SetOriginLocations(
     GraphReader& graphreader,
     google::protobuf::RepeatedPtrField<valhalla::Location>& origin_locations,
     const std::shared_ptr<DynamicCost>& costing) {
-
-  // Capture the snapped center locations for each origin
-  std::for_each(origin_locations.begin(), origin_locations.end(),
-                [this](const valhalla::Location& origin) {
-                  isotile_->set_current_center(origin.path_edges().Get(0).ll());
-                });
-
   // Add edges for each location to the adjacency list
   for (auto& origin : origin_locations) {
     PointLL ll(origin.ll().lng(), origin.ll().lat());
@@ -1115,12 +1108,6 @@ void Isochrone::SetOriginLocationsMM(
     GraphReader& graphreader,
     google::protobuf::RepeatedPtrField<valhalla::Location>& origin_locations,
     const std::shared_ptr<DynamicCost>& costing) {
-
-  // Capture the snapped center locations for each origin
-  std::for_each(origin_locations.begin(), origin_locations.end(),
-                [this](const valhalla::Location& origin) {
-                  isotile_->set_current_center(origin.path_edges().Get(0).ll());
-                });
   // Add edges for each location to the adjacency list
   for (auto& origin : origin_locations) {
     PointLL ll(origin.ll().lng(), origin.ll().lat());
@@ -1200,13 +1187,6 @@ void Isochrone::SetDestinationLocations(
     google::protobuf::RepeatedPtrField<valhalla::Location>& dest_locations,
     const std::shared_ptr<DynamicCost>& costing) {
   // Add edges for each location to the adjacency list
-
-  // Capture the snapped center locations for each origin
-  std::for_each(dest_locations.begin(), dest_locations.end(),
-                [this](const valhalla::Location& origin) {
-                  isotile_->set_current_center(origin.path_edges().Get(0).ll());
-                });
-
   for (auto& dest : dest_locations) {
     PointLL ll(dest.ll().lng(), dest.ll().lat());
     // Set time at the origin lat, lon grid to 0
