@@ -85,17 +85,29 @@ serializeIsochrones(const Api& request,
       }));
     }
   }
-  // Add original locations to the geojson
+  // Add input and snapped locations to the geojson
   if (show_locations) {
+    auto snapped_coords = array({});
+    auto input_coords = array({});
     for (const auto& location : request.options().locations()) {
-      features->emplace_back(
-          map({{"type", std::string("Feature")},
-               {"properties", map({})},
-               {"geometry", map({{"type", std::string("Point")},
-                                 {"coordinates", array({fp_t{location.ll().lng(), 6},
-                                                        fp_t{location.ll().lat(), 6}})}})}}));
-    }
+      const valhalla::LatLng& latLng_snapped = location.path_edges(0).ll();
+      snapped_coords->push_back(
+          array({fp_t{latLng_snapped.lng(), 6}, fp_t{latLng_snapped.lat(), 6}}));
+
+      const valhalla::LatLng& latlng_input = location.ll();
+      input_coords->push_back(array({fp_t{latlng_input.lng(), 6}, fp_t{latlng_input.lat(), 6}}));
+    };
+    features->emplace_back(map(
+        {{"type", std::string("Feature")},
+         {"properties", map({{"type", std::string("input")}})},
+         {"geometry", map({{"type", std::string("MultiPoint")}, {"coordinates", input_coords}})}}));
+
+    features->emplace_back(map(
+        {{"type", std::string("Feature")},
+         {"properties", map({{"type", std::string("snapped")}})},
+         {"geometry", map({{"type", std::string("MultiPoint")}, {"coordinates", snapped_coords}})}}));
   }
+
   // make the collection
   auto feature_collection = map({
       {"type", std::string("FeatureCollection")},
