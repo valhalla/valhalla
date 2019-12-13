@@ -274,14 +274,12 @@ MatchResult FindMatchResult(const MapMatcher& mapmatcher,
     }
   }
 
-  // TODO: verify if there are scenarios that could lead us here
+  // when we reach here, there are gaps exist in the state colums, which means there are no
+  // edge candidates in the previous state nor the next state. Discontinuity happens here,
+  // thus, location can not be matched with any edges, we set the edgeid to invalid and return
   const auto& edge = mapmatcher.state_container().state(stateid).candidate().edges.front();
-  return {edge.projected,
-          std::sqrt(edge.distance),
-          prev_state_edgeid.Is_Valid() ? prev_state_edgeid : next_state_edgeid,
-          edge.percent_along,
-          measurement.epoch_time(),
-          stateid};
+  return {edge.projected,     std::sqrt(edge.distance), {},
+          edge.percent_along, measurement.epoch_time(), stateid};
 }
 
 // Find the corresponding match results of a list of states

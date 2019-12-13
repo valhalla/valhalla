@@ -1047,12 +1047,12 @@ void test_intersection_matching() {
       R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
           {"lat": 52.0951641, "lon": 5.1285609, "type": "break"},
           {"lat": 52.0952055, "lon": 5.1292756, "type": "break"},
-          {"lat": 52.0953289, "lon": 5.1301092, "type": "break"},
+          {"lat": 52.0952580, "lon": 5.1301359, "type": "break"},
           {"lat": 52.0952939, "lon": 5.1309020, "type": "break"},
           {"lat": 52.0944788, "lon": 5.1304066, "type": "break"}]})"};
   std::vector<std::pair<int, std::vector<float>>> test_answers = {{1, {7.3}},
                                                                   {3, {61.7, 41.6, 109.4}},
-                                                                  {4, {49.3, 59, 55, 98}}};
+                                                                  {4, {49.3, 61, 52.6, 99}}};
 
   tyr::actor_t actor(conf, true);
   for (size_t i = 0; i < test_cases.size(); ++i) {
