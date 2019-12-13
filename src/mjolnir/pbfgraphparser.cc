@@ -41,6 +41,20 @@ constexpr uint64_t kMaxOSMNodeId = 6800000000;
 // Absurd classification.
 constexpr uint32_t kAbsurdRoadClass = 777777;
 
+// Convenience method to get a number from a string. Uses try/catch in case
+// stoi throws an exception
+int get_number(const std::string& tag, const std::string& value) {
+  int num = -1;
+  try {
+    num = stoi(value);
+  } catch (const std::invalid_argument& arg) {
+    LOG_INFO("invalid_argument thrown for " + tag + " value: " + value);
+  } catch (const std::out_of_range& oor) {
+    LOG_INFO("out_of_range exception thrown for " + tag + " value: " + value);
+  }
+  return num;
+}
+
 // Construct PBFGraphParser based on properties file and input PBF extract
 struct graph_callback : public OSMPBF::Callback {
 public:
@@ -1000,41 +1014,47 @@ public:
     auto mtb_scale = results.find("mtb:scale");
     bool has_mtb_scale = mtb_scale != results.end();
     if (has_mtb_scale) {
-      // Set surface based on scale
-      uint32_t scale = stoi(mtb_scale->second);
-      if (scale == 0) {
-        w.set_surface(Surface::kDirt);
-      } else if (scale == 1) {
-        w.set_surface(Surface::kGravel);
-      } else {
-        w.set_surface(Surface::kPath);
-      }
-      has_surface = true;
-
-      // Set bicycle access to true for all but the highest scale.
-      bool access = scale < kMaxMtbScale;
-      w.set_bike_forward(access);
-      w.set_bike_backward(access);
-    }
-
-    auto mtb_uphill_scale = results.find("mtb:scale:uphill");
-    bool has_mtb_uphill_scale = mtb_uphill_scale != results.end();
-    if (has_mtb_uphill_scale) {
-      // Set surface based on scale (if no mtb scale exists)
-      uint32_t scale = stoi(mtb_uphill_scale->second);
-      if (!has_mtb_scale) {
-        if (scale < 2) {
+      int scale = get_number("mtb:scale", mtb_scale->second);
+      if (scale >= 0) {
+        // Set surface based on scale
+        uint32_t scale = stoi(mtb_scale->second);
+        if (scale == 0) {
+          w.set_surface(Surface::kDirt);
+        } else if (scale == 1) {
           w.set_surface(Surface::kGravel);
         } else {
           w.set_surface(Surface::kPath);
         }
         has_surface = true;
-      }
 
-      // Set bicycle access to true for all but the highest scale.
-      bool access = scale < kMaxMtbUphillScale;
-      w.set_bike_forward(access);
-      w.set_bike_backward(access);
+        // Set bicycle access to true for all but the highest scale.
+        bool access = scale < kMaxMtbScale;
+        w.set_bike_forward(access);
+        w.set_bike_backward(access);
+      }
+    }
+
+    auto mtb_uphill_scale = results.find("mtb:scale:uphill");
+    bool has_mtb_uphill_scale = mtb_uphill_scale != results.end();
+    if (has_mtb_uphill_scale) {
+      int scale = get_number("mtb:uphill:scale", mtb_uphill_scale->second);
+      if (scale >= 0) {
+        // Set surface based on scale (if no scale exists)
+        uint32_t scale = stoi(mtb_uphill_scale->second);
+        if (!has_mtb_scale) {
+          if (scale < 2) {
+            w.set_surface(Surface::kGravel);
+          } else {
+            w.set_surface(Surface::kPath);
+          }
+          has_surface = true;
+        }
+
+        // Set bicycle access to true for all but the highest scale.
+        bool access = scale < kMaxMtbUphillScale;
+        w.set_bike_forward(access);
+        w.set_bike_backward(access);
+      }
     }
 
     // IMBA scale
@@ -1562,8 +1582,8 @@ public:
               restriction.set_from(from_way_id);
               restriction.set_vias(vias);
               // for bi-directional we need to create the restriction in reverse.  flip the to and
-              // from. also in order to avoid duplicate data in the from and to restrictions, we only
-              // need to store the mode, from, and to for the to_restrictions.
+              // from. also in order to avoid duplicate data in the from and to restrictions, we
+              // only need to store the mode, from, and to for the to_restrictions.
               to_restriction.set_from(restriction.to());
               to_restriction.set_to(from_way_id);
               to_restriction.set_modes(restriction.modes());
