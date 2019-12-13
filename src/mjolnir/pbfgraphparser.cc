@@ -996,12 +996,68 @@ public:
       }
     }
 
+    // Process mtb tags.
+    auto mtb_scale = results.find("mtb:scale");
+    bool has_mtb_scale = mtb_scale != results.end();
+    if (has_mtb_scale) {
+      // Set surface based on scale
+      uint32_t scale = stoi(mtb_scale->second);
+      if (scale == 0) {
+        w.set_surface(Surface::kDirt);
+      } else if (scale == 1) {
+        w.set_surface(Surface::kGravel);
+      } else {
+        w.set_surface(Surface::kPath);
+      }
+      has_surface = true;
+
+      // Set bicycle access to true for all but the highest scale.
+      bool access = scale < kMaxMtbScale;
+      w.set_bike_forward(access);
+      w.set_bike_backward(access);
+    }
+
+    auto mtb_uphill_scale = results.find("mtb:scale:uphill");
+    bool has_mtb_uphill_scale = mtb_uphill_scale != results.end();
+    if (has_mtb_uphill_scale) {
+      // Set surface based on scale (if no mtb scale exists)
+      uint32_t scale = stoi(mtb_uphill_scale->second);
+      if (!has_mtb_scale) {
+        if (scale < 2) {
+          w.set_surface(Surface::kGravel);
+        } else {
+          w.set_surface(Surface::kPath);
+        }
+        has_surface = true;
+      }
+
+      // Set bicycle access to true for all but the highest scale.
+      bool access = scale < kMaxMtbUphillScale;
+      w.set_bike_forward(access);
+      w.set_bike_backward(access);
+    }
+
+    // IMBA scale
+    auto mtb_imba_scale = results.find("mtb:scale:imba");
+    bool has_mtb_imba = mtb_imba_scale != results.end();
+    if (has_mtb_imba) {
+      // Update bike access (only if neither mtb:scale nor mtb:scale:uphill is present)
+      if (!has_mtb_scale && !has_mtb_uphill_scale) {
+        w.set_bike_forward(true);
+        w.set_bike_backward(true);
+      }
+    }
+
+    // Only has MTB description - set bicycle access.
+    bool has_mtb_desc = results.find("mtb:description") != results.end();
+    if (has_mtb_desc && !has_mtb_scale && !has_mtb_uphill_scale && !has_mtb_imba) {
+      w.set_bike_forward(true);
+      w.set_bike_backward(true);
+    }
+
     // if no surface and tracktype but we have a sac_scale, set surface to path.
     if (!has_surface) {
-      if (results.find("sac_scale") != results.end() || results.find("mtb:scale") != results.end() ||
-          results.find("mtb:scale:imba") != results.end() ||
-          results.find("mtb:scale:uphill") != results.end() ||
-          results.find("mtb:description") != results.end()) {
+      if (results.find("sac_scale") != results.end()) {
         w.set_surface(Surface::kPath);
       } else {
         // If no surface has been set by a user, assign a surface based on Road Class and Use

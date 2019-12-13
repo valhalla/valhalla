@@ -382,6 +382,10 @@ enum class SacScale : uint8_t {
   kDifficultAlpineHiking = 6
 };
 
+// Mountain bike scale
+const uint32_t kMaxMtbScale = 6;
+const uint32_t kMaxMtbUphillScale = 5;
+
 // Generalized representation of surface types. Lower values indicate smoother
 // surfaces. Vehicle or bicycle type can use this to avoid or disallow edges
 // that are "too rough" or inappropriate for the vehicle to travel on.
