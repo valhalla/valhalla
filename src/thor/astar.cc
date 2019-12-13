@@ -433,7 +433,7 @@ void AStarPathAlgorithm::SetOrigin(GraphReader& graphreader,
       }
     }
 
-    // Store the closest node info
+    // Store a node-info for later timezone retrieval (approximate for closest)
     if (closest_ni == nullptr) {
       closest_ni = nodeinfo;
     }
