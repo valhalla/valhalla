@@ -48,9 +48,9 @@ int get_number(const std::string& tag, const std::string& value) {
   try {
     num = stoi(value);
   } catch (const std::invalid_argument& arg) {
-    LOG_INFO("invalid_argument thrown for " + tag + " value: " + value);
+    LOG_DEBUG("invalid_argument thrown for " + tag + " value: " + value);
   } catch (const std::out_of_range& oor) {
-    LOG_INFO("out_of_range exception thrown for " + tag + " value: " + value);
+    LOG_DEBUG("out_of_range exception thrown for " + tag + " value: " + value);
   }
   return num;
 }
