@@ -81,18 +81,13 @@ protected:
   void parse_measurements(const Api& request);
   std::string parse_costing(const Api& request);
   void parse_filter_attributes(const Api& request, bool is_strict_filter = false);
+  static std::string offset_date(baldr::GraphReader& reader,
+                                 const std::string& in_dt,
+                                 const baldr::GraphId& in_edge,
+                                 float offset,
+                                 const baldr::GraphId& out_edge);
   sif::TravelMode mode;
   std::vector<meili::Measurement> trace;
-  std::vector<PathInfo> m_path_infos;
-  std::vector<meili::MatchResults> m_offline_results;
-  std::vector<thor::MatchResult> m_temp_enhanced_match_results;
-  std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>>
-      m_temp_route_discontinuities;
-  std::vector<std::pair<baldr::GraphId, baldr::GraphId>> m_temp_disconnected_edges;
-  std::vector<PathInfo> m_temp_path_edges;
-  std::vector<std::pair<std::vector<PathInfo>, std::vector<meili::MatchResult>::const_iterator>>
-      m_temp_disjoint_edge_groups;
-  std::vector<std::tuple<float, float, std::vector<thor::MatchResult>>> m_map_match_results;
   sif::CostFactory<sif::DynamicCost> factory;
   sif::cost_ptr_t mode_costing[static_cast<int>(sif::TravelMode::kMaxTravelMode)];
   // Path algorithms (TODO - perhaps use a map?))

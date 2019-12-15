@@ -312,6 +312,14 @@ void validate(
       // The node we will modify
       NodeInfo nodeinfo = tilebuilder.node(i);
       auto ni = tile->node(i);
+
+      // Validate signs
+      if (ni->named_intersection()) {
+        if (tile->GetSigns(i, true).size() == 0) {
+          LOG_ERROR("Node marked as having signs but none found");
+        }
+      }
+
       std::string begin_node_iso = tile->admin(nodeinfo.admin_index())->country_iso();
 
       // Go through directed edges and validate/update data
@@ -321,7 +329,7 @@ void validate(
         auto de = tile->directededge(idx);
 
         // Validate signs
-        if (de->exitsign()) {
+        if (de->sign()) {
           if (tile->GetSigns(idx).size() == 0) {
             LOG_ERROR("Directed edge marked as having signs but none found");
           }

@@ -638,14 +638,33 @@ std::string get_sign_element_nonrefs(
   return nonrefs;
 }
 
-// Add destinations along a step/maneuver. Constructs a destinations string.
-// Here are the destinations formats:
-//   1. <ref>
-//   2. <non-ref>
-//   3. <ref>: <non-ref>
-// Each <ref> or <non-ref> could have one or more items and will separated with ", "
-//   for example: "I 99, US 220, US 30: Altoona, Johnstown"
-std::string destinations(const valhalla::DirectionsLeg_Maneuver_Sign& sign) {
+// Compile and return the sign elements of the specified list
+// TODO we could enhance by limiting results by using consecutive count
+std::string get_sign_elements(const google::protobuf::RepeatedPtrField<
+                                  ::valhalla::DirectionsLeg_Maneuver_SignElement>& sign_elements,
+                              const std::string& delimiter = kSignElementDelimiter) {
+  std::string sign_elements_string;
+  for (const auto& sign_element : sign_elements) {
+    // If the sign_elements_string is not empty, append specified delimiter
+    if (!sign_elements_string.empty()) {
+      sign_elements_string += delimiter;
+    }
+    // Append sign element
+    sign_elements_string += sign_element.text();
+  }
+  return sign_elements_string;
+}
+
+bool exit_destinations_exist(const valhalla::DirectionsLeg_Maneuver_Sign& sign) {
+  if ((sign.exit_onto_streets_size() > 0) || (sign.exit_toward_locations_size() > 0) ||
+      (sign.exit_names_size() > 0)) {
+    return true;
+  }
+  return false;
+}
+
+// Return the exit destinations
+std::string exit_destinations(const valhalla::DirectionsLeg_Maneuver_Sign& sign) {
 
   /////////////////////////////////////////////////////////////////////////////
   // Process the refs
@@ -699,6 +718,66 @@ std::string destinations(const valhalla::DirectionsLeg_Maneuver_Sign& sign) {
   destinations += nonrefs;
 
   return destinations;
+}
+
+// Return the guide destinations
+std::string guide_destinations(const valhalla::DirectionsLeg_Maneuver_Sign& sign) {
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Process the refs
+  // Get the branch refs
+  std::string branch_refs = get_sign_element_refs(sign.guide_onto_streets());
+
+  // Get the toward refs
+  std::string toward_refs = get_sign_element_refs(sign.guide_toward_locations());
+
+  // Create the refs by combining the branch and toward ref lists
+  std::string refs = branch_refs;
+  // If needed, add the delimiter between the lists
+  if (!refs.empty() && !toward_refs.empty()) {
+    refs += kSignElementDelimiter;
+  }
+  refs += toward_refs;
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Process the nonrefs
+  // Get the branch nonrefs
+  std::string branch_nonrefs = get_sign_element_nonrefs(sign.guide_onto_streets());
+
+  // Get the towards nonrefs
+  std::string toward_nonrefs = get_sign_element_nonrefs(sign.guide_toward_locations());
+
+  // Create nonrefs by combining the branch, toward, name nonref lists
+  std::string nonrefs = branch_nonrefs;
+  // If needed, add the delimiter between the lists
+  if (!nonrefs.empty() && !toward_nonrefs.empty()) {
+    nonrefs += kSignElementDelimiter;
+  }
+  nonrefs += toward_nonrefs;
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Process the destinations
+  std::string destinations = refs;
+  if (!refs.empty() && !nonrefs.empty()) {
+    destinations += kDestinationsDelimiter;
+  }
+  destinations += nonrefs;
+
+  return destinations;
+}
+
+// Add destinations along a step/maneuver. Constructs a destinations string.
+// Here are the destinations formats:
+//   1. <ref>
+//   2. <non-ref>
+//   3. <ref>: <non-ref>
+// Each <ref> or <non-ref> could have one or more items and will separated with ", "
+//   for example: "I 99, US 220, US 30: Altoona, Johnstown"
+std::string destinations(const valhalla::DirectionsLeg_Maneuver_Sign& sign) {
+  if (exit_destinations_exist(sign)) {
+    return exit_destinations(sign);
+  }
+  return guide_destinations(sign);
 }
 
 // Get the turn modifier based on incoming edge bearing and outgoing edge
@@ -1123,6 +1202,8 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
     bool rotary = false;
     bool prev_rotary = false;
     auto steps = json::array({});
+    const DirectionsLeg_Maneuver* prev_maneuver = nullptr;
+    json::MapPtr prev_step;
     for (const auto& maneuver : leg->maneuver()) {
       auto step = json::map({});
       bool depart_maneuver = (maneuver_index == 0);
@@ -1174,15 +1255,30 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
                                   depart_maneuver, arrive_maneuver, prev_intersection_count, mode,
                                   prev_mode, rotary, prev_rotary));
 
-      // Add destinations and exits
+      // Add destinations
       const auto& sign = maneuver.sign();
       std::string dest = destinations(sign);
       if (!dest.empty()) {
         step->emplace("destinations", dest);
+        // If the maneuver is an exit roundabout
+        // and the previous maneuver is an enter roundabout
+        // then set the destinations on the previous step
+        if ((maneuver.type() == DirectionsLeg_Maneuver_Type_kRoundaboutExit) && prev_maneuver &&
+            (prev_maneuver->type() == DirectionsLeg_Maneuver_Type_kRoundaboutEnter) && prev_step) {
+          prev_step->emplace("destinations", dest);
+        }
       }
+
+      // Add exits
       std::string ex = exits(sign);
       if (!ex.empty()) {
         step->emplace("exits", ex);
+      }
+
+      // Add junction_name
+      std::string junction_name = get_sign_elements(sign.junction_names());
+      if (!junction_name.empty()) {
+        step->emplace("junction_name", junction_name);
       }
 
       // Add intersections
@@ -1193,6 +1289,8 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
       steps->emplace_back(step);
       prev_rotary = rotary;
       prev_mode = mode;
+      prev_step = step;
+      prev_maneuver = &maneuver;
       maneuver_index++;
     } // end maneuver loop
     //#########################################################################

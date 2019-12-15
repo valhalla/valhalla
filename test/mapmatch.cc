@@ -6,17 +6,16 @@
 #include <vector>
 
 #include "baldr/rapidjson_utils.h"
-#include <boost/optional/optional.hpp>
 #include <boost/property_tree/ptree.hpp>
 
 #include "baldr/json.h"
-#include "meili/map_matcher.h"
-#include "meili/map_matcher_factory.h"
+#include "loki/worker.h"
 #include "midgard/distanceapproximator.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
 #include "midgard/util.h"
-#include "mjolnir/util.h"
+#include "odin/worker.h"
+#include "thor/worker.h"
 #include "tyr/actor.h"
 #include "worker.h"
 
@@ -108,6 +107,40 @@ const auto conf = json_to_pt(R"({
     }
   })");
 
+struct api_tester {
+  api_tester()
+      : conf_(conf), reader(new valhalla::baldr::GraphReader(conf.get_child("mjolnir"))),
+        loki_worker(conf, reader), thor_worker(conf, reader), odin_worker(conf) {
+  }
+  Api match(const std::string& request_json) {
+    Api request;
+    ParseApi(request_json, Options::trace_route, request);
+    loki_worker.trace(request);
+    thor_worker.trace_route(request);
+    odin_worker.narrate(request);
+    loki_worker.cleanup();
+    thor_worker.cleanup();
+    odin_worker.cleanup();
+    return request;
+  }
+  Api route(const std::string& request_json) {
+    Api request;
+    ParseApi(request_json, Options::route, request);
+    loki_worker.route(request);
+    thor_worker.route(request);
+    odin_worker.narrate(request);
+    loki_worker.cleanup();
+    thor_worker.cleanup();
+    odin_worker.cleanup();
+    return request;
+  }
+  boost::property_tree::ptree conf_;
+  std::shared_ptr<valhalla::baldr::GraphReader> reader;
+  valhalla::loki::loki_worker_t loki_worker;
+  valhalla::thor::thor_worker_t thor_worker;
+  valhalla::odin::odin_worker_t odin_worker;
+};
+
 std::string json_escape(const std::string& unescaped) {
   std::stringstream ss;
   baldr::json::OstreamVisitor v(ss);
@@ -119,6 +152,7 @@ std::string json_escape(const std::string& unescaped) {
 
 int seed = 521;
 int bound = 81;
+
 std::string make_test_case(PointLL& start, PointLL& end) {
   static std::mt19937 generator(seed);
   static std::uniform_real_distribution<float> distribution(0, 1);
@@ -304,127 +338,120 @@ void test_edges_discontinuity_with_multi_routes() {
   // here everything is a leg and the discontinuities are the routes
   // we have to use osrm format because valhalla format doesnt support multi route
   std::vector<std::string> test_cases = {
+      R"({"date_time":{"type":1,"value":"2019-11-10T09:00"},
+                 "costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
+                 {"lat":52.0609632,"lon":5.0917676,"type":"break"},
+                 {"lat":52.0607180,"lon":5.0950566,"type":"break"},
+                 {"lat":52.0797372,"lon":5.1293068,"type":"break"},
+                 {"lat":52.0792731,"lon":5.1343818,"type":"break"},
+                 {"lat":52.0763011,"lon":5.1574637,"type":"break"},
+                 {"lat":52.0782167,"lon":5.1592370,"type":"break"}]})",
+      R"({"date_time":{"type":0},
+                  "costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
+                  {"lat":52.0609632,"lon":5.0917676,"type":"break"},
+                  {"lat":52.0607180,"lon":5.0950566,"type":"via"},
+                  {"lat":52.0797372,"lon":5.1293068,"type":"via"},
+                  {"lat":52.0792731,"lon":5.1343818,"type":"via"},
+                  {"lat":52.0763011,"lon":5.1574637,"type":"via"},
+                  {"lat":52.0782167,"lon":5.1592370,"type":"break"}]})",
       R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
-          {"lat":52.0609632,"lon":5.0917676,"type":"break"},
-          {"lat":52.0607180,"lon":5.0950566,"type":"break"},
-          {"lat":52.0797372,"lon":5.1293068,"type":"break"},
-          {"lat":52.0792731,"lon":5.1343818,"type":"break"},
-          {"lat":52.0763011,"lon":5.1574637,"type":"break"},
-          {"lat":52.0782167,"lon":5.1592370,"type":"break"}]})",
+                  {"lat":52.0609632,"lon":5.0917676,"type":"break","time":7},
+                  {"lat":52.0607185,"lon":5.0940566,"type":"break_through","time":11},
+                  {"lat":52.0607180,"lon":5.0950566,"type":"break_through","time":15},
+                  {"lat":52.0797372,"lon":5.1293068,"type":"break_through","time":19},
+                  {"lat":52.0792731,"lon":5.1343818,"type":"break_through","time":23},
+                  {"lat":52.0763011,"lon":5.1574637,"type":"break_through","time":27},
+                  {"lat":52.0782167,"lon":5.1592370,"type":"break","time":13}]})",
+      R"({"date_time":{"type":2,"value":"2019-11-10T09:00"},
+          "costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
+                  {"lat":52.0609632,"lon":5.0917676,"type":"break"},
+                  {"lat":52.0607185,"lon":5.0940566,"type":"via"},
+                  {"lat":52.0607180,"lon":5.0950566,"type":"via"},
+                  {"lat":52.0797372,"lon":5.1293068,"type":"via"},
+                  {"lat":52.0792731,"lon":5.1343818,"type":"via"},
+                  {"lat":52.0763011,"lon":5.1574637,"type":"via"},
+                  {"lat":52.0782167,"lon":5.1592370,"type":"break"}]})",
+      R"({"date_time":{"type":1,"value":"2019-11-10T09:00"},
+          "costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
+                  {"lat": 52.068882, "lon": 5.120852, "type": "break"},
+                  {"lat": 52.069671, "lon": 5.121185, "type": "break"},
+                  {"lat": 52.070380, "lon": 5.121523, "type": "break"},
+                  {"lat": 52.070947, "lon": 5.121828, "type": "break"},
+                  {"lat": 52.071827, "lon": 5.122220, "type": "break"},
+                  {"lat": 52.072526, "lon": 5.122553, "type": "break"},
+                  {"lat": 52.073489, "lon": 5.122880, "type": "break"},
+                  {"lat": 52.074554, "lon": 5.122955, "type": "break"},
+                  {"lat": 52.075190, "lon": 5.123067, "type": "break"},
+                  {"lat": 52.075718, "lon": 5.123121, "type": "break"}]})",
+      R"({"date_time":{"type":0},
+        "costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
+                  {"lat": 52.068882, "lon": 5.120852, "type": "break"},
+                  {"lat": 52.069671, "lon": 5.121185, "type": "through"},
+                  {"lat": 52.070380, "lon": 5.121523, "type": "through"},
+                  {"lat": 52.070947, "lon": 5.121828, "type": "through"},
+                  {"lat": 52.071827, "lon": 5.122220, "type": "through"},
+                  {"lat": 52.072526, "lon": 5.122553, "type": "through"},
+                  {"lat": 52.073489, "lon": 5.122880, "type": "through"},
+                  {"lat": 52.074554, "lon": 5.122955, "type": "through"},
+                  {"lat": 52.075190, "lon": 5.123067, "type": "through"},
+                  {"lat": 52.075718, "lon": 5.123121, "type": "break"}]})",
       R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
-          {"lat":52.0609632,"lon":5.0917676,"type":"break"},
-          {"lat":52.0607180,"lon":5.0950566,"type":"via"},
-          {"lat":52.0797372,"lon":5.1293068,"type":"via"},
-          {"lat":52.0792731,"lon":5.1343818,"type":"via"},
-          {"lat":52.0763011,"lon":5.1574637,"type":"via"},
-          {"lat":52.0782167,"lon":5.1592370,"type":"break"}]})",
-      R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
-          {"lat":52.0609632,"lon":5.0917676,"type":"break"},
-          {"lat":52.0607185,"lon":5.0940566,"type":"break_through"},
-          {"lat":52.0607180,"lon":5.0950566,"type":"break_through"},
-          {"lat":52.0797372,"lon":5.1293068,"type":"break_through"},
-          {"lat":52.0792731,"lon":5.1343818,"type":"break_through"},
-          {"lat":52.0763011,"lon":5.1574637,"type":"break_through"},
-          {"lat":52.0782167,"lon":5.1592370,"type":"break"}]})",
-      R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
-          {"lat":52.0609632,"lon":5.0917676,"type":"break"},
-          {"lat":52.0607185,"lon":5.0940566,"type":"via"},
-          {"lat":52.0607180,"lon":5.0950566,"type":"via"},
-          {"lat":52.0797372,"lon":5.1293068,"type":"via"},
-          {"lat":52.0792731,"lon":5.1343818,"type":"via"},
-          {"lat":52.0763011,"lon":5.1574637,"type":"via"},
-          {"lat":52.0782167,"lon":5.1592370,"type":"break"}]})",
-      R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
-          {"lat": 52.068882, "lon": 5.120852, "type": "break"},
-          {"lat": 52.069671, "lon": 5.121185, "type": "break"},
-          {"lat": 52.070380, "lon": 5.121523, "type": "break"},
-          {"lat": 52.070947, "lon": 5.121828, "type": "break"},
-          {"lat": 52.071827, "lon": 5.122220, "type": "break"},
-          {"lat": 52.072526, "lon": 5.122553, "type": "break"},
-          {"lat": 52.073489, "lon": 5.122880, "type": "break"},
-          {"lat": 52.074554, "lon": 5.122955, "type": "break"},
-          {"lat": 52.075190, "lon": 5.123067, "type": "break"},
-          {"lat": 52.075718, "lon": 5.123121, "type": "break"}]})",
-      R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
-          {"lat": 52.068882, "lon": 5.120852, "type": "break"},
-          {"lat": 52.069671, "lon": 5.121185, "type": "through"},
-          {"lat": 52.070380, "lon": 5.121523, "type": "through"},
-          {"lat": 52.070947, "lon": 5.121828, "type": "through"},
-          {"lat": 52.071827, "lon": 5.122220, "type": "through"},
-          {"lat": 52.072526, "lon": 5.122553, "type": "through"},
-          {"lat": 52.073489, "lon": 5.122880, "type": "through"},
-          {"lat": 52.074554, "lon": 5.122955, "type": "through"},
-          {"lat": 52.075190, "lon": 5.123067, "type": "through"},
-          {"lat": 52.075718, "lon": 5.123121, "type": "break"}]})",
-      R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
-          {"lat": 52.068882, "lon": 5.120852, "type": "break"},
-          {"lat": 52.069671, "lon": 5.121185, "type": "break"},
-          {"lat": 52.070380, "lon": 5.121523, "type": "break"},
-          {"lat": 52.070947, "lon": 5.121828, "type": "break"},
-          {"lat": 52.071827, "lon": 5.1227, "type": "break", "radius": 1},
-          {"lat": 52.072526, "lon": 5.122553, "type": "break"},
-          {"lat": 52.073489, "lon": 5.122880, "type": "break"},
-          {"lat": 52.074554, "lon": 5.122955, "type": "break"},
-          {"lat": 52.075190, "lon": 5.123067, "type": "break"},
-          {"lat": 52.075718, "lon": 5.123121, "type": "break"}]})",
-      R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
-          {"lat": 52.068882, "lon": 5.120852, "type": "break"},
-          {"lat": 52.069671, "lon": 5.121185, "type": "through"},
-          {"lat": 52.070380, "lon": 5.121523, "type": "through"},
-          {"lat": 52.070947, "lon": 5.121828, "type": "through"},
-          {"lat": 52.071827, "lon": 5.1227, "type": "through", "radius": 1},
-          {"lat": 52.072526, "lon": 5.122553, "type": "through"},
-          {"lat": 52.073489, "lon": 5.122880, "type": "through"},
-          {"lat": 52.074554, "lon": 5.122955, "type": "through"},
-          {"lat": 52.075190, "lon": 5.123067, "type": "through"},
-          {"lat": 52.075718, "lon": 5.123121, "type": "break"}]})"};
+                  {"lat": 52.068882, "lon": 5.120852, "type": "break","time":7},
+                  {"lat": 52.069671, "lon": 5.121185, "type": "break","time":9},
+                  {"lat": 52.070380, "lon": 5.121523, "type": "break","time":11},
+                  {"lat": 52.070947, "lon": 5.121828, "type": "break","time":13},
+                  {"lat": 52.071827, "lon": 5.1227, "type": "break", "radius":1,"time":15},
+                  {"lat": 52.072526, "lon": 5.122553, "type": "break","time":17},
+                  {"lat": 52.073489, "lon": 5.122880, "type": "break","time":19},
+                  {"lat": 52.074554, "lon": 5.122955, "type": "break","time":21},
+                  {"lat": 52.075190, "lon": 5.123067, "type": "break","time":23},
+                  {"lat": 52.075718, "lon": 5.123121, "type": "break","time":25}]})",
+      R"({"date_time":{"type":2,"value":"2019-11-10T09:00"},
+        "costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
+                  {"lat": 52.068882, "lon": 5.120852, "type": "break"},
+                  {"lat": 52.069671, "lon": 5.121185, "type": "through"},
+                  {"lat": 52.070380, "lon": 5.121523, "type": "through"},
+                  {"lat": 52.070947, "lon": 5.121828, "type": "through"},
+                  {"lat": 52.071827, "lon": 5.1227, "type": "through", "radius": 1},
+                  {"lat": 52.072526, "lon": 5.122553, "type": "through"},
+                  {"lat": 52.073489, "lon": 5.122880, "type": "through"},
+                  {"lat": 52.074554, "lon": 5.122955, "type": "through"},
+                  {"lat": 52.075190, "lon": 5.123067, "type": "through"},
+                  {"lat": 52.075718, "lon": 5.123121, "type": "break"}]})"};
 
-  std::vector<std::pair<size_t, size_t>> test_answers = {{3, 3}, {3, 3}, {3, 4}, {3, 3},
-                                                         {1, 9}, {1, 1}, {2, 7}, {2, 2}};
-
-  tyr::actor_t actor(conf, true);
+  using a_t = std::tuple<size_t, size_t, bool>;
+  std::vector<a_t> test_answers = {a_t{3, 3, true},  a_t{3, 3, true}, a_t{2, 3, true},
+                                   a_t{3, 3, false}, a_t{1, 9, true}, a_t{1, 1, true},
+                                   a_t{2, 7, true},  a_t{2, 2, false}};
+  // for type 2, we currently do not support them, thus we are not expecting any time stamp
   for (size_t i = 0; i < test_cases.size(); ++i) {
-    auto json_match = actor.trace_route(test_cases[i]);
-    auto matched = json_to_pt(json_match);
-    const auto& trips = matched.get_child("matchings");
-    if (trips.size() != test_answers[i].first)
-      throw std::logic_error("Expected " + std::to_string(test_answers[i].first) +
-                             " routes but got " + std::to_string(trips.size()));
+    api_tester tester;
+    auto response = tester.match(test_cases[i]);
+    if (response.trip().routes_size() != std::get<0>(test_answers[i])) {
+      throw std::logic_error("Expected " + std::to_string(std::get<0>(test_answers[i])) +
+                             " routes but got " + std::to_string(response.trip().routes_size()));
+    }
     size_t leg_count = 0;
-    for (const auto& trip : trips)
-      leg_count += trip.second.get_child("legs").size();
-    if (leg_count != test_answers[i].second)
-      throw std::logic_error("Expected " + std::to_string(test_answers[i].second) +
-                             " legs in total but got " + std::to_string(leg_count));
-
-    // this compare indices will be build base on number of routes and number of legs on each route.
-    std::vector<int> compare_indices;
-    for (const auto& trip : trips) {
-      int num_legs = trip.second.get_child("legs").size();
-      for (int waypoint_index = 0; waypoint_index < num_legs + 1; ++waypoint_index) {
-        compare_indices.push_back(waypoint_index);
+    for (const auto& route : response.trip().routes()) {
+      leg_count += route.legs_size();
+      for (const auto& leg : route.legs()) {
+        if (leg.location(0).has_date_time() && !std::get<2>(test_answers[i])) {
+          throw std::logic_error("Found a leg with a start time when it shouldnt have had one");
+        }
+        if (!leg.location(0).has_date_time() && std::get<2>(test_answers[i])) {
+          throw std::logic_error("Found a leg without a start time when it should have had one");
+        }
       }
     }
-
-    std::vector<int> waypoint_indices;
-    const auto& tracepoints = matched.get_child("tracepoints");
-    for (const auto& tracepoint : tracepoints) {
-      try {
-        // this try catch block handles tracepoints of null or tracepoint waypooint_index of null from
-        // the match result.
-        waypoint_indices.push_back(tracepoint.second.get<int>("waypoint_index"));
-      } catch (...) {}
-    }
-
-    if (compare_indices != waypoint_indices) {
-      throw std::logic_error("leg shape waypoint indices does not match");
+    if (leg_count != std::get<1>(test_answers[i])) {
+      throw std::logic_error("Expected " + std::to_string(std::get<1>(test_answers[i])) +
+                             " legs in total but got " + std::to_string(leg_count));
     }
   }
 }
 
 void test_disconnected_edges_expect_no_route() {
-  std::vector<std::string> test_cases = {
-      R"({"costing":"auto","shape_match":"map_snap","shape":[
+  std::vector<std::string> test_cases = {R"({"costing":"auto","shape_match":"map_snap","shape":[
         {"lat":52.0630834,"lon":5.1037227,"type":"break"},
         {"lat":52.0633099,"lon":5.1047193,"type":"break"},
         {"lat":52.0640117,"lon":5.1040429,"type":"break"},
@@ -505,7 +532,7 @@ void test_matching_indices_and_waypoint_indices() {
       ++j;
     }
   }
-} // namespace
+}
 
 void test_time_rejection() {
   tyr::actor_t actor(conf, true);
@@ -910,6 +937,102 @@ void test_now_matches() {
   actor.trace_route(test_case);
 }
 
+void test_leg_duration_trimming() {
+  std::vector<std::vector<std::string>> test_cases = {
+      // 2 routes, one leg per route
+      {R"([{"lat": 52.0865058, "lon": 5.1201, "type": "break", "node_snap_tolerance":0},
+          {"lat": 52.0865512, "lon": 5.1201, "type": "via", "node_snap_tolerance":0},
+          {"lat": 52.0867449, "lon": 5.12, "type": "break", "node_snap_tolerance":0}])",
+       R"([{"lat": 52.12705182, "lon": 5.0892165, "type": "break", "node_snap_tolerance":0},
+          {"lat": 52.1267117, "lon": 5.0898420, "type": "via", "node_snap_tolerance":0},
+          {"lat": 52.1261379, "lon": 5.0907894, "type": "break", "node_snap_tolerance":0}])"},
+      // 2 routes, multiple legs per route
+      {R"([{"lat": 52.0865058, "lon": 5.1201, "type": "break", "node_snap_tolerance":0},
+          {"lat": 52.0865512, "lon": 5.1201, "type": "break", "node_snap_tolerance":0},
+          {"lat": 52.0867449, "lon": 5.12, "type": "break", "node_snap_tolerance":0}])",
+       R"([{"lat": 52.12705182, "lon": 5.0892165, "type": "break", "node_snap_tolerance":0},
+          {"lat": 52.1267117, "lon": 5.0898420, "type": "break", "node_snap_tolerance":0},
+          {"lat": 52.1261379, "lon": 5.0907894, "type": "break", "node_snap_tolerance":0}])"},
+      // 2 routes close together in space
+      {R"([{"lat": 52.0940283, "lon": 5.1133286, "type": "break", "node_snap_tolerance":0},
+          {"lat": 52.0938604, "lon": 5.1133609, "type": "break", "node_snap_tolerance":0},
+          {"lat": 52.0935827, "lon": 5.1133893, "type": "break", "node_snap_tolerance":0}])",
+       R"([{"lat": 52.0939489, "lon": 5.1136976, "type": "break", "node_snap_tolerance":0},
+          {"lat": 52.0939837, "lon": 5.1139511, "type": "break", "node_snap_tolerance":0}])"},
+      // 1 route with 1 leg across 2 edges and then another leg on the same second edge
+      {R"([{"lat": 52.0957652, "lon": 5.1101366, "type": "break", "node_snap_tolerance":0},
+          {"lat": 52.0959457, "lon": 5.1106847, "type": "break", "node_snap_tolerance":0},
+          {"lat": 52.0962535, "lon": 5.1116988, "type": "break", "node_snap_tolerance":0}])"},
+      // 1 route with 1 leg across 2 edges
+      {R"([{"lat": 52.0957652, "lon": 5.1101366, "type": "break", "node_snap_tolerance":0},
+          {"lat": 52.0959457, "lon": 5.1106847, "type": "break", "node_snap_tolerance":0}])"},
+      // 1 route with 1 leg on 1 edge
+      {R"([{"lat": 52.0959457, "lon": 5.1106847, "type": "break", "node_snap_tolerance":0},
+          {"lat": 52.0962535, "lon": 5.1116988, "type": "break", "node_snap_tolerance":0}])"},
+      // 1 routes, lots of legs on same edge
+      {R"([{"lat": 52.108781, "lon": 5.1057369, "type": "break", "node_snap_tolerance":0},
+          {"lat": 52.108982, "lon": 5.1054472, "type": "break", "node_snap_tolerance":0},
+          {"lat": 52.109180, "lon": 5.1051449, "type": "break", "node_snap_tolerance":0},
+          {"lat": 52.109407, "lon": 5.1047962, "type": "break", "node_snap_tolerance":0},
+          {"lat": 52.109589, "lon": 5.1044422, "type": "break", "node_snap_tolerance":0},
+          {"lat": 52.109806, "lon": 5.1041525, "type": "break", "node_snap_tolerance":0},
+          {"lat": 52.110030, "lon": 5.1038306, "type": "break", "node_snap_tolerance":0},
+          {"lat": 52.110244, "lon": 5.1034766, "type": "break", "node_snap_tolerance":0},
+          {"lat": 52.110521, "lon": 5.1031029, "type": "break", "node_snap_tolerance":0},
+          {"lat": 52.110735, "lon": 5.1027846, "type": "break", "node_snap_tolerance":0}])"},
+      {R"([{"lat": 52.0826293, "lon": 5.1267623, "type": "break", "node_snap_tolerance":0},
+          {"lat": 52.0835867, "lon": 5.1276355, "type": "break", "node_snap_tolerance":0},
+          {"lat": 52.0837127, "lon": 5.1277763, "type": "break", "node_snap_tolerance":0},
+          {"lat": 52.0839615, "lon": 5.1280204, "type": "break", "node_snap_tolerance":0},
+          {"lat": 52.0841756, "lon": 5.1282906, "type": "break", "node_snap_tolerance":0}])"},
+      {R"([{"lat": 52.0609108, "lon": 5.0924059, "type": "break", "node_snap_tolerance":0},
+          {"lat": 52.0605926, "lon": 5.0962937, "type": "break", "node_snap_tolerance":0},
+          {"lat": 52.0604866, "lon": 5.0975675, "type": "break", "node_snap_tolerance":0},
+          {"lat": 52.0601766, "lon": 5.1005663, "type": "break", "node_snap_tolerance":0}])"},
+  };
+
+  api_tester tester;
+  for (const auto& test_case : test_cases) {
+    // for routing we need to do each route separately, and we manually mash them into one object
+    valhalla::Api route_api;
+    for (const auto& locations : test_case) {
+      auto route_test_case = R"({"costing":"auto","locations":)" + locations + '}';
+      auto single_route_api = tester.route(route_test_case);
+      route_api.mutable_trip()->mutable_routes()->MergeFrom(single_route_api.trip().routes());
+    }
+
+    // for map matching we do it all in one shot by mashing all the locations together
+    // NOTE: if want a test case with a discontinuity make sure a map match is not possible at it
+    std::string match_test_case = R"({"costing":"auto", "shape_match":"map_snap","shape":)";
+    for (const auto& locations : test_case) {
+      if (match_test_case.back() == ']')
+        match_test_case.back() = ',';
+      match_test_case += locations.substr(match_test_case.back() == ',');
+    }
+    match_test_case += '}';
+    auto match_api = tester.match(match_test_case);
+    printf("\n%s\n", match_test_case.c_str());
+
+    // they should not disagree (unless the map match is very vague)
+    if (route_api.trip().routes_size() != match_api.trip().routes_size())
+      throw std::logic_error("Number of routes differs");
+    for (size_t i = 0; i < route_api.trip().routes_size(); ++i) {
+      const auto& rlegs = route_api.trip().routes(i).legs();
+      const auto& mlegs = match_api.trip().routes(i).legs();
+      if (rlegs.size() != mlegs.size())
+        throw std::logic_error("Number of legs differs");
+      printf("Route %zu\n", i);
+      for (size_t j = 0; j < rlegs.size(); ++j) {
+        auto rtime = rlegs.Get(j).node().rbegin()->elapsed_time();
+        auto mtime = mlegs.Get(j).node().rbegin()->elapsed_time();
+        printf("r: %.2f %s\n", rtime, rlegs.Get(j).shape().c_str());
+        printf("m: %.2f %s\n", mtime, mlegs.Get(j).shape().c_str());
+        if (!valhalla::midgard::equal(rtime, mtime, 0.1))
+          throw std::logic_error("Leg time differs");
+      }
+    }
+  }
+}
 } // namespace
 
 int main(int argc, char* argv[]) {
@@ -927,8 +1050,6 @@ int main(int argc, char* argv[]) {
   suite.test(TEST_CASE(test_trace_route_breaks));
 
   suite.test(TEST_CASE(test_disconnected_edges_expect_no_route));
-
-  suite.test(TEST_CASE(test_edges_discontinuity_with_multi_routes));
 
   suite.test(TEST_CASE(test_distance_only));
 
@@ -950,9 +1071,13 @@ int main(int argc, char* argv[]) {
 
   suite.test(TEST_CASE(test_topk_frontage_alternate));
 
-  suite.test(TEST_CASE(test_now_matches));
+  suite.test(TEST_CASE(test_leg_duration_trimming));
 
   suite.test(TEST_CASE(test_matching_indices_and_waypoint_indices));
+
+  suite.test(TEST_CASE(test_now_matches));
+
+  suite.test(TEST_CASE(test_edges_discontinuity_with_multi_routes));
 
   return suite.tear_down();
 }

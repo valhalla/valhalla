@@ -98,7 +98,7 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
   // Create sign builders
   for (uint32_t i = 0; i < header_->signcount(); i++) {
     name_info.insert({signs_[i].text_offset()});
-    signs_builder_.emplace_back(signs_[i].edgeindex(), signs_[i].type(), signs_[i].is_route_num(),
+    signs_builder_.emplace_back(signs_[i].index(), signs_[i].type(), signs_[i].is_route_num(),
                                 signs_[i].text_offset());
   }
 
@@ -261,6 +261,7 @@ void GraphTileBuilder::StoreTileData() {
     header_builder_.set_transfercount(0);
 
     // Write the signs
+    std::stable_sort(signs_builder_.begin(), signs_builder_.end());
     header_builder_.set_signcount(signs_builder_.size());
     in_mem.write(reinterpret_cast<const char*>(signs_builder_.data()),
                  signs_builder_.size() * sizeof(Sign));

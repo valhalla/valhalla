@@ -12,9 +12,12 @@ message TripLeg {
 
   message Sign {
     repeated SignElement exit_numbers = 1;          // The list of exit numbers, example: 67B
-    repeated SignElement exit_onto_streets = 2;     // The list of exit branch street names, example: I 95 North
+    repeated SignElement exit_onto_streets = 2;     // The list of exit branch street names, examples: I 95 North or Baltimore-Washington Parkway
     repeated SignElement exit_toward_locations = 3; // The list of exit toward locations, examples: New York or I 395 South
     repeated SignElement exit_names = 4;            // The list of exit names - not used much in US, example: Gettysburg Pike
+    repeated SignElement guide_onto_streets = 5;    // The list of guide branch street names, examples: US 22 West or Baltimore-Washington Parkway
+    repeated SignElement guide_toward_locations = 6;// The list of guide toward locations, examples: Lewistown or US 15
+    repeated SignElement junction_names = 7;        // The list of junction names, example: 万年橋東 or Mannenbashi East
   }
 
   enum Traversability {
