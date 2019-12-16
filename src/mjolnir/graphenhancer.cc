@@ -899,11 +899,11 @@ bool IsNextEdgeInternal(const DirectedEdge directededge,
     if (tilebuilder.edgeinfo(directededge.edgeinfo_offset()).wayid() ==
         tile.edgeinfo(diredge.edgeinfo_offset()).wayid()) {
 
-        if (commercial_data)
-          return diredge.internal();
-        else
-          return IsIntersectionInternal(&tile, reader, lock, directededge.endnode(), nodeinfo, diredge,
-                                        i);
+      if (commercial_data)
+        return diredge.internal();
+      else
+        return IsIntersectionInternal(&tile, reader, lock, directededge.endnode(), nodeinfo, diredge,
+                                      i);
     }
   }
   return false;
@@ -1723,8 +1723,8 @@ void enhance(const boost::property_tree::ptree& pt,
 
         // Test if an internal intersection edge. Must do this after setting
         // opposing edge index
-        if (!commercial_data && IsIntersectionInternal(&tilebuilder, reader, lock, startnode, nodeinfo, directededge,
-                                   j)) {
+        if (!commercial_data && IsIntersectionInternal(&tilebuilder, reader, lock, startnode,
+                                                       nodeinfo, directededge, j)) {
           directededge.set_internal(true);
         }
 
@@ -1737,8 +1737,8 @@ void enhance(const boost::property_tree::ptree& pt,
         // Enhance and add turn lanes if not an internal edge.
         if (!directededge.internal() && directededge.turnlanes()) {
           // Update turn lanes.
-          UpdateTurnLanes(osmdata, nodeinfo.edge_index() + j, directededge,
-                          nodeinfo, tilebuilder, reader, lock, turn_lanes);
+          UpdateTurnLanes(osmdata, nodeinfo.edge_index() + j, directededge, nodeinfo, tilebuilder,
+                          reader, lock, turn_lanes);
         }
 
         // Check for not_thru edge (only on low importance edges). Exclude
