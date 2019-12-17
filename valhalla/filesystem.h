@@ -10,6 +10,7 @@
 #include <cstdio>
 #include <cstring>
 #include <dirent.h>
+#include <iomanip>
 #include <memory>
 #include <string>
 #include <sys/stat.h>
@@ -113,17 +114,17 @@ private:
 
 template <class CharT, class Traits>
 std::basic_ostream<CharT, Traits>& operator<<(std::basic_ostream<CharT, Traits>& os, const path& p) {
-  // TODO: quote the string for space
-  os << p.string();
+  // paths get quoted to handle space
+  os << std::quoted(p.string(), CharT('"'), CharT('\\'));
   return os;
 }
 
 template <class CharT, class Traits>
 std::basic_istream<CharT, Traits>& operator>>(std::basic_istream<CharT, Traits>& is, path& p) {
+  // paths get unquoted to handle space
   std::string tmp;
-  // TODO: quote the string for space
-  is >> tmp;
-  p = path(tmp);
+  if (is >> std::quoted(tmp, CharT('"'), CharT('\\')))
+    p = std::move(tmp);
   return is;
 }
 
