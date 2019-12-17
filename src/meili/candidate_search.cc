@@ -109,7 +109,10 @@ CandidateQuery::WithinSquaredDistance(const midgard::PointLL& location,
 
     if (correlated.edges.size()) {
       // Add back if it is an edge correlated or it's a node correlated
-      // but it's not added yet
+      // but it's not added yet. By only allow one snapped_node per intersection match
+      // we are including one edge candidate that starts/ends on the snapped node.
+      // by the time we recover the route from edge candidates, the logic need to adjust
+      // the this edge candidate accordingly to the edge transition consistancy.
       if (!snapped_node.Is_Valid() || visited_nodes.insert(snapped_node).second) {
         candidates.emplace_back(std::move(correlated));
       }
