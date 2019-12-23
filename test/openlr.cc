@@ -1,5 +1,4 @@
 #include "midgard/openlr.h"
-#include "test.h"
 
 #include <boost/archive/iterators/base64_from_binary.hpp>
 #include <boost/archive/iterators/binary_from_base64.hpp>
@@ -8,6 +7,10 @@
 #include <iomanip>
 #include <sstream>
 #include <string>
+
+#include "test.h"
+
+namespace {
 
 using namespace valhalla::midgard::OpenLR;
 
@@ -61,36 +64,21 @@ const testfixture testfixtures[] = {{"CwOa9yUQACODBQEqAL4jEw==", 5.069987, 52.11
                                     {"C6i8rRtM3BjgAAAAAAUYAA==", -122.713562, 38.390942, 5.625,
                                      -122.713562, 38.390991, 5.625, 0, 0, 0}};
 
-namespace {
-
-void check_close(double value, double expected, const std::string& message, double abstol = 1e-5) {
-  if (std::abs(value - expected) > abstol) {
-    throw std::runtime_error(message + "  Was " + std::to_string(value) + ", expected " +
-                             std::to_string(expected));
-  }
-}
-
-void test_decode() {
+TEST(OpenLR, Decode) {
 
   for (auto& fixture : testfixtures) {
     auto locRef = LineLocation(decode64(fixture.descriptor));
 
-    check_close(locRef.getFirstCoordinate().lng(), fixture.expectedFirstCoordinateLongitude,
-                "First coordinate longitude incorrect.");
-    check_close(locRef.getFirstCoordinate().lat(), fixture.expectedFirstCoordinateLatitude,
-                "First coordinate latitude incorrect.");
-    check_close(locRef.first.bearing, fixture.expectedFirstCoordinateBearing,
-                "First bearing incorrect.");
-    check_close(locRef.getLastCoordinate().lng(), fixture.expectedLastCoordinateLongitude,
-                "Last coordinate longitude incorrect.");
-    check_close(locRef.getLastCoordinate().lat(), fixture.expectedLastCoordinateLatitude,
-                "Last coordinate latitude incorrect.");
-    check_close(locRef.last.bearing, fixture.expectedLastCoordinateBearing,
-                "Last bearing incorrect.");
+    EXPECT_NEAR(locRef.getFirstCoordinate().lng(), fixture.expectedFirstCoordinateLongitude, 1e-5);
+    EXPECT_NEAR(locRef.getFirstCoordinate().lat(), fixture.expectedFirstCoordinateLatitude, 1e-5);
+    EXPECT_NEAR(locRef.first.bearing, fixture.expectedFirstCoordinateBearing, 1e-5);
+    EXPECT_NEAR(locRef.getLastCoordinate().lng(), fixture.expectedLastCoordinateLongitude, 1e-5);
+    EXPECT_NEAR(locRef.getLastCoordinate().lat(), fixture.expectedLastCoordinateLatitude, 1e-5);
+    EXPECT_NEAR(locRef.last.bearing, fixture.expectedLastCoordinateBearing, 1e-5);
 
-    check_close(locRef.first.distance, fixture.expectedDistance, "Distance incorrect.", 1e-3);
-    check_close(locRef.poff, fixture.expectedPoff, "Positive offset incorrect.", 1e-3);
-    check_close(locRef.noff, fixture.expectedNoff, "Negative offset incorrect.", 1e-3);
+    EXPECT_NEAR(locRef.first.distance, fixture.expectedDistance, 1e-3);
+    EXPECT_NEAR(locRef.poff, fixture.expectedPoff, 1e-3);
+    EXPECT_NEAR(locRef.noff, fixture.expectedNoff, 1e-3);
 
     // This test can be faulty - we check if the coordinates and bearing are close (but not
     // exact) above. If they are not exact then this test will fail! Try again with expected
@@ -106,46 +94,37 @@ void test_decode() {
       locRef.first.distance = fixture.expectedDistance;
       locRef.poff = fixture.expectedPoff;
       locRef.noff = fixture.expectedNoff;
-      if (encode64(locRef.toBinary()) != fixture.descriptor) {
-        throw std::runtime_error("Incorrectly encoded reference " + encode64(locRef.toBinary()) +
-                                 ", expected " + fixture.descriptor);
-      }
+      EXPECT_EQ(encode64(locRef.toBinary()), fixture.descriptor);
     }
 #endif
   }
 }
 
-void test_internal_reference_points() {
+TEST(OpenLR, InternalReferencePoints) {
   auto location = "CwG1ASK3PhD82sz0CIAQ89r83hRxEAM=";
 
   auto locRef = LineLocation(decode64(location));
 
-  if (encode64(locRef.toBinary()) != location) {
-    throw std::runtime_error("Incorrectly encoded reference " + encode64(locRef.toBinary()) +
-                             ", expected " + location);
-  }
+  EXPECT_EQ(encode64(locRef.toBinary()), location);
+  EXPECT_EQ(locRef.intermediate.size(), 1) << "Incorrectly number of intermediate LRP";
 
-  if (locRef.intermediate.size() != 1) {
-    throw std::runtime_error("Incorrectly number of intermediate LRP");
-  }
+  EXPECT_NEAR(locRef.getFirstCoordinate().lng(), 2.400523, 1e-5);
+  EXPECT_NEAR(locRef.getFirstCoordinate().lat(), 48.819069, 1e-5);
+  EXPECT_NEAR(locRef.first.bearing, 320.625, 1e-5);
+  EXPECT_NEAR(locRef.first.distance, 12774.8, 1e-3);
 
-  check_close(locRef.getFirstCoordinate().lng(), 2.400523, "First coordinate longitude incorrect.");
-  check_close(locRef.getFirstCoordinate().lat(), 48.819069, "First coordinate latitude incorrect.");
-  check_close(locRef.first.bearing, 320.625, "First bearing incorrect.");
-  check_close(locRef.first.distance, 12774.8, "Distance incorrect.", 1e-3);
+  EXPECT_NEAR(locRef.intermediate[0].longitude, 2.269843, 1e-5);
+  EXPECT_NEAR(locRef.intermediate[0].latitude, 48.840829, 1e-5);
+  EXPECT_NEAR(locRef.intermediate[0].bearing, 219.375, 1e-5);
+  EXPECT_NEAR(locRef.intermediate[0].distance, 12774.8, 1e-3);
 
-  check_close(locRef.intermediate[0].longitude, 2.269843, "First coordinate longitude incorrect.");
-  check_close(locRef.intermediate[0].latitude, 48.840829, "First coordinate latitude incorrect.");
-  check_close(locRef.intermediate[0].bearing, 219.375, "First bearing incorrect.");
-  check_close(locRef.intermediate[0].distance, 12774.8, "Distance incorrect.", 1e-3);
+  EXPECT_NEAR(locRef.getLastCoordinate().lng(), 2.261823, 1e-5);
+  EXPECT_NEAR(locRef.getLastCoordinate().lat(), 48.893158, 1e-5);
+  EXPECT_NEAR(locRef.last.bearing, 39.375, 1e-5);
 
-  check_close(locRef.getLastCoordinate().lng(), 2.261823, "Last coordinate longitude incorrect.");
-  check_close(locRef.getLastCoordinate().lat(), 48.893158, "Last coordinate latitude incorrect.");
-  check_close(locRef.last.bearing, 39.375, "Last bearing incorrect.");
-
-  check_close(locRef.getLength(), 2 * 12774.8, "Distance incorrect.", 1e-3);
-  check_close(locRef.poff, 0, "Positive offset incorrect.", 1e-3);
-  check_close(locRef.noff, 0, "Negative offset incorrect.", 1e-3);
+  EXPECT_NEAR(locRef.getLength(), 2 * 12774.8, 1e-3);
+  EXPECT_NEAR(locRef.poff, 0, 1e-3);
+  EXPECT_NEAR(locRef.noff, 0, 1e-3);
 
   for (float poff = 0; poff < locRef.first.distance; poff += locRef.first.distance / 3) {
     for (float noff = 0; noff < locRef.intermediate[0].distance;
@@ -154,51 +133,37 @@ void test_internal_reference_points() {
       locRef.noff = noff;
       LineLocation tryRef(locRef.toBinary());
 
-      check_close(tryRef.getLength(), 2 * 12774.8, "Distance incorrect.", 1e-3);
-      check_close(tryRef.poff, locRef.poff, "Positive offset incorrect.", 58.6);
-      check_close(tryRef.noff, locRef.noff, "Negative offset incorrect.", 58.6);
+      EXPECT_NEAR(tryRef.getLength(), 2 * 12774.8, 1e-3) << "Distance incorrect.";
+      EXPECT_NEAR(tryRef.poff, locRef.poff, 58.6) << "Positive offset incorrect.";
+      EXPECT_NEAR(tryRef.noff, locRef.noff, 58.6) << "Negative offset incorrect.";
     }
   }
 
   locRef.intermediate.push_back(locRef.intermediate.front());
   locRef.intermediate.push_back(locRef.intermediate.front());
   locRef.intermediate.push_back(locRef.intermediate.front());
-  check_close(locRef.getLength(), 5 * 12774.8, "Distance incorrect.", 1e-3);
+  EXPECT_NEAR(locRef.getLength(), 5 * 12774.8, 1e-3) << "Distance incorrect.";
 
   auto hex = " 0b 01 b5 01 22 b7 3e 10 fc da cc f4 08 80 10 f3 da "
              "00 00 00 00 10 f3 da 00 00 00 00 10 f3 da 00 00 00 00 10 f3 da fc de 14 71 10 63 aa aa";
-  if (to_hex(locRef.toBinary()) != hex) {
-    throw std::runtime_error("Incorrectly encoded reference " + to_hex(locRef.toBinary()) +
-                             ", expected " + hex);
-  }
+  EXPECT_EQ(to_hex(locRef.toBinary()), hex) << "Incorrectly encoded reference";
 }
 
-void test_offsets_overrun() {
+TEST(OpenLR, OffsetsOverrun) {
   auto location = "CwG1ASK3PhD82sz0CIAQ89oAAAAAEPPa/N4UcRBj";
   auto locRef = LineLocation(decode64(location));
-  if (locRef.poff != 0.f || locRef.noff != 0.f) {
-    throw std::runtime_error("Non-zero positive " + std::to_string(locRef.poff) +
-                             " or negative offset " + std::to_string(locRef.noff));
-  }
+  EXPECT_EQ(locRef.poff, 0.f);
+  EXPECT_EQ(locRef.noff, 0.f);
 }
 
-void test_too_small_reference() {
+TEST(OpenLR, TooSmallReference) {
   auto location = "CwG1ASK3PhD82=";
-  try {
-    auto locRef = LineLocation(decode64(location));
-  } catch (const std::invalid_argument& e) { return; }
-  throw std::runtime_error("No error returned");
+  EXPECT_THROW(auto locRef = LineLocation(decode64(location)), std::invalid_argument);
 }
 
 } // namespace
 
-int main(void) {
-  test::suite suite("openlr");
-
-  suite.test(TEST_CASE(test_decode));
-  suite.test(TEST_CASE(test_internal_reference_points));
-  suite.test(TEST_CASE(test_offsets_overrun));
-  suite.test(TEST_CASE(test_too_small_reference));
-
-  return suite.tear_down();
+int main(int argc, char* argv[]) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

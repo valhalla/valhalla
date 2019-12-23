@@ -46,29 +46,21 @@ boost::shared_array<char> ToFileAndBack(const EdgeInfoBuilder& eibuilder) {
   return memblock;
 }
 
-void TestWriteRead() {
+TEST(EdgeInfoBuilder, TestWriteRead) {
   // Make a builder to write the info to disk
   EdgeInfoBuilder eibuilder;
 
   eibuilder.set_mean_elevation(kMinElevation - 100.0f);
-  if (eibuilder.mean_elevation() != kMinElevation) {
-    throw runtime_error("EdgeInfoBuilder mean_elevation test 1 failed");
-  }
+  EXPECT_EQ(eibuilder.mean_elevation(), kMinElevation);
 
   eibuilder.set_mean_elevation(kMaxElevation + 100.0f);
-  if (eibuilder.mean_elevation() != kMaxElevation) {
-    throw runtime_error("EdgeInfoBuilder mean_elevation test 2 failed");
-  }
+  EXPECT_EQ(eibuilder.mean_elevation(), kMaxElevation);
 
   eibuilder.set_mean_elevation(0.0f);
-  if (std::abs(eibuilder.mean_elevation()) > kElevationBinSize) {
-    throw runtime_error("EdgeInfoBuilder mean_elevation test 3 failed");
-  }
+  EXPECT_NEAR(eibuilder.mean_elevation(), 0, kElevationBinSize);
 
   eibuilder.set_mean_elevation(100.0f);
-  if (std::abs(eibuilder.mean_elevation() - 100.0f) > kElevationBinSize) {
-    throw runtime_error("EdgeInfoBuilder mean_elevation test 4 failed");
-  }
+  EXPECT_NEAR(eibuilder.mean_elevation(), 100.0f, kElevationBinSize);
 
   // Name
   std::vector<NameInfo> name_info_list;
@@ -90,31 +82,23 @@ void TestWriteRead() {
   // TODO: errors thrown should say what was found and what was expected
 
   // Validate the read in fields to the original EdgeInfoBuilder
-  if (!(name_info_list.size() == ei->name_count()))
-    throw runtime_error("WriteRead:name_count test failed");
-  if (!(shape.size() == ei->shape().size()))
-    throw runtime_error("WriteRead:shape_count test failed");
+  EXPECT_EQ(name_info_list.size(), ei->name_count());
+  EXPECT_EQ(shape.size(), ei->shape().size());
 
   // Check the name indices
   for (uint8_t i = 0; i < ei->name_count(); ++i) {
-    if (name_info_list[i].name_offset_ != ei->GetNameInfo(i).name_offset_)
-      throw runtime_error("WriteRead:NameOffset test failed");
+    EXPECT_EQ(name_info_list[i].name_offset_, ei->GetNameInfo(i).name_offset_);
   }
 
   // Check the shape points
   for (size_t i = 0; i < ei->shape().size(); ++i) {
-    if (!shape[i].ApproximatelyEqual(ei->shape()[i]))
-      throw runtime_error("WriteRead:shape test failed");
+    ASSERT_TRUE(shape[i].ApproximatelyEqual(ei->shape()[i])) << "index " << i;
   }
 }
 
 } // namespace
 
-int main() {
-  test::suite suite("edgeinfobuilder");
-
-  // Write to file and read into EdgeInfo
-  suite.test(TEST_CASE(TestWriteRead));
-
-  return suite.tear_down();
+int main(int argc, char* argv[]) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

@@ -1,5 +1,3 @@
-#include "test.h"
-
 #include <iostream>
 #include <string>
 #include <vector>
@@ -7,6 +5,8 @@
 #include "baldr/graphreader.h"
 #include "baldr/rapidjson_utils.h"
 #include <boost/property_tree/ptree.hpp>
+
+#include "test.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -43,55 +43,51 @@ struct bb_tester {
   }
 };
 
-// an approximate inequality measure
-bool operator!=(const AABB2<PointLL>& a, const AABB2<PointLL>& b) {
-  return !(a.minpt().ApproximatelyEqual(b.minpt(), 0.000001f) &&
-           a.maxpt().ApproximatelyEqual(b.maxpt(), 0.000001f));
+bool ApproxEqual(const AABB2<PointLL>& a, const AABB2<PointLL>& b) {
+  return a.minpt().ApproximatelyEqual(b.minpt(), 0.000001f) &&
+         a.maxpt().ApproximatelyEqual(b.maxpt(), 0.000001f);
 }
 
-void utrecht_bb() {
+TEST(MinBB, utrecht_bb) {
   bb_tester t("test/data/utrecht_tiles");
-  if (!t.bb.minpt().IsValid() || !t.bb.maxpt().IsValid())
-    throw std::logic_error("actual data should have a valid bounding box");
 
-  if (t(t.bb) != t.bb)
-    throw std::logic_error("Expanding the bbox from the largest bbox shouldn't change the bbox");
+  EXPECT_TRUE(t.bb.minpt().IsValid());
+  EXPECT_TRUE(t.bb.maxpt().IsValid());
+
+  EXPECT_PRED2(ApproxEqual, t(t.bb), t.bb)
+      << "Expanding the bbox from the largest bbox shouldn't change the bbox";
 
   AABB2<PointLL> sbb(t.bb.minpt() + Vector2(0.0001f, 0.0001f),
                      t.bb.maxpt() - Vector2(0.0001f, 0.0001f));
-  if (t(sbb) != t.bb)
-    throw std::logic_error("Expanding a slightly smaller bbox shouldn't change the bbox");
+
+  EXPECT_PRED2(ApproxEqual, t(sbb), t.bb)
+      << "Expanding a slightly smaller bbox shouldn't change the bbox";
 
   AABB2<PointLL> lbb(t.bb.minpt() - Vector2(0.0001f, 0.0001f),
                      t.bb.maxpt() + Vector2(0.0001f, 0.0001f));
-  if (t(lbb) != t.bb)
-    throw std::logic_error("Expanding a slightly larger bbox shouldn't change the bbox");
+
+  EXPECT_PRED2(ApproxEqual, t(lbb), t.bb)
+      << "Expanding a slightly larger bbox shouldn't change the bbox";
 }
 
-void null_bb() {
+TEST(MinBB, null_bb) {
   bb_tester t("");
-  if (t.bb.minpt().IsValid() || t.bb.maxpt().IsValid())
-    throw std::logic_error("no dataset should have an invalid bounding box");
+
+  // no dataset should have an invalid bounding box
+  EXPECT_FALSE(t.bb.minpt().IsValid());
+  EXPECT_FALSE(t.bb.maxpt().IsValid());
 
   auto bb = t(t.bb);
-  if (bb != t.bb)
-    throw std::logic_error("reader should also give back invalid bounding box");
+  EXPECT_EQ(bb, t.bb) << "reader should also give back invalid bounding box";
 
   bb = t(AABB2<PointLL>{});
-  if (bb != t.bb)
-    throw std::logic_error("reader should still give back invalid bounding box");
+  EXPECT_EQ(bb, t.bb) << "reader should still give back invalid bounding box";
 }
 
 } // namespace
 
 int main(int argc, char* argv[]) {
-  test::suite suite("Minimum Bounding Box");
-
   valhalla::midgard::logging::Configure({{"type", ""}});
-
-  suite.test(TEST_CASE(utrecht_bb));
-
-  suite.test(TEST_CASE(null_bb));
-
-  return suite.tear_down();
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

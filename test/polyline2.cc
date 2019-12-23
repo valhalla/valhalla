@@ -1,13 +1,12 @@
 #include "midgard/polyline2.h"
 #include <cstdint>
 
-#include "test.h"
-
 #include <algorithm>
-#include <iostream>
 #include <vector>
 
 #include "midgard/point2.h"
+
+#include "test.h"
 
 using namespace std;
 using namespace valhalla::midgard;
@@ -19,44 +18,39 @@ void TryGeneralizeAndLength(Polyline2<Point2>& pl, const float& gen, const float
 
   std::vector<Point2> pts = pl.pts();
 
-  if (pl.pts().size() != 2)
-    throw runtime_error("Generalize #1 test failed.");
-
-  if ((pts[0] != Point2(25.0f, 25.0f)) || (pts[1] != Point2(50.0f, 100.0f))) {
-    throw runtime_error("Generalize #2 test failed.");
-  }
+  EXPECT_EQ(pl.pts().size(), 2);
+  EXPECT_EQ(pts[0], Point2(25.0f, 25.0f));
+  EXPECT_EQ(pts[1], Point2(50.0f, 100.0f));
 
   Polyline2<Point2> pl2;
   pl2 = pl.GeneralizedPolyline(gen);
 
-  if (pl2.pts().size() != 2)
-    throw runtime_error("Generalize #3 test failed.");
+  EXPECT_EQ(pl2.pts().size(), 2);
+  EXPECT_EQ(pl2.pts().at(0), Point2(25.0f, 25.0f));
+  EXPECT_EQ(pl2.pts().at(1), Point2(50.0f, 100.0f));
 
-  if ((pl2.pts().at(0) != Point2(25.0f, 25.0f)) || (pl2.pts().at(1) != Point2(50.0f, 100.0f))) {
-    throw runtime_error("Generalize #2 test failed.");
-  }
-
-  if (!(fabs(pl2.Length() - res) > kEpsilon))
-    throw runtime_error("Length test failed.");
+  // TODO: there was a bug in test and it never ran
+  // TODO: currently it doesn't compare up to kEpsilon precision
+  EXPECT_NEAR(pl2.Length(), res, 1e-4);
 }
 
-void TestGeneralizeAndLength() {
+TEST(Polyline2, TestGeneralizeAndLength) {
   std::vector<Point2> pts = {Point2(25.0f, 25.0f), Point2(50.0f, 50.0f), Point2(25.0f, 75.0f),
                              Point2(50.0f, 100.0f)};
   Polyline2<Point2> pl(pts);
   TryGeneralizeAndLength(pl, 100.0f, 79.0569f);
 }
 
-void TestGeneralizeSimplification() {
+TEST(Polyline2, TestGeneralizeSimplification) {
   Polyline2<Point2> line{{{17, 0}, {17, 1}, {17, 2}, {17, 3}, {17, 4}, {17, 5}}};
 
   line.Generalize(1, std::unordered_set<size_t>{2, 4});
-  if (!(line == Polyline2<Point2>{{{17, 0}, {17, 2}, {17, 4}, {17, 5}}}))
-    throw std::logic_error("Should have removed all but the first, last and marked points");
+  EXPECT_EQ(line, (Polyline2<Point2>{{{17, 0}, {17, 2}, {17, 4}, {17, 5}}}))
+      << "Should have removed all but the first, last and marked points";
 
   line.Generalize(1, std::unordered_set<size_t>{2});
-  if (!(line == Polyline2<Point2>{{{17, 0}, {17, 4}, {17, 5}}}))
-    throw std::logic_error("Should have removed all but the first, last and marked points");
+  EXPECT_EQ(line, (Polyline2<Point2>{{{17, 0}, {17, 4}, {17, 5}}}))
+      << "Should have removed all but the first, last and marked points";
 
   Polyline2<PointLL> line1{
       {{-76.58489, 40.31402}, {-76.58496, 40.31411}, {-76.58506, 40.31416}, {-76.58521, 40.31414},
@@ -74,8 +68,8 @@ void TestGeneralizeSimplification() {
                                     {-76.59371, 40.32189}, {-76.59971, 40.31932},
                                     {-76.6011, 40.31905}};
   for (const auto& p : remaining) {
-    if (std::find(line1.pts().cbegin(), line1.pts().cend(), p) == line1.pts().cend())
-      throw std::logic_error("Should still have at least the first, last and marked points");
+    ASSERT_NE(std::find(line1.pts().cbegin(), line1.pts().cend(), p), line1.pts().cend())
+        << "Should still have at least the first, last and marked points";
   }
 
   Polyline2<Point2> line2{{{-79.3837, 43.6481},
@@ -96,14 +90,14 @@ void TestGeneralizeSimplification() {
                            {-79.3838, 43.6496}}};
   line2.Generalize(2.6f, std::unordered_set<size_t>{15, 14, 13, 0, 10, 6, 9});
 
-  if (!(line2 == Polyline2<Point2>{{{-79.3837, 43.6481},
-                                    {-79.3842, 43.6492},
-                                    {-79.384, 43.6493},
-                                    {-79.3841, 43.6496},
-                                    {-79.3839, 43.6496},
-                                    {-79.3839, 43.6496},
-                                    {-79.3838, 43.6496}}}))
-    throw std::logic_error("Wrong points removed.");
+  EXPECT_EQ(line2, (Polyline2<Point2>{{{-79.3837, 43.6481},
+                                       {-79.3842, 43.6492},
+                                       {-79.384, 43.6493},
+                                       {-79.3841, 43.6496},
+                                       {-79.3839, 43.6496},
+                                       {-79.3839, 43.6496},
+                                       {-79.3838, 43.6496}}}))
+      << "Wrong points removed.";
 
   Polyline2<Point2> line3{{{-79.3837, 43.6481},
                            {-79.3839, 43.6485},
@@ -123,19 +117,15 @@ void TestGeneralizeSimplification() {
                            {-79.3838, 43.6496}}};
   line3.Generalize(0.f);
 
-  if (line3.pts().size() != 16)
-    throw std::logic_error("No points should be removed.");
+  EXPECT_EQ(line3.pts().size(), 16) << "No points should be removed.";
 }
 
 void TryClosestPoint(const Polyline2<Point2>& pl, const Point2& a, const Point2& b) {
-
   auto result = pl.ClosestPoint(a);
-
-  if (std::get<0>(result) != b)
-    throw runtime_error("ClosestPoint test failed.");
+  EXPECT_EQ(std::get<0>(result), b);
 }
 
-void TestClosestPoint() {
+TEST(Polyline2, TestClosestPoint) {
   Point2 a(25.0f, 25.0f);
   Point2 b(50.0f, 50.0f);
   Point2 c(25.0f, 75.0f);
@@ -161,22 +151,18 @@ void TestClosestPoint() {
 void TryClip(Polyline2<Point2>& pl, const AABB2<Point2>& a, const uint32_t exp) {
   // Clip and check vertex count and 1st 2 points
   uint32_t x = pl.Clip(a);
-  if (x != exp)
-    throw runtime_error("Clip test failed: count not correct");
+  EXPECT_EQ(x, exp) << "Clip test failed: count not correct";
 
-  if ((pl.pts().at(0) != Point2(25.0f, 25.0f)) || (pl.pts().at(1) != Point2(50.0f, 50.0f))) {
-    throw runtime_error("Clip test failed: clipped points not correct");
-  }
+  EXPECT_EQ(pl.pts().at(0), Point2(25.0f, 25.0f));
+  EXPECT_EQ(pl.pts().at(1), Point2(50.0f, 50.0f));
 }
 
 void TryClipOutside(Polyline2<Point2>& pl, const AABB2<Point2>& a) {
   uint32_t x = pl.Clip(a);
-  if (x != 0) {
-    throw runtime_error("Clip test failed: all vertices outside so count should be 0");
-  }
+  EXPECT_EQ(x, 0) << "Clip test failed: all vertices outside so count should be 0";
 }
 
-void TestClip() {
+TEST(Polyline2, TestClip) {
   std::vector<Point2> pts = {Point2(25.0f, 25.0f), Point2(50.0f, 50.0f), Point2(25.0f, 75.0f),
                              Point2(50.0f, 100.0f)};
   Polyline2<Point2> pl(pts);
@@ -206,15 +192,13 @@ void TestClip() {
 void TryClippedPolyline(Polyline2<Point2>& pl, const AABB2<Point2>& a, const uint32_t exp) {
   Polyline2<Point2> pl2 = pl.ClippedPolyline(a);
   uint32_t x = pl2.pts().size();
-  if (x != 2)
-    throw runtime_error("ClippedPolyline test failed: count not correct");
+  EXPECT_EQ(x, 2) << "count not correct";
 
-  if ((pl2.pts().at(0) != Point2(25.0f, 25.0f)) || (pl2.pts().at(1) != Point2(50.0f, 50.0f))) {
-    throw runtime_error("ClippedPolyline test failed: clipped points not correct");
-  }
+  EXPECT_EQ(pl2.pts().at(0), Point2(25.0f, 25.0f));
+  EXPECT_EQ(pl2.pts().at(1), Point2(50.0f, 50.0f));
 }
 
-void TestClippedPolyline() {
+TEST(Polyline2, TestClippedPolyline) {
   std::vector<Point2> pts = {Point2(25.0f, 25.0f), Point2(50.0f, 50.0f), Point2(25.0f, 75.0f),
                              Point2(50.0f, 100.0f)};
   Polyline2<Point2> pl(pts);
@@ -223,23 +207,7 @@ void TestClippedPolyline() {
 
 } // namespace
 
-int main() {
-  test::suite suite("polyline2");
-
-  // Test Generalize
-  suite.test(TEST_CASE(TestGeneralizeAndLength));
-
-  // Test Generalize for which points are removed
-  suite.test(TEST_CASE(TestGeneralizeSimplification));
-
-  // Test distance of a point to a line segment
-  suite.test(TEST_CASE(TestClosestPoint));
-
-  // Test clip
-  suite.test(TEST_CASE(TestClip));
-
-  // Test clipped polyline
-  suite.test(TEST_CASE(TestClippedPolyline));
-
-  return suite.tear_down();
+int main(int argc, char* argv[]) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

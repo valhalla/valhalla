@@ -1,6 +1,5 @@
 #include "midgard/encoded.h"
-#include "midgard/pointll.h"
-#include "midgard/util.h"
+
 #include "test.h"
 
 #include <string>
@@ -12,15 +11,12 @@ namespace {
 
 using container_t = std::vector<std::pair<double, double>>;
 
-bool appx_equal(const container_t& a, const container_t& b, const float epsilon = 0.00001f) {
-  if (a.size() != b.size())
-    return false;
+void assert_approx_equal(const container_t& a, const container_t& b, const float epsilon = 0.00001f) {
+  ASSERT_EQ(a.size(), b.size());
   for (size_t i = 0; i < a.size(); ++i) {
-    if (!equal<float>(a[i].first, b[i].first, epsilon) ||
-        !equal<float>(a[i].second, b[i].second, epsilon))
-      return false;
+    ASSERT_NEAR(a[i].first, b[i].first, epsilon) << "i: " + std::to_string(i);
+    ASSERT_NEAR(a[i].second, b[i].second, epsilon) << "i: " + std::to_string(i);
   }
-  return true;
 }
 
 // need ostream operators for some of these types
@@ -37,47 +33,38 @@ std::string to_string(const container_t& points) {
 
 void do_polyline_pair(const container_t& points, const std::string& encoded) {
   auto enc_answer = encode<container_t>(points);
-  if (enc_answer != encoded)
-    throw std::runtime_error("Simple polyline encoding failed. Expected: " + encoded +
-                             " Got: " + enc_answer);
+  EXPECT_EQ(enc_answer, encoded) << "Simple polyline encoding failed";
+
   auto dec_answer = decode<container_t>(encoded);
-  if (!appx_equal(dec_answer, points))
-    throw std::runtime_error("Simple polyline decoding failed. Expected: " + to_string(points) +
-                             " Got: " + to_string(dec_answer));
+  assert_approx_equal(dec_answer, points);
 
   // cant run this thorough of a test due to accumulation of error
-  /*if(encode<container_t>(decode<container_t>(encoded)) != encoded)
-    throw std::runtime_error("Nested polyline encoding of a decoding failed");
-  if(appx_equal(decode<container_t>(encode<container_t>(points)), points))
-    throw std::runtime_error("Nested polyline decoding of an encoding failed");*/
+  //  EXPECT_EQ(encode<container_t>(decode<container_t>(encoded)), encoded)
+  //    << "Nested polyline encoding of a decoding failed";
+  //  assert_approx_equal(decode<container_t>(encode<container_t>(points)), points);
 }
 
 void do_polyline_pair5(const container_t& points, const std::string& encoded) {
   auto enc_answer = encode<container_t>(points, 1e5);
-  if (enc_answer != encoded)
-    throw std::runtime_error("Simple polyline encoding failed. Expected: " + encoded +
-                             " Got: " + enc_answer);
+  EXPECT_EQ(enc_answer, encoded) << "Simple polyline encoding failed";
 
   // Decode the answer, use a lower epsilon when comparing
   auto dec_answer = decode<container_t>(enc_answer, 1e-5);
-  if (!appx_equal(dec_answer, points, 0.00005f))
-    throw std::runtime_error("Simple polyline decoding failed. Expected: " + to_string(points) +
-                             " Got: " + to_string(dec_answer));
+
+  assert_approx_equal(dec_answer, points, 0.00005f);
 }
 
 void do_varint_pair(const container_t& points) {
   auto enc_answer = encode7<container_t>(points);
   auto dec_answer = decode7<container_t>(enc_answer);
-  if (!appx_equal(dec_answer, points))
-    throw std::runtime_error("Simple varint encode decode loop failed. Expected: " +
-                             to_string(points) + " Got: " + to_string(dec_answer));
+
+  assert_approx_equal(dec_answer, points);
 }
 
-void test_polyline5() {
+TEST(Encode, Polyline5) {
   // check an easy case first just to be sure its working
   auto encoded = encode<container_t>({{-76.3002, 40.0433}, {-76.3036, 40.043}}, 1e5);
-  if (encoded != "s}ksFfkupMz@fT")
-    throw std::runtime_error("Expected: s}ksFfkupMz@fT but got: " + encoded);
+  EXPECT_EQ(encoded, "s}ksFfkupMz@fT");
 
   do_polyline_pair5({{41.37084, -5.03016}, {76.8342, 42.01251}}, "pmu]wfo{Fw_c~G_mmwE");
 
@@ -94,7 +81,7 @@ void test_polyline5() {
       "y|}~[fqox@jqrzEyjkm@~yfza@vmvgL}k~uXwkpcYrprzZ`ow~DisbzDrh{lSaebeCxqna@u~eoW}iq{Gnip|r@cdoeP");
 }
 
-void test_polyline() {
+TEST(Encode, Polyline) {
   /**
    * #to generate these a new test cases grab google polyline encoder for python:
    * wget "https://py-gpolyencode.googlecode.com/svn/trunk/python/gpolyencode.py"
@@ -108,8 +95,7 @@ void test_polyline() {
 
   // check an easy case first just to be sure its working
   auto encoded = encode<container_t>({{-76.3002, 40.0433}, {-76.3036, 40.043}});
-  if (encoded != "gq`kkAny~opCvQnsE")
-    throw std::runtime_error("Expected: gq`kkAny~opCvQnsE but got: " + encoded);
+  EXPECT_EQ(encoded, "gq`kkAny~opCvQnsE");
 
   // note we are testing with higher precision to avoid truncation/roundoff errors just to make the
   // test cases easier to generate
@@ -404,7 +390,7 @@ void test_polyline() {
                    "zwI{{datFklv|wA~glffOgr``kD");
 }
 
-void test_varint() {
+TEST(Encode, VarInt) {
   do_varint_pair({{41.37084, -5.03016}, {76.8342, 42.01251}});
   do_varint_pair({{-86.36737, 90.75251},   {22.62106, 29.07404},    {-29.06206, -163.63365},
                   {-37.89193, 2.07912},    {-21.17342, -109.54591}, {21.73208, 2.41464},
@@ -632,12 +618,7 @@ void test_varint() {
 
 } // namespace
 
-int main() {
-  test::suite suite("encode_decode");
-
-  suite.test(TEST_CASE(test_polyline));
-  suite.test(TEST_CASE(test_polyline5));
-  suite.test(TEST_CASE(test_varint));
-
-  return suite.tear_down();
+int main(int argc, char* argv[]) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

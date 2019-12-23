@@ -91,13 +91,11 @@ void TrySetSimpleDirectionalManeuverType(uint32_t turn_degree, DirectionsLeg_Man
   maneuver.set_begin_node_index(1);
   maneuver.set_turn_degree(turn_degree);
   mbTest.SetSimpleDirectionalManeuverType(maneuver);
-  if (maneuver.type() != expected) {
-    throw std::runtime_error("Incorrect maneuver type for turn degree=" +
-                             std::to_string(turn_degree));
-  }
+  EXPECT_EQ(maneuver.type(), expected)
+      << "Incorrect maneuver type for turn degree=" + std::to_string(turn_degree);
 }
 
-void TestSetSimpleDirectionalManeuverType() {
+TEST(Maneuversbuilder, TestSetSimpleDirectionalManeuverType) {
   // Continue lower bound
   TrySetSimpleDirectionalManeuverType(350, DirectionsLeg_Maneuver_Type_kContinue);
   // Continue middle
@@ -161,11 +159,10 @@ void TestSetSimpleDirectionalManeuverType() {
 void TryDetermineCardinalDirection(uint32_t heading,
                                    DirectionsLeg_Maneuver_CardinalDirection expected) {
   ManeuversBuilderTest mbTest;
-  if (mbTest.DetermineCardinalDirection(heading) != expected)
-    throw std::runtime_error("Incorrect cardinal direction");
+  EXPECT_EQ(mbTest.DetermineCardinalDirection(heading), expected) << "Incorrect cardinal direction";
 }
 
-void TestDetermineCardinalDirection() {
+TEST(Maneuversbuilder, TestDetermineCardinalDirection) {
   // North lower bound
   TryDetermineCardinalDirection(337, DirectionsLeg_Maneuver_CardinalDirection_kNorth);
   // North middle
@@ -253,14 +250,13 @@ void TryDetermineRelativeDirection_Maneuver(uint32_t prev_heading,
   maneuver.set_begin_node_index(1);
   maneuver.set_turn_degree(valhalla::midgard::GetTurnDegree(prev_heading, curr_heading));
   mbTest.DetermineRelativeDirection(maneuver);
-  if (maneuver.begin_relative_direction() != expected) {
-    throw std::runtime_error(std::string("Incorrect relative direction: ") +
-                             std::to_string(static_cast<int>(maneuver.begin_relative_direction())) +
-                             " | expected: " + std::to_string(static_cast<int>(expected)));
-  }
+  EXPECT_EQ(maneuver.begin_relative_direction(), expected)
+      << std::string("Incorrect relative direction: ") +
+             std::to_string(static_cast<int>(maneuver.begin_relative_direction())) +
+             " | expected: " + std::to_string(static_cast<int>(expected));
 }
 
-void TestDetermineRelativeDirection_Maneuver() {
+TEST(Maneuversbuilder, TestDetermineRelativeDirection_Maneuver) {
   // Path straight, intersecting straight on the left - thus keep right
   TryDetermineRelativeDirection_Maneuver(0, 5, {355}, Maneuver::RelativeDirection::kKeepRight);
 
@@ -301,11 +297,11 @@ void TestDetermineRelativeDirection_Maneuver() {
 }
 
 void TryDetermineRelativeDirection(uint32_t turn_degree, Maneuver::RelativeDirection expected) {
-  if (ManeuversBuilderTest::DetermineRelativeDirection(turn_degree) != expected)
-    throw std::runtime_error("Incorrect relative direction");
+  EXPECT_EQ(ManeuversBuilderTest::DetermineRelativeDirection(turn_degree), expected)
+      << "Incorrect relative direction";
 }
 
-void TestDetermineRelativeDirection() {
+TEST(Maneuversbuilder, TestDetermineRelativeDirection) {
   // kKeepStraight lower bound
   TryDetermineRelativeDirection(330, Maneuver::RelativeDirection::kKeepStraight);
   // kKeepStraight middle
@@ -340,22 +336,13 @@ void TryCombine(ManeuversBuilderTest& mbTest,
                 std::list<Maneuver>& expected_maneuvers) {
   mbTest.Combine(maneuvers);
 
-  if (maneuvers.size() != expected_maneuvers.size())
-    throw std::runtime_error(
-        "Incorrect maneuver count: " + std::to_string(maneuvers.size()) +
-        " | Expected maneuver count=" + std::to_string(expected_maneuvers.size()));
+  EXPECT_EQ(maneuvers.size(), expected_maneuvers.size());
+
   for (auto man = maneuvers.begin(), expected_man = expected_maneuvers.begin();
        man != maneuvers.end(); ++man, ++expected_man) {
-    if (man->type() != expected_man->type())
-      throw std::runtime_error("Incorrect maneuver type: " + std::to_string(man->type()) +
-                               "  |  expected: " + std::to_string(expected_man->type()));
-    if (!equal<float>(man->length(), expected_man->length())) {
-      throw std::runtime_error("Incorrect maneuver distance=" + std::to_string(man->length()) +
-                               std::string(" | Expected distance=") +
-                               std::to_string(expected_man->length()));
-    }
-    if (man->time() != expected_man->time())
-      throw std::runtime_error("Incorrect maneuver time");
+    EXPECT_EQ(man->type(), expected_man->type());
+    EXPECT_NEAR(man->length(), expected_man->length(), .00001);
+    EXPECT_EQ(man->time(), expected_man->time()) << "Incorrect maneuver time";
   }
 }
 
@@ -575,7 +562,7 @@ void PopulateManeuver(Maneuver& maneuver,
   maneuver.set_verbal_multi_cue(verbal_multi_cue);
 }
 
-void TestLeftInternalStraightCombine() {
+TEST(Maneuversbuilder, TestLeftInternalStraightCombine) {
   Options options;
   TripLeg path;
   TripLeg_Node* node;
@@ -716,7 +703,7 @@ void TestLeftInternalStraightCombine() {
   TryCombine(mbTest, maneuvers, expected_maneuvers);
 }
 
-void TestStraightInternalLeftCombine() {
+TEST(Maneuversbuilder, TestStraightInternalLeftCombine) {
   Options options;
   TripLeg path;
   TripLeg_Node* node;
@@ -881,7 +868,7 @@ void TestStraightInternalLeftCombine() {
   TryCombine(mbTest, maneuvers, expected_maneuvers);
 }
 
-void TestStraightInternalLeftInternalCombine() {
+TEST(Maneuversbuilder, TestStraightInternalLeftInternalCombine) {
   Options options;
   TripLeg path;
   TripLeg_Node* node;
@@ -986,7 +973,7 @@ void TestStraightInternalLeftInternalCombine() {
   TryCombine(mbTest, maneuvers, expected_maneuvers);
 }
 
-void TestStraightInternalStraightCombine() {
+TEST(Maneuversbuilder, TestStraightInternalStraightCombine) {
   Options options;
   TripLeg path;
   TripLeg_Node* node;
@@ -1136,7 +1123,7 @@ void TestStraightInternalStraightCombine() {
   TryCombine(mbTest, maneuvers, expected_maneuvers);
 }
 
-void TestLeftInternalUturnCombine() {
+TEST(Maneuversbuilder, TestLeftInternalUturnCombine) {
   Options options;
   TripLeg path;
   TripLeg_Node* node;
@@ -1230,7 +1217,7 @@ void TestLeftInternalUturnCombine() {
   TryCombine(mbTest, maneuvers, expected_maneuvers);
 }
 
-void TestLeftInternalUturnProperDirectionCombine() {
+TEST(Maneuversbuilder, TestLeftInternalUturnProperDirectionCombine) {
   Options options;
   TripLeg path;
   TripLeg_Node* node;
@@ -1331,7 +1318,7 @@ void TestLeftInternalUturnProperDirectionCombine() {
   TryCombine(mbTest, maneuvers, expected_maneuvers);
 }
 
-void TestStraightInternalLeftInternalStraightInternalUturnCombine() {
+TEST(Maneuversbuilder, TestStraightInternalLeftInternalStraightInternalUturnCombine) {
   Options options;
   TripLeg path;
   TripLeg_Node* node;
@@ -1440,7 +1427,7 @@ void TestStraightInternalLeftInternalStraightInternalUturnCombine() {
   TryCombine(mbTest, maneuvers, expected_maneuvers);
 }
 
-void TestInternalPencilPointUturnProperDirectionCombine() {
+TEST(Maneuversbuilder, TestInternalPencilPointUturnProperDirectionCombine) {
   Options options;
   TripLeg path;
   TripLeg_Node* node;
@@ -1540,7 +1527,7 @@ void TestInternalPencilPointUturnProperDirectionCombine() {
   TryCombine(mbTest, maneuvers, expected_maneuvers);
 }
 
-void TestSimpleRightTurnChannelCombine() {
+TEST(Maneuversbuilder, TestSimpleRightTurnChannelCombine) {
   Options options;
   TripLeg path;
   TripLeg_Node* node;
@@ -1637,16 +1624,15 @@ void TryCountAndSortExitSigns(std::list<Maneuver>& maneuvers,
   ManeuversBuilderTest mbTest;
   mbTest.CountAndSortSigns(maneuvers);
 
-  if (maneuvers.size() != expected_maneuvers.size())
-    throw std::runtime_error("Incorrect maneuver count");
+  ASSERT_EQ(maneuvers.size(), expected_maneuvers.size()) << "Incorrect maneuver count";
+
   for (auto man = maneuvers.begin(), expected_man = expected_maneuvers.begin();
        man != maneuvers.end(); ++man, ++expected_man) {
-    if (!(man->signs() == expected_man->signs()))
-      throw std::runtime_error("Maneuver signs do not match expected");
+    EXPECT_EQ(man->signs(), expected_man->signs()) << "Maneuver signs do not match expected";
   }
 }
 
-void TestCountAndSortExitSigns() {
+TEST(Maneuversbuilder, TestCountAndSortExitSigns) {
 
   ///////////////////////////////////////////////////////////////////////////
   // Create maneuver list
@@ -1755,13 +1741,10 @@ void TryIsIntersectingForwardEdge(ManeuversBuilderTest& mbTest, int node_index, 
   bool intersecting_forward_link =
       mbTest.IsIntersectingForwardEdge(node_index, prev_edge.get(), curr_edge.get());
 
-  if (intersecting_forward_link != expected) {
-    throw std::runtime_error("Incorrect intersecting forward link value - expected: " +
-                             std::to_string(expected));
-  }
+  EXPECT_EQ(intersecting_forward_link, expected);
 }
 
-void TestPathRightXStraightIsIntersectingForwardEdge() {
+TEST(Maneuversbuilder, TestPathRightXStraightIsIntersectingForwardEdge) {
   Options options;
   TripLeg path;
   TripLeg_Node* node;
@@ -1793,7 +1776,7 @@ void TestPathRightXStraightIsIntersectingForwardEdge() {
   TryIsIntersectingForwardEdge(mbTest, 1, true);
 }
 
-void TestPathLeftXStraightIsIntersectingForwardEdge() {
+TEST(Maneuversbuilder, TestPathLeftXStraightIsIntersectingForwardEdge) {
   Options options;
   TripLeg path;
   TripLeg_Node* node;
@@ -1825,7 +1808,7 @@ void TestPathLeftXStraightIsIntersectingForwardEdge() {
   TryIsIntersectingForwardEdge(mbTest, 1, true);
 }
 
-void TestPathSlightRightXSlightLeftIsIntersectingForwardEdge() {
+TEST(Maneuversbuilder, TestPathSlightRightXSlightLeftIsIntersectingForwardEdge) {
   Options options;
   TripLeg path;
   TripLeg_Node* node;
@@ -1859,59 +1842,7 @@ void TestPathSlightRightXSlightLeftIsIntersectingForwardEdge() {
 
 } // namespace
 
-int main() {
-  test::suite suite("maneuversbuilder");
-
-  // SetSimpleDirectionalManeuverType
-  suite.test(TEST_CASE(TestSetSimpleDirectionalManeuverType));
-
-  // DetermineCardinalDirection
-  suite.test(TEST_CASE(TestDetermineCardinalDirection));
-
-  // DetermineRelativeDirection_Maneuver
-  suite.test(TEST_CASE(TestDetermineRelativeDirection_Maneuver));
-
-  // DetermineRelativeDirection
-  suite.test(TEST_CASE(TestDetermineRelativeDirection));
-
-  // LeftInternalStraightCombine
-  suite.test(TEST_CASE(TestLeftInternalStraightCombine));
-
-  // StraightInternalLeftCombine
-  suite.test(TEST_CASE(TestStraightInternalLeftCombine));
-
-  // StraightInternalLeftInternalCombine
-  suite.test(TEST_CASE(TestStraightInternalLeftInternalCombine));
-
-  // StraightInternalStraightCombine
-  suite.test(TEST_CASE(TestStraightInternalStraightCombine));
-
-  // LeftInternalUturnCombine
-  suite.test(TEST_CASE(TestLeftInternalUturnCombine));
-
-  // LeftInternalUturnProperDirectionCombine
-  suite.test(TEST_CASE(TestLeftInternalUturnProperDirectionCombine));
-
-  // StraightInternalLeftInternalStraightInternalUturnCombine
-  suite.test(TEST_CASE(TestStraightInternalLeftInternalStraightInternalUturnCombine));
-
-  // InternalPencilPointUturnProperDirectionCombine
-  suite.test(TEST_CASE(TestInternalPencilPointUturnProperDirectionCombine));
-
-  // SimpleRightTurnChannelCombine
-  suite.test(TEST_CASE(TestSimpleRightTurnChannelCombine));
-
-  // CountAndSortExitSigns
-  suite.test(TEST_CASE(TestCountAndSortExitSigns));
-
-  // PathRightXStraightIsIntersectingForwardEdge
-  suite.test(TEST_CASE(TestPathRightXStraightIsIntersectingForwardEdge));
-
-  // PathLeftXStraightIsIntersectingForwardEdge
-  suite.test(TEST_CASE(TestPathLeftXStraightIsIntersectingForwardEdge));
-
-  // PathSlightRightXSlightLeftIsIntersectingForwardEdge
-  suite.test(TEST_CASE(TestPathSlightRightXSlightLeftIsIntersectingForwardEdge));
-
-  return suite.tear_down();
+int main(int argc, char* argv[]) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

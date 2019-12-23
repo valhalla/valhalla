@@ -1,12 +1,11 @@
 #include "baldr/streetnames_factory.h"
 #include "baldr/streetnames.h"
 #include "baldr/streetnames_us.h"
-#include "test.h"
 
-#include <iostream>
 #include <memory>
-#include <typeinfo>
 #include <vector>
+
+#include "test.h"
 
 using namespace valhalla::baldr;
 
@@ -19,12 +18,10 @@ void TryCreate(const std::string& country_code,
 
   auto& value = *street_names.get();
   std::string rtti(typeid(value).name());
-  if (rtti != expected) {
-    throw std::runtime_error(rtti + ": Incorrect object type - expected: " + expected);
-  }
+  EXPECT_EQ(rtti, expected) << "Incorrect object type";
 }
 
-void TestCreate() {
+TEST(StreetnamesFactory, Create) {
   // US - should be StreetNamesUs
   TryCreate("US", {{"Main Street", false}}, "N8valhalla5baldr13StreetNamesUsE");
   TryCreate("US", {{"Hershey Road", false}, {"PA 743 North", true}},
@@ -38,11 +35,7 @@ void TestCreate() {
 
 } // namespace
 
-int main() {
-  test::suite suite("streetnames_factory");
-
-  // Constructor with list argument
-  suite.test(TEST_CASE(TestCreate));
-
-  return suite.tear_down();
+int main(int argc, char* argv[]) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }
