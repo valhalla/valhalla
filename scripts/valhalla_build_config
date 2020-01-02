@@ -254,7 +254,7 @@ help_text = {
     'transit_bounding_box': 'Add comma separated bounding box values to only download transit data inside the given bounding box',
     'hierarchy': 'bool indicating whether road hierarchy is to be built - default to True',
     'shortcuts': 'bool indicating whether shortcuts are to be built - default to True',
-    'commercial_data': ' bool indicating whether to use commercially set attributes',
+    'commercial_data': 'bool indicating whether to use commercially set attributes',
     'include_driveways': 'bool indicating whether private driveways are included - default to True',
     'include_bicycle': 'bool indicating whether cycling only ways are included - default to True',
     'include_pedestrian': 'bool indicating whether pedestrian only ways are included - default to True',
