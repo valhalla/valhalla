@@ -31,7 +31,8 @@ public:
    * Constructor given arguments.
    * @param  idx  Directed edge or node index to which this sign applies.
    * @param  type Sign type.
-   * @param  rn_type   Boolean indicating whether this sign indicates a route number or the guidance view type.
+   * @param  rn_type   Boolean indicating whether this sign indicates a route number or the guidance
+   * view type.
    * @param  text_offset  Offset to text in the names/text table.
    */
   Sign(const uint32_t idx, const Sign::Type& type, const bool rn_type, const uint32_t text_offset)
