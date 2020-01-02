@@ -9,7 +9,7 @@
 * **Enhancement**
    * ADDED: Allows more complicated routes in timedependent a-star before timing out [#2068](https://github.com/valhalla/valhalla/pull/2068)
    * ADDED: Guide signs and junction names [#2096](https://github.com/valhalla/valhalla/pull/2096)
-
+   * ADDED: Added a bool to the config indicating whether to use commercially set attributes.  Added logic to not call IsIntersectionInternal if this is a commercial data set.  [#2132](https://github.com/valhalla/valhalla/pull/2132)
 
 ## Release Date: 2019-11-21 Valhalla 3.0.9
 * **Bug Fix**
