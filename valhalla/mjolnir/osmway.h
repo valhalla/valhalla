@@ -773,6 +773,22 @@ struct OSMWay {
   }
 
   /**
+   * Sets the internal flag.
+   * @param  internal   Is this part of a internal intersection?
+   */
+  void set_internal(const bool internal) {
+    internal_ = internal;
+  }
+
+  /**
+   * Get the internal flag.
+   * @return  Returns internal flag.
+   */
+  bool internal() const {
+    return internal_;
+  }
+
+  /**
    * Sets the no thru traffic flag.
    * @param  no_thru_traffic   Traffic allowed?
    */
@@ -1509,7 +1525,8 @@ struct OSMWay {
   uint16_t wheelchair_tag_ : 1;
   uint32_t pedestrian_ : 1;
   uint32_t has_user_tags_ : 1;
-  uint32_t spare0_ : 5; // Spare
+  uint32_t internal_ : 1;
+  uint32_t spare0_ : 4; // Spare
 
   // Access
   uint16_t auto_forward_ : 1;
