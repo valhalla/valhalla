@@ -1413,13 +1413,13 @@ bool GraphBuilder::CreateSignInfoList(const OSMNode& node,
         GetTagTokens(osmdata.name_offset_map.name(way.fwd_jct_base_index()), '|');
     // route number set to true for kGuidanceViewJct type means base type
     for (auto& name : names)
-      exit_list.emplace_back(Sign::Type::kGuidanceViewJct, true, name);
+      exit_list.emplace_back(Sign::Type::kGuidanceViewJunction, true, name);
   } else if (!forward && way.bwd_jct_base_index() > 0) {
     std::vector<std::string> names =
         GetTagTokens(osmdata.name_offset_map.name(way.bwd_jct_base_index()), '|');
     // route number set to true for kGuidanceViewJct type means base type
     for (auto& name : names)
-      exit_list.emplace_back(Sign::Type::kGuidanceViewJct, true, name);
+      exit_list.emplace_back(Sign::Type::kGuidanceViewJunction, true, name);
   }
 
   if (forward && way.fwd_jct_overlay_index() > 0) {
@@ -1427,13 +1427,13 @@ bool GraphBuilder::CreateSignInfoList(const OSMNode& node,
         GetTagTokens(osmdata.name_offset_map.name(way.fwd_jct_overlay_index()), '|');
     // route number set to false for kGuidanceViewJct type means overlay type
     for (auto& name : names)
-      exit_list.emplace_back(Sign::Type::kGuidanceViewJct, false, name);
+      exit_list.emplace_back(Sign::Type::kGuidanceViewJunction, false, name);
   } else if (!forward && way.bwd_jct_overlay_index() > 0) {
     std::vector<std::string> names =
         GetTagTokens(osmdata.name_offset_map.name(way.bwd_jct_overlay_index()), '|');
     // route number set to false for kGuidanceViewJct type means overlay type
     for (auto& name : names)
-      exit_list.emplace_back(Sign::Type::kGuidanceViewJct, false, name);
+      exit_list.emplace_back(Sign::Type::kGuidanceViewJunction, false, name);
   }
 
   return has_guide;

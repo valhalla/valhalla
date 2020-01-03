@@ -24,7 +24,7 @@ public:
     kGuideBranch,
     kGuideToward,
     kJunctionName,
-    kGuidanceViewJct
+    kGuidanceViewJunction
   };
 
   /**

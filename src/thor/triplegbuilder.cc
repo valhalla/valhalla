@@ -636,7 +636,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
             }
             break;
           }
-          case Sign::Type::kGuidanceViewJct: {
+          case Sign::Type::kGuidanceViewJunction: {
             if (controller.attributes.at(kEdgeSignGuidanceViewJunction)) {
               auto* trip_sign_guidance_view_junction =
                   trip_sign->mutable_guidance_view_junctions()->Add();
