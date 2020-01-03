@@ -107,12 +107,15 @@ CandidateQuery::WithinSquaredDistance(const midgard::PointLL& location,
       }
     }
 
+    // We found some edge candidates within the distance cut off
     if (correlated.edges.size()) {
-      // Add back if it is an edge correlated or it's a node correlated
-      // but it's not added yet. By only allow one snapped_node per intersection match
-      // we are including one edge candidate that starts/ends on the snapped node.
-      // by the time we recover the route from edge candidates, the logic need to adjust
-      // the this edge candidate accordingly to the edge transition consistancy.
+      // If the candidates are not at a node we just add them if they are at a node
+      // we avoid adding them multiple times by remembering the node we snapped to
+      // this has two consequences:
+      // 1. it allows us to keep the number of edge candidates low which keeps the search fast
+      // 2. it may use one edge for the route segment going into a state (at 100% along the edge)
+      //    and then use the opposing edge (at 0% along the edge) to start the route segment which
+      //    leaves that state. we fix this case later inside of find match result
       if (!snapped_node.Is_Valid() || visited_nodes.insert(snapped_node).second) {
         candidates.emplace_back(std::move(correlated));
       }
