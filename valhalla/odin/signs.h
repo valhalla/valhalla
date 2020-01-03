@@ -81,6 +81,15 @@ public:
                         std::string delim = "/",
                         const VerbalTextFormatter* verbal_formatter = nullptr) const;
 
+  const std::vector<Sign>& guidance_view_junction_list() const;
+  std::vector<Sign>* mutable_guidance_view_junction_list();
+
+  const std::string
+  GetGuidanceViewJunctionString(uint32_t max_count = 0,
+                                bool limit_by_consecutive_count = false,
+                                std::string delim = "/",
+                                const VerbalTextFormatter* verbal_formatter = nullptr) const;
+
   bool HasExit() const;
   bool HasExitNumber() const;
   bool HasExitBranch() const;
@@ -92,6 +101,9 @@ public:
   bool HasGuideToward() const;
 
   bool HasJunctionName() const;
+
+  bool HasGuidanceView() const;
+  bool HasGuidanceViewJunction() const;
 
   std::string ToString() const;
 
@@ -119,6 +131,7 @@ protected:
   std::vector<Sign> guide_branch_list_;
   std::vector<Sign> guide_toward_list_;
   std::vector<Sign> junction_name_list_;
+  std::vector<Sign> guidance_view_junction_list_;
 };
 
 } // namespace odin
