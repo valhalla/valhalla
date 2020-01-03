@@ -279,8 +279,6 @@ enum class Use : uint8_t {
   kFerry = 41,
   kRailFerry = 42,
 
-  kBikeShareConnection = 43, // Connection to multi-use transit stop
-
   // Transit specific uses. Must be last in the list
   kRail = 50,               // Rail line
   kBus = 51,                // Bus line
@@ -318,7 +316,6 @@ inline std::string to_string(Use u) {
       {static_cast<uint8_t>(Use::kEgressConnection), "egress_connection"},
       {static_cast<uint8_t>(Use::kPlatformConnection), "platform_connnection"},
       {static_cast<uint8_t>(Use::kTransitConnection), "transit_connection"},
-      {static_cast<uint8_t>(Use::kBikeShareConnection), "bike_share_connection"},
   };
 
   auto i = UseStrings.find(static_cast<uint8_t>(u));

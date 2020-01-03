@@ -360,6 +360,7 @@ void thor_worker_t::cleanup() {
   timedep_forward.Clear();
   timedep_reverse.Clear();
   multi_modal_astar.Clear();
+  bss_astar.Clear();
   trace.clear();
   isochrone_gen.Clear();
   matcher_factory.ClearFullCache();

@@ -63,7 +63,7 @@ void loki_worker_t::route(Api& request) {
   check_distance(options.locations(), max_distance.find(costing_name)->second);
 
   // Validate walking distances (make sure they are in the accepted range)
-  if (costing_name == "multimodal" || costing_name == "transit" || costing_name == "bikeshare") {
+  if (costing_name == "multimodal" || costing_name == "transit") {
     auto* ped_opts = options.mutable_costing_options(static_cast<int>(pedestrian));
     if (!ped_opts->has_transit_start_end_max_distance())
       ped_opts->set_transit_start_end_max_distance(min_transit_walking_dis);

@@ -417,7 +417,8 @@ protected:
     float a = avoid_bad_surfaces_;
     return [s, a](const baldr::DirectedEdge* edge) {
       if (edge->is_shortcut() || !(edge->forwardaccess() & kBicycleAccess) ||
-          edge->use() == Use::kSteps || (a == 1.0f && edge->surface() > s)) {
+          edge->use() == Use::kSteps || (a == 1.0f && edge->surface() > s) ||
+          edge->bss_connection()) {
         return 0.0f;
       } else {
         // TODO - use classification/use to alter the factor

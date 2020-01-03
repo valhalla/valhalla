@@ -381,9 +381,11 @@ public:
     // Throw back a lambda that checks the access for this type of costing
     auto access_mask = access_mask_;
     auto max_sac_scale = max_hiking_difficulty_;
-    return [access_mask, max_sac_scale](const baldr::DirectedEdge* edge) {
+    auto on_bss_connection = project_on_bss_connection;
+    return [access_mask, max_sac_scale, on_bss_connection](const baldr::DirectedEdge* edge) {
       return !(edge->is_shortcut() || edge->use() >= Use::kRail ||
-               edge->sac_scale() > max_sac_scale || !(edge->forwardaccess() & access_mask));
+               edge->sac_scale() > max_sac_scale || !(edge->forwardaccess() & access_mask) ||
+               (edge->bss_connection() && !on_bss_connection));
     };
   }
 
@@ -440,6 +442,9 @@ public:
   float driveway_factor_;          // Avoid driveways factor.
   float step_penalty_;             // Penalty applied to steps/stairs (seconds).
 
+  // Used in edgefilter, it tells if the location should be projected on a edge which is
+  // a bike share station connection
+  bool project_on_bss_connection = 0;
   /**
    * Override the base transition cost to not add maneuver penalties onto transit edges.
    * Base transition cost that all costing methods use. Includes costs for
@@ -912,6 +917,12 @@ void ParsePedestrianCostOptions(const rapidjson::Document& doc,
 
 cost_ptr_t CreatePedestrianCost(const Costing costing, const Options& options) {
   return std::make_shared<PedestrianCost>(costing, options);
+}
+
+cost_ptr_t CreateBikeShareCost(const Costing costing, const Options& options) {
+  auto cost_ptr = std::make_shared<PedestrianCost>(Costing::pedestrian, options);
+  cost_ptr->project_on_bss_connection = true;
+  return cost_ptr;
 }
 
 } // namespace sif

@@ -73,6 +73,7 @@ public:
     Register(Costing::pedestrian, CreatePedestrianCost);
     Register(Costing::truck, CreateTruckCost);
     Register(Costing::transit, CreateTransitCost);
+    Register(Costing::bikeshare, CreateBikeShareCost);
   }
 
 private:
