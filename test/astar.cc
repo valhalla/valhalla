@@ -95,9 +95,9 @@ std::pair<vb::GraphId, vm::PointLL> b({tile_id.tileid(), tile_id.level(), 1}, {0
 std::pair<vb::GraphId, vm::PointLL> c({tile_id.tileid(), tile_id.level(), 2}, {0.01, 0.01});
 std::pair<vb::GraphId, vm::PointLL> d({tile_id.tileid(), tile_id.level(), 3}, {0.10, 0.01});
 
-std::pair<vb::GraphId, vm::PointLL> e({tile_id.tileid(), tile_id.level(), 4}, {0.01, 0.14});
-std::pair<vb::GraphId, vm::PointLL> f({tile_id.tileid(), tile_id.level(), 5}, {0.10, 0.14});
-std::pair<vb::GraphId, vm::PointLL> g({tile_id.tileid(), tile_id.level(), 6}, {0.05, 0.11});
+std::pair<vb::GraphId, vm::PointLL> e({tile_id.tileid(), tile_id.level(), 4}, {0.21, 0.14});
+std::pair<vb::GraphId, vm::PointLL> f({tile_id.tileid(), tile_id.level(), 5}, {0.20, 0.14});
+std::pair<vb::GraphId, vm::PointLL> g({tile_id.tileid(), tile_id.level(), 6}, {0.25, 0.11});
 } // namespace node
 
 void make_tile() {
@@ -131,13 +131,14 @@ void make_tile() {
   };
 
   auto add_edge = [&](const std::pair<vb::GraphId, vm::PointLL>& u,
-                      const std::pair<vb::GraphId, vm::PointLL>& v, const uint32_t edgeindex,
-                      const uint32_t opposing, const bool forward) {
+                      const std::pair<vb::GraphId, vm::PointLL>& v, const uint32_t localedgeidx,
+                      const uint32_t opposing_edge_index, const bool forward) {
     DirectedEdgeBuilder edge_builder({}, v.first, forward, u.second.Distance(v.second) + .5, 1, 1,
-                                     baldr::Use::kRoad, baldr::RoadClass::kMotorway, 0, false, 0, 0,
-                                     false);
-    edge_builder.set_opp_index(opposing);
+                                     baldr::Use::kRoad, baldr::RoadClass::kMotorway, localedgeidx,
+                                     false, 0, 0, false);
+    edge_builder.set_opp_index(opposing_edge_index);
     edge_builder.set_forwardaccess(vb::kAllAccess);
+    edge_builder.set_reverseaccess(vb::kAllAccess);
     edge_builder.set_free_flow_speed(100);
     edge_builder.set_constrained_flow_speed(10);
     std::vector<vm::PointLL> shape = {u.second, u.second.MidPoint(v.second), v.second};
@@ -147,42 +148,43 @@ void make_tile() {
     bool added;
     // make more complex edge geom so that there are 3 segments, affine combination doesnt properly
     // handle arcs but who cares
-    uint32_t edge_info_offset = tile.AddEdgeInfo(edgeindex, u.first, v.first, 123, // way_id
+    uint32_t edge_info_offset = tile.AddEdgeInfo(localedgeidx, u.first, v.first, 123, // way_id
                                                  0, 0,
                                                  120, // speed limit in kph
-                                                 shape, {std::to_string(edgeindex)}, 0, added);
+                                                 shape, {std::to_string(localedgeidx)}, 0, added);
+    // assert(added);
     edge_builder.set_edgeinfo_offset(edge_info_offset);
     tile.directededges().emplace_back(edge_builder);
   };
 
   // first set of roads - Square
-  add_edge(node::a, node::b, 0, 2, true);
-  add_edge(node::a, node::c, 1, 4, true);
+  add_edge(node::a, node::b, 0, 0, true);
+  add_edge(node::a, node::c, 1, 0, true);
   add_node(node::a, 2);
 
-  add_edge(node::b, node::a, 0, 0, false);
-  add_edge(node::b, node::d, 2, 7, true);
+  add_edge(node::b, node::a, 2, 0, false);
+  add_edge(node::b, node::d, 3, 1, true);
   add_node(node::b, 2);
 
-  add_edge(node::c, node::a, 1, 1, false);
-  add_edge(node::c, node::d, 3, 6, true);
+  add_edge(node::c, node::a, 4, 1, false);
+  add_edge(node::c, node::d, 5, 0, true);
   add_node(node::c, 2);
 
-  add_edge(node::d, node::c, 3, 5, false);
-  add_edge(node::d, node::b, 2, 3, false);
+  add_edge(node::d, node::c, 6, 1, false);
+  add_edge(node::d, node::b, 7, 1, false);
   add_node(node::d, 2);
 
   // second set of roads - Triangle
-  add_edge(node::e, node::f, 4, 10, true);
-  add_edge(node::e, node::g, 5, 12, true);
+  add_edge(node::e, node::f, 8, 10, true);
+  add_edge(node::e, node::g, 9, 12, true);
   add_node(node::e, 2);
 
-  add_edge(node::f, node::e, 4, 8, false);
-  add_edge(node::f, node::g, 6, 13, true);
+  add_edge(node::f, node::e, 10, 8, false);
+  add_edge(node::f, node::g, 11, 13, true);
   add_node(node::f, 2);
 
-  add_edge(node::g, node::e, 5, 9, false);
-  add_edge(node::g, node::f, 6, 11, false);
+  add_edge(node::g, node::e, 12, 9, false);
+  add_edge(node::g, node::f, 13, 11, false);
   add_node(node::g, 2);
 
   tile.StoreTileData();
@@ -438,39 +440,41 @@ void TestPartialDurationTrivial() {
                          vs::TravelMode::kDrive);
 }
 
-void TestPartialDuration() {
+void TestPartialDuration(vt::PathAlgorithm& astar) {
   // Tests that a partial duration is returned when starting on a partial edge
   using node::a;
   using node::b;
   using node::d;
 
+  float partial_dist = 0.1;
+
   valhalla::Location origin;
   origin.set_date_time("2019-11-21T23:05");
   origin.mutable_ll()->set_lng(a.second.first);
   origin.mutable_ll()->set_lat(a.second.second);
-  add(tile_id + uint64_t(0), 0., a.second, origin);
-  add(tile_id + uint64_t(2), 1., a.second, origin);
+  add(tile_id + uint64_t(0), 0. + partial_dist, a.second, origin);
+  add(tile_id + uint64_t(2), 1. - partial_dist, a.second, origin);
 
-  valhalla::Location middle;
-  middle.mutable_ll()->set_lng(b.second.first);
-  middle.mutable_ll()->set_lat(b.second.second);
-  add(tile_id + uint64_t(2), 0.0f, b.second, middle);
-  add(tile_id + uint64_t(0), 1.0f, b.second, middle);
-  add(tile_id + uint64_t(3), 0.0f, b.second, middle);
-  add(tile_id + uint64_t(7), 1.0f, b.second, middle);
-
-  float partial_dist = 0.1;
   valhalla::Location dest;
+  dest.set_date_time("2019-11-21T23:05");
   dest.mutable_ll()->set_lng(d.second.first);
   dest.mutable_ll()->set_lat(d.second.second);
   add(tile_id + uint64_t(7), 0.0f + partial_dist, d.second, dest);
   add(tile_id + uint64_t(3), 1.0f - partial_dist, d.second, dest);
 
-  uint32_t expected_duration = 1045;
+  uint32_t expected_duration = 973;
 
-  vt::TimeDepForward astar;
   assert_is_trivial_path(astar, origin, dest, 2, TrivialPathTest::DurationEqualTo, expected_duration,
                          vs::TravelMode::kDrive);
+}
+
+void TestPartialDurationForward() {
+  vt::TimeDepForward astar;
+  TestPartialDuration(astar);
+}
+void TestPartialDurationReverse() {
+  vt::TimeDepReverse astar;
+  TestPartialDuration(astar);
 }
 void trivial_path_no_uturns(const std::string& config_file) {
   boost::property_tree::ptree conf;
@@ -963,14 +967,15 @@ void test_time_restricted_road() {
 int main() {
   test::suite suite("astar");
 
-  //// TODO: move to mjolnir?
+  // TODO: move to mjolnir?
   suite.test(TEST_CASE(make_tile));
 
   suite.test(TEST_CASE(TestTrivialPathForward));
   suite.test(TEST_CASE(TestTrivialPathReverse));
   suite.test(TEST_CASE(TestTrivialPathTriangle));
   suite.test(TEST_CASE(TestPartialDurationTrivial));
-  suite.test(TEST_CASE(TestPartialDuration));
+  suite.test(TEST_CASE(TestPartialDurationForward));
+  suite.test(TEST_CASE(TestPartialDurationReverse));
 
   suite.test(TEST_CASE(DoConfig));
   suite.test(TEST_CASE(TestTrivialPathNoUturns));

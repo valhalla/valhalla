@@ -4,6 +4,7 @@
 #include "thor/timedep.h"
 #include <algorithm>
 #include <map>
+#include <string>
 
 using namespace valhalla::baldr;
 using namespace valhalla::sif;
@@ -188,8 +189,10 @@ inline bool TimeDepReverse::ExpandReverseInner(GraphReader& graphreader,
 
   // Skip shortcut edges for time dependent routes. Also skip this edge if permanently labeled (best
   // path already found to this directed edge) or if no access for this mode.
-  if (meta.edge->is_shortcut() || meta.edge_status->set() == EdgeSet::kPermanent ||
-      !(meta.edge->reverseaccess() & access_mode_)) {
+  if (meta.edge->is_shortcut() || meta.edge_status->set() == EdgeSet::kPermanent) {
+    return false;
+  }
+  if (!(meta.edge->reverseaccess() & access_mode_)) {
     return false;
   }
 
@@ -223,7 +226,7 @@ inline bool TimeDepReverse::ExpandReverseInner(GraphReader& graphreader,
   auto p = destinations_percent_along_.find(meta.edge_id);
   if (p != destinations_percent_along_.end()) {
     // Adapt cost to potentially not using the entire destination edge
-    newcost -= edge_cost * (1.0f - p->second);
+    newcost -= edge_cost * p->second;
 
     // Find the destination edge and update cost to include the edge score.
     // Note - with high edge scores the convergence test fails some routes
@@ -362,6 +365,7 @@ TimeDepReverse::GetBestPath(valhalla::Location& origin,
     // Get next element from adjacency list. Check that it is valid. An
     // invalid label indicates there are no edges that can be expanded.
     uint32_t predindex = adjacencylist_->pop();
+
     if (predindex == kInvalidLabel) {
       LOG_ERROR("Route failed after iterations = " + std::to_string(edgelabels_rev_.size()));
       return {};
