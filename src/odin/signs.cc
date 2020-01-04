@@ -148,6 +148,23 @@ const std::string Signs::GetJunctionNameString(uint32_t max_count,
                       verbal_formatter);
 }
 
+const std::vector<Sign>& Signs::guidance_view_junction_list() const {
+  return guidance_view_junction_list_;
+}
+
+std::vector<Sign>* Signs::mutable_guidance_view_junction_list() {
+  return &guidance_view_junction_list_;
+}
+
+const std::string
+Signs::GetGuidanceViewJunctionString(uint32_t max_count,
+                                     bool limit_by_consecutive_count,
+                                     std::string delim,
+                                     const VerbalTextFormatter* verbal_formatter) const {
+  return ListToString(guidance_view_junction_list_, max_count, limit_by_consecutive_count,
+                      std::move(delim), verbal_formatter);
+}
+
 bool Signs::HasExit() const {
   return (HasExitNumber() || HasExitBranch() || HasExitToward() || HasExitName());
 }
@@ -184,6 +201,14 @@ bool Signs::HasJunctionName() const {
   return (junction_name_list_.size() > 0);
 }
 
+bool Signs::HasGuidanceView() const {
+  return (HasGuidanceViewJunction());
+}
+
+bool Signs::HasGuidanceViewJunction() const {
+  return (guidance_view_junction_list_.size() > 0);
+}
+
 std::string Signs::ToString() const {
   std::string signs_string;
 
@@ -207,6 +232,9 @@ std::string Signs::ToString() const {
 
   signs_string += " | junction_names=";
   signs_string += GetJunctionNameString();
+
+  signs_string += " | guidance_view_junctions=";
+  signs_string += GetGuidanceViewJunctionString();
 
   return signs_string;
 }
@@ -235,6 +263,9 @@ std::string Signs::ToParameterString() const {
 
   signs_string += delim;
   signs_string += ListToParameterString(junction_name_list_);
+
+  signs_string += delim;
+  signs_string += ListToParameterString(guidance_view_junction_list_);
 
   return signs_string;
 }
@@ -308,7 +339,8 @@ bool Signs::operator==(const Signs& rhs) const {
           (exit_toward_list_ == rhs.exit_toward_list_) && (exit_name_list_ == rhs.exit_name_list_) &&
           (guide_branch_list_ == rhs.guide_branch_list_) &&
           (guide_toward_list_ == rhs.guide_toward_list_) &&
-          (junction_name_list_ == rhs.junction_name_list_));
+          (junction_name_list_ == rhs.junction_name_list_) &&
+          (guidance_view_junction_list_ == rhs.guidance_view_junction_list_));
 }
 
 } // namespace odin

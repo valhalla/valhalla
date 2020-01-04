@@ -448,7 +448,7 @@ Signs* Maneuver::mutable_signs() {
 }
 
 bool Maneuver::HasSigns() const {
-  return (HasExitSign() || HasGuideSign() || HasJunctionNameSign());
+  return (HasExitSign() || HasGuideSign() || HasJunctionNameSign() || HasGuidanceViewSign());
 }
 
 bool Maneuver::HasExitSign() const {
@@ -485,6 +485,14 @@ bool Maneuver::HasGuideTowardSign() const {
 
 bool Maneuver::HasJunctionNameSign() const {
   return signs_.HasJunctionName();
+}
+
+bool Maneuver::HasGuidanceViewSign() const {
+  return (HasGuidanceViewJunctionSign());
+}
+
+bool Maneuver::HasGuidanceViewJunctionSign() const {
+  return signs_.HasGuidanceViewJunction();
 }
 
 uint32_t Maneuver::internal_right_turn_count() const {

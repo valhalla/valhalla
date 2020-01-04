@@ -160,6 +160,9 @@ public:
 
   bool HasJunctionNameSign() const;
 
+  bool HasGuidanceViewSign() const;
+  bool HasGuidanceViewJunctionSign() const;
+
   uint32_t internal_right_turn_count() const;
   void set_internal_right_turn_count(uint32_t internal_right_turn_count);
 
