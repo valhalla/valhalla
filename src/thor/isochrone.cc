@@ -322,14 +322,8 @@ void Isochrone::ExpandForward(GraphReader& graphreader,
     // Add edge label, add to the adjacency list and set edge status
     uint32_t idx = bdedgelabels_.size();
     *es = {EdgeSet::kTemporary, idx};
-<<<<<<< HEAD
-    bdedgelabels_.emplace_back(pred_idx, edgeid, oppedgeid, directededge, newcost, mode_, Cost{}, 0.f,
-                               false);
-    // kInvalidLabel, edgeid, opp_edge_id, directededge, cost, mode_, Cost{}, d, false
-=======
-    edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, 0.0f, mode_, 0,
-                             has_time_restrictions);
->>>>>>> origin/master
+    bdedgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, 0.0f, mode_, 0,
+                               has_time_restrictions);
     adjacencylist_->add(idx);
   }
 
