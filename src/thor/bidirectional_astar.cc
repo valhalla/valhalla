@@ -267,7 +267,7 @@ inline bool BidirectionalAStar::ExpandForwardInner(GraphReader& graphreader,
   // Add edge label, add to the adjacency list and set edge status
   uint32_t idx = edgelabels_forward_.size();
   edgelabels_forward_.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, newcost, sortcost,
-                                   dist, mode_, tc,
+                                   dist, mode_, tc, 0,
                                    (pred.not_thru_pruning() || !meta.edge->not_thru()),
                                    has_time_restrictions);
 
@@ -457,7 +457,7 @@ inline bool BidirectionalAStar::ExpandReverseInner(GraphReader& graphreader,
   // Add edge label, add to the adjacency list and set edge status
   uint32_t idx = edgelabels_reverse_.size();
   edgelabels_reverse_.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, newcost, sortcost,
-                                   dist, mode_, tc,
+                                   dist, mode_, tc, 0,
                                    (pred.not_thru_pruning() || !meta.edge->not_thru()),
                                    has_time_restrictions);
 
@@ -785,8 +785,8 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader, valhalla::Location&
     // to invalid to indicate the origin of the path.
     uint32_t idx = edgelabels_forward_.size();
     edgestatus_forward_.Set(edgeid, EdgeSet::kTemporary, idx, tile);
-    edgelabels_forward_.emplace_back(kInvalidLabel, edgeid, directededge, cost, sortcost, dist, mode_,
-                                     false);
+    edgelabels_forward_.emplace_back(kInvalidLabel, edgeid, GraphId{}, directededge, cost, sortcost,
+                                     dist, mode_, Cost{}, 0, false, false);
     adjacencylist_forward_->add(idx);
 
     // setting this edge as reached
@@ -864,7 +864,7 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader, const valhalla
     edgestatus_reverse_.Set(opp_edge_id, EdgeSet::kTemporary, idx,
                             graphreader.GetGraphTile(opp_edge_id));
     edgelabels_reverse_.emplace_back(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, sortcost,
-                                     dist, mode_, c, false, false);
+                                     dist, mode_, c, 0, false, false);
     adjacencylist_reverse_->add(idx);
 
     // setting this edge as settled, sending the opposing because this is the reverse tree

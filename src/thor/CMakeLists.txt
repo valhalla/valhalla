@@ -4,6 +4,7 @@ set(sources
   astar.cc
   bidirectional_astar.cc
   costmatrix.cc
+  #dijkstras.cc
   isochrone.cc
   map_matcher.cc
   multimodal.cc

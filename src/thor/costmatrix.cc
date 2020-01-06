@@ -341,8 +341,8 @@ void CostMatrix::ForwardSearch(const uint32_t index, const uint32_t n, GraphRead
       // Add edge label, add to the adjacency list and set edge status
       uint32_t idx = edgelabels.size();
       *es = {EdgeSet::kTemporary, idx};
-      edgelabels.emplace_back(pred_idx, edgeid, oppedge, directededge, newcost, mode_, tc,
-                              pred.path_distance() + directededge->length(),
+      edgelabels.emplace_back(pred_idx, edgeid, oppedge, directededge, newcost, newcost.cost, 0.,
+                              mode_, tc, pred.path_distance() + directededge->length(),
                               (pred.not_thru_pruning() || !directededge->not_thru()),
                               has_time_restrictions);
       adj->add(idx);
@@ -608,8 +608,8 @@ void CostMatrix::BackwardSearch(const uint32_t index, GraphReader& graphreader) 
       // Add edge label, add to the adjacency list and set edge status
       uint32_t idx = edgelabels.size();
       *es = {EdgeSet::kTemporary, idx};
-      edgelabels.emplace_back(pred_idx, edgeid, oppedge, directededge, newcost, mode_, tc,
-                              pred.path_distance() + directededge->length(),
+      edgelabels.emplace_back(pred_idx, edgeid, oppedge, directededge, newcost, newcost.cost, 0.,
+                              mode_, tc, pred.path_distance() + directededge->length(),
                               (pred.not_thru_pruning() || !directededge->not_thru()),
                               has_time_restrictions);
       adj->add(idx);
@@ -706,7 +706,7 @@ void CostMatrix::SetSources(GraphReader& graphreader,
       // Get cost. Get distance along the remainder of this edge.
       Cost edgecost = costing_->EdgeCost(directededge, tile);
       Cost cost = edgecost * (1.0f - edge.percent_along());
-      uint32_t d = std::round(directededge->length() * (1.0f - edge.percent_along()));
+      uint32_t path_distance = std::round(directededge->length() * (1.0f - edge.percent_along()));
 
       // We need to penalize this location based on its score (distance in meters from input)
       // We assume the slowest speed you could travel to cover that distance to start/end the route
@@ -716,13 +716,12 @@ void CostMatrix::SetSources(GraphReader& graphreader,
       // Store the edge cost and length in the transition cost (so we can
       // recover the full length and cost for cases where origin and
       // destination are on the same edge
-      Cost ec(std::round(edgecost.secs), static_cast<uint32_t>(directededge->length()));
+      Cost edge_cost(std::round(edgecost.secs), static_cast<uint32_t>(directededge->length()));
 
       // Set the initial not_thru flag to false. There is an issue with not_thru
       // flags on small loops. Set this to false here to override this for now.
-      BDEdgeLabel edge_label(kInvalidLabel, edgeid, oppedge, directededge, cost, mode_, ec, d, false,
-                             false);
-      edge_label.set_not_thru(false);
+      BDEdgeLabel edge_label(kInvalidLabel, edgeid, oppedge, directededge, cost, cost.cost, 0., mode_,
+                             edge_cost, path_distance, false, false);
 
       // Add EdgeLabel to the adjacency list (but do not set its status).
       // Set the predecessor edge index to invalid to indicate the origin
@@ -793,7 +792,7 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
       // along the destination edge.
       Cost edgecost = costing_->EdgeCost(directededge, tile);
       Cost cost = edgecost * edge.percent_along();
-      uint32_t d = std::round(directededge->length() * edge.percent_along());
+      uint32_t path_distance = std::round(directededge->length() * edge.percent_along());
 
       // We need to penalize this location based on its score (distance in meters from input)
       // We assume the slowest speed you could travel to cover that distance to start/end the route
@@ -803,12 +802,12 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
       // Store the edge cost and length in the transition cost (so we can
       // recover the full length and cost for cases where origin and
       // destination are on the same edge
-      Cost ec(std::round(edgecost.secs), static_cast<uint32_t>(directededge->length()));
+      Cost edge_cost(std::round(edgecost.secs), static_cast<uint32_t>(directededge->length()));
 
       // Set the initial not_thru flag to false. There is an issue with not_thru
       // flags on small loops. Set this to false here to override this for now.
-      BDEdgeLabel edge_label(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, mode_, ec, d,
-                             false, false);
+      BDEdgeLabel edge_label(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, cost.cost, 0.,
+                             mode_, edge_cost, path_distance, false, false);
       edge_label.set_not_thru(false);
 
       // Add EdgeLabel to the adjacency list (but do not set its status).

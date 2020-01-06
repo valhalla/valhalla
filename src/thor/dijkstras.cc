@@ -191,18 +191,19 @@ void Dijkstras::ExpandForward(GraphReader& graphreader,
 
     // Check if the edge is allowed or if a restriction occurs. Get the edge speed.
     uint32_t speed;
-    bool has_traffic = directededge->predicted_speed() || directededge->constrained_flow_speed() > 0;
+    bool has_time_restrictions = false;
     if (has_date_time_) {
       // With date time we check time dependent restrictions and access as well as get
       // traffic based speed if it exists
-      if (!costing_->Allowed(directededge, pred, tile, edgeid, localtime, nodeinfo->timezone()) ||
+      if (!costing_->Allowed(directededge, pred, tile, edgeid, localtime, nodeinfo->timezone(),
+                             has_time_restrictions) ||
           costing_->Restricted(directededge, pred, bdedgelabels_, tile, edgeid, true, localtime,
                                nodeinfo->timezone())) {
         continue;
       }
       speed = tile->GetSpeed(directededge, edgeid, seconds_of_week);
     } else {
-      if (!costing_->Allowed(directededge, pred, tile, edgeid, 0, 0) ||
+      if (!costing_->Allowed(directededge, pred, tile, edgeid, 0, 0, has_time_restrictions) ||
           costing_->Restricted(directededge, pred, bdedgelabels_, tile, edgeid, true)) {
         continue;
       }
@@ -210,8 +211,11 @@ void Dijkstras::ExpandForward(GraphReader& graphreader,
     }
 
     // Compute the cost to the end of this edge
-    Cost newcost = pred.cost() + costing_->EdgeCost(directededge, speed) +
-                   costing_->TransitionCost(directededge, nodeinfo, pred, has_traffic);
+    Cost newcost =
+        pred.cost() +
+        costing_->EdgeCost(directededge, tile,
+                           has_date_time_ ? seconds_of_week : kConstrainedFlowSecondOfDay) +
+        costing_->TransitionCost(directededge, nodeinfo, pred);
 
     // Check if edge is temporarily labeled and this path has less cost. If
     // less cost the predecessor is updated and the sort cost is decremented
@@ -221,7 +225,7 @@ void Dijkstras::ExpandForward(GraphReader& graphreader,
       if (newcost.cost < lab.cost().cost) {
         float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
         adjacencylist_->decrease(es->index(), newsortcost);
-        lab.Update(pred_idx, newcost, newsortcost);
+        lab.Update(pred_idx, newcost, newsortcost, has_time_restrictions);
       }
       continue;
     }
@@ -354,18 +358,20 @@ void Dijkstras::ExpandReverse(GraphReader& graphreader,
 
     // Check if the edge is allowed or if a restriction occurs. Get the edge speed.
     uint32_t speed;
+    bool has_time_restrictions = false;
     if (has_date_time_) {
       // With date time we check time dependent restrictions and access as well as get
       // traffic based speed if it exists
       if (!costing_->AllowedReverse(directededge, pred, opp_edge, t2, oppedge, localtime,
-                                    nodeinfo->timezone()) ||
+                                    nodeinfo->timezone(), has_time_restrictions) ||
           costing_->Restricted(directededge, pred, bdedgelabels_, tile, edgeid, false, localtime,
                                nodeinfo->timezone())) {
         continue;
       }
       speed = t2->GetSpeed(opp_edge, oppedge, seconds_of_week);
     } else {
-      if (!costing_->AllowedReverse(directededge, pred, opp_edge, t2, oppedge, 0, 0) ||
+      if (!costing_->AllowedReverse(directededge, pred, opp_edge, t2, oppedge, 0, 0,
+                                    has_time_restrictions) ||
           costing_->Restricted(directededge, pred, bdedgelabels_, tile, edgeid, false)) {
         continue;
       }
@@ -373,11 +379,11 @@ void Dijkstras::ExpandReverse(GraphReader& graphreader,
     }
 
     // Compute the cost to the end of this edge with separate transition cost
-    bool has_traffic =
-        opp_pred_edge->predicted_speed() || opp_pred_edge->constrained_flow_speed() > 0;
     Cost tc = costing_->TransitionCostReverse(directededge->localedgeidx(), nodeinfo, opp_edge,
-                                              opp_pred_edge, has_traffic);
-    Cost newcost = pred.cost() + costing_->EdgeCost(opp_edge, speed);
+                                              opp_pred_edge);
+    Cost newcost = pred.cost() +
+                   costing_->EdgeCost(opp_edge, t2,
+                                      has_date_time_ ? seconds_of_week : kConstrainedFlowSecondOfDay);
     newcost.cost += tc.cost;
 
     // Check if edge is temporarily labeled and this path has less cost. If
@@ -388,7 +394,7 @@ void Dijkstras::ExpandReverse(GraphReader& graphreader,
       if (newcost.cost < lab.cost().cost) {
         float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
         adjacencylist_->decrease(es->index(), newsortcost);
-        lab.Update(pred_idx, newcost, newsortcost, tc);
+        lab.Update(pred_idx, newcost, newsortcost, tc, has_time_restrictions);
       }
       continue;
     }
@@ -570,9 +576,10 @@ void Dijkstras::ExpandForwardMM(GraphReader& graphreader,
     // costing - assume if you get a transit edge you walked to the transit stop
     uint32_t tripid = 0;
     uint32_t blockid = 0;
+    bool has_time_restrictions = false;
     if (directededge->IsTransitLine()) {
       // Check if transit costing allows this edge
-      if (!tc->Allowed(directededge, pred, tile, edgeid, 0, 0)) {
+      if (!tc->Allowed(directededge, pred, tile, edgeid, 0, 0, has_time_restrictions)) {
         continue;
       }
 
@@ -647,13 +654,12 @@ void Dijkstras::ExpandForwardMM(GraphReader& graphreader,
       // Regular edge - use the appropriate costing and check if access
       // is allowed. If mode is pedestrian this will validate walking
       // distance has not been exceeded.
-      if (!mode_costing[static_cast<uint32_t>(mode_)]->Allowed(directededge, pred, tile, edgeid, 0,
-                                                               0)) {
+      if (!mode_costing[static_cast<uint32_t>(mode_)]->Allowed(directededge, pred, tile, edgeid, 0, 0,
+                                                               has_time_restrictions)) {
         continue;
       }
 
-      Cost c = mode_costing[static_cast<uint32_t>(mode_)]->EdgeCost(directededge,
-                                                                    tile->GetSpeed(directededge));
+      Cost c = mode_costing[static_cast<uint32_t>(mode_)]->EdgeCost(directededge, tile);
       c.cost *= mode_costing[static_cast<uint32_t>(mode_)]->GetModeFactor();
       newcost += c;
 
@@ -695,9 +701,11 @@ void Dijkstras::ExpandForwardMM(GraphReader& graphreader,
 
     // Continue if the time interval has been met. This bus or rail line goes beyond the max
     // but need to consider others so we just continue here.
-    if (newcost.secs > max_seconds_) {
-      continue;
-    }
+    //
+    // if (newcost.secs > max_seconds_) {
+    //  continue;
+    //}
+    // TODO How to do this continue in generalized Dijkstras?
 
     // Check if edge is temporarily labeled and this path has less cost. If
     // less cost the predecessor is updated and the sort cost is decremented
@@ -708,7 +716,8 @@ void Dijkstras::ExpandForwardMM(GraphReader& graphreader,
       if (newcost.cost < lab.cost().cost) {
         float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
         adjacencylist_->decrease(es->index(), newsortcost);
-        lab.Update(pred_idx, newcost, newsortcost, walking_distance, tripid, blockid);
+        lab.Update(pred_idx, newcost, newsortcost, walking_distance, tripid, blockid,
+                   has_time_restrictions);
       }
       continue;
     }
@@ -797,9 +806,10 @@ void Dijkstras::ComputeMultiModal(
     edgestatus_.Update(pred.edgeid(), EdgeSet::kPermanent);
 
     // Skip edges with large penalties (e.g. ferries?)
-    if (pred.cost().cost > max_seconds_ * 2) {
-      continue;
-    }
+    // if (pred.cost().cost > max_seconds_ * 2) {
+    //  continue;
+    //}
+    // TODO Handle this isochrone specific piece in generalized Dijkstras
 
     // Expand from the end node of the predecessor edge.
     ExpandForwardMM(graphreader, pred.endnode(), pred, predindex, false, pc, tc, mode_costing);
@@ -847,8 +857,7 @@ void Dijkstras::SetOriginLocations(GraphReader& graphreader,
       const DirectedEdge* opp_dir_edge = opp_tile->directededge(edgeid);
 
       // Get cost
-      Cost cost = costing->EdgeCost(directededge, tile->GetSpeed(directededge)) *
-                  (1.0f - edge.percent_along());
+      Cost cost = costing->EdgeCost(directededge, tile) * (1.0f - edge.percent_along());
 
       // We need to penalize this location based on its score (distance in meters from input)
       // We assume the slowest speed you could travel to cover that distance to start/end the route
@@ -915,8 +924,7 @@ void Dijkstras::SetDestinationLocations(
       const DirectedEdge* opp_dir_edge = opp_tile->directededge(edgeid);
 
       // Get the cost
-      Cost cost =
-          costing->EdgeCost(directededge, tile->GetSpeed(directededge)) * edge.percent_along();
+      Cost cost = costing->EdgeCost(directededge, tile) * edge.percent_along();
 
       // We need to penalize this location based on its score (distance in meters from input)
       // We assume the slowest speed you could travel to cover that distance to start/end the route
@@ -978,8 +986,7 @@ void Dijkstras::SetOriginLocationsMM(
       }
 
       // Get cost
-      Cost cost = costing->EdgeCost(directededge, tile->GetSpeed(directededge)) *
-                  (1.0f - edge.percent_along());
+      Cost cost = costing->EdgeCost(directededge, endtile) * (1.0f - edge.percent_along());
 
       // We need to penalize this location based on its score (distance in meters from input)
       // We assume the slowest speed you could travel to cover that distance to start/end the route
@@ -999,7 +1006,7 @@ void Dijkstras::SetOriginLocationsMM(
       edge_label.set_origin();
 
       // Add EdgeLabel to the adjacency list
-      mmedgelabels_.push_back(std::move(edge_label));
+      mmedgelabels_.push_back(edge_label);
       adjacencylist_->add(idx);
 
       // TODO: inform someone we used this edge
