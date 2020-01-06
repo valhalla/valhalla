@@ -217,7 +217,8 @@ void DirectionsBuilder::PopulateDirectionsLeg(const Options& options,
     }
 
     // Populate sign information
-    if (maneuver.HasExitSign() || maneuver.HasGuideSign() || maneuver.HasJunctionNameSign()) {
+    if (maneuver.HasExitSign() || maneuver.HasGuideSign() || maneuver.HasJunctionNameSign() ||
+        maneuver.HasGuidanceViewSign()) {
       auto* trip_sign = trip_maneuver->mutable_sign();
 
       // Process exit number info
@@ -287,6 +288,17 @@ void DirectionsBuilder::PopulateDirectionsLeg(const Options& options,
           trip_junction_name->set_text(junction_name.text());
           trip_junction_name->set_is_route_number(junction_name.is_route_number());
           trip_junction_name->set_consecutive_count(junction_name.consecutive_count());
+        }
+      }
+
+      // Process guidance view junction info
+      if (maneuver.HasGuidanceViewJunctionSign()) {
+        for (const auto& guidance_view_junction : maneuver.signs().guidance_view_junction_list()) {
+          auto* trip_guidance_view_junction = trip_sign->mutable_guidance_view_junctions()->Add();
+          trip_guidance_view_junction->set_text(guidance_view_junction.text());
+          trip_guidance_view_junction->set_is_route_number(guidance_view_junction.is_route_number());
+          trip_guidance_view_junction->set_consecutive_count(
+              guidance_view_junction.consecutive_count());
         }
       }
     }
