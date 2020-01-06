@@ -229,6 +229,7 @@ MatchResult FindMatchResult(const MapMatcher& mapmatcher,
     return {};
 
   // find which candidate for this state was used
+  const baldr::GraphTile* tile = nullptr;
   for (const auto& edge : state.candidate().edges) {
     // is this actually possible? why would we put invalid candidates in here?
     if (!edge.id.Is_Valid()) {
@@ -247,33 +248,28 @@ MatchResult FindMatchResult(const MapMatcher& mapmatcher,
       continue;
     }
 
-    // TODO: remove
-    const baldr::GraphTile* t = nullptr;
-    auto candidate_nodes = graph_reader.GetDirectedEdgeNodes(edge.id, t);
-    auto prev_nodes = graph_reader.GetDirectedEdgeNodes(prev_edge, t);
-    auto next_nodes = graph_reader.GetDirectedEdgeNodes(next_edge, t);
+    // we are at an intersection so we need the node from the candidate where the route would be
+    auto candidate_nodes = graph_reader.GetDirectedEdgeNodes(edge.id, tile);
+    const auto& candidate_node =
+        edge.percent_along == 0.f ? candidate_nodes.first : candidate_nodes.second;
 
-    // if the route coming into this state ends at this edge candidates begin node
-    if (prev_edge.Is_Valid() /*&& edge.percent_along == 0.f*/ &&
-        graph_reader.AreEdgesConnectedForward(prev_edge, edge.id)) {
-      return {edge.projected, std::sqrt(edge.distance), prev_edge, 1.f, measurement.epoch_time(),
-              stateid};
+    // try previous and next (first one and discontinuities wont have previous)
+    for (const auto& path_edge : {prev_edge, next_edge}) {
+      // is the candidate node the begin node of this edge
+      auto nodes = graph_reader.GetDirectedEdgeNodes(path_edge, tile);
+      if (nodes.first == candidate_node) {
+        return {edge.projected, std::sqrt(edge.distance), path_edge, 0.f, measurement.epoch_time(),
+                stateid};
+      } // is the candidate node the end node of this edge
+      else if (nodes.second == candidate_node) {
+        return {edge.projected, std::sqrt(edge.distance), path_edge, 1.f, measurement.epoch_time(),
+                stateid};
+      }
     }
-
-    // if the route leaving this state begins at this edge candidates end node
-    if (next_edge.Is_Valid() /*&& edge.percent_along == 1.f*/ &&
-        graph_reader.AreEdgesConnectedForward(edge.id, next_edge)) {
-      return {edge.projected, std::sqrt(edge.distance), next_edge, 0.f, measurement.epoch_time(),
-              stateid};
-    }
-
-    if (state.candidate().edges.size() == 1)
-      throw std::runtime_error("WHY WOULD THIS HAPPEN");
   }
 
   // we should never reach here, the above early exit checks whether there is no path on either side
-  // of the given state we are finding a match for
-  throw std::runtime_error("WHY WOULD THIS HAPPEN");
+  // of the given state we are finding a match for. perhaps we should throw?
   return {};
 }
 
