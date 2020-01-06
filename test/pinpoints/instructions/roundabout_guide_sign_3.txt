@@ -1,0 +1,1 @@
+-j '{"locations":[{"lat":51.121723,"lon":7.245947,"street":"L 101"},{"lat":51.122608,"lon":7.247447,"street":"Dhünner Straße"}],"costing":"auto","units":"kilometers"}'

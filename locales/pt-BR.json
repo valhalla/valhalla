@@ -427,7 +427,19 @@
         "8": "Pegue a saída <NAME_SIGN> <RELATIVE_DIRECTION>.",
         "10": "Pegue a saída <NAME_SIGN> <RELATIVE_DIRECTION> para <BRANCH_SIGN>.",
         "12": "Pegue a saída <NAME_SIGN> <RELATIVE_DIRECTION> em direção a <TOWARD_SIGN>.",
-        "14": "Pegue a saída <NAME_SIGN> <RELATIVE_DIRECTION> para <BRANCH_SIGN> em direção a <TOWARD_SIGN>."
+        "14": "Pegue a saída <NAME_SIGN> <RELATIVE_DIRECTION> para <BRANCH_SIGN> em direção a <TOWARD_SIGN>.",
+        "15": "Pegue a saída.",
+        "16": "Pegue a saída <NUMBER_SIGN>.",
+        "17": "Pegue a saída <BRANCH_SIGN>.",
+        "18": "Pegue a saída <NUMBER_SIGN> para <BRANCH_SIGN>.",
+        "19": "Pegue a saída em direção a <TOWARD_SIGN>.",
+        "20": "Pegue a saída <NUMBER_SIGN> em direção a <TOWARD_SIGN>.",
+        "21": "Pegue a saída <BRANCH_SIGN> em direção a <TOWARD_SIGN>.",
+        "22": "Pegue a saída <NUMBER_SIGN> para <BRANCH_SIGN> em direção a <TOWARD_SIGN>.",
+        "23": "Pegue a saída <NAME_SIGN>.",
+        "25": "Pegue a saída <NAME_SIGN> para <BRANCH_SIGN>.",
+        "27": "Pegue a saída <NAME_SIGN> em direção a <TOWARD_SIGN>.",
+        "29": "Pegue a saída <NAME_SIGN> para <BRANCH_SIGN> em direção a <TOWARD_SIGN>."
       },
       "relative_directions": [
         "à esquerda",
@@ -470,6 +482,42 @@
         ],
         "14": [
           "Pegue a saída Calçada de Carriche à esquerda para CRIL em direção a Odivelas."
+        ],
+        "15": [
+          "Pegue a saída."
+        ],
+        "16": [
+          "Pegue a saída 67 B-A."
+        ],
+        "17": [
+          "Pegue a saída A1-Norte."
+        ],
+        "18": [
+          "Pegue a saída 67 B-A para A1-Norte."
+        ],
+        "19": [
+          "Pegue a saída em direção a Lisboa."
+        ],
+        "20": [
+          "Pegue a saída 67 B-A em direção a Lisboa."
+        ],
+        "21": [
+          "Pegue a saída A1-Norte em direção a Lisboa."
+        ],
+        "22": [
+          "Pegue a saída 67 B-A para A1-Norte em direção a Lisboa, Centro."
+        ],
+        "23": [
+          "Pegue a saída Calçada de Carriche."
+        ],
+        "25": [
+          "Pegue a saída Calçada de Carriche para Odivelas, Norte."
+        ],
+        "27": [
+          "Pegue a saída Calçada de Carriche em direção a Odivelas."
+        ],
+        "29": [
+          "Pegue a saída Calçada de Carriche para Odivelas, Norte em direção a Loures."
         ]
       }
     },
@@ -670,7 +718,19 @@
         "8": "Pegue a saída <NAME_SIGN> <RELATIVE_DIRECTION>.",
         "10": "Pegue a saída <NAME_SIGN> <RELATIVE_DIRECTION> para <BRANCH_SIGN>.",
         "12": "Pegue a saída <NAME_SIGN> <RELATIVE_DIRECTION> em direção a <TOWARD_SIGN>.",
-        "14": "Pegue a saída <NAME_SIGN> <RELATIVE_DIRECTION> para <BRANCH_SIGN> em direção a <TOWARD_SIGN>."
+        "14": "Pegue a saída <NAME_SIGN> <RELATIVE_DIRECTION> para <BRANCH_SIGN> em direção a <TOWARD_SIGN>.",
+        "15": "Pegue a saída.",
+        "16": "Pegue a saída <NUMBER_SIGN>.",
+        "17": "Pegue a saída <BRANCH_SIGN>.",
+        "18": "Pegue a saída <NUMBER_SIGN> para <BRANCH_SIGN>.",
+        "19": "Pegue a saída em direção a <TOWARD_SIGN>.",
+        "20": "Pegue a saída <NUMBER_SIGN> em direção a <TOWARD_SIGN>.",
+        "21": "Pegue a saída <BRANCH_SIGN> em direção a <TOWARD_SIGN>.",
+        "22": "Pegue a saída <NUMBER_SIGN> para <BRANCH_SIGN> em direção a <TOWARD_SIGN>.",
+        "23": "Pegue a saída <NAME_SIGN>.",
+        "25": "Pegue a saída <NAME_SIGN> para <BRANCH_SIGN>.",
+        "27": "Pegue a saída <NAME_SIGN> em direção a <TOWARD_SIGN>.",
+        "29": "Pegue a saída <NAME_SIGN> para <BRANCH_SIGN> em direção a <TOWARD_SIGN>."
       },
       "relative_directions": [
         "à esquerda",
@@ -713,6 +773,42 @@
         ],
         "14": [
           "Pegue a saída Calçada de Carriche à esquerda para Odivelas, Norte em direção a Loures."
+        ],
+        "15": [
+          "Pegue a saída."
+        ],
+        "16": [
+          "Pegue a saída 67 B-A."
+        ],
+        "17": [
+          "Pegue a saída A1-Norte."
+        ],
+        "18": [
+          "Pegue a saída 67 B-A para A1-Norte."
+        ],
+        "19": [
+          "Pegue a saída em direção a Lisboa."
+        ],
+        "20": [
+          "Pegue a saída 67 B-A em direção a Lisboa."
+        ],
+        "21": [
+          "Pegue a saída A1-Norte em direção a Lisboa."
+        ],
+        "22": [
+          "Pegue a saída 67 B-A para A1-Norte em direção a Lisboa, Centro."
+        ],
+        "23": [
+          "Pegue a saída Calçada de Carriche."
+        ],
+        "25": [
+          "Pegue a saída Calçada de Carriche para Odivelas, Norte."
+        ],
+        "27": [
+          "Pegue a saída Calçada de Carriche em direção a Odivelas."
+        ],
+        "29": [
+          "Pegue a saída Calçada de Carriche para Odivelas, Norte em direção a Loures."
         ]
       }
     },
@@ -887,8 +983,14 @@
     "merge": {
       "phrases": {
         "0": "Entre.",
-        "1": "Entre na <STREET_NAMES>."
+        "1": "Entre <RELATIVE_DIRECTION>.",
+        "2": "Entre na <STREET_NAMES>.",
+        "3": "Entre <RELATIVE_DIRECTION> na <STREET_NAMES>."
       },
+      "relative_directions": [
+        "à esquerda",
+        "à direita"
+      ],
       "empty_street_name_labels": [
         "calçada",
         "ciclovia",
@@ -899,15 +1001,27 @@
           "Entre."
         ],
         "1": [
+          "Entre à esquerda."
+        ],
+        "2": [
           "Entre na A22 Oeste/Marinha Grande."
+        ],
+        "3": [
+          "Entre à direita na A22 Oeste/Marinha Grande."
         ]
       }
     },
     "merge_verbal": {
       "phrases": {
         "0": "Entre.",
-        "1": "Entre na <STREET_NAMES>."
+        "1": "Entre <RELATIVE_DIRECTION>.",
+        "2": "Entre na <STREET_NAMES>.",
+        "3": "Entre <RELATIVE_DIRECTION> na <STREET_NAMES>."
       },
+      "relative_directions": [
+        "à esquerda",
+        "à direita"
+      ],
       "empty_street_name_labels": [
         "calçada",
         "ciclovia",
@@ -918,7 +1032,13 @@
           "Entre."
         ],
         "1": [
+          "Entre à esquerda."
+        ],
+        "2": [
           "Entre na A22 Oeste/Marinha Grande."
+        ],
+        "3": [
+          "Entre à direita na A22 Oeste/Marinha Grande."
         ]
       }
     },
@@ -1123,7 +1243,12 @@
         "6": "Vire <RELATIVE_DIRECTION> para pegar a rampa <BRANCH_SIGN>.",
         "7": "Vire <RELATIVE_DIRECTION> para pegar a rampa em direção a <TOWARD_SIGN>.",
         "8": "Vire <RELATIVE_DIRECTION> para pegar a rampa <BRANCH_SIGN> em direção a <TOWARD_SIGN>.",
-        "9": "Vire <RELATIVE_DIRECTION> para pegar a rampa <NAME_SIGN>."
+        "9": "Vire <RELATIVE_DIRECTION> para pegar a rampa <NAME_SIGN>.",
+        "10": "Pegue a rampa.",
+        "11": "Pegue a rampa <BRANCH_SIGN>.",
+        "12": "Pegue a rampa em direção a <TOWARD_SIGN>.",
+        "13": "Pegue a rampa <BRANCH_SIGN> em direção a <TOWARD_SIGN>.",
+        "14": "Pegue a rampa <NAME_SIGN>."
       },
       "relative_directions": [
         "à esquerda",
@@ -1161,6 +1286,21 @@
         ],
         "9": [
           "Vire à direita para pegar a rampa Matosinhos."
+        ],
+        "10": [
+          "Pegue a rampa."
+        ],
+        "11": [
+          "Pegue a rampa A2."
+        ],
+        "12": [
+          "Pegue a rampa em direção a Aeroporto."
+        ],
+        "13": [
+          "Pegue a rampa Eixo Norte/Sul em direção a Aeroporto."
+        ],
+        "14": [
+          "Pegue a rampa Alcochete."
         ]
       }
     },
@@ -1227,7 +1367,12 @@
         "6": "Vire <RELATIVE_DIRECTION> para pegar a rampa <BRANCH_SIGN>.",
         "7": "Vire <RELATIVE_DIRECTION> para pegar a rampa em direção a <TOWARD_SIGN>.",
         "8": "Vire <RELATIVE_DIRECTION> para pegar a rampa <BRANCH_SIGN> em direção a <TOWARD_SIGN>.",
-        "9": "Vire <RELATIVE_DIRECTION> para pegar a rampa <NAME_SIGN>."
+        "9": "Vire <RELATIVE_DIRECTION> para pegar a rampa <NAME_SIGN>.",
+        "10": "Pegue a rampa.",
+        "11": "Pegue a rampa <BRANCH_SIGN>.",
+        "12": "Pegue a rampa em direção a <TOWARD_SIGN>.",
+        "13": "Pegue a rampa <BRANCH_SIGN> em direção a <TOWARD_SIGN>.",
+        "14": "Pegue a rampa <NAME_SIGN>."
       },
       "relative_directions": [
         "à esquerda",
@@ -1265,6 +1410,21 @@
         ],
         "9": [
           "Vire à direita para pegar a rampa Alcochete."
+        ],
+        "10": [
+          "Pegue a rampa."
+        ],
+        "11": [
+          "Pegue a rampa A2."
+        ],
+        "12": [
+          "Pegue a rampa em direção a Aeroporto."
+        ],
+        "13": [
+          "Pegue a rampa Eixo Norte/Sul em direção a Aeroporto."
+        ],
+        "14": [
+          "Pegue a rampa Alcochete."
         ]
       }
     },

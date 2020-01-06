@@ -334,6 +334,28 @@ PointLL PointLL::Project(const PointLL& u, const PointLL& v, float lon_scale) co
   return {u.first + bx * scale, u.second + by * scale};
 }
 
+std::tuple<PointLL, float, int> PointLL::Project(const std::vector<PointLL>& pts) const {
+  auto u = pts.begin();
+  auto v = pts.begin();
+  std::advance(v, 1);
+
+  auto min_distance = std::numeric_limits<float>::max();
+  auto best = PointLL{};
+  int best_index = 0;
+  while (v != pts.end()) {
+    auto candidate = Project(*u, *v);
+    auto distance = Distance(candidate);
+    if (distance < min_distance) {
+      min_distance = distance;
+      best = candidate;
+      best_index = std::distance(pts.begin(), u);
+    }
+    u++;
+    v++;
+  }
+  return std::make_tuple(best, min_distance, best_index);
+};
+
 // Explicit instantiations
 template bool PointLL::WithinPolygon(const std::vector<PointLL>&) const;
 template bool PointLL::WithinPolygon(const std::list<PointLL>&) const;

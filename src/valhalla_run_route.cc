@@ -211,8 +211,7 @@ const valhalla::TripLeg* PathTest(GraphReader& reader,
       PathLocation::toPBF(path_location.back(), options.mutable_locations()->Add(), reader);
     }
     std::vector<PathInfo> path;
-    bool ret =
-        RouteMatcher::FormPath(mode_costing, mode, reader, trace, false, options.locations(), path);
+    bool ret = RouteMatcher::FormPath(mode_costing, mode, reader, trace, options, path);
     if (ret) {
       LOG_INFO("RouteMatcher succeeded");
     } else {
@@ -514,12 +513,10 @@ int main(int argc, char* argv[]) {
   pos_options.add("config", 1);
 
   bpo::variables_map vm;
-
   try {
     bpo::store(bpo::command_line_parser(argc, argv).options(poptions).positional(pos_options).run(),
                vm);
     bpo::notify(vm);
-
   } catch (std::exception& e) {
     std::cerr << "Unable to parse command line options because: " << e.what() << "\n"
               << "This is a bug, please report it at " PACKAGE_BUGREPORT << "\n";
@@ -550,7 +547,7 @@ int main(int argc, char* argv[]) {
   const auto& options = request.options();
 
   // Get type of route - this provides the costing method to use.
-  std::string routetype = valhalla::Costing_Name(options.costing());
+  std::string routetype = valhalla::Costing_Enum_Name(options.costing());
   LOG_INFO("routetype: " + routetype);
 
   // Locations
@@ -572,18 +569,15 @@ int main(int argc, char* argv[]) {
                                  std::unordered_map<std::string, std::string>>(logging_subtree.get());
     valhalla::midgard::logging::Configure(logging_config);
   }
-
   // Something to hold the statistics
   uint32_t n = locations.size() - 1;
   PathStatistics data({locations[0].latlng_.lat(), locations[0].latlng_.lng()},
                       {locations[n].latlng_.lat(), locations[n].latlng_.lng()});
-
   // Crow flies distance between locations (km)
   float d1 = 0.0f;
   for (uint32_t i = 0; i < n; i++) {
     d1 += locations[i].latlng_.Distance(locations[i + 1].latlng_) * kKmPerMeter;
   }
-
   // Get something we can use to fetch tiles
   valhalla::baldr::GraphReader reader(pt.get_child("mjolnir"));
 
@@ -596,7 +590,6 @@ int main(int argc, char* argv[]) {
   // Construct costing
   CostFactory<DynamicCost> factory;
   factory.RegisterStandardCostingModels();
-
   // Get the costing method - pass the JSON configuration
   TravelMode mode;
   std::shared_ptr<DynamicCost> mode_costing[4];
@@ -689,6 +682,8 @@ int main(int argc, char* argv[]) {
       if (get_env("SAVE_PATH_PBF") == "true") {
         std::string path_bytes = request.SerializeAsString();
         std::string pbf_filename = "path.pbf";
+        LOG_INFO("Writing TripPath to " + pbf_filename + " with size " +
+                 std::to_string(path_bytes.size()));
         std::ofstream output_pbf(pbf_filename, std::ios::out | std::ios::trunc | std::ios::binary);
         if (output_pbf.is_open() && path_bytes.size() > 0) {
           output_pbf.write(&path_bytes[0], path_bytes.size());

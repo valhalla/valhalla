@@ -26,18 +26,8 @@ jobs:
       VCPKG_DIR: '$(Agent.WorkFolder)\vcpkg'
 
     steps:
-      - script: |
-          git config core.symlinks true
-          git reset --hard
-        displayName: 'Fix symlinks to third-party .proto files'
-
       - script: git submodule update --init --recursive
         displayName: 'Pull submodules'
-
-      - powershell: |
-          Get-Content -TotalCount 1 -Path .\proto\fileformat.proto
-          Get-Content -TotalCount 1 -Path .\proto\osmformat.proto
-        displayName: 'Check symlinks to third-party .proto files'
 
       - script: |
           git clone --depth 1 https://github.com/microsoft/vcpkg %VCPKG_DIR%

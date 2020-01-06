@@ -68,7 +68,7 @@ void loki_worker_t::parse_costing(Api& api) {
   }
 
   auto costing_type = options.costing();
-  auto costing_str = Costing_Name(costing_type);
+  auto costing_str = Costing_Enum_Name(costing_type);
 
   if (!options.do_not_track()) {
     valhalla::midgard::logging::Log("costing_type::" + costing_str, " [ANALYTICS] ");
@@ -155,7 +155,7 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
   Options::Action action;
   for (const auto& kv : config.get_child("loki.actions")) {
     auto path = kv.second.get_value<std::string>();
-    if (!Options_Action_Parse(path, &action)) {
+    if (!Options_Action_Enum_Parse(path, &action)) {
       throw std::runtime_error("Action not supported " + path);
     }
     action_str.append("'/" + path + "' ");
@@ -231,7 +231,7 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
 
 void loki_worker_t::cleanup() {
   if (reader->OverCommitted()) {
-    reader->Clear();
+    reader->Trim();
   }
 }
 

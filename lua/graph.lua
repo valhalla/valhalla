@@ -1269,6 +1269,11 @@ function filter_tags_generic(kv)
      return 1
    end
 
+   --toss where access=private and highway=service and service != driveway
+   if (kv["access"] == "private" and kv["highway"] == "service" and (kv["service"] == nil or kv["service"] ~= "driveway")) then
+     return 1
+   end
+
    delete_tags = { 'FIXME', 'note', 'source' }
 
    for i,k in ipairs(delete_tags) do
@@ -1815,10 +1820,28 @@ function nodes_proc (kv, nokeys)
 
   if kv["traffic_signals:direction"] == "forward" then
     kv["forward_signal"] = "true"
+
+    if kv["public_transport"] == nil and kv["name"] then
+       kv["junction"] = "named"
+    end
   end
 
   if kv["traffic_signals:direction"] == "backward" then
     kv["backward_signal"] = "true"
+
+    if kv["public_transport"] == nil and kv["name"] then
+       kv["junction"] = "named"
+    end
+  end
+
+  if kv["public_transport"] == nil and kv["name"] then
+    if kv["highway"] == "traffic_signals" then
+       if kv["junction"] ~= "yes" then
+          kv["junction"] = "named"
+       end
+    elseif kv["junction"] == "yes" or kv["reference_point"] == "yes" then
+       kv["junction"] = "named"
+    end
   end
 
   --store a mask denoting access

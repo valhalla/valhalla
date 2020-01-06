@@ -276,29 +276,31 @@ void Isochrone::ExpandForward(GraphReader& graphreader,
       continue;
     }
 
+    bool has_time_restrictions = false;
     // Check if the edge is allowed or if a restriction occurs. Get the edge speed.
-    uint32_t speed;
-    bool has_traffic = directededge->predicted_speed() || directededge->constrained_flow_speed() > 0;
     if (has_date_time_) {
       // With date time we check time dependent restrictions and access as well as get
       // traffic based speed if it exists
-      if (!costing_->Allowed(directededge, pred, tile, edgeid, localtime, nodeinfo->timezone()) ||
+      if (!costing_->Allowed(directededge, pred, tile, edgeid, localtime, nodeinfo->timezone(),
+                             has_time_restrictions) ||
           costing_->Restricted(directededge, pred, bdedgelabels_, tile, edgeid, true, localtime,
                                nodeinfo->timezone())) {
         continue;
       }
-      speed = tile->GetSpeed(directededge, edgeid, seconds_of_week);
     } else {
-      if (!costing_->Allowed(directededge, pred, tile, edgeid, 0, 0) ||
+      // TODO merge these two branches
+      if (!costing_->Allowed(directededge, pred, tile, edgeid, 0, 0, has_time_restrictions) ||
           costing_->Restricted(directededge, pred, bdedgelabels_, tile, edgeid, true)) {
         continue;
       }
-      speed = tile->GetSpeed(directededge);
     }
 
     // Compute the cost to the end of this edge
-    Cost newcost = pred.cost() + costing_->EdgeCost(directededge, speed) +
-                   costing_->TransitionCost(directededge, nodeinfo, pred, has_traffic);
+    Cost newcost =
+        pred.cost() +
+        costing_->EdgeCost(directededge, tile,
+                           has_date_time_ ? seconds_of_week : kConstrainedFlowSecondOfDay) +
+        costing_->TransitionCost(directededge, nodeinfo, pred);
 
     // Check if edge is temporarily labeled and this path has less cost. If
     // less cost the predecessor is updated and the sort cost is decremented
@@ -308,7 +310,7 @@ void Isochrone::ExpandForward(GraphReader& graphreader,
       if (newcost.cost < lab.cost().cost) {
         float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
         adjacencylist_->decrease(es->index(), newsortcost);
-        lab.Update(pred_idx, newcost, newsortcost);
+        lab.Update(pred_idx, newcost, newsortcost, has_time_restrictions);
       }
       continue;
     }
@@ -320,9 +322,14 @@ void Isochrone::ExpandForward(GraphReader& graphreader,
     // Add edge label, add to the adjacency list and set edge status
     uint32_t idx = bdedgelabels_.size();
     *es = {EdgeSet::kTemporary, idx};
+<<<<<<< HEAD
     bdedgelabels_.emplace_back(pred_idx, edgeid, oppedgeid, directededge, newcost, mode_, Cost{}, 0.f,
                                false);
     // kInvalidLabel, edgeid, opp_edge_id, directededge, cost, mode_, Cost{}, d, false
+=======
+    edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, 0.0f, mode_, 0,
+                             has_time_restrictions);
+>>>>>>> origin/master
     adjacencylist_->add(idx);
   }
 
@@ -454,31 +461,30 @@ void Isochrone::ExpandReverse(GraphReader& graphreader,
     const DirectedEdge* opp_edge = t2->directededge(oppedge);
 
     // Check if the edge is allowed or if a restriction occurs. Get the edge speed.
-    uint32_t speed;
+    bool has_time_restrictions = false;
     if (has_date_time_) {
       // With date time we check time dependent restrictions and access as well as get
       // traffic based speed if it exists
       if (!costing_->AllowedReverse(directededge, pred, opp_edge, t2, oppedge, localtime,
-                                    nodeinfo->timezone()) ||
+                                    nodeinfo->timezone(), has_time_restrictions) ||
           costing_->Restricted(directededge, pred, bdedgelabels_, tile, edgeid, false, localtime,
                                nodeinfo->timezone())) {
         continue;
       }
-      speed = t2->GetSpeed(opp_edge, oppedge, seconds_of_week);
     } else {
-      if (!costing_->AllowedReverse(directededge, pred, opp_edge, t2, oppedge, 0, 0) ||
+      if (!costing_->AllowedReverse(directededge, pred, opp_edge, t2, oppedge, 0, 0,
+                                    has_time_restrictions) ||
           costing_->Restricted(directededge, pred, bdedgelabels_, tile, edgeid, false)) {
         continue;
       }
-      speed = t2->GetSpeed(opp_edge);
     }
 
     // Compute the cost to the end of this edge with separate transition cost
-    bool has_traffic =
-        opp_pred_edge->predicted_speed() || opp_pred_edge->constrained_flow_speed() > 0;
     Cost tc = costing_->TransitionCostReverse(directededge->localedgeidx(), nodeinfo, opp_edge,
-                                              opp_pred_edge, has_traffic);
-    Cost newcost = pred.cost() + costing_->EdgeCost(opp_edge, speed);
+                                              opp_pred_edge);
+    Cost newcost = pred.cost() +
+                   costing_->EdgeCost(opp_edge, t2,
+                                      has_date_time_ ? seconds_of_week : kConstrainedFlowSecondOfDay);
     newcost.cost += tc.cost;
 
     // Check if edge is temporarily labeled and this path has less cost. If
@@ -489,7 +495,7 @@ void Isochrone::ExpandReverse(GraphReader& graphreader,
       if (newcost.cost < lab.cost().cost) {
         float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
         adjacencylist_->decrease(es->index(), newsortcost);
-        lab.Update(pred_idx, newcost, newsortcost, tc);
+        lab.Update(pred_idx, newcost, newsortcost, tc, has_time_restrictions);
       }
       continue;
     }
@@ -498,7 +504,7 @@ void Isochrone::ExpandReverse(GraphReader& graphreader,
     uint32_t idx = bdedgelabels_.size();
     *es = {EdgeSet::kTemporary, idx};
     bdedgelabels_.emplace_back(pred_idx, edgeid, oppedge, directededge, newcost, newcost.cost, 0.0f,
-                               mode_, tc, false);
+                               mode_, tc, false, has_time_restrictions);
     adjacencylist_->add(idx);
   }
 
@@ -692,9 +698,10 @@ bool Isochrone::ExpandForwardMM(GraphReader& graphreader,
     // costing - assume if you get a transit edge you walked to the transit stop
     uint32_t tripid = 0;
     uint32_t blockid = 0;
+    bool has_time_restrictions = false;
     if (directededge->IsTransitLine()) {
       // Check if transit costing allows this edge
-      if (!tc->Allowed(directededge, pred, tile, edgeid, 0, 0)) {
+      if (!tc->Allowed(directededge, pred, tile, edgeid, 0, 0, has_time_restrictions)) {
         continue;
       }
 
@@ -769,13 +776,12 @@ bool Isochrone::ExpandForwardMM(GraphReader& graphreader,
       // Regular edge - use the appropriate costing and check if access
       // is allowed. If mode is pedestrian this will validate walking
       // distance has not been exceeded.
-      if (!mode_costing[static_cast<uint32_t>(mode_)]->Allowed(directededge, pred, tile, edgeid, 0,
-                                                               0)) {
+      if (!mode_costing[static_cast<uint32_t>(mode_)]->Allowed(directededge, pred, tile, edgeid, 0, 0,
+                                                               has_time_restrictions)) {
         continue;
       }
 
-      Cost c = mode_costing[static_cast<uint32_t>(mode_)]->EdgeCost(directededge,
-                                                                    tile->GetSpeed(directededge));
+      Cost c = mode_costing[static_cast<uint32_t>(mode_)]->EdgeCost(directededge, tile);
       c.cost *= mode_costing[static_cast<uint32_t>(mode_)]->GetModeFactor();
       newcost += c;
 
@@ -830,7 +836,8 @@ bool Isochrone::ExpandForwardMM(GraphReader& graphreader,
       if (newcost.cost < lab.cost().cost) {
         float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
         adjacencylist_->decrease(es->index(), newsortcost);
-        lab.Update(pred_idx, newcost, newsortcost, walking_distance, tripid, blockid);
+        lab.Update(pred_idx, newcost, newsortcost, walking_distance, tripid, blockid,
+                   has_time_restrictions);
       }
       continue;
     }
@@ -840,7 +847,7 @@ bool Isochrone::ExpandForwardMM(GraphReader& graphreader,
     *es = {EdgeSet::kTemporary, idx};
     mmedgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, 0.0f, mode_,
                                walking_distance, tripid, prior_stop, blockid, operator_id,
-                               has_transit);
+                               has_transit, has_time_restrictions);
     adjacencylist_->add(idx);
   }
 
@@ -1074,8 +1081,7 @@ void Isochrone::SetOriginLocations(GraphReader& graphreader,
       const DirectedEdge* opp_dir_edge = opp_tile->directededge(edgeid);
 
       // Get cost
-      Cost cost = costing->EdgeCost(directededge, tile->GetSpeed(directededge)) *
-                  (1.0f - edge.percent_along());
+      Cost cost = costing->EdgeCost(directededge, tile) * (1.0f - edge.percent_along());
 
       // We need to penalize this location based on its score (distance in meters from input)
       // We assume the slowest speed you could travel to cover that distance to start/end the route
@@ -1144,8 +1150,7 @@ void Isochrone::SetDestinationLocations(
       const DirectedEdge* opp_dir_edge = opp_tile->directededge(edgeid);
 
       // Get the cost
-      Cost cost =
-          costing->EdgeCost(directededge, tile->GetSpeed(directededge)) * edge.percent_along();
+      Cost cost = costing->EdgeCost(directededge, tile) * edge.percent_along();
 
       // We need to penalize this location based on its score (distance in meters from input)
       // We assume the slowest speed you could travel to cover that distance to start/end the route
@@ -1159,7 +1164,7 @@ void Isochrone::SetDestinationLocations(
       uint32_t idx = bdedgelabels_.size();
       uint32_t d = static_cast<uint32_t>(directededge->length() * edge.percent_along());
       bdedgelabels_.emplace_back(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, mode_,
-                                 Cost{}, d, false);
+                                 Cost{}, d, false, false);
       adjacencylist_->add(idx);
       edgestatus_.Set(opp_edge_id, EdgeSet::kTemporary, idx, graphreader.GetGraphTile(opp_edge_id));
     }
@@ -1209,8 +1214,7 @@ void Isochrone::SetOriginLocationsMM(
       }
 
       // Get cost
-      Cost cost = costing->EdgeCost(directededge, tile->GetSpeed(directededge)) *
-                  (1.0f - edge.percent_along());
+      Cost cost = costing->EdgeCost(directededge, endtile) * (1.0f - edge.percent_along());
 
       // We need to penalize this location based on its score (distance in meters from input)
       // We assume the slowest speed you could travel to cover that distance to start/end the route

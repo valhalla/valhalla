@@ -43,6 +43,7 @@ public:
   const DirectionsLeg_Maneuver_Type& type() const;
   void set_type(const DirectionsLeg_Maneuver_Type& type);
   bool IsDestinationType() const;
+  bool IsMergeType() const;
 
   const StreetNames& street_names() const;
   void set_street_names(const std::vector<std::pair<std::string, bool>>& names);
@@ -129,6 +130,8 @@ public:
 
   bool portions_toll() const;
   void set_portions_toll(bool portionsToll);
+  bool has_time_restrictions() const;
+  void set_has_time_restrictions(bool has_time_restrictions);
 
   bool portions_unpaved() const;
   void set_portions_unpaved(bool portionsUnpaved);
@@ -143,11 +146,19 @@ public:
   const Signs& signs() const;
   Signs* mutable_signs();
 
+  bool HasSigns() const;
+
   bool HasExitSign() const;
   bool HasExitNumberSign() const;
   bool HasExitBranchSign() const;
   bool HasExitTowardSign() const;
   bool HasExitNameSign() const;
+
+  bool HasGuideSign() const;
+  bool HasGuideBranchSign() const;
+  bool HasGuideTowardSign() const;
+
+  bool HasJunctionNameSign() const;
 
   uint32_t internal_right_turn_count() const;
   void set_internal_right_turn_count(uint32_t internal_right_turn_count);
@@ -206,6 +217,12 @@ public:
   void set_roundabout_exit_street_names(std::unique_ptr<StreetNames>&& roundabout_exit_street_names);
   bool HasRoundaboutExitStreetNames() const;
   void ClearRoundaboutExitStreetNames();
+
+  RelativeDirection merge_to_relative_direction() const;
+  void set_merge_to_relative_direction(RelativeDirection merge_to_relative_direction);
+
+  bool drive_on_right() const;
+  void set_drive_on_right(bool drive_on_right);
 
   TripLeg_TravelMode travel_mode() const;
   void set_travel_mode(TripLeg_TravelMode travel_mode);
@@ -325,6 +342,9 @@ protected:
   bool verbal_multi_cue_;
   bool to_stay_on_;
   std::unique_ptr<StreetNames> roundabout_exit_street_names_;
+  RelativeDirection merge_to_relative_direction_;
+  bool drive_on_right_; // Defaults to true
+  bool has_time_restrictions_;
 
   ////////////////////////////////////////////////////////////////////////////
   // Transit support

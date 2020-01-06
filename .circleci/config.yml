@@ -1,30 +1,32 @@
-version: 2
-jobs:
-  lint:
-    docker:
-      - image: valhalla/docker:build-2.6.1
+version: 2.1
+
+executors:
+  macos:
+    macos:
+      xcode: 11.1.0
+    environment:
+      HOMEBREW_NO_AUTO_UPDATE: 1
+
+commands:
+  install_macos_dependencies:
     steps:
-      - checkout
-      - run: apt-get update && apt-get -y install clang-tidy-5.0 clang-5.0 curl git nodejs
-      - run: nodejs ./scripts/validate_changelog.js
-      - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
-      - run: git submodule sync && git submodule update --init
-      - restore_cache:
-          keys:
-            - ccache
-      - run: npm install --ignore-scripts
-      - run: mkdir build
-      - run: cd build && cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXPORT_COMPILE_COMMANDS=On
-      - run: make -C build -j4
-      - run: cd build && ../scripts/tidy.sh && ../scripts/error_on_dirty.sh
-      - save_cache:
-          key: ccache
-          paths:
-            - ~/.ccache
+      - run: brew install protobuf cmake libtool boost-python libspatialite pkg-config lua curl wget czmq lz4 spatialite-tools unzip
+      - run:
+          name: Install Node
+          command: |
+            set +e
+            touch $BASH_ENV
+            curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.5/install.sh | bash
+            echo 'export NVM_DIR="$HOME/.nvm"' >> $BASH_ENV
+            echo '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> $BASH_ENV
+            echo 'nvm install v8.11.2' >> $BASH_ENV
+            echo 'nvm alias default v8.11.2' >> $BASH_ENV
+
+jobs:
 
   build-release-binary-linux:
     docker:
-      - image: valhalla/docker:build-2.6.1
+      - image: valhalla/docker:build-3.0.2
     steps:
       - checkout
       - run:
@@ -65,7 +67,7 @@ jobs:
 
   build-debug-binary-linux:
     docker:
-      - image: valhalla/docker:build-2.6.1
+      - image: valhalla/docker:build-3.0.2
     steps:
       - checkout
       - run:
@@ -102,9 +104,9 @@ jobs:
           paths:
             - ~/.ccache
 
-  build-debug:
+  lint-build-debug:
     docker:
-      - image: valhalla/docker:build-2.6.1
+      - image: valhalla/docker:build-3.0.2
     steps:
       - checkout
       - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
@@ -114,8 +116,9 @@ jobs:
             - ccache
       - run: npm install --ignore-scripts
       - run: mkdir build
-      - run: cd build && cmake .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_COVERAGE=On -DCPACK_GENERATOR=DEB
+      - run: cd build && cmake .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_COVERAGE=On -DCPACK_GENERATOR=DEB -DENABLE_COMPILER_WARNINGS=On -DCMAKE_EXPORT_COMPILE_COMMANDS=On
       - run: make -C build -j4
+      - run: scripts/clang-tidy-only-diff.sh
       - run: make -C build -j4 tests
       - run: make -C build -j2 check
       - run: make -C build install
@@ -129,7 +132,7 @@ jobs:
 
   build-release:
     docker:
-      - image: valhalla/docker:build-2.6.1
+      - image: valhalla/docker:build-3.0.2
     steps:
       - checkout
       - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
@@ -154,7 +157,7 @@ jobs:
 
   build-release-x86:
     docker:
-      - image: valhalla/docker:build-x86-3.0.0
+      - image: valhalla/docker:build-x86-3.0.2
     steps:
       - checkout
       #- run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
@@ -175,23 +178,9 @@ jobs:
             - ~/.ccache
 
   build-osx:
-    macos:
-      xcode: "9.2.0"
-    environment:
-      HOMEBREW_NO_AUTO_UPDATE: 1
+    executor: macos
     steps:
-      - run: brew install protobuf --without-python@2
-      - run: brew upgrade python
-      - run: brew install cmake libtool boost-python libspatialite pkg-config lua jq curl wget czmq lz4 nvm
-      - run:
-          command: |
-            set +e
-            touch $BASH_ENV
-            curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.5/install.sh | bash
-            echo 'export NVM_DIR="$HOME/.nvm"' >> $BASH_ENV
-            echo '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> $BASH_ENV
-            echo 'nvm install v8.11.2' >> $BASH_ENV
-            echo 'nvm alias default v8.11.2' >> $BASH_ENV
+      - install_macos_dependencies
       - checkout
       - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
       - run: git submodule sync && git submodule update --init
@@ -212,23 +201,9 @@ jobs:
             - ~/.ccache
 
   build-release-binary-osx:
-    macos:
-      xcode: "9.2.0"
-    environment:
-      HOMEBREW_NO_AUTO_UPDATE: 1
+    executor: macos
     steps:
-      - run: brew install protobuf --without-python@2
-      - run: brew upgrade python
-      - run: brew install cmake libtool boost-python libspatialite pkg-config lua jq curl wget czmq lz4 nvm
-      - run:
-          command: |
-            set +e
-            touch $BASH_ENV
-            curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.5/install.sh | bash
-            echo 'export NVM_DIR="$HOME/.nvm"' >> $BASH_ENV
-            echo '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> $BASH_ENV
-            echo 'nvm install v8.11.2' >> $BASH_ENV
-            echo 'nvm alias default v8.11.2' >> $BASH_ENV
+      - install_macos_dependencies
       - checkout
       - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
       - run: git submodule sync && git submodule update --init
@@ -245,23 +220,9 @@ jobs:
             ./scripts/publish.sh
 
   build-debug-binary-osx:
-    macos:
-      xcode: "9.2.0"
-    environment:
-      HOMEBREW_NO_AUTO_UPDATE: 1
+    executor: macos
     steps:
-      - run: brew install protobuf --without-python@2
-      - run: brew upgrade python
-      - run: brew install cmake libtool boost-python libspatialite pkg-config lua jq curl wget czmq lz4 nvm
-      - run:
-          command: |
-            set +e
-            touch $BASH_ENV
-            curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.5/install.sh | bash
-            echo 'export NVM_DIR="$HOME/.nvm"' >> $BASH_ENV
-            echo '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> $BASH_ENV
-            echo 'nvm install v8.11.2' >> $BASH_ENV
-            echo 'nvm alias default v8.11.2' >> $BASH_ENV
+      - install_macos_dependencies
       - checkout
       - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
       - run: git submodule sync && git submodule update --init
@@ -281,8 +242,7 @@ workflows:
   version: 2
   build_test_publish:
     jobs:
-      - lint
-      - build-debug
+      - lint-build-debug
       - build-release
       - build-release-x86
       - build-osx

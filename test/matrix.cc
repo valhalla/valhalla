@@ -48,7 +48,8 @@ public:
                const GraphTile*& tile,
                const GraphId& edgeid,
                const uint64_t current_time,
-               const uint32_t tz_index) const {
+               const uint32_t tz_index,
+               bool& time_restricted) const {
     if (!(edge->forwardaccess() & kAutoAccess) ||
         (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
         (pred.restrictions() & (1 << edge->localedgeidx())) ||
@@ -65,7 +66,8 @@ public:
                       const GraphTile*& tile,
                       const GraphId& opp_edgeid,
                       const uint64_t current_time,
-                      const uint32_t tz_index) const {
+                      const uint32_t tz_index,
+                      bool& has_time_restrictions) const {
     if (!(opp_edge->forwardaccess() & kAutoAccess) ||
         (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
         (opp_edge->restrictions() & (1 << pred.opp_local_idx())) ||
@@ -80,23 +82,25 @@ public:
     return (node->access() & kAutoAccess);
   }
 
-  Cost EdgeCost(const DirectedEdge* edge, const uint32_t speed) const {
+  Cost EdgeCost(const baldr::DirectedEdge* edge,
+                const baldr::TransitDeparture* departure,
+                const uint32_t curr_time) const {
+    throw std::runtime_error("We shouldnt be testing transit edges");
+  }
+
+  Cost EdgeCost(const DirectedEdge* edge, const GraphTile* tile, const uint32_t seconds) const {
     float sec = static_cast<float>(edge->length());
     return {sec / 10.0f, sec};
   }
 
-  Cost TransitionCost(const DirectedEdge* edge,
-                      const NodeInfo* node,
-                      const EdgeLabel& pred,
-                      const bool has_traffic) const {
+  Cost TransitionCost(const DirectedEdge* edge, const NodeInfo* node, const EdgeLabel& pred) const {
     return {5.0f, 5.0f};
   }
 
   Cost TransitionCostReverse(const uint32_t idx,
                              const NodeInfo* node,
                              const DirectedEdge* opp_edge,
-                             const DirectedEdge* opp_pred_edge,
-                             const bool has_traffic) const {
+                             const DirectedEdge* opp_pred_edge) const {
     return {5.0f, 5.0f};
   }
 
@@ -177,7 +181,7 @@ void adjust_scores(Options& options) {
       }
 
       // subtract off the min score and cap at max so that path algorithm doesnt go too far
-      auto max_score = kMaxDistances.find(Costing_Name(options.costing()));
+      auto max_score = kMaxDistances.find(Costing_Enum_Name(options.costing()));
       for (auto* candidates : {location.mutable_path_edges(), location.mutable_filtered_edges()}) {
         for (auto& candidate : *candidates) {
           candidate.set_distance(candidate.distance() - minScore);
@@ -246,10 +250,10 @@ const auto test_request_osrm = R"({
     "costing":"auto"
   }&format=osrm)";
 
-std::vector<TimeDistance> matrix_answers = {{28, 28},     {2027, 1837}, {2402, 2211}, {4164, 3839},
-                                            {1518, 1397}, {1809, 1639}, {2062, 1951}, {3946, 3641},
-                                            {2312, 2112}, {700, 640},   {0, 0},       {2822, 2626},
-                                            {5563, 5178}, {3951, 3706}, {4367, 4107}, {1825, 1679}};
+std::vector<TimeDistance> matrix_answers = {{28, 28},     {2027, 1837}, {2389, 2208}, {4164, 3839},
+                                            {1518, 1397}, {1809, 1639}, {2043, 1938}, {3946, 3641},
+                                            {2299, 2109}, {687, 637},   {0, 0},       {2809, 2623},
+                                            {5554, 5178}, {3942, 3706}, {4344, 4104}, {1815, 1679}};
 } // namespace
 
 const uint32_t kThreshold = 1;

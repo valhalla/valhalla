@@ -134,6 +134,8 @@ public:
       auto* edge = path_edges->Add();
       edge->set_graph_id(e.id);
       edge->set_percent_along(e.percent_along);
+      edge->set_begin_node(e.percent_along == 0.0f);
+      edge->set_end_node(e.percent_along == 1.0f);
       edge->mutable_ll()->set_lng(e.projected.first);
       edge->mutable_ll()->set_lat(e.projected.second);
       edge->set_side_of_street(e.sos == PathLocation::LEFT

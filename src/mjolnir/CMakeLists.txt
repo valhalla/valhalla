@@ -66,6 +66,7 @@ valhalla_module(NAME mjolnir
       ${VALHALLA_SOURCE_DIR}
       ${VALHALLA_SOURCE_DIR}/valhalla
       ${VALHALLA_SOURCE_DIR}/third_party/date/include
+      $<$<BOOL:${MSVC}>:${VALHALLA_SOURCE_DIR}/third_party/dirent/include>
       ${PROTOBUF_INCLUDE_DIR}
    PRIVATE
       ${CMAKE_CURRENT_BINARY_DIR}
@@ -76,7 +77,8 @@ valhalla_module(NAME mjolnir
     Boost::filesystem
     Boost::system
     Boost::date_time
-    Spatialite::Spatialite
+    SpatiaLite::SpatiaLite
     SQLite3::SQLite3
     Lua::Lua
-    Threads::Threads)
+    Threads::Threads
+    ZLIB::ZLIB)

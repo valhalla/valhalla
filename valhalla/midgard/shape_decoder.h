@@ -8,7 +8,7 @@ namespace midgard {
 
 template <typename Point> class Shape7Decoder {
 public:
-  Shape7Decoder(const char* begin, const size_t size, const int precision = 7)
+  Shape7Decoder(const char* begin, const size_t size, const int = 7)
       : begin(begin), end(begin + size) {
   }
   Point pop() noexcept(false) {

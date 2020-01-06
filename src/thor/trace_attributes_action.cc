@@ -68,7 +68,7 @@ std::string thor_worker_t::trace_attributes(Api& request) {
         map_match_results.emplace_back(1.0f, 0.0f, std::vector<thor::MatchResult>{});
       } catch (const std::exception& e) {
         throw valhalla_exception_t{
-            443, ShapeMatch_Name(options.shape_match()) +
+            443, ShapeMatch_Enum_Name(options.shape_match()) +
                      " algorithm failed to find exact route match.  Try using "
                      "shape_match:'walk_or_snap' to fallback to map-matching algorithm"};
       }
@@ -77,10 +77,10 @@ std::string thor_worker_t::trace_attributes(Api& request) {
     // through the map-matching algorithm to snap the points to the correct shape
     case ShapeMatch::map_snap:
       try {
-        map_match_results = map_match(request, options.best_paths());
+        map_match_results = map_match(request);
       } catch (const std::exception& e) {
         throw valhalla_exception_t{
-            444, ShapeMatch_Name(options.shape_match()) +
+            444, ShapeMatch_Enum_Name(options.shape_match()) +
                      " algorithm failed to snap the shape points to the correct shape."};
       }
       break;
@@ -93,13 +93,13 @@ std::string thor_worker_t::trace_attributes(Api& request) {
         route_match(request);
         map_match_results.emplace_back(1.0f, 0.0f, std::vector<thor::MatchResult>{});
       } catch (...) {
-        LOG_WARN(ShapeMatch_Name(options.shape_match()) +
+        LOG_WARN(ShapeMatch_Enum_Name(options.shape_match()) +
                  " algorithm failed to find exact route match; Falling back to map_match...");
         try {
           map_match_results = map_match(request);
         } catch (const std::exception& e) {
           throw valhalla_exception_t{
-              444, ShapeMatch_Name(options.shape_match()) +
+              444, ShapeMatch_Enum_Name(options.shape_match()) +
                        " algorithm failed to snap the shape points to the correct shape."};
         }
       }

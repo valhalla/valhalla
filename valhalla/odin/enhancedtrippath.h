@@ -38,7 +38,7 @@ public:
     return trip_path_.node(index);
   }
 
-  ::valhalla::TripLeg_Node* mutable_node(int index) {
+  ::valhalla::TripLeg_Node* mutable_node(int index) const {
     return trip_path_.mutable_node(index);
   }
 
@@ -90,9 +90,9 @@ public:
 
   std::unique_ptr<EnhancedTripLeg_Edge> GetPrevEdge(const int node_index, int delta = 1);
 
-  std::unique_ptr<EnhancedTripLeg_Edge> GetCurrEdge(const int node_index);
+  std::unique_ptr<EnhancedTripLeg_Edge> GetCurrEdge(const int node_index) const;
 
-  std::unique_ptr<EnhancedTripLeg_Edge> GetNextEdge(const int node_index, int delta = 1);
+  std::unique_ptr<EnhancedTripLeg_Edge> GetNextEdge(const int node_index, int delta = 1) const;
 
   bool IsValidNodeIndex(int node_index) const;
 
@@ -213,6 +213,10 @@ public:
 
   bool toll() const {
     return mutable_edge_->toll();
+  }
+
+  bool has_time_restrictions() const {
+    return mutable_edge_->has_time_restrictions();
   }
 
   bool unpaved() const {

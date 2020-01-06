@@ -58,7 +58,7 @@ void loki_worker_t::init_route(Api& request) {
 void loki_worker_t::route(Api& request) {
   init_route(request);
   auto& options = *request.mutable_options();
-  auto costing_name = Costing_Name(options.costing());
+  auto costing_name = Costing_Enum_Name(options.costing());
   check_locations(options.locations_size(), max_locations.find(costing_name)->second);
   check_distance(options.locations(), max_distance.find(costing_name)->second);
 

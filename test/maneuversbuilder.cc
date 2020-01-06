@@ -39,8 +39,8 @@ public:
     ManeuversBuilder::Combine(maneuvers);
   }
 
-  void CountAndSortExitSigns(std::list<Maneuver>& maneuvers) {
-    ManeuversBuilder::CountAndSortExitSigns(maneuvers);
+  void CountAndSortSigns(std::list<Maneuver>& maneuvers) {
+    ManeuversBuilder::CountAndSortSigns(maneuvers);
   }
 
   void SetSimpleDirectionalManeuverType(Maneuver& maneuver) {
@@ -667,8 +667,8 @@ void TestLeftInternalStraightCombine() {
 
   maneuvers.emplace_back();
   Maneuver& maneuver4 = maneuvers.back();
-  PopulateManeuver(maneuver4, DirectionsLeg_Maneuver_Type_kMerge, {{"PA 283 East", 1}}, {}, {}, "",
-                   0.176467, 6, 4, Maneuver::RelativeDirection::kKeepStraight,
+  PopulateManeuver(maneuver4, DirectionsLeg_Maneuver_Type_kMergeLeft, {{"PA 283 East", 1}}, {}, {},
+                   "", 0.176467, 6, 4, Maneuver::RelativeDirection::kKeepStraight,
                    DirectionsLeg_Maneuver_CardinalDirection_kSouthEast, 134, 134, 7, 8, 20, 22, 0, 0,
                    0, 0, 0, 0, 0, 1, 0, {}, {}, {}, {});
 
@@ -701,8 +701,8 @@ void TestLeftInternalStraightCombine() {
 
   expected_maneuvers.emplace_back();
   Maneuver& expected_maneuver3 = expected_maneuvers.back();
-  PopulateManeuver(expected_maneuver3, DirectionsLeg_Maneuver_Type_kMerge, {{"PA 283 East", 1}}, {},
-                   {}, "", 0.176467, 6, 4, Maneuver::RelativeDirection::kKeepStraight,
+  PopulateManeuver(expected_maneuver3, DirectionsLeg_Maneuver_Type_kMergeLeft, {{"PA 283 East", 1}},
+                   {}, {}, "", 0.176467, 6, 4, Maneuver::RelativeDirection::kKeepStraight,
                    DirectionsLeg_Maneuver_CardinalDirection_kSouthEast, 134, 134, 7, 8, 20, 22, 0, 0,
                    0, 0, 0, 0, 0, 1, 0, {}, {}, {}, {});
 
@@ -1635,7 +1635,7 @@ void TestSimpleRightTurnChannelCombine() {
 void TryCountAndSortExitSigns(std::list<Maneuver>& maneuvers,
                               std::list<Maneuver>& expected_maneuvers) {
   ManeuversBuilderTest mbTest;
-  mbTest.CountAndSortExitSigns(maneuvers);
+  mbTest.CountAndSortSigns(maneuvers);
 
   if (maneuvers.size() != expected_maneuvers.size())
     throw std::runtime_error("Incorrect maneuver count");
@@ -1684,8 +1684,8 @@ void TestCountAndSortExitSigns() {
 
   maneuvers.emplace_back();
   Maneuver& maneuver4 = maneuvers.back();
-  PopulateManeuver(maneuver4, DirectionsLeg_Maneuver_Type_kMerge, {{"US 322 West", 1}}, {}, {}, "",
-                   55.286610, 3319, 358, Maneuver::RelativeDirection::kKeepStraight,
+  PopulateManeuver(maneuver4, DirectionsLeg_Maneuver_Type_kMergeLeft, {{"US 322 West", 1}}, {}, {},
+                   "", 55.286610, 3319, 358, Maneuver::RelativeDirection::kKeepStraight,
                    DirectionsLeg_Maneuver_CardinalDirection_kNorth, 351, 348, 4, 57, 31, 1303, 0, 0,
                    0, 0, 0, 0, 0, 1, 0, {}, {}, {}, {}, 0, 0, 0);
 
@@ -1733,8 +1733,8 @@ void TestCountAndSortExitSigns() {
 
   expected_maneuvers.emplace_back();
   Maneuver& expected_maneuver4 = expected_maneuvers.back();
-  PopulateManeuver(expected_maneuver4, DirectionsLeg_Maneuver_Type_kMerge, {{"US 322 West", 1}}, {},
-                   {}, "", 55.286610, 3319, 358, Maneuver::RelativeDirection::kKeepStraight,
+  PopulateManeuver(expected_maneuver4, DirectionsLeg_Maneuver_Type_kMergeLeft, {{"US 322 West", 1}},
+                   {}, {}, "", 55.286610, 3319, 358, Maneuver::RelativeDirection::kKeepStraight,
                    DirectionsLeg_Maneuver_CardinalDirection_kNorth, 351, 348, 4, 57, 31, 1303, 0, 0,
                    0, 0, 0, 0, 0, 1, 0, {}, {}, {}, {}, 0, 0, 0);
 

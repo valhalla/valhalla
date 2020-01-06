@@ -3,6 +3,7 @@
 #include <unordered_map>
 
 #include "baldr/datetime.h"
+#include "baldr/graphconstants.h"
 #include "baldr/location.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
@@ -286,6 +287,25 @@ rapidjson::Document from_string(const std::string& json, const valhalla_exceptio
   return d;
 }
 
+void add_date_to_locations(Options& options,
+                           google::protobuf::RepeatedPtrField<valhalla::Location>& locations) {
+  if (options.has_date_time() && locations.size()) {
+    switch (options.date_time_type()) {
+      case Options::current:
+        locations.Mutable(0)->set_date_time("current");
+        break;
+      case Options::depart_at:
+        locations.Mutable(0)->set_date_time(options.date_time());
+        break;
+      case Options::arrive_by:
+        locations.Mutable(locations.size() - 1)->set_date_time(options.date_time());
+        break;
+      default:
+        break;
+    }
+  }
+}
+
 void parse_locations(const rapidjson::Document& doc,
                      Options& options,
                      const std::string& node,
@@ -309,6 +329,7 @@ void parse_locations(const rapidjson::Document& doc,
     return;
   }
 
+  bool had_date_time = false;
   auto request_locations =
       rapidjson::get_optional<rapidjson::Value::ConstArray>(doc, std::string("/" + node).c_str());
   if (request_locations) {
@@ -384,6 +405,7 @@ void parse_locations(const rapidjson::Document& doc,
         auto date_time = rapidjson::get_optional<std::string>(r_loc, "/date_time");
         if (date_time) {
           location->set_date_time(*date_time);
+          had_date_time = true;
         }
         auto heading = rapidjson::get_optional<int>(r_loc, "/heading");
         if (heading) {
@@ -424,7 +446,7 @@ void parse_locations(const rapidjson::Document& doc,
         }
         auto preferred_side = rapidjson::get_optional<std::string>(r_loc, "/preferred_side");
         valhalla::Location::PreferredSide side;
-        if (preferred_side && PreferredSide_Parse(*preferred_side, &side)) {
+        if (preferred_side && PreferredSide_Enum_Parse(*preferred_side, &side)) {
           location->set_preferred_side(side);
         }
         auto search_cutoff = rapidjson::get_optional<unsigned int>(r_loc, "/search_cutoff");
@@ -438,6 +460,7 @@ void parse_locations(const rapidjson::Document& doc,
         }
       } catch (...) { throw valhalla_exception_t{location_parse_error_code}; }
     }
+
     // first and last locations get the default type of break no matter what
     if (locations->size()) {
       locations->Mutable(0)->set_type(valhalla::Location::kBreak);
@@ -446,6 +469,11 @@ void parse_locations(const rapidjson::Document& doc,
     if (track) {
       midgard::logging::Log(node + "_count::" + std::to_string(request_locations->Size()),
                             " [ANALYTICS] ");
+    }
+
+    // push the date time information down into the locations
+    if (!had_date_time) {
+      add_date_to_locations(options, *locations);
     }
   }
 }
@@ -500,7 +528,7 @@ void from_json(rapidjson::Document& doc, Options& options) {
 
   auto fmt = rapidjson::get_optional<std::string>(doc, "/format");
   Options::Format format;
-  if (fmt && Options_Format_Parse(*fmt, &format)) {
+  if (fmt && Options_Format_Enum_Parse(*fmt, &format)) {
     options.set_format(format);
   }
 
@@ -536,10 +564,41 @@ void from_json(rapidjson::Document& doc, Options& options) {
 
   auto dir_type = rapidjson::get_optional<std::string>(doc, "/directions_type");
   DirectionsType directions_type;
-  if (dir_type && DirectionsType_Parse(*dir_type, &directions_type)) {
+  if (dir_type && DirectionsType_Enum_Parse(*dir_type, &directions_type)) {
     options.set_directions_type(directions_type);
   }
 
+  // date_time
+  auto date_time_type = rapidjson::get_optional<unsigned int>(doc, "/date_time/type");
+  auto date_time_value = rapidjson::get_optional<std::string>(doc, "/date_time/value");
+  if (date_time_type && Options::DateTimeType_IsValid(*date_time_type)) {
+    // check the type is in bounds
+    auto const v = static_cast<Options::DateTimeType>(*date_time_type);
+    if (v >= Options::DateTimeType_ARRAYSIZE)
+      throw valhalla_exception_t{163};
+    options.set_date_time_type(static_cast<Options::DateTimeType>(v));
+    // check the value exists for depart at and arrive by
+    if (!date_time_value) {
+      if (v == Options::depart_at)
+        throw valhalla_exception_t{160};
+      else if (v == Options::arrive_by)
+        throw valhalla_exception_t{161};
+    }
+    // check the value is sane for depart at and arrive by
+    if (v != Options::current && !baldr::DateTime::is_iso_valid(*date_time_value))
+      throw valhalla_exception_t{162};
+    if (v != Options::current)
+      options.set_date_time(*date_time_value);
+    else
+      options.set_date_time("current");
+  } // not specified but you want transit, then we default to current
+  else if (options.has_costing() &&
+           (options.costing() == multimodal || options.costing() == transit)) {
+    options.set_date_time_type(Options::current);
+    options.set_date_time("current");
+  }
+
+  // parse map matching location input
   auto encoded_polyline = rapidjson::get_optional<std::string>(doc, "/encoded_polyline");
   if (encoded_polyline) {
     options.set_encoded_polyline(*encoded_polyline);
@@ -556,7 +615,10 @@ void from_json(rapidjson::Document& doc, Options& options) {
       options.mutable_shape(0)->set_type(valhalla::Location::kBreak);
       options.mutable_shape(options.shape_size() - 1)->set_type(valhalla::Location::kBreak);
     }
-  } else {
+    // add the date time
+    add_date_to_locations(options, *options.mutable_shape());
+  } // fall back from encoded polyline to array of locations
+  else {
     parse_locations(doc, options, "shape", 134, false);
 
     // if no shape then try 'trace'
@@ -567,13 +629,16 @@ void from_json(rapidjson::Document& doc, Options& options) {
 
   // Begin time for timestamps when entered given durations/delta times (defaults to 0)
   auto t = rapidjson::get_optional<unsigned int>(doc, "/begin_time");
-  double begin_time = (t) ? begin_time = *t : 0.0;
+  double begin_time = 0.0;
+  if (t) {
+    begin_time = *t;
+  }
 
   // Use durations (per shape point pair) to set time
   auto durations = rapidjson::get_optional<rapidjson::Value::ConstArray>(doc, "/durations");
   if (durations) {
     // Make sure durations is sized appropriately
-    if (durations->Size() != options.shape_size() - 1) {
+    if (options.shape_size() > 0 && durations->Size() != (unsigned int)options.shape_size() - 1) {
       throw valhalla_exception_t{136};
     }
 
@@ -620,6 +685,8 @@ void from_json(rapidjson::Document& doc, Options& options) {
       options.set_shape_format(polyline6);
     } else if (*shape_format == "polyline5") {
       options.set_shape_format(polyline5);
+    } else if (*shape_format == "geojson") {
+      options.set_shape_format(geojson);
     } else {
       // Throw an error if shape format is invalid
       throw valhalla_exception_t{164};
@@ -638,7 +705,7 @@ void from_json(rapidjson::Document& doc, Options& options) {
   if (costing_str) {
     // try the string directly, some strings are keywords so add an underscore
     Costing costing;
-    if (valhalla::Costing_Parse(*costing_str, &costing)) {
+    if (valhalla::Costing_Enum_Parse(*costing_str, &costing)) {
       options.set_costing(costing);
     } else {
       throw valhalla_exception_t{125, "'" + *costing_str + "'"};
@@ -650,7 +717,7 @@ void from_json(rapidjson::Document& doc, Options& options) {
   for (const auto& costing : {auto_, auto_shorter, bicycle, bus, hov, motor_scooter, multimodal,
                               pedestrian, transit, truck, motorcycle, auto_data_fix, taxi}) {
     // Create the costing string
-    auto costing_str = valhalla::Costing_Name(costing);
+    auto costing_str = valhalla::Costing_Enum_Name(costing);
     // Create the costing options key
     const auto costing_options_key = "/costing_options/" + costing_str;
 
@@ -722,57 +789,13 @@ void from_json(rapidjson::Document& doc, Options& options) {
   // get the avoids in there
   parse_locations(doc, options, "avoid_locations", 133, track);
 
-  // time type
-  auto date_time_type = rapidjson::get_optional<float>(doc, "/date_time/type");
-  if (date_time_type && Options::DateTimeType_IsValid(*date_time_type)) {
-    auto const v = static_cast<int>(*date_time_type);
-    options.set_date_time_type(static_cast<Options::DateTimeType>(v));
-  } // not specified but you want transit, then we default to current
-  else if (options.has_costing() &&
-           (options.costing() == multimodal || options.costing() == transit)) {
-    options.set_date_time_type(Options::current);
-  }
-
-  // time value
-  if (options.has_date_time_type()) {
-    auto date_time_value = rapidjson::get_optional<std::string>(doc, "/date_time/value");
-    switch (options.date_time_type()) {
-      case Options::current:
-        options.set_date_time("current");
-        if (options.locations_size() > 0) {
-          options.mutable_locations(0)->set_date_time("current");
-        }
-        break;
-      case Options::depart_at:
-        if (!date_time_value) {
-          throw valhalla_exception_t{160};
-        };
-        if (!baldr::DateTime::is_iso_valid(*date_time_value)) {
-          throw valhalla_exception_t{162};
-        };
-        options.set_date_time(*date_time_value);
-        if (options.locations_size() > 0) {
-          options.mutable_locations(0)->set_date_time(*date_time_value);
-        }
-        break;
-      case Options::arrive_by:
-        // not yet for transit
-        if (options.costing() == multimodal || options.costing() == transit) {
-          throw valhalla_exception_t{141};
-        };
-        if (!date_time_value) {
-          throw valhalla_exception_t{161};
-        };
-        if (!baldr::DateTime::is_iso_valid(*date_time_value)) {
-          throw valhalla_exception_t{162};
-        };
-        options.set_date_time(*date_time_value);
-        if (options.locations_size() > 0) {
-          options.mutable_locations()->rbegin()->set_date_time(*date_time_value);
-        }
-        break;
-      default:
-        throw valhalla_exception_t{163};
+  // if not a time dependent route/mapmatch disable time dependent edge speed/flow data sources
+  // TODO: this is because bidirectional a* defaults to middle of the day time for speed lookup
+  if (!options.has_date_time_type() && (options.shape_size() == 0 || options.shape(0).time() == -1)) {
+    for (auto& costing : *options.mutable_costing_options()) {
+      costing.set_flow_mask(
+          static_cast<uint8_t>(costing.flow_mask()) &
+          ~(valhalla::baldr::kPredictedFlowMask | valhalla::baldr::kCurrentFlowMask));
     }
   }
 
@@ -813,7 +836,7 @@ void from_json(rapidjson::Document& doc, Options& options) {
   auto shape_match_str = rapidjson::get_optional<std::string>(doc, "/shape_match");
   ShapeMatch shape_match;
   if (shape_match_str) {
-    if (valhalla::ShapeMatch_Parse(*shape_match_str, &shape_match)) {
+    if (valhalla::ShapeMatch_Enum_Parse(*shape_match_str, &shape_match)) {
       options.set_shape_match(shape_match);
     } else {
       throw valhalla_exception_t{445};
@@ -860,7 +883,7 @@ void from_json(rapidjson::Document& doc, Options& options) {
   // if specified, get the filter_action value in there
   auto filter_action_str = rapidjson::get_optional<std::string>(doc, "/filters/action");
   FilterAction filter_action;
-  if (filter_action_str && valhalla::FilterAction_Parse(*filter_action_str, &filter_action)) {
+  if (filter_action_str && valhalla::FilterAction_Enum_Parse(*filter_action_str, &filter_action)) {
     options.set_filter_action(filter_action);
   }
 
@@ -880,15 +903,15 @@ void from_json(rapidjson::Document& doc, Options& options) {
 
   // force these into the output so its obvious what we did to the user
   doc.AddMember({"language", allocator}, {options.language(), allocator}, allocator);
-  doc.AddMember({"format", allocator}, {valhalla::Options_Format_Name(options.format()), allocator},
-                allocator);
+  doc.AddMember({"format", allocator},
+                {valhalla::Options_Format_Enum_Name(options.format()), allocator}, allocator);
 }
 
 } // namespace
 
 namespace valhalla {
 
-bool Options_Action_Parse(const std::string& action, Options::Action* a) {
+bool Options_Action_Enum_Parse(const std::string& action, Options::Action* a) {
   static const std::unordered_map<std::string, Options::Action> actions{
       {"route", Options::route},
       {"locate", Options::locate},
@@ -908,7 +931,7 @@ bool Options_Action_Parse(const std::string& action, Options::Action* a) {
   return true;
 }
 
-const std::string& Options_Action_Name(const Options::Action action) {
+const std::string& Options_Action_Enum_Name(const Options::Action action) {
   static const std::string empty;
   static const std::unordered_map<int, std::string> actions{
       {Options::route, "route"},
@@ -926,7 +949,7 @@ const std::string& Options_Action_Name(const Options::Action action) {
   return i == actions.cend() ? empty : i->second;
 }
 
-bool Costing_Parse(const std::string& costing, Costing* c) {
+bool Costing_Enum_Parse(const std::string& costing, Costing* c) {
   static const std::unordered_map<std::string, Costing> costings{
       {"auto", Costing::auto_},
       {"auto_shorter", Costing::auto_shorter},
@@ -949,7 +972,7 @@ bool Costing_Parse(const std::string& costing, Costing* c) {
   return true;
 }
 
-const std::string& Costing_Name(const Costing costing) {
+const std::string& Costing_Enum_Name(const Costing costing) {
   static const std::string empty;
   static const std::unordered_map<int, std::string> costings{
       {Costing::auto_, "auto"},
@@ -970,7 +993,7 @@ const std::string& Costing_Name(const Costing costing) {
   return i == costings.cend() ? empty : i->second;
 }
 
-bool ShapeMatch_Parse(const std::string& match, ShapeMatch* s) {
+bool ShapeMatch_Enum_Parse(const std::string& match, ShapeMatch* s) {
   static const std::unordered_map<std::string, ShapeMatch> matches{
       {"edge_walk", ShapeMatch::edge_walk},
       {"map_snap", ShapeMatch::map_snap},
@@ -983,7 +1006,7 @@ bool ShapeMatch_Parse(const std::string& match, ShapeMatch* s) {
   return true;
 }
 
-const std::string& ShapeMatch_Name(const ShapeMatch match) {
+const std::string& ShapeMatch_Enum_Name(const ShapeMatch match) {
   static const std::string empty;
   static const std::unordered_map<int, std::string> matches{
       {ShapeMatch::edge_walk, "edge_walk"},
@@ -994,7 +1017,7 @@ const std::string& ShapeMatch_Name(const ShapeMatch match) {
   return i == matches.cend() ? empty : i->second;
 }
 
-bool Options_Format_Parse(const std::string& format, Options::Format* f) {
+bool Options_Format_Enum_Parse(const std::string& format, Options::Format* f) {
   static const std::unordered_map<std::string, Options::Format> formats{
       {"json", Options::json},
       {"gpx", Options::gpx},
@@ -1007,7 +1030,7 @@ bool Options_Format_Parse(const std::string& format, Options::Format* f) {
   return true;
 }
 
-const std::string& Options_Format_Name(const Options::Format match) {
+const std::string& Options_Format_Enum_Name(const Options::Format match) {
   static const std::string empty;
   static const std::unordered_map<int, std::string> formats{
       {Options::json, "json"},
@@ -1018,7 +1041,7 @@ const std::string& Options_Format_Name(const Options::Format match) {
   return i == formats.cend() ? empty : i->second;
 }
 
-const std::string& Options_Units_Name(const Options::Units unit) {
+const std::string& Options_Units_Enum_Name(const Options::Units unit) {
   static const std::string empty;
   static const std::unordered_map<int, std::string> units{
       {Options::kilometers, "kilometers"},
@@ -1028,7 +1051,7 @@ const std::string& Options_Units_Name(const Options::Units unit) {
   return i == units.cend() ? empty : i->second;
 }
 
-bool FilterAction_Parse(const std::string& action, FilterAction* a) {
+bool FilterAction_Enum_Parse(const std::string& action, FilterAction* a) {
   static const std::unordered_map<std::string, FilterAction> actions{
       {"exclude", FilterAction::exclude},
       {"include", FilterAction::include},
@@ -1040,7 +1063,7 @@ bool FilterAction_Parse(const std::string& action, FilterAction* a) {
   return true;
 }
 
-const std::string& FilterAction_Name(const FilterAction action) {
+const std::string& FilterAction_Enum_Name(const FilterAction action) {
   static const std::string empty;
   static const std::unordered_map<int, std::string> actions{
       {FilterAction::exclude, "exclude"},
@@ -1050,7 +1073,7 @@ const std::string& FilterAction_Name(const FilterAction action) {
   return i == actions.cend() ? empty : i->second;
 }
 
-bool DirectionsType_Parse(const std::string& dtype, DirectionsType* t) {
+bool DirectionsType_Enum_Parse(const std::string& dtype, DirectionsType* t) {
   static const std::unordered_map<std::string, DirectionsType> types{
       {"none", DirectionsType::none},
       {"maneuvers", DirectionsType::maneuvers},
@@ -1063,7 +1086,7 @@ bool DirectionsType_Parse(const std::string& dtype, DirectionsType* t) {
   return true;
 }
 
-bool PreferredSide_Parse(const std::string& pside, valhalla::Location::PreferredSide* p) {
+bool PreferredSide_Enum_Parse(const std::string& pside, valhalla::Location::PreferredSide* p) {
   static const std::unordered_map<std::string, valhalla::Location::PreferredSide> types{
       {"either", valhalla::Location::either},
       {"same", valhalla::Location::same},
@@ -1146,7 +1169,7 @@ void ParseApi(const http_request_t& request, valhalla::Api& api) {
 
   // set the action
   Options::Action action;
-  if (!request.path.empty() && Options_Action_Parse(request.path.substr(1), &action)) {
+  if (!request.path.empty() && Options_Action_Enum_Parse(request.path.substr(1), &action)) {
     options.set_action(action);
   }
 
@@ -1192,7 +1215,7 @@ worker_t::result_t jsonify_error(const valhalla_exception_t& exception,
          << (request.options().has_jsonp() ? ")" : "");
   }
 
-  worker_t::result_t result{false};
+  worker_t::result_t result{false, std::list<std::string>(), ""};
   http_response_t response(exception.http_code, exception.http_message, body.str(),
                            headers_t{CORS, request.options().has_jsonp() ? JS_MIME : JSON_MIME});
   response.from_info(request_info);
@@ -1214,7 +1237,7 @@ worker_t::result_t to_response(const baldr::json::ArrayPtr& array,
     stream << ')';
   }
 
-  worker_t::result_t result{false};
+  worker_t::result_t result{false, std::list<std::string>(), ""};
   http_response_t response(200, "OK", stream.str(),
                            headers_t{CORS, request.options().has_jsonp() ? JS_MIME : JSON_MIME});
   response.from_info(request_info);
@@ -1234,7 +1257,7 @@ to_response(const baldr::json::MapPtr& map, http_request_info_t& request_info, c
     stream << ')';
   }
 
-  worker_t::result_t result{false};
+  worker_t::result_t result{false, std::list<std::string>(), ""};
   http_response_t response(200, "OK", stream.str(),
                            headers_t{CORS, request.options().has_jsonp() ? JS_MIME : JSON_MIME});
   response.from_info(request_info);
@@ -1254,7 +1277,7 @@ to_response_json(const std::string& json, http_request_info_t& request_info, con
     stream << ')';
   }
 
-  worker_t::result_t result{false};
+  worker_t::result_t result{false, std::list<std::string>(), ""};
   http_response_t response(200, "OK", stream.str(),
                            headers_t{CORS, request.options().has_jsonp() ? JS_MIME : JSON_MIME});
   response.from_info(request_info);
@@ -1263,8 +1286,8 @@ to_response_json(const std::string& json, http_request_info_t& request_info, con
 }
 
 worker_t::result_t
-to_response_xml(const std::string& xml, http_request_info_t& request_info, const Api& request) {
-  worker_t::result_t result{false};
+to_response_xml(const std::string& xml, http_request_info_t& request_info, const Api&) {
+  worker_t::result_t result{false, std::list<std::string>(), ""};
   http_response_t response(200, "OK", xml, headers_t{CORS, GPX_MIME, ATTACHMENT});
   response.from_info(request_info);
   result.messages.emplace_back(response.to_string());
@@ -1279,6 +1302,6 @@ service_worker_t::~service_worker_t() {
 }
 void service_worker_t::set_interrupt(const std::function<void()>& interrupt_function) {
   interrupt = &interrupt_function;
-};
+}
 
 } // namespace valhalla

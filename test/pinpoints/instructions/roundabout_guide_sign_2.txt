@@ -1,0 +1,1 @@
+-j '{"locations":[{"lat":51.121723,"lon":7.245947,"street":"L 101"},{"lat":51.121857,"lon":7.249306,"street":"L 101"}],"costing":"auto","units":"kilometers"}'
