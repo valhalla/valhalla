@@ -228,14 +228,9 @@ MatchResult FindMatchResult(const MapMatcher& mapmatcher,
   if (!prev_edge.Is_Valid() && !next_edge.Is_Valid())
     return {};
 
-  // find which candidate for this state was used
+  // find which candidate was used for this state
   const baldr::GraphTile* tile = nullptr;
   for (const auto& edge : state.candidate().edges) {
-    // is this actually possible? why would we put invalid candidates in here?
-    if (!edge.id.Is_Valid()) {
-      continue;
-    }
-
     // if it matches either end of the path coming into this state or the beginning of the
     // path leaving this state, then we are good to go and have found the match
     if (edge.id == prev_edge || edge.id == next_edge) {
@@ -253,18 +248,18 @@ MatchResult FindMatchResult(const MapMatcher& mapmatcher,
     const auto& candidate_node =
         edge.percent_along == 0.f ? candidate_nodes.first : candidate_nodes.second;
 
-    // try previous and next (first one and discontinuities wont have previous)
-    for (const auto& path_edge : {prev_edge, next_edge}) {
-      // is the candidate node the begin node of this edge
-      auto nodes = graph_reader.GetDirectedEdgeNodes(path_edge, tile);
-      if (nodes.first == candidate_node) {
-        return {edge.projected, std::sqrt(edge.distance), path_edge, 0.f, measurement.epoch_time(),
-                stateid};
-      } // is the candidate node the end node of this edge
-      else if (nodes.second == candidate_node) {
-        return {edge.projected, std::sqrt(edge.distance), path_edge, 1.f, measurement.epoch_time(),
-                stateid};
-      }
+    // if the last edge of the previous route ends at this candidate node
+    const auto* prev_de = graph_reader.directededge(prev_edge, tile);
+    if (prev_de && prev_de->endnode() == candidate_node) {
+      return {edge.projected, std::sqrt(edge.distance), prev_edge, 1.f, measurement.epoch_time(),
+              stateid};
+    }
+
+    // if the first edge of the next route starts at this candidate node
+    const auto* next_opp_de = graph_reader.GetOpposingEdge(next_edge, tile);
+    if (next_opp_de && next_opp_de->endnode() == candidate_node) {
+      return {edge.projected, std::sqrt(edge.distance), next_edge, 0.f, measurement.epoch_time(),
+              stateid};
     }
   }
 
