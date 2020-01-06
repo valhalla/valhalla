@@ -113,9 +113,9 @@ CandidateQuery::WithinSquaredDistance(const midgard::PointLL& location,
       // we avoid adding them multiple times by remembering the node we snapped to
       // this has two consequences:
       // 1. it allows us to keep the number of edge candidates low which keeps the search fast
-      // 2. it may use one edge for the route segment going into a state (at 100% along the edge)
-      //    and then use the opposing edge (at 0% along the edge) to start the route segment which
-      //    leaves that state. we fix this case later inside of find match result
+      // 2. in routing.cc we will find a route to the node, ie not the candidate edge, which means
+      //    the route may not end or begin with the candidates we store here, we will need to
+      //    handle this case inside of FindMatchResult which expects a candidate to be used
       if (!snapped_node.Is_Valid() || visited_nodes.insert(snapped_node).second) {
         candidates.emplace_back(std::move(correlated));
       }

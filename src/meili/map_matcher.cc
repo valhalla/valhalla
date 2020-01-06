@@ -201,36 +201,31 @@ MatchResult FindMatchResult(const MapMatcher& mapmatcher,
     return CreateMatchResult(measurement);
   }
 
+  // Find the last edge of the path from the previous state to the current state
   const auto& state = mapmatcher.state_container().state(stateid);
-  // Construct the route from previous state to current state, and
-  // find out which edge it matches
-  baldr::GraphId prev_end;
-  baldr::GraphId prev_state_edgeid;
+  baldr::GraphId prev_edge;
   if (prev_stateid.IsValid()) {
     const auto& prev_state = mapmatcher.state_container().state(prev_stateid);
     // It must stay on the last edge of the route
     const auto rbegin = prev_state.RouteBegin(state), rend = prev_state.RouteEnd();
     if (rbegin != rend && rbegin->edgeid().Is_Valid()) {
-      prev_state_edgeid = rbegin->edgeid();
-      prev_end = graph_reader.directededge(prev_state_edgeid)->endnode();
+      prev_edge = rbegin->edgeid();
     }
   }
 
-  // Do the same from current state to next state
-  baldr::GraphId next_start;
-  baldr::GraphId next_state_edgeid;
+  // Find the first edge of the path from the current state to the next state
+  baldr::GraphId next_edge;
   if (next_stateid.IsValid()) {
     const auto& next_state = mapmatcher.state_container().state(next_stateid);
     for (auto label = state.RouteBegin(next_state); label != state.RouteEnd(); label++) {
       if (label->edgeid().Is_Valid()) {
-        next_state_edgeid = label->edgeid();
-        next_start = graph_reader.GetOpposingEdge(next_state_edgeid)->endnode();
+        next_edge = label->edgeid();
       }
     }
   }
 
   // bail early when no path exists on either side of this state
-  if (!prev_state_edgeid.Is_Valid() && !next_state_edgeid.Is_Valid())
+  if (!prev_edge.Is_Valid() && !next_edge.Is_Valid())
     return {};
 
   // find which candidate for this state was used
@@ -240,55 +235,45 @@ MatchResult FindMatchResult(const MapMatcher& mapmatcher,
       continue;
     }
 
-    // if this edge isnt at an intersection we can just check the ids
+    // if it matches either end of the path coming into this state or the beginning of the
+    // path leaving this state, then we are good to go and have found the match
+    if (edge.id == prev_edge || edge.id == next_edge) {
+      return {edge.projected,     std::sqrt(edge.distance), edge.id,
+              edge.percent_along, measurement.epoch_time(), stateid};
+    }
+
+    // the only matches we can make where the ids arent the same are at intersections
     if (edge.percent_along > 0.f && edge.percent_along < 1.f) {
-      // if it matches either end of the path coming into this state or the beginning of the
-      // path leaving this state, then we are good to go and have found the match
-      if (edge.id == prev_state_edgeid || edge.id == next_state_edgeid) {
-        return {edge.projected,     std::sqrt(edge.distance), edge.id,
-                edge.percent_along, measurement.epoch_time(), stateid};
-      }
       continue;
     }
 
-    // this edge is at an intersection and so we may need to actually use a different edge id
-    baldr::GraphId curr_edge_start = graph_reader.GetOpposingEdge(edge.id)->endnode();
-    baldr::GraphId curr_edge_end = graph_reader.directededge(edge.id)->endnode();
+    // TODO: remove
+    const baldr::GraphTile* t = nullptr;
+    auto candidate_nodes = graph_reader.GetDirectedEdgeNodes(edge.id, t);
+    auto prev_nodes = graph_reader.GetDirectedEdgeNodes(prev_edge, t);
+    auto next_nodes = graph_reader.GetDirectedEdgeNodes(next_edge, t);
 
-    // intersection match handling:
-    //                      |
-    //                      |
-    //   edge (prev_state)  |   edge (next state)
-    // -------------------->N1------------------>N2
-    //                      |
-    //                      |
-    //                      |
+    // if the route coming into this state ends at this edge candidates begin node
+    if (prev_edge.Is_Valid() /*&& edge.percent_along == 0.f*/ &&
+        graph_reader.AreEdgesConnectedForward(prev_edge, edge.id)) {
+      return {edge.projected, std::sqrt(edge.distance), prev_edge, 1.f, measurement.epoch_time(),
+              stateid};
+    }
 
-    // last matched location is on intersection:
-    // If there is a valid edge in previous state. For leg builder to work properly in
-    // intersections (where edge candidates may not be correct), we snap the matched
-    // location to the previous edge's end and set the percentage along to 1.0
-    // p.s: this also handles any middle point that are matched on intersections
-    if (prev_state_edgeid.Is_Valid() && (prev_end == curr_edge_start || prev_end == curr_edge_end)) {
-      // curr rout could be one way with edge ending at the same node with previous edge
-      return {edge.projected,           std::sqrt(edge.distance),
-              prev_state_edgeid,        1.0,
-              measurement.epoch_time(), stateid};
+    // if the route leaving this state begins at this edge candidates end node
+    if (next_edge.Is_Valid() /*&& edge.percent_along == 1.f*/ &&
+        graph_reader.AreEdgesConnectedForward(edge.id, next_edge)) {
+      return {edge.projected, std::sqrt(edge.distance), next_edge, 0.f, measurement.epoch_time(),
+              stateid};
     }
-    // first matched location is on intersection:
-    // If there is a valid edge in next state. For leg builder to work properly in
-    // intersections (where edge candidates may not be correct), we snap the matched
-    // location to the next edge's start and set the percentage along to 0.0
-    else if (next_state_edgeid.Is_Valid() &&
-             (next_start == curr_edge_end || next_start == curr_edge_start)) {
-      return {edge.projected,           std::sqrt(edge.distance),
-              next_state_edgeid,        0.0,
-              measurement.epoch_time(), stateid};
-    }
+
+    if (state.candidate().edges.size() == 1)
+      throw std::runtime_error("WHY WOULD THIS HAPPEN");
   }
 
   // we should never reach here, the above early exit checks whether there is no path on either side
   // of the given state we are finding a match for
+  throw std::runtime_error("WHY WOULD THIS HAPPEN");
   return {};
 }
 
