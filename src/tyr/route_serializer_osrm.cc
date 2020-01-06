@@ -1281,6 +1281,12 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
         step->emplace("junction_name", junction_name);
       }
 
+      // Add guidance_view_junction if not the start maneuver
+      std::string guidance_view_junction = get_sign_elements(sign.guidance_view_junctions());
+      if (!depart_maneuver && !guidance_view_junction.empty()) {
+        step->emplace("guidance_view_junction", guidance_view_junction);
+      }
+
       // Add intersections
       step->emplace("intersections",
                     intersections(maneuver, &etp, shape, prev_intersection_count, arrive_maneuver));
