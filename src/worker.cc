@@ -774,6 +774,10 @@ void from_json(rapidjson::Document& doc, Options& options) {
         sif::ParseAutoDataFixCostOptions(doc, costing_options_key, options.add_costing_options());
         break;
       }
+      case bikeshare: {
+        options.add_costing_options(); // Nothing to parse for this one
+        break;
+      }
     }
   }
 
