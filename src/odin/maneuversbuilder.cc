@@ -2729,10 +2729,10 @@ void ManeuversBuilder::MatchGuidanceViewJunctions(Maneuver& maneuver,
        ((node_index < maneuver.end_node_index()) && (edge_count < kOverlayEdgeMax));
        ++node_index, edge_count++) {
     // Loop over guidance view junctions
-    auto prev_edge = trip_path_->GetPrevEdge(maneuver.begin_node_index());
-    if (prev_edge && (prev_edge->has_sign())) {
+    auto curr_edge = trip_path_->GetCurrEdge(maneuver.begin_node_index());
+    if (curr_edge && (curr_edge->has_sign())) {
       // Process overlay guidance view junctions
-      for (const auto& overlay_guidance_view_junction : prev_edge->sign().guidance_view_junctions()) {
+      for (const auto& overlay_guidance_view_junction : curr_edge->sign().guidance_view_junctions()) {
         auto overlay_tokens = split(overlay_guidance_view_junction.text(), ';');
         // If overlay(!is_route_number) guidance view junction and a pair...
         if (!overlay_guidance_view_junction.is_route_number() && is_pair(overlay_tokens) &&
