@@ -45,12 +45,12 @@ jobs:
           paths:
             - ~/.ccache
       - run:
-          name: Push Valhalla Docker image
+          name: Push Valhalla base image
           command: |
             if [ "${CIRCLE_BRANCH}" == "master" ]; then
               echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
-              docker push valhalla/docker:build-3.0.2
-              docker push valhalla/docker:build-x86-3.0.2
+              docker push valhalla/valhalla:build-latest
+              docker push valhalla/valhalla:build-x86-latest
             fi
   build-release-binary-linux:
     docker:
