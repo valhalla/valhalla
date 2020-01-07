@@ -76,6 +76,7 @@ public:
     }
 
     include_driveways_ = pt.get<bool>("include_driveways", true);
+    commercial_data_ = pt.get<bool>("commercial_data", false);
   }
 
   static std::string get_lua(const boost::property_tree::ptree& pt) {
@@ -384,7 +385,10 @@ public:
         ((highway_junction != results.end()) && (highway_junction->second == "motorway_junction"));
 
     for (const auto& tag : results) {
-      if (tag.first == "road_class") {
+
+      if (tag.first == "internal_intersection" && commercial_data_) {
+        w.set_internal(tag.second == "true" ? true : false);
+      } else if (tag.first == "road_class") {
         RoadClass roadclass = (RoadClass)std::stoi(tag.second);
         switch (roadclass) {
 
@@ -1658,6 +1662,9 @@ public:
 
   // Configuration option to include driveways
   bool include_driveways_;
+
+  // Configuration option for commercial data sets
+  bool commercial_data_;
 
   // Road class assignment needs to be set to the highway cutoff for ferries and auto trains.
   RoadClass highway_cutoff_rc_;

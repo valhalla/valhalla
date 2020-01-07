@@ -23,7 +23,35 @@ commands:
             echo 'nvm alias default v8.11.2' >> $BASH_ENV
 
 jobs:
-
+  build-base:
+    docker:
+      - image: docker:18.06.3-ce-git
+    steps:
+      - setup_remote_docker
+      - checkout
+      - restore_cache:
+          keys:
+            - ccache
+      - run:
+          name: Build Valhalla base Dockerfile
+          command: |
+            docker build -f ./docker/Dockerfile-build --tag valhalla/valhalla:build-latest ./docker
+      - run:
+          name: Build Valhalla base Dockerfile x86
+          command: |
+            docker build -f ./docker/Dockerfile-build-x86 --tag valhalla/valhalla:build-x86-latest ./docker
+      - save_cache:
+          key: ccache
+          paths:
+            - ~/.ccache
+      - run:
+          name: Push Valhalla base image
+          command: |
+            if [ "${CIRCLE_BRANCH}" == "master" ]; then
+              echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+              docker push valhalla/valhalla:build-latest
+              docker push valhalla/valhalla:build-x86-latest
+            fi
   build-release-binary-linux:
     docker:
       - image: valhalla/docker:build-3.0.2
@@ -242,6 +270,7 @@ workflows:
   version: 2
   build_test_publish:
     jobs:
+      - build-base
       - lint-build-debug
       - build-release
       - build-release-x86

@@ -3,8 +3,8 @@
 #include "midgard/logging.h"
 #include "thor/timedep.h"
 #include <algorithm>
-#include <iostream> // TODO remove if not needed
 #include <map>
+#include <string>
 
 using namespace valhalla::baldr;
 using namespace valhalla::sif;
@@ -189,8 +189,10 @@ inline bool TimeDepReverse::ExpandReverseInner(GraphReader& graphreader,
 
   // Skip shortcut edges for time dependent routes. Also skip this edge if permanently labeled (best
   // path already found to this directed edge) or if no access for this mode.
-  if (meta.edge->is_shortcut() || meta.edge_status->set() == EdgeSet::kPermanent ||
-      !(meta.edge->reverseaccess() & access_mode_)) {
+  if (meta.edge->is_shortcut() || meta.edge_status->set() == EdgeSet::kPermanent) {
+    return false;
+  }
+  if (!(meta.edge->reverseaccess() & access_mode_)) {
     return false;
   }
 
@@ -215,15 +217,16 @@ inline bool TimeDepReverse::ExpandReverseInner(GraphReader& graphreader,
 
   Cost tc =
       costing_->TransitionCostReverse(meta.edge->localedgeidx(), nodeinfo, opp_edge, opp_pred_edge);
-  Cost newcost = pred.cost() + costing_->EdgeCost(opp_edge, t2, seconds_of_week);
+  auto edge_cost = costing_->EdgeCost(opp_edge, t2, seconds_of_week);
+  Cost newcost = pred.cost() + edge_cost;
   newcost.cost += tc.cost;
 
   // If this edge is a destination, subtract the partial/remainder cost
   // (cost from the dest. location to the end of the edge).
-  auto p = destinations_.find(meta.edge_id);
-  if (p != destinations_.end()) {
-    // Subtract partial cost and time
-    newcost -= p->second;
+  auto p = destinations_percent_along_.find(meta.edge_id);
+  if (p != destinations_percent_along_.end()) {
+    // Adapt cost to potentially not using the entire destination edge
+    newcost -= edge_cost * p->second;
 
     // Find the destination edge and update cost to include the edge score.
     // Note - with high edge scores the convergence test fails some routes
@@ -263,7 +266,7 @@ inline bool TimeDepReverse::ExpandReverseInner(GraphReader& graphreader,
   // end node of the directed edge.
   float dist = 0.0f;
   float sortcost = newcost.cost;
-  if (p == destinations_.end()) {
+  if (p == destinations_percent_along_.end()) {
     const GraphTile* t2 =
         meta.edge->leaves_tile() ? graphreader.GetGraphTile(meta.edge->endnode()) : tile;
     if (t2 == nullptr) {
@@ -314,10 +317,14 @@ TimeDepReverse::GetBestPath(valhalla::Location& origin,
   Init(origin_new, destination_new);
   float mindist = astarheuristic_.GetDistance(origin_new);
 
+  // Set seconds from beginning of the week
+  seconds_of_week_ = DateTime::day_of_week(destination.date_time()) * midgard::kSecondsPerDay +
+                     DateTime::seconds_from_midnight(destination.date_time());
+
   // Initialize the locations. For a reverse path search the destination location
   // is used as the "origin" and the origin location is used as the "destination".
   uint32_t density = SetDestination(graphreader, origin);
-  SetOrigin(graphreader, destination, origin);
+  SetOrigin(graphreader, destination, origin, seconds_of_week_);
 
   // Set the destination timezone
   dest_tz_index_ =
@@ -334,10 +341,6 @@ TimeDepReverse::GetBestPath(valhalla::Location& origin,
   uint64_t start_time =
       DateTime::seconds_since_epoch(destination.date_time(),
                                     DateTime::get_tz_db().from_index(dest_tz_index_));
-
-  // Set seconds from beginning of the week
-  seconds_of_week_ = DateTime::day_of_week(destination.date_time()) * midgard::kSecondsPerDay +
-                     DateTime::seconds_from_midnight(destination.date_time());
 
   // Find shortest path
   uint32_t nc = 0; // Count of iterations with no convergence
@@ -362,6 +365,7 @@ TimeDepReverse::GetBestPath(valhalla::Location& origin,
     // Get next element from adjacency list. Check that it is valid. An
     // invalid label indicates there are no edges that can be expanded.
     uint32_t predindex = adjacencylist_->pop();
+
     if (predindex == kInvalidLabel) {
       LOG_ERROR("Route failed after iterations = " + std::to_string(edgelabels_rev_.size()));
       return {};
@@ -370,7 +374,7 @@ TimeDepReverse::GetBestPath(valhalla::Location& origin,
     // Copy the BDEdgeLabel for use in costing. Check if this is a destination
     // edge and potentially complete the path.
     BDEdgeLabel pred = edgelabels_rev_[predindex];
-    if (destinations_.find(pred.edgeid()) != destinations_.end()) {
+    if (destinations_percent_along_.find(pred.edgeid()) != destinations_percent_along_.end()) {
       // Check if a trivial path using opposing edge. Skip if no predecessor and not
       // trivial (cannot reach destination along this one edge).
       if (pred.predecessor() == kInvalidLabel) {
@@ -431,7 +435,8 @@ TimeDepReverse::GetBestPath(valhalla::Location& origin,
 // TODO - how do we set the
 void TimeDepReverse::SetOrigin(GraphReader& graphreader,
                                valhalla::Location& origin,
-                               valhalla::Location& destination) {
+                               valhalla::Location& destination,
+                               uint32_t seconds_of_week) {
   // Only skip outbound edges if we have other options
   bool has_other_edges = false;
   std::for_each(origin.path_edges().begin(), origin.path_edges().end(),
@@ -441,8 +446,8 @@ void TimeDepReverse::SetOrigin(GraphReader& graphreader,
 
   // Check if the origin edge matches a destination edge at the node.
   auto trivial_at_node = [this, &destination](const valhalla::Location::PathEdge& edge) {
-    auto p = destinations_.find(edge.graph_id());
-    if (p != destinations_.end()) {
+    auto p = destinations_percent_along_.find(edge.graph_id());
+    if (p != destinations_percent_along_.end()) {
       for (const auto& destination_edge : destination.path_edges()) {
         if (destination_edge.graph_id() == edge.graph_id()) {
           return true;
@@ -477,7 +482,7 @@ void TimeDepReverse::SetOrigin(GraphReader& graphreader,
     const DirectedEdge* opp_dir_edge = graphreader.GetOpposingEdge(edgeid);
 
     // Get cost
-    Cost cost = costing_->EdgeCost(directededge, tile) * edge.percent_along();
+    Cost cost = costing_->EdgeCost(directededge, tile, seconds_of_week) * edge.percent_along();
     float dist = astarheuristic_.GetDistance(tile->get_node_ll(opp_dir_edge->endnode()));
 
     // We need to penalize this location based on its score (distance in meters from input)
@@ -488,36 +493,35 @@ void TimeDepReverse::SetOrigin(GraphReader& graphreader,
 
     // If this edge is a destination, subtract the partial/remainder cost
     // (cost from the dest. location to the end of the edge) if the
-    // destination is in a forward direction along the edge. Add back in
-    // the edge score/penalty to account for destination edges farther from
-    // the input location lat,lon.
-    auto p = destinations_.find(opp_edge_id);
-    if (p != destinations_.end()) {
+    // destination is in a forward direction along the edge.
+    auto settled_dest_edge = destinations_percent_along_.find(opp_edge_id);
+    if (settled_dest_edge != destinations_percent_along_.end()) {
       // Reverse the origin and destination in the IsTrivial call.
       if (IsTrivial(edgeid, destination, origin)) {
         // Find the destination edge and update cost.
-        for (const auto& destination_edge : destination.path_edges()) {
-          if (destination_edge.graph_id() == edgeid) {
+        for (const auto& dest_path_edge : destination.path_edges()) {
+          if (dest_path_edge.graph_id() == edgeid) {
             // a trivial route passes along a single edge, meaning that the
             // destination point must be on this edge, and so the distance
             // remaining must be zero.
-            GraphId id(destination_edge.graph_id());
-            const DirectedEdge* dest_diredge = tile->directededge(id);
-            Cost dest_cost =
-                costing_->EdgeCost(dest_diredge, tile) * (1.0f - destination_edge.percent_along());
-            cost.secs -= p->second.secs;
-            cost.cost -= dest_cost.cost;
-            cost.cost += destination_edge.distance();
+            GraphId id(dest_path_edge.graph_id());
+            const DirectedEdge* dest_edge = tile->directededge(id);
+            Cost remainder_cost = costing_->EdgeCost(dest_edge, tile, seconds_of_week) *
+                                  (dest_path_edge.percent_along());
+            // Remove the cost of the final "unused" part of the destination edge
+            cost -= remainder_cost;
+            // Add back in the edge score/penalty to account for destination edges
+            // farther from the input location lat,lon.
+            cost.cost += dest_path_edge.distance();
             cost.cost = std::max(0.0f, cost.cost);
             dist = 0.0;
           }
         }
       }
-
-      // Store the closest node info
-      if (closest_ni == nullptr) {
-        closest_ni = nodeinfo;
-      }
+    }
+    // Store the closest node info
+    if (closest_ni == nullptr) {
+      closest_ni = nodeinfo;
     }
 
     // Compute sortcost
@@ -575,7 +579,7 @@ uint32_t TimeDepReverse::SetDestination(GraphReader& graphreader, const valhalla
       continue;
     }
     GraphId oppedge = t2->GetOpposingEdgeId(directededge);
-    destinations_[oppedge] = costing_->EdgeCost(directededge, tile) * (1.0f - edge.percent_along());
+    destinations_percent_along_[oppedge] = edge.percent_along();
 
     // Edge score (penalty) is handled within GetPath. Do not add score here.
 
