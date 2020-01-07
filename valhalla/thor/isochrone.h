@@ -17,6 +17,7 @@
 #include <valhalla/sif/dynamiccost.h>
 #include <valhalla/sif/edgelabel.h>
 #include <valhalla/thor/edgestatus.h>
+#include <valhalla/thor/dijkstras.h>
 
 namespace valhalla {
 namespace thor {
@@ -26,7 +27,7 @@ namespace thor {
  * each each grid point. This gridded data can then be contoured to create
  * isolines or contours.
  */
-class Isochrone {
+class Isochrone : public Dijkstras{
 public:
   /**
    * Constructor.
@@ -91,6 +92,14 @@ public:
                     const sif::TravelMode mode);
 
 protected:
+
+  // Virtual function called when expanding a node
+  //
+  // Children can implement this to customize behaviour
+  virtual void ExpandingNodeBD(baldr::GraphReader& graphreader, const baldr::NodeInfo* nodeinfo, const sif::BDEdgeLabel& pred);
+  virtual void ExpandingNodeMM(baldr::GraphReader& graphreader, const baldr::NodeInfo* nodeinfo, const sif::MMEdgeLabel& pred);
+
+
   bool has_date_time_;
   int start_tz_index_; // Timezone at the start of the isochrone
 

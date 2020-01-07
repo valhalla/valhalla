@@ -77,6 +77,14 @@ public:
                          const sif::TravelMode mode);
 
 protected:
+
+  // Virtual function called when expanding a node
+  //
+  // Children can implement this to customize behaviour
+  virtual void ExpandingNodeBD(baldr::GraphReader& graphreader, const baldr::NodeInfo* nodeinfo, const sif::BDEdgeLabel& pred) {};
+  virtual void ExpandingNodeMM(baldr::GraphReader& graphreader, const baldr::NodeInfo* nodeinfo, const sif::MMEdgeLabel& pred) {};
+
+
   bool has_date_time_;
   int start_tz_index_;   // Timezone at the start of the Dijkstras
   sif::TravelMode mode_; // Current travel mode

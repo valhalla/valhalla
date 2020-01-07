@@ -486,7 +486,9 @@ void Dijkstras::ExpandForwardMM(GraphReader& graphreader,
   // Get the nodeinfo
   const NodeInfo* nodeinfo = tile->node(node);
 
-  // TODO: inform someone that we expanded to this node
+  if (nodeinfo) {
+    ExpandingNodeMM(graphreader, nodeinfo, pred);
+  }
 
   // Bail if we cant expand from here
   if (!mode_costing[static_cast<uint8_t>(mode_)]->Allowed(nodeinfo)) {
@@ -881,6 +883,7 @@ void Dijkstras::SetOriginLocations(GraphReader& graphreader,
       edgestatus_.Set(edgeid, EdgeSet::kTemporary, idx, tile);
 
       // TODO: inform someone we used this edge
+      ExpandingNodeBD(graphreader, nullptr, bdedgelabels_.back());
     }
   }
 }

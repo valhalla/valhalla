@@ -1249,5 +1249,27 @@ void Isochrone::SetOriginLocationsMM(
   }
 }
 
+// Virtual function called when expanding a node
+//
+// Children can implement this to customize behaviour
+void Isochrone::ExpandingNodeBD(baldr::GraphReader& graphreader,
+                                const baldr::NodeInfo* org_nodeinfo,
+                                const sif::BDEdgeLabel& pred) {
+  // Use pred to get endnode and it's location
+  const GraphTile* tile = graphreader.GetGraphTile(pred.endnode());
+  if (tile == nullptr) {
+    return;
+  }
+   PointLL ll = tile->get_node_ll(pred.endnode());
+
+  float time = 0.;// Set time at the lat, lon grid to 0
+   isotile_->Set(ll, time);
+};
+void Isochrone::ExpandingNodeMM(baldr::GraphReader& graphreader,
+                                const baldr::NodeInfo* nodeinfo,
+                                const sif::MMEdgeLabel& pred){
+    // TODO Figure out if we can combine this with ExpandingNodeBD
+};
+
 } // namespace thor
 } // namespace valhalla
