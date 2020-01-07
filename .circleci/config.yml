@@ -54,7 +54,7 @@ jobs:
             fi
   build-release-binary-linux:
     docker:
-      - image: valhalla/docker:build-3.0.2
+      - image: valhalla/valhalla:build-latest
     steps:
       - checkout
       - run:
@@ -95,7 +95,7 @@ jobs:
 
   build-debug-binary-linux:
     docker:
-      - image: valhalla/docker:build-3.0.2
+      - image: valhalla/valhalla:build-latest
     steps:
       - checkout
       - run:
@@ -134,7 +134,7 @@ jobs:
 
   lint-build-debug:
     docker:
-      - image: valhalla/docker:build-3.0.2
+      - image: valhalla/valhalla:build-latest
     steps:
       - checkout
       - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
@@ -160,7 +160,7 @@ jobs:
 
   build-release:
     docker:
-      - image: valhalla/docker:build-3.0.2
+      - image: valhalla/valhalla:build-latest
     steps:
       - checkout
       - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
@@ -185,7 +185,7 @@ jobs:
 
   build-release-x86:
     docker:
-      - image: valhalla/docker:build-x86-3.0.2
+      - image: valhalla/valhalla:build-x86-latest
     steps:
       - checkout
       #- run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
