@@ -35,11 +35,11 @@ jobs:
       - run:
           name: Build Valhalla base Dockerfile
           command: |
-            docker build -f ./docker/Dockerfile-build --tag valhalla/docker:build-3.0.2 ./docker
+            docker build -f ./docker/Dockerfile-build --tag valhalla/valhalla:build-latest ./docker
       - run:
           name: Build Valhalla base Dockerfile x86
           command: |
-            docker build -f ./docker/Dockerfile-build-x86 --tag valhalla/docker:build-x86-3.0.2 ./docker
+            docker build -f ./docker/Dockerfile-build-x86 --tag valhalla/valhalla:build-x86-latest ./docker
       - save_cache:
           key: ccache
           paths:
