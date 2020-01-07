@@ -700,7 +700,7 @@ public:
    * @param edgeid
    * @return the encoded shape (string) for specified id.
    */
-  std::string get_shape(const valhalla::baldr::GraphId& edgeid);
+  std::string edge_shape(const valhalla::baldr::GraphId& edgeid);
 
   /**
    * Gets back a set of available tiles

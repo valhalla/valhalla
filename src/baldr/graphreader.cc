@@ -733,7 +733,7 @@ std::pair<GraphId, GraphId> GraphReader::GetDirectedEdgeNodes(const GraphTile* t
   return std::make_pair(start_node, end_node);
 }
 
-std::string GraphReader::get_shape(const valhalla::baldr::GraphId& edgeid) {
+std::string GraphReader::edge_shape(const valhalla::baldr::GraphId& edgeid) {
   const baldr::GraphTile* t_debug = GetGraphTile(edgeid);
   const baldr::DirectedEdge* directedEdge = t_debug->directededge(edgeid);
   auto shape = t_debug->edgeinfo(directedEdge->edgeinfo_offset()).shape();
