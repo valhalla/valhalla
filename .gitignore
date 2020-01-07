@@ -57,6 +57,7 @@ scripts/gdal-2.0.0.tar.gz
 /*build*/
 /CMakeSettings.json
 /.idea
+/.tidytmp
 
 # nodejs
 node_modules

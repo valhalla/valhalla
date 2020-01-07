@@ -1,13 +1,16 @@
 #ifndef VALHALLA_SIF_DYNAMICCOST_H_
 #define VALHALLA_SIF_DYNAMICCOST_H_
 
+#include "baldr/accessrestriction.h"
 #include <cstdint>
 #include <valhalla/baldr/datetime.h>
 #include <valhalla/baldr/directededge.h>
 #include <valhalla/baldr/double_bucket_queue.h> // For kInvalidLabel
+#include <valhalla/baldr/graphconstants.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphtile.h>
 #include <valhalla/baldr/nodeinfo.h>
+#include <valhalla/baldr/rapidjson_utils.h>
 #include <valhalla/baldr/timedomain.h>
 #include <valhalla/baldr/transitdeparture.h>
 #include <valhalla/proto/options.pb.h>
@@ -16,6 +19,7 @@
 #include <valhalla/sif/hierarchylimits.h>
 
 #include <memory>
+#include <third_party/rapidjson/include/rapidjson/document.h>
 #include <unordered_map>
 
 namespace valhalla {
@@ -147,7 +151,8 @@ public:
                        const baldr::GraphTile*& tile,
                        const baldr::GraphId& edgeid,
                        const uint64_t current_time,
-                       const uint32_t tz_index) const = 0;
+                       const uint32_t tz_index,
+                       bool& time_restricted) const = 0;
 
   /**
    * Checks if access is allowed for an edge on the reverse path
@@ -173,7 +178,8 @@ public:
                               const baldr::GraphTile*& tile,
                               const baldr::GraphId& opp_edgeid,
                               const uint64_t current_time,
-                              const uint32_t tz_index) const = 0;
+                              const uint32_t tz_index,
+                              bool& has_time_restrictions) const = 0;
 
   /**
    * Checks if access is allowed for the provided node. Node access can
@@ -183,6 +189,9 @@ public:
    */
   virtual bool Allowed(const baldr::NodeInfo* node) const = 0;
 
+  inline virtual bool ModeSpecificAllowed(const baldr::AccessRestriction&) const {
+    return true;
+  };
   /**
    * Get the cost to traverse the specified directed edge using a transit
    * departure (schedule based edge traversal). Cost includes
@@ -194,16 +203,28 @@ public:
    */
   virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
                         const baldr::TransitDeparture* departure,
-                        const uint32_t curr_time) const;
+                        const uint32_t curr_time) const = 0;
 
   /**
    * Get the cost to traverse the specified directed edge. Cost includes
    * the time (seconds) to traverse the edge.
-   * @param   edge  Pointer to a directed edge.
-   * @param   speed A speed for a road segment/edge.
-   * @return  Returns the cost and speed.
+   * @param   edge    Pointer to a directed edge.
+   * @param   tile    Pointer to the tile which contains the directed edge for speed lookup
+   * @param   seconds Seconds of week for predicted speed or free and constrained speed lookup
+   * @return  Returns the cost and time (seconds).
    */
-  virtual Cost EdgeCost(const baldr::DirectedEdge* edge, const uint32_t speed) const;
+  virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
+                        const baldr::GraphTile* tile,
+                        const uint32_t seconds) const = 0;
+
+  /**
+   * Get the cost to traverse the specified directed edge. Cost includes
+   * the time (seconds) to traverse the edge.
+   * @param   edge    Pointer to a directed edge.
+   * @param   tile    Pointer to the tile which contains the directed edge for speed lookup
+   * @return  Returns the cost and time (seconds).
+   */
+  virtual Cost EdgeCost(const baldr::DirectedEdge* edge, const baldr::GraphTile* tile) const;
 
   /**
    * Returns the cost to make the transition from the predecessor edge.
@@ -212,13 +233,11 @@ public:
    * @param   edge  Directed edge (the to edge)
    * @param   node  Node (intersection) where transition occurs.
    * @param   pred  Predecessor edge information.
-   * @param   has_traffic  Does the transition have traffic information.
    * @return  Returns the cost and time (seconds)
    */
   virtual Cost TransitionCost(const baldr::DirectedEdge* edge,
                               const baldr::NodeInfo* node,
-                              const EdgeLabel& pred,
-                              const bool has_traffic = false) const;
+                              const EdgeLabel& pred) const;
 
   /**
    * Returns the cost to make the transition from the predecessor edge
@@ -231,14 +250,12 @@ public:
    *                   "from" or predecessor edge in the transition.
    * @param  opp_pred_edge  Pointer to the opposing directed edge to the
    *                        predecessor. This is the "to" edge.
-   * @param   has_traffic  Does the transition have traffic information.
    * @return  Returns the cost and time (seconds)
    */
   virtual Cost TransitionCostReverse(const uint32_t idx,
                                      const baldr::NodeInfo* node,
                                      const baldr::DirectedEdge* opp_edge,
-                                     const baldr::DirectedEdge* opp_pred_edge,
-                                     const bool has_traffic = false) const;
+                                     const baldr::DirectedEdge* opp_pred_edge) const;
 
   /**
    * Test if an edge should be restricted due to a complex restriction.
@@ -335,9 +352,8 @@ public:
    *                      indicates the route is not time dependent.
    * @param  tz_index     timezone index for the node
    */
-  bool IsRestricted(const uint64_t restriction,
-                    const uint64_t current_time,
-                    const uint32_t tz_index) const {
+  static bool
+  IsRestricted(const uint64_t restriction, const uint64_t current_time, const uint32_t tz_index) {
 
     baldr::TimeDomain td(restriction);
     return baldr::DateTime::is_restricted(td.type(), td.begin_hrs(), td.begin_mins(), td.end_hrs(),
@@ -345,6 +361,58 @@ public:
                                           td.begin_day_dow(), td.end_week(), td.end_month(),
                                           td.end_day_dow(), current_time,
                                           baldr::DateTime::get_tz_db().from_index(tz_index));
+  }
+
+  inline static bool IsRestricted(const uint64_t restriction,
+                                  const uint64_t current_time,
+                                  const uint32_t tz_index,
+                                  baldr::AccessType access_type) {
+
+    if (access_type == baldr::AccessType::kTimedAllowed) {
+      return IsRestricted(restriction, current_time, tz_index);
+    } else if (access_type == baldr::AccessType::kTimedDenied) {
+      return !IsRestricted(restriction, current_time, tz_index);
+    }
+    return true;
+  }
+
+  inline bool EvaluateRestrictions(uint16_t auto_type,
+                                   const baldr::DirectedEdge* edge,
+                                   const baldr::GraphTile*& tile,
+                                   const baldr::GraphId& edgeid,
+                                   const uint64_t current_time,
+                                   const uint32_t tz_index,
+                                   bool& has_time_restrictions) const {
+    if (edge->access_restriction()) {
+      const std::vector<baldr::AccessRestriction>& restrictions =
+          tile->GetAccessRestrictions(edgeid.id(), auto_type);
+      for (const auto& restriction : restrictions) {
+        // Compare the time to the time-based restrictions
+        baldr::AccessType access_type = restriction.type();
+        if (access_type == baldr::AccessType::kTimedAllowed ||
+            access_type == baldr::AccessType::kTimedDenied) {
+          has_time_restrictions = true;
+          if (current_time == 0) {
+            // No time supplied so ignore time-based restrictions
+            // (but mark the edge  (`has_time_restrictions`)
+            continue;
+          } else {
+            // allowed at this range or allowed all the time
+            if (DynamicCost::IsRestricted(restriction.value(), current_time, tz_index, access_type)) {
+              // If edge really is restricted at this time, we can exit early.
+              // If not, we should keep looking
+              return false;
+            }
+          }
+        }
+        // In case there are additional restriction checks for a particular  mode,
+        // check them now
+        if (!ModeSpecificAllowed(restriction)) {
+          return false;
+        }
+      }
+    }
+    return true;
   }
 
   /**
@@ -514,6 +582,14 @@ public:
     return (avoid != user_avoid_edges_.end() && avoid->second <= percent_along);
   }
 
+  /**
+   * Get the flow mask used for accessing traffic flow data from the tile
+   * @return the flow mask used
+   */
+  uint8_t flow_mask() const {
+    return flow_mask_;
+  }
+
 protected:
   // Algorithm pass
   uint32_t pass_;
@@ -548,6 +624,9 @@ protected:
   float maneuver_penalty_;         // Penalty (seconds) when inconsistent names
   float alley_penalty_;            // Penalty (seconds) to use a alley
   float destination_only_penalty_; // Penalty (seconds) using private road, driveway, or parking aisle
+
+  // A mask which determines which flow data the costing should use from the tile
+  uint8_t flow_mask_;
 
   /**
    * Get the base transition costs (and ferry factor) from the costing options.
@@ -587,6 +666,9 @@ protected:
       ferry_factor_ = 1.5f - use_ferry;
     }
     ferry_transition_cost_ = {costing_options.ferry_cost() + penalty, costing_options.ferry_cost()};
+
+    // Set the speed mask to determine which speed data types are allowed
+    flow_mask_ = costing_options.flow_mask();
   }
 
   /**
@@ -687,9 +769,17 @@ protected:
   }
 };
 
-typedef std::shared_ptr<DynamicCost> cost_ptr_t;
+using cost_ptr_t = std::shared_ptr<DynamicCost>;
+
+/**
+ * Parses the cost options from json and stores values in pbf.
+ * @param object The json request represented as a DOM tree.
+ * @param pbf_costing_options A mutable protocol buffer where the parsed json values will be stored.
+ */
+void ParseCostOptions(const rapidjson::Value& obj, CostingOptions* pbf_costing_options);
 
 } // namespace sif
+
 } // namespace valhalla
 
 #endif // VALHALLA_SIF_DYNAMICCOST_H_

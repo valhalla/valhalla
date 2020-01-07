@@ -231,7 +231,7 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
 
 void loki_worker_t::cleanup() {
   if (reader->OverCommitted()) {
-    reader->Clear();
+    reader->Trim();
   }
 }
 

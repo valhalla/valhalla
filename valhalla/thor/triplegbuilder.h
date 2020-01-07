@@ -25,68 +25,40 @@ namespace thor {
 class TripLegBuilder {
 public:
   /**
-   * Format the trip path output given the edges on the path.
-   * For now just return length. TODO - modify to return trip path.
+   * Form a trip leg out of a path (sequence of path infos)
+   *
+   * @param controller            Which meta data attributes to include in the trip leg
+   * @param graphreader           A way of accessing graph information
+   * @param mode_costing          A costing object
+   * @param path_begin            The first path info in the path
+   * @param path_end              One past the last path info in the path
+   * @param origin                The origin location with path edges filled in from loki
+   * @param dest                  The destination location with path edges filled in from loki
+   * @param through_loc           The list of through locations along this leg if any
+   * @param trip_path             The leg we will fill out
+   * @param interrupt_callback    A way to abort the processing in case the request was cancelled
+   * @param route_discontinuities Markers at places in the leg where there are discontinuities
+   * @param trim_begin            For map matching we have one long sequence of path infos regardless
+   *                              of legs so we must supply an amount of elapsed time which we trim
+   *                              from the beginning
+   * @param trim_end              Similarly to trim_begin, we must also trim at the end of a map
+   *                              matched edge
+   * @return
    */
-  static TripLeg Build(const AttributesController& controller,
-                       baldr::GraphReader& graphreader,
-                       const std::shared_ptr<sif::DynamicCost>* mode_costing,
-                       const std::vector<PathInfo>::const_iterator path_begin,
-                       const std::vector<PathInfo>::const_iterator path_end,
-                       valhalla::Location& origin,
-                       valhalla::Location& dest,
-                       const std::list<valhalla::Location>& through_loc,
-                       TripLeg& trip_path,
-                       const std::function<void()>* interrupt_callback = nullptr,
-                       std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>>*
-                           route_discontinuities = nullptr);
-
-  /**
-   * Add trip edge. (TODO more comments)
-   * @param  controller    Controller to determine which attributes to set.
-   * @param  edge          Identifier of an edge within the tiled, hierarchical graph.
-   * @param  trip_id       Trip Id (0 if not a transit edge).
-   * @param  block_id      Transit block Id (0 if not a transit edge)
-   * @param  mode          Travel mode for the edge: Biking, walking, etc.
-   * @param  directededge  Directed edge information.
-   * @param  drive_right   Right side driving for this edge.
-   * @param  trip_node     Trip node to add the edge information to.
-   * @param  graphtile     Graph tile for accessing data.
-   * @param   current_time Current time (seconds from midnight).
-   * @param  length_percentage Scale for the edge length for the partial distance
-   *                       at begin and end edges
-   */
-  static TripLeg_Edge* AddTripEdge(const AttributesController& controller,
-                                   const baldr::GraphId& edge,
-                                   const uint32_t trip_id,
-                                   const uint32_t block_id,
-                                   const sif::TravelMode mode,
-                                   const uint8_t travel_type,
-                                   const baldr::DirectedEdge* directededge,
-                                   const bool drive_right,
-                                   TripLeg_Node* trip_node,
-                                   const baldr::GraphTile* graphtile,
-                                   const uint32_t current_time,
-                                   const float length_percentage = 1.f);
-
-  /**
-   * Add trip intersecting edge.
-   * @param  controller   Controller to determine which attributes to set.
-   * @param  directededge Directed edge on the path.
-   * @param  prev_de  Previous directed edge on the path.
-   * @param  local_edge_index  Index of the local intersecting path edge at intersection.
-   * @param  nodeinfo  Node information of the intersection.
-   * @param  trip_node  Trip node that will store the intersecting edge information.
-   * @param  intersecting_de Intersecting directed edge. Will be nullptr except when
-   *                         on the local hierarchy.
-   */
-  static void AddTripIntersectingEdge(const AttributesController& controller,
-                                      const baldr::DirectedEdge* directededge,
-                                      const baldr::DirectedEdge* prev_de,
-                                      uint32_t local_edge_index,
-                                      const baldr::NodeInfo* nodeinfo,
-                                      TripLeg_Node* trip_node,
-                                      const baldr::DirectedEdge* intersecting_de);
+  static void Build(const AttributesController& controller,
+                    baldr::GraphReader& graphreader,
+                    const std::shared_ptr<sif::DynamicCost>* mode_costing,
+                    const std::vector<PathInfo>::const_iterator path_begin,
+                    const std::vector<PathInfo>::const_iterator path_end,
+                    valhalla::Location& origin,
+                    valhalla::Location& dest,
+                    const std::list<valhalla::Location>& through_loc,
+                    TripLeg& trip_path,
+                    const std::function<void()>* interrupt_callback = nullptr,
+                    std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>>*
+                        route_discontinuities = nullptr,
+                    float trim_begin = 0,
+                    float trim_end = 0);
 };
 
 } // namespace thor

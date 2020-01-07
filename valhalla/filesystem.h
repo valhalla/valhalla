@@ -144,7 +144,10 @@ private:
       entry_->d_type = mode_to_type(s.st_mode);
     }
   }
-  unsigned char mode_to_type(decltype(stat::st_mode) mode) {
+
+  // On POXIX, d_type is char.
+  // On Windows, d_type is int (values are larger than 8-bit integer).
+  decltype(::dirent::d_type) mode_to_type(decltype(::stat::st_mode) mode) {
     if (S_ISREG(mode))
       return DT_REG;
     else if (S_ISDIR(mode))

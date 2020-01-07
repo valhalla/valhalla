@@ -80,6 +80,8 @@ message Location {
   //spot for display_ll
   optional uint32 search_cutoff = 28;
   optional uint32 street_side_tolerance = 29;
+  optional uint32 route_index = 30;
+  optional uint32 shape_index = 31;
 }
 
 message TransitEgressInfo {

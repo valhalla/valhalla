@@ -263,8 +263,8 @@ void checkExitInfo(const GraphTile& tile,
       } else {
         // store exit info in case this is a fork
         std::string iso_code = tile->admin(startnodeinfo.admin_index())->country_iso();
-        tile_fork_signs.push_back({tile->id(), otheredge->exitsign()});
-        ctry_fork_signs.push_back({iso_code, otheredge->exitsign()});
+        tile_fork_signs.push_back({tile->id(), otheredge->sign()});
+        ctry_fork_signs.push_back({iso_code, otheredge->sign()});
       }
     }
     // If it was a fork, store the data appropriately
@@ -278,8 +278,8 @@ void checkExitInfo(const GraphTile& tile,
     } else {
       // Otherwise store original edge info as a normal exit
       std::string iso_code = tile->admin(startnodeinfo.admin_index())->country_iso();
-      stats.add_exitinfo({tile->id(), directededge.exitsign()});
-      stats.add_exitinfo({iso_code, directededge.exitsign()});
+      stats.add_exitinfo({tile->id(), directededge.sign()});
+      stats.add_exitinfo({iso_code, directededge.sign()});
     }
   }
 }
@@ -494,7 +494,7 @@ void build(const boost::property_tree::ptree& pt,
     // Check if we need to clear the tile cache
     lock.lock();
     if (graph_reader.OverCommitted()) {
-      graph_reader.Clear();
+      graph_reader.Trim();
     }
     lock.unlock();
   }

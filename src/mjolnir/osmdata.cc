@@ -1,3 +1,4 @@
+#include <cctype>
 #include <cstdint>
 #include <fstream>
 #include <iostream>

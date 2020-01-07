@@ -243,6 +243,9 @@ struct bin_handler_t {
                       const candidate_t& candidate,
                       PathLocation& correlated,
                       std::vector<PathLocation::PathEdge>& filtered) {
+    // the search cutoff is a hard filter so skip any outside of that
+    if (candidate.point.Distance(location.latlng_) > location.search_cutoff_)
+      return;
     // we need this because we might need to go to different levels
     float distance = std::numeric_limits<float>::lowest();
     std::function<void(const GraphId& node_id, bool transition)> crawl;
@@ -259,9 +262,6 @@ struct bin_handler_t {
       // cache the distance
       if (distance == std::numeric_limits<float>::lowest())
         distance = node_ll.Distance(location.latlng_);
-      // the search cutoff is a hard filter so skip any outside of that
-      if (distance > location.search_cutoff_)
-        return;
       // add edges entering/leaving this node
       for (const auto* edge = start_edge; edge < end_edge; ++edge) {
         // get some info about this edge and the opposing
@@ -303,7 +303,8 @@ struct bin_handler_t {
                                            PathLocation::NONE,
                                            reach.outbound,
                                            reach.inbound};
-          auto index = other_edge->forward() ? 0 : info.shape().size() - 2;
+          // index is opposite the logic above
+          auto index = other_edge->forward() ? info.shape().size() - 2 : 0;
           if (heading_filter(other_edge, tile->edgeinfo(edge->edgeinfo_offset()), location,
                              candidate.point, index)) {
             filtered.emplace_back(std::move(path_edge));

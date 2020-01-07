@@ -42,7 +42,7 @@ uint32_t Admin::country_offset() const {
 }
 
 // country ISO3166-1
-const std::string Admin::country_iso() const {
+std::string Admin::country_iso() const {
   std::string str;
   for (int i = 0; i < kCountryIso; i++) {
     if (country_iso_[i] == '\0') {
@@ -54,7 +54,7 @@ const std::string Admin::country_iso() const {
 }
 
 // country ISO + dash + state ISO will give you ISO3166-2 for state.
-const std::string Admin::state_iso() const {
+std::string Admin::state_iso() const {
   std::string str;
   for (int i = 0; i < kStateIso; i++) {
     if (state_iso_[i] == '\0') {

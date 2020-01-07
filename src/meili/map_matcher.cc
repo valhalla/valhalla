@@ -106,9 +106,7 @@ Interpolation InterpolateMeasurement(const MapMatcher& mapmatcher,
 
     // Get the amount of time spent on this segment
     auto edge_percent = segment->target - segment->source;
-    auto route_time =
-        mapmatcher.costing()->EdgeCost(directededge, tile->GetSpeed(directededge)).secs *
-        edge_percent;
+    auto route_time = mapmatcher.costing()->EdgeCost(directededge, tile).secs * edge_percent;
 
     Interpolation interp{projected_point, segment->edgeid, sq_distance,
                          route_distance,  route_time,      offset};
@@ -186,11 +184,11 @@ std::vector<MatchResult> InterpolateMeasurements(const MapMatcher& mapmatcher,
   return results;
 }
 
-// Find the match result of a state, given its previous state and next
-// state
+// Find the match result of a state, given its previous state and next state
 MatchResult FindMatchResult(const MapMatcher& mapmatcher,
                             const std::vector<StateId>& stateids,
-                            StateId::Time time) {
+                            StateId::Time time,
+                            baldr::GraphReader& graph_reader) {
   if (!(time < stateids.size())) {
     throw std::runtime_error("reading stateid at time out of bounds");
   }
@@ -203,53 +201,80 @@ MatchResult FindMatchResult(const MapMatcher& mapmatcher,
     return CreateMatchResult(measurement);
   }
 
+  // Find the last edge of the path from the previous state to the current state
   const auto& state = mapmatcher.state_container().state(stateid);
-  baldr::GraphId edgeid;
-
-  // Construct the route from previous state to current state, and
-  // find out which edge it matches
+  baldr::GraphId prev_edge;
   if (prev_stateid.IsValid()) {
     const auto& prev_state = mapmatcher.state_container().state(prev_stateid);
     // It must stay on the last edge of the route
     const auto rbegin = prev_state.RouteBegin(state), rend = prev_state.RouteEnd();
-    if (rbegin != rend) {
-      edgeid = rbegin->edgeid();
+    if (rbegin != rend && rbegin->edgeid().Is_Valid()) {
+      prev_edge = rbegin->edgeid();
     }
   }
 
-  // Do the same from current state to next state
-  if (!edgeid.Is_Valid() && next_stateid.IsValid()) {
+  // Find the first edge of the path from the current state to the next state
+  baldr::GraphId next_edge;
+  if (next_stateid.IsValid()) {
     const auto& next_state = mapmatcher.state_container().state(next_stateid);
-    // It must stay on the first edge of the route
     for (auto label = state.RouteBegin(next_state); label != state.RouteEnd(); label++) {
       if (label->edgeid().Is_Valid()) {
-        edgeid = label->edgeid();
+        next_edge = label->edgeid();
       }
     }
   }
 
-  // If we get a valid edge and find it in the state that's good
+  // bail early when no path exists on either side of this state
+  if (!prev_edge.Is_Valid() && !next_edge.Is_Valid())
+    return {};
+
+  // find which candidate was used for this state
+  const baldr::GraphTile* tile = nullptr;
   for (const auto& edge : state.candidate().edges) {
-    if (edge.id == edgeid) {
-      return {edge.projected,     std::sqrt(edge.distance), edgeid,
+    // if it matches either end of the path coming into this state or the beginning of the
+    // path leaving this state, then we are good to go and have found the match
+    if (edge.id == prev_edge || edge.id == next_edge) {
+      return {edge.projected,     std::sqrt(edge.distance), edge.id,
               edge.percent_along, measurement.epoch_time(), stateid};
+    }
+
+    // the only matches we can make where the ids arent the same are at intersections
+    if (edge.percent_along > 0.f && edge.percent_along < 1.f) {
+      continue;
+    }
+
+    // we are at an intersection so we need the node from the candidate where the route would be
+    auto candidate_nodes = graph_reader.GetDirectedEdgeNodes(edge.id, tile);
+    const auto& candidate_node =
+        edge.percent_along == 0.f ? candidate_nodes.first : candidate_nodes.second;
+
+    // if the last edge of the previous route ends at this candidate node
+    const auto* prev_de = graph_reader.directededge(prev_edge, tile);
+    if (prev_de && prev_de->endnode() == candidate_node) {
+      return {edge.projected, std::sqrt(edge.distance), prev_edge, 1.f, measurement.epoch_time(),
+              stateid};
+    }
+
+    // if the first edge of the next route starts at this candidate node
+    const auto* next_opp_de = graph_reader.GetOpposingEdge(next_edge, tile);
+    if (next_opp_de && next_opp_de->endnode() == candidate_node) {
+      return {edge.projected, std::sqrt(edge.distance), next_edge, 0.f, measurement.epoch_time(),
+              stateid};
     }
   }
 
-  // If we failed to get a valid edge or can't find it
-  // At least we know which point it matches
-  const auto& edge = state.candidate().edges.front();
-  return {edge.projected,     std::sqrt(edge.distance), edgeid,
-          edge.percent_along, measurement.epoch_time(), stateid};
+  // we should never reach here, the above early exit checks whether there is no path on either side
+  // of the given state we are finding a match for. perhaps we should throw?
+  return {};
 }
 
 // Find the corresponding match results of a list of states
 std::vector<MatchResult> FindMatchResults(const MapMatcher& mapmatcher,
-                                          const std::vector<StateId>& stateids) {
+                                          const std::vector<StateId>& stateids,
+                                          baldr::GraphReader& graph_reader) {
   std::vector<MatchResult> results;
-
   for (StateId::Time time = 0; time < stateids.size(); time++) {
-    results.push_back(FindMatchResult(mapmatcher, stateids, time));
+    results.push_back(FindMatchResult(mapmatcher, stateids, time, graph_reader));
   }
 
   return results;
@@ -586,7 +611,7 @@ std::vector<MatchResults> MapMatcher::OfflineMatch(const std::vector<Measurement
     }
 
     // Get the match result for each of the states
-    auto results = FindMatchResults(*this, original_state_ids);
+    auto results = FindMatchResults(*this, original_state_ids, graphreader_);
 
     // Insert the interpolated results into the result list
     std::vector<MatchResult> best_path;

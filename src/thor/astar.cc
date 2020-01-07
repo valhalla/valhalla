@@ -1,5 +1,6 @@
 #include "thor/astar.h"
 #include "baldr/datetime.h"
+#include "baldr/graphconstants.h"
 #include "midgard/logging.h"
 #include <algorithm>
 #include <iostream> // TODO remove if not needed
@@ -35,7 +36,7 @@ void AStarPathAlgorithm::Clear() {
   // Clear the edge labels and destination list. Reset the adjacency list
   // and clear edge status.
   edgelabels_.clear();
-  destinations_.clear();
+  destinations_percent_along_.clear();
   adjacencylist_.reset();
   edgestatus_.clear();
 
@@ -152,22 +153,23 @@ void AStarPathAlgorithm::ExpandForward(GraphReader& graphreader,
     // Skip this edge if permanently labeled (best path already found to this
     // directed edge), if no access is allowed to this edge (based on costing method),
     // or if a complex restriction exists.
+    bool has_time_restrictions = false;
     if (es->set() == EdgeSet::kPermanent ||
-        !costing_->Allowed(directededge, pred, tile, edgeid, 0, 0) ||
+        !costing_->Allowed(directededge, pred, tile, edgeid, 0, 0, has_time_restrictions) ||
         costing_->Restricted(directededge, pred, edgelabels_, tile, edgeid, true)) {
       continue;
     }
 
     // Compute the cost to the end of this edge
-    Cost newcost = pred.cost() + costing_->EdgeCost(directededge, tile->GetSpeed(directededge)) +
-                   costing_->TransitionCost(directededge, nodeinfo, pred);
+    auto edge_cost = costing_->EdgeCost(directededge, tile);
+    Cost newcost = pred.cost() + edge_cost + costing_->TransitionCost(directededge, nodeinfo, pred);
 
     // If this edge is a destination, subtract the partial/remainder cost
     // (cost from the dest. location to the end of the edge).
-    auto p = destinations_.find(edgeid);
-    if (p != destinations_.end()) {
+    auto p = destinations_percent_along_.find(edgeid);
+    if (p != destinations_percent_along_.end()) {
       // Subtract partial cost and time
-      newcost -= p->second;
+      newcost -= edge_cost * (1.0f - p->second);
 
       // Find the destination edge and update cost to include the edge score.
       // Note - with high edge scores the convergence test fails some routes
@@ -196,7 +198,7 @@ void AStarPathAlgorithm::ExpandForward(GraphReader& graphreader,
       if (newcost.cost < lab.cost().cost) {
         float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
         adjacencylist_->decrease(es->index(), newsortcost);
-        lab.Update(pred_idx, newcost, newsortcost);
+        lab.Update(pred_idx, newcost, newsortcost, has_time_restrictions);
       }
       continue;
     }
@@ -206,7 +208,7 @@ void AStarPathAlgorithm::ExpandForward(GraphReader& graphreader,
     // end node of the directed edge.
     float dist = 0.0f;
     float sortcost = newcost.cost;
-    if (p == destinations_.end()) {
+    if (p == destinations_percent_along_.end()) {
       const GraphTile* t2 =
           directededge->leaves_tile() ? graphreader.GetGraphTile(directededge->endnode()) : tile;
       if (t2 == nullptr) {
@@ -262,7 +264,7 @@ AStarPathAlgorithm::GetBestPath(valhalla::Location& origin,
   // Initialize the origin and destination locations. Initialize the
   // destination first in case the origin edge includes a destination edge.
   uint32_t density = SetDestination(graphreader, destination);
-  SetOrigin(graphreader, origin, destination);
+  SetOrigin(graphreader, origin, destination, kInvalidSecondsOfWeek);
 
   // Update hierarchy limits
   ModifyHierarchyLimits(mindist, density);
@@ -297,7 +299,7 @@ AStarPathAlgorithm::GetBestPath(valhalla::Location& origin,
     // Copy the EdgeLabel for use in costing. Check if this is a destination
     // edge and potentially complete the path.
     EdgeLabel pred = edgelabels_[predindex];
-    if (destinations_.find(pred.edgeid()) != destinations_.end()) {
+    if (destinations_percent_along_.find(pred.edgeid()) != destinations_percent_along_.end()) {
       // Check if a trivial path. Skip if no predecessor and not
       // trivial (cannot reach destination along this one edge).
       if (pred.predecessor() == kInvalidLabel) {
@@ -345,7 +347,8 @@ AStarPathAlgorithm::GetBestPath(valhalla::Location& origin,
 // Add an edge at the origin to the adjacency list
 void AStarPathAlgorithm::SetOrigin(GraphReader& graphreader,
                                    valhalla::Location& origin,
-                                   const valhalla::Location& destination) {
+                                   const valhalla::Location& destination,
+                                   const uint32_t seconds_of_week) {
   // Only skip inbound edges if we have other options
   bool has_other_edges = false;
   std::for_each(origin.path_edges().begin(), origin.path_edges().end(),
@@ -355,8 +358,8 @@ void AStarPathAlgorithm::SetOrigin(GraphReader& graphreader,
 
   // Check if the origin edge matches a destination edge at the node.
   auto trivial_at_node = [this, &destination](const valhalla::Location::PathEdge& edge) {
-    auto p = destinations_.find(edge.graph_id());
-    if (p != destinations_.end()) {
+    auto p = destinations_percent_along_.find(edge.graph_id());
+    if (p != destinations_percent_along_.end()) {
       for (const auto& destination_edge : destination.path_edges()) {
         if (destination_edge.graph_id() == edge.graph_id()) {
           return true;
@@ -395,8 +398,8 @@ void AStarPathAlgorithm::SetOrigin(GraphReader& graphreader,
 
     // Get cost
     nodeinfo = endtile->node(directededge->endnode());
-    Cost cost = costing_->EdgeCost(directededge, tile->GetSpeed(directededge)) *
-                (1.0f - edge.percent_along());
+    Cost cost =
+        costing_->EdgeCost(directededge, tile, seconds_of_week) * (1.0f - edge.percent_along());
     float dist = astarheuristic_.GetDistance(endtile->get_node_ll(directededge->endnode()));
 
     // We need to penalize this location based on its score (distance in meters from input)
@@ -410,22 +413,24 @@ void AStarPathAlgorithm::SetOrigin(GraphReader& graphreader,
     // destination is in a forward direction along the edge. Add back in
     // the edge score/penalty to account for destination edges farther from
     // the input location lat,lon.
-    auto p = destinations_.find(edgeid);
-    if (p != destinations_.end()) {
+    auto settled_dest_edge = destinations_percent_along_.find(edgeid);
+    if (settled_dest_edge != destinations_percent_along_.end()) {
       if (IsTrivial(edgeid, origin, destination)) {
         // Find the destination edge and update cost.
-        for (const auto& destination_edge : destination.path_edges()) {
-          if (destination_edge.graph_id() == edgeid) {
+        for (const auto& dest_path_edge : destination.path_edges()) {
+          if (dest_path_edge.graph_id() == edgeid) {
             // a trivial route passes along a single edge, meaning that the
             // destination point must be on this edge, and so the distance
             // remaining must be zero.
-            GraphId id(destination_edge.graph_id());
-            const DirectedEdge* dest_diredge = tile->directededge(id);
-            Cost dest_cost = costing_->EdgeCost(dest_diredge, tile->GetSpeed(dest_diredge)) *
-                             (1.0f - destination_edge.percent_along());
-            cost.secs -= p->second.secs;
-            cost.cost -= dest_cost.cost;
-            cost.cost += destination_edge.distance();
+            GraphId id(dest_path_edge.graph_id());
+            const DirectedEdge* dest_edge = tile->directededge(id);
+            Cost remainder_cost = costing_->EdgeCost(dest_edge, tile, seconds_of_week) *
+                                  (1.0f - dest_path_edge.percent_along());
+            // Remove the cost of the final "unused" part of the destination edge
+            cost -= remainder_cost;
+            // Add back in the edge score/penalty to account for destination edges
+            // farther from the input location lat,lon.
+            cost.cost += dest_path_edge.distance();
             cost.cost = std::max(0.0f, cost.cost);
             dist = 0.0;
           }
@@ -433,7 +438,7 @@ void AStarPathAlgorithm::SetOrigin(GraphReader& graphreader,
       }
     }
 
-    // Store the closest node info
+    // Store a node-info for later timezone retrieval (approximate for closest)
     if (closest_ni == nullptr) {
       closest_ni = nodeinfo;
     }
@@ -451,7 +456,7 @@ void AStarPathAlgorithm::SetOrigin(GraphReader& graphreader,
 
     // Add EdgeLabel to the adjacency list
     uint32_t idx = edgelabels_.size();
-    edgelabels_.push_back(std::move(edge_label));
+    edgelabels_.push_back(edge_label);
     adjacencylist_->add(idx);
 
     // DO NOT SET EdgeStatus - it messes up trivial paths with oneways
@@ -490,14 +495,12 @@ uint32_t AStarPathAlgorithm::SetDestination(GraphReader& graphreader,
 
     // Keep the cost to traverse the partial distance for the remainder of the edge. This cost
     // is subtracted from the total cost up to the end of the destination edge.
-    const GraphTile* tile = graphreader.GetGraphTile(edgeid);
-    const DirectedEdge* directededge = tile->directededge(edgeid);
-    destinations_[edge.graph_id()] = costing_->EdgeCost(directededge, tile->GetSpeed(directededge)) *
-                                     (1.0f - edge.percent_along());
+    destinations_percent_along_[edge.graph_id()] = edge.percent_along();
 
     // Edge score (penalty) is handled within GetPath. Do not add score here.
 
     // Get the tile relative density
+    const GraphTile* tile = graphreader.GetGraphTile(edgeid);
     density = tile->header()->density();
   }
   return density;
@@ -515,7 +518,7 @@ std::vector<PathInfo> AStarPathAlgorithm::FormPath(const uint32_t dest) {
        edgelabel_index = edgelabels_[edgelabel_index].predecessor()) {
     const EdgeLabel& edgelabel = edgelabels_[edgelabel_index];
     path.emplace_back(edgelabel.mode(), edgelabel.cost().secs, edgelabel.edgeid(), 0,
-                      edgelabel.cost().cost);
+                      edgelabel.cost().cost, edgelabel.has_time_restriction());
 
     // Check if this is a ferry
     if (edgelabel.use() == Use::kFerry) {
