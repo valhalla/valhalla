@@ -271,18 +271,10 @@ workflows:
   build_test_publish:
     jobs:
       - build-base
-      - lint-build-debug:
-          requires:
-            - build-base
-      - build-release:
-          requires:
-            - build-base
-      - build-release-x86:
-          requires:
-            - build-base
-      - build-osx:
-          requires:
-            - build-base
+      - lint-build-debug
+      - build-release
+      - build-release-x86
+      - build-osx
       - build-release-binary-osx:
           filters:
             tags:
@@ -296,16 +288,12 @@ workflows:
             branches:
               ignore: /.*/
       - build-release-binary-linux:
-          requires:
-            - build-base
           filters:
             tags:
               only: /.*/
             branches:
               ignore: /.*/
       - build-debug-binary-linux:
-          requires:
-            - build-base
           filters:
             tags:
               only: /.*/
