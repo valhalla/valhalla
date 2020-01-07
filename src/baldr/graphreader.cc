@@ -5,9 +5,9 @@
 #include <string>
 #include <sys/stat.h>
 
+#include "midgard/encoded.h"
 #include "midgard/logging.h"
 #include "midgard/sequence.h"
-#include "midgard/encoded.h"
 
 #include "baldr/connectivity_map.h"
 #include "filesystem.h"
