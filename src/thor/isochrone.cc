@@ -1040,9 +1040,11 @@ void Isochrone::SetOriginLocations(GraphReader& graphreader,
                                    const std::shared_ptr<DynamicCost>& costing) {
   // Add edges for each location to the adjacency list
   for (auto& location : locations) {
+    // NOTE ISOCHRONE SPECIFIC
     PointLL ll(location.ll().lng(), location.ll().lat());
     // Set time at the lat, lon grid to 0
     isotile_->Set(ll, 0);
+    // ENDNOTE
 
     // Only skip inbound edges if we have other options
     bool has_other_edges = false;
@@ -1111,9 +1113,11 @@ void Isochrone::SetDestinationLocations(
     const std::shared_ptr<DynamicCost>& costing) {
   // Add edges for each location to the adjacency list
   for (auto& location : locations) {
+    // NOTE ISOCHRONE SPECIFIC
     PointLL ll(location.ll().lng(), location.ll().lat());
     // Set time at the lat, lon grid to 0
     isotile_->Set(ll, 0);
+    // ENDNOTE
 
     // Only skip outbound edges if we have other options
     bool has_other_edges = false;
@@ -1179,9 +1183,11 @@ void Isochrone::SetOriginLocationsMM(
     const std::shared_ptr<DynamicCost>& costing) {
   // Add edges for each location to the adjacency list
   for (auto& origin : origin_locations) {
+    // NOTE ISOCHRONE SPECIFIC
     PointLL ll(origin.ll().lng(), origin.ll().lat());
     // Set time at the origin lat, lon grid to 0
     isotile_->Set(ll, 0);
+    // ENDNOTE
 
     // Only skip inbound edges if we have other options
     bool has_other_edges = false;

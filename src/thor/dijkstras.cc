@@ -237,9 +237,8 @@ void Dijkstras::ExpandForward(GraphReader& graphreader,
     // Add edge label, add to the adjacency list and set edge status
     uint32_t idx = bdedgelabels_.size();
     *es = {EdgeSet::kTemporary, idx};
-    bdedgelabels_.emplace_back(pred_idx, edgeid, oppedgeid, directededge, newcost, mode_, Cost{}, 0.f,
-                               false);
-    // kInvalidLabel, edgeid, opp_edge_id, directededge, cost, mode_, Cost{}, d, false
+    bdedgelabels_.emplace_back(pred_idx, edgeid, oppedgeid, directededge, newcost, newcost.cost, 0.0f,
+                               mode_, Cost{}, false, 0, has_time_restrictions);
     adjacencylist_->add(idx);
   }
 
@@ -403,7 +402,7 @@ void Dijkstras::ExpandReverse(GraphReader& graphreader,
     uint32_t idx = bdedgelabels_.size();
     *es = {EdgeSet::kTemporary, idx};
     bdedgelabels_.emplace_back(pred_idx, edgeid, oppedge, directededge, newcost, newcost.cost, 0.0f,
-                               mode_, tc, false);
+                               mode_, tc, 0, false, has_time_restrictions);
     adjacencylist_->add(idx);
   }
 
@@ -727,7 +726,7 @@ void Dijkstras::ExpandForwardMM(GraphReader& graphreader,
     *es = {EdgeSet::kTemporary, idx};
     mmedgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, 0.0f, mode_,
                                walking_distance, tripid, prior_stop, blockid, operator_id,
-                               has_transit);
+                               has_transit, has_time_restrictions);
     adjacencylist_->add(idx);
   }
 
@@ -824,6 +823,7 @@ void Dijkstras::SetOriginLocations(GraphReader& graphreader,
                                    const std::shared_ptr<DynamicCost>& costing) {
   // Add edges for each location to the adjacency list
   for (auto& location : locations) {
+
     // Only skip inbound edges if we have other options
     bool has_other_edges = false;
     std::for_each(location.path_edges().begin(), location.path_edges().end(),
@@ -868,9 +868,11 @@ void Dijkstras::SetOriginLocations(GraphReader& graphreader,
       // Construct the edge label. Set the predecessor edge index to invalid
       // to indicate the origin of the path.
       uint32_t idx = bdedgelabels_.size();
-      uint32_t d = static_cast<uint32_t>(directededge->length() * (1.0f - edge.percent_along()));
-      bdedgelabels_.emplace_back(kInvalidLabel, edgeid, opp_edge_id, directededge, cost, mode_,
-                                 Cost{}, d, false);
+      uint32_t path_distance =
+          static_cast<uint32_t>(directededge->length() * (1.0f - edge.percent_along()));
+      const bool has_time_restrictions = false;
+      bdedgelabels_.emplace_back(kInvalidLabel, edgeid, opp_edge_id, directededge, cost, cost.cost,
+                                 0., mode_, Cost{}, path_distance, false, has_time_restrictions);
       // Set the origin flag
       bdedgelabels_.back().set_origin();
 
@@ -890,6 +892,7 @@ void Dijkstras::SetDestinationLocations(
     const std::shared_ptr<DynamicCost>& costing) {
   // Add edges for each location to the adjacency list
   for (auto& location : locations) {
+
     // Only skip outbound edges if we have other options
     bool has_other_edges = false;
     std::for_each(location.path_edges().begin(), location.path_edges().end(),
@@ -936,9 +939,10 @@ void Dijkstras::SetDestinationLocations(
       // to invalid to indicate the origin of the path. Make sure the opposing
       // edge (edgeid) is set.
       uint32_t idx = bdedgelabels_.size();
-      uint32_t d = static_cast<uint32_t>(directededge->length() * edge.percent_along());
-      bdedgelabels_.emplace_back(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, mode_,
-                                 Cost{}, d, false);
+      uint32_t path_distance = static_cast<uint32_t>(directededge->length() * edge.percent_along());
+      const bool has_time_restrictions = false;
+      bdedgelabels_.emplace_back(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, cost.cost,
+                                 0., mode_, Cost{}, path_distance, false, has_time_restrictions);
       adjacencylist_->add(idx);
       edgestatus_.Set(opp_edge_id, EdgeSet::kTemporary, idx, graphreader.GetGraphTile(opp_edge_id));
 
@@ -999,17 +1003,17 @@ void Dijkstras::SetOriginLocationsMM(
       // of the path.
       uint32_t idx = mmedgelabels_.size();
       uint32_t d = static_cast<uint32_t>(directededge->length() * (1.0f - edge.percent_along()));
+      // TODO Do we care about time restrictions at origin edges?
+      bool has_time_restrictions = false;
       MMEdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost, cost.cost, 0.0f, mode_, d, 0,
-                             GraphId(), 0, 0, false);
+                             GraphId(), 0, 0, false, has_time_restrictions);
 
       // Set the origin flag
       edge_label.set_origin();
 
       // Add EdgeLabel to the adjacency list
-      mmedgelabels_.push_back(edge_label);
+      mmedgelabels_.push_back(std::move(edge_label));
       adjacencylist_->add(idx);
-
-      // TODO: inform someone we used this edge
     }
   }
 }
