@@ -741,10 +741,6 @@ std::string GraphReader::encoded_edge_shape(const valhalla::baldr::GraphId& edge
 
   const baldr::DirectedEdge* directedEdge = t_debug->directededge(edgeid);
   auto shape = t_debug->edgeinfo(directedEdge->edgeinfo_offset()).shape();
-  if (shape.empty()) {
-    return {};
-  }
-
   if (!directedEdge->forward()) {
     std::reverse(shape.begin(), shape.end());
   }
