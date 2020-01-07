@@ -276,9 +276,6 @@ SynchronizedTileCache::Put(const GraphId& graphid, const GraphTile& tile, size_t
 
 // Constructs tile cache.
 TileCache* TileCacheFactory::createTileCache(const boost::property_tree::ptree& pt) {
-  static std::mutex globalCacheMutex_;
-  static std::shared_ptr<TileCache> globalTileCache_;
-
   size_t max_cache_size = pt.get<size_t>("max_cache_size", DEFAULT_MAX_CACHE_SIZE);
 
   bool use_lru_cache = pt.get<bool>("use_lru_mem_cache", false);
@@ -288,6 +285,12 @@ TileCache* TileCacheFactory::createTileCache(const boost::property_tree::ptree& 
 
   // wrap tile cache with thread-safe version
   if (pt.get<bool>("global_synchronized_cache", false)) {
+    // Handle synchronization of cache
+    static std::mutex globalCacheMutex_;
+    static std::shared_ptr<TileCache> globalTileCache_;
+    // We need to lock the factory method itself to prevent races
+    static std::mutex factoryMutex;
+    std::lock_guard<std::mutex> lock(factoryMutex);
     if (!globalTileCache_) {
       if (use_lru_cache) {
         globalTileCache_.reset(new TileCacheLRU(max_cache_size, lru_mem_control));
@@ -298,6 +301,7 @@ TileCache* TileCacheFactory::createTileCache(const boost::property_tree::ptree& 
     return new SynchronizedTileCache(*globalTileCache_, globalCacheMutex_);
   }
 
+  // Otherwise: No synchronization
   if (use_lru_cache) {
     return new TileCacheLRU(max_cache_size, lru_mem_control);
   }
