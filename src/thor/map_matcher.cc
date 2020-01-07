@@ -131,15 +131,7 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
                      const sif::TravelMode mode,
                      std::vector<std::pair<GraphId, GraphId>>& disconnected_edges,
                      Options& options) {
-  // Set costing based on the mode
-  const auto& costing = mode_costing[static_cast<uint32_t>(mode)];
-  bool use_timestamps = options.use_timestamps();
-  // Iterate through the matched path. Form PathInfo - populate elapsed time
-  // Return an empty path (or throw exception) if path is not connected.
-  Cost elapsed;
-  std::vector<PathInfo> path;
-  GraphId prior_edge, prior_node;
-  EdgeLabel pred;
+
   const GraphTile* tile = nullptr;
   const DirectedEdge* directededge = nullptr;
   const NodeInfo* nodeinfo = nullptr;
@@ -174,8 +166,9 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
 
   // Interpolate match results if using timestamps for elapsed time
   std::list<std::vector<interpolation_t>> interpolations;
-  size_t interpolated_index = 0;
+
   size_t last_interp_index = 0;
+  bool use_timestamps = options.use_timestamps();
   if (use_timestamps) {
     interpolations = interpolate_matches(results, edge_segments, matcher);
     // This means there is a discontinuity. If so, fallback to using costing
@@ -185,7 +178,17 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
       last_interp_index = interpolations.front().back().original_index;
   }
 
+  // Set costing based on the mode
+  const auto& costing = mode_costing[static_cast<uint32_t>(mode)];
+  // Iterate through the matched path. Form PathInfo - populate elapsed time
+  // Return an empty path (or throw exception) if path is not connected.
+  Cost elapsed;
+  std::vector<PathInfo> path;
+  GraphId prior_edge, prior_node;
+  EdgeLabel pred;
+
   // Build the path
+  size_t interpolated_index = 0;
   for (const auto& edge_segment : edge_segments) {
     // Skip edges that are the same as the prior edge
     if (edge_segment.edgeid == prior_edge) {
@@ -196,10 +199,13 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
     GraphId edge_id = edge_segment.edgeid;
     matcher->graphreader().GetGraphTile(edge_id, tile);
     directededge = tile->directededge(edge_id);
+
     // Check if connected to prior edge
+    bool disconnected = false;
     if (prior_edge.Is_Valid() &&
         !matcher->graphreader().AreEdgesConnectedForward(prior_edge, edge_id)) {
       disconnected_edges.emplace_back(prior_edge, edge_id);
+      disconnected = true;
     }
 
     // Get seconds from beginning of the week accounting for any changes to timezone on the path
@@ -211,8 +217,11 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
     }
 
     // get the cost of traversing the node, there is no turn cost the first time
-    if (elapsed.secs > 0)
-      elapsed += costing->TransitionCost(directededge, nodeinfo, pred);
+    Cost turn_cost{};
+    if (elapsed.secs > 0 && !disconnected) {
+      turn_cost = costing->TransitionCost(directededge, nodeinfo, pred);
+      elapsed += turn_cost;
+    }
 
     // Get time along the edge, handling partial distance along the first and last edge.
     elapsed += costing->EdgeCost(directededge, tile, second_of_week) *
@@ -241,11 +250,11 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
     const GraphTile* end_tile = matcher->graphreader().GetGraphTile(prior_node);
     nodeinfo = end_tile->node(prior_node);
 
-    // Create a predecessor EdgeLabel (for transition costing)
-    pred = {kInvalidLabel, edge_id, directededge, {}, 0, 0, mode, 0};
+    // Update the predecessor EdgeLabel (for transition costing in the next round);
+    pred = {kInvalidLabel, edge_id, directededge, elapsed, 0, 0, mode, 0};
 
     // Add to the PathInfo
-    path.emplace_back(mode, elapsed.secs, edge_id, 0, elapsed.cost, false);
+    path.emplace_back(mode, elapsed.secs, edge_id, 0, elapsed.cost, false, turn_cost.secs);
   }
 
   return path;
