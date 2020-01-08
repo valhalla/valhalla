@@ -452,7 +452,10 @@ void AddBssNode(TripLeg_Node* trip_node,
                 const GraphTile* graphtile,
                 const std::shared_ptr<sif::DynamicCost>* mode_costing,
                 const AttributesController& controller) {
-  if (node->type() == NodeType::kBikeShare) {
+  auto pedestrian_costing = mode_costing[static_cast<size_t>(TravelMode::kPedestrian)];
+  auto bicycle_costing = mode_costing[static_cast<size_t>(TravelMode::kBicycle)];
+
+  if (node->type() == NodeType::kBikeShare && pedestrian_costing && bicycle_costing) {
     auto* bss_station_info = trip_node->mutable_bss_info();
     // TODO: import more BSS data, can be used to display capacity in real time
     bss_station_info->set_name("BSS 42");
@@ -460,10 +463,8 @@ void AddBssNode(TripLeg_Node* trip_node,
     bss_station_info->set_capacity("42");
     bss_station_info->set_network("universe");
     bss_station_info->set_operator_("Douglas");
-    bss_station_info->set_rent_cost(
-        mode_costing[static_cast<size_t>(TravelMode::kPedestrian)]->BSSCost().secs);
-    bss_station_info->set_return_cost(
-        mode_costing[static_cast<size_t>(TravelMode::kBicycle)]->BSSCost().secs);
+    bss_station_info->set_rent_cost(pedestrian_costing->BSSCost().secs);
+    bss_station_info->set_return_cost(bicycle_costing->BSSCost().secs);
   }
 }
 
