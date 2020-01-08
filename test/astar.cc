@@ -24,6 +24,9 @@
 #include "sif/pedestriancost.h"
 #include "thor/astar.h"
 #include "thor/attributes_controller.h"
+#include "thor/bidirectional_astar.h"
+#include "thor/pathalgorithm.h"
+#include "thor/timedep.h"
 #include "thor/triplegbuilder.h"
 #include "thor/worker.h"
 #include "tyr/serializers.h"
@@ -82,7 +85,7 @@ namespace {
 //      \ /
 //       g
 //
-std::string test_dir = "test/fake_tiles_astar";
+std::string test_dir = "test/data/fake_tiles_astar";
 vb::GraphId tile_id = vb::TileHierarchy::GetGraphId({.125, .125}, 2);
 
 namespace node {
@@ -91,9 +94,9 @@ std::pair<vb::GraphId, vm::PointLL> b({tile_id.tileid(), tile_id.level(), 1}, {0
 std::pair<vb::GraphId, vm::PointLL> c({tile_id.tileid(), tile_id.level(), 2}, {0.01, 0.01});
 std::pair<vb::GraphId, vm::PointLL> d({tile_id.tileid(), tile_id.level(), 3}, {0.10, 0.01});
 
-std::pair<vb::GraphId, vm::PointLL> e({tile_id.tileid(), tile_id.level(), 4}, {0.01, 0.14});
-std::pair<vb::GraphId, vm::PointLL> f({tile_id.tileid(), tile_id.level(), 5}, {0.10, 0.14});
-std::pair<vb::GraphId, vm::PointLL> g({tile_id.tileid(), tile_id.level(), 6}, {0.05, 0.11});
+std::pair<vb::GraphId, vm::PointLL> e({tile_id.tileid(), tile_id.level(), 4}, {0.21, 0.14});
+std::pair<vb::GraphId, vm::PointLL> f({tile_id.tileid(), tile_id.level(), 5}, {0.20, 0.14});
+std::pair<vb::GraphId, vm::PointLL> g({tile_id.tileid(), tile_id.level(), 6}, {0.25, 0.11});
 } // namespace node
 
 void make_tile() {
@@ -121,18 +124,22 @@ void make_tile() {
     node_builder.set_access(vb::kAllAccess);
     node_builder.set_edge_count(edge_count);
     node_builder.set_edge_index(edge_index);
+    node_builder.set_timezone(1);
     edge_index += edge_count;
     tile.nodes().emplace_back(node_builder);
   };
 
   auto add_edge = [&](const std::pair<vb::GraphId, vm::PointLL>& u,
-                      const std::pair<vb::GraphId, vm::PointLL>& v, const uint32_t edgeindex,
-                      const uint32_t opposing, const bool forward) {
+                      const std::pair<vb::GraphId, vm::PointLL>& v, const uint32_t localedgeidx,
+                      const uint32_t opposing_edge_index, const bool forward) {
     DirectedEdgeBuilder edge_builder({}, v.first, forward, u.second.Distance(v.second) + .5, 1, 1,
-                                     baldr::Use::kRoad, baldr::RoadClass::kMotorway, 0, false, 0, 0,
-                                     false);
-    edge_builder.set_opp_index(opposing);
+                                     baldr::Use::kRoad, baldr::RoadClass::kMotorway, localedgeidx,
+                                     false, 0, 0, false);
+    edge_builder.set_opp_index(opposing_edge_index);
     edge_builder.set_forwardaccess(vb::kAllAccess);
+    edge_builder.set_reverseaccess(vb::kAllAccess);
+    edge_builder.set_free_flow_speed(100);
+    edge_builder.set_constrained_flow_speed(10);
     std::vector<vm::PointLL> shape = {u.second, u.second.MidPoint(v.second), v.second};
     if (!forward) {
       std::reverse(shape.begin(), shape.end());
@@ -140,42 +147,43 @@ void make_tile() {
     bool added;
     // make more complex edge geom so that there are 3 segments, affine combination doesnt properly
     // handle arcs but who cares
-    uint32_t edge_info_offset = tile.AddEdgeInfo(edgeindex, u.first, v.first, 123, // way_id
+    uint32_t edge_info_offset = tile.AddEdgeInfo(localedgeidx, u.first, v.first, 123, // way_id
                                                  0, 0,
                                                  120, // speed limit in kph
-                                                 shape, {std::to_string(edgeindex)}, 0, added);
+                                                 shape, {std::to_string(localedgeidx)}, 0, added);
+    // assert(added);
     edge_builder.set_edgeinfo_offset(edge_info_offset);
     tile.directededges().emplace_back(edge_builder);
   };
 
   // first set of roads - Square
-  add_edge(node::a, node::b, 0, 2, true);
-  add_edge(node::a, node::c, 1, 4, true);
+  add_edge(node::a, node::b, 0, 0, true);
+  add_edge(node::a, node::c, 1, 0, true);
   add_node(node::a, 2);
 
-  add_edge(node::b, node::a, 0, 0, false);
-  add_edge(node::b, node::d, 2, 7, true);
+  add_edge(node::b, node::a, 2, 0, false);
+  add_edge(node::b, node::d, 3, 1, true);
   add_node(node::b, 2);
 
-  add_edge(node::c, node::a, 1, 1, false);
-  add_edge(node::c, node::d, 3, 6, true);
+  add_edge(node::c, node::a, 4, 1, false);
+  add_edge(node::c, node::d, 5, 0, true);
   add_node(node::c, 2);
 
-  add_edge(node::d, node::c, 3, 5, false);
-  add_edge(node::d, node::b, 2, 3, false);
+  add_edge(node::d, node::c, 6, 1, false);
+  add_edge(node::d, node::b, 7, 1, false);
   add_node(node::d, 2);
 
   // second set of roads - Triangle
-  add_edge(node::e, node::f, 4, 10, true);
-  add_edge(node::e, node::g, 5, 12, true);
+  add_edge(node::e, node::f, 8, 10, true);
+  add_edge(node::e, node::g, 9, 12, true);
   add_node(node::e, 2);
 
-  add_edge(node::f, node::e, 4, 8, false);
-  add_edge(node::f, node::g, 6, 13, true);
+  add_edge(node::f, node::e, 10, 8, false);
+  add_edge(node::f, node::g, 11, 13, true);
   add_node(node::f, 2);
 
-  add_edge(node::g, node::e, 5, 9, false);
-  add_edge(node::g, node::f, 6, 11, false);
+  add_edge(node::g, node::e, 12, 9, false);
+  add_edge(node::g, node::f, 13, 11, false);
   add_node(node::g, 2);
 
   tile.StoreTileData();
@@ -184,6 +192,9 @@ void make_tile() {
   GraphTile reloaded(test_dir, tile_id);
   auto bins = GraphTileBuilder::BinEdges(&reloaded, tweeners);
   GraphTileBuilder::AddBins(test_dir, &reloaded, bins);
+  if (!filesystem::exists(test_dir + "/2/000/519/120.gph")) {
+    throw std::runtime_error("Still no expected tile, did the actual fname on disk change?");
+  }
 }
 
 const std::string config_file = "test/test_trivial_path";
@@ -205,16 +216,25 @@ void write_config(const std::string& filename) {
 }
 
 void create_costing_options(Options& options) {
-  for (const auto costing : {auto_, auto_shorter, bicycle, bus, hov, motor_scooter, multimodal,
-                             pedestrian, transit, truck, motorcycle, auto_data_fix}) {
-    if (costing == pedestrian) {
-      const rapidjson::Document doc;
-      vs::ParsePedestrianCostOptions(doc, "/costing_options/pedestrian",
-                                     options.add_costing_options());
-    } else {
-      options.add_costing_options();
-    }
-  }
+  const rapidjson::Document doc;
+  sif::ParseAutoCostOptions(doc, "/costing_options/auto", options.add_costing_options());
+  sif::ParseAutoShorterCostOptions(doc, "/costing_options/auto_shorter",
+                                   options.add_costing_options());
+  sif::ParseBicycleCostOptions(doc, "/costing_options/bicycle", options.add_costing_options());
+  sif::ParseBusCostOptions(doc, "/costing_options/bus", options.add_costing_options());
+  sif::ParseHOVCostOptions(doc, "/costing_options/hov", options.add_costing_options());
+  sif::ParseTaxiCostOptions(doc, "/costing_options/taxi", options.add_costing_options());
+  sif::ParseMotorScooterCostOptions(doc, "/costing_options/motor_scooter",
+                                    options.add_costing_options());
+  sif::ParsePedestrianCostOptions(doc, "/costing_options/pedestrian", options.add_costing_options());
+  sif::ParseTransitCostOptions(doc, "/costing_options/transit", options.add_costing_options());
+  sif::ParseTruckCostOptions(doc, "/costing_options/truck", options.add_costing_options());
+  sif::ParseMotorcycleCostOptions(doc, "/costing_options/motorcycle", options.add_costing_options());
+  sif::ParseAutoShorterCostOptions(doc, "/costing_options/auto_shorter",
+                                   options.add_costing_options());
+  sif::ParseAutoDataFixCostOptions(doc, "/costing_options/auto_data_fix",
+                                   options.add_costing_options());
+  options.add_costing_options();
 }
 
 enum class TrivialPathTest {
@@ -223,11 +243,13 @@ enum class TrivialPathTest {
 };
 
 // check that a path from origin to dest goes along the edge with expected_edge_index
-void assert_is_trivial_path(valhalla::Location& origin,
+void assert_is_trivial_path(vt::PathAlgorithm& astar,
+                            valhalla::Location& origin,
                             valhalla::Location& dest,
                             uint32_t expected_num_paths,
                             TrivialPathTest assert_type,
-                            uint32_t assert_type_value) {
+                            int32_t assert_type_value,
+                            vs::TravelMode mode = vs::TravelMode::kPedestrian) {
 
   // make the config file
   std::stringstream json;
@@ -238,8 +260,7 @@ void assert_is_trivial_path(valhalla::Location& origin,
   vb::GraphReader reader(conf);
   auto* tile = reader.GetGraphTile(tile_id);
   if (tile == nullptr) {
-    throw std::runtime_error("Unable to load test tile! Please read the comment at the top of this "
-                             "file about generating the test tiles.");
+    throw std::runtime_error("Unable to load test tile! Did `make_tile` run succesfully?");
   }
   if (tile->header()->directededgecount() != 14) {
     throw std::runtime_error("test-tiles does not contain expected number of edges");
@@ -251,23 +272,36 @@ void assert_is_trivial_path(valhalla::Location& origin,
 
   Options options;
   create_costing_options(options);
-  auto mode = vs::TravelMode::kPedestrian;
   vs::cost_ptr_t costs[int(vs::TravelMode::kMaxTravelMode)];
-  auto pedestrian = vs::CreatePedestrianCost(Costing::pedestrian, options);
-  costs[int(mode)] = pedestrian;
+  switch (mode) {
+    case vs::TravelMode::kPedestrian: {
+      auto pedestrian = vs::CreatePedestrianCost(Costing::pedestrian, options);
+      costs[int(mode)] = pedestrian;
+      break;
+    }
+    case vs::TravelMode::kDrive: {
+      auto car = vs::CreateAutoCost(Costing::auto_, options);
+      costs[int(mode)] = car;
+      break;
+    }
+    default:
+      throw std::runtime_error("Unhandled case");
+  }
   assert(bool(costs[int(mode)]));
 
-  vt::AStarPathAlgorithm astar;
   auto paths = astar.GetBestPath(origin, dest, reader, costs, mode);
 
-  uint32_t time = 0;
+  int32_t time = 0;
   for (const auto& path : paths) {
     for (const auto& p : path) {
       time += p.elapsed_time;
     }
+    for (const vt::PathInfo& subpath : path) {
+      LOG_INFO("Got path " + std::to_string(subpath.edgeid.id()));
+    }
     if (path.size() != expected_num_paths) {
       std::ostringstream ostr;
-      ostr << "Expected number of paths to be " << expected_num_paths << ", but got " << paths.size();
+      ostr << "Expected number of paths to be " << expected_num_paths << ", but got " << path.size();
       throw std::runtime_error(ostr.str());
     }
     break;
@@ -282,8 +316,8 @@ void assert_is_trivial_path(valhalla::Location& origin,
     case TrivialPathTest::MatchesEdge:
       // Grab time from an edge index
       const DirectedEdge* expected_edge = tile->directededge(assert_type_value);
-      auto expected_cost = pedestrian->EdgeCost(expected_edge, tile);
-      expected_time = expected_cost.cost;
+      auto expected_cost = costs[int(mode)]->EdgeCost(expected_edge, tile);
+      expected_time = expected_cost.secs;
       break;
   };
   if (expected_time == 0) {
@@ -292,7 +326,7 @@ void assert_is_trivial_path(valhalla::Location& origin,
 
   if (time != expected_time) {
     std::ostringstream ostr;
-    ostr << "Expected time to be " << expected_time << ", but got " << time;
+    ostr << "Expected time to be " << expected_time << "s, but got " << time << "s";
     throw std::runtime_error(ostr.str());
   }
 }
@@ -308,13 +342,14 @@ void add(GraphId edge_id, float percent_along, const PointLL& ll, valhalla::Loca
 
 // test that a path from A to B succeeds, even if the edges from A to C and B
 // to D appear first in the PathLocation.
-void TestTrivialPath() {
+void TestTrivialPath(vt::PathAlgorithm& astar) {
   using node::a;
   using node::b;
   using node::c;
   using node::d;
 
   valhalla::Location origin;
+  // origin.set_date_time();
   origin.mutable_ll()->set_lng(a.second.first);
   origin.mutable_ll()->set_lat(a.second.second);
   add(tile_id + uint64_t(1), 0.0f, a.second, origin);
@@ -331,7 +366,17 @@ void TestTrivialPath() {
   add(tile_id + uint64_t(0), 1.0f, b.second, dest);
 
   // this should go along the path from A to B
-  assert_is_trivial_path(origin, dest, 1, TrivialPathTest::MatchesEdge, 0);
+  assert_is_trivial_path(astar, origin, dest, 1, TrivialPathTest::DurationEqualTo, 360,
+                         vs::TravelMode::kDrive);
+}
+
+void TestTrivialPathForward() {
+  auto astar = vt::TimeDepForward();
+  TestTrivialPath(astar);
+}
+void TestTrivialPathReverse() {
+  auto astar = vt::TimeDepReverse();
+  TestTrivialPath(astar);
 }
 
 // test that a path from E to F succeeds, even if the edges from E and F
@@ -356,10 +401,80 @@ void TestTrivialPathTriangle() {
   add(tile_id + uint64_t(10), 0.0f, f.second, dest);
   add(tile_id + uint64_t(8), 1.0f, f.second, dest);
 
+  // TODO This fails with graphindex out of bounds for Reverse direction, is this
+  // related to why we short-circuit trivial routes to AStarPathAlgorithm in route_action.cc?
+  //
+  vt::AStarPathAlgorithm astar;
   // this should go along the path from E to F
-  assert_is_trivial_path(origin, dest, 1, TrivialPathTest::MatchesEdge, 8);
+  assert_is_trivial_path(astar, origin, dest, 1, TrivialPathTest::MatchesEdge, 8,
+                         vs::TravelMode::kPedestrian);
 }
 
+void TestPartialDurationTrivial() {
+  // Tests a trivial path with partial edge results in partial duration
+  using node::a;
+  using node::b;
+  using node::d;
+
+  valhalla::Location origin;
+  origin.set_date_time("2019-11-21T23:05");
+  origin.mutable_ll()->set_lng(a.second.first);
+  origin.mutable_ll()->set_lat(a.second.second);
+  add(tile_id + uint64_t(0), 0.1f, a.second, origin);
+  add(tile_id + uint64_t(2), 0.9f, a.second, origin);
+
+  float partial_dist = 0.1;
+  valhalla::Location dest;
+  dest.mutable_ll()->set_lng(b.second.first);
+  dest.mutable_ll()->set_lat(b.second.second);
+  add(tile_id + uint64_t(2), 0. + partial_dist, b.second, dest);
+  add(tile_id + uint64_t(0), 1. - partial_dist, b.second, dest);
+  add(tile_id + uint64_t(3), 0.0f, b.second, dest);
+  add(tile_id + uint64_t(7), 1.0f, b.second, dest);
+
+  uint32_t expected_duration = 288;
+
+  vt::TimeDepForward astar;
+  assert_is_trivial_path(astar, origin, dest, 1, TrivialPathTest::DurationEqualTo, expected_duration,
+                         vs::TravelMode::kDrive);
+}
+
+void TestPartialDuration(vt::PathAlgorithm& astar) {
+  // Tests that a partial duration is returned when starting on a partial edge
+  using node::a;
+  using node::b;
+  using node::d;
+
+  float partial_dist = 0.1;
+
+  valhalla::Location origin;
+  origin.set_date_time("2019-11-21T23:05");
+  origin.mutable_ll()->set_lng(a.second.first);
+  origin.mutable_ll()->set_lat(a.second.second);
+  add(tile_id + uint64_t(0), 0. + partial_dist, a.second, origin);
+  add(tile_id + uint64_t(2), 1. - partial_dist, a.second, origin);
+
+  valhalla::Location dest;
+  dest.set_date_time("2019-11-21T23:05");
+  dest.mutable_ll()->set_lng(d.second.first);
+  dest.mutable_ll()->set_lat(d.second.second);
+  add(tile_id + uint64_t(7), 0.0f + partial_dist, d.second, dest);
+  add(tile_id + uint64_t(3), 1.0f - partial_dist, d.second, dest);
+
+  uint32_t expected_duration = 973;
+
+  assert_is_trivial_path(astar, origin, dest, 2, TrivialPathTest::DurationEqualTo, expected_duration,
+                         vs::TravelMode::kDrive);
+}
+
+void TestPartialDurationForward() {
+  vt::TimeDepForward astar;
+  TestPartialDuration(astar);
+}
+void TestPartialDurationReverse() {
+  vt::TimeDepReverse astar;
+  TestPartialDuration(astar);
+}
 void trivial_path_no_uturns(const std::string& config_file) {
   boost::property_tree::ptree conf;
   rapidjson::read_json(config_file, conf);
@@ -854,8 +969,12 @@ int main() {
   // TODO: move to mjolnir?
   suite.test(TEST_CASE(make_tile));
 
-  suite.test(TEST_CASE(TestTrivialPath));
+  suite.test(TEST_CASE(TestTrivialPathForward));
+  suite.test(TEST_CASE(TestTrivialPathReverse));
   suite.test(TEST_CASE(TestTrivialPathTriangle));
+  suite.test(TEST_CASE(TestPartialDurationTrivial));
+  suite.test(TEST_CASE(TestPartialDurationForward));
+  suite.test(TEST_CASE(TestPartialDurationReverse));
 
   suite.test(TEST_CASE(DoConfig));
   suite.test(TEST_CASE(TestTrivialPathNoUturns));

@@ -396,6 +396,7 @@ void BuildTileSet(const std::string& ways_file,
   sequence<OSMRestriction> complex_restrictions_to(complex_restriction_to_file, false);
 
   auto database = pt.get_optional<std::string>("admin");
+  bool commercial_data = pt.get<bool>("commercial_data", false);
   // Initialize the admin DB (if it exists)
   sqlite3* admin_db_handle = database ? GetDBHandle(*database) : nullptr;
   if (!database) {
@@ -740,6 +741,9 @@ void BuildTileSet(const std::string& ways_file,
             directededge.set_use(Use::kRamp);
           }
 
+          if (commercial_data && w.internal())
+            directededge.set_internal(true);
+
           // Update the node's best class
           bestclass = std::min(bestclass, directededge.classification());
 
@@ -777,13 +781,13 @@ void BuildTileSet(const std::string& ways_file,
                 directededge.set_turnlanes(true);
                 graphtile.AddTurnLanes(idx, w.fwd_turn_lanes_index());
 
-                // Temporarily use the internal flag so that in the enhancer we can properly check to
+                // Temporarily use the not thru flag so that in the enhancer we can properly check to
                 // see if we have an internal edge
                 // Basically, we are setting turn lanes on the prior and last edge because we need
                 // to check if the last edge is internal or not.  If it is internal, we remove the
                 // turn lanes from the last edge and leave them on the prior.
                 if (edge.attributes.way_prior)
-                  directededge.set_internal(true);
+                  directededge.set_not_thru(true);
               }
             }
           } else if (!forward && w.bwd_turn_lanes_index() > 0 &&
@@ -795,13 +799,13 @@ void BuildTileSet(const std::string& ways_file,
                 directededge.set_turnlanes(true);
                 graphtile.AddTurnLanes(idx, w.bwd_turn_lanes_index());
 
-                // Temporarily use the internal flag so that in the enhancer we can properly check to
+                // Temporarily use the not thru flag so that in the enhancer we can properly check to
                 // see if we have an internal edge
                 // Basically, we are setting turn lanes on the next and first edge because we need
                 // to check if the fist edge is internal or not.  If it is internal, we remove the
                 // turn lanes from the first edge and leave them on the next.
                 if (edge.attributes.way_next)
-                  directededge.set_internal(true);
+                  directededge.set_not_thru(true);
               }
             }
           }
