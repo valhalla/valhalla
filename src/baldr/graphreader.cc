@@ -5,6 +5,7 @@
 #include <string>
 #include <sys/stat.h>
 
+#include "midgard/encoded.h"
 #include "midgard/logging.h"
 #include "midgard/sequence.h"
 
@@ -734,6 +735,20 @@ std::pair<GraphId, GraphId> GraphReader::GetDirectedEdgeNodes(const GraphTile* t
     start_node = t2->directededge(edge_idx)->endnode();
   }
   return std::make_pair(start_node, end_node);
+}
+
+std::string GraphReader::encoded_edge_shape(const valhalla::baldr::GraphId& edgeid) {
+  const baldr::GraphTile* t_debug = GetGraphTile(edgeid);
+  if (t_debug == nullptr) {
+    return {};
+  }
+
+  const baldr::DirectedEdge* directedEdge = t_debug->directededge(edgeid);
+  auto shape = t_debug->edgeinfo(directedEdge->edgeinfo_offset()).shape();
+  if (!directedEdge->forward()) {
+    std::reverse(shape.begin(), shape.end());
+  }
+  return midgard::encode(shape);
 }
 
 // Note: this will grab all road tiles and transit tiles.
