@@ -45,7 +45,7 @@ for arg in $(valhalla_run_route --help | grep -o '\-[a-z\-]\+' | sort | uniq); d
     sed -i -e "s/^${arg}[ ]\+/${arg}|/g" "${TMP}"
     sed -i -e "s/[ ]\+${arg}[ ]\+/|${arg}|/g" "${TMP}"
 done
-sed -i -e "s;$;|--config|${CONF};g" -e "s/\([^\\]\)'|/\1|/g" -e "s/|'/|/g" "${TMP}"
+sed -i '' -e "s;$;|--config|${CONF};g" -e "s/\([^\\]\)'|/\1|/g" -e "s/|'/|/g" "${TMP}"
 
 #run all of the paths, make sure to cut off the timestamps
 #from the log messages otherwise every line will be a diff
