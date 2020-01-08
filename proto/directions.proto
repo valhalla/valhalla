@@ -67,6 +67,13 @@ message DirectionsLeg {
     kFunicular = 7;
   }
 
+  message GuidanceView {
+    optional string data_id = 1;        // TODO future enum as data id?
+    optional string type = 2;           // The type of guidance view TODO future enum
+    optional string base_id = 3;        // Image base id
+    repeated string overlay_ids = 4;    // List of overlay ids
+  }
+
   message Maneuver {
     enum CardinalDirection {
       kNorth = 0;
@@ -136,7 +143,6 @@ message DirectionsLeg {
       repeated SignElement guide_onto_streets = 5;      // The list of guide branch street names, examples: US 22 West or Baltimore-Washington Parkway
       repeated SignElement guide_toward_locations = 6;  // The list of guide toward locations, examples: Lewistown or US 15
       repeated SignElement junction_names = 7;          // The list of junction names, examples: 万年橋東 or Mannenbashi East
-      repeated SignElement guidance_view_junctions = 8; // The list of guidance view junctions, examples: AB12345;1 or AB12345;E
     }
 
     optional Type type = 1;                                  // Maneuver type
@@ -173,6 +179,7 @@ message DirectionsLeg {
     repeated StreetName roundabout_exit_street_names = 32;   // Outbound street names from roundabout
     optional uint32 turn_degree = 33;                        // Turn degree of maneuver
     optional bool has_time_restrictions = 34;                // Whether edge has any time restrictions or not
+    repeated GuidanceView guidance_views = 35;               // List of guidance views
   }
   
   optional uint64 trip_id = 1;

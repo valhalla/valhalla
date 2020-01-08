@@ -448,7 +448,7 @@ Signs* Maneuver::mutable_signs() {
 }
 
 bool Maneuver::HasSigns() const {
-  return (HasExitSign() || HasGuideSign() || HasJunctionNameSign() || HasGuidanceViewSign());
+  return (HasExitSign() || HasGuideSign() || HasJunctionNameSign());
 }
 
 bool Maneuver::HasExitSign() const {
@@ -485,14 +485,6 @@ bool Maneuver::HasGuideTowardSign() const {
 
 bool Maneuver::HasJunctionNameSign() const {
   return signs_.HasJunctionName();
-}
-
-bool Maneuver::HasGuidanceViewSign() const {
-  return (HasGuidanceViewJunctionSign());
-}
-
-bool Maneuver::HasGuidanceViewJunctionSign() const {
-  return signs_.HasGuidanceViewJunction();
 }
 
 uint32_t Maneuver::internal_right_turn_count() const {
@@ -866,6 +858,14 @@ const VerbalTextFormatter* Maneuver::verbal_formatter() const {
 
 void Maneuver::set_verbal_formatter(std::unique_ptr<VerbalTextFormatter>&& verbal_formatter) {
   verbal_formatter_ = std::move(verbal_formatter);
+}
+
+const std::vector<DirectionsLeg_GuidanceView>& Maneuver::guidance_views() const {
+  return guidance_views_;
+}
+
+std::vector<DirectionsLeg_GuidanceView>* Maneuver::mutable_guidance_views() {
+  return &guidance_views_;
 }
 
 #ifdef LOGGING_LEVEL_TRACE

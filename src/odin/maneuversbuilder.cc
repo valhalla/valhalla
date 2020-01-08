@@ -2737,17 +2737,13 @@ void ManeuversBuilder::MatchGuidanceViewJunctions(Maneuver& maneuver,
         // If overlay(!is_route_number) guidance view junction and a pair...
         if (!overlay_guidance_view_junction.is_route_number() && is_pair(overlay_tokens) &&
             (base_prefix == overlay_tokens.at(0))) {
-          // TODO implement for real in the future: {network_id}/{image_type}/{image_id}
-          const std::string network_id = "z";
-          const std::string image_type = "jct";
-          // If matched then add <prefix>_<base_suffix>_<overlay_suffix> sign to maneuver
-          const std::string composite_image_id =
-              base_prefix + "_" + base_suffix + "_" + overlay_tokens.at(1);
-          const std::string guidance_view_junction_id =
-              network_id + "/" + image_type + "/" + composite_image_id;
-          maneuver.mutable_signs()
-              ->mutable_guidance_view_junction_list()
-              ->emplace_back(guidance_view_junction_id, false);
+          // TODO implement for real in the future
+          DirectionsLeg_GuidanceView guidance_view;
+          guidance_view.set_data_id("z");
+          guidance_view.set_type("jct");
+          guidance_view.set_base_id(base_prefix + base_suffix);
+          guidance_view.add_overlay_ids(overlay_tokens.at(0) + overlay_tokens.at(1));
+          maneuver.mutable_guidance_views()->emplace_back(guidance_view);
           return;
         }
       } // end for loop over base guidance view junction

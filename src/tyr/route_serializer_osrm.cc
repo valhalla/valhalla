@@ -1281,10 +1281,25 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
         step->emplace("junction_name", junction_name);
       }
 
-      // Add guidance_view_junction if not the start maneuver
-      std::string guidance_view_junction = get_sign_elements(sign.guidance_view_junctions());
-      if (!depart_maneuver && !guidance_view_junction.empty()) {
-        step->emplace("guidance_view_junction", guidance_view_junction);
+      // Add guidance_views if not the start maneuver
+      if (!depart_maneuver && (maneuver.guidance_views_size() > 0)) {
+        auto guidance_views = json::array({});
+        for (const auto& gv : maneuver.guidance_views()) {
+          auto guidance_view = json::map({});
+          guidance_view->emplace("data_id", gv.data_id());
+          guidance_view->emplace("type", gv.type());
+          guidance_view->emplace("base_id", gv.base_id());
+          auto overlay_ids = json::array({});
+          for (const auto& overlay : gv.overlay_ids()) {
+            overlay_ids->emplace_back(overlay);
+          }
+          guidance_view->emplace("overlay_ids", overlay_ids);
+
+          // Append to guidance view list
+          guidance_views->emplace_back(guidance_view);
+        }
+        // Add guidance views to step
+        step->emplace("guidance_views", guidance_views);
       }
 
       // Add intersections
