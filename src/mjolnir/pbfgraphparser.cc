@@ -690,10 +690,8 @@ public:
           if (tag.first == "motorcar:conditional" || tag.first == "motor_vehicle:conditional") {
             mode = (kAutoAccess | kTruckAccess | kEmergencyAccess | kTaxiAccess | kBusAccess |
                     kHOVAccess | kMopedAccess | kMotorcycleAccess);
-            std::cout << "******************" + tag.second << std::endl;
           } else if (tag.first.substr(0, 19) == "bicycle:conditional") {
             mode = kBicycleAccess;
-            std::cout << "******************" + tag.second << std::endl;
           } else if (tag.first.substr(0, 16) == "foot:conditional" ||
                      tag.first.substr(0, 22) == "pedestrian:conditional") {
             mode = (kPedestrianAccess | kWheelchairAccess);
