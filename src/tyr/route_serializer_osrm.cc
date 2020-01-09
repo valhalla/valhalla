@@ -1275,9 +1275,9 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
         step->emplace("exits", ex);
       }
 
-      // Add junction_name
+      // Add junction_name if not the start maneuver
       std::string junction_name = get_sign_elements(sign.junction_names());
-      if (!junction_name.empty()) {
+      if (!depart_maneuver && !junction_name.empty()) {
         step->emplace("junction_name", junction_name);
       }
 
@@ -1334,6 +1334,8 @@ std::string serialize(valhalla::Api& api) {
     case valhalla::Options::optimized_route:
       json->emplace("waypoints", waypoints(*options.mutable_locations()));
       break;
+    default:
+      throw std::runtime_error("Unknown route serialization action");
   }
 
   // Add each route

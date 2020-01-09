@@ -198,7 +198,8 @@ protected:
    */
   void SetOrigin(baldr::GraphReader& graphreader,
                  valhalla::Location& origin,
-                 valhalla::Location& destination);
+                 valhalla::Location& destination,
+                 uint32_t seconds_of_week);
 
   /**
    * The destination of the reverse path is the origin location. Set the
