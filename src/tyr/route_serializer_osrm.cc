@@ -1334,6 +1334,8 @@ std::string serialize(valhalla::Api& api) {
     case valhalla::Options::optimized_route:
       json->emplace("waypoints", waypoints(*options.mutable_locations()));
       break;
+    default:
+      throw std::runtime_error("Unknown route serialization action");
   }
 
   // Add each route
