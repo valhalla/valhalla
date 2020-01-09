@@ -53,17 +53,17 @@ void TestStatus() {
   TryGet(edgestatus, GraphId(555, 2, 1), EdgeSet::kPermanent);
   TryGet(edgestatus, GraphId(555, 3, 1), EdgeSet::kPermanent);
 
-  // Clear and make sure all status are kUnreached
+  // Clear and make sure all status are kUnreachedOrReset
   edgestatus.clear();
-  TryGet(edgestatus, GraphId(555, 1, 100100), EdgeSet::kUnreached);
-  TryGet(edgestatus, GraphId(555, 2, 100100), EdgeSet::kUnreached);
-  TryGet(edgestatus, GraphId(555, 3, 100100), EdgeSet::kUnreached);
-  TryGet(edgestatus, GraphId(555, 1, 55555), EdgeSet::kUnreached);
-  TryGet(edgestatus, GraphId(555, 2, 55555), EdgeSet::kUnreached);
-  TryGet(edgestatus, GraphId(555, 3, 55555), EdgeSet::kUnreached);
-  TryGet(edgestatus, GraphId(555, 1, 1), EdgeSet::kUnreached);
-  TryGet(edgestatus, GraphId(555, 2, 1), EdgeSet::kUnreached);
-  TryGet(edgestatus, GraphId(555, 3, 1), EdgeSet::kUnreached);
+  TryGet(edgestatus, GraphId(555, 1, 100100), EdgeSet::kUnreachedOrReset);
+  TryGet(edgestatus, GraphId(555, 2, 100100), EdgeSet::kUnreachedOrReset);
+  TryGet(edgestatus, GraphId(555, 3, 100100), EdgeSet::kUnreachedOrReset);
+  TryGet(edgestatus, GraphId(555, 1, 55555), EdgeSet::kUnreachedOrReset);
+  TryGet(edgestatus, GraphId(555, 2, 55555), EdgeSet::kUnreachedOrReset);
+  TryGet(edgestatus, GraphId(555, 3, 55555), EdgeSet::kUnreachedOrReset);
+  TryGet(edgestatus, GraphId(555, 1, 1), EdgeSet::kUnreachedOrReset);
+  TryGet(edgestatus, GraphId(555, 2, 1), EdgeSet::kUnreachedOrReset);
+  TryGet(edgestatus, GraphId(555, 3, 1), EdgeSet::kUnreachedOrReset);
 }
 
 } // namespace

@@ -10,7 +10,9 @@ namespace thor {
 
 // Edge label status
 enum class EdgeSet : uint8_t {
-  kUnreached = 0, // Unreached - not yet encountered in search
+  kUnreachedOrReset = 0, // Unreached - not yet encountered in search _or_ encountered but
+                         // reset due to encountering a complex restriction:
+                         // https://github.com/valhalla/valhalla/issues/2103
   kPermanent = 1, // Permanent - shortest path to this edge has been found
   kTemporary = 2  // Temporary - edge has been encountered but there could
                   //   still be a shorter path to this edge. This edge will

@@ -304,7 +304,7 @@ public:
           // So, in order to still allow new paths involving B, e.g. D to B to C,
           // we need to go back and revert the permanent status of A and B.
           //
-          // We mark it as kUnreached so that in effect it is no longer visible. (It can't
+          // We mark it as kUnreachedOrReset so that in effect it is no longer visible. (It can't
           // be removed since that invalidates subsequent indices and setting it to temporary
           // means it'll still do a comparison to existing sort cost and fail later).
           //
@@ -319,7 +319,7 @@ public:
             // to infinite loops
             --last;
             std::for_each(first, last, [&edgestatus](baldr::GraphId edge_id) {
-              edgestatus->Update(edge_id, thor::EdgeSet::kUnreached);
+              edgestatus->Update(edge_id, thor::EdgeSet::kUnreachedOrReset);
             });
           }
         };
