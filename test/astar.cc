@@ -115,9 +115,9 @@ std::pair<vb::GraphId, vm::PointLL> e({tile_id.tileid(), tile_id.level(), 4}, {0
 std::pair<vb::GraphId, vm::PointLL> f({tile_id.tileid(), tile_id.level(), 5}, {0.20, 0.14});
 std::pair<vb::GraphId, vm::PointLL> g({tile_id.tileid(), tile_id.level(), 6}, {0.25, 0.11});
 
-std::pair<vb::GraphId, vm::PointLL> h({tile_id.tileid(), tile_id.level(), 7},  {0.00, 0.10});
-std::pair<vb::GraphId, vm::PointLL> i({tile_id.tileid(), tile_id.level(), 8},  {0.10, 0.10});
-std::pair<vb::GraphId, vm::PointLL> j({tile_id.tileid(), tile_id.level(), 9},  {0.20, 0.10});
+std::pair<vb::GraphId, vm::PointLL> h({tile_id.tileid(), tile_id.level(), 7}, {0.00, 0.10});
+std::pair<vb::GraphId, vm::PointLL> i({tile_id.tileid(), tile_id.level(), 8}, {0.10, 0.10});
+std::pair<vb::GraphId, vm::PointLL> j({tile_id.tileid(), tile_id.level(), 9}, {0.20, 0.10});
 std::pair<vb::GraphId, vm::PointLL> k({tile_id.tileid(), tile_id.level(), 10}, {0.00, 0.01});
 std::pair<vb::GraphId, vm::PointLL> l({tile_id.tileid(), tile_id.level(), 11}, {0.10, 0.01});
 std::pair<vb::GraphId, vm::PointLL> m({tile_id.tileid(), tile_id.level(), 12}, {0.20, 0.01});
@@ -326,7 +326,8 @@ std::unique_ptr<vb::GraphReader> get_graph_reader(const std::string& tile_dir) {
     throw std::runtime_error("Unable to load test tile! Did `make_tile` run succesfully?");
   }
   if (tile->header()->directededgecount() != 26) {
-    throw std::runtime_error("test-tiles does not contain expected number of edges, (it contained "+std::to_string(tile->header()->directededgecount()));
+    throw std::runtime_error("test-tiles does not contain expected number of edges, (it contained " +
+                             std::to_string(tile->header()->directededgecount()));
   }
   const GraphTile* endtile = reader->GetGraphTile(node::b.first);
   if (endtile == nullptr) {
@@ -1353,7 +1354,7 @@ void TestBacktrackComplexRestrictionForwardDetourAfterRestriction() {
   create_costing_options(options);
   vs::cost_ptr_t costs[int(vs::TravelMode::kMaxTravelMode)];
   auto mode = vs::TravelMode::kDrive;
-      costs[int(mode)] = vs::CreateAutoCost(Costing::auto_, options);
+  costs[int(mode)] = vs::CreateAutoCost(Costing::auto_, options);
   assert(bool(costs[int(mode)]));
 
   auto reader = get_graph_reader(test_dir);
@@ -1361,13 +1362,13 @@ void TestBacktrackComplexRestrictionForwardDetourAfterRestriction() {
   auto paths = astar.GetBestPath(origin, dest, *reader, costs, mode).front();
 
   for (auto path_info : paths) {
-    LOG_INFO("Got pathinfo "+std::to_string(path_info.edgeid.id()));
+    LOG_INFO("Got pathinfo " + std::to_string(path_info.edgeid.id()));
   }
   auto correct_len = 5;
   if (paths.size() != correct_len) {
-    throw std::runtime_error("Wrong number of paths in response: "+std::to_string(paths.size())+" != "+std::to_string(correct_len));
+    throw std::runtime_error("Wrong number of paths in response: " + std::to_string(paths.size()) +
+                             " != " + std::to_string(correct_len));
   }
-
 }
 
 } // anonymous namespace
