@@ -96,7 +96,7 @@ serializeIsochrones(const Api& request,
 
       const valhalla::LatLng& latlng_input = location.ll();
       input_coords->push_back(array({fp_t{latlng_input.lng(), 6}, fp_t{latlng_input.lat(), 6}}));
-    };
+    }
     features->emplace_back(map(
         {{"type", std::string("Feature")},
          {"properties", map({{"type", std::string("input")}})},
