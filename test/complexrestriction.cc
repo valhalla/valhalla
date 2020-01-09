@@ -39,13 +39,13 @@ void TestWriteRead() {
     throw runtime_error("ComplexRestriction to GraphId get failed");
   }
 
-  res.set_via_count(5);
+  res.set_via_list(std::vector<GraphId>(5, GraphId{}));
   if (res.via_count() != 5) {
     throw runtime_error("ComplexRestriction via count failed");
   }
 
-  res.set_via_count(kMaxViasPerRestriction + 5);
-  if (res.via_count() != kMaxViasPerRestriction) {
+  res.set_via_list(std::vector<GraphId>(kMaxViasPerRestriction + 7, GraphId{}));
+  if (res.via_count() != 5) {
     throw runtime_error("ComplexRestriction via count limit check failed");
   }
 
