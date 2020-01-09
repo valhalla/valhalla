@@ -203,6 +203,11 @@ void NodeInfo::set_mode_change(const bool mc) {
   mode_change_ = mc;
 }
 
+// Sets the named intersection.
+void NodeInfo::set_named_intersection(const bool named) {
+  named_ = named;
+}
+
 // Set the traffic signal flag.
 void NodeInfo::set_traffic_signal(const bool traffic_signal) {
   traffic_signal_ = traffic_signal;
@@ -254,6 +259,7 @@ json::MapPtr NodeInfo::json(const GraphTile* tile) const {
       {"traffic_signal", static_cast<bool>(traffic_signal_)},
       {"type", to_string(static_cast<NodeType>(type_))},
       {"transition count", static_cast<uint64_t>(transition_count_)},
+      {"named_intersection", static_cast<bool>(named_)},
   });
   if (is_transit()) {
     m->emplace("stop_index", static_cast<uint64_t>(stop_index()));

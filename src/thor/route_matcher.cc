@@ -191,7 +191,7 @@ bool expand_from_node(const std::shared_ptr<DynamicCost>* mode_costing,
           elapsed.secs = shape[index].epoch_time() - shape[0].epoch_time();
 
         // Add edge and update correlated index
-        path_infos.emplace_back(mode, elapsed.secs, edge_id, 0, elapsed.cost);
+        path_infos.emplace_back(mode, elapsed.secs, edge_id, 0, elapsed.cost, false);
 
         // Set previous edge label
         prev_edge_label = {kInvalidLabel, edge_id, de, {}, 0, 0, mode, 0};
@@ -286,14 +286,19 @@ bool RouteMatcher::FormPath(const std::shared_ptr<DynamicCost>* mode_costing,
       // get the timezone
       nodeinfo = tile->node(directededge->endnode());
       const auto* tz = DateTime::get_tz_db().from_index(nodeinfo->timezone());
+      if (!tz)
+        continue;
       // if its timestamp based need to signal that out to trip leg builder
-      if (options.shape(0).time() != -1.0) {
+      if (!options.shape(0).has_date_time() && options.shape(0).time() != -1.0) {
         options.mutable_shape(0)->set_date_time(
             DateTime::seconds_to_date(options.shape(0).time(), tz, false));
       }
       // remember where we are starting
-      if (options.shape(0).has_date_time())
+      if (options.shape(0).has_date_time()) {
+        if (options.shape(0).date_time() == "current")
+          options.mutable_shape(0)->set_date_time(DateTime::iso_date_time(tz));
         origin_epoch = DateTime::seconds_since_epoch(options.shape(0).date_time(), tz);
+      }
       break;
     }
   }
@@ -359,7 +364,7 @@ bool RouteMatcher::FormPath(const std::shared_ptr<DynamicCost>* mode_costing,
           elapsed.secs = shape[index].epoch_time() - shape[0].epoch_time();
 
         // Add begin edge
-        path_infos.emplace_back(mode, elapsed.secs, graphid, 0, elapsed.cost);
+        path_infos.emplace_back(mode, elapsed.secs, graphid, 0, elapsed.cost, false);
 
         // Set previous edge label
         prev_edge_label = {kInvalidLabel, graphid, de, {}, 0, 0, mode, 0};
@@ -410,7 +415,7 @@ bool RouteMatcher::FormPath(const std::shared_ptr<DynamicCost>* mode_costing,
             elapsed.secs = shape.back().epoch_time() - shape[0].epoch_time();
 
           // Add end edge
-          path_infos.emplace_back(mode, elapsed.secs, end_edge_graphid, 0, elapsed.cost);
+          path_infos.emplace_back(mode, elapsed.secs, end_edge_graphid, 0, elapsed.cost, false);
           return true;
         } else {
           // Did not find an edge that correlates with the trace, return false.
@@ -431,7 +436,7 @@ bool RouteMatcher::FormPath(const std::shared_ptr<DynamicCost>* mode_costing,
           elapsed.secs = shape.back().epoch_time() - shape[0].epoch_time();
 
         // Add end edge
-        path_infos.emplace_back(mode, elapsed.secs, GraphId(edge.graph_id()), 0, elapsed.cost);
+        path_infos.emplace_back(mode, elapsed.secs, GraphId(edge.graph_id()), 0, elapsed.cost, false);
         return true;
       }
     }

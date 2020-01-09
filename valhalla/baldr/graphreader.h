@@ -696,6 +696,13 @@ public:
   }
 
   /**
+   * Get the shape of an edge
+   * @param edgeid
+   * @return the encoded shape (string) for specified id.
+   */
+  std::string encoded_edge_shape(const valhalla::baldr::GraphId& edgeid);
+
+  /**
    * Gets back a set of available tiles
    * @return  returns the list of available tiles
    *          Note: this will grab all road tiles

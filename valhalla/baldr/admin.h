@@ -34,14 +34,14 @@ public:
    * Get the country ISO3166-1 code.
    * @return  Returns the ISO country code.
    */
-  const std::string country_iso() const;
+  std::string country_iso() const;
 
   /**
    * Get the state ISO code. Country ISO + dash + state ISO will give
    * you ISO3166-2 for state.
    * @return  Returns the state ISO code.
    */
-  const std::string state_iso() const;
+  std::string state_iso() const;
 
   /**
    * Get the offset into the GraphTile text list for the state text associated

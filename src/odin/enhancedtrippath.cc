@@ -185,13 +185,13 @@ EnhancedTripLeg::EnhancedTripLeg(TripLeg& trip_path) : trip_path_(trip_path) {
 }
 
 std::unique_ptr<EnhancedTripLeg_Node> EnhancedTripLeg::GetEnhancedNode(const int node_index) {
-  return midgard::make_unique<EnhancedTripLeg_Node>(mutable_node(node_index));
+  return std::make_unique<EnhancedTripLeg_Node>(mutable_node(node_index));
 }
 
 std::unique_ptr<EnhancedTripLeg_Edge> EnhancedTripLeg::GetPrevEdge(const int node_index, int delta) {
   int index = node_index - delta;
   if (IsValidNodeIndex(index)) {
-    return midgard::make_unique<EnhancedTripLeg_Edge>(mutable_node(index)->mutable_edge());
+    return std::make_unique<EnhancedTripLeg_Edge>(mutable_node(index)->mutable_edge());
   } else {
     return nullptr;
   }
@@ -205,7 +205,7 @@ std::unique_ptr<EnhancedTripLeg_Edge> EnhancedTripLeg::GetNextEdge(const int nod
                                                                    int delta) const {
   int index = node_index + delta;
   if (IsValidNodeIndex(index) && !IsLastNodeIndex(index)) {
-    return midgard::make_unique<EnhancedTripLeg_Edge>(mutable_node(index)->mutable_edge());
+    return std::make_unique<EnhancedTripLeg_Edge>(mutable_node(index)->mutable_edge());
   } else {
     return nullptr;
   }
@@ -237,7 +237,7 @@ int EnhancedTripLeg::GetLastNodeIndex() const {
 }
 
 std::unique_ptr<EnhancedTripLeg_Admin> EnhancedTripLeg::GetAdmin(size_t index) {
-  return midgard::make_unique<EnhancedTripLeg_Admin>(mutable_admin(index));
+  return std::make_unique<EnhancedTripLeg_Admin>(mutable_admin(index));
 }
 
 std::string EnhancedTripLeg::GetCountryCode(int node_index) {
@@ -672,6 +672,15 @@ std::string EnhancedTripLeg_Edge::ToString() const {
 
     str += " | exit_names=";
     str += SignElementsToString(this->sign().exit_names());
+
+    str += " | guide_onto_streets=";
+    str += SignElementsToString(this->sign().guide_onto_streets());
+
+    str += " | guide_toward_locations=";
+    str += SignElementsToString(this->sign().guide_toward_locations());
+
+    str += " | junction_names=";
+    str += SignElementsToString(this->sign().junction_names());
   }
 
   str += " | travel_mode=";
@@ -989,6 +998,15 @@ std::string EnhancedTripLeg_Edge::ToParameterString() const {
   str += SignElementsToParameterString(this->sign().exit_names());
 
   str += delim;
+  str += SignElementsToParameterString(this->sign().guide_onto_streets());
+
+  str += delim;
+  str += SignElementsToParameterString(this->sign().guide_toward_locations());
+
+  str += delim;
+  str += SignElementsToParameterString(this->sign().junction_names());
+
+  str += delim;
   if (this->has_travel_mode()) {
     str += "TripLeg_TravelMode_";
     str += TripLeg_TravelMode_Name(travel_mode());
@@ -1275,7 +1293,7 @@ bool EnhancedTripLeg_Node::HasIntersectingEdgeCurrNameConsistency() const {
 
 std::unique_ptr<EnhancedTripLeg_IntersectingEdge>
 EnhancedTripLeg_Node::GetIntersectingEdge(size_t index) {
-  return midgard::make_unique<EnhancedTripLeg_IntersectingEdge>(mutable_intersecting_edge(index));
+  return std::make_unique<EnhancedTripLeg_IntersectingEdge>(mutable_intersecting_edge(index));
 }
 
 void EnhancedTripLeg_Node::CalculateRightLeftIntersectingEdgeCounts(

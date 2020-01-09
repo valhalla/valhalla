@@ -10,7 +10,7 @@ executors:
 commands:
   install_macos_dependencies:
     steps:
-      - run: brew install protobuf cmake libtool boost-python libspatialite pkg-config lua curl wget czmq lz4
+      - run: brew install protobuf cmake libtool boost-python libspatialite pkg-config lua curl wget czmq lz4 spatialite-tools unzip
       - run:
           name: Install Node
           command: |
@@ -23,31 +23,38 @@ commands:
             echo 'nvm alias default v8.11.2' >> $BASH_ENV
 
 jobs:
-  lint:
+  build-base:
     docker:
-      - image: valhalla/docker:build-2.6.1
+      - image: docker:18.06.3-ce-git
     steps:
+      - setup_remote_docker
       - checkout
-      - run: apt-get update && apt-get -y install clang-tidy-5.0 clang-5.0 curl git nodejs
-      - run: nodejs ./scripts/validate_changelog.js
-      - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
-      - run: git submodule sync && git submodule update --init
       - restore_cache:
           keys:
             - ccache
-      - run: npm install --ignore-scripts
-      - run: mkdir build
-      - run: cd build && cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXPORT_COMPILE_COMMANDS=On
-      - run: make -C build -j4
-      - run: cd build && ../scripts/tidy.sh && ../scripts/error_on_dirty.sh
+      - run:
+          name: Build Valhalla base Dockerfile
+          command: |
+            docker build -f ./docker/Dockerfile-build --tag valhalla/valhalla:build-latest ./docker
+      - run:
+          name: Build Valhalla base Dockerfile x86
+          command: |
+            docker build -f ./docker/Dockerfile-build-x86 --tag valhalla/valhalla:build-x86-latest ./docker
       - save_cache:
           key: ccache
           paths:
             - ~/.ccache
-
+      - run:
+          name: Push Valhalla base image
+          command: |
+            if [ "${CIRCLE_BRANCH}" == "master" ]; then
+              echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+              docker push valhalla/valhalla:build-latest
+              docker push valhalla/valhalla:build-x86-latest
+            fi
   build-release-binary-linux:
     docker:
-      - image: valhalla/docker:build-2.6.1
+      - image: valhalla/valhalla:build-latest
     steps:
       - checkout
       - run:
@@ -88,7 +95,7 @@ jobs:
 
   build-debug-binary-linux:
     docker:
-      - image: valhalla/docker:build-2.6.1
+      - image: valhalla/valhalla:build-latest
     steps:
       - checkout
       - run:
@@ -125,9 +132,9 @@ jobs:
           paths:
             - ~/.ccache
 
-  build-debug:
+  lint-build-debug:
     docker:
-      - image: valhalla/docker:build-2.6.1
+      - image: valhalla/valhalla:build-latest
     steps:
       - checkout
       - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
@@ -137,8 +144,9 @@ jobs:
             - ccache
       - run: npm install --ignore-scripts
       - run: mkdir build
-      - run: cd build && cmake .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_COVERAGE=On -DCPACK_GENERATOR=DEB
+      - run: cd build && cmake .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_COVERAGE=On -DCPACK_GENERATOR=DEB -DENABLE_COMPILER_WARNINGS=On -DCMAKE_EXPORT_COMPILE_COMMANDS=On
       - run: make -C build -j4
+      - run: scripts/clang-tidy-only-diff.sh
       - run: make -C build -j4 tests
       - run: make -C build -j2 check
       - run: make -C build install
@@ -152,7 +160,7 @@ jobs:
 
   build-release:
     docker:
-      - image: valhalla/docker:build-2.6.1
+      - image: valhalla/valhalla:build-latest
     steps:
       - checkout
       - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
@@ -177,7 +185,7 @@ jobs:
 
   build-release-x86:
     docker:
-      - image: valhalla/docker:build-x86-3.0.0
+      - image: valhalla/valhalla:build-x86-latest
     steps:
       - checkout
       #- run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
@@ -262,8 +270,8 @@ workflows:
   version: 2
   build_test_publish:
     jobs:
-      - lint
-      - build-debug
+      - build-base
+      - lint-build-debug
       - build-release
       - build-release-x86
       - build-osx
