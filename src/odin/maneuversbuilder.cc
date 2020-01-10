@@ -2744,6 +2744,11 @@ void ManeuversBuilder::MatchGuidanceViewJunctions(Maneuver& maneuver,
           guidance_view.set_base_id(base_prefix + base_suffix);
           guidance_view.add_overlay_ids(overlay_tokens.at(0) + overlay_tokens.at(1));
           maneuver.mutable_guidance_views()->emplace_back(guidance_view);
+#ifdef LOGGING_LEVEL_TRACE
+          LOG_TRACE("############################################");
+          LOG_TRACE("MatchGuidanceViewJunctions");
+          LOG_TRACE(std::string("  maneuver=") + maneuver.ToString());
+#endif
           return;
         }
       } // end for loop over base guidance view junction
