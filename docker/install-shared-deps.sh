@@ -32,7 +32,7 @@ apt-get install -y \
     libsqlite3-mod-spatialite \
     libtool \
     locales \
-    lua5.2 \
+    lua5.3 \
     make \
     ninja-build \
     osmium-tool \
