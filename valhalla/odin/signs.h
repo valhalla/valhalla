@@ -102,9 +102,6 @@ public:
 
   bool HasJunctionName() const;
 
-  bool HasGuidanceView() const;
-  bool HasGuidanceViewJunction() const;
-
   std::string ToString() const;
 
 #ifdef LOGGING_LEVEL_TRACE
@@ -131,7 +128,6 @@ protected:
   std::vector<Sign> guide_branch_list_;
   std::vector<Sign> guide_toward_list_;
   std::vector<Sign> junction_name_list_;
-  std::vector<Sign> guidance_view_junction_list_;
 };
 
 } // namespace odin
