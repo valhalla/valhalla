@@ -87,25 +87,39 @@ serializeIsochrones(const Api& request,
   }
   // Add input and snapped locations to the geojson
   if (show_locations) {
-    auto snapped_coords = array({});
-    auto input_coords = array({});
+    int idx = 0;
     for (const auto& location : request.options().locations()) {
-      const valhalla::LatLng& latLng_snapped = location.path_edges(0).ll();
-      snapped_coords->push_back(
-          array({fp_t{latLng_snapped.lng(), 6}, fp_t{latLng_snapped.lat(), 6}}));
+      // first add snapped points as MultiPoint feature per origin point
+      auto snapped_points_array = array({});
+      std::vector<std::vector<float>> snapped_points;
+      for (const auto& path_edge : location.path_edges()) {
+        const valhalla::LatLng& snapped_latlng = path_edge.ll();
+        const std::vector<float> current_coords{snapped_latlng.lng(), snapped_latlng.lat()};
+        // remove duplicates of path_edges in case the snapped object is a node
+        if (std::find(snapped_points.begin(), snapped_points.end(), current_coords) ==
+            snapped_points.end()) {
+          snapped_points.push_back(current_coords);
+          snapped_points_array->push_back(
+              array({fp_t{current_coords.at(0), 6}, fp_t{current_coords.at(1), 6}}));
+        }
+      };
+      features->emplace_back(map(
+          {{"type", std::string("Feature")},
+           {"properties",
+            map({{"type", std::string("snapped")}, {"location_index", static_cast<uint64_t>(idx)}})},
+           {"geometry",
+            map({{"type", std::string("MultiPoint")}, {"coordinates", snapped_points_array}})}}));
 
-      const valhalla::LatLng& latlng_input = location.ll();
-      input_coords->push_back(array({fp_t{latlng_input.lng(), 6}, fp_t{latlng_input.lat(), 6}}));
+      // then each input point as separate Point feature
+      const valhalla::LatLng& input_latlng = location.ll();
+      const auto input_array = array({fp_t{input_latlng.lng(), 6}, fp_t{input_latlng.lat(), 6}});
+      features->emplace_back(map(
+          {{"type", std::string("Feature")},
+           {"properties",
+            map({{"type", std::string("input")}, {"location_index", static_cast<uint64_t>(idx)}})},
+           {"geometry", map({{"type", std::string("Point")}, {"coordinates", input_array}})}}));
+      idx++;
     }
-    features->emplace_back(map(
-        {{"type", std::string("Feature")},
-         {"properties", map({{"type", std::string("input")}})},
-         {"geometry", map({{"type", std::string("MultiPoint")}, {"coordinates", input_coords}})}}));
-
-    features->emplace_back(map(
-        {{"type", std::string("Feature")},
-         {"properties", map({{"type", std::string("snapped")}})},
-         {"geometry", map({{"type", std::string("MultiPoint")}, {"coordinates", snapped_coords}})}}));
   }
 
   // make the collection
