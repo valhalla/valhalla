@@ -40,14 +40,6 @@ public:
   }
 
   /**
-   * Set the number of vias.
-   * @param  count Number of vias
-   */
-  void set_via_count(const uint64_t count) {
-    via_count_ = (count > kMaxViasPerRestriction) ? kMaxViasPerRestriction : count;
-  }
-
-  /**
    * Set the vias for this restriction
    * @param  via_list  via list.
    */
@@ -184,6 +176,14 @@ public:
   bool operator==(const ComplexRestrictionBuilder& other) const;
 
 protected:
+  /**
+   * Set the number of vias.
+   * @param  count Number of vias
+   */
+  void set_via_count(const uint64_t count) {
+    via_count_ = (count > kMaxViasPerRestriction) ? kMaxViasPerRestriction : count;
+  }
+
   // via list
   std::vector<GraphId> via_list_;
 

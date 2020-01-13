@@ -252,7 +252,7 @@ void test_osrm_junction_name(const std::string filename,
                                    std::to_string(steps_index) + "/junction_name";
 
   // Validate junction_name
-  std::string found_junction_name = rapidjson::get<std::string>(doc, junction_name_path.c_str());
+  std::string found_junction_name = rapidjson::get<std::string>(doc, junction_name_path.c_str(), "");
   if (found_junction_name != expected_junction_name) {
     throw std::runtime_error("Invalid junction_name - found: " + found_junction_name +
                              " | expected: " + expected_junction_name);
@@ -333,12 +333,10 @@ void validate_osrm_turn_junction_name() {
   int routes_index = 0;
   int legs_index = 0;
   int steps_index = 1;
-
   // Test osrm turn left at junction name
   test_osrm_junction_name({VALHALLA_SOURCE_DIR
                            "test/pinpoints/instructions/turn_left_junction_name_sign.pbf"},
                           routes_index, legs_index, steps_index, "新橋三丁目交番前");
-
   // Test osrm turn right at junction name
   test_osrm_junction_name({VALHALLA_SOURCE_DIR
                            "test/pinpoints/instructions/turn_right_junction_name_sign.pbf"},
@@ -348,6 +346,28 @@ void validate_osrm_turn_junction_name() {
   test_osrm_junction_name({VALHALLA_SOURCE_DIR
                            "test/pinpoints/instructions/turn_right_internal_junction_name_sign.pbf"},
                           routes_index, legs_index, steps_index, "万年橋東");
+
+  test_osrm_junction_name({VALHALLA_SOURCE_DIR
+                           "test/pinpoints/instructions/osrm_no_origin_junction_name_pinpoint.pbf"},
+                          routes_index, legs_index, steps_index, "銀座七丁目");
+
+  // Test osrm no junction name at origin/start maneuver
+  steps_index = 0;
+  test_osrm_junction_name({VALHALLA_SOURCE_DIR
+                           "test/pinpoints/instructions/turn_left_junction_name_sign.pbf"},
+                          routes_index, legs_index, steps_index, "");
+
+  test_osrm_junction_name({VALHALLA_SOURCE_DIR
+                           "test/pinpoints/instructions/turn_right_junction_name_sign.pbf"},
+                          routes_index, legs_index, steps_index, "");
+
+  test_osrm_junction_name({VALHALLA_SOURCE_DIR
+                           "test/pinpoints/instructions/turn_right_internal_junction_name_sign.pbf"},
+                          routes_index, legs_index, steps_index, "");
+
+  test_osrm_junction_name({VALHALLA_SOURCE_DIR
+                           "test/pinpoints/instructions/osrm_no_origin_junction_name_pinpoint.pbf"},
+                          routes_index, legs_index, steps_index, "");
 }
 
 void validate_osrm_roundabout_destinations() {

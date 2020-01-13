@@ -14,6 +14,7 @@
 #include <fstream>
 #include <future>
 #include <list>
+#include <random>
 #include <set>
 #include <string>
 #include <thread>
@@ -205,6 +206,10 @@ int main(int argc, char** argv) {
     valhalla::midgard::logging::Configure(logging_config);
   }
 
+  std::random_device rd;
+  std::mt19937 gen(rd());
+  std::uniform_real_distribution<> dis(-0.25, 0.25);
+
   // fill up the queue with work
   job_t job;
   for (const auto& file : input_files) {
@@ -218,19 +223,30 @@ int main(int argc, char** argv) {
       while (std::getline(ss, item, ',')) {
         parts.push_back(std::move(item));
       }
-      float lat = std::stof(parts[0]);
-      if (lat < -90.0f || lat > 90.0f) {
+      if (parts.size() < 2) {
+        continue;
+      }
+      float base_lat = std::stof(parts[0]);
+      if (base_lat < -90.0f || base_lat > 90.0f) {
         throw std::runtime_error("Latitude must be in the range [-90, 90] degrees");
       }
-      float lon = valhalla::midgard::circular_range_clamp<float>(std::stof(parts[1]), -180, 180);
-      valhalla::midgard::PointLL ll(lat, lon);
-      valhalla::baldr::Location loc(ll);
-      loc.min_inbound_reach_ = loc.min_outbound_reach_ = isolated;
-      loc.radius_ = radius;
-      job.emplace_back(std::move(loc));
-      if (job.size() == batch) {
-        jobs.emplace_back(std::move(job));
-        job.clear();
+      float base_lon = valhalla::midgard::circular_range_clamp<float>(std::stof(parts[1]), -180, 180);
+
+      // Add 50 random locations around the lat,lon
+      for (int i = 0; i < 49; ++i) {
+        auto lat = base_lat + dis(gen);
+        auto lon = base_lon + dis(gen);
+        valhalla::midgard::PointLL ll(lat, lon);
+        valhalla::baldr::Location loc(ll);
+        loc.min_inbound_reach_ = loc.min_outbound_reach_ = isolated;
+        loc.radius_ = radius;
+        loc.heading_ = 60.0f;
+        loc.heading_tolerance_ = 120.0f;
+        job.emplace_back(std::move(loc));
+        if (job.size() == batch) {
+          jobs.emplace_back(std::move(job));
+          job.clear();
+        }
       }
       line.clear();
     }

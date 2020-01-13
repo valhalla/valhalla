@@ -2,10 +2,10 @@
 
 set -o errexit -o pipefail -o nounset
 
-which parallel &> /dev/null
-if [ $? != 0 ]; then
+if ! [ -x "$(command -v parallel)" ]; then
 	echo "parallel is required please install it"
-	echo "sudo apt-get install parallel"
+	echo "Debian: sudo apt-get install parallel"
+	echo "Osx:    brew install parallel"
 	exit 1
 fi
 
