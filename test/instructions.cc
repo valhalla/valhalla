@@ -259,6 +259,66 @@ void test_osrm_junction_name(const std::string filename,
   }
 }
 
+void test_osrm_guidance_view(const std::string filename,
+                             int routes_index,
+                             int legs_index,
+                             int steps_index,
+                             int guidance_views_index,
+                             int overlay_ids_index,
+                             const std::string expected_base_id,
+                             const std::string expected_overlay_id) {
+  // Load pinpoint test
+  std::string path_bytes = test::load_binary_file(filename);
+  if (path_bytes.size() == 0) {
+    throw std::runtime_error("path_bytes is empty");
+  }
+
+  // Create the request from the path bytes
+  valhalla::Api request;
+  request.ParseFromString(path_bytes);
+
+  // Set osrm format
+  request.mutable_options()->set_format(valhalla::Options_Format_osrm);
+
+  // Build the directions
+  valhalla::odin::DirectionsBuilder().Build(request);
+
+  // Serialize to osrm json string
+  auto json_str = valhalla::tyr::serializeDirections(request);
+
+  rapidjson::Document doc;
+  doc.Parse(json_str.c_str());
+  if (doc.HasParseError()) {
+    throw std::runtime_error("Parse JSON error");
+  }
+
+  // Set the guidance_views path
+  std::string guidance_views_path =
+      "/routes/" + std::to_string(routes_index) + "/legs/" + std::to_string(legs_index) + "/steps/" +
+      std::to_string(steps_index) + "/guidance_views/" + std::to_string(guidance_views_index);
+
+  // Set the base_id path
+  std::string base_id_path = guidance_views_path + "/base_id";
+
+  // Validate guidance view base id
+  std::string found_base_id = rapidjson::get<std::string>(doc, base_id_path.c_str(), "");
+  if (found_base_id != expected_base_id) {
+    throw std::runtime_error("Invalid base_id - found: " + found_base_id +
+                             " | expected: " + expected_base_id);
+  }
+
+  // Set the overlay_id path
+  std::string overlay_id_path =
+      guidance_views_path + "/overlay_ids/" + std::to_string(overlay_ids_index);
+
+  // Validate guidance view overlay id
+  std::string found_overlay_id = rapidjson::get<std::string>(doc, overlay_id_path.c_str(), "");
+  if (found_overlay_id != expected_overlay_id) {
+    throw std::runtime_error("Invalid overlay_id - found: " + found_overlay_id +
+                             " | expected: " + expected_overlay_id);
+  }
+}
+
 void validate_merge_instructions() {
 
   int expected_routes_size = 1;
@@ -368,6 +428,21 @@ void validate_osrm_turn_junction_name() {
   test_osrm_junction_name({VALHALLA_SOURCE_DIR
                            "test/pinpoints/instructions/osrm_no_origin_junction_name_pinpoint.pbf"},
                           routes_index, legs_index, steps_index, "");
+}
+
+void validate_osrm_guidance_view() {
+
+  int routes_index = 0;
+  int legs_index = 0;
+  int steps_index = 1;
+  int guidance_views_index = 0;
+  int overlay_ids_index = 0;
+
+  // Test osrm turn left at junction name
+  test_osrm_guidance_view({VALHALLA_SOURCE_DIR
+                           "test/pinpoints/instructions/guidance_view_exit_right.pbf"},
+                          routes_index, legs_index, steps_index, guidance_views_index,
+                          overlay_ids_index, "CA075101", "CA07510E");
 }
 
 void validate_osrm_roundabout_destinations() {
@@ -486,6 +561,9 @@ int main() {
 
   // Validate the osrm turn at junction name
   suite.test(TEST_CASE(validate_osrm_turn_junction_name));
+
+  // Validate the osrm guidance view
+  suite.test(TEST_CASE(validate_osrm_guidance_view));
 
   return suite.tear_down();
 }

@@ -1,0 +1,1 @@
+-j '{"locations":[{"lat":35.682072,"lon":139.777283,"street":"C1"},{"lat":35.680748,"lon":139.781326,"street":"首都高速６号向島線"}],"costing":"auto","units":"kilometers"}'
