@@ -1029,8 +1029,12 @@ public:
 
         // Set bicycle access to true for all but the highest scale.
         bool access = scale < kMaxMtbScale;
-        w.set_bike_forward(access);
-        w.set_bike_backward(access);
+        if (access && !w.oneway_reverse()) {
+          w.set_bike_forward(true);
+        }
+        if (access && !w.oneway()) {
+          w.set_bike_backward(true);
+        }
       }
     }
 
@@ -1052,8 +1056,12 @@ public:
 
         // Set bicycle access to true for all but the highest scale.
         bool access = scale < kMaxMtbUphillScale;
-        w.set_bike_forward(access);
-        w.set_bike_backward(access);
+        if (access && !w.oneway_reverse()) {
+          w.set_bike_forward(true);
+        }
+        if (access && !w.oneway()) {
+          w.set_bike_backward(true);
+        }
       }
     }
 
@@ -1063,16 +1071,24 @@ public:
     if (has_mtb_imba) {
       // Update bike access (only if neither mtb:scale nor mtb:scale:uphill is present)
       if (!has_mtb_scale && !has_mtb_uphill_scale) {
-        w.set_bike_forward(true);
-        w.set_bike_backward(true);
+        if (!w.oneway_reverse()) {
+          w.set_bike_forward(true);
+        }
+        if (!w.oneway()) {
+          w.set_bike_backward(true);
+        }
       }
     }
 
     // Only has MTB description - set bicycle access.
     bool has_mtb_desc = results.find("mtb:description") != results.end();
     if (has_mtb_desc && !has_mtb_scale && !has_mtb_uphill_scale && !has_mtb_imba) {
-      w.set_bike_forward(true);
-      w.set_bike_backward(true);
+      if (!w.oneway_reverse()) {
+        w.set_bike_forward(true);
+      }
+      if (!w.oneway()) {
+        w.set_bike_backward(true);
+      }
     }
 
     // if no surface and tracktype but we have a sac_scale, set surface to path.
