@@ -1143,11 +1143,13 @@ void ManeuversBuilder::FinalizeManeuver(Maneuver& maneuver, int node_index) {
     }
   }
 
-  if (node->type() == TripLeg_Node_Type::TripLeg_Node_Type_kBikeShare &&
+  if (node->type() == TripLeg_Node_Type::TripLeg_Node_Type_kBikeShare && prev_edge &&
+      (prev_edge->travel_mode() == TripLeg_TravelMode::TripLeg_TravelMode_kBicycle) &&
       maneuver.travel_mode() == TripLeg_TravelMode::TripLeg_TravelMode_kPedestrian) {
     maneuver.set_bss_maneuver_type(DirectionsLeg_Maneuver_BssManeuverType_kReturnBikeAtBikeShare);
   }
-  if (node->type() == TripLeg_Node_Type::TripLeg_Node_Type_kBikeShare &&
+  if (node->type() == TripLeg_Node_Type::TripLeg_Node_Type_kBikeShare && prev_edge &&
+      (prev_edge->travel_mode() == TripLeg_TravelMode::TripLeg_TravelMode_kPedestrian) &&
       maneuver.travel_mode() == TripLeg_TravelMode::TripLeg_TravelMode_kBicycle) {
     maneuver.set_bss_maneuver_type(DirectionsLeg_Maneuver_BssManeuverType_kRentBikeAtBikeShare);
   }
