@@ -2473,6 +2473,8 @@ void ManeuversBuilder::SetToStayOnAttribute(std::list<Maneuver>& maneuvers) {
         }
         break;
       }
+      default:
+        break;
     }
     // on to the next maneuver...
     prev_man = curr_man;
