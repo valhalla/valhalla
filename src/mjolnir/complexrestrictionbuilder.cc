@@ -17,6 +17,7 @@ void ComplexRestrictionBuilder::set_via_list(const std::vector<GraphId>& via_lis
   } else {
     via_list_ = via_list;
   }
+  set_via_count(via_list_.size());
 }
 
 // Output complex restriction to output stream
