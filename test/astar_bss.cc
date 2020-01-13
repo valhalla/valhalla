@@ -211,7 +211,6 @@ void test(const std::string& request,
     std::copy(route.begin(), route.end(), std::ostream_iterator<std::string>(std::cout, ", "));
     throw std::logic_error("The route is incorrect");
   }
-
 }
 
 void TestBSS_With_Mode_Changes() {
