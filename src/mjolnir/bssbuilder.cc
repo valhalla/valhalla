@@ -95,7 +95,7 @@ std::vector<OSMConnectionEdge> project(const GraphTile& local_tile,
     auto latlng = bss.latlng();
     osm_conn.bss_ll = PointLL{latlng.first, latlng.second};
 
-    float mindist = 10000000.0f;
+    float mindist = std::numeric_limits<float>::max();
 
     const DirectedEdge* best_directededge = nullptr;
     uint32_t best_startnode_index = 0;
@@ -251,7 +251,7 @@ void create_bss_node_and_edges(GraphTileBuilder& tilebuilder_local,
   uint32_t added_nodes = 0;
 
   for (auto& nb : currentnodes) {
-    uint32_t nodeid = tilebuilder_local.nodes().size();
+    size_t nodeid = tilebuilder_local.nodes().size();
     size_t edge_index = tilebuilder_local.directededges().size();
 
     // recreate the node and its edges
@@ -301,8 +301,8 @@ void create_bss_node_and_edges(GraphTileBuilder& tilebuilder_local,
         // the oppo_local_idx must be set, or in some cases, the transition will be
         // incorrectly considered as a U turn.
         // we assume 0 for bss->startnode and 1 for bss->endnode
-        uint32_t oppo_local_idx = 0;
-        uint32_t local_idx = tilebuilder_local.directededges().size() - edge_index;
+        size_t oppo_local_idx = 0;
+        size_t local_idx = tilebuilder_local.directededges().size() - edge_index;
 
         auto directededge =
             make_directed_edge({}, conn.startshape, conn, true, local_idx, oppo_local_idx);
@@ -318,8 +318,8 @@ void create_bss_node_and_edges(GraphTileBuilder& tilebuilder_local,
         // the oppo_local_idx must be set, or in some cases, the transition will be
         // incorrectly considered as a U turn.
         // we assume 0 for bss->startnode and 1 for bss->endnode
-        uint32_t oppo_local_idx = 1;
-        uint32_t local_idx = tilebuilder_local.directededges().size() - edge_index;
+        size_t oppo_local_idx = 1;
+        size_t local_idx = tilebuilder_local.directededges().size() - edge_index;
 
         auto directededge =
             make_directed_edge({}, conn.endshape, conn, false, local_idx, oppo_local_idx);

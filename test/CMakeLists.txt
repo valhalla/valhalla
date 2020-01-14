@@ -88,7 +88,6 @@ add_custom_target(roma_tiles DEPENDS ${CMAKE_BINARY_DIR}/test/data/roma_tiles/1/
 
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/paris_bss_tiles/0/003/105.gph
   COMMAND ${CMAKE_COMMAND} -E make_directory test/data/paris_bss_tiles/
-  COMMAND ${VALHALLA_SOURCE_DIR}/scripts/valhalla_build_timezones 2>/dev/null > test/data/paris_bss_tiles/tz.sqlite
   COMMAND ${CMAKE_BINARY_DIR}/valhalla_build_tiles
       --inline-config '{"mjolnir":{"tile_dir":"test/data/paris_bss_tiles","timezone":"test/data/paris_bss_tiles/tz.sqlite","hierarchy": true,"import_bike_share_stations": true,"shortcuts":true,"concurrency":4,"logging":{"type":""}}}'
       ${VALHALLA_SOURCE_DIR}/test/data/paris_bss.osm.pbf
