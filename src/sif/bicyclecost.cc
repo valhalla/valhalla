@@ -957,13 +957,14 @@ void ParseBicycleCostOptions(const rapidjson::Document& doc,
         kCycleSpeedRange(rapidjson::get_optional<float>(*json_costing_options, "/cycling_speed")
                              .get_value_or(kDefaultCyclingSpeed[t])));
 
-    // bss return cost
+    // bss rent cost
     pbf_costing_options->set_bike_share_cost(
-        kBSSCostRange(rapidjson::get_optional<uint32_t>(*json_costing_options, "/bss_rent_cost")
+        kBSSCostRange(rapidjson::get_optional<uint32_t>(*json_costing_options, "/bss_return_cost")
                           .get_value_or(kDefaultBssCost)));
-    pbf_costing_options->set_bike_share_penalty(
-        kBSSPenaltyRange(rapidjson::get_optional<uint32_t>(*json_costing_options, "/bss_rent_cost")
-                             .get_value_or(kDefaultBssPenalty)));
+
+    pbf_costing_options->set_bike_share_penalty(kBSSPenaltyRange(
+        rapidjson::get_optional<uint32_t>(*json_costing_options, "/bss_return_penalty")
+            .get_value_or(kDefaultBssPenalty)));
   } else {
     // Set pbf values to defaults
     pbf_costing_options->set_maneuver_penalty(kDefaultManeuverPenalty);

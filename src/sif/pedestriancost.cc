@@ -885,7 +885,7 @@ void ParsePedestrianCostOptions(const rapidjson::Document& doc,
         kBSSCostRange(rapidjson::get_optional<uint32_t>(*json_costing_options, "/bss_rent_cost")
                           .get_value_or(kDefaultBssCost)));
     pbf_costing_options->set_bike_share_penalty(
-        kBSSPenaltyRange(rapidjson::get_optional<uint32_t>(*json_costing_options, "/bss_rent_cost")
+        kBSSPenaltyRange(rapidjson::get_optional<uint32_t>(*json_costing_options, "/bss_rent_penalty")
                              .get_value_or(kDefaultBssPenalty)));
   } else {
     // Set pbf values to defaults

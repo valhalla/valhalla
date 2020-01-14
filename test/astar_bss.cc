@@ -235,6 +235,68 @@ void TestBSS_With_Mode_Changes() {
   test(request, expected_travel_modes, expected_route, expected_bss_maneuver);
 }
 
+/*
+ * In this test, we increase the bss rent/return penalty considerably, so the algorithm will avoid
+ * bike share stations
+ */
+void TestBSS_BSS_mode_Without_Mode_Changes() {
+
+  std::string request =
+      R"({"locations":[{"lat":48.865020,"lon":2.369113},{"lat":48.859782,"lon":2.36101}],
+       "costing":"bikeshare",
+       "costing_options":{"pedestrian":{"bss_rent_cost":0,"bss_rent_penalty":1800},
+                          "bicycle"   :{"bss_return_cost":0,"bss_return_penalty":1800}}})";
+
+  std::vector<valhalla::DirectionsLeg_TravelMode> expected_travel_modes{
+      valhalla::DirectionsLeg_TravelMode::DirectionsLeg_TravelMode_kPedestrian};
+
+  // yes... the departure is still projected on the bss connection..
+  std::vector<std::string> expected_route{"Rue du Grand Prieuré",
+                                          "Rue du Grand Prieuré",
+                                          "Rue de Crussol",
+                                          "Boulevard du Temple",
+                                          "Rue des Filles du Calvaire",
+                                          "Rue de Turenne",
+                                          "Rue Debelleyme",
+                                          "Rue de Thorigny",
+                                          "Rue de la Perle"};
+
+  const std::map<size_t, BssManeuverType>& expected_bss_maneuver{};
+
+  test(request, expected_travel_modes, expected_route, expected_bss_maneuver);
+}
+
+/*
+ * In this test, we increase the bss rent/return cost considerably, so the algorithm will avoid bike
+ * share stations
+ */
+void TestBSS_BSS_mode_Without_Mode_Changes_2() {
+
+  std::string request =
+      R"({"locations":[{"lat":48.865020,"lon":2.369113},{"lat":48.859782,"lon":2.36101}],
+       "costing":"bikeshare",
+       "costing_options":{"pedestrian":{"bss_rent_cost":1800,"bss_rent_penalty":0},
+                          "bicycle"   :{"bss_return_cost":1800,"bss_return_penalty":0}}})";
+
+  std::vector<valhalla::DirectionsLeg_TravelMode> expected_travel_modes{
+      valhalla::DirectionsLeg_TravelMode::DirectionsLeg_TravelMode_kPedestrian};
+
+  // yes... the departure is still projected on the bss connection..
+  std::vector<std::string> expected_route{"Rue du Grand Prieuré",
+                                          "Rue du Grand Prieuré",
+                                          "Rue de Crussol",
+                                          "Boulevard du Temple",
+                                          "Rue des Filles du Calvaire",
+                                          "Rue de Turenne",
+                                          "Rue Debelleyme",
+                                          "Rue de Thorigny",
+                                          "Rue de la Perle"};
+
+  const std::map<size_t, BssManeuverType>& expected_bss_maneuver{};
+
+  test(request, expected_travel_modes, expected_route, expected_bss_maneuver);
+}
+
 void TestBSS_With_Mode_Changes_2() {
   std::string request =
       R"({"locations":[{"lat":48.8597457895,"lon":2.3610520},{"lat":48.8582528,"lon":2.3678675}],"costing":"bikeshare"})";
@@ -310,6 +372,9 @@ int main() {
   suite.test(TEST_CASE(TestBSS_With_Mode_Changes));
   // We test if the bss connection edges respect the forward/reverse access
   suite.test(TEST_CASE(TestBSS_With_Mode_Changes_2));
+  // Play with the bss rent/return penalty
+  suite.test(TEST_CASE(TestBSS_BSS_mode_Without_Mode_Changes));
+  suite.test(TEST_CASE(TestBSS_BSS_mode_Without_Mode_Changes_2));
   // When pedestrian is chosen as travel_mode, the departure edge must NOT be a bss connections edge
   suite.test(TEST_CASE(TestBSS_Pedestrian));
   // When bicycle is chosen as travel_mode, the departure edge must NOT be a bss connections edge
