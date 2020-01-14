@@ -16,8 +16,8 @@
 #include <valhalla/proto/tripcommon.pb.h>
 #include <valhalla/sif/dynamiccost.h>
 #include <valhalla/sif/edgelabel.h>
-#include <valhalla/thor/edgestatus.h>
 #include <valhalla/thor/dijkstras.h>
+#include <valhalla/thor/edgestatus.h>
 
 namespace valhalla {
 namespace thor {
@@ -27,7 +27,7 @@ namespace thor {
  * each each grid point. This gridded data can then be contoured to create
  * isolines or contours.
  */
-class Isochrone : public Dijkstras{
+class Isochrone : public Dijkstras {
 public:
   /**
    * Constructor.
@@ -92,48 +92,15 @@ public:
                     const sif::TravelMode mode);
 
 protected:
-
   // Virtual function called when expanding a node
   //
   // Children can implement this to customize behaviour
-  virtual void ExpandingNodeBD(baldr::GraphReader& graphreader, const baldr::NodeInfo* nodeinfo, const sif::BDEdgeLabel& pred);
-  virtual void ExpandingNodeMM(baldr::GraphReader& graphreader, const baldr::NodeInfo* nodeinfo, const sif::MMEdgeLabel& pred);
-
-
-  bool has_date_time_;
-  int start_tz_index_; // Timezone at the start of the isochrone
+  virtual void ExpandingNode(baldr::GraphReader& graphreader,
+                             const baldr::NodeInfo* nodeinfo,
+                             const sif::EdgeLabel& pred);
 
   float shape_interval_; // Interval along shape to mark time
-  sif::TravelMode mode_; // Current travel mode
-  uint32_t access_mode_; // Access mode used by the costing method
-
-  // For multimodal isochrones
-  bool date_set_;
-  bool date_before_tile_;
-  uint32_t date_;
-  uint32_t dow_;
-  uint32_t day_;
   uint32_t max_seconds_;
-  uint32_t max_transfer_distance_;
-  std::string origin_date_time_;
-  uint32_t start_time_;
-  std::unordered_map<std::string, uint32_t> operators_;
-  std::unordered_set<uint32_t> processed_tiles_;
-
-  // Current costing mode
-  std::shared_ptr<sif::DynamicCost> costing_;
-
-  // Vector of edge labels (requires access by index).
-  std::vector<sif::BDEdgeLabel> bdedgelabels_;
-  std::vector<sif::MMEdgeLabel> mmedgelabels_;
-
-  // Adjacency list - approximate double bucket sort
-  std::shared_ptr<baldr::DoubleBucketQueue> adjacencylist_;
-
-  // Edge status. Mark edges that are in adjacency list or settled.
-  EdgeStatus edgestatus_;
-
-  // Isochrone gridded time data
   std::shared_ptr<midgard::GriddedData<midgard::PointLL>> isotile_;
 
   /**
@@ -170,24 +137,6 @@ protected:
   void ConstructIsoTile(const bool multimodal,
                         const unsigned int max_minutes,
                         google::protobuf::RepeatedPtrField<valhalla::Location>& origin_locations);
-
-  /**
-   * Expand from the node along the forward search path.
-   * @param graphreader  Graph reader.
-   * @param node Graph Id of the node to expand.
-   * @param pred Edge label of the predecessor edge leading to the node.
-   * @param pred_idx Index in the edge label list of the predecessor edge.
-   * @param from_transition Boolean indicating if this expansion is from a transition edge.
-   * @param localtime Current local time.  Seconds since epoch.
-   * @param seconds_of_week For time dependent isochrones this allows lookup of predicted traffic.
-   */
-  void ExpandForward(baldr::GraphReader& graphreader,
-                     const baldr::GraphId& node,
-                     const sif::EdgeLabel& pred,
-                     const uint32_t pred_idx,
-                     const bool from_transition,
-                     uint64_t localtime,
-                     int32_t seconds_of_week);
 
   /**
    * Expand from the node along the reverse search path.

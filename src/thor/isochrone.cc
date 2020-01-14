@@ -44,9 +44,8 @@ constexpr uint32_t kBucketCount = 20000;
 constexpr uint32_t kInitialEdgeLabelCount = 500000;
 
 // Default constructor
-Isochrone::Isochrone()
-    : has_date_time_(false), start_tz_index_(0), access_mode_(kAutoAccess), shape_interval_(50.0f),
-      mode_(TravelMode::kDrive), adjacencylist_(nullptr) {
+Isochrone::Isochrone() : shape_interval_(50.0f) {
+  Dijkstras();
 }
 
 // Destructor
@@ -224,118 +223,6 @@ Isochrone::SetTime(google::protobuf::RepeatedPtrField<valhalla::Location>& locat
 
   // Hand back the start time and second of the week
   return {start_time, start_seconds_of_week};
-}
-
-// Expand from a node in the forward direction
-void Isochrone::ExpandForward(GraphReader& graphreader,
-                              const GraphId& node,
-                              const EdgeLabel& pred,
-                              const uint32_t pred_idx,
-                              const bool from_transition,
-                              uint64_t localtime,
-                              int32_t seconds_of_week) {
-  // Get the tile and the node info. Skip if tile is null (can happen
-  // with regional data sets) or if no access at the node.
-  const GraphTile* tile = graphreader.GetGraphTile(node);
-  if (tile == nullptr) {
-    return;
-  }
-
-  // Get the nodeinfo and update the isotile
-  const NodeInfo* nodeinfo = tile->node(node);
-  if (!from_transition) {
-    uint32_t idx = pred.predecessor();
-    float secs0 = (idx == kInvalidLabel) ? 0 : bdedgelabels_[idx].cost().secs;
-    UpdateIsoTile(pred, graphreader, tile->get_node_ll(node), secs0);
-  }
-  if (!costing_->Allowed(nodeinfo)) {
-    return;
-  }
-
-  // Adjust for time zone (if different from timezone at the start).
-  if (nodeinfo->timezone() != start_tz_index_) {
-    // Get the difference in seconds between the origin tz and current tz
-    int tz_diff =
-        DateTime::timezone_diff(localtime, DateTime::get_tz_db().from_index(start_tz_index_),
-                                DateTime::get_tz_db().from_index(nodeinfo->timezone()));
-    localtime += tz_diff;
-    seconds_of_week = DateTime::normalize_seconds_of_week(seconds_of_week + tz_diff);
-  }
-
-  // Expand from end node in forward direction.
-  GraphId edgeid = {node.tileid(), node.level(), nodeinfo->edge_index()};
-  EdgeStatusInfo* es = edgestatus_.GetPtr(edgeid, tile);
-  const DirectedEdge* directededge = tile->directededge(edgeid);
-  for (uint32_t i = 0; i < nodeinfo->edge_count(); ++i, ++directededge, ++edgeid, ++es) {
-    // Skip this edge if permanently labeled (best path already found to this
-    // directed edge). skip shortcuts or if no access is allowed to this edge
-    // (based on the costing method) or if a complex restriction exists for
-    // this path.
-    if (directededge->is_shortcut() || es->set() == EdgeSet::kPermanent ||
-        !(directededge->forwardaccess() & access_mode_)) {
-      continue;
-    }
-
-    bool has_time_restrictions = false;
-    // Check if the edge is allowed or if a restriction occurs. Get the edge speed.
-    if (has_date_time_) {
-      // With date time we check time dependent restrictions and access as well as get
-      // traffic based speed if it exists
-      if (!costing_->Allowed(directededge, pred, tile, edgeid, localtime, nodeinfo->timezone(),
-                             has_time_restrictions) ||
-          costing_->Restricted(directededge, pred, bdedgelabels_, tile, edgeid, true, localtime,
-                               nodeinfo->timezone())) {
-        continue;
-      }
-    } else {
-      // TODO merge these two branches
-      if (!costing_->Allowed(directededge, pred, tile, edgeid, 0, 0, has_time_restrictions) ||
-          costing_->Restricted(directededge, pred, bdedgelabels_, tile, edgeid, true)) {
-        continue;
-      }
-    }
-
-    // Compute the cost to the end of this edge
-    Cost newcost =
-        pred.cost() +
-        costing_->EdgeCost(directededge, tile,
-                           has_date_time_ ? seconds_of_week : kConstrainedFlowSecondOfDay) +
-        costing_->TransitionCost(directededge, nodeinfo, pred);
-
-    // Check if edge is temporarily labeled and this path has less cost. If
-    // less cost the predecessor is updated and the sort cost is decremented
-    // by the difference in real cost (A* heuristic doesn't change)
-    if (es->set() == EdgeSet::kTemporary) {
-      EdgeLabel& lab = bdedgelabels_[es->index()];
-      if (newcost.cost < lab.cost().cost) {
-        float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
-        adjacencylist_->decrease(es->index(), newsortcost);
-        lab.Update(pred_idx, newcost, newsortcost, has_time_restrictions);
-      }
-      continue;
-    }
-
-    // Only needed if you want to connect with a reverse path
-    const GraphTile* t2 = tile;
-    GraphId oppedgeid = graphreader.GetOpposingEdgeId(edgeid, t2);
-
-    // Add edge label, add to the adjacency list and set edge status
-    uint32_t idx = bdedgelabels_.size();
-    *es = {EdgeSet::kTemporary, idx};
-    // TODO Should not path_distance be set accordingly?
-    const uint32_t path_distance = 0;
-    bdedgelabels_.emplace_back(pred_idx, edgeid, oppedgeid, directededge, newcost, newcost.cost, 0.0f,
-                               mode_, Cost{}, false, path_distance, has_time_restrictions);
-    adjacencylist_->add(idx);
-  }
-
-  // Handle transitions - expand from the end node of each transition
-  if (!from_transition && nodeinfo->transition_count() > 0) {
-    const NodeTransition* trans = tile->transition(nodeinfo->transition_index());
-    for (uint32_t i = 0; i < nodeinfo->transition_count(); ++i, ++trans) {
-      ExpandForward(graphreader, trans->endnode(), pred, pred_idx, true, localtime, seconds_of_week);
-    }
-  }
 }
 
 // Compute iso-tile that we can use to generate isochrones.
@@ -1252,23 +1139,18 @@ void Isochrone::SetOriginLocationsMM(
 // Virtual function called when expanding a node
 //
 // Children can implement this to customize behaviour
-void Isochrone::ExpandingNodeBD(baldr::GraphReader& graphreader,
-                                const baldr::NodeInfo* org_nodeinfo,
-                                const sif::BDEdgeLabel& pred) {
+void Isochrone::ExpandingNode(baldr::GraphReader& graphreader,
+                              const baldr::NodeInfo* org_nodeinfo,
+                              const sif::EdgeLabel& pred) {
   // Use pred to get endnode and it's location
   const GraphTile* tile = graphreader.GetGraphTile(pred.endnode());
   if (tile == nullptr) {
     return;
   }
-   PointLL ll = tile->get_node_ll(pred.endnode());
+  PointLL ll = tile->get_node_ll(pred.endnode());
 
-  float time = 0.;// Set time at the lat, lon grid to 0
-   isotile_->Set(ll, time);
-};
-void Isochrone::ExpandingNodeMM(baldr::GraphReader& graphreader,
-                                const baldr::NodeInfo* nodeinfo,
-                                const sif::MMEdgeLabel& pred){
-    // TODO Figure out if we can combine this with ExpandingNodeBD
+  float time = 0.; // Set time at the lat, lon grid to 0
+  isotile_->Set(ll, time);
 };
 
 } // namespace thor
