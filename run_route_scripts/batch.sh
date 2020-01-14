@@ -53,7 +53,7 @@ sed -i -e "s/'//g" "${TMP}"
 #from the log messages otherwise every line will be a diff
 #TODO: add leading zeros to output files so they sort nicely
 echo -e "\x1b[32;1mWriting routes from ${INPUT} with a concurrency of ${CONCURRENCY} into ${RESULTS_OUTDIR}\x1b[0m"
-cat "${TMP}" | parallel --progress -k -P "${CONCURRENCY}" "valhalla_run_route {} --config ${CONF} 2>&1 | tee -a ${RESULTS_OUTDIR}/{#}.tmp | grep -F NARRATIVE | sed -e 's/^[^\[]*\[NARRATIVE\] //' &> ${RESULTS_OUTDIR}/{#}.txt; grep -F STATISTICS ${RESULTS_OUTDIR}/{#}.tmp | sed -e 's/^[^\[]*\[STATISTICS\] //' &>> ${RESULTS_OUTDIR}/{#}_statistics.csv; rm -f ${RESULTS_OUTDIR}/{#}.tmp"
+cat "${TMP}" | parallel --progress -k -C '\|' -P "${CONCURRENCY}" "valhalla_run_route {} --config ${CONF} 2>&1 | tee -a ${RESULTS_OUTDIR}/{#}.tmp | grep -F NARRATIVE | sed -e 's/^[^\[]*\[NARRATIVE\] //' &> ${RESULTS_OUTDIR}/{#}.txt; grep -F STATISTICS ${RESULTS_OUTDIR}/{#}.tmp | sed -e 's/^[^\[]*\[STATISTICS\] //' &>> ${RESULTS_OUTDIR}/{#}_statistics.csv; rm -f ${RESULTS_OUTDIR}/{#}.tmp"
 # On macos, sed inline replace (-i opt) ends up creating a backup file with
 # "-e" suffix, even though -i arg is empty. The wildcard below will ensure that
 # that file is deleted as well.
