@@ -557,7 +557,7 @@ PedestrianCost::PedestrianCost(const Costing costing, const Options& options)
   get_base_costs(costing_options);
 
   // Get the pedestrian type - enter as string and convert to enum
-  std::string type = costing_options.transport_type();
+  const std::string& type = costing_options.transport_type();
   if (type == "wheelchair") {
     type_ = PedestrianType::kWheelchair;
   } else if (type == "segway") {

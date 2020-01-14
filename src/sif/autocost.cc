@@ -330,7 +330,7 @@ AutoCost::AutoCost(const Costing costing, const Options& options)
   // Get the vehicle type - enter as string and convert to enum.
   // Used to set the surface factor - penalize some roads based on surface type.
   surface_factor_ = 0.5f;
-  std::string type = costing_options.transport_type();
+  const std::string& type = costing_options.transport_type();
   if (type == "motorcycle") {
     type_ = VehicleType::kMotorcycle;
     surface_factor_ = 1.0f;
