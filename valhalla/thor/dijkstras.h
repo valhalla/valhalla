@@ -20,6 +20,29 @@
 namespace valhalla {
 namespace thor {
 
+enum class InfoEdgeType {
+  origin,
+  destination,
+  regular,
+};
+enum class InfoRoutingType {
+  forward,
+  bidirectional,
+  multi_modal,
+};
+
+struct ExpandingNodeMiscInfo {
+  InfoEdgeType edge_type;
+  InfoRoutingType routing_type;
+  bool from_transition;
+};
+
+enum class RouteCallbackRecommendedAction {
+  no_action,
+  skip_expansion,
+  stop_expansion,
+};
+
 /**
  * Algorithms to do shortest first graph traversal
  */
@@ -81,8 +104,15 @@ protected:
   //
   // Children can implement this to customize behaviour
   virtual void ExpandingNode(baldr::GraphReader& graphreader,
-                             const baldr::NodeInfo* nodeinfo,
-                             const sif::EdgeLabel& pred){};
+                             const sif::EdgeLabel& pred,
+                             const ExpandingNodeMiscInfo& info){};
+
+  // A child-class can implement this to configure how the graph expands
+  virtual RouteCallbackRecommendedAction RouteCallbackDecideAction(baldr::GraphReader& graphreader,
+                                                                   const sif::EdgeLabel& pred,
+                                                                   const InfoRoutingType route_type) {
+    return RouteCallbackRecommendedAction::no_action;
+  };
 
   bool has_date_time_;
   int start_tz_index_;   // Timezone at the start of the Dijkstras

@@ -96,8 +96,12 @@ protected:
   //
   // Children can implement this to customize behaviour
   virtual void ExpandingNode(baldr::GraphReader& graphreader,
-                             const baldr::NodeInfo* nodeinfo,
-                             const sif::EdgeLabel& pred);
+                             const sif::EdgeLabel& pred,
+                             const ExpandingNodeMiscInfo& info);
+
+  virtual RouteCallbackRecommendedAction RouteCallbackDecideAction(baldr::GraphReader& graphreader,
+                                                                   const sif::EdgeLabel& pred,
+                                                                   const InfoRoutingType route_type);
 
   float shape_interval_; // Interval along shape to mark time
   uint32_t max_seconds_;
@@ -137,25 +141,6 @@ protected:
   void ConstructIsoTile(const bool multimodal,
                         const unsigned int max_minutes,
                         google::protobuf::RepeatedPtrField<valhalla::Location>& origin_locations);
-
-  /**
-   * Expand from the node along the reverse search path.
-   * @param graphreader  Graph reader.
-   * @param node Graph Id of the node to expand.
-   * @param pred Edge label of the predecessor edge leading to the node.
-   * @param pred_idx Index in the edge label list of the predecessor edge.
-   * @param from_transition Boolean indicating if this expansion is from a transition edge.
-   * @param localtime Current local time.  Seconds since epoch.
-   * @param seconds_of_week For time dependent isochrones this allows lookup of predicted traffic.
-   */
-  void ExpandReverse(baldr::GraphReader& graphreader,
-                     const baldr::GraphId& node,
-                     const sif::BDEdgeLabel& pred,
-                     const uint32_t pred_idx,
-                     const baldr::DirectedEdge* opp_pred_edge,
-                     const bool from_transition,
-                     uint64_t localtime,
-                     int32_t seconds_of_week);
 
   /**
    * Expand from the node using multimodal algorithm.

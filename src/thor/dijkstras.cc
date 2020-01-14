@@ -159,7 +159,9 @@ void Dijkstras::ExpandForward(GraphReader& graphreader,
   const NodeInfo* nodeinfo = tile->node(node);
 
   if (nodeinfo) {
-    ExpandingNode(graphreader, nodeinfo, pred);
+    ExpandingNode(graphreader, pred,
+                  ExpandingNodeMiscInfo{InfoEdgeType::regular, InfoRoutingType::bidirectional,
+                                        from_transition});
   }
 
   // Bail if we cant expand from here
@@ -292,6 +294,13 @@ void Dijkstras::Compute(google::protobuf::RepeatedPtrField<valhalla::Location>& 
     int32_t seconds_of_week = start_seconds_of_week + static_cast<uint32_t>(pred.cost().secs);
     if (seconds_of_week > midgard::kSecondsPerWeek) {
       seconds_of_week -= midgard::kSecondsPerWeek;
+    }
+
+    auto cb_decision = RouteCallbackDecideAction(graphreader, pred, InfoRoutingType::forward);
+    if (cb_decision == RouteCallbackRecommendedAction::skip_expansion) {
+      continue;
+    } else if (cb_decision == RouteCallbackRecommendedAction::stop_expansion) {
+      return;
     }
 
     // Expand from the end node in forward direction.
@@ -489,7 +498,9 @@ void Dijkstras::ExpandForwardMM(GraphReader& graphreader,
   const NodeInfo* nodeinfo = tile->node(node);
 
   if (nodeinfo) {
-    ExpandingNode(graphreader, nodeinfo, pred);
+    ExpandingNode(graphreader, pred,
+                  ExpandingNodeMiscInfo{InfoEdgeType::regular, InfoRoutingType::multi_modal,
+                                        from_transition});
   }
 
   // Bail if we cant expand from here
@@ -808,16 +819,15 @@ void Dijkstras::ComputeMultiModal(
     MMEdgeLabel pred = mmedgelabels_[predindex];
     edgestatus_.Update(pred.edgeid(), EdgeSet::kPermanent);
 
-    // Skip edges with large penalties (e.g. ferries?)
-    // if (pred.cost().cost > max_seconds_ * 2) {
-    //  continue;
-    //}
-    // TODO Handle this isochrone specific piece in generalized Dijkstras
+    auto cb_decision = RouteCallbackDecideAction(graphreader, pred, InfoRoutingType::multi_modal);
+    if (cb_decision == RouteCallbackRecommendedAction::skip_expansion) {
+      continue;
+    } else if (cb_decision == RouteCallbackRecommendedAction::stop_expansion) {
+      return;
+    }
 
     // Expand from the end node of the predecessor edge.
     ExpandForwardMM(graphreader, pred.endnode(), pred, predindex, false, pc, tc, mode_costing);
-
-    // TODO: need a way to stop the expansion
   }
 }
 
@@ -885,7 +895,8 @@ void Dijkstras::SetOriginLocations(GraphReader& graphreader,
       edgestatus_.Set(edgeid, EdgeSet::kTemporary, idx, tile);
 
       // TODO: inform someone we used this edge
-      ExpandingNode(graphreader, nullptr, bdedgelabels_.back());
+      ExpandingNode(graphreader, bdedgelabels_.back(),
+                    ExpandingNodeMiscInfo{InfoEdgeType::origin, InfoRoutingType::bidirectional});
     }
   }
 }
@@ -1020,7 +1031,8 @@ void Dijkstras::SetOriginLocationsMM(
       mmedgelabels_.push_back(std::move(edge_label));
       adjacencylist_->add(idx);
 
-      ExpandingNode(graphreader, nullptr, mmedgelabels_.back());
+      ExpandingNode(graphreader, mmedgelabels_.back(),
+                    ExpandingNodeMiscInfo{InfoEdgeType::origin, InfoRoutingType::multi_modal});
     }
   }
 }
