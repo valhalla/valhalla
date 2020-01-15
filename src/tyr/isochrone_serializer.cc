@@ -89,18 +89,16 @@ serializeIsochrones(const Api& request,
   if (show_locations) {
     int idx = 0;
     for (const auto& location : request.options().locations()) {
-      // first add snapped points as MultiPoint feature per origin point
+      // first add all snapped points as MultiPoint feature per origin point
       auto snapped_points_array = array({});
-      std::vector<std::vector<float>> snapped_points;
+      std::unordered_set<midgard::PointLL> snapped_points;
       for (const auto& path_edge : location.path_edges()) {
-        const valhalla::LatLng& snapped_latlng = path_edge.ll();
-        const std::vector<float> current_coords{snapped_latlng.lng(), snapped_latlng.lat()};
+        const midgard::PointLL& snapped_current =
+            midgard::PointLL(path_edge.ll().lng(), path_edge.ll().lat());
         // remove duplicates of path_edges in case the snapped object is a node
-        if (std::find(snapped_points.begin(), snapped_points.end(), current_coords) ==
-            snapped_points.end()) {
-          snapped_points.push_back(current_coords);
+        if (snapped_points.insert(snapped_current).second) {
           snapped_points_array->push_back(
-              array({fp_t{current_coords.at(0), 6}, fp_t{current_coords.at(1), 6}}));
+              array({fp_t{snapped_current.lng(), 6}, fp_t{snapped_current.lat(), 6}}));
         }
       };
       features->emplace_back(map(
@@ -110,7 +108,7 @@ serializeIsochrones(const Api& request,
            {"geometry",
             map({{"type", std::string("MultiPoint")}, {"coordinates", snapped_points_array}})}}));
 
-      // then each input point as separate Point feature
+      // then each user input point as separate Point feature
       const valhalla::LatLng& input_latlng = location.ll();
       const auto input_array = array({fp_t{input_latlng.lng(), 6}, fp_t{input_latlng.lat(), 6}});
       features->emplace_back(map(
