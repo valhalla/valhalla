@@ -717,8 +717,12 @@ public:
           } else if (tag.first.substr(0, 21) == "emergency:conditional") {
             mode = kEmergencyAccess;
           }
-
           std::string tmp = tokens.at(1);
+
+          if (osmid == 55372536 || osmid == 226690) {
+            tmp = "Mar 24-Mar 31 00:00-07:30";
+          }
+
           boost::algorithm::trim(tmp);
           std::vector<std::string> conditions = GetTagTokens(tmp, ';');
 
