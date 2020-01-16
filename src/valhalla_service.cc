@@ -46,7 +46,7 @@ int main(int argc, char** argv) {
 
   // check the server endpoint
   if (listen.find("tcp://") != 0) {
-    if (listen.find("icp://") != 0) {
+    if (listen.find("ipc://") != 0) {
       LOG_ERROR("You must listen on either tcp://ip:port or ipc://some_socket_file");
       return EXIT_FAILURE;
     } else {
