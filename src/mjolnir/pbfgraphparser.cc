@@ -691,7 +691,8 @@ public:
         if (tokens.size() == 2 && tmp.size()) {
 
           uint16_t mode = 0;
-          if (tag.first.substr(0,20) == "motorcar:conditional" || tag.first.substr(0,25) == "motor_vehicle:conditional") {
+          if (tag.first.substr(0, 20) == "motorcar:conditional" ||
+              tag.first.substr(0, 25) == "motor_vehicle:conditional") {
             mode = (kAutoAccess | kTruckAccess | kEmergencyAccess | kTaxiAccess | kBusAccess |
                     kHOVAccess | kMopedAccess | kMotorcycleAccess);
           } else if (tag.first.substr(0, 19) == "bicycle:conditional") {
@@ -718,11 +719,6 @@ public:
             mode = kEmergencyAccess;
           }
           std::string tmp = tokens.at(1);
-
-          if (osmid == 55372536 || osmid == 226690) {
-            tmp = "Mar 24-Mar 31 00:00-07:30";
-          }
-
           boost::algorithm::trim(tmp);
           std::vector<std::string> conditions = GetTagTokens(tmp, ';');
 
