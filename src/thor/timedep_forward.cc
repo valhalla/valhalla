@@ -148,8 +148,6 @@ inline bool TimeDepForward::ExpandForwardInner(GraphReader& graphreader,
                                                const valhalla::Location& destination,
                                                std::pair<int32_t, float>& best_path) {
 
-  LOG_WARN(std::string("Expanding edge_id ") + std::to_string(meta.edge_id.id()) + " from node " +
-           std::to_string(pred.endnode().id()));
   // Skip shortcut edges for time dependent routes. Also skip this edge if permanently labeled
   // (best path already found to this directed edge), if no access is allowed to this edge
   // (based on costing method), or if a complex restriction exists.
