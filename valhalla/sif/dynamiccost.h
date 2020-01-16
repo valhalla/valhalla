@@ -369,9 +369,9 @@ public:
                                   baldr::AccessType access_type) {
 
     if (access_type == baldr::AccessType::kTimedAllowed) {
-      return IsRestricted(restriction, current_time, tz_index);
-    } else if (access_type == baldr::AccessType::kTimedDenied) {
       return !IsRestricted(restriction, current_time, tz_index);
+    } else if (access_type == baldr::AccessType::kTimedDenied) {
+      return IsRestricted(restriction, current_time, tz_index);
     }
     return true;
   }

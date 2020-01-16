@@ -962,6 +962,49 @@ void test_time_restricted_road() {
   }
 }
 
+Api route_on_timerestricted(uint16_t hour) {
+  // Try routing over "Via Montebello" in Rome which is a time restricted road
+  // The restriction is <tag k="motor_vehicle:conditional" v="no @ (Mo-Sa 07:00-16:00)"/>
+  // so lets use a timedependent a-star and verify that
+
+  auto conf = get_conf("roma_tiles");
+  route_tester tester(conf);
+  // The following request results in timedep astar during the restricted hours
+  // and should be denied
+  std::string request =
+      R"({
+        "locations":[{"lat":41.90550,"lon":12.50090},{"lat":41.90477,"lon":12.49914}],
+        "costing":"auto",
+          "date_time":{
+            "type":1,
+            "value":"2020-01-16T)" +
+      std::to_string(hour) + R"(:05"
+          }
+        })";
+
+  return tester.test(request);
+}
+
+void test_time_restricted_road_denied_on_timedep() {
+  try {
+    route_on_timerestricted(11);
+  } catch (const std::exception& e) {
+    if (std::string(e.what()) != "No path could be found for input") {
+      throw std::logic_error("Was expecting 'No path could be found for input'");
+    }
+  }
+}
+
+void test_time_restricted_road_allowed_on_timedep() {
+  auto response = route_on_timerestricted(18);
+  const auto& legs = response.trip().routes(0).legs();
+  const auto& directions = response.directions().routes(0).legs(0);
+  const auto& summary = directions.summary();
+  if (summary.time() == 0) {
+    throw std::logic_error("Time shouldn't be 0");
+  }
+}
+
 } // anonymous namespace
 
 int main() {
@@ -986,6 +1029,8 @@ int main() {
   suite.test(TEST_CASE(test_oneway));
   suite.test(TEST_CASE(test_oneway_wrong_way));
   suite.test(TEST_CASE(test_time_restricted_road));
+  suite.test(TEST_CASE(test_time_restricted_road_denied_on_timedep));
+  suite.test(TEST_CASE(test_time_restricted_road_allowed_on_timedep));
 
   return suite.tear_down();
 }
