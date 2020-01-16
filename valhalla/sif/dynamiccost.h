@@ -324,12 +324,12 @@ public:
                       (!forward && next_pred->edgeid() == cr->to_graphid()))) {
 
           if (current_time && cr->has_dt()) {
-            if (baldr::DateTime::is_restricted(cr->dt_type(), cr->begin_hrs(), cr->begin_mins(),
-                                               cr->end_hrs(), cr->end_mins(), cr->dow(),
-                                               cr->begin_week(), cr->begin_month(),
-                                               cr->begin_day_dow(), cr->end_week(), cr->end_month(),
-                                               cr->end_day_dow(), current_time,
-                                               baldr::DateTime::get_tz_db().from_index(tz_index))) {
+            if (baldr::DateTime::is_in_range(cr->dt_type(), cr->begin_hrs(), cr->begin_mins(),
+                                             cr->end_hrs(), cr->end_mins(), cr->dow(),
+                                             cr->begin_week(), cr->begin_month(), cr->begin_day_dow(),
+                                             cr->end_week(), cr->end_month(), cr->end_day_dow(),
+                                             current_time,
+                                             baldr::DateTime::get_tz_db().from_index(tz_index))) {
               return true;
             }
             continue;
@@ -356,11 +356,11 @@ public:
   IsRestricted(const uint64_t restriction, const uint64_t current_time, const uint32_t tz_index) {
 
     baldr::TimeDomain td(restriction);
-    return baldr::DateTime::is_restricted(td.type(), td.begin_hrs(), td.begin_mins(), td.end_hrs(),
-                                          td.end_mins(), td.dow(), td.begin_week(), td.begin_month(),
-                                          td.begin_day_dow(), td.end_week(), td.end_month(),
-                                          td.end_day_dow(), current_time,
-                                          baldr::DateTime::get_tz_db().from_index(tz_index));
+    return baldr::DateTime::is_in_range(td.type(), td.begin_hrs(), td.begin_mins(), td.end_hrs(),
+                                        td.end_mins(), td.dow(), td.begin_week(), td.begin_month(),
+                                        td.begin_day_dow(), td.end_week(), td.end_month(),
+                                        td.end_day_dow(), current_time,
+                                        baldr::DateTime::get_tz_db().from_index(tz_index));
   }
 
   inline static bool IsRestricted(const uint64_t restriction,
@@ -369,9 +369,9 @@ public:
                                   baldr::AccessType access_type) {
 
     if (access_type == baldr::AccessType::kTimedAllowed) {
-      return IsRestricted(restriction, current_time, tz_index);
-    } else if (access_type == baldr::AccessType::kTimedDenied) {
       return !IsRestricted(restriction, current_time, tz_index);
+    } else if (access_type == baldr::AccessType::kTimedDenied) {
+      return IsRestricted(restriction, current_time, tz_index);
     }
     return true;
   }
@@ -386,6 +386,7 @@ public:
     if (edge->access_restriction()) {
       const std::vector<baldr::AccessRestriction>& restrictions =
           tile->GetAccessRestrictions(edgeid.id(), auto_type);
+
       for (const auto& restriction : restrictions) {
         // Compare the time to the time-based restrictions
         baldr::AccessType access_type = restriction.type();
@@ -397,7 +398,7 @@ public:
             // (but mark the edge  (`has_time_restrictions`)
             continue;
           } else {
-            // allowed at this range or allowed all the time
+            // not allowed at this range
             if (DynamicCost::IsRestricted(restriction.value(), current_time, tz_index, access_type)) {
               // If edge really is restricted at this time, we can exit early.
               // If not, we should keep looking
