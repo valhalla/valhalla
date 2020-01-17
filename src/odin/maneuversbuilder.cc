@@ -69,7 +69,7 @@ std::list<Maneuver> ManeuversBuilder::Build() {
 #ifdef LOGGING_LEVEL_TRACE
   int man_id = 1;
   LOG_TRACE("############################################");
-  LOG_TRACE("MANEUVERS");
+  LOG_TRACE("INITIAL MANEUVERS");
   for (const Maneuver& maneuver : maneuvers) {
     LOG_TRACE("---------------------------------------------");
     LOG_TRACE(std::to_string(man_id++) + ":  ");
@@ -80,18 +80,6 @@ std::list<Maneuver> ManeuversBuilder::Build() {
 
   // Combine maneuvers
   Combine(maneuvers);
-
-#ifdef LOGGING_LEVEL_TRACE
-  int combined_man_id = 1;
-  LOG_TRACE("############################################");
-  LOG_TRACE("COMBINED MANEUVERS");
-  for (const Maneuver& maneuver : maneuvers) {
-    LOG_TRACE("---------------------------------------------");
-    LOG_TRACE(std::to_string(combined_man_id++) + ":  ");
-    LOG_TRACE(std::string("  maneuver_PARAMETERS=") + maneuver.ToParameterString());
-    LOG_TRACE(std::string("  maneuver=") + maneuver.ToString());
-  }
-#endif
 
   // Calculate the consecutive exit sign count and then sort
   CountAndSortSigns(maneuvers);
@@ -113,6 +101,18 @@ std::list<Maneuver> ManeuversBuilder::Build() {
 
   // Process the guidance view junctions
   ProcessGuidanceViewJunctions(maneuvers);
+
+#ifdef LOGGING_LEVEL_TRACE
+  int final_man_id = 1;
+  LOG_TRACE("############################################");
+  LOG_TRACE("FINAL MANEUVERS");
+  for (const Maneuver& maneuver : maneuvers) {
+    LOG_TRACE("---------------------------------------------");
+    LOG_TRACE(std::to_string(final_man_id++) + ":  ");
+    LOG_TRACE(std::string("  maneuver_PARAMETERS=") + maneuver.ToParameterString());
+    LOG_TRACE(std::string("  maneuver=") + maneuver.ToString());
+  }
+#endif
 
 #ifdef LOGGING_LEVEL_DEBUG
   std::vector<PointLL> shape = midgard::decode<std::vector<PointLL>>(trip_path_->shape());
@@ -2744,11 +2744,6 @@ void ManeuversBuilder::MatchGuidanceViewJunctions(Maneuver& maneuver,
           guidance_view.set_base_id(base_prefix + base_suffix);
           guidance_view.add_overlay_ids(overlay_tokens.at(0) + overlay_tokens.at(1));
           maneuver.mutable_guidance_views()->emplace_back(guidance_view);
-#ifdef LOGGING_LEVEL_TRACE
-          LOG_TRACE("############################################");
-          LOG_TRACE("MatchGuidanceViewJunctions");
-          LOG_TRACE(std::string("  maneuver=") + maneuver.ToString());
-#endif
           return;
         }
       } // end for loop over base guidance view junction
