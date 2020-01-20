@@ -250,15 +250,11 @@ void TestBSS_BSS_mode_Without_Mode_Changes() {
       valhalla::DirectionsLeg_TravelMode::DirectionsLeg_TravelMode_kPedestrian};
 
   // yes... the departure is still projected on the bss connection..
-  std::vector<std::string> expected_route{"Rue du Grand Prieuré",
-                                          "Rue du Grand Prieuré",
-                                          "Rue de Crussol",
-                                          "Boulevard du Temple",
-                                          "Rue des Filles du Calvaire",
-                                          "Rue de Turenne",
-                                          "Rue Debelleyme",
-                                          "Rue de Thorigny",
-                                          "Rue de la Perle"};
+  std::vector<std::string> expected_route{"Rue du Grand Prieuré", "Rue Jean-Pierre Timbaud",
+                                          "Rue Amelot",           "Place Pasdeloup",
+                                          "Boulevard du Temple",  "Rue des Filles du Calvaire",
+                                          "Rue de Turenne",       "Rue Debelleyme",
+                                          "Rue de Thorigny",      "Rue de la Perle"};
 
   const std::map<size_t, BssManeuverType>& expected_bss_maneuver{};
 
@@ -281,15 +277,11 @@ void TestBSS_BSS_mode_Without_Mode_Changes_2() {
       valhalla::DirectionsLeg_TravelMode::DirectionsLeg_TravelMode_kPedestrian};
 
   // yes... the departure is still projected on the bss connection..
-  std::vector<std::string> expected_route{"Rue du Grand Prieuré",
-                                          "Rue du Grand Prieuré",
-                                          "Rue de Crussol",
-                                          "Boulevard du Temple",
-                                          "Rue des Filles du Calvaire",
-                                          "Rue de Turenne",
-                                          "Rue Debelleyme",
-                                          "Rue de Thorigny",
-                                          "Rue de la Perle"};
+  std::vector<std::string> expected_route{"Rue du Grand Prieuré", "Rue Jean-Pierre Timbaud",
+                                          "Rue Amelot",           "Place Pasdeloup",
+                                          "Boulevard du Temple",  "Rue des Filles du Calvaire",
+                                          "Rue de Turenne",       "Rue Debelleyme",
+                                          "Rue de Thorigny",      "Rue de la Perle"};
 
   const std::map<size_t, BssManeuverType>& expected_bss_maneuver{};
 
@@ -298,19 +290,28 @@ void TestBSS_BSS_mode_Without_Mode_Changes_2() {
 
 void TestBSS_With_Mode_Changes_2() {
   std::string request =
-      R"({"locations":[{"lat":48.8597457895,"lon":2.3610520},{"lat":48.8582528,"lon":2.3678675}],"costing":"bikeshare"})";
+      R"({"locations":[{"lat":48.8601411,"lon":2.3716413},{"lat":48.8594916,"lon":2.3602581}],"costing":"bikeshare"})";
   std::vector<valhalla::DirectionsLeg_TravelMode>
       expected_travel_modes{valhalla::DirectionsLeg_TravelMode::DirectionsLeg_TravelMode_kPedestrian,
                             valhalla::DirectionsLeg_TravelMode::DirectionsLeg_TravelMode_kBicycle,
                             valhalla::DirectionsLeg_TravelMode::DirectionsLeg_TravelMode_kPedestrian};
-  std::vector<std::string> expected_route{"Rue de la Perle",       "Rue de la Perle",
-                                          "Rue Vieille du Temple", "Rue des Francs Bourgeois",
-                                          "Rue de Turenne",        "Rue des Minimes",
-                                          "Rue des Tournelles",    "Boulevard Beaumarchais",
-                                          "Boulevard Beaumarchais"};
+  std::vector<std::string> expected_route{"Rue Pelée",
+                                          "Rue Pelée",
+                                          "Rue Pelée",
+                                          "Rue Alphonse Baudin",
+                                          "Rue Saint-Sébastien",
+                                          "Boulevard Beaumarchais",
+                                          "Boulevard des Filles du Calvaire",
+                                          "Rue du Pont aux Choux",
+                                          "Rue de Turenne",
+                                          "Rue du Parc Royal",
+                                          "Place de Thorigny",
+                                          "Rue de la Perle",
+                                          "Rue de la Perle",
+                                          "Rue Vieille du Temple"};
   const std::map<size_t, BssManeuverType>&
-      expected_bss_maneuver{{1, DirectionsLeg_Maneuver_BssManeuverType_kRentBikeAtBikeShare},
-                            {8, DirectionsLeg_Maneuver_BssManeuverType_kReturnBikeAtBikeShare}};
+      expected_bss_maneuver{{2, DirectionsLeg_Maneuver_BssManeuverType_kRentBikeAtBikeShare},
+                            {12, DirectionsLeg_Maneuver_BssManeuverType_kReturnBikeAtBikeShare}};
 
   test(request, expected_travel_modes, expected_route, expected_bss_maneuver);
 }
