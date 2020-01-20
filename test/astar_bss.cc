@@ -216,20 +216,19 @@ void test(const std::string& request,
 void TestBSS_With_Mode_Changes() {
 
   std::string request =
-      R"({"locations":[{"lat":48.865020,"lon":2.369113},{"lat":48.859782,"lon":2.36101}],"costing":"bikeshare"})";
+      R"({"locations":[{"lat":48.86481,"lon":2.361015},{"lat":48.859782,"lon":2.36101}],"costing":"bikeshare"})";
   std::vector<valhalla::DirectionsLeg_TravelMode>
       expected_travel_modes{valhalla::DirectionsLeg_TravelMode::DirectionsLeg_TravelMode_kPedestrian,
                             valhalla::DirectionsLeg_TravelMode::DirectionsLeg_TravelMode_kBicycle,
                             valhalla::DirectionsLeg_TravelMode::DirectionsLeg_TravelMode_kPedestrian};
 
-  std::vector<std::string>
-      expected_route{"Rue du Grand Prieuré", "Rue du Grand Prieuré",       "Rue de Crussol",
-                     "Boulevard du Temple",  "Rue des Filles du Calvaire", "Rue de Turenne",
-                     "Rue du Parc Royal",    "Place de Thorigny",          "Rue de la Perle",
-                     "Rue de la Perle"};
+  std::vector<std::string> expected_route{"Rue Perrée",        "Rue Perrée",        "Rue Perrée",
+                                          "Rue Caffarelli",    "Rue de Bretagne",   "Rue de Turenne",
+                                          "Rue du Parc Royal", "Place de Thorigny", "Rue de la Perle",
+                                          "Rue de la Perle"};
 
   const std::map<size_t, BssManeuverType>&
-      expected_bss_maneuver{{1, DirectionsLeg_Maneuver_BssManeuverType_kRentBikeAtBikeShare},
+      expected_bss_maneuver{{2, DirectionsLeg_Maneuver_BssManeuverType_kRentBikeAtBikeShare},
                             {9, DirectionsLeg_Maneuver_BssManeuverType_kReturnBikeAtBikeShare}};
 
   test(request, expected_travel_modes, expected_route, expected_bss_maneuver);
@@ -372,9 +371,11 @@ int main() {
   suite.test(TEST_CASE(TestBSS_With_Mode_Changes));
   // We test if the bss connection edges respect the forward/reverse access
   suite.test(TEST_CASE(TestBSS_With_Mode_Changes_2));
+
   // Play with the bss rent/return penalty
   suite.test(TEST_CASE(TestBSS_BSS_mode_Without_Mode_Changes));
   suite.test(TEST_CASE(TestBSS_BSS_mode_Without_Mode_Changes_2));
+
   // When pedestrian is chosen as travel_mode, the departure edge must NOT be a bss connections edge
   suite.test(TEST_CASE(TestBSS_Pedestrian));
   // When bicycle is chosen as travel_mode, the departure edge must NOT be a bss connections edge
