@@ -87,6 +87,7 @@ add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/roma_tiles/1/047/352.gph
 add_custom_target(roma_tiles DEPENDS ${CMAKE_BINARY_DIR}/test/data/roma_tiles/1/047/352.gph)
 
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/ny_ar_tiles/2/000/752/104.gph
+  COMMAND ${CMAKE_COMMAND} -E make_directory test/data/ny_ar_tiles/
   COMMAND ${CMAKE_BINARY_DIR}/valhalla_build_tiles
       --inline-config '{"mjolnir":{"tile_dir":"test/data/ny_ar_tiles","hierarchy":true,"shortcuts":true,"concurrency":4,"logging":{"type":""}}}'
       ${VALHALLA_SOURCE_DIR}/test/data/ny-access-restriction.osm.pbf
@@ -96,6 +97,7 @@ add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/ny_ar_tiles/2/000/752/10
 add_custom_target(ny_ar_tiles DEPENDS ${CMAKE_BINARY_DIR}/test/data/ny_ar_tiles/2/000/752/104.gph)
 
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/harrisburg_ar_tiles/2/000/749/212.gph
+  COMMAND ${CMAKE_COMMAND} -E make_directory test/data/harrisburg_ar_tiles/
   COMMAND ${CMAKE_BINARY_DIR}/valhalla_build_tiles
       --inline-config '{"mjolnir":{"tile_dir":"test/data/harrisburg_ar_tiles","hierarchy":true,"shortcuts":true,"concurrency":4,"logging":{"type":""}}}'
       ${VALHALLA_SOURCE_DIR}/test/data/harrisburg-access-restriction.osm.pbf
