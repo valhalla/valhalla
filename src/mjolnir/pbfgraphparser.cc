@@ -62,7 +62,9 @@ public:
     }
 
     include_driveways_ = pt.get<bool>("include_driveways", true);
-    commercial_data_ = pt.get<bool>("commercial_data", false);
+    infer_internal_intersections_ =
+        pt.get<bool>("data_processing.infer_internal_intersections", true);
+    infer_turn_channels_ = pt.get<bool>("data_processing.infer_turn_channels", true);
   }
 
   static std::string get_lua(const boost::property_tree::ptree& pt) {
@@ -371,9 +373,10 @@ public:
         ((highway_junction != results.end()) && (highway_junction->second == "motorway_junction"));
 
     for (const auto& tag : results) {
-
-      if (tag.first == "internal_intersection" && commercial_data_) {
+      if (tag.first == "internal_intersection" && !infer_internal_intersections_) {
         w.set_internal(tag.second == "true" ? true : false);
+      } else if (tag.first == "turn_channel" && !infer_turn_channels_) {
+        w.set_turn_channel(tag.second == "true" ? true : false);
       } else if (tag.first == "road_class") {
         RoadClass roadclass = (RoadClass)std::stoi(tag.second);
         switch (roadclass) {
@@ -561,8 +564,6 @@ public:
         w.set_roundabout(tag.second == "true" ? true : false);
       } else if (tag.first == "link") {
         w.set_link(tag.second == "true" ? true : false);
-      } else if (tag.first == "link_type") {
-        w.set_turn_channel(tag.second == "slip" ? true : false);
       } else if (tag.first == "ferry") {
         w.set_ferry(tag.second == "true" ? true : false);
       } else if (tag.first == "rail") {
@@ -1597,8 +1598,13 @@ public:
   // Configuration option to include driveways
   bool include_driveways_;
 
-  // Configuration option for commercial data sets
-  bool commercial_data_;
+  // Configuration option on whether or not to infer internal intersections during the graph enhancer
+  // phase or use the internal_intersection key from the pbf
+  bool infer_internal_intersections_;
+
+  // Configuration option on whether or not to infer turn channels during the graph
+  // enhancer phase or use the turn_channel key from the pbf
+  bool infer_turn_channels_;
 
   // Road class assignment needs to be set to the highway cutoff for ferries and auto trains.
   RoadClass highway_cutoff_rc_;
