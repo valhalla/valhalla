@@ -95,14 +95,14 @@ add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/ny_ar_tiles/2/000/752/10
   DEPENDS valhalla_build_tiles ${VALHALLA_SOURCE_DIR}/test/data/ny-access-restriction.osm.pbf)
 add_custom_target(ny_ar_tiles DEPENDS ${CMAKE_BINARY_DIR}/test/data/ny_ar_tiles/2/000/752/104.gph)
 
-add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/harrisburg_ar_tiles/2/000/749/212.gph
+add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/harrisburg_ar_tiles/1/046/903.gph
   COMMAND ${CMAKE_BINARY_DIR}/valhalla_build_tiles
       --inline-config '{"mjolnir":{"tile_dir":"test/data/harrisburg_ar_tiles","hierarchy":true,"shortcuts":true,"concurrency":4,"logging":{"type":""}}}'
       ${VALHALLA_SOURCE_DIR}/test/data/harrisburg-access-restriction.osm.pbf
   COMMENT "Building Harrisburg Tiles..."
   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
   DEPENDS valhalla_build_tiles ${VALHALLA_SOURCE_DIR}/test/data/harrisburg-access-restriction.osm.pbf)
-add_custom_target(harrisburg_ar_tiles DEPENDS ${CMAKE_BINARY_DIR}/test/data/harrisburg_ar_tiles/2/000/749/212.gph)
+add_custom_target(harrisburg_ar_tiles DEPENDS ${CMAKE_BINARY_DIR}/test/data/harrisburg_ar_tiles/1/046/903.gph)
 
 file(GLOB locales "${VALHALLA_SOURCE_DIR}/locales/*.json")
 add_custom_command(OUTPUT .locales.timestamp
