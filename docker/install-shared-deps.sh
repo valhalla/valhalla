@@ -9,6 +9,7 @@ add-apt-repository -y ppa:valhalla-core/valhalla && apt-get update -y
 apt-get install -y \
     autoconf \
     automake \
+    cargo \
     ccache \
     clang-5.0 \
     clang-tidy-5.0 \
@@ -30,6 +31,7 @@ apt-get install -y \
     libspatialite-dev \
     libsqlite3-dev \
     libsqlite3-mod-spatialite \
+    libssl-dev \
     libtool \
     locales \
     lua5.2 \
@@ -62,3 +64,7 @@ curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.11/install.sh | 
 curl https://cmake.org/files/v3.16/cmake-3.16.0-Linux-$(uname --machine).sh > /tmp/cmake.sh
 sh /tmp/cmake.sh --prefix=/usr/local --skip-license && /bin/rm /tmp/cmake.sh
 cmake --version
+
+# Install sccache
+cargo install --root /usr/local sccache
+rm -rf ~/.cargo
