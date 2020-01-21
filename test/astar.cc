@@ -761,6 +761,56 @@ void test_deadend() {
     throw std::logic_error("We did not find the expected u-turn");
   }
 }
+void test_time_dep_forward_with_current_time() {
+  // Test a request with date_time as "current" (type: 0)
+  //
+  auto conf = get_conf("whitelion_tiles_reverse");
+  route_tester tester(conf);
+  std::string request =
+      R"({
+      "locations":[
+        {"lat":51.45562646682483,"lon":-2.5952598452568054},
+        {"lat":51.455143447135974,"lon":-2.5958767533302307}
+      ],
+      "costing":"auto",
+      "date_time":{
+        "type":0
+      }
+    })";
+
+  auto response = tester.test(request);
+
+  const auto& legs = response.trip().routes(0).legs();
+  const auto& directions = response.directions().routes(0).legs();
+
+  if (legs.size() != 1) {
+    throw std::logic_error("Should have 1 leg");
+  }
+
+  std::vector<std::string> names;
+
+  for (const auto& d : directions) {
+    for (const auto& m : d.maneuver()) {
+      std::string name;
+      for (const auto& n : m.street_name()) {
+        name += n.value() + " ";
+      }
+      if (!name.empty()) {
+        name.pop_back();
+      }
+      names.push_back(name);
+    }
+  }
+
+  auto correct_route =
+      std::vector<std::string>{"Bell Lane",   "Small Street",
+                               "Quay Street", // The u-turn on Quay Street is optimized away
+                               "Quay Street", "Small Street", "", ""};
+  if (names != correct_route) {
+    throw std::logic_error("Incorrect route, got: \n" + boost::algorithm::join(names, ", ") +
+                           ", expected: \n" + boost::algorithm::join(correct_route, ", "));
+  }
+}
 
 void test_deadend_timedep_forward() {
   auto conf = get_conf("whitelion_tiles_reverse");
@@ -1056,7 +1106,6 @@ void test_time_restricted_road_allowed_on_timedep() {
 int main() {
   test::suite suite("astar");
 
-  // TODO: move to mjolnir?
   suite.test(TEST_CASE(make_tile));
 
   suite.test(TEST_CASE(TestTrivialPathForward));
@@ -1077,6 +1126,8 @@ int main() {
   suite.test(TEST_CASE(test_time_restricted_road_bidirectional));
   suite.test(TEST_CASE(test_time_restricted_road_denied_on_timedep));
   suite.test(TEST_CASE(test_time_restricted_road_allowed_on_timedep));
+
+  suite.test(TEST_CASE(test_time_dep_forward_with_current_time));
 
   return suite.tear_down();
 }
