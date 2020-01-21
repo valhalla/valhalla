@@ -1080,7 +1080,7 @@ void test_timed_access_restriction_2() {
 
 Api timed_conditional_restriction(std::string mode, std::string datetime) {
   // The restriction is <tag k="restriction:conditional" v="no_right_turn @ (Mo-Fr 07:00-09:00)"/>
-  auto conf = get_conf("harrisburg_ar_tiles");
+  auto conf = get_conf("pa_ar_tiles");
   route_tester tester(conf);
   std::string request =
       R"({
