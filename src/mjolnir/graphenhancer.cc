@@ -1399,7 +1399,8 @@ void enhance(const boost::property_tree::ptree& pt,
   sequence<OSMAccess> access_tags(access_file, false);
 
   auto database = pt.get_optional<std::string>("admin");
-  bool infer_internal_intersections = pt.get<bool>("data_processing.infer_internal_intersections", true);
+  bool infer_internal_intersections =
+      pt.get<bool>("data_processing.infer_internal_intersections", true);
   bool apply_country_overrides = pt.get<bool>("data_processing.apply_country_overrides", true);
 
   // Initialize the admin DB (if it exists)
@@ -1713,7 +1714,8 @@ void enhance(const boost::property_tree::ptree& pt,
           // find the edge that has the same wayid as the current DE
           // if it is internal, then add turn lanes for this edge and not the internal one
           // if not internal, then do not add turn lanes for this DE and leave them on the next one.
-          if (!IsNextEdgeInternal(directededge, tilebuilder, reader, lock, infer_internal_intersections)) {
+          if (!IsNextEdgeInternal(directededge, tilebuilder, reader, lock,
+                                  infer_internal_intersections)) {
             directededge.set_turnlanes(false);
           }
         }
@@ -1723,8 +1725,9 @@ void enhance(const boost::property_tree::ptree& pt,
 
         // Test if an internal intersection edge. Must do this after setting
         // opposing edge index
-        if (infer_internal_intersections && IsIntersectionInternal(&tilebuilder, reader, lock, startnode,
-                                                          nodeinfo, directededge, j)) {
+        if (infer_internal_intersections &&
+            IsIntersectionInternal(&tilebuilder, reader, lock, startnode, nodeinfo, directededge,
+                                   j)) {
           directededge.set_internal(true);
         }
 
