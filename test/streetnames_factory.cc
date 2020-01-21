@@ -8,7 +8,6 @@
 #include <typeinfo>
 #include <vector>
 
-using namespace std;
 using namespace valhalla::baldr;
 
 namespace {
@@ -18,7 +17,8 @@ void TryCreate(const std::string& country_code,
                const std::string& expected) {
   std::unique_ptr<StreetNames> street_names = StreetNamesFactory::Create(country_code, names);
 
-  std::string rtti(typeid(*street_names).name());
+  auto& value = *street_names.get();
+  std::string rtti(typeid(value).name());
   if (rtti != expected) {
     throw std::runtime_error(rtti + ": Incorrect object type - expected: " + expected);
   }
