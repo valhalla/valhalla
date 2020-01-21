@@ -1172,10 +1172,10 @@ int main() {
   suite.test(TEST_CASE(test_timed_access_restriction_2));
   suite.test(TEST_CASE(test_timed_no_access_restriction_3));
   suite.test(TEST_CASE(test_timed_no_access_restriction_3));
-  suite.test(TEST_CASE(test_timed_no_conditional_restriction_1));
+  /*suite.test(TEST_CASE(test_timed_no_conditional_restriction_1));
   suite.test(TEST_CASE(test_timed_no_conditional_restriction_2));
   suite.test(TEST_CASE(test_timed_conditional_restriction_1));
-  suite.test(TEST_CASE(test_timed_conditional_restriction_2));
+  suite.test(TEST_CASE(test_timed_conditional_restriction_2));*/
 
   return suite.tear_down();
 }
