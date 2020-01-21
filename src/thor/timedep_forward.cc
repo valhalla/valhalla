@@ -262,7 +262,7 @@ TimeDepForward::GetBestPath(valhalla::Location& origin,
   uint32_t density = SetDestination(graphreader, destination);
   // Call SetOrigin with kFreeFlowSecondOfDay for now since we don't yet have
   // a timezone for converting a date_time of "current" to seconds_of_week
-  SetOrigin(graphreader, origin, destination, kFreeFlowSecondOfDay);
+  SetOrigin(graphreader, origin, destination, kInvalidSecondsOfWeek);
 
   // Set the origin timezone to be the timezone at the end node
   origin_tz_index_ = edgelabels_.size() == 0 ? 0 : GetTimezone(graphreader, edgelabels_[0].endnode());

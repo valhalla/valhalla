@@ -350,7 +350,7 @@ void TestTrivialPath(vt::PathAlgorithm& astar) {
   using node::d;
 
   valhalla::Location origin;
-  // origin.set_date_time();
+  origin.set_date_time("2019-11-21T13:05");
   origin.mutable_ll()->set_lng(a.second.first);
   origin.mutable_ll()->set_lat(a.second.second);
   add(tile_id + uint64_t(1), 0.0f, a.second, origin);
@@ -359,6 +359,7 @@ void TestTrivialPath(vt::PathAlgorithm& astar) {
   add(tile_id + uint64_t(2), 1.0f, a.second, origin);
 
   valhalla::Location dest;
+  dest.set_date_time("2019-11-21T13:05");
   dest.mutable_ll()->set_lng(b.second.first);
   dest.mutable_ll()->set_lat(b.second.second);
   add(tile_id + uint64_t(3), 0.0f, b.second, dest);
@@ -367,7 +368,7 @@ void TestTrivialPath(vt::PathAlgorithm& astar) {
   add(tile_id + uint64_t(0), 1.0f, b.second, dest);
 
   // this should go along the path from A to B
-  assert_is_trivial_path(astar, origin, dest, 1, TrivialPathTest::DurationEqualTo, 360,
+  assert_is_trivial_path(astar, origin, dest, 1, TrivialPathTest::DurationEqualTo, 3606,
                          vs::TravelMode::kDrive);
 }
 
@@ -418,7 +419,7 @@ void TestPartialDurationTrivial() {
   using node::d;
 
   valhalla::Location origin;
-  origin.set_date_time("2019-11-21T23:05");
+  origin.set_date_time("2019-11-21T13:05");
   origin.mutable_ll()->set_lng(a.second.first);
   origin.mutable_ll()->set_lat(a.second.second);
   add(tile_id + uint64_t(0), 0.1f, a.second, origin);
@@ -433,7 +434,7 @@ void TestPartialDurationTrivial() {
   add(tile_id + uint64_t(3), 0.0f, b.second, dest);
   add(tile_id + uint64_t(7), 1.0f, b.second, dest);
 
-  uint32_t expected_duration = 288;
+  uint32_t expected_duration = 2885;
 
   vt::TimeDepForward astar;
   assert_is_trivial_path(astar, origin, dest, 1, TrivialPathTest::DurationEqualTo, expected_duration,
@@ -449,20 +450,20 @@ void TestPartialDuration(vt::PathAlgorithm& astar) {
   float partial_dist = 0.1;
 
   valhalla::Location origin;
-  origin.set_date_time("2019-11-21T23:05");
+  origin.set_date_time("2019-11-21T13:05");
   origin.mutable_ll()->set_lng(a.second.first);
   origin.mutable_ll()->set_lat(a.second.second);
   add(tile_id + uint64_t(0), 0. + partial_dist, a.second, origin);
   add(tile_id + uint64_t(2), 1. - partial_dist, a.second, origin);
 
   valhalla::Location dest;
-  dest.set_date_time("2019-11-21T23:05");
+  dest.set_date_time("2019-11-21T13:05");
   dest.mutable_ll()->set_lng(d.second.first);
   dest.mutable_ll()->set_lat(d.second.second);
   add(tile_id + uint64_t(7), 0.0f + partial_dist, d.second, dest);
   add(tile_id + uint64_t(3), 1.0f - partial_dist, d.second, dest);
 
-  uint32_t expected_duration = 973;
+  uint32_t expected_duration = 9738;
 
   assert_is_trivial_path(astar, origin, dest, 2, TrivialPathTest::DurationEqualTo, expected_duration,
                          vs::TravelMode::kDrive);
