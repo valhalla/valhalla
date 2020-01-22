@@ -175,7 +175,7 @@ jobs:
           -DCPACK_GENERATOR=DEB -DCPACK_PACKAGE_VERSION_SUFFIX="-0ubuntu1-$(lsb_release -sc)"
       - run: make -C build -j4
       - run: make -C build -j4 tests
-      - run: make -C build -j2 check
+      - run: make -C build -j1 check
       - run: make -C build install
       - run: make -C build package
       - save_cache:
@@ -199,7 +199,7 @@ jobs:
           cd build && cmake .. -DCMAKE_BUILD_TYPE=Release -DENABLE_NODE_BINDINGS=Off
       - run: make -C build -j4
       - run: make -C build -j4 tests
-      - run: make -C build -j2 check
+      - run: make -C build -j1 check
       - save_cache:
           key: ccache
           paths:
