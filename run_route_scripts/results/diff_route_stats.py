@@ -32,10 +32,10 @@ def main(old_stats_file, new_stats_file, output_file):
             # - <field name>_new
             # - <field name>_diff
             # - <field name>_%diff_
-            stats_diff_fieldnames.append(f'{col}_old')
-            stats_diff_fieldnames.append(f'{col}_new')
-            stats_diff_fieldnames.append(f'{col}_diff')
-            stats_diff_fieldnames.append(f'{col}_%diff')
+            stats_diff_fieldnames.append('{}_old'.format(col))
+            stats_diff_fieldnames.append('{}_new'.format(col))
+            stats_diff_fieldnames.append('{}_diff'.format(col))
+            stats_diff_fieldnames.append('{}_%diff'.format(col))
 
         csv_writer = csv.writer(output_csv)
         csv_writer.writerow(stats_diff_fieldnames)
@@ -53,12 +53,12 @@ def main(old_stats_file, new_stats_file, output_file):
                 pct_diff = diff/old_stat * 100
                 diff_row.append(old_stat)
                 diff_row.append(new_stat)
-                diff_row.append(f'{diff}')
-                diff_row.append(f'{pct_diff:.2f}')
+                diff_row.append('{}'.format(diff))
+                diff_row.append('{:.2f}'.format(pct_diff))
 
             csv_writer.writerow(diff_row)
             route_num += 1
-        print(f'Combined statistics generated: {output_file}')
+        print('Combined statistics generated: {}'.format(output_file))
 
 
 if __name__ == '__main__':
