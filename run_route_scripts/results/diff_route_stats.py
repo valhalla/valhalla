@@ -49,7 +49,7 @@ def main(old_stats_file, new_stats_file, output_file):
                 # Treat everything as float
                 old_stat, new_stat = (float(old_row[col_index]),
                                       float(new_row[col_index]))
-                diff = old_stat - new_stat
+                diff = new_stat - old_stat
                 pct_diff = diff/old_stat * 100
                 diff_row.append(old_stat)
                 diff_row.append(new_stat)
