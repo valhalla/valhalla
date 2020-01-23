@@ -110,11 +110,14 @@ For instructions on installing Valhalla on Ubuntu 18.04.x see this [script](scri
 To install on macOS, you need to install its dependencies with [Homebrew](http://brew.sh):
 
 ```bash
-# install dependencies (czmq is required by prime_server)
-brew install cmake libtool protobuf-c boost-python libspatialite pkg-config sqlite3 lua jq curl wget czmq lz4 node@10 npm
+# install dependencies (automake & czmq are required by prime_server)
+brew install automake cmake libtool protobuf-c boost-python libspatialite pkg-config sqlite3 lua jq curl wget czmq lz4 node@10 npm spatialite-tools unzip
 curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.11/install.sh | bash
 nvm use 10 # must use node 8.11.1 and up because of N-API
 npm install --ignore-scripts
+# following packages are needed for running Linux compatible scripts
+brew install bash coreutils binutils
+# Update your PATH env variable to include /usr/local/opt/binutils/bin:/usr/local/opt/coreutils/libexec/gnubin
 ```
 
 Now, clone the Valhalla repository
@@ -182,7 +185,7 @@ firefox demos/routing/index-internal.html &
 #start up the server
 valhalla_service valhalla.json 1
 #curl it directly if you like:
-curl http://localhost:8002/route --data '{"locations":[{"lat":40.285488,"lon":-76.650597,"type":"break","city":"Hershey","state":"PA"},{"lat":40.794025,"lon":-77.860695,"type":"break","city":"State College","state":"PA"}],"costing":"auto","directions_options":{"units":"miles"}}' | jq '.'
+curl http://localhost:8002/route --data '{"locations":[{"lat":47.365109,"lon":8.546824,"type":"break","city":"Zürich","state":"Altstadt"},{"lat":47.108878,"lon":8.394801,"type":"break","city":"6037 Root","state":"Untere Waldstrasse"}],"costing":"auto","directions_options":{"units":"miles"}}' | jq '.'
 
 #HAVE FUN!
 ```

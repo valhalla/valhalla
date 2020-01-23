@@ -40,14 +40,6 @@ public:
   }
 
   /**
-   * Set the number of vias.
-   * @param  count Number of vias
-   */
-  void set_via_count(const uint64_t count) {
-    via_count_ = (count > kMaxViasPerRestriction) ? kMaxViasPerRestriction : count;
-  }
-
-  /**
    * Set the vias for this restriction
    * @param  via_list  via list.
    */
@@ -153,7 +145,9 @@ public:
 
   /**
    * Set the dow mask.  indicates days of week to apply the restriction
-   * @param  dow  day of week - This is a mask (e.g., Mo-Fr = 62).
+   * @param  dow  day of week - This is a mask with first day of week being sunday
+   *                            e.g., Mo-Th = 30 = 0011110.
+   *                            Sunday is least significant bit.
    */
   void set_dow(const uint64_t dow) {
     dow_ = dow;
@@ -184,6 +178,14 @@ public:
   bool operator==(const ComplexRestrictionBuilder& other) const;
 
 protected:
+  /**
+   * Set the number of vias.
+   * @param  count Number of vias
+   */
+  void set_via_count(const uint64_t count) {
+    via_count_ = (count > kMaxViasPerRestriction) ? kMaxViasPerRestriction : count;
+  }
+
   // via list
   std::vector<GraphId> via_list_;
 
