@@ -350,7 +350,7 @@ void TestTrivialPath(vt::PathAlgorithm& astar) {
   using node::d;
 
   valhalla::Location origin;
-  // origin.set_date_time();
+  origin.set_date_time("2019-11-21T13:05");
   origin.mutable_ll()->set_lng(a.second.first);
   origin.mutable_ll()->set_lat(a.second.second);
   add(tile_id + uint64_t(1), 0.0f, a.second, origin);
@@ -359,6 +359,7 @@ void TestTrivialPath(vt::PathAlgorithm& astar) {
   add(tile_id + uint64_t(2), 1.0f, a.second, origin);
 
   valhalla::Location dest;
+  dest.set_date_time("2019-11-21T13:05");
   dest.mutable_ll()->set_lng(b.second.first);
   dest.mutable_ll()->set_lat(b.second.second);
   add(tile_id + uint64_t(3), 0.0f, b.second, dest);
@@ -367,7 +368,7 @@ void TestTrivialPath(vt::PathAlgorithm& astar) {
   add(tile_id + uint64_t(0), 1.0f, b.second, dest);
 
   // this should go along the path from A to B
-  assert_is_trivial_path(astar, origin, dest, 1, TrivialPathTest::DurationEqualTo, 360,
+  assert_is_trivial_path(astar, origin, dest, 1, TrivialPathTest::DurationEqualTo, 3606,
                          vs::TravelMode::kDrive);
 }
 
@@ -418,7 +419,7 @@ void TestPartialDurationTrivial() {
   using node::d;
 
   valhalla::Location origin;
-  origin.set_date_time("2019-11-21T23:05");
+  origin.set_date_time("2019-11-21T13:05");
   origin.mutable_ll()->set_lng(a.second.first);
   origin.mutable_ll()->set_lat(a.second.second);
   add(tile_id + uint64_t(0), 0.1f, a.second, origin);
@@ -433,7 +434,7 @@ void TestPartialDurationTrivial() {
   add(tile_id + uint64_t(3), 0.0f, b.second, dest);
   add(tile_id + uint64_t(7), 1.0f, b.second, dest);
 
-  uint32_t expected_duration = 288;
+  uint32_t expected_duration = 2885;
 
   vt::TimeDepForward astar;
   assert_is_trivial_path(astar, origin, dest, 1, TrivialPathTest::DurationEqualTo, expected_duration,
@@ -449,20 +450,20 @@ void TestPartialDuration(vt::PathAlgorithm& astar) {
   float partial_dist = 0.1;
 
   valhalla::Location origin;
-  origin.set_date_time("2019-11-21T23:05");
+  origin.set_date_time("2019-11-21T13:05");
   origin.mutable_ll()->set_lng(a.second.first);
   origin.mutable_ll()->set_lat(a.second.second);
   add(tile_id + uint64_t(0), 0. + partial_dist, a.second, origin);
   add(tile_id + uint64_t(2), 1. - partial_dist, a.second, origin);
 
   valhalla::Location dest;
-  dest.set_date_time("2019-11-21T23:05");
+  dest.set_date_time("2019-11-21T13:05");
   dest.mutable_ll()->set_lng(d.second.first);
   dest.mutable_ll()->set_lat(d.second.second);
   add(tile_id + uint64_t(7), 0.0f + partial_dist, d.second, dest);
   add(tile_id + uint64_t(3), 1.0f - partial_dist, d.second, dest);
 
-  uint32_t expected_duration = 973;
+  uint32_t expected_duration = 9738;
 
   assert_is_trivial_path(astar, origin, dest, 2, TrivialPathTest::DurationEqualTo, expected_duration,
                          vs::TravelMode::kDrive);
@@ -761,6 +762,56 @@ void test_deadend() {
     throw std::logic_error("We did not find the expected u-turn");
   }
 }
+void test_time_dep_forward_with_current_time() {
+  // Test a request with date_time as "current" (type: 0)
+  //
+  auto conf = get_conf("whitelion_tiles_reverse");
+  route_tester tester(conf);
+  std::string request =
+      R"({
+      "locations":[
+        {"lat":51.45562646682483,"lon":-2.5952598452568054},
+        {"lat":51.455143447135974,"lon":-2.5958767533302307}
+      ],
+      "costing":"auto",
+      "date_time":{
+        "type":0
+      }
+    })";
+
+  auto response = tester.test(request);
+
+  const auto& legs = response.trip().routes(0).legs();
+  const auto& directions = response.directions().routes(0).legs();
+
+  if (legs.size() != 1) {
+    throw std::logic_error("Should have 1 leg");
+  }
+
+  std::vector<std::string> names;
+
+  for (const auto& d : directions) {
+    for (const auto& m : d.maneuver()) {
+      std::string name;
+      for (const auto& n : m.street_name()) {
+        name += n.value() + " ";
+      }
+      if (!name.empty()) {
+        name.pop_back();
+      }
+      names.push_back(name);
+    }
+  }
+
+  auto correct_route =
+      std::vector<std::string>{"Bell Lane",   "Small Street",
+                               "Quay Street", // The u-turn on Quay Street is optimized away
+                               "Quay Street", "Small Street", "", ""};
+  if (names != correct_route) {
+    throw std::logic_error("Incorrect route, got: \n" + boost::algorithm::join(names, ", ") +
+                           ", expected: \n" + boost::algorithm::join(correct_route, ", "));
+  }
+}
 
 void test_deadend_timedep_forward() {
   auto conf = get_conf("whitelion_tiles_reverse");
@@ -1056,7 +1107,6 @@ void test_time_restricted_road_allowed_on_timedep() {
 int main() {
   test::suite suite("astar");
 
-  // TODO: move to mjolnir?
   suite.test(TEST_CASE(make_tile));
 
   suite.test(TEST_CASE(TestTrivialPathForward));
@@ -1077,6 +1127,8 @@ int main() {
   suite.test(TEST_CASE(test_time_restricted_road_bidirectional));
   suite.test(TEST_CASE(test_time_restricted_road_denied_on_timedep));
   suite.test(TEST_CASE(test_time_restricted_road_allowed_on_timedep));
+
+  suite.test(TEST_CASE(test_time_dep_forward_with_current_time));
 
   return suite.tear_down();
 }
