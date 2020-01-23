@@ -186,12 +186,13 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
   std::vector<PathInfo> path;
   GraphId prior_edge, prior_node;
   EdgeLabel pred;
+  auto prev_segment_end = std::numeric_limits<float>::max();
 
   // Build the path
   size_t interpolated_index = 0;
   for (const auto& edge_segment : edge_segments) {
-    // Skip edges that are the same as the prior edge
-    if (edge_segment.edgeid == prior_edge) {
+    // Skip edges that are the same as the prior edge if they are not disconnected
+    if (edge_segment.edgeid == prior_edge && prev_segment_end <= edge_segment.source) {
       continue;
     }
 
@@ -245,6 +246,7 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
     }
 
     // Update the prior_edge and nodeinfo. TODO (protect against invalid tile)
+    prev_segment_end = edge_segment.target;
     prior_edge = edge_id;
     prior_node = directededge->endnode();
     const GraphTile* end_tile = matcher->graphreader().GetGraphTile(prior_node);
