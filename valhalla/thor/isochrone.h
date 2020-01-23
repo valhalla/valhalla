@@ -142,26 +142,6 @@ protected:
                         const unsigned int max_minutes,
                         google::protobuf::RepeatedPtrField<valhalla::Location>& origin_locations);
 
-  /**
-   * Expand from the node using multimodal algorithm.
-   * @param graphreader  Graph reader.
-   * @param node Graph Id of the node to expand.
-   * @param pred Edge label of the predecessor edge leading to the node.
-   * @param pred_idx Index in the edge label list of the predecessor edge.
-   * @param from_transition Boolean indicating if this expansion is from a transition edge.
-   * @param pc Pedestrian costing.
-   * @param tc Transit costing.
-   * @param mode_costing Array of all costing models.
-   * @return Returns true if the isochrone is done.
-   */
-  bool ExpandForwardMM(baldr::GraphReader& graphreader,
-                       const baldr::GraphId& node,
-                       const sif::MMEdgeLabel& pred,
-                       const uint32_t pred_idx,
-                       const bool from_transition,
-                       const std::shared_ptr<sif::DynamicCost>& pc,
-                       const std::shared_ptr<sif::DynamicCost>& tc,
-                       const std::shared_ptr<sif::DynamicCost>* mode_costing);
 
   /**
    * Expand from the node for a multi-modal path.
