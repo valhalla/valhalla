@@ -1174,7 +1174,7 @@ void test_timed_access_restriction_2() {
     throw std::logic_error("This route should turn L onto Delancey St. because of restriction. ");
   }
 }
-/*
+
 Api timed_conditional_restriction(std::string mode, std::string datetime) {
   // The restriction is <tag k="restriction:conditional" v="no_right_turn @ (Mo-Fr 07:00-09:00)"/>
   auto conf = get_conf("pa_ar_tiles");
@@ -1236,7 +1236,7 @@ void test_timed_conditional_restriction_2() {
     throw std::logic_error("This route should turn L onto Dickinson Ave.");
   }
 }
-*/
+
 
 } // anonymous namespace
 
@@ -1272,10 +1272,10 @@ int main() {
   suite.test(TEST_CASE(test_timed_access_restriction_2));
   suite.test(TEST_CASE(test_timed_no_access_restriction_3));
   suite.test(TEST_CASE(test_timed_no_access_restriction_3));
-  /*suite.test(TEST_CASE(test_timed_no_conditional_restriction_1));
+  suite.test(TEST_CASE(test_timed_no_conditional_restriction_1));
   suite.test(TEST_CASE(test_timed_no_conditional_restriction_2));
   suite.test(TEST_CASE(test_timed_conditional_restriction_1));
-  suite.test(TEST_CASE(test_timed_conditional_restriction_2));*/
+  suite.test(TEST_CASE(test_timed_conditional_restriction_2));
 
   return suite.tear_down();
 }
