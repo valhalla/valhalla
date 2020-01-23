@@ -218,20 +218,20 @@ get_duration(const std::string& date_time, const uint32_t seconds, const date::t
 }
 
 // does this date fall in the begin and end date range?
-bool is_restricted(const bool type,
-                   const uint8_t begin_hrs,
-                   const uint8_t begin_mins,
-                   const uint8_t end_hrs,
-                   const uint8_t end_mins,
-                   const uint8_t dow,
-                   const uint8_t begin_week,
-                   const uint8_t begin_month,
-                   const uint8_t begin_day_dow,
-                   const uint8_t end_week,
-                   const uint8_t end_month,
-                   const uint8_t end_day_dow,
-                   const uint64_t current_time,
-                   const date::time_zone* time_zone) {
+bool is_conditional_active(const bool type,
+                           const uint8_t begin_hrs,
+                           const uint8_t begin_mins,
+                           const uint8_t end_hrs,
+                           const uint8_t end_mins,
+                           const uint8_t dow,
+                           const uint8_t begin_week,
+                           const uint8_t begin_month,
+                           const uint8_t begin_day_dow,
+                           const uint8_t end_week,
+                           const uint8_t end_month,
+                           const uint8_t end_day_dow,
+                           const uint64_t current_time,
+                           const date::time_zone* time_zone) {
 
   if (!time_zone)
     return false;
