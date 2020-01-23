@@ -401,7 +401,6 @@ thor_worker_t::map_match(Api& request) {
       path_map_match(match_results, path_edges, *route.mutable_legs()->Add(), route_discontinuities);
     } // trace_route can return multiple trip paths
     else {
-
       // here we break the path edges and match results into contiguous sets so that
       // where they are discontinuous we can make them into separate routes
       using edge_group_t =
@@ -477,10 +476,22 @@ thor_worker_t::map_match(Api& request) {
           for (auto destination_match_result = origin_match_result + 1;
                destination_match_result != std::next(std::get<3>(edge_group));
                ++destination_match_result) {
-            // skip input location points that are not on the match results edge
-            if (path_edge_itr->edgeid != destination_match_result->edgeid) {
+
+            // skip input location points that are not valid
+            if (!destination_match_result->edgeid.Is_Valid()) {
               continue;
             }
+
+            // we also want to skip edges that are not matching the valid matched locations
+            while (path_edge_itr != std::next(std::get<1>(edge_group)) &&
+                   path_edge_itr->edgeid != destination_match_result->edgeid) {
+              ++path_edge_itr;
+            }
+
+            if (path_edge_itr == std::next(std::get<1>(edge_group))) {
+              break;
+            }
+
             // we only build legs on 3 types of locations:
             // break, breakthrough and disjoint points (if there is disconnect edges)
             // for locations that matched but are break types nor disjoint points
@@ -551,7 +562,7 @@ thor_worker_t::map_match(Api& request) {
             // we get the time up to the last edge before this begin edge if any. we also remove
             // the turn cost at the begging of this edge if there is any
             double trim_begin = leg_begin == path_edges.cbegin()
-                                    ? 0
+                                    ? 0.0
                                     : std::prev(leg_begin)->elapsed_time + leg_begin->turn_cost;
             // then we scale the elapsed time on the edge based on the distance along the edge but
             // we need to scale that distance down in the case FormPath knew it was a partial edge
@@ -561,8 +572,9 @@ thor_worker_t::map_match(Api& request) {
             // we get the time up to the last edge before this end edge if any. we also remove
             // the turn cost at the begging of this edge if there is any
             double trim_end = trivial_leg && begin_trimmed
-                                  ? 0
+                                  ? 0.0
                                   : std::prev(leg_end)->elapsed_time + leg_end->turn_cost;
+
             // then we scale the elapsed time on the edge based on the distance along the edge but
             // we need to scale that distance down in the case FormPath knew it was a partial edge
             trim_end = (leg_end->elapsed_time - trim_end) *
