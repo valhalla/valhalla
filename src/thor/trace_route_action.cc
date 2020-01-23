@@ -461,7 +461,7 @@ thor_worker_t::map_match(Api& request) {
         // We use multi-route to handle discontinuity
         uint64_t route_index = request.trip().routes_size();
         auto* route = request.mutable_trip()->mutable_routes()->Add();
-        // first we find where this leg is going to begin
+        // first we set origin_match_result to leg is going to begin
         origin_match_result = std::get<2>(edge_group);
         if (origin_match_result == match_results.cend()) {
           break;

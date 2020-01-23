@@ -506,12 +506,12 @@ find_shortest_path(baldr::GraphReader& reader,
     } else {
       // Path to a destination along an edge is found: remember it and
       // remove the destination from the destination list
-      const auto dest = label.dest();
-      results[dest] = label_idx;
-      for (const auto& edge : destinations[dest].edges) {
+      const auto destination_idx = label.dest();
+      results[destination_idx] = label_idx;
+      for (const auto& edge : destinations[destination_idx].edges) {
         const auto it = edge_dests.find(edge.id);
         if (it != edge_dests.end()) {
-          it->second.erase(dest);
+          it->second.erase(destination_idx);
           if (it->second.empty()) {
             edge_dests.erase(it);
           }
@@ -524,15 +524,21 @@ find_shortest_path(baldr::GraphReader& reader,
       }
 
       // Expand origin: add segments from origin to destinations ahead
-      // at the same edge to the queue
-      if (dest == origin_idx) {
+      // at the same edge as well as at the opposite edge to the queue
+      if (destination_idx == origin_idx) {
         for (const auto& origin_edge : destinations[origin_idx].edges) {
           // The tile will be guaranteed to be directededge's tile in this loop
-          const baldr::GraphTile* tile = nullptr;
-          const auto directededge = reader.directededge(origin_edge.id, tile);
+          const baldr::GraphTile* start_tile = nullptr;
+          const auto directededge = reader.directededge(origin_edge.id, start_tile);
+
+          baldr::GraphId opposite_edgeid = reader.GetOpposingEdgeId(origin_edge.id);
+          const baldr::GraphTile* end_tile =
+              directededge->leaves_tile() ? reader.GetGraphTile(directededge->endnode()) : start_tile;
+          const baldr::DirectedEdge* opposite_edge = reader.directededge(opposite_edgeid, end_tile);
 
           // Skip if edge is not allowed
-          if (!directededge || !IsEdgeAllowed(directededge, origin_edge.id, costing, label, tile)) {
+          if (!directededge ||
+              !IsEdgeAllowed(directededge, origin_edge.id, costing, label, start_tile)) {
             continue;
           }
 
@@ -543,39 +549,65 @@ find_shortest_path(baldr::GraphReader& reader,
             turn_cost += turn_cost_table[0];
           }
 
-          auto opp_edgeid = reader.GetOpposingEdgeId(origin_edge.id);
-          const baldr::GraphTile* endtile =
-              directededge->leaves_tile() ? reader.GetGraphTile(directededge->endnode()) : tile;
-          auto opp_edge = reader.directededge(opp_edgeid, endtile);
-
           // All destinations on this origin edge
           for (const auto other_dest : edge_dests[origin_edge.id]) {
             // All edges of this destination
-            for (const auto& other_edge : destinations[other_dest].edges) {
-              if (origin_edge.id == other_edge.id &&
-                  origin_edge.percent_along <= other_edge.percent_along) {
+            for (const auto& destination_edge : destinations[other_dest].edges) {
+              // when expanding origin edges, there are two possible scenarios:
+              // 1. destination_edge is on the same edge with the origin edge, this indicates that
+              //    the path finding algorithm may find origin destination match on same edge if
+              //    percentage flow agrees topologically (see below):
+              //
+              //    origin percent_along
+              //             |
+              //  0% X------------------------------------------------>X 100%
+              //                                  |
+              //                          destination percent_along
+              //
+              // 2. destination_edge is on the opposited edge of the origin edge, this indicates that
+              //    an u-turn may occur if percentage flow agrees topologically (see below):
+              //
+              //                            origin percent_along
+              //                                      |
+              // 0%   X------------------------------------------------>X 100%
+              // 100% X<------------------------------------------------X 0%
+              //               |
+              //    destination percent_along
+
+              bool matched_same_edge = origin_edge.id == destination_edge.id &&
+                                       origin_edge.percent_along <= destination_edge.percent_along;
+              bool matched_opposite_edge =
+                  opposite_edge != nullptr &&
+                  IsEdgeAllowed(opposite_edge, opposite_edgeid, costing, label, end_tile) &&
+                  opposite_edgeid == destination_edge.id &&
+                  (1.0f - origin_edge.percent_along) <= destination_edge.percent_along;
+
+              if (matched_same_edge) {
                 // Get cost - use EdgeCost to get time along the edge. Override
                 // cost portion to be distance. The heuristic cost from a
                 // destination to itself must be 0
-                float f = (other_edge.percent_along - origin_edge.percent_along);
-                sif::Cost cost(label.cost().cost + directededge->length() * f,
-                               label.cost().secs + costing->EdgeCost(directededge, tile).secs * f);
+                float segment_percentage =
+                    (destination_edge.percent_along - origin_edge.percent_along);
+                sif::Cost cost(label.cost().cost + directededge->length() * segment_percentage,
+                               label.cost().secs + costing->EdgeCost(directededge, start_tile).secs *
+                                                       segment_percentage);
                 // We only add the labels if we are under the limits for distance and for time or
                 // time limit is 0
                 if (cost.cost < max_dist && (max_time < 0 || cost.secs < max_time)) {
                   labelset->put(other_dest, origin_edge.id, origin_edge.percent_along,
-                                other_edge.percent_along, cost, turn_cost, cost.cost, label_idx,
+                                destination_edge.percent_along, cost, turn_cost, cost.cost, label_idx,
                                 directededge, travelmode);
                 }
-              } else if (opp_edgeid == other_edge.id &&
-                         (1.0f - origin_edge.percent_along) <= other_edge.percent_along) {
-                float f = other_edge.percent_along - (1.0f - origin_edge.percent_along);
-                sif::Cost cost(label.cost().cost + opp_edge->length() * f,
-                               label.cost().secs + costing->EdgeCost(opp_edge, endtile).secs * f);
+              } else if (matched_opposite_edge) {
+                float segment_percentage =
+                    destination_edge.percent_along - (1.0f - origin_edge.percent_along);
+                sif::Cost cost(label.cost().cost + opposite_edge->length() * segment_percentage,
+                               label.cost().secs + costing->EdgeCost(opposite_edge, end_tile).secs *
+                                                       segment_percentage);
                 if (cost.cost < max_dist && (max_time < 0 || cost.secs < max_time)) {
-                  labelset->put(other_dest, other_edge.id, (1.0f - origin_edge.percent_along),
-                                other_edge.percent_along, cost, turn_cost, cost.cost, label_idx,
-                                opp_edge, travelmode);
+                  labelset->put(other_dest, destination_edge.id, (1.0f - origin_edge.percent_along),
+                                destination_edge.percent_along, cost, turn_cost, cost.cost, label_idx,
+                                opposite_edge, travelmode);
                 }
               }
             }
@@ -586,7 +618,7 @@ find_shortest_path(baldr::GraphReader& reader,
           // destination to itself must be 0
           float f = (1.0f - origin_edge.percent_along);
           sif::Cost cost(label.cost().cost + directededge->length() * f,
-                         label.cost().secs + costing->EdgeCost(directededge, tile).secs * f);
+                         label.cost().secs + costing->EdgeCost(directededge, start_tile).secs * f);
           // We only add the labels if we are under the limits for distance and for time or time
           // limit is 0
           if (cost.cost < max_dist && (max_time < 0 || cost.secs < max_time)) {
