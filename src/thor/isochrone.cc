@@ -545,81 +545,13 @@ Isochrone::ComputeMultiModal(google::protobuf::RepeatedPtrField<valhalla::Locati
                              GraphReader& graphreader,
                              const std::shared_ptr<DynamicCost>* mode_costing,
                              const TravelMode mode) {
-  // For pedestrian costing - set flag allowing use of transit connections
-  // Set pedestrian costing to use max distance. TODO - need for other modes
-  const auto& pc = mode_costing[static_cast<uint8_t>(TravelMode::kPedestrian)];
-  pc->SetAllowTransitConnections(true);
-  pc->UseMaxMultiModalDistance();
-
-  // Set the mode from the origin
-  mode_ = mode;
-  const auto& tc = mode_costing[static_cast<uint8_t>(TravelMode::kPublicTransit)];
-
-  // Get maximum transfer distance (TODO - want to allow unlimited walking once
-  // you get off the transit stop...)
-  max_transfer_distance_ = 99999.0f; // costing->GetMaxTransferDistanceMM();
-
   // Initialize and create the isotile
   max_seconds_ = max_minutes * 60;
-  Initialize(mmedgelabels_, mode_costing[static_cast<uint8_t>(mode_)]->UnitSize());
   ConstructIsoTile(true, max_minutes, origin_locations);
 
-  // Set the origin locations.
-  SetOriginLocationsMM(graphreader, origin_locations, mode_costing[static_cast<uint8_t>(mode_)]);
+  Dijkstras::ComputeMultiModal(origin_locations, graphreader, mode_costing, mode);
 
-  // For now the date_time must be set on the origin.
-  if (!origin_locations.Get(0).has_date_time()) {
-    LOG_ERROR("No date time set on the origin location");
-    return isotile_;
-  }
-
-  // Update start time
-  date_set_ = false;
-  date_before_tile_ = false;
-  if (origin_locations.Get(0).has_date_time()) {
-    // Set the timezone to be the timezone at the end node
-    start_tz_index_ =
-        mmedgelabels_.size() == 0 ? 0 : GetTimezone(graphreader, mmedgelabels_[0].endnode());
-    if (start_tz_index_ == 0) {
-      // TODO - should we throw an exception and return an error
-      LOG_ERROR("Could not get the timezone at the origin location");
-      // return isotile_;
-    }
-    origin_date_time_ = origin_locations.Get(0).date_time();
-
-    // Set route start time (seconds from midnight), date, and day of week
-    start_time_ = DateTime::seconds_from_midnight(origin_locations.Get(0).date_time());
-  }
-
-  // Clear operators and processed tiles
-  operators_.clear();
-  processed_tiles_.clear();
-
-  // Expand using adjacency list until we exceed threshold
-  const GraphTile* tile;
-  while (true) {
-    // Get next element from adjacency list. Check that it is valid. An
-    // invalid label indicates there are no edges that can be expanded.
-    uint32_t predindex = adjacencylist_->pop();
-    if (predindex == kInvalidLabel) {
-      return isotile_;
-    }
-
-    // Copy the EdgeLabel for use in costing and settle the edge.
-    MMEdgeLabel pred = mmedgelabels_[predindex];
-    edgestatus_.Update(pred.edgeid(), EdgeSet::kPermanent);
-
-    // Skip edges with large penalties (e.g. ferries?)
-    if (pred.cost().cost > max_seconds_ * 2) {
-      continue;
-    }
-
-    // Expand from the end node of the predecessor edge.
-    if (ExpandForwardMM(graphreader, pred.endnode(), pred, predindex, false, pc, tc, mode_costing)) {
-      return isotile_;
-    }
-  }
-  return isotile_; // Should never get here
+  return isotile_;
 }
 
 // Update the isotile
