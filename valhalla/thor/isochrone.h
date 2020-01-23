@@ -107,29 +107,6 @@ protected:
   uint32_t max_seconds_;
   std::shared_ptr<midgard::GriddedData<midgard::PointLL>> isotile_;
 
-  /**
-   * Initialize prior to computing the isochrones. Creates adjacency list,
-   * edgestatus support, and reserves edgelabels.
-   * @param bucketsize  Adjacency list bucket size.
-   */
-  template <typename label_container_t>
-  void Initialize(label_container_t& labels, const uint32_t bucketsize);
-
-  /**
-   * Sets the start time for forward expansion or end time for reverse expansion based on the
-   * locations date time string and the edge candidates timezone
-   *
-   * @param location           which location to use for the date time information
-   * @param node_id            the node from which to get timezone information
-   * @param reader             the reader for looking up timezone information
-   * @returns                  a pair with the first being the epoch seconds for the date time at that
-   *                           timezone and the second being the ordinal second from the beginning of
-   *                           the week
-   */
-  std::pair<uint64_t, uint32_t>
-  SetTime(google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
-          const baldr::GraphId& node_id,
-          baldr::GraphReader& reader);
 
   /**
    * Constructs the isotile - 2-D gridded data containing the time
@@ -141,7 +118,6 @@ protected:
   void ConstructIsoTile(const bool multimodal,
                         const unsigned int max_minutes,
                         google::protobuf::RepeatedPtrField<valhalla::Location>& origin_locations);
-
 
   /**
    * Expand from the node for a multi-modal path.
