@@ -543,6 +543,11 @@ find_shortest_path(baldr::GraphReader& reader,
             turn_cost += turn_cost_table[0];
           }
 
+          auto opp_edgeid = reader.GetOpposingEdgeId(origin_edge.id);
+          const baldr::GraphTile* endtile =
+              directededge->leaves_tile() ? reader.GetGraphTile(directededge->endnode()) : tile;
+          auto opp_edge = reader.directededge(opp_edgeid, endtile);
+
           // All destinations on this origin edge
           for (const auto other_dest : edge_dests[origin_edge.id]) {
             // All edges of this destination
@@ -561,6 +566,16 @@ find_shortest_path(baldr::GraphReader& reader,
                   labelset->put(other_dest, origin_edge.id, origin_edge.percent_along,
                                 other_edge.percent_along, cost, turn_cost, cost.cost, label_idx,
                                 directededge, travelmode);
+                }
+              } else if (opp_edgeid == other_edge.id &&
+                         (1.0f - origin_edge.percent_along) <= other_edge.percent_along) {
+                float f = other_edge.percent_along - (1.0f - origin_edge.percent_along);
+                sif::Cost cost(label.cost().cost + opp_edge->length() * f,
+                               label.cost().secs + costing->EdgeCost(opp_edge, endtile).secs * f);
+                if (cost.cost < max_dist && (max_time < 0 || cost.secs < max_time)) {
+                  labelset->put(other_dest, other_edge.id, (1.0f - origin_edge.percent_along),
+                                other_edge.percent_along, cost, turn_cost, cost.cost, label_idx,
+                                opp_edge, travelmode);
                 }
               }
             }
