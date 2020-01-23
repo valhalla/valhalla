@@ -145,7 +145,9 @@ public:
 
   /**
    * Set the dow mask.  indicates days of week to apply the restriction
-   * @param  dow  day of week - This is a mask (e.g., Mo-Fr = 62).
+   * @param  dow  day of week - This is a mask with first day of week being sunday
+   *                            e.g., Mo-Th = 30 = 0011110.
+   *                            Sunday is least significant bit.
    */
   void set_dow(const uint64_t dow) {
     dow_ = dow;
