@@ -257,14 +257,12 @@ TimeDepForward::GetBestPath(valhalla::Location& origin,
   Init(origin_new, destination_new);
   float mindist = astarheuristic_.GetDistance(origin_new);
 
-  // Set seconds from beginning of the week
-  seconds_of_week_ = DateTime::day_of_week(origin.date_time()) * midgard::kSecondsPerDay +
-                     DateTime::seconds_from_midnight(origin.date_time());
-
   // Initialize the origin and destination locations. Initialize the
   // destination first in case the origin edge includes a destination edge.
   uint32_t density = SetDestination(graphreader, destination);
-  SetOrigin(graphreader, origin, destination, seconds_of_week_);
+  // Call SetOrigin with kFreeFlowSecondOfDay for now since we don't yet have
+  // a timezone for converting a date_time of "current" to seconds_of_week
+  SetOrigin(graphreader, origin, destination, kInvalidSecondsOfWeek);
 
   // Set the origin timezone to be the timezone at the end node
   origin_tz_index_ = edgelabels_.size() == 0 ? 0 : GetTimezone(graphreader, edgelabels_[0].endnode());
@@ -278,6 +276,9 @@ TimeDepForward::GetBestPath(valhalla::Location& origin,
       DateTime::seconds_since_epoch(origin.date_time(),
                                     DateTime::get_tz_db().from_index(origin_tz_index_));
 
+  // Set seconds from beginning of the week
+  seconds_of_week_ = DateTime::day_of_week(origin.date_time()) * midgard::kSecondsPerDay +
+                     DateTime::seconds_from_midnight(origin.date_time());
   // Update hierarchy limits
   ModifyHierarchyLimits(mindist, density);
 
