@@ -107,7 +107,6 @@ protected:
   uint32_t max_seconds_;
   std::shared_ptr<midgard::GriddedData<midgard::PointLL>> isotile_;
 
-
   /**
    * Constructs the isotile - 2-D gridded data containing the time
    * to get to each lat,lng tile.
