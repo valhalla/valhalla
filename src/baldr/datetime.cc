@@ -218,20 +218,20 @@ get_duration(const std::string& date_time, const uint32_t seconds, const date::t
 }
 
 // does this date fall in the begin and end date range?
-bool is_in_range(const bool type,
-                 const uint8_t begin_hrs,
-                 const uint8_t begin_mins,
-                 const uint8_t end_hrs,
-                 const uint8_t end_mins,
-                 const uint8_t dow,
-                 const uint8_t begin_week,
-                 const uint8_t begin_month,
-                 const uint8_t begin_day_dow,
-                 const uint8_t end_week,
-                 const uint8_t end_month,
-                 const uint8_t end_day_dow,
-                 const uint64_t current_time,
-                 const date::time_zone* time_zone) {
+bool is_conditional_active(const bool type,
+                           const uint8_t begin_hrs,
+                           const uint8_t begin_mins,
+                           const uint8_t end_hrs,
+                           const uint8_t end_mins,
+                           const uint8_t dow,
+                           const uint8_t begin_week,
+                           const uint8_t begin_month,
+                           const uint8_t begin_day_dow,
+                           const uint8_t end_week,
+                           const uint8_t end_month,
+                           const uint8_t end_day_dow,
+                           const uint64_t current_time,
+                           const date::time_zone* time_zone) {
 
   if (!time_zone)
     return false;
@@ -420,6 +420,7 @@ bool is_in_range(const bool type,
       b_td = std::chrono::hours(begin_hrs) + std::chrono::minutes(begin_mins);
       e_td = std::chrono::hours(end_hrs) + std::chrono::minutes(end_mins);
     }
+
     auto b_in_local_time = date::make_zoned(time_zone, date::local_days(begin_date));
     auto local_dt = date::make_zoned(time_zone, date::local_days(d));
     auto e_in_local_time = date::make_zoned(time_zone, date::local_days(end_date));

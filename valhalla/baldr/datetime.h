@@ -133,7 +133,7 @@ std::string
 get_duration(const std::string& date_time, const uint32_t seconds, const date::time_zone* tz);
 
 /**
- * Checks if a date is in range within a begin and end range.
+ * Checks if a date is restricted within a begin and end range.
  * @param   type          type of restriction kYMD or kNthDow
  * @param   begin_hrs     begin hours
  * @param   begin_mins    begin minutes
@@ -152,20 +152,20 @@ get_duration(const std::string& date_time, const uint32_t seconds, const date::t
  * @param   time_zone     timezone for the date_time
  * @return true or false
  */
-bool is_in_range(const bool type,
-                 const uint8_t begin_hrs,
-                 const uint8_t begin_mins,
-                 const uint8_t end_hrs,
-                 const uint8_t end_mins,
-                 const uint8_t dow,
-                 const uint8_t begin_week,
-                 const uint8_t begin_month,
-                 const uint8_t begin_day_dow,
-                 const uint8_t end_week,
-                 const uint8_t end_month,
-                 const uint8_t end_day_dow,
-                 const uint64_t current_time,
-                 const date::time_zone* time_zone);
+bool is_conditional_active(const bool type,
+                           const uint8_t begin_hrs,
+                           const uint8_t begin_mins,
+                           const uint8_t end_hrs,
+                           const uint8_t end_mins,
+                           const uint8_t dow,
+                           const uint8_t begin_week,
+                           const uint8_t begin_month,
+                           const uint8_t begin_day_dow,
+                           const uint8_t end_week,
+                           const uint8_t end_month,
+                           const uint8_t end_day_dow,
+                           const uint64_t current_time,
+                           const date::time_zone* time_zone);
 
 /**
  * Gets the second of the week in local time from an epoch time and timezone
