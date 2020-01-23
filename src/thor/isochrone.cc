@@ -236,7 +236,7 @@ Isochrone::Compute(google::protobuf::RepeatedPtrField<valhalla::Location>& origi
   // Initialize and create the isotile
   max_seconds_ = max_minutes * 60;
   ConstructIsoTile(false, max_minutes, origin_locations);
-  uint32_t n = 0;
+  uint32_t n = 0; // TODO What is/was this used for
 
   Dijkstras::Compute(origin_locations, graphreader, mode_costing, mode);
 
@@ -255,57 +255,9 @@ Isochrone::ComputeReverse(google::protobuf::RepeatedPtrField<valhalla::Location>
   max_seconds_ = max_minutes * 60;
   ConstructIsoTile(false, max_minutes, dest_locations);
 
-  // Set the mode and costing
-  mode_ = mode;
-  costing_ = mode_costing[static_cast<uint32_t>(mode_)];
-  access_mode_ = costing_->access_mode();
+  Dijkstras::ComputeReverse(dest_locations, graphreader, mode_costing, mode);
 
-  // Prepare for graph traversal
-  Initialize(bdedgelabels_, costing_->UnitSize());
-  SetDestinationLocations(graphreader, dest_locations, costing_);
-
-  // Check if date_time is set on the destination location. Set the seconds_of_week if it is set
-  uint64_t start_time;
-  uint32_t start_seconds_of_week;
-  auto node_id = bdedgelabels_.empty() ? GraphId{} : bdedgelabels_[0].endnode();
-  std::tie(start_time, start_seconds_of_week) = SetTime(dest_locations, node_id, graphreader);
-
-  // Compute the isotile
-  uint32_t n = 0;
-  while (true) {
-    // Get next element from adjacency list. Check that it is valid. An
-    // invalid label indicates there are no edges that can be expanded.
-    uint32_t predindex = adjacencylist_->pop();
-    if (predindex == kInvalidLabel) {
-      return isotile_;
-    }
-
-    // Copy the EdgeLabel for use in costing and settle the edge.
-    BDEdgeLabel pred = bdedgelabels_[predindex];
-    edgestatus_.Update(pred.edgeid(), EdgeSet::kPermanent);
-
-    // Get the opposing predecessor directed edge. Need to make sure we get
-    // the correct one if a transition occurred
-    const DirectedEdge* opp_pred_edge =
-        graphreader.GetGraphTile(pred.opp_edgeid())->directededge(pred.opp_edgeid());
-
-    // Update local time and seconds from beginning of the week
-    uint64_t localtime = start_time + static_cast<uint32_t>(pred.cost().secs);
-    int32_t seconds_of_week = DateTime::normalize_seconds_of_week(
-        start_seconds_of_week - static_cast<uint32_t>(pred.cost().secs));
-
-    // Expand from the end node in forward direction.
-    ExpandReverse(graphreader, pred.endnode(), pred, predindex, opp_pred_edge, false, localtime,
-                  seconds_of_week);
-    n++;
-
-    // Return after the time interval has been met
-    if (pred.cost().secs > max_seconds_ || pred.cost().cost > max_seconds_ * 4) {
-      LOG_DEBUG("Exceed time interval: n = " + std::to_string(n));
-      return isotile_;
-    }
-  }
-  return isotile_; // Should never get here
+  return isotile_;
 }
 
 // Expand from a node using multi-modal algorithm.
