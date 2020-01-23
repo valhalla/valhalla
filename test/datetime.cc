@@ -195,10 +195,11 @@ void TryIsRestricted(const TimeDomain td, const std::string& date, const bool ex
 
   auto tz = DateTime::get_tz_db().from_index(DateTime::get_tz_db().to_index("America/New_York"));
 
-  if (DateTime::is_restricted(td.type(), td.begin_hrs(), td.begin_mins(), td.end_hrs(), td.end_mins(),
-                              td.dow(), td.begin_week(), td.begin_month(), td.begin_day_dow(),
-                              td.end_week(), td.end_month(), td.end_day_dow(),
-                              DateTime::seconds_since_epoch(date, tz), tz) != expected_value) {
+  if (DateTime::is_conditional_active(td.type(), td.begin_hrs(), td.begin_mins(), td.end_hrs(),
+                                      td.end_mins(), td.dow(), td.begin_week(), td.begin_month(),
+                                      td.begin_day_dow(), td.end_week(), td.end_month(),
+                                      td.end_day_dow(), DateTime::seconds_since_epoch(date, tz),
+                                      tz) != expected_value) {
 
     throw std::runtime_error("Is Restricted " + date +
                              " test failed.  Expected: " + std::to_string(expected_value));
