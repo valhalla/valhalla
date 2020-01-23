@@ -1237,7 +1237,6 @@ void test_timed_conditional_restriction_2() {
   }
 }
 
-
 } // anonymous namespace
 
 int main() {
