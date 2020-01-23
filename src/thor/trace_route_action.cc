@@ -462,10 +462,7 @@ thor_worker_t::map_match(Api& request) {
         uint64_t route_index = request.trip().routes_size();
         auto* route = request.mutable_trip()->mutable_routes()->Add();
         // first we find where this leg is going to begin
-        while (origin_match_result != match_results.end() &&
-               origin_match_result->edgeid != std::get<0>(edge_group)->edgeid) {
-          ++origin_match_result;
-        }
+        origin_match_result = std::get<2>(edge_group);
         if (origin_match_result == match_results.cend()) {
           break;
         }
@@ -478,7 +475,8 @@ thor_worker_t::map_match(Api& request) {
           // then we find where each leg is going to end by finding the
           // first valid destination matched points after origin matched points
           for (auto destination_match_result = origin_match_result + 1;
-               destination_match_result != match_results.cend(); ++destination_match_result) {
+               destination_match_result != std::next(std::get<3>(edge_group));
+               ++destination_match_result) {
             // skip input location points that are not on the match results edge
             if (path_edge_itr->edgeid != destination_match_result->edgeid) {
               continue;
