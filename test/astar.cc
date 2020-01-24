@@ -1162,7 +1162,7 @@ void test_timed_access_restriction_1() {
   const auto& legs = response.trip().routes(0).legs();
   const auto& directions = response.directions().routes(0).legs(0);
   const auto& maneuvers_size = directions.maneuver_size();
-  if (maneuvers_size > 3) {
+  if (maneuvers_size == 3) {
     throw std::logic_error("This route should turn L onto Delancey St. because of restriction. ");
   }
 }
@@ -1172,7 +1172,7 @@ void test_timed_access_restriction_2() {
   const auto& legs = response.trip().routes(0).legs();
   const auto& directions = response.directions().routes(0).legs(0);
   const auto& maneuvers_size = directions.maneuver_size();
-  if (maneuvers_size > 3) {
+  if (maneuvers_size == 3) {
     throw std::logic_error("This route should turn L onto Delancey St. because of restriction. ");
   }
 }
@@ -1256,8 +1256,8 @@ void test_timed_conditional_restriction_1() {
   const auto& legs = response.trip().routes(0).legs();
   const auto& directions = response.directions().routes(0).legs(0);
   const auto& maneuvers_size = directions.maneuver_size();
-  if (maneuvers_size > 3) {
-    throw std::logic_error("This route should turn L onto Dickinson Ave.");
+  if (maneuvers_size == 3) {
+    throw std::logic_error("This route should turn L onto Dickinson Ave." + std::to_string(maneuvers_size));
   }
 }
 
@@ -1266,8 +1266,8 @@ void test_timed_conditional_restriction_2() {
   const auto& legs = response.trip().routes(0).legs();
   const auto& directions = response.directions().routes(0).legs(0);
   const auto& maneuvers_size = directions.maneuver_size();
-  if (maneuvers_size > 3) {
-    throw std::logic_error("This route should turn L onto Dickinson Ave.");
+  if (maneuvers_size == 3) {
+    throw std::logic_error("This route should turn L onto Dickinson Ave." + std::to_string(maneuvers_size));
   }
 }
 
