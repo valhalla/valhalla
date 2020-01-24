@@ -48,14 +48,8 @@ enum class RouteCallbackRecommendedAction {
  */
 class Dijkstras {
 public:
-  /**
-   * Constructor.
-   */
   Dijkstras();
 
-  /**
-   * Destructor
-   */
   virtual ~Dijkstras();
 
   /**
@@ -145,8 +139,9 @@ protected:
   EdgeStatus edgestatus_;
 
   /**
-   * Initialize prior to computing the Dijkstrass. Creates adjacency list,
-   * edgestatus support, and reserves edgelabels.
+   * Initialization prior to computing the graph expansion
+   *
+   * Creates adjacency list, edgestatus support, and reserves edgelabels.
    * @param bucketsize  Adjacency list bucket size.
    */
   template <typename label_container_t>
@@ -216,14 +211,14 @@ protected:
    * @param tc Transit costing.
    * @param mode_costing Array of all costing models.
    */
-  void ExpandForwardMM(baldr::GraphReader& graphreader,
-                       const baldr::GraphId& node,
-                       const sif::MMEdgeLabel& pred,
-                       const uint32_t pred_idx,
-                       const bool from_transition,
-                       const std::shared_ptr<sif::DynamicCost>& pc,
-                       const std::shared_ptr<sif::DynamicCost>& tc,
-                       const std::shared_ptr<sif::DynamicCost>* mode_costing);
+  void ExpandForwardMultiModal(baldr::GraphReader& graphreader,
+                               const baldr::GraphId& node,
+                               const sif::MMEdgeLabel& pred,
+                               const uint32_t pred_idx,
+                               const bool from_transition,
+                               const std::shared_ptr<sif::DynamicCost>& pc,
+                               const std::shared_ptr<sif::DynamicCost>& tc,
+                               const std::shared_ptr<sif::DynamicCost>* mode_costing);
 
   /**
    * Add edge(s) at each origin location to the adjacency list.
@@ -241,9 +236,10 @@ protected:
    * @param  origin_locations  Location information for origins.
    * @param  costing           Dynamic costing.
    */
-  void SetOriginLocationsMM(baldr::GraphReader& graphreader,
-                            google::protobuf::RepeatedPtrField<valhalla::Location>& origin_locations,
-                            const std::shared_ptr<sif::DynamicCost>& costing);
+  void SetOriginLocationsMultiModal(
+      baldr::GraphReader& graphreader,
+      google::protobuf::RepeatedPtrField<valhalla::Location>& origin_locations,
+      const std::shared_ptr<sif::DynamicCost>& costing);
 
   /**
    * Add edge(s) at each destination location to the adjacency list.

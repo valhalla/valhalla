@@ -479,14 +479,14 @@ void Dijkstras::ComputeReverse(google::protobuf::RepeatedPtrField<valhalla::Loca
 }
 
 // Expand from a node in forward direction using multimodal.
-void Dijkstras::ExpandForwardMM(GraphReader& graphreader,
-                                const GraphId& node,
-                                const MMEdgeLabel& pred,
-                                const uint32_t pred_idx,
-                                const bool from_transition,
-                                const std::shared_ptr<DynamicCost>& pc,
-                                const std::shared_ptr<DynamicCost>& tc,
-                                const std::shared_ptr<DynamicCost>* mode_costing) {
+void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
+                                        const GraphId& node,
+                                        const MMEdgeLabel& pred,
+                                        const uint32_t pred_idx,
+                                        const bool from_transition,
+                                        const std::shared_ptr<DynamicCost>& pc,
+                                        const std::shared_ptr<DynamicCost>& tc,
+                                        const std::shared_ptr<DynamicCost>* mode_costing) {
   // Get the tile and the node info. Skip if tile is null (can happen
   // with regional data sets) or if no access at the node.
   const GraphTile* tile = graphreader.GetGraphTile(node);
@@ -749,7 +749,8 @@ void Dijkstras::ExpandForwardMM(GraphReader& graphreader,
   if (!from_transition && nodeinfo->transition_count() > 0) {
     const NodeTransition* trans = tile->transition(nodeinfo->transition_index());
     for (uint32_t i = 0; i < nodeinfo->transition_count(); ++i, ++trans) {
-      ExpandForwardMM(graphreader, trans->endnode(), pred, pred_idx, true, pc, tc, mode_costing);
+      ExpandForwardMultiModal(graphreader, trans->endnode(), pred, pred_idx, true, pc, tc,
+                              mode_costing);
     }
   }
 }
@@ -776,7 +777,8 @@ void Dijkstras::ComputeMultiModal(
 
   // Prepare for graph traversal
   Initialize(mmedgelabels_, mode_costing[static_cast<uint8_t>(mode_)]->UnitSize());
-  SetOriginLocationsMM(graphreader, origin_locations, mode_costing[static_cast<uint8_t>(mode_)]);
+  SetOriginLocationsMultiModal(graphreader, origin_locations,
+                               mode_costing[static_cast<uint8_t>(mode_)]);
 
   // For now the date_time must be set on the origin.
   if (!origin_locations.Get(0).has_date_time()) {
@@ -827,7 +829,8 @@ void Dijkstras::ComputeMultiModal(
     }
 
     // Expand from the end node of the predecessor edge.
-    ExpandForwardMM(graphreader, pred.endnode(), pred, predindex, false, pc, tc, mode_costing);
+    ExpandForwardMultiModal(graphreader, pred.endnode(), pred, predindex, false, pc, tc,
+                            mode_costing);
   }
 }
 
@@ -968,7 +971,7 @@ void Dijkstras::SetDestinationLocations(
 }
 
 // Add edge(s) at each origin to the adjacency list
-void Dijkstras::SetOriginLocationsMM(
+void Dijkstras::SetOriginLocationsMultiModal(
     GraphReader& graphreader,
     google::protobuf::RepeatedPtrField<valhalla::Location>& origin_locations,
     const std::shared_ptr<DynamicCost>& costing) {
