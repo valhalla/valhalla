@@ -45,7 +45,15 @@ void AccessRestriction::set_value(const uint64_t v) {
 
 // operator < - for sorting. Sort by route Id.
 bool AccessRestriction::operator<(const AccessRestriction& other) const {
-  return edgeindex() < other.edgeindex();
+  if (edgeindex() == other.edgeindex()) {
+    if (modes() == other.modes()) {
+      return value() < other.value();
+    } else {
+      return modes() < other.modes();
+    }
+  } else {
+    return edgeindex() < other.edgeindex();
+  }
 }
 
 } // namespace baldr
