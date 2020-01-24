@@ -1207,7 +1207,8 @@ Api timed_conditional_restriction_nh(std::string mode, std::string datetime) {
       R"({
             "locations":[{"lat":42.79615642306863,"lon":-71.43550157459686},{"lat":42.79873856769978,"lon":-71.43146753223846}],
             "costing":")" +
-      mode + R"(","costing_options":{"truck":{"height":"4.11","width":"2.6","length":"21.64","weight":"21.77","axle_load":"9.07","hazmat":false}},
+      mode +
+      R"(","costing_options":{"truck":{"height":"4.11","width":"2.6","length":"21.64","weight":"21.77","axle_load":"9.07","hazmat":false}},
               "date_time":{
                 "type":1,
                 "value":")" +
@@ -1257,7 +1258,8 @@ void test_timed_conditional_restriction_1() {
   const auto& directions = response.directions().routes(0).legs(0);
   const auto& maneuvers_size = directions.maneuver_size();
   if (maneuvers_size == 3) {
-    throw std::logic_error("This route should turn L onto Dickinson Ave." + std::to_string(maneuvers_size));
+    throw std::logic_error("This route should turn L onto Dickinson Ave." +
+                           std::to_string(maneuvers_size));
   }
 }
 
@@ -1267,29 +1269,29 @@ void test_timed_conditional_restriction_2() {
   const auto& directions = response.directions().routes(0).legs(0);
   const auto& maneuvers_size = directions.maneuver_size();
   if (maneuvers_size == 3) {
-    throw std::logic_error("This route should turn L onto Dickinson Ave." + std::to_string(maneuvers_size));
+    throw std::logic_error("This route should turn L onto Dickinson Ave." +
+                           std::to_string(maneuvers_size));
   }
 }
 
 void test_timed_conditional_restriction_3() {
   bool found_route = false;
-    try {
-      auto response = timed_conditional_restriction_nh("truck", "2018-05-02T20:00");
-      found_route = true;
-      const auto& leg = response.directions().routes(0).legs(0);
-      LOG_INFO("Route that wasn't supposed to happen: " + leg.shape());
-    } catch (const std::exception& e) {
-      if (std::string(e.what()) != "No path could be found for input") {
-        throw std::logic_error("Was expecting 'No path could be found for input'");
-      } else {
-        return;
-      }
+  try {
+    auto response = timed_conditional_restriction_nh("truck", "2018-05-02T20:00");
+    found_route = true;
+    const auto& leg = response.directions().routes(0).legs(0);
+    LOG_INFO("Route that wasn't supposed to happen: " + leg.shape());
+  } catch (const std::exception& e) {
+    if (std::string(e.what()) != "No path could be found for input") {
+      throw std::logic_error("Was expecting 'No path could be found for input'");
+    } else {
+      return;
     }
-    if (found_route) {
-      throw std::logic_error("Found a route when no route was expected");
-    }
+  }
+  if (found_route) {
+    throw std::logic_error("Found a route when no route was expected");
+  }
 }
-
 
 } // anonymous namespace
 
