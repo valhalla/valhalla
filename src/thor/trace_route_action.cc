@@ -470,10 +470,10 @@ thor_worker_t::map_match(Api& request) {
         int last_edge_index = 0;
         int way_point_index = 0;
         for (auto path_edge_itr = std::get<0>(edge_group);
-             path_edge_itr != std::next(std::get<1>(edge_group)); ++path_edge_itr) {
+             path_edge_itr < std::next(std::get<1>(edge_group)); ++path_edge_itr) {
           // then we find where each leg is going to end by finding the
           // first valid destination matched points after origin matched points
-          for (auto destination_match_result = origin_match_result + 1;
+          for (auto destination_match_result = std::next(origin_match_result);
                destination_match_result != std::next(std::get<3>(edge_group));
                ++destination_match_result) {
 
@@ -482,7 +482,7 @@ thor_worker_t::map_match(Api& request) {
               continue;
             }
 
-            // we also want to skip edges that are not matching the valid matched locations
+            // we want to skip edges that are not matching the valid matched locations
             while (path_edge_itr != std::next(std::get<1>(edge_group)) &&
                    path_edge_itr->edgeid != destination_match_result->edgeid) {
               ++path_edge_itr;
@@ -490,6 +490,33 @@ thor_worker_t::map_match(Api& request) {
 
             if (path_edge_itr == std::next(std::get<1>(edge_group))) {
               break;
+            }
+
+            // If both origin location and destination location are on the same edge, when
+            // origin's distance along is greater than destination's distance along, it indicates
+            // that there should be other edges in between them (loop occurs). We should put the
+            // path edge iter onto the correct edge (jumping over all the edges in the loop).
+            // see below:
+            //                      origin distance_along
+            //                                 |
+            //      X---------------------------------------------►X
+            //      ▲                 |                            |
+            //      |  destination distance along                  |
+            //      |                                              |
+            //      |                                              ▼
+            //      X◄---------------------------------------------X
+            //                        edge loop
+
+            if (origin_match_result->edgeid == destination_match_result->edgeid &&
+                origin_match_result->distance_along > destination_match_result->distance_along) {
+              path_edge_itr =
+                  std::find_if(std::next(path_edge_itr), std::next(std::get<1>(edge_group)),
+                               [&destination_match_result](const PathInfo& edge) {
+                                 return edge.edgeid == destination_match_result->edgeid;
+                               });
+              if (path_edge_itr == std::next(std::get<1>(edge_group))) {
+                break;
+              }
             }
 
             // we only build legs on 3 types of locations:
