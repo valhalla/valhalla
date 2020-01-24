@@ -98,7 +98,7 @@ add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/ny_ar_tiles/2/000/752/10
   COMMAND ${CMAKE_BINARY_DIR}/valhalla_build_tiles
       --inline-config '{"mjolnir":{"tile_dir":"test/data/ny_ar_tiles","hierarchy":true,"shortcuts":true,"concurrency":4,"logging":{"type":""}}}'
       ${VALHALLA_SOURCE_DIR}/test/data/ny-access-restriction.osm.pbf
-  COMMENT "Building New York Tiles..."
+  COMMENT "Building New York Access Restriction Tiles..."
   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
   DEPENDS valhalla_build_tiles ${VALHALLA_SOURCE_DIR}/test/data/ny-access-restriction.osm.pbf)
 add_custom_target(ny_ar_tiles DEPENDS ${CMAKE_BINARY_DIR}/test/data/ny_ar_tiles/2/000/752/104.gph)
@@ -107,11 +107,21 @@ add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/pa_ar_tiles/2/000/749/21
   COMMAND ${CMAKE_COMMAND} -E make_directory test/data/pa_ar_tiles/
   COMMAND ${CMAKE_BINARY_DIR}/valhalla_build_tiles
       --inline-config '{"mjolnir":{"tile_dir":"test/data/pa_ar_tiles","hierarchy":true,"shortcuts":true,"concurrency":4,"logging":{"type":""}}}'
-      ${VALHALLA_SOURCE_DIR}/test/data/harrisburg-access-restriction.osm.pbf
-  COMMENT "Building Harrisburg Tiles..."
+      ${VALHALLA_SOURCE_DIR}/test/data/pa-access-restriction.osm.pbf
+  COMMENT "Building PA Access Restriction Tiles..."
   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-  DEPENDS valhalla_build_tiles ${VALHALLA_SOURCE_DIR}/test/data/harrisburg-access-restriction.osm.pbf)
+  DEPENDS valhalla_build_tiles ${VALHALLA_SOURCE_DIR}/test/data/pa-access-restriction.osm.pbf)
 add_custom_target(pa_ar_tiles DEPENDS ${CMAKE_BINARY_DIR}/test/data/pa_ar_tiles/2/000/749/212.gph)
+
+add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/nh_ar_tiles/2/000/765/074.gph
+  COMMAND ${CMAKE_COMMAND} -E make_directory test/data/nh_ar_tiles/
+  COMMAND ${CMAKE_BINARY_DIR}/valhalla_build_tiles
+      --inline-config '{"mjolnir":{"tile_dir":"test/data/nh_ar_tiles","hierarchy":true,"shortcuts":true,"concurrency":4,"logging":{"type":""}}}'
+      ${VALHALLA_SOURCE_DIR}/test/data/nh-access-restriction.osm.pbf
+  COMMENT "Building New Hampshire Access Restriction Tiles..."
+  WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+  DEPENDS valhalla_build_tiles ${VALHALLA_SOURCE_DIR}/test/data/nh-access-restriction.osm.pbf)
+add_custom_target(nh_ar_tiles DEPENDS ${CMAKE_BINARY_DIR}/test/data/nh_ar_tiles/2/000/765/074.gph)
 
 
 file(GLOB locales "${VALHALLA_SOURCE_DIR}/locales/*.json")
@@ -177,7 +187,7 @@ if(ENABLE_DATA_TOOLS)
   add_dependencies(run-thor_worker utrecht_tiles)
   add_dependencies(run-recover_shortcut utrecht_tiles)
   add_dependencies(run-minbb utrecht_tiles)
-  add_dependencies(run-astar whitelion_tiles roma_tiles reversed_whitelion_tiles ny_ar_tiles pa_ar_tiles)
+  add_dependencies(run-astar whitelion_tiles roma_tiles reversed_whitelion_tiles ny_ar_tiles pa_ar_tiles nh_ar_tiles)
   if(ENABLE_HTTP)
     add_dependencies(run-http_tiles utrecht_tiles)
   endif()

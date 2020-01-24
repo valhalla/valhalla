@@ -421,6 +421,7 @@ bool is_conditional_active(const bool type,
       e_td = std::chrono::hours(end_hrs) + std::chrono::minutes(end_mins);
     }
 
+    // Time does not matter here; we are only dealing with dates.
     auto b_in_local_time = date::make_zoned(time_zone, date::local_days(begin_date));
     auto local_dt = date::make_zoned(time_zone, date::local_days(d));
     auto e_in_local_time = date::make_zoned(time_zone, date::local_days(end_date));
