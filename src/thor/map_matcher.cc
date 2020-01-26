@@ -193,7 +193,7 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
   for (const auto& edge_segment : edge_segments) {
     // Skip edges that are the same as the prior edge if they are not disconnected,
     // Note that, when the prior edge and current edge has the same edgeid and the current
-    // source is smaller than prior target, it indicates discontinuity see follow:
+    // source is smaller than prior target, it indicates discontinuity. see follow:
     //
     //                   current_source
     //    prior_scource          |    prior_target

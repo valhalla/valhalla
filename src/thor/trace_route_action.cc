@@ -449,7 +449,7 @@ thor_worker_t::map_match(Api& request) {
         }
         std::get<3>(edge_group) = std::prev(match_result_itr);
       }
-
+      
       // The following logic put break points (matches results) on edge candidates to form legs
       // logic assumes the both match results and edge candidates are topologically sorted in correct
       // order. Only the first location will be populated with corresponding input date_time
@@ -598,7 +598,7 @@ thor_worker_t::map_match(Api& request) {
 
             // we get the time up to the last edge before this end edge if any. we also remove
             // the turn cost at the begging of this edge if there is any
-            double trim_end = trivial_leg && begin_trimmed
+            double trim_end = leg_end == path_edges.cbegin()
                                   ? 0.0
                                   : std::prev(leg_end)->elapsed_time + leg_end->turn_cost;
 
