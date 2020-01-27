@@ -578,7 +578,6 @@ thor_worker_t::map_match(Api& request) {
             bool begin_trimmed = leg_begin == std::get<0>(edge_group);
             bool end_trimmed = leg_end == std::get<1>(edge_group);
             bool trivial_group = std::get<0>(edge_group) == std::get<1>(edge_group);
-            bool trivial_leg = leg_begin == leg_end;
 
             // we need to scale the elapsed time of the current edge to undo what FormPath did
             double begin_pct = begin_trimmed ? std::get<2>(edge_group)->distance_along : 0;
