@@ -449,7 +449,7 @@ thor_worker_t::map_match(Api& request) {
         }
         std::get<3>(edge_group) = std::prev(match_result_itr);
       }
-      
+
       // The following logic put break points (matches results) on edge candidates to form legs
       // logic assumes the both match results and edge candidates are topologically sorted in correct
       // order. Only the first location will be populated with corresponding input date_time
