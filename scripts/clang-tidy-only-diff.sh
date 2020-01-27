@@ -41,18 +41,24 @@ if [ ${#modified_filepaths[@]} = 0 ]; then
   exit 0
 fi
 
+readonly FIX_ERRORS="-fix -fix-errors"
+
+readonly num_jobs="${1:-$(nproc)}"
 # -m specifies that `parallel` should distribute the arguments evenly across the executing jobs.
 # -p Tells clang-tidy where to find the `compile_commands.json`.
 # `{}` specifies where `parallel` adds the command-line arguments.
 # `:::` separates the command `parallel` should execute from the arguments it should pass to the commands.
-parallel -m \
+parallel \
+  -m \
+  -j $num_jobs \
+  --halt-on-error now,fail=1 \
   ${CLANG_TIDY} \
   -p $tidy_dir \
   -header-filter "^$(pwd)/valhalla/[^/]+$" \
-  -fix \
+  ${FIX_ERRORS} \
   -format-style=file \
   {} ::: "${modified_filepaths[@]}" \
-    || true
+    || true  # TODO disable this erroring out
 
 if ! git diff --exit-code; then
   echo "Tidy introduced changes"
