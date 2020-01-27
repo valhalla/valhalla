@@ -57,10 +57,9 @@ parallel \
   -header-filter "^$(pwd)/valhalla/[^/]+$" \
   ${FIX_ERRORS} \
   -format-style=file \
-  {} ::: "${modified_filepaths[@]}" \
-    || true  # TODO disable this erroring out
+  {} ::: "${modified_filepaths[@]}"
 
 if ! git diff --exit-code; then
   echo "Tidy introduced changes"
-  #exit 1 # TODO Enable exit-code 1 on errors once we fix all the existing clang-tidy errors to prevent noisy PR's
+  exit 1
 fi

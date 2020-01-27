@@ -284,7 +284,7 @@ TEST(Tiles, test_random_linestring) {
   for (int i = 0; i < 500; ++i) {
     std::vector<Point2> linestring;
     linestring.reserve(100);
-for (int j = 0; j < 100; ++j)
+    for (int j = 0; j < 100; ++j)
       linestring.emplace_back(PointLL(distribution(generator), distribution(generator)));
     auto answer = t.Intersect(linestring);
     for (const auto& tile : answer)

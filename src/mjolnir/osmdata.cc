@@ -206,7 +206,7 @@ bool write_node_names(const std::string& filename, const UniqueNames& names) {
   std::vector<char> namebuf;
   for (uint32_t n = 0; n < name_count; ++n) {
     const auto& str = names.name(n + 1); // Add 1 since the first name is blank
-    lengths[n] = str.length() + 1;      // Add 1 for the null terminator
+    lengths[n] = str.length() + 1;       // Add 1 for the null terminator
 
     // Copy the string to the namebuf and add a terminator
     std::copy(str.c_str(), str.c_str() + str.length(), back_inserter(namebuf));
@@ -237,7 +237,7 @@ bool write_unique_names(const std::string& filename, const UniqueNames& names) {
   std::vector<char> namebuf;
   for (uint32_t n = 0; n < name_count; ++n) {
     const auto& str = names.name(n + 1); // Add 1 since the first name is blank
-    lengths[n] = str.length() + 1;      // Add 1 for the null terminator
+    lengths[n] = str.length() + 1;       // Add 1 for the null terminator
 
     // Copy the string to the namebuf and add a terminator
     std::copy(str.c_str(), str.c_str() + str.length(), back_inserter(namebuf));

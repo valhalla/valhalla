@@ -7960,15 +7960,8 @@ Maneuver CreateSignManeuver(DirectionsLeg_Maneuver_Type type,
 
 void TryFormRampStraightInstruction(NarrativeBuilderTest& nbt,
                                     Maneuver maneuver,
-<<<<<<< HEAD
                                     std::string expected) {
   EXPECT_EQ(nbt.FormRampStraightInstruction(maneuver), expected);
-=======
-                                    const std::string& expected) {
-  std::string instruction = nbt.FormRampStraightInstruction(maneuver);
-  if (instruction != expected)
-    throw std::runtime_error("Incorrect FormRampStraightInstruction");
->>>>>>> Runs clang-tidy on test
 }
 
 TEST(NarrativeBuilder, TestFormRampStraightInstruction) {
@@ -8044,16 +8037,8 @@ TEST(NarrativeBuilder, TestFormRampStraightInstruction) {
                                  "Stay straight to take the Gettysburg Pike ramp.");
 }
 
-<<<<<<< HEAD
 void TryFormRampRightInstruction(NarrativeBuilderTest& nbt, Maneuver maneuver, std::string expected) {
   EXPECT_EQ(nbt.FormRampInstruction(maneuver), expected);
-=======
-void TryFormRampRightInstruction(NarrativeBuilderTest& nbt, Maneuver maneuver, const std::string& expected) {
-  std::string instruction = nbt.FormRampInstruction(maneuver);
-  if (instruction != expected)
-    throw std::runtime_error("Incorrect FormRampRightInstruction | actual=" + instruction +
-                             " | expected=" + expected);
->>>>>>> Runs clang-tidy on test
 }
 
 TEST(NarrativeBuilder, TestFormRampRightInstruction) {
@@ -8226,15 +8211,8 @@ TEST(NarrativeBuilder, TestFormRampRightInstruction) {
                               "Take the Gettysburg Pike ramp.");
 }
 
-<<<<<<< HEAD
 void TryFormRampLeftInstruction(NarrativeBuilderTest& nbt, Maneuver maneuver, std::string expected) {
   EXPECT_EQ(nbt.FormRampInstruction(maneuver), expected);
-=======
-void TryFormRampLeftInstruction(NarrativeBuilderTest& nbt, Maneuver maneuver, const std::string& expected) {
-  std::string instruction = nbt.FormRampInstruction(maneuver);
-  if (instruction != expected)
-    throw std::runtime_error("Incorrect FormRampLeftInstruction");
->>>>>>> Runs clang-tidy on test
 }
 
 TEST(NarrativeBuilder, TestFormRampLeftInstruction) {
@@ -8407,16 +8385,8 @@ TEST(NarrativeBuilder, TestFormRampLeftInstruction) {
                              "Take the Gettysburg Pike ramp.");
 }
 
-<<<<<<< HEAD
 void TryFormExitRightInstruction(NarrativeBuilderTest& nbt, Maneuver maneuver, std::string expected) {
   EXPECT_EQ(nbt.FormExitInstruction(maneuver), expected);
-=======
-void TryFormExitRightInstruction(NarrativeBuilderTest& nbt, Maneuver maneuver, const std::string& expected) {
-  std::string instruction = nbt.FormExitInstruction(maneuver);
-  if (instruction != expected)
-    throw std::runtime_error("Incorrect FormExitRightInstruction | actual=" + instruction +
-                             " | expected=" + expected);
->>>>>>> Runs clang-tidy on test
 }
 
 TEST(NarrativeBuilder, TestFormExitRightInstruction) {
@@ -8636,16 +8606,8 @@ TEST(NarrativeBuilder, TestFormExitRightInstruction) {
       "Take the Gettysburg Pike exit onto US 15 toward Harrisburg/Gettysburg.");
 }
 
-<<<<<<< HEAD
 void TryFormExitLeftInstruction(NarrativeBuilderTest& nbt, Maneuver maneuver, std::string expected) {
   EXPECT_EQ(nbt.FormExitInstruction(maneuver), expected);
-=======
-void TryFormExitLeftInstruction(NarrativeBuilderTest& nbt, Maneuver maneuver, const std::string& expected) {
-  std::string instruction = nbt.FormExitInstruction(maneuver);
-  if (instruction != expected)
-    throw std::runtime_error("Incorrect FormExitLeftInstruction | actual=" + instruction +
-                             " | expected=" + expected);
->>>>>>> Runs clang-tidy on test
 }
 
 TEST(NarrativeBuilder, TestFormExitLeftInstruction) {
