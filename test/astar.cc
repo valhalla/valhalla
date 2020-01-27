@@ -1300,7 +1300,7 @@ TEST(Astar, TestBacktrackComplexRestrictionForwardDetourAfterRestriction) {
   }
 }
 
-Api timed_access_restriction_ny(std::string mode, std::string datetime) {
+Api timed_access_restriction_ny(const std::string& mode, const std::string& datetime) {
   // The restriction is <tag k="bicycle:conditional" v="no @ (Su 08:00-18:00)"/>
   // and <tag k="motor_vehicle:conditional" v="no @ (Su 08:00-18:00)"/>
   auto conf = get_conf("ny_ar_tiles");
@@ -1367,7 +1367,7 @@ TEST(Astar, test_timed_access_restriction_2) {
       << "This route should turn L onto Delancey St. because of restriction. ";
 }
 
-Api timed_conditional_restriction_pa(std::string mode, std::string datetime) {
+Api timed_conditional_restriction_pa(const std::string& mode, const std::string& datetime) {
   // The restriction is <tag k="restriction:conditional" v="no_right_turn @ (Mo-Fr 07:00-09:00)"/>
   auto conf = get_conf("pa_ar_tiles");
   route_tester tester(conf);
@@ -1387,7 +1387,7 @@ Api timed_conditional_restriction_pa(std::string mode, std::string datetime) {
   return tester.test(request);
 }
 
-Api timed_conditional_restriction_nh(std::string mode, std::string datetime) {
+Api timed_conditional_restriction_nh(const std::string& mode, const std::string& datetime) {
   // The restriction is <tag k="hgv:conditional" v="no @ (19:00-06:00)"/>
   auto conf = get_conf("nh_ar_tiles");
   route_tester tester(conf);

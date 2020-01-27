@@ -35,13 +35,13 @@ TEST(PointLL, test_constructor) {
   EXPECT_EQ(ll.y(), 2);
 }
 
-void test_along(const std::vector<PointLL> l, float d, float a) {
+void test_along(const std::vector<PointLL>& l, float d, float a) {
   auto r = PointLL::HeadingAlongPolyline(l, d);
   EXPECT_NEAR(r, a, 1.f) << "Invalid polyline begin heading was " + std::to_string(r) +
                                 " but should be " + std::to_string(a);
 }
 
-void test_end(const std::vector<PointLL> l, float d, float a) {
+void test_end(const std::vector<PointLL>& l, float d, float a) {
   auto r = PointLL::HeadingAtEndOfPolyline(l, d);
   EXPECT_NEAR(r, a, 1.f) << "Invalid polyline end heading was " + std::to_string(r) +
                                 " but should be " + std::to_string(a);
