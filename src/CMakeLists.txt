@@ -124,6 +124,9 @@ function(valhalla_module)
   set(libvalhalla_link_libraries "${libvalhalla_link_libraries};${external_module_depends}" CACHE INTERNAL "")
 endfunction()
 
+include_directories(${VALHALLA_SOURCE_DIR}/third_party/fmt/include)
+
+add_subdirectory(${VALHALLA_SOURCE_DIR}/third_party/fmt ${CMAKE_CURRENT_BINARY_DIR}/valhalla/fmt)
 add_subdirectory(../proto ${CMAKE_CURRENT_BINARY_DIR}/valhalla/proto)
 add_subdirectory(baldr)
 add_subdirectory(loki)
@@ -192,6 +195,7 @@ target_include_directories(valhalla
 
 target_link_libraries(valhalla
   PUBLIC
+    fmt::fmt-header-only
     ${libvalhalla_link_libraries}
   PRIVATE
     $<$<BOOL:${ENABLE_COVERAGE}>:gcov>

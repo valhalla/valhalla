@@ -2,5 +2,6 @@ coverage:
 
   ignore:
     - rapidjson/.*
+    - fmt/.*
 
 comment: off
