@@ -506,7 +506,6 @@ thor_worker_t::map_match(Api& request) {
             //      |                                              ▼
             //      X◄---------------------------------------------X
             //                        edge loop
-
             if (origin_match_result->edgeid == destination_match_result->edgeid &&
                 origin_match_result->distance_along > destination_match_result->distance_along) {
               path_edge_itr =
