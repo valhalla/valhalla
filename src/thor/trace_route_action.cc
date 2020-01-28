@@ -406,9 +406,14 @@ thor_worker_t::map_match(Api& request) {
       using edge_group_t =
           std::tuple<std::vector<PathInfo>::const_iterator, std::vector<PathInfo>::const_iterator,
                      std::vector<meili::MatchResult>::const_iterator,
-                     std::vector<meili::MatchResult>::const_iterator>;
+                     std::vector<meili::MatchResult>::const_iterator, bool>;
+
+      int idx = 0;
+      std::unordered_map<GraphId, int> edge_table;
+      GraphId edgeid = path_edges.empty() ? GraphId{} : path_edges.cbegin()->edgeid;
+      edge_table[edgeid] = ++idx;
       std::vector<edge_group_t> edge_groups{
-          edge_group_t{path_edges.cbegin(), path_edges.cbegin(), {}, {}}};
+          edge_group_t{path_edges.cbegin(), path_edges.cbegin(), {}, {}, false}};
       auto discontinuity_edges_iter = disconnected_edges.begin();
       for (auto path_edge_itr = std::next(path_edges.cbegin()); path_edge_itr != path_edges.cend();
            ++path_edge_itr) {
@@ -418,11 +423,21 @@ thor_worker_t::map_match(Api& request) {
             discontinuity_edges_iter->first == prev_path_edge_itr->edgeid &&
             discontinuity_edges_iter->second == path_edge_itr->edgeid) {
           // start a new one
-          edge_groups.emplace_back(edge_group_t{path_edge_itr, path_edge_itr, {}, {}});
+          edge_groups.emplace_back(edge_group_t{path_edge_itr, path_edge_itr, {}, {}, false});
+          idx = 1;
+          edge_table.clear();
           ++discontinuity_edges_iter;
         }
         // remember where the last one ended
         std::get<1>(edge_groups.back()) = path_edge_itr;
+        // also remember whether there is a loop on the last one (gap in loop idx)
+        int loop_idx = edge_table[path_edge_itr->edgeid];
+        if (loop_idx > 0 && loop_idx != idx - 1) {
+          std::get<4>(edge_groups.back()) = true;
+        } else {
+          std::get<4>(edge_groups.back()) = false;
+          edge_table[path_edge_itr->edgeid] = ++idx;
+        }
       }
 
       // here we mark the original shape points that just after and just before the
@@ -441,27 +456,26 @@ thor_worker_t::map_match(Api& request) {
         // TODO:: handle case when both discontinuity and loop on last edge
         // we know the discontinuity happens on this edge so we need to
         // find the first match result on this edge
-        match_result_itr = std::get<1>(edge_group) == path_edges.end() - 1
-                               ? match_results.cend()
-                               : std::find_if(std::next(match_result_itr), match_results.cend(),
-                                              [last_edge](const MatchResult& result) {
-                                                return result.edgeid == last_edge->edgeid;
-                                              });
+        match_result_itr = std::find_if(std::next(match_result_itr), match_results.cend(),
+                                        [last_edge](const MatchResult& result) {
+                                          return result.edgeid == last_edge->edgeid;
+                                        });
 
+        bool has_loop_on_last_edge = std::get<4>(edge_group);
         // find the last match result on this edge before discontinuity
         while (match_result_itr != match_results.end() &&
                match_result_itr->edgeid == last_edge->edgeid) {
           ++match_result_itr;
-          auto prev_result_iter = std::prev(match_result_itr);
-          // this indicates discontinuity on the same edge see below:
+          // this indicates discontinuity on the same edge (if there is no loop) see below:
           //
           //     curr distance_along    prev distance_along
           //            |                       |
           //            ▼                       ▼
           //  X---------------------------------------------> 100%
           //
-          if (prev_result_iter->edgeid == last_edge->edgeid &&
-              match_result_itr->distance_along < prev_result_iter->distance_along) {
+          if (std::prev(match_result_itr)->edgeid == last_edge->edgeid &&
+              match_result_itr->distance_along < std::prev(match_result_itr)->distance_along &&
+              !has_loop_on_last_edge) {
             break;
           }
         }
