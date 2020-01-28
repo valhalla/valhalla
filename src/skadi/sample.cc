@@ -13,7 +13,7 @@
 #include <boost/optional.hpp>
 
 #include "baldr/compression_utils.h"
-#include "filesystem.h"
+#include "baldr/filesystem.h"
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
 

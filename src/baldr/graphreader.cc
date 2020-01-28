@@ -10,7 +10,7 @@
 #include "midgard/sequence.h"
 
 #include "baldr/connectivity_map.h"
-#include "filesystem.h"
+#include "baldr/filesystem.h"
 
 using namespace valhalla::midgard;
 

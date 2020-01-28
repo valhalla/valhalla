@@ -2,8 +2,8 @@
 
 #include "baldr/datetime.h"
 #include "baldr/edgeinfo.h"
+#include "baldr/filesystem.h"
 #include "baldr/tilehierarchy.h"
-#include "filesystem.h"
 #include "midgard/logging.h"
 #include <algorithm>
 #include <boost/filesystem/operations.hpp>

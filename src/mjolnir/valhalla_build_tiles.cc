@@ -13,7 +13,7 @@ using namespace valhalla::mjolnir;
 #include <boost/property_tree/ptree.hpp>
 #include <iostream>
 
-#include "filesystem.h"
+#include "baldr/filesystem.h"
 #include "midgard/logging.h"
 #include "midgard/util.h"
 

@@ -1,7 +1,7 @@
+#include "baldr/filesystem.h"
 #include "baldr/graphreader.h"
 #include "baldr/predictedspeeds.h"
 #include "baldr/rapidjson_utils.h"
-#include "filesystem.h"
 #include "midgard/logging.h"
 #include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/util.h"

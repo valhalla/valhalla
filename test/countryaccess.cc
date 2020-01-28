@@ -13,11 +13,11 @@
 #include <fstream>
 
 #include "baldr/directededge.h"
+#include "baldr/filesystem.h"
 #include "baldr/graphconstants.h"
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
 #include "baldr/tilehierarchy.h"
-#include "filesystem.h"
 
 #if !defined(VALHALLA_SOURCE_DIR)
 #define VALHALLA_SOURCE_DIR

@@ -1,9 +1,9 @@
 #include "test.h"
 
+#include "baldr/filesystem.h"
 #include "baldr/graphtile.h"
 #include "baldr/rapidjson_utils.h"
 #include "tyr/actor.h"
-#include "valhalla/filesystem.h"
 #include "valhalla/tile_server.h"
 
 #include <prime_server/prime_server.hpp>
