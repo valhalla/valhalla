@@ -447,6 +447,8 @@ thor_worker_t::map_match(Api& request) {
         auto first_edge = std::get<0>(edge_group);
         auto last_edge = std::get<1>(edge_group);
 
+        // we know the discontinuity happens on this edge so we need to
+        // find the first match result on this edge
         match_result_itr = std::find_if(match_result_itr, match_results.cend(),
                                         [first_edge](const MatchResult& result) {
                                           return result.edgeid == first_edge->edgeid;
