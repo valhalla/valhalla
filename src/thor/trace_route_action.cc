@@ -429,26 +429,28 @@ thor_worker_t::map_match(Api& request) {
       // discontinuities so that in the path they get "upgraded" to break points
       auto match_result_itr = match_results.cbegin();
       for (auto& edge_group : edge_groups) {
-        // we know the discontinuity happens on this edge so we just need to
-        // find the first match result on this edge
-        auto first_edge_id = std::get<0>(edge_group)->edgeid;
-        while (match_result_itr != match_results.cend() &&
-               match_result_itr->edgeid != first_edge_id) {
-          ++match_result_itr;
-        }
+        auto first_edge = std::get<0>(edge_group);
+        auto last_edge = std::get<1>(edge_group);
+
+        match_result_itr = std::find_if(match_result_itr, match_results.cend(),
+                                        [first_edge](const MatchResult& result) {
+                                          return result.edgeid == first_edge->edgeid;
+                                        });
         std::get<2>(edge_group) = match_result_itr;
 
-        // we know the discontinuity happens on this edge so we just need to
-        // find the last match result on this edge
-        auto last_edge_id = std::get<1>(edge_group)->edgeid;
-        // we know the discontinuity happens on this edge so we just need to
+        // TODO:: handle case when both discontinuity and loop on last edge
+        // we know the discontinuity happens on this edge so we need to
         // find the first match result on this edge
-        match_result_itr = std::find_if(match_result_itr, match_results.cend(),
-                                        [last_edge_id](const MatchResult& result) {
-                                          return result.edgeid == last_edge_id;
-                                        });
-        // find the last match result on this edge
-        while (match_result_itr != match_results.end() && match_result_itr->edgeid == last_edge_id) {
+        match_result_itr = std::get<1>(edge_group) == path_edges.end() - 1
+                               ? match_results.cend()
+                               : std::find_if(std::next(match_result_itr), match_results.cend(),
+                                              [last_edge](const MatchResult& result) {
+                                                return result.edgeid == last_edge->edgeid;
+                                              });
+
+        // find the last match result on this edge before discontinuity
+        while (match_result_itr != match_results.end() &&
+               match_result_itr->edgeid == last_edge->edgeid) {
           ++match_result_itr;
           auto prev_result_iter = std::prev(match_result_itr);
           // this indicates discontinuity on the same edge see below:
@@ -458,12 +460,34 @@ thor_worker_t::map_match(Api& request) {
           //            ▼                       ▼
           //  X---------------------------------------------> 100%
           //
-          if (prev_result_iter->edgeid == last_edge_id &&
+          if (prev_result_iter->edgeid == last_edge->edgeid &&
               match_result_itr->distance_along < prev_result_iter->distance_along) {
             break;
           }
         }
         std::get<3>(edge_group) = std::prev(match_result_itr);
+      }
+
+      int idx = 0;
+      std::cout << "edges are :" << std::endl;
+      for (const auto& edge : path_edges) {
+        std::cout << idx++ << " " << reader->encoded_edge_shape(edge.edgeid) << std::endl;
+      }
+
+      idx = 0;
+      std::cout << "locations are :" << std::endl;
+      for (const auto& loc : match_results) {
+        std::cout << idx++ << "  " << reader->encoded_edge_shape(loc.edgeid) << std::endl;
+      }
+
+      std::cout << "edge group size is: " << edge_groups.size() << std::endl;
+      for (const auto& edge_group : edge_groups) {
+        std::cout << "start edge: " << std::distance(path_edges.cbegin(), std::get<0>(edge_group))
+                  << " ,  end edge: " << std::distance(path_edges.cbegin(), std::get<1>(edge_group))
+                  << std::endl;
+        std::cout << "start loc: " << std::distance(match_results.cbegin(), std::get<2>(edge_group))
+                  << " ,  end loc: " << std::distance(match_results.cbegin(), std::get<3>(edge_group))
+                  << std::endl;
       }
 
       // The following logic put break points (matches results) on edge candidates to form legs
