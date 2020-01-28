@@ -441,11 +441,27 @@ thor_worker_t::map_match(Api& request) {
         // we know the discontinuity happens on this edge so we just need to
         // find the last match result on this edge
         auto last_edge_id = std::get<1>(edge_group)->edgeid;
-        while (match_result_itr != match_results.cend() && match_result_itr->edgeid != last_edge_id) {
+        // we know the discontinuity happens on this edge so we just need to
+        // find the first match result on this edge
+        match_result_itr = std::find_if(match_result_itr, match_results.cend(),
+                                        [last_edge_id](const MatchResult& result) {
+                                          return result.edgeid == last_edge_id;
+                                        });
+        // find the last match result on this edge
+        while (match_result_itr != match_results.end() && match_result_itr->edgeid == last_edge_id) {
           ++match_result_itr;
-        }
-        while (match_result_itr != match_results.cend() && match_result_itr->edgeid == last_edge_id) {
-          ++match_result_itr;
+          auto prev_result_iter = std::prev(match_result_itr);
+          // this indicates discontinuity on the same edge see below:
+          //
+          //     curr distance_along    prev distance_along
+          //            |                       |
+          //            ▼                       ▼
+          //  X---------------------------------------------> 100%
+          //
+          if (prev_result_iter->edgeid == last_edge_id &&
+              match_result_itr->distance_along < prev_result_iter->distance_along) {
+            break;
+          }
         }
         std::get<3>(edge_group) = std::prev(match_result_itr);
       }
@@ -476,7 +492,6 @@ thor_worker_t::map_match(Api& request) {
           for (auto destination_match_result = std::next(origin_match_result);
                destination_match_result != std::next(std::get<3>(edge_group));
                ++destination_match_result) {
-
             // skip input location points that are not valid
             if (!destination_match_result->edgeid.Is_Valid()) {
               continue;
@@ -502,7 +517,6 @@ thor_worker_t::map_match(Api& request) {
             //      X---------------------------------------------►X
             //      ▲                 |                            |
             //      |  destination distance along                  |
-            //      |                                              |
             //      |                                              ▼
             //      X◄---------------------------------------------X
             //                        edge loop
