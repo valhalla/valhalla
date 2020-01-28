@@ -7,6 +7,9 @@
    * FIXED: Updated the osrm serializer to not set junction name for osrm origin/start maneuver - this is not helpful since we are not transitioning through the intersection.  [#2121](https://github.com/valhalla/valhalla/pull/2121)
    * FIXED: Removes precomputing of edge-costs which lead to wrong results [#2120](https://github.com/valhalla/valhalla/pull/2120)
    * FIXED: Fixes bug with inverted time-restriction parsing [#2167](https://github.com/valhalla/valhalla/pull/2167)
+   * FIXED: Fixed bug with duration under flow in map-matching with discontinuity on same edge: form_path should catch discontinuities on the same edge when the distance precentage along don't agree. So that leg builder will build disconnected legs on a single edge to avoid duration under flow. [#2178](https://github.com/valhalla/valhalla/pull/2178)   
+   * FIXED: Fixed bug with duration under flow in map-matching with loops: map_match should be aware loops in matching results and populate the edge groups correctly. When loop happens, it should point the leg builder to the correct edge where loop ends at and take accounts for all the edges in between the looped edge. [#2178](https://github.com/valhalla/valhalla/pull/2178)  
+   * FIXED: Fixed bug with duration under flow in map-matching with duration over trimming the end edge. [#2178](https://github.com/valhalla/valhalla/pull/2178)  
 
 * **Enhancement**
    * ADDED: Allows more complicated routes in timedependent a-star before timing out [#2068](https://github.com/valhalla/valhalla/pull/2068)
