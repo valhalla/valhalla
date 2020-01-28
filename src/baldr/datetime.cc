@@ -218,20 +218,20 @@ get_duration(const std::string& date_time, const uint32_t seconds, const date::t
 }
 
 // does this date fall in the begin and end date range?
-bool is_restricted(const bool type,
-                   const uint8_t begin_hrs,
-                   const uint8_t begin_mins,
-                   const uint8_t end_hrs,
-                   const uint8_t end_mins,
-                   const uint8_t dow,
-                   const uint8_t begin_week,
-                   const uint8_t begin_month,
-                   const uint8_t begin_day_dow,
-                   const uint8_t end_week,
-                   const uint8_t end_month,
-                   const uint8_t end_day_dow,
-                   const uint64_t current_time,
-                   const date::time_zone* time_zone) {
+bool is_conditional_active(const bool type,
+                           const uint8_t begin_hrs,
+                           const uint8_t begin_mins,
+                           const uint8_t end_hrs,
+                           const uint8_t end_mins,
+                           const uint8_t dow,
+                           const uint8_t begin_week,
+                           const uint8_t begin_month,
+                           const uint8_t begin_day_dow,
+                           const uint8_t end_week,
+                           const uint8_t end_month,
+                           const uint8_t end_day_dow,
+                           const uint64_t current_time,
+                           const date::time_zone* time_zone) {
 
   if (!time_zone)
     return false;
@@ -421,18 +421,13 @@ bool is_restricted(const bool type,
       e_td = std::chrono::hours(end_hrs) + std::chrono::minutes(end_mins);
     }
 
-    date::sys_seconds sec = date::sys_days(begin_date);
-    date::utc_seconds utc = date::to_utc_time(sec);
-    auto leap_s = utc.time_since_epoch() - sec.time_since_epoch();
-    auto b_in_local_time = date::make_zoned(time_zone, date::local_days(begin_date) + b_td + leap_s);
+    // Time does not matter here; we are only dealing with dates.
+    auto b_in_local_time = date::make_zoned(time_zone, date::local_days(begin_date));
+    auto local_dt = date::make_zoned(time_zone, date::local_days(d));
+    auto e_in_local_time = date::make_zoned(time_zone, date::local_days(end_date));
 
-    sec = date::sys_days(end_date);
-    utc = date::to_utc_time(sec);
-    leap_s = utc.time_since_epoch() - sec.time_since_epoch();
-    auto e_in_local_time = date::make_zoned(time_zone, date::local_days(end_date) + e_td + leap_s);
-
-    dt_in_range = (b_in_local_time.get_local_time() <= in_local_time.get_local_time() &&
-                   in_local_time.get_local_time() <= e_in_local_time.get_local_time());
+    dt_in_range = (b_in_local_time.get_local_time() <= local_dt.get_local_time() &&
+                   local_dt.get_local_time() <= e_in_local_time.get_local_time());
 
     bool time_in_range = false;
 

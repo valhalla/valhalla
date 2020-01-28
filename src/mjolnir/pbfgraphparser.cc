@@ -62,7 +62,9 @@ public:
     }
 
     include_driveways_ = pt.get<bool>("include_driveways", true);
-    commercial_data_ = pt.get<bool>("commercial_data", false);
+    infer_internal_intersections_ =
+        pt.get<bool>("data_processing.infer_internal_intersections", true);
+    infer_turn_channels_ = pt.get<bool>("data_processing.infer_turn_channels", true);
   }
 
   static std::string get_lua(const boost::property_tree::ptree& pt) {
@@ -371,9 +373,10 @@ public:
         ((highway_junction != results.end()) && (highway_junction->second == "motorway_junction"));
 
     for (const auto& tag : results) {
-
-      if (tag.first == "internal_intersection" && commercial_data_) {
+      if (tag.first == "internal_intersection" && !infer_internal_intersections_) {
         w.set_internal(tag.second == "true" ? true : false);
+      } else if (tag.first == "turn_channel" && !infer_turn_channels_) {
+        w.set_turn_channel(tag.second == "true" ? true : false);
       } else if (tag.first == "road_class") {
         RoadClass roadclass = (RoadClass)std::stoi(tag.second);
         switch (roadclass) {
@@ -561,8 +564,6 @@ public:
         w.set_roundabout(tag.second == "true" ? true : false);
       } else if (tag.first == "link") {
         w.set_link(tag.second == "true" ? true : false);
-      } else if (tag.first == "link_type") {
-        w.set_turn_channel(tag.second == "slip" ? true : false);
       } else if (tag.first == "ferry") {
         w.set_ferry(tag.second == "true" ? true : false);
       } else if (tag.first == "rail") {
@@ -662,13 +663,20 @@ public:
       }
 
       // motor_vehicle:conditional=no @ (16:30-07:00)
-      else if (tag.first == "motorcar:conditional" || tag.first == "motor_vehicle:conditional" ||
-               tag.first == "bicycle:conditional" || tag.first == "motorcycle:conditional" ||
-               tag.first == "foot:conditional" || tag.first == "pedestrian:conditional" ||
-               tag.first == "hgv:conditional" || tag.first == "moped:conditional" ||
-               tag.first == "mofa:conditional" || tag.first == "psv:conditional" ||
-               tag.first == "taxi:conditional" || tag.first == "bus:conditional" ||
-               tag.first == "hov:conditional" || tag.first == "emergency:conditional") {
+      else if (tag.first.substr(0, 20) == "motorcar:conditional" ||
+               tag.first.substr(0, 25) == "motor_vehicle:conditional" ||
+               tag.first.substr(0, 19) == "bicycle:conditional" ||
+               tag.first.substr(0, 22) == "motorcycle:conditional" ||
+               tag.first.substr(0, 16) == "foot:conditional" ||
+               tag.first.substr(0, 22) == "pedestrian:conditional" ||
+               tag.first.substr(0, 15) == "hgv:conditional" ||
+               tag.first.substr(0, 17) == "moped:conditional" ||
+               tag.first.substr(0, 16) == "mofa:conditional" ||
+               tag.first.substr(0, 15) == "psv:conditional" ||
+               tag.first.substr(0, 16) == "taxi:conditional" ||
+               tag.first.substr(0, 15) == "bus:conditional" ||
+               tag.first.substr(0, 15) == "hov:conditional" ||
+               tag.first.substr(0, 21) == "emergency:conditional") {
 
         std::vector<std::string> tokens = GetTagTokens(tag.second, '@');
         std::string tmp = tokens.at(0);
@@ -684,31 +692,33 @@ public:
         if (tokens.size() == 2 && tmp.size()) {
 
           uint16_t mode = 0;
-          if (tag.first == "motorcar:conditional" || tag.first == "motor_vehicle:conditional") {
+          if (tag.first.substr(0, 20) == "motorcar:conditional" ||
+              tag.first.substr(0, 25) == "motor_vehicle:conditional") {
             mode = (kAutoAccess | kTruckAccess | kEmergencyAccess | kTaxiAccess | kBusAccess |
                     kHOVAccess | kMopedAccess | kMotorcycleAccess);
-          } else if (tag.first == "bicycle:conditional") {
+          } else if (tag.first.substr(0, 19) == "bicycle:conditional") {
             mode = kBicycleAccess;
-          } else if (tag.first == "foot:conditional" || tag.first == "pedestrian:conditional") {
+          } else if (tag.first.substr(0, 16) == "foot:conditional" ||
+                     tag.first.substr(0, 22) == "pedestrian:conditional") {
             mode = (kPedestrianAccess | kWheelchairAccess);
-          } else if (tag.first == "hgv:conditional") {
+          } else if (tag.first.substr(0, 15) == "hgv:conditional") {
             mode = kTruckAccess;
-          } else if (tag.first == "moped:conditional" || tag.first == "mofa:conditional") {
+          } else if (tag.first.substr(0, 17) == "moped:conditional" ||
+                     tag.first.substr(0, 16) == "mofa:conditional") {
             mode = kMopedAccess;
-          } else if (tag.first == "motorcycle:conditional") {
+          } else if (tag.first.substr(0, 22) == "motorcycle:conditional") {
             mode = kMotorcycleAccess;
-          } else if (tag.first == "psv:conditional") {
+          } else if (tag.first.substr(0, 15) == "psv:conditional") {
             mode = (kTaxiAccess | kBusAccess);
-          } else if (tag.first == "taxi:conditional") {
+          } else if (tag.first.substr(0, 16) == "taxi:conditional") {
             mode = kTaxiAccess;
-          } else if (tag.first == "bus:conditional") {
+          } else if (tag.first.substr(0, 15) == "bus:conditional") {
             mode = kBusAccess;
-          } else if (tag.first == "hov:conditional") {
+          } else if (tag.first.substr(0, 15) == "hov:conditional") {
             mode = kHOVAccess;
-          } else if (tag.first == "emergency:conditional") {
+          } else if (tag.first.substr(0, 21) == "emergency:conditional") {
             mode = kEmergencyAccess;
           }
-
           std::string tmp = tokens.at(1);
           boost::algorithm::trim(tmp);
           std::vector<std::string> conditions = GetTagTokens(tmp, ';');
@@ -1587,8 +1597,13 @@ public:
   // Configuration option to include driveways
   bool include_driveways_;
 
-  // Configuration option for commercial data sets
-  bool commercial_data_;
+  // Configuration option on whether or not to infer internal intersections during the graph enhancer
+  // phase or use the internal_intersection key from the pbf
+  bool infer_internal_intersections_;
+
+  // Configuration option on whether or not to infer turn channels during the graph
+  // enhancer phase or use the turn_channel key from the pbf
+  bool infer_turn_channels_;
 
   // Road class assignment needs to be set to the highway cutoff for ferries and auto trains.
   RoadClass highway_cutoff_rc_;
