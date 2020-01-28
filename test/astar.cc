@@ -350,7 +350,7 @@ void TestTrivialPath(vt::PathAlgorithm& astar) {
   using node::d;
 
   valhalla::Location origin;
-  // origin.set_date_time();
+  origin.set_date_time("2019-11-21T13:05");
   origin.mutable_ll()->set_lng(a.second.first);
   origin.mutable_ll()->set_lat(a.second.second);
   add(tile_id + uint64_t(1), 0.0f, a.second, origin);
@@ -359,6 +359,7 @@ void TestTrivialPath(vt::PathAlgorithm& astar) {
   add(tile_id + uint64_t(2), 1.0f, a.second, origin);
 
   valhalla::Location dest;
+  dest.set_date_time("2019-11-21T13:05");
   dest.mutable_ll()->set_lng(b.second.first);
   dest.mutable_ll()->set_lat(b.second.second);
   add(tile_id + uint64_t(3), 0.0f, b.second, dest);
@@ -367,7 +368,7 @@ void TestTrivialPath(vt::PathAlgorithm& astar) {
   add(tile_id + uint64_t(0), 1.0f, b.second, dest);
 
   // this should go along the path from A to B
-  assert_is_trivial_path(astar, origin, dest, 1, TrivialPathTest::DurationEqualTo, 360,
+  assert_is_trivial_path(astar, origin, dest, 1, TrivialPathTest::DurationEqualTo, 3606,
                          vs::TravelMode::kDrive);
 }
 
@@ -418,7 +419,7 @@ void TestPartialDurationTrivial() {
   using node::d;
 
   valhalla::Location origin;
-  origin.set_date_time("2019-11-21T23:05");
+  origin.set_date_time("2019-11-21T13:05");
   origin.mutable_ll()->set_lng(a.second.first);
   origin.mutable_ll()->set_lat(a.second.second);
   add(tile_id + uint64_t(0), 0.1f, a.second, origin);
@@ -433,7 +434,7 @@ void TestPartialDurationTrivial() {
   add(tile_id + uint64_t(3), 0.0f, b.second, dest);
   add(tile_id + uint64_t(7), 1.0f, b.second, dest);
 
-  uint32_t expected_duration = 288;
+  uint32_t expected_duration = 2885;
 
   vt::TimeDepForward astar;
   assert_is_trivial_path(astar, origin, dest, 1, TrivialPathTest::DurationEqualTo, expected_duration,
@@ -449,20 +450,20 @@ void TestPartialDuration(vt::PathAlgorithm& astar) {
   float partial_dist = 0.1;
 
   valhalla::Location origin;
-  origin.set_date_time("2019-11-21T23:05");
+  origin.set_date_time("2019-11-21T13:05");
   origin.mutable_ll()->set_lng(a.second.first);
   origin.mutable_ll()->set_lat(a.second.second);
   add(tile_id + uint64_t(0), 0. + partial_dist, a.second, origin);
   add(tile_id + uint64_t(2), 1. - partial_dist, a.second, origin);
 
   valhalla::Location dest;
-  dest.set_date_time("2019-11-21T23:05");
+  dest.set_date_time("2019-11-21T13:05");
   dest.mutable_ll()->set_lng(d.second.first);
   dest.mutable_ll()->set_lat(d.second.second);
   add(tile_id + uint64_t(7), 0.0f + partial_dist, d.second, dest);
   add(tile_id + uint64_t(3), 1.0f - partial_dist, d.second, dest);
 
-  uint32_t expected_duration = 973;
+  uint32_t expected_duration = 9738;
 
   assert_is_trivial_path(astar, origin, dest, 2, TrivialPathTest::DurationEqualTo, expected_duration,
                          vs::TravelMode::kDrive);
@@ -761,6 +762,56 @@ void test_deadend() {
     throw std::logic_error("We did not find the expected u-turn");
   }
 }
+void test_time_dep_forward_with_current_time() {
+  // Test a request with date_time as "current" (type: 0)
+  //
+  auto conf = get_conf("whitelion_tiles_reverse");
+  route_tester tester(conf);
+  std::string request =
+      R"({
+      "locations":[
+        {"lat":51.45562646682483,"lon":-2.5952598452568054},
+        {"lat":51.455143447135974,"lon":-2.5958767533302307}
+      ],
+      "costing":"auto",
+      "date_time":{
+        "type":0
+      }
+    })";
+
+  auto response = tester.test(request);
+
+  const auto& legs = response.trip().routes(0).legs();
+  const auto& directions = response.directions().routes(0).legs();
+
+  if (legs.size() != 1) {
+    throw std::logic_error("Should have 1 leg");
+  }
+
+  std::vector<std::string> names;
+
+  for (const auto& d : directions) {
+    for (const auto& m : d.maneuver()) {
+      std::string name;
+      for (const auto& n : m.street_name()) {
+        name += n.value() + " ";
+      }
+      if (!name.empty()) {
+        name.pop_back();
+      }
+      names.push_back(name);
+    }
+  }
+
+  auto correct_route =
+      std::vector<std::string>{"Bell Lane",   "Small Street",
+                               "Quay Street", // The u-turn on Quay Street is optimized away
+                               "Quay Street", "Small Street", "", ""};
+  if (names != correct_route) {
+    throw std::logic_error("Incorrect route, got: \n" + boost::algorithm::join(names, ", ") +
+                           ", expected: \n" + boost::algorithm::join(correct_route, ", "));
+  }
+}
 
 void test_deadend_timedep_forward() {
   auto conf = get_conf("whitelion_tiles_reverse");
@@ -882,7 +933,7 @@ void test_deadend_timedep_reverse() {
     throw std::logic_error("We did not find the expected u-turn");
   }
 }
-void test_time_restricted_road() {
+void test_time_restricted_road_bidirectional() {
   // Try routing over "Via Montebello" in Rome which is a time restricted road
   // We should receive a route for a time-independent query but have the response
   // note that it is time restricted
@@ -962,12 +1013,291 @@ void test_time_restricted_road() {
   }
 }
 
+Api route_on_timerestricted(std::string& costing_str, int16_t hour) {
+  // Try routing over "Via Montebello" in Rome which is a time restricted road
+  // The restriction is
+  //
+  //    <tag k="auto" v="yes"/>
+  //    <tag k="motor_vehicle:conditional" v="no @ (Mo-Sa 07:00-16:00)"/>
+  //    <tag k="pedestrian" v="no"/>
+  //    <tag k="pedestrian:conditional" v="yes @ (Mo-Sa 08:00-15:00)"/>
+  //
+  // so lets use a timedependent a-star and verify that
+
+  LOG_INFO("Testing " + costing_str + " route at hour " + std::to_string(hour));
+  auto conf = get_conf("roma_tiles");
+  route_tester tester(conf);
+  // The following request results in timedep astar during the restricted hours
+  // and should be denied
+  std::string request =
+      R"({
+        "locations":[{"lat":41.90550,"lon":12.50090},{"lat":41.90477,"lon":12.49914}],
+        "costing":")" +
+      costing_str + R"(",
+          "date_time":{
+            "type":1,
+            "value":"2020-01-16T)" +
+      std::to_string(hour) + R"(:05"
+          }
+        })";
+
+  return tester.test(request);
+}
+
+void test_route_restricted(std::string costing_str, int16_t hour) {
+  bool found_route = false;
+  try {
+    auto response = route_on_timerestricted(costing_str, hour);
+    found_route = true;
+    const auto& leg = response.directions().routes(0).legs(0);
+    LOG_INFO("Route that wasn't supposed to happen: " + leg.shape());
+  } catch (const std::exception& e) {
+    if (std::string(e.what()) != "No path could be found for input") {
+      throw std::logic_error("Was expecting 'No path could be found for input'");
+    } else {
+      return;
+    }
+  }
+  if (found_route) {
+    throw std::logic_error("Found a route when no route was expected");
+  }
+}
+
+void test_time_restricted_road_denied_on_timedep() {
+  {
+    // A car at hour 11 should be denied
+    std::string costing_str("auto");
+    test_route_restricted(costing_str, 11);
+  }
+  {
+    // A pedestrian at hour 22 should be denied
+    std::string costing_str("pedestrian");
+    test_route_restricted(costing_str, 22);
+  }
+}
+
+void test_route_allowed(std::string costing_str, int16_t hour) {
+  auto response = route_on_timerestricted(costing_str, hour);
+  const auto& legs = response.trip().routes(0).legs();
+  if (legs.size() != 1) {
+    throw std::logic_error("Should have 1 leg");
+  }
+  const auto& directions = response.directions().routes(0).legs(0);
+  const auto& summary = directions.summary();
+  if (summary.time() == 0) {
+    throw std::logic_error("Time shouldn't be 0");
+  }
+}
+
+void test_time_restricted_road_allowed_on_timedep() {
+  {
+    // Pedestrian at hour 13 should be allowed
+    std::string costing_str("pedestrian");
+    test_route_allowed(costing_str, 13);
+  }
+  {
+    // A car at hour 22 should be allowed
+    std::string costing_str("auto");
+    test_route_allowed(costing_str, 22);
+  }
+}
+
+Api timed_access_restriction_ny(std::string mode, std::string datetime) {
+  // The restriction is <tag k="bicycle:conditional" v="no @ (Su 08:00-18:00)"/>
+  // and <tag k="motor_vehicle:conditional" v="no @ (Su 08:00-18:00)"/>
+  auto conf = get_conf("ny_ar_tiles");
+  route_tester tester(conf);
+  LOG_INFO("Testing " + mode + " route at " + datetime);
+
+  std::string request =
+      R"({
+            "locations":[{"lat":40.71835519823214,"lon":-73.99010449658817},{"lat":40.72136384343179,"lon":-73.98817330609745}],
+            "costing":")" +
+      mode + R"(",
+              "date_time":{
+                "type":1,
+                "value":")" +
+      datetime + R"("
+          }
+        })";
+  return tester.test(request);
+}
+
+// The following requests results in timedep astar during the non-restricted hours
+// and should be allowed
+void test_timed_no_access_restriction_1() {
+  auto response = timed_access_restriction_ny("bicycle", "2018-05-13T19:14");
+  const auto& legs = response.trip().routes(0).legs();
+  const auto& directions = response.directions().routes(0).legs(0);
+  const auto& maneuvers_size = directions.maneuver_size();
+  if (maneuvers_size != 3) {
+    throw std::logic_error("This route should remain on Orchard St.");
+  }
+}
+
+void test_timed_no_access_restriction_2() {
+  auto response = timed_access_restriction_ny("bicycle", "2018-05-14T17:14");
+  const auto& legs = response.trip().routes(0).legs();
+  const auto& directions = response.directions().routes(0).legs(0);
+  const auto& maneuvers_size = directions.maneuver_size();
+  if (maneuvers_size != 3) {
+    throw std::logic_error("This route should remain on Orchard St.");
+  }
+}
+
+void test_timed_no_access_restriction_3() {
+  auto response = timed_access_restriction_ny("pedestrian", "2018-05-13T17:14");
+  const auto& legs = response.trip().routes(0).legs();
+  const auto& directions = response.directions().routes(0).legs(0);
+  const auto& maneuvers_size = directions.maneuver_size();
+  if (maneuvers_size != 3) {
+    throw std::logic_error("This route should remain on Orchard St.");
+  }
+}
+
+// The following requests results in timedep astar during the restricted hours
+// and should be denied
+void test_timed_access_restriction_1() {
+  auto response = timed_access_restriction_ny("bicycle", "2018-05-13T17:14");
+  const auto& legs = response.trip().routes(0).legs();
+  const auto& directions = response.directions().routes(0).legs(0);
+  const auto& maneuvers_size = directions.maneuver_size();
+  if (maneuvers_size == 3) {
+    throw std::logic_error("This route should turn L onto Delancey St. because of restriction. ");
+  }
+}
+
+void test_timed_access_restriction_2() {
+  auto response = timed_access_restriction_ny("auto", "2018-05-13T17:14");
+  const auto& legs = response.trip().routes(0).legs();
+  const auto& directions = response.directions().routes(0).legs(0);
+  const auto& maneuvers_size = directions.maneuver_size();
+  if (maneuvers_size == 3) {
+    throw std::logic_error("This route should turn L onto Delancey St. because of restriction. ");
+  }
+}
+
+Api timed_conditional_restriction_pa(std::string mode, std::string datetime) {
+  // The restriction is <tag k="restriction:conditional" v="no_right_turn @ (Mo-Fr 07:00-09:00)"/>
+  auto conf = get_conf("pa_ar_tiles");
+  route_tester tester(conf);
+  LOG_INFO("Testing " + mode + " route at " + datetime);
+
+  std::string request =
+      R"({
+            "locations":[{"lat":40.234100,"lon":-76.933037},{"lat":40.234734,"lon":-76.932022}],
+            "costing":")" +
+      mode + R"(",
+              "date_time":{
+                "type":1,
+                "value":")" +
+      datetime + R"("
+          }
+        })";
+  return tester.test(request);
+}
+
+Api timed_conditional_restriction_nh(std::string mode, std::string datetime) {
+  // The restriction is <tag k="hgv:conditional" v="no @ (19:00-06:00)"/>
+  auto conf = get_conf("nh_ar_tiles");
+  route_tester tester(conf);
+  LOG_INFO("Testing " + mode + " route at " + datetime);
+
+  std::string request =
+      R"({
+            "locations":[{"lat":42.79615642306863,"lon":-71.43550157459686},{"lat":42.79873856769978,"lon":-71.43146753223846}],
+            "costing":")" +
+      mode +
+      R"(","costing_options":{"truck":{"height":"4.11","width":"2.6","length":"21.64","weight":"21.77","axle_load":"9.07","hazmat":false}},
+              "date_time":{
+                "type":1,
+                "value":")" +
+      datetime + R"("
+          }
+        })";
+  return tester.test(request);
+}
+
+// The following requests results in timedep astar during the non-restricted hours
+// and should be allowed
+void test_timed_no_conditional_restriction_1() {
+  auto response = timed_conditional_restriction_pa("auto", "2018-11-01T06:30");
+  const auto& legs = response.trip().routes(0).legs();
+  const auto& directions = response.directions().routes(0).legs(0);
+  const auto& maneuvers_size = directions.maneuver_size();
+  if (maneuvers_size != 3) {
+    throw std::logic_error("This route should turn R onto Dickinson Ave.");
+  }
+}
+
+void test_timed_no_conditional_restriction_2() {
+  auto response = timed_conditional_restriction_pa("auto", "2018-11-01T10:00");
+  const auto& legs = response.trip().routes(0).legs();
+  const auto& directions = response.directions().routes(0).legs(0);
+  const auto& maneuvers_size = directions.maneuver_size();
+  if (maneuvers_size != 3) {
+    throw std::logic_error("This route should turn R onto Dickinson Ave.");
+  }
+}
+
+void test_timed_no_conditional_restriction_3() {
+  auto response = timed_conditional_restriction_nh("truck", "2018-05-02T18:00");
+  const auto& legs = response.trip().routes(0).legs();
+  const auto& directions = response.directions().routes(0).legs(0);
+  const auto& maneuvers_size = directions.maneuver_size();
+  if (maneuvers_size > 3) {
+    throw std::logic_error("This route should turn R onto Old Derry Rd.");
+  }
+}
+
+// The following requests results in timedep astar during the restricted hours
+// and should be denied
+void test_timed_conditional_restriction_1() {
+  auto response = timed_conditional_restriction_pa("auto", "2018-11-01T07:00");
+  const auto& legs = response.trip().routes(0).legs();
+  const auto& directions = response.directions().routes(0).legs(0);
+  const auto& maneuvers_size = directions.maneuver_size();
+  if (maneuvers_size == 3) {
+    throw std::logic_error("This route should turn L onto Dickinson Ave." +
+                           std::to_string(maneuvers_size));
+  }
+}
+
+void test_timed_conditional_restriction_2() {
+  auto response = timed_conditional_restriction_pa("auto", "2018-11-01T09:00");
+  const auto& legs = response.trip().routes(0).legs();
+  const auto& directions = response.directions().routes(0).legs(0);
+  const auto& maneuvers_size = directions.maneuver_size();
+  if (maneuvers_size == 3) {
+    throw std::logic_error("This route should turn L onto Dickinson Ave." +
+                           std::to_string(maneuvers_size));
+  }
+}
+
+void test_timed_conditional_restriction_3() {
+  bool found_route = false;
+  try {
+    auto response = timed_conditional_restriction_nh("truck", "2018-05-02T20:00");
+    found_route = true;
+    const auto& leg = response.directions().routes(0).legs(0);
+    LOG_INFO("Route that wasn't supposed to happen: " + leg.shape());
+  } catch (const std::exception& e) {
+    if (std::string(e.what()) != "No path could be found for input") {
+      throw std::logic_error("Was expecting 'No path could be found for input'");
+    } else {
+      return;
+    }
+  }
+  if (found_route) {
+    throw std::logic_error("Found a route when no route was expected");
+  }
+}
+
 } // anonymous namespace
 
 int main() {
   test::suite suite("astar");
 
-  // TODO: move to mjolnir?
   suite.test(TEST_CASE(make_tile));
 
   suite.test(TEST_CASE(TestTrivialPathForward));
@@ -985,7 +1315,24 @@ int main() {
   suite.test(TEST_CASE(test_deadend_timedep_reverse));
   suite.test(TEST_CASE(test_oneway));
   suite.test(TEST_CASE(test_oneway_wrong_way));
-  suite.test(TEST_CASE(test_time_restricted_road));
+  suite.test(TEST_CASE(test_time_restricted_road_bidirectional));
+  suite.test(TEST_CASE(test_time_restricted_road_denied_on_timedep));
+  suite.test(TEST_CASE(test_time_restricted_road_allowed_on_timedep));
+
+  suite.test(TEST_CASE(test_time_dep_forward_with_current_time));
+
+  suite.test(TEST_CASE(test_timed_no_access_restriction_1));
+  suite.test(TEST_CASE(test_timed_access_restriction_1));
+  suite.test(TEST_CASE(test_timed_no_access_restriction_2));
+  suite.test(TEST_CASE(test_timed_access_restriction_2));
+  suite.test(TEST_CASE(test_timed_no_access_restriction_3));
+  suite.test(TEST_CASE(test_timed_no_access_restriction_3));
+  suite.test(TEST_CASE(test_timed_no_conditional_restriction_1));
+  suite.test(TEST_CASE(test_timed_no_conditional_restriction_2));
+  suite.test(TEST_CASE(test_timed_no_conditional_restriction_3));
+  suite.test(TEST_CASE(test_timed_conditional_restriction_1));
+  suite.test(TEST_CASE(test_timed_conditional_restriction_2));
+  suite.test(TEST_CASE(test_timed_conditional_restriction_3));
 
   return suite.tear_down();
 }
