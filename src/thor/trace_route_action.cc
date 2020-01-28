@@ -468,28 +468,6 @@ thor_worker_t::map_match(Api& request) {
         std::get<3>(edge_group) = std::prev(match_result_itr);
       }
 
-      int idx = 0;
-      std::cout << "edges are :" << std::endl;
-      for (const auto& edge : path_edges) {
-        std::cout << idx++ << " " << reader->encoded_edge_shape(edge.edgeid) << std::endl;
-      }
-
-      idx = 0;
-      std::cout << "locations are :" << std::endl;
-      for (const auto& loc : match_results) {
-        std::cout << idx++ << "  " << reader->encoded_edge_shape(loc.edgeid) << std::endl;
-      }
-
-      std::cout << "edge group size is: " << edge_groups.size() << std::endl;
-      for (const auto& edge_group : edge_groups) {
-        std::cout << "start edge: " << std::distance(path_edges.cbegin(), std::get<0>(edge_group))
-                  << " ,  end edge: " << std::distance(path_edges.cbegin(), std::get<1>(edge_group))
-                  << std::endl;
-        std::cout << "start loc: " << std::distance(match_results.cbegin(), std::get<2>(edge_group))
-                  << " ,  end loc: " << std::distance(match_results.cbegin(), std::get<3>(edge_group))
-                  << std::endl;
-      }
-
       // The following logic put break points (matches results) on edge candidates to form legs
       // logic assumes the both match results and edge candidates are topologically sorted in correct
       // order. Only the first location will be populated with corresponding input date_time

@@ -434,8 +434,6 @@ find_shortest_path(baldr::GraphReader& reader,
               if (cost.cost < max_dist && (max_time < 0 || cost.secs < max_time)) {
                 labelset->put(dest, edgeid, 0.f, edge.percent_along, cost, turn_cost, cost.cost,
                               label_idx, directededge, travelmode);
-                std::cout << "put from node expand " << reader.encoded_edge_shape(edgeid)
-                          << std::endl;
               }
             }
           }
@@ -456,7 +454,6 @@ find_shortest_path(baldr::GraphReader& reader,
           float sortcost = cost.cost + heuristic(endtile->get_node_ll(directededge->endnode()));
           labelset->put(directededge->endnode(), edgeid, 0.0f, 1.0f, cost, turn_cost, sortcost,
                         label_idx, directededge, travelmode);
-          std::cout << "put from node expand " << reader.encoded_edge_shape(edgeid) << std::endl;
         }
       }
     }
@@ -534,10 +531,6 @@ find_shortest_path(baldr::GraphReader& reader,
           const baldr::GraphTile* start_tile = nullptr;
           const auto* directed_edge = reader.directededge(origin_edge.id, start_tile);
 
-          const baldr::GraphTile* end_tile = nullptr;
-          baldr::GraphId opposite_edgeid = reader.GetOpposingEdgeId(origin_edge.id);
-          const auto* opposite_edge = reader.directededge(opposite_edgeid, end_tile);
-
           // Skip if edge is not allowed
           if (!directed_edge ||
               !IsEdgeAllowed(directed_edge, origin_edge.id, costing, label, start_tile)) {
@@ -551,41 +544,12 @@ find_shortest_path(baldr::GraphReader& reader,
             turn_cost += turn_cost_table[0];
           }
 
-          std::cout << "origin edge: " << reader.encoded_edge_shape(origin_edge.id) << std::endl;
           // All destinations on this origin edge
           for (const auto other_dest : edge_dests[origin_edge.id]) {
             // All edges of this destination
             for (const auto& destination_edge : destinations[other_dest].edges) {
-              // when expanding origin edges, there are two possible scenarios:
-              // 1. destination_edge is on the same edge with the origin edge, this indicates that
-              //    the path finding algorithm may find origin destination match on same edge if
-              //    percentage flow agrees topologically (see below):
-              //
-              //    origin percent_along
-              //             |
-              //  0% X------------------------------------------------>X 100%  (directed_edge)
-              //                                  |
-              //                          destination percent_along
-              //
-              // 2. destination_edge is on the opposited edge of the origin edge, this indicates that
-              //    an u-turn may occur if percentage flow agrees topologically (see below):
-              //
-              //                            origin percent_along
-              //                                      |
-              // 0%   X------------------------------------------------>X 100% (directed_edge)
-              // 100% X<------------------------------------------------X 0%   (opposited_edge)
-              //               |
-              //    destination percent_along
-
-              bool matched_same_edge = origin_edge.id == destination_edge.id &&
-                                       origin_edge.percent_along <= destination_edge.percent_along;
-              bool matched_opposite_edge =
-                  opposite_edge != nullptr &&
-                  IsEdgeAllowed(opposite_edge, opposite_edgeid, costing, label, end_tile) &&
-                  opposite_edgeid == destination_edge.id &&
-                  (1.0f - origin_edge.percent_along) <= destination_edge.percent_along;
-
-              if (matched_same_edge) {
+              if (origin_edge.id == destination_edge.id &&
+                  origin_edge.percent_along <= destination_edge.percent_along) {
                 // Get cost - use EdgeCost to get time along the edge. Override
                 // cost portion to be distance. The heuristic cost from a
                 // destination to itself must be 0
@@ -600,21 +564,6 @@ find_shortest_path(baldr::GraphReader& reader,
                   labelset->put(other_dest, origin_edge.id, origin_edge.percent_along,
                                 destination_edge.percent_along, cost, turn_cost, cost.cost, label_idx,
                                 directed_edge, travelmode);
-                  std::cout << "put destination forward match "
-                            << reader.encoded_edge_shape(destination_edge.id) << std::endl;
-                }
-              } else if (matched_opposite_edge) {
-                float segment_percentage =
-                    destination_edge.percent_along - (1.0f - origin_edge.percent_along);
-                sif::Cost cost(label.cost().cost + opposite_edge->length() * segment_percentage,
-                               label.cost().secs + costing->EdgeCost(opposite_edge, end_tile).secs *
-                                                       segment_percentage);
-                if (cost.cost < max_dist && (max_time < 0 || cost.secs < max_time)) {
-                  labelset->put(other_dest, destination_edge.id, (1.0f - origin_edge.percent_along),
-                                destination_edge.percent_along, cost, turn_cost, cost.cost, label_idx,
-                                opposite_edge, travelmode);
-                  std::cout << "put destination reverse match "
-                            << reader.encoded_edge_shape(destination_edge.id) << std::endl;
                 }
               }
             }
@@ -637,8 +586,6 @@ find_shortest_path(baldr::GraphReader& reader,
             float sortcost = cost.cost + heuristic(endtile->get_node_ll(directed_edge->endnode()));
             labelset->put(directed_edge->endnode(), origin_edge.id, origin_edge.percent_along, 1.f,
                           cost, turn_cost, sortcost, label_idx, directed_edge, travelmode);
-            std::cout << "put from origin expand " << reader.encoded_edge_shape(origin_edge.id)
-                      << std::endl;
           }
         }
       }
