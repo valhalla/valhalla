@@ -7,9 +7,15 @@
    * FIXED: Updated the osrm serializer to not set junction name for osrm origin/start maneuver - this is not helpful since we are not transitioning through the intersection.  [#2121](https://github.com/valhalla/valhalla/pull/2121)
    * FIXED: Removes precomputing of edge-costs which lead to wrong results [#2120](https://github.com/valhalla/valhalla/pull/2120)
    * FIXED: Fixes bug with inverted time-restriction parsing [#2167](https://github.com/valhalla/valhalla/pull/2167)
-   * FIXED: Fixed bug with duration under flow in map-matching with discontinuity on same edge: form_path should catch discontinuities on the same edge when the distance precentage along don't agree. So that leg builder will build disconnected legs on a single edge to avoid duration under flow. [#2178](https://github.com/valhalla/valhalla/pull/2178)   
-   * FIXED: Fixed bug with duration under flow in map-matching with loops: map_match should be aware loops in matching results and populate the edge groups correctly. When loop happens, it should point the leg builder to the correct edge where loop ends at and take accounts for all the edges in between the looped edge. [#2178](https://github.com/valhalla/valhalla/pull/2178)  
-   * FIXED: Fixed bug with duration under flow in map-matching with duration over trimming the end edge. [#2178](https://github.com/valhalla/valhalla/pull/2178)  
+   * FIXED: Fixed several bugs with numeric underflow in map-matching trip durations:
+     [#2178](https://github.com/valhalla/valhalla/pull/2178)
+     - `MapMatcher::FormPath` now catches route discontinuities on the same edge when the distance
+       percentage along don't agree. This can occur in some traces that include u-turns. The trip
+       leg builder builds disconnected legs on a single edge to avoid duration underflow.
+     - Correctly populate edge groups when matching results contain loops. When a loop occurs,
+       the leg builder now starts at the correct edge where the loop ends, and correctly accounts
+       for contained edges.
+     - Duration over-trimming at the terminating edge of a match
 
 * **Enhancement**
    * ADDED: Allows more complicated routes in timedependent a-star before timing out [#2068](https://github.com/valhalla/valhalla/pull/2068)
