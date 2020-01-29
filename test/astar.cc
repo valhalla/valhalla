@@ -1191,7 +1191,6 @@ void test_time_restricted_road_allowed_on_timedep() {
   }
 }
 
-
 void test_backtrack_complex_restriction(int date_time_type) {
   // Regression test for backtracking complex restriction behaviour.
   //
@@ -1371,6 +1370,197 @@ void TestBacktrackComplexRestrictionForwardDetourAfterRestriction() {
   }
 }
 
+Api timed_access_restriction_ny(std::string mode, std::string datetime) {
+  // The restriction is <tag k="bicycle:conditional" v="no @ (Su 08:00-18:00)"/>
+  // and <tag k="motor_vehicle:conditional" v="no @ (Su 08:00-18:00)"/>
+  auto conf = get_conf("ny_ar_tiles");
+  route_tester tester(conf);
+  LOG_INFO("Testing " + mode + " route at " + datetime);
+
+  std::string request =
+      R"({
+            "locations":[{"lat":40.71835519823214,"lon":-73.99010449658817},{"lat":40.72136384343179,"lon":-73.98817330609745}],
+            "costing":")" +
+      mode + R"(",
+              "date_time":{
+                "type":1,
+                "value":")" +
+      datetime + R"("
+          }
+        })";
+  return tester.test(request);
+}
+
+// The following requests results in timedep astar during the non-restricted hours
+// and should be allowed
+void test_timed_no_access_restriction_1() {
+  auto response = timed_access_restriction_ny("bicycle", "2018-05-13T19:14");
+  const auto& legs = response.trip().routes(0).legs();
+  const auto& directions = response.directions().routes(0).legs(0);
+  const auto& maneuvers_size = directions.maneuver_size();
+  if (maneuvers_size != 3) {
+    throw std::logic_error("This route should remain on Orchard St.");
+  }
+}
+
+void test_timed_no_access_restriction_2() {
+  auto response = timed_access_restriction_ny("bicycle", "2018-05-14T17:14");
+  const auto& legs = response.trip().routes(0).legs();
+  const auto& directions = response.directions().routes(0).legs(0);
+  const auto& maneuvers_size = directions.maneuver_size();
+  if (maneuvers_size != 3) {
+    throw std::logic_error("This route should remain on Orchard St.");
+  }
+}
+
+void test_timed_no_access_restriction_3() {
+  auto response = timed_access_restriction_ny("pedestrian", "2018-05-13T17:14");
+  const auto& legs = response.trip().routes(0).legs();
+  const auto& directions = response.directions().routes(0).legs(0);
+  const auto& maneuvers_size = directions.maneuver_size();
+  if (maneuvers_size != 3) {
+    throw std::logic_error("This route should remain on Orchard St.");
+  }
+}
+
+// The following requests results in timedep astar during the restricted hours
+// and should be denied
+void test_timed_access_restriction_1() {
+  auto response = timed_access_restriction_ny("bicycle", "2018-05-13T17:14");
+  const auto& legs = response.trip().routes(0).legs();
+  const auto& directions = response.directions().routes(0).legs(0);
+  const auto& maneuvers_size = directions.maneuver_size();
+  if (maneuvers_size == 3) {
+    throw std::logic_error("This route should turn L onto Delancey St. because of restriction. ");
+  }
+}
+
+void test_timed_access_restriction_2() {
+  auto response = timed_access_restriction_ny("auto", "2018-05-13T17:14");
+  const auto& legs = response.trip().routes(0).legs();
+  const auto& directions = response.directions().routes(0).legs(0);
+  const auto& maneuvers_size = directions.maneuver_size();
+  if (maneuvers_size == 3) {
+    throw std::logic_error("This route should turn L onto Delancey St. because of restriction. ");
+  }
+}
+
+Api timed_conditional_restriction_pa(std::string mode, std::string datetime) {
+  // The restriction is <tag k="restriction:conditional" v="no_right_turn @ (Mo-Fr 07:00-09:00)"/>
+  auto conf = get_conf("pa_ar_tiles");
+  route_tester tester(conf);
+  LOG_INFO("Testing " + mode + " route at " + datetime);
+
+  std::string request =
+      R"({
+            "locations":[{"lat":40.234100,"lon":-76.933037},{"lat":40.234734,"lon":-76.932022}],
+            "costing":")" +
+      mode + R"(",
+              "date_time":{
+                "type":1,
+                "value":")" +
+      datetime + R"("
+          }
+        })";
+  return tester.test(request);
+}
+
+Api timed_conditional_restriction_nh(std::string mode, std::string datetime) {
+  // The restriction is <tag k="hgv:conditional" v="no @ (19:00-06:00)"/>
+  auto conf = get_conf("nh_ar_tiles");
+  route_tester tester(conf);
+  LOG_INFO("Testing " + mode + " route at " + datetime);
+
+  std::string request =
+      R"({
+            "locations":[{"lat":42.79615642306863,"lon":-71.43550157459686},{"lat":42.79873856769978,"lon":-71.43146753223846}],
+            "costing":")" +
+      mode +
+      R"(","costing_options":{"truck":{"height":"4.11","width":"2.6","length":"21.64","weight":"21.77","axle_load":"9.07","hazmat":false}},
+              "date_time":{
+                "type":1,
+                "value":")" +
+      datetime + R"("
+          }
+        })";
+  return tester.test(request);
+}
+
+// The following requests results in timedep astar during the non-restricted hours
+// and should be allowed
+void test_timed_no_conditional_restriction_1() {
+  auto response = timed_conditional_restriction_pa("auto", "2018-11-01T06:30");
+  const auto& legs = response.trip().routes(0).legs();
+  const auto& directions = response.directions().routes(0).legs(0);
+  const auto& maneuvers_size = directions.maneuver_size();
+  if (maneuvers_size != 3) {
+    throw std::logic_error("This route should turn R onto Dickinson Ave.");
+  }
+}
+
+void test_timed_no_conditional_restriction_2() {
+  auto response = timed_conditional_restriction_pa("auto", "2018-11-01T10:00");
+  const auto& legs = response.trip().routes(0).legs();
+  const auto& directions = response.directions().routes(0).legs(0);
+  const auto& maneuvers_size = directions.maneuver_size();
+  if (maneuvers_size != 3) {
+    throw std::logic_error("This route should turn R onto Dickinson Ave.");
+  }
+}
+
+void test_timed_no_conditional_restriction_3() {
+  auto response = timed_conditional_restriction_nh("truck", "2018-05-02T18:00");
+  const auto& legs = response.trip().routes(0).legs();
+  const auto& directions = response.directions().routes(0).legs(0);
+  const auto& maneuvers_size = directions.maneuver_size();
+  if (maneuvers_size > 3) {
+    throw std::logic_error("This route should turn R onto Old Derry Rd.");
+  }
+}
+
+// The following requests results in timedep astar during the restricted hours
+// and should be denied
+void test_timed_conditional_restriction_1() {
+  auto response = timed_conditional_restriction_pa("auto", "2018-11-01T07:00");
+  const auto& legs = response.trip().routes(0).legs();
+  const auto& directions = response.directions().routes(0).legs(0);
+  const auto& maneuvers_size = directions.maneuver_size();
+  if (maneuvers_size == 3) {
+    throw std::logic_error("This route should turn L onto Dickinson Ave." +
+                           std::to_string(maneuvers_size));
+  }
+}
+
+void test_timed_conditional_restriction_2() {
+  auto response = timed_conditional_restriction_pa("auto", "2018-11-01T09:00");
+  const auto& legs = response.trip().routes(0).legs();
+  const auto& directions = response.directions().routes(0).legs(0);
+  const auto& maneuvers_size = directions.maneuver_size();
+  if (maneuvers_size == 3) {
+    throw std::logic_error("This route should turn L onto Dickinson Ave." +
+                           std::to_string(maneuvers_size));
+  }
+}
+
+void test_timed_conditional_restriction_3() {
+  bool found_route = false;
+  try {
+    auto response = timed_conditional_restriction_nh("truck", "2018-05-02T20:00");
+    found_route = true;
+    const auto& leg = response.directions().routes(0).legs(0);
+    LOG_INFO("Route that wasn't supposed to happen: " + leg.shape());
+  } catch (const std::exception& e) {
+    if (std::string(e.what()) != "No path could be found for input") {
+      throw std::logic_error("Was expecting 'No path could be found for input'");
+    } else {
+      return;
+    }
+  }
+  if (found_route) {
+    throw std::logic_error("Found a route when no route was expected");
+  }
+}
+
 } // anonymous namespace
 
 int main() {
@@ -1403,6 +1593,19 @@ int main() {
   suite.test(TEST_CASE(TestBacktrackComplexRestrictionReverse));
   suite.test(TEST_CASE(TestBacktrackComplexRestrictionBidirectional));
   suite.test(TEST_CASE(TestBacktrackComplexRestrictionForwardDetourAfterRestriction));
+
+  suite.test(TEST_CASE(test_timed_no_access_restriction_1));
+  suite.test(TEST_CASE(test_timed_access_restriction_1));
+  suite.test(TEST_CASE(test_timed_no_access_restriction_2));
+  suite.test(TEST_CASE(test_timed_access_restriction_2));
+  suite.test(TEST_CASE(test_timed_no_access_restriction_3));
+  suite.test(TEST_CASE(test_timed_no_access_restriction_3));
+  suite.test(TEST_CASE(test_timed_no_conditional_restriction_1));
+  suite.test(TEST_CASE(test_timed_no_conditional_restriction_2));
+  suite.test(TEST_CASE(test_timed_no_conditional_restriction_3));
+  suite.test(TEST_CASE(test_timed_conditional_restriction_1));
+  suite.test(TEST_CASE(test_timed_conditional_restriction_2));
+  suite.test(TEST_CASE(test_timed_conditional_restriction_3));
 
   return suite.tear_down();
 }
