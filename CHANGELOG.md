@@ -7,6 +7,16 @@
    * FIXED: Updated the osrm serializer to not set junction name for osrm origin/start maneuver - this is not helpful since we are not transitioning through the intersection.  [#2121](https://github.com/valhalla/valhalla/pull/2121)
    * FIXED: Removes precomputing of edge-costs which lead to wrong results [#2120](https://github.com/valhalla/valhalla/pull/2120)
    * FIXED: Fixes bug with inverted time-restriction parsing [#2167](https://github.com/valhalla/valhalla/pull/2167)
+   * FIXED: Fixed several bugs with numeric underflow in map-matching trip durations. These may
+     occur when serializing match results where adjacent trace points appear out-of-sequence on the
+     same edge [#2178](https://github.com/valhalla/valhalla/pull/2178)
+     - `MapMatcher::FormPath` now catches route discontinuities on the same edge when the distance
+       percentage along don't agree. The trip leg builder builds disconnected legs on a single edge
+       to avoid duration underflow.
+     - Correctly populate edge groups when matching results contain loops. When a loop occurs,
+       the leg builder now starts at the correct edge where the loop ends, and correctly accounts
+       for any contained edges.
+     - Duration over-trimming at the terminating edge of a match.
 
 * **Enhancement**
    * ADDED: Allows more complicated routes in timedependent a-star before timing out [#2068](https://github.com/valhalla/valhalla/pull/2068)
