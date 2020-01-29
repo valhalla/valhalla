@@ -111,7 +111,9 @@ configure_file(../valhalla/config.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/valhalla/c
 
 set(valhalla_hdrs
     ${CMAKE_CURRENT_BINARY_DIR}/valhalla/valhalla.h
-    ${VALHALLA_SOURCE_DIR}/valhalla/worker.h)
+    ${VALHALLA_SOURCE_DIR}/valhalla/worker.h
+    ${VALHALLA_SOURCE_DIR}/valhalla/filesystem.h
+    )
 
 set(valhalla_src
     worker.cc
@@ -120,7 +122,7 @@ set(valhalla_src
     ${libvalhalla_link_objects})
 
 if (ENABLE_SERVICES)
-  set(valahlla_hdrs ${valhalla_hdrs} ${VALHALLA_SOURCE_DIR}/valhalla/tile_server.h)
+  set(valhalla_hdrs ${valhalla_hdrs} ${VALHALLA_SOURCE_DIR}/valhalla/tile_server.h)
   set(valhalla_src ${valhalla_src} tile_server.cc)
 endif()
 
