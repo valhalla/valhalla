@@ -231,6 +231,8 @@ We highly encourage running and updating the tests to make sure no regressions h
 
 To run an individual test, `make run-<test name>` from the build directory or `./test/<testname>`
 
+You may check some notes on [unit tests](docs/testing.md)
+
 Coverage reports are automatically generated using codecov for each pull request, but you can also build them locally by passing `-DENABLE_COVERAGE=On` and running `make coverage`.
 
 Command Line Tools

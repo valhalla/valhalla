@@ -1,6 +1,5 @@
 #include "skadi/sample.h"
 #include "pixels.h"
-#include "test.h"
 
 #include "baldr/compression_utils.h"
 #include "midgard/sequence.h"
@@ -10,24 +9,25 @@
 #include <fstream>
 #include <list>
 
+#include "test.h"
+
 using namespace valhalla;
 
 namespace {
 
-void no_data() {
+TEST(Sample, no_data) {
   // check the no data value
   skadi::sample s("test/data/this_is_not_a_directory");
-  if (skadi::sample::get_no_data_value() != -32768)
-    throw std::logic_error("No data value should be -32768");
+  EXPECT_EQ(skadi::sample::get_no_data_value(), -32768) << "No data value should be -32768";
 
-  if (s.get(std::make_pair(0.0, 0.0)) != skadi::sample::get_no_data_value())
-    throw std::logic_error("Asked for point with no data should be no data value");
+  EXPECT_EQ(s.get(std::make_pair(0.0, 0.0)), skadi::sample::get_no_data_value())
+      << "Asked for point with no data should be no data value";
 
-  if (s.get(std::make_pair(200.0, 200.0)) != skadi::sample::get_no_data_value())
-    throw std::logic_error("Asked for point outside of valid range");
+  EXPECT_EQ(s.get(std::make_pair(200.0, 200.0)), skadi::sample::get_no_data_value())
+      << "Asked for point outside of valid range";
 }
 
-void create_tile() {
+TEST(Sample, create_tile) {
   // its annoying to have to get actual data but its also very boring to test with fake data
   // so we get some real data build the tests and then create the data on the fly
   // get the real tile and run the tests against it uncommenting the log infos in src/sample.cc
@@ -66,21 +66,16 @@ void create_tile() {
   };
 
   // gzip it
-  if (!baldr::deflate(src_func, dst_func))
-    throw std::logic_error("Can't write gzipped elevation tile");
+  EXPECT_TRUE(baldr::deflate(src_func, dst_func)) << "Can't write gzipped elevation tile";
 }
 
 void _get(const std::string& location) {
   // check a single point
   skadi::sample s(location);
-  if (std::fabs(490 - s.get(std::make_pair(-76.503915, 40.678783))) > 1.0)
-    throw std::runtime_error("Wrong value at location: " +
-                             std::to_string(s.get(std::make_pair(-76.503915, 40.678783))));
+  EXPECT_NEAR(490, s.get(std::make_pair(-76.503915, 40.678783)), 1.0);
 
   // check a point near the edge of a tile
-  if (std::fabs(134 - s.get(std::make_pair(-76.9, 40.0))) > 1.0)
-    throw std::runtime_error("Wrong value at edge of tile: " +
-                             std::to_string(s.get(std::make_pair(-76.9, 40.0))));
+  EXPECT_NEAR(134, s.get(std::make_pair(-76.9, 40.0)), 1.0);
 
   // check a bunch
   std::list<std::pair<double, double>> postings = {
@@ -93,17 +88,18 @@ void _get(const std::string& location) {
   double riemann_sum = 0;
   auto heights = s.get_all(postings);
   for (const auto height : heights) {
-    if (height == skadi::sample::get_no_data_value())
-      throw std::runtime_error("Should have heights for all of these points");
+    EXPECT_NE(height, skadi::sample::get_no_data_value())
+        << "Should have heights for all of these points";
     riemann_sum += height;
   }
-  if (std::fabs(riemann_sum - 1675) > 100)
-    throw std::runtime_error("Area under discretized curve isn't right");
+  EXPECT_NEAR(riemann_sum, 1675, 100) << "Area under discretized curve isn't right";
 }
-void get() {
+
+TEST(Sample, get) {
   _get("test/data/sample");
 };
-void getgz() {
+
+TEST(Sample, getgz) {
   _get("test/data/samplegz");
 };
 
@@ -122,32 +118,30 @@ struct testable_sample_t : public skadi::sample {
   }
 };
 
-void edges() {
+TEST(Sample, edges) {
   testable_sample_t s("/dev/null");
 
   // check 4 pixels
   auto n = .5f / 3600;
   float v = s.get(std::make_pair(-180.f + n, -89.f - n));
-  if (!midgard::equal(v, 1.5f, 0.1f))
-    throw std::runtime_error("Wrong value at location");
+
+  EXPECT_NEAR(v, 1.5f, 0.1f);
 
   // check 2 pixels
   v = s.get(std::make_pair(-180.f + n, -89.f - n * 3));
-  if (!midgard::equal(v, 2.f, 0.1f))
-    throw std::runtime_error("Wrong value at location");
+  EXPECT_NEAR(v, 2.f, 0.1f);
 
   // check 0 pixels
   v = s.get(std::make_pair(-180.f + n, -89.f - n * 5));
-  if (v != skadi::sample::get_no_data_value())
-    throw std::runtime_error("Wrong value at location");
+  EXPECT_EQ(v, skadi::sample::get_no_data_value()) << "Wrong value at location";
 }
 
-void lazy_load() {
+TEST(Sample, lazy_load) {
   // make sure there is no data there
   { std::ofstream file("test/data/sample/N00/N00E000.hgt", std::ios::binary | std::ios::trunc); }
   skadi::sample s("test/data/sample");
-  if (s.get(std::make_pair(0.503915, 0.678783)) != skadi::sample::get_no_data_value())
-    throw std::logic_error("Asked for point with no data should be no data value");
+  EXPECT_EQ(s.get(std::make_pair(0.503915, 0.678783)), skadi::sample::get_no_data_value())
+      << "Asked for point with no data should be no data value";
 
   // put data there
   {
@@ -160,27 +154,12 @@ void lazy_load() {
   }
 
   // make sure there is now data there
-  if (std::fabs(490 - s.get(std::make_pair(1 - 0.503915, 0.678783))) > 1.0)
-    throw std::runtime_error("Wrong value at location: " +
-                             std::to_string(s.get(std::make_pair(1 - 0.503915, 0.678783))));
+  EXPECT_NEAR(490, s.get(std::make_pair(1 - 0.503915, 0.678783)), 1.0);
 }
 
 } // namespace
 
-int main() {
-  test::suite suite("sample");
-
-  suite.test(TEST_CASE(no_data));
-
-  suite.test(TEST_CASE(create_tile));
-
-  suite.test(TEST_CASE(get));
-
-  suite.test(TEST_CASE(edges));
-
-  suite.test(TEST_CASE(getgz));
-
-  suite.test(TEST_CASE(lazy_load));
-
-  return suite.tear_down();
+int main(int argc, char* argv[]) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

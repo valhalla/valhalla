@@ -1,5 +1,3 @@
-#include <algorithm>
-#include <cstdint>
 #include <vector>
 
 #include "baldr/accessrestriction.h"
@@ -15,20 +13,13 @@ constexpr size_t kAccessRestrictionExpectedSize = 16;
 
 namespace {
 
-void test_sizeof() {
-  if (sizeof(AccessRestriction) != kAccessRestrictionExpectedSize)
-    throw std::runtime_error("AccessRestriction size should be " +
-                             std::to_string(kAccessRestrictionExpectedSize) + " bytes" + " but is " +
-                             std::to_string(sizeof(AccessRestriction)));
+TEST(AccessRestrictions, SizeofCheck) {
+  EXPECT_EQ(sizeof(AccessRestriction), kAccessRestrictionExpectedSize);
 }
 
 } // namespace
 
-int main() {
-  test::suite suite("access_restriction");
-
-  // Test sizeof the structure
-  suite.test(TEST_CASE(test_sizeof));
-
-  return suite.tear_down();
+int main(int argc, char* argv[]) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

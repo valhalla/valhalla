@@ -2,6 +2,7 @@
 
 #include "midgard/constants.h"
 #include "midgard/pointll.h"
+
 #include "test.h"
 
 using namespace std;
@@ -10,12 +11,10 @@ using namespace valhalla::midgard;
 namespace {
 
 void TryMetersPerDegreeLongitude(const PointLL& p, const float d2) {
-  float d = DistanceApproximator::MetersPerLngDegree(p.lat());
-  if (fabs(d - d2) > kEpsilon)
-    throw runtime_error("KmPerDegreeLongitude test failed");
+  EXPECT_NEAR(DistanceApproximator::MetersPerLngDegree(p.lat()), d2, kEpsilon);
 }
 
-void TestMetersPerDegreeLongitude() {
+TEST(DistanceApproximator, TestMetersPerDegreeLongitude) {
   TryMetersPerDegreeLongitude(PointLL(-80.0f, 0.0f), kMetersPerDegreeLat);
 }
 
@@ -24,10 +23,10 @@ void TryDistanceSquaredFromTestPt(const PointLL& testpt, const PointLL& p, const
   DistanceApproximator approx(testpt);
   float d = sqrtf(approx.DistanceSquared(p));
   // std::cout << " d = " << d << " ArcDistance = " << d2 << std::endl;
-  if (fabs(d - d2) / d2 > 0.02f)
-    throw runtime_error("DistanceSquared from point test failed");
+  EXPECT_NEAR(d / d2, 1, 0.02f);
 }
-void TestDistanceSquaredFromTestPt() {
+
+TEST(DistanceApproximator, TestDistanceSquaredFromTestPt) {
   PointLL p1(-80.0f, 42.0f);
   PointLL p2(-78.0f, 40.0f);
   TryDistanceSquaredFromTestPt(p2, p1, p1.Distance(p2));
@@ -38,11 +37,10 @@ void TryDistanceSquared(const PointLL& a, const PointLL& b, const float d2) {
   // Test if distance is > 2% the spherical distance
   float d = sqrtf(DistanceApproximator::DistanceSquared(a, b));
   // std::cout << " d = " << d << " ArcDistance = " << d2 << std::endl;
-  if (fabs(d - d2) / d2 > 2.0f)
-    throw runtime_error("DistanceSquared between 2 points test failed");
+  EXPECT_NEAR(d / d2, 1, 2.0f) << "DistanceSquared between 2 points test failed";
 }
 
-void TestDistanceSquared() {
+TEST(DistanceApproximator, TestDistanceSquared) {
   PointLL a(-80.0f, 42.0f);
   PointLL b(-78.0f, 40.0f);
   auto d = a.Distance(b);
@@ -51,17 +49,7 @@ void TestDistanceSquared() {
 
 } // namespace
 
-int main() {
-  test::suite suite("distanceapproximator");
-
-  // Test meters per degree longitude at a specified latitude
-  suite.test(TEST_CASE(TestMetersPerDegreeLongitude));
-
-  // Test distance squared from a test point
-  suite.test(TEST_CASE(TestDistanceSquaredFromTestPt));
-
-  // Test distance squared between 2 points
-  suite.test(TEST_CASE(TestDistanceSquared));
-
-  return suite.tear_down();
+int main(int argc, char* argv[]) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

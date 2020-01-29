@@ -261,7 +261,7 @@ bool within_tolerance(const uint32_t v1, const uint32_t v2) {
   return (v1 > v2) ? v1 - v2 <= kThreshold : v2 - v1 <= kThreshold;
 }
 
-void test_matrix() {
+TEST(Matrix, test_matrix) {
   loki_worker_t loki_worker(config);
 
   Api request;
@@ -278,44 +278,31 @@ void test_matrix() {
   results = cost_matrix.SourceToTarget(request.options().sources(), request.options().targets(),
                                        reader, &costing, TravelMode::kDrive, 400000.0);
   for (uint32_t i = 0; i < results.size(); ++i) {
-    if (!within_tolerance(results[i].dist, matrix_answers[i].dist)) {
-      throw std::runtime_error("result " + std::to_string(i) +
-                               "'s distance is not close enough"
-                               " to expected value for CostMatrix. Expected: " +
-                               std::to_string(matrix_answers[i].dist) +
-                               " Actual: " + std::to_string(results[i].dist));
-    }
-    if (!within_tolerance(results[i].time, matrix_answers[i].time)) {
-      throw std::runtime_error("result " + std::to_string(i) +
-                               "'s time is not close enough"
-                               " to expected value for CostMatrix. Expected: " +
-                               std::to_string(matrix_answers[i].time) +
-                               " Actual: " + std::to_string(results[i].time));
-    }
+    EXPECT_NEAR(results[i].dist, matrix_answers[i].dist, kThreshold)
+        << "result " + std::to_string(i) + "'s distance is not close enough" +
+               " to expected value for CostMatrix";
+
+    EXPECT_NEAR(results[i].time, matrix_answers[i].time, kThreshold)
+        << "result " + std::to_string(i) + "'s time is not close enough" +
+               " to expected value for CostMatrix";
   }
 
   TimeDistanceMatrix timedist_matrix;
   results = timedist_matrix.SourceToTarget(request.options().sources(), request.options().targets(),
                                            reader, &costing, TravelMode::kDrive, 400000.0);
   for (uint32_t i = 0; i < results.size(); ++i) {
-    if (!within_tolerance(results[i].dist, matrix_answers[i].dist)) {
-      throw std::runtime_error("result " + std::to_string(i) +
-                               "'s distance is not equal to"
-                               " the expected value for TimeDistMatrix. Expected: " +
-                               std::to_string(matrix_answers[i].dist) +
-                               " Actual: " + std::to_string(results[i].dist));
-    }
-    if (!within_tolerance(results[i].time, matrix_answers[i].time)) {
-      throw std::runtime_error("result " + std::to_string(i) +
-                               "'s time is not equal to"
-                               " the expected value for TimeDistMatrix. Expected: " +
-                               std::to_string(matrix_answers[i].time) +
-                               " Actual: " + std::to_string(results[i].time));
-    }
+    EXPECT_NEAR(results[i].dist, matrix_answers[i].dist, kThreshold)
+        << "result " + std::to_string(i) + "'s distance is not equal to" +
+               " the expected value for TimeDistMatrix";
+
+    EXPECT_NEAR(results[i].time, matrix_answers[i].time, kThreshold)
+        << "result " + std::to_string(i) +
+               "'s time is not equal to the expected value for TimeDistMatrix";
   }
 }
 
-void test_matrix_osrm() {
+// TODO: it was commented before. Why?
+TEST(Matrix, DISABLED_test_matrix_osrm) {
   loki_worker_t loki_worker(config);
 
   Api request;
@@ -333,50 +320,31 @@ void test_matrix_osrm() {
   results = cost_matrix.SourceToTarget(request.options().sources(), request.options().targets(),
                                        reader, &costing, TravelMode::kDrive, 400000.0);
   for (uint32_t i = 0; i < results.size(); ++i) {
-    if (results[i].dist != matrix_answers[i].dist) {
-      throw std::runtime_error("Something is wrong");
-      throw std::runtime_error("result " + std::to_string(i) +
-                               "'s distance is not close enough"
-                               " to expected value for CostMatrix. Expected: " +
-                               std::to_string(matrix_answers[i].dist) +
-                               " Actual: " + std::to_string(results[i].dist));
-    }
-    if (results[i].time != matrix_answers[i].time) {
-      throw std::runtime_error("result " + std::to_string(i) +
-                               "'s time is not close enough"
-                               " to expected value for CostMatrix. Expected: " +
-                               std::to_string(matrix_answers[i].time) +
-                               " Actual: " + std::to_string(results[i].time));
-    }
+    EXPECT_EQ(results[i].dist, matrix_answers[i].dist)
+        << "result " + std::to_string(i) +
+               "'s distance is not close enough to expected value for CostMatrix.";
+
+    EXPECT_EQ(results[i].time, matrix_answers[i].time)
+        << "result " + std::to_string(i) +
+               "'s time is not close enough to expected value for CostMatrix.";
   }
 
   TimeDistanceMatrix timedist_matrix;
   results = timedist_matrix.SourceToTarget(request.options().sources(), request.options().targets(),
                                            reader, &costing, TravelMode::kDrive, 400000.0);
   for (uint32_t i = 0; i < results.size(); ++i) {
-    if (results[i].dist != matrix_answers[i].dist) {
-      throw std::runtime_error("result " + std::to_string(i) +
-                               "'s distance is not equal to"
-                               " the expected value for TimeDistMatrix. Expected: " +
-                               std::to_string(matrix_answers[i].dist) +
-                               " Actual: " + std::to_string(results[i].dist));
-    }
-    if (results[i].time != matrix_answers[i].time) {
-      throw std::runtime_error("result " + std::to_string(i) +
-                               "'s time is not equal to"
-                               " the expected value for TimeDistMatrix. Expected: " +
-                               std::to_string(matrix_answers[i].time) +
-                               " Actual: " + std::to_string(results[i].time));
-    }
+    EXPECT_EQ(results[i].dist, matrix_answers[i].dist)
+        << "result " + std::to_string(i) +
+               "'s distance is not equal to the expected value for TimeDistMatrix.";
+
+    EXPECT_EQ(results[i].time, matrix_answers[i].time)
+        << "result " + std::to_string(i) +
+               "'s time is not equal to the expected value for TimeDistMatrix";
   }
 }
 
 int main(int argc, char* argv[]) {
-  test::suite suite("matrix");
   logging::Configure({{"type", ""}}); // silence logs
-
-  suite.test(TEST_CASE(test_matrix));
-  // suite.test(TEST_CASE(test_matrix_osrm));
-
-  return suite.tear_down();
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

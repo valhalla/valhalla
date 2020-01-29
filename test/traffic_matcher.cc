@@ -103,7 +103,7 @@ std::vector<std::pair<std::string, ots_matches_t>> test_cases{
     // of the partial in it
 };
 
-void test_matcher() {
+TEST(TrafficMatcher, test_matcher) {
   // fake config
   std::stringstream conf_json;
   conf_json << R"({
@@ -140,31 +140,22 @@ void test_matcher() {
         });
     b_segs.erase(seg_itr, b_segs.end());
 
-    if (a_segs.size() != b_segs.size())
-      throw std::logic_error("wrong number of segments matched");
+    ASSERT_EQ(a_segs.size(), b_segs.size());
     for (size_t i = 0; i < a_segs.size(); ++i) {
       const auto& a = a_segs[i];
       const auto& b = b_segs[i];
-      if (a.begin_shape_index != b.begin_shape_index)
-        throw std::logic_error("begin_shape_index mismatch");
-      if (a.end_shape_index != b.end_shape_index)
-        throw std::logic_error("end_shape_index mismatch");
-      if (std::fabs(a.start_time - b.start_time) > 10)
-        throw std::logic_error("start time is out of tolerance");
-      if (std::fabs(a.end_time - b.end_time) > 10)
-        throw std::logic_error("end time is out of tolerance");
-      if (std::fabs(a.length - b.length) > 50)
-        throw std::logic_error("length is out of tolerance");
+      EXPECT_EQ(a.begin_shape_index, b.begin_shape_index);
+      EXPECT_EQ(a.end_shape_index, b.end_shape_index);
+      EXPECT_NEAR(a.start_time, b.start_time, 10) << "start time is out of tolerance";
+      EXPECT_NEAR(a.end_time, b.end_time, 10) << "end time is out of tolerance";
+      EXPECT_NEAR(a.length, b.length, 50) << "length is out of tolerance";
     }
   }
 }
 
 } // namespace
 
-int main() {
-  test::suite suite("traffic matcher");
-
-  suite.test(TEST_CASE(test_matcher));
-
-  return suite.tear_down();
+int main(int argc, char* argv[]) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

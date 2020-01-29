@@ -1,7 +1,7 @@
-#include "test.h"
-
-#include "baldr/graphid.h"
 #include "baldr/nodetransition.h"
+#include "baldr/graphid.h"
+
+#include "test.h"
 
 using namespace std;
 using namespace valhalla::baldr;
@@ -11,34 +11,22 @@ constexpr size_t kNodeTransitionExpectedSize = 8;
 
 namespace {
 
-void test_sizeof() {
-  if (sizeof(NodeTransition) != kNodeTransitionExpectedSize)
-    throw std::runtime_error("NodeTransition size should be " +
-                             std::to_string(kNodeTransitionExpectedSize) + " bytes but is " +
-                             std::to_string(sizeof(NodeTransition)));
+TEST(NodeTransition, Sizeof) {
+  EXPECT_EQ(sizeof(NodeTransition), kNodeTransitionExpectedSize);
 }
 
-void TestWriteRead() {
+TEST(NodeTransition, WriteRead) {
   // Test building NodeTransition and reading back values
   GraphId id(1111, 2, 5555);
   NodeTransition nodetrans(id, true);
 
-  if (nodetrans.endnode() != id) {
-    throw runtime_error("NodeTransition endnode test failed");
-  }
-  if (!nodetrans.up()) {
-    throw runtime_error("NodeTransition up test failed");
-  }
+  EXPECT_EQ(nodetrans.endnode(), id);
+  EXPECT_TRUE(nodetrans.up());
 }
+
 } // namespace
 
-int main(void) {
-  test::suite suite("nodetransition");
-
-  suite.test(TEST_CASE(test_sizeof));
-
-  // Write to file and read into NodeTransition
-  suite.test(TEST_CASE(TestWriteRead));
-
-  return suite.tear_down();
+int main(int argc, char* argv[]) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }
