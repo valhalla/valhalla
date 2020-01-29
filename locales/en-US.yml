@@ -1,0 +1,448 @@
+en:
+    posix_locale: "en_US.UTF-8"
+    aliases:
+        - "en"
+    ordinal_values: &ordinal_values
+        - "1st"
+        - "2nd"
+        - "3rd"
+        - "4th"
+        - "5th"
+        - "6th"
+        - "7th"
+        - "8th"
+        - "9th"
+        - "10th"
+    cardinal_directions: &cardinal_directions
+        - "north"
+        - "northeast"
+        - "east"
+        - "southeast"
+        - "south"
+        - "southwest"
+        - "west"
+        - "northwest"
+    relative_directions: &relative_directions
+        - "left"
+        - "straight"
+        - "right"
+    relative_directions_left_right: &relative_directions_left_right
+        - "left"
+        - "right"
+    empty_street_name_labels: &empty_street_name_labels
+        - "the walkway"
+        - "the cycleway"
+        - "the mountain bike trail"
+    empty_transit_name_labels: &empty_transit_name_labels
+        - "tram"
+        - "metro"
+        - "train"
+        - "bus"
+        - "ferry"
+        - "cable car"
+        - "gondola"
+        - "funicular"
+    metric_lengths: &metric_lengths
+        - "<KILOMETERS> kilometers"
+        - "1 kilometer"
+        - "a half kilometer"
+        - "<METERS> meters"
+        - "less than 10 meters"
+    us_customary_lengths: &us_customary_lengths
+        - "<MILES> miles"
+        - "1 mile"
+        - "a half mile"
+        - "<TENTHS_OF_MILE> tenths of a mile"
+        - "1 tenth of a mile"
+        - "<FEET> feet"
+        - "less than 10 feet"
+    station_label: &station_label "Station"
+    transit_stop_count_labels: &transit_stop_count_labels
+        "one": "stop"
+        "other": "stops"
+    ferry_label: &ferry_label "Ferry"
+    example_tokens:
+        # These names are used to populate example phrases
+        STREET_NAMES:
+            - "Arlen Road"
+        BEGIN_STREET_NAMES:
+            - "Belair Road/US 1 Business"
+        CROSS_STREET_NAMES:
+            - "Devonshire Road"
+        PREVIOUS_STREET_NAMES:
+            - "Vine Street"
+        LENGTH:
+            - "1 mile"
+            - "a half mile"
+        TIME:
+            - "8:02 AM"
+        TRANSIT_STOP:
+            - "8 St - NYU"
+        DESTINATION:
+            - "Lancaster Brewing Company"
+        FERRY_LABEL:
+            - *ferry_label
+        STATION_LABEL:
+            - "Embarcadero Station"
+        ORDINAL_VALUE: *ordinal_values
+        RELATIVE_DIRECTION: *relative_directions_left_right
+        CARDINAL_DIRECTION: *cardinal_directions
+        NUMBER_SIGN:
+            - "67 B-A"
+        BRANCH_SIGN:
+            - "US 322 West"
+        TOWARD_SIGN:
+            - "Lewiston"
+        NAME_SIGN:
+            - "White Marsh Boulevard"
+        TRANSIT_STOP_COUNT:
+            - "1"
+            - "3"
+        TRANSIT_STOP_COUNT_LABEL:
+            - "stop"
+            - "stops"
+        TRANSIT_NAME:
+            - "New Haven"
+        TRANSIT_HEADSIGN:
+            - "JAMAICA - 179 ST"
+        CURRENT_VERBAL_CUE:
+            - "Bear right onto East Fayette Street."
+        NEXT_VERBAL_CUE:
+            - "Turn right onto North Gay Street."
+    instructions:
+        arrive:
+            phrases:
+                "0": "Arrive: <TIME>."
+                "1": "Arrive: <TIME> at <TRANSIT_STOP>."
+        arrive_verbal:
+            phrases:
+                "0": "Arrive at <TIME>."
+                "1": "Arrive at <TIME> at <TRANSIT_STOP>."
+        bear: &bear
+            phrases:
+                "0": "Bear <RELATIVE_DIRECTION>."
+                "1": "Bear <RELATIVE_DIRECTION> onto <STREET_NAMES>."
+                "2": "Bear <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
+                "3": "Bear <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
+            empty_street_name_labels: *empty_street_name_labels
+            relative_directions: *relative_directions_left_right
+        bear_verbal:
+            phrases:
+                "0": "Bear <RELATIVE_DIRECTION>."
+                "1": "Bear <RELATIVE_DIRECTION> onto <STREET_NAMES>."
+                "2": "Bear <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>."
+                "3": "Bear <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
+            empty_street_name_labels: *empty_street_name_labels
+            relative_directions: *relative_directions_left_right
+        becomes: &becomes
+            phrases:
+                "0": "<PREVIOUS_STREET_NAMES> becomes <STREET_NAMES>."
+        becomes_verbal: *becomes
+        continue: &continue
+            phrases:
+                "0": "Continue."
+                "1": "Continue on <STREET_NAMES>."
+            empty_street_name_labels: *empty_street_name_labels
+        continue_verbal: &continue_verbal
+            phrases:
+                "0": "Continue for <LENGTH>."
+                "1": "Continue on <STREET_NAMES> for <LENGTH>."
+            empty_street_name_labels: *empty_street_name_labels
+            metric_lengths: *metric_lengths
+            us_customary_lengths: *us_customary_lengths
+        continue_verbal_alert: *continue
+        depart: &depart
+            phrases:
+                "0": "Depart: <TIME>."
+                "1": "Depart: <TIME> from <TRANSIT_STOP>."
+        depart_verbal:
+            phrases:
+                "0": "Depart at <TIME>."
+                "1": "Depart at <TIME> from <TRANSIT_STOP>."
+
+        destination: &destination
+            phrases:
+                "0": "You have arrived at your destination."
+                "1": "You have arrived at <DESTINATION>."
+                "2": "Your destination is on the <RELATIVE_DIRECTION>."
+                "3": "<DESTINATION> is on the <RELATIVE_DIRECTION>."
+            relative_directions: *relative_directions_left_right
+        destination_verbal: *destination
+        destination_verbal_alert:
+            phrases:
+                "0": "You will arrive at your destination."
+                "1": "You will arrive at <DESTINATION>."
+                "2": "Your destination will be on the <RELATIVE_DIRECTION>."
+                "3": "<DESTINATION> will be on the <RELATIVE_DIRECTION>."
+            relative_directions: *relative_directions_left_right
+        enter_ferry: &enter_ferry
+            phrases:
+                "0": "Take the Ferry."
+                "1": "Take the <STREET_NAMES>."
+                "2": "Take the <STREET_NAMES> <FERRY_LABEL>."
+            empty_street_name_labels: *empty_street_name_labels
+            ferry_label: *ferry_label
+        enter_ferry_verbal: *enter_ferry
+        enter_roundabout: &enter_roundabout
+            phrases:
+                "0": "Enter the roundabout."
+                "1": "Enter the roundabout and take the <ORDINAL_VALUE> exit."
+            ordinal_values: *ordinal_values
+        enter_roundabout_verbal: *enter_roundabout
+        exit: &exit
+            phrases:
+                "0": "Take the exit on the <RELATIVE_DIRECTION>."
+                "1": "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION>."
+                "2": "Take the <BRANCH_SIGN> exit on the <RELATIVE_DIRECTION>."
+                "3": "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN>."
+                "4": "Take the exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+                "5": "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+                "6": "Take the <BRANCH_SIGN> exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+                "7": "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN> toward <TOWARD_SIGN>."
+                "8": "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION>."
+                "10": "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN>."
+                "12": "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+                "14": "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN> toward <TOWARD_SIGN>."
+                "15": "Take the exit."
+                "16": "Take exit <NUMBER_SIGN>."
+                "17": "Take the <BRANCH_SIGN> exit."
+                "18": "Take exit <NUMBER_SIGN> onto <BRANCH_SIGN>."
+                "19": "Take the exit toward <TOWARD_SIGN>."
+                "20": "Take exit <NUMBER_SIGN> toward <TOWARD_SIGN>."
+                "21": "Take the <BRANCH_SIGN> exit toward <TOWARD_SIGN>."
+                "22": "Take exit <NUMBER_SIGN> onto <BRANCH_SIGN> toward <TOWARD_SIGN>."
+                "23": "Take the <NAME_SIGN> exit."
+                "25": "Take the <NAME_SIGN> exit onto <BRANCH_SIGN>."
+                "27": "Take the <NAME_SIGN> exit toward <TOWARD_SIGN>."
+                "29": "Take the <NAME_SIGN> exit onto <BRANCH_SIGN> toward <TOWARD_SIGN>."
+            relative_directions: *relative_directions_left_right
+        exit_ferry: &exit_ferry
+            phrases:
+                "0": "Head <CARDINAL_DIRECTION>."
+                "1": "Head <CARDINAL_DIRECTION> on <STREET_NAMES>."
+                "2": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
+                "4": "Drive <CARDINAL_DIRECTION>."
+                "5": "Drive <CARDINAL_DIRECTION> on <STREET_NAMES>."
+                "6": "Drive <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
+                "8": "Walk <CARDINAL_DIRECTION>."
+                "9": "Walk <CARDINAL_DIRECTION> on <STREET_NAMES>."
+                "10": "Walk <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
+                "16": "Bike <CARDINAL_DIRECTION>."
+                "17": "Bike <CARDINAL_DIRECTION> on <STREET_NAMES>."
+                "18": "Bike <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
+            cardinal_directions: *cardinal_directions
+            empty_street_name_labels: *empty_street_name_labels
+        exit_ferry_verbal: &exit_ferry_verbal
+            phrases:
+                "0": "Head <CARDINAL_DIRECTION>."
+                "1": "Head <CARDINAL_DIRECTION> on <STREET_NAMES>."
+                "2": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."
+                "4": "Drive <CARDINAL_DIRECTION>."
+                "5": "Drive <CARDINAL_DIRECTION> on <STREET_NAMES>."
+                "6": "Drive <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."
+                "8": "Walk <CARDINAL_DIRECTION>."
+                "9": "Walk <CARDINAL_DIRECTION> on <STREET_NAMES>."
+                "10": "Walk <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."
+                "16": "Bike <CARDINAL_DIRECTION>."
+                "17": "Bike <CARDINAL_DIRECTION> on <STREET_NAMES>."
+                "18": "Bike <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."
+            cardinal_directions: *cardinal_directions
+            empty_street_name_labels: *empty_street_name_labels
+        exit_roundabout:
+            phrases:
+                "0": "Exit the roundabout."
+                "1": "Exit the roundabout onto <STREET_NAMES>."
+                "2": "Exit the roundabout onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
+            empty_street_name_labels: *empty_street_name_labels
+        exit_roundabout_verbal: # TODO so similar to exit_roundabout, can we dedupe
+            phrases:
+                "0": "Exit the roundabout."
+                "1": "Exit the roundabout onto <STREET_NAMES>."
+                "2": "Exit the roundabout onto <BEGIN_STREET_NAMES>."
+            empty_street_name_labels: *empty_street_name_labels
+        exit_verbal: *exit
+        keep: &keep
+            phrases:
+                "0": "Keep <RELATIVE_DIRECTION> at the fork."
+                "1": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN>."
+                "2": "Keep <RELATIVE_DIRECTION> to take <STREET_NAMES>."
+                "3": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> onto <STREET_NAMES>."
+                "4": "Keep <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+                "5": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> toward <TOWARD_SIGN>."
+                "6": "Keep <RELATIVE_DIRECTION> to take <STREET_NAMES> toward <TOWARD_SIGN>."
+                "7": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> onto <STREET_NAMES> toward <TOWARD_SIGN>."
+            empty_street_name_labels: *empty_street_name_labels
+            relative_directions: *relative_directions
+        keep_to_stay_on: &keep_to_stay_on
+            phrases:
+                "0": "Keep <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
+                "1": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> to stay on <STREET_NAMES>."
+                "2": "Keep <RELATIVE_DIRECTION> to stay on <STREET_NAMES> toward <TOWARD_SIGN>."
+                "3": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> to stay on <STREET_NAMES> toward <TOWARD_SIGN>."
+            empty_street_name_labels: *empty_street_name_labels
+            relative_directions: *relative_directions
+        keep_to_stay_on_verbal: *keep_to_stay_on
+        keep_verbal: *keep
+        merge: &merge
+            phrases:
+                "0": "Merge."
+                "1": "Merge <RELATIVE_DIRECTION>."
+                "2": "Merge onto <STREET_NAMES>."
+                "3": "Merge <RELATIVE_DIRECTION> onto <STREET_NAMES>."
+            relative_directions: *relative_directions_left_right
+            empty_street_name_labels: *empty_street_name_labels
+        merge_verbal: *merge
+        post_transit_connection_destination: *exit_ferry
+        post_transit_connection_destination_verbal: *exit_ferry_verbal
+        post_transition_transit_verbal:
+            phrases:
+                "0": "Travel <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>."
+            transit_stop_count_labels: *transit_stop_count_labels
+        post_transition_verbal: *continue_verbal
+        ramp: &ramp
+            phrases:
+                "0": "Take the ramp on the <RELATIVE_DIRECTION>."
+                "1": "Take the <BRANCH_SIGN> ramp on the <RELATIVE_DIRECTION>."
+                "2": "Take the ramp on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+                "3": "Take the <BRANCH_SIGN> ramp on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+                "4": "Take the <NAME_SIGN> ramp on the <RELATIVE_DIRECTION>."
+                "5": "Turn <RELATIVE_DIRECTION> to take the ramp."
+                "6": "Turn <RELATIVE_DIRECTION> to take the <BRANCH_SIGN> ramp."
+                "7": "Turn <RELATIVE_DIRECTION> to take the ramp toward <TOWARD_SIGN>."
+                "8": "Turn <RELATIVE_DIRECTION> to take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>."
+                "9": "Turn <RELATIVE_DIRECTION> to take the <NAME_SIGN> ramp."
+                "10": "Take the ramp."
+                "11": "Take the <BRANCH_SIGN> ramp."
+                "12": "Take the ramp toward <TOWARD_SIGN>."
+                "13": "Take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>."
+                "14": "Take the <NAME_SIGN> ramp."
+            relative_directions: *relative_directions_left_right
+        ramp_straight: &ramp_straight
+            phrases:
+                "0": "Stay straight to take the ramp."
+                "1": "Stay straight to take the <BRANCH_SIGN> ramp."
+                "2": "Stay straight to take the ramp toward <TOWARD_SIGN>."
+                "3": "Stay straight to take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>."
+                "4": "Stay straight to take the <NAME_SIGN> ramp."
+        ramp_straight_verbal: *ramp_straight
+        ramp_verbal: *ramp
+        sharp:
+            phrases:
+                "0": "Turn sharp <RELATIVE_DIRECTION>."
+                "1": "Turn sharp <RELATIVE_DIRECTION> onto <STREET_NAMES>."
+                "2": "Turn sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
+                "3": "Turn sharp <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
+            empty_street_name_labels: *empty_street_name_labels
+            relative_directions: *relative_directions_left_right
+        sharp_verbal: # TODO similar to sharp, can we dedupe
+            phrases:
+                "0": "Turn sharp <RELATIVE_DIRECTION>."
+                "1": "Turn sharp <RELATIVE_DIRECTION> onto <STREET_NAMES>."
+                "2": "Turn sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>."
+                "3": "Turn sharp <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
+            empty_street_name_labels: *empty_street_name_labels
+            relative_directions: *relative_directions_left_right
+        start: *exit_ferry
+        start_verbal:
+            phrases:
+                "0": "Head <CARDINAL_DIRECTION> for <LENGTH>."
+                "1": "Head <CARDINAL_DIRECTION> on <STREET_NAMES> for <LENGTH>."
+                "2": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."
+                "4": "Drive <CARDINAL_DIRECTION> for <LENGTH>."
+                "5": "Drive <CARDINAL_DIRECTION> on <STREET_NAMES> for <LENGTH>."
+                "6": "Drive <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."
+                "8": "Walk <CARDINAL_DIRECTION> for <LENGTH>."
+                "9": "Walk <CARDINAL_DIRECTION> on <STREET_NAMES> for <LENGTH>."
+                "10": "Walk <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."
+                "16": "Bike <CARDINAL_DIRECTION> for <LENGTH>."
+                "17": "Bike <CARDINAL_DIRECTION> on <STREET_NAMES> for <LENGTH>."
+                "18": "Bike <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."
+            cardinal_directions: *cardinal_directions
+            empty_street_name_labels: *empty_street_name_labels
+            metric_lengths: *metric_lengths
+            us_customary_lengths: *us_customary_lengths
+        transit:
+            phrases:
+                "0": "Take the <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+                "1": "Take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+            empty_transit_name_labels: *empty_transit_name_labels
+            transit_stop_count_labels: *transit_stop_count_labels
+        transit_connection_destination: &transit_connection_destination
+            phrases:
+                "0": "Exit the station."
+                "1": "Exit the <TRANSIT_STOP>."
+                "2": "Exit the <TRANSIT_STOP> <STATION_LABEL>."
+            station_label: *station_label
+        transit_connection_destination_verbal: *transit_connection_destination
+        transit_connection_start: &transit_connection_start
+            phrases:
+                "0": "Enter the station."
+                "1": "Enter the <TRANSIT_STOP>."
+                "2": "Enter the <TRANSIT_STOP> <STATION_LABEL>."
+            station_label: *station_label
+        transit_connection_start_verbal: *transit_connection_start
+        transit_connection_transfer: &transit_connection_transfer
+            phrases:
+                "0": "Transfer at the station."
+                "1": "Transfer at the <TRANSIT_STOP>."
+                "2": "Transfer at the <TRANSIT_STOP> <STATION_LABEL>."
+            station_label: *station_label
+        transit_connection_transfer_verbal: *transit_connection_transfer
+        transit_remain_on:
+            phrases:
+                "0": "Remain on the <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+                "1": "Remain on the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+            empty_transit_name_labels: *empty_transit_name_labels
+            transit_stop_count_labels: *transit_stop_count_labels
+        transit_remain_on_verbal:
+            phrases:
+                "0": "Remain on the <TRANSIT_NAME>."
+                "1": "Remain on the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>."
+            empty_transit_name_labels: *empty_transit_name_labels
+            transit_stop_count_labels: *transit_stop_count_labels
+        transit_transfer: &transit_transfer
+            phrases:
+                "0": "Transfer to take the <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+                "1": "Transfer to take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+            empty_transit_name_labels: *empty_transit_name_labels
+            transit_stop_count_labels: *transit_stop_count_labels
+        transit_transfer_verbal:
+            phrases:
+                "0": "Transfer to take the <TRANSIT_NAME>."
+                "1": "Transfer to take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>."
+            empty_transit_name_labels: *empty_transit_name_labels
+        transit_verbal:
+            phrases:
+                "0": "Take the <TRANSIT_NAME>."
+                "1": "Take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>."
+            empty_transit_name_labels: *empty_transit_name_labels
+        turn:
+            phrases:
+                "0": "Turn <RELATIVE_DIRECTION>."
+                "1": "Turn <RELATIVE_DIRECTION> onto <STREET_NAMES>."
+                "2": "Turn <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
+                "3": "Turn <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
+            empty_street_name_labels: *empty_street_name_labels
+            relative_directions: *relative_directions_left_right
+        turn_verbal: # TODO similar to turn, can we dedupe
+            phrases:
+                "0": "Turn <RELATIVE_DIRECTION>."
+                "1": "Turn <RELATIVE_DIRECTION> onto <STREET_NAMES>."
+                "2": "Turn <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>."
+                "3": "Turn <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
+            empty_street_name_labels: *empty_street_name_labels
+            relative_directions: *relative_directions_left_right
+        uturn: &uturn
+            phrases:
+                "0": "Make a <RELATIVE_DIRECTION> U-turn."
+                "1": "Make a <RELATIVE_DIRECTION> U-turn onto <STREET_NAMES>."
+                "2": "Make a <RELATIVE_DIRECTION> U-turn to stay on <STREET_NAMES>."
+                "3": "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES>."
+                "4": "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES> onto <STREET_NAMES>."
+                "5": "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES> to stay on <STREET_NAMES>."
+            empty_street_name_labels: *empty_street_name_labels
+            relative_directions: *relative_directions_left_right
+        uturn_verbal: *uturn
+        verbal_multi_cue:
+            phrases:
+                "0": "<CURRENT_VERBAL_CUE> Then <NEXT_VERBAL_CUE>"
