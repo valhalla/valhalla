@@ -198,6 +198,14 @@ install(FILES ${valhalla_hdrs}
   DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/valhalla"
   COMPONENT development)
 
+install(DIRECTORY ${VALHALLA_SOURCE_DIR}/third_party/date/include/date
+  DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/valhalla/third_party"
+  COMPONENT development)
+
+install(DIRECTORY ${VALHALLA_SOURCE_DIR}/third_party/rapidjson/include/rapidjson
+  DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/valhalla/third_party"
+  COMPONENT development)
+
 if(PKG_CONFIG_FOUND)
   ## Configure libvalhalla.pc file with valhalla target linking options via PkgConfig linker
   set(CMAKE_PkgConfig_LINK_EXECUTABLE "<CMAKE_COMMAND> -DINPUT=${VALHALLA_SOURCE_DIR}/libvalhalla.pc.in -DOUTPUT=<TARGET> -DVERSION=${VERSION} -Dprefix=${CMAKE_INSTALL_PREFIX} -Dexec_prefix=${CMAKE_INSTALL_PREFIX} -Dlibdir=${CMAKE_INSTALL_LIBDIR} -Dincludedir=${CMAKE_INSTALL_INCLUDEDIR} -Ddeplibs=\"<FLAGS> <LINK_FLAGS> <LINK_LIBRARIES>\" -P ${CMAKE_SOURCE_DIR}/cmake/PkgConfig.cmake")
