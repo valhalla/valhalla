@@ -6,11 +6,23 @@
    * FIXED: Adds support for geos-3.8 c++ api [#2021](https://github.com/valhalla/valhalla/issues/2021)
    * FIXED: Updated the osrm serializer to not set junction name for osrm origin/start maneuver - this is not helpful since we are not transitioning through the intersection.  [#2121](https://github.com/valhalla/valhalla/pull/2121)
    * FIXED: Removes precomputing of edge-costs which lead to wrong results [#2120](https://github.com/valhalla/valhalla/pull/2120)
+   * FIXED: Fixes bug with inverted time-restriction parsing [#2167](https://github.com/valhalla/valhalla/pull/2167)
+   * FIXED: Fixed several bugs with numeric underflow in map-matching trip durations. These may
+     occur when serializing match results where adjacent trace points appear out-of-sequence on the
+     same edge [#2178](https://github.com/valhalla/valhalla/pull/2178)
+     - `MapMatcher::FormPath` now catches route discontinuities on the same edge when the distance
+       percentage along don't agree. The trip leg builder builds disconnected legs on a single edge
+       to avoid duration underflow.
+     - Correctly populate edge groups when matching results contain loops. When a loop occurs,
+       the leg builder now starts at the correct edge where the loop ends, and correctly accounts
+       for any contained edges.
+     - Duration over-trimming at the terminating edge of a match.
 
 * **Enhancement**
    * ADDED: Allows more complicated routes in timedependent a-star before timing out [#2068](https://github.com/valhalla/valhalla/pull/2068)
    * ADDED: Guide signs and junction names [#2096](https://github.com/valhalla/valhalla/pull/2096)
    * ADDED: Added a bool to the config indicating whether to use commercially set attributes.  Added logic to not call IsIntersectionInternal if this is a commercial data set.  [#2132](https://github.com/valhalla/valhalla/pull/2132)
+   * ADDED: Removed commerical data set bool to the config and added more knobs for data.  Added infer_internal_intersections, infer_turn_channels, apply_country_overrides, and use_admin_db.  [#2173](https://github.com/valhalla/valhalla/pull/2173)
 
 ## Release Date: 2019-11-21 Valhalla 3.0.9
 * **Bug Fix**

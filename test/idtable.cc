@@ -69,6 +69,15 @@ void TestBounds() {
     throw std::logic_error("The max id should have been increased to 181");
 }
 
+void TestX86() {
+  IdTable t(6800000000);
+  uint64_t old_max = t.max();
+
+  t.set(5528037441);
+  if (t.max() != old_max) {
+    throw std::logic_error("The max id shouldn't be changed");
+  }
+}
 int main() {
   test::suite suite("nodetable");
 
@@ -76,6 +85,7 @@ int main() {
   suite.test(TEST_CASE(TestSetGet));
   suite.test(TEST_CASE(TestRandom));
   suite.test(TEST_CASE(TestBounds));
+  suite.test(TEST_CASE(TestX86));
 
   return suite.tear_down();
 }

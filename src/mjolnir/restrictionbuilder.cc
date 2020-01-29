@@ -389,7 +389,6 @@ void build(const std::string& complex_restriction_from_file,
                   ComplexRestrictionBuilder complex_restriction;
                   complex_restriction.set_from_id(tmp_ids.at(tmp_ids.size() - 1));
                   complex_restriction.set_via_list(vias);
-                  complex_restriction.set_via_count(vias.size());
                   complex_restriction.set_to_id(tmp_ids.at(0));
                   complex_restriction.set_type(restriction.type());
                   complex_restriction.set_modes(restriction.modes());
@@ -529,7 +528,6 @@ void build(const std::string& complex_restriction_from_file,
                     ComplexRestrictionBuilder complex_restriction;
                     complex_restriction.set_from_id(tmp_ids.at(0));
                     complex_restriction.set_via_list(vias);
-                    complex_restriction.set_via_count(vias.size());
                     complex_restriction.set_to_id(tmp_ids.at(tmp_ids.size() - 1));
                     complex_restriction.set_type(restriction.type());
                     complex_restriction.set_modes(restriction.modes());

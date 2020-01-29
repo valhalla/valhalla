@@ -324,12 +324,16 @@ public:
                       (!forward && next_pred->edgeid() == cr->to_graphid()))) {
 
           if (current_time && cr->has_dt()) {
-            if (baldr::DateTime::is_restricted(cr->dt_type(), cr->begin_hrs(), cr->begin_mins(),
-                                               cr->end_hrs(), cr->end_mins(), cr->dow(),
-                                               cr->begin_week(), cr->begin_month(),
-                                               cr->begin_day_dow(), cr->end_week(), cr->end_month(),
-                                               cr->end_day_dow(), current_time,
-                                               baldr::DateTime::get_tz_db().from_index(tz_index))) {
+            // TODO Possibly a bug here. Shouldn't both kTimedDenied and kTimedAllowed
+            //      be handled here? As is done in IsRestricted
+            if (baldr::DateTime::is_conditional_active(cr->dt_type(), cr->begin_hrs(),
+                                                       cr->begin_mins(), cr->end_hrs(),
+                                                       cr->end_mins(), cr->dow(), cr->begin_week(),
+                                                       cr->begin_month(), cr->begin_day_dow(),
+                                                       cr->end_week(), cr->end_month(),
+                                                       cr->end_day_dow(), current_time,
+                                                       baldr::DateTime::get_tz_db().from_index(
+                                                           tz_index))) {
               return true;
             }
             continue;
@@ -352,26 +356,34 @@ public:
    *                      indicates the route is not time dependent.
    * @param  tz_index     timezone index for the node
    */
-  static bool
-  IsRestricted(const uint64_t restriction, const uint64_t current_time, const uint32_t tz_index) {
+  static bool IsConditionalActive(const uint64_t restriction,
+                                  const uint64_t current_time,
+                                  const uint32_t tz_index) {
 
     baldr::TimeDomain td(restriction);
-    return baldr::DateTime::is_restricted(td.type(), td.begin_hrs(), td.begin_mins(), td.end_hrs(),
-                                          td.end_mins(), td.dow(), td.begin_week(), td.begin_month(),
-                                          td.begin_day_dow(), td.end_week(), td.end_month(),
-                                          td.end_day_dow(), current_time,
-                                          baldr::DateTime::get_tz_db().from_index(tz_index));
+    return baldr::DateTime::is_conditional_active(td.type(), td.begin_hrs(), td.begin_mins(),
+                                                  td.end_hrs(), td.end_mins(), td.dow(),
+                                                  td.begin_week(), td.begin_month(),
+                                                  td.begin_day_dow(), td.end_week(), td.end_month(),
+                                                  td.end_day_dow(), current_time,
+                                                  baldr::DateTime::get_tz_db().from_index(tz_index));
   }
 
+  // Is the restriction active?
+  //
+  // Function is mostly a helper to abstract the behaviour of time-based
+  // restrictions where kTimedAllowed is _allowed_ inside a period of time
+  // and kTimedDenied is denied inside a period of time
   inline static bool IsRestricted(const uint64_t restriction,
                                   const uint64_t current_time,
                                   const uint32_t tz_index,
-                                  baldr::AccessType access_type) {
+                                  baldr::AccessType restriction_access_type) {
 
-    if (access_type == baldr::AccessType::kTimedAllowed) {
-      return IsRestricted(restriction, current_time, tz_index);
-    } else if (access_type == baldr::AccessType::kTimedDenied) {
-      return !IsRestricted(restriction, current_time, tz_index);
+    if (restriction_access_type == baldr::AccessType::kTimedAllowed) {
+      return !IsConditionalActive(restriction, current_time, tz_index);
+    }
+    if (restriction_access_type == baldr::AccessType::kTimedDenied) {
+      return IsConditionalActive(restriction, current_time, tz_index);
     }
     return true;
   }

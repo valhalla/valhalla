@@ -396,12 +396,12 @@ int main(int argc, char* argv[]) {
     bpo::notify(vm);
   } catch (std::exception& e) {
     std::cerr << "Unable to parse command line options because: " << e.what();
-    return false;
+    return EXIT_FAILURE;
   }
 
   if (vm.count("help")) {
     std::cout << options << "\n";
-    return true;
+    return EXIT_SUCCESS;
   }
 
   for (const auto& arg : std::vector<std::string>{"o_onestop_id", "o_lat", "o_lng", "conf"}) {
@@ -468,4 +468,6 @@ int main(int argc, char* argv[]) {
     LOG_INFO("Schedule:");
     LogSchedule(*transit_dir, originid, destid, tripid, time, transit, file_name, local_level);
   }
+
+  return EXIT_SUCCESS;
 }
