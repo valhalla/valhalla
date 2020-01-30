@@ -27,27 +27,27 @@ public:
   using GraphTileBuilder::GraphTileBuilder;
 };
 
-bool tile_equalish(const GraphTile a,
-                   const GraphTile b,
-                   size_t difference,
-                   const std::array<std::vector<GraphId>, kBinCount>& bins) {
+void assert_tile_equalish(const GraphTile a,
+                          const GraphTile b,
+                          size_t difference,
+                          const std::array<std::vector<GraphId>, kBinCount>& bins,
+                          const std::string& msg) {
   // expected size
-  if (a.header()->end_offset() + difference != b.header()->end_offset())
-    return false;
+  ASSERT_EQ(a.header()->end_offset() + difference, b.header()->end_offset());
 
   // check the first chunk after the header
-  if (memcmp(reinterpret_cast<const char*>(a.header()) + sizeof(GraphTileHeader),
-             reinterpret_cast<const char*>(b.header()) + sizeof(GraphTileHeader),
-             (reinterpret_cast<const char*>(b.GetBin(0, 0).begin()) -
-              reinterpret_cast<const char*>(b.header())) -
-                 sizeof(GraphTileHeader)))
-    return false;
+  ASSERT_EQ(memcmp(reinterpret_cast<const char*>(a.header()) + sizeof(GraphTileHeader),
+                   reinterpret_cast<const char*>(b.header()) + sizeof(GraphTileHeader),
+                   (reinterpret_cast<const char*>(b.GetBin(0, 0).begin()) -
+                    reinterpret_cast<const char*>(b.header())) -
+                       sizeof(GraphTileHeader)),
+            0);
 
   // check the stuff after the bins
-  if (memcmp(reinterpret_cast<const char*>(a.header()) + a.header()->edgeinfo_offset(),
-             reinterpret_cast<const char*>(b.header()) + b.header()->edgeinfo_offset(),
-             b.header()->end_offset() - b.header()->edgeinfo_offset()))
-    return false;
+  ASSERT_EQ(memcmp(reinterpret_cast<const char*>(a.header()) + a.header()->edgeinfo_offset(),
+                   reinterpret_cast<const char*>(b.header()) + b.header()->edgeinfo_offset(),
+                   b.header()->end_offset() - b.header()->edgeinfo_offset()),
+            0);
 
   // if the header is as expected
   const auto *ah = a.header(), *bh = b.header();
@@ -71,42 +71,37 @@ bool tile_equalish(const GraphTile a,
     for (size_t i = 0; i < ah->directededgecount(); ++i) {
       auto a_info = a.edgeinfo(a.directededge(i)->edgeinfo_offset());
       auto b_info = b.edgeinfo(b.directededge(i)->edgeinfo_offset());
-      if (a_info.encoded_shape() != b_info.encoded_shape())
-        return false;
-      if (a_info.GetNames().size() != b_info.GetNames().size())
-        return false;
+      ASSERT_EQ(a_info.encoded_shape(), b_info.encoded_shape());
+      ASSERT_EQ(a_info.GetNames().size(), b_info.GetNames().size());
       for (size_t j = 0; j < a_info.GetNames().size(); ++j)
-        if (a_info.GetNames()[j] != b_info.GetNames()[j])
-          return false;
+        ASSERT_EQ(a_info.GetNames()[j], b_info.GetNames()[j]);
     }
     // check that the bins contain what was just added to them
     for (size_t i = 0; i < bins.size(); ++i) {
       auto bin = b.GetBin(i % kBinsDim, i / kBinsDim);
       auto offset = bin.size() - bins[i].size();
       for (size_t j = 0; j < bins[i].size(); ++j) {
-        if (bin[j + offset] != bins[i][j])
-          return false;
+        ASSERT_EQ(bin[j + offset], bins[i][j]);
       }
     }
-    return true;
+  } else {
+    FAIL() << "not equal";
   }
-  return false;
 }
 
-void TestDuplicateEdgeInfo() {
+TEST(GraphTileBuilder, TestDuplicateEdgeInfo) {
   edge_tuple a = test_graph_tile_builder::EdgeTuple(0, GraphId(0, 2, 0), GraphId(0, 2, 1));
   edge_tuple b = test_graph_tile_builder::EdgeTuple(0, GraphId(0, 2, 0), GraphId(0, 2, 1));
-  if (a != b || !(a == b))
-    throw std::runtime_error("Edge tuples should be equivalent");
+  EXPECT_EQ(a, b);
+  EXPECT_TRUE(a == b) << "Edge tuples should be equivalent";
+
   std::unordered_map<edge_tuple, size_t, test_graph_tile_builder::EdgeTupleHasher> m;
   m.emplace(a, 0);
-  if (m.size() != 1)
-    throw std::runtime_error("Why isnt there an item in this map");
-  if (m.find(a) == m.end())
-    throw std::runtime_error("We should have been able to find the edge tuple");
+  EXPECT_EQ(m.size(), 1) << "Why isnt there an item in this map";
+  ASSERT_NE(m.find(a), m.end()) << "We should have been able to find the edge tuple";
+
   const auto success = m.emplace(b, 1);
-  if (success.second)
-    throw std::runtime_error("Why on earth would it be found but then insert just fine");
+  EXPECT_FALSE(success.second) << "Why on earth would it be found but then insert just fine";
 
   // load a test builder
   std::string test_dir = "test/data/builder_tiles";
@@ -115,26 +110,21 @@ void TestDuplicateEdgeInfo() {
   bool added = false;
   test.AddEdgeInfo(0, GraphId(0, 2, 0), GraphId(0, 2, 1), 1234, 555, 0, 120,
                    std::list<PointLL>{{0, 0}, {1, 1}}, {"einzelweg"}, 0, added);
-  if (test.edge_offset_map_.size() != 1)
-    throw std::runtime_error("There should be exactly one of these in here");
+  EXPECT_EQ(test.edge_offset_map_.size(), 1) << "There should be exactly one of these in here";
+
   // add edge info for node 1 to node 0
   test.AddEdgeInfo(0, GraphId(0, 2, 1), GraphId(0, 2, 0), 1234, 555, 0, 120,
                    std::list<PointLL>{{1, 1}, {0, 0}}, {"einzelweg"}, 0, added);
-  if (test.edge_offset_map_.size() != 1)
-    throw std::runtime_error("There should still be exactly one of these in here");
+  EXPECT_EQ(test.edge_offset_map_.size(), 1) << "There should still be exactly one of these in here";
 
   test.StoreTileData();
   test_graph_tile_builder test2(test_dir, GraphId(0, 2, 0), false);
   auto ei = test2.edgeinfo(0);
-  if (std::abs(ei.mean_elevation() - 555.0f) > kElevationBinSize) {
-    throw std::runtime_error("Mean elevation test failed " + std::to_string(ei.mean_elevation()));
-  }
-  if (ei.speed_limit() != 120) {
-    throw std::runtime_error("Speed limit test failed " + std::to_string(ei.speed_limit()));
-  }
+  EXPECT_NEAR(ei.mean_elevation(), 555.0f, kElevationBinSize);
+  EXPECT_EQ(ei.speed_limit(), 120);
 }
 
-void TestAddBins() {
+TEST(GraphTileBuilder, TestAddBins) {
 
   // if you update the tile format you must regenerate test tiles. after your tile format change,
   // run valhalla_build_tiles on a reasonable sized extract. when its done do the following:
@@ -156,8 +146,7 @@ void TestAddBins() {
     GraphId id(test_tile.second, 2, 0);
     std::string no_bin_dir = VALHALLA_SOURCE_DIR "test/data/bin_tiles/no_bin";
     GraphTile t(no_bin_dir, id);
-    if (!t.header())
-      throw std::runtime_error("Couldn't load test tile");
+    EXPECT_TRUE(t.header()) << "Couldn't load test tile";
 
     // alter the config to point to another dir
     std::string bin_dir = "test/data/bin_tiles/bin";
@@ -177,8 +166,7 @@ void TestAddBins() {
       n.exceptions(std::ifstream::failbit | std::ifstream::badbit);
       n.open("test/data/bin_tiles/bin/2/000/" + test_tile.first, std::ios::binary);
       std::string nbytes((std::istreambuf_iterator<char>(n)), std::istreambuf_iterator<char>());
-      if (obytes != nbytes)
-        throw std::logic_error("Old tile and new tile should be the same if not adding any bins");
+      EXPECT_EQ(obytes, nbytes) << "Old tile and new tile should be the same if not adding any bins";
     }
 
     // send fake bins, we'll throw one in each bin
@@ -188,8 +176,8 @@ void TestAddBins() {
     auto increase = bins.size() * sizeof(GraphId);
 
     // check the new tile isnt broken and is exactly the right size bigger
-    if (!tile_equalish(t, GraphTile(bin_dir, id), increase, bins))
-      throw std::logic_error("New tiles edgeinfo or names arent matching up: 1");
+    assert_tile_equalish(t, GraphTile(bin_dir, id), increase, bins,
+                         "New tiles edgeinfo or names arent matching up: 1");
 
     // append some more
     for (auto& bin : bins)
@@ -198,8 +186,8 @@ void TestAddBins() {
     increase = bins.size() * sizeof(GraphId) * 2;
 
     // check the new tile isnt broken and is exactly the right size bigger
-    if (!tile_equalish(t, GraphTile(bin_dir, id), increase, bins))
-      throw std::logic_error("New tiles edgeinfo or names arent matching up: 2");
+    assert_tile_equalish(t, GraphTile(bin_dir, id), increase, bins,
+                         "New tiles edgeinfo or names arent matching up: 2");
 
     // check that appending works
     t = GraphTile(bin_dir, id);
@@ -208,8 +196,8 @@ void TestAddBins() {
       bin.insert(bin.end(), bin.begin(), bin.end());
 
     // check the new tile isnt broken and is exactly the right size bigger
-    if (!tile_equalish(t, GraphTile(bin_dir, id), increase, bins))
-      throw std::logic_error("New tiles edgeinfo or names arent matching up: 3");
+    assert_tile_equalish(t, GraphTile(bin_dir, id), increase, bins,
+                         "New tiles edgeinfo or names arent matching up: 3");
   }
 }
 
@@ -249,7 +237,7 @@ public:
   }
 };
 
-void TestBinEdges() {
+TEST(GraphTileBuilder, TestBinEdges) {
   fake_tile fake(
       "gsoyLcpczmFgJOsMzAwGtDmDtEmApG|@tE|EdF~PjKlRjLbKhLrJnTdD`\\oEz`@wAlJKjVnHfMpRbQdQbRvTtNrM~"
       "ShNdZ|HjLfCbPfIbGdNxBjOyBjPOnJm@rDvD~BbFxFzA|IjAdEdFy@tOqBbPv@`HfHj`@"
@@ -262,23 +250,12 @@ void TestBinEdges() {
       "JiGlJqAfDbAtE~A~GgBdFyKlJy[xWqMvMqTlKoPfCeKiBkHeF}E{KoD{JaLsGwSeEg~BqR");
   GraphTileBuilder::tweeners_t tweeners;
   auto bins = GraphTileBuilder::BinEdges(&fake, tweeners);
-  if (tweeners.size() != 1)
-    throw std::logic_error("This edge leaves a tile for 1 other tile and comes back.");
+  EXPECT_EQ(tweeners.size(), 1) << "This edge leaves a tile for 1 other tile and comes back.";
 }
 
 } // namespace
 
-int main() {
-  test::suite suite("graphtilebuilder");
-
-  // Write to file and read into EdgeInfo
-  suite.test(TEST_CASE(TestDuplicateEdgeInfo));
-
-  // Add bins to a tile and see if its still ok
-  suite.test(TEST_CASE(TestAddBins));
-
-  // Test bin edges of some tricky edges
-  suite.test(TEST_CASE(TestBinEdges));
-
-  return suite.tear_down();
+int main(int argc, char* argv[]) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

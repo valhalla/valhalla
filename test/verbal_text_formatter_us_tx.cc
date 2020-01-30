@@ -1,6 +1,7 @@
 #include "baldr/verbal_text_formatter_us_tx.h"
 #include "baldr/verbal_text_formatter.h"
 #include "baldr/verbal_text_formatter_us.h"
+
 #include "test.h"
 
 using namespace std;
@@ -26,13 +27,10 @@ public:
 
 void TryFormFmTts(string source, string expected) {
   VerbalTextFormatterUsTxTest formatter_test("US", "TX");
-  string tts = formatter_test.FormFmTts(source);
-  if (tts != expected) {
-    throw std::runtime_error("Incorrect FormFmTts - EXPECTED: " + expected + "  |  FORMED: " + tts);
-  }
+  EXPECT_EQ(formatter_test.FormFmTts(source), expected);
 }
 
-void TestFormFmTts() {
+TEST(VerbalTextFormatterUsTx, TestFormFmTts) {
   TryFormFmTts("FM1018", "Farm to Market Road 1018");
   TryFormFmTts("FM 1018", "Farm to Market Road 1018");
   TryFormFmTts("FM-1018", "Farm to Market Road 1018");
@@ -43,16 +41,13 @@ void TestFormFmTts() {
 
 void TryFormRmTts(string source, string expected) {
   VerbalTextFormatterUsTxTest formatter_test("US", "TX");
-  string tts = formatter_test.FormRmTts(source);
-  if (tts != expected) {
-    throw std::runtime_error("Incorrect FormRmTts - EXPECTED: " + expected + "  |  FORMED: " + tts);
-  }
+  EXPECT_EQ(formatter_test.FormRmTts(source), expected);
 }
 
-void TestFormRmTts() {
+TEST(VerbalTextFormatterUsTx, TestFormRmTts) {
   TryFormRmTts("RM1018", "Ranch to Market Road 1018");
   TryFormRmTts("RM 1018", "Ranch to Market Road 1018");
-  TryFormRmTts("FM-1018", "Ranch to Market Road 1018");
+  TryFormRmTts("RM-1018", "Ranch to Market Road 1018");
   TryFormRmTts("R M 1018", "Ranch to Market Road 1018");
   TryFormRmTts("R-M 1018", "Ranch to Market Road 1018");
   TryFormRmTts("R-M-1018", "Ranch to Market Road 1018");
@@ -60,13 +55,10 @@ void TestFormRmTts() {
 
 void TryFormat(string source, string expected) {
   VerbalTextFormatterUsTxTest formatter_test("US", "TX");
-  string tts = formatter_test.Format(source);
-  if (tts != expected) {
-    throw std::runtime_error("Incorrect Format - EXPECTED: " + expected + "  |  FORMED: " + tts);
-  }
+  EXPECT_EQ(formatter_test.Format(source), expected);
 }
 
-void TestFormat() {
+TEST(VerbalTextFormatterUsTx, TestFormat) {
   TryFormat("I H1", "Interstate H1");
   TryFormat("I 5", "Interstate 5");
   TryFormat("I 35", "Interstate 35");
@@ -120,14 +112,7 @@ void TestFormat() {
 
 } // namespace
 
-int main() {
-  test::suite suite("verbal_text_formatter_us_tx");
-
-  // FormFmTts
-  suite.test(TEST_CASE(TestFormFmTts));
-
-  // Format
-  suite.test(TEST_CASE(TestFormat));
-
-  return suite.tear_down();
+int main(int argc, char* argv[]) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }
