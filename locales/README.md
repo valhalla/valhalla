@@ -2,7 +2,7 @@
 
 Valhalla supports localized instructions in multiple languages for both textual and verbal phrases.
 
-## Contibuting Translations
+## Contributing Translations
 
 Thank you contributing to Valhalla translations!
 
