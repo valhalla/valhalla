@@ -787,7 +787,7 @@ make_distributor_from_range(const ranged_default_t<float>& range) {
   return new std::uniform_real_distribution<float>(range.min - rangeLength, range.max + rangeLength);
 }
 
-void testTransitCostParams() {
+TEST(TransitCost, testTransitCostParams) {
   constexpr unsigned testIterations = 250;
   constexpr unsigned seed = 0;
   std::mt19937 generator(seed);
@@ -798,68 +798,53 @@ void testTransitCostParams() {
   distributor.reset(make_distributor_from_range(kModeFactorRange));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_transitcost_from_json("mode_factor", (*distributor)(generator)));
-    if (ctorTester->mode_factor_ < kModeFactorRange.min ||
-        ctorTester->mode_factor_ > kModeFactorRange.max) {
-      throw std::runtime_error("mode_factor_ is not within it's range");
-    }
+    EXPECT_THAT(ctorTester->mode_factor_,
+                test::IsBetween(kModeFactorRange.min, kModeFactorRange.max));
   }
 
   // use_bus_
   distributor.reset(make_distributor_from_range(kUseBusRange));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_transitcost_from_json("use_bus", (*distributor)(generator)));
-    if (ctorTester->use_bus_ < kUseBusRange.min || ctorTester->use_bus_ > kUseBusRange.max) {
-      throw std::runtime_error("use_bus_ is not within it's range");
-    }
+    EXPECT_THAT(ctorTester->use_bus_, test::IsBetween(kUseBusRange.min, kUseBusRange.max));
   }
 
   // use_rail_
   distributor.reset(make_distributor_from_range(kUseRailRange));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_transitcost_from_json("use_rail", (*distributor)(generator)));
-    if (ctorTester->use_rail_ < kUseRailRange.min || ctorTester->use_rail_ > kUseRailRange.max) {
-      throw std::runtime_error("use_rail_ is not within it's range");
-    }
+    EXPECT_THAT(ctorTester->use_rail_, test::IsBetween(kUseRailRange.min, kUseRailRange.max));
   }
 
   // use_transfers_
   distributor.reset(make_distributor_from_range(kUseTransfersRange));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_transitcost_from_json("use_transfers", (*distributor)(generator)));
-    if (ctorTester->use_transfers_ < kUseTransfersRange.min ||
-        ctorTester->use_transfers_ > kUseTransfersRange.max) {
-      throw std::runtime_error("use_transfers_ is not within it's range");
-    }
+    EXPECT_THAT(ctorTester->use_transfers_,
+                test::IsBetween(kUseTransfersRange.min, kUseTransfersRange.max));
   }
 
   // transfer_cost_
   distributor.reset(make_distributor_from_range(kTransferCostRange));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_transitcost_from_json("transfer_cost", (*distributor)(generator)));
-    if (ctorTester->transfer_cost_ < kTransferCostRange.min ||
-        ctorTester->transfer_cost_ > kTransferCostRange.max) {
-      throw std::runtime_error("transfer_cost_ is not within it's range");
-    }
+    EXPECT_THAT(ctorTester->transfer_cost_,
+                test::IsBetween(kTransferCostRange.min, kTransferCostRange.max));
   }
 
   // transfer_penalty_
   distributor.reset(make_distributor_from_range(kTransferPenaltyRange));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_transitcost_from_json("transfer_penalty", (*distributor)(generator)));
-    if (ctorTester->transfer_penalty_ < kTransferPenaltyRange.min ||
-        ctorTester->transfer_penalty_ > kTransferPenaltyRange.max) {
-      throw std::runtime_error("transfer_penalty_ is not within it's range");
-    }
+    EXPECT_THAT(ctorTester->transfer_penalty_,
+                test::IsBetween(kTransferPenaltyRange.min, kTransferPenaltyRange.max));
   }
 }
 } // namespace
 
-int main() {
-  test::suite suite("costing");
-
-  suite.test(TEST_CASE(testTransitCostParams));
-
-  return suite.tear_down();
+int main(int argc, char* argv[]) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }
 
 #endif

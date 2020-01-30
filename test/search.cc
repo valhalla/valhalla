@@ -1,5 +1,4 @@
 #include "loki/search.h"
-#include "test.h"
 #include <cstdint>
 
 #include <boost/filesystem.hpp>
@@ -13,6 +12,8 @@
 #include "baldr/tilehierarchy.h"
 #include "midgard/pointll.h"
 #include "midgard/vector2.h"
+
+#include "test.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -45,14 +46,18 @@ std::pair<GraphId, PointLL> a({tile_id.tileid(), tile_id.level(), 1}, {.01, .1})
 std::pair<GraphId, PointLL> c({tile_id.tileid(), tile_id.level(), 2}, {.01, .01});
 std::pair<GraphId, PointLL> d({tile_id.tileid(), tile_id.level(), 3}, {.2, .1});
 
+void clean_tiles() {
+  if (boost::filesystem::is_directory(tile_dir)) {
+    boost::filesystem::remove_all(tile_dir);
+  }
+}
+
 void make_tile() {
   using namespace valhalla::mjolnir;
   using namespace valhalla::baldr;
 
   // make sure that all the old tiles are gone before trying to make new ones.
-  if (boost::filesystem::is_directory(tile_dir)) {
-    boost::filesystem::remove_all(tile_dir);
-  }
+  clean_tiles();
 
   // basic tile information
   GraphTileBuilder tile(tile_dir, tile_id, false);
@@ -160,13 +165,12 @@ void search(valhalla::baldr::Location location,
   const auto results = Search({location}, reader);
   const auto p = results.at(location);
 
-  if ((p.edges.front().begin_node() || p.edges.front().end_node()) != expected_node)
-    throw std::runtime_error(expected_node ? "Should've snapped to node"
-                                           : "Shouldn't've snapped to node");
-  if (!p.edges.size())
-    throw std::runtime_error("Didn't find any node/edges");
-  if (!p.edges.front().projected.ApproximatelyEqual(expected_point))
-    throw std::runtime_error("Found wrong point");
+  EXPECT_EQ((p.edges.front().begin_node() || p.edges.front().end_node()), expected_node)
+      << p.edges.front().begin_node() << ":" << p.edges.front().end_node()
+      << (expected_node ? " Should've snapped to node" : " Shouldn't've snapped to node");
+
+  EXPECT_TRUE(p.edges.size()) << "Didn't find any node/edges";
+  EXPECT_TRUE(p.edges.front().projected.ApproximatelyEqual(expected_point)) << "Found wrong point";
 
   valhalla::baldr::PathLocation answer(location);
   for (const auto& expected_edge : expected_edges) {
@@ -176,11 +180,11 @@ void search(valhalla::baldr::Location location,
   }
   // note that this just checks that p has the edges that answer has
   // p can have more edges than answer has and that wont fail this check!
-  if (!answer.shares_edges(p))
-    throw std::runtime_error("Did not find expected edges");
+  EXPECT_TRUE(answer.shares_edges(p)) << "Did not find expected edges";
   // if you want to enforce that the result didnt have more then expected
-  if (exact && answer.edges.size() != p.edges.size())
-    throw std::logic_error("Got more edges than expected");
+  if (exact) {
+    EXPECT_EQ(answer.edges.size(), p.edges.size()) << "Got more edges than expected";
+  }
 }
 
 void search(valhalla::baldr::Location location, size_t result_count, int reachability) {
@@ -200,14 +204,14 @@ void search(valhalla::baldr::Location location, size_t result_count, int reachab
     return;
   const auto& p = results.at(location);
 
-  if (p.edges.size() != result_count)
-    throw std::logic_error("Wrong number of edges");
-  for (const auto& e : p.edges)
-    if (e.outbound_reach != reachability || e.inbound_reach != reachability)
-      throw std::logic_error("Wrong reachability");
+  EXPECT_EQ(p.edges.size(), result_count) << "Wrong number of edges";
+  for (const auto& e : p.edges) {
+    EXPECT_EQ(e.outbound_reach, reachability);
+    EXPECT_EQ(e.inbound_reach, reachability);
+  }
 }
 
-void test_edge_search() {
+TEST(Search, test_edge_search) {
   auto t = a.first.tileid();
   auto l = a.first.level();
   using S = PathLocation::SideOfStreet;
@@ -322,7 +326,7 @@ void test_edge_search() {
   // TODO: add more tests
 }
 
-void test_reachability_radius() {
+TEST(Search, test_reachability_radius) {
   PointLL ob(b.second.first - .001f, b.second.second - .01f);
   unsigned int longest = ob.Distance(d.second);
   unsigned int shortest = ob.Distance(a.second);
@@ -346,7 +350,7 @@ void test_reachability_radius() {
   search({ob, Location::StopType::BREAK, 3, 3, 0}, 2, 3);
 }
 
-void test_search_cutoff() {
+TEST(Search, test_search_cutoff) {
   // test default cutoff of 35km showing no results
   search({{-77, -77}}, 0, 0);
 
@@ -383,16 +387,19 @@ void test_search_cutoff() {
 
 } // namespace
 
-int main() {
-  test::suite suite("search");
+// Setup and tearown will be called only once for the entire suite121
+class SearchTestSuiteEnv : public ::testing::Environment {
+public:
+  void SetUp() override {
+    make_tile();
+  }
+  void TearDown() override {
+    // todo: think whether we want to clean tile dir after the test
+  }
+};
 
-  suite.test(TEST_CASE(make_tile));
-
-  suite.test(TEST_CASE(test_edge_search));
-
-  suite.test(TEST_CASE(test_reachability_radius));
-
-  suite.test(TEST_CASE(test_search_cutoff));
-
-  return suite.tear_down();
+int main(int argc, char* argv[]) {
+  testing::AddGlobalTestEnvironment(new SearchTestSuiteEnv);
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

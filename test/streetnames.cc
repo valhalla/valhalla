@@ -1,10 +1,9 @@
 #include "baldr/streetnames.h"
 #include "baldr/streetname.h"
-#include "test.h"
 
-#include <algorithm>
-#include <iostream>
 #include <vector>
+
+#include "test.h"
 
 using namespace std;
 using namespace valhalla::baldr;
@@ -16,15 +15,13 @@ void TryListCtor(const std::vector<std::pair<std::string, bool>>& names) {
 
   int x = 0;
   for (const auto& street_name : street_names) {
-    if (names.at(x).first != street_name->value())
-      throw std::runtime_error("Incorrect street name value");
-    if (names.at(x).second != street_name->is_route_number())
-      throw std::runtime_error("Incorrect street name is_route_number");
+    EXPECT_EQ(names.at(x).first, street_name->value());
+    EXPECT_EQ(names.at(x).second, street_name->is_route_number());
     ++x;
   }
 }
 
-void TestListCtor() {
+TEST(Streetnames, TestListCtor) {
   TryListCtor({{"Main Street", false}});
   TryListCtor({{"Hershey Road", false}, {"PA 743 North", true}});
   TryListCtor({{"Unter den Linden", false}, {"B 2", true}, {"B 5", true}});
@@ -34,13 +31,11 @@ void TryFindCommonStreetNames(const StreetNames& lhs,
                               const StreetNames& rhs,
                               const StreetNames& expected) {
   std::unique_ptr<StreetNames> computed = lhs.FindCommonStreetNames(rhs);
-  if (computed->ToString() != expected.ToString()) {
-    throw std::runtime_error(expected.ToString() +
-                             ": Incorrect street names returned from FindCommonStreetNames");
-  }
+  EXPECT_EQ(computed->ToString(), expected.ToString())
+      << "Incorrect street names returned from FindCommonStreetNames";
 }
 
-void TestFindCommonStreetNames() {
+TEST(Streetnames, TestFindCommonStreetNames) {
   TryFindCommonStreetNames(StreetNames({{"Hershey Road", false}, {"PA 743 North", true}}),
                            StreetNames({{"Fishburn Road", false}, {"PA 743 North", true}}),
                            StreetNames({{"PA 743 North", true}}));
@@ -62,13 +57,11 @@ void TryFindCommonBaseNames(const StreetNames& lhs,
                             const StreetNames& rhs,
                             const StreetNames& expected) {
   std::unique_ptr<StreetNames> computed = lhs.FindCommonBaseNames(rhs);
-  if (computed->ToString() != expected.ToString()) {
-    throw std::runtime_error(expected.ToString() +
-                             ": Incorrect street names returned from FindCommonBaseNames");
-  }
+  EXPECT_EQ(computed->ToString(), expected.ToString())
+      << "Incorrect street names returned from FindCommonBaseNames";
 }
 
-void TestFindCommonBaseNames() {
+TEST(Streetnames, TestFindCommonBaseNames) {
   TryFindCommonBaseNames(StreetNames({{"Hershey Road", false}, {"PA 743 North", true}}),
                          StreetNames({{"Fishburn Road", false}, {"PA 743 North", true}}),
                          StreetNames({{"PA 743 North", true}}));
@@ -80,13 +73,11 @@ void TestFindCommonBaseNames() {
 
 void TryGetRouteNumbers(const StreetNames& street_names, const StreetNames& expected) {
   std::unique_ptr<StreetNames> computed = street_names.GetRouteNumbers();
-  if (computed->ToString() != expected.ToString()) {
-    throw std::runtime_error(expected.ToString() +
-                             ": Incorrect values returned from GetRouteNumbers");
-  }
+  EXPECT_EQ(computed->ToString(), expected.ToString())
+      << "Incorrect values returned from GetRouteNumbers";
 }
 
-void TestGetRouteNumbers() {
+TEST(Streetnames, TestGetRouteNumbers) {
   TryGetRouteNumbers(StreetNames({{"Hershey Road", false}, {"PA 743 North", true}}),
                      StreetNames({{"PA 743 North", true}}));
 
@@ -100,13 +91,11 @@ void TestGetRouteNumbers() {
 
 void TryGetNonRouteNumbers(const StreetNames& street_names, const StreetNames& expected) {
   std::unique_ptr<StreetNames> computed = street_names.GetNonRouteNumbers();
-  if (computed->ToString() != expected.ToString()) {
-    throw std::runtime_error(expected.ToString() +
-                             ": Incorrect values returned from GetNonRouteNumbers");
-  }
+  EXPECT_EQ(computed->ToString(), expected.ToString())
+      << "Incorrect values returned from GetNonRouteNumbers";
 }
 
-void TestGetNonRouteNumbers() {
+TEST(Streetnames, TestGetNonRouteNumbers) {
   TryGetNonRouteNumbers(StreetNames({{"Hershey Road", false}, {"PA 743 North", true}}),
                         StreetNames({{"Hershey Road", false}}));
 
@@ -121,23 +110,7 @@ void TestGetNonRouteNumbers() {
 
 } // namespace
 
-int main() {
-  test::suite suite("streetnames");
-
-  // Constructor with list argument
-  suite.test(TEST_CASE(TestListCtor));
-
-  // FindCommonStreetNames
-  suite.test(TEST_CASE(TestFindCommonStreetNames));
-
-  // FindCommonBaseNames
-  suite.test(TEST_CASE(TestFindCommonBaseNames));
-
-  // GetRouteNumbers
-  suite.test(TEST_CASE(TestGetRouteNumbers));
-
-  // GetNonRouteNumbers
-  suite.test(TEST_CASE(TestGetNonRouteNumbers));
-
-  return suite.tear_down();
+int main(int argc, char* argv[]) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

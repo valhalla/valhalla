@@ -1,5 +1,3 @@
-#include "test.h"
-
 #include <iostream>
 #include <string>
 #include <vector>
@@ -12,6 +10,8 @@
 #include "thor/isochrone.h"
 #include "thor/worker.h"
 #include <boost/property_tree/ptree.hpp>
+
+#include "test.h"
 
 using namespace valhalla;
 using namespace valhalla::thor;
@@ -65,8 +65,6 @@ const auto config = json_to_pt(R"({
     }
   })");
 
-} // namespace
-
 void try_isochrone(GraphReader& reader,
                    loki_worker_t& loki_worker,
                    thor_worker_t& thor_worker,
@@ -80,12 +78,10 @@ void try_isochrone(GraphReader& reader,
   auto result = thor_worker.isochrones(request);
 
   // Check if the result contains the expected string
-  if (result.find(expected) == std::string::npos) {
-    throw std::runtime_error("isochrones failed: expected " + expected);
-  }
+  EXPECT_NE(result.find(expected), std::string::npos) << "isochrones failed: expected " + expected;
 }
 
-void test_isochrones() {
+TEST(Isochronies, Basic) {
   // Test setup
   loki_worker_t loki_worker(config);
   thor_worker_t thor_worker(config);
@@ -107,13 +103,11 @@ void test_isochrones() {
 #endif
 }
 
-int main(int argc, char* argv[]) {
-  test::suite suite("isochrones");
+} // namespace
 
+int main(int argc, char* argv[]) {
   // Silence logs (especially long request logging)
   logging::Configure({{"type", ""}});
-
-  suite.test(TEST_CASE(test_isochrones));
-
-  return suite.tear_down();
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }
