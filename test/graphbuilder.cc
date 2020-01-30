@@ -15,12 +15,9 @@ using namespace valhalla::mjolnir;
 
 namespace {}
 
-int main() {
-  test::suite suite("graphbuilder");
+// TODO: sweet jesus add more tests of this class!
 
-  // Test setting and getting on random sizes of bit tables
-  // suite.test(TEST_CASE(some_test));
-  // TODO: sweet jesus add more tests of this class!
-
-  return suite.tear_down();
+int main(int argc, char* argv[]) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

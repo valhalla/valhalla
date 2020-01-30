@@ -34,9 +34,7 @@ void test_instructions(const std::string filename,
                        const std::string expected_verbal_post_transition_instruction = "") {
   // Load pinpoint test
   std::string path_bytes = test::load_binary_file(filename);
-  if (path_bytes.size() == 0) {
-    throw std::runtime_error("path_bytes is empty");
-  }
+  EXPECT_NE(path_bytes.size(), 0);
 
   // Create the request from the path bytes
   valhalla::Api request;
@@ -47,33 +45,20 @@ void test_instructions(const std::string filename,
 
   // Validate routes size
   int found_routes_size = request.directions().routes_size();
-  if (found_routes_size != expected_routes_size) {
-    throw std::runtime_error("Invalid routes size - found: " + std::to_string(found_routes_size) +
-                             " | expected: " + std::to_string(expected_routes_size));
-  }
+  EXPECT_EQ(found_routes_size, expected_routes_size);
 
   // Validate legs size
   int found_legs_size = request.directions().routes(0).legs_size();
-  if (found_legs_size != expected_legs_size) {
-    throw std::runtime_error("Invalid legs size - found: " + std::to_string(found_legs_size) +
-                             " | expected: " + std::to_string(expected_legs_size));
-  }
+  EXPECT_EQ(found_legs_size, expected_legs_size);
 
   // Validate maneuvers size
   int found_maneuvers_size = request.directions().routes(0).legs(0).maneuver_size();
-  if (found_maneuvers_size != expected_maneuvers_size) {
-    throw std::runtime_error(
-        "Invalid maneuvers size - found: " + std::to_string(found_maneuvers_size) +
-        " | expected: " + std::to_string(expected_maneuvers_size));
-  }
+  EXPECT_EQ(found_maneuvers_size, expected_maneuvers_size);
 
   // Validate the text instruction for the specified maneuver index
   std::string found_text_instruction =
       request.directions().routes(0).legs(0).maneuver(maneuver_index).text_instruction();
-  if (found_text_instruction != expected_text_instruction) {
-    throw std::runtime_error("Invalid text instruction - found: " + found_text_instruction +
-                             " | expected: " + expected_text_instruction);
-  }
+  EXPECT_EQ(found_text_instruction, expected_text_instruction);
 
   // Validate the verbal_transition_alert_instruction for the specified maneuver index, if requested
   if (!expected_verbal_transition_alert_instruction.empty()) {
@@ -83,11 +68,8 @@ void test_instructions(const std::string filename,
             .legs(0)
             .maneuver(maneuver_index)
             .verbal_transition_alert_instruction();
-    if (found_verbal_transition_alert_instruction != expected_verbal_transition_alert_instruction) {
-      throw std::runtime_error("Invalid verbal_transition_alert_instruction - found: " +
-                               found_verbal_transition_alert_instruction +
-                               " | expected: " + expected_verbal_transition_alert_instruction);
-    }
+    EXPECT_EQ(found_verbal_transition_alert_instruction,
+              expected_verbal_transition_alert_instruction);
   }
 
   // Validate the verbal_pre_transition_instruction for the specified maneuver index, if requested
@@ -97,11 +79,7 @@ void test_instructions(const std::string filename,
                                                               .legs(0)
                                                               .maneuver(maneuver_index)
                                                               .verbal_pre_transition_instruction();
-    if (found_verbal_pre_transition_instruction != expected_verbal_pre_transition_instruction) {
-      throw std::runtime_error("Invalid verbal_pre_transition_instruction - found: " +
-                               found_verbal_pre_transition_instruction +
-                               " | expected: " + expected_verbal_pre_transition_instruction);
-    }
+    EXPECT_EQ(found_verbal_pre_transition_instruction, expected_verbal_pre_transition_instruction);
   }
 
   // Validate the verbal_post_transition_instruction for the specified maneuver index, if requested
@@ -111,11 +89,7 @@ void test_instructions(const std::string filename,
                                                                .legs(0)
                                                                .maneuver(maneuver_index)
                                                                .verbal_post_transition_instruction();
-    if (found_verbal_post_transition_instruction != expected_verbal_post_transition_instruction) {
-      throw std::runtime_error("Invalid verbal_post_transition_instruction - found: " +
-                               found_verbal_post_transition_instruction +
-                               " | expected: " + expected_verbal_post_transition_instruction);
-    }
+    EXPECT_EQ(found_verbal_post_transition_instruction, expected_verbal_post_transition_instruction);
   }
 }
 
@@ -127,9 +101,7 @@ void test_osrm_maneuver(const std::string filename,
                         const std::string expected_maneuver_modifier) {
   // Load pinpoint test
   std::string path_bytes = test::load_binary_file(filename);
-  if (path_bytes.size() == 0) {
-    throw std::runtime_error("path_bytes is empty");
-  }
+  EXPECT_NE(path_bytes.size(), 0);
 
   // Create the request from the path bytes
   valhalla::Api request;
@@ -146,9 +118,8 @@ void test_osrm_maneuver(const std::string filename,
 
   rapidjson::Document doc;
   doc.Parse(json_str.c_str());
-  if (doc.HasParseError()) {
-    throw std::runtime_error("Parse JSON error");
-  }
+
+  ASSERT_FALSE(doc.HasParseError()) << "Parse JSON error";
 
   // Set the maneuver path
   std::string maneuver_path = "/routes/" + std::to_string(routes_index) + "/legs/" +
@@ -158,19 +129,13 @@ void test_osrm_maneuver(const std::string filename,
   // Validate maneuver type
   std::string maneuver_type_path = maneuver_path + "/type";
   std::string found_maneuver_type = rapidjson::get<std::string>(doc, maneuver_type_path.c_str());
-  if (found_maneuver_type != expected_maneuver_type) {
-    throw std::runtime_error("Invalid maneuver type - found: " + found_maneuver_type +
-                             " | expected: " + expected_maneuver_type);
-  }
+  EXPECT_EQ(found_maneuver_type, expected_maneuver_type);
 
   // Validate maneuver modifier
   std::string maneuver_midifier_path = maneuver_path + "/modifier";
   std::string found_maneuver_modifier =
       rapidjson::get<std::string>(doc, maneuver_midifier_path.c_str());
-  if (found_maneuver_modifier != expected_maneuver_modifier) {
-    throw std::runtime_error("Invalid maneuver modifier - found: " + found_maneuver_modifier +
-                             " | expected: " + expected_maneuver_modifier);
-  }
+  EXPECT_EQ(found_maneuver_modifier, expected_maneuver_modifier);
 }
 
 void test_osrm_destinations(const std::string filename,
@@ -180,9 +145,8 @@ void test_osrm_destinations(const std::string filename,
                             const std::string expected_destinations) {
   // Load pinpoint test
   std::string path_bytes = test::load_binary_file(filename);
-  if (path_bytes.size() == 0) {
-    throw std::runtime_error("path_bytes is empty");
-  }
+
+  EXPECT_NE(path_bytes.size(), 0);
 
   // Create the request from the path bytes
   valhalla::Api request;
@@ -199,9 +163,7 @@ void test_osrm_destinations(const std::string filename,
 
   rapidjson::Document doc;
   doc.Parse(json_str.c_str());
-  if (doc.HasParseError()) {
-    throw std::runtime_error("Parse JSON error");
-  }
+  ASSERT_FALSE(doc.HasParseError()) << "Parse JSON error";
 
   // Set the destination path
   std::string destinations_path = "/routes/" + std::to_string(routes_index) + "/legs/" +
@@ -210,10 +172,7 @@ void test_osrm_destinations(const std::string filename,
 
   // Validate destinations
   std::string found_destinations = rapidjson::get<std::string>(doc, destinations_path.c_str());
-  if (found_destinations != expected_destinations) {
-    throw std::runtime_error("Invalid destinations - found: " + found_destinations +
-                             " | expected: " + expected_destinations);
-  }
+  EXPECT_EQ(found_destinations, expected_destinations);
 }
 
 void test_osrm_junction_name(const std::string filename,
@@ -223,9 +182,7 @@ void test_osrm_junction_name(const std::string filename,
                              const std::string expected_junction_name) {
   // Load pinpoint test
   std::string path_bytes = test::load_binary_file(filename);
-  if (path_bytes.size() == 0) {
-    throw std::runtime_error("path_bytes is empty");
-  }
+  EXPECT_NE(path_bytes.size(), 0);
 
   // Create the request from the path bytes
   valhalla::Api request;
@@ -242,9 +199,7 @@ void test_osrm_junction_name(const std::string filename,
 
   rapidjson::Document doc;
   doc.Parse(json_str.c_str());
-  if (doc.HasParseError()) {
-    throw std::runtime_error("Parse JSON error");
-  }
+  ASSERT_FALSE(doc.HasParseError()) << "Parse JSON error";
 
   // Set the junction_name path
   std::string junction_name_path = "/routes/" + std::to_string(routes_index) + "/legs/" +
@@ -253,10 +208,7 @@ void test_osrm_junction_name(const std::string filename,
 
   // Validate junction_name
   std::string found_junction_name = rapidjson::get<std::string>(doc, junction_name_path.c_str(), "");
-  if (found_junction_name != expected_junction_name) {
-    throw std::runtime_error("Invalid junction_name - found: " + found_junction_name +
-                             " | expected: " + expected_junction_name);
-  }
+  EXPECT_EQ(found_junction_name, expected_junction_name);
 }
 
 void test_osrm_guidance_view(const std::string filename,
@@ -269,9 +221,7 @@ void test_osrm_guidance_view(const std::string filename,
                              const std::string expected_overlay_id) {
   // Load pinpoint test
   std::string path_bytes = test::load_binary_file(filename);
-  if (path_bytes.size() == 0) {
-    throw std::runtime_error("path_bytes is empty");
-  }
+  EXPECT_NE(path_bytes.size(), 0);
 
   // Create the request from the path bytes
   valhalla::Api request;
@@ -288,9 +238,7 @@ void test_osrm_guidance_view(const std::string filename,
 
   rapidjson::Document doc;
   doc.Parse(json_str.c_str());
-  if (doc.HasParseError()) {
-    throw std::runtime_error("Parse JSON error");
-  }
+  ASSERT_FALSE(doc.HasParseError()) << "Parse JSON error";
 
   // Set the guidance_views path
   std::string guidance_views_path =
@@ -302,10 +250,7 @@ void test_osrm_guidance_view(const std::string filename,
 
   // Validate guidance view base id
   std::string found_base_id = rapidjson::get<std::string>(doc, base_id_path.c_str(), "");
-  if (found_base_id != expected_base_id) {
-    throw std::runtime_error("Invalid base_id - found: " + found_base_id +
-                             " | expected: " + expected_base_id);
-  }
+  EXPECT_EQ(found_base_id, expected_base_id);
 
   // Set the overlay_id path
   std::string overlay_id_path =
@@ -313,13 +258,10 @@ void test_osrm_guidance_view(const std::string filename,
 
   // Validate guidance view overlay id
   std::string found_overlay_id = rapidjson::get<std::string>(doc, overlay_id_path.c_str(), "");
-  if (found_overlay_id != expected_overlay_id) {
-    throw std::runtime_error("Invalid overlay_id - found: " + found_overlay_id +
-                             " | expected: " + expected_overlay_id);
-  }
+  EXPECT_EQ(found_overlay_id, expected_overlay_id);
 }
 
-void validate_merge_instructions() {
+TEST(Instructions, validate_merge_instructions) {
 
   int expected_routes_size = 1;
   int expected_legs_size = 1;
@@ -340,7 +282,7 @@ void validate_merge_instructions() {
                     "Continue for 2 tenths of a mile.");
 }
 
-void validate_osrm_merge_maneuver() {
+TEST(Instructions, validate_osrm_merge_maneuver) {
 
   int routes_index = 0;
   int legs_index = 0;
@@ -355,7 +297,7 @@ void validate_osrm_merge_maneuver() {
                      legs_index, steps_index, "merge", "slight left");
 }
 
-void validate_osrm_turn_destinations() {
+TEST(Instructions, validate_osrm_turn_destinations) {
 
   int routes_index = 0;
   int legs_index = 0;
@@ -388,7 +330,7 @@ void validate_osrm_turn_destinations() {
                          routes_index, legs_index, steps_index, "A20: Dover, Channel Tunnel");
 }
 
-void validate_osrm_turn_junction_name() {
+TEST(Instructions, validate_osrm_turn_junction_name) {
 
   int routes_index = 0;
   int legs_index = 0;
@@ -430,7 +372,7 @@ void validate_osrm_turn_junction_name() {
                           routes_index, legs_index, steps_index, "");
 }
 
-void validate_osrm_guidance_view() {
+TEST(Instructions, validate_osrm_guidance_view) {
 
   int routes_index = 0;
   int legs_index = 0;
@@ -445,7 +387,7 @@ void validate_osrm_guidance_view() {
                           overlay_ids_index, "CA075101", "CA07510E");
 }
 
-void validate_osrm_roundabout_destinations() {
+TEST(Instructions, validate_osrm_roundabout_destinations) {
 
   int routes_index = 0;
   int legs_index = 0;
@@ -495,7 +437,7 @@ void validate_osrm_roundabout_destinations() {
                          routes_index, legs_index, exit_steps_index, "Bexley");
 }
 
-void validate_ramp_instructions() {
+TEST(Instructions, validate_ramp_instructions) {
   int expected_routes_size = 1;
   int expected_legs_size = 1;
   int expected_maneuvers_size = 4;
@@ -515,7 +457,7 @@ void validate_ramp_instructions() {
                     "Take the M11 ramp toward London.", "", "Take the M11 ramp toward London.", "");
 }
 
-void validate_exit_instructions() {
+TEST(Instructions, validate_exit_instructions) {
   int expected_routes_size = 1;
   int expected_legs_size = 1;
   int expected_maneuvers_size = 3;
@@ -538,32 +480,7 @@ void validate_exit_instructions() {
 
 } // namespace
 
-int main() {
-  test::suite suite("instructions");
-
-  // Validate the merge instructions
-  suite.test(TEST_CASE(validate_merge_instructions));
-
-  // Validate the osrm merge maneuver
-  suite.test(TEST_CASE(validate_osrm_merge_maneuver));
-
-  // Validate the ramp instructions
-  suite.test(TEST_CASE(validate_ramp_instructions));
-
-  // Validate the exit instructions
-  suite.test(TEST_CASE(validate_exit_instructions));
-
-  // Validate the osrm turn destinations
-  suite.test(TEST_CASE(validate_osrm_turn_destinations));
-
-  // Validate the osrm roundabout destinations
-  suite.test(TEST_CASE(validate_osrm_roundabout_destinations));
-
-  // Validate the osrm turn at junction name
-  suite.test(TEST_CASE(validate_osrm_turn_junction_name));
-
-  // Validate the osrm guidance view
-  suite.test(TEST_CASE(validate_osrm_guidance_view));
-
-  return suite.tear_down();
+int main(int argc, char* argv[]) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

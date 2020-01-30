@@ -1,10 +1,13 @@
 #include <cstdint>
 // -*- mode: c++ -*-
 #include "meili/routing.h"
+
 #include "test.h"
 
 using namespace valhalla;
 using namespace valhalla::meili;
+
+namespace {
 
 void Add(baldr::DoubleBucketQueue& adjlist, const std::vector<float>& costs) {
   uint32_t idx = 0;
@@ -20,12 +23,12 @@ void TryRemove(baldr::DoubleBucketQueue& adjlist,
   for (size_t i = 0; i < num_to_remove; ++i) {
     const auto top = adjlist.pop();
     const auto cost = costs[top];
-    test::assert_bool(previous_cost <= cost, "TryAddRemove: expected order test failed");
+    EXPECT_LE(previous_cost, cost) << "TryAddRemove: expected order test failed";
     previous_cost = cost;
   }
 }
 
-void TestAddRemove() {
+TEST(Routing, TestAddRemove) {
   // Test add and remove
   std::vector<float> costs = {67, 325, 25, 466, 1000, 10000, 758, 167, 258, 16442, 278};
 
@@ -35,7 +38,7 @@ void TestAddRemove() {
 
   Add(adjlist, costs);
   TryRemove(adjlist, costs.size(), costs);
-  test::assert_bool(adjlist.pop() == baldr::kInvalidLabel, "TestAddRemove: expect list to be empty");
+  EXPECT_EQ(adjlist.pop(), baldr::kInvalidLabel) << "TestAddRemove: expect list to be empty";
 
   // Test add randomly and remove
   costs.clear();
@@ -49,7 +52,7 @@ void TestAddRemove() {
   baldr::DoubleBucketQueue adjlist2(0, 10000, 1, labelcost);
   Add(adjlist2, costs);
   TryRemove(adjlist2, costs.size(), costs);
-  test::assert_bool(adjlist.pop() == baldr::kInvalidLabel, "TestAddRemove: expect list to be empty");
+  EXPECT_EQ(adjlist.pop(), baldr::kInvalidLabel) << "TestAddRemove: expect list to be empty";
 
   // Construct a new adjlist
   costs.resize(5);
@@ -70,9 +73,8 @@ void TestAddRemove() {
   adjlist3.decrease(3, 3);
   costs[3] = 3;
   uint32_t lab = adjlist3.pop();
-  test::assert_bool(lab == 3,
-                    "TestAddRemove: After decrease the lowest cost label must be label 3, top = " +
-                        std::to_string(lab));
+  EXPECT_EQ(lab, 3) << "TestAddRemove: After decrease the lowest cost label must be label 3, top = " +
+                           std::to_string(lab);
 }
 
 void TrySimulation(size_t loop_count, size_t expansion_size, size_t max_increment_cost) {
@@ -96,7 +98,7 @@ void TrySimulation(size_t loop_count, size_t expansion_size, size_t max_incremen
     const auto min_cost = costs[key];
     // Must be the minimal one among the tracked labels
     for (auto k : track) {
-      test::assert_bool(min_cost <= costs[k], "Simulation: minimal cost expected");
+      EXPECT_LE(min_cost, costs[k]) << "Simulation: minimal cost expected";
     }
     track.erase(key);
 
@@ -108,7 +110,7 @@ void TrySimulation(size_t loop_count, size_t expansion_size, size_t max_incremen
         if (newcost < costs[idx]) {
           adjlist.decrease(idx, newcost);
           costs[idx] = newcost;
-          test::assert_bool(labelcost(idx) == newcost, "failed to decrease cost");
+          EXPECT_EQ(labelcost(idx), newcost) << "failed to decrease cost";
         } /*else {
           // Assert that it must fail to decrease since costs[idx] <= newcost
           test::assert_throw<std::runtime_error>([&adjlist, idx, newcost](){
@@ -126,17 +128,17 @@ void TrySimulation(size_t loop_count, size_t expansion_size, size_t max_incremen
   }
 
   TryRemove(adjlist, track.size(), costs);
-  test::assert_bool(adjlist.pop() == baldr::kInvalidLabel, "Simulation: expect list to be empty");
+  EXPECT_EQ(adjlist.pop(), baldr::kInvalidLabel) << "Simulation: expect list to be empty";
 }
 
-void TestSimulation() {
+TEST(Routing, TestSimulation) {
   TrySimulation(1000, 40, 100);
   TrySimulation(222, 40, 100);
   TrySimulation(333, 60, 100);
   TrySimulation(333, 60, 100);
 }
 
-void Benchmark() {
+TEST(Routing, Benchmark) {
   std::random_device rd;
   std::mt19937 gen(rd());
   std::vector<float> costs;
@@ -155,7 +157,7 @@ void Benchmark() {
   std::cout << ms << std::endl;
 }
 
-void TestRoutePathIterator() {
+TEST(Routing, TestRoutePathIterator) {
   meili::LabelSet labelset(100);
   // Travel mode is insignificant in the tests
   sif::TravelMode travelmode = static_cast<sif::TravelMode>(0);
@@ -179,47 +181,40 @@ void TestRoutePathIterator() {
       it1(&labelset, 1), it2(&labelset, 2), it3(&labelset, 3), it4(&labelset, 4), it5(&labelset, 5),
       it6(&labelset, 6);
 
-  test::assert_bool(it0 != the_end, "TestRoutePathIterator: wrong equality testing");
+  EXPECT_NE(it0, the_end) << "TestRoutePathIterator: wrong equality testing";
 
-  test::assert_bool(&(*it0) == &labelset.label(0), "TestRoutePathIterator: wrong dereferencing");
+  EXPECT_EQ(&(*it0), &labelset.label(0)) << "TestRoutePathIterator: wrong dereferencing";
 
-  test::assert_bool(it0->predecessor() == baldr::kInvalidLabel,
-                    "TestRoutePathIterator: wrong dereferencing pointer");
+  EXPECT_EQ(it0->predecessor(), baldr::kInvalidLabel)
+      << "TestRoutePathIterator: wrong dereferencing pointer";
 
-  test::assert_bool(++it0 == the_end, "TestRoutePathIterator: wrong prefix increment");
+  EXPECT_EQ(++it0, the_end) << "TestRoutePathIterator: wrong prefix increment";
 
-  test::assert_bool(std::next(it3) == it1, "TestRoutePathIterator: wrong forwarding");
+  EXPECT_EQ(std::next(it3), it1) << "TestRoutePathIterator: wrong forwarding";
 
-  test::assert_bool(std::next(it3, 2) == the_end, "TestRoutePathIterator: wrong forwarding 2");
+  EXPECT_EQ(std::next(it3, 2), the_end) << "TestRoutePathIterator: wrong forwarding 2";
 
-  test::assert_bool(std::next(it4) == it1, "TestRoutePathIterator: wrong forwarding 3");
+  EXPECT_EQ(std::next(it4), it1) << "TestRoutePathIterator: wrong forwarding 3";
 
-  test::assert_bool(std::next(it4, 2) == the_end, "TestRoutePathIterator: wrong forwarding 4");
+  EXPECT_EQ(std::next(it4, 2), the_end) << "TestRoutePathIterator: wrong forwarding 4";
 
-  test::assert_bool(it4->predecessor() == 1, "TestRoutePathIterator: wrong dereferencing pointer 2");
+  EXPECT_EQ(it4->predecessor(), 1) << "TestRoutePathIterator: wrong dereferencing pointer 2";
 
-  test::assert_bool((it5++)->predecessor() == 3, "TestRoutePathIterator: wrong postfix increment");
+  EXPECT_EQ((it5++)->predecessor(), 3) << "TestRoutePathIterator: wrong postfix increment";
 
-  test::assert_bool(it5 == it3, "TestRoutePathIterator: wrong after postfix increment");
+  EXPECT_EQ(it5, it3) << "TestRoutePathIterator: wrong after postfix increment";
 
-  test::assert_bool(++it5 == it1, "TestRoutePathIterator: wrong prefix increment");
+  EXPECT_EQ(++it5, it1) << "TestRoutePathIterator: wrong prefix increment";
 
-  test::assert_bool(it5 == it1, "TestRoutePathIterator: wrong after prefix increment");
+  EXPECT_EQ(it5, it1) << "TestRoutePathIterator: wrong after prefix increment";
 
   std::advance(it5, 1);
-  test::assert_bool(it5 == the_end, "TestRoutePathIterator: wrong advance");
+  EXPECT_EQ(it5, the_end) << "TestRoutePathIterator: wrong advance";
 }
 
+} // namespace
+
 int main(int argc, char* argv[]) {
-  test::suite suite("routing");
-
-  suite.test(TEST_CASE(TestAddRemove));
-
-  suite.test(TEST_CASE(TestSimulation));
-
-  suite.test(TEST_CASE(Benchmark));
-
-  suite.test(TEST_CASE(TestRoutePathIterator));
-
-  return suite.tear_down();
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }
