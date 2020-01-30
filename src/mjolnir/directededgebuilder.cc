@@ -71,7 +71,8 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
   set_sidewalk_left(way.sidewalk_left());
   set_sidewalk_right(way.sidewalk_right());
 
-  bool tagged_speed = (way.tagged_speed() || way.forward_tagged_speed() || way.backward_tagged_speed());
+  bool tagged_speed =
+      (way.tagged_speed() || way.forward_tagged_speed() || way.backward_tagged_speed());
   set_speed_type(tagged_speed ? SpeedType::kTagged : SpeedType::kClassified);
 
   // Set forward flag and access modes (based on direction)
