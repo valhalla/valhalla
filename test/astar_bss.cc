@@ -62,11 +62,6 @@ namespace vo = valhalla::odin;
 
 namespace {
 
-std::string test_dir = "test/data/paris_bss_tiles";
-vb::GraphId tile_id = vb::TileHierarchy::GetGraphId({.125, .125}, 2);
-
-const std::string config_file = "test/test_astar_bss";
-
 void write_config(const std::string& filename) {
   std::ofstream file;
   try {
@@ -79,11 +74,6 @@ void write_config(const std::string& filename) {
     }";
   } catch (...) {}
   file.close();
-}
-
-void DoConfig() {
-  // make a config file
-  write_config(config_file);
 }
 
 boost::property_tree::ptree get_conf(const char* tiles) {
@@ -213,8 +203,10 @@ void test(const std::string& request,
   }
 }
 
-void TestBSS_With_Mode_Changes() {
-
+/*
+ * A general case
+ */
+TEST(AstarBss, test_With_Mode_Changes) {
   std::string request =
       R"({"locations":[{"lat":48.86481,"lon":2.361015},{"lat":48.859782,"lon":2.36101}],"costing":"bikeshare"})";
   std::vector<valhalla::DirectionsLeg_TravelMode>
@@ -238,13 +230,13 @@ void TestBSS_With_Mode_Changes() {
  * In this test, we increase the bss rent/return penalty considerably, so the algorithm will avoid
  * bike share stations
  */
-void TestBSS_BSS_mode_Without_Mode_Changes() {
+TEST(AstarBss, test_BSS_mode_Without_Mode_Changes) {
 
   std::string request =
       R"({"locations":[{"lat":48.865020,"lon":2.369113},{"lat":48.859782,"lon":2.36101}],
-       "costing":"bikeshare",
-       "costing_options":{"pedestrian":{"bss_rent_cost":0,"bss_rent_penalty":1800},
-                          "bicycle"   :{"bss_return_cost":0,"bss_return_penalty":1800}}})";
+	       "costing":"bikeshare",
+	       "costing_options":{"pedestrian":{"bss_rent_cost":0,"bss_rent_penalty":1800},
+	                          "bicycle"   :{"bss_return_cost":0,"bss_return_penalty":1800}}})";
 
   std::vector<valhalla::DirectionsLeg_TravelMode> expected_travel_modes{
       valhalla::DirectionsLeg_TravelMode::DirectionsLeg_TravelMode_kPedestrian};
@@ -265,13 +257,12 @@ void TestBSS_BSS_mode_Without_Mode_Changes() {
  * In this test, we increase the bss rent/return cost considerably, so the algorithm will avoid bike
  * share stations
  */
-void TestBSS_BSS_mode_Without_Mode_Changes_2() {
-
+TEST(AstarBss, test_BSS_mode_Without_Mode_Changes_2) {
   std::string request =
       R"({"locations":[{"lat":48.865020,"lon":2.369113},{"lat":48.859782,"lon":2.36101}],
-       "costing":"bikeshare",
-       "costing_options":{"pedestrian":{"bss_rent_cost":1800,"bss_rent_penalty":0},
-                          "bicycle"   :{"bss_return_cost":1800,"bss_return_penalty":0}}})";
+	       "costing":"bikeshare",
+	       "costing_options":{"pedestrian":{"bss_rent_cost":1800,"bss_rent_penalty":0},
+	                          "bicycle"   :{"bss_return_cost":1800,"bss_return_penalty":0}}})";
 
   std::vector<valhalla::DirectionsLeg_TravelMode> expected_travel_modes{
       valhalla::DirectionsLeg_TravelMode::DirectionsLeg_TravelMode_kPedestrian};
@@ -288,7 +279,8 @@ void TestBSS_BSS_mode_Without_Mode_Changes_2() {
   test(request, expected_travel_modes, expected_route, expected_bss_maneuver);
 }
 
-void TestBSS_With_Mode_Changes_2() {
+// We test if the bss connection edges respect the forward/reverse access
+TEST(AstarBss, test_With_Mode_Changes_2) {
   std::string request =
       R"({"locations":[{"lat":48.8601411,"lon":2.3716413},{"lat":48.8594916,"lon":2.3602581}],"costing":"bikeshare"})";
   std::vector<valhalla::DirectionsLeg_TravelMode>
@@ -316,7 +308,8 @@ void TestBSS_With_Mode_Changes_2() {
   test(request, expected_travel_modes, expected_route, expected_bss_maneuver);
 }
 
-void TestBSS_Pedestrian() {
+// When pedestrian is chosen as travel_mode, the departure edge must NOT be a bss connections edge
+TEST(AstarBss, test_Pedestrian) {
   std::string request =
       R"({"locations":[{"lat":48.859895,"lon":2.3610976338},{"lat":48.86271911,"lon":2.367111146}],"costing":"pedestrian"})";
   std::vector<valhalla::DirectionsLeg_TravelMode> expected_travel_modes{
@@ -329,7 +322,8 @@ void TestBSS_Pedestrian() {
   test(request, expected_travel_modes, expected_route, expected_bss_maneuver);
 }
 
-void TestBSS_Bicycle() {
+// When bicycle is chosen as travel_mode, the departure edge must NOT be a bss connections edge
+TEST(AstarBss, test_Bicycle) {
   std::string request =
       R"({"locations":[{"lat":48.859895,"lon":2.3610976338},{"lat":48.86271911,"lon":2.367111146}],"costing":"bicycle"})";
   std::vector<valhalla::DirectionsLeg_TravelMode> expected_travel_modes{
@@ -344,7 +338,8 @@ void TestBSS_Bicycle() {
   test(request, expected_travel_modes, expected_route, expected_bss_maneuver);
 }
 
-void TestBSS_Auto() {
+// When auto is chosen as travel_mode, the departure edge must NOT be a bss connections edge
+TEST(AstarBss, test_Auto) {
   std::string request =
       R"({"locations":[{"lat":48.859895,"lon":2.3610976338},{"lat":48.86271911,"lon":2.367111146}],"costing":"auto"})";
   std::vector<valhalla::DirectionsLeg_TravelMode> expected_travel_modes{
@@ -361,28 +356,18 @@ void TestBSS_Auto() {
   test(request, expected_travel_modes, expected_route, expected_bss_maneuver);
 }
 
+class AstarBSSTestEnv : public ::testing::Environment {
+public:
+  void SetUp() override {
+    const std::string config_file = "test/test_astar_bss";
+    write_config(config_file);
+  }
+};
+
 } // anonymous namespace
 
-int main() {
-  test::suite suite("bss_astar");
-
-  suite.test(TEST_CASE(DoConfig));
-
-  // A general case
-  suite.test(TEST_CASE(TestBSS_With_Mode_Changes));
-  // We test if the bss connection edges respect the forward/reverse access
-  suite.test(TEST_CASE(TestBSS_With_Mode_Changes_2));
-
-  // Play with the bss rent/return penalty
-  suite.test(TEST_CASE(TestBSS_BSS_mode_Without_Mode_Changes));
-  suite.test(TEST_CASE(TestBSS_BSS_mode_Without_Mode_Changes_2));
-
-  // When pedestrian is chosen as travel_mode, the departure edge must NOT be a bss connections edge
-  suite.test(TEST_CASE(TestBSS_Pedestrian));
-  // When bicycle is chosen as travel_mode, the departure edge must NOT be a bss connections edge
-  suite.test(TEST_CASE(TestBSS_Bicycle));
-  // When auto is chosen as travel_mode, the departure edge must NOT be a bss connections edge
-  suite.test(TEST_CASE(TestBSS_Auto));
-
-  return suite.tear_down();
+int main(int argc, char* argv[]) {
+  testing::AddGlobalTestEnvironment(new AstarBSSTestEnv);
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }
