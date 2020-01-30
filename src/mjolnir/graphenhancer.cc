@@ -106,10 +106,13 @@ struct enhancer_stats {
  * @param  infer_turn_channels flag indicating if we should infer tc.
  *
  */
-void UpdateSpeed(DirectedEdge& directededge, const uint32_t density, const uint32_t* urban_rc_speed, bool infer_turn_channels) {
+void UpdateSpeed(DirectedEdge& directededge,
+                 const uint32_t density,
+                 const uint32_t* urban_rc_speed,
+                 bool infer_turn_channels) {
 
   // Update speed on ramps (if not a tagged speed) and turn channels
-  if (directededge.link())  {
+  if (directededge.link()) {
     uint32_t speed = directededge.speed();
     Use use = directededge.use();
     if (use == Use::kTurnChannel && infer_turn_channels) {
@@ -1405,8 +1408,7 @@ void enhance(const boost::property_tree::ptree& pt,
   bool infer_internal_intersections =
       pt.get<bool>("data_processing.infer_internal_intersections", true);
 
-  bool infer_turn_channels =
-      pt.get<bool>("data_processing.infer_turn_channels", true);
+  bool infer_turn_channels = pt.get<bool>("data_processing.infer_turn_channels", true);
 
   bool apply_country_overrides = pt.get<bool>("data_processing.apply_country_overrides", true);
 
