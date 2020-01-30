@@ -103,15 +103,16 @@ struct enhancer_stats {
  * @param  density       Relative road density.
  * @param  urban_rc_speed Array of default speeds vs. road class for urban areas
  * @param  rc_speed Array of default speeds vs. road class
+ * @param  infer_turn_channels flag indicating if we should infer tc.
  *
  */
-void UpdateSpeed(DirectedEdge& directededge, const uint32_t density, const uint32_t* urban_rc_speed) {
+void UpdateSpeed(DirectedEdge& directededge, const uint32_t density, const uint32_t* urban_rc_speed, bool infer_turn_channels) {
 
   // Update speed on ramps (if not a tagged speed) and turn channels
-  if (directededge.link()) {
+  if (directededge.link())  {
     uint32_t speed = directededge.speed();
     Use use = directededge.use();
-    if (use == Use::kTurnChannel) {
+    if (use == Use::kTurnChannel && infer_turn_channels) {
       speed = static_cast<uint32_t>((speed * kTurnChannelFactor) + 0.5f);
     } else if ((use == Use::kRamp) && (directededge.speed_type() != SpeedType::kTagged)) {
       // If no tagged speed set ramp speed to slightly lower than speed
@@ -1244,7 +1245,8 @@ uint32_t GetStopImpact(uint32_t from,
     } else if (count > 3) {
       stop_impact += 2;
     }
-  } else if (edges[from].use() == Use::kRamp && edges[to].use() != Use::kRamp) {
+  } else if (edges[from].use() == Use::kRamp && edges[to].use() != Use::kRamp &&
+             !edges[from].internal() && !edges[to].internal()) {
     // Increase stop impact on merge
     if (is_sharp) {
       stop_impact += 3;
@@ -1253,6 +1255,7 @@ uint32_t GetStopImpact(uint32_t from,
     } else {
       stop_impact += 2;
     }
+
   } else if (edges[from].use() == Use::kTurnChannel) {
     // Penalize sharp turns
     if (is_sharp) {
@@ -1401,6 +1404,10 @@ void enhance(const boost::property_tree::ptree& pt,
   auto database = pt.get_optional<std::string>("admin");
   bool infer_internal_intersections =
       pt.get<bool>("data_processing.infer_internal_intersections", true);
+
+  bool infer_turn_channels =
+      pt.get<bool>("data_processing.infer_turn_channels", true);
+
   bool apply_country_overrides = pt.get<bool>("data_processing.apply_country_overrides", true);
 
   // Initialize the admin DB (if it exists)
@@ -1685,7 +1692,7 @@ void enhance(const boost::property_tree::ptree& pt,
         }
 
         // Update speed.
-        UpdateSpeed(directededge, density, urban_rc_speed);
+        UpdateSpeed(directededge, density, urban_rc_speed, infer_turn_channels);
 
         // Update the named flag
         auto names = tilebuilder.edgeinfo(directededge.edgeinfo_offset()).GetNamesAndTypes();
