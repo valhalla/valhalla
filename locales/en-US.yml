@@ -399,7 +399,6 @@ en:
                 "0": "Remain on the <TRANSIT_NAME>."
                 "1": "Remain on the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>."
             empty_transit_name_labels: *empty_transit_name_labels
-            transit_stop_count_labels: *transit_stop_count_labels
         transit_transfer: &transit_transfer
             phrases:
                 "0": "Transfer to take the <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"

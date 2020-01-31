@@ -2649,10 +2649,6 @@
         "gondola",
         "funicular"
       ],
-      "transit_stop_count_labels": {
-        "one": "stop",
-        "other": "stops"
-      },
       "example_phrases": {
         "0": [
           "Remain on the New Haven."
