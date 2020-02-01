@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
-import csv
 import argparse
+import csv
+import sys
 
 
 STATS_TO_DIFF = ['#Passes', 'runtime', 'trip time', 'length', '#Manuevers']
@@ -41,14 +42,24 @@ def main(old_stats_file, new_stats_file, output_file):
         csv_writer.writerow(stats_diff_fieldnames)
 
         route_num = 1
+        failed_routes = 0
         # Assume same number of rows in both csv
         for old_row, new_row in zip(old_csv_reader, new_csv_reader):
+            # skip failed routes
+            if old_row[4] == 'fail_no_route' or new_row[4] == 'fail_no_route':
+                failed_routes += 1
+                continue
             diff_row = []
             diff_row.append(route_num)
             for col_index in cols_to_diff:
                 # Treat everything as float
                 old_stat, new_stat = (float(old_row[col_index]),
                                       float(new_row[col_index]))
+                # if old stat is 0, add small epsilon value to avoid divide by
+                # zero
+                # Should we skip these rows instead?
+                if old_stat == 0:
+                    old_stat = sys.float_info.epsilon
                 diff = new_stat - old_stat
                 pct_diff = diff/old_stat * 100
                 diff_row.append(old_stat)
@@ -58,6 +69,7 @@ def main(old_stats_file, new_stats_file, output_file):
 
             csv_writer.writerow(diff_row)
             route_num += 1
+        print('Found {} failed routes'.format(failed_routes))
         print('Combined statistics generated: {}'.format(output_file))
 
 
