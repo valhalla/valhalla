@@ -397,23 +397,16 @@ void run_requests(const std::vector<http_request_t>& requests,
              },
              [&requests, &request, &responses, &success_count](const void* data, size_t size) {
                auto response = http_response_t::from_string(static_cast<const char*>(data), size);
-               if (response.code != responses[request - requests.cbegin() - 1].first) {
-                 throw std::runtime_error(
-                     "Expected Response Code: " +
-                     std::to_string(responses[request - requests.cbegin() - 1].first) +
-                     ", Actual Response Code: " + std::to_string(response.code));
-               }
+               EXPECT_EQ(response.code, responses[request - requests.cbegin() - 1].first);
 
                // Parse as rapidjson::Document which correctly doesn't care about order-dependence
                // of the json-data compared to the boost::property_tree::ptree
                rapidjson::Document response_json, expected_json;
                response_json.Parse(response.body);
                expected_json.Parse(responses[request - requests.cbegin() - 1].second);
-               if (response_json != expected_json) {
-                 throw std::runtime_error(
-                     "\nExpected Response: " + responses[request - requests.cbegin() - 1].second +
-                     "\n, Actual Response: " + response.body);
-               }
+               EXPECT_EQ(response_json, expected_json)
+                   << "\nExpected Response: " + responses[request - requests.cbegin() - 1].second +
+                          "\n, Actual Response: " + response.body;
 
                ++success_count;
                return request != requests.cend();
@@ -423,33 +416,34 @@ void run_requests(const std::vector<http_request_t>& requests,
   client.batch();
 
   // Make sure that all requests are tested
-  test::assert_bool(success_count == requests.size(),
-                    "Expected passed tests count: " + std::to_string(requests.size()) +
-                        " Actual passed tests count: " + std::to_string(success_count));
+  EXPECT_EQ(success_count, requests.size());
 }
 
-void test_failure_requests() {
+TEST(LokiService, test_failure_requests) {
   run_requests(valhalla_requests, valhalla_responses);
 }
 
-void test_osrm_failure_requests() {
+TEST(LokiService, test_osrm_failure_requests) {
   run_requests(osrm_requests, osrm_responses);
 }
+
+// todo: test_success_requests??
+
 } // namespace
 
-int main(void) {
+class LokiServiceEnv : public ::testing::Environment {
+public:
+  void SetUp() override {
+    start_service();
+  }
+};
+
+// Elevation service
+int main(int argc, char* argv[]) {
   // make this whole thing bail if it doesnt finish fast
   alarm(180);
 
-  test::suite suite("Loki Service");
-
-  // test failures
-  suite.test(TEST_CASE(start_service));
-  suite.test(TEST_CASE(test_failure_requests));
-  suite.test(TEST_CASE(test_osrm_failure_requests));
-
-  // test successes
-  // suite.test(TEST_CASE(test_success_requests));
-
-  return suite.tear_down();
+  testing::AddGlobalTestEnvironment(new LokiServiceEnv);
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

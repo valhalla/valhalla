@@ -1,11 +1,8 @@
-#include "test.h"
-
-#include <fstream>
-#include <iostream>
 #include <vector>
 
 #include "baldr/admin.h"
-#include <memory>
+
+#include "test.h"
 
 using namespace std;
 using namespace valhalla::baldr;
@@ -16,52 +13,32 @@ constexpr size_t kAdminExpectedSize = 16;
 
 namespace {
 
-void test_sizeof() {
-  if (sizeof(Admin) != kAdminExpectedSize)
-    throw std::runtime_error("Admin size should be " + std::to_string(kAdminExpectedSize) + " bytes" +
-                             " but is " + std::to_string(sizeof(Admin)));
+TEST(Admin, size) {
+  EXPECT_EQ(sizeof(Admin), kAdminExpectedSize);
 }
 
-void TestWriteRead() {
-  // Make an admin record
+TEST(Admin, Create) {
   Admin ai(5, 6, "US", "PA");
+  EXPECT_EQ(ai.country_offset(), 5);
+  EXPECT_EQ(ai.state_offset(), 6);
+  EXPECT_EQ(ai.country_iso(), "US");
+  EXPECT_EQ(ai.state_iso(), "PA");
+}
 
-  if (ai.country_offset() != 5)
-    throw runtime_error("Admin country_offset incorrect.");
-
-  if (ai.state_offset() != 6)
-    throw runtime_error("Admin state_offset incorrect.");
-
-  if (ai.country_iso() != "US")
-    throw runtime_error("Admin country_iso incorrect.");
-
-  if (ai.state_iso() != "PA")
-    throw runtime_error("Admin state_iso incorrect.");
-
+TEST(Admin, Create3CharStateIso) {
   Admin aiStateISO(5, 6, "GB", "WLS");
+  EXPECT_EQ(aiStateISO.state_iso(), "WLS");
+}
 
-  if (aiStateISO.state_iso() != "WLS")
-    throw runtime_error("Admin 3 char state_iso incorrect.");
-
+TEST(Admin, EmptyStrings) {
   Admin aiEmptyStrings(5, 6, "", "");
-
-  if (aiEmptyStrings.country_iso() != "" && aiEmptyStrings.state_iso() != "")
-    throw runtime_error("Admin empty strings test failed.");
+  EXPECT_EQ(aiEmptyStrings.country_iso(), "");
+  EXPECT_EQ(aiEmptyStrings.state_iso(), "");
 }
 
 } // namespace
 
-int main() {
-  test::suite suite("admin");
-
-  // Test sizeof the structure
-  suite.test(TEST_CASE(test_sizeof));
-
-  // Test structure size
-  suite.test(TEST_CASE(TestWriteRead));
-
-  // Write to file and read into Admin records
-  suite.test(TEST_CASE(TestWriteRead));
-
-  return suite.tear_down();
+int main(int argc, char* argv[]) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

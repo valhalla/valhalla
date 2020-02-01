@@ -1,5 +1,4 @@
 #include "midgard/logging.h"
-#include "test.h"
 
 #include <algorithm>
 #include <cstdio>
@@ -10,6 +9,8 @@
 #include <sstream>
 #include <thread>
 #include <vector>
+
+#include "test.h"
 
 using namespace valhalla::midgard;
 
@@ -36,17 +37,16 @@ size_t work() {
   return 10;
 }
 
-void ThreadFileLoggerTest() {
+TEST(Logging, FileLoggerTest) {
   // get rid of it first so we don't append
   std::remove("test/thread_file_log_test.log");
 
   // configure bogusly
-  try {
-    logging::Configure({{"type", "file"},
-                        {"file_name", "test/thread_file_log_test.log"},
-                        {"reopen_interval", "opi-903"}});
-    throw std::runtime_error("Configuring with non numeric reopen_interval should have thrown");
-  } catch (...) {}
+  EXPECT_THROW(logging::Configure({{"type", "file"},
+                                   {"file_name", "test/thread_file_log_test.log"},
+                                   {"reopen_interval", "opi-903"}}),
+               std::exception);
+
   // configure properly
   logging::Configure(
       {{"type", "file"}, {"file_name", "test/thread_file_log_test.log"}, {"reopen_interval", "1"}});
@@ -84,20 +84,19 @@ void ThreadFileLoggerTest() {
     line.clear();
   }
   size_t line_count = error + warn + info + debug + trace;
-  if (line_count != 41)
-    throw std::runtime_error("Log should have exactly 40 lines but had " +
-                             std::to_string(line_count));
-  if (error != 8 || warn != 8 || info != 8 || debug != 8 || trace != 9 || custom != 8)
-    throw std::runtime_error("Wrong distribution of log messages");
+  EXPECT_EQ(line_count, 41); // todo: or should it be 40 as it was in the comment?
+
+  EXPECT_EQ(error, 8);
+  EXPECT_EQ(warn, 8);
+  EXPECT_EQ(info, 8);
+  EXPECT_EQ(debug, 8);
+  EXPECT_EQ(trace, 9);
+  EXPECT_EQ(custom, 8);
 }
 
 } // namespace
 
-int main() {
-  test::suite suite("logging");
-
-  // check file logging
-  suite.test(TEST_CASE(ThreadFileLoggerTest));
-
-  return suite.tear_down();
+int main(int argc, char* argv[]) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }
