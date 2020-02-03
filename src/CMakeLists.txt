@@ -28,7 +28,7 @@ else()
   message(FATAL_ERROR "No Valhalla major version")
 endif()
 
-## Declare C++ build configuration variables
+## Declare C++ build configuration variables as part of HandleLibcxxFlags.
 #
 # - LIBCXX_COMPILE_FLAGS: flags used to compile libc++
 # - LIBCXX_LINK_FLAGS: flags used to link libc++
@@ -53,6 +53,21 @@ set(libvalhalla_include_directories "" CACHE INTERNAL "")
 set(libvalhalla_link_objects "" CACHE INTERNAL  "")
 set(libvalhalla_link_libraries "" CACHE INTERNAL  "")
 
+# Setup warning flags. Note that these are only added to libvalhalla_compile_options if
+# ENABLE_COMPILER_WARNINGS=ON. Note that this needs to be done before the definition of
+# valhalla_module, otherwise LIBCXX_COMPILE_FLAGS will not available for downstream targets.
+
+if (ENABLE_COMPILER_WARNINGS)
+  message(STATUS "Enabling compiler warning flags")
+endif()
+
+function (cxx_add_warning_flags target)
+  target_add_compile_flags_if_supported(${target} PRIVATE -Wall -Wextra -Wconversion)
+  if (ENABLE_WERROR)
+   target_add_compile_flags_if_supported(${target} PRIVATE -Werror)
+  endif()
+endfunction()
+
 function(valhalla_module)
   set(oneValueArgs NAME)
   set(multiValueArgs SOURCES HEADERS DEPENDS INCLUDE_DIRECTORIES)
@@ -75,8 +90,16 @@ function(valhalla_module)
        ${VALHALLA_BINARY_DIR}/valhalla)
 
   if(ENABLE_COVERAGE)
-    target_compile_options(${library} PUBLIC -ftest-coverage -fprofile-arcs)
+    target_add_compile_flags_if_supported(${library} PRIVATE
+      -ftest-coverage
+      -fprofile-arcs)
   endif()
+
+  if(ENABLE_COMPILER_WARNINGS)
+    cxx_add_warning_flags(${library})
+  endif()
+
+  #target_compile_options(${library} PUBLIC ${LIBCXX_COMPILE_FLAGS})
 
   install(FILES ${MODULE_HEADERS}
     DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/valhalla/${MODULE_NAME}"
@@ -153,23 +176,11 @@ target_compile_definitions(valhalla
   PRIVATE
     ${libvalhalla_compile_definitions})
 
-# Setup warning flags. Note that these are only added to libvalhalla_compile_options if
-# ENABLE_COMPILER_WARNINGS=ON
+target_compile_options(valhalla PUBLIC ${libvalhalla_compile_options})
 
-add_compile_flags_if_supported(-Wall)
-add_compile_flags_if_supported(-Wextra)
-add_compile_flags_if_supported(-Werror)
-
-if (ENABLE_COMPILER_WARNINGS)
-  message(STATUS "Enabling compiler warning flags ${LIBCXX_COMPILE_FLAGS}")
+if(ENABLE_COMPILER_WARNINGS)
+  cxx_add_warning_flags(valhalla)
 endif()
-
-target_compile_options(valhalla
-  PUBLIC
-    ${libvalhalla_compile_options}
-  PRIVATE
-  $<$<BOOL:${ENABLE_COMPILER_WARNINGS}>:${LIBCXX_COMPILE_FLAGS}>
-  )
 
 target_include_directories(valhalla
   PUBLIC
