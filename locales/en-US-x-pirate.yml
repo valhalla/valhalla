@@ -1,0 +1,479 @@
+en-US-x-pirate:
+    posix_locale: 'en_US.UTF-8'
+    aliases:
+    - pirate
+    ordinal_values: &ordinal_values
+    - 1st
+    - 2nd
+    - 3rd
+    - 4th
+    - 5th
+    - 6th
+    - 7th
+    - 8th
+    - 9th
+    - 10th
+    cardinal_directions: &cardinal_directions
+    - north
+    - northeast
+    - east
+    - southeast
+    - south
+    - southwest
+    - west
+    - northwest
+    relative_directions: &relative_directions
+    - port
+    - straight
+    - starboard
+    relative_directions_left_right: &relative_directions_left_right
+    - port
+    - starboard
+    empty_street_name_labels: &empty_street_name_labels
+    - solid ground
+    - th' bike pirate way
+    - th' treasure trail
+    empty_transit_name_labels: &empty_transit_name_labels
+    - tram
+    - metro
+    - train
+    - bus
+    - ferry
+    - cable car
+    - gondola
+    - funicular
+    metric_lengths: &metric_lengths
+    - <KILOMETERS> kilometers
+    - 1 kilometer
+    - a half kilometer
+    - <METERS> meters
+    - less than 10 meters
+    us_customary_lengths: &us_customary_lengths
+    - <MILES> miles
+    - 1 mile
+    - a half mile
+    - <TENTHS_OF_MILE> tenths of a mile
+    - 1 tenth of a mile
+    - <FEET> feet
+    - less than 10 feet
+    station_label: &station_label 'Station'
+    transit_stop_count_labels: &transit_stop_count_labels
+        'one': 'port'
+        'other': 'ports'
+    ferry_label: &ferry_label 'Ferry'
+    example_tokens:
+        # These names are used to populate example phrases
+        STREET_NAMES:
+        - 'Arlen Road'
+        BEGIN_STREET_NAMES:
+        - 'Belair Road/US 1 Business'
+        CROSS_STREET_NAMES:
+        - 'Devonshire Road'
+        PREVIOUS_STREET_NAMES:
+        - 'Vine Street'
+        LENGTH:
+        - '1 mile'
+        - 'a half mile'
+        TIME:
+        - '8:02 AM'
+        TRANSIT_STOP:
+        - '8 St - NYU'
+        DESTINATION:
+        - 'Lancaster Brewing Company'
+        FERRY_LABEL:
+        - *ferry_label
+        STATION_LABEL:
+        - 'Embarcadero Station'
+        ORDINAL_VALUE: *ordinal_values
+        RELATIVE_DIRECTION: *relative_directions_left_right
+        CARDINAL_DIRECTION: *cardinal_directions
+        NUMBER_SIGN:
+        - '67 B-A'
+        BRANCH_SIGN:
+        - 'US 322 West'
+        TOWARD_SIGN:
+        - 'Lewiston'
+        NAME_SIGN:
+        - 'White Marsh Boulevard'
+        TRANSIT_STOP_COUNT:
+        - '1'
+        - '3'
+        TRANSIT_STOP_COUNT_LABEL:
+        - 'stop'
+        - 'stops'
+        TRANSIT_NAME:
+        - 'New Haven'
+        TRANSIT_HEADSIGN:
+        - 'JAMAICA - 179 ST'
+        CURRENT_VERBAL_CUE:
+        - 'Bear right onto East Fayette Street.'
+        NEXT_VERBAL_CUE:
+        - 'Turn right onto North Gay Street.'
+    instructions:
+        arrive:
+            phrases:
+                '0': 'Dock: <TIME>.'
+                '1': 'Dock: <TIME> at <TRANSIT_STOP>.'
+        arrive_verbal:
+            phrases:
+                '0': Dock at <TIME>.
+                '1': Dock at <TIME> at <TRANSIT_STOP>.
+        bear:
+            empty_street_name_labels: *empty_street_name_labels
+            phrases:
+                '0': Bear <RELATIVE_DIRECTION> me matey.
+                '1': Bear <RELATIVE_DIRECTION> me matey onto <STREET_NAMES>.
+                '2': Bear <RELATIVE_DIRECTION> me matey onto <BEGIN_STREET_NAMES>.
+                    Continue on <STREET_NAMES>.
+                '3': Bear <RELATIVE_DIRECTION> me matey to stay on <STREET_NAMES>.
+            relative_directions: *relative_directions_left_right
+        bear_verbal:
+            empty_street_name_labels: *empty_street_name_labels
+            phrases:
+                '0': Bear <RELATIVE_DIRECTION> me matey.
+                '1': Bear <RELATIVE_DIRECTION> me matey onto <STREET_NAMES>.
+                '2': Bear <RELATIVE_DIRECTION> me matey onto <BEGIN_STREET_NAMES>.
+                '3': Bear <RELATIVE_DIRECTION> me matey to stay on <STREET_NAMES>.
+            relative_directions: *relative_directions_left_right
+        becomes: &id004
+            phrases:
+                '0': <PREVIOUS_STREET_NAMES> becomes <STREET_NAMES>.
+        becomes_verbal: *id004
+        continue: &id005
+            empty_street_name_labels: *empty_street_name_labels
+            phrases:
+                '0': Aye, continue.
+                '1': Heave ho on <STREET_NAMES>.
+        continue_verbal: &id017
+            empty_street_name_labels: *empty_street_name_labels
+            metric_lengths: *metric_lengths
+            phrases:
+                '0': Aye, continue fer <LENGTH>.
+                '1': Avast ye, continue on <STREET_NAMES> fer <LENGTH>.
+            us_customary_lengths: *us_customary_lengths
+        continue_verbal_alert: *id005
+        depart:
+            phrases:
+                '0': 'Set sail: <TIME>.'
+                '1': 'Set sail: <TIME> from <TRANSIT_STOP>.'
+        depart_verbal:
+            phrases:
+                '0': Set sail at <TIME>.
+                '1': Set sail at <TIME> from <TRANSIT_STOP>.
+        destination: &id006
+            phrases:
+                '0': Shiver me timbers! Ye have arrived at yer destination. Savvy?
+                '1': Blimey! Ye have arrived at <DESTINATION>. Savvy?
+                '2': Yer destination be on th' <RELATIVE_DIRECTION>. Savvy?
+                '3': <DESTINATION> be on th' <RELATIVE_DIRECTION>. Savvy?
+            relative_directions: *relative_directions_left_right
+        destination_verbal: *id006
+        destination_verbal_alert:
+            phrases:
+                '0': Blimey! Ye will arrive at yer destination.
+                '1': Shiver me timbers! Ye will arrive at <DESTINATION>.
+                '2': Yer destination will be on the <RELATIVE_DIRECTION>.
+                '3': <DESTINATION> will be on the <RELATIVE_DIRECTION>.
+            relative_directions: *relative_directions_left_right
+        enter_ferry: &id007
+            empty_street_name_labels: *empty_street_name_labels
+            ferry_label: *ferry_label
+            phrases:
+                '0': Ahoy, me matey! Take the Black Pearl.
+                '1': Ahoy, me matey! Take the <STREET_NAMES>.
+                '2': Ahoy, me matey! Take the <STREET_NAMES> <FERRY_LABEL>.
+        enter_ferry_verbal: *id007
+        enter_roundabout: &id009
+            ordinal_values: *ordinal_values
+            phrases:
+                '0': Enter thee Cap'n wheel.
+                '1': Enter thee Cap'n wheel and take th' <ORDINAL_VALUE> spoke.
+        enter_roundabout_verbal: *id009
+        exit: &id010
+            phrases:
+                '0': Blimey! Take thee exit on th' <RELATIVE_DIRECTION>.
+                '1': Shiver me timbers! Take exit <NUMBER_SIGN> on th' <RELATIVE_DIRECTION>.
+                '10': Blow me down! Take thee <NAME_SIGN> exit on th' <RELATIVE_DIRECTION>
+                    onto <BRANCH_SIGN>.
+                '12': Blow me down! Take thee <NAME_SIGN> exit on th' <RELATIVE_DIRECTION>
+                    toward <TOWARD_SIGN>.
+                '14': Blow me down! Take thee <NAME_SIGN> exit on th' <RELATIVE_DIRECTION>
+                    onto <BRANCH_SIGN> toward <TOWARD_SIGN>.
+                '15': Blimey! Take thee exit.
+                '16': Shiver me timbers! Take exit <NUMBER_SIGN>.
+                '17': Blow me down! Take thee <BRANCH_SIGN> exit.
+                '18': Yo ho ho! Take exit <NUMBER_SIGN> onto <BRANCH_SIGN>.
+                '19': Sink me! Take thee exit toward <TOWARD_SIGN>.
+                '2': Blow me down! Take thee <BRANCH_SIGN> exit on th' <RELATIVE_DIRECTION>.
+                '20': Avast ye, take exit <NUMBER_SIGN> toward <TOWARD_SIGN>.
+                '21': Blimey! Take thee <BRANCH_SIGN> exit toward <TOWARD_SIGN>.
+                '22': Sink me! Take exit <NUMBER_SIGN> onto <BRANCH_SIGN> toward <TOWARD_SIGN>.
+                '23': Blow me down! Take thee <NAME_SIGN> exit.
+                '25': Blow me down! Take thee <NAME_SIGN> exit onto <BRANCH_SIGN>.
+                '27': Blow me down! Take thee <NAME_SIGN> exit toward <TOWARD_SIGN>.
+                '29': Blow me down! Take thee <NAME_SIGN> exit onto <BRANCH_SIGN>
+                    toward <TOWARD_SIGN>.
+                '3': Yo ho ho! Take exit <NUMBER_SIGN> on th' <RELATIVE_DIRECTION>
+                    onto <BRANCH_SIGN>.
+                '4': Sink me! Take thee exit on th' <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.
+                '5': Avast ye, take exit <NUMBER_SIGN> on th' <RELATIVE_DIRECTION>
+                    toward <TOWARD_SIGN>.
+                '6': Blimey! Take thee <BRANCH_SIGN> exit on th' <RELATIVE_DIRECTION>
+                    toward <TOWARD_SIGN>.
+                '7': Sink me! Take exit <NUMBER_SIGN> on th' <RELATIVE_DIRECTION>
+                    onto <BRANCH_SIGN> toward <TOWARD_SIGN>.
+                '8': Blow me down! Take thee <NAME_SIGN> exit on th' <RELATIVE_DIRECTION>.
+            relative_directions: *relative_directions_left_right
+        exit_ferry: &id015
+            cardinal_directions: *cardinal_directions
+            empty_street_name_labels: *empty_street_name_labels
+            phrases:
+                '0': Head <CARDINAL_DIRECTION>.
+                '1': Head <CARDINAL_DIRECTION> on <STREET_NAMES>.
+                '10': Saunter <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue
+                    on <STREET_NAMES>.
+                '16': Ride <CARDINAL_DIRECTION>.
+                '17': Ride <CARDINAL_DIRECTION> on <STREET_NAMES>.
+                '18': Ride <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue
+                    on <STREET_NAMES>.
+                '2': Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on
+                    <STREET_NAMES>.
+                '4': Set sail <CARDINAL_DIRECTION>.
+                '5': Point yer bow <CARDINAL_DIRECTION> and set sail on <STREET_NAMES>.
+                '6': Weigh anchor! Set sail <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.
+                    Continue on <STREET_NAMES>.
+                '8': Saunter <CARDINAL_DIRECTION> on solid ground.
+                '9': Saunter <CARDINAL_DIRECTION> on <STREET_NAMES>.
+        exit_ferry_verbal: &id016
+            cardinal_directions: *cardinal_directions
+            empty_street_name_labels: *empty_street_name_labels
+            phrases:
+                '0': Head <CARDINAL_DIRECTION>.
+                '1': Head <CARDINAL_DIRECTION> on <STREET_NAMES>.
+                '10': Saunter <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES> me hearties.
+                '16': Ride <CARDINAL_DIRECTION>.
+                '17': Ride <CARDINAL_DIRECTION> on <STREET_NAMES>.
+                '18': Ride <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.
+                '2': Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.
+                '4': Set sail <CARDINAL_DIRECTION>.
+                '5': Set sail <CARDINAL_DIRECTION> on <STREET_NAMES>.
+                '6': Set sail <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.
+                '8': Saunter <CARDINAL_DIRECTION> me buccaneer.
+                '9': Saunter <CARDINAL_DIRECTION> on <STREET_NAMES> ye scurvy dog.
+        exit_roundabout:
+            empty_street_name_labels: *empty_street_name_labels
+            phrases:
+                '0': Exit thee wheel.
+                '1': Exit thee wheel onto <STREET_NAMES>.
+                '2': Exit thee wheel onto <BEGIN_STREET_NAMES>. Aye, continue on <STREET_NAMES>.
+        exit_roundabout_verbal:
+            empty_street_name_labels: *empty_street_name_labels
+            phrases:
+                '0': Exit thee wheel.
+                '1': Exit thee wheel onto <STREET_NAMES>.
+                '2': Exit thee wheel onto <BEGIN_STREET_NAMES>.
+        exit_verbal: *id010
+        keep: &id013
+            empty_street_name_labels: *empty_street_name_labels
+            phrases:
+                '0': Keep <RELATIVE_DIRECTION> at the fork me hearties.
+                '1': Keep <RELATIVE_DIRECTION> ye landlubber to take exit <NUMBER_SIGN>.
+                '2': Keep <RELATIVE_DIRECTION> me buccaneer to take <STREET_NAMES>.
+                '3': Keep <RELATIVE_DIRECTION> ye scallywag to take exit <NUMBER_SIGN>
+                    onto <STREET_NAMES>.
+                '4': Keep <RELATIVE_DIRECTION> me bucko toward <TOWARD_SIGN>.
+                '5': Keep <RELATIVE_DIRECTION> ye scurvy dog to take exit <NUMBER_SIGN>
+                    toward <TOWARD_SIGN>.
+                '6': Keep <RELATIVE_DIRECTION> me hearties to take <STREET_NAMES>
+                    toward <TOWARD_SIGN>.
+                '7': Keep <RELATIVE_DIRECTION> ye landlubber to take exit <NUMBER_SIGN>
+                    onto <STREET_NAMES> toward <TOWARD_SIGN>.
+            relative_directions: *relative_directions
+        keep_to_stay_on: &id012
+            empty_street_name_labels: *empty_street_name_labels
+            phrases:
+                '0': Keep <RELATIVE_DIRECTION> me hearties to stay on <STREET_NAMES>.
+                '1': Keep <RELATIVE_DIRECTION> ye landlubber to take exit <NUMBER_SIGN>
+                    to stay on <STREET_NAMES>.
+                '2': Keep <RELATIVE_DIRECTION> me bucko to stay on <STREET_NAMES>
+                    toward <TOWARD_SIGN>.
+                '3': Keep <RELATIVE_DIRECTION> ye scallywag to take exit <NUMBER_SIGN>
+                    to stay on <STREET_NAMES> toward <TOWARD_SIGN>.
+            relative_directions: *relative_directions
+        keep_to_stay_on_verbal: *id012
+        keep_verbal: *id013
+        merge: &id014
+            empty_street_name_labels: *empty_street_name_labels
+            phrases:
+                '0': Avast ye, merge.
+                '1': Avast ye, merge to th' <RELATIVE_DIRECTION>.
+                '2': Merge onto <STREET_NAMES> me matey.
+                '3': Merge to th' <RELATIVE_DIRECTION> onto <STREET_NAMES> me matey.
+            relative_directions: *relative_directions_left_right
+        merge_verbal: *id014
+        post_transit_connection_destination: *id015
+        post_transit_connection_destination_verbal: *id016
+        post_transition_transit_verbal:
+            phrases:
+                '0': Voyage <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>.
+            transit_stop_count_labels: *transit_stop_count_labels
+        post_transition_verbal: *id017
+        ramp: &id019
+            phrases:
+                '0': Take thee gangplank on th' <RELATIVE_DIRECTION>.
+                '1': Take thee <BRANCH_SIGN> gangplank on th' <RELATIVE_DIRECTION>.
+                '10': Take thee gangplank.
+                '11': Take thee <BRANCH_SIGN> gangplank.
+                '12': Take thee gangplank toward <TOWARD_SIGN>.
+                '13': Take thee <BRANCH_SIGN> gangplank toward <TOWARD_SIGN>.
+                '14': Take thee <NAME_SIGN> gangplank.
+                '2': Take thee gangplank on th' <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.
+                '3': Take thee <BRANCH_SIGN> gangplank on th' <RELATIVE_DIRECTION>
+                    toward <TOWARD_SIGN>.
+                '4': Take thee <NAME_SIGN> gangplank on th' <RELATIVE_DIRECTION>.
+                '5': Turn <RELATIVE_DIRECTION> to take th' gangplank.
+                '6': Turn <RELATIVE_DIRECTION> to take th' <BRANCH_SIGN> gangplank.
+                '7': Turn <RELATIVE_DIRECTION> to take th' gangplank toward <TOWARD_SIGN>.
+                '8': Turn <RELATIVE_DIRECTION> to take th' <BRANCH_SIGN> gangplank
+                    toward <TOWARD_SIGN>.
+                '9': Turn <RELATIVE_DIRECTION> to take th' <NAME_SIGN> gangplank.
+            relative_directions: *relative_directions_left_right
+        ramp_straight: &id018
+            phrases:
+                '0': Keep yer head'n straight to take th' gangplank.
+                '1': Keep yer head'n straight to take th' <BRANCH_SIGN> gangplank.
+                '2': Keep yer head'n straight to take th' gangplank toward <TOWARD_SIGN>.
+                '3': Keep yer head'n straight to take th' <BRANCH_SIGN> gangplank
+                    toward <TOWARD_SIGN>.
+                '4': Keep yer head'n straight to take th' <NAME_SIGN> gangplank.
+        ramp_straight_verbal: *id018
+        ramp_verbal: *id019
+        sharp:
+            empty_street_name_labels: *empty_street_name_labels
+            phrases:
+                '0': Turn sharp <RELATIVE_DIRECTION> bucko.
+                '1': Turn sharp <RELATIVE_DIRECTION> onto <STREET_NAMES> ye scallywag.
+                '2': Arrr, turn sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>.
+                    Continue on <STREET_NAMES>.
+                '3': Turn sharp <RELATIVE_DIRECTION> matey to stay on <STREET_NAMES>.
+            relative_directions: *relative_directions_left_right
+        sharp_verbal:
+            empty_street_name_labels: *empty_street_name_labels
+            phrases:
+                '0': Turn sharp <RELATIVE_DIRECTION> bucko.
+                '1': Turn sharp <RELATIVE_DIRECTION> onto <STREET_NAMES> ye scallywag.
+                '2': Arrr, turn sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>.
+                '3': Turn sharp <RELATIVE_DIRECTION> matey to stay on <STREET_NAMES>.
+            relative_directions: *relative_directions_left_right
+        start: *id015
+        start_verbal:
+            cardinal_directions: *cardinal_directions
+            empty_street_name_labels: *empty_street_name_labels
+            metric_lengths: *metric_lengths
+            phrases:
+                '0': Head <CARDINAL_DIRECTION> fer <LENGTH>.
+                '1': Head <CARDINAL_DIRECTION> on <STREET_NAMES> fer <LENGTH>.
+                '10': Saunter <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.
+                '16': Ride <CARDINAL_DIRECTION> fer <LENGTH>.
+                '17': Ride <CARDINAL_DIRECTION> on <STREET_NAMES> fer <LENGTH>.
+                '18': Ride <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.
+                '2': Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.
+                '4': Set sail <CARDINAL_DIRECTION> fer <LENGTH>.
+                '5': Point yer bow <CARDINAL_DIRECTION> and set sail on <STREET_NAMES>
+                    fer <LENGTH>.
+                '6': Weigh anchor! Set sail <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.
+                '8': Saunter <CARDINAL_DIRECTION> fer <LENGTH>.
+                '9': Saunter <CARDINAL_DIRECTION> on <STREET_NAMES> fer <LENGTH>.
+            us_customary_lengths: *us_customary_lengths
+        transit:
+            empty_transit_name_labels: *empty_transit_name_labels
+            phrases:
+                '0': Aye, take thee <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)
+                '1': Heave ho on thee <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT>
+                    <TRANSIT_STOP_COUNT_LABEL>)
+            transit_stop_count_labels: *transit_stop_count_labels
+        transit_connection_destination: &id024
+            phrases:
+                '0': Sink me! Exit thee station ye scallywag.
+                '1': Avast ye, exit thee <TRANSIT_STOP>.
+                '2': Exit thee <TRANSIT_STOP> <STATION_LABEL> me buccaneer.
+            station_label: *station_label
+        transit_connection_destination_verbal: *id024
+        transit_connection_start: &id025
+            phrases:
+                '0': Shiver me timbers! Enter thee station ye landlubber.
+                '1': Yo ho ho! Enter thee <TRANSIT_STOP>.
+                '2': Enter thee <TRANSIT_STOP> <STATION_LABEL> me hearties.
+            station_label: *station_label
+        transit_connection_start_verbal: *id025
+        transit_connection_transfer: &id026
+            phrases:
+                '0': Blimey! Transfer at thee station me buccaneer.
+                '1': Blow me down! Transfer at thee <TRANSIT_STOP>.
+                '2': Transfer at thee <TRANSIT_STOP> <STATION_LABEL> ye scurvy dog.
+            station_label: *station_label
+        transit_connection_transfer_verbal: *id026
+        transit_remain_on:
+            empty_transit_name_labels: *empty_transit_name_labels
+            phrases:
+                '0': Remain on thee <TRANSIT_NAME> ye landlubber. (<TRANSIT_STOP_COUNT>
+                    <TRANSIT_STOP_COUNT_LABEL>)
+                '1': Remain on thee <TRANSIT_NAME> toward <TRANSIT_HEADSIGN> ye landlubber.
+                    (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)
+            transit_stop_count_labels: *transit_stop_count_labels
+        transit_remain_on_verbal:
+            empty_transit_name_labels: *empty_transit_name_labels
+            phrases:
+                '0': Remain on thee <TRANSIT_NAME> ye landlubber.
+                '1': Remain on thee <TRANSIT_NAME> toward <TRANSIT_HEADSIGN> ye landlubber.
+        transit_transfer:
+            empty_transit_name_labels: *empty_transit_name_labels
+            phrases:
+                '0': Argh! Transfer to take thee <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT>
+                    <TRANSIT_STOP_COUNT_LABEL>)
+                '1': Hang the Jib! Transfer to take thee <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>.
+                    (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)
+            transit_stop_count_labels: *transit_stop_count_labels
+        transit_transfer_verbal:
+            empty_transit_name_labels: *empty_transit_name_labels
+            phrases:
+                '0': Argh! Transfer to take thee <TRANSIT_NAME>.
+                '1': Hang the Jib! Transfer to take thee <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>.
+        transit_verbal:
+            empty_transit_name_labels: *empty_transit_name_labels
+            phrases:
+                '0': Aye, take thee <TRANSIT_NAME>.
+                '1': Heave ho on thee <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>.
+        turn:
+            empty_street_name_labels: *empty_street_name_labels
+            phrases:
+                '0': Turn <RELATIVE_DIRECTION> bucko.
+                '1': Turn <RELATIVE_DIRECTION> onto <STREET_NAMES> me hearties.
+                '2': Arrr, turn <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>. Aye,
+                    continue on <STREET_NAMES>.
+                '3': Turn <RELATIVE_DIRECTION> matey to stay on <STREET_NAMES>.
+            relative_directions: *relative_directions_left_right
+        turn_verbal:
+            empty_street_name_labels: *empty_street_name_labels
+            phrases:
+                '0': Turn <RELATIVE_DIRECTION> bucko.
+                '1': Turn <RELATIVE_DIRECTION> onto <STREET_NAMES> me hearties.
+                '2': Arrr, turn <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>.
+                '3': Turn <RELATIVE_DIRECTION> matey to stay on <STREET_NAMES>.
+            relative_directions: *relative_directions_left_right
+        uturn: &id027
+            empty_street_name_labels: *empty_street_name_labels
+            phrases:
+                '0': Argh! Make a <RELATIVE_DIRECTION> U-turn.
+                '1': Argh! Make a <RELATIVE_DIRECTION> U-turn onto <STREET_NAMES>.
+                '2': Argh! Make a <RELATIVE_DIRECTION> U-turn to stay on <STREET_NAMES>.
+                '3': Argh! Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES>.
+                '4': Argh! Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES>
+                    onto <STREET_NAMES>.
+                '5': Argh! Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES>
+                    to stay on <STREET_NAMES>.
+            relative_directions: *relative_directions_left_right
+        uturn_verbal: *id027
+        verbal_multi_cue:
+            phrases:
+                '0': <CURRENT_VERBAL_CUE> Then <NEXT_VERBAL_CUE>

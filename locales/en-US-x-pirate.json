@@ -33,64 +33,72 @@
       }
     },
     "bear": {
+      "empty_street_name_labels": [
+        "solid ground",
+        "th' bike pirate way",
+        "th' treasure trail"
+      ],
       "phrases": {
         "0": "Bear <RELATIVE_DIRECTION> me matey.",
         "1": "Bear <RELATIVE_DIRECTION> me matey onto <STREET_NAMES>.",
         "2": "Bear <RELATIVE_DIRECTION> me matey onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
         "3": "Bear <RELATIVE_DIRECTION> me matey to stay on <STREET_NAMES>."
       },
+      "relative_directions": [
+        "port",
+        "starboard"
+      ],
+      "example_phrases": {
+        "0": [
+          "Bear port me matey.",
+          "Bear starboard me matey."
+        ],
+        "1": [
+          "Bear port me matey onto Arlen Road.",
+          "Bear starboard me matey onto Arlen Road."
+        ],
+        "2": [
+          "Bear port me matey onto Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Bear starboard me matey onto Belair Road/US 1 Business. Continue on Arlen Road."
+        ],
+        "3": [
+          "Bear port me matey to stay on Arlen Road.",
+          "Bear starboard me matey to stay on Arlen Road."
+        ]
+      }
+    },
+    "bear_verbal": {
       "empty_street_name_labels": [
         "solid ground",
         "th' bike pirate way",
         "th' treasure trail"
       ],
-      "relative_directions": [
-        "left",
-        "right"
-      ],
-      "example_phrases": {
-        "0": [
-          "Bear right me matey."
-        ],
-        "1": [
-          "Bear left me matey onto Arlen Road."
-        ],
-        "2": [
-          "Bear right me matey onto Belair Road/US 1 Business. Continue on US 1 Business."
-        ],
-        "3": [
-          "Bear left me matey to stay on US 15 South."
-        ]
-      }
-    },
-    "bear_verbal": {
       "phrases": {
         "0": "Bear <RELATIVE_DIRECTION> me matey.",
         "1": "Bear <RELATIVE_DIRECTION> me matey onto <STREET_NAMES>.",
         "2": "Bear <RELATIVE_DIRECTION> me matey onto <BEGIN_STREET_NAMES>.",
         "3": "Bear <RELATIVE_DIRECTION> me matey to stay on <STREET_NAMES>."
       },
-      "empty_street_name_labels": [
-        "solid ground",
-        "th' bike pirate way",
-        "th' treasure trail"
-      ],
       "relative_directions": [
-        "left",
-        "right"
+        "port",
+        "starboard"
       ],
       "example_phrases": {
         "0": [
-          "Bear right me matey."
+          "Bear port me matey.",
+          "Bear starboard me matey."
         ],
         "1": [
-          "Bear left me matey onto Arlen Road."
+          "Bear port me matey onto Arlen Road.",
+          "Bear starboard me matey onto Arlen Road."
         ],
         "2": [
-          "Bear right me matey onto Belair Road, U.S. 1 Business."
+          "Bear port me matey onto Belair Road/US 1 Business.",
+          "Bear starboard me matey onto Belair Road/US 1 Business."
         ],
         "3": [
-          "Bear left me matey to stay on U.S. 15 South."
+          "Bear port me matey to stay on Arlen Road.",
+          "Bear starboard me matey to stay on Arlen Road."
         ]
       }
     },
@@ -100,7 +108,7 @@
       },
       "example_phrases": {
         "0": [
-          "Vine Street becomes Middletown Road."
+          "Vine Street becomes Arlen Road."
         ]
       }
     },
@@ -110,34 +118,30 @@
       },
       "example_phrases": {
         "0": [
-          "Vine Street becomes Middletown Road."
+          "Vine Street becomes Arlen Road."
         ]
       }
     },
     "continue": {
-      "phrases": {
-        "0": "Aye, continue.",
-        "1": "Heave ho on <STREET_NAMES>."
-      },
       "empty_street_name_labels": [
         "solid ground",
         "th' bike pirate way",
         "th' treasure trail"
       ],
+      "phrases": {
+        "0": "Aye, continue.",
+        "1": "Heave ho on <STREET_NAMES>."
+      },
       "example_phrases": {
         "0": [
           "Aye, continue."
         ],
         "1": [
-          "Heave ho on 10th Avenue."
+          "Heave ho on Arlen Road."
         ]
       }
     },
     "continue_verbal": {
-      "phrases": {
-        "0": "Aye, continue fer <LENGTH>.",
-        "1": "Heave ho on <STREET_NAMES> fer <LENGTH>."
-      },
       "empty_street_name_labels": [
         "solid ground",
         "th' bike pirate way",
@@ -150,6 +154,10 @@
         "<METERS> meters",
         "less than 10 meters"
       ],
+      "phrases": {
+        "0": "Aye, continue fer <LENGTH>.",
+        "1": "Avast ye, continue on <STREET_NAMES> fer <LENGTH>."
+      },
       "us_customary_lengths": [
         "<MILES> miles",
         "1 mile",
@@ -161,29 +169,31 @@
       ],
       "example_phrases": {
         "0": [
-          "Aye, continue fer 300 feet."
+          "Aye, continue fer 1 mile.",
+          "Aye, continue fer a half mile."
         ],
         "1": [
-          "Heave ho on 10th Avenue fer 3 tenths of a mile."
+          "Avast ye, continue on Arlen Road fer 1 mile.",
+          "Avast ye, continue on Arlen Road fer a half mile."
         ]
       }
     },
     "continue_verbal_alert": {
-      "phrases": {
-        "0": "Aye, continue.",
-        "1": "Heave ho on <STREET_NAMES>."
-      },
       "empty_street_name_labels": [
         "solid ground",
         "th' bike pirate way",
         "th' treasure trail"
       ],
+      "phrases": {
+        "0": "Aye, continue.",
+        "1": "Heave ho on <STREET_NAMES>."
+      },
       "example_phrases": {
         "0": [
           "Aye, continue."
         ],
         "1": [
-          "Heave ho on 10th Avenue."
+          "Heave ho on Arlen Road."
         ]
       }
     },
@@ -217,28 +227,29 @@
     },
     "destination": {
       "phrases": {
-        "0": "Blimey! Ye have arrived at yer destination. Savvy?",
-        "1": "Shiver me timbers! Ye have arrived at <DESTINATION>. Savvy?",
-        "2": "Sink me! Yer destination be on th' <RELATIVE_DIRECTION>. Savvy?",
-        "3": "Aye <DESTINATION> be on th' <RELATIVE_DIRECTION>. Savvy?"
+        "0": "Shiver me timbers! Ye have arrived at yer destination. Savvy?",
+        "1": "Blimey! Ye have arrived at <DESTINATION>. Savvy?",
+        "2": "Yer destination be on th' <RELATIVE_DIRECTION>. Savvy?",
+        "3": "<DESTINATION> be on th' <RELATIVE_DIRECTION>. Savvy?"
       },
       "relative_directions": [
-        "left",
-        "right"
+        "port",
+        "starboard"
       ],
       "example_phrases": {
         "0": [
-          "Blimey! Ye have arrived at yer destination. Savvy?"
+          "Shiver me timbers! Ye have arrived at yer destination. Savvy?"
         ],
         "1": [
-          "Shiver me timbers! Ye have arrived at 3206 Powelton Avenue. Savvy?"
+          "Blimey! Ye have arrived at Lancaster Brewing Company. Savvy?"
         ],
         "2": [
-          "Sink me! Yer destination be on th' left.",
-          "Sink me! Yer destination be on th' right. Savvy?"
+          "Yer destination be on th' port. Savvy?",
+          "Yer destination be on th' starboard. Savvy?"
         ],
         "3": [
-          "Aye Lancaster Brewing Company be on th' left. Savvy?"
+          "Lancaster Brewing Company be on th' port. Savvy?",
+          "Lancaster Brewing Company be on th' starboard. Savvy?"
         ]
       }
     },
@@ -250,22 +261,23 @@
         "3": "<DESTINATION> be on th' <RELATIVE_DIRECTION>. Savvy?"
       },
       "relative_directions": [
-        "left",
-        "right"
+        "port",
+        "starboard"
       ],
       "example_phrases": {
         "0": [
           "Shiver me timbers! Ye have arrived at yer destination. Savvy?"
         ],
         "1": [
-          "Blimey! Ye have arrived at 32 o6 Powelton Avenue. Savvy?"
+          "Blimey! Ye have arrived at Lancaster Brewing Company. Savvy?"
         ],
         "2": [
-          "Yer destination be on th' left.",
-          "Yer destination be on th' right. Savvy?"
+          "Yer destination be on th' port. Savvy?",
+          "Yer destination be on th' starboard. Savvy?"
         ],
         "3": [
-          "Lancaster Brewing Company be on th' left. Savvy?"
+          "Lancaster Brewing Company be on th' port. Savvy?",
+          "Lancaster Brewing Company be on th' starboard. Savvy?"
         ]
       }
     },
@@ -277,78 +289,75 @@
         "3": "<DESTINATION> will be on the <RELATIVE_DIRECTION>."
       },
       "relative_directions": [
-        "left",
-        "right"
+        "port",
+        "starboard"
       ],
       "example_phrases": {
         "0": [
           "Blimey! Ye will arrive at yer destination."
         ],
         "1": [
-          "Shiver me timbers! Ye will arrive at 32 o6 Powelton Avenue."
+          "Shiver me timbers! Ye will arrive at Lancaster Brewing Company."
         ],
         "2": [
-          "Yer destination will be on the left.",
-          "Yer destination will be on the right."
+          "Yer destination will be on the port.",
+          "Yer destination will be on the starboard."
         ],
         "3": [
-          "Lancaster Brewing Company will be on the left."
+          "Lancaster Brewing Company will be on the port.",
+          "Lancaster Brewing Company will be on the starboard."
         ]
       }
     },
     "enter_ferry": {
-      "phrases": {
-        "0": "Ahoy, me matey! Take the Black Pearl.",
-        "1": "Ahoy, me matey! Take the <STREET_NAMES>.",
-        "2": "Ahoy, me matey! Take the <STREET_NAMES> <FERRY_LABEL>."
-      },
       "empty_street_name_labels": [
         "solid ground",
         "th' bike pirate way",
         "th' treasure trail"
       ],
       "ferry_label": "Ferry",
+      "phrases": {
+        "0": "Ahoy, me matey! Take the Black Pearl.",
+        "1": "Ahoy, me matey! Take the <STREET_NAMES>.",
+        "2": "Ahoy, me matey! Take the <STREET_NAMES> <FERRY_LABEL>."
+      },
       "example_phrases": {
         "0": [
           "Ahoy, me matey! Take the Black Pearl."
         ],
         "1": [
-          "Ahoy, me matey! Take the Millersburg Ferry."
+          "Ahoy, me matey! Take the Arlen Road."
         ],
         "2": [
-          "Ahoy, me matey! Take the Bridgeport - Port Jefferson Ferry."
+          "Ahoy, me matey! Take the Arlen Road Ferry."
         ]
       }
     },
     "enter_ferry_verbal": {
-      "phrases": {
-        "0": "Ahoy, me matey! Take the Black Pearl.",
-        "1": "Ahoy, me matey! Take the <STREET_NAMES>.",
-        "2": "Ahoy, me matey! Take the <STREET_NAMES> <FERRY_LABEL>."
-      },
       "empty_street_name_labels": [
         "solid ground",
         "th' bike pirate way",
         "th' treasure trail"
       ],
       "ferry_label": "Ferry",
+      "phrases": {
+        "0": "Ahoy, me matey! Take the Black Pearl.",
+        "1": "Ahoy, me matey! Take the <STREET_NAMES>.",
+        "2": "Ahoy, me matey! Take the <STREET_NAMES> <FERRY_LABEL>."
+      },
       "example_phrases": {
         "0": [
           "Ahoy, me matey! Take the Black Pearl."
         ],
         "1": [
-          "Ahoy, me matey! Take the Millersburg Ferry."
+          "Ahoy, me matey! Take the Arlen Road."
         ],
         "2": [
-          "Ahoy, me matey! Take the Bridgeport - Port Jefferson Ferry."
+          "Ahoy, me matey! Take the Arlen Road Ferry."
         ]
       }
     },
     "enter_roundabout": {
-      "phrases": {
-        "0": "Enter thee Cap'n wheel.",
-        "1": "Enter thee Cap'n wheel and take th' <ORDINAL_VALUE> spoke."
-      },
       "ordinal_values": [
         "1st",
         "2nd",
@@ -361,6 +370,10 @@
         "9th",
         "10th"
       ],
+      "phrases": {
+        "0": "Enter thee Cap'n wheel.",
+        "1": "Enter thee Cap'n wheel and take th' <ORDINAL_VALUE> spoke."
+      },
       "example_phrases": {
         "0": [
           "Enter thee Cap'n wheel."
@@ -380,10 +393,6 @@
       }
     },
     "enter_roundabout_verbal": {
-      "phrases": {
-        "0": "Enter thee Cap'n wheel.",
-        "1": "Enter thee Cap'n wheel and take th' <ORDINAL_VALUE> spoke."
-      },
       "ordinal_values": [
         "1st",
         "2nd",
@@ -396,6 +405,10 @@
         "9th",
         "10th"
       ],
+      "phrases": {
+        "0": "Enter thee Cap'n wheel.",
+        "1": "Enter thee Cap'n wheel and take th' <ORDINAL_VALUE> spoke."
+      },
       "example_phrases": {
         "0": [
           "Enter thee Cap'n wheel."
@@ -418,13 +431,6 @@
       "phrases": {
         "0": "Blimey! Take thee exit on th' <RELATIVE_DIRECTION>.",
         "1": "Shiver me timbers! Take exit <NUMBER_SIGN> on th' <RELATIVE_DIRECTION>.",
-        "2": "Blow me down! Take thee <BRANCH_SIGN> exit on th' <RELATIVE_DIRECTION>.",
-        "3": "Yo ho ho! Take exit <NUMBER_SIGN> on th' <RELATIVE_DIRECTION> onto <BRANCH_SIGN>.",
-        "4": "Sink me! Take thee exit on th' <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
-        "5": "Avast ye, take exit <NUMBER_SIGN> on th' <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
-        "6": "Blimey! Take thee <BRANCH_SIGN> exit on th' <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
-        "7": "Sink me! Take exit <NUMBER_SIGN> on th' <RELATIVE_DIRECTION> onto <BRANCH_SIGN> toward <TOWARD_SIGN>.",
-        "8": "Blow me down! Take thee <NAME_SIGN> exit on th' <RELATIVE_DIRECTION>.",
         "10": "Blow me down! Take thee <NAME_SIGN> exit on th' <RELATIVE_DIRECTION> onto <BRANCH_SIGN>.",
         "12": "Blow me down! Take thee <NAME_SIGN> exit on th' <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
         "14": "Blow me down! Take thee <NAME_SIGN> exit on th' <RELATIVE_DIRECTION> onto <BRANCH_SIGN> toward <TOWARD_SIGN>.",
@@ -433,304 +439,20 @@
         "17": "Blow me down! Take thee <BRANCH_SIGN> exit.",
         "18": "Yo ho ho! Take exit <NUMBER_SIGN> onto <BRANCH_SIGN>.",
         "19": "Sink me! Take thee exit toward <TOWARD_SIGN>.",
+        "2": "Blow me down! Take thee <BRANCH_SIGN> exit on th' <RELATIVE_DIRECTION>.",
         "20": "Avast ye, take exit <NUMBER_SIGN> toward <TOWARD_SIGN>.",
         "21": "Blimey! Take thee <BRANCH_SIGN> exit toward <TOWARD_SIGN>.",
         "22": "Sink me! Take exit <NUMBER_SIGN> onto <BRANCH_SIGN> toward <TOWARD_SIGN>.",
         "23": "Blow me down! Take thee <NAME_SIGN> exit.",
         "25": "Blow me down! Take thee <NAME_SIGN> exit onto <BRANCH_SIGN>.",
         "27": "Blow me down! Take thee <NAME_SIGN> exit toward <TOWARD_SIGN>.",
-        "29": "Blow me down! Take thee <NAME_SIGN> exit onto <BRANCH_SIGN> toward <TOWARD_SIGN>."
-      },
-      "relative_directions": [
-        "port",
-        "starboard"
-      ],
-      "example_phrases": {
-        "0": [
-          "Blimey! Take thee exit on th' port.",
-          "Take thee exit on th' starboard."
-        ],
-        "1": [
-          "Shiver me timbers! Take exit 67 B-A on th' starboard."
-        ],
-        "2": [
-          "Blow me down! Take thee US 322 West exit on th' starboard."
-        ],
-        "3": [
-          "Yo ho ho! Take exit 67 B-A on th' starboard onto US 322 West."
-        ],
-        "4": [
-          "Sink me! Take thee exit on th' starboard toward Lewistown."
-        ],
-        "5": [
-          "Avast ye, take exit 67 B-A on th' starboard toward Lewistown."
-        ],
-        "6": [
-          "Blimey! Take thee US 322 West exit on th' starboard toward Lewistown."
-        ],
-        "7": [
-          "Sink me! Take exit 67 B-A on th' starboard onto US 322 West toward Lewistown/State College."
-        ],
-        "8": [
-          "Blow me down! Take thee White Marsh Boulevard exit on th' port."
-        ],
-        "10": [
-          "Blow me down! Take thee White Marsh Boulevard exit on th' port onto MD 43 East."
-        ],
-        "12": [
-          "Blow me down! Take thee White Marsh Boulevard exit on th' port toward White Marsh."
-        ],
-        "14": [
-          "Blow me down! Take thee White Marsh Boulevard exit on th' port onto MD 43 East toward White Marsh."
-        ],
-        "15": [
-          "Blimey! Take thee exit."
-        ],
-        "16": [
-          "Shiver me timbers! Take exit 67 B-A."
-        ],
-        "17": [
-          "Blow me down! Take thee US 322 West exit."
-        ],
-        "18": [
-          "Yo ho ho! Take exit 67 B-A onto US 322 West."
-        ],
-        "19": [
-          "Sink me! Take thee exit toward Lewistown."
-        ],
-        "20": [
-          "Avast ye, take exit 67 B-A toward Lewistown."
-        ],
-        "21": [
-          "Blimey! Take thee US 322 West exit toward Lewistown."
-        ],
-        "22": [
-          "Sink me! Take exit 67 B-A onto US 322 West toward Lewistown/State College."
-        ],
-        "23": [
-          "Blow me down! Take thee White Marsh Boulevard exit."
-        ],
-        "25": [
-          "Blow me down! Take thee White Marsh Boulevard exit onto MD 43 East."
-        ],
-        "27": [
-          "Blow me down! Take thee White Marsh Boulevard exit toward White Marsh."
-        ],
-        "29": [
-          "Blow me down! Take thee White Marsh Boulevard exit onto MD 43 East toward White Marsh."
-        ]
-      }
-    },
-    "exit_ferry": {
-      "phrases": {
-        "0": "Head <CARDINAL_DIRECTION>.",
-        "1": "Head <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-        "2": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Aye, continue on <STREET_NAMES>.",
-        "4": "Set sail <CARDINAL_DIRECTION>.",
-        "5": "Weigh anchor! Set sail <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-        "6": "Point yer bow <CARDINAL_DIRECTION> and set sail on <BEGIN_STREET_NAMES>. Aye, continue on <STREET_NAMES>.",
-        "8": "Saunter <CARDINAL_DIRECTION>.",
-        "9": "Saunter <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-        "10": "Saunter <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Aye, continue on <STREET_NAMES>.",
-        "16": "Ride <CARDINAL_DIRECTION>.",
-        "17": "Ride <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-        "18": "Ride <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Aye, continue on <STREET_NAMES>."
-      },
-      "cardinal_directions": [
-        "north",
-        "northeast",
-        "east",
-        "southeast",
-        "south",
-        "southwest",
-        "west",
-        "northwest"
-      ],
-      "empty_street_name_labels": [
-        "solid ground",
-        "th' bike pirate way",
-        "th' treasure trail"
-      ],
-      "example_phrases": {
-        "0": [
-          "Head southeast."
-        ],
-        "1": [
-          "Head west on Ferry Lane"
-        ],
-        "2": [
-          "Head south on Summerfield Place/NY 114. Aye, continue on NY 114."
-        ],
-        "4": [
-          "Set sail southeast."
-        ],
-        "5": [
-          "Weigh anchor! Set sail west on Ferry Lane"
-        ],
-        "6": [
-          "Point yer bow south and set sail on Summerfield Place/NY 114. Aye, continue on NY 114."
-        ],
-        "8": [
-          "Saunter southeast."
-        ],
-        "9": [
-          "Saunter west on Ferry Lane"
-        ],
-        "10": [
-          "Saunter south on Summerfield Place/NY 114. Aye, continue on NY 114."
-        ],
-        "16": [
-          "Ride southeast."
-        ],
-        "17": [
-          "Ride west on Ferry Lane"
-        ],
-        "18": [
-          "Ride south on Summerfield Place/NY 114. Aye, continue on NY 114."
-        ]
-      }
-    },
-    "exit_ferry_verbal": {
-      "phrases": {
-        "0": "Head <CARDINAL_DIRECTION>.",
-        "1": "Head <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-        "2": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.",
-        "4": "Set sail <CARDINAL_DIRECTION>.",
-        "5": "Weigh anchor! Set sail <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-        "6": "Point yer bow <CARDINAL_DIRECTION> and set sail on <BEGIN_STREET_NAMES>.",
-        "8": "Saunter <CARDINAL_DIRECTION>.",
-        "9": "Saunter <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-        "10": "Saunter <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.",
-        "16": "Ride <CARDINAL_DIRECTION>.",
-        "17": "Ride <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-        "18": "Ride <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."
-      },
-      "cardinal_directions": [
-        "north",
-        "northeast",
-        "east",
-        "southeast",
-        "south",
-        "southwest",
-        "west",
-        "northwest"
-      ],
-      "empty_street_name_labels": [
-        "solid ground",
-        "th' bike pirate way",
-        "th' treasure trail"
-      ],
-      "example_phrases": {
-        "0": [
-          "Head southeast."
-        ],
-        "1": [
-          "Head west on Ferry Lane"
-        ],
-        "2": [
-          "Head south on Summerfield Place, New York 1 14."
-        ],
-        "4": [
-          "Set sail southeast."
-        ],
-        "5": [
-          "Weigh anchor! Set sail west on Ferry Lane"
-        ],
-        "6": [
-          "Point yer bow south and set sail on Summerfield Place, New York 1 14."
-        ],
-        "8": [
-          "Saunter southeast."
-        ],
-        "9": [
-          "Saunter west on Ferry Lane"
-        ],
-        "10": [
-          "Saunter south on Summerfield Place, New York 1 14."
-        ],
-        "16": [
-          "Ride southeast."
-        ],
-        "17": [
-          "Ride west on Ferry Lane"
-        ],
-        "18": [
-          "Ride south on Summerfield Place, New York 1 14."
-        ]
-      }
-    },
-    "exit_roundabout": {
-      "phrases": {
-        "0": "Exit thee wheel.",
-        "1": "Exit thee wheel onto <STREET_NAMES>.",
-        "2": "Exit thee wheel onto <BEGIN_STREET_NAMES>. Aye, continue on <STREET_NAMES>."
-      },
-      "empty_street_name_labels": [
-        "solid ground",
-        "th' bike pirate way",
-        "th' treasure trail"
-      ],
-      "example_phrases": {
-        "0": [
-          "Exit thee wheel."
-        ],
-        "1": [
-          "Exit thee wheel onto Philadelphia Road/MD 7."
-        ],
-        "2": [
-          "Exit thee wheel onto Catoctin Mountain Highway/US 15. Aye, continue on US 15."
-        ]
-      }
-    },
-    "exit_roundabout_verbal": {
-      "phrases": {
-        "0": "Exit thee wheel.",
-        "1": "Exit thee wheel onto <STREET_NAMES>.",
-        "2": "Exit thee wheel onto <BEGIN_STREET_NAMES>."
-      },
-      "empty_street_name_labels": [
-        "solid ground",
-        "th' bike pirate way",
-        "th' treasure trail"
-      ],
-      "example_phrases": {
-        "0": [
-          "Exit thee wheel."
-        ],
-        "1": [
-          "Exit thee wheel onto Philadelphia Road, Maryland 7."
-        ],
-        "2": [
-          "Exit thee wheel onto Catoctin Mountain Highway, U.S. 15."
-        ]
-      }
-    },
-    "exit_verbal": {
-      "phrases": {
-        "0": "Blimey! Take thee exit on th' <RELATIVE_DIRECTION>.",
-        "1": "Shiver me timbers! Take exit <NUMBER_SIGN> on th' <RELATIVE_DIRECTION>.",
-        "2": "Blow me down! Take thee <BRANCH_SIGN> exit on th' <RELATIVE_DIRECTION>.",
+        "29": "Blow me down! Take thee <NAME_SIGN> exit onto <BRANCH_SIGN> toward <TOWARD_SIGN>.",
         "3": "Yo ho ho! Take exit <NUMBER_SIGN> on th' <RELATIVE_DIRECTION> onto <BRANCH_SIGN>.",
         "4": "Sink me! Take thee exit on th' <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
         "5": "Avast ye, take exit <NUMBER_SIGN> on th' <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
         "6": "Blimey! Take thee <BRANCH_SIGN> exit on th' <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
         "7": "Sink me! Take exit <NUMBER_SIGN> on th' <RELATIVE_DIRECTION> onto <BRANCH_SIGN> toward <TOWARD_SIGN>.",
-        "8": "Blow me down! Take thee <NAME_SIGN> exit on th' <RELATIVE_DIRECTION>.",
-        "10": "Blow me down! Take thee <NAME_SIGN> exit on th' <RELATIVE_DIRECTION> onto <BRANCH_SIGN>.",
-        "12": "Blow me down! Take thee <NAME_SIGN> exit on th' <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
-        "14": "Blow me down! Take thee <NAME_SIGN> exit on th' <RELATIVE_DIRECTION> onto <BRANCH_SIGN> toward <TOWARD_SIGN>.",
-        "15": "Blimey! Take thee exit.",
-        "16": "Shiver me timbers! Take exit <NUMBER_SIGN>.",
-        "17": "Blow me down! Take thee <BRANCH_SIGN> exit.",
-        "18": "Yo ho ho! Take exit <NUMBER_SIGN> onto <BRANCH_SIGN>.",
-        "19": "Sink me! Take thee exit toward <TOWARD_SIGN>.",
-        "20": "Avast ye, take exit <NUMBER_SIGN> toward <TOWARD_SIGN>.",
-        "21": "Blimey! Take thee <BRANCH_SIGN> exit toward <TOWARD_SIGN>.",
-        "22": "Sink me! Take exit <NUMBER_SIGN> onto <BRANCH_SIGN> toward <TOWARD_SIGN>.",
-        "23": "Blow me down! Take thee <NAME_SIGN> exit.",
-        "25": "Blow me down! Take thee <NAME_SIGN> exit onto <BRANCH_SIGN>.",
-        "27": "Blow me down! Take thee <NAME_SIGN> exit toward <TOWARD_SIGN>.",
-        "29": "Blow me down! Take thee <NAME_SIGN> exit onto <BRANCH_SIGN> toward <TOWARD_SIGN>."
+        "8": "Blow me down! Take thee <NAME_SIGN> exit on th' <RELATIVE_DIRECTION>."
       },
       "relative_directions": [
         "port",
@@ -742,37 +464,20 @@
           "Blimey! Take thee exit on th' starboard."
         ],
         "1": [
+          "Shiver me timbers! Take exit 67 B-A on th' port.",
           "Shiver me timbers! Take exit 67 B-A on th' starboard."
         ],
-        "2": [
-          "Blow me down! Take thee U.S. 3 22 West exit on th' starboard."
-        ],
-        "3": [
-          "Yo ho ho! Take exit 67 B-A on th' starboard onto U.S. 3 22 West."
-        ],
-        "4": [
-          "Sink me! Take thee exit on th' starboard toward Lewistown."
-        ],
-        "5": [
-          "Avast ye, take exit 67 B-A on th' starboard toward Lewistown."
-        ],
-        "6": [
-          "Blimey! Take thee U.S. 3 22 West exit on th' starboard toward Lewistown."
-        ],
-        "7": [
-          "Sink me! Take exit 67 B-A on th' starboard onto U.S. 3 22 West toward Lewistown, State College."
-        ],
-        "8": [
-          "Blow me down! Take thee White Marsh Boulevard exit on th' port."
-        ],
         "10": [
-          "Blow me down! Take thee White Marsh Boulevard exit on th' port onto Maryland 43 East."
+          "Blow me down! Take thee White Marsh Boulevard exit on th' port onto US 322 West.",
+          "Blow me down! Take thee White Marsh Boulevard exit on th' starboard onto US 322 West."
         ],
         "12": [
-          "Blow me down! Take thee White Marsh Boulevard exit on th' port toward White Marsh."
+          "Blow me down! Take thee White Marsh Boulevard exit on th' port toward Lewiston.",
+          "Blow me down! Take thee White Marsh Boulevard exit on th' starboard toward Lewiston."
         ],
         "14": [
-          "Blow me down! Take thee White Marsh Boulevard exit on th' port onto Maryland 43 East toward White Marsh."
+          "Blow me down! Take thee White Marsh Boulevard exit on th' port onto US 322 West toward Lewiston.",
+          "Blow me down! Take thee White Marsh Boulevard exit on th' starboard onto US 322 West toward Lewiston."
         ],
         "15": [
           "Blimey! Take thee exit."
@@ -787,276 +492,60 @@
           "Yo ho ho! Take exit 67 B-A onto US 322 West."
         ],
         "19": [
-          "Sink me! Take thee exit exit toward Lewistown."
+          "Sink me! Take thee exit toward Lewiston."
+        ],
+        "2": [
+          "Blow me down! Take thee US 322 West exit on th' port.",
+          "Blow me down! Take thee US 322 West exit on th' starboard."
         ],
         "20": [
-          "Avast ye, take exit 67 B-A toward Lewistown."
+          "Avast ye, take exit 67 B-A toward Lewiston."
         ],
         "21": [
-          "Blimey! Take thee US 322 West exit toward Lewistown."
+          "Blimey! Take thee US 322 West exit toward Lewiston."
         ],
         "22": [
-          "Sink me! Take exit 67 B-A onto US 322 West toward Lewistown/State College."
+          "Sink me! Take exit 67 B-A onto US 322 West toward Lewiston."
         ],
         "23": [
           "Blow me down! Take thee White Marsh Boulevard exit."
         ],
         "25": [
-          "Blow me down! Take thee White Marsh Boulevard exit onto MD 43 East."
+          "Blow me down! Take thee White Marsh Boulevard exit onto US 322 West."
         ],
         "27": [
-          "Blow me down! Take thee White Marsh Boulevard exit toward White Marsh."
+          "Blow me down! Take thee White Marsh Boulevard exit toward Lewiston."
         ],
         "29": [
-          "Blow me down! Take thee White Marsh Boulevard exit onto MD 43 East toward White Marsh."
-        ]
-      }
-    },
-    "keep": {
-      "phrases": {
-        "0": "Keep <RELATIVE_DIRECTION> at the fork me hearties.",
-        "1": "Keep <RELATIVE_DIRECTION> ye landlubber to take exit <NUMBER_SIGN>.",
-        "2": "Keep <RELATIVE_DIRECTION> me buccaneer to take <STREET_NAMES>.",
-        "3": "Keep <RELATIVE_DIRECTION> ye scallywag to take exit <NUMBER_SIGN> onto <STREET_NAMES>.",
-        "4": "Keep <RELATIVE_DIRECTION> me bucko toward <TOWARD_SIGN>.",
-        "5": "Keep <RELATIVE_DIRECTION> ye scurvy dog to take exit <NUMBER_SIGN> toward <TOWARD_SIGN>.",
-        "6": "Keep <RELATIVE_DIRECTION> me hearties to take <STREET_NAMES> toward <TOWARD_SIGN>.",
-        "7": "Keep <RELATIVE_DIRECTION> ye landlubber to take exit <NUMBER_SIGN> onto <STREET_NAMES> toward <TOWARD_SIGN>."
-      },
-      "empty_street_name_labels": [
-        "solid ground",
-        "th' bike pirate way",
-        "th' treasure trail"
-      ],
-      "relative_directions": [
-        "left",
-        "straight",
-        "right"
-      ],
-      "example_phrases": {
-        "0": [
-          "Keep left at the fork me hearties.",
-          "Keep straight at the fork me hearties.",
-          "Keep right at the fork me hearties."
-        ],
-        "1": [
-          "Keep right ye landlubber to take exit 62."
-        ],
-        "2": [
-          "Keep right me buccaneer to take I 895 South."
+          "Blow me down! Take thee White Marsh Boulevard exit onto US 322 West toward Lewiston."
         ],
         "3": [
-          "Keep right ye scallywag to take exit 62 onto I 895 South."
+          "Yo ho ho! Take exit 67 B-A on th' port onto US 322 West.",
+          "Yo ho ho! Take exit 67 B-A on th' starboard onto US 322 West."
         ],
         "4": [
-          "Keep right me bucko toward Annapolis."
+          "Sink me! Take thee exit on th' port toward Lewiston.",
+          "Sink me! Take thee exit on th' starboard toward Lewiston."
         ],
         "5": [
-          "Keep right ye scurvy dog to take exit 62 toward Annapolis."
+          "Avast ye, take exit 67 B-A on th' port toward Lewiston.",
+          "Avast ye, take exit 67 B-A on th' starboard toward Lewiston."
         ],
         "6": [
-          "Keep right me hearties to take I 895 South toward Annapolis."
+          "Blimey! Take thee US 322 West exit on th' port toward Lewiston.",
+          "Blimey! Take thee US 322 West exit on th' starboard toward Lewiston."
         ],
         "7": [
-          "Keep right ye landlubber to take exit 62 onto I 895 South toward Annapolis."
+          "Sink me! Take exit 67 B-A on th' port onto US 322 West toward Lewiston.",
+          "Sink me! Take exit 67 B-A on th' starboard onto US 322 West toward Lewiston."
+        ],
+        "8": [
+          "Blow me down! Take thee White Marsh Boulevard exit on th' port.",
+          "Blow me down! Take thee White Marsh Boulevard exit on th' starboard."
         ]
       }
     },
-    "keep_to_stay_on": {
-      "phrases": {
-        "0": "Keep <RELATIVE_DIRECTION> me hearties to stay on <STREET_NAMES>.",
-        "1": "Keep <RELATIVE_DIRECTION> ye landlubber to take exit <NUMBER_SIGN> to stay on <STREET_NAMES>.",
-        "2": "Keep <RELATIVE_DIRECTION> me bucko to stay on <STREET_NAMES> toward <TOWARD_SIGN>.",
-        "3": "Keep <RELATIVE_DIRECTION> ye scallywag to take exit <NUMBER_SIGN> to stay on <STREET_NAMES> toward <TOWARD_SIGN>."
-      },
-      "empty_street_name_labels": [
-        "solid ground",
-        "th' bike pirate way",
-        "th' treasure trail"
-      ],
-      "relative_directions": [
-        "left",
-        "straight",
-        "right"
-      ],
-      "example_phrases": {
-        "0": [
-          "Keep left me hearties to stay on I 95 South.",
-          "Keep straight me hearties to stay on I 95 South.",
-          "Keep right me hearties to stay on I 95 South."
-        ],
-        "1": [
-          "Keep left ye landlubber to take exit 62 to stay on I 95 South."
-        ],
-        "2": [
-          "Keep left me bucko to stay on I 95 South toward Baltimore."
-        ],
-        "3": [
-          "Keep left ye scallywag to take exit 62 to stay on I 95 South toward Baltimore."
-        ]
-      }
-    },
-    "keep_to_stay_on_verbal": {
-      "phrases": {
-        "0": "Keep <RELATIVE_DIRECTION> me hearties to stay on <STREET_NAMES>.",
-        "1": "Keep <RELATIVE_DIRECTION> ye landlubber to take exit <NUMBER_SIGN> to stay on <STREET_NAMES>.",
-        "2": "Keep <RELATIVE_DIRECTION> me bucko to stay on <STREET_NAMES> toward <TOWARD_SIGN>.",
-        "3": "Keep <RELATIVE_DIRECTION> ye scallywag to take exit <NUMBER_SIGN> to stay on <STREET_NAMES> toward <TOWARD_SIGN>."
-      },
-      "empty_street_name_labels": [
-        "solid ground",
-        "th' bike pirate way",
-        "th' treasure trail"
-      ],
-      "relative_directions": [
-        "left",
-        "straight",
-        "right"
-      ],
-      "example_phrases": {
-        "0": [
-          "Keep left me hearties to stay on Interstate 95 South.",
-          "Keep straight me hearties to stay on Interstate 95 South.",
-          "Keep right me hearties to stay on Interstate 95 South."
-        ],
-        "1": [
-          "Keep left ye landlubber to take exit 62 to stay on Interstate 95 South."
-        ],
-        "2": [
-          "Keep left me bucko to stay on I 95 South toward Baltimore."
-        ],
-        "3": [
-          "Keep left ye scallywag to take exit 62 to stay on Interstate 95 South toward Baltimore."
-        ]
-      }
-    },
-    "keep_verbal": {
-      "phrases": {
-        "0": "Keep <RELATIVE_DIRECTION> at the fork me hearties.",
-        "1": "Keep <RELATIVE_DIRECTION> ye landlubber to take exit <NUMBER_SIGN>.",
-        "2": "Keep <RELATIVE_DIRECTION> me buccaneer to take <STREET_NAMES>.",
-        "3": "Keep <RELATIVE_DIRECTION> ye scallywag to take exit <NUMBER_SIGN> onto <STREET_NAMES>.",
-        "4": "Keep <RELATIVE_DIRECTION> me bucko toward <TOWARD_SIGN>.",
-        "5": "Keep <RELATIVE_DIRECTION> ye scurvy dog to take exit <NUMBER_SIGN> toward <TOWARD_SIGN>.",
-        "6": "Keep <RELATIVE_DIRECTION> me hearties to take <STREET_NAMES> toward <TOWARD_SIGN>.",
-        "7": "Keep <RELATIVE_DIRECTION> ye landlubber to take exit <NUMBER_SIGN> onto <STREET_NAMES> toward <TOWARD_SIGN>."
-      },
-      "empty_street_name_labels": [
-        "solid ground",
-        "th' bike pirate way",
-        "th' treasure trail"
-      ],
-      "relative_directions": [
-        "left",
-        "straight",
-        "right"
-      ],
-      "example_phrases": {
-        "0": [
-          "Keep left at the fork me hearties.",
-          "Keep straight at the fork me hearties.",
-          "Keep right at the fork me hearties."
-        ],
-        "1": [
-          "Keep right ye landlubber to take exit 62."
-        ],
-        "2": [
-          "Keep right me buccaneer to take Interstate 8 95 South."
-        ],
-        "3": [
-          "Keep right ye scallywag to take exit 62 onto Interstate 8 95 South."
-        ],
-        "4": [
-          "Keep right me bucko toward Annapolis."
-        ],
-        "5": [
-          "Keep right ye scurvy dog to take exit 62 toward Annapolis."
-        ],
-        "6": [
-          "Keep right me hearties to take Interstate 8 95 South toward Annapolis."
-        ],
-        "7": [
-          "Keep right ye landlubber to take exit 62 onto Interstate 8 95 South toward Annapolis."
-        ]
-      }
-    },
-    "merge": {
-      "phrases": {
-        "0": "Avast ye, merge.",
-        "1": "Avast ye, merge to th' <RELATIVE_DIRECTION>.",
-        "2": "Merge onto <STREET_NAMES> me matey.",
-        "3": "Merge to th' <RELATIVE_DIRECTION> onto <STREET_NAMES> me matey."
-      },
-      "relative_directions": [
-        "port",
-        "starboard"
-      ],
-      "empty_street_name_labels": [
-        "solid ground",
-        "th' bike pirate way",
-        "th' treasure trail"
-      ],
-      "example_phrases": {
-        "0": [
-          "Avast ye, merge."
-        ],
-        "1": [
-          "Avast ye, merge to th' port."
-        ],
-        "2": [
-          "Merge onto I 76 West/Pennsylvania Turnpike me matey."
-        ],
-        "3": [
-          "Merge to th' starboard onto I 83 South me matey."
-        ]
-      }
-    },
-    "merge_verbal": {
-      "phrases": {
-        "0": "Avast ye, merge.",
-        "1": "Avast ye, merge to th' <RELATIVE_DIRECTION>.",
-        "2": "Merge onto <STREET_NAMES> me matey.",
-        "3": "Merge to th' <RELATIVE_DIRECTION> onto <STREET_NAMES> me matey."
-      },
-      "relative_directions": [
-        "port",
-        "starboard"
-      ],
-      "empty_street_name_labels": [
-        "solid ground",
-        "th' bike pirate way",
-        "th' treasure trail"
-      ],
-      "example_phrases": {
-        "0": [
-          "Avast ye, merge."
-        ],
-        "1": [
-          "Avast ye, merge to th' port."
-        ],
-        "2": [
-          "Merge onto I 76 West/Pennsylvania Turnpike me matey."
-        ],
-        "3": [
-          "Merge to th' starboard onto I 83 South me matey."
-        ]
-      }
-    },
-    "post_transit_connection_destination": {
-      "phrases": {
-        "0": "Head <CARDINAL_DIRECTION>.",
-        "1": "Head <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-        "2": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
-        "4": "Set sail <CARDINAL_DIRECTION>.",
-        "5": "Set sail <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-        "6": "Set sail <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
-        "8": "Saunter <CARDINAL_DIRECTION> me buccaneer.",
-        "9": "Saunter <CARDINAL_DIRECTION> on <STREET_NAMES> ye scurvy dog.",
-        "10": "Saunter <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES> me hearties. Aye, continue on <STREET_NAMES>.",
-        "16": "Ride <CARDINAL_DIRECTION>.",
-        "17": "Ride <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-        "18": "Ride <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
-      },
+    "exit_ferry": {
       "cardinal_directions": [
         "north",
         "northeast",
@@ -1072,60 +561,711 @@
         "th' bike pirate way",
         "th' treasure trail"
       ],
-      "example_phrases": {
-        "0": [
-          "Head west."
-        ],
-        "1": [
-          "Head northeast on Broadway"
-        ],
-        "2": [
-          "Head south on Summerfield Place/NY 114. Continue on NY 114."
-        ],
-        "4": [
-          "Set sail west."
-        ],
-        "5": [
-          "Set sail northeast on Broadway"
-        ],
-        "6": [
-          "Set sail south on Summerfield Place/NY 114. Continue on NY 114."
-        ],
-        "8": [
-          "Saunter west me buccaneer."
-        ],
-        "9": [
-          "Saunter northeast on Broadway ye scurvy dog."
-        ],
-        "10": [
-          "Saunter south on Summerfield Place/NY 114 me hearties. Aye, continue on NY 114."
-        ],
-        "16": [
-          "Ride west."
-        ],
-        "17": [
-          "Ride northeast on Broadway"
-        ],
-        "18": [
-          "Ride south on Summerfield Place/NY 114. Continue on NY 114."
-        ]
-      }
-    },
-    "post_transit_connection_destination_verbal": {
       "phrases": {
         "0": "Head <CARDINAL_DIRECTION>.",
         "1": "Head <CARDINAL_DIRECTION> on <STREET_NAMES>.",
+        "10": "Saunter <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
+        "16": "Ride <CARDINAL_DIRECTION>.",
+        "17": "Ride <CARDINAL_DIRECTION> on <STREET_NAMES>.",
+        "18": "Ride <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
+        "2": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
+        "4": "Set sail <CARDINAL_DIRECTION>.",
+        "5": "Point yer bow <CARDINAL_DIRECTION> and set sail on <STREET_NAMES>.",
+        "6": "Weigh anchor! Set sail <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
+        "8": "Saunter <CARDINAL_DIRECTION> on solid ground.",
+        "9": "Saunter <CARDINAL_DIRECTION> on <STREET_NAMES>."
+      },
+      "example_phrases": {
+        "0": [
+          "Head north.",
+          "Head northeast.",
+          "Head east.",
+          "Head southeast.",
+          "Head south.",
+          "Head southwest.",
+          "Head west.",
+          "Head northwest."
+        ],
+        "1": [
+          "Head north on Arlen Road.",
+          "Head northeast on Arlen Road.",
+          "Head east on Arlen Road.",
+          "Head southeast on Arlen Road.",
+          "Head south on Arlen Road.",
+          "Head southwest on Arlen Road.",
+          "Head west on Arlen Road.",
+          "Head northwest on Arlen Road."
+        ],
+        "10": [
+          "Saunter north on Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Saunter northeast on Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Saunter east on Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Saunter southeast on Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Saunter south on Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Saunter southwest on Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Saunter west on Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Saunter northwest on Belair Road/US 1 Business. Continue on Arlen Road."
+        ],
+        "16": [
+          "Ride north.",
+          "Ride northeast.",
+          "Ride east.",
+          "Ride southeast.",
+          "Ride south.",
+          "Ride southwest.",
+          "Ride west.",
+          "Ride northwest."
+        ],
+        "17": [
+          "Ride north on Arlen Road.",
+          "Ride northeast on Arlen Road.",
+          "Ride east on Arlen Road.",
+          "Ride southeast on Arlen Road.",
+          "Ride south on Arlen Road.",
+          "Ride southwest on Arlen Road.",
+          "Ride west on Arlen Road.",
+          "Ride northwest on Arlen Road."
+        ],
+        "18": [
+          "Ride north on Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Ride northeast on Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Ride east on Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Ride southeast on Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Ride south on Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Ride southwest on Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Ride west on Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Ride northwest on Belair Road/US 1 Business. Continue on Arlen Road."
+        ],
+        "2": [
+          "Head north on Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Head northeast on Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Head east on Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Head southeast on Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Head south on Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Head southwest on Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Head west on Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Head northwest on Belair Road/US 1 Business. Continue on Arlen Road."
+        ],
+        "4": [
+          "Set sail north.",
+          "Set sail northeast.",
+          "Set sail east.",
+          "Set sail southeast.",
+          "Set sail south.",
+          "Set sail southwest.",
+          "Set sail west.",
+          "Set sail northwest."
+        ],
+        "5": [
+          "Point yer bow north and set sail on Arlen Road.",
+          "Point yer bow northeast and set sail on Arlen Road.",
+          "Point yer bow east and set sail on Arlen Road.",
+          "Point yer bow southeast and set sail on Arlen Road.",
+          "Point yer bow south and set sail on Arlen Road.",
+          "Point yer bow southwest and set sail on Arlen Road.",
+          "Point yer bow west and set sail on Arlen Road.",
+          "Point yer bow northwest and set sail on Arlen Road."
+        ],
+        "6": [
+          "Weigh anchor! Set sail north on Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Weigh anchor! Set sail northeast on Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Weigh anchor! Set sail east on Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Weigh anchor! Set sail southeast on Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Weigh anchor! Set sail south on Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Weigh anchor! Set sail southwest on Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Weigh anchor! Set sail west on Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Weigh anchor! Set sail northwest on Belair Road/US 1 Business. Continue on Arlen Road."
+        ],
+        "8": [
+          "Saunter north on solid ground.",
+          "Saunter northeast on solid ground.",
+          "Saunter east on solid ground.",
+          "Saunter southeast on solid ground.",
+          "Saunter south on solid ground.",
+          "Saunter southwest on solid ground.",
+          "Saunter west on solid ground.",
+          "Saunter northwest on solid ground."
+        ],
+        "9": [
+          "Saunter north on Arlen Road.",
+          "Saunter northeast on Arlen Road.",
+          "Saunter east on Arlen Road.",
+          "Saunter southeast on Arlen Road.",
+          "Saunter south on Arlen Road.",
+          "Saunter southwest on Arlen Road.",
+          "Saunter west on Arlen Road.",
+          "Saunter northwest on Arlen Road."
+        ]
+      }
+    },
+    "exit_ferry_verbal": {
+      "cardinal_directions": [
+        "north",
+        "northeast",
+        "east",
+        "southeast",
+        "south",
+        "southwest",
+        "west",
+        "northwest"
+      ],
+      "empty_street_name_labels": [
+        "solid ground",
+        "th' bike pirate way",
+        "th' treasure trail"
+      ],
+      "phrases": {
+        "0": "Head <CARDINAL_DIRECTION>.",
+        "1": "Head <CARDINAL_DIRECTION> on <STREET_NAMES>.",
+        "10": "Saunter <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES> me hearties.",
+        "16": "Ride <CARDINAL_DIRECTION>.",
+        "17": "Ride <CARDINAL_DIRECTION> on <STREET_NAMES>.",
+        "18": "Ride <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.",
         "2": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.",
         "4": "Set sail <CARDINAL_DIRECTION>.",
         "5": "Set sail <CARDINAL_DIRECTION> on <STREET_NAMES>.",
         "6": "Set sail <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.",
         "8": "Saunter <CARDINAL_DIRECTION> me buccaneer.",
-        "9": "Saunter <CARDINAL_DIRECTION> on <STREET_NAMES> ye scurvy dog.",
-        "10": "Saunter <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES> me hearties.",
-        "16": "Ride <CARDINAL_DIRECTION>.",
-        "17": "Ride <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-        "18": "Ride <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."
+        "9": "Saunter <CARDINAL_DIRECTION> on <STREET_NAMES> ye scurvy dog."
       },
+      "example_phrases": {
+        "0": [
+          "Head north.",
+          "Head northeast.",
+          "Head east.",
+          "Head southeast.",
+          "Head south.",
+          "Head southwest.",
+          "Head west.",
+          "Head northwest."
+        ],
+        "1": [
+          "Head north on Arlen Road.",
+          "Head northeast on Arlen Road.",
+          "Head east on Arlen Road.",
+          "Head southeast on Arlen Road.",
+          "Head south on Arlen Road.",
+          "Head southwest on Arlen Road.",
+          "Head west on Arlen Road.",
+          "Head northwest on Arlen Road."
+        ],
+        "10": [
+          "Saunter north on Belair Road/US 1 Business me hearties.",
+          "Saunter northeast on Belair Road/US 1 Business me hearties.",
+          "Saunter east on Belair Road/US 1 Business me hearties.",
+          "Saunter southeast on Belair Road/US 1 Business me hearties.",
+          "Saunter south on Belair Road/US 1 Business me hearties.",
+          "Saunter southwest on Belair Road/US 1 Business me hearties.",
+          "Saunter west on Belair Road/US 1 Business me hearties.",
+          "Saunter northwest on Belair Road/US 1 Business me hearties."
+        ],
+        "16": [
+          "Ride north.",
+          "Ride northeast.",
+          "Ride east.",
+          "Ride southeast.",
+          "Ride south.",
+          "Ride southwest.",
+          "Ride west.",
+          "Ride northwest."
+        ],
+        "17": [
+          "Ride north on Arlen Road.",
+          "Ride northeast on Arlen Road.",
+          "Ride east on Arlen Road.",
+          "Ride southeast on Arlen Road.",
+          "Ride south on Arlen Road.",
+          "Ride southwest on Arlen Road.",
+          "Ride west on Arlen Road.",
+          "Ride northwest on Arlen Road."
+        ],
+        "18": [
+          "Ride north on Belair Road/US 1 Business.",
+          "Ride northeast on Belair Road/US 1 Business.",
+          "Ride east on Belair Road/US 1 Business.",
+          "Ride southeast on Belair Road/US 1 Business.",
+          "Ride south on Belair Road/US 1 Business.",
+          "Ride southwest on Belair Road/US 1 Business.",
+          "Ride west on Belair Road/US 1 Business.",
+          "Ride northwest on Belair Road/US 1 Business."
+        ],
+        "2": [
+          "Head north on Belair Road/US 1 Business.",
+          "Head northeast on Belair Road/US 1 Business.",
+          "Head east on Belair Road/US 1 Business.",
+          "Head southeast on Belair Road/US 1 Business.",
+          "Head south on Belair Road/US 1 Business.",
+          "Head southwest on Belair Road/US 1 Business.",
+          "Head west on Belair Road/US 1 Business.",
+          "Head northwest on Belair Road/US 1 Business."
+        ],
+        "4": [
+          "Set sail north.",
+          "Set sail northeast.",
+          "Set sail east.",
+          "Set sail southeast.",
+          "Set sail south.",
+          "Set sail southwest.",
+          "Set sail west.",
+          "Set sail northwest."
+        ],
+        "5": [
+          "Set sail north on Arlen Road.",
+          "Set sail northeast on Arlen Road.",
+          "Set sail east on Arlen Road.",
+          "Set sail southeast on Arlen Road.",
+          "Set sail south on Arlen Road.",
+          "Set sail southwest on Arlen Road.",
+          "Set sail west on Arlen Road.",
+          "Set sail northwest on Arlen Road."
+        ],
+        "6": [
+          "Set sail north on Belair Road/US 1 Business.",
+          "Set sail northeast on Belair Road/US 1 Business.",
+          "Set sail east on Belair Road/US 1 Business.",
+          "Set sail southeast on Belair Road/US 1 Business.",
+          "Set sail south on Belair Road/US 1 Business.",
+          "Set sail southwest on Belair Road/US 1 Business.",
+          "Set sail west on Belair Road/US 1 Business.",
+          "Set sail northwest on Belair Road/US 1 Business."
+        ],
+        "8": [
+          "Saunter north me buccaneer.",
+          "Saunter northeast me buccaneer.",
+          "Saunter east me buccaneer.",
+          "Saunter southeast me buccaneer.",
+          "Saunter south me buccaneer.",
+          "Saunter southwest me buccaneer.",
+          "Saunter west me buccaneer.",
+          "Saunter northwest me buccaneer."
+        ],
+        "9": [
+          "Saunter north on Arlen Road ye scurvy dog.",
+          "Saunter northeast on Arlen Road ye scurvy dog.",
+          "Saunter east on Arlen Road ye scurvy dog.",
+          "Saunter southeast on Arlen Road ye scurvy dog.",
+          "Saunter south on Arlen Road ye scurvy dog.",
+          "Saunter southwest on Arlen Road ye scurvy dog.",
+          "Saunter west on Arlen Road ye scurvy dog.",
+          "Saunter northwest on Arlen Road ye scurvy dog."
+        ]
+      }
+    },
+    "exit_roundabout": {
+      "empty_street_name_labels": [
+        "solid ground",
+        "th' bike pirate way",
+        "th' treasure trail"
+      ],
+      "phrases": {
+        "0": "Exit thee wheel.",
+        "1": "Exit thee wheel onto <STREET_NAMES>.",
+        "2": "Exit thee wheel onto <BEGIN_STREET_NAMES>. Aye, continue on <STREET_NAMES>."
+      },
+      "example_phrases": {
+        "0": [
+          "Exit thee wheel."
+        ],
+        "1": [
+          "Exit thee wheel onto Arlen Road."
+        ],
+        "2": [
+          "Exit thee wheel onto Belair Road/US 1 Business. Aye, continue on Arlen Road."
+        ]
+      }
+    },
+    "exit_roundabout_verbal": {
+      "empty_street_name_labels": [
+        "solid ground",
+        "th' bike pirate way",
+        "th' treasure trail"
+      ],
+      "phrases": {
+        "0": "Exit thee wheel.",
+        "1": "Exit thee wheel onto <STREET_NAMES>.",
+        "2": "Exit thee wheel onto <BEGIN_STREET_NAMES>."
+      },
+      "example_phrases": {
+        "0": [
+          "Exit thee wheel."
+        ],
+        "1": [
+          "Exit thee wheel onto Arlen Road."
+        ],
+        "2": [
+          "Exit thee wheel onto Belair Road/US 1 Business."
+        ]
+      }
+    },
+    "exit_verbal": {
+      "phrases": {
+        "0": "Blimey! Take thee exit on th' <RELATIVE_DIRECTION>.",
+        "1": "Shiver me timbers! Take exit <NUMBER_SIGN> on th' <RELATIVE_DIRECTION>.",
+        "10": "Blow me down! Take thee <NAME_SIGN> exit on th' <RELATIVE_DIRECTION> onto <BRANCH_SIGN>.",
+        "12": "Blow me down! Take thee <NAME_SIGN> exit on th' <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
+        "14": "Blow me down! Take thee <NAME_SIGN> exit on th' <RELATIVE_DIRECTION> onto <BRANCH_SIGN> toward <TOWARD_SIGN>.",
+        "15": "Blimey! Take thee exit.",
+        "16": "Shiver me timbers! Take exit <NUMBER_SIGN>.",
+        "17": "Blow me down! Take thee <BRANCH_SIGN> exit.",
+        "18": "Yo ho ho! Take exit <NUMBER_SIGN> onto <BRANCH_SIGN>.",
+        "19": "Sink me! Take thee exit toward <TOWARD_SIGN>.",
+        "2": "Blow me down! Take thee <BRANCH_SIGN> exit on th' <RELATIVE_DIRECTION>.",
+        "20": "Avast ye, take exit <NUMBER_SIGN> toward <TOWARD_SIGN>.",
+        "21": "Blimey! Take thee <BRANCH_SIGN> exit toward <TOWARD_SIGN>.",
+        "22": "Sink me! Take exit <NUMBER_SIGN> onto <BRANCH_SIGN> toward <TOWARD_SIGN>.",
+        "23": "Blow me down! Take thee <NAME_SIGN> exit.",
+        "25": "Blow me down! Take thee <NAME_SIGN> exit onto <BRANCH_SIGN>.",
+        "27": "Blow me down! Take thee <NAME_SIGN> exit toward <TOWARD_SIGN>.",
+        "29": "Blow me down! Take thee <NAME_SIGN> exit onto <BRANCH_SIGN> toward <TOWARD_SIGN>.",
+        "3": "Yo ho ho! Take exit <NUMBER_SIGN> on th' <RELATIVE_DIRECTION> onto <BRANCH_SIGN>.",
+        "4": "Sink me! Take thee exit on th' <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
+        "5": "Avast ye, take exit <NUMBER_SIGN> on th' <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
+        "6": "Blimey! Take thee <BRANCH_SIGN> exit on th' <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
+        "7": "Sink me! Take exit <NUMBER_SIGN> on th' <RELATIVE_DIRECTION> onto <BRANCH_SIGN> toward <TOWARD_SIGN>.",
+        "8": "Blow me down! Take thee <NAME_SIGN> exit on th' <RELATIVE_DIRECTION>."
+      },
+      "relative_directions": [
+        "port",
+        "starboard"
+      ],
+      "example_phrases": {
+        "0": [
+          "Blimey! Take thee exit on th' port.",
+          "Blimey! Take thee exit on th' starboard."
+        ],
+        "1": [
+          "Shiver me timbers! Take exit 67 B-A on th' port.",
+          "Shiver me timbers! Take exit 67 B-A on th' starboard."
+        ],
+        "10": [
+          "Blow me down! Take thee White Marsh Boulevard exit on th' port onto US 322 West.",
+          "Blow me down! Take thee White Marsh Boulevard exit on th' starboard onto US 322 West."
+        ],
+        "12": [
+          "Blow me down! Take thee White Marsh Boulevard exit on th' port toward Lewiston.",
+          "Blow me down! Take thee White Marsh Boulevard exit on th' starboard toward Lewiston."
+        ],
+        "14": [
+          "Blow me down! Take thee White Marsh Boulevard exit on th' port onto US 322 West toward Lewiston.",
+          "Blow me down! Take thee White Marsh Boulevard exit on th' starboard onto US 322 West toward Lewiston."
+        ],
+        "15": [
+          "Blimey! Take thee exit."
+        ],
+        "16": [
+          "Shiver me timbers! Take exit 67 B-A."
+        ],
+        "17": [
+          "Blow me down! Take thee US 322 West exit."
+        ],
+        "18": [
+          "Yo ho ho! Take exit 67 B-A onto US 322 West."
+        ],
+        "19": [
+          "Sink me! Take thee exit toward Lewiston."
+        ],
+        "2": [
+          "Blow me down! Take thee US 322 West exit on th' port.",
+          "Blow me down! Take thee US 322 West exit on th' starboard."
+        ],
+        "20": [
+          "Avast ye, take exit 67 B-A toward Lewiston."
+        ],
+        "21": [
+          "Blimey! Take thee US 322 West exit toward Lewiston."
+        ],
+        "22": [
+          "Sink me! Take exit 67 B-A onto US 322 West toward Lewiston."
+        ],
+        "23": [
+          "Blow me down! Take thee White Marsh Boulevard exit."
+        ],
+        "25": [
+          "Blow me down! Take thee White Marsh Boulevard exit onto US 322 West."
+        ],
+        "27": [
+          "Blow me down! Take thee White Marsh Boulevard exit toward Lewiston."
+        ],
+        "29": [
+          "Blow me down! Take thee White Marsh Boulevard exit onto US 322 West toward Lewiston."
+        ],
+        "3": [
+          "Yo ho ho! Take exit 67 B-A on th' port onto US 322 West.",
+          "Yo ho ho! Take exit 67 B-A on th' starboard onto US 322 West."
+        ],
+        "4": [
+          "Sink me! Take thee exit on th' port toward Lewiston.",
+          "Sink me! Take thee exit on th' starboard toward Lewiston."
+        ],
+        "5": [
+          "Avast ye, take exit 67 B-A on th' port toward Lewiston.",
+          "Avast ye, take exit 67 B-A on th' starboard toward Lewiston."
+        ],
+        "6": [
+          "Blimey! Take thee US 322 West exit on th' port toward Lewiston.",
+          "Blimey! Take thee US 322 West exit on th' starboard toward Lewiston."
+        ],
+        "7": [
+          "Sink me! Take exit 67 B-A on th' port onto US 322 West toward Lewiston.",
+          "Sink me! Take exit 67 B-A on th' starboard onto US 322 West toward Lewiston."
+        ],
+        "8": [
+          "Blow me down! Take thee White Marsh Boulevard exit on th' port.",
+          "Blow me down! Take thee White Marsh Boulevard exit on th' starboard."
+        ]
+      }
+    },
+    "keep": {
+      "empty_street_name_labels": [
+        "solid ground",
+        "th' bike pirate way",
+        "th' treasure trail"
+      ],
+      "phrases": {
+        "0": "Keep <RELATIVE_DIRECTION> at the fork me hearties.",
+        "1": "Keep <RELATIVE_DIRECTION> ye landlubber to take exit <NUMBER_SIGN>.",
+        "2": "Keep <RELATIVE_DIRECTION> me buccaneer to take <STREET_NAMES>.",
+        "3": "Keep <RELATIVE_DIRECTION> ye scallywag to take exit <NUMBER_SIGN> onto <STREET_NAMES>.",
+        "4": "Keep <RELATIVE_DIRECTION> me bucko toward <TOWARD_SIGN>.",
+        "5": "Keep <RELATIVE_DIRECTION> ye scurvy dog to take exit <NUMBER_SIGN> toward <TOWARD_SIGN>.",
+        "6": "Keep <RELATIVE_DIRECTION> me hearties to take <STREET_NAMES> toward <TOWARD_SIGN>.",
+        "7": "Keep <RELATIVE_DIRECTION> ye landlubber to take exit <NUMBER_SIGN> onto <STREET_NAMES> toward <TOWARD_SIGN>."
+      },
+      "relative_directions": [
+        "port",
+        "straight",
+        "starboard"
+      ],
+      "example_phrases": {
+        "0": [
+          "Keep port at the fork me hearties.",
+          "Keep starboard at the fork me hearties."
+        ],
+        "1": [
+          "Keep port ye landlubber to take exit 67 B-A.",
+          "Keep starboard ye landlubber to take exit 67 B-A."
+        ],
+        "2": [
+          "Keep port me buccaneer to take Arlen Road.",
+          "Keep starboard me buccaneer to take Arlen Road."
+        ],
+        "3": [
+          "Keep port ye scallywag to take exit 67 B-A onto Arlen Road.",
+          "Keep starboard ye scallywag to take exit 67 B-A onto Arlen Road."
+        ],
+        "4": [
+          "Keep port me bucko toward Lewiston.",
+          "Keep starboard me bucko toward Lewiston."
+        ],
+        "5": [
+          "Keep port ye scurvy dog to take exit 67 B-A toward Lewiston.",
+          "Keep starboard ye scurvy dog to take exit 67 B-A toward Lewiston."
+        ],
+        "6": [
+          "Keep port me hearties to take Arlen Road toward Lewiston.",
+          "Keep starboard me hearties to take Arlen Road toward Lewiston."
+        ],
+        "7": [
+          "Keep port ye landlubber to take exit 67 B-A onto Arlen Road toward Lewiston.",
+          "Keep starboard ye landlubber to take exit 67 B-A onto Arlen Road toward Lewiston."
+        ]
+      }
+    },
+    "keep_to_stay_on": {
+      "empty_street_name_labels": [
+        "solid ground",
+        "th' bike pirate way",
+        "th' treasure trail"
+      ],
+      "phrases": {
+        "0": "Keep <RELATIVE_DIRECTION> me hearties to stay on <STREET_NAMES>.",
+        "1": "Keep <RELATIVE_DIRECTION> ye landlubber to take exit <NUMBER_SIGN> to stay on <STREET_NAMES>.",
+        "2": "Keep <RELATIVE_DIRECTION> me bucko to stay on <STREET_NAMES> toward <TOWARD_SIGN>.",
+        "3": "Keep <RELATIVE_DIRECTION> ye scallywag to take exit <NUMBER_SIGN> to stay on <STREET_NAMES> toward <TOWARD_SIGN>."
+      },
+      "relative_directions": [
+        "port",
+        "straight",
+        "starboard"
+      ],
+      "example_phrases": {
+        "0": [
+          "Keep port me hearties to stay on Arlen Road.",
+          "Keep starboard me hearties to stay on Arlen Road."
+        ],
+        "1": [
+          "Keep port ye landlubber to take exit 67 B-A to stay on Arlen Road.",
+          "Keep starboard ye landlubber to take exit 67 B-A to stay on Arlen Road."
+        ],
+        "2": [
+          "Keep port me bucko to stay on Arlen Road toward Lewiston.",
+          "Keep starboard me bucko to stay on Arlen Road toward Lewiston."
+        ],
+        "3": [
+          "Keep port ye scallywag to take exit 67 B-A to stay on Arlen Road toward Lewiston.",
+          "Keep starboard ye scallywag to take exit 67 B-A to stay on Arlen Road toward Lewiston."
+        ]
+      }
+    },
+    "keep_to_stay_on_verbal": {
+      "empty_street_name_labels": [
+        "solid ground",
+        "th' bike pirate way",
+        "th' treasure trail"
+      ],
+      "phrases": {
+        "0": "Keep <RELATIVE_DIRECTION> me hearties to stay on <STREET_NAMES>.",
+        "1": "Keep <RELATIVE_DIRECTION> ye landlubber to take exit <NUMBER_SIGN> to stay on <STREET_NAMES>.",
+        "2": "Keep <RELATIVE_DIRECTION> me bucko to stay on <STREET_NAMES> toward <TOWARD_SIGN>.",
+        "3": "Keep <RELATIVE_DIRECTION> ye scallywag to take exit <NUMBER_SIGN> to stay on <STREET_NAMES> toward <TOWARD_SIGN>."
+      },
+      "relative_directions": [
+        "port",
+        "straight",
+        "starboard"
+      ],
+      "example_phrases": {
+        "0": [
+          "Keep port me hearties to stay on Arlen Road.",
+          "Keep starboard me hearties to stay on Arlen Road."
+        ],
+        "1": [
+          "Keep port ye landlubber to take exit 67 B-A to stay on Arlen Road.",
+          "Keep starboard ye landlubber to take exit 67 B-A to stay on Arlen Road."
+        ],
+        "2": [
+          "Keep port me bucko to stay on Arlen Road toward Lewiston.",
+          "Keep starboard me bucko to stay on Arlen Road toward Lewiston."
+        ],
+        "3": [
+          "Keep port ye scallywag to take exit 67 B-A to stay on Arlen Road toward Lewiston.",
+          "Keep starboard ye scallywag to take exit 67 B-A to stay on Arlen Road toward Lewiston."
+        ]
+      }
+    },
+    "keep_verbal": {
+      "empty_street_name_labels": [
+        "solid ground",
+        "th' bike pirate way",
+        "th' treasure trail"
+      ],
+      "phrases": {
+        "0": "Keep <RELATIVE_DIRECTION> at the fork me hearties.",
+        "1": "Keep <RELATIVE_DIRECTION> ye landlubber to take exit <NUMBER_SIGN>.",
+        "2": "Keep <RELATIVE_DIRECTION> me buccaneer to take <STREET_NAMES>.",
+        "3": "Keep <RELATIVE_DIRECTION> ye scallywag to take exit <NUMBER_SIGN> onto <STREET_NAMES>.",
+        "4": "Keep <RELATIVE_DIRECTION> me bucko toward <TOWARD_SIGN>.",
+        "5": "Keep <RELATIVE_DIRECTION> ye scurvy dog to take exit <NUMBER_SIGN> toward <TOWARD_SIGN>.",
+        "6": "Keep <RELATIVE_DIRECTION> me hearties to take <STREET_NAMES> toward <TOWARD_SIGN>.",
+        "7": "Keep <RELATIVE_DIRECTION> ye landlubber to take exit <NUMBER_SIGN> onto <STREET_NAMES> toward <TOWARD_SIGN>."
+      },
+      "relative_directions": [
+        "port",
+        "straight",
+        "starboard"
+      ],
+      "example_phrases": {
+        "0": [
+          "Keep port at the fork me hearties.",
+          "Keep starboard at the fork me hearties."
+        ],
+        "1": [
+          "Keep port ye landlubber to take exit 67 B-A.",
+          "Keep starboard ye landlubber to take exit 67 B-A."
+        ],
+        "2": [
+          "Keep port me buccaneer to take Arlen Road.",
+          "Keep starboard me buccaneer to take Arlen Road."
+        ],
+        "3": [
+          "Keep port ye scallywag to take exit 67 B-A onto Arlen Road.",
+          "Keep starboard ye scallywag to take exit 67 B-A onto Arlen Road."
+        ],
+        "4": [
+          "Keep port me bucko toward Lewiston.",
+          "Keep starboard me bucko toward Lewiston."
+        ],
+        "5": [
+          "Keep port ye scurvy dog to take exit 67 B-A toward Lewiston.",
+          "Keep starboard ye scurvy dog to take exit 67 B-A toward Lewiston."
+        ],
+        "6": [
+          "Keep port me hearties to take Arlen Road toward Lewiston.",
+          "Keep starboard me hearties to take Arlen Road toward Lewiston."
+        ],
+        "7": [
+          "Keep port ye landlubber to take exit 67 B-A onto Arlen Road toward Lewiston.",
+          "Keep starboard ye landlubber to take exit 67 B-A onto Arlen Road toward Lewiston."
+        ]
+      }
+    },
+    "merge": {
+      "empty_street_name_labels": [
+        "solid ground",
+        "th' bike pirate way",
+        "th' treasure trail"
+      ],
+      "phrases": {
+        "0": "Avast ye, merge.",
+        "1": "Avast ye, merge to th' <RELATIVE_DIRECTION>.",
+        "2": "Merge onto <STREET_NAMES> me matey.",
+        "3": "Merge to th' <RELATIVE_DIRECTION> onto <STREET_NAMES> me matey."
+      },
+      "relative_directions": [
+        "port",
+        "starboard"
+      ],
+      "example_phrases": {
+        "0": [
+          "Avast ye, merge."
+        ],
+        "1": [
+          "Avast ye, merge to th' port.",
+          "Avast ye, merge to th' starboard."
+        ],
+        "2": [
+          "Merge onto Arlen Road me matey."
+        ],
+        "3": [
+          "Merge to th' port onto Arlen Road me matey.",
+          "Merge to th' starboard onto Arlen Road me matey."
+        ]
+      }
+    },
+    "merge_verbal": {
+      "empty_street_name_labels": [
+        "solid ground",
+        "th' bike pirate way",
+        "th' treasure trail"
+      ],
+      "phrases": {
+        "0": "Avast ye, merge.",
+        "1": "Avast ye, merge to th' <RELATIVE_DIRECTION>.",
+        "2": "Merge onto <STREET_NAMES> me matey.",
+        "3": "Merge to th' <RELATIVE_DIRECTION> onto <STREET_NAMES> me matey."
+      },
+      "relative_directions": [
+        "port",
+        "starboard"
+      ],
+      "example_phrases": {
+        "0": [
+          "Avast ye, merge."
+        ],
+        "1": [
+          "Avast ye, merge to th' port.",
+          "Avast ye, merge to th' starboard."
+        ],
+        "2": [
+          "Merge onto Arlen Road me matey."
+        ],
+        "3": [
+          "Merge to th' port onto Arlen Road me matey.",
+          "Merge to th' starboard onto Arlen Road me matey."
+        ]
+      }
+    },
+    "post_transit_connection_destination": {
       "cardinal_directions": [
         "north",
         "northeast",
@@ -1141,42 +1281,293 @@
         "th' bike pirate way",
         "th' treasure trail"
       ],
+      "phrases": {
+        "0": "Head <CARDINAL_DIRECTION>.",
+        "1": "Head <CARDINAL_DIRECTION> on <STREET_NAMES>.",
+        "10": "Saunter <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
+        "16": "Ride <CARDINAL_DIRECTION>.",
+        "17": "Ride <CARDINAL_DIRECTION> on <STREET_NAMES>.",
+        "18": "Ride <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
+        "2": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
+        "4": "Set sail <CARDINAL_DIRECTION>.",
+        "5": "Point yer bow <CARDINAL_DIRECTION> and set sail on <STREET_NAMES>.",
+        "6": "Weigh anchor! Set sail <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
+        "8": "Saunter <CARDINAL_DIRECTION> on solid ground.",
+        "9": "Saunter <CARDINAL_DIRECTION> on <STREET_NAMES>."
+      },
       "example_phrases": {
         "0": [
-          "Head west."
+          "Head north.",
+          "Head northeast.",
+          "Head east.",
+          "Head southeast.",
+          "Head south.",
+          "Head southwest.",
+          "Head west.",
+          "Head northwest."
         ],
         "1": [
-          "Head northeast on Broadway"
-        ],
-        "2": [
-          "Head south on Summerfield Place, New York 1 14."
-        ],
-        "4": [
-          "Set sail west."
-        ],
-        "5": [
-          "Set sail northeast on Broadway"
-        ],
-        "6": [
-          "Set sail south on Summerfield Place, New York 1 14."
-        ],
-        "8": [
-          "Saunter west me buccaneer."
-        ],
-        "9": [
-          "Saunter northeast on Broadway ye scurvy dog."
+          "Head north on Arlen Road.",
+          "Head northeast on Arlen Road.",
+          "Head east on Arlen Road.",
+          "Head southeast on Arlen Road.",
+          "Head south on Arlen Road.",
+          "Head southwest on Arlen Road.",
+          "Head west on Arlen Road.",
+          "Head northwest on Arlen Road."
         ],
         "10": [
-          "Saunter south on Summerfield Place, New York 1 14 me hearties."
+          "Saunter north on Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Saunter northeast on Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Saunter east on Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Saunter southeast on Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Saunter south on Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Saunter southwest on Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Saunter west on Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Saunter northwest on Belair Road/US 1 Business. Continue on Arlen Road."
         ],
         "16": [
-          "Ride west."
+          "Ride north.",
+          "Ride northeast.",
+          "Ride east.",
+          "Ride southeast.",
+          "Ride south.",
+          "Ride southwest.",
+          "Ride west.",
+          "Ride northwest."
         ],
         "17": [
-          "Ride northeast on Broadway"
+          "Ride north on Arlen Road.",
+          "Ride northeast on Arlen Road.",
+          "Ride east on Arlen Road.",
+          "Ride southeast on Arlen Road.",
+          "Ride south on Arlen Road.",
+          "Ride southwest on Arlen Road.",
+          "Ride west on Arlen Road.",
+          "Ride northwest on Arlen Road."
         ],
         "18": [
-          "Ride south on Summerfield Place, New York 1 14."
+          "Ride north on Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Ride northeast on Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Ride east on Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Ride southeast on Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Ride south on Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Ride southwest on Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Ride west on Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Ride northwest on Belair Road/US 1 Business. Continue on Arlen Road."
+        ],
+        "2": [
+          "Head north on Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Head northeast on Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Head east on Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Head southeast on Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Head south on Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Head southwest on Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Head west on Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Head northwest on Belair Road/US 1 Business. Continue on Arlen Road."
+        ],
+        "4": [
+          "Set sail north.",
+          "Set sail northeast.",
+          "Set sail east.",
+          "Set sail southeast.",
+          "Set sail south.",
+          "Set sail southwest.",
+          "Set sail west.",
+          "Set sail northwest."
+        ],
+        "5": [
+          "Point yer bow north and set sail on Arlen Road.",
+          "Point yer bow northeast and set sail on Arlen Road.",
+          "Point yer bow east and set sail on Arlen Road.",
+          "Point yer bow southeast and set sail on Arlen Road.",
+          "Point yer bow south and set sail on Arlen Road.",
+          "Point yer bow southwest and set sail on Arlen Road.",
+          "Point yer bow west and set sail on Arlen Road.",
+          "Point yer bow northwest and set sail on Arlen Road."
+        ],
+        "6": [
+          "Weigh anchor! Set sail north on Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Weigh anchor! Set sail northeast on Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Weigh anchor! Set sail east on Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Weigh anchor! Set sail southeast on Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Weigh anchor! Set sail south on Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Weigh anchor! Set sail southwest on Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Weigh anchor! Set sail west on Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Weigh anchor! Set sail northwest on Belair Road/US 1 Business. Continue on Arlen Road."
+        ],
+        "8": [
+          "Saunter north on solid ground.",
+          "Saunter northeast on solid ground.",
+          "Saunter east on solid ground.",
+          "Saunter southeast on solid ground.",
+          "Saunter south on solid ground.",
+          "Saunter southwest on solid ground.",
+          "Saunter west on solid ground.",
+          "Saunter northwest on solid ground."
+        ],
+        "9": [
+          "Saunter north on Arlen Road.",
+          "Saunter northeast on Arlen Road.",
+          "Saunter east on Arlen Road.",
+          "Saunter southeast on Arlen Road.",
+          "Saunter south on Arlen Road.",
+          "Saunter southwest on Arlen Road.",
+          "Saunter west on Arlen Road.",
+          "Saunter northwest on Arlen Road."
+        ]
+      }
+    },
+    "post_transit_connection_destination_verbal": {
+      "cardinal_directions": [
+        "north",
+        "northeast",
+        "east",
+        "southeast",
+        "south",
+        "southwest",
+        "west",
+        "northwest"
+      ],
+      "empty_street_name_labels": [
+        "solid ground",
+        "th' bike pirate way",
+        "th' treasure trail"
+      ],
+      "phrases": {
+        "0": "Head <CARDINAL_DIRECTION>.",
+        "1": "Head <CARDINAL_DIRECTION> on <STREET_NAMES>.",
+        "10": "Saunter <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES> me hearties.",
+        "16": "Ride <CARDINAL_DIRECTION>.",
+        "17": "Ride <CARDINAL_DIRECTION> on <STREET_NAMES>.",
+        "18": "Ride <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.",
+        "2": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.",
+        "4": "Set sail <CARDINAL_DIRECTION>.",
+        "5": "Set sail <CARDINAL_DIRECTION> on <STREET_NAMES>.",
+        "6": "Set sail <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.",
+        "8": "Saunter <CARDINAL_DIRECTION> me buccaneer.",
+        "9": "Saunter <CARDINAL_DIRECTION> on <STREET_NAMES> ye scurvy dog."
+      },
+      "example_phrases": {
+        "0": [
+          "Head north.",
+          "Head northeast.",
+          "Head east.",
+          "Head southeast.",
+          "Head south.",
+          "Head southwest.",
+          "Head west.",
+          "Head northwest."
+        ],
+        "1": [
+          "Head north on Arlen Road.",
+          "Head northeast on Arlen Road.",
+          "Head east on Arlen Road.",
+          "Head southeast on Arlen Road.",
+          "Head south on Arlen Road.",
+          "Head southwest on Arlen Road.",
+          "Head west on Arlen Road.",
+          "Head northwest on Arlen Road."
+        ],
+        "10": [
+          "Saunter north on Belair Road/US 1 Business me hearties.",
+          "Saunter northeast on Belair Road/US 1 Business me hearties.",
+          "Saunter east on Belair Road/US 1 Business me hearties.",
+          "Saunter southeast on Belair Road/US 1 Business me hearties.",
+          "Saunter south on Belair Road/US 1 Business me hearties.",
+          "Saunter southwest on Belair Road/US 1 Business me hearties.",
+          "Saunter west on Belair Road/US 1 Business me hearties.",
+          "Saunter northwest on Belair Road/US 1 Business me hearties."
+        ],
+        "16": [
+          "Ride north.",
+          "Ride northeast.",
+          "Ride east.",
+          "Ride southeast.",
+          "Ride south.",
+          "Ride southwest.",
+          "Ride west.",
+          "Ride northwest."
+        ],
+        "17": [
+          "Ride north on Arlen Road.",
+          "Ride northeast on Arlen Road.",
+          "Ride east on Arlen Road.",
+          "Ride southeast on Arlen Road.",
+          "Ride south on Arlen Road.",
+          "Ride southwest on Arlen Road.",
+          "Ride west on Arlen Road.",
+          "Ride northwest on Arlen Road."
+        ],
+        "18": [
+          "Ride north on Belair Road/US 1 Business.",
+          "Ride northeast on Belair Road/US 1 Business.",
+          "Ride east on Belair Road/US 1 Business.",
+          "Ride southeast on Belair Road/US 1 Business.",
+          "Ride south on Belair Road/US 1 Business.",
+          "Ride southwest on Belair Road/US 1 Business.",
+          "Ride west on Belair Road/US 1 Business.",
+          "Ride northwest on Belair Road/US 1 Business."
+        ],
+        "2": [
+          "Head north on Belair Road/US 1 Business.",
+          "Head northeast on Belair Road/US 1 Business.",
+          "Head east on Belair Road/US 1 Business.",
+          "Head southeast on Belair Road/US 1 Business.",
+          "Head south on Belair Road/US 1 Business.",
+          "Head southwest on Belair Road/US 1 Business.",
+          "Head west on Belair Road/US 1 Business.",
+          "Head northwest on Belair Road/US 1 Business."
+        ],
+        "4": [
+          "Set sail north.",
+          "Set sail northeast.",
+          "Set sail east.",
+          "Set sail southeast.",
+          "Set sail south.",
+          "Set sail southwest.",
+          "Set sail west.",
+          "Set sail northwest."
+        ],
+        "5": [
+          "Set sail north on Arlen Road.",
+          "Set sail northeast on Arlen Road.",
+          "Set sail east on Arlen Road.",
+          "Set sail southeast on Arlen Road.",
+          "Set sail south on Arlen Road.",
+          "Set sail southwest on Arlen Road.",
+          "Set sail west on Arlen Road.",
+          "Set sail northwest on Arlen Road."
+        ],
+        "6": [
+          "Set sail north on Belair Road/US 1 Business.",
+          "Set sail northeast on Belair Road/US 1 Business.",
+          "Set sail east on Belair Road/US 1 Business.",
+          "Set sail southeast on Belair Road/US 1 Business.",
+          "Set sail south on Belair Road/US 1 Business.",
+          "Set sail southwest on Belair Road/US 1 Business.",
+          "Set sail west on Belair Road/US 1 Business.",
+          "Set sail northwest on Belair Road/US 1 Business."
+        ],
+        "8": [
+          "Saunter north me buccaneer.",
+          "Saunter northeast me buccaneer.",
+          "Saunter east me buccaneer.",
+          "Saunter southeast me buccaneer.",
+          "Saunter south me buccaneer.",
+          "Saunter southwest me buccaneer.",
+          "Saunter west me buccaneer.",
+          "Saunter northwest me buccaneer."
+        ],
+        "9": [
+          "Saunter north on Arlen Road ye scurvy dog.",
+          "Saunter northeast on Arlen Road ye scurvy dog.",
+          "Saunter east on Arlen Road ye scurvy dog.",
+          "Saunter southeast on Arlen Road ye scurvy dog.",
+          "Saunter south on Arlen Road ye scurvy dog.",
+          "Saunter southwest on Arlen Road ye scurvy dog.",
+          "Saunter west on Arlen Road ye scurvy dog.",
+          "Saunter northwest on Arlen Road ye scurvy dog."
         ]
       }
     },
@@ -1190,16 +1581,14 @@
       },
       "example_phrases": {
         "0": [
-          "Voyage 1 port.",
-          "Voyage 3 ports."
+          "Voyage 1 stop.",
+          "Voyage 1 stops.",
+          "Voyage 3 stop.",
+          "Voyage 3 stops."
         ]
       }
     },
     "post_transition_verbal": {
-      "phrases": {
-        "0": "Aye, continue fer <LENGTH>.",
-        "1": "Avast ye, continue on <STREET_NAMES> fer <LENGTH>."
-      },
       "empty_street_name_labels": [
         "solid ground",
         "th' bike pirate way",
@@ -1212,6 +1601,10 @@
         "<METERS> meters",
         "less than 10 meters"
       ],
+      "phrases": {
+        "0": "Aye, continue fer <LENGTH>.",
+        "1": "Avast ye, continue on <STREET_NAMES> fer <LENGTH>."
+      },
       "us_customary_lengths": [
         "<MILES> miles",
         "1 mile",
@@ -1223,12 +1616,12 @@
       ],
       "example_phrases": {
         "0": [
-          "Aye, continue fer 300 feet.",
-          "Aye, continue fer 9 miles."
+          "Aye, continue fer 1 mile.",
+          "Aye, continue fer a half mile."
         ],
         "1": [
-          "Avast ye, continue on Pennsylvania 7 43 fer 6.2 miles.",
-          "Avast ye, continue on Main Street, Vermont 30 fer 1 tenth of a mile."
+          "Avast ye, continue on Arlen Road fer 1 mile.",
+          "Avast ye, continue on Arlen Road fer a half mile."
         ]
       }
     },
@@ -1236,6 +1629,11 @@
       "phrases": {
         "0": "Take thee gangplank on th' <RELATIVE_DIRECTION>.",
         "1": "Take thee <BRANCH_SIGN> gangplank on th' <RELATIVE_DIRECTION>.",
+        "10": "Take thee gangplank.",
+        "11": "Take thee <BRANCH_SIGN> gangplank.",
+        "12": "Take thee gangplank toward <TOWARD_SIGN>.",
+        "13": "Take thee <BRANCH_SIGN> gangplank toward <TOWARD_SIGN>.",
+        "14": "Take thee <NAME_SIGN> gangplank.",
         "2": "Take thee gangplank on th' <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
         "3": "Take thee <BRANCH_SIGN> gangplank on th' <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
         "4": "Take thee <NAME_SIGN> gangplank on th' <RELATIVE_DIRECTION>.",
@@ -1243,12 +1641,7 @@
         "6": "Turn <RELATIVE_DIRECTION> to take th' <BRANCH_SIGN> gangplank.",
         "7": "Turn <RELATIVE_DIRECTION> to take th' gangplank toward <TOWARD_SIGN>.",
         "8": "Turn <RELATIVE_DIRECTION> to take th' <BRANCH_SIGN> gangplank toward <TOWARD_SIGN>.",
-        "9": "Turn <RELATIVE_DIRECTION> to take th' <NAME_SIGN> gangplank.",
-        "10": "Take thee gangplank.",
-        "11": "Take thee <BRANCH_SIGN> gangplank.",
-        "12": "Take thee gangplank toward <TOWARD_SIGN>.",
-        "13": "Take thee <BRANCH_SIGN> gangplank toward <TOWARD_SIGN>.",
-        "14": "Take thee <NAME_SIGN> gangplank."
+        "9": "Turn <RELATIVE_DIRECTION> to take th' <NAME_SIGN> gangplank."
       },
       "relative_directions": [
         "port",
@@ -1260,47 +1653,55 @@
           "Take thee gangplank on th' starboard."
         ],
         "1": [
-          "Take thee I 95 gangplank on th' starboard."
+          "Take thee US 322 West gangplank on th' port.",
+          "Take thee US 322 West gangplank on th' starboard."
+        ],
+        "10": [
+          "Take thee gangplank."
+        ],
+        "11": [
+          "Take thee US 322 West gangplank."
+        ],
+        "12": [
+          "Take thee gangplank toward Lewiston."
+        ],
+        "13": [
+          "Take thee US 322 West gangplank toward Lewiston."
+        ],
+        "14": [
+          "Take thee White Marsh Boulevard gangplank."
         ],
         "2": [
-          "Take thee gangplank on th' port toward JFK."
+          "Take thee gangplank on th' port toward Lewiston.",
+          "Take thee gangplank on th' starboard toward Lewiston."
         ],
         "3": [
-          "Take thee South Conduit Avenue gangplank on th' port toward JFK."
+          "Take thee US 322 West gangplank on th' port toward Lewiston.",
+          "Take thee US 322 West gangplank on th' starboard toward Lewiston."
         ],
         "4": [
-          "Take thee Gettysburg Pike gangplank on th' starboard."
+          "Take thee White Marsh Boulevard gangplank on th' port.",
+          "Take thee White Marsh Boulevard gangplank on th' starboard."
         ],
         "5": [
           "Turn port to take th' gangplank.",
           "Turn starboard to take th' gangplank."
         ],
         "6": [
-          "Turn port to take th' PA 283 West gangplank."
+          "Turn port to take th' US 322 West gangplank.",
+          "Turn starboard to take th' US 322 West gangplank."
         ],
         "7": [
-          "Turn port to take th' gangplank toward Harrisburg/Harrisburg International Airport."
+          "Turn port to take th' gangplank toward Lewiston.",
+          "Turn starboard to take th' gangplank toward Lewiston."
         ],
         "8": [
-          "Turn port to take th' PA 283 West gangplank toward Harrisburg/Harrisburg International Airport."
+          "Turn port to take th' US 322 West gangplank toward Lewiston.",
+          "Turn starboard to take th' US 322 West gangplank toward Lewiston."
         ],
         "9": [
-          "Turn starboard to take th' Gettysburg Pike gangplank."
-        ],
-        "10": [
-          "Take thee gangplank."
-        ],
-        "11": [
-          "Take thee I 95 gangplank."
-        ],
-        "12": [
-          "Take thee gangplank toward JFK."
-        ],
-        "13": [
-          "Take thee Soutch Conduit Avenue gangplank toward JFK."
-        ],
-        "14": [
-          "Take thee Gettysburg gangplank."
+          "Turn port to take th' White Marsh Boulevard gangplank.",
+          "Turn starboard to take th' White Marsh Boulevard gangplank."
         ]
       }
     },
@@ -1317,16 +1718,16 @@
           "Keep yer head'n straight to take th' gangplank."
         ],
         "1": [
-          "Keep yer head'n straight to take th' US 322 East gangplank."
+          "Keep yer head'n straight to take th' US 322 West gangplank."
         ],
         "2": [
-          "Keep yer head'n straight to take th' gangplank toward Hershey."
+          "Keep yer head'n straight to take th' gangplank toward Lewiston."
         ],
         "3": [
-          "Keep yer head'n straight to take th' US 322 East/US 422 East/US 522 East/US 622 East gangplank toward Hershey/Palmdale/Palmyra/Campbelltown."
+          "Keep yer head'n straight to take th' US 322 West gangplank toward Lewiston."
         ],
         "4": [
-          "Keep yer head'n straight to take th' Gettysburg Pike gangplank."
+          "Keep yer head'n straight to take th' White Marsh Boulevard gangplank."
         ]
       }
     },
@@ -1343,16 +1744,16 @@
           "Keep yer head'n straight to take th' gangplank."
         ],
         "1": [
-          "Keep yer head'n straight to take th' U.S. 3 22 East gangplank."
+          "Keep yer head'n straight to take th' US 322 West gangplank."
         ],
         "2": [
-          "Keep yer head'n straight to take th' gangplank toward Hershey."
+          "Keep yer head'n straight to take th' gangplank toward Lewiston."
         ],
         "3": [
-          "Keep yer head'n straight to take th' U.S. 3 22 East, U.S. 4 22 East gangplank toward Hershey, Palmdale."
+          "Keep yer head'n straight to take th' US 322 West gangplank toward Lewiston."
         ],
         "4": [
-          "Keep yer head'n straight to take th' Gettysburg Pike gangplank."
+          "Keep yer head'n straight to take th' White Marsh Boulevard gangplank."
         ]
       }
     },
@@ -1360,6 +1761,11 @@
       "phrases": {
         "0": "Take thee gangplank on th' <RELATIVE_DIRECTION>.",
         "1": "Take thee <BRANCH_SIGN> gangplank on th' <RELATIVE_DIRECTION>.",
+        "10": "Take thee gangplank.",
+        "11": "Take thee <BRANCH_SIGN> gangplank.",
+        "12": "Take thee gangplank toward <TOWARD_SIGN>.",
+        "13": "Take thee <BRANCH_SIGN> gangplank toward <TOWARD_SIGN>.",
+        "14": "Take thee <NAME_SIGN> gangplank.",
         "2": "Take thee gangplank on th' <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
         "3": "Take thee <BRANCH_SIGN> gangplank on th' <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
         "4": "Take thee <NAME_SIGN> gangplank on th' <RELATIVE_DIRECTION>.",
@@ -1367,12 +1773,7 @@
         "6": "Turn <RELATIVE_DIRECTION> to take th' <BRANCH_SIGN> gangplank.",
         "7": "Turn <RELATIVE_DIRECTION> to take th' gangplank toward <TOWARD_SIGN>.",
         "8": "Turn <RELATIVE_DIRECTION> to take th' <BRANCH_SIGN> gangplank toward <TOWARD_SIGN>.",
-        "9": "Turn <RELATIVE_DIRECTION> to take th' <NAME_SIGN> gangplank.",
-        "10": "Take thee gangplank.",
-        "11": "Take thee <BRANCH_SIGN> gangplank.",
-        "12": "Take thee gangplank toward <TOWARD_SIGN>.",
-        "13": "Take thee <BRANCH_SIGN> gangplank toward <TOWARD_SIGN>.",
-        "14": "Take thee <NAME_SIGN> gangplank."
+        "9": "Turn <RELATIVE_DIRECTION> to take th' <NAME_SIGN> gangplank."
       },
       "relative_directions": [
         "port",
@@ -1384,127 +1785,129 @@
           "Take thee gangplank on th' starboard."
         ],
         "1": [
-          "Take thee Interstate 95 gangplank on th' starboard."
+          "Take thee US 322 West gangplank on th' port.",
+          "Take thee US 322 West gangplank on th' starboard."
+        ],
+        "10": [
+          "Take thee gangplank."
+        ],
+        "11": [
+          "Take thee US 322 West gangplank."
+        ],
+        "12": [
+          "Take thee gangplank toward Lewiston."
+        ],
+        "13": [
+          "Take thee US 322 West gangplank toward Lewiston."
+        ],
+        "14": [
+          "Take thee White Marsh Boulevard gangplank."
         ],
         "2": [
-          "Take thee gangplank on th' port toward JFK."
+          "Take thee gangplank on th' port toward Lewiston.",
+          "Take thee gangplank on th' starboard toward Lewiston."
         ],
         "3": [
-          "Take thee South Conduit Avenue gangplank on th' port toward JFK."
+          "Take thee US 322 West gangplank on th' port toward Lewiston.",
+          "Take thee US 322 West gangplank on th' starboard toward Lewiston."
         ],
         "4": [
-          "Take thee Gettysburg Pike gangplank on th' starboard."
+          "Take thee White Marsh Boulevard gangplank on th' port.",
+          "Take thee White Marsh Boulevard gangplank on th' starboard."
         ],
         "5": [
           "Turn port to take th' gangplank.",
           "Turn starboard to take th' gangplank."
         ],
         "6": [
-          "Turn port to take th' Pennsylvania 2 83 West gangplank."
+          "Turn port to take th' US 322 West gangplank.",
+          "Turn starboard to take th' US 322 West gangplank."
         ],
         "7": [
-          "Turn port to take th' gangplank toward Harrisburg/Harrisburg International Airport."
+          "Turn port to take th' gangplank toward Lewiston.",
+          "Turn starboard to take th' gangplank toward Lewiston."
         ],
         "8": [
-          "Turn port to take th' Pennsylvania 2 83 West gangplank toward Harrisburg, Harrisburg International Airport."
+          "Turn port to take th' US 322 West gangplank toward Lewiston.",
+          "Turn starboard to take th' US 322 West gangplank toward Lewiston."
         ],
         "9": [
-          "Turn starboard to take th' Gettysburg Pike gangplank."
-        ],
-        "10": [
-          "Take thee gangplank."
-        ],
-        "11": [
-          "Take thee Interstate 95 gangplank."
-        ],
-        "12": [
-          "Take thee gangplank toward JFK."
-        ],
-        "13": [
-          "Take thee South Conduit Avenue gangplank toward JFK."
-        ],
-        "14": [
-          "Take thee Gettysburg Pike gangplank."
+          "Turn port to take th' White Marsh Boulevard gangplank.",
+          "Turn starboard to take th' White Marsh Boulevard gangplank."
         ]
       }
     },
     "sharp": {
+      "empty_street_name_labels": [
+        "solid ground",
+        "th' bike pirate way",
+        "th' treasure trail"
+      ],
       "phrases": {
         "0": "Turn sharp <RELATIVE_DIRECTION> bucko.",
         "1": "Turn sharp <RELATIVE_DIRECTION> onto <STREET_NAMES> ye scallywag.",
         "2": "Arrr, turn sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
         "3": "Turn sharp <RELATIVE_DIRECTION> matey to stay on <STREET_NAMES>."
       },
+      "relative_directions": [
+        "port",
+        "starboard"
+      ],
+      "example_phrases": {
+        "0": [
+          "Turn sharp port bucko.",
+          "Turn sharp starboard bucko."
+        ],
+        "1": [
+          "Turn sharp port onto Arlen Road ye scallywag.",
+          "Turn sharp starboard onto Arlen Road ye scallywag."
+        ],
+        "2": [
+          "Arrr, turn sharp port onto Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Arrr, turn sharp starboard onto Belair Road/US 1 Business. Continue on Arlen Road."
+        ],
+        "3": [
+          "Turn sharp port matey to stay on Arlen Road.",
+          "Turn sharp starboard matey to stay on Arlen Road."
+        ]
+      }
+    },
+    "sharp_verbal": {
       "empty_street_name_labels": [
         "solid ground",
         "th' bike pirate way",
         "th' treasure trail"
       ],
-      "relative_directions": [
-        "left",
-        "right"
-      ],
-      "example_phrases": {
-        "0": [
-          "Turn sharp left bucko."
-        ],
-        "1": [
-          "Turn sharp right onto Flatbush Avenue ye scallywag."
-        ],
-        "2": [
-          "Arrr, turn sharp left onto North Bond Street/US 1 Business/MD 924. Continue on MD 924."
-        ],
-        "3": [
-          "Turn sharp right matey to stay on Sunstone Drive."
-        ]
-      }
-    },
-    "sharp_verbal": {
       "phrases": {
         "0": "Turn sharp <RELATIVE_DIRECTION> bucko.",
         "1": "Turn sharp <RELATIVE_DIRECTION> onto <STREET_NAMES> ye scallywag.",
         "2": "Arrr, turn sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>.",
         "3": "Turn sharp <RELATIVE_DIRECTION> matey to stay on <STREET_NAMES>."
       },
-      "empty_street_name_labels": [
-        "solid ground",
-        "th' bike pirate way",
-        "th' treasure trail"
-      ],
       "relative_directions": [
-        "left",
-        "right"
+        "port",
+        "starboard"
       ],
       "example_phrases": {
         "0": [
-          "Turn sharp left bucko."
+          "Turn sharp port bucko.",
+          "Turn sharp starboard bucko."
         ],
         "1": [
-          "Turn sharp right onto Flatbush Avenue ye scallywag."
+          "Turn sharp port onto Arlen Road ye scallywag.",
+          "Turn sharp starboard onto Arlen Road ye scallywag."
         ],
         "2": [
-          "Arrr, turn sharp left onto North Bond Street, U.S. 1 Business."
+          "Arrr, turn sharp port onto Belair Road/US 1 Business.",
+          "Arrr, turn sharp starboard onto Belair Road/US 1 Business."
         ],
         "3": [
-          "Turn sharp right matey to stay on Sunstone Drive."
+          "Turn sharp port matey to stay on Arlen Road.",
+          "Turn sharp starboard matey to stay on Arlen Road."
         ]
       }
     },
     "start": {
-      "phrases": {
-        "0": "Head <CARDINAL_DIRECTION>.",
-        "1": "Head <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-        "2": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
-        "4": "Set sail <CARDINAL_DIRECTION>.",
-        "5": "Point yer bow <CARDINAL_DIRECTION> and set sail on <STREET_NAMES>.",
-        "6": "Weigh anchor! Set sail <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
-        "8": "Saunter <CARDINAL_DIRECTION> on solid ground.",
-        "9": "Saunter <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-        "10": "Saunter <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
-        "16": "Ride <CARDINAL_DIRECTION>.",
-        "17": "Ride <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-        "18": "Ride <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
-      },
       "cardinal_directions": [
         "north",
         "northeast",
@@ -1520,70 +1923,144 @@
         "th' bike pirate way",
         "th' treasure trail"
       ],
+      "phrases": {
+        "0": "Head <CARDINAL_DIRECTION>.",
+        "1": "Head <CARDINAL_DIRECTION> on <STREET_NAMES>.",
+        "10": "Saunter <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
+        "16": "Ride <CARDINAL_DIRECTION>.",
+        "17": "Ride <CARDINAL_DIRECTION> on <STREET_NAMES>.",
+        "18": "Ride <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
+        "2": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
+        "4": "Set sail <CARDINAL_DIRECTION>.",
+        "5": "Point yer bow <CARDINAL_DIRECTION> and set sail on <STREET_NAMES>.",
+        "6": "Weigh anchor! Set sail <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
+        "8": "Saunter <CARDINAL_DIRECTION> on solid ground.",
+        "9": "Saunter <CARDINAL_DIRECTION> on <STREET_NAMES>."
+      },
       "example_phrases": {
         "0": [
+          "Head north.",
+          "Head northeast.",
           "Head east.",
-          "Head north."
+          "Head southeast.",
+          "Head south.",
+          "Head southwest.",
+          "Head west.",
+          "Head northwest."
         ],
         "1": [
-          "Head southwest on 5th Avenue.",
-          "Head west on solid ground",
-          "Head east on th' bike pirate way",
-          "Head north on th' treasure trail"
-        ],
-        "2": [
-          "Head south on North Prince Street/US 222/PA 272. Continue on US 222/PA 272."
-        ],
-        "4": [
-          "Set sail east.",
-          "Set sail north."
-        ],
-        "5": [
-          "Point yer bow southwest and set sail on 5th Avenue."
-        ],
-        "6": [
-          "Weigh anchor! Set sail south on North Prince Street/US 222/PA 272. Continue on US 222/PA 272."
-        ],
-        "8": [
-          "Saunter east on solid ground.",
-          "Saunter north on solid ground."
-        ],
-        "9": [
-          "Saunter southwest on 5th Avenue.",
-          "Saunter west on solid ground"
+          "Head north on Arlen Road.",
+          "Head northeast on Arlen Road.",
+          "Head east on Arlen Road.",
+          "Head southeast on Arlen Road.",
+          "Head south on Arlen Road.",
+          "Head southwest on Arlen Road.",
+          "Head west on Arlen Road.",
+          "Head northwest on Arlen Road."
         ],
         "10": [
-          "Saunter south on North Prince Street/US 222/PA 272. Continue on US 222/PA 272."
+          "Saunter north on Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Saunter northeast on Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Saunter east on Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Saunter southeast on Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Saunter south on Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Saunter southwest on Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Saunter west on Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Saunter northwest on Belair Road/US 1 Business. Continue on Arlen Road."
         ],
         "16": [
+          "Ride north.",
+          "Ride northeast.",
           "Ride east.",
-          "Ride north."
+          "Ride southeast.",
+          "Ride south.",
+          "Ride southwest.",
+          "Ride west.",
+          "Ride northwest."
         ],
         "17": [
-          "Ride southwest on 5th Avenue.",
-          "Ride east on th' bike pirate way",
-          "Ride north on th' treasure trail"
+          "Ride north on Arlen Road.",
+          "Ride northeast on Arlen Road.",
+          "Ride east on Arlen Road.",
+          "Ride southeast on Arlen Road.",
+          "Ride south on Arlen Road.",
+          "Ride southwest on Arlen Road.",
+          "Ride west on Arlen Road.",
+          "Ride northwest on Arlen Road."
         ],
         "18": [
-          "Ride south on North Prince Street/US 222/PA 272. Continue on US 222/PA 272."
+          "Ride north on Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Ride northeast on Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Ride east on Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Ride southeast on Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Ride south on Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Ride southwest on Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Ride west on Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Ride northwest on Belair Road/US 1 Business. Continue on Arlen Road."
+        ],
+        "2": [
+          "Head north on Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Head northeast on Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Head east on Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Head southeast on Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Head south on Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Head southwest on Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Head west on Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Head northwest on Belair Road/US 1 Business. Continue on Arlen Road."
+        ],
+        "4": [
+          "Set sail north.",
+          "Set sail northeast.",
+          "Set sail east.",
+          "Set sail southeast.",
+          "Set sail south.",
+          "Set sail southwest.",
+          "Set sail west.",
+          "Set sail northwest."
+        ],
+        "5": [
+          "Point yer bow north and set sail on Arlen Road.",
+          "Point yer bow northeast and set sail on Arlen Road.",
+          "Point yer bow east and set sail on Arlen Road.",
+          "Point yer bow southeast and set sail on Arlen Road.",
+          "Point yer bow south and set sail on Arlen Road.",
+          "Point yer bow southwest and set sail on Arlen Road.",
+          "Point yer bow west and set sail on Arlen Road.",
+          "Point yer bow northwest and set sail on Arlen Road."
+        ],
+        "6": [
+          "Weigh anchor! Set sail north on Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Weigh anchor! Set sail northeast on Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Weigh anchor! Set sail east on Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Weigh anchor! Set sail southeast on Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Weigh anchor! Set sail south on Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Weigh anchor! Set sail southwest on Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Weigh anchor! Set sail west on Belair Road/US 1 Business. Continue on Arlen Road.",
+          "Weigh anchor! Set sail northwest on Belair Road/US 1 Business. Continue on Arlen Road."
+        ],
+        "8": [
+          "Saunter north on solid ground.",
+          "Saunter northeast on solid ground.",
+          "Saunter east on solid ground.",
+          "Saunter southeast on solid ground.",
+          "Saunter south on solid ground.",
+          "Saunter southwest on solid ground.",
+          "Saunter west on solid ground.",
+          "Saunter northwest on solid ground."
+        ],
+        "9": [
+          "Saunter north on Arlen Road.",
+          "Saunter northeast on Arlen Road.",
+          "Saunter east on Arlen Road.",
+          "Saunter southeast on Arlen Road.",
+          "Saunter south on Arlen Road.",
+          "Saunter southwest on Arlen Road.",
+          "Saunter west on Arlen Road.",
+          "Saunter northwest on Arlen Road."
         ]
       }
     },
     "start_verbal": {
-      "phrases": {
-        "0": "Head <CARDINAL_DIRECTION> fer <LENGTH>.",
-        "1": "Head <CARDINAL_DIRECTION> on <STREET_NAMES> fer <LENGTH>.",
-        "2": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.",
-        "4": "Set sail <CARDINAL_DIRECTION> fer <LENGTH>.",
-        "5": "Point yer bow <CARDINAL_DIRECTION> and set sail on <STREET_NAMES> fer <LENGTH>.",
-        "6": "Weigh anchor! Set sail <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.",
-        "8": "Saunter <CARDINAL_DIRECTION> fer <LENGTH>.",
-        "9": "Saunter <CARDINAL_DIRECTION> on <STREET_NAMES> fer <LENGTH>.",
-        "10": "Saunter <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.",
-        "16": "Ride <CARDINAL_DIRECTION> fer <LENGTH>.",
-        "17": "Ride <CARDINAL_DIRECTION> on <STREET_NAMES> fer <LENGTH>.",
-        "18": "Ride <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."
-      },
       "cardinal_directions": [
         "north",
         "northeast",
@@ -1606,6 +2083,20 @@
         "<METERS> meters",
         "less than 10 meters"
       ],
+      "phrases": {
+        "0": "Head <CARDINAL_DIRECTION> fer <LENGTH>.",
+        "1": "Head <CARDINAL_DIRECTION> on <STREET_NAMES> fer <LENGTH>.",
+        "10": "Saunter <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.",
+        "16": "Ride <CARDINAL_DIRECTION> fer <LENGTH>.",
+        "17": "Ride <CARDINAL_DIRECTION> on <STREET_NAMES> fer <LENGTH>.",
+        "18": "Ride <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.",
+        "2": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.",
+        "4": "Set sail <CARDINAL_DIRECTION> fer <LENGTH>.",
+        "5": "Point yer bow <CARDINAL_DIRECTION> and set sail on <STREET_NAMES> fer <LENGTH>.",
+        "6": "Weigh anchor! Set sail <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.",
+        "8": "Saunter <CARDINAL_DIRECTION> fer <LENGTH>.",
+        "9": "Saunter <CARDINAL_DIRECTION> on <STREET_NAMES> fer <LENGTH>."
+      },
       "us_customary_lengths": [
         "<MILES> miles",
         "1 mile",
@@ -1617,52 +2108,192 @@
       ],
       "example_phrases": {
         "0": [
+          "Head north fer 1 mile.",
+          "Head north fer a half mile.",
+          "Head northeast fer 1 mile.",
+          "Head northeast fer a half mile.",
+          "Head east fer 1 mile.",
           "Head east fer a half mile.",
-          "Head north fer 1 kilometer."
+          "Head southeast fer 1 mile.",
+          "Head southeast fer a half mile.",
+          "Head south fer 1 mile.",
+          "Head south fer a half mile.",
+          "Head southwest fer 1 mile.",
+          "Head southwest fer a half mile.",
+          "Head west fer 1 mile.",
+          "Head west fer a half mile.",
+          "Head northwest fer 1 mile.",
+          "Head northwest fer a half mile."
         ],
         "1": [
-          "Head southwest on 5th Avenue fer 1 tenth of a mile."
-        ],
-        "2": [
-          "Head south on North Prince Street, U.S. 2 22."
-        ],
-        "4": [
-          "Set sail east fer a half mile.",
-          "Drive north fer 1 kilometer."
-        ],
-        "5": [
-          "Point yer bow southwest and set sail on 5th Avenue fer 1 tenth of a mile."
-        ],
-        "6": [
-          "Weigh anchor! Set sail south on North Prince Street, U.S. 2 22."
-        ],
-        "8": [
-          "Saunter east fer a half mile.",
-          "Saunter north fer 1 kilometer."
-        ],
-        "9": [
-          "Saunter southwest on 5th Avenue fer 1 tenth of a mile."
+          "Head north on Arlen Road fer 1 mile.",
+          "Head north on Arlen Road fer a half mile.",
+          "Head northeast on Arlen Road fer 1 mile.",
+          "Head northeast on Arlen Road fer a half mile.",
+          "Head east on Arlen Road fer 1 mile.",
+          "Head east on Arlen Road fer a half mile.",
+          "Head southeast on Arlen Road fer 1 mile.",
+          "Head southeast on Arlen Road fer a half mile.",
+          "Head south on Arlen Road fer 1 mile.",
+          "Head south on Arlen Road fer a half mile.",
+          "Head southwest on Arlen Road fer 1 mile.",
+          "Head southwest on Arlen Road fer a half mile.",
+          "Head west on Arlen Road fer 1 mile.",
+          "Head west on Arlen Road fer a half mile.",
+          "Head northwest on Arlen Road fer 1 mile.",
+          "Head northwest on Arlen Road fer a half mile."
         ],
         "10": [
-          "Saunter south on North Prince Street, U.S. 2 22."
+          "Saunter north on Belair Road/US 1 Business.",
+          "Saunter northeast on Belair Road/US 1 Business.",
+          "Saunter east on Belair Road/US 1 Business.",
+          "Saunter southeast on Belair Road/US 1 Business.",
+          "Saunter south on Belair Road/US 1 Business.",
+          "Saunter southwest on Belair Road/US 1 Business.",
+          "Saunter west on Belair Road/US 1 Business.",
+          "Saunter northwest on Belair Road/US 1 Business."
         ],
         "16": [
+          "Ride north fer 1 mile.",
+          "Ride north fer a half mile.",
+          "Ride northeast fer 1 mile.",
+          "Ride northeast fer a half mile.",
+          "Ride east fer 1 mile.",
           "Ride east fer a half mile.",
-          "Ride north fer 1 kilometer."
+          "Ride southeast fer 1 mile.",
+          "Ride southeast fer a half mile.",
+          "Ride south fer 1 mile.",
+          "Ride south fer a half mile.",
+          "Ride southwest fer 1 mile.",
+          "Ride southwest fer a half mile.",
+          "Ride west fer 1 mile.",
+          "Ride west fer a half mile.",
+          "Ride northwest fer 1 mile.",
+          "Ride northwest fer a half mile."
         ],
         "17": [
-          "Ride southwest on 5th Avenue fer 1 tenth of a mile."
+          "Ride north on Arlen Road fer 1 mile.",
+          "Ride north on Arlen Road fer a half mile.",
+          "Ride northeast on Arlen Road fer 1 mile.",
+          "Ride northeast on Arlen Road fer a half mile.",
+          "Ride east on Arlen Road fer 1 mile.",
+          "Ride east on Arlen Road fer a half mile.",
+          "Ride southeast on Arlen Road fer 1 mile.",
+          "Ride southeast on Arlen Road fer a half mile.",
+          "Ride south on Arlen Road fer 1 mile.",
+          "Ride south on Arlen Road fer a half mile.",
+          "Ride southwest on Arlen Road fer 1 mile.",
+          "Ride southwest on Arlen Road fer a half mile.",
+          "Ride west on Arlen Road fer 1 mile.",
+          "Ride west on Arlen Road fer a half mile.",
+          "Ride northwest on Arlen Road fer 1 mile.",
+          "Ride northwest on Arlen Road fer a half mile."
         ],
         "18": [
-          "Ride south on North Prince Street, U.S. 2 22."
+          "Ride north on Belair Road/US 1 Business.",
+          "Ride northeast on Belair Road/US 1 Business.",
+          "Ride east on Belair Road/US 1 Business.",
+          "Ride southeast on Belair Road/US 1 Business.",
+          "Ride south on Belair Road/US 1 Business.",
+          "Ride southwest on Belair Road/US 1 Business.",
+          "Ride west on Belair Road/US 1 Business.",
+          "Ride northwest on Belair Road/US 1 Business."
+        ],
+        "2": [
+          "Head north on Belair Road/US 1 Business.",
+          "Head northeast on Belair Road/US 1 Business.",
+          "Head east on Belair Road/US 1 Business.",
+          "Head southeast on Belair Road/US 1 Business.",
+          "Head south on Belair Road/US 1 Business.",
+          "Head southwest on Belair Road/US 1 Business.",
+          "Head west on Belair Road/US 1 Business.",
+          "Head northwest on Belair Road/US 1 Business."
+        ],
+        "4": [
+          "Set sail north fer 1 mile.",
+          "Set sail north fer a half mile.",
+          "Set sail northeast fer 1 mile.",
+          "Set sail northeast fer a half mile.",
+          "Set sail east fer 1 mile.",
+          "Set sail east fer a half mile.",
+          "Set sail southeast fer 1 mile.",
+          "Set sail southeast fer a half mile.",
+          "Set sail south fer 1 mile.",
+          "Set sail south fer a half mile.",
+          "Set sail southwest fer 1 mile.",
+          "Set sail southwest fer a half mile.",
+          "Set sail west fer 1 mile.",
+          "Set sail west fer a half mile.",
+          "Set sail northwest fer 1 mile.",
+          "Set sail northwest fer a half mile."
+        ],
+        "5": [
+          "Point yer bow north and set sail on Arlen Road fer 1 mile.",
+          "Point yer bow north and set sail on Arlen Road fer a half mile.",
+          "Point yer bow northeast and set sail on Arlen Road fer 1 mile.",
+          "Point yer bow northeast and set sail on Arlen Road fer a half mile.",
+          "Point yer bow east and set sail on Arlen Road fer 1 mile.",
+          "Point yer bow east and set sail on Arlen Road fer a half mile.",
+          "Point yer bow southeast and set sail on Arlen Road fer 1 mile.",
+          "Point yer bow southeast and set sail on Arlen Road fer a half mile.",
+          "Point yer bow south and set sail on Arlen Road fer 1 mile.",
+          "Point yer bow south and set sail on Arlen Road fer a half mile.",
+          "Point yer bow southwest and set sail on Arlen Road fer 1 mile.",
+          "Point yer bow southwest and set sail on Arlen Road fer a half mile.",
+          "Point yer bow west and set sail on Arlen Road fer 1 mile.",
+          "Point yer bow west and set sail on Arlen Road fer a half mile.",
+          "Point yer bow northwest and set sail on Arlen Road fer 1 mile.",
+          "Point yer bow northwest and set sail on Arlen Road fer a half mile."
+        ],
+        "6": [
+          "Weigh anchor! Set sail north on Belair Road/US 1 Business.",
+          "Weigh anchor! Set sail northeast on Belair Road/US 1 Business.",
+          "Weigh anchor! Set sail east on Belair Road/US 1 Business.",
+          "Weigh anchor! Set sail southeast on Belair Road/US 1 Business.",
+          "Weigh anchor! Set sail south on Belair Road/US 1 Business.",
+          "Weigh anchor! Set sail southwest on Belair Road/US 1 Business.",
+          "Weigh anchor! Set sail west on Belair Road/US 1 Business.",
+          "Weigh anchor! Set sail northwest on Belair Road/US 1 Business."
+        ],
+        "8": [
+          "Saunter north fer 1 mile.",
+          "Saunter north fer a half mile.",
+          "Saunter northeast fer 1 mile.",
+          "Saunter northeast fer a half mile.",
+          "Saunter east fer 1 mile.",
+          "Saunter east fer a half mile.",
+          "Saunter southeast fer 1 mile.",
+          "Saunter southeast fer a half mile.",
+          "Saunter south fer 1 mile.",
+          "Saunter south fer a half mile.",
+          "Saunter southwest fer 1 mile.",
+          "Saunter southwest fer a half mile.",
+          "Saunter west fer 1 mile.",
+          "Saunter west fer a half mile.",
+          "Saunter northwest fer 1 mile.",
+          "Saunter northwest fer a half mile."
+        ],
+        "9": [
+          "Saunter north on Arlen Road fer 1 mile.",
+          "Saunter north on Arlen Road fer a half mile.",
+          "Saunter northeast on Arlen Road fer 1 mile.",
+          "Saunter northeast on Arlen Road fer a half mile.",
+          "Saunter east on Arlen Road fer 1 mile.",
+          "Saunter east on Arlen Road fer a half mile.",
+          "Saunter southeast on Arlen Road fer 1 mile.",
+          "Saunter southeast on Arlen Road fer a half mile.",
+          "Saunter south on Arlen Road fer 1 mile.",
+          "Saunter south on Arlen Road fer a half mile.",
+          "Saunter southwest on Arlen Road fer 1 mile.",
+          "Saunter southwest on Arlen Road fer a half mile.",
+          "Saunter west on Arlen Road fer 1 mile.",
+          "Saunter west on Arlen Road fer a half mile.",
+          "Saunter northwest on Arlen Road fer 1 mile.",
+          "Saunter northwest on Arlen Road fer a half mile."
         ]
       }
     },
     "transit": {
-      "phrases": {
-        "0": "Aye, take thee <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
-        "1": "Heave ho on thee <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
-      },
       "empty_transit_name_labels": [
         "tram",
         "metro",
@@ -1673,19 +2304,26 @@
         "gondola",
         "funicular"
       ],
+      "phrases": {
+        "0": "Aye, take thee <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "Heave ho on thee <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+      },
       "transit_stop_count_labels": {
         "one": "port",
         "other": "ports"
       },
       "example_phrases": {
         "0": [
-          "Aye, take thee New Haven. (1 port)",
-          "Aye, take thee metro. (2 ports)",
-          "Aye, take thee bus. (12 ports)"
+          "Aye, take thee New Haven. (1 stop)",
+          "Aye, take thee New Haven. (1 stops)",
+          "Aye, take thee New Haven. (3 stop)",
+          "Aye, take thee New Haven. (3 stops)"
         ],
         "1": [
-          "Heave ho on thee F toward JAMAICA - 179 ST. (10 ports)",
-          "Heave ho on thee ferry toward Staten Island. (1 port)"
+          "Heave ho on thee New Haven toward JAMAICA - 179 ST. (1 stop)",
+          "Heave ho on thee New Haven toward JAMAICA - 179 ST. (1 stops)",
+          "Heave ho on thee New Haven toward JAMAICA - 179 ST. (3 stop)",
+          "Heave ho on thee New Haven toward JAMAICA - 179 ST. (3 stops)"
         ]
       }
     },
@@ -1701,10 +2339,10 @@
           "Sink me! Exit thee station ye scallywag."
         ],
         "1": [
-          "Avast ye, exit thee Embarcadero Station."
+          "Avast ye, exit thee 8 St - NYU."
         ],
         "2": [
-          "Exit thee 8 St - NYU Station me buccaneer."
+          "Exit thee 8 St - NYU Embarcadero Station me buccaneer."
         ]
       }
     },
@@ -1720,10 +2358,10 @@
           "Sink me! Exit thee station ye scallywag."
         ],
         "1": [
-          "Avast ye, exit thee Embarcadero Station."
+          "Avast ye, exit thee 8 St - NYU."
         ],
         "2": [
-          "Exit thee 8 St - NYU Station me buccaneer."
+          "Exit thee 8 St - NYU Embarcadero Station me buccaneer."
         ]
       }
     },
@@ -1739,10 +2377,10 @@
           "Shiver me timbers! Enter thee station ye landlubber."
         ],
         "1": [
-          "Yo ho ho! Enter thee Embarcadero Station."
+          "Yo ho ho! Enter thee 8 St - NYU."
         ],
         "2": [
-          "Enter thee 8 St - NYU Station me hearties."
+          "Enter thee 8 St - NYU Embarcadero Station me hearties."
         ]
       }
     },
@@ -1758,10 +2396,10 @@
           "Shiver me timbers! Enter thee station ye landlubber."
         ],
         "1": [
-          "Yo ho ho! Enter thee Embarcadero Station."
+          "Yo ho ho! Enter thee 8 St - NYU."
         ],
         "2": [
-          "Enter thee 8 St - NYU Station me hearties."
+          "Enter thee 8 St - NYU Embarcadero Station me hearties."
         ]
       }
     },
@@ -1777,10 +2415,10 @@
           "Blimey! Transfer at thee station me buccaneer."
         ],
         "1": [
-          "Blow me down! Transfer at thee Embarcadero Station."
+          "Blow me down! Transfer at thee 8 St - NYU."
         ],
         "2": [
-          "Transfer at thee 8 St - NYU Station ye scurvy dog."
+          "Transfer at thee 8 St - NYU Embarcadero Station ye scurvy dog."
         ]
       }
     },
@@ -1796,18 +2434,14 @@
           "Blimey! Transfer at thee station me buccaneer."
         ],
         "1": [
-          "Blow me down! Transfer at thee Embarcadero Station."
+          "Blow me down! Transfer at thee 8 St - NYU."
         ],
         "2": [
-          "Transfer at thee 8 St - NYU Station ye scurvy dog."
+          "Transfer at thee 8 St - NYU Embarcadero Station ye scurvy dog."
         ]
       }
     },
     "transit_remain_on": {
-      "phrases": {
-        "0": "Remain on thee <TRANSIT_NAME> ye landlubber. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
-        "1": "Remain on thee <TRANSIT_NAME> toward <TRANSIT_HEADSIGN> ye landlubber. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
-      },
       "empty_transit_name_labels": [
         "tram",
         "metro",
@@ -1818,25 +2452,30 @@
         "gondola",
         "funicular"
       ],
+      "phrases": {
+        "0": "Remain on thee <TRANSIT_NAME> ye landlubber. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "Remain on thee <TRANSIT_NAME> toward <TRANSIT_HEADSIGN> ye landlubber. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+      },
       "transit_stop_count_labels": {
         "one": "port",
         "other": "ports"
       },
       "example_phrases": {
         "0": [
-          "Remain on thee New Haven ye landlubber. (1 port)",
-          "Remain on thee train ye landlubber. (3 ports)"
+          "Remain on thee New Haven ye landlubber. (1 stop)",
+          "Remain on thee New Haven ye landlubber. (1 stops)",
+          "Remain on thee New Haven ye landlubber. (3 stop)",
+          "Remain on thee New Haven ye landlubber. (3 stops)"
         ],
         "1": [
-          "Remain on thee F toward JAMAICA - 179 ST ye landlubber. (10 ports)"
+          "Remain on thee New Haven toward JAMAICA - 179 ST ye landlubber. (1 stop)",
+          "Remain on thee New Haven toward JAMAICA - 179 ST ye landlubber. (1 stops)",
+          "Remain on thee New Haven toward JAMAICA - 179 ST ye landlubber. (3 stop)",
+          "Remain on thee New Haven toward JAMAICA - 179 ST ye landlubber. (3 stops)"
         ]
       }
     },
     "transit_remain_on_verbal": {
-      "phrases": {
-        "0": "Remain on thee <TRANSIT_NAME> ye landlubber.",
-        "1": "Remain on thee <TRANSIT_NAME> toward <TRANSIT_HEADSIGN> ye landlubber."
-      },
       "empty_transit_name_labels": [
         "tram",
         "metro",
@@ -1847,20 +2486,20 @@
         "gondola",
         "funicular"
       ],
+      "phrases": {
+        "0": "Remain on thee <TRANSIT_NAME> ye landlubber.",
+        "1": "Remain on thee <TRANSIT_NAME> toward <TRANSIT_HEADSIGN> ye landlubber."
+      },
       "example_phrases": {
         "0": [
           "Remain on thee New Haven ye landlubber."
         ],
         "1": [
-          "Remain on thee F toward JAMAICA - 179 ST ye landlubber."
+          "Remain on thee New Haven toward JAMAICA - 179 ST ye landlubber."
         ]
       }
     },
     "transit_transfer": {
-      "phrases": {
-        "0": "Argh! Transfer to take thee <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
-        "1": "Hang the Jib! Transfer to take thee <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
-      },
       "empty_transit_name_labels": [
         "tram",
         "metro",
@@ -1871,25 +2510,30 @@
         "gondola",
         "funicular"
       ],
+      "phrases": {
+        "0": "Argh! Transfer to take thee <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "Hang the Jib! Transfer to take thee <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+      },
       "transit_stop_count_labels": {
         "one": "port",
         "other": "ports"
       },
       "example_phrases": {
         "0": [
-          "Argh! Transfer to take thee New Haven. (1 port)",
-          "Argh! Transfer to take thee tram. (4 ports)"
+          "Argh! Transfer to take thee New Haven. (1 stop)",
+          "Argh! Transfer to take thee New Haven. (1 stops)",
+          "Argh! Transfer to take thee New Haven. (3 stop)",
+          "Argh! Transfer to take thee New Haven. (3 stops)"
         ],
         "1": [
-          "Hang the Jib! Transfer to take thee F toward JAMAICA - 179 ST. (10 ports)"
+          "Hang the Jib! Transfer to take thee New Haven toward JAMAICA - 179 ST. (1 stop)",
+          "Hang the Jib! Transfer to take thee New Haven toward JAMAICA - 179 ST. (1 stops)",
+          "Hang the Jib! Transfer to take thee New Haven toward JAMAICA - 179 ST. (3 stop)",
+          "Hang the Jib! Transfer to take thee New Haven toward JAMAICA - 179 ST. (3 stops)"
         ]
       }
     },
     "transit_transfer_verbal": {
-      "phrases": {
-        "0": "Argh! Transfer to take thee <TRANSIT_NAME>.",
-        "1": "Hang the Jib! Transfer to take thee <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>."
-      },
       "empty_transit_name_labels": [
         "tram",
         "metro",
@@ -1900,20 +2544,20 @@
         "gondola",
         "funicular"
       ],
+      "phrases": {
+        "0": "Argh! Transfer to take thee <TRANSIT_NAME>.",
+        "1": "Hang the Jib! Transfer to take thee <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>."
+      },
       "example_phrases": {
         "0": [
           "Argh! Transfer to take thee New Haven."
         ],
         "1": [
-          "Hang the Jib! Transfer to take thee F toward JAMAICA - 179 ST."
+          "Hang the Jib! Transfer to take thee New Haven toward JAMAICA - 179 ST."
         ]
       }
     },
     "transit_verbal": {
-      "phrases": {
-        "0": "Aye, take thee <TRANSIT_NAME>.",
-        "1": "Heave ho on thee <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>."
-      },
       "empty_transit_name_labels": [
         "tram",
         "metro",
@@ -1924,78 +2568,95 @@
         "gondola",
         "funicular"
       ],
+      "phrases": {
+        "0": "Aye, take thee <TRANSIT_NAME>.",
+        "1": "Heave ho on thee <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>."
+      },
       "example_phrases": {
         "0": [
           "Aye, take thee New Haven."
         ],
         "1": [
-          "Heave ho on thee F toward JAMAICA - 179 ST."
+          "Heave ho on thee New Haven toward JAMAICA - 179 ST."
         ]
       }
     },
     "turn": {
+      "empty_street_name_labels": [
+        "solid ground",
+        "th' bike pirate way",
+        "th' treasure trail"
+      ],
       "phrases": {
         "0": "Turn <RELATIVE_DIRECTION> bucko.",
         "1": "Turn <RELATIVE_DIRECTION> onto <STREET_NAMES> me hearties.",
         "2": "Arrr, turn <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>. Aye, continue on <STREET_NAMES>.",
         "3": "Turn <RELATIVE_DIRECTION> matey to stay on <STREET_NAMES>."
       },
-      "empty_street_name_labels": [
-        "solid ground",
-        "th' bike pirate way",
-        "th' treasure trail"
-      ],
       "relative_directions": [
         "port",
         "starboard"
       ],
       "example_phrases": {
         "0": [
-          "Turn port bucko."
+          "Turn port bucko.",
+          "Turn starboard bucko."
         ],
         "1": [
-          "Turn starboard onto Flatbush Avenue me hearties."
+          "Turn port onto Arlen Road me hearties.",
+          "Turn starboard onto Arlen Road me hearties."
         ],
         "2": [
-          "Arrr, turn port onto North Bond Street/US 1 Business/MD 924. Aye, continue on MD 924."
+          "Arrr, turn port onto Belair Road/US 1 Business. Aye, continue on Arlen Road.",
+          "Arrr, turn starboard onto Belair Road/US 1 Business. Aye, continue on Arlen Road."
         ],
         "3": [
-          "Turn starboard matey to stay on Sunstone Drive."
+          "Turn port matey to stay on Arlen Road.",
+          "Turn starboard matey to stay on Arlen Road."
         ]
       }
     },
     "turn_verbal": {
+      "empty_street_name_labels": [
+        "solid ground",
+        "th' bike pirate way",
+        "th' treasure trail"
+      ],
       "phrases": {
         "0": "Turn <RELATIVE_DIRECTION> bucko.",
         "1": "Turn <RELATIVE_DIRECTION> onto <STREET_NAMES> me hearties.",
         "2": "Arrr, turn <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>.",
         "3": "Turn <RELATIVE_DIRECTION> matey to stay on <STREET_NAMES>."
       },
-      "empty_street_name_labels": [
-        "solid ground",
-        "th' bike pirate way",
-        "th' treasure trail"
-      ],
       "relative_directions": [
         "port",
         "starboard"
       ],
       "example_phrases": {
         "0": [
-          "Turn port bucko."
+          "Turn port bucko.",
+          "Turn starboard bucko."
         ],
         "1": [
-          "Turn starboard onto Flatbush Avenue me hearties."
+          "Turn port onto Arlen Road me hearties.",
+          "Turn starboard onto Arlen Road me hearties."
         ],
         "2": [
-          "Arrr, turn port onto North Bond Street, U.S. 1 Business."
+          "Arrr, turn port onto Belair Road/US 1 Business.",
+          "Arrr, turn starboard onto Belair Road/US 1 Business."
         ],
         "3": [
-          "Turn starboard matey to stay on Sunstone Drive."
+          "Turn port matey to stay on Arlen Road.",
+          "Turn starboard matey to stay on Arlen Road."
         ]
       }
     },
     "uturn": {
+      "empty_street_name_labels": [
+        "solid ground",
+        "th' bike pirate way",
+        "th' treasure trail"
+      ],
       "phrases": {
         "0": "Argh! Make a <RELATIVE_DIRECTION> U-turn.",
         "1": "Argh! Make a <RELATIVE_DIRECTION> U-turn onto <STREET_NAMES>.",
@@ -2004,37 +2665,43 @@
         "4": "Argh! Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES> onto <STREET_NAMES>.",
         "5": "Argh! Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES> to stay on <STREET_NAMES>."
       },
-      "empty_street_name_labels": [
-        "solid ground",
-        "th' bike pirate way",
-        "th' treasure trail"
-      ],
       "relative_directions": [
         "port",
         "starboard"
       ],
       "example_phrases": {
         "0": [
-          "Argh! Make a port U-turn."
+          "Argh! Make a port U-turn.",
+          "Argh! Make a starboard U-turn."
         ],
         "1": [
-          "Argh! Make a starboard U-turn onto Bunker Hill Road."
+          "Argh! Make a port U-turn onto Arlen Road.",
+          "Argh! Make a starboard U-turn onto Arlen Road."
         ],
         "2": [
-          "Argh! Make a port U-turn to stay on Bunker Hill Road."
+          "Argh! Make a port U-turn to stay on Arlen Road.",
+          "Argh! Make a starboard U-turn to stay on Arlen Road."
         ],
         "3": [
-          "Argh! Make a port U-turn at Devonshire Road."
+          "Argh! Make a port U-turn at Devonshire Road.",
+          "Argh! Make a starboard U-turn at Devonshire Road."
         ],
         "4": [
-          "Argh! Make a port U-turn at Devonshire Road onto Jonestown Road/US 22."
+          "Argh! Make a port U-turn at Devonshire Road onto Arlen Road.",
+          "Argh! Make a starboard U-turn at Devonshire Road onto Arlen Road."
         ],
         "5": [
-          "Argh! Make a port U-turn at Devonshire Road to stay on Jonestown Road/US 22."
+          "Argh! Make a port U-turn at Devonshire Road to stay on Arlen Road.",
+          "Argh! Make a starboard U-turn at Devonshire Road to stay on Arlen Road."
         ]
       }
     },
     "uturn_verbal": {
+      "empty_street_name_labels": [
+        "solid ground",
+        "th' bike pirate way",
+        "th' treasure trail"
+      ],
       "phrases": {
         "0": "Argh! Make a <RELATIVE_DIRECTION> U-turn.",
         "1": "Argh! Make a <RELATIVE_DIRECTION> U-turn onto <STREET_NAMES>.",
@@ -2043,33 +2710,34 @@
         "4": "Argh! Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES> onto <STREET_NAMES>.",
         "5": "Argh! Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES> to stay on <STREET_NAMES>."
       },
-      "empty_street_name_labels": [
-        "solid ground",
-        "th' bike pirate way",
-        "th' treasure trail"
-      ],
       "relative_directions": [
         "port",
         "starboard"
       ],
       "example_phrases": {
         "0": [
-          "Argh! Make a port U-turn."
+          "Argh! Make a port U-turn.",
+          "Argh! Make a starboard U-turn."
         ],
         "1": [
-          "Argh! Make a starboard U-turn onto Bunker Hill Road."
+          "Argh! Make a port U-turn onto Arlen Road.",
+          "Argh! Make a starboard U-turn onto Arlen Road."
         ],
         "2": [
-          "Argh! Make a port U-turn to stay on Bunker Hill Road."
+          "Argh! Make a port U-turn to stay on Arlen Road.",
+          "Argh! Make a starboard U-turn to stay on Arlen Road."
         ],
         "3": [
-          "Argh! Make a port U-turn at Devonshire Road."
+          "Argh! Make a port U-turn at Devonshire Road.",
+          "Argh! Make a starboard U-turn at Devonshire Road."
         ],
         "4": [
-          "Argh! Make a port U-turn at Devonshire Road onto Jonestown Road, U.S. 22."
+          "Argh! Make a port U-turn at Devonshire Road onto Arlen Road.",
+          "Argh! Make a starboard U-turn at Devonshire Road onto Arlen Road."
         ],
         "5": [
-          "Argh! Make a port U-turn at Devonshire Road to stay on Jonestown Road, U.S. 22."
+          "Argh! Make a port U-turn at Devonshire Road to stay on Arlen Road.",
+          "Argh! Make a starboard U-turn at Devonshire Road to stay on Arlen Road."
         ]
       }
     },

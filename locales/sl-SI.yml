@@ -1,0 +1,479 @@
+sl:
+    posix_locale: sl-SI.UTF-8
+    aliases:
+    - sl
+    ordinal_values: &ordinal_values
+    - '1'
+    - '2'
+    - '3'
+    - '4'
+    - '5'
+    - '6'
+    - '7'
+    - '8'
+    - '9'
+    - '10'
+    cardinal_directions: &cardinal_directions
+    - proti severu
+    - proti severovzhodu
+    - proti vzhodu
+    - proti jugovzhodu
+    - proti jugu
+    - proti jugozahodu
+    - proti zahodu
+    - proti severozahodu
+    relative_directions: &relative_directions
+    - levo
+    - naravnost
+    - desno
+    relative_directions_left_right: &relative_directions_left_right
+    - levo
+    - desno
+    empty_street_name_labels: &empty_street_name_labels
+    - pešpoti
+    - kolesarski stezi
+    - stezi za gorsko kolo
+    empty_transit_name_labels: &empty_transit_name_labels
+    - tramvaj
+    - podzemno železnico
+    - vlak
+    - avtobus
+    - trajekt
+    - nihalko
+    - kabinsko žičnico
+    - žično vzpenjačo
+    metric_lengths: &metric_lengths
+    - <KILOMETERS> kilometrov
+    - 1 kilometer
+    - pol kilometra
+    - <METERS> metrov
+    - manj kot 10 metrov
+    us_customary_lengths: &us_customary_lengths
+    - <MILES> milj
+    - 1 miljo
+    - pol milje
+    - <TENTHS_OF_MILE> desetink milje
+    - 1 desentinko milje
+    - <FEET> čevljev
+    - Manj kot 10 čevljev
+    station_label: &station_label Postaja
+    transit_stop_count_labels: &transit_stop_count_labels
+        one: postanek
+        other: postankov
+        few: postanki
+        two: postanka
+    ferry_label: &ferry_label Trajekt
+    example_tokens:
+        BEGIN_STREET_NAMES:
+        - Belair Road/US 1 Business
+        BRANCH_SIGN:
+        - US 322 West
+        CARDINAL_DIRECTION: *cardinal_directions
+        CROSS_STREET_NAMES:
+        - Devonshire Road
+        CURRENT_VERBAL_CUE:
+        - Bear right onto East Fayette Street.
+        DESTINATION:
+        - Lancaster Brewing Company
+        FERRY_LABEL:
+        - *ferry_label
+        LENGTH:
+        - 1 mile
+        - a half mile
+        NAME_SIGN:
+        - White Marsh Boulevard
+        NEXT_VERBAL_CUE:
+        - Turn right onto North Gay Street.
+        NUMBER_SIGN:
+        - 67 B-A
+        ORDINAL_VALUE: *ordinal_values
+        PREVIOUS_STREET_NAMES:
+        - Vine Street
+        RELATIVE_DIRECTION: *relative_directions_left_right
+        STATION_LABEL:
+        - Embarcadero Station
+        STREET_NAMES:
+        - Arlen Road
+        TIME:
+        - 8:02 AM
+        TOWARD_SIGN:
+        - Lewiston
+        TRANSIT_HEADSIGN:
+        - JAMAICA - 179 ST
+        TRANSIT_NAME:
+        - New Haven
+        TRANSIT_STOP:
+        - 8 St - NYU
+        TRANSIT_STOP_COUNT:
+        - '1'
+        - '3'
+        TRANSIT_STOP_COUNT_LABEL:
+        - stop
+        - stops
+    instructions:
+        arrive:
+            phrases:
+                '0': 'Prihod: <TIME>.'
+                '1': 'Prihod: <TIME> na <TRANSIT_STOP>.'
+        arrive_verbal:
+            phrases:
+                '0': Prihod ob <TIME>.
+                '1': Prihod ob <TIME> na <TRANSIT_STOP>.
+        bear:
+            empty_street_name_labels: *empty_street_name_labels
+            phrases:
+                '0': Držite se <RELATIVE_DIRECTION>.
+                '1': Držite se <RELATIVE_DIRECTION>, da pridete na <STREET_NAMES>.
+                '2': Držite se <RELATIVE_DIRECTION>, da pridete na <BEGIN_STREET_NAMES>.
+                    Nadaljujte po <STREET_NAMES>.
+                '3': Držite se <RELATIVE_DIRECTION>, da ostanete na <STREET_NAMES>.
+            relative_directions: *relative_directions_left_right
+        bear_verbal:
+            empty_street_name_labels: *empty_street_name_labels
+            phrases:
+                '0': Držite se <RELATIVE_DIRECTION>.
+                '1': Držite se <RELATIVE_DIRECTION>, da pridete na <STREET_NAMES>.
+                '2': Držite se <RELATIVE_DIRECTION>, da pridete na <BEGIN_STREET_NAMES>.
+                '3': Držite se <RELATIVE_DIRECTION>, da ostanete na <STREET_NAMES>.
+            relative_directions: *relative_directions_left_right
+        becomes: &id004
+            phrases:
+                '0': <PREVIOUS_STREET_NAMES> se spremeni v <STREET_NAMES>.
+        becomes_verbal: *id004
+        continue: &id005
+            empty_street_name_labels: *empty_street_name_labels
+            phrases:
+                '0': Nadaljujte.
+                '1': Nadaljujte po <STREET_NAMES>.
+        continue_verbal: &id017
+            empty_street_name_labels: *empty_street_name_labels
+            metric_lengths: *metric_lengths
+            phrases:
+                '0': Nadaljujte <LENGTH>.
+                '1': Po <STREET_NAMES> nadaljujte <LENGTH>.
+            us_customary_lengths: *us_customary_lengths
+        continue_verbal_alert: *id005
+        depart:
+            phrases:
+                '0': 'Odhod: <TIME>.'
+                '1': 'Odhod: <TIME> s/z <TRANSIT_STOP>.'
+        depart_verbal:
+            phrases:
+                '0': Odhod ob <TIME>.
+                '1': Odhod ob <TIME> s/z <TRANSIT_STOP>.
+        destination: &id006
+            phrases:
+                '0': Prispeli ste na cilj.
+                '1': Prispeli ste na <DESTINATION>.
+                '2': Vaš cilj je na <RELATIVE_DIRECTION>.
+                '3': <DESTINATION> je na <RELATIVE_DIRECTION>.
+            relative_directions: *relative_directions_left_right
+        destination_verbal: *id006
+        destination_verbal_alert:
+            phrases:
+                '0': Prispeli boste na cilj.
+                '1': Prispeli boste na <DESTINATION>.
+                '2': Vaš cilj bo na <RELATIVE_DIRECTION>.
+                '3': <DESTINATION> bo na <RELATIVE_DIRECTION>.
+            relative_directions: *relative_directions_left_right
+        enter_ferry: &id007
+            empty_street_name_labels: *empty_street_name_labels
+            ferry_label: *ferry_label
+            phrases:
+                '0': Pojdite na trajekt.
+                '1': Pojdite na <STREET_NAMES>.
+                '2': Pojdite na <FERRY_LABEL> <STREET_NAMES>.
+        enter_ferry_verbal: *id007
+        enter_roundabout: &id009
+            ordinal_values: *ordinal_values
+            phrases:
+                '0': Pojdite v krožišče.
+                '1': Pojdite v krožišče in uporabite <ORDINAL_VALUE>. izhod.
+        enter_roundabout_verbal: *id009
+        exit: &id010
+            phrases:
+                '0': Zapeljite na izhod na <RELATIVE_DIRECTION>.
+                '1': Zapeljite na izhod <NUMBER_SIGN> na <RELATIVE_DIRECTION>.
+                '10': Zapeljite na izhod <NAME_SIGN> na <RELATIVE_DIRECTION> in nato
+                    na <BRANCH_SIGN>.
+                '12': Zapeljite na izhod <NAME_SIGN> na <RELATIVE_DIRECTION> proti
+                    <TOWARD_SIGN>.
+                '14': Zapeljite na izhod <NAME_SIGN> na <RELATIVE_DIRECTION> in nato
+                    na <BRANCH_SIGN> proti <TOWARD_SIGN>.
+                '15': Zapeljite na izhod.
+                '16': Zapeljite na izhod <NUMBER_SIGN>.
+                '17': Zapeljite na izhod <BRANCH_SIGN>.
+                '18': Zapeljite na izhod <NUMBER_SIGN> in nato na <BRANCH_SIGN>.
+                '19': Zapeljite na izhod proti <TOWARD_SIGN>.
+                '2': Zapeljite na izhod <BRANCH_SIGN> na <RELATIVE_DIRECTION>.
+                '20': Zapeljite na izhod <NUMBER_SIGN> proti <TOWARD_SIGN>.
+                '21': Zapeljite na izhod <BRANCH_SIGN> proti <TOWARD_SIGN>.
+                '22': Zapeljite na izhod <NUMBER_SIGN> in nato na <BRANCH_SIGN> proti
+                    <TOWARD_SIGN>.
+                '23': Zapeljite na izhod <NAME_SIGN>.
+                '25': Zapeljite na izhod <NAME_SIGN> in nato na <BRANCH_SIGN>.
+                '27': Zapeljite na izhod <NAME_SIGN> proti <TOWARD_SIGN>.
+                '29': Zapeljite na izhod <NAME_SIGN> in nato na <BRANCH_SIGN> proti
+                    <TOWARD_SIGN>.
+                '3': Zapeljite na izhod <NUMBER_SIGN> na <RELATIVE_DIRECTION> in nato
+                    na <BRANCH_SIGN>.
+                '4': Zapeljite na izhod <RELATIVE_DIRECTION> proti <TOWARD_SIGN>.
+                '5': Zapeljite na izhod <NUMBER_SIGN> na <RELATIVE_DIRECTION> proti
+                    <TOWARD_SIGN>.
+                '6': Zapeljite na izhod <BRANCH_SIGN> na <RELATIVE_DIRECTION> proti
+                    <TOWARD_SIGN>.
+                '7': Zapeljite na izhod <NUMBER_SIGN> na <RELATIVE_DIRECTION> in nato
+                    na <BRANCH_SIGN> proti <TOWARD_SIGN>.
+                '8': Zapeljite na izhod <NAME_SIGN> na <RELATIVE_DIRECTION>.
+            relative_directions: *relative_directions_left_right
+        exit_ferry: &id015
+            cardinal_directions: *cardinal_directions
+            empty_street_name_labels: *empty_street_name_labels
+            phrases:
+                '0': Pojdite <CARDINAL_DIRECTION>.
+                '1': Na <STREET_NAMES> pojdite <CARDINAL_DIRECTION>.
+                '10': Na <BEGIN_STREET_NAMES> pojdite <CARDINAL_DIRECTION>. Nadaljujte
+                    po <STREET_NAMES>.
+                '16': Pojdite <CARDINAL_DIRECTION>.
+                '17': Na <STREET_NAMES> pojdite <CARDINAL_DIRECTION>.
+                '18': Na <BEGIN_STREET_NAMES> pojdite <CARDINAL_DIRECTION>. Nadaljujte
+                    po <STREET_NAMES>.
+                '2': Na <BEGIN_STREET_NAMES> pojdite <CARDINAL_DIRECTION>. Nadaljujte
+                    po <STREET_NAMES>.
+                '4': Peljite <CARDINAL_DIRECTION>.
+                '5': Na <STREET_NAMES> peljite <CARDINAL_DIRECTION>.
+                '6': Na <BEGIN_STREET_NAMES> peljite <CARDINAL_DIRECTION>. Nadaljujte
+                    po <STREET_NAMES>.
+                '8': Pojdite <CARDINAL_DIRECTION>.
+                '9': Na <STREET_NAMES> pojdite <CARDINAL_DIRECTION>.
+        exit_ferry_verbal: &id016
+            cardinal_directions: *cardinal_directions
+            empty_street_name_labels: *empty_street_name_labels
+            phrases:
+                '0': Pojdite <CARDINAL_DIRECTION>.
+                '1': Na <STREET_NAMES> pojdite <CARDINAL_DIRECTION>.
+                '10': Na <BEGIN_STREET_NAMES> pojdite <CARDINAL_DIRECTION>.
+                '16': Pojdite <CARDINAL_DIRECTION>.
+                '17': Na <STREET_NAMES> pojdite <CARDINAL_DIRECTION>.
+                '18': Na <BEGIN_STREET_NAMES> pojdite <CARDINAL_DIRECTION>.
+                '2': Na <BEGIN_STREET_NAMES> pojdite <CARDINAL_DIRECTION>.
+                '4': Peljite <CARDINAL_DIRECTION>.
+                '5': Na <STREET_NAMES> peljite <CARDINAL_DIRECTION>.
+                '6': Na <BEGIN_STREET_NAMES> peljite <CARDINAL_DIRECTION>.
+                '8': Pojdite <CARDINAL_DIRECTION>.
+                '9': Na <STREET_NAMES> pojdite <CARDINAL_DIRECTION>.
+        exit_roundabout:
+            empty_street_name_labels: *empty_street_name_labels
+            phrases:
+                '0': Zapustite krožišče.
+                '1': Iz krožišča pojdite na <STREET_NAMES>.
+                '2': Iz krožišča pojdite na <BEGIN_STREET_NAMES>. Nadaljujte po <STREET_NAMES>.
+        exit_roundabout_verbal:
+            empty_street_name_labels: *empty_street_name_labels
+            phrases:
+                '0': Zapustite krožišče.
+                '1': Iz krožišča pojdite na <STREET_NAMES>.
+                '2': Iz krožišča pojdite na <BEGIN_STREET_NAMES>.
+        exit_verbal: *id010
+        keep: &id013
+            empty_street_name_labels: *empty_street_name_labels
+            phrases:
+                '0': Na razcepu pojdite <RELATIVE_DIRECTION>.
+                '1': Držite se <RELATIVE_DIRECTION>, da zapeljete na izhod <NUMBER_SIGN>.
+                '2': Držite se <RELATIVE_DIRECTION>, da zapeljete na <STREET_NAMES>.
+                '3': Držite se <RELATIVE_DIRECTION>, da zapeljete na izhod <NUMBER_SIGN>
+                    in nato na <STREET_NAMES>.
+                '4': Držite se <RELATIVE_DIRECTION> proti <TOWARD_SIGN>.
+                '5': Držite se <RELATIVE_DIRECTION>, da zapeljete na izhod <NUMBER_SIGN>
+                    proti <TOWARD_SIGN>.
+                '6': Držite se <RELATIVE_DIRECTION>, da zapeljete na <STREET_NAMES>
+                    proti <TOWARD_SIGN>.
+                '7': Držite se <RELATIVE_DIRECTION>, da zapeljete na izhod <NUMBER_SIGN>
+                    in nato na <STREET_NAMES> proti <TOWARD_SIGN>.
+            relative_directions: *relative_directions
+        keep_to_stay_on: &id012
+            empty_street_name_labels: *empty_street_name_labels
+            phrases:
+                '0': Pojdite <RELATIVE_DIRECTION>, da ostanete na <STREET_NAMES>.
+                '1': Držite se <RELATIVE_DIRECTION>, da zapeljete na izhod <NUMBER_SIGN>
+                    in ostanete na <STREET_NAMES>.
+                '2': Držite se <RELATIVE_DIRECTION>, da ostanete na <STREET_NAMES>
+                    proti <TOWARD_SIGN>.
+                '3': Držite se <RELATIVE_DIRECTION>, da zapeljete na izhod <NUMBER_SIGN>
+                    in ostanete na <STREET_NAMES> proti <TOWARD_SIGN>.
+            relative_directions: *relative_directions
+        keep_to_stay_on_verbal: *id012
+        keep_verbal: *id013
+        merge: &id014
+            empty_street_name_labels: *empty_street_name_labels
+            phrases:
+                '0': Zapeljite na sosednjo pot.
+                '1': Zapeljite <RELATIVE_DIRECTION> na sosednjo pot.
+                '2': Zapeljite na <STREET_NAMES>.
+                '3': Zapeljite <RELATIVE_DIRECTION> na <STREET_NAMES>.
+            relative_directions: *relative_directions_left_right
+        merge_verbal: *id014
+        post_transit_connection_destination: *id015
+        post_transit_connection_destination_verbal: *id016
+        post_transition_transit_verbal:
+            phrases:
+                '0': Potujte <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>.
+            transit_stop_count_labels: *transit_stop_count_labels
+        post_transition_verbal: *id017
+        ramp: &id019
+            phrases:
+                '0': Zapeljite <RELATIVE_DIRECTION> na priključek.
+                '1': Zapeljite <RELATIVE_DIRECTION> na priključek <BRANCH_SIGN>.
+                '10': Zapeljite na priključek.
+                '11': Zapeljite na priključek <BRANCH_SIGN>.
+                '12': Zapeljite na priključek proti <TOWARD_SIGN>.
+                '13': Zapeljite na priključek <BRANCH_SIGN> proti <TOWARD_SIGN>.
+                '14': Zapeljite na priključek <NAME_SIGN>.
+                '2': Zapeljite <RELATIVE_DIRECTION> na priključek proti <TOWARD_SIGN>.
+                '3': Zapeljite <RELATIVE_DIRECTION> na priključek <BRANCH_SIGN> proti
+                    <TOWARD_SIGN>.
+                '4': Zapeljite <RELATIVE_DIRECTION> na priključek <NAME_SIGN>.
+                '5': Zavijte <RELATIVE_DIRECTION>, da zapeljete na priključek.
+                '6': Zavijte <RELATIVE_DIRECTION>, da zapeljete na priključek <BRANCH_SIGN>.
+                '7': Zavijte <RELATIVE_DIRECTION>, da zapeljete na priključek proti
+                    <TOWARD_SIGN>.
+                '8': Zavijte <RELATIVE_DIRECTION>, da zapeljete na priključek <BRANCH_SIGN>
+                    proti <TOWARD_SIGN>.
+                '9': Zavijte <RELATIVE_DIRECTION>, da zapeljete na priključek <NAME_SIGN>.
+            relative_directions: *relative_directions_left_right
+        ramp_straight: &id018
+            phrases:
+                '0': Nadaljujte naravnost, da zapeljete na priključek.
+                '1': Nadaljujte naravnost, da zapeljete na priključek <BRANCH_SIGN>.
+                '2': Nadaljujte naravnost, da zapeljete na priključek proti <TOWARD_SIGN>.
+                '3': Nadaljujte naravnost, da zapeljete na priključek <BRANCH_SIGN>
+                    proti <TOWARD_SIGN>.
+                '4': Nadaljujte naravnost, da zapeljete na priključek <NAME_SIGN>.
+        ramp_straight_verbal: *id018
+        ramp_verbal: *id019
+        sharp:
+            empty_street_name_labels: *empty_street_name_labels
+            phrases:
+                '0': Zavijte ostro <RELATIVE_DIRECTION>.
+                '1': Zavijte ostro <RELATIVE_DIRECTION> na <STREET_NAMES>.
+                '2': Zavijte ostro <RELATIVE_DIRECTION> na <BEGIN_STREET_NAMES>. Nadaljujte
+                    po <STREET_NAMES>.
+                '3': Zavijte ostro <RELATIVE_DIRECTION>, da ostanete na <STREET_NAMES>.
+            relative_directions: *relative_directions_left_right
+        sharp_verbal:
+            empty_street_name_labels: *empty_street_name_labels
+            phrases:
+                '0': Zavijte ostro <RELATIVE_DIRECTION>.
+                '1': Zavijte ostro <RELATIVE_DIRECTION> na <STREET_NAMES>.
+                '2': Zavijte ostro <RELATIVE_DIRECTION> na <BEGIN_STREET_NAMES>.
+                '3': Zavijte ostro <RELATIVE_DIRECTION>, da ostanete na <STREET_NAMES>.
+            relative_directions: *relative_directions_left_right
+        start: *id015
+        start_verbal:
+            cardinal_directions: *cardinal_directions
+            empty_street_name_labels: *empty_street_name_labels
+            metric_lengths: *metric_lengths
+            phrases:
+                '0': Pojdite <LENGTH> <CARDINAL_DIRECTION>.
+                '1': Na <STREET_NAMES> pojdite <LENGTH> <CARDINAL_DIRECTION>.
+                '10': Pojdite <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.
+                '16': Pojdite <LENGTH> <CARDINAL_DIRECTION>.
+                '17': Na <STREET_NAMES> pojdite <LENGTH> <CARDINAL_DIRECTION>.
+                '18': Na <BEGIN_STREET_NAMES> pojdite <CARDINAL_DIRECTION>.
+                '2': Na <BEGIN_STREET_NAMES> pojdite <CARDINAL_DIRECTION>.
+                '4': Peljite <LENGTH> <CARDINAL_DIRECTION>.
+                '5': Na <STREET_NAMES> peljite <LENGTH> <CARDINAL_DIRECTION>.
+                '6': Na <BEGIN_STREET_NAMES> peljite <CARDINAL_DIRECTION>.
+                '8': Pojdite <LENGTH> <CARDINAL_DIRECTION>.
+                '9': Na <STREET_NAMES> pojdite <LENGTH> <CARDINAL_DIRECTION>.
+            us_customary_lengths: *us_customary_lengths
+        transit:
+            empty_transit_name_labels: *empty_transit_name_labels
+            phrases:
+                '0': Pojdite na <TRANSIT_NAME> (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>).
+                '1': Pojdite na <TRANSIT_NAME> proti <TRANSIT_HEADSIGN> (<TRANSIT_STOP_COUNT>
+                    <TRANSIT_STOP_COUNT_LABEL>).
+            transit_stop_count_labels: *transit_stop_count_labels
+        transit_connection_destination: &id024
+            phrases:
+                '0': Zapustite postajo.
+                '1': Zapustite <TRANSIT_STOP>.
+                '2': Zapustite <STATION_LABEL> <TRANSIT_STOP>.
+            station_label: *station_label
+        transit_connection_destination_verbal: *id024
+        transit_connection_start: &id025
+            phrases:
+                '0': Pojdite na postajo.
+                '1': Pojdite na <TRANSIT_STOP>.
+                '2': Pojdite na <STATION_LABEL> <TRANSIT_STOP>.
+            station_label: *station_label
+        transit_connection_start_verbal: *id025
+        transit_connection_transfer: &id026
+            phrases:
+                '0': Prestopite na postaji.
+                '1': Prestopite na <TRANSIT_STOP>.
+                '2': Prestopite na <STATION_LABEL> <TRANSIT_STOP>.
+            station_label: *station_label
+        transit_connection_transfer_verbal: *id026
+        transit_remain_on:
+            empty_transit_name_labels: *empty_transit_name_labels
+            phrases:
+                '0': Ostanite na <TRANSIT_NAME> (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>).
+                '1': Ostanite na <TRANSIT_NAME> proti <TRANSIT_HEADSIGN> (<TRANSIT_STOP_COUNT>
+                    <TRANSIT_STOP_COUNT_LABEL>).
+            transit_stop_count_labels: *transit_stop_count_labels
+        transit_remain_on_verbal:
+            empty_transit_name_labels: *empty_transit_name_labels
+            phrases:
+                '0': Ostanite na <TRANSIT_NAME>.
+                '1': Ostanite na <TRANSIT_NAME> proti <TRANSIT_HEADSIGN>.
+        transit_transfer:
+            empty_transit_name_labels: *empty_transit_name_labels
+            phrases:
+                '0': Prestopite na <TRANSIT_NAME> (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>).
+                '1': Prestopite na <TRANSIT_NAME> proti <TRANSIT_HEADSIGN> (<TRANSIT_STOP_COUNT>
+                    <TRANSIT_STOP_COUNT_LABEL>).
+            transit_stop_count_labels: *transit_stop_count_labels
+        transit_transfer_verbal:
+            empty_transit_name_labels: *empty_transit_name_labels
+            phrases:
+                '0': Prestopite na <TRANSIT_NAME>.
+                '1': Prestopite na <TRANSIT_NAME> proti <TRANSIT_HEADSIGN>.
+        transit_verbal:
+            empty_transit_name_labels: *empty_transit_name_labels
+            phrases:
+                '0': Pojdite na <TRANSIT_NAME>.
+                '1': Pojdite na <TRANSIT_NAME> proti <TRANSIT_HEADSIGN>.
+        turn:
+            empty_street_name_labels: *empty_street_name_labels
+            phrases:
+                '0': Zavijte <RELATIVE_DIRECTION>.
+                '1': Zavijte <RELATIVE_DIRECTION> na <STREET_NAMES>.
+                '2': Zavijte <RELATIVE_DIRECTION> na <BEGIN_STREET_NAMES>. Nadaljujte
+                    po <STREET_NAMES>.
+                '3': Zavijte <RELATIVE_DIRECTION>, da ostanete na <STREET_NAMES>.
+            relative_directions: *relative_directions_left_right
+        turn_verbal:
+            empty_street_name_labels: *empty_street_name_labels
+            phrases:
+                '0': Zavijte <RELATIVE_DIRECTION>.
+                '1': Zavijte <RELATIVE_DIRECTION> na <STREET_NAMES>.
+                '2': Zavijte <RELATIVE_DIRECTION> na <BEGIN_STREET_NAMES>.
+                '3': Zavijte <RELATIVE_DIRECTION>, da ostanete na <STREET_NAMES>.
+            relative_directions: *relative_directions_left_right
+        uturn: &id027
+            empty_street_name_labels: *empty_street_name_labels
+            phrases:
+                '0': Polkrožno obrnite <RELATIVE_DIRECTION>.
+                '1': Polkrožno obrnite <RELATIVE_DIRECTION> na <STREET_NAMES>.
+                '2': Polkrožno obrnite <RELATIVE_DIRECTION>, da ostanete na <STREET_NAMES>.
+                '3': Pri <CROSS_STREET_NAMES> polkrožno obrnite <RELATIVE_DIRECTION>.
+                '4': Pri <CROSS_STREET_NAMES> polkrožno obrnite <RELATIVE_DIRECTION>
+                    na <STREET_NAMES>.
+                '5': Pri <CROSS_STREET_NAMES> polkrožno obrnite <RELATIVE_DIRECTION>,
+                    da ostanete na <STREET_NAMES>.
+            relative_directions: *relative_directions_left_right
+        uturn_verbal: *id027
+        verbal_multi_cue:
+            phrases:
+                '0': <CURRENT_VERBAL_CUE> Nato <NEXT_VERBAL_CUE>

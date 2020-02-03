@@ -1,0 +1,466 @@
+sv:
+    posix_locale: sv_SE.UTF-8
+    aliases:
+    - sv
+    ordinal_values: &ordinal_values
+    - 1:a
+    - 2:a
+    - 3:e
+    - 4:e
+    - 5:e
+    - 6:e
+    - 7:e
+    - 8:e
+    - 9:e
+    - 10:e
+    cardinal_directions: &cardinal_directions
+    - norrut
+    - mot nordost
+    - österut
+    - mot sydost
+    - söderut
+    - mot sydväst
+    - västerut
+    - mot nordväst
+    relative_directions: &relative_directions
+    - vänster
+    - rakt
+    - höger
+    relative_directions_left_right: &relative_directions_left_right
+    - vänster
+    - höger
+    empty_street_name_labels: &empty_street_name_labels
+    - gångbanan
+    - cykelbanan
+    - mountain bike-spåret
+    empty_transit_name_labels: &empty_transit_name_labels
+    - spårvagnen
+    - tunnelbanan
+    - tåget
+    - bussen
+    - färjan
+    - kabelvagnen
+    - gondolen
+    - linbanan
+    metric_lengths: &metric_lengths
+    - <KILOMETERS> kilometer
+    - 1 kilometer
+    - en halv kilometer
+    - <METERS> meter
+    - mindre än 10 meter
+    us_customary_lengths: &us_customary_lengths
+    - <MILES> miles
+    - 1 mile
+    - en halv mile
+    - <TENTHS_OF_MILE> tiondels mile
+    - 1 tiondels mile
+    - <FEET> fot
+    - mindre än 10 fot
+    station_label: &station_label Station
+    transit_stop_count_labels: &transit_stop_count_labels
+        one: hållplats
+        other: hållplatser
+    ferry_label: &ferry_label Färja
+    example_tokens:
+        BEGIN_STREET_NAMES:
+        - Belair Road/US 1 Business
+        BRANCH_SIGN:
+        - US 322 West
+        CARDINAL_DIRECTION: *cardinal_directions
+        CROSS_STREET_NAMES:
+        - Devonshire Road
+        CURRENT_VERBAL_CUE:
+        - Bear right onto East Fayette Street.
+        DESTINATION:
+        - Lancaster Brewing Company
+        FERRY_LABEL:
+        - *ferry_label
+        LENGTH:
+        - 1 mile
+        - a half mile
+        NAME_SIGN:
+        - White Marsh Boulevard
+        NEXT_VERBAL_CUE:
+        - Turn right onto North Gay Street.
+        NUMBER_SIGN:
+        - 67 B-A
+        ORDINAL_VALUE: *ordinal_values
+        PREVIOUS_STREET_NAMES:
+        - Vine Street
+        RELATIVE_DIRECTION: *relative_directions_left_right
+        STATION_LABEL:
+        - Embarcadero Station
+        STREET_NAMES:
+        - Arlen Road
+        TIME:
+        - 8:02 AM
+        TOWARD_SIGN:
+        - Lewiston
+        TRANSIT_HEADSIGN:
+        - JAMAICA - 179 ST
+        TRANSIT_NAME:
+        - New Haven
+        TRANSIT_STOP:
+        - 8 St - NYU
+        TRANSIT_STOP_COUNT:
+        - '1'
+        - '3'
+        TRANSIT_STOP_COUNT_LABEL:
+        - stop
+        - stops
+    instructions:
+        arrive:
+            phrases:
+                '0': 'Ankomst: <TIME>.'
+                '1': 'Ankomst: <TIME> till <TRANSIT_STOP>.'
+        arrive_verbal:
+            phrases:
+                '0': Ankomst vid <TIME>.
+                '1': Ankomst vid <TIME> till <TRANSIT_STOP>.
+        bear:
+            empty_street_name_labels: *empty_street_name_labels
+            phrases:
+                '0': Håll <RELATIVE_DIRECTION>.
+                '1': Håll <RELATIVE_DIRECTION> till <STREET_NAMES>.
+                '2': Håll <RELATIVE_DIRECTION> till <BEGIN_STREET_NAMES>. Fortsätt
+                    på <STREET_NAMES>.
+                '3': Håll <RELATIVE_DIRECTION> för att stanna kvar på <STREET_NAMES>.
+            relative_directions: *relative_directions_left_right
+        bear_verbal:
+            empty_street_name_labels: *empty_street_name_labels
+            phrases:
+                '0': Håll <RELATIVE_DIRECTION>.
+                '1': Håll <RELATIVE_DIRECTION> till <STREET_NAMES>.
+                '2': Håll <RELATIVE_DIRECTION> till <BEGIN_STREET_NAMES>.
+                '3': Håll <RELATIVE_DIRECTION> för att stanna kvar på <STREET_NAMES>.
+            relative_directions: *relative_directions_left_right
+        becomes: &id004
+            phrases:
+                '0': <PREVIOUS_STREET_NAMES> övergår i <STREET_NAMES>.
+        becomes_verbal: *id004
+        continue: &id005
+            empty_street_name_labels: *empty_street_name_labels
+            phrases:
+                '0': Fortsätt.
+                '1': Fortsätt på <STREET_NAMES>.
+        continue_verbal: &id017
+            empty_street_name_labels: *empty_street_name_labels
+            metric_lengths: *metric_lengths
+            phrases:
+                '0': Fortsätt <LENGTH>.
+                '1': Fortsätt på <STREET_NAMES> <LENGTH>.
+            us_customary_lengths: *us_customary_lengths
+        continue_verbal_alert: *id005
+        depart:
+            phrases:
+                '0': 'Avresa: <TIME>.'
+                '1': 'Avresa: <TIME> från <TRANSIT_STOP>.'
+        depart_verbal:
+            phrases:
+                '0': Avresa vid <TIME>.
+                '1': Avresa vid <TIME> från <TRANSIT_STOP>.
+        destination: &id006
+            phrases:
+                '0': Du är framme vid målet.
+                '1': Du är framme vid <DESTINATION>.
+                '2': Din destination ligger på <RELATIVE_DIRECTION> sida.
+                '3': <DESTINATION> ligger på <RELATIVE_DIRECTION> sida.
+            relative_directions: *relative_directions_left_right
+        destination_verbal: *id006
+        destination_verbal_alert:
+            phrases:
+                '0': Du anländer till din destination.
+                '1': Du anländer till <DESTINATION>.
+                '2': Din destination ligger på <RELATIVE_DIRECTION> sida.
+                '3': <DESTINATION> ligger på <RELATIVE_DIRECTION> sida.
+            relative_directions: *relative_directions_left_right
+        enter_ferry: &id007
+            empty_street_name_labels: *empty_street_name_labels
+            ferry_label: *ferry_label
+            phrases:
+                '0': Ta färjan.
+                '1': Ta <STREET_NAMES>.
+                '2': Ta <STREET_NAMES> <FERRY_LABEL>.
+        enter_ferry_verbal: *id007
+        enter_roundabout: &id009
+            ordinal_values: *ordinal_values
+            phrases:
+                '0': Kör in i rondellen.
+                '1': Kör in i rondellen och ta <ORDINAL_VALUE> exit.
+        enter_roundabout_verbal: *id009
+        exit: &id010
+            phrases:
+                '0': Ta avfarten på <RELATIVE_DIRECTION> sida.
+                '1': Ta avfart <NUMBER_SIGN> på <RELATIVE_DIRECTION> sida.
+                '10': Ta <NAME_SIGN>-avfarten på <RELATIVE_DIRECTION> sida till <BRANCH_SIGN>.
+                '12': Ta <NAME_SIGN>-avfarten på <RELATIVE_DIRECTION> sida mot <TOWARD_SIGN>.
+                '14': Ta <NAME_SIGN>-avfarten på <RELATIVE_DIRECTION> sida till <BRANCH_SIGN>
+                    mot <TOWARD_SIGN>.
+                '15': Ta avfarten.
+                '16': Ta avfart <NUMBER_SIGN>.
+                '17': Ta <BRANCH_SIGN>-avfarten.
+                '18': Ta avfart <NUMBER_SIGN> till <BRANCH_SIGN>.
+                '19': Ta avfarten mot <TOWARD_SIGN>.
+                '2': Ta <BRANCH_SIGN>-avfarten på <RELATIVE_DIRECTION> sida.
+                '20': Ta avfart <NUMBER_SIGN> mot <TOWARD_SIGN>.
+                '21': Ta <BRANCH_SIGN>-avfarten mot <TOWARD_SIGN>.
+                '22': Ta avfart <NUMBER_SIGN> till <BRANCH_SIGN> mot <TOWARD_SIGN>.
+                '23': Ta <NAME_SIGN>-avfarten.
+                '25': Ta <NAME_SIGN>-avfarten till <BRANCH_SIGN>.
+                '27': Ta <NAME_SIGN>-avfarten mot <TOWARD_SIGN>.
+                '29': Ta <NAME_SIGN>-avfarten till <BRANCH_SIGN> mot <TOWARD_SIGN>.
+                '3': Ta avfart <NUMBER_SIGN> på <RELATIVE_DIRECTION> sida till <BRANCH_SIGN>.
+                '4': Ta avfarten på <RELATIVE_DIRECTION> sida mot <TOWARD_SIGN>.
+                '5': Ta avfart <NUMBER_SIGN> på <RELATIVE_DIRECTION> sida mot <TOWARD_SIGN>.
+                '6': Ta <BRANCH_SIGN>-avfarten på <RELATIVE_DIRECTION> sida, mot <TOWARD_SIGN>.
+                '7': Ta avfart <NUMBER_SIGN> på <RELATIVE_DIRECTION> sida till <BRANCH_SIGN>
+                    mot <TOWARD_SIGN>.
+                '8': Ta <NAME_SIGN>-avfarten på <RELATIVE_DIRECTION> sida.
+            relative_directions: *relative_directions_left_right
+        exit_ferry: &id015
+            cardinal_directions: *cardinal_directions
+            empty_street_name_labels: *empty_street_name_labels
+            phrases:
+                '0': <CARDINAL_DIRECTION>.
+                '1': <CARDINAL_DIRECTION> på <STREET_NAMES>.
+                '10': Gå <CARDINAL_DIRECTION> på <BEGIN_STREET_NAMES>. Fortsätt på
+                    <STREET_NAMES>.
+                '16': Cykla <CARDINAL_DIRECTION>.
+                '17': Cykla <CARDINAL_DIRECTION> på <STREET_NAMES>.
+                '18': Cykla <CARDINAL_DIRECTION> på <BEGIN_STREET_NAMES>. Fortsätt
+                    på <STREET_NAMES>.
+                '2': <CARDINAL_DIRECTION> på <BEGIN_STREET_NAMES>. Fortsätt på <STREET_NAMES>.
+                '4': Kör <CARDINAL_DIRECTION>.
+                '5': Kör <CARDINAL_DIRECTION> på <STREET_NAMES>.
+                '6': Kör <CARDINAL_DIRECTION> på <BEGIN_STREET_NAMES>. Fortsätt på
+                    <STREET_NAMES>.
+                '8': Gå <CARDINAL_DIRECTION>.
+                '9': Gå <CARDINAL_DIRECTION> på <STREET_NAMES>.
+        exit_ferry_verbal: &id016
+            cardinal_directions: *cardinal_directions
+            empty_street_name_labels: *empty_street_name_labels
+            phrases:
+                '0': <CARDINAL_DIRECTION>.
+                '1': <CARDINAL_DIRECTION> på <STREET_NAMES>.
+                '10': Gå <CARDINAL_DIRECTION> på <BEGIN_STREET_NAMES>.
+                '16': Cykla <CARDINAL_DIRECTION>.
+                '17': Cykla <CARDINAL_DIRECTION> på <STREET_NAMES>.
+                '18': Cykla <CARDINAL_DIRECTION> på <BEGIN_STREET_NAMES>.
+                '2': <CARDINAL_DIRECTION> på <BEGIN_STREET_NAMES>.
+                '4': Kör <CARDINAL_DIRECTION>.
+                '5': Kör <CARDINAL_DIRECTION> på <STREET_NAMES>.
+                '6': Kör <CARDINAL_DIRECTION> på <BEGIN_STREET_NAMES>.
+                '8': Gå <CARDINAL_DIRECTION>.
+                '9': Gå <CARDINAL_DIRECTION> på <STREET_NAMES>.
+        exit_roundabout:
+            empty_street_name_labels: *empty_street_name_labels
+            phrases:
+                '0': Kör ut ur rondellen.
+                '1': Kör ut ur rondellen till <STREET_NAMES>.
+                '2': Kör ut ur rondellen till <BEGIN_STREET_NAMES>. Fortsätt på <STREET_NAMES>.
+        exit_roundabout_verbal:
+            empty_street_name_labels: *empty_street_name_labels
+            phrases:
+                '0': Kör ut ur rondellen.
+                '1': Kör ut ur rondellen till <STREET_NAMES>.
+                '2': Kör ut ur rondellen till <BEGIN_STREET_NAMES>.
+        exit_verbal: *id010
+        keep: &id013
+            empty_street_name_labels: *empty_street_name_labels
+            phrases:
+                '0': Håll <RELATIVE_DIRECTION> i vägskälet.
+                '1': Håll <RELATIVE_DIRECTION> för att ta avfart <NUMBER_SIGN>.
+                '2': Håll <RELATIVE_DIRECTION> för att ta <STREET_NAMES>.
+                '3': Håll <RELATIVE_DIRECTION> för att ta avfart <NUMBER_SIGN> mot
+                    <STREET_NAMES>.
+                '4': Håll <RELATIVE_DIRECTION> mot <TOWARD_SIGN>.
+                '5': Håll <RELATIVE_DIRECTION> för att ta avfart <NUMBER_SIGN> mot
+                    <TOWARD_SIGN>.
+                '6': Håll <RELATIVE_DIRECTION> för att ta <STREET_NAMES> mot <TOWARD_SIGN>.
+                '7': Håll <RELATIVE_DIRECTION> för att ta avfart <NUMBER_SIGN> till
+                    <STREET_NAMES> mot <TOWARD_SIGN>.
+            relative_directions: *relative_directions
+        keep_to_stay_on: &id012
+            empty_street_name_labels: *empty_street_name_labels
+            phrases:
+                '0': Håll <RELATIVE_DIRECTION> för att stanna kvar på <STREET_NAMES>.
+                '1': Håll <RELATIVE_DIRECTION> för att ta avfart <NUMBER_SIGN>, för
+                    att stanna kvar på <STREET_NAMES>.
+                '2': Håll <RELATIVE_DIRECTION> för att stanna kvar på <STREET_NAMES>
+                    mot <TOWARD_SIGN>.
+                '3': Håll <RELATIVE_DIRECTION> för att ta avfart <NUMBER_SIGN>, för
+                    att stanna kvar på <STREET_NAMES> mot <TOWARD_SIGN>.
+            relative_directions: *relative_directions
+        keep_to_stay_on_verbal: *id012
+        keep_verbal: *id013
+        merge: &id014
+            empty_street_name_labels: *empty_street_name_labels
+            phrases:
+                '0': Anslut.
+                '1': Anslut <RELATIVE_DIRECTION>.
+                '2': Anslut till <STREET_NAMES>.
+                '3': Anslut <RELATIVE_DIRECTION> till <STREET_NAMES>.
+            relative_directions: *relative_directions_left_right
+        merge_verbal: *id014
+        post_transit_connection_destination: *id015
+        post_transit_connection_destination_verbal: *id016
+        post_transition_transit_verbal:
+            phrases:
+                '0': Res <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>.
+            transit_stop_count_labels: *transit_stop_count_labels
+        post_transition_verbal: *id017
+        ramp: &id019
+            phrases:
+                '0': Ta rampen på <RELATIVE_DIRECTION> sida.
+                '1': Ta <BRANCH_SIGN>-rampen på <RELATIVE_DIRECTION> sida.
+                '10': Ta rampen.
+                '11': Ta <BRANCH_SIGN>-rampen.
+                '12': Ta rampen mot <TOWARD_SIGN>.
+                '13': Ta <BRANCH_SIGN>-rampen mot <TOWARD_SIGN>.
+                '14': Ta <NAME_SIGN>-rampen.
+                '2': Ta rampen på <RELATIVE_DIRECTION> sida mot <TOWARD_SIGN>.
+                '3': Ta <BRANCH_SIGN>-rampen på <RELATIVE_DIRECTION> sida mot <TOWARD_SIGN>.
+                '4': Ta <NAME_SIGN>-rampen på <RELATIVE_DIRECTION> sida.
+                '5': Sväng <RELATIVE_DIRECTION> för att komma till ramp.
+                '6': Sväng <RELATIVE_DIRECTION> för att komma till <BRANCH_SIGN>-rampen.
+                '7': Sväng <RELATIVE_DIRECTION> för att komma till rampen, mot <TOWARD_SIGN>.
+                '8': Sväng <RELATIVE_DIRECTION> för att komma till <BRANCH_SIGN>-rampen,
+                    mot <TOWARD_SIGN>.
+                '9': Sväng <RELATIVE_DIRECTION> för att komma till <NAME_SIGN>-rampen.
+            relative_directions: *relative_directions_left_right
+        ramp_straight: &id018
+            phrases:
+                '0': Håll rakt för att komma till rampen.
+                '1': Håll rakt för att komma till <BRANCH_SIGN>-rampen.
+                '2': Håll rakt för att komma till rampen mot <TOWARD_SIGN>.
+                '3': Håll rakt för att komma till <BRANCH_SIGN>-rampen mot <TOWARD_SIGN>.
+                '4': Håll rakt för att komma till <NAME_SIGN>-rampen.
+        ramp_straight_verbal: *id018
+        ramp_verbal: *id019
+        sharp:
+            empty_street_name_labels: *empty_street_name_labels
+            phrases:
+                '0': Sväng skarp <RELATIVE_DIRECTION>.
+                '1': Sväng skarp <RELATIVE_DIRECTION> till <STREET_NAMES>.
+                '2': Sväng skarp <RELATIVE_DIRECTION> till <BEGIN_STREET_NAMES>. Fortsätt
+                    på <STREET_NAMES>.
+                '3': Sväng skarp <RELATIVE_DIRECTION> för att stanna kvar på <STREET_NAMES>.
+            relative_directions: *relative_directions_left_right
+        sharp_verbal:
+            empty_street_name_labels: *empty_street_name_labels
+            phrases:
+                '0': Sväng skarp <RELATIVE_DIRECTION>.
+                '1': Sväng skarp <RELATIVE_DIRECTION> till <STREET_NAMES>.
+                '2': Sväng skarp <RELATIVE_DIRECTION> till <BEGIN_STREET_NAMES>.
+                '3': Sväng skarp <RELATIVE_DIRECTION> för att stanna kvar på <STREET_NAMES>.
+            relative_directions: *relative_directions_left_right
+        start: *id015
+        start_verbal:
+            cardinal_directions: *cardinal_directions
+            empty_street_name_labels: *empty_street_name_labels
+            metric_lengths: *metric_lengths
+            phrases:
+                '0': <LENGTH> <CARDINAL_DIRECTION>.
+                '1': <LENGTH> <CARDINAL_DIRECTION> på <STREET_NAMES>.
+                '10': Gå <CARDINAL_DIRECTION> på <BEGIN_STREET_NAMES>.
+                '16': Cykla <LENGTH> <CARDINAL_DIRECTION>.
+                '17': Cykla <LENGTH> <CARDINAL_DIRECTION> på <STREET_NAMES>.
+                '18': Cykla <CARDINAL_DIRECTION> på <BEGIN_STREET_NAMES>.
+                '2': <CARDINAL_DIRECTION> på <BEGIN_STREET_NAMES>.
+                '4': Kör <LENGTH> <CARDINAL_DIRECTION>.
+                '5': Kör <LENGTH> <CARDINAL_DIRECTION> på <STREET_NAMES>.
+                '6': Kör <CARDINAL_DIRECTION> på <BEGIN_STREET_NAMES>.
+                '8': Gå <LENGTH> <CARDINAL_DIRECTION>.
+                '9': Gå <LENGTH> <CARDINAL_DIRECTION> på <STREET_NAMES>.
+            us_customary_lengths: *us_customary_lengths
+        transit:
+            empty_transit_name_labels: *empty_transit_name_labels
+            phrases:
+                '0': Ta <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)
+                '1': Ta <TRANSIT_NAME> mot <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT>
+                    <TRANSIT_STOP_COUNT_LABEL>)
+            transit_stop_count_labels: *transit_stop_count_labels
+        transit_connection_destination: &id024
+            phrases:
+                '0': Lämna stationen.
+                '1': Lämna <TRANSIT_STOP>.
+                '2': Lämna <TRANSIT_STOP> <STATION_LABEL>.
+            station_label: *station_label
+        transit_connection_destination_verbal: *id024
+        transit_connection_start: &id025
+            phrases:
+                '0': Gå in på stationen.
+                '1': Gå in på <TRANSIT_STOP>.
+                '2': Gå in på <TRANSIT_STOP> <STATION_LABEL>.
+            station_label: *station_label
+        transit_connection_start_verbal: *id025
+        transit_connection_transfer: &id026
+            phrases:
+                '0': Byt vid stationen.
+                '1': Byt vid <TRANSIT_STOP>.
+                '2': Byt vid <TRANSIT_STOP> <STATION_LABEL>.
+            station_label: *station_label
+        transit_connection_transfer_verbal: *id026
+        transit_remain_on:
+            empty_transit_name_labels: *empty_transit_name_labels
+            phrases:
+                '0': Stanna kvar på <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)
+                '1': Stanna kvar på <TRANSIT_NAME> mot <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT>
+                    <TRANSIT_STOP_COUNT_LABEL>)
+            transit_stop_count_labels: *transit_stop_count_labels
+        transit_remain_on_verbal:
+            empty_transit_name_labels: *empty_transit_name_labels
+            phrases:
+                '0': Stanna kvar på <TRANSIT_NAME>.
+                '1': Stanna kvar på <TRANSIT_NAME> mot <TRANSIT_HEADSIGN>.
+        transit_transfer:
+            empty_transit_name_labels: *empty_transit_name_labels
+            phrases:
+                '0': Byt för att ta <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)
+                '1': Byt för att ta <TRANSIT_NAME> mot <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT>
+                    <TRANSIT_STOP_COUNT_LABEL>)
+            transit_stop_count_labels: *transit_stop_count_labels
+        transit_transfer_verbal:
+            empty_transit_name_labels: *empty_transit_name_labels
+            phrases:
+                '0': Byt för att ta <TRANSIT_NAME>.
+                '1': Byt för att ta <TRANSIT_NAME> mot <TRANSIT_HEADSIGN>.
+        transit_verbal:
+            empty_transit_name_labels: *empty_transit_name_labels
+            phrases:
+                '0': Ta <TRANSIT_NAME>.
+                '1': Ta <TRANSIT_NAME> mot <TRANSIT_HEADSIGN>.
+        turn:
+            empty_street_name_labels: *empty_street_name_labels
+            phrases:
+                '0': Sväng <RELATIVE_DIRECTION>.
+                '1': Sväng <RELATIVE_DIRECTION> till <STREET_NAMES>.
+                '2': Sväng <RELATIVE_DIRECTION> till <BEGIN_STREET_NAMES>. Fortsätt
+                    på <STREET_NAMES>.
+                '3': Sväng <RELATIVE_DIRECTION> för att stanna kvar på <STREET_NAMES>.
+            relative_directions: *relative_directions_left_right
+        turn_verbal:
+            empty_street_name_labels: *empty_street_name_labels
+            phrases:
+                '0': Sväng <RELATIVE_DIRECTION>.
+                '1': Sväng <RELATIVE_DIRECTION> till <STREET_NAMES>.
+                '2': Sväng <RELATIVE_DIRECTION> till <BEGIN_STREET_NAMES>.
+                '3': Sväng <RELATIVE_DIRECTION> för att stanna kvar på <STREET_NAMES>.
+            relative_directions: *relative_directions_left_right
+        uturn: &id027
+            empty_street_name_labels: *empty_street_name_labels
+            phrases:
+                '0': Gör en U-sväng åt <RELATIVE_DIRECTION>.
+                '1': Gör en U-sväng åt <RELATIVE_DIRECTION> till <STREET_NAMES>.
+                '2': Gör en U-sväng åt <RELATIVE_DIRECTION> för att stanna kvar på
+                    <STREET_NAMES>.
+                '3': Gör en U-sväng åt <RELATIVE_DIRECTION> på <CROSS_STREET_NAMES>.
+                '4': Gör en U-sväng åt <RELATIVE_DIRECTION> på <CROSS_STREET_NAMES>
+                    till <STREET_NAMES>.
+                '5': Gör en U-sväng åt <RELATIVE_DIRECTION> på <CROSS_STREET_NAMES>
+                    för att stanna kvar på <STREET_NAMES>.
+            relative_directions: *relative_directions_left_right
+        uturn_verbal: *id027
+        verbal_multi_cue:
+            phrases:
+                '0': <CURRENT_VERBAL_CUE> sedan <NEXT_VERBAL_CUE>

@@ -1,0 +1,474 @@
+pt_BR:
+    posix_locale: pt_BR.UTF-8
+    aliases:
+    - ptbr
+    ordinal_values: &ordinal_values
+    - 1ª
+    - 2ª
+    - 3ª
+    - 4ª
+    - 5ª
+    - 6ª
+    - 7ª
+    - 8ª
+    - 9ª
+    - 10ª
+    cardinal_directions: &cardinal_directions
+    - norte
+    - nordeste
+    - este
+    - sudeste
+    - sul
+    - sudoeste
+    - oeste
+    - noroeste
+    relative_directions: &relative_directions
+    - à esquerda
+    - em frente
+    - à direita
+    relative_directions_left_right: &relative_directions_left_right
+    - à esquerda
+    - à direita
+    empty_street_name_labels: &empty_street_name_labels
+    - a via pedonal
+    - a ciclovia
+    - a pista de bicicleta de montanha
+    empty_transit_name_labels: &empty_transit_name_labels
+    - elétrico
+    - metro
+    - comboio
+    - autocarro
+    - barco
+    - trólei
+    - gôndola
+    - funicular
+    metric_lengths: &metric_lengths
+    - <KILOMETERS> quilómetros
+    - 1 quilómetro
+    - meio quilómetro
+    - <METERS> metros
+    - menos que 10 metros
+    us_customary_lengths: &us_customary_lengths
+    - <MILES> milhas
+    - 1 milha
+    - meia milha
+    - <TENTHS_OF_MILE> décimos de milha
+    - 1 décimo de milha
+    - <FEET> pés
+    - menos que 10 pés
+    station_label: &station_label Station
+    transit_stop_count_labels: &transit_stop_count_labels
+        one: parada
+        other: parades
+    ferry_label: &ferry_label Ferry
+    example_tokens:
+        BEGIN_STREET_NAMES:
+        - Belair Road/US 1 Business
+        BRANCH_SIGN:
+        - US 322 West
+        CARDINAL_DIRECTION: *cardinal_directions
+        CROSS_STREET_NAMES:
+        - Devonshire Road
+        CURRENT_VERBAL_CUE:
+        - Bear right onto East Fayette Street.
+        DESTINATION:
+        - Lancaster Brewing Company
+        FERRY_LABEL:
+        - *ferry_label
+        LENGTH:
+        - 1 mile
+        - a half mile
+        NAME_SIGN:
+        - White Marsh Boulevard
+        NEXT_VERBAL_CUE:
+        - Turn right onto North Gay Street.
+        NUMBER_SIGN:
+        - 67 B-A
+        ORDINAL_VALUE: *ordinal_values
+        PREVIOUS_STREET_NAMES:
+        - Vine Street
+        RELATIVE_DIRECTION: *relative_directions_left_right
+        STATION_LABEL:
+        - Embarcadero Station
+        STREET_NAMES:
+        - Arlen Road
+        TIME:
+        - 8:02 AM
+        TOWARD_SIGN:
+        - Lewiston
+        TRANSIT_HEADSIGN:
+        - JAMAICA - 179 ST
+        TRANSIT_NAME:
+        - New Haven
+        TRANSIT_STOP:
+        - 8 St - NYU
+        TRANSIT_STOP_COUNT:
+        - '1'
+        - '3'
+        TRANSIT_STOP_COUNT_LABEL:
+        - stop
+        - stops
+    instructions:
+        arrive:
+            phrases:
+                '0': 'Chegada: <TIME>.'
+                '1': 'Chegada: <TIME> a <TRANSIT_STOP>.'
+        arrive_verbal:
+            phrases:
+                '0': Chegada às <TIME>.
+                '1': Chegada às <TIME> a <TRANSIT_STOP>.
+        bear:
+            empty_street_name_labels: *empty_street_name_labels
+            phrases:
+                '0': Mantenha-se <RELATIVE_DIRECTION>.
+                '1': Mantenha-se <RELATIVE_DIRECTION> na <STREET_NAMES>.
+                '2': Mantenha-se <RELATIVE_DIRECTION> na <BEGIN_STREET_NAMES>, então
+                    continue em <STREET_NAMES>.
+                '3': Mantenha-se <RELATIVE_DIRECTION> e continue em <STREET_NAMES>.
+            relative_directions: *relative_directions_left_right
+        bear_verbal:
+            empty_street_name_labels: *empty_street_name_labels
+            phrases:
+                '0': Mantenha-se <RELATIVE_DIRECTION>.
+                '1': Mantenha-se <RELATIVE_DIRECTION> para <STREET_NAMES>.
+                '2': Mantenha-se <RELATIVE_DIRECTION> para <BEGIN_STREET_NAMES>.
+                '3': Mantenha-se <RELATIVE_DIRECTION> e continue em <STREET_NAMES>.
+            relative_directions: *relative_directions_left_right
+        becomes: &id004
+            phrases:
+                '0': <PREVIOUS_STREET_NAMES> agora é <STREET_NAMES>.
+        becomes_verbal: *id004
+        continue: &id005
+            empty_street_name_labels: *empty_street_name_labels
+            phrases:
+                '0': Continue.
+                '1': Continue em <STREET_NAMES>.
+        continue_verbal: &id017
+            empty_street_name_labels: *empty_street_name_labels
+            metric_lengths: *metric_lengths
+            phrases:
+                '0': Continue por <LENGTH>.
+                '1': Continue em <STREET_NAMES> por <LENGTH>.
+            us_customary_lengths: *us_customary_lengths
+        continue_verbal_alert: *id005
+        depart:
+            phrases:
+                '0': 'Partida: <TIME>.'
+                '1': 'Partida: <TIME> de <TRANSIT_STOP>.'
+        depart_verbal:
+            phrases:
+                '0': Partida às <TIME>.
+                '1': Partida às <TIME> de <TRANSIT_STOP>.
+        destination: &id006
+            phrases:
+                '0': Chegou ao seu destino.
+                '1': Chegou a <DESTINATION>.
+                '2': O seu destino fica <RELATIVE_DIRECTION>.
+                '3': <DESTINATION> fica <RELATIVE_DIRECTION>.
+            relative_directions: *relative_directions_left_right
+        destination_verbal: *id006
+        destination_verbal_alert:
+            phrases:
+                '0': Vai chegar ao seu destino.
+                '1': Vai chegar a <DESTINATION>.
+                '2': O seu destino ficará <RELATIVE_DIRECTION>.
+                '3': <DESTINATION> ficará <RELATIVE_DIRECTION>.
+            relative_directions: *relative_directions_left_right
+        enter_ferry: &id007
+            empty_street_name_labels: *empty_street_name_labels
+            ferry_label: *ferry_label
+            phrases:
+                '0': Pegue a Balsa.
+                '1': Pegue a <STREET_NAMES>.
+                '2': Pegue a <FERRY_LABEL> <STREET_NAMES>.
+        enter_ferry_verbal: *id007
+        enter_roundabout: &id009
+            ordinal_values: *ordinal_values
+            phrases:
+                '0': Entre na rotatória.
+                '1': Entre na rotatória e saia na <ORDINAL_VALUE> saída.
+        enter_roundabout_verbal: *id009
+        exit: &id010
+            phrases:
+                '0': Pegue a saída <RELATIVE_DIRECTION>.
+                '1': Pegue a saída <NUMBER_SIGN> <RELATIVE_DIRECTION>.
+                '10': Pegue a saída <NAME_SIGN> <RELATIVE_DIRECTION> para <BRANCH_SIGN>.
+                '12': Pegue a saída <NAME_SIGN> <RELATIVE_DIRECTION> em direção a
+                    <TOWARD_SIGN>.
+                '14': Pegue a saída <NAME_SIGN> <RELATIVE_DIRECTION> para <BRANCH_SIGN>
+                    em direção a <TOWARD_SIGN>.
+                '15': Pegue a saída.
+                '16': Pegue a saída <NUMBER_SIGN>.
+                '17': Pegue a saída <BRANCH_SIGN>.
+                '18': Pegue a saída <NUMBER_SIGN> para <BRANCH_SIGN>.
+                '19': Pegue a saída em direção a <TOWARD_SIGN>.
+                '2': Pegue a saída <BRANCH_SIGN> <RELATIVE_DIRECTION>.
+                '20': Pegue a saída <NUMBER_SIGN> em direção a <TOWARD_SIGN>.
+                '21': Pegue a saída <BRANCH_SIGN> em direção a <TOWARD_SIGN>.
+                '22': Pegue a saída <NUMBER_SIGN> para <BRANCH_SIGN> em direção a
+                    <TOWARD_SIGN>.
+                '23': Pegue a saída <NAME_SIGN>.
+                '25': Pegue a saída <NAME_SIGN> para <BRANCH_SIGN>.
+                '27': Pegue a saída <NAME_SIGN> em direção a <TOWARD_SIGN>.
+                '29': Pegue a saída <NAME_SIGN> para <BRANCH_SIGN> em direção a <TOWARD_SIGN>.
+                '3': Pegue a saída <NUMBER_SIGN> <RELATIVE_DIRECTION> para <BRANCH_SIGN>.
+                '4': Pegue a saída <RELATIVE_DIRECTION> em direção a <TOWARD_SIGN>.
+                '5': Pegue a saída <NUMBER_SIGN> <RELATIVE_DIRECTION> em direção a
+                    <TOWARD_SIGN>.
+                '6': Pegue a saída <BRANCH_SIGN> <RELATIVE_DIRECTION> em direção a
+                    <TOWARD_SIGN>.
+                '7': Pegue a saída <NUMBER_SIGN> <RELATIVE_DIRECTION> para <BRANCH_SIGN>
+                    em direção a <TOWARD_SIGN>.
+                '8': Pegue a saída <NAME_SIGN> <RELATIVE_DIRECTION>.
+            relative_directions: *relative_directions_left_right
+        exit_ferry: &id015
+            cardinal_directions: *cardinal_directions
+            empty_street_name_labels: *empty_street_name_labels
+            phrases:
+                '0': Siga para <CARDINAL_DIRECTION>.
+                '1': Siga para <CARDINAL_DIRECTION> em <STREET_NAMES>.
+                '10': Caminhe para <CARDINAL_DIRECTION> em <BEGIN_STREET_NAMES>, então
+                    continue em <STREET_NAMES>.
+                '16': Pedale para <CARDINAL_DIRECTION>.
+                '17': Pedale para <CARDINAL_DIRECTION> em <STREET_NAMES>.
+                '18': Pedale para <CARDINAL_DIRECTION> em <BEGIN_STREET_NAMES>, então
+                    continue em <STREET_NAMES>.
+                '2': Siga para <CARDINAL_DIRECTION> em <BEGIN_STREET_NAMES>, então
+                    continue para a <STREET_NAMES>.
+                '4': Dirija para <CARDINAL_DIRECTION>.
+                '5': Dirija para <CARDINAL_DIRECTION> em <STREET_NAMES>.
+                '6': Dirija para <CARDINAL_DIRECTION> em <BEGIN_STREET_NAMES>, então
+                    continue em <STREET_NAMES>.
+                '8': Caminhe para <CARDINAL_DIRECTION>.
+                '9': Caminhe para <CARDINAL_DIRECTION> em <STREET_NAMES>.
+        exit_ferry_verbal: &id016
+            cardinal_directions: *cardinal_directions
+            empty_street_name_labels: *empty_street_name_labels
+            phrases:
+                '0': Siga para <CARDINAL_DIRECTION>.
+                '1': Siga para <CARDINAL_DIRECTION> em <STREET_NAMES>.
+                '10': Caminhe para <CARDINAL_DIRECTION> em <BEGIN_STREET_NAMES>.
+                '16': Pedale para <CARDINAL_DIRECTION>.
+                '17': Pedale para <CARDINAL_DIRECTION> em <STREET_NAMES>.
+                '18': Pedale para <CARDINAL_DIRECTION> em <BEGIN_STREET_NAMES>.
+                '2': Siga para <CARDINAL_DIRECTION> em <BEGIN_STREET_NAMES>.
+                '4': Dirija para <CARDINAL_DIRECTION>.
+                '5': Dirija para <CARDINAL_DIRECTION> em <STREET_NAMES>.
+                '6': Dirija para <CARDINAL_DIRECTION> em <BEGIN_STREET_NAMES>.
+                '8': Caminhe para <CARDINAL_DIRECTION>.
+                '9': Caminhe para <CARDINAL_DIRECTION> em <STREET_NAMES>.
+        exit_roundabout:
+            empty_street_name_labels: *empty_street_name_labels
+            phrases:
+                '0': Saia da rotatória.
+                '1': Saia da rotatória para <STREET_NAMES>.
+                '2': Saia da rotatória para <BEGIN_STREET_NAMES>, então continue em
+                    <STREET_NAMES>.
+        exit_roundabout_verbal:
+            empty_street_name_labels: *empty_street_name_labels
+            phrases:
+                '0': Saia da rotatória.
+                '1': Saia da rotatória para <STREET_NAMES>.
+                '2': Saia da rotatória para <BEGIN_STREET_NAMES>.
+        exit_verbal: *id010
+        keep: &id013
+            empty_street_name_labels: *empty_street_name_labels
+            phrases:
+                '0': Mantenha-se <RELATIVE_DIRECTION> na bifurcação.
+                '1': Mantenha-se <RELATIVE_DIRECTION> para pegar a saída <NUMBER_SIGN>.
+                '2': Mantenha-se <RELATIVE_DIRECTION> para pegar <STREET_NAMES>.
+                '3': Mantenha-se <RELATIVE_DIRECTION> para pegar a saída <NUMBER_SIGN>
+                    para <STREET_NAMES>.
+                '4': Mantenha-se <RELATIVE_DIRECTION> em direção a <TOWARD_SIGN>.
+                '5': Mantenha-se <RELATIVE_DIRECTION> para pegar a saída <NUMBER_SIGN>
+                    em direção a <TOWARD_SIGN>.
+                '6': Mantenha-se <RELATIVE_DIRECTION> para pegar <STREET_NAMES> em
+                    direção a <TOWARD_SIGN>.
+                '7': Mantenha-se <RELATIVE_DIRECTION> para pegar a saída <NUMBER_SIGN>
+                    para <STREET_NAMES> em direção a <TOWARD_SIGN>.
+            relative_directions: *relative_directions
+        keep_to_stay_on: &id012
+            empty_street_name_labels: *empty_street_name_labels
+            phrases:
+                '0': Mantenha-se <RELATIVE_DIRECTION> e continue em <STREET_NAMES>.
+                '1': Mantenha-se <RELATIVE_DIRECTION> para pegar a saída <NUMBER_SIGN>
+                    e continue em <STREET_NAMES>.
+                '2': Mantenha-se <RELATIVE_DIRECTION> e continue em <STREET_NAMES>
+                    em direção a <TOWARD_SIGN>.
+                '3': Mantenha-se <RELATIVE_DIRECTION> para pegar a saída <NUMBER_SIGN>
+                    e continue em <STREET_NAMES> em direção a <TOWARD_SIGN>.
+            relative_directions: *relative_directions
+        keep_to_stay_on_verbal: *id012
+        keep_verbal: *id013
+        merge: &id014
+            empty_street_name_labels: *empty_street_name_labels
+            phrases:
+                '0': Entre.
+                '1': Entre <RELATIVE_DIRECTION>.
+                '2': Entre na <STREET_NAMES>.
+                '3': Entre <RELATIVE_DIRECTION> na <STREET_NAMES>.
+            relative_directions: *relative_directions_left_right
+        merge_verbal: *id014
+        post_transit_connection_destination: *id015
+        post_transit_connection_destination_verbal: *id016
+        post_transition_transit_verbal:
+            phrases:
+                '0': Viaje por <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>.
+            transit_stop_count_labels: *transit_stop_count_labels
+        post_transition_verbal: *id017
+        ramp: &id019
+            phrases:
+                '0': Pegue a rampa <RELATIVE_DIRECTION>.
+                '1': Pegue a rampa <BRANCH_SIGN> <RELATIVE_DIRECTION>.
+                '10': Pegue a rampa.
+                '11': Pegue a rampa <BRANCH_SIGN>.
+                '12': Pegue a rampa em direção a <TOWARD_SIGN>.
+                '13': Pegue a rampa <BRANCH_SIGN> em direção a <TOWARD_SIGN>.
+                '14': Pegue a rampa <NAME_SIGN>.
+                '2': Pegue a rampa <RELATIVE_DIRECTION> em direção a <TOWARD_SIGN>.
+                '3': Pegue a rampa <BRANCH_SIGN> <RELATIVE_DIRECTION> em direção a
+                    <TOWARD_SIGN>.
+                '4': Pegue a rampa <NAME_SIGN> <RELATIVE_DIRECTION>.
+                '5': Vire <RELATIVE_DIRECTION> para pegar a rampa.
+                '6': Vire <RELATIVE_DIRECTION> para pegar a rampa <BRANCH_SIGN>.
+                '7': Vire <RELATIVE_DIRECTION> para pegar a rampa em direção a <TOWARD_SIGN>.
+                '8': Vire <RELATIVE_DIRECTION> para pegar a rampa <BRANCH_SIGN> em
+                    direção a <TOWARD_SIGN>.
+                '9': Vire <RELATIVE_DIRECTION> para pegar a rampa <NAME_SIGN>.
+            relative_directions: *relative_directions_left_right
+        ramp_straight: &id018
+            phrases:
+                '0': Siga em frente para pegar a rampa.
+                '1': Siga em frente para pegar a rampa <BRANCH_SIGN>.
+                '2': Siga em frente para pegar a rampa em direção a <TOWARD_SIGN>.
+                '3': Siga em frente para pegar a rampa <BRANCH_SIGN> em direção a
+                    <TOWARD_SIGN>.
+                '4': Siga em frente para pegar a rampa <NAME_SIGN>.
+        ramp_straight_verbal: *id018
+        ramp_verbal: *id019
+        sharp:
+            empty_street_name_labels: *empty_street_name_labels
+            phrases:
+                '0': Faça uma curva fechada <RELATIVE_DIRECTION>.
+                '1': Faça uma curva fechada <RELATIVE_DIRECTION> para <STREET_NAMES>.
+                '2': Faça uma curva fechada <RELATIVE_DIRECTION> para <BEGIN_STREET_NAMES>,
+                    então continue em <STREET_NAMES>.
+                '3': Faça uma curva fechada <RELATIVE_DIRECTION> e continue em <STREET_NAMES>.
+            relative_directions: *relative_directions_left_right
+        sharp_verbal:
+            empty_street_name_labels: *empty_street_name_labels
+            phrases:
+                '0': Faça uma curva fechada <RELATIVE_DIRECTION>.
+                '1': Faça uma curva fechada <RELATIVE_DIRECTION> para <STREET_NAMES>.
+                '2': Faça uma curva fechada <RELATIVE_DIRECTION> para <BEGIN_STREET_NAMES>.
+                '3': Faça uma curva fechada <RELATIVE_DIRECTION> e continue em <STREET_NAMES>.
+            relative_directions: *relative_directions_left_right
+        start: *id015
+        start_verbal:
+            cardinal_directions: *cardinal_directions
+            empty_street_name_labels: *empty_street_name_labels
+            metric_lengths: *metric_lengths
+            phrases:
+                '0': Siga para <CARDINAL_DIRECTION> por <LENGTH>.
+                '1': Siga para <CARDINAL_DIRECTION> em <STREET_NAMES> por <LENGTH>.
+                '10': Caminhe para <CARDINAL_DIRECTION> em <BEGIN_STREET_NAMES>.
+                '16': Pedale para <CARDINAL_DIRECTION> por <LENGTH>.
+                '17': Pedale para <CARDINAL_DIRECTION> em <STREET_NAMES> por <LENGTH>.
+                '18': Pedale para <CARDINAL_DIRECTION> em <BEGIN_STREET_NAMES>.
+                '2': Siga para <CARDINAL_DIRECTION> em <BEGIN_STREET_NAMES>.
+                '4': Dirija para <CARDINAL_DIRECTION> por <LENGTH>.
+                '5': Dirija para <CARDINAL_DIRECTION> em <STREET_NAMES> por <LENGTH>.
+                '6': Dirija para <CARDINAL_DIRECTION> em <BEGIN_STREET_NAMES>.
+                '8': Caminhe para <CARDINAL_DIRECTION> por <LENGTH>.
+                '9': Caminhe para <CARDINAL_DIRECTION> em <STREET_NAMES> por <LENGTH>.
+            us_customary_lengths: *us_customary_lengths
+        transit:
+            empty_transit_name_labels: *empty_transit_name_labels
+            phrases:
+                '0': Pegue <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)
+                '1': Pegue <TRANSIT_NAME> em direção a <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT>
+                    <TRANSIT_STOP_COUNT_LABEL>)
+            transit_stop_count_labels: *transit_stop_count_labels
+        transit_connection_destination: &id024
+            phrases:
+                '0': Saia da estação.
+                '1': Saia de <TRANSIT_STOP>.
+                '2': Saia da <STATION_LABEL> <TRANSIT_STOP>.
+            station_label: *station_label
+        transit_connection_destination_verbal: *id024
+        transit_connection_start: &id025
+            phrases:
+                '0': Entre na estação.
+                '1': Entre em <TRANSIT_STOP>.
+                '2': Entre na <STATION_LABEL> <TRANSIT_STOP>.
+            station_label: *station_label
+        transit_connection_start_verbal: *id025
+        transit_connection_transfer: &id026
+            phrases:
+                '0': Mude na estação.
+                '1': Mude em <TRANSIT_STOP>.
+                '2': Mude na <STATION_LABEL> <TRANSIT_STOP>.
+            station_label: *station_label
+        transit_connection_transfer_verbal: *id026
+        transit_remain_on:
+            empty_transit_name_labels: *empty_transit_name_labels
+            phrases:
+                '0': Continue em <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)
+                '1': Continue na <TRANSIT_NAME> em direção a <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT>
+                    <TRANSIT_STOP_COUNT_LABEL>)
+            transit_stop_count_labels: *transit_stop_count_labels
+        transit_remain_on_verbal:
+            empty_transit_name_labels: *empty_transit_name_labels
+            phrases:
+                '0': Continue em <TRANSIT_NAME>.
+                '1': Continue na <TRANSIT_NAME> em direção a <TRANSIT_HEADSIGN>.
+        transit_transfer:
+            empty_transit_name_labels: *empty_transit_name_labels
+            phrases:
+                '0': Mude para pegar <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)
+                '1': Mude para pegar <TRANSIT_NAME> em direção a <TRANSIT_HEADSIGN>.
+                    (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)
+            transit_stop_count_labels: *transit_stop_count_labels
+        transit_transfer_verbal:
+            empty_transit_name_labels: *empty_transit_name_labels
+            phrases:
+                '0': Mude para pegar <TRANSIT_NAME>.
+                '1': Mude para pegar <TRANSIT_NAME> em direção a <TRANSIT_HEADSIGN>.
+        transit_verbal:
+            empty_transit_name_labels: *empty_transit_name_labels
+            phrases:
+                '0': Pegue <TRANSIT_NAME>.
+                '1': Pegue <TRANSIT_NAME> em direção a <TRANSIT_HEADSIGN>.
+        turn:
+            empty_street_name_labels: *empty_street_name_labels
+            phrases:
+                '0': Vire <RELATIVE_DIRECTION>.
+                '1': Vire <RELATIVE_DIRECTION> para <STREET_NAMES>.
+                '2': Vire <RELATIVE_DIRECTION> para <BEGIN_STREET_NAMES>, então continue
+                    em <STREET_NAMES>.
+                '3': Vire <RELATIVE_DIRECTION> para continuar em <STREET_NAMES>.
+            relative_directions: *relative_directions_left_right
+        turn_verbal:
+            empty_street_name_labels: *empty_street_name_labels
+            phrases:
+                '0': Vire <RELATIVE_DIRECTION>.
+                '1': Vire <RELATIVE_DIRECTION> para <STREET_NAMES>.
+                '2': Vire <RELATIVE_DIRECTION> para <BEGIN_STREET_NAMES>.
+                '3': Vire <RELATIVE_DIRECTION> para continuar em <STREET_NAMES>.
+            relative_directions: *relative_directions_left_right
+        uturn: &id027
+            empty_street_name_labels: *empty_street_name_labels
+            phrases:
+                '0': Faça o retorno <RELATIVE_DIRECTION>.
+                '1': Faça o retorno <RELATIVE_DIRECTION> para <STREET_NAMES>.
+                '2': Faça o retorno <RELATIVE_DIRECTION> e continue em <STREET_NAMES>.
+                '3': Faça o retorno <RELATIVE_DIRECTION> em <CROSS_STREET_NAMES>.
+                '4': Faça o retorno <RELATIVE_DIRECTION> em <CROSS_STREET_NAMES> para
+                    <STREET_NAMES>.
+                '5': Faça o retorno <RELATIVE_DIRECTION> em <CROSS_STREET_NAMES> e
+                    continue em <STREET_NAMES>.
+            relative_directions: *relative_directions_left_right
+        uturn_verbal: *id027
+        verbal_multi_cue:
+            phrases:
+                '0': <CURRENT_VERBAL_CUE> Então, <NEXT_VERBAL_CUE>

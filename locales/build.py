@@ -45,7 +45,7 @@ def make_example_phrases(raw_phrase, tokens, examples_tokens):
         for perm in permutations:
             phrase = raw_phrase
             for token, replacement in perm.items():
-                phrase = phrase.replace('<{}>'.format(token), replacement)
+                phrase = phrase.replace('<{}>'.format(token), str(replacement))
             examples.append(phrase)
     return examples
 

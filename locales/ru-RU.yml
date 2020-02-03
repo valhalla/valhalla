@@ -1,0 +1,482 @@
+ru:
+    posix_locale: ru_RU.UTF-8
+    aliases:
+    - ru
+    ordinal_values: &ordinal_values
+    - первом
+    - втором
+    - третьем
+    - четвертом
+    - пятом
+    - шестом
+    - седьмом
+    - восьмом
+    - девятом
+    - десятом
+    cardinal_directions: &cardinal_directions
+    - север
+    - северо-восток
+    - восток
+    - юго-восток
+    - юг
+    - юго-запад
+    - запад
+    - северо-запад
+    relative_directions: &relative_directions
+    - влево
+    - прямо
+    - вправо
+    relative_directions_left_right: &relative_directions_left_right
+    - влево
+    - вправо
+    empty_street_name_labels: &empty_street_name_labels
+    - аллее
+    - велосипедной дорожке
+    - горной велосипедной тропе
+    empty_transit_name_labels: &empty_transit_name_labels
+    - трамваем
+    - метро
+    - поездом
+    - автобусом
+    - паромом
+    - вагоном фуникулера
+    - гондолой
+    - фуникулером
+    metric_lengths: &metric_lengths
+    - <KILOMETERS> километров
+    - 1 километр
+    - полкилометра
+    - <METERS> метров
+    - менее 10 метров
+    us_customary_lengths: &us_customary_lengths
+    - <MILES> миль
+    - 1 милю
+    - полмили
+    - <TENTHS_OF_MILE> десятых мили
+    - 1 десятую мили
+    - <FEET> футов
+    - менее 10 футов
+    station_label: &station_label Station
+    transit_stop_count_labels: &transit_stop_count_labels
+        one: остановка
+        other: остановок
+        few: остановки
+    ferry_label: &ferry_label Ferry
+    example_tokens:
+        BEGIN_STREET_NAMES:
+        - Belair Road/US 1 Business
+        BRANCH_SIGN:
+        - US 322 West
+        CARDINAL_DIRECTION: *cardinal_directions
+        CROSS_STREET_NAMES:
+        - Devonshire Road
+        CURRENT_VERBAL_CUE:
+        - Bear right onto East Fayette Street.
+        DESTINATION:
+        - Lancaster Brewing Company
+        FERRY_LABEL:
+        - *ferry_label
+        LENGTH:
+        - 1 mile
+        - a half mile
+        NAME_SIGN:
+        - White Marsh Boulevard
+        NEXT_VERBAL_CUE:
+        - Turn right onto North Gay Street.
+        NUMBER_SIGN:
+        - 67 B-A
+        ORDINAL_VALUE: *ordinal_values
+        PREVIOUS_STREET_NAMES:
+        - Vine Street
+        RELATIVE_DIRECTION: *relative_directions_left_right
+        STATION_LABEL:
+        - Embarcadero Station
+        STREET_NAMES:
+        - Arlen Road
+        TIME:
+        - 8:02 AM
+        TOWARD_SIGN:
+        - Lewiston
+        TRANSIT_HEADSIGN:
+        - JAMAICA - 179 ST
+        TRANSIT_NAME:
+        - New Haven
+        TRANSIT_STOP:
+        - 8 St - NYU
+        TRANSIT_STOP_COUNT:
+        - '1'
+        - '3'
+        TRANSIT_STOP_COUNT_LABEL:
+        - stop
+        - stops
+    instructions:
+        arrive:
+            phrases:
+                '0': 'Прибытие: <TIME>.'
+                '1': 'Прибытие: <TIME> на <TRANSIT_STOP>.'
+        arrive_verbal:
+            phrases:
+                '0': 'Прибытие: <TIME>.'
+                '1': 'Прибытие: <TIME> на <TRANSIT_STOP>.'
+        bear:
+            empty_street_name_labels: *empty_street_name_labels
+            phrases:
+                '0': Держитесь <RELATIVE_DIRECTION>.
+                '1': Держитесь <RELATIVE_DIRECTION> по <STREET_NAMES>.
+                '2': Держитесь <RELATIVE_DIRECTION> по <BEGIN_STREET_NAMES>. Продолжайте
+                    по <STREET_NAMES>.
+                '3': Держитесь <RELATIVE_DIRECTION> чтобы остаться на <STREET_NAMES>.
+            relative_directions: *relative_directions_left_right
+        bear_verbal:
+            empty_street_name_labels: *empty_street_name_labels
+            phrases:
+                '0': Держитесь <RELATIVE_DIRECTION>.
+                '1': Держитесь <RELATIVE_DIRECTION> по <STREET_NAMES>.
+                '2': Держитесь <RELATIVE_DIRECTION> по <BEGIN_STREET_NAMES>. Продолжайте
+                    по <STREET_NAMES>.
+                '3': Держитесь <RELATIVE_DIRECTION> чтобы остаться на <STREET_NAMES>.
+            relative_directions: *relative_directions_left_right
+        becomes: &id004
+            phrases:
+                '0': <PREVIOUS_STREET_NAMES> переходит в <STREET_NAMES>.
+        becomes_verbal: *id004
+        continue: &id005
+            empty_street_name_labels: *empty_street_name_labels
+            phrases:
+                '0': Продолжайте.
+                '1': Продолжайте по <STREET_NAMES>.
+        continue_verbal: &id017
+            empty_street_name_labels: *empty_street_name_labels
+            metric_lengths: *metric_lengths
+            phrases:
+                '0': Продолжайте двигаться <LENGTH>.
+                '1': Продолжайте двигаться по <STREET_NAMES> <LENGTH>.
+            us_customary_lengths: *us_customary_lengths
+        continue_verbal_alert: *id005
+        depart:
+            phrases:
+                '0': 'Отправление: <TIME>.'
+                '1': 'Отправление: <TIME> с <TRANSIT_STOP>.'
+        depart_verbal:
+            phrases:
+                '0': 'Отправление: <TIME>.'
+                '1': 'Отправление: <TIME> с <TRANSIT_STOP>.'
+        destination: &id006
+            phrases:
+                '0': Вы прибыли к месту назначения.
+                '1': Вы прибыли к <DESTINATION>.
+                '2': Место назначения <RELATIVE_DIRECTION>.
+                '3': <DESTINATION> находится <RELATIVE_DIRECTION>.
+            relative_directions: *relative_directions_left_right
+        destination_verbal: *id006
+        destination_verbal_alert:
+            phrases:
+                '0': Вы прибываете к месту назначения.
+                '1': Вы прибываете к <DESTINATION>.
+                '2': Место назначения будет <RELATIVE_DIRECTION>.
+                '3': <DESTINATION> будет <RELATIVE_DIRECTION>.
+            relative_directions: *relative_directions_left_right
+        enter_ferry: &id007
+            empty_street_name_labels: *empty_street_name_labels
+            ferry_label: *ferry_label
+            phrases:
+                '0': Воспользуйтесь паромом.
+                '1': Воспользуйтесь паромом <STREET_NAMES>.
+                '2': Воспользуйтесь <STREET_NAMES> <FERRY_LABEL>.
+        enter_ferry_verbal: *id007
+        enter_roundabout: &id009
+            ordinal_values: *ordinal_values
+            phrases:
+                '0': Заедьте на кольцо.
+                '1': Заедьте на кольцо и съезжайте на <ORDINAL_VALUE> съезде.
+        enter_roundabout_verbal: *id009
+        exit: &id010
+            phrases:
+                '0': Выезжайте <RELATIVE_DIRECTION>.
+                '1': Выезжайте <RELATIVE_DIRECTION> через <NUMBER_SIGN>.
+                '10': Выезжайте <RELATIVE_DIRECTION> через <NAME_SIGN> на <BRANCH_SIGN>.
+                '12': Выезжайте <RELATIVE_DIRECTION> через <NAME_SIGN> в сторону <TOWARD_SIGN>.
+                '14': Выезжайте <RELATIVE_DIRECTION> через <NAME_SIGN> на <BRANCH_SIGN>
+                    в сторону <TOWARD_SIGN>.
+                '15': Выезжайте.
+                '16': Выезжайте через <NUMBER_SIGN>.
+                '17': Выезжайте через <BRANCH_SIGN>.
+                '18': Выезжайте через <NUMBER_SIGN> на <BRANCH_SIGN>.
+                '19': Выезжайте в строну <TOWARD_SIGN>.
+                '2': Выезжайте <RELATIVE_DIRECTION> через <BRANCH_SIGN>.
+                '20': Выезжайте через <NUMBER_SIGN> в строну <TOWARD_SIGN>.
+                '21': Выезжайте через <BRANCH_SIGN> в строну <TOWARD_SIGN>.
+                '22': Выезжайте через <NUMBER_SIGN> на <BRANCH_SIGN> в строну <TOWARD_SIGN>.
+                '23': Выезжайте через <NAME_SIGN>.
+                '25': Выезжайте через <NAME_SIGN> на <BRANCH_SIGN>.
+                '27': Выезжайте через <NAME_SIGN> в сторону <TOWARD_SIGN>.
+                '29': Выезжайте через <NAME_SIGN> на <BRANCH_SIGN> в сторону <TOWARD_SIGN>.
+                '3': Выезжайте <RELATIVE_DIRECTION> через <NUMBER_SIGN> на <BRANCH_SIGN>.
+                '4': Выезжайте <RELATIVE_DIRECTION> в строну <TOWARD_SIGN>.
+                '5': Выезжайте <RELATIVE_DIRECTION> через <NUMBER_SIGN> в строну <TOWARD_SIGN>.
+                '6': Выезжайте <RELATIVE_DIRECTION> через <BRANCH_SIGN> в строну <TOWARD_SIGN>.
+                '7': Выезжайте <RELATIVE_DIRECTION> через <NUMBER_SIGN> на <BRANCH_SIGN>
+                    в строну <TOWARD_SIGN>.
+                '8': Выезжайте <RELATIVE_DIRECTION> через <NAME_SIGN>.
+            relative_directions: *relative_directions_left_right
+        exit_ferry: &id015
+            cardinal_directions: *cardinal_directions
+            empty_street_name_labels: *empty_street_name_labels
+            phrases:
+                '0': Двигайтесь на <CARDINAL_DIRECTION>.
+                '1': Двигайтесь на <CARDINAL_DIRECTION> по <STREET_NAMES>.
+                '10': Идите на <CARDINAL_DIRECTION> по <BEGIN_STREET_NAMES>. Продолжайте
+                    идти по <STREET_NAMES>.
+                '16': Едьте на <CARDINAL_DIRECTION>.
+                '17': Едьте на <CARDINAL_DIRECTION> по <STREET_NAMES>.
+                '18': Едьте на <CARDINAL_DIRECTION> по <BEGIN_STREET_NAMES>. Продолжайте
+                    ехать по <STREET_NAMES>.
+                '2': Двигайтесь на <CARDINAL_DIRECTION> по <BEGIN_STREET_NAMES>. Продолжите
+                    по <STREET_NAMES>.
+                '4': Едьте на <CARDINAL_DIRECTION>.
+                '5': Едьте на <CARDINAL_DIRECTION> по <STREET_NAMES>.
+                '6': Едьте на <CARDINAL_DIRECTION> по <BEGIN_STREET_NAMES>. Продолжайте
+                    ехать по <STREET_NAMES>.
+                '8': Идите на <CARDINAL_DIRECTION>.
+                '9': Идите на <CARDINAL_DIRECTION> по <STREET_NAMES>.
+        exit_ferry_verbal: &id016
+            cardinal_directions: *cardinal_directions
+            empty_street_name_labels: *empty_street_name_labels
+            phrases:
+                '0': Двигайтесь на <CARDINAL_DIRECTION>.
+                '1': Двигайтесь на <CARDINAL_DIRECTION> на <STREET_NAMES>.
+                '10': Идите <CARDINAL_DIRECTION> на <BEGIN_STREET_NAMES>. Продолжайте
+                    идти по <STREET_NAMES>.
+                '16': Едьте на <CARDINAL_DIRECTION>.
+                '17': Едьте на <CARDINAL_DIRECTION> на <STREET_NAMES>.
+                '18': Едьте на <CARDINAL_DIRECTION> на <BEGIN_STREET_NAMES>. Продолжайте
+                    ехать по <STREET_NAMES>.
+                '2': Двигайтесь на <CARDINAL_DIRECTION> на <BEGIN_STREET_NAMES>. Продолжайте
+                    направляться вдоль <STREET_NAMES>.
+                '4': Едьте на <CARDINAL_DIRECTION>.
+                '5': Едьте на <CARDINAL_DIRECTION> на <STREET_NAMES>.
+                '6': Едьте на <CARDINAL_DIRECTION> на <BEGIN_STREET_NAMES>. Продолжайте
+                    ехать по <STREET_NAMES>.
+                '8': Идите <CARDINAL_DIRECTION>.
+                '9': Идите <CARDINAL_DIRECTION> на <STREET_NAMES>.
+        exit_roundabout:
+            empty_street_name_labels: *empty_street_name_labels
+            phrases:
+                '0': Съезжайте с кольца.
+                '1': Съезжайте с кольца на <STREET_NAMES>.
+                '2': Съезжайте с кольца на <BEGIN_STREET_NAMES>. Продолжайте двигаться
+                    по <STREET_NAMES>.
+        exit_roundabout_verbal:
+            empty_street_name_labels: *empty_street_name_labels
+            phrases:
+                '0': Съезжайте с кольца.
+                '1': Съезжайте с кольца на <STREET_NAMES>.
+                '2': Съезжайте с кольца на <BEGIN_STREET_NAMES>. Продолжайте двигаться
+                    по <STREET_NAMES>.
+        exit_verbal: *id010
+        keep: &id013
+            empty_street_name_labels: *empty_street_name_labels
+            phrases:
+                '0': На развилке держитесь <RELATIVE_DIRECTION>.
+                '1': Держитесь <RELATIVE_DIRECTION>, чтобы выехать через <NUMBER_SIGN>.
+                '2': Держитесь <RELATIVE_DIRECTION>, чтобы попасть на <STREET_NAMES>.
+                '3': Держитесь <RELATIVE_DIRECTION>, чтобы выехать через <NUMBER_SIGN>
+                    на <STREET_NAMES>.
+                '4': Держитесь <RELATIVE_DIRECTION> в сторону <TOWARD_SIGN>.
+                '5': Держитесь <RELATIVE_DIRECTION>, чтобы выехать через <NUMBER_SIGN>
+                    в сторону <TOWARD_SIGN>.
+                '6': Держитесь <RELATIVE_DIRECTION>, чтобы попасть на <STREET_NAMES>
+                    в сторону <TOWARD_SIGN>.
+                '7': Держитесь <RELATIVE_DIRECTION>, чтобы выехать через <NUMBER_SIGN>
+                    на <STREET_NAMES> в сторону <TOWARD_SIGN>.
+            relative_directions: *relative_directions
+        keep_to_stay_on: &id012
+            empty_street_name_labels: *empty_street_name_labels
+            phrases:
+                '0': Держитесь <RELATIVE_DIRECTION> чтобы остаться на <STREET_NAMES>.
+                '1': Держитесь <RELATIVE_DIRECTION> чтобы выехать через <NUMBER_SIGN>
+                    и остаться на <STREET_NAMES>.
+                '2': Держитесь <RELATIVE_DIRECTION> чтобы остаться на <STREET_NAMES>
+                    в сторону <TOWARD_SIGN>.
+                '3': Держитесь <RELATIVE_DIRECTION> чтобы выехать через <NUMBER_SIGN>
+                    и остаться на <STREET_NAMES> в сторону <TOWARD_SIGN>.
+            relative_directions: *relative_directions
+        keep_to_stay_on_verbal: *id012
+        keep_verbal: *id013
+        merge: &id014
+            empty_street_name_labels: *empty_street_name_labels
+            phrases:
+                '0': Выезжайте.
+                '1': Выезжайте <RELATIVE_DIRECTION>.
+                '2': Выезжайте на <STREET_NAMES>.
+                '3': Выезжайте <RELATIVE_DIRECTION> на <STREET_NAMES>.
+            relative_directions: *relative_directions_left_right
+        merge_verbal: *id014
+        post_transit_connection_destination: *id015
+        post_transit_connection_destination_verbal: *id016
+        post_transition_transit_verbal:
+            phrases:
+                '0': Проедьте <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>.
+            transit_stop_count_labels: *transit_stop_count_labels
+        post_transition_verbal: *id017
+        ramp: &id019
+            phrases:
+                '0': Двигайтесь в сторону съезда <RELATIVE_DIRECTION>.
+                '1': Двигайтесь в сторону съезда <BRANCH_SIGN>, который находится
+                    <RELATIVE_DIRECTION>.
+                '10': Двигайтесь в сторону съезда.
+                '11': Двигайтесь в сторону съезда <BRANCH_SIGN>, который находится.
+                '12': Двигайтесь в сторону съезда в строну <TOWARD_SIGN>.
+                '13': Двигайтесь в сторону съезда <BRANCH_SIGN> в строну <TOWARD_SIGN>.
+                '14': Двигайтесь в сторону съезда <NAME_SIGN>.
+                '2': Двигайтесь в сторону съезда <RELATIVE_DIRECTION> в строну <TOWARD_SIGN>.
+                '3': Двигайтесь в сторону съезда <BRANCH_SIGN> <RELATIVE_DIRECTION>
+                    в строну <TOWARD_SIGN>.
+                '4': Двигайтесь в сторону съезда <NAME_SIGN> <RELATIVE_DIRECTION>.
+                '5': Поверните <RELATIVE_DIRECTION> чтобы попасть на съезд.
+                '6': Поверните <RELATIVE_DIRECTION> чтобы попасть на съезд <BRANCH_SIGN>.
+                '7': Поверните <RELATIVE_DIRECTION> чтобы попасть на съезд в строну
+                    <TOWARD_SIGN>.
+                '8': Поверните <RELATIVE_DIRECTION> чтобы попасть на съезд <BRANCH_SIGN>
+                    в строну <TOWARD_SIGN>.
+                '9': Поверните <RELATIVE_DIRECTION> чтобы попасть на съезд <NAME_SIGN>.
+            relative_directions: *relative_directions_left_right
+        ramp_straight: &id018
+            phrases:
+                '0': Двигайтесь прямо чтобы попасть на съезд.
+                '1': Двигайтесь прямо чтобы попасть на съезд <BRANCH_SIGN>.
+                '2': Двигайтесь прямо чтобы попасть на съезд в строну <TOWARD_SIGN>.
+                '3': Двигайтесь прямо чтобы попасть съезд <BRANCH_SIGN> в направлении
+                    <TOWARD_SIGN>.
+                '4': Двигайтесь прямо чтобы попасть на съезд <NAME_SIGN>.
+        ramp_straight_verbal: *id018
+        ramp_verbal: *id019
+        sharp:
+            empty_street_name_labels: *empty_street_name_labels
+            phrases:
+                '0': Резко поверните <RELATIVE_DIRECTION>.
+                '1': Резко поверните <RELATIVE_DIRECTION> на <STREET_NAMES>.
+                '2': Резко поверните <RELATIVE_DIRECTION> на<BEGIN_STREET_NAMES>.
+                    Продолжайте по <STREET_NAMES>.
+                '3': Резко поверните <RELATIVE_DIRECTION> чтобы остаться на <STREET_NAMES>.
+            relative_directions: *relative_directions_left_right
+        sharp_verbal:
+            empty_street_name_labels: *empty_street_name_labels
+            phrases:
+                '0': Резко поверните <RELATIVE_DIRECTION>.
+                '1': Резко поверните <RELATIVE_DIRECTION> на <STREET_NAMES>.
+                '2': Резко поверните <RELATIVE_DIRECTION> на<BEGIN_STREET_NAMES>.
+                    Продолжайте по <STREET_NAMES>.
+                '3': Резко поверните <RELATIVE_DIRECTION> чтобы остаться на <STREET_NAMES>.
+            relative_directions: *relative_directions_left_right
+        start: *id015
+        start_verbal:
+            cardinal_directions: *cardinal_directions
+            empty_street_name_labels: *empty_street_name_labels
+            metric_lengths: *metric_lengths
+            phrases:
+                '0': Двигайтесь на <CARDINAL_DIRECTION> <LENGTH>.
+                '1': Двигайтесь на <CARDINAL_DIRECTION> по <STREET_NAMES> <LENGTH>.
+                '10': Идите на <CARDINAL_DIRECTION> по <BEGIN_STREET_NAMES>.
+                '16': Едьте в на <CARDINAL_DIRECTION> <LENGTH>.
+                '17': Едьте в на <CARDINAL_DIRECTION> по <STREET_NAMES> <LENGTH>.
+                '18': Едьте в на <CARDINAL_DIRECTION> по <BEGIN_STREET_NAMES>.
+                '2': Двигайтесь на <CARDINAL_DIRECTION> по <BEGIN_STREET_NAMES>.
+                '4': Едьте на <CARDINAL_DIRECTION> <LENGTH>.
+                '5': Едьте на <CARDINAL_DIRECTION> по <STREET_NAMES> <LENGTH>.
+                '6': Едьте на <CARDINAL_DIRECTION> по <BEGIN_STREET_NAMES>.
+                '8': Идите на <CARDINAL_DIRECTION> <LENGTH>.
+                '9': Идите на <CARDINAL_DIRECTION> по <STREET_NAMES> for <LENGTH>.
+            us_customary_lengths: *us_customary_lengths
+        transit:
+            empty_transit_name_labels: *empty_transit_name_labels
+            phrases:
+                '0': Воспользуйтесь <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)
+                '1': Воспользуйтесь <TRANSIT_NAME> в сторону <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT>
+                    <TRANSIT_STOP_COUNT_LABEL>)
+            transit_stop_count_labels: *transit_stop_count_labels
+        transit_connection_destination: &id024
+            phrases:
+                '0': Выйдите на станции.
+                '1': Выйдите на станции <TRANSIT_STOP>.
+                '2': Выйдите на станции <TRANSIT_STOP> <STATION_LABEL>.
+            station_label: *station_label
+        transit_connection_destination_verbal: *id024
+        transit_connection_start: &id025
+            phrases:
+                '0': Зайдите на станцию.
+                '1': Зайдите на станции <TRANSIT_STOP>.
+                '2': Зайдите на станции <TRANSIT_STOP> <STATION_LABEL>.
+            station_label: *station_label
+        transit_connection_start_verbal: *id025
+        transit_connection_transfer: &id026
+            phrases:
+                '0': Перейдите на станцию.
+                '1': Перейдите на станцию <TRANSIT_STOP>.
+                '2': Перейдите на станцию <TRANSIT_STOP> <STATION_LABEL>.
+            station_label: *station_label
+        transit_connection_transfer_verbal: *id026
+        transit_remain_on:
+            empty_transit_name_labels: *empty_transit_name_labels
+            phrases:
+                '0': Оставайтесь в <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)
+                '1': Оставайтесь в <TRANSIT_NAME> в сторону <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT>
+                    <TRANSIT_STOP_COUNT_LABEL>)
+            transit_stop_count_labels: *transit_stop_count_labels
+        transit_remain_on_verbal:
+            empty_transit_name_labels: *empty_transit_name_labels
+            phrases:
+                '0': Оставайтесь в <TRANSIT_NAME>.
+                '1': Оставайтесь в <TRANSIT_NAME> в сторону <TRANSIT_HEADSIGN>.
+        transit_transfer:
+            empty_transit_name_labels: *empty_transit_name_labels
+            phrases:
+                '0': Перейдите чтобы попасть на <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT>
+                    <TRANSIT_STOP_COUNT_LABEL>)
+                '1': Перейдите чтобы попасть на <TRANSIT_NAME> в сторону <TRANSIT_HEADSIGN>.
+                    (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)
+            transit_stop_count_labels: *transit_stop_count_labels
+        transit_transfer_verbal:
+            empty_transit_name_labels: *empty_transit_name_labels
+            phrases:
+                '0': Перейдите чтобы попасть на <TRANSIT_NAME>.
+                '1': Перейдите чтобы попасть на <TRANSIT_NAME> в сторону <TRANSIT_HEADSIGN>.
+        transit_verbal:
+            empty_transit_name_labels: *empty_transit_name_labels
+            phrases:
+                '0': Воспользуйтесь <TRANSIT_NAME>.
+                '1': Воспользуйтесь <TRANSIT_NAME> в сторону <TRANSIT_HEADSIGN>.
+        turn:
+            empty_street_name_labels: *empty_street_name_labels
+            phrases:
+                '0': Поверните <RELATIVE_DIRECTION>.
+                '1': Поверните <RELATIVE_DIRECTION> на <STREET_NAMES>.
+                '2': Поверните <RELATIVE_DIRECTION> на <BEGIN_STREET_NAMES>. Продолжайте
+                    по <STREET_NAMES>.
+                '3': Поверните <RELATIVE_DIRECTION> чтобы остаться на <STREET_NAMES>.
+            relative_directions: *relative_directions_left_right
+        turn_verbal:
+            empty_street_name_labels: *empty_street_name_labels
+            phrases:
+                '0': Поверните <RELATIVE_DIRECTION>.
+                '1': Поверните <RELATIVE_DIRECTION> на <STREET_NAMES>.
+                '2': Поверните <RELATIVE_DIRECTION> на <BEGIN_STREET_NAMES>. Продолжайте
+                    по <STREET_NAMES>.
+                '3': Поверните <RELATIVE_DIRECTION> чтобы остаться на <STREET_NAMES>.
+            relative_directions: *relative_directions_left_right
+        uturn: &id027
+            empty_street_name_labels: *empty_street_name_labels
+            phrases:
+                '0': Развернитесь <RELATIVE_DIRECTION>.
+                '1': Развернитесь <RELATIVE_DIRECTION> на <STREET_NAMES>.
+                '2': Развернитесь <RELATIVE_DIRECTION> чтобы остаться на <STREET_NAMES>.
+                '3': Развернитесь <RELATIVE_DIRECTION> на <CROSS_STREET_NAMES>.
+                '4': Развернитесь <RELATIVE_DIRECTION> на <CROSS_STREET_NAMES> чтобы
+                    попасть на <STREET_NAMES>.
+                '5': Развернитесь <RELATIVE_DIRECTION> на <CROSS_STREET_NAMES> чтобы
+                    остаться <STREET_NAMES>.
+            relative_directions: *relative_directions_left_right
+        uturn_verbal: *id027
+        verbal_multi_cue:
+            phrases:
+                '0': <CURRENT_VERBAL_CUE> Затем <NEXT_VERBAL_CUE>

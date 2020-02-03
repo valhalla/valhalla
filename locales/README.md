@@ -60,3 +60,14 @@ Czech `aliases` entry example:
 1. Add the new phrases in en-US.yml.
 2. Add the new phrases in each other language file, translating as you add to each file. If you are unsure about a translation
 3. Update the English strings in each language file.
+
+
+### Turning json files into yaml
+
+```
+for FILENAME in *.json; do
+    LANGUAGE_CODE=$(basename $FILENAME .json)
+    YAML_LANGUAGE_CODE=$(printf '%-.2s' $FILENAME)
+    cat $FILENAME | jq 'del(.. | .example_phrases?) | {'\"$YAML_LANGUAGE_CODE\"': .}' | python -c 'import yaml, json, sys; sys.stdout.write(yaml.dump(json.load(sys.stdin), allow_unicode=True, indent = 4))' > $LANGUAGE_CODE.yml
+done
+```
