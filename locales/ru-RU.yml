@@ -31,7 +31,7 @@ ru:
     - вправо
     empty_street_name_labels: &empty_street_name_labels
     - аллее
-    - велосипедной дорожке
+    - велосипедная дорожке
     - горной велосипедной тропе
     empty_transit_name_labels: &empty_transit_name_labels
     - трамваем
