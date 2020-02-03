@@ -6887,7 +6887,7 @@ TEST(NarrativeBuilder, TestBuildTransit_1_stop_count_1_miles_cs_CZ) {
   PopulateTransitManeuverList_1_stop_count_1(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(expected_maneuvers,
                                   "Nastupte na R směr FOREST HILLS - 71 AV. (1 zastávka)", "",
-                                  "Nastupte na R směr FOREST HILLS - 71 AV.", "Jeďte 1 zastávku.",
+                                  "Nastupte na R směr FOREST HILLS - 71 AV.", "Jeďte 1 zastávka.",
                                   "Odjezd: 08:06 z Union St.", "Odjíždíte v 08:06 z Union St.",
                                   "Příjezd: 08:08 na Atlantic Av - Barclays Ctr.",
                                   "Přijedete v 08:08 na Atlantic Av - Barclays Ctr.");

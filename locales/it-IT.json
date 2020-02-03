@@ -1022,14 +1022,14 @@
         "la pista per mountain bike"
       ],
       "phrases": {
-        "0": "Mantieni <RELATIVE_DIRECTION> al bivio.",
-        "1": "Mantieni <RELATIVE_DIRECTION> e prendi l'uscita <NUMBER_SIGN>.",
-        "2": "Mantieni <RELATIVE_DIRECTION> e prendi <STREET_NAMES>.",
-        "3": "Mantieni <RELATIVE_DIRECTION> e prendi l'uscita <NUMBER_SIGN> e prendi <STREET_NAMES>.",
-        "4": "Mantieni <RELATIVE_DIRECTION> verso <TOWARD_SIGN>.",
-        "5": "Mantieni <RELATIVE_DIRECTION> e prendi l'uscita <NUMBER_SIGN> verso <TOWARD_SIGN>.",
-        "6": "Mantieni <RELATIVE_DIRECTION> e prendi <STREET_NAMES> verso <TOWARD_SIGN>.",
-        "7": "Mantieni <RELATIVE_DIRECTION> e prendi l'uscita <NUMBER_SIGN> e prendi <STREET_NAMES> verso <TOWARD_SIGN>."
+        "0": "Mantieni la <RELATIVE_DIRECTION> al bivio.",
+        "1": "Mantieni la <RELATIVE_DIRECTION> e prendi l'uscita <NUMBER_SIGN>.",
+        "2": "Mantieni la <RELATIVE_DIRECTION> e prendi <STREET_NAMES>.",
+        "3": "Mantieni la <RELATIVE_DIRECTION> e prendi l'uscita <NUMBER_SIGN> e prendi <STREET_NAMES>.",
+        "4": "Mantieni la <RELATIVE_DIRECTION> verso <TOWARD_SIGN>.",
+        "5": "Mantieni la <RELATIVE_DIRECTION> e prendi l'uscita <NUMBER_SIGN> verso <TOWARD_SIGN>.",
+        "6": "Mantieni la <RELATIVE_DIRECTION> e prendi <STREET_NAMES> verso <TOWARD_SIGN>.",
+        "7": "Mantieni la <RELATIVE_DIRECTION> e prendi l'uscita <NUMBER_SIGN> e prendi <STREET_NAMES> verso <TOWARD_SIGN>."
       },
       "relative_directions": [
         "sinistra",
@@ -1038,36 +1038,36 @@
       ],
       "example_phrases": {
         "0": [
-          "Mantieni sinistra al bivio.",
-          "Mantieni destra al bivio."
+          "Mantieni la sinistra al bivio.",
+          "Mantieni la destra al bivio."
         ],
         "1": [
-          "Mantieni sinistra e prendi l'uscita 67 B-A.",
-          "Mantieni destra e prendi l'uscita 67 B-A."
+          "Mantieni la sinistra e prendi l'uscita 67 B-A.",
+          "Mantieni la destra e prendi l'uscita 67 B-A."
         ],
         "2": [
-          "Mantieni sinistra e prendi Arlen Road.",
-          "Mantieni destra e prendi Arlen Road."
+          "Mantieni la sinistra e prendi Arlen Road.",
+          "Mantieni la destra e prendi Arlen Road."
         ],
         "3": [
-          "Mantieni sinistra e prendi l'uscita 67 B-A e prendi Arlen Road.",
-          "Mantieni destra e prendi l'uscita 67 B-A e prendi Arlen Road."
+          "Mantieni la sinistra e prendi l'uscita 67 B-A e prendi Arlen Road.",
+          "Mantieni la destra e prendi l'uscita 67 B-A e prendi Arlen Road."
         ],
         "4": [
-          "Mantieni sinistra verso Lewiston.",
-          "Mantieni destra verso Lewiston."
+          "Mantieni la sinistra verso Lewiston.",
+          "Mantieni la destra verso Lewiston."
         ],
         "5": [
-          "Mantieni sinistra e prendi l'uscita 67 B-A verso Lewiston.",
-          "Mantieni destra e prendi l'uscita 67 B-A verso Lewiston."
+          "Mantieni la sinistra e prendi l'uscita 67 B-A verso Lewiston.",
+          "Mantieni la destra e prendi l'uscita 67 B-A verso Lewiston."
         ],
         "6": [
-          "Mantieni sinistra e prendi Arlen Road verso Lewiston.",
-          "Mantieni destra e prendi Arlen Road verso Lewiston."
+          "Mantieni la sinistra e prendi Arlen Road verso Lewiston.",
+          "Mantieni la destra e prendi Arlen Road verso Lewiston."
         ],
         "7": [
-          "Mantieni sinistra e prendi l'uscita 67 B-A e prendi Arlen Road verso Lewiston.",
-          "Mantieni destra e prendi l'uscita 67 B-A e prendi Arlen Road verso Lewiston."
+          "Mantieni la sinistra e prendi l'uscita 67 B-A e prendi Arlen Road verso Lewiston.",
+          "Mantieni la destra e prendi l'uscita 67 B-A e prendi Arlen Road verso Lewiston."
         ]
       }
     },
@@ -1078,10 +1078,10 @@
         "la pista per mountain bike"
       ],
       "phrases": {
-        "0": "Mantieni <RELATIVE_DIRECTION> per rimanere su <STREET_NAMES>.",
-        "1": "Mantieni <RELATIVE_DIRECTION> e prendi l'uscita <NUMBER_SIGN> per rimanere su <STREET_NAMES>.",
-        "2": "Mantieni <RELATIVE_DIRECTION> per rimanere su <STREET_NAMES> verso <TOWARD_SIGN>.",
-        "3": "Mantieni <RELATIVE_DIRECTION> e prendi l'uscita <NUMBER_SIGN> per rimanere su <STREET_NAMES> verso <TOWARD_SIGN>."
+        "0": "Mantieni la <RELATIVE_DIRECTION> per rimanere su <STREET_NAMES>.",
+        "1": "Mantieni la <RELATIVE_DIRECTION> e prendi l'uscita <NUMBER_SIGN> per rimanere su <STREET_NAMES>.",
+        "2": "Mantieni la <RELATIVE_DIRECTION> per rimanere su <STREET_NAMES> verso <TOWARD_SIGN>.",
+        "3": "Mantieni la <RELATIVE_DIRECTION> e prendi l'uscita <NUMBER_SIGN> per rimanere su <STREET_NAMES> verso <TOWARD_SIGN>."
       },
       "relative_directions": [
         "sinistra",
@@ -1090,20 +1090,20 @@
       ],
       "example_phrases": {
         "0": [
-          "Mantieni sinistra per rimanere su Arlen Road.",
-          "Mantieni destra per rimanere su Arlen Road."
+          "Mantieni la sinistra per rimanere su Arlen Road.",
+          "Mantieni la destra per rimanere su Arlen Road."
         ],
         "1": [
-          "Mantieni sinistra e prendi l'uscita 67 B-A per rimanere su Arlen Road.",
-          "Mantieni destra e prendi l'uscita 67 B-A per rimanere su Arlen Road."
+          "Mantieni la sinistra e prendi l'uscita 67 B-A per rimanere su Arlen Road.",
+          "Mantieni la destra e prendi l'uscita 67 B-A per rimanere su Arlen Road."
         ],
         "2": [
-          "Mantieni sinistra per rimanere su Arlen Road verso Lewiston.",
-          "Mantieni destra per rimanere su Arlen Road verso Lewiston."
+          "Mantieni la sinistra per rimanere su Arlen Road verso Lewiston.",
+          "Mantieni la destra per rimanere su Arlen Road verso Lewiston."
         ],
         "3": [
-          "Mantieni sinistra e prendi l'uscita 67 B-A per rimanere su Arlen Road verso Lewiston.",
-          "Mantieni destra e prendi l'uscita 67 B-A per rimanere su Arlen Road verso Lewiston."
+          "Mantieni la sinistra e prendi l'uscita 67 B-A per rimanere su Arlen Road verso Lewiston.",
+          "Mantieni la destra e prendi l'uscita 67 B-A per rimanere su Arlen Road verso Lewiston."
         ]
       }
     },
@@ -1114,10 +1114,10 @@
         "la pista per mountain bike"
       ],
       "phrases": {
-        "0": "Mantieni <RELATIVE_DIRECTION> per rimanere su <STREET_NAMES>.",
-        "1": "Mantieni <RELATIVE_DIRECTION> e prendi l'uscita <NUMBER_SIGN> per rimanere su <STREET_NAMES>.",
-        "2": "Mantieni <RELATIVE_DIRECTION> per rimanere su <STREET_NAMES> verso <TOWARD_SIGN>.",
-        "3": "Mantieni <RELATIVE_DIRECTION> e prendi l'uscita <NUMBER_SIGN> per rimanere su <STREET_NAMES> verso <TOWARD_SIGN>."
+        "0": "Mantieni la <RELATIVE_DIRECTION> per rimanere su <STREET_NAMES>.",
+        "1": "Mantieni la <RELATIVE_DIRECTION> e prendi l'uscita <NUMBER_SIGN> per rimanere su <STREET_NAMES>.",
+        "2": "Mantieni la <RELATIVE_DIRECTION> per rimanere su <STREET_NAMES> verso <TOWARD_SIGN>.",
+        "3": "Mantieni la <RELATIVE_DIRECTION> e prendi l'uscita <NUMBER_SIGN> per rimanere su <STREET_NAMES> verso <TOWARD_SIGN>."
       },
       "relative_directions": [
         "sinistra",
@@ -1126,20 +1126,20 @@
       ],
       "example_phrases": {
         "0": [
-          "Mantieni sinistra per rimanere su Arlen Road.",
-          "Mantieni destra per rimanere su Arlen Road."
+          "Mantieni la sinistra per rimanere su Arlen Road.",
+          "Mantieni la destra per rimanere su Arlen Road."
         ],
         "1": [
-          "Mantieni sinistra e prendi l'uscita 67 B-A per rimanere su Arlen Road.",
-          "Mantieni destra e prendi l'uscita 67 B-A per rimanere su Arlen Road."
+          "Mantieni la sinistra e prendi l'uscita 67 B-A per rimanere su Arlen Road.",
+          "Mantieni la destra e prendi l'uscita 67 B-A per rimanere su Arlen Road."
         ],
         "2": [
-          "Mantieni sinistra per rimanere su Arlen Road verso Lewiston.",
-          "Mantieni destra per rimanere su Arlen Road verso Lewiston."
+          "Mantieni la sinistra per rimanere su Arlen Road verso Lewiston.",
+          "Mantieni la destra per rimanere su Arlen Road verso Lewiston."
         ],
         "3": [
-          "Mantieni sinistra e prendi l'uscita 67 B-A per rimanere su Arlen Road verso Lewiston.",
-          "Mantieni destra e prendi l'uscita 67 B-A per rimanere su Arlen Road verso Lewiston."
+          "Mantieni la sinistra e prendi l'uscita 67 B-A per rimanere su Arlen Road verso Lewiston.",
+          "Mantieni la destra e prendi l'uscita 67 B-A per rimanere su Arlen Road verso Lewiston."
         ]
       }
     },
@@ -1150,14 +1150,14 @@
         "la pista per mountain bike"
       ],
       "phrases": {
-        "0": "Mantieni <RELATIVE_DIRECTION> al bivio.",
-        "1": "Mantieni <RELATIVE_DIRECTION> e prendi l'uscita <NUMBER_SIGN>.",
-        "2": "Mantieni <RELATIVE_DIRECTION> e prendi <STREET_NAMES>.",
-        "3": "Mantieni <RELATIVE_DIRECTION> e prendi l'uscita <NUMBER_SIGN> e prendi <STREET_NAMES>.",
-        "4": "Mantieni <RELATIVE_DIRECTION> verso <TOWARD_SIGN>.",
-        "5": "Mantieni <RELATIVE_DIRECTION> e prendi l'uscita <NUMBER_SIGN> verso <TOWARD_SIGN>.",
-        "6": "Mantieni <RELATIVE_DIRECTION> e prendi <STREET_NAMES> verso <TOWARD_SIGN>.",
-        "7": "Mantieni <RELATIVE_DIRECTION> e prendi l'uscita <NUMBER_SIGN> e prendi <STREET_NAMES> verso <TOWARD_SIGN>."
+        "0": "Mantieni la <RELATIVE_DIRECTION> al bivio.",
+        "1": "Mantieni la <RELATIVE_DIRECTION> e prendi l'uscita <NUMBER_SIGN>.",
+        "2": "Mantieni la <RELATIVE_DIRECTION> e prendi <STREET_NAMES>.",
+        "3": "Mantieni la <RELATIVE_DIRECTION> e prendi l'uscita <NUMBER_SIGN> e prendi <STREET_NAMES>.",
+        "4": "Mantieni la <RELATIVE_DIRECTION> verso <TOWARD_SIGN>.",
+        "5": "Mantieni la <RELATIVE_DIRECTION> e prendi l'uscita <NUMBER_SIGN> verso <TOWARD_SIGN>.",
+        "6": "Mantieni la <RELATIVE_DIRECTION> e prendi <STREET_NAMES> verso <TOWARD_SIGN>.",
+        "7": "Mantieni la <RELATIVE_DIRECTION> e prendi l'uscita <NUMBER_SIGN> e prendi <STREET_NAMES> verso <TOWARD_SIGN>."
       },
       "relative_directions": [
         "sinistra",
@@ -1166,36 +1166,36 @@
       ],
       "example_phrases": {
         "0": [
-          "Mantieni sinistra al bivio.",
-          "Mantieni destra al bivio."
+          "Mantieni la sinistra al bivio.",
+          "Mantieni la destra al bivio."
         ],
         "1": [
-          "Mantieni sinistra e prendi l'uscita 67 B-A.",
-          "Mantieni destra e prendi l'uscita 67 B-A."
+          "Mantieni la sinistra e prendi l'uscita 67 B-A.",
+          "Mantieni la destra e prendi l'uscita 67 B-A."
         ],
         "2": [
-          "Mantieni sinistra e prendi Arlen Road.",
-          "Mantieni destra e prendi Arlen Road."
+          "Mantieni la sinistra e prendi Arlen Road.",
+          "Mantieni la destra e prendi Arlen Road."
         ],
         "3": [
-          "Mantieni sinistra e prendi l'uscita 67 B-A e prendi Arlen Road.",
-          "Mantieni destra e prendi l'uscita 67 B-A e prendi Arlen Road."
+          "Mantieni la sinistra e prendi l'uscita 67 B-A e prendi Arlen Road.",
+          "Mantieni la destra e prendi l'uscita 67 B-A e prendi Arlen Road."
         ],
         "4": [
-          "Mantieni sinistra verso Lewiston.",
-          "Mantieni destra verso Lewiston."
+          "Mantieni la sinistra verso Lewiston.",
+          "Mantieni la destra verso Lewiston."
         ],
         "5": [
-          "Mantieni sinistra e prendi l'uscita 67 B-A verso Lewiston.",
-          "Mantieni destra e prendi l'uscita 67 B-A verso Lewiston."
+          "Mantieni la sinistra e prendi l'uscita 67 B-A verso Lewiston.",
+          "Mantieni la destra e prendi l'uscita 67 B-A verso Lewiston."
         ],
         "6": [
-          "Mantieni sinistra e prendi Arlen Road verso Lewiston.",
-          "Mantieni destra e prendi Arlen Road verso Lewiston."
+          "Mantieni la sinistra e prendi Arlen Road verso Lewiston.",
+          "Mantieni la destra e prendi Arlen Road verso Lewiston."
         ],
         "7": [
-          "Mantieni sinistra e prendi l'uscita 67 B-A e prendi Arlen Road verso Lewiston.",
-          "Mantieni destra e prendi l'uscita 67 B-A e prendi Arlen Road verso Lewiston."
+          "Mantieni la sinistra e prendi l'uscita 67 B-A e prendi Arlen Road verso Lewiston.",
+          "Mantieni la destra e prendi l'uscita 67 B-A e prendi Arlen Road verso Lewiston."
         ]
       }
     },
