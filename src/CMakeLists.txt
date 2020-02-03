@@ -99,8 +99,6 @@ function(valhalla_module)
     cxx_add_warning_flags(${library})
   endif()
 
-  #target_compile_options(${library} PUBLIC ${LIBCXX_COMPILE_FLAGS})
-
   install(FILES ${MODULE_HEADERS}
     DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/valhalla/${MODULE_NAME}"
     COMPONENT development)
