@@ -95,29 +95,35 @@ void test_route(const std::string& tile_dir, bool tile_url_gz) {
   auto route = json_to_pt(route_json);
 
   // TODO: check result
-  if (route_json.find("Wijckskade") == std::string::npos ||
-      route_json.find("Lauwerstraat") == std::string::npos)
-    throw std::logic_error("didn't find the right street names in the route");
+  // didn't find the right street names in the route?
+  EXPECT_NE(route_json.find("Wijckskade"), std::string::npos);
+  EXPECT_NE(route_json.find("Lauwerstraat"), std::string::npos);
 }
 
-void test_no_cache_no_gz() {
+TEST(HttpTiles, test_no_cache_no_gz) {
   test_route("", false);
 }
 
-void test_cache_no_gz() {
-  filesystem::remove_all("url_tile_cache");
-  test_route("url_tile_cache", false);
-  filesystem::remove_all("url_tile_cache");
-}
-
-void test_no_cache_gz() {
+TEST(HttpTiles, test_no_cache_gz) {
   test_route("", true);
 }
 
-void test_cache_gz() {
-  filesystem::remove_all("url_tile_cache");
+class HttpTilesWithCache : public ::testing::Test {
+protected:
+  void SetUp() override {
+    filesystem::remove_all("url_tile_cache");
+  }
+  void TearDown() override {
+    filesystem::remove_all("url_tile_cache");
+  }
+};
+
+TEST_F(HttpTilesWithCache, test_cache_no_gz) {
+  test_route("url_tile_cache", false);
+}
+
+TEST_F(HttpTilesWithCache, test_cache_gz) {
   test_route("url_tile_cache", true);
-  filesystem::remove_all("url_tile_cache");
 }
 
 struct TestTileDownloadData {
@@ -179,14 +185,12 @@ void test_tile_download(size_t tile_count, size_t curler_count, size_t thread_co
           auto tile_data = curler.get()(tile_uri, http_code, params.is_gzipped_tile);
 
           if (http_code != 404) {
-            test::assert_bool(http_code == 200,
-                              "Invalid code received: " + std::to_string(http_code));
-
+            EXPECT_EQ(http_code, 200);
             auto tile = GraphTile(GraphId(), tile_data.data(), tile_data.size());
-            test::assert_bool(tile.id() == expected_tile_id, "wrong tile ID received");
+            EXPECT_EQ(tile.id(), expected_tile_id);
           } else {
-            test::assert_bool(expected_tile_id == non_existent_tile_id,
-                              "Tile not found! " + tile_name);
+            // The test is expecting to get 404 since the tile does not exist
+            EXPECT_EQ(expected_tile_id, non_existent_tile_id);
           }
         }
       }
@@ -226,9 +230,9 @@ void test_graphreader_tile_download(size_t tile_count, size_t curler_count, size
                                               curler.get(), params.is_gzipped_tile, "");
 
           if (expected_tile_id != non_existent_tile_id) {
-            test::assert_bool(tile.id() == expected_tile_id, "invalid tile id");
+            EXPECT_EQ(tile.id(), expected_tile_id);
           } else {
-            test::assert_bool(tile.header() == nullptr, "Expected empty header");
+            EXPECT_EQ(tile.header(), nullptr) << "Expected empty header";
           }
         }
       }
@@ -240,48 +244,39 @@ void test_graphreader_tile_download(size_t tile_count, size_t curler_count, size
   }
 }
 
-void test_curler_single_thread_download() {
+TEST(HttpTiles, test_curler_single_thread_download) {
   test_tile_download(5, 1, 1);
 }
 
-void test_curler_multiple_threads_without_contention() {
+TEST(HttpTiles, test_curler_multiple_threads_without_contention) {
   test_tile_download(6, 3, 2);
 }
 
-void test_curler_multiple_threads_optimal() {
+TEST(HttpTiles, test_curler_multiple_threads_optimal) {
   test_tile_download(8, 4, 4);
 }
 
-void test_curler_multiple_threads_contention() {
+TEST(HttpTiles, test_curler_multiple_threads_contention) {
   test_tile_download(6, 2, 5);
 }
 
-void test_graphreader_multiple_threads() {
+TEST(HttpTiles, test_graphreader_multiple_threads) {
   test_graphreader_tile_download(8, 2, 4);
 }
 
-int main() {
-  test::suite suite("http_tiles");
-  // start a file server for utrecht tiles
-  test_tile_server_t::start("test/data/utrecht_tiles", context);
+class HttpTilesEnv : public ::testing::Environment {
+public:
+  void SetUp() override {
+    // start a file server for utrecht tiles
+    test_tile_server_t::start("test/data/utrecht_tiles", context);
+  }
 
-  suite.test(TEST_CASE(test_no_cache_no_gz));
+  void TearDown() override {
+  }
+};
 
-  suite.test(TEST_CASE(test_cache_no_gz));
-
-  suite.test(TEST_CASE(test_no_cache_gz));
-
-  suite.test(TEST_CASE(test_cache_gz));
-
-  suite.test(TEST_CASE(test_curler_single_thread_download));
-
-  suite.test(TEST_CASE(test_curler_multiple_threads_without_contention));
-
-  suite.test(TEST_CASE(test_curler_multiple_threads_optimal));
-
-  suite.test(TEST_CASE(test_curler_multiple_threads_contention));
-
-  suite.test(TEST_CASE(test_graphreader_multiple_threads));
-
-  return suite.tear_down();
+int main(int argc, char* argv[]) {
+  testing::AddGlobalTestEnvironment(new HttpTilesEnv);
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

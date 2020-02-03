@@ -95,10 +95,12 @@ void check_dates(bool time_dependent,
   // non-time dependent should get no dates, time dependent should all have dates that increase
   uint64_t epoch = 0;
   for (const auto& l : locations) {
-    if (l.has_date_time() && !time_dependent)
-      throw std::logic_error("Routes without time dependency should have not dates attached");
-    if (!l.has_date_time() && time_dependent)
-      throw std::logic_error("Routes with time dependency should have dates attached");
+    if (l.has_date_time()) {
+      EXPECT_TRUE(time_dependent) << "Routes without time dependency should have not dates attached";
+    } else {
+      EXPECT_FALSE(time_dependent) << "Routes with time dependency should have dates attached";
+    }
+
     if (l.has_date_time()) {
       // get the timezone
       baldr::GraphId edge_id(l.path_edges().begin()->graph_id());
@@ -111,8 +113,8 @@ void check_dates(bool time_dependent,
           DateTime::seconds_since_epoch(l.date_time(),
                                         DateTime::get_tz_db().from_index(node->timezone()));
       // check it
-      if (ltime < epoch)
-        throw std::logic_error("Date time should be increasing with each route leg");
+      EXPECT_GE(ltime, epoch) << "Date time should be increasing with each route leg";
+
       epoch = ltime;
     }
   }
@@ -129,8 +131,9 @@ void test_mid_break(const std::string& date_time) {
   const auto& legs = response.trip().routes(0).legs();
   const auto& directions = response.directions().routes(0).legs();
 
-  if (legs.size() != 2 || directions.size() != 2)
-    throw std::logic_error("Should have two legs with two sets of directions");
+  // Should have two legs with two sets of directions
+  EXPECT_EQ(legs.size(), 2);
+  EXPECT_EQ(directions.size(), 2);
 
   std::vector<std::string> names;
   for (const auto& d : directions) {
@@ -141,16 +144,16 @@ void test_mid_break(const std::string& date_time) {
       if (!name.empty())
         name.pop_back();
       names.push_back(name);
-      if (m.type() == DirectionsLeg_Maneuver_Type_kUturnRight ||
-          m.type() == DirectionsLeg_Maneuver_Type_kUturnLeft)
-        throw std::logic_error("Should not encounter any u-turns");
+
+      // Should not encounter any u-turns
+      EXPECT_NE(m.type(), DirectionsLeg_Maneuver_Type_kUturnRight);
+      EXPECT_NE(m.type(), DirectionsLeg_Maneuver_Type_kUturnLeft);
     }
   }
 
-  if (names != std::vector<std::string>{"Korianderstraat", "Maanzaadstraat", "", "Maanzaadstraat",
-                                        "Korianderstraat", ""})
-    throw std::logic_error(
-        "Should be a destination at the midpoint and reverse the route for the second leg");
+  EXPECT_EQ(names, (std::vector<std::string>{"Korianderstraat", "Maanzaadstraat", "",
+                                             "Maanzaadstraat", "Korianderstraat", ""}))
+      << "Should be a destination at the midpoint and reverse the route for the second leg";
 
   check_dates(date_time.find(R"("type":)") != std::string::npos, response.options().locations(),
               *tester.reader);
@@ -170,8 +173,9 @@ void test_mid_through(const std::string& date_time) {
   const auto& legs = response.trip().routes(0).legs();
   const auto& directions = response.directions().routes(0).legs();
 
-  if (legs.size() != 1 || directions.size() != 1)
-    throw std::logic_error("Should have 1 leg with 1 set of directions");
+  // Should have 1 leg with 1 set of directions
+  EXPECT_EQ(legs.size(), 1);
+  EXPECT_EQ(directions.size(), 1);
 
   std::vector<std::string> names;
   for (const auto& d : directions) {
@@ -182,15 +186,16 @@ void test_mid_through(const std::string& date_time) {
       if (!name.empty())
         name.pop_back();
       names.push_back(name);
-      if (m.type() == DirectionsLeg_Maneuver_Type_kUturnRight ||
-          m.type() == DirectionsLeg_Maneuver_Type_kUturnLeft)
-        throw std::logic_error("Should not encounter any u-turns");
+
+      // Should not encounter any u-turns
+      EXPECT_NE(m.type(), DirectionsLeg_Maneuver_Type_kUturnRight);
+      EXPECT_NE(m.type(), DirectionsLeg_Maneuver_Type_kUturnLeft);
     }
   }
 
-  if (names != std::vector<std::string>{"Korianderstraat", "Maanzaadstraat", "Pimpernelstraat",
-                                        "Selderiestraat", "Korianderstraat", ""})
-    throw std::logic_error("Should continue through the midpoint and around the block");
+  EXPECT_EQ(names, (std::vector<std::string>{"Korianderstraat", "Maanzaadstraat", "Pimpernelstraat",
+                                             "Selderiestraat", "Korianderstraat", ""}))
+      << "Should continue through the midpoint and around the block";
 
   check_dates(date_time.find(R"("type":)") != std::string::npos, response.options().locations(),
               *tester.reader);
@@ -209,8 +214,9 @@ void test_mid_via(const std::string& date_time) {
   const auto& legs = response.trip().routes(0).legs();
   const auto& directions = response.directions().routes(0).legs();
 
-  if (legs.size() != 1 || directions.size() != 1)
-    throw std::logic_error("Should have 1 leg with 1 set of directions");
+  // Should have 1 leg with 1 set of directions
+  EXPECT_EQ(legs.size(), 1);
+  EXPECT_EQ(directions.size(), 1);
 
   std::vector<std::string> names;
   unsigned int uturns = 0;
@@ -227,17 +233,15 @@ void test_mid_via(const std::string& date_time) {
     }
   }
 
-  if (uturns != 1)
-    throw std::logic_error("Should be exactly 1 u-turn but there are: " + std::to_string(uturns));
+  EXPECT_EQ(uturns, 1) << "Should be exactly 1 u-turn but there are: " + std::to_string(uturns);
 
   float mid_via_distance = directions.begin()->summary().length();
-  if (!equal(mid_via_distance, mid_break_distance, 0.001f))
-    throw std::logic_error(
-        "The only difference in path between mid break and mid via is arrive/depart guidance");
+  EXPECT_NEAR(mid_via_distance, mid_break_distance, 0.001f)
+      << "The only difference in path between mid break and mid via is arrive/depart guidance";
 
-  if (names != std::vector<std::string>{"Korianderstraat", "Maanzaadstraat", "Maanzaadstraat",
-                                        "Korianderstraat", ""})
-    throw std::logic_error("Should be a uturn at the mid point");
+  EXPECT_EQ(names, (std::vector<std::string>{"Korianderstraat", "Maanzaadstraat", "Maanzaadstraat",
+                                             "Korianderstraat", ""}))
+      << "Should be a uturn at the mid point";
 
   check_dates(date_time.find(R"("type":)") != std::string::npos, response.options().locations(),
               *tester.reader);
@@ -254,8 +258,9 @@ void test_mid_break_through(const std::string& date_time) {
   const auto& legs = response.trip().routes(0).legs();
   const auto& directions = response.directions().routes(0).legs();
 
-  if (legs.size() != 2 || directions.size() != 2)
-    throw std::logic_error("Should have two legs with two sets of directions");
+  // Should have two legs with two sets of directions
+  EXPECT_EQ(legs.size(), 2);
+  EXPECT_EQ(directions.size(), 2);
 
   std::vector<std::string> names;
   for (const auto& d : directions) {
@@ -266,108 +271,80 @@ void test_mid_break_through(const std::string& date_time) {
       if (!name.empty())
         name.pop_back();
       names.push_back(name);
-      if (m.type() == DirectionsLeg_Maneuver_Type_kUturnRight ||
-          m.type() == DirectionsLeg_Maneuver_Type_kUturnLeft)
-        throw std::logic_error("Should not encounter any u-turns");
+
+      // Should not encounter any u-turns
+      EXPECT_NE(m.type(), DirectionsLeg_Maneuver_Type_kUturnRight);
+      EXPECT_NE(m.type(), DirectionsLeg_Maneuver_Type_kUturnLeft);
     }
   }
 
   float mid_break_through_distance =
       directions.begin()->summary().length() + directions.rbegin()->summary().length();
-  if (!equal(mid_break_through_distance, mid_through_distance, 0.001f))
-    throw std::logic_error(
-        "The only difference in path between mid through and mid break through is arrive/depart guidance");
 
-  if (names != std::vector<std::string>{"Korianderstraat", "Maanzaadstraat", "", "Maanzaadstraat",
-                                        "Pimpernelstraat", "Selderiestraat", "Korianderstraat", ""})
-    throw std::logic_error("Should be a destination at the midpoint and continue around the block");
+  EXPECT_NEAR(mid_break_through_distance, mid_through_distance, 0.001f)
+      << "The only difference in path between mid through and mid break through is arrive/depart guidance";
+
+  EXPECT_EQ(names,
+            (std::vector<std::string>{"Korianderstraat", "Maanzaadstraat", "", "Maanzaadstraat",
+                                      "Pimpernelstraat", "Selderiestraat", "Korianderstraat", ""}))
+      << "Should be a destination at the midpoint and continue around the block";
 
   check_dates(date_time.find(R"("type":)") != std::string::npos, response.options().locations(),
               *tester.reader);
 }
 
-void test_mid_break_no_time() {
+TEST(MultiPointRoutesBreak, test_mid_break_no_time) {
   test_mid_break("}");
 }
 
-void test_mid_break_depart_at() {
+TEST(MultiPointRoutesBreak, test_mid_break_depart_at) {
   test_mid_break(R"(,"date_time":{"type":1,"value":"2016-07-03T08:06"}})");
 }
 
-void test_mid_break_arrive_by() {
+TEST(MultiPointRoutesBreak, test_mid_break_arrive_by) {
   test_mid_break(R"(,"date_time":{"type":2,"value":"2016-07-03T08:06"}})");
 }
 
-void test_mid_through_no_time() {
+TEST(MultiPointRoutesThrough, test_mid_through_no_time) {
   test_mid_through("}");
 }
 
-void test_mid_through_depart_at() {
+TEST(MultiPointRoutesThrough, test_mid_through_depart_at) {
   test_mid_through(R"(,"date_time":{"type":1,"value":"2016-07-03T08:06"}})");
 }
 
-void test_mid_through_arrive_by() {
+TEST(MultiPointRoutesThrough, test_mid_through_arrive_by) {
   test_mid_through(R"(,"date_time":{"type":2,"value":"2016-07-03T08:06"}})");
 }
 
-void test_mid_via_no_time() {
+TEST(MultiPointRoutesVia, test_mid_via_no_time) {
   test_mid_via("}");
 }
 
-void test_mid_via_depart_at() {
+TEST(MultiPointRoutesVia, test_mid_via_depart_at) {
   test_mid_via(R"(,"date_time":{"type":1,"value":"2016-07-03T08:06"}})");
 }
 
-void test_mid_via_arrive_by() {
+TEST(MultiPointRoutesVia, test_mid_via_arrive_by) {
   test_mid_via(R"(,"date_time":{"type":2,"value":"2016-07-03T08:06"}})");
 }
 
-void test_mid_break_through_no_time() {
+TEST(MultiPointRoutesBreakThrough, test_mid_break_through_no_time) {
   test_mid_break_through("}");
 }
 
-void test_mid_break_through_depart_at() {
+TEST(MultiPointRoutesBreakThrough, test_mid_break_through_depart_at) {
   test_mid_break_through(R"(,"date_time":{"type":1,"value":"2016-07-03T08:06"}})");
 }
 
-void test_mid_break_through_arrive_by() {
+TEST(MultiPointRoutesBreakThrough, test_mid_break_through_arrive_by) {
   test_mid_break_through(R"(,"date_time":{"type":2,"value":"2016-07-03T08:06"}})");
 }
 
 } // namespace
 
 int main(int argc, char* argv[]) {
-  test::suite suite("multipoint_route");
-
   valhalla::midgard::logging::Configure({{"type", ""}});
-
-  // break
-  suite.test(TEST_CASE(test_mid_break_no_time));
-
-  suite.test(TEST_CASE(test_mid_break_depart_at));
-
-  suite.test(TEST_CASE(test_mid_break_arrive_by));
-
-  // through
-  suite.test(TEST_CASE(test_mid_through_no_time));
-
-  suite.test(TEST_CASE(test_mid_through_depart_at));
-
-  suite.test(TEST_CASE(test_mid_through_arrive_by));
-
-  // via
-  suite.test(TEST_CASE(test_mid_via_no_time));
-
-  suite.test(TEST_CASE(test_mid_via_depart_at));
-
-  suite.test(TEST_CASE(test_mid_via_arrive_by));
-
-  // break_through
-  suite.test(TEST_CASE(test_mid_break_through_no_time));
-
-  suite.test(TEST_CASE(test_mid_break_through_depart_at));
-
-  suite.test(TEST_CASE(test_mid_break_through_arrive_by));
-
-  return suite.tear_down();
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

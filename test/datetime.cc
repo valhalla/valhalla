@@ -1,16 +1,13 @@
-#include "test.h"
 
-#include <algorithm>
-#include <bitset>
 #include <cstdint>
 #include <string>
-
-#include <boost/algorithm/string/split.hpp>
 
 #include "baldr/datetime.h"
 #include "baldr/graphconstants.h"
 #include "baldr/timedomain.h"
 #include "midgard/constants.h"
+
+#include "test.h"
 
 using namespace std;
 using namespace valhalla::baldr;
@@ -111,19 +108,15 @@ void TryGetDuration(const std::string& date_time,
 
   auto tz = DateTime::get_tz_db().from_index(DateTime::get_tz_db().to_index("America/New_York"));
 
-  if (DateTime::get_duration(date_time, seconds, tz) != expected_date_time) {
-    throw std::runtime_error(std::string("Incorrect duration ") +
-                             DateTime::get_duration(date_time, seconds, tz) + std::string(" ") +
-                             expected_date_time);
-  }
+  EXPECT_EQ(DateTime::get_duration(date_time, seconds, tz), expected_date_time)
+      << std::string("Incorrect duration ") + DateTime::get_duration(date_time, seconds, tz) +
+             std::string(" ") + expected_date_time;
 }
 
 void TryGetSecondsFromMidnight(const std::string& date_time, uint32_t expected_seconds) {
   auto secs = DateTime::seconds_from_midnight(date_time);
-  if (secs != expected_seconds) {
-    throw std::runtime_error(std::string("Incorrect number of seconds from ") + date_time +
-                             " got: " + std::to_string(secs));
-  }
+  EXPECT_EQ(secs, expected_seconds) << std::string("Incorrect number of seconds from ") + date_time +
+                                           " got: " + std::to_string(secs);
 }
 
 void TryIsoDateTime() {
@@ -136,10 +129,9 @@ void TryIsoDateTime() {
   if (found != std::string::npos)
     time = current_date_time.substr(found + 1);
 
-  if (test_iso_date_time(DateTime::day_of_week_mask(current_date_time), time, tz) !=
-      current_date_time) {
-    throw std::runtime_error(std::string("Iso date time failed ") + current_date_time);
-  }
+  EXPECT_EQ(test_iso_date_time(DateTime::day_of_week_mask(current_date_time), time, tz),
+            current_date_time)
+      << std::string("Iso date time failed ") + current_date_time;
 
   tz = DateTime::get_tz_db().from_index(DateTime::get_tz_db().to_index("America/Chicago"));
   current_date_time = DateTime::iso_date_time(tz);
@@ -147,10 +139,9 @@ void TryIsoDateTime() {
   if (found != std::string::npos)
     time = current_date_time.substr(found + 1);
 
-  if (test_iso_date_time(DateTime::day_of_week_mask(current_date_time), time, tz) !=
-      current_date_time) {
-    throw std::runtime_error(std::string("Iso date time failed ") + current_date_time);
-  }
+  EXPECT_EQ(test_iso_date_time(DateTime::day_of_week_mask(current_date_time), time, tz),
+            current_date_time)
+      << std::string("Iso date time failed ") + current_date_time;
 
   tz = DateTime::get_tz_db().from_index(DateTime::get_tz_db().to_index("Africa/Porto-Novo"));
   current_date_time = DateTime::iso_date_time(tz);
@@ -158,18 +149,16 @@ void TryIsoDateTime() {
   if (found != std::string::npos)
     time = current_date_time.substr(found + 1);
 
-  if (test_iso_date_time(DateTime::day_of_week_mask(current_date_time), time, tz) !=
-      current_date_time) {
-    throw std::runtime_error(std::string("Iso date time failed ") + current_date_time);
-  }
+  EXPECT_EQ(test_iso_date_time(DateTime::day_of_week_mask(current_date_time), time, tz),
+            current_date_time)
+      << std::string("Iso date time failed ") + current_date_time;
 }
 
 void TryTestIsValid(const std::string& date, bool return_value) {
 
   auto ret = DateTime::is_iso_valid(date);
-  if (ret != return_value)
-    throw std::runtime_error("Test is_iso_valid failed: " + date +
-                             " locale = " + std::locale("").name());
+  EXPECT_EQ(ret, return_value) << "Test is_iso_valid failed: " + date +
+                                      " locale = " + std::locale("").name();
 }
 
 void TryTestDST(const uint64_t origin_seconds,
@@ -182,28 +171,24 @@ void TryTestDST(const uint64_t origin_seconds,
   std::string iso_origin, iso_dest;
   DateTime::seconds_to_date(origin_seconds, dest_seconds, tz, tz, iso_origin, iso_dest);
 
-  if (iso_origin != o_value)
-    throw std::runtime_error("Test origin DST failed.  Expected: " + o_value + " but received " +
-                             iso_origin);
+  EXPECT_EQ(iso_origin, o_value) << "Test origin DST failed.  Expected: " + o_value +
+                                        " but received " + iso_origin;
 
-  if (iso_dest != d_value)
-    throw std::runtime_error("Test destination DST failed.  Expected: " + d_value + " but received " +
-                             iso_dest);
+  EXPECT_EQ(iso_dest, d_value) << "Test destination DST failed.  Expected: " + d_value +
+                                      " but received " + iso_dest;
 }
 
 void TryIsRestricted(const TimeDomain td, const std::string& date, const bool expected_value) {
 
   auto tz = DateTime::get_tz_db().from_index(DateTime::get_tz_db().to_index("America/New_York"));
 
-  if (DateTime::is_conditional_active(td.type(), td.begin_hrs(), td.begin_mins(), td.end_hrs(),
-                                      td.end_mins(), td.dow(), td.begin_week(), td.begin_month(),
-                                      td.begin_day_dow(), td.end_week(), td.end_month(),
-                                      td.end_day_dow(), DateTime::seconds_since_epoch(date, tz),
-                                      tz) != expected_value) {
-
-    throw std::runtime_error("Is Restricted " + date +
-                             " test failed.  Expected: " + std::to_string(expected_value));
-  }
+  EXPECT_EQ(DateTime::is_conditional_active(td.type(), td.begin_hrs(), td.begin_mins(), td.end_hrs(),
+                                            td.end_mins(), td.dow(), td.begin_week(),
+                                            td.begin_month(), td.begin_day_dow(), td.end_week(),
+                                            td.end_month(), td.end_day_dow(),
+                                            DateTime::seconds_since_epoch(date, tz), tz),
+            expected_value)
+      << "Is Restricted " + date + " test failed.  Expected: " + std::to_string(expected_value);
 }
 
 void TryTestTimezoneDiff(const uint64_t date_time,
@@ -218,36 +203,33 @@ void TryTestTimezoneDiff(const uint64_t date_time,
   auto tz2 = DateTime::get_tz_db().from_index(DateTime::get_tz_db().to_index(time_zone2));
 
   dt += DateTime::timezone_diff(dt, tz1, tz2);
-  if (DateTime::seconds_to_date(dt, tz1) != expected1)
-    throw std::runtime_error("Timezone Diff test #1: " + std::to_string(date_time) +
-                             " test failed.  Expected: " + expected1 + " but got " +
-                             DateTime::seconds_to_date(dt, tz1));
 
-  if (DateTime::seconds_to_date(dt, tz2) != expected2)
-    throw std::runtime_error("Timezone Diff test #2: " + std::to_string(date_time) +
-                             " test failed.  Expected: " + expected2 + " but got " +
-                             DateTime::seconds_to_date(dt, tz2));
+  EXPECT_EQ(DateTime::seconds_to_date(dt, tz1), expected1)
+      << "Timezone Diff test #1: " + std::to_string(date_time) +
+             " test failed.  Expected: " + expected1 + " but got " +
+             DateTime::seconds_to_date(dt, tz1);
+
+  EXPECT_EQ(DateTime::seconds_to_date(dt, tz2), expected2)
+      << "Timezone Diff test #2: " + std::to_string(date_time) +
+             " test failed.  Expected: " + expected2 + " but got " +
+             DateTime::seconds_to_date(dt, tz2);
 }
 
-} // namespace
-
-void TestGetDaysFromPivotDate() {
+TEST(DateTime, TestGetDaysFromPivotDate) {
   TryGetDaysFromPivotDate("2014-01-01T07:01", 0);
   TryGetDaysFromPivotDate("2014-01-02T15:00", 1);
   TryGetDaysFromPivotDate("1999-01-01-T:00:00", 0);
   TryGetDaysFromPivotDate("2015-05-06T08:00", 490);
 }
 
-void TestDOW() {
-
+TEST(DateTime, TestDOW) {
   TryGetDOW("2014-01-01T07:01", kWednesday);
   TryGetDOW("2014-01-02T15:00", kThursday);
   TryGetDOW("1999-01-01T:00:00", kDOWNone);
   TryGetDOW("2015-05-09T08:00", kSaturday);
 }
 
-void TestDuration() {
-
+TEST(DateTime, TestDuration) {
   TryGetDuration("2014-01-01T00:00", 30, "2014-01-01T00:00-05:00 EST");
   TryGetDuration("2014-01-02T00:00", 60, "2014-01-02T00:01-05:00 EST");
   TryGetDuration("1999-01-01T00:00", 89, "");
@@ -257,11 +239,11 @@ void TestDuration() {
   TryGetDuration("2016-07-14T00:00", 60, "2016-07-14T00:01-04:00 EDT");
 }
 
-void TestIsoDateTime() {
+TEST(DateTime, TestIsoDateTime) {
   TryIsoDateTime();
 }
 
-void TestGetSecondsFromMidnight() {
+TEST(DateTime, TestGetSecondsFromMidnight) {
   TryGetSecondsFromMidnight("00:00:00", 0);
   TryGetSecondsFromMidnight("01:00:00", 3600);
   TryGetSecondsFromMidnight("05:34:34", 20074);
@@ -277,7 +259,7 @@ void TestGetSecondsFromMidnight() {
   TryGetSecondsFromMidnight("2015-05-06T24:01:01", 86461);
 }
 
-void TestIsValid() {
+TEST(DateTime, TestIsValid) {
   TryTestIsValid("2015-05-06T01:00", true);
   TryTestIsValid("2015/05-06T01:00", false);
   TryTestIsValid("2015-05/06T01:00", false);
@@ -313,7 +295,7 @@ void TestIsValid() {
   TryTestIsValid("2018-07-22T10:89", false);
 }
 
-void TestDST() {
+TEST(DateTime, TestDST) {
 
   // bunch of tests for the start and end of dst using startat and arriveby
 
@@ -369,7 +351,7 @@ void TestDST() {
   TryTestDST(1478417468, 1478419500, "2016-11-06T02:31-05:00", "2016-11-06T03:05-05:00");
 }
 
-void TestIsRestricted() {
+TEST(DateTime, TestIsRestricted) {
 
   TimeDomain td = TimeDomain(23622321788); // Mo-Fr 06:00-11:00
   TryIsRestricted(td, "2018-04-17T05:00", false);
@@ -479,7 +461,7 @@ void TestIsRestricted() {
   TryIsRestricted(td, "2019-03-03T08:30", false);
 }
 
-void TestTimezoneDiff() {
+TEST(DateTime, TestTimezoneDiff) {
 
   // dst tests
   TryTestTimezoneDiff(1478493271, "2016-11-06T23:34-05:00", "2016-11-06T23:34-05:00",
@@ -544,64 +526,44 @@ void TestTimezoneDiff() {
                       "America/New_York");
 }
 
-void TestDayOfWeek() {
+TEST(DateTime, TestDayOfWeek) {
   std::string date = "2018-07-22T10:00";
   uint32_t dow = DateTime::day_of_week(date);
-  if (dow != 0) {
-    throw std::runtime_error("DateTime::day_of_week failed: 0 expected");
-  }
+  EXPECT_EQ(dow, 0) << "DateTime::day_of_week failed: 0 expected";
 
   date = "2018-07-26T10:00";
   dow = DateTime::day_of_week(date);
-  if (dow != 4) {
-    throw std::runtime_error("DateTime::day_of_week failed: 4 expected");
-  }
+  EXPECT_EQ(dow, 4) << "DateTime::day_of_week failed: 4 expected";
 
   date = "2019-11-06T17:15";
   dow = DateTime::day_of_week(date);
-  if (dow != 3) {
-    throw std::runtime_error("DateTime::day_of_week failed: 3 expected");
-  }
+  EXPECT_EQ(dow, 3) << "DateTime::day_of_week failed: 3 expected";
 }
 
-void TestSecondOfWeek() {
+TEST(DateTime, TestSecondOfWeek) {
   auto tz = DateTime::get_tz_db().from_index(DateTime::get_tz_db().to_index("America/New_York"));
   // 2019-11-06T17:15
   auto a = DateTime::second_of_week(1573078500, tz);
   auto e = 3 * valhalla::midgard::kSecondsPerDay + 17 * valhalla::midgard::kSecondsPerHour +
            15 * valhalla::midgard::kSecondsPerMinute;
-  if (a != e)
-    throw std::logic_error("Wrong second of week");
+  EXPECT_EQ(a, e) << "Wrong second of week";
 
   // 1982-12-08T06:07:42
   a = DateTime::second_of_week(408193662, tz);
   e = 3 * valhalla::midgard::kSecondsPerDay + 6 * valhalla::midgard::kSecondsPerHour +
       7 * valhalla::midgard::kSecondsPerMinute + 42;
-  if (a != e)
-    throw std::logic_error("Wrong second of week");
+  EXPECT_EQ(a, e) << "Wrong second of week";
 
   // 2077-02-14T11:11:11
   a = DateTime::second_of_week(3380544671, tz);
   e = 0 * valhalla::midgard::kSecondsPerDay + 11 * valhalla::midgard::kSecondsPerHour +
       11 * valhalla::midgard::kSecondsPerMinute + 11;
-  if (a != e)
-    throw std::logic_error("Wrong second of week");
+  EXPECT_EQ(a, e) << "Wrong second of week";
 }
 
-int main(void) {
-  test::suite suite("datetime");
+} // namespace
 
-  suite.test(TEST_CASE(TestGetDaysFromPivotDate));
-  suite.test(TEST_CASE(TestGetSecondsFromMidnight));
-  suite.test(TEST_CASE(TestDOW));
-  suite.test(TEST_CASE(TestDuration));
-  suite.test(TEST_CASE(TestIsoDateTime));
-  suite.test(TEST_CASE(TestIsValid));
-  suite.test(TEST_CASE(TestIsRestricted));
-  suite.test(TEST_CASE(TestDST));
-  suite.test(TEST_CASE(TestTimezoneDiff));
-  suite.test(TEST_CASE(TestDayOfWeek));
-  suite.test(TEST_CASE(TestSecondOfWeek));
-
-  return suite.tear_down();
+int main(int argc, char* argv[]) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

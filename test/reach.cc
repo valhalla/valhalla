@@ -63,7 +63,7 @@ GraphId begin_node(GraphReader& reader, const DirectedEdge* edge) {
   return opp_edge->endnode();
 }
 
-void check_all_reach() {
+TEST(Reach, check_all_reach) {
   // get tile access
   auto conf = get_conf();
   GraphReader reader(conf.get_child("mjolnir"));
@@ -96,25 +96,22 @@ void check_all_reach() {
       const auto* end = t->node(edge->endnode());
 
       // if you have non zero reach but you dont have access, something is wrong
-      if ((reach.outbound > 0 || reach.inbound > 0) && !(edge->forwardaccess() & kAutoAccess) &&
-          !(edge->reverseaccess() & kAutoAccess)) {
-        throw std::logic_error("This edge should have 0 reach as its not accessable: " +
-                               std::to_string(edge_id.value) + " " + shape_str);
-      }
+      EXPECT_FALSE((reach.outbound > 0 || reach.inbound > 0) &&
+                   !(edge->forwardaccess() & kAutoAccess) && !(edge->reverseaccess() & kAutoAccess))
+          << "This edge should have 0 reach as its not accessable: " + std::to_string(edge_id.value) +
+                 " " + shape_str;
 
       // if inbound is 0 and outbound is not then it must be an edge leaving a dead end
       // meaning a begin node that is not accessable
-      if (reach.inbound == 0 && reach.outbound > 0 && !node_filter(begin)) {
-        throw std::logic_error("Only outbound reach should mean an edge that leaves a dead end: " +
-                               std::to_string(edge_id.value) + " " + shape_str);
-      }
+      EXPECT_FALSE(reach.inbound == 0 && reach.outbound > 0 && !node_filter(begin))
+          << "Only outbound reach should mean an edge that leaves a dead end: " +
+                 std::to_string(edge_id.value) + " " + shape_str;
 
       // if outbound is 0 and inbound is not then it must be an edge entering a dead end
       // meaning an end node that is not accessable
-      if (reach.inbound > 0 && reach.outbound == 0 && !node_filter(end)) {
-        throw std::logic_error("Only inbound reach should mean an edge that enters a dead end: " +
-                               std::to_string(edge_id.value) + " " + shape_str);
-      }
+      EXPECT_FALSE(reach.inbound > 0 && reach.outbound == 0 && !node_filter(end))
+          << "Only inbound reach should mean an edge that enters a dead end: " +
+                 std::to_string(edge_id.value) + " " + shape_str;
     }
   }
 }
@@ -122,11 +119,7 @@ void check_all_reach() {
 } // namespace
 
 int main(int argc, char* argv[]) {
-  test::suite suite("reach");
-
   logging::Configure({{"type", ""}});
-
-  suite.test(TEST_CASE(check_all_reach));
-
-  return suite.tear_down();
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }
