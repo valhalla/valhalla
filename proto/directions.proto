@@ -7,7 +7,7 @@ message DirectionsLeg {
 
   message Summary {
     optional float length = 1;          // kilometers or miles based on units
-    optional uint32 time = 2;           // seconds
+    optional double time = 2;           // seconds
     optional BoundingBox bbox = 3;      // Bounding box of the shape
     optional bool has_time_restrictions = 4; // Does the route contain any time restrictions?
   }
@@ -142,7 +142,7 @@ message DirectionsLeg {
     optional string text_instruction = 2;                    // text instruction
     repeated StreetName street_name = 3;                     // street names
     optional float length = 4;                               // kilometers or miles based on units
-    optional uint32 time = 5;                                // seconds
+    optional double time = 5;                                // seconds
     optional CardinalDirection begin_cardinal_direction = 6; // CardinalDirection
     optional uint32 begin_heading = 7;                       // 0-360 
     optional uint32 begin_shape_index = 8;                   // inclusive index

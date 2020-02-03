@@ -4,23 +4,19 @@
 #include <string>
 #include <vector>
 
+#include "baldr/graphreader.h"
 #include "baldr/rapidjson_utils.h"
 #include "loki/worker.h"
-#include "midgard/logging.h"
-#include "midgard/util.h"
 #include "odin/worker.h"
-#include "sif/autocost.h"
-#include "thor/astar.h"
 #include "thor/worker.h"
+#include "tyr/serializers.h"
 #include <boost/property_tree/ptree.hpp>
 
 using namespace valhalla;
+using namespace valhalla::baldr;
 using namespace valhalla::thor;
 using namespace valhalla::odin;
-using namespace valhalla::sif;
 using namespace valhalla::loki;
-using namespace valhalla::baldr;
-using namespace valhalla::midgard;
 using namespace valhalla::tyr;
 
 namespace {
@@ -86,21 +82,65 @@ struct route_tester {
   odin_worker_t odin_worker;
 };
 
-TEST(Summary, test_valhalla_summary) {
+TEST(Summary, test_time_summary) {
   route_tester tester;
   std::string request =
       R"({"locations":[{"lat":52.048267,"lon":5.074825},{"lat":52.114622,"lon":5.131816}],"costing":"auto"})";
   auto response = tester.test(request);
 
-  // grab the accumulated info from the individual parts
+  // loop over all routes all legs
+  auto trip_route = response.trip().routes().begin();
   for (const auto& route : response.directions().routes()) {
+    auto trip_leg = trip_route->legs().begin();
     for (const auto& leg : route.legs()) {
+      // accumulate the maneuvers for a leg
       double accumulated_time = 0;
       for (const auto& maneuver : leg.maneuver()) {
         accumulated_time += maneuver.time();
       }
+      // make sure the end of the trip path is the same as the legs
+      EXPECT_EQ(trip_leg->node().rbegin()->elapsed_time(), leg.summary().time());
+      // make sure the maneuvers add up to the leg as well
       EXPECT_EQ(accumulated_time, leg.summary().time());
+      ++trip_leg;
     }
+    ++trip_route;
+  }
+
+  // get the json
+  auto json_str = serializeDirections(response);
+  rapidjson::Document json;
+  json.Parse(json_str);
+  ASSERT_FALSE(json.HasParseError());
+
+  // loop over all routes all legs
+  for (const auto& leg : json["trip"].GetObject()["legs"].GetArray()) {
+    // accumulate the maneuvers for a leg
+    double accumulated_time = 0;
+    for (const auto& maneuver : leg["maneuvers"].GetArray()) {
+      accumulated_time += maneuver["time"].GetDouble();
+    }
+    // make sure the end of the trip path is the same as the legs
+    EXPECT_NEAR(accumulated_time, leg["summary"].GetObject()["time"].GetDouble(), .01);
+  }
+
+  // get the osrm json
+  response.mutable_options()->set_format(Options::osrm);
+  json_str = serializeDirections(response);
+  json.Parse(json_str);
+  ASSERT_FALSE(json.HasParseError());
+
+  // loop over all routes all legs
+  for (const auto& route : json["routes"].GetArray()) {
+    // accumulate the steps over all the legs
+    double accumulated_time = 0;
+    for (const auto& leg : route["legs"].GetArray()) {
+      for (const auto& step : leg["steps"].GetArray()) {
+        accumulated_time += step["duration"].GetDouble();
+      }
+    }
+    // make sure the end of the trip path is the same as the legs
+    EXPECT_NEAR(accumulated_time, route.GetObject()["duration"].GetDouble(), .01);
   }
 }
 
