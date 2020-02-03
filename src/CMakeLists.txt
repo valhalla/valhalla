@@ -1,5 +1,7 @@
 include(GNUInstallDirs)
 
+list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
+
 ## Set relative to the current source and binary paths
 set(VALHALLA_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR})
 if(NOT VALHALLA_SOURCE_DIR)
@@ -25,6 +27,18 @@ if(DEFINED VALHALLA_VERSION_MAJOR)
 else()
   message(FATAL_ERROR "No Valhalla major version")
 endif()
+
+## Declare C++ build configuration variables
+#
+# - LIBCXX_COMPILE_FLAGS: flags used to compile libc++
+# - LIBCXX_LINK_FLAGS: flags used to link libc++
+# - LIBCXX_LIBRARIES: libraries to link libc++ to
+set(LIBCXX_COMPILE_FLAGS "")
+set(LIBCXX_LINK_FLAGS "")
+set(LIBCXX_LIBRARIES "")
+
+# Inlclude build macros for updating configuration variables
+include(HandleLibcxxFlags)
 
 ## Define libvalhalla sub-modules as OBJECT libraries
 
@@ -139,11 +153,22 @@ target_compile_definitions(valhalla
   PRIVATE
     ${libvalhalla_compile_definitions})
 
+# Setup warning flags. Note that these are only added to libvalhalla_compile_options if
+# ENABLE_COMPILER_WARNINGS=ON
+
+add_compile_flags_if_supported(-Wall)
+add_compile_flags_if_supported(-Wextra)
+add_compile_flags_if_supported(-Werror)
+
+if (ENABLE_COMPILER_WARNINGS)
+  message(STATUS "Enabling compiler warning flags ${LIBCXX_COMPILE_FLAGS}")
+endif()
+
 target_compile_options(valhalla
   PUBLIC
     ${libvalhalla_compile_options}
   PRIVATE
-  $<$<BOOL:${ENABLE_COMPILER_WARNINGS}>:-Wall -Wextra -Werror>
+  $<$<BOOL:${ENABLE_COMPILER_WARNINGS}>:${LIBCXX_COMPILE_FLAGS}>
   )
 
 target_include_directories(valhalla
@@ -153,7 +178,7 @@ target_include_directories(valhalla
     ${VALHALLA_BINARY_DIR}
     ${VALHALLA_BINARY_DIR}/valhalla  # TODO: this path must be removed and changed to #include <valhalla/...> in headers
     ${VALHALLA_SOURCE_DIR}/third_party/rapidjson/include
-    ${VALHALLA_SOURCE_DIR}/third_party/date/include 
+    ${VALHALLA_SOURCE_DIR}/third_party/date/include
     $<$<BOOL:${MSVC}>:${VALHALLA_SOURCE_DIR}/third_party/dirent/include>
   PRIVATE
     ${libvalhalla_include_directories})
