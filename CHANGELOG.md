@@ -17,6 +17,7 @@
        the leg builder now starts at the correct edge where the loop ends, and correctly accounts
        for any contained edges.
      - Duration over-trimming at the terminating edge of a match.
+   * FIXED: Increased internal precision of time tracking per edge and maneuver so that maneuver times sum to the same time represented in the leg summary [#2195](https://github.com/valhalla/valhalla/pull/2195)
 
 * **Enhancement**
    * ADDED: Return the coordinates of the nodes isochrone input locations snapped to [#2111](https://github.com/valhalla/valhalla/pull/2111)
