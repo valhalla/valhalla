@@ -159,7 +159,7 @@
         "1": "Continua su <STREET_NAMES> per <LENGTH>."
       },
       "us_customary_lengths": [
-        "<MILES> miglio",
+        "<MILES> miglia",
         "1 miglio",
         "un mezzo miglio",
         "<TENTHS_OF_MILE> decimi di miglio",
@@ -1606,7 +1606,7 @@
         "1": "Continua su <STREET_NAMES> per <LENGTH>."
       },
       "us_customary_lengths": [
-        "<MILES> miglio",
+        "<MILES> miglia",
         "1 miglio",
         "un mezzo miglio",
         "<TENTHS_OF_MILE> decimi di miglio",
@@ -2098,7 +2098,7 @@
         "9": "Vai a piedi in direzione <CARDINAL_DIRECTION> e prendi <STREET_NAMES> per <LENGTH>."
       },
       "us_customary_lengths": [
-        "<MILES> miglio",
+        "<MILES> miglia",
         "1 miglio",
         "un mezzo miglio",
         "<TENTHS_OF_MILE> decimi di miglio",

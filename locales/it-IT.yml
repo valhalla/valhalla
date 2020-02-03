@@ -49,7 +49,7 @@ it:
     - <METERS> metri
     - meno di 10 metri
     us_customary_lengths: &us_customary_lengths
-    - <MILES> miglio
+    - <MILES> miglia
     - 1 miglio
     - un mezzo miglio
     - <TENTHS_OF_MILE> decimi di miglio
