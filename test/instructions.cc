@@ -230,6 +230,9 @@ void test_osrm_guidance_view(const std::string filename,
   // Set osrm format
   request.mutable_options()->set_format(valhalla::Options_Format_osrm);
 
+  // Set guidance_views option
+  request.mutable_options()->set_guidance_views(true);
+
   // Build the directions
   valhalla::odin::DirectionsBuilder().Build(request);
 
