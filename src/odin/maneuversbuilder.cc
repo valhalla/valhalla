@@ -996,6 +996,7 @@ void ManeuversBuilder::UpdateManeuver(Maneuver& maneuver, int node_index) {
   maneuver.set_length(maneuver.length() + prev_edge->length());
 
   // Basic time (len/speed on each edge with no stop impact) in seconds
+  // TODO: update GetTime and GetSpeed to double precision
   maneuver.set_basic_time(
       maneuver.basic_time() +
       GetTime(prev_edge->length(), GetSpeed(maneuver.travel_mode(), prev_edge->speed())));

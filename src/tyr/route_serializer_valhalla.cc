@@ -95,12 +95,12 @@ using namespace std;
 
 json::MapPtr summary(const google::protobuf::RepeatedPtrField<valhalla::DirectionsLeg>& legs) {
 
-  uint64_t time = 0;
-  long double length = 0;
+  double time = 0;
+  double length = 0;
   bool has_time_restrictions = false;
   AABB2<PointLL> bbox(10000.0f, 10000.0f, -10000.0f, -10000.0f);
   for (const auto& leg : legs) {
-    time += static_cast<uint64_t>(leg.summary().time());
+    time += leg.summary().time();
     length += leg.summary().length();
 
     AABB2<PointLL> leg_bbox(leg.summary().bbox().min_ll().lng(), leg.summary().bbox().min_ll().lat(),
@@ -110,7 +110,7 @@ json::MapPtr summary(const google::protobuf::RepeatedPtrField<valhalla::Directio
   }
 
   auto route_summary = json::map({});
-  route_summary->emplace("time", time);
+  route_summary->emplace("time", json::fp_t{time, 3});
   route_summary->emplace("length", json::fp_t{length, 3});
   route_summary->emplace("min_lat", json::fp_t{bbox.miny(), 6});
   route_summary->emplace("min_lon", json::fp_t{bbox.minx(), 6});
@@ -300,7 +300,7 @@ legs(const google::protobuf::RepeatedPtrField<valhalla::DirectionsLeg>& directio
       }
 
       // Time, length, and shape indexes
-      man->emplace("time", static_cast<uint64_t>(maneuver.time()));
+      man->emplace("time", json::fp_t{maneuver.time(), 3});
       man->emplace("length", json::fp_t{maneuver.length(), 3});
       man->emplace("begin_shape_index", static_cast<uint64_t>(maneuver.begin_shape_index()));
       man->emplace("end_shape_index", static_cast<uint64_t>(maneuver.end_shape_index()));
@@ -546,7 +546,7 @@ legs(const google::protobuf::RepeatedPtrField<valhalla::DirectionsLeg>& directio
     if (directions_leg.maneuver_size() > 0) {
       leg->emplace("maneuvers", maneuvers);
     }
-    summary->emplace("time", static_cast<uint64_t>(directions_leg.summary().time()));
+    summary->emplace("time", json::fp_t{directions_leg.summary().time(), 3});
     summary->emplace("length", json::fp_t{directions_leg.summary().length(), 3});
     summary->emplace("min_lat", json::fp_t{directions_leg.summary().bbox().min_ll().lat(), 6});
     summary->emplace("min_lon", json::fp_t{directions_leg.summary().bbox().min_ll().lng(), 6});

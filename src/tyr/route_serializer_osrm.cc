@@ -251,17 +251,17 @@ void route_summary(json::MapPtr& route,
                    const google::protobuf::RepeatedPtrField<valhalla::DirectionsLeg>& legs,
                    bool imperial) {
   // Compute total distance and duration
-  float duration = 0.0f;
-  float distance = 0.0f;
+  double duration = 0.0f;
+  double distance = 0.0f;
   for (const auto& leg : legs) {
     distance += leg.summary().length();
     duration += leg.summary().time();
   }
 
   // Convert distance to meters. Output distance and duration.
-  distance *= imperial ? 1609.34f : 1000.0f;
-  route->emplace("distance", json::fp_t{distance, 1});
-  route->emplace("duration", json::fp_t{duration, 1});
+  distance *= imperial ? 1609.344 : 1000.0;
+  route->emplace("distance", json::fp_t{distance, 3});
+  route->emplace("duration", json::fp_t{duration, 3});
 
   // TODO - support returning weight based on costing method
   // as well as returning the costing method
@@ -1218,8 +1218,8 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
                         arrive_maneuver, options);
 
       // Add mode, driving side, weight, distance, duration, name
-      float distance = maneuver.length() * (imperial ? 1609.34f : 1000.0f);
-      float duration = maneuver.time();
+      double distance = maneuver.length() * (imperial ? 1609.344 : 1000.0);
+      double duration = maneuver.time();
 
       // Process drive_side, name, ref, mode, and prev_mode attributes if not the arrive maneuver
       if (!arrive_maneuver) {
@@ -1235,9 +1235,9 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
 
       step->emplace("mode", mode);
       step->emplace("driving_side", drive_side);
-      step->emplace("duration", json::fp_t{duration, 1});
-      step->emplace("weight", json::fp_t{duration, 1});
-      step->emplace("distance", json::fp_t{distance, 1});
+      step->emplace("duration", json::fp_t{duration, 3});
+      step->emplace("weight", json::fp_t{duration, 3});
+      step->emplace("distance", json::fp_t{distance, 3});
       step->emplace("name", name);
       if (!ref.empty()) {
         step->emplace("ref", ref);
@@ -1321,12 +1321,12 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
 
     // Add distance, duration, weight, and summary
     // Get a summary based on longest maneuvers.
-    float duration = leg->summary().time();
-    float distance = leg->summary().length() * (imperial ? 1609.34f : 1000.0f);
+    double duration = leg->summary().time();
+    double distance = leg->summary().length() * (imperial ? 1609.344 : 1000.0);
     output_leg->emplace("summary", summarize_leg(leg));
-    output_leg->emplace("distance", json::fp_t{distance, 1});
-    output_leg->emplace("duration", json::fp_t{duration, 1});
-    output_leg->emplace("weight", json::fp_t{duration, 1});
+    output_leg->emplace("distance", json::fp_t{distance, 3});
+    output_leg->emplace("duration", json::fp_t{duration, 3});
+    output_leg->emplace("weight", json::fp_t{duration, 3});
 
     // Add steps to the leg
     output_leg->emplace("steps", steps);
