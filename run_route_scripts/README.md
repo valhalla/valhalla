@@ -19,7 +19,7 @@ cp request_files.txt.TEMPLATE request_files.txt
 ./multi_run.sh <FILE_OF_REQUESTS> <CONFIG_FILE>
 ##Example#1:
 ./multi_run.sh
-##Example#1:
+##Example#2:
 ./multi_run.sh my_own_files.txt
 ##Example#3:
 ./multi_run.sh request_files.txt ../../conf/valhalla.json
