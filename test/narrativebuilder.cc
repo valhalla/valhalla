@@ -7572,7 +7572,7 @@ CreateVerbalPostManeuver(const std::vector<std::pair<std::string, bool>>& street
 void TryFormVerbalPostTransitionInstruction(NarrativeBuilderTest& nbt,
                                             Maneuver maneuver,
                                             bool include_street_names,
-                                            std::string expected) {
+                                            const std::string& expected) {
   EXPECT_EQ(nbt.FormVerbalPostTransitionInstruction(maneuver, include_street_names), expected);
 }
 
@@ -7960,7 +7960,7 @@ Maneuver CreateSignManeuver(DirectionsLeg_Maneuver_Type type,
 
 void TryFormRampStraightInstruction(NarrativeBuilderTest& nbt,
                                     Maneuver maneuver,
-                                    std::string expected) {
+                                    const std::string& expected) {
   EXPECT_EQ(nbt.FormRampStraightInstruction(maneuver), expected);
 }
 
@@ -8037,7 +8037,9 @@ TEST(NarrativeBuilder, TestFormRampStraightInstruction) {
                                  "Stay straight to take the Gettysburg Pike ramp.");
 }
 
-void TryFormRampRightInstruction(NarrativeBuilderTest& nbt, Maneuver maneuver, std::string expected) {
+void TryFormRampRightInstruction(NarrativeBuilderTest& nbt,
+                                 Maneuver maneuver,
+                                 const std::string& expected) {
   EXPECT_EQ(nbt.FormRampInstruction(maneuver), expected);
 }
 
@@ -8211,7 +8213,9 @@ TEST(NarrativeBuilder, TestFormRampRightInstruction) {
                               "Take the Gettysburg Pike ramp.");
 }
 
-void TryFormRampLeftInstruction(NarrativeBuilderTest& nbt, Maneuver maneuver, std::string expected) {
+void TryFormRampLeftInstruction(NarrativeBuilderTest& nbt,
+                                Maneuver maneuver,
+                                const std::string& expected) {
   EXPECT_EQ(nbt.FormRampInstruction(maneuver), expected);
 }
 
@@ -8385,7 +8389,9 @@ TEST(NarrativeBuilder, TestFormRampLeftInstruction) {
                              "Take the Gettysburg Pike ramp.");
 }
 
-void TryFormExitRightInstruction(NarrativeBuilderTest& nbt, Maneuver maneuver, std::string expected) {
+void TryFormExitRightInstruction(NarrativeBuilderTest& nbt,
+                                 Maneuver maneuver,
+                                 const std::string& expected) {
   EXPECT_EQ(nbt.FormExitInstruction(maneuver), expected);
 }
 
@@ -8606,7 +8612,9 @@ TEST(NarrativeBuilder, TestFormExitRightInstruction) {
       "Take the Gettysburg Pike exit onto US 15 toward Harrisburg/Gettysburg.");
 }
 
-void TryFormExitLeftInstruction(NarrativeBuilderTest& nbt, Maneuver maneuver, std::string expected) {
+void TryFormExitLeftInstruction(NarrativeBuilderTest& nbt,
+                                Maneuver maneuver,
+                                const std::string& expected) {
   EXPECT_EQ(nbt.FormExitInstruction(maneuver), expected);
 }
 

@@ -1024,7 +1024,7 @@ TEST(Astar, test_time_restricted_road_bidirectional) {
   }
 }
 
-Api route_on_timerestricted(std::string& costing_str, int16_t hour) {
+Api route_on_timerestricted(const std::string& costing_str, int16_t hour) {
   // Try routing over "Via Montebello" in Rome which is a time restricted road
   // The restriction is
   //
@@ -1055,7 +1055,7 @@ Api route_on_timerestricted(std::string& costing_str, int16_t hour) {
   return tester.test(request);
 }
 
-void test_route_restricted(std::string costing_str, int16_t hour) {
+void test_route_restricted(const std::string& costing_str, int16_t hour) {
   bool found_route = false;
   try {
     auto response = route_on_timerestricted(costing_str, hour);
@@ -1082,7 +1082,7 @@ TEST(Astar, test_time_restricted_road_denied_on_timedep) {
   }
 }
 
-void test_route_allowed(std::string costing_str, int16_t hour) {
+void test_route_allowed(const std::string& costing_str, int16_t hour) {
   auto response = route_on_timerestricted(costing_str, hour);
   const auto& legs = response.trip().routes(0).legs();
   EXPECT_EQ(legs.size(), 1) << "Should have 1 leg";
