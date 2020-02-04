@@ -144,7 +144,10 @@ jobs:
             - ccache
       - run: npm install --ignore-scripts
       - run: mkdir build
-      - run: cd build && cmake .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_COVERAGE=On -DCPACK_GENERATOR=DEB -DENABLE_COMPILER_WARNINGS=On -DCMAKE_EXPORT_COMPILE_COMMANDS=On
+      - run: |
+          cd build \
+            && cmake .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_COVERAGE=On -DCPACK_GENERATOR=DEB \
+                -DENABLE_COMPILER_WARNINGS=On -DENABLE_WERROR=On -DCMAKE_EXPORT_COMPILE_COMMANDS=On
       - run: make -C build -j4
       - run: scripts/clang-tidy-only-diff.sh
       - run: make -C build -j4 tests
