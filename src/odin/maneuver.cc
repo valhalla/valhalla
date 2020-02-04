@@ -264,19 +264,19 @@ void Maneuver::set_length(float length) {
   length_ = length;
 }
 
-uint32_t Maneuver::time() const {
+double Maneuver::time() const {
   return time_;
 }
 
-void Maneuver::set_time(uint32_t time) {
+void Maneuver::set_time(double time) {
   time_ = time;
 }
 
-uint32_t Maneuver::basic_time() const {
+double Maneuver::basic_time() const {
   return basic_time_;
 }
 
-void Maneuver::set_basic_time(uint32_t basic_time) {
+void Maneuver::set_basic_time(double basic_time) {
   basic_time_ = basic_time;
 }
 

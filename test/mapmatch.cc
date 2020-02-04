@@ -1037,8 +1037,8 @@ TEST(Mapmatch, test_intersection_matching) {
       int j = 0;
       for (const auto& leg : legs) {
         float distance = leg.second.get<float>("distance");
-        ASSERT_EQ(distance, test_answers[i].second[j++])
-            << "Expected legs with distance" + std::to_string(test_answers[i].second[j - 1]) +
+        ASSERT_NEAR(distance, test_answers[i].second[j++], .1)
+            << "Expected legs with distance " + std::to_string(test_answers[i].second[j - 1]) +
                    " but got " + std::to_string(distance);
       }
     }

@@ -557,7 +557,7 @@ public:
     return mutable_node_->type();
   }
 
-  uint32_t elapsed_time() const {
+  double elapsed_time() const {
     return mutable_node_->elapsed_time();
   }
 
