@@ -90,9 +90,7 @@ function(valhalla_module)
        ${VALHALLA_BINARY_DIR}/valhalla)
 
   if(ENABLE_COVERAGE)
-    target_add_compile_flags_if_supported(${library} PUBLIC
-      -ftest-coverage
-      -fprofile-arcs)
+    target_compile_options(${library} PUBLIC -ftest-coverage -fprofile-arcs)
   endif()
 
   if(ENABLE_COMPILER_WARNINGS)
