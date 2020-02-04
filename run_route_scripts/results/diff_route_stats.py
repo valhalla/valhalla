@@ -24,6 +24,7 @@ def main(old_stats_file, new_stats_file, output_file):
         cols_to_diff = []
         stats_diff_fieldnames = ['routeID']
 
+        result_col_index = headers.index('result')
         # Collect indexes of cols we're going to generate diff stats of and
         # generate fieldnames for stats diff
         for col in STATS_TO_DIFF:
@@ -43,14 +44,28 @@ def main(old_stats_file, new_stats_file, output_file):
 
         route_num = 1
         failed_routes = 0
+        mismatched_result = 0
         # Assume same number of rows in both csv
         for old_row, new_row in zip(old_csv_reader, new_csv_reader):
-            # skip failed routes
-            if old_row[4] == 'fail_no_route' or new_row[4] == 'fail_no_route':
-                failed_routes += 1
-                continue
             diff_row = []
             diff_row.append(route_num)
+            route_num += 1
+
+            # Compare status of old & new stat
+            old_result = old_row[result_col_index]
+            new_result = new_row[result_col_index]
+            # skip failed routes
+            if old_result != new_result:
+                print('WARNING: Result mismatch for route #{}! '
+                      'Old result: {}, new result: {}'.format(route_num,
+                                                              old_result,
+                                                              new_result))
+                mismatched_result += 1
+                continue
+            elif old_result == 'fail_no_route':
+                failed_routes += 1
+                continue
+
             for col_index in cols_to_diff:
                 # Treat everything as float
                 old_stat, new_stat = (float(old_row[col_index]),
@@ -68,8 +83,8 @@ def main(old_stats_file, new_stats_file, output_file):
                 diff_row.append('{:.2f}'.format(pct_diff))
 
             csv_writer.writerow(diff_row)
-            route_num += 1
         print('Found {} failed routes'.format(failed_routes))
+        print('Found {} mismatched results'.format(mismatched_result))
         print('Combined statistics generated: {}'.format(output_file))
 
 
