@@ -215,11 +215,13 @@ inline bool TimeDepReverse::ExpandReverseInner(GraphReader& graphreader,
     return false;
   }
 
-  Cost tc =
+  // Get cost. Use opposing edge for EdgeCost. Separate the transition seconds so we
+  // can properly recover elapsed time on the reverse path.
+  auto transition_cost =
       costing_->TransitionCostReverse(meta.edge->localedgeidx(), nodeinfo, opp_edge, opp_pred_edge);
   auto edge_cost = costing_->EdgeCost(opp_edge, t2, seconds_of_week);
   Cost newcost = pred.cost() + edge_cost;
-  newcost.cost += tc.cost;
+  newcost.cost += transition_cost.cost;
 
   // If this edge is a destination, subtract the partial/remainder cost
   // (cost from the dest. location to the end of the edge).
@@ -256,7 +258,7 @@ inline bool TimeDepReverse::ExpandReverseInner(GraphReader& graphreader,
     if (newcost.cost < lab.cost().cost) {
       float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
       adjacencylist_->decrease(meta.edge_status->index(), newsortcost);
-      lab.Update(pred_idx, newcost, newsortcost, tc, has_time_restrictions);
+      lab.Update(pred_idx, newcost, newsortcost, transition_cost, has_time_restrictions);
     }
     return true;
   }
@@ -278,7 +280,8 @@ inline bool TimeDepReverse::ExpandReverseInner(GraphReader& graphreader,
   // Add edge label, add to the adjacency list and set edge status
   uint32_t idx = edgelabels_rev_.size();
   edgelabels_rev_.emplace_back(pred_idx, meta.edge_id, oppedge, meta.edge, newcost, sortcost, dist,
-                               mode_, tc, (pred.not_thru_pruning() || !meta.edge->not_thru()),
+                               mode_, transition_cost,
+                               (pred.not_thru_pruning() || !meta.edge->not_thru()),
                                has_time_restrictions);
   adjacencylist_->add(idx);
   *meta.edge_status = {EdgeSet::kTemporary, idx};

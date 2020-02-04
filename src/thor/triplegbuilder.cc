@@ -1383,6 +1383,10 @@ void TripLegBuilder::Build(
       }
     }
 
+    if (controller.attributes.at(kNodeTransitionTime)) {
+      trip_node->set_transition_time(edge_itr->turn_cost);
+    }
+
     AddTransitNodes(trip_node, node, startnode, start_tile, graphtile, controller);
 
     ///////////////////////////////////////////////////////////////////////////

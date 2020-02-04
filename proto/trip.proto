@@ -257,6 +257,7 @@ message TripLeg {
     optional TransitStationInfo transit_station_info = 8;
     optional TransitEgressInfo transit_egress_info = 9;
     optional string time_zone = 10;
+    optional double transition_time = 11;    // seconds spent transitioning through this node
   }
 
   message Admin {

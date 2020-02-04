@@ -458,14 +458,16 @@ bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
     }
 
     // Add mode change cost or edge transition cost from the costing model
+    Cost transition_cost{};
     if (mode_change) {
       // TODO: make mode change cost configurable. No cost for entering
       // a transit line (assume the wait time is the cost)
-      ; // newcost += {10.0f, 10.0f };
+      // transition_cost = {10.0f, 10.0f };
     } else {
-      newcost +=
+      transition_cost =
           mode_costing[static_cast<uint32_t>(mode_)]->TransitionCost(directededge, nodeinfo, pred);
     }
+    newcost += transition_cost;
 
     // If this edge is a destination, subtract the partial/remainder cost
     // (cost from the dest. location to the end of the edge)
@@ -497,7 +499,7 @@ bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
         float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
         adjacencylist_->decrease(es->index(), newsortcost);
         lab.Update(pred_idx, newcost, newsortcost, walking_distance_, tripid, blockid,
-                   has_time_restrictions);
+                   transition_cost, has_time_restrictions);
       }
       continue;
     }
@@ -523,8 +525,8 @@ bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
     uint32_t idx = edgelabels_.size();
     *es = {EdgeSet::kTemporary, idx};
     edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, sortcost, dist, mode_,
-                             walking_distance_, tripid, prior_stop, blockid, operator_id,
-                             has_transit);
+                             walking_distance_, tripid, prior_stop, blockid, operator_id, has_transit,
+                             transition_cost);
     adjacencylist_->add(idx);
   }
 
@@ -628,7 +630,7 @@ void MultiModalPathAlgorithm::SetOrigin(GraphReader& graphreader,
     // of the path.
     uint32_t d = static_cast<uint32_t>(directededge->length() * (1.0f - edge.percent_along()));
     MMEdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost, sortcost, dist, mode_, d, 0,
-                           GraphId(), 0, 0, false);
+                           GraphId(), 0, 0, false, Cost{});
     // Set the origin flag
     edge_label.set_origin();
 
@@ -733,8 +735,8 @@ bool MultiModalPathAlgorithm::ExpandFromNode(baldr::GraphReader& graphreader,
     }
 
     // Get cost
-    Cost newcost = pred.cost() + costing->EdgeCost(directededge, tile) +
-                   costing->TransitionCost(directededge, nodeinfo, pred);
+    auto transition_cost = costing->TransitionCost(directededge, nodeinfo, pred);
+    Cost newcost = pred.cost() + costing->EdgeCost(directededge, tile) + transition_cost;
     uint32_t walking_distance = pred.path_distance() + directededge->length();
 
     // Check if lower cost path
@@ -743,7 +745,8 @@ bool MultiModalPathAlgorithm::ExpandFromNode(baldr::GraphReader& graphreader,
       if (newcost.cost < lab.cost().cost) {
         float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
         adjlist.decrease(es->index(), newsortcost);
-        lab.Update(pred_idx, newcost, newsortcost, walking_distance, has_time_restrictions);
+        lab.Update(pred_idx, newcost, newsortcost, walking_distance, transition_cost,
+                   has_time_restrictions);
       }
       continue;
     }
@@ -751,7 +754,7 @@ bool MultiModalPathAlgorithm::ExpandFromNode(baldr::GraphReader& graphreader,
     // Add edge label, add to the adjacency list and set edge status
     uint32_t idx = edgelabels.size();
     edgelabels.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, 0.0f, mode_,
-                            walking_distance);
+                            walking_distance, transition_cost);
     *es = {EdgeSet::kTemporary, idx};
     adjlist.add(idx);
   }
@@ -808,7 +811,10 @@ bool MultiModalPathAlgorithm::CanReachDestination(const valhalla::Location& dest
     const DirectedEdge* diredge = tile->directededge(oppedge);
     uint32_t length = static_cast<uint32_t>(diredge->length()) * ratio;
     Cost cost = costing->EdgeCost(diredge, tile) * ratio;
-    edgelabels.emplace_back(kInvalidLabel, oppedge, diredge, cost, cost.cost, 0.0f, mode_, length);
+    // we cannot do transition_cost on this label yet because we have no predecessor, but when we find
+    // it, we will do an update on it and set the real transition cost based on the path to it
+    edgelabels.emplace_back(kInvalidLabel, oppedge, diredge, cost, cost.cost, 0.0f, mode_, length,
+                            Cost{});
     adjlist.add(label_idx);
     edgestatus.Set(oppedge, EdgeSet::kTemporary, label_idx, tile);
     label_idx++;
