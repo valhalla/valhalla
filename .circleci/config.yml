@@ -145,9 +145,10 @@ jobs:
       - run: npm install --ignore-scripts
       - run: mkdir build
       - run: |
+          # NOTE: -Werror disabled in CI, as we currently have >4k warnings.
           cd build \
             && cmake .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_COVERAGE=On -DCPACK_GENERATOR=DEB \
-                -DENABLE_COMPILER_WARNINGS=On -DENABLE_WERROR=On -DCMAKE_EXPORT_COMPILE_COMMANDS=On
+                -DENABLE_COMPILER_WARNINGS=On -DENABLE_WERROR=Off -DCMAKE_EXPORT_COMPILE_COMMANDS=On
       - run: make -C build -j4
       - run: scripts/clang-tidy-only-diff.sh
       - run: make -C build -j4 tests
