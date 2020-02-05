@@ -1007,6 +1007,16 @@ public:
       } else if (tag.first == "turn:lanes:backward") {
         // Turn lanes in the reverse direction
         w.set_bwd_turn_lanes_index(osmdata_.name_offset_map.index(tag.second));
+      } else if (tag.first == "guidance_view:jct:base" ||
+                 tag.first == "guidance_view:jct:base:forward") {
+        w.set_fwd_jct_base_index(osmdata_.name_offset_map.index(tag.second));
+      } else if (tag.first == "guidance_view:jct:overlay" ||
+                 tag.first == "guidance_view:jct:overlay:forward") {
+        w.set_fwd_jct_overlay_index(osmdata_.name_offset_map.index(tag.second));
+      } else if (tag.first == "guidance_view:jct:base:backward") {
+        w.set_bwd_jct_base_index(osmdata_.name_offset_map.index(tag.second));
+      } else if (tag.first == "guidance_view:jct:overlay:backward") {
+        w.set_bwd_jct_overlay_index(osmdata_.name_offset_map.index(tag.second));
       }
     }
 

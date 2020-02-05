@@ -578,7 +578,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
   LOG_TRACE(std::string("wayid=") + std::to_string(edgeinfo.wayid()));
 #endif
 
-  // Set the exits (if the directed edge has exit sign information) and if requested
+  // Set the signs (if the directed edge has sign information) and if requested
   if (directededge->sign()) {
     // Add the edge signs
     std::vector<SignInfo> edge_signs = graphtile->GetSigns(idx);
@@ -636,12 +636,21 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
             }
             break;
           }
+          case Sign::Type::kGuidanceViewJunction: {
+            if (controller.attributes.at(kEdgeSignGuidanceViewJunction)) {
+              auto* trip_sign_guidance_view_junction =
+                  trip_sign->mutable_guidance_view_junctions()->Add();
+              trip_sign_guidance_view_junction->set_text(sign.text());
+              trip_sign_guidance_view_junction->set_is_route_number(sign.is_route_num());
+            }
+            break;
+          }
         }
       }
     }
   }
 
-  // Process the named junctions
+  // Process the named junctions at nodes
   if (has_junction_name && start_tile) {
     // Add the node signs
     std::vector<SignInfo> node_signs = start_tile->GetSigns(start_node_idx, true);
