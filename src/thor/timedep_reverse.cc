@@ -598,19 +598,14 @@ std::vector<PathInfo> TimeDepReverse::FormPath(GraphReader& graphreader, const u
   LOG_DEBUG("path_cost::" + std::to_string(edgelabels_rev_[dest].cost().cost));
   LOG_DEBUG("path_iterations::" + std::to_string(edgelabels_rev_.size()));
 
-  // Get the transition cost at the last edge of the reverse path
-  Cost tc(edgelabels_rev_[dest].transition_cost(), edgelabels_rev_[dest].transition_secs());
-
-  // Form the reverse path from the destination (true origin) using opposing
-  // edges.
+  // Form the reverse path from the destination (true origin) using opposing edges.
   std::vector<PathInfo> path;
-  Cost cost;
+  Cost cost, tc;
   uint32_t edgelabel_index = dest;
   while (edgelabel_index != kInvalidLabel) {
     const BDEdgeLabel& edgelabel = edgelabels_rev_[edgelabel_index];
 
-    // Get elapsed time on the edge, then add the transition cost at
-    // prior edge.
+    // Get elapsed time on the edge, then add the transition cost at prior edge.
     uint32_t predidx = edgelabel.predecessor();
     if (predidx == kInvalidLabel) {
       cost += edgelabel.cost();
@@ -619,7 +614,7 @@ std::vector<PathInfo> TimeDepReverse::FormPath(GraphReader& graphreader, const u
     }
     cost += tc;
     path.emplace_back(edgelabel.mode(), cost.secs, edgelabel.opp_edgeid(), 0, cost.cost,
-                      edgelabel.has_time_restriction());
+                      edgelabel.has_time_restriction(), tc.secs);
 
     // Check if this is a ferry
     if (edgelabel.use() == Use::kFerry) {
@@ -628,6 +623,9 @@ std::vector<PathInfo> TimeDepReverse::FormPath(GraphReader& graphreader, const u
 
     // Update edgelabel_index and transition cost to apply at next iteration
     edgelabel_index = predidx;
+    // We apply the turn cost at the beginning of the edge, as is done in the forward path
+    // Semantically this can be thought of is, how much time did it take to turn onto this edge
+    // To do this we need to carry the cost forward to the next edge in the path so we cache it here
     tc.secs = edgelabel.transition_secs();
     tc.cost = edgelabel.transition_cost();
   }

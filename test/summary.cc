@@ -95,13 +95,23 @@ TEST(Summary, test_time_summary) {
     for (const auto& leg : route.legs()) {
       // accumulate the maneuvers for a leg
       double accumulated_time = 0;
+      double accumulated_transition_time = 0;
       for (const auto& maneuver : leg.maneuver()) {
         accumulated_time += maneuver.time();
+        // check the transition times should be non-zero and less than equal to the maneuver time
+        double transition_time = 0;
+        for (auto n = maneuver.begin_path_index(); n < maneuver.end_path_index(); ++n) {
+          transition_time += trip_leg->node(n).transition_time();
+        }
+        EXPECT_LE(transition_time, maneuver.time());
+        accumulated_transition_time += transition_time;
       }
       // make sure the end of the trip path is the same as the legs
       EXPECT_EQ(trip_leg->node().rbegin()->elapsed_time(), leg.summary().time());
       // make sure the maneuvers add up to the leg as well
       EXPECT_EQ(accumulated_time, leg.summary().time());
+      // we should have had some transition costs along the way
+      EXPECT_GT(accumulated_transition_time, 0);
       ++trip_leg;
     }
     ++trip_route;
@@ -134,13 +144,25 @@ TEST(Summary, test_time_summary) {
   for (const auto& route : json["routes"].GetArray()) {
     // accumulate the steps over all the legs
     double accumulated_time = 0;
+    double accumulated_transition_time = 0;
     for (const auto& leg : route["legs"].GetArray()) {
       for (const auto& step : leg["steps"].GetArray()) {
         accumulated_time += step["duration"].GetDouble();
+        // check that the accumulated transition durations are less than the step duration
+        double transition_time = 0;
+        for (const auto& intersection : step["intersections"].GetArray()) {
+          if (intersection.HasMember("duration")) {
+            transition_time += intersection["duration"].GetDouble();
+          }
+        }
+        EXPECT_LE(transition_time, step["duration"].GetDouble());
+        accumulated_transition_time += transition_time;
       }
     }
     // make sure the end of the trip path is the same as the legs
     EXPECT_NEAR(accumulated_time, route.GetObject()["duration"].GetDouble(), .01);
+    // we should have had some transition costs along the way
+    EXPECT_GT(accumulated_transition_time, 0);
   }
 }
 

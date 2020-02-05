@@ -900,7 +900,8 @@ std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& gra
        edgelabel_index = edgelabels_forward_[edgelabel_index].predecessor()) {
     const BDEdgeLabel& edgelabel = edgelabels_forward_[edgelabel_index];
     path.emplace_back(edgelabel.mode(), edgelabel.cost().secs, edgelabel.edgeid(), 0,
-                      edgelabel.cost().cost, edgelabel.has_time_restriction());
+                      edgelabel.cost().cost, edgelabel.has_time_restriction(),
+                      edgelabel.transition_secs());
 
     // Check if this is a ferry
     if (edgelabel.use() == Use::kFerry) {
@@ -954,7 +955,7 @@ std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& gra
     }
     cost += tc;
     path.emplace_back(edgelabel.mode(), cost.secs, edgelabel.opp_edgeid(), 0, cost.cost,
-                      edgelabel.has_time_restriction());
+                      edgelabel.has_time_restriction(), tc.secs);
 
     // Check if this is a ferry
     if (edgelabel.use() == Use::kFerry) {
@@ -963,6 +964,9 @@ std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& gra
 
     // Update edgelabel_index and transition cost to apply at next iteration
     edgelabel_index = predidx;
+    // We apply the turn cost at the beginning of the edge, as is done in the forward path
+    // Semantically this can be thought of is, how much time did it take to turn onto this edge
+    // To do this we need to carry the cost forward to the next edge in the path so we cache it here
     tc.secs = edgelabel.transition_secs();
     tc.cost = edgelabel.transition_cost();
   }
