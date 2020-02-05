@@ -303,6 +303,9 @@ json::ArrayPtr serialize_edges(const AttributesController& controller,
         if (node.has_time_zone()) {
           end_node_map->emplace("time_zone", node.time_zone());
         }
+        if (node.has_transition_time()) {
+          end_node_map->emplace("transition_time", node.transition_time());
+        }
 
         // TODO transit info at node
         // kNodeTransitStopInfoType = "node.transit_stop_info.type";

@@ -1383,7 +1383,7 @@ void TripLegBuilder::Build(
       }
     }
 
-    if (controller.attributes.at(kNodeTransitionTime)) {
+    if (controller.attributes.at(kNodeTransitionTime) && edge_itr->turn_cost > 0) {
       trip_node->set_transition_time(edge_itr->turn_cost);
     }
 
