@@ -52,7 +52,7 @@ public:
         const baldr::DirectedEdge* edge,
         const sif::TravelMode mode)
       : sif::EdgeLabel(predecessor, edgeid, edge, cost, sortcost, 0.0f, mode, 0, sif::Cost{}),
-        nodeid_(nodeid), dest_(dest), source_(source), target_(target) {
+        nodeid_(nodeid), dest_(dest), source_(source), target_(target), turn_cost_(turn_cost) {
     // Validate inputs
     if (!(0.f <= source && source <= target && target <= 1.f)) {
       throw std::invalid_argument("invalid source (" + std::to_string(source) + ") or target (" +
