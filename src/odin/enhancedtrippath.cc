@@ -681,6 +681,9 @@ std::string EnhancedTripLeg_Edge::ToString() const {
 
     str += " | junction_names=";
     str += SignElementsToString(this->sign().junction_names());
+
+    str += " | guidance_view_junctions=";
+    str += SignElementsToString(this->sign().guidance_view_junctions());
   }
 
   str += " | travel_mode=";
@@ -1005,6 +1008,9 @@ std::string EnhancedTripLeg_Edge::ToParameterString() const {
 
   str += delim;
   str += SignElementsToParameterString(this->sign().junction_names());
+
+  str += delim;
+  str += SignElementsToParameterString(this->sign().guidance_view_junctions());
 
   str += delim;
   if (this->has_travel_mode()) {

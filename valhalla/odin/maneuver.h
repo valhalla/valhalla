@@ -292,6 +292,9 @@ public:
   const VerbalTextFormatter* verbal_formatter() const;
   void set_verbal_formatter(std::unique_ptr<VerbalTextFormatter>&& verbal_formatter);
 
+  const std::vector<DirectionsLeg_GuidanceView>& guidance_views() const;
+  std::vector<DirectionsLeg_GuidanceView>* mutable_guidance_views();
+
 #ifdef LOGGING_LEVEL_TRACE
   std::string ToString() const;
 
@@ -377,6 +380,8 @@ protected:
   TripLeg_TransitType transit_type_;
 
   std::unique_ptr<VerbalTextFormatter> verbal_formatter_;
+
+  std::vector<DirectionsLeg_GuidanceView> guidance_views_;
 };
 
 } // namespace odin

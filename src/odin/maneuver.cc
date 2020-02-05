@@ -860,6 +860,14 @@ void Maneuver::set_verbal_formatter(std::unique_ptr<VerbalTextFormatter>&& verba
   verbal_formatter_ = std::move(verbal_formatter);
 }
 
+const std::vector<DirectionsLeg_GuidanceView>& Maneuver::guidance_views() const {
+  return guidance_views_;
+}
+
+std::vector<DirectionsLeg_GuidanceView>* Maneuver::mutable_guidance_views() {
+  return &guidance_views_;
+}
+
 #ifdef LOGGING_LEVEL_TRACE
 std::string Maneuver::ToString() const {
   std::string man_str;
@@ -1009,6 +1017,19 @@ std::string Maneuver::ToString() const {
   //  std::string verbal_depart_instruction_;
   //  std::string arrive_instruction_;
   //  std::string verbal_arrive_instruction_;
+
+  man_str += " | guidance_views=";
+  for (const auto& guidance_view : guidance_views_) {
+    man_str += "[";
+    man_str += " data_id=" + guidance_view.data_id();
+    man_str += " type=" + guidance_view.type();
+    man_str += " base_id=" + guidance_view.base_id();
+    man_str += " overlay_ids=";
+    for (const auto& overlay_id : guidance_view.overlay_ids()) {
+      man_str += overlay_id + " ";
+    }
+    man_str += "]";
+  }
 
   return man_str;
 }
