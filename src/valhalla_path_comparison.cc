@@ -220,7 +220,7 @@ int main(int argc, char* argv[]) {
         for (const auto& location : path.second) {
           // Get the location from the ptree
           // TODO - this was copied from the defunct Location::FromPtree
-          const auto& pt = path.second;
+          const auto& pt = location.second;
           float lat = pt.get<float>("lat");
           if (lat < -90.0f || lat > 90.0f) {
             throw std::runtime_error("Latitude must be in the range [-90, 90] degrees");
