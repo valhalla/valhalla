@@ -196,7 +196,7 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
     // source is smaller than prior target, it indicates discontinuity. see follow:
     //
     //                   current_source
-    //    prior_source          |    prior_target
+    //    prior_source           |    prior_target
     //          |                |         |
     //  X---------------------------------------------X
     //                      Edge
