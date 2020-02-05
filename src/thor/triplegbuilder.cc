@@ -139,6 +139,8 @@ void SetShapeAttributes(const AttributesController& controller,
                         double edge_percentage) {
   if (trip_path.has_shape_attributes()) {
     // calculates total edge time and total edge length
+    // TODO: you can get this directly from the path edge by taking its cost and subtracting off
+    // the transition cost that it also now contains
     double edge_time =
         costing->EdgeCost(edge, tile, second_of_week).secs * edge_percentage; // seconds
     // TODO: get the measured length from shape (full shape) to increase precision

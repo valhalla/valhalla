@@ -85,7 +85,8 @@ struct route_tester {
 TEST(Summary, test_time_summary) {
   route_tester tester;
   std::string request =
-      R"({"locations":[{"lat":52.048267,"lon":5.074825},{"lat":52.114622,"lon":5.131816}],"costing":"auto"})";
+      R"({"locations":[{"lat":52.048267,"lon":5.074825},{"lat":52.114622,"lon":5.131816}],"costing":"auto",
+          "filters":{"attributes":["shape_attributes.time"],"action":"include"}})";
   auto response = tester.test(request);
 
   // loop over all routes all legs
@@ -96,6 +97,7 @@ TEST(Summary, test_time_summary) {
       // accumulate the maneuvers for a leg
       double accumulated_time = 0;
       double accumulated_transition_time = 0;
+      double accumulated_edge_time = 0;
       for (const auto& maneuver : leg.maneuver()) {
         accumulated_time += maneuver.time();
         // check the transition times should be non-zero and less than equal to the maneuver time
@@ -104,7 +106,14 @@ TEST(Summary, test_time_summary) {
           transition_time += trip_leg->node(n).transition_time();
         }
         EXPECT_LE(transition_time, maneuver.time());
+        // check the on edge times plus the transition times add up to the maneuver time
+        double edge_time_ms = 0;
+        for (auto s = maneuver.begin_shape_index(); s < maneuver.end_shape_index(); ++s) {
+          edge_time_ms += trip_leg->shape_attributes().time(s);
+        }
+        EXPECT_NEAR(edge_time_ms / 1000.0 + transition_time, maneuver.time(), .2);
         accumulated_transition_time += transition_time;
+        accumulated_edge_time += edge_time_ms / 1000.0;
       }
       // make sure the end of the trip path is the same as the legs
       EXPECT_EQ(trip_leg->node().rbegin()->elapsed_time(), leg.summary().time());
@@ -112,6 +121,8 @@ TEST(Summary, test_time_summary) {
       EXPECT_EQ(accumulated_time, leg.summary().time());
       // we should have had some transition costs along the way
       EXPECT_GT(accumulated_transition_time, 0);
+      // we should have the edge time plus the transition time add up to the leg time
+      EXPECT_NEAR(accumulated_edge_time + accumulated_transition_time, accumulated_time, .1);
       ++trip_leg;
     }
     ++trip_route;
