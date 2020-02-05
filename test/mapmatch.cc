@@ -575,6 +575,27 @@ TEST(Mapmatch, test_trace_route_edge_walk_expected_error_code) {
   FAIL() << "Expected trace_route edge_walk exception was not found";
 }
 
+TEST(Mapmatch, test_map_match_wrong_tile_error_code) {
+  // tests expected error_code for trace_route edge_walk
+  auto expected_error_code = 171;
+  tyr::actor_t actor(conf, true);
+
+  try {
+    auto response = json_to_pt(actor.trace_route(
+        R"({"shape":[{"lon":139.703838,"lat":35.689926,"radius":50},
+                      {"lon":139.703441,"lat":35.689781,"radius":71},
+                      {"lon":139.704311,"lat":35.690070,"radius":56}],
+                      "costing":"auto","shape_match":"map_snap","format":"osrm","shape_format":"polyline6"})"));
+  } catch (const valhalla_exception_t& e) {
+    EXPECT_EQ(e.code, expected_error_code);
+    // If we get here then all good - return
+    return;
+  }
+
+  // If we get here then fail the test!
+  FAIL() << "Expected map_match wrong tile exception was not found";
+}
+
 TEST(Mapmatch, test_trace_route_map_snap_expected_error_code) {
   // tests expected error_code for trace_route edge_walk
   auto expected_error_code = 442;

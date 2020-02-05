@@ -185,7 +185,7 @@ struct projector_wrapper {
       // grab the tile the lat, lon is in
       auto tile_id = GraphId(tile_index, TileHierarchy::levels().rbegin()->first, 0);
       reader.GetGraphTile(tile_id, cur_tile);
-    } while (!cur_tile);
+    } while (!cur_tile && has_bin()); // bail when we do not have bin
   }
 
   std::function<std::tuple<int32_t, unsigned short, float>()> binner;
