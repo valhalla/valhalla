@@ -30,9 +30,9 @@ using namespace valhalla::thor;
 
 namespace {
 
-void TrimShape(const float start,
+void TrimShape(float start,
                PointLL start_vertex,
-               const float end,
+               float end,
                PointLL end_vertex,
                std::vector<PointLL>& shape) {
   // clip up to the start point if the start_vertex is valid
