@@ -1063,6 +1063,54 @@ TEST(Mapmatch, test_discontinuity_on_same_edge) {
   }
 }
 
+TEST(Mapmatch, test_discontinuity_duration_trimming) {
+  std::vector<std::string> test_cases = {
+      R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
+          {"lat": 52.1055358, "lon": 5.1208866, "type": "break"},
+          {"lat": 52.1044362, "lon": 5.1259572, "type": "break"},
+          {"lat": 52.1130862, "lon": 5.1445529, "type": "break"},
+          {"lat": 52.1130460, "lon": 5.1444851, "type": "break"},
+          {"lat": 52.1130186, "lon": 5.1444687, "type": "break"}]})",
+      R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
+          {"lat": 52.1047614, "lon": 5.1245468, "type": "break"},
+          {"lat": 52.1022218, "lon": 5.1299002, "type": "break"},
+          {"lat": 52.1131029, "lon": 5.1440879, "type": "break"},
+          {"lat": 52.1131350, "lon": 5.1440195, "type": "break"},
+          {"lat": 52.1131857, "lon": 5.1439104, "type": "break"}]})",
+      R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
+          {"lat": 52.1089306, "lon": 5.1226142, "type": "break"},
+          {"lat": 52.1060622, "lon": 5.1256574, "type": "break"},
+          {"lat": 52.0873837, "lon": 5.1442371, "type": "break"},
+          {"lat": 52.0872970, "lon": 5.1439155, "type": "break"},
+          {"lat": 52.0872151, "lon": 5.1436803, "type": "break"}]})"};
+
+  std::vector<int> test_ans_num_routes{2, 2, 2};
+  std::vector<std::vector<int>> test_ans_num_legs{{1, 2}, {1, 2}, {1, 2}};
+  std::vector<std::vector<float>> test_ans_leg_duration{{26.459, 0.97, 0.454},
+                                                        {48.6, 0.64, 0.961},
+                                                        {201.178, 2.431, 1.899}};
+
+  tyr::actor_t actor(conf, true);
+  for (size_t i = 0; i < test_cases.size(); ++i) {
+    auto matched = json_to_pt(actor.trace_route(test_cases[i]));
+    const auto& routes = matched.get_child("matchings");
+    EXPECT_EQ(routes.size(), test_ans_num_routes[i]);
+    int j = 0, k = 0;
+    for (const auto& route : routes) {
+      const auto& legs = route.second.get_child("legs");
+      ASSERT_EQ(legs.size(), test_ans_num_legs[i][j++])
+          << "Expected " + std::to_string(test_ans_num_legs[i][j - 1]) + " legs but got " +
+                 std::to_string(legs.size());
+      for (const auto& leg : legs) {
+        float duration = leg.second.get<float>("duration");
+        ASSERT_NEAR(duration, test_ans_leg_duration[i][k++], .1)
+            << "Expected legs with duration " + std::to_string(test_ans_leg_duration[i][k - 1]) +
+                   " but got " + std::to_string(duration);
+      }
+    }
+  }
+}
+
 TEST(Mapmatch, test_intersection_matching) {
   std::vector<std::string> test_cases = {
       R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
