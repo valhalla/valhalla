@@ -475,9 +475,10 @@ thor_worker_t::map_match(Api& request) {
           //            ▼                       ▼
           //  X---------------------------------------------> 100%
           //
-          if (std::prev(match_result_itr)->edgeid == last_edge->edgeid &&
-              match_result_itr->distance_along < std::prev(match_result_itr)->distance_along &&
-              !has_loop_on_last_edge) {
+          if (match_result_itr == match_results.cend() ||
+              (std::prev(match_result_itr)->edgeid == last_edge->edgeid &&
+               match_result_itr->distance_along < std::prev(match_result_itr)->distance_along &&
+               !has_loop_on_last_edge)) {
             break;
           }
         }
