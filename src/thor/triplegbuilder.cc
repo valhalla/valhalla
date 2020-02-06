@@ -28,7 +28,8 @@ using namespace valhalla::midgard;
 using namespace valhalla::sif;
 using namespace valhalla::thor;
 
-namespace {
+namespace valhalla {
+namespace thor {
 
 void TrimShape(float start,
                PointLL start_vertex,
@@ -39,7 +40,7 @@ void TrimShape(float start,
   float along = 0.f;
   auto current = shape.begin();
   if (start_vertex.IsValid()) {
-    while (current != shape.end() - 1) {
+    while (!shape.empty() && (current != shape.end() - 1)) {
       along += (current + 1)->Distance(*current);
       // just crossed it, replace the current vertex with the start position and erase
       // shape up to the current vertex
@@ -52,11 +53,10 @@ void TrimShape(float start,
       ++current;
     }
   }
-
   // clip after the end point if the end vertex is valid
   current = shape.begin();
   if (end_vertex.IsValid()) {
-    while (current != shape.end() - 1) {
+    while (!shape.empty() && (current != shape.end() - 1)) {
       along += (current + 1)->Distance(*current);
       // just crossed it, replace the current vertex with the end vertex and erase
       // shape after the current vertex
@@ -69,6 +69,11 @@ void TrimShape(float start,
     }
   }
 }
+
+} // namespace thor
+} // namespace valhalla
+
+namespace {
 
 uint32_t
 GetAdminIndex(const AdminInfo& admin_info,
