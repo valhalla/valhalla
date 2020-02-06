@@ -998,7 +998,7 @@ TEST(Mapmatch, test_leg_duration_trimming) {
         auto mtime = mlegs.Get(j).node().rbegin()->elapsed_time();
         printf("r: %.2f %s\n", rtime, rlegs.Get(j).shape().c_str());
         printf("m: %.2f %s\n", mtime, mlegs.Get(j).shape().c_str());
-        EXPECT_TRUE(valhalla::midgard::equal(rtime, mtime, 0.1)) << "Leg time differs";
+        EXPECT_NEAR(rtime, mtime, 0.1) << "Leg time differs";
       }
     }
   }

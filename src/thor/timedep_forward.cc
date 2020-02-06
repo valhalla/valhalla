@@ -162,7 +162,8 @@ inline bool TimeDepForward::ExpandForwardInner(GraphReader& graphreader,
 
   // Compute the cost to the end of this edge
   auto edge_cost = costing_->EdgeCost(meta.edge, tile, seconds_of_week);
-  Cost newcost = pred.cost() + edge_cost + costing_->TransitionCost(meta.edge, nodeinfo, pred);
+  auto transition_cost = costing_->TransitionCost(meta.edge, nodeinfo, pred);
+  Cost newcost = pred.cost() + edge_cost + transition_cost;
 
   // If this edge is a destination, subtract the partial/remainder cost
   // (cost from the dest. location to the end of the edge).
@@ -199,7 +200,7 @@ inline bool TimeDepForward::ExpandForwardInner(GraphReader& graphreader,
     if (newcost.cost < lab.cost().cost) {
       float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
       adjacencylist_->decrease(meta.edge_status->index(), newsortcost);
-      lab.Update(pred_idx, newcost, newsortcost, has_time_restrictions);
+      lab.Update(pred_idx, newcost, newsortcost, transition_cost, has_time_restrictions);
     }
     return true;
   }
@@ -221,7 +222,7 @@ inline bool TimeDepForward::ExpandForwardInner(GraphReader& graphreader,
   // Add to the adjacency list and edge labels.
   uint32_t idx = edgelabels_.size();
   edgelabels_.emplace_back(pred_idx, meta.edge_id, meta.edge, newcost, sortcost, dist, mode_, 0,
-                           has_time_restrictions);
+                           transition_cost, has_time_restrictions);
   *meta.edge_status = {EdgeSet::kTemporary, idx};
   adjacencylist_->add(idx);
   return true;

@@ -175,42 +175,6 @@ void test_osrm_destinations(const std::string filename,
   EXPECT_EQ(found_destinations, expected_destinations);
 }
 
-void test_osrm_junction_name(const std::string filename,
-                             int routes_index,
-                             int legs_index,
-                             int steps_index,
-                             const std::string expected_junction_name) {
-  // Load pinpoint test
-  std::string path_bytes = test::load_binary_file(filename);
-  EXPECT_NE(path_bytes.size(), 0);
-
-  // Create the request from the path bytes
-  valhalla::Api request;
-  request.ParseFromString(path_bytes);
-
-  // Set osrm format
-  request.mutable_options()->set_format(valhalla::Options_Format_osrm);
-
-  // Build the directions
-  valhalla::odin::DirectionsBuilder().Build(request);
-
-  // Serialize to osrm json string
-  auto json_str = valhalla::tyr::serializeDirections(request);
-
-  rapidjson::Document doc;
-  doc.Parse(json_str.c_str());
-  ASSERT_FALSE(doc.HasParseError()) << "Parse JSON error";
-
-  // Set the junction_name path
-  std::string junction_name_path = "/routes/" + std::to_string(routes_index) + "/legs/" +
-                                   std::to_string(legs_index) + "/steps/" +
-                                   std::to_string(steps_index) + "/junction_name";
-
-  // Validate junction_name
-  std::string found_junction_name = rapidjson::get<std::string>(doc, junction_name_path.c_str(), "");
-  EXPECT_EQ(found_junction_name, expected_junction_name);
-}
-
 TEST(Instructions, validate_merge_instructions) {
 
   int expected_routes_size = 1;
@@ -278,48 +242,6 @@ TEST(Instructions, validate_osrm_turn_destinations) {
   test_osrm_destinations({VALHALLA_SOURCE_DIR
                           "test/pinpoints/instructions/roundabout_and_bear_right_guide_sign.pbf"},
                          routes_index, legs_index, steps_index, "A20: Dover, Channel Tunnel");
-}
-
-TEST(Instructions, validate_osrm_turn_junction_name) {
-
-  int routes_index = 0;
-  int legs_index = 0;
-  int steps_index = 1;
-  // Test osrm turn left at junction name
-  test_osrm_junction_name({VALHALLA_SOURCE_DIR
-                           "test/pinpoints/instructions/turn_left_junction_name_sign.pbf"},
-                          routes_index, legs_index, steps_index, "新橋三丁目交番前");
-  // Test osrm turn right at junction name
-  test_osrm_junction_name({VALHALLA_SOURCE_DIR
-                           "test/pinpoints/instructions/turn_right_junction_name_sign.pbf"},
-                          routes_index, legs_index, steps_index, "新橋三丁目交番前");
-
-  // Test osrm turn right at junction name with internal intersection edge
-  test_osrm_junction_name({VALHALLA_SOURCE_DIR
-                           "test/pinpoints/instructions/turn_right_internal_junction_name_sign.pbf"},
-                          routes_index, legs_index, steps_index, "万年橋東");
-
-  test_osrm_junction_name({VALHALLA_SOURCE_DIR
-                           "test/pinpoints/instructions/osrm_no_origin_junction_name_pinpoint.pbf"},
-                          routes_index, legs_index, steps_index, "銀座七丁目");
-
-  // Test osrm no junction name at origin/start maneuver
-  steps_index = 0;
-  test_osrm_junction_name({VALHALLA_SOURCE_DIR
-                           "test/pinpoints/instructions/turn_left_junction_name_sign.pbf"},
-                          routes_index, legs_index, steps_index, "");
-
-  test_osrm_junction_name({VALHALLA_SOURCE_DIR
-                           "test/pinpoints/instructions/turn_right_junction_name_sign.pbf"},
-                          routes_index, legs_index, steps_index, "");
-
-  test_osrm_junction_name({VALHALLA_SOURCE_DIR
-                           "test/pinpoints/instructions/turn_right_internal_junction_name_sign.pbf"},
-                          routes_index, legs_index, steps_index, "");
-
-  test_osrm_junction_name({VALHALLA_SOURCE_DIR
-                           "test/pinpoints/instructions/osrm_no_origin_junction_name_pinpoint.pbf"},
-                          routes_index, legs_index, steps_index, "");
 }
 
 TEST(Instructions, validate_osrm_roundabout_destinations) {
