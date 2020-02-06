@@ -293,7 +293,7 @@ public:
       return next_pred;
     };
     auto reset_edge_status =
-        [&edgestatus, &forward](const std::list<baldr::GraphId>& edge_ids_in_complex_restriction) {
+        [&edgestatus, &forward](const std::vector<baldr::GraphId>& edge_ids_in_complex_restriction) {
           // A complex restriction spans multiple edges, e.g. from A to C via B.
           //
           // At the point of triggering a complex restriction, all edges leading up to C
@@ -314,6 +314,11 @@ public:
           if (edgestatus != nullptr) {
             auto first = edge_ids_in_complex_restriction.cbegin();
             auto last = edge_ids_in_complex_restriction.cend();
+
+            // Nothing to do if the restriction has no vias
+            if (first == last) {
+              return;
+            }
             // Reset all but the last edge since there is
             // no point in possibly expanding from A a second time and could lead
             // to infinite loops
@@ -341,7 +346,8 @@ public:
         // Ids do not match the path for this restriction.
         bool match = true;
         const EdgeLabel* next_pred = first_pred;
-        std::list<baldr::GraphId> edge_ids_in_complex_restriction;
+        std::vector<baldr::GraphId> edge_ids_in_complex_restriction;
+        edge_ids_in_complex_restriction.reserve(10);
         if (cr->via_count() > 0) {
           // The via list starts immediately after the structure
           baldr::GraphId* via = reinterpret_cast<baldr::GraphId*>(cr + 1);
