@@ -32,10 +32,12 @@ using namespace valhalla::thor;
 using namespace valhalla::midgard;
 
 /*
- * Example with json: ./valhalla_path_comparison --json '{"paths":[[{"lat":48.26147,"lon":11.59043},{"lat":48.268398,"lon":11.59349},
+ * Example with json: ./valhalla_path_comparison --json
+ * '{"paths":[[{"lat":48.26147,"lon":11.59043},{"lat":48.268398,"lon":11.59349},
  * {"lat":48.26969,"lon":11.58427}]],"costing":"auto"}' --config ../config/valhalla.json
  *
- * Example trace_route request: http://localhost:8002/trace_route?json={"shape":[{"lat":48.26147,"lon":11.59043},{"lat":48.268398,"lon":11.59349},
+ * Example trace_route request:
+ * http://localhost:8002/trace_route?json={"shape":[{"lat":48.26147,"lon":11.59043},{"lat":48.268398,"lon":11.59349},
  * {"lat":48.26969,"lon":11.58427}],"costing":"auto","shape_match":"map_snap"}
  *
  * NOTE: If the trace_route does not return a path, this comparison will not work.
@@ -78,7 +80,7 @@ void print_edge(GraphReader& reader,
     trans_total += trans_cost;
     std::cout << "TransitionCost cost: " << trans_cost.cost;
     std::cout << " secs: " << trans_cost.secs << "\n";
-    std::cout << "Stop Impact: " << edge->stopimpact(pred_edge->opp_local_idx())  << "\n";
+    std::cout << "Stop Impact: " << edge->stopimpact(pred_edge->opp_local_idx()) << "\n";
     std::cout << "------------------------\n\n";
   }
   pred_id = current_id;
