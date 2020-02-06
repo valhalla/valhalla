@@ -1035,27 +1035,28 @@ TEST(Mapmatch, test_discontinuity_on_same_edge) {
           {"lat": 52.0956105, "lon": 5.0975165, "type": "break"},
           {"lat": 52.0956333, "lon": 5.0972287, "type": "break"}]})"};
 
-  std::vector<std::tuple<int, std::vector<int>, std::vector<float>>>
-      test_answers{{2, std::vector<int>{1, 1}, std::vector<float>{3.955, 2.226}},
-                   {2, std::vector<int>{1, 1}, std::vector<float>{7.095, 2.562}},
-                   {3, std::vector<int>{1, 1, 1}, std::vector<float>{12.214, 3.728, 8.184}},
-                   {2, std::vector<int>{2, 2}, std::vector<float>{7.456, 2.931, 1.324, 2.37}}};
+  std::vector<int> test_ans_num_routes{2, 2, 3, 2};
+  std::vector<std::vector<int>> test_ans_num_legs{{1, 1}, {1, 1}, {1, 1, 1}, {2, 2}};
+  std::vector<std::vector<float>> test_ans_leg_duration{{3.955, 2.226},
+                                                        {7.095, 2.562},
+                                                        {12.214, 3.728, 8.184},
+                                                        {7.456, 2.931, 1.324, 2.37}};
 
   tyr::actor_t actor(conf, true);
   for (size_t i = 0; i < test_cases.size(); ++i) {
     auto matched = json_to_pt(actor.trace_route(test_cases[i]));
     const auto& routes = matched.get_child("matchings");
-    EXPECT_EQ(routes.size(), std::get<0>(test_answers[i]));
+    EXPECT_EQ(routes.size(), test_ans_num_routes[i]);
     int j = 0, k = 0;
     for (const auto& route : routes) {
       const auto& legs = route.second.get_child("legs");
-      ASSERT_EQ(legs.size(), std::get<1>(test_answers[i])[j++])
-          << "Expected " + std::to_string(std::get<1>(test_answers[i])[j - 1]) + " legs but got " +
+      ASSERT_EQ(legs.size(), test_ans_num_legs[i][j++])
+          << "Expected " + std::to_string(test_ans_num_legs[i][j - 1]) + " legs but got " +
                  std::to_string(legs.size());
       for (const auto& leg : legs) {
         float duration = leg.second.get<float>("duration");
-        ASSERT_NEAR(duration, std::get<2>(test_answers[i])[k++], .1)
-            << "Expected legs with duration " + std::to_string(std::get<2>(test_answers[i])[k - 1]) +
+        ASSERT_NEAR(duration, test_ans_leg_duration[i][k++], .1)
+            << "Expected legs with duration " + std::to_string(test_ans_leg_duration[i][k - 1]) +
                    " but got " + std::to_string(duration);
       }
     }
