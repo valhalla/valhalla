@@ -1036,10 +1036,10 @@ TEST(Mapmatch, test_discontinuity_on_same_edge) {
           {"lat": 52.0956333, "lon": 5.0972287, "type": "break"}]})"};
 
   std::vector<std::tuple<int, std::vector<int>, std::vector<float>>>
-      test_answers{{2, {1, 1}, {3.955, 2.226}},
-                   {2, {1, 1}, {7.095, 2.562}},
-                   {3, {1, 1, 1}, {12.214, 3.728, 8.184}},
-                   {2, {2, 2}, {7.456, 2.931, 1.324, 2.37}}};
+      test_answers{{2, std::vector<int>{1, 1}, std::vector<float>{3.955, 2.226}},
+                   {2, std::vector<int>{1, 1}, std::vector<float>{7.095, 2.562}},
+                   {3, std::vector<int>{1, 1, 1}, std::vector<float>{12.214, 3.728, 8.184}},
+                   {2, std::vector<int>{2, 2}, std::vector<float>{7.456, 2.931, 1.324, 2.37}}};
 
   tyr::actor_t actor(conf, true);
   for (size_t i = 0; i < test_cases.size(); ++i) {
