@@ -607,9 +607,14 @@ public:
         name = tag.second;
       } else if (tag.first == "name:en" && !tag.second.empty()) {
         w.set_name_en_index(osmdata_.name_offset_map.index(tag.second));
-      } else if (tag.first == "alt_name" && !tag.second.empty()) {
+      }
+      /* Disabling alt_name tag processing. This might need to be re-enabled
+       * for commerical dataset.
+       * TODO: Make this a config option
+       * else if (tag.first == "alt_name" && !tag.second.empty()) {
         w.set_alt_name_index(osmdata_.name_offset_map.index(tag.second));
-      } else if (tag.first == "official_name" && !tag.second.empty()) {
+      } */
+      else if (tag.first == "official_name" && !tag.second.empty()) {
         w.set_official_name_index(osmdata_.name_offset_map.index(tag.second));
 
       } else if (tag.first == "max_speed") {
