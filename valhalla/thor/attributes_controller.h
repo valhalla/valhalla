@@ -103,8 +103,8 @@ const std::string kNodeTransitStationInfoLatLon = "node.transit_station_info.lat
 const std::string kNodeTransitEgressInfoOnestopId = "node.transit_egress_info.onestop_id";
 const std::string kNodeTransitEgressInfoName = "node.transit_egress_info.name";
 const std::string kNodeTransitEgressInfoLatLon = "node.transit_egress_info.lat_lon";
-
 const std::string kNodeTimeZone = "node.time_zone";
+const std::string kNodeTransitionTime = "node.transition_time";
 
 // Top level: osm changeset, admin list, and full shape keys
 const std::string kOsmChangeset = "osm_changeset";

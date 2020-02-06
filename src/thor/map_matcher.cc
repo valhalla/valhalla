@@ -196,7 +196,7 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
     // source is smaller than prior target, it indicates discontinuity. see follow:
     //
     //                   current_source
-    //    prior_scource          |    prior_target
+    //    prior_source           |    prior_target
     //          |                |         |
     //  X---------------------------------------------X
     //                      Edge
@@ -226,10 +226,10 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
     }
 
     // get the cost of traversing the node, there is no turn cost the first time
-    Cost turn_cost{};
+    Cost transition_cost{};
     if (elapsed.secs > 0 && !disconnected) {
-      turn_cost = costing->TransitionCost(directededge, nodeinfo, pred);
-      elapsed += turn_cost;
+      transition_cost = costing->TransitionCost(directededge, nodeinfo, pred);
+      elapsed += transition_cost;
     }
 
     // Get time along the edge, handling partial distance along the first and last edge.
@@ -261,10 +261,10 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
     nodeinfo = end_tile->node(prior_node);
 
     // Update the predecessor EdgeLabel (for transition costing in the next round);
-    pred = {kInvalidLabel, edge_id, directededge, elapsed, 0, 0, mode, 0};
+    pred = {kInvalidLabel, edge_id, directededge, elapsed, 0, 0, mode, 0, {}};
 
     // Add to the PathInfo
-    path.emplace_back(mode, elapsed.secs, edge_id, 0, elapsed.cost, false, turn_cost.secs);
+    path.emplace_back(mode, elapsed.secs, edge_id, 0, elapsed.cost, false, transition_cost.secs);
   }
 
   return path;

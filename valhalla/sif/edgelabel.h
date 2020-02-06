@@ -49,6 +49,7 @@ public:
             const float dist,
             const TravelMode mode,
             const uint32_t path_distance,
+            const Cost& transition_cost,
             bool has_time_restrictions = false)
       : predecessor_(predecessor), path_distance_(path_distance), restrictions_(edge->restrictions()),
         edgeid_(edgeid), opp_index_(edge->opp_index()), opp_local_idx_(edge->opp_local_idx()),
@@ -57,7 +58,7 @@ public:
         classification_(static_cast<uint32_t>(edge->classification())), shortcut_(edge->shortcut()),
         dest_only_(edge->destonly()), origin_(0), toll_(edge->toll()), not_thru_(edge->not_thru()),
         deadend_(edge->deadend()), on_complex_rest_(edge->part_of_complex_restriction()), cost_(cost),
-        sortcost_(sortcost), distance_(dist) {
+        sortcost_(sortcost), distance_(dist), transition_cost_(transition_cost) {
   }
 
   /**
@@ -70,10 +71,12 @@ public:
   void Update(const uint32_t predecessor,
               const Cost& cost,
               const float sortcost,
+              const Cost& transition_cost,
               const bool has_time_restrictions) {
     predecessor_ = predecessor;
     cost_ = cost;
     sortcost_ = sortcost;
+    transition_cost_ = transition_cost;
     has_time_restrictions_ = has_time_restrictions;
   }
 
@@ -91,11 +94,13 @@ public:
               const Cost& cost,
               const float sortcost,
               const uint32_t path_distance,
+              const Cost& transition_cost,
               const bool has_time_restrictions) {
     predecessor_ = predecessor;
     cost_ = cost;
     sortcost_ = sortcost;
     path_distance_ = path_distance;
+    transition_cost_ = transition_cost;
     has_time_restrictions_ = has_time_restrictions;
   }
 
@@ -314,6 +319,26 @@ public:
     deadend_ = is_deadend;
   }
 
+  /**
+   * Get the transition cost in seconds. This is used in the bidirectional A*
+   * to determine the cost at the connection. But is also used for general stats
+   * @return  Returns the transition cost (including penalties) in seconds.
+   */
+  float transition_cost() const {
+    return transition_cost_.cost;
+  }
+
+  /**
+   * Get the transition cost in seconds. This is used in the bidirectional A*
+   * reverse path search to allow the recovery of the true elapsed time along
+   * the path. This is needed since the transition cost is applied at a
+   * different node than the forward search.
+   * @return  Returns the transition cost (without penalties) in seconds.
+   */
+  float transition_secs() const {
+    return transition_cost_.secs;
+  }
+
 protected:
   // predecessor_: Index to the predecessor edge label information.
   // Note: invalid predecessor value uses all 32 bits (so if this needs to
@@ -369,6 +394,10 @@ protected:
   Cost cost_;      // Cost and elapsed time along the path.
   float sortcost_; // Sort cost - includes A* heuristic.
   float distance_; // Distance to the destination.
+
+  // Was originally used for reverse search path to remove extra time where paths intersected
+  // but its now used everywhere to measure the difference in time along the edge vs at the node
+  sif::Cost transition_cost_;
 };
 
 /**
@@ -404,11 +433,20 @@ public:
               const float sortcost,
               const float dist,
               const sif::TravelMode mode,
-              const sif::Cost& tc,
+              const sif::Cost& transition_cost,
               const bool not_thru_pruning,
               const bool has_time_restrictions)
-      : EdgeLabel(predecessor, edgeid, edge, cost, sortcost, dist, mode, 0, has_time_restrictions),
-        opp_edgeid_(oppedgeid), not_thru_pruning_(not_thru_pruning), transition_cost_(tc) {
+      : EdgeLabel(predecessor,
+                  edgeid,
+                  edge,
+                  cost,
+                  sortcost,
+                  dist,
+                  mode,
+                  0,
+                  transition_cost,
+                  has_time_restrictions),
+        opp_edgeid_(oppedgeid), not_thru_pruning_(not_thru_pruning) {
   }
 
   /**
@@ -431,7 +469,7 @@ public:
               const baldr::DirectedEdge* edge,
               const sif::Cost& cost,
               const sif::TravelMode mode,
-              const sif::Cost& tc,
+              const sif::Cost& transition_cost,
               const uint32_t path_distance,
               const bool not_thru_pruning,
               const bool has_time_restrictions)
@@ -443,8 +481,9 @@ public:
                   0,
                   mode,
                   path_distance,
+                  transition_cost,
                   has_time_restrictions),
-        opp_edgeid_(oppedgeid), not_thru_pruning_(not_thru_pruning), transition_cost_(tc) {
+        opp_edgeid_(oppedgeid), not_thru_pruning_(not_thru_pruning) {
   }
 
   /**
@@ -466,10 +505,18 @@ public:
               const float dist,
               const sif::TravelMode mode,
               const bool has_time_restrictions)
-      : EdgeLabel(predecessor, edgeid, edge, cost, sortcost, dist, mode, 0, has_time_restrictions),
+      : EdgeLabel(predecessor,
+                  edgeid,
+                  edge,
+                  cost,
+                  sortcost,
+                  dist,
+                  mode,
+                  0,
+                  Cost{},
+                  has_time_restrictions),
         not_thru_pruning_(false) {
     opp_edgeid_ = {};
-    transition_cost_ = {};
   }
 
   /**
@@ -524,26 +571,6 @@ public:
   }
 
   /**
-   * Get the transition cost in seconds. This is used in the bidirectional A*
-   * to determine the cost at the connection.
-   * @return  Returns the transition cost (including penalties) in seconds.
-   */
-  float transition_cost() const {
-    return transition_cost_.cost;
-  }
-
-  /**
-   * Get the transition cost in seconds. This is used in the bidirectional A*
-   * reverse path search to allow the recovery of the true elapsed time along
-   * the path. This is needed since the transition cost is applied at a
-   * different node than the forward search.
-   * @return  Returns the transition cost (without penalties) in seconds.
-   */
-  float transition_secs() const {
-    return transition_cost_.secs;
-  }
-
-  /**
    * Should not thru pruning be enabled on this path?
    * @return Returns true if not thru pruning should be enabled.
    */
@@ -556,9 +583,6 @@ protected:
   // not_thru_pruning_: Is not thru pruning enabled?
   uint64_t opp_edgeid_ : 63; // Could be 46 (to provide more spare)
   uint64_t not_thru_pruning_ : 1;
-
-  // Transition cost (for recovering elapsed time on reverse path)
-  sif::Cost transition_cost_;
 };
 
 /**
@@ -596,6 +620,7 @@ public:
               const uint32_t blockid,
               const uint32_t transit_operator,
               const bool has_transit,
+              const Cost& transition_cost,
               const bool has_time_restrictions = false)
       : EdgeLabel(predecessor,
                   edgeid,
@@ -605,6 +630,7 @@ public:
                   dist,
                   mode,
                   path_distance,
+                  transition_cost,
                   has_time_restrictions),
         prior_stopid_(prior_stopid), tripid_(tripid), blockid_(blockid),
         transit_operator_(transit_operator), has_transit_(has_transit) {
@@ -628,6 +654,7 @@ public:
               const uint32_t path_distance,
               const uint32_t tripid,
               const uint32_t blockid,
+              const Cost& transition_cost,
               const bool has_time_restrictions) {
     predecessor_ = predecessor;
     cost_ = cost;
@@ -635,6 +662,7 @@ public:
     path_distance_ = path_distance;
     tripid_ = tripid;
     blockid_ = blockid;
+    transition_cost_ = transition_cost;
     has_time_restrictions_ = has_time_restrictions;
   }
 

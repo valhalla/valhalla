@@ -573,6 +573,14 @@ public:
     return mutable_node_->time_zone();
   }
 
+  bool has_transition_time() const {
+    return mutable_node_->has_transition_time();
+  }
+
+  double transition_time() const {
+    return mutable_node_->transition_time();
+  }
+
   bool HasIntersectingEdges() const;
 
   bool HasIntersectingEdgeNameConsistency() const;
