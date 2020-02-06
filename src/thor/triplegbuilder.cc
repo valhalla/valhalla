@@ -15,6 +15,7 @@
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
+#include "midgard/util.h"
 #include "sif/costconstants.h"
 #include "thor/attributes_controller.h"
 #include "thor/match_result.h"
@@ -27,51 +28,6 @@ using namespace valhalla::baldr;
 using namespace valhalla::midgard;
 using namespace valhalla::sif;
 using namespace valhalla::thor;
-
-namespace valhalla {
-namespace thor {
-
-void TrimShape(float start,
-               PointLL start_vertex,
-               float end,
-               PointLL end_vertex,
-               std::vector<PointLL>& shape) {
-  // clip up to the start point if the start_vertex is valid
-  float along = 0.f;
-  auto current = shape.begin();
-  if (start_vertex.IsValid()) {
-    while (!shape.empty() && (current != shape.end() - 1)) {
-      along += (current + 1)->Distance(*current);
-      // just crossed it, replace the current vertex with the start position and erase
-      // shape up to the current vertex
-      if (along > start) {
-        along = start;
-        *current = start_vertex;
-        shape.erase(shape.begin(), current);
-        break;
-      }
-      ++current;
-    }
-  }
-  // clip after the end point if the end vertex is valid
-  current = shape.begin();
-  if (end_vertex.IsValid()) {
-    while (!shape.empty() && (current != shape.end() - 1)) {
-      along += (current + 1)->Distance(*current);
-      // just crossed it, replace the current vertex with the end vertex and erase
-      // shape after the current vertex
-      if (along > end) {
-        *(++current) = end_vertex;
-        shape.erase(++current, shape.end());
-        break;
-      }
-      ++current;
-    }
-  }
-}
-
-} // namespace thor
-} // namespace valhalla
 
 namespace {
 

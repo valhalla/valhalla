@@ -10,23 +10,14 @@
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/pathlocation.h>
-#include <valhalla/midgard/pointll.h>
 #include <valhalla/proto/trip.pb.h>
 #include <valhalla/sif/costfactory.h>
 #include <valhalla/thor/attributes_controller.h>
 #include <valhalla/thor/match_result.h>
 #include <valhalla/thor/pathinfo.h>
 
-using namespace valhalla::midgard;
-
 namespace valhalla {
 namespace thor {
-
-void TrimShape(float start,
-               PointLL start_vertex,
-               float end,
-               PointLL end_vertex,
-               std::vector<PointLL>& shape);
 
 /**
  * Algorithm to create a trip path output from a list of directed edges.
