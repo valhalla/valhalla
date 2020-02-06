@@ -30,11 +30,11 @@ using namespace valhalla::thor;
 
 namespace {
 
-void TrimShape(std::vector<PointLL>& shape,
-               const float start,
-               const PointLL& start_vertex,
+void TrimShape(const float start,
+               PointLL start_vertex,
                const float end,
-               const PointLL& end_vertex) {
+               PointLL end_vertex,
+               std::vector<PointLL>& shape) {
   // clip up to the start point if the start_vertex is valid
   float along = 0.f;
   auto current = shape.begin();
@@ -1239,7 +1239,7 @@ void TripLegBuilder::Build(
     }
 
     float total = static_cast<float>(edge->length());
-    TrimShape(shape, start_pct * total, start_vrt, end_pct * total, end_vrt);
+    TrimShape(start_pct * total, start_vrt, end_pct * total, end_vrt, shape);
 
     // Driving on right from the start of the edge?
     const GraphId start_node = graphreader.GetOpposingEdge(path_begin->edgeid)->endnode();
@@ -1615,8 +1615,8 @@ void TripLegBuilder::Build(
 
       // Trim the shape
       auto edge_length = static_cast<float>(directededge->length());
-      TrimShape(edge_shape, edge_begin_info.distance_along * edge_length, edge_begin_info.vertex,
-                edge_end_info.distance_along * edge_length, edge_end_info.vertex);
+      TrimShape(edge_begin_info.distance_along * edge_length, edge_begin_info.vertex,
+                edge_end_info.distance_along * edge_length, edge_end_info.vertex, edge_shape);
       // Add edge shape to trip
       trip_shape.insert(trip_shape.end(),
                         (edge_shape.begin() + ((edge_begin_info.exists || is_first_edge) ? 0 : 1)),
@@ -1647,10 +1647,10 @@ void TripLegBuilder::Build(
       // Note: that this cannot be both the first and last edge, that special case is handled above
       // Trim the shape at the front for the first edge
       if (is_first_edge) {
-        TrimShape(edge_shape, start_pct * total, start_vrt, total, edge_shape.back());
+        TrimShape(start_pct * total, start_vrt, total, edge_shape.back(), edge_shape);
       } // And at the back if its the last edge
       else {
-        TrimShape(edge_shape, 0, edge_shape.front(), end_pct * total, end_vrt);
+        TrimShape(0, edge_shape.front(), end_pct * total, end_vrt, edge_shape);
       }
       // Keep the shape
       trip_shape.insert(trip_shape.end(), edge_shape.begin() + is_last_edge, edge_shape.end());
