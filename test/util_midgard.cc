@@ -382,17 +382,15 @@ TEST(UtilMidgard, TestSimilarAndEqual) {
 TEST(UtilMidgard, TrimShapeAsan) {
   float start = 42.2698097;
   float end = 47;
-  PointLL start_vertex{8.54709148, 47.3651924};
-  PointLL end_vertex{8.54711914, 47.3651543};
   std::vector<PointLL> shape = {
       PointLL{8.5468483, 47.3655319},
       PointLL{8.54691314, 47.365448},
       PointLL{8.54711914, 47.3651543},
   };
-  TrimShape(start, start_vertex, end, end_vertex, shape);
+  TrimShape(start, shape.front(), end, shape.back(), shape);
   ASSERT_EQ(shape.size(), 2);
-  ASSERT_FLOAT_EQ(shape.at(0).lat(), 47.3652);
-  ASSERT_FLOAT_EQ(shape.at(0).lng(), 8.54709);
+  ASSERT_FLOAT_EQ(shape.at(0).lat(), 47.365532);
+  ASSERT_FLOAT_EQ(shape.at(0).lng(), 8.5468483);
   ASSERT_FLOAT_EQ(shape.at(1).lat(), 47.365154);
   ASSERT_FLOAT_EQ(shape.at(1).lng(), 8.54712);
 }
