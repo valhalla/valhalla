@@ -307,8 +307,6 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
     boost::filesystem::remove(*database);
   }
 
-  spatialite_init(0);
-
   sqlite3* db_handle;
   sqlite3_stmt* stmt;
   uint32_t ret;
@@ -324,6 +322,8 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
     return;
   }
 
+  auto spatialite_conn_ptr = spatialite_alloc_connection();
+  spatialite_init_ex(db_handle, spatialite_conn_ptr, 0);
   // loading SpatiaLite as an extension
   sqlite3_enable_load_extension(db_handle, 1);
 #if SQLITE_VERSION_NUMBER > 3008007
@@ -701,6 +701,7 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
     return;
   }
 
+  spatialite_cleanup_ex(spatialite_conn_ptr);
   sqlite3_close(db_handle);
 
   LOG_INFO("Finished.");
