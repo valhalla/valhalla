@@ -196,9 +196,10 @@ void AStarBSSAlgorithm::ExpandForward(GraphReader& graphreader,
 
     auto edge_cost = current_costing->EdgeCost(directededge, tile);
     Cost normalized_edge_cost = {edge_cost.cost * current_costing->GetModeFactor(), edge_cost.secs};
+    auto transition_cost = current_costing->TransitionCost(directededge, nodeinfo, pred);
+
     // Compute the cost to the end of this edge
-    Cost newcost = pred.cost() + normalized_edge_cost +
-                   current_costing->TransitionCost(directededge, nodeinfo, pred);
+    Cost newcost = pred.cost() + normalized_edge_cost + transition_cost;
 
     // If this edge is a destination, subtract the partial/remainder cost
     // (cost from the dest. location to the end of the edge).
@@ -235,7 +236,7 @@ void AStarBSSAlgorithm::ExpandForward(GraphReader& graphreader,
       if (newcost.cost < lab.cost().cost) {
         float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
         adjacencylist_->decrease(current_es->index(), newsortcost);
-        lab.Update(pred_idx, newcost, newsortcost, has_time_restrictions);
+        lab.Update(pred_idx, newcost, newsortcost, transition_cost, has_time_restrictions);
       }
       continue;
     }
@@ -257,7 +258,8 @@ void AStarBSSAlgorithm::ExpandForward(GraphReader& graphreader,
 
     // Add to the adjacency list and edge labels.
     uint32_t idx = edgelabels_.size();
-    edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, sortcost, dist, mode, 0);
+    edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, sortcost, dist, mode, 0,
+                             transition_cost);
     *current_es = {EdgeSet::kTemporary, idx};
     adjacencylist_->add(idx);
   }
@@ -510,7 +512,7 @@ void AStarBSSAlgorithm::SetOrigin(GraphReader& graphreader,
     // of the path.
     uint32_t d = static_cast<uint32_t>(directededge->length() * (1.0f - edge.percent_along()));
     EdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost, sortcost, dist,
-                         TravelMode::kPedestrian, d);
+                         TravelMode::kPedestrian, d, Cost{});
     // Set the origin flag
     edge_label.set_origin();
 
