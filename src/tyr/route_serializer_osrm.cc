@@ -251,17 +251,17 @@ void route_summary(json::MapPtr& route,
                    const google::protobuf::RepeatedPtrField<valhalla::DirectionsLeg>& legs,
                    bool imperial) {
   // Compute total distance and duration
-  float duration = 0.0f;
-  float distance = 0.0f;
+  double duration = 0.0f;
+  double distance = 0.0f;
   for (const auto& leg : legs) {
     distance += leg.summary().length();
     duration += leg.summary().time();
   }
 
   // Convert distance to meters. Output distance and duration.
-  distance *= imperial ? 1609.34f : 1000.0f;
-  route->emplace("distance", json::fp_t{distance, 1});
-  route->emplace("duration", json::fp_t{duration, 1});
+  distance *= imperial ? 1609.344 : 1000.0;
+  route->emplace("distance", json::fp_t{distance, 3});
+  route->emplace("duration", json::fp_t{duration, 3});
 
   // TODO - support returning weight based on costing method
   // as well as returning the costing method
@@ -425,10 +425,14 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
     // Add the node location (lon, lat). Use the last shape point for
     // the arrive step
     auto loc = json::array({});
-    PointLL ll = arrive_maneuver ? shape[shape.size() - 1] : shape[curr_edge->begin_shape_index()];
+    size_t shape_index = arrive_maneuver ? shape.size() - 1 : curr_edge->begin_shape_index();
+    PointLL ll = shape[shape_index];
     loc->emplace_back(json::fp_t{ll.lng(), 6});
     loc->emplace_back(json::fp_t{ll.lat(), 6});
     intersection->emplace("location", loc);
+    intersection->emplace("geometry_index", static_cast<uint64_t>(shape_index));
+    if (node->has_transition_time())
+      intersection->emplace("duration", json::fp_t{node->transition_time(), 3});
 
     // Get bearings and access to outgoing intersecting edges. Do not add
     // any intersecting edges for the first depart intersection and for
@@ -1218,8 +1222,8 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
                         arrive_maneuver, options);
 
       // Add mode, driving side, weight, distance, duration, name
-      float distance = maneuver.length() * (imperial ? 1609.34f : 1000.0f);
-      float duration = maneuver.time();
+      double distance = maneuver.length() * (imperial ? 1609.344 : 1000.0);
+      double duration = maneuver.time();
 
       // Process drive_side, name, ref, mode, and prev_mode attributes if not the arrive maneuver
       if (!arrive_maneuver) {
@@ -1235,9 +1239,9 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
 
       step->emplace("mode", mode);
       step->emplace("driving_side", drive_side);
-      step->emplace("duration", json::fp_t{duration, 1});
-      step->emplace("weight", json::fp_t{duration, 1});
-      step->emplace("distance", json::fp_t{distance, 1});
+      step->emplace("duration", json::fp_t{duration, 3});
+      step->emplace("weight", json::fp_t{duration, 3});
+      step->emplace("distance", json::fp_t{distance, 3});
       step->emplace("name", name);
       if (!ref.empty()) {
         step->emplace("ref", ref);
@@ -1281,6 +1285,30 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
         step->emplace("junction_name", junction_name);
       }
 
+      // If the user requested guidance_views
+      if (options.guidance_views()) {
+        // Add guidance_views if not the start maneuver
+        if (!depart_maneuver && (maneuver.guidance_views_size() > 0)) {
+          auto guidance_views = json::array({});
+          for (const auto& gv : maneuver.guidance_views()) {
+            auto guidance_view = json::map({});
+            guidance_view->emplace("data_id", gv.data_id());
+            guidance_view->emplace("type", gv.type());
+            guidance_view->emplace("base_id", gv.base_id());
+            auto overlay_ids = json::array({});
+            for (const auto& overlay : gv.overlay_ids()) {
+              overlay_ids->emplace_back(overlay);
+            }
+            guidance_view->emplace("overlay_ids", overlay_ids);
+
+            // Append to guidance view list
+            guidance_views->emplace_back(guidance_view);
+          }
+          // Add guidance views to step
+          step->emplace("guidance_views", guidance_views);
+        }
+      }
+
       // Add intersections
       step->emplace("intersections",
                     intersections(maneuver, &etp, shape, prev_intersection_count, arrive_maneuver));
@@ -1297,12 +1325,12 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
 
     // Add distance, duration, weight, and summary
     // Get a summary based on longest maneuvers.
-    float duration = leg->summary().time();
-    float distance = leg->summary().length() * (imperial ? 1609.34f : 1000.0f);
+    double duration = leg->summary().time();
+    double distance = leg->summary().length() * (imperial ? 1609.344 : 1000.0);
     output_leg->emplace("summary", summarize_leg(leg));
-    output_leg->emplace("distance", json::fp_t{distance, 1});
-    output_leg->emplace("duration", json::fp_t{duration, 1});
-    output_leg->emplace("weight", json::fp_t{duration, 1});
+    output_leg->emplace("distance", json::fp_t{distance, 3});
+    output_leg->emplace("duration", json::fp_t{duration, 3});
+    output_leg->emplace("weight", json::fp_t{duration, 3});
 
     // Add steps to the leg
     output_leg->emplace("steps", steps);

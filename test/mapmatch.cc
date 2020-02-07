@@ -998,7 +998,7 @@ TEST(Mapmatch, test_leg_duration_trimming) {
         auto mtime = mlegs.Get(j).node().rbegin()->elapsed_time();
         printf("r: %.2f %s\n", rtime, rlegs.Get(j).shape().c_str());
         printf("m: %.2f %s\n", mtime, mlegs.Get(j).shape().c_str());
-        EXPECT_TRUE(valhalla::midgard::equal(rtime, mtime, 0.1)) << "Leg time differs";
+        EXPECT_NEAR(rtime, mtime, 0.1) << "Leg time differs";
       }
     }
   }
@@ -1037,8 +1037,8 @@ TEST(Mapmatch, test_intersection_matching) {
       int j = 0;
       for (const auto& leg : legs) {
         float distance = leg.second.get<float>("distance");
-        ASSERT_EQ(distance, test_answers[i].second[j++])
-            << "Expected legs with distance" + std::to_string(test_answers[i].second[j - 1]) +
+        ASSERT_NEAR(distance, test_answers[i].second[j++], .1)
+            << "Expected legs with distance " + std::to_string(test_answers[i].second[j - 1]) +
                    " but got " + std::to_string(distance);
       }
     }

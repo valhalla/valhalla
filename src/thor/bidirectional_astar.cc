@@ -239,8 +239,9 @@ inline bool BidirectionalAStar::ExpandForwardInner(GraphReader& graphreader,
   }
 
   // Get cost. Separate out transition cost.
-  Cost tc = costing_->TransitionCost(meta.edge, nodeinfo, pred);
-  Cost newcost = pred.cost() + tc + costing_->EdgeCost(meta.edge, tile, kConstrainedFlowSecondOfDay);
+  Cost transition_cost = costing_->TransitionCost(meta.edge, nodeinfo, pred);
+  Cost newcost = pred.cost() + transition_cost +
+                 costing_->EdgeCost(meta.edge, tile, kConstrainedFlowSecondOfDay);
 
   // Check if edge is temporarily labeled and this path has less cost. If
   // less cost the predecessor is updated and the sort cost is decremented
@@ -250,7 +251,7 @@ inline bool BidirectionalAStar::ExpandForwardInner(GraphReader& graphreader,
     if (newcost.cost < lab.cost().cost) {
       float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
       adjacencylist_forward_->decrease(meta.edge_status->index(), newsortcost);
-      lab.Update(pred_idx, newcost, newsortcost, tc, has_time_restrictions);
+      lab.Update(pred_idx, newcost, newsortcost, transition_cost, has_time_restrictions);
     }
     return true; // Returning true since this means we approved the edge
   }
@@ -272,7 +273,7 @@ inline bool BidirectionalAStar::ExpandForwardInner(GraphReader& graphreader,
   // Add edge label, add to the adjacency list and set edge status
   uint32_t idx = edgelabels_forward_.size();
   edgelabels_forward_.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, newcost, sortcost,
-                                   dist, mode_, tc,
+                                   dist, mode_, transition_cost,
                                    (pred.not_thru_pruning() || !meta.edge->not_thru()),
                                    has_time_restrictions);
 
@@ -438,10 +439,10 @@ inline bool BidirectionalAStar::ExpandReverseInner(GraphReader& graphreader,
 
   // Get cost. Use opposing edge for EdgeCost. Separate the transition seconds so we
   // can properly recover elapsed time on the reverse path.
-  Cost tc =
+  Cost transition_cost =
       costing_->TransitionCostReverse(meta.edge->localedgeidx(), nodeinfo, opp_edge, opp_pred_edge);
   Cost newcost = pred.cost() + costing_->EdgeCost(opp_edge, t2, kConstrainedFlowSecondOfDay);
-  newcost.cost += tc.cost;
+  newcost.cost += transition_cost.cost;
 
   // Check if edge is temporarily labeled and this path has less cost. If
   // less cost the predecessor is updated and the sort cost is decremented
@@ -451,7 +452,7 @@ inline bool BidirectionalAStar::ExpandReverseInner(GraphReader& graphreader,
     if (newcost.cost < lab.cost().cost) {
       float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
       adjacencylist_reverse_->decrease(meta.edge_status->index(), newsortcost);
-      lab.Update(pred_idx, newcost, newsortcost, tc, has_time_restrictions);
+      lab.Update(pred_idx, newcost, newsortcost, transition_cost, has_time_restrictions);
     }
     return true; // Returning true since this means we approved the edge
   }
@@ -465,7 +466,7 @@ inline bool BidirectionalAStar::ExpandReverseInner(GraphReader& graphreader,
   // Add edge label, add to the adjacency list and set edge status
   uint32_t idx = edgelabels_reverse_.size();
   edgelabels_reverse_.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, newcost, sortcost,
-                                   dist, mode_, tc,
+                                   dist, mode_, transition_cost,
                                    (pred.not_thru_pruning() || !meta.edge->not_thru()),
                                    has_time_restrictions);
 
@@ -907,7 +908,8 @@ std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& gra
        edgelabel_index = edgelabels_forward_[edgelabel_index].predecessor()) {
     const BDEdgeLabel& edgelabel = edgelabels_forward_[edgelabel_index];
     path.emplace_back(edgelabel.mode(), edgelabel.cost().secs, edgelabel.edgeid(), 0,
-                      edgelabel.cost().cost, edgelabel.has_time_restriction());
+                      edgelabel.cost().cost, edgelabel.has_time_restriction(),
+                      edgelabel.transition_secs());
 
     // Check if this is a ferry
     if (edgelabel.use() == Use::kFerry) {
@@ -942,7 +944,8 @@ std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& gra
   Cost cost(path.back().elapsed_cost, path.back().elapsed_time);
 
   // Get the transition cost at the last edge of the reverse path
-  Cost tc(edgelabels_reverse_[idx2].transition_cost(), edgelabels_reverse_[idx2].transition_secs());
+  Cost previous_transition_cost{edgelabels_reverse_[idx2].transition_cost(),
+                                edgelabels_reverse_[idx2].transition_secs()};
 
   // Append the reverse path from the destination - use opposing edges
   // The first edge on the reverse path is the same as the last on the forward
@@ -959,9 +962,9 @@ std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& gra
     } else {
       cost += edgelabel.cost() - edgelabels_reverse_[predidx].cost();
     }
-    cost += tc;
+    cost += previous_transition_cost;
     path.emplace_back(edgelabel.mode(), cost.secs, edgelabel.opp_edgeid(), 0, cost.cost,
-                      edgelabel.has_time_restriction());
+                      edgelabel.has_time_restriction(), previous_transition_cost.secs);
 
     // Check if this is a ferry
     if (edgelabel.use() == Use::kFerry) {
@@ -970,8 +973,11 @@ std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& gra
 
     // Update edgelabel_index and transition cost to apply at next iteration
     edgelabel_index = predidx;
-    tc.secs = edgelabel.transition_secs();
-    tc.cost = edgelabel.transition_cost();
+    // We apply the turn cost at the beginning of the edge, as is done in the forward path
+    // Semantically this can be thought of is, how much time did it take to turn onto this edge
+    // To do this we need to carry the cost forward to the next edge in the path so we cache it here
+    previous_transition_cost.secs = edgelabel.transition_secs();
+    previous_transition_cost.cost = edgelabel.transition_cost();
   }
   return paths;
 }

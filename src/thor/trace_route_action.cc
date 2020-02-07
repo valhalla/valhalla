@@ -183,7 +183,7 @@ thor_worker_t::map_match(Api& request) {
                                            mode, disconnected_edges, options);
 
     // If we want a route but there actually isnt a path, we cant give you one
-    if (path_edges.empty() && options.action() == Options::trace_route) {
+    if (path_edges.empty()) {
       throw std::exception{};
     }
 

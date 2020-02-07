@@ -260,11 +260,12 @@ void Isochrone::ExpandForward(GraphReader& graphreader,
     }
 
     // Compute the cost to the end of this edge
+    auto transition_cost = costing_->TransitionCost(directededge, nodeinfo, pred);
     Cost newcost =
         pred.cost() +
         costing_->EdgeCost(directededge, tile,
                            has_date_time_ ? seconds_of_week : kConstrainedFlowSecondOfDay) +
-        costing_->TransitionCost(directededge, nodeinfo, pred);
+        transition_cost;
 
     // Check if edge is temporarily labeled and this path has less cost. If
     // less cost the predecessor is updated and the sort cost is decremented
@@ -274,7 +275,7 @@ void Isochrone::ExpandForward(GraphReader& graphreader,
       if (newcost.cost < lab.cost().cost) {
         float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
         adjacencylist_->decrease(es->index(), newsortcost);
-        lab.Update(pred_idx, newcost, newsortcost, has_time_restrictions);
+        lab.Update(pred_idx, newcost, newsortcost, transition_cost, has_time_restrictions);
       }
       continue;
     }
@@ -283,7 +284,7 @@ void Isochrone::ExpandForward(GraphReader& graphreader,
     uint32_t idx = edgelabels_.size();
     *es = {EdgeSet::kTemporary, idx};
     edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, 0.0f, mode_, 0,
-                             has_time_restrictions);
+                             transition_cost, has_time_restrictions);
     adjacencylist_->add(idx);
   }
 
@@ -792,14 +793,16 @@ bool Isochrone::ExpandForwardMM(GraphReader& graphreader,
     }
 
     // Add mode change cost or edge transition cost from the costing model
+    Cost transition_cost{};
     if (mode_change) {
       // TODO: make mode change cost configurable. No cost for entering
       // a transit line (assume the wait time is the cost)
-      ; // newcost += {10.0f, 10.0f };
+      // transition_cost = { 10.0f, 10.0f };
     } else {
-      newcost +=
+      transition_cost =
           mode_costing[static_cast<uint32_t>(mode_)]->TransitionCost(directededge, nodeinfo, pred);
     }
+    newcost += transition_cost;
 
     // Prohibit entering the same station as the prior.
     if (directededge->use() == Use::kTransitConnection &&
@@ -828,7 +831,7 @@ bool Isochrone::ExpandForwardMM(GraphReader& graphreader,
       if (newcost.cost < lab.cost().cost) {
         float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
         adjacencylist_->decrease(es->index(), newsortcost);
-        lab.Update(pred_idx, newcost, newsortcost, walking_distance, tripid, blockid,
+        lab.Update(pred_idx, newcost, newsortcost, walking_distance, tripid, blockid, transition_cost,
                    has_time_restrictions);
       }
       continue;
@@ -839,7 +842,7 @@ bool Isochrone::ExpandForwardMM(GraphReader& graphreader,
     *es = {EdgeSet::kTemporary, idx};
     mmedgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, 0.0f, mode_,
                                walking_distance, tripid, prior_stop, blockid, operator_id,
-                               has_transit, has_time_restrictions);
+                               has_transit, transition_cost, has_time_restrictions);
     adjacencylist_->add(idx);
   }
 
@@ -1087,7 +1090,8 @@ void Isochrone::SetOriginLocations(
       // to indicate the origin of the path.
       uint32_t idx = edgelabels_.size();
       uint32_t d = static_cast<uint32_t>(directededge->length() * (1.0f - edge.percent_along()));
-      EdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost, cost.cost, 0.0f, mode_, d);
+      EdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost, cost.cost, 0.0f, mode_, d,
+                           sif::Cost{});
       // Set the origin flag
       edge_label.set_origin();
 
@@ -1165,7 +1169,7 @@ void Isochrone::SetOriginLocationsMM(
       uint32_t d = static_cast<uint32_t>(directededge->length() * (1.0f - edge.percent_along()));
       edgestatus_.Set(edgeid, EdgeSet::kTemporary, idx, tile);
       MMEdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost, cost.cost, 0.0f, mode_, d, 0,
-                             GraphId(), 0, 0, false);
+                             GraphId(), 0, 0, false, sif::Cost{});
 
       // Set the origin flag
       edge_label.set_origin();
