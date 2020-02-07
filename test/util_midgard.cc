@@ -387,7 +387,7 @@ TEST(UtilMidgard, TrimShapeAsan) {
       PointLL{8.54691314, 47.365448},
       PointLL{8.54711914, 47.3651543},
   };
-  TrimShape(start, shape.front(), end, shape.back(), shape);
+  trim_shape(start, shape.front(), end, shape.back(), shape);
   ASSERT_EQ(shape.size(), 2);
   ASSERT_FLOAT_EQ(shape.at(0).lat(), 47.365532);
   ASSERT_FLOAT_EQ(shape.at(0).lng(), 8.5468483);
@@ -400,7 +400,7 @@ TEST(UtilMidgard, TrimShapeEmpty) {
   PointLL start_vertex;
   PointLL end_vertex;
   std::vector<PointLL> shape;
-  TrimShape(0, start_vertex, 0, end_vertex, shape);
+  trim_shape(0, start_vertex, 0, end_vertex, shape);
   ASSERT_EQ(shape.size(), 0);
 }
 

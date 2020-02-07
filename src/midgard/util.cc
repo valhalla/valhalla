@@ -89,11 +89,11 @@ template <class container_t> container_t trim_front(container_t& pts, const floa
   return result;
 }
 
-void TrimShape(float start,
-               PointLL start_vertex,
-               float end,
-               PointLL end_vertex,
-               std::vector<PointLL>& shape) {
+void trim_shape(float start,
+                PointLL start_vertex,
+                float end,
+                PointLL end_vertex,
+                std::vector<PointLL>& shape) {
   // clip up to the start point if the start_vertex is valid
   float along = 0.f;
   auto current = shape.begin();

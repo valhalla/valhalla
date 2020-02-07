@@ -254,11 +254,11 @@ template <class container_t> container_t trim_front(container_t& pts, const floa
  * @param  end_vertex    Ending point
  * @param  shape         Shape, as vector of PointLLs
  */
-void TrimShape(float start,
-               PointLL start_vertex,
-               float end,
-               PointLL end_vertex,
-               std::vector<PointLL>& shape);
+void trim_shape(float start,
+                PointLL start_vertex,
+                float end,
+                PointLL end_vertex,
+                std::vector<PointLL>& shape);
 
 /**
  * Estimate the angle of the tangent at a point along a discretised curve. We attempt
