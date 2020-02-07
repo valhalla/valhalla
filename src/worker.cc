@@ -905,6 +905,12 @@ void from_json(rapidjson::Document& doc, Options& options) {
   if (options.locations_size() > 2)
     options.set_alternates(0);
 
+  // whether to return guidance_views, default false
+  auto guidance_views = rapidjson::get_optional<bool>(doc, "/guidance_views");
+  if (guidance_views) {
+    options.set_guidance_views(*guidance_views);
+  }
+
   // force these into the output so its obvious what we did to the user
   doc.AddMember({"language", allocator}, {options.language(), allocator}, allocator);
   doc.AddMember({"format", allocator},

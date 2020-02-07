@@ -139,6 +139,8 @@ void SetShapeAttributes(const AttributesController& controller,
                         double edge_percentage) {
   if (trip_path.has_shape_attributes()) {
     // calculates total edge time and total edge length
+    // TODO: you can get this directly from the path edge by taking its cost and subtracting off
+    // the transition cost that it also now contains
     double edge_time =
         costing->EdgeCost(edge, tile, second_of_week).secs * edge_percentage; // seconds
     // TODO: get the measured length from shape (full shape) to increase precision
@@ -601,7 +603,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
   LOG_TRACE(std::string("wayid=") + std::to_string(edgeinfo.wayid()));
 #endif
 
-  // Set the exits (if the directed edge has exit sign information) and if requested
+  // Set the signs (if the directed edge has sign information) and if requested
   if (directededge->sign()) {
     // Add the edge signs
     std::vector<SignInfo> edge_signs = graphtile->GetSigns(idx);
@@ -659,12 +661,21 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
             }
             break;
           }
+          case Sign::Type::kGuidanceViewJunction: {
+            if (controller.attributes.at(kEdgeSignGuidanceViewJunction)) {
+              auto* trip_sign_guidance_view_junction =
+                  trip_sign->mutable_guidance_view_junctions()->Add();
+              trip_sign_guidance_view_junction->set_text(sign.text());
+              trip_sign_guidance_view_junction->set_is_route_number(sign.is_route_num());
+            }
+            break;
+          }
         }
       }
     }
   }
 
-  // Process the named junctions
+  // Process the named junctions at nodes
   if (has_junction_name && start_tile) {
     // Add the node signs
     std::vector<SignInfo> node_signs = start_tile->GetSigns(start_node_idx, true);
@@ -1404,6 +1415,10 @@ void TripLegBuilder::Build(
       if (tz) {
         trip_node->set_time_zone(tz->name());
       }
+    }
+
+    if (controller.attributes.at(kNodeTransitionTime) && edge_itr->turn_cost > 0) {
+      trip_node->set_transition_time(edge_itr->turn_cost);
     }
 
     AddBssNode(trip_node, node, startnode, start_tile, graphtile, mode_costing, controller);

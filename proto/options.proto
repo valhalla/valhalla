@@ -185,4 +185,5 @@ message Options {
   optional ShapeFormat shape_format = 38 [default = polyline6];           // Shape format (defaults to polyline6 encoding)
   optional uint32 alternates = 39;                                        // Maximum number of alternate routes that can be returned
   optional float interpolation_distance = 40;                             // Map-matching interpolation distance beyond which trace points are merged
+  optional bool guidance_views = 41;                                      // Whether to return guidance_views in the response
 }

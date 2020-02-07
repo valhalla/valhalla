@@ -291,6 +291,11 @@ void DirectionsBuilder::PopulateDirectionsLeg(const Options& options,
       }
     }
 
+    // Process the guidance views
+    for (const auto& guidance_view : maneuver.guidance_views()) {
+      trip_maneuver->add_guidance_views()->CopyFrom(guidance_view);
+    }
+
     // Roundabout exit count
     if (maneuver.roundabout_exit_count() > 0) {
       trip_maneuver->set_roundabout_exit_count(maneuver.roundabout_exit_count());

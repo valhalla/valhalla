@@ -61,7 +61,7 @@ void print_edge(GraphReader& reader,
     auto node_id = pred_edge->endnode();
     auto node_tile = reader.GetGraphTile(node_id);
     auto node = node_tile->node(node_id);
-    EdgeLabel pred_label(0, pred_id, pred_edge, {}, 0.0f, 0.0f, static_cast<TravelMode>(0), 0);
+    EdgeLabel pred_label(0, pred_id, pred_edge, {}, 0.0f, 0.0f, static_cast<TravelMode>(0), 0, {});
     std::cout << "-------Transition-------\n";
     std::cout << "Pred GraphId: " << pred_id << std::endl;
     Cost trans_cost = costing->TransitionCost(edge, node, pred_label);
@@ -220,7 +220,7 @@ int main(int argc, char* argv[]) {
         for (const auto& location : path.second) {
           // Get the location from the ptree
           // TODO - this was copied from the defunct Location::FromPtree
-          const auto& pt = path.second;
+          const auto& pt = location.second;
           float lat = pt.get<float>("lat");
           if (lat < -90.0f || lat > 90.0f) {
             throw std::runtime_error("Latitude must be in the range [-90, 90] degrees");

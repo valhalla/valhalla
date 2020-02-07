@@ -101,8 +101,8 @@ void TimeDistanceMatrix::ExpandForward(GraphReader& graphreader,
     }
 
     // Get cost and update distance
-    Cost newcost = pred.cost() + costing_->EdgeCost(directededge, tile) +
-                   costing_->TransitionCost(directededge, nodeinfo, pred);
+    auto transition_cost = costing_->TransitionCost(directededge, nodeinfo, pred);
+    Cost newcost = pred.cost() + costing_->EdgeCost(directededge, tile) + transition_cost;
     uint32_t distance = pred.path_distance() + directededge->length();
 
     // Check if edge is temporarily labeled and this path has less cost. If
@@ -113,7 +113,7 @@ void TimeDistanceMatrix::ExpandForward(GraphReader& graphreader,
       if (newcost.cost < lab.cost().cost) {
         float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
         adjacencylist_->decrease(es->index(), newsortcost);
-        lab.Update(pred_idx, newcost, newsortcost, distance, has_time_restrictions);
+        lab.Update(pred_idx, newcost, newsortcost, distance, transition_cost, has_time_restrictions);
       }
       continue;
     }
@@ -121,7 +121,7 @@ void TimeDistanceMatrix::ExpandForward(GraphReader& graphreader,
     // Add to the adjacency list and edge labels.
     uint32_t idx = edgelabels_.size();
     edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, 0.0f, mode_,
-                             distance, has_time_restrictions);
+                             distance, transition_cost, has_time_restrictions);
     *es = {EdgeSet::kTemporary, idx};
     adjacencylist_->add(idx);
   }
@@ -261,9 +261,9 @@ void TimeDistanceMatrix::ExpandReverse(GraphReader& graphreader,
     }
 
     // Get cost. Use the opposing edge for EdgeCost.
-    Cost newcost = pred.cost() + costing_->EdgeCost(opp_edge, t2) +
-                   costing_->TransitionCostReverse(directededge->localedgeidx(), nodeinfo, opp_edge,
-                                                   opp_pred_edge);
+    auto transition_cost = costing_->TransitionCostReverse(directededge->localedgeidx(), nodeinfo,
+                                                           opp_edge, opp_pred_edge);
+    Cost newcost = pred.cost() + costing_->EdgeCost(opp_edge, t2) + transition_cost;
     uint32_t distance = pred.path_distance() + directededge->length();
 
     // Check if edge is temporarily labeled and this path has less cost. If
@@ -274,8 +274,7 @@ void TimeDistanceMatrix::ExpandReverse(GraphReader& graphreader,
       if (newcost.cost < lab.cost().cost) {
         float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
         adjacencylist_->decrease(es->index(), newsortcost);
-        lab.Update(pred_idx, newcost, newsortcost, distance);
-        lab.set_has_time_restriction(has_time_restrictions);
+        lab.Update(pred_idx, newcost, newsortcost, distance, transition_cost, has_time_restrictions);
       }
       continue;
     }
@@ -283,7 +282,7 @@ void TimeDistanceMatrix::ExpandReverse(GraphReader& graphreader,
     // Add to the adjacency list and edge labels.
     uint32_t idx = edgelabels_.size();
     edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, 0.0f, mode_,
-                             distance, has_time_restrictions);
+                             distance, transition_cost, has_time_restrictions);
     *es = {EdgeSet::kTemporary, idx};
     adjacencylist_->add(idx);
   }
@@ -454,7 +453,7 @@ void TimeDistanceMatrix::SetOriginOneToMany(GraphReader& graphreader,
     // Add EdgeLabel to the adjacency list (but do not set its status).
     // Set the predecessor edge index to invalid to indicate the origin
     // of the path. Set the origin flag
-    EdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost, cost.cost, 0.0f, mode_, d);
+    EdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost, cost.cost, 0.0f, mode_, d, {});
     edge_label.set_origin();
     edgelabels_.push_back(std::move(edge_label));
     adjacencylist_->add(edgelabels_.size() - 1);
@@ -504,7 +503,8 @@ void TimeDistanceMatrix::SetOriginManyToOne(GraphReader& graphreader,
     // Set the predecessor edge index to invalid to indicate the origin
     // of the path. Set the origin flag.
     // TODO - restrictions?
-    EdgeLabel edge_label(kInvalidLabel, opp_edge_id, opp_dir_edge, cost, cost.cost, 0.0f, mode_, d);
+    EdgeLabel edge_label(kInvalidLabel, opp_edge_id, opp_dir_edge, cost, cost.cost, 0.0f, mode_, d,
+                         {});
     edge_label.set_origin();
     edgelabels_.push_back(std::move(edge_label));
     adjacencylist_->add(edgelabels_.size() - 1);

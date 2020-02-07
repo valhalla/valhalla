@@ -292,6 +292,9 @@ public:
   const VerbalTextFormatter* verbal_formatter() const;
   void set_verbal_formatter(std::unique_ptr<VerbalTextFormatter>&& verbal_formatter);
 
+  const std::vector<DirectionsLeg_GuidanceView>& guidance_views() const;
+  std::vector<DirectionsLeg_GuidanceView>* mutable_guidance_views();
+
   const DirectionsLeg_Maneuver_BssManeuverType bss_maneuver_type() const;
   void set_bss_maneuver_type(DirectionsLeg_Maneuver_BssManeuverType);
 
@@ -382,6 +385,8 @@ protected:
   DirectionsLeg_Maneuver_BssManeuverType bss_maneuver_type_;
 
   std::unique_ptr<VerbalTextFormatter> verbal_formatter_;
+
+  std::vector<DirectionsLeg_GuidanceView> guidance_views_;
 };
 
 } // namespace odin

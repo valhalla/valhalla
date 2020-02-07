@@ -194,7 +194,7 @@ bool expand_from_node(const std::shared_ptr<DynamicCost>* mode_costing,
         path_infos.emplace_back(mode, elapsed.secs, edge_id, 0, elapsed.cost, false);
 
         // Set previous edge label
-        prev_edge_label = {kInvalidLabel, edge_id, de, {}, 0, 0, mode, 0};
+        prev_edge_label = {kInvalidLabel, edge_id, de, {}, 0, 0, mode, 0, {}};
 
         // Continue walking shape to find the end edge...
         if (expand_from_node(mode_costing, mode, reader, shape, distances, origin_epoch,
@@ -367,7 +367,7 @@ bool RouteMatcher::FormPath(const std::shared_ptr<DynamicCost>* mode_costing,
         path_infos.emplace_back(mode, elapsed.secs, graphid, 0, elapsed.cost, false);
 
         // Set previous edge label
-        prev_edge_label = {kInvalidLabel, graphid, de, {}, 0, 0, mode, 0};
+        prev_edge_label = {kInvalidLabel, graphid, de, {}, 0, 0, mode, 0, {}};
 
         // Continue walking shape to find the end node
         GraphId end_node;

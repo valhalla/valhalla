@@ -425,10 +425,14 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
     // Add the node location (lon, lat). Use the last shape point for
     // the arrive step
     auto loc = json::array({});
-    PointLL ll = arrive_maneuver ? shape[shape.size() - 1] : shape[curr_edge->begin_shape_index()];
+    size_t shape_index = arrive_maneuver ? shape.size() - 1 : curr_edge->begin_shape_index();
+    PointLL ll = shape[shape_index];
     loc->emplace_back(json::fp_t{ll.lng(), 6});
     loc->emplace_back(json::fp_t{ll.lat(), 6});
     intersection->emplace("location", loc);
+    intersection->emplace("geometry_index", static_cast<uint64_t>(shape_index));
+    if (node->has_transition_time())
+      intersection->emplace("duration", json::fp_t{node->transition_time(), 3});
 
     // Get bearings and access to outgoing intersecting edges. Do not add
     // any intersecting edges for the first depart intersection and for
@@ -1279,6 +1283,30 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
       std::string junction_name = get_sign_elements(sign.junction_names());
       if (!depart_maneuver && !junction_name.empty()) {
         step->emplace("junction_name", junction_name);
+      }
+
+      // If the user requested guidance_views
+      if (options.guidance_views()) {
+        // Add guidance_views if not the start maneuver
+        if (!depart_maneuver && (maneuver.guidance_views_size() > 0)) {
+          auto guidance_views = json::array({});
+          for (const auto& gv : maneuver.guidance_views()) {
+            auto guidance_view = json::map({});
+            guidance_view->emplace("data_id", gv.data_id());
+            guidance_view->emplace("type", gv.type());
+            guidance_view->emplace("base_id", gv.base_id());
+            auto overlay_ids = json::array({});
+            for (const auto& overlay : gv.overlay_ids()) {
+              overlay_ids->emplace_back(overlay);
+            }
+            guidance_view->emplace("overlay_ids", overlay_ids);
+
+            // Append to guidance view list
+            guidance_views->emplace_back(guidance_view);
+          }
+          // Add guidance views to step
+          step->emplace("guidance_views", guidance_views);
+        }
       }
 
       // Add intersections
