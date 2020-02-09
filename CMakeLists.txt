@@ -29,6 +29,7 @@ option(ENABLE_COMPILER_WARNINGS "Build with compiler warnings" OFF)
 option(ENABLE_SANITIZER "Use memory sanitizer for Debug build" OFF)
 option(ENABLE_TESTS "Enable Valhalla tests" ON)
 option(ENABLE_WERROR "Convert compiler warnings to errors. Requires ENABLE_COMPILER_WARNINGS=ON to take effect" OFF)
+option(ENABLE_BENCHMARKS "Enable microbenchmarking" OFF)
 set(LOGGING_LEVEL "" CACHE STRING "Logging level, default is INFO")
 set_property(CACHE LOGGING_LEVEL PROPERTY STRINGS "NONE;ALL;ERROR;WARN;INFO;DEBUG;TRACE")
 
@@ -319,6 +320,10 @@ install(FILES COPYING CHANGELOG.md
 
 if(ENABLE_TESTS)
   add_subdirectory(test)
+endif()
+
+if(ENABLE_BENCHMARKS)
+  add_subdirectory(bench)
 endif()
 
 ## Packaging via CPack
