@@ -45,9 +45,7 @@ NarrativeBuilder::NarrativeBuilder(const Options& options,
       articulated_preposition_enabled_(false) {
 }
 
-void NarrativeBuilder::Build(const Options& options,
-                             const EnhancedTripLeg* etp,
-                             std::list<Maneuver>& maneuvers) {
+void NarrativeBuilder::Build(const Options& options, std::list<Maneuver>& maneuvers) {
   Maneuver* prev_maneuver = nullptr;
   for (auto& maneuver : maneuvers) {
     switch (maneuver.type()) {
