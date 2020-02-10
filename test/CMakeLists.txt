@@ -104,6 +104,16 @@ add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/roma_tiles/1/047/352.gph
   DEPENDS valhalla_build_tiles valhalla_add_predicted_traffic ${CMAKE_BINARY_DIR}/test/data/tz.sqlite ${VALHALLA_SOURCE_DIR}/test/data/via_montebello_roma_italy.osm.pbf)
 add_custom_target(roma_tiles DEPENDS ${CMAKE_BINARY_DIR}/test/data/roma_tiles/1/047/352.gph)
 
+add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/jonkoping_tiles/0/003/377.gph
+  COMMAND ${CMAKE_COMMAND} -E make_directory test/data/jonkoping_tiles/
+  COMMAND ${CMAKE_BINARY_DIR}/valhalla_build_tiles
+      --inline-config '{"mjolnir":{"tile_dir":"test/data/jonkoping_tiles","timezone":"test/data/tz.sqlite","hierarchy":true,"shortcuts":true,"concurrency":1,"logging":{"type":""}}}'
+      ${VALHALLA_SOURCE_DIR}/test/data/jonkoping.osm.pbf
+  COMMENT "Building Jönköping Tiles..."
+  WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+  DEPENDS valhalla_build_tiles valhalla_add_predicted_traffic ${CMAKE_BINARY_DIR}/test/data/tz.sqlite ${VALHALLA_SOURCE_DIR}/test/data/jonkoping.osm.pbf)
+add_custom_target(jonkoping_tiles DEPENDS ${CMAKE_BINARY_DIR}/test/data/jonkoping_tiles/0/003/377.gph)
+
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/ny_ar_tiles/2/000/752/104.gph
   COMMAND ${CMAKE_COMMAND} -E make_directory test/data/ny_ar_tiles/
   COMMAND ${CMAKE_BINARY_DIR}/valhalla_build_tiles
@@ -199,7 +209,7 @@ if(ENABLE_DATA_TOOLS)
   add_dependencies(run-thor_worker utrecht_tiles)
   add_dependencies(run-recover_shortcut utrecht_tiles)
   add_dependencies(run-minbb utrecht_tiles)
-  add_dependencies(run-astar whitelion_tiles roma_tiles reversed_whitelion_tiles bayfront_singapore_tiles ny_ar_tiles pa_ar_tiles nh_ar_tiles)
+  add_dependencies(run-astar whitelion_tiles roma_tiles reversed_whitelion_tiles bayfront_singapore_tiles ny_ar_tiles pa_ar_tiles nh_ar_tiles jonkoping_tiles)
   if(ENABLE_HTTP)
     add_dependencies(run-http_tiles utrecht_tiles)
   endif()
