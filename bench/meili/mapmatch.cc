@@ -12,6 +12,7 @@
 
 using namespace valhalla::midgard;
 using namespace valhalla::meili;
+using namespace valhalla::sif;
 
 namespace {
 
