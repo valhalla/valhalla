@@ -266,7 +266,7 @@ void route_summary(json::MapPtr& route,
   // TODO - support returning weight based on costing method
   // as well as returning the costing method
   float weight = duration;
-  route->emplace("weight", json::fp_t{weight, 1});
+  route->emplace("weight", json::fp_t{weight, 3});
   route->emplace("weight_name", std::string("Valhalla default"));
 }
 
