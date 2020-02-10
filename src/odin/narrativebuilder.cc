@@ -913,11 +913,11 @@ std::string NarrativeBuilder::FormVerbalContinueInstruction(Maneuver& maneuver,
 }
 
 std::string NarrativeBuilder::FormTurnInstruction(Maneuver& maneuver) {
-  // "0": "Turn/Bear/Turn sharp <RELATIVE_DIRECTION>.",
-  // "1": "Turn/Bear/Turn sharp <RELATIVE_DIRECTION> onto <STREET_NAMES>.",
-  // "2": "Turn/Bear/Turn sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>. Continue on
+  // "0": "Turn/Bear/Make a sharp <RELATIVE_DIRECTION>.",
+  // "1": "Turn/Bear/Make a sharp <RELATIVE_DIRECTION> onto <STREET_NAMES>.",
+  // "2": "Turn/Bear/Make a sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>. Continue on
   // <STREET_NAMES>.",
-  // "3": "Turn/Bear/Turn sharp <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
+  // "3": "Turn/Bear/Make a sharp <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
   const TurnSubset* subset = nullptr;
   switch (maneuver.type()) {
     case DirectionsLeg_Maneuver_Type_kSlightRight:
@@ -978,10 +978,10 @@ std::string NarrativeBuilder::FormTurnInstruction(Maneuver& maneuver) {
 std::string NarrativeBuilder::FormVerbalAlertTurnInstruction(Maneuver& maneuver,
                                                              uint32_t element_max_count,
                                                              const std::string& delim) {
-  // "0": "Turn/Bear/Turn sharp <RELATIVE_DIRECTION>.",
-  // "1": "Turn/Bear/Turn sharp <RELATIVE_DIRECTION> onto <STREET_NAMES>.",
-  // "2": "Turn/Bear/Turn sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>.",
-  // "3": "Turn/Bear/Turn sharp <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
+  // "0": "Turn/Bear/Make a sharp <RELATIVE_DIRECTION>.",
+  // "1": "Turn/Bear/Make a sharp <RELATIVE_DIRECTION> onto <STREET_NAMES>.",
+  // "2": "Turn/Bear/Make a sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>.",
+  // "3": "Turn/Bear/Make a sharp <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
 
   return FormVerbalTurnInstruction(maneuver, element_max_count, delim);
 }
@@ -989,10 +989,10 @@ std::string NarrativeBuilder::FormVerbalAlertTurnInstruction(Maneuver& maneuver,
 std::string NarrativeBuilder::FormVerbalTurnInstruction(Maneuver& maneuver,
                                                         uint32_t element_max_count,
                                                         const std::string& delim) {
-  // "0": "Turn/Bear/Turn sharp <RELATIVE_DIRECTION>.",
-  // "1": "Turn/Bear/Turn sharp <RELATIVE_DIRECTION> onto <STREET_NAMES>.",
-  // "2": "Turn/Bear/Turn sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>.",
-  // "3": "Turn/Bear/Turn sharp <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
+  // "0": "Turn/Bear/Make a sharp <RELATIVE_DIRECTION>.",
+  // "1": "Turn/Bear/Make a sharp <RELATIVE_DIRECTION> onto <STREET_NAMES>.",
+  // "2": "Turn/Bear/Make a sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>.",
+  // "3": "Turn/Bear/Make a sharp <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
 
   const TurnSubset* subset = nullptr;
   switch (maneuver.type()) {
