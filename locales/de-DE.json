@@ -1446,16 +1446,16 @@
       ],
       "example_phrases": {
         "0": [
-          "Turn sharp right."
+          "Make a sharp right."
         ],
         "1": [
-          "Turn sharp left onto Arlen Road."
+          "Make a sharp left onto Arlen Road."
         ],
         "2": [
-          "Turn sharp right onto Belair Road/US 1 Business. Continue on US 1 Business."
+          "Make a sharp right onto Belair Road/US 1 Business. Continue on US 1 Business."
         ],
         "3": [
-          "Turn sharp left to stay on US 15 South."
+          "Make a sharp left to stay on US 15 South."
         ]
       }
     },
@@ -1477,16 +1477,16 @@
       ],
       "example_phrases": {
         "0": [
-          "Turn sharp right."
+          "Make a sharp right."
         ],
         "1": [
-          "Turn sharp left onto Arlen Road."
+          "Make a sharp left onto Arlen Road."
         ],
         "2": [
-          "Turn sharp right onto Belair Road, U.S. 1 Business."
+          "Make a sharp right onto Belair Road, U.S. 1 Business."
         ],
         "3": [
-          "Turn sharp left to stay on U.S. 15 South."
+          "Make a sharp left to stay on U.S. 15 South."
         ]
       }
     },
