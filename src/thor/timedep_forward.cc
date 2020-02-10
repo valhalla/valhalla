@@ -159,8 +159,8 @@ inline bool TimeDepForward::ExpandForwardInner(GraphReader& graphreader,
   if (meta.edge->is_shortcut() ||
       !costing_->Allowed(meta.edge, pred, tile, meta.edge_id, localtime, nodeinfo->timezone(),
                          has_time_restrictions) ||
-      costing_->Restricted(meta.edge, pred, edgelabels_, tile, meta.edge_id, true, &edgestatus_,
-                           localtime, nodeinfo->timezone())) {
+      costing_->Restricted(meta.edge, pred, edgelabels_, (std::vector<sif::EdgeLabel>*)nullptr, tile,
+                           meta.edge_id, true, &edgestatus_, localtime, nodeinfo->timezone())) {
     return false;
   }
 

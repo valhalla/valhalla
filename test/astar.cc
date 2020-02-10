@@ -1480,6 +1480,35 @@ TEST(Astar, test_timed_conditional_restriction_3) {
   EXPECT_FALSE(found_route) << "Found a route when no route was expected";
 }
 
+TEST(Astar, test_complex_restriction_short_path) {
+  // Tests that Bidirectional can correctly connect the two expanding trees
+  // when the connecting edge is part of a complex restriction
+
+  {
+      // TODO Add two tests where start and end lives on a partial complex restriction
+      //      Can use tests added in https://github.com/valhalla/valhalla/pull/2109
+  } {
+      // TODO Add a test where the complex restriction between the two expanding
+      // trees actually is a real one and needs to be avoided
+  }
+
+  {
+    // Tests a real live scenario of a short Bidirectional query
+    auto conf = get_conf("melborne_tiles");
+    route_tester tester(conf);
+    std::string request =
+        R"({"locations":[{"lat":-37.625167699300704,"lon":145.36315056293708},{"lat":-37.6257286993007,"lon":145.36319656293708}],"costing":"auto"})";
+
+    auto response = tester.test(request);
+
+    const auto& legs = response.trip().routes(0).legs();
+    const auto& directions = response.directions().routes(0).legs();
+
+    EXPECT_EQ(legs.size(), 1);
+    EXPECT_EQ(legs[0].shape(), "psmwfAmlggtG|N}TzAzAzAzAxLhM");
+  }
+}
+
 class AstarTestEnv : public ::testing::Environment {
 public:
   void SetUp() override {

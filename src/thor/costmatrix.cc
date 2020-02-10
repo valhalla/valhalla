@@ -310,7 +310,8 @@ void CostMatrix::ForwardSearch(const uint32_t index, const uint32_t n, GraphRead
       // or if a complex restriction prevents transition onto this edge.
       bool has_time_restrictions = false;
       if (!costing_->Allowed(directededge, pred, tile, edgeid, 0, 0, has_time_restrictions) ||
-          costing_->Restricted(directededge, pred, edgelabels, tile, edgeid, true)) {
+          costing_->Restricted(directededge, pred, edgelabels,
+                               (const std::vector<sif::BDEdgeLabel>*)nullptr, tile, edgeid, true)) {
         continue;
       }
 
@@ -583,7 +584,8 @@ void CostMatrix::BackwardSearch(const uint32_t index, GraphReader& graphreader) 
       bool has_time_restrictions = false;
       if (!costing_->AllowedReverse(directededge, pred, opp_edge, t2, oppedge, 0, 0,
                                     has_time_restrictions) ||
-          costing_->Restricted(directededge, pred, edgelabels, tile, edgeid, false)) {
+          costing_->Restricted(directededge, pred, edgelabels,
+                               (const std::vector<sif::BDEdgeLabel>*)nullptr, tile, edgeid, false)) {
         continue;
       }
 

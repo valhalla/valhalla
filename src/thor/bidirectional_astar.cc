@@ -233,7 +233,8 @@ inline bool BidirectionalAStar::ExpandForwardInner(GraphReader& graphreader,
   bool has_time_restrictions = false;
   if (!costing_->Allowed(meta.edge, pred, tile, meta.edge_id, localtime, tz_index,
                          has_time_restrictions) ||
-      costing_->Restricted(meta.edge, pred, edgelabels_forward_, tile, meta.edge_id, true,
+      costing_->Restricted(meta.edge, pred, edgelabels_forward_,
+                           (const std::vector<sif::BDEdgeLabel>*)nullptr, tile, meta.edge_id, true,
                            &edgestatus_forward_, localtime, tz_index)) {
     return false;
   }
@@ -269,7 +270,6 @@ inline bool BidirectionalAStar::ExpandForwardInner(GraphReader& graphreader,
   float dist = 0.0f;
   float sortcost =
       newcost.cost + astarheuristic_forward_.Get(t2->get_node_ll(meta.edge->endnode()), dist);
-
   // Add edge label, add to the adjacency list and set edge status
   uint32_t idx = edgelabels_forward_.size();
   edgelabels_forward_.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, newcost, sortcost,
@@ -432,7 +432,8 @@ inline bool BidirectionalAStar::ExpandReverseInner(GraphReader& graphreader,
   bool has_time_restrictions = false;
   if (!costing_->AllowedReverse(meta.edge, pred, opp_edge, t2, opp_edge_id, localtime, tz_index,
                                 has_time_restrictions) ||
-      costing_->Restricted(meta.edge, pred, edgelabels_reverse_, tile, meta.edge_id, false,
+      costing_->Restricted(meta.edge, pred, edgelabels_reverse_,
+                           (const std::vector<sif::BDEdgeLabel>*)nullptr, tile, meta.edge_id, false,
                            &edgestatus_reverse_, localtime, tz_index)) {
     return false;
   }
@@ -529,7 +530,6 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
       forward_pred_idx = adjacencylist_forward_->pop();
       if (forward_pred_idx != kInvalidLabel) {
         fwd_pred = edgelabels_forward_[forward_pred_idx];
-
         // Terminate if the cost threshold has been exceeded.
         if (fwd_pred.sortcost() + cost_diff_ > threshold_) {
           return FormPath(graphreader, options);
@@ -849,6 +849,7 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader, const valhalla
     if (!opp_edge_id.Is_Valid()) {
       continue;
     }
+
     const DirectedEdge* opp_dir_edge = graphreader.GetOpposingEdge(edgeid);
 
     // Get cost and sort cost (based on distance from endnode of this edge

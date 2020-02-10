@@ -247,14 +247,20 @@ void Isochrone::ExpandForward(GraphReader& graphreader,
       // traffic based speed if it exists
       if (!costing_->Allowed(directededge, pred, tile, edgeid, localtime, nodeinfo->timezone(),
                              has_time_restrictions) ||
+<<<<<<< HEAD
           costing_->Restricted(directededge, pred, edgelabels_, tile, edgeid, true, todo, localtime,
                                nodeinfo->timezone())) {
+=======
+          costing_->Restricted(directededge, pred, edgelabels_, (std::vector<sif::EdgeLabel>*)nullptr,
+                               tile, edgeid, true, localtime, nodeinfo->timezone())) {
+>>>>>>> Adds test with complex restriction where bidirectional meet
         continue;
       }
     } else {
       // TODO merge these two branches
       if (!costing_->Allowed(directededge, pred, tile, edgeid, 0, 0, has_time_restrictions) ||
-          costing_->Restricted(directededge, pred, edgelabels_, tile, edgeid, true)) {
+          costing_->Restricted(directededge, pred, edgelabels_, (std::vector<sif::EdgeLabel>*)nullptr,
+                               tile, edgeid, true)) {
         continue;
       }
     }
@@ -442,14 +448,16 @@ void Isochrone::ExpandReverse(GraphReader& graphreader,
       // traffic based speed if it exists
       if (!costing_->AllowedReverse(directededge, pred, opp_edge, t2, oppedge, localtime,
                                     nodeinfo->timezone(), has_time_restrictions) ||
-          costing_->Restricted(directededge, pred, bdedgelabels_, tile, edgeid, false, nullptr,
+          costing_->Restricted(directededge, pred, bdedgelabels_,
+                               (std::vector<sif::BDEdgeLabel>*)nullptr, tile, edgeid, false, nullptr,
                                localtime, nodeinfo->timezone())) {
         continue;
       }
     } else {
       if (!costing_->AllowedReverse(directededge, pred, opp_edge, t2, oppedge, 0, 0,
                                     has_time_restrictions) ||
-          costing_->Restricted(directededge, pred, bdedgelabels_, tile, edgeid, false)) {
+          costing_->Restricted(directededge, pred, bdedgelabels_,
+                               (std::vector<sif::BDEdgeLabel>*)nullptr, tile, edgeid, false)) {
         continue;
       }
     }
