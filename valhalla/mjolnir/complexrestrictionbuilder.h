@@ -177,6 +177,14 @@ public:
    */
   bool operator==(const ComplexRestrictionBuilder& other) const;
 
+  /**
+   * This function makes sense for ComplexRestriction but it is likely unintended
+   * that the builder is called with this method. Therefore throw here
+   */
+  template <typename Callback> void WalkVias(Callback callback) const {
+    throw std::logic_error("You probably didn't intend to walk vias on builder");
+  }
+
 protected:
   /**
    * Set the number of vias.

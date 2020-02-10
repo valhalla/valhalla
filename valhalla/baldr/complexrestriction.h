@@ -17,6 +17,19 @@ namespace baldr {
 
 constexpr size_t kMaxViasPerRestriction = 31;
 
+enum class WalkingVia {
+  KeepWalking,
+  StopWalking,
+};
+
+// Essentially checks if any of the restrictions in `list_of_restrictions`
+// has a match against some part of `patch_path`.
+//
+// IMPORTANT: Each vector in `list_of_restrictions` must contain the original
+// edge_id in addition to the vias
+bool CheckPatchPathForRestrictions(const std::vector<GraphId>& patch_path,
+                                   const std::vector<std::vector<GraphId>>& list_of_restrictions);
+
 /**
  * Information held for each complex access restriction. A complex restriction
  * is a restriction that either:
@@ -186,6 +199,21 @@ public:
    */
   std::size_t SizeOf() const {
     return (sizeof(ComplexRestriction)) + (via_count_ * sizeof(GraphId));
+  }
+
+  /**
+   * Walks the vias of the restriction and calls `callback`
+   * Return false from `callback` if done walking early
+   */
+  template <typename Callback> void WalkVias(Callback callback) const {
+    if (via_count() > 0) {
+      const baldr::GraphId* via = reinterpret_cast<const baldr::GraphId*>(this + 1);
+      for (uint32_t i = 0; i < via_count(); i++, via++) {
+        if (callback(via) == WalkingVia::StopWalking) {
+          break;
+        }
+      }
+    }
   }
 
 protected:

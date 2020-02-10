@@ -1,5 +1,6 @@
 
 #include "baldr/complexrestriction.h"
+#include "baldr/graphid.h"
 #include "mjolnir/complexrestrictionbuilder.h"
 
 #include "test.h"
@@ -16,6 +17,107 @@ namespace {
 
 TEST(ComplexRestriction, Sizeof) {
   EXPECT_EQ(sizeof(ComplexRestriction), kComplexRestrictionExpectedSize);
+}
+
+TEST(ComplexRestriction, CheckPatchPathForRestrictions) {
+  std::vector<GraphId> patch_path;
+  const int length_patch_path = 10;
+  for (uint32_t id = 0; id < length_patch_path; ++id) {
+    patch_path.push_back(GraphId(0, 0, id));
+  }
+
+  {
+    std::vector<std::vector<GraphId>> list_of_restrictions;
+    {
+      // Test with restriction out of order
+      std::vector<GraphId> restr;
+      restr.push_back(GraphId(0, 0, 2));
+      restr.push_back(GraphId(0, 0, 3));
+      restr.push_back(GraphId(0, 0, 1)); // Out of order, should mean no match
+      list_of_restrictions.push_back(restr);
+    }
+    EXPECT_FALSE(CheckPatchPathForRestrictions(patch_path, list_of_restrictions));
+    {
+      // Test a positive, a matching restriction
+      std::vector<GraphId> restr;
+      restr.push_back(GraphId(0, 0, 2));
+      restr.push_back(GraphId(0, 0, 3));
+      restr.push_back(GraphId(0, 0, 4)); // Out of order, should mean no match
+      list_of_restrictions.push_back(restr);
+    }
+    EXPECT_TRUE(CheckPatchPathForRestrictions(patch_path, list_of_restrictions));
+  }
+  {
+    std::vector<std::vector<GraphId>> list_of_restrictions;
+
+    {
+      // Test a restriction that goes outside the patch_path
+      std::vector<GraphId> restr;
+      for (uint32_t id = length_patch_path - 2; id < length_patch_path + 2; ++id) {
+        restr.push_back(GraphId(0, 0, id));
+      }
+      list_of_restrictions.push_back(restr);
+    }
+    EXPECT_FALSE(CheckPatchPathForRestrictions(patch_path, list_of_restrictions));
+    {
+      // Test a restriction overlaying beginning
+      std::vector<GraphId> restr;
+      restr.push_back(GraphId(0, 0, 20));
+      restr.push_back(GraphId(0, 0, 0));
+      restr.push_back(GraphId(0, 0, 1));
+      list_of_restrictions.push_back(restr);
+    }
+    EXPECT_FALSE(CheckPatchPathForRestrictions(patch_path, list_of_restrictions));
+  }
+  {
+    std::vector<std::vector<GraphId>> list_of_restrictions;
+    {
+      // Test single edge restriction
+      std::vector<GraphId> restr;
+      restr.push_back(GraphId(0, 0, 2));
+      list_of_restrictions.push_back(restr);
+    }
+    EXPECT_TRUE(CheckPatchPathForRestrictions(patch_path, list_of_restrictions));
+  }
+}
+
+TEST(ComplexRestriction, WalkViasBuilder) {
+  ComplexRestrictionBuilder builder;
+
+  std::vector<GraphId> expected_vias;
+  builder.set_via_list(expected_vias);
+
+  // Ensure the builder cannot walk (throws logic_error to avoid accidentally trying
+  // to walk a builder which likely is not what was intended)
+  std::vector<GraphId> walked_vias;
+  ASSERT_THROW(builder.WalkVias([&walked_vias](const GraphId* via) {
+    walked_vias.push_back(*via);
+    return WalkingVia::KeepWalking;
+  }),
+               std::logic_error)
+      << "Did not walk the expected vias";
+}
+
+TEST(ComplexRestriction, WalkVias) {
+  // TODO Astar test in https://github.com/valhalla/valhalla/pull/2109
+  // has a fake tileset with restrictions we could use here
+  //{
+  //  // Walk some of the vias and exit early
+  //  std::vector<GraphId> expected_subset;
+  //  expected_subset.push_back(GraphId(44, 1, 1));
+  //  expected_subset.push_back(GraphId(44, 1, 2));
+
+  //  std::vector<GraphId> walked_vias;
+  //  builder.WalkVias([&walked_vias](const GraphId* via) {
+  //    walked_vias.push_back(*via);
+  //    if (via->id() == 2) {
+  //      return WalkingVia::StopWalking;
+  //    } else {
+  //      return WalkingVia::KeepWalking;
+  //    }
+  //  });
+  //  EXPECT_EQ(walked_vias, expected_subset) << "Did not walk the expected subset of vias";
+  //}
 }
 
 TEST(ComplexRestriction, WriteRead) {
