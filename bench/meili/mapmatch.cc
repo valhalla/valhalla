@@ -7,9 +7,12 @@
 
 #include "meili/map_matcher_factory.h"
 #include "meili/measurement.h"
+#include "sif/costconstants.h"
+#include "sif/costfactory.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::meili;
+using namespace valhalla::sif;
 
 namespace {
 
@@ -20,6 +23,7 @@ namespace {
 class MapmatchFixture : public benchmark::Fixture {
 public:
   void SetUp(const ::benchmark::State& state) {
+    InitEngineConfig();
     InitMapMatcher();
     InitMeasurements();
   }
@@ -33,11 +37,15 @@ public:
   }
 
 private:
+  void InitEngineConfig() {
+    rapidjson::read_json(VALHALLA_SOURCE_DIR "test/valhalla.json", config_);
+    const rapidjson::Document doc;
+    ParseAutoCostOptions(doc, "/costing_options/auto", options_.add_costing_options());
+  }
+
   void InitMapMatcher() {
-    boost::property_tree::ptree config;
-    rapidjson::read_json(VALHALLA_SOURCE_DIR "test/valhalla.json", config);
-    matcher_factory_ = std::make_shared<MapMatcherFactory>(config);
-    mapmatcher_.reset(matcher_factory_->Create(valhalla::Costing::auto_));
+    matcher_factory_ = std::make_shared<MapMatcherFactory>(config_);
+    mapmatcher_.reset(matcher_factory_->Create(valhalla::Costing::auto_, options_));
   }
 
   void InitMeasurements() {
@@ -49,18 +57,23 @@ private:
   }
 
 protected:
+  // Mapmatcher implementation
   std::shared_ptr<MapMatcher> mapmatcher_;
   std::shared_ptr<MapMatcherFactory> matcher_factory_;
+  // Inputs
   std::vector<Measurement> measurements_;
+  // Mapmatching configuration
+  boost::property_tree::ptree config_;
+  valhalla::Options options_;
 };
 
-BENCHMARK_DEFINE_F(MapmatchFixture, MapMatching)(benchmark::State& state) {
+BENCHMARK_DEFINE_F(MapmatchFixture, BasicOfflineMatch)(benchmark::State& state) {
   for (auto _ : state) {
     mapmatcher_->OfflineMatch(measurements_);
   }
 }
 
-BENCHMARK_REGISTER_F(MapmatchFixture, MapMatching);
+BENCHMARK_REGISTER_F(MapmatchFixture, BasicOfflineMatch);
 
 } // namespace
 
