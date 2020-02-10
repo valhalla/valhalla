@@ -85,7 +85,7 @@ message DirectionsLeg {
       kWest = 6;
       kNorthWest = 7;
     }
-  
+
     // TODO - add others later
     enum Type {
       kNone = 0;
@@ -128,7 +128,7 @@ message DirectionsLeg {
       kMergeRight = 37;
       kMergeLeft = 38;
     }
-  
+
     message SignElement {
       optional string text = 1;               // The actual sign element text, examples: I 95 North or Derry Street
       optional bool is_route_number = 2;      // true if sign element is a reference route number such as: I 81 South or US 322 West
@@ -151,7 +151,7 @@ message DirectionsLeg {
     optional float length = 4;                               // kilometers or miles based on units
     optional double time = 5;                                // seconds
     optional CardinalDirection begin_cardinal_direction = 6; // CardinalDirection
-    optional uint32 begin_heading = 7;                       // 0-360 
+    optional uint32 begin_heading = 7;                       // 0-360
     optional uint32 begin_shape_index = 8;                   // inclusive index
     optional uint32 end_shape_index = 9;                     // inclusive index
     optional bool portions_toll = 10;                        // has portions toll
@@ -181,7 +181,7 @@ message DirectionsLeg {
     optional bool has_time_restrictions = 34;                // Whether edge has any time restrictions or not
     repeated GuidanceView guidance_views = 35;               // List of guidance views
   }
-  
+
   optional uint64 trip_id = 1;
   optional uint32 leg_id = 2;
   optional uint32 leg_count = 3;
