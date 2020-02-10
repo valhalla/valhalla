@@ -287,31 +287,21 @@ const NarrativeDictionary& GetNarrativeDictionary(const std::string& lang_tag) {
   const auto phrase_dictionary = get_locales().find(lang_tag);
 
   // If language tag is not found then throw error
-  if (phrase_dictionary == get_locales().end()) {
-    throw std::runtime_error("Invalid language tag.");
-  }
+  EXPECT_NE(phrase_dictionary, get_locales().end()) << "Invalid language tag.";
 
   return *phrase_dictionary->second;
 }
 
 void validate(const std::string& test_target, const std::string& expected) {
-  if (test_target != expected) {
-    throw std::runtime_error("Invalid entry: " + test_target + "  |  expected: " + expected);
-  }
+  EXPECT_EQ(test_target, expected);
 }
 
 void validate(const std::vector<std::string>& test_target, const std::vector<std::string>& expected) {
-  if (test_target.size() != expected.size()) {
-    throw std::runtime_error("Invalid item count: " + std::to_string(test_target.size()) +
-                             "  |  expected: " + std::to_string(expected.size()));
-  }
+  EXPECT_EQ(test_target.size(), expected.size());
 
   for (auto test_target_item = test_target.begin(), expected_item = expected.begin();
        test_target_item != test_target.end(); ++test_target_item, ++expected_item) {
-    if ((*test_target_item) != (*expected_item)) {
-      throw std::runtime_error("Invalid entry: " + (*test_target_item) +
-                               "  |  expected: " + (*expected_item));
-    }
+    EXPECT_EQ((*test_target_item), (*expected_item));
   }
 }
 
@@ -320,14 +310,11 @@ void validate(const std::unordered_map<std::string, std::string>& test_target,
 
   for (const auto& expected_phrase : expected) {
     const auto& test_target_item = test_target.at(expected_phrase.first);
-    if (test_target_item != expected_phrase.second) {
-      throw std::runtime_error("Invalid entry: " + test_target_item +
-                               "  |  expected: " + expected_phrase.second);
-    }
+    EXPECT_EQ(test_target_item, expected_phrase.second);
   }
 }
 
-void test_en_US_start() {
+TEST(NarrativeDictionary, test_en_US_start) {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // Validate start phrases
@@ -342,7 +329,7 @@ void test_en_US_start() {
   validate(empty_street_name_labels, kExpectedEmptyStreetNameLabels);
 }
 
-void test_en_US_start_verbal() {
+TEST(NarrativeDictionary, test_en_US_start_verbal) {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // Validate start phrases
@@ -365,7 +352,7 @@ void test_en_US_start_verbal() {
   validate(us_customary_lengths, kExpectedUsCustomaryLengths);
 }
 
-void test_en_US_destination() {
+TEST(NarrativeDictionary, test_en_US_destination) {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // "0": "You have arrived at your destination.",
@@ -389,7 +376,7 @@ void test_en_US_destination() {
   validate(relative_directions, kExpectedRelativeTwoDirections);
 }
 
-void test_en_US_destination_verbal_alert() {
+TEST(NarrativeDictionary, test_en_US_destination_verbal_alert) {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // "0": "You will arrive at your destination.",
@@ -413,7 +400,7 @@ void test_en_US_destination_verbal_alert() {
   validate(relative_directions, kExpectedRelativeTwoDirections);
 }
 
-void test_en_US_destination_verbal() {
+TEST(NarrativeDictionary, test_en_US_destination_verbal) {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // "0": "You have arrived at your destination.",
@@ -437,7 +424,7 @@ void test_en_US_destination_verbal() {
   validate(relative_directions, kExpectedRelativeTwoDirections);
 }
 
-void test_en_US_becomes() {
+TEST(NarrativeDictionary, test_en_US_becomes) {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // "0": "<PREVIOUS_STREET_NAMES> becomes <STREET_NAMES>.",
@@ -445,7 +432,7 @@ void test_en_US_becomes() {
   validate(phrase_0, "<PREVIOUS_STREET_NAMES> becomes <STREET_NAMES>.");
 }
 
-void test_en_US_becomes_verbal() {
+TEST(NarrativeDictionary, test_en_US_becomes_verbal) {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // "0": "<PREVIOUS_STREET_NAMES> becomes <STREET_NAMES>.",
@@ -453,7 +440,7 @@ void test_en_US_becomes_verbal() {
   validate(phrase_0, "<PREVIOUS_STREET_NAMES> becomes <STREET_NAMES>.");
 }
 
-void test_en_US_continue() {
+TEST(NarrativeDictionary, test_en_US_continue) {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // "0": "Continue.",
@@ -469,7 +456,7 @@ void test_en_US_continue() {
   validate(empty_street_name_labels, kExpectedEmptyStreetNameLabels);
 }
 
-void test_en_US_continue_verbal_alert() {
+TEST(NarrativeDictionary, test_en_US_continue_verbal_alert) {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // "0": "Continue.",
@@ -486,7 +473,7 @@ void test_en_US_continue_verbal_alert() {
   validate(empty_street_name_labels, kExpectedEmptyStreetNameLabels);
 }
 
-void test_en_US_continue_verbal() {
+TEST(NarrativeDictionary, test_en_US_continue_verbal) {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // "0": "Continue for <LENGTH>.",
@@ -510,7 +497,7 @@ void test_en_US_continue_verbal() {
   validate(us_customary_lengths, kExpectedUsCustomaryLengths);
 }
 
-void test_en_US_bear() {
+TEST(NarrativeDictionary, test_en_US_bear) {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // "0": "Bear <RELATIVE_DIRECTION>.",
@@ -539,7 +526,7 @@ void test_en_US_bear() {
   validate(empty_street_name_labels, kExpectedEmptyStreetNameLabels);
 }
 
-void test_en_US_bear_verbal() {
+TEST(NarrativeDictionary, test_en_US_bear_verbal) {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // "0": "Bear <RELATIVE_DIRECTION>.",
@@ -567,7 +554,7 @@ void test_en_US_bear_verbal() {
   validate(empty_street_name_labels, kExpectedEmptyStreetNameLabels);
 }
 
-void test_en_US_turn() {
+TEST(NarrativeDictionary, test_en_US_turn) {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // "0": "Turn <RELATIVE_DIRECTION>.",
@@ -596,7 +583,7 @@ void test_en_US_turn() {
   validate(empty_street_name_labels, kExpectedEmptyStreetNameLabels);
 }
 
-void test_en_US_turn_verbal() {
+TEST(NarrativeDictionary, test_en_US_turn_verbal) {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // "0": "Turn <RELATIVE_DIRECTION>.",
@@ -624,7 +611,7 @@ void test_en_US_turn_verbal() {
   validate(empty_street_name_labels, kExpectedEmptyStreetNameLabels);
 }
 
-void test_en_US_sharp() {
+TEST(NarrativeDictionary, test_en_US_sharp) {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // "0": "Turn sharp <RELATIVE_DIRECTION>.",
@@ -653,7 +640,7 @@ void test_en_US_sharp() {
   validate(empty_street_name_labels, kExpectedEmptyStreetNameLabels);
 }
 
-void test_en_US_sharp_verbal() {
+TEST(NarrativeDictionary, test_en_US_sharp_verbal) {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // "0": "Turn sharp <RELATIVE_DIRECTION>.",
@@ -681,7 +668,7 @@ void test_en_US_sharp_verbal() {
   validate(empty_street_name_labels, kExpectedEmptyStreetNameLabels);
 }
 
-void test_en_US_uturn() {
+TEST(NarrativeDictionary, test_en_US_uturn) {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // "0": "Make a <RELATIVE_DIRECTION> U-turn.",
@@ -719,7 +706,7 @@ void test_en_US_uturn() {
   validate(empty_street_name_labels, kExpectedEmptyStreetNameLabels);
 }
 
-void test_en_US_uturn_verbal() {
+TEST(NarrativeDictionary, test_en_US_uturn_verbal) {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // "0": "Make a <RELATIVE_DIRECTION> U-turn.",
@@ -757,7 +744,7 @@ void test_en_US_uturn_verbal() {
   validate(empty_street_name_labels, kExpectedEmptyStreetNameLabels);
 }
 
-void test_en_US_ramp_straight() {
+TEST(NarrativeDictionary, test_en_US_ramp_straight) {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   //  "0": "Stay straight to take the ramp.",
@@ -781,7 +768,7 @@ void test_en_US_ramp_straight() {
   validate(phrase_4, "Stay straight to take the <NAME_SIGN> ramp.");
 }
 
-void test_en_US_ramp_straight_verbal() {
+TEST(NarrativeDictionary, test_en_US_ramp_straight_verbal) {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   //  "0": "Stay straight to take the ramp.",
@@ -805,7 +792,7 @@ void test_en_US_ramp_straight_verbal() {
   validate(phrase_4, "Stay straight to take the <NAME_SIGN> ramp.");
 }
 
-void test_en_US_ramp() {
+TEST(NarrativeDictionary, test_en_US_ramp) {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // "0": "Take the ramp on the <RELATIVE_DIRECTION>.",
@@ -874,7 +861,7 @@ void test_en_US_ramp() {
   validate(relative_directions, kExpectedRelativeTwoDirections);
 }
 
-void test_en_US_ramp_verbal() {
+TEST(NarrativeDictionary, test_en_US_ramp_verbal) {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // "0": "Take the ramp on the <RELATIVE_DIRECTION>.",
@@ -943,7 +930,7 @@ void test_en_US_ramp_verbal() {
   validate(relative_directions, kExpectedRelativeTwoDirections);
 }
 
-void test_en_US_exit() {
+TEST(NarrativeDictionary, test_en_US_exit) {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // Validate exit phrases
@@ -954,7 +941,7 @@ void test_en_US_exit() {
   validate(relative_directions, kExpectedRelativeTwoDirections);
 }
 
-void test_en_US_exit_verbal() {
+TEST(NarrativeDictionary, test_en_US_exit_verbal) {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // Validate exit_verbal phrases
@@ -965,7 +952,7 @@ void test_en_US_exit_verbal() {
   validate(relative_directions, kExpectedRelativeTwoDirections);
 }
 
-void test_en_US_keep() {
+TEST(NarrativeDictionary, test_en_US_keep) {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // Validate keep phrases
@@ -980,7 +967,7 @@ void test_en_US_keep() {
   validate(empty_street_name_labels, kExpectedEmptyStreetNameLabels);
 }
 
-void test_en_US_keep_verbal() {
+TEST(NarrativeDictionary, test_en_US_keep_verbal) {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // Validate keep_verbal phrases
@@ -995,7 +982,7 @@ void test_en_US_keep_verbal() {
   validate(empty_street_name_labels, kExpectedEmptyStreetNameLabels);
 }
 
-void test_en_US_keep_to_stay_on() {
+TEST(NarrativeDictionary, test_en_US_keep_to_stay_on) {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // Validate keep_to_stay_on phrases
@@ -1010,7 +997,7 @@ void test_en_US_keep_to_stay_on() {
   validate(empty_street_name_labels, kExpectedEmptyStreetNameLabels);
 }
 
-void test_en_US_keep_to_stay_on_verbal() {
+TEST(NarrativeDictionary, test_en_US_keep_to_stay_on_verbal) {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // Validate keep_to_stay_on_verbal phrases
@@ -1026,7 +1013,7 @@ void test_en_US_keep_to_stay_on_verbal() {
   validate(empty_street_name_labels, kExpectedEmptyStreetNameLabels);
 }
 
-void test_en_US_merge() {
+TEST(NarrativeDictionary, test_en_US_merge) {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // Validate merge phrases
@@ -1037,7 +1024,7 @@ void test_en_US_merge() {
   validate(empty_street_name_labels, kExpectedEmptyStreetNameLabels);
 }
 
-void test_en_US_merge_verbal() {
+TEST(NarrativeDictionary, test_en_US_merge_verbal) {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // Validate merge_verbal phrases
@@ -1048,7 +1035,7 @@ void test_en_US_merge_verbal() {
   validate(empty_street_name_labels, kExpectedEmptyStreetNameLabels);
 }
 
-void test_en_US_enter_roundabout() {
+TEST(NarrativeDictionary, test_en_US_enter_roundabout) {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // Validate enter_roundabout phrases
@@ -1059,7 +1046,7 @@ void test_en_US_enter_roundabout() {
   validate(ordinal_values, kExpectedOrdinalValues);
 }
 
-void test_en_US_enter_roundabout_verbal() {
+TEST(NarrativeDictionary, test_en_US_enter_roundabout_verbal) {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // Validate enter_roundabout_verbal phrases
@@ -1070,7 +1057,7 @@ void test_en_US_enter_roundabout_verbal() {
   validate(ordinal_values, kExpectedOrdinalValues);
 }
 
-void test_en_US_exit_roundabout() {
+TEST(NarrativeDictionary, test_en_US_exit_roundabout) {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // Validate exit_roundabout phrases
@@ -1081,7 +1068,7 @@ void test_en_US_exit_roundabout() {
   validate(empty_street_name_labels, kExpectedEmptyStreetNameLabels);
 }
 
-void test_en_US_exit_roundabout_verbal() {
+TEST(NarrativeDictionary, test_en_US_exit_roundabout_verbal) {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // Validate exit_roundabout_verbal phrases
@@ -1093,7 +1080,7 @@ void test_en_US_exit_roundabout_verbal() {
   validate(empty_street_name_labels, kExpectedEmptyStreetNameLabels);
 }
 
-void test_en_US_enter_ferry() {
+TEST(NarrativeDictionary, test_en_US_enter_ferry) {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // Validate enter_ferry phrases
@@ -1107,7 +1094,7 @@ void test_en_US_enter_ferry() {
   validate(dictionary.enter_ferry_subset.ferry_label, kExpectedFerryLabel);
 }
 
-void test_en_US_enter_ferry_verbal() {
+TEST(NarrativeDictionary, test_en_US_enter_ferry_verbal) {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // Validate enter_ferry_verbal phrases
@@ -1122,7 +1109,7 @@ void test_en_US_enter_ferry_verbal() {
   validate(dictionary.enter_ferry_verbal_subset.ferry_label, kExpectedFerryLabel);
 }
 
-void test_en_US_exit_ferry() {
+TEST(NarrativeDictionary, test_en_US_exit_ferry) {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // Validate exit_ferry phrases
@@ -1137,7 +1124,7 @@ void test_en_US_exit_ferry() {
   validate(empty_street_name_labels, kExpectedEmptyStreetNameLabels);
 }
 
-void test_en_US_exit_ferry_verbal() {
+TEST(NarrativeDictionary, test_en_US_exit_ferry_verbal) {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // Validate exit_ferry_verbal phrases
@@ -1152,7 +1139,7 @@ void test_en_US_exit_ferry_verbal() {
   validate(empty_street_name_labels, kExpectedEmptyStreetNameLabels);
 }
 
-void test_en_US_transit_connection_start() {
+TEST(NarrativeDictionary, test_en_US_transit_connection_start) {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // Validate transit_connection_start phrases
@@ -1163,7 +1150,7 @@ void test_en_US_transit_connection_start() {
   validate(dictionary.transit_connection_start_subset.station_label, kExpectedStationLabel);
 }
 
-void test_en_US_transit_connection_start_verbal() {
+TEST(NarrativeDictionary, test_en_US_transit_connection_start_verbal) {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // Validate transit_connection_start_verbal phrases
@@ -1174,7 +1161,7 @@ void test_en_US_transit_connection_start_verbal() {
   validate(dictionary.transit_connection_start_verbal_subset.station_label, kExpectedStationLabel);
 }
 
-void test_en_US_transit_connection_transfer() {
+TEST(NarrativeDictionary, test_en_US_transit_connection_transfer) {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // Validate transit_connection_start phrases
@@ -1185,7 +1172,7 @@ void test_en_US_transit_connection_transfer() {
   validate(dictionary.transit_connection_transfer_subset.station_label, kExpectedStationLabel);
 }
 
-void test_en_US_transit_connection_transfer_verbal() {
+TEST(NarrativeDictionary, test_en_US_transit_connection_transfer_verbal) {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // Validate transit_connection_start_verbal phrases
@@ -1196,7 +1183,7 @@ void test_en_US_transit_connection_transfer_verbal() {
   validate(dictionary.transit_connection_transfer_verbal_subset.station_label, kExpectedStationLabel);
 }
 
-void test_en_US_transit_connection_destination() {
+TEST(NarrativeDictionary, test_en_US_transit_connection_destination) {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // Validate transit_destination_start phrases
@@ -1207,7 +1194,7 @@ void test_en_US_transit_connection_destination() {
   validate(dictionary.transit_connection_destination_subset.station_label, kExpectedStationLabel);
 }
 
-void test_en_US_transit_connection_destination_verbal() {
+TEST(NarrativeDictionary, test_en_US_transit_connection_destination_verbal) {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // Validate transit_destination_start_verbal phrases
@@ -1219,35 +1206,35 @@ void test_en_US_transit_connection_destination_verbal() {
            kExpectedStationLabel);
 }
 
-void test_en_US_depart() {
+TEST(NarrativeDictionary, test_en_US_depart) {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // Validate depart phrases
   validate(dictionary.depart_subset.phrases, kExpectedDepartPhrases);
 }
 
-void test_en_US_depart_verbal() {
+TEST(NarrativeDictionary, test_en_US_depart_verbal) {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // Validate depart_verbal phrases
   validate(dictionary.depart_verbal_subset.phrases, kExpectedDepartVerbalPhrases);
 }
 
-void test_en_US_arrive() {
+TEST(NarrativeDictionary, test_en_US_arrive) {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // Validate arrive phrases
   validate(dictionary.arrive_subset.phrases, kExpectedArrivePhrases);
 }
 
-void test_en_US_arrive_verbal() {
+TEST(NarrativeDictionary, test_en_US_arrive_verbal) {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // Validate arrive_verbal phrases
   validate(dictionary.arrive_verbal_subset.phrases, kExpectedArriveVerbalPhrases);
 }
 
-void test_en_US_transit() {
+TEST(NarrativeDictionary, test_en_US_transit) {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   const auto& phrase_0 = dictionary.transit_subset.phrases.at("0");
@@ -1266,7 +1253,7 @@ void test_en_US_transit() {
   validate(transit_stop_count_labels, kExpectedTransitStopCountLabels);
 }
 
-void test_en_US_transit_verbal() {
+TEST(NarrativeDictionary, test_en_US_transit_verbal) {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   const auto& phrase_0 = dictionary.transit_verbal_subset.phrases.at("0");
@@ -1280,7 +1267,7 @@ void test_en_US_transit_verbal() {
   validate(empty_transit_name_labels, kExpectedEmptyTransitNameLabels);
 }
 
-void test_en_US_transit_remain_on() {
+TEST(NarrativeDictionary, test_en_US_transit_remain_on) {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   const auto& phrase_0 = dictionary.transit_remain_on_subset.phrases.at("0");
@@ -1301,7 +1288,7 @@ void test_en_US_transit_remain_on() {
   validate(transit_stop_count_labels, kExpectedTransitStopCountLabels);
 }
 
-void test_en_US_transit_remain_on_verbal() {
+TEST(NarrativeDictionary, test_en_US_transit_remain_on_verbal) {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   const auto& phrase_0 = dictionary.transit_remain_on_verbal_subset.phrases.at("0");
@@ -1315,7 +1302,7 @@ void test_en_US_transit_remain_on_verbal() {
   validate(empty_transit_name_labels, kExpectedEmptyTransitNameLabels);
 }
 
-void test_en_US_transit_transfer() {
+TEST(NarrativeDictionary, test_en_US_transit_transfer) {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   const auto& phrase_0 = dictionary.transit_transfer_subset.phrases.at("0");
@@ -1336,7 +1323,7 @@ void test_en_US_transit_transfer() {
   validate(transit_stop_count_labels, kExpectedTransitStopCountLabels);
 }
 
-void test_en_US_transit_transfer_verbal() {
+TEST(NarrativeDictionary, test_en_US_transit_transfer_verbal) {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   const auto& phrase_0 = dictionary.transit_transfer_verbal_subset.phrases.at("0");
@@ -1350,7 +1337,7 @@ void test_en_US_transit_transfer_verbal() {
   validate(empty_transit_name_labels, kExpectedEmptyTransitNameLabels);
 }
 
-void test_en_US_post_transit_connection_destination() {
+TEST(NarrativeDictionary, test_en_US_post_transit_connection_destination) {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // Validate post_transit_connection_destination phrases
@@ -1368,7 +1355,7 @@ void test_en_US_post_transit_connection_destination() {
   validate(empty_street_name_labels, kExpectedEmptyStreetNameLabels);
 }
 
-void test_en_US_post_transit_connection_destination_verbal() {
+TEST(NarrativeDictionary, test_en_US_post_transit_connection_destination_verbal) {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // Validate post_transit_connection_destination_verbal phrases
@@ -1386,7 +1373,7 @@ void test_en_US_post_transit_connection_destination_verbal() {
   validate(empty_street_name_labels, kExpectedEmptyStreetNameLabels);
 }
 
-void test_en_US_post_transition_verbal() {
+TEST(NarrativeDictionary, test_en_US_post_transition_verbal) {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // "0": "Continue for <LENGTH>.",
@@ -1411,7 +1398,7 @@ void test_en_US_post_transition_verbal() {
   validate(empty_street_name_labels, kExpectedEmptyStreetNameLabels);
 }
 
-void test_en_US_post_transition_transit_verbal() {
+TEST(NarrativeDictionary, test_en_US_post_transition_transit_verbal) {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // "0": "Continue for <LENGTH>.",
@@ -1424,7 +1411,7 @@ void test_en_US_post_transition_transit_verbal() {
   validate(transit_stop_count_labels, kExpectedTransitStopCountLabels);
 }
 
-void test_en_US_verbal_multi_cue() {
+TEST(NarrativeDictionary, test_en_US_verbal_multi_cue) {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // "0": "<CURRENT_VERBAL_CUE> Then <NEXT_VERBAL_CUE>"
@@ -1434,185 +1421,7 @@ void test_en_US_verbal_multi_cue() {
 
 } // namespace
 
-int main() {
-  test::suite suite("narrative_dictionary");
-
-  // test the en-US start phrases
-  suite.test(TEST_CASE(test_en_US_start));
-
-  // test the en-US start verbal phrases
-  suite.test(TEST_CASE(test_en_US_start_verbal));
-
-  // test the en-US destination phrases
-  suite.test(TEST_CASE(test_en_US_destination));
-
-  // test the en-US destination verbal alert_phrases
-  suite.test(TEST_CASE(test_en_US_destination_verbal_alert));
-
-  // test the en-US destination verbal phrases
-  suite.test(TEST_CASE(test_en_US_destination_verbal));
-
-  // test the en-US becomes phrases
-  suite.test(TEST_CASE(test_en_US_becomes));
-
-  // test the en-US becomes verbal phrases
-  suite.test(TEST_CASE(test_en_US_becomes_verbal));
-
-  // test the en-US continue phrases
-  suite.test(TEST_CASE(test_en_US_continue));
-
-  // test the en-US continue verbal alert_phrases
-  suite.test(TEST_CASE(test_en_US_continue_verbal_alert));
-
-  // test the en-US continue verbal phrases
-  suite.test(TEST_CASE(test_en_US_continue_verbal));
-
-  // test the en-US bear phrases
-  suite.test(TEST_CASE(test_en_US_bear));
-
-  // test the en-US bear verbal phrases
-  suite.test(TEST_CASE(test_en_US_bear_verbal));
-
-  // test the en-US turn phrases
-  suite.test(TEST_CASE(test_en_US_turn));
-
-  // test the en-US turn verbal phrases
-  suite.test(TEST_CASE(test_en_US_turn_verbal));
-
-  // test the en-US sharp phrases
-  suite.test(TEST_CASE(test_en_US_sharp));
-
-  // test the en-US sharp verbal phrases
-  suite.test(TEST_CASE(test_en_US_sharp_verbal));
-
-  // test the en-US uturn phrases
-  suite.test(TEST_CASE(test_en_US_uturn));
-
-  // test the en-US uturn verbal phrases
-  suite.test(TEST_CASE(test_en_US_uturn_verbal));
-
-  // test the en-US ramp_straight phrases
-  suite.test(TEST_CASE(test_en_US_ramp_straight));
-
-  // test the en-US ramp_straight verbal phrases
-  suite.test(TEST_CASE(test_en_US_ramp_straight_verbal));
-
-  // test the en-US ramp phrases
-  suite.test(TEST_CASE(test_en_US_ramp));
-
-  // test the en-US ramp verbal phrases
-  suite.test(TEST_CASE(test_en_US_ramp_verbal));
-
-  // test the en-US exit phrases
-  suite.test(TEST_CASE(test_en_US_exit));
-
-  // test the en-US exit_verbal phrases
-  suite.test(TEST_CASE(test_en_US_exit_verbal));
-
-  // test the en-US keep phrases
-  suite.test(TEST_CASE(test_en_US_keep));
-
-  // test the en-US keep_verbal phrases
-  suite.test(TEST_CASE(test_en_US_keep_verbal));
-
-  // test the en-US keep_to_stay_on phrases
-  suite.test(TEST_CASE(test_en_US_keep_to_stay_on));
-
-  // test the en-US keep_to_stay_on_verbal phrases
-  suite.test(TEST_CASE(test_en_US_keep_to_stay_on_verbal));
-
-  // test the en-US merge phrases
-  suite.test(TEST_CASE(test_en_US_merge));
-
-  // test the en-US merge_verbal phrases
-  suite.test(TEST_CASE(test_en_US_merge_verbal));
-
-  // test the en-US enter_roundabout phrases
-  suite.test(TEST_CASE(test_en_US_enter_roundabout));
-
-  // test the en-US enter_roundabout_verbal phrases
-  suite.test(TEST_CASE(test_en_US_enter_roundabout_verbal));
-
-  // test the en-US exit_roundabout phrases
-  suite.test(TEST_CASE(test_en_US_exit_roundabout));
-
-  // test the en-US exit_roundabout_verbal phrases
-  suite.test(TEST_CASE(test_en_US_exit_roundabout_verbal));
-
-  // test the en-US enter_ferry phrases
-  suite.test(TEST_CASE(test_en_US_enter_ferry));
-
-  // test the en-US enter_ferry_verbal phrases
-  suite.test(TEST_CASE(test_en_US_enter_ferry_verbal));
-
-  // test the en-US exit_ferry phrases
-  suite.test(TEST_CASE(test_en_US_exit_ferry));
-
-  // test the en-US exit_ferry_verbal phrases
-  suite.test(TEST_CASE(test_en_US_exit_ferry_verbal));
-
-  // test the en-US transit_connection_start phrases
-  suite.test(TEST_CASE(test_en_US_transit_connection_start));
-
-  // test the en-US transit_connection_start_verbal phrases
-  suite.test(TEST_CASE(test_en_US_transit_connection_start_verbal));
-
-  // test the en-US transit_connection_transfer phrases
-  suite.test(TEST_CASE(test_en_US_transit_connection_transfer));
-
-  // test the en-US transit_connection_transfer_verbal phrases
-  suite.test(TEST_CASE(test_en_US_transit_connection_transfer_verbal));
-
-  // test the en-US transit_connection_destination phrases
-  suite.test(TEST_CASE(test_en_US_transit_connection_destination));
-
-  // test the en-US transit_connection_destination_verbal phrases
-  suite.test(TEST_CASE(test_en_US_transit_connection_destination_verbal));
-
-  // test the en-US depart phrases
-  suite.test(TEST_CASE(test_en_US_depart));
-
-  // test the en-US depart_verbal phrases
-  suite.test(TEST_CASE(test_en_US_depart_verbal));
-
-  // test the en-US arrive phrases
-  suite.test(TEST_CASE(test_en_US_arrive));
-
-  // test the en-US arrive_verbal phrases
-  suite.test(TEST_CASE(test_en_US_arrive_verbal));
-
-  // test the en-US transit phrases
-  suite.test(TEST_CASE(test_en_US_transit));
-
-  // test the en-US transit_verbal phrases
-  suite.test(TEST_CASE(test_en_US_transit_verbal));
-
-  // test the en-US transit_remain_on phrases
-  suite.test(TEST_CASE(test_en_US_transit_remain_on));
-
-  // test the en-US transit_remain_on_verbal phrases
-  suite.test(TEST_CASE(test_en_US_transit_remain_on_verbal));
-
-  // test the en-US transit_transfer phrases
-  suite.test(TEST_CASE(test_en_US_transit_transfer));
-
-  // test the en-US transit_transfer_verbal phrases
-  suite.test(TEST_CASE(test_en_US_transit_transfer_verbal));
-
-  // test the en-US post_transit_connection_destination phrases
-  suite.test(TEST_CASE(test_en_US_post_transit_connection_destination));
-
-  // test the en-US post_transit_connection_destination_verbal phrases
-  suite.test(TEST_CASE(test_en_US_post_transit_connection_destination_verbal));
-
-  // test the en-US post_transition_verbal_subset phrases
-  suite.test(TEST_CASE(test_en_US_post_transition_verbal));
-
-  // test the en-US post_transition_transit_verbal phrases
-  suite.test(TEST_CASE(test_en_US_post_transition_transit_verbal));
-
-  // test the en-US verbal_multi_cue phrases
-  suite.test(TEST_CASE(test_en_US_verbal_multi_cue));
-
-  return suite.tear_down();
+int main(int argc, char* argv[]) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

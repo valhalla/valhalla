@@ -2,8 +2,9 @@
 #include "baldr/turnlanes.h"
 #include "midgard/util.h"
 
-#include "test.h"
 #include <cstdint>
+
+#include "test.h"
 
 using namespace std;
 using namespace valhalla;
@@ -22,42 +23,20 @@ void TryCalculateRightLeftIntersectingEdgeCounts(
   xedge_counts.clear();
 
   node->CalculateRightLeftIntersectingEdgeCounts(from_heading, travel_mode, xedge_counts);
-  if (xedge_counts.right != expected_xedge_counts.right) {
-    throw std::runtime_error("Incorrect right");
-  }
-
-  if (xedge_counts.right_similar != expected_xedge_counts.right_similar) {
-    throw std::runtime_error("Incorrect right_similar");
-  }
-
-  if (xedge_counts.right_traversable_outbound != expected_xedge_counts.right_traversable_outbound) {
-    throw std::runtime_error("Incorrect right_driveable_outbound");
-  }
-
-  if (xedge_counts.right_similar_traversable_outbound !=
-      expected_xedge_counts.right_similar_traversable_outbound) {
-    throw std::runtime_error("Incorrect right_similar_driveable_outbound");
-  }
-
-  if (xedge_counts.left != expected_xedge_counts.left) {
-    throw std::runtime_error("Incorrect left");
-  }
-
-  if (xedge_counts.left_similar != expected_xedge_counts.left_similar) {
-    throw std::runtime_error("Incorrect left_similar");
-  }
-
-  if (xedge_counts.left_traversable_outbound != expected_xedge_counts.left_traversable_outbound) {
-    throw std::runtime_error("Incorrect left_driveable_outbound");
-  }
-
-  if (xedge_counts.left_similar_traversable_outbound !=
-      expected_xedge_counts.left_similar_traversable_outbound) {
-    throw std::runtime_error("Incorrect left_similar_driveable_outbound");
-  }
+  EXPECT_EQ(xedge_counts.right, expected_xedge_counts.right);
+  EXPECT_EQ(xedge_counts.right_similar, expected_xedge_counts.right_similar);
+  EXPECT_EQ(xedge_counts.right_traversable_outbound,
+            expected_xedge_counts.right_traversable_outbound);
+  EXPECT_EQ(xedge_counts.right_similar_traversable_outbound,
+            expected_xedge_counts.right_similar_traversable_outbound);
+  EXPECT_EQ(xedge_counts.left, expected_xedge_counts.left);
+  EXPECT_EQ(xedge_counts.left_similar, expected_xedge_counts.left_similar);
+  EXPECT_EQ(xedge_counts.left_traversable_outbound, expected_xedge_counts.left_traversable_outbound);
+  EXPECT_EQ(xedge_counts.left_similar_traversable_outbound,
+            expected_xedge_counts.left_similar_traversable_outbound);
 }
 
-void TestCalculateRightLeftIntersectingEdgeCounts_Straight_Straight() {
+TEST(EnhancedTripPathCalculateRightLeftIntersectingEdgeCounts, StraightStraight) {
   // Path straight, intersecting straight
   TripLeg_Node node1;
   node1.mutable_edge()->set_begin_heading(5);
@@ -77,7 +56,7 @@ void TestCalculateRightLeftIntersectingEdgeCounts_Straight_Straight() {
                                               IntersectingEdgeCounts(1, 1, 1, 1, 0, 0, 0, 0));
 }
 
-void TestCalculateRightLeftIntersectingEdgeCounts_SlightRight_Straight() {
+TEST(EnhancedTripPathCalculateRightLeftIntersectingEdgeCounts, SlightRightStraight) {
   // Path slight right, intersecting straight
   TripLeg_Node node1;
   node1.mutable_edge()->set_begin_heading(11);
@@ -97,7 +76,7 @@ void TestCalculateRightLeftIntersectingEdgeCounts_SlightRight_Straight() {
                                               IntersectingEdgeCounts(0, 0, 0, 0, 1, 1, 0, 0));
 }
 
-void TestCalculateRightLeftIntersectingEdgeCounts_SlightLeft_Straight() {
+TEST(EnhancedTripPathCalculateRightLeftIntersectingEdgeCounts, SlightLeftStraight) {
   // Path slight left, intersecting straight
   TripLeg_Node node1;
   node1.mutable_edge()->set_begin_heading(345);
@@ -113,7 +92,7 @@ void TestCalculateRightLeftIntersectingEdgeCounts_SlightLeft_Straight() {
                                               IntersectingEdgeCounts(1, 1, 0, 0, 0, 0, 0, 0));
 }
 
-void TestCalculateRightLeftIntersectingEdgeCounts_SlightLeft_Right_Left() {
+TEST(EnhancedTripPathCalculateRightLeftIntersectingEdgeCounts, SlightLeftRightLeft) {
   // Path slight left, intersecting right and left
   TripLeg_Node node1;
   node1.mutable_edge()->set_begin_heading(340);
@@ -139,7 +118,7 @@ void TestCalculateRightLeftIntersectingEdgeCounts_SlightLeft_Right_Left() {
                                               IntersectingEdgeCounts(1, 0, 1, 0, 1, 0, 1, 0));
 }
 
-void TestCalculateRightLeftIntersectingEdgeCounts_SharpRight_Right_Left() {
+TEST(EnhancedTripPathCalculateRightLeftIntersectingEdgeCounts, SharpRightRightLeft) {
   // Path sharp right, intersecting right and left
   TripLeg_Node node1;
   node1.mutable_edge()->set_begin_heading(352);
@@ -152,7 +131,7 @@ void TestCalculateRightLeftIntersectingEdgeCounts_SharpRight_Right_Left() {
                                               IntersectingEdgeCounts(1, 1, 0, 0, 4, 0, 0, 0));
 }
 
-void TestCalculateRightLeftIntersectingEdgeCounts_SharpLeft_Right_Left() {
+TEST(EnhancedTripPathCalculateRightLeftIntersectingEdgeCounts, SharpLeftRightLeft) {
   // Path sharp left, intersecting right and left
   TripLeg_Node node1;
   node1.mutable_edge()->set_begin_heading(10);
@@ -167,14 +146,10 @@ void TestCalculateRightLeftIntersectingEdgeCounts_SharpLeft_Right_Left() {
 }
 
 void TryHasActiveTurnLane(std::unique_ptr<EnhancedTripLeg_Edge> edge, bool expected) {
-
-  if (edge->HasActiveTurnLane() != expected) {
-    throw std::runtime_error("Incorrect value returned for HasActiveTurnLane - expected: " +
-                             std::string(expected ? "true" : "false"));
-  }
+  EXPECT_EQ(edge->HasActiveTurnLane(), expected);
 }
 
-void TestHasActiveTurnLane_False() {
+TEST(EnhancedTripPathHasActiveTurnLane, False) {
   TripLeg_Edge edge;
   edge.add_turn_lanes()->set_directions_mask(kTurnLaneLeft);
   edge.add_turn_lanes()->set_directions_mask(kTurnLaneThrough);
@@ -182,7 +157,7 @@ void TestHasActiveTurnLane_False() {
   TryHasActiveTurnLane(std::make_unique<EnhancedTripLeg_Edge>(&edge), false);
 }
 
-void TestHasActiveTurnLane_True() {
+TEST(EnhancedTripPathHasActiveTurnLane, True) {
   TripLeg_Edge edge;
   edge.add_turn_lanes()->set_directions_mask(kTurnLaneLeft);
   edge.add_turn_lanes()->set_directions_mask(kTurnLaneThrough);
@@ -204,14 +179,10 @@ void TestHasActiveTurnLane_True() {
 }
 
 void TryHasNonDirectionalTurnLane(std::unique_ptr<EnhancedTripLeg_Edge> edge, bool expected) {
-
-  if (edge->HasNonDirectionalTurnLane() != expected) {
-    throw std::runtime_error("Incorrect value returned for HasNonDirectionalTurnLane - expected: " +
-                             std::string(expected ? "true" : "false"));
-  }
+  EXPECT_EQ(edge->HasNonDirectionalTurnLane(), expected);
 }
 
-void TestHasNonDirectionalTurnLane_False() {
+TEST(EnhancedTripPathHasNonDirectionalTurnLane, False) {
   TripLeg_Edge edge;
   edge.add_turn_lanes()->set_directions_mask(kTurnLaneLeft);
   edge.add_turn_lanes()->set_directions_mask(kTurnLaneThrough);
@@ -219,7 +190,7 @@ void TestHasNonDirectionalTurnLane_False() {
   TryHasNonDirectionalTurnLane(std::make_unique<EnhancedTripLeg_Edge>(&edge), false);
 }
 
-void TestHasNonDirectionalTurnLane_True() {
+TEST(EnhancedTripPathHasNonDirectionalTurnLane, True) {
   TripLeg_Edge edge_1;
   edge_1.add_turn_lanes()->set_directions_mask(kTurnLaneLeft);
   edge_1.add_turn_lanes()->set_directions_mask(kTurnLaneNone);
@@ -245,17 +216,15 @@ void TryActivateTurnLanes(std::unique_ptr<EnhancedTripLeg_Edge> edge,
                           uint16_t expected_activated_count) {
   uint16_t activated_count = edge->ActivateTurnLanes(turn_lane_direction, remaining_step_distance,
                                                      curr_maneuver_type, next_maneuver_type);
-  if (activated_count != expected_activated_count) {
-    throw std::runtime_error(
-        "Incorrect activated count returned from ActivateTurnLanes(" +
-        std::to_string(turn_lane_direction) + ", " + std::to_string(remaining_step_distance) + ", " +
-        std::to_string(curr_maneuver_type) + ", " + std::to_string(next_maneuver_type) +
-        ") - found: " + std::to_string(activated_count) +
-        " | expected: " + std::to_string(expected_activated_count));
-  }
+  EXPECT_EQ(activated_count, expected_activated_count)
+      << "Incorrect activated count returned from ActivateTurnLanes(" +
+             std::to_string(turn_lane_direction) + ", " + std::to_string(remaining_step_distance) +
+             ", " + std::to_string(curr_maneuver_type) + ", " + std::to_string(next_maneuver_type) +
+             ") - found: " + std::to_string(activated_count) +
+             " | expected: " + std::to_string(expected_activated_count);
 }
 
-void TestActivateTurnLanes() {
+TEST(EnhancedTripPath, TestActivateTurnLanes) {
   //
   // Test various active angles
   //
@@ -418,7 +387,7 @@ void TestActivateTurnLanes() {
   ClearActiveTurnLanes(edge_4.mutable_turn_lanes());
 }
 
-void TestActivateTurnLanesShortNextRight() {
+TEST(EnhancedTripPath, TestActivateTurnLanesShortNextRight) {
   //
   // Test various active angles
   //
@@ -545,7 +514,7 @@ void TestActivateTurnLanesShortNextRight() {
   ClearActiveTurnLanes(edge_3.mutable_turn_lanes());
 }
 
-void TestActivateTurnLanesShortNextLeft() {
+TEST(EnhancedTripPath, TestActivateTurnLanesShortNextLeft) {
   //
   // Test various active angles
   //
@@ -674,47 +643,7 @@ void TestActivateTurnLanesShortNextLeft() {
 
 } // namespace
 
-int main() {
-  test::suite suite("enhancedtrippath");
-
-  // CalculateRightLeftIntersectingEdgeCounts_Straight_Straight
-  suite.test(TEST_CASE(TestCalculateRightLeftIntersectingEdgeCounts_Straight_Straight));
-
-  // CalculateRightLeftIntersectingEdgeCounts_SlightRight_Straight
-  suite.test(TEST_CASE(TestCalculateRightLeftIntersectingEdgeCounts_SlightRight_Straight));
-
-  // CalculateRightLeftIntersectingEdgeCounts_SlightLeft_Straight
-  suite.test(TEST_CASE(TestCalculateRightLeftIntersectingEdgeCounts_SlightLeft_Straight));
-
-  // CalculateRightLeftIntersectingEdgeCounts_SlightLeft_Right_Left
-  suite.test(TEST_CASE(TestCalculateRightLeftIntersectingEdgeCounts_SlightLeft_Right_Left));
-
-  // CalculateRightLeftIntersectingEdgeCounts_SharpRight_Right_Left
-  suite.test(TEST_CASE(TestCalculateRightLeftIntersectingEdgeCounts_SharpRight_Right_Left));
-
-  // CalculateRightLeftIntersectingEdgeCounts_SharpLeft_Right_Left
-  suite.test(TEST_CASE(TestCalculateRightLeftIntersectingEdgeCounts_SharpLeft_Right_Left));
-
-  // HasActiveTurnLane_False
-  suite.test(TEST_CASE(TestHasActiveTurnLane_False));
-
-  // HasActiveTurnLane_True
-  suite.test(TEST_CASE(TestHasActiveTurnLane_True));
-
-  // HasNonDirectionalTurnLane_False
-  suite.test(TEST_CASE(TestHasNonDirectionalTurnLane_False));
-
-  // HasNonDirectionalTurnLane_True
-  suite.test(TEST_CASE(TestHasNonDirectionalTurnLane_True));
-
-  // ActivateTurnLanes
-  suite.test(TEST_CASE(TestActivateTurnLanes));
-
-  // ActivateTurnLanesShortNextRight
-  suite.test(TEST_CASE(TestActivateTurnLanesShortNextRight));
-
-  // ActivateTurnLanesShortNextLeft
-  suite.test(TEST_CASE(TestActivateTurnLanesShortNextLeft));
-
-  return suite.tear_down();
+int main(int argc, char* argv[]) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

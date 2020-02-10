@@ -607,9 +607,14 @@ public:
         name = tag.second;
       } else if (tag.first == "name:en" && !tag.second.empty()) {
         w.set_name_en_index(osmdata_.name_offset_map.index(tag.second));
-      } else if (tag.first == "alt_name" && !tag.second.empty()) {
+      }
+      /* Disabling alt_name tag processing. This might need to be re-enabled
+       * for commerical dataset.
+       * TODO: Make this a config option
+       * else if (tag.first == "alt_name" && !tag.second.empty()) {
         w.set_alt_name_index(osmdata_.name_offset_map.index(tag.second));
-      } else if (tag.first == "official_name" && !tag.second.empty()) {
+      } */
+      else if (tag.first == "official_name" && !tag.second.empty()) {
         w.set_official_name_index(osmdata_.name_offset_map.index(tag.second));
 
       } else if (tag.first == "max_speed") {
@@ -663,13 +668,20 @@ public:
       }
 
       // motor_vehicle:conditional=no @ (16:30-07:00)
-      else if (tag.first == "motorcar:conditional" || tag.first == "motor_vehicle:conditional" ||
-               tag.first == "bicycle:conditional" || tag.first == "motorcycle:conditional" ||
-               tag.first == "foot:conditional" || tag.first == "pedestrian:conditional" ||
-               tag.first == "hgv:conditional" || tag.first == "moped:conditional" ||
-               tag.first == "mofa:conditional" || tag.first == "psv:conditional" ||
-               tag.first == "taxi:conditional" || tag.first == "bus:conditional" ||
-               tag.first == "hov:conditional" || tag.first == "emergency:conditional") {
+      else if (tag.first.substr(0, 20) == "motorcar:conditional" ||
+               tag.first.substr(0, 25) == "motor_vehicle:conditional" ||
+               tag.first.substr(0, 19) == "bicycle:conditional" ||
+               tag.first.substr(0, 22) == "motorcycle:conditional" ||
+               tag.first.substr(0, 16) == "foot:conditional" ||
+               tag.first.substr(0, 22) == "pedestrian:conditional" ||
+               tag.first.substr(0, 15) == "hgv:conditional" ||
+               tag.first.substr(0, 17) == "moped:conditional" ||
+               tag.first.substr(0, 16) == "mofa:conditional" ||
+               tag.first.substr(0, 15) == "psv:conditional" ||
+               tag.first.substr(0, 16) == "taxi:conditional" ||
+               tag.first.substr(0, 15) == "bus:conditional" ||
+               tag.first.substr(0, 15) == "hov:conditional" ||
+               tag.first.substr(0, 21) == "emergency:conditional") {
 
         std::vector<std::string> tokens = GetTagTokens(tag.second, '@');
         std::string tmp = tokens.at(0);
@@ -685,31 +697,33 @@ public:
         if (tokens.size() == 2 && tmp.size()) {
 
           uint16_t mode = 0;
-          if (tag.first == "motorcar:conditional" || tag.first == "motor_vehicle:conditional") {
+          if (tag.first.substr(0, 20) == "motorcar:conditional" ||
+              tag.first.substr(0, 25) == "motor_vehicle:conditional") {
             mode = (kAutoAccess | kTruckAccess | kEmergencyAccess | kTaxiAccess | kBusAccess |
                     kHOVAccess | kMopedAccess | kMotorcycleAccess);
-          } else if (tag.first == "bicycle:conditional") {
+          } else if (tag.first.substr(0, 19) == "bicycle:conditional") {
             mode = kBicycleAccess;
-          } else if (tag.first == "foot:conditional" || tag.first == "pedestrian:conditional") {
+          } else if (tag.first.substr(0, 16) == "foot:conditional" ||
+                     tag.first.substr(0, 22) == "pedestrian:conditional") {
             mode = (kPedestrianAccess | kWheelchairAccess);
-          } else if (tag.first == "hgv:conditional") {
+          } else if (tag.first.substr(0, 15) == "hgv:conditional") {
             mode = kTruckAccess;
-          } else if (tag.first == "moped:conditional" || tag.first == "mofa:conditional") {
+          } else if (tag.first.substr(0, 17) == "moped:conditional" ||
+                     tag.first.substr(0, 16) == "mofa:conditional") {
             mode = kMopedAccess;
-          } else if (tag.first == "motorcycle:conditional") {
+          } else if (tag.first.substr(0, 22) == "motorcycle:conditional") {
             mode = kMotorcycleAccess;
-          } else if (tag.first == "psv:conditional") {
+          } else if (tag.first.substr(0, 15) == "psv:conditional") {
             mode = (kTaxiAccess | kBusAccess);
-          } else if (tag.first == "taxi:conditional") {
+          } else if (tag.first.substr(0, 16) == "taxi:conditional") {
             mode = kTaxiAccess;
-          } else if (tag.first == "bus:conditional") {
+          } else if (tag.first.substr(0, 15) == "bus:conditional") {
             mode = kBusAccess;
-          } else if (tag.first == "hov:conditional") {
+          } else if (tag.first.substr(0, 15) == "hov:conditional") {
             mode = kHOVAccess;
-          } else if (tag.first == "emergency:conditional") {
+          } else if (tag.first.substr(0, 21) == "emergency:conditional") {
             mode = kEmergencyAccess;
           }
-
           std::string tmp = tokens.at(1);
           boost::algorithm::trim(tmp);
           std::vector<std::string> conditions = GetTagTokens(tmp, ';');
@@ -998,6 +1012,16 @@ public:
       } else if (tag.first == "turn:lanes:backward") {
         // Turn lanes in the reverse direction
         w.set_bwd_turn_lanes_index(osmdata_.name_offset_map.index(tag.second));
+      } else if (tag.first == "guidance_view:jct:base" ||
+                 tag.first == "guidance_view:jct:base:forward") {
+        w.set_fwd_jct_base_index(osmdata_.name_offset_map.index(tag.second));
+      } else if (tag.first == "guidance_view:jct:overlay" ||
+                 tag.first == "guidance_view:jct:overlay:forward") {
+        w.set_fwd_jct_overlay_index(osmdata_.name_offset_map.index(tag.second));
+      } else if (tag.first == "guidance_view:jct:base:backward") {
+        w.set_bwd_jct_base_index(osmdata_.name_offset_map.index(tag.second));
+      } else if (tag.first == "guidance_view:jct:overlay:backward") {
+        w.set_bwd_jct_overlay_index(osmdata_.name_offset_map.index(tag.second));
       }
     }
 

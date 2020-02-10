@@ -33,6 +33,7 @@ const std::string kEdgeSignExitName = "edge.sign.exit_name";
 const std::string kEdgeSignGuideBranch = "edge.sign.guide_branch";
 const std::string kEdgeSignGuideToward = "edge.sign.guide_toward";
 const std::string kEdgeSignJunctionName = "edge.sign.junction_name";
+const std::string kEdgeSignGuidanceViewJunction = "edge.sign.guidance_view_junction";
 const std::string kEdgeTravelMode = "edge.travel_mode";
 const std::string kEdgeVehicleType = "edge.vehicle_type";
 const std::string kEdgePedestrianType = "edge.pedestrian_type";
@@ -102,8 +103,8 @@ const std::string kNodeTransitStationInfoLatLon = "node.transit_station_info.lat
 const std::string kNodeTransitEgressInfoOnestopId = "node.transit_egress_info.onestop_id";
 const std::string kNodeTransitEgressInfoName = "node.transit_egress_info.name";
 const std::string kNodeTransitEgressInfoLatLon = "node.transit_egress_info.lat_lon";
-
 const std::string kNodeTimeZone = "node.time_zone";
+const std::string kNodeTransitionTime = "node.transition_time";
 
 // Top level: osm changeset, admin list, and full shape keys
 const std::string kOsmChangeset = "osm_changeset";

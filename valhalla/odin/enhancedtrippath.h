@@ -557,7 +557,7 @@ public:
     return mutable_node_->type();
   }
 
-  uint32_t elapsed_time() const {
+  double elapsed_time() const {
     return mutable_node_->elapsed_time();
   }
 
@@ -571,6 +571,14 @@ public:
 
   const std::string& time_zone() const {
     return mutable_node_->time_zone();
+  }
+
+  bool has_transition_time() const {
+    return mutable_node_->has_transition_time();
+  }
+
+  double transition_time() const {
+    return mutable_node_->transition_time();
   }
 
   bool HasIntersectingEdges() const;

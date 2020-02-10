@@ -1,10 +1,10 @@
-#include "test.h"
-
 #include "sif/autocost.h"
 #include "sif/bicyclecost.h"
 #include "sif/costfactory.h"
 #include "sif/pedestriancost.h"
 #include <valhalla/proto/options.pb.h>
+
+#include "test.h"
 
 using namespace std;
 using namespace valhalla;
@@ -35,7 +35,7 @@ void create_costing_options(Options& options) {
   ParseAutoDataFixCostOptions(doc, "/costing_options/auto_data_fix", options.add_costing_options());
 }
 
-void test_register() {
+TEST(Factory, Register) {
   Options options;
   create_costing_options(options);
 
@@ -47,13 +47,12 @@ void test_register() {
   // TODO: then ask for some odin::Options& options
   auto car = factory.Create(Costing::auto_, options);
 }
+
+// TODO: add many more tests!
+
 } // namespace
 
-int main(void) {
-  test::suite suite("factory");
-
-  suite.test(TEST_CASE(test_register));
-  // TODO: many more
-
-  return suite.tear_down();
+int main(int argc, char* argv[]) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

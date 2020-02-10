@@ -215,11 +215,13 @@ inline bool TimeDepReverse::ExpandReverseInner(GraphReader& graphreader,
     return false;
   }
 
-  Cost tc =
+  // Get cost. Use opposing edge for EdgeCost. Separate the transition seconds so we
+  // can properly recover elapsed time on the reverse path.
+  auto transition_cost =
       costing_->TransitionCostReverse(meta.edge->localedgeidx(), nodeinfo, opp_edge, opp_pred_edge);
   auto edge_cost = costing_->EdgeCost(opp_edge, t2, seconds_of_week);
   Cost newcost = pred.cost() + edge_cost;
-  newcost.cost += tc.cost;
+  newcost.cost += transition_cost.cost;
 
   // If this edge is a destination, subtract the partial/remainder cost
   // (cost from the dest. location to the end of the edge).
@@ -256,7 +258,7 @@ inline bool TimeDepReverse::ExpandReverseInner(GraphReader& graphreader,
     if (newcost.cost < lab.cost().cost) {
       float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
       adjacencylist_->decrease(meta.edge_status->index(), newsortcost);
-      lab.Update(pred_idx, newcost, newsortcost, tc, has_time_restrictions);
+      lab.Update(pred_idx, newcost, newsortcost, transition_cost, has_time_restrictions);
     }
     return true;
   }
@@ -278,7 +280,7 @@ inline bool TimeDepReverse::ExpandReverseInner(GraphReader& graphreader,
   // Add edge label, add to the adjacency list and set edge status
   uint32_t idx = edgelabels_rev_.size();
   edgelabels_rev_.emplace_back(pred_idx, meta.edge_id, oppedge, meta.edge, newcost, sortcost, dist,
-                               mode_, tc, 0, (pred.not_thru_pruning() || !meta.edge->not_thru()),
+                               mode_, transition_cost, 0, (pred.not_thru_pruning() || !meta.edge->not_thru()),
                                has_time_restrictions);
   adjacencylist_->add(idx);
   *meta.edge_status = {EdgeSet::kTemporary, idx};
@@ -595,28 +597,23 @@ std::vector<PathInfo> TimeDepReverse::FormPath(GraphReader& graphreader, const u
   LOG_DEBUG("path_cost::" + std::to_string(edgelabels_rev_[dest].cost().cost));
   LOG_DEBUG("path_iterations::" + std::to_string(edgelabels_rev_.size()));
 
-  // Get the transition cost at the last edge of the reverse path
-  Cost tc(edgelabels_rev_[dest].transition_cost(), edgelabels_rev_[dest].transition_secs());
-
-  // Form the reverse path from the destination (true origin) using opposing
-  // edges.
+  // Form the reverse path from the destination (true origin) using opposing edges.
   std::vector<PathInfo> path;
-  Cost cost;
+  Cost cost, previous_transition_cost;
   uint32_t edgelabel_index = dest;
   while (edgelabel_index != kInvalidLabel) {
     const BDEdgeLabel& edgelabel = edgelabels_rev_[edgelabel_index];
 
-    // Get elapsed time on the edge, then add the transition cost at
-    // prior edge.
+    // Get elapsed time on the edge, then add the transition cost at prior edge.
     uint32_t predidx = edgelabel.predecessor();
     if (predidx == kInvalidLabel) {
       cost += edgelabel.cost();
     } else {
       cost += edgelabel.cost() - edgelabels_rev_[predidx].cost();
     }
-    cost += tc;
+    cost += previous_transition_cost;
     path.emplace_back(edgelabel.mode(), cost.secs, edgelabel.opp_edgeid(), 0, cost.cost,
-                      edgelabel.has_time_restriction());
+                      edgelabel.has_time_restriction(), previous_transition_cost.secs);
 
     // Check if this is a ferry
     if (edgelabel.use() == Use::kFerry) {
@@ -625,8 +622,11 @@ std::vector<PathInfo> TimeDepReverse::FormPath(GraphReader& graphreader, const u
 
     // Update edgelabel_index and transition cost to apply at next iteration
     edgelabel_index = predidx;
-    tc.secs = edgelabel.transition_secs();
-    tc.cost = edgelabel.transition_cost();
+    // We apply the turn cost at the beginning of the edge, as is done in the forward path
+    // Semantically this can be thought of is, how much time did it take to turn onto this edge
+    // To do this we need to carry the cost forward to the next edge in the path so we cache it here
+    previous_transition_cost.secs = edgelabel.transition_secs();
+    previous_transition_cost.cost = edgelabel.transition_cost();
   }
 
   return path;

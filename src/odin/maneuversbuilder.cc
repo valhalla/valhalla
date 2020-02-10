@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <functional>
 #include <iostream>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -36,6 +37,21 @@ using namespace valhalla::odin;
 namespace {
 
 constexpr float kShortForkThreshold = 0.05f; // Kilometers
+constexpr uint32_t kOverlayEdgeMax = 5;      // Maximum number of edges to look for matching overlay
+
+std::vector<std::string> split(const std::string& source, char delimiter) {
+  std::vector<std::string> tokens;
+  std::string token;
+  std::istringstream tokenStream(source);
+  while (std::getline(tokenStream, token, delimiter)) {
+    tokens.push_back(token);
+  }
+  return tokens;
+}
+
+bool is_pair(const std::vector<std::string>& tokens) {
+  return (tokens.size() == 2);
+}
 
 } // namespace
 
@@ -53,7 +69,7 @@ std::list<Maneuver> ManeuversBuilder::Build() {
 #ifdef LOGGING_LEVEL_TRACE
   int man_id = 1;
   LOG_TRACE("############################################");
-  LOG_TRACE("MANEUVERS");
+  LOG_TRACE("INITIAL MANEUVERS");
   for (const Maneuver& maneuver : maneuvers) {
     LOG_TRACE("---------------------------------------------");
     LOG_TRACE(std::to_string(man_id++) + ":  ");
@@ -64,18 +80,6 @@ std::list<Maneuver> ManeuversBuilder::Build() {
 
   // Combine maneuvers
   Combine(maneuvers);
-
-#ifdef LOGGING_LEVEL_TRACE
-  int combined_man_id = 1;
-  LOG_TRACE("############################################");
-  LOG_TRACE("COMBINED MANEUVERS");
-  for (const Maneuver& maneuver : maneuvers) {
-    LOG_TRACE("---------------------------------------------");
-    LOG_TRACE(std::to_string(combined_man_id++) + ":  ");
-    LOG_TRACE(std::string("  maneuver_PARAMETERS=") + maneuver.ToParameterString());
-    LOG_TRACE(std::string("  maneuver=") + maneuver.ToString());
-  }
-#endif
 
   // Calculate the consecutive exit sign count and then sort
   CountAndSortSigns(maneuvers);
@@ -94,6 +98,21 @@ std::list<Maneuver> ManeuversBuilder::Build() {
 
   // Process the turn lanes
   ProcessTurnLanes(maneuvers);
+
+  // Process the guidance view junctions
+  ProcessGuidanceViewJunctions(maneuvers);
+
+#ifdef LOGGING_LEVEL_TRACE
+  int final_man_id = 1;
+  LOG_TRACE("############################################");
+  LOG_TRACE("FINAL MANEUVERS");
+  for (const Maneuver& maneuver : maneuvers) {
+    LOG_TRACE("---------------------------------------------");
+    LOG_TRACE(std::to_string(final_man_id++) + ":  ");
+    LOG_TRACE(std::string("  maneuver_PARAMETERS=") + maneuver.ToParameterString());
+    LOG_TRACE(std::string("  maneuver=") + maneuver.ToString());
+  }
+#endif
 
 #ifdef LOGGING_LEVEL_DEBUG
   std::vector<PointLL> shape = midgard::decode<std::vector<PointLL>>(trip_path_->shape());
@@ -977,6 +996,7 @@ void ManeuversBuilder::UpdateManeuver(Maneuver& maneuver, int node_index) {
   maneuver.set_length(maneuver.length() + prev_edge->length());
 
   // Basic time (len/speed on each edge with no stop impact) in seconds
+  // TODO: update GetTime and GetSpeed to double precision
   maneuver.set_basic_time(
       maneuver.basic_time() +
       GetTime(prev_edge->length(), GetSpeed(maneuver.travel_mode(), prev_edge->speed())));
@@ -2679,6 +2699,58 @@ void ManeuversBuilder::ProcessTurnLanes(std::list<Maneuver>& maneuvers) {
     // on to the next maneuver...
     curr_man = next_man;
     ++next_man;
+  }
+}
+
+void ManeuversBuilder::ProcessGuidanceViewJunctions(std::list<Maneuver>& maneuvers) {
+  // Walk the maneuvers to match find guidance view junctions
+  for (Maneuver& maneuver : maneuvers) {
+    // Only process driving maneuvers
+    if (maneuver.travel_mode() == TripLeg_TravelMode::TripLeg_TravelMode_kDrive) {
+      auto prev_edge = trip_path_->GetPrevEdge(maneuver.begin_node_index());
+      if (prev_edge && (prev_edge->has_sign())) {
+        // Process base guidance view junctions
+        for (const auto& base_guidance_view_junction : prev_edge->sign().guidance_view_junctions()) {
+          auto base_tokens = split(base_guidance_view_junction.text(), ';');
+          // If base(is_route_number) guidance view junction and a pair...
+          if (base_guidance_view_junction.is_route_number() && is_pair(base_tokens)) {
+            // ...find matching overlay
+            MatchGuidanceViewJunctions(maneuver, base_tokens.at(0), base_tokens.at(1));
+          }
+        } // end for loop over base guidance view junction
+      }
+    }
+  }
+}
+
+void ManeuversBuilder::MatchGuidanceViewJunctions(Maneuver& maneuver,
+                                                  const std::string& base_prefix,
+                                                  const std::string& base_suffix) {
+  // Loop over edges
+  uint32_t edge_count = 0;
+  for (uint32_t node_index = maneuver.begin_node_index();
+       ((node_index < maneuver.end_node_index()) && (edge_count < kOverlayEdgeMax));
+       ++node_index, edge_count++) {
+    // Loop over guidance view junctions
+    auto curr_edge = trip_path_->GetCurrEdge(maneuver.begin_node_index());
+    if (curr_edge && (curr_edge->has_sign())) {
+      // Process overlay guidance view junctions
+      for (const auto& overlay_guidance_view_junction : curr_edge->sign().guidance_view_junctions()) {
+        auto overlay_tokens = split(overlay_guidance_view_junction.text(), ';');
+        // If overlay(!is_route_number) guidance view junction and a pair...
+        if (!overlay_guidance_view_junction.is_route_number() && is_pair(overlay_tokens) &&
+            (base_prefix == overlay_tokens.at(0))) {
+          // TODO implement for real in the future
+          DirectionsLeg_GuidanceView guidance_view;
+          guidance_view.set_data_id("z");
+          guidance_view.set_type("jct");
+          guidance_view.set_base_id(base_prefix + base_suffix);
+          guidance_view.add_overlay_ids(overlay_tokens.at(0) + overlay_tokens.at(1));
+          maneuver.mutable_guidance_views()->emplace_back(guidance_view);
+          return;
+        }
+      } // end for loop over base guidance view junction
+    }
   }
 }
 

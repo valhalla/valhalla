@@ -60,7 +60,7 @@ boost::property_tree::ptree get_conf() {
   return conf;
 }
 
-void test_recover_shortcut_edges() {
+TEST(RecoverShortcut, test_recover_shortcut_edges) {
   auto conf = get_conf();
   GraphReader graphreader(conf.get_child("mjolnir"));
 
@@ -100,8 +100,8 @@ void test_recover_shortcut_edges() {
 
         // if it gave us back the shortcut we failed
         if (edgeids.front() == shortcutid) {
-          /*throw std::logic_error("We couldnt recover the shortcut\nShortcut was: " +
-                                 midgard::encode(shortcut_shape));*/
+          //          FAIL() << "We couldnt recover the shortcut\nShortcut was: " +
+          //              midgard::encode(shortcut_shape);
           ++bad;
           ++total;
           continue;
@@ -123,11 +123,11 @@ void test_recover_shortcut_edges() {
 
         // check the number of coords match
         if (shortcut_shape.size() != recovered_shape.size()) {
-          /*throw std::logic_error(
-              "shape lengths do not match: " + std::to_string(shortcut_shape.size()) +
-              " != " + std::to_string(recovered_shape.size()) +
-              "\nShortcut was: " + midgard::encode(shortcut_shape) +
-              "\nRecovered was: " + midgard::encode(recovered_shape));*/
+          //          FAIL() << "shape lengths do not match: " + std::to_string(shortcut_shape.size())
+          //          +
+          //              " != " + std::to_string(recovered_shape.size()) +
+          //              "\nShortcut was: " + midgard::encode(shortcut_shape) +
+          //              "\nRecovered was: " + midgard::encode(recovered_shape);
           ++bad;
           ++total;
           continue;
@@ -136,11 +136,11 @@ void test_recover_shortcut_edges() {
         // check if the shape matches approximatly
         for (size_t k = 0; k < shortcut_shape.size(); ++k) {
           if (!shortcut_shape[k].ApproximatelyEqual(recovered_shape[k])) {
-            /*throw std::logic_error(
-                "edge shape points are not equal: " + std::to_string(shortcut_shape[k]) +
-                " != " + std::to_string(recovered_shape[k]) +
-                "\nShortcut was: " + midgard::encode(shortcut_shape) +
-                "\nRecovered was: " + midgard::encode(recovered_shape));*/
+            //            FAIL() << "edge shape points are not equal: " +
+            //            std::to_string(shortcut_shape[k]) +
+            //                " != " + std::to_string(recovered_shape[k]) +
+            //                "\nShortcut was: " + midgard::encode(shortcut_shape) +
+            //                "\nRecovered was: " + midgard::encode(recovered_shape);
             ++bad;
             break;
           }
@@ -150,18 +150,13 @@ void test_recover_shortcut_edges() {
     }
   }
   printf("bad: %zu, total: %zu\n", bad, total);
-  if (double(bad) / double(total) > .001)
-    throw std::logic_error("More than 0.1% is too much");
+  EXPECT_LE(double(bad) / double(total), .001) << "More than 0.1% is too much";
 }
 
 } // namespace
 
 int main(int argc, char* argv[]) {
-  test::suite suite("recover_shortcut");
-
   // valhalla::midgard::logging::Configure({{"type", ""}});
-
-  suite.test(TEST_CASE(test_recover_shortcut_edges));
-
-  return suite.tear_down();
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }
