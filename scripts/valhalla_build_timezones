@@ -6,7 +6,6 @@ error_exit() {
 }
 
 readonly shapefile=$PWD/timezones-with-oceans.shapefile.zip
-readonly lockfile=/tmp/valhalla_build_timezones.lock
 
 if  ! which spatialite >/dev/null; then
     echo "spatialite not found which is required.  Please install via:  sudo apt-get install spatialite-bin"
@@ -16,13 +15,6 @@ fi
 if  ! which unzip >/dev/null; then
     echo "unzip not found which is required.  Please install via:  sudo apt-get install unzip"
     exit 1
-fi
-
-if [ -f $lockfile ]; then
-  echo "$lockfile already exists"
-  exit 9
-else
-  touch $lockfile
 fi
 
 rm -rf dist
@@ -255,4 +247,3 @@ spatialite ${tz_file} "ANALYZE;" 1>&2 || error_exit "ANALYZE failed"
 rm -rf dist
 rm -f $shapefile alias_tz.csv
 cat ${tz_file}
-rm $lockfile
