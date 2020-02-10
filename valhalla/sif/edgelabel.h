@@ -432,14 +432,22 @@ public:
               const float sortcost,
               const float dist,
               const sif::TravelMode mode,
-              const sif::Cost& tc,
+              const sif::Cost& transition_cost,
               const uint32_t path_distance,
               const bool not_thru_pruning,
               const bool has_time_restrictions)
-      : EdgeLabel(predecessor, edgeid, edge, cost, sortcost, dist, mode, 0, has_time_restrictions),
+      : EdgeLabel(predecessor,
+                  edgeid,
+                  edge,
+                  cost,
+                  sortcost,
+                  dist,
+                  mode,
+                  0,
+                  transition_cost,
+                  has_time_restrictions),
         not_thru_pruning_(false) {
     opp_edgeid_ = oppedgeid;
-    transition_cost_ = tc;
     path_distance_ = path_distance;
     not_thru_pruning_ = not_thru_pruning;
     has_time_restrictions_ = has_time_restrictions;

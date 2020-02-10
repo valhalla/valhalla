@@ -526,7 +526,7 @@ bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
     *es = {EdgeSet::kTemporary, idx};
     edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, sortcost, dist, mode_,
                              walking_distance_, tripid, prior_stop, blockid, operator_id, has_transit,
-                             transition_cost,has_time_restrictions);
+                             transition_cost, has_time_restrictions);
     adjacencylist_->add(idx);
   }
 
@@ -632,7 +632,7 @@ void MultiModalPathAlgorithm::SetOrigin(GraphReader& graphreader,
     // of the path.
     uint32_t d = static_cast<uint32_t>(directededge->length() * (1.0f - edge.percent_along()));
     MMEdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost, sortcost, dist, mode_, d, 0,
-                           GraphId(), 0, 0, false, Cost{},has_time_restrictions);
+                           GraphId(), 0, 0, false, Cost{}, has_time_restrictions);
     // Set the origin flag
     edge_label.set_origin();
 

@@ -221,6 +221,9 @@ void Dijkstras::ExpandForward(GraphReader& graphreader,
                            has_date_time_ ? seconds_of_week : kConstrainedFlowSecondOfDay) +
         costing_->TransitionCost(directededge, nodeinfo, pred);
 
+    // TODO Fill in transition_cost
+    auto transition_cost = Cost{};
+
     // Check if edge is temporarily labeled and this path has less cost. If
     // less cost the predecessor is updated and the sort cost is decremented
     // by the difference in real cost (A* heuristic doesn't change)
@@ -229,7 +232,7 @@ void Dijkstras::ExpandForward(GraphReader& graphreader,
       if (newcost.cost < lab.cost().cost) {
         float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
         adjacencylist_->decrease(es->index(), newsortcost);
-        lab.Update(pred_idx, newcost, newsortcost, has_time_restrictions);
+        lab.Update(pred_idx, newcost, newsortcost, transition_cost, has_time_restrictions);
       }
       continue;
     }
@@ -720,6 +723,8 @@ void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
     //  continue;
     //}
     // TODO How to do this continue in generalized Dijkstras?
+    // TODO Fill in the transition cost
+    auto transition_cost = Cost{};
 
     // Check if edge is temporarily labeled and this path has less cost. If
     // less cost the predecessor is updated and the sort cost is decremented
@@ -730,7 +735,7 @@ void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
       if (newcost.cost < lab.cost().cost) {
         float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
         adjacencylist_->decrease(es->index(), newsortcost);
-        lab.Update(pred_idx, newcost, newsortcost, walking_distance, tripid, blockid,
+        lab.Update(pred_idx, newcost, newsortcost, walking_distance, tripid, blockid, transition_cost,
                    has_time_restrictions);
       }
       continue;
@@ -741,7 +746,7 @@ void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
     *es = {EdgeSet::kTemporary, idx};
     mmedgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, 0.0f, mode_,
                                walking_distance, tripid, prior_stop, blockid, operator_id,
-                               has_transit, has_time_restrictions);
+                               has_transit, transition_cost, has_time_restrictions);
     adjacencylist_->add(idx);
   }
 
@@ -1024,8 +1029,10 @@ void Dijkstras::SetOriginLocationsMultiModal(
       uint32_t d = static_cast<uint32_t>(directededge->length() * (1.0f - edge.percent_along()));
       // TODO Do we care about time restrictions at origin edges?
       bool has_time_restrictions = false;
+      // TODO How about transition cost?
+      auto transition_cost = Cost{};
       MMEdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost, cost.cost, 0.0f, mode_, d, 0,
-                             GraphId(), 0, 0, false, has_time_restrictions);
+                             GraphId(), 0, 0, false, transition_cost, has_time_restrictions);
 
       // Set the origin flag
       edge_label.set_origin();
