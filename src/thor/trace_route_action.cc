@@ -440,26 +440,18 @@ thor_worker_t::map_match(Api& request) {
                                         });
         std::get<2>(edge_group) = match_result_itr;
 
-        // we know the discontinuity happens on this edge so we need to
-        // find the last match result on this edge
-        // when the first edge and the last edge has the same edge id, we have to move the edge iter
-        // over the first edge (if there is no discontinuity suggested by the distance along), then
-        // we are able to find the match result on the last edge by std::find_if
-        auto prev_match_result = match_result_itr;
-        if (first_edge != last_edge && first_edge->edgeid == last_edge->edgeid) {
-          while (match_result_itr < match_results.cend() &&
-                 match_result_itr->edgeid == first_edge->edgeid &&
-                 match_result_itr->distance_along >= prev_match_result->distance_along) {
-            prev_match_result = match_result_itr;
-            ++match_result_itr;
-          }
-        }
-
-        // find the last match result on this edge before discontinuity. There maybe scenarios that
-        // there is a loop on the last edge. We have to navigate the iterator through all the in
-        // between matched results (may have same edge id with the last edge) right before where
-        // discontinuity actually happens
+        // we know the discontinuity happens on this edge so we need to find the last match result
+        // on this edge before discontinuity occurs. There might be scenarios that there is a loop on
+        // the last edge. We have to navigate the iterator through all the in between path edges.
+        // (NOTE that, in between edges may have same edge id with the last edge) right before where
+        // discontinuity occurs
+        auto prev_match_result = match_result_itr++;
+        // TODO: optimize this linear search away in the form path method
+        bool loop_on_last_edge = std::find_if(first_edge, last_edge, [last_edge](const auto edge) {
+                                   return edge.edgeid == last_edge->edgeid;
+                                 }) != last_edge;
         bool discontinuity = false;
+
         while (!discontinuity) {
           // if we could locate an edge with the same edge id of last edge we start our search from
           // that edge. Otherwise, we exit the search, save prev_match_result as the last edge and
@@ -493,8 +485,9 @@ thor_worker_t::map_match(Api& request) {
             // we found the last_match result either when distance_along suggests discontinuity
             // on the current edge or we exhaust the search
             if (match_result_itr == match_results.cend() ||
-                prev_match_result->edgeid == last_edge->edgeid &&
-                    match_result_itr->distance_along < prev_match_result->distance_along) {
+                (prev_match_result->edgeid == last_edge->edgeid &&
+                 match_result_itr->distance_along < prev_match_result->distance_along &&
+                 !loop_on_last_edge)) {
               discontinuity = true;
               break;
             }

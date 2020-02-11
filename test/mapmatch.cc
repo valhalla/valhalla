@@ -1114,7 +1114,13 @@ TEST(Mapmatch, test_discontinuity_duration_trimming) {
 TEST(Mapmatch, test_loop_matching) {
   // NOTE THAT: test case 0 and 3 has discontinuity on loops
   std::vector<std::string> test_cases = {
-      R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[{"lat": 52.0992698, "lon": 5.1071285, "type": "break"},{"lat": 52.0990768, "lon": 5.1069392, "type": "break"},{"lat": 52.0995259, "lon": 5.1073563, "type": "break"},{"lat": 52.1183497, "lon": 5.1171364, "type": "break"},{"lat": 52.1181338, "lon": 5.1188697, "type": "break"},{"lat": 52.1182095, "lon": 5.1170544, "type": "break"}]})",
+      R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
+          {"lat": 52.0992698, "lon": 5.1071285, "type": "break"},
+          {"lat": 52.0990768, "lon": 5.1069392, "type": "break"},
+          {"lat": 52.0995259, "lon": 5.1073563, "type": "break"},
+          {"lat": 52.1183497, "lon": 5.1171364, "type": "break"},
+          {"lat": 52.1181338, "lon": 5.1188697, "type": "break"},
+          {"lat": 52.1182095, "lon": 5.1170544, "type": "break"}]})",
       R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
           {"lat": 52.1181394, "lon": 5.1168568, "type": "break"},
           {"lat": 52.1181338, "lon": 5.1188697, "type": "break"},
