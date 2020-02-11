@@ -115,6 +115,7 @@ bool BidirectionalAStar::ExpandForward(GraphReader& graphreader,
                                        BDEdgeLabel& pred,
                                        const uint32_t pred_idx,
                                        const bool from_transition) {
+  std::cout << "ExpandForward: " << pred.edgeid().id() << std::endl;
   // Get the tile and the node info. Skip if tile is null (can happen
   // with regional data sets) or if no access at the node.
   const GraphTile* tile = graphreader.GetGraphTile(node);
@@ -297,6 +298,7 @@ bool BidirectionalAStar::ExpandReverse(GraphReader& graphreader,
                                        const uint32_t pred_idx,
                                        const DirectedEdge* opp_pred_edge,
                                        const bool from_transition) {
+  std::cout << "ExpandReverse: " << pred.edgeid().id() << std::endl;
   // Get the tile and the node info. Skip if tile is null (can happen
   // with regional data sets) or if no access at the node.
   const GraphTile* tile = graphreader.GetGraphTile(node);
@@ -719,7 +721,8 @@ bool IsBridgingEdgeRestricted(GraphReader& graphreader,
 // search tree. Check if this is the best connection so far and set the
 // search threshold.
 bool BidirectionalAStar::SetForwardConnection(GraphReader& graphreader, const BDEdgeLabel& pred) {
-  // Disallow connections that are part of a complex restriction.
+  std::cout << "SetForwardConnection: " << pred.edgeid().id() << ", on_complex_rest "
+            << pred.on_complex_rest() << std::endl;
   if (pred.on_complex_rest()) {
     // Lets dig deeper and test if we are really triggering these restrictions
     if (IsBridgingEdgeRestricted(graphreader, true, edgelabels_forward_, edgelabels_reverse_, pred,
@@ -769,10 +772,15 @@ bool BidirectionalAStar::SetForwardConnection(GraphReader& graphreader, const BD
 // search tree. Check if this is the best connection so far and set the
 // search threshold.
 bool BidirectionalAStar::SetReverseConnection(GraphReader& graphreader, const BDEdgeLabel& pred) {
-  // Disallow connections that are part of a complex restriction.
-  // TODO Call IsBridgingEdgeRestricted here
+  std::cout << "SetReverseConnection: " << pred.edgeid().id() << ", on_complex_rest "
+            << pred.on_complex_rest() << std::endl;
   if (pred.on_complex_rest()) {
     return false;
+    // Lets dig deeper and test if we are really triggering these restrictions
+    if (IsBridgingEdgeRestricted(graphreader, true, edgelabels_forward_, edgelabels_reverse_, pred,
+                                 costing_)) {
+      return false;
+    }
   }
 
   // Get the opposing edge - a candidate shortest path has been found to the

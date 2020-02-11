@@ -1530,6 +1530,8 @@ enum class StrangleDirection {
 class BidirectionalAStarSingleDirection : public vt::BidirectionalAStar {
 
   StrangleDirection strangled_;
+  uint32_t num_fwd_expanded_;
+  uint32_t num_rev_expanded_;
 
 public:
   BidirectionalAStarSingleDirection(StrangleDirection strangled) {
@@ -1537,45 +1539,51 @@ public:
     // BidirectionalAStar::BidirectionalAStar();
   }
 
-  //// Reimplement ExpandForward to not do anything
-  //bool ExpandForward(baldr::GraphReader& graphreader,
-  //                   const baldr::GraphId& node,
-  //                   sif::BDEdgeLabel& pred,
-  //                   const uint32_t pred_idx,
-  //                   const bool from_transition) {
-  //  if (strangled_ == StrangleDirection::StrangleForward) {
-  //    std::cout << "MOOOOOOCK ExpandForward" << std::endl;
-  //    return false;
-  //  }
-  //  return vt::BidirectionalAStar::ExpandForward(graphreader, node, pred, pred_idx, from_transition);
-  //}
+  // Reimplement ExpandForward to not do anything
+  bool ExpandForward(baldr::GraphReader& graphreader,
+                     const baldr::GraphId& node,
+                     sif::BDEdgeLabel& pred,
+                     const uint32_t pred_idx,
+                     const bool from_transition) {
+    if (strangled_ == StrangleDirection::StrangleForward && num_fwd_expanded_ > 0) {
+      std::cout << "MOOOOOOCK ExpandForward" << std::endl;
+      return false;
+    }
+    num_fwd_expanded_ += 1;
+    std::cout << "REAL ExpandForward " << pred.edgeid().id() << std::endl;
+    return vt::BidirectionalAStar::ExpandForward(graphreader, node, pred, pred_idx, from_transition);
+  }
   bool SetForwardConnection(baldr::GraphReader& graphreader, const sif::BDEdgeLabel& pred) {
     if (strangled_ == StrangleDirection::StrangleForward) {
       std::cout << "MOOOOOOCK SetForwardConnection" << std::endl;
       return false;
     }
+    std::cout << "REAL SetForwardConnection" << std::endl;
     return vt::BidirectionalAStar::SetForwardConnection(graphreader, pred);
   }
 
-  //// Reimplement ExpandReverse to not do anything
-  //bool ExpandReverse(baldr::GraphReader& graphreader,
-  //                   const baldr::GraphId& node,
-  //                   sif::BDEdgeLabel& pred,
-  //                   const uint32_t pred_idx,
-  //                   const baldr::DirectedEdge* opp_pred_edge,
-  //                   const bool from_transition) {
-  //  if (strangled_ == StrangleDirection::StrangleReverse) {
-  //    std::cout << "MOOOOOOCK ExpandReverse" << std::endl;
-  //    return false;
-  //  }
-  //  return vt::BidirectionalAStar::ExpandReverse(graphreader, node, pred, pred_idx, opp_pred_edge,
-  //                                               from_transition);
-  //}
+  // Reimplement ExpandReverse to not do anything
+  bool ExpandReverse(baldr::GraphReader& graphreader,
+                     const baldr::GraphId& node,
+                     sif::BDEdgeLabel& pred,
+                     const uint32_t pred_idx,
+                     const baldr::DirectedEdge* opp_pred_edge,
+                     const bool from_transition) {
+    if (strangled_ == StrangleDirection::StrangleReverse && num_rev_expanded_ > 0) {
+      std::cout << "MOOOOOOCK ExpandReverse" << std::endl;
+      return false;
+    }
+    num_rev_expanded_ += 1;
+    std::cout << "REAL ExpandReverse " << pred.edgeid().id() << std::endl;
+    return vt::BidirectionalAStar::ExpandReverse(graphreader, node, pred, pred_idx, opp_pred_edge,
+                                                 from_transition);
+  }
   bool SetReverseConnection(baldr::GraphReader& graphreader, const sif::BDEdgeLabel& pred) {
     if (strangled_ == StrangleDirection::StrangleReverse) {
       std::cout << "MOOOOOOCK SetReverseConnection" << std::endl;
       return false;
     }
+    std::cout << "REAL SetReverseConnection" << std::endl;
     return vt::BidirectionalAStar::SetReverseConnection(graphreader, pred);
   }
 };
@@ -1593,14 +1601,20 @@ TEST(Astar, test_complex_restriction_short_path_fake) {
   costs[int(mode)] = vs::CreateAutoCost(Costing::auto_, options);
   ASSERT_TRUE(bool(costs[int(mode)]));
 
+  //// Test Bidirectional both for forward and reverse expansion
+  // std::vector<std::pair<BidirectionalAStarSingleDirection, std::string>> astars;
+  // astars.push_back(
+  //    std::make_pair(BidirectionalAStarSingleDirection(StrangleDirection::StrangleForward),
+  //                   "WithoutForwardExpansion"));
+  // astars.push_back(
+  //    std::make_pair(BidirectionalAStarSingleDirection(StrangleDirection::StrangleReverse),
+  //                   "WithoutReverseExpansion"));
   // Test Bidirectional both for forward and reverse expansion
-  std::vector<std::pair<BidirectionalAStarSingleDirection, std::string>> astars;
-  astars.push_back(
-      std::make_pair(BidirectionalAStarSingleDirection(StrangleDirection::StrangleForward),
-                     "WithoutForwardExpansion"));
-  astars.push_back(
-      std::make_pair(BidirectionalAStarSingleDirection(StrangleDirection::StrangleReverse),
-                     "WithoutReverseExpansion"));
+  std::vector<std::pair<vt::BidirectionalAStar, std::string>> astars;
+  astars.push_back(std::make_pair(vt::BidirectionalAStar(), "BidirectionalAStar"));
+  // astars.push_back(
+  //    std::make_pair(vt::BidirectionalAStar,
+  //                   "WithoutReverseExpansion"));
   for (auto& astar : astars) {
     std::cout << "new test" << std::endl;
     // TODO Add two tests where start and end lives on a partial complex restriction
@@ -1614,13 +1628,13 @@ TEST(Astar, test_complex_restriction_short_path_fake) {
     add(tile_id + uint64_t(21), 0.0f, k.second, origin);
     add(tile_id + uint64_t(15), 1.0f, k.second, origin);
 
-    // Put the destination between I and J which is outside the restriction
-    using node::j;
+    // Put the destination at I which in the middle of restriction
+    using node::i;
     valhalla::Location dest;
-    dest.mutable_ll()->set_lng(j.second.first);
-    dest.mutable_ll()->set_lat(j.second.second);
-    add(tile_id + uint64_t(18), 0.1f, j.second, dest);
-    add(tile_id + uint64_t(22), 0.9f, j.second, dest);
+    dest.mutable_ll()->set_lng(i.second.first);
+    dest.mutable_ll()->set_lat(i.second.second);
+    add(tile_id + uint64_t(16), 0.0f, i.second, dest);
+    add(tile_id + uint64_t(14), 1.0f, i.second, dest);
 
     auto paths = astar.first.GetBestPath(origin, dest, *reader, costs, mode);
 
@@ -1633,7 +1647,7 @@ TEST(Astar, test_complex_restriction_short_path_fake) {
     std::vector<uint32_t> expected;
     expected.push_back(21);
     expected.push_back(14);
-    expected.push_back(18);
+    expected.push_back(17);
     EXPECT_EQ(visited, expected) << "Unexpected edges in case 1 " << astar.second;
 
     // For the second test, just switch origin/destination and reverse expected,
@@ -1648,7 +1662,6 @@ TEST(Astar, test_complex_restriction_short_path_fake) {
       }
     }
     expected.clear();
-    expected.push_back(22);
     expected.push_back(16);
     expected.push_back(15);
     EXPECT_EQ(visited, expected) << "Unexpected edges in case 2 " << astar.second;
