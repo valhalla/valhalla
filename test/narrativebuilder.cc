@@ -266,7 +266,7 @@ void TryBuild(const Options& options,
               std::list<Maneuver>& expected_maneuvers,
               const EnhancedTripLeg* etp = nullptr) {
   std::unique_ptr<NarrativeBuilder> narrative_builder = NarrativeBuilderFactory::Create(options, etp);
-  narrative_builder->Build(options, etp, maneuvers);
+  narrative_builder->Build(options, maneuvers);
 
   // Check maneuver list sizes
   ASSERT_EQ(maneuvers.size(), expected_maneuvers.size());
@@ -3688,9 +3688,9 @@ TEST(NarrativeBuilder, TestBuildTurnInstructions_3_miles_en_US) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // FormTurnInstruction
-// 0 "Turn sharp <RELATIVE_DIRECTION>."
-// 0 "Turn sharp <RELATIVE_DIRECTION>."
-// 0 "Turn sharp <RELATIVE_DIRECTION>."
+// 0 "Make a sharp <RELATIVE_DIRECTION>."
+// 0 "Make a sharp <RELATIVE_DIRECTION>."
+// 0 "Make a sharp <RELATIVE_DIRECTION>."
 TEST(NarrativeBuilder, TestBuildSharpInstructions_0_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
@@ -3707,17 +3707,17 @@ TEST(NarrativeBuilder, TestBuildSharpInstructions_0_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateSharpManeuverList_0(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Turn sharp left.", "Turn sharp left.",
-                                  "Turn sharp left.", "Continue for a half mile.");
+  SetExpectedManeuverInstructions(expected_maneuvers, "Make a sharp left.", "Make a sharp left.",
+                                  "Make a sharp left.", "Continue for a half mile.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 // FormTurnInstruction
-// 1 "Turn sharp <RELATIVE_DIRECTION> onto <STREET_NAMES>."
-// 1 "Turn sharp <RELATIVE_DIRECTION> onto <STREET_NAMES(1)>."
-// 1 "Turn sharp <RELATIVE_DIRECTION> onto <STREET_NAMES(2)>."
+// 1 "Make a sharp <RELATIVE_DIRECTION> onto <STREET_NAMES>."
+// 1 "Make a sharp <RELATIVE_DIRECTION> onto <STREET_NAMES(1)>."
+// 1 "Make a sharp <RELATIVE_DIRECTION> onto <STREET_NAMES(2)>."
 TEST(NarrativeBuilder, TestBuildSharpInstructions_1_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "NY";
@@ -3734,9 +3734,9 @@ TEST(NarrativeBuilder, TestBuildSharpInstructions_1_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateSharpManeuverList_1(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Turn sharp right onto Flatbush Avenue.",
-                                  "Turn sharp right onto Flatbush Avenue.",
-                                  "Turn sharp right onto Flatbush Avenue.",
+  SetExpectedManeuverInstructions(expected_maneuvers, "Make a sharp right onto Flatbush Avenue.",
+                                  "Make a sharp right onto Flatbush Avenue.",
+                                  "Make a sharp right onto Flatbush Avenue.",
                                   "Continue for 1 tenth of a mile.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
@@ -3744,9 +3744,9 @@ TEST(NarrativeBuilder, TestBuildSharpInstructions_1_miles_en_US) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // FormTurnInstruction
-// 2 "Turn sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
-// 2 "Turn sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES(1)>."
-// 2 "Turn sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES(2)>."
+// 2 "Make a sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
+// 2 "Make a sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES(1)>."
+// 2 "Make a sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES(2)>."
 TEST(NarrativeBuilder, TestBuildSharpInstructions_2_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "MD";
@@ -3765,9 +3765,9 @@ TEST(NarrativeBuilder, TestBuildSharpInstructions_2_miles_en_US) {
   PopulateSharpManeuverList_2(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(
       expected_maneuvers,
-      "Turn sharp left onto North Bond Street/US 1 Business/MD 924. Continue on MD 924.",
-      "Turn sharp left onto North Bond Street.",
-      "Turn sharp left onto North Bond Street, U.S. 1 Business.",
+      "Make a sharp left onto North Bond Street/US 1 Business/MD 924. Continue on MD 924.",
+      "Make a sharp left onto North Bond Street.",
+      "Make a sharp left onto North Bond Street, U.S. 1 Business.",
       "Continue on Maryland 9 24 for a half mile.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
@@ -3775,9 +3775,9 @@ TEST(NarrativeBuilder, TestBuildSharpInstructions_2_miles_en_US) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // FormTurnInstruction
-// 3 "Turn sharp <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
-// 3 "Turn sharp <RELATIVE_DIRECTION> to stay on <STREET_NAMES(1)>."
-// 3 "Turn sharp <RELATIVE_DIRECTION> to stay on <STREET_NAMES(2)>."
+// 3 "Make a sharp <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
+// 3 "Make a sharp <RELATIVE_DIRECTION> to stay on <STREET_NAMES(1)>."
+// 3 "Make a sharp <RELATIVE_DIRECTION> to stay on <STREET_NAMES(2)>."
 // todo: check why the test case has been disabled in previous test suite and why it doesn't pass now
 TEST(NarrativeBuilder, DISABLED_TestBuildSharpInstructions_3_miles_en_US) {
   std::string country_code = "US";
@@ -3799,9 +3799,9 @@ TEST(NarrativeBuilder, DISABLED_TestBuildSharpInstructions_3_miles_en_US) {
       expected_maneuvers, "Turn right onto Sunstone Drive.", "Turn right onto Sunstone Drive.",
       "Turn right onto Sunstone Drive. Then Turn right to stay on Sunstone Drive.",
       "Continue for 300 feet.");
-  SetExpectedManeuverInstructions(expected_maneuvers, "Turn sharp right to stay on Sunstone Drive.",
-                                  "Turn sharp right to stay on Sunstone Drive.",
-                                  "Turn sharp right to stay on Sunstone Drive.",
+  SetExpectedManeuverInstructions(expected_maneuvers, "Make a sharp right to stay on Sunstone Drive.",
+                                  "Make a sharp right to stay on Sunstone Drive.",
+                                  "Make a sharp right to stay on Sunstone Drive.",
                                   "Continue for 100 feet.");
 
   TryBuild(options, maneuvers, expected_maneuvers);

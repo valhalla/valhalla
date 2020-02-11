@@ -378,6 +378,32 @@ TEST(UtilMidgard, TestSimilarAndEqual) {
       << "Similar test fails for values with opposing signs";
 }
 
+// Fixes case in https://github.com/valhalla/valhalla/issues/2201#issuecomment-582656499
+TEST(UtilMidgard, TrimShapeAsan) {
+  float start = 42.2698097;
+  float end = 47;
+  std::vector<PointLL> shape = {
+      PointLL{8.5468483, 47.3655319},
+      PointLL{8.54691314, 47.365448},
+      PointLL{8.54711914, 47.3651543},
+  };
+  trim_shape(start, shape.front(), end, shape.back(), shape);
+  ASSERT_EQ(shape.size(), 2);
+  ASSERT_FLOAT_EQ(shape.at(0).lat(), 47.365532);
+  ASSERT_FLOAT_EQ(shape.at(0).lng(), 8.5468483);
+  ASSERT_FLOAT_EQ(shape.at(1).lat(), 47.365154);
+  ASSERT_FLOAT_EQ(shape.at(1).lng(), 8.54712);
+}
+
+// Check for empty shape
+TEST(UtilMidgard, TrimShapeEmpty) {
+  PointLL start_vertex;
+  PointLL end_vertex;
+  std::vector<PointLL> shape;
+  trim_shape(0, start_vertex, 0, end_vertex, shape);
+  ASSERT_EQ(shape.size(), 0);
+}
+
 } // namespace
 
 int main(int argc, char* argv[]) {
