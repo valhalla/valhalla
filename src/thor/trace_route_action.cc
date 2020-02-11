@@ -450,9 +450,8 @@ thor_worker_t::map_match(Api& request) {
         bool loop_on_last_edge = std::find_if(first_edge, last_edge, [last_edge](const auto edge) {
                                    return edge.edgeid == last_edge->edgeid;
                                  }) != last_edge;
-        bool discontinuity = false;
-
-        while (!discontinuity) {
+        bool found_last_match = false;
+        while (!found_last_match) {
           // if we could locate an edge with the same edge id of last edge we start our search from
           // that edge. Otherwise, we exit the search, save prev_match_result as the last edge and
           // proceed to a new edge group.
@@ -488,7 +487,7 @@ thor_worker_t::map_match(Api& request) {
                 (prev_match_result->edgeid == last_edge->edgeid &&
                  match_result_itr->distance_along < prev_match_result->distance_along &&
                  !loop_on_last_edge)) {
-              discontinuity = true;
+              found_last_match = true;
               break;
             }
           }
