@@ -2,6 +2,7 @@
 #include "baldr/datetime.h"
 #include "baldr/directededge.h"
 #include "baldr/graphid.h"
+#include "baldr/graphtile.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
 #include "sif/edgelabel.h"
@@ -641,15 +642,37 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
   return {}; // If we are here the route failed
 }
 
+bool IsBridgingEdgeRestricted(const GraphTile* tile,
+                              bool is_forward,
+                              const BDEdgeLabel& pred,
+                              uint32_t access_mode) {
+  // TODO For each restriction:
+  //        1) Walk forward/reverse in edgelabels_reverse_/edgelabels_forward_
+  //           to find the end/beginning of the restriction.
+  //        2) Call DynamicCost::Restricted to evaluate if this is allowed
+
+  if (tile == nullptr) {
+    // TODO Now what?
+    LOG_ERROR("Tile pointer was null while checking restrictions");
+    return false;
+  }
+  // Begin by finding the complex restrictions on this bridging edge
+  auto restrictions = tile->GetRestrictions(is_forward, pred.edgeid(), access_mode);
+
+  return false; // TODO
+}
+
 // The edge on the forward search connects to a reached edge on the reverse
 // search tree. Check if this is the best connection so far and set the
 // search threshold.
 bool BidirectionalAStar::SetForwardConnection(GraphReader& graphreader, const BDEdgeLabel& pred) {
   // Disallow connections that are part of a complex restriction.
-  // TODO - validate that we do not need to "walk" the paths forward
-  // and backward to see if they match a restriction.
   if (pred.on_complex_rest()) {
-    return false;
+    // Lets dig deeper and test if we are really triggering these restrictions
+    const auto tile = graphreader.GetGraphTile(pred.edgeid());
+    if (IsBridgingEdgeRestricted(tile, true, pred, costing_->access_mode())) {
+      return false;
+    }
   }
 
   // Get the opposing edge - a candidate shortest path has been found to the
