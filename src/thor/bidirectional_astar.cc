@@ -642,22 +642,75 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
   return {}; // If we are here the route failed
 }
 
-bool IsBridgingEdgeRestricted(const GraphTile* tile,
+bool IsBridgingEdgeRestricted(GraphReader& graphreader,
                               bool is_forward,
+                              std::vector<sif::BDEdgeLabel>& edge_labels,
+                              std::vector<sif::BDEdgeLabel>& edge_labels_opposite_direction,
                               const BDEdgeLabel& pred,
-                              uint32_t access_mode) {
+                              std::shared_ptr<sif::DynamicCost>& costing) {
   // TODO For each restriction:
   //        1) Walk forward/reverse in edgelabels_reverse_/edgelabels_forward_
   //           to find the end/beginning of the restriction.
   //        2) Call DynamicCost::Restricted to evaluate if this is allowed
 
+  const auto tile = graphreader.GetGraphTile(pred.edgeid());
   if (tile == nullptr) {
     // TODO Now what?
     LOG_ERROR("Tile pointer was null while checking restrictions");
     return false;
   }
   // Begin by finding the complex restrictions on this bridging edge
-  auto restrictions = tile->GetRestrictions(is_forward, pred.edgeid(), access_mode);
+  auto restrictions = tile->GetRestrictions(is_forward, pred.edgeid(), costing->access_mode());
+
+  for (auto cr : restrictions) {
+    // Walk each restriction to its end (when is_forward=true) or
+    // beginning (when is_forward=false) and call DynamicCost::Restricted(...)
+    // to see if it is active for that path
+    if (is_forward) {
+
+      auto next_predecessor = [&edge_labels](const EdgeLabel* label) {
+        // Get the next predecessor - make sure it is valid. Continue to get
+        // the next predecessor if the edge is a transition edge.
+        const EdgeLabel* next_pred = (label->predecessor() == baldr::kInvalidLabel)
+                                         ? label
+                                         : &edge_labels[label->predecessor()];
+        return next_pred;
+      };
+      bool walked_to_end = true;
+      const EdgeLabel* next_pred = &pred;
+
+      // Lets walk the restriction and see if the path traverses it
+      cr->WalkVias([&walked_to_end, &next_pred, next_predecessor](const baldr::GraphId* via) {
+        if (via->value != next_pred->edgeid().value) {
+          // Pred diverged from restriction, exit early
+          walked_to_end = false;
+          return baldr::WalkingVia::StopWalking;
+        } else {
+          // Move to the next predecessor and keep walking restriction
+          next_pred = next_predecessor(next_pred);
+          return baldr::WalkingVia::KeepWalking;
+        }
+      });
+
+      if (walked_to_end) {
+        auto last_pred = next_pred;
+        const GraphTile* tile = graphreader.GetGraphTile(last_pred->edgeid());
+        if (tile == nullptr) {
+          LOG_WARN("Tile was null");
+          return false; // We ran into bad data or logic bug, so allow path to form?
+        }
+        const auto edge = tile->directededge(last_pred->edgeid());
+        // So we now know that the opposite expansion came via this restriction.
+        // Now lets check the entire restriction spanning of both trees of expansion
+        bool is_restricted =
+            costing->Restricted(edge, *last_pred, edge_labels, &edge_labels_opposite_direction, tile,
+                                last_pred->edgeid(), is_forward, 0, 0);
+        return is_restricted;
+      }
+    } else {
+      // Reverse
+    }
+  }
 
   return false; // TODO
 }
@@ -669,8 +722,8 @@ bool BidirectionalAStar::SetForwardConnection(GraphReader& graphreader, const BD
   // Disallow connections that are part of a complex restriction.
   if (pred.on_complex_rest()) {
     // Lets dig deeper and test if we are really triggering these restrictions
-    const auto tile = graphreader.GetGraphTile(pred.edgeid());
-    if (IsBridgingEdgeRestricted(tile, true, pred, costing_->access_mode())) {
+    if (IsBridgingEdgeRestricted(graphreader, true, edgelabels_forward_, edgelabels_reverse_, pred,
+                                 costing_)) {
       return false;
     }
   }
@@ -717,8 +770,7 @@ bool BidirectionalAStar::SetForwardConnection(GraphReader& graphreader, const BD
 // search threshold.
 bool BidirectionalAStar::SetReverseConnection(GraphReader& graphreader, const BDEdgeLabel& pred) {
   // Disallow connections that are part of a complex restriction.
-  // TODO - validate that we do not need to "walk" the paths forward
-  // and backward to see if they match a restriction.
+  // TODO Call IsBridgingEdgeRestricted here
   if (pred.on_complex_rest()) {
     return false;
   }

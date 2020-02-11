@@ -280,7 +280,7 @@ public:
   bool Restricted(const baldr::DirectedEdge* edge,
                   const EdgeLabel& pred,
                   const edge_labels_container_t& edge_labels,
-                  const edge_labels_container_t* edge_labels_other_direction,
+                  const edge_labels_container_t* edge_labels_opposite_direction,
                   const baldr::GraphTile*& tile,
                   const baldr::GraphId& edgeid,
                   const bool forward,
@@ -293,6 +293,7 @@ public:
       // the next predecessor if the edge is a transition edge.
       const EdgeLabel* next_pred =
           (label->predecessor() == baldr::kInvalidLabel) ? label : &edge_labels[label->predecessor()];
+      // TODO fall back to check edge_labels_opposite_direction here if no match in edge_labels
       return next_pred;
     };
     auto reset_edge_status =
