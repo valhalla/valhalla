@@ -15,6 +15,11 @@
 namespace valhalla {
 namespace baldr {
 
+enum class WalkingVia {
+  KeepWalking,
+  StopWalking,
+};
+
 constexpr size_t kMaxViasPerRestriction = 31;
 
 /**
@@ -186,6 +191,21 @@ public:
    */
   std::size_t SizeOf() const {
     return (sizeof(ComplexRestriction)) + (via_count_ * sizeof(GraphId));
+  }
+
+  /**
+   * Walks the vias of the restriction and calls `callback`
+   * Return false from `callback` if done walking early
+   */
+  template <typename Callback> void WalkVias(Callback callback) const {
+    if (via_count() > 0) {
+      const baldr::GraphId* via = reinterpret_cast<const baldr::GraphId*>(this + 1);
+      for (uint32_t i = 0; i < via_count(); i++, via++) {
+        if (callback(via) == WalkingVia::StopWalking) {
+          break;
+        }
+      }
+    }
   }
 
 protected:

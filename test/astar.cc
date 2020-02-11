@@ -105,6 +105,10 @@ namespace {
 std::string test_dir = "test/data/fake_tiles_astar";
 const vb::GraphId tile_id = vb::TileHierarchy::GetGraphId({.125, .125}, 2);
 
+GraphId make_graph_id(uint32_t id) {
+  return GraphId(tile_id.tileid(), tile_id.level(), id);
+}
+
 namespace node {
 std::pair<vb::GraphId, vm::PointLL> a({tile_id.tileid(), tile_id.level(), 0}, {0.01, 0.10});
 std::pair<vb::GraphId, vm::PointLL> b({tile_id.tileid(), tile_id.level(), 1}, {0.10, 0.10});
@@ -1480,6 +1484,54 @@ TEST(Astar, test_timed_conditional_restriction_3) {
   EXPECT_FALSE(found_route) << "Found a route when no route was expected";
 }
 
+TEST(ComplexRestriction, WalkVias) {
+  auto reader = get_graph_reader(test_dir);
+  {
+    // Walk some of the vias and exit early
+    std::vector<GraphId> expected_vias;
+    expected_vias.push_back(make_graph_id(14));
+    expected_vias.push_back(make_graph_id(18));
+
+    Options options;
+    create_costing_options(options);
+    auto costing = vs::CreateAutoCost(Costing::auto_, options);
+
+    bool is_forward = true;
+    auto* tile = reader->GetGraphTile(tile_id);
+    auto restrictions = tile->GetRestrictions(is_forward, make_graph_id(21), costing->access_mode());
+    ASSERT_EQ(restrictions.size(), 1);
+
+    const auto cr = restrictions[0];
+
+    {
+      // Walk all vias
+      std::vector<GraphId> walked_vias;
+      cr->WalkVias([&walked_vias](const GraphId* via) {
+        walked_vias.push_back(*via);
+        return WalkingVia::KeepWalking;
+      });
+      EXPECT_EQ(walked_vias, expected_vias) << "Did not walk expected vias";
+    }
+
+    {
+      // Walk subset of vias
+      std::vector<GraphId> walked_vias;
+      cr->WalkVias([&walked_vias](const GraphId* via) {
+        walked_vias.push_back(*via);
+        if (via->id() == 14) {
+          LOG_INFO("Stopped walking early");
+          return WalkingVia::StopWalking;
+        } else {
+          return WalkingVia::KeepWalking;
+        }
+      });
+
+      std::vector<GraphId> expected_subset;
+      expected_subset.push_back(make_graph_id(14));
+      EXPECT_EQ(walked_vias, expected_subset) << "Did not walk the expected subset of vias";
+    }
+  }
+}
 class AstarTestEnv : public ::testing::Environment {
 public:
   void SetUp() override {
