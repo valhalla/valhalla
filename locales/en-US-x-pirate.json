@@ -1430,10 +1430,10 @@
     },
     "sharp": {
       "phrases": {
-        "0": "Turn sharp <RELATIVE_DIRECTION> bucko.",
-        "1": "Turn sharp <RELATIVE_DIRECTION> onto <STREET_NAMES> ye scallywag.",
-        "2": "Arrr, turn sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
-        "3": "Turn sharp <RELATIVE_DIRECTION> matey to stay on <STREET_NAMES>."
+        "0": "Make a sharp <RELATIVE_DIRECTION> bucko.",
+        "1": "Make a sharp <RELATIVE_DIRECTION> onto <STREET_NAMES> ye scallywag.",
+        "2": "Arrr, make a sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
+        "3": "Make a sharp <RELATIVE_DIRECTION> matey to stay on <STREET_NAMES>."
       },
       "empty_street_name_labels": [
         "solid ground",
@@ -1446,25 +1446,25 @@
       ],
       "example_phrases": {
         "0": [
-          "Turn sharp left bucko."
+          "Make a sharp left bucko."
         ],
         "1": [
-          "Turn sharp right onto Flatbush Avenue ye scallywag."
+          "Make a sharp right onto Flatbush Avenue ye scallywag."
         ],
         "2": [
-          "Arrr, turn sharp left onto North Bond Street/US 1 Business/MD 924. Continue on MD 924."
+          "Arrr, make a sharp left onto North Bond Street/US 1 Business/MD 924. Continue on MD 924."
         ],
         "3": [
-          "Turn sharp right matey to stay on Sunstone Drive."
+          "Make a sharp right matey to stay on Sunstone Drive."
         ]
       }
     },
     "sharp_verbal": {
       "phrases": {
-        "0": "Turn sharp <RELATIVE_DIRECTION> bucko.",
-        "1": "Turn sharp <RELATIVE_DIRECTION> onto <STREET_NAMES> ye scallywag.",
-        "2": "Arrr, turn sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>.",
-        "3": "Turn sharp <RELATIVE_DIRECTION> matey to stay on <STREET_NAMES>."
+        "0": "Make a sharp <RELATIVE_DIRECTION> bucko.",
+        "1": "Make a sharp <RELATIVE_DIRECTION> onto <STREET_NAMES> ye scallywag.",
+        "2": "Arrr, make a sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>.",
+        "3": "Make a sharp <RELATIVE_DIRECTION> matey to stay on <STREET_NAMES>."
       },
       "empty_street_name_labels": [
         "solid ground",
@@ -1477,16 +1477,16 @@
       ],
       "example_phrases": {
         "0": [
-          "Turn sharp left bucko."
+          "Make a sharp left bucko."
         ],
         "1": [
-          "Turn sharp right onto Flatbush Avenue ye scallywag."
+          "Make a sharp right onto Flatbush Avenue ye scallywag."
         ],
         "2": [
-          "Arrr, turn sharp left onto North Bond Street, U.S. 1 Business."
+          "Arrr, make a sharp left onto North Bond Street, U.S. 1 Business."
         ],
         "3": [
-          "Turn sharp right matey to stay on Sunstone Drive."
+          "Make a sharp right matey to stay on Sunstone Drive."
         ]
       }
     },
