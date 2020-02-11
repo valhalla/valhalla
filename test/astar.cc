@@ -680,7 +680,7 @@ void trivial_path_no_uturns(const std::string& config_file) {
   boost::filesystem::remove(cr_to_file);
 }
 
-//TEST(Astar, TestTrivialPathNoUturns) {
+// TEST(Astar, TestTrivialPathNoUturns) {
 //  write_config(config_file);
 //  trivial_path_no_uturns(config_file);
 //}
@@ -1520,37 +1520,63 @@ TEST(Astar, test_timed_conditional_restriction_3) {
   EXPECT_FALSE(found_route) << "Found a route when no route was expected";
 }
 
-// Subclassing BidirectionalAStar with reverse expansion strangled in order
-// to run tests on forward expansion
-class BidirectionalAStarWithoutReverseExpansion : public vt::BidirectionalAStar {
-
-  // Reimplement ExpandForward to not do anything
-  bool ExpandReverse(baldr::GraphReader& graphreader,
-                     const baldr::GraphId& node,
-                     sif::BDEdgeLabel& pred,
-                     const uint32_t pred_idx,
-                     const bool from_transition) {
-    return false;
-  }
-  bool SetReverseConnection(baldr::GraphReader& graphreader, const sif::BDEdgeLabel& pred) {
-    return false;
-  }
+enum class StrangleDirection {
+  StrangleForward,
+  StrangleReverse,
 };
 
-// Subclassing BidirectionalAStar with forward expansion strangled in order
-// to run tests on reverse expansion
-class BidirectionalAStarWithoutForwardExpansion : public vt::BidirectionalAStar {
+// Subclassing BidirectionalAStar to be able to decide on strangling forward
+// or reverse direction
+class BidirectionalAStarSingleDirection : public vt::BidirectionalAStar {
 
-  // Reimplement ExpandForward to not do anything
-  bool ExpandForward(baldr::GraphReader& graphreader,
-                     const baldr::GraphId& node,
-                     sif::BDEdgeLabel& pred,
-                     const uint32_t pred_idx,
-                     const bool from_transition) {
-    return false;
+  StrangleDirection strangled_;
+
+public:
+  BidirectionalAStarSingleDirection(StrangleDirection strangled) {
+    strangled_ = strangled;
+    // BidirectionalAStar::BidirectionalAStar();
   }
+
+  //// Reimplement ExpandForward to not do anything
+  //bool ExpandForward(baldr::GraphReader& graphreader,
+  //                   const baldr::GraphId& node,
+  //                   sif::BDEdgeLabel& pred,
+  //                   const uint32_t pred_idx,
+  //                   const bool from_transition) {
+  //  if (strangled_ == StrangleDirection::StrangleForward) {
+  //    std::cout << "MOOOOOOCK ExpandForward" << std::endl;
+  //    return false;
+  //  }
+  //  return vt::BidirectionalAStar::ExpandForward(graphreader, node, pred, pred_idx, from_transition);
+  //}
   bool SetForwardConnection(baldr::GraphReader& graphreader, const sif::BDEdgeLabel& pred) {
-    return false;
+    if (strangled_ == StrangleDirection::StrangleForward) {
+      std::cout << "MOOOOOOCK SetForwardConnection" << std::endl;
+      return false;
+    }
+    return vt::BidirectionalAStar::SetForwardConnection(graphreader, pred);
+  }
+
+  //// Reimplement ExpandReverse to not do anything
+  //bool ExpandReverse(baldr::GraphReader& graphreader,
+  //                   const baldr::GraphId& node,
+  //                   sif::BDEdgeLabel& pred,
+  //                   const uint32_t pred_idx,
+  //                   const baldr::DirectedEdge* opp_pred_edge,
+  //                   const bool from_transition) {
+  //  if (strangled_ == StrangleDirection::StrangleReverse) {
+  //    std::cout << "MOOOOOOCK ExpandReverse" << std::endl;
+  //    return false;
+  //  }
+  //  return vt::BidirectionalAStar::ExpandReverse(graphreader, node, pred, pred_idx, opp_pred_edge,
+  //                                               from_transition);
+  //}
+  bool SetReverseConnection(baldr::GraphReader& graphreader, const sif::BDEdgeLabel& pred) {
+    if (strangled_ == StrangleDirection::StrangleReverse) {
+      std::cout << "MOOOOOOCK SetReverseConnection" << std::endl;
+      return false;
+    }
+    return vt::BidirectionalAStar::SetReverseConnection(graphreader, pred);
   }
 };
 
@@ -1568,12 +1594,14 @@ TEST(Astar, test_complex_restriction_short_path_fake) {
   ASSERT_TRUE(bool(costs[int(mode)]));
 
   // Test Bidirectional both for forward and reverse expansion
-  std::vector<std::pair<vt::BidirectionalAStar, std::string>> astars;
+  std::vector<std::pair<BidirectionalAStarSingleDirection, std::string>> astars;
   astars.push_back(
-      std::make_pair(BidirectionalAStarWithoutForwardExpansion(), "WithoutForwardExpansion"));
+      std::make_pair(BidirectionalAStarSingleDirection(StrangleDirection::StrangleForward),
+                     "WithoutForwardExpansion"));
   astars.push_back(
-      std::make_pair(BidirectionalAStarWithoutReverseExpansion(), "WithoutReverseExpansion"));
-  for (auto astar : astars) {
+      std::make_pair(BidirectionalAStarSingleDirection(StrangleDirection::StrangleReverse),
+                     "WithoutReverseExpansion"));
+  for (auto& astar : astars) {
     std::cout << "new test" << std::endl;
     // TODO Add two tests where start and end lives on a partial complex restriction
     //      Under this circumstance the restriction should _not_ trigger
@@ -1586,13 +1614,13 @@ TEST(Astar, test_complex_restriction_short_path_fake) {
     add(tile_id + uint64_t(21), 0.0f, k.second, origin);
     add(tile_id + uint64_t(15), 1.0f, k.second, origin);
 
-    // Put the destination between I and L which is outside the restriction
-    using node::l;
+    // Put the destination between I and J which is outside the restriction
+    using node::j;
     valhalla::Location dest;
-    dest.mutable_ll()->set_lng(l.second.first);
-    dest.mutable_ll()->set_lat(l.second.second);
-    add(tile_id + uint64_t(18), 0.1f, l.second, dest);
-    add(tile_id + uint64_t(22), 0.9f, l.second, dest);
+    dest.mutable_ll()->set_lng(j.second.first);
+    dest.mutable_ll()->set_lat(j.second.second);
+    add(tile_id + uint64_t(18), 0.1f, j.second, dest);
+    add(tile_id + uint64_t(22), 0.9f, j.second, dest);
 
     auto paths = astar.first.GetBestPath(origin, dest, *reader, costs, mode);
 
@@ -1606,8 +1634,7 @@ TEST(Astar, test_complex_restriction_short_path_fake) {
     expected.push_back(21);
     expected.push_back(14);
     expected.push_back(18);
-    EXPECT_EQ(visited, expected) << "Unexpected edges in case 1 "
-                                 << astar.second;
+    EXPECT_EQ(visited, expected) << "Unexpected edges in case 1 " << astar.second;
 
     // For the second test, just switch origin/destination and reverse expected,
     // result should be the same
@@ -1624,8 +1651,7 @@ TEST(Astar, test_complex_restriction_short_path_fake) {
     expected.push_back(22);
     expected.push_back(16);
     expected.push_back(15);
-    EXPECT_EQ(visited, expected) << "Unexpected edges in case 2 "
-                                 << astar.second;
+    EXPECT_EQ(visited, expected) << "Unexpected edges in case 2 " << astar.second;
   }
   {
     // TestBacktrackComplexRestrictionBidirectional tests the behaviour with a
