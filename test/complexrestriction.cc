@@ -1,5 +1,6 @@
 
 #include "baldr/complexrestriction.h"
+#include "baldr/graphid.h"
 #include "mjolnir/complexrestrictionbuilder.h"
 
 #include "test.h"
@@ -16,6 +17,45 @@ namespace {
 
 TEST(ComplexRestriction, Sizeof) {
   EXPECT_EQ(sizeof(ComplexRestriction), kComplexRestrictionExpectedSize);
+}
+
+TEST(ComplexRestriction, WalkViasBuilder) {
+  ComplexRestrictionBuilder builder;
+
+  std::vector<GraphId> expected_vias;
+  builder.set_via_list(expected_vias);
+
+  // Ensure the builder cannot walk (throws logic_error to avoid accidentally trying
+  // to walk a builder which likely is not what was intended)
+  std::vector<GraphId> walked_vias;
+  ASSERT_THROW(builder.WalkVias([&walked_vias](const GraphId* via) {
+    walked_vias.push_back(*via);
+    return WalkingVia::KeepWalking;
+  }),
+               std::logic_error)
+      << "Did not walk the expected vias";
+}
+
+TEST(ComplexRestriction, WalkVias) {
+  // TODO Astar test in https://github.com/valhalla/valhalla/pull/2109
+  // has a fake tileset with restrictions we could use here
+  //{
+  //  // Walk some of the vias and exit early
+  //  std::vector<GraphId> expected_subset;
+  //  expected_subset.push_back(GraphId(44, 1, 1));
+  //  expected_subset.push_back(GraphId(44, 1, 2));
+
+  //  std::vector<GraphId> walked_vias;
+  //  builder.WalkVias([&walked_vias](const GraphId* via) {
+  //    walked_vias.push_back(*via);
+  //    if (via->id() == 2) {
+  //      return WalkingVia::StopWalking;
+  //    } else {
+  //      return WalkingVia::KeepWalking;
+  //    }
+  //  });
+  //  EXPECT_EQ(walked_vias, expected_subset) << "Did not walk the expected subset of vias";
+  //}
 }
 
 TEST(ComplexRestriction, WriteRead) {

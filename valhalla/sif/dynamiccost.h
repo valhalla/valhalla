@@ -349,21 +349,25 @@ public:
         // Ids do not match the path for this restriction.
         bool match = true;
         const EdgeLabel* next_pred = first_pred;
+        // Remember the edge_ids in restriction for later reset
         std::vector<baldr::GraphId> edge_ids_in_complex_restriction;
         edge_ids_in_complex_restriction.reserve(10);
-        if (cr->via_count() > 0) {
-          // The via list starts immediately after the structure
-          baldr::GraphId* via = reinterpret_cast<baldr::GraphId*>(cr + 1);
-          for (uint32_t i = 0; i < cr->via_count(); i++, via++) {
-            if (via->value != next_pred->edgeid().value) {
-              match = false;
-              break;
-            }
+
+        cr->WalkVias([&match, &next_pred, next_predecessor,
+                      &edge_ids_in_complex_restriction](const baldr::GraphId* via) {
+          if (via->value != next_pred->edgeid().value) {
+            // Pred diverged from restriction, exit early
+            match = false;
+            return baldr::WalkingVia::StopWalking;
+          } else {
             edge_ids_in_complex_restriction.push_back(next_pred->edgeid());
+            // Move to the next predecessor and keep walking restriction
             next_pred = next_predecessor(next_pred);
+            return baldr::WalkingVia::KeepWalking;
           }
-          edge_ids_in_complex_restriction.push_back(next_pred->edgeid());
-        }
+        });
+        // Don't forget the last one
+        edge_ids_in_complex_restriction.push_back(next_pred->edgeid());
 
         // Check against the start/end of the complex restriction
         if (match && ((forward && next_pred->edgeid() == cr->from_graphid()) ||

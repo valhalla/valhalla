@@ -247,13 +247,8 @@ void Isochrone::ExpandForward(GraphReader& graphreader,
       // traffic based speed if it exists
       if (!costing_->Allowed(directededge, pred, tile, edgeid, localtime, nodeinfo->timezone(),
                              has_time_restrictions) ||
-<<<<<<< HEAD
-          costing_->Restricted(directededge, pred, edgelabels_, tile, edgeid, true, todo, localtime,
-                               nodeinfo->timezone())) {
-=======
           costing_->Restricted(directededge, pred, edgelabels_, (std::vector<sif::EdgeLabel>*)nullptr,
-                               tile, edgeid, true, localtime, nodeinfo->timezone())) {
->>>>>>> Adds test with complex restriction where bidirectional meet
+                               tile, edgeid, true, todo, localtime, nodeinfo->timezone())) {
         continue;
       }
     } else {
