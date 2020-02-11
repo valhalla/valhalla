@@ -440,7 +440,6 @@ thor_worker_t::map_match(Api& request) {
                                         });
         std::get<2>(edge_group) = match_result_itr;
 
-        // TODO:: handle case when both discontinuity and loop on last edge
         // we know the discontinuity happens on this edge so we need to
         // find the last match result on this edge
         // when the first edge and the last edge has the same edge id, we have to move the edge iter
@@ -458,10 +457,10 @@ thor_worker_t::map_match(Api& request) {
 
         // find the last match result on this edge before discontinuity. There maybe scenarios that
         // there is a loop on the last edge. We have to navigate the iterator through all the in
-        // between matched results (may have same edge id with the last edge) to where discontinuity
-        // actually happens
-        bool found_last_match_result = false;
-        while (!found_last_match_result) {
+        // between matched results (may have same edge id with the last edge) right before where
+        // discontinuity actually happens
+        bool discontinuity = false;
+        while (!discontinuity) {
           // if we could locate an edge with the same edge id of last edge we start our search from
           // that edge. Otherwise, we exit the search, save prev_match_result as the last edge and
           // proceed to a new edge group.
@@ -469,16 +468,17 @@ thor_worker_t::map_match(Api& request) {
                                    [last_edge](const MatchResult& result) {
                                      return result.edgeid == last_edge->edgeid;
                                    });
+          // we find an edge has same edgeid with last edge.
           if (iter != match_results.cend()) {
             match_result_itr = iter;
           }
-          // we exhaust the search prev_match_result is last match result on this edge group
+          // Search exhausted, prev_match_result is last match result on this edge group
           else {
             break;
           }
 
-          // once we are on the edge with the same edge id of the last edge, we have to detect whether
-          // this edge is the last edge in the group before discontibuity happens
+          // we are on the edge with the same edge id of the last edge, we have to detect whether
+          // this edge is the last edge where discontibuity occurs
           while (match_result_itr != match_results.end() &&
                  match_result_itr->edgeid == last_edge->edgeid) {
             prev_match_result = match_result_itr;
@@ -495,7 +495,7 @@ thor_worker_t::map_match(Api& request) {
             if (match_result_itr == match_results.cend() ||
                 prev_match_result->edgeid == last_edge->edgeid &&
                     match_result_itr->distance_along < prev_match_result->distance_along) {
-              found_last_match_result = true;
+              discontinuity = true;
               break;
             }
           }
