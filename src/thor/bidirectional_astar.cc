@@ -668,49 +668,43 @@ bool IsBridgingEdgeRestricted(GraphReader& graphreader,
     // Walk each restriction to its end (when is_forward=true) or
     // beginning (when is_forward=false) and call DynamicCost::Restricted(...)
     // to see if it is active for that path
-    if (is_forward) {
+    auto next_predecessor = [&edge_labels](const EdgeLabel* label) {
+      // Get the next predecessor - make sure it is valid. Continue to get
+      // the next predecessor if the edge is a transition edge.
+      const EdgeLabel* next_pred =
+          (label->predecessor() == baldr::kInvalidLabel) ? label : &edge_labels[label->predecessor()];
+      return next_pred;
+    };
+    bool walked_to_end = true;
+    const EdgeLabel* next_pred = &pred;
 
-      auto next_predecessor = [&edge_labels](const EdgeLabel* label) {
-        // Get the next predecessor - make sure it is valid. Continue to get
-        // the next predecessor if the edge is a transition edge.
-        const EdgeLabel* next_pred = (label->predecessor() == baldr::kInvalidLabel)
-                                         ? label
-                                         : &edge_labels[label->predecessor()];
-        return next_pred;
-      };
-      bool walked_to_end = true;
-      const EdgeLabel* next_pred = &pred;
-
-      // Lets walk the restriction and see if the path traverses it
-      cr->WalkVias([&walked_to_end, &next_pred, next_predecessor](const baldr::GraphId* via) {
-        if (via->value != next_pred->edgeid().value) {
-          // Pred diverged from restriction, exit early
-          walked_to_end = false;
-          return baldr::WalkingVia::StopWalking;
-        } else {
-          // Move to the next predecessor and keep walking restriction
-          next_pred = next_predecessor(next_pred);
-          return baldr::WalkingVia::KeepWalking;
-        }
-      });
-
-      if (walked_to_end) {
-        auto last_pred = next_pred;
-        const GraphTile* tile = graphreader.GetGraphTile(last_pred->edgeid());
-        if (tile == nullptr) {
-          LOG_WARN("Tile was null");
-          return false; // We ran into bad data or logic bug, so allow path to form?
-        }
-        const auto edge = tile->directededge(last_pred->edgeid());
-        // So we now know that the opposite expansion came via this restriction.
-        // Now lets check the entire restriction spanning of both trees of expansion
-        bool is_restricted =
-            costing->Restricted(edge, *last_pred, edge_labels, &edge_labels_opposite_direction, tile,
-                                last_pred->edgeid(), is_forward, 0, 0);
-        return is_restricted;
+    // Lets walk the restriction and see if the path traverses it
+    cr->WalkVias([&walked_to_end, &next_pred, next_predecessor](const baldr::GraphId* via) {
+      if (via->value != next_pred->edgeid().value) {
+        // Pred diverged from restriction, exit early
+        walked_to_end = false;
+        return baldr::WalkingVia::StopWalking;
+      } else {
+        // Move to the next predecessor and keep walking restriction
+        next_pred = next_predecessor(next_pred);
+        return baldr::WalkingVia::KeepWalking;
       }
-    } else {
-      // Reverse
+    });
+
+    if (walked_to_end) {
+      auto last_pred = next_pred;
+      const GraphTile* tile = graphreader.GetGraphTile(last_pred->edgeid());
+      if (tile == nullptr) {
+        LOG_WARN("Tile was null");
+        return false; // We ran into bad data or logic bug, so allow path to form?
+      }
+      const auto edge = tile->directededge(last_pred->edgeid());
+      // So we now know that the opposite expansion came via this restriction.
+      // Now lets check the entire restriction spanning of both trees of expansion
+      bool is_restricted =
+          costing->Restricted(edge, *last_pred, edge_labels, &edge_labels_opposite_direction, tile,
+                              last_pred->edgeid(), is_forward, 0, 0);
+      return is_restricted;
     }
   }
 
@@ -775,9 +769,8 @@ bool BidirectionalAStar::SetReverseConnection(GraphReader& graphreader, const BD
   std::cout << "SetReverseConnection: " << pred.edgeid().id() << ", on_complex_rest "
             << pred.on_complex_rest() << std::endl;
   if (pred.on_complex_rest()) {
-    return false;
     // Lets dig deeper and test if we are really triggering these restrictions
-    if (IsBridgingEdgeRestricted(graphreader, true, edgelabels_forward_, edgelabels_reverse_, pred,
+    if (IsBridgingEdgeRestricted(graphreader, false, edgelabels_reverse_, edgelabels_forward_, pred,
                                  costing_)) {
       return false;
     }

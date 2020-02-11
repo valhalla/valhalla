@@ -1647,7 +1647,6 @@ TEST(Astar, test_complex_restriction_short_path_fake) {
     std::vector<uint32_t> expected;
     expected.push_back(21);
     expected.push_back(14);
-    expected.push_back(17);
     EXPECT_EQ(visited, expected) << "Unexpected edges in case 1 " << astar.second;
 
     // For the second test, just switch origin/destination and reverse expected,
