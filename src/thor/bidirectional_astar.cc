@@ -227,9 +227,14 @@ inline bool BidirectionalAStar::ExpandForwardInner(GraphReader& graphreader,
   if (meta.edge_status->set() == EdgeSet::kPermanent) {
     return true; // This is an edge we _could_ have expanded, so return true
   }
+
+  const uint64_t localtime = 0; // Bidirectional is not yet time-aware
+  const uint32_t tz_index = 0;
   bool has_time_restrictions = false;
-  if (!costing_->Allowed(meta.edge, pred, tile, meta.edge_id, 0, 0, has_time_restrictions) ||
-      costing_->Restricted(meta.edge, pred, edgelabels_forward_, tile, meta.edge_id, true)) {
+  if (!costing_->Allowed(meta.edge, pred, tile, meta.edge_id, localtime, tz_index,
+                         has_time_restrictions) ||
+      costing_->Restricted(meta.edge, pred, edgelabels_forward_, tile, meta.edge_id, true,
+                           &edgestatus_forward_, localtime, tz_index)) {
     return false;
   }
 
@@ -422,10 +427,13 @@ inline bool BidirectionalAStar::ExpandReverseInner(GraphReader& graphreader,
 
   // Skip this edge if no access is allowed (based on costing method)
   // or if a complex restriction prevents transition onto this edge.
+  const uint64_t localtime = 0; // Bidirectional is not yet time-aware
+  const uint32_t tz_index = 0;
   bool has_time_restrictions = false;
-  if (!costing_->AllowedReverse(meta.edge, pred, opp_edge, t2, opp_edge_id, 0, 0,
+  if (!costing_->AllowedReverse(meta.edge, pred, opp_edge, t2, opp_edge_id, localtime, tz_index,
                                 has_time_restrictions) ||
-      costing_->Restricted(meta.edge, pred, edgelabels_reverse_, tile, meta.edge_id, false)) {
+      costing_->Restricted(meta.edge, pred, edgelabels_reverse_, tile, meta.edge_id, false,
+                           &edgestatus_reverse_, localtime, tz_index)) {
     return false;
   }
 
