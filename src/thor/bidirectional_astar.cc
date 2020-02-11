@@ -644,13 +644,21 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
   return {}; // If we are here the route failed
 }
 
+// This function checks if the path formed by the two expanding trees
+// when connected by `pred`.
+//
+// To do this, it walks all the complex restrictions on `pred` and
+// for each one, it must traverse both trees to compare actual path
+// with the restriction.
+//
+// If no restriction triggers, it returns true and the edge is allowed
 bool IsBridgingEdgeRestricted(GraphReader& graphreader,
                               bool is_forward,
                               std::vector<sif::BDEdgeLabel>& edge_labels,
                               std::vector<sif::BDEdgeLabel>& edge_labels_opposite_direction,
                               const BDEdgeLabel& pred,
                               std::shared_ptr<sif::DynamicCost>& costing) {
-  // TODO For each restriction:
+  // For each restriction:
   //        1) Walk forward/reverse in edgelabels_reverse_/edgelabels_forward_
   //           to find the end/beginning of the restriction.
   //        2) Call DynamicCost::Restricted to evaluate if this is allowed
@@ -675,23 +683,29 @@ bool IsBridgingEdgeRestricted(GraphReader& graphreader,
           (label->predecessor() == baldr::kInvalidLabel) ? label : &edge_labels[label->predecessor()];
       return next_pred;
     };
-    bool walked_to_end = true;
+    bool walked_to_end_current_side = true;
     const EdgeLabel* next_pred = &pred;
 
     // Lets walk the restriction and see if the path traverses it
-    cr->WalkVias([&walked_to_end, &next_pred, next_predecessor](const baldr::GraphId* via) {
-      if (via->value != next_pred->edgeid().value) {
-        // Pred diverged from restriction, exit early
-        walked_to_end = false;
-        return baldr::WalkingVia::StopWalking;
-      } else {
-        // Move to the next predecessor and keep walking restriction
-        next_pred = next_predecessor(next_pred);
-        return baldr::WalkingVia::KeepWalking;
-      }
-    });
+    cr->WalkVias(
+        [&walked_to_end_current_side, &next_pred, next_predecessor](const baldr::GraphId* via) {
+          if (via->value != next_pred->edgeid().value) {
+            // Pred diverged from restriction, exit early
+            walked_to_end_current_side = false;
+            return baldr::WalkingVia::StopWalking;
+          } else {
+            // Move to the next predecessor and keep walking restriction
+            next_pred = next_predecessor(next_pred);
+            return baldr::WalkingVia::KeepWalking;
+          }
+        });
 
-    if (walked_to_end) {
+    if (walked_to_end_current_side) {
+      // We now know that the current side triggers this `cr` (restriction)
+      //
+      // Next we must walk the opposite tree and test that side
+
+      // TODO tweak this to take opposite side into account
       auto last_pred = next_pred;
       const GraphTile* tile = graphreader.GetGraphTile(last_pred->edgeid());
       if (tile == nullptr) {
@@ -707,8 +721,8 @@ bool IsBridgingEdgeRestricted(GraphReader& graphreader,
       return is_restricted;
     }
   }
-
-  return false; // TODO
+  // No restrictions, it must be allowed
+  return false;
 }
 
 // The edge on the forward search connects to a reached edge on the reverse
