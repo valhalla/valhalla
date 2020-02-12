@@ -442,7 +442,9 @@ Cost AutoCost::EdgeCost(const baldr::DirectedEdge* edge,
             surface_factor_ * kSurfaceFactor[static_cast<uint32_t>(edge->surface())];
   if (edge->toll()) {
     factor += toll_factor_;
-  } else if (edge->use() == Use::kAlley) {
+  }
+ 
+  if (edge->use() == Use::kAlley) {
     factor *= alley_factor_;
   }
 
