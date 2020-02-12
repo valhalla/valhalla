@@ -88,7 +88,7 @@ namespace {
 //       g
 //
 //
-// Third test has a complex turn restriction preventing H->I->L  (marked with R)
+// Third test has a complex turn restriction preventing K->H->I->L  (marked with R)
 // which should force the algorithm to take the detour via the J->M edge
 // if starting at K and heading to L
 //
@@ -96,13 +96,13 @@ namespace {
 // h-->--<--i-->--<--j
 // |    R   |        |
 // v 15     v 18     v 20
-// |      R |        |
+// |R     R |        |
 // ^ 21     ^ 22     ^ 24
 // |        |        |
 // k        l-->--<--m
 //            23  25
 //
-std::string test_dir = "test/data/fake_tiles_astar";
+const std::string test_dir = "test/data/fake_tiles_astar";
 const vb::GraphId tile_id = vb::TileHierarchy::GetGraphId({.125, .125}, 2);
 
 GraphId make_graph_id(uint32_t id) {
@@ -216,33 +216,51 @@ void make_tile() {
 
   // Third set of roads - Complex restriction with detour
   add_edge(node::h, node::i, 14, 0, true);
-  auto edge_id_14 = GraphId(tile_id.tileid(), tile_id.level(), 14);
-  auto edge_id_18 = GraphId(tile_id.tileid(), tile_id.level(), 18);
   {
-    // Add first part of complex turn restriction preventing turn from 14 -> 18
-    tile.directededges().back().set_start_restriction(kAutoAccess);
-    ComplexRestrictionBuilder complex_restr_edge_14;
-    complex_restr_edge_14.set_to_id(edge_id_14);
-    complex_restr_edge_14.set_from_id(edge_id_18);
-    complex_restr_edge_14.set_modes(kAllAccess);
-    tile.AddForwardComplexRestriction(complex_restr_edge_14);
-    tile.AddReverseComplexRestriction(complex_restr_edge_14);
+    // Add second part of complex turn restriction CLOCKWISE direction
+    // preventing turn from 14 -> 18
+    tile.directededges().back().complex_restriction(true);
+    ComplexRestrictionBuilder complex_restr_edge_14_18;
+    // TODO I switched set_to with set_from after looking at
+    // implementation of GraphTile::GetRestrictions but it sounds backwards to me...
+    complex_restr_edge_14_18.set_to_id(make_graph_id(14));
+    complex_restr_edge_14_18.set_from_id(make_graph_id(18));
+    complex_restr_edge_14_18.set_modes(kAllAccess);
+    std::vector<GraphId> vias;
+    vias.push_back(make_graph_id(14));
+    vias.push_back(make_graph_id(21));
+    complex_restr_edge_14_18.set_via_list(vias);
+    tile.AddForwardComplexRestriction(complex_restr_edge_14_18);
+    tile.AddReverseComplexRestriction(complex_restr_edge_14_18);
   }
   add_edge(node::h, node::k, 15, 0, true);
+  {
+    // Add first part of complex turn restriction COUNTER-CLOCKWISE direction
+    // preventing turn from 16 -> 15
+    tile.directededges().back().set_start_restriction(kAutoAccess);
+    tile.directededges().back().complex_restriction(true);
+    ComplexRestrictionBuilder complex_restr_edge_16_15;
+    complex_restr_edge_16_15.set_from_id(make_graph_id(16));
+    complex_restr_edge_16_15.set_to_id(make_graph_id(15));
+    complex_restr_edge_16_15.set_modes(kAllAccess);
+    tile.AddForwardComplexRestriction(complex_restr_edge_16_15);
+    tile.AddReverseComplexRestriction(complex_restr_edge_16_15);
+  }
   add_node(node::h, 2);
 
   add_edge(node::i, node::h, 16, 0, false);
   add_edge(node::i, node::j, 17, 0, true);
   add_edge(node::i, node::l, 18, 0, true);
   {
-    // Add second part of complex turn restriction preventing turn from 14 -> 18
+    // Add second part of complex turn restriction CLOCKWISE direction
+    // preventing turn from 14 -> 18
     tile.directededges().back().set_end_restriction(kAutoAccess);
-    ComplexRestrictionBuilder complex_restr_edge_18;
-    complex_restr_edge_18.set_from_id(edge_id_14);
-    complex_restr_edge_18.set_to_id(edge_id_18);
-    complex_restr_edge_18.set_modes(kAllAccess);
-    tile.AddForwardComplexRestriction(complex_restr_edge_18);
-    tile.AddReverseComplexRestriction(complex_restr_edge_18);
+    ComplexRestrictionBuilder complex_restr_edge_14_18;
+    complex_restr_edge_14_18.set_from_id(make_graph_id(14));
+    complex_restr_edge_14_18.set_to_id(make_graph_id(18));
+    complex_restr_edge_14_18.set_modes(kAllAccess);
+    tile.AddForwardComplexRestriction(complex_restr_edge_14_18);
+    tile.AddReverseComplexRestriction(complex_restr_edge_14_18);
   }
   add_node(node::i, 3);
 
@@ -251,9 +269,39 @@ void make_tile() {
   add_node(node::j, 2);
 
   add_edge(node::k, node::h, 21, 1, false);
+  {
+    // Add first part of complex turn restriction CLOCKWISE direction
+    // preventing turn from 21 -> 14
+    tile.directededges().back().set_start_restriction(kAllAccess);
+    tile.directededges().back().complex_restriction(true);
+    ComplexRestrictionBuilder complex_restr_edge_21_14;
+    // TODO I switched set_to with set_from after looking at
+    // implementation of GraphTile::GetRestrictions but it sounds backwards to me...
+    complex_restr_edge_21_14.set_to_id(make_graph_id(21));
+    complex_restr_edge_21_14.set_from_id(make_graph_id(14));
+    std::vector<GraphId> vias;
+    vias.push_back(make_graph_id(14));
+    vias.push_back(make_graph_id(18));
+    complex_restr_edge_21_14.set_via_list(vias);
+    complex_restr_edge_21_14.set_modes(kAllAccess);
+    tile.AddForwardComplexRestriction(complex_restr_edge_21_14);
+    tile.AddReverseComplexRestriction(complex_restr_edge_21_14);
+  }
   add_node(node::k, 1);
 
   add_edge(node::l, node::i, 22, 2, false);
+  {
+    // Add second part of complex turn restriction COUNTER-CLOCKWISE direction
+    // preventing turn from 22 -> 16
+    tile.directededges().back().set_start_restriction(kAutoAccess);
+    tile.directededges().back().complex_restriction(true);
+    ComplexRestrictionBuilder complex_restr_edge_22_16;
+    complex_restr_edge_22_16.set_from_id(make_graph_id(22));
+    complex_restr_edge_22_16.set_to_id(make_graph_id(16));
+    complex_restr_edge_22_16.set_modes(kAllAccess);
+    tile.AddForwardComplexRestriction(complex_restr_edge_22_16);
+    tile.AddReverseComplexRestriction(complex_restr_edge_22_16);
+  }
   add_edge(node::l, node::m, 23, 0, true);
   add_node(node::l, 2);
 
