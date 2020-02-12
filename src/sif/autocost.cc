@@ -443,7 +443,7 @@ Cost AutoCost::EdgeCost(const baldr::DirectedEdge* edge,
   if (edge->toll()) {
     factor += toll_factor_;
   }
- 
+
   if (edge->use() == Use::kAlley) {
     factor *= alley_factor_;
   }
