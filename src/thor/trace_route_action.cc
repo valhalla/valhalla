@@ -447,7 +447,7 @@ thor_worker_t::map_match(Api& request) {
         // discontinuity occurs
         auto prev_match_result = match_result_itr++;
         // TODO: optimize this linear search away in the form path method
-        bool loop_on_last_edge = std::find_if(first_edge, last_edge, [last_edge](const auto edge) {
+        bool loop_on_last_edge = std::find_if(first_edge, last_edge, [last_edge](const auto& edge) {
                                    return edge.edgeid == last_edge->edgeid;
                                  }) != last_edge;
         bool found_last_match = false;
