@@ -1485,6 +1485,11 @@ TEST(Astar, test_timed_conditional_restriction_3) {
 }
 
 TEST(ComplexRestriction, WalkVias) {
+  // Yes, it's a little odd to have a test of restrictions and vias here, but
+  // you need a baked tile to test this functionality which we conveniently
+  // have here from `make_tile`.
+  // TODO Future improvement would be to make it simpler to quickly generate
+  // tiles programmatically
   auto reader = get_graph_reader(test_dir);
   {
     // Walk some of the vias and exit early
