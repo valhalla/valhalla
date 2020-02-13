@@ -172,6 +172,10 @@ target_compile_definitions(valhalla
   PRIVATE
     ${libvalhalla_compile_definitions})
 
+
+# Location independent code which is necessary for library
+target_add_compile_flags_if_supported(valhalla PUBLIC -fPIC)
+
 target_compile_options(valhalla PUBLIC ${libvalhalla_compile_options})
 
 if(ENABLE_COMPILER_WARNINGS)
