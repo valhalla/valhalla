@@ -22,14 +22,6 @@ enum class WalkingVia {
   StopWalking,
 };
 
-// Essentially checks if any of the restrictions in `list_of_restrictions`
-// has a match against some part of `patch_path`.
-//
-// IMPORTANT: Each vector in `list_of_restrictions` must contain the original
-// edge_id in addition to the vias
-bool CheckPatchPathForRestrictions(const std::vector<GraphId>& patch_path,
-                                   const std::vector<std::vector<GraphId>>& list_of_restrictions);
-
 /**
  * Information held for each complex access restriction. A complex restriction
  * is a restriction that either:
