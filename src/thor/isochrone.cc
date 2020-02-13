@@ -44,8 +44,7 @@ constexpr uint32_t kBucketCount = 20000;
 constexpr uint32_t kInitialEdgeLabelCount = 500000;
 
 // Default constructor
-Isochrone::Isochrone() : shape_interval_(50.0f) {
-  Dijkstras();
+Isochrone::Isochrone() : Dijkstras(), shape_interval_(50.0f) {
 }
 
 // Destructor
@@ -66,10 +65,9 @@ void Isochrone::Clear() {
 // Construct the isotile. Use a fixed grid size. Convert time in minutes to
 // a max distance in meters based on an estimate of max average speed for
 // the travel mode.
-void Isochrone::ConstructIsoTile(
-    const bool multimodal,
-    const unsigned int max_minutes,
-    google::protobuf::RepeatedPtrField<valhalla::Location>& origin_locations) {
+void Isochrone::ConstructIsoTile(const bool multimodal,
+                                 const unsigned int max_minutes,
+                                 google::protobuf::RepeatedPtrField<valhalla::Location>& locations) {
   float max_distance;
   max_seconds_ = max_minutes * 60;
   if (multimodal) {
@@ -85,22 +83,22 @@ void Isochrone::ConstructIsoTile(
 
   // Form bounding box that's just big enough to surround all of the locations.
   // Convert to PointLL
-  PointLL center_ll(origin_locations.Get(0).ll().lng(), origin_locations.Get(0).ll().lat());
+  PointLL center_ll(locations.Get(0).ll().lng(), locations.Get(0).ll().lat());
   AABB2<PointLL> loc_bounds(center_ll.lng(), center_ll.lat(), center_ll.lng(), center_ll.lat());
 
-  for (const auto& origin : origin_locations) {
-    PointLL loc(origin.ll().lng(), origin.ll().lat());
-    loc_bounds.Expand(loc);
+  for (const auto& location : locations) {
+    PointLL ll(location.ll().lng(), location.ll().lat());
+    loc_bounds.Expand(ll);
   }
   // Find the location closest to the center.
   PointLL bounds_center = loc_bounds.Center();
   float shortest_dist = center_ll.Distance(bounds_center);
-  for (const auto& origin : origin_locations) {
-    PointLL loc(origin.ll().lng(), origin.ll().lat());
-    float current_dist = loc.Distance(bounds_center);
+  for (const auto& location : locations) {
+    PointLL ll(location.ll().lng(), location.ll().lat());
+    float current_dist = ll.Distance(bounds_center);
     if (current_dist < shortest_dist) {
       shortest_dist = current_dist;
-      center_ll = loc;
+      center_ll = ll;
     }
   }
 
@@ -146,6 +144,12 @@ void Isochrone::ConstructIsoTile(
              std::to_string(center_ll.lat() - grid_center.lat()) + "," +
              std::to_string(center_ll.lng() - grid_center.lng()));
   }
+
+  // initialize the time at these locations
+  for (const auto& location : locations) {
+    PointLL ll(location.ll().lng(), location.ll().lat());
+    isotile_->Set(ll, 0);
+  }
 }
 
 // Compute iso-tile that we can use to generate isochrones.
@@ -159,11 +163,10 @@ Isochrone::Compute(google::protobuf::RepeatedPtrField<valhalla::Location>& origi
   // Initialize and create the isotile
   max_seconds_ = max_minutes * 60;
   ConstructIsoTile(false, max_minutes, origin_locations);
-  uint32_t n = 0; // TODO What is/was this used for
 
   Dijkstras::Compute(origin_locations, graphreader, mode_costing, mode);
 
-  return isotile_; // Should never get here
+  return isotile_;
 }
 
 // Compute iso-tile that we can use to generate isochrones.
@@ -292,55 +295,29 @@ void Isochrone::UpdateIsoTile(const EdgeLabel& pred,
   }
 }
 
-// Virtual function called when expanding a node
-//
-// Children can implement this to customize behaviour
+// here we mark the cells of the isochrone along the edge we just reached up to its end node
 void Isochrone::ExpandingNode(baldr::GraphReader& graphreader,
-                              const sif::EdgeLabel& pred,
-                              const ExpandingNodeMiscInfo& info) {
+                              const sif::EdgeLabel& current,
+                              const midgard::PointLL& node_ll,
+                              const sif::EdgeLabel* previous) {
+  // Update the isotile
+  float secs0 = previous ? previous->cost().secs : 0;
+  UpdateIsoTile(current, graphreader, node_ll, secs0);
+}
 
-  const GraphTile* tile = graphreader.GetGraphTile(pred.endnode());
-  if (tile == nullptr) {
-    return;
-  }
-  const PointLL ll = tile->get_node_ll(pred.endnode());
-
-  if (info.edge_type == InfoEdgeType::origin || info.edge_type == InfoEdgeType::destination) {
-    // Use pred to get endnode and it's location
-
-    float time = 0.; // Set time at the lat, lon grid to 0
-    isotile_->Set(ll, time);
-  } else {
-    // Update the isotile
-    uint32_t idx = pred.predecessor();
-
-    float secs0;
-
-    // TODO this case is ugly, can it be simplified?
-    if (info.routing_type == InfoRoutingType::multi_modal) {
-      secs0 = (idx == kInvalidLabel) ? 0 : mmedgelabels_[idx].cost().secs;
-    } else {
-      secs0 = (idx == kInvalidLabel) ? 0 : bdedgelabels_[idx].cost().secs;
-    }
-    UpdateIsoTile(pred, graphreader, ll, secs0);
-  }
-};
-
-RouteCallbackRecommendedAction
-Isochrone::RouteCallbackDecideAction(baldr::GraphReader& graphreader,
-                                     const sif::EdgeLabel& pred,
-                                     const InfoRoutingType route_type) {
+ExpansionRecommendation Isochrone::ShouldExpand(baldr::GraphReader& graphreader,
+                                                const sif::EdgeLabel& pred,
+                                                const InfoRoutingType route_type) {
   if (route_type == InfoRoutingType::multi_modal) {
     // Skip edges with large penalties (e.g. ferries?)
     if (pred.cost().cost > max_seconds_ * 2) {
-      return RouteCallbackRecommendedAction::skip_expansion;
+      return ExpansionRecommendation::prune_expansion;
     }
   }
   if (pred.cost().secs > max_seconds_ || pred.cost().cost > max_seconds_ * 4) {
-    LOG_DEBUG("Exceed time interval: n = " + std::to_string(n));
-    return RouteCallbackRecommendedAction::stop_expansion;
+    return ExpansionRecommendation::stop_expansion;
   }
-  return RouteCallbackRecommendedAction::no_action;
+  return ExpansionRecommendation::continue_expansion;
 };
 
 } // namespace thor

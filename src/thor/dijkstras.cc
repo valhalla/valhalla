@@ -155,16 +155,13 @@ void Dijkstras::ExpandForward(GraphReader& graphreader,
     return;
   }
 
-  std::cout << "EXPAND NODE: " << std::to_string(node) << std::endl;
-
   // Get the nodeinfo
   const NodeInfo* nodeinfo = tile->node(node);
 
-  if (nodeinfo) {
-    ExpandingNode(graphreader, pred,
-                  ExpandingNodeMiscInfo{InfoEdgeType::regular, InfoRoutingType::bidirectional,
-                                        from_transition});
-  }
+  // Let implementing class we are expanding from here
+  EdgeLabel* prev_pred =
+      pred.predecessor() == kInvalidLabel ? nullptr : &bdedgelabels_[pred.predecessor()];
+  ExpandingNode(graphreader, pred, tile->get_node_ll(node), prev_pred);
 
   // Bail if we cant expand from here
   if (!costing_->Allowed(nodeinfo)) {
@@ -277,7 +274,8 @@ void Dijkstras::Compute(google::protobuf::RepeatedPtrField<valhalla::Location>& 
   std::tie(start_time, start_seconds_of_week) = SetTime(origin_locations, node_id, graphreader);
 
   // Compute the isotile
-  while (true) {
+  auto cb_decision = ExpansionRecommendation::continue_expansion;
+  while (cb_decision != ExpansionRecommendation::stop_expansion) {
     // Get next element from adjacency list. Check that it is valid. An
     // invalid label indicates there are no edges that can be expanded.
     uint32_t predindex = adjacencylist_->pop();
@@ -296,17 +294,12 @@ void Dijkstras::Compute(google::protobuf::RepeatedPtrField<valhalla::Location>& 
       seconds_of_week -= midgard::kSecondsPerWeek;
     }
 
-    auto cb_decision = RouteCallbackDecideAction(graphreader, pred, InfoRoutingType::forward);
-    if (cb_decision == RouteCallbackRecommendedAction::skip_expansion) {
-      continue;
-    } else if (cb_decision == RouteCallbackRecommendedAction::stop_expansion) {
-      return;
+    // Check if we should stop
+    cb_decision = ShouldExpand(graphreader, pred, InfoRoutingType::forward);
+    if (cb_decision != ExpansionRecommendation::prune_expansion) {
+      // Expand from the end node in forward direction.
+      ExpandForward(graphreader, pred.endnode(), pred, predindex, false, localtime, seconds_of_week);
     }
-
-    // Expand from the end node in forward direction.
-    ExpandForward(graphreader, pred.endnode(), pred, predindex, false, localtime, seconds_of_week);
-
-    // TODO: need a way to stop the expansion
   }
 }
 
@@ -329,7 +322,10 @@ void Dijkstras::ExpandReverse(GraphReader& graphreader,
   // Get the nodeinfo
   const NodeInfo* nodeinfo = tile->node(node);
 
-  // TODO: inform someone that we expanded to this node
+  // Let implementing class we are expanding from here
+  EdgeLabel* prev_pred =
+      pred.predecessor() == kInvalidLabel ? nullptr : &bdedgelabels_[pred.predecessor()];
+  ExpandingNode(graphreader, pred, tile->get_node_ll(node), prev_pred);
 
   // Bail if we cant expand from here
   if (!costing_->Allowed(nodeinfo)) {
@@ -445,7 +441,8 @@ void Dijkstras::ComputeReverse(google::protobuf::RepeatedPtrField<valhalla::Loca
   std::tie(start_time, start_seconds_of_week) = SetTime(dest_locations, node_id, graphreader);
 
   // Compute the isotile
-  while (true) {
+  auto cb_decision = ExpansionRecommendation::continue_expansion;
+  while (cb_decision != ExpansionRecommendation::stop_expansion) {
     // Get next element from adjacency list. Check that it is valid. An
     // invalid label indicates there are no edges that can be expanded.
     uint32_t predindex = adjacencylist_->pop();
@@ -467,11 +464,13 @@ void Dijkstras::ComputeReverse(google::protobuf::RepeatedPtrField<valhalla::Loca
     int32_t seconds_of_week = DateTime::normalize_seconds_of_week(
         start_seconds_of_week - static_cast<uint32_t>(pred.cost().secs));
 
-    // Expand from the end node in forward direction.
-    ExpandReverse(graphreader, pred.endnode(), pred, predindex, opp_pred_edge, false, localtime,
-                  seconds_of_week);
-
-    // TODO: need a way to stop the expansion
+    // Check if we should stop
+    cb_decision = ShouldExpand(graphreader, pred, InfoRoutingType::forward);
+    if (cb_decision != ExpansionRecommendation::prune_expansion) {
+      // Expand from the end node in forward direction.
+      ExpandReverse(graphreader, pred.endnode(), pred, predindex, opp_pred_edge, false, localtime,
+                    seconds_of_week);
+    }
   }
 }
 
@@ -494,11 +493,10 @@ void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
   // Get the nodeinfo
   const NodeInfo* nodeinfo = tile->node(node);
 
-  if (nodeinfo) {
-    ExpandingNode(graphreader, pred,
-                  ExpandingNodeMiscInfo{InfoEdgeType::regular, InfoRoutingType::multi_modal,
-                                        from_transition});
-  }
+  // Let implementing class we are expanding from here
+  EdgeLabel* prev_pred =
+      pred.predecessor() == kInvalidLabel ? nullptr : &mmedgelabels_[pred.predecessor()];
+  ExpandingNode(graphreader, pred, tile->get_node_ll(node), prev_pred);
 
   // Bail if we cant expand from here
   if (!mode_costing[static_cast<uint8_t>(mode_)]->Allowed(nodeinfo)) {
@@ -652,7 +650,8 @@ void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
         // No matching departures found for this edge
         continue;
       }
-    } else {
+    } // This is not a transit edge
+    else {
       // If current mode is public transit we should only connect to
       // transit connection edges or transit edges
       if (mode_ == TravelMode::kPublicTransit) {
@@ -712,7 +711,8 @@ void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
       continue;
     }
 
-    // TODO How to do this continue in generalized Dijkstras?
+    // TODO: need to put this in the base class and let isochrones implement it
+    // TODO: can we cram it into the expansion recommendation?
     // Continue if the time interval has been met. This bus or rail line goes beyond the max
     // but need to consider others so we just continue here.
     // if (newcost.secs > max_seconds_) {
@@ -807,7 +807,8 @@ void Dijkstras::ComputeMultiModal(
 
   // Expand using adjacency list until we exceed threshold
   const GraphTile* tile;
-  while (true) {
+  auto cb_decision = ExpansionRecommendation::continue_expansion;
+  while (cb_decision != ExpansionRecommendation::stop_expansion) {
     // Get next element from adjacency list. Check that it is valid. An
     // invalid label indicates there are no edges that can be expanded.
     uint32_t predindex = adjacencylist_->pop();
@@ -819,16 +820,13 @@ void Dijkstras::ComputeMultiModal(
     MMEdgeLabel pred = mmedgelabels_[predindex];
     edgestatus_.Update(pred.edgeid(), EdgeSet::kPermanent);
 
-    auto cb_decision = RouteCallbackDecideAction(graphreader, pred, InfoRoutingType::multi_modal);
-    if (cb_decision == RouteCallbackRecommendedAction::skip_expansion) {
-      continue;
-    } else if (cb_decision == RouteCallbackRecommendedAction::stop_expansion) {
-      return;
+    // Check if we should stop
+    cb_decision = ShouldExpand(graphreader, pred, InfoRoutingType::multi_modal);
+    if (cb_decision != ExpansionRecommendation::prune_expansion) {
+      // Expand from the end node of the predecessor edge.
+      ExpandForwardMultiModal(graphreader, pred.endnode(), pred, predindex, false, pc, tc,
+                              mode_costing);
     }
-
-    // Expand from the end node of the predecessor edge.
-    ExpandForwardMultiModal(graphreader, pred.endnode(), pred, predindex, false, pc, tc,
-                            mode_costing);
   }
 }
 
@@ -892,10 +890,6 @@ void Dijkstras::SetOriginLocations(GraphReader& graphreader,
       // Add EdgeLabel to the adjacency list
       adjacencylist_->add(idx);
       edgestatus_.Set(edgeid, EdgeSet::kTemporary, idx, tile);
-
-      // TODO: inform someone we used this edge
-      ExpandingNode(graphreader, bdedgelabels_.back(),
-                    ExpandingNodeMiscInfo{InfoEdgeType::origin, InfoRoutingType::bidirectional});
     }
   }
 }
@@ -907,7 +901,6 @@ void Dijkstras::SetDestinationLocations(
     const std::shared_ptr<DynamicCost>& costing) {
   // Add edges for each location to the adjacency list
   for (auto& location : locations) {
-
     // Only skip outbound edges if we have other options
     bool has_other_edges = false;
     std::for_each(location.path_edges().begin(), location.path_edges().end(),
@@ -959,8 +952,6 @@ void Dijkstras::SetDestinationLocations(
                                  0., mode_, Cost{}, false, has_time_restrictions);
       adjacencylist_->add(idx);
       edgestatus_.Set(opp_edge_id, EdgeSet::kTemporary, idx, graphreader.GetGraphTile(opp_edge_id));
-
-      // TODO: inform someone we used this edge
     }
   }
 }
@@ -1030,9 +1021,6 @@ void Dijkstras::SetOriginLocationsMultiModal(
       // Add EdgeLabel to the adjacency list
       mmedgelabels_.push_back(std::move(edge_label));
       adjacencylist_->add(idx);
-
-      ExpandingNode(graphreader, mmedgelabels_.back(),
-                    ExpandingNodeMiscInfo{InfoEdgeType::origin, InfoRoutingType::multi_modal});
     }
   }
 }

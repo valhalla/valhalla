@@ -92,16 +92,16 @@ public:
                     const sif::TravelMode mode);
 
 protected:
-  // Virtual function called when expanding a node
-  //
-  // Children can implement this to customize behaviour
+  // A child-class must implement this to learn about what nodes were expanded
   virtual void ExpandingNode(baldr::GraphReader& graphreader,
-                             const sif::EdgeLabel& pred,
-                             const ExpandingNodeMiscInfo& info);
+                             const sif::EdgeLabel& current,
+                             const midgard::PointLL& node_ll,
+                             const sif::EdgeLabel* previous);
 
-  virtual RouteCallbackRecommendedAction RouteCallbackDecideAction(baldr::GraphReader& graphreader,
-                                                                   const sif::EdgeLabel& pred,
-                                                                   const InfoRoutingType route_type);
+  // A child-class must implement this to decide when to stop the expansion
+  virtual ExpansionRecommendation ShouldExpand(baldr::GraphReader& graphreader,
+                                               const sif::EdgeLabel& pred,
+                                               const InfoRoutingType route_type);
 
   float shape_interval_; // Interval along shape to mark time
   uint32_t max_seconds_;
@@ -112,11 +112,11 @@ protected:
    * to get to each lat,lng tile.
    * @param  multimodal  True if the route type is multimodal.
    * @param  max_minutes Maximum time (minutes) for computing isochrones.
-   * @param  origin_locations  List of origin locations.
+   * @param  locations  List of origin locations.
    */
   void ConstructIsoTile(const bool multimodal,
                         const unsigned int max_minutes,
-                        google::protobuf::RepeatedPtrField<valhalla::Location>& origin_locations);
+                        google::protobuf::RepeatedPtrField<valhalla::Location>& locations);
 
   /**
    * Expand from the node for a multi-modal path.
