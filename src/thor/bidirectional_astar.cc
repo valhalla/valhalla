@@ -227,9 +227,14 @@ inline bool BidirectionalAStar::ExpandForwardInner(GraphReader& graphreader,
   if (meta.edge_status->set() == EdgeSet::kPermanent) {
     return true; // This is an edge we _could_ have expanded, so return true
   }
+
+  const uint64_t localtime = 0; // Bidirectional is not yet time-aware
+  const uint32_t tz_index = 0;
   bool has_time_restrictions = false;
-  if (!costing_->Allowed(meta.edge, pred, tile, meta.edge_id, 0, 0, has_time_restrictions) ||
-      costing_->Restricted(meta.edge, pred, edgelabels_forward_, tile, meta.edge_id, true)) {
+  if (!costing_->Allowed(meta.edge, pred, tile, meta.edge_id, localtime, tz_index,
+                         has_time_restrictions) ||
+      costing_->Restricted(meta.edge, pred, edgelabels_forward_, tile, meta.edge_id, true,
+                           &edgestatus_forward_, localtime, tz_index)) {
     return false;
   }
 
@@ -268,7 +273,7 @@ inline bool BidirectionalAStar::ExpandForwardInner(GraphReader& graphreader,
   // Add edge label, add to the adjacency list and set edge status
   uint32_t idx = edgelabels_forward_.size();
   edgelabels_forward_.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, newcost, sortcost,
-                                   dist, mode_, transition_cost, 0,
+                                   dist, mode_, transition_cost,
                                    (pred.not_thru_pruning() || !meta.edge->not_thru()),
                                    has_time_restrictions);
 
@@ -422,10 +427,13 @@ inline bool BidirectionalAStar::ExpandReverseInner(GraphReader& graphreader,
 
   // Skip this edge if no access is allowed (based on costing method)
   // or if a complex restriction prevents transition onto this edge.
+  const uint64_t localtime = 0; // Bidirectional is not yet time-aware
+  const uint32_t tz_index = 0;
   bool has_time_restrictions = false;
-  if (!costing_->AllowedReverse(meta.edge, pred, opp_edge, t2, opp_edge_id, 0, 0,
+  if (!costing_->AllowedReverse(meta.edge, pred, opp_edge, t2, opp_edge_id, localtime, tz_index,
                                 has_time_restrictions) ||
-      costing_->Restricted(meta.edge, pred, edgelabels_reverse_, tile, meta.edge_id, false)) {
+      costing_->Restricted(meta.edge, pred, edgelabels_reverse_, tile, meta.edge_id, false,
+                           &edgestatus_reverse_, localtime, tz_index)) {
     return false;
   }
 
@@ -458,7 +466,7 @@ inline bool BidirectionalAStar::ExpandReverseInner(GraphReader& graphreader,
   // Add edge label, add to the adjacency list and set edge status
   uint32_t idx = edgelabels_reverse_.size();
   edgelabels_reverse_.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, newcost, sortcost,
-                                   dist, mode_, transition_cost, 0,
+                                   dist, mode_, transition_cost,
                                    (pred.not_thru_pruning() || !meta.edge->not_thru()),
                                    has_time_restrictions);
 
@@ -786,8 +794,8 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader, valhalla::Location&
     // to invalid to indicate the origin of the path.
     uint32_t idx = edgelabels_forward_.size();
     edgestatus_forward_.Set(edgeid, EdgeSet::kTemporary, idx, tile);
-    edgelabels_forward_.emplace_back(kInvalidLabel, edgeid, GraphId{}, directededge, cost, sortcost,
-                                     dist, mode_, Cost{}, 0, false, false);
+    edgelabels_forward_.emplace_back(kInvalidLabel, edgeid, directededge, cost, sortcost, dist, mode_,
+                                     false);
     adjacencylist_forward_->add(idx);
 
     // setting this edge as reached
@@ -865,7 +873,7 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader, const valhalla
     edgestatus_reverse_.Set(opp_edge_id, EdgeSet::kTemporary, idx,
                             graphreader.GetGraphTile(opp_edge_id));
     edgelabels_reverse_.emplace_back(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, sortcost,
-                                     dist, mode_, c, 0, false, false);
+                                     dist, mode_, c, false, false);
     adjacencylist_reverse_->add(idx);
 
     // setting this edge as settled, sending the opposing because this is the reverse tree

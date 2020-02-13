@@ -526,7 +526,7 @@ bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
     *es = {EdgeSet::kTemporary, idx};
     edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, sortcost, dist, mode_,
                              walking_distance_, tripid, prior_stop, blockid, operator_id, has_transit,
-                             transition_cost, has_time_restrictions);
+                             transition_cost);
     adjacencylist_->add(idx);
   }
 
@@ -624,15 +624,13 @@ void MultiModalPathAlgorithm::SetOrigin(GraphReader& graphreader,
 
     // Compute sortcost
     float sortcost = cost.cost + astarheuristic_.Get(dist);
-    // We don't care about time restrictions at origin
-    bool has_time_restrictions = false;
 
     // Add EdgeLabel to the adjacency list (but do not set its status).
     // Set the predecessor edge index to invalid to indicate the origin
     // of the path.
     uint32_t d = static_cast<uint32_t>(directededge->length() * (1.0f - edge.percent_along()));
     MMEdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost, sortcost, dist, mode_, d, 0,
-                           GraphId(), 0, 0, false, Cost{}, has_time_restrictions);
+                           GraphId(), 0, 0, false, Cost{});
     // Set the origin flag
     edge_label.set_origin();
 
@@ -756,7 +754,7 @@ bool MultiModalPathAlgorithm::ExpandFromNode(baldr::GraphReader& graphreader,
     // Add edge label, add to the adjacency list and set edge status
     uint32_t idx = edgelabels.size();
     edgelabels.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, 0.0f, mode_,
-                            walking_distance, transition_cost, has_time_restrictions);
+                            walking_distance, transition_cost);
     *es = {EdgeSet::kTemporary, idx};
     adjlist.add(idx);
   }

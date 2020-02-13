@@ -613,8 +613,10 @@ thor_worker_t::map_match(Api& request) {
             // we need to scale the elapsed time of the current edge to undo what FormPath did
             double begin_pct = begin_trimmed ? std::get<2>(edge_group)->distance_along : 0;
             double end_pct = end_trimmed ? std::get<3>(edge_group)->distance_along : 1;
-            double begin_edge_scale = 1.0 / ((trivial_group ? end_pct : 1) - begin_pct);
-            double end_edge_scale = 1.0 / (end_pct - (trivial_group ? begin_pct : 0));
+            double dist_from_begin = (trivial_group ? end_pct : 1) - begin_pct;
+            double dist_to_end = end_pct - (trivial_group ? begin_pct : 0);
+            double begin_edge_scale = dist_from_begin > 0 ? 1 / dist_from_begin : 0;
+            double end_edge_scale = dist_to_end > 0 ? 1 / dist_to_end : 0;
 
             // we get the time up to the last edge before this begin edge if any. we also remove
             // the turn cost at the begging of this edge if there is any

@@ -189,11 +189,13 @@ inline bool TimeDepReverse::ExpandReverseInner(GraphReader& graphreader,
 
   // Skip shortcut edges for time dependent routes. Also skip this edge if permanently labeled (best
   // path already found to this directed edge) or if no access for this mode.
-  if (meta.edge->is_shortcut() || meta.edge_status->set() == EdgeSet::kPermanent) {
+  if (meta.edge->is_shortcut() || !(meta.edge->reverseaccess() & access_mode_)) {
     return false;
   }
-  if (!(meta.edge->reverseaccess() & access_mode_)) {
-    return false;
+  // Skip this edge if permanently labeled (best path already found to this
+  // directed edge)
+  if (meta.edge_status->set() == EdgeSet::kPermanent) {
+    return true; // This is an edge we _could_ have expanded, so return true
   }
 
   // Get end node tile, opposing edge Id, and opposing directed edge.
@@ -210,8 +212,8 @@ inline bool TimeDepReverse::ExpandReverseInner(GraphReader& graphreader,
   bool has_time_restrictions = false;
   if (!costing_->AllowedReverse(meta.edge, pred, opp_edge, t2, oppedge, localtime,
                                 nodeinfo->timezone(), has_time_restrictions) ||
-      costing_->Restricted(meta.edge, pred, edgelabels_rev_, tile, meta.edge_id, false, localtime,
-                           nodeinfo->timezone())) {
+      costing_->Restricted(meta.edge, pred, edgelabels_rev_, tile, meta.edge_id, false, &edgestatus_,
+                           localtime, nodeinfo->timezone())) {
     return false;
   }
 
@@ -280,7 +282,7 @@ inline bool TimeDepReverse::ExpandReverseInner(GraphReader& graphreader,
   // Add edge label, add to the adjacency list and set edge status
   uint32_t idx = edgelabels_rev_.size();
   edgelabels_rev_.emplace_back(pred_idx, meta.edge_id, oppedge, meta.edge, newcost, sortcost, dist,
-                               mode_, transition_cost, 0,
+                               mode_, transition_cost,
                                (pred.not_thru_pruning() || !meta.edge->not_thru()),
                                has_time_restrictions);
   adjacencylist_->add(idx);
@@ -536,7 +538,7 @@ void TimeDepReverse::SetOrigin(GraphReader& graphreader,
     // DO NOT SET EdgeStatus - it messes up trivial paths with oneways
     uint32_t idx = edgelabels_rev_.size();
     edgelabels_rev_.emplace_back(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, sortcost,
-                                 dist, mode_, c, 0, false, false);
+                                 dist, mode_, c, false, false);
     adjacencylist_->add(idx);
 
     // Set the initial not_thru flag to false. There is an issue with not_thru

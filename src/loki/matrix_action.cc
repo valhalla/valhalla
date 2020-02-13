@@ -93,13 +93,13 @@ void loki_worker_t::matrix(Api& request) {
 
   if (costing_name == "multimodal") {
     throw valhalla_exception_t{140, Options_Action_Enum_Name(options.action())};
-  }
+  };
 
   // check that location size does not exceed max.
   auto max = max_matrix_locations.find(costing_name)->second;
   if (options.sources_size() > max || options.targets_size() > max) {
     throw valhalla_exception_t{150, std::to_string(max)};
-  }
+  };
 
   // check the distances
   auto max_location_distance = std::numeric_limits<float>::min();

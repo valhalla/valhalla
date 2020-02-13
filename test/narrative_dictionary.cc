@@ -614,22 +614,22 @@ TEST(NarrativeDictionary, test_en_US_turn_verbal) {
 TEST(NarrativeDictionary, test_en_US_sharp) {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
-  // "0": "Turn sharp <RELATIVE_DIRECTION>.",
+  // "0": "Make a sharp <RELATIVE_DIRECTION>.",
   const auto& phrase_0 = dictionary.sharp_subset.phrases.at("0");
-  validate(phrase_0, "Turn sharp <RELATIVE_DIRECTION>.");
+  validate(phrase_0, "Make a sharp <RELATIVE_DIRECTION>.");
 
-  // "1": "Turn sharp <RELATIVE_DIRECTION> onto <STREET_NAMES>.",
+  // "1": "Make a sharp <RELATIVE_DIRECTION> onto <STREET_NAMES>.",
   const auto& phrase_1 = dictionary.sharp_subset.phrases.at("1");
-  validate(phrase_1, "Turn sharp <RELATIVE_DIRECTION> onto <STREET_NAMES>.");
+  validate(phrase_1, "Make a sharp <RELATIVE_DIRECTION> onto <STREET_NAMES>.");
 
-  // "2": "Turn sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
+  // "2": "Make a sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
   const auto& phrase_2 = dictionary.sharp_subset.phrases.at("2");
   validate(phrase_2,
-           "Turn sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.");
+           "Make a sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.");
 
-  // "3": "Turn sharp <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
+  // "3": "Make a sharp <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
   const auto& phrase_3 = dictionary.sharp_subset.phrases.at("3");
-  validate(phrase_3, "Turn sharp <RELATIVE_DIRECTION> to stay on <STREET_NAMES>.");
+  validate(phrase_3, "Make a sharp <RELATIVE_DIRECTION> to stay on <STREET_NAMES>.");
 
   // relative_directions
   const auto& relative_directions = dictionary.sharp_subset.relative_directions;
@@ -643,21 +643,21 @@ TEST(NarrativeDictionary, test_en_US_sharp) {
 TEST(NarrativeDictionary, test_en_US_sharp_verbal) {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
-  // "0": "Turn sharp <RELATIVE_DIRECTION>.",
+  // "0": "Make a sharp <RELATIVE_DIRECTION>.",
   const auto& phrase_0 = dictionary.sharp_verbal_subset.phrases.at("0");
-  validate(phrase_0, "Turn sharp <RELATIVE_DIRECTION>.");
+  validate(phrase_0, "Make a sharp <RELATIVE_DIRECTION>.");
 
-  // "1": "Turn sharp <RELATIVE_DIRECTION> onto <STREET_NAMES>.",
+  // "1": "Make a sharp <RELATIVE_DIRECTION> onto <STREET_NAMES>.",
   const auto& phrase_1 = dictionary.sharp_verbal_subset.phrases.at("1");
-  validate(phrase_1, "Turn sharp <RELATIVE_DIRECTION> onto <STREET_NAMES>.");
+  validate(phrase_1, "Make a sharp <RELATIVE_DIRECTION> onto <STREET_NAMES>.");
 
-  // "2": "Turn sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>.",
+  // "2": "Make a sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>.",
   const auto& phrase_2 = dictionary.sharp_verbal_subset.phrases.at("2");
-  validate(phrase_2, "Turn sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>.");
+  validate(phrase_2, "Make a sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>.");
 
-  // "3": "Turn sharp <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
+  // "3": "Make a sharp <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
   const auto& phrase_3 = dictionary.sharp_verbal_subset.phrases.at("3");
-  validate(phrase_3, "Turn sharp <RELATIVE_DIRECTION> to stay on <STREET_NAMES>.");
+  validate(phrase_3, "Make a sharp <RELATIVE_DIRECTION> to stay on <STREET_NAMES>.");
 
   // relative_directions
   const auto& relative_directions = dictionary.sharp_verbal_subset.relative_directions;

@@ -51,7 +51,6 @@ public:
             const uint32_t path_distance,
             const Cost& transition_cost,
             bool has_time_restrictions = false)
-      //: EdgeLabel(predecessor, edgeid, edge, cost, sortcost, dist, mode, 0, has_time_restrictions),
       : predecessor_(predecessor), path_distance_(path_distance), restrictions_(edge->restrictions()),
         edgeid_(edgeid), opp_index_(edge->opp_index()), opp_local_idx_(edge->opp_local_idx()),
         mode_(static_cast<uint32_t>(mode)), endnode_(edge->endnode()),
@@ -417,13 +416,15 @@ public:
    * @param predecessor  Index into the edge label list for the predecessor
    *                     directed edge in the shortest path.
    * @param edgeid       Directed edge Id.
+   * @param oppedgeid    Opposing directed edge Id.
    * @param edge         Directed edge.
    * @param cost         True cost (cost and time in seconds) to the edge.
-   * @param sortcost     Cost for sorting (includes A* heuristic).
+   * @param sortcost     Cost for sorting (includes A* heuristic)n
    * @param dist         Distance to the destination in meters.
    * @param mode         Mode of travel along this edge.
+   * @param tc           Transition cost entering this edge.
+   * @param not_thru_pruning  Is not thru pruning enabled.
    */
-  // 12(8) PARAM
   BDEdgeLabel(const uint32_t predecessor,
               const baldr::GraphId& edgeid,
               const baldr::GraphId& oppedgeid,
@@ -433,7 +434,6 @@ public:
               const float dist,
               const sif::TravelMode mode,
               const sif::Cost& transition_cost,
-              const uint32_t path_distance,
               const bool not_thru_pruning,
               const bool has_time_restrictions)
       : EdgeLabel(predecessor,
@@ -446,11 +446,77 @@ public:
                   0,
                   transition_cost,
                   has_time_restrictions),
+        opp_edgeid_(oppedgeid), not_thru_pruning_(not_thru_pruning) {
+  }
+
+  /**
+   * Constructor with values. Sets sortcost to the true cost.
+   * Used with CostMatrix (no heuristic/distance to destination).
+   * @param predecessor  Index into the edge label list for the predecessor
+   *                       directed edge in the shortest path.
+   * @param edgeid        Directed edge.
+   * @param oppedgeid     Opposing directed edge Id.
+   * @param edge          End node of the directed edge.
+   * @param cost          True cost (cost and time in seconds) to the edge.
+   * @param mode          Mode of travel along this edge.
+   * @param tc            Transition cost entering this edge.
+   * @param path_distance Accumulated path distance.
+   * @param not_thru_pruning  Is not thru pruning enabled.
+   */
+  BDEdgeLabel(const uint32_t predecessor,
+              const baldr::GraphId& edgeid,
+              const baldr::GraphId& oppedgeid,
+              const baldr::DirectedEdge* edge,
+              const sif::Cost& cost,
+              const sif::TravelMode mode,
+              const sif::Cost& transition_cost,
+              const uint32_t path_distance,
+              const bool not_thru_pruning,
+              const bool has_time_restrictions)
+      : EdgeLabel(predecessor,
+                  edgeid,
+                  edge,
+                  cost,
+                  cost.cost,
+                  0,
+                  mode,
+                  path_distance,
+                  transition_cost,
+                  has_time_restrictions),
+        opp_edgeid_(oppedgeid), not_thru_pruning_(not_thru_pruning) {
+  }
+
+  /**
+   * Constructor with values.
+   * @param predecessor  Index into the edge label list for the predecessor
+   *                     directed edge in the shortest path.
+   * @param edgeid       Directed edge Id.
+   * @param edge         Directed edge.
+   * @param cost         True cost (cost and time in seconds) to the edge.
+   * @param sortcost     Cost for sorting (includes A* heuristic).
+   * @param dist         Distance to the destination in meters.
+   * @param mode         Mode of travel along this edge.
+   */
+  BDEdgeLabel(const uint32_t predecessor,
+              const baldr::GraphId& edgeid,
+              const baldr::DirectedEdge* edge,
+              const sif::Cost& cost,
+              const float sortcost,
+              const float dist,
+              const sif::TravelMode mode,
+              const bool has_time_restrictions)
+      : EdgeLabel(predecessor,
+                  edgeid,
+                  edge,
+                  cost,
+                  sortcost,
+                  dist,
+                  mode,
+                  0,
+                  Cost{},
+                  has_time_restrictions),
         not_thru_pruning_(false) {
-    opp_edgeid_ = oppedgeid;
-    path_distance_ = path_distance;
-    not_thru_pruning_ = not_thru_pruning;
-    has_time_restrictions_ = has_time_restrictions;
+    opp_edgeid_ = {};
   }
 
   /**
@@ -541,7 +607,6 @@ public:
    * @param transit_operator Transit operator - index into an internal map
    * @param has_transit   Does the path to this edge have any transit.
    */
-  // 14 PARAM
   MMEdgeLabel(const uint32_t predecessor,
               const baldr::GraphId& edgeid,
               const baldr::DirectedEdge* edge,
@@ -556,7 +621,7 @@ public:
               const uint32_t transit_operator,
               const bool has_transit,
               const Cost& transition_cost,
-              const bool has_time_restrictions)
+              const bool has_time_restrictions = false)
       : EdgeLabel(predecessor,
                   edgeid,
                   edge,
