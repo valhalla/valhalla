@@ -217,50 +217,54 @@ void make_tile() {
   // Third set of roads - Complex restriction with detour
   add_edge(node::h, node::i, 14, 0, true);
   {
-    // Add second part of complex turn restriction CLOCKWISE direction
-    // preventing turn from 14 -> 18
+    // we only set this to true for vias
     tile.directededges().back().complex_restriction(true);
-    ComplexRestrictionBuilder complex_restr_edge_14_18;
-    // TODO I switched set_to with set_from after looking at
-    // implementation of GraphTile::GetRestrictions but it sounds backwards to me...
-    complex_restr_edge_14_18.set_to_id(make_graph_id(14));
-    complex_restr_edge_14_18.set_from_id(make_graph_id(18));
-    complex_restr_edge_14_18.set_modes(kAllAccess);
-    std::vector<GraphId> vias;
-    vias.push_back(make_graph_id(14));
-    vias.push_back(make_graph_id(21));
-    complex_restr_edge_14_18.set_via_list(vias);
-    tile.AddForwardComplexRestriction(complex_restr_edge_14_18);
-    tile.AddReverseComplexRestriction(complex_restr_edge_14_18);
   }
   add_edge(node::h, node::k, 15, 0, true);
   {
-    // Add first part of complex turn restriction COUNTER-CLOCKWISE direction
-    // preventing turn from 16 -> 15
-    tile.directededges().back().set_start_restriction(kAutoAccess);
-    tile.directededges().back().complex_restriction(true);
-    ComplexRestrictionBuilder complex_restr_edge_16_15;
-    complex_restr_edge_16_15.set_from_id(make_graph_id(16));
-    complex_restr_edge_16_15.set_to_id(make_graph_id(15));
-    complex_restr_edge_16_15.set_modes(kAllAccess);
-    tile.AddForwardComplexRestriction(complex_restr_edge_16_15);
-    tile.AddReverseComplexRestriction(complex_restr_edge_16_15);
+    // preventing turn from 22 -> 16 -> 15  in the reverse direction
+    // in regards to bi-directional.  Forget about is the edge is
+    // oneway or not
+    //
+    // when we are an end of a restriction we set the modes that
+    // this restriction applies to.
+    tile.directededges().back().set_end_restriction(kAllAccess);
+    ComplexRestrictionBuilder complex_restr_edge_22_16_15;
+    complex_restr_edge_22_16_15.set_type(RestrictionType::kNoEntry);
+    complex_restr_edge_22_16_15.set_to_id(make_graph_id(22));
+    complex_restr_edge_22_16_15.set_from_id(make_graph_id(15));
+    std::vector<GraphId> vias;
+    vias.push_back(make_graph_id(16));
+    complex_restr_edge_22_16_15.set_via_list(vias);
+    complex_restr_edge_22_16_15.set_modes(kAllAccess);
+    tile.AddReverseComplexRestriction(complex_restr_edge_22_16_15);
   }
   add_node(node::h, 2);
 
   add_edge(node::i, node::h, 16, 0, false);
+  {
+    // we only set this to true for vias
+    tile.directededges().back().complex_restriction(true);
+  }
   add_edge(node::i, node::j, 17, 0, true);
   add_edge(node::i, node::l, 18, 0, true);
   {
-    // Add second part of complex turn restriction CLOCKWISE direction
-    // preventing turn from 14 -> 18
-    tile.directededges().back().set_end_restriction(kAutoAccess);
-    ComplexRestrictionBuilder complex_restr_edge_14_18;
-    complex_restr_edge_14_18.set_from_id(make_graph_id(14));
-    complex_restr_edge_14_18.set_to_id(make_graph_id(18));
-    complex_restr_edge_14_18.set_modes(kAllAccess);
-    tile.AddForwardComplexRestriction(complex_restr_edge_14_18);
-    tile.AddReverseComplexRestriction(complex_restr_edge_14_18);
+    // preventing turn from 21 -> 14 -> 18 in the reverse direction
+    // in regards to bi-directional.  Forget about is the edge is
+    // oneway or not
+    //
+    // when we are the end of a restriction we set the modes that
+    // this restriction applies to.
+    tile.directededges().back().set_end_restriction(kAllAccess);
+    ComplexRestrictionBuilder complex_restr_edge_21_14;
+    complex_restr_edge_21_14.set_type(RestrictionType::kNoEntry);
+    complex_restr_edge_21_14.set_to_id(make_graph_id(21));
+    complex_restr_edge_21_14.set_from_id(make_graph_id(18));
+    std::vector<GraphId> vias;
+    vias.push_back(make_graph_id(14));
+    complex_restr_edge_21_14.set_via_list(vias);
+    complex_restr_edge_21_14.set_modes(kAllAccess);
+    tile.AddReverseComplexRestriction(complex_restr_edge_21_14);
   }
   add_node(node::i, 3);
 
@@ -271,37 +275,42 @@ void make_tile() {
   add_edge(node::k, node::h, 21, 1, false);
   {
     // Add first part of complex turn restriction CLOCKWISE direction
-    // preventing turn from 21 -> 14
+    // preventing turn from 21 -> 14 -> 18
+    //
+    // when we are the start of a restriction we set the modes that
+    // this restriction applies to.
     tile.directededges().back().set_start_restriction(kAllAccess);
-    tile.directededges().back().complex_restriction(true);
     ComplexRestrictionBuilder complex_restr_edge_21_14;
-    // TODO I switched set_to with set_from after looking at
-    // implementation of GraphTile::GetRestrictions but it sounds backwards to me...
-    complex_restr_edge_21_14.set_to_id(make_graph_id(21));
-    complex_restr_edge_21_14.set_from_id(make_graph_id(14));
+    complex_restr_edge_21_14.set_type(RestrictionType::kNoEntry);
+    complex_restr_edge_21_14.set_to_id(make_graph_id(18));
+    complex_restr_edge_21_14.set_from_id(make_graph_id(21));
     std::vector<GraphId> vias;
     vias.push_back(make_graph_id(14));
-    vias.push_back(make_graph_id(18));
     complex_restr_edge_21_14.set_via_list(vias);
     complex_restr_edge_21_14.set_modes(kAllAccess);
     tile.AddForwardComplexRestriction(complex_restr_edge_21_14);
-    tile.AddReverseComplexRestriction(complex_restr_edge_21_14);
   }
   add_node(node::k, 1);
 
   add_edge(node::l, node::i, 22, 2, false);
   {
-    // Add second part of complex turn restriction COUNTER-CLOCKWISE direction
-    // preventing turn from 22 -> 16
-    tile.directededges().back().set_start_restriction(kAutoAccess);
-    tile.directededges().back().complex_restriction(true);
-    ComplexRestrictionBuilder complex_restr_edge_22_16;
-    complex_restr_edge_22_16.set_from_id(make_graph_id(22));
-    complex_restr_edge_22_16.set_to_id(make_graph_id(16));
-    complex_restr_edge_22_16.set_modes(kAllAccess);
-    tile.AddForwardComplexRestriction(complex_restr_edge_22_16);
-    tile.AddReverseComplexRestriction(complex_restr_edge_22_16);
+    // Add complex turn restriction COUNTER CLOCKWISE direction
+    // preventing turn from 22 -> 16 -> 15
+    //
+    // when we are the start of a restriction we set the modes that
+    // this restriction applies to.
+    tile.directededges().back().set_start_restriction(kAllAccess);
+    ComplexRestrictionBuilder complex_restr_edge_22_16_15;
+    complex_restr_edge_22_16_15.set_type(RestrictionType::kNoEntry);
+    complex_restr_edge_22_16_15.set_to_id(make_graph_id(15));
+    complex_restr_edge_22_16_15.set_from_id(make_graph_id(22));
+    std::vector<GraphId> vias;
+    vias.push_back(make_graph_id(16));
+    complex_restr_edge_22_16_15.set_via_list(vias);
+    complex_restr_edge_22_16_15.set_modes(kAllAccess);
+    tile.AddForwardComplexRestriction(complex_restr_edge_22_16_15);
   }
+
   add_edge(node::l, node::m, 23, 0, true);
   add_node(node::l, 2);
 
@@ -1539,52 +1548,93 @@ TEST(ComplexRestriction, WalkVias) {
   // TODO Future improvement would be to make it simpler to quickly generate
   // tiles programmatically
   auto reader = get_graph_reader(test_dir);
+  std::vector<GraphId> expected_vias;
+  expected_vias.push_back(make_graph_id(14));
+
+  Options options;
+  create_costing_options(options);
+  auto costing = vs::CreateAutoCost(Costing::auto_, options);
+
+  bool is_forward = true;
+  auto* tile = reader->GetGraphTile(tile_id);
+  auto restrictions = tile->GetRestrictions(is_forward, make_graph_id(18), costing->access_mode());
+  ASSERT_EQ(restrictions.size(), 1);
+
+  const auto cr = restrictions[0];
+
   {
-    // Walk some of the vias and exit early
-    std::vector<GraphId> expected_vias;
-    expected_vias.push_back(make_graph_id(14));
-    expected_vias.push_back(make_graph_id(18));
-
-    Options options;
-    create_costing_options(options);
-    auto costing = vs::CreateAutoCost(Costing::auto_, options);
-
-    bool is_forward = true;
-    auto* tile = reader->GetGraphTile(tile_id);
-    auto restrictions = tile->GetRestrictions(is_forward, make_graph_id(21), costing->access_mode());
-    ASSERT_EQ(restrictions.size(), 1);
-
-    const auto cr = restrictions[0];
-
-    {
-      // Walk all vias
-      std::vector<GraphId> walked_vias;
-      cr->WalkVias([&walked_vias](const GraphId* via) {
-        walked_vias.push_back(*via);
-        return WalkingVia::KeepWalking;
-      });
-      EXPECT_EQ(walked_vias, expected_vias) << "Did not walk expected vias";
-    }
-
-    {
-      // Walk subset of vias
-      std::vector<GraphId> walked_vias;
-      cr->WalkVias([&walked_vias](const GraphId* via) {
-        walked_vias.push_back(*via);
-        if (via->id() == 14) {
-          LOG_INFO("Stopped walking early");
-          return WalkingVia::StopWalking;
-        } else {
-          return WalkingVia::KeepWalking;
-        }
-      });
-
-      std::vector<GraphId> expected_subset;
-      expected_subset.push_back(make_graph_id(14));
-      EXPECT_EQ(walked_vias, expected_subset) << "Did not walk the expected subset of vias";
-    }
+    // Walk all vias
+    std::vector<GraphId> walked_vias;
+    cr->WalkVias([&walked_vias](const GraphId* via) {
+      walked_vias.push_back(*via);
+      return WalkingVia::KeepWalking;
+    });
+    EXPECT_EQ(walked_vias, expected_vias) << "Did not walk expected vias";
   }
 }
+
+TEST(ComplexRestriction, CheckPatchPathForRestrictions) {
+  std::vector<GraphId> patch_path;
+  const int length_patch_path = 10;
+  for (uint32_t id = 0; id < length_patch_path; ++id) {
+    patch_path.push_back(GraphId(0, 0, id));
+  }
+
+  {
+    std::vector<std::vector<GraphId>> list_of_restrictions;
+    {
+      // Test with restriction out of order
+      std::vector<GraphId> restr;
+      restr.push_back(GraphId(0, 0, 2));
+      restr.push_back(GraphId(0, 0, 3));
+      restr.push_back(GraphId(0, 0, 1)); // Out of order, should mean no match
+      list_of_restrictions.push_back(restr);
+    }
+    EXPECT_FALSE(vt::CheckPatchPathForRestrictions(patch_path, list_of_restrictions));
+    {
+      // Test a positive, a matching restriction
+      std::vector<GraphId> restr;
+      restr.push_back(GraphId(0, 0, 2));
+      restr.push_back(GraphId(0, 0, 3));
+      restr.push_back(GraphId(0, 0, 4)); // Out of order, should mean no match
+      list_of_restrictions.push_back(restr);
+    }
+    EXPECT_TRUE(vt::CheckPatchPathForRestrictions(patch_path, list_of_restrictions));
+  }
+  {
+    std::vector<std::vector<GraphId>> list_of_restrictions;
+
+    {
+      // Test a restriction that goes outside the patch_path
+      std::vector<GraphId> restr;
+      for (uint32_t id = length_patch_path - 2; id < length_patch_path + 2; ++id) {
+        restr.push_back(GraphId(0, 0, id));
+      }
+      list_of_restrictions.push_back(restr);
+    }
+    EXPECT_FALSE(vt::CheckPatchPathForRestrictions(patch_path, list_of_restrictions));
+    {
+      // Test a restriction overlaying beginning
+      std::vector<GraphId> restr;
+      restr.push_back(GraphId(0, 0, 20));
+      restr.push_back(GraphId(0, 0, 0));
+      restr.push_back(GraphId(0, 0, 1));
+      list_of_restrictions.push_back(restr);
+    }
+    EXPECT_FALSE(vt::CheckPatchPathForRestrictions(patch_path, list_of_restrictions));
+  }
+  {
+    std::vector<std::vector<GraphId>> list_of_restrictions;
+    {
+      // Test single edge restriction
+      std::vector<GraphId> restr;
+      restr.push_back(GraphId(0, 0, 2));
+      list_of_restrictions.push_back(restr);
+    }
+    EXPECT_TRUE(vt::CheckPatchPathForRestrictions(patch_path, list_of_restrictions));
+  }
+}
+
 class AstarTestEnv : public ::testing::Environment {
 public:
   void SetUp() override {
