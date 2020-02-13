@@ -155,6 +155,8 @@ void Dijkstras::ExpandForward(GraphReader& graphreader,
     return;
   }
 
+  std::cout << "EXPAND NODE: " << std::to_string(node) << std::endl;
+
   // Get the nodeinfo
   const NodeInfo* nodeinfo = tile->node(node);
 
