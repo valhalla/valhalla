@@ -416,8 +416,8 @@ resample_polyline(const std::vector<PointLL>& polyline, const float length, cons
  * @return Returns a vector of resampled points.
  */
 std::vector<PointLL> uniform_resample_spherical_polyline(const std::vector<PointLL>& polyline,
-                                                 const double length,
-                                                 const uint32_t n);
+                                                         const double length,
+                                                         const uint32_t n);
 
 /**
  * A class to wrap a primitive array in something iterable which is useful for loops mostly

@@ -238,7 +238,7 @@ std::ostream& operator<<(std::ostream& stream, const memory_status& s) {
 
 /* This method makes use of several computations explained and demonstrated at:
  *   http://williams.best.vwh.net/avform.htm (reference no longer active)
- * New Reference: 
+ * New Reference:
  *   http://www.movable-type.co.uk/scripts/latlong.html
  */
 template <class container_t>
@@ -317,12 +317,12 @@ resample_spherical_polyline<std::list<Point2>>(const std::list<Point2>&, double,
  * is exactly produced.
  * This method makes use of several computations explained and demonstrated at:
  *   http://williams.best.vwh.net/avform.htm (reference no longer active)
- * New Reference: 
+ * New Reference:
  *   http://www.movable-type.co.uk/scripts/latlong.html
  */
 std::vector<PointLL> uniform_resample_spherical_polyline(const std::vector<PointLL>& polyline,
-                                                 const double length,
-                                                 const uint32_t n) {
+                                                         const double length,
+                                                         const uint32_t n) {
   if (polyline.size() == 0) {
     return {};
   }
@@ -342,9 +342,9 @@ std::vector<PointLL> uniform_resample_spherical_polyline(const std::vector<Point
     auto lon2 = p->first * -RAD_PER_DEG;
     auto lat2 = p->second * RAD_PER_DEG;
     auto d = (last == *p) ? 0.0
-                        : acos(sin(last.second * RAD_PER_DEG) * sin(lat2) +
-                               cos(last.second * RAD_PER_DEG) * cos(lat2) *
-                                   cos(last.first * -RAD_PER_DEG - lon2));
+                          : acos(sin(last.second * RAD_PER_DEG) * sin(lat2) +
+                                 cos(last.second * RAD_PER_DEG) * cos(lat2) *
+                                     cos(last.first * -RAD_PER_DEG - lon2));
 
     // Place resampled points on this segment as long as remaining distance is < d
     while (remaining < d) {
