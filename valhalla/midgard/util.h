@@ -406,6 +406,20 @@ std::vector<PointLL>
 resample_polyline(const std::vector<PointLL>& polyline, const float length, const float resolution);
 
 /**
+ * Resample a polyline at uniform intervals using more accurate spherical interpolation between
+ * points. The length and number of samples is specified. The interval is computed based on
+ * the number of samples and the algorithm guarantees that the secified number of samples
+ * is exactly produced.
+ * @param polyline   the list/vector of points in the line
+ * @param length     Length (meters) of the polyline
+ * @param n          Number of samples (includes the first and last point)
+ * @return Returns a vector of resampled points.
+ */
+std::vector<PointLL> uniform_resample_spherical_polyline(const std::vector<PointLL>& polyline,
+                                                 const double length,
+                                                 const uint32_t n);
+
+/**
  * A class to wrap a primitive array in something iterable which is useful for loops mostly
  * Basically if you dont have a vector or list, this makes your array a bit more usable in
  * that it fakes up a container for the purpose of ripping through the array
