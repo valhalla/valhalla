@@ -1044,48 +1044,6 @@ bool IsBridgingEdgeRestricted(GraphReader& graphreader,
       break;
     }
     patch_path.push_back(next_pred.edgeid());
-
-    // Also grab restrictions while walking for later comparison against patch_path
-    //
-    const auto edgeid = next_pred.edgeid();
-    const auto tile = graphreader.GetGraphTile(edgeid);
-    const auto edge = tile->directededge(edgeid);
-    // If is_forward, check if the edge marks the beginning of a restriction, else check
-    // if the edge marks the end of a complex restriction. (opposite from DynamicCost::Restricted)
-    if ((is_forward && (edge->start_restriction() & costing->access_mode())) ||
-        (!is_forward && (edge->end_restriction() & costing->access_mode()))) {
-      std::cout << "looking for restrictions on edgeid " << edgeid.id() << " for is_forward "
-                << is_forward << std::endl;
-      auto restrictions = tile->GetRestrictions(is_forward, edgeid, costing->access_mode());
-      if (restrictions.size() == 0) {
-        // TODO Should we actually throw here? Or assert to gracefully continue in release?
-        // LOG_ERROR("Found no restrictions in tile even though edge-label.on_complex_rest() ==
-        // true");
-        throw std::logic_error(
-            "Found no restrictions in tile even though edge-label.on_complex_rest() == true");
-        // We can actually stop here if this edge is no longer path of any complex restriction
-        break;
-      }
-      for (auto cr : restrictions) {
-        // For each restriction `cr`, grab the beginning (or end) id PLUS vias
-        std::vector<GraphId> restriction_ids;
-        // We must add beginning and ending edge as well, not just the vias,
-        // to track the full restriction
-        // TODO Seems like to and from is still switched
-        restriction_ids.push_back(cr->to_graphid());
-        cr->WalkVias([&restriction_ids](const GraphId* id) {
-          restriction_ids.push_back(*id);
-          return WalkingVia::KeepWalking;
-        });
-        // We must add beginning and ending edge as well, not just the vias,
-        // to track the full restriction
-        // TODO Seems like to and from is still switched
-        restriction_ids.push_back(cr->from_graphid());
-        if (restriction_ids.size() > 0) {
-          lists_of_restriction_ids.push_back(restriction_ids);
-        }
-      }
-    }
   }
 
   // std::cout << "IsBridgingEdgeRestricted: 2 \n";
@@ -1115,6 +1073,53 @@ bool IsBridgingEdgeRestricted(GraphReader& graphreader,
     // auto edgeid = next_opp_pred.opp_edgeid();
     auto edgeid = next_opp_pred.edgeid();
     patch_path.push_back(edgeid);
+
+    // Also grab restrictions while walking for later comparison against patch_path
+    //
+    const auto tile = graphreader.GetGraphTile(edgeid);
+    const auto edge = tile->directededge(edgeid);
+    // If is_forward, check if the edge marks the end of a restriction, else check
+    // if the edge marks the start of a complex restriction.
+    if ((is_forward && (edge->end_restriction() & costing->access_mode())) ||
+        (!is_forward && (edge->start_restriction() & costing->access_mode()))) {
+      std::cout << "looking for restrictions on edgeid " << edgeid.id() << " for is_forward "
+                << is_forward << std::endl;
+      auto restrictions = tile->GetRestrictions(is_forward, edgeid, costing->access_mode());
+      if (restrictions.size() == 0) {
+        // TODO Should we actually throw here? Or assert to gracefully continue in release?
+        // LOG_ERROR("Found no restrictions in tile even though edge-label.on_complex_rest() ==
+        // true");
+        throw std::logic_error(
+            "Found no restrictions in tile even though edge-label.on_complex_rest() == true");
+        // We can actually stop here if this edge is no longer path of any complex restriction
+        break;
+      }
+      for (auto cr : restrictions) {
+        // For each restriction `cr`, grab the beginning (or end) id PLUS vias
+        std::vector<GraphId> restriction_ids;
+        // We must add beginning and ending edge as well, not just the vias,
+        // to track the full restriction
+        if (is_forward) {
+          restriction_ids.push_back(cr->from_graphid());
+        } else {
+          restriction_ids.push_back(cr->to_graphid());
+        }
+        cr->WalkVias([&restriction_ids](const GraphId* id) {
+          restriction_ids.push_back(*id);
+          return WalkingVia::KeepWalking;
+        });
+        // We must add beginning and ending edge as well, not just the vias,
+        // to track the full restriction
+        if (is_forward) {
+          restriction_ids.push_back(cr->to_graphid());
+        } else {
+          restriction_ids.push_back(cr->from_graphid());
+        }
+        if (restriction_ids.size() > 0) {
+          lists_of_restriction_ids.push_back(restriction_ids);
+        }
+      }
+    }
   }
 
   std::cout << "IsBridgingEdgeRestricted: end-of-func\npatch_path: \n";
@@ -1123,7 +1128,7 @@ bool IsBridgingEdgeRestricted(GraphReader& graphreader,
   }
   std::cout << std::endl;
   std::cout << "restriction_ids: \n";
-  for (auto restriction_ids : lists_of_restriction_ids) {
+  for (auto& restriction_ids : lists_of_restriction_ids) {
     std::cout << "new restriction\n";
     for (auto restriction_id : restriction_ids) {
       std::cout << restriction_id.id() << ", ";

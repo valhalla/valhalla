@@ -258,8 +258,9 @@ void make_tile() {
     tile.directededges().back().set_end_restriction(kAllAccess);
     ComplexRestrictionBuilder complex_restr_edge_21_14;
     complex_restr_edge_21_14.set_type(RestrictionType::kNoEntry);
-    complex_restr_edge_21_14.set_to_id(make_graph_id(21));
-    complex_restr_edge_21_14.set_from_id(make_graph_id(18));
+    // TODO DOUBLECHECK I had to switch to and from here...
+    complex_restr_edge_21_14.set_to_id(make_graph_id(18));
+    complex_restr_edge_21_14.set_from_id(make_graph_id(21));
     std::vector<GraphId> vias;
     vias.push_back(make_graph_id(14));
     complex_restr_edge_21_14.set_via_list(vias);
