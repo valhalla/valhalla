@@ -158,10 +158,13 @@ void Dijkstras::ExpandForward(GraphReader& graphreader,
   // Get the nodeinfo
   const NodeInfo* nodeinfo = tile->node(node);
 
-  // Let implementing class we are expanding from here
-  EdgeLabel* prev_pred =
-      pred.predecessor() == kInvalidLabel ? nullptr : &bdedgelabels_[pred.predecessor()];
-  ExpandingNode(graphreader, pred, tile->get_node_ll(node), prev_pred);
+  // We dont need to do transitions again we just need to queue the edges that leave them
+  if (!from_transition) {
+    // Let implementing class we are expanding from here
+    EdgeLabel* prev_pred =
+        pred.predecessor() == kInvalidLabel ? nullptr : &bdedgelabels_[pred.predecessor()];
+    ExpandingNode(graphreader, pred, tile->get_node_ll(node), prev_pred);
+  }
 
   // Bail if we cant expand from here
   if (!costing_->Allowed(nodeinfo)) {
@@ -322,10 +325,13 @@ void Dijkstras::ExpandReverse(GraphReader& graphreader,
   // Get the nodeinfo
   const NodeInfo* nodeinfo = tile->node(node);
 
-  // Let implementing class we are expanding from here
-  EdgeLabel* prev_pred =
-      pred.predecessor() == kInvalidLabel ? nullptr : &bdedgelabels_[pred.predecessor()];
-  ExpandingNode(graphreader, pred, tile->get_node_ll(node), prev_pred);
+  // We dont need to do transitions again we just need to queue the edges that leave them
+  if (!from_transition) {
+    // Let implementing class we are expanding from here
+    EdgeLabel* prev_pred =
+        pred.predecessor() == kInvalidLabel ? nullptr : &bdedgelabels_[pred.predecessor()];
+    ExpandingNode(graphreader, pred, tile->get_node_ll(node), prev_pred);
+  }
 
   // Bail if we cant expand from here
   if (!costing_->Allowed(nodeinfo)) {
@@ -493,10 +499,13 @@ void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
   // Get the nodeinfo
   const NodeInfo* nodeinfo = tile->node(node);
 
-  // Let implementing class we are expanding from here
-  EdgeLabel* prev_pred =
-      pred.predecessor() == kInvalidLabel ? nullptr : &mmedgelabels_[pred.predecessor()];
-  ExpandingNode(graphreader, pred, tile->get_node_ll(node), prev_pred);
+  // We dont need to do transitions again we just need to queue the edges that leave them
+  if (!from_transition) {
+    // Let implementing class we are expanding from here
+    EdgeLabel* prev_pred =
+        pred.predecessor() == kInvalidLabel ? nullptr : &mmedgelabels_[pred.predecessor()];
+    ExpandingNode(graphreader, pred, tile->get_node_ll(node), prev_pred);
+  }
 
   // Bail if we cant expand from here
   if (!mode_costing[static_cast<uint8_t>(mode_)]->Allowed(nodeinfo)) {
