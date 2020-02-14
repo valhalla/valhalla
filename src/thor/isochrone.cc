@@ -65,9 +65,10 @@ void Isochrone::Clear() {
 // Construct the isotile. Use a fixed grid size. Convert time in minutes to
 // a max distance in meters based on an estimate of max average speed for
 // the travel mode.
-void Isochrone::ConstructIsoTile(const bool multimodal,
-                                 const unsigned int max_minutes,
-                                 google::protobuf::RepeatedPtrField<valhalla::Location>& locations) {
+void Isochrone::ConstructIsoTile(
+    const bool multimodal,
+    const unsigned int max_minutes,
+    const google::protobuf::RepeatedPtrField<valhalla::Location>& locations) {
   float max_distance;
   max_seconds_ = max_minutes * 60;
   if (multimodal) {

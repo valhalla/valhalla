@@ -116,7 +116,7 @@ protected:
    */
   void ConstructIsoTile(const bool multimodal,
                         const unsigned int max_minutes,
-                        google::protobuf::RepeatedPtrField<valhalla::Location>& locations);
+                        const google::protobuf::RepeatedPtrField<valhalla::Location>& locations);
 
   /**
    * Expand from the node for a multi-modal path.
