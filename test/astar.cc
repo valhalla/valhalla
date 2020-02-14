@@ -238,7 +238,6 @@ void make_tile() {
     complex_restr_edge_22_16_15.set_via_list(vias);
     complex_restr_edge_22_16_15.set_modes(kAllAccess);
     tile.AddReverseComplexRestriction(complex_restr_edge_22_16_15);
-
   }
   add_node(node::h, 2);
 
@@ -266,7 +265,6 @@ void make_tile() {
     complex_restr_edge_21_14.set_via_list(vias);
     complex_restr_edge_21_14.set_modes(kAllAccess);
     tile.AddReverseComplexRestriction(complex_restr_edge_21_14);
-
   }
   add_node(node::i, 3);
 
@@ -1619,78 +1617,112 @@ TEST(Astar, test_complex_restriction_short_path_fake) {
   }
 }
 
-//TEST(Astar, test_complex_restriction_short_path_melborne) {
-//  // Tests a real live scenario of a short Bidirectional query against "Melborne"
-//  auto conf = get_conf("melborne_tiles");
-//  route_tester tester(conf);
-//  std::string request =
-//      R"({"locations":[{"lat":-37.625167699300704,"lon":145.36315056293708},{"lat":-37.6257286993007,"lon":145.36319656293708}],"costing":"auto"})";
+TEST(Astar, test_complex_restriction_short_path_melborne) {
+  // Tests a real live scenario of a short Bidirectional query against "Melborne"
+  auto conf = get_conf("melborne_tiles");
+  route_tester tester(conf);
+  std::string request =
+      R"({"locations":[{"lat":-37.625167699300704,"lon":145.36315056293708},{"lat":-37.6257286993007,"lon":145.36319656293708}],"costing":"auto"})";
 
-//  auto response = tester.test(request);
+  auto response = tester.test(request);
 
-//  const auto& leg = response.trip().routes(0).legs(0);
-//  const auto& directions = response.directions().routes(0).legs();
+  const auto& leg = response.trip().routes(0).legs(0);
+  const auto& directions = response.directions().routes(0).legs();
 
-//  // EXPECT_EQ(legs.size(), 1);
-//  EXPECT_EQ(leg.shape(), "psmwfAmlggtG|N}TzAzAzAzAxLhM");
-//}
+  // EXPECT_EQ(legs.size(), 1);
+  EXPECT_EQ(leg.shape(), "psmwfAmlggtG|N}TzAzAzAzAxLhM");
+}
 
-//TEST(Astar, test_IsBridgingEdgeRestricted) {
-//  // Tests the IsBridgingEdgeRestricted function specifically with known inputs
-//  // which is simpler than trying to get BidirectionalAStar to call it with
-//  // a specific setup
-//  auto reader = get_graph_reader(test_dir);
-//  Options options;
-//  create_costing_options(options);
-//  auto costing = vs::CreateAutoCost(Costing::auto_, options);
-//  std::vector<sif::BDEdgeLabel> edge_labels;
-//  std::vector<sif::BDEdgeLabel> edge_labels_opposite_direction;
+TEST(Astar, test_IsBridgingEdgeRestricted) {
+  // Tests the IsBridgingEdgeRestricted function specifically with known inputs
+  // which is simpler than trying to get BidirectionalAStar to call it with
+  // a specific setup
+  auto reader = get_graph_reader(test_dir);
+  Options options;
+  create_costing_options(options);
+  auto costing = vs::CreateAutoCost(Costing::auto_, options);
+  std::vector<sif::BDEdgeLabel> edge_labels;
+  std::vector<sif::BDEdgeLabel> edge_labels_opposite_direction;
 
-//  // Lets construct the inputs fed to IsBridgingEdgeRestricted for a situation
-//  // where it tries to connect edge 14 to edge_labels from 21 and opposing edges
-//  // from 18
-//  DirectedEdge edge_21;
-//  edge_21.complex_restriction(true);
-//  const uint32_t edge_idx_21 = 21;
-//  {
-//    const auto edge_id = make_graph_id(edge_idx_21);
-//    edge_labels.emplace_back(kInvalidLabel, edge_id, &edge_21, vs::Cost{}, 0, 0,
-//                             vs::TravelMode::kDrive, false);
-//  }
-//  // Create our pred for the bridging check
-//  DirectedEdge edge_14;
-//  edge_14.complex_restriction(true);
-//  vs::BDEdgeLabel pred(edge_labels.size() - 1, // Index to predecessor in edge_labels
-//                       make_graph_id(14), make_graph_id(16), &edge_14, vs::Cost{}, 0.0, 0.0,
-//                       vs::TravelMode::kDrive, vs::Cost{}, false, false);
+  // Lets construct the inputs fed to IsBridgingEdgeRestricted for a situation
+  // where it tries to connect edge 14 to edge_labels from 21 and opposing edges
+  // from 18
+  DirectedEdge edge_21;
+  edge_21.complex_restriction(true);
+  const uint32_t edge_idx_21 = 21;
+  {
+    const auto edge_id = make_graph_id(edge_idx_21);
+    edge_labels.emplace_back(kInvalidLabel, edge_id, &edge_21, vs::Cost{}, 0, 0,
+                             vs::TravelMode::kDrive, false);
+  }
+  // Create our pred for the bridging check
+  DirectedEdge edge_14;
+  edge_14.complex_restriction(true);
+  vs::BDEdgeLabel pred(edge_labels.size() - 1, // Index to predecessor in edge_labels
+                       make_graph_id(14), make_graph_id(16), &edge_14, vs::Cost{}, 0.0, 0.0,
+                       vs::TravelMode::kDrive, vs::Cost{}, false, false);
 
-//  DirectedEdge edge_18;
-//  edge_18.complex_restriction(true);
-//  {
-//    edge_labels_opposite_direction.emplace_back(kInvalidLabel, make_graph_id(18), make_graph_id(22),
-//                                                &edge_18, vs::Cost{}, vs::TravelMode::kDrive,
-//                                                vs::Cost{}, 0, false, false);
-//  }
-//  // Create the opp_pred for the bridging check
-//  DirectedEdge edge_16;
-//  edge_16.complex_restriction(true);
-//  vs::BDEdgeLabel opp_pred(edge_labels_opposite_direction.size() -
-//                               1, // Index to predecessor in edge_labels_opposite_direction
-//                           make_graph_id(16), make_graph_id(14), &edge_16, vs::Cost{}, 0.0, 0.0,
-//                           vs::TravelMode::kDrive, vs::Cost{}, false, false);
+  DirectedEdge edge_18;
+  edge_18.complex_restriction(true);
+  {
+    edge_labels_opposite_direction.emplace_back(kInvalidLabel, make_graph_id(18), make_graph_id(22),
+                                                &edge_18, vs::Cost{}, vs::TravelMode::kDrive,
+                                                vs::Cost{}, 0, false, false);
+  }
+  // Create the opp_pred for the bridging check
+  DirectedEdge edge_16;
+  edge_16.complex_restriction(true);
+  vs::BDEdgeLabel opp_pred(edge_labels_opposite_direction.size() -
+                               1, // Index to predecessor in edge_labels_opposite_direction
+                           make_graph_id(16), make_graph_id(14), &edge_16, vs::Cost{}, 0.0, 0.0,
+                           vs::TravelMode::kDrive, vs::Cost{}, false, false);
 
-//  {
-//    const bool is_forward = true;
-//    ASSERT_TRUE(vt::IsBridgingEdgeRestricted(*reader, is_forward, edge_labels,
-//                                             edge_labels_opposite_direction, pred, opp_pred,
-//                                             costing));
-//  }
-//  LOG_INFO("Next, switch to verify reverse expansion");
-//  {
-//    const bool is_forward = false;
-//    ASSERT_TRUE(vt::IsBridgingEdgeRestricted(*reader, is_forward, edge_labels_opposite_direction,
-//                                             edge_labels, opp_pred, pred, costing));
-//=======
+  {
+    const bool is_forward = true;
+    ASSERT_TRUE(vt::IsBridgingEdgeRestricted(*reader, is_forward, edge_labels,
+                                             edge_labels_opposite_direction, pred, opp_pred,
+                                             costing));
+  }
+  LOG_INFO("Next, switch to verify reverse expansion");
+  {
+    const bool is_forward = false;
+    ASSERT_TRUE(vt::IsBridgingEdgeRestricted(*reader, is_forward, edge_labels_opposite_direction,
+                                             edge_labels, opp_pred, pred, costing));
+  }
+}
+
+TEST(ComplexRestriction, WalkVias) {
+  // Yes, it's a little odd to have a test of restrictions and vias here, but
+  // you need a baked tile to test this functionality which we conveniently
+  // have here from `make_tile`.
+  // TODO Future improvement would be to make it simpler to quickly generate
+  // tiles programmatically
+  auto reader = get_graph_reader(test_dir);
+  std::vector<GraphId> expected_vias;
+  expected_vias.push_back(make_graph_id(14));
+
+  Options options;
+  create_costing_options(options);
+  auto costing = vs::CreateAutoCost(Costing::auto_, options);
+
+  bool is_forward = true;
+  auto* tile = reader->GetGraphTile(tile_id);
+  auto restrictions = tile->GetRestrictions(is_forward, make_graph_id(18), costing->access_mode());
+  ASSERT_EQ(restrictions.size(), 1);
+
+  const auto cr = restrictions[0];
+
+  {
+    // Walk all vias
+    std::vector<GraphId> walked_vias;
+    cr->WalkVias([&walked_vias](const GraphId* via) {
+      walked_vias.push_back(*via);
+      return WalkingVia::KeepWalking;
+    });
+    EXPECT_EQ(walked_vias, expected_vias) << "Did not walk expected vias";
+  }
+}
+
 TEST(ComplexRestriction, CheckPatchPathForRestrictions) {
   std::vector<GraphId> patch_path;
   const int length_patch_path = 10;
@@ -1708,7 +1740,7 @@ TEST(ComplexRestriction, CheckPatchPathForRestrictions) {
       restr.push_back(GraphId(0, 0, 1)); // Out of order, should mean no match
       list_of_restrictions.push_back(restr);
     }
-    EXPECT_FALSE(CheckPatchPathForRestrictions(patch_path, list_of_restrictions));
+    EXPECT_FALSE(vt::CheckPatchPathForRestrictions(patch_path, list_of_restrictions));
     {
       // Test a positive, a matching restriction
       std::vector<GraphId> restr;
@@ -1717,7 +1749,7 @@ TEST(ComplexRestriction, CheckPatchPathForRestrictions) {
       restr.push_back(GraphId(0, 0, 4)); // Out of order, should mean no match
       list_of_restrictions.push_back(restr);
     }
-    EXPECT_TRUE(CheckPatchPathForRestrictions(patch_path, list_of_restrictions));
+    EXPECT_TRUE(vt::CheckPatchPathForRestrictions(patch_path, list_of_restrictions));
   }
   {
     std::vector<std::vector<GraphId>> list_of_restrictions;
@@ -1730,7 +1762,7 @@ TEST(ComplexRestriction, CheckPatchPathForRestrictions) {
       }
       list_of_restrictions.push_back(restr);
     }
-    EXPECT_FALSE(CheckPatchPathForRestrictions(patch_path, list_of_restrictions));
+    EXPECT_FALSE(vt::CheckPatchPathForRestrictions(patch_path, list_of_restrictions));
     {
       // Test a restriction overlaying beginning
       std::vector<GraphId> restr;
@@ -1739,7 +1771,7 @@ TEST(ComplexRestriction, CheckPatchPathForRestrictions) {
       restr.push_back(GraphId(0, 0, 1));
       list_of_restrictions.push_back(restr);
     }
-    EXPECT_FALSE(CheckPatchPathForRestrictions(patch_path, list_of_restrictions));
+    EXPECT_FALSE(vt::CheckPatchPathForRestrictions(patch_path, list_of_restrictions));
   }
   {
     std::vector<std::vector<GraphId>> list_of_restrictions;
@@ -1749,7 +1781,7 @@ TEST(ComplexRestriction, CheckPatchPathForRestrictions) {
       restr.push_back(GraphId(0, 0, 2));
       list_of_restrictions.push_back(restr);
     }
-    EXPECT_TRUE(CheckPatchPathForRestrictions(patch_path, list_of_restrictions));
+    EXPECT_TRUE(vt::CheckPatchPathForRestrictions(patch_path, list_of_restrictions));
   }
 }
 
