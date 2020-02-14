@@ -229,6 +229,8 @@ void Isochrone::UpdateIsoTile(const EdgeLabel& pred,
   // TODO - do we need partial shape from origin location to end of edge?
   float secs1 = pred.cost().secs;
 
+  std::cout << secs1 << std::endl;
+
   // For short edges just mark the segment between the 2 nodes of the edge. This
   // avoid getting the shape for short edges.
   if (edge->length() < shape_interval_ * 1.5f) {
