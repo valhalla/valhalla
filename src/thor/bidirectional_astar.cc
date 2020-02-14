@@ -654,7 +654,7 @@ bool BidirectionalAStar::SetForwardConnection(GraphReader& graphreader, const BD
   if (pred.on_complex_rest()) {
     // Lets dig deeper and test if we are really triggering these restrictions
     // since the complex restriction can span many edges
-    if (IsBridgingEdgeRestricted(graphreader, true, edgelabels_forward_, edgelabels_reverse_, pred,
+    if (IsBridgingEdgeRestricted(graphreader, edgelabels_forward_, edgelabels_reverse_, pred,
                                  opp_pred, costing_)) {
       return false;
     }
@@ -698,17 +698,17 @@ bool BidirectionalAStar::SetForwardConnection(GraphReader& graphreader, const BD
 // The edge on the reverse search connects to a reached edge on the forward
 // search tree. Check if this is the best connection so far and set the
 // search threshold.
-bool BidirectionalAStar::SetReverseConnection(GraphReader& graphreader, const BDEdgeLabel& pred) {
-  GraphId oppedge = pred.opp_edgeid();
-  EdgeStatusInfo oppedgestatus = edgestatus_forward_.Get(oppedge);
-  auto opp_pred = edgelabels_reverse_[oppedgestatus.index()];
+bool BidirectionalAStar::SetReverseConnection(GraphReader& graphreader, const BDEdgeLabel& rev_pred) {
+  GraphId fwd_edge_id = rev_pred.opp_edgeid();
+  EdgeStatusInfo fwd_edge_status = edgestatus_forward_.Get(fwd_edge_id);
+  auto fwd_pred = edgelabels_reverse_[fwd_edge_status.index()];
 
   // Disallow connections that are part of a complex restriction
-  if (pred.on_complex_rest()) {
+  if (rev_pred.on_complex_rest()) {
     // Lets dig deeper and test if we are really triggering these restrictions
     // since the complex restriction can span many edges
-    if (IsBridgingEdgeRestricted(graphreader, false, edgelabels_reverse_, edgelabels_forward_, pred,
-                                 opp_pred, costing_)) {
+    if (IsBridgingEdgeRestricted(graphreader, edgelabels_forward_, edgelabels_reverse_, fwd_pred,
+                                 rev_pred, costing_)) {
       return false;
     }
   }
@@ -716,33 +716,33 @@ bool BidirectionalAStar::SetReverseConnection(GraphReader& graphreader, const BD
   // Get the opposing edge - a candidate shortest path has been found to the
   // end node of this directed edge. Get total cost.
   float c;
-  if (pred.predecessor() != kInvalidLabel) {
+  if (rev_pred.predecessor() != kInvalidLabel) {
     // Get the start of the predecessor edge on the reverse path. Cost is to
     // the end this edge, plus the cost to the end of the forward predecessor,
     // plus the transition cost.
-    c = edgelabels_reverse_[pred.predecessor()].cost().cost + opp_pred.cost().cost +
-        pred.transition_cost();
+    c = edgelabels_reverse_[rev_pred.predecessor()].cost().cost + fwd_pred.cost().cost +
+        rev_pred.transition_cost();
   } else {
     // If no predecessor on the reverse path get the predecessor on
     // the forward path to form the cost.
-    uint32_t predidx = opp_pred.predecessor();
+    uint32_t predidx = fwd_pred.predecessor();
     float oppcost = (predidx == kInvalidLabel) ? 0 : edgelabels_forward_[predidx].cost().cost;
-    c = pred.cost().cost + oppcost + opp_pred.transition_cost();
+    c = rev_pred.cost().cost + oppcost + fwd_pred.transition_cost();
   }
 
   // Set best_connection if cost is less than the best cost so far.
   if (c < best_connection_.cost) {
-    best_connection_ = {oppedge, pred.edgeid(), c};
+    best_connection_ = {fwd_edge_id, rev_pred.edgeid(), c};
   }
 
   // Set a threshold to extend search
   if (threshold_ == std::numeric_limits<float>::max()) {
-    threshold_ = pred.sortcost() + kThresholdDelta;
+    threshold_ = rev_pred.sortcost() + kThresholdDelta;
   }
 
   // setting this edge as connected, sending the opposing because this is the reverse tree
   if (expansion_callback_) {
-    expansion_callback_(graphreader, "bidirectional_astar", oppedge, "c", false);
+    expansion_callback_(graphreader, "bidirectional_astar", fwd_edge_id, "c", false);
   }
 
   return true;
@@ -994,127 +994,98 @@ std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& gra
 }
 
 bool IsBridgingEdgeRestricted(GraphReader& graphreader,
-                              bool is_forward,
-                              std::vector<sif::BDEdgeLabel>& edge_labels,
-                              std::vector<sif::BDEdgeLabel>& edge_labels_opposite_direction,
-                              const BDEdgeLabel& pred,
-                              const BDEdgeLabel& opp_pred,
+                              std::vector<sif::BDEdgeLabel>& edge_labels_fwd,
+                              std::vector<sif::BDEdgeLabel>& edge_labels_rev,
+                              const BDEdgeLabel& fwd_pred,
+                              const BDEdgeLabel& rev_pred,
                               std::shared_ptr<sif::DynamicCost>& costing) {
 
   const uint8_t M = 10;                 // TODO Look at data to figure this out
   const uint8_t PATCH_PATH_SIZE = M * 2 // Expand M in both directions
                                   + 1;  // Also need space for pred in the middle
 
-  const auto tile = graphreader.GetGraphTile(pred.edgeid());
-  if (tile == nullptr) {
-    // TODO Now what?
-    LOG_ERROR("Tile pointer was null while checking restrictions");
-    return false;
-  }
   // Begin by building the "patch" path
   std::vector<GraphId> patch_path;
   patch_path.reserve(PATCH_PATH_SIZE);
 
-  // Add pred to patch path
-  if (is_forward) {
-    patch_path.push_back(pred.edgeid());
-  } else {
-    patch_path.push_back(opp_pred.edgeid());
-  }
-
-  // std::cout << "IsBridgingEdgeRestricted: 1 \n";
-  // for (auto p: patch_path) {
-  //  std::cout << p.id() <<", ";
-  //}
-  // std::cout<< std::endl;
+  patch_path.push_back(fwd_pred.edgeid());
 
   // Track what restriction ids we've seen (via ids + beginning id)
   std::vector<std::vector<GraphId>> lists_of_restriction_ids;
-  auto next_pred = pred;
 
+  auto next_fwd_pred = fwd_pred;
   for (int i = 0; i < M; ++i) {
     // Walk M edges back and add each to patch path
-    const uint32_t next_pred_idx = next_pred.predecessor();
+    const uint32_t next_pred_idx = next_fwd_pred.predecessor();
     if (next_pred_idx == baldr::kInvalidLabel) {
       break;
     }
-    next_pred = edge_labels[next_pred_idx];
-    if (!next_pred.on_complex_rest()) {
+    next_fwd_pred = edge_labels_fwd[next_pred_idx];
+    if (!next_fwd_pred.on_complex_rest()) {
       // We can actually stop here if this edge is no longer path of any complex restriction
       break;
     }
-    patch_path.push_back(next_pred.edgeid());
+
+    patch_path.push_back(next_fwd_pred.edgeid());
   }
 
-  // std::cout << "IsBridgingEdgeRestricted: 2 \n";
-  // for (auto p: patch_path) {
-  //  std::cout << p.id() <<", ";
-  //}
-  // std::cout<< std::endl;
-
   // Reverse patch_path so that the leftmost edge is first and original `pred`
-  // at the end before pushing the right edges onto the back
+  // at the end before pushing the right-hand edges (opposite direction) onto the back
   std::reverse(patch_path.begin(), patch_path.end());
 
-  auto next_opp_pred = opp_pred;
+  auto next_rev_pred = rev_pred;
   // Now push_back the edges from opposite direction onto our patch_path
   for (int n = 0; n < PATCH_PATH_SIZE; ++n) {
-    auto next_opp_pred_idx = next_opp_pred.predecessor();
-    if (next_opp_pred_idx == kInvalidLabel) {
+    auto next_rev_pred_idx = next_rev_pred.predecessor();
+    if (next_rev_pred_idx == kInvalidLabel) {
       // We reached the end of the opposing tree, i.e. destination or origin
       break;
     }
-    // TODO Also do early exit here if edge not part of any retriction
+    next_rev_pred = edge_labels_rev[next_rev_pred_idx];
+    if (!next_rev_pred.on_complex_rest()) {
+      // We can actually stop here if this edge is no longer path of any complex restriction
+      break;
+    }
 
-    next_opp_pred = edge_labels_opposite_direction[next_opp_pred_idx];
-    // We need the opposing edge graph-id as the rest of the patch_path consists of
-    // edges pointing to the right
-    // TODO Double check if we need the opposing edge id
-    // auto edgeid = next_opp_pred.opp_edgeid();
-    auto edgeid = next_opp_pred.edgeid();
+    // Since we are on the reverse expansion here, we want the opp_edgeid
+    // since we're tracking everything in the forward direction
+    const auto edgeid = next_rev_pred.opp_edgeid();
     patch_path.push_back(edgeid);
 
     // Also grab restrictions while walking for later comparison against patch_path
     //
+    std::cout << "Grabbing tile with edgeid " << edgeid.id() << std::endl;
     const auto tile = graphreader.GetGraphTile(edgeid);
+    if (tile == nullptr) {
+      // TODO Now what?
+      LOG_ERROR("Tile pointer was null while checking restrictions");
+      return false;
+    }
     const auto edge = tile->directededge(edgeid);
-    // If is_forward, check if the edge marks the end of a restriction, else check
-    // if the edge marks the start of a complex restriction.
-    if ((is_forward && (edge->end_restriction() & costing->access_mode())) ||
-        (!is_forward && (edge->start_restriction() & costing->access_mode()))) {
-      std::cout << "looking for restrictions on edgeid " << edgeid.id() << " for is_forward "
-                << is_forward << std::endl;
-      auto restrictions = tile->GetRestrictions(is_forward, edgeid, costing->access_mode());
+    if (edge->end_restriction() & costing->access_mode()) {
+      std::cout << "looking for end restrictions on edgeid " << edgeid.id() << std::endl;
+      auto restrictions = tile->GetRestrictions(true, edgeid, costing->access_mode());
       if (restrictions.size() == 0) {
         // TODO Should we actually throw here? Or assert to gracefully continue in release?
-        // LOG_ERROR("Found no restrictions in tile even though edge-label.on_complex_rest() ==
-        // true");
+        // This implies corrupt data or logic bug
         throw std::logic_error(
             "Found no restrictions in tile even though edge-label.on_complex_rest() == true");
-        // We can actually stop here if this edge is no longer path of any complex restriction
         break;
       }
       for (auto cr : restrictions) {
-        // For each restriction `cr`, grab the beginning (or end) id PLUS vias
+        std::cout << "Got cr" << cr->from_graphid() << " " << cr->to_graphid() << std::endl;
+        // For each restriction `cr`, grab the end id PLUS vias PLUS beginning
         std::vector<GraphId> restriction_ids;
         // We must add beginning and ending edge as well, not just the vias,
         // to track the full restriction
-        if (is_forward) {
-          restriction_ids.push_back(cr->from_graphid());
-        } else {
-          restriction_ids.push_back(cr->to_graphid());
-        }
+        restriction_ids.push_back(cr->from_graphid());
         cr->WalkVias([&restriction_ids](const GraphId* id) {
           restriction_ids.push_back(*id);
           return WalkingVia::KeepWalking;
         });
         // We must add beginning and ending edge as well, not just the vias,
         // to track the full restriction
-        if (is_forward) {
-          restriction_ids.push_back(cr->to_graphid());
-        } else {
-          restriction_ids.push_back(cr->from_graphid());
-        }
+        restriction_ids.push_back(cr->to_graphid());
         if (restriction_ids.size() > 0) {
           lists_of_restriction_ids.push_back(restriction_ids);
         }

@@ -231,11 +231,10 @@ protected:
 //
 // If no restriction triggers, it returns true and the edge is allowed
 bool IsBridgingEdgeRestricted(valhalla::baldr::GraphReader& graphreader,
-                              bool is_forward,
-                              std::vector<sif::BDEdgeLabel>& edge_labels,
-                              std::vector<sif::BDEdgeLabel>& edge_labels_opposite_direction,
-                              const sif::BDEdgeLabel& pred,
-                              const sif::BDEdgeLabel& opp_pred,
+                              std::vector<sif::BDEdgeLabel>& edge_labels_fwd,
+                              std::vector<sif::BDEdgeLabel>& edge_labels_rev,
+                              const sif::BDEdgeLabel& fwd_pred,
+                              const sif::BDEdgeLabel& rev_pred,
                               std::shared_ptr<sif::DynamicCost>& costing);
 
 // Essentially checks if any of the restrictions in `list_of_restrictions`

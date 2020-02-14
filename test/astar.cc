@@ -259,8 +259,8 @@ void make_tile() {
     ComplexRestrictionBuilder complex_restr_edge_21_14;
     complex_restr_edge_21_14.set_type(RestrictionType::kNoEntry);
     // TODO DOUBLECHECK I had to switch to and from here...
-    complex_restr_edge_21_14.set_to_id(make_graph_id(18));
-    complex_restr_edge_21_14.set_from_id(make_graph_id(21));
+    complex_restr_edge_21_14.set_to_id(make_graph_id(21));
+    complex_restr_edge_21_14.set_from_id(make_graph_id(18));
     std::vector<GraphId> vias;
     vias.push_back(make_graph_id(14));
     complex_restr_edge_21_14.set_via_list(vias);
@@ -1642,53 +1642,51 @@ TEST(Astar, test_IsBridgingEdgeRestricted) {
   Options options;
   create_costing_options(options);
   auto costing = vs::CreateAutoCost(Costing::auto_, options);
-  std::vector<sif::BDEdgeLabel> edge_labels;
-  std::vector<sif::BDEdgeLabel> edge_labels_opposite_direction;
+  std::vector<sif::BDEdgeLabel> edge_labels_fwd;
+  std::vector<sif::BDEdgeLabel> edge_labels_rev;
 
   // Lets construct the inputs fed to IsBridgingEdgeRestricted for a situation
-  // where it tries to connect edge 14 to edge_labels from 21 and opposing edges
+  // where it tries to connect edge 14 to edge_labels_fwd from 21 and opposing edges
   // from 18
   DirectedEdge edge_21;
   edge_21.complex_restriction(true);
-  const uint32_t edge_idx_21 = 21;
   {
-    const auto edge_id = make_graph_id(edge_idx_21);
-    edge_labels.emplace_back(kInvalidLabel, edge_id, &edge_21, vs::Cost{}, 0, 0,
-                             vs::TravelMode::kDrive, false);
+    edge_labels_fwd.emplace_back(kInvalidLabel, make_graph_id(21), make_graph_id(15), &edge_21,
+                                 vs::Cost{}, vs::TravelMode::kDrive, vs::Cost{}, 0, false, false);
   }
-  // Create our pred for the bridging check
+  // Create our fwd_pred for the bridging check
   DirectedEdge edge_14;
   edge_14.complex_restriction(true);
-  vs::BDEdgeLabel pred(edge_labels.size() - 1, // Index to predecessor in edge_labels
-                       make_graph_id(14), make_graph_id(16), &edge_14, vs::Cost{}, 0.0, 0.0,
-                       vs::TravelMode::kDrive, vs::Cost{}, false, false);
+  vs::BDEdgeLabel fwd_pred(edge_labels_fwd.size() - 1, // Index to predecessor in edge_labels_fwd
+                           make_graph_id(14), make_graph_id(16), &edge_14, vs::Cost{}, 0.0, 0.0,
+                           vs::TravelMode::kDrive, vs::Cost{}, false, false);
 
   DirectedEdge edge_18;
   edge_18.complex_restriction(true);
   {
-    edge_labels_opposite_direction.emplace_back(kInvalidLabel, make_graph_id(18), make_graph_id(22),
-                                                &edge_18, vs::Cost{}, vs::TravelMode::kDrive,
-                                                vs::Cost{}, 0, false, false);
+    edge_labels_rev
+        .emplace_back(kInvalidLabel,
+                      // TODO which order is the edgeid and opp_edge_id for reverse expansion label?
+                      make_graph_id(22), make_graph_id(18), &edge_18, vs::Cost{},
+                      vs::TravelMode::kDrive, vs::Cost{}, 0, false, false);
   }
-  // Create the opp_pred for the bridging check
+  // Create the rev_pred for the bridging check
   DirectedEdge edge_16;
   edge_16.complex_restriction(true);
-  vs::BDEdgeLabel opp_pred(edge_labels_opposite_direction.size() -
-                               1, // Index to predecessor in edge_labels_opposite_direction
+  vs::BDEdgeLabel rev_pred(edge_labels_rev.size() - 1, // Index to predecessor in edge_labels_rev
                            make_graph_id(16), make_graph_id(14), &edge_16, vs::Cost{}, 0.0, 0.0,
                            vs::TravelMode::kDrive, vs::Cost{}, false, false);
 
   {
-    const bool is_forward = true;
-    ASSERT_TRUE(vt::IsBridgingEdgeRestricted(*reader, is_forward, edge_labels,
-                                             edge_labels_opposite_direction, pred, opp_pred,
-                                             costing));
+    // Test for forward search
+    ASSERT_TRUE(vt::IsBridgingEdgeRestricted(*reader, edge_labels_fwd, edge_labels_rev, fwd_pred,
+                                             rev_pred, costing));
   }
-  LOG_INFO("Next, switch to verify reverse expansion");
+  LOG_INFO("Next, switch to verify reverse direction");
   {
-    const bool is_forward = false;
-    ASSERT_TRUE(vt::IsBridgingEdgeRestricted(*reader, is_forward, edge_labels_opposite_direction,
-                                             edge_labels, opp_pred, pred, costing));
+    // Test for reverse search
+    ASSERT_TRUE(vt::IsBridgingEdgeRestricted(*reader, edge_labels_rev, edge_labels_fwd, rev_pred,
+                                             fwd_pred, costing));
   }
 }
 
