@@ -1,6 +1,7 @@
 #ifndef VALHALLA_MIDGARD_GRIDDEDDATA_H_
 #define VALHALLA_MIDGARD_GRIDDEDDATA_H_
 
+#include <iostream>
 #include <limits>
 #include <list>
 #include <map>
@@ -38,6 +39,7 @@ public:
   bool Set(const coord_t& pt, const float value) {
     auto cell_id = this->TileId(pt);
     if (cell_id >= 0 && cell_id < data_.size()) {
+      std::cout << cell_id << " " << value << std::endl;
       data_[cell_id] = value;
       return true;
     }
@@ -52,6 +54,7 @@ public:
    */
   void SetIfLessThan(const int tile_id, const float value) {
     if (tile_id >= 0 && tile_id < data_.size() && value < data_[tile_id]) {
+      std::cout << tile_id << " " << value << std::endl;
       data_[tile_id] = value;
     }
   }
@@ -66,6 +69,7 @@ public:
   void SetIfLessThan(const coord_t& pt, const float value) {
     int32_t cell_id = this->TileId(pt);
     if (cell_id >= 0 && cell_id < data_.size() && value < data_[cell_id]) {
+      std::cout << cell_id << " " << value << std::endl;
       data_[cell_id] = value;
     }
   }
