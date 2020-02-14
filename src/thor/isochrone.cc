@@ -110,7 +110,7 @@ void Isochrone::ConstructIsoTile(
 
   // Optimize for 600 cells in latitude (slightly larger for multimodal).
   // Round off to nearest 0.001 degree. TODO - revisit min and max grid sizes
-  float grid_size = (multimodal) ? dlat / 500.0f : dlat / 300.0f;
+  float grid_size = multimodal ? dlat / 500.0f : dlat / 300.0f;
   if (grid_size < 0.001f) {
     grid_size = 0.001f;
   } else if (grid_size > 0.005f) {
