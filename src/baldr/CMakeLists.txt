@@ -35,7 +35,6 @@ set(includes
 set(sources
     accessrestriction.cc
     admin.cc
-    complexrestriction.cc
     compression_utils.cc
     connectivity_map.cc
     curler.cc

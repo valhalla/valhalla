@@ -1100,5 +1100,19 @@ bool IsBridgingEdgeRestricted(GraphReader& graphreader,
   return CheckPatchPathForRestrictions(patch_path, lists_of_restriction_ids);
 }
 
+bool CheckPatchPathForRestrictions(
+    const std::vector<valhalla::baldr::GraphId>& patch_path,
+    const std::vector<std::vector<valhalla::baldr::GraphId>>& list_of_restrictions) {
+  for (auto& restriction_ids : list_of_restrictions) {
+    if (std::search(patch_path.cbegin(), patch_path.cend(), restriction_ids.cbegin(),
+                    restriction_ids.cend()) != patch_path.cend()) {
+      // We found a restriction that matches parts of patch_path
+      return true;
+    }
+  }
+  // None of the restrictions matched
+  return false;
+};
+
 } // namespace thor
 } // namespace valhalla
