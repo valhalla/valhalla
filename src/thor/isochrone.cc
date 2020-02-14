@@ -159,13 +159,10 @@ Isochrone::Compute(google::protobuf::RepeatedPtrField<valhalla::Location>& origi
                    GraphReader& graphreader,
                    const std::shared_ptr<DynamicCost>* mode_costing,
                    const TravelMode mode) {
-
   // Initialize and create the isotile
-  max_seconds_ = max_minutes * 60;
   ConstructIsoTile(false, max_minutes, origin_locations);
-
+  // Compute the expansion
   Dijkstras::Compute(origin_locations, graphreader, mode_costing, mode);
-
   return isotile_;
 }
 
@@ -178,11 +175,9 @@ Isochrone::ComputeReverse(google::protobuf::RepeatedPtrField<valhalla::Location>
                           const TravelMode mode) {
 
   // Initialize and create the isotile
-  max_seconds_ = max_minutes * 60;
   ConstructIsoTile(false, max_minutes, dest_locations);
-
+  // Compute the expansion
   Dijkstras::ComputeReverse(dest_locations, graphreader, mode_costing, mode);
-
   return isotile_;
 }
 
@@ -194,11 +189,9 @@ Isochrone::ComputeMultiModal(google::protobuf::RepeatedPtrField<valhalla::Locati
                              const std::shared_ptr<DynamicCost>* mode_costing,
                              const TravelMode mode) {
   // Initialize and create the isotile
-  max_seconds_ = max_minutes * 60;
   ConstructIsoTile(true, max_minutes, origin_locations);
-
+  // Compute the expansion
   Dijkstras::ComputeMultiModal(origin_locations, graphreader, mode_costing, mode);
-
   return isotile_;
 }
 
