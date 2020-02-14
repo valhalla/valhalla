@@ -1057,13 +1057,16 @@ bool IsBridgingEdgeRestricted(GraphReader& graphreader,
       for (auto cr : restrictions) {
         // For each restriction `cr`, grab the beginning (or end) id PLUS vias
         std::vector<GraphId> restriction_ids;
-        // We must add current edge as well, not just the vias to track the full
-        // restriction
-        restriction_ids.push_back(edgeid);
+        // We must add beginning and ending edge as well, not just the vias,
+        // to track the full restriction
+        restriction_ids.push_back(cr->from_graphid());
         cr->WalkVias([&restriction_ids](const GraphId* id) {
           restriction_ids.push_back(*id);
           return WalkingVia::KeepWalking;
         });
+        // We must add beginning and ending edge as well, not just the vias,
+        // to track the full restriction
+        restriction_ids.push_back(cr->to_graphid());
         if (restriction_ids.size() > 0) {
           lists_of_restriction_ids.push_back(restriction_ids);
         }
@@ -1083,6 +1086,8 @@ bool IsBridgingEdgeRestricted(GraphReader& graphreader,
       // We reached the end of the opposing tree, i.e. destination or origin
       break;
     }
+    // TODO Also do early exit here if edge not part of any retriction
+
     next_opp_pred = edge_labels_opposite_direction[next_opp_pred_idx];
     // We need the opposing edge graph-id as the rest of the patch_path consists of
     // edges pointing to the right
