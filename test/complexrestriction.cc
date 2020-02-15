@@ -1,5 +1,7 @@
 
 #include "baldr/complexrestriction.h"
+#include "baldr/graphid.h"
+#include "midgard/logging.h"
 #include "mjolnir/complexrestrictionbuilder.h"
 
 #include "test.h"
@@ -16,6 +18,23 @@ namespace {
 
 TEST(ComplexRestriction, Sizeof) {
   EXPECT_EQ(sizeof(ComplexRestriction), kComplexRestrictionExpectedSize);
+}
+
+TEST(ComplexRestriction, WalkViasBuilder) {
+  ComplexRestrictionBuilder builder;
+
+  std::vector<GraphId> expected_vias;
+  builder.set_via_list(expected_vias);
+
+  // Ensure the builder cannot walk (throws logic_error to avoid accidentally trying
+  // to walk a builder which likely is not what was intended)
+  std::vector<GraphId> walked_vias;
+  ASSERT_THROW(builder.WalkVias([&walked_vias](const GraphId* via) {
+    walked_vias.push_back(*via);
+    return WalkingVia::KeepWalking;
+  }),
+               std::logic_error)
+      << "Did not walk the expected vias";
 }
 
 TEST(ComplexRestriction, WriteRead) {
