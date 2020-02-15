@@ -724,9 +724,11 @@ void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
     // TODO: can we cram it into the expansion recommendation?
     // Continue if the time interval has been met. This bus or rail line goes beyond the max
     // but need to consider others so we just continue here.
-    // if (newcost.secs > max_seconds_) {
-    //  continue;
-    //}
+    /*
+    if (newcost.secs > max_seconds_) {
+      continue;
+    }
+    */
 
     // Check if edge is temporarily labeled and this path has less cost. If
     // less cost the predecessor is updated and the sort cost is decremented

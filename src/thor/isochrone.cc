@@ -68,14 +68,15 @@ void Isochrone::Clear() {
 void Isochrone::ConstructIsoTile(
     const bool multimodal,
     const unsigned int max_minutes,
-    const google::protobuf::RepeatedPtrField<valhalla::Location>& locations) {
+    const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
+    const sif::TravelMode mode) {
   float max_distance;
   max_seconds_ = max_minutes * 60;
   if (multimodal) {
     max_distance = max_seconds_ * 70.0f * kMPHtoMetersPerSec;
-  } else if (mode_ == TravelMode::kPedestrian) {
+  } else if (mode == TravelMode::kPedestrian) {
     max_distance = max_seconds_ * 5.0f * kMPHtoMetersPerSec;
-  } else if (mode_ == TravelMode::kBicycle) {
+  } else if (mode == TravelMode::kBicycle) {
     max_distance = max_seconds_ * 20.0f * kMPHtoMetersPerSec;
   } else {
     // A driving mode
@@ -161,7 +162,7 @@ Isochrone::Compute(google::protobuf::RepeatedPtrField<valhalla::Location>& origi
                    const std::shared_ptr<DynamicCost>* mode_costing,
                    const TravelMode mode) {
   // Initialize and create the isotile
-  ConstructIsoTile(false, max_minutes, origin_locations);
+  ConstructIsoTile(false, max_minutes, origin_locations, mode);
   // Compute the expansion
   Dijkstras::Compute(origin_locations, graphreader, mode_costing, mode);
   return isotile_;
@@ -176,7 +177,7 @@ Isochrone::ComputeReverse(google::protobuf::RepeatedPtrField<valhalla::Location>
                           const TravelMode mode) {
 
   // Initialize and create the isotile
-  ConstructIsoTile(false, max_minutes, dest_locations);
+  ConstructIsoTile(false, max_minutes, dest_locations, mode);
   // Compute the expansion
   Dijkstras::ComputeReverse(dest_locations, graphreader, mode_costing, mode);
   return isotile_;
@@ -190,7 +191,7 @@ Isochrone::ComputeMultiModal(google::protobuf::RepeatedPtrField<valhalla::Locati
                              const std::shared_ptr<DynamicCost>* mode_costing,
                              const TravelMode mode) {
   // Initialize and create the isotile
-  ConstructIsoTile(true, max_minutes, origin_locations);
+  ConstructIsoTile(true, max_minutes, origin_locations, mode);
   // Compute the expansion
   Dijkstras::ComputeMultiModal(origin_locations, graphreader, mode_costing, mode);
   return isotile_;

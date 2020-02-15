@@ -112,21 +112,13 @@ protected:
    * to get to each lat,lng tile.
    * @param  multimodal  True if the route type is multimodal.
    * @param  max_minutes Maximum time (minutes) for computing isochrones.
-   * @param  locations  List of origin locations.
+   * @param  locations   List of origin locations.
+   * @param  mode        Travel mode
    */
   void ConstructIsoTile(const bool multimodal,
                         const unsigned int max_minutes,
-                        const google::protobuf::RepeatedPtrField<valhalla::Location>& locations);
-
-  /**
-   * Expand from the node for a multi-modal path.
-   */
-  void ExpandMM(baldr::GraphReader& graphreader,
-                const baldr::GraphId& node,
-                const sif::MMEdgeLabel& pred,
-                const sif::DynamicCost* costing,
-                const sif::DynamicCost* tc,
-                const std::shared_ptr<sif::DynamicCost>* mode_costing);
+                        const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
+                        const sif::TravelMode mode);
 
   /**
    * Updates the isotile using the edge information from the predecessor edge
@@ -140,47 +132,6 @@ protected:
                      baldr::GraphReader& graphreader,
                      const midgard::PointLL& ll,
                      const float secs0);
-
-  /**
-   * Add edge(s) at each origin location to the adjacency list.
-   * @param  graphreader       Graph tile reader.
-   * @param  locations  Location information for origins.
-   * @param  costing           Dynamic costing.
-   */
-  void SetOriginLocations(baldr::GraphReader& graphreader,
-                          google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
-                          const std::shared_ptr<sif::DynamicCost>& costing);
-
-  /**
-   * Add edge(s) at each origin location to the adjacency list.
-   * @param  graphreader       Graph tile reader.
-   * @param  origin_locations  Location information for origins.
-   * @param  costing           Dynamic costing.
-   */
-  void SetOriginLocationsMM(baldr::GraphReader& graphreader,
-                            google::protobuf::RepeatedPtrField<valhalla::Location>& origin_locations,
-                            const std::shared_ptr<sif::DynamicCost>& costing);
-
-  /**
-   * Add edge(s) at each destination location to the adjacency list.
-   * @param  graphreader       Graph tile reader.
-   * @param  locations    Location information for destinations.
-   * @param  costing           Dynamic costing.
-   */
-  void SetDestinationLocations(baldr::GraphReader& graphreader,
-                               google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
-                               const std::shared_ptr<sif::DynamicCost>& costing);
-
-  /**
-   * Convenience method to get the timezone index at a node.
-   * @param graphreader Graph reader.
-   * @param node GraphId of the node to get the timezone index.
-   * @return Returns the timezone index. A value of 0 indicates an invalid timezone.
-   */
-  int GetTimezone(baldr::GraphReader& graphreader, const baldr::GraphId& node) {
-    const baldr::GraphTile* tile = graphreader.GetGraphTile(node);
-    return (tile == nullptr) ? 0 : tile->node(node)->timezone();
-  }
 };
 
 } // namespace thor
