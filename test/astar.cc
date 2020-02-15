@@ -1620,6 +1620,7 @@ TEST(Astar, test_complex_restriction_short_path_fake) {
 
 TEST(Astar, test_complex_restriction_short_path_melborne) {
   // Tests a real live scenario of a short Bidirectional query against "Melborne"
+  // TODO Add second testcase here from greg
   auto conf = get_conf("melborne_tiles");
   route_tester tester(conf);
   std::string request =
@@ -1628,9 +1629,7 @@ TEST(Astar, test_complex_restriction_short_path_melborne) {
   auto response = tester.test(request);
 
   const auto& leg = response.trip().routes(0).legs(0);
-  const auto& directions = response.directions().routes(0).legs();
 
-  // EXPECT_EQ(legs.size(), 1);
   EXPECT_EQ(leg.shape(), "psmwfAmlggtG|N}TzAzAzAzAxLhM");
 }
 
@@ -1661,14 +1660,11 @@ TEST(Astar, test_IsBridgingEdgeRestricted) {
                            make_graph_id(14), make_graph_id(16), &edge_14, vs::Cost{}, 0.0, 0.0,
                            vs::TravelMode::kDrive, vs::Cost{}, false, false);
 
-  DirectedEdge edge_18;
-  edge_18.complex_restriction(true);
+  DirectedEdge edge_22;
+  edge_22.complex_restriction(true);
   {
-    edge_labels_rev
-        .emplace_back(kInvalidLabel,
-                      // TODO which order is the edgeid and opp_edge_id for reverse expansion label?
-                      make_graph_id(22), make_graph_id(18), &edge_18, vs::Cost{},
-                      vs::TravelMode::kDrive, vs::Cost{}, 0, false, false);
+    edge_labels_rev.emplace_back(kInvalidLabel, make_graph_id(22), make_graph_id(18), &edge_22,
+                                 vs::Cost{}, vs::TravelMode::kDrive, vs::Cost{}, 0, false, false);
   }
   // Create the rev_pred for the bridging check
   DirectedEdge edge_16;

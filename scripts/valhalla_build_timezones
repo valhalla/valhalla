@@ -1,11 +1,9 @@
-#!/usr/bin/env bash
+#!/bin/sh
 
 error_exit() {
   echo "$1" 1>&2
   exit 1
 }
-
-readonly shapefile=$PWD/timezones-with-oceans.shapefile.zip
 
 if  ! which spatialite >/dev/null; then
     echo "spatialite not found which is required.  Please install via:  sudo apt-get install spatialite-bin"
@@ -18,7 +16,7 @@ if  ! which unzip >/dev/null; then
 fi
 
 rm -rf dist
-rm -f $shapefile
+rm -f ./timezones-with-oceans.shapefile.zip
 
 url="https://github.com/evansiroky/timezone-boundary-builder/releases/download/2018d/timezones-with-oceans.shapefile.zip"
 
@@ -230,8 +228,8 @@ Atlantic/St_Helena,Africa/Abidjan
 EOF
 
 echo "downloading timezone polygon file." 1>&2 
-curl -L -s -o $shapefile ${url} || error_exit "wget failed for " ${url}
-unzip $shapefile 1>&2 || error_exit "unzip failed"
+curl -L -s -o ./timezones-with-oceans.shapefile.zip ${url} || error_exit "wget failed for " ${url}
+unzip ./timezones-with-oceans.shapefile.zip 1>&2 || error_exit "unzip failed"
 
 tz_file=$(mktemp)
 spatialite_tool -i -shp ./dist/combined-shapefile-with-oceans -d ${tz_file} -t tz_world -s 4326 -g geom -c UTF-8 1>&2 || error_exit "spatialite_tool import failed"
@@ -245,5 +243,5 @@ spatialite ${tz_file} "VACUUM;" 1>&2 || error_exit "VACUUM failed"
 spatialite ${tz_file} "ANALYZE;" 1>&2 || error_exit "ANALYZE failed"
 
 rm -rf dist
-rm -f $shapefile alias_tz.csv
+rm -f ./timezones-with-oceans.shapefile.zip alias_tz.csv
 cat ${tz_file}
