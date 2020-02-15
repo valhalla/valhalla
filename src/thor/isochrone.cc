@@ -304,11 +304,15 @@ ExpansionRecommendation Isochrone::ShouldExpand(baldr::GraphReader& graphreader,
                                                 const sif::EdgeLabel& pred,
                                                 const InfoRoutingType route_type) {
   if (route_type == InfoRoutingType::multi_modal) {
-    // Skip edges with large penalties (e.g. ferries?)
+    // Skip edges with large penalties (e.g. ferries?), MMCompute function will skip expanding this
+    // label
     if (pred.cost().cost > max_seconds_ * 2) {
       return ExpansionRecommendation::prune_expansion;
     }
   }
+  // Continue if the time interval has been met. This bus or rail line goes beyond the max
+  // but need to consider others so we just continue here. Tells MMExpand function to skip
+  // updating or pushing the label back
   if (pred.cost().secs > max_seconds_ || pred.cost().cost > max_seconds_ * 4) {
     return ExpansionRecommendation::stop_expansion;
   }

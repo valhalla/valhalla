@@ -720,15 +720,19 @@ void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
       continue;
     }
 
-    // TODO: need to put this in the base class and let isochrones implement it
-    // TODO: can we cram it into the expansion recommendation?
-    // Continue if the time interval has been met. This bus or rail line goes beyond the max
-    // but need to consider others so we just continue here.
-    /*
-    if (newcost.secs > max_seconds_) {
+    // Make the label in advance, we may not end up using it but we need it for the expansion decision
+    MMEdgeLabel edge_label{pred_idx,    edgeid,           directededge,
+                           newcost,     newcost.cost,     0.0f,
+                           mode_,       walking_distance, tripid,
+                           prior_stop,  blockid,          operator_id,
+                           has_transit, transition_cost,  has_time_restrictions};
+
+    // See if this is even worth expanding
+    auto maybe_expand = ShouldExpand(graphreader, edge_label, InfoRoutingType::multi_modal);
+    if (maybe_expand == ExpansionRecommendation::prune_expansion ||
+        maybe_expand == ExpansionRecommendation::stop_expansion) {
       continue;
     }
-    */
 
     // Check if edge is temporarily labeled and this path has less cost. If
     // less cost the predecessor is updated and the sort cost is decremented
@@ -748,9 +752,7 @@ void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
     // Add edge label, add to the adjacency list and set edge status
     uint32_t idx = mmedgelabels_.size();
     *es = {EdgeSet::kTemporary, idx};
-    mmedgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, 0.0f, mode_,
-                               walking_distance, tripid, prior_stop, blockid, operator_id,
-                               has_transit, transition_cost, has_time_restrictions);
+    mmedgelabels_.emplace_back(std::move(edge_label));
     adjacencylist_->add(idx);
   }
 
