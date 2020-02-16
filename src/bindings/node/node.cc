@@ -6,8 +6,6 @@
 #include <functional>
 #include <iostream>
 #include <napi.h>
-#include <rapidjson/stringbuffer.h>
-#include <rapidjson/writer.h>
 #include <sstream>
 #include <string>
 
@@ -216,6 +214,12 @@ private:
     return generic_action(info,
                           [](valhalla::tyr::actor_t& actor, const std::string& request)
                               -> std::string { return actor.transit_available(request); });
+  }
+
+  Napi::Value Expansion(const Napi::CallbackInfo& info) {
+    return generic_action(info,
+                          [](valhalla::tyr::actor_t& actor, const std::string& request)
+                              -> std::string { return actor.expansion(request); });
   }
 
   valhalla::tyr::actor_t actor;

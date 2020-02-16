@@ -5,7 +5,7 @@
 #include <memory>
 
 #include <valhalla/baldr/rapidjson_utils.h>
-#include <valhalla/proto/directions_options.pb.h>
+#include <valhalla/proto/options.pb.h>
 #include <valhalla/sif/autocost.h>
 #include <valhalla/sif/bicyclecost.h>
 #include <valhalla/sif/motorcyclecost.h>
@@ -24,8 +24,7 @@ namespace sif {
 template <class cost_t> class CostFactory {
 public:
   typedef std::shared_ptr<cost_t> cost_ptr_t;
-  typedef cost_ptr_t (*factory_function_t)(const odin::Costing costing,
-                                           const odin::DirectionsOptions& options);
+  typedef cost_ptr_t (*factory_function_t)(const Costing costing, const Options& options);
 
   /**
    * Constructor
@@ -39,7 +38,7 @@ public:
    * @param costing    the cost type that the function creates
    * @param function   the function pointer to call to actually create the cost object
    */
-  void Register(const odin::Costing costing, factory_function_t function) {
+  void Register(const Costing costing, factory_function_t function) {
     factory_funcs_.emplace(costing, function);
   }
 
@@ -48,10 +47,10 @@ public:
    * @param costing  the type of cost to create
    * @param options  pbf with request options
    */
-  cost_ptr_t Create(const odin::Costing costing, const odin::DirectionsOptions& options) const {
+  cost_ptr_t Create(const Costing costing, const Options& options) const {
     auto itr = factory_funcs_.find(costing);
     if (itr == factory_funcs_.end()) {
-      auto costing_str = odin::Costing_Name(costing);
+      auto costing_str = Costing_Enum_Name(costing);
       throw std::runtime_error("No costing method found for '" + costing_str + "'");
     }
     // create the cost using the function pointer
@@ -62,21 +61,22 @@ public:
    * Convenience method to register all of the standard costing models.
    */
   void RegisterStandardCostingModels() {
-    Register(odin::Costing::auto_, CreateAutoCost);
-    Register(odin::Costing::auto_data_fix, CreateAutoDataFixCost);
-    Register(odin::Costing::auto_shorter, CreateAutoShorterCost);
-    Register(odin::Costing::bicycle, CreateBicycleCost);
-    Register(odin::Costing::bus, CreateBusCost);
-    Register(odin::Costing::hov, CreateHOVCost);
-    Register(odin::Costing::motor_scooter, CreateMotorScooterCost);
-    Register(odin::Costing::motorcycle, CreateMotorcycleCost);
-    Register(odin::Costing::pedestrian, CreatePedestrianCost);
-    Register(odin::Costing::truck, CreateTruckCost);
-    Register(odin::Costing::transit, CreateTransitCost);
+    Register(Costing::auto_, CreateAutoCost);
+    Register(Costing::auto_data_fix, CreateAutoDataFixCost);
+    Register(Costing::auto_shorter, CreateAutoShorterCost);
+    Register(Costing::bicycle, CreateBicycleCost);
+    Register(Costing::bus, CreateBusCost);
+    Register(Costing::hov, CreateHOVCost);
+    Register(Costing::taxi, CreateTaxiCost);
+    Register(Costing::motor_scooter, CreateMotorScooterCost);
+    Register(Costing::motorcycle, CreateMotorcycleCost);
+    Register(Costing::pedestrian, CreatePedestrianCost);
+    Register(Costing::truck, CreateTruckCost);
+    Register(Costing::transit, CreateTransitCost);
   }
 
 private:
-  std::map<const odin::Costing, factory_function_t> factory_funcs_;
+  std::map<const Costing, factory_function_t> factory_funcs_;
 };
 
 } // namespace sif

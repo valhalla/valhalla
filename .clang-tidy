@@ -1,6 +1,6 @@
 ---
 #Checks:          '*,-clang-diagnostic-*'
-Checks:          'readability-braces-around-statements,-clang-*,performance*'
+Checks:          '-clang-*,performance*'
 #WarningsAsErrors: '*'
 #HeaderFilterRegex: '\/src\/'
 AnalyzeTemporaryDtors: false

@@ -46,12 +46,17 @@ public:
    * levels. If the deserialize flag is set then all objects are serialized
    * from memory into builders that can be added to and then stored using
    * StoreTileData.
-   * @param  tile_dir     Base directory path
-   * @param  graphid      GraphId used to determine the tileid and level
-   * @param  deserialize  If true the existing objects in the tile are
-   *                      converted into builders so they can be added to.
+   * @param  tile_dir               Base directory path
+   * @param  graphid                GraphId used to determine the tileid and level
+   * @param  deserialize            If true the existing objects in the tile are
+   *                                converted into builders so they can be added to.
+   * @param  serialize_turn_lanes   If true, the offsets are truely text offsets.
+   *                                If false, the offsets are indexes into unique name file
    */
-  GraphTileBuilder(const std::string& tile_dir, const GraphId& graphid, const bool deserialize);
+  GraphTileBuilder(const std::string& tile_dir,
+                   const GraphId& graphid,
+                   const bool deserialize,
+                   bool serialize_turn_lanes = true);
 
   /**
    * Output the tile to file. Stores as binary data.
@@ -187,13 +192,14 @@ public:
    * @param  wayid  The target edge is part of this the way id.
    * @param  elev   Mean elevation.
    * @param  bn     Bike network.
-   * @param  spd    Speed limit.
+   * @param  spd    Speed limit. [kph]
    * @param  lls    The shape of the target edge.
    * @param  names  The names of the target edge.
    * @param  types  Bits indicating if the name is a ref vs a name.
    * @param  added  Set to true if the target edge was newly added to the list,
    *                set to false if the target edge was already in the list.
-   *
+   * @param  diff_names Indicates the opposing direction has different names.
+   *                    If true a new EdgeInfo is always added.
    * @return  The edge info offset that will be stored in the directed edge.
    */
   template <class shape_container_t>
@@ -207,7 +213,8 @@ public:
                        const shape_container_t& lls,
                        const std::vector<std::string>& names,
                        const uint16_t types,
-                       bool& added);
+                       bool& added,
+                       bool diff_names = false);
 
   /**
    * Add the edge info to the tile. This method accepts an encoded shape string.
@@ -229,7 +236,8 @@ public:
    * @param  types  Bits indicating if the name is a ref vs a name.
    * @param  added  Set to true if the target edge was newly added to the list,
    *                set to false if the target edge was already in the list.
-   *
+   * @param  diff_names Indicates the opposing direction has different names.
+   *                    If true a new EdgeInfo is always added.
    * @return  The edge info offset that will be stored in the directed edge.
    */
   uint32_t AddEdgeInfo(const uint32_t edgeindex,
@@ -242,13 +250,22 @@ public:
                        const std::string& llstr,
                        const std::vector<std::string>& names,
                        const uint16_t types,
-                       bool& added);
+                       bool& added,
+                       bool diff_names = false);
 
   /**
    * Set the mean elevation in the most recently added EdgeInfo.
    * @param elev Mean elevation.
    */
   void set_mean_elevation(const float elev);
+
+  /**
+   * Set the mean elevation to the EdgeInfo given the edge info offset. This requires
+   * a serialized tile builder.
+   * @param offset Edge info offset.
+   * @param elev Mean elevation.
+   */
+  void set_mean_elevation(const uint32_t offset, const float elev);
 
   /**
    * Add a name to the text list.
@@ -397,11 +414,27 @@ public:
   void AddTurnLanes(const uint32_t idx, const std::string& str);
 
   /**
+   * Add turn lane information for a directed edge.
+   * @param  idx      Directed edge index.
+   * @param  tl_idx   Turn lane index into the OSMData name_offset map
+   */
+  void AddTurnLanes(const uint32_t idx, const uint32_t tl_idx);
+
+  /**
+   * Add turn lanes
+   * @param  turn_lanes vector of turn lanes
+   */
+  void AddTurnLanes(const std::vector<TurnLanes>& turn_lanes);
+
+  /**
    * Add a predicted speed profile for a directed edge.
    * @param  idx  Edge Id within the tile.
    * @param  profile  Compressed profile (200 short int)
+   * @param  predicted_count_hint  How many predicted speeds should we expect to add
    */
-  void AddPredictedSpeed(const uint32_t idx, const std::vector<int16_t>& profile);
+  void AddPredictedSpeed(const uint32_t idx,
+                         const std::vector<int16_t>& profile,
+                         const size_t predicted_count_hint = 256);
 
   /**
    * Updates a tile with predictive speed data. Also updates directed edges with
@@ -497,6 +530,7 @@ protected:
   // Edge info offset and map
   size_t edge_info_offset_ = 0;
   std::unordered_map<edge_tuple, size_t, EdgeTupleHasher> edge_offset_map_;
+  std::unordered_map<uint32_t, EdgeInfoBuilder*> edgeinfo_offset_map_;
 
   // The edgeinfo list
   std::list<EdgeInfoBuilder> edgeinfo_list_;

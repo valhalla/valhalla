@@ -30,6 +30,10 @@ const std::string kEdgeSignExitNumber = "edge.sign.exit_number";
 const std::string kEdgeSignExitBranch = "edge.sign.exit_branch";
 const std::string kEdgeSignExitToward = "edge.sign.exit_toward";
 const std::string kEdgeSignExitName = "edge.sign.exit_name";
+const std::string kEdgeSignGuideBranch = "edge.sign.guide_branch";
+const std::string kEdgeSignGuideToward = "edge.sign.guide_toward";
+const std::string kEdgeSignJunctionName = "edge.sign.junction_name";
+const std::string kEdgeSignGuidanceViewJunction = "edge.sign.guidance_view_junction";
 const std::string kEdgeTravelMode = "edge.travel_mode";
 const std::string kEdgeVehicleType = "edge.vehicle_type";
 const std::string kEdgePedestrianType = "edge.pedestrian_type";
@@ -73,6 +77,8 @@ const std::string kNodeIntersectingEdgeToEdgeNameConsistency =
 const std::string kNodeIntersectingEdgeDriveability = "node.intersecting_edge.driveability";
 const std::string kNodeIntersectingEdgeCyclability = "node.intersecting_edge.cyclability";
 const std::string kNodeIntersectingEdgeWalkability = "node.intersecting_edge.walkability";
+const std::string kNodeIntersectingEdgeUse = "node.intersecting_edge.use";
+const std::string kNodeIntersectingEdgeRoadClass = "node.intersecting_edge.road_class";
 const std::string kNodeElapsedTime = "node.elapsed_time";
 const std::string kNodeaAdminIndex = "node.admin_index";
 const std::string kNodeType = "node.type";
@@ -97,10 +103,10 @@ const std::string kNodeTransitStationInfoLatLon = "node.transit_station_info.lat
 const std::string kNodeTransitEgressInfoOnestopId = "node.transit_egress_info.onestop_id";
 const std::string kNodeTransitEgressInfoName = "node.transit_egress_info.name";
 const std::string kNodeTransitEgressInfoLatLon = "node.transit_egress_info.lat_lon";
-
 const std::string kNodeTimeZone = "node.time_zone";
+const std::string kNodeTransitionTime = "node.transition_time";
 
-// Top level: osm chnageset, admin list, and full shape keys
+// Top level: osm changeset, admin list, and full shape keys
 const std::string kOsmChangeset = "osm_changeset";
 const std::string kAdminCountryCode = "admin.country_code";
 const std::string kAdminCountryText = "admin.country_text";
@@ -117,10 +123,16 @@ const std::string kMatchedDistanceFromTracePoint = "matched.distance_from_trace_
 const std::string kConfidenceScore = "confidence_score";
 const std::string kRawScore = "raw_score";
 
+// Per-shape attributes
+const std::string kShapeAttributesTime = "shape_attributes.time";
+const std::string kShapeAttributesLength = "shape_attributes.length";
+const std::string kShapeAttributesSpeed = "shape_attributes.speed";
+
 // Categories
 const std::string kNodeCategory = "node.";
 const std::string kAdminCategory = "admin.";
 const std::string kMatchedCategory = "matched.";
+const std::string kShapeAttributesCategory = "shape_attributes.";
 
 /**
  * Trip path controller for attributes
@@ -130,18 +142,12 @@ struct AttributesController {
   /*
    * Attributes that are required by the route action to make guidance instructions.
    */
-  static const std::unordered_map<std::string, bool> kRouteAttributes;
+  static const std::unordered_map<std::string, bool> kDefaultAttributes;
 
   /*
-   * Constructor that will use the route attributes by default.
+   * Constructor that will use the default values for all of the attributes.
    */
-  AttributesController(const std::unordered_map<std::string, bool>& new_attributes =
-                           AttributesController::kRouteAttributes);
-
-  /**
-   * Enable all of the attributes.
-   */
-  void enable_all();
+  AttributesController();
 
   /**
    * Disable all of the attributes.

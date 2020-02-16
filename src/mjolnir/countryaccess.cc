@@ -61,6 +61,10 @@ uint32_t GetAccess(const uint32_t current_access,
     new_access = ProcessAccess(new_access, country_access, kHOVAccess);
   }
 
+  if (!user_access.taxi_tag()) {
+    new_access = ProcessAccess(new_access, country_access, kTaxiAccess);
+  }
+
   if (!user_access.moped_tag()) {
     new_access = ProcessAccess(new_access, country_access, kMopedAccess);
   }

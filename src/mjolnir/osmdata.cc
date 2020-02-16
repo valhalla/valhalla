@@ -1,7 +1,9 @@
+#include <cctype>
 #include <cstdint>
 #include <fstream>
 #include <iostream>
 
+#include <boost/algorithm/string.hpp>
 #include <boost/filesystem/operations.hpp>
 
 #include "midgard/logging.h"
@@ -18,7 +20,8 @@ const std::string restrictions_file = "osmdata_restrictions.bin";
 const std::string viaset_file = "osmdata_viaset.bin";
 const std::string access_restrictions_file = "osmdata_access_restrictions.bin";
 const std::string bike_relations_file = "osmdata_bike_relations.bin";
-const std::string wayref_file = "osmdata_wayrefs.bin";
+const std::string way_ref_file = "osmdata_way_refs.bin";
+const std::string way_ref_rev_file = "osmdata_way_refs_rev.bin";
 const std::string node_names_file = "osmdata_node_names.bin";
 const std::string unique_names_file = "osmdata_unique_strings.bin";
 const std::string lane_connectivity_file = "osmdata_lane_connectivity.bin";
@@ -503,7 +506,8 @@ bool OSMData::write_to_temp_files(const std::string& tile_dir) {
                 write_viaset(tile_dir + viaset_file, via_set) &&
                 write_access_restrictions(tile_dir + access_restrictions_file, access_restrictions) &&
                 write_bike_relations(tile_dir + bike_relations_file, bike_relations) &&
-                write_way_refs(tile_dir + wayref_file, way_ref) &&
+                write_way_refs(tile_dir + way_ref_file, way_ref) &&
+                write_way_refs(tile_dir + way_ref_rev_file, way_ref_rev) &&
                 write_node_names(tile_dir + node_names_file, node_names) &&
                 write_unique_names(tile_dir + unique_names_file, name_offset_map) &&
                 write_lane_connectivity(tile_dir + lane_connectivity_file, lane_connectivity_map);
@@ -539,12 +543,58 @@ bool OSMData::read_from_temp_files(const std::string& tile_dir) {
                 read_viaset(tile_dir + viaset_file, via_set) &&
                 read_access_restrictions(tile_dir + access_restrictions_file, access_restrictions) &&
                 read_bike_relations(tile_dir + bike_relations_file, bike_relations) &&
-                read_way_refs(tile_dir + wayref_file, way_ref) &&
+                read_way_refs(tile_dir + way_ref_file, way_ref) &&
+                read_way_refs(tile_dir + way_ref_rev_file, way_ref_rev) &&
                 read_node_names(tile_dir + node_names_file, node_names) &&
                 read_unique_names(tile_dir + unique_names_file, name_offset_map) &&
                 read_lane_connectivity(tile_dir + lane_connectivity_file, lane_connectivity_map);
   LOG_INFO("Done");
   return status;
+}
+
+// Read OSMData from temporary files
+bool OSMData::read_from_unique_names_file(const std::string& tile_dir) {
+  LOG_INFO("Read OSMData unique_names from temp file");
+
+  // Read the other data
+  bool status = read_unique_names(tile_dir + unique_names_file, name_offset_map);
+  LOG_INFO("Done");
+  return status;
+}
+
+// add the direction information to the forward or reverse map for relations.
+void OSMData::add_to_name_map(const uint32_t member_id,
+                              const std::string& direction,
+                              const std::string& reference,
+                              const bool forward) {
+
+  std::string dir = direction;
+  boost::algorithm::to_lower(dir);
+  dir[0] = std::toupper(dir[0]);
+
+  // TODO:  network=e-road with int_ref=E #
+  if ((boost::starts_with(dir, "North (") || boost::starts_with(dir, "South (") ||
+       boost::starts_with(dir, "East (") || boost::starts_with(dir, "West (")) ||
+      dir == "North" || dir == "South" || dir == "East" || dir == "West") {
+
+    if (forward) {
+      auto iter = way_ref.find(member_id);
+      if (iter != way_ref.end()) {
+        std::string ref = name_offset_map.name(iter->second);
+        way_ref[member_id] = name_offset_map.index(ref + ";" + reference + "|" + dir);
+      } else {
+        way_ref[member_id] = name_offset_map.index(reference + "|" + dir);
+      }
+    } else {
+      auto iter = way_ref_rev.find(member_id);
+      if (iter != way_ref_rev.end()) {
+        std::string ref = name_offset_map.name(iter->second);
+        way_ref_rev[member_id] = name_offset_map.index(ref + ";" + reference + "|" + dir);
+      } else {
+        way_ref_rev[member_id] = name_offset_map.index(reference + "|" + dir);
+      }
+    }
+  }
 }
 
 void OSMData::cleanup_temp_files(const std::string& tile_dir) {
@@ -559,7 +609,8 @@ void OSMData::cleanup_temp_files(const std::string& tile_dir) {
   remove_temp_file(tile_dir + viaset_file);
   remove_temp_file(tile_dir + access_restrictions_file);
   remove_temp_file(tile_dir + bike_relations_file);
-  remove_temp_file(tile_dir + wayref_file);
+  remove_temp_file(tile_dir + way_ref_file);
+  remove_temp_file(tile_dir + way_ref_rev_file);
   remove_temp_file(tile_dir + node_names_file);
   remove_temp_file(tile_dir + unique_names_file);
   remove_temp_file(tile_dir + lane_connectivity_file);

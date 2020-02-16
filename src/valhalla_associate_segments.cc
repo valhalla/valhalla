@@ -284,13 +284,13 @@ public:
                       const uint32_t tz_index) const;
   bool Allowed(const vb::NodeInfo* node) const;
   vs::Cost EdgeCost(const vb::DirectedEdge* edge, const uint32_t speed) const;
-  const vs::EdgeFilter GetEdgeFilter() const;
-  const vs::NodeFilter GetNodeFilter() const;
+  vs::EdgeFilter GetEdgeFilter() const;
+  vs::NodeFilter GetNodeFilter() const;
   float AStarCostFactor() const;
 };
 
 DistanceOnlyCost::DistanceOnlyCost(vs::TravelMode travel_mode)
-    : DynamicCost(valhalla::odin::DirectionsOptions(), travel_mode) {
+    : DynamicCost(valhalla::Options(), travel_mode) {
 }
 
 DistanceOnlyCost::~DistanceOnlyCost() {
@@ -330,11 +330,11 @@ vs::Cost DistanceOnlyCost::EdgeCost(const vb::DirectedEdge* edge, const uint32_t
   return {edge_len, edge_len};
 }
 
-const vs::EdgeFilter DistanceOnlyCost::GetEdgeFilter() const {
+vs::EdgeFilter DistanceOnlyCost::GetEdgeFilter() const {
   return [](const vb::DirectedEdge* edge) -> float { return allow_edge_pred(edge) ? 1.0f : 0.0f; };
 }
 
-const vs::NodeFilter DistanceOnlyCost::GetNodeFilter() const {
+vs::NodeFilter DistanceOnlyCost::GetNodeFilter() const {
   return [](const vb::NodeInfo*) -> bool { return false; };
 }
 
@@ -702,13 +702,14 @@ std::vector<EdgeMatch> edge_association::match_edges(const pbf::Segment& segment
     // make sure there's no state left over from previous paths
     m_path_algo->Clear();
     m_path_algo->set_max_label_count(100);
-    auto path = m_path_algo->GetBestPath(origin, dest, m_reader, &m_costing, m_travel_mode);
-    if (path.empty()) {
+    auto paths = m_path_algo->GetBestPath(origin, dest, m_reader, &m_costing, m_travel_mode);
+    if (paths.empty()) {
       // what to do if there's no path?
       LOG_DEBUG("No route to destination " + std::to_string(next_coord) + " from origin point " +
                 std::to_string(coord) + ". Segment cannot be matched, discarding.");
       return std::vector<EdgeMatch>();
     }
+    const auto& path = paths.front();
 
     // Throw out if dist mismatch. The costing method stores distance in both
     // cost and elapsed time - so elapsed time of the last edge is total

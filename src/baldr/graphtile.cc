@@ -1,6 +1,7 @@
 #include "baldr/graphtile.h"
 #include "baldr/compression_utils.h"
 #include "baldr/datetime.h"
+#include "baldr/sign.h"
 #include "baldr/tilehierarchy.h"
 #include "filesystem.h"
 #include "midgard/aabb2.h"
@@ -8,7 +9,11 @@
 #include "midgard/tiles.h"
 
 #include <boost/algorithm/string.hpp>
+#include <boost/filesystem.hpp>
+#include <chrono>
 #include <cmath>
+#include <cstdio>
+#include <cstring>
 #include <ctime>
 #include <fstream>
 #include <iomanip>
@@ -16,6 +21,8 @@
 #include <locale>
 #include <string>
 #include <vector>
+
+using namespace valhalla::midgard;
 
 namespace {
 struct dir_facet : public std::numpunct<char> {
@@ -52,11 +59,11 @@ GraphTile::GraphTile()
 GraphTile::GraphTile(const std::string& tile_dir, const GraphId& graphid) : header_(nullptr) {
 
   // Don't bother with invalid ids
-  if (!graphid.Is_Valid() || graphid.level() > TileHierarchy::get_max_level()) {
+  if (!graphid.Is_Valid() || graphid.level() > TileHierarchy::get_max_level() || tile_dir.empty()) {
     return;
   }
 
-  // Open to the end of the file so we can immediately get size;
+  // Open to the end of the file so we can immediately get size
   std::string file_location =
       tile_dir + filesystem::path::preferred_separator + FileSuffix(graphid.Tile_Base());
   std::ifstream file(file_location, std::ios::in | std::ios::binary | std::ios::ate);
@@ -71,51 +78,58 @@ GraphTile::GraphTile(const std::string& tile_dir, const GraphId& graphid) : head
 
     // Set pointers to internal data structures
     Initialize(graphid, graphtile_->data(), graphtile_->size());
-  } // try to load a gzipped tile
-  else {
-    std::ifstream file(file_location + ".gz", std::ios::in | std::ios::binary);
+  } else {
+    // try to load a gzipped tile
+    std::ifstream file(file_location + ".gz", std::ios::in | std::ios::binary | std::ios::ate);
     if (file.is_open()) {
       // read the compressed file into memory
-      std::vector<char> compressed(std::istreambuf_iterator<char>(file),
-                                   (std::istreambuf_iterator<char>()));
+      size_t filesize = file.tellg();
+      file.seekg(0, std::ios::beg);
+      std::vector<char> compressed(filesize);
+      file.read(&compressed[0], filesize);
+      file.close();
 
-      // for setting where to read compressed data from
-      auto src_func = [&compressed](z_stream& s) -> void {
-        s.next_in = static_cast<Byte*>(static_cast<void*>(compressed.data()));
-        s.avail_in = static_cast<unsigned int>(compressed.size());
-      };
-
-      // for setting where to write the uncompressed data to
-      graphtile_.reset(new std::vector<char>(0, 0));
-      auto dst_func = [this, &compressed](z_stream& s) -> int {
-        // if the whole buffer wasn't used we are done
-        auto size = graphtile_->size();
-        if (s.total_out < size)
-          graphtile_->resize(s.total_out);
-        // we need more space
-        else {
-          // assume we need 3.5x the space
-          graphtile_->resize(size + (compressed.size() * COMPRESSION_HINT));
-          // set the pointer to the next spot
-          s.next_out = static_cast<Byte*>(static_cast<void*>(graphtile_->data() + size));
-          s.avail_out = compressed.size() * COMPRESSION_HINT;
-        }
-        return Z_NO_FLUSH;
-      };
-
-      // Decompress tile into memory
-      if (!baldr::inflate(src_func, dst_func)) {
-        LOG_WARN("Failed to gunzip: " + file_location + ".gz");
-        graphtile_.reset();
-        return;
-      }
-
-      // Set pointers to internal data structures
-      Initialize(graphid, graphtile_->data(), graphtile_->size());
-    } else {
-      LOG_DEBUG("Tile " + file_location + " was not found");
+      // try to decompress it
+      DecompressTile(graphid, compressed);
     }
   }
+}
+
+bool GraphTile::DecompressTile(const GraphId& graphid, std::vector<char>& compressed) {
+  // for setting where to read compressed data from
+  auto src_func = [&compressed](z_stream& s) -> void {
+    s.next_in = static_cast<Byte*>(static_cast<void*>(compressed.data()));
+    s.avail_in = static_cast<unsigned int>(compressed.size());
+  };
+
+  // for setting where to write the uncompressed data to
+  graphtile_.reset(new std::vector<char>(0, 0));
+  auto dst_func = [this, &compressed](z_stream& s) -> int {
+    // if the whole buffer wasn't used we are done
+    auto size = graphtile_->size();
+    if (s.total_out < size)
+      graphtile_->resize(s.total_out);
+    // we need more space
+    else {
+      // assume we need 3.5x the space
+      graphtile_->resize(size + (compressed.size() * COMPRESSION_HINT));
+      // set the pointer to the next spot
+      s.next_out = static_cast<Byte*>(static_cast<void*>(graphtile_->data() + size));
+      s.avail_out = compressed.size() * COMPRESSION_HINT;
+    }
+    return Z_NO_FLUSH;
+  };
+
+  // Decompress tile into memory
+  if (!baldr::inflate(src_func, dst_func)) {
+    LOG_ERROR("Failed to gunzip " + FileSuffix(graphid, true));
+    graphtile_.reset();
+    return false;
+  }
+
+  // Set pointers to internal data structures
+  Initialize(graphid, graphtile_->data(), graphtile_->size());
+  return true;
 }
 
 GraphTile::GraphTile(const GraphId& graphid, char* ptr, size_t size) : header_(nullptr) {
@@ -124,24 +138,71 @@ GraphTile::GraphTile(const GraphId& graphid, char* ptr, size_t size) : header_(n
   Initialize(graphid, ptr, size);
 }
 
-GraphTile::GraphTile(const std::string& tile_url, const GraphId& graphid, curler_t& curler) {
+std::string MakeSingleTileUrl(const std::string& tile_url, const GraphId& graphid) {
+  auto id_pos = tile_url.find(GraphTile::kTilePathPattern);
+  return tile_url.substr(0, id_pos) + GraphTile::FileSuffix(graphid.Tile_Base()) +
+         tile_url.substr(id_pos + std::strlen(GraphTile::kTilePathPattern));
+}
+
+void GraphTile::SaveTileToFile(const std::vector<char>& tile_data, const std::string& disk_location) {
+  // At first we save tile to a temporary file and then move it
+  // so we can avoid cases when another thread could read partially written file.
+  auto tmp_location = disk_location + boost::filesystem::unique_path().string();
+  auto dir = filesystem::path(disk_location);
+  dir.replace_filename("");
+
+  bool success = true;
+  if (filesystem::create_directories(dir)) {
+    std::ofstream file(tmp_location, std::ios::out | std::ios::binary | std::ios::ate);
+    file.write(tile_data.data(), tile_data.size());
+    file.close();
+    if (file.fail())
+      success = false;
+    int err = std::rename(tmp_location.c_str(), disk_location.c_str());
+    if (err)
+      success = false;
+  }
+
+  if (!success)
+    filesystem::remove(tmp_location);
+}
+
+GraphTile GraphTile::CacheTileURL(const std::string& tile_url,
+                                  const GraphId& graphid,
+                                  curler_t& curler,
+                                  bool gzipped,
+                                  const std::string& cache_location) {
   // Don't bother with invalid ids
   if (!graphid.Is_Valid() || graphid.level() > TileHierarchy::get_max_level()) {
-    return;
+    return {};
   }
 
-  // Get the response returned from curl
-  std::string uri =
-      tile_url + filesystem::path::preferred_separator + FileSuffix(graphid.Tile_Base());
+  auto uri = MakeSingleTileUrl(tile_url, graphid);
   long http_code;
-  auto tile_data = curler(uri, http_code);
+  auto tile_data = curler(uri, http_code, gzipped);
 
-  // If its good try to use it
-  if (http_code == 200) {
-    graphtile_ = std::make_shared<std::vector<char>>(std::move(tile_data));
-    Initialize(graphid, graphtile_->data(), graphtile_->size());
-    // TODO: optionally write the tile to disk?
+  if (http_code != 200)
+    return {};
+
+  // try to cache it on disk so we dont have to keep fetching it from url
+  if (!cache_location.empty()) {
+    auto suffix = FileSuffix(graphid.Tile_Base(), gzipped);
+    auto disk_location = cache_location + filesystem::path::preferred_separator + suffix;
+    SaveTileToFile(tile_data, disk_location);
   }
+
+  // turn the memory into a tile
+  auto tile = GraphTile();
+  if (gzipped) {
+    tile.DecompressTile(graphid, tile_data);
+  } // we dont need to decompress so just take ownership of the data
+  else {
+    tile.graphtile_.reset(new std::vector<char>(0, 0));
+    *tile.graphtile_ = std::move(tile_data);
+    tile.Initialize(graphid, tile.graphtile_->data(), tile.graphtile_->size());
+  }
+
+  return tile;
 }
 
 GraphTile::~GraphTile() {
@@ -149,9 +210,18 @@ GraphTile::~GraphTile() {
 
 // Set pointers to internal tile data structures
 void GraphTile::Initialize(const GraphId& graphid, char* tile_ptr, const size_t tile_size) {
+  if (tile_size < sizeof(GraphTileHeader))
+    throw std::runtime_error("Invalid tile data size = " + std::to_string(tile_size) +
+                             ". Tile file might me corrupted");
+
   char* ptr = tile_ptr;
   header_ = reinterpret_cast<GraphTileHeader*>(ptr);
   ptr += sizeof(GraphTileHeader);
+
+  if (header_->end_offset() != tile_size)
+    throw std::runtime_error("Mismatch in end offset = " + std::to_string(header_->end_offset()) +
+                             " vs raw tile data size = " + std::to_string(tile_size) +
+                             ". Tile file might me corrupted");
 
   // TODO check version
 
@@ -301,7 +371,7 @@ void GraphTile::AssociateOneStopIds(const GraphId& graphid) {
   }
 }
 
-std::string GraphTile::FileSuffix(const GraphId& graphid) {
+std::string GraphTile::FileSuffix(const GraphId& graphid, bool gzipped) {
   /*
   if you have a graphid where level == 8 and tileid == 24134109851 you should get:
   8/024/134/109/851.gph since the number of levels is likely to be very small this limits the total
@@ -337,14 +407,15 @@ std::string GraphTile::FileSuffix(const GraphId& graphid) {
 
   // if it starts with a zero the pow trick doesn't work
   if (graphid.level() == 0) {
-    stream << static_cast<uint32_t>(std::pow(10, max_length)) + graphid.tileid() << ".gph";
+    stream << static_cast<uint32_t>(std::pow(10, max_length)) + graphid.tileid() << ".gph"
+           << (gzipped ? ".gz" : "");
     std::string suffix = stream.str();
     suffix[0] = '0';
     return suffix;
   }
   // it was something else
   stream << graphid.level() * static_cast<uint32_t>(std::pow(10, max_length)) + graphid.tileid()
-         << ".gph";
+         << ".gph" << (gzipped ? ".gz" : "");
   return stream.str();
 }
 
@@ -467,14 +538,19 @@ AABB2<PointLL> GraphTile::BoundingBox() const {
   return tiles.TileBounds(header_->graphid().tileid());
 }
 
+iterable_t<const DirectedEdge> GraphTile::GetDirectedEdges(const NodeInfo* node) const {
+  const auto* edge = directededges_ + node->edge_index();
+  return iterable_t<const DirectedEdge>{edge, node->edge_count()};
+}
+
 iterable_t<const DirectedEdge> GraphTile::GetDirectedEdges(const GraphId& node) const {
   if (node.id() < header_->nodecount()) {
-    const auto& nodeinfo = nodes_[node.id()];
-    const auto* edge = directededge(nodeinfo.edge_index());
-    return iterable_t<const DirectedEdge>{edge, nodeinfo.edge_count()};
+    const auto* nodeinfo = nodes_ + node.id();
+    return GetDirectedEdges(nodeinfo);
   }
   throw std::runtime_error(
-      "GraphTile NodeInfo index out of bounds: " + std::to_string(node.tileid()) + "," +
+      std::string(__FILE__) + ":" + std::to_string(__LINE__) +
+      " GraphTile NodeInfo index out of bounds: " + std::to_string(node.tileid()) + "," +
       std::to_string(node.level()) + "," + std::to_string(node.id()) +
       " nodecount= " + std::to_string(header_->nodecount()));
 }
@@ -486,8 +562,9 @@ iterable_t<const DirectedEdge> GraphTile::GetDirectedEdges(const size_t idx) con
     return iterable_t<const DirectedEdge>{edge, nodeinfo.edge_count()};
   }
   throw std::runtime_error(
-      "GraphTile NodeInfo index out of bounds: " + std::to_string(header_->graphid().tileid()) + "," +
-      std::to_string(header_->graphid().level()) + "," + std::to_string(idx) +
+      std::string(__FILE__) + ":" + std::to_string(__LINE__) +
+      " GraphTile NodeInfo index out of bounds 5: " + std::to_string(header_->graphid().tileid()) +
+      "," + std::to_string(header_->graphid().level()) + "," + std::to_string(idx) +
       " nodecount= " + std::to_string(header_->nodecount()));
 }
 
@@ -574,7 +651,7 @@ std::string GraphTile::GetName(const uint32_t textlist_offset) const {
 
 // Convenience method to get the signs for an edge given the
 // directed edge index.
-std::vector<SignInfo> GraphTile::GetSigns(const uint32_t idx) const {
+std::vector<SignInfo> GraphTile::GetSigns(const uint32_t idx, bool signs_on_node) const {
   uint32_t count = header_->signcount();
   std::vector<SignInfo> signs;
   if (count == 0) {
@@ -591,11 +668,11 @@ std::vector<SignInfo> GraphTile::GetSigns(const uint32_t idx) const {
     mid = (low + high) / 2;
     const auto& sign = signs_[mid];
     // matching edge index
-    if (idx == sign.edgeindex()) {
+    if (idx == sign.index()) {
       found = mid;
       high = mid - 1;
     } // need a smaller index
-    else if (idx < sign.edgeindex()) {
+    else if (idx < sign.index()) {
       high = mid - 1;
     } // need a bigger index
     else {
@@ -604,14 +681,19 @@ std::vector<SignInfo> GraphTile::GetSigns(const uint32_t idx) const {
   }
 
   // Add signs
-  for (; found < count && signs_[found].edgeindex() == idx; ++found) {
+  for (; found < count && signs_[found].index() == idx; ++found) {
     if (signs_[found].text_offset() < textlist_size_) {
       // Skip tagged text strings (Future code is needed to handle tagged strings)
       if (signs_[found].tagged()) {
         continue;
       }
-      signs.emplace_back(signs_[found].type(), signs_[found].is_route_num(),
-                         (textlist_ + signs_[found].text_offset()));
+
+      // only add named signs when asking for signs at the node and
+      // only add edge signs when asking for signs at the edges.
+      if ((signs_[found].type() == Sign::Type::kJunctionName && signs_on_node) ||
+          (signs_[found].type() != Sign::Type::kJunctionName && !signs_on_node))
+        signs.emplace_back(signs_[found].type(), signs_[found].route_num_type(),
+                           (textlist_ + signs_[found].text_offset()));
     } else {
       throw std::runtime_error("GetSigns: offset exceeds size of text list");
     }

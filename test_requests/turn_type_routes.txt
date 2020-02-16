@@ -1,0 +1,8 @@
+-j '{"locations":[{"lat":37.772182,"lon":-122.407425,"street":"Bryant Street"},{"lat":37.771442,"lon":-122.404968,"street":"Brannan Street"}],"costing":"auto","units":"miles"}'
+-j '{"locations":[{"lat":37.772182,"lon":-122.407425,"street":"Bryant Street"},{"lat":37.770744,"lon":-122.406174,"street":"Brannan Street"}],"costing":"auto","units":"miles"}'
+-j '{"locations":[{"lat":37.771305,"lon":-122.410934,"street":"10th Street"},{"lat":37.773537,"lon":-122.405708,"street":"Bryant Street"}],"costing":"auto","units":"miles"}'
+-j '{"locations":[{"lat":37.771305,"lon":-122.410934,"street":"10th Street"},{"lat":37.766865,"lon":-122.405426,"street":"US 101 South"}],"costing":"auto","units":"miles"}'
+-j '{"locations":[{"lat":40.030132,"lon":-75.104416,"street":"Whitaker Avenue"},{"lat":40.029846,"lon":-75.104965,"street":"US 1 South"}],"costing":"auto","units":"miles"}'
+-j '{"locations":[{"lat":40.030132,"lon":-75.104416,"street":"Whitaker Avenue"},{"lat":40.029678,"lon":-75.104996,"street":"US 1 South"}],"costing":"auto","units":"miles"}'
+-j '{"locations":[{"lat":40.769985,"lon":-73.974312,"street":""},{"lat":40.769848,"lon":-73.973953,"street":""}],"costing":"pedestrian","units":"miles"}'
+-j '{"locations":[{"lat":40.769985,"lon":-73.974312,"street":""},{"lat":40.769775,"lon":-73.973984,"street":""}],"costing":"pedestrian","units":"miles"}'

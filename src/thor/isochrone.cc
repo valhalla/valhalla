@@ -71,7 +71,7 @@ void Isochrone::Clear() {
 void Isochrone::ConstructIsoTile(
     const bool multimodal,
     const unsigned int max_minutes,
-    google::protobuf::RepeatedPtrField<valhalla::odin::Location>& origin_locations) {
+    google::protobuf::RepeatedPtrField<valhalla::Location>& origin_locations) {
   float max_distance;
   auto max_seconds = max_minutes * 60;
   if (multimodal) {
@@ -239,29 +239,33 @@ void Isochrone::ExpandForward(GraphReader& graphreader,
       continue;
     }
 
+    auto todo = nullptr;
+    bool has_time_restrictions = false;
     // Check if the edge is allowed or if a restriction occurs. Get the edge speed.
-    uint32_t speed;
-    bool has_traffic = directededge->predicted_speed() || directededge->constrained_flow_speed() > 0;
     if (has_date_time_) {
       // With date time we check time dependent restrictions and access as well as get
       // traffic based speed if it exists
-      if (!costing_->Allowed(directededge, pred, tile, edgeid, localtime, nodeinfo->timezone()) ||
-          costing_->Restricted(directededge, pred, edgelabels_, tile, edgeid, true, localtime,
+      if (!costing_->Allowed(directededge, pred, tile, edgeid, localtime, nodeinfo->timezone(),
+                             has_time_restrictions) ||
+          costing_->Restricted(directededge, pred, edgelabels_, tile, edgeid, true, todo, localtime,
                                nodeinfo->timezone())) {
         continue;
       }
-      speed = tile->GetSpeed(directededge, edgeid, seconds_of_week);
     } else {
-      if (!costing_->Allowed(directededge, pred, tile, edgeid, 0, 0) ||
+      // TODO merge these two branches
+      if (!costing_->Allowed(directededge, pred, tile, edgeid, 0, 0, has_time_restrictions) ||
           costing_->Restricted(directededge, pred, edgelabels_, tile, edgeid, true)) {
         continue;
       }
-      speed = tile->GetSpeed(directededge);
     }
 
     // Compute the cost to the end of this edge
-    Cost newcost = pred.cost() + costing_->EdgeCost(directededge, speed) +
-                   costing_->TransitionCost(directededge, nodeinfo, pred, has_traffic);
+    auto transition_cost = costing_->TransitionCost(directededge, nodeinfo, pred);
+    Cost newcost =
+        pred.cost() +
+        costing_->EdgeCost(directededge, tile,
+                           has_date_time_ ? seconds_of_week : kConstrainedFlowSecondOfDay) +
+        transition_cost;
 
     // Check if edge is temporarily labeled and this path has less cost. If
     // less cost the predecessor is updated and the sort cost is decremented
@@ -271,7 +275,7 @@ void Isochrone::ExpandForward(GraphReader& graphreader,
       if (newcost.cost < lab.cost().cost) {
         float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
         adjacencylist_->decrease(es->index(), newsortcost);
-        lab.Update(pred_idx, newcost, newsortcost);
+        lab.Update(pred_idx, newcost, newsortcost, transition_cost, has_time_restrictions);
       }
       continue;
     }
@@ -279,7 +283,8 @@ void Isochrone::ExpandForward(GraphReader& graphreader,
     // Add edge label, add to the adjacency list and set edge status
     uint32_t idx = edgelabels_.size();
     *es = {EdgeSet::kTemporary, idx};
-    edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, 0.0f, mode_, 0);
+    edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, 0.0f, mode_, 0,
+                             transition_cost, has_time_restrictions);
     adjacencylist_->add(idx);
   }
 
@@ -294,7 +299,7 @@ void Isochrone::ExpandForward(GraphReader& graphreader,
 
 // Compute iso-tile that we can use to generate isochrones.
 std::shared_ptr<const GriddedData<PointLL>>
-Isochrone::Compute(google::protobuf::RepeatedPtrField<valhalla::odin::Location>& origin_locations,
+Isochrone::Compute(google::protobuf::RepeatedPtrField<valhalla::Location>& origin_locations,
                    const unsigned int max_minutes,
                    GraphReader& graphreader,
                    const std::shared_ptr<DynamicCost>* mode_costing,
@@ -430,31 +435,31 @@ void Isochrone::ExpandReverse(GraphReader& graphreader,
     const DirectedEdge* opp_edge = t2->directededge(oppedge);
 
     // Check if the edge is allowed or if a restriction occurs. Get the edge speed.
-    uint32_t speed;
+    auto todo = nullptr;
+    bool has_time_restrictions = false;
     if (has_date_time_) {
       // With date time we check time dependent restrictions and access as well as get
       // traffic based speed if it exists
       if (!costing_->AllowedReverse(directededge, pred, opp_edge, t2, oppedge, localtime,
-                                    nodeinfo->timezone()) ||
-          costing_->Restricted(directededge, pred, bdedgelabels_, tile, edgeid, false, localtime,
-                               nodeinfo->timezone())) {
+                                    nodeinfo->timezone(), has_time_restrictions) ||
+          costing_->Restricted(directededge, pred, bdedgelabels_, tile, edgeid, false, nullptr,
+                               localtime, nodeinfo->timezone())) {
         continue;
       }
-      speed = t2->GetSpeed(opp_edge, oppedge, seconds_of_week);
     } else {
-      if (!costing_->AllowedReverse(directededge, pred, opp_edge, t2, oppedge, 0, 0) ||
+      if (!costing_->AllowedReverse(directededge, pred, opp_edge, t2, oppedge, 0, 0,
+                                    has_time_restrictions) ||
           costing_->Restricted(directededge, pred, bdedgelabels_, tile, edgeid, false)) {
         continue;
       }
-      speed = t2->GetSpeed(opp_edge);
     }
 
     // Compute the cost to the end of this edge with separate transition cost
-    bool has_traffic =
-        opp_pred_edge->predicted_speed() || opp_pred_edge->constrained_flow_speed() > 0;
     Cost tc = costing_->TransitionCostReverse(directededge->localedgeidx(), nodeinfo, opp_edge,
-                                              opp_pred_edge, has_traffic);
-    Cost newcost = pred.cost() + costing_->EdgeCost(opp_edge, speed);
+                                              opp_pred_edge);
+    Cost newcost = pred.cost() +
+                   costing_->EdgeCost(opp_edge, t2,
+                                      has_date_time_ ? seconds_of_week : kConstrainedFlowSecondOfDay);
     newcost.cost += tc.cost;
 
     // Check if edge is temporarily labeled and this path has less cost. If
@@ -465,7 +470,7 @@ void Isochrone::ExpandReverse(GraphReader& graphreader,
       if (newcost.cost < lab.cost().cost) {
         float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
         adjacencylist_->decrease(es->index(), newsortcost);
-        lab.Update(pred_idx, newcost, newsortcost, tc);
+        lab.Update(pred_idx, newcost, newsortcost, tc, has_time_restrictions);
       }
       continue;
     }
@@ -474,7 +479,7 @@ void Isochrone::ExpandReverse(GraphReader& graphreader,
     uint32_t idx = bdedgelabels_.size();
     *es = {EdgeSet::kTemporary, idx};
     bdedgelabels_.emplace_back(pred_idx, edgeid, oppedge, directededge, newcost, newcost.cost, 0.0f,
-                               mode_, tc, false);
+                               mode_, tc, false, has_time_restrictions);
     adjacencylist_->add(idx);
   }
 
@@ -489,12 +494,12 @@ void Isochrone::ExpandReverse(GraphReader& graphreader,
 }
 
 // Compute iso-tile that we can use to generate isochrones.
-std::shared_ptr<const GriddedData<PointLL>> Isochrone::ComputeReverse(
-    google::protobuf::RepeatedPtrField<valhalla::odin::Location>& dest_locations,
-    const unsigned int max_minutes,
-    GraphReader& graphreader,
-    const std::shared_ptr<DynamicCost>* mode_costing,
-    const TravelMode mode) {
+std::shared_ptr<const GriddedData<PointLL>>
+Isochrone::ComputeReverse(google::protobuf::RepeatedPtrField<valhalla::Location>& dest_locations,
+                          const unsigned int max_minutes,
+                          GraphReader& graphreader,
+                          const std::shared_ptr<DynamicCost>* mode_costing,
+                          const TravelMode mode) {
   // Set the mode and costing
   mode_ = mode;
   costing_ = mode_costing[static_cast<uint32_t>(mode_)];
@@ -686,9 +691,10 @@ bool Isochrone::ExpandForwardMM(GraphReader& graphreader,
     // costing - assume if you get a transit edge you walked to the transit stop
     uint32_t tripid = 0;
     uint32_t blockid = 0;
+    bool has_time_restrictions = false;
     if (directededge->IsTransitLine()) {
       // Check if transit costing allows this edge
-      if (!tc->Allowed(directededge, pred, tile, edgeid, 0, 0)) {
+      if (!tc->Allowed(directededge, pred, tile, edgeid, 0, 0, has_time_restrictions)) {
         continue;
       }
 
@@ -763,13 +769,12 @@ bool Isochrone::ExpandForwardMM(GraphReader& graphreader,
       // Regular edge - use the appropriate costing and check if access
       // is allowed. If mode is pedestrian this will validate walking
       // distance has not been exceeded.
-      if (!mode_costing[static_cast<uint32_t>(mode_)]->Allowed(directededge, pred, tile, edgeid, 0,
-                                                               0)) {
+      if (!mode_costing[static_cast<uint32_t>(mode_)]->Allowed(directededge, pred, tile, edgeid, 0, 0,
+                                                               has_time_restrictions)) {
         continue;
       }
 
-      Cost c = mode_costing[static_cast<uint32_t>(mode_)]->EdgeCost(directededge,
-                                                                    tile->GetSpeed(directededge));
+      Cost c = mode_costing[static_cast<uint32_t>(mode_)]->EdgeCost(directededge, tile);
       c.cost *= mode_costing[static_cast<uint32_t>(mode_)]->GetModeFactor();
       newcost += c;
 
@@ -788,14 +793,16 @@ bool Isochrone::ExpandForwardMM(GraphReader& graphreader,
     }
 
     // Add mode change cost or edge transition cost from the costing model
+    Cost transition_cost{};
     if (mode_change) {
       // TODO: make mode change cost configurable. No cost for entering
       // a transit line (assume the wait time is the cost)
-      ; // newcost += {10.0f, 10.0f };
+      // transition_cost = { 10.0f, 10.0f };
     } else {
-      newcost +=
+      transition_cost =
           mode_costing[static_cast<uint32_t>(mode_)]->TransitionCost(directededge, nodeinfo, pred);
     }
+    newcost += transition_cost;
 
     // Prohibit entering the same station as the prior.
     if (directededge->use() == Use::kTransitConnection &&
@@ -824,7 +831,8 @@ bool Isochrone::ExpandForwardMM(GraphReader& graphreader,
       if (newcost.cost < lab.cost().cost) {
         float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
         adjacencylist_->decrease(es->index(), newsortcost);
-        lab.Update(pred_idx, newcost, newsortcost, walking_distance, tripid, blockid);
+        lab.Update(pred_idx, newcost, newsortcost, walking_distance, tripid, blockid, transition_cost,
+                   has_time_restrictions);
       }
       continue;
     }
@@ -834,7 +842,7 @@ bool Isochrone::ExpandForwardMM(GraphReader& graphreader,
     *es = {EdgeSet::kTemporary, idx};
     mmedgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, 0.0f, mode_,
                                walking_distance, tripid, prior_stop, blockid, operator_id,
-                               has_transit);
+                               has_transit, transition_cost, has_time_restrictions);
     adjacencylist_->add(idx);
   }
 
@@ -849,12 +857,12 @@ bool Isochrone::ExpandForwardMM(GraphReader& graphreader,
 }
 
 // Compute isochrone for mulit-modal route.
-std::shared_ptr<const GriddedData<PointLL>> Isochrone::ComputeMultiModal(
-    google::protobuf::RepeatedPtrField<valhalla::odin::Location>& origin_locations,
-    const unsigned int max_minutes,
-    GraphReader& graphreader,
-    const std::shared_ptr<DynamicCost>* mode_costing,
-    const TravelMode mode) {
+std::shared_ptr<const GriddedData<PointLL>>
+Isochrone::ComputeMultiModal(google::protobuf::RepeatedPtrField<valhalla::Location>& origin_locations,
+                             const unsigned int max_minutes,
+                             GraphReader& graphreader,
+                             const std::shared_ptr<DynamicCost>* mode_costing,
+                             const TravelMode mode) {
   // For pedestrian costing - set flag allowing use of transit connections
   // Set pedestrian costing to use max distance. TODO - need for other modes
   const auto& pc = mode_costing[static_cast<uint8_t>(TravelMode::kPedestrian)];
@@ -1028,7 +1036,7 @@ void Isochrone::UpdateIsoTile(const EdgeLabel& pred,
 // Add edge(s) at each origin to the adjacency list
 void Isochrone::SetOriginLocations(
     GraphReader& graphreader,
-    google::protobuf::RepeatedPtrField<valhalla::odin::Location>& origin_locations,
+    google::protobuf::RepeatedPtrField<valhalla::Location>& origin_locations,
     const std::shared_ptr<DynamicCost>& costing) {
   // Add edges for each location to the adjacency list
   for (auto& origin : origin_locations) {
@@ -1039,7 +1047,7 @@ void Isochrone::SetOriginLocations(
     // Only skip inbound edges if we have other options
     bool has_other_edges = false;
     std::for_each(origin.path_edges().begin(), origin.path_edges().end(),
-                  [&has_other_edges](const odin::Location::PathEdge& e) {
+                  [&has_other_edges](const valhalla::Location::PathEdge& e) {
                     has_other_edges = has_other_edges || !e.end_node();
                   });
 
@@ -1051,8 +1059,13 @@ void Isochrone::SetOriginLocations(
         continue;
       }
 
-      // Get the directed edge
+      // Disallow any user avoid edges if the avoid location is ahead of the origin along the edge
       GraphId edgeid(edge.graph_id());
+      if (costing_->AvoidAsOriginEdge(edgeid, edge.percent_along())) {
+        continue;
+      }
+
+      // Get the directed edge
       const GraphTile* tile = graphreader.GetGraphTile(edgeid);
       const DirectedEdge* directededge = tile->directededge(edgeid);
 
@@ -1065,8 +1078,7 @@ void Isochrone::SetOriginLocations(
 
       // Get cost
       nodeinfo = endtile->node(directededge->endnode());
-      Cost cost = costing->EdgeCost(directededge, tile->GetSpeed(directededge)) *
-                  (1.0f - edge.percent_along());
+      Cost cost = costing->EdgeCost(directededge, tile) * (1.0f - edge.percent_along());
 
       // We need to penalize this location based on its score (distance in meters from input)
       // We assume the slowest speed you could travel to cover that distance to start/end the route
@@ -1078,7 +1090,8 @@ void Isochrone::SetOriginLocations(
       // to indicate the origin of the path.
       uint32_t idx = edgelabels_.size();
       uint32_t d = static_cast<uint32_t>(directededge->length() * (1.0f - edge.percent_along()));
-      EdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost, cost.cost, 0.0f, mode_, d);
+      EdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost, cost.cost, 0.0f, mode_, d,
+                           sif::Cost{});
       // Set the origin flag
       edge_label.set_origin();
 
@@ -1099,7 +1112,7 @@ void Isochrone::SetOriginLocations(
 // Add edge(s) at each origin to the adjacency list
 void Isochrone::SetOriginLocationsMM(
     GraphReader& graphreader,
-    google::protobuf::RepeatedPtrField<valhalla::odin::Location>& origin_locations,
+    google::protobuf::RepeatedPtrField<valhalla::Location>& origin_locations,
     const std::shared_ptr<DynamicCost>& costing) {
   // Add edges for each location to the adjacency list
   for (auto& origin : origin_locations) {
@@ -1110,7 +1123,7 @@ void Isochrone::SetOriginLocationsMM(
     // Only skip inbound edges if we have other options
     bool has_other_edges = false;
     std::for_each(origin.path_edges().begin(), origin.path_edges().end(),
-                  [&has_other_edges](const odin::Location::PathEdge& e) {
+                  [&has_other_edges](const valhalla::Location::PathEdge& e) {
                     has_other_edges = has_other_edges || !e.end_node();
                   });
 
@@ -1122,8 +1135,13 @@ void Isochrone::SetOriginLocationsMM(
         continue;
       }
 
-      // Get the directed edge
+      // Disallow any user avoid edges if the avoid location is ahead of the origin along the edge
       GraphId edgeid(edge.graph_id());
+      if (costing_->AvoidAsOriginEdge(edgeid, edge.percent_along())) {
+        continue;
+      }
+
+      // Get the directed edge
       const GraphTile* tile = graphreader.GetGraphTile(edgeid);
       const DirectedEdge* directededge = tile->directededge(edgeid);
 
@@ -1136,8 +1154,7 @@ void Isochrone::SetOriginLocationsMM(
 
       // Get cost
       nodeinfo = endtile->node(directededge->endnode());
-      Cost cost = costing->EdgeCost(directededge, endtile->GetSpeed(directededge)) *
-                  (1.0f - edge.percent_along());
+      Cost cost = costing->EdgeCost(directededge, endtile) * (1.0f - edge.percent_along());
 
       // We need to penalize this location based on its score (distance in meters from input)
       // We assume the slowest speed you could travel to cover that distance to start/end the route
@@ -1152,7 +1169,7 @@ void Isochrone::SetOriginLocationsMM(
       uint32_t d = static_cast<uint32_t>(directededge->length() * (1.0f - edge.percent_along()));
       edgestatus_.Set(edgeid, EdgeSet::kTemporary, idx, tile);
       MMEdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost, cost.cost, 0.0f, mode_, d, 0,
-                             GraphId(), 0, 0, false);
+                             GraphId(), 0, 0, false, sif::Cost{});
 
       // Set the origin flag
       edge_label.set_origin();
@@ -1173,7 +1190,7 @@ void Isochrone::SetOriginLocationsMM(
 // Add destination edges to the reverse path adjacency list.
 void Isochrone::SetDestinationLocations(
     GraphReader& graphreader,
-    google::protobuf::RepeatedPtrField<valhalla::odin::Location>& dest_locations,
+    google::protobuf::RepeatedPtrField<valhalla::Location>& dest_locations,
     const std::shared_ptr<DynamicCost>& costing) {
   // Add edges for each location to the adjacency list
   for (auto& dest : dest_locations) {
@@ -1184,7 +1201,7 @@ void Isochrone::SetDestinationLocations(
     // Only skip outbound edges if we have other options
     bool has_other_edges = false;
     std::for_each(dest.path_edges().begin(), dest.path_edges().end(),
-                  [&has_other_edges](const odin::Location::PathEdge& e) {
+                  [&has_other_edges](const valhalla::Location::PathEdge& e) {
                     has_other_edges = has_other_edges || !e.begin_node();
                   });
 
@@ -1214,8 +1231,7 @@ void Isochrone::SetDestinationLocations(
       // the end node of the opposing edge is in the same tile as the directed
       // edge.  Use the directed edge for costing, as this is the forward
       // direction along the destination edge.
-      Cost cost =
-          costing->EdgeCost(directededge, tile->GetSpeed(directededge)) * edge.percent_along();
+      Cost cost = costing->EdgeCost(directededge, tile) * edge.percent_along();
 
       // We need to penalize this location based on its score (distance in meters from input)
       // We assume the slowest speed you could travel to cover that distance to start/end the route
@@ -1228,7 +1244,7 @@ void Isochrone::SetDestinationLocations(
       uint32_t idx = bdedgelabels_.size();
       edgestatus_.Set(opp_edge_id, EdgeSet::kTemporary, idx, graphreader.GetGraphTile(opp_edge_id));
       bdedgelabels_.emplace_back(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, cost.cost,
-                                 0.0f, mode_, c, false);
+                                 0.0f, mode_, c, false, false);
       adjacencylist_->add(idx);
     }
   }

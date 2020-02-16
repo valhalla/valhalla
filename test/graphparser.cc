@@ -1,4 +1,8 @@
+#include "baldr/graphreader.h"
+#include "baldr/tilehierarchy.h"
 #include "midgard/sequence.h"
+#include "mjolnir/bssbuilder.h"
+#include "mjolnir/graphbuilder.h"
 #include "mjolnir/osmnode.h"
 #include "mjolnir/pbfgraphparser.h"
 #include "test.h"
@@ -17,6 +21,7 @@
 #endif
 
 using namespace std;
+using namespace valhalla::midgard;
 using namespace valhalla::mjolnir;
 using namespace valhalla::baldr;
 
@@ -53,11 +58,12 @@ void BollardsGatesAndAccess(const std::string& config_file) {
   std::string access_file = "test_access.bin";
   std::string from_restriction_file = "test_from_complex_restrictions.bin";
   std::string to_restriction_file = "test_to_complex_restrictions.bin";
+  std::string bss_nodes_file = "test_bss_nodes.bin";
 
-  auto osmdata =
-      PBFGraphParser::Parse(conf.get_child("mjolnir"),
-                            {VALHALLA_SOURCE_DIR "test/data/liechtenstein-latest.osm.pbf"}, ways_file,
-                            way_nodes_file, access_file, from_restriction_file, to_restriction_file);
+  auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"),
+                                       {VALHALLA_SOURCE_DIR "test/data/liechtenstein-latest.osm.pbf"},
+                                       ways_file, way_nodes_file, access_file, from_restriction_file,
+                                       to_restriction_file, bss_nodes_file);
   sequence<OSMWayNode> way_nodes(way_nodes_file, false);
   way_nodes.sort(node_predicate);
 
@@ -65,90 +71,101 @@ void BollardsGatesAndAccess(const std::string& config_file) {
   ways.sort(way_predicate);
 
   // bus access tests.
-  auto way = GetWay(85744121, ways);
-  if (way.auto_forward() != false || way.moped_forward() != false || way.bike_forward() != true ||
-      way.bus_forward() != true || way.pedestrian() != true || way.auto_backward() != false ||
-      way.moped_backward() != false || way.bike_backward() != false || way.bus_backward() != false) {
-    throw std::runtime_error("Access is not set correctly for way 85744121.");
-  }
+  auto way_85744121 = GetWay(85744121, ways);
+  EXPECT_FALSE(way_85744121.auto_forward());
+  EXPECT_FALSE(way_85744121.moped_forward());
+  EXPECT_TRUE(way_85744121.bike_forward());
+  EXPECT_TRUE(way_85744121.bus_forward());
+  EXPECT_TRUE(way_85744121.pedestrian());
+  EXPECT_FALSE(way_85744121.auto_backward());
+  EXPECT_FALSE(way_85744121.moped_backward());
+  EXPECT_FALSE(way_85744121.bike_backward());
+  EXPECT_FALSE(way_85744121.bus_backward());
 
-  way = GetWay(86260080, ways);
-  if (way.auto_forward() != true || way.bike_forward() != true || way.bus_forward() != true ||
-      way.moped_forward() != true || way.pedestrian() != true || way.auto_backward() != true ||
-      way.bike_backward() != true || way.bus_backward() != true || way.moped_backward() != true) {
-    throw std::runtime_error("Access is not set correctly for way 86260080.");
-  }
+  auto way_86260080 = GetWay(86260080, ways);
+  EXPECT_TRUE(way_86260080.auto_forward());
+  EXPECT_TRUE(way_86260080.bike_forward());
+  EXPECT_TRUE(way_86260080.bus_forward());
+  EXPECT_TRUE(way_86260080.moped_forward());
+  EXPECT_TRUE(way_86260080.pedestrian());
+  EXPECT_TRUE(way_86260080.auto_backward());
+  EXPECT_TRUE(way_86260080.bike_backward());
+  EXPECT_TRUE(way_86260080.bus_backward());
+  EXPECT_TRUE(way_86260080.moped_backward());
 
-  way = GetWay(161683833, ways);
-  if (way.auto_forward() != true || way.bike_forward() != true || way.bus_forward() != true ||
-      way.moped_forward() != true || way.pedestrian() != true || way.auto_backward() != true ||
-      way.bike_backward() != true || way.bus_backward() != true || way.moped_backward() != true) {
-    throw std::runtime_error("Access is not set correctly for way 161683833.");
-  }
+  auto way_161683833 = GetWay(161683833, ways);
+  EXPECT_TRUE(way_161683833.auto_forward());
+  EXPECT_TRUE(way_161683833.bike_forward());
+  EXPECT_TRUE(way_161683833.bus_forward());
+  EXPECT_TRUE(way_161683833.moped_forward());
+  EXPECT_TRUE(way_161683833.pedestrian());
+  EXPECT_TRUE(way_161683833.auto_backward());
+  EXPECT_TRUE(way_161683833.bike_backward());
+  EXPECT_TRUE(way_161683833.bus_backward());
+  EXPECT_TRUE(way_161683833.moped_backward());
 
   // We split set the uses at bollards and gates.
   auto node = GetNode(392700757, way_nodes);
-  if (!node.intersection())
-    throw std::runtime_error("Bollard not marked as intersection.");
+  EXPECT_TRUE(node.intersection()) << "Bollard not marked as intersection.";
 
   // We split set the uses at bollards and gates.
   node = GetNode(376947468, way_nodes);
-  if (!node.intersection())
-    throw std::runtime_error("Gate not marked as intersection.");
+  EXPECT_TRUE(node.intersection()) << "Gate not marked as intersection.";
 
   // Is a gate with foot and bike flags set; however, access is private.
+  // Gate at the end of way
   node = GetNode(2949666866, way_nodes);
-  if (!node.intersection() || node.type() != NodeType::kGate ||
-      node.access() !=
-          (kAutoAccess | kHOVAccess | kTruckAccess | kBusAccess | kEmergencyAccess |
-           kPedestrianAccess | kWheelchairAccess | kBicycleAccess | kMopedAccess | kMotorcycleAccess))
-    throw std::runtime_error("Gate at end of way test failed.");
+  EXPECT_TRUE(node.intersection());
+  EXPECT_EQ(node.type(), NodeType::kGate);
+  EXPECT_EQ(node.access(), (kAutoAccess | kHOVAccess | kTaxiAccess | kTruckAccess | kBusAccess |
+                            kEmergencyAccess | kPedestrianAccess | kWheelchairAccess |
+                            kBicycleAccess | kMopedAccess | kMotorcycleAccess));
 
   // block
   node = GetNode(1819036441, way_nodes);
-  if (!node.intersection() || node.type() != NodeType::kBollard ||
-      node.access() != (kPedestrianAccess | kWheelchairAccess | kBicycleAccess))
-    throw std::runtime_error("Block test failed.");
+  EXPECT_TRUE(node.intersection());
+  EXPECT_EQ(node.type(), NodeType::kBollard);
+  EXPECT_EQ(node.access(), kPedestrianAccess | kWheelchairAccess | kBicycleAccess);
 
   // border control
   node = GetNode(3256854624, way_nodes);
-  if (!node.intersection() || node.type() != NodeType::kBorderControl ||
-      node.access() !=
-          (kAutoAccess | kHOVAccess | kTruckAccess | kBusAccess | kEmergencyAccess |
-           kPedestrianAccess | kWheelchairAccess | kBicycleAccess | kMopedAccess | kMotorcycleAccess))
-    throw std::runtime_error("Border control test failed.");
+  EXPECT_TRUE(node.intersection());
+  EXPECT_EQ(node.type(), NodeType::kBorderControl);
+  EXPECT_EQ(node.access(), kAutoAccess | kHOVAccess | kTaxiAccess | kTruckAccess | kBusAccess |
+                               kEmergencyAccess | kPedestrianAccess | kWheelchairAccess |
+                               kBicycleAccess | kMopedAccess | kMotorcycleAccess);
 
   // has bike tag but all should have access
+  // Bike access only test
   node = GetNode(696222071, way_nodes);
-  if (!node.intersection() ||
-      node.access() !=
-          (kAutoAccess | kHOVAccess | kTruckAccess | kBusAccess | kEmergencyAccess |
-           kPedestrianAccess | kWheelchairAccess | kBicycleAccess | kMopedAccess | kMotorcycleAccess))
-    throw std::runtime_error("Bike access only failed.");
+  EXPECT_TRUE(node.intersection());
+  EXPECT_EQ(node.access(), kAutoAccess | kHOVAccess | kTaxiAccess | kTruckAccess | kBusAccess |
+                               kEmergencyAccess | kPedestrianAccess | kWheelchairAccess |
+                               kBicycleAccess | kMopedAccess | kMotorcycleAccess);
 
   // Is a bollard with no flags set.
   node = GetNode(569645326, way_nodes);
-  if (!node.intersection() || node.type() != NodeType::kBollard ||
-      node.access() != (kPedestrianAccess | kWheelchairAccess | kBicycleAccess))
-    throw std::runtime_error("Bollard(with flags) not marked as intersection.");
+  EXPECT_TRUE(node.intersection());
+  EXPECT_EQ(node.type(), NodeType::kBollard);
+  EXPECT_EQ(node.access(), kPedestrianAccess | kWheelchairAccess | kBicycleAccess);
 
   // Is a bollard=block with foot flag set.
   node = GetNode(1819036441, way_nodes);
-  if (!node.intersection() || node.type() != NodeType::kBollard ||
-      node.access() != (kPedestrianAccess | kWheelchairAccess | kBicycleAccess))
-    throw std::runtime_error("Bollard=block not marked as intersection.");
+  EXPECT_TRUE(node.intersection());
+  EXPECT_EQ(node.type(), NodeType::kBollard);
+  EXPECT_EQ(node.access(), kPedestrianAccess | kWheelchairAccess | kBicycleAccess);
 
   auto bike = osmdata.bike_relations.equal_range(25452580);
-  way = GetWay(25452580, ways);
+  auto way_25452580 = GetWay(25452580, ways);
   uint32_t bike_network = 0;
 
   for (auto b = bike.first; b != bike.second; ++b)
     bike_network |= b->second.bike_network;
 
-  if (bike_network != kRcn || way.bike_network() != 0)
-    throw std::runtime_error("rcn not marked on way 25452580.");
+  EXPECT_EQ(bike_network, kRcn) << "rcn not marked on way 25452580.";
+  EXPECT_EQ(way_25452580.bike_network(), 0) << "rcn not marked on way 25452580.";
 
-  way = GetWay(74584853, ways);
+  auto way_74584853 = GetWay(74584853, ways);
   bike_network = 0;
   bike = osmdata.bike_relations.equal_range(74584853);
 
@@ -159,10 +176,10 @@ void BollardsGatesAndAccess(const std::string& config_file) {
     else
       bike_network |= b->second.bike_network;
 
-  if ((!(bike_network & kMcn) || !(bike_network & kLcn)) || way.bike_network() != 0)
-    throw std::runtime_error("lcn and mtb not marked on way 74584853.");
+  EXPECT_TRUE((bike_network & kMcn) && (bike_network & kLcn) && way_74584853.bike_network() == 0)
+      << "lcn and mtb not marked on way 74584853.";
 
-  way = GetWay(75786176, ways);
+  auto way_75786176 = GetWay(75786176, ways);
   bike_network = 0;
   bike = osmdata.bike_relations.equal_range(75786176);
 
@@ -174,8 +191,8 @@ void BollardsGatesAndAccess(const std::string& config_file) {
       bike_network |= b->second.bike_network;
   }
 
-  if ((!(bike_network & kMcn) || !(bike_network & kRcn)) || way.bike_network() != 0)
-    throw std::runtime_error("rcn and mtb not marked on way 75786176.");
+  EXPECT_TRUE((bike_network & kMcn) && (bike_network & kRcn) && way_75786176.bike_network() == 0)
+      << "rcn and mtb not marked on way 75786176.";
 
   boost::filesystem::remove(ways_file);
   boost::filesystem::remove(way_nodes_file);
@@ -193,21 +210,22 @@ void RemovableBollards(const std::string& config_file) {
   std::string access_file = "test_access.bin";
   std::string from_restriction_file = "test_from_complex_restrictions.bin";
   std::string to_restriction_file = "test_to_complex_restrictions.bin";
+  std::string bss_nodes_file = "test_bss_nodes.bin";
 
   auto osmdata =
       PBFGraphParser::Parse(conf.get_child("mjolnir"), {VALHALLA_SOURCE_DIR "test/data/rome.osm.pbf"},
                             ways_file, way_nodes_file, access_file, from_restriction_file,
-                            to_restriction_file);
+                            to_restriction_file, bss_nodes_file);
   sequence<OSMWayNode> way_nodes(way_nodes_file, false);
   way_nodes.sort(node_predicate);
 
   // Is a bollard=rising is saved as a gate...with foot flag and bike set.
   auto node = GetNode(2425784125, way_nodes);
-  if (!node.intersection() || node.type() != NodeType::kGate ||
-      node.access() !=
-          (kAutoAccess | kHOVAccess | kTruckAccess | kBusAccess | kEmergencyAccess |
-           kPedestrianAccess | kWheelchairAccess | kBicycleAccess | kMopedAccess | kMotorcycleAccess))
-    throw std::runtime_error("Rising Bollard not marked as intersection.");
+  EXPECT_TRUE(node.intersection()) << "Rising Bollard not marked as intersection.";
+  EXPECT_EQ(node.type(), NodeType::kGate);
+  EXPECT_EQ(node.access(), kAutoAccess | kHOVAccess | kTaxiAccess | kTruckAccess | kBusAccess |
+                               kEmergencyAccess | kPedestrianAccess | kWheelchairAccess |
+                               kBicycleAccess | kMopedAccess | kMotorcycleAccess);
 
   boost::filesystem::remove(ways_file);
   boost::filesystem::remove(way_nodes_file);
@@ -225,29 +243,30 @@ void Exits(const std::string& config_file) {
   std::string access_file = "test_access.bin";
   std::string from_restriction_file = "test_from_complex_restrictions.bin";
   std::string to_restriction_file = "test_to_complex_restrictions.bin";
+  std::string bss_nodes_file = "test_bss_nodes.bin";
 
-  auto osmdata =
-      PBFGraphParser::Parse(conf.get_child("mjolnir"),
-                            {VALHALLA_SOURCE_DIR "test/data/harrisburg.osm.pbf"}, ways_file,
-                            way_nodes_file, access_file, from_restriction_file, to_restriction_file);
+  auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"),
+                                       {VALHALLA_SOURCE_DIR "test/data/harrisburg.osm.pbf"},
+                                       ways_file, way_nodes_file, access_file, from_restriction_file,
+                                       to_restriction_file, bss_nodes_file);
   sequence<OSMWayNode> way_nodes(way_nodes_file, false);
   way_nodes.sort(node_predicate);
 
   auto node = GetNode(33698177, way_nodes);
-
-  if (!node.intersection() || !node.has_ref() || osmdata.node_names.name(node.ref_index()) != "51A-B")
-    throw std::runtime_error("Ref not set correctly .");
+  EXPECT_TRUE(node.intersection());
+  EXPECT_TRUE(node.has_ref());
+  EXPECT_EQ(osmdata.node_names.name(node.ref_index()), "51A-B") << "Ref not set correctly .";
 
   node = GetNode(1901353894, way_nodes);
-
-  if (!node.intersection() || !node.has_ref() ||
-      osmdata.node_names.name(node.name_index()) != "Harrisburg East")
-    throw std::runtime_error("node name not set correctly .");
+  EXPECT_TRUE(node.intersection());
+  EXPECT_TRUE(node.has_ref());
+  EXPECT_EQ(osmdata.node_names.name(node.name_index()), "Harrisburg East")
+      << "node name not set correctly .";
 
   node = GetNode(462240654, way_nodes);
-
-  if (!node.intersection() || osmdata.node_names.name(node.exit_to_index()) != "PA441")
-    throw std::runtime_error("node exit_to not set correctly .");
+  EXPECT_TRUE(node.intersection());
+  EXPECT_EQ(osmdata.node_names.name(node.exit_to_index()), "PA441")
+      << "node exit_to not set correctly .";
 
   boost::filesystem::remove(ways_file);
   boost::filesystem::remove(way_nodes_file);
@@ -265,75 +284,100 @@ void Baltimore(const std::string& config_file) {
   std::string access_file = "test_access.bin";
   std::string from_restriction_file = "test_from_complex_restrictions.bin";
   std::string to_restriction_file = "test_to_complex_restrictions.bin";
+  std::string bss_nodes_file = "test_bss_nodes.bin";
 
-  auto osmdata =
-      PBFGraphParser::Parse(conf.get_child("mjolnir"),
-                            {VALHALLA_SOURCE_DIR "test/data/baltimore.osm.pbf"}, ways_file,
-                            way_nodes_file, access_file, from_restriction_file, to_restriction_file);
+  auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"),
+                                       {VALHALLA_SOURCE_DIR "test/data/baltimore.osm.pbf"}, ways_file,
+                                       way_nodes_file, access_file, from_restriction_file,
+                                       to_restriction_file, bss_nodes_file);
   sequence<OSMWay> ways(ways_file, false);
   ways.sort(way_predicate);
 
   // bike_forward and reverse is set to false by default.  Meaning defaults for
   // highway = pedestrian.  Bike overrides bicycle=designated and/or cycleway=shared_lane
   // make it bike_forward and reverse = true
-  auto way = GetWay(216240466, ways);
-  if (way.auto_forward() != false || way.bus_forward() != false || way.moped_forward() != false ||
-      way.bike_forward() != true || way.pedestrian() != true || way.auto_backward() != false ||
-      way.bus_backward() != false || way.moped_backward() != false || way.bike_backward() != true) {
-    throw std::runtime_error("Access is not set correctly for way 216240466.");
-  }
+  auto way_216240466 = GetWay(216240466, ways);
+  EXPECT_FALSE(way_216240466.auto_forward());
+  EXPECT_FALSE(way_216240466.bus_forward());
+  EXPECT_FALSE(way_216240466.moped_forward());
+  EXPECT_TRUE(way_216240466.bike_forward());
+  EXPECT_TRUE(way_216240466.pedestrian());
+  EXPECT_FALSE(way_216240466.auto_backward());
+  EXPECT_FALSE(way_216240466.bus_backward());
+  EXPECT_FALSE(way_216240466.moped_backward());
+  EXPECT_TRUE(way_216240466.bike_backward());
+
   // access for all
-  way = GetWay(138388359, ways);
-  if (way.auto_forward() != true || way.bus_forward() != true || way.moped_forward() != true ||
-      way.bike_forward() != true || way.pedestrian() != true || way.auto_backward() != true ||
-      way.bus_backward() != true || way.moped_backward() != true || way.bike_backward() != true) {
-    throw std::runtime_error("Access is not set correctly for way 138388359.");
-  }
+  auto way_138388359 = GetWay(138388359, ways);
+  EXPECT_TRUE(way_138388359.auto_forward());
+  EXPECT_TRUE(way_138388359.bus_forward());
+  EXPECT_TRUE(way_138388359.moped_forward());
+  EXPECT_TRUE(way_138388359.bike_forward());
+  EXPECT_TRUE(way_138388359.pedestrian());
+  EXPECT_TRUE(way_138388359.auto_backward());
+  EXPECT_TRUE(way_138388359.bus_backward());
+  EXPECT_TRUE(way_138388359.moped_backward());
+  EXPECT_TRUE(way_138388359.bike_backward());
+
   // footway...pedestrian only
-  way = GetWay(133689121, ways);
-  if (way.auto_forward() != false || way.bus_forward() != false || way.moped_forward() != false ||
-      way.bike_forward() != false || way.pedestrian() != true || way.auto_backward() != false ||
-      way.bus_backward() != false || way.moped_backward() != false || way.bike_backward() != false) {
-    throw std::runtime_error("Access is not set correctly for way 133689121.");
-  }
+  auto way_133689121 = GetWay(133689121, ways);
+  EXPECT_FALSE(way_133689121.auto_forward());
+  EXPECT_FALSE(way_133689121.bus_forward());
+  EXPECT_FALSE(way_133689121.moped_forward());
+  EXPECT_FALSE(way_133689121.bike_forward());
+  EXPECT_TRUE(way_133689121.pedestrian());
+  EXPECT_FALSE(way_133689121.auto_backward());
+  EXPECT_FALSE(way_133689121.bus_backward());
+  EXPECT_FALSE(way_133689121.moped_backward());
+  EXPECT_FALSE(way_133689121.bike_backward());
+
   // oneway
-  way = GetWay(49641455, ways);
-  if (way.auto_forward() != true || way.bus_forward() != true || way.moped_forward() != true ||
-      way.bike_forward() != true || way.pedestrian() != true || way.auto_backward() != false ||
-      way.bus_backward() != false || way.moped_backward() != false || way.bike_backward() != false) {
-    throw std::runtime_error("Access is not set correctly for way 49641455.");
-  }
+  auto way_49641455 = GetWay(49641455, ways);
+  EXPECT_TRUE(way_49641455.auto_forward());
+  EXPECT_TRUE(way_49641455.bus_forward());
+  EXPECT_TRUE(way_49641455.moped_forward());
+  EXPECT_TRUE(way_49641455.bike_forward());
+  EXPECT_TRUE(way_49641455.pedestrian());
+  EXPECT_FALSE(way_49641455.auto_backward());
+  EXPECT_FALSE(way_49641455.bus_backward());
+  EXPECT_FALSE(way_49641455.moped_backward());
+  EXPECT_FALSE(way_49641455.bike_backward());
 
   // Oneway test.  Make sure auto backward is set for ways where oneway=no.
-  way = GetWay(192573108, ways);
-  if (way.auto_forward() != true || way.bus_forward() != true || way.moped_forward() != true ||
-      way.bike_forward() != true || way.pedestrian() != true || way.auto_backward() != true ||
-      way.bus_backward() != true || way.moped_backward() != true || way.bike_backward() != true) {
-    throw std::runtime_error(
-        "Forward/Backward/Pedestrian access is not set correctly for way 192573108.");
-  }
+  // Check Forward/Backward/Pedestrian access is set correctly for way 192573108.
+  auto way_192573108 = GetWay(192573108, ways);
+  EXPECT_TRUE(way_192573108.auto_forward());
+  EXPECT_TRUE(way_192573108.bus_forward());
+  EXPECT_TRUE(way_192573108.moped_forward());
+  EXPECT_TRUE(way_192573108.bike_forward());
+  EXPECT_TRUE(way_192573108.pedestrian());
+  EXPECT_TRUE(way_192573108.auto_backward());
+  EXPECT_TRUE(way_192573108.bus_backward());
+  EXPECT_TRUE(way_192573108.moped_backward());
+  EXPECT_TRUE(way_192573108.bike_backward());
 
   sequence<OSMWayNode> way_nodes(way_nodes_file, false, true);
   way_nodes.sort(node_predicate);
   auto node = GetNode(49473254, way_nodes);
 
-  if (!node.intersection() || node.type() != NodeType::kTollBooth)
-    throw std::runtime_error("Toll Booth 49473254 test failed.");
+  EXPECT_TRUE(node.intersection()) << "Toll Booth 49473254";
+  EXPECT_EQ(node.type(), NodeType::kTollBooth) << "Toll Booth 49473254";
 
   auto res = osmdata.restrictions.equal_range(98040438);
 
-  if (res.first == osmdata.restrictions.end())
-    throw std::runtime_error("Failed to find 98040438 restriction.");
+  ASSERT_NE(res.first, osmdata.restrictions.end()) << "Failed to find 98040438 restriction.";
 
   for (auto r = res.first; r != res.second; ++r) {
     if (r->second.to() == 6003340) {
-      if (r->second.via() != 2123388822 || r->second.type() != RestrictionType::kNoLeftTurn)
-        throw std::runtime_error("98040438 restriction test failed for to: 6003340");
+      EXPECT_EQ(r->second.via(), 2123388822) << "98040438 restriction test failed for to: 6003340";
+      EXPECT_EQ(r->second.type(), RestrictionType::kNoLeftTurn)
+          << "98040438 restriction test failed for to: 6003340";
     } else if (r->second.to() == 98040438) {
-      if (r->second.via() != 2123388822 || r->second.type() != RestrictionType::kNoUTurn)
-        throw std::runtime_error("98040438 restriction test failed for to: 98040438");
+      EXPECT_EQ(r->second.via(), 2123388822) << "98040438 restriction test failed for to: 98040438";
+      EXPECT_EQ(r->second.type(), RestrictionType::kNoUTurn)
+          << "98040438 restriction test failed for to: 98040438";
     } else
-      throw std::runtime_error("98040438 restriction test failed.");
+      FAIL() << "98040438 restriction test failed.";
   }
 
   boost::filesystem::remove(ways_file);
@@ -352,50 +396,71 @@ void Bike(const std::string& config_file) {
   std::string access_file = "test_access.bin";
   std::string from_restriction_file = "test_from_complex_restrictions.bin";
   std::string to_restriction_file = "test_to_complex_restrictions.bin";
+  std::string bss_nodes_file = "test_bss_nodes.bin";
 
   auto osmdata =
       PBFGraphParser::Parse(conf.get_child("mjolnir"), {VALHALLA_SOURCE_DIR "test/data/bike.osm.pbf"},
                             ways_file, way_nodes_file, access_file, from_restriction_file,
-                            to_restriction_file);
+                            to_restriction_file, bss_nodes_file);
   sequence<OSMWay> ways(ways_file, false);
   ways.sort(way_predicate);
 
   // http://www.openstreetmap.org/way/6885577#map=14/51.9774/5.7718
   // direction of this way for oneway is flipped.  Confirmed on opencyclemap.org.
-  auto way = GetWay(6885577, ways);
-  if (way.auto_forward() != true || way.bus_forward() != true || way.moped_forward() != true ||
-      way.bike_forward() != false || way.pedestrian() != true || way.auto_backward() != true ||
-      way.bus_backward() != true || way.moped_backward() != true || way.bike_backward() != true) {
-    throw std::runtime_error("Access is not correct for way 6885577.");
-  }
+  auto way_6885577 = GetWay(6885577, ways);
+  EXPECT_TRUE(way_6885577.auto_forward());
+  EXPECT_TRUE(way_6885577.bus_forward());
+  EXPECT_TRUE(way_6885577.moped_forward());
+  EXPECT_FALSE(way_6885577.bike_forward());
+  EXPECT_TRUE(way_6885577.pedestrian());
+  EXPECT_TRUE(way_6885577.auto_backward());
+  EXPECT_TRUE(way_6885577.bus_backward());
+  EXPECT_TRUE(way_6885577.moped_backward());
+  EXPECT_TRUE(way_6885577.bike_backward());
 
-  way = GetWay(156539494, ways);
-  if (way.auto_forward() != false || way.bus_forward() != false || way.moped_forward() != false ||
-      way.bike_forward() != true || way.pedestrian() != false || way.auto_backward() != false ||
-      way.bus_backward() != false || way.moped_backward() != false || way.bike_backward() != false) {
-    throw std::runtime_error("Access is not correct for way 156539494.");
-  }
+  auto way_156539494 = GetWay(156539494, ways);
+  EXPECT_FALSE(way_156539494.auto_forward());
+  EXPECT_FALSE(way_156539494.bus_forward());
+  EXPECT_FALSE(way_156539494.moped_forward());
+  EXPECT_TRUE(way_156539494.bike_forward());
+  EXPECT_FALSE(way_156539494.pedestrian());
+  EXPECT_FALSE(way_156539494.auto_backward());
+  EXPECT_FALSE(way_156539494.bus_backward());
+  EXPECT_FALSE(way_156539494.moped_backward());
+  EXPECT_FALSE(way_156539494.bike_backward());
 
-  way = GetWay(6885404, ways);
-  if (way.auto_forward() != false || way.bus_forward() != false || way.moped_forward() != false ||
-      way.bike_forward() != true || way.pedestrian() != false || way.auto_backward() != false ||
-      way.bus_backward() != false || way.moped_backward() != false || way.bike_backward() != true) {
-    throw std::runtime_error("Access is not correct for way 6885404.");
-  }
+  auto way_6885404 = GetWay(6885404, ways);
+  EXPECT_FALSE(way_6885404.auto_forward());
+  EXPECT_FALSE(way_6885404.bus_forward());
+  EXPECT_FALSE(way_6885404.moped_forward());
+  EXPECT_TRUE(way_6885404.bike_forward());
+  EXPECT_FALSE(way_6885404.pedestrian());
+  EXPECT_FALSE(way_6885404.auto_backward());
+  EXPECT_FALSE(way_6885404.bus_backward());
+  EXPECT_FALSE(way_6885404.moped_backward());
+  EXPECT_TRUE(way_6885404.bike_backward());
 
-  way = GetWay(156539492, ways);
-  if (way.auto_forward() != true || way.bus_forward() != true || way.moped_forward() != true ||
-      way.bike_forward() != false || way.pedestrian() != true || way.auto_backward() != true ||
-      way.bus_backward() != true || way.moped_backward() != true || way.bike_backward() != false) {
-    throw std::runtime_error("Access is not correct for way 156539492.");
-  }
+  auto way_156539492 = GetWay(156539492, ways);
+  EXPECT_TRUE(way_156539492.auto_forward());
+  EXPECT_TRUE(way_156539492.bus_forward());
+  EXPECT_TRUE(way_156539492.moped_forward());
+  EXPECT_FALSE(way_156539492.bike_forward());
+  EXPECT_TRUE(way_156539492.pedestrian());
+  EXPECT_TRUE(way_156539492.auto_backward());
+  EXPECT_TRUE(way_156539492.bus_backward());
+  EXPECT_TRUE(way_156539492.moped_backward());
+  EXPECT_FALSE(way_156539492.bike_backward());
 
-  way = GetWay(156539491, ways);
-  if (way.auto_forward() != true || way.bus_forward() != true || way.moped_forward() != true ||
-      way.bike_forward() != true || way.pedestrian() != true || way.auto_backward() != true ||
-      way.bus_backward() != true || way.moped_forward() != true || way.bike_backward() != true) {
-    throw std::runtime_error("Access is not correct for way 156539491.");
-  }
+  auto way_156539491 = GetWay(156539491, ways);
+  EXPECT_TRUE(way_156539491.auto_forward());
+  EXPECT_TRUE(way_156539491.bus_forward());
+  EXPECT_TRUE(way_156539491.moped_forward());
+  EXPECT_TRUE(way_156539491.bike_forward());
+  EXPECT_TRUE(way_156539491.pedestrian());
+  EXPECT_TRUE(way_156539491.auto_backward());
+  EXPECT_TRUE(way_156539491.bus_backward());
+  EXPECT_TRUE(way_156539491.moped_forward());
+  EXPECT_TRUE(way_156539491.bike_backward());
 
   boost::filesystem::remove(ways_file);
   boost::filesystem::remove(way_nodes_file);
@@ -413,40 +478,57 @@ void Bus(const std::string& config_file) {
   std::string access_file = "test_access.bin";
   std::string from_restriction_file = "test_from_complex_restrictions.bin";
   std::string to_restriction_file = "test_to_complex_restrictions.bin";
+  std::string bss_nodes_file = "test_bss_nodes.bin";
   auto osmdata =
       PBFGraphParser::Parse(conf.get_child("mjolnir"), {VALHALLA_SOURCE_DIR "test/data/bus.osm.pbf"},
                             ways_file, way_nodes_file, access_file, from_restriction_file,
-                            to_restriction_file);
+                            to_restriction_file, bss_nodes_file);
   sequence<OSMWay> ways(ways_file, false);
   ways.sort(way_predicate);
 
-  auto way = GetWay(14327599, ways);
-  if (way.auto_forward() != false || way.moped_forward() != false || way.bus_forward() != true ||
-      way.bike_forward() != true || way.pedestrian() != true || way.auto_backward() != false ||
-      way.moped_backward() != false || way.bus_backward() != false || way.bike_backward() != true) {
-    throw std::runtime_error("Access is not correct for way 14327599.");
-  }
+  auto way_14327599 = GetWay(14327599, ways);
+  EXPECT_FALSE(way_14327599.auto_forward());
+  EXPECT_FALSE(way_14327599.moped_forward());
+  EXPECT_TRUE(way_14327599.bus_forward());
+  EXPECT_TRUE(way_14327599.bike_forward());
+  EXPECT_TRUE(way_14327599.pedestrian());
+  EXPECT_FALSE(way_14327599.auto_backward());
+  EXPECT_FALSE(way_14327599.moped_backward());
+  EXPECT_FALSE(way_14327599.bus_backward());
+  EXPECT_TRUE(way_14327599.bike_backward());
 
-  way = GetWay(87358588, ways);
-  if (way.auto_forward() != false || way.moped_forward() != false || way.bus_forward() != false ||
-      way.bike_forward() != true || way.pedestrian() != true || way.auto_backward() != false ||
-      way.moped_backward() != false || way.bus_backward() != false || way.bike_backward() != true) {
-    throw std::runtime_error("Access is not correct for way 87358588.");
-  }
+  auto way_87358588 = GetWay(87358588, ways);
+  EXPECT_FALSE(way_87358588.auto_forward());
+  EXPECT_FALSE(way_87358588.moped_forward());
+  EXPECT_FALSE(way_87358588.bus_forward());
+  EXPECT_TRUE(way_87358588.bike_forward());
+  EXPECT_TRUE(way_87358588.pedestrian());
+  EXPECT_FALSE(way_87358588.auto_backward());
+  EXPECT_FALSE(way_87358588.moped_backward());
+  EXPECT_FALSE(way_87358588.bus_backward());
+  EXPECT_TRUE(way_87358588.bike_backward());
 
-  way = GetWay(49771553, ways);
-  if (way.auto_forward() != true || way.moped_forward() != true || way.bus_forward() != true ||
-      way.bike_forward() != true || way.pedestrian() != true || way.auto_backward() != true ||
-      way.moped_backward() != true || way.bus_backward() != true || way.bike_backward() != true) {
-    throw std::runtime_error("Access is not correct for way 49771553.");
-  }
+  auto way_49771553 = GetWay(49771553, ways);
+  EXPECT_TRUE(way_49771553.auto_forward());
+  EXPECT_TRUE(way_49771553.moped_forward());
+  EXPECT_TRUE(way_49771553.bus_forward());
+  EXPECT_TRUE(way_49771553.bike_forward());
+  EXPECT_TRUE(way_49771553.pedestrian());
+  EXPECT_TRUE(way_49771553.auto_backward());
+  EXPECT_TRUE(way_49771553.moped_backward());
+  EXPECT_TRUE(way_49771553.bus_backward());
+  EXPECT_TRUE(way_49771553.bike_backward());
 
-  way = GetWay(225895737, ways);
-  if (way.auto_forward() != true || way.moped_forward() != true || way.bus_forward() != true ||
-      way.bike_forward() != true || way.pedestrian() != true || way.auto_backward() != false ||
-      way.moped_backward() != false || way.bus_backward() != false || way.bike_backward() != false) {
-    throw std::runtime_error("Access is not correct for way 225895737.");
-  }
+  auto way_225895737 = GetWay(225895737, ways);
+  EXPECT_TRUE(way_225895737.auto_forward());
+  EXPECT_TRUE(way_225895737.moped_forward());
+  EXPECT_TRUE(way_225895737.bus_forward());
+  EXPECT_TRUE(way_225895737.bike_forward());
+  EXPECT_TRUE(way_225895737.pedestrian());
+  EXPECT_FALSE(way_225895737.auto_backward());
+  EXPECT_FALSE(way_225895737.moped_backward());
+  EXPECT_FALSE(way_225895737.bus_backward());
+  EXPECT_FALSE(way_225895737.bike_backward());
 
   boost::filesystem::remove(ways_file);
   boost::filesystem::remove(way_nodes_file);
@@ -464,27 +546,29 @@ void BicycleTrafficSignals(const std::string& config_file) {
   std::string access_file = "test_access.bin";
   std::string from_restriction_file = "test_from_complex_restrictions.bin";
   std::string to_restriction_file = "test_to_complex_restrictions.bin";
+  std::string bss_nodes_file = "test_bss_nodes.bin";
 
   auto osmdata =
       PBFGraphParser::Parse(conf.get_child("mjolnir"), {VALHALLA_SOURCE_DIR "test/data/nyc.osm.pbf"},
                             ways_file, way_nodes_file, access_file, from_restriction_file,
-                            to_restriction_file);
+                            to_restriction_file, bss_nodes_file);
   sequence<OSMWayNode> way_nodes(way_nodes_file, false);
   way_nodes.sort(node_predicate);
 
   auto node = GetNode(42439096, way_nodes);
-  if (!node.intersection() || !node.traffic_signal())
-    throw std::runtime_error("Traffic Signal test failed.");
+  EXPECT_TRUE(node.intersection());
+  EXPECT_TRUE(node.traffic_signal());
+
   /*
     //When we support finding bike rentals, this test will need updated.
     node = GetNode(3146484929, way_nodes);
-    if (node.intersection())
-      throw std::runtime_error("Bike rental not marked as intersection.");
+    EXPECT_FALSE(node.intersection())
+      << "Bike rental not marked as intersection.";
 
     //When we support finding shops that rent bikes, this test will need updated.
     node = GetNode(2592264881, way_nodes);
-    if (node.intersection())
-      throw std::runtime_error("Bike rental at a shop not marked as intersection.");
+    EXPECT_FALSE(node.intersection())
+      << "Bike rental at a shop not marked as intersection."
   */
 
   boost::filesystem::remove(ways_file);
@@ -507,45 +591,127 @@ void DoConfig() {
   file.close();
 }
 
-void TestBollardsGatesAndAccess() {
+TEST(GraphParser, TestBollardsGatesAndAccess) {
   // write the tiles with it
   BollardsGatesAndAccess(config_file);
 }
 
-void TestRemovableBollards() {
+TEST(GraphParser, TestRemovableBollards) {
   // write the tiles with it
   RemovableBollards(config_file);
 }
 
-void TestBicycleTrafficSignals() {
+TEST(GraphParser, TestBicycleTrafficSignals) {
   // write the tiles with it
   BicycleTrafficSignals(config_file);
 }
 
-void TestExits() {
+TEST(GraphParser, TestExits) {
   // write the tiles with it
   Exits(config_file);
 }
 
-void TestBaltimoreArea() {
+TEST(GraphParser, TestBaltimoreArea) {
   // write the tiles with it
   Baltimore(config_file);
 }
 
-void TestBike() {
+TEST(GraphParser, TestBike) {
   // write the tiles with it
   Bike(config_file);
 }
 
-void TestBus() {
+TEST(GraphParser, TestBus) {
   // write the tiles with it
   Bus(config_file);
 }
 
+TEST(GraphParser, TestImportBssNode) {
+  boost::property_tree::ptree conf;
+  rapidjson::read_json(config_file, conf);
+
+  conf.put("mjolnir.import_bike_share_stations", true);
+
+  std::string ways_file = "test_ways.bin";
+  std::string way_nodes_file = "test_way_nodes.bin";
+  std::string nodes_file = "test_nodes.bin";
+  std::string edges_file = "test_edges.bin";
+  std::string access_file = "test_access.bin";
+  std::string from_restriction_file = "test_from_complex_restrictions.bin";
+  std::string to_restriction_file = "test_to_complex_restrictions.bin";
+  std::string bss_nodes_file = "test_bss_nodes.bin";
+
+  auto osmdata =
+      PBFGraphParser::Parse(conf.get_child("mjolnir"), {VALHALLA_SOURCE_DIR "test/data/rome.osm.pbf"},
+                            ways_file, way_nodes_file, access_file, from_restriction_file,
+                            to_restriction_file, bss_nodes_file);
+
+  GraphReader reader(conf.get_child("mjolnir"));
+
+  GraphBuilder::Build(conf, osmdata, ways_file, way_nodes_file, nodes_file, edges_file,
+                      from_restriction_file, to_restriction_file);
+
+  BssBuilder::Build(conf, bss_nodes_file);
+
+  auto local_level = TileHierarchy::levels().rbegin()->first;
+
+  const GraphTile* local_tile = reader.GetGraphTile({759649, local_level, 0});
+  auto count = local_tile->header()->nodecount();
+
+  EXPECT_EQ(local_tile->node(count - 1)->type(), NodeType::kBikeShare)
+      << "The added node is not bike share";
+
+  EXPECT_EQ(local_tile->node(count - 1)->edge_count(), 2)
+      << "The bike share node must have 2 outbound edges";
+
+  auto check_edge_attribute = [](const DirectedEdge* directededge) {
+    EXPECT_TRUE(directededge->bss_connection())
+        << "The bike share node's edges is not a bss connection";
+    EXPECT_EQ(directededge->surface(), Surface::kPavedRough) << "The edges' surface is incorrect";
+    EXPECT_EQ(directededge->cyclelane(), CycleLane::kNone) << "The edges' cyclelane is incorrect";
+    EXPECT_EQ(directededge->classification(), RoadClass::kResidential)
+        << "The edges' road calss is incorrect";
+    EXPECT_EQ(directededge->use(), Use::kRoad) << "The edges' use is incorrect";
+  };
+
+  auto bss_edge_idx = local_tile->node(count - 1)->edge_index();
+
+  check_edge_attribute(local_tile->directededge(bss_edge_idx));
+  check_edge_attribute(local_tile->directededge(bss_edge_idx + 1));
+
+  auto endnode_1 = local_tile->directededge(bss_edge_idx)->endnode();
+  auto count_1 = local_tile->node(endnode_1)->edge_count();
+  auto edge_idx_1 = local_tile->node(endnode_1)->edge_index();
+  // in this case the bike share edge should be the last edge of this node
+  check_edge_attribute(local_tile->directededge(edge_idx_1 + count_1 - 1));
+
+  auto endnode_2 = local_tile->directededge(bss_edge_idx + 1)->endnode();
+  auto count_2 = local_tile->node(endnode_2)->edge_count();
+  auto edge_idx_2 = local_tile->node(endnode_2)->edge_index();
+  // in this case the bike share edge should be the last edge of this node
+  check_edge_attribute(local_tile->directededge(edge_idx_2 + count_2 - 1));
+
+  boost::filesystem::remove(ways_file);
+  boost::filesystem::remove(way_nodes_file);
+  boost::filesystem::remove(bss_nodes_file);
+  boost::filesystem::remove(access_file);
+  boost::filesystem::remove(from_restriction_file);
+  boost::filesystem::remove(to_restriction_file);
+}
+
 } // namespace
 
-int main() {
+class GraphParserEnv : public ::testing::Environment {
+public:
+  void SetUp() override {
+    DoConfig();
+  }
 
+  void TearDown() override {
+  }
+};
+
+int main(int argc, char* argv[]) {
   // Test data BBs are as follows:
   // Rome:        <bounds minlat="41.8957000" minlon="12.4820400" maxlat="41.8973400"
   // maxlon="12.4855600"/> NYC:         <bounds minlat="40.7330200" minlon="-74.0136900"
@@ -553,17 +719,7 @@ int main() {
   // minlon="-76.6081000" maxlat="39.3065000" maxlon="-76.5288000"/> Harrisburg:  <bounds
   // minlat="40.2075000" minlon="-76.8459000" maxlat="40.3136000" maxlon="-76.7474000"/>
   // Liechtenstein: None
-
-  test::suite suite("parser");
-
-  suite.test(TEST_CASE(DoConfig));
-  suite.test(TEST_CASE(TestBollardsGatesAndAccess));
-  suite.test(TEST_CASE(TestRemovableBollards));
-  suite.test(TEST_CASE(TestBicycleTrafficSignals));
-  suite.test(TEST_CASE(TestExits));
-  suite.test(TEST_CASE(TestBaltimoreArea));
-  suite.test(TEST_CASE(TestBike));
-  suite.test(TEST_CASE(TestBus));
-
-  return suite.tear_down();
+  testing::AddGlobalTestEnvironment(new GraphParserEnv);
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

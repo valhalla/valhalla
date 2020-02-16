@@ -1,29 +1,30 @@
-#include "test.h"
 #include <cstdint>
 
 #include "mjolnir/uniquenames.h"
 
+#include "test.h"
+
 using namespace std;
 using namespace valhalla::mjolnir;
 
-void TestSize() {
+namespace {
+
+TEST(UniqueNames, Size) {
   UniqueNames names;
   names.index("Main Street");
   names.index("I-95");
   names.index("MD-32");
   names.index("I-95 S");
-  if (names.Size() != 4)
-    throw runtime_error("UniqueNames Size test failed");
+  EXPECT_EQ(names.Size(), 4);
 
   // Add a duplicate name and a unique name. Make sure Size
   // reflects only one name added
   names.index("MD-32");
   names.index("First Avenue");
-  if (names.Size() != 5)
-    throw runtime_error("UniqueNames Size test failed");
+  EXPECT_EQ(names.Size(), 5);
 }
 
-void TestAddAndIndex() {
+TEST(UniqueNames, TestAddAndIndex) {
   UniqueNames names;
   uint32_t index1 = names.index("I-95");
   uint32_t index2 = names.index("I-95 S");
@@ -32,34 +33,21 @@ void TestAddAndIndex() {
   uint32_t index5 = names.index("I-95");
   uint32_t index6 = names.index("I-95 N");
 
-  if (index3 != index6)
-    throw runtime_error("UniqueNames: indexes for common name are not equal");
-  if (index1 != index5)
-    throw runtime_error("UniqueNames: indexes for common name are not equal");
+  EXPECT_EQ(index3, index6) << "UniqueNames: indexes for common name are not equal";
+  EXPECT_EQ(index1, index5) << "UniqueNames: indexes for common name are not equal";
 
   // Test getting the name given the index
-  if (names.name(index1) != "I-95")
-    throw runtime_error("UniqueNames: name given an index failed");
-  if (names.name(index2) != "I-95 S")
-    throw runtime_error("UniqueNames: name given an index failed");
-  if (names.name(index3) != "I-95 N")
-    throw runtime_error("UniqueNames: name given an index failed");
-  if (names.name(index4) != "Interstate 95")
-    throw runtime_error("UniqueNames: name given an index failed");
-  if (names.name(index5) != "I-95")
-    throw runtime_error("UniqueNames: name given an index failed");
-  if (names.name(index6) != "I-95 N")
-    throw runtime_error("UniqueNames: name given an index failed");
+  EXPECT_EQ(names.name(index1), "I-95");
+  EXPECT_EQ(names.name(index2), "I-95 S");
+  EXPECT_EQ(names.name(index3), "I-95 N");
+  EXPECT_EQ(names.name(index4), "Interstate 95");
+  EXPECT_EQ(names.name(index5), "I-95");
+  EXPECT_EQ(names.name(index6), "I-95 N");
 }
 
-int main() {
-  test::suite suite("uniquenames");
+} // namespace
 
-  // Test adding names and getting them via index
-  suite.test(TEST_CASE(TestAddAndIndex));
-
-  // Test Size
-  suite.test(TEST_CASE(TestSize));
-
-  return suite.tear_down();
+int main(int argc, char* argv[]) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

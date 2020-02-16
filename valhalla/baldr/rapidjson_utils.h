@@ -11,7 +11,9 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/optional.hpp>
 
-// rapidjson loves to assert and crash programs, its more useful to throw and catch
+// rapidjson asserts by default but we dont want to crash running server
+// its more useful to throw and catch for our use case
+#define RAPIDJSON_ASSERT_THROWS
 #undef RAPIDJSON_ASSERT
 #define RAPIDJSON_ASSERT(x)                                                                          \
   if (!(x))                                                                                          \
@@ -28,9 +30,12 @@
 
 namespace rapidjson {
 
-template <typename T> inline std::string to_string(const T& document_or_value) {
+template <typename T>
+inline std::string to_string(const T& document_or_value, int decimal_places = -1) {
   rapidjson::StringBuffer buffer;
   rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+  if (decimal_places >= 0)
+    writer.SetMaxDecimalPlaces(decimal_places);
   document_or_value.Accept(writer);
   return std::string(buffer.GetString(), buffer.GetSize());
 }

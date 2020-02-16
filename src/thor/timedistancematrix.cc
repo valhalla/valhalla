@@ -8,8 +8,8 @@ using namespace valhalla::sif;
 
 namespace {
 static bool IsTrivial(const uint64_t& edgeid,
-                      const valhalla::odin::Location& origin,
-                      const valhalla::odin::Location& destination) {
+                      const valhalla::Location& origin,
+                      const valhalla::Location& destination) {
   for (const auto& destination_edge : destination.path_edges()) {
     if (destination_edge.graph_id() == edgeid) {
       for (const auto& origin_edge : origin.path_edges()) {
@@ -93,15 +93,16 @@ void TimeDistanceMatrix::ExpandForward(GraphReader& graphreader,
     // Skip this edge if permanently labeled (best path already found to this
     // directed edge), if no access is allowed to this edge (based on costing
     // method), or if a complex restriction prevents this path.
+    bool has_time_restrictions = false;
     if (es->set() == EdgeSet::kPermanent ||
-        !costing_->Allowed(directededge, pred, tile, edgeid, 0, 0) ||
+        !costing_->Allowed(directededge, pred, tile, edgeid, 0, 0, has_time_restrictions) ||
         costing_->Restricted(directededge, pred, edgelabels_, tile, edgeid, true)) {
       continue;
     }
 
     // Get cost and update distance
-    Cost newcost = pred.cost() + costing_->EdgeCost(directededge, tile->GetSpeed(directededge)) +
-                   costing_->TransitionCost(directededge, nodeinfo, pred);
+    auto transition_cost = costing_->TransitionCost(directededge, nodeinfo, pred);
+    Cost newcost = pred.cost() + costing_->EdgeCost(directededge, tile) + transition_cost;
     uint32_t distance = pred.path_distance() + directededge->length();
 
     // Check if edge is temporarily labeled and this path has less cost. If
@@ -112,7 +113,7 @@ void TimeDistanceMatrix::ExpandForward(GraphReader& graphreader,
       if (newcost.cost < lab.cost().cost) {
         float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
         adjacencylist_->decrease(es->index(), newsortcost);
-        lab.Update(pred_idx, newcost, newsortcost, distance);
+        lab.Update(pred_idx, newcost, newsortcost, distance, transition_cost, has_time_restrictions);
       }
       continue;
     }
@@ -120,7 +121,7 @@ void TimeDistanceMatrix::ExpandForward(GraphReader& graphreader,
     // Add to the adjacency list and edge labels.
     uint32_t idx = edgelabels_.size();
     edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, 0.0f, mode_,
-                             distance);
+                             distance, transition_cost, has_time_restrictions);
     *es = {EdgeSet::kTemporary, idx};
     adjacencylist_->add(idx);
   }
@@ -137,8 +138,8 @@ void TimeDistanceMatrix::ExpandForward(GraphReader& graphreader,
 // Calculate time and distance from one origin location to many destination
 // locations.
 std::vector<TimeDistance>
-TimeDistanceMatrix::OneToMany(const odin::Location& origin,
-                              const google::protobuf::RepeatedPtrField<odin::Location>& locations,
+TimeDistanceMatrix::OneToMany(const valhalla::Location& origin,
+                              const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
                               GraphReader& graphreader,
                               const std::shared_ptr<DynamicCost>* mode_costing,
                               const TravelMode mode,
@@ -191,7 +192,7 @@ TimeDistanceMatrix::OneToMany(const odin::Location& origin,
       // have been settled.
       tile = graphreader.GetGraphTile(pred.edgeid());
       const DirectedEdge* edge = tile->directededge(pred.edgeid());
-      if (UpdateDestinations(origin, locations, destedge->second, edge, pred, predindex)) {
+      if (UpdateDestinations(origin, locations, destedge->second, edge, tile, pred, predindex)) {
         return FormTimeDistanceMatrix();
       }
     }
@@ -253,15 +254,16 @@ void TimeDistanceMatrix::ExpandReverse(GraphReader& graphreader,
 
     // Get opposing directed edge and check if allowed.
     const DirectedEdge* opp_edge = t2->directededge(oppedge);
-    if (opp_edge == nullptr ||
-        !costing_->AllowedReverse(directededge, pred, opp_edge, t2, oppedge, 0, 0)) {
+    bool has_time_restrictions = false;
+    if (opp_edge == nullptr || !costing_->AllowedReverse(directededge, pred, opp_edge, t2, oppedge, 0,
+                                                         0, has_time_restrictions)) {
       continue;
     }
 
     // Get cost. Use the opposing edge for EdgeCost.
-    Cost newcost = pred.cost() + costing_->EdgeCost(opp_edge, t2->GetSpeed(opp_edge)) +
-                   costing_->TransitionCostReverse(directededge->localedgeidx(), nodeinfo, opp_edge,
-                                                   opp_pred_edge);
+    auto transition_cost = costing_->TransitionCostReverse(directededge->localedgeidx(), nodeinfo,
+                                                           opp_edge, opp_pred_edge);
+    Cost newcost = pred.cost() + costing_->EdgeCost(opp_edge, t2) + transition_cost;
     uint32_t distance = pred.path_distance() + directededge->length();
 
     // Check if edge is temporarily labeled and this path has less cost. If
@@ -272,7 +274,7 @@ void TimeDistanceMatrix::ExpandReverse(GraphReader& graphreader,
       if (newcost.cost < lab.cost().cost) {
         float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
         adjacencylist_->decrease(es->index(), newsortcost);
-        lab.Update(pred_idx, newcost, newsortcost, distance);
+        lab.Update(pred_idx, newcost, newsortcost, distance, transition_cost, has_time_restrictions);
       }
       continue;
     }
@@ -280,7 +282,7 @@ void TimeDistanceMatrix::ExpandReverse(GraphReader& graphreader,
     // Add to the adjacency list and edge labels.
     uint32_t idx = edgelabels_.size();
     edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, 0.0f, mode_,
-                             distance);
+                             distance, transition_cost, has_time_restrictions);
     *es = {EdgeSet::kTemporary, idx};
     adjacencylist_->add(idx);
   }
@@ -297,8 +299,8 @@ void TimeDistanceMatrix::ExpandReverse(GraphReader& graphreader,
 // Many to one time and distance cost matrix. Computes time and distance
 // from many locations to one location.
 std::vector<TimeDistance>
-TimeDistanceMatrix::ManyToOne(const odin::Location& dest,
-                              const google::protobuf::RepeatedPtrField<odin::Location>& locations,
+TimeDistanceMatrix::ManyToOne(const valhalla::Location& dest,
+                              const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
                               GraphReader& graphreader,
                               const std::shared_ptr<DynamicCost>* mode_costing,
                               const TravelMode mode,
@@ -350,7 +352,7 @@ TimeDistanceMatrix::ManyToOne(const odin::Location& dest,
       // have been settled.
       tile = graphreader.GetGraphTile(pred.edgeid());
       const DirectedEdge* edge = tile->directededge(pred.edgeid());
-      if (UpdateDestinations(dest, locations, destedge->second, edge, pred, predindex)) {
+      if (UpdateDestinations(dest, locations, destedge->second, edge, tile, pred, predindex)) {
         return FormTimeDistanceMatrix();
       }
     }
@@ -368,18 +370,18 @@ TimeDistanceMatrix::ManyToOne(const odin::Location& dest,
 
 // Many to one time and distance cost matrix. Computes time and distance
 // from many locations to many locations.
-std::vector<TimeDistance>
-TimeDistanceMatrix::ManyToMany(const google::protobuf::RepeatedPtrField<odin::Location>& locations,
-                               GraphReader& graphreader,
-                               const std::shared_ptr<DynamicCost>* mode_costing,
-                               const sif::TravelMode mode,
-                               const float max_matrix_distance) {
+std::vector<TimeDistance> TimeDistanceMatrix::ManyToMany(
+    const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
+    GraphReader& graphreader,
+    const std::shared_ptr<DynamicCost>* mode_costing,
+    const sif::TravelMode mode,
+    const float max_matrix_distance) {
   return SourceToTarget(locations, locations, graphreader, mode_costing, mode, max_matrix_distance);
 }
 
 std::vector<TimeDistance> TimeDistanceMatrix::SourceToTarget(
-    const google::protobuf::RepeatedPtrField<odin::Location>& source_location_list,
-    const google::protobuf::RepeatedPtrField<odin::Location>& target_location_list,
+    const google::protobuf::RepeatedPtrField<valhalla::Location>& source_location_list,
+    const google::protobuf::RepeatedPtrField<valhalla::Location>& target_location_list,
     baldr::GraphReader& graphreader,
     const std::shared_ptr<sif::DynamicCost>* mode_costing,
     const sif::TravelMode mode,
@@ -405,11 +407,12 @@ std::vector<TimeDistance> TimeDistanceMatrix::SourceToTarget(
 }
 
 // Add edges at the origin to the adjacency list
-void TimeDistanceMatrix::SetOriginOneToMany(GraphReader& graphreader, const odin::Location& origin) {
+void TimeDistanceMatrix::SetOriginOneToMany(GraphReader& graphreader,
+                                            const valhalla::Location& origin) {
   // Only skip inbound edges if we have other options
   bool has_other_edges = false;
   std::for_each(origin.path_edges().begin(), origin.path_edges().end(),
-                [&has_other_edges](const odin::Location::PathEdge& e) {
+                [&has_other_edges](const valhalla::Location::PathEdge& e) {
                   has_other_edges = has_other_edges || !e.end_node();
                 });
 
@@ -420,8 +423,13 @@ void TimeDistanceMatrix::SetOriginOneToMany(GraphReader& graphreader, const odin
       continue;
     }
 
+    // Disallow any user avoid edges if the avoid location is ahead of the origin along the edge
+    GraphId edgeid(edge.graph_id());
+    if (costing_->AvoidAsOriginEdge(edgeid, edge.percent_along())) {
+      continue;
+    }
+
     // Get the directed edge
-    GraphId edgeid = static_cast<GraphId>(edge.graph_id());
     const GraphTile* tile = graphreader.GetGraphTile(edgeid);
     const DirectedEdge* directededge = tile->directededge(edgeid);
 
@@ -434,8 +442,7 @@ void TimeDistanceMatrix::SetOriginOneToMany(GraphReader& graphreader, const odin
 
     // Get cost. Use this as sortcost since A* is not used for time+distance
     // matrix computations. . Get distance along the remainder of this edge.
-    Cost cost = costing_->EdgeCost(directededge, tile->GetSpeed(directededge)) *
-                (1.0f - edge.percent_along());
+    Cost cost = costing_->EdgeCost(directededge, tile) * (1.0f - edge.percent_along());
     uint32_t d = static_cast<uint32_t>(directededge->length() * (1.0f - edge.percent_along()));
 
     // We need to penalize this location based on its score (distance in meters from input)
@@ -446,7 +453,7 @@ void TimeDistanceMatrix::SetOriginOneToMany(GraphReader& graphreader, const odin
     // Add EdgeLabel to the adjacency list (but do not set its status).
     // Set the predecessor edge index to invalid to indicate the origin
     // of the path. Set the origin flag
-    EdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost, cost.cost, 0.0f, mode_, d);
+    EdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost, cost.cost, 0.0f, mode_, d, {});
     edge_label.set_origin();
     edgelabels_.push_back(std::move(edge_label));
     adjacencylist_->add(edgelabels_.size() - 1);
@@ -454,11 +461,17 @@ void TimeDistanceMatrix::SetOriginOneToMany(GraphReader& graphreader, const odin
 }
 
 // Add origin for a many to one time distance matrix.
-void TimeDistanceMatrix::SetOriginManyToOne(GraphReader& graphreader, const odin::Location& dest) {
+void TimeDistanceMatrix::SetOriginManyToOne(GraphReader& graphreader,
+                                            const valhalla::Location& dest) {
   // Iterate through edges and add opposing edges to adjacency list
   for (const auto& edge : dest.path_edges()) {
+    // Disallow any user avoided edges if the avoid location is behind the destination along the edge
+    GraphId edgeid(edge.graph_id());
+    if (costing_->AvoidAsDestinationEdge(edgeid, edge.percent_along())) {
+      continue;
+    }
+
     // Get the directed edge
-    GraphId edgeid = static_cast<GraphId>(edge.graph_id());
     const GraphTile* tile = graphreader.GetGraphTile(edgeid);
     const DirectedEdge* directededge = tile->directededge(edgeid);
 
@@ -478,8 +491,7 @@ void TimeDistanceMatrix::SetOriginManyToOne(GraphReader& graphreader, const odin
 
     // Get cost. Use this as sortcost since A* is not used for time
     // distance matrix computations. Get the distance along the edge.
-    Cost cost =
-        costing_->EdgeCost(opp_dir_edge, endtile->GetSpeed(opp_dir_edge)) * edge.percent_along();
+    Cost cost = costing_->EdgeCost(opp_dir_edge, endtile) * edge.percent_along();
     uint32_t d = static_cast<uint32_t>(directededge->length() * edge.percent_along());
 
     // We need to penalize this location based on its score (distance in meters from input)
@@ -491,7 +503,8 @@ void TimeDistanceMatrix::SetOriginManyToOne(GraphReader& graphreader, const odin
     // Set the predecessor edge index to invalid to indicate the origin
     // of the path. Set the origin flag.
     // TODO - restrictions?
-    EdgeLabel edge_label(kInvalidLabel, opp_edge_id, opp_dir_edge, cost, cost.cost, 0.0f, mode_, d);
+    EdgeLabel edge_label(kInvalidLabel, opp_edge_id, opp_dir_edge, cost, cost.cost, 0.0f, mode_, d,
+                         {});
     edge_label.set_origin();
     edgelabels_.push_back(std::move(edge_label));
     adjacencylist_->add(edgelabels_.size() - 1);
@@ -501,25 +514,35 @@ void TimeDistanceMatrix::SetOriginManyToOne(GraphReader& graphreader, const odin
 // Set destinations
 void TimeDistanceMatrix::SetDestinations(
     GraphReader& graphreader,
-    const google::protobuf::RepeatedPtrField<odin::Location>& locations) {
+    const google::protobuf::RepeatedPtrField<valhalla::Location>& locations) {
   // For each destination
   uint32_t idx = 0;
   for (const auto& loc : locations) {
-    // Add a destination and get a reference to it
-    destinations_.emplace_back();
-    Destination& d = destinations_.back();
-
     // Set up the destination - consider each possible location edge.
+    bool added = false;
     for (const auto& edge : loc.path_edges()) {
-      // Keep the id and the partial distance for the
-      // remainder of the edge.
+      // Disallow any user avoided edges if the avoid location is behind the destination along the
+      // edge
+      GraphId edgeid(edge.graph_id());
+      if (costing_->AvoidAsDestinationEdge(edgeid, edge.percent_along())) {
+        continue;
+      }
+
+      // Add a destination if this is the first allowed edge for the location
+      if (!added) {
+        destinations_.emplace_back();
+        added = true;
+      }
+
+      // Keep the id and the partial distance for the remainder of the edge.
+      Destination& d = destinations_.back();
       d.dest_edges[edge.graph_id()] = (1.0f - edge.percent_along());
 
       // Form a threshold cost (the total cost to traverse the edge)
       GraphId id(static_cast<GraphId>(edge.graph_id()));
       const GraphTile* tile = graphreader.GetGraphTile(id);
       const DirectedEdge* directededge = tile->directededge(id);
-      float c = costing_->EdgeCost(directededge, tile->GetSpeed(directededge)).cost;
+      float c = costing_->EdgeCost(directededge, tile).cost;
 
       // We need to penalize this location based on its score (distance in meters from input)
       // We assume the slowest speed you could travel to cover that distance to start/end the route
@@ -540,30 +563,32 @@ void TimeDistanceMatrix::SetDestinations(
 // Set destinations for the many to one case.
 void TimeDistanceMatrix::SetDestinationsManyToOne(
     GraphReader& graphreader,
-    const google::protobuf::RepeatedPtrField<odin::Location>& locations) {
+    const google::protobuf::RepeatedPtrField<valhalla::Location>& locations) {
   // For each destination
   uint32_t idx = 0;
   for (const auto& loc : locations) {
-    // Add a destination and get a reference to it
-    destinations_.emplace_back();
-    Destination& d = destinations_.back();
-
     // Set up the destination - consider each possible location edge.
+    bool added = false;
     for (const auto& edge : loc.path_edges()) {
-      // Get the opposing directed edge Id - this is the edge marked as the
-      // "destination" - but the cost is based on the forward path along the
-      // initial edge.
+      // Get the opposing directed edge Id - this is the edge marked as the "destination",
+      // but the cost is based on the forward path along the initial edge.
       GraphId opp_edge_id = graphreader.GetOpposingEdgeId(static_cast<GraphId>(edge.graph_id()));
 
-      // Keep the id and the partial distance for the
-      // remainder of the edge.
+      // Add a destination if this is the first allowed edge for the location
+      if (!added) {
+        destinations_.emplace_back();
+        added = true;
+      }
+
+      // Keep the id and the partial distance for the remainder of the edge.
+      Destination& d = destinations_.back();
       d.dest_edges[opp_edge_id] = edge.percent_along();
 
       // Form a threshold cost (the total cost to traverse the edge)
       GraphId id(static_cast<GraphId>(edge.graph_id()));
       const GraphTile* tile = graphreader.GetGraphTile(id);
       const DirectedEdge* directededge = tile->directededge(id);
-      float c = costing_->EdgeCost(directededge, tile->GetSpeed(directededge)).cost;
+      float c = costing_->EdgeCost(directededge, tile).cost;
 
       // We need to penalize this location based on its score (distance in meters from input)
       // We assume the slowest speed you could travel to cover that distance to start/end the route
@@ -584,10 +609,11 @@ void TimeDistanceMatrix::SetDestinationsManyToOne(
 // Update any destinations along the edge. Returns true if all destinations
 // have be settled.
 bool TimeDistanceMatrix::UpdateDestinations(
-    const odin::Location& origin,
-    const google::protobuf::RepeatedPtrField<odin::Location>& locations,
+    const valhalla::Location& origin,
+    const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
     std::vector<uint32_t>& destinations,
     const DirectedEdge* edge,
+    const GraphTile* tile,
     const EdgeLabel& pred,
     const uint32_t predindex) {
   // For each destination along this edge
@@ -623,7 +649,7 @@ bool TimeDistanceMatrix::UpdateDestinations(
     // Get the cost. The predecessor cost is cost to the end of the edge.
     // Subtract the partial remaining cost and distance along the edge.
     float remainder = dest_edge->second;
-    Cost newcost = pred.cost() - (costing_->EdgeCost(edge, edge->speed()) * remainder);
+    Cost newcost = pred.cost() - (costing_->EdgeCost(edge, tile) * remainder);
     if (newcost.cost < dest.best_cost.cost) {
       dest.best_cost = newcost;
       dest.distance = pred.path_distance() - (edge->length() * remainder);

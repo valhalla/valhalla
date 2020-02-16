@@ -4,7 +4,7 @@
 #include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/osmnode.h"
 #include "mjolnir/pbfgraphparser.h"
-#include "test.h"
+
 #include <cstdint>
 
 #include "baldr/rapidjson_utils.h"
@@ -17,7 +17,8 @@
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
 #include "baldr/tilehierarchy.h"
-#include "filesystem.h"
+
+#include "test.h"
 
 #if !defined(VALHALLA_SOURCE_DIR)
 #define VALHALLA_SOURCE_DIR
@@ -60,8 +61,7 @@ const auto node_predicate = [](const OSMWayNode& a, const OSMWayNode& b) {
 
 OSMNode GetNode(uint64_t node_id, sequence<OSMWayNode>& way_nodes) {
   auto found = way_nodes.find({node_id}, node_predicate);
-  if (found == way_nodes.end())
-    throw std::runtime_error("Couldn't find node: " + std::to_string(node_id));
+  EXPECT_NE(found, way_nodes.end()) << "Couldn't find node: " + std::to_string(node_id);
   return (*found).node;
 }
 
@@ -69,8 +69,7 @@ auto way_predicate = [](const OSMWay& a, const OSMWay& b) { return a.osmwayid_ <
 
 OSMWay GetWay(uint32_t way_id, sequence<OSMWay>& ways) {
   auto found = ways.find({way_id}, way_predicate);
-  if (found == ways.end())
-    throw std::runtime_error("Couldn't find way: " + std::to_string(way_id));
+  EXPECT_NE(found, ways.end()) << "Couldn't find way: " + std::to_string(way_id);
   return *found;
 }
 
@@ -95,11 +94,12 @@ void CountryAccess(const std::string& config_file) {
   std::string access_file = "test_access_amsterdam.bin";
   std::string cr_from_file = "test_from_cr_amsterdam.bin";
   std::string cr_to_file = "test_to_cr_amsterdam.bin";
-
+  std::string bss_nodes_file = "test_bss_nodes_amsterdam.bin";
   // Parse Amsterdam OSM data
-  auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"),
-                                       {VALHALLA_SOURCE_DIR "test/data/amsterdam.osm.pbf"}, ways_file,
-                                       way_nodes_file, access_file, cr_from_file, cr_to_file);
+  auto osmdata =
+      PBFGraphParser::Parse(conf.get_child("mjolnir"),
+                            {VALHALLA_SOURCE_DIR "test/data/amsterdam.osm.pbf"}, ways_file,
+                            way_nodes_file, access_file, cr_from_file, cr_to_file, bss_nodes_file);
 
   // Build the graph using the OSMNodes and OSMWays from the parser
   GraphBuilder::Build(conf, osmdata, ways_file, way_nodes_file, nodes_file, edges_file, cr_from_file,
@@ -124,52 +124,48 @@ void CountryAccess(const std::string& config_file) {
 
       // cycleway (not oneway) should have kBicycleAccess and kMopedAccess
       if (e_offset.wayid() == 7047088) {
-        if (forward != (kBicycleAccess | kMopedAccess) ||
-            reverse != (kBicycleAccess | kMopedAccess)) {
-          throw std::runtime_error("Defaults:  Access is not correct for way 7047088.");
-        }
+        EXPECT_EQ(forward, kBicycleAccess | kMopedAccess)
+            << "Defaults:  Access is not correct for way 7047088.";
+        EXPECT_EQ(reverse, (kBicycleAccess | kMopedAccess))
+            << "Defaults:  Access is not correct for way 7047088.";
         // cycleway (is oneway) should have kPedestrianAccess and kBicycleAccess
       } else if (e_offset.wayid() == 35600238) {
         if (directededge.forward()) {
-          if (forward != kBicycleAccess)
-            throw std::runtime_error("Defaults:  Forward access is not correct for way 35600238.");
-          if (reverse != 0) // no access
-            throw std::runtime_error("Defaults:  Reverse access is not correct for way 35600238.");
+          EXPECT_EQ(forward, kBicycleAccess)
+              << "Defaults:  Forward access is not correct for way 35600238.";
+          EXPECT_EQ(reverse, 0) << "Defaults:  Reverse access is not correct for way 35600238.";
         } else {
-          if (reverse != kBicycleAccess)
-            throw std::runtime_error("Defaults:  Reverse access is not correct for way 35600238.");
-          if (forward != 0) // no access
-            throw std::runtime_error("Defaults:  Forward access is not correct for way 35600238.");
+          EXPECT_EQ(reverse, kBicycleAccess)
+              << "Defaults:  Reverse access is not correct for way 35600238.";
+          EXPECT_EQ(forward, 0) << "Defaults:  Forward access is not correct for way 35600238.";
         }
         // trunk that has pedestrian, moped and bike access but motorroad key changes turns off
         // pedestrians and bikes
       } else if (e_offset.wayid() == 139156014) {
         if (directededge.forward()) {
-          if (forward !=
-              (kAutoAccess | kHOVAccess | kPedestrianAccess | kWheelchairAccess | kBicycleAccess |
-               kTruckAccess | kBusAccess | kMopedAccess | kMotorcycleAccess))
-            throw std::runtime_error("Defaults:  Forward access is not correct for way 139156014.");
-          if (reverse != (kPedestrianAccess | kWheelchairAccess))
-            throw std::runtime_error("Defaults:  Reverse access is not correct for way 139156014.");
+          EXPECT_EQ(forward,
+                    (kAutoAccess | kHOVAccess | kTaxiAccess | kPedestrianAccess | kWheelchairAccess |
+                     kBicycleAccess | kTruckAccess | kBusAccess | kMopedAccess | kMotorcycleAccess))
+              << "Defaults:  Forward access is not correct for way 139156014.";
+          EXPECT_EQ(reverse, kPedestrianAccess | kWheelchairAccess)
+              << "Defaults:  Reverse access is not correct for way 139156014.";
         } else {
-          if (reverse !=
-              (kAutoAccess | kHOVAccess | kPedestrianAccess | kWheelchairAccess | kBicycleAccess |
-               kTruckAccess | kBusAccess | kMopedAccess | kMotorcycleAccess))
-            throw std::runtime_error("Defaults:  Reverse access is not correct for way 139156014.");
-          if (forward != (kPedestrianAccess | kWheelchairAccess))
-            throw std::runtime_error("Defaults:  Forward access is not correct for way 139156014.");
+          EXPECT_EQ(reverse,
+                    (kAutoAccess | kHOVAccess | kTaxiAccess | kPedestrianAccess | kWheelchairAccess |
+                     kBicycleAccess | kTruckAccess | kBusAccess | kMopedAccess | kMotorcycleAccess))
+              << "Defaults:  Reverse access is not correct for way 139156014.";
+          EXPECT_EQ(forward, kPedestrianAccess | kWheelchairAccess)
+              << "Defaults:  Forward access is not correct for way 139156014.";
         }
       } else if (e_offset.wayid() == 512688404) { // motorroad key test
         if (directededge.forward()) {
-          if (forward != (kAutoAccess | kHOVAccess | kTruckAccess | kBusAccess))
-            throw std::runtime_error("Defaults:  Forward access is not correct for way 512688404.");
-          if (reverse != 0)
-            throw std::runtime_error("Defaults:  Reverse access is not correct for way 512688404.");
+          EXPECT_EQ(forward, (kAutoAccess | kHOVAccess | kTaxiAccess | kTruckAccess | kBusAccess))
+              << "Defaults:  Forward access is not correct for way 512688404.";
+          EXPECT_EQ(reverse, 0) << "Defaults:  Reverse access is not correct for way 512688404.";
         } else {
-          if (reverse != (kAutoAccess | kHOVAccess | kTruckAccess | kBusAccess))
-            throw std::runtime_error("Defaults:  Reverse access is not correct for way 512688404.");
-          if (forward != 0)
-            throw std::runtime_error("Defaults:  Forward access is not correct for way 512688404.");
+          EXPECT_EQ(reverse, (kAutoAccess | kHOVAccess | kTaxiAccess | kTruckAccess | kBusAccess))
+              << "Defaults:  Reverse access is not correct for way 512688404.";
+          EXPECT_EQ(forward, 0) << "Defaults:  Forward access is not correct for way 512688404.";
         }
       }
     }
@@ -178,7 +174,7 @@ void CountryAccess(const std::string& config_file) {
   // Enhance the local level of the graph. This adds information to the local
   // level that is usable across all levels (density, administrative
   // information (and country based attribution), edge transition logic, etc.
-  GraphEnhancer::Enhance(conf, access_file);
+  GraphEnhancer::Enhance(conf, osmdata, access_file);
 
   // load a tile and test that the country level access is set.
   GraphId id2(820099, 2, 0);
@@ -200,37 +196,36 @@ void CountryAccess(const std::string& config_file) {
 
       // cycleway (not oneway) should have kPedestrianAccess and kBicycleAccess
       if (e_offset.wayid() == 7047088) {
-        if ((forward != (kPedestrianAccess | kWheelchairAccess | kBicycleAccess | kMopedAccess)) ||
-            (reverse != (kPedestrianAccess | kWheelchairAccess | kBicycleAccess | kMopedAccess))) {
-          throw std::runtime_error("Enhanced:  Access is not correct for way 7047088.");
-        }
+        EXPECT_EQ(forward, (kPedestrianAccess | kWheelchairAccess | kBicycleAccess | kMopedAccess))
+            << "Enhanced:  Access is not correct for way 7047088.";
+        EXPECT_EQ(reverse, (kPedestrianAccess | kWheelchairAccess | kBicycleAccess | kMopedAccess))
+            << "Enhanced:  Access is not correct for way 7047088.";
         // cycleway (is oneway) should have kPedestrianAccess and kBicycleAccess
       } else if (e_offset.wayid() == 31976259) {
         if (directededge.forward()) {
-          if (forward != (kPedestrianAccess | kWheelchairAccess | kBicycleAccess | kMopedAccess))
-            throw std::runtime_error("Enhanced:  Forward access is not correct for way 31976259.");
-          if (reverse !=
-              (kPedestrianAccess |
-               kWheelchairAccess)) // only pedestrian access because this is a oneway cycleway
-            throw std::runtime_error("Enhanced:  Reverse access is not correct for way 31976259.");
+          EXPECT_EQ(forward, (kPedestrianAccess | kWheelchairAccess | kBicycleAccess | kMopedAccess))
+              << "Enhanced:  Forward access is not correct for way 31976259.";
+          // only pedestrian access because this is a oneway cycleway
+          EXPECT_EQ(reverse, (kPedestrianAccess | kWheelchairAccess))
+              << "Enhanced:  Reverse access is not correct for way 31976259.";
         } else {
-          if (reverse != (kPedestrianAccess | kWheelchairAccess | kBicycleAccess | kMopedAccess))
-            throw std::runtime_error("Enhanced:  Reverse access is not correct for way 31976259.");
-          if (forward != (kPedestrianAccess | kWheelchairAccess))
-            throw std::runtime_error("Enhanced:  Forward access is not correct for way 31976259.");
+          EXPECT_EQ(reverse, (kPedestrianAccess | kWheelchairAccess | kBicycleAccess | kMopedAccess))
+              << "Enhanced:  Reverse access is not correct for way 31976259.";
+          EXPECT_EQ(forward, (kPedestrianAccess | kWheelchairAccess))
+              << "Enhanced:  Forward access is not correct for way 31976259.";
         }
         // trunk should have no kPedestrianAccess
       } else if (e_offset.wayid() == 139156014) {
         if (directededge.forward()) {
-          if (forward != (kAutoAccess | kHOVAccess | kTruckAccess | kBusAccess | kMotorcycleAccess))
-            throw std::runtime_error("Enhanced:  Forward access is not correct for way 139156014.");
-          if (reverse != 0)
-            throw std::runtime_error("Enhanced:  Reverse access is not correct for way 139156014.");
+          EXPECT_EQ(forward, (kAutoAccess | kHOVAccess | kTaxiAccess | kTruckAccess | kBusAccess |
+                              kMotorcycleAccess))
+              << "Enhanced:  Forward access is not correct for way 139156014.";
+          EXPECT_EQ(reverse, 0) << "Enhanced:  Reverse access is not correct for way 139156014.";
         } else {
-          if (reverse != (kAutoAccess | kHOVAccess | kTruckAccess | kBusAccess | kMotorcycleAccess))
-            throw std::runtime_error("Enhanced:  Reverse access is not correct for way 139156014.");
-          if (forward != 0)
-            throw std::runtime_error("Enhanced:  Forward access is not correct for way 139156014.");
+          EXPECT_EQ(reverse, (kAutoAccess | kHOVAccess | kTaxiAccess | kTruckAccess | kBusAccess |
+                              kMotorcycleAccess))
+              << "Enhanced:  Reverse access is not correct for way 139156014.";
+          EXPECT_EQ(forward, 0) << "Enhanced:  Forward access is not correct for way 139156014.";
         }
       }
     }
@@ -246,24 +241,17 @@ void CountryAccess(const std::string& config_file) {
   remove_temp_file(cr_to_file);
 }
 
-void TestCountryAccess() {
+TEST(CountryAccess, Basic) {
+  // make a config file
+  write_config(config_file);
+
   // write the tiles with it
   CountryAccess(config_file);
 }
 
-void DoConfig() {
-  // make a config file
-  write_config(config_file);
-}
-
 } // namespace
 
-int main() {
-
-  test::suite suite("countryaccess");
-
-  suite.test(TEST_CASE(DoConfig));
-  suite.test(TEST_CASE(TestCountryAccess));
-
-  return suite.tear_down();
+int main(int argc, char* argv[]) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

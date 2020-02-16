@@ -47,7 +47,7 @@ Without the `range`, the result looks something like this, with only a `height`:
 
 ### Use an encoded polyline for input locations
 
-The `encoded_polyline` parameter is a string of a polyline-encoded, with **six degrees of precision**, shape and has the following parameters. Details on polyline encoding and decoding can be found [here](/decoding.md).
+The `encoded_polyline` parameter is a string of a polyline-encoded, with **six degrees of precision**, shape and has the following parameters. Details on polyline encoding and decoding can be found [here](../../decoding.md).
 
 | Encoded polyline parameters | Description |
 | :--------- | :----------- |

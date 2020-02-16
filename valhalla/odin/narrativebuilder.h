@@ -9,8 +9,8 @@
 #include <valhalla/odin/enhancedtrippath.h>
 #include <valhalla/odin/maneuver.h>
 #include <valhalla/odin/narrative_dictionary.h>
-#include <valhalla/proto/directions_options.pb.h>
-#include <valhalla/proto/trippath.pb.h>
+#include <valhalla/proto/options.pb.h>
+#include <valhalla/proto/trip.pb.h>
 
 namespace valhalla {
 namespace odin {
@@ -24,8 +24,8 @@ const std::string kVerbalDelim = ", ";
 
 class NarrativeBuilder {
 public:
-  NarrativeBuilder(const DirectionsOptions& directions_options,
-                   const EnhancedTripPath* trip_path,
+  NarrativeBuilder(const Options& options,
+                   const EnhancedTripLeg* trip_path,
                    const NarrativeDictionary& dictionary);
 
   virtual ~NarrativeBuilder() = default;
@@ -36,9 +36,7 @@ public:
   NarrativeBuilder(const NarrativeBuilder&) = default;
   NarrativeBuilder& operator=(const NarrativeBuilder&) = default;
 
-  void Build(const DirectionsOptions& directions_options,
-             const EnhancedTripPath* etp,
-             std::list<Maneuver>& maneuvers);
+  void Build(const Options& options, std::list<Maneuver>& maneuvers);
 
 protected:
   /////////////////////////////////////////////////////////////////////////////
@@ -72,34 +70,30 @@ protected:
                                      const std::string& delim = kVerbalDelim);
 
   std::string FormVerbalContinueInstruction(Maneuver& maneuver,
-                                            DirectionsOptions_Units units,
+                                            Options_Units units,
                                             uint32_t element_max_count = kVerbalPreElementMaxCount,
                                             const std::string& delim = kVerbalDelim);
 
   /////////////////////////////////////////////////////////////////////////////
-  std::string FormTurnInstruction(Maneuver& maneuver, Maneuver* prev_maneuver);
+  std::string FormTurnInstruction(Maneuver& maneuver);
 
   std::string FormVerbalAlertTurnInstruction(Maneuver& maneuver,
-                                             Maneuver* prev_maneuver,
                                              uint32_t element_max_count = kVerbalAlertElementMaxCount,
                                              const std::string& delim = kVerbalDelim);
 
   std::string FormVerbalTurnInstruction(Maneuver& maneuver,
-                                        Maneuver* prev_maneuver,
                                         uint32_t element_max_count = kVerbalPreElementMaxCount,
                                         const std::string& delim = kVerbalDelim);
 
   /////////////////////////////////////////////////////////////////////////////
-  std::string FormUturnInstruction(Maneuver& maneuver, Maneuver* prev_maneuver);
+  std::string FormUturnInstruction(Maneuver& maneuver);
 
   std::string
   FormVerbalAlertUturnInstruction(Maneuver& maneuver,
-                                  Maneuver* prev_maneuver,
                                   uint32_t element_max_count = kVerbalAlertElementMaxCount,
                                   const std::string& delim = kVerbalDelim);
 
   std::string FormVerbalUturnInstruction(Maneuver& maneuver,
-                                         Maneuver* prev_maneuver,
                                          uint32_t element_max_count = kVerbalPreElementMaxCount,
                                          const std::string& delim = kVerbalDelim);
 
@@ -392,13 +386,13 @@ protected:
                                     const std::vector<std::string>& us_customary_lengths);
 
   /////////////////////////////////////////////////////////////////////////////
-  std::string FormRelativeTwoDirection(TripDirections_Maneuver_Type type,
+  std::string FormRelativeTwoDirection(DirectionsLeg_Maneuver_Type type,
                                        const std::vector<std::string>& relative_directions);
 
-  std::string FormRelativeThreeDirection(TripDirections_Maneuver_Type type,
+  std::string FormRelativeThreeDirection(DirectionsLeg_Maneuver_Type type,
                                          const std::vector<std::string>& relative_directions);
 
-  std::string FormRelativeTurnDirection(TripDirections_Maneuver_Type type,
+  std::string FormRelativeTurnDirection(DirectionsLeg_Maneuver_Type type,
                                         const std::vector<std::string>& relative_directions);
 
   /////////////////////////////////////////////////////////////////////////////
@@ -517,8 +511,8 @@ protected:
   }
 
   /////////////////////////////////////////////////////////////////////////////
-  const DirectionsOptions& directions_options_;
-  const EnhancedTripPath* trip_path_;
+  const Options& options_;
+  const EnhancedTripLeg* trip_path_;
   const NarrativeDictionary& dictionary_;
   bool articulated_preposition_enabled_;
 };
@@ -527,10 +521,10 @@ protected:
 class NarrativeBuilder_csCZ : public NarrativeBuilder {
 
 public:
-  NarrativeBuilder_csCZ(const DirectionsOptions& directions_options,
-                        const EnhancedTripPath* trip_path,
+  NarrativeBuilder_csCZ(const Options& options,
+                        const EnhancedTripLeg* trip_path,
                         const NarrativeDictionary& dictionary)
-      : NarrativeBuilder(directions_options, trip_path, dictionary) {
+      : NarrativeBuilder(options, trip_path, dictionary) {
   }
 
 protected:
@@ -550,10 +544,10 @@ protected:
 class NarrativeBuilder_hiIN : public NarrativeBuilder {
 
 public:
-  NarrativeBuilder_hiIN(const DirectionsOptions& directions_options,
-                        const EnhancedTripPath* trip_path,
+  NarrativeBuilder_hiIN(const Options& options,
+                        const EnhancedTripLeg* trip_path,
                         const NarrativeDictionary& dictionary)
-      : NarrativeBuilder(directions_options, trip_path, dictionary) {
+      : NarrativeBuilder(options, trip_path, dictionary) {
   }
 
 protected:
@@ -573,10 +567,10 @@ protected:
 class NarrativeBuilder_itIT : public NarrativeBuilder {
 
 public:
-  NarrativeBuilder_itIT(const DirectionsOptions& directions_options,
-                        const EnhancedTripPath* trip_path,
+  NarrativeBuilder_itIT(const Options& options,
+                        const EnhancedTripLeg* trip_path,
                         const NarrativeDictionary& dictionary)
-      : NarrativeBuilder(directions_options, trip_path, dictionary) {
+      : NarrativeBuilder(options, trip_path, dictionary) {
     // Enable articulated prepositions for Itailian
     articulated_preposition_enabled_ = true;
   }
@@ -595,10 +589,10 @@ private:
 class NarrativeBuilder_ruRU : public NarrativeBuilder {
 
 public:
-  NarrativeBuilder_ruRU(const DirectionsOptions& directions_options,
-                        const EnhancedTripPath* trip_path,
+  NarrativeBuilder_ruRU(const Options& options,
+                        const EnhancedTripLeg* trip_path,
                         const NarrativeDictionary& dictionary)
-      : NarrativeBuilder(directions_options, trip_path, dictionary) {
+      : NarrativeBuilder(options, trip_path, dictionary) {
   }
 
 protected:

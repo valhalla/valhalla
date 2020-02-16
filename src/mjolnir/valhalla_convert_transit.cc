@@ -903,7 +903,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
 
       // Add edge info to the tile and set the offset in the directed edge
       // Leave the name empty. Use the trip Id to look up the route Id and
-      // route within TripPathBuilder.
+      // route within TripLegBuilder.
       bool added = false;
       std::vector<std::string> names;
 
@@ -987,7 +987,7 @@ void build_tiles(const boost::property_tree::ptree& pt,
   for (; tile_start != tile_end; ++tile_start) {
     // Get the next tile Id from the queue and get a tile builder
     if (reader_transit_level.OverCommitted()) {
-      reader_transit_level.Clear();
+      reader_transit_level.Trim();
     }
     GraphId tile_id = tile_start->Tile_Base();
 

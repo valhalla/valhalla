@@ -1,5 +1,4 @@
-#ifndef VALHALLA_THOR_PATHALGORITHM_H_
-#define VALHALLA_THOR_PATHALGORITHM_H_
+#pragma once
 
 #include <functional>
 #include <map>
@@ -10,8 +9,9 @@
 
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
-#include <valhalla/proto/tripcommon.pb.h>
+#include <valhalla/proto/api.pb.h>
 #include <valhalla/sif/dynamiccost.h>
+#include <valhalla/thor/edgestatus.h>
 #include <valhalla/thor/pathinfo.h>
 
 namespace valhalla {
@@ -29,7 +29,7 @@ public:
   /**
    * Constructor
    */
-  PathAlgorithm() : interrupt(nullptr), has_ferry_(false) {
+  PathAlgorithm() : interrupt(nullptr), has_ferry_(false), expansion_callback_() {
   }
 
   /**
@@ -49,11 +49,13 @@ public:
    * @return Returns the path edges (and elapsed time/modes at end of
    *          each edge).
    */
-  virtual std::vector<PathInfo> GetBestPath(odin::Location& origin,
-                                            odin::Location& dest,
-                                            baldr::GraphReader& graphreader,
-                                            const std::shared_ptr<sif::DynamicCost>* mode_costing,
-                                            const sif::TravelMode mode) = 0;
+  virtual std::vector<std::vector<PathInfo>>
+  GetBestPath(valhalla::Location& origin,
+              valhalla::Location& dest,
+              baldr::GraphReader& graphreader,
+              const std::shared_ptr<sif::DynamicCost>* mode_costing,
+              const sif::TravelMode mode,
+              const Options& options = Options::default_instance()) = 0;
 
   /**
    * Clear the temporary information generated during path construction.
@@ -77,10 +79,25 @@ public:
     return has_ferry_;
   }
 
+  /**
+   * Sets the functor which will track the algorithms expansion.
+   *
+   * @param  expansion_callback  the functor to call back when the algorithm makes progress
+   *                             on a given edge
+   */
+  using expansion_callback_t =
+      std::function<void(baldr::GraphReader&, const char*, baldr::GraphId, const char*, bool)>;
+  void set_track_expansion(const expansion_callback_t& expansion_callback) {
+    expansion_callback_ = expansion_callback;
+  }
+
 protected:
   const std::function<void()>* interrupt;
 
   bool has_ferry_; // Indicates whether the path has a ferry
+
+  // for tracking the expansion of the algorithm visually
+  expansion_callback_t expansion_callback_;
 
   /**
    * Check for path completion along the same edge. Edge ID in question
@@ -91,9 +108,9 @@ protected:
    * @param  origin       Origin path location information.
    * @param  destination  Destination path location information.
    */
-  bool IsTrivial(const baldr::GraphId& edgeid,
-                 const odin::Location& origin,
-                 const odin::Location& destination) const {
+  virtual bool IsTrivial(const baldr::GraphId& edgeid,
+                         const valhalla::Location& origin,
+                         const valhalla::Location& destination) const {
     for (const auto& destination_edge : destination.path_edges()) {
       if (destination_edge.graph_id() == edgeid) {
         for (const auto& origin_edge : origin.path_edges()) {
@@ -119,7 +136,28 @@ protected:
   }
 };
 
+// Container for the data we iterate over in Expand* function
+struct EdgeMetadata {
+  const baldr::DirectedEdge* edge;
+  baldr::GraphId edge_id;
+  EdgeStatusInfo* edge_status;
+
+  inline static EdgeMetadata make(const baldr::GraphId& node,
+                                  const baldr::NodeInfo* nodeinfo,
+                                  const baldr::GraphTile* tile,
+                                  EdgeStatus& edge_status_) {
+    baldr::GraphId edge_id = {node.tileid(), node.level(), nodeinfo->edge_index()};
+    EdgeStatusInfo* edge_status = edge_status_.GetPtr(edge_id, tile);
+    const baldr::DirectedEdge* directededge = tile->directededge(edge_id);
+    return {directededge, edge_id, edge_status};
+  }
+
+  inline void increment_pointers() {
+    ++edge;
+    ++edge_id;
+    ++edge_status;
+  }
+};
+
 } // namespace thor
 } // namespace valhalla
-
-#endif // VALHALLA_THOR_PATHALGORITHM_H_

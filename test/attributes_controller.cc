@@ -1,53 +1,27 @@
 
-#include "test.h"
-
-#include "config.h"
 #include "thor/attributes_controller.h"
+#include "config.h"
+
+#include "test.h"
 
 using namespace std;
 using namespace valhalla::thor;
 
 namespace {
 
-void TryCtor() {
+TEST(AttrController, TestCtorDefautAttributes) {
   AttributesController controller;
-  if (controller.attributes != AttributesController::kRouteAttributes)
-    throw runtime_error("Incorrect Constructor using default route attributes");
+  EXPECT_EQ(controller.attributes, AttributesController::kDefaultAttributes);
 }
 
-void TestCtor() {
-  TryCtor();
-}
-
-void TryArgCtor(const std::unordered_map<std::string, bool>& new_attributes, size_t expected_size) {
-  AttributesController controller(new_attributes);
-  if (controller.attributes != new_attributes)
-    throw runtime_error("Incorrect Constructor using argument attributes");
-  if (controller.attributes.size() != expected_size)
-    throw runtime_error("Incorrect Constructor using argument attributes size");
-}
-
-void TestArgCtor() {
-  const std::unordered_map<std::string, bool> attributes = {{kEdgeNames, true},
-                                                            {kEdgeLength, false},
-                                                            {kEdgeSpeed, true},
-                                                            {kEdgeRoadClass, false}};
-
-  TryArgCtor(attributes, attributes.size());
-}
-
-void TryEnableAll() {
+void TryArgCtor(size_t expected_size) {
   AttributesController controller;
-  controller.enable_all();
-  for (auto& pair : controller.attributes) {
-    // If any pair value is false then throw error
-    if (!pair.second)
-      throw runtime_error("Incorrect enable_all value for " + pair.first);
-  }
+  EXPECT_EQ(controller.attributes, AttributesController::kDefaultAttributes);
+  EXPECT_EQ(controller.attributes.size(), expected_size);
 }
 
-void TestEnableAll() {
-  TryEnableAll();
+TEST(AttrController, TestArgCtor) {
+  TryArgCtor(AttributesController::kDefaultAttributes.size());
 }
 
 void TryDisableAll() {
@@ -55,12 +29,11 @@ void TryDisableAll() {
   controller.disable_all();
   for (auto& pair : controller.attributes) {
     // If any pair value is true then throw error
-    if (pair.second)
-      throw runtime_error("Incorrect disable_all value for " + pair.first);
+    EXPECT_FALSE(pair.second) << ("Incorrect disable_all value for " + pair.first);
   }
 }
 
-void TestDisableAll() {
+TEST(AttrController, TestDisableAll) {
   TryDisableAll();
 }
 
@@ -68,20 +41,13 @@ void TryCategoryAttributeEnabled(const AttributesController& controller,
                                  const std::string& category,
                                  bool expected_response) {
   // If category_attribute_enabled does not equal expected response then throw error
-  if (controller.category_attribute_enabled(category) != expected_response) {
-    throw runtime_error("Incorrect cateogry_attribute_enabled response - expected: " +
-                        std::string(expected_response ? "true" : "false"));
-  }
+  EXPECT_EQ(controller.category_attribute_enabled(category), expected_response);
 }
 
-void TestNodeAttributeEnabled() {
+TEST(AttrController, TestNodeAttributeEnabled) {
   AttributesController controller;
 
   // Test default
-  TryCategoryAttributeEnabled(controller, kNodeCategory, true);
-
-  // Test all node enabled
-  controller.enable_all();
   TryCategoryAttributeEnabled(controller, kNodeCategory, true);
 
   // Test all node disabled
@@ -101,14 +67,10 @@ void TestNodeAttributeEnabled() {
   TryCategoryAttributeEnabled(controller, kNodeCategory, true);
 }
 
-void TestAdminAttributeEnabled() {
+TEST(AttrController, TestAdminAttributeEnabled) {
   AttributesController controller;
 
   // Test default
-  TryCategoryAttributeEnabled(controller, kAdminCategory, true);
-
-  // Test all admin enabled
-  controller.enable_all();
   TryCategoryAttributeEnabled(controller, kAdminCategory, true);
 
   // Test all admin disabled
@@ -129,26 +91,7 @@ void TestAdminAttributeEnabled() {
 
 } // namespace
 
-int main() {
-  test::suite suite("trip_path_controller");
-
-  // Test Constructor
-  suite.test(TEST_CASE(TestCtor));
-
-  // Test Constructor with argument
-  suite.test(TEST_CASE(TestArgCtor));
-
-  // Test enable_all
-  suite.test(TEST_CASE(TestEnableAll));
-
-  // Test disable_all
-  suite.test(TEST_CASE(TestDisableAll));
-
-  // Test node category_attribute_enabled
-  suite.test(TEST_CASE(TestNodeAttributeEnabled));
-
-  // Test admin category_attribute_enabled
-  suite.test(TEST_CASE(TestAdminAttributeEnabled));
-
-  return suite.tear_down();
+int main(int argc, char* argv[]) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

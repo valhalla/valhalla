@@ -5,7 +5,7 @@
 
 #include <boost/property_tree/ptree.hpp>
 #include <valhalla/baldr/rapidjson_utils.h>
-#include <valhalla/proto/directions_options.pb.h>
+#include <valhalla/proto/options.pb.h>
 #include <valhalla/sif/dynamiccost.h>
 
 namespace valhalla {
@@ -20,7 +20,7 @@ namespace sif {
  */
 void ParseMotorScooterCostOptions(const rapidjson::Document& doc,
                                   const std::string& costing_options_key,
-                                  odin::CostingOptions* pbf_costing_options);
+                                  CostingOptions* pbf_costing_options);
 
 /**
  * Create motor scooter cost method. This is derived from auto costing and
@@ -29,8 +29,7 @@ void ParseMotorScooterCostOptions(const rapidjson::Document& doc,
  * @param  costing specified costing type.
  * @param  options pbf with request options.
  */
-cost_ptr_t CreateMotorScooterCost(const odin::Costing costing,
-                                  const odin::DirectionsOptions& options);
+cost_ptr_t CreateMotorScooterCost(const Costing costing, const Options& options);
 
 } // namespace sif
 } // namespace valhalla

@@ -153,8 +153,6 @@ const std::vector<std::string> responses{
         "292,292,291,289,278,279,279,280,281,281,280,281,281,282,282,282,280,276,251,248,247,246,"
         "244,243,240,239,239,238,239,241,241,239,236,221,221,225,224]}")};
 
-// TODO: add tests that do resampling as well
-
 void create_tile() {
   // its annoying to have to get actual data but its also very boring to test with fake data
   // so we get some real data build the tests and then create the data on the fly
@@ -170,9 +168,8 @@ void create_tile() {
   std::ofstream file("test/data/service/N40W077.hgt", std::ios::binary | std::ios::trunc);
   file.write(static_cast<const char*>(static_cast<void*>(tile.data())),
              sizeof(int16_t) * tile.size());
-  if (!file.good()) {
-    throw std::runtime_error("File stream is not good");
-  }
+
+  ASSERT_TRUE(file.good()) << "File stream is not good";
 }
 
 void start_service(zmq::context_t& context) {
@@ -198,7 +195,7 @@ void start_service(zmq::context_t& context) {
       "loki": { "actions": [ "height" ],
                   "logging": { "long_request": 100.0 },
                   "service": { "proxy": "ipc:///tmp/test_skadi_proxy" },
-                "service_defaults": { "minimum_reachability": 50, "radius": 0} },
+                "service_defaults": { "minimum_reachability": 50, "radius": 0,"search_cutoff": 35000, "node_snap_tolerance": 5, "street_side_tolerance": 5, "heading_tolerance": 60} },
       "thor": { "service": { "proxy": "ipc:///tmp/test_skadi_thor_proxy" } },
       "httpd": { "service": { "loopback": "ipc:///tmp/test_skadi_results", "interrupt": "ipc:///tmp/test_skadi_interrupt" } },
       "additional_data": { "elevation": "test/data/service" },
@@ -213,7 +210,8 @@ void start_service(zmq::context_t& context) {
         "trace": { "max_best_paths": 4, "max_best_paths_shape": 100, "max_distance": 200000.0, "max_gps_accuracy": 100.0, "max_search_radius": 100, "max_shape": 16000 },
         "max_avoid_locations": 0,
         "max_reachability": 100,
-        "max_radius": 200
+        "max_radius": 200,
+        "max_alternates":2
       },
       "costing_options": { "auto": {}, "pedestrian": {} }
     })";
@@ -223,7 +221,7 @@ void start_service(zmq::context_t& context) {
   worker.detach();
 }
 
-void test_requests() {
+TEST(SkadiService, test_requests) {
   // start up the service
   zmq::context_t context;
   start_service(context);
@@ -245,9 +243,7 @@ void test_requests() {
                        [&request](const void* data, size_t size) {
                          auto response =
                              http_response_t::from_string(static_cast<const char*>(data), size);
-                         if (response.body != responses[request - requests.cbegin() - 1])
-                           throw std::runtime_error("Unexpected response body: " + response.body);
-
+                         EXPECT_EQ(response.body, responses[request - requests.cbegin() - 1]);
                          return request != requests.cend();
                        },
                        1);
@@ -256,15 +252,21 @@ void test_requests() {
 }
 } // namespace
 
-int main(void) {
+// TODO: add tests that do resampling as well
+
+class SkadiServiceEnv : public ::testing::Environment {
+public:
+  void SetUp() override {
+    create_tile();
+  }
+};
+
+// Elevation service
+int main(int argc, char* argv[]) {
   // make this whole thing bail if it doesnt finish fast
   alarm(120);
 
-  test::suite suite("Elevation Service");
-
-  suite.test(TEST_CASE(create_tile));
-
-  suite.test(TEST_CASE(test_requests));
-
-  return suite.tear_down();
+  testing::AddGlobalTestEnvironment(new SkadiServiceEnv);
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

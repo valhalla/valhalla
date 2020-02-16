@@ -237,13 +237,21 @@ ConstructRoute(const MapMatcher& mapmatcher, match_iterator_t begin, match_itera
     if (prev_match != end) {
       const auto &prev_state = mapmatcher.state_container().state(prev_match->stateid),
                  state = mapmatcher.state_container().state(match->stateid);
+
+      // get the route between the two states by walking edge labels backwards
+      // then reverse merge the segments together which are on the same edge so we have a
+      // minimum number of segments. in this case we could at minimum end up with 1 segment
       std::vector<EdgeSegment> segments;
       MergeRoute(segments, prev_state, state);
 
+      // TODO remove: the code is pretty mature we dont need this check its wasted cpu
       if (!ValidateRoute(mapmatcher.graphreader(), segments.begin(), segments.end(), tile)) {
         throw std::runtime_error("Found invalid route");
       }
 
+      // from this match to the last match we may be on the same edge, we call merge here
+      // instead of just appending this vector to the end of the route vector because
+      // we may merge the last segment of route with the beginning segment of segments
       MergeEdgeSegments(route, segments.begin(), segments.end());
     }
 

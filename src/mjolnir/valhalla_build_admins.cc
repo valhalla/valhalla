@@ -17,7 +17,11 @@
 /* Need to know which geos version we have to work out which headers to include */
 #include <geos/version.h>
 
+#if GEOS_VERSION_MAJOR == 3 && GEOS_VERSION_MINOR >= 8
+#include <geos/geom/CoordinateArraySequence.h>
+#else
 #include <geos/geom/CoordinateSequenceFactory.h>
+#endif
 #include <geos/geom/Geometry.h>
 #include <geos/geom/GeometryFactory.h>
 #include <geos/geom/LineString.h>
@@ -159,8 +163,14 @@ std::vector<std::string> GetWkts(std::unique_ptr<Geometry>& mline) {
   for (unsigned i = 0; i < merged->size(); ++i) {
     std::unique_ptr<LineString> pline((*merged)[i]);
     if (pline->getNumPoints() > 3 && pline->isClosed()) {
+#if GEOS_VERSION_MAJOR == 3 && GEOS_VERSION_MINOR >= 8
+      polys[totalpolys].polygon =
+          gf->createPolygon(gf->createLinearRing(pline->getCoordinates())).release();
+      polys[totalpolys].ring = gf->createLinearRing(pline->getCoordinates()).release();
+#else
       polys[totalpolys].polygon = gf->createPolygon(gf->createLinearRing(pline->getCoordinates()), 0);
       polys[totalpolys].ring = gf->createLinearRing(pline->getCoordinates());
+#endif
       polys[totalpolys].area = polys[totalpolys].polygon->getArea();
       polys[totalpolys].iscontained = 0;
       polys[totalpolys].containedbyid = 0;
@@ -218,14 +228,26 @@ std::vector<std::string> GetWkts(std::unique_ptr<Geometry>& mline) {
       }
 
       // List of holes for this top level polygon
+#if GEOS_VERSION_MAJOR == 3 && GEOS_VERSION_MINOR >= 8
+      std::unique_ptr<std::vector<LinearRing*>> interior(new std::vector<LinearRing*>);
+#else
       std::unique_ptr<std::vector<Geometry*>> interior(new std::vector<Geometry*>);
+#endif
       for (unsigned j = i + 1; j < totalpolys; ++j) {
         if (polys[j].iscontained == 1 && polys[j].containedbyid == i) {
+#if GEOS_VERSION_MAJOR == 3 && GEOS_VERSION_MINOR >= 8
           interior->push_back(polys[j].ring);
+#else
+          interior->push_back(polys[j].ring);
+#endif
         }
       }
 
+#if GEOS_VERSION_MAJOR == 3 && GEOS_VERSION_MINOR >= 8
       Polygon* poly(gf->createPolygon(polys[i].ring, interior.release()));
+#else
+      Polygon* poly(gf->createPolygon(polys[i].ring, interior.release()));
+#endif
       poly->normalize();
       polygons->push_back(poly);
     }
@@ -324,7 +346,8 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
   sql += "parent_admin INTEGER,";
   sql += "name TEXT NOT NULL,";
   sql += "name_en TEXT,";
-  sql += "drive_on_right INTEGER NOT NULL)";
+  sql += "drive_on_right INTEGER NOT NULL,";
+  sql += "allow_intersection_names INTEGER NOT NULL)";
 
   ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
   if (ret != SQLITE_OK) {
@@ -401,7 +424,7 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
    * this time too we'll use a Prepared Statement
    */
   sql = "INSERT INTO admins (admin_level, iso_code, parent_admin, name, name_en, ";
-  sql += "drive_on_right, geom) VALUES (?, ?, ?, ?, ?, ?, ";
+  sql += "drive_on_right, allow_intersection_names, geom) VALUES (?, ?, ?, ?, ?, ? ,?, ";
   sql += "CastToMulti(GeomFromText(?, 4326)))";
 
   ret = sqlite3_prepare_v2(db_handle, sql.c_str(), strlen(sql.c_str()), &stmt, NULL);
@@ -420,7 +443,7 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
   uint32_t count = 0;
   uint64_t nodeid;
   bool has_data;
-#if 3 == GEOS_VERSION_MAJOR && 6 <= GEOS_VERSION_MINOR
+#if GEOS_VERSION_MAJOR == 3 && GEOS_VERSION_MINOR >= 6
   auto gf = GeometryFactory::create();
 #else
   std::unique_ptr<GeometryFactory> gf(new GeometryFactory());
@@ -445,8 +468,12 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
           break;
         }
 
+#if GEOS_VERSION_MAJOR == 3 && GEOS_VERSION_MINOR >= 8
+        auto coords = std::unique_ptr<CoordinateArraySequence>(new CoordinateArraySequence);
+#else
         std::unique_ptr<CoordinateSequence> coords(
             gf->getCoordinateSequenceFactory()->create((size_t)0, (size_t)2));
+#endif
         size_t j = 0;
 
         for (const auto ref_id : itr->second) {
@@ -501,7 +528,8 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
           }
 
           sqlite3_bind_int(stmt, 6, admin.drive_on_right());
-          sqlite3_bind_text(stmt, 7, wkt.c_str(), wkt.length(), SQLITE_STATIC);
+          sqlite3_bind_int(stmt, 7, admin.allow_intersection_names());
+          sqlite3_bind_text(stmt, 8, wkt.c_str(), wkt.length(), SQLITE_STATIC);
           /* performing INSERT INTO */
           ret = sqlite3_step(stmt);
           if (ret == SQLITE_DONE || ret == SQLITE_ROW) {
@@ -514,6 +542,8 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
                     osm_admin_data.name_offset_map.name(admin.name_en_index()));
           LOG_ERROR("sqlite3_step() Admin Level: " + std::to_string(admin.admin_level()));
           LOG_ERROR("sqlite3_step() Drive on Right: " + std::to_string(admin.drive_on_right()));
+          LOG_ERROR("sqlite3_step() Allow Intersection Names: " +
+                    std::to_string(admin.allow_intersection_names()));
         }
       } // has data
     }   // admins
@@ -561,6 +591,16 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
   }
   LOG_INFO("Created Drive On Right index");
 
+  sql = "CREATE INDEX IdxAllowIntersectionNames ON admins (allow_intersection_names)";
+  ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
+  if (ret != SQLITE_OK) {
+    LOG_ERROR("Error: " + std::string(err_msg));
+    sqlite3_free(err_msg);
+    sqlite3_close(db_handle);
+    return;
+  }
+  LOG_INFO("Created allow intersection names index");
+
   sql = "update admins set drive_on_right = (select a.drive_on_right from admins";
   sql += " a where ST_Covers(a.geom, admins.geom) and admins.admin_level != ";
   sql += "a.admin_level and a.drive_on_right=0) where rowid = ";
@@ -574,6 +614,20 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
     return;
   }
   LOG_INFO("Done updating drive on right column.");
+
+  sql = "update admins set allow_intersection_names = (select a.allow_intersection_names from admins";
+  sql += " a where ST_Covers(a.geom, admins.geom) and admins.admin_level != ";
+  sql += "a.admin_level and a.allow_intersection_names=1) where rowid = ";
+  sql += "(select admins.rowid from admins a where ST_Covers(a.geom, admins.geom) ";
+  sql += "and admins.admin_level != a.admin_level and a.allow_intersection_names=1)";
+  ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
+  if (ret != SQLITE_OK) {
+    LOG_ERROR("Error: " + std::string(err_msg));
+    sqlite3_free(err_msg);
+    sqlite3_close(db_handle);
+    return;
+  }
+  LOG_INFO("Done updating allow intersection names column.");
 
   sql = "update admins set parent_admin = (select a.rowid from admins";
   sql += " a where ST_Covers(a.geom, admins.geom) and admins.admin_level != ";
@@ -634,7 +688,8 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
       continue;
     }
     LOG_ERROR("sqlite3_step() error: " + std::string(sqlite3_errmsg(db_handle)) +
-              ".  Ignore if not using a planet extract.");
+              ".  Ignore if not using a planet extract or check if there was a name change for " +
+              access.first.c_str());
   }
 
   sqlite3_finalize(stmt);

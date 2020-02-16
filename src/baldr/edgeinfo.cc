@@ -112,10 +112,11 @@ uint16_t EdgeInfo::GetTypes() const {
 }
 
 // Returns shape as a vector of PointLL
-const std::vector<PointLL>& EdgeInfo::shape() const {
+const std::vector<midgard::PointLL>& EdgeInfo::shape() const {
   // if we haven't yet decoded the shape, do so
   if (encoded_shape_ != nullptr && shape_.empty()) {
-    shape_ = midgard::decode7<std::vector<PointLL>>(encoded_shape_, item_->encoded_shape_size);
+    shape_ =
+        midgard::decode7<std::vector<midgard::PointLL>>(encoded_shape_, item_->encoded_shape_size);
   }
   return shape_;
 }
@@ -129,7 +130,7 @@ std::string EdgeInfo::encoded_shape() const {
 json::MapPtr EdgeInfo::json() const {
   return json::map({
       {"way_id", static_cast<uint64_t>(wayid())},
-      {"mean elevation", static_cast<uint64_t>(mean_elevation())},
+      {"mean_elevation", static_cast<uint64_t>(mean_elevation())},
       {"bike_network", bike_network_json(bike_network())},
       {"speed_limit", static_cast<uint64_t>(speed_limit())},
       {"names", names_json(GetNames())},

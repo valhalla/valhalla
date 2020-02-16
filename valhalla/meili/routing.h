@@ -51,8 +51,8 @@ public:
         const uint32_t predecessor,
         const baldr::DirectedEdge* edge,
         const sif::TravelMode mode)
-      : sif::EdgeLabel(predecessor, edgeid, edge, cost, sortcost, 0.0f, mode, 0), nodeid_(nodeid),
-        dest_(dest), source_(source), target_(target), turn_cost_(turn_cost) {
+      : sif::EdgeLabel(predecessor, edgeid, edge, cost, sortcost, 0.0f, mode, 0, sif::Cost{}),
+        nodeid_(nodeid), dest_(dest), source_(source), target_(target), turn_cost_(turn_cost) {
     // Validate inputs
     if (!(0.f <= source && source <= target && target <= 1.f)) {
       throw std::invalid_argument("invalid source (" + std::to_string(source) + ") or target (" +
@@ -132,6 +132,7 @@ private:
   float target_;
 
   // Turn cost since origin (including the turn cost of this edge segment)
+  // TODO: can we rely on the built in transition_cost_ in the base class?
   float turn_cost_;
 };
 

@@ -25,7 +25,7 @@ public:
     // Create a vector to mark bits. Initialize to 0.
     bitmarkers_.resize((maxosmid / 64) + 1, 0);
     // Set this to the actual maximum as dictated by the storage
-    maxosmid_ = bitmarkers_.size() * 64 - 1;
+    maxosmid_ = bitmarkers_.size() * static_cast<uint64_t>(64) - 1;
   }
 
   /**
@@ -76,7 +76,7 @@ private:
     if (id > maxosmid_) {
       LOG_WARN("Max osmid exceeded bitset, resizing to fit id: " + std::to_string(id));
       bitmarkers_.resize(std::ceil(idx * 1.01 + 1), 0);
-      maxosmid_ = bitmarkers_.size() * 64 - 1;
+      maxosmid_ = bitmarkers_.size() * static_cast<uint64_t>(64) - 1;
     }
     return idx;
   }

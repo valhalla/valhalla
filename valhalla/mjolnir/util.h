@@ -22,11 +22,13 @@ enum class BuildStage : int8_t {
   kEnhance = 3,
   kFilter = 4,
   kTransit = 5,
-  kHierarchy = 6,
-  kShortcuts = 7,
-  kRestrictions = 8,
-  kValidate = 9,
-  kCleanup = 10
+  kBss = 6,
+  kHierarchy = 7,
+  kShortcuts = 8,
+  kRestrictions = 9,
+  kElevation = 10,
+  kValidate = 11,
+  kCleanup = 12
 };
 
 // Convert string to BuildStage
@@ -38,9 +40,11 @@ inline BuildStage string_to_buildstage(const std::string& s) {
        {"enhance", BuildStage::kEnhance},
        {"filter", BuildStage::kFilter},
        {"transit", BuildStage::kTransit},
+       {"bss", BuildStage::kBss},
        {"hierarchy", BuildStage::kHierarchy},
        {"shortcuts", BuildStage::kShortcuts},
        {"restrictions", BuildStage::kRestrictions},
+       {"elevation", BuildStage::kElevation},
        {"validate", BuildStage::kValidate},
        {"cleanup", BuildStage::kCleanup}};
 
@@ -57,9 +61,11 @@ inline std::string to_string(BuildStage stg) {
        {static_cast<int8_t>(BuildStage::kEnhance), "enhance"},
        {static_cast<int8_t>(BuildStage::kFilter), "filter"},
        {static_cast<int8_t>(BuildStage::kTransit), "transit"},
+       {static_cast<int8_t>(BuildStage::kBss), "bss"},
        {static_cast<int8_t>(BuildStage::kHierarchy), "hierarchy"},
        {static_cast<int8_t>(BuildStage::kShortcuts), "shortcuts"},
        {static_cast<int8_t>(BuildStage::kRestrictions), "restrictions"},
+       {static_cast<int8_t>(BuildStage::kElevation), "elevation"},
        {static_cast<int8_t>(BuildStage::kValidate), "validate"},
        {static_cast<int8_t>(BuildStage::kCleanup), "cleanup"}};
 

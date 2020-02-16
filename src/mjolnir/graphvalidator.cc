@@ -147,10 +147,8 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode,
         // or shape (if not in same tile)
         wayid2 = end_tile->edgeinfo(directededge->edgeinfo_offset()).wayid();
         if (wayid == wayid2) {
-          if (sametile) {
-            if (edge.edgeinfo_offset() == directededge->edgeinfo_offset()) {
-              match = true;
-            }
+          if (sametile && edge.edgeinfo_offset() == directededge->edgeinfo_offset()) {
+            match = true;
           } else {
             auto shape1 = tile->edgeinfo(edge.edgeinfo_offset()).shape();
             auto shape2 = end_tile->edgeinfo(directededge->edgeinfo_offset()).shape();
@@ -315,6 +313,14 @@ void validate(
       // The node we will modify
       NodeInfo nodeinfo = tilebuilder.node(i);
       auto ni = tile->node(i);
+
+      // Validate signs
+      if (ni->named_intersection()) {
+        if (tile->GetSigns(i, true).size() == 0) {
+          LOG_ERROR("Node marked as having signs but none found");
+        }
+      }
+
       std::string begin_node_iso = tile->admin(nodeinfo.admin_index())->country_iso();
 
       // Go through directed edges and validate/update data
@@ -324,7 +330,7 @@ void validate(
         auto de = tile->directededge(idx);
 
         // Validate signs
-        if (de->exitsign()) {
+        if (de->sign()) {
           if (tile->GetSigns(idx).size() == 0) {
             LOG_ERROR("Directed edge marked as having signs but none found");
           }
@@ -469,7 +475,7 @@ void validate(
 
     // Check if we need to clear the tile cache
     if (graph_reader.OverCommitted()) {
-      graph_reader.Clear();
+      graph_reader.Trim();
     }
     lock.unlock();
 

@@ -44,26 +44,26 @@ json::ArrayPtr serialize_distance(const std::vector<TimeDistance>& tds,
 }
 
 // Serialize route response in OSRM compatible format.
-json::MapPtr serialize(const valhalla_request_t& request,
+json::MapPtr serialize(const Api& request,
                        const std::vector<TimeDistance>& time_distances,
                        double distance_scale) {
   auto json = json::map({});
   auto time = json::array({});
   auto distance = json::array({});
+  const auto& options = request.options();
 
   // If here then the matrix succeeded. Set status code to OK and serialize
   // waypoints (locations).
   json->emplace("code", std::string("Ok"));
-  json->emplace("sources", osrm::waypoints(request.options.sources()));
-  json->emplace("destinations", osrm::waypoints(request.options.targets()));
+  json->emplace("sources", osrm::waypoints(options.sources()));
+  json->emplace("destinations", osrm::waypoints(options.targets()));
 
-  for (size_t source_index = 0; source_index < request.options.sources_size(); ++source_index) {
-    time->emplace_back(serialize_duration(time_distances,
-                                          source_index * request.options.targets_size(),
-                                          request.options.targets_size()));
-    distance->emplace_back(
-        serialize_distance(time_distances, source_index * request.options.targets_size(),
-                           request.options.targets_size(), source_index, 0, distance_scale));
+  for (size_t source_index = 0; source_index < options.sources_size(); ++source_index) {
+    time->emplace_back(serialize_duration(time_distances, source_index * options.targets_size(),
+                                          options.targets_size()));
+    distance->emplace_back(serialize_distance(time_distances, source_index * options.targets_size(),
+                                              options.targets_size(), source_index, 0,
+                                              distance_scale));
   }
   json->emplace("durations", time);
   json->emplace("distances", distance);
@@ -78,7 +78,7 @@ valhalla output looks like this:
 
 */
 
-json::ArrayPtr locations(const google::protobuf::RepeatedPtrField<odin::Location>& correlated) {
+json::ArrayPtr locations(const google::protobuf::RepeatedPtrField<valhalla::Location>& correlated) {
   auto input_locs = json::array({});
   for (size_t i = 0; i < correlated.size(); i++) {
     input_locs->emplace_back(json::map({{"lat", json::fp_t{correlated.Get(i).ll().lat(), 6}},
@@ -112,24 +112,24 @@ json::ArrayPtr serialize_row(const std::vector<TimeDistance>& tds,
   return row;
 }
 
-json::MapPtr serialize(const valhalla_request_t& request,
+json::MapPtr serialize(const Api& request,
                        const std::vector<TimeDistance>& time_distances,
                        double distance_scale) {
   json::ArrayPtr matrix = json::array({});
-  for (size_t source_index = 0; source_index < request.options.sources_size(); ++source_index) {
-    matrix->emplace_back(serialize_row(time_distances, source_index * request.options.targets_size(),
-                                       request.options.targets_size(), source_index, 0,
-                                       distance_scale));
+  const auto& options = request.options();
+  for (size_t source_index = 0; source_index < options.sources_size(); ++source_index) {
+    matrix->emplace_back(serialize_row(time_distances, source_index * options.targets_size(),
+                                       options.targets_size(), source_index, 0, distance_scale));
   }
   auto json = json::map({
       {"sources_to_targets", matrix},
-      {"units", odin::DirectionsOptions_Units_Name(request.options.units())},
+      {"units", Options_Units_Enum_Name(options.units())},
   });
-  json->emplace("targets", json::array({locations(request.options.targets())}));
-  json->emplace("sources", json::array({locations(request.options.sources())}));
+  json->emplace("targets", json::array({locations(options.targets())}));
+  json->emplace("sources", json::array({locations(options.sources())}));
 
-  if (request.options.has_id()) {
-    json->emplace("id", request.options.id());
+  if (options.has_id()) {
+    json->emplace("id", options.id());
   }
   return json;
 }
@@ -138,11 +138,11 @@ json::MapPtr serialize(const valhalla_request_t& request,
 namespace valhalla {
 namespace tyr {
 
-std::string serializeMatrix(const valhalla_request_t& request,
+std::string serializeMatrix(const Api& request,
                             const std::vector<TimeDistance>& time_distances,
                             double distance_scale) {
 
-  auto json = request.options.format() == odin::DirectionsOptions::osrm
+  auto json = request.options().format() == Options::osrm
                   ? osrm_serializers::serialize(request, time_distances, distance_scale)
                   : valhalla_serializers::serialize(request, time_distances, distance_scale);
 

@@ -5,6 +5,7 @@ set(sources
   worker.cc
   height_action.cc
   locate_action.cc
+  reach.cc
   route_action.cc
   matrix_action.cc
   isochrone_action.cc
@@ -20,6 +21,7 @@ valhalla_module(NAME loki
       ${VALHALLA_SOURCE_DIR}
       ${VALHALLA_SOURCE_DIR}/valhalla
       ${VALHALLA_SOURCE_DIR}/third_party/date/include
+      $<$<BOOL:${MSVC}>:${VALHALLA_SOURCE_DIR}/third_party/dirent/include>
     PRIVATE
       ${VALHALLA_SOURCE_DIR}/third_party/rapidjson/include
       ${CMAKE_BINARY_DIR}

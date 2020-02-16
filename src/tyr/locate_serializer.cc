@@ -16,6 +16,13 @@ json::ArrayPtr serialize_edges(const PathLocation& location, GraphReader& reader
       auto edge_info = tile->edgeinfo(directed_edge->edgeinfo_offset());
       // they want MOAR!
       if (verbose) {
+        auto predicted_speeds = json::array({});
+        if (directed_edge->has_predicted_speed()) {
+          for (auto sec = 0; sec < midgard::kSecondsPerWeek; sec += 5 * midgard::kSecPerMinute) {
+            predicted_speeds->emplace_back(
+                static_cast<uint64_t>(tile->GetSpeed(directed_edge, kPredictedFlowMask, sec)));
+          }
+        }
         array->emplace_back(json::map({
             {"correlated_lat", json::fp_t{edge.projected.lat(), 6}},
             {"correlated_lon", json::fp_t{edge.projected.lng(), 6}},
@@ -25,10 +32,12 @@ json::ArrayPtr serialize_edges(const PathLocation& location, GraphReader& reader
                  : (edge.sos == PathLocation::RIGHT ? std::string("right") : std::string("neither"))},
             {"percent_along", json::fp_t{edge.percent_along, 5}},
             {"distance", json::fp_t{edge.distance, 1}},
-            {"minimum_reachability", static_cast<int64_t>(edge.minimum_reachability)},
+            {"outbound_reach", static_cast<int64_t>(edge.outbound_reach)},
+            {"inbound_reach", static_cast<int64_t>(edge.inbound_reach)},
             {"edge_id", edge.id.json()},
             {"edge", directed_edge->json()},
             {"edge_info", edge_info.json()},
+            {"predicted_speeds", predicted_speeds},
         }));
       } // they want it lean and mean
       else {
@@ -70,7 +79,7 @@ json::ArrayPtr serialize_nodes(const PathLocation& location, GraphReader& reader
       node = node_info->json(tile);
       node->emplace("node_id", n.json());
     } else {
-      PointLL node_ll = tile->get_node_ll(n);
+      midgard::PointLL node_ll = tile->get_node_ll(n);
       node = json::map({
           {"lon", json::fp_t{node_ll.first, 6}}, {"lat", json::fp_t{node_ll.second, 6}},
           // TODO: osm_id
@@ -93,7 +102,7 @@ json::MapPtr serialize(const PathLocation& location, GraphReader& reader, bool v
   return m;
 }
 
-json::MapPtr serialize(const PointLL& ll, const std::string& reason, bool verbose) {
+json::MapPtr serialize(const midgard::PointLL& ll, const std::string& reason, bool verbose) {
   auto m = json::map({
       {"edges", static_cast<std::nullptr_t>(nullptr)},
       {"nodes", static_cast<std::nullptr_t>(nullptr)},
@@ -111,17 +120,17 @@ json::MapPtr serialize(const PointLL& ll, const std::string& reason, bool verbos
 namespace valhalla {
 namespace tyr {
 
-std::string serializeLocate(const valhalla_request_t& request,
-                            const std::vector<Location>& locations,
-                            const std::unordered_map<Location, PathLocation>& projections,
+std::string serializeLocate(const Api& request,
+                            const std::vector<baldr::Location>& locations,
+                            const std::unordered_map<baldr::Location, PathLocation>& projections,
                             GraphReader& reader) {
   auto json = json::array({});
   for (const auto& location : locations) {
     try {
-      json->emplace_back(serialize(projections.at(location), reader, request.options.verbose()));
+      json->emplace_back(serialize(projections.at(location), reader, request.options().verbose()));
     } catch (const std::exception& e) {
       json->emplace_back(
-          serialize(location.latlng_, "No data found for location", request.options.verbose()));
+          serialize(location.latlng_, "No data found for location", request.options().verbose()));
     }
   }
 

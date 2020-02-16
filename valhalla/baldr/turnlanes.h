@@ -56,7 +56,7 @@ const static std::unordered_map<std::string, uint16_t> kTurnLaneMasks =
      {"slight_left", kTurnLaneSlightLeft},
      {"slight_right", kTurnLaneSlightRight},
      {"right", kTurnLaneRight},
-     {"sharp right", kTurnLaneSharpRight},
+     {"sharp_right", kTurnLaneSharpRight},
      {"reverse", kTurnLaneReverse},
      {"merge_to_left", kTurnLaneMergeToLeft},
      {"merge_to_right", kTurnLaneMergeToRight}};

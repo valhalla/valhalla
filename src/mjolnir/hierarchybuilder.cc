@@ -102,6 +102,26 @@ OldToNewNodes find_nodes(sequence<OldToNewNodes>& old_to_new, const GraphId& nod
   }
 }
 
+/**
+ * Is there an opposing edge with matching edgeinfo offset. The end node of the directed edge
+ * must be in the same tile as the directed edge.
+ * @param  tile          Graph tile of the edge
+ * @param  directededge  Directed edge to match.
+ */
+bool OpposingEdgeInfoMatches(const GraphTile* tile, const DirectedEdge* edge) {
+  // Get the nodeinfo at the end of the edge. Iterate through the directed edges and return
+  // true if a matching edgeinfo offset if found.
+  const NodeInfo* nodeinfo = tile->node(edge->endnode().id());
+  const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
+  for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++) {
+    // Return true if the edge info matches (same name, shape, etc.)
+    if (directededge->edgeinfo_offset() == edge->edgeinfo_offset()) {
+      return true;
+    }
+  }
+  return false;
+}
+
 // Form tiles in the new level.
 void FormTilesInNewLevel(GraphReader& reader,
                          const std::string& new_to_old_file,
@@ -130,6 +150,9 @@ void FormTilesInNewLevel(GraphReader& reader,
         lowest_level = 0;
       }
       return (lowest_level == current_level);
+    } else if (directededge->bss_connection()) {
+      // Despite the road class, Bike Share Stations' connections are always at local level
+      return (2 == current_level);
     } else {
       return (TileHierarchy::get_level(directededge->classification()) == current_level);
     }
@@ -165,7 +188,7 @@ void FormTilesInNewLevel(GraphReader& reader,
 
       // Check if we need to clear the base/local tile cache
       if (reader.OverCommitted()) {
-        reader.Clear();
+        reader.Trim();
       }
     }
 
@@ -245,7 +268,7 @@ void FormTilesInNewLevel(GraphReader& reader,
       newedge.set_opp_index(0);
 
       // Get signs from the base directed edge
-      if (directededge->exitsign()) {
+      if (directededge->sign()) {
         std::vector<SignInfo> signs = tile->GetSigns(base_edge_id.id());
         if (signs.size() == 0) {
           LOG_ERROR("Base edge should have signs, but none found");
@@ -282,18 +305,24 @@ void FormTilesInNewLevel(GraphReader& reader,
         tilebuilder->AddLaneConnectivity(laneconnectivity);
       }
 
+      // Do we need to force adding edgeinfo (opposing edge could have diff names)?
+      // If end node is in the same tile and there is no opposing edge with matching
+      // edge_info_offset).
+      uint32_t idx = directededge->edgeinfo_offset();
+      bool diff_names = directededge->endnode().tileid() == base_edge_id.tileid() &&
+                        !OpposingEdgeInfoMatches(tile, directededge);
+
       // Get edge info, shape, and names from the old tile and add to the
       // new. Cannot use edge info offset since edges in arterial and
       // highway hierarchy can cross base tiles! Use a hash based on the
       // encoded shape plus way Id.
-      uint32_t idx = directededge->edgeinfo_offset();
       auto edgeinfo = tile->edgeinfo(idx);
       std::string encoded_shape = edgeinfo.encoded_shape();
       uint32_t w = hasher(encoded_shape + std::to_string(edgeinfo.wayid()));
       uint32_t edge_info_offset =
           tilebuilder->AddEdgeInfo(w, nodea, nodeb, edgeinfo.wayid(), edgeinfo.mean_elevation(),
                                    edgeinfo.bike_network(), edgeinfo.speed_limit(), encoded_shape,
-                                   tile->GetNames(idx), tile->GetTypes(idx), added);
+                                   tile->GetNames(idx), tile->GetTypes(idx), added, diff_names);
       newedge.set_edgeinfo_offset(edge_info_offset);
 
       // Add directed edge
@@ -324,6 +353,16 @@ void FormTilesInNewLevel(GraphReader& reader,
 
     // Set the edge count for the new node
     node.set_edge_count(tilebuilder->directededges().size() - edge_count);
+
+    // Get named signs from the base node
+    if (baseni.named_intersection()) {
+      std::vector<SignInfo> signs = tile->GetSigns(base_node.id(), true);
+      if (signs.size() == 0) {
+        LOG_ERROR("Base node should have signs, but none found");
+      }
+      node.set_named_intersection(true);
+      tilebuilder->AddSigns(tilebuilder->nodes().size() - 1, signs);
+    }
   }
 
   // Delete the tile builder
@@ -404,9 +443,12 @@ void CreateNodeAssociations(GraphReader& reader,
         // Update the flag for the level of this edge (skip transit
         // connection edges)
         const DirectedEdge* directededge = tile->directededge(edgeid);
-        if (directededge->use() != Use::kTransitConnection &&
-            directededge->use() != Use::kEgressConnection &&
-            directededge->use() != Use::kPlatformConnection) {
+        if (directededge->bss_connection()) {
+          // Despite the road class, Bike Share Stations' connections are always at local level
+          levels[2] = true;
+        } else if (directededge->use() != Use::kTransitConnection &&
+                   directededge->use() != Use::kEgressConnection &&
+                   directededge->use() != Use::kPlatformConnection) {
           levels[TileHierarchy::get_level(directededge->classification())] = true;
         }
       }
@@ -443,7 +485,7 @@ void CreateNodeAssociations(GraphReader& reader,
 
     // Check if we need to clear the tile cache
     if (reader.OverCommitted()) {
-      reader.Clear();
+      reader.Trim();
     }
   }
 }

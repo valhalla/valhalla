@@ -11,6 +11,8 @@
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphtile.h>
 #include <valhalla/baldr/tilehierarchy.h>
+#include <valhalla/midgard/aabb2.h>
+#include <valhalla/midgard/pointll.h>
 
 namespace valhalla {
 namespace baldr {
@@ -63,6 +65,12 @@ public:
    * Clears the cache.
    */
   virtual void Clear() = 0;
+
+  /**
+   *  Does its best to reduce the cache size to remove overcommitted state.
+   *  Some implementations may simply clear the entire cache
+   */
+  virtual void Trim() = 0;
 };
 
 /**
@@ -81,14 +89,14 @@ public:
    * Reserves enough cache to hold (max_cache_size / tile_size) items.
    * @param tile_size appeoximate size of one tile
    */
-  virtual void Reserve(size_t tile_size);
+  void Reserve(size_t tile_size) override;
 
   /**
    * Checks if tile exists in the cache.
    * @param graphid  the graphid of the tile
    * @return true if tile exists in the cache
    */
-  virtual bool Contains(const GraphId& graphid) const;
+  bool Contains(const GraphId& graphid) const override;
 
   /**
    * Puts a copy of a tile of into the cache.
@@ -96,25 +104,31 @@ public:
    * @param tile the graph tile
    * @param size size of the tile in memory
    */
-  virtual const GraphTile* Put(const GraphId& graphid, const GraphTile& tile, size_t size);
+  const GraphTile* Put(const GraphId& graphid, const GraphTile& tile, size_t size) override;
 
   /**
    * Get a pointer to a graph tile object given a GraphId.
    * @param graphid  the graphid of the tile
    * @return GraphTile* a pointer to the graph tile
    */
-  virtual const GraphTile* Get(const GraphId& graphid) const;
+  const GraphTile* Get(const GraphId& graphid) const override;
 
   /**
    * Lets you know if the cache is too large.
    * @return true if the cache is over committed with respect to the limit
    */
-  virtual bool OverCommitted() const;
+  bool OverCommitted() const override;
 
   /**
    * Clears the cache.
    */
-  virtual void Clear();
+  void Clear() override;
+
+  /**
+   *  Does its best to reduce the cache size to remove overcommitted state.
+   *  Some implementations may simply clear the entire cache
+   */
+  void Trim() override;
 
 protected:
   // The actual cached GraphTile objects
@@ -128,7 +142,113 @@ protected:
 };
 
 /**
- * Tile cache synchronized using external mutex.
+ * Class that manages simple tile cache and makes sure it's never overcommited.
+ * The eviction policy is least
+ * It is NOT thread-safe!
+ */
+class TileCacheLRU : public TileCache {
+public:
+  enum class MemoryLimitControl {
+    SOFT, // no eviction is done by the cache; should be triggered by clients
+    HARD, // strict memory control on every Put operation
+  };
+
+  /**
+   * Constructor.
+   * @param max_size     maximum size of the cache
+   * @param mem_control  strategy our cache will use to control its memory
+   */
+  TileCacheLRU(size_t max_size, MemoryLimitControl mem_control);
+
+  /**
+   * Reserves enough cache to hold (max_cache_size / tile_size) items.
+   * @param tile_size appeoximate size of one tile
+   */
+  void Reserve(size_t tile_size) override;
+
+  /**
+   * Checks if tile exists in the cache.
+   * @param graphid  the graphid of the tile
+   * @return true if tile exists in the cache
+   */
+  bool Contains(const GraphId& graphid) const override;
+
+  /**
+   * Puts a copy of a tile of into the cache.
+   * @param graphid  the graphid of the tile
+   * @param tile the graph tile
+   * @param size size of the tile in memory
+   */
+  const GraphTile* Put(const GraphId& graphid, const GraphTile& tile, size_t tile_size) override;
+
+  /**
+   * Get a pointer to a graph tile object given a GraphId.
+   * @param graphid  the graphid of the tile
+   * @return GraphTile* a pointer to the graph tile
+   */
+  const GraphTile* Get(const GraphId& graphid) const override;
+
+  /**
+   * Lets you know if the cache is too large.
+   * @return true if the cache is over committed with respect to the limit
+   */
+  bool OverCommitted() const override;
+
+  /**
+   * Clears the cache.
+   */
+  void Clear() override;
+
+  /**
+   *  Does its best to reduce the cache size to remove overcommitted state.
+   *  Some implementations may simply clear the entire cache
+   */
+  void Trim() override;
+
+protected:
+  struct KeyValue {
+    GraphId id;
+    GraphTile tile;
+  };
+  using KeyValueIter = std::list<KeyValue>::iterator;
+
+  /**
+   * If needed, delete cache items until required_size in bytes is free in cache.
+   * The deletion starts from the items that have been unaccessed longer than others.
+   * Can potentially clean the entire cache.
+   *
+   * @param  required_size   size in bytes that should be free in the cache
+   *
+   * @return  bytes freed by the eviction
+   */
+  size_t TrimToFit(const size_t required_size);
+
+  /**
+   * Mark provided cache entry as most recently used.
+   *
+   * @param entry_iter   list entry inside LRU list
+   */
+  void MoveToLruHead(const KeyValueIter& entry_iter) const;
+
+  // The GraphId -> Iterator into the linked list which owns the cached objects
+  std::unordered_map<GraphId, KeyValueIter> cache_;
+
+  // Linked list of <GraphId, Tile> pairs.
+  // The most recently used item is at the beginning and the least one - at the back.
+  mutable std::list<KeyValue> key_val_lru_list_;
+
+  // Determines how we deal with
+  MemoryLimitControl mem_control_;
+
+  // The current cache size in bytes
+  size_t cache_size_;
+
+  // The max cache size in bytes
+  size_t max_cache_size_;
+};
+
+/**
+ * TileCache wrapper synchronized using external mutex.
  * It is thread-safe.
  */
 class SynchronizedTileCache : public TileCache {
@@ -177,6 +297,12 @@ public:
    * Clears the cache.
    */
   void Clear() override;
+
+  /**
+   *  Does its best to reduce the cache size to remove overcommitted state.
+   *  Some implementations may simply clear the entire cache
+   */
+  void Trim() override;
 
 private:
   TileCache& cache_;
@@ -244,7 +370,7 @@ public:
    * @param level    the hierarchy level to use when getting the tile
    * @return GraphTile* a pointer to the graph tile
    */
-  const GraphTile* GetGraphTile(const PointLL& pointll, const uint8_t level) {
+  const GraphTile* GetGraphTile(const midgard::PointLL& pointll, const uint8_t level) {
     GraphId id = TileHierarchy::GetGraphId(pointll, level);
     return id.Is_Valid() ? GetGraphTile(id) : nullptr;
   }
@@ -255,7 +381,7 @@ public:
    * @param pointll  the lat,lng that the tile covers
    * @return GraphTile* a pointer to the graph tile
    */
-  const GraphTile* GetGraphTile(const PointLL& pointll) {
+  const GraphTile* GetGraphTile(const midgard::PointLL& pointll) {
     return GetGraphTile(pointll, TileHierarchy::levels().rbegin()->second.level);
   }
 
@@ -264,6 +390,22 @@ public:
    */
   void Clear() {
     cache_->Clear();
+  }
+
+  /**
+   * Tries to ensure the cache footprint below allowed maximum
+   * In some cases may even remove the entire cache.
+   */
+  void Trim() {
+    cache_->Trim();
+  }
+
+  /**
+   * Returns the maximum number of threads that can
+   * use the reader concurrently without blocking
+   */
+  size_t MaxConcurrentUsers() const {
+    return curlers_->size();
   }
 
   /**
@@ -324,6 +466,22 @@ public:
   }
 
   /**
+   * Convenience method to get an opposing directed edge.
+   * @param  edge    edge of the directed edge.
+   * @param  tile    Reference to a pointer to a const tile.
+   * @return  Returns the opposing directed edge or nullptr if the
+   *          opposing edge does not exist (can occur with a regional extract
+   *          where the adjacent tile is missing)
+   */
+  const DirectedEdge* GetOpposingEdge(const DirectedEdge* edge, const GraphTile*& tile) {
+    if (GetGraphTile(edge->endnode(), tile)) {
+      const auto* node = tile->node(edge->endnode());
+      return tile->directededge(node->edge_index() + edge->opp_index());
+    }
+    return nullptr;
+  }
+
+  /**
    * Convenience method to get an end node.
    * @param edge  the edge whose end node you want
    * @param  tile    Reference to a pointer to a const tile.
@@ -374,6 +532,13 @@ public:
    *         part of a shortcut.
    */
   GraphId GetShortcut(const GraphId& edgeid);
+
+  /**
+   * Recovers the edges comprising a shortcut edge.
+   * @param  shortcutid  Graph Id of the shortcut edge.
+   * @return Returns the edgeids of the directed edges this shortcut represents.
+   */
+  std::vector<GraphId> RecoverShortcut(const GraphId& shortcutid);
 
   /**
    * Convenience method to get the relative edge density (from the
@@ -448,6 +613,8 @@ public:
       return GetDirectedEdgeNodes(tile, tile->directededge(edgeid));
     } else {
       tile = GetGraphTile(edgeid);
+      if (!tile)
+        return {};
       return GetDirectedEdgeNodes(tile, tile->directededge(edgeid));
     }
   }
@@ -529,6 +696,13 @@ public:
   }
 
   /**
+   * Get the shape of an edge
+   * @param edgeid
+   * @return the encoded shape (string) for specified id.
+   */
+  std::string encoded_edge_shape(const valhalla::baldr::GraphId& edgeid);
+
+  /**
    * Gets back a set of available tiles
    * @return  returns the list of available tiles
    *          Note: this will grab all road tiles
@@ -552,6 +726,16 @@ public:
     return tile_dir_;
   }
 
+  /**
+   * Given an input bounding box, the reader will query the tile set to find the minimum
+   * bounding box which entirely encloses all the edges who have begin nodes in the input
+   * bounding box. If there is no data enclosed in the region the bounding box will have
+   * invalid coordinates.
+   *
+   * @param bb   the input bounding box which is used to find begin nodes of edges
+   */
+  midgard::AABB2<midgard::PointLL> GetMinimumBoundingBox(const midgard::AABB2<midgard::PointLL>& bb);
+
 protected:
   // (Tar) extract of tiles - the contents are empty if not being used
   struct tile_extract_t;
@@ -559,12 +743,16 @@ protected:
   static std::shared_ptr<const GraphReader::tile_extract_t>
   get_extract_instance(const boost::property_tree::ptree& pt);
 
-  // Stuff for getting at remote tiles
-  curler_t curler;
-  std::string tile_url_;
-  std::unordered_set<GraphId> _404s;
   // Information about where the tiles are kept
-  std::string tile_dir_;
+  const std::string tile_dir_;
+
+  // Stuff for getting at remote tiles
+  std::unique_ptr<curler_pool_t> curlers_;
+  const std::string tile_url_;
+  const bool tile_url_gz_;
+
+  std::mutex _404s_lock;
+  std::unordered_set<GraphId> _404s;
 
   std::unique_ptr<TileCache> cache_;
 };
