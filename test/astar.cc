@@ -1621,17 +1621,26 @@ TEST(Astar, test_complex_restriction_short_path_fake) {
 
 TEST(Astar, test_complex_restriction_short_path_melborne) {
   // Tests a real live scenario of a short Bidirectional query against "Melborne"
-  // TODO Add second testcase here from greg
   auto conf = get_conf("melborne_tiles");
   route_tester tester(conf);
-  std::string request =
-      R"({"locations":[{"lat":-37.62982645340752,"lon":145.36789925452018},{"lat":-37.630387453407515,"lon":145.36794525452018}],"costing":"auto"})";
-
-  auto response = tester.test(request);
-
-  const auto& leg = response.trip().routes(0).legs(0);
-
-  EXPECT_EQ(leg.shape(), "psmwfAmlggtG|N}TzAzAzAzAxLhM");
+  {
+    // Tests "Route around the block" due to complex restriction,
+    // fixed by IsBridgingEdgeRestricted
+    std::string request =
+        R"({"locations":[{"lat":-37.627860699397075,"lon":145.365825588286},{"lat":-37.62842169939707,"lon":145.36587158828598}],"costing":"auto"})";
+    auto response = tester.test(request);
+    const auto& leg = response.trip().routes(0).legs(0);
+    EXPECT_EQ(leg.shape(), "b|rwfAislgtGtN{UvDtDxLhM");
+  }
+  {
+    // Tests "X-crossing",
+    // fixed by IsBridgingEdgeRestricted
+    std::string request =
+        R"({"locations":[{"lat":-37.62403769939707,"lon":145.360320588286},{"lat":-37.624804699397075,"lon":145.36041758828597}],"costing":"auto"})";
+    auto response = tester.test(request);
+    const auto& leg = response.trip().routes(0).legs(0);
+    EXPECT_EQ(leg.shape(), "tmkwfAa{agtGjAyBpBwC`HkK`M]bR`R");
+  }
 }
 
 TEST(Astar, test_IsBridgingEdgeRestricted) {
