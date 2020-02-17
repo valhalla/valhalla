@@ -1030,6 +1030,8 @@ bool IsBridgingEdgeRestricted(GraphReader& graphreader,
   // at the end before pushing the right-hand edges (opposite direction) onto the back
   std::reverse(patch_path.begin(), patch_path.end());
 
+  const GraphTile* tile = nullptr; // Used for later hinting
+
   auto next_rev_pred = rev_pred;
   // Now push_back the edges from opposite direction onto our patch_path
   for (int n = 0; n < PATCH_PATH_SIZE; ++n) {
@@ -1051,15 +1053,13 @@ bool IsBridgingEdgeRestricted(GraphReader& graphreader,
 
     // Also grab restrictions while walking for later comparison against patch_path
     //
-    const auto& tile = graphreader.GetGraphTile(edgeid);
+    tile = graphreader.GetGraphTile(edgeid, tile);
     if (tile == nullptr) {
-      // TODO Now what?
-      LOG_ERROR("Tile pointer was null in IsBridgingEdgeRestricted");
-      return false;
+      throw std::logic_error("Tile pointer was null in IsBridgingEdgeRestricted");
     }
     const auto& edge = tile->directededge(edgeid);
     if (edge == nullptr) {
-      LOG_ERROR("Edge pointer was null in IsBridgingEdgeRestricted");
+      throw std::logic_error("Edge pointer was null in IsBridgingEdgeRestricted");
       return false;
     }
     if (edge->end_restriction() & costing->access_mode()) {

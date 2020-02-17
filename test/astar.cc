@@ -1581,7 +1581,6 @@ TEST(Astar, test_complex_restriction_short_path_fake) {
     add(tile_id + uint64_t(16), 0.0f, i.second, dest);
     add(tile_id + uint64_t(14), 1.0f, i.second, dest);
 
-    std::cout << "foo" << std::endl;
     auto paths = astar.first.GetBestPath(origin, dest, *reader, costs, mode);
 
     std::vector<uint32_t> visited;
