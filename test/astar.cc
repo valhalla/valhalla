@@ -665,7 +665,7 @@ void trivial_path_no_uturns(const std::string& config_file) {
   auto mode = cost->travel_mode();
   mode_costing[static_cast<uint32_t>(mode)] = cost;
 
-  const auto projections = vk::Search(locations, graph_reader, cost.get());
+  const auto projections = vk::Search(locations, graph_reader, cost);
   std::vector<PathLocation> path_location;
 
   for (const auto& loc : locations) {
@@ -1375,7 +1375,7 @@ TEST(Astar, TestBacktrackComplexRestrictionForwardDetourAfterRestriction) {
   ASSERT_EQ(paths.size(), correct_len) << "Wrong number of paths in response";
 }
 
-Api timed_access_restriction_ny(std::string mode, std::string datetime) {
+Api timed_access_restriction_ny(const std::string& mode, const std::string& datetime) {
   // The restriction is <tag k="bicycle:conditional" v="no @ (Su 08:00-18:00)"/>
   // and <tag k="motor_vehicle:conditional" v="no @ (Su 08:00-18:00)"/>
   auto conf = get_conf("ny_ar_tiles");
