@@ -121,6 +121,14 @@ directed_reach SimpleReach(const DirectedEdge* edge,
 
   return reach;
 }
+/*
+directed_reach Reach::operator()(const valhalla::baldr::DirectedEdge* edge,
+                                 uint32_t max_reach,
+                                 valhalla::baldr::GraphReader& reader,
+                                 const sif::EdgeFilter& edge_filter,
+                                 const sif::NodeFilter& node_filter,
+                                 uint8_t direction) {
+}*/
 
 } // namespace loki
 } // namespace valhalla

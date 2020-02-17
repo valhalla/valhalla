@@ -47,21 +47,6 @@ constexpr uint32_t kInitialEdgeLabelCount = 500000;
 Isochrone::Isochrone() : Dijkstras(), shape_interval_(50.0f) {
 }
 
-// Destructor
-Isochrone::~Isochrone() {
-  Clear();
-}
-
-// Clear the temporary information generated during path construction.
-void Isochrone::Clear() {
-  // Clear the edge labels, edge status flags, and adjacency list
-  // TODO - clear only the edge label set that was used?
-  bdedgelabels_.clear();
-  mmedgelabels_.clear();
-  adjacencylist_.reset();
-  edgestatus_.clear();
-}
-
 // Construct the isotile. Use a fixed grid size. Convert time in minutes to
 // a max distance in meters based on an estimate of max average speed for
 // the travel mode.
@@ -318,6 +303,11 @@ ExpansionRecommendation Isochrone::ShouldExpand(baldr::GraphReader& graphreader,
   }
   return ExpansionRecommendation::continue_expansion;
 };
+
+void Isochrone::GetExpansionHints(uint32_t& bucket_count, uint32_t& edge_label_reservation) const {
+  bucket_count = 20000;
+  edge_label_reservation = 500000;
+}
 
 } // namespace thor
 } // namespace valhalla

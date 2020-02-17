@@ -81,7 +81,6 @@ public:
    * Destructor.
    */
   virtual ~DoubleBucketQueue() {
-    clear();
   }
 
   /**

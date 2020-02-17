@@ -39,18 +39,10 @@ uint32_t GetOperatorId(const GraphTile* tile,
 namespace valhalla {
 namespace thor {
 
-constexpr uint32_t kBucketCount = 20000;
-constexpr uint32_t kInitialEdgeLabelCount = 500000;
-
 // Default constructor
 Dijkstras::Dijkstras()
     : has_date_time_(false), start_tz_index_(0), access_mode_(kAutoAccess), mode_(TravelMode::kDrive),
       adjacencylist_(nullptr) {
-}
-
-// Destructor
-Dijkstras::~Dijkstras() {
-  Clear();
 }
 
 // Clear the temporary information generated during path construction.
@@ -66,15 +58,17 @@ void Dijkstras::Clear() {
 // Initialize - create adjacency list, edgestatus support, and reserve
 // edgelabels
 template <typename label_container_t>
-void Dijkstras::Initialize(label_container_t& labels, const uint32_t bucketsize) {
-  labels.reserve(kInitialEdgeLabelCount);
+void Dijkstras::Initialize(label_container_t& labels, const uint32_t bucket_size) {
+  // Set aside some space for edge labels
+  uint32_t edge_label_reservation;
+  uint32_t bucket_count;
+  GetExpansionHints(bucket_count, edge_label_reservation);
+  labels.reserve(edge_label_reservation);
 
   // Set up lambda to get sort costs
   const auto edgecost = [&labels](const uint32_t label) { return labels[label].sortcost(); };
-
-  float range = kBucketCount * bucketsize;
-  adjacencylist_.reset(new DoubleBucketQueue(0.0f, range, bucketsize, edgecost));
-  edgestatus_.clear();
+  float range = bucket_count * bucket_size;
+  adjacencylist_.reset(new DoubleBucketQueue(0.0f, range, bucket_size, edgecost));
 }
 template void
 Dijkstras::Initialize<decltype(Dijkstras::bdedgelabels_)>(decltype(Dijkstras::bdedgelabels_)&,
