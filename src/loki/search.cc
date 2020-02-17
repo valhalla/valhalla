@@ -202,6 +202,7 @@ struct bin_handler_t {
   unsigned int max_reach_limit;
   std::vector<candidate_t> bin_candidates;
   std::unordered_set<uint64_t> correlated_edges;
+  Reach ExactReach;
 
   // keep track of edges whose reachability we've already computed
   // TODO: dont use pointers as keys, its safe for now but fancy caching one day could be bad
@@ -386,7 +387,8 @@ struct bin_handler_t {
       return itr->second;
 
     // notice we do both directions here because in the end we use this reach for all input locations
-    auto reach = SimpleReach(edge, max_reach_limit, reader, costing, kInbound | kOutbound);
+    // auto reach = SimpleReach(edge, max_reach_limit, reader, costing, kInbound | kOutbound);
+    auto reach = ExactReach(edge, max_reach_limit, reader, costing, kInbound | kOutbound);
     directed_reaches[edge] = reach;
     return reach;
   }
@@ -419,7 +421,8 @@ struct bin_handler_t {
       return {max_reach_limit, max_reach_limit};
 
     // notice we do both directions here because in the end we use this reach for all input locations
-    auto reach = SimpleReach(edge, max_reach_limit, reader, costing, kInbound | kOutbound);
+    // auto reach = SimpleReach(edge, max_reach_limit, reader, costing, kInbound | kOutbound);
+    auto reach = ExactReach(edge, max_reach_limit, reader, costing, kInbound | kOutbound);
     directed_reaches[edge] = reach;
 
     // if the inbound reach is not 0 and the outbound reach is not 0 and the opposing edge is not

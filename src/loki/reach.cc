@@ -11,7 +11,7 @@ directed_reach SimpleReach(const DirectedEdge* edge,
                            const std::shared_ptr<sif::DynamicCost>& costing,
                            uint8_t direction) {
 
-  // no reach to start with
+  // no reach is needed
   directed_reach reach{};
   if (max_reach == 0)
     return reach;
@@ -129,26 +129,66 @@ directed_reach Reach::operator()(const valhalla::baldr::DirectedEdge* edge,
                                  valhalla::baldr::GraphReader& reader,
                                  const std::shared_ptr<sif::DynamicCost>& costing,
                                  uint8_t direction) {
-  return {};
-}
+  // no reach is needed
+  directed_reach reach{};
+  if (max_reach == 0)
+    return reach;
 
-// when we expand up to a node we color the cells of the grid that the edge that ends at the
-// node touches
-void Reach::ExpandingNode(baldr::GraphReader& graphreader,
-                          const sif::EdgeLabel& current,
-                          const midgard::PointLL& node_ll,
-                          const sif::EdgeLabel* previous) {
+  max_reach_ = max_reach;
+  size_t max_labels = std::numeric_limits<decltype(reach.outbound)>::max();
+
+  // TODO: will this even work with the PBF api?
+  // fake up a location array
+  const baldr::GraphTile* tile = nullptr;
+  const auto* node = reader.GetEndNode(edge, tile);
+  auto ll = node->latlng(tile->header()->base_ll());
+
+  google::protobuf::RepeatedPtrField<Location> locations;
+  locations.Add()->mutable_ll()->set_lng(ll.first);
+  locations.Add()->mutable_ll()->set_lat(ll.second);
+  auto* path_edge = locations.Add()->add_path_edges();
+  path_edge->mutable_ll()->set_lng(ll.first);
+  path_edge->mutable_ll()->set_lat(ll.second);
+  path_edge->set_distance(0);
+
+  // fake up the costing array
+  std::shared_ptr<sif::DynamicCost> costings[static_cast<int>(sif::TravelMode::kMaxTravelMode)];
+  costings[static_cast<int>(costing->travel_mode())] = costing;
+
+  // expand in the forward direction
+  if (direction | kOutbound) {
+    Compute(locations, reader, costings, costing->travel_mode());
+    reach.outbound = bdedgelabels_.size() > max_labels
+                         ? max_labels
+                         : static_cast<decltype(reach.outbound)>(bdedgelabels_.size());
+    Clear();
+  }
+
+  // expand in the reverse direction
+  if (direction | kInbound) {
+    ComputeReverse(locations, reader, costings, costing->travel_mode());
+    reach.inbound = bdedgelabels_.size() > max_labels
+                        ? max_labels
+                        : static_cast<decltype(reach.outbound)>(bdedgelabels_.size());
+  }
+
+  return reach;
 }
 
 // when the main loop is looking to continue expanding we tell it to terminate here
 thor::ExpansionRecommendation Reach::ShouldExpand(baldr::GraphReader& graphreader,
                                                   const sif::EdgeLabel& pred,
                                                   const thor::InfoRoutingType route_type) {
-  return thor::ExpansionRecommendation::stop_expansion;
+  if (bdedgelabels_.size() < max_reach_)
+    return thor::ExpansionRecommendation::continue_expansion;
+  return thor::ExpansionRecommendation::prune_expansion;
 }
 
 // tell the expansion how many labels to expect and how many buckets to use
 void Reach::GetExpansionHints(uint32_t& bucket_count, uint32_t& edge_label_reservation) const {
+  // TODO: tweak these for performance
+  bucket_count = max_reach_ * 2;
+  edge_label_reservation = max_reach_ * 2;
 }
 
 } // namespace loki

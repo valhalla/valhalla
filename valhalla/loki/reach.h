@@ -54,13 +54,6 @@ public:
                             uint8_t direction = kInbound | kOutbound);
 
 protected:
-  // when we expand up to a node we color the cells of the grid that the edge that ends at the
-  // node touches
-  virtual void ExpandingNode(baldr::GraphReader& graphreader,
-                             const sif::EdgeLabel& current,
-                             const midgard::PointLL& node_ll,
-                             const sif::EdgeLabel* previous) override;
-
   // when the main loop is looking to continue expanding we tell it to terminate here
   virtual thor::ExpansionRecommendation ShouldExpand(baldr::GraphReader& graphreader,
                                                      const sif::EdgeLabel& pred,
@@ -69,6 +62,8 @@ protected:
   // tell the expansion how many labels to expect and how many buckets to use
   virtual void GetExpansionHints(uint32_t& bucket_count,
                                  uint32_t& edge_label_reservation) const override;
+
+  uint32_t max_reach_;
 };
 
 } // namespace loki
