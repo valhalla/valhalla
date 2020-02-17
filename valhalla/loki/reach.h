@@ -19,8 +19,7 @@ struct directed_reach {
 directed_reach SimpleReach(const valhalla::baldr::DirectedEdge* edge,
                            uint32_t max_reach,
                            valhalla::baldr::GraphReader& reader,
-                           const sif::EdgeFilter& edge_filter,
-                           const sif::NodeFilter& node_filter,
+                           const std::shared_ptr<sif::DynamicCost>& costing,
                            uint8_t direction = kInbound | kOutbound);
 
 // NOTE: at the moment this checks one edge at a time. That works well with loki's current search
@@ -45,20 +44,32 @@ directed_reach SimpleReach(const valhalla::baldr::DirectedEdge* edge,
 // returns. Which expansion do you keep around for performing the intersections. Surely not all of
 // them, so the question is which ones. The first one may not be relevant for the second one but may
 // be for the 3rd one.
-/*
+
 class Reach : public thor::Dijkstras {
 public:
   directed_reach operator()(const valhalla::baldr::DirectedEdge* edge,
                             uint32_t max_reach,
                             valhalla::baldr::GraphReader& reader,
-                            const sif::EdgeFilter& edge_filter,
-                            const sif::NodeFilter& node_filter,
+                            const std::shared_ptr<sif::DynamicCost>& costing,
                             uint8_t direction = kInbound | kOutbound);
 
 protected:
+  // when we expand up to a node we color the cells of the grid that the edge that ends at the
+  // node touches
+  virtual void ExpandingNode(baldr::GraphReader& graphreader,
+                             const sif::EdgeLabel& current,
+                             const midgard::PointLL& node_ll,
+                             const sif::EdgeLabel* previous) override;
 
+  // when the main loop is looking to continue expanding we tell it to terminate here
+  virtual thor::ExpansionRecommendation ShouldExpand(baldr::GraphReader& graphreader,
+                                                     const sif::EdgeLabel& pred,
+                                                     const thor::InfoRoutingType route_type) override;
+
+  // tell the expansion how many labels to expect and how many buckets to use
+  virtual void GetExpansionHints(uint32_t& bucket_count,
+                                 uint32_t& edge_label_reservation) const override;
 };
- */
 
 } // namespace loki
 } // namespace valhalla

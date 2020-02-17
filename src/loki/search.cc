@@ -18,14 +18,6 @@ using namespace valhalla::loki;
 
 namespace {
 
-float PassThroughEdgeFilter(const valhalla::baldr::DirectedEdge* edge) {
-  return !(edge->is_shortcut() || edge->IsTransitLine());
-}
-
-bool PassThroughNodeFilter(const valhalla::baldr::NodeInfo* node) {
-  return false;
-}
-
 template <typename T> inline T square(T v) {
   return v * v;
 }
@@ -206,7 +198,7 @@ struct bin_handler_t {
   valhalla::baldr::GraphReader& reader;
   EdgeFilter edge_filter;
   NodeFilter node_filter;
-  const DynamicCost* costing;
+  std::shared_ptr<DynamicCost> costing;
   unsigned int max_reach_limit;
   std::vector<candidate_t> bin_candidates;
   std::unordered_set<uint64_t> correlated_edges;
@@ -217,7 +209,7 @@ struct bin_handler_t {
 
   bin_handler_t(const std::vector<valhalla::baldr::Location>& locations,
                 valhalla::baldr::GraphReader& reader,
-                const DynamicCost* costing)
+                const std::shared_ptr<DynamicCost>& costing)
       : reader(reader), costing(costing),
         edge_filter(costing ? costing->GetEdgeFilter() : PassThroughEdgeFilter),
         node_filter(costing ? costing->GetNodeFilter() : PassThroughNodeFilter) {
@@ -394,8 +386,7 @@ struct bin_handler_t {
       return itr->second;
 
     // notice we do both directions here because in the end we use this reach for all input locations
-    auto reach =
-        SimpleReach(edge, max_reach_limit, reader, edge_filter, node_filter, kInbound | kOutbound);
+    auto reach = SimpleReach(edge, max_reach_limit, reader, costing, kInbound | kOutbound);
     directed_reaches[edge] = reach;
     return reach;
   }
@@ -428,8 +419,7 @@ struct bin_handler_t {
       return {max_reach_limit, max_reach_limit};
 
     // notice we do both directions here because in the end we use this reach for all input locations
-    auto reach =
-        SimpleReach(edge, max_reach_limit, reader, edge_filter, node_filter, kInbound | kOutbound);
+    auto reach = SimpleReach(edge, max_reach_limit, reader, costing, kInbound | kOutbound);
     directed_reaches[edge] = reach;
 
     // if the inbound reach is not 0 and the outbound reach is not 0 and the opposing edge is not
@@ -724,7 +714,7 @@ namespace loki {
 std::unordered_map<valhalla::baldr::Location, PathLocation>
 Search(const std::vector<valhalla::baldr::Location>& locations,
        GraphReader& reader,
-       const DynamicCost* costing) {
+       const std::shared_ptr<DynamicCost>& costing) {
   // trivially finished already
   if (locations.empty())
     return std::unordered_map<valhalla::baldr::Location, PathLocation>{};

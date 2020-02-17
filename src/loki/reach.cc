@@ -8,14 +8,16 @@ namespace loki {
 directed_reach SimpleReach(const DirectedEdge* edge,
                            uint32_t max_reach,
                            GraphReader& reader,
-                           const sif::EdgeFilter& edge_filter,
-                           const sif::NodeFilter& node_filter,
+                           const std::shared_ptr<sif::DynamicCost>& costing,
                            uint8_t direction) {
 
   // no reach to start with
   directed_reach reach{};
   if (max_reach == 0)
     return reach;
+
+  auto node_filter = costing ? costing->GetNodeFilter() : sif::PassThroughNodeFilter;
+  auto edge_filter = costing ? costing->GetEdgeFilter() : sif::PassThroughEdgeFilter;
 
   // TODO: throw these vectors into a cache that we reuse
   // we keep a queue of nodes to expand from, to prevent duplicate expansion we use a set
@@ -121,14 +123,33 @@ directed_reach SimpleReach(const DirectedEdge* edge,
 
   return reach;
 }
-/*
+
 directed_reach Reach::operator()(const valhalla::baldr::DirectedEdge* edge,
                                  uint32_t max_reach,
                                  valhalla::baldr::GraphReader& reader,
-                                 const sif::EdgeFilter& edge_filter,
-                                 const sif::NodeFilter& node_filter,
+                                 const std::shared_ptr<sif::DynamicCost>& costing,
                                  uint8_t direction) {
-}*/
+  return {};
+}
+
+// when we expand up to a node we color the cells of the grid that the edge that ends at the
+// node touches
+void Reach::ExpandingNode(baldr::GraphReader& graphreader,
+                          const sif::EdgeLabel& current,
+                          const midgard::PointLL& node_ll,
+                          const sif::EdgeLabel* previous) {
+}
+
+// when the main loop is looking to continue expanding we tell it to terminate here
+thor::ExpansionRecommendation Reach::ShouldExpand(baldr::GraphReader& graphreader,
+                                                  const sif::EdgeLabel& pred,
+                                                  const thor::InfoRoutingType route_type) {
+  return thor::ExpansionRecommendation::stop_expansion;
+}
+
+// tell the expansion how many labels to expect and how many buckets to use
+void Reach::GetExpansionHints(uint32_t& bucket_count, uint32_t& edge_label_reservation) const {
+}
 
 } // namespace loki
 } // namespace valhalla

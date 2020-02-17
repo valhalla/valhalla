@@ -92,7 +92,7 @@ void loki_worker_t::parse_costing(Api& api) {
   if (options.avoid_locations_size()) {
     try {
       auto avoid_locations = PathLocation::fromPBF(options.avoid_locations());
-      auto results = loki::Search(avoid_locations, *reader, costing.get());
+      auto results = loki::Search(avoid_locations, *reader, costing);
       std::unordered_set<uint64_t> avoids;
       for (const auto& result : results) {
         for (const auto& edge : result.second.edges) {
