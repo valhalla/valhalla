@@ -1625,7 +1625,7 @@ TEST(Astar, test_complex_restriction_short_path_melborne) {
   auto conf = get_conf("melborne_tiles");
   route_tester tester(conf);
   std::string request =
-      R"({"locations":[{"lat":-37.625167699300704,"lon":145.36315056293708},{"lat":-37.6257286993007,"lon":145.36319656293708}],"costing":"auto"})";
+      R"({"locations":[{"lat":-37.62982645340752,"lon":145.36789925452018},{"lat":-37.630387453407515,"lon":145.36794525452018}],"costing":"auto"})";
 
   auto response = tester.test(request);
 
