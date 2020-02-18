@@ -58,8 +58,8 @@ constexpr float kHOVFactor = 0.85f;
 // How much to favor taxi roads.
 constexpr float kTaxiFactor = 0.85f;
 
-// Avoid alleys
-constexpr float kDefaultAlleyFactor = 2.0f;
+// Do not avoid alleys by default
+constexpr float kDefaultAlleyFactor = 1.0f;
 
 // Turn costs based on side of street driving
 constexpr float kRightSideTurnCosts[] = {kTCStraight,       kTCSlight,  kTCFavorable,
