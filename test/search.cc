@@ -12,12 +12,14 @@
 #include "baldr/tilehierarchy.h"
 #include "midgard/pointll.h"
 #include "midgard/vector2.h"
+#include "sif/autocost.h"
 
 #include "test.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 using namespace valhalla::loki;
+namespace vs = valhalla::sif;
 
 #include "mjolnir/directededgebuilder.h"
 #include "mjolnir/graphtilebuilder.h"
@@ -147,6 +149,15 @@ void make_tile() {
   GraphTileBuilder::AddBins(tile_dir, &reloaded, bins);
 }
 
+std::shared_ptr<vs::DynamicCost> create_costing() {
+  valhalla::Options options;
+  const rapidjson::Document doc;
+  vs::ParseAutoCostOptions(doc, "/costing_options/auto", options.add_costing_options());
+  vs::ParseAutoShorterCostOptions(doc, "/costing_options/auto_shorter",
+                                  options.add_costing_options());
+  options.add_costing_options();
+  return vs::CreateAutoCost(valhalla::Costing::auto_, options);
+}
 void search(valhalla::baldr::Location location,
             bool expected_node,
             const valhalla::midgard::PointLL& expected_point,
@@ -162,7 +173,9 @@ void search(valhalla::baldr::Location location,
   PathLocation::toPBF(location, &pbf, reader);
   location = PathLocation::fromPBF(pbf);
 
-  const auto results = Search({location}, reader);
+  const auto costing = create_costing();
+
+  const auto results = Search({location}, reader, costing);
   const auto p = results.at(location);
 
   EXPECT_EQ((p.edges.front().begin_node() || p.edges.front().end_node()), expected_node)
@@ -198,11 +211,16 @@ void search(valhalla::baldr::Location location, size_t result_count, int reachab
   valhalla::Location pbf;
   PathLocation::toPBF(location, &pbf, reader);
   location = PathLocation::fromPBF(pbf);
+  const auto costing = create_costing();
 
-  const auto results = Search({location}, reader);
+  const auto results = Search({location}, reader, costing);
   if (results.empty() && result_count == 0)
     return;
+
+  LOG_WARN("indexing map");
+  // TODO Exception raised here _Map_at
   const auto& p = results.at(location);
+  LOG_WARN("done indexing");
 
   EXPECT_EQ(p.edges.size(), result_count) << "Wrong number of edges";
   for (const auto& e : p.edges) {
