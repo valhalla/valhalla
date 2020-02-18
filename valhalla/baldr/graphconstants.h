@@ -1,9 +1,9 @@
 #ifndef VALHALLA_BALDR_GRAPHCONSTANTS_H_
 #define VALHALLA_BALDR_GRAPHCONSTANTS_H_
 
+#include <limits>
 #include <string>
 #include <unordered_map>
-#include <limits>
 
 namespace valhalla {
 namespace baldr {
