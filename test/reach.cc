@@ -25,19 +25,20 @@ void create_costing_options(Options& options) {
   sif::ParseAutoCostOptions(doc, "/costing_options/auto", options.add_costing_options());
   sif::ParseAutoShorterCostOptions(doc, "/costing_options/auto_shorter",
                                    options.add_costing_options());
-  //sif::ParseBicycleCostOptions(doc, "/costing_options/bicycle", options.add_costing_options());
-  //sif::ParseBusCostOptions(doc, "/costing_options/bus", options.add_costing_options());
-  //sif::ParseHOVCostOptions(doc, "/costing_options/hov", options.add_costing_options());
-  //sif::ParseTaxiCostOptions(doc, "/costing_options/taxi", options.add_costing_options());
-  //sif::ParseMotorScooterCostOptions(doc, "/costing_options/motor_scooter",
+  // sif::ParseBicycleCostOptions(doc, "/costing_options/bicycle", options.add_costing_options());
+  // sif::ParseBusCostOptions(doc, "/costing_options/bus", options.add_costing_options());
+  // sif::ParseHOVCostOptions(doc, "/costing_options/hov", options.add_costing_options());
+  // sif::ParseTaxiCostOptions(doc, "/costing_options/taxi", options.add_costing_options());
+  // sif::ParseMotorScooterCostOptions(doc, "/costing_options/motor_scooter",
   //                                  options.add_costing_options());
-  //sif::ParsePedestrianCostOptions(doc, "/costing_options/pedestrian", options.add_costing_options());
-  //sif::ParseTransitCostOptions(doc, "/costing_options/transit", options.add_costing_options());
-  //sif::ParseTruckCostOptions(doc, "/costing_options/truck", options.add_costing_options());
-  //sif::ParseMotorcycleCostOptions(doc, "/costing_options/motorcycle", options.add_costing_options());
-  //sif::ParseAutoShorterCostOptions(doc, "/costing_options/auto_shorter",
+  // sif::ParsePedestrianCostOptions(doc, "/costing_options/pedestrian",
+  // options.add_costing_options()); sif::ParseTransitCostOptions(doc, "/costing_options/transit",
+  // options.add_costing_options()); sif::ParseTruckCostOptions(doc, "/costing_options/truck",
+  // options.add_costing_options()); sif::ParseMotorcycleCostOptions(doc,
+  // "/costing_options/motorcycle", options.add_costing_options());
+  // sif::ParseAutoShorterCostOptions(doc, "/costing_options/auto_shorter",
   //                                 options.add_costing_options());
-  //sif::ParseAutoDataFixCostOptions(doc, "/costing_options/auto_data_fix",
+  // sif::ParseAutoDataFixCostOptions(doc, "/costing_options/auto_data_fix",
   //                                 options.add_costing_options());
   options.add_costing_options();
 }
@@ -131,13 +132,13 @@ TEST(Reach, check_all_reach) {
 
       //// if inbound is 0 and outbound is not then it must be an edge leaving a dead end
       //// meaning a begin node that is not accessable
-      //EXPECT_FALSE(reach.inbound == 0 && reach.outbound > 0 && !node_filter(begin))
+      // EXPECT_FALSE(reach.inbound == 0 && reach.outbound > 0 && !node_filter(begin))
       //    << "Only outbound reach should mean an edge that leaves a dead end: " +
       //           std::to_string(edge_id.value) + " " + shape_str;
 
       //// if outbound is 0 and inbound is not then it must be an edge entering a dead end
       //// meaning an end node that is not accessable
-      //EXPECT_FALSE(reach.inbound > 0 && reach.outbound == 0 && !node_filter(end))
+      // EXPECT_FALSE(reach.inbound > 0 && reach.outbound == 0 && !node_filter(end))
       //    << "Only inbound reach should mean an edge that enters a dead end: " +
       //           std::to_string(edge_id.value) + " " + shape_str;
     }

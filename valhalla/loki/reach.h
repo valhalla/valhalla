@@ -48,6 +48,7 @@ directed_reach SimpleReach(const valhalla::baldr::DirectedEdge* edge,
 class Reach : public thor::Dijkstras {
 public:
   directed_reach operator()(const valhalla::baldr::DirectedEdge* edge,
+                            const baldr::GraphId edge_id,
                             uint32_t max_reach,
                             valhalla::baldr::GraphReader& reader,
                             const std::shared_ptr<sif::DynamicCost>& costing,

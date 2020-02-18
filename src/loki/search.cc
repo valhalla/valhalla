@@ -264,7 +264,7 @@ struct bin_handler_t {
 
         // do we want this edge
         if (edge_filter(edge) != 0.0f) {
-          auto reach = get_reach(edge);
+          auto reach = get_reach(id, edge);
           PathLocation::PathEdge path_edge{std::move(id),
                                            0.f,
                                            node_ll,
@@ -288,7 +288,7 @@ struct bin_handler_t {
         }
         const auto* other_edge = other_tile->directededge(other_id);
         if (edge_filter(other_edge) != 0.0f) {
-          auto reach = get_reach(other_edge);
+          auto reach = get_reach(id, other_edge);
           PathLocation::PathEdge path_edge{std::move(other_id),
                                            1.f,
                                            node_ll,
@@ -347,7 +347,7 @@ struct bin_handler_t {
       // side of street
       auto sq_tolerance = square(double(location.street_side_tolerance_));
       auto side = candidate.get_side(location.latlng_, candidate.sq_distance, sq_tolerance);
-      auto reach = get_reach(candidate.edge);
+      auto reach = get_reach(candidate.edge_id, candidate.edge);
       PathLocation::PathEdge path_edge{candidate.edge_id, length_ratio, candidate.point,
                                        distance,          side,         reach.outbound,
                                        reach.inbound};
@@ -365,7 +365,7 @@ struct bin_handler_t {
       const DirectedEdge* other_edge;
       if (opposing_edge_id.Is_Valid() && (other_edge = other_tile->directededge(opposing_edge_id)) &&
           edge_filter(other_edge) != 0.0f) {
-        auto reach = get_reach(other_edge);
+        auto reach = get_reach(opposing_edge_id, other_edge);
         PathLocation::PathEdge other_path_edge{opposing_edge_id, 1 - length_ratio, candidate.point,
                                                distance,         flip_side(side),  reach.outbound,
                                                reach.inbound};
@@ -380,7 +380,7 @@ struct bin_handler_t {
     }
   }
 
-  directed_reach get_reach(const DirectedEdge* edge) {
+  directed_reach get_reach(const GraphId edge_id, const DirectedEdge* edge) {
     // if its in cache return it
     auto itr = directed_reaches.find(edge);
     if (itr != directed_reaches.cend())
@@ -388,7 +388,7 @@ struct bin_handler_t {
 
     // notice we do both directions here because in the end we use this reach for all input locations
     // auto reach = SimpleReach(edge, max_reach_limit, reader, costing, kInbound | kOutbound);
-    auto reach = ExactReach(edge, max_reach_limit, reader, costing, kInbound | kOutbound);
+    auto reach = ExactReach(edge, edge_id, max_reach_limit, reader, costing, kInbound | kOutbound);
     directed_reaches[edge] = reach;
     return reach;
   }
@@ -397,7 +397,8 @@ struct bin_handler_t {
   directed_reach check_reachability(std::vector<projector_wrapper>::iterator begin,
                                     std::vector<projector_wrapper>::iterator end,
                                     const GraphTile* tile,
-                                    const DirectedEdge* edge) {
+                                    const DirectedEdge* edge,
+                                    const GraphId edge_id) {
     // no need when set to 0
     if (max_reach_limit == 0)
       return {};
@@ -422,7 +423,7 @@ struct bin_handler_t {
 
     // notice we do both directions here because in the end we use this reach for all input locations
     // auto reach = SimpleReach(edge, max_reach_limit, reader, costing, kInbound | kOutbound);
-    auto reach = ExactReach(edge, max_reach_limit, reader, costing, kInbound | kOutbound);
+    auto reach = ExactReach(edge, edge_id, max_reach_limit, reader, costing, kInbound | kOutbound);
     directed_reaches[edge] = reach;
 
     // if the inbound reach is not 0 and the outbound reach is not 0 and the opposing edge is not
@@ -441,16 +442,17 @@ struct bin_handler_t {
     // iterate over the edges in the bin
     auto tile = begin->cur_tile;
     auto edges = tile->GetBin(begin->bin_index);
-    for (auto e : edges) {
+    for (auto edge_id : edges) {
       // get the tile and edge
-      if (!reader.GetGraphTile(e, tile)) {
+      if (!reader.GetGraphTile(edge_id, tile)) {
         continue;
       }
 
       // no thanks on this one or its evil twin
-      const auto* edge = tile->directededge(e);
-      if (edge_filter(edge) == 0.0f && (!(e = reader.GetOpposingEdgeId(e, tile)).Is_Valid() ||
-                                        edge_filter(edge = tile->directededge(e)) == 0.0f)) {
+      const auto* edge = tile->directededge(edge_id);
+      if (edge_filter(edge) == 0.0f &&
+          (!(edge_id = reader.GetOpposingEdgeId(edge_id, tile)).Is_Valid() ||
+           edge_filter(edge = tile->directededge(edge_id)) == 0.0f)) {
         continue;
       }
 
@@ -497,7 +499,7 @@ struct bin_handler_t {
       }
 
       // if we already have a better reachable candidate we can just assume this one is reachable
-      auto reach = check_reachability(begin, end, tile, edge);
+      auto reach = check_reachability(begin, end, tile, edge, edge_id);
 
       // keep the best point along this edge if it makes sense
       c_itr = bin_candidates.begin();
@@ -510,7 +512,7 @@ struct bin_handler_t {
         const DirectedEdge* opp_edge = nullptr;
         if (!reachable && (opp_edge = reader.GetOpposingEdge(edge, opp_tile)) &&
             edge_filter(opp_edge) > 0.f) {
-          auto opp_reach = check_reachability(begin, end, opp_tile, opp_edge);
+          auto opp_reach = check_reachability(begin, end, opp_tile, opp_edge, edge_id);
           if (opp_reach.outbound >= p_itr->location.min_outbound_reach_ &&
               opp_reach.inbound >= p_itr->location.min_inbound_reach_) {
             tile = opp_tile;
@@ -526,7 +528,7 @@ struct bin_handler_t {
         // if its empty append
         if (batch->empty()) {
           c_itr->edge = edge;
-          c_itr->edge_id = e;
+          c_itr->edge_id = edge_id;
           c_itr->edge_info = edge_info;
           c_itr->tile = tile;
           batch->emplace_back(std::move(*c_itr));
@@ -548,7 +550,7 @@ struct bin_handler_t {
         // it has to either be better or in the radius to move on
         if (in_radius || better) {
           c_itr->edge = edge;
-          c_itr->edge_id = e;
+          c_itr->edge_id = edge_id;
           c_itr->edge_info = edge_info;
           c_itr->tile = tile;
           // the last one wasnt in the radius so replace it with this one because its better or is

@@ -125,6 +125,7 @@ directed_reach SimpleReach(const DirectedEdge* edge,
 }
 
 directed_reach Reach::operator()(const valhalla::baldr::DirectedEdge* edge,
+                                 const GraphId edge_id,
                                  uint32_t max_reach,
                                  valhalla::baldr::GraphReader& reader,
                                  const std::shared_ptr<sif::DynamicCost>& costing,
@@ -147,6 +148,7 @@ directed_reach Reach::operator()(const valhalla::baldr::DirectedEdge* edge,
   locations.Add()->mutable_ll()->set_lng(ll.first);
   locations.Add()->mutable_ll()->set_lat(ll.second);
   auto* path_edge = locations.Add()->add_path_edges();
+  path_edge->set_graph_id(edge_id);
   path_edge->mutable_ll()->set_lng(ll.first);
   path_edge->mutable_ll()->set_lat(ll.second);
   path_edge->set_distance(0);
