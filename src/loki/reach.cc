@@ -130,10 +130,13 @@ directed_reach Reach::operator()(const valhalla::baldr::DirectedEdge* edge,
                                  valhalla::baldr::GraphReader& reader,
                                  const std::shared_ptr<sif::DynamicCost>& costing,
                                  uint8_t direction) {
+  LOG_WARN("Reach::operator()");
   // no reach is needed
   directed_reach reach{};
-  if (max_reach == 0)
+  if (max_reach == 0) {
+    LOG_WARN("maxe_reach == 0");
     return reach;
+  }
 
   max_reach_ = max_reach;
   size_t max_labels = std::numeric_limits<decltype(reach.outbound)>::max();
@@ -163,6 +166,10 @@ directed_reach Reach::operator()(const valhalla::baldr::DirectedEdge* edge,
     reach.outbound = bdedgelabels_.size() > max_labels
                          ? max_labels
                          : static_cast<decltype(reach.outbound)>(bdedgelabels_.size());
+    LOGLN_WARN("OUTBOUND - EDGELABELS");
+    for (auto edge : bdedgelabels_) {
+      std::cout << "   " << edge.edgeid().id();
+    }
     Clear();
   }
 
@@ -172,6 +179,10 @@ directed_reach Reach::operator()(const valhalla::baldr::DirectedEdge* edge,
     reach.inbound = bdedgelabels_.size() > max_labels
                         ? max_labels
                         : static_cast<decltype(reach.outbound)>(bdedgelabels_.size());
+    LOGLN_WARN("INBOUND - EDGELABELS");
+    for (auto edge : bdedgelabels_) {
+      std::cout << "   " << edge.edgeid().id();
+    }
   }
 
   return reach;

@@ -52,9 +52,9 @@ public:
     // a measure of how close the result is to the original input where the
     // lower the score the better the match, maybe there's a better word for this?
     float distance;
-    // minimum number of nodes reachable from this edge
+    // minimum number of edges reachable from this edge
     unsigned int outbound_reach;
-    // minimum number of nodes that can reach this edge
+    // minimum number of edges that can reach this edge
     unsigned int inbound_reach;
   };
 

@@ -80,7 +80,7 @@ TEST(Reach, check_all_reach) {
   auto conf = get_conf();
   GraphReader reader(conf.get_child("mjolnir"));
 
-  create_costing_options();
+  auto costing = create_costing();
 
   // look at all the edges
   for (auto tile_id : reader.GetTileSet()) {

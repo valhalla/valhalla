@@ -490,7 +490,6 @@ struct bin_handler_t {
       for (size_t i = 0; !shape.empty(); ++i) {
         auto u = v;
         v = shape.pop();
-        std::cout<<"shape.pop() "<<std::endl;
         // for each input point
         c_itr = bin_candidates.begin();
         for (p_itr = begin; p_itr != end; ++p_itr, ++c_itr) {
