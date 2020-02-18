@@ -74,10 +74,14 @@ void make_tile() {
     return node_builder;
   };
   auto add_edge = [&tile](const std::pair<GraphId, PointLL>& u, const std::pair<GraphId, PointLL>& v,
-                          const uint32_t name, const uint32_t opposing, const bool forward) {
+                          const uint32_t name, const uint32_t opposing_edge_index, const bool forward) {
     DirectedEdgeBuilder edge_builder({}, v.first, forward, u.second.Distance(v.second) + .5, 1, 1, {},
                                      {}, 0, false, 0, 0, false);
-    edge_builder.set_opp_index(opposing);
+    edge_builder.set_opp_index(opposing_edge_index);
+    edge_builder.set_forwardaccess(kAllAccess);
+    edge_builder.set_reverseaccess(kAllAccess);
+    edge_builder.set_free_flow_speed(100);
+    edge_builder.set_constrained_flow_speed(10);
     std::vector<PointLL> shape = {u.second, u.second.MidPoint(v.second), v.second};
     if (!forward)
       std::reverse(shape.begin(), shape.end());
@@ -158,6 +162,7 @@ std::shared_ptr<vs::DynamicCost> create_costing() {
   options.add_costing_options();
   return vs::CreateAutoCost(valhalla::Costing::auto_, options);
 }
+
 void search(valhalla::baldr::Location location,
             bool expected_node,
             const valhalla::midgard::PointLL& expected_point,
@@ -175,8 +180,12 @@ void search(valhalla::baldr::Location location,
 
   const auto costing = create_costing();
 
+  LOG_WARN("calling Search");
   const auto results = Search({location}, reader, costing);
-  const auto p = results.at(location);
+  LOG_WARN("foo");
+    std::cout <<results.size()<<std::endl;
+  const auto& p = results.at(location);
+  LOG_WARN("bar");
 
   EXPECT_EQ((p.edges.front().begin_node() || p.edges.front().end_node()), expected_node)
       << p.edges.front().begin_node() << ":" << p.edges.front().end_node()

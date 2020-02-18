@@ -285,8 +285,10 @@ public:
     // Throw back a lambda that checks the access for this type of costing
     return [](const baldr::DirectedEdge* edge) {
       if (edge->is_shortcut() || !(edge->forwardaccess() & kAutoAccess)) {
+        LOGLN_WARN("    autocost::EdgeFilter return 0.0");
         return 0.0f;
       } else {
+        LOGLN_WARN("    autocost::EdgeFilter return 1.0");
         // TODO - use classification/use to alter the factor
         return 1.0f;
       }

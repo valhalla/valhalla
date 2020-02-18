@@ -254,6 +254,7 @@ void Dijkstras::Compute(google::protobuf::RepeatedPtrField<valhalla::Location>& 
                         GraphReader& graphreader,
                         const std::shared_ptr<DynamicCost>* mode_costing,
                         const TravelMode mode) {
+  LOGLN_WARN("COMPUTE");
 
   // Set the mode and costing
   mode_ = mode;
@@ -425,6 +426,7 @@ void Dijkstras::ComputeReverse(google::protobuf::RepeatedPtrField<valhalla::Loca
                                GraphReader& graphreader,
                                const std::shared_ptr<DynamicCost>* mode_costing,
                                const TravelMode mode) {
+  LOGLN_WARN("COMPUTEREVERSE");
   // Set the mode and costing
   mode_ = mode;
   costing_ = mode_costing[static_cast<uint32_t>(mode_)];
