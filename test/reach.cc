@@ -3,11 +3,9 @@
 #include "baldr/graphreader.h"
 #include "baldr/rapidjson_utils.h"
 #include "loki/reach.h"
-#include "sif/autocost.h"
-//#include "sif/bicyclecost.h"
-//#include "sif/pedestriancost.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
+#include "sif/autocost.h"
 
 #include <algorithm>
 #include <boost/property_tree/ptree.hpp>
@@ -20,27 +18,14 @@ namespace vs = valhalla::sif;
 
 namespace {
 
-void create_costing_options(Options& options) {
+std::shared_ptr<vs::DynamicCost> create_costing() {
+  Options options;
   const rapidjson::Document doc;
   sif::ParseAutoCostOptions(doc, "/costing_options/auto", options.add_costing_options());
   sif::ParseAutoShorterCostOptions(doc, "/costing_options/auto_shorter",
                                    options.add_costing_options());
-  // sif::ParseBicycleCostOptions(doc, "/costing_options/bicycle", options.add_costing_options());
-  // sif::ParseBusCostOptions(doc, "/costing_options/bus", options.add_costing_options());
-  // sif::ParseHOVCostOptions(doc, "/costing_options/hov", options.add_costing_options());
-  // sif::ParseTaxiCostOptions(doc, "/costing_options/taxi", options.add_costing_options());
-  // sif::ParseMotorScooterCostOptions(doc, "/costing_options/motor_scooter",
-  //                                  options.add_costing_options());
-  // sif::ParsePedestrianCostOptions(doc, "/costing_options/pedestrian",
-  // options.add_costing_options()); sif::ParseTransitCostOptions(doc, "/costing_options/transit",
-  // options.add_costing_options()); sif::ParseTruckCostOptions(doc, "/costing_options/truck",
-  // options.add_costing_options()); sif::ParseMotorcycleCostOptions(doc,
-  // "/costing_options/motorcycle", options.add_costing_options());
-  // sif::ParseAutoShorterCostOptions(doc, "/costing_options/auto_shorter",
-  //                                 options.add_costing_options());
-  // sif::ParseAutoDataFixCostOptions(doc, "/costing_options/auto_data_fix",
-  //                                 options.add_costing_options());
   options.add_costing_options();
+  return vs::CreateAutoCost(Costing::auto_, options);
 }
 
 boost::property_tree::ptree get_conf() {
@@ -95,9 +80,7 @@ TEST(Reach, check_all_reach) {
   auto conf = get_conf();
   GraphReader reader(conf.get_child("mjolnir"));
 
-  Options options;
-  create_costing_options(options);
-  std::shared_ptr<vs::DynamicCost> costing = vs::CreateAutoCost(Costing::auto_, options);
+  create_costing_options();
 
   // look at all the edges
   for (auto tile_id : reader.GetTileSet()) {

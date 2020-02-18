@@ -28,7 +28,7 @@ namespace loki {
 std::unordered_map<baldr::Location, baldr::PathLocation>
 Search(const std::vector<baldr::Location>& locations,
        baldr::GraphReader& reader,
-       const std::shared_ptr<sif::DynamicCost>& costing = {});
+       const std::shared_ptr<sif::DynamicCost>& costing);
 
 } // namespace loki
 } // namespace valhalla
