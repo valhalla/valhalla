@@ -146,9 +146,9 @@ void ConstructEdges(const OSMData& osmdata,
     bool valid = true;
     for (auto ni = current_way_node_index; ni <= last_way_node_index; ni++) {
       const auto wn = (*way_nodes[ni]).node;
-      if (wn.lat_ == 0.0 && wn.lng_ == 0.0) {
-        LOG_ERROR("Cannot find node " + std::to_string(wn.osmid_) + " in way " +
-                  std::to_string(way.way_id()));
+      if (wn.lat_ == kInvalidLatitude && wn.lng_ == kInvalidLongitude) {
+        LOG_ERROR("Node " + std::to_string(wn.osmid_) + " in way " + std::to_string(way.way_id()) +
+                  " has not had coordinates initialized");
         valid = false;
       }
     }
