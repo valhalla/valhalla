@@ -162,15 +162,18 @@ directed_reach Reach::operator()(const valhalla::baldr::DirectedEdge* edge,
 
   // expand in the forward direction
   if (direction | kOutbound) {
+    Clear();
+    LOGLN_ERROR("Clear");
     Compute(locations, reader, costings, costing->travel_mode());
     reach.outbound = bdedgelabels_.size() > max_labels
                          ? max_labels
                          : static_cast<decltype(reach.outbound)>(bdedgelabels_.size());
-    LOGLN_WARN("OUTBOUND - EDGELABELS");
-    for (auto edge : bdedgelabels_) {
-      std::cout << "   " << edge.edgeid().id();
-    }
+    //LOGLN_WARN("OUTBOUND - EDGELABELS");
+    //for (auto edge : bdedgelabels_) {
+    //  std::cout << "   " << edge.edgeid().id();
+    //}
     Clear();
+    LOGLN_ERROR("Clear");
   }
 
   // expand in the reverse direction
@@ -179,10 +182,11 @@ directed_reach Reach::operator()(const valhalla::baldr::DirectedEdge* edge,
     reach.inbound = bdedgelabels_.size() > max_labels
                         ? max_labels
                         : static_cast<decltype(reach.outbound)>(bdedgelabels_.size());
-    LOGLN_WARN("INBOUND - EDGELABELS");
-    for (auto edge : bdedgelabels_) {
-      std::cout << "   " << edge.edgeid().id();
-    }
+    //LOGLN_WARN("INBOUND - EDGELABELS");
+    //for (auto edge : bdedgelabels_) {
+    //  std::cout << "   " << edge.edgeid().id();
+    //}
+    Clear();
   }
 
   return reach;
@@ -204,5 +208,9 @@ void Reach::GetExpansionHints(uint32_t& bucket_count, uint32_t& edge_label_reser
   edge_label_reservation = max_reach_ * 2;
 }
 
+void Reach::Clear() {
+  //max_reach_ = 0;
+  Dijkstras::Clear();
+}
 } // namespace loki
 } // namespace valhalla

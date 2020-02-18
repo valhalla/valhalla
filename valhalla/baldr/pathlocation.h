@@ -246,6 +246,7 @@ public:
     // for regular routing we dont really care about inbound reach for the origin or outbound reach
     // for the destination so we remove that requirement
     if (route_reach && pls.size() > 1) {
+      // TODO Why only set min_reach for front/back? For routing, `pls` is only ever just size 2?
       pls.front().min_inbound_reach_ = 0;
       pls.back().min_outbound_reach_ = 0;
     }

@@ -442,15 +442,16 @@ struct bin_handler_t {
     // iterate over the edges in the bin
     auto tile = begin->cur_tile;
     auto edges = tile->GetBin(begin->bin_index);
+    LOGLN_WARN("handle_bin got edges");
+    for (auto edge_id : edges) {
+      std::cout << edge_id.id()<< " ";
+    }
+    std::cout<<std::endl;
     if (edges.size() > 0) {
-      LOGLN_WARN("handle_bin");
-      std::cout << "Bin got " << edges.size() << " edges" << std::endl;
     }
     for (auto edge_id : edges) {
-      std::cout << "  edgi_id " << edge_id.id() << std::endl;
       // get the tile and edge
       if (!reader.GetGraphTile(edge_id, tile)) {
-        LOGLN_WARN("continue");
         continue;
       }
 
@@ -505,7 +506,6 @@ struct bin_handler_t {
         }
       }
 
-      std::cout << "  HERE check_reachability of " << edge_id << std::endl;
       // if we already have a better reachable candidate we can just assume this one is reachable
       auto reach = check_reachability(begin, end, tile, edge, edge_id);
 
@@ -734,13 +734,13 @@ Search(const std::vector<valhalla::baldr::Location>& locations,
     return std::unordered_map<valhalla::baldr::Location, PathLocation>{};
   }
 
-  LOG_WARN("calling handler");
+  LOGLN_WARN("calling handler");
   // setup the unique list of locations
   bin_handler_t handler(locations, reader, costing);
   // search over the bins doing multiple locations per bin
-  LOG_WARN("calling search");
+  LOGLN_WARN("calling search");
   handler.search();
-  LOG_WARN("calling finalize");
+  LOGLN_WARN("calling finalize");
   // turn each locations candidate set into path locations
   return handler.finalize();
 }
