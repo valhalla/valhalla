@@ -193,6 +193,16 @@ struct projector_wrapper {
   projector_t project;
 };
 
+struct loc_cmp {
+  bool operator()(const valhalla::baldr::Location& a, const valhalla::baldr::Location& b) {
+    if (a.latlng_.lng() == b.latlng_.lng()) {
+      return (a.latlng_.lat() > b.latlng_.lat());
+    } else {
+      return (a.latlng_.lng() > b.latlng_.lng());
+    }
+  };
+};
+
 struct bin_handler_t {
   std::vector<projector_wrapper> pps;
   valhalla::baldr::GraphReader& reader;
@@ -215,8 +225,9 @@ struct bin_handler_t {
         edge_filter(costing ? costing->GetEdgeFilter() : PassThroughEdgeFilter),
         node_filter(costing ? costing->GetNodeFilter() : PassThroughNodeFilter) {
     // get the unique set of input locations and the max reachability of them all
-    std::unordered_set<Location> uniq_locations(locations.begin(), locations.end());
-    pps.reserve(uniq_locations.size());
+    // TODO Removing the unordered_set for now as it evaluates to different orderings and non-determinism
+    std::set<Location, loc_cmp> uniq_locations(locations.begin(), locations.end());
+    pps.reserve(locations.size());
     max_reach_limit = 0;
     for (const auto& loc : uniq_locations) {
       pps.emplace_back(loc, reader);
@@ -442,12 +453,12 @@ struct bin_handler_t {
     // iterate over the edges in the bin
     auto tile = begin->cur_tile;
     auto edges = tile->GetBin(begin->bin_index);
-    LOGLN_WARN("handle_bin got edges");
-    for (auto edge_id : edges) {
-      std::cout << edge_id.id()<< " ";
-    }
-    std::cout<<std::endl;
     if (edges.size() > 0) {
+      LOGLN_WARN("handle_bin got edges");
+      for (auto edge_id : edges) {
+        std::cout << edge_id.id() << " ";
+      }
+      std::cout << std::endl;
     }
     for (auto edge_id : edges) {
       // get the tile and edge
@@ -733,6 +744,11 @@ Search(const std::vector<valhalla::baldr::Location>& locations,
     LOG_WARN("empty");
     return std::unordered_map<valhalla::baldr::Location, PathLocation>{};
   }
+  for (const auto& loc : locations) {
+    std::cout << "min_reach " << loc.min_outbound_reach_ << " " << loc.min_inbound_reach_
+              << std::endl;
+  }
+  std::cout << "access_mode " << costing->access_mode() << std::endl;
 
   LOGLN_WARN("calling handler");
   // setup the unique list of locations

@@ -163,7 +163,6 @@ directed_reach Reach::operator()(const valhalla::baldr::DirectedEdge* edge,
   // expand in the forward direction
   if (direction | kOutbound) {
     Clear();
-    LOGLN_ERROR("Clear");
     Compute(locations, reader, costings, costing->travel_mode());
     reach.outbound = bdedgelabels_.size() > max_labels
                          ? max_labels
@@ -173,7 +172,6 @@ directed_reach Reach::operator()(const valhalla::baldr::DirectedEdge* edge,
     //  std::cout << "   " << edge.edgeid().id();
     //}
     Clear();
-    LOGLN_ERROR("Clear");
   }
 
   // expand in the reverse direction

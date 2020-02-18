@@ -768,6 +768,7 @@ struct route_tester {
   route_tester(const boost::property_tree::ptree& _conf)
       : conf(_conf), reader(new GraphReader(conf.get_child("mjolnir"))), loki_worker(conf, reader),
         thor_worker(conf, reader), odin_worker(conf) {
+      LOGLN_ERROR("route_tester init");
   }
   Api test(const std::string& request_json) {
     Api request;
@@ -1051,7 +1052,7 @@ TEST(Astar, test_deadend_timedep_reverse) {
   EXPECT_EQ(uturn_street, "Quay Street") << "We did not find the expected u-turn";
 }
 
-TEST(Astar, DISABLED_test_time_restricted_road_bidirectional) {
+TEST(Astar, test_time_restricted_road_bidirectional) {
   // Try routing over "Via Montebello" in Rome which is a time restricted road
   // We should receive a route for a time-independent query but have the response
   // note that it is time restricted
