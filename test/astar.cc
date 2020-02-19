@@ -701,7 +701,7 @@ void trivial_path_no_uturns(const std::string& config_file) {
   boost::filesystem::remove(cr_to_file);
 }
 
-//TEST(Astar, TestTrivialPathNoUturns) {
+// TEST(Astar, TestTrivialPathNoUturns) {
 //  write_config(config_file);
 //  trivial_path_no_uturns(config_file);
 //}
@@ -768,7 +768,7 @@ struct route_tester {
   route_tester(const boost::property_tree::ptree& _conf)
       : conf(_conf), reader(new GraphReader(conf.get_child("mjolnir"))), loki_worker(conf, reader),
         thor_worker(conf, reader), odin_worker(conf) {
-      LOGLN_ERROR("route_tester init");
+    LOGLN_ERROR("route_tester init");
   }
   Api test(const std::string& request_json) {
     Api request;
@@ -1150,7 +1150,7 @@ Api route_on_timerestricted(std::string& costing_str, int16_t hour) {
       std::to_string(hour) + R"(:05"
           }
         })";
-  std::cout << "REQUEST IS "<<request<<std::endl;
+  std::cout << "REQUEST IS " << request << std::endl;
 
   return tester.test(request);
 }

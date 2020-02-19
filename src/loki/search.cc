@@ -225,7 +225,8 @@ struct bin_handler_t {
         edge_filter(costing ? costing->GetEdgeFilter() : PassThroughEdgeFilter),
         node_filter(costing ? costing->GetNodeFilter() : PassThroughNodeFilter) {
     // get the unique set of input locations and the max reachability of them all
-    // TODO Removing the unordered_set for now as it evaluates to different orderings and non-determinism
+    // TODO Removing the unordered_set for now as it evaluates to different orderings and
+    // non-determinism
     std::set<Location, loc_cmp> uniq_locations(locations.begin(), locations.end());
     pps.reserve(locations.size());
     max_reach_limit = 0;
@@ -457,7 +458,7 @@ struct bin_handler_t {
     auto edges = tile->GetBin(begin->bin_index);
     if (edges.size() > 0) {
       LOGLN_WARN("handle_bin got edges");
-      //for (auto edge_id : edges) {
+      // for (auto edge_id : edges) {
       //  std::cout << edge_id.id() << " ";
       //}
       std::cout << std::endl;
@@ -542,7 +543,7 @@ struct bin_handler_t {
             reachable = true;
           }
         }
-        std::cout<<"  reachable " << reachable<<std::endl;
+        std::cout << "  reachable " << reachable << std::endl;
 
         // which batch of findings will this go into
         auto* batch = reachable ? &p_itr->reachable : &p_itr->unreachable;
@@ -647,7 +648,7 @@ struct bin_handler_t {
       pp.reachable.reserve(pp.reachable.size() + pp.unreachable.size());
       std::move(pp.unreachable.begin(), pp.unreachable.end(), std::back_inserter(pp.reachable));
       std::sort(pp.reachable.begin(), pp.reachable.end());
-      std::cout<<"  got reachable " << pp.reachable.size()<<std::endl;
+      std::cout << "  got reachable " << pp.reachable.size() << std::endl;
       // keep a look up around so we dont add duplicates with worse scores
       correlated_edges.reserve(pp.reachable.size());
       correlated_edges.clear();
@@ -702,7 +703,8 @@ struct bin_handler_t {
         // remove them from the original
         correlated.edges.erase(new_end, correlated.edges.end());
       }
-      std::cout << "correlated.edges.size() "<<correlated.edges.size()<<" filtered.size() "<<filtered.size()<<std::endl;
+      std::cout << "correlated.edges.size() " << correlated.edges.size() << " filtered.size() "
+                << filtered.size() << std::endl;
 
       // if we have nothing because of filtering (heading/side) we'll just ignore it
       if (correlated.edges.size() == 0 && filtered.size()) {

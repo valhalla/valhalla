@@ -77,12 +77,12 @@ void make_tile() {
     tile.nodes().emplace_back(node_builder);
   };
 
-  auto add_edge = [&](const std::pair<GraphId, PointLL>& u,
-                      const std::pair<GraphId, PointLL>& v, const uint32_t localedgeidx,
-                      const uint32_t opposing_edge_index, const bool forward) {
+  auto add_edge = [&](const std::pair<GraphId, PointLL>& u, const std::pair<GraphId, PointLL>& v,
+                      const uint32_t localedgeidx, const uint32_t opposing_edge_index,
+                      const bool forward) {
     DirectedEdgeBuilder edge_builder({}, v.first, forward, u.second.Distance(v.second) + .5, 1, 1,
-                                     Use::kRoad, RoadClass::kMotorway, localedgeidx,
-                                     false, 0, 0, false);
+                                     Use::kRoad, RoadClass::kMotorway, localedgeidx, false, 0, 0,
+                                     false);
     edge_builder.set_opp_index(opposing_edge_index);
     edge_builder.set_forwardaccess(kAllAccess);
     edge_builder.set_reverseaccess(kAllAccess);
@@ -123,8 +123,10 @@ void make_tile() {
   // on
   //
   // Old declaration
-  //auto add_edge = [&tile](const std::pair<GraphId, PointLL>& u, const std::pair<GraphId, PointLL>& v,
-  //                        const uint32_t name, const uint32_t opposing_edge_index, const bool forward) {
+  // auto add_edge = [&tile](const std::pair<GraphId, PointLL>& u, const std::pair<GraphId, PointLL>&
+  // v,
+  //                        const uint32_t name, const uint32_t opposing_edge_index, const bool
+  //                        forward) {
 
   // B
   {
@@ -137,14 +139,14 @@ void make_tile() {
   {
     add_edge(a, b, 2, 1, false); // 2
     add_edge(a, d, 3, 0, true);  // 3
-    add_edge(a, c, 4, 0, true); // 4
+    add_edge(a, c, 4, 0, true);  // 4
     add_node(a, 3);
   }
 
   // C
   {
-    add_edge(c, a, 5, 2, false);  // 5
-    add_edge(c, d, 6, 0, true); // 6
+    add_edge(c, a, 5, 2, false); // 5
+    add_edge(c, d, 6, 0, true);  // 6
     add_node(c, 2);
   }
 
@@ -194,7 +196,7 @@ void search(valhalla::baldr::Location location,
   const auto costing = create_costing();
 
   const auto results = Search({location}, reader, costing);
-    std::cout <<"Got results.size() " << results.size()<<std::endl;
+  std::cout << "Got results.size() " << results.size() << std::endl;
   const auto& p = results.at(location);
 
   ASSERT_EQ((p.edges.front().begin_node() || p.edges.front().end_node()), expected_node)
@@ -368,14 +370,14 @@ TEST(Search, test_reachability_radius) {
   unsigned int longest = ob.Distance(d.second);
   unsigned int shortest = ob.Distance(a.second);
 
-  //LOGLN_WARN("zero everything should be a single closest result");
-  //search({ob, Location::StopType::BREAK, 0, 0, 0}, 2, 0);
+  // LOGLN_WARN("zero everything should be a single closest result");
+  // search({ob, Location::StopType::BREAK, 0, 0, 0}, 2, 0);
 
-  //LOGLN_WARN("set radius high to get them all");
-  //search({b.second, Location::StopType::BREAK, 0, 0, longest + 100}, 10, 0);
+  // LOGLN_WARN("set radius high to get them all");
+  // search({b.second, Location::StopType::BREAK, 0, 0, longest + 100}, 10, 0);
 
-  //LOGLN_WARN("set radius mid to get just some");
-  //search({b.second, Location::StopType::BREAK, 0, 0, shortest - 100}, 4, 0);
+  // LOGLN_WARN("set radius mid to get just some");
+  // search({b.second, Location::StopType::BREAK, 0, 0, shortest - 100}, 4, 0);
 
   LOGLN_WARN("set reachability high to see it gets all nodes reachable");
   // TODO figure out if this is correct. It is good enough for now
@@ -384,11 +386,11 @@ TEST(Search, test_reachability_radius) {
   auto expected_reach = 7;
   search({ob, Location::StopType::BREAK, 5, 5, 0}, 2, expected_reach);
 
-  //LOGLN_WARN("set reachability right on to see we arent off by one");
-  //search({ob, Location::StopType::BREAK, 4, 4, 0}, 2, 4);
+  // LOGLN_WARN("set reachability right on to see we arent off by one");
+  // search({ob, Location::StopType::BREAK, 4, 4, 0}, 2, 4);
 
-  //LOGLN_WARN("set reachability lower to see we give up early");
-  //search({ob, Location::StopType::BREAK, 3, 3, 0}, 2, 3);
+  // LOGLN_WARN("set reachability lower to see we give up early");
+  // search({ob, Location::StopType::BREAK, 3, 3, 0}, 2, 3);
 }
 
 TEST(Search, test_search_cutoff) {

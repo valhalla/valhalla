@@ -58,6 +58,7 @@ public:
    * cleanup
    */
   virtual void Clear() override;
+
 protected:
   // when the main loop is looking to continue expanding we tell it to terminate here
   virtual thor::ExpansionRecommendation ShouldExpand(baldr::GraphReader& graphreader,

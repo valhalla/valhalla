@@ -167,8 +167,8 @@ directed_reach Reach::operator()(const valhalla::baldr::DirectedEdge* edge,
     reach.outbound = bdedgelabels_.size() > max_labels
                          ? max_labels
                          : static_cast<decltype(reach.outbound)>(bdedgelabels_.size());
-    //LOGLN_WARN("OUTBOUND - EDGELABELS");
-    //for (auto edge : bdedgelabels_) {
+    // LOGLN_WARN("OUTBOUND - EDGELABELS");
+    // for (auto edge : bdedgelabels_) {
     //  std::cout << "   " << edge.edgeid().id();
     //}
     Clear();
@@ -180,8 +180,8 @@ directed_reach Reach::operator()(const valhalla::baldr::DirectedEdge* edge,
     reach.inbound = bdedgelabels_.size() > max_labels
                         ? max_labels
                         : static_cast<decltype(reach.outbound)>(bdedgelabels_.size());
-    //LOGLN_WARN("INBOUND - EDGELABELS");
-    //for (auto edge : bdedgelabels_) {
+    // LOGLN_WARN("INBOUND - EDGELABELS");
+    // for (auto edge : bdedgelabels_) {
     //  std::cout << "   " << edge.edgeid().id();
     //}
     Clear();
@@ -207,7 +207,7 @@ void Reach::GetExpansionHints(uint32_t& bucket_count, uint32_t& edge_label_reser
 }
 
 void Reach::Clear() {
-  //max_reach_ = 0;
+  // max_reach_ = 0;
   Dijkstras::Clear();
 }
 } // namespace loki
