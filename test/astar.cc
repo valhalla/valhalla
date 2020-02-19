@@ -329,24 +329,6 @@ void make_tile() {
       << "Still no expected tile, did the actual fname on disk change?";
 }
 
-const std::string config_file = "test/test_trivial_path";
-
-void write_config(const std::string& filename) {
-  std::ofstream file;
-  try {
-    file.open(filename, std::ios_base::trunc);
-    file << "{ \
-      \"mjolnir\": { \
-      \"concurrency\": 1, \
-       \"tile_dir\": \"test/data/trivial_tiles\", \
-        \"admin\": \"" VALHALLA_SOURCE_DIR "test/data/netherlands_admin.sqlite\", \
-         \"timezone\": \"" VALHALLA_SOURCE_DIR "test/data/not_needed.sqlite\" \
-      } \
-    }";
-  } catch (...) {}
-  file.close();
-}
-
 void create_costing_options(Options& options) {
   const rapidjson::Document doc;
   sif::ParseAutoCostOptions(doc, "/costing_options/auto", options.add_costing_options());
@@ -605,63 +587,6 @@ TEST(Astar, TestPartialDurationReverse) {
   TestPartialDuration(astar);
 }
 
-void trivial_path_no_uturns(const std::string& config_file) {
-  boost::property_tree::ptree conf;
-  rapidjson::read_json(config_file, conf);
-
-  // setup and purge
-  vb::GraphReader graph_reader(conf.get_child("mjolnir"));
-
-  // Locations
-  std::vector<valhalla::baldr::Location> locations;
-  baldr::Location origin(valhalla::midgard::PointLL(5.114587f, 52.095957f),
-                         baldr::Location::StopType::BREAK);
-  locations.push_back(origin);
-  baldr::Location dest(valhalla::midgard::PointLL(5.114506f, 52.096141f),
-                       baldr::Location::StopType::BREAK);
-  locations.push_back(dest);
-
-  Api api;
-  auto& options = *api.mutable_options();
-  create_costing_options(options);
-  std::shared_ptr<vs::DynamicCost> mode_costing[4];
-  std::shared_ptr<vs::DynamicCost> cost = vs::CreatePedestrianCost(Costing::pedestrian, options);
-  auto mode = cost->travel_mode();
-  mode_costing[static_cast<uint32_t>(mode)] = cost;
-
-  const auto projections = vk::Search(locations, graph_reader, cost.get());
-  std::vector<PathLocation> path_location;
-
-  for (const auto& loc : locations) {
-    ASSERT_NO_THROW(
-        path_location.push_back(projections.at(loc));
-        PathLocation::toPBF(path_location.back(), options.mutable_locations()->Add(), graph_reader);)
-        << "fail_invalid_origin";
-  }
-
-  vt::AStarPathAlgorithm astar;
-  auto path = astar
-                  .GetBestPath(*options.mutable_locations(0), *options.mutable_locations(1),
-                               graph_reader, mode_costing, mode)
-                  .front();
-
-  vt::AttributesController controller;
-  auto& leg = *api.mutable_trip()->mutable_routes()->Add()->mutable_legs()->Add();
-  vt::TripLegBuilder::Build(controller, graph_reader, mode_costing, path.begin(), path.end(),
-                            *options.mutable_locations(0), *options.mutable_locations(1),
-                            std::list<valhalla::Location>{}, leg);
-  // really could of got the total of the elapsed_time.
-  odin::DirectionsBuilder::Build(api);
-  const auto& trip_directions = api.directions().routes(0).legs(0);
-
-  EXPECT_EQ(trip_directions.summary().time(), 0);
-}
-
-TEST(Astar, TestTrivialPathNoUturns) {
-  write_config(config_file);
-  trivial_path_no_uturns(config_file);
-}
-
 boost::property_tree::ptree get_conf(const char* tiles) {
   std::stringstream ss;
   ss << R"({
@@ -718,6 +643,57 @@ boost::property_tree::ptree get_conf(const char* tiles) {
   boost::property_tree::ptree conf;
   rapidjson::read_json(ss, conf);
   return conf;
+}
+
+TEST(Astar, TestTrivialPathNoUturns) {
+  auto conf = get_conf("utrecht_tiles");
+
+  // setup and purge
+  vb::GraphReader graph_reader(conf.get_child("mjolnir"));
+
+  // Locations
+  std::vector<valhalla::baldr::Location> locations;
+  baldr::Location origin(valhalla::midgard::PointLL(5.114587f, 52.095957f),
+                         baldr::Location::StopType::BREAK);
+  locations.push_back(origin);
+  baldr::Location dest(valhalla::midgard::PointLL(5.114506f, 52.096141f),
+                       baldr::Location::StopType::BREAK);
+  locations.push_back(dest);
+
+  Api api;
+  auto& options = *api.mutable_options();
+  create_costing_options(options);
+  std::shared_ptr<vs::DynamicCost> mode_costing[4];
+  std::shared_ptr<vs::DynamicCost> cost = vs::CreatePedestrianCost(Costing::pedestrian, options);
+  auto mode = cost->travel_mode();
+  mode_costing[static_cast<uint32_t>(mode)] = cost;
+
+  const auto projections = vk::Search(locations, graph_reader, cost.get());
+  std::vector<PathLocation> path_location;
+
+  for (const auto& loc : locations) {
+    ASSERT_NO_THROW(
+        path_location.push_back(projections.at(loc));
+        PathLocation::toPBF(path_location.back(), options.mutable_locations()->Add(), graph_reader);)
+        << "fail_invalid_origin";
+  }
+
+  vt::AStarPathAlgorithm astar;
+  auto path = astar
+                  .GetBestPath(*options.mutable_locations(0), *options.mutable_locations(1),
+                               graph_reader, mode_costing, mode)
+                  .front();
+
+  vt::AttributesController controller;
+  auto& leg = *api.mutable_trip()->mutable_routes()->Add()->mutable_legs()->Add();
+  vt::TripLegBuilder::Build(controller, graph_reader, mode_costing, path.begin(), path.end(),
+                            *options.mutable_locations(0), *options.mutable_locations(1),
+                            std::list<valhalla::Location>{}, leg);
+  // really could of got the total of the elapsed_time.
+  odin::DirectionsBuilder::Build(api);
+  const auto& trip_directions = api.directions().routes(0).legs(0);
+
+  EXPECT_EQ(trip_directions.summary().time(), 0);
 }
 
 struct route_tester {
