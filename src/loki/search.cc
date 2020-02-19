@@ -338,8 +338,10 @@ struct bin_handler_t {
     // get the distance between the result
     auto distance = candidate.point.Distance(location.latlng_);
     // the search cutoff is a hard filter so skip any outside of that
-    if (distance > location.search_cutoff_)
+    if (distance > location.search_cutoff_) {
+      LOGLN_INFO("continue");
       return;
+    }
     // now that we have an edge we can pass back all the info about it
     if (candidate.edge != nullptr) {
       // we need the ratio in the direction of the edge we are correlated to
@@ -455,9 +457,9 @@ struct bin_handler_t {
     auto edges = tile->GetBin(begin->bin_index);
     if (edges.size() > 0) {
       LOGLN_WARN("handle_bin got edges");
-      for (auto edge_id : edges) {
-        std::cout << edge_id.id() << " ";
-      }
+      //for (auto edge_id : edges) {
+      //  std::cout << edge_id.id() << " ";
+      //}
       std::cout << std::endl;
     }
     for (auto edge_id : edges) {
@@ -471,7 +473,7 @@ struct bin_handler_t {
       if (edge_filter(edge) == 0.0f &&
           (!(edge_id = reader.GetOpposingEdgeId(edge_id, tile)).Is_Valid() ||
            edge_filter(edge = tile->directededge(edge_id)) == 0.0f)) {
-        LOGLN_WARN("continue");
+        LOGLN_WARN("continue due to edgefilter");
         continue;
       }
 
@@ -540,6 +542,7 @@ struct bin_handler_t {
             reachable = true;
           }
         }
+        std::cout<<"  reachable " << reachable<<std::endl;
 
         // which batch of findings will this go into
         auto* batch = reachable ? &p_itr->reachable : &p_itr->unreachable;
@@ -644,6 +647,7 @@ struct bin_handler_t {
       pp.reachable.reserve(pp.reachable.size() + pp.unreachable.size());
       std::move(pp.unreachable.begin(), pp.unreachable.end(), std::back_inserter(pp.reachable));
       std::sort(pp.reachable.begin(), pp.reachable.end());
+      std::cout<<"  got reachable " << pp.reachable.size()<<std::endl;
       // keep a look up around so we dont add duplicates with worse scores
       correlated_edges.reserve(pp.reachable.size());
       correlated_edges.clear();
@@ -664,14 +668,18 @@ struct bin_handler_t {
           const GraphTile* other_tile;
           auto opposing_edge = reader.GetOpposingEdge(candidate.edge_id, other_tile);
           if (!other_tile) {
+            LOGLN_WARN("Continue");
             continue; // TODO: do an edge snap instead, but you'll only get one direction
           }
+          LOGLN_WARN("correlate_node 1");
           correlate_node(pp.location, opposing_edge->endnode(), candidate, correlated, filtered);
         } // it was the end node
         else if ((back && candidate.edge->forward()) || (front && !candidate.edge->forward())) {
+          LOGLN_WARN("correlate_node 2");
           correlate_node(pp.location, candidate.edge->endnode(), candidate, correlated, filtered);
         } // it was along the edge
         else {
+          LOGLN_WARN("correlated_edge");
           correlate_edge(pp.location, candidate, correlated, filtered);
         }
       }
@@ -694,6 +702,7 @@ struct bin_handler_t {
         // remove them from the original
         correlated.edges.erase(new_end, correlated.edges.end());
       }
+      std::cout << "filtered.size() "<<filtered.size()<<std::endl;
 
       // if we have nothing because of filtering (heading/side) we'll just ignore it
       if (correlated.edges.size() == 0 && filtered.size()) {
