@@ -702,7 +702,7 @@ struct bin_handler_t {
         // remove them from the original
         correlated.edges.erase(new_end, correlated.edges.end());
       }
-      std::cout << "filtered.size() "<<filtered.size()<<std::endl;
+      std::cout << "correlated.edges.size() "<<correlated.edges.size()<<" filtered.size() "<<filtered.size()<<std::endl;
 
       // if we have nothing because of filtering (heading/side) we'll just ignore it
       if (correlated.edges.size() == 0 && filtered.size()) {

@@ -193,19 +193,16 @@ void search(valhalla::baldr::Location location,
 
   const auto costing = create_costing();
 
-  LOG_WARN("calling Search");
   const auto results = Search({location}, reader, costing);
-  LOG_WARN("foo");
-    std::cout <<results.size()<<std::endl;
+    std::cout <<"Got results.size() " << results.size()<<std::endl;
   const auto& p = results.at(location);
-  LOG_WARN("bar");
 
-  EXPECT_EQ((p.edges.front().begin_node() || p.edges.front().end_node()), expected_node)
+  ASSERT_EQ((p.edges.front().begin_node() || p.edges.front().end_node()), expected_node)
       << p.edges.front().begin_node() << ":" << p.edges.front().end_node()
       << (expected_node ? " Should've snapped to node" : " Shouldn't've snapped to node");
 
-  EXPECT_TRUE(p.edges.size()) << "Didn't find any node/edges";
-  EXPECT_TRUE(p.edges.front().projected.ApproximatelyEqual(expected_point)) << "Found wrong point";
+  ASSERT_TRUE(p.edges.size()) << "Didn't find any node/edges";
+  ASSERT_TRUE(p.edges.front().projected.ApproximatelyEqual(expected_point)) << "Found wrong point";
 
   valhalla::baldr::PathLocation answer(location);
   for (const auto& expected_edge : expected_edges) {
@@ -215,10 +212,10 @@ void search(valhalla::baldr::Location location,
   }
   // note that this just checks that p has the edges that answer has
   // p can have more edges than answer has and that wont fail this check!
-  EXPECT_TRUE(answer.shares_edges(p)) << "Did not find expected edges";
+  ASSERT_TRUE(answer.shares_edges(p)) << "Did not find expected edges";
   // if you want to enforce that the result didnt have more then expected
   if (exact) {
-    EXPECT_EQ(answer.edges.size(), p.edges.size()) << "Got more edges than expected";
+    ASSERT_EQ(answer.edges.size(), p.edges.size()) << "Got more edges than expected";
   }
 }
 
