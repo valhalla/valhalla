@@ -611,42 +611,6 @@ void trivial_path_no_uturns(const std::string& config_file) {
 
   // setup and purge
   vb::GraphReader graph_reader(conf.get_child("mjolnir"));
-  for (const auto& level : vb::TileHierarchy::levels()) {
-    auto level_dir = graph_reader.tile_dir() + "/" + std::to_string(level.first);
-    if (boost::filesystem::exists(level_dir) && !boost::filesystem::is_empty(level_dir)) {
-      boost::filesystem::remove_all(level_dir);
-    }
-  }
-
-  // Set up the temporary (*.bin) files used during processing
-  std::string ways_file = "test_ways_trivial.bin";
-  std::string way_nodes_file = "test_way_nodes_trivial.bin";
-  std::string nodes_file = "test_nodes_trivial.bin";
-  std::string edges_file = "test_edges_trivial.bin";
-  std::string access_file = "test_access_trivial.bin";
-  std::string cr_from_file = "test_from_complex_restrictions_trivial.bin";
-  std::string cr_to_file = "test_to_complex_restrictions_trivial.bin";
-  std::string bss_nodes_file = "test_bss_nodes_file_trivial.bin";
-
-  // Parse Utrecht OSM data
-  auto osmdata =
-      vj::PBFGraphParser::Parse(conf.get_child("mjolnir"),
-                                {VALHALLA_SOURCE_DIR "test/data/utrecht_netherlands.osm.pbf"},
-                                ways_file, way_nodes_file, access_file, cr_from_file, cr_to_file,
-                                bss_nodes_file);
-
-  // Build the graph using the OSMNodes and OSMWays from the parser
-  vj::GraphBuilder::Build(conf, osmdata, ways_file, way_nodes_file, nodes_file, edges_file,
-                          cr_from_file, cr_to_file);
-
-  // Enhance the local level of the graph. This adds information to the local
-  // level that is usable across all levels (density, administrative
-  // information (and country based attribution), edge transition logic, etc.
-  vj::GraphEnhancer::Enhance(conf, osmdata, access_file);
-
-  // Validate the graph and add information that cannot be added until
-  // full graph is formed.
-  vj::GraphValidator::Validate(conf);
 
   // Locations
   std::vector<valhalla::baldr::Location> locations;
@@ -691,14 +655,6 @@ void trivial_path_no_uturns(const std::string& config_file) {
   const auto& trip_directions = api.directions().routes(0).legs(0);
 
   EXPECT_EQ(trip_directions.summary().time(), 0);
-
-  boost::filesystem::remove(ways_file);
-  boost::filesystem::remove(way_nodes_file);
-  boost::filesystem::remove(nodes_file);
-  boost::filesystem::remove(edges_file);
-  boost::filesystem::remove(access_file);
-  boost::filesystem::remove(cr_from_file);
-  boost::filesystem::remove(cr_to_file);
 }
 
 TEST(Astar, TestTrivialPathNoUturns) {
