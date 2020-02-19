@@ -50,9 +50,12 @@ struct OSMNode {
   /**
    * Constructor with OSM node Id
    */
-  OSMNode(const uint64_t id) {
+  OSMNode(const uint64_t id,
+          const float lat = baldr::kInvalidLongitude,
+          const float lng = baldr::kInvalidLatitude) {
     memset(this, 0, sizeof(OSMNode));
     set_id(id);
+    set_latlng(lat, lng);
   }
 
   /**
