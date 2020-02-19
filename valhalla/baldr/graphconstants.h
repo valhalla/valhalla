@@ -1,6 +1,7 @@
 #ifndef VALHALLA_BALDR_GRAPHCONSTANTS_H_
 #define VALHALLA_BALDR_GRAPHCONSTANTS_H_
 
+#include <limits>
 #include <string>
 #include <unordered_map>
 
@@ -15,6 +16,10 @@ constexpr uint32_t kMaxOSMWayId = 4294967295;
 constexpr uint32_t kMaxGraphTileId = 4194303;
 // Maximum id/index within a tile. 21 bits
 constexpr uint32_t kMaxGraphId = 2097151;
+
+// A value to use for invalid latitude/longitudes (i.e. uninitialized)
+constexpr float kInvalidLatitude = std::numeric_limits<float>::max();
+constexpr float kInvalidLongitude = std::numeric_limits<float>::max();
 
 // Access bit field constants. Access in directed edge allows 12 bits.
 constexpr uint16_t kAutoAccess = 1;

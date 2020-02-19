@@ -42,4 +42,4 @@ find ${OLD_DIR}/*.txt -printf "%f\n" | parallel --progress -P "${CONCURRENCY}" "
 COMBINED_STATS_FILE="combined_statistics.csv"
 echo -e "\x1b[32;1mGenerating combined statistics at ${DIFF_DIR}/${COMBINED_STATS_FILE}\x1b[0m"
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-${DIR}/diff_route_stats.py ${OLD_DIR}/statistics.csv ${NEW_DIR}/statistics.csv ${DIFF_DIR}/${COMBINED_STATS_FILE}
+${DIR}/combine_route_stats.py ${OLD_DIR}/statistics.csv ${NEW_DIR}/statistics.csv ${DIFF_DIR}/${COMBINED_STATS_FILE}

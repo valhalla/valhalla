@@ -171,6 +171,15 @@ protected:
   virtual std::vector<PathInfo> FormPath(const uint32_t dest);
 };
 
+// Essentially checks if any of the restrictions in `list_of_restrictions`
+// has a match against some part of `patch_path`.
+//
+// IMPORTANT: Each vector in `list_of_restrictions` must contain the original
+// edge_id in addition to the vias
+bool CheckPatchPathForRestrictions(
+    const std::vector<baldr::GraphId>& patch_path,
+    const std::vector<std::vector<baldr::GraphId>>& list_of_restrictions);
+
 } // namespace thor
 } // namespace valhalla
 
