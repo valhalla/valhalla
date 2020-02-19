@@ -1052,7 +1052,6 @@ bool IsBridgingEdgeRestricted(GraphReader& graphreader,
     patch_path.push_back(edgeid);
 
     // Also grab restrictions while walking for later comparison against patch_path
-    //
     tile = graphreader.GetGraphTile(edgeid, tile);
     if (tile == nullptr) {
       throw std::logic_error("Tile pointer was null in IsBridgingEdgeRestricted");
