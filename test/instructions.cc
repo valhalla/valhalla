@@ -304,14 +304,15 @@ TEST(Instructions, validate_ramp_instructions) {
   test_instructions({VALHALLA_SOURCE_DIR
                      "test/pinpoints/instructions/ramp_take_toward_driving_side_right.pbf"},
                     expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
-                    "Take the ramp toward Pennsylvania Avenue.", "",
-                    "Take the ramp toward Pennsylvania Avenue.", "");
+                    "Take the PA 283 West ramp toward Harrisburg.",
+                    "Take the Pennsylvania 2 83 West ramp.",
+                    "Take the Pennsylvania 2 83 West ramp toward Harrisburg.");
 
   // Test take toward driving side left
   test_instructions({VALHALLA_SOURCE_DIR
                      "test/pinpoints/instructions/ramp_take_toward_driving_side_left.pbf"},
                     expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
-                    "Take the M11 ramp toward London.", "", "Take the M11 ramp toward London.", "");
+                    "Take the M11 ramp toward London.", "", "Take the M11 ramp toward London.");
 }
 
 TEST(Instructions, validate_exit_instructions) {
