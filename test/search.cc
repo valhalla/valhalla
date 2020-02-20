@@ -40,7 +40,7 @@ namespace {
 //  5 | / 6
 //    |/
 //    c
-std::string tile_dir = "test/search_tiles";
+const std::string tile_dir = "test/search_tiles";
 GraphId tile_id = TileHierarchy::GetGraphId({.125, .125}, 2);
 PointLL base_ll = TileHierarchy::get_tiling(tile_id.level()).Base(tile_id.tileid());
 std::pair<GraphId, PointLL> b({tile_id.tileid(), tile_id.level(), 0}, {.01, .2});
@@ -130,31 +130,31 @@ void make_tile() {
 
   // B
   {
-    add_edge(b, d, 0, 0, true);
-    add_edge(b, a, 1, 0, true); // 1
+    add_edge(b, d, 0, 0, false);
+    add_edge(b, a, 2, 0, true); // 1
     add_node(b, 2);
   }
 
   // A
   {
     add_edge(a, b, 2, 1, false); // 2
-    add_edge(a, d, 3, 0, true);  // 3
-    add_edge(a, c, 4, 0, true);  // 4
+    add_edge(a, d, 3, 1, true);  // 3
+    add_edge(a, c, 1, 0, false); // 4
     add_node(a, 3);
   }
 
   // C
   {
-    add_edge(c, a, 5, 2, false); // 5
-    add_edge(c, d, 6, 0, true);  // 6
+    add_edge(c, a, 1, 2, true);  // 5
+    add_edge(c, d, 4, 2, false); // 6
     add_node(c, 2);
   }
 
   // D
   {
-    add_edge(d, b, 7, 0, true);  // 7
-    add_edge(d, a, 8, 1, false); // 8
-    add_edge(d, c, 9, 1, true);  // 9
+    add_edge(d, b, 0, 0, true);  // 7
+    add_edge(d, a, 3, 1, false); // 8
+    add_edge(d, c, 4, 1, true);  // 9
     add_node(d, 3);
   }
 
@@ -243,10 +243,10 @@ void search(valhalla::baldr::Location location, size_t result_count, int reachab
   const auto& path = results.at(location);
   LOG_WARN("done indexing");
 
-  EXPECT_EQ(path.edges.size(), result_count) << "Wrong number of edges";
+  ASSERT_EQ(path.edges.size(), result_count) << "Wrong number of edges";
   for (const auto& edge : path.edges) {
     ASSERT_EQ(edge.outbound_reach, reachability);
-    ASSERT_EQ(edge.inbound_reach, reachability);
+    ASSERT_EQ(edge.inbound_reach, reachability); // TODO
   }
 }
 
@@ -370,27 +370,27 @@ TEST(Search, test_reachability_radius) {
   unsigned int longest = ob.Distance(d.second);
   unsigned int shortest = ob.Distance(a.second);
 
-  // LOGLN_WARN("zero everything should be a single closest result");
-  // search({ob, Location::StopType::BREAK, 0, 0, 0}, 2, 0);
+  LOGLN_WARN("zero everything should be a single closest result");
+  search({ob, Location::StopType::BREAK, 0, 0, 0}, 2, 0);
 
-  // LOGLN_WARN("set radius high to get them all");
-  // search({b.second, Location::StopType::BREAK, 0, 0, longest + 100}, 10, 0);
+  LOGLN_WARN("set radius high to get them all");
+  search({b.second, Location::StopType::BREAK, 0, 0, longest + 100}, 10, 0);
 
-  // LOGLN_WARN("set radius mid to get just some");
-  // search({b.second, Location::StopType::BREAK, 0, 0, shortest - 100}, 4, 0);
+  LOGLN_WARN("set radius mid to get just some");
+  search({b.second, Location::StopType::BREAK, 0, 0, shortest - 100}, 4, 0);
 
   LOGLN_WARN("set reachability high to see it gets all nodes reachable");
   // TODO figure out if this is correct. It is good enough for now
   // It is complicated by the fact that u-turn detection and similar never
   // was iimplemented for Isochrone/Dijkstras
-  auto expected_reach = 7;
+  auto expected_reach = 6;
   search({ob, Location::StopType::BREAK, 5, 5, 0}, 2, expected_reach);
 
-  // LOGLN_WARN("set reachability right on to see we arent off by one");
-  // search({ob, Location::StopType::BREAK, 4, 4, 0}, 2, 4);
+  LOGLN_WARN("set reachability right on to see we arent off by one");
+  search({ob, Location::StopType::BREAK, 4, 4, 0}, 2, 4);
 
-  // LOGLN_WARN("set reachability lower to see we give up early");
-  // search({ob, Location::StopType::BREAK, 3, 3, 0}, 2, 3);
+  LOGLN_WARN("set reachability lower to see we give up early");
+  search({ob, Location::StopType::BREAK, 3, 3, 0}, 2, 3);
 }
 
 TEST(Search, test_search_cutoff) {
