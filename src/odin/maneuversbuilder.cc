@@ -1278,7 +1278,10 @@ void ManeuversBuilder::SetManeuverType(Maneuver& maneuver, bool none_type_allowe
   // Process exit
   else if (maneuver.ramp() && prev_edge &&
            (prev_edge->IsHighway() || maneuver.HasExitNumberSign() ||
-            (!prev_edge->IsRampUse() && !RampLeadsToHighway(maneuver)))) {
+            (!prev_edge->IsRampUse() && !RampLeadsToHighway(maneuver) &&
+             (maneuver.begin_relative_direction() != Maneuver::RelativeDirection::kRight) &&
+             (maneuver.begin_relative_direction() != Maneuver::RelativeDirection::KReverse) &&
+             (maneuver.begin_relative_direction() != Maneuver::RelativeDirection::kLeft)))) {
     switch (maneuver.begin_relative_direction()) {
       case Maneuver::RelativeDirection::kKeepRight:
       case Maneuver::RelativeDirection::kRight: {
@@ -2770,6 +2773,9 @@ bool ManeuversBuilder::RampLeadsToHighway(Maneuver& maneuver) const {
       } else if (curr_edge && curr_edge->IsHighway()) {
         // Ramp leads to highway
         return true;
+      } else {
+        // Ramp does not lead to highway
+        return false;
       }
     }
   }
