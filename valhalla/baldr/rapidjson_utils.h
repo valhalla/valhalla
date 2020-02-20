@@ -225,7 +225,7 @@ void read_json(const std::string& filename, Ptree& pt, const std::locale& loc = 
   if (!stream)
     throw std::runtime_error("Cannot open file " + filename);
   stream.imbue(loc);
-  read_json(stream, pt);
+  rapidjson::read_json(stream, pt);
 }
 
 } // namespace rapidjson
