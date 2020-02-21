@@ -1276,7 +1276,10 @@ void ManeuversBuilder::SetManeuverType(Maneuver& maneuver, bool none_type_allowe
     LOG_TRACE("ManeuverType=TURN_CHANNNEL");
   }
   // Process exit
-  // TODO
+  // if maneuver is ramp
+  // and previous edge is a highway or maneuver has an exit number
+  // or previous edge is not a ramp and ramp does not lead to a highway
+  //    and the maneuver relative direction is a keep left or keep right
   else if (maneuver.ramp() && prev_edge &&
            (prev_edge->IsHighway() || maneuver.HasExitNumberSign() ||
             (!prev_edge->IsRampUse() && !RampLeadsToHighway(maneuver) &&
@@ -2779,7 +2782,7 @@ bool ManeuversBuilder::RampLeadsToHighway(Maneuver& maneuver) const {
       }
     }
   }
-  // Ramp does not lead to highway
+  // Not a ramp
   return false;
 }
 
