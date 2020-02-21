@@ -88,7 +88,7 @@ namespace {
 //       g
 //
 //
-// Third test has a complex turn restriction preventing H->I->L  (marked with R)
+// Third test has a complex turn restriction preventing K->H->I->L  (marked with R)
 // which should force the algorithm to take the detour via the J->M edge
 // if starting at K and heading to L
 //
@@ -96,14 +96,18 @@ namespace {
 // h-->--<--i-->--<--j
 // |    R   |        |
 // v 15     v 18     v 20
-// |      R |        |
+// |R     R |        |
 // ^ 21     ^ 22     ^ 24
 // |        |        |
 // k        l-->--<--m
 //            23  25
 //
-std::string test_dir = "test/data/fake_tiles_astar";
+const std::string test_dir = "test/data/fake_tiles_astar";
 const vb::GraphId tile_id = vb::TileHierarchy::GetGraphId({.125, .125}, 2);
+
+GraphId make_graph_id(uint32_t id) {
+  return GraphId(tile_id.tileid(), tile_id.level(), id);
+}
 
 namespace node {
 std::pair<vb::GraphId, vm::PointLL> a({tile_id.tileid(), tile_id.level(), 0}, {0.01, 0.10});
@@ -212,33 +216,55 @@ void make_tile() {
 
   // Third set of roads - Complex restriction with detour
   add_edge(node::h, node::i, 14, 0, true);
-  auto edge_id_14 = GraphId(tile_id.tileid(), tile_id.level(), 14);
-  auto edge_id_18 = GraphId(tile_id.tileid(), tile_id.level(), 18);
   {
-    // Add first part of complex turn restriction preventing turn from 14 -> 18
-    tile.directededges().back().set_start_restriction(kAutoAccess);
-    ComplexRestrictionBuilder complex_restr_edge_14;
-    complex_restr_edge_14.set_to_id(edge_id_14);
-    complex_restr_edge_14.set_from_id(edge_id_18);
-    complex_restr_edge_14.set_modes(kAllAccess);
-    tile.AddForwardComplexRestriction(complex_restr_edge_14);
-    tile.AddReverseComplexRestriction(complex_restr_edge_14);
+    // we only set this to true for vias
+    tile.directededges().back().complex_restriction(true);
   }
   add_edge(node::h, node::k, 15, 0, true);
+  {
+    // preventing turn from 22 -> 16 -> 15  in the reverse direction
+    // in regards to bi-directional.  Forget about is the edge is
+    // oneway or not
+    //
+    // when we are an end of a restriction we set the modes that
+    // this restriction applies to.
+    tile.directededges().back().set_end_restriction(kAllAccess);
+    ComplexRestrictionBuilder complex_restr_edge_22_16_15;
+    complex_restr_edge_22_16_15.set_type(RestrictionType::kNoEntry);
+    complex_restr_edge_22_16_15.set_to_id(make_graph_id(22));
+    complex_restr_edge_22_16_15.set_from_id(make_graph_id(15));
+    std::vector<GraphId> vias;
+    vias.push_back(make_graph_id(16));
+    complex_restr_edge_22_16_15.set_via_list(vias);
+    complex_restr_edge_22_16_15.set_modes(kAllAccess);
+    tile.AddReverseComplexRestriction(complex_restr_edge_22_16_15);
+  }
   add_node(node::h, 2);
 
   add_edge(node::i, node::h, 16, 0, false);
+  {
+    // we only set this to true for vias
+    tile.directededges().back().complex_restriction(true);
+  }
   add_edge(node::i, node::j, 17, 0, true);
   add_edge(node::i, node::l, 18, 0, true);
   {
-    // Add second part of complex turn restriction preventing turn from 14 -> 18
-    tile.directededges().back().set_end_restriction(kAutoAccess);
-    ComplexRestrictionBuilder complex_restr_edge_18;
-    complex_restr_edge_18.set_from_id(edge_id_14);
-    complex_restr_edge_18.set_to_id(edge_id_18);
-    complex_restr_edge_18.set_modes(kAllAccess);
-    tile.AddForwardComplexRestriction(complex_restr_edge_18);
-    tile.AddReverseComplexRestriction(complex_restr_edge_18);
+    // preventing turn from 21 -> 14 -> 18 in the reverse direction
+    // in regards to bi-directional.  Forget about is the edge is
+    // oneway or not
+    //
+    // when we are the end of a restriction we set the modes that
+    // this restriction applies to.
+    tile.directededges().back().set_end_restriction(kAllAccess);
+    ComplexRestrictionBuilder complex_restr_edge_21_14;
+    complex_restr_edge_21_14.set_type(RestrictionType::kNoEntry);
+    complex_restr_edge_21_14.set_to_id(make_graph_id(21));
+    complex_restr_edge_21_14.set_from_id(make_graph_id(18));
+    std::vector<GraphId> vias;
+    vias.push_back(make_graph_id(14));
+    complex_restr_edge_21_14.set_via_list(vias);
+    complex_restr_edge_21_14.set_modes(kAllAccess);
+    tile.AddReverseComplexRestriction(complex_restr_edge_21_14);
   }
   add_node(node::i, 3);
 
@@ -247,9 +273,44 @@ void make_tile() {
   add_node(node::j, 2);
 
   add_edge(node::k, node::h, 21, 1, false);
+  {
+    // Add first part of complex turn restriction CLOCKWISE direction
+    // preventing turn from 21 -> 14 -> 18
+    //
+    // when we are the start of a restriction we set the modes that
+    // this restriction applies to.
+    tile.directededges().back().set_start_restriction(kAllAccess);
+    ComplexRestrictionBuilder complex_restr_edge_21_14;
+    complex_restr_edge_21_14.set_type(RestrictionType::kNoEntry);
+    complex_restr_edge_21_14.set_to_id(make_graph_id(18));
+    complex_restr_edge_21_14.set_from_id(make_graph_id(21));
+    std::vector<GraphId> vias;
+    vias.push_back(make_graph_id(14));
+    complex_restr_edge_21_14.set_via_list(vias);
+    complex_restr_edge_21_14.set_modes(kAllAccess);
+    tile.AddForwardComplexRestriction(complex_restr_edge_21_14);
+  }
   add_node(node::k, 1);
 
   add_edge(node::l, node::i, 22, 2, false);
+  {
+    // Add complex turn restriction COUNTER CLOCKWISE direction
+    // preventing turn from 22 -> 16 -> 15
+    //
+    // when we are the start of a restriction we set the modes that
+    // this restriction applies to.
+    tile.directededges().back().set_start_restriction(kAllAccess);
+    ComplexRestrictionBuilder complex_restr_edge_22_16_15;
+    complex_restr_edge_22_16_15.set_type(RestrictionType::kNoEntry);
+    complex_restr_edge_22_16_15.set_to_id(make_graph_id(15));
+    complex_restr_edge_22_16_15.set_from_id(make_graph_id(22));
+    std::vector<GraphId> vias;
+    vias.push_back(make_graph_id(16));
+    complex_restr_edge_22_16_15.set_via_list(vias);
+    complex_restr_edge_22_16_15.set_modes(kAllAccess);
+    tile.AddForwardComplexRestriction(complex_restr_edge_22_16_15);
+  }
+
   add_edge(node::l, node::m, 23, 0, true);
   add_node(node::l, 2);
 
@@ -266,24 +327,6 @@ void make_tile() {
 
   ASSERT_PRED1(filesystem::exists, test_dir + "/2/000/519/120.gph")
       << "Still no expected tile, did the actual fname on disk change?";
-}
-
-const std::string config_file = "test/test_trivial_path";
-
-void write_config(const std::string& filename) {
-  std::ofstream file;
-  try {
-    file.open(filename, std::ios_base::trunc);
-    file << "{ \
-      \"mjolnir\": { \
-      \"concurrency\": 1, \
-       \"tile_dir\": \"test/data/trivial_tiles\", \
-        \"admin\": \"" VALHALLA_SOURCE_DIR "test/data/netherlands_admin.sqlite\", \
-         \"timezone\": \"" VALHALLA_SOURCE_DIR "test/data/not_needed.sqlite\" \
-      } \
-    }";
-  } catch (...) {}
-  file.close();
 }
 
 void create_costing_options(Options& options) {
@@ -544,107 +587,6 @@ TEST(Astar, TestPartialDurationReverse) {
   TestPartialDuration(astar);
 }
 
-void trivial_path_no_uturns(const std::string& config_file) {
-  boost::property_tree::ptree conf;
-  rapidjson::read_json(config_file, conf);
-
-  // setup and purge
-  vb::GraphReader graph_reader(conf.get_child("mjolnir"));
-  for (const auto& level : vb::TileHierarchy::levels()) {
-    auto level_dir = graph_reader.tile_dir() + "/" + std::to_string(level.first);
-    if (boost::filesystem::exists(level_dir) && !boost::filesystem::is_empty(level_dir)) {
-      boost::filesystem::remove_all(level_dir);
-    }
-  }
-
-  // Set up the temporary (*.bin) files used during processing
-  std::string ways_file = "test_ways_trivial.bin";
-  std::string way_nodes_file = "test_way_nodes_trivial.bin";
-  std::string nodes_file = "test_nodes_trivial.bin";
-  std::string edges_file = "test_edges_trivial.bin";
-  std::string access_file = "test_access_trivial.bin";
-  std::string cr_from_file = "test_from_complex_restrictions_trivial.bin";
-  std::string cr_to_file = "test_to_complex_restrictions_trivial.bin";
-  std::string bss_nodes_file = "test_bss_nodes_file_trivial.bin";
-
-  // Parse Utrecht OSM data
-  auto osmdata =
-      vj::PBFGraphParser::Parse(conf.get_child("mjolnir"),
-                                {VALHALLA_SOURCE_DIR "test/data/utrecht_netherlands.osm.pbf"},
-                                ways_file, way_nodes_file, access_file, cr_from_file, cr_to_file,
-                                bss_nodes_file);
-
-  // Build the graph using the OSMNodes and OSMWays from the parser
-  vj::GraphBuilder::Build(conf, osmdata, ways_file, way_nodes_file, nodes_file, edges_file,
-                          cr_from_file, cr_to_file);
-
-  // Enhance the local level of the graph. This adds information to the local
-  // level that is usable across all levels (density, administrative
-  // information (and country based attribution), edge transition logic, etc.
-  vj::GraphEnhancer::Enhance(conf, osmdata, access_file);
-
-  // Validate the graph and add information that cannot be added until
-  // full graph is formed.
-  vj::GraphValidator::Validate(conf);
-
-  // Locations
-  std::vector<valhalla::baldr::Location> locations;
-  baldr::Location origin(valhalla::midgard::PointLL(5.114587f, 52.095957f),
-                         baldr::Location::StopType::BREAK);
-  locations.push_back(origin);
-  baldr::Location dest(valhalla::midgard::PointLL(5.114506f, 52.096141f),
-                       baldr::Location::StopType::BREAK);
-  locations.push_back(dest);
-
-  Api api;
-  auto& options = *api.mutable_options();
-  create_costing_options(options);
-  std::shared_ptr<vs::DynamicCost> mode_costing[4];
-  std::shared_ptr<vs::DynamicCost> cost = vs::CreatePedestrianCost(Costing::pedestrian, options);
-  auto mode = cost->travel_mode();
-  mode_costing[static_cast<uint32_t>(mode)] = cost;
-
-  const auto projections = vk::Search(locations, graph_reader, cost.get());
-  std::vector<PathLocation> path_location;
-
-  for (const auto& loc : locations) {
-    ASSERT_NO_THROW(
-        path_location.push_back(projections.at(loc));
-        PathLocation::toPBF(path_location.back(), options.mutable_locations()->Add(), graph_reader);)
-        << "fail_invalid_origin";
-  }
-
-  vt::AStarPathAlgorithm astar;
-  auto path = astar
-                  .GetBestPath(*options.mutable_locations(0), *options.mutable_locations(1),
-                               graph_reader, mode_costing, mode)
-                  .front();
-
-  vt::AttributesController controller;
-  auto& leg = *api.mutable_trip()->mutable_routes()->Add()->mutable_legs()->Add();
-  vt::TripLegBuilder::Build(controller, graph_reader, mode_costing, path.begin(), path.end(),
-                            *options.mutable_locations(0), *options.mutable_locations(1),
-                            std::list<valhalla::Location>{}, leg);
-  // really could of got the total of the elapsed_time.
-  odin::DirectionsBuilder::Build(api);
-  const auto& trip_directions = api.directions().routes(0).legs(0);
-
-  EXPECT_EQ(trip_directions.summary().time(), 0);
-
-  boost::filesystem::remove(ways_file);
-  boost::filesystem::remove(way_nodes_file);
-  boost::filesystem::remove(nodes_file);
-  boost::filesystem::remove(edges_file);
-  boost::filesystem::remove(access_file);
-  boost::filesystem::remove(cr_from_file);
-  boost::filesystem::remove(cr_to_file);
-}
-
-TEST(Astar, TestTrivialPathNoUturns) {
-  write_config(config_file);
-  trivial_path_no_uturns(config_file);
-}
-
 boost::property_tree::ptree get_conf(const char* tiles) {
   std::stringstream ss;
   ss << R"({
@@ -701,6 +643,57 @@ boost::property_tree::ptree get_conf(const char* tiles) {
   boost::property_tree::ptree conf;
   rapidjson::read_json(ss, conf);
   return conf;
+}
+
+TEST(Astar, TestTrivialPathNoUturns) {
+  auto conf = get_conf("utrecht_tiles");
+
+  // setup and purge
+  vb::GraphReader graph_reader(conf.get_child("mjolnir"));
+
+  // Locations
+  std::vector<valhalla::baldr::Location> locations;
+  baldr::Location origin(valhalla::midgard::PointLL(5.114587f, 52.095957f),
+                         baldr::Location::StopType::BREAK);
+  locations.push_back(origin);
+  baldr::Location dest(valhalla::midgard::PointLL(5.114506f, 52.096141f),
+                       baldr::Location::StopType::BREAK);
+  locations.push_back(dest);
+
+  Api api;
+  auto& options = *api.mutable_options();
+  create_costing_options(options);
+  std::shared_ptr<vs::DynamicCost> mode_costing[4];
+  std::shared_ptr<vs::DynamicCost> cost = vs::CreatePedestrianCost(Costing::pedestrian, options);
+  auto mode = cost->travel_mode();
+  mode_costing[static_cast<uint32_t>(mode)] = cost;
+
+  const auto projections = vk::Search(locations, graph_reader, cost.get());
+  std::vector<PathLocation> path_location;
+
+  for (const auto& loc : locations) {
+    ASSERT_NO_THROW(
+        path_location.push_back(projections.at(loc));
+        PathLocation::toPBF(path_location.back(), options.mutable_locations()->Add(), graph_reader);)
+        << "fail_invalid_origin";
+  }
+
+  vt::AStarPathAlgorithm astar;
+  auto path = astar
+                  .GetBestPath(*options.mutable_locations(0), *options.mutable_locations(1),
+                               graph_reader, mode_costing, mode)
+                  .front();
+
+  vt::AttributesController controller;
+  auto& leg = *api.mutable_trip()->mutable_routes()->Add()->mutable_legs()->Add();
+  vt::TripLegBuilder::Build(controller, graph_reader, mode_costing, path.begin(), path.end(),
+                            *options.mutable_locations(0), *options.mutable_locations(1),
+                            std::list<valhalla::Location>{}, leg);
+  // really could of got the total of the elapsed_time.
+  odin::DirectionsBuilder::Build(api);
+  const auto& trip_directions = api.directions().routes(0).legs(0);
+
+  EXPECT_EQ(trip_directions.summary().time(), 0);
 }
 
 struct route_tester {
@@ -1478,6 +1471,100 @@ TEST(Astar, test_timed_conditional_restriction_3) {
     return;
   }
   EXPECT_FALSE(found_route) << "Found a route when no route was expected";
+}
+
+TEST(ComplexRestriction, WalkVias) {
+  // Yes, it's a little odd to have a test of restrictions and vias here, but
+  // you need a baked tile to test this functionality which we conveniently
+  // have here from `make_tile`.
+  // TODO Future improvement would be to make it simpler to quickly generate
+  // tiles programmatically
+  auto reader = get_graph_reader(test_dir);
+  std::vector<GraphId> expected_vias;
+  expected_vias.push_back(make_graph_id(14));
+
+  Options options;
+  create_costing_options(options);
+  auto costing = vs::CreateAutoCost(Costing::auto_, options);
+
+  bool is_forward = true;
+  auto* tile = reader->GetGraphTile(tile_id);
+  auto restrictions = tile->GetRestrictions(is_forward, make_graph_id(18), costing->access_mode());
+  ASSERT_EQ(restrictions.size(), 1);
+
+  const auto cr = restrictions[0];
+
+  {
+    // Walk all vias
+    std::vector<GraphId> walked_vias;
+    cr->WalkVias([&walked_vias](const GraphId* via) {
+      walked_vias.push_back(*via);
+      return WalkingVia::KeepWalking;
+    });
+    EXPECT_EQ(walked_vias, expected_vias) << "Did not walk expected vias";
+  }
+}
+
+TEST(ComplexRestriction, CheckPatchPathForRestrictions) {
+  std::vector<GraphId> patch_path;
+  const int length_patch_path = 10;
+  for (uint32_t id = 0; id < length_patch_path; ++id) {
+    patch_path.push_back(GraphId(0, 0, id));
+  }
+
+  {
+    std::vector<std::vector<GraphId>> list_of_restrictions;
+    {
+      // Test with restriction out of order
+      std::vector<GraphId> restr;
+      restr.push_back(GraphId(0, 0, 2));
+      restr.push_back(GraphId(0, 0, 3));
+      restr.push_back(GraphId(0, 0, 1)); // Out of order, should mean no match
+      list_of_restrictions.push_back(restr);
+    }
+    EXPECT_FALSE(vt::CheckPatchPathForRestrictions(patch_path, list_of_restrictions));
+    {
+      // Test a positive, a matching restriction
+      std::vector<GraphId> restr;
+      restr.push_back(GraphId(0, 0, 2));
+      restr.push_back(GraphId(0, 0, 3));
+      restr.push_back(GraphId(0, 0, 4)); // Out of order, should mean no match
+      list_of_restrictions.push_back(restr);
+    }
+    EXPECT_TRUE(vt::CheckPatchPathForRestrictions(patch_path, list_of_restrictions));
+  }
+  {
+    std::vector<std::vector<GraphId>> list_of_restrictions;
+
+    {
+      // Test a restriction that goes outside the patch_path
+      std::vector<GraphId> restr;
+      for (uint32_t id = length_patch_path - 2; id < length_patch_path + 2; ++id) {
+        restr.push_back(GraphId(0, 0, id));
+      }
+      list_of_restrictions.push_back(restr);
+    }
+    EXPECT_FALSE(vt::CheckPatchPathForRestrictions(patch_path, list_of_restrictions));
+    {
+      // Test a restriction overlaying beginning
+      std::vector<GraphId> restr;
+      restr.push_back(GraphId(0, 0, 20));
+      restr.push_back(GraphId(0, 0, 0));
+      restr.push_back(GraphId(0, 0, 1));
+      list_of_restrictions.push_back(restr);
+    }
+    EXPECT_FALSE(vt::CheckPatchPathForRestrictions(patch_path, list_of_restrictions));
+  }
+  {
+    std::vector<std::vector<GraphId>> list_of_restrictions;
+    {
+      // Test single edge restriction
+      std::vector<GraphId> restr;
+      restr.push_back(GraphId(0, 0, 2));
+      list_of_restrictions.push_back(restr);
+    }
+    EXPECT_TRUE(vt::CheckPatchPathForRestrictions(patch_path, list_of_restrictions));
+  }
 }
 
 class AstarTestEnv : public ::testing::Environment {
