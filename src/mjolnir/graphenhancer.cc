@@ -1271,42 +1271,44 @@ uint32_t GetStopImpact(uint32_t from,
     } else if (stop_impact != 0) { // make sure we do not subtract 1 from 0
       stop_impact -= 1;
     }
-  } else if (nodeinfo.drive_on_right() && (turn_type == Turn::Type::kSharpLeft || turn_type == Turn::Type::kLeft) &&
-      from_rc != edges[to].classification() && edges[to].use() != Use::kRamp && edges[to].use() != Use::kTurnChannel){
+  } else if (nodeinfo.drive_on_right() &&
+             (turn_type == Turn::Type::kSharpLeft || turn_type == Turn::Type::kLeft) &&
+             from_rc != edges[to].classification() && edges[to].use() != Use::kRamp &&
+             edges[to].use() != Use::kTurnChannel) {
     stop_impact++;
 
-  } else if (!nodeinfo.drive_on_right() && (turn_type == Turn::Type::kSharpRight || turn_type == Turn::Type::kRight) &&
-      from_rc != edges[to].classification() && edges[to].use() != Use::kRamp && edges[to].use() != Use::kTurnChannel){
+  } else if (!nodeinfo.drive_on_right() &&
+             (turn_type == Turn::Type::kSharpRight || turn_type == Turn::Type::kRight) &&
+             from_rc != edges[to].classification() && edges[to].use() != Use::kRamp &&
+             edges[to].use() != Use::kTurnChannel) {
     stop_impact++;
   }
 
-
   if (nodeinfo.drive_on_right() && turn_type == Turn::Type::kSharpLeft &&
-        (edges[from].use() != Use::kRamp && edges[from].use() != Use::kTurnChannel) &&
-        (edges[to].use() == Use::kRamp || edges[to].use() == Use::kTurnChannel)) {
-      stop_impact++;
-
-    }
-
-/*
-  if ((tilebuilder.edgeinfo(edges[from].edgeinfo_offset()).wayid() == 114161069 &&
-        tilebuilder.edgeinfo(edges[to].edgeinfo_offset()).wayid() == 153070489) ||
-      (tilebuilder.edgeinfo(edges[from].edgeinfo_offset()).wayid() == 144041212 &&
-              tilebuilder.edgeinfo(edges[to].edgeinfo_offset()).wayid() == 119324354)){
+      (edges[from].use() != Use::kRamp && edges[from].use() != Use::kTurnChannel) &&
+      (edges[to].use() == Use::kRamp || edges[to].use() == Use::kTurnChannel)) {
     stop_impact++;
-    std::cout << tilebuilder.edgeinfo(edges[from].edgeinfo_offset()).wayid() << " " <<
-    tilebuilder.edgeinfo(edges[to].edgeinfo_offset()).wayid() << " " << stop_impact << std::endl;
+  }
 
-    }
-*/
+  /*
+    if ((tilebuilder.edgeinfo(edges[from].edgeinfo_offset()).wayid() == 114161069 &&
+          tilebuilder.edgeinfo(edges[to].edgeinfo_offset()).wayid() == 153070489) ||
+        (tilebuilder.edgeinfo(edges[from].edgeinfo_offset()).wayid() == 144041212 &&
+                tilebuilder.edgeinfo(edges[to].edgeinfo_offset()).wayid() == 119324354)){
+      stop_impact++;
+      std::cout << tilebuilder.edgeinfo(edges[from].edgeinfo_offset()).wayid() << " " <<
+      tilebuilder.edgeinfo(edges[to].edgeinfo_offset()).wayid() << " " << stop_impact << std::endl;
 
+      }
+  */
 
   /*if (tilebuilder.edgeinfo(edges[from].edgeinfo_offset()).wayid() == 130049583 ||
       tilebuilder.edgeinfo(edges[from].edgeinfo_offset()).wayid() == 144224450 ||
       tilebuilder.edgeinfo(edges[from].edgeinfo_offset()).wayid() == 129102067 ||
       tilebuilder.edgeinfo(edges[from].edgeinfo_offset()).wayid() == 128747794)
     std::cout << tilebuilder.edgeinfo(edges[from].edgeinfo_offset()).wayid() << " " <<
-    tilebuilder.edgeinfo(edges[to].edgeinfo_offset()).wayid() << " " << stop_impact << " " << (int)turn_type << std::endl;
+    tilebuilder.edgeinfo(edges[to].edgeinfo_offset()).wayid() << " " << stop_impact << " " <<
+    (int)turn_type << std::endl;
 */
   // Clamp to kMaxStopImpact
   return (stop_impact <= kMaxStopImpact) ? stop_impact : kMaxStopImpact;
@@ -1750,7 +1752,7 @@ void enhance(const boost::property_tree::ptree& pt,
 
         // Set edge transitions.
         if (j < kNumberOfEdgeTransitions) {
-          ProcessEdgeTransitions(j, directededge, edges, ntrans, nodeinfo, stats,tilebuilder);
+          ProcessEdgeTransitions(j, directededge, edges, ntrans, nodeinfo, stats, tilebuilder);
         }
 
         // since the not thru flag is set, we are at either the prior or the next edge and we need to
@@ -1882,7 +1884,7 @@ void GraphEnhancer::Enhance(const boost::property_tree::ptree& pt,
   LOG_INFO("Enhancing local graph...");
 
   // A place to hold worker threads and their results, exceptions or otherwise
-  std::vector<std::shared_ptr<std::thread>> threads(//1);
+  std::vector<std::shared_ptr<std::thread>> threads( // 1);
       std::max(static_cast<unsigned int>(1),
                pt.get<unsigned int>("concurrency", std::thread::hardware_concurrency())));
 
