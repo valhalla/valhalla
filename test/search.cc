@@ -78,13 +78,13 @@ void make_tile() {
   };
 
   auto add_edge = [&](const std::pair<GraphId, PointLL>& u, const std::pair<GraphId, PointLL>& v,
-                      const uint32_t localedgeidx, const uint32_t opposing_edge_index,
-                      const bool forward) {
+                      const uint32_t localedgeidx, const uint32_t opp_local_idx,
+                      const uint32_t opposing_edge_index, const bool forward) {
     DirectedEdgeBuilder edge_builder({}, v.first, forward, u.second.Distance(v.second) + .5, 1, 1,
                                      Use::kRoad, RoadClass::kMotorway, localedgeidx, false, 0, 0,
                                      false);
     edge_builder.set_opp_index(opposing_edge_index);
-    edge_builder.set_opp_local_idx(opposing_edge_index); // TODO Should this be something different
+    edge_builder.set_opp_local_idx(opp_local_idx);
     edge_builder.set_localedgeidx(localedgeidx);
     edge_builder.set_forwardaccess(kAllAccess);
     edge_builder.set_reverseaccess(kAllAccess);
@@ -132,8 +132,8 @@ void make_tile() {
 
   // B
   {
-    add_edge(b, d, 0, 0, false);
-    add_edge(b, a, 2, 0, true); // 1
+    add_edge(b, d, 0, , 0, false);
+    add_edge(b, a, 1, 0, true); // 1
     add_node(b, 2);
   }
 
