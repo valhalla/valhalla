@@ -88,6 +88,10 @@ TEST(Summary, test_time_summary) {
       R"({"locations":[{"lat":52.048267,"lon":5.074825},{"lat":52.114622,"lon":5.131816}],"costing":"auto",
           "filters":{"attributes":["shape_attributes.time"],"action":"include"}})";
   auto response = tester.test(request);
+  const auto& leg = response.trip().routes(0).legs(0);
+  EXPECT_EQ(
+      leg.shape(),
+      "khxgbBsawtHd@yCNu`@FaFrFih@pBcAxV`L|Ji}@F_Ul@{C_D}Bk[kQgDuEoD_Me@eG?eJbAwJNaIvCiXxBaIxC{Tz@mHrAuKt@oFjAyJrAqRl@oD`R{uAxBcOjKmb@zKa`A|@{HhCsRwDwEuYye@}^up@oh@}cAoaAumBolA_fC_c@{w@wr@qaAqBqC_D_F{FkH}Z_a@q\\{]g]o]eo@eh@}|@kw@sQyNiMsIoNwHaMwEsUuE{Lq@iVb@kWjDwRbFgTvF{U~H{EdCpAxJ`DlXfIjs@bAjT\\dXcAbXyB~WkFvXmEjPmFtLyGxIcFzDgIvC{Ko@kL_GyGiJwDuMoCcRcAcUTk^l@w|@j[wvH~X_vFxG}xAzFu|@xL}sAp\\ooCpLu`Axg@ozDha@ynBhW}qA~SufA~RseA|JgYlOc]~IyJzKyYlEm[xAyWEoRsAoNkBmPuImW{GcOyLqKuJiDgHkA}Ew@}EUcLtB{JjFeKtJ}JtHsK~IwMzEoSl@{Fw@oNaCwgA{_@_w@wYemAke@}|Aam@_}@c_@{yAsl@w\\qRw^aWk`@}\\eYiYu_@qd@w]sg@uTqYaXq[oh@_t@gSs[iMuTiQg]{[mt@qM_]oXav@cQsg@_h@c|AyLu^mOi^kQ}[eOsUaN{OsUqTiMeJcLwH}I_GgIkFqWoOglAau@cLwH_uBouA}d@oZsbBoeAmo@qa@uc@w\\c[c[knBc{B}JwJqQoQcQ_NoDiBgCsAyHaEqQwFoJgA_H}@uUf@ePxAcPbGkV|Ku^~VuKbKaa@j`@sQdNiQ`N}OtKaXpO}IxEaRvF_ElAoH`AkfD~hAyGhCqWzIos@hV_NlEcFdAoDGyGkB{A_AuE}CoCyBoDeAwD@mDfA_DnCkBvCsAnD{@jEmFzImDvEaHdFuUfHcUfGej@hKgc@|Hq\\tA{d@e@iMUkVyCi\\yBo]{BuEi@mFmBmEoBmD{BoDuNyBuDiBwMsAaLWqMbBklA_@{h@iBqe@aCmY}Iev@_Jst@{Fkb@eJ}r@yVumBmAqJyBqLcUqaBkLvJkLxIgh@``@q_Arj@_i@j]ydBd|@o~CbtA{fCniAmUlEgS|FwNlEiGdBql@`L{PpB_S\\cQsA{t@kPoh@{QsUwGwSuCoOTsPrByLzDsKlFyLlJsLjLgIdLwHpMoIrR_IjVoDdPgDfPeEl\\iCb]kAjo@d@|m@~Cpm@fD``@bFzm@jLjdAdJty@jBdLnDhStOxz@`Mbh@tOjl@|Nfj@xRnj@f^j|@lJ`WxBrHtDrOVxAtD|DpHnFxGnAjF?d@?bBkCvIsKd@_@rPcPrVkQhGuEjVcQ`CaBLz@t@lFfDbS`HnM~HrMlPz[z@pZjAth@Vde@");
 
   // loop over all routes all legs
   auto trip_route = response.trip().routes().begin();
@@ -122,7 +126,7 @@ TEST(Summary, test_time_summary) {
       // we should have had some transition costs along the way
       EXPECT_GT(accumulated_transition_time, 0);
       // we should have the edge time plus the transition time add up to the leg time
-      EXPECT_NEAR(accumulated_edge_time + accumulated_transition_time, accumulated_time, .1);
+      EXPECT_NEAR(accumulated_edge_time + accumulated_transition_time, accumulated_time, .35);
       ++trip_leg;
     }
     ++trip_route;
