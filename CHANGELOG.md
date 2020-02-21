@@ -24,6 +24,7 @@
    * FIXED: Protect against duplicate points in the input or points that snap to the same location resulting in `nan` times for the legs of the map match (of a 0 distance route) [#2229](https://github.com/valhalla/valhalla/pull/2229)
    * FIXED: Improves restriction check on briding edge in Bidirectional Astar [#2228](https://github.com/valhalla/valhalla/pull/2242)
    * FIXED: Allow nodes at location 0,0 [#2245](https://github.com/valhalla/valhalla/pull/2245)
+   * FIXED: Fix RapidJSON compiler warnings and naming conflict [#2249](https://github.com/valhalla/valhalla/pull/2249)
 
 * **Enhancement**
    * ADDED: Return the coordinates of the nodes isochrone input locations snapped to [#2111](https://github.com/valhalla/valhalla/pull/2111)
