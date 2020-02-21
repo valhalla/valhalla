@@ -1284,13 +1284,14 @@ uint32_t GetStopImpact(uint32_t from,
     stop_impact++;
   }
 
+  /*
   if (nodeinfo.drive_on_right() && turn_type == Turn::Type::kSharpLeft &&
       (edges[from].use() != Use::kRamp && edges[from].use() != Use::kTurnChannel) &&
       (edges[to].use() == Use::kRamp || edges[to].use() == Use::kTurnChannel)) {
     stop_impact++;
   }
 
-  /*
+
     if ((tilebuilder.edgeinfo(edges[from].edgeinfo_offset()).wayid() == 114161069 &&
           tilebuilder.edgeinfo(edges[to].edgeinfo_offset()).wayid() == 153070489) ||
         (tilebuilder.edgeinfo(edges[from].edgeinfo_offset()).wayid() == 144041212 &&
