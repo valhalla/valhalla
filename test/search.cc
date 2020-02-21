@@ -84,6 +84,8 @@ void make_tile() {
                                      Use::kRoad, RoadClass::kMotorway, localedgeidx, false, 0, 0,
                                      false);
     edge_builder.set_opp_index(opposing_edge_index);
+    edge_builder.set_opp_local_idx(opposing_edge_index); // TODO Should this be something different
+    edge_builder.set_localedgeidx(localedgeidx);
     edge_builder.set_forwardaccess(kAllAccess);
     edge_builder.set_reverseaccess(kAllAccess);
     edge_builder.set_free_flow_speed(100);
@@ -166,6 +168,30 @@ void make_tile() {
   GraphTile reloaded(tile_dir, tile_id);
   auto bins = GraphTileBuilder::BinEdges(&reloaded, tweeners);
   GraphTileBuilder::AddBins(tile_dir, &reloaded, bins);
+
+  {
+    // Verify tiles
+    boost::property_tree::ptree conf;
+    conf.put("tile_dir", tile_dir);
+    valhalla::baldr::GraphReader reader(conf);
+
+    auto tile = reader.GetGraphTile(tile_id);
+    int edges = 0;
+    std::cout << "Edges in tile " << std::endl;
+    for (int i = 0; i < tile->header()->directededgecount(); ++i) {
+      // std::cout << edge_id.id() << ", ";
+      auto edge = tile->directededge(i);
+      auto node = reader.GetEndNode(edge, tile);
+      auto edge_info = tile->edgeinfo(edge->edgeinfo_offset());
+      // std::cout << edge_info.shape()<< " ";
+      for (auto& name : edge_info.GetNames()) {
+        std::cout << name << " ";
+      }
+      ++edges;
+    }
+    std::cout << "\nfound " << edges << std::endl;
+    ASSERT_EQ(edges, 10);
+  }
 }
 
 std::shared_ptr<vs::DynamicCost> create_costing() {
@@ -246,7 +272,7 @@ void search(valhalla::baldr::Location location, size_t result_count, int reachab
   ASSERT_EQ(path.edges.size(), result_count) << "Wrong number of edges";
   for (const auto& edge : path.edges) {
     ASSERT_EQ(edge.outbound_reach, reachability);
-    ASSERT_EQ(edge.inbound_reach, reachability); // TODO
+    ASSERT_EQ(edge.inbound_reach, reachability);
   }
 }
 
@@ -365,29 +391,61 @@ TEST(Search, test_edge_search) {
   // TODO: add more tests
 }
 
-TEST(Search, test_reachability_radius) {
+TEST(Search, test_reachability_radius_zero_everything) {
   PointLL ob(b.second.first - .001f, b.second.second - .01f);
   unsigned int longest = ob.Distance(d.second);
   unsigned int shortest = ob.Distance(a.second);
 
   LOGLN_WARN("zero everything should be a single closest result");
   search({ob, Location::StopType::BREAK, 0, 0, 0}, 2, 0);
+}
+
+TEST(Search, test_reachability_radius_high) {
+  PointLL ob(b.second.first - .001f, b.second.second - .01f);
+  unsigned int longest = ob.Distance(d.second);
+  unsigned int shortest = ob.Distance(a.second);
 
   LOGLN_WARN("set radius high to get them all");
   search({b.second, Location::StopType::BREAK, 0, 0, longest + 100}, 10, 0);
+}
+
+TEST(Search, test_reachability_radius_mid) {
+  PointLL ob(b.second.first - .001f, b.second.second - .01f);
+  unsigned int longest = ob.Distance(d.second);
+  unsigned int shortest = ob.Distance(a.second);
 
   LOGLN_WARN("set radius mid to get just some");
   search({b.second, Location::StopType::BREAK, 0, 0, shortest - 100}, 4, 0);
+}
 
-  LOGLN_WARN("set reachability high to see it gets all nodes reachable");
+TEST(Search, test_reachability_radius_reachibility_high) {
+  PointLL ob(b.second.first - .001f, b.second.second - .01f);
+  unsigned int longest = ob.Distance(d.second);
+  unsigned int shortest = ob.Distance(a.second);
+
+  LOGLN_WARN("set reachability high to see it gets all edges reachable");
   // TODO figure out if this is correct. It is good enough for now
   // It is complicated by the fact that u-turn detection and similar never
   // was iimplemented for Isochrone/Dijkstras
-  auto expected_reach = 6;
-  search({ob, Location::StopType::BREAK, 5, 5, 0}, 2, expected_reach);
+  auto expected_reach = 10;
+  search({ob, Location::StopType::BREAK, 10, 10, 0}, 4 // Why was it 2 here?
+         ,
+         expected_reach);
+}
+
+TEST(Search, test_reachability_radius_off_by_one) {
+  PointLL ob(b.second.first - .001f, b.second.second - .01f);
+  unsigned int longest = ob.Distance(d.second);
+  unsigned int shortest = ob.Distance(a.second);
 
   LOGLN_WARN("set reachability right on to see we arent off by one");
   search({ob, Location::StopType::BREAK, 4, 4, 0}, 2, 4);
+}
+
+TEST(Search, test_reachability_radius_give_up_early) {
+  PointLL ob(b.second.first - .001f, b.second.second - .01f);
+  unsigned int longest = ob.Distance(d.second);
+  unsigned int shortest = ob.Distance(a.second);
 
   LOGLN_WARN("set reachability lower to see we give up early");
   search({ob, Location::StopType::BREAK, 3, 3, 0}, 2, 3);
