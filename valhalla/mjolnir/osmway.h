@@ -70,6 +70,21 @@ struct OSMWay {
   uint8_t speed_limit() const {
     return speed_limit_;
   }
+
+  /**
+   * Sets the unlimited speed limit flag
+   * @param  speed_limit_unlimited   Is this unlimited speed.
+   */
+  void set_speed_limit_unlimited(const bool speed_limit_unlimited);
+
+  /**
+   * Gets the unlimited speed limit flag
+   * @return  Returns speed_limit_unlimited flag.
+   */
+  bool speed_limit_unlimited() const {
+    return speed_limit_unlimited_;
+  }
+
   /**
    * Sets the backward speed
    * @param  backward_speed   Speed in KPH.
@@ -1596,7 +1611,8 @@ struct OSMWay {
   uint32_t pedestrian_ : 1;
   uint32_t has_user_tags_ : 1;
   uint32_t internal_ : 1;
-  uint32_t spare0_ : 4; // Spare
+  uint32_t speed_limit_unlimited_ : 1; // maxspeed=none
+  uint32_t spare0_ : 3;                // Spare
 
   // Access
   uint16_t auto_forward_ : 1;

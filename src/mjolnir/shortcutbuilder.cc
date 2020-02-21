@@ -478,7 +478,8 @@ uint32_t AddShortcutEdges(GraphReader& reader,
       uint32_t idx = ((length & 0xfffff) | ((shape.size() & 0xfff) << 20));
       uint32_t edge_info_offset =
           tilebuilder.AddEdgeInfo(idx, start_node, end_node, 0, 0, edgeinfo.bike_network(),
-                                  edgeinfo.speed_limit(), shape, names, types, forward, diff_names);
+                                  edgeinfo.speed_limit(), edgeinfo.speed_limit_unlimited(), shape,
+                                  names, types, forward, diff_names);
       newedge.set_edgeinfo_offset(edge_info_offset);
 
       // Set the forward flag on this directed edge. If a new edge was added
@@ -657,7 +658,7 @@ uint32_t FormShortcuts(GraphReader& reader, const TileLevel& level) {
             tilebuilder.AddEdgeInfo(directededge->edgeinfo_offset(), node_id, directededge->endnode(),
                                     edgeinfo.wayid(), edgeinfo.mean_elevation(),
                                     edgeinfo.bike_network(), edgeinfo.speed_limit(),
-                                    edgeinfo.encoded_shape(),
+                                    edgeinfo.speed_limit_unlimited(), edgeinfo.encoded_shape(),
                                     tile->GetNames(directededge->edgeinfo_offset()),
                                     tile->GetTypes(directededge->edgeinfo_offset()), added);
         newedge.set_edgeinfo_offset(edge_info_offset);

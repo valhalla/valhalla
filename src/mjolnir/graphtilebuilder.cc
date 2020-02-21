@@ -151,6 +151,7 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
     eib.set_mean_elevation(ei.mean_elevation());
     eib.set_bike_network(ei.bike_network());
     eib.set_speed_limit(ei.speed_limit());
+    eib.set_speed_limit_unlimited(ei.speed_limit_unlimited());
     for (uint32_t nm = 0; nm < ei.name_count(); nm++) {
       NameInfo info = ei.GetNameInfo(nm);
       name_info.insert(info);
@@ -514,6 +515,7 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
                                        const float elev,
                                        const uint32_t bike_network,
                                        const uint32_t speed_limit,
+                                       const bool speed_limit_unlimited,
                                        const shape_container_t& lls,
                                        const std::vector<std::string>& names,
                                        const uint16_t types,
@@ -530,6 +532,7 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
     edgeinfo.set_mean_elevation(elev);
     edgeinfo.set_bike_network(bike_network);
     edgeinfo.set_speed_limit(speed_limit);
+    edgeinfo.set_speed_limit_unlimited(speed_limit_unlimited);
     edgeinfo.set_shape(lls);
 
     // Add names to the common text/name list. Skip blank names.
@@ -584,6 +587,7 @@ template uint32_t GraphTileBuilder::AddEdgeInfo<std::vector<PointLL>>(const uint
                                                                       const float,
                                                                       const uint32_t,
                                                                       const uint32_t,
+                                                                      const bool,
                                                                       const std::vector<PointLL>&,
                                                                       const std::vector<std::string>&,
                                                                       const uint16_t,
@@ -596,6 +600,7 @@ template uint32_t GraphTileBuilder::AddEdgeInfo<std::list<PointLL>>(const uint32
                                                                     const float,
                                                                     const uint32_t,
                                                                     const uint32_t,
+                                                                    const bool,
                                                                     const std::list<PointLL>&,
                                                                     const std::vector<std::string>&,
                                                                     const uint16_t,
@@ -610,6 +615,7 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
                                        const float elev,
                                        const uint32_t bike_network,
                                        const uint32_t speed_limit,
+                                       const bool speed_limit_unlimited,
                                        const std::string& llstr,
                                        const std::vector<std::string>& names,
                                        const uint16_t types,
@@ -626,6 +632,7 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
     edgeinfo.set_mean_elevation(elev);
     edgeinfo.set_bike_network(bike_network);
     edgeinfo.set_speed_limit(speed_limit);
+    edgeinfo.set_speed_limit_unlimited(speed_limit_unlimited);
     edgeinfo.set_encoded_shape(llstr);
 
     // Add names to the common text/name list. Skip blank names.

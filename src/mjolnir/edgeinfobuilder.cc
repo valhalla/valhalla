@@ -42,6 +42,11 @@ void EdgeInfoBuilder::set_speed_limit(const uint32_t speed_limit) {
   }
 }
 
+// Sets the speed limit unlimited flag.
+void EdgeInfoBuilder::set_speed_limit_unlimited(const bool speed_limit_unlimited) {
+  w0_.speed_limit_unlimited_ = speed_limit_unlimited;
+}
+
 // Set the list of name info (offsets, etc.) used by this edge.
 void EdgeInfoBuilder::set_name_info_list(const std::vector<NameInfo>& name_info_list) {
   if (name_info_list.size() > kMaxNamesPerEdge) {

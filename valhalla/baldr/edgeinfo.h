@@ -112,6 +112,14 @@ public:
   }
 
   /**
+   * Gets the speed limit unlimited flag.
+   * @return  Returns the speed limit unlimited flag.
+   */
+  uint32_t speed_limit_unlimited() const {
+    return w0_.speed_limit_unlimited_;
+  }
+
+  /**
    * Get the number of names.
    * @return Returns the name count.
    */
@@ -189,11 +197,12 @@ protected:
   // 1st 8-byte word
   union Word0 {
     struct {
-      uint64_t wayid_ : 32;          // OSM way Id
-      uint64_t mean_elevation_ : 12; // Mean elevation with 2 meter precision
-      uint64_t bike_network_ : 4;    // Mask of bicycle network types (see graphconstants.h)
-      uint64_t speed_limit_ : 8;     // Speed limit (kph)
-      uint64_t spare0_ : 8;
+      uint64_t wayid_ : 32;                // OSM way Id
+      uint64_t mean_elevation_ : 12;       // Mean elevation with 2 meter precision
+      uint64_t bike_network_ : 4;          // Mask of bicycle network types (see graphconstants.h)
+      uint64_t speed_limit_ : 8;           // Speed limit (kph)
+      uint64_t speed_limit_unlimited_ : 1; // Unlimited speed limit
+      uint64_t spare0_ : 7;
     };
     uint64_t value_;
   };

@@ -569,6 +569,8 @@ void BuildTileSet(const std::string& ways_file,
                      " wayId= " + std::to_string(w.way_id()));
             speed_limit = kMaxSpeedKph;
           }
+          uint32_t speed_limit_unlimited = w.speed_limit_unlimited();
+
           uint32_t truck_speed = w.truck_speed();
           if (truck_speed > kMaxSpeedKph) {
             LOG_WARN("Truck Speed = " + std::to_string(truck_speed) +
@@ -688,10 +690,10 @@ void BuildTileSet(const std::string& ways_file,
             }
 
             // Add edge info. Mean elevation is set to 1234 as a placeholder, set later if we have it.
-            edge_info_offset =
-                graphtile.AddEdgeInfo(edge_pair.second, (*nodes[source]).graph_id,
-                                      (*nodes[target]).graph_id, w.way_id(), 1234, bike_network,
-                                      speed_limit, shape, names, types, added, dual_refs);
+            edge_info_offset = graphtile.AddEdgeInfo(edge_pair.second, (*nodes[source]).graph_id,
+                                                     (*nodes[target]).graph_id, w.way_id(), 1234,
+                                                     bike_network, speed_limit, speed_limit_unlimited,
+                                                     shape, names, types, added, dual_refs);
             if (added) {
               stats.edgeinfocount++;
             }

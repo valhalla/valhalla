@@ -616,14 +616,18 @@ public:
       } */
       else if (tag.first == "official_name" && !tag.second.empty()) {
         w.set_official_name_index(osmdata_.name_offset_map.index(tag.second));
-
       } else if (tag.first == "max_speed") {
-        try {
-          max_speed = std::stof(tag.second);
-          has_max_speed = true;
-          w.set_tagged_speed(true);
-        } catch (const std::out_of_range& oor) {
-          LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid));
+        if (tag.second == "unlimited") {
+          // this way has an unlimited speed limit (german autobahn)
+          w.set_speed_limit_unlimited(true);
+        } else {
+          try {
+            max_speed = std::stof(tag.second);
+            has_max_speed = true;
+            w.set_tagged_speed(true);
+          } catch (const std::out_of_range& oor) {
+            LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid));
+          }
         }
       } else if (tag.first == "average_speed") {
         try {

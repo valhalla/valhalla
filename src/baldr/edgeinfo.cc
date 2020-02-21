@@ -133,6 +133,7 @@ json::MapPtr EdgeInfo::json() const {
       {"mean_elevation", static_cast<uint64_t>(mean_elevation())},
       {"bike_network", bike_network_json(bike_network())},
       {"speed_limit", static_cast<uint64_t>(speed_limit())},
+      {"speed_limit_unlimited", static_cast<bool>(speed_limit_unlimited())},
       {"names", names_json(GetNames())},
       {"shape", midgard::encode(shape())},
   });

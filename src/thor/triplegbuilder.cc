@@ -106,6 +106,10 @@ void SetShapeAttributes(const AttributesController& controller,
         costing->EdgeCost(edge, tile, second_of_week).secs * edge_percentage; // seconds
     // TODO: get the measured length from shape (full shape) to increase precision
     double edge_length = edge->length() * edge_percentage; // meters
+
+    // Get the edgeinfo
+    auto edgeinfo = tile->edgeinfo(edge->edgeinfo_offset());
+
     // Set the shape attributes
     for (++shape_begin; shape_begin < shape_end; ++shape_begin) {
       double distance = shape_begin->Distance(*(shape_begin - 1)); // meters

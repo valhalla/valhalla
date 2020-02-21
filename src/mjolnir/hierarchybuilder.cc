@@ -321,7 +321,8 @@ void FormTilesInNewLevel(GraphReader& reader,
       uint32_t w = hasher(encoded_shape + std::to_string(edgeinfo.wayid()));
       uint32_t edge_info_offset =
           tilebuilder->AddEdgeInfo(w, nodea, nodeb, edgeinfo.wayid(), edgeinfo.mean_elevation(),
-                                   edgeinfo.bike_network(), edgeinfo.speed_limit(), encoded_shape,
+                                   edgeinfo.bike_network(), edgeinfo.speed_limit(),
+                                   edgeinfo.speed_limit_unlimited(), encoded_shape,
                                    tile->GetNames(idx), tile->GetTypes(idx), added, diff_names);
       newedge.set_edgeinfo_offset(edge_info_offset);
 

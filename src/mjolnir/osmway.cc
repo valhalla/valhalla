@@ -46,6 +46,11 @@ void OSMWay::set_speed_limit(const float speed_limit) {
   }
 }
 
+// Sets the speed_limit_unlimited flag.
+void OSMWay::set_speed_limit_unlimited(const bool speed_limit_unlimited) {
+  speed_limit_unlimited_ = speed_limit_unlimited;
+}
+
 // Sets the backward speed in KPH.
 void OSMWay::set_backward_speed(const float backward_speed) {
   if (backward_speed > kMaxOSMSpeed) {
