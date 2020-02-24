@@ -261,7 +261,7 @@ bool within_tolerance(const uint32_t v1, const uint32_t v2) {
   return (v1 > v2) ? v1 - v2 <= kThreshold : v2 - v1 <= kThreshold;
 }
 
-TEST(Matrix, DISABLED_test_matrix) {
+TEST(Matrix, test_matrix) {
   loki_worker_t loki_worker(config);
 
   Api request;
