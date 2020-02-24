@@ -340,7 +340,6 @@ struct bin_handler_t {
     auto distance = candidate.point.Distance(location.latlng_);
     // the search cutoff is a hard filter so skip any outside of that
     if (distance > location.search_cutoff_) {
-      LOGLN_INFO("continue");
       return;
     }
     // now that we have an edge we can pass back all the info about it
@@ -456,13 +455,6 @@ struct bin_handler_t {
     // iterate over the edges in the bin
     auto tile = begin->cur_tile;
     auto edges = tile->GetBin(begin->bin_index);
-    if (edges.size() > 0) {
-      LOGLN_WARN("handle_bin got edges");
-      // for (auto edge_id : edges) {
-      //  std::cout << edge_id.id() << " ";
-      //}
-      std::cout << std::endl;
-    }
     for (auto edge_id : edges) {
       // get the tile and edge
       if (!reader.GetGraphTile(edge_id, tile)) {
@@ -474,7 +466,6 @@ struct bin_handler_t {
       if (edge_filter(edge) == 0.0f &&
           (!(edge_id = reader.GetOpposingEdgeId(edge_id, tile)).Is_Valid() ||
            edge_filter(edge = tile->directededge(edge_id)) == 0.0f)) {
-        LOGLN_WARN("continue due to edgefilter");
         continue;
       }
 
@@ -543,7 +534,6 @@ struct bin_handler_t {
             reachable = true;
           }
         }
-        std::cout << "  reachable " << reachable << std::endl;
 
         // which batch of findings will this go into
         auto* batch = reachable ? &p_itr->reachable : &p_itr->unreachable;
@@ -648,7 +638,6 @@ struct bin_handler_t {
       pp.reachable.reserve(pp.reachable.size() + pp.unreachable.size());
       std::move(pp.unreachable.begin(), pp.unreachable.end(), std::back_inserter(pp.reachable));
       std::sort(pp.reachable.begin(), pp.reachable.end());
-      std::cout << "  got reachable " << pp.reachable.size() << std::endl;
       // keep a look up around so we dont add duplicates with worse scores
       correlated_edges.reserve(pp.reachable.size());
       correlated_edges.clear();
@@ -669,18 +658,14 @@ struct bin_handler_t {
           const GraphTile* other_tile;
           auto opposing_edge = reader.GetOpposingEdge(candidate.edge_id, other_tile);
           if (!other_tile) {
-            LOGLN_WARN("Continue");
             continue; // TODO: do an edge snap instead, but you'll only get one direction
           }
-          LOGLN_WARN("correlate_node 1");
           correlate_node(pp.location, opposing_edge->endnode(), candidate, correlated, filtered);
         } // it was the end node
         else if ((back && candidate.edge->forward()) || (front && !candidate.edge->forward())) {
-          LOGLN_WARN("correlate_node 2");
           correlate_node(pp.location, candidate.edge->endnode(), candidate, correlated, filtered);
         } // it was along the edge
         else {
-          LOGLN_WARN("correlated_edge");
           correlate_edge(pp.location, candidate, correlated, filtered);
         }
       }
@@ -703,8 +688,6 @@ struct bin_handler_t {
         // remove them from the original
         correlated.edges.erase(new_end, correlated.edges.end());
       }
-      std::cout << "correlated.edges.size() " << correlated.edges.size() << " filtered.size() "
-                << filtered.size() << std::endl;
 
       // if we have nothing because of filtering (heading/side) we'll just ignore it
       if (correlated.edges.size() == 0 && filtered.size()) {
@@ -752,22 +735,13 @@ Search(const std::vector<valhalla::baldr::Location>& locations,
        const std::shared_ptr<DynamicCost>& costing) {
   // trivially finished already
   if (locations.empty()) {
-    LOG_WARN("empty");
     return std::unordered_map<valhalla::baldr::Location, PathLocation>{};
   }
-  for (const auto& loc : locations) {
-    std::cout << "min_reach " << loc.min_outbound_reach_ << " " << loc.min_inbound_reach_
-              << std::endl;
-  }
-  std::cout << "access_mode " << costing->access_mode() << std::endl;
 
-  LOGLN_WARN("calling handler");
   // setup the unique list of locations
   bin_handler_t handler(locations, reader, costing);
   // search over the bins doing multiple locations per bin
-  LOGLN_WARN("calling search");
   handler.search();
-  LOGLN_WARN("calling finalize");
   // turn each locations candidate set into path locations
   return handler.finalize();
 }

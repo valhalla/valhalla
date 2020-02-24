@@ -130,11 +130,9 @@ directed_reach Reach::operator()(const valhalla::baldr::DirectedEdge* edge,
                                  valhalla::baldr::GraphReader& reader,
                                  const std::shared_ptr<sif::DynamicCost>& costing,
                                  uint8_t direction) {
-  LOG_WARN("Reach::operator()");
   // no reach is needed
   directed_reach reach{};
   if (max_reach == 0) {
-    LOG_WARN("maxe_reach == 0");
     return reach;
   }
 
@@ -173,10 +171,6 @@ directed_reach Reach::operator()(const valhalla::baldr::DirectedEdge* edge,
     reach.outbound = bdedgelabels_.size() > max_labels
                          ? max_labels
                          : static_cast<decltype(reach.outbound)>(bdedgelabels_.size());
-    // LOGLN_WARN("OUTBOUND - EDGELABELS");
-    // for (auto edge : bdedgelabels_) {
-    //  std::cout << "   " << edge.edgeid().id();
-    //}
     Clear();
   }
 
@@ -186,10 +180,6 @@ directed_reach Reach::operator()(const valhalla::baldr::DirectedEdge* edge,
     reach.inbound = bdedgelabels_.size() > max_labels
                         ? max_labels
                         : static_cast<decltype(reach.outbound)>(bdedgelabels_.size());
-    // LOGLN_WARN("INBOUND - EDGELABELS");
-    // for (auto edge : bdedgelabels_) {
-    //  std::cout << "   " << edge.edgeid().id();
-    //}
     Clear();
   }
 
@@ -202,7 +192,6 @@ thor::ExpansionRecommendation Reach::ShouldExpand(baldr::GraphReader& graphreade
                                                   const thor::InfoRoutingType route_type) {
   if (bdedgelabels_.size() < max_reach_)
     return thor::ExpansionRecommendation::continue_expansion;
-  std::cout << "    ExpansionRecommendation advices prune" << std::endl;
   return thor::ExpansionRecommendation::prune_expansion;
 }
 
