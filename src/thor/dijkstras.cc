@@ -180,7 +180,6 @@ void Dijkstras::ExpandForward(GraphReader& graphreader,
   EdgeStatusInfo* es = edgestatus_.GetPtr(edgeid, tile);
   const DirectedEdge* directededge = tile->directededge(edgeid);
   for (uint32_t i = 0; i < nodeinfo->edge_count(); ++i, ++directededge, ++edgeid, ++es) {
-
     // Skip this edge if permanently labeled (best path already found to this
     // directed edge). skip shortcuts or if no access is allowed to this edge
     // (based on the costing method) or if a complex restriction exists for
@@ -310,7 +309,6 @@ void Dijkstras::ExpandReverse(GraphReader& graphreader,
                               const bool from_transition,
                               uint64_t localtime,
                               int32_t seconds_of_week) {
-  // << " opp_pred "<< opp_pred_edge.edgeid().id()<< std::endl;
   // Get the tile and the node info. Skip if tile is null (can happen
   // with regional data sets) or if no access at the node.
   const GraphTile* tile = graphreader.GetGraphTile(node);
