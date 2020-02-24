@@ -1430,10 +1430,10 @@
     },
     "sharp": {
       "phrases": {
-        "0": "Turn sharp <RELATIVE_DIRECTION>.",
-        "1": "Turn sharp <RELATIVE_DIRECTION> onto <STREET_NAMES>.",
-        "2": "Turn sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
-        "3": "Turn sharp <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
+        "0": "Make a sharp <RELATIVE_DIRECTION>.",
+        "1": "Make a sharp <RELATIVE_DIRECTION> onto <STREET_NAMES>.",
+        "2": "Make a sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
+        "3": "Make a sharp <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
       },
       "empty_street_name_labels": [
         "the walkway",
@@ -1446,25 +1446,25 @@
       ],
       "example_phrases": {
         "0": [
-          "Turn sharp left."
+          "Make a sharp left."
         ],
         "1": [
-          "Turn sharp right onto Flatbush Avenue."
+          "Make a sharp right onto Flatbush Avenue."
         ],
         "2": [
-          "Turn sharp left onto North Bond Street/US 1 Business/MD 924. Continue on MD 924."
+          "Make a sharp left onto North Bond Street/US 1 Business/MD 924. Continue on MD 924."
         ],
         "3": [
-          "Turn sharp right to stay on Sunstone Drive."
+          "Make a sharp right to stay on Sunstone Drive."
         ]
       }
     },
     "sharp_verbal": {
       "phrases": {
-        "0": "Turn sharp <RELATIVE_DIRECTION>.",
-        "1": "Turn sharp <RELATIVE_DIRECTION> onto <STREET_NAMES>.",
-        "2": "Turn sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>.",
-        "3": "Turn sharp <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
+        "0": "Make a sharp <RELATIVE_DIRECTION>.",
+        "1": "Make a sharp <RELATIVE_DIRECTION> onto <STREET_NAMES>.",
+        "2": "Make a sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>.",
+        "3": "Make a sharp <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
       },
       "empty_street_name_labels": [
         "the walkway",
@@ -1477,16 +1477,16 @@
       ],
       "example_phrases": {
         "0": [
-          "Turn sharp left."
+          "Make a sharp left."
         ],
         "1": [
-          "Turn sharp right onto Flatbush Avenue."
+          "Make a sharp right onto Flatbush Avenue."
         ],
         "2": [
-          "Turn sharp left onto North Bond Street, U.S. 1 Business."
+          "Make a sharp left onto North Bond Street, U.S. 1 Business."
         ],
         "3": [
-          "Turn sharp right to stay on Sunstone Drive."
+          "Make a sharp right to stay on Sunstone Drive."
         ]
       }
     },

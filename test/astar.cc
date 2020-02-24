@@ -1,3 +1,4 @@
+#include "midgard/logging.h"
 #include "test.h"
 #include <cstdint>
 #include <fstream>
@@ -86,8 +87,27 @@ namespace {
 //      \ /
 //       g
 //
-std::string test_dir = "test/data/fake_tiles_astar";
-vb::GraphId tile_id = vb::TileHierarchy::GetGraphId({.125, .125}, 2);
+//
+// Third test has a complex turn restriction preventing K->H->I->L  (marked with R)
+// which should force the algorithm to take the detour via the J->M edge
+// if starting at K and heading to L
+//
+//   14  16   17  19
+// h-->--<--i-->--<--j
+// |    R   |        |
+// v 15     v 18     v 20
+// |R     R |        |
+// ^ 21     ^ 22     ^ 24
+// |        |        |
+// k        l-->--<--m
+//            23  25
+//
+const std::string test_dir = "test/data/fake_tiles_astar";
+const vb::GraphId tile_id = vb::TileHierarchy::GetGraphId({.125, .125}, 2);
+
+GraphId make_graph_id(uint32_t id) {
+  return GraphId(tile_id.tileid(), tile_id.level(), id);
+}
 
 namespace node {
 std::pair<vb::GraphId, vm::PointLL> a({tile_id.tileid(), tile_id.level(), 0}, {0.01, 0.10});
@@ -98,11 +118,18 @@ std::pair<vb::GraphId, vm::PointLL> d({tile_id.tileid(), tile_id.level(), 3}, {0
 std::pair<vb::GraphId, vm::PointLL> e({tile_id.tileid(), tile_id.level(), 4}, {0.21, 0.14});
 std::pair<vb::GraphId, vm::PointLL> f({tile_id.tileid(), tile_id.level(), 5}, {0.20, 0.14});
 std::pair<vb::GraphId, vm::PointLL> g({tile_id.tileid(), tile_id.level(), 6}, {0.25, 0.11});
+
+std::pair<vb::GraphId, vm::PointLL> h({tile_id.tileid(), tile_id.level(), 7}, {0.00, 0.10});
+std::pair<vb::GraphId, vm::PointLL> i({tile_id.tileid(), tile_id.level(), 8}, {0.10, 0.10});
+std::pair<vb::GraphId, vm::PointLL> j({tile_id.tileid(), tile_id.level(), 9}, {0.20, 0.10});
+std::pair<vb::GraphId, vm::PointLL> k({tile_id.tileid(), tile_id.level(), 10}, {0.00, 0.01});
+std::pair<vb::GraphId, vm::PointLL> l({tile_id.tileid(), tile_id.level(), 11}, {0.10, 0.01});
+std::pair<vb::GraphId, vm::PointLL> m({tile_id.tileid(), tile_id.level(), 12}, {0.20, 0.01});
 } // namespace node
 
 void make_tile() {
   // Don't recreate tiles if they already exist (leads to silent corruption of tiles)
-  if (filesystem::exists(test_dir + "/2/000/519/120.gph")) {
+  if (filesystem::exists(test_dir)) {
     return;
   }
 
@@ -175,17 +202,121 @@ void make_tile() {
   add_node(node::d, 2);
 
   // second set of roads - Triangle
-  add_edge(node::e, node::f, 8, 10, true);
-  add_edge(node::e, node::g, 9, 12, true);
+  add_edge(node::e, node::f, 8, 0, true);
+  add_edge(node::e, node::g, 9, 0, true);
   add_node(node::e, 2);
 
-  add_edge(node::f, node::e, 10, 8, false);
-  add_edge(node::f, node::g, 11, 13, true);
+  add_edge(node::f, node::e, 10, 0, false);
+  add_edge(node::f, node::g, 11, 1, true);
   add_node(node::f, 2);
 
-  add_edge(node::g, node::e, 12, 9, false);
-  add_edge(node::g, node::f, 13, 11, false);
+  add_edge(node::g, node::e, 12, 0, false);
+  add_edge(node::g, node::f, 13, 1, false);
   add_node(node::g, 2);
+
+  // Third set of roads - Complex restriction with detour
+  add_edge(node::h, node::i, 14, 0, true);
+  {
+    // we only set this to true for vias
+    tile.directededges().back().complex_restriction(true);
+  }
+  add_edge(node::h, node::k, 15, 0, true);
+  {
+    // preventing turn from 22 -> 16 -> 15  in the reverse direction
+    // in regards to bi-directional.  Forget about is the edge is
+    // oneway or not
+    //
+    // when we are an end of a restriction we set the modes that
+    // this restriction applies to.
+    tile.directededges().back().set_end_restriction(kAllAccess);
+    ComplexRestrictionBuilder complex_restr_edge_22_16_15;
+    complex_restr_edge_22_16_15.set_type(RestrictionType::kNoEntry);
+    complex_restr_edge_22_16_15.set_to_id(make_graph_id(22));
+    complex_restr_edge_22_16_15.set_from_id(make_graph_id(15));
+    std::vector<GraphId> vias;
+    vias.push_back(make_graph_id(16));
+    complex_restr_edge_22_16_15.set_via_list(vias);
+    complex_restr_edge_22_16_15.set_modes(kAllAccess);
+    tile.AddReverseComplexRestriction(complex_restr_edge_22_16_15);
+  }
+  add_node(node::h, 2);
+
+  add_edge(node::i, node::h, 16, 0, false);
+  {
+    // we only set this to true for vias
+    tile.directededges().back().complex_restriction(true);
+  }
+  add_edge(node::i, node::j, 17, 0, true);
+  add_edge(node::i, node::l, 18, 0, true);
+  {
+    // preventing turn from 21 -> 14 -> 18 in the reverse direction
+    // in regards to bi-directional.  Forget about is the edge is
+    // oneway or not
+    //
+    // when we are the end of a restriction we set the modes that
+    // this restriction applies to.
+    tile.directededges().back().set_end_restriction(kAllAccess);
+    ComplexRestrictionBuilder complex_restr_edge_21_14;
+    complex_restr_edge_21_14.set_type(RestrictionType::kNoEntry);
+    complex_restr_edge_21_14.set_to_id(make_graph_id(21));
+    complex_restr_edge_21_14.set_from_id(make_graph_id(18));
+    std::vector<GraphId> vias;
+    vias.push_back(make_graph_id(14));
+    complex_restr_edge_21_14.set_via_list(vias);
+    complex_restr_edge_21_14.set_modes(kAllAccess);
+    tile.AddReverseComplexRestriction(complex_restr_edge_21_14);
+  }
+  add_node(node::i, 3);
+
+  add_edge(node::j, node::i, 19, 1, false);
+  add_edge(node::j, node::m, 20, 0, true);
+  add_node(node::j, 2);
+
+  add_edge(node::k, node::h, 21, 1, false);
+  {
+    // Add first part of complex turn restriction CLOCKWISE direction
+    // preventing turn from 21 -> 14 -> 18
+    //
+    // when we are the start of a restriction we set the modes that
+    // this restriction applies to.
+    tile.directededges().back().set_start_restriction(kAllAccess);
+    ComplexRestrictionBuilder complex_restr_edge_21_14;
+    complex_restr_edge_21_14.set_type(RestrictionType::kNoEntry);
+    complex_restr_edge_21_14.set_to_id(make_graph_id(18));
+    complex_restr_edge_21_14.set_from_id(make_graph_id(21));
+    std::vector<GraphId> vias;
+    vias.push_back(make_graph_id(14));
+    complex_restr_edge_21_14.set_via_list(vias);
+    complex_restr_edge_21_14.set_modes(kAllAccess);
+    tile.AddForwardComplexRestriction(complex_restr_edge_21_14);
+  }
+  add_node(node::k, 1);
+
+  add_edge(node::l, node::i, 22, 2, false);
+  {
+    // Add complex turn restriction COUNTER CLOCKWISE direction
+    // preventing turn from 22 -> 16 -> 15
+    //
+    // when we are the start of a restriction we set the modes that
+    // this restriction applies to.
+    tile.directededges().back().set_start_restriction(kAllAccess);
+    ComplexRestrictionBuilder complex_restr_edge_22_16_15;
+    complex_restr_edge_22_16_15.set_type(RestrictionType::kNoEntry);
+    complex_restr_edge_22_16_15.set_to_id(make_graph_id(15));
+    complex_restr_edge_22_16_15.set_from_id(make_graph_id(22));
+    std::vector<GraphId> vias;
+    vias.push_back(make_graph_id(16));
+    complex_restr_edge_22_16_15.set_via_list(vias);
+    complex_restr_edge_22_16_15.set_modes(kAllAccess);
+    tile.AddForwardComplexRestriction(complex_restr_edge_22_16_15);
+  }
+
+  add_edge(node::l, node::m, 23, 0, true);
+  add_node(node::l, 2);
+
+  add_edge(node::m, node::j, 24, 1, false);
+  add_edge(node::m, node::l, 25, 1, false);
+  add_node(node::m, 2);
 
   tile.StoreTileData();
 
@@ -196,24 +327,6 @@ void make_tile() {
 
   ASSERT_PRED1(filesystem::exists, test_dir + "/2/000/519/120.gph")
       << "Still no expected tile, did the actual fname on disk change?";
-}
-
-const std::string config_file = "test/test_trivial_path";
-
-void write_config(const std::string& filename) {
-  std::ofstream file;
-  try {
-    file.open(filename, std::ios_base::trunc);
-    file << "{ \
-      \"mjolnir\": { \
-      \"concurrency\": 1, \
-       \"tile_dir\": \"test/data/trivial_tiles\", \
-        \"admin\": \"" VALHALLA_SOURCE_DIR "test/data/netherlands_admin.sqlite\", \
-         \"timezone\": \"" VALHALLA_SOURCE_DIR "test/data/not_needed.sqlite\" \
-      } \
-    }";
-  } catch (...) {}
-  file.close();
 }
 
 void create_costing_options(Options& options) {
@@ -243,6 +356,26 @@ enum class TrivialPathTest {
   DurationEqualTo,
 };
 
+std::unique_ptr<vb::GraphReader> get_graph_reader(const std::string& tile_dir) {
+  // make the config file
+  std::stringstream json;
+  json << "{ \"tile_dir\": \"" << tile_dir << "\" }";
+  bpt::ptree conf;
+  rapidjson::read_json(json, conf);
+
+  std::unique_ptr<vb::GraphReader> reader(new vb::GraphReader(conf));
+  auto* tile = reader->GetGraphTile(tile_id);
+
+  EXPECT_NE(tile, nullptr) << "Unable to load test tile! Did `make_tile` run succesfully?";
+  EXPECT_EQ(tile->header()->directededgecount(), 26)
+      << "test-tiles does not contain expected number of edges";
+
+  const GraphTile* endtile = reader->GetGraphTile(node::b.first);
+  EXPECT_NE(endtile, nullptr) << "bad tile, node::b wasn't found in it";
+
+  return reader;
+}
+
 // check that a path from origin to dest goes along the edge with expected_edge_index
 void assert_is_trivial_path(vt::PathAlgorithm& astar,
                             valhalla::Location& origin,
@@ -252,22 +385,7 @@ void assert_is_trivial_path(vt::PathAlgorithm& astar,
                             int32_t assert_type_value,
                             vs::TravelMode mode = vs::TravelMode::kPedestrian) {
 
-  // make the config file
-  std::stringstream json;
-  json << "{ \"tile_dir\": \"" << test_dir << "\" }";
-  bpt::ptree conf;
-  rapidjson::read_json(json, conf);
-
-  vb::GraphReader reader(conf);
-  auto* tile = reader.GetGraphTile(tile_id);
-
-  ASSERT_NE(tile, nullptr) << "Unable to load test tile! Did `make_tile` run succesfully?";
-
-  EXPECT_EQ(tile->header()->directededgecount(), 14)
-      << "test-tiles does not contain expected number of edges";
-
-  const GraphTile* endtile = reader.GetGraphTile(node::b.first);
-  ASSERT_NE(endtile, nullptr) << "bad tile, node::b wasn't found in it";
+  auto reader = get_graph_reader(test_dir);
 
   Options options;
   create_costing_options(options);
@@ -289,7 +407,7 @@ void assert_is_trivial_path(vt::PathAlgorithm& astar,
   }
   ASSERT_TRUE(bool(costs[int(mode)]));
 
-  auto paths = astar.GetBestPath(origin, dest, reader, costs, mode);
+  auto paths = astar.GetBestPath(origin, dest, *reader, costs, mode);
 
   int32_t time = 0;
   for (const auto& path : paths) {
@@ -303,6 +421,7 @@ void assert_is_trivial_path(vt::PathAlgorithm& astar,
     break;
   }
 
+  auto* tile = reader->GetGraphTile(tile_id);
   uint32_t expected_time = 979797;
   switch (assert_type) {
     case TrivialPathTest::DurationEqualTo:
@@ -468,48 +587,69 @@ TEST(Astar, TestPartialDurationReverse) {
   TestPartialDuration(astar);
 }
 
-void trivial_path_no_uturns(const std::string& config_file) {
+boost::property_tree::ptree get_conf(const char* tiles) {
+  std::stringstream ss;
+  ss << R"({
+      "mjolnir":{
+        "tile_dir":"test/data/)"
+     << tiles << R"(",
+        "concurrency": 1
+      },
+      "loki":{
+        "actions":["route"],
+        "logging":{"long_request": 100},
+        "service_defaults":{
+          "minimum_reachability": 50,
+          "radius": 0,
+          "search_cutoff": 35000,
+          "node_snap_tolerance": 5,
+          "street_side_tolerance": 5,
+          "heading_tolerance": 60
+        }
+      },
+      "thor":{"logging":{
+        "long_request": 100,
+        "type": "std_out"
+        }
+      },
+      "midgard":{
+        "logging":{
+          "type": "std_out"
+        }
+      },
+      "odin":{"logging":{"long_request": 100}},
+      "skadi":{"actons":["height"],"logging":{"long_request": 5}},
+      "meili":{"customizable": ["turn_penalty_factor","max_route_distance_factor","max_route_time_factor","search_radius"],
+              "mode":"auto","grid":{"cache_size":100240,"size":500},
+              "default":{"beta":3,"breakage_distance":2000,"geometry":false,"gps_accuracy":5.0,"interpolation_distance":10,
+              "max_route_distance_factor":5,"max_route_time_factor":5,"max_search_radius":200,"route":true,
+              "search_radius":15.0,"sigma_z":4.07,"turn_penalty_factor":200}},
+      "service_limits": {
+        "auto": {"max_distance": 5000000.0, "max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
+        "auto_shorter": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
+        "bicycle": {"max_distance": 500000.0,"max_locations": 50,"max_matrix_distance": 200000.0,"max_matrix_locations": 50},
+        "bus": {"max_distance": 5000000.0,"max_locations": 50,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
+        "hov": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
+        "isochrone": {"max_contours": 4,"max_distance": 25000.0,"max_locations": 1,"max_time": 120},
+        "max_avoid_locations": 50,"max_radius": 200,"max_reachability": 100,"max_alternates":2,
+        "multimodal": {"max_distance": 500000.0,"max_locations": 50,"max_matrix_distance": 0.0,"max_matrix_locations": 0},
+        "pedestrian": {"max_distance": 250000.0,"max_locations": 50,"max_matrix_distance": 200000.0,"max_matrix_locations": 50,"max_transit_walking_distance": 10000,"min_transit_walking_distance": 1},
+        "skadi": {"max_shape": 750000,"min_resample": 10.0},
+        "trace": {"max_distance": 200000.0,"max_gps_accuracy": 100.0,"max_search_radius": 100,"max_shape": 16000,"max_best_paths":4,"max_best_paths_shape":100},
+        "transit": {"max_distance": 500000.0,"max_locations": 50,"max_matrix_distance": 200000.0,"max_matrix_locations": 50},
+        "truck": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50}
+      }
+    })";
   boost::property_tree::ptree conf;
-  rapidjson::read_json(config_file, conf);
+  rapidjson::read_json(ss, conf);
+  return conf;
+}
+
+TEST(Astar, TestTrivialPathNoUturns) {
+  auto conf = get_conf("utrecht_tiles");
 
   // setup and purge
   vb::GraphReader graph_reader(conf.get_child("mjolnir"));
-  for (const auto& level : vb::TileHierarchy::levels()) {
-    auto level_dir = graph_reader.tile_dir() + "/" + std::to_string(level.first);
-    if (boost::filesystem::exists(level_dir) && !boost::filesystem::is_empty(level_dir)) {
-      boost::filesystem::remove_all(level_dir);
-    }
-  }
-
-  // Set up the temporary (*.bin) files used during processing
-  std::string ways_file = "test_ways_trivial.bin";
-  std::string way_nodes_file = "test_way_nodes_trivial.bin";
-  std::string nodes_file = "test_nodes_trivial.bin";
-  std::string edges_file = "test_edges_trivial.bin";
-  std::string access_file = "test_access_trivial.bin";
-  std::string cr_from_file = "test_from_complex_restrictions_trivial.bin";
-  std::string cr_to_file = "test_to_complex_restrictions_trivial.bin";
-  std::string bss_nodes_file = "test_bss_nodes_file_trivial.bin";
-
-  // Parse Utrecht OSM data
-  auto osmdata =
-      vj::PBFGraphParser::Parse(conf.get_child("mjolnir"),
-                                {VALHALLA_SOURCE_DIR "test/data/utrecht_netherlands.osm.pbf"},
-                                ways_file, way_nodes_file, access_file, cr_from_file, cr_to_file,
-                                bss_nodes_file);
-
-  // Build the graph using the OSMNodes and OSMWays from the parser
-  vj::GraphBuilder::Build(conf, osmdata, ways_file, way_nodes_file, nodes_file, edges_file,
-                          cr_from_file, cr_to_file);
-
-  // Enhance the local level of the graph. This adds information to the local
-  // level that is usable across all levels (density, administrative
-  // information (and country based attribution), edge transition logic, etc.
-  vj::GraphEnhancer::Enhance(conf, osmdata, access_file);
-
-  // Validate the graph and add information that cannot be added until
-  // full graph is formed.
-  vj::GraphValidator::Validate(conf);
 
   // Locations
   std::vector<valhalla::baldr::Location> locations;
@@ -554,65 +694,6 @@ void trivial_path_no_uturns(const std::string& config_file) {
   const auto& trip_directions = api.directions().routes(0).legs(0);
 
   EXPECT_EQ(trip_directions.summary().time(), 0);
-
-  boost::filesystem::remove(ways_file);
-  boost::filesystem::remove(way_nodes_file);
-  boost::filesystem::remove(nodes_file);
-  boost::filesystem::remove(edges_file);
-  boost::filesystem::remove(access_file);
-  boost::filesystem::remove(cr_from_file);
-  boost::filesystem::remove(cr_to_file);
-}
-
-TEST(Astar, TestTrivialPathNoUturns) {
-  write_config(config_file);
-  trivial_path_no_uturns(config_file);
-}
-
-std::string ways_file = "test_ways_whitelion.bin";
-std::string way_nodes_file = "test_way_nodes_whitelion.bin";
-std::string access_file = "test_access_whitelion.bin";
-std::string from_restriction_file = "test_from_complex_restrictions_whitelion.bin";
-std::string to_restriction_file = "test_to_complex_restrictions_whitelion.bin";
-std::string bss_file = "test_bss_nodes_whitelion.bin";
-
-boost::property_tree::ptree get_conf(const char* tiles) {
-  std::stringstream ss;
-  ss << R"({
-      "mjolnir":{"tile_dir":"test/data/)"
-     << tiles << R"(", "concurrency": 1},
-      "loki":{
-        "actions":["route"],
-        "logging":{"long_request": 100},
-        "service_defaults":{"minimum_reachability": 2,"radius": 10,"search_cutoff": 35000, "node_snap_tolerance": 5, "street_side_tolerance": 5, "heading_tolerance": 60}
-      },
-      "thor":{"logging":{"long_request": 100}},
-      "odin":{"logging":{"long_request": 100}},
-      "skadi":{"actons":["height"],"logging":{"long_request": 5}},
-      "meili":{"customizable": ["turn_penalty_factor","max_route_distance_factor","max_route_time_factor","search_radius"],
-              "mode":"auto","grid":{"cache_size":100240,"size":500},
-              "default":{"beta":3,"breakage_distance":2000,"geometry":false,"gps_accuracy":5.0,"interpolation_distance":10,
-              "max_route_distance_factor":5,"max_route_time_factor":5,"max_search_radius":200,"route":true,
-              "search_radius":15.0,"sigma_z":4.07,"turn_penalty_factor":200}},
-      "service_limits": {
-        "auto": {"max_distance": 5000000.0, "max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
-        "auto_shorter": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
-        "bicycle": {"max_distance": 500000.0,"max_locations": 50,"max_matrix_distance": 200000.0,"max_matrix_locations": 50},
-        "bus": {"max_distance": 5000000.0,"max_locations": 50,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
-        "hov": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
-        "isochrone": {"max_contours": 4,"max_distance": 25000.0,"max_locations": 1,"max_time": 120},
-        "max_avoid_locations": 50,"max_radius": 200,"max_reachability": 100,"max_alternates":2,
-        "multimodal": {"max_distance": 500000.0,"max_locations": 50,"max_matrix_distance": 0.0,"max_matrix_locations": 0},
-        "pedestrian": {"max_distance": 250000.0,"max_locations": 50,"max_matrix_distance": 200000.0,"max_matrix_locations": 50,"max_transit_walking_distance": 10000,"min_transit_walking_distance": 1},
-        "skadi": {"max_shape": 750000,"min_resample": 10.0},
-        "trace": {"max_distance": 200000.0,"max_gps_accuracy": 100.0,"max_search_radius": 100,"max_shape": 16000,"max_best_paths":4,"max_best_paths_shape":100},
-        "transit": {"max_distance": 500000.0,"max_locations": 50,"max_matrix_distance": 200000.0,"max_matrix_locations": 50},
-        "truck": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50}
-      }
-    })";
-  boost::property_tree::ptree conf;
-  rapidjson::read_json(ss, conf);
-  return conf;
 }
 
 struct route_tester {
@@ -1050,6 +1131,182 @@ TEST(Astar, test_time_restricted_road_allowed_on_timedep) {
   }
 }
 
+void test_backtrack_complex_restriction(int date_time_type) {
+  // Regression test for backtracking complex restriction behaviour.
+  //
+  // Test-case documented in https://github.com/valhalla/valhalla/issues/2103
+  //
+  auto conf = get_conf("bayfront_singapore_tiles");
+  route_tester tester(conf);
+  std::string request;
+  switch (date_time_type) {
+    case 0:
+      // Bidir search
+      request = R"({
+        "locations": [
+          {
+            "lat":1.282185,
+            "lon":103.859650,
+            "street":"Sheares Link"
+          },
+          {
+            "lat":1.282493,
+            "lon":103.859421,
+            "street":"Sheares Link"
+          }
+        ],
+        "costing":"auto"
+      })";
+      break;
+    case 1:
+      // Forward search
+      request = R"({
+        "locations": [
+          {
+            "lat":1.282185,
+            "lon":103.859650,
+            "street":"Sheares Link"
+          },
+          {
+            "lat":1.282493,
+            "lon":103.859421,
+            "street":"Sheares Link"
+          }
+        ],
+        "costing":"auto",
+        "date_time": {
+          "type": 1,
+          "value": "2019-05-02T15:00"
+        }
+      })";
+      break;
+    case 2:
+      // Backward search with slightly different coordinates
+      request = R"({
+        "locations": [
+          {
+            "lat":1.282366,
+            "lon":-256.140661,
+            "street":"Sheares Link"
+          },
+          {
+            "lat":1.282355,
+            "lon":-256.140414,
+            "street":"Sheares Link"
+          }
+        ],
+        "costing":"auto",
+        "date_time": {
+          "type": 2,
+          "value": "2019-05-02T15:00"
+        }
+      })";
+      break;
+    default:
+      throw std::runtime_error("Unhandled case");
+  };
+
+  LOGLN_WARN(request);
+  auto response = tester.test(request);
+
+  const auto& leg = response.trip().routes(0).legs(0);
+  std::string correct_shape;
+  switch (date_time_type) {
+    case 0:
+    case 1:
+      correct_shape =
+          "iggmAa{abeEyD~HaBvCn@^`e@tYdGhCr]nRnCzArDjB{CbFsDyBwC{AsYsP_LcGqA{@wJsGeU{Km@]qFgDz@{A";
+      break;
+    case 2:
+      correct_shape =
+          R"(qrgmA_habeE}@xBqFgDkB{@_WiNiB{@mXwNqJcFcIeFeViL}Z_JoVeE\cFw@kBb@NxQdEzb@zKfIvDb`@|Sh\rQ`YdOdB|@tCeF)";
+      break;
+    default:
+      throw std::runtime_error("unhandled case");
+  }
+  if (leg.shape() != correct_shape) {
+    throw std::runtime_error("Did not find expected shape. Found \n" + leg.shape() +
+                             "\nbut expected \n" + correct_shape);
+  }
+
+  std::vector<std::string> names;
+  const auto& directions = response.directions().routes(0).legs();
+
+  for (const auto& d : directions) {
+    for (const auto& m : d.maneuver()) {
+      std::string name;
+      for (const auto& n : m.street_name()) {
+        name += n.value() + " ";
+      }
+      if (!name.empty()) {
+        name.pop_back();
+      }
+      names.push_back(name);
+    }
+  }
+  auto correct_route = std::vector<std::string>{"Sheares Link", "Bayfront Avenue", "Bayfront Avenue",
+                                                "Sheares Link", ""};
+  if (names != correct_route) {
+    throw std::logic_error("Incorrect route, got: \n" + boost::algorithm::join(names, ", ") +
+                           ", expected: \n" + boost::algorithm::join(correct_route, ", "));
+  }
+}
+
+TEST(Astar, TestBacktrackComplexRestrictionForward) {
+  test_backtrack_complex_restriction(1);
+}
+
+TEST(Astar, TestBacktrackComplexRestrictionReverse) {
+  // Reverse direction condition is triggered via use of slightly tweaked start/end coordinates
+  test_backtrack_complex_restriction(2);
+}
+
+TEST(Astar, TestBacktrackComplexRestrictionBidirectional) {
+  // Bidirectional routed before via the reverse direction search
+  // So this becomes more of a regression test
+  test_backtrack_complex_restriction(0);
+}
+
+TEST(Astar, TestBacktrackComplexRestrictionForwardDetourAfterRestriction) {
+  // This tests if a detour _after_ a partial complex restriction is found.
+  // The other tests with Bayfront Singapore tests with a detour _before_
+  // the complex restriction
+  auto conf = get_conf(test_dir.c_str());
+  LOG_INFO("");
+
+  valhalla::Location origin;
+  origin.set_date_time("2019-11-21T23:05");
+  origin.mutable_ll()->set_lng(node::k.second.first);
+  origin.mutable_ll()->set_lat(node::k.second.second);
+  add(tile_id + uint64_t(15), 0.0f, node::k.second, origin);
+  add(tile_id + uint64_t(21), 1.0f, node::k.second, origin);
+
+  valhalla::Location dest;
+  dest.mutable_ll()->set_lng(node::l.second.first);
+  dest.mutable_ll()->set_lat(node::l.second.second);
+  add(tile_id + uint64_t(22), 0.0f, node::l.second, dest);
+  add(tile_id + uint64_t(18), 1.0f, node::l.second, dest);
+  add(tile_id + uint64_t(23), 0.0f, node::l.second, dest);
+  add(tile_id + uint64_t(25), 1.0f, node::l.second, dest);
+
+  Options options;
+  create_costing_options(options);
+  vs::cost_ptr_t costs[int(vs::TravelMode::kMaxTravelMode)];
+  auto mode = vs::TravelMode::kDrive;
+  costs[int(mode)] = vs::CreateAutoCost(Costing::auto_, options);
+  ASSERT_TRUE(bool(costs[int(mode)]));
+
+  auto reader = get_graph_reader(test_dir);
+  vt::TimeDepForward astar;
+  auto paths = astar.GetBestPath(origin, dest, *reader, costs, mode).front();
+
+  for (auto path_info : paths) {
+    LOG_INFO("Got pathinfo " + std::to_string(path_info.edgeid.id()));
+  }
+  auto correct_len = 5;
+  ASSERT_EQ(paths.size(), correct_len) << "Wrong number of paths in response";
+}
+
 Api timed_access_restriction_ny(std::string mode, std::string datetime) {
   // The restriction is <tag k="bicycle:conditional" v="no @ (Su 08:00-18:00)"/>
   // and <tag k="motor_vehicle:conditional" v="no @ (Su 08:00-18:00)"/>
@@ -1214,6 +1471,100 @@ TEST(Astar, test_timed_conditional_restriction_3) {
     return;
   }
   EXPECT_FALSE(found_route) << "Found a route when no route was expected";
+}
+
+TEST(ComplexRestriction, WalkVias) {
+  // Yes, it's a little odd to have a test of restrictions and vias here, but
+  // you need a baked tile to test this functionality which we conveniently
+  // have here from `make_tile`.
+  // TODO Future improvement would be to make it simpler to quickly generate
+  // tiles programmatically
+  auto reader = get_graph_reader(test_dir);
+  std::vector<GraphId> expected_vias;
+  expected_vias.push_back(make_graph_id(14));
+
+  Options options;
+  create_costing_options(options);
+  auto costing = vs::CreateAutoCost(Costing::auto_, options);
+
+  bool is_forward = true;
+  auto* tile = reader->GetGraphTile(tile_id);
+  auto restrictions = tile->GetRestrictions(is_forward, make_graph_id(18), costing->access_mode());
+  ASSERT_EQ(restrictions.size(), 1);
+
+  const auto cr = restrictions[0];
+
+  {
+    // Walk all vias
+    std::vector<GraphId> walked_vias;
+    cr->WalkVias([&walked_vias](const GraphId* via) {
+      walked_vias.push_back(*via);
+      return WalkingVia::KeepWalking;
+    });
+    EXPECT_EQ(walked_vias, expected_vias) << "Did not walk expected vias";
+  }
+}
+
+TEST(ComplexRestriction, CheckPatchPathForRestrictions) {
+  std::vector<GraphId> patch_path;
+  const int length_patch_path = 10;
+  for (uint32_t id = 0; id < length_patch_path; ++id) {
+    patch_path.push_back(GraphId(0, 0, id));
+  }
+
+  {
+    std::vector<std::vector<GraphId>> list_of_restrictions;
+    {
+      // Test with restriction out of order
+      std::vector<GraphId> restr;
+      restr.push_back(GraphId(0, 0, 2));
+      restr.push_back(GraphId(0, 0, 3));
+      restr.push_back(GraphId(0, 0, 1)); // Out of order, should mean no match
+      list_of_restrictions.push_back(restr);
+    }
+    EXPECT_FALSE(vt::CheckPatchPathForRestrictions(patch_path, list_of_restrictions));
+    {
+      // Test a positive, a matching restriction
+      std::vector<GraphId> restr;
+      restr.push_back(GraphId(0, 0, 2));
+      restr.push_back(GraphId(0, 0, 3));
+      restr.push_back(GraphId(0, 0, 4)); // Out of order, should mean no match
+      list_of_restrictions.push_back(restr);
+    }
+    EXPECT_TRUE(vt::CheckPatchPathForRestrictions(patch_path, list_of_restrictions));
+  }
+  {
+    std::vector<std::vector<GraphId>> list_of_restrictions;
+
+    {
+      // Test a restriction that goes outside the patch_path
+      std::vector<GraphId> restr;
+      for (uint32_t id = length_patch_path - 2; id < length_patch_path + 2; ++id) {
+        restr.push_back(GraphId(0, 0, id));
+      }
+      list_of_restrictions.push_back(restr);
+    }
+    EXPECT_FALSE(vt::CheckPatchPathForRestrictions(patch_path, list_of_restrictions));
+    {
+      // Test a restriction overlaying beginning
+      std::vector<GraphId> restr;
+      restr.push_back(GraphId(0, 0, 20));
+      restr.push_back(GraphId(0, 0, 0));
+      restr.push_back(GraphId(0, 0, 1));
+      list_of_restrictions.push_back(restr);
+    }
+    EXPECT_FALSE(vt::CheckPatchPathForRestrictions(patch_path, list_of_restrictions));
+  }
+  {
+    std::vector<std::vector<GraphId>> list_of_restrictions;
+    {
+      // Test single edge restriction
+      std::vector<GraphId> restr;
+      restr.push_back(GraphId(0, 0, 2));
+      list_of_restrictions.push_back(restr);
+    }
+    EXPECT_TRUE(vt::CheckPatchPathForRestrictions(patch_path, list_of_restrictions));
+  }
 }
 
 class AstarTestEnv : public ::testing::Environment {

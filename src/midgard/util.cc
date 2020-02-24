@@ -89,6 +89,45 @@ template <class container_t> container_t trim_front(container_t& pts, const floa
   return result;
 }
 
+void trim_shape(float start,
+                PointLL start_vertex,
+                float end,
+                PointLL end_vertex,
+                std::vector<PointLL>& shape) {
+  // clip up to the start point if the start_vertex is valid
+  float along = 0.f;
+  auto current = shape.begin();
+  if (start_vertex.IsValid()) {
+    while (!shape.empty() && (current != shape.end() - 1)) {
+      along += (current + 1)->Distance(*current);
+      // just crossed it, replace the current vertex with the start position and erase
+      // shape up to the current vertex
+      if (along > start) {
+        along = start;
+        *current = start_vertex;
+        shape.erase(shape.begin(), current);
+        break;
+      }
+      ++current;
+    }
+  }
+  // clip after the end point if the end vertex is valid
+  current = shape.begin();
+  if (end_vertex.IsValid()) {
+    while (!shape.empty() && (current != shape.end() - 1)) {
+      along += (current + 1)->Distance(*current);
+      // just crossed it, replace the current vertex with the end vertex and erase
+      // shape after the current vertex
+      if (along > end) {
+        *(++current) = end_vertex;
+        shape.erase(++current, shape.end());
+        break;
+      }
+      ++current;
+    }
+  }
+}
+
 float tangent_angle(size_t index,
                     const PointLL& point,
                     const std::vector<PointLL>& shape,

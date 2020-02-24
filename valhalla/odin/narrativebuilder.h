@@ -36,7 +36,7 @@ public:
   NarrativeBuilder(const NarrativeBuilder&) = default;
   NarrativeBuilder& operator=(const NarrativeBuilder&) = default;
 
-  void Build(const Options& options, const EnhancedTripLeg* etp, std::list<Maneuver>& maneuvers);
+  void Build(const Options& options, std::list<Maneuver>& maneuvers);
 
 protected:
   /////////////////////////////////////////////////////////////////////////////
