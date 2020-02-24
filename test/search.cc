@@ -264,8 +264,8 @@ void search(valhalla::baldr::Location location, size_t result_count, int reachab
 
   ASSERT_EQ(path.edges.size(), result_count) << "Wrong number of edges";
   for (const auto& edge : path.edges) {
-    ASSERT_EQ(edge.outbound_reach, reachability);
-    ASSERT_EQ(edge.inbound_reach, reachability);
+    ASSERT_GE(edge.outbound_reach, reachability);
+    ASSERT_GE(edge.inbound_reach, reachability);
   }
 }
 
@@ -386,8 +386,6 @@ TEST(Search, test_edge_search) {
 
 TEST(Search, test_reachability_radius_zero_everything) {
   PointLL ob(b.second.first - .001f, b.second.second - .01f);
-  unsigned int longest = ob.Distance(d.second);
-  unsigned int shortest = ob.Distance(a.second);
 
   LOGLN_WARN("zero everything should be a single closest result");
   search({ob, Location::StopType::BREAK, 0, 0, 0}, 2, 0);
@@ -396,7 +394,6 @@ TEST(Search, test_reachability_radius_zero_everything) {
 TEST(Search, test_reachability_radius_high) {
   PointLL ob(b.second.first - .001f, b.second.second - .01f);
   unsigned int longest = ob.Distance(d.second);
-  unsigned int shortest = ob.Distance(a.second);
 
   LOGLN_WARN("set radius high to get them all");
   search({b.second, Location::StopType::BREAK, 0, 0, longest + 100}, 10, 0);
@@ -404,7 +401,6 @@ TEST(Search, test_reachability_radius_high) {
 
 TEST(Search, test_reachability_radius_mid) {
   PointLL ob(b.second.first - .001f, b.second.second - .01f);
-  unsigned int longest = ob.Distance(d.second);
   unsigned int shortest = ob.Distance(a.second);
 
   LOGLN_WARN("set radius mid to get just some");
@@ -415,17 +411,11 @@ TEST(Search, test_reachability_radius_reachability_high) {
   PointLL ob(b.second.first - .001f, b.second.second - .001f);
 
   LOGLN_WARN("set reachability high to see it gets all edges reachable");
-  // TODO figure out if this is correct. It is good enough for now
-  // It is complicated by the fact that u-turn detection and similar never
-  // was iimplemented for Isochrone/Dijkstras
-  auto expected_reach = 10;
-  search({ob, Location::StopType::BREAK, 10, 10, 0}, 2, expected_reach);
+  search({ob, Location::StopType::BREAK, 10, 10, 0}, 2, 10);
 }
 
 TEST(Search, test_reachability_radius_off_by_one) {
   PointLL ob(b.second.first - .001f, b.second.second - .01f);
-  unsigned int longest = ob.Distance(d.second);
-  unsigned int shortest = ob.Distance(a.second);
 
   LOGLN_WARN("set reachability right on to see we arent off by one");
   search({ob, Location::StopType::BREAK, 4, 4, 0}, 2, 4);
@@ -433,8 +423,6 @@ TEST(Search, test_reachability_radius_off_by_one) {
 
 TEST(Search, test_reachability_radius_give_up_early) {
   PointLL ob(b.second.first - .001f, b.second.second - .01f);
-  unsigned int longest = ob.Distance(d.second);
-  unsigned int shortest = ob.Distance(a.second);
 
   LOGLN_WARN("set reachability lower to see we give up early");
   search({ob, Location::StopType::BREAK, 3, 3, 0}, 2, 3);
