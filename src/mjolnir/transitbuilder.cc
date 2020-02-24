@@ -197,8 +197,8 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
       // Add edge info to the tile and set the offset in the directed edge
       bool added = false;
       uint32_t edge_info_offset =
-          tilebuilder_local.AddEdgeInfo(0, conn.osm_node, endnode, conn.wayid, 0, 0, 0, false,
-                                        conn.shape, conn.names, 0, added);
+          tilebuilder_local.AddEdgeInfo(0, conn.osm_node, endnode, conn.wayid, 0, 0, 0, conn.shape,
+                                        conn.names, 0, added);
       directededge.set_edgeinfo_offset(edge_info_offset);
       directededge.set_forward(true);
       tilebuilder_local.directededges().emplace_back(std::move(directededge));
@@ -312,7 +312,7 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
         std::list<PointLL> r_shape = conn.shape;
         std::reverse(r_shape.begin(), r_shape.end());
         uint32_t edge_info_offset =
-            tilebuilder_transit.AddEdgeInfo(0, origin_node, conn.osm_node, conn.wayid, 0, 0, 0, false,
+            tilebuilder_transit.AddEdgeInfo(0, origin_node, conn.osm_node, conn.wayid, 0, 0, 0,
                                             r_shape, conn.names, 0, added);
         LOG_DEBUG("Add conn from stop to OSM: ei offset = " + std::to_string(edge_info_offset));
         directededge.set_edgeinfo_offset(edge_info_offset);

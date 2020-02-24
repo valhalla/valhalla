@@ -34,17 +34,14 @@ void EdgeInfoBuilder::set_bike_network(const uint32_t bike_network) {
 
 // Sets the speed limit in KPH.
 void EdgeInfoBuilder::set_speed_limit(const uint32_t speed_limit) {
-  if (speed_limit > kMaxSpeedKph) {
+  if (speed_limit == kUnlimitedSpeedLimit) {
+    w0_.speed_limit_ = kUnlimitedSpeedLimit;
+  } else if (speed_limit > kMaxSpeedKph) {
     LOG_WARN("Exceeding maximum.  Speed limit: " + std::to_string(speed_limit));
     w0_.speed_limit_ = kMaxSpeedKph;
   } else {
     w0_.speed_limit_ = speed_limit;
   }
-}
-
-// Sets the speed limit unlimited flag.
-void EdgeInfoBuilder::set_speed_limit_unlimited(const bool speed_limit_unlimited) {
-  w0_.speed_limit_unlimited_ = speed_limit_unlimited;
 }
 
 // Set the list of name info (offsets, etc.) used by this edge.

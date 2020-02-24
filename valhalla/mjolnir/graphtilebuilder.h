@@ -193,7 +193,6 @@ public:
    * @param  elev   Mean elevation.
    * @param  bn     Bike network.
    * @param  spd    Speed limit. [kph]
-   * @param  spdu   Speed limit unlimited?
    * @param  lls    The shape of the target edge.
    * @param  names  The names of the target edge.
    * @param  types  Bits indicating if the name is a ref vs a name.
@@ -211,7 +210,6 @@ public:
                        const float elev,
                        const uint32_t bn,
                        const uint32_t spd,
-                       const bool spdu,
                        const shape_container_t& lls,
                        const std::vector<std::string>& names,
                        const uint16_t types,
@@ -233,7 +231,6 @@ public:
    * @param  elev   Mean elevation.
    * @param  bn     Bike network.
    * @param  spd    Speed limit.
-   * @param  spdu   Speed limit unlimited?
    * @param  llstr  The shape of the target edge as an encoded string.
    * @param  names  The names of the target edge.
    * @param  types  Bits indicating if the name is a ref vs a name.
@@ -250,7 +247,6 @@ public:
                        const float elev,
                        const uint32_t bn,
                        const uint32_t spd,
-                       const bool spdu,
                        const std::string& llstr,
                        const std::vector<std::string>& names,
                        const uint16_t types,

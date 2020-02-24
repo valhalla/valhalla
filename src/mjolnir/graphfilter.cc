@@ -148,8 +148,8 @@ void FilterTiles(GraphReader& reader,
         uint32_t edge_info_offset =
             tilebuilder.AddEdgeInfo(w, nodeid, directededge->endnode(), edgeinfo.wayid(),
                                     edgeinfo.mean_elevation(), edgeinfo.bike_network(),
-                                    edgeinfo.speed_limit(), edgeinfo.speed_limit_unlimited(),
-                                    encoded_shape, tile->GetNames(idx), tile->GetTypes(idx), added);
+                                    edgeinfo.speed_limit(), encoded_shape, tile->GetNames(idx),
+                                    tile->GetTypes(idx), added);
         newedge.set_edgeinfo_offset(edge_info_offset);
         wayid.push_back(edgeinfo.wayid());
         endnode.push_back(directededge->endnode());

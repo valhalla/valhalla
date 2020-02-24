@@ -108,12 +108,12 @@ TEST(GraphTileBuilder, TestDuplicateEdgeInfo) {
   test_graph_tile_builder test(test_dir, GraphId(0, 2, 0), false);
   // add edge info for node 0 to node 1
   bool added = false;
-  test.AddEdgeInfo(0, GraphId(0, 2, 0), GraphId(0, 2, 1), 1234, 555, 0, 120, false,
+  test.AddEdgeInfo(0, GraphId(0, 2, 0), GraphId(0, 2, 1), 1234, 555, 0, 120,
                    std::list<PointLL>{{0, 0}, {1, 1}}, {"einzelweg"}, 0, added);
   EXPECT_EQ(test.edge_offset_map_.size(), 1) << "There should be exactly one of these in here";
 
   // add edge info for node 1 to node 0
-  test.AddEdgeInfo(0, GraphId(0, 2, 1), GraphId(0, 2, 0), 1234, 555, 0, 120, false,
+  test.AddEdgeInfo(0, GraphId(0, 2, 1), GraphId(0, 2, 0), 1234, 555, 0, 120,
                    std::list<PointLL>{{1, 1}, {0, 0}}, {"einzelweg"}, 0, added);
   EXPECT_EQ(test.edge_offset_map_.size(), 1) << "There should still be exactly one of these in here";
 

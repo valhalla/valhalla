@@ -352,7 +352,7 @@ void create_bss_node_and_edges(GraphTileBuilder& tilebuilder_local,
       bool added;
       uint32_t edge_info_offset =
           tilebuilder_local.AddEdgeInfo(0, conn.startnode, new_bss_node_graphid, conn.wayid, 0, 0, 0,
-                                        false, conn.startshape, conn.names, 0, added);
+                                        conn.startshape, conn.names, 0, added);
       directededge.set_edgeinfo_offset(edge_info_offset);
     }
 
@@ -363,7 +363,6 @@ void create_bss_node_and_edges(GraphTileBuilder& tilebuilder_local,
       bool added;
       uint32_t edge_info_offset =
           tilebuilder_local.AddEdgeInfo(0, conn.endnode, new_bss_node_graphid, conn.wayid, 0, 0, 0,
-                                        false,
                                         std::vector<PointLL>{conn.endshape.rbegin(),
                                                              conn.endshape.rend()},
                                         conn.names, 0, added);
@@ -380,7 +379,6 @@ void create_bss_node_and_edges(GraphTileBuilder& tilebuilder_local,
       bool added;
       uint32_t edge_info_offset =
           tilebuilder_local.AddEdgeInfo(0, new_bss_node_graphid, conn.startnode, conn.wayid, 0, 0, 0,
-                                        false,
                                         std::vector<PointLL>{conn.startshape.rbegin(),
                                                              conn.startshape.rend()},
                                         conn.names, 0, added);
@@ -398,7 +396,7 @@ void create_bss_node_and_edges(GraphTileBuilder& tilebuilder_local,
       bool added;
       uint32_t edge_info_offset =
           tilebuilder_local.AddEdgeInfo(0, new_bss_node_graphid, conn.endnode, conn.wayid, 0, 0, 0,
-                                        false, conn.endshape, conn.names, 0, added);
+                                        conn.endshape, conn.names, 0, added);
       directededge.set_edgeinfo_offset(edge_info_offset);
       tilebuilder_local.directededges().emplace_back(std::move(directededge));
       ++added_edges;

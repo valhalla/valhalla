@@ -655,8 +655,8 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
         std::list<PointLL> shape = {egress_ll, station_ll};
 
         uint32_t edge_info_offset =
-            tilebuilder_transit.AddEdgeInfo(0, egress_graphid, station_graphid, 0, 0, 0, 0, false,
-                                            shape, names, 0, added);
+            tilebuilder_transit.AddEdgeInfo(0, egress_graphid, station_graphid, 0, 0, 0, 0, shape,
+                                            names, 0, added);
         directededge.set_edgeinfo_offset(edge_info_offset);
         directededge.set_forward(true);
 
@@ -704,8 +704,8 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
 
         // TODO - these need to be valhalla graph Ids
         uint32_t edge_info_offset =
-            tilebuilder_transit.AddEdgeInfo(0, station_graphid, egress_graphid, 0, 0, 0, 0, false,
-                                            shape, names, 0, added);
+            tilebuilder_transit.AddEdgeInfo(0, station_graphid, egress_graphid, 0, 0, 0, 0, shape,
+                                            names, 0, added);
         directededge.set_edgeinfo_offset(edge_info_offset);
         directededge.set_forward(true);
 
@@ -761,8 +761,8 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
 
         // TODO - these need to be valhalla graph Ids
         uint32_t edge_info_offset =
-            tilebuilder_transit.AddEdgeInfo(0, station_graphid, platform_graphid, 0, 0, 0, 0, false,
-                                            shape, names, 0, added);
+            tilebuilder_transit.AddEdgeInfo(0, station_graphid, platform_graphid, 0, 0, 0, 0, shape,
+                                            names, 0, added);
         directededge.set_edgeinfo_offset(edge_info_offset);
         directededge.set_forward(true);
 
@@ -838,9 +838,8 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
     std::list<PointLL> shape = {platform_ll, station_ll};
 
     // TODO - these need to be valhalla graph Ids
-    uint32_t edge_info_offset =
-        tilebuilder_transit.AddEdgeInfo(0, platform_graphid, station_graphid, 0, 0, 0, 0, false,
-                                        shape, names, 0, added);
+    uint32_t edge_info_offset = tilebuilder_transit.AddEdgeInfo(0, platform_graphid, station_graphid,
+                                                                0, 0, 0, 0, shape, names, 0, added);
     directededge.set_edgeinfo_offset(edge_info_offset);
     directededge.set_forward(true);
 
@@ -930,7 +929,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
 
       uint32_t edge_info_offset =
           tilebuilder_transit.AddEdgeInfo(transitedge.routeid, platform_graphid, endnode, 0, 0, 0, 0,
-                                          false, shape, names, 0, added);
+                                          shape, names, 0, added);
       directededge.set_edgeinfo_offset(edge_info_offset);
       directededge.set_forward(added);
 
