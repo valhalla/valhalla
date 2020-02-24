@@ -315,6 +315,23 @@ TEST(Instructions, validate_ramp_instructions) {
                     "Take the M11 ramp toward London.", "", "Take the M11 ramp toward London.");
 }
 
+TEST(Instructions, validate_osrm_ramp_maneuver) {
+
+  int routes_index = 0;
+  int legs_index = 0;
+  int steps_index = 1;
+
+  // Test take toward driving side right
+  test_osrm_maneuver({VALHALLA_SOURCE_DIR
+                      "test/pinpoints/instructions/ramp_take_toward_driving_side_right.pbf"},
+                     routes_index, legs_index, steps_index, "on ramp", "slight right");
+
+  // Test take toward driving side left
+  test_osrm_maneuver({VALHALLA_SOURCE_DIR
+                      "test/pinpoints/instructions/ramp_take_toward_driving_side_left.pbf"},
+                     routes_index, legs_index, steps_index, "on ramp", "slight left");
+}
+
 TEST(Instructions, validate_exit_instructions) {
   int expected_routes_size = 1;
   int expected_legs_size = 1;
@@ -349,6 +366,33 @@ TEST(Instructions, validate_exit_instructions) {
                     "Take the US 15 North exit toward Frederick Maryland.",
                     "Take the U.S. 15 North exit.",
                     "Take the U.S. 15 North exit toward Frederick Maryland.");
+}
+
+TEST(Instructions, validate_osrm_exit_maneuver) {
+
+  int routes_index = 0;
+  int legs_index = 0;
+  int steps_index = 1;
+
+  // Test exit left on right driving side
+  test_osrm_maneuver({VALHALLA_SOURCE_DIR
+                      "test/pinpoints/instructions/exit_left_driving_side_right.pbf"},
+                     routes_index, legs_index, steps_index, "off ramp", "slight left");
+
+  // Test exit left on left driving side
+  test_osrm_maneuver({VALHALLA_SOURCE_DIR
+                      "test/pinpoints/instructions/exit_left_driving_side_left.pbf"},
+                     routes_index, legs_index, steps_index, "off ramp", "slight left");
+
+  // Test exit non-motorway in PA
+  test_osrm_maneuver({VALHALLA_SOURCE_DIR
+                      "test/pinpoints/instructions/exit_right_nonmotorway_pa.pbf"},
+                     routes_index, legs_index, steps_index, "off ramp", "slight right");
+
+  // Test exit non-motorway in VA
+  test_osrm_maneuver({VALHALLA_SOURCE_DIR
+                      "test/pinpoints/instructions/exit_right_nonmotorway_va.pbf"},
+                     routes_index, legs_index, steps_index, "off ramp", "slight right");
 }
 
 } // namespace
