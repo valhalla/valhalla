@@ -187,6 +187,7 @@ inline bool TimeDepReverse::ExpandReverseInner(GraphReader& graphreader,
                                                const valhalla::Location& destination,
                                                std::pair<int32_t, float>& best_path) {
 
+  std::cout << "Expanding "<<meta.edge_id.id() << " from "<<pred.edgeid().id()<<std::endl;
   // Skip shortcut edges for time dependent routes. Also skip this edge if permanently labeled (best
   // path already found to this directed edge) or if no access for this mode.
   if (meta.edge->is_shortcut() || !(meta.edge->reverseaccess() & access_mode_)) {
@@ -537,6 +538,8 @@ void TimeDepReverse::SetOrigin(GraphReader& graphreader,
     // edge (edgeid) is set.
     // DO NOT SET EdgeStatus - it messes up trivial paths with oneways
     uint32_t idx = edgelabels_rev_.size();
+    std::cout << "  SetOrigin: Emplacing edge_id " << edgeid.id() << " opp_edge_id "
+              << opp_edge_id.id() << " end-node "<<opp_dir_edge->endnode().id() << std::endl;
     edgelabels_rev_.emplace_back(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, sortcost,
                                  dist, mode_, c, false, false);
     adjacencylist_->add(idx);

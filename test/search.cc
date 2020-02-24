@@ -106,19 +106,19 @@ void make_tile() {
   };
 
   // this is what it looks like
-  //    b
+  //    b 0
   //    |\
   //  1 | \ 0
   //    |  \
   //  2 |   \ 7
   //    |    \
-  //    a-3-8-d
+  //   1a-3-8-d 3
   //    |    /
   //  4 |   / 9
   //    |  /
   //  5 | / 6
   //    |/
-  //    c
+  //    c 2
 
   // NOTE: edge ids are in the order the edges are added, so b->d is 0, b->a is 1, a->b is 2 and so
   // on

@@ -323,7 +323,7 @@ void Dijkstras::ExpandReverse(GraphReader& graphreader,
                               const bool from_transition,
                               uint64_t localtime,
                               int32_t seconds_of_week) {
-  std::cout << "Expanding pred " << pred.edgeid().id() << std::endl;
+  std::cout << "Expanding pred " << pred.edgeid().id() << " node "<<node.id() << std::endl;
   // << " opp_pred "<< opp_pred_edge.edgeid().id()<< std::endl;
   // Get the tile and the node info. Skip if tile is null (can happen
   // with regional data sets) or if no access at the node.
@@ -448,6 +448,14 @@ void Dijkstras::ComputeReverse(google::protobuf::RepeatedPtrField<valhalla::Loca
                                const std::shared_ptr<DynamicCost>* mode_costing,
                                const TravelMode mode) {
   LOGLN_WARN("COMPUTEREVERSE");
+  for (auto& location : dest_locations) {
+
+    std::cout << "dest_locations: loc "<<std::endl;
+    for (auto& edge : location.path_edges()) {
+      std::cout << "  edge "<<GraphId(edge.graph_id()).id()<< " endnode "<<GraphId(edge.end_node()).id();
+    }
+    std::cout<<std::endl;
+  }
   // Set the mode and costing
   mode_ = mode;
   costing_ = mode_costing[static_cast<uint32_t>(mode_)];
@@ -946,6 +954,7 @@ void Dijkstras::SetDestinationLocations(
 
     // Iterate through edges and add to adjacency list
     for (const auto& edge : (location.path_edges())) {
+      std::cout <<" SetDestinationLocations: edge: "<<GraphId(edge.graph_id()).id()<<std::endl;
       // If the destination is at a node, skip any outbound edges (so any
       // opposing inbound edges are not considered)
       if (has_other_edges && edge.begin_node()) {
@@ -968,7 +977,7 @@ void Dijkstras::SetDestinationLocations(
       if (!opp_edge_id.Is_Valid()) {
         continue;
       }
-      const DirectedEdge* opp_dir_edge = opp_tile->directededge(edgeid);
+      const DirectedEdge* opp_dir_edge = opp_tile->directededge(opp_edge_id);
 
       // Get the cost
       Cost cost = costing->EdgeCost(directededge, tile) * edge.percent_along();
@@ -984,10 +993,8 @@ void Dijkstras::SetDestinationLocations(
       // edge (edgeid) is set.
       uint32_t idx = bdedgelabels_.size();
       const bool has_time_restrictions = false;
-      std::cout << "  SetDestination: Emplacing " << edgeid.id() << " opp_edge_id "
-                << opp_edge_id.id() << std::endl;
-      // bdedgelabels_.emplace_back(kInvalidLabel, edgeid,opp_edge_id,  directededge, cost, cost.cost,
-      //                           0., mode_, Cost{}, false, has_time_restrictions);
+    std::cout << "  SetOrigin: Emplacing edge_id " << edgeid.id() << " opp_edge_id "
+              << opp_edge_id.id() << " end-node "<<opp_dir_edge->endnode().id() << std::endl;
       bdedgelabels_.emplace_back(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, cost.cost,
                                  0., mode_, Cost{}, false, has_time_restrictions);
       adjacencylist_->add(idx);

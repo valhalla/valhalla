@@ -148,13 +148,19 @@ directed_reach Reach::operator()(const valhalla::baldr::DirectedEdge* edge,
   auto ll = node->latlng(tile->header()->base_ll());
 
   google::protobuf::RepeatedPtrField<Location> locations;
-  locations.Add()->mutable_ll()->set_lng(ll.first);
-  locations.Add()->mutable_ll()->set_lat(ll.second);
-  auto* path_edge = locations.Add()->add_path_edges();
-  path_edge->set_graph_id(edge_id);
-  path_edge->mutable_ll()->set_lng(ll.first);
-  path_edge->mutable_ll()->set_lat(ll.second);
-  path_edge->set_distance(0);
+  {
+    // Mock up the Location struct
+    auto* loc = locations.Add();
+    loc->mutable_ll()->set_lng(ll.first);
+    loc->mutable_ll()->set_lat(ll.second);
+    auto* path_edge = loc->add_path_edges();
+    path_edge->set_graph_id(edge_id);
+    path_edge->mutable_ll()->set_lng(ll.first);
+    path_edge->mutable_ll()->set_lat(ll.second);
+    path_edge->set_distance(0);
+    path_edge->set_begin_node(false);
+    path_edge->set_end_node(false);
+  }
 
   // fake up the costing array
   std::shared_ptr<sif::DynamicCost> costings[static_cast<int>(sif::TravelMode::kMaxTravelMode)];
