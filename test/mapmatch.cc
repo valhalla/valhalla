@@ -1088,7 +1088,7 @@ TEST(Mapmatch, test_discontinuity_duration_trimming) {
   std::vector<std::vector<int>> test_ans_num_legs{{1, 2}, {1, 2}, {1, 2}};
   std::vector<std::vector<float>> test_ans_leg_duration{{26.459, 0.97, 0.454},
                                                         {48.6, 0.64, 0.961},
-                                                        {201.178, 2.431, 1.899}};
+                                                        {213.778, 2.431, 1.899}};
 
   tyr::actor_t actor(conf, true);
   for (size_t i = 0; i < test_cases.size(); ++i) {
@@ -1139,10 +1139,10 @@ TEST(Mapmatch, test_loop_matching) {
 
   std::vector<int> test_ans_num_routes{2, 1, 1, 2};
   std::vector<std::vector<int>> test_ans_num_legs{{2, 2}, {2}, {2}, {2, 2}};
-  std::vector<std::vector<float>> test_ans_leg_duration{{4.106, 123.003, 62.23, 86.375},
-                                                        {65.34, 89.01},
-                                                        {33.282, 90.027},
-                                                        {12.911, 104.793, 3.382, 70.655}};
+  std::vector<std::vector<float>> test_ans_leg_duration{{4.106, 67.203, 45.13, 59.375},
+                                                        {48.24, 62.01},
+                                                        {26.082, 74.277},
+                                                        {12.911, 89.043, 3.382, 52.205}};
 
   tyr::actor_t actor(conf, true);
   for (size_t i = 0; i < test_cases.size(); ++i) {
@@ -1232,10 +1232,12 @@ TEST(Mapmatch, test_degenerate_match) {
 
 int main(int argc, char* argv[]) {
   midgard::logging::Configure({{"type", ""}}); // silence logs
-  if (argc > 1)
-    seed = std::stoi(argv[1]);
-  if (argc > 2)
-    bound = std::stoi(argv[2]);
+  if (argc > 1 && std::string(argv[1]).find("gtest") == std::string::npos) {
+    if (argc > 1)
+      seed = std::stoi(argv[1]);
+    if (argc > 2)
+      bound = std::stoi(argv[2]);
+  }
 
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
