@@ -67,6 +67,7 @@ Valhalla's routing service uses dynamic, run-time costing to generate the route 
 | `auto_shorter` | Alternate costing for driving that provides a short path (though not guaranteed to be shortest distance) that obeys driving rules for access and turn restrictions. |
 | `bicycle` | Standard costing for travel by bicycle, with a slight preference for using [cycleways](http://wiki.openstreetmap.org/wiki/Key:cycleway) or roads with bicycle lanes. Bicycle routes follow regular roads when needed, but avoid roads without bicycle access. |
 | `bus` | Standard costing for bus routes. Bus costing inherits the auto costing behaviors, but checks for bus access on the roads. |
+| `truck` | Standard costing for trucks. Truck costing inherits the auto costing behaviors, but checks for truck access, width and height restrictions, and weight limits on the roads. |
 | `hov` | Standard costing for high-occupancy vehicle (HOV) routes. HOV costing inherits the auto costing behaviors, but checks for HOV lane access on the roads and favors those roads.|
 | `taxi` | Standard costing for taxi routes. Taxi costing inherits the auto costing behaviors, but checks for taxi lane access on the roads and favors those roads.|
 | `motor_scooter` | Standard costing for travel by motor scooter or moped.  By default, motor_scooter costing will avoid higher class roads unless the country overrides allows motor scooters on these roads.  Motor scooter routes follow regular roads when needed, but avoid roads without motor_scooter, moped, or mofa access. |
@@ -84,7 +85,7 @@ Costing methods can have several options that can be adjusted to develop the rou
 
 ##### Automobile and bus costing options
 
-These options are available for `auto`, `auto_shorter`, and `bus` costing methods.
+These options are available for `auto`, `auto_shorter`, `bus`, and `truck` costing methods.
 
 | Automobile options | Description |
 | :-------------------------- | :----------- |
@@ -98,6 +99,19 @@ These options are available for `auto`, `auto_shorter`, and `bus` costing method
 | `use_tolls` | This value indicates the willingness to take roads with tolls. This is a range of values between 0 and 1. Values near 0 attempt to avoid tolls and values near 1 will not attempt to avoid them. The default value is 0.5. Note that sometimes roads with tolls are required to complete a route so values of 0 are not guaranteed to avoid them entirely. |
 | `country_crossing_cost` | A cost applied when encountering an international border. This cost is added to the estimated and elapsed times. The default cost is 600 seconds. |
 | `country_crossing_penalty` | A penalty applied for a country crossing. This penalty can be used to create paths that avoid spanning country boundaries. The default penalty is 0. |
+
+###### Truck-specific costing options
+
+In addition to the above, the following options are available for `truck` costing.
+
+| Truck options | Description |
+| :-------------------------- | :----------- |
+| `height` | The height of the truck (in meters). |
+| `width` | The width of the truck (in meters). |
+| `length` | The length of the truck (in meters). |
+| `weight` | The weight of the truck (in metric tons). |
+| `axle_load` | The axle load of the truck (in metric tons). |
+| `hazmat` | A value indicating if the truck is carrying hazardous materials. |
 
 ##### Bicycle costing options
 The default bicycle costing is tuned toward road bicycles with a slight preference for using [cycleways](http://wiki.openstreetmap.org/wiki/Key:cycleway) or roads with bicycle lanes. Bicycle routes use regular roads where needed or where no direct bicycle lane options exist, but avoid roads without bicycle access. The costing model recognizes several factors unique to bicycle travel and offers several options for tuning bicycle routes. Several factors unique to travel by bicycle influence the resulting route.
