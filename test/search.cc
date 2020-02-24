@@ -78,12 +78,11 @@ void make_tile() {
   };
 
   auto add_edge = [&](const std::pair<GraphId, PointLL>& u, const std::pair<GraphId, PointLL>& v,
-                      const uint32_t localedgeidx, const uint32_t opp_local_idx,
-                      const uint32_t opposing_edge_index, const bool forward) {
+                      const uint32_t localedgeidx, const uint32_t opp_local_idx, const bool forward) {
     DirectedEdgeBuilder edge_builder({}, v.first, forward, u.second.Distance(v.second) + .5, 1, 1,
                                      Use::kRoad, RoadClass::kMotorway, localedgeidx, false, 0, 0,
                                      false);
-    edge_builder.set_opp_index(opposing_edge_index);
+    edge_builder.set_opp_index(opp_local_idx); // How is this different from opp_local_idx
     edge_builder.set_opp_local_idx(opp_local_idx);
     edge_builder.set_localedgeidx(localedgeidx);
     edge_builder.set_forwardaccess(kAllAccess);
@@ -123,40 +122,34 @@ void make_tile() {
 
   // NOTE: edge ids are in the order the edges are added, so b->d is 0, b->a is 1, a->b is 2 and so
   // on
-  //
-  // Old declaration
-  // auto add_edge = [&tile](const std::pair<GraphId, PointLL>& u, const std::pair<GraphId, PointLL>&
-  // v,
-  //                        const uint32_t name, const uint32_t opposing_edge_index, const bool
-  //                        forward) {
 
   // B
   {
-    add_edge(b, d, 0, , 0, false);
+    add_edge(b, d, 0, 0, true);
     add_edge(b, a, 1, 0, true); // 1
     add_node(b, 2);
   }
 
   // A
   {
-    add_edge(a, b, 2, 1, false); // 2
-    add_edge(a, d, 3, 1, true);  // 3
-    add_edge(a, c, 1, 0, false); // 4
+    add_edge(a, b, 0, 1, false); // 2
+    add_edge(a, d, 1, 1, true);  // 3
+    add_edge(a, c, 2, 0, false); // 4
     add_node(a, 3);
   }
 
   // C
   {
-    add_edge(c, a, 1, 2, true);  // 5
-    add_edge(c, d, 4, 2, false); // 6
+    add_edge(c, a, 0, 2, true);  // 5
+    add_edge(c, d, 1, 2, false); // 6
     add_node(c, 2);
   }
 
   // D
   {
-    add_edge(d, b, 0, 0, true);  // 7
-    add_edge(d, a, 3, 1, false); // 8
-    add_edge(d, c, 4, 1, true);  // 9
+    add_edge(d, b, 0, 0, false); // 7
+    add_edge(d, a, 1, 1, false); // 8
+    add_edge(d, c, 2, 1, true);  // 9
     add_node(d, 3);
   }
 
@@ -418,19 +411,15 @@ TEST(Search, test_reachability_radius_mid) {
   search({b.second, Location::StopType::BREAK, 0, 0, shortest - 100}, 4, 0);
 }
 
-TEST(Search, test_reachability_radius_reachibility_high) {
-  PointLL ob(b.second.first - .001f, b.second.second - .01f);
-  unsigned int longest = ob.Distance(d.second);
-  unsigned int shortest = ob.Distance(a.second);
+TEST(Search, test_reachability_radius_reachability_high) {
+  PointLL ob(b.second.first - .001f, b.second.second - .001f);
 
   LOGLN_WARN("set reachability high to see it gets all edges reachable");
   // TODO figure out if this is correct. It is good enough for now
   // It is complicated by the fact that u-turn detection and similar never
   // was iimplemented for Isochrone/Dijkstras
   auto expected_reach = 10;
-  search({ob, Location::StopType::BREAK, 10, 10, 0}, 4 // Why was it 2 here?
-         ,
-         expected_reach);
+  search({ob, Location::StopType::BREAK, 10, 10, 0}, 2, expected_reach);
 }
 
 TEST(Search, test_reachability_radius_off_by_one) {
