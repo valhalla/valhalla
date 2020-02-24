@@ -202,6 +202,38 @@ TEST(UtilMidgard, TestResample) {
   }
 }
 
+TEST(UtilMidgard, TestResampleDuplicate) {
+  std::vector<PointLL> polyline = {{-75.589897, 39.776615},
+                                   {-75.589996, 39.777287},
+                                   {-75.589996, 39.777287},
+                                   {-75.590080, 39.777798},
+                                   {-75.590103, 39.777969}};
+  double interval = 30.0;
+  auto resampled = resample_spherical_polyline(polyline, interval, false);
+
+  // check that nothing is too far apart
+  for (auto p = std::next(resampled.cbegin()); p != resampled.cend(); ++p) {
+    auto dist = p->Distance(*std::prev(p));
+    EXPECT_LE(dist, interval + 1)
+        << "Distance between any two points on the resampled line cannot be "
+        << "further than resample distance";
+  }
+
+  // all the points better be within a meter or so of the original line
+  for (const auto& p : resampled) {
+    auto cp = p.ClosestPoint(polyline);
+    auto dist = std::get<1>(cp);
+    if (!equal(dist, 0.f, 1.2f)) {
+      throw std::runtime_error("Sampled point was not found on original line");
+    }
+  }
+
+  // Test whether the last resampled vertex is close to the last polyline vertex
+  if (resampled.back().Distance(polyline.back()) > interval) {
+    throw std::runtime_error("Last resampled point too far from original polyline end");
+  }
+}
+
 TEST(UtilMidgard, TestIterable) {
   int a[] = {1, 2, 3, 4, 5};
   char b[] = {'a', 'b', 'c', 'd', 'e'};
