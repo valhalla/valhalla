@@ -150,7 +150,7 @@ std::string json_escape(const std::string& unescaped) {
   return escaped;
 }
 
-int seed = 521;
+int seed = 527;
 int bound = 81;
 
 std::string make_test_case(PointLL& start, PointLL& end) {
