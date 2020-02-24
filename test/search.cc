@@ -257,10 +257,7 @@ void search(valhalla::baldr::Location location, size_t result_count, int reachab
   if (results.empty() && result_count == 0)
     return;
 
-  LOG_WARN("indexing map");
-  // TODO Exception raised here _Map_at
   const auto& path = results.at(location);
-  LOG_WARN("done indexing");
 
   ASSERT_EQ(path.edges.size(), result_count) << "Wrong number of edges";
   for (const auto& edge : path.edges) {
