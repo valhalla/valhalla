@@ -239,23 +239,19 @@ void make_tile() {
   add_edge(node::i, node::j, 17, 0, 19, true);
   add_edge(node::i, node::l, 18, 0, 23, true);
   {
-    // preventing turn from 27 -> 21 -> 14 -> 18 in the reverse direction
-    // in regards to bi-directional.  Forget about is the edge is
-    // oneway or not
-    //
-    // when we are the end of a restriction we set the modes that
-    // this restriction applies to.
+    // preventing turn from 27 -> 21 -> 14 -> 18 in the FORWARD direction
+    // Necessary for Forward direction
     tile.directededges().back().set_end_restriction(kAllAccess);
-    ComplexRestrictionBuilder cr_rev;
-    cr_rev.set_type(RestrictionType::kNoEntry);
-    cr_rev.set_to_id(make_graph_id(27));
-    cr_rev.set_from_id(make_graph_id(18));
+    ComplexRestrictionBuilder cr_fwd;
+    cr_fwd.set_type(RestrictionType::kNoEntry);
+    cr_fwd.set_to_id(make_graph_id(18));
+    cr_fwd.set_from_id(make_graph_id(27));
     std::vector<GraphId> vias;
     vias.push_back(make_graph_id(14));
     vias.push_back(make_graph_id(21));
-    cr_rev.set_via_list(vias);
-    cr_rev.set_modes(kAllAccess);
-    tile.AddReverseComplexRestriction(cr_rev);
+    cr_fwd.set_via_list(vias);
+    cr_fwd.set_modes(kAllAccess);
+    tile.AddForwardComplexRestriction(cr_fwd);
   }
   add_node(node::i, 3);
 
@@ -269,6 +265,22 @@ void make_tile() {
     tile.directededges().back().complex_restriction(true);
   }
   add_edge(node::k, node::n, 22, 0, 27, true);
+  {
+    // Add first part of complex turn restriction in REVERSE direction
+    // preventing turn from 22 -> 15 -> 16 -> 23
+    // Necessary for reverse direction
+    tile.directededges().back().set_start_restriction(kAllAccess);
+    ComplexRestrictionBuilder cr_fwd;
+    cr_fwd.set_type(RestrictionType::kNoEntry);
+    cr_fwd.set_to_id(make_graph_id(23));
+    cr_fwd.set_from_id(make_graph_id(22));
+    std::vector<GraphId> vias;
+    vias.push_back(make_graph_id(15));
+    vias.push_back(make_graph_id(16));
+    cr_fwd.set_via_list(vias);
+    cr_fwd.set_modes(kAllAccess);
+    tile.AddReverseComplexRestriction(cr_fwd);
+  }
   add_node(node::k, 2);
 
   add_edge(node::l, node::i, 23, 2, 18, false);
@@ -280,24 +292,6 @@ void make_tile() {
   add_node(node::m, 2);
 
   add_edge(node::n, node::k, 27, 1, 22, true);
-  {
-    // Add first part of complex turn restriction CLOCKWISE direction
-    // preventing turn from 27 -> 21 -> 14 -> 18
-    //
-    // when we are the start of a restriction we set the modes that
-    // this restriction applies to.
-    tile.directededges().back().set_start_restriction(kAllAccess);
-    ComplexRestrictionBuilder cr_fwd;
-    cr_fwd.set_type(RestrictionType::kNoEntry);
-    cr_fwd.set_to_id(make_graph_id(18));
-    cr_fwd.set_from_id(make_graph_id(27));
-    std::vector<GraphId> vias;
-    vias.push_back(make_graph_id(14));
-    vias.push_back(make_graph_id(21));
-    cr_fwd.set_via_list(vias);
-    cr_fwd.set_modes(kAllAccess);
-    tile.AddForwardComplexRestriction(cr_fwd);
-  }
   add_node(node::n, 1);
 
   tile.StoreTileData();
@@ -1299,12 +1293,12 @@ TEST(Astar, TestBacktrackComplexRestrictionForwardDetourAfterRestriction) {
     auto paths = astar.GetBestPath(origin, dest, *reader, costs, mode).front();
     verify_paths(paths);
   }
-  //{
-  //  LOGLN_INFO("Reverse direction");
-  //  vt::TimeDepReverse astar;
-  //  auto paths = astar.GetBestPath(origin, dest, *reader, costs, mode).front();
-  //  verify_paths(paths);
-  //}
+  {
+    LOGLN_INFO("Reverse direction");
+    vt::TimeDepReverse astar;
+    auto paths = astar.GetBestPath(origin, dest, *reader, costs, mode).front();
+    verify_paths(paths);
+  }
 }
 
 Api timed_access_restriction_ny(std::string mode, std::string datetime) {
