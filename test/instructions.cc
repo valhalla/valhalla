@@ -326,14 +326,29 @@ TEST(Instructions, validate_exit_instructions) {
                      "test/pinpoints/instructions/exit_left_driving_side_right.pbf"},
                     expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
                     "Take the I 66 East exit on the left toward Washington.", "",
-                    "Take the Interstate 66 East exit on the left toward Washington.", "");
+                    "Take the Interstate 66 East exit on the left toward Washington.");
 
   // Test exit left on left driving side
   test_instructions({VALHALLA_SOURCE_DIR
                      "test/pinpoints/instructions/exit_left_driving_side_left.pbf"},
                     expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
-                    "Take exit 8 onto A120(W)|A120(W).", "", "Take exit 8 onto A1 20(W)|A1 20(W).",
-                    "");
+                    "Take exit 8 onto A120(W)|A120(W).", "", "Take exit 8 onto A1 20(W)|A1 20(W).");
+
+  expected_maneuvers_size = 4;
+  // Test exit non-motorway in PA
+  test_instructions({VALHALLA_SOURCE_DIR "test/pinpoints/instructions/exit_right_nonmotorway_pa.pbf"},
+                    expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
+                    "Take the PA 934 exit toward I 81/Fort Indiantown Gap/Annville.",
+                    "Take the Pennsylvania 9 34 exit.",
+                    "Take the Pennsylvania 9 34 exit toward Interstate 81, Fort Indiantown Gap.");
+
+  expected_maneuvers_size = 5;
+  // Test exit non-motorway in VA
+  test_instructions({VALHALLA_SOURCE_DIR "test/pinpoints/instructions/exit_right_nonmotorway_va.pbf"},
+                    expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
+                    "Take the US 15 North exit toward Frederick Maryland.",
+                    "Take the U.S. 15 North exit.",
+                    "Take the U.S. 15 North exit toward Frederick Maryland.");
 }
 
 } // namespace
