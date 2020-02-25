@@ -52,9 +52,9 @@ public:
     // a measure of how close the result is to the original input where the
     // lower the score the better the match, maybe there's a better word for this?
     float distance;
-    // minimum number of nodes reachable from this edge
+    // minimum number of edges reachable from this edge
     unsigned int outbound_reach;
-    // minimum number of nodes that can reach this edge
+    // minimum number of edges that can reach this edge
     unsigned int inbound_reach;
   };
 
@@ -246,6 +246,7 @@ public:
     // for regular routing we dont really care about inbound reach for the origin or outbound reach
     // for the destination so we remove that requirement
     if (route_reach && pls.size() > 1) {
+      // TODO Why only set min_reach for front/back? For routing, `pls` is only ever just size 2?
       pls.front().min_inbound_reach_ = 0;
       pls.back().min_outbound_reach_ = 0;
     }

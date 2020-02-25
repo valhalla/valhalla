@@ -775,6 +775,10 @@ struct route_tester {
     loki_worker.route(request);
     thor_worker.route(request);
     odin_worker.narrate(request);
+    // Cleanup
+    loki_worker.cleanup();
+    thor_worker.cleanup();
+    odin_worker.cleanup();
     return request;
   }
   boost::property_tree::ptree conf;

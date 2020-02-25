@@ -132,8 +132,9 @@ directed_reach Reach::operator()(const valhalla::baldr::DirectedEdge* edge,
                                  uint8_t direction) {
   // no reach is needed
   directed_reach reach{};
-  if (max_reach == 0)
+  if (max_reach == 0) {
     return reach;
+  }
 
   max_reach_ = max_reach;
   size_t max_labels = std::numeric_limits<decltype(reach.outbound)>::max();
@@ -145,13 +146,19 @@ directed_reach Reach::operator()(const valhalla::baldr::DirectedEdge* edge,
   auto ll = node->latlng(tile->header()->base_ll());
 
   google::protobuf::RepeatedPtrField<Location> locations;
-  locations.Add()->mutable_ll()->set_lng(ll.first);
-  locations.Add()->mutable_ll()->set_lat(ll.second);
-  auto* path_edge = locations.Add()->add_path_edges();
-  path_edge->set_graph_id(edge_id);
-  path_edge->mutable_ll()->set_lng(ll.first);
-  path_edge->mutable_ll()->set_lat(ll.second);
-  path_edge->set_distance(0);
+  {
+    // Mock up the Location struct
+    auto* loc = locations.Add();
+    loc->mutable_ll()->set_lng(ll.first);
+    loc->mutable_ll()->set_lat(ll.second);
+    auto* path_edge = loc->add_path_edges();
+    path_edge->set_graph_id(edge_id);
+    path_edge->mutable_ll()->set_lng(ll.first);
+    path_edge->mutable_ll()->set_lat(ll.second);
+    path_edge->set_distance(0);
+    path_edge->set_begin_node(false);
+    path_edge->set_end_node(false);
+  }
 
   // fake up the costing array
   std::shared_ptr<sif::DynamicCost> costings[static_cast<int>(sif::TravelMode::kMaxTravelMode)];
@@ -159,6 +166,7 @@ directed_reach Reach::operator()(const valhalla::baldr::DirectedEdge* edge,
 
   // expand in the forward direction
   if (direction | kOutbound) {
+    Clear();
     Compute(locations, reader, costings, costing->travel_mode());
     reach.outbound = bdedgelabels_.size() > max_labels
                          ? max_labels
@@ -172,6 +180,7 @@ directed_reach Reach::operator()(const valhalla::baldr::DirectedEdge* edge,
     reach.inbound = bdedgelabels_.size() > max_labels
                         ? max_labels
                         : static_cast<decltype(reach.outbound)>(bdedgelabels_.size());
+    Clear();
   }
 
   return reach;
@@ -193,5 +202,9 @@ void Reach::GetExpansionHints(uint32_t& bucket_count, uint32_t& edge_label_reser
   edge_label_reservation = max_reach_ * 2;
 }
 
+void Reach::Clear() {
+  // max_reach_ = 0;
+  Dijkstras::Clear();
+}
 } // namespace loki
 } // namespace valhalla

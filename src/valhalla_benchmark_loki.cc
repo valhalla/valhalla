@@ -158,7 +158,7 @@ void work(const boost::property_tree::ptree& config, std::promise<results_t>& pr
       auto start = std::chrono::high_resolution_clock::now();
       try {
         // TODO: actually save the result
-        auto result = valhalla::loki::Search(job, reader);
+        auto result = valhalla::loki::Search(job, reader, {});
         auto end = std::chrono::high_resolution_clock::now();
         (*r) = result_t{std::chrono::duration_cast<std::chrono::milliseconds>(end - start), true, job,
                         cached};
