@@ -1019,7 +1019,7 @@ bool IsBridgingEdgeRestricted(GraphReader& graphreader,
     }
     next_fwd_pred = edge_labels_fwd[next_pred_idx];
     if (!next_fwd_pred.on_complex_rest()) {
-      // We can actually stop here if this edge is no longer path of any complex restriction
+      // We can actually stop here if this edge is no longer part of any complex restriction
       break;
     }
 
@@ -1056,7 +1056,7 @@ bool IsBridgingEdgeRestricted(GraphReader& graphreader,
     if (tile == nullptr) {
       throw std::logic_error("Tile pointer was null in IsBridgingEdgeRestricted");
     }
-    const auto& edge = tile->directededge(edgeid);
+    const auto* edge = tile->directededge(edgeid);
     if (edge == nullptr) {
       throw std::logic_error("Edge pointer was null in IsBridgingEdgeRestricted");
       return false;

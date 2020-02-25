@@ -165,13 +165,12 @@ void make_tile() {
 
   auto add_edge = [&](const std::pair<vb::GraphId, vm::PointLL>& u,
                       const std::pair<vb::GraphId, vm::PointLL>& v, const uint32_t localedgeidx,
-                      const uint32_t opposing_edge_index, const uint32_t opp_local_idx,
-                      const bool forward) {
+                      const uint32_t opposing_edge_index, const bool forward) {
     DirectedEdgeBuilder edge_builder({}, v.first, forward, u.second.Distance(v.second) + .5, 1, 1,
                                      baldr::Use::kRoad, baldr::RoadClass::kMotorway, localedgeidx,
                                      false, 0, 0, false);
     edge_builder.set_opp_index(opposing_edge_index);
-    edge_builder.set_opp_local_idx(opp_local_idx);
+    edge_builder.set_opp_local_idx(opposing_edge_index);
     edge_builder.set_forwardaccess(vb::kAllAccess);
     edge_builder.set_reverseaccess(vb::kAllAccess);
     edge_builder.set_free_flow_speed(100);
@@ -193,51 +192,51 @@ void make_tile() {
   };
 
   // first set of roads - Square
-  add_edge(node::a, node::b, 0, 0, 2, true);
-  add_edge(node::a, node::c, 1, 0, 4, true);
+  add_edge(node::a, node::b, 0, 0, true);
+  add_edge(node::a, node::c, 1, 0, true);
   add_node(node::a, 2);
 
-  add_edge(node::b, node::a, 2, 0, 0, false);
-  add_edge(node::b, node::d, 3, 1, 7, true);
+  add_edge(node::b, node::a, 0, 0, false);
+  add_edge(node::b, node::d, 1, 1, true);
   add_node(node::b, 2);
 
-  add_edge(node::c, node::a, 4, 1, 1, false);
-  add_edge(node::c, node::d, 5, 0, 6, true);
+  add_edge(node::c, node::a, 0, 1, false);
+  add_edge(node::c, node::d, 1, 0, true);
   add_node(node::c, 2);
 
-  add_edge(node::d, node::c, 6, 1, 5, false);
-  add_edge(node::d, node::b, 7, 1, 3, false);
+  add_edge(node::d, node::c, 0, 1, false);
+  add_edge(node::d, node::b, 1, 1, false);
   add_node(node::d, 2);
 
   // second set of roads - Triangle
-  add_edge(node::e, node::f, 8, 0, 10, true);
-  add_edge(node::e, node::g, 9, 0, 12, true);
+  add_edge(node::e, node::f, 0, 0, true);
+  add_edge(node::e, node::g, 1, 0, true);
   add_node(node::e, 2);
 
-  add_edge(node::f, node::e, 10, 0, 8, false);
-  add_edge(node::f, node::g, 11, 1, 13, true);
+  add_edge(node::f, node::e, 0, 0, false);
+  add_edge(node::f, node::g, 1, 1, true);
   add_node(node::f, 2);
 
-  add_edge(node::g, node::e, 12, 0, 9, false);
-  add_edge(node::g, node::f, 13, 1, 11, false);
+  add_edge(node::g, node::e, 0, 1, false);
+  add_edge(node::g, node::f, 1, 1, false);
   add_node(node::g, 2);
 
   // Third set of roads - Complex restriction with detour
-  add_edge(node::h, node::i, 14, 0, 16, true);
+  add_edge(node::h, node::i, 0, 0, true);
   {
     // we only set this to true for vias
     tile.directededges().back().complex_restriction(true);
   }
-  add_edge(node::h, node::k, 15, 0, 21, true);
+  add_edge(node::h, node::k, 1, 0, true);
   add_node(node::h, 2);
 
-  add_edge(node::i, node::h, 16, 0, 14, false);
+  add_edge(node::i, node::h, 0, 0, false);
   {
     // we only set this to true for vias
     tile.directededges().back().complex_restriction(true);
   }
-  add_edge(node::i, node::j, 17, 0, 19, true);
-  add_edge(node::i, node::l, 18, 0, 23, true);
+  add_edge(node::i, node::j, 1, 0, true);
+  add_edge(node::i, node::l, 2, 0, true);
   {
     // preventing turn from 27 -> 21 -> 14 -> 18 in the FORWARD direction
     // Necessary for Forward direction
@@ -255,16 +254,16 @@ void make_tile() {
   }
   add_node(node::i, 3);
 
-  add_edge(node::j, node::i, 19, 1, 17, false);
-  add_edge(node::j, node::m, 20, 0, 25, true);
+  add_edge(node::j, node::i, 0, 1, false);
+  add_edge(node::j, node::m, 1, 0, true);
   add_node(node::j, 2);
 
-  add_edge(node::k, node::h, 21, 1, 15, false);
+  add_edge(node::k, node::h, 0, 1, false);
   {
     // we only set this to true for vias
     tile.directededges().back().complex_restriction(true);
   }
-  add_edge(node::k, node::n, 22, 0, 27, true);
+  add_edge(node::k, node::n, 1, 0, true);
   {
     // Add first part of complex turn restriction in REVERSE direction
     // preventing turn from 22 -> 15 -> 16 -> 23
@@ -283,15 +282,15 @@ void make_tile() {
   }
   add_node(node::k, 2);
 
-  add_edge(node::l, node::i, 23, 2, 18, false);
-  add_edge(node::l, node::m, 24, 1, 26, true);
+  add_edge(node::l, node::i, 0, 2, false);
+  add_edge(node::l, node::m, 1, 1, true);
   add_node(node::l, 2);
 
-  add_edge(node::m, node::j, 25, 1, 20, false);
-  add_edge(node::m, node::l, 26, 1, 24, false);
+  add_edge(node::m, node::j, 0, 1, false);
+  add_edge(node::m, node::l, 1, 1, false);
   add_node(node::m, 2);
 
-  add_edge(node::n, node::k, 27, 1, 22, true);
+  add_edge(node::n, node::k, 0, 1, true);
   add_node(node::n, 1);
 
   tile.StoreTileData();
@@ -1481,63 +1480,58 @@ TEST(Astar, test_complex_restriction_short_path_fake) {
   ASSERT_TRUE(bool(costs[int(mode)]));
 
   // Test Bidirectional both for forward and reverse expansion
-  std::vector<std::pair<vt::BidirectionalAStar, std::string>> astars;
-  astars.push_back(std::make_pair(vt::BidirectionalAStar(), "BidirectionalAStar"));
-  // astars.push_back(
-  //    std::make_pair(vt::BidirectionalAStar,
-  //                   "WithoutReverseExpansion"));
-  for (auto& astar : astars) {
-    std::cout << "new test" << std::endl;
-    // Two tests where start and end lives on a partial complex restriction
-    //      Under this circumstance the restriction should _not_ trigger
+  vt::BidirectionalAStar astar;
 
-    // Put the origin on N which is start of restriction
-    using node::n;
-    valhalla::Location origin;
-    origin.mutable_ll()->set_lng(n.second.first);
-    origin.mutable_ll()->set_lat(n.second.second);
-    add(tile_id + uint64_t(27), 0.0f, n.second, origin);
-    add(tile_id + uint64_t(22), 1.0f, n.second, origin);
+  // Two tests where start and end lives on a partial complex restriction
+  //      Under this circumstance the restriction should _not_ trigger
 
-    // Put the destination at I which in the middle of restriction
-    using node::i;
-    valhalla::Location dest;
-    dest.mutable_ll()->set_lng(i.second.first);
-    dest.mutable_ll()->set_lat(i.second.second);
-    add(tile_id + uint64_t(16), 0.0f, i.second, dest);
-    add(tile_id + uint64_t(14), 1.0f, i.second, dest);
+  // Put the origin on N which is start of restriction
+  using node::n;
+  valhalla::Location origin;
+  origin.mutable_ll()->set_lng(n.second.first);
+  origin.mutable_ll()->set_lat(n.second.second);
+  add(tile_id + uint64_t(27), 0.0f, n.second, origin);
+  add(tile_id + uint64_t(22), 1.0f, n.second, origin);
 
-    auto paths = astar.first.GetBestPath(origin, dest, *reader, costs, mode);
+  // Put the destination at I which in the middle of restriction
+  using node::i;
+  valhalla::Location dest;
+  dest.mutable_ll()->set_lng(i.second.first);
+  dest.mutable_ll()->set_lat(i.second.second);
+  add(tile_id + uint64_t(16), 0.0f, i.second, dest);
+  add(tile_id + uint64_t(14), 1.0f, i.second, dest);
 
-    std::vector<uint32_t> visited;
-    for (auto& path_infos : paths) {
-      for (auto path_info : path_infos) {
-        visited.push_back(path_info.edgeid.id());
-      }
+  auto paths = astar.GetBestPath(origin, dest, *reader, costs, mode);
+
+  std::vector<uint32_t> visited;
+  for (auto& path_infos : paths) {
+    for (auto path_info : path_infos) {
+      visited.push_back(path_info.edgeid.id());
     }
-    std::vector<uint32_t> expected;
-    expected.push_back(27);
-    expected.push_back(21);
-    expected.push_back(14);
-    ASSERT_EQ(visited, expected) << "Unexpected edges in case 1 " << astar.second;
-
-    // For the second test, just switch origin/destination and reverse expected,
-    // result should be the same
-    std::cout << "reversed test" << std::endl;
-    paths = astar.first.GetBestPath(dest, origin, *reader, costs, mode);
-
-    visited.clear();
-    for (auto& path_infos : paths) {
-      for (auto path_info : path_infos) {
-        visited.push_back(path_info.edgeid.id());
-      }
-    }
-    expected.clear();
-    expected.push_back(16);
-    expected.push_back(15);
-    expected.push_back(22);
-    ASSERT_EQ(visited, expected) << "Unexpected edges in case 2 " << astar.second;
   }
+  std::vector<uint32_t> expected;
+  expected.push_back(27);
+  expected.push_back(21);
+  expected.push_back(14);
+  ASSERT_EQ(visited, expected) << "Unexpected edges in case 1 of bidirectional a*";
+
+  // For the second test, just switch origin/destination and reverse expected,
+  // result should be the same
+  std::cout << "reversed test" << std::endl;
+  paths = astar.GetBestPath(dest, origin, *reader, costs, mode);
+
+  visited.clear();
+  for (auto& path_infos : paths) {
+    for (auto path_info : path_infos) {
+      visited.push_back(path_info.edgeid.id());
+    }
+  }
+  expected.clear();
+  expected.push_back(16);
+  expected.push_back(15);
+  expected.push_back(22);
+  ASSERT_EQ(visited, expected) << "Unexpected edges in case 2 of bidirectional a*";
+
   {
     // TestBacktrackComplexRestrictionBidirectional tests the behaviour with a
     // complex restriction between the two expanding
