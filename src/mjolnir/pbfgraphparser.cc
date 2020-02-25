@@ -623,9 +623,9 @@ public:
             max_speed = kUnlimitedSpeedLimit;
           } else {
             max_speed = std::stof(tag.second);
+            w.set_tagged_speed(true);
           }
           has_max_speed = true;
-          w.set_tagged_speed(true);
         } catch (const std::out_of_range& oor) {
           LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid));
         }
@@ -1091,7 +1091,8 @@ public:
       w.set_speed(average_speed);
     } else if (has_advisory_speed) {
       w.set_speed(advisory_speed);
-    } else if (has_max_speed) {
+    } else if (has_max_speed && max_speed != kUnlimitedSpeedLimit) {
+      // don't use unlimited speed limit for default edge speed
       w.set_speed(max_speed);
     } else if (has_default_speed && !w.forward_tagged_speed() && !w.backward_tagged_speed()) {
       w.set_speed(default_speed);
