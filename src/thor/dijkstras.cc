@@ -874,7 +874,7 @@ void Dijkstras::SetOriginLocations(GraphReader& graphreader,
       if (!opp_edge_id.Is_Valid()) {
         continue;
       }
-      const DirectedEdge* opp_dir_edge = opp_tile->directededge(edgeid);
+      const DirectedEdge* opp_dir_edge = opp_tile->directededge(opp_edge_id);
 
       // Get cost
       Cost cost = costing->EdgeCost(directededge, tile) * (1.0f - edge.percent_along());

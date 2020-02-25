@@ -193,16 +193,6 @@ struct projector_wrapper {
   projector_t project;
 };
 
-struct loc_cmp {
-  bool operator()(const valhalla::baldr::Location& a, const valhalla::baldr::Location& b) {
-    if (a.latlng_.lng() == b.latlng_.lng()) {
-      return (a.latlng_.lat() > b.latlng_.lat());
-    } else {
-      return (a.latlng_.lng() > b.latlng_.lng());
-    }
-  };
-};
-
 struct bin_handler_t {
   std::vector<projector_wrapper> pps;
   valhalla::baldr::GraphReader& reader;
@@ -225,9 +215,7 @@ struct bin_handler_t {
         edge_filter(costing ? costing->GetEdgeFilter() : PassThroughEdgeFilter),
         node_filter(costing ? costing->GetNodeFilter() : PassThroughNodeFilter) {
     // get the unique set of input locations and the max reachability of them all
-    // TODO Removing the unordered_set for now as it evaluates to different orderings and
-    // non-determinism
-    std::set<Location, loc_cmp> uniq_locations(locations.begin(), locations.end());
+    std::unordered_set<Location> uniq_locations(locations.begin(), locations.end());
     pps.reserve(locations.size());
     max_reach_limit = 0;
     for (const auto& loc : uniq_locations) {
