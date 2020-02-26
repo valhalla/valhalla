@@ -111,19 +111,17 @@ TEST(Reach, check_all_reach) {
           << "This edge should have 0 reach as its not accessable: " + std::to_string(edge_id.value) +
                  " " + shape_str;
 
-      // TODO Fix test here
+      // if inbound is 0 and outbound is not then it must be an edge leaving a dead end
+      // meaning a begin node that is not accessable
+      EXPECT_FALSE(reach.inbound == 0 && reach.outbound > 0 && !costing->GetNodeFilter()(begin))
+          << "Only outbound reach should mean an edge that leaves a dead end: " +
+                 std::to_string(edge_id.value) + " " + shape_str;
 
-      //// if inbound is 0 and outbound is not then it must be an edge leaving a dead end
-      //// meaning a begin node that is not accessable
-      // EXPECT_FALSE(reach.inbound == 0 && reach.outbound > 0 && !node_filter(begin))
-      //    << "Only outbound reach should mean an edge that leaves a dead end: " +
-      //           std::to_string(edge_id.value) + " " + shape_str;
-
-      //// if outbound is 0 and inbound is not then it must be an edge entering a dead end
-      //// meaning an end node that is not accessable
-      // EXPECT_FALSE(reach.inbound > 0 && reach.outbound == 0 && !node_filter(end))
-      //    << "Only inbound reach should mean an edge that enters a dead end: " +
-      //           std::to_string(edge_id.value) + " " + shape_str;
+      // if outbound is 0 and inbound is not then it must be an edge entering a dead end
+      // meaning an end node that is not accessable
+      EXPECT_FALSE(reach.inbound > 0 && reach.outbound == 0 && !costing->GetNodeFilter()(end))
+          << "Only inbound reach should mean an edge that enters a dead end: " +
+                 std::to_string(edge_id.value) + " " + shape_str;
     }
   }
 }
