@@ -279,7 +279,7 @@ int main(int argc, char* argv[]) {
   } else {
     throw std::runtime_error("No costing method found");
   }
-  cost_ptr_t cost_ptr = factory.Create(costing, request.options());
+  cost_ptr_t cost_ptr = factory.Create(request.options());
 
   // If a shape is entered use edge walking
   if (!map_match) {

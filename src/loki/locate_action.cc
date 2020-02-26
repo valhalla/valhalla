@@ -13,10 +13,7 @@ void loki_worker_t::init_locate(Api& request) {
   if (request.options().locations_size() < 1)
     throw valhalla_exception_t{120};
 
-  if (request.options().has_costing())
-    parse_costing(request);
-  else
-    costing.reset();
+  parse_costing(request);
 }
 
 std::string loki_worker_t::locate(Api& request) {

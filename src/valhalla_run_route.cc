@@ -604,7 +604,7 @@ int main(int argc, char* argv[]) {
   } else {
     // Assign costing method, override any config options that are in the
     // json request
-    std::shared_ptr<DynamicCost> cost = factory.Create(options.costing(), options);
+    std::shared_ptr<DynamicCost> cost = factory.Create(options);
     mode = cost->travel_mode();
     mode_costing[static_cast<uint32_t>(mode)] = cost;
   }

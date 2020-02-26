@@ -721,6 +721,11 @@ std::unordered_map<valhalla::baldr::Location, PathLocation>
 Search(const std::vector<valhalla::baldr::Location>& locations,
        GraphReader& reader,
        const std::shared_ptr<DynamicCost>& costing) {
+  // we cannot continue without costing
+  if (!costing) {
+    throw std::runtime_error("No costing was provided for edge candidate search");
+  }
+
   // trivially finished already
   if (locations.empty()) {
     return std::unordered_map<valhalla::baldr::Location, PathLocation>{};

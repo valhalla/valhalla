@@ -710,12 +710,15 @@ void from_json(rapidjson::Document& doc, Options& options) {
     } else {
       throw valhalla_exception_t{125, "'" + *costing_str + "'"};
     }
+  } // none provided
+  else {
+    options.set_costing(valhalla::Costing::none_);
   }
 
   // if specified, get the costing options in there
   // the order of costing must reflect the enum order
   for (const auto& costing : {auto_, auto_shorter, bicycle, bus, hov, motor_scooter, multimodal,
-                              pedestrian, transit, truck, motorcycle, auto_data_fix, taxi}) {
+                              pedestrian, transit, truck, motorcycle, auto_data_fix, taxi, none_}) {
     // Create the costing string
     auto costing_str = valhalla::Costing_Enum_Name(costing);
     // Create the costing options key
@@ -772,6 +775,10 @@ void from_json(rapidjson::Document& doc, Options& options) {
       }
       case auto_data_fix: {
         sif::ParseAutoDataFixCostOptions(doc, costing_options_key, options.add_costing_options());
+        break;
+      }
+      case none_: {
+        sif::ParseNoCostOptions(doc, costing_options_key, options.add_costing_options());
         break;
       }
     }

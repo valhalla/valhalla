@@ -179,7 +179,7 @@ int main(int argc, char* argv[]) {
     mode = TravelMode::kPedestrian;
   } else {
     // Assign costing method
-    std::shared_ptr<DynamicCost> cost = factory.Create(options.costing(), options);
+    std::shared_ptr<DynamicCost> cost = factory.Create(options);
     mode = cost->travel_mode();
     mode_costing[static_cast<uint32_t>(mode)] = cost;
   }

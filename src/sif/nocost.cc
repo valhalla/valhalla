@@ -201,6 +201,12 @@ public:
   }
 };
 
+void ParseNoCostOptions(const rapidjson::Document& doc,
+                        const std::string& costing_options_key,
+                        CostingOptions* pbf_costing_options) {
+  // this is probably not needed but its part of the contract for costing..
+}
+
 cost_ptr_t CreateNoCost(const Costing costing, const Options& options) {
   return std::make_shared<NoCost>(costing, options);
 }

@@ -12,7 +12,7 @@
 #include "baldr/tilehierarchy.h"
 #include "midgard/pointll.h"
 #include "midgard/vector2.h"
-#include "sif/autocost.h"
+#include "sif/nocost.h"
 
 #include "test.h"
 
@@ -189,12 +189,8 @@ void make_tile() {
 
 std::shared_ptr<vs::DynamicCost> create_costing() {
   valhalla::Options options;
-  const rapidjson::Document doc;
-  vs::ParseAutoCostOptions(doc, "/costing_options/auto", options.add_costing_options());
-  vs::ParseAutoShorterCostOptions(doc, "/costing_options/auto_shorter",
-                                  options.add_costing_options());
-  options.add_costing_options();
-  return vs::CreateAutoCost(valhalla::Costing::auto_, options);
+  options.set_costing(valhalla::Costing::none_);
+  return vs::CreateNoCost(valhalla::Costing::none_, options);
 }
 
 void search(valhalla::baldr::Location location,

@@ -60,27 +60,28 @@ void loki_worker_t::parse_locations(google::protobuf::RepeatedPtrField<valhalla:
   }
 }
 
-void loki_worker_t::parse_costing(Api& api) {
+void loki_worker_t::parse_costing(Api& api, bool allow_none) {
   auto& options = *api.mutable_options();
   // using the costing we can determine what type of edge filtering to use
-  if (!options.has_costing()) {
+  if (!options.has_costing() || (!allow_none && options.costing() == Costing::none_)) {
     throw valhalla_exception_t{124};
   }
 
-  auto costing_type = options.costing();
-  auto costing_str = Costing_Enum_Name(costing_type);
-
+  auto costing_str = Costing_Enum_Name(options.costing());
   if (!options.do_not_track()) {
     valhalla::midgard::logging::Log("costing_type::" + costing_str, " [ANALYTICS] ");
   }
 
-  // TODO - have a way of specifying mode at the location
-  if (costing_type == Costing::multimodal) {
-    costing_type = Costing::pedestrian;
-  }
-
   try {
-    costing = factory.Create(costing_type, options);
+    // For the begin and end of multimodal we expect you to be walking
+    if (options.costing() == Costing::multimodal) {
+      options.set_costing(Costing::pedestrian);
+      costing = factory.Create(options);
+      options.set_costing(Costing::multimodal);
+    } // otherwise use the provided costing
+    else {
+      costing = factory.Create(options);
+    }
   } catch (const std::runtime_error&) { throw valhalla_exception_t{125, "'" + costing_str + "'"}; }
 
   // See if we have avoids and take care of them
