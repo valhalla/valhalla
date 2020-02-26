@@ -46,3 +46,9 @@ $ bash wrk-csv-filter.sh results.csv
 # Plot metadata
 $ python3 wrk-analysis.py plot-throughput results.csv.measurements.csv results.csv.metadata.csv
 ```
+
+`wrk-bench.sh` relies on Lua scripts defined in `scripts/` to perform
+benchmarking. To update or modify these scripts, check out wrk's scripting API
+[documentation][lua_wrk_docs].
+
+[lua_wrk_docs]: https://github.com/wg/wrk/blob/master/SCRIPTING
