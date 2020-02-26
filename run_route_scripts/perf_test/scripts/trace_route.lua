@@ -1,6 +1,6 @@
 -- Perform HTTP-based benchmarking of the trace_route endpoint
 
-common = require("common")
+local common = require("common")
 
 done = function(summary, latency, requests)
    common.write_result_csv(summary, latency, requests)
