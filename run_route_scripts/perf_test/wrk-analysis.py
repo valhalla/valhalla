@@ -16,14 +16,16 @@ def analyze_benchmark(measurements, metadata):
     combined = measurements_df.join(metadata_df)
     combined['throughput_qps'] \
       = combined['summary.requests']/(combined['summary.duration(usec)']/10**6)
-    qps_mean = combined.groupby('concurrency').mean()['throughput_qps']
-    qps_stddev = combined.groupby('concurrency').std()['throughput_qps']
-    ax = qps_mean.plot(yerr=qps_stddev, label='QPS')
+    for test_name, df in combined.groupby('test_name'):
+        qps_mean = df.groupby('concurrency').mean()['throughput_qps']
+        qps_stddev = df.groupby('concurrency').std()['throughput_qps']
+        ax = qps_mean.plot(yerr=qps_stddev, label='test_name')
     plt.legend()
-    ax.set_title('Throughput(QPS) Under Load')
-    ax.set_xlabel('Number of Concurrent Users')
+    ax.set_title('Query Throughput Under Load')
+    ax.set_xlabel('Number of Concurrent Clients')
     ax.set_ylabel('Throughput (Queries/Second)')
     ax.get_figure().savefig(measurements + '.png')
+    combined.to_csv(measurements + '-combined.csv')
 
 
 @click.group()
