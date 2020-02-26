@@ -28,6 +28,7 @@ endpoint=${2:-http://localhost:8002}
 test_name=${TEST_NAME:-benchmark}
 duration_sec=${DURATION_SEC:-30}
 num_trials=${NUM_TRIALS:-5}
+timeout_sec=${TIMEOUT_SEC:-10}
 
 num_threads=2
 
@@ -42,6 +43,7 @@ benchmark () {
     wrk --script "$script"  \
         --threads "$threads" \
         --latency \
+        --timeout "$timeout_sec"s \
         --connections "$connections" \
         --duration "$duration_sec"s \
         "$endpoint"

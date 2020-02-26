@@ -4,6 +4,7 @@ local common = {}
 
 -- Shared table output for benchmarking results. Writes to stderr so report
 -- output can be easily separated out for analysis and plotting
+-- NOTE(mookerji): Edit with care, otherwise columns will become misaligned.
 function common.write_result_csv (summary, latency, requests)
    -- Write header row
    io.stderr:write("latency.min(usec),")
@@ -16,6 +17,11 @@ function common.write_result_csv (summary, latency, requests)
    io.stderr:write("latency:percentile(99.999)(usec),")
    io.stderr:write("summary.duration(usec),")
    io.stderr:write("summary.requests,")
+   io.stderr:write("summary.errors.connect,")
+   io.stderr:write("summary.errors.read,")
+   io.stderr:write("summary.errors.write,")
+   io.stderr:write("summary.errors.status,")
+   io.stderr:write("summary.errors.timeout,")
    io.stderr:write("requests.min,")
    io.stderr:write("requests.max,")
    io.stderr:write("requests.mean,")
@@ -32,6 +38,11 @@ function common.write_result_csv (summary, latency, requests)
    io.stderr:write(string.format("%d,",latency:percentile(99.999)))
    io.stderr:write(string.format("%d,",summary.duration))
    io.stderr:write(string.format("%d,",summary.requests))
+   io.stderr:write(string.format("%d,",summary.errors.connect))
+   io.stderr:write(string.format("%d,",summary.errors.read))
+   io.stderr:write(string.format("%d,",summary.errors.write))
+   io.stderr:write(string.format("%d,",summary.errors.status))
+   io.stderr:write(string.format("%d,",summary.errors.timeout))
    io.stderr:write(string.format("%d,",requests.min))
    io.stderr:write(string.format("%d,",requests.max))
    io.stderr:write(string.format("%d,",requests.mean))
