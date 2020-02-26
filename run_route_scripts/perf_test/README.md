@@ -14,7 +14,7 @@ $ siege -c 4 -b -r 2550 -f url_de_benchmark_routes.txt
 
 ## Load-based Benchmarking
 
-The [`wrk-bench.sh`][https://github.com/wg/wrk] script measures Valhalla's query
+The [`wrk-bench.sh`](https://github.com/wg/wrk) script measures Valhalla's query
 throughput under varying concurrency load.
 
 Installation:
