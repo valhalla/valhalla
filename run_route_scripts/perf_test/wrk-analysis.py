@@ -16,6 +16,11 @@ def analyze_benchmark(measurements, metadata):
     combined = measurements_df.join(metadata_df)
     combined['throughput_qps'] \
       = combined['summary.requests']/(combined['summary.duration(usec)']/10**6)
+    # Plot separate performance envelopes for different benchmark tests.
+    # groupby handles the situation where multiple tests appear in the same
+    # file, which may happen if you concatenate results from multiple benchmark
+    # tests into the single file. If you concatenate multiple CSVs together
+    # from separate runs of wrk-bench, this will plot
     for test_name, df in combined.groupby('test_name'):
         qps_mean = df.groupby('concurrency').mean()['throughput_qps']
         qps_stddev = df.groupby('concurrency').std()['throughput_qps']
