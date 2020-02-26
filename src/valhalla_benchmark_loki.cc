@@ -79,7 +79,7 @@ struct result_t {
 };
 using results_t = std::set<result_t>;
 
-bool ParseArguments(int argc, char* argv[]) {
+int ParseArguments(int argc, char* argv[]) {
 
   bpo::options_description options(
       "search " VALHALLA_VERSION "\n"
@@ -124,17 +124,17 @@ bool ParseArguments(int argc, char* argv[]) {
   } catch (std::exception& e) {
     std::cerr << "Unable to parse command line options because: " << e.what() << "\n"
               << "This is a bug, please report it at " PACKAGE_BUGREPORT << "\n";
-    return false;
+    return 1;
   }
 
   if (vm.count("help")) {
     std::cout << options << "\n";
-    return true;
+    return -1;
   }
 
   if (vm.count("version")) {
     std::cout << "loki_benchmark " << VALHALLA_VERSION << "\n";
-    return true;
+    return 0;
   }
 
   // argument checking and verification
@@ -142,16 +142,16 @@ bool ParseArguments(int argc, char* argv[]) {
     if (vm.count(arg) == 0) {
       std::cerr << "The <" << arg << "> argument was not provided, but is mandatory\n\n";
       std::cerr << options << "\n";
-      return false;
+      return 1;
     }
   }
 
   // TODO: complain when no input files
 
-  return true;
+  return 0;
 }
 
-std::shared_ptr<valhalla::sif::DynamicCost> create_costing() {
+valhalla::sif::cost_ptr_t create_costing() {
   valhalla::Options options;
   valhalla::Costing costing;
   if (valhalla::Costing_Enum_Parse(costing_str, &costing)) {
@@ -160,6 +160,7 @@ std::shared_ptr<valhalla::sif::DynamicCost> create_costing() {
     options.set_costing(valhalla::Costing::none_);
   }
   valhalla::sif::CostFactory<valhalla::sif::DynamicCost> factory;
+  factory.RegisterStandardCostingModels();
   return factory.Create(options);
 }
 
@@ -205,8 +206,12 @@ void work(const boost::property_tree::ptree& config, std::promise<results_t>& pr
 
 int main(int argc, char** argv) {
 
-  if (!ParseArguments(argc, argv)) {
+  int ret = ParseArguments(argc, argv);
+  if (ret > 0) {
     return EXIT_FAILURE;
+  }
+  if (ret < 0) {
+    return EXIT_SUCCESS;
   }
 
   // check what type of input we are getting
@@ -233,7 +238,7 @@ int main(int argc, char** argv) {
       std::stringstream ss(line);
       std::string item;
       std::vector<std::string> parts;
-      while (std::getline(ss, item, ',')) {
+      while (std::getline(ss, item, ' ')) {
         parts.push_back(std::move(item));
       }
       float lat = std::stof(parts[0]);

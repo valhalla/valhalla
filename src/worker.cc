@@ -700,19 +700,14 @@ void from_json(rapidjson::Document& doc, Options& options) {
 
   options.set_verbose(rapidjson::get(doc, "/verbose", false));
 
-  // costing
-  auto costing_str = rapidjson::get_optional<std::string>(doc, "/costing");
-  if (costing_str) {
-    // try the string directly, some strings are keywords so add an underscore
-    Costing costing;
-    if (valhalla::Costing_Enum_Parse(*costing_str, &costing)) {
-      options.set_costing(costing);
-    } else {
-      throw valhalla_exception_t{125, "'" + *costing_str + "'"};
-    }
-  } // none provided
-  else {
-    options.set_costing(valhalla::Costing::none_);
+  // costing defaults to none which is only valid for locate
+  auto costing_str = rapidjson::get<std::string>(doc, "/costing", "none");
+  // try the string directly, some strings are keywords so add an underscore
+  Costing costing;
+  if (valhalla::Costing_Enum_Parse(costing_str, &costing)) {
+    options.set_costing(costing);
+  } else {
+    throw valhalla_exception_t{125, "'" + costing_str + "'"};
   }
 
   // if specified, get the costing options in there
@@ -977,6 +972,8 @@ bool Costing_Enum_Parse(const std::string& costing, Costing* c) {
       {"truck", Costing::truck},
       {"motorcycle", Costing::motorcycle},
       {"auto_data_fix", Costing::auto_data_fix},
+      {"none", Costing::none_},
+      {"", Costing::none_},
   };
   auto i = costings.find(costing);
   if (i == costings.cend())
@@ -1001,6 +998,7 @@ const std::string& Costing_Enum_Name(const Costing costing) {
       {Costing::truck, "truck"},
       {Costing::motorcycle, "motorcycle"},
       {Costing::auto_data_fix, "auto_data_fix"},
+      {Costing::none_, "none"},
   };
   auto i = costings.find(costing);
   return i == costings.cend() ? empty : i->second;
