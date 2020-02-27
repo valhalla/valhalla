@@ -388,8 +388,7 @@ struct bin_handler_t {
       return itr->second;
 
     // notice we do both directions here because in the end we use this reach for all input locations
-    auto reach =
-        reach_finder.exact(edge, edge_id, max_reach_limit, reader, costing, kInbound | kOutbound);
+    auto reach = reach_finder(edge, edge_id, max_reach_limit, reader, costing, kInbound | kOutbound);
     directed_reaches[edge] = reach;
     return reach;
   }
@@ -423,8 +422,7 @@ struct bin_handler_t {
       return {max_reach_limit, max_reach_limit};
 
     // notice we do both directions here because in the end we use this reach for all input locations
-    auto reach =
-        reach_finder.exact(edge, edge_id, max_reach_limit, reader, costing, kInbound | kOutbound);
+    auto reach = reach_finder(edge, edge_id, max_reach_limit, reader, costing, kInbound | kOutbound);
     directed_reaches[edge] = reach;
 
     // if the inbound reach is not 0 and the outbound reach is not 0 and the opposing edge is not

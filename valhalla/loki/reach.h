@@ -41,13 +41,28 @@ struct directed_reach {
 
 class Reach : public thor::Dijkstras {
 public:
-  directed_reach approximate(const valhalla::baldr::DirectedEdge* edge,
-                             const baldr::GraphId edge_id,
-                             uint32_t max_reach,
-                             valhalla::baldr::GraphReader& reader,
-                             const std::shared_ptr<sif::DynamicCost>& costing,
-                             uint8_t direction = kInbound | kOutbound);
+  /**
+   * Returns the in and outbound reach for a given edge in the graph and a given costing model
+   * @param edge        the directed edge in the graph for which we want to know the reach
+   * @param edge_id     the id of the directed edge
+   * @param max_reach   the maximum reach to check
+   * @param reader      a graph reader so we can do an expansion
+   * @param costing     the costing model to apply during the expansion
+   * @param direction   a mask of which directions we care about in or out or both
+   * @return the reach in both directions for the given edge
+   */
+  directed_reach operator()(const valhalla::baldr::DirectedEdge* edge,
+                            const baldr::GraphId edge_id,
+                            uint32_t max_reach,
+                            valhalla::baldr::GraphReader& reader,
+                            const std::shared_ptr<sif::DynamicCost>& costing,
+                            uint8_t direction = kInbound | kOutbound);
 
+protected:
+  // the main method above will do a conservative reach estimate stopping the expansion at any
+  // edges which the costing could decide to skip (because of restrictions and possibly more?)
+  // when that happens and the maximum reach is not found, this is then validated with a more
+  // accurate exact expansion performed by the method below
   directed_reach exact(const valhalla::baldr::DirectedEdge* edge,
                        const baldr::GraphId edge_id,
                        uint32_t max_reach,
@@ -55,7 +70,6 @@ public:
                        const std::shared_ptr<sif::DynamicCost>& costing,
                        uint8_t direction = kInbound | kOutbound);
 
-protected:
   // when the main loop is looking to continue expanding we tell it to terminate here
   virtual thor::ExpansionRecommendation ShouldExpand(baldr::GraphReader& graphreader,
                                                      const sif::EdgeLabel& pred,

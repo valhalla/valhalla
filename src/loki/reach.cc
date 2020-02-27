@@ -5,12 +5,12 @@ using namespace valhalla::baldr;
 namespace valhalla {
 namespace loki {
 
-directed_reach Reach::approximate(const DirectedEdge* edge,
-                                  const baldr::GraphId edge_id,
-                                  uint32_t max_reach,
-                                  GraphReader& reader,
-                                  const std::shared_ptr<sif::DynamicCost>& costing,
-                                  uint8_t direction) {
+directed_reach Reach::operator()(const DirectedEdge* edge,
+                                 const baldr::GraphId edge_id,
+                                 uint32_t max_reach,
+                                 GraphReader& reader,
+                                 const std::shared_ptr<sif::DynamicCost>& costing,
+                                 uint8_t direction) {
 
   // no reach is needed
   directed_reach reach{};
@@ -52,7 +52,7 @@ directed_reach Reach::approximate(const DirectedEdge* edge,
   };
 
   // seed the expansion with a place to start expanding from
-  if (edge_filter(edge) > 0)
+  if (edge_filter(edge) > 0 && !edge->start_restriction() && !edge->restrictions())
     enqueue(edge->endnode());
 
   // get outbound reach by doing a simple forward expansion until you either hit the max_reach
@@ -67,8 +67,10 @@ directed_reach Reach::approximate(const DirectedEdge* edge,
     if (!reader.GetGraphTile(node_id, tile))
       continue;
     for (const auto& edge : tile->GetDirectedEdges(node_id)) {
+      // TODO: we'd rather say !edge.end_simple_restriction() and not !edge.restrictions()
+      // TODO: but we'd need the predecessor information to do that so we punt 1 edge early
       // if this edge is traversable we enqueue its end node
-      if (edge_filter(&edge) > 0)
+      if (edge_filter(&edge) > 0 && !edge.end_restriction() && !edge.restrictions())
         enqueue(edge.endnode());
     }
   }
@@ -91,7 +93,7 @@ directed_reach Reach::approximate(const DirectedEdge* edge,
   // seed the expansion with a place to start expanding from
   Clear();
   transitions = 0;
-  if (edge_filter(edge) > 0)
+  if (edge_filter(edge) > 0 && !edge->end_restriction())
     enqueue(begin_node(edge));
 
   // get inbound reach by doing a simple reverse expansion until you either hit the max_reach
@@ -112,13 +114,22 @@ directed_reach Reach::approximate(const DirectedEdge* edge,
       const auto* node = tile->node(edge.endnode());
       const auto* opp_edge = tile->directededge(node->edge_index() + edge.opp_index());
       // if this opposing edge is traversable we enqueue its begin node
-      if (edge_filter(opp_edge) > 0)
+      if (edge_filter(opp_edge) > 0 && !opp_edge->start_restriction() && !opp_edge->restrictions())
         enqueue(edge.endnode());
     }
   }
   // settled nodes + will be settled nodes - duplicated transitions nodes
   reach.inbound =
       std::min(static_cast<uint32_t>(queue.size() + done.size() - transitions), max_reach);
+
+  // if we didnt make the limit we should do an exact check for whichever directions we didnt meet
+  auto retry_direction = (direction & kOutbound && reach.outbound < max_reach ? kOutbound : 0) |
+                         (direction & kInbound && reach.inbound < max_reach ? kInbound : 0);
+  if (retry_direction) {
+    auto retry_reach = exact(edge, edge_id, max_reach, reader, costing, retry_direction);
+    reach.outbound = std::max(reach.outbound, retry_reach.outbound);
+    reach.inbound = std::max(reach.inbound, retry_reach.inbound);
+  }
 
   return reach;
 }
@@ -131,14 +142,14 @@ directed_reach Reach::exact(const valhalla::baldr::DirectedEdge* edge,
                             uint8_t direction) {
   // no reach is needed
   directed_reach reach{};
-  if (max_reach == 0) {
+  if (max_reach == 0 || costing->GetEdgeFilter()(edge) == 0) {
     return reach;
   }
 
+  // some limits on the computation
   max_reach_ = max_reach;
-  size_t max_labels = std::numeric_limits<decltype(reach.outbound)>::max();
+  size_t max_labels = std::numeric_limits<uint32_t>::max();
 
-  // TODO: will this even work with the PBF api?
   // fake up a location array
   const baldr::GraphTile* tile = nullptr;
   const auto* node = reader.GetEndNode(edge, tile);
@@ -167,18 +178,20 @@ directed_reach Reach::exact(const valhalla::baldr::DirectedEdge* edge,
   if (direction | kOutbound) {
     Clear();
     Compute(locations, reader, costings, costing->travel_mode());
-    reach.outbound = bdedgelabels_.size() > max_labels
-                         ? max_labels
-                         : static_cast<decltype(reach.outbound)>(bdedgelabels_.size());
+    reach.outbound =
+        std::min(static_cast<uint32_t>(bdedgelabels_.size() > max_labels ? max_labels
+                                                                         : bdedgelabels_.size()),
+                 max_reach);
   }
 
   // expand in the reverse direction
   if (direction | kInbound) {
     Clear();
     ComputeReverse(locations, reader, costings, costing->travel_mode());
-    reach.inbound = bdedgelabels_.size() > max_labels
-                        ? max_labels
-                        : static_cast<decltype(reach.outbound)>(bdedgelabels_.size());
+    reach.inbound =
+        std::min(static_cast<uint32_t>(bdedgelabels_.size() > max_labels ? max_labels
+                                                                         : bdedgelabels_.size()),
+                 max_reach);
   }
 
   return reach;
