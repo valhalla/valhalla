@@ -261,6 +261,50 @@ MatchResult FindMatchResult(const MapMatcher& mapmatcher,
       return {edge.projected, std::sqrt(edge.distance), next_edge, 0.f, measurement.epoch_time(),
               stateid};
     }
+
+    // when the instersection match fails, we do a more labor intensive search at transitions
+    // for both prev_edge's ending node and next_edge's starting node and see if we could do a
+    // node snap match
+    if (prev_de && edge.id.level() != prev_de->endnode().level()) {
+      baldr::GraphId end_node = prev_de->endnode();
+      tile = graph_reader.GetGraphTile(end_node);
+      for (const auto& trans : tile->GetNodeTransitions(end_node)) {
+        // we only care about if the nodes are in the same level
+        if (trans.endnode().level() != candidate_node.level()) {
+          continue;
+        }
+
+        end_node = trans.endnode();
+        tile = graph_reader.GetGraphTile(end_node);
+        if (tile == nullptr || end_node != candidate_node) {
+          break;
+        }
+
+        return {edge.projected, std::sqrt(edge.distance), prev_edge, 1.f, measurement.epoch_time(),
+                stateid};
+      }
+    }
+
+    if (next_opp_de && edge.id.level() != next_opp_de->endnode().level()) {
+      baldr::GraphId end_node = next_opp_de->endnode();
+      tile = graph_reader.GetGraphTile(end_node);
+      for (const auto& trans : tile->GetNodeTransitions(end_node)) {
+
+        // we only care about if the nodes are in the same level
+        if (trans.endnode().level() != candidate_node.level()) {
+          continue;
+        }
+
+        end_node = trans.endnode();
+        tile = graph_reader.GetGraphTile(end_node);
+        if (tile == nullptr || end_node != candidate_node) {
+          break;
+        }
+
+        return {edge.projected, std::sqrt(edge.distance), next_edge, 0.f, measurement.epoch_time(),
+                stateid};
+      }
+    }
   }
 
   // we should never reach here, the above early exit checks whether there is no path on either side

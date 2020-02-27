@@ -1111,6 +1111,35 @@ TEST(Mapmatch, test_discontinuity_duration_trimming) {
   }
 }
 
+TEST(Mapmatch, test_transition_matching) {
+  std::vector<std::string> test_cases = {
+      R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
+                {"lat": 52.1003455, "lon": 5.1194303, "type": "break"},
+                {"lat": 52.1003954, "lon": 5.1190220, "type": "break"}]})",
+      R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
+                {"lat": 52.1011859, "lon": 5.1209135, "type": "break"},
+                {"lat": 52.1009284, "lon": 5.1204603, "type": "break"}]})",
+  };
+
+  std::vector<int> test_ans_num_routes{1, 1};
+  std::vector<float> durations{3.4, 5.0};
+  tyr::actor_t actor(conf, true);
+  for (size_t i = 0; i < test_cases.size(); ++i) {
+    auto matched = json_to_pt(actor.trace_route(test_cases[i]));
+    const auto& routes = matched.get_child("matchings");
+    EXPECT_EQ(routes.size(), test_ans_num_routes[i]);
+    for (const auto& route : routes) {
+      const auto& legs = route.second.get_child("legs");
+      for (const auto& leg : legs) {
+        float duration = leg.second.get<float>("duration");
+        ASSERT_NEAR(duration, durations[i], .1) << "Expected legs with duration " +
+                                                       std::to_string(durations[i]) + " but got " +
+                                                       std::to_string(duration);
+      }
+    }
+  }
+}
+
 TEST(Mapmatch, test_loop_matching) {
   // NOTE THAT: test case 0 and 3 has discontinuity on loops
   std::vector<std::string> test_cases = {
