@@ -623,8 +623,8 @@ public:
             max_speed = kUnlimitedSpeedLimit;
           } else {
             max_speed = std::stof(tag.second);
-            w.set_tagged_speed(true);
           }
+          w.set_tagged_speed(true);
           has_max_speed = true;
         } catch (const std::out_of_range& oor) {
           LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid));
