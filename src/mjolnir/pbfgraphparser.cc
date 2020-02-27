@@ -115,46 +115,37 @@ public:
       throw std::runtime_error("Detected unsorted input data");
     }
     last_node_ = osmid;
-
-    const auto& highway_junction = results->find("highway");
-    bool is_highway_junction =
-        ((highway_junction != results->end()) && (highway_junction->second == "motorway_junction"));
-
-    const auto& junction_name = results->find("junction");
-    bool has_junction_name =
-        ((junction_name != results->end()) && (junction_name->second == "named"));
-
     // Create a new node and set its attributes
     OSMNode n;
     n.set_id(osmid);
     n.set_latlng(static_cast<float>(lng), static_cast<float>(lat));
-    if (is_highway_junction) {
-      n.set_type(NodeType::kMotorWayJunction);
-    }
 
     for (const auto& tag : *results) {
 
       if (tag.first == "highway") {
-        n.set_traffic_signal(tag.second == "traffic_signals" ? true : false);
+        if (tag.second == "traffic_signals")
+          n.set_traffic_signal(true);
+        else if (tag.second == "motorway_junction")
+          n.set_type(NodeType::kMotorWayJunction);
       } else if (tag.first == "forward_signal") {
         n.set_forward_signal(tag.second == "true" ? true : false);
       } else if (tag.first == "backward_signal") {
         n.set_backward_signal(tag.second == "true" ? true : false);
-      } else if (is_highway_junction && (tag.first == "exit_to")) {
+      } else if (tag.first == "exit_to") {
         bool hasTag = (tag.second.length() ? true : false);
         if (hasTag) {
           // Add the name to the unique node names list and store its index in the OSM node
           n.set_exit_to_index(osmdata_.node_names.index(tag.second));
           ++osmdata_.node_exit_to_count;
         }
-      } else if (is_highway_junction && (tag.first == "ref")) {
+      } else if (tag.first == "ref") {
         bool hasTag = (tag.second.length() ? true : false);
         if (hasTag) {
           // Add the name to the unique node names list and store its index in the OSM node
           n.set_ref_index(osmdata_.node_names.index(tag.second));
           ++osmdata_.node_ref_count;
         }
-      } else if ((is_highway_junction || has_junction_name) && (tag.first == "name")) {
+      } else if (tag.first == "name") {
         bool hasTag = (tag.second.length() ? true : false);
         if (hasTag) {
           // Add the name to the unique node names list and store its index in the OSM node
@@ -195,7 +186,7 @@ public:
         }
       } else if (tag.first == "access_mask") {
         n.set_access(std::stoi(tag.second));
-      } else if (has_junction_name) {
+      } else if (tag.first == "junction" && tag.second == "named") {
         n.set_named_intersection(true);
       }
 
@@ -1024,7 +1015,6 @@ public:
         w.set_bwd_jct_overlay_index(osmdata_.name_offset_map.index(tag.second));
       }
     }
-
     // if no surface and tracktype but we have a sac_scale, set surface to path.
     if (!has_surface) {
       if (results.find("sac_scale") != results.end() || results.find("mtb:scale") != results.end() ||
@@ -1161,6 +1151,7 @@ public:
       w.set_has_user_tags(true);
       access_->push_back(access);
     }
+
     // Add the way to the list
     ways_->push_back(w);
   }
