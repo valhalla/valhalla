@@ -187,7 +187,9 @@ public:
    */
   virtual const EdgeFilter GetEdgeFilter() const {
     // Throw back a lambda that checks the access for this type of costing
-    return [](const baldr::DirectedEdge* edge) { return !edge->is_shortcut(); };
+    return [](const baldr::DirectedEdge* edge) {
+      return !(edge->is_shortcut() || edge->IsTransitLine());
+    };
   }
 
   /**
@@ -197,7 +199,7 @@ public:
    */
   virtual const NodeFilter GetNodeFilter() const {
     // throw back a lambda that checks the access for this type of costing
-    return [](const baldr::NodeInfo* node) { return true; };
+    return [](const baldr::NodeInfo* node) { return false; };
   }
 };
 

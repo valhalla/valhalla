@@ -5,27 +5,27 @@ using namespace valhalla::baldr;
 namespace valhalla {
 namespace loki {
 
-directed_reach SimpleReach(const DirectedEdge* edge,
-                           uint32_t max_reach,
-                           GraphReader& reader,
-                           const std::shared_ptr<sif::DynamicCost>& costing,
-                           uint8_t direction) {
+directed_reach Reach::approximate(const DirectedEdge* edge,
+                                  const baldr::GraphId edge_id,
+                                  uint32_t max_reach,
+                                  GraphReader& reader,
+                                  const std::shared_ptr<sif::DynamicCost>& costing,
+                                  uint8_t direction) {
 
   // no reach is needed
   directed_reach reach{};
   if (max_reach == 0)
     return reach;
 
-  auto node_filter = costing ? costing->GetNodeFilter() : sif::PassThroughNodeFilter;
-  auto edge_filter = costing ? costing->GetEdgeFilter() : sif::PassThroughEdgeFilter;
+  auto node_filter = costing->GetNodeFilter();
+  auto edge_filter = costing->GetEdgeFilter();
 
-  // TODO: throw these vectors into a cache that we reuse
   // we keep a queue of nodes to expand from, to prevent duplicate expansion we use a set
   // each node we pop from the set will increase the reach and be added to the done set
   // the done set is used to avoid duplicate expansion of already dequeued nodes
   // we also track how many nodes were added as transitions from other levels
   // this allows us to have "duplicate" nodes but not do any trickery with the expansion
-  std::unordered_set<uint64_t> queue, done;
+  Clear();
   queue.reserve(max_reach);
   done.reserve(max_reach);
   size_t transitions = 0;
@@ -89,8 +89,7 @@ directed_reach SimpleReach(const DirectedEdge* edge,
   };
 
   // seed the expansion with a place to start expanding from
-  done.clear();
-  queue.clear();
+  Clear();
   transitions = 0;
   if (edge_filter(edge) > 0)
     enqueue(begin_node(edge));
@@ -124,12 +123,12 @@ directed_reach SimpleReach(const DirectedEdge* edge,
   return reach;
 }
 
-directed_reach Reach::operator()(const valhalla::baldr::DirectedEdge* edge,
-                                 const GraphId edge_id,
-                                 uint32_t max_reach,
-                                 valhalla::baldr::GraphReader& reader,
-                                 const std::shared_ptr<sif::DynamicCost>& costing,
-                                 uint8_t direction) {
+directed_reach Reach::exact(const valhalla::baldr::DirectedEdge* edge,
+                            const GraphId edge_id,
+                            uint32_t max_reach,
+                            valhalla::baldr::GraphReader& reader,
+                            const std::shared_ptr<sif::DynamicCost>& costing,
+                            uint8_t direction) {
   // no reach is needed
   directed_reach reach{};
   if (max_reach == 0) {
@@ -171,16 +170,15 @@ directed_reach Reach::operator()(const valhalla::baldr::DirectedEdge* edge,
     reach.outbound = bdedgelabels_.size() > max_labels
                          ? max_labels
                          : static_cast<decltype(reach.outbound)>(bdedgelabels_.size());
-    Clear();
   }
 
   // expand in the reverse direction
   if (direction | kInbound) {
+    Clear();
     ComputeReverse(locations, reader, costings, costing->travel_mode());
     reach.inbound = bdedgelabels_.size() > max_labels
                         ? max_labels
                         : static_cast<decltype(reach.outbound)>(bdedgelabels_.size());
-    Clear();
   }
 
   return reach;
@@ -198,13 +196,15 @@ thor::ExpansionRecommendation Reach::ShouldExpand(baldr::GraphReader& graphreade
 // tell the expansion how many labels to expect and how many buckets to use
 void Reach::GetExpansionHints(uint32_t& bucket_count, uint32_t& edge_label_reservation) const {
   // TODO: tweak these for performance
-  bucket_count = max_reach_ * 2;
-  edge_label_reservation = max_reach_ * 2;
+  bucket_count = max_reach_ * 50;
+  edge_label_reservation = max_reach_ + 1;
 }
 
 void Reach::Clear() {
-  // max_reach_ = 0;
+  queue.clear();
+  done.clear();
   Dijkstras::Clear();
 }
+
 } // namespace loki
 } // namespace valhalla

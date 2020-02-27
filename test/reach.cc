@@ -81,6 +81,7 @@ TEST(Reach, check_all_reach) {
   GraphReader reader(conf.get_child("mjolnir"));
 
   auto costing = create_costing();
+  Reach reach_finder;
 
   // look at all the edges
   for (auto tile_id : reader.GetTileSet()) {
@@ -90,7 +91,7 @@ TEST(Reach, check_all_reach) {
          edge_id.id() < tile->header()->directededgecount(); ++edge_id) {
       // use the simple method to find the reach for the edge in both directions
       const auto* edge = tile->directededge(edge_id);
-      auto reach = SimpleReach(edge, 50, reader, costing, kInbound | kOutbound);
+      auto reach = reach_finder.approximate(edge, edge_id, 50, reader, costing, kInbound | kOutbound);
 
       // shape is nice to have
       auto shape = tile->edgeinfo(edge->edgeinfo_offset()).shape();

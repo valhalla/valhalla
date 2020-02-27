@@ -11,17 +11,6 @@ constexpr uint8_t kOutbound = 2;
 namespace valhalla {
 namespace loki {
 
-struct directed_reach {
-  uint32_t outbound : 16;
-  uint32_t inbound : 16;
-};
-
-directed_reach SimpleReach(const valhalla::baldr::DirectedEdge* edge,
-                           uint32_t max_reach,
-                           valhalla::baldr::GraphReader& reader,
-                           const std::shared_ptr<sif::DynamicCost>& costing,
-                           uint8_t direction = kInbound | kOutbound);
-
 // NOTE: at the moment this checks one edge at a time. That works well with loki's current search
 // implementation in that it expects to check one at a time. The performance of such a solution is
 // not really optimal though. Instead what we can do is initialize dijkstras with a large batch of
@@ -45,19 +34,26 @@ directed_reach SimpleReach(const valhalla::baldr::DirectedEdge* edge,
 // them, so the question is which ones. The first one may not be relevant for the second one but may
 // be for the 3rd one.
 
+struct directed_reach {
+  uint32_t outbound : 16;
+  uint32_t inbound : 16;
+};
+
 class Reach : public thor::Dijkstras {
 public:
-  directed_reach operator()(const valhalla::baldr::DirectedEdge* edge,
-                            const baldr::GraphId edge_id,
-                            uint32_t max_reach,
-                            valhalla::baldr::GraphReader& reader,
-                            const std::shared_ptr<sif::DynamicCost>& costing,
-                            uint8_t direction = kInbound | kOutbound);
+  directed_reach approximate(const valhalla::baldr::DirectedEdge* edge,
+                             const baldr::GraphId edge_id,
+                             uint32_t max_reach,
+                             valhalla::baldr::GraphReader& reader,
+                             const std::shared_ptr<sif::DynamicCost>& costing,
+                             uint8_t direction = kInbound | kOutbound);
 
-  /**
-   * cleanup
-   */
-  virtual void Clear() override;
+  directed_reach exact(const valhalla::baldr::DirectedEdge* edge,
+                       const baldr::GraphId edge_id,
+                       uint32_t max_reach,
+                       valhalla::baldr::GraphReader& reader,
+                       const std::shared_ptr<sif::DynamicCost>& costing,
+                       uint8_t direction = kInbound | kOutbound);
 
 protected:
   // when the main loop is looking to continue expanding we tell it to terminate here
@@ -69,6 +65,10 @@ protected:
   virtual void GetExpansionHints(uint32_t& bucket_count,
                                  uint32_t& edge_label_reservation) const override;
 
+  // need to reset the queues
+  virtual void Clear() override;
+
+  std::unordered_set<uint64_t> queue, done;
   uint32_t max_reach_;
 };
 

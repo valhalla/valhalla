@@ -153,6 +153,8 @@ int ParseArguments(int argc, char* argv[]) {
 
 valhalla::sif::cost_ptr_t create_costing() {
   valhalla::Options options;
+  for (int i = 0; i < valhalla::Costing_MAX; ++i)
+    options.add_costing_options();
   valhalla::Costing costing;
   if (valhalla::Costing_Enum_Parse(costing_str, &costing)) {
     options.set_costing(costing);
@@ -166,8 +168,8 @@ valhalla::sif::cost_ptr_t create_costing() {
 
 void work(const boost::property_tree::ptree& config, std::promise<results_t>& promise) {
   // lambda to do the current job
-  valhalla::baldr::GraphReader reader(config.get_child("mjolnir"));
   auto costing = create_costing();
+  valhalla::baldr::GraphReader reader(config.get_child("mjolnir"));
   auto search = [&reader, &costing](const job_t& job) {
     // so that we dont benefit from cache coherency
     reader.Clear();
