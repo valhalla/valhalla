@@ -240,14 +240,14 @@ TEST(PointLL, TestClosestPoint) {
 
   // Closest to the 1st point
   TryClosestPoint(pts, PointLL(-76.299189f, 40.042572f), PointLL(-76.299171f, 40.042519f), 5.933f, 0,
-                  4);
+                  3);
 
   // Closest along the 2nd segment
   TryClosestPoint(pts, PointLL(-76.298477f, 40.042645f), PointLL(-76.298470f, 40.042595f), 5.592f, 1,
                   2);
 
   // Closest to third shape point
-  TryClosestPoint(pts, PointLL(-76.297806f, 40.042671f), PointLL(-76.297806f, 40.042671f), 0.f, 2, 2);
+  TryClosestPoint(pts, PointLL(-76.297806f, 40.042671f), PointLL(-76.297806f, 40.042671f), 0.f, 1, 1);
 
   // Closest along the 3rd segment
   TryClosestPoint(pts, PointLL(-76.297752f, 40.042183f), PointLL(-76.297722f, 40.042187f), 2.592f, 2,
@@ -262,11 +262,11 @@ TEST(PointLL, TestClosestPoint) {
                   0);
 
   // Closest to the last point
-  TryClosestPoint(pts, PointLL(-76.296700f, 40.042114f), PointLL(-76.296837f, 40.042099f), 11.78f, 4,
+  TryClosestPoint(pts, PointLL(-76.296700f, 40.042114f), PointLL(-76.296837f, 40.042099f), 11.78f, 3,
                   0);
 
   // Closest to the last point with begin_index = 4 - therefore, special case of one point
-  TryClosestPoint(pts, PointLL(-76.296700f, 40.042114f), PointLL(-76.296837f, 40.042099f), 11.78f, 4,
+  TryClosestPoint(pts, PointLL(-76.296700f, 40.042114f), PointLL(-76.296837f, 40.042099f), 11.78f, 3,
                   0, 4);
 
   // Invalid begin_index of 5
@@ -352,6 +352,34 @@ TEST(PointLL, TestDistance) {
 
 } // namespace
 
+TEST(PointLL, ClosestPointDoesNotReturnSegmentIndexGreaterThanSegmentsCount) {
+  using valhalla::midgard::PointLL;
+
+  PointLL p{-76.6375, 40.3837};
+  std::vector<PointLL> pts = {{-76.6185, 40.3989}, {-76.6175, 40.3992}, {-76.6139, 40.4002},
+                              {-76.614, 40.3989},  {-76.6141, 40.3986}, {-76.6143, 40.3982},
+                              {-76.6147, 40.3972}, {-76.6148, 40.3969}, {-76.6151, 40.3959},
+                              {-76.6164, 40.3926}, {-76.6165, 40.3925}, {-76.6165, 40.3924},
+                              {-76.6165, 40.3923}, {-76.6165, 40.3922}, {-76.6165, 40.3922},
+                              {-76.6164, 40.3921}, {-76.6163, 40.3918}, {-76.6163, 40.3917},
+                              {-76.6171, 40.3912}, {-76.6179, 40.3908}, {-76.6183, 40.3905},
+                              {-76.6186, 40.3903}, {-76.6189, 40.3902}, {-76.6191, 40.3901},
+                              {-76.6196, 40.3899}, {-76.6197, 40.3899}, {-76.6198, 40.3899},
+                              {-76.6203, 40.3898}, {-76.6205, 40.3898}, {-76.6217, 40.3896},
+                              {-76.6218, 40.3896}, {-76.6231, 40.3895}, {-76.6235, 40.3894},
+                              {-76.6237, 40.3894}, {-76.624, 40.3893},  {-76.6242, 40.3892},
+                              {-76.6244, 40.3891}, {-76.6246, 40.389},  {-76.6255, 40.3886},
+                              {-76.6259, 40.3884}, {-76.6261, 40.3883}, {-76.6264, 40.3882},
+                              {-76.6266, 40.3882}, {-76.6307, 40.3874}, {-76.6312, 40.3873},
+                              {-76.6318, 40.3871}, {-76.6322, 40.387},  {-76.6327, 40.3868},
+                              {-76.6331, 40.3866}, {-76.6335, 40.3864}, {-76.6339, 40.3862},
+                              {-76.6343, 40.3859}, {-76.6359, 40.3849}, {-76.6372, 40.3839}};
+  int pivotIndex = 53;
+
+  auto result = p.ClosestPoint(pts, pivotIndex, std::numeric_limits<float>::infinity(),
+                               std::numeric_limits<float>::infinity());
+  EXPECT_EQ(std::get<2>(result), pts.size() - 2);
+}
 // todo: add many more tests!
 
 int main(int argc, char* argv[]) {
