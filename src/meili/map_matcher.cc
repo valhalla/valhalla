@@ -289,7 +289,6 @@ MatchResult FindMatchResult(const MapMatcher& mapmatcher,
       baldr::GraphId end_node = next_opp_de->endnode();
       tile = graph_reader.GetGraphTile(end_node);
       for (const auto& trans : tile->GetNodeTransitions(end_node)) {
-
         // we only care about if the nodes are in the same level
         if (trans.endnode().level() != candidate_node.level()) {
           continue;

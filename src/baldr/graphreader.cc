@@ -466,10 +466,6 @@ GraphId GraphReader::GetOpposingEdgeId(const GraphId& edgeid, const GraphTile*& 
 
 // Convenience method to determine if 2 directed edges are connected.
 bool GraphReader::AreEdgesConnected(const GraphId& edge1, const GraphId& edge2) {
-  if (!edge1.Is_Valid() || !edge2.Is_Valid()) {
-    return false;
-  }
-
   // Check if there is a transition edge between n1 and n2
   auto is_transition = [this](const GraphId& n1, const GraphId& n2) {
     if (n1.level() == n2.level()) {
@@ -520,10 +516,6 @@ bool GraphReader::AreEdgesConnected(const GraphId& edge1, const GraphId& edge2) 
 bool GraphReader::AreEdgesConnectedForward(const GraphId& edge1,
                                            const GraphId& edge2,
                                            const GraphTile*& tile) {
-  if (!edge1.Is_Valid() || !edge2.Is_Valid()) {
-    return false;
-  }
-
   // Get end node of edge1
   GraphId endnode = edge_endnode(edge1, tile);
   if (endnode.Tile_Base() != edge1.Tile_Base()) {
