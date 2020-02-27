@@ -41,6 +41,9 @@ struct directed_reach {
 
 class Reach : public thor::Dijkstras {
 public:
+  // TODO: currently this interface has no place for time, we need to both add it and handle
+  // TODO: the problem of guessing what time to use at the other end of the route depending on
+  // TODO: whether its depart_at or arrive_by
   /**
    * Returns the in and outbound reach for a given edge in the graph and a given costing model
    * @param edge        the directed edge in the graph for which we want to know the reach
