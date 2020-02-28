@@ -1305,9 +1305,9 @@ uint32_t GetStopImpact(uint32_t from,
       stop_impact -= 1;
     }
     // one is likely to stop at traffic signals.
-  } else if (nodeinfo.traffic_signal()) {
-    stop_impact += 2;
-  }
+  } //else if (nodeinfo.traffic_signal()) {
+    //stop_impact += 2;
+ // }
   // Clamp to kMaxStopImpact
   return (stop_impact <= kMaxStopImpact) ? stop_impact : kMaxStopImpact;
 }
