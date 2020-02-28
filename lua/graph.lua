@@ -1466,11 +1466,11 @@ function filter_tags_generic(kv)
 
   --do not store private driveways
   if (use == 4 && kv["private"] == "true") then
-     kv["private_driveway"] = true
+     kv["private_driveway"] = "true"
   end
 
   --delete track_type of there is a surface
-  if kv["surface"] then
+  if kv["surface"] ~= nil then
      kv["tracktype"] = nil
   end
 
