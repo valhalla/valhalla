@@ -701,7 +701,7 @@ bool BidirectionalAStar::SetForwardConnection(GraphReader& graphreader, const BD
 bool BidirectionalAStar::SetReverseConnection(GraphReader& graphreader, const BDEdgeLabel& rev_pred) {
   GraphId fwd_edge_id = rev_pred.opp_edgeid();
   EdgeStatusInfo fwd_edge_status = edgestatus_forward_.Get(fwd_edge_id);
-  auto fwd_pred = edgelabels_reverse_[fwd_edge_status.index()];
+  auto fwd_pred = edgelabels_forward_[fwd_edge_status.index()];
 
   // Disallow connections that are part of a complex restriction
   if (rev_pred.on_complex_rest()) {
