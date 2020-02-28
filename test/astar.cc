@@ -587,57 +587,6 @@ TEST(Astar, TestPartialDurationReverse) {
   TestPartialDuration(astar);
 }
 
-TEST(Astar, TestTrivialPathNoUturns) {
-  boost::property_tree::ptree conf;
-  conf.put("tile_dir", "test/data/utrecht_tiles");
-  // setup and purge
-  vb::GraphReader graph_reader(conf);
-
-  // Locations
-  std::vector<valhalla::baldr::Location> locations;
-  baldr::Location origin(valhalla::midgard::PointLL(5.114587f, 52.095957f),
-                         baldr::Location::StopType::BREAK);
-  locations.push_back(origin);
-  baldr::Location dest(valhalla::midgard::PointLL(5.114506f, 52.096141f),
-                       baldr::Location::StopType::BREAK);
-  locations.push_back(dest);
-
-  Api api;
-  auto& options = *api.mutable_options();
-  create_costing_options(options);
-  std::shared_ptr<vs::DynamicCost> mode_costing[4];
-  std::shared_ptr<vs::DynamicCost> cost = vs::CreatePedestrianCost(Costing::pedestrian, options);
-  auto mode = cost->travel_mode();
-  mode_costing[static_cast<uint32_t>(mode)] = cost;
-
-  const auto projections = vk::Search(locations, graph_reader, cost);
-  std::vector<PathLocation> path_location;
-
-  for (const auto& loc : locations) {
-    ASSERT_NO_THROW(
-        path_location.push_back(projections.at(loc));
-        PathLocation::toPBF(path_location.back(), options.mutable_locations()->Add(), graph_reader);)
-        << "fail_invalid_origin";
-  }
-
-  vt::AStarPathAlgorithm astar;
-  auto path = astar
-                  .GetBestPath(*options.mutable_locations(0), *options.mutable_locations(1),
-                               graph_reader, mode_costing, mode)
-                  .front();
-
-  vt::AttributesController controller;
-  auto& leg = *api.mutable_trip()->mutable_routes()->Add()->mutable_legs()->Add();
-  vt::TripLegBuilder::Build(controller, graph_reader, mode_costing, path.begin(), path.end(),
-                            *options.mutable_locations(0), *options.mutable_locations(1),
-                            std::list<valhalla::Location>{}, leg);
-  // really could of got the total of the elapsed_time.
-  odin::DirectionsBuilder::Build(api);
-  const auto& trip_directions = api.directions().routes(0).legs(0);
-
-  EXPECT_EQ(trip_directions.summary().time(), 0);
-}
-
 boost::property_tree::ptree get_conf(const char* tiles) {
   std::stringstream ss;
   ss << R"({
@@ -694,6 +643,57 @@ boost::property_tree::ptree get_conf(const char* tiles) {
   boost::property_tree::ptree conf;
   rapidjson::read_json(ss, conf);
   return conf;
+}
+
+TEST(Astar, TestTrivialPathNoUturns) {
+  boost::property_tree::ptree conf;
+  conf.put("tile_dir", "test/data/utrecht_tiles");
+  // setup and purge
+  vb::GraphReader graph_reader(conf);
+
+  // Locations
+  std::vector<valhalla::baldr::Location> locations;
+  baldr::Location origin(valhalla::midgard::PointLL(5.114587f, 52.095957f),
+                         baldr::Location::StopType::BREAK);
+  locations.push_back(origin);
+  baldr::Location dest(valhalla::midgard::PointLL(5.114506f, 52.096141f),
+                       baldr::Location::StopType::BREAK);
+  locations.push_back(dest);
+
+  Api api;
+  auto& options = *api.mutable_options();
+  create_costing_options(options);
+  std::shared_ptr<vs::DynamicCost> mode_costing[4];
+  std::shared_ptr<vs::DynamicCost> cost = vs::CreatePedestrianCost(Costing::pedestrian, options);
+  auto mode = cost->travel_mode();
+  mode_costing[static_cast<uint32_t>(mode)] = cost;
+
+  const auto projections = vk::Search(locations, graph_reader, cost);
+  std::vector<PathLocation> path_location;
+
+  for (const auto& loc : locations) {
+    ASSERT_NO_THROW(
+        path_location.push_back(projections.at(loc));
+        PathLocation::toPBF(path_location.back(), options.mutable_locations()->Add(), graph_reader);)
+        << "fail_invalid_origin";
+  }
+
+  vt::AStarPathAlgorithm astar;
+  auto path = astar
+                  .GetBestPath(*options.mutable_locations(0), *options.mutable_locations(1),
+                               graph_reader, mode_costing, mode)
+                  .front();
+
+  vt::AttributesController controller;
+  auto& leg = *api.mutable_trip()->mutable_routes()->Add()->mutable_legs()->Add();
+  vt::TripLegBuilder::Build(controller, graph_reader, mode_costing, path.begin(), path.end(),
+                            *options.mutable_locations(0), *options.mutable_locations(1),
+                            std::list<valhalla::Location>{}, leg);
+  // really could of got the total of the elapsed_time.
+  odin::DirectionsBuilder::Build(api);
+  const auto& trip_directions = api.directions().routes(0).legs(0);
+
+  EXPECT_EQ(trip_directions.summary().time(), 0);
 }
 
 struct route_tester {
@@ -1208,7 +1208,7 @@ void test_backtrack_complex_restriction(int date_time_type) {
       break;
     default:
       throw std::runtime_error("Unhandled case");
-  };
+  }
 
   LOGLN_WARN(request);
   auto response = tester.test(request);
