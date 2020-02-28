@@ -277,12 +277,13 @@ void Isochrone::UpdateIsoTile(const EdgeLabel& pred,
 
 // here we mark the cells of the isochrone along the edge we just reached up to its end node
 void Isochrone::ExpandingNode(baldr::GraphReader& graphreader,
+                              const baldr::GraphTile* tile,
+                              const baldr::NodeInfo* node,
                               const sif::EdgeLabel& current,
-                              const midgard::PointLL& node_ll,
                               const sif::EdgeLabel* previous) {
   // Update the isotile
   float secs0 = previous ? previous->cost().secs : 0;
-  UpdateIsoTile(current, graphreader, node_ll, secs0);
+  UpdateIsoTile(current, graphreader, node->latlng(tile->header()->base_ll()), secs0);
 }
 
 ExpansionRecommendation Isochrone::ShouldExpand(baldr::GraphReader& graphreader,

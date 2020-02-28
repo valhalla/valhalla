@@ -91,8 +91,9 @@ protected:
   // when we expand up to a node we color the cells of the grid that the edge that ends at the
   // node touches
   virtual void ExpandingNode(baldr::GraphReader& graphreader,
+                             const baldr::GraphTile* tile,
+                             const baldr::NodeInfo* node,
                              const sif::EdgeLabel& current,
-                             const midgard::PointLL& node_ll,
                              const sif::EdgeLabel* previous) override;
 
   // when the main loop is looking to continue expanding we tell it to terminate here

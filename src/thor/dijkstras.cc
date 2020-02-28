@@ -157,7 +157,7 @@ void Dijkstras::ExpandForward(GraphReader& graphreader,
     // Let implementing class we are expanding from here
     EdgeLabel* prev_pred =
         pred.predecessor() == kInvalidLabel ? nullptr : &bdedgelabels_[pred.predecessor()];
-    ExpandingNode(graphreader, pred, tile->get_node_ll(node), prev_pred);
+    ExpandingNode(graphreader, tile, nodeinfo, pred, prev_pred);
   }
 
   // Bail if we cant expand from here
@@ -324,7 +324,7 @@ void Dijkstras::ExpandReverse(GraphReader& graphreader,
     // Let implementing class we are expanding from here
     EdgeLabel* prev_pred =
         pred.predecessor() == kInvalidLabel ? nullptr : &bdedgelabels_[pred.predecessor()];
-    ExpandingNode(graphreader, pred, tile->get_node_ll(node), prev_pred);
+    ExpandingNode(graphreader, tile, nodeinfo, pred, prev_pred);
   }
 
   // Bail if we cant expand from here
@@ -498,7 +498,7 @@ void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
     // Let implementing class we are expanding from here
     EdgeLabel* prev_pred =
         pred.predecessor() == kInvalidLabel ? nullptr : &mmedgelabels_[pred.predecessor()];
-    ExpandingNode(graphreader, pred, tile->get_node_ll(node), prev_pred);
+    ExpandingNode(graphreader, tile, nodeinfo, pred, prev_pred);
   }
 
   // Bail if we cant expand from here

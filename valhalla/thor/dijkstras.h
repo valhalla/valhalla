@@ -86,8 +86,9 @@ public:
 protected:
   // A child-class must implement this to learn about what nodes were expanded
   virtual void ExpandingNode(baldr::GraphReader& graphreader,
+                             const baldr::GraphTile* tile,
+                             const baldr::NodeInfo* node,
                              const sif::EdgeLabel& current,
-                             const midgard::PointLL& node_ll,
                              const sif::EdgeLabel* previous){};
 
   // A child-class must implement this to decide when to stop the expansion

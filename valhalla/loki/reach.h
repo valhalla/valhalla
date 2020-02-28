@@ -11,19 +11,6 @@ constexpr uint8_t kOutbound = 2;
 namespace valhalla {
 namespace loki {
 
-// NOTE: at the moment this checks one edge at a time. That works well with loki's current search
-// implementation in that it expects to check one at a time. The performance of such a solution is
-// not really optimal though. Instead what we can do is initialize dijkstras with a large batch of
-// of edges (all that loki finds within the radius). Then when we get to the ShouldExpand call we
-// can prune edges in the search that have already been shown to be reachable and we can keep
-// expanding those labels which still need to be looked at. To actually do that though, we need more
-// information in the edge label. Specifically we need an index that tells what location the chain
-// leading to the label started at and we need to keep track of the length of the chain. Also because
-// paths converge (when we update a label with a shorter path) we need to keep a map of locations
-// whose paths take over the expansion chain of another location. This could get tricky because a
-// chain can swap ownership multiple times. More thought is required to see if we could do something
-// more efficiently in batch.
-
 // NOTE: another approach is possible which would still allow for one-at-a-time look up. In this case
 // we could actually keep the tree from the previous expansion and as soon as the tree from the next
 // expansion intersects it we could merge the two and continue. To make that work we'd need to remove
@@ -32,7 +19,13 @@ namespace loki {
 // terminate the expansion if the threshold has been met. The problem here is one of diminishing
 // returns. Which expansion do you keep around for performing the intersections. Surely not all of
 // them, so the question is which ones. The first one may not be relevant for the second one but may
-// be for the 3rd one.
+// be for the 3rd one. The trick is we dont keep any of them around, instead we just remember the
+// the outcomes for any edges that we touched. Specifically we keep a set of edge ids we found to be
+// reachable. We can use this information to shortcut the current expansion when it intersects these
+// edges. If you are searching outbound and hit an edge that is reachabile outbound then you can stop
+// and claim reachable outbound. The same works for the inbound direction. Sadly you cannot use
+// previously found unreachable edges to shortcut a search as they could be local minima (just a
+// branch) of your current search tree
 
 struct directed_reach {
   uint32_t outbound : 16;
@@ -41,6 +34,7 @@ struct directed_reach {
 
 class Reach : public thor::Dijkstras {
 public:
+  Reach();
   // TODO: currently this interface has no place for time, we need to both add it and handle
   // TODO: the problem of guessing what time to use at the other end of the route depending on
   // TODO: whether its depart_at or arrive_by
@@ -73,6 +67,13 @@ protected:
                        const std::shared_ptr<sif::DynamicCost>& costing,
                        uint8_t direction = kInbound | kOutbound);
 
+  // callback fired when a node is expanded from, the node will be the end node of the previous label
+  virtual void ExpandingNode(baldr::GraphReader& graphreader,
+                             const baldr::GraphTile* tile,
+                             const baldr::NodeInfo* node,
+                             const sif::EdgeLabel& current,
+                             const sif::EdgeLabel* previous) override;
+
   // when the main loop is looking to continue expanding we tell it to terminate here
   virtual thor::ExpansionRecommendation ShouldExpand(baldr::GraphReader& graphreader,
                                                      const sif::EdgeLabel& pred,
@@ -85,8 +86,10 @@ protected:
   // need to reset the queues
   virtual void Clear() override;
 
-  std::unordered_set<uint64_t> queue, done;
+  google::protobuf::RepeatedPtrField<Location> locations_;
+  std::unordered_set<uint64_t> queue_, done_;
   uint32_t max_reach_;
+  size_t transitions_;
 };
 
 } // namespace loki
