@@ -1465,7 +1465,7 @@ function filter_tags_generic(kv)
   kv["wheelchair"] = wheelchair[kv["wheelchair"]]
 
   --do not store private driveways
-  if (use == 4 && kv["private"] == "true") then
+  if (use == 4 and kv["private"] == "true") then
      kv["private_driveway"] = "true"
   end
 
