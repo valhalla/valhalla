@@ -607,9 +607,14 @@ public:
         name = tag.second;
       } else if (tag.first == "name:en" && !tag.second.empty()) {
         w.set_name_en_index(osmdata_.name_offset_map.index(tag.second));
-      } else if (tag.first == "alt_name" && !tag.second.empty()) {
+      }
+      /* Disabling alt_name tag processing. This might need to be re-enabled
+       * for commerical dataset.
+       * TODO: Make this a config option
+       * else if (tag.first == "alt_name" && !tag.second.empty()) {
         w.set_alt_name_index(osmdata_.name_offset_map.index(tag.second));
-      } else if (tag.first == "official_name" && !tag.second.empty()) {
+      } */
+      else if (tag.first == "official_name" && !tag.second.empty()) {
         w.set_official_name_index(osmdata_.name_offset_map.index(tag.second));
 
       } else if (tag.first == "max_speed") {
@@ -1007,6 +1012,16 @@ public:
       } else if (tag.first == "turn:lanes:backward") {
         // Turn lanes in the reverse direction
         w.set_bwd_turn_lanes_index(osmdata_.name_offset_map.index(tag.second));
+      } else if (tag.first == "guidance_view:jct:base" ||
+                 tag.first == "guidance_view:jct:base:forward") {
+        w.set_fwd_jct_base_index(osmdata_.name_offset_map.index(tag.second));
+      } else if (tag.first == "guidance_view:jct:overlay" ||
+                 tag.first == "guidance_view:jct:overlay:forward") {
+        w.set_fwd_jct_overlay_index(osmdata_.name_offset_map.index(tag.second));
+      } else if (tag.first == "guidance_view:jct:base:backward") {
+        w.set_bwd_jct_base_index(osmdata_.name_offset_map.index(tag.second));
+      } else if (tag.first == "guidance_view:jct:overlay:backward") {
+        w.set_bwd_jct_overlay_index(osmdata_.name_offset_map.index(tag.second));
       }
     }
 

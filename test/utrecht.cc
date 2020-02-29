@@ -1,8 +1,6 @@
-#include "filesystem.h"
 #include "midgard/sequence.h"
 #include "mjolnir/osmnode.h"
 #include "mjolnir/pbfgraphparser.h"
-#include "test.h"
 #include <cstdint>
 
 #include <boost/property_tree/ptree.hpp>
@@ -10,6 +8,8 @@
 
 #include "baldr/directededge.h"
 #include "baldr/graphconstants.h"
+
+#include "test.h"
 
 #if !defined(VALHALLA_SOURCE_DIR)
 #define VALHALLA_SOURCE_DIR
@@ -50,131 +50,176 @@ OSMWay GetWay(uint32_t way_id, sequence<OSMWay>& ways) {
   return *found;
 }
 
-void Parse() {
-  boost::property_tree::ptree conf;
-  conf.put<std::string>("mjolnir.tile_dir", "test/data/parser_tiles");
-  auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"),
-                                       {VALHALLA_SOURCE_DIR "test/data/utrecht_netherlands.osm.pbf"},
-                                       ways_file, way_nodes_file, access_file, from_restriction_file,
-                                       to_restriction_file, bss_file);
-}
-
-void TestBike() {
+TEST(Utrecth, TestBike) {
   boost::property_tree::ptree conf;
   conf.put<std::string>("mjolnir.tile_dir", "test/data/parser_tiles");
   sequence<OSMWay> ways(ways_file, false);
   ways.sort(way_predicate);
 
-  auto way = GetWay(127361688, ways);
-  if (way.auto_forward() != true || way.moped_forward() != true || way.bus_forward() != true ||
-      way.bike_forward() != true || way.pedestrian() != true || way.auto_backward() != true ||
-      way.moped_backward() != true || way.bus_backward() != true || way.bike_backward() != true) {
-    throw std::runtime_error("Access is not correct for way 127361688.");
-  }
+  auto way_127361688 = GetWay(127361688, ways);
+  EXPECT_TRUE(way_127361688.auto_forward());
+  EXPECT_TRUE(way_127361688.moped_forward());
+  EXPECT_TRUE(way_127361688.bus_forward());
+  EXPECT_TRUE(way_127361688.bike_forward());
+  EXPECT_TRUE(way_127361688.pedestrian());
+  EXPECT_TRUE(way_127361688.auto_backward());
+  EXPECT_TRUE(way_127361688.moped_backward());
+  EXPECT_TRUE(way_127361688.bus_backward());
+  EXPECT_TRUE(way_127361688.bike_backward());
 
-  way = GetWay(7062008, ways);
-  if (way.auto_forward() != true || way.moped_forward() != true || way.bus_forward() != true ||
-      way.bike_forward() != true || way.pedestrian() != true || way.auto_backward() != false ||
-      way.moped_backward() != false || way.bus_backward() != false || way.bike_backward() != true) {
-    throw std::runtime_error("Access is not correct for way 7062008.");
-  }
+  auto way_7062008 = GetWay(7062008, ways);
+  EXPECT_TRUE(way_7062008.auto_forward());
+  EXPECT_TRUE(way_7062008.moped_forward());
+  EXPECT_TRUE(way_7062008.bus_forward());
+  EXPECT_TRUE(way_7062008.bike_forward());
+  EXPECT_TRUE(way_7062008.pedestrian());
+  EXPECT_FALSE(way_7062008.auto_backward());
+  EXPECT_FALSE(way_7062008.moped_backward());
+  EXPECT_FALSE(way_7062008.bus_backward());
+  EXPECT_TRUE(way_7062008.bike_backward());
 
-  way = GetWay(48672084, ways);
-  if (way.auto_forward() != true || way.moped_forward() != true || way.bus_forward() != true ||
-      way.bike_forward() != true || way.pedestrian() != true || way.auto_backward() != false ||
-      way.moped_backward() != false || way.bus_backward() != false || way.bike_backward() != true) {
-    throw std::runtime_error("Access is not correct for way 48672084.");
-  }
+  auto way_48672084 = GetWay(48672084, ways);
+  EXPECT_TRUE(way_48672084.auto_forward());
+  EXPECT_TRUE(way_48672084.moped_forward());
+  EXPECT_TRUE(way_48672084.bus_forward());
+  EXPECT_TRUE(way_48672084.bike_forward());
+  EXPECT_TRUE(way_48672084.pedestrian());
+  EXPECT_FALSE(way_48672084.auto_backward());
+  EXPECT_FALSE(way_48672084.moped_backward());
+  EXPECT_FALSE(way_48672084.bus_backward());
+  EXPECT_TRUE(way_48672084.bike_backward());
 
-  way = GetWay(7053107, ways);
-  if (way.auto_forward() != true || way.bus_forward() != true || way.bike_forward() != true ||
-      way.pedestrian() != true || way.auto_backward() != false || way.bus_backward() != false ||
-      way.bike_backward() != true) {
-    throw std::runtime_error("Access is not correct for way 7053107.");
-  }
+  auto way_7053107 = GetWay(7053107, ways);
+  EXPECT_TRUE(way_7053107.auto_forward());
+  EXPECT_TRUE(way_7053107.bus_forward());
+  EXPECT_TRUE(way_7053107.bike_forward());
+  EXPECT_TRUE(way_7053107.pedestrian());
+  EXPECT_FALSE(way_7053107.auto_backward());
+  EXPECT_FALSE(way_7053107.bus_backward());
+  EXPECT_TRUE(way_7053107.bike_backward());
 
-  way = GetWay(7053048, ways);
-  if (way.auto_forward() != true || way.moped_forward() != true || way.bus_forward() != true ||
-      way.bike_forward() != true || way.pedestrian() != true || way.auto_backward() != false ||
-      way.moped_backward() != false || way.bike_backward() != true || way.bus_backward() != false) {
-    throw std::runtime_error("Access is not correct for way 7053048.");
-  }
+  auto way_7053048 = GetWay(7053048, ways);
+  EXPECT_TRUE(way_7053048.auto_forward());
+  EXPECT_TRUE(way_7053048.moped_forward());
+  EXPECT_TRUE(way_7053048.bus_forward());
+  EXPECT_TRUE(way_7053048.bike_forward());
+  EXPECT_TRUE(way_7053048.pedestrian());
+  EXPECT_FALSE(way_7053048.auto_backward());
+  EXPECT_FALSE(way_7053048.moped_backward());
+  EXPECT_TRUE(way_7053048.bike_backward());
+  EXPECT_FALSE(way_7053048.bus_backward());
 
-  way = GetWay(221051138, ways);
-  if (way.auto_forward() != true || way.moped_forward() != true || way.bus_forward() != true ||
-      way.bike_forward() != true || way.pedestrian() != true || way.auto_backward() != false ||
-      way.moped_backward() != false || way.bus_backward() != false || way.bike_backward() != false) {
-    throw std::runtime_error("Access is not correct for way 221051138.");
-  }
+  auto way_221051138 = GetWay(221051138, ways);
+  EXPECT_TRUE(way_221051138.auto_forward());
+  EXPECT_TRUE(way_221051138.moped_forward());
+  EXPECT_TRUE(way_221051138.bus_forward());
+  EXPECT_TRUE(way_221051138.bike_forward());
+  EXPECT_TRUE(way_221051138.pedestrian());
+  EXPECT_FALSE(way_221051138.auto_backward());
+  EXPECT_FALSE(way_221051138.moped_backward());
+  EXPECT_FALSE(way_221051138.bus_backward());
+  EXPECT_FALSE(way_221051138.bike_backward());
 
-  way = GetWay(23544607, ways);
-  if (way.auto_forward() != true || way.moped_forward() != true || way.bus_forward() != true ||
-      way.bike_forward() != true || way.pedestrian() != true || way.auto_backward() != true ||
-      way.moped_backward() != true || way.bus_backward() != true || way.bike_backward() != true) {
-    throw std::runtime_error("Access is not correct for way 23544607.");
-  }
+  auto way_23544607 = GetWay(23544607, ways);
+  EXPECT_TRUE(way_23544607.auto_forward());
+  EXPECT_TRUE(way_23544607.moped_forward());
+  EXPECT_TRUE(way_23544607.bus_forward());
+  EXPECT_TRUE(way_23544607.bike_forward());
+  EXPECT_TRUE(way_23544607.pedestrian());
+  EXPECT_TRUE(way_23544607.auto_backward());
+  EXPECT_TRUE(way_23544607.moped_backward());
+  EXPECT_TRUE(way_23544607.bus_backward());
+  EXPECT_TRUE(way_23544607.bike_backward());
 
-  way = GetWay(221051142, ways);
-  if (way.auto_forward() != false || way.moped_forward() != true || way.bus_forward() != false ||
-      way.bike_forward() != true || way.pedestrian() != false || way.auto_backward() != false ||
-      way.moped_backward() != false || way.bus_backward() != false || way.bike_backward() != false) {
-    throw std::runtime_error("Access is not correct for way 221051142.");
-  }
+  auto way_221051142 = GetWay(221051142, ways);
+  EXPECT_FALSE(way_221051142.auto_forward());
+  EXPECT_TRUE(way_221051142.moped_forward());
+  EXPECT_FALSE(way_221051142.bus_forward());
+  EXPECT_TRUE(way_221051142.bike_forward());
+  EXPECT_FALSE(way_221051142.pedestrian());
+  EXPECT_FALSE(way_221051142.auto_backward());
+  EXPECT_FALSE(way_221051142.moped_backward());
+  EXPECT_FALSE(way_221051142.bus_backward());
+  EXPECT_FALSE(way_221051142.bike_backward());
 
-  way = GetWay(72906238, ways);
-  if (way.auto_forward() != true || way.moped_forward() != true || way.bus_forward() != true ||
-      way.bike_forward() != true || way.pedestrian() != true || way.auto_backward() != false ||
-      way.moped_backward() != false || way.bus_backward() != false || way.bike_backward() != true) {
-    throw std::runtime_error("Access is not correct for way 72906238.");
-  }
+  auto way_72906238 = GetWay(72906238, ways);
+  EXPECT_TRUE(way_72906238.auto_forward());
+  EXPECT_TRUE(way_72906238.moped_forward());
+  EXPECT_TRUE(way_72906238.bus_forward());
+  EXPECT_TRUE(way_72906238.bike_forward());
+  EXPECT_TRUE(way_72906238.pedestrian());
+  EXPECT_FALSE(way_72906238.auto_backward());
+  EXPECT_FALSE(way_72906238.moped_backward());
+  EXPECT_FALSE(way_72906238.bus_backward());
+  EXPECT_TRUE(way_72906238.bike_backward());
 
-  way = GetWay(7010549, ways);
-  if (way.auto_forward() != true || way.moped_forward() != true || way.bus_forward() != true ||
-      way.bike_forward() != true || way.pedestrian() != true || way.auto_backward() != false ||
-      way.moped_backward() != false || way.bus_backward() != false || way.bike_backward() != true) {
-    throw std::runtime_error("Access is not correct for way 7010549.");
-  }
+  auto way_7010549 = GetWay(7010549, ways);
+  EXPECT_TRUE(way_7010549.auto_forward());
+  EXPECT_TRUE(way_7010549.moped_forward());
+  EXPECT_TRUE(way_7010549.bus_forward());
+  EXPECT_TRUE(way_7010549.bike_forward());
+  EXPECT_TRUE(way_7010549.pedestrian());
+  EXPECT_FALSE(way_7010549.auto_backward());
+  EXPECT_FALSE(way_7010549.moped_backward());
+  EXPECT_FALSE(way_7010549.bus_backward());
+  EXPECT_TRUE(way_7010549.bike_backward());
 
-  way = GetWay(7007629, ways);
-  if (way.auto_forward() != true || way.moped_forward() != true || way.bus_forward() != true ||
-      way.bike_forward() != true || way.pedestrian() != true || way.auto_backward() != false ||
-      way.moped_backward() != false || way.bus_backward() != false || way.bike_backward() != true) {
-    throw std::runtime_error("Access is not correct for way 7007629.");
-  }
+  auto way_7007629 = GetWay(7007629, ways);
+  EXPECT_TRUE(way_7007629.auto_forward());
+  EXPECT_TRUE(way_7007629.moped_forward());
+  EXPECT_TRUE(way_7007629.bus_forward());
+  EXPECT_TRUE(way_7007629.bike_forward());
+  EXPECT_TRUE(way_7007629.pedestrian());
+  EXPECT_FALSE(way_7007629.auto_backward());
+  EXPECT_FALSE(way_7007629.moped_backward());
+  EXPECT_FALSE(way_7007629.bus_backward());
+  EXPECT_TRUE(way_7007629.bike_backward());
 }
 
-void TestBus() {
+TEST(Utrecht, TestBus) {
   boost::property_tree::ptree conf;
   conf.put<std::string>("mjolnir.tile_dir", "test/data/parser_tiles");
   sequence<OSMWay> ways(ways_file, false);
   ways.sort(way_predicate);
 
-  auto way = GetWay(33648196, ways);
-  if (way.auto_forward() != true || way.moped_forward() != true || way.bus_forward() != true ||
-      way.bike_forward() != true || way.pedestrian() != true || way.auto_backward() != false ||
-      way.moped_backward() != true || way.bus_backward() != true || way.bike_backward() != true) {
-    throw std::runtime_error("Access is not correct for way 33648196.");
-  }
+  auto way_33648196 = GetWay(33648196, ways);
+  EXPECT_TRUE(way_33648196.auto_forward());
+  EXPECT_TRUE(way_33648196.moped_forward());
+  EXPECT_TRUE(way_33648196.bus_forward());
+  EXPECT_TRUE(way_33648196.bike_forward());
+  EXPECT_TRUE(way_33648196.pedestrian());
+  EXPECT_FALSE(way_33648196.auto_backward());
+  EXPECT_TRUE(way_33648196.moped_backward());
+  EXPECT_TRUE(way_33648196.bus_backward());
+  EXPECT_TRUE(way_33648196.bike_backward());
 }
 
-void TearDown() {
-  filesystem::remove(ways_file);
-  filesystem::remove(way_nodes_file);
-  filesystem::remove(access_file);
-  filesystem::remove(from_restriction_file);
-  filesystem::remove(to_restriction_file);
-}
+// Setup and tearown will be called only once for the entire suite
+class UtrecthTestSuiteEnv : public ::testing::Environment {
+public:
+  void SetUp() override {
+    boost::property_tree::ptree conf;
+    conf.put<std::string>("mjolnir.tile_dir", "test/data/parser_tiles");
+    auto osmdata =
+        PBFGraphParser::Parse(conf.get_child("mjolnir"),
+                              {VALHALLA_SOURCE_DIR "test/data/utrecht_netherlands.osm.pbf"},
+                              ways_file, way_nodes_file, access_file, from_restriction_file,
+                              to_restriction_file, bss_file);
+  }
+
+  void TearDown() override {
+    filesystem::remove(ways_file);
+    filesystem::remove(way_nodes_file);
+    filesystem::remove(access_file);
+    filesystem::remove(from_restriction_file);
+    filesystem::remove(to_restriction_file);
+  }
+};
 
 } // namespace
 
-int main() {
-
-  test::suite suite("utrecht");
-
-  suite.test(TEST_CASE(Parse));
-  suite.test(TEST_CASE(TestBike));
-  suite.test(TEST_CASE(TestBus));
-  suite.test(TEST_CASE(TearDown));
-
-  return suite.tear_down();
+int main(int argc, char* argv[]) {
+  testing::AddGlobalTestEnvironment(new UtrecthTestSuiteEnv);
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

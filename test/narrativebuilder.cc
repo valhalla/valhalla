@@ -266,84 +266,49 @@ void TryBuild(const Options& options,
               std::list<Maneuver>& expected_maneuvers,
               const EnhancedTripLeg* etp = nullptr) {
   std::unique_ptr<NarrativeBuilder> narrative_builder = NarrativeBuilderFactory::Create(options, etp);
-  narrative_builder->Build(options, etp, maneuvers);
+  narrative_builder->Build(options, maneuvers);
 
   // Check maneuver list sizes
-  if (maneuvers.size() != expected_maneuvers.size())
-    throw std::runtime_error("Incorrect maneuver count");
+  ASSERT_EQ(maneuvers.size(), expected_maneuvers.size());
+
   for (auto man = maneuvers.begin(), expected_man = expected_maneuvers.begin();
        man != maneuvers.end(); ++man, ++expected_man) {
 
     // Check maneuver type
-    if (man->type() != expected_man->type()) {
-      throw std::runtime_error("Incorrect maneuver type");
-    }
+    EXPECT_EQ(man->type(), expected_man->type());
 
     // Check maneuver instruction
-    if (man->instruction() != expected_man->instruction()) {
-      throw std::runtime_error("Incorrect maneuver instruction - expected: " +
-                               expected_man->instruction() + "  |  produced: " + man->instruction());
-    }
+    EXPECT_EQ(man->instruction(), expected_man->instruction());
 
     // Check maneuver verbal_transition_alert_instruction
-    if (man->verbal_transition_alert_instruction() !=
-        expected_man->verbal_transition_alert_instruction()) {
-      throw std::runtime_error("Incorrect maneuver verbal_transition_alert_instruction - expected: " +
-                               expected_man->verbal_transition_alert_instruction() +
-                               "  |  produced: " + man->verbal_transition_alert_instruction());
-    }
+    EXPECT_EQ(man->verbal_transition_alert_instruction(),
+              expected_man->verbal_transition_alert_instruction());
 
     // Check maneuver verbal_pre_transition_instruction
-    if (man->verbal_pre_transition_instruction() !=
-        expected_man->verbal_pre_transition_instruction()) {
-      throw std::runtime_error("Incorrect maneuver verbal_pre_transition_instruction - expected: " +
-                               expected_man->verbal_pre_transition_instruction() +
-                               "  |  produced: " + man->verbal_pre_transition_instruction());
-    }
+    EXPECT_EQ(man->verbal_pre_transition_instruction(),
+              expected_man->verbal_pre_transition_instruction());
 
     // Check maneuver verbal_post_transition_instruction
-    if (man->verbal_post_transition_instruction() !=
-        expected_man->verbal_post_transition_instruction()) {
-      throw std::runtime_error("Incorrect maneuver verbal_post_transition_instruction - expected: " +
-                               expected_man->verbal_post_transition_instruction() +
-                               "  |  produced: " + man->verbal_post_transition_instruction());
-    }
+    EXPECT_EQ(man->verbal_post_transition_instruction(),
+              expected_man->verbal_post_transition_instruction());
 
     // Check maneuver depart_instruction
-    if (man->depart_instruction() != expected_man->depart_instruction()) {
-      throw std::runtime_error(
-          "Incorrect maneuver depart_instruction - expected: " + expected_man->depart_instruction() +
-          "  |  produced: " + man->depart_instruction());
-    }
+    EXPECT_EQ(man->depart_instruction(), expected_man->depart_instruction());
 
     // Check maneuver verbal_depart_instruction
-    if (man->verbal_depart_instruction() != expected_man->verbal_depart_instruction()) {
-      throw std::runtime_error("Incorrect maneuver verbal_depart_instruction - expected: " +
-                               expected_man->verbal_depart_instruction() +
-                               "  |  produced: " + man->verbal_depart_instruction());
-    }
+    EXPECT_EQ(man->verbal_depart_instruction(), expected_man->verbal_depart_instruction());
 
     // Check maneuver arrive_instruction
-    if (man->arrive_instruction() != expected_man->arrive_instruction()) {
-      throw std::runtime_error(
-          "Incorrect maneuver arrive_instruction - expected: " + expected_man->arrive_instruction() +
-          "  |  produced: " + man->arrive_instruction());
-    }
+    EXPECT_EQ(man->arrive_instruction(), expected_man->arrive_instruction());
 
     // Check maneuver verbal_arrive_instruction
-    if (man->verbal_arrive_instruction() != expected_man->verbal_arrive_instruction()) {
-      throw std::runtime_error("Incorrect maneuver verbal_arrive_instruction - expected: " +
-                               expected_man->verbal_arrive_instruction() +
-                               "  |  produced: " + man->verbal_arrive_instruction());
-    }
+    EXPECT_EQ(man->verbal_arrive_instruction(), expected_man->verbal_arrive_instruction());
   }
 }
 
 void VerifyToStayOn(const Maneuver& maneuver, bool expected_to_stay_on) {
-
   // Check to stay on attribute
-  if (maneuver.to_stay_on() != expected_to_stay_on)
-    throw std::runtime_error("Incorrect 'to stay on' attribute");
+  EXPECT_EQ(maneuver.to_stay_on(), expected_to_stay_on);
 }
 
 void PopulateStartManeuverList_0(std::list<Maneuver>& maneuvers,
@@ -2864,7 +2829,7 @@ void SetExpectedPreviousManeuverInstructions(std::list<Maneuver>& expected_maneu
   maneuver.set_verbal_post_transition_instruction(verbal_post_transition_instruction);
 }
 
-void TestBuildStartInstructions_0_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildStartInstructions_0_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -2886,7 +2851,7 @@ void TestBuildStartInstructions_0_miles_en_US() {
   TryBuild(options, maneuvers, expected_maneuvers);
 }
 
-void TestBuildStartInstructions_1_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildStartInstructions_1_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "NY";
 
@@ -2908,7 +2873,7 @@ void TestBuildStartInstructions_1_miles_en_US() {
   TryBuild(options, maneuvers, expected_maneuvers);
 }
 
-void TestBuildStartInstructions_2_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildStartInstructions_2_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -2933,7 +2898,7 @@ void TestBuildStartInstructions_2_miles_en_US() {
   TryBuild(options, maneuvers, expected_maneuvers);
 }
 
-void TestBuildStartInstructions_4_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildStartInstructions_4_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -2955,7 +2920,7 @@ void TestBuildStartInstructions_4_miles_en_US() {
   TryBuild(options, maneuvers, expected_maneuvers);
 }
 
-void TestBuildStartInstructions_5_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildStartInstructions_5_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "NY";
 
@@ -2977,7 +2942,7 @@ void TestBuildStartInstructions_5_miles_en_US() {
   TryBuild(options, maneuvers, expected_maneuvers);
 }
 
-void TestBuildStartInstructions_6_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildStartInstructions_6_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -3002,7 +2967,7 @@ void TestBuildStartInstructions_6_miles_en_US() {
   TryBuild(options, maneuvers, expected_maneuvers);
 }
 
-void TestBuildStartInstructions_8_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildStartInstructions_8_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -3024,7 +2989,7 @@ void TestBuildStartInstructions_8_miles_en_US() {
   TryBuild(options, maneuvers, expected_maneuvers);
 }
 
-void TestBuildStartInstructions_9_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildStartInstructions_9_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "NY";
 
@@ -3046,7 +3011,7 @@ void TestBuildStartInstructions_9_miles_en_US() {
   TryBuild(options, maneuvers, expected_maneuvers);
 }
 
-void TestBuildStartInstructions_9_unnamed_walkway_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildStartInstructions_9_unnamed_walkway_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "NY";
 
@@ -3068,7 +3033,7 @@ void TestBuildStartInstructions_9_unnamed_walkway_miles_en_US() {
   TryBuild(options, maneuvers, expected_maneuvers);
 }
 
-void TestBuildStartInstructions_10_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildStartInstructions_10_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -3093,7 +3058,7 @@ void TestBuildStartInstructions_10_miles_en_US() {
   TryBuild(options, maneuvers, expected_maneuvers);
 }
 
-void TestBuildStartInstructions_16_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildStartInstructions_16_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -3115,7 +3080,7 @@ void TestBuildStartInstructions_16_miles_en_US() {
   TryBuild(options, maneuvers, expected_maneuvers);
 }
 
-void TestBuildStartInstructions_17_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildStartInstructions_17_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "NY";
 
@@ -3137,7 +3102,7 @@ void TestBuildStartInstructions_17_miles_en_US() {
   TryBuild(options, maneuvers, expected_maneuvers);
 }
 
-void TestBuildStartInstructions_17_unnamed_cycleway_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildStartInstructions_17_unnamed_cycleway_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "NY";
 
@@ -3159,7 +3124,7 @@ void TestBuildStartInstructions_17_unnamed_cycleway_miles_en_US() {
   TryBuild(options, maneuvers, expected_maneuvers);
 }
 
-void TestBuildStartInstructions_17_unnamed_mountain_bike_trail_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildStartInstructions_17_unnamed_mountain_bike_trail_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "NY";
 
@@ -3182,7 +3147,7 @@ void TestBuildStartInstructions_17_unnamed_mountain_bike_trail_miles_en_US() {
   TryBuild(options, maneuvers, expected_maneuvers);
 }
 
-void TestBuildStartInstructions_18_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildStartInstructions_18_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -3207,7 +3172,7 @@ void TestBuildStartInstructions_18_miles_en_US() {
   TryBuild(options, maneuvers, expected_maneuvers);
 }
 
-void TestBuildStartInstructions_0_kilometers_en_US() {
+TEST(NarrativeBuilder, TestBuildStartInstructions_0_kilometers_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -3229,7 +3194,7 @@ void TestBuildStartInstructions_0_kilometers_en_US() {
   TryBuild(options, maneuvers, expected_maneuvers);
 }
 
-void TestBuildStartInstructions_1_kilometers_en_US() {
+TEST(NarrativeBuilder, TestBuildStartInstructions_1_kilometers_en_US) {
   std::string country_code = "US";
   std::string state_code = "NY";
 
@@ -3251,7 +3216,7 @@ void TestBuildStartInstructions_1_kilometers_en_US() {
   TryBuild(options, maneuvers, expected_maneuvers);
 }
 
-void TestBuildStartInstructions_2_kilometers_en_US() {
+TEST(NarrativeBuilder, TestBuildStartInstructions_2_kilometers_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -3281,7 +3246,7 @@ void TestBuildStartInstructions_2_kilometers_en_US() {
 // 0 "You have arrived at your destination."
 // 0 "You will arrive at your destination."
 // 0 "You have arrived at your destination."
-void TestBuildDestinationInstructions_0_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildDestinationInstructions_0_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -3318,7 +3283,7 @@ void TestBuildDestinationInstructions_0_miles_en_US() {
 // 1 "You have arrived at <LOCATION_NAME|LOCATION_STREET_ADDRESS>."
 // 1 "You will arrive at <LOCATION_NAME|LOCATION_STREET_ADDRESS>."
 // 1 "You have arrived at <LOCATION_NAME|LOCATION_STREET_ADDRESS>."
-void TestBuildDestinationInstructions_1_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildDestinationInstructions_1_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -3356,7 +3321,7 @@ void TestBuildDestinationInstructions_1_miles_en_US() {
 // 2 "Your destination is on the <SOS>."
 // 2 "Your destination will be on the <SOS>."
 // 2 "Your destination is on the <SOS>."
-void TestBuildDestinationInstructions_2_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildDestinationInstructions_2_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -3394,7 +3359,7 @@ void TestBuildDestinationInstructions_2_miles_en_US() {
 // 3 "<LOCATION_NAME|LOCATION_STREET_ADDRESS> is on the <SOS>."
 // 3 "<LOCATION_NAME|LOCATION_STREET_ADDRESS> will be on the <SOS>"
 // 3 "<LOCATION_NAME|LOCATION_STREET_ADDRESS> is on the <SOS>."
-void TestBuildDestinationInstructions_3_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildDestinationInstructions_3_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -3433,7 +3398,7 @@ void TestBuildDestinationInstructions_3_miles_en_US() {
 // "0": "<PREV_STREET_NAMES> becomes <STREET_NAMES>."
 // no verbal alert
 // "0": "<PREV_STREET_NAMES> becomes <STREET_NAMES>."
-void TestBuildBecomesInstructions_0_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildBecomesInstructions_0_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "VA";
 
@@ -3465,7 +3430,7 @@ void TestBuildBecomesInstructions_0_miles_en_US() {
 // 0 "Continue."
 // 0 "Continue."
 // 0 "Continue for <LENGTH>."
-void TestBuildContinueInstructions_0_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildContinueInstructions_0_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -3492,7 +3457,7 @@ void TestBuildContinueInstructions_0_miles_en_US() {
 // 1 "Continue on <STREET_NAMES>."
 // 1 "Continue on <STREET_NAMES(1)>."
 // 1 "Continue on <STREET_NAMES(2)> for <LENGTH>."
-void TestBuildContinueInstructions_1_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildContinueInstructions_1_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -3520,7 +3485,7 @@ void TestBuildContinueInstructions_1_miles_en_US() {
 // 0 "Turn <RELATIVE_DIRECTION>."
 // 0 "Turn <RELATIVE_DIRECTION>."
 // 0 "Turn <RELATIVE_DIRECTION>."
-void TestBuildTurnInstructions_0_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildTurnInstructions_0_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -3548,7 +3513,7 @@ void TestBuildTurnInstructions_0_miles_en_US() {
 // 1 "Turn <RELATIVE_DIRECTION> onto <STREET_NAMES>."
 // 1 "Turn <RELATIVE_DIRECTION> onto <STREET_NAMES(1)>."
 // 1 "Turn <RELATIVE_DIRECTION> onto <STREET_NAMES(2)>."
-void TestBuildTurnInstructions_1_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildTurnInstructions_1_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -3577,7 +3542,7 @@ void TestBuildTurnInstructions_1_miles_en_US() {
 // 1 "Turn <RELATIVE_DIRECTION> onto <STREET_NAMES>."
 // 1 "Turn <RELATIVE_DIRECTION> onto <STREET_NAMES(1)>."
 // 1 "Turn <RELATIVE_DIRECTION> onto <STREET_NAMES(2)>."
-void TestBuildTurnInstructions_1_miles_cs_CZ() {
+TEST(NarrativeBuilder, TestBuildTurnInstructions_1_miles_cs_CZ) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -3605,7 +3570,7 @@ void TestBuildTurnInstructions_1_miles_cs_CZ() {
 // 1 "Turn <RELATIVE_DIRECTION> onto <STREET_NAMES>."
 // 1 "Turn <RELATIVE_DIRECTION> onto <STREET_NAMES(1)>."
 // 1 "Turn <RELATIVE_DIRECTION> onto <STREET_NAMES(2)>."
-void TestBuildTurnInstructions_1_miles_de_DE() {
+TEST(NarrativeBuilder, TestBuildTurnInstructions_1_miles_de_DE) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -3633,7 +3598,7 @@ void TestBuildTurnInstructions_1_miles_de_DE() {
 // 1 "Turn <RELATIVE_DIRECTION> onto <STREET_NAMES>."
 // 1 "Turn <RELATIVE_DIRECTION> onto <STREET_NAMES(1)>."
 // 1 "Turn <RELATIVE_DIRECTION> onto <STREET_NAMES(2)>."
-void TestBuildTurnInstructions_1_miles_it_IT() {
+TEST(NarrativeBuilder, TestBuildTurnInstructions_1_miles_it_IT) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -3662,7 +3627,7 @@ void TestBuildTurnInstructions_1_miles_it_IT() {
 // 2 "Turn <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
 // 2 "Turn <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES(1)>."
 // 2 "Turn <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES(2)>."
-void TestBuildTurnInstructions_2_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildTurnInstructions_2_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "MD";
 
@@ -3693,7 +3658,7 @@ void TestBuildTurnInstructions_2_miles_en_US() {
 // 3 "Turn <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
 // 3 "Turn <RELATIVE_DIRECTION> to stay on <STREET_NAMES(1)>."
 // 3 "Turn <RELATIVE_DIRECTION> to stay on <STREET_NAMES(2)>."
-void TestBuildTurnInstructions_3_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildTurnInstructions_3_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "VA";
 
@@ -3723,10 +3688,10 @@ void TestBuildTurnInstructions_3_miles_en_US() {
 
 ///////////////////////////////////////////////////////////////////////////////
 // FormTurnInstruction
-// 0 "Turn sharp <RELATIVE_DIRECTION>."
-// 0 "Turn sharp <RELATIVE_DIRECTION>."
-// 0 "Turn sharp <RELATIVE_DIRECTION>."
-void TestBuildSharpInstructions_0_miles_en_US() {
+// 0 "Make a sharp <RELATIVE_DIRECTION>."
+// 0 "Make a sharp <RELATIVE_DIRECTION>."
+// 0 "Make a sharp <RELATIVE_DIRECTION>."
+TEST(NarrativeBuilder, TestBuildSharpInstructions_0_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -3742,18 +3707,18 @@ void TestBuildSharpInstructions_0_miles_en_US() {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateSharpManeuverList_0(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Turn sharp left.", "Turn sharp left.",
-                                  "Turn sharp left.", "Continue for a half mile.");
+  SetExpectedManeuverInstructions(expected_maneuvers, "Make a sharp left.", "Make a sharp left.",
+                                  "Make a sharp left.", "Continue for a half mile.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 // FormTurnInstruction
-// 1 "Turn sharp <RELATIVE_DIRECTION> onto <STREET_NAMES>."
-// 1 "Turn sharp <RELATIVE_DIRECTION> onto <STREET_NAMES(1)>."
-// 1 "Turn sharp <RELATIVE_DIRECTION> onto <STREET_NAMES(2)>."
-void TestBuildSharpInstructions_1_miles_en_US() {
+// 1 "Make a sharp <RELATIVE_DIRECTION> onto <STREET_NAMES>."
+// 1 "Make a sharp <RELATIVE_DIRECTION> onto <STREET_NAMES(1)>."
+// 1 "Make a sharp <RELATIVE_DIRECTION> onto <STREET_NAMES(2)>."
+TEST(NarrativeBuilder, TestBuildSharpInstructions_1_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "NY";
 
@@ -3769,9 +3734,9 @@ void TestBuildSharpInstructions_1_miles_en_US() {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateSharpManeuverList_1(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Turn sharp right onto Flatbush Avenue.",
-                                  "Turn sharp right onto Flatbush Avenue.",
-                                  "Turn sharp right onto Flatbush Avenue.",
+  SetExpectedManeuverInstructions(expected_maneuvers, "Make a sharp right onto Flatbush Avenue.",
+                                  "Make a sharp right onto Flatbush Avenue.",
+                                  "Make a sharp right onto Flatbush Avenue.",
                                   "Continue for 1 tenth of a mile.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
@@ -3779,10 +3744,10 @@ void TestBuildSharpInstructions_1_miles_en_US() {
 
 ///////////////////////////////////////////////////////////////////////////////
 // FormTurnInstruction
-// 2 "Turn sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
-// 2 "Turn sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES(1)>."
-// 2 "Turn sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES(2)>."
-void TestBuildSharpInstructions_2_miles_en_US() {
+// 2 "Make a sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
+// 2 "Make a sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES(1)>."
+// 2 "Make a sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES(2)>."
+TEST(NarrativeBuilder, TestBuildSharpInstructions_2_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "MD";
 
@@ -3800,9 +3765,9 @@ void TestBuildSharpInstructions_2_miles_en_US() {
   PopulateSharpManeuverList_2(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(
       expected_maneuvers,
-      "Turn sharp left onto North Bond Street/US 1 Business/MD 924. Continue on MD 924.",
-      "Turn sharp left onto North Bond Street.",
-      "Turn sharp left onto North Bond Street, U.S. 1 Business.",
+      "Make a sharp left onto North Bond Street/US 1 Business/MD 924. Continue on MD 924.",
+      "Make a sharp left onto North Bond Street.",
+      "Make a sharp left onto North Bond Street, U.S. 1 Business.",
       "Continue on Maryland 9 24 for a half mile.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
@@ -3810,10 +3775,11 @@ void TestBuildSharpInstructions_2_miles_en_US() {
 
 ///////////////////////////////////////////////////////////////////////////////
 // FormTurnInstruction
-// 3 "Turn sharp <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
-// 3 "Turn sharp <RELATIVE_DIRECTION> to stay on <STREET_NAMES(1)>."
-// 3 "Turn sharp <RELATIVE_DIRECTION> to stay on <STREET_NAMES(2)>."
-void TestBuildSharpInstructions_3_miles_en_US() {
+// 3 "Make a sharp <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
+// 3 "Make a sharp <RELATIVE_DIRECTION> to stay on <STREET_NAMES(1)>."
+// 3 "Make a sharp <RELATIVE_DIRECTION> to stay on <STREET_NAMES(2)>."
+// todo: check why the test case has been disabled in previous test suite and why it doesn't pass now
+TEST(NarrativeBuilder, DISABLED_TestBuildSharpInstructions_3_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "VA";
 
@@ -3833,9 +3799,9 @@ void TestBuildSharpInstructions_3_miles_en_US() {
       expected_maneuvers, "Turn right onto Sunstone Drive.", "Turn right onto Sunstone Drive.",
       "Turn right onto Sunstone Drive. Then Turn right to stay on Sunstone Drive.",
       "Continue for 300 feet.");
-  SetExpectedManeuverInstructions(expected_maneuvers, "Turn sharp right to stay on Sunstone Drive.",
-                                  "Turn sharp right to stay on Sunstone Drive.",
-                                  "Turn sharp right to stay on Sunstone Drive.",
+  SetExpectedManeuverInstructions(expected_maneuvers, "Make a sharp right to stay on Sunstone Drive.",
+                                  "Make a sharp right to stay on Sunstone Drive.",
+                                  "Make a sharp right to stay on Sunstone Drive.",
                                   "Continue for 100 feet.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
@@ -3847,7 +3813,7 @@ void TestBuildSharpInstructions_3_miles_en_US() {
 // 0 "Bear <RELATIVE_DIRECTION>."
 // 0 "Bear <RELATIVE_DIRECTION>."
 // 0 "Bear <RELATIVE_DIRECTION>."
-void TestBuildBearInstructions_0_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildBearInstructions_0_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "MD";
 
@@ -3874,7 +3840,7 @@ void TestBuildBearInstructions_0_miles_en_US() {
 // 1 "Bear <RELATIVE_DIRECTION> onto <STREET_NAMES>."
 // 1 "Bear <RELATIVE_DIRECTION> onto <STREET_NAMES(1)>."
 // 1 "Bear <RELATIVE_DIRECTION> onto <STREET_NAMES(2)>."
-void TestBuildBearInstructions_1_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildBearInstructions_1_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "MD";
 
@@ -3902,7 +3868,7 @@ void TestBuildBearInstructions_1_miles_en_US() {
 // 2 "Bear <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
 // 2 "Bear <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES(1)>."
 // 2 "Bear <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES(2)>."
-void TestBuildBearInstructions_2_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildBearInstructions_2_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "MD";
 
@@ -3931,7 +3897,7 @@ void TestBuildBearInstructions_2_miles_en_US() {
 // 3 "Bear <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
 // 3 "Bear <RELATIVE_DIRECTION> to stay on <STREET_NAMES(1)>."
 // 3 "Bear <RELATIVE_DIRECTION> to stay on <STREET_NAMES(2)>."
-void TestBuildBearInstructions_3_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildBearInstructions_3_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "VA";
 
@@ -3965,7 +3931,7 @@ void TestBuildBearInstructions_3_miles_en_US() {
 // 0 "Make a <RELATIVE_DIRECTION> U-turn."
 // 0 "Make a <RELATIVE_DIRECTION> U-turn."
 // 0 "Make a <RELATIVE_DIRECTION> U-turn."
-void TestBuildUturnInstructions_0_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildUturnInstructions_0_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -3992,7 +3958,7 @@ void TestBuildUturnInstructions_0_miles_en_US() {
 // 1 "Make a <RELATIVE_DIRECTION> U-turn onto <STREET_NAMES>."
 // 1 "Make a <RELATIVE_DIRECTION> U-turn onto <STREET_NAMES(1)>."
 // 1 "Make a <RELATIVE_DIRECTION> U-turn onto <STREET_NAMES(2)>."
-void TestBuildUturnInstructions_1_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildUturnInstructions_1_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -4021,7 +3987,7 @@ void TestBuildUturnInstructions_1_miles_en_US() {
 // 2 "Make a <RELATIVE_DIRECTION> U-turn to stay on <STREET_NAMES>."
 // 2 "Make a <RELATIVE_DIRECTION> U-turn to stay on <STREET_NAMES(1)>."
 // 2 "Make a <RELATIVE_DIRECTION> U-turn to stay on <STREET_NAMES(2)>."
-void TestBuildUturnInstructions_2_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildUturnInstructions_2_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -4056,7 +4022,7 @@ void TestBuildUturnInstructions_2_miles_en_US() {
 // 3 "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES>."
 // 3 "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES(1)>."
 // 3 "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES(2)>."
-void TestBuildUturnInstructions_3_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildUturnInstructions_3_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -4084,7 +4050,7 @@ void TestBuildUturnInstructions_3_miles_en_US() {
 // 4 "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES> onto <STREET_NAMES>."
 // 3 "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES(1)>."
 // 4 "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES(2)> onto <STREET_NAMES(2)>."
-void TestBuildUturnInstructions_4_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildUturnInstructions_4_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -4114,7 +4080,7 @@ void TestBuildUturnInstructions_4_miles_en_US() {
 // 5 "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES> to stay on <STREET_NAMES>."
 // 3 "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES(1)>."
 // 5 "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES(2)> to stay on <STREET_NAMES(2)>."
-void TestBuildUturnInstructions_5_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildUturnInstructions_5_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -4150,7 +4116,7 @@ void TestBuildUturnInstructions_5_miles_en_US() {
 // 0 "Stay straight to take the ramp."
 // 0 "Stay straight to take the ramp."
 // 0 "Stay straight to take the ramp."
-void TestBuildRampStraight_0_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildRampStraight_0_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -4178,7 +4144,7 @@ void TestBuildRampStraight_0_miles_en_US() {
 // 1 "Stay straight to take the <BRANCH_SIGN> ramp."
 // 1 "Stay straight to take the <BRANCH_SIGN> ramp."
 // 1 "Stay straight to take the <BRANCH_SIGN> ramp."
-void TestBuildRampStraight_1_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildRampStraight_1_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -4206,7 +4172,7 @@ void TestBuildRampStraight_1_miles_en_US() {
 // 2 "Stay straight to take the ramp toward <TOWARD_SIGN>."
 // 2 "Stay straight to take the ramp toward <TOWARD_SIGN>."
 // 2 "Stay straight to take the ramp toward <TOWARD_SIGN>."
-void TestBuildRampStraight_2_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildRampStraight_2_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -4235,7 +4201,7 @@ void TestBuildRampStraight_2_miles_en_US() {
 // 3 "Stay straight to take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>."
 // 1 "Stay straight to take the <BRANCH_SIGN> ramp"
 // 3 "Stay straight to take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>."
-void TestBuildRampStraight_3_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildRampStraight_3_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -4266,7 +4232,7 @@ void TestBuildRampStraight_3_miles_en_US() {
 // 4 "Stay straight to take the <NAME_SIGN> ramp."
 // 3 "Stay straight to take the <NAME_SIGN> ramp."
 // 4 "Stay straight to take the <NAME_SIGN> ramp."
-void TestBuildRampStraight_4_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildRampStraight_4_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -4295,7 +4261,7 @@ void TestBuildRampStraight_4_miles_en_US() {
 // "0": "Take the ramp on the <RELATIVE_DIRECTION>.",
 // "0": "Take the ramp on the <RELATIVE_DIRECTION>.",
 // "0": "Take the ramp on the <RELATIVE_DIRECTION>.",
-void TestBuildRamp_0_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildRamp_0_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -4322,7 +4288,7 @@ void TestBuildRamp_0_miles_en_US() {
 // "1": "Take the <BRANCH_SIGN> ramp on the <RELATIVE_DIRECTION>.",
 // "1": "Take the <BRANCH_SIGN> ramp on the <RELATIVE_DIRECTION>.",
 // "1": "Take the <BRANCH_SIGN> ramp on the <RELATIVE_DIRECTION>.",
-void TestBuildRamp_1_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildRamp_1_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -4350,7 +4316,7 @@ void TestBuildRamp_1_miles_en_US() {
 // "2": "Take the ramp on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
 // "2": "Take the ramp on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
 // "2": "Take the ramp on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
-void TestBuildRamp_2_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildRamp_2_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -4378,7 +4344,7 @@ void TestBuildRamp_2_miles_en_US() {
 // "3": "Take the <BRANCH_SIGN> ramp on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
 // "1": "Take the <BRANCH_SIGN> ramp on the <RELATIVE_DIRECTION>",
 // "3": "Take the <BRANCH_SIGN> ramp on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
-void TestBuildRamp_3_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildRamp_3_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -4407,7 +4373,7 @@ void TestBuildRamp_3_miles_en_US() {
 // "4": "Take the <NAME_SIGN> ramp on the <RELATIVE_DIRECTION>.",
 // "4": "Take the <NAME_SIGN> ramp on the <RELATIVE_DIRECTION>.",
 // "4": "Take the <NAME_SIGN> ramp on the <RELATIVE_DIRECTION>.",
-void TestBuildRamp_4_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildRamp_4_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -4435,7 +4401,7 @@ void TestBuildRamp_4_miles_en_US() {
 // "5": "Turn <RELATIVE_DIRECTION> to take the ramp.",
 // "5": "Turn <RELATIVE_DIRECTION> to take the ramp.",
 // "5": "Turn <RELATIVE_DIRECTION> to take the ramp.",
-void TestBuildRamp_5_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildRamp_5_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -4462,7 +4428,7 @@ void TestBuildRamp_5_miles_en_US() {
 // "6": "Turn <RELATIVE_DIRECTION> to take the <BRANCH_SIGN> ramp.",
 // "6": "Turn <RELATIVE_DIRECTION> to take the <BRANCH_SIGN> ramp.",
 // "6": "Turn <RELATIVE_DIRECTION> to take the <BRANCH_SIGN> ramp.",
-void TestBuildRamp_6_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildRamp_6_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -4490,7 +4456,7 @@ void TestBuildRamp_6_miles_en_US() {
 // "7": "Turn <RELATIVE_DIRECTION> to take the ramp toward <TOWARD_SIGN>.",
 // "7": "Turn <RELATIVE_DIRECTION> to take the ramp toward <TOWARD_SIGN>.",
 // "7": "Turn <RELATIVE_DIRECTION> to take the ramp toward <TOWARD_SIGN>.",
-void TestBuildRamp_7_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildRamp_7_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -4520,7 +4486,7 @@ void TestBuildRamp_7_miles_en_US() {
 // "8": "Turn <RELATIVE_DIRECTION> to take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>.",
 // "6": "Turn <RELATIVE_DIRECTION> to take the <BRANCH_SIGN> ramp.",
 // "8": "Turn <RELATIVE_DIRECTION> to take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>.",
-void TestBuildRamp_8_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildRamp_8_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -4552,7 +4518,7 @@ void TestBuildRamp_8_miles_en_US() {
 // "9": "Turn <RELATIVE_DIRECTION> to take the <NAME_SIGN> ramp."
 // "9": "Turn <RELATIVE_DIRECTION> to take the <NAME_SIGN> ramp."
 // "9": "Turn <RELATIVE_DIRECTION> to take the <NAME_SIGN> ramp."
-void TestBuildRamp_9_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildRamp_9_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -4580,7 +4546,7 @@ void TestBuildRamp_9_miles_en_US() {
 // "10": "Take the ramp.",
 // "10": "Take the ramp.",
 // "10": "Take the ramp.",
-void TestBuildRamp_10_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildRamp_10_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -4607,7 +4573,7 @@ void TestBuildRamp_10_miles_en_US() {
 // "11": "Take the <BRANCH_SIGN> ramp.",
 // "11": "Take the <BRANCH_SIGN> ramp.",
 // "11": "Take the <BRANCH_SIGN> ramp.",
-void TestBuildRamp_11_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildRamp_11_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -4634,7 +4600,7 @@ void TestBuildRamp_11_miles_en_US() {
 // "12": "Take the ramp toward <TOWARD_SIGN>.",
 // "12": "Take the ramp toward <TOWARD_SIGN>.",
 // "12": "Take the ramp toward <TOWARD_SIGN>.",
-void TestBuildRamp_12_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildRamp_12_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -4661,7 +4627,7 @@ void TestBuildRamp_12_miles_en_US() {
 // "13": "Take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>.",
 // "10": "Take the <BRANCH_SIGN> ramp",
 // "13": "Take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>.",
-void TestBuildRamp_13_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildRamp_13_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -4690,7 +4656,7 @@ void TestBuildRamp_13_miles_en_US() {
 // "14": "Take the <NAME_SIGN> ramp.",
 // "14": "Take the <NAME_SIGN> ramp.",
 // "14": "Take the <NAME_SIGN> ramp.",
-void TestBuildRamp_14_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildRamp_14_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -4718,7 +4684,7 @@ void TestBuildRamp_14_miles_en_US() {
 // "0": "Take the exit on the <RELATIVE_DIRECTION>.",
 // "0": "Take the exit on the <RELATIVE_DIRECTION>.",
 // "0": "Take the exit on the <RELATIVE_DIRECTION>.",
-void TestBuildExit_0_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildExit_0_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -4745,7 +4711,7 @@ void TestBuildExit_0_miles_en_US() {
 // "1": "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION>.",
 // "1": "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION>.",
 // "1": "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION>.",
-void TestBuildExit_1_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildExit_1_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -4773,7 +4739,7 @@ void TestBuildExit_1_miles_en_US() {
 // "2": "Take the <BRANCH_SIGN> exit on the <RELATIVE_DIRECTION>.",
 // "2": "Take the <BRANCH_SIGN> exit on the <RELATIVE_DIRECTION>.",
 // "2": "Take the <BRANCH_SIGN> exit on the <RELATIVE_DIRECTION>.",
-void TestBuildExit_2_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildExit_2_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -4801,7 +4767,7 @@ void TestBuildExit_2_miles_en_US() {
 // "3": "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN>.",
 // "1": "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION>.",
 // "3": "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN>.",
-void TestBuildExit_3_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildExit_3_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -4830,7 +4796,7 @@ void TestBuildExit_3_miles_en_US() {
 // "4": "Take the exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
 // "4": "Take the exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
 // "4": "Take the exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
-void TestBuildExit_4_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildExit_4_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -4858,7 +4824,7 @@ void TestBuildExit_4_miles_en_US() {
 // "5": "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
 // "1": "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION>.",
 // "5": "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
-void TestBuildExit_5_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildExit_5_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -4887,7 +4853,7 @@ void TestBuildExit_5_miles_en_US() {
 // "6": "Take the <BRANCH_SIGN> exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
 // "2": "Take the <BRANCH_SIGN> exit on the <RELATIVE_DIRECTION>.",
 // "6": "Take the <BRANCH_SIGN> exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
-void TestBuildExit_6_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildExit_6_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -4916,7 +4882,7 @@ void TestBuildExit_6_miles_en_US() {
 // "7": "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN> toward
 // <TOWARD_SIGN>.", "1": "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION>.", "7": "Take exit
 // <NUMBER_SIGN> on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN> toward <TOWARD_SIGN>.",
-void TestBuildExit_7_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildExit_7_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -4946,7 +4912,7 @@ void TestBuildExit_7_miles_en_US() {
 // "8": "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION>.",
 // "8": "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION>.",
 // "8": "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION>.",
-void TestBuildExit_8_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildExit_8_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -4975,7 +4941,7 @@ void TestBuildExit_8_miles_en_US() {
 // "10": "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN>.",
 // "2": "Take the <BRANCH_SIGN> exit on the <RELATIVE_DIRECTION>.",
 // "10": "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN>.",
-void TestBuildExit_10_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildExit_10_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -5004,7 +4970,7 @@ void TestBuildExit_10_miles_en_US() {
 // "12": "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
 // "4": "Take the exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
 // "12": "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
-void TestBuildExit_12_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildExit_12_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -5033,7 +4999,7 @@ void TestBuildExit_12_miles_en_US() {
 // "14": "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN> toward
 // <TOWARD_SIGN>." "2": "Take the <BRANCH_SIGN> exit on the <RELATIVE_DIRECTION>.", "14": "Take the
 // <NAME_SIGN> exit on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN> toward <TOWARD_SIGN>."
-void TestBuildExit_14_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildExit_14_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -5064,7 +5030,7 @@ void TestBuildExit_14_miles_en_US() {
 // "15": "Take the exit.",
 // "15": "Take the exit.",
 // "15": "Take the exit.",
-void TestBuildExit_15_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildExit_15_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -5091,7 +5057,7 @@ void TestBuildExit_15_miles_en_US() {
 // "16": "Take exit <NUMBER_SIGN>.",
 // "16": "Take exit <NUMBER_SIGN>.",
 // "16": "Take exit <NUMBER_SIGN>.",
-void TestBuildExit_16_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildExit_16_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -5118,7 +5084,7 @@ void TestBuildExit_16_miles_en_US() {
 // "17": "Take the <BRANCH_SIGN> exit.",
 // "17": "Take the <BRANCH_SIGN> exit.",
 // "17": "Take the <BRANCH_SIGN> exit.",
-void TestBuildExit_17_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildExit_17_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -5146,7 +5112,7 @@ void TestBuildExit_17_miles_en_US() {
 // "18": "Take exit <NUMBER_SIGN> onto <BRANCH_SIGN>.",
 // "15": "Take exit <NUMBER_SIGN>.",
 // "18": "Take exit <NUMBER_SIGN> onto <BRANCH_SIGN>.",
-void TestBuildExit_18_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildExit_18_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -5173,7 +5139,7 @@ void TestBuildExit_18_miles_en_US() {
 // "19": "Take the exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
 // "19": "Take the exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
 // "19": "Take the exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
-void TestBuildExit_19_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildExit_19_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -5201,7 +5167,7 @@ void TestBuildExit_19_miles_en_US() {
 // "20": "Take exit <NUMBER_SIGN> toward <TOWARD_SIGN>.",
 // "16": "Take exit <NUMBER_SIGN>.",
 // "20": "Take exit <NUMBER_SIGN> toward <TOWARD_SIGN>.",
-void TestBuildExit_20_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildExit_20_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -5228,7 +5194,7 @@ void TestBuildExit_20_miles_en_US() {
 // "21": "Take the <BRANCH_SIGN> exit toward <TOWARD_SIGN>.",
 // "17": "Take the <BRANCH_SIGN> exit.",
 // "21": "Take the <BRANCH_SIGN> exit toward <TOWARD_SIGN>.",
-void TestBuildExit_21_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildExit_21_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -5256,7 +5222,7 @@ void TestBuildExit_21_miles_en_US() {
 // "22": "Take exit <NUMBER_SIGN> onto <BRANCH_SIGN> toward <TOWARD_SIGN>.",
 // "16": "Take exit <NUMBER_SIGN>.",
 // "22": "Take exit <NUMBER_SIGN> onto <BRANCH_SIGN> toward <TOWARD_SIGN>.",
-void TestBuildExit_22_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildExit_22_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -5285,7 +5251,7 @@ void TestBuildExit_22_miles_en_US() {
 // "23": "Take the <NAME_SIGN> exit.",
 // "23": "Take the <NAME_SIGN> exit.",
 // "23": "Take the <NAME_SIGN> exit.",
-void TestBuildExit_23_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildExit_23_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -5313,7 +5279,7 @@ void TestBuildExit_23_miles_en_US() {
 // "25": "Take the <NAME_SIGN> exit onto <BRANCH_SIGN>.",
 // "17": "Take the <BRANCH_SIGN> exit.",
 // "25": "Take the <NAME_SIGN> exit onto <BRANCH_SIGN>.",
-void TestBuildExit_25_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildExit_25_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -5342,7 +5308,7 @@ void TestBuildExit_25_miles_en_US() {
 // "27": "Take the <NAME_SIGN> exit toward <TOWARD_SIGN>.",
 // "19": "Take the exit toward <TOWARD_SIGN>.",
 // "27": "Take the <NAME_SIGN> exit toward <TOWARD_SIGN>.",
-void TestBuildExit_27_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildExit_27_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -5371,7 +5337,7 @@ void TestBuildExit_27_miles_en_US() {
 // "29": "Take the <NAME_SIGN> exit onto <BRANCH_SIGN> toward <TOWARD_SIGN>.",
 // "17": "Take the <BRANCH_SIGN> exit.",
 // "29": "Take the <NAME_SIGN> exit onto <BRANCH_SIGN> toward <TOWARD_SIGN>.",
-void TestBuildExit_29_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildExit_29_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -5400,7 +5366,7 @@ void TestBuildExit_29_miles_en_US() {
 // "0": "Keep <RELATIVE_DIRECTION> at the fork.",
 // "0": "Keep <RELATIVE_DIRECTION> at the fork.",
 // "0": "Keep <RELATIVE_DIRECTION> at the fork.",
-void TestBuildKeep_0_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildKeep_0_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -5427,7 +5393,7 @@ void TestBuildKeep_0_miles_en_US() {
 // "1": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN>.",
 // "1": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN>.",
 // "1": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN>.",
-void TestBuildKeep_1_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildKeep_1_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -5455,7 +5421,7 @@ void TestBuildKeep_1_miles_en_US() {
 // "2": "Keep <RELATIVE_DIRECTION> to take <STREET_NAMES>.",
 // "2": "Keep <RELATIVE_DIRECTION> to take <STREET_NAMES>.",
 // "2": "Keep <RELATIVE_DIRECTION> to take <STREET_NAMES>.",
-void TestBuildKeep_2_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildKeep_2_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -5484,7 +5450,7 @@ void TestBuildKeep_2_miles_en_US() {
 // "3": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> onto <STREET_NAMES>.",
 // "1": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN>.",
 // "3": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> onto <STREET_NAMES>.",
-void TestBuildKeep_3_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildKeep_3_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -5513,7 +5479,7 @@ void TestBuildKeep_3_miles_en_US() {
 // "4": "Keep <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
 // "4": "Keep <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
 // "4": "Keep <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
-void TestBuildKeep_4_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildKeep_4_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -5541,7 +5507,7 @@ void TestBuildKeep_4_miles_en_US() {
 // "5": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> toward <TOWARD_SIGN>.",
 // "1": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN>.",
 // "5": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> toward <TOWARD_SIGN>.",
-void TestBuildKeep_5_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildKeep_5_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -5570,7 +5536,7 @@ void TestBuildKeep_5_miles_en_US() {
 // "6": "Keep <RELATIVE_DIRECTION> to take <STREET_NAMES> toward <TOWARD_SIGN>.",
 // "2": "Keep <RELATIVE_DIRECTION> to take <STREET_NAMES>.",
 // "6": "Keep <RELATIVE_DIRECTION> to take <STREET_NAMES> toward <TOWARD_SIGN>.",
-void TestBuildKeep_6_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildKeep_6_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -5600,7 +5566,7 @@ void TestBuildKeep_6_miles_en_US() {
 // "7": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> onto <STREET_NAMES> toward
 // <TOWARD_SIGN>." "1": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN>.", "7": "Keep
 // <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> onto <STREET_NAMES> toward <TOWARD_SIGN>."
-void TestBuildKeep_7_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildKeep_7_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -5630,7 +5596,7 @@ void TestBuildKeep_7_miles_en_US() {
 // "0": "Keep <RELATIVE_DIRECTION> to stay on <STREET_NAMES>.",
 // "0": "Keep <RELATIVE_DIRECTION> to stay on <STREET_NAMES>.",
 // "0": "Keep <RELATIVE_DIRECTION> to stay on <STREET_NAMES>.",
-void TestBuildKeepToStayOn_0_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildKeepToStayOn_0_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -5664,7 +5630,7 @@ void TestBuildKeepToStayOn_0_miles_en_US() {
 // "1": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> to stay on <STREET_NAMES>.",
 // "0": "Keep <RELATIVE_DIRECTION> to stay on <STREET_NAMES>.",
 // "1": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> to stay on <STREET_NAMES>.",
-void TestBuildKeepToStayOn_1_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildKeepToStayOn_1_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -5699,7 +5665,7 @@ void TestBuildKeepToStayOn_1_miles_en_US() {
 // "2": "Keep <RELATIVE_DIRECTION> to stay on <STREET_NAMES> toward <TOWARD_SIGN>.",
 // "0": "Keep <RELATIVE_DIRECTION> to stay on <STREET_NAMES>.",
 // "2": "Keep <RELATIVE_DIRECTION> to stay on <STREET_NAMES> toward <TOWARD_SIGN>.",
-void TestBuildKeepToStayOn_2_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildKeepToStayOn_2_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -5734,7 +5700,7 @@ void TestBuildKeepToStayOn_2_miles_en_US() {
 // "3": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> to stay on <STREET_NAMES> toward
 // <TOWARD_SIGN>." "0": "Keep <RELATIVE_DIRECTION> to stay on <STREET_NAMES>.", "3": "Keep
 // <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> to stay on <STREET_NAMES> toward <TOWARD_SIGN>."
-void TestBuildKeepToStayOn_3_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildKeepToStayOn_3_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -5769,7 +5735,7 @@ void TestBuildKeepToStayOn_3_miles_en_US() {
 // "0": "Merge.",
 // No alert since prior maneuver is not > 2 km
 // "0": "Merge.",
-void TestBuildMerge_0_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildMerge_0_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -5800,7 +5766,7 @@ void TestBuildMerge_0_miles_en_US() {
 // "1": "Merge onto <STREET_NAMES>."
 // No alert since prior maneuver is not > 2 km
 // "1": "Merge onto <STREET_NAMES>."
-void TestBuildMerge_1_1_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildMerge_1_1_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -5832,7 +5798,7 @@ void TestBuildMerge_1_1_miles_en_US() {
 // "1": "Merge onto <STREET_NAMES>."
 // "1": "Merge onto <STREET_NAMES>."
 // "1": "Merge onto <STREET_NAMES>."
-void TestBuildMerge_1_2_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildMerge_1_2_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -5866,7 +5832,7 @@ void TestBuildMerge_1_2_miles_en_US() {
 // "0": "Enter the roundabout.",
 // "0": "Enter the roundabout.",
 // "0": "Enter the roundabout.",
-void TestBuildEnterRoundabout_0_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildEnterRoundabout_0_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -5893,7 +5859,7 @@ void TestBuildEnterRoundabout_0_miles_en_US() {
 // "1": "Enter the roundabout and take the <ORDINAL_VALUE> exit."
 // "1": "Enter the roundabout and take the <ORDINAL_VALUE> exit."
 // "1": "Enter the roundabout and take the <ORDINAL_VALUE> exit."
-void TestBuildEnterRoundabout_1_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildEnterRoundabout_1_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -5930,7 +5896,7 @@ void TestBuildEnterRoundabout_1_miles_en_US() {
 // "0": "Exit the roundabout.",
 // No verbal alert
 // "0": "Exit the roundabout.",
-void TestBuildExitRoundabout_0_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildExitRoundabout_0_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -5957,7 +5923,7 @@ void TestBuildExitRoundabout_0_miles_en_US() {
 // "1": "Exit the roundabout onto <STREET_NAMES>.",
 // No verbal alert
 // "1": "Exit the roundabout onto <STREET_NAMES>.",
-void TestBuildExitRoundabout_1_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildExitRoundabout_1_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -5986,7 +5952,7 @@ void TestBuildExitRoundabout_1_miles_en_US() {
 // "2": "Exit the roundabout onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
 // No verbal alert
 // "2": "Exit the roundabout onto <BEGIN_STREET_NAMES>.",
-void TestBuildExitRoundabout_2_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildExitRoundabout_2_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -6016,7 +5982,7 @@ void TestBuildExitRoundabout_2_miles_en_US() {
 // "0": "Take the Ferry.",
 // "0": "Take the Ferry.",
 // "0": "Take the Ferry.",
-void TestBuildEnterFerry_0_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildEnterFerry_0_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -6043,7 +6009,7 @@ void TestBuildEnterFerry_0_miles_en_US() {
 // "1": "Take the <STREET_NAMES>.",
 // "1": "Take the <STREET_NAMES>.",
 // "1": "Take the <STREET_NAMES>.",
-void TestBuildEnterFerry_1_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildEnterFerry_1_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -6071,7 +6037,7 @@ void TestBuildEnterFerry_1_miles_en_US() {
 // "2": "Take the <STREET_NAMES> <FERRY_LABEL>."
 // "2": "Take the <STREET_NAMES> <FERRY_LABEL>."
 // "2": "Take the <STREET_NAMES> <FERRY_LABEL>."
-void TestBuildEnterFerry_2_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildEnterFerry_2_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -6100,7 +6066,7 @@ void TestBuildEnterFerry_2_miles_en_US() {
 // "0": "Head <CARDINAL_DIRECTION>.",
 // "0": "Head <CARDINAL_DIRECTION>.",
 // "0": "Head <CARDINAL_DIRECTION>.",
-void TestBuildExitFerry_0_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildExitFerry_0_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -6127,7 +6093,7 @@ void TestBuildExitFerry_0_miles_en_US() {
 // "1": "Head <CARDINAL_DIRECTION> on <STREET_NAMES>.",
 // "1": "Head <CARDINAL_DIRECTION> on <STREET_NAMES>.",
 // "1": "Head <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-void TestBuildExitFerry_1_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildExitFerry_1_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -6155,7 +6121,7 @@ void TestBuildExitFerry_1_miles_en_US() {
 // "2": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
 // "2": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."
 // "2": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."
-void TestBuildExitFerry_2_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildExitFerry_2_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -6184,7 +6150,7 @@ void TestBuildExitFerry_2_miles_en_US() {
 // "4": "Drive <CARDINAL_DIRECTION>.",
 // "4": "Drive <CARDINAL_DIRECTION>.",
 // "4": "Drive <CARDINAL_DIRECTION>.",
-void TestBuildExitFerry_4_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildExitFerry_4_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -6211,7 +6177,7 @@ void TestBuildExitFerry_4_miles_en_US() {
 // "5": "Drive <CARDINAL_DIRECTION> on <STREET_NAMES>.",
 // "5": "Drive <CARDINAL_DIRECTION> on <STREET_NAMES>.",
 // "5": "Drive <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-void TestBuildExitFerry_5_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildExitFerry_5_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -6239,7 +6205,7 @@ void TestBuildExitFerry_5_miles_en_US() {
 // "6": "Drive <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
 // "6": "Drive <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."
 // "6": "Drive <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."
-void TestBuildExitFerry_6_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildExitFerry_6_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -6269,7 +6235,7 @@ void TestBuildExitFerry_6_miles_en_US() {
 // "8": "Walk <CARDINAL_DIRECTION>.",
 // "8": "Walk <CARDINAL_DIRECTION>.",
 // "8": "Walk <CARDINAL_DIRECTION>.",
-void TestBuildExitFerry_8_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildExitFerry_8_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -6296,7 +6262,7 @@ void TestBuildExitFerry_8_miles_en_US() {
 // "9": "Walk <CARDINAL_DIRECTION> on <STREET_NAMES>.",
 // "9": "Walk <CARDINAL_DIRECTION> on <STREET_NAMES>.",
 // "9": "Walk <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-void TestBuildExitFerry_9_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildExitFerry_9_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -6324,7 +6290,7 @@ void TestBuildExitFerry_9_miles_en_US() {
 // "10": "Walk <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
 // "10": "Walk <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."
 // "10": "Walk <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."
-void TestBuildExitFerry_10_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildExitFerry_10_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -6353,7 +6319,7 @@ void TestBuildExitFerry_10_miles_en_US() {
 // "16": "Bike <CARDINAL_DIRECTION>.",
 // "16": "Bike <CARDINAL_DIRECTION>.",
 // "16": "Bike <CARDINAL_DIRECTION>.",
-void TestBuildExitFerry_16_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildExitFerry_16_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -6380,7 +6346,7 @@ void TestBuildExitFerry_16_miles_en_US() {
 // "17": "Bike <CARDINAL_DIRECTION> on <STREET_NAMES>.",
 // "17": "Bike <CARDINAL_DIRECTION> on <STREET_NAMES>.",
 // "17": "Bike <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-void TestBuildExitFerry_17_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildExitFerry_17_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -6408,7 +6374,7 @@ void TestBuildExitFerry_17_miles_en_US() {
 // "18": "Bike <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
 // "18": "Bike <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."
 // "18": "Bike <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."
-void TestBuildExitFerry_18_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildExitFerry_18_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -6437,7 +6403,7 @@ void TestBuildExitFerry_18_miles_en_US() {
 // "0": "Enter the station.",
 // No verbal alert
 // "0": "Enter the station.",
-void TestBuildTransitConnectionStart_0_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildTransitConnectionStart_0_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -6464,7 +6430,7 @@ void TestBuildTransitConnectionStart_0_miles_en_US() {
 // "1": "Enter the <TRANSIT_STOP>."
 // No verbal alert
 // "1": "Enter the <TRANSIT_STOP>."
-void TestBuildTransitConnectionStart_1_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildTransitConnectionStart_1_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -6492,7 +6458,7 @@ void TestBuildTransitConnectionStart_1_miles_en_US() {
 // "2": "Enter the <TRANSIT_STOP> <STATION_LABEL>."
 // No verbal alert
 // "2": "Enter the <TRANSIT_STOP> <STATION_LABEL>."
-void TestBuildTransitConnectionStart_2_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildTransitConnectionStart_2_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -6519,7 +6485,7 @@ void TestBuildTransitConnectionStart_2_miles_en_US() {
 // "0": "Transfer at the station.",
 // No verbal alert
 // "0": "Transfer at the station.",
-void TestBuildTransitConnectionTransfer_0_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildTransitConnectionTransfer_0_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -6546,7 +6512,7 @@ void TestBuildTransitConnectionTransfer_0_miles_en_US() {
 // "1": "Transfer at the <TRANSIT_STOP>."
 // No verbal alert
 // "1": "Transfer at the <TRANSIT_STOP>."
-void TestBuildTransitConnectionTransfer_1_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildTransitConnectionTransfer_1_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -6575,7 +6541,7 @@ void TestBuildTransitConnectionTransfer_1_miles_en_US() {
 // "2": "Transfer at the <TRANSIT_STOP> <STATION_LABEL>."
 // No verbal alert
 // "2": "Transfer at the <TRANSIT_STOP> <STATION_LABEL>."
-void TestBuildTransitConnectionTransfer_2_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildTransitConnectionTransfer_2_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -6602,7 +6568,7 @@ void TestBuildTransitConnectionTransfer_2_miles_en_US() {
 // "0": "Exit the station.",
 // No verbal alert
 // "0": "Exit the station.",
-void TestBuildTransitConnectionDestination_0_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildTransitConnectionDestination_0_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -6629,7 +6595,7 @@ void TestBuildTransitConnectionDestination_0_miles_en_US() {
 // "1": "Exit the <TRANSIT_STOP>."
 // No verbal alert
 // "1": "Exit the <TRANSIT_STOP>."
-void TestBuildTransitConnectionDestination_1_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildTransitConnectionDestination_1_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -6657,7 +6623,7 @@ void TestBuildTransitConnectionDestination_1_miles_en_US() {
 // "2": "Exit the <TRANSIT_STOP> <STATION_LABEL>."
 // No verbal alert
 // "2": "Exit the <TRANSIT_STOP> <STATION_LABEL>."
-void TestBuildTransitConnectionDestination_2_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildTransitConnectionDestination_2_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -6684,7 +6650,7 @@ void TestBuildTransitConnectionDestination_2_miles_en_US() {
 // "0": "Take the <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
 // No verbal alert
 // "0": "Take the <TRANSIT_NAME>.",
-void TestBuildTransit_0_train_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildTransit_0_train_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -6715,7 +6681,7 @@ void TestBuildTransit_0_train_miles_en_US() {
 // "0": "Take the <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
 // No verbal alert
 // "0": "Take the <TRANSIT_NAME>.",
-void TestBuildTransit_0_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildTransit_0_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -6745,7 +6711,7 @@ void TestBuildTransit_0_miles_en_US() {
 // "1": "Take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT>
 // <TRANSIT_STOP_COUNT_LABEL>)" No verbal alert "1": "Take the <TRANSIT_NAME> toward
 // <TRANSIT_HEADSIGN>."
-void TestBuildTransit_1_cable_car_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildTransit_1_cable_car_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -6777,7 +6743,7 @@ void TestBuildTransit_1_cable_car_miles_en_US() {
 // "1": "Take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT>
 // <TRANSIT_STOP_COUNT_LABEL>)" No verbal alert "1": "Take the <TRANSIT_NAME> toward
 // <TRANSIT_HEADSIGN>."
-void TestBuildTransit_1_stop_count_1_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildTransit_1_stop_count_1_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "NY";
 
@@ -6809,7 +6775,7 @@ void TestBuildTransit_1_stop_count_1_miles_en_US() {
 // "1": "Take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT>
 // <TRANSIT_STOP_COUNT_LABEL>)" No verbal alert "1": "Take the <TRANSIT_NAME> toward
 // <TRANSIT_HEADSIGN>."
-void TestBuildTransit_1_stop_count_2_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildTransit_1_stop_count_2_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "NY";
 
@@ -6840,7 +6806,7 @@ void TestBuildTransit_1_stop_count_2_miles_en_US() {
 // "1": "Take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT>
 // <TRANSIT_STOP_COUNT_LABEL>)" No verbal alert "1": "Take the <TRANSIT_NAME> toward
 // <TRANSIT_HEADSIGN>."
-void TestBuildTransit_1_stop_count_4_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildTransit_1_stop_count_4_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "NY";
 
@@ -6872,7 +6838,7 @@ void TestBuildTransit_1_stop_count_4_miles_en_US() {
 // "1": "Take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT>
 // <TRANSIT_STOP_COUNT_LABEL>)" No verbal alert "1": "Take the <TRANSIT_NAME> toward
 // <TRANSIT_HEADSIGN>."
-void TestBuildTransit_1_stop_count_8_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildTransit_1_stop_count_8_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "NY";
 
@@ -6903,7 +6869,7 @@ void TestBuildTransit_1_stop_count_8_miles_en_US() {
 // "1": "Take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT>
 // <TRANSIT_STOP_COUNT_LABEL>)" No verbal alert "1": "Take the <TRANSIT_NAME> toward
 // <TRANSIT_HEADSIGN>."
-void TestBuildTransit_1_stop_count_1_miles_cs_CZ() {
+TEST(NarrativeBuilder, TestBuildTransit_1_stop_count_1_miles_cs_CZ) {
   std::string country_code = "US";
   std::string state_code = "NY";
 
@@ -6934,7 +6900,7 @@ void TestBuildTransit_1_stop_count_1_miles_cs_CZ() {
 // "1": "Take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT>
 // <TRANSIT_STOP_COUNT_LABEL>)" No verbal alert "1": "Take the <TRANSIT_NAME> toward
 // <TRANSIT_HEADSIGN>."
-void TestBuildTransit_1_stop_count_2_miles_cs_CZ() {
+TEST(NarrativeBuilder, TestBuildTransit_1_stop_count_2_miles_cs_CZ) {
   std::string country_code = "US";
   std::string state_code = "NY";
 
@@ -6965,7 +6931,7 @@ void TestBuildTransit_1_stop_count_2_miles_cs_CZ() {
 // "1": "Take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT>
 // <TRANSIT_STOP_COUNT_LABEL>)" No verbal alert "1": "Take the <TRANSIT_NAME> toward
 // <TRANSIT_HEADSIGN>."
-void TestBuildTransit_1_stop_count_4_miles_cs_CZ() {
+TEST(NarrativeBuilder, TestBuildTransit_1_stop_count_4_miles_cs_CZ) {
   std::string country_code = "US";
   std::string state_code = "NY";
 
@@ -6996,7 +6962,7 @@ void TestBuildTransit_1_stop_count_4_miles_cs_CZ() {
 // "1": "Take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT>
 // <TRANSIT_STOP_COUNT_LABEL>)" No verbal alert "1": "Take the <TRANSIT_NAME> toward
 // <TRANSIT_HEADSIGN>."
-void TestBuildTransit_1_stop_count_8_miles_cs_CZ() {
+TEST(NarrativeBuilder, TestBuildTransit_1_stop_count_8_miles_cs_CZ) {
   std::string country_code = "US";
   std::string state_code = "NY";
 
@@ -7026,7 +6992,7 @@ void TestBuildTransit_1_stop_count_8_miles_cs_CZ() {
 // "0": "Transfer to take the <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
 // No verbal alert
 // "0": "Transfer to take the <TRANSIT_NAME>.",
-void TestBuildTransitTransfer_0_no_name_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildTransitTransfer_0_no_name_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -7057,7 +7023,7 @@ void TestBuildTransitTransfer_0_no_name_miles_en_US() {
 // "0": "Transfer to take the <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
 // No verbal alert
 // "0": "Transfer to take the <TRANSIT_NAME>.",
-void TestBuildTransitTransfer_0_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildTransitTransfer_0_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -7088,7 +7054,7 @@ void TestBuildTransitTransfer_0_miles_en_US() {
 // "1": "Transfer to take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT>
 // <TRANSIT_STOP_COUNT_LABEL>)" No verbal alert "1": "Transfer to take the <TRANSIT_NAME> toward
 // <TRANSIT_HEADSIGN>."
-void TestBuildTransitTransfer_1_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildTransitTransfer_1_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -7120,7 +7086,7 @@ void TestBuildTransitTransfer_1_miles_en_US() {
 // "0": "Remain on the <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
 // No verbal alert
 // "0": "Remain on the <TRANSIT_NAME>.",
-void TestBuildTransitRemainOn_0_no_name_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildTransitRemainOn_0_no_name_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -7151,7 +7117,7 @@ void TestBuildTransitRemainOn_0_no_name_miles_en_US() {
 // "0": "Remain on the <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
 // No verbal alert
 // "0": "Remain on the <TRANSIT_NAME>.",
-void TestBuildTransitRemainOn_0_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildTransitRemainOn_0_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -7182,7 +7148,7 @@ void TestBuildTransitRemainOn_0_miles_en_US() {
 // "1": "Remain on the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT>
 // <TRANSIT_STOP_COUNT_LABEL>)" No verbal alert "1": "Remain on the <TRANSIT_NAME> toward
 // <TRANSIT_HEADSIGN>."
-void TestBuildTransitRemainOn_1_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildTransitRemainOn_1_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -7214,7 +7180,7 @@ void TestBuildTransitRemainOn_1_miles_en_US() {
 // "0": "Head <CARDINAL_DIRECTION>.",
 // no verbal alert
 // "0": "Head <CARDINAL_DIRECTION>.",
-void TestBuildPostTransitConnectionDestination_0_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildPostTransitConnectionDestination_0_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -7242,7 +7208,7 @@ void TestBuildPostTransitConnectionDestination_0_miles_en_US() {
 // "1": "Head <CARDINAL_DIRECTION> on <STREET_NAMES>.",
 // no verbal alert
 // "1": "Head <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-void TestBuildPostTransitConnectionDestination_1_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildPostTransitConnectionDestination_1_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -7272,7 +7238,7 @@ void TestBuildPostTransitConnectionDestination_1_miles_en_US() {
 // "2": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
 // no verbal alert
 // "2": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."
-void TestBuildPostTransitConnectionDestination_2_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildPostTransitConnectionDestination_2_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -7302,7 +7268,7 @@ void TestBuildPostTransitConnectionDestination_2_miles_en_US() {
 // "4": "Drive <CARDINAL_DIRECTION>.",
 // no verbal alert
 // "4": "Drive <CARDINAL_DIRECTION>.",
-void TestBuildPostTransitConnectionDestination_4_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildPostTransitConnectionDestination_4_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -7330,7 +7296,7 @@ void TestBuildPostTransitConnectionDestination_4_miles_en_US() {
 // "5": "Drive <CARDINAL_DIRECTION> on <STREET_NAMES>.",
 // no verbal alert
 // "5": "Drive <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-void TestBuildPostTransitConnectionDestination_5_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildPostTransitConnectionDestination_5_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -7360,7 +7326,7 @@ void TestBuildPostTransitConnectionDestination_5_miles_en_US() {
 // "6": "Drive <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
 // no verbal alert
 // "6": "Drive <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."
-void TestBuildPostTransitConnectionDestination_6_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildPostTransitConnectionDestination_6_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -7390,7 +7356,7 @@ void TestBuildPostTransitConnectionDestination_6_miles_en_US() {
 // "8": "Walk <CARDINAL_DIRECTION>.",
 // no verbal alert
 // "8": "Walk <CARDINAL_DIRECTION>.",
-void TestBuildPostTransitConnectionDestination_8_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildPostTransitConnectionDestination_8_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -7418,7 +7384,7 @@ void TestBuildPostTransitConnectionDestination_8_miles_en_US() {
 // "9": "Walk <CARDINAL_DIRECTION> on <STREET_NAMES>.",
 // no verbal alert
 // "9": "Walk <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-void TestBuildPostTransitConnectionDestination_9_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildPostTransitConnectionDestination_9_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -7448,7 +7414,7 @@ void TestBuildPostTransitConnectionDestination_9_miles_en_US() {
 // "10": "Walk <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
 // no verbal alert
 // "10": "Walk <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."
-void TestBuildPostTransitConnectionDestination_10_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildPostTransitConnectionDestination_10_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -7478,7 +7444,7 @@ void TestBuildPostTransitConnectionDestination_10_miles_en_US() {
 // "16": "Bike <CARDINAL_DIRECTION>.",
 // no verbal alert
 // "16": "Bike <CARDINAL_DIRECTION>.",
-void TestBuildPostTransitConnectionDestination_16_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildPostTransitConnectionDestination_16_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -7506,7 +7472,7 @@ void TestBuildPostTransitConnectionDestination_16_miles_en_US() {
 // "17": "Bike <CARDINAL_DIRECTION> on <STREET_NAMES>.",
 // no verbal alert
 // "17": "Bike <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-void TestBuildPostTransitConnectionDestination_17_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildPostTransitConnectionDestination_17_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -7536,7 +7502,7 @@ void TestBuildPostTransitConnectionDestination_17_miles_en_US() {
 // "18": "Bike <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
 // no verbal alert
 // "18": "Bike <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."
-void TestBuildPostTransitConnectionDestination_18_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildPostTransitConnectionDestination_18_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -7564,7 +7530,7 @@ void TestBuildPostTransitConnectionDestination_18_miles_en_US() {
 ///////////////////////////////////////////////////////////////////////////////
 // FormVerbalMultiCue
 // 0 "<CURRENT_VERBAL_CUE> Then <NEXT_VERBAL_CUE>"
-void TestBuildVerbalMultiCue_0_miles_en_US() {
+TEST(NarrativeBuilder, TestBuildVerbalMultiCue_0_miles_en_US) {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -7607,14 +7573,10 @@ void TryFormVerbalPostTransitionInstruction(NarrativeBuilderTest& nbt,
                                             Maneuver maneuver,
                                             bool include_street_names,
                                             std::string expected) {
-  std::string instruction = nbt.FormVerbalPostTransitionInstruction(maneuver, include_street_names);
-  if (instruction != expected) {
-    throw std::runtime_error("Incorrect FormVerbalPostTransitionInstruction - EXPECTED: " + expected +
-                             "  |  FORMED: " + instruction);
-  }
+  EXPECT_EQ(nbt.FormVerbalPostTransitionInstruction(maneuver, include_street_names), expected);
 }
 
-void TestFormVerbalPostTransitionInstruction() {
+TEST(NarrativeBuilder, TestFormVerbalPostTransitionInstruction) {
   Options options;
   options.set_units(Options::kilometers);
   options.set_language("en-US");
@@ -7999,12 +7961,10 @@ Maneuver CreateSignManeuver(DirectionsLeg_Maneuver_Type type,
 void TryFormRampStraightInstruction(NarrativeBuilderTest& nbt,
                                     Maneuver maneuver,
                                     std::string expected) {
-  std::string instruction = nbt.FormRampStraightInstruction(maneuver);
-  if (instruction != expected)
-    throw std::runtime_error("Incorrect FormRampStraightInstruction");
+  EXPECT_EQ(nbt.FormRampStraightInstruction(maneuver), expected);
 }
 
-void TestFormRampStraightInstruction() {
+TEST(NarrativeBuilder, TestFormRampStraightInstruction) {
   Options options;
   options.set_units(Options::miles);
   options.set_language("en-US");
@@ -8078,13 +8038,10 @@ void TestFormRampStraightInstruction() {
 }
 
 void TryFormRampRightInstruction(NarrativeBuilderTest& nbt, Maneuver maneuver, std::string expected) {
-  std::string instruction = nbt.FormRampInstruction(maneuver);
-  if (instruction != expected)
-    throw std::runtime_error("Incorrect FormRampRightInstruction | actual=" + instruction +
-                             " | expected=" + expected);
+  EXPECT_EQ(nbt.FormRampInstruction(maneuver), expected);
 }
 
-void TestFormRampRightInstruction() {
+TEST(NarrativeBuilder, TestFormRampRightInstruction) {
   Options options;
   options.set_units(Options::miles);
   options.set_language("en-US");
@@ -8255,12 +8212,10 @@ void TestFormRampRightInstruction() {
 }
 
 void TryFormRampLeftInstruction(NarrativeBuilderTest& nbt, Maneuver maneuver, std::string expected) {
-  std::string instruction = nbt.FormRampInstruction(maneuver);
-  if (instruction != expected)
-    throw std::runtime_error("Incorrect FormRampLeftInstruction");
+  EXPECT_EQ(nbt.FormRampInstruction(maneuver), expected);
 }
 
-void TestFormRampLeftInstruction() {
+TEST(NarrativeBuilder, TestFormRampLeftInstruction) {
   Options options;
   options.set_units(Options::miles);
   options.set_language("en-US");
@@ -8431,13 +8386,10 @@ void TestFormRampLeftInstruction() {
 }
 
 void TryFormExitRightInstruction(NarrativeBuilderTest& nbt, Maneuver maneuver, std::string expected) {
-  std::string instruction = nbt.FormExitInstruction(maneuver);
-  if (instruction != expected)
-    throw std::runtime_error("Incorrect FormExitRightInstruction | actual=" + instruction +
-                             " | expected=" + expected);
+  EXPECT_EQ(nbt.FormExitInstruction(maneuver), expected);
 }
 
-void TestFormExitRightInstruction() {
+TEST(NarrativeBuilder, TestFormExitRightInstruction) {
   Options options;
   options.set_units(Options::miles);
   options.set_language("en-US");
@@ -8655,13 +8607,10 @@ void TestFormExitRightInstruction() {
 }
 
 void TryFormExitLeftInstruction(NarrativeBuilderTest& nbt, Maneuver maneuver, std::string expected) {
-  std::string instruction = nbt.FormExitInstruction(maneuver);
-  if (instruction != expected)
-    throw std::runtime_error("Incorrect FormExitLeftInstruction | actual=" + instruction +
-                             " | expected=" + expected);
+  EXPECT_EQ(nbt.FormExitInstruction(maneuver), expected);
 }
 
-void TestFormExitLeftInstruction() {
+TEST(NarrativeBuilder, TestFormExitLeftInstruction) {
   Options options;
   options.set_units(Options::miles);
   options.set_language("en-US");
@@ -8879,488 +8828,7 @@ void TestFormExitLeftInstruction() {
 
 } // namespace
 
-int main() {
-  test::suite suite("narrativebuilder");
-
-  // FormRampStraightInstruction
-  suite.test(TEST_CASE(TestFormRampStraightInstruction));
-
-  // FormRampRightInstruction
-  suite.test(TEST_CASE(TestFormRampRightInstruction));
-
-  // FormRampLeftInstruction
-  suite.test(TEST_CASE(TestFormRampLeftInstruction));
-
-  // FormExitRightInstruction
-  suite.test(TEST_CASE(TestFormExitRightInstruction));
-
-  // FormExitLeftInstruction
-  suite.test(TEST_CASE(TestFormExitLeftInstruction));
-
-  // FormVerbalPostTransitionInstruction
-  suite.test(TEST_CASE(TestFormVerbalPostTransitionInstruction));
-
-  /////////////////////////////////////////////////////////////////////////////
-  // Begin of the build phrase tests
-
-  // BuildStartInstructions_0_miles_en_US
-  suite.test(TEST_CASE(TestBuildStartInstructions_0_miles_en_US));
-
-  // BuildStartInstructions_1_miles_en_US
-  suite.test(TEST_CASE(TestBuildStartInstructions_1_miles_en_US));
-
-  // BuildStartInstructions_2_miles_en_US
-  suite.test(TEST_CASE(TestBuildStartInstructions_2_miles_en_US));
-
-  // BuildStartInstructions_4_miles_en_US
-  suite.test(TEST_CASE(TestBuildStartInstructions_4_miles_en_US));
-
-  // BuildStartInstructions_5_miles_en_US
-  suite.test(TEST_CASE(TestBuildStartInstructions_5_miles_en_US));
-
-  // BuildStartInstructions_6_miles_en_US
-  suite.test(TEST_CASE(TestBuildStartInstructions_6_miles_en_US));
-
-  // BuildStartInstructions_8_miles_en_US
-  suite.test(TEST_CASE(TestBuildStartInstructions_8_miles_en_US));
-
-  // BuildStartInstructions_9_miles_en_US
-  suite.test(TEST_CASE(TestBuildStartInstructions_9_miles_en_US));
-
-  // BuildStartInstructions_9_unnamed_walkway_miles_en_US
-  suite.test(TEST_CASE(TestBuildStartInstructions_9_unnamed_walkway_miles_en_US));
-
-  // BuildStartInstructions_10_miles_en_US
-  suite.test(TEST_CASE(TestBuildStartInstructions_10_miles_en_US));
-
-  // BuildStartInstructions_16_miles_en_US
-  suite.test(TEST_CASE(TestBuildStartInstructions_16_miles_en_US));
-
-  // BuildStartInstructions_17_miles_en_US
-  suite.test(TEST_CASE(TestBuildStartInstructions_17_miles_en_US));
-
-  // BuildStartInstructions_17_unnamed_cycleway_miles_en_US
-  suite.test(TEST_CASE(TestBuildStartInstructions_17_unnamed_cycleway_miles_en_US));
-
-  // BuildStartInstructions_17_unnamed_mountain_bike_trail_miles_en_US
-  suite.test(TEST_CASE(TestBuildStartInstructions_17_unnamed_mountain_bike_trail_miles_en_US));
-
-  // BuildStartInstructions_18_miles_en_US
-  suite.test(TEST_CASE(TestBuildStartInstructions_18_miles_en_US));
-
-  // BuildStartInstructions_0_kilometers_en_US
-  suite.test(TEST_CASE(TestBuildStartInstructions_0_kilometers_en_US));
-
-  // BuildStartInstructions_1_kilometers_en_US
-  suite.test(TEST_CASE(TestBuildStartInstructions_1_kilometers_en_US));
-
-  // BuildStartInstructions_2_kilometers_en_US
-  suite.test(TEST_CASE(TestBuildStartInstructions_2_kilometers_en_US));
-
-  // BuildDestinationInstructions_0_miles_en_US
-  suite.test(TEST_CASE(TestBuildDestinationInstructions_0_miles_en_US));
-
-  // BuildDestinationInstructions_1_miles_en_US
-  suite.test(TEST_CASE(TestBuildDestinationInstructions_1_miles_en_US));
-
-  // BuildDestinationInstructions_2_miles_en_US
-  suite.test(TEST_CASE(TestBuildDestinationInstructions_2_miles_en_US));
-
-  // BuildDestinationInstructions_3_miles_en_US
-  suite.test(TEST_CASE(TestBuildDestinationInstructions_3_miles_en_US));
-
-  // BuildBecomesInstructions_0_miles_en_US
-  suite.test(TEST_CASE(TestBuildBecomesInstructions_0_miles_en_US));
-
-  // BuildContinueInstructions_0_miles_en_US
-  suite.test(TEST_CASE(TestBuildContinueInstructions_0_miles_en_US));
-
-  // BuildContinueInstructions_1_miles_en_US
-  suite.test(TEST_CASE(TestBuildContinueInstructions_1_miles_en_US));
-
-  // BuildTurnInstructions_0_miles_en_US
-  suite.test(TEST_CASE(TestBuildTurnInstructions_0_miles_en_US));
-
-  // BuildTurnInstructions_1_miles_en_US
-  suite.test(TEST_CASE(TestBuildTurnInstructions_1_miles_en_US));
-
-  // BuildTurnInstructions_1_miles_cs_CZ
-  suite.test(TEST_CASE(TestBuildTurnInstructions_1_miles_cs_CZ));
-
-  // BuildTurnInstructions_1_miles_de_DE
-  suite.test(TEST_CASE(TestBuildTurnInstructions_1_miles_de_DE));
-
-  // BuildTurnInstructions_1_miles_it_IT
-  suite.test(TEST_CASE(TestBuildTurnInstructions_1_miles_it_IT));
-
-  // BuildTurnInstructions_2_miles_en_US
-  suite.test(TEST_CASE(TestBuildTurnInstructions_2_miles_en_US));
-
-  // BuildTurnInstructions_3_miles_en_US
-  suite.test(TEST_CASE(TestBuildTurnInstructions_3_miles_en_US));
-
-  // BuildSharpInstructions_0_miles_en_US
-  suite.test(TEST_CASE(TestBuildSharpInstructions_0_miles_en_US));
-
-  // BuildSharpInstructions_1_miles_en_US
-  suite.test(TEST_CASE(TestBuildSharpInstructions_1_miles_en_US));
-
-  // BuildSharpInstructions_2_miles_en_US
-  suite.test(TEST_CASE(TestBuildSharpInstructions_2_miles_en_US));
-
-  // BuildSharpInstructions_0_miles_en_US
-  suite.test(TEST_CASE(TestBuildSharpInstructions_0_miles_en_US));
-
-  // BuildBearInstructions_0_miles_en_US
-  suite.test(TEST_CASE(TestBuildBearInstructions_0_miles_en_US));
-
-  // BuildBearInstructions_1_miles_en_US
-  suite.test(TEST_CASE(TestBuildBearInstructions_1_miles_en_US));
-
-  // BuildBearInstructions_2_miles_en_US
-  suite.test(TEST_CASE(TestBuildBearInstructions_2_miles_en_US));
-
-  // BuildBearInstructions_3_miles_en_US
-  suite.test(TEST_CASE(TestBuildBearInstructions_3_miles_en_US));
-
-  // BuildUturnInstructions_0_miles_en_US
-  suite.test(TEST_CASE(TestBuildUturnInstructions_0_miles_en_US));
-
-  // BuildUturnInstructions_1_miles_en_US
-  suite.test(TEST_CASE(TestBuildUturnInstructions_1_miles_en_US));
-
-  // BuildUturnInstructions_2_miles_en_US
-  suite.test(TEST_CASE(TestBuildUturnInstructions_2_miles_en_US));
-
-  // BuildUturnInstructions_3_miles_en_US
-  suite.test(TEST_CASE(TestBuildUturnInstructions_3_miles_en_US));
-
-  // BuildUturnInstructions_4_miles_en_US
-  suite.test(TEST_CASE(TestBuildUturnInstructions_4_miles_en_US));
-
-  // BuildUturnInstructions_5_miles_en_US
-  suite.test(TEST_CASE(TestBuildUturnInstructions_5_miles_en_US));
-
-  // BuildRampStraight_0_miles_en_US
-  suite.test(TEST_CASE(TestBuildRampStraight_0_miles_en_US));
-
-  // BuildRampStraight_1_miles_en_US
-  suite.test(TEST_CASE(TestBuildRampStraight_1_miles_en_US));
-
-  // BuildRampStraight_2_miles_en_US
-  suite.test(TEST_CASE(TestBuildRampStraight_2_miles_en_US));
-
-  // BuildRampStraight_3_miles_en_US
-  suite.test(TEST_CASE(TestBuildRampStraight_3_miles_en_US));
-
-  // BuildRampStraight_4_miles_en_US
-  suite.test(TEST_CASE(TestBuildRampStraight_4_miles_en_US));
-
-  // BuildRamp_0_miles_en_US
-  suite.test(TEST_CASE(TestBuildRamp_0_miles_en_US));
-
-  // BuildRamp_1_miles_en_US
-  suite.test(TEST_CASE(TestBuildRamp_1_miles_en_US));
-
-  // BuildRamp_2_miles_en_US
-  suite.test(TEST_CASE(TestBuildRamp_2_miles_en_US));
-
-  // BuildRamp_3_miles_en_US
-  suite.test(TEST_CASE(TestBuildRamp_3_miles_en_US));
-
-  // BuildRamp_4_miles_en_US
-  suite.test(TEST_CASE(TestBuildRamp_4_miles_en_US));
-
-  // BuildRamp_5_miles_en_US
-  suite.test(TEST_CASE(TestBuildRamp_5_miles_en_US));
-
-  // BuildRamp_6_miles_en_US
-  suite.test(TEST_CASE(TestBuildRamp_6_miles_en_US));
-
-  // BuildRamp_7_miles_en_US
-  suite.test(TEST_CASE(TestBuildRamp_7_miles_en_US));
-
-  // BuildRamp_8_miles_en_US
-  suite.test(TEST_CASE(TestBuildRamp_8_miles_en_US));
-
-  // BuildRamp_9_miles_en_US
-  suite.test(TEST_CASE(TestBuildRamp_9_miles_en_US));
-
-  // BuildRamp_10_miles_en_US
-  suite.test(TEST_CASE(TestBuildRamp_10_miles_en_US));
-
-  // BuildRamp_11_miles_en_US
-  suite.test(TEST_CASE(TestBuildRamp_11_miles_en_US));
-
-  // BuildRamp_12_miles_en_US
-  suite.test(TEST_CASE(TestBuildRamp_12_miles_en_US));
-
-  // BuildRamp_13_miles_en_US
-  suite.test(TEST_CASE(TestBuildRamp_13_miles_en_US));
-
-  // BuildRamp_14_miles_en_US
-  suite.test(TEST_CASE(TestBuildRamp_14_miles_en_US));
-
-  // BuildExit_0_miles_en_US
-  suite.test(TEST_CASE(TestBuildExit_0_miles_en_US));
-
-  // BuildExit_1_miles_en_US
-  suite.test(TEST_CASE(TestBuildExit_1_miles_en_US));
-
-  // BuildExit_2_miles_en_US
-  suite.test(TEST_CASE(TestBuildExit_2_miles_en_US));
-
-  // BuildExit_3_miles_en_US
-  suite.test(TEST_CASE(TestBuildExit_3_miles_en_US));
-
-  // BuildExit_4_miles_en_US
-  suite.test(TEST_CASE(TestBuildExit_4_miles_en_US));
-
-  // BuildExit_5_miles_en_US
-  suite.test(TEST_CASE(TestBuildExit_5_miles_en_US));
-
-  // BuildExit_6_miles_en_US
-  suite.test(TEST_CASE(TestBuildExit_6_miles_en_US));
-
-  // BuildExit_7_miles_en_US
-  suite.test(TEST_CASE(TestBuildExit_7_miles_en_US));
-
-  // BuildExit_8_miles_en_US
-  suite.test(TEST_CASE(TestBuildExit_8_miles_en_US));
-
-  // BuildExit_10_miles_en_US
-  suite.test(TEST_CASE(TestBuildExit_10_miles_en_US));
-
-  // BuildExit_12_miles_en_US
-  suite.test(TEST_CASE(TestBuildExit_12_miles_en_US));
-
-  // BuildExit_14_miles_en_US
-  suite.test(TEST_CASE(TestBuildExit_14_miles_en_US));
-
-  // BuildKeep_0_miles_en_US
-  suite.test(TEST_CASE(TestBuildKeep_0_miles_en_US));
-
-  // BuildKeep_1_miles_en_US
-  suite.test(TEST_CASE(TestBuildKeep_1_miles_en_US));
-
-  // BuildKeep_2_miles_en_US
-  suite.test(TEST_CASE(TestBuildKeep_2_miles_en_US));
-
-  // BuildKeep_3_miles_en_US
-  suite.test(TEST_CASE(TestBuildKeep_3_miles_en_US));
-
-  // BuildKeep_4_miles_en_US
-  suite.test(TEST_CASE(TestBuildKeep_4_miles_en_US));
-
-  // BuildKeep_5_miles_en_US
-  suite.test(TEST_CASE(TestBuildKeep_5_miles_en_US));
-
-  // BuildKeep_6_miles_en_US
-  suite.test(TEST_CASE(TestBuildKeep_6_miles_en_US));
-
-  // BuildKeep_7_miles_en_US
-  suite.test(TEST_CASE(TestBuildKeep_7_miles_en_US));
-
-  // BuildKeepToStayOn_0_miles_en_US
-  suite.test(TEST_CASE(TestBuildKeepToStayOn_0_miles_en_US));
-
-  // BuildKeepToStayOn_1_miles_en_US
-  suite.test(TEST_CASE(TestBuildKeepToStayOn_1_miles_en_US));
-
-  // BuildKeepToStayOn_2_miles_en_US
-  suite.test(TEST_CASE(TestBuildKeepToStayOn_2_miles_en_US));
-
-  // BuildKeepToStayOn_3_miles_en_US
-  suite.test(TEST_CASE(TestBuildKeepToStayOn_3_miles_en_US));
-
-  // BuildMerge_0_miles_en_US
-  suite.test(TEST_CASE(TestBuildMerge_0_miles_en_US));
-
-  // BuildMerge_1_1_miles_en_US
-  suite.test(TEST_CASE(TestBuildMerge_1_1_miles_en_US));
-
-  // BuildMerge_1_2_miles_en_US
-  suite.test(TEST_CASE(TestBuildMerge_1_2_miles_en_US));
-
-  // BuildEnterRoundabout_0_miles_en_US
-  suite.test(TEST_CASE(TestBuildEnterRoundabout_0_miles_en_US));
-
-  // BuildEnterRoundabout_1_miles_en_US
-  suite.test(TEST_CASE(TestBuildEnterRoundabout_1_miles_en_US));
-
-  // BuildExitRoundabout_0_miles_en_US
-  suite.test(TEST_CASE(TestBuildExitRoundabout_0_miles_en_US));
-
-  // BuildExitRoundabout_1_miles_en_US
-  suite.test(TEST_CASE(TestBuildExitRoundabout_1_miles_en_US));
-
-  // BuildExitRoundabout_2_miles_en_US
-  suite.test(TEST_CASE(TestBuildExitRoundabout_2_miles_en_US));
-
-  // BuildEnterFerry_0_miles_en_US
-  suite.test(TEST_CASE(TestBuildEnterFerry_0_miles_en_US));
-
-  // BuildEnterFerry_1_miles_en_US
-  suite.test(TEST_CASE(TestBuildEnterFerry_1_miles_en_US));
-
-  // BuildEnterFerry_2_miles_en_US
-  suite.test(TEST_CASE(TestBuildEnterFerry_2_miles_en_US));
-
-  // BuildExitFerry_0_miles_en_US
-  suite.test(TEST_CASE(TestBuildExitFerry_0_miles_en_US));
-
-  // BuildExitFerry_1_miles_en_US
-  suite.test(TEST_CASE(TestBuildExitFerry_1_miles_en_US));
-
-  // BuildExitFerry_2_miles_en_US
-  suite.test(TEST_CASE(TestBuildExitFerry_2_miles_en_US));
-
-  // BuildExitFerry_4_miles_en_US
-  suite.test(TEST_CASE(TestBuildExitFerry_4_miles_en_US));
-
-  // BuildExitFerry_5_miles_en_US
-  suite.test(TEST_CASE(TestBuildExitFerry_5_miles_en_US));
-
-  // BuildExitFerry_6_miles_en_US
-  suite.test(TEST_CASE(TestBuildExitFerry_6_miles_en_US));
-
-  // BuildExitFerry_8_miles_en_US
-  suite.test(TEST_CASE(TestBuildExitFerry_8_miles_en_US));
-
-  // BuildExitFerry_9_miles_en_US
-  suite.test(TEST_CASE(TestBuildExitFerry_9_miles_en_US));
-
-  // BuildExitFerry_10_miles_en_US
-  suite.test(TEST_CASE(TestBuildExitFerry_10_miles_en_US));
-
-  // BuildExitFerry_16_miles_en_US
-  suite.test(TEST_CASE(TestBuildExitFerry_16_miles_en_US));
-
-  // BuildExitFerry_17_miles_en_US
-  suite.test(TEST_CASE(TestBuildExitFerry_17_miles_en_US));
-
-  // BuildExitFerry_18_miles_en_US
-  suite.test(TEST_CASE(TestBuildExitFerry_18_miles_en_US));
-
-  // BuildTransitConnectionStart_0_miles_en_US
-  suite.test(TEST_CASE(TestBuildTransitConnectionStart_0_miles_en_US));
-
-  // BuildTransitConnectionStart_1_miles_en_US
-  suite.test(TEST_CASE(TestBuildTransitConnectionStart_1_miles_en_US));
-
-  // BuildTransitConnectionStart_2_miles_en_US
-  suite.test(TEST_CASE(TestBuildTransitConnectionStart_2_miles_en_US));
-
-  // BuildTransitConnectionTransfer_0_miles_en_US
-  suite.test(TEST_CASE(TestBuildTransitConnectionTransfer_0_miles_en_US));
-
-  // BuildTransitConnectionTransfer_1_miles_en_US
-  suite.test(TEST_CASE(TestBuildTransitConnectionTransfer_1_miles_en_US));
-
-  // BuildTransitConnectionTransfer_2_miles_en_US
-  suite.test(TEST_CASE(TestBuildTransitConnectionTransfer_2_miles_en_US));
-
-  // BuildTransitConnectionDestination_0_miles_en_US
-  suite.test(TEST_CASE(TestBuildTransitConnectionDestination_0_miles_en_US));
-
-  // BuildTransitConnectionDestination_1_miles_en_US
-  suite.test(TEST_CASE(TestBuildTransitConnectionDestination_1_miles_en_US));
-
-  // BuildTransitConnectionDestination_2_miles_en_US
-  suite.test(TEST_CASE(TestBuildTransitConnectionDestination_2_miles_en_US));
-
-  // BuildTransit_0_no_name_miles_en_US
-  suite.test(TEST_CASE(TestBuildTransit_0_train_miles_en_US));
-
-  // BuildTransit_0_miles_en_US
-  suite.test(TEST_CASE(TestBuildTransit_0_miles_en_US));
-
-  // BuildTransit_1_miles_en_US
-  suite.test(TEST_CASE(TestBuildTransit_1_cable_car_miles_en_US));
-
-  // BuildTransit_1_stop_count_1_miles_en_US
-  suite.test(TEST_CASE(TestBuildTransit_1_stop_count_1_miles_en_US));
-
-  // BuildTransit_1_stop_count_2_miles_en_US
-  suite.test(TEST_CASE(TestBuildTransit_1_stop_count_2_miles_en_US));
-
-  // BuildTransit_1_stop_count_4_miles_en_US
-  suite.test(TEST_CASE(TestBuildTransit_1_stop_count_4_miles_en_US));
-
-  // BuildTransit_1_stop_count_8_miles_en_US
-  suite.test(TEST_CASE(TestBuildTransit_1_stop_count_8_miles_en_US));
-
-  // BuildTransit_1_stop_count_1_miles_cs_CZ
-  suite.test(TEST_CASE(TestBuildTransit_1_stop_count_1_miles_cs_CZ));
-
-  // BuildTransit_1_stop_count_2_miles_cs_CZ
-  suite.test(TEST_CASE(TestBuildTransit_1_stop_count_2_miles_cs_CZ));
-
-  // BuildTransit_1_stop_count_4_miles_cs_CZ
-  suite.test(TEST_CASE(TestBuildTransit_1_stop_count_4_miles_cs_CZ));
-
-  // BuildTransit_1_stop_count_8_miles_cs_CZ
-  suite.test(TEST_CASE(TestBuildTransit_1_stop_count_8_miles_cs_CZ));
-
-  // BuildTransitTransfer_0_no_name_miles_en_US
-  suite.test(TEST_CASE(TestBuildTransitTransfer_0_no_name_miles_en_US));
-
-  // BuildTransitTransfer_0_miles_en_US
-  suite.test(TEST_CASE(TestBuildTransitTransfer_0_miles_en_US));
-
-  // BuildTransitTransfer_1_miles_en_US
-  suite.test(TEST_CASE(TestBuildTransitTransfer_1_miles_en_US));
-
-  // BuildTransitRemainOn_0_no_name_miles_en_US
-  suite.test(TEST_CASE(TestBuildTransitRemainOn_0_no_name_miles_en_US));
-
-  // BuildTransitRemainOn_0_miles_en_US
-  suite.test(TEST_CASE(TestBuildTransitRemainOn_0_miles_en_US));
-
-  // BuildTransitRemainOn_1_miles_en_US
-  suite.test(TEST_CASE(TestBuildTransitRemainOn_1_miles_en_US));
-
-  // BuildPostTransitConnectionDestination_0_miles_en_US
-  suite.test(TEST_CASE(TestBuildPostTransitConnectionDestination_0_miles_en_US));
-
-  // BuildPostTransitConnectionDestination_1_miles_en_US
-  suite.test(TEST_CASE(TestBuildPostTransitConnectionDestination_1_miles_en_US));
-
-  // BuildPostTransitConnectionDestination_2_miles_en_US
-  suite.test(TEST_CASE(TestBuildPostTransitConnectionDestination_2_miles_en_US));
-
-  // BuildPostTransitConnectionDestination_4_miles_en_US
-  suite.test(TEST_CASE(TestBuildPostTransitConnectionDestination_4_miles_en_US));
-
-  // BuildPostTransitConnectionDestination_5_miles_en_US
-  suite.test(TEST_CASE(TestBuildPostTransitConnectionDestination_5_miles_en_US));
-
-  // BuildPostTransitConnectionDestination_6_miles_en_US
-  suite.test(TEST_CASE(TestBuildPostTransitConnectionDestination_6_miles_en_US));
-
-  // BuildPostTransitConnectionDestination_8_miles_en_US
-  suite.test(TEST_CASE(TestBuildPostTransitConnectionDestination_8_miles_en_US));
-
-  // BuildPostTransitConnectionDestination_9_miles_en_US
-  suite.test(TEST_CASE(TestBuildPostTransitConnectionDestination_9_miles_en_US));
-
-  // BuildPostTransitConnectionDestination_10_miles_en_US
-  suite.test(TEST_CASE(TestBuildPostTransitConnectionDestination_10_miles_en_US));
-
-  // BuildPostTransitConnectionDestination_16_miles_en_US
-  suite.test(TEST_CASE(TestBuildPostTransitConnectionDestination_16_miles_en_US));
-
-  // BuildPostTransitConnectionDestination_17_miles_en_US
-  suite.test(TEST_CASE(TestBuildPostTransitConnectionDestination_17_miles_en_US));
-
-  // BuildPostTransitConnectionDestination_18_miles_en_US
-  suite.test(TEST_CASE(TestBuildPostTransitConnectionDestination_18_miles_en_US));
-
-  // BuildVerbalMultiCue_0_miles_en_US
-  suite.test(TEST_CASE(TestBuildVerbalMultiCue_0_miles_en_US));
-
-  // End of the build phrase tests
-  //////////
-
-  return suite.tear_down();
+int main(int argc, char* argv[]) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

@@ -227,15 +227,21 @@ inline bool BidirectionalAStar::ExpandForwardInner(GraphReader& graphreader,
   if (meta.edge_status->set() == EdgeSet::kPermanent) {
     return true; // This is an edge we _could_ have expanded, so return true
   }
+
+  const uint64_t localtime = 0; // Bidirectional is not yet time-aware
+  const uint32_t tz_index = 0;
   bool has_time_restrictions = false;
-  if (!costing_->Allowed(meta.edge, pred, tile, meta.edge_id, 0, 0, has_time_restrictions) ||
-      costing_->Restricted(meta.edge, pred, edgelabels_forward_, tile, meta.edge_id, true)) {
+  if (!costing_->Allowed(meta.edge, pred, tile, meta.edge_id, localtime, tz_index,
+                         has_time_restrictions) ||
+      costing_->Restricted(meta.edge, pred, edgelabels_forward_, tile, meta.edge_id, true,
+                           &edgestatus_forward_, localtime, tz_index)) {
     return false;
   }
 
   // Get cost. Separate out transition cost.
-  Cost tc = costing_->TransitionCost(meta.edge, nodeinfo, pred);
-  Cost newcost = pred.cost() + tc + costing_->EdgeCost(meta.edge, tile, kConstrainedFlowSecondOfDay);
+  Cost transition_cost = costing_->TransitionCost(meta.edge, nodeinfo, pred);
+  Cost newcost = pred.cost() + transition_cost +
+                 costing_->EdgeCost(meta.edge, tile, kConstrainedFlowSecondOfDay);
 
   // Check if edge is temporarily labeled and this path has less cost. If
   // less cost the predecessor is updated and the sort cost is decremented
@@ -245,7 +251,7 @@ inline bool BidirectionalAStar::ExpandForwardInner(GraphReader& graphreader,
     if (newcost.cost < lab.cost().cost) {
       float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
       adjacencylist_forward_->decrease(meta.edge_status->index(), newsortcost);
-      lab.Update(pred_idx, newcost, newsortcost, tc, has_time_restrictions);
+      lab.Update(pred_idx, newcost, newsortcost, transition_cost, has_time_restrictions);
     }
     return true; // Returning true since this means we approved the edge
   }
@@ -267,7 +273,7 @@ inline bool BidirectionalAStar::ExpandForwardInner(GraphReader& graphreader,
   // Add edge label, add to the adjacency list and set edge status
   uint32_t idx = edgelabels_forward_.size();
   edgelabels_forward_.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, newcost, sortcost,
-                                   dist, mode_, tc,
+                                   dist, mode_, transition_cost,
                                    (pred.not_thru_pruning() || !meta.edge->not_thru()),
                                    has_time_restrictions);
 
@@ -421,19 +427,22 @@ inline bool BidirectionalAStar::ExpandReverseInner(GraphReader& graphreader,
 
   // Skip this edge if no access is allowed (based on costing method)
   // or if a complex restriction prevents transition onto this edge.
+  const uint64_t localtime = 0; // Bidirectional is not yet time-aware
+  const uint32_t tz_index = 0;
   bool has_time_restrictions = false;
-  if (!costing_->AllowedReverse(meta.edge, pred, opp_edge, t2, opp_edge_id, 0, 0,
+  if (!costing_->AllowedReverse(meta.edge, pred, opp_edge, t2, opp_edge_id, localtime, tz_index,
                                 has_time_restrictions) ||
-      costing_->Restricted(meta.edge, pred, edgelabels_reverse_, tile, meta.edge_id, false)) {
+      costing_->Restricted(meta.edge, pred, edgelabels_reverse_, tile, meta.edge_id, false,
+                           &edgestatus_reverse_, localtime, tz_index)) {
     return false;
   }
 
   // Get cost. Use opposing edge for EdgeCost. Separate the transition seconds so we
   // can properly recover elapsed time on the reverse path.
-  Cost tc =
+  Cost transition_cost =
       costing_->TransitionCostReverse(meta.edge->localedgeidx(), nodeinfo, opp_edge, opp_pred_edge);
   Cost newcost = pred.cost() + costing_->EdgeCost(opp_edge, t2, kConstrainedFlowSecondOfDay);
-  newcost.cost += tc.cost;
+  newcost.cost += transition_cost.cost;
 
   // Check if edge is temporarily labeled and this path has less cost. If
   // less cost the predecessor is updated and the sort cost is decremented
@@ -443,7 +452,7 @@ inline bool BidirectionalAStar::ExpandReverseInner(GraphReader& graphreader,
     if (newcost.cost < lab.cost().cost) {
       float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
       adjacencylist_reverse_->decrease(meta.edge_status->index(), newsortcost);
-      lab.Update(pred_idx, newcost, newsortcost, tc, has_time_restrictions);
+      lab.Update(pred_idx, newcost, newsortcost, transition_cost, has_time_restrictions);
     }
     return true; // Returning true since this means we approved the edge
   }
@@ -457,7 +466,7 @@ inline bool BidirectionalAStar::ExpandReverseInner(GraphReader& graphreader,
   // Add edge label, add to the adjacency list and set edge status
   uint32_t idx = edgelabels_reverse_.size();
   edgelabels_reverse_.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, newcost, sortcost,
-                                   dist, mode_, tc,
+                                   dist, mode_, transition_cost,
                                    (pred.not_thru_pruning() || !meta.edge->not_thru()),
                                    has_time_restrictions);
 
@@ -636,30 +645,36 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
 // search tree. Check if this is the best connection so far and set the
 // search threshold.
 bool BidirectionalAStar::SetForwardConnection(GraphReader& graphreader, const BDEdgeLabel& pred) {
-  // Disallow connections that are part of a complex restriction.
-  // TODO - validate that we do not need to "walk" the paths forward
-  // and backward to see if they match a restriction.
+  // Find pred on opposite side
+  GraphId oppedge = pred.opp_edgeid();
+  EdgeStatusInfo oppedgestatus = edgestatus_reverse_.Get(oppedge);
+  auto opp_pred = edgelabels_reverse_[oppedgestatus.index()];
+
+  // Disallow connections that are part of a complex restriction
   if (pred.on_complex_rest()) {
-    return false;
+    // Lets dig deeper and test if we are really triggering these restrictions
+    // since the complex restriction can span many edges
+    if (IsBridgingEdgeRestricted(graphreader, edgelabels_forward_, edgelabels_reverse_, pred,
+                                 opp_pred, costing_)) {
+      return false;
+    }
   }
 
   // Get the opposing edge - a candidate shortest path has been found to the
   // end node of this directed edge. Get total cost.
   float c;
-  GraphId oppedge = pred.opp_edgeid();
-  EdgeStatusInfo oppedgestatus = edgestatus_reverse_.Get(oppedge);
   if (pred.predecessor() != kInvalidLabel) {
     // Get the start of the predecessor edge on the forward path. Cost is to
     // the end this edge, plus the cost to the end of the reverse predecessor,
     // plus the transition cost.
-    c = edgelabels_forward_[pred.predecessor()].cost().cost +
-        edgelabels_reverse_[oppedgestatus.index()].cost().cost + pred.transition_cost();
+    c = edgelabels_forward_[pred.predecessor()].cost().cost + opp_pred.cost().cost +
+        pred.transition_cost();
   } else {
     // If no predecessor on the forward path get the predecessor on
     // the reverse path to form the cost.
-    uint32_t predidx = edgelabels_reverse_[oppedgestatus.index()].predecessor();
+    uint32_t predidx = opp_pred.predecessor();
     float oppcost = (predidx == kInvalidLabel) ? 0 : edgelabels_reverse_[predidx].cost().cost;
-    c = pred.cost().cost + oppcost + edgelabels_reverse_[oppedgestatus.index()].transition_cost();
+    c = pred.cost().cost + oppcost + opp_pred.transition_cost();
   }
 
   // Set best_connection if cost is less than the best cost so far.
@@ -683,46 +698,51 @@ bool BidirectionalAStar::SetForwardConnection(GraphReader& graphreader, const BD
 // The edge on the reverse search connects to a reached edge on the forward
 // search tree. Check if this is the best connection so far and set the
 // search threshold.
-bool BidirectionalAStar::SetReverseConnection(GraphReader& graphreader, const BDEdgeLabel& pred) {
-  // Disallow connections that are part of a complex restriction.
-  // TODO - validate that we do not need to "walk" the paths forward
-  // and backward to see if they match a restriction.
-  if (pred.on_complex_rest()) {
-    return false;
+bool BidirectionalAStar::SetReverseConnection(GraphReader& graphreader, const BDEdgeLabel& rev_pred) {
+  GraphId fwd_edge_id = rev_pred.opp_edgeid();
+  EdgeStatusInfo fwd_edge_status = edgestatus_forward_.Get(fwd_edge_id);
+  auto fwd_pred = edgelabels_forward_[fwd_edge_status.index()];
+
+  // Disallow connections that are part of a complex restriction
+  if (rev_pred.on_complex_rest()) {
+    // Lets dig deeper and test if we are really triggering these restrictions
+    // since the complex restriction can span many edges
+    if (IsBridgingEdgeRestricted(graphreader, edgelabels_forward_, edgelabels_reverse_, fwd_pred,
+                                 rev_pred, costing_)) {
+      return false;
+    }
   }
 
   // Get the opposing edge - a candidate shortest path has been found to the
   // end node of this directed edge. Get total cost.
   float c;
-  GraphId oppedge = pred.opp_edgeid();
-  EdgeStatusInfo oppedgestatus = edgestatus_forward_.Get(oppedge);
-  if (pred.predecessor() != kInvalidLabel) {
+  if (rev_pred.predecessor() != kInvalidLabel) {
     // Get the start of the predecessor edge on the reverse path. Cost is to
     // the end this edge, plus the cost to the end of the forward predecessor,
     // plus the transition cost.
-    c = edgelabels_reverse_[pred.predecessor()].cost().cost +
-        edgelabels_forward_[oppedgestatus.index()].cost().cost + pred.transition_cost();
+    c = edgelabels_reverse_[rev_pred.predecessor()].cost().cost + fwd_pred.cost().cost +
+        rev_pred.transition_cost();
   } else {
     // If no predecessor on the reverse path get the predecessor on
     // the forward path to form the cost.
-    uint32_t predidx = edgelabels_forward_[oppedgestatus.index()].predecessor();
+    uint32_t predidx = fwd_pred.predecessor();
     float oppcost = (predidx == kInvalidLabel) ? 0 : edgelabels_forward_[predidx].cost().cost;
-    c = pred.cost().cost + oppcost + edgelabels_forward_[oppedgestatus.index()].transition_cost();
+    c = rev_pred.cost().cost + oppcost + fwd_pred.transition_cost();
   }
 
   // Set best_connection if cost is less than the best cost so far.
   if (c < best_connection_.cost) {
-    best_connection_ = {oppedge, pred.edgeid(), c};
+    best_connection_ = {fwd_edge_id, rev_pred.edgeid(), c};
   }
 
   // Set a threshold to extend search
   if (threshold_ == std::numeric_limits<float>::max()) {
-    threshold_ = pred.sortcost() + kThresholdDelta;
+    threshold_ = rev_pred.sortcost() + kThresholdDelta;
   }
 
   // setting this edge as connected, sending the opposing because this is the reverse tree
   if (expansion_callback_) {
-    expansion_callback_(graphreader, "bidirectional_astar", oppedge, "c", false);
+    expansion_callback_(graphreader, "bidirectional_astar", fwd_edge_id, "c", false);
   }
 
   return true;
@@ -830,7 +850,6 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader, const valhalla
     if (costing_->AvoidAsDestinationEdge(edgeid, edge.percent_along())) {
       continue;
     }
-
     // Get the directed edge
     const GraphTile* tile = graphreader.GetGraphTile(edgeid);
     const DirectedEdge* directededge = tile->directededge(edgeid);
@@ -840,6 +859,7 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader, const valhalla
     if (!opp_edge_id.Is_Valid()) {
       continue;
     }
+
     const DirectedEdge* opp_dir_edge = graphreader.GetOpposingEdge(edgeid);
 
     // Get cost and sort cost (based on distance from endnode of this edge
@@ -899,7 +919,8 @@ std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& gra
        edgelabel_index = edgelabels_forward_[edgelabel_index].predecessor()) {
     const BDEdgeLabel& edgelabel = edgelabels_forward_[edgelabel_index];
     path.emplace_back(edgelabel.mode(), edgelabel.cost().secs, edgelabel.edgeid(), 0,
-                      edgelabel.cost().cost, edgelabel.has_time_restriction());
+                      edgelabel.cost().cost, edgelabel.has_time_restriction(),
+                      edgelabel.transition_secs());
 
     // Check if this is a ferry
     if (edgelabel.use() == Use::kFerry) {
@@ -934,7 +955,8 @@ std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& gra
   Cost cost(path.back().elapsed_cost, path.back().elapsed_time);
 
   // Get the transition cost at the last edge of the reverse path
-  Cost tc(edgelabels_reverse_[idx2].transition_cost(), edgelabels_reverse_[idx2].transition_secs());
+  Cost previous_transition_cost{edgelabels_reverse_[idx2].transition_cost(),
+                                edgelabels_reverse_[idx2].transition_secs()};
 
   // Append the reverse path from the destination - use opposing edges
   // The first edge on the reverse path is the same as the last on the forward
@@ -951,9 +973,9 @@ std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& gra
     } else {
       cost += edgelabel.cost() - edgelabels_reverse_[predidx].cost();
     }
-    cost += tc;
+    cost += previous_transition_cost;
     path.emplace_back(edgelabel.mode(), cost.secs, edgelabel.opp_edgeid(), 0, cost.cost,
-                      edgelabel.has_time_restriction());
+                      edgelabel.has_time_restriction(), previous_transition_cost.secs);
 
     // Check if this is a ferry
     if (edgelabel.use() == Use::kFerry) {
@@ -962,10 +984,118 @@ std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& gra
 
     // Update edgelabel_index and transition cost to apply at next iteration
     edgelabel_index = predidx;
-    tc.secs = edgelabel.transition_secs();
-    tc.cost = edgelabel.transition_cost();
+    // We apply the turn cost at the beginning of the edge, as is done in the forward path
+    // Semantically this can be thought of is, how much time did it take to turn onto this edge
+    // To do this we need to carry the cost forward to the next edge in the path so we cache it here
+    previous_transition_cost.secs = edgelabel.transition_secs();
+    previous_transition_cost.cost = edgelabel.transition_cost();
   }
   return paths;
+}
+
+bool IsBridgingEdgeRestricted(GraphReader& graphreader,
+                              std::vector<sif::BDEdgeLabel>& edge_labels_fwd,
+                              std::vector<sif::BDEdgeLabel>& edge_labels_rev,
+                              const BDEdgeLabel& fwd_pred,
+                              const BDEdgeLabel& rev_pred,
+                              std::shared_ptr<sif::DynamicCost>& costing) {
+
+  const uint8_t M = 10;                 // TODO Look at data to figure this out
+  const uint8_t PATCH_PATH_SIZE = M * 2 // Expand M in both directions
+                                  + 1;  // Also need space for pred in the middle
+
+  // Begin by building the "patch" path
+  std::vector<GraphId> patch_path;
+  patch_path.reserve(PATCH_PATH_SIZE);
+
+  patch_path.push_back(fwd_pred.edgeid());
+
+  auto next_fwd_pred = fwd_pred;
+  for (int i = 0; i < M; ++i) {
+    // Walk M edges back and add each to patch path
+    const uint32_t next_pred_idx = next_fwd_pred.predecessor();
+    if (next_pred_idx == baldr::kInvalidLabel) {
+      break;
+    }
+    next_fwd_pred = edge_labels_fwd[next_pred_idx];
+    if (!next_fwd_pred.on_complex_rest()) {
+      // We can actually stop here if this edge is no longer part of any complex restriction
+      break;
+    }
+
+    patch_path.push_back(next_fwd_pred.edgeid());
+  }
+
+  // Reverse patch_path so that the leftmost edge is first and original `pred`
+  // at the end before pushing the right-hand edges (opposite direction) onto the back
+  std::reverse(patch_path.begin(), patch_path.end());
+
+  const GraphTile* tile = nullptr; // Used for later hinting
+
+  auto next_rev_pred = rev_pred;
+  // Now push_back the edges from opposite direction onto our patch_path
+  for (int n = 0; n < PATCH_PATH_SIZE; ++n) {
+    auto next_rev_pred_idx = next_rev_pred.predecessor();
+    if (next_rev_pred_idx == kInvalidLabel) {
+      // We reached the end of the opposing tree, i.e. destination or origin
+      break;
+    }
+    next_rev_pred = edge_labels_rev[next_rev_pred_idx];
+    if (!next_rev_pred.on_complex_rest()) {
+      // We can actually stop here if this edge is no longer path of any complex restriction
+      break;
+    }
+
+    // Since we are on the reverse expansion here, we want the opp_edgeid
+    // since we're tracking everything in the forward direction
+    const auto edgeid = next_rev_pred.opp_edgeid();
+    patch_path.push_back(edgeid);
+
+    // Also grab restrictions while walking for later comparison against patch_path
+    tile = graphreader.GetGraphTile(edgeid, tile);
+    if (tile == nullptr) {
+      throw std::logic_error("Tile pointer was null in IsBridgingEdgeRestricted");
+    }
+    const auto* edge = tile->directededge(edgeid);
+    if (edge == nullptr) {
+      throw std::logic_error("Edge pointer was null in IsBridgingEdgeRestricted");
+      return false;
+    }
+    if (edge->end_restriction() & costing->access_mode()) {
+      auto restrictions = tile->GetRestrictions(true, edgeid, costing->access_mode());
+      if (restrictions.size() == 0) {
+        // TODO Should we actually throw here? Or assert to gracefully continue in release?
+        // This implies corrupt data or logic bug
+        throw std::logic_error(
+            "Found no restrictions in tile even though edge-label.on_complex_rest() == true");
+        break;
+      }
+      for (auto cr : restrictions) {
+        // For each restriction `cr`, grab the end id PLUS vias PLUS beginning
+        std::vector<GraphId> restriction_ids;
+        // We must add beginning and ending edge as well, not just the vias,
+        // to track the full restriction
+        restriction_ids.push_back(cr->to_graphid());
+        cr->WalkVias([&restriction_ids](const GraphId* id) {
+          restriction_ids.push_back(*id);
+          return WalkingVia::KeepWalking;
+        });
+        // We must add beginning and ending edge as well, not just the vias,
+        // to track the full restriction
+        restriction_ids.push_back(cr->from_graphid());
+
+        // Now, lets see if this restriction matches part of our patch_path
+        if (std::search(patch_path.cbegin(), patch_path.cend(), restriction_ids.crbegin(),
+                        restriction_ids.crend()) != patch_path.cend()) {
+          // The restriction matches! This path is restricted and we can exit
+          return true;
+        }
+      }
+    }
+  }
+
+  // No restrictions matched our patch path
+  return false;
 }
 
 } // namespace thor

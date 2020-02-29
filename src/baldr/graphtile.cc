@@ -701,7 +701,7 @@ std::vector<SignInfo> GraphTile::GetSigns(const uint32_t idx, bool signs_on_node
       // only add edge signs when asking for signs at the edges.
       if ((signs_[found].type() == Sign::Type::kJunctionName && signs_on_node) ||
           (signs_[found].type() != Sign::Type::kJunctionName && !signs_on_node))
-        signs.emplace_back(signs_[found].type(), signs_[found].is_route_num(),
+        signs.emplace_back(signs_[found].type(), signs_[found].route_num_type(),
                            (textlist_ + signs_[found].text_offset()));
     } else {
       throw std::runtime_error("GetSigns: offset exceeds size of text list");

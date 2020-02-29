@@ -58,6 +58,9 @@ constexpr float kHOVFactor = 0.85f;
 // How much to favor taxi roads.
 constexpr float kTaxiFactor = 0.85f;
 
+// Do not avoid alleys by default
+constexpr float kDefaultAlleyFactor = 1.0f;
+
 // Turn costs based on side of street driving
 constexpr float kRightSideTurnCosts[] = {kTCStraight,       kTCSlight,  kTCFavorable,
                                          kTCFavorableSharp, kTCReverse, kTCUnfavorableSharp,
@@ -66,11 +69,15 @@ constexpr float kLeftSideTurnCosts[] = {kTCStraight,         kTCSlight,  kTCUnfa
                                         kTCUnfavorableSharp, kTCReverse, kTCFavorableSharp,
                                         kTCFavorable,        kTCSlight};
 
+constexpr float kMinFactor = 0.1f;
+constexpr float kMaxFactor = 100000.0f;
+
 // Valid ranges and defaults
 constexpr ranged_default_t<float> kManeuverPenaltyRange{0, kDefaultManeuverPenalty, kMaxPenalty};
 constexpr ranged_default_t<float> kDestinationOnlyPenaltyRange{0, kDefaultDestinationOnlyPenalty,
                                                                kMaxPenalty};
 constexpr ranged_default_t<float> kAlleyPenaltyRange{0, kDefaultAlleyPenalty, kMaxPenalty};
+constexpr ranged_default_t<float> kAlleyFactorRange{kMinFactor, kDefaultAlleyFactor, kMaxFactor};
 constexpr ranged_default_t<float> kGateCostRange{0, kDefaultGateCost, kMaxPenalty};
 constexpr ranged_default_t<float> kGatePenaltyRange{0, kDefaultGatePenalty, kMaxPenalty};
 constexpr ranged_default_t<float> kTollBoothCostRange{0, kDefaultTollBoothCost, kMaxPenalty};
@@ -310,6 +317,7 @@ public:
   float speedfactor_[kMaxSpeedKph + 1];
   float density_factor_[16]; // Density factor
   float highway_factor_;     // Factor applied when road is a motorway or trunk
+  float alley_factor_;       // Avoid alleys factor.
   float toll_factor_;        // Factor applied when road has a toll
   float surface_factor_;     // How much the surface factors are applied.
 
@@ -330,7 +338,7 @@ AutoCost::AutoCost(const Costing costing, const Options& options)
   // Get the vehicle type - enter as string and convert to enum.
   // Used to set the surface factor - penalize some roads based on surface type.
   surface_factor_ = 0.5f;
-  std::string type = costing_options.transport_type();
+  const std::string& type = costing_options.transport_type();
   if (type == "motorcycle") {
     type_ = VehicleType::kMotorcycle;
     surface_factor_ = 1.0f;
@@ -347,6 +355,9 @@ AutoCost::AutoCost(const Costing costing, const Options& options)
 
   // Get the base transition costs
   get_base_costs(costing_options);
+
+  // Get alley factor from costing options.
+  alley_factor_ = costing_options.alley_factor();
 
   // Preference to use highways. Is a value from 0 to 1
   float use_highways_ = costing_options.use_highways();
@@ -431,6 +442,10 @@ Cost AutoCost::EdgeCost(const baldr::DirectedEdge* edge,
             surface_factor_ * kSurfaceFactor[static_cast<uint32_t>(edge->surface())];
   if (edge->toll()) {
     factor += toll_factor_;
+  }
+
+  if (edge->use() == Use::kAlley) {
+    factor *= alley_factor_;
   }
 
   float sec = (edge->length() * speedfactor_[speed]);
@@ -548,6 +563,11 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
         rapidjson::get_optional<float>(*json_costing_options, "/destination_only_penalty")
             .get_value_or(kDefaultDestinationOnlyPenalty)));
 
+    // alley_factor
+    pbf_costing_options->set_alley_factor(
+        kAlleyFactorRange(rapidjson::get_optional<float>(*json_costing_options, "/alley_factor")
+                              .get_value_or(kDefaultAlleyFactor)));
+
     // gate_cost
     pbf_costing_options->set_gate_cost(
         kGateCostRange(rapidjson::get_optional<float>(*json_costing_options, "/gate_cost")
@@ -607,6 +627,7 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_transport_type("car");
     pbf_costing_options->set_maneuver_penalty(kDefaultManeuverPenalty);
     pbf_costing_options->set_destination_only_penalty(kDefaultDestinationOnlyPenalty);
+    pbf_costing_options->set_alley_factor(kDefaultAlleyFactor);
     pbf_costing_options->set_gate_cost(kDefaultGateCost);
     pbf_costing_options->set_gate_penalty(kDefaultGatePenalty);
     pbf_costing_options->set_toll_booth_cost(kDefaultTollBoothCost);
@@ -1381,7 +1402,7 @@ make_distributor_from_range(const ranged_default_t<float>& range) {
   return std::uniform_real_distribution<float>(range.min - rangeLength, range.max + rangeLength);
 }
 
-void testAutoCostParams() {
+TEST(AutoCost, testAutoCostParams) {
   constexpr unsigned testIterations = 250;
   constexpr unsigned seed = 0;
   std::mt19937 generator(seed);
@@ -1392,110 +1413,97 @@ void testAutoCostParams() {
   distributor = make_distributor_from_range(kManeuverPenaltyRange);
   for (unsigned i = 0; i < testIterations; ++i) {
     tester = make_autocost_from_json("maneuver_penalty", distributor(generator));
-    if (tester->maneuver_penalty_ < kManeuverPenaltyRange.min ||
-        tester->maneuver_penalty_ > kManeuverPenaltyRange.max) {
-      throw std::runtime_error("maneuver_penalty_ is not within it's range");
-    }
+    EXPECT_THAT(tester->maneuver_penalty_,
+                test::IsBetween(kManeuverPenaltyRange.min, kManeuverPenaltyRange.max));
   }
 
   // alley_penalty_
   distributor = make_distributor_from_range(kAlleyPenaltyRange);
   for (unsigned i = 0; i < testIterations; ++i) {
     tester = make_autocost_from_json("alley_penalty", distributor(generator));
-    if (tester->alley_penalty_ < kAlleyPenaltyRange.min ||
-        tester->alley_penalty_ > kAlleyPenaltyRange.max) {
-      throw std::runtime_error("alley_penalty_ is not within it's range");
-    }
+    EXPECT_THAT(tester->alley_penalty_,
+                test::IsBetween(kAlleyPenaltyRange.min, kAlleyPenaltyRange.max));
+  }
+
+  // alley_factor_
+  distributor = make_distributor_from_range(kAlleyFactorRange);
+  for (unsigned i = 0; i < testIterations; ++i) {
+    tester = make_autocost_from_json("alley_factor", distributor(generator));
+    EXPECT_THAT(tester->alley_factor_, test::IsBetween(kAlleyFactorRange.min, kAlleyFactorRange.max));
   }
 
   // destination_only_penalty_
   distributor = make_distributor_from_range(kDestinationOnlyPenaltyRange);
   for (unsigned i = 0; i < testIterations; ++i) {
     tester = make_autocost_from_json("destination_only_penalty", distributor(generator));
-    if (tester->destination_only_penalty_ < kDestinationOnlyPenaltyRange.min ||
-        tester->destination_only_penalty_ > kDestinationOnlyPenaltyRange.max) {
-      throw std::runtime_error("destination_only_penalty_ is not within it's range");
-    }
+    EXPECT_THAT(tester->destination_only_penalty_,
+                test::IsBetween(kDestinationOnlyPenaltyRange.min, kDestinationOnlyPenaltyRange.max));
   }
 
   // gate_cost_ (Cost.secs)
   distributor = make_distributor_from_range(kGateCostRange);
   for (unsigned i = 0; i < testIterations; ++i) {
     tester = make_autocost_from_json("gate_cost", distributor(generator));
-    if (tester->gate_cost_.secs < kGateCostRange.min ||
-        tester->gate_cost_.secs > kGateCostRange.max) {
-      throw std::runtime_error("gate_cost_ is not within it's range");
-    }
+    EXPECT_THAT(tester->gate_cost_.secs, test::IsBetween(kGateCostRange.min, kGateCostRange.max));
   }
 
   // gate_penalty_ (Cost.cost)
   distributor = make_distributor_from_range(kGatePenaltyRange);
   for (unsigned i = 0; i < testIterations; ++i) {
     tester = make_autocost_from_json("gate_penalty", distributor(generator));
-    if (tester->gate_cost_.cost < kGatePenaltyRange.min ||
-        tester->gate_cost_.cost > kGatePenaltyRange.max + kDefaultGateCost) {
-      throw std::runtime_error("gate_penalty_ is not within it's range");
-    }
+    EXPECT_THAT(tester->gate_cost_.cost,
+                test::IsBetween(kGatePenaltyRange.min, kGatePenaltyRange.max + kDefaultGateCost));
   }
 
   // tollbooth_cost_ (Cost.secs)
   distributor = make_distributor_from_range(kTollBoothCostRange);
   for (unsigned i = 0; i < testIterations; ++i) {
     tester = make_autocost_from_json("toll_booth_cost", distributor(generator));
-    if (tester->toll_booth_cost_.secs < kTollBoothCostRange.min ||
-        tester->toll_booth_cost_.secs > kTollBoothCostRange.max) {
-      throw std::runtime_error("tollbooth_cost_ is not within it's range");
-    }
+    EXPECT_THAT(tester->toll_booth_cost_.secs,
+                test::IsBetween(kTollBoothCostRange.min, kTollBoothCostRange.max));
   }
 
   // tollbooth_penalty_ (Cost.cost)
   distributor = make_distributor_from_range(kTollBoothPenaltyRange);
   for (unsigned i = 0; i < testIterations; ++i) {
     tester = make_autocost_from_json("toll_booth_penalty", distributor(generator));
-    if (tester->toll_booth_cost_.cost < kTollBoothPenaltyRange.min ||
-        tester->toll_booth_cost_.cost > kTollBoothPenaltyRange.max + kDefaultTollBoothCost) {
-      throw std::runtime_error("tollbooth_penalty_ is not within it's range");
-    }
+    EXPECT_THAT(tester->toll_booth_cost_.cost,
+                test::IsBetween(kTollBoothPenaltyRange.min,
+                                kTollBoothPenaltyRange.max + kDefaultTollBoothCost));
   }
 
   // country_crossing_cost_ (Cost.secs)
   distributor = make_distributor_from_range(kCountryCrossingCostRange);
   for (unsigned i = 0; i < testIterations; ++i) {
     tester = make_autocost_from_json("country_crossing_cost", distributor(generator));
-    if (tester->country_crossing_cost_.secs < kCountryCrossingCostRange.min ||
-        tester->country_crossing_cost_.secs > kCountryCrossingCostRange.max) {
-      throw std::runtime_error("country_crossing_cost_ is not within it's range");
-    }
+    EXPECT_THAT(tester->country_crossing_cost_.secs,
+                test::IsBetween(kCountryCrossingCostRange.min, kCountryCrossingCostRange.max));
   }
 
   // country_crossing_penalty_ (Cost.cost)
   distributor = make_distributor_from_range(kCountryCrossingPenaltyRange);
   for (unsigned i = 0; i < testIterations; ++i) {
     tester = make_autocost_from_json("country_crossing_penalty", distributor(generator));
-    if (tester->country_crossing_cost_.cost < kCountryCrossingPenaltyRange.min ||
-        tester->country_crossing_cost_.cost >
-            kCountryCrossingPenaltyRange.max + kDefaultCountryCrossingCost) {
-      throw std::runtime_error("country_crossing_penalty_ is not within it's range");
-    }
+    EXPECT_THAT(tester->country_crossing_cost_.cost,
+                test::IsBetween(kCountryCrossingPenaltyRange.min,
+                                kCountryCrossingPenaltyRange.max + kDefaultCountryCrossingCost));
   }
 
   // ferry_cost_ (Cost.secs)
   distributor = make_distributor_from_range(kFerryCostRange);
   for (unsigned i = 0; i < testIterations; ++i) {
     tester = make_autocost_from_json("ferry_cost", distributor(generator));
-    if (tester->ferry_transition_cost_.secs < kFerryCostRange.min ||
-        tester->ferry_transition_cost_.secs > kFerryCostRange.max) {
-      throw std::runtime_error("ferry_cost_ is not within it's range");
-    }
+    EXPECT_THAT(tester->ferry_transition_cost_.secs,
+                test::IsBetween(kFerryCostRange.min, kFerryCostRange.max));
   }
+
   /**
    // use_ferry
    distributor = make_distributor_from_range(kUseFerryRange);
    for (unsigned i = 0; i < testIterations; ++i) {
      tester = make_autocost_from_json("use_ferry", distributor(generator));
-     if (tester->use_ferry < kUseFerryRange.min || tester->use_ferry > kUseFerryRange.max) {
-       throw std::runtime_error("use_ferry is not within it's range");
-     }
+     EXPECT_THAT(tester->use_ferry, test::IsBetween(
+       kUseFerryRange.min, kUseFerryRange.max));
    }
  **/
 
@@ -1546,22 +1554,14 @@ void testAutoCostParams() {
     }
 
     tester = make_autocost_from_json(key, value, extra_json);
-    auto actual = tester->flow_mask_;
-
-    if (actual != expected)
-      throw std::runtime_error("flow_mask_ is not the expected value in test case " +
-                               std::to_string(i) + " | " + std::to_string(actual) +
-                               "!=" + std::to_string(expected));
+    EXPECT_EQ(tester->flow_mask_, expected);
   }
 }
 } // namespace
 
-int main() {
-  test::suite suite("costing");
-
-  suite.test(TEST_CASE(testAutoCostParams));
-
-  return suite.tear_down();
+int main(int argc, char* argv[]) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }
 
 #endif

@@ -1,33 +1,26 @@
 
-#include "test.h"
-
-#include "config.h"
 #include "thor/attributes_controller.h"
+#include "config.h"
+
+#include "test.h"
 
 using namespace std;
 using namespace valhalla::thor;
 
 namespace {
 
-void TryCtor() {
+TEST(AttrController, TestCtorDefautAttributes) {
   AttributesController controller;
-  if (controller.attributes != AttributesController::kDefaultAttributes)
-    throw runtime_error("Incorrect Constructor using default attributes");
-}
-
-void TestCtor() {
-  TryCtor();
+  EXPECT_EQ(controller.attributes, AttributesController::kDefaultAttributes);
 }
 
 void TryArgCtor(size_t expected_size) {
   AttributesController controller;
-  if (controller.attributes != AttributesController::kDefaultAttributes)
-    throw runtime_error("Incorrect Constructor");
-  if (controller.attributes.size() != expected_size)
-    throw runtime_error("Incorrect Constructor size");
+  EXPECT_EQ(controller.attributes, AttributesController::kDefaultAttributes);
+  EXPECT_EQ(controller.attributes.size(), expected_size);
 }
 
-void TestArgCtor() {
+TEST(AttrController, TestArgCtor) {
   TryArgCtor(AttributesController::kDefaultAttributes.size());
 }
 
@@ -36,12 +29,11 @@ void TryDisableAll() {
   controller.disable_all();
   for (auto& pair : controller.attributes) {
     // If any pair value is true then throw error
-    if (pair.second)
-      throw runtime_error("Incorrect disable_all value for " + pair.first);
+    EXPECT_FALSE(pair.second) << ("Incorrect disable_all value for " + pair.first);
   }
 }
 
-void TestDisableAll() {
+TEST(AttrController, TestDisableAll) {
   TryDisableAll();
 }
 
@@ -49,13 +41,10 @@ void TryCategoryAttributeEnabled(const AttributesController& controller,
                                  const std::string& category,
                                  bool expected_response) {
   // If category_attribute_enabled does not equal expected response then throw error
-  if (controller.category_attribute_enabled(category) != expected_response) {
-    throw runtime_error("Incorrect cateogry_attribute_enabled response - expected: " +
-                        std::string(expected_response ? "true" : "false"));
-  }
+  EXPECT_EQ(controller.category_attribute_enabled(category), expected_response);
 }
 
-void TestNodeAttributeEnabled() {
+TEST(AttrController, TestNodeAttributeEnabled) {
   AttributesController controller;
 
   // Test default
@@ -78,7 +67,7 @@ void TestNodeAttributeEnabled() {
   TryCategoryAttributeEnabled(controller, kNodeCategory, true);
 }
 
-void TestAdminAttributeEnabled() {
+TEST(AttrController, TestAdminAttributeEnabled) {
   AttributesController controller;
 
   // Test default
@@ -102,23 +91,7 @@ void TestAdminAttributeEnabled() {
 
 } // namespace
 
-int main() {
-  test::suite suite("trip_path_controller");
-
-  // Test Constructor
-  suite.test(TEST_CASE(TestCtor));
-
-  // Test Constructor with argument
-  suite.test(TEST_CASE(TestArgCtor));
-
-  // Test disable_all
-  suite.test(TEST_CASE(TestDisableAll));
-
-  // Test node category_attribute_enabled
-  suite.test(TEST_CASE(TestNodeAttributeEnabled));
-
-  // Test admin category_attribute_enabled
-  suite.test(TEST_CASE(TestAdminAttributeEnabled));
-
-  return suite.tear_down();
+int main(int argc, char* argv[]) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

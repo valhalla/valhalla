@@ -1,1 +1,0 @@
--j '{"locations":[{"lat":35.666039,"lon":139.755463},{"lat":35.666229,"lon":139.756348}],"costing":"auto","units":"kilometers"}'

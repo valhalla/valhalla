@@ -1,10 +1,9 @@
 #include "thor/optimizer.h"
 #include "config.h"
-#include "test.h"
-#include <algorithm>
 #include <cstdint>
-#include <iostream>
 #include <vector>
+
+#include "test.h"
 
 using namespace std;
 using namespace valhalla::thor;
@@ -17,12 +16,10 @@ void TryOptimizer(const uint32_t nlocs,
   Optimizer optimizer;
   optimizer.Seed(111111);
   auto order = optimizer.Solve(nlocs, costs);
-  if (order != expected_order) {
-    throw runtime_error("TryOptimizer: expected order failed");
-  }
+  EXPECT_EQ(order, expected_order);
 }
 
-void TestOptimizer() {
+TEST(Optimizer, Basic) {
   std::vector<float> costs = {0,    3036, 707,  956,  318,  1934, 355,  1170, 1286, 3171, 2133,
                               2978, 0,    2664, 3613, 3102, 2011, 3139, 3846, 1764, 2050, 1143,
                               638,  2638, 0,    1295, 763,  1536, 800,  1528, 888,  2773, 1735,
@@ -40,10 +37,7 @@ void TestOptimizer() {
 
 } // namespace
 
-int main() {
-  test::suite suite("optimizer");
-
-  suite.test(TEST_CASE(TestOptimizer));
-
-  return suite.tear_down();
+int main(int argc, char* argv[]) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

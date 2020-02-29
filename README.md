@@ -1,16 +1,16 @@
 
 
 
-     ██▒   █▓ ▄▄▄       ██▓     ██░ ██  ▄▄▄       ██▓     ██▓    ▄▄▄      
-    ▓██░   █▒▒████▄    ▓██▒    ▓██░ ██▒▒████▄    ▓██▒    ▓██▒   ▒████▄    
-     ▓██  █▒░▒██  ▀█▄  ▒██░    ▒██▀▀██░▒██  ▀█▄  ▒██░    ▒██░   ▒██  ▀█▄  
+     ██▒   █▓ ▄▄▄       ██▓     ██░ ██  ▄▄▄       ██▓     ██▓    ▄▄▄
+    ▓██░   █▒▒████▄    ▓██▒    ▓██░ ██▒▒████▄    ▓██▒    ▓██▒   ▒████▄
+     ▓██  █▒░▒██  ▀█▄  ▒██░    ▒██▀▀██░▒██  ▀█▄  ▒██░    ▒██░   ▒██  ▀█▄
       ▒██ █░░░██▄▄▄▄██ ▒██░    ░▓█ ░██ ░██▄▄▄▄██ ▒██░    ▒██░   ░██▄▄▄▄██
        ▒▀█░   ▓█   ▓██▒░██████▒░▓█▒░██▓ ▓█   ▓██▒░██████▒░██████▒▓█   ▓██▒
        ░ ▐░   ▒▒   ▓▒█░░ ▒░▓  ░ ▒ ░░▒░▒ ▒▒   ▓▒█░░ ▒░▓  ░░ ▒░▓  ░▒▒   ▓▒█░
        ░ ░░    ▒   ▒▒ ░░ ░ ▒  ░ ▒ ░▒░ ░  ▒   ▒▒ ░░ ░ ▒  ░░ ░ ▒  ░ ▒   ▒▒ ░
-         ░░    ░   ▒     ░ ░    ░  ░░ ░  ░   ▒     ░ ░     ░ ░    ░   ▒   
+         ░░    ░   ▒     ░ ░    ░  ░░ ░  ░   ▒     ░ ░     ░ ░    ░   ▒
           ░        ░  ░    ░  ░ ░  ░  ░      ░  ░    ░  ░    ░  ░     ░  ░
-         ░                                                                    
+         ░
 
 
 ### NOTICE
@@ -91,9 +91,9 @@ To install on a Debian or Ubuntu system you need to install its dependencies wit
 ```bash
 sudo add-apt-repository -y ppa:valhalla-core/valhalla
 sudo apt-get update
-sudo apt-get install -y cmake make libtool pkg-config g++ gcc jq lcov protobuf-compiler vim-common locales libboost-all-dev libcurl4-openssl-dev zlib1g-dev liblz4-dev libprime-server-dev libprotobuf-dev prime-server-bin
+sudo apt-get install -y cmake make libtool pkg-config g++ gcc curl jq lcov protobuf-compiler vim-common locales libboost-all-dev libcurl4-openssl-dev zlib1g-dev liblz4-dev libprime-server-dev libprotobuf-dev prime-server-bin
 #if you plan to compile with data building support, see below for more info
-sudo apt-get install -y libgeos-dev libgeos++-dev liblua5.2-dev libspatialite-dev libsqlite3-dev lua5.2 wget
+sudo apt-get install -y libgeos-dev libgeos++-dev liblua5.2-dev libspatialite-dev libsqlite3-dev lua5.2 wget sqlite3 spatialite-bin
 source /etc/lsb-release
 if [[ $(python -c "print int($DISTRIB_RELEASE > 15)") > 0 ]]; then sudo apt-get install -y libsqlite3-mod-spatialite; fi
 #if you plan to compile with python bindings, see below for more info
@@ -102,7 +102,6 @@ sudo apt-get install -y python-all-dev
 curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.11/install.sh | bash #follow instructions in output to use nvm without starting a new bash session
 nvm install 10
 nvm use 10
-npm install --ignore-scripts
 ```
 
 For instructions on installing Valhalla on Ubuntu 18.04.x see this [script](scripts/Ubuntu_Bionic_Install.sh).
@@ -124,6 +123,8 @@ Now, clone the Valhalla repository
 
 ```bash
 git clone --recurse-submodules https://github.com/valhalla/valhalla.git
+# if you wanted to enable node bindings
+npm install --ignore-scripts
 ```
 
 Then, build [`prime_server`](https://github.com/kevinkreiser/prime_server#build-and-install).
@@ -134,7 +135,7 @@ After getting the dependencies install it with:
 mkdir build
 cd build
 cmake .. -DCMAKE_BUILD_TYPE=Release
-make -j$(nproc) # for macos, use: make -j$(sysctl -n hw.physicalcpu) 
+make -j$(nproc) # for macos, use: make -j$(sysctl -n hw.physicalcpu)
 sudo make install
 ```
 
@@ -147,7 +148,8 @@ Important build options include:
 | `-DENABLE_SERVICES` (`On` / `Off`) | Build the HTTP service|
 | `-DBUILD_SHARED_LIBS` (`On` / `Off`) | Build static or shared libraries|
 | `-DENABLE_NODE_BINDINGS` (`ON` / `OFF`) | Build the node bindings (defaults to on)|
-| `-DENABLE_COMPILER_WARNINGS` (`ON` / `OFF`) | Build with common compiler warnings as errors (defaults to off)|
+| `-DENABLE_COMPILER_WARNINGS` (`ON` / `OFF`) | Build with common compiler warnings (defaults to off)|
+| `-DENABLE_WERROR` (`ON` / `OFF`) | Treat compiler warnings as errors  (defaults to off). Requires `-DENABLE_COMPILER_WARNINGS=ON` to take effect.|
 
 For more build options run the interactive GUI:
 
@@ -230,6 +232,8 @@ We highly encourage running and updating the tests to make sure no regressions h
     make check
 
 To run an individual test, `make run-<test name>` from the build directory or `./test/<testname>`
+
+You may check some notes on [unit tests](docs/testing.md)
 
 Coverage reports are automatically generated using codecov for each pull request, but you can also build them locally by passing `-DENABLE_COVERAGE=On` and running `make coverage`.
 

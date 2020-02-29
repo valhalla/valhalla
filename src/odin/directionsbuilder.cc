@@ -95,7 +95,7 @@ void DirectionsBuilder::Build(Api& api) {
         if (options.directions_type() == DirectionsType::instructions) {
           std::unique_ptr<NarrativeBuilder> narrative_builder =
               NarrativeBuilderFactory::Create(options, &etp);
-          narrative_builder->Build(options, &etp, maneuvers);
+          narrative_builder->Build(options, maneuvers);
         }
       }
 
@@ -289,6 +289,11 @@ void DirectionsBuilder::PopulateDirectionsLeg(const Options& options,
           trip_junction_name->set_consecutive_count(junction_name.consecutive_count());
         }
       }
+    }
+
+    // Process the guidance views
+    for (const auto& guidance_view : maneuver.guidance_views()) {
+      trip_maneuver->add_guidance_views()->CopyFrom(guidance_view);
     }
 
     // Roundabout exit count

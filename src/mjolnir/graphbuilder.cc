@@ -145,9 +145,9 @@ void ConstructEdges(const OSMData& osmdata,
     bool valid = true;
     for (auto ni = current_way_node_index; ni <= last_way_node_index; ni++) {
       const auto wn = (*way_nodes[ni]).node;
-      if (wn.lat_ == 0.0 && wn.lng_ == 0.0) {
-        LOG_ERROR("Cannot find node " + std::to_string(wn.osmid_) + " in way " +
-                  std::to_string(way.way_id()));
+      if (wn.lat_ == kInvalidLatitude && wn.lng_ == kInvalidLongitude) {
+        LOG_ERROR("Node " + std::to_string(wn.osmid_) + " in way " + std::to_string(way.way_id()) +
+                  " has not had coordinates initialized");
         valid = false;
       }
     }
@@ -768,7 +768,7 @@ void BuildTileSet(const std::string& ways_file,
           // and directed edge if forward access and auto use
           // and directed edge is a link and not (link count=2 and driveforward count=1)
           //    OR node is a fork
-          //    OR we added guide signs
+          //    OR we added guide signs or guidance views
           if (!signs.empty() && (directededge.forwardaccess() & kAutoAccess) &&
               ((directededge.link() &&
                 (!((bundle.link_count == 2) && (bundle.driveforward_count == 1)))) ||
@@ -1416,7 +1416,47 @@ bool GraphBuilder::CreateSignInfoList(const OSMNode& node,
     }
   }
 
-  return has_guide;
+  ////////////////////////////////////////////////////////////////////////////
+  // GUIDANCE VIEWS
+
+  bool has_guidance_view = false;
+  if (forward && way.fwd_jct_base_index() > 0) {
+    std::vector<std::string> names =
+        GetTagTokens(osmdata.name_offset_map.name(way.fwd_jct_base_index()), '|');
+    // route number set to true for kGuidanceViewJct type means base type
+    for (auto& name : names) {
+      exit_list.emplace_back(Sign::Type::kGuidanceViewJunction, true, name);
+      has_guidance_view = true;
+    }
+  } else if (!forward && way.bwd_jct_base_index() > 0) {
+    std::vector<std::string> names =
+        GetTagTokens(osmdata.name_offset_map.name(way.bwd_jct_base_index()), '|');
+    // route number set to true for kGuidanceViewJct type means base type
+    for (auto& name : names) {
+      exit_list.emplace_back(Sign::Type::kGuidanceViewJunction, true, name);
+      has_guidance_view = true;
+    }
+  }
+
+  if (forward && way.fwd_jct_overlay_index() > 0) {
+    std::vector<std::string> names =
+        GetTagTokens(osmdata.name_offset_map.name(way.fwd_jct_overlay_index()), '|');
+    // route number set to false for kGuidanceViewJct type means overlay type
+    for (auto& name : names) {
+      exit_list.emplace_back(Sign::Type::kGuidanceViewJunction, false, name);
+      has_guidance_view = true;
+    }
+  } else if (!forward && way.bwd_jct_overlay_index() > 0) {
+    std::vector<std::string> names =
+        GetTagTokens(osmdata.name_offset_map.name(way.bwd_jct_overlay_index()), '|');
+    // route number set to false for kGuidanceViewJct type means overlay type
+    for (auto& name : names) {
+      exit_list.emplace_back(Sign::Type::kGuidanceViewJunction, false, name);
+      has_guidance_view = true;
+    }
+  }
+
+  return (has_guide || has_guidance_view);
 }
 
 } // namespace mjolnir

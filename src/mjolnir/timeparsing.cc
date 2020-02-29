@@ -246,6 +246,14 @@ std::vector<uint64_t> get_time_range(const std::string& str) {
       }
     }
 
+    std::size_t found = condition.find(",PH");
+    if (found != std::string::npos)
+      condition.erase(found, 3);
+
+    found = condition.find("PH,");
+    if (found != std::string::npos)
+      condition.erase(found, 3);
+
     std::vector<std::string> months_dow_times = GetTokens(condition, ' ');
 
     if (months_dow_times.size() == 1 && condition.find('#') != std::string::npos &&

@@ -35,11 +35,11 @@ then
 fi
 
 CONCURRENCY=$(nproc)
-echo -e "\x1b[32;1mDiffing the output of ${OLD_DIR} with ${NEW_DIR} to ${OLD_DIR}_${NEW_DIR}_diff\x1b[0m"
+echo -e "\x1b[32;1mDiffing the output of ${OLD_DIR} with ${NEW_DIR} to ${DIFF_DIR}\x1b[0m"
 mkdir -p "${DIFF_DIR}"
 find ${OLD_DIR}/*.txt -printf "%f\n" | parallel --progress -P "${CONCURRENCY}" "diff ${OLD_DIR}/{} ${NEW_DIR}/{} > ${DIFF_DIR}/{}"
                                                                                                        
 COMBINED_STATS_FILE="combined_statistics.csv"
-echo -e "\x1b[32;1mGenerating combined statistics at ${OLD_DIR}_${NEW_DIR}_diff/${COMBINED_STATS_FILE}\x1b[0m"
+echo -e "\x1b[32;1mGenerating combined statistics at ${DIFF_DIR}/${COMBINED_STATS_FILE}\x1b[0m"
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-${DIR}/diff_route_stats.py ${OLD_DIR}/statistics.csv ${NEW_DIR}/statistics.csv ${OLD_DIR}_${NEW_DIR}_diff/${COMBINED_STATS_FILE}
+${DIR}/combine_route_stats.py ${OLD_DIR}/statistics.csv ${NEW_DIR}/statistics.csv ${DIFF_DIR}/${COMBINED_STATS_FILE}
