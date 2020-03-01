@@ -24,21 +24,21 @@ Installation:
 $ brew install wrk
 
 # On Ubuntu/Debian
-$ sudo apt-get install build-essential libssl-dev git -y
+$ sudo apt install build-essential libssl-dev git -y
 $ git clone https://github.com/wg/wrk.git wrk
 $ cd wrk
 $ make
 $ sudo cp wrk /usr/local/bin
 
-# If plotting/analyzing results
-$ pip3 install pandas click
+# If plotting/analyzing results...
+$ pip3 install --user pandas click
 ```
 
 Assuming your local Valhalla is running and listening at `localhost:8002`:
 
 ```bash
 # Start benchmark
-$ TEST_NAME=bencmark-name bash wrk-bench.sh scripts/trace_route.lua http://localhost:8002 2> >(tee results.csv)
+$ TEST_NAME=benchmark-name bash wrk-bench.sh scripts/trace_route.lua http://localhost:8002 2> >(tee results.csv)
 
 # Split files into results.csv.measurements.csv and results.csv.metadata.csv
 $ bash wrk-csv-filter.sh results.csv
