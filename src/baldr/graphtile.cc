@@ -160,7 +160,7 @@ void GraphTile::SaveTileToFile(const std::vector<char>& tile_data, const std::st
   filesystem::path tmp_location;
   if (filesystem::create_directories(dir)) {
     // Technically this is a race condition but its super unlikely (famous last words)
-    while (tmp_location.string().empty() && filesystem::exists(tmp_location))
+    while (tmp_location.string().empty() ||  filesystem::exists(tmp_location))
       tmp_location = disk_location + GenerateTmpSuffix();
     std::ofstream file(tmp_location.string(), std::ios::out | std::ios::binary | std::ios::ate);
     file.write(tile_data.data(), tile_data.size());
