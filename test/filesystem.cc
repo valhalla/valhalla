@@ -98,7 +98,7 @@ TEST(Filesystem, remove_any) {
   EXPECT_FALSE(filesystem::exists(".foobar")) << ".foobar dir should have been deleted";
 }
 
-Test(Filesystem, parent_path) {
+TEST(Filesystem, parent_path) {
   std::vector<filesystem::path> in{{"/"},   {"/foo/bar"}, {"/foo/../"}, {"/foo/bar/../f"},
                                    {"./f"}, {"foo/bar/f"}};
   std::vector<filesystem::path> out{
@@ -111,7 +111,7 @@ Test(Filesystem, parent_path) {
   }
 }
 
-Test(Filesystem, extension) {
+TEST(Filesystem, extension) {
   std::vector<filesystem::path>
       in{{"/foo/bar.txt"},      {"/foo/bar."},        {"/foo/bar"},         {"/foo/bar.txt/bar.cc"},
          {"/foo/bar.txt/bar."}, {"/foo/bar.txt/bar"}, {"/foo/."},           {"/foo/.."},
