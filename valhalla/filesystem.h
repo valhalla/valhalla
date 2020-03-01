@@ -124,7 +124,7 @@ std::basic_istream<CharT, Traits>& operator>>(std::basic_istream<CharT, Traits>&
   // paths get unquoted to handle space
   std::string tmp;
   if (is >> std::quoted(tmp, CharT('"'), CharT('\\')))
-    p = std::move(tmp);
+    p = tmp;
   return is;
 }
 
