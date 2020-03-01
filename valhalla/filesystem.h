@@ -152,15 +152,18 @@ public:
   bool operator==(const directory_entry& rhs) const {
     return (!entry_ && !rhs.entry_) || memcmp(entry_.get(), rhs.entry_.get(), sizeof(dirent)) == 0;
   }
-  std::uintmax_t file_size() {
+  std::uintmax_t file_size() const {
     if (entry_ && entry_->d_type == DT_DIR)
       throw std::runtime_error("Cannot get the file_size of a directory");
     // if we know the inode then we stat'd the file already and cached the size
     if (entry_->d_ino)
       return file_size_;
     struct stat s;
-    if (stat(path_.c_str(), &s) == 0)
-      return s.st_size;
+    if (stat(path_.c_str(), &s) == 0) {
+      entry_->d_ino = s.st_ino;
+      file_size_ = s.st_size;
+      return file_size_;
+    }
     throw std::runtime_error("Cannot get the file_size of this directory_entry");
   }
 
@@ -244,7 +247,7 @@ private:
   std::shared_ptr<DIR> dir_;
   std::shared_ptr<dirent> entry_;
   filesystem::path path_;
-  std::uintmax_t file_size_;
+  mutable std::uintmax_t file_size_;
 };
 
 class directory_iterator {

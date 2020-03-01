@@ -101,7 +101,7 @@ add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/roma_tiles/1/047/352.gph
       ${VALHALLA_SOURCE_DIR}/test/data/via_montebello_roma_italy.osm.pbf
   COMMENT "Building Roma Tiles..."
   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-  DEPENDS valhalla_build_tiles valhalla_add_predicted_traffic ${CMAKE_BINARY_DIR}/test/data/tz.sqlite ${VALHALLA_SOURCE_DIR}/test/data/via_montebello_roma_italy.osm.pbf)
+  DEPENDS valhalla_build_tiles ${CMAKE_BINARY_DIR}/test/data/tz.sqlite ${VALHALLA_SOURCE_DIR}/test/data/via_montebello_roma_italy.osm.pbf)
 add_custom_target(roma_tiles DEPENDS ${CMAKE_BINARY_DIR}/test/data/roma_tiles/1/047/352.gph)
 
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/melborne_tiles/0/001/251.gph
@@ -111,7 +111,7 @@ add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/melborne_tiles/0/001/251
       ${VALHALLA_SOURCE_DIR}/test/data/melborne.osm.pbf
   COMMENT "Building Melborne Tiles..."
   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-  DEPENDS valhalla_build_tiles valhalla_add_predicted_traffic ${CMAKE_BINARY_DIR}/test/data/tz.sqlite ${VALHALLA_SOURCE_DIR}/test/data/melborne.osm.pbf)
+  DEPENDS valhalla_build_tiles ${CMAKE_BINARY_DIR}/test/data/tz.sqlite ${VALHALLA_SOURCE_DIR}/test/data/melborne.osm.pbf)
 add_custom_target(melborne_tiles DEPENDS ${CMAKE_BINARY_DIR}/test/data/melborne_tiles/0/001/251.gph)
 
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/ny_ar_tiles/2/000/752/104.gph
@@ -209,7 +209,7 @@ if(ENABLE_DATA_TOOLS)
   add_dependencies(run-thor_worker utrecht_tiles)
   add_dependencies(run-recover_shortcut utrecht_tiles)
   add_dependencies(run-minbb utrecht_tiles)
-  add_dependencies(run-astar whitelion_tiles roma_tiles reversed_whitelion_tiles bayfront_singapore_tiles ny_ar_tiles pa_ar_tiles nh_ar_tiles melborne_tiles utrecht_tiles)
+  add_dependencies(run-astar utrecht_tiles whitelion_tiles roma_tiles reversed_whitelion_tiles bayfront_singapore_tiles ny_ar_tiles pa_ar_tiles nh_ar_tiles melborne_tiles)
   if(ENABLE_HTTP)
     add_dependencies(run-http_tiles utrecht_tiles)
   endif()
