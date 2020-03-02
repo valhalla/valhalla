@@ -34,8 +34,10 @@ enum class WalkingVia {
 class ComplexRestriction {
 public:
   ComplexRestriction()
-      : from_graphid_(kInvalidGraphId), has_dt_(0), to_graphid_(kInvalidGraphId), type_(0), modes_(0),
-        via_count_(0) {
+      : from_graphid_(kInvalidGraphId), has_dt_(0), begin_day_dow_(0), begin_month_(0),
+        begin_week_(0), begin_hrs_(0), to_graphid_(kInvalidGraphId), dt_type_(0), end_day_dow_(0),
+        end_month_(0), end_week_(0), end_hrs_(0), type_(0), modes_(0), via_count_(0), dow_(0),
+        begin_mins_(0), end_mins_(0), spare_(0) {
   }
 
   /**
