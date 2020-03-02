@@ -259,24 +259,6 @@ public:
       }
     }
 
-    // Throw away driveways if include_driveways_ is false
-    Tags::const_iterator driveways;
-    try {
-      if (!include_driveways_ && (driveways = results.find("use")) != results.end() &&
-          static_cast<Use>(std::stoi(driveways->second)) == Use::kDriveway) {
-
-        // only private driveways.
-        Tags::const_iterator priv;
-        if ((priv = results.find("private")) != results.end() && priv->second == "true") {
-          return;
-        }
-      }
-    } catch (const std::invalid_argument& arg) {
-      LOG_INFO("invalid_argument thrown for way id: " + std::to_string(osmid));
-    } catch (const std::out_of_range& oor) {
-      LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid));
-    }
-
     // Check for ways that loop back on themselves (simple check) and add
     // any wayids that have loops to a vector
     if (nodes.size() > 2) {
@@ -344,6 +326,7 @@ public:
     bool has_default_speed = false, has_max_speed = false;
     bool has_average_speed = false, has_advisory_speed = false;
     bool has_surface = true;
+    bool sac_scale = false, mtb = false;
     std::string name;
 
     // Process tags
@@ -353,19 +336,12 @@ public:
     OSMAccess access{wayid};
     bool has_user_tags = false;
 
-    const auto& surface_exists = results.find("surface");
-    bool has_surface_tag = (surface_exists != results.end());
-    if (!has_surface_tag) {
-      has_surface = false;
-    }
-
-    const auto& highway_junction = results.find("highway");
-    bool is_highway_junction =
-        ((highway_junction != results.end()) && (highway_junction->second == "motorway_junction"));
-
     for (const auto& tag : results) {
       if (tag.first == "internal_intersection" && !infer_internal_intersections_) {
         w.set_internal(tag.second == "true" ? true : false);
+        // we want to throw away if include driveways is false and private driveways is true
+      } else if (!include_driveways_ && tag.first == "private_driveway" && tag.second == "true") {
+        return;
       } else if (tag.first == "turn_channel" && !infer_turn_channels_) {
         w.set_turn_channel(tag.second == "true" ? true : false);
       } else if (tag.first == "road_class") {
@@ -868,8 +844,8 @@ public:
         }
       }
 
-      // surface tag should win over tracktype.
-      else if (tag.first == "tracktype" && !has_surface_tag) {
+      // we delete tracktype if there is a surface in the lua so only need to check for tracktype here
+      else if (tag.first == "tracktype") {
 
         has_surface = true;
 
@@ -1013,14 +989,16 @@ public:
         w.set_bwd_jct_base_index(osmdata_.name_offset_map.index(tag.second));
       } else if (tag.first == "guidance_view:jct:overlay:backward") {
         w.set_bwd_jct_overlay_index(osmdata_.name_offset_map.index(tag.second));
+      } else if (tag.first == "sac_scale") {
+        sac_scale = true;
+      } else if (tag.first == "mtb:scale" || tag.first == "mtb:scale:imba" ||
+                 tag.first == "mtb:scale:uphill" || tag.first == "mtb:description") {
+        mtb = true;
       }
     }
     // if no surface and tracktype but we have a sac_scale, set surface to path.
     if (!has_surface) {
-      if (results.find("sac_scale") != results.end() || results.find("mtb:scale") != results.end() ||
-          results.find("mtb:scale:imba") != results.end() ||
-          results.find("mtb:scale:uphill") != results.end() ||
-          results.find("mtb:description") != results.end()) {
+      if (sac_scale || mtb) {
         w.set_surface(Surface::kPath);
       } else {
         // If no surface has been set by a user, assign a surface based on Road Class and Use

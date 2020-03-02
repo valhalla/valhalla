@@ -1464,6 +1464,16 @@ function filter_tags_generic(kv)
   kv["surface"] = kv["surface"]
   kv["wheelchair"] = wheelchair[kv["wheelchair"]]
 
+  --do not store private driveways
+  if (use == 4 and kv["private"] == "true") then
+     kv["private_driveway"] = "true"
+  end
+
+  --delete track_type of there is a surface
+  if kv["surface"] ~= nil then
+     kv["tracktype"] = nil
+  end
+
   --lower the default speed for tracks
   if kv["highway"] == "track" then
      kv["default_speed"] = 5
