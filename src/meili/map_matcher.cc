@@ -6,6 +6,7 @@
 #include "meili/routing.h"
 #include "meili/transition_cost_model.h"
 #include "midgard/distanceapproximator.h"
+#include <array>
 
 namespace {
 
@@ -264,46 +265,35 @@ MatchResult FindMatchResult(const MapMatcher& mapmatcher,
 
     // when the instersection match fails, we do a more labor intensive search at transitions
     // for both prev_edge's ending node and next_edge's starting node and see if we could do a
-    // node snap match
+    // node snap match. We collect the info together and search both prev edge end node and next
+    // edge start node in the below loop
+    std::array<std::tuple<const baldr::DirectedEdge*, baldr::GraphId, float>, 2> transition_infos{
+        {std::tuple<const baldr::DirectedEdge*, baldr::GraphId, float>{prev_de, prev_edge, 0.f},
+         std::tuple<const baldr::DirectedEdge*, baldr::GraphId, float>{next_opp_de, next_edge, 1.f}}};
 
-    if (next_opp_de && edge.id.level() != next_opp_de->endnode().level()) {
-      baldr::GraphId end_node = next_opp_de->endnode();
-      for (const auto& trans : tile->GetNodeTransitions(end_node)) {
-        // we only care about if the nodes are in the same level
-        if (trans.endnode().level() != candidate_node.level()) {
-          continue;
+    for (const auto& trans_info : transition_infos) {
+      const auto* de = std::get<0>(trans_info);
+      auto edge_id = std::get<1>(trans_info);
+      float distance_along = std::get<2>(trans_info);
+
+      if (de && edge.id.level() != de->endnode().level()) {
+        baldr::GraphId end_node = next_opp_de->endnode();
+        for (const auto& trans : tile->GetNodeTransitions(end_node)) {
+          // we only care about if the nodes are in the same level
+          if (trans.endnode().level() != candidate_node.level()) {
+            continue;
+          }
+
+          // bail when nodes are the same level node is not a sibling of the target node
+          end_node = trans.endnode();
+          tile = graph_reader.GetGraphTile(end_node);
+          if (tile == nullptr || end_node != candidate_node) {
+            break;
+          }
+
+          return {edge.projected, std::sqrt(edge.distance), edge_id,
+                  distance_along, measurement.epoch_time(), stateid};
         }
-
-        // bail when nodes are the same level node is not a sibling of the target node
-        end_node = trans.endnode();
-        tile = graph_reader.GetGraphTile(end_node);
-        if (tile == nullptr || end_node != candidate_node) {
-          break;
-        }
-
-        return {edge.projected, std::sqrt(edge.distance), next_edge, 0.f, measurement.epoch_time(),
-                stateid};
-      }
-    }
-
-    if (prev_de && edge.id.level() != prev_de->endnode().level()) {
-      baldr::GraphId end_node = prev_de->endnode();
-      tile = graph_reader.GetGraphTile(end_node);
-      for (const auto& trans : tile->GetNodeTransitions(end_node)) {
-        // we only care about if the nodes are in the same level
-        if (trans.endnode().level() != candidate_node.level()) {
-          continue;
-        }
-
-        // bail when nodes are the same level node is not a sibling of the target node
-        end_node = trans.endnode();
-        tile = graph_reader.GetGraphTile(end_node);
-        if (tile == nullptr || end_node != candidate_node) {
-          break;
-        }
-
-        return {edge.projected, std::sqrt(edge.distance), prev_edge, 1.f, measurement.epoch_time(),
-                stateid};
       }
     }
   }
