@@ -19,6 +19,7 @@
 #include <iostream>
 #include <locale>
 #include <string>
+#include <thread>
 #include <vector>
 
 using namespace valhalla::midgard;
@@ -44,11 +45,13 @@ std::string MakeSingleTileUrl(const std::string& tile_url, const valhalla::baldr
          tile_url.substr(id_pos + std::strlen(valhalla::baldr::GraphTile::kTilePathPattern));
 }
 
+// the point of this function is to avoid race conditions for writing a tile between threads
+// so the easiest thing to do is just use the thread id to differentiate
 std::string GenerateTmpSuffix() {
-  // TODO: use /dev/random or similar on windows
-  auto now = std::chrono::high_resolution_clock::now();
-  auto time = now.time_since_epoch().count();
-  return ".tmp_" + std::to_string(time);
+  std::stringstream ss;
+  ss << ".tmp_" << std::this_thread::get_id() << "_"
+     << std::chrono::high_resolution_clock::now().time_since_epoch().count();
+  return ss.str();
 }
 } // namespace
 
