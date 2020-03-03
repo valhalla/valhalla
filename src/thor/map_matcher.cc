@@ -115,17 +115,9 @@ MapMatcher::interpolate_matches(const std::vector<meili::MatchResult>& matches,
   return interpolations;
 }
 
-// Form the path from the map-matching results. This path gets sent to
-// TripLegBuilder.
-std::vector<PathInfo>
-MapMatcher::FormPath(meili::MapMatcher* matcher,
-                     const std::vector<meili::MatchResult>& results,
-                     const std::vector<meili::EdgeSegment>& edge_segments,
-                     const std::shared_ptr<sif::DynamicCost>* mode_costing,
-                     const sif::TravelMode mode,
-                     std::vector<std::pair<GraphId, GraphId>>& disconnected_edges,
-                     Options& options) {
-
+uint32_t MapMatcher::compute_origin_epoch(const std::vector<meili::EdgeSegment>& edge_segments,
+                                          meili::MapMatcher* matcher,
+                                          valhalla::Options& options) {
   const GraphTile* tile = nullptr;
   const DirectedEdge* directededge = nullptr;
   const NodeInfo* nodeinfo = nullptr;
@@ -157,6 +149,28 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
       break;
     }
   }
+
+  return origin_epoch;
+}
+
+// Form the path from the map-matching results. This path gets sent to
+// TripLegBuilder.
+std::vector<PathInfo>
+MapMatcher::FormPath(meili::MapMatcher* matcher,
+                     const std::vector<meili::MatchResult>& results,
+                     const std::vector<meili::EdgeSegment>& edge_segments,
+                     const std::shared_ptr<sif::DynamicCost>* mode_costing,
+                     const sif::TravelMode mode,
+                     std::vector<std::pair<GraphId, GraphId>>& disconnected_edges,
+                     Options& options) {
+
+  const GraphTile* tile = nullptr;
+  const DirectedEdge* directededge = nullptr;
+  const NodeInfo* nodeinfo = nullptr;
+
+  // We support either the epoch timestamp that came with the trace point or
+  // a local date time which we convert to epoch by finding the first timezone
+  uint32_t origin_epoch = compute_origin_epoch(edge_segments, matcher, options);
 
   // Interpolate match results if using timestamps for elapsed time
   std::vector<std::vector<interpolation_t>> interpolations;
