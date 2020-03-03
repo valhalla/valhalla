@@ -402,7 +402,7 @@ TEST(Search, test_reachability_radius_reachability_high) {
   PointLL ob(b.second.first - .001f, b.second.second - .001f);
 
   LOGLN_WARN("set reachability high to see it gets all edges reachable");
-  search({ob, Location::StopType::BREAK, 10, 10, 0}, 2, 10);
+  search({ob, Location::StopType::BREAK, 10, 10, 0}, 2, 4);
 }
 
 TEST(Search, test_reachability_radius_off_by_one) {

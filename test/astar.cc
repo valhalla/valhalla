@@ -1165,7 +1165,8 @@ void test_backtrack_complex_restriction(int date_time_type) {
           {
             "lat":1.282366,
             "lon":-256.140661,
-            "street":"Sheares Link"
+            "street":"Sheares Link",
+            "minimum_reachability": 0
           },
           {
             "lat":1.282355,
