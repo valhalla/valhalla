@@ -1,7 +1,6 @@
 
 #include "baldr/complexrestriction.h"
 #include "baldr/graphid.h"
-#include "midgard/logging.h"
 #include "mjolnir/complexrestrictionbuilder.h"
 
 #include "test.h"
