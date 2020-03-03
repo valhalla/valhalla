@@ -1454,7 +1454,14 @@ function filter_tags_generic(kv)
   kv["name:en"] = kv["name:en"]
   kv["alt_name"] = kv["alt_name"]
   kv["official_name"] = kv["official_name"]
-  kv["max_speed"] = normalize_speed(kv["maxspeed"])
+
+  if kv["maxspeed"] == "none" then
+    --- special case unlimited speed limit (german autobahn)
+    kv["max_speed"] = "unlimited"
+  else
+    kv["max_speed"] = normalize_speed(kv["maxspeed"])
+  end
+
   kv["advisory_speed"] = normalize_speed(kv["maxspeed:advisory"])
   kv["average_speed"] = normalize_speed(kv["maxspeed:practical"])
   kv["backward_speed"] = normalize_speed(kv["maxspeed:backward"])

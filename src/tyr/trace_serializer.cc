@@ -1,5 +1,6 @@
 #include <cstdint>
 
+#include "baldr/graphconstants.h"
 #include "baldr/json.h"
 #include "odin/enhancedtrippath.h"
 #include "thor/attributes_controller.h"
@@ -70,8 +71,12 @@ json::ArrayPtr serialize_edges(const AttributesController& controller,
                           static_cast<uint64_t>(std::round(edge.truck_speed() * scale)));
       }
       if (edge.has_speed_limit() && (edge.speed_limit() > 0)) {
-        edge_map->emplace("speed_limit",
-                          static_cast<uint64_t>(std::round(edge.speed_limit() * scale)));
+        if (edge.speed_limit() == kUnlimitedSpeedLimit) {
+          edge_map->emplace("speed_limit", std::string("unlimited"));
+        } else {
+          edge_map->emplace("speed_limit",
+                            static_cast<uint64_t>(std::round(edge.speed_limit() * scale)));
+        }
       }
       if (edge.has_density()) {
         edge_map->emplace("density", static_cast<uint64_t>(edge.density()));
