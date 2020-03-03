@@ -9,7 +9,7 @@ using namespace valhalla::baldr;
 namespace {
 
 constexpr uint32_t kMaxNodesPerWay = 65535;
-constexpr float kUnlimitedOSMSpeed = 255.0f;
+constexpr uint8_t kUnlimitedOSMSpeed = std::numeric_limits<uint8_t>::max();
 constexpr float kMaxOSMSpeed = 140.0f;
 
 } // namespace

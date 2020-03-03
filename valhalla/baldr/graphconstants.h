@@ -80,7 +80,7 @@ constexpr uint32_t kMaxDensity = 15;
 
 // Unlimited speed limit. In OSM maxspeed=none. Set to max value to signify
 // unlimited.
-constexpr uint32_t kUnlimitedSpeedLimit = 255;
+constexpr uint8_t kUnlimitedSpeedLimit = std::numeric_limits<uint8_t>::max();
 
 // Maximum speed. This impacts the effectiveness of A* for driving routes
 // so it should be set as low as is reasonable. Speeds above this in OSM are
