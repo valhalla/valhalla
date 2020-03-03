@@ -1828,15 +1828,11 @@ function nodes_proc (kv, nokeys)
     kv["bicycle_rental"] = "true"
   end
 
-  local named_jct = kv["named"] ~= nil
-
   if kv["traffic_signals:direction"] == "forward" then
     kv["forward_signal"] = "true"
 
     if kv["public_transport"] == nil and kv["name"] then
        kv["junction"] = "named"
-    else
-       named_jct = false
     end
   end
 
@@ -1845,8 +1841,6 @@ function nodes_proc (kv, nokeys)
 
     if kv["public_transport"] == nil and kv["name"] then
        kv["junction"] = "named"
-    else
-       named_jct = false
     end
   end
 
@@ -1854,14 +1848,9 @@ function nodes_proc (kv, nokeys)
     if kv["highway"] == "traffic_signals" then
        if kv["junction"] ~= "yes" then
           kv["junction"] = "named"
-       else
-          named_jct = false
-       end
     else
        if kv["junction"] == "yes" or kv["reference_point"] == "yes" then
          kv["junction"] = "named"
-       else
-          named_jct = false
        end
     end
   end
@@ -1876,7 +1865,7 @@ function nodes_proc (kv, nokeys)
   end
 
   --do not store name if named_jct == false and highway ~= motorway_junction
-  if (named_jct ~= true and kv["highway"] ~= "motorway_junction") then
+  if (kv["junction"] ~= "named" and kv["highway"] ~= "motorway_junction") then
     kv["name"] = nil
   end
 
