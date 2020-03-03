@@ -673,7 +673,7 @@ std::vector<MatchResults> MapMatcher::OfflineMatch(const std::vector<Measurement
     }
 
     // Construct a result
-    auto segments = ConstructRoute(*this, best_path.cbegin(), best_path.cend());
+    auto segments = ConstructRoute(*this, best_path);
     MatchResults match_results(std::move(best_path), std::move(segments), accumulated_cost);
 
     // We'll keep it if we don't have a duplicate already

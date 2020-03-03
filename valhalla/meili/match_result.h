@@ -41,10 +41,11 @@ struct EdgeSegment {
 
   // TODO make them private
   baldr::GraphId edgeid;
-
-  float source;
-
-  float target;
+  float source{0.f};
+  float target{1.f};
+  int first_match_idx{-1};
+  int last_match_idx{-1};
+  bool discontinuity{false};
 };
 
 struct MatchResults {

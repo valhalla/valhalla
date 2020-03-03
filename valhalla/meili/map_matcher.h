@@ -115,9 +115,8 @@ bool MergeRoute(std::vector<EdgeSegment>& route, const State& source, const Stat
 
 std::vector<EdgeSegment> MergeRoute(const State& source, const State& target);
 
-template <typename match_iterator_t>
-std::vector<EdgeSegment>
-ConstructRoute(const MapMatcher& mapmatcher, match_iterator_t begin, match_iterator_t end);
+std::vector<EdgeSegment> ConstructRoute(const MapMatcher& mapmatcher,
+                                        const std::vector<MatchResult>& match_results);
 
 template <typename segment_iterator_t>
 std::vector<std::vector<midgard::PointLL>> ConstructRouteShapes(baldr::GraphReader& graphreader,
