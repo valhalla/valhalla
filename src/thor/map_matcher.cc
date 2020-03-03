@@ -20,9 +20,8 @@ MapMatcher::interpolate_matches(const std::vector<meili::MatchResult>& matches,
   // positional inaccuracies. for now we should detect when there are backtracks and give up
   // otherwise the the timing reported here might be suspect
   // find each set of continuous edges
-
-  auto total_matches = matches.size();
   std::vector<std::vector<interpolation_t>> interpolations;
+  interpolations.reserve(edges.size());
   size_t idx = 0;
   for (auto begin_edge = edges.cbegin(), end_edge = edges.cbegin() + 1; begin_edge != edges.cend();
        begin_edge = end_edge, end_edge += 1) {
@@ -37,6 +36,7 @@ MapMatcher::interpolate_matches(const std::vector<meili::MatchResult>& matches,
 
     // go through each edge and each match keeping the distance each point is along the entire trace
     std::vector<interpolation_t> interpolated;
+    interpolated.reserve(matches.size());
     size_t last_idx = idx;
     for (auto segment = begin_edge; segment != end_edge; ++segment) {
       float edge_length = matcher->graphreader()
