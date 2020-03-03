@@ -12,23 +12,17 @@ using namespace valhalla::sif;
 namespace valhalla {
 namespace thor {
 
-struct interpolation_t {
-  baldr::GraphId edge;   // edge id
-  float total_distance;  // distance along the path
-  float edge_distance;   // ratio of the distance along the edge
-  size_t original_index; // index into the original measurements
-  double epoch_time;     // seconds from epoch
-};
-
-std::list<std::vector<interpolation_t>>
-interpolate_matches(const std::vector<meili::MatchResult>& matches,
-                    const std::vector<meili::EdgeSegment>& edges,
-                    meili::MapMatcher* matcher) {
+std::vector<std::vector<MapMatcher::interpolation_t>>
+MapMatcher::interpolate_matches(const std::vector<meili::MatchResult>& matches,
+                                const std::vector<meili::EdgeSegment>& edges,
+                                meili::MapMatcher* matcher) {
   // TODO: backtracking could have happened. maybe it really happened but maybe there were
   // positional inaccuracies. for now we should detect when there are backtracks and give up
   // otherwise the the timing reported here might be suspect
   // find each set of continuous edges
-  std::list<std::vector<interpolation_t>> interpolations;
+
+  auto total_matches = matches.size();
+  std::vector<std::vector<interpolation_t>> interpolations;
   size_t idx = 0;
   for (auto begin_edge = edges.cbegin(), end_edge = edges.cbegin() + 1; begin_edge != edges.cend();
        begin_edge = end_edge, end_edge += 1) {
@@ -165,7 +159,7 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
   }
 
   // Interpolate match results if using timestamps for elapsed time
-  std::list<std::vector<interpolation_t>> interpolations;
+  std::vector<std::vector<interpolation_t>> interpolations;
 
   size_t last_interp_index = 0;
   bool use_timestamps = options.use_timestamps();

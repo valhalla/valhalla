@@ -30,6 +30,24 @@ public:
            const sif::TravelMode mode,
            std::vector<std::pair<baldr::GraphId, baldr::GraphId>>& disconnected_edges,
            Options& options);
+
+private:
+  struct interpolation_t {
+    baldr::GraphId edge;   // edge id
+    float total_distance;  // distance along the path
+    float edge_distance;   // ratio of the distance along the edge
+    size_t original_index; // index into the original measurements
+    double epoch_time;     // seconds from epoch
+  };
+
+  static uint32_t compute_origin_epoch(const std::vector<meili::EdgeSegment>& edge_segments,
+                                       meili::MapMatcher* matcher,
+                                       Options& options);
+
+  static std::vector<std::vector<interpolation_t>>
+  interpolate_matches(const std::vector<meili::MatchResult>& matches,
+                      const std::vector<meili::EdgeSegment>& edges,
+                      meili::MapMatcher* matcher);
 };
 
 } // namespace thor
