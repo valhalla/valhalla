@@ -32,24 +32,23 @@ size_t work() {
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
     LOG_TRACE(s.str());
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    valhalla::midgard::logging::Log(s.str(), " [CUSTOM] ");
+    valhalla::midgard::logging::Log("CUSTOM", s.str());
   }
   return 10;
 }
 
 TEST(Logging, FileLoggerTest) {
+  const char* path = "test/thread_file_log_test.log";
   // get rid of it first so we don't append
-  std::remove("test/thread_file_log_test.log");
+  std::remove(path);
 
   // configure bogusly
-  EXPECT_THROW(logging::Configure({{"type", "file"},
-                                   {"file_name", "test/thread_file_log_test.log"},
-                                   {"reopen_interval", "opi-903"}}),
+  EXPECT_THROW(logging::Configure(
+                   {{"type", "file"}, {"file_name", "invalid_test/thread_file_log_test.log"}}),
                std::exception);
 
   // configure properly
-  logging::Configure(
-      {{"type", "file"}, {"file_name", "test/thread_file_log_test.log"}, {"reopen_interval", "1"}});
+  logging::Configure({{"type", "file"}, {"file_name", path}});
 
   // start up some threads
   std::vector<std::future<size_t>> results;
@@ -65,12 +64,11 @@ TEST(Logging, FileLoggerTest) {
     } catch (std::exception& e) { exit_code++; }
   }
 
-  // wait for logger to close and reopen the file
   LOG_TRACE("force log close/reopen");
-  std::this_thread::sleep_for(std::chrono::milliseconds(1010));
+  logging::GetLogger().reset();
 
   // open up the file and make sure it looks right
-  std::ifstream file("test/thread_file_log_test.log");
+  std::ifstream file(path);
 
   std::string line;
   size_t error = 0, warn = 0, info = 0, debug = 0, trace = 0, custom = 0;
