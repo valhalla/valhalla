@@ -164,10 +164,6 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
                      std::vector<std::pair<GraphId, GraphId>>& disconnected_edges,
                      Options& options) {
 
-  const GraphTile* tile = nullptr;
-  const DirectedEdge* directededge = nullptr;
-  const NodeInfo* nodeinfo = nullptr;
-
   // We support either the epoch timestamp that came with the trace point or
   // a local date time which we convert to epoch by finding the first timezone
   uint32_t origin_epoch = compute_origin_epoch(edge_segments, matcher, options);
@@ -194,35 +190,24 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
   std::vector<PathInfo> path;
   GraphId prior_edge, prior_node;
   EdgeLabel pred;
-  auto prev_segment_target = std::numeric_limits<float>::max();
+  const meili::EdgeSegment* prev_segment = nullptr;
+  const GraphTile* tile = nullptr;
+  const DirectedEdge* directededge = nullptr;
+  const NodeInfo* nodeinfo = nullptr;
 
   // Build the path
   size_t interpolated_index = 0;
   for (const auto& edge_segment : edge_segments) {
-    // Skip edges that are the same as the prior edge if they are not disconnected,
-    // Note that, when the prior edge and current edge has the same edgeid and the current
-    // source is smaller than prior target, it indicates discontinuity. see follow:
-    //
-    //                   current_source
-    //    prior_source           |    prior_target
-    //          |                |         |
-    //  X---------------------------------------------X
-    //                      Edge
-    if (edge_segment.edgeid == prior_edge && prev_segment_target <= edge_segment.source) {
-      continue;
-    }
-
     // Get the directed edge
     GraphId edge_id = edge_segment.edgeid;
     matcher->graphreader().GetGraphTile(edge_id, tile);
     directededge = tile->directededge(edge_id);
 
     // Check if connected to prior edge
-    bool disconnected = false;
-    if (prior_edge.Is_Valid() &&
-        !matcher->graphreader().AreEdgesConnectedForward(prior_edge, edge_id)) {
+    bool disconnected =
+        prev_segment != nullptr && prev_segment->edgeid.Is_Valid() && prev_segment->discontinuity;
+    if (disconnected) {
       disconnected_edges.emplace_back(prior_edge, edge_id);
-      disconnected = true;
     }
 
     // Get seconds from beginning of the week accounting for any changes to timezone on the path
@@ -262,7 +247,7 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
     }
 
     // Update the prior_edge and nodeinfo. TODO (protect against invalid tile)
-    prev_segment_target = edge_segment.target;
+    prev_segment = &edge_segment;
     prior_edge = edge_id;
     prior_node = directededge->endnode();
     const GraphTile* end_tile = matcher->graphreader().GetGraphTile(prior_node);

@@ -244,8 +244,8 @@ std::vector<EdgeSegment> ConstructRoute(const MapMatcher& mapmatcher,
       // then reverse merge the segments together which are on the same edge so we have a
       // minimum number of segments. in this case we could at minimum end up with 1 segment
       std::vector<EdgeSegment> segments;
-      if (!MergeRoute(segments, prev_state, state) && !segments.empty()) {
-        segments.back().discontinuity = true;
+      if (!MergeRoute(segments, prev_state, state) && !route.empty()) {
+        route.back().discontinuity = true;
       }
 
       if (!segments.empty()) {
