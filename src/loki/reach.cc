@@ -57,8 +57,14 @@ directed_reach Reach::operator()(const DirectedEdge* edge,
     transitions_ += node->transition_count();
   };
 
+  // TODO: here we stay extra conservative by avoiding starting on a simple restriction because we
+  // TODO: dont have predecessor information in the simple reach expansion so we bail 1 edge earlier
+  // NOTE: we can expand from the end of a complex restriction because it cant possibly be on our path
+  // and we can expand from the start of a complex restriction because only the end would mark a
+  // potential stopping point (maybe a path followed the restriction)
+
   // seed the expansion with a place to start expanding from
-  if (edge_filter(edge) > 0 && !edge->start_restriction() && !edge->restrictions())
+  if (edge_filter(edge) > 0 && !edge->restrictions())
     enqueue(edge->endnode());
 
   // get outbound reach by doing a simple forward expansion until you either hit the max_reach
@@ -74,7 +80,10 @@ directed_reach Reach::operator()(const DirectedEdge* edge,
       continue;
     for (const auto& edge : tile->GetDirectedEdges(node_id)) {
       // TODO: we'd rather say !edge.end_simple_restriction() and not !edge.restrictions()
-      // TODO: but we'd need the predecessor information to do that so we punt 1 edge early
+      // TODO: but we'd need the predecessor information to do that so we punt 1 edge earlier
+      // NOTE: we can go through the start of the restriction because only the end would mark a
+      // potential stopping point (maybe a path followed the restriction)
+
       // if this edge is traversable we enqueue its end node
       if (edge_filter(&edge) > 0 && !edge.end_restriction() && !edge.restrictions())
         enqueue(edge.endnode());
@@ -96,9 +105,13 @@ directed_reach Reach::operator()(const DirectedEdge* edge,
     return opp_edge->endnode();
   };
 
+  // NOTE: we can expand from the start of a complex or regular restriction because it cant possibly
+  // be on our path and we can expand from the end of a complex restriction because only the start
+  // would mark a potential stopping point (maybe a path followed the restriction)
+
   // seed the expansion with a place to start expanding from
   Clear();
-  if (edge_filter(edge) > 0 && !edge->end_restriction())
+  if (edge_filter(edge) > 0)
     enqueue(begin_node(edge));
 
   // get inbound reach by doing a simple reverse expansion until you either hit the max_reach
@@ -118,6 +131,11 @@ directed_reach Reach::operator()(const DirectedEdge* edge,
         continue;
       const auto* node = tile->node(edge.endnode());
       const auto* opp_edge = tile->directededge(node->edge_index() + edge.opp_index());
+
+      // NOTE: we can go through the end of the restriction because only the start would mark a
+      // potential stopping point (maybe a path followed the restriction). We also have to stop
+      // at the start of a simple restriction because it could have been on our path
+
       // if this opposing edge is traversable we enqueue its begin node
       if (edge_filter(opp_edge) > 0 && !opp_edge->start_restriction() && !opp_edge->restrictions())
         enqueue(edge.endnode());
