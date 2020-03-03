@@ -211,12 +211,11 @@ struct bin_handler_t {
   bin_handler_t(const std::vector<valhalla::baldr::Location>& locations,
                 valhalla::baldr::GraphReader& reader,
                 const std::shared_ptr<DynamicCost>& costing)
-      : reader(reader), costing(costing),
-        edge_filter(costing ? costing->GetEdgeFilter() : PassThroughEdgeFilter),
-        node_filter(costing ? costing->GetNodeFilter() : PassThroughNodeFilter) {
+      : reader(reader), costing(costing), edge_filter(costing->GetEdgeFilter()),
+        node_filter(costing->GetNodeFilter()) {
     // get the unique set of input locations and the max reachability of them all
     std::unordered_set<Location> uniq_locations(locations.begin(), locations.end());
-    pps.reserve(locations.size());
+    pps.reserve(uniq_locations.size());
     max_reach_limit = 0;
     for (const auto& loc : uniq_locations) {
       pps.emplace_back(loc, reader);
@@ -288,7 +287,7 @@ struct bin_handler_t {
         }
         const auto* other_edge = other_tile->directededge(other_id);
         if (edge_filter(other_edge) != 0.0f) {
-          auto reach = get_reach(id, other_edge);
+          auto reach = get_reach(other_id, other_edge);
           PathLocation::PathEdge path_edge{std::move(other_id),
                                            1.f,
                                            node_ll,
@@ -327,9 +326,8 @@ struct bin_handler_t {
     // get the distance between the result
     auto distance = candidate.point.Distance(location.latlng_);
     // the search cutoff is a hard filter so skip any outside of that
-    if (distance > location.search_cutoff_) {
+    if (distance > location.search_cutoff_)
       return;
-    }
     // now that we have an edge we can pass back all the info about it
     if (candidate.edge != nullptr) {
       // we need the ratio in the direction of the edge we are correlated to
@@ -720,14 +718,12 @@ Search(const std::vector<valhalla::baldr::Location>& locations,
        GraphReader& reader,
        const std::shared_ptr<DynamicCost>& costing) {
   // we cannot continue without costing
-  if (!costing) {
+  if (!costing)
     throw std::runtime_error("No costing was provided for edge candidate search");
-  }
 
   // trivially finished already
-  if (locations.empty()) {
+  if (locations.empty())
     return std::unordered_map<valhalla::baldr::Location, PathLocation>{};
-  }
 
   // setup the unique list of locations
   bin_handler_t handler(locations, reader, costing);

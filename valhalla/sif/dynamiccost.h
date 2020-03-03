@@ -39,19 +39,11 @@ const sif::Cost kNoCost(0.0f, 0.0f);
  */
 using EdgeFilter = std::function<float(const baldr::DirectedEdge*)>;
 
-inline float PassThroughEdgeFilter(const valhalla::baldr::DirectedEdge* edge) {
-  return !(edge->is_shortcut() || edge->IsTransitLine());
-}
-
 /**
  * A callable element which returns true if a node should be
  * filtered out/ not used and false if the node is usable
  */
 using NodeFilter = std::function<bool(const baldr::NodeInfo*)>;
-
-inline bool PassThroughNodeFilter(const valhalla::baldr::NodeInfo* node) {
-  return false;
-}
 
 // Default unit size (seconds) for cost sorting.
 constexpr uint32_t kDefaultUnitSize = 1;
