@@ -445,12 +445,17 @@ struct bin_handler_t {
         continue;
       }
 
-      // no thanks on this one or its evil twin
+      // if this edge is filtered
       const auto* edge = tile->directededge(edge_id);
-      if (edge_filter(edge) == 0.0f &&
-          (!(edge_id = reader.GetOpposingEdgeId(edge_id, tile)).Is_Valid() ||
-           edge_filter(edge = tile->directededge(edge_id)) == 0.0f)) {
-        continue;
+      if (edge_filter(edge) == 0.0f) {
+        // then we try its opposing edge
+        edge_id = reader.GetOpposingEdgeId(edge_id, tile);
+        // but if we couldnt get it or its filtered too then we move on
+        if (!edge_id.Is_Valid())
+          continue;
+        edge = tile->directededge(edge_id);
+        if (edge_filter(edge) == 0.0f)
+          continue;
       }
 
       // reset these so we know the best point along the edge

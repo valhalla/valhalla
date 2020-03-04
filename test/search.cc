@@ -167,23 +167,8 @@ void make_tile() {
     boost::property_tree::ptree conf;
     conf.put("tile_dir", tile_dir);
     valhalla::baldr::GraphReader reader(conf);
-
     auto tile = reader.GetGraphTile(tile_id);
-    int edges = 0;
-    std::cout << "Edges in tile " << std::endl;
-    for (int i = 0; i < tile->header()->directededgecount(); ++i) {
-      // std::cout << edge_id.id() << ", ";
-      auto edge = tile->directededge(i);
-      auto node = reader.GetEndNode(edge, tile);
-      auto edge_info = tile->edgeinfo(edge->edgeinfo_offset());
-      // std::cout << edge_info.shape()<< " ";
-      for (auto& name : edge_info.GetNames()) {
-        std::cout << name << " ";
-      }
-      ++edges;
-    }
-    std::cout << "\nfound " << edges << std::endl;
-    ASSERT_EQ(edges, 10);
+    ASSERT_EQ(tile->header()->directededgecount(), 10);
   }
 }
 

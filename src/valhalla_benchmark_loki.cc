@@ -134,7 +134,7 @@ int ParseArguments(int argc, char* argv[]) {
 
   if (vm.count("version")) {
     std::cout << "loki_benchmark " << VALHALLA_VERSION << "\n";
-    return 0;
+    return -1;
   }
 
   // argument checking and verification
