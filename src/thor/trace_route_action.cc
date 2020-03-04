@@ -179,8 +179,14 @@ thor_worker_t::map_match(Api& request) {
 
     // Form the path edges based on the matched points and populate disconnected edges
     std::vector<std::pair<GraphId, GraphId>> disconnected_edges;
-    auto path_edges = MapMatcher::FormPath(matcher.get(), match_results, edge_segments, mode_costing,
-                                           mode, disconnected_edges, options);
+    auto pathes = MapMatcher::FormPath(matcher.get(), match_results, edge_segments, mode_costing,
+                                       mode, disconnected_edges, options);
+
+    std::vector<PathInfo> path_edges;
+    path_edges.reserve(edge_segments.size());
+    for (const auto& path : pathes)
+      for (const auto& edge_pair : path)
+        path_edges.push_back(edge_pair.first);
 
     // If we want a route but there actually isnt a path, we cant give you one
     if (path_edges.empty()) {
