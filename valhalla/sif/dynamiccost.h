@@ -39,19 +39,11 @@ const sif::Cost kNoCost(0.0f, 0.0f);
  */
 using EdgeFilter = std::function<float(const baldr::DirectedEdge*)>;
 
-inline float PassThroughEdgeFilter(const valhalla::baldr::DirectedEdge* edge) {
-  return !(edge->is_shortcut() || edge->IsTransitLine());
-}
-
 /**
  * A callable element which returns true if a node should be
  * filtered out/ not used and false if the node is usable
  */
 using NodeFilter = std::function<bool(const baldr::NodeInfo*)>;
-
-inline bool PassThroughNodeFilter(const valhalla::baldr::NodeInfo* node) {
-  return false;
-}
 
 // Default unit size (seconds) for cost sorting.
 constexpr uint32_t kDefaultUnitSize = 1;
@@ -272,6 +264,8 @@ public:
    * @param  edge  Directed edge.
    * @param  pred        Predecessor information.
    * @param  edge_labels List of edge labels.
+   * @param  edge_labels List of edge labels in other direction
+   *                     (e.g. bidirectional when connecting the two trees).
    * @param  tile        Graph tile (to read restriction if needed).
    * @param  edgeid      Edge Id for the directed edge.
    * @param  forward     Forward search or reverse search.

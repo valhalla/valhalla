@@ -746,7 +746,7 @@ void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
     // Add edge label, add to the adjacency list and set edge status
     uint32_t idx = mmedgelabels_.size();
     *es = {EdgeSet::kTemporary, idx};
-    mmedgelabels_.emplace_back(std::move(edge_label));
+    mmedgelabels_.emplace_back(edge_label);
     adjacencylist_->add(idx);
   }
 
@@ -1026,7 +1026,7 @@ void Dijkstras::SetOriginLocationsMultiModal(
       edge_label.set_origin();
 
       // Add EdgeLabel to the adjacency list
-      mmedgelabels_.push_back(std::move(edge_label));
+      mmedgelabels_.push_back(edge_label);
       adjacencylist_->add(idx);
     }
   }
