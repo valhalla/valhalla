@@ -702,7 +702,7 @@ void test_transport_type_parsing(const Costing costing,
   // Create the costing string
   auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
-  const std::string parent_key = costing_str;
+  const std::string& parent_key = costing_str;
 
   Api request =
       get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
@@ -717,7 +717,7 @@ void test_maneuver_penalty_parsing(const Costing costing,
   // Create the costing string
   auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
-  const std::string parent_key = costing_str;
+  const std::string& parent_key = costing_str;
   const std::string key = "maneuver_penalty";
 
   Api request =
@@ -733,7 +733,7 @@ void test_destination_only_penalty_parsing(const Costing costing,
   // Create the costing string
   auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
-  const std::string parent_key = costing_str;
+  const std::string& parent_key = costing_str;
   const std::string key = "destination_only_penalty";
 
   Api request =
@@ -749,7 +749,7 @@ void test_gate_cost_parsing(const Costing costing,
   // Create the costing string
   auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
-  const std::string parent_key = costing_str;
+  const std::string& parent_key = costing_str;
   const std::string key = "gate_cost";
 
   Api request =
@@ -765,7 +765,7 @@ void test_gate_penalty_parsing(const Costing costing,
   // Create the costing string
   auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
-  const std::string parent_key = costing_str;
+  const std::string& parent_key = costing_str;
   const std::string key = "gate_penalty";
 
   Api request =
@@ -781,7 +781,7 @@ void test_toll_booth_cost_parsing(const Costing costing,
   // Create the costing string
   auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
-  const std::string parent_key = costing_str;
+  const std::string& parent_key = costing_str;
   const std::string key = "toll_booth_cost";
 
   Api request =
@@ -797,7 +797,7 @@ void test_toll_booth_penalty_parsing(const Costing costing,
   // Create the costing string
   auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
-  const std::string parent_key = costing_str;
+  const std::string& parent_key = costing_str;
   const std::string key = "toll_booth_penalty";
 
   Api request =
@@ -813,7 +813,7 @@ void test_alley_penalty_parsing(const Costing costing,
   // Create the costing string
   auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
-  const std::string parent_key = costing_str;
+  const std::string& parent_key = costing_str;
   const std::string key = "alley_penalty";
 
   Api request =
@@ -829,7 +829,7 @@ void test_country_crossing_cost_parsing(const Costing costing,
   // Create the costing string
   auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
-  const std::string parent_key = costing_str;
+  const std::string& parent_key = costing_str;
   const std::string key = "country_crossing_cost";
 
   Api request =
@@ -845,7 +845,7 @@ void test_country_crossing_penalty_parsing(const Costing costing,
   // Create the costing string
   auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
-  const std::string parent_key = costing_str;
+  const std::string& parent_key = costing_str;
   const std::string key = "country_crossing_penalty";
 
   Api request =
@@ -861,7 +861,7 @@ void test_ferry_cost_parsing(const Costing costing,
   // Create the costing string
   auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
-  const std::string parent_key = costing_str;
+  const std::string& parent_key = costing_str;
   const std::string key = "ferry_cost";
 
   Api request =
@@ -877,7 +877,7 @@ void test_use_ferry_parsing(const Costing costing,
   // Create the costing string
   auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
-  const std::string parent_key = costing_str;
+  const std::string& parent_key = costing_str;
   const std::string key = "use_ferry";
 
   Api request =
@@ -893,7 +893,7 @@ void test_use_highways_parsing(const Costing costing,
   // Create the costing string
   auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
-  const std::string parent_key = costing_str;
+  const std::string& parent_key = costing_str;
   const std::string key = "use_highways";
 
   Api request =
@@ -909,7 +909,7 @@ void test_use_tolls_parsing(const Costing costing,
   // Create the costing string
   auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
-  const std::string parent_key = costing_str;
+  const std::string& parent_key = costing_str;
   const std::string key = "use_tolls";
 
   Api request =
@@ -925,7 +925,7 @@ void test_use_hills_parsing(const Costing costing,
   // Create the costing string
   auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
-  const std::string parent_key = costing_str;
+  const std::string& parent_key = costing_str;
   const std::string key = "use_hills";
 
   Api request =
@@ -941,7 +941,7 @@ void test_use_primary_parsing(const Costing costing,
   // Create the costing string
   auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
-  const std::string parent_key = costing_str;
+  const std::string& parent_key = costing_str;
   const std::string key = "use_primary";
 
   Api request =
@@ -957,7 +957,7 @@ void test_top_speed_parsing(const Costing costing,
   // Create the costing string
   auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
-  const std::string parent_key = costing_str;
+  const std::string& parent_key = costing_str;
   const std::string key = "top_speed";
 
   Api request =
@@ -973,7 +973,7 @@ void test_use_trails_parsing(const Costing costing,
   // Create the costing string
   auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
-  const std::string parent_key = costing_str;
+  const std::string& parent_key = costing_str;
   const std::string key = "use_trails";
 
   Api request =
@@ -990,7 +990,7 @@ void test_max_distance_parsing(const Costing costing,
   // Create the costing string
   auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
-  const std::string parent_key = costing_str;
+  const std::string& parent_key = costing_str;
   const std::string sibling_key = "type";
   const std::string key = "max_distance";
 
@@ -1009,7 +1009,7 @@ void test_walking_speed_parsing(const Costing costing,
   // Create the costing string
   auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
-  const std::string parent_key = costing_str;
+  const std::string& parent_key = costing_str;
   const std::string sibling_key = "type";
   const std::string key = "walking_speed";
 
@@ -1028,7 +1028,7 @@ void test_cycling_speed_parsing(const Costing costing,
   // Create the costing string
   auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
-  const std::string parent_key = costing_str;
+  const std::string& parent_key = costing_str;
   const std::string sibling_key = "bicycle_type";
   const std::string key = "cycling_speed";
 
@@ -1047,7 +1047,7 @@ void test_step_penalty_parsing(const Costing costing,
   // Create the costing string
   auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
-  const std::string parent_key = costing_str;
+  const std::string& parent_key = costing_str;
   const std::string sibling_key = "type";
   const std::string key = "step_penalty";
 
@@ -1066,7 +1066,7 @@ void test_max_grade_parsing(const Costing costing,
   // Create the costing string
   auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
-  const std::string parent_key = costing_str;
+  const std::string& parent_key = costing_str;
   const std::string sibling_key = "type";
   const std::string key = "max_grade";
 
@@ -1084,7 +1084,7 @@ void test_max_hiking_difficulty_parsing(const Costing costing,
   // Create the costing string
   auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
-  const std::string parent_key = costing_str;
+  const std::string& parent_key = costing_str;
   const std::string key = "max_hiking_difficulty";
 
   Api request =
@@ -1100,7 +1100,7 @@ void test_mode_factor_parsing(const Costing costing,
   // Create the costing string
   auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
-  const std::string parent_key = costing_str;
+  const std::string& parent_key = costing_str;
   const std::string key = "mode_factor";
 
   Api request =
@@ -1116,7 +1116,7 @@ void test_walkway_factor_parsing(const Costing costing,
   // Create the costing string
   auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
-  const std::string parent_key = costing_str;
+  const std::string& parent_key = costing_str;
   const std::string key = "walkway_factor";
 
   Api request =
@@ -1132,7 +1132,7 @@ void test_sidewalk_factor_parsing(const Costing costing,
   // Create the costing string
   auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
-  const std::string parent_key = costing_str;
+  const std::string& parent_key = costing_str;
   const std::string key = "sidewalk_factor";
 
   Api request =
@@ -1148,7 +1148,7 @@ void test_alley_factor_parsing(const Costing costing,
   // Create the costing string
   auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
-  const std::string parent_key = costing_str;
+  const std::string& parent_key = costing_str;
   const std::string key = "alley_factor";
 
   Api request =
@@ -1164,7 +1164,7 @@ void test_driveway_factor_parsing(const Costing costing,
   // Create the costing string
   auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
-  const std::string parent_key = costing_str;
+  const std::string& parent_key = costing_str;
   const std::string key = "driveway_factor";
 
   Api request =
@@ -1180,7 +1180,7 @@ void test_use_roads_parsing(const Costing costing,
   // Create the costing string
   auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
-  const std::string parent_key = costing_str;
+  const std::string& parent_key = costing_str;
   const std::string key = "use_roads";
 
   Api request =
@@ -1196,7 +1196,7 @@ void test_avoid_bad_surfaces_parsing(const Costing costing,
   // Create the costing string
   auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
-  const std::string parent_key = costing_str;
+  const std::string& parent_key = costing_str;
   const std::string key = "avoid_bad_surfaces";
 
   Api request =
@@ -1212,7 +1212,7 @@ void test_transit_start_end_max_distance_parsing(const Costing costing,
   // Create the costing string
   auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
-  const std::string parent_key = costing_str;
+  const std::string& parent_key = costing_str;
   const std::string key = "transit_start_end_max_distance";
 
   Api request =
@@ -1230,7 +1230,7 @@ void test_transit_transfer_max_distance_parsing(const Costing costing,
   // Create the costing string
   auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
-  const std::string parent_key = costing_str;
+  const std::string& parent_key = costing_str;
   const std::string key = "transit_transfer_max_distance";
 
   Api request =
@@ -1248,7 +1248,7 @@ void test_low_class_penalty_parsing(const Costing costing,
   // Create the costing string
   auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
-  const std::string parent_key = costing_str;
+  const std::string& parent_key = costing_str;
   const std::string key = "low_class_penalty";
 
   Api request =
@@ -1264,7 +1264,7 @@ void test_weight_parsing(const Costing costing,
   // Create the costing string
   auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
-  const std::string parent_key = costing_str;
+  const std::string& parent_key = costing_str;
   const std::string key = "weight";
 
   Api request =
@@ -1280,7 +1280,7 @@ void test_axle_load_parsing(const Costing costing,
   // Create the costing string
   auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
-  const std::string parent_key = costing_str;
+  const std::string& parent_key = costing_str;
   const std::string key = "axle_load";
 
   Api request =
@@ -1296,7 +1296,7 @@ void test_height_parsing(const Costing costing,
   // Create the costing string
   auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
-  const std::string parent_key = costing_str;
+  const std::string& parent_key = costing_str;
   const std::string key = "height";
 
   Api request =
@@ -1312,7 +1312,7 @@ void test_width_parsing(const Costing costing,
   // Create the costing string
   auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
-  const std::string parent_key = costing_str;
+  const std::string& parent_key = costing_str;
   const std::string key = "width";
 
   Api request =
@@ -1327,7 +1327,7 @@ void test_length_parsing(const Costing costing,
   // Create the costing string
   auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
-  const std::string parent_key = costing_str;
+  const std::string& parent_key = costing_str;
   const std::string key = "length";
 
   Api request =
@@ -1343,7 +1343,7 @@ void test_use_bus_parsing(const Costing costing,
   // Create the costing string
   auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
-  const std::string parent_key = costing_str;
+  const std::string& parent_key = costing_str;
   const std::string key = "use_bus";
 
   Api request =
@@ -1359,7 +1359,7 @@ void test_use_rail_parsing(const Costing costing,
   // Create the costing string
   auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
-  const std::string parent_key = costing_str;
+  const std::string& parent_key = costing_str;
   const std::string key = "use_rail";
 
   Api request =
@@ -1375,7 +1375,7 @@ void test_use_transfers_parsing(const Costing costing,
   // Create the costing string
   auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
-  const std::string parent_key = costing_str;
+  const std::string& parent_key = costing_str;
   const std::string key = "use_transfers";
 
   Api request =
@@ -1391,7 +1391,7 @@ void test_transfer_cost_parsing(const Costing costing,
   // Create the costing string
   auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
-  const std::string parent_key = costing_str;
+  const std::string& parent_key = costing_str;
   const std::string key = "transfer_cost";
 
   Api request =
@@ -1407,7 +1407,7 @@ void test_transfer_penalty_parsing(const Costing costing,
   // Create the costing string
   auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
-  const std::string parent_key = costing_str;
+  const std::string& parent_key = costing_str;
   const std::string key = "transfer_penalty";
 
   Api request =
@@ -1423,7 +1423,7 @@ void test_hazmat_parsing(const Costing costing,
   // Create the costing string
   auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
-  const std::string parent_key = costing_str;
+  const std::string& parent_key = costing_str;
   const std::string key = "hazmat";
 
   Api request =
@@ -1439,7 +1439,7 @@ void test_wheelchair_parsing(const Costing costing,
   // Create the costing string
   auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
-  const std::string parent_key = costing_str;
+  const std::string& parent_key = costing_str;
   const std::string key = "wheelchair";
 
   Api request =
@@ -1455,7 +1455,7 @@ void test_bicycle_parsing(const Costing costing,
   // Create the costing string
   auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
-  const std::string parent_key = costing_str;
+  const std::string& parent_key = costing_str;
   const std::string key = "bicycle";
 
   Api request =

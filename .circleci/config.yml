@@ -150,7 +150,7 @@ jobs:
             && cmake .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_COVERAGE=On -DCPACK_GENERATOR=DEB \
                 -DENABLE_COMPILER_WARNINGS=On -DENABLE_WERROR=Off -DCMAKE_EXPORT_COMPILE_COMMANDS=On
       - run: make -C build -j4
-      - run: scripts/clang-tidy-only-diff.sh
+      - run: scripts/clang-tidy-only-diff.sh 4
       - run: make -C build -j4 tests
       - run: make -C build -j2 check
       - run: make -C build install

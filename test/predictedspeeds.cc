@@ -33,7 +33,7 @@ inline bool within_threshold(const uint32_t v1, const uint32_t v2) {
   return (v2 > v1) ? (v2 - v1) < kSpeedErrorThreshold : (v1 - v2) < kSpeedErrorThreshold;
 }
 
-void try_free_flow_speed(const std::string encoded_str,
+void try_free_flow_speed(const std::string& encoded_str,
                          const uint32_t exp_free_flow,
                          const uint32_t exp_constrained_flow) {
   auto decoded_data = decode64(encoded_str);

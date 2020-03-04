@@ -1024,7 +1024,7 @@ TEST(Astar, test_time_restricted_road_bidirectional) {
   }
 }
 
-Api route_on_timerestricted(std::string& costing_str, int16_t hour) {
+Api route_on_timerestricted(const std::string& costing_str, int16_t hour) {
   // Try routing over "Via Montebello" in Rome which is a time restricted road
   // The restriction is
   //
@@ -1055,7 +1055,7 @@ Api route_on_timerestricted(std::string& costing_str, int16_t hour) {
   return tester.test(request);
 }
 
-void test_route_restricted(std::string costing_str, int16_t hour) {
+void test_route_restricted(const std::string& costing_str, int16_t hour) {
   bool found_route = false;
   try {
     auto response = route_on_timerestricted(costing_str, hour);
@@ -1082,7 +1082,7 @@ TEST(Astar, test_time_restricted_road_denied_on_timedep) {
   }
 }
 
-void test_route_allowed(std::string costing_str, int16_t hour) {
+void test_route_allowed(const std::string& costing_str, int16_t hour) {
   auto response = route_on_timerestricted(costing_str, hour);
   const auto& legs = response.trip().routes(0).legs();
   EXPECT_EQ(legs.size(), 1) << "Should have 1 leg";
@@ -1300,7 +1300,7 @@ TEST(Astar, TestBacktrackComplexRestrictionForwardDetourAfterRestriction) {
   }
 }
 
-Api timed_access_restriction_ny(std::string mode, std::string datetime) {
+Api timed_access_restriction_ny(const std::string& mode, const std::string& datetime) {
   // The restriction is <tag k="bicycle:conditional" v="no @ (Su 08:00-18:00)"/>
   // and <tag k="motor_vehicle:conditional" v="no @ (Su 08:00-18:00)"/>
   auto conf = get_conf("ny_ar_tiles");
@@ -1367,7 +1367,7 @@ TEST(Astar, test_timed_access_restriction_2) {
       << "This route should turn L onto Delancey St. because of restriction. ";
 }
 
-Api timed_conditional_restriction_pa(std::string mode, std::string datetime) {
+Api timed_conditional_restriction_pa(const std::string& mode, const std::string& datetime) {
   // The restriction is <tag k="restriction:conditional" v="no_right_turn @ (Mo-Fr 07:00-09:00)"/>
   auto conf = get_conf("pa_ar_tiles");
   route_tester tester(conf);
@@ -1387,7 +1387,7 @@ Api timed_conditional_restriction_pa(std::string mode, std::string datetime) {
   return tester.test(request);
 }
 
-Api timed_conditional_restriction_nh(std::string mode, std::string datetime) {
+Api timed_conditional_restriction_nh(const std::string& mode, const std::string& datetime) {
   // The restriction is <tag k="hgv:conditional" v="no @ (19:00-06:00)"/>
   auto conf = get_conf("nh_ar_tiles");
   route_tester tester(conf);
