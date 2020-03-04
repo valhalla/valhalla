@@ -86,6 +86,16 @@ protected:
                                  const baldr::GraphId& in_edge,
                                  float offset,
                                  const baldr::GraphId& out_edge);
+
+  void
+  serilize_pathes(const std::vector<PathInfo>& path_edges,
+                  const std::vector<meili::MatchResult>& match_results,
+                  const std::vector<std::pair<baldr::GraphId, baldr::GraphId>>& disconnected_edges,
+                  std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>>&
+                      route_discontinuities,
+                  Options& options,
+                  Api& request);
+
   sif::TravelMode mode;
   std::vector<meili::Measurement> trace;
   sif::CostFactory<sif::DynamicCost> factory;
