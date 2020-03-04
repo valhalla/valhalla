@@ -163,7 +163,7 @@ void search(valhalla::baldr::Location location,
   location = PathLocation::fromPBF(pbf);
 
   const auto results = Search({location}, reader);
-  const auto p = results.at(location);
+  const auto& p = results.at(location);
 
   EXPECT_EQ((p.edges.front().begin_node() || p.edges.front().end_node()), expected_node)
       << p.edges.front().begin_node() << ":" << p.edges.front().end_node()

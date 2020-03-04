@@ -26,7 +26,7 @@ std::vector<std::string> GetTagTokens(const std::string& tag_value, char delim) 
 }
 
 void TryConditionalRestrictions(const std::string& condition,
-                                const std::vector<uint64_t> expected_values) {
+                                const std::vector<uint64_t>& expected_values) {
 
   std::vector<uint64_t> results = get_time_range(condition);
 

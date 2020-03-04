@@ -79,12 +79,12 @@ TEST(Turnlanes, test_static_methods) {
   EXPECT_EQ(val_turn_lanes, "||");
 }
 
-void test_turn_lanes(const std::string filename,
+void test_turn_lanes(const std::string& filename,
                      int expected_routes_size,
                      int expected_legs_size,
                      int expected_maneuvers_size,
                      int maneuver_index,
-                     const std::string expected_turn_lanes) {
+                     const std::string& expected_turn_lanes) {
   // Load pinpoint test
   std::string path_bytes = test::load_binary_file(filename);
 

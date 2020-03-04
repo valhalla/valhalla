@@ -125,7 +125,7 @@ void TryIsoDateTime() {
 
   std::string current_date_time = DateTime::iso_date_time(tz);
   std::string time;
-  std::size_t found = current_date_time.find("T"); // YYYY-MM-DDTHH:MM
+  std::size_t found = current_date_time.find('T'); // YYYY-MM-DDTHH:MM
   if (found != std::string::npos)
     time = current_date_time.substr(found + 1);
 
@@ -135,7 +135,7 @@ void TryIsoDateTime() {
 
   tz = DateTime::get_tz_db().from_index(DateTime::get_tz_db().to_index("America/Chicago"));
   current_date_time = DateTime::iso_date_time(tz);
-  found = current_date_time.find("T"); // YYYY-MM-DDTHH:MM
+  found = current_date_time.find('T'); // YYYY-MM-DDTHH:MM
   if (found != std::string::npos)
     time = current_date_time.substr(found + 1);
 
@@ -145,7 +145,7 @@ void TryIsoDateTime() {
 
   tz = DateTime::get_tz_db().from_index(DateTime::get_tz_db().to_index("Africa/Porto-Novo"));
   current_date_time = DateTime::iso_date_time(tz);
-  found = current_date_time.find("T"); // YYYY-MM-DDTHH:MM
+  found = current_date_time.find('T'); // YYYY-MM-DDTHH:MM
   if (found != std::string::npos)
     time = current_date_time.substr(found + 1);
 
