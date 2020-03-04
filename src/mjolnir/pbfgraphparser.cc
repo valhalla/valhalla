@@ -259,6 +259,13 @@ public:
       }
     }
 
+    // toss driveways if they are not wanted.
+    if (!include_driveways_) {
+      for (const auto& tag : results)
+        if (tag.first == "private_driveway" && tag.second == "true")
+          return;
+    }
+
     // Check for ways that loop back on themselves (simple check) and add
     // any wayids that have loops to a vector
     if (nodes.size() > 2) {
@@ -340,8 +347,6 @@ public:
       if (tag.first == "internal_intersection" && !infer_internal_intersections_) {
         w.set_internal(tag.second == "true" ? true : false);
         // we want to throw away if include driveways is false and private driveways is true
-      } else if (!include_driveways_ && tag.first == "private_driveway" && tag.second == "true") {
-        return;
       } else if (tag.first == "turn_channel" && !infer_turn_channels_) {
         w.set_turn_channel(tag.second == "true" ? true : false);
       } else if (tag.first == "road_class") {
