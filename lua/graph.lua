@@ -1849,8 +1849,7 @@ function nodes_proc (kv, nokeys)
     if kv["highway"] == "traffic_signals" then
        if kv["junction"] ~= "yes" then
           kv["junction"] = "named"
-    else
-       if kv["junction"] == "yes" or kv["reference_point"] == "yes" then
+    elseif kv["junction"] == "yes" or kv["reference_point"] == "yes" then
          kv["junction"] = "named"
        end
     end
