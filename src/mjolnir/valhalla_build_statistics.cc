@@ -511,7 +511,7 @@ void BuildStatistics(const boost::property_tree::ptree& pt) {
 
   // Create a randomized queue of tiles to work from
   std::deque<GraphId> tilequeue;
-  for (auto tier : TileHierarchy::levels()) {
+  for (const auto& tier : TileHierarchy::levels()) {
     auto level = tier.second.level;
     auto tiles = tier.second.tiles;
     for (uint32_t id = 0; id < tiles.TileCount(); id++) {

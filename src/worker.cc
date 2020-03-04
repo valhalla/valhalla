@@ -715,7 +715,7 @@ void from_json(rapidjson::Document& doc, Options& options) {
   for (const auto& costing : {auto_, auto_shorter, bicycle, bus, hov, motor_scooter, multimodal,
                               pedestrian, transit, truck, motorcycle, auto_data_fix, taxi, none_}) {
     // Create the costing string
-    auto costing_str = valhalla::Costing_Enum_Name(costing);
+    const auto& costing_str = valhalla::Costing_Enum_Name(costing);
     // Create the costing options key
     const auto costing_options_key = "/costing_options/" + costing_str;
 

@@ -203,6 +203,8 @@ Note that our CI system checks that code formatting is consistent, and the build
 
 Also note that we run some `clang-tidy` linting over the code as well (see `.clang-tidy` for the list of rules enforced).  You can run `./scripts/clang-tidy-only-diff.sh` over the code before committing to ensure you haven't added any of the common problems we check for (Note: `./scripts/clang-tidy-only-diff.sh` requires the exitence of a `compile_commands.json` database.  You can generate this file by running `cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=On ... && make`.
 
+`scripts/clang-tidy-only-diff.sh` is run in CI and will the build if it detects any issues.
+
 Using the Node.js Bindings
 --------------------------
 

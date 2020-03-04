@@ -67,7 +67,7 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
     throw valhalla_exception_t{124};
   }
 
-  auto costing_str = Costing_Enum_Name(options.costing());
+  const auto& costing_str = Costing_Enum_Name(options.costing());
   if (!options.do_not_track()) {
     valhalla::midgard::logging::Log("costing_type::" + costing_str, " [ANALYTICS] ");
   }

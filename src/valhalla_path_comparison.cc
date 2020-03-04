@@ -81,7 +81,8 @@ void print_edge(GraphReader& reader,
   std::cout << "------------------------\n\n";
 }
 
-void walk_edges(const std::string& shape, GraphReader& reader, cost_ptr_t& cost_ptr) {
+
+void walk_edges(const std::string& shape, GraphReader& reader, cosnt cost_ptr_t& cost_ptr) {
   TravelMode mode = cost_ptr->travel_mode();
   cost_ptr_t mode_costing[10];
   mode_costing[static_cast<uint32_t>(mode)] = cost_ptr;
