@@ -2,6 +2,7 @@
 #define VALHALLA_THOR_MAP_MATCHER_H_
 
 #include <cstdint>
+#include <deque>
 #include <map>
 #include <memory>
 #include <unordered_map>
@@ -30,6 +31,15 @@ public:
            const sif::TravelMode mode,
            std::vector<std::pair<baldr::GraphId, baldr::GraphId>>& disconnected_edges,
            Options& options);
+
+  static std::deque<std::vector<std::pair<PathInfo, const meili::EdgeSegment*>>>
+  FormPathNew(meili::MapMatcher* matcher,
+              const std::vector<meili::MatchResult>& results,
+              const std::vector<meili::EdgeSegment>& edge_segments,
+              const std::shared_ptr<sif::DynamicCost>* mode_costing,
+              const sif::TravelMode mode,
+              std::vector<std::pair<baldr::GraphId, baldr::GraphId>>& disconnected_edges,
+              Options& options);
 
 private:
   struct interpolation_t {
