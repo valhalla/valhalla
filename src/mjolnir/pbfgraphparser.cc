@@ -1003,16 +1003,20 @@ public:
       } else if (tag.first == "guidance_view:jct:overlay:backward") {
         w.set_bwd_jct_overlay_index(osmdata_.name_offset_map.index(tag.second));
       } else if (tag.first == "sac_scale") {
-        ++osmdata_.sac_scale_count;
         sac_scale = true;
       } else if (tag.first == "mtb:scale" || tag.first == "mtb:scale:imba" ||
                  tag.first == "mtb:scale:uphill" || tag.first == "mtb:description") {
-        ++osmdata_.mtb_count;
         mtb = true;
       }
     }
     // if no surface and tracktype but we have a sac_scale, set surface to path.
     if (!has_surface) {
+      if (sac_scale) {
+        ++osmdata_.sac_scale_count;
+      }
+      if (mtb) {
+        ++osmdata_.mtb_count;
+      }
       if (sac_scale || mtb) {
         w.set_surface(Surface::kPath);
       } else {
