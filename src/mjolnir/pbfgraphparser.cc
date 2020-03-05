@@ -264,12 +264,10 @@ public:
       for (const auto& tag : results)
         if (tag.first == "private_driveway") {
           if (tag.second == "true") {
-            ++osmdata_.driveways_included;
+            ++osmdata_.driveways_excluded;
             return;
           } else break;
         }
-    } else {
-      ++osmdata_.driveways_included;
     }
 
     // Check for ways that loop back on themselves (simple check) and add
@@ -1806,7 +1804,7 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt,
   LOG_INFO("Number of reverse way refs = " + std::to_string(osmdata.way_ref_rev.size()));
   LOG_INFO("Unique Node Strings (names, refs, etc.) = " + std::to_string(osmdata.node_names.Size()));
   LOG_INFO("Unique Strings (names, refs, etc.) = " + std::to_string(osmdata.name_offset_map.Size()));
-  LOG_INFO("Number of driveways included = " + std::to_string(osmdata.driveways_included));
+  LOG_INFO("Number of driveways excluded = " + std::to_string(osmdata.driveways_excluded));
 
   // Return OSM data
   return osmdata;
