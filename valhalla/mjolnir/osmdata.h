@@ -99,6 +99,7 @@ struct OSMData {
   size_t node_ref_count;      // Number of node with ref
   size_t node_name_count;     // Number of nodes with names
   size_t node_exit_to_count;  // Number of nodes with exit_to
+  size_t driveways_included;  // Number of driveways included
 
   // Stores simple restrictions. Indexed by the from way Id
   RestrictionsMultiMap restrictions;
