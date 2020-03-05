@@ -222,7 +222,7 @@ void Reach::ExpandingNode(baldr::GraphReader& graphreader,
 thor::ExpansionRecommendation Reach::ShouldExpand(baldr::GraphReader& graphreader,
                                                   const sif::EdgeLabel& pred,
                                                   const thor::InfoRoutingType route_type) {
-  if (done_.size() < max_reach_)
+  if ((done_.size() - transitions_) < max_reach_)
     return thor::ExpansionRecommendation::continue_expansion;
   return thor::ExpansionRecommendation::prune_expansion;
 }
