@@ -62,10 +62,10 @@ if (ENABLE_COMPILER_WARNINGS)
 endif()
 
 function (cxx_add_warning_flags target)
-  target_add_compile_flags_if_supported(${target} PRIVATE -Wall -Wextra)
   target_add_compile_flags_if_supported(${target} PRIVATE
-    -Wcast-qual
-    -Wmissing-field-initializers)
+    -Wall
+    -Wextra
+    -Wcast-qual)
   if (ENABLE_WERROR)
    target_add_compile_flags_if_supported(${target} PRIVATE -Werror)
   endif()
