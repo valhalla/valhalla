@@ -262,9 +262,11 @@ public:
     // toss driveways if they are not wanted.
     if (!include_driveways_) {
       for (const auto& tag : results)
-        if (tag.first == "private_driveway" && tag.second == "true"){
-          ++osmdata_.driveways_included;
-          return;
+        if (tag.first == "private_driveway") {
+          if (tag.second == "true") {
+            ++osmdata_.driveways_included;
+            return;
+          } else break;
         }
     } else {
       ++osmdata_.driveways_included;
