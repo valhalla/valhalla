@@ -283,10 +283,11 @@ TEST(Tiles, test_random_linestring) {
   std::uniform_real_distribution<> distribution(-10, 10);
   for (int i = 0; i < 500; ++i) {
     std::vector<Point2> linestring;
+    linestring.reserve(100);
     for (int j = 0; j < 100; ++j)
       linestring.emplace_back(PointLL(distribution(generator), distribution(generator)));
     auto answer = t.Intersect(linestring);
-    for (auto tile : answer)
+    for (const auto& tile : answer)
       for (auto sub : tile.second)
         ASSERT_LE(sub, 24) << "Non-existant bin!";
   }

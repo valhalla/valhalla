@@ -264,6 +264,8 @@ public:
    * @param  edge  Directed edge.
    * @param  pred        Predecessor information.
    * @param  edge_labels List of edge labels.
+   * @param  edge_labels List of edge labels in other direction
+   *                     (e.g. bidirectional when connecting the two trees).
    * @param  tile        Graph tile (to read restriction if needed).
    * @param  edgeid      Edge Id for the directed edge.
    * @param  forward     Forward search or reverse search.

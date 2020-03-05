@@ -53,7 +53,7 @@ public:
   FormVerbalPostTransitionInstruction(Maneuver& maneuver,
                                       bool include_street_names = false,
                                       uint32_t element_max_count = kVerbalPostElementMaxCount,
-                                      std::string delim = kVerbalDelim) {
+                                      const std::string& delim = kVerbalDelim) {
     return NarrativeBuilder::FormVerbalPostTransitionInstruction(maneuver, include_street_names,
                                                                  element_max_count, delim);
   }
@@ -78,7 +78,7 @@ void PopulateManeuver(Maneuver& maneuver,
                       const std::vector<std::pair<std::string, bool>>& street_names,
                       const std::vector<std::pair<std::string, bool>>& begin_street_names,
                       const std::vector<std::pair<std::string, bool>>& cross_street_names,
-                      std::string instruction,
+                      const std::string& instruction,
                       float distance,
                       uint32_t time,
                       uint32_t turn_degree,
@@ -109,9 +109,9 @@ void PopulateManeuver(Maneuver& maneuver,
                       bool fork = false,
                       bool begin_intersecting_edge_name_consistency = false,
                       bool intersecting_forward_edge = false,
-                      std::string verbal_transition_alert_instruction = "",
-                      std::string verbal_pre_transition_instruction = "",
-                      std::string verbal_post_transition_instruction = "",
+                      const std::string& verbal_transition_alert_instruction = "",
+                      const std::string& verbal_pre_transition_instruction = "",
+                      const std::string& verbal_post_transition_instruction = "",
                       bool tee = false,
                       bool unnamed_walkway = false,
                       bool unnamed_cycleway = false,
@@ -231,10 +231,10 @@ void PopulateTransitInfo(TransitRouteInfo* transit_info,
 // TOOD - remove is_parent_stop
 // TODO - add station_onestop_id and station_name
 TransitPlatformInfo GetTransitPlatformInfo(TransitPlatformInfo_Type type,
-                                           std::string onestop_id,
-                                           std::string name,
-                                           std::string arrival_date_time,
-                                           std::string departure_date_time,
+                                           const std::string& onestop_id,
+                                           const std::string& name,
+                                           const std::string& arrival_date_time,
+                                           const std::string& departure_date_time,
                                            bool is_parent_stop,
                                            bool assumed_schedule,
                                            float lat,
@@ -7572,7 +7572,7 @@ CreateVerbalPostManeuver(const std::vector<std::pair<std::string, bool>>& street
 void TryFormVerbalPostTransitionInstruction(NarrativeBuilderTest& nbt,
                                             Maneuver maneuver,
                                             bool include_street_names,
-                                            std::string expected) {
+                                            const std::string& expected) {
   EXPECT_EQ(nbt.FormVerbalPostTransitionInstruction(maneuver, include_street_names), expected);
 }
 
@@ -7960,7 +7960,7 @@ Maneuver CreateSignManeuver(DirectionsLeg_Maneuver_Type type,
 
 void TryFormRampStraightInstruction(NarrativeBuilderTest& nbt,
                                     Maneuver maneuver,
-                                    std::string expected) {
+                                    const std::string& expected) {
   EXPECT_EQ(nbt.FormRampStraightInstruction(maneuver), expected);
 }
 
@@ -8037,7 +8037,9 @@ TEST(NarrativeBuilder, TestFormRampStraightInstruction) {
                                  "Stay straight to take the Gettysburg Pike ramp.");
 }
 
-void TryFormRampRightInstruction(NarrativeBuilderTest& nbt, Maneuver maneuver, std::string expected) {
+void TryFormRampRightInstruction(NarrativeBuilderTest& nbt,
+                                 Maneuver maneuver,
+                                 const std::string& expected) {
   EXPECT_EQ(nbt.FormRampInstruction(maneuver), expected);
 }
 
@@ -8211,7 +8213,9 @@ TEST(NarrativeBuilder, TestFormRampRightInstruction) {
                               "Take the Gettysburg Pike ramp.");
 }
 
-void TryFormRampLeftInstruction(NarrativeBuilderTest& nbt, Maneuver maneuver, std::string expected) {
+void TryFormRampLeftInstruction(NarrativeBuilderTest& nbt,
+                                Maneuver maneuver,
+                                const std::string& expected) {
   EXPECT_EQ(nbt.FormRampInstruction(maneuver), expected);
 }
 
@@ -8385,7 +8389,9 @@ TEST(NarrativeBuilder, TestFormRampLeftInstruction) {
                              "Take the Gettysburg Pike ramp.");
 }
 
-void TryFormExitRightInstruction(NarrativeBuilderTest& nbt, Maneuver maneuver, std::string expected) {
+void TryFormExitRightInstruction(NarrativeBuilderTest& nbt,
+                                 Maneuver maneuver,
+                                 const std::string& expected) {
   EXPECT_EQ(nbt.FormExitInstruction(maneuver), expected);
 }
 
@@ -8606,7 +8612,9 @@ TEST(NarrativeBuilder, TestFormExitRightInstruction) {
       "Take the Gettysburg Pike exit onto US 15 toward Harrisburg/Gettysburg.");
 }
 
-void TryFormExitLeftInstruction(NarrativeBuilderTest& nbt, Maneuver maneuver, std::string expected) {
+void TryFormExitLeftInstruction(NarrativeBuilderTest& nbt,
+                                Maneuver maneuver,
+                                const std::string& expected) {
   EXPECT_EQ(nbt.FormExitInstruction(maneuver), expected);
 }
 

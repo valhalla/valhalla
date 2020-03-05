@@ -150,7 +150,7 @@ std::string json_escape(const std::string& unescaped) {
   return escaped;
 }
 
-int seed = 521;
+int seed = 527;
 int bound = 81;
 
 std::string make_test_case(PointLL& start, PointLL& end) {
@@ -1088,7 +1088,7 @@ TEST(Mapmatch, test_discontinuity_duration_trimming) {
   std::vector<std::vector<int>> test_ans_num_legs{{1, 2}, {1, 2}, {1, 2}};
   std::vector<std::vector<float>> test_ans_leg_duration{{26.459, 0.97, 0.454},
                                                         {48.6, 0.64, 0.961},
-                                                        {201.178, 2.431, 1.899}};
+                                                        {213.778, 2.431, 1.899}};
 
   tyr::actor_t actor(conf, true);
   for (size_t i = 0; i < test_cases.size(); ++i) {
@@ -1106,6 +1106,35 @@ TEST(Mapmatch, test_discontinuity_duration_trimming) {
         ASSERT_NEAR(duration, test_ans_leg_duration[i][k++], .1)
             << "Expected legs with duration " + std::to_string(test_ans_leg_duration[i][k - 1]) +
                    " but got " + std::to_string(duration);
+      }
+    }
+  }
+}
+
+TEST(Mapmatch, test_transition_matching) {
+  std::vector<std::string> test_cases = {
+      R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
+                {"lat": 52.1003455, "lon": 5.1194303, "type": "break"},
+                {"lat": 52.1003954, "lon": 5.1190220, "type": "break"}]})",
+      R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
+                {"lat": 52.1011859, "lon": 5.1209135, "type": "break"},
+                {"lat": 52.1009284, "lon": 5.1204603, "type": "break"}]})",
+  };
+
+  std::vector<int> test_ans_num_routes{1, 1};
+  std::vector<float> durations{3.4, 5.0};
+  tyr::actor_t actor(conf, true);
+  for (size_t i = 0; i < test_cases.size(); ++i) {
+    auto matched = json_to_pt(actor.trace_route(test_cases[i]));
+    const auto& routes = matched.get_child("matchings");
+    EXPECT_EQ(routes.size(), test_ans_num_routes[i]);
+    for (const auto& route : routes) {
+      const auto& legs = route.second.get_child("legs");
+      for (const auto& leg : legs) {
+        float duration = leg.second.get<float>("duration");
+        ASSERT_NEAR(duration, durations[i], .1) << "Expected legs with duration " +
+                                                       std::to_string(durations[i]) + " but got " +
+                                                       std::to_string(duration);
       }
     }
   }
@@ -1139,10 +1168,10 @@ TEST(Mapmatch, test_loop_matching) {
 
   std::vector<int> test_ans_num_routes{2, 1, 1, 2};
   std::vector<std::vector<int>> test_ans_num_legs{{2, 2}, {2}, {2}, {2, 2}};
-  std::vector<std::vector<float>> test_ans_leg_duration{{4.106, 123.003, 62.23, 86.375},
-                                                        {65.34, 89.01},
-                                                        {33.282, 90.027},
-                                                        {12.911, 104.793, 3.382, 70.655}};
+  std::vector<std::vector<float>> test_ans_leg_duration{{4.106, 67.203, 45.13, 59.375},
+                                                        {48.24, 62.01},
+                                                        {26.082, 74.277},
+                                                        {12.911, 89.043, 3.382, 52.205}};
 
   tyr::actor_t actor(conf, true);
   for (size_t i = 0; i < test_cases.size(); ++i) {
@@ -1232,10 +1261,12 @@ TEST(Mapmatch, test_degenerate_match) {
 
 int main(int argc, char* argv[]) {
   midgard::logging::Configure({{"type", ""}}); // silence logs
-  if (argc > 1)
-    seed = std::stoi(argv[1]);
-  if (argc > 2)
-    bound = std::stoi(argv[2]);
+  if (argc > 1 && std::string(argv[1]).find("gtest") == std::string::npos) {
+    if (argc > 1)
+      seed = std::stoi(argv[1]);
+    if (argc > 2)
+      bound = std::stoi(argv[2]);
+  }
 
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
