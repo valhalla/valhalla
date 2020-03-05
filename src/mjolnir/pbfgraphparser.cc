@@ -266,7 +266,8 @@ public:
           if (tag.second == "true") {
             ++osmdata_.driveways_excluded;
             return;
-          } else break;
+          } else
+            break;
         }
     }
 
@@ -807,6 +808,7 @@ public:
         } else {
           w.set_sac_scale(SacScale::kNone);
         }
+        ++osmdata_.sac_scale_count;
       }
 
       else if (tag.first == "surface") {
@@ -1012,6 +1014,12 @@ public:
     }
     // if no surface and tracktype but we have a sac_scale, set surface to path.
     if (!has_surface) {
+      if (sac_scale) {
+        ++osmdata_.sac_scale_count;
+      }
+      if (mtb) {
+        ++osmdata_.mtb_count;
+      }
       if (sac_scale || mtb) {
         w.set_surface(Surface::kPath);
       } else {
@@ -1811,6 +1819,8 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt,
   LOG_INFO("Unique Node Strings (names, refs, etc.) = " + std::to_string(osmdata.node_names.Size()));
   LOG_INFO("Unique Strings (names, refs, etc.) = " + std::to_string(osmdata.name_offset_map.Size()));
   LOG_INFO("Number of driveways excluded = " + std::to_string(osmdata.driveways_excluded));
+  LOG_INFO("Number of ways with sac_scale = " + std::to_string(osmdata.sac_scale_count));
+  LOG_INFO("Number of ways with mtb = " + std::to_string(osmdata.mtb_count));
 
   // Return OSM data
   return osmdata;
