@@ -266,7 +266,8 @@ public:
           if (tag.second == "true") {
             ++osmdata_.driveways_included;
             return;
-          } else break;
+          } else
+            break;
         }
     } else {
       ++osmdata_.driveways_included;
@@ -804,6 +805,7 @@ public:
         } else {
           w.set_sac_scale(SacScale::kNone);
         }
+        ++osmdata_.sac_scale_count;
       }
 
       else if (tag.first == "surface") {
@@ -1001,9 +1003,11 @@ public:
       } else if (tag.first == "guidance_view:jct:overlay:backward") {
         w.set_bwd_jct_overlay_index(osmdata_.name_offset_map.index(tag.second));
       } else if (tag.first == "sac_scale") {
+        ++osmdata_.sac_scale_count;
         sac_scale = true;
       } else if (tag.first == "mtb:scale" || tag.first == "mtb:scale:imba" ||
                  tag.first == "mtb:scale:uphill" || tag.first == "mtb:description") {
+        ++osmdata_.mtb_count;
         mtb = true;
       }
     }
@@ -1806,7 +1810,9 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt,
   LOG_INFO("Number of reverse way refs = " + std::to_string(osmdata.way_ref_rev.size()));
   LOG_INFO("Unique Node Strings (names, refs, etc.) = " + std::to_string(osmdata.node_names.Size()));
   LOG_INFO("Unique Strings (names, refs, etc.) = " + std::to_string(osmdata.name_offset_map.Size()));
-  LOG_INFO("Number of driveways included = " + std::to_string(osmdata.driveways_included));
+  LOG_INFO("Number of ways with driveways included = " + std::to_string(osmdata.driveways_included));
+  LOG_INFO("Number of ways with sac_scale = " + std::to_string(osmdata.sac_scale_count));
+  LOG_INFO("Number of ways with mtb = " + std::to_string(osmdata.mtb_count));
 
   // Return OSM data
   return osmdata;
