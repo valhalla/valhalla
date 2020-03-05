@@ -73,23 +73,23 @@ private:
 
   const StateContainer& container_;
 
-  const sif::cost_ptr_t* mode_costing_;
+  const sif::cost_ptr_t* mode_costing_{} {};
 
-  const sif::TravelMode travelmode_;
+  const sif::TravelMode travelmode_{} {};
 
-  float beta_;
-  float inv_beta_; // equals to 1.f / beta_
+  float beta_{};
+  float inv_beta_{}; // equals to 1.f / beta_
 
-  float breakage_distance_;
+  float breakage_distance_{};
 
-  float max_route_distance_factor_;
+  float max_route_distance_factor_{};
 
-  float max_route_time_factor_;
+  float max_route_time_factor_{};
 
-  float turn_penalty_factor_;
+  float turn_penalty_factor_{};
 
   // Cost for each degree in [0, 180]
-  float turn_cost_table_[181];
+  float turn_cost_table_[181]{};
 };
 
 } // namespace meili

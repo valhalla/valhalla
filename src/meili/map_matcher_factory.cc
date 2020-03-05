@@ -37,8 +37,7 @@ MapMatcherFactory::MapMatcherFactory(const boost::property_tree::ptree& root,
   cost_factory_.RegisterStandardCostingModels();
 }
 
-MapMatcherFactory::~MapMatcherFactory() {
-}
+MapMatcherFactory::~MapMatcherFactory() = default;
 
 MapMatcher* MapMatcherFactory::Create(const Costing costing, const Options& options) {
   // Merge any customizable options with the config defaults

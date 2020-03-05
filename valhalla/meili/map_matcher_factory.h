@@ -52,17 +52,17 @@ public:
 private:
   typedef sif::cost_ptr_t (*factory_function_t)(const boost::property_tree::ptree&);
 
-  boost::property_tree::ptree config_;
+  boost::property_tree::ptree config_{};
 
   std::shared_ptr<baldr::GraphReader> graphreader_;
 
   valhalla::sif::cost_ptr_t mode_costing_[kModeCostingCount];
 
-  sif::CostFactory<sif::DynamicCost> cost_factory_;
+  sif::CostFactory<sif::DynamicCost> cost_factory_{};
 
   std::shared_ptr<CandidateGridQuery> candidatequery_;
 
-  float max_grid_cache_size_;
+  float max_grid_cache_size_{};
 };
 
 } // namespace meili

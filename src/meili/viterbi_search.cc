@@ -98,7 +98,8 @@ const StateId& StateIdIterator::operator*() const {
 void StateIdIterator::ValidateStateId(const StateId::Time time, const StateId& stateid) {
   if (!stateid.IsValid()) {
     return;
-  } else if (time == kInvalidTime) {
+  }
+  if (time == kInvalidTime) {
     throw std::runtime_error("expect invalid stateid");
   } else if (stateid.time() != time) {
     throw std::runtime_error("time is not matched");
@@ -112,8 +113,7 @@ IViterbiSearch::IViterbiSearch(const IEmissionCostModel& emission_cost_model,
 }
 
 IViterbiSearch::IViterbiSearch()
-    : IViterbiSearch(DefaultEmissionCostModel, DefaultTransitionCostModel) {
-}
+    : IViterbiSearch(DefaultEmissionCostModel, DefaultTransitionCostModel) = default;
 
 IViterbiSearch::~IViterbiSearch() {
   Clear();
@@ -355,8 +355,8 @@ ViterbiSearch::ViterbiSearch(const IEmissionCostModel& emission_cost_model,
     : IViterbiSearch(emission_cost_model, transition_cost_model) {
 }
 
-ViterbiSearch::ViterbiSearch() : ViterbiSearch(DefaultEmissionCostModel, DefaultTransitionCostModel) {
-}
+ViterbiSearch::ViterbiSearch()
+    : ViterbiSearch(DefaultEmissionCostModel, DefaultTransitionCostModel) = default;
 
 ViterbiSearch::~ViterbiSearch() {
   Clear();
@@ -430,18 +430,16 @@ StateId ViterbiSearch::Predecessor(const StateId& stateid) const {
   const auto it = scanned_labels_.find(stateid);
   if (it == scanned_labels_.end()) {
     return {};
-  } else {
-    return (it->second).predecessor();
   }
+  return (it->second).predecessor();
 }
 
 double ViterbiSearch::AccumulatedCost(const StateId& stateid) const {
   const auto it = scanned_labels_.find(stateid);
   if (it == scanned_labels_.end()) {
     return -1.f;
-  } else {
-    return it->second.costsofar();
   }
+  return it->second.costsofar();
 }
 
 void ViterbiSearch::Clear() {
@@ -512,10 +510,9 @@ StateId::Time ViterbiSearch::IterativeSearch(StateId::Time target, bool request_
   if (unreached_states_by_time.size() <= target) {
     if (unreached_states_by_time.empty()) {
       throw std::runtime_error("empty states: add some states at least before searching");
-    } else {
-      throw std::runtime_error("the target time is beyond the maximum allowed time " +
-                               std::to_string(unreached_states_by_time.size() - 1));
     }
+    throw std::runtime_error("the target time is beyond the maximum allowed time " +
+                             std::to_string(unreached_states_by_time.size() - 1));
   }
 
   // Do nothing since the winner at the target time is already known

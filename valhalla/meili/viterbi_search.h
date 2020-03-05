@@ -113,10 +113,10 @@ protected:
   CostSofar(double prev_costsofar, float transition_cost, float emission_cost);
 
   std::vector<std::vector<StateId>> states_by_time;
-  std::vector<StateId> winner_by_time;
+  std::vector<StateId> winner_by_time{} {};
 
 private:
-  std::unordered_set<StateId> added_states_;
+  std::unordered_set<StateId> added_states_{} {};
   IEmissionCostModel emission_cost_model_;
   ITransitionCostModel transition_cost_model_;
   const stateid_iterator path_end_;
@@ -173,8 +173,8 @@ private:
   constexpr static bool IsInvalidCost(double cost);
 
   std::vector<std::vector<StateId>> unreached_states_by_time;
-  std::unordered_map<StateId, StateLabel> scanned_labels_;
-  SPQueue<StateLabel> queue_;
+  std::unordered_map<StateId, StateLabel> scanned_labels_{} {};
+  SPQueue<StateLabel> queue_{} {};
   StateId::Time earliest_time_{0};
 };
 } // namespace meili

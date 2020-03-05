@@ -187,7 +187,8 @@ bool EdgeSegment::Adjoined(baldr::GraphReader& graphreader, const EdgeSegment& o
 }
 
 bool MergeRoute(std::vector<EdgeSegment>& route, const State& source, const State& target) {
-  const auto route_rbegin = source.RouteBegin(target), route_rend = source.RouteEnd();
+  const auto route_rbegin = source.RouteBegin(target);
+  const auto route_rend = source.RouteEnd();
 
   // No route, discontinuity
   if (route_rbegin == route_rend) {
@@ -235,8 +236,8 @@ ConstructRoute(const MapMatcher& mapmatcher, match_iterator_t begin, match_itera
     }
 
     if (prev_match != end) {
-      const auto &prev_state = mapmatcher.state_container().state(prev_match->stateid),
-                 state = mapmatcher.state_container().state(match->stateid);
+      const auto& prev_state = mapmatcher.state_container().state(prev_match->stateid);
+      const auto state = mapmatcher.state_container().state(match->stateid);
 
       // get the route between the two states by walking edge labels backwards
       // then reverse merge the segments together which are on the same edge so we have a

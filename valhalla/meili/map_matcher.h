@@ -87,28 +87,28 @@ private:
   void RemoveRedundancies(const std::vector<StateId>& result);
   // void RemoveRedundancies(const MatchResults& path, std::vector<StateId>& result);
 
-  boost::property_tree::ptree config_;
+  boost::property_tree::ptree config_{};
 
   baldr::GraphReader& graphreader_;
 
   CandidateQuery& candidatequery_;
 
-  const sif::cost_ptr_t* mode_costing_;
+  const sif::cost_ptr_t* mode_costing_{};
 
-  sif::TravelMode travelmode_;
+  sif::TravelMode travelmode_{};
 
   // Interrupt callback. Can be set to interrupt if connection is closed.
   const std::function<void()>* interrupt_;
 
-  ViterbiSearch vs_;
+  ViterbiSearch vs_{};
 
-  TopKSearch ts_;
+  TopKSearch ts_{};
 
-  StateContainer container_;
+  StateContainer container_{};
 
-  EmissionCostModel emission_cost_model_;
+  EmissionCostModel emission_cost_model_{};
 
-  TransitionCostModel transition_cost_model_;
+  TransitionCostModel transition_cost_model_{};
 };
 
 bool MergeRoute(std::vector<EdgeSegment>& route, const State& source, const State& target);

@@ -72,7 +72,7 @@ Interpolation InterpolateMeasurement(const MapMatcher& mapmatcher,
   float minimal_cost = std::numeric_limits<float>::infinity();
 
   // Invalid edgeid indicates that no interpolation found
-  Interpolation best_interp;
+  Interpolation best_interp{};
 
   for (auto segment = begin; segment != end; segment++) {
     const auto directededge = mapmatcher.graphreader().directededge(segment->edgeid, tile);
@@ -194,8 +194,9 @@ MatchResult FindMatchResult(const MapMatcher& mapmatcher,
     throw std::runtime_error("reading stateid at time out of bounds");
   }
 
-  const auto &prev_stateid = 0 < time ? stateids[time - 1] : StateId(), stateid = stateids[time],
-             next_stateid = time + 1 < stateids.size() ? stateids[time + 1] : StateId();
+  const auto& prev_stateid = 0 < time ? stateids[time - 1] : StateId();
+  const auto stateid = stateids[time];
+  const auto next_stateid = time + 1 < stateids.size() ? stateids[time + 1] : StateId();
   const auto& measurement = mapmatcher.state_container().measurement(time);
 
   if (!stateid.IsValid()) {
@@ -208,7 +209,8 @@ MatchResult FindMatchResult(const MapMatcher& mapmatcher,
   if (prev_stateid.IsValid()) {
     const auto& prev_state = mapmatcher.state_container().state(prev_stateid);
     // It must stay on the last edge of the route
-    const auto rbegin = prev_state.RouteBegin(state), rend = prev_state.RouteEnd();
+    const auto rbegin = prev_state.RouteBegin(state);
+    const auto rend = prev_state.RouteEnd();
     if (rbegin != rend && rbegin->edgeid().Is_Valid()) {
       prev_edge = rbegin->edgeid();
     }
@@ -316,7 +318,7 @@ std::vector<MatchResult> FindMatchResults(const MapMatcher& mapmatcher,
 }
 
 struct path_t {
-  path_t(const std::vector<EdgeSegment>& segments) {
+  explicit path_t(const std::vector<EdgeSegment>& segments) {
     edges.reserve(segments.size());
     for (const auto& segment : segments) {
       if (edges.empty() || edges.back() != segment.edgeid) {
@@ -337,9 +339,9 @@ struct path_t {
     }
     return false;
   }
-  std::vector<uint64_t> edges;
-  std::vector<uint64_t>::const_iterator e1;
-  std::vector<uint64_t>::const_iterator e2;
+  std::vector<uint64_t> edges{};
+  std::vector<uint64_t>::const_iterator e1{};
+  std::vector<uint64_t>::const_iterator e2{};
 };
 
 } // namespace
@@ -366,8 +368,7 @@ MapMatcher::MapMatcher(const boost::property_tree::ptree& config,
   vs_.set_transition_cost_model(transition_cost_model_);
 }
 
-MapMatcher::~MapMatcher() {
-}
+MapMatcher::~MapMatcher() = default;
 
 void MapMatcher::Clear() {
   vs_.Clear();

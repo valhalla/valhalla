@@ -29,16 +29,14 @@ float EnlargedEmissionCostModel::calculate_cost(const StateId& stateid,
     // remove the last clone
     if (stateid.time() == evs_.clone_end_time()) {
       return -1.0;
-    } else {
-      return model(original_stateid);
     }
+    return model(original_stateid);
   }
   // remove the first cloned origin
   if (stateid.time() == evs_.clone_start_time() && evs_.GetClone(stateid).IsValid()) {
     return -1.0;
-  } else {
-    return model(stateid);
   }
+  return model(stateid);
 }
 
 float EnlargedTransitionCostModel::operator()(const StateId& lhs, const StateId& rhs) {
@@ -61,16 +59,14 @@ float EnlargedTransitionCostModel::calculate_cost(const StateId& lhs, const Stat
     } else {
       if (evs_.GetClone(rhs).IsValid()) {
         return -1.0;
-      } else {
-        return model(original_lhs, rhs);
       }
+      return model(original_lhs, rhs);
     }
   } else {
     if (original_rhs.IsValid()) {
       return -1.0;
-    } else {
-      return model(lhs, rhs);
     }
+    return model(lhs, rhs);
   }
 }
 

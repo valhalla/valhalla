@@ -19,13 +19,13 @@ ReadMeasurements(istream_t& istream, float default_gps_accuracy, float default_s
     if (line.empty()) {
       if (measurements.empty()) {
         continue;
-      } else {
-        break;
       }
+      break;
     }
 
     // Read coordinates from the input line
-    float lng, lat;
+    float lng;
+    float lat;
     std::stringstream stream(line);
     stream >> lng;
     stream >> lat;
@@ -52,8 +52,8 @@ int main(int argc, char* argv[]) {
   MapMatcherFactory matcher_factory(config);
   auto mapmatcher = matcher_factory.Create(costing);
 
-  const float default_gps_accuracy = mapmatcher->config().get<float>("gps_accuracy"),
-              default_search_radius = mapmatcher->config().get<float>("search_radius");
+  const float default_gps_accuracy = mapmatcher->config().get<float>("gps_accuracy");
+  const float default_search_radius = mapmatcher->config().get<float>("search_radius");
 
   size_t index = 0;
   for (auto measurements = ReadMeasurements(std::cin, default_gps_accuracy, default_search_radius);
