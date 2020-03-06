@@ -1,9 +1,15 @@
-#include "midgard/tiles.h"
-#include "midgard/distanceapproximator.h"
-#include "midgard/polyline2.h"
-#include "midgard/util.h"
+#include <array>
 #include <cmath>
+#include <queue>
 #include <set>
+#include <unordered_set>
+#include <vector>
+
+#include "midgard/distanceapproximator.h"
+#include "midgard/ellipse.h"
+#include "midgard/polyline2.h"
+#include "midgard/tiles.h"
+#include "midgard/util.h"
 
 namespace {
 
@@ -184,10 +190,9 @@ Tiles<coord_t>::Tiles(const coord_t& min_pt,
       subdivision_size_(tilesize_ / nsubdivisions_), nsubdivisions_(subdivisions), wrapx_(wrapx) {
 }
 
-// Get the list of tiles that lie within the specified bounding box.
-// The method finds the center tile and spirals out by finding neighbors
-// and recursively checking if tile is inside and checking/adding
-// neighboring tiles
+// Get the list of tiles that lie within the specified bounding box. Since tiles as well as the
+// bounding box are both aligned to the axes we can simply find tiles by iterating over rows
+// and columns of tiles from the minimum to maximum.
 template <class coord_t> std::vector<int> Tiles<coord_t>::TileList(const AABB2<coord_t>& bbox) const {
   // Check if x range needs to be split
   std::vector<AABB2<coord_t>> bboxes;
@@ -223,6 +228,47 @@ template <class coord_t> std::vector<int> Tiles<coord_t>::TileList(const AABB2<c
     }
   }
   return tilelist;
+}
+
+// Get the list of tiles that lie within the specified bounding box. The method finds the tile
+// at the ellipse center. It successively finds neighbors and checks if they are inside or intersect
+// with the ellipse.
+template <class coord_t>
+std::vector<int32_t> Tiles<coord_t>::TileList(const Ellipse<coord_t>& e) const {
+  // Create a queue of tiles to check, initialize with the tile at the center of the ellipse
+  int32_t tileid = TileId(e.center());
+  std::queue<int32_t> check_queue;
+  check_queue.push(tileid);
+
+  // Record any tiles added to the check_queue
+  std::unordered_set<int32_t> checked_tiles;
+  checked_tiles.insert(tileid);
+
+  // Successively check a tile from the queue - if tile bounds are not outside the ellipse then
+  // add to the tile list and find its neighbors. Add them to the check list if not in the checked
+  // tiles list.
+  std::vector<int32_t> tile_list;
+  while (!check_queue.empty()) {
+    tileid = check_queue.front();
+    check_queue.pop();
+
+    // Test if the tile bounds is not outside the ellipse (if not the ellipse is inside the tile,
+    // the tile is inside the ellipse, or the tile bounds intersects the ellipse).
+    if (e.DoesIntersect(TileBounds(tileid)) != IntersectCase::kOutside) {
+      tile_list.push_back(tileid);
+
+      // Add neighboring tiles that have not already been checked
+      std::array<int32_t, 4> neighbors = {BottomNeighbor(tileid), TopNeighbor(tileid),
+                                          LeftNeighbor(tileid), RightNeighbor(tileid)};
+      for (const auto nb : neighbors) {
+        if (checked_tiles.find(nb) == checked_tiles.end()) {
+          check_queue.push(nb);
+          checked_tiles.insert(nb);
+        }
+      }
+    }
+  }
+  return tile_list;
 }
 
 // Color a "connectivity map" starting with a sparse map of uncolored tiles.
