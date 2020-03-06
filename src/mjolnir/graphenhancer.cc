@@ -1289,9 +1289,10 @@ uint32_t GetStopImpact(uint32_t from,
       stop_impact += 2;
     } else if (abs(static_cast<int>(from_rc) - static_cast<int>(edges[to].classification())) > 1)
       stop_impact++;
+  }
     // add to the stop impact when transitioning from a normal highway to a TC or ramp almost in the
     // reverse direction. most of these will be an illegal maneuver anyhow.
-  } else if (nodeinfo.drive_on_right() && turn_type == Turn::Type::kSharpLeft &&
+ /* } else if (nodeinfo.drive_on_right() && turn_type == Turn::Type::kSharpLeft &&
              (edges[from].use() != Use::kRamp && edges[from].use() != Use::kTurnChannel) &&
              (edges[to].use() == Use::kRamp || edges[to].use() == Use::kTurnChannel)) {
     stop_impact += 2;
@@ -1308,6 +1309,8 @@ uint32_t GetStopImpact(uint32_t from,
   } //else if (nodeinfo.traffic_signal()) {
     //stop_impact += 2;
  // }
+  *
+  */
   // Clamp to kMaxStopImpact
   return (stop_impact <= kMaxStopImpact) ? stop_impact : kMaxStopImpact;
 }
