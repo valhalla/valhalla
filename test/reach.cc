@@ -5,6 +5,7 @@
 #include "loki/reach.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
+#include "sif/autocost.h"
 
 #include <algorithm>
 #include <boost/property_tree/ptree.hpp>
@@ -13,8 +14,19 @@ using namespace valhalla;
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 using namespace valhalla::loki;
+namespace vs = valhalla::sif;
 
 namespace {
+
+std::shared_ptr<vs::DynamicCost> create_costing() {
+  Options options;
+  const rapidjson::Document doc;
+  sif::ParseAutoCostOptions(doc, "/costing_options/auto", options.add_costing_options());
+  sif::ParseAutoShorterCostOptions(doc, "/costing_options/auto_shorter",
+                                   options.add_costing_options());
+  options.add_costing_options();
+  return vs::CreateAutoCost(Costing::auto_, options);
+}
 
 boost::property_tree::ptree get_conf() {
   std::stringstream ss;
@@ -68,9 +80,8 @@ TEST(Reach, check_all_reach) {
   auto conf = get_conf();
   GraphReader reader(conf.get_child("mjolnir"));
 
-  // use basic car filters
-  auto edge_filter = [](const DirectedEdge* e) { return e->forwardaccess() & kAutoAccess; };
-  auto node_filter = [](const NodeInfo* n) { return !(n->access() & kAutoAccess); };
+  auto costing = create_costing();
+  Reach reach_finder;
 
   // look at all the edges
   for (auto tile_id : reader.GetTileSet()) {
@@ -80,7 +91,7 @@ TEST(Reach, check_all_reach) {
          edge_id.id() < tile->header()->directededgecount(); ++edge_id) {
       // use the simple method to find the reach for the edge in both directions
       const auto* edge = tile->directededge(edge_id);
-      auto reach = SimpleReach(edge, 50, reader, edge_filter, node_filter, kInbound | kOutbound);
+      auto reach = reach_finder(edge, edge_id, 50, reader, costing, kInbound | kOutbound);
 
       // shape is nice to have
       auto shape = tile->edgeinfo(edge->edgeinfo_offset()).shape();
@@ -103,13 +114,13 @@ TEST(Reach, check_all_reach) {
 
       // if inbound is 0 and outbound is not then it must be an edge leaving a dead end
       // meaning a begin node that is not accessable
-      EXPECT_FALSE(reach.inbound == 0 && reach.outbound > 0 && !node_filter(begin))
+      EXPECT_FALSE(reach.inbound == 0 && reach.outbound > 0 && !costing->GetNodeFilter()(begin))
           << "Only outbound reach should mean an edge that leaves a dead end: " +
                  std::to_string(edge_id.value) + " " + shape_str;
 
       // if outbound is 0 and inbound is not then it must be an edge entering a dead end
       // meaning an end node that is not accessable
-      EXPECT_FALSE(reach.inbound > 0 && reach.outbound == 0 && !node_filter(end))
+      EXPECT_FALSE(reach.inbound > 0 && reach.outbound == 0 && !costing->GetNodeFilter()(end))
           << "Only inbound reach should mean an edge that enters a dead end: " +
                  std::to_string(edge_id.value) + " " + shape_str;
     }

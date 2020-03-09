@@ -622,10 +622,10 @@ boost::property_tree::ptree get_conf(const char* tiles) {
 }
 
 TEST(Astar, TestTrivialPathNoUturns) {
-  auto conf = get_conf("utrecht_tiles");
-
+  boost::property_tree::ptree conf;
+  conf.put("tile_dir", "test/data/utrecht_tiles");
   // setup and purge
-  vb::GraphReader graph_reader(conf.get_child("mjolnir"));
+  vb::GraphReader graph_reader(conf);
 
   // Locations
   std::vector<valhalla::baldr::Location> locations;
@@ -644,7 +644,7 @@ TEST(Astar, TestTrivialPathNoUturns) {
   auto mode = cost->travel_mode();
   mode_costing[static_cast<uint32_t>(mode)] = cost;
 
-  const auto projections = vk::Search(locations, graph_reader, cost.get());
+  const auto projections = vk::Search(locations, graph_reader, cost);
   std::vector<PathLocation> path_location;
 
   for (const auto& loc : locations) {
@@ -683,6 +683,10 @@ struct route_tester {
     loki_worker.route(request);
     thor_worker.route(request);
     odin_worker.narrate(request);
+    // Cleanup
+    loki_worker.cleanup();
+    thor_worker.cleanup();
+    odin_worker.cleanup();
     return request;
   }
   boost::property_tree::ptree conf;
@@ -1161,7 +1165,8 @@ void test_backtrack_complex_restriction(int date_time_type) {
           {
             "lat":1.282366,
             "lon":-256.140661,
-            "street":"Sheares Link"
+            "street":"Sheares Link",
+            "minimum_reachability": 0
           },
           {
             "lat":1.282355,
@@ -1178,7 +1183,7 @@ void test_backtrack_complex_restriction(int date_time_type) {
       break;
     default:
       throw std::runtime_error("Unhandled case");
-  };
+  }
 
   LOGLN_WARN(request);
   auto response = tester.test(request);

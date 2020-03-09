@@ -13,17 +13,14 @@ void loki_worker_t::init_locate(Api& request) {
   if (request.options().locations_size() < 1)
     throw valhalla_exception_t{120};
 
-  if (request.options().has_costing())
-    parse_costing(request);
-  else
-    costing.reset();
+  parse_costing(request, true);
 }
 
 std::string loki_worker_t::locate(Api& request) {
   // correlate the various locations to the underlying graph
   init_locate(request);
   auto locations = PathLocation::fromPBF(request.options().locations());
-  auto projections = loki::Search(locations, *reader, costing.get());
+  auto projections = loki::Search(locations, *reader, costing);
   return tyr::serializeLocate(request, locations, projections, *reader);
 }
 

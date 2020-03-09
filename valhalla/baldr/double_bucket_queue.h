@@ -28,7 +28,7 @@ using buckets_t = std::vector<bucket_t>;
  * into the overflow bucket and are moved into the low-level buckets as
  * needed. Each bucket stores label indexes into external data.
  */
-class DoubleBucketQueue {
+class DoubleBucketQueue final {
 public:
   /**
    * Constructor given a minimum cost, a range of costs held within the
@@ -75,13 +75,6 @@ public:
 
     // Set the cost function.
     labelcost_ = labelcost;
-  }
-
-  /**
-   * Destructor.
-   */
-  virtual ~DoubleBucketQueue() {
-    clear();
   }
 
   /**
