@@ -92,7 +92,7 @@ Dijkstras::SetTime(google::protobuf::RepeatedPtrField<valhalla::Location>& locat
   // Set the timezone to be the timezone at the end node
   start_tz_index_ = GetTimezone(reader, node_id);
   if (start_tz_index_ == 0)
-    LOG_ERROR("Could not get the timezone at the destination location");
+    LOG_WARN("Could not get the timezone at the destination location");
 
   // Set route start time (seconds from epoch)
   auto start_time = DateTime::seconds_since_epoch(location.date_time(),
@@ -800,7 +800,7 @@ void Dijkstras::ComputeMultiModal(
         mmedgelabels_.size() == 0 ? 0 : GetTimezone(graphreader, mmedgelabels_[0].endnode());
     if (start_tz_index_ == 0) {
       // TODO - should we throw an exception and return an error
-      LOG_ERROR("Could not get the timezone at the origin location");
+      LOG_WARN("Could not get the timezone at the origin location");
     }
     origin_date_time_ = origin_locations.Get(0).date_time();
 

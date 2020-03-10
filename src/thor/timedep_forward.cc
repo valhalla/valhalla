@@ -273,7 +273,7 @@ TimeDepForward::GetBestPath(valhalla::Location& origin,
   origin_tz_index_ = edgelabels_.size() == 0 ? 0 : GetTimezone(graphreader, edgelabels_[0].endnode());
   if (origin_tz_index_ == 0) {
     // TODO - do not throw exception at this time
-    LOG_ERROR("Could not get the timezone at the origin");
+    LOG_WARN("Could not get the timezone at the origin");
   }
 
   // Set route start time (seconds from epoch)
