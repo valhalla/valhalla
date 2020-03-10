@@ -41,6 +41,7 @@
    * ADDED: Added alley factor to autocost.  Factor is defaulted at 1.0f or do not avoid alleys. [#2246](https://github.com/valhalla/valhalla/pull/2246)
    * ADDED: Support unlimited speed limits where maxspeed=none. [#2251](https://github.com/valhalla/valhalla/pull/2251)
    * ADDED: Implement improved Reachability check using base class Dijkstra. [#2243](https://github.com/valhalla/valhalla/pull/2243)
+   * ADDED: Gurka integration test framework with ascii-art maps [#2244](https://github.com/valhalla/valhalla/pull/2244)
 
 ## Release Date: 2019-11-21 Valhalla 3.0.9
 * **Bug Fix**
