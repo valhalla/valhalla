@@ -130,7 +130,7 @@ const gurka::relations relations3 = {{{gurka::relation_member{gurka::way_member,
 const std::string test_dir = "test/data/fake_tiles_astar";
 const vb::GraphId tile_id = vb::TileHierarchy::GetGraphId({.125, .125}, 2);
 
-std::unordered_map<std::string, vm::PointLL> node_locations;
+gurka::nodelayout node_locations;
 
 const std::string config_file = "test/test_trivial_path";
 
