@@ -28,6 +28,8 @@
 #include <valhalla/midgard/logging.h>
 #include <valhalla/midgard/util.h>
 
+#include <valhalla/baldr/traffictile.h>
+
 #include <cstdint>
 #include <memory>
 
@@ -61,7 +63,7 @@ public:
    * @param  ptr      Pointer to the start of the tile's data.
    * @param  size     Size in bytes of the tile data.
    */
-  GraphTile(const GraphId& graphid, char* ptr, size_t size);
+  GraphTile(const GraphId& graphid, char* tile_ptr, size_t size, const char* traffic_ptr = nullptr);
 
   /**
    * Construct a tile given a url for the tile using curl
@@ -663,6 +665,9 @@ protected:
 
   // Map of operator one stops in this tile.
   std::unordered_map<std::string, std::list<GraphId>> oper_one_stops;
+
+  // Pointer to live traffic data (can be nullptr if not active)
+  traffic::Tile traffic_tile;
 
   /**
    * Set pointers to internal tile data structures.

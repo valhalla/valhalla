@@ -51,12 +51,13 @@ GraphTile::GraphTile()
       signs_(nullptr), admins_(nullptr), edge_bins_(nullptr), complex_restriction_forward_(nullptr),
       complex_restriction_reverse_(nullptr), edgeinfo_(nullptr), textlist_(nullptr),
       complex_restriction_forward_size_(0), complex_restriction_reverse_size_(0), edgeinfo_size_(0),
-      textlist_size_(0), lane_connectivity_(nullptr), lane_connectivity_size_(0),
-      turnlanes_(nullptr) {
+      textlist_size_(0), lane_connectivity_(nullptr), lane_connectivity_size_(0), turnlanes_(nullptr),
+      traffic_tile(nullptr) {
 }
 
 // Constructor given a filename. Reads the graph data into memory.
-GraphTile::GraphTile(const std::string& tile_dir, const GraphId& graphid) : header_(nullptr) {
+GraphTile::GraphTile(const std::string& tile_dir, const GraphId& graphid)
+    : header_(nullptr), traffic_tile(nullptr) {
 
   // Don't bother with invalid ids
   if (!graphid.Is_Valid() || graphid.level() > TileHierarchy::get_max_level() || tile_dir.empty()) {
@@ -132,10 +133,11 @@ bool GraphTile::DecompressTile(const GraphId& graphid, std::vector<char>& compre
   return true;
 }
 
-GraphTile::GraphTile(const GraphId& graphid, char* ptr, size_t size) : header_(nullptr) {
+GraphTile::GraphTile(const GraphId& graphid, char* tile_ptr, size_t size, const char* traffic_ptr)
+    : header_(nullptr), traffic_tile(traffic_ptr) {
   // Initialize the internal tile data structures using a pointer to the
   // tile and the tile size
-  Initialize(graphid, ptr, size);
+  Initialize(graphid, tile_ptr, size);
 }
 
 std::string MakeSingleTileUrl(const std::string& tile_url, const GraphId& graphid) {

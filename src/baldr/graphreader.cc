@@ -56,9 +56,41 @@ struct GraphReader::tile_extract_t {
         LOG_WARN("Tile extract could not be loaded");
       }
     }
+
+    if (pt.get_optional<std::string>("traffic_extract")) {
+      try {
+        // load the tar
+        archive.reset(new midgard::tar(pt.get<std::string>("traffic_extract")));
+        // map files to graph ids
+        for (auto& c : archive->contents) {
+          try {
+            auto id = GraphTile::GetTileId(c.first);
+            traffic_tiles[id] = std::make_pair(const_cast<char*>(c.second.first), c.second.second);
+          } catch (...) {
+            // skip files we dont understand
+          }
+        }
+        // couldn't load it
+        if (traffic_tiles.empty()) {
+          LOG_WARN("Traffic tile extract contained no usuable tiles");
+        } // loaded ok but with possibly bad blocks
+        else {
+          LOG_INFO("Traffic tile extract successfully loaded with tile count: " +
+                   std::to_string(traffic_tiles.size()));
+          if (archive->corrupt_blocks) {
+            LOG_WARN("Traffic tile extract had " + std::to_string(archive->corrupt_blocks) +
+                     " corrupt blocks");
+          }
+        }
+      } catch (const std::exception& e) {
+        LOG_ERROR(e.what());
+        LOG_WARN("Traffic tile extract could not be loaded");
+      }
+    }
   }
   // TODO: dont remove constness, and actually make graphtile read only?
   std::unordered_map<uint64_t, std::pair<char*, size_t>> tiles;
+  std::unordered_map<uint64_t, std::pair<char*, size_t>> traffic_tiles;
   std::shared_ptr<midgard::tar> archive;
 };
 
@@ -390,8 +422,12 @@ const GraphTile* GraphReader::GetGraphTile(const GraphId& graphid) {
       return nullptr;
     }
 
+    auto traffic_ptr = tile_extract_->traffic_tiles.find(base);
+
     // This initializes the tile from mmap
-    GraphTile tile(base, t->second.first, t->second.second);
+    GraphTile tile(base, t->second.first, t->second.second,
+                   traffic_ptr == tile_extract_->traffic_tiles.end() ? traffic_ptr->second.first
+                                                                     : nullptr);
     if (!tile.header()) {
       // LOG_DEBUG("Memory map cache miss " + GraphTile::FileSuffix(base));
       return nullptr;
