@@ -62,45 +62,44 @@ SortGraph(const std::string& nodes_file, const std::string& edges_file, const ui
   size_t node_count = 0;
   Node last_node{};
   std::map<GraphId, size_t> tiles;
-  nodes.transform(
-      [&nodes, &edges, &run_index, &node_index, &node_count, &last_node, &tiles](Node& node) {
-        // remember if this was a new tile
-        if (node_index == 0 || node.graph_id != (--tiles.end())->first) {
-          tiles.insert({node.graph_id, node_index});
-          node.graph_id.set_id(0);
-          run_index = node_index;
-          ++node_count;
-        } // but is it a new node
-        else if (last_node.node.osmid_ != node.node.osmid_) {
-          node.graph_id.set_id(last_node.graph_id.id() + 1);
-          run_index = node_index;
-          ++node_count;
-        } // not new keep the same graphid
-        else {
-          node.graph_id.set_id(last_node.graph_id.id());
-        }
+  nodes.transform([&edges, &run_index, &node_index, &node_count, &last_node, &tiles](Node& node) {
+    // remember if this was a new tile
+    if (node_index == 0 || node.graph_id != (--tiles.end())->first) {
+      tiles.insert({node.graph_id, node_index});
+      node.graph_id.set_id(0);
+      run_index = node_index;
+      ++node_count;
+    } // but is it a new node
+    else if (last_node.node.osmid_ != node.node.osmid_) {
+      node.graph_id.set_id(last_node.graph_id.id() + 1);
+      run_index = node_index;
+      ++node_count;
+    } // not new keep the same graphid
+    else {
+      node.graph_id.set_id(last_node.graph_id.id());
+    }
 
-        // if this node marks the start of an edge, go tell the edge where the first node in the
-        // series is
-        if (node.is_start()) {
-          auto element = edges[node.start_of];
-          auto edge = *element;
-          edge.sourcenode_ = run_index;
-          element = edge;
-        }
-        // if this node marks the end of an edge, go tell the edge where the first node in the
-        // series is
-        if (node.is_end()) {
-          auto element = edges[node.end_of];
-          auto edge = *element;
-          edge.targetnode_ = run_index;
-          element = edge;
-        }
+    // if this node marks the start of an edge, go tell the edge where the first node in the
+    // series is
+    if (node.is_start()) {
+      auto element = edges[node.start_of];
+      auto edge = *element;
+      edge.sourcenode_ = run_index;
+      element = edge;
+    }
+    // if this node marks the end of an edge, go tell the edge where the first node in the
+    // series is
+    if (node.is_end()) {
+      auto element = edges[node.end_of];
+      auto edge = *element;
+      edge.targetnode_ = run_index;
+      element = edge;
+    }
 
-        // next node
-        last_node = node;
-        ++node_index;
-      });
+    // next node
+    last_node = node;
+    ++node_index;
+  });
 
   LOG_INFO("Finished with " + std::to_string(node_count) + " graph nodes");
   return tiles;
@@ -147,13 +146,13 @@ void ConstructEdges(const OSMData& osmdata,
     for (auto ni = current_way_node_index; ni <= last_way_node_index; ni++) {
       const auto wn = (*way_nodes[ni]).node;
       if (wn.lat_ == kInvalidLatitude && wn.lng_ == kInvalidLongitude) {
-        LOG_ERROR("Node " + std::to_string(wn.osmid_) + " in way " + std::to_string(way.way_id()) +
-                  " has not had coordinates initialized");
+        LOG_WARN("Node " + std::to_string(wn.osmid_) + " in way " + std::to_string(way.way_id()) +
+                 " has not had coordinates initialized");
         valid = false;
       }
     }
     if (!valid) {
-      LOG_ERROR("Do not add edge!");
+      LOG_WARN("Do not add edge!");
       current_way_node_index = last_way_node_index + 1;
       continue;
     }
