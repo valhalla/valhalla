@@ -60,9 +60,9 @@ struct GraphReader::tile_extract_t {
     if (pt.get_optional<std::string>("traffic_extract")) {
       try {
         // load the tar
-        archive.reset(new midgard::tar(pt.get<std::string>("traffic_extract")));
+        traffic_archive.reset(new midgard::tar(pt.get<std::string>("traffic_extract")));
         // map files to graph ids
-        for (auto& c : archive->contents) {
+        for (auto& c : traffic_archive->contents) {
           try {
             auto id = GraphTile::GetTileId(c.first);
             traffic_tiles[id] = std::make_pair(const_cast<char*>(c.second.first), c.second.second);
@@ -77,13 +77,13 @@ struct GraphReader::tile_extract_t {
         else {
           LOG_INFO("Traffic tile extract successfully loaded with tile count: " +
                    std::to_string(traffic_tiles.size()));
-          if (archive->corrupt_blocks) {
-            LOG_WARN("Traffic tile extract had " + std::to_string(archive->corrupt_blocks) +
+          if (traffic_archive->corrupt_blocks) {
+            LOG_WARN("Traffic tile extract had " + std::to_string(traffic_archive->corrupt_blocks) +
                      " corrupt blocks");
           }
         }
       } catch (const std::exception& e) {
-        LOG_ERROR(e.what());
+        LOG_WARN(e.what());
         LOG_WARN("Traffic tile extract could not be loaded");
       }
     }
@@ -92,6 +92,7 @@ struct GraphReader::tile_extract_t {
   std::unordered_map<uint64_t, std::pair<char*, size_t>> tiles;
   std::unordered_map<uint64_t, std::pair<char*, size_t>> traffic_tiles;
   std::shared_ptr<midgard::tar> archive;
+  std::shared_ptr<midgard::tar> traffic_archive;
 };
 
 std::shared_ptr<const GraphReader::tile_extract_t>

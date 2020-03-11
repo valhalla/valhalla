@@ -40,11 +40,6 @@ struct TileHeader {
   std::uint64_t last_update : 63; // seconds since epoch
 };
 
-struct IncidentsHeader {
-  std::uint32_t incidents_begin;
-  std::uint32_t incidents_end;
-};
-
 /**
  * A tile of live traffic data.  The layout is:
  *
@@ -64,16 +59,16 @@ class Tile {
 public:
   Tile(const char* tile_ptr)
       : header{reinterpret_cast<const TileHeader*>(tile_ptr)},
-        speeds{reinterpret_cast<const volatile Speed*>(tile_ptr + sizeof(TileHeader))},
-        incidents_header{reinterpret_cast<const volatile IncidentsHeader*>(
-            tile_ptr + sizeof(TileHeader) + sizeof(Speed) * header->directededge_count)},
-        incidents0{reinterpret_cast<const volatile Incident*>(
-            tile_ptr + sizeof(TileHeader) + sizeof(Speed) * header->directededge_count +
-            sizeof(IncidentsHeader))},
-        incidents1{reinterpret_cast<const volatile Incident*>(
-                       tile_ptr + sizeof(TileHeader) + sizeof(Speed) * header->directededge_count +
-                       sizeof(IncidentsHeader)) +
-                   sizeof(Incident) * header->incident_buffer_size} {
+        speeds{reinterpret_cast<const volatile Speed*>(tile_ptr + offsetof(Tile, speeds))},
+        incident_count_0{reinterpret_cast<const volatile std::uint32_t*>(
+            tile_ptr + offsetof(Tile, incident_count_0))},
+        incident_count_1{
+            reinterpret_cast<const volatile std::uint32_t*>(
+                tile_ptr + offsetof(Tile, incident_count_1))},
+        incidents_0{reinterpret_cast<const volatile Incident*>(
+            tile_ptr + offsetof(Tile, incidents_0))},
+        incidents_1{reinterpret_cast<const volatile Incident*>(
+            tile_ptr + offsetof(Tile, incidents_1))} {
   }
 
   Tile(const Tile& other) = default;
@@ -90,7 +85,11 @@ public:
     if (!getTrafficForDirectedEdge(directed_edge_offset)->has_incident)
       return {};
 
-    const auto buffer = header->active_incident_buffer == 0 ? incidents0 : incidents1;
+    // Copy the current active buffer so it won't change during our usage below
+    auto active_buffer = header->active_incident_buffer;
+
+    const auto& count = active_buffer == 0 ? *incident_count_0 : *incident_count_1;
+    const auto& buffer = active_buffer == 0 ? incidents_0 : incidents_1;
 
     // Find the beginning and end of edges that match our directed_edge_offset
     // Note that equal_range uses a binary search when given a LegacyRandomAccessIterator,
@@ -103,8 +102,7 @@ public:
         return edge_index < incident.edge_index;
       }
     };
-    const auto range =
-        std::equal_range(buffer, buffer + header->incident_buffer_size, directed_edge_offset, Comp{});
+    const auto range = std::equal_range(buffer, buffer + count, directed_edge_offset, Comp{});
 
     // Copy the results so that they're non-volatile for our caller
     // TODO: race condition: make sure our range is still valid
@@ -118,9 +116,10 @@ protected:
   // our control (another process accessing a mmap'd file for example)
   const volatile TileHeader* header;
   const volatile Speed* speeds;
-  const volatile IncidentsHeader* incidents_header;
-  const volatile Incident* incidents0;
-  const volatile Incident* incidents1;
+  const volatile std::uint32_t* incident_count_0;
+  const volatile std::uint32_t* incident_count_1;
+  const volatile Incident* incidents_0;
+  const volatile Incident* incidents_1;
 };
 
 } // namespace traffic
