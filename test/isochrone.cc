@@ -80,6 +80,9 @@ void try_isochrone(GraphReader& reader,
 
   ASSERT_EQ(response, expected_response) << "Actual:   " << response_json << std::endl
                                          << "Expected: " << expected_json;
+
+  loki_worker.cleanup();
+  thor_worker.cleanup();
 } // namespace
 
 TEST(Isochronies, Basic) {

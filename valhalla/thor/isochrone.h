@@ -37,12 +37,8 @@ public:
   /**
    * Destructor
    */
-  virtual ~Isochrone();
-
-  /**
-   * Clear the temporary memory (adjacency list, edgestatus, edgelabels)
-   */
-  void Clear();
+  virtual ~Isochrone() {
+  }
 
   /**
    * Compute an isochrone grid. This creates and populates a lat,lon grid with
@@ -92,16 +88,22 @@ public:
                     const sif::TravelMode mode);
 
 protected:
-  // A child-class must implement this to learn about what nodes were expanded
+  // when we expand up to a node we color the cells of the grid that the edge that ends at the
+  // node touches
   virtual void ExpandingNode(baldr::GraphReader& graphreader,
+                             const baldr::GraphTile* tile,
+                             const baldr::NodeInfo* node,
                              const sif::EdgeLabel& current,
-                             const midgard::PointLL& node_ll,
-                             const sif::EdgeLabel* previous);
+                             const sif::EdgeLabel* previous) override;
 
-  // A child-class must implement this to decide when to stop the expansion
+  // when the main loop is looking to continue expanding we tell it to terminate here
   virtual ExpansionRecommendation ShouldExpand(baldr::GraphReader& graphreader,
                                                const sif::EdgeLabel& pred,
-                                               const InfoRoutingType route_type);
+                                               const InfoRoutingType route_type) override;
+
+  // tell the expansion how many labels to expect and how many buckets to use
+  virtual void GetExpansionHints(uint32_t& bucket_count,
+                                 uint32_t& edge_label_reservation) const override;
 
   float shape_interval_; // Interval along shape to mark time
   uint32_t max_seconds_;

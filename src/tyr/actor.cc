@@ -42,7 +42,8 @@ void actor_t::cleanup() {
   pimpl->cleanup();
 }
 
-std::string actor_t::route(const std::string& request_str, const std::function<void()>& interrupt) {
+valhalla::Api actor_t::unserialized_route(const std::string& request_str,
+                                          const std::function<void()>& interrupt) {
   // set the interrupts
   pimpl->set_interrupts(interrupt);
   // parse the request
@@ -54,12 +55,17 @@ std::string actor_t::route(const std::string& request_str, const std::function<v
   pimpl->thor_worker.route(request);
   // get some directions back from them
   pimpl->odin_worker.narrate(request);
-  // serialize them out to json string
-  auto bytes = tyr::serializeDirections(request);
   // if they want you do to do the cleanup automatically
   if (auto_cleanup) {
     cleanup();
   }
+  return request;
+}
+
+std::string actor_t::route(const std::string& request_str, const std::function<void()>& interrupt) {
+  auto request = unserialized_route(request_str, interrupt);
+  // serialize them out to json string
+  auto bytes = tyr::serializeDirections(request);
   return bytes;
 }
 
@@ -135,8 +141,8 @@ std::string actor_t::isochrone(const std::string& request_str,
   return json;
 }
 
-std::string actor_t::trace_route(const std::string& request_str,
-                                 const std::function<void()>& interrupt) {
+valhalla::Api actor_t::unserialized_trace_route(const std::string& request_str,
+                                                const std::function<void()>& interrupt) {
   // set the interrupts
   pimpl->set_interrupts(interrupt);
   // parse the request
@@ -148,12 +154,18 @@ std::string actor_t::trace_route(const std::string& request_str,
   pimpl->thor_worker.trace_route(request);
   // get some directions back from them
   pimpl->odin_worker.narrate(request);
-  // serialize them out to json string
-  auto bytes = tyr::serializeDirections(request);
   // if they want you do to do the cleanup automatically
   if (auto_cleanup) {
     cleanup();
   }
+  return request;
+}
+
+std::string actor_t::trace_route(const std::string& request_str,
+                                 const std::function<void()>& interrupt) {
+  auto request = unserialized_trace_route(request_str, interrupt);
+  // serialize them out to json string
+  auto bytes = tyr::serializeDirections(request);
   return bytes;
 }
 

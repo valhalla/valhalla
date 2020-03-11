@@ -151,7 +151,8 @@ bool load_spatialite(sqlite3* db_handle) {
 bool build_tile_set(const boost::property_tree::ptree& config,
                     const std::vector<std::string>& input_files,
                     const BuildStage start_stage,
-                    const BuildStage end_stage) {
+                    const BuildStage end_stage,
+                    const bool release_osmpbf_memory) {
   auto remove_temp_file = [](const std::string& fname) {
     if (filesystem::exists(fname)) {
       filesystem::remove(fname);
@@ -218,7 +219,9 @@ bool build_tile_set(const boost::property_tree::ptree& config,
                               access_bin, cr_from_bin, cr_to_bin, bss_nodes_bin);
 
     // Free all protobuf memory - cannot use the protobuffer lib after this!
-    OSMPBF::Parser::free();
+    if (release_osmpbf_memory) {
+      OSMPBF::Parser::free();
+    }
 
     // Write the OSMData to files if parsing is the end stage
     if (end_stage <= BuildStage::kEnhance) {

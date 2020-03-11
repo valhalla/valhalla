@@ -34,6 +34,9 @@ foreach(test ${tests})
   set_target_properties(${test} PROPERTIES
     COMPILE_DEFINITIONS VALHALLA_SOURCE_DIR="${VALHALLA_SOURCE_DIR}/")
   target_link_libraries(${test} valhalla gtest gmock)
+  target_include_directories(${test} SYSTEM PRIVATE
+      ${VALHALLA_SOURCE_DIR}/third_party/protozero/include
+      ${VALHALLA_SOURCE_DIR}/third_party/libosmium/include)
 endforeach()
 
 set(cost_tests autocost bicyclecost motorcyclecost motorscootercost pedestriancost transitcost truckcost)
@@ -269,3 +272,5 @@ endif()
 
 add_custom_target(check DEPENDS ${test_targets})
 add_custom_target(tests DEPENDS ${tests} ${cost_tests})
+
+add_subdirectory(gurka)

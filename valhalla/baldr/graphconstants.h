@@ -78,6 +78,10 @@ enum class Traversability {
 // Maximum relative density at a node or within a tile
 constexpr uint32_t kMaxDensity = 15;
 
+// Unlimited speed limit. In OSM maxspeed=none. Set to max value to signify
+// unlimited.
+constexpr uint8_t kUnlimitedSpeedLimit = std::numeric_limits<uint8_t>::max();
+
 // Maximum speed. This impacts the effectiveness of A* for driving routes
 // so it should be set as low as is reasonable. Speeds above this in OSM are
 // clamped to this maximum value.

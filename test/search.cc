@@ -12,12 +12,14 @@
 #include "filesystem.h"
 #include "midgard/pointll.h"
 #include "midgard/vector2.h"
+#include "sif/nocost.h"
 
 #include "test.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 using namespace valhalla::loki;
+namespace vs = valhalla::sif;
 
 #include "mjolnir/directededgebuilder.h"
 #include "mjolnir/graphtilebuilder.h"
@@ -38,7 +40,7 @@ namespace {
 //  5 | / 6
 //    |/
 //    c
-std::string tile_dir = "test/search_tiles";
+const std::string tile_dir = "test/search_tiles";
 GraphId tile_id = TileHierarchy::GetGraphId({.125, .125}, 2);
 PointLL base_ll = TileHierarchy::get_tiling(tile_id.level()).Base(tile_id.tileid());
 std::pair<GraphId, PointLL> b({tile_id.tileid(), tile_id.level(), 0}, {.01, .2});
@@ -63,78 +65,92 @@ void make_tile() {
   GraphTileBuilder tile(tile_dir, tile_id, false);
   uint32_t edge_index = 0;
 
-  auto add_node = [&edge_index](const std::pair<GraphId, PointLL>& v, const uint32_t edge_count) {
+  auto add_node = [&](const std::pair<GraphId, PointLL>& v, const uint32_t edge_count) {
     NodeInfo node_builder;
     node_builder.set_latlng(base_ll, v.second);
+    // node_builder.set_road_class(RoadClass::kSecondary);
+    node_builder.set_access(kAllAccess);
     node_builder.set_edge_count(edge_count);
     node_builder.set_edge_index(edge_index);
+    node_builder.set_timezone(1);
     edge_index += edge_count;
-    return node_builder;
+    tile.nodes().emplace_back(node_builder);
   };
-  auto add_edge = [&tile](const std::pair<GraphId, PointLL>& u, const std::pair<GraphId, PointLL>& v,
-                          const uint32_t name, const uint32_t opposing, const bool forward) {
-    DirectedEdgeBuilder edge_builder({}, v.first, forward, u.second.Distance(v.second) + .5, 1, 1, {},
-                                     {}, 0, false, 0, 0, false);
-    edge_builder.set_opp_index(opposing);
-    std::vector<PointLL> shape = {u.second, u.second.MidPoint(v.second), v.second};
-    if (!forward)
-      std::reverse(shape.begin(), shape.end());
 
-    bool add;
+  auto add_edge = [&](const std::pair<GraphId, PointLL>& u, const std::pair<GraphId, PointLL>& v,
+                      const uint32_t localedgeidx, const uint32_t opp_local_idx, const bool forward) {
+    DirectedEdgeBuilder edge_builder({}, v.first, forward, u.second.Distance(v.second) + .5, 1, 1,
+                                     Use::kRoad, RoadClass::kMotorway, localedgeidx, false, 0, 0,
+                                     false);
+    edge_builder.set_opp_index(opp_local_idx); // How is this different from opp_local_idx
+    edge_builder.set_opp_local_idx(opp_local_idx);
+    edge_builder.set_localedgeidx(localedgeidx);
+    edge_builder.set_forwardaccess(kAllAccess);
+    edge_builder.set_reverseaccess(kAllAccess);
+    edge_builder.set_free_flow_speed(100);
+    edge_builder.set_constrained_flow_speed(10);
+    std::vector<PointLL> shape = {u.second, u.second.MidPoint(v.second), v.second};
+    if (!forward) {
+      std::reverse(shape.begin(), shape.end());
+    }
+    bool added;
     // make more complex edge geom so that there are 3 segments, affine combination doesnt properly
     // handle arcs but who cares
-    uint32_t edge_info_offset = tile.AddEdgeInfo(name, u.first, v.first, 123, 456, 0, 55, shape,
-                                                 {std::to_string(name)}, 0, add);
+    uint32_t edge_info_offset = tile.AddEdgeInfo(localedgeidx, u.first, v.first, 123, // way_id
+                                                 0, 0,
+                                                 120, // speed limit in kph
+                                                 shape, {std::to_string(localedgeidx)}, 0, added);
+    // assert(added);
     edge_builder.set_edgeinfo_offset(edge_info_offset);
-    return edge_builder;
+    tile.directededges().emplace_back(edge_builder);
   };
 
   // this is what it looks like
-  //    b
+  //    b 0
   //    |\
   //  1 | \ 0
   //    |  \
   //  2 |   \ 7
   //    |    \
-  //    a-3-8-d
+  //   1a-3-8-d 3
   //    |    /
   //  4 |   / 9
   //    |  /
   //  5 | / 6
   //    |/
-  //    c
+  //    c 2
 
   // NOTE: edge ids are in the order the edges are added, so b->d is 0, b->a is 1, a->b is 2 and so
   // on
 
   // B
   {
-    tile.directededges().emplace_back(add_edge(b, d, 0, 0, false)); // 0
-    tile.directededges().emplace_back(add_edge(b, a, 2, 0, true));  // 1
-    tile.nodes().emplace_back(add_node(b, 2));
+    add_edge(b, d, 0, 0, true);
+    add_edge(b, a, 1, 0, true); // 1
+    add_node(b, 2);
   }
 
   // A
   {
-    tile.directededges().emplace_back(add_edge(a, b, 2, 1, false)); // 2
-    tile.directededges().emplace_back(add_edge(a, d, 3, 1, true));  // 3
-    tile.directededges().emplace_back(add_edge(a, c, 1, 0, false)); // 4
-    tile.nodes().emplace_back(add_node(a, 3));
+    add_edge(a, b, 0, 1, false); // 2
+    add_edge(a, d, 1, 1, true);  // 3
+    add_edge(a, c, 2, 0, false); // 4
+    add_node(a, 3);
   }
 
   // C
   {
-    tile.directededges().emplace_back(add_edge(c, a, 1, 2, true));  // 5
-    tile.directededges().emplace_back(add_edge(c, d, 4, 2, false)); // 6
-    tile.nodes().emplace_back(add_node(c, 2));
+    add_edge(c, a, 0, 2, true);  // 5
+    add_edge(c, d, 1, 2, false); // 6
+    add_node(c, 2);
   }
 
   // D
   {
-    tile.directededges().emplace_back(add_edge(d, b, 0, 0, true));  // 7
-    tile.directededges().emplace_back(add_edge(d, a, 3, 1, false)); // 8
-    tile.directededges().emplace_back(add_edge(d, c, 4, 1, true));  // 9
-    tile.nodes().emplace_back(add_node(d, 3));
+    add_edge(d, b, 0, 0, false); // 7
+    add_edge(d, a, 1, 1, false); // 8
+    add_edge(d, c, 2, 1, true);  // 9
+    add_node(d, 3);
   }
 
   // write the tile
@@ -145,6 +161,21 @@ void make_tile() {
   GraphTile reloaded(tile_dir, tile_id);
   auto bins = GraphTileBuilder::BinEdges(&reloaded, tweeners);
   GraphTileBuilder::AddBins(tile_dir, &reloaded, bins);
+
+  {
+    // Verify tiles
+    boost::property_tree::ptree conf;
+    conf.put("tile_dir", tile_dir);
+    valhalla::baldr::GraphReader reader(conf);
+    auto tile = reader.GetGraphTile(tile_id);
+    ASSERT_EQ(tile->header()->directededgecount(), 10);
+  }
+}
+
+std::shared_ptr<vs::DynamicCost> create_costing() {
+  valhalla::Options options;
+  options.set_costing(valhalla::Costing::none_);
+  return vs::CreateNoCost(valhalla::Costing::none_, options);
 }
 
 void search(valhalla::baldr::Location location,
@@ -162,15 +193,16 @@ void search(valhalla::baldr::Location location,
   PathLocation::toPBF(location, &pbf, reader);
   location = PathLocation::fromPBF(pbf);
 
-  const auto results = Search({location}, reader);
-  const auto p = results.at(location);
+  const auto costing = create_costing();
+  const auto results = Search({location}, reader, costing);
+  const auto& p = results.at(location);
 
-  EXPECT_EQ((p.edges.front().begin_node() || p.edges.front().end_node()), expected_node)
+  ASSERT_EQ((p.edges.front().begin_node() || p.edges.front().end_node()), expected_node)
       << p.edges.front().begin_node() << ":" << p.edges.front().end_node()
       << (expected_node ? " Should've snapped to node" : " Shouldn't've snapped to node");
 
-  EXPECT_TRUE(p.edges.size()) << "Didn't find any node/edges";
-  EXPECT_TRUE(p.edges.front().projected.ApproximatelyEqual(expected_point)) << "Found wrong point";
+  ASSERT_TRUE(p.edges.size()) << "Didn't find any node/edges";
+  ASSERT_TRUE(p.edges.front().projected.ApproximatelyEqual(expected_point)) << "Found wrong point";
 
   valhalla::baldr::PathLocation answer(location);
   for (const auto& expected_edge : expected_edges) {
@@ -180,10 +212,10 @@ void search(valhalla::baldr::Location location,
   }
   // note that this just checks that p has the edges that answer has
   // p can have more edges than answer has and that wont fail this check!
-  EXPECT_TRUE(answer.shares_edges(p)) << "Did not find expected edges";
+  ASSERT_TRUE(answer.shares_edges(p)) << "Did not find expected edges";
   // if you want to enforce that the result didnt have more then expected
   if (exact) {
-    EXPECT_EQ(answer.edges.size(), p.edges.size()) << "Got more edges than expected";
+    ASSERT_EQ(answer.edges.size(), p.edges.size()) << "Got more edges than expected";
   }
 }
 
@@ -198,16 +230,18 @@ void search(valhalla::baldr::Location location, size_t result_count, int reachab
   valhalla::Location pbf;
   PathLocation::toPBF(location, &pbf, reader);
   location = PathLocation::fromPBF(pbf);
+  const auto costing = create_costing();
 
-  const auto results = Search({location}, reader);
+  const auto results = Search({location}, reader, costing);
   if (results.empty() && result_count == 0)
     return;
-  const auto& p = results.at(location);
 
-  EXPECT_EQ(p.edges.size(), result_count) << "Wrong number of edges";
-  for (const auto& e : p.edges) {
-    EXPECT_EQ(e.outbound_reach, reachability);
-    EXPECT_EQ(e.inbound_reach, reachability);
+  const auto& path = results.at(location);
+
+  ASSERT_EQ(path.edges.size(), result_count) << "Wrong number of edges";
+  for (const auto& edge : path.edges) {
+    ASSERT_GE(edge.outbound_reach, reachability);
+    ASSERT_GE(edge.inbound_reach, reachability);
   }
 }
 
@@ -326,27 +360,47 @@ TEST(Search, test_edge_search) {
   // TODO: add more tests
 }
 
-TEST(Search, test_reachability_radius) {
+TEST(Search, test_reachability_radius_zero_everything) {
+  PointLL ob(b.second.first - .001f, b.second.second - .01f);
+
+  LOGLN_WARN("zero everything should be a single closest result");
+  search({ob, Location::StopType::BREAK, 0, 0, 0}, 2, 0);
+}
+
+TEST(Search, test_reachability_radius_high) {
   PointLL ob(b.second.first - .001f, b.second.second - .01f);
   unsigned int longest = ob.Distance(d.second);
+
+  LOGLN_WARN("set radius high to get them all");
+  search({b.second, Location::StopType::BREAK, 0, 0, longest + 100}, 10, 0);
+}
+
+TEST(Search, test_reachability_radius_mid) {
+  PointLL ob(b.second.first - .001f, b.second.second - .01f);
   unsigned int shortest = ob.Distance(a.second);
 
-  // zero everything should be a single closest result
-  search({ob, Location::StopType::BREAK, 0, 0, 0}, 2, 0);
-
-  // set radius high to get them all
-  search({b.second, Location::StopType::BREAK, 0, 0, longest + 100}, 10, 0);
-
-  // set radius mid to get just some
+  LOGLN_WARN("set radius mid to get just some");
   search({b.second, Location::StopType::BREAK, 0, 0, shortest - 100}, 4, 0);
+}
 
-  // set reachability high to see it gets all nodes reachable
-  search({ob, Location::StopType::BREAK, 5, 5, 0}, 2, 4);
+TEST(Search, test_reachability_radius_reachability_high) {
+  PointLL ob(b.second.first - .001f, b.second.second - .001f);
 
-  // set reachability right on to see we arent off by one
+  LOGLN_WARN("set reachability high to see it gets all edges reachable");
+  search({ob, Location::StopType::BREAK, 10, 10, 0}, 2, 4);
+}
+
+TEST(Search, test_reachability_radius_off_by_one) {
+  PointLL ob(b.second.first - .001f, b.second.second - .01f);
+
+  LOGLN_WARN("set reachability right on to see we arent off by one");
   search({ob, Location::StopType::BREAK, 4, 4, 0}, 2, 4);
+}
 
-  // set reachability lower to see we give up early
+TEST(Search, test_reachability_radius_give_up_early) {
+  PointLL ob(b.second.first - .001f, b.second.second - .01f);
+
+  LOGLN_WARN("set reachability lower to see we give up early");
   search({ob, Location::StopType::BREAK, 3, 3, 0}, 2, 3);
 }
 

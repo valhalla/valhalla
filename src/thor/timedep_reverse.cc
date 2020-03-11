@@ -336,7 +336,7 @@ TimeDepReverse::GetBestPath(valhalla::Location& origin,
       edgelabels_rev_.size() == 0 ? 0 : GetTimezone(graphreader, edgelabels_rev_[0].endnode());
   if (dest_tz_index_ == 0) {
     // TODO - do not throw exception at this time
-    LOG_ERROR("Could not get the timezone at the destination");
+    LOG_WARN("Could not get the timezone at the destination");
   }
 
   // Update hierarchy limits

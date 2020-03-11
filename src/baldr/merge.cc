@@ -15,7 +15,7 @@ namespace {
 
 uint64_t count_tiles_in_levels(GraphReader& reader) {
   uint64_t tile_count = 0;
-  for (auto level : TileHierarchy::levels() | bra::map_values) {
+  for (const auto& level : TileHierarchy::levels() | bra::map_values) {
     tile_count += level.tiles.ncolumns() * level.tiles.nrows();
   }
   return tile_count;

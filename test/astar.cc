@@ -18,6 +18,7 @@
 #include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/graphvalidator.h"
 #include "mjolnir/pbfgraphparser.h"
+#include "mjolnir/util.h"
 #include "odin/directionsbuilder.h"
 #include "odin/worker.h"
 #include "sif/costconstants.h"
@@ -31,6 +32,8 @@
 #include "thor/triplegbuilder.h"
 #include "thor/worker.h"
 #include "tyr/serializers.h"
+
+#include "gurka/gurka.h"
 
 #include <valhalla/proto/directions.pb.h>
 #include <valhalla/proto/options.pb.h>
@@ -63,244 +66,164 @@ namespace {
 // ph34r the ASCII art diagram:
 //
 // first test is just a square set of roads
-//
-//       0  2
-// a----->--<-----b
-// |              |
-// v 1          3 v
-// |              |
-// ^ 4          7 ^
-// |              |
-// c----->--<-----d
-//       5  6
+const std::string map1 = R"(
+   a1------------2b
+   |              |
+   |              |
+   |              |
+   |              |
+   |              3
+   c--------------d
+)";
+
+const gurka::ways ways1 = {{"ab", {{"highway", "motorway"}}},
+                           {"bd", {{"highway", "motorway"}}},
+                           {"ac", {{"highway", "motorway"}}},
+                           {"dc", {{"highway", "motorway"}}}};
+
 //
 // second test is a triangle set of roads, where the height of the triangle is
 // about a third of its width.
-//
-//      8  10
-//  e--->--<---f
-//  \         /
-// 9 v       v 11
-//    \     /
-//  12 ^   ^ 13
-//      \ /
-//       g
-//
-//
-// Third test has a complex turn restriction preventing N->K->H->I->L  (marked with R)
+
+const std::string map2 = R"(
+    e4--------5f
+    \         /
+     \       /
+      \     /
+       \   /
+        \ /
+         g
+)";
+const gurka::ways ways2 = {{"ef", {{"highway", "residential"}, {"foot", "yes"}}},
+                           {"eg", {{"highway", "residential"}, {"foot", "yes"}}},
+                           {"fg", {{"highway", "residential"}, {"foot", "yes"}}}};
+
+// Third test has a complex turn restriction preventing K->H->I->L  (marked with R)
 // which should force the algorithm to take the detour via the J->M edge
 // if starting at K and heading to L
 //
-//   14  16   17  19
-// h-->--<--i-->--<--j
-// |    R   |        |
-// v 15     v 18     v 20
-// |R     R |        |
-// ^ 21     ^ 23     ^ 25
-// |        |        |
-// k        l-->--<--m
-// |          24  26
-// V 22
-// | R
-// ^ 27
-// |
-// n
+const std::string map3 = R"(
+   h---V----i--------j
+   |        |        |
+   |        |        |
+   6        7        |
+   |        |        |
+   |        |        |
+   k        l8-------m
+   |
+   |
+   |
+   n
+)";
+const gurka::ways ways3 = {{"kh", {{"highway", "motorway"}}}, {"hi", {{"highway", "motorway"}}},
+                           {"ij", {{"highway", "motorway"}}}, {"lm", {{"highway", "motorway"}}},
+                           {"mj", {{"highway", "motorway"}}}, {"il", {{"highway", "motorway"}}},
+                           {"nk", {{"highway", "motorway"}}}};
+
+const gurka::relations relations3 = {{{gurka::relation_member{gurka::way_member, "kh", "from"},
+                                       gurka::relation_member{gurka::way_member, "il", "to"},
+                                       gurka::relation_member{gurka::way_member, "hi", "via"}},
+                                      {{"type", "restriction"}, {"restriction", "no_right_turn"}}}};
+
 //
 const std::string test_dir = "test/data/fake_tiles_astar";
 const vb::GraphId tile_id = vb::TileHierarchy::GetGraphId({.125, .125}, 2);
 
-GraphId make_graph_id(uint32_t id) {
-  return GraphId(tile_id.tileid(), tile_id.level(), id);
+std::unordered_map<std::string, vm::PointLL> node_locations;
+
+const std::string config_file = "test/test_trivial_path";
+
+void write_config(const std::string& filename,
+                  const std::string& tile_dir = "test/data/trivial_tiles") {
+  std::ofstream file;
+  try {
+    file.open(filename, std::ios_base::trunc);
+    file << "{ \
+      \"mjolnir\": { \
+      \"concurrency\": 1, \
+       \"tile_dir\": \"" +
+                tile_dir + "\", \
+        \"admin\": \"" VALHALLA_SOURCE_DIR "test/data/netherlands_admin.sqlite\", \
+         \"timezone\": \"" VALHALLA_SOURCE_DIR "test/data/not_needed.sqlite\" \
+      } \
+    }";
+  } catch (...) {}
+  file.close();
 }
 
-namespace node {
-std::pair<vb::GraphId, vm::PointLL> a({tile_id.tileid(), tile_id.level(), 0}, {0.01, 0.10});
-std::pair<vb::GraphId, vm::PointLL> b({tile_id.tileid(), tile_id.level(), 1}, {0.10, 0.10});
-std::pair<vb::GraphId, vm::PointLL> c({tile_id.tileid(), tile_id.level(), 2}, {0.01, 0.01});
-std::pair<vb::GraphId, vm::PointLL> d({tile_id.tileid(), tile_id.level(), 3}, {0.10, 0.01});
-
-std::pair<vb::GraphId, vm::PointLL> e({tile_id.tileid(), tile_id.level(), 4}, {0.21, 0.14});
-std::pair<vb::GraphId, vm::PointLL> f({tile_id.tileid(), tile_id.level(), 5}, {0.20, 0.14});
-std::pair<vb::GraphId, vm::PointLL> g({tile_id.tileid(), tile_id.level(), 6}, {0.25, 0.11});
-
-std::pair<vb::GraphId, vm::PointLL> h({tile_id.tileid(), tile_id.level(), 7}, {0.00, 0.10});
-std::pair<vb::GraphId, vm::PointLL> i({tile_id.tileid(), tile_id.level(), 8}, {0.10, 0.10});
-std::pair<vb::GraphId, vm::PointLL> j({tile_id.tileid(), tile_id.level(), 9}, {0.20, 0.10});
-std::pair<vb::GraphId, vm::PointLL> k({tile_id.tileid(), tile_id.level(), 10}, {0.00, 0.01});
-std::pair<vb::GraphId, vm::PointLL> l({tile_id.tileid(), tile_id.level(), 11}, {0.10, 0.01});
-std::pair<vb::GraphId, vm::PointLL> m({tile_id.tileid(), tile_id.level(), 12}, {0.20, 0.01});
-std::pair<vb::GraphId, vm::PointLL> n({tile_id.tileid(), tile_id.level(), 13}, {0.00, 0.02});
-} // namespace node
-
 void make_tile() {
-  // Don't recreate tiles if they already exist (leads to silent corruption of tiles)
-  if (filesystem::exists(test_dir)) {
-    return;
+
+  if (boost::filesystem::exists(test_dir))
+    boost::filesystem::remove_all(test_dir);
+
+  boost::filesystem::create_directories(test_dir);
+
+  boost::property_tree::ptree conf;
+  write_config(config_file, test_dir);
+  rapidjson::read_json(config_file, conf);
+
+  // We don't want these in our test tile
+  conf.put("mjolnir.hierarchy", false);
+  conf.put("mjolnir.shortcuts", false);
+
+  const double gridsize = 666;
+
+  {
+    // Build the maps from the ASCII diagrams, and extract the generated lon,lat values
+    auto nodemap = gurka::detail::map_to_coordinates(map1, gridsize, {0, 0.2});
+    const int initial_osm_id = 0;
+    gurka::detail::build_pbf(nodemap, ways1, {}, {}, test_dir + "/map1.pbf", initial_osm_id);
+    for (const auto& n : nodemap)
+      node_locations[n.first] = n.second;
   }
 
-  using namespace valhalla::mjolnir;
+  {
+    auto nodemap = gurka::detail::map_to_coordinates(map2, gridsize, {0.10, 0.2});
+    // Need to use a non-conflicting osm ID range for each map, as they
+    // all get merged during tile building, and we don't want a weirdly connected
+    // graph because IDs are shared
+    const int initial_osm_id = 100;
+    gurka::detail::build_pbf(nodemap, ways2, {}, {}, test_dir + "/map2.pbf", initial_osm_id);
+    for (const auto& n : nodemap)
+      node_locations[n.first] = n.second;
+  }
 
-  GraphTileBuilder tile(test_dir, tile_id, false);
+  {
+    auto nodemap = gurka::detail::map_to_coordinates(map3, gridsize, {0.1, 0.1});
+    const int initial_osm_id = 200;
+    gurka::detail::build_pbf(nodemap, ways3, {}, relations3, test_dir + "/map3.pbf", initial_osm_id);
+    for (const auto& n : nodemap)
+      node_locations[n.first] = n.second;
+  }
 
-  // Set the base lat,lon of the tile
-  uint32_t id = tile_id.tileid();
-  const auto& tl = TileHierarchy::levels().rbegin();
-  PointLL base_ll = tl->second.tiles.Base(id);
-  tile.header_builder().set_base_ll(base_ll);
-
-  uint32_t edge_index = 0;
-
-  auto add_node = [&](const std::pair<vb::GraphId, vm::PointLL>& v, const uint32_t edge_count) {
-    NodeInfo node_builder;
-    node_builder.set_latlng(base_ll, v.second);
-    // node_builder.set_road_class(RoadClass::kSecondary);
-    node_builder.set_access(vb::kAllAccess);
-    node_builder.set_edge_count(edge_count);
-    node_builder.set_edge_index(edge_index);
-    node_builder.set_timezone(1);
-    edge_index += edge_count;
-    tile.nodes().emplace_back(node_builder);
-  };
-
-  auto add_edge = [&](const std::pair<vb::GraphId, vm::PointLL>& u,
-                      const std::pair<vb::GraphId, vm::PointLL>& v, const uint32_t localedgeidx,
-                      const uint32_t opposing_edge_index, const bool forward) {
-    DirectedEdgeBuilder edge_builder({}, v.first, forward, u.second.Distance(v.second) + .5, 1, 1,
-                                     baldr::Use::kRoad, baldr::RoadClass::kMotorway, localedgeidx,
-                                     false, 0, 0, false);
-    edge_builder.set_opp_index(opposing_edge_index);
-    edge_builder.set_opp_local_idx(opposing_edge_index);
-    edge_builder.set_forwardaccess(vb::kAllAccess);
-    edge_builder.set_reverseaccess(vb::kAllAccess);
-    edge_builder.set_free_flow_speed(100);
-    edge_builder.set_constrained_flow_speed(10);
-    std::vector<vm::PointLL> shape = {u.second, u.second.MidPoint(v.second), v.second};
-    if (!forward) {
-      std::reverse(shape.begin(), shape.end());
+  {
+    constexpr bool release_osmpbf_memory = false;
+    mjolnir::build_tile_set(conf,
+                            {test_dir + "/map1.pbf", test_dir + "/map2.pbf", test_dir + "/map3.pbf"},
+                            mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate,
+                            release_osmpbf_memory);
+    /** Set the freeflow and constrained flow speeds manually on all edges */
+    vj::GraphTileBuilder tile_builder(test_dir, tile_id, false);
+    std::vector<DirectedEdge> directededges;
+    directededges.reserve(tile_builder.header()->directededgecount());
+    for (uint32_t j = 0; j < tile_builder.header()->directededgecount(); ++j) {
+      // skip edges for which we dont have speed data
+      DirectedEdge& directededge = tile_builder.directededge(j);
+      directededge.set_free_flow_speed(100);
+      directededge.set_constrained_flow_speed(10);
+      directededge.set_forwardaccess(vb::kAllAccess);
+      directededge.set_reverseaccess(vb::kAllAccess);
+      directededges.emplace_back(std::move(directededge));
     }
-    bool added;
-    // make more complex edge geom so that there are 3 segments, affine combination doesnt properly
-    // handle arcs but who cares
-    uint32_t edge_info_offset = tile.AddEdgeInfo(localedgeidx, u.first, v.first, 123, // way_id
-                                                 0, 0,
-                                                 120, // speed limit in kph
-                                                 shape, {std::to_string(localedgeidx)}, 0, added);
-    // assert(added);
-    edge_builder.set_edgeinfo_offset(edge_info_offset);
-    tile.directededges().emplace_back(edge_builder);
-  };
-
-  // first set of roads - Square
-  add_edge(node::a, node::b, 0, 0, true);
-  add_edge(node::a, node::c, 1, 0, true);
-  add_node(node::a, 2);
-
-  add_edge(node::b, node::a, 0, 0, false);
-  add_edge(node::b, node::d, 1, 1, true);
-  add_node(node::b, 2);
-
-  add_edge(node::c, node::a, 0, 1, false);
-  add_edge(node::c, node::d, 1, 0, true);
-  add_node(node::c, 2);
-
-  add_edge(node::d, node::c, 0, 1, false);
-  add_edge(node::d, node::b, 1, 1, false);
-  add_node(node::d, 2);
-
-  // second set of roads - Triangle
-  add_edge(node::e, node::f, 0, 0, true);
-  add_edge(node::e, node::g, 1, 0, true);
-  add_node(node::e, 2);
-
-  add_edge(node::f, node::e, 0, 0, false);
-  add_edge(node::f, node::g, 1, 1, true);
-  add_node(node::f, 2);
-
-  add_edge(node::g, node::e, 0, 1, false);
-  add_edge(node::g, node::f, 1, 1, false);
-  add_node(node::g, 2);
-
-  // Third set of roads - Complex restriction with detour
-  add_edge(node::h, node::i, 0, 0, true);
-  {
-    // we only set this to true for vias
-    tile.directededges().back().complex_restriction(true);
+    tile_builder.UpdatePredictedSpeeds(directededges);
   }
-  add_edge(node::h, node::k, 1, 0, true);
-  add_node(node::h, 2);
 
-  add_edge(node::i, node::h, 0, 0, false);
-  {
-    // we only set this to true for vias
-    tile.directededges().back().complex_restriction(true);
-  }
-  add_edge(node::i, node::j, 1, 0, true);
-  add_edge(node::i, node::l, 2, 0, true);
-  {
-    // preventing turn from 27 -> 21 -> 14 -> 18 in the FORWARD direction
-    // Necessary for Forward direction
-    tile.directededges().back().set_end_restriction(kAllAccess);
-    ComplexRestrictionBuilder cr_fwd;
-    cr_fwd.set_type(RestrictionType::kNoEntry);
-    cr_fwd.set_to_id(make_graph_id(18));
-    cr_fwd.set_from_id(make_graph_id(27));
-    std::vector<GraphId> vias;
-    vias.push_back(make_graph_id(14));
-    vias.push_back(make_graph_id(21));
-    cr_fwd.set_via_list(vias);
-    cr_fwd.set_modes(kAllAccess);
-    tile.AddForwardComplexRestriction(cr_fwd);
-  }
-  add_node(node::i, 3);
+  GraphTile tile(test_dir, tile_id);
+  ASSERT_EQ(tile.FileSuffix(tile_id, false), std::string("2/000/519/120.gph"))
+      << "Tile ID didn't match the expected filename";
 
-  add_edge(node::j, node::i, 0, 1, false);
-  add_edge(node::j, node::m, 1, 0, true);
-  add_node(node::j, 2);
-
-  add_edge(node::k, node::h, 0, 1, false);
-  {
-    // we only set this to true for vias
-    tile.directededges().back().complex_restriction(true);
-  }
-  add_edge(node::k, node::n, 1, 0, true);
-  {
-    // Add first part of complex turn restriction in REVERSE direction
-    // preventing turn from 22 -> 15 -> 16 -> 23
-    // Necessary for reverse direction
-    tile.directededges().back().set_start_restriction(kAllAccess);
-    ComplexRestrictionBuilder cr_fwd;
-    cr_fwd.set_type(RestrictionType::kNoEntry);
-    cr_fwd.set_to_id(make_graph_id(23));
-    cr_fwd.set_from_id(make_graph_id(22));
-    std::vector<GraphId> vias;
-    vias.push_back(make_graph_id(15));
-    vias.push_back(make_graph_id(16));
-    cr_fwd.set_via_list(vias);
-    cr_fwd.set_modes(kAllAccess);
-    tile.AddReverseComplexRestriction(cr_fwd);
-  }
-  add_node(node::k, 2);
-
-  add_edge(node::l, node::i, 0, 2, false);
-  add_edge(node::l, node::m, 1, 1, true);
-  add_node(node::l, 2);
-
-  add_edge(node::m, node::j, 0, 1, false);
-  add_edge(node::m, node::l, 1, 1, false);
-  add_node(node::m, 2);
-
-  add_edge(node::n, node::k, 0, 1, true);
-  add_node(node::n, 1);
-
-  tile.StoreTileData();
-
-  GraphTileBuilder::tweeners_t tweeners;
-  GraphTile reloaded(test_dir, tile_id);
-  auto bins = GraphTileBuilder::BinEdges(&reloaded, tweeners);
-  GraphTileBuilder::AddBins(test_dir, &reloaded, bins);
-
-  ASSERT_PRED1(filesystem::exists, test_dir + "/2/000/519/120.gph")
-      << "Still no expected tile, did the actual fname on disk change?";
+  ASSERT_PRED1(filesystem::exists, test_dir + "/" + tile.FileSuffix(tile_id, false))
+      << "Expected tile file didn't show up on disk - are the fixtures in the right location?";
 }
 
 void create_costing_options(Options& options) {
@@ -345,8 +268,8 @@ std::unique_ptr<vb::GraphReader> get_graph_reader(const std::string& tile_dir) {
     throw std::logic_error("test-tiles does not contain expected number of edges");
   }
 
-  const GraphTile* endtile = reader->GetGraphTile(node::b.first);
-  EXPECT_NE(endtile, nullptr) << "bad tile, node::b wasn't found in it";
+  const GraphTile* endtile = reader->GetGraphTile(node_locations["b"]);
+  EXPECT_NE(endtile, nullptr) << "bad tile, node 'b' wasn't found in it";
 
   return reader;
 }
@@ -389,9 +312,6 @@ void assert_is_trivial_path(vt::PathAlgorithm& astar,
     for (const auto& p : path) {
       time += p.elapsed_time;
     }
-    for (const vt::PathInfo& subpath : path) {
-      LOG_INFO("Got path " + std::to_string(subpath.edgeid.id()));
-    }
     EXPECT_EQ(path.size(), expected_num_paths);
     break;
   }
@@ -414,43 +334,36 @@ void assert_is_trivial_path(vt::PathAlgorithm& astar,
   EXPECT_EQ(time, expected_time) << "time in seconds";
 }
 
-// Adds edge to location
-void add(GraphId edge_id, float percent_along, const PointLL& ll, valhalla::Location& location) {
-  location.mutable_path_edges()->Add()->set_graph_id(edge_id);
-  location.mutable_path_edges()->rbegin()->set_percent_along(percent_along);
-  location.mutable_path_edges()->rbegin()->mutable_ll()->set_lng(ll.first);
-  location.mutable_path_edges()->rbegin()->mutable_ll()->set_lat(ll.second);
-  location.mutable_path_edges()->rbegin()->set_distance(0.0f);
-}
-
 // test that a path from A to B succeeds, even if the edges from A to C and B
 // to D appear first in the PathLocation.
 void TestTrivialPath(vt::PathAlgorithm& astar) {
-  using node::a;
-  using node::b;
-  using node::c;
-  using node::d;
 
+  Options options;
+  create_costing_options(options);
+  auto costs = vs::CreateAutoCost(Costing::auto_, options);
+
+  auto reader = get_graph_reader(test_dir);
+
+  std::vector<valhalla::baldr::Location> locations;
+  locations.push_back({node_locations["1"]});
+  locations.push_back({node_locations["2"]});
+
+  const auto projections = loki::Search(locations, *reader, costs);
   valhalla::Location origin;
-  origin.set_date_time("2019-11-21T13:05");
-  origin.mutable_ll()->set_lng(a.second.first);
-  origin.mutable_ll()->set_lat(a.second.second);
-  add(tile_id + uint64_t(1), 0.0f, a.second, origin);
-  add(tile_id + uint64_t(4), 1.0f, a.second, origin);
-  add(tile_id + uint64_t(0), 0.0f, a.second, origin);
-  add(tile_id + uint64_t(2), 1.0f, a.second, origin);
-
+  {
+    const auto& correlated = projections.at(locations[0]);
+    PathLocation::toPBF(correlated, &origin, *reader);
+    origin.set_date_time("2019-11-21T13:05");
+  }
   valhalla::Location dest;
-  dest.set_date_time("2019-11-21T13:05");
-  dest.mutable_ll()->set_lng(b.second.first);
-  dest.mutable_ll()->set_lat(b.second.second);
-  add(tile_id + uint64_t(3), 0.0f, b.second, dest);
-  add(tile_id + uint64_t(7), 1.0f, b.second, dest);
-  add(tile_id + uint64_t(2), 0.0f, b.second, dest);
-  add(tile_id + uint64_t(0), 1.0f, b.second, dest);
+  {
+    const auto& correlated = projections.at(locations[1]);
+    PathLocation::toPBF(correlated, &dest, *reader);
+    dest.set_date_time("2019-11-21T13:05");
+  }
 
   // this should go along the path from A to B
-  assert_is_trivial_path(astar, origin, dest, 1, TrivialPathTest::DurationEqualTo, 3606,
+  assert_is_trivial_path(astar, origin, dest, 1, TrivialPathTest::DurationEqualTo, 3116,
                          vs::TravelMode::kDrive);
 }
 
@@ -467,86 +380,69 @@ TEST(Astar, TestTrivialPathReverse) {
 // test that a path from E to F succeeds, even if the edges from E and F
 // to G appear first in the PathLocation.
 TEST(Astar, TestTrivialPathTriangle) {
-  using node::e;
-  using node::f;
 
+  Options options;
+  create_costing_options(options);
+  auto costs = vs::CreatePedestrianCost(Costing::pedestrian, options);
+
+  auto reader = get_graph_reader(test_dir);
+
+  std::vector<valhalla::baldr::Location> locations;
+  locations.push_back({node_locations["4"]});
+  locations.push_back({node_locations["5"]});
+
+  const auto projections = loki::Search(locations, *reader, costs);
   valhalla::Location origin;
-  origin.mutable_ll()->set_lng(e.second.first);
-  origin.mutable_ll()->set_lat(e.second.second);
-  add(tile_id + uint64_t(9), 0.0f, e.second, origin);
-  add(tile_id + uint64_t(12), 1.0f, e.second, origin);
-  add(tile_id + uint64_t(8), 0.0f, e.second, origin);
-  add(tile_id + uint64_t(10), 1.0f, e.second, origin);
-
+  {
+    const auto& correlated = projections.at(locations[0]);
+    PathLocation::toPBF(correlated, &origin, *reader);
+  }
   valhalla::Location dest;
-  dest.mutable_ll()->set_lng(f.second.first);
-  dest.mutable_ll()->set_lat(f.second.second);
-  add(tile_id + uint64_t(11), 0.0f, f.second, dest);
-  add(tile_id + uint64_t(13), 1.0f, f.second, dest);
-  add(tile_id + uint64_t(10), 0.0f, f.second, dest);
-  add(tile_id + uint64_t(8), 1.0f, f.second, dest);
+  {
+    const auto& correlated = projections.at(locations[1]);
+    PathLocation::toPBF(correlated, &dest, *reader);
+  }
 
   // TODO This fails with graphindex out of bounds for Reverse direction, is this
   // related to why we short-circuit trivial routes to AStarPathAlgorithm in route_action.cc?
   //
   vt::AStarPathAlgorithm astar;
   // this should go along the path from E to F
-  assert_is_trivial_path(astar, origin, dest, 1, TrivialPathTest::MatchesEdge, 8,
+  assert_is_trivial_path(astar, origin, dest, 1, TrivialPathTest::DurationEqualTo, 4231,
                          vs::TravelMode::kPedestrian);
-}
-
-TEST(Astar, TestPartialDurationTrivial) {
-  // Tests a trivial path with partial edge results in partial duration
-  using node::a;
-  using node::b;
-  using node::d;
-
-  valhalla::Location origin;
-  origin.set_date_time("2019-11-21T13:05");
-  origin.mutable_ll()->set_lng(a.second.first);
-  origin.mutable_ll()->set_lat(a.second.second);
-  add(tile_id + uint64_t(0), 0.1f, a.second, origin);
-  add(tile_id + uint64_t(2), 0.9f, a.second, origin);
-
-  float partial_dist = 0.1;
-  valhalla::Location dest;
-  dest.mutable_ll()->set_lng(b.second.first);
-  dest.mutable_ll()->set_lat(b.second.second);
-  add(tile_id + uint64_t(2), 0. + partial_dist, b.second, dest);
-  add(tile_id + uint64_t(0), 1. - partial_dist, b.second, dest);
-  add(tile_id + uint64_t(3), 0.0f, b.second, dest);
-  add(tile_id + uint64_t(7), 1.0f, b.second, dest);
-
-  uint32_t expected_duration = 2885;
-
-  vt::TimeDepForward astar;
-  assert_is_trivial_path(astar, origin, dest, 1, TrivialPathTest::DurationEqualTo, expected_duration,
-                         vs::TravelMode::kDrive);
 }
 
 void TestPartialDuration(vt::PathAlgorithm& astar) {
   // Tests that a partial duration is returned when starting on a partial edge
-  using node::a;
-  using node::b;
-  using node::d;
 
-  float partial_dist = 0.1;
+  Options options;
+  create_costing_options(options);
+  vs::cost_ptr_t costs[int(vs::TravelMode::kMaxTravelMode)];
+  auto mode = vs::TravelMode::kDrive;
+  costs[int(mode)] = vs::CreateAutoCost(Costing::auto_, options);
 
+  auto reader = get_graph_reader(test_dir);
+
+  std::vector<valhalla::baldr::Location> locations;
+  locations.push_back({node_locations["1"]});
+  locations.push_back({node_locations["3"]});
+
+  auto projections = loki::Search(locations, *reader, costs[int(mode)]);
   valhalla::Location origin;
-  origin.set_date_time("2019-11-21T13:05");
-  origin.mutable_ll()->set_lng(a.second.first);
-  origin.mutable_ll()->set_lat(a.second.second);
-  add(tile_id + uint64_t(0), 0. + partial_dist, a.second, origin);
-  add(tile_id + uint64_t(2), 1. - partial_dist, a.second, origin);
+  {
+    auto& correlated = projections.at(locations[0]);
+    PathLocation::toPBF(correlated, &origin, *reader);
+    origin.set_date_time("2019-11-21T13:05");
+  }
 
   valhalla::Location dest;
-  dest.set_date_time("2019-11-21T13:05");
-  dest.mutable_ll()->set_lng(d.second.first);
-  dest.mutable_ll()->set_lat(d.second.second);
-  add(tile_id + uint64_t(7), 0.0f + partial_dist, d.second, dest);
-  add(tile_id + uint64_t(3), 1.0f - partial_dist, d.second, dest);
+  {
+    auto& correlated = projections.at(locations[1]);
+    PathLocation::toPBF(correlated, &dest, *reader);
+    dest.set_date_time("2019-11-21T13:05");
+  }
 
-  uint32_t expected_duration = 9738;
+  uint32_t expected_duration = 7911;
 
   assert_is_trivial_path(astar, origin, dest, 2, TrivialPathTest::DurationEqualTo, expected_duration,
                          vs::TravelMode::kDrive);
@@ -621,10 +517,10 @@ boost::property_tree::ptree get_conf(const char* tiles) {
 }
 
 TEST(Astar, TestTrivialPathNoUturns) {
-  auto conf = get_conf("utrecht_tiles");
-
+  boost::property_tree::ptree conf;
+  conf.put("tile_dir", "test/data/utrecht_tiles");
   // setup and purge
-  vb::GraphReader graph_reader(conf.get_child("mjolnir"));
+  vb::GraphReader graph_reader(conf);
 
   // Locations
   std::vector<valhalla::baldr::Location> locations;
@@ -643,7 +539,7 @@ TEST(Astar, TestTrivialPathNoUturns) {
   auto mode = cost->travel_mode();
   mode_costing[static_cast<uint32_t>(mode)] = cost;
 
-  const auto projections = vk::Search(locations, graph_reader, cost.get());
+  const auto projections = vk::Search(locations, graph_reader, cost);
   std::vector<PathLocation> path_location;
 
   for (const auto& loc : locations) {
@@ -682,6 +578,10 @@ struct route_tester {
     loki_worker.route(request);
     thor_worker.route(request);
     odin_worker.narrate(request);
+    // Cleanup
+    loki_worker.cleanup();
+    thor_worker.cleanup();
+    odin_worker.cleanup();
     return request;
   }
   boost::property_tree::ptree conf;
@@ -773,10 +673,8 @@ TEST(Astar, test_deadend) {
       if (!name.empty()) {
         name.pop_back();
       }
-      bool is_uturn = false;
       if (m.type() == DirectionsLeg_Maneuver_Type_kUturnRight ||
           m.type() == DirectionsLeg_Maneuver_Type_kUturnLeft) {
-        is_uturn = true;
         uturn_street = name;
       }
       names.push_back(name);
@@ -876,10 +774,8 @@ TEST(Astar, test_deadend_timedep_forward) {
       if (!name.empty()) {
         name.pop_back();
       }
-      bool is_uturn = false;
       if (m.type() == DirectionsLeg_Maneuver_Type_kUturnRight ||
           m.type() == DirectionsLeg_Maneuver_Type_kUturnLeft) {
-        is_uturn = true;
         uturn_street = name;
       }
       names.push_back(name);
@@ -931,10 +827,8 @@ TEST(Astar, test_deadend_timedep_reverse) {
       if (!name.empty()) {
         name.pop_back();
       }
-      bool is_uturn = false;
       if (m.type() == DirectionsLeg_Maneuver_Type_kUturnRight ||
           m.type() == DirectionsLeg_Maneuver_Type_kUturnLeft) {
-        is_uturn = true;
         uturn_street = name;
       }
       names.push_back(name);
@@ -998,7 +892,7 @@ TEST(Astar, test_time_restricted_road_bidirectional) {
   // Verify JSON payload
   const std::string payload = tyr::serializeDirections(response);
   rapidjson::Document response_json;
-  response_json.Parse(payload);
+  response_json.Parse(payload.c_str());
   std::cout << payload << std::endl;
   {
     const char key[] = "/trip/legs/0/maneuvers/0/has_time_restrictions";
@@ -1023,7 +917,7 @@ TEST(Astar, test_time_restricted_road_bidirectional) {
   }
 }
 
-Api route_on_timerestricted(std::string& costing_str, int16_t hour) {
+Api route_on_timerestricted(const std::string& costing_str, int16_t hour) {
   // Try routing over "Via Montebello" in Rome which is a time restricted road
   // The restriction is
   //
@@ -1054,7 +948,7 @@ Api route_on_timerestricted(std::string& costing_str, int16_t hour) {
   return tester.test(request);
 }
 
-void test_route_restricted(std::string costing_str, int16_t hour) {
+void test_route_restricted(const std::string& costing_str, int16_t hour) {
   bool found_route = false;
   try {
     auto response = route_on_timerestricted(costing_str, hour);
@@ -1081,7 +975,7 @@ TEST(Astar, test_time_restricted_road_denied_on_timedep) {
   }
 }
 
-void test_route_allowed(std::string costing_str, int16_t hour) {
+void test_route_allowed(const std::string& costing_str, int16_t hour) {
   auto response = route_on_timerestricted(costing_str, hour);
   const auto& legs = response.trip().routes(0).legs();
   EXPECT_EQ(legs.size(), 1) << "Should have 1 leg";
@@ -1160,7 +1054,8 @@ void test_backtrack_complex_restriction(int date_time_type) {
           {
             "lat":1.282366,
             "lon":-256.140661,
-            "street":"Sheares Link"
+            "street":"Sheares Link",
+            "minimum_reachability": 0
           },
           {
             "lat":1.282355,
@@ -1177,7 +1072,7 @@ void test_backtrack_complex_restriction(int date_time_type) {
       break;
     default:
       throw std::runtime_error("Unhandled case");
-  };
+  }
 
   LOGLN_WARN(request);
   auto response = tester.test(request);
@@ -1244,23 +1139,6 @@ TEST(Astar, TestBacktrackComplexRestrictionForwardDetourAfterRestriction) {
   // This tests if a detour _after_ a partial complex restriction is found.
   // The other tests with Bayfront Singapore tests with a detour _before_
   // the complex restriction
-  auto conf = get_conf(test_dir.c_str());
-  LOG_INFO("");
-
-  valhalla::Location origin;
-  origin.set_date_time("2019-11-21T23:05");
-  origin.mutable_ll()->set_lng(node::n.second.first);
-  origin.mutable_ll()->set_lat(node::n.second.second);
-  add(tile_id + uint64_t(27), 0.0f, node::n.second, origin);
-
-  valhalla::Location dest;
-  dest.set_date_time("2019-11-21T23:05");
-  dest.mutable_ll()->set_lng(node::l.second.first);
-  dest.mutable_ll()->set_lat(node::l.second.second);
-  add(tile_id + uint64_t(23), 0.0f, node::l.second, dest);
-  add(tile_id + uint64_t(18), 1.0f, node::l.second, dest);
-  add(tile_id + uint64_t(24), 0.0f, node::l.second, dest);
-  add(tile_id + uint64_t(26), 1.0f, node::l.second, dest);
 
   Options options;
   create_costing_options(options);
@@ -1269,37 +1147,67 @@ TEST(Astar, TestBacktrackComplexRestrictionForwardDetourAfterRestriction) {
   costs[int(mode)] = vs::CreateAutoCost(Costing::auto_, options);
   ASSERT_TRUE(bool(costs[int(mode)]));
 
-  auto verify_paths = [](const std::vector<vt::PathInfo>& paths) {
-    std::vector<uint32_t> walked_path;
+  auto reader = get_graph_reader(test_dir);
+
+  auto tile = reader->GetGraphTile(tile_id);
+
+  auto verify_paths = [&](const std::vector<vt::PathInfo>& paths) {
+    std::vector<std::string> walked_path;
     for (auto path_info : paths) {
       LOG_INFO("Got pathinfo " + std::to_string(path_info.edgeid.id()));
-      walked_path.push_back(path_info.edgeid.id());
+      auto directededge = tile->directededge(path_info.edgeid);
+      auto edgeinfo = tile->edgeinfo(directededge->edgeinfo_offset());
+      auto names = edgeinfo.GetNames();
+      walked_path.push_back(names.front());
     }
-    std::vector<uint32_t> expected_path;
-    expected_path.push_back(27);
-    expected_path.push_back(21);
-    expected_path.push_back(14);
-    expected_path.push_back(17);
-    expected_path.push_back(20);
-    expected_path.push_back(26);
+    std::vector<std::string> expected_path;
+    expected_path.push_back("kh");
+    expected_path.push_back("hi");
+    expected_path.push_back("ij");
+    expected_path.push_back("mj");
+    expected_path.push_back("lm");
+    expected_path.push_back("il");
     ASSERT_EQ(walked_path, expected_path) << "Wrong path";
   };
-  auto reader = get_graph_reader(test_dir);
+
+  std::vector<valhalla::baldr::Location> locations;
+  locations.push_back({node_locations["6"]});
+  locations.push_back({node_locations["7"]});
+
+  const auto projections = loki::Search(locations, *reader, costs[int(mode)]);
+
+  std::vector<PathLocation> path_location;
+  for (const auto& loc : locations) {
+    ASSERT_NO_THROW(
+        path_location.push_back(projections.at(loc));
+        PathLocation::toPBF(path_location.back(), options.mutable_locations()->Add(), *reader);)
+        << "fail_invalid_origin";
+  }
+
+  // Set departure date for timedep forward
+  options.mutable_locations(0)->set_date_time("2019-11-21T13:05");
+
   {
-    LOGLN_INFO("Forward direction");
     vt::TimeDepForward astar;
-    auto paths = astar.GetBestPath(origin, dest, *reader, costs, mode).front();
+    auto paths = astar
+                     .GetBestPath(*options.mutable_locations(0), *options.mutable_locations(1),
+                                  *reader, costs, mode)
+                     .front();
+
     verify_paths(paths);
   }
   {
-    LOGLN_INFO("Reverse direction");
     vt::TimeDepReverse astar;
-    auto paths = astar.GetBestPath(origin, dest, *reader, costs, mode).front();
+    auto paths = astar
+                     .GetBestPath(*options.mutable_locations(0), *options.mutable_locations(1),
+                                  *reader, costs, mode)
+                     .front();
+
     verify_paths(paths);
   }
 }
 
-Api timed_access_restriction_ny(std::string mode, std::string datetime) {
+Api timed_access_restriction_ny(const std::string& mode, const std::string& datetime) {
   // The restriction is <tag k="bicycle:conditional" v="no @ (Su 08:00-18:00)"/>
   // and <tag k="motor_vehicle:conditional" v="no @ (Su 08:00-18:00)"/>
   auto conf = get_conf("ny_ar_tiles");
@@ -1325,6 +1233,7 @@ Api timed_access_restriction_ny(std::string mode, std::string datetime) {
 TEST(Astar, test_timed_no_access_restriction_1) {
   auto response = timed_access_restriction_ny("bicycle", "2018-05-13T19:14");
   const auto& legs = response.trip().routes(0).legs();
+  EXPECT_EQ(legs.size(), 1) << "Should have 1 leg";
   const auto& directions = response.directions().routes(0).legs(0);
   const auto& maneuvers_size = directions.maneuver_size();
   EXPECT_EQ(maneuvers_size, 3) << "This route should remain on Orchard St.";
@@ -1333,6 +1242,7 @@ TEST(Astar, test_timed_no_access_restriction_1) {
 TEST(Astar, test_timed_no_access_restriction_2) {
   auto response = timed_access_restriction_ny("bicycle", "2018-05-14T17:14");
   const auto& legs = response.trip().routes(0).legs();
+  EXPECT_EQ(legs.size(), 1) << "Should have 1 leg";
   const auto& directions = response.directions().routes(0).legs(0);
   const auto& maneuvers_size = directions.maneuver_size();
   EXPECT_EQ(maneuvers_size, 3) << "This route should remain on Orchard St.";
@@ -1341,6 +1251,7 @@ TEST(Astar, test_timed_no_access_restriction_2) {
 TEST(Astar, test_timed_no_access_restriction_3) {
   auto response = timed_access_restriction_ny("pedestrian", "2018-05-13T17:14");
   const auto& legs = response.trip().routes(0).legs();
+  EXPECT_EQ(legs.size(), 1) << "Should have 1 leg";
   const auto& directions = response.directions().routes(0).legs(0);
   const auto& maneuvers_size = directions.maneuver_size();
   EXPECT_EQ(maneuvers_size, 3) << "This route should remain on Orchard St.";
@@ -1351,6 +1262,7 @@ TEST(Astar, test_timed_no_access_restriction_3) {
 TEST(Astar, test_timed_access_restriction_1) {
   auto response = timed_access_restriction_ny("bicycle", "2018-05-13T17:14");
   const auto& legs = response.trip().routes(0).legs();
+  EXPECT_EQ(legs.size(), 1) << "Should have 1 leg";
   const auto& directions = response.directions().routes(0).legs(0);
   const auto& maneuvers_size = directions.maneuver_size();
   EXPECT_NE(maneuvers_size, 3)
@@ -1360,13 +1272,14 @@ TEST(Astar, test_timed_access_restriction_1) {
 TEST(Astar, test_timed_access_restriction_2) {
   auto response = timed_access_restriction_ny("auto", "2018-05-13T17:14");
   const auto& legs = response.trip().routes(0).legs();
+  EXPECT_EQ(legs.size(), 1) << "Should have 1 leg";
   const auto& directions = response.directions().routes(0).legs(0);
   const auto& maneuvers_size = directions.maneuver_size();
   EXPECT_NE(maneuvers_size, 3)
       << "This route should turn L onto Delancey St. because of restriction. ";
 }
 
-Api timed_conditional_restriction_pa(std::string mode, std::string datetime) {
+Api timed_conditional_restriction_pa(const std::string& mode, const std::string& datetime) {
   // The restriction is <tag k="restriction:conditional" v="no_right_turn @ (Mo-Fr 07:00-09:00)"/>
   auto conf = get_conf("pa_ar_tiles");
   route_tester tester(conf);
@@ -1386,7 +1299,7 @@ Api timed_conditional_restriction_pa(std::string mode, std::string datetime) {
   return tester.test(request);
 }
 
-Api timed_conditional_restriction_nh(std::string mode, std::string datetime) {
+Api timed_conditional_restriction_nh(const std::string& mode, const std::string& datetime) {
   // The restriction is <tag k="hgv:conditional" v="no @ (19:00-06:00)"/>
   auto conf = get_conf("nh_ar_tiles");
   route_tester tester(conf);
@@ -1412,6 +1325,7 @@ Api timed_conditional_restriction_nh(std::string mode, std::string datetime) {
 TEST(Astar, test_timed_no_conditional_restriction_1) {
   auto response = timed_conditional_restriction_pa("auto", "2018-11-01T06:30");
   const auto& legs = response.trip().routes(0).legs();
+  EXPECT_EQ(legs.size(), 1) << "Should have 1 leg";
   const auto& directions = response.directions().routes(0).legs(0);
   const auto& maneuvers_size = directions.maneuver_size();
   EXPECT_EQ(maneuvers_size, 3) << "This route should turn R onto Dickinson Ave.";
@@ -1420,6 +1334,7 @@ TEST(Astar, test_timed_no_conditional_restriction_1) {
 TEST(Astar, test_timed_no_conditional_restriction_2) {
   auto response = timed_conditional_restriction_pa("auto", "2018-11-01T10:00");
   const auto& legs = response.trip().routes(0).legs();
+  EXPECT_EQ(legs.size(), 1) << "Should have 1 leg";
   const auto& directions = response.directions().routes(0).legs(0);
   const auto& maneuvers_size = directions.maneuver_size();
   EXPECT_EQ(maneuvers_size, 3) << "This route should turn R onto Dickinson Ave.";
@@ -1428,6 +1343,7 @@ TEST(Astar, test_timed_no_conditional_restriction_2) {
 TEST(Astar, test_timed_no_conditional_restriction_3) {
   auto response = timed_conditional_restriction_nh("truck", "2018-05-02T18:00");
   const auto& legs = response.trip().routes(0).legs();
+  EXPECT_EQ(legs.size(), 1) << "Should have 1 leg";
   const auto& directions = response.directions().routes(0).legs(0);
   const auto& maneuvers_size = directions.maneuver_size();
   EXPECT_LE(maneuvers_size, 3) << "This route should turn R onto Old Derry Rd.";
@@ -1438,6 +1354,7 @@ TEST(Astar, test_timed_no_conditional_restriction_3) {
 TEST(Astar, test_timed_conditional_restriction_1) {
   auto response = timed_conditional_restriction_pa("auto", "2018-11-01T07:00");
   const auto& legs = response.trip().routes(0).legs();
+  EXPECT_EQ(legs.size(), 1) << "Should have 1 leg";
   const auto& directions = response.directions().routes(0).legs(0);
   const auto& maneuvers_size = directions.maneuver_size();
   EXPECT_NE(maneuvers_size, 3) << "This route should turn L onto Dickinson Ave.";
@@ -1446,6 +1363,7 @@ TEST(Astar, test_timed_conditional_restriction_1) {
 TEST(Astar, test_timed_conditional_restriction_2) {
   auto response = timed_conditional_restriction_pa("auto", "2018-11-01T09:00");
   const auto& legs = response.trip().routes(0).legs();
+  EXPECT_EQ(legs.size(), 1) << "Should have 1 leg";
   const auto& directions = response.directions().routes(0).legs(0);
   const auto& maneuvers_size = directions.maneuver_size();
   EXPECT_NE(maneuvers_size, 3) << "This route should turn L onto Dickinson Ave.";
@@ -1478,27 +1396,27 @@ TEST(Astar, test_complex_restriction_short_path_fake) {
   costs[int(mode)] = vs::CreateAutoCost(Costing::auto_, options);
   ASSERT_TRUE(bool(costs[int(mode)]));
 
+  std::vector<valhalla::baldr::Location> locations;
+  locations.push_back({node_locations["n"]});
+  locations.push_back({node_locations["i"]});
+
+  const auto projections = loki::Search(locations, *reader, costs[int(mode)]);
+  valhalla::Location origin;
+  {
+    const auto& correlated = projections.at(locations[0]);
+    PathLocation::toPBF(correlated, &origin, *reader);
+  }
+  valhalla::Location dest;
+  {
+    const auto& correlated = projections.at(locations[1]);
+    PathLocation::toPBF(correlated, &dest, *reader);
+  }
+
   // Test Bidirectional both for forward and reverse expansion
   vt::BidirectionalAStar astar;
 
   // Two tests where start and end lives on a partial complex restriction
   //      Under this circumstance the restriction should _not_ trigger
-
-  // Put the origin on N which is start of restriction
-  using node::n;
-  valhalla::Location origin;
-  origin.mutable_ll()->set_lng(n.second.first);
-  origin.mutable_ll()->set_lat(n.second.second);
-  add(tile_id + uint64_t(27), 0.0f, n.second, origin);
-  add(tile_id + uint64_t(22), 1.0f, n.second, origin);
-
-  // Put the destination at I which in the middle of restriction
-  using node::i;
-  valhalla::Location dest;
-  dest.mutable_ll()->set_lng(i.second.first);
-  dest.mutable_ll()->set_lat(i.second.second);
-  add(tile_id + uint64_t(16), 0.0f, i.second, dest);
-  add(tile_id + uint64_t(14), 1.0f, i.second, dest);
 
   auto paths = astar.GetBestPath(origin, dest, *reader, costs, mode);
 
@@ -1508,11 +1426,17 @@ TEST(Astar, test_complex_restriction_short_path_fake) {
       visited.push_back(path_info.edgeid.id());
     }
   }
-  std::vector<uint32_t> expected;
-  expected.push_back(27);
-  expected.push_back(21);
-  expected.push_back(14);
-  ASSERT_EQ(visited, expected) << "Unexpected edges in case 1 of bidirectional a*";
+  {
+    std::vector<uint32_t> expected;
+    auto reader = get_graph_reader(test_dir);
+    auto e1 = gurka::findEdge(reader, node_locations, tile_id, "nk", "k");
+    auto e2 = gurka::findEdge(reader, node_locations, tile_id, "kh", "h");
+    auto e3 = gurka::findEdge(reader, node_locations, tile_id, "hi", "i");
+    expected.push_back(std::get<0>(e1).id());
+    expected.push_back(std::get<0>(e2).id());
+    expected.push_back(std::get<0>(e3).id());
+    ASSERT_EQ(visited, expected) << "Unexpected edges in case 1 of bidirectional a*";
+  }
 
   // For the second test, just switch origin/destination and reverse expected,
   // result should be the same
@@ -1525,11 +1449,18 @@ TEST(Astar, test_complex_restriction_short_path_fake) {
       visited.push_back(path_info.edgeid.id());
     }
   }
-  expected.clear();
-  expected.push_back(16);
-  expected.push_back(15);
-  expected.push_back(22);
-  ASSERT_EQ(visited, expected) << "Unexpected edges in case 2 of bidirectional a*";
+
+  {
+    std::vector<uint32_t> expected;
+    auto reader = get_graph_reader(test_dir);
+    auto e1 = gurka::findEdge(reader, node_locations, tile_id, "hi", "h");
+    auto e2 = gurka::findEdge(reader, node_locations, tile_id, "kh", "k");
+    auto e3 = gurka::findEdge(reader, node_locations, tile_id, "nk", "n");
+    expected.push_back(std::get<0>(e1).id());
+    expected.push_back(std::get<0>(e2).id());
+    expected.push_back(std::get<0>(e3).id());
+    ASSERT_EQ(visited, expected) << "Unexpected edges in case 1 of bidirectional a*";
+  }
 
   {
     // TestBacktrackComplexRestrictionBidirectional tests the behaviour with a
@@ -1576,38 +1507,51 @@ TEST(Astar, test_IsBridgingEdgeRestricted) {
   // Lets construct the inputs fed to IsBridgingEdgeRestricted for a situation
   // where it tries to connect edge 14 to edge_labels_fwd from 21 and opposing edges
   // from 18
-  DirectedEdge edge_27;
-  edge_27.complex_restriction(true);
+  DirectedEdge edge_nk;
   {
-    edge_labels_fwd.emplace_back(kInvalidLabel, make_graph_id(27), make_graph_id(22), &edge_27,
+    auto result = gurka::findEdge(reader, node_locations, tile_id, "nk", "k");
+    ASSERT_NE(nullptr, std::get<1>(result));
+    edge_nk = *std::get<1>(result);
+    edge_nk.complex_restriction(true);
+    edge_labels_fwd.emplace_back(kInvalidLabel, std::get<0>(result), std::get<2>(result), &edge_nk,
                                  vs::Cost{}, vs::TravelMode::kDrive, vs::Cost{}, 0, false, false);
   }
-  DirectedEdge edge_21;
-  edge_21.complex_restriction(true);
+  DirectedEdge edge_kh;
   {
-    edge_labels_fwd.emplace_back(edge_labels_fwd.size() - 1, make_graph_id(21), make_graph_id(15),
-                                 &edge_21, vs::Cost{}, vs::TravelMode::kDrive, vs::Cost{}, 0, false,
+    auto result = gurka::findEdge(reader, node_locations, tile_id, "kh", "h");
+    ASSERT_NE(nullptr, std::get<1>(result));
+    edge_kh = *std::get<1>(result);
+    edge_kh.complex_restriction(true);
+    edge_labels_fwd.emplace_back(edge_labels_fwd.size() - 1, std::get<0>(result), std::get<2>(result),
+                                 &edge_kh, vs::Cost{}, vs::TravelMode::kDrive, vs::Cost{}, 0, false,
                                  false);
   }
   // Create our fwd_pred for the bridging check
-  DirectedEdge edge_14;
-  edge_14.complex_restriction(true);
+  DirectedEdge edge_hi;
+  auto edge_hi_result = gurka::findEdge(reader, node_locations, tile_id, "hi", "i");
+  ASSERT_NE(nullptr, std::get<1>(edge_hi_result));
+  edge_hi = *std::get<1>(edge_hi_result);
+  edge_hi.complex_restriction(true);
   vs::BDEdgeLabel fwd_pred(edge_labels_fwd.size() - 1, // Index to predecessor in edge_labels_fwd
-                           make_graph_id(14), make_graph_id(16), &edge_14, vs::Cost{}, 0.0, 0.0,
-                           vs::TravelMode::kDrive, vs::Cost{}, false, false);
+                           std::get<0>(edge_hi_result), std::get<2>(edge_hi_result), &edge_hi,
+                           vs::Cost{}, 0.0, 0.0, vs::TravelMode::kDrive, vs::Cost{}, false, false);
 
-  DirectedEdge edge_23;
-  edge_23.complex_restriction(true);
+  DirectedEdge edge_il;
   {
-    edge_labels_rev.emplace_back(kInvalidLabel, make_graph_id(23), make_graph_id(18), &edge_23,
+    auto result = gurka::findEdge(reader, node_locations, tile_id, "il", "i");
+    ASSERT_NE(nullptr, std::get<1>(result));
+    edge_il = *std::get<1>(result);
+    edge_il.complex_restriction(true);
+    edge_labels_rev.emplace_back(kInvalidLabel, std::get<0>(result), std::get<2>(result), &edge_il,
                                  vs::Cost{}, vs::TravelMode::kDrive, vs::Cost{}, 0, false, false);
   }
   // Create the rev_pred for the bridging check
-  DirectedEdge edge_16;
-  edge_16.complex_restriction(true);
+  DirectedEdge edge_ih;
+  edge_ih = *std::get<3>(edge_hi_result); // use result from earlier, which already got opposing edge
+  edge_ih.complex_restriction(true);
   vs::BDEdgeLabel rev_pred(edge_labels_rev.size() - 1, // Index to predecessor in edge_labels_rev
-                           make_graph_id(16), make_graph_id(14), &edge_16, vs::Cost{}, 0.0, 0.0,
-                           vs::TravelMode::kDrive, vs::Cost{}, false, false);
+                           std::get<2>(edge_hi_result), std::get<0>(edge_hi_result), &edge_ih,
+                           vs::Cost{}, 0.0, 0.0, vs::TravelMode::kDrive, vs::Cost{}, false, false);
 
   {
     // Test for forward search
@@ -1623,20 +1567,55 @@ TEST(ComplexRestriction, WalkVias) {
   // TODO Future improvement would be to make it simpler to quickly generate
   // tiles programmatically
   auto reader = get_graph_reader(test_dir);
-  std::vector<GraphId> expected_vias;
-  expected_vias.push_back(make_graph_id(14));
-  expected_vias.push_back(make_graph_id(21));
-
   Options options;
   create_costing_options(options);
   auto costing = vs::CreateAutoCost(Costing::auto_, options);
 
   bool is_forward = true;
   auto* tile = reader->GetGraphTile(tile_id);
-  auto restrictions = tile->GetRestrictions(is_forward, make_graph_id(18), costing->access_mode());
-  ASSERT_EQ(restrictions.size(), 1);
 
-  const auto cr = restrictions[0];
+  std::vector<valhalla::baldr::Location> locations;
+  locations.push_back({node_locations["7"]});
+  const auto projections = loki::Search(locations, *reader, costing);
+  const auto& correlated = projections.at(locations[0]);
+
+  ASSERT_EQ(correlated.edges.size(), 2) << "Expected only 2 edges in snapping response";
+
+  // Need to figure out if it's the forward or backward edge that we need to
+  // use for walking
+  const auto cr = [&]() -> ComplexRestriction* {
+    const auto first_id = correlated.edges.front().id;
+    auto restrictions = tile->GetRestrictions(is_forward, first_id, costing->access_mode());
+    if (!restrictions.empty())
+      return restrictions.front();
+    const auto second_id = correlated.edges.back().id;
+    restrictions = tile->GetRestrictions(is_forward, second_id, costing->access_mode());
+    if (!restrictions.empty())
+      return restrictions.front();
+    return nullptr;
+  }();
+
+  ASSERT_NE(cr, nullptr) << "Failed to find the target edge of the test restriction";
+
+  std::vector<GraphId> expected_vias;
+  {
+    std::vector<valhalla::baldr::Location> via_locations;
+    via_locations.push_back({node_locations["V"]});
+    const auto via_projections = loki::Search(via_locations, *reader, costing);
+    const auto& via_correlated = via_projections.at(via_locations[0]);
+    ASSERT_EQ(via_correlated.edges.size(), 2) << "Should've found 2 edges for the via point";
+
+    auto* de1 = tile->directededge(via_correlated.edges.front().id);
+    auto* de2 = tile->directededge(via_correlated.edges.back().id);
+    if (de1->part_of_complex_restriction()) {
+      expected_vias.push_back(via_correlated.edges.front().id);
+    }
+    if (de2->part_of_complex_restriction()) {
+      expected_vias.push_back(via_correlated.edges.back().id);
+    }
+    ASSERT_LE(expected_vias.size(), 2) << "Found too many edges - max should be 2 (2 DirectedEdges)";
+    ASSERT_NE(expected_vias.size(), 0) << "Failed to find the via edge";
+  }
 
   {
     // Walk all vias
@@ -1645,7 +1624,10 @@ TEST(ComplexRestriction, WalkVias) {
       walked_vias.push_back(*via);
       return WalkingVia::KeepWalking;
     });
-    EXPECT_EQ(walked_vias, expected_vias) << "Did not walk expected vias";
+    EXPECT_EQ(walked_vias.size(), 1);
+    EXPECT_NE(std::find(expected_vias.begin(), expected_vias.end(), walked_vias.front()),
+              expected_vias.end())
+        << "Did not walk expected vias";
   }
 }
 
