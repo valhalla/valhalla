@@ -315,6 +315,10 @@ public:
     return mutable_edge_->speed_limit();
   }
 
+  float default_speed() const {
+    return mutable_edge_->default_speed();
+  }
+
   float truck_speed() const {
     return mutable_edge_->truck_speed();
   }
