@@ -33,7 +33,12 @@ struct MatchResult {
 };
 
 struct EdgeSegment {
-  EdgeSegment(baldr::GraphId the_edgeid, float the_source = 0.f, float the_target = 1.f);
+  EdgeSegment(baldr::GraphId the_edgeid,
+              float the_source = 0.f,
+              float the_target = 1.f,
+              int the_first_match_idx = -1,
+              int the_last_match_idx = -1,
+              bool disconnect = false);
 
   std::vector<midgard::PointLL> Shape(baldr::GraphReader& graphreader) const;
 

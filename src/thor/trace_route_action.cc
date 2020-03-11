@@ -166,6 +166,8 @@ thor_worker_t::map_match(Api& request) {
     return {};
   }
 
+  std::cout << "new request!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+
   // we don't allow multi path for trace route at the moment, discontinuities force multi route
   int topk =
       request.options().action() == Options::trace_attributes ? request.options().best_paths() : 1;
@@ -407,8 +409,10 @@ thor_worker_t::map_match(Api& request) {
       path_map_match(match_results, path_edges, *route.mutable_legs()->Add(), route_discontinuities);
     } // trace_route can return multiple trip paths
     else {
-      serilize_pathes(path_edges, match_results, disconnected_edges, route_discontinuities, options,
-                      request);
+      //      serilize_pathes(path_edges, match_results, disconnected_edges, route_discontinuities,
+      //      options,
+      //                      request);
+      serilize_pathes_new(pathes, match_results, route_discontinuities, options, request);
     }
     // TODO: move this info to the trip leg
     // Keep the result
@@ -420,6 +424,124 @@ thor_worker_t::map_match(Api& request) {
   }
 
   return map_match_results;
+}
+
+void thor_worker_t::serilize_pathes_new(
+    const std::deque<std::vector<std::pair<PathInfo, const meili::EdgeSegment*>>>& pathes,
+    const std::vector<meili::MatchResult>& match_results,
+    std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>>&
+        route_discontinuities,
+    Options& options,
+    Api& request) {
+  std::cout << pathes.size() << std::endl;
+  // The following logic put break points (matches results) on edge candidates to form legs
+  // logic assumes the both match results and edge candidates are topologically sorted in correct
+  // order. Only the first location will be populated with corresponding input date_time
+  std::vector<PathInfo> edges;
+  edges.reserve(10);
+  std::string date_time = options.shape(0).has_date_time() ? options.shape(0).date_time() : "";
+  for (const auto& path : pathes) {
+    if (path.empty()) {
+      continue;
+    }
+
+    // for each disjoint edge group, we make a new route for it.
+    // We use multi-route to handle discontinuity
+    uint64_t route_index = request.trip().routes_size();
+    auto* route = request.mutable_trip()->mutable_routes()->Add();
+    // first we set origin_match_result to leg is going to begin
+    auto origin_iter = path.cbegin();
+    auto last_iter = path.cend() - 1;
+
+    int origin_match_idx = origin_iter->second->first_match_idx;
+    int last_match_idx = last_iter->second->last_match_idx;
+    int way_point_index = 0;
+
+    const PathInfo* last_leg{nullptr};
+    while (origin_match_idx < last_match_idx) {
+      for (int dest_match_idx = origin_match_idx + 1; dest_match_idx <= last_match_idx;
+           ++dest_match_idx) {
+
+        const meili::MatchResult& origin_match = match_results[origin_iter->second->first_match_idx];
+        const meili::MatchResult& dest_match = match_results[dest_match_idx];
+        if (!dest_match.edgeid.Is_Valid()) {
+          continue;
+        }
+
+        // we only build legs on 3 types of locations:
+        // break, breakthrough and disjoint points (if there is disconnect edges)
+        // for locations that matched but are break types nor disjoint points
+        // we set its waypoint_index to limits::max to notify the serializer thus distinguish
+        // them from the first waypoint of the route whose waypoint_index is 0.
+        auto break_type = options.shape(dest_match_idx).type();
+        if ((break_type != valhalla::Location::kBreak &&
+             break_type != valhalla::Location::kBreakThrough && dest_match_idx != last_match_idx)) {
+          Location* via_location = options.mutable_shape(dest_match_idx);
+          via_location->set_route_index(route_index);
+          via_location->set_shape_index(std::numeric_limits<uint32_t>::max());
+          continue;
+        }
+
+        auto dest_iter =
+            std::find_if(origin_iter, last_iter + 1, [&dest_match, dest_match_idx](const auto& ele) {
+              return dest_match_idx == ele.second->last_match_idx;
+            });
+
+        if (dest_iter == last_iter + 1) {
+          std::cout
+              << "this is not populated correct !!!!!!!!!!!!!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+              << std::endl;
+        }
+
+        // initialize the origin and destination location for route
+        Location* origin_location = options.mutable_shape(origin_match_idx);
+        Location* destination_location = options.mutable_shape(dest_match_idx);
+
+        // populate date time for the first location, either with the start time of the route
+        // or with the offset datetime of the previous leg in case of multiple legs.
+        if (!date_time.empty()) {
+          origin_location->set_date_time(date_time);
+        }
+
+        // when handling multi routes, orsm serializer need to know both the
+        // matching_index(route_index) and the waypoint_index(shape_index).
+        origin_location->set_route_index(route_index);
+        origin_location->set_shape_index(way_point_index);
+        destination_location->set_route_index(route_index);
+        destination_location->set_shape_index(++way_point_index);
+
+        // we fake up something that looks like the output of loki
+        add_path_edge(&*origin_location, origin_match);
+        add_path_edge(&*destination_location, dest_match);
+
+        edges.clear();
+        for (auto iter = origin_iter; iter <= dest_iter; ++iter)
+          edges.push_back(iter->first);
+        // mark the beginning and end of the edges on the path for this leg (inclusive)
+
+        std::cout << "build legs on idx :" << origin_match_idx << " and " << dest_match_idx
+                  << std::endl;
+
+        TripLegBuilder::Build(controller, matcher->graphreader(), mode_costing, edges.cbegin(),
+                              edges.cend(), *origin_location, *destination_location,
+                              std::list<valhalla::Location>{}, *route->mutable_legs()->Add(),
+                              interrupt, &route_discontinuities);
+
+        // we remember the datetime at the end of this leg, to use as the datetime at the start
+        // of the next leg.
+        if (!date_time.empty()) {
+          date_time = offset_date(*reader, date_time, edges.cbegin()->edgeid,
+                                  route->legs().rbegin()->node().rbegin()->elapsed_time(),
+                                  (edges.cend() - 1)->edgeid);
+        }
+
+        // beginning of next leg will be the end of this leg
+        origin_match_idx = dest_match_idx;
+        origin_iter = dest_iter + 1;
+        last_leg = &dest_iter->first;
+      }
+    }
+  }
 }
 
 void thor_worker_t::serilize_pathes(

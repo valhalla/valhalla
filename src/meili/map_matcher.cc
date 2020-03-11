@@ -652,7 +652,7 @@ std::vector<MatchResults> MapMatcher::OfflineMatch(const std::vector<Measurement
     std::vector<MatchResult> best_path;
     for (StateId::Time time = 0; time < original_state_ids.size(); time++) {
       // Add in this states result
-      best_path.emplace_back(std::move(results[time]));
+      best_path.emplace_back(results[time]);
 
       // See if there were any interpolated points with this state move on if not
       const auto it = interpolated.find(time);
@@ -673,7 +673,7 @@ std::vector<MatchResults> MapMatcher::OfflineMatch(const std::vector<Measurement
     }
 
     // Construct a result
-    auto segments = ConstructRoute(*this, best_path);
+    auto segments = ConstructRoute(*this, best_path, graphreader_);
     MatchResults match_results(std::move(best_path), std::move(segments), accumulated_cost);
 
     // We'll keep it if we don't have a duplicate already

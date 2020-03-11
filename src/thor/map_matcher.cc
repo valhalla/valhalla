@@ -168,7 +168,6 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
 
   // Interpolate match results if using timestamps for elapsed time
   std::vector<std::vector<interpolation_t>> interpolations;
-
   size_t last_interp_index = 0;
   bool use_timestamps = options.use_timestamps();
   if (use_timestamps) {
@@ -252,6 +251,8 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
     if (disconnected || !prev_segment) {
       pathes.emplace_back();
       pathes.back().reserve(num_segments);
+      elapsed = costing->EdgeCost(directededge, tile, second_of_week) *
+                (edge_segment.target - edge_segment.source);
     }
 
     pathes.back().emplace_back(PathInfo{mode, elapsed.secs, edge_id, 0, elapsed.cost, false,

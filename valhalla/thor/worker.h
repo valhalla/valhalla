@@ -96,6 +96,14 @@ protected:
                   Options& options,
                   Api& request);
 
+  void serilize_pathes_new(
+      const std::deque<std::vector<std::pair<PathInfo, const meili::EdgeSegment*>>>& pathes,
+      const std::vector<meili::MatchResult>& match_results,
+      std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>>&
+          route_discontinuities,
+      Options& options,
+      Api& request);
+
   sif::TravelMode mode;
   std::vector<meili::Measurement> trace;
   sif::CostFactory<sif::DynamicCost> factory;

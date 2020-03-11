@@ -912,11 +912,11 @@ TEST(Mapmatch, test_leg_duration_trimming) {
   std::vector<std::vector<std::string>> test_cases = {
       // 2 routes, one leg per route
       {R"([{"lat": 52.0865058, "lon": 5.1201, "type": "break", "node_snap_tolerance":0},
-          {"lat": 52.0865512, "lon": 5.1201, "type": "via", "node_snap_tolerance":0},
-          {"lat": 52.0867449, "lon": 5.12, "type": "break", "node_snap_tolerance":0}])",
+                {"lat": 52.0865512, "lon": 5.1201, "type": "via", "node_snap_tolerance":0},
+                {"lat": 52.0867449, "lon": 5.12, "type": "break", "node_snap_tolerance":0}])",
        R"([{"lat": 52.12705182, "lon": 5.0892165, "type": "break", "node_snap_tolerance":0},
-          {"lat": 52.1267117, "lon": 5.0898420, "type": "via", "node_snap_tolerance":0},
-          {"lat": 52.1261379, "lon": 5.0907894, "type": "break", "node_snap_tolerance":0}])"},
+                {"lat": 52.1267117, "lon": 5.0898420, "type": "via", "node_snap_tolerance":0},
+                {"lat": 52.1261379, "lon": 5.0907894, "type": "break", "node_snap_tolerance":0}])"},
       // 2 routes, multiple legs per route
       {R"([{"lat": 52.0865058, "lon": 5.1201, "type": "break", "node_snap_tolerance":0},
           {"lat": 52.0865512, "lon": 5.1201, "type": "break", "node_snap_tolerance":0},
