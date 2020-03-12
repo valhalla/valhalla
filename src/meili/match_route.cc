@@ -236,20 +236,19 @@ void reorder_segments(const std::vector<MatchResult>& match_results,
   if (segments.empty()) {
     return;
   } else if (match_indices.size() == 2) {
+    std::cout << match_indices.front() << " " << match_indices.back() << std::endl;
     segments.front().first_match_idx = match_indices.front();
     segments.back().last_match_idx = match_indices.back();
     return;
   }
-  // I have to match it to the segments, since there could be intersection matching, transition
-  // matching etc
 
   segments.clear();
-
-  MatchResult prev_match = match_results.front();
   int prev_idx = match_indices.front();
+  MatchResult prev_match = match_results[prev_idx];
   for (int i = 1, n = static_cast<int>(match_indices.size()); i < n; ++i) {
     int curr_idx = match_indices[i];
     const MatchResult& curr_match = match_results[curr_idx];
+    std::cout << prev_idx << " " << curr_idx << std::endl;
 
     if (prev_match.edgeid != curr_match.edgeid &&
         !reader.AreEdgesConnectedForward(prev_match.edgeid, curr_match.edgeid)) {
@@ -264,6 +263,9 @@ void reorder_segments(const std::vector<MatchResult>& match_results,
                           prev_idx, curr_idx});
     }
 
+    int x = 0;
+    int y = 0;
+    bool z = false;
     prev_match = curr_match;
     prev_idx = curr_idx;
   }
@@ -275,6 +277,15 @@ std::vector<EdgeSegment> ConstructRoute(const MapMatcher& mapmatcher,
   if (match_results.empty()) {
     return {};
   }
+
+  std::vector<std::string> coords;
+  for (const auto& res : match_results) {
+    coords.push_back(std::to_string(res.lnglat.lng()) + ",");
+    coords.push_back(std::to_string(res.lnglat.lat()) + ";");
+  }
+  for (const auto& s : coords)
+    std::cout << s;
+  std::cout << std::endl;
 
   std::vector<EdgeSegment> route;
   const baldr::GraphTile* tile = nullptr;
@@ -292,7 +303,7 @@ std::vector<EdgeSegment> ConstructRoute(const MapMatcher& mapmatcher,
       }
       continue;
     }
-
+    
     if (prev_match && prev_match->HasState()) {
       const auto &prev_state = mapmatcher.state_container().state(prev_match->stateid),
                  state = mapmatcher.state_container().state(match.stateid);
@@ -321,11 +332,12 @@ std::vector<EdgeSegment> ConstructRoute(const MapMatcher& mapmatcher,
       // we may merge the last segment of route with the beginning segment of segments
       // MergeEdgeSegments(route, segments.begin(), segments.end());
       route.insert(route.end(), segments.cbegin(), segments.cend());
+      match_indices.clear();
+      std::cout << " clear containers " << std::endl;
     }
 
     prev_match = &match;
     prev_idx = curr_idx;
-    match_indices.clear();
   }
   return route;
 }

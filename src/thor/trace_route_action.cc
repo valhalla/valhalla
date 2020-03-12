@@ -521,6 +521,8 @@ void thor_worker_t::serilize_pathes_new(
 
         std::cout << "build legs on idx :" << origin_match_idx << " and " << dest_match_idx
                   << std::endl;
+        std::cout << "build legs on edges :" << std::distance(path.begin(), origin_iter) << " and "
+                  << std::distance(path.begin(), dest_iter) << std::endl;
 
         TripLegBuilder::Build(controller, matcher->graphreader(), mode_costing, edges.cbegin(),
                               edges.cend(), *origin_location, *destination_location,
