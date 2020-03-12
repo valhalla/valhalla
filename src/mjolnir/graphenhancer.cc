@@ -1290,27 +1290,6 @@ uint32_t GetStopImpact(uint32_t from,
     } else if (abs(static_cast<int>(from_rc) - static_cast<int>(edges[to].classification())) > 1)
       stop_impact++;
   }
-    // add to the stop impact when transitioning from a normal highway to a TC or ramp almost in the
-    // reverse direction. most of these will be an illegal maneuver anyhow.
- /* } else if (nodeinfo.drive_on_right() && turn_type == Turn::Type::kSharpLeft &&
-             (edges[from].use() != Use::kRamp && edges[from].use() != Use::kTurnChannel) &&
-             (edges[to].use() == Use::kRamp || edges[to].use() == Use::kTurnChannel)) {
-    stop_impact += 2;
-  } else if (!nodeinfo.drive_on_right() && turn_type == Turn::Type::kSharpRight &&
-             (edges[from].use() != Use::kRamp && edges[from].use() != Use::kTurnChannel) &&
-             (edges[to].use() == Use::kRamp || edges[to].use() == Use::kTurnChannel)) {
-    stop_impact += 2;
-    // roads intersecting in the middle of a diamond interchange
-  } else if (turn_type == Turn::Type::kStraight && edges[to].internal() && edges[from].internal()) {
-    if (stop_impact != 0) { // make sure we do not subtract 1 from 0
-      stop_impact -= 1;
-    }
-    // one is likely to stop at traffic signals.
-  } //else if (nodeinfo.traffic_signal()) {
-    //stop_impact += 2;
- // }
-  *
-  */
   // Clamp to kMaxStopImpact
   return (stop_impact <= kMaxStopImpact) ? stop_impact : kMaxStopImpact;
 }
