@@ -230,6 +230,13 @@ protected:
                                   const std::string& base_prefix,
                                   const std::string& base_suffix);
 
+  /**
+   * Returns true if the specified maneuver is a ramp and leads to a highway.
+   *
+   * @return true if the specified maneuver is a ramp and leads to a highway.
+   */
+  bool RampLeadsToHighway(Maneuver& maneuver) const;
+
   const Options& options_;
   EnhancedTripLeg* trip_path_;
 };

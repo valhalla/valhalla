@@ -3,6 +3,7 @@
 #include "loki/search.h"
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
+#include "worker.h"
 
 #include "baldr/rapidjson_utils.h"
 #include <algorithm>
@@ -18,6 +19,7 @@
 #include <string>
 #include <thread>
 #include <tuple>
+#include <valhalla/sif/costfactory.h>
 #include <vector>
 
 namespace bpo = boost::program_options;
@@ -29,6 +31,7 @@ size_t batch = 1;
 bool extrema = false;
 size_t isolated = 0;
 size_t radius = 0;
+std::string costing_str;
 std::vector<std::string> input_files;
 
 using job_t = std::vector<valhalla::baldr::Location>;
@@ -76,7 +79,7 @@ struct result_t {
 };
 using results_t = std::set<result_t>;
 
-bool ParseArguments(int argc, char* argv[]) {
+int ParseArguments(int argc, char* argv[]) {
 
   bpo::options_description options(
       "search " VALHALLA_VERSION "\n"
@@ -102,7 +105,9 @@ bool ParseArguments(int argc, char* argv[]) {
       "reach,i", boost::program_options::value<size_t>(&isolated),
       "How many edges need to be reachable before considering it as connected to the larger "
       "network")("radius,r", boost::program_options::value<size_t>(&radius),
-                 "How many meters to search away from the input location")
+                 "How many meters to search away from the input location")(
+      "costing", boost::program_options::value<std::string>(&costing_str),
+      "Which costing model to use.")
       // positional arguments
       ("input_files",
        boost::program_options::value<std::vector<std::string>>(&input_files)->multitoken());
@@ -119,17 +124,17 @@ bool ParseArguments(int argc, char* argv[]) {
   } catch (std::exception& e) {
     std::cerr << "Unable to parse command line options because: " << e.what() << "\n"
               << "This is a bug, please report it at " PACKAGE_BUGREPORT << "\n";
-    return false;
+    return 1;
   }
 
   if (vm.count("help")) {
     std::cout << options << "\n";
-    return true;
+    return -1;
   }
 
   if (vm.count("version")) {
     std::cout << "loki_benchmark " << VALHALLA_VERSION << "\n";
-    return true;
+    return -1;
   }
 
   // argument checking and verification
@@ -137,19 +142,35 @@ bool ParseArguments(int argc, char* argv[]) {
     if (vm.count(arg) == 0) {
       std::cerr << "The <" << arg << "> argument was not provided, but is mandatory\n\n";
       std::cerr << options << "\n";
-      return false;
+      return 1;
     }
   }
 
   // TODO: complain when no input files
 
-  return true;
+  return 0;
+}
+
+valhalla::sif::cost_ptr_t create_costing() {
+  valhalla::Options options;
+  for (int i = 0; i < valhalla::Costing_MAX; ++i)
+    options.add_costing_options();
+  valhalla::Costing costing;
+  if (valhalla::Costing_Enum_Parse(costing_str, &costing)) {
+    options.set_costing(costing);
+  } else {
+    options.set_costing(valhalla::Costing::none_);
+  }
+  valhalla::sif::CostFactory<valhalla::sif::DynamicCost> factory;
+  factory.RegisterStandardCostingModels();
+  return factory.Create(options);
 }
 
 void work(const boost::property_tree::ptree& config, std::promise<results_t>& promise) {
   // lambda to do the current job
+  auto costing = create_costing();
   valhalla::baldr::GraphReader reader(config.get_child("mjolnir"));
-  auto search = [&reader](const job_t& job) {
+  auto search = [&reader, &costing](const job_t& job) {
     // so that we dont benefit from cache coherency
     reader.Clear();
     std::pair<result_t, result_t> result;
@@ -158,7 +179,7 @@ void work(const boost::property_tree::ptree& config, std::promise<results_t>& pr
       auto start = std::chrono::high_resolution_clock::now();
       try {
         // TODO: actually save the result
-        auto result = valhalla::loki::Search(job, reader);
+        auto result = valhalla::loki::Search(job, reader, costing);
         auto end = std::chrono::high_resolution_clock::now();
         (*r) = result_t{std::chrono::duration_cast<std::chrono::milliseconds>(end - start), true, job,
                         cached};
@@ -187,8 +208,12 @@ void work(const boost::property_tree::ptree& config, std::promise<results_t>& pr
 
 int main(int argc, char** argv) {
 
-  if (!ParseArguments(argc, argv)) {
+  int ret = ParseArguments(argc, argv);
+  if (ret > 0) {
     return EXIT_FAILURE;
+  }
+  if (ret < 0) {
+    return EXIT_SUCCESS;
   }
 
   // check what type of input we are getting
@@ -215,7 +240,7 @@ int main(int argc, char** argv) {
       std::stringstream ss(line);
       std::string item;
       std::vector<std::string> parts;
-      while (std::getline(ss, item, ',')) {
+      while (std::getline(ss, item, ' ')) {
         parts.push_back(std::move(item));
       }
       float lat = std::stof(parts[0]);

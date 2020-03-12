@@ -203,6 +203,40 @@ protected:
                                               const Options& options);
 };
 
+// This function checks if the path formed by the two expanding trees
+// when connected by `pred` triggers a complex restriction.
+//
+// At a high level, the code forms a smaller path of the full path to
+// be formed by `pred` if accepted. This "patch" path is then tested for
+// restrictions.
+//
+// To do this, the code walks M edges back into `edge_labels`
+// while tracking the vias from edges with starting complex restrictions.
+//
+// These M edges, plus the current `pred`, plus M edges from `edge_labels_opposite_direction`
+// form a "patch" path. The vias that were tracked earlier are then compared
+// to this patch path to see if they match anywhere in the larger patch path.
+//
+// M must be chosen apriori to be larger than the length of known complex restrictions.
+// TODO Implement a lazy approach where we don't need a priori knowledge. This
+// could be done by storing number of complex restrictions in each edge-label.
+//
+//   edge_labels |        | edge_labels_opposite_direction
+//               |        |
+//   E-2    E-1  | pred   |  E1    E2
+// N ---> N ---> N -----> N ---> N ---> N
+//                opp_pred
+//
+// |<-------   PATCH_PATH -------------->|
+//
+// If no restriction triggers, it returns true and the edge is allowed
+bool IsBridgingEdgeRestricted(valhalla::baldr::GraphReader& graphreader,
+                              std::vector<sif::BDEdgeLabel>& edge_labels_fwd,
+                              std::vector<sif::BDEdgeLabel>& edge_labels_rev,
+                              const sif::BDEdgeLabel& fwd_pred,
+                              const sif::BDEdgeLabel& rev_pred,
+                              std::shared_ptr<sif::DynamicCost>& costing);
+
 } // namespace thor
 } // namespace valhalla
 

@@ -47,21 +47,6 @@ constexpr uint32_t kInitialEdgeLabelCount = 500000;
 Isochrone::Isochrone() : Dijkstras(), shape_interval_(50.0f) {
 }
 
-// Destructor
-Isochrone::~Isochrone() {
-  Clear();
-}
-
-// Clear the temporary information generated during path construction.
-void Isochrone::Clear() {
-  // Clear the edge labels, edge status flags, and adjacency list
-  // TODO - clear only the edge label set that was used?
-  bdedgelabels_.clear();
-  mmedgelabels_.clear();
-  adjacencylist_.reset();
-  edgestatus_.clear();
-}
-
 // Construct the isotile. Use a fixed grid size. Convert time in minutes to
 // a max distance in meters based on an estimate of max average speed for
 // the travel mode.
@@ -242,7 +227,7 @@ void Isochrone::UpdateIsoTile(const EdgeLabel& pred,
     } else {
       // Find intersecting tiles (using a Bresenham method)
       auto tiles = isotile_->Intersect(std::list<PointLL>{ll0, ll});
-      for (auto t : tiles) {
+      for (const auto& t : tiles) {
         isotile_->SetIfLessThan(t.first, secs1 * kMinPerSec);
       }
     }
@@ -283,7 +268,7 @@ void Isochrone::UpdateIsoTile(const EdgeLabel& pred,
     } else {
       // Find intersecting tiles (using a Bresenham method)
       auto tiles = isotile_->Intersect(std::list<PointLL>{*itr1, *itr2});
-      for (auto t : tiles) {
+      for (const auto& t : tiles) {
         isotile_->SetIfLessThan(t.first, minutes);
       }
     }
@@ -292,12 +277,13 @@ void Isochrone::UpdateIsoTile(const EdgeLabel& pred,
 
 // here we mark the cells of the isochrone along the edge we just reached up to its end node
 void Isochrone::ExpandingNode(baldr::GraphReader& graphreader,
+                              const baldr::GraphTile* tile,
+                              const baldr::NodeInfo* node,
                               const sif::EdgeLabel& current,
-                              const midgard::PointLL& node_ll,
                               const sif::EdgeLabel* previous) {
   // Update the isotile
   float secs0 = previous ? previous->cost().secs : 0;
-  UpdateIsoTile(current, graphreader, node_ll, secs0);
+  UpdateIsoTile(current, graphreader, node->latlng(tile->header()->base_ll()), secs0);
 }
 
 ExpansionRecommendation Isochrone::ShouldExpand(baldr::GraphReader& graphreader,
@@ -318,6 +304,11 @@ ExpansionRecommendation Isochrone::ShouldExpand(baldr::GraphReader& graphreader,
   }
   return ExpansionRecommendation::continue_expansion;
 };
+
+void Isochrone::GetExpansionHints(uint32_t& bucket_count, uint32_t& edge_label_reservation) const {
+  bucket_count = 20000;
+  edge_label_reservation = 500000;
+}
 
 } // namespace thor
 } // namespace valhalla

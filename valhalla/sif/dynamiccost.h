@@ -1,9 +1,8 @@
 #ifndef VALHALLA_SIF_DYNAMICCOST_H_
 #define VALHALLA_SIF_DYNAMICCOST_H_
 
-#include "baldr/accessrestriction.h"
-#include "midgard/logging.h"
 #include <cstdint>
+#include <valhalla/baldr/accessrestriction.h>
 #include <valhalla/baldr/datetime.h>
 #include <valhalla/baldr/directededge.h>
 #include <valhalla/baldr/double_bucket_queue.h> // For kInvalidLabel
@@ -14,6 +13,7 @@
 #include <valhalla/baldr/rapidjson_utils.h>
 #include <valhalla/baldr/timedomain.h>
 #include <valhalla/baldr/transitdeparture.h>
+#include <valhalla/midgard/logging.h>
 #include <valhalla/proto/options.pb.h>
 #include <valhalla/sif/costconstants.h>
 #include <valhalla/sif/edgelabel.h>
@@ -264,6 +264,8 @@ public:
    * @param  edge  Directed edge.
    * @param  pred        Predecessor information.
    * @param  edge_labels List of edge labels.
+   * @param  edge_labels List of edge labels in other direction
+   *                     (e.g. bidirectional when connecting the two trees).
    * @param  tile        Graph tile (to read restriction if needed).
    * @param  edgeid      Edge Id for the directed edge.
    * @param  forward     Forward search or reverse search.
