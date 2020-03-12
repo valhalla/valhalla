@@ -851,5 +851,10 @@ AABB2<PointLL> GraphReader::GetMinimumBoundingBox(const AABB2<PointLL>& bb) {
   return min_bb;
 }
 
+int GraphReader::GetTimezone(const baldr::GraphId& node) {
+  const baldr::GraphTile* tile = GetGraphTile(node);
+  return (tile == nullptr) ? 0 : tile->node(node)->timezone();
+}
+
 } // namespace baldr
 } // namespace valhalla

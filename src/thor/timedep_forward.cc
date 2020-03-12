@@ -270,7 +270,7 @@ TimeDepForward::GetBestPath(valhalla::Location& origin,
   SetOrigin(graphreader, origin, destination, kInvalidSecondsOfWeek);
 
   // Set the origin timezone to be the timezone at the end node
-  origin_tz_index_ = edgelabels_.size() == 0 ? 0 : GetTimezone(graphreader, edgelabels_[0].endnode());
+  origin_tz_index_ = edgelabels_.size() == 0 ? 0 : graphreader.GetTimezone(edgelabels_[0].endnode());
   if (origin_tz_index_ == 0) {
     // TODO - do not throw exception at this time
     LOG_WARN("Could not get the timezone at the origin");

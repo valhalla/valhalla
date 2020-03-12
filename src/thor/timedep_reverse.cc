@@ -333,7 +333,7 @@ TimeDepReverse::GetBestPath(valhalla::Location& origin,
 
   // Set the destination timezone
   dest_tz_index_ =
-      edgelabels_rev_.size() == 0 ? 0 : GetTimezone(graphreader, edgelabels_rev_[0].endnode());
+      edgelabels_rev_.size() == 0 ? 0 : graphreader.GetTimezone(edgelabels_rev_[0].endnode());
   if (dest_tz_index_ == 0) {
     // TODO - do not throw exception at this time
     LOG_WARN("Could not get the timezone at the destination");

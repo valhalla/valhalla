@@ -123,17 +123,6 @@ protected:
     }
     return false;
   }
-
-  /**
-   * Convenience method to get the timezone index at a node.
-   * @param graphreader Graph reader.
-   * @param node GraphId of the node to get the timezone index.
-   * @return Returns the timezone index. A value of 0 indicates an invalid timezone.
-   */
-  int GetTimezone(baldr::GraphReader& graphreader, const baldr::GraphId& node) {
-    const baldr::GraphTile* tile = graphreader.GetGraphTile(node);
-    return (tile == nullptr) ? 0 : tile->node(node)->timezone();
-  }
 };
 
 // Container for the data we iterate over in Expand* function
