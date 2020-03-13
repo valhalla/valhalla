@@ -63,7 +63,7 @@ public:
    * @param  ptr      Pointer to the start of the tile's data.
    * @param  size     Size in bytes of the tile data.
    */
-  GraphTile(const GraphId& graphid, char* tile_ptr, size_t size, const char* traffic_ptr = nullptr);
+  GraphTile(const GraphId& graphid, char* tile_ptr, size_t size, char* traffic_ptr = nullptr);
 
   /**
    * Construct a tile given a url for the tile using curl

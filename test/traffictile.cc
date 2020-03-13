@@ -38,11 +38,22 @@ TEST(Traffic, TileConstruction) {
   traffic::Tile tile(reinterpret_cast<char*>(&testdata));
 
   auto incidents = tile.getIncidentsForDirectedEdge(2);
-  EXPECT_EQ(incidents.size(), 1);
+  ASSERT_EQ(incidents.size(), 1);
   EXPECT_EQ(incidents.front().edge_index, 2);
 
   auto speed = tile.getTrafficForDirectedEdge(2);
   EXPECT_EQ(speed.speed_kmh, 99);
+}
+
+TEST(Traffic, NullTileConstruction) {
+  using namespace valhalla::baldr;
+  traffic::Tile tile(nullptr); // Should not segfault
+
+  auto speed = tile.getTrafficForDirectedEdge(99);
+  EXPECT_EQ(speed.speed_kmh, 0);
+
+  auto incidents = tile.getIncidentsForDirectedEdge(99);
+  EXPECT_EQ(incidents.size(), 0);
 }
 
 int main(int argc, char* argv[]) {

@@ -558,8 +558,10 @@ findEdge(const map& map,
  * @param waypoints an array of node names to use as waypoints
  * @param costing the name of the costing model to use
  */
-valhalla::Api
-route(const map& map, const std::vector<std::string>& waypoints, const std::string& costing) {
+valhalla::Api route(const map& map,
+                    const std::vector<std::string>& waypoints,
+                    const std::string& costing,
+                    valhalla::tyr::actor_t* actor = nullptr) {
   std::cerr << "[          ] Routing with mjolnir.tile_dir = "
             << map.config.get<std::string>("mjolnir.tile_dir") << " with waypoints ";
   bool first = true;
@@ -572,14 +574,21 @@ route(const map& map, const std::vector<std::string>& waypoints, const std::stri
   std::cerr << " with costing " << costing << std::endl;
   auto request_json = detail::build_valhalla_route_request(map, waypoints, costing);
   std::cerr << "[          ] Valhalla request is: " << request_json << std::endl;
-
-  valhalla::tyr::actor_t actor(map.config, true);
-  return actor.unserialized_route(request_json);
+  if (actor != nullptr) {
+    std::cerr << "[          ] Using pre-allocated tyr::actor" << std::endl;
+    return actor->unserialized_route(request_json);
+  } else {
+    valhalla::tyr::actor_t actor(map.config, true);
+    return actor.unserialized_route(request_json);
+  }
 }
 
-valhalla::Api
-route(const map& map, const std::string& from, const std::string& to, const std::string& costing) {
-  return route(map, {from, to}, costing);
+valhalla::Api route(const map& map,
+                    const std::string& from,
+                    const std::string& to,
+                    const std::string& costing,
+                    valhalla::tyr::actor_t* actor = nullptr) {
+  return route(map, {from, to}, costing, actor);
 }
 
 valhalla::Api match(const map& map,
@@ -770,6 +779,28 @@ void expect_path_length(const valhalla::Api& result,
     EXPECT_FLOAT_EQ(length_km, expected_length_km);
   } else {
     EXPECT_NEAR(length_km, expected_length_km, error_margin);
+  }
+}
+
+void expect_eta(const valhalla::Api& result,
+                const float expected_eta_seconds,
+                const float error_margin = 0) {
+  EXPECT_EQ(result.trip().routes_size(), 1);
+  EXPECT_EQ(result.trip().routes(0).legs_size(), 1);
+
+  const auto& route = result.trip().routes(0);
+
+  double eta_sec = 0;
+  for (int legnum = 0; legnum < route.legs_size(); legnum++) {
+    const auto& leg = route.legs(legnum);
+    const auto& lastnode = leg.node(leg.node_size()-1);
+    eta_sec += lastnode.elapsed_time();
+  }
+
+  if (error_margin == 0) {
+    EXPECT_FLOAT_EQ(eta_sec, expected_eta_seconds);
+  } else {
+    EXPECT_NEAR(eta_sec, expected_eta_seconds, error_margin);
   }
 }
 

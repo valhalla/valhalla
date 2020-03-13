@@ -133,7 +133,7 @@ bool GraphTile::DecompressTile(const GraphId& graphid, std::vector<char>& compre
   return true;
 }
 
-GraphTile::GraphTile(const GraphId& graphid, char* tile_ptr, size_t size, const char* traffic_ptr)
+GraphTile::GraphTile(const GraphId& graphid, char* tile_ptr, size_t size, char* traffic_ptr)
     : header_(nullptr), traffic_tile(traffic_ptr) {
   // Initialize the internal tile data structures using a pointer to the
   // tile and the tile size
