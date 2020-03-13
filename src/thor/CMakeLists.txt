@@ -2,26 +2,27 @@ file(GLOB headers ${VALHALLA_SOURCE_DIR}/valhalla/thor/*.h)
 
 set(sources
   astar.cc
+  attributes_controller.cc
   bidirectional_astar.cc
   costmatrix.cc
   dijkstras.cc
+  isochrone_action.cc
   isochrone.cc
   map_matcher.cc
+  matrix_action.cc
   multimodal.cc
+  optimized_route_action.cc
   optimizer.cc
-  triplegbuilder.cc
-  attributes_controller.cc
+  pathalgorithm.cc
+  route_action.cc
   route_matcher.cc
   timedep_forward.cc
   timedep_reverse.cc
   timedistancematrix.cc
-  worker.cc
-  isochrone_action.cc
-  matrix_action.cc
-  optimized_route_action.cc
-  route_action.cc
   trace_attributes_action.cc
-  trace_route_action.cc)
+  trace_route_action.cc
+  triplegbuilder.cc
+  worker.cc)
 
 valhalla_module(NAME thor
   SOURCES ${sources}

@@ -148,5 +148,40 @@ struct EdgeMetadata {
   }
 };
 
+// A structure for tracking time information as the route progresses
+struct TimeInfo {
+  // index into the timezone database of the location
+  // used to do timezone offset as the route progresses
+  int timezone_index;
+
+  // seconds from epoch adjusted for timezone at the location
+  // used to do local time offset as the route progresses
+  uint64_t local_time;
+
+  // the ordinal second from the beginning of the week (starting monday at 00:00)
+  // used to look up historical traffic as the route progresses
+  uint32_t second_of_week;
+
+  // whether or not this route is relative to "now"
+  // and how far from "now" it is
+  bool current;
+  uint32_t seconds_from_now;
+
+  // helper function to initialize the object from a location
+  static TimeInfo make(valhalla::Location& location, int timezone_index);
+
+  // a tuple used to offset from a time in the forward or reverse direction
+  struct Offset {
+    float seconds;
+    int timezone_index;
+  };
+
+  // offset all the initial time info to reflect the progress along the route to this point
+  TimeInfo operator+(Offset offset) const;
+
+  // offset all the initial time info to reflect the progress along the route to this point
+  TimeInfo operator-(Offset offset) const;
+};
+
 } // namespace thor
 } // namespace valhalla
