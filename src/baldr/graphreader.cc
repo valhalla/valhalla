@@ -96,9 +96,12 @@ struct GraphReader::tile_extract_t {
 };
 
 std::shared_ptr<const GraphReader::tile_extract_t>
-GraphReader::get_extract_instance(const boost::property_tree::ptree& pt) {
+GraphReader::get_extract_instance(const boost::property_tree::ptree& pt, const bool reset_static) {
   static std::shared_ptr<const GraphReader::tile_extract_t> tile_extract(
       new GraphReader::tile_extract_t(pt));
+  if (reset_static) {
+    tile_extract.reset(new GraphReader::tile_extract_t(pt));
+  }
   return tile_extract;
 }
 
@@ -342,8 +345,9 @@ TileCache* TileCacheFactory::createTileCache(const boost::property_tree::ptree& 
 }
 
 // Constructor using separate tile files
-GraphReader::GraphReader(const boost::property_tree::ptree& pt)
-    : tile_extract_(get_extract_instance(pt)), tile_dir_(pt.get<std::string>("tile_dir", "")),
+GraphReader::GraphReader(const boost::property_tree::ptree& pt, const bool reset_static)
+    : tile_extract_(get_extract_instance(pt, reset_static)),
+      tile_dir_(pt.get<std::string>("tile_dir", "")),
       curlers_(std::make_unique<curler_pool_t>(pt.get<size_t>("max_concurrent_reader_users", 1),
                                                pt.get<std::string>("user_agent", ""))),
       tile_url_(pt.get<std::string>("tile_url", "")),
@@ -427,7 +431,7 @@ const GraphTile* GraphReader::GetGraphTile(const GraphId& graphid) {
 
     // This initializes the tile from mmap
     GraphTile tile(base, t->second.first, t->second.second,
-                   traffic_ptr == tile_extract_->traffic_tiles.end() ? traffic_ptr->second.first
+                   traffic_ptr != tile_extract_->traffic_tiles.end() ? traffic_ptr->second.first
                                                                      : nullptr);
     if (!tile.header()) {
       // LOG_DEBUG("Memory map cache miss " + GraphTile::FileSuffix(base));
@@ -441,8 +445,11 @@ const GraphTile* GraphReader::GetGraphTile(const GraphId& graphid) {
     return inserted;
   } // Try getting it from flat file
   else {
+    auto traffic_ptr = tile_extract_->traffic_tiles.find(base);
     // Try to get it from disk and if we cant..
-    GraphTile tile(tile_dir_, base);
+    GraphTile tile(tile_dir_, base,
+                   traffic_ptr != tile_extract_->traffic_tiles.end() ? traffic_ptr->second.first
+                                                                     : nullptr);
     if (!tile.header()) {
       {
         std::lock_guard<std::mutex> lock(_404s_lock);

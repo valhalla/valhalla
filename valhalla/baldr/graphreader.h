@@ -333,7 +333,7 @@ public:
    * Constructor using tiles as separate files.
    * @param pt  Property tree listing the configuration for the tile storage.
    */
-  GraphReader(const boost::property_tree::ptree& pt);
+  GraphReader(const boost::property_tree::ptree& pt, const bool reset_static = false);
 
   /**
    * Test if tile exists
@@ -741,7 +741,7 @@ protected:
   struct tile_extract_t;
   std::shared_ptr<const tile_extract_t> tile_extract_;
   static std::shared_ptr<const GraphReader::tile_extract_t>
-  get_extract_instance(const boost::property_tree::ptree& pt);
+  get_extract_instance(const boost::property_tree::ptree& pt, const bool reset_static = false);
 
   // Information about where the tiles are kept
   const std::string tile_dir_;

@@ -5,6 +5,8 @@
 #include <cstdint>
 #include <vector>
 
+#include <iostream>
+
 namespace valhalla {
 namespace baldr {
 namespace traffic {
@@ -68,34 +70,41 @@ struct TileHeader {
 class Tile {
 public:
   Tile(char* tile_ptr)
-      : header{reinterpret_cast<TileHeader*>(tile_ptr)},
-        speeds{reinterpret_cast<volatile Speed*>(tile_ptr + sizeof(TileHeader))},
+      : header{reinterpret_cast<TileHeader*>(tile_ptr)}, speeds{reinterpret_cast<volatile Speed*>(
+                                                             tile_ptr + sizeof(TileHeader))},
         incident_count_0{reinterpret_cast<volatile std::uint32_t*>(
-            tile_ptr + sizeof(TileHeader) + sizeof(Speed) * (tile_ptr == nullptr ? 0 : header->directed_edge_count))},
+            tile_ptr + sizeof(TileHeader) +
+            sizeof(Speed) * (tile_ptr == nullptr ? 0 : header->directed_edge_count))},
         incident_count_1{reinterpret_cast<volatile std::uint32_t*>(
-            tile_ptr + sizeof(TileHeader) + sizeof(Speed) * (tile_ptr == nullptr ? 0 : header->directed_edge_count) +
+            tile_ptr + sizeof(TileHeader) +
+            sizeof(Speed) * (tile_ptr == nullptr ? 0 : header->directed_edge_count) +
             sizeof(*incident_count_0))},
         incidents_0{reinterpret_cast<volatile Incident*>(
-            tile_ptr + sizeof(TileHeader) + sizeof(Speed) * (tile_ptr == nullptr ? 0 : header->directed_edge_count) +
+            tile_ptr + sizeof(TileHeader) +
+            sizeof(Speed) * (tile_ptr == nullptr ? 0 : header->directed_edge_count) +
             sizeof(*incident_count_0) * 2)},
         incidents_1{reinterpret_cast<volatile Incident*>(
-            tile_ptr + sizeof(TileHeader) + sizeof(Speed) * (tile_ptr == nullptr ? 0 : header->directed_edge_count) +
-            sizeof(*incident_count_0) * 2 + (tile_ptr == nullptr ? 0 : header->incident_buffer_size) * sizeof(Incident))} {
+            tile_ptr + sizeof(TileHeader) +
+            sizeof(Speed) * (tile_ptr == nullptr ? 0 : header->directed_edge_count) +
+            sizeof(*incident_count_0) * 2 +
+            (tile_ptr == nullptr ? 0 : header->incident_buffer_size) * sizeof(Incident))} {
   }
 
   Tile(const Tile& other) = default;
   Tile& operator=(const Tile& other) = default;
 
-  const Speed getTrafficForDirectedEdge(const std::uint32_t directed_edge_offset) {
-    if (header == nullptr) return {};
+  const Speed getTrafficForDirectedEdge(const std::uint32_t directed_edge_offset) const {
+    if (header == nullptr)
+      return {};
     assert(directed_edge_offset < header->directed_edge_count);
     return *(speeds + directed_edge_offset);
   }
 
-  const std::vector<const Incident>
-  getIncidentsForDirectedEdge(const std::uint32_t directed_edge_offset) {
+  const std::vector<Incident>
+  getIncidentsForDirectedEdge(const std::uint32_t directed_edge_offset) const {
     // Sanity check and exit early if false
-    if (header == nullptr) return {};
+    if (header == nullptr)
+      return {};
 
     assert(directed_edge_offset < header->directed_edge_count);
     if (!(speeds + directed_edge_offset)->has_incident)
@@ -122,7 +131,7 @@ public:
 
     // Copy the results so that they're non-volatile for our caller
     // TODO: race condition: make sure our range is still valid
-    return std::vector<const Incident>(range.first, range.second);
+    return std::vector<Incident>(range.first, range.second);
   }
 
   // These are all const pointers to data structures - once assigned,

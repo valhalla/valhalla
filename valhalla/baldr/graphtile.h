@@ -32,6 +32,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <iterator>
 
 namespace valhalla {
 namespace baldr {
@@ -54,7 +55,7 @@ public:
    * @param  tile_dir   Tile directory.
    * @param  graphid    GraphId (tileid and level)
    */
-  GraphTile(const std::string& tile_dir, const GraphId& graphid);
+  GraphTile(const std::string& tile_dir, const GraphId& graphid, char* traffic_ptr = nullptr);
 
   /**
    * Constructor given the graph Id, pointer to the tile data, and the
@@ -486,17 +487,21 @@ public:
    *                       if nullptr is passed in flow_sources does nothing.
    * @return Returns the speed for the edge.
    */
-  inline uint32_t GetSpeed(const DirectedEdge* de,
+  uint32_t GetSpeed(const DirectedEdge* de,
                            uint8_t flow_mask = kConstrainedFlowMask,
                            uint32_t seconds = kInvalidSecondsOfWeek,
-                           uint8_t* flow_sources = nullptr) const {
+                           uint8_t* flow_sources = nullptr) const; /* {
     // if they dont want source info we bind it to a temp and no one will miss it
     uint8_t temp_sources;
     if (!flow_sources)
       flow_sources = &temp_sources;
     *flow_sources = kNoFlowMask;
 
-    // TODO: current with coefficient based on distance in time from start of route
+    auto directed_edge_index = std::distance(const_cast<const DirectedEdge *>(directededges_), de);
+    auto live_speed = traffic_tile.getTrafficForDirectedEdge(directed_edge_index);
+    if (live_speed.speed_kmh != 0) {
+      return live_speed.speed_kmh;
+    }
 
     // use predicted speed if a time was passed in, the predicted speed layer was requested, and if
     // the edge has predicted speed
@@ -549,6 +554,7 @@ public:
     // Fallback further to specified or derived speed
     return de->speed();
   }
+  */
 
   /**
    * Convenience method to get the turn lanes for an edge given the directed edge index.
