@@ -418,7 +418,7 @@ void CostMatrix::CheckForwardConnections(const uint32_t source,
     // If this edge has been reached then a shortest path has been found
     // to the end node of this directed edge.
     EdgeStatusInfo oppedgestatus = edgestate.Get(oppedge);
-    if (oppedgestatus.set() != EdgeSet::kUnreached) {
+    if (oppedgestatus.set() != EdgeSet::kUnreachedOrReset) {
       const auto& edgelabels = target_edgelabel_[target];
       uint32_t predidx = edgelabels[oppedgestatus.index()].predecessor();
       const BDEdgeLabel& opp_el = edgelabels[oppedgestatus.index()];
@@ -730,7 +730,7 @@ void CostMatrix::SetSources(GraphReader& graphreader,
       uint32_t idx = source_edgelabel_[index].size();
       source_edgelabel_[index].push_back(std::move(edge_label));
       source_adjacency_[index]->add(idx);
-      source_edgestatus_[index].Set(edgeid, EdgeSet::kUnreached, idx, tile);
+      source_edgestatus_[index].Set(edgeid, EdgeSet::kUnreachedOrReset, idx, tile);
     }
     index++;
   }
@@ -817,7 +817,7 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
       uint32_t idx = target_edgelabel_[index].size();
       target_edgelabel_[index].push_back(std::move(edge_label));
       target_adjacency_[index]->add(idx);
-      target_edgestatus_[index].Set(opp_edge_id, EdgeSet::kUnreached, idx,
+      target_edgestatus_[index].Set(opp_edge_id, EdgeSet::kUnreachedOrReset, idx,
                                     graphreader.GetGraphTile(opp_edge_id));
       targets_[opp_edge_id].push_back(index);
     }

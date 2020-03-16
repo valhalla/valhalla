@@ -57,8 +57,10 @@ public:
         has_time_restrictions_(has_time_restrictions), use_(static_cast<uint32_t>(edge->use())),
         classification_(static_cast<uint32_t>(edge->classification())), shortcut_(edge->shortcut()),
         dest_only_(edge->destonly()), origin_(0), toll_(edge->toll()), not_thru_(edge->not_thru()),
-        deadend_(edge->deadend()), on_complex_rest_(edge->part_of_complex_restriction()), cost_(cost),
-        sortcost_(sortcost), distance_(dist), transition_cost_(transition_cost) {
+        deadend_(edge->deadend()),
+        on_complex_rest_(edge->part_of_complex_restriction() || edge->start_restriction() ||
+                         edge->end_restriction()),
+        cost_(cost), sortcost_(sortcost), distance_(dist), transition_cost_(transition_cost) {
   }
 
   /**

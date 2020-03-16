@@ -189,11 +189,13 @@ inline bool TimeDepReverse::ExpandReverseInner(GraphReader& graphreader,
 
   // Skip shortcut edges for time dependent routes. Also skip this edge if permanently labeled (best
   // path already found to this directed edge) or if no access for this mode.
-  if (meta.edge->is_shortcut() || meta.edge_status->set() == EdgeSet::kPermanent) {
+  if (meta.edge->is_shortcut() || !(meta.edge->reverseaccess() & access_mode_)) {
     return false;
   }
-  if (!(meta.edge->reverseaccess() & access_mode_)) {
-    return false;
+  // Skip this edge if permanently labeled (best path already found to this
+  // directed edge)
+  if (meta.edge_status->set() == EdgeSet::kPermanent) {
+    return true; // This is an edge we _could_ have expanded, so return true
   }
 
   // Get end node tile, opposing edge Id, and opposing directed edge.
@@ -210,8 +212,8 @@ inline bool TimeDepReverse::ExpandReverseInner(GraphReader& graphreader,
   bool has_time_restrictions = false;
   if (!costing_->AllowedReverse(meta.edge, pred, opp_edge, t2, oppedge, localtime,
                                 nodeinfo->timezone(), has_time_restrictions) ||
-      costing_->Restricted(meta.edge, pred, edgelabels_rev_, tile, meta.edge_id, false, localtime,
-                           nodeinfo->timezone())) {
+      costing_->Restricted(meta.edge, pred, edgelabels_rev_, tile, meta.edge_id, false, &edgestatus_,
+                           localtime, nodeinfo->timezone())) {
     return false;
   }
 
@@ -334,7 +336,7 @@ TimeDepReverse::GetBestPath(valhalla::Location& origin,
       edgelabels_rev_.size() == 0 ? 0 : GetTimezone(graphreader, edgelabels_rev_[0].endnode());
   if (dest_tz_index_ == 0) {
     // TODO - do not throw exception at this time
-    LOG_ERROR("Could not get the timezone at the destination");
+    LOG_WARN("Could not get the timezone at the destination");
   }
 
   // Update hierarchy limits

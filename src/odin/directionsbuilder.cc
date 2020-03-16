@@ -95,7 +95,7 @@ void DirectionsBuilder::Build(Api& api) {
         if (options.directions_type() == DirectionsType::instructions) {
           std::unique_ptr<NarrativeBuilder> narrative_builder =
               NarrativeBuilderFactory::Create(options, &etp);
-          narrative_builder->Build(options, &etp, maneuvers);
+          narrative_builder->Build(options, maneuvers);
         }
       }
 

@@ -156,7 +156,7 @@ void AStarPathAlgorithm::ExpandForward(GraphReader& graphreader,
     bool has_time_restrictions = false;
     if (es->set() == EdgeSet::kPermanent ||
         !costing_->Allowed(directededge, pred, tile, edgeid, 0, 0, has_time_restrictions) ||
-        costing_->Restricted(directededge, pred, edgelabels_, tile, edgeid, true)) {
+        costing_->Restricted(directededge, pred, edgelabels_, tile, edgeid, true, &edgestatus_)) {
       continue;
     }
 

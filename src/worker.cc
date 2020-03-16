@@ -700,24 +700,22 @@ void from_json(rapidjson::Document& doc, Options& options) {
 
   options.set_verbose(rapidjson::get(doc, "/verbose", false));
 
-  // costing
-  auto costing_str = rapidjson::get_optional<std::string>(doc, "/costing");
-  if (costing_str) {
-    // try the string directly, some strings are keywords so add an underscore
-    Costing costing;
-    if (valhalla::Costing_Enum_Parse(*costing_str, &costing)) {
-      options.set_costing(costing);
-    } else {
-      throw valhalla_exception_t{125, "'" + *costing_str + "'"};
-    }
+  // costing defaults to none which is only valid for locate
+  auto costing_str = rapidjson::get<std::string>(doc, "/costing", "none");
+  // try the string directly, some strings are keywords so add an underscore
+  Costing costing;
+  if (valhalla::Costing_Enum_Parse(costing_str, &costing)) {
+    options.set_costing(costing);
+  } else {
+    throw valhalla_exception_t{125, "'" + costing_str + "'"};
   }
 
   // if specified, get the costing options in there
   // the order of costing must reflect the enum order
   for (const auto& costing : {auto_, auto_shorter, bicycle, bus, hov, motor_scooter, multimodal,
-                              pedestrian, transit, truck, motorcycle, auto_data_fix, taxi}) {
+                              pedestrian, transit, truck, motorcycle, auto_data_fix, taxi, none_}) {
     // Create the costing string
-    auto costing_str = valhalla::Costing_Enum_Name(costing);
+    const auto& costing_str = valhalla::Costing_Enum_Name(costing);
     // Create the costing options key
     const auto costing_options_key = "/costing_options/" + costing_str;
 
@@ -772,6 +770,10 @@ void from_json(rapidjson::Document& doc, Options& options) {
       }
       case auto_data_fix: {
         sif::ParseAutoDataFixCostOptions(doc, costing_options_key, options.add_costing_options());
+        break;
+      }
+      case none_: {
+        sif::ParseNoCostOptions(doc, costing_options_key, options.add_costing_options());
         break;
       }
       case bikeshare: {
@@ -974,6 +976,8 @@ bool Costing_Enum_Parse(const std::string& costing, Costing* c) {
       {"truck", Costing::truck},
       {"motorcycle", Costing::motorcycle},
       {"auto_data_fix", Costing::auto_data_fix},
+      {"none", Costing::none_},
+      {"", Costing::none_},
       {"bikeshare", Costing::bikeshare},
   };
   auto i = costings.find(costing);
@@ -999,6 +1003,7 @@ const std::string& Costing_Enum_Name(const Costing costing) {
       {Costing::truck, "truck"},
       {Costing::motorcycle, "motorcycle"},
       {Costing::auto_data_fix, "auto_data_fix"},
+      {Costing::none_, "none"},
       {Costing::bikeshare, "bikeshare"},
   };
   auto i = costings.find(costing);

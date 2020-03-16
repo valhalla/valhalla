@@ -91,9 +91,9 @@ To install on a Debian or Ubuntu system you need to install its dependencies wit
 ```bash
 sudo add-apt-repository -y ppa:valhalla-core/valhalla
 sudo apt-get update
-sudo apt-get install -y cmake make libtool pkg-config g++ gcc jq lcov protobuf-compiler vim-common locales libboost-all-dev libcurl4-openssl-dev zlib1g-dev liblz4-dev libprime-server-dev libprotobuf-dev prime-server-bin
+sudo apt-get install -y cmake make libtool pkg-config g++ gcc curl jq lcov protobuf-compiler vim-common locales libboost-all-dev libcurl4-openssl-dev zlib1g-dev liblz4-dev libprime-server-dev libprotobuf-dev prime-server-bin
 #if you plan to compile with data building support, see below for more info
-sudo apt-get install -y libgeos-dev libgeos++-dev liblua5.2-dev libspatialite-dev libsqlite3-dev lua5.2 wget
+sudo apt-get install -y libgeos-dev libgeos++-dev liblua5.2-dev libspatialite-dev libsqlite3-dev lua5.2 wget sqlite3 spatialite-bin
 source /etc/lsb-release
 if [[ $(python -c "print int($DISTRIB_RELEASE > 15)") > 0 ]]; then sudo apt-get install -y libsqlite3-mod-spatialite; fi
 #if you plan to compile with python bindings, see below for more info
@@ -102,7 +102,6 @@ sudo apt-get install -y python-all-dev
 curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.11/install.sh | bash #follow instructions in output to use nvm without starting a new bash session
 nvm install 10
 nvm use 10
-npm install --ignore-scripts
 ```
 
 For instructions on installing Valhalla on Ubuntu 18.04.x see this [script](scripts/Ubuntu_Bionic_Install.sh).
@@ -124,6 +123,8 @@ Now, clone the Valhalla repository
 
 ```bash
 git clone --recurse-submodules https://github.com/valhalla/valhalla.git
+# if you wanted to enable node bindings
+npm install --ignore-scripts
 ```
 
 Then, build [`prime_server`](https://github.com/kevinkreiser/prime_server#build-and-install).
@@ -201,6 +202,8 @@ If you would like to make an improvement to the code, please be aware that all v
 Note that our CI system checks that code formatting is consistent, and the build will fail if formatting rules aren't followed.  Please run `./scripts/format.sh` over your code before committing, to auto-format it in the projects preferred style.
 
 Also note that we run some `clang-tidy` linting over the code as well (see `.clang-tidy` for the list of rules enforced).  You can run `./scripts/clang-tidy-only-diff.sh` over the code before committing to ensure you haven't added any of the common problems we check for (Note: `./scripts/clang-tidy-only-diff.sh` requires the exitence of a `compile_commands.json` database.  You can generate this file by running `cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=On ... && make`.
+
+`scripts/clang-tidy-only-diff.sh` is run in CI and will the build if it detects any issues.
 
 Using the Node.js Bindings
 --------------------------

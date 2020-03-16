@@ -999,7 +999,7 @@ void ManeuversBuilder::UpdateManeuver(Maneuver& maneuver, int node_index) {
   // TODO: update GetTime and GetSpeed to double precision
   maneuver.set_basic_time(
       maneuver.basic_time() +
-      GetTime(prev_edge->length(), GetSpeed(maneuver.travel_mode(), prev_edge->speed())));
+      GetTime(prev_edge->length(), GetSpeed(maneuver.travel_mode(), prev_edge->default_speed())));
 
   // Portions Toll
   if (prev_edge->toll()) {
@@ -1287,7 +1287,15 @@ void ManeuversBuilder::SetManeuverType(Maneuver& maneuver, bool none_type_allowe
     LOG_TRACE("ManeuverType=TURN_CHANNNEL");
   }
   // Process exit
-  else if (maneuver.ramp() && prev_edge && (prev_edge->IsHighway() || maneuver.HasExitNumberSign())) {
+  // if maneuver is ramp
+  // and previous edge is a highway or maneuver has an exit number
+  // or previous edge is not a ramp and ramp does not lead to a highway
+  //    and the maneuver relative direction is a keep left or keep right
+  else if (maneuver.ramp() && prev_edge &&
+           (prev_edge->IsHighway() || maneuver.HasExitNumberSign() ||
+            (!prev_edge->IsRampUse() && !RampLeadsToHighway(maneuver) &&
+             ((maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kKeepRight) ||
+              (maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kKeepLeft))))) {
     switch (maneuver.begin_relative_direction()) {
       case Maneuver::RelativeDirection::kKeepRight:
       case Maneuver::RelativeDirection::kRight: {
@@ -2767,6 +2775,30 @@ void ManeuversBuilder::MatchGuidanceViewJunctions(Maneuver& maneuver,
       } // end for loop over base guidance view junction
     }
   }
+}
+
+bool ManeuversBuilder::RampLeadsToHighway(Maneuver& maneuver) const {
+  // Verify that the specified maneuver is a ramp
+  if (maneuver.ramp()) {
+    // Loop over edges
+    for (uint32_t node_index = maneuver.end_node_index(); node_index < trip_path_->GetLastNodeIndex();
+         ++node_index) {
+      auto curr_edge = trip_path_->GetCurrEdge(node_index);
+      if (curr_edge && (curr_edge->IsRampUse() || curr_edge->IsTurnChannelUse() ||
+                        curr_edge->internal_intersection())) {
+        // Skip ramp, turn channel, and internal edges
+        continue;
+      } else if (curr_edge && curr_edge->IsHighway()) {
+        // Ramp leads to highway
+        return true;
+      } else {
+        // Ramp does not lead to highway
+        return false;
+      }
+    }
+  }
+  // Not a ramp
+  return false;
 }
 
 } // namespace odin

@@ -10,6 +10,7 @@
 #include <valhalla/sif/bicyclecost.h>
 #include <valhalla/sif/motorcyclecost.h>
 #include <valhalla/sif/motorscootercost.h>
+#include <valhalla/sif/nocost.h>
 #include <valhalla/sif/pedestriancost.h>
 #include <valhalla/sif/transitcost.h>
 #include <valhalla/sif/truckcost.h>
@@ -44,6 +45,19 @@ public:
 
   /**
    * Make a cost from its specified type
+   * @param options  pbf with costing type and costing options
+   */
+  cost_ptr_t Create(const Options& options) const {
+    // you cant get a costing without a costing type
+    if (!options.has_costing())
+      throw std::runtime_error("No costing provided to cost factory");
+
+    // create the cost using the creation function
+    return Create(options.costing(), options);
+  }
+
+  /**
+   * Make a cost from its specified type
    * @param costing  the type of cost to create
    * @param options  pbf with request options
    */
@@ -73,6 +87,7 @@ public:
     Register(Costing::pedestrian, CreatePedestrianCost);
     Register(Costing::truck, CreateTruckCost);
     Register(Costing::transit, CreateTransitCost);
+    Register(Costing::none_, CreateNoCost);
     Register(Costing::bikeshare, CreateBikeShareCost);
   }
 

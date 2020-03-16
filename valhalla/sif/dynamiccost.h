@@ -1,8 +1,8 @@
 #ifndef VALHALLA_SIF_DYNAMICCOST_H_
 #define VALHALLA_SIF_DYNAMICCOST_H_
 
-#include "baldr/accessrestriction.h"
 #include <cstdint>
+#include <valhalla/baldr/accessrestriction.h>
 #include <valhalla/baldr/datetime.h>
 #include <valhalla/baldr/directededge.h>
 #include <valhalla/baldr/double_bucket_queue.h> // For kInvalidLabel
@@ -13,10 +13,12 @@
 #include <valhalla/baldr/rapidjson_utils.h>
 #include <valhalla/baldr/timedomain.h>
 #include <valhalla/baldr/transitdeparture.h>
+#include <valhalla/midgard/logging.h>
 #include <valhalla/proto/options.pb.h>
 #include <valhalla/sif/costconstants.h>
 #include <valhalla/sif/edgelabel.h>
 #include <valhalla/sif/hierarchylimits.h>
+#include <valhalla/thor/edgestatus.h>
 
 #include <memory>
 #include <third_party/rapidjson/include/rapidjson/document.h>
@@ -262,6 +264,8 @@ public:
    * @param  edge  Directed edge.
    * @param  pred        Predecessor information.
    * @param  edge_labels List of edge labels.
+   * @param  edge_labels List of edge labels in other direction
+   *                     (e.g. bidirectional when connecting the two trees).
    * @param  tile        Graph tile (to read restriction if needed).
    * @param  edgeid      Edge Id for the directed edge.
    * @param  forward     Forward search or reverse search.
@@ -279,6 +283,7 @@ public:
                   const baldr::GraphTile*& tile,
                   const baldr::GraphId& edgeid,
                   const bool forward,
+                  thor::EdgeStatus* edgestatus = nullptr,
                   const uint64_t current_time = 0,
                   const uint32_t tz_index = 0) const {
     // Lambda to get the next predecessor EdgeLabel (that is not a transition)
@@ -289,6 +294,42 @@ public:
           (label->predecessor() == baldr::kInvalidLabel) ? label : &edge_labels[label->predecessor()];
       return next_pred;
     };
+    auto reset_edge_status =
+        [&edgestatus, &forward](const std::vector<baldr::GraphId>& edge_ids_in_complex_restriction) {
+          // A complex restriction spans multiple edges, e.g. from A to C via B.
+          //
+          // At the point of triggering a complex restriction, all edges leading up to C
+          // hav already been evaluated. I.e. B is now marked as kPermanent since
+          // we didn't know at the time of B's evaluation that A to B would eventually
+          // form a restricted path
+          //
+          // So, in order to still allow new paths involving B, e.g. D to B to C,
+          // we need to go back and revert the permanent status of A and B.
+          //
+          // We mark it as kUnreachedOrReset so that in effect it is no longer visible. (It can't
+          // be removed since that invalidates subsequent indices and setting it to temporary
+          // means it'll still do a comparison to existing sort cost and fail later).
+          //
+          // If we do find a complex restriction has triggered, we must walk back
+          // and reset the EdgeStatus of previous edges in the restriction that were
+          // already marked as kPermanent.
+          if (edgestatus != nullptr) {
+            auto first = edge_ids_in_complex_restriction.cbegin();
+            auto last = edge_ids_in_complex_restriction.cend();
+
+            // Nothing to do if the restriction has no vias
+            if (first == last) {
+              return;
+            }
+            // Reset all but the last edge since there is
+            // no point in possibly expanding from A a second time and could lead
+            // to infinite loops
+            --last;
+            std::for_each(first, last, [&edgestatus](baldr::GraphId edge_id) {
+              edgestatus->Update(edge_id, thor::EdgeSet::kUnreachedOrReset);
+            });
+          }
+        };
 
     // If forward, check if the edge marks the end of a restriction, else check
     // if the edge marks the start of a complex restriction.
@@ -307,17 +348,25 @@ public:
         // Ids do not match the path for this restriction.
         bool match = true;
         const EdgeLabel* next_pred = first_pred;
-        if (cr->via_count() > 0) {
-          // The via list starts immediately after the structure
-          baldr::GraphId* via = reinterpret_cast<baldr::GraphId*>(cr + 1);
-          for (uint32_t i = 0; i < cr->via_count(); i++, via++) {
-            if (via->value != next_pred->edgeid().value) {
-              match = false;
-              break;
-            }
+        // Remember the edge_ids in restriction for later reset
+        std::vector<baldr::GraphId> edge_ids_in_complex_restriction;
+        edge_ids_in_complex_restriction.reserve(10);
+
+        cr->WalkVias([&match, &next_pred, next_predecessor,
+                      &edge_ids_in_complex_restriction](const baldr::GraphId* via) {
+          if (via->value != next_pred->edgeid().value) {
+            // Pred diverged from restriction, exit early
+            match = false;
+            return baldr::WalkingVia::StopWalking;
+          } else {
+            edge_ids_in_complex_restriction.push_back(next_pred->edgeid());
+            // Move to the next predecessor and keep walking restriction
             next_pred = next_predecessor(next_pred);
+            return baldr::WalkingVia::KeepWalking;
           }
-        }
+        });
+        // Don't forget the last one
+        edge_ids_in_complex_restriction.push_back(next_pred->edgeid());
 
         // Check against the start/end of the complex restriction
         if (match && ((forward && next_pred->edgeid() == cr->from_graphid()) ||
@@ -334,15 +383,23 @@ public:
                                                        cr->end_day_dow(), current_time,
                                                        baldr::DateTime::get_tz_db().from_index(
                                                            tz_index))) {
+              // We triggered a complex restriction, so make sure we reset edge-status' for
+              // earlier edges in restriction that were already marked as permanent
+              reset_edge_status(edge_ids_in_complex_restriction);
               return true;
             }
             continue;
           }
           // TODO: If a user runs a non-time dependent route, we need to provide Manuever Notes for
           // the timed restriction.
-          else if (!current_time && cr->has_dt())
+          else if (!current_time && cr->has_dt()) {
             return false;
-          return true; // Otherwise this is a non-timed restriction and it exists all the time.
+          } else {
+            // We triggered a complex restriction, so make sure we reset edge-status' for
+            // earlier edges in restriction that were already marked as permanent
+            reset_edge_status(edge_ids_in_complex_restriction);
+            return true; // Otherwise this is a non-timed restriction and it exists all the time.
+          }
         }
       }
     }

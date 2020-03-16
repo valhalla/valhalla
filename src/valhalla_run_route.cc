@@ -203,7 +203,7 @@ const valhalla::TripLeg* PathTest(GraphReader& reader,
     locations.back().heading_ = std::round(PointLL::HeadingAtEndOfPolyline(shape, 30.f));
 
     std::shared_ptr<DynamicCost> cost = mode_costing[static_cast<uint32_t>(mode)];
-    const auto projections = Search(locations, reader, cost.get());
+    const auto projections = Search(locations, reader, cost);
     std::vector<PathLocation> path_location;
     valhalla::Options options;
     for (const auto& loc : locations) {
@@ -547,7 +547,7 @@ int main(int argc, char* argv[]) {
   const auto& options = request.options();
 
   // Get type of route - this provides the costing method to use.
-  std::string routetype = valhalla::Costing_Enum_Name(options.costing());
+  const std::string& routetype = valhalla::Costing_Enum_Name(options.costing());
   LOG_INFO("routetype: " + routetype);
 
   // Locations
@@ -604,7 +604,7 @@ int main(int argc, char* argv[]) {
   } else {
     // Assign costing method, override any config options that are in the
     // json request
-    std::shared_ptr<DynamicCost> cost = factory.Create(options.costing(), options);
+    std::shared_ptr<DynamicCost> cost = factory.Create(options);
     mode = cost->travel_mode();
     mode_costing[static_cast<uint32_t>(mode)] = cost;
   }

@@ -896,6 +896,10 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
     trip_edge->set_speed_limit(edgeinfo.speed_limit());
   }
 
+  if (controller.attributes.at(kEdgeDefaultSpeed)) {
+    trip_edge->set_default_speed(directededge->speed());
+  }
+
   if (controller.attributes.at(kEdgeTruckSpeed)) {
     trip_edge->set_truck_speed(directededge->truck_speed());
   }

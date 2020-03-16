@@ -6,6 +6,7 @@
    * FIXED: Adds support for geos-3.8 c++ api [#2021](https://github.com/valhalla/valhalla/issues/2021)
    * FIXED: Updated the osrm serializer to not set junction name for osrm origin/start maneuver - this is not helpful since we are not transitioning through the intersection.  [#2121](https://github.com/valhalla/valhalla/pull/2121)
    * FIXED: Removes precomputing of edge-costs which lead to wrong results [#2120](https://github.com/valhalla/valhalla/pull/2120)
+   * FIXED: Complex turn-restriction invalidates edge marked as kPermanent [#2103](https://github.com/valhalla/valhalla/issues/2103)
    * FIXED: Fixes bug with inverted time-restriction parsing [#2167](https://github.com/valhalla/valhalla/pull/2167)
    * FIXED: Fixed several bugs with numeric underflow in map-matching trip durations. These may
      occur when serializing match results where adjacent trace points appear out-of-sequence on the
@@ -19,6 +20,15 @@
      - Duration over-trimming at the terminating edge of a match.
    * FIXED: Increased internal precision of time tracking per edge and maneuver so that maneuver times sum to the same time represented in the leg summary [#2195](https://github.com/valhalla/valhalla/pull/2195)
    * FIXED: Tagged speeds were not properly marked. We were not using forward and backward speeds to flag if a speed is tagged or not.  Should not update turn channel speeds if we are not inferring them.  Added additional logic to handle PH in the conditional restrictions. Do not update stop impact for ramps if they are marked as internal. [#2198](https://github.com/valhalla/valhalla/pull/2198)
+   * FIXED: Fixed the sharp turn phrase [#2226](https://github.com/valhalla/valhalla/pull/2226)
+   * FIXED: Protect against duplicate points in the input or points that snap to the same location resulting in `nan` times for the legs of the map match (of a 0 distance route) [#2229](https://github.com/valhalla/valhalla/pull/2229)
+   * FIXED: Improves restriction check on briding edge in Bidirectional Astar [#2228](https://github.com/valhalla/valhalla/pull/2242)
+   * FIXED: Allow nodes at location 0,0 [#2245](https://github.com/valhalla/valhalla/pull/2245)
+   * FIXED: Fix RapidJSON compiler warnings and naming conflict [#2249](https://github.com/valhalla/valhalla/pull/2249)
+   * FIXED: Fixed bug in resample_spherical_polyline where duplicate successive lat,lng locations in the polyline resulting in `nan` for the distance computation which shortcuts further sampling [#2239](https://github.com/valhalla/valhalla/pull/2239)
+   * FIXED: Update exit logic for non-motorways [#2252](https://github.com/valhalla/valhalla/pull/2252)
+   * FIXED: Transition point map-matching. When match results are on a transition point, we search for the sibling nodes at that transition and snap it to the corresponding edges in the route. [#2258](https://github.com/valhalla/valhalla/pull/2258)
+   * FIXED: Fixed verbal multi-cue logic [#2270](https://github.com/valhalla/valhalla/pull/2270)
 
 * **Enhancement**
    * ADDED: Return the coordinates of the nodes isochrone input locations snapped to [#2111](https://github.com/valhalla/valhalla/pull/2111)
@@ -29,6 +39,10 @@
    * ADDED: Allow using googletest in unit tests and convert all tests to it (old test.cc is completely removed). [#2128](https://github.com/valhalla/valhalla/pull/2128)
    * ADDED: Add guidance view capability. [#2209](https://github.com/valhalla/valhalla/pull/2209)
    * ADDED: Collect turn cost information as path is formed so that it can be seralized out for trace attributes or osrm flavored intersections. Also add shape_index to osrm intersections. [#2207](https://github.com/valhalla/valhalla/pull/2207)
+   * ADDED: Added alley factor to autocost.  Factor is defaulted at 1.0f or do not avoid alleys. [#2246](https://github.com/valhalla/valhalla/pull/2246)
+   * ADDED: Support unlimited speed limits where maxspeed=none. [#2251](https://github.com/valhalla/valhalla/pull/2251)
+   * ADDED: Implement improved Reachability check using base class Dijkstra. [#2243](https://github.com/valhalla/valhalla/pull/2243)
+   * ADDED: Gurka integration test framework with ascii-art maps [#2244](https://github.com/valhalla/valhalla/pull/2244)
 
 ## Release Date: 2019-11-21 Valhalla 3.0.9
 * **Bug Fix**

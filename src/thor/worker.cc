@@ -203,12 +203,6 @@ void run_service(const boost::property_tree::ptree& config) {
 }
 #endif
 
-// Get the costing options if in the config or get the empty default.
-// Creates the cost in the cost factory
-valhalla::sif::cost_ptr_t thor_worker_t::get_costing(const Costing costing, const Options& options) {
-  return factory.Create(costing, options);
-}
-
 std::string thor_worker_t::parse_costing(const Api& request) {
   // Parse out the type of route - this provides the costing method to use
   const auto& options = request.options();
@@ -220,13 +214,13 @@ std::string thor_worker_t::parse_costing(const Api& request) {
       costing == Costing::bikeshare) {
     // For multi-modal we construct costing for all modes and set the
     // initial mode to pedestrian. (TODO - allow other initial modes)
-    mode_costing[0] = get_costing(Costing::auto_, options);
-    mode_costing[1] = get_costing(Costing::pedestrian, options);
-    mode_costing[2] = get_costing(Costing::bicycle, options);
-    mode_costing[3] = get_costing(Costing::transit, options);
+    mode_costing[0] = factory.Create(Costing::auto_, options);
+    mode_costing[1] = factory.Create(Costing::pedestrian, options);
+    mode_costing[2] = factory.Create(Costing::bicycle, options);
+    mode_costing[3] = factory.Create(Costing::transit, options);
     mode = valhalla::sif::TravelMode::kPedestrian;
   } else {
-    valhalla::sif::cost_ptr_t cost = get_costing(costing, options);
+    valhalla::sif::cost_ptr_t cost = factory.Create(options);
     mode = cost->travel_mode();
     mode_costing[static_cast<uint32_t>(mode)] = cost;
   }

@@ -266,7 +266,7 @@ void route_summary(json::MapPtr& route,
   // TODO - support returning weight based on costing method
   // as well as returning the costing method
   float weight = duration;
-  route->emplace("weight", json::fp_t{weight, 1});
+  route->emplace("weight", json::fp_t{weight, 3});
   route->emplace("weight_name", std::string("Valhalla default"));
 }
 
@@ -274,7 +274,7 @@ void route_summary(json::MapPtr& route,
 json::MapPtr geojson_shape(const std::vector<PointLL> shape) {
   auto geojson = json::map({});
   auto coords = json::array({});
-  for (auto p : shape) {
+  for (const auto& p : shape) {
     coords->emplace_back(json::array({json::fp_t{p.lng(), 6}, json::fp_t{p.lat(), 6}}));
   }
   geojson->emplace("type", std::string("LineString"));
@@ -1145,7 +1145,8 @@ summarize_leg(google::protobuf::RepeatedPtrField<valhalla::DirectionsLeg>::const
 
   // Create a list of named segments (maneuver name, index, distance items)
   std::vector<NamedSegment> named_segments;
-  for (const auto map_item : maneuver_summary_map) {
+  named_segments.reserve(maneuver_summary_map.size());
+  for (const auto& map_item : maneuver_summary_map) {
     named_segments.emplace_back(
         NamedSegment{map_item.first, map_item.second.first, map_item.second.second});
   }

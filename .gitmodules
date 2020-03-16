@@ -13,3 +13,9 @@
 [submodule "third_party/googletest"]
 	path = third_party/googletest
 	url = https://github.com/google/googletest.git
+[submodule "third_party/libosmium"]
+	path = third_party/libosmium
+	url = https://github.com/osmcode/libosmium.git
+[submodule "third_party/protozero"]
+	path = third_party/protozero
+	url = https://github.com/mapbox/protozero.git

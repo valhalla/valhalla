@@ -23,15 +23,15 @@ using namespace valhalla::baldr;
 
 namespace {
 
-void test_instructions(const std::string filename,
+void test_instructions(const std::string& filename,
                        int expected_routes_size,
                        int expected_legs_size,
                        int expected_maneuvers_size,
                        int maneuver_index,
-                       const std::string expected_text_instruction,
-                       const std::string expected_verbal_transition_alert_instruction = "",
-                       const std::string expected_verbal_pre_transition_instruction = "",
-                       const std::string expected_verbal_post_transition_instruction = "") {
+                       const std::string& expected_text_instruction,
+                       const std::string& expected_verbal_transition_alert_instruction = "",
+                       const std::string& expected_verbal_pre_transition_instruction = "",
+                       const std::string& expected_verbal_post_transition_instruction = "") {
   // Load pinpoint test
   std::string path_bytes = test::load_binary_file(filename);
   EXPECT_NE(path_bytes.size(), 0);
@@ -93,12 +93,12 @@ void test_instructions(const std::string filename,
   }
 }
 
-void test_osrm_maneuver(const std::string filename,
+void test_osrm_maneuver(const std::string& filename,
                         int routes_index,
                         int legs_index,
                         int steps_index,
-                        const std::string expected_maneuver_type,
-                        const std::string expected_maneuver_modifier) {
+                        const std::string& expected_maneuver_type,
+                        const std::string& expected_maneuver_modifier) {
   // Load pinpoint test
   std::string path_bytes = test::load_binary_file(filename);
   EXPECT_NE(path_bytes.size(), 0);
@@ -138,11 +138,11 @@ void test_osrm_maneuver(const std::string filename,
   EXPECT_EQ(found_maneuver_modifier, expected_maneuver_modifier);
 }
 
-void test_osrm_destinations(const std::string filename,
+void test_osrm_destinations(const std::string& filename,
                             int routes_index,
                             int legs_index,
                             int steps_index,
-                            const std::string expected_destinations) {
+                            const std::string& expected_destinations) {
   // Load pinpoint test
   std::string path_bytes = test::load_binary_file(filename);
 
@@ -304,14 +304,32 @@ TEST(Instructions, validate_ramp_instructions) {
   test_instructions({VALHALLA_SOURCE_DIR
                      "test/pinpoints/instructions/ramp_take_toward_driving_side_right.pbf"},
                     expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
-                    "Take the ramp toward Pennsylvania Avenue.", "",
-                    "Take the ramp toward Pennsylvania Avenue.", "");
+                    "Take the PA 283 West ramp toward Harrisburg.",
+                    "Take the Pennsylvania 2 83 West ramp.",
+                    "Take the Pennsylvania 2 83 West ramp toward Harrisburg.");
 
   // Test take toward driving side left
   test_instructions({VALHALLA_SOURCE_DIR
                      "test/pinpoints/instructions/ramp_take_toward_driving_side_left.pbf"},
                     expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
-                    "Take the M11 ramp toward London.", "", "Take the M11 ramp toward London.", "");
+                    "Take the M11 ramp toward London.", "", "Take the M11 ramp toward London.");
+}
+
+TEST(Instructions, validate_osrm_ramp_maneuver) {
+
+  int routes_index = 0;
+  int legs_index = 0;
+  int steps_index = 1;
+
+  // Test take toward driving side right
+  test_osrm_maneuver({VALHALLA_SOURCE_DIR
+                      "test/pinpoints/instructions/ramp_take_toward_driving_side_right.pbf"},
+                     routes_index, legs_index, steps_index, "on ramp", "slight right");
+
+  // Test take toward driving side left
+  test_osrm_maneuver({VALHALLA_SOURCE_DIR
+                      "test/pinpoints/instructions/ramp_take_toward_driving_side_left.pbf"},
+                     routes_index, legs_index, steps_index, "on ramp", "slight left");
 }
 
 TEST(Instructions, validate_exit_instructions) {
@@ -325,14 +343,87 @@ TEST(Instructions, validate_exit_instructions) {
                      "test/pinpoints/instructions/exit_left_driving_side_right.pbf"},
                     expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
                     "Take the I 66 East exit on the left toward Washington.", "",
-                    "Take the Interstate 66 East exit on the left toward Washington.", "");
+                    "Take the Interstate 66 East exit on the left toward Washington.");
 
   // Test exit left on left driving side
   test_instructions({VALHALLA_SOURCE_DIR
                      "test/pinpoints/instructions/exit_left_driving_side_left.pbf"},
                     expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
-                    "Take exit 8 onto A120(W)|A120(W).", "", "Take exit 8 onto A1 20(W)|A1 20(W).",
-                    "");
+                    "Take exit 8 onto A120(W)|A120(W).", "", "Take exit 8 onto A1 20(W)|A1 20(W).");
+
+  expected_maneuvers_size = 4;
+  // Test exit non-motorway in PA
+  test_instructions({VALHALLA_SOURCE_DIR "test/pinpoints/instructions/exit_right_nonmotorway_pa.pbf"},
+                    expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
+                    "Take the PA 934 exit toward I 81/Fort Indiantown Gap/Annville.",
+                    "Take the Pennsylvania 9 34 exit.",
+                    "Take the Pennsylvania 9 34 exit toward Interstate 81, Fort Indiantown Gap.");
+
+  expected_maneuvers_size = 5;
+  // Test exit non-motorway in VA
+  test_instructions({VALHALLA_SOURCE_DIR "test/pinpoints/instructions/exit_right_nonmotorway_va.pbf"},
+                    expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
+                    "Take the US 15 North exit toward Frederick Maryland.",
+                    "Take the U.S. 15 North exit.",
+                    "Take the U.S. 15 North exit toward Frederick Maryland.");
+}
+
+TEST(Instructions, validate_osrm_exit_maneuver) {
+
+  int routes_index = 0;
+  int legs_index = 0;
+  int steps_index = 1;
+
+  // Test exit left on right driving side
+  test_osrm_maneuver({VALHALLA_SOURCE_DIR
+                      "test/pinpoints/instructions/exit_left_driving_side_right.pbf"},
+                     routes_index, legs_index, steps_index, "off ramp", "slight left");
+
+  // Test exit left on left driving side
+  test_osrm_maneuver({VALHALLA_SOURCE_DIR
+                      "test/pinpoints/instructions/exit_left_driving_side_left.pbf"},
+                     routes_index, legs_index, steps_index, "off ramp", "slight left");
+
+  // Test exit non-motorway in PA
+  test_osrm_maneuver({VALHALLA_SOURCE_DIR
+                      "test/pinpoints/instructions/exit_right_nonmotorway_pa.pbf"},
+                     routes_index, legs_index, steps_index, "off ramp", "slight right");
+
+  // Test exit non-motorway in VA
+  test_osrm_maneuver({VALHALLA_SOURCE_DIR
+                      "test/pinpoints/instructions/exit_right_nonmotorway_va.pbf"},
+                     routes_index, legs_index, steps_index, "off ramp", "slight right");
+}
+
+TEST(Instructions, validate_multi_cue_instructions) {
+  int expected_routes_size = 1;
+  int expected_legs_size = 1;
+  int expected_maneuvers_size = 4;
+  int maneuver_index = 0;
+
+  // Test the start verbal multi-cue instruction
+  test_instructions(
+      {VALHALLA_SOURCE_DIR "test/pinpoints/instructions/multi_cue_start_turn_destination.pbf"},
+      expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
+      "Drive north on Hartman Bridge Road/PA 896.", "",
+      "Drive north on Hartman Bridge Road, Pennsylvania 8 96 for 200 feet. Then Turn left onto U.S. 30.");
+
+  maneuver_index = 1;
+  // Test the turn verbal multi-cue instruction
+  test_instructions({VALHALLA_SOURCE_DIR
+                     "test/pinpoints/instructions/multi_cue_start_turn_destination.pbf"},
+                    expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
+                    "Turn left onto US 30/Lincoln Highway East.", "Turn left onto U.S. 30.",
+                    "Turn left onto U.S. 30, Lincoln Highway East. Then Turn right.",
+                    "Continue for 500 feet.");
+
+  maneuver_index = 2;
+  // Test the destination verbal multi-cue instruction
+  test_instructions({VALHALLA_SOURCE_DIR
+                     "test/pinpoints/instructions/multi_cue_start_turn_destination.pbf"},
+                    expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
+                    "Turn right.", "Turn right.",
+                    "Turn right. Then Adidas Outlet will be on the left.", "Continue for 100 feet.");
 }
 
 } // namespace

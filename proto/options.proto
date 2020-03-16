@@ -45,7 +45,8 @@ enum Costing {
   motorcycle = 10;
   auto_data_fix = 11;
   taxi = 12;
-  bikeshare = 13;
+  none_ = 13;
+  bikeshare = 14;
 }
 
 message CostingOptions {
