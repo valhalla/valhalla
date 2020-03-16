@@ -263,9 +263,9 @@ void reorder_segments(const std::vector<MatchResult>& match_results,
                           prev_idx, curr_idx});
     }
 
-    int x = 0;
-    int y = 0;
-    bool z = false;
+    int x = 14;
+    int y = 1;
+    int z = 3;
     prev_match = curr_match;
     prev_idx = curr_idx;
   }
@@ -303,7 +303,7 @@ std::vector<EdgeSegment> ConstructRoute(const MapMatcher& mapmatcher,
       }
       continue;
     }
-    
+
     if (prev_match && prev_match->HasState()) {
       const auto &prev_state = mapmatcher.state_container().state(prev_match->stateid),
                  state = mapmatcher.state_container().state(match.stateid);
