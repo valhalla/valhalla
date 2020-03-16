@@ -6,6 +6,7 @@
 #include "meili/routing.h"
 #include "meili/transition_cost_model.h"
 #include "midgard/distanceapproximator.h"
+#include <algorithm>
 #include <array>
 
 namespace {
@@ -670,6 +671,15 @@ std::vector<MatchResults> MapMatcher::OfflineMatch(const std::vector<Measurement
       // Copy the interpolated match results into the final set
       std::copy(interpolated_results.cbegin(), interpolated_results.cend(),
                 std::back_inserter(best_path));
+
+      for (size_t i = 1, n = interpolated_results.size(); i < n; ++i) {
+        if (interpolated_results[i].edgeid != interpolated_results[i - 1].edgeid) {
+          throw std::logic_error{"interpolated results don't match edgeid"};
+        } else if (interpolated_results[i].distance_along <=
+                   interpolated_results[i - 1].distance_along) {
+          throw std::logic_error{"interpolated results don't match distance_algon"};
+        }
+      }
     }
 
     // Construct a result
