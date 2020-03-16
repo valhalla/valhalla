@@ -158,7 +158,9 @@ MultiModalPathAlgorithm::GetBestPath(valhalla::Location& origin,
   origin_date_time_ = origin.date_time();
 
   start_time_ = DateTime::seconds_from_midnight(origin_date_time_);
-  start_tz_index_ = edgelabels_.size() == 0 ? 0 : graphreader.GetTimezone(edgelabels_[0].endnode());
+  const baldr::GraphTile* tile = nullptr;
+  start_tz_index_ =
+      edgelabels_.size() == 0 ? 0 : graphreader.GetTimezone(edgelabels_[0].endnode(), tile);
   if (start_tz_index_ == 0) {
     // TODO - should we throw an exception and return an error
     LOG_ERROR("Could not get the timezone at the origin location");
@@ -172,7 +174,6 @@ MultiModalPathAlgorithm::GetBestPath(valhalla::Location& origin,
   // Find shortest path
   uint32_t nc = 0; // Count of iterations with no convergence
                    // towards destination
-  const GraphTile* tile;
   size_t total_labels = 0;
   while (true) {
     // Allow this process to be aborted

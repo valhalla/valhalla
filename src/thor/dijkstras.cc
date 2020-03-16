@@ -90,7 +90,8 @@ Dijkstras::SetTime(google::protobuf::RepeatedPtrField<valhalla::Location>& locat
     return {};
 
   // Set the timezone to be the timezone at the end node
-  start_tz_index_ = reader.GetTimezone(node_id);
+  const baldr::GraphTile* tile = nullptr;
+  start_tz_index_ = reader.GetTimezone(node_id, tile);
   if (start_tz_index_ == 0)
     LOG_WARN("Could not get the timezone at the destination location");
 

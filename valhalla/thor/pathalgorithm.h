@@ -168,7 +168,7 @@ struct TimeInfo {
   uint32_t seconds_from_now;
 
   // helper function to initialize the object from a location
-  static TimeInfo make(valhalla::Location& location, int timezone_index);
+  static TimeInfo make(valhalla::Location& location, baldr::GraphReader& reader);
 
   // a tuple used to offset from a time in the forward or reverse direction
   struct Offset {

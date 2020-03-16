@@ -44,9 +44,6 @@ public:
               const Options& options = Options::default_instance());
 
 protected:
-  uint32_t origin_tz_index_;
-  uint32_t seconds_of_week_;
-
   /**
    * Expand from the node along the forward search path. Immediately expands
    * from the end node of any transition edge (so no transition edges are added
@@ -58,8 +55,7 @@ protected:
    * @param  pred_idx     Predecessor index into the EdgeLabel list.
    * @param  from_transition True if this method is called from a transition
    *                         edge.
-   * @param  localtime    Current local time.  Seconds since epoch
-   * @param  seconds_of_week Seconds from start of the week (local time).
+   * @param  time_info    Information time offset as the route progresses
    * @param  dest         Location information of the destination.
    * @param  best_path    Best path found so far. Includes the index into
    *                      EdgeLabels and the cost.
@@ -69,8 +65,7 @@ protected:
                      sif::EdgeLabel& pred,
                      const uint32_t pred_idx,
                      const bool from_transition,
-                     uint64_t localtime,
-                     int32_t seconds_of_week,
+                     const TimeInfo& time_info,
                      const valhalla::Location& dest,
                      std::pair<int32_t, float>& best_path);
 
@@ -81,8 +76,7 @@ protected:
                                  const uint32_t pred_idx,
                                  const EdgeMetadata& meta,
                                  const baldr::GraphTile* tile,
-                                 uint64_t localtime,
-                                 uint32_t seconds_of_week,
+                                 const TimeInfo& time_info,
                                  const valhalla::Location& destination,
                                  std::pair<int32_t, float>& best_path);
 };
@@ -130,9 +124,6 @@ public:
   virtual void Clear();
 
 protected:
-  uint32_t dest_tz_index_;
-  uint32_t seconds_of_week_;
-
   // Access mode used by the costing method
   uint32_t access_mode_;
 
@@ -159,8 +150,7 @@ protected:
    * @param  opp_pred_edge Opposing predecessor directed edge.
    * @param  from_transition True if this method is called from a transition
    *                         edge.
-   * @param  localtime    Current local time.  Seconds since epoch
-   * @param  seconds_of_week Seconds from start of the week (local time).
+   * @param  time_info    Information time offset as the route progresses
    * @param  dest         Location information of the destination.
    * @param  best_path    Best path found so far. Includes the index into
    *                      EdgeLabels and the cost.
@@ -171,8 +161,7 @@ protected:
                      const uint32_t pred_idx,
                      const baldr::DirectedEdge* opp_pred_edge,
                      const bool from_transition,
-                     uint64_t localtime,
-                     int32_t seconds_of_week,
+                     const TimeInfo& time_info,
                      const valhalla::Location& dest,
                      std::pair<int32_t, float>& best_path);
 
@@ -184,8 +173,7 @@ protected:
                           const uint32_t pred_idx,
                           const EdgeMetadata& meta,
                           const baldr::GraphTile* tile,
-                          uint64_t localtime,
-                          uint32_t seconds_of_week,
+                          const TimeInfo& time_info,
                           const valhalla::Location& destination,
                           std::pair<int32_t, float>& best_path);
 

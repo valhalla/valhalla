@@ -24,8 +24,6 @@ TimeDepReverse::TimeDepReverse() : AStarPathAlgorithm() {
   travel_type_ = 0;
   adjacencylist_ = nullptr;
   max_label_count_ = std::numeric_limits<uint32_t>::max();
-  dest_tz_index_ = 0;
-  seconds_of_week_ = 0;
   access_mode_ = kAutoAccess;
 }
 
@@ -78,8 +76,7 @@ bool TimeDepReverse::ExpandReverse(GraphReader& graphreader,
                                    const uint32_t pred_idx,
                                    const DirectedEdge* opp_pred_edge,
                                    const bool from_transition,
-                                   uint64_t localtime,
-                                   int32_t seconds_of_week,
+                                   const TimeInfo& time_info,
                                    const valhalla::Location& destination,
                                    std::pair<int32_t, float>& best_path) {
   // Get the tile and the node info. Skip if tile is null (can happen
@@ -93,15 +90,10 @@ bool TimeDepReverse::ExpandReverse(GraphReader& graphreader,
     return false;
   }
 
-  // Adjust for time zone (if different from timezone at the destination).
-  if (nodeinfo->timezone() != dest_tz_index_) {
-    // Get the difference in seconds between the destination tz and current tz
-    int tz_diff =
-        DateTime::timezone_diff(localtime, DateTime::get_tz_db().from_index(nodeinfo->timezone()),
-                                DateTime::get_tz_db().from_index(dest_tz_index_));
-    localtime += tz_diff;
-    seconds_of_week = DateTime::normalize_seconds_of_week(seconds_of_week + tz_diff);
-  }
+  // Update the time information
+  auto ti = from_transition ? time_info
+                            : time_info - TimeInfo::Offset{pred.cost().secs,
+                                                           static_cast<int>(nodeinfo->timezone())};
 
   // Expand from end node.
   EdgeMetadata meta = EdgeMetadata::make(node, nodeinfo, tile, edgestatus_);
@@ -122,7 +114,7 @@ bool TimeDepReverse::ExpandReverse(GraphReader& graphreader,
     }
 
     found_valid_edge = ExpandReverseInner(graphreader, pred, opp_pred_edge, nodeinfo, pred_idx, meta,
-                                          tile, localtime, seconds_of_week, destination, best_path) ||
+                                          tile, ti, destination, best_path) ||
                        found_valid_edge;
   }
 
@@ -133,11 +125,11 @@ bool TimeDepReverse::ExpandReverse(GraphReader& graphreader,
       if (trans->up()) {
         hierarchy_limits_[node.level()].up_transition_count++;
         found_valid_edge = ExpandReverse(graphreader, trans->endnode(), pred, pred_idx, opp_pred_edge,
-                                         true, localtime, seconds_of_week, destination, best_path) ||
+                                         true, ti, destination, best_path) ||
                            found_valid_edge;
       } else if (!hierarchy_limits_[trans->endnode().level()].StopExpanding(pred.distance())) {
         found_valid_edge = ExpandReverse(graphreader, trans->endnode(), pred, pred_idx, opp_pred_edge,
-                                         true, localtime, seconds_of_week, destination, best_path) ||
+                                         true, ti, destination, best_path) ||
                            found_valid_edge;
       }
     }
@@ -160,10 +152,9 @@ bool TimeDepReverse::ExpandReverse(GraphReader& graphreader,
         found_valid_edge = true;
       } else {
         // We didn't add any shortcut of the uturn, therefore evaluate the regular uturn instead
-        found_valid_edge =
-            ExpandReverseInner(graphreader, pred, opp_pred_edge, nodeinfo, pred_idx, uturn_meta, tile,
-                               localtime, seconds_of_week, destination, best_path) ||
-            found_valid_edge;
+        found_valid_edge = ExpandReverseInner(graphreader, pred, opp_pred_edge, nodeinfo, pred_idx,
+                                              uturn_meta, tile, ti, destination, best_path) ||
+                           found_valid_edge;
       }
     }
   }
@@ -182,8 +173,7 @@ inline bool TimeDepReverse::ExpandReverseInner(GraphReader& graphreader,
                                                const uint32_t pred_idx,
                                                const EdgeMetadata& meta,
                                                const GraphTile* tile,
-                                               uint64_t localtime,
-                                               uint32_t seconds_of_week,
+                                               const TimeInfo& time_info,
                                                const valhalla::Location& destination,
                                                std::pair<int32_t, float>& best_path) {
 
@@ -210,10 +200,10 @@ inline bool TimeDepReverse::ExpandReverseInner(GraphReader& graphreader,
   // Skip this edge if no access is allowed (based on costing method)
   // or if a complex restriction prevents transition onto this edge.
   bool has_time_restrictions = false;
-  if (!costing_->AllowedReverse(meta.edge, pred, opp_edge, t2, oppedge, localtime,
+  if (!costing_->AllowedReverse(meta.edge, pred, opp_edge, t2, oppedge, time_info.local_time,
                                 nodeinfo->timezone(), has_time_restrictions) ||
       costing_->Restricted(meta.edge, pred, edgelabels_rev_, tile, meta.edge_id, false, &edgestatus_,
-                           localtime, nodeinfo->timezone())) {
+                           time_info.local_time, nodeinfo->timezone())) {
     return false;
   }
 
@@ -221,7 +211,7 @@ inline bool TimeDepReverse::ExpandReverseInner(GraphReader& graphreader,
   // can properly recover elapsed time on the reverse path.
   auto transition_cost =
       costing_->TransitionCostReverse(meta.edge->localedgeidx(), nodeinfo, opp_edge, opp_pred_edge);
-  auto edge_cost = costing_->EdgeCost(opp_edge, t2, seconds_of_week);
+  auto edge_cost = costing_->EdgeCost(opp_edge, t2, time_info.second_of_week);
   Cost newcost = pred.cost() + edge_cost;
   newcost.cost += transition_cost.cost;
 
@@ -322,30 +312,16 @@ TimeDepReverse::GetBestPath(valhalla::Location& origin,
   Init(origin_new, destination_new);
   float mindist = astarheuristic_.GetDistance(origin_new);
 
-  // Set seconds from beginning of the week
-  seconds_of_week_ = DateTime::day_of_week(destination.date_time()) * midgard::kSecondsPerDay +
-                     DateTime::seconds_from_midnight(destination.date_time());
+  // Get time information for backward search
+  auto reverse_time_info = TimeInfo::make(destination, graphreader);
 
   // Initialize the locations. For a reverse path search the destination location
   // is used as the "origin" and the origin location is used as the "destination".
   uint32_t density = SetDestination(graphreader, origin);
-  SetOrigin(graphreader, destination, origin, seconds_of_week_);
-
-  // Set the destination timezone
-  dest_tz_index_ =
-      edgelabels_rev_.size() == 0 ? 0 : graphreader.GetTimezone(edgelabels_rev_[0].endnode());
-  if (dest_tz_index_ == 0) {
-    // TODO - do not throw exception at this time
-    LOG_WARN("Could not get the timezone at the destination");
-  }
+  SetOrigin(graphreader, destination, origin, reverse_time_info.second_of_week);
 
   // Update hierarchy limits
   ModifyHierarchyLimits(mindist, density);
-
-  // Set route start time (seconds from epoch)
-  uint64_t start_time =
-      DateTime::seconds_since_epoch(destination.date_time(),
-                                    DateTime::get_tz_db().from_index(dest_tz_index_));
 
   // Find shortest path
   uint32_t nc = 0; // Count of iterations with no convergence
@@ -419,19 +395,14 @@ TimeDepReverse::GetBestPath(valhalla::Location& origin,
       continue;
     }
 
-    // Set local time and seconds of the week.
-    uint32_t secs = static_cast<uint32_t>(pred.cost().secs);
-    uint64_t localtime = start_time - secs;
-    int32_t seconds_of_week = DateTime::normalize_seconds_of_week(seconds_of_week_ - secs);
-
     // Get the opposing predecessor directed edge. Need to make sure we get
     // the correct one if a transition occurred
     const DirectedEdge* opp_pred_edge =
         graphreader.GetGraphTile(pred.opp_edgeid())->directededge(pred.opp_edgeid());
 
     // Expand forward from the end node of the predecessor edge.
-    ExpandReverse(graphreader, pred.endnode(), pred, predindex, opp_pred_edge, false, localtime,
-                  seconds_of_week, destination, best_path);
+    ExpandReverse(graphreader, pred.endnode(), pred, predindex, opp_pred_edge, false,
+                  reverse_time_info, destination, best_path);
   }
   return {}; // Should never get here
 }
