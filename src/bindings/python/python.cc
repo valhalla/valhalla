@@ -53,6 +53,16 @@ void py_configure(const std::string& config_file) {
   configure(config_file);
 }
 
+struct TyrActorWrapper : public valhalla::tyr::actor_t {
+
+  TyrActorWrapper(boost::property_tree::ptree config)
+      : reader(config), actor_t(config, reader, true) {
+  }
+
+protected:
+  valhalla::baldr::GraphReader reader;
+};
+
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(route_overloads, route, 1, 1);
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(locate_overloads, locate, 1, 1);
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(optimized_route_overloads, optimized_route, 1, 1);
@@ -70,23 +80,24 @@ BOOST_PYTHON_MODULE(valhalla) {
   // python interface for configuring the system, always call this first in your python program
   boost::python::def("Configure", py_configure);
 
-  boost::python::class_<valhalla::tyr::actor_t, boost::noncopyable,
-                        boost::shared_ptr<valhalla::tyr::actor_t>>("Actor", boost::python::no_init)
-      .def("__init__", boost::python::make_constructor(+[]() {
-             auto config = configure();
-             valhalla::baldr::GraphReader reader(config.get_child("mjolnir"));
-             return boost::make_shared<valhalla::tyr::actor_t>(config, reader, true);
-           }))
-      .def("Route", &valhalla::tyr::actor_t::route, route_overloads())
-      .def("Locate", &valhalla::tyr::actor_t::route, locate_overloads())
-      .def("OptimizedRoute", &valhalla::tyr::actor_t::route, optimized_route_overloads())
-      .def("Matrix", &valhalla::tyr::actor_t::route, matrix_overloads())
-      .def("Isochrone", &valhalla::tyr::actor_t::route, isochrone_overloads())
-      .def("TraceRoute", &valhalla::tyr::actor_t::route, trace_route_overloads())
-      .def("TraceAttributes", &valhalla::tyr::actor_t::route, trace_attributes_overloads())
-      .def("Height", &valhalla::tyr::actor_t::route, height_overloads())
-      .def("TransitAvailable", &valhalla::tyr::actor_t::route, transit_available_overloads())
-      .def("Expansion", &valhalla::tyr::actor_t::route, expansion_overloads())
+  boost::python::class_<valhalla::tyr::actor_t, boost::noncopyable>("ActorBase",
+                                                                    boost::python::no_init);
+
+  boost::python::class_<TyrActorWrapper, boost::python::bases<valhalla::tyr::actor_t>,
+                        boost::noncopyable,
+                        boost::shared_ptr<TyrActorWrapper>>("Actor", boost::python::no_init)
+      .def("__init__", boost::python::make_constructor(
+                           +[]() { return boost::make_shared<TyrActorWrapper>(configure()); }))
+      .def("Route", &TyrActorWrapper::route, route_overloads())
+      .def("Locate", &TyrActorWrapper::route, locate_overloads())
+      .def("OptimizedRoute", &TyrActorWrapper::route, optimized_route_overloads())
+      .def("Matrix", &TyrActorWrapper::route, matrix_overloads())
+      .def("Isochrone", &TyrActorWrapper::route, isochrone_overloads())
+      .def("TraceRoute", &TyrActorWrapper::route, trace_route_overloads())
+      .def("TraceAttributes", &TyrActorWrapper::route, trace_attributes_overloads())
+      .def("Height", &TyrActorWrapper::route, height_overloads())
+      .def("TransitAvailable", &TyrActorWrapper::route, transit_available_overloads())
+      .def("Expansion", &TyrActorWrapper::route, expansion_overloads())
 
       ;
 }
