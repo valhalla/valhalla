@@ -23,7 +23,6 @@ namespace valhalla {
 namespace baldr {
 
 GraphReader::tile_extract_t::tile_extract_t(const boost::property_tree::ptree& pt) {
-  std::cout << "Initizliaing a tile extract" << std::endl;
   // if you really meant to load it
   if (pt.get_optional<std::string>("tile_extract")) {
     try {
