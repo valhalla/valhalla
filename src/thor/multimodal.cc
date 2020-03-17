@@ -146,6 +146,9 @@ MultiModalPathAlgorithm::GetBestPath(valhalla::Location& origin,
     }
   }
 
+  // Get time information for forward search
+  auto forward_time_info = TimeInfo::make(origin, graphreader);
+
   // Initialize the origin and destination locations. Initialize the
   // destination first in case the origin edge includes a destination edge.
   SetDestination(graphreader, destination, costing);
@@ -156,16 +159,7 @@ MultiModalPathAlgorithm::GetBestPath(valhalla::Location& origin,
   date_before_tile_ = false;
   date_set_ = false;
   origin_date_time_ = origin.date_time();
-
   start_time_ = DateTime::seconds_from_midnight(origin_date_time_);
-  const baldr::GraphTile* tile = nullptr;
-  start_tz_index_ =
-      edgelabels_.size() == 0 ? 0 : graphreader.GetTimezone(edgelabels_[0].endnode(), tile);
-  if (start_tz_index_ == 0) {
-    // TODO - should we throw an exception and return an error
-    LOG_ERROR("Could not get the timezone at the origin location");
-    return {};
-  }
 
   // Clear operators and processed tiles
   operators_.clear();
@@ -224,7 +218,8 @@ MultiModalPathAlgorithm::GetBestPath(valhalla::Location& origin,
     }
 
     // Expand from the end node of the predecessor edge.
-    ExpandForward(graphreader, pred.endnode(), pred, predindex, false, pc, tc, mode_costing);
+    ExpandForward(graphreader, pred.endnode(), pred, predindex, false, pc, tc, mode_costing,
+                  forward_time_info);
   }
   return {}; // Should never get here
 }
@@ -237,7 +232,8 @@ bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
                                             const bool from_transition,
                                             const std::shared_ptr<DynamicCost>& pc,
                                             const std::shared_ptr<DynamicCost>& tc,
-                                            const std::shared_ptr<DynamicCost>* mode_costing) {
+                                            const std::shared_ptr<DynamicCost>* mode_costing,
+                                            const TimeInfo& time_info) {
 
   // Get the tile and the node info. Skip if tile is null (can happen
   // with regional data sets) or if no access at the node.
@@ -261,15 +257,10 @@ bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
     }
   }
 
-  // Set local time and adjust for time zone (if different from timezone at the start).
-  uint32_t localtime = start_time_ + pred.cost().secs;
-  if (nodeinfo->timezone() != start_tz_index_) {
-    // Get the difference in seconds between the origin tz and current tz
-    int tz_diff =
-        DateTime::timezone_diff(localtime, DateTime::get_tz_db().from_index(start_tz_index_),
-                                DateTime::get_tz_db().from_index(nodeinfo->timezone()));
-    localtime += tz_diff;
-  }
+  // Update the time information
+  auto ti = from_transition ? time_info
+                            : time_info + TimeInfo::Offset{pred.cost().secs,
+                                                           static_cast<int>(nodeinfo->timezone())};
 
   // Set a default transfer penalty at a stop (if not same trip Id and block Id)
   Cost transfer_cost = tc->DefaultTransferCost();
@@ -291,7 +282,7 @@ bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
     // as a pedestrian. This is a small added cost on top of
     // any costs along paths and roads
     if (mode_ == TravelMode::kPedestrian) {
-      localtime += transfer_cost.secs;
+      ti.local_time += transfer_cost.secs;
     }
 
     // Update prior stop. TODO - parent/child stop info?
@@ -370,7 +361,7 @@ bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
 
       // Look up the next departure along this edge
       const TransitDeparture* departure =
-          tile->GetNextDeparture(directededge->lineid(), localtime, day_, dow_, date_before_tile_,
+          tile->GetNextDeparture(directededge->lineid(), ti.local_time, day_, dow_, date_before_tile_,
                                  tc->wheelchair(), tc->bicycle());
 
       if (departure) {
@@ -394,9 +385,10 @@ bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
             // call GetNextDeparture again if we cannot make the current
             // departure.
             // TODO - is there a better way?
-            if (localtime + 30 > departure->departure_time()) {
-              departure = tile->GetNextDeparture(directededge->lineid(), localtime + 30, day_, dow_,
-                                                 date_before_tile_, tc->wheelchair(), tc->bicycle());
+            if (ti.local_time + 30 > departure->departure_time()) {
+              departure =
+                  tile->GetNextDeparture(directededge->lineid(), ti.local_time + 30, day_, dow_,
+                                         date_before_tile_, tc->wheelchair(), tc->bicycle());
               if (!departure) {
                 continue;
               }
@@ -417,7 +409,7 @@ bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
 
         // Change mode and costing to transit. Add edge cost.
         mode_ = TravelMode::kPublicTransit;
-        newcost += tc->EdgeCost(directededge, departure, localtime);
+        newcost += tc->EdgeCost(directededge, departure, ti.local_time);
       } else {
         // No matching departures found for this edge
         continue;
@@ -535,7 +527,7 @@ bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
   if (!from_transition && nodeinfo->transition_count() > 0) {
     const NodeTransition* trans = tile->transition(nodeinfo->transition_index());
     for (uint32_t i = 0; i < nodeinfo->transition_count(); ++i, ++trans) {
-      ExpandForward(graphreader, trans->endnode(), pred, pred_idx, true, pc, tc, mode_costing);
+      ExpandForward(graphreader, trans->endnode(), pred, pred_idx, true, pc, tc, mode_costing, ti);
     }
   }
   return false;
