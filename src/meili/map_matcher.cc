@@ -6,7 +6,6 @@
 #include "meili/routing.h"
 #include "meili/transition_cost_model.h"
 #include "midgard/distanceapproximator.h"
-#include <algorithm>
 #include <array>
 
 namespace {
