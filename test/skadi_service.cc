@@ -173,22 +173,8 @@ void create_tile() {
   ASSERT_TRUE(file.good()) << "File stream is not good";
 }
 
-void start_service(zmq::context_t& context) {
-  // server
-  std::thread server(
-      std::bind(&http_server_t::serve,
-                http_server_t(context, "ipc:///tmp/test_skadi_server",
-                              "ipc:///tmp/test_skadi_proxy_upstream", "ipc:///tmp/test_skadi_results",
-                              "ipc:///tmp/test_skadi_interrupt")));
-  server.detach();
+boost::property_tree::ptree make_config() {
 
-  // load balancer
-  std::thread proxy(
-      std::bind(&proxy_t::forward, proxy_t(context, "ipc:///tmp/test_skadi_proxy_upstream",
-                                           "ipc:///tmp/test_skadi_proxy_out")));
-  proxy.detach();
-
-  // service worker
   boost::property_tree::ptree config;
   std::stringstream json;
   json << R"({
@@ -217,8 +203,24 @@ void start_service(zmq::context_t& context) {
       "costing_options": { "auto": {}, "pedestrian": {} }
     })";
   rapidjson::read_json(json, config);
+  return config;
+}
 
-  valhalla::baldr::GraphReader reader(config.get_child("mjolnir"));
+void start_service(zmq::context_t& context, boost::property_tree::ptree &config, valhalla::baldr::GraphReader &reader) {
+  // server
+  std::thread server(
+      std::bind(&http_server_t::serve,
+                http_server_t(context, "ipc:///tmp/test_skadi_server",
+                              "ipc:///tmp/test_skadi_proxy_upstream", "ipc:///tmp/test_skadi_results",
+                              "ipc:///tmp/test_skadi_interrupt")));
+  server.detach();
+
+  // load balancer
+  std::thread proxy(
+      std::bind(&proxy_t::forward, proxy_t(context, "ipc:///tmp/test_skadi_proxy_upstream",
+                                           "ipc:///tmp/test_skadi_proxy_out")));
+  proxy.detach();
+
   std::thread worker(valhalla::loki::run_service, config, std::ref(reader));
   worker.detach();
 }
@@ -226,29 +228,30 @@ void start_service(zmq::context_t& context) {
 TEST(SkadiService, test_requests) {
   // start up the service
   zmq::context_t context;
-  start_service(context);
+  auto config = make_config();
+  valhalla::baldr::GraphReader reader(config.get_child("mjolnir"));
+  start_service(context, config, reader);
 
   // client makes requests and gets back responses in a batch fashion
   auto request = requests.cbegin();
   std::string request_str;
-  http_client_t client(context, "ipc:///tmp/test_skadi_server",
-                       [&request, &request_str]() {
-                         // we dont have any more requests so bail
-                         if (request == requests.cend())
-                           return std::make_pair<const void*, size_t>(nullptr, 0);
-                         // get the string of bytes to send formatted for http protocol
-                         request_str = request->to_string();
-                         ++request;
-                         return std::make_pair<const void*, size_t>(request_str.c_str(),
-                                                                    request_str.size());
-                       },
-                       [&request](const void* data, size_t size) {
-                         auto response =
-                             http_response_t::from_string(static_cast<const char*>(data), size);
-                         EXPECT_EQ(response.body, responses[request - requests.cbegin() - 1]);
-                         return request != requests.cend();
-                       },
-                       1);
+  http_client_t client(
+      context, "ipc:///tmp/test_skadi_server",
+      [&request, &request_str]() {
+        // we dont have any more requests so bail
+        if (request == requests.cend())
+          return std::make_pair<const void*, size_t>(nullptr, 0);
+        // get the string of bytes to send formatted for http protocol
+        request_str = request->to_string();
+        ++request;
+        return std::make_pair<const void*, size_t>(request_str.c_str(), request_str.size());
+      },
+      [&request](const void* data, size_t size) {
+        auto response = http_response_t::from_string(static_cast<const char*>(data), size);
+        EXPECT_EQ(response.body, responses[request - requests.cbegin() - 1]);
+        return request != requests.cend();
+      },
+      1);
   // request and receive
   client.batch();
 }
