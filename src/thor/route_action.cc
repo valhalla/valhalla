@@ -265,7 +265,7 @@ thor::PathAlgorithm* thor_worker_t::get_path_algorithm(const std::string& routet
   for (auto& edge1 : origin.path_edges()) {
     for (auto& edge2 : destination.path_edges()) {
       if (edge1.graph_id() == edge2.graph_id() ||
-          reader->AreEdgesConnected(GraphId(edge1.graph_id()), GraphId(edge2.graph_id()))) {
+          reader.AreEdgesConnected(GraphId(edge1.graph_id()), GraphId(edge2.graph_id()))) {
         astar.set_interrupt(interrupt);
         return &astar;
       }
@@ -287,7 +287,7 @@ std::vector<std::vector<thor::PathInfo>> thor_worker_t::get_path(PathAlgorithm* 
     cost->set_allow_destination_only(false);
   }
   cost->set_pass(0);
-  auto paths = path_algorithm->GetBestPath(origin, destination, *reader, mode_costing, mode, options);
+  auto paths = path_algorithm->GetBestPath(origin, destination, reader, mode_costing, mode, options);
 
   // Check if we should run a second pass pedestrian route with different A*
   // (to look for better routes where a ferry is taken)
@@ -319,7 +319,7 @@ std::vector<std::vector<thor::PathInfo>> thor_worker_t::get_path(PathAlgorithm* 
 
     // Get the best path. Return if not empty (else return the original path)
     auto relaxed_paths =
-        path_algorithm->GetBestPath(origin, destination, *reader, mode_costing, mode, options);
+        path_algorithm->GetBestPath(origin, destination, reader, mode_costing, mode, options);
     if (!relaxed_paths.empty()) {
       return relaxed_paths;
     }
@@ -364,7 +364,7 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
     for (auto& temp_path : temp_paths) {
       // back propagate time information
       if (destination->has_date_time()) {
-        auto origin_dt = offset_date(*reader, destination->date_time(), temp_path.back().edgeid,
+        auto origin_dt = offset_date(reader, destination->date_time(), temp_path.back().edgeid,
                                      -temp_path.back().elapsed_time, temp_path.front().edgeid);
         origin->set_date_time(origin_dt);
       }
@@ -383,7 +383,7 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
         } else if (destination->type() == valhalla::Location::kVia) {
           // Insert a route discontinuity if the paths meet at opposing edges and not
           // at a graph node. Use path size - 1 as the index where the discontinuity lies.
-          via_discontinuity(*reader, *destination, path.back().edgeid, temp_path.front().edgeid, vias,
+          via_discontinuity(reader, *destination, path.back().edgeid, temp_path.front().edgeid, vias,
                             temp_path.size(), true);
         }
         path.insert(path.end(), temp_path.begin(), temp_path.end());
@@ -412,7 +412,7 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
         if (api.trip().routes_size() == 0 || api.options().alternates() > 0)
           route = api.mutable_trip()->mutable_routes()->Add();
         auto& leg = *route->mutable_legs()->Add();
-        TripLegBuilder::Build(controller, *reader, mode_costing, path.begin(), path.end(), *origin,
+        TripLegBuilder::Build(controller, reader, mode_costing, path.begin(), path.end(), *origin,
                               *destination, throughs, leg, interrupt, &vias);
         path.clear();
         vias.clear();
@@ -457,7 +457,7 @@ void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
     for (auto& temp_path : temp_paths) {
       // forward propagate time information
       if (origin->has_date_time()) {
-        auto destination_dt = offset_date(*reader, origin->date_time(), temp_path.front().edgeid,
+        auto destination_dt = offset_date(reader, origin->date_time(), temp_path.front().edgeid,
                                           temp_path.back().elapsed_time, temp_path.back().edgeid);
         destination->set_date_time(destination_dt);
       }
@@ -475,7 +475,7 @@ void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
         } else if (origin->type() == valhalla::Location::kVia) {
           // Insert a route discontinuity if the paths meet at opposing edges and not
           // at a graph node. Use path size - 1 as the index where the discontinuity lies.
-          via_discontinuity(*reader, *origin, path.back().edgeid, temp_path.front().edgeid, vias,
+          via_discontinuity(reader, *origin, path.back().edgeid, temp_path.front().edgeid, vias,
                             path.size() - 1, false);
         }
         path.insert(path.end(), temp_path.begin(), temp_path.end());
@@ -500,7 +500,7 @@ void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
         if (api.trip().routes_size() == 0 || api.options().alternates() > 0)
           route = api.mutable_trip()->mutable_routes()->Add();
         auto& leg = *route->mutable_legs()->Add();
-        thor::TripLegBuilder::Build(controller, *reader, mode_costing, path.begin(), path.end(),
+        thor::TripLegBuilder::Build(controller, reader, mode_costing, path.begin(), path.end(),
                                     *origin, *destination, throughs, leg, interrupt, &vias);
         path.clear();
         vias.clear();

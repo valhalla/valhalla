@@ -76,13 +76,16 @@ int main(int argc, char** argv) {
       std::thread(std::bind(&http_server_t::serve, http_server_t(context, listen, loki_proxy + "_in",
                                                                  loopback, interrupt, true)));
 
+  // Shared GraphReader
+  valhalla::baldr::GraphReader graph_reader(config.get_child("mjolnir"));
+
   // loki layer
   std::thread loki_proxy_thread(
       std::bind(&proxy_t::forward, proxy_t(context, loki_proxy + "_in", loki_proxy + "_out")));
   loki_proxy_thread.detach();
   std::list<std::thread> loki_worker_threads;
   for (size_t i = 0; i < worker_concurrency; ++i) {
-    loki_worker_threads.emplace_back(valhalla::loki::run_service, config);
+    loki_worker_threads.emplace_back(valhalla::loki::run_service, config, std::ref(graph_reader));
     loki_worker_threads.back().detach();
   }
 
@@ -92,7 +95,7 @@ int main(int argc, char** argv) {
   thor_proxy_thread.detach();
   std::list<std::thread> thor_worker_threads;
   for (size_t i = 0; i < worker_concurrency; ++i) {
-    thor_worker_threads.emplace_back(valhalla::thor::run_service, config);
+    thor_worker_threads.emplace_back(valhalla::thor::run_service, config, std::ref(graph_reader));
     thor_worker_threads.back().detach();
   }
 

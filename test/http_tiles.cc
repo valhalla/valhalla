@@ -87,7 +87,8 @@ make_conf(const std::string& tile_dir, bool tile_url_gz, size_t curler_count) {
 
 void test_route(const std::string& tile_dir, bool tile_url_gz) {
   auto conf = make_conf(tile_dir, tile_url_gz, 1);
-  tyr::actor_t actor(conf);
+  baldr::GraphReader reader(conf.get_child("mjolnir"));
+  tyr::actor_t actor(conf, reader);
 
   auto route_json = actor.route(R"({"locations":[{"lat":52.09620,"lon": 5.11909,"type":"break"},
           {"lat":52.09585,"lon":5.11934,"type":"break"}],"costing":"auto"})");

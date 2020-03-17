@@ -56,8 +56,10 @@ const auto conf = json_to_pt(R"({
     }
   })");
 
+valhalla::baldr::GraphReader reader(conf.get_child("mjolnir"));
+
 TEST(ThorWorker, test_parse_filter_attributes_defaults) {
-  tyr::actor_t actor(conf, true);
+  tyr::actor_t actor(conf, reader, true);
 
   auto result = json_to_pt(actor.trace_attributes(
       R"({"costing":"auto","shape_match":"map_snap","shape":[
@@ -72,7 +74,7 @@ TEST(ThorWorker, test_parse_filter_attributes_defaults) {
 }
 
 TEST(ThorWorker, test_parse_filter_attributes_excludes) {
-  tyr::actor_t actor(conf, true);
+  tyr::actor_t actor(conf, reader, true);
 
   std::vector<std::string> test_cases = {
       actor.trace_attributes(
@@ -105,7 +107,7 @@ TEST(ThorWorker, test_parse_filter_attributes_excludes) {
 }
 
 TEST(ThorWorker, test_parse_filter_attributes_includes) {
-  tyr::actor_t actor(conf, true);
+  tyr::actor_t actor(conf, reader, true);
 
   std::vector<std::string> test_cases = {
       actor.trace_attributes(

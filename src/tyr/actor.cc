@@ -14,9 +14,9 @@ namespace valhalla {
 namespace tyr {
 
 struct actor_t::pimpl_t {
-  pimpl_t(const boost::property_tree::ptree& config)
-      : reader(new baldr::GraphReader(config.get_child("mjolnir"))), loki_worker(config, reader),
-        thor_worker(config, reader), odin_worker(config) {
+  pimpl_t(const boost::property_tree::ptree& config, baldr::GraphReader& reader_)
+      : reader{reader_}, loki_worker(config, reader), thor_worker(config, reader),
+        odin_worker(config) {
   }
   void set_interrupts(const std::function<void()>& interrupt_function) {
     loki_worker.set_interrupt(interrupt_function);
@@ -28,14 +28,16 @@ struct actor_t::pimpl_t {
     thor_worker.cleanup();
     odin_worker.cleanup();
   }
-  std::shared_ptr<baldr::GraphReader> reader;
+  baldr::GraphReader& reader;
   loki::loki_worker_t loki_worker;
   thor::thor_worker_t thor_worker;
   odin_worker_t odin_worker;
 };
 
-actor_t::actor_t(const boost::property_tree::ptree& config, bool auto_cleanup)
-    : pimpl(new pimpl_t(config)), auto_cleanup(auto_cleanup) {
+actor_t::actor_t(const boost::property_tree::ptree& config,
+                 baldr::GraphReader& reader,
+                 bool auto_cleanup)
+    : pimpl(new pimpl_t(config, reader)), auto_cleanup(auto_cleanup) {
 }
 
 void actor_t::cleanup() {

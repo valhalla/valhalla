@@ -184,12 +184,12 @@ void loki_worker_t::locations_from_shape(Api& request) {
 
     // Project first and last shape point onto nearest edge(s). Clear current locations list
     // and set the path locations
-    auto projections = loki::Search(locations, *reader, costing);
+    auto projections = loki::Search(locations, reader, costing);
     options.clear_locations();
     PathLocation::toPBF(projections.at(locations.front()), options.mutable_locations()->Add(),
-                        *reader);
+                        reader);
     PathLocation::toPBF(projections.at(locations.back()), options.mutable_locations()->Add(),
-                        *reader);
+                        reader);
 
     // If locations were provided, backfill the origin and dest lat,lon and update
     // side of street on associated edges. TODO - create a constant for side of street
@@ -201,7 +201,7 @@ void loki_worker_t::locations_from_shape(Api& request) {
       orig->mutable_ll()->set_lat(orig_ll.lat());
       for (auto& e : *orig->mutable_path_edges()) {
         GraphId edgeid(e.graph_id());
-        const GraphTile* tile = reader->GetGraphTile(edgeid);
+        const GraphTile* tile = reader.GetGraphTile(edgeid);
         const DirectedEdge* de = tile->directededge(edgeid);
         auto& shape = tile->edgeinfo(de->edgeinfo_offset()).shape();
         auto closest = orig_ll.ClosestPoint(shape);
@@ -228,7 +228,7 @@ void loki_worker_t::locations_from_shape(Api& request) {
       dest->mutable_ll()->set_lat(dest_ll.lat());
       for (auto& e : *dest->mutable_path_edges()) {
         GraphId edgeid(e.graph_id());
-        const GraphTile* tile = reader->GetGraphTile(edgeid);
+        const GraphTile* tile = reader.GetGraphTile(edgeid);
         const DirectedEdge* de = tile->directededge(edgeid);
         auto& shape = tile->edgeinfo(de->edgeinfo_offset()).shape();
         auto closest = dest_ll.ClosestPoint(shape);

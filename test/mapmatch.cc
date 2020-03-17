@@ -107,10 +107,12 @@ const auto conf = json_to_pt(R"({
     }
   })");
 
+valhalla::baldr::GraphReader graph_reader(conf.get_child("mjolnir"));
+
 struct api_tester {
   api_tester()
-      : conf_(conf), reader(new valhalla::baldr::GraphReader(conf.get_child("mjolnir"))),
-        loki_worker(conf, reader), thor_worker(conf, reader), odin_worker(conf) {
+      : conf_(conf), reader(graph_reader), loki_worker(conf, reader), thor_worker(conf, reader),
+        odin_worker(conf) {
   }
   Api match(const std::string& request_json) {
     Api request;
@@ -135,7 +137,7 @@ struct api_tester {
     return request;
   }
   boost::property_tree::ptree conf_;
-  std::shared_ptr<valhalla::baldr::GraphReader> reader;
+  valhalla::baldr::GraphReader& reader;
   valhalla::loki::loki_worker_t loki_worker;
   valhalla::thor::thor_worker_t thor_worker;
   valhalla::odin::odin_worker_t odin_worker;
@@ -173,7 +175,7 @@ std::string make_test_case(PointLL& start, PointLL& end) {
 
 TEST(Mapmatch, test_matcher) {
   // generate a bunch of tests
-  tyr::actor_t actor(conf, true);
+  tyr::actor_t actor(conf, graph_reader, true);
   int tested = 0;
   while (tested < bound) {
     // get a route shape
@@ -282,7 +284,7 @@ TEST(Mapmatch, test_matcher) {
 }
 
 TEST(Mapmatch, test_distance_only) {
-  tyr::actor_t actor(conf, true);
+  tyr::actor_t actor(conf, graph_reader, true);
   auto matched = json_to_pt(actor.trace_attributes(
       R"({"trace_options":{"max_route_distance_factor":10,"max_route_time_factor":1,"turn_penalty_factor":0},
           "costing":"auto","shape_match":"map_snap","shape":[
@@ -319,7 +321,7 @@ TEST(Mapmatch, test_trace_route_breaks) {
       R"({"costing":"auto","shape_match":"map_snap","encoded_polyline":"quijbBqpnwHfJxc@bBdJrDfSdAzFX|AHd@bG~[|AnIdArGbAo@z@m@`EuClO}MjE}E~NkPaAuC"})"};
   std::vector<size_t> test_answers = {2, 1, 1, 1, 1};
 
-  tyr::actor_t actor(conf, true);
+  tyr::actor_t actor(conf, graph_reader, true);
   for (size_t i = 0; i < test_cases.size(); ++i) {
     auto matched = json_to_pt(actor.trace_route(test_cases[i]));
     const auto& legs = matched.get_child("trip.legs");
@@ -452,7 +454,7 @@ TEST(Mapmatch, test_disconnected_edges_expect_no_route) {
         {"lat":52.0644313,"lon":5.1041697,"type":"break"}]})"};
   std::vector<size_t> test_answers = {0};
   size_t illegal_path = 0;
-  tyr::actor_t actor(conf, true);
+  tyr::actor_t actor(conf, graph_reader, true);
   for (size_t i = 0; i < test_cases.size(); ++i) {
     try {
       auto matched = json_to_pt(actor.trace_route(test_cases[i]));
@@ -500,7 +502,7 @@ TEST(Mapmatch, test_matching_indices_and_waypoint_indices) {
                                                                             {"2", "1"},
                                                                         }};
 
-  tyr::actor_t actor(conf, true);
+  tyr::actor_t actor(conf, graph_reader, true);
   for (size_t i = 0; i < test_cases.size(); ++i) {
     auto matched = json_to_pt(actor.trace_route(test_cases[i]));
     const auto& tracepoints = matched.get_child("tracepoints");
@@ -524,7 +526,7 @@ TEST(Mapmatch, test_matching_indices_and_waypoint_indices) {
 }
 
 TEST(Mapmatch, test_time_rejection) {
-  tyr::actor_t actor(conf, true);
+  tyr::actor_t actor(conf, graph_reader, true);
   auto matched = json_to_pt(actor.trace_attributes(
       R"({"trace_options":{"max_route_distance_factor":10,"max_route_time_factor":3,"turn_penalty_factor":0},
           "costing":"auto","shape_match":"map_snap","shape":[
@@ -540,7 +542,7 @@ TEST(Mapmatch, test_time_rejection) {
 }
 
 TEST(Mapmatch, test32bit) {
-  tyr::actor_t actor(conf, true);
+  tyr::actor_t actor(conf, graph_reader, true);
   std::string test_case =
       R"({"costing":"auto","locations":[{"lat":52.096672,"lon":5.110825},
           {"lat":52.081371,"lon":5.125671,"name":"foo","street":"bar","city":"baz",
@@ -554,7 +556,7 @@ TEST(Mapmatch, test32bit) {
 TEST(Mapmatch, test_trace_route_edge_walk_expected_error_code) {
   // tests expected error_code for trace_route edge_walk
   auto expected_error_code = 443;
-  tyr::actor_t actor(conf, true);
+  tyr::actor_t actor(conf, graph_reader, true);
 
   try {
     auto response = json_to_pt(actor.trace_route(
@@ -578,7 +580,7 @@ TEST(Mapmatch, test_trace_route_edge_walk_expected_error_code) {
 TEST(Mapmatch, test_trace_route_map_snap_expected_error_code) {
   // tests expected error_code for trace_route edge_walk
   auto expected_error_code = 442;
-  tyr::actor_t actor(conf, true);
+  tyr::actor_t actor(conf, graph_reader, true);
 
   try {
     auto response = json_to_pt(actor.trace_route(
@@ -602,7 +604,7 @@ TEST(Mapmatch, test_trace_route_map_snap_expected_error_code) {
 TEST(Mapmatch, test_trace_attributes_edge_walk_expected_error_code) {
   // tests expected error_code for trace_attributes edge_walk
   auto expected_error_code = 443;
-  tyr::actor_t actor(conf, true);
+  tyr::actor_t actor(conf, graph_reader, true);
 
   try {
     auto response = json_to_pt(actor.trace_attributes(
@@ -626,7 +628,7 @@ TEST(Mapmatch, test_trace_attributes_edge_walk_expected_error_code) {
 TEST(Mapmatch, test_trace_attributes_map_snap_expected_error_code) {
   // tests expected error_code for trace_attributes edge_walk
   auto expected_error_code = 444;
-  tyr::actor_t actor(conf, true);
+  tyr::actor_t actor(conf, graph_reader, true);
 
   try {
     auto response = json_to_pt(actor.trace_attributes(
@@ -649,7 +651,7 @@ TEST(Mapmatch, test_trace_attributes_map_snap_expected_error_code) {
 
 TEST(Mapmatch, test_topk_validate) {
   // tests a fork in the road
-  tyr::actor_t actor(conf, true);
+  tyr::actor_t actor(conf, graph_reader, true);
 
   // tests a previous segfault due to using a claimed state
   auto matched = json_to_pt(actor.trace_attributes(
@@ -672,7 +674,7 @@ TEST(Mapmatch, test_topk_validate) {
 
 TEST(Mapmatch, test_topk_fork_alternate) {
   // tests a fork in the road
-  tyr::actor_t actor(conf, true);
+  tyr::actor_t actor(conf, graph_reader, true);
   auto matched = json_to_pt(actor.trace_attributes(
       R"({"trace_options":{"search_radius":0},"costing":"auto","best_paths":2,"shape_match":"map_snap","shape":[
           {"lat":52.08511,"lon":5.15085,"accuracy":10,"time":2},
@@ -731,7 +733,7 @@ TEST(Mapmatch, test_topk_fork_alternate) {
 
 TEST(Mapmatch, test_topk_loop_alternate) {
   // tests a loop in the road
-  tyr::actor_t actor(conf, true);
+  tyr::actor_t actor(conf, graph_reader, true);
   auto matched = json_to_pt(actor.trace_attributes(
       R"({"costing":"auto","best_paths":2,"shape_match":"map_snap","shape":[
            {"lat":52.0886,"lon":5.1535,"accuracy":10},
@@ -806,7 +808,7 @@ TEST(Mapmatch, test_topk_loop_alternate) {
 
 TEST(Mapmatch, test_topk_frontage_alternate) {
   // tests a parallel frontage road
-  tyr::actor_t actor(conf, true);
+  tyr::actor_t actor(conf, graph_reader, true);
   auto matched = json_to_pt(actor.trace_attributes(
       R"({"costing":"auto","best_paths":2,"shape_match":"map_snap","shape":[
            {"lat":52.07956040090567,"lon":5.138160288333893,"accuracy":10,"time":2},
@@ -891,7 +893,7 @@ TEST(Mapmatch, test_topk_frontage_alternate) {
 }
 
 TEST(Mapmatch, test_now_matches) {
-  tyr::actor_t actor(conf, true);
+  tyr::actor_t actor(conf, graph_reader, true);
 
   // once with map matching
   std::string test_case =
@@ -1042,7 +1044,7 @@ TEST(Mapmatch, test_discontinuity_on_same_edge) {
                                                         {12.214, 3.728, 8.184},
                                                         {7.456, 2.931, 1.324, 2.37}};
 
-  tyr::actor_t actor(conf, true);
+  tyr::actor_t actor(conf, graph_reader, true);
   for (size_t i = 0; i < test_cases.size(); ++i) {
     auto matched = json_to_pt(actor.trace_route(test_cases[i]));
     const auto& routes = matched.get_child("matchings");
@@ -1090,7 +1092,7 @@ TEST(Mapmatch, test_discontinuity_duration_trimming) {
                                                         {48.6, 0.64, 0.961},
                                                         {213.778, 2.431, 1.899}};
 
-  tyr::actor_t actor(conf, true);
+  tyr::actor_t actor(conf, graph_reader, true);
   for (size_t i = 0; i < test_cases.size(); ++i) {
     auto matched = json_to_pt(actor.trace_route(test_cases[i]));
     const auto& routes = matched.get_child("matchings");
@@ -1123,7 +1125,7 @@ TEST(Mapmatch, test_transition_matching) {
 
   std::vector<int> test_ans_num_routes{1, 1};
   std::vector<float> durations{3.4, 5.0};
-  tyr::actor_t actor(conf, true);
+  tyr::actor_t actor(conf, graph_reader, true);
   for (size_t i = 0; i < test_cases.size(); ++i) {
     auto matched = json_to_pt(actor.trace_route(test_cases[i]));
     const auto& routes = matched.get_child("matchings");
@@ -1173,7 +1175,7 @@ TEST(Mapmatch, test_loop_matching) {
                                                         {26.082, 74.277},
                                                         {12.911, 89.043, 3.382, 52.205}};
 
-  tyr::actor_t actor(conf, true);
+  tyr::actor_t actor(conf, graph_reader, true);
   for (size_t i = 0; i < test_cases.size(); ++i) {
     auto matched = json_to_pt(actor.trace_route(test_cases[i]));
     const auto& routes = matched.get_child("matchings");
@@ -1214,7 +1216,7 @@ TEST(Mapmatch, test_intersection_matching) {
                                                                   {3, {61.7, 41.6, 109.4}},
                                                                   {4, {49.3, 61, 52.6, 99}}};
 
-  tyr::actor_t actor(conf, true);
+  tyr::actor_t actor(conf, graph_reader, true);
   for (size_t i = 0; i < test_cases.size(); ++i) {
     auto matched = json_to_pt(actor.trace_route(test_cases[i]));
     const auto& routes = matched.get_child("matchings");
@@ -1242,7 +1244,7 @@ TEST(Mapmatch, test_degenerate_match) {
           {"lat": 52.0981280, "lon": 5.1297250, "type": "break", "time":169}],
           "trace_options": {"interpolation_distance": 0}})",
   };
-  tyr::actor_t actor(conf, true);
+  tyr::actor_t actor(conf, graph_reader, true);
 
   for (size_t i = 0; i < test_cases.size(); ++i) {
     auto matched = json_to_pt(actor.trace_route(test_cases[i]));

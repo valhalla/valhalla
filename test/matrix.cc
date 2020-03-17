@@ -262,14 +262,14 @@ bool within_tolerance(const uint32_t v1, const uint32_t v2) {
 }
 
 TEST(Matrix, test_matrix) {
-  loki_worker_t loki_worker(config);
+  GraphReader reader(config.get_child("mjolnir"));
+  loki_worker_t loki_worker(config, reader);
 
   Api request;
   ParseApi(test_request, Options::sources_to_targets, request);
   loki_worker.matrix(request);
   adjust_scores(*request.mutable_options());
 
-  GraphReader reader(config.get_child("mjolnir"));
 
   cost_ptr_t costing = CreateSimpleCost(request.options());
 
@@ -303,15 +303,14 @@ TEST(Matrix, test_matrix) {
 
 // TODO: it was commented before. Why?
 TEST(Matrix, DISABLED_test_matrix_osrm) {
-  loki_worker_t loki_worker(config);
+  GraphReader reader(config.get_child("mjolnir"));
+  loki_worker_t loki_worker(config, reader);
 
   Api request;
   ParseApi(test_request_osrm, Options::sources_to_targets, request);
 
   loki_worker.matrix(request);
   adjust_scores(*request.mutable_options());
-
-  GraphReader reader(config.get_child("mjolnir"));
 
   cost_ptr_t costing = CreateSimpleCost(request.options());
 

@@ -93,7 +93,7 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
   if (options.avoid_locations_size()) {
     try {
       auto avoid_locations = PathLocation::fromPBF(options.avoid_locations());
-      auto results = loki::Search(avoid_locations, *reader, costing);
+      auto results = loki::Search(avoid_locations, reader, costing);
       std::unordered_set<uint64_t> avoids;
       for (const auto& result : results) {
         for (const auto& edge : result.second.edges) {
@@ -108,7 +108,7 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
             avoid->set_percent_along(edge.percent_along);
 
             // Check if a shortcut exists
-            GraphId shortcut = reader->GetShortcut(edge.id);
+            GraphId shortcut = reader.GetShortcut(edge.id);
             if (shortcut.Is_Valid()) {
               // Check if this shortcut has not been added
               auto shortcut_inserted = avoids.insert(shortcut);
@@ -136,7 +136,7 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
 }
 
 loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
-                             const std::shared_ptr<baldr::GraphReader>& graph_reader)
+                             baldr::GraphReader& graph_reader)
     : config(config), reader(graph_reader),
       connectivity_map(config.get<bool>("loki.use_connectivity", true)
                            ? new connectivity_map_t(config.get_child("mjolnir"))
@@ -148,9 +148,6 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
       sample(config.get<std::string>("additional_data.elevation", "test/data/")),
       max_elevation_shape(config.get<size_t>("service_limits.skadi.max_shape")),
       min_resample(config.get<float>("service_limits.skadi.min_resample")) {
-  // If we weren't provided with a graph reader make our own
-  if (!reader)
-    reader.reset(new baldr::GraphReader(config.get_child("mjolnir")));
 
   // Keep a string noting which actions we support, throw if one isnt supported
   Options::Action action;
@@ -231,8 +228,8 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
 }
 
 void loki_worker_t::cleanup() {
-  if (reader->OverCommitted()) {
-    reader->Trim();
+  if (reader.OverCommitted()) {
+    reader.Trim();
   }
 }
 
@@ -322,7 +319,7 @@ loki_worker_t::work(const std::list<zmq::message_t>& job,
   }
 }
 
-void run_service(const boost::property_tree::ptree& config) {
+void run_service(const boost::property_tree::ptree& config, baldr::GraphReader &reader) {
   // gets requests from the http server
   auto upstream_endpoint = config.get<std::string>("loki.service.proxy") + "_out";
   // sends them on to thor
@@ -333,7 +330,7 @@ void run_service(const boost::property_tree::ptree& config) {
 
   // listen for requests
   zmq::context_t context;
-  loki_worker_t loki_worker(config);
+  loki_worker_t loki_worker(config, reader);
   prime_server::worker_t worker(context, upstream_endpoint, downstream_endpoint, loopback_endpoint,
                                 interrupt_endpoint,
                                 std::bind(&loki_worker_t::work, std::ref(loki_worker),

@@ -2,6 +2,7 @@
 
 #include "midgard/logging.h"
 #include "thor/worker.h"
+#include "baldr/graphreader.h"
 #include <unistd.h>
 
 #include <thread>
@@ -89,7 +90,8 @@ TEST(ThorService, test_failure_requests) {
   customizable.push_back(std::make_pair("", mode));
   customizable.push_back(std::make_pair("", search_radius));
   config.add_child("meili.customizable", customizable);
-  thor_worker_t worker(config);
+  baldr::GraphReader reader(config.get_child("mjolnir"));
+  thor_worker_t worker(config, reader);
   for (auto& req_resp : failure_request_responses) {
     std::list<zmq::message_t> messages;
     http_request_info_t request_info;

@@ -20,12 +20,11 @@ namespace meili {
 
 class MapMatcherFactory final {
 public:
-  MapMatcherFactory(const boost::property_tree::ptree& root,
-                    const std::shared_ptr<baldr::GraphReader>& graph_reader = {});
+  MapMatcherFactory(const boost::property_tree::ptree& root, baldr::GraphReader& graph_reader);
 
   ~MapMatcherFactory();
 
-  std::shared_ptr<baldr::GraphReader>& graphreader() {
+  baldr::GraphReader& graphreader() {
     return graphreader_;
   }
 
@@ -54,7 +53,7 @@ private:
 
   boost::property_tree::ptree config_;
 
-  std::shared_ptr<baldr::GraphReader> graphreader_;
+  baldr::GraphReader &graphreader_;
 
   valhalla::sif::cost_ptr_t mode_costing_[kModeCostingCount];
 

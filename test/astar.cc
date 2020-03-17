@@ -254,25 +254,14 @@ enum class TrivialPathTest {
   DurationEqualTo,
 };
 
-std::unique_ptr<vb::GraphReader> get_graph_reader(const std::string& tile_dir) {
+bpt::ptree get_config(const std::string& tile_dir) {
   // make the config file
   std::stringstream json;
   json << "{ \"tile_dir\": \"" << tile_dir << "\" }";
   bpt::ptree conf;
   rapidjson::read_json(json, conf);
 
-  std::unique_ptr<vb::GraphReader> reader(new vb::GraphReader(conf));
-  auto* tile = reader->GetGraphTile(tile_id);
-
-  EXPECT_NE(tile, nullptr) << "Unable to load test tile! Did `make_tile` run succesfully?";
-  if (tile->header()->directededgecount() != 28) {
-    throw std::logic_error("test-tiles does not contain expected number of edges");
-  }
-
-  const GraphTile* endtile = reader->GetGraphTile(node_locations["b"]);
-  EXPECT_NE(endtile, nullptr) << "bad tile, node 'b' wasn't found in it";
-
-  return reader;
+  return conf;
 }
 
 // check that a path from origin to dest goes along the edge with expected_edge_index
@@ -284,7 +273,7 @@ void assert_is_trivial_path(vt::PathAlgorithm& astar,
                             int32_t assert_type_value,
                             vs::TravelMode mode = vs::TravelMode::kPedestrian) {
 
-  auto reader = get_graph_reader(test_dir);
+  vb::GraphReader reader(get_config(test_dir));
 
   Options options;
   create_costing_options(options);
@@ -306,7 +295,7 @@ void assert_is_trivial_path(vt::PathAlgorithm& astar,
   }
   ASSERT_TRUE(bool(costs[int(mode)]));
 
-  auto paths = astar.GetBestPath(origin, dest, *reader, costs, mode);
+  auto paths = astar.GetBestPath(origin, dest, reader, costs, mode);
 
   int32_t time = 0;
   for (const auto& path : paths) {
@@ -317,7 +306,7 @@ void assert_is_trivial_path(vt::PathAlgorithm& astar,
     break;
   }
 
-  auto* tile = reader->GetGraphTile(tile_id);
+  auto* tile = reader.GetGraphTile(tile_id);
   uint32_t expected_time = 979797;
   switch (assert_type) {
     case TrivialPathTest::DurationEqualTo:
@@ -343,23 +332,23 @@ void TestTrivialPath(vt::PathAlgorithm& astar) {
   create_costing_options(options);
   auto costs = vs::CreateAutoCost(Costing::auto_, options);
 
-  auto reader = get_graph_reader(test_dir);
+  vb::GraphReader reader(get_config(test_dir));
 
   std::vector<valhalla::baldr::Location> locations;
   locations.push_back({node_locations["1"]});
   locations.push_back({node_locations["2"]});
 
-  const auto projections = loki::Search(locations, *reader, costs);
+  const auto projections = loki::Search(locations, reader, costs);
   valhalla::Location origin;
   {
     const auto& correlated = projections.at(locations[0]);
-    PathLocation::toPBF(correlated, &origin, *reader);
+    PathLocation::toPBF(correlated, &origin, reader);
     origin.set_date_time("2019-11-21T13:05");
   }
   valhalla::Location dest;
   {
     const auto& correlated = projections.at(locations[1]);
-    PathLocation::toPBF(correlated, &dest, *reader);
+    PathLocation::toPBF(correlated, &dest, reader);
     dest.set_date_time("2019-11-21T13:05");
   }
 
@@ -386,22 +375,22 @@ TEST(Astar, TestTrivialPathTriangle) {
   create_costing_options(options);
   auto costs = vs::CreatePedestrianCost(Costing::pedestrian, options);
 
-  auto reader = get_graph_reader(test_dir);
+  vb::GraphReader reader(get_config(test_dir));
 
   std::vector<valhalla::baldr::Location> locations;
   locations.push_back({node_locations["4"]});
   locations.push_back({node_locations["5"]});
 
-  const auto projections = loki::Search(locations, *reader, costs);
+  const auto projections = loki::Search(locations, reader, costs);
   valhalla::Location origin;
   {
     const auto& correlated = projections.at(locations[0]);
-    PathLocation::toPBF(correlated, &origin, *reader);
+    PathLocation::toPBF(correlated, &origin, reader);
   }
   valhalla::Location dest;
   {
     const auto& correlated = projections.at(locations[1]);
-    PathLocation::toPBF(correlated, &dest, *reader);
+    PathLocation::toPBF(correlated, &dest, reader);
   }
 
   // TODO This fails with graphindex out of bounds for Reverse direction, is this
@@ -422,24 +411,24 @@ void TestPartialDuration(vt::PathAlgorithm& astar) {
   auto mode = vs::TravelMode::kDrive;
   costs[int(mode)] = vs::CreateAutoCost(Costing::auto_, options);
 
-  auto reader = get_graph_reader(test_dir);
+  vb::GraphReader reader(get_config(test_dir));
 
   std::vector<valhalla::baldr::Location> locations;
   locations.push_back({node_locations["1"]});
   locations.push_back({node_locations["3"]});
 
-  auto projections = loki::Search(locations, *reader, costs[int(mode)]);
+  auto projections = loki::Search(locations, reader, costs[int(mode)]);
   valhalla::Location origin;
   {
     auto& correlated = projections.at(locations[0]);
-    PathLocation::toPBF(correlated, &origin, *reader);
+    PathLocation::toPBF(correlated, &origin, reader);
     origin.set_date_time("2019-11-21T13:05");
   }
 
   valhalla::Location dest;
   {
     auto& correlated = projections.at(locations[1]);
-    PathLocation::toPBF(correlated, &dest, *reader);
+    PathLocation::toPBF(correlated, &dest, reader);
     dest.set_date_time("2019-11-21T13:05");
   }
 
@@ -570,7 +559,7 @@ TEST(Astar, TestTrivialPathNoUturns) {
 
 struct route_tester {
   route_tester(const boost::property_tree::ptree& _conf)
-      : conf(_conf), reader(new GraphReader(conf.get_child("mjolnir"))), loki_worker(conf, reader),
+      : conf(_conf), reader(conf.get_child("mjolnir")), loki_worker(conf, reader),
         thor_worker(conf, reader), odin_worker(conf) {
   }
   Api test(const std::string& request_json) {
@@ -586,7 +575,7 @@ struct route_tester {
     return request;
   }
   boost::property_tree::ptree conf;
-  std::shared_ptr<GraphReader> reader;
+  GraphReader reader;
   vk::loki_worker_t loki_worker;
   vt::thor_worker_t thor_worker;
   vo::odin_worker_t odin_worker;
@@ -1148,9 +1137,9 @@ TEST(Astar, TestBacktrackComplexRestrictionForwardDetourAfterRestriction) {
   costs[int(mode)] = vs::CreateAutoCost(Costing::auto_, options);
   ASSERT_TRUE(bool(costs[int(mode)]));
 
-  auto reader = get_graph_reader(test_dir);
+  vb::GraphReader reader(get_config(test_dir));
 
-  auto tile = reader->GetGraphTile(tile_id);
+  auto tile = reader.GetGraphTile(tile_id);
 
   auto verify_paths = [&](const std::vector<vt::PathInfo>& paths) {
     std::vector<std::string> walked_path;
@@ -1175,13 +1164,13 @@ TEST(Astar, TestBacktrackComplexRestrictionForwardDetourAfterRestriction) {
   locations.push_back({node_locations["6"]});
   locations.push_back({node_locations["7"]});
 
-  const auto projections = loki::Search(locations, *reader, costs[int(mode)]);
+  const auto projections = loki::Search(locations, reader, costs[int(mode)]);
 
   std::vector<PathLocation> path_location;
   for (const auto& loc : locations) {
     ASSERT_NO_THROW(
         path_location.push_back(projections.at(loc));
-        PathLocation::toPBF(path_location.back(), options.mutable_locations()->Add(), *reader);)
+        PathLocation::toPBF(path_location.back(), options.mutable_locations()->Add(), reader);)
         << "fail_invalid_origin";
   }
 
@@ -1192,7 +1181,7 @@ TEST(Astar, TestBacktrackComplexRestrictionForwardDetourAfterRestriction) {
     vt::TimeDepForward astar;
     auto paths = astar
                      .GetBestPath(*options.mutable_locations(0), *options.mutable_locations(1),
-                                  *reader, costs, mode)
+                                  reader, costs, mode)
                      .front();
 
     verify_paths(paths);
@@ -1201,7 +1190,7 @@ TEST(Astar, TestBacktrackComplexRestrictionForwardDetourAfterRestriction) {
     vt::TimeDepReverse astar;
     auto paths = astar
                      .GetBestPath(*options.mutable_locations(0), *options.mutable_locations(1),
-                                  *reader, costs, mode)
+                                  reader, costs, mode)
                      .front();
 
     verify_paths(paths);
@@ -1388,7 +1377,7 @@ TEST(Astar, test_complex_restriction_short_path_fake) {
   // Tests that Bidirectional can correctly connect the two expanding trees
   // when the connecting edge is part of a complex restriction
 
-  auto reader = get_graph_reader(test_dir);
+  vb::GraphReader reader(get_config(test_dir));
   Options options;
   create_costing_options(options);
   vs::cost_ptr_t costs[int(vs::TravelMode::kMaxTravelMode)];
@@ -1401,16 +1390,16 @@ TEST(Astar, test_complex_restriction_short_path_fake) {
   locations.push_back({node_locations["n"]});
   locations.push_back({node_locations["i"]});
 
-  const auto projections = loki::Search(locations, *reader, costs[int(mode)]);
+  const auto projections = loki::Search(locations, reader, costs[int(mode)]);
   valhalla::Location origin;
   {
     const auto& correlated = projections.at(locations[0]);
-    PathLocation::toPBF(correlated, &origin, *reader);
+    PathLocation::toPBF(correlated, &origin, reader);
   }
   valhalla::Location dest;
   {
     const auto& correlated = projections.at(locations[1]);
-    PathLocation::toPBF(correlated, &dest, *reader);
+    PathLocation::toPBF(correlated, &dest, reader);
   }
 
   // Test Bidirectional both for forward and reverse expansion
@@ -1419,7 +1408,7 @@ TEST(Astar, test_complex_restriction_short_path_fake) {
   // Two tests where start and end lives on a partial complex restriction
   //      Under this circumstance the restriction should _not_ trigger
 
-  auto paths = astar.GetBestPath(origin, dest, *reader, costs, mode);
+  auto paths = astar.GetBestPath(origin, dest, reader, costs, mode);
 
   std::vector<uint32_t> visited;
   for (auto& path_infos : paths) {
@@ -1429,7 +1418,7 @@ TEST(Astar, test_complex_restriction_short_path_fake) {
   }
   {
     std::vector<uint32_t> expected;
-    auto reader = get_graph_reader(test_dir);
+    vb::GraphReader reader(get_config(test_dir));
     auto e1 = gurka::findEdge(reader, node_locations, tile_id, "nk", "k");
     auto e2 = gurka::findEdge(reader, node_locations, tile_id, "kh", "h");
     auto e3 = gurka::findEdge(reader, node_locations, tile_id, "hi", "i");
@@ -1442,7 +1431,7 @@ TEST(Astar, test_complex_restriction_short_path_fake) {
   // For the second test, just switch origin/destination and reverse expected,
   // result should be the same
   std::cout << "reversed test" << std::endl;
-  paths = astar.GetBestPath(dest, origin, *reader, costs, mode);
+  paths = astar.GetBestPath(dest, origin, reader, costs, mode);
 
   visited.clear();
   for (auto& path_infos : paths) {
@@ -1453,7 +1442,7 @@ TEST(Astar, test_complex_restriction_short_path_fake) {
 
   {
     std::vector<uint32_t> expected;
-    auto reader = get_graph_reader(test_dir);
+    vb::GraphReader reader(get_config(test_dir));
     auto e1 = gurka::findEdge(reader, node_locations, tile_id, "hi", "h");
     auto e2 = gurka::findEdge(reader, node_locations, tile_id, "kh", "k");
     auto e3 = gurka::findEdge(reader, node_locations, tile_id, "nk", "n");
@@ -1498,7 +1487,7 @@ TEST(Astar, test_IsBridgingEdgeRestricted) {
   // Tests the IsBridgingEdgeRestricted function specifically with known inputs
   // which is simpler than trying to get BidirectionalAStar to call it with
   // a specific setup
-  auto reader = get_graph_reader(test_dir);
+  vb::GraphReader reader(get_config(test_dir));
   Options options;
   create_costing_options(options);
   auto costing = vs::CreateAutoCost(Costing::auto_, options);
@@ -1556,7 +1545,7 @@ TEST(Astar, test_IsBridgingEdgeRestricted) {
 
   {
     // Test for forward search
-    ASSERT_TRUE(vt::IsBridgingEdgeRestricted(*reader, edge_labels_fwd, edge_labels_rev, fwd_pred,
+    ASSERT_TRUE(vt::IsBridgingEdgeRestricted(reader, edge_labels_fwd, edge_labels_rev, fwd_pred,
                                              rev_pred, costing));
   }
 }
@@ -1567,17 +1556,17 @@ TEST(ComplexRestriction, WalkVias) {
   // have here from `make_tile`.
   // TODO Future improvement would be to make it simpler to quickly generate
   // tiles programmatically
-  auto reader = get_graph_reader(test_dir);
+  vb::GraphReader reader(get_config(test_dir));
   Options options;
   create_costing_options(options);
   auto costing = vs::CreateAutoCost(Costing::auto_, options);
 
   bool is_forward = true;
-  auto* tile = reader->GetGraphTile(tile_id);
+  auto* tile = reader.GetGraphTile(tile_id);
 
   std::vector<valhalla::baldr::Location> locations;
   locations.push_back({node_locations["7"]});
-  const auto projections = loki::Search(locations, *reader, costing);
+  const auto projections = loki::Search(locations, reader, costing);
   const auto& correlated = projections.at(locations[0]);
 
   ASSERT_EQ(correlated.edges.size(), 2) << "Expected only 2 edges in snapping response";
@@ -1602,7 +1591,7 @@ TEST(ComplexRestriction, WalkVias) {
   {
     std::vector<valhalla::baldr::Location> via_locations;
     via_locations.push_back({node_locations["V"]});
-    const auto via_projections = loki::Search(via_locations, *reader, costing);
+    const auto via_projections = loki::Search(via_locations, reader, costing);
     const auto& via_correlated = via_projections.at(via_locations[0]);
     ASSERT_EQ(via_correlated.edges.size(), 2) << "Should've found 2 edges for the via point";
 

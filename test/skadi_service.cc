@@ -1,3 +1,4 @@
+#include "baldr/graphreader.h"
 #include "loki/worker.h"
 #include "pixels.h"
 #include "test.h"
@@ -217,7 +218,8 @@ void start_service(zmq::context_t& context) {
     })";
   rapidjson::read_json(json, config);
 
-  std::thread worker(valhalla::loki::run_service, config);
+  valhalla::baldr::GraphReader reader(config.get_child("mjolnir"));
+  std::thread worker(valhalla::loki::run_service, config, std::ref(reader));
   worker.detach();
 }
 
@@ -229,24 +231,23 @@ TEST(SkadiService, test_requests) {
   // client makes requests and gets back responses in a batch fashion
   auto request = requests.cbegin();
   std::string request_str;
-  http_client_t client(context, "ipc:///tmp/test_skadi_server",
-                       [&request, &request_str]() {
-                         // we dont have any more requests so bail
-                         if (request == requests.cend())
-                           return std::make_pair<const void*, size_t>(nullptr, 0);
-                         // get the string of bytes to send formatted for http protocol
-                         request_str = request->to_string();
-                         ++request;
-                         return std::make_pair<const void*, size_t>(request_str.c_str(),
-                                                                    request_str.size());
-                       },
-                       [&request](const void* data, size_t size) {
-                         auto response =
-                             http_response_t::from_string(static_cast<const char*>(data), size);
-                         EXPECT_EQ(response.body, responses[request - requests.cbegin() - 1]);
-                         return request != requests.cend();
-                       },
-                       1);
+  http_client_t client(
+      context, "ipc:///tmp/test_skadi_server",
+      [&request, &request_str]() {
+        // we dont have any more requests so bail
+        if (request == requests.cend())
+          return std::make_pair<const void*, size_t>(nullptr, 0);
+        // get the string of bytes to send formatted for http protocol
+        request_str = request->to_string();
+        ++request;
+        return std::make_pair<const void*, size_t>(request_str.c_str(), request_str.size());
+      },
+      [&request](const void* data, size_t size) {
+        auto response = http_response_t::from_string(static_cast<const char*>(data), size);
+        EXPECT_EQ(response.body, responses[request - requests.cbegin() - 1]);
+        return request != requests.cend();
+      },
+      1);
   // request and receive
   client.batch();
 }

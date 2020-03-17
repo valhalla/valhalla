@@ -129,7 +129,7 @@ void thor_worker_t::route_match(Api& request) {
   // TODO - make sure the trace has timestamps..
   auto& options = *request.mutable_options();
   std::vector<PathInfo> path;
-  if (RouteMatcher::FormPath(mode_costing, mode, *reader, trace, options, path)) {
+  if (RouteMatcher::FormPath(mode_costing, mode, reader, trace, options, path)) {
     // TODO: we dont support multileg here as it ignores location types but...
     // if this were a time dependent match you need to propogate the date time
     // information to each legs origin location because triplegbuilder relies on it.
@@ -143,7 +143,7 @@ void thor_worker_t::route_match(Api& request) {
 
     // Form the trip path based on mode costing, origin, destination, and path edges
     auto& leg = *request.mutable_trip()->mutable_routes()->Add()->mutable_legs()->Add();
-    thor::TripLegBuilder::Build(controller, *reader, mode_costing, path.begin(), path.end(),
+    thor::TripLegBuilder::Build(controller, reader, mode_costing, path.begin(), path.end(),
                                 *options.mutable_locations()->begin(),
                                 *options.mutable_locations()->rbegin(),
                                 std::list<valhalla::Location>{}, leg, interrupt);
@@ -199,11 +199,11 @@ thor_worker_t::map_match(Api& request) {
         }
 
         // Make one path edge from it
-        reader->GetGraphTile(match.edgeid, tile);
+        reader.GetGraphTile(match.edgeid, tile);
         auto* pe = options.mutable_shape(i)->mutable_path_edges()->Add();
         pe->mutable_ll()->set_lat(match.lnglat.lat());
         pe->mutable_ll()->set_lng(match.lnglat.lng());
-        for (const auto& n : reader->edgeinfo(match.edgeid).GetNames()) {
+        for (const auto& n : reader.edgeinfo(match.edgeid).GetNames()) {
           pe->mutable_names()->Add()->assign(n);
         }
 
@@ -659,7 +659,7 @@ thor_worker_t::map_match(Api& request) {
             // we remember the datetime at the end of this leg, to use as the datetime at the start
             // of the next leg.
             if (!date_time.empty()) {
-              date_time = offset_date(*reader, date_time, leg_begin->edgeid,
+              date_time = offset_date(reader, date_time, leg_begin->edgeid,
                                       route->legs().rbegin()->node().rbegin()->elapsed_time(),
                                       leg_end->edgeid);
             }
@@ -712,10 +712,10 @@ void thor_worker_t::path_map_match(
     PathLocation::toPBF(matcher->state_container()
                             .state(first_result_with_state->stateid)
                             .candidate(),
-                        &origin, *reader);
+                        &origin, reader);
     valhalla::Location destination;
     PathLocation::toPBF(matcher->state_container().state(last_result_with_state->stateid).candidate(),
-                        &destination, *reader);
+                        &destination, reader);
 
     bool found_origin = false;
     for (const auto& e : origin.path_edges()) {

@@ -87,9 +87,9 @@ void try_isochrone(GraphReader& reader,
 
 TEST(Isochronies, Basic) {
   // Test setup
-  loki_worker_t loki_worker(config);
-  thor_worker_t thor_worker(config);
   GraphReader reader(config.get_child("mjolnir"));
+  loki_worker_t loki_worker(config, reader);
+  thor_worker_t thor_worker(config, reader);
 
 // Test auto isochrone with one contour
 // 32bit builds fail in release mode we'll look at this separately
@@ -125,9 +125,9 @@ TEST(Isochronies, Basic) {
 int main(int argc, char* argv[]) {
   // user wants to try it
   if (argc > 1) {
-    loki_worker_t loki_worker(config);
-    thor_worker_t thor_worker(config);
     GraphReader reader(config.get_child("mjolnir"));
+    loki_worker_t loki_worker(config, reader);
+    thor_worker_t thor_worker(config, reader);
     Api request;
     ParseApi(argv[1], Options::isochrone, request);
     loki_worker.isochrones(request);

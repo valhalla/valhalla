@@ -44,12 +44,12 @@ std::string thor_worker_t::matrix(Api& request) {
   std::vector<TimeDistance> time_distances;
   auto costmatrix = [&]() {
     thor::CostMatrix matrix;
-    return matrix.SourceToTarget(options.sources(), options.targets(), *reader, mode_costing, mode,
+    return matrix.SourceToTarget(options.sources(), options.targets(), reader, mode_costing, mode,
                                  max_matrix_distance.find(costing)->second);
   };
   auto timedistancematrix = [&]() {
     thor::TimeDistanceMatrix matrix;
-    return matrix.SourceToTarget(options.sources(), options.targets(), *reader, mode_costing, mode,
+    return matrix.SourceToTarget(options.sources(), options.targets(), reader, mode_costing, mode,
                                  max_matrix_distance.find(costing)->second);
   };
   switch (source_to_target_algorithm) {

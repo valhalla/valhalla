@@ -84,10 +84,10 @@ void loki_worker_t::isochrones(Api& request) {
   try {
     // correlate the various locations to the underlying graph
     auto locations = PathLocation::fromPBF(options.locations());
-    const auto projections = loki::Search(locations, *reader, costing);
+    const auto projections = loki::Search(locations, reader, costing);
     for (size_t i = 0; i < locations.size(); ++i) {
       const auto& projection = projections.at(locations[i]);
-      PathLocation::toPBF(projection, options.mutable_locations(i), *reader);
+      PathLocation::toPBF(projection, options.mutable_locations(i), reader);
     }
   } catch (const std::exception&) { throw valhalla_exception_t{171}; }
 }

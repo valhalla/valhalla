@@ -22,13 +22,12 @@ namespace valhalla {
 namespace loki {
 
 #ifdef HAVE_HTTP
-void run_service(const boost::property_tree::ptree& config);
+void run_service(const boost::property_tree::ptree& config, baldr::GraphReader &graph_reader);
 #endif
 
 class loki_worker_t : public service_worker_t {
 public:
-  loki_worker_t(const boost::property_tree::ptree& config,
-                const std::shared_ptr<baldr::GraphReader>& graph_reader = {});
+  loki_worker_t(const boost::property_tree::ptree& config, baldr::GraphReader& graph_reader);
 #ifdef HAVE_HTTP
   virtual prime_server::worker_t::result_t work(const std::list<zmq::message_t>& job,
                                                 void* request_info,
@@ -63,7 +62,7 @@ protected:
   boost::property_tree::ptree config;
   sif::CostFactory<sif::DynamicCost> factory;
   sif::cost_ptr_t costing;
-  std::shared_ptr<baldr::GraphReader> reader;
+  baldr::GraphReader& reader;
   std::shared_ptr<baldr::connectivity_map_t> connectivity_map;
   std::string action_str;
   std::unordered_map<std::string, size_t> max_locations;

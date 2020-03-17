@@ -30,7 +30,7 @@ void thor_worker_t::optimized_route(Api& request) {
   // Use CostMatrix to find costs from each location to every other location
   CostMatrix costmatrix;
   std::vector<thor::TimeDistance> td =
-      costmatrix.SourceToTarget(options.sources(), options.targets(), *reader, mode_costing, mode,
+      costmatrix.SourceToTarget(options.sources(), options.targets(), reader, mode_costing, mode,
                                 max_matrix_distance.find(costing)->second);
 
   // Return an error if any locations are totally unreachable

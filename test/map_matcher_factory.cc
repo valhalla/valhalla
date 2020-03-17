@@ -1,6 +1,7 @@
 // -*- mode: c++ -*-
 #include <string>
 
+#include "baldr/graphreader.h"
 #include "baldr/rapidjson_utils.h"
 #include <boost/property_tree/ptree.hpp>
 
@@ -65,7 +66,8 @@ TEST(MapMatcherFactory, TestMapMatcherFactory) {
       auto config = root;
       config.put<std::string>("meili.auto.hello", "world");
       config.put<std::string>("meili.default.hello", "default world");
-      meili::MapMatcherFactory factory(config);
+      baldr::GraphReader reader(root.get_child("mjolnir"));
+      meili::MapMatcherFactory factory(config, reader);
       auto matcher = factory.Create(Costing::auto_, options);
       EXPECT_EQ(matcher->travelmode(), sif::TravelMode::kDrive);
 
@@ -81,7 +83,8 @@ TEST(MapMatcherFactory, TestMapMatcherFactory) {
       create_costing_options(options);
       auto config = root;
       config.put<std::string>("meili.default.hello", "default world");
-      meili::MapMatcherFactory factory(config);
+      baldr::GraphReader reader(root.get_child("mjolnir"));
+      meili::MapMatcherFactory factory(config, reader);
       auto matcher = factory.Create(Costing::bicycle, options);
       EXPECT_EQ(matcher->travelmode(), sif::TravelMode::kBicycle);
 
@@ -96,7 +99,8 @@ TEST(MapMatcherFactory, TestMapMatcherFactory) {
       Options options;
       create_costing_options(options);
       auto config = root;
-      meili::MapMatcherFactory factory(config);
+      baldr::GraphReader reader(root.get_child("mjolnir"));
+      meili::MapMatcherFactory factory(config, reader);
       float preferred_search_radius = 3;
       float incorrect_search_radius = 2;
       float default_search_radius = 1;
@@ -115,7 +119,8 @@ TEST(MapMatcherFactory, TestMapMatcherFactory) {
     {
       Options options;
       create_costing_options(options);
-      meili::MapMatcherFactory factory(root);
+      baldr::GraphReader reader(root.get_child("mjolnir"));
+      meili::MapMatcherFactory factory(root, reader);
       float preferred_search_radius = 3;
       options.set_search_radius(preferred_search_radius);
       auto matcher = factory.Create(Costing::pedestrian, options);
@@ -129,7 +134,8 @@ TEST(MapMatcherFactory, TestMapMatcherFactory) {
     {
       Options options;
       create_costing_options(options);
-      meili::MapMatcherFactory factory(root);
+      baldr::GraphReader reader(root.get_child("mjolnir"));
+      meili::MapMatcherFactory factory(root, reader);
       auto matcher = factory.Create(options);
       EXPECT_EQ(matcher->travelmode(), sif::TravelMode::kDrive)
           << "should read default mode in the meili.mode correctly";
@@ -141,7 +147,8 @@ TEST(MapMatcherFactory, TestMapMatcherFactory) {
     {
       Options options;
       create_costing_options(options);
-      meili::MapMatcherFactory factory(root);
+      baldr::GraphReader reader(root.get_child("mjolnir"));
+      meili::MapMatcherFactory factory(root, reader);
       options.set_costing(Costing::pedestrian);
       auto matcher = factory.Create(options);
       EXPECT_EQ(matcher->travelmode(), sif::TravelMode::kPedestrian)
@@ -161,7 +168,8 @@ TEST(MapMatcherFactory, TestMapMatcherFactory) {
     {
       Options options;
       create_costing_options(options);
-      meili::MapMatcherFactory factory(root);
+      baldr::GraphReader reader(root.get_child("mjolnir"));
+      meili::MapMatcherFactory factory(root, reader);
       options.set_costing(Costing::pedestrian);
       auto matcher = factory.Create(options);
       EXPECT_NE(matcher->costing()->travel_type(), (int)sif::PedestrianType::kSegway)
@@ -186,8 +194,9 @@ TEST(MapMatcherFactory, TestMapMatcher) {
   rapidjson::read_json(VALHALLA_SOURCE_DIR "test/valhalla.json", root);
 
   // Nothing special to test for the moment
+  baldr::GraphReader reader(root.get_child("mjolnir"));
 
-  meili::MapMatcherFactory factory(root);
+  meili::MapMatcherFactory factory(root, reader);
   Options options;
   create_costing_options(options);
   auto auto_matcher = factory.Create(Costing::auto_, options);

@@ -2,6 +2,7 @@
 #include <cstdint>
 
 #include "baldr/rapidjson_utils.h"
+#include "baldr/graphreader.h"
 #include "midgard/logging.h"
 #include <boost/property_tree/ptree.hpp>
 #include <prime_server/http_protocol.hpp>
@@ -371,7 +372,8 @@ void start_service() {
   rapidjson::read_json(json, config);
 
   // service worker
-  std::thread worker(valhalla::loki::run_service, config);
+  valhalla::baldr::GraphReader reader(config.get_child("mjolnir"));
+  std::thread worker(valhalla::loki::run_service, config, std::ref(reader));
   worker.detach();
 }
 
@@ -382,36 +384,36 @@ void run_requests(const std::vector<http_request_t>& requests,
   auto request = requests.cbegin();
   std::string request_str;
   int success_count = 0;
-  http_client_t
-      client(context, "ipc:///tmp/test_loki_server",
-             [&requests, &request, &request_str]() {
-               // we dont have any more requests so bail
-               if (request == requests.cend()) {
-                 return std::make_pair<const void*, size_t>(nullptr, 0);
-               }
-               // get the string of bytes to send formatted for http protocol
-               request_str = request->to_string();
-               // LOG_INFO("Loki Test Request :: " + request_str + '\n');
-               ++request;
-               return std::make_pair<const void*, size_t>(request_str.c_str(), request_str.size());
-             },
-             [&requests, &request, &responses, &success_count](const void* data, size_t size) {
-               auto response = http_response_t::from_string(static_cast<const char*>(data), size);
-               EXPECT_EQ(response.code, responses[request - requests.cbegin() - 1].first);
+  http_client_t client(
+      context, "ipc:///tmp/test_loki_server",
+      [&requests, &request, &request_str]() {
+        // we dont have any more requests so bail
+        if (request == requests.cend()) {
+          return std::make_pair<const void*, size_t>(nullptr, 0);
+        }
+        // get the string of bytes to send formatted for http protocol
+        request_str = request->to_string();
+        // LOG_INFO("Loki Test Request :: " + request_str + '\n');
+        ++request;
+        return std::make_pair<const void*, size_t>(request_str.c_str(), request_str.size());
+      },
+      [&requests, &request, &responses, &success_count](const void* data, size_t size) {
+        auto response = http_response_t::from_string(static_cast<const char*>(data), size);
+        EXPECT_EQ(response.code, responses[request - requests.cbegin() - 1].first);
 
-               // Parse as rapidjson::Document which correctly doesn't care about order-dependence
-               // of the json-data compared to the boost::property_tree::ptree
-               rapidjson::Document response_json, expected_json;
-               response_json.Parse(response.body);
-               expected_json.Parse(responses[request - requests.cbegin() - 1].second);
-               EXPECT_EQ(response_json, expected_json)
-                   << "\nExpected Response: " + responses[request - requests.cbegin() - 1].second +
-                          "\n, Actual Response: " + response.body;
+        // Parse as rapidjson::Document which correctly doesn't care about order-dependence
+        // of the json-data compared to the boost::property_tree::ptree
+        rapidjson::Document response_json, expected_json;
+        response_json.Parse(response.body);
+        expected_json.Parse(responses[request - requests.cbegin() - 1].second);
+        EXPECT_EQ(response_json, expected_json)
+            << "\nExpected Response: " + responses[request - requests.cbegin() - 1].second +
+                   "\n, Actual Response: " + response.body;
 
-               ++success_count;
-               return request != requests.cend();
-             },
-             1);
+        ++success_count;
+        return request != requests.cend();
+      },
+      1);
   // request and receive
   client.batch();
 

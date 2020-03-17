@@ -503,12 +503,12 @@ std::tuple<const baldr::GraphId,
            const baldr::DirectedEdge*,
            const baldr::GraphId,
            const baldr::DirectedEdge*>
-findEdge(const std::unique_ptr<valhalla::baldr::GraphReader>& reader,
+findEdge(valhalla::baldr::GraphReader& reader,
          const std::unordered_map<std::string, midgard::PointLL>& nodes,
          const baldr::GraphId& tile_id,
          const std::string& way_name,
          const std::string& end_node) {
-  auto* tile = reader->GetGraphTile(tile_id);
+  auto* tile = reader.GetGraphTile(tile_id);
 
   auto end_node_coordinates = nodes.at(end_node);
 
@@ -546,7 +546,7 @@ findEdge(const map& map,
          const baldr::GraphId& tile_id,
          const std::string& way_name,
          const std::string& end_node) {
-  std::unique_ptr<baldr::GraphReader> reader(new baldr::GraphReader(map.config));
+  baldr::GraphReader reader(map.config.get_child("mjolnir"));
   return findEdge(reader, map.nodes, tile_id, way_name, end_node);
 }
 
@@ -573,7 +573,8 @@ route(const map& map, const std::vector<std::string>& waypoints, const std::stri
   auto request_json = detail::build_valhalla_route_request(map, waypoints, costing);
   std::cerr << "[          ] Valhalla request is: " << request_json << std::endl;
 
-  valhalla::tyr::actor_t actor(map.config, true);
+  baldr::GraphReader reader(map.config.get_child("mjolnir"));
+  valhalla::tyr::actor_t actor(map.config, reader, true);
   return actor.unserialized_route(request_json);
 }
 
@@ -599,7 +600,8 @@ valhalla::Api match(const map& map,
   auto request_json = detail::build_valhalla_match_request(map, waypoints, break_at_points, costing);
   std::cerr << "[          ] Valhalla request is: " << request_json << std::endl;
 
-  valhalla::tyr::actor_t actor(map.config, true);
+  baldr::GraphReader reader(map.config.get_child("mjolnir"));
+  valhalla::tyr::actor_t actor(map.config, reader, true);
   return actor.unserialized_trace_route(request_json);
 }
 

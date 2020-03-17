@@ -13,6 +13,7 @@
 #include <valhalla/baldr/tilehierarchy.h>
 #include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/pointll.h>
+#include <valhalla/midgard/sequence.h>
 
 namespace valhalla {
 namespace baldr {
@@ -738,10 +739,12 @@ public:
 
 protected:
   // (Tar) extract of tiles - the contents are empty if not being used
-  struct tile_extract_t;
-  std::shared_ptr<const tile_extract_t> tile_extract_;
-  static std::shared_ptr<const GraphReader::tile_extract_t>
-  get_extract_instance(const boost::property_tree::ptree& pt);
+  struct tile_extract_t {
+    tile_extract_t(const boost::property_tree::ptree& pt);
+    std::unordered_map<uint64_t, std::pair<char*, size_t>> tiles;
+    std::shared_ptr<midgard::tar> archive;
+  };
+  const tile_extract_t tile_extract_;
 
   // Information about where the tiles are kept
   const std::string tile_dir_;

@@ -7,7 +7,6 @@
 
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
-#include "midgard/sequence.h"
 
 #include "baldr/connectivity_map.h"
 #include "filesystem.h"
@@ -23,50 +22,37 @@ constexpr size_t AVERAGE_MM_TILE_SIZE = 1024;         // 1k
 namespace valhalla {
 namespace baldr {
 
-struct GraphReader::tile_extract_t {
-  tile_extract_t(const boost::property_tree::ptree& pt) {
-    // if you really meant to load it
-    if (pt.get_optional<std::string>("tile_extract")) {
-      try {
-        // load the tar
-        archive.reset(new midgard::tar(pt.get<std::string>("tile_extract")));
-        // map files to graph ids
-        for (auto& c : archive->contents) {
-          try {
-            auto id = GraphTile::GetTileId(c.first);
-            tiles[id] = std::make_pair(const_cast<char*>(c.second.first), c.second.second);
-          } catch (...) {
-            // skip files we dont understand
-          }
+GraphReader::tile_extract_t::tile_extract_t(const boost::property_tree::ptree& pt) {
+  std::cout << "Initizliaing a tile extract" << std::endl;
+  // if you really meant to load it
+  if (pt.get_optional<std::string>("tile_extract")) {
+    try {
+      // load the tar
+      archive.reset(new midgard::tar(pt.get<std::string>("tile_extract")));
+      // map files to graph ids
+      for (auto& c : archive->contents) {
+        try {
+          auto id = GraphTile::GetTileId(c.first);
+          tiles[id] = std::make_pair(const_cast<char*>(c.second.first), c.second.second);
+        } catch (...) {
+          // skip files we dont understand
         }
-        // couldn't load it
-        if (tiles.empty()) {
-          LOG_WARN("Tile extract contained no usuable tiles");
-        } // loaded ok but with possibly bad blocks
-        else {
-          LOG_INFO("Tile extract successfully loaded with tile count: " +
-                   std::to_string(tiles.size()));
-          if (archive->corrupt_blocks) {
-            LOG_WARN("Tile extract had " + std::to_string(archive->corrupt_blocks) +
-                     " corrupt blocks");
-          }
-        }
-      } catch (const std::exception& e) {
-        LOG_ERROR(e.what());
-        LOG_WARN("Tile extract could not be loaded");
       }
+      // couldn't load it
+      if (tiles.empty()) {
+        LOG_WARN("Tile extract contained no usuable tiles");
+      } // loaded ok but with possibly bad blocks
+      else {
+        LOG_INFO("Tile extract successfully loaded with tile count: " + std::to_string(tiles.size()));
+        if (archive->corrupt_blocks) {
+          LOG_WARN("Tile extract had " + std::to_string(archive->corrupt_blocks) + " corrupt blocks");
+        }
+      }
+    } catch (const std::exception& e) {
+      LOG_ERROR(e.what());
+      LOG_WARN("Tile extract could not be loaded");
     }
   }
-  // TODO: dont remove constness, and actually make graphtile read only?
-  std::unordered_map<uint64_t, std::pair<char*, size_t>> tiles;
-  std::shared_ptr<midgard::tar> archive;
-};
-
-std::shared_ptr<const GraphReader::tile_extract_t>
-GraphReader::get_extract_instance(const boost::property_tree::ptree& pt) {
-  static std::shared_ptr<const GraphReader::tile_extract_t> tile_extract(
-      new GraphReader::tile_extract_t(pt));
-  return tile_extract;
 }
 
 // ----------------------------------------------------------------------------
@@ -310,7 +296,7 @@ TileCache* TileCacheFactory::createTileCache(const boost::property_tree::ptree& 
 
 // Constructor using separate tile files
 GraphReader::GraphReader(const boost::property_tree::ptree& pt)
-    : tile_extract_(get_extract_instance(pt)), tile_dir_(pt.get<std::string>("tile_dir", "")),
+    : tile_extract_(pt), tile_dir_(pt.get<std::string>("tile_dir", "")),
       curlers_(std::make_unique<curler_pool_t>(pt.get<size_t>("max_concurrent_reader_users", 1),
                                                pt.get<std::string>("user_agent", ""))),
       tile_url_(pt.get<std::string>("tile_url", "")),
@@ -321,7 +307,7 @@ GraphReader::GraphReader(const boost::property_tree::ptree& pt)
     throw std::runtime_error("Not found tilePath pattern in tile url");
   // Reserve cache (based on whether using individual tile files or shared,
   // mmap'd file
-  cache_->Reserve(tile_extract_->tiles.empty() ? AVERAGE_TILE_SIZE : AVERAGE_MM_TILE_SIZE);
+  cache_->Reserve(tile_extract_.tiles.empty() ? AVERAGE_TILE_SIZE : AVERAGE_MM_TILE_SIZE);
 }
 
 // Method to test if tile exists
@@ -330,8 +316,8 @@ bool GraphReader::DoesTileExist(const GraphId& graphid) const {
     return false;
   }
   // if you are using an extract only check that
-  if (!tile_extract_->tiles.empty()) {
-    return tile_extract_->tiles.find(graphid) != tile_extract_->tiles.cend();
+  if (!tile_extract_.tiles.empty()) {
+    return tile_extract_.tiles.find(graphid) != tile_extract_.tiles.cend();
   }
   // otherwise check memory or disk
   if (cache_->Contains(graphid)) {
@@ -351,9 +337,9 @@ bool GraphReader::DoesTileExist(const boost::property_tree::ptree& pt, const Gra
     return false;
   }
   // if you are using an extract only check that
-  auto extract = get_extract_instance(pt);
-  if (!extract->tiles.empty()) {
-    return extract->tiles.find(graphid) != extract->tiles.cend();
+  auto extract = tile_extract_t(pt);
+  if (!extract.tiles.empty()) {
+    return extract.tiles.find(graphid) != extract.tiles.cend();
   }
   // otherwise check the disk
   std::string file_location = pt.get<std::string>("tile_dir") +
@@ -382,10 +368,10 @@ const GraphTile* GraphReader::GetGraphTile(const GraphId& graphid) {
   }
 
   // Try getting it from the memmapped tar extract
-  if (!tile_extract_->tiles.empty()) {
+  if (!tile_extract_.tiles.empty()) {
     // Do we have this tile
-    auto t = tile_extract_->tiles.find(base);
-    if (t == tile_extract_->tiles.cend()) {
+    auto t = tile_extract_.tiles.find(base);
+    if (t == tile_extract_.tiles.cend()) {
       // LOG_DEBUG("Memory map cache miss " + GraphTile::FileSuffix(base));
       return nullptr;
     }
@@ -755,8 +741,8 @@ std::string GraphReader::encoded_edge_shape(const valhalla::baldr::GraphId& edge
 std::unordered_set<GraphId> GraphReader::GetTileSet() const {
   // either mmap'd tiles
   std::unordered_set<GraphId> tiles;
-  if (tile_extract_->tiles.size()) {
-    for (const auto& t : tile_extract_->tiles) {
+  if (tile_extract_.tiles.size()) {
+    for (const auto& t : tile_extract_.tiles) {
       tiles.emplace(t.first);
     }
   } // or individually on disk
@@ -788,8 +774,8 @@ std::unordered_set<GraphId> GraphReader::GetTileSet() const {
 std::unordered_set<GraphId> GraphReader::GetTileSet(const uint8_t level) const {
   // either mmap'd tiles
   std::unordered_set<GraphId> tiles;
-  if (tile_extract_->tiles.size()) {
-    for (const auto& t : tile_extract_->tiles) {
+  if (tile_extract_.tiles.size()) {
+    for (const auto& t : tile_extract_.tiles) {
       if (static_cast<GraphId>(t.first).level() == level) {
         tiles.emplace(t.first);
       }
