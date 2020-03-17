@@ -500,8 +500,8 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
       if (maneuver.portions_toll() || curr_edge->toll()) {
         classes.push_back("toll");
       }
-      // TODO We might want to have more specific logic for ramp
-      if ((curr_edge->road_class() == TripLeg_RoadClass_kMotorway) || curr_edge->IsRampUse()) {
+      // TODO We might want to label motorway for motorway_link
+      if (curr_edge->road_class() == TripLeg_RoadClass_kMotorway) {
         classes.push_back("motorway");
       }
       if (curr_edge->use() == TripLeg::Use::TripLeg_Use_kFerryUse) {
