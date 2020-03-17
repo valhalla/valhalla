@@ -319,7 +319,7 @@ loki_worker_t::work(const std::list<zmq::message_t>& job,
   }
 }
 
-void run_service(const boost::property_tree::ptree& config, baldr::GraphReader &reader) {
+void run_service(const boost::property_tree::ptree& config, baldr::GraphReader& reader) {
   // gets requests from the http server
   auto upstream_endpoint = config.get<std::string>("loki.service.proxy") + "_out";
   // sends them on to thor

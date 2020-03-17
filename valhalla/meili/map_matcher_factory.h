@@ -53,7 +53,7 @@ private:
 
   boost::property_tree::ptree config_;
 
-  baldr::GraphReader &graphreader_;
+  baldr::GraphReader& graphreader_;
 
   valhalla::sif::cost_ptr_t mode_costing_[kModeCostingCount];
 

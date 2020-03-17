@@ -61,8 +61,8 @@ boost::property_tree::ptree get_conf() {
 
 struct route_tester {
   route_tester()
-      : conf(get_conf()), reader(conf.get_child("mjolnir")),
-        loki_worker(conf, reader), thor_worker(conf, reader), odin_worker(conf) {
+      : conf(get_conf()), reader(conf.get_child("mjolnir")), loki_worker(conf, reader),
+        thor_worker(conf, reader), odin_worker(conf) {
   }
   Api test(const std::string& request_json) {
     Api request;

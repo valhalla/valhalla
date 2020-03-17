@@ -1,8 +1,8 @@
 #include <iostream>
 
+#include "baldr/graphreader.h"
 #include "baldr/rapidjson_utils.h"
 #include <boost/property_tree/ptree.hpp>
-#include "baldr/graphreader.h"
 
 #include "loki/worker.h"
 

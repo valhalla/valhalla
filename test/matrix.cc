@@ -270,7 +270,6 @@ TEST(Matrix, test_matrix) {
   loki_worker.matrix(request);
   adjust_scores(*request.mutable_options());
 
-
   cost_ptr_t costing = CreateSimpleCost(request.options());
 
   CostMatrix cost_matrix;

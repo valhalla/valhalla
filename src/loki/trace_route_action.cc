@@ -188,8 +188,7 @@ void loki_worker_t::locations_from_shape(Api& request) {
     options.clear_locations();
     PathLocation::toPBF(projections.at(locations.front()), options.mutable_locations()->Add(),
                         reader);
-    PathLocation::toPBF(projections.at(locations.back()), options.mutable_locations()->Add(),
-                        reader);
+    PathLocation::toPBF(projections.at(locations.back()), options.mutable_locations()->Add(), reader);
 
     // If locations were provided, backfill the origin and dest lat,lon and update
     // side of street on associated edges. TODO - create a constant for side of street

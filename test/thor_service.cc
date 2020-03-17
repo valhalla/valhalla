@@ -1,8 +1,8 @@
 #include "test.h"
 
+#include "baldr/graphreader.h"
 #include "midgard/logging.h"
 #include "thor/worker.h"
-#include "baldr/graphreader.h"
 #include <unistd.h>
 
 #include <thread>

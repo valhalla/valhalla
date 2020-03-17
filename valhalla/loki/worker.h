@@ -22,7 +22,7 @@ namespace valhalla {
 namespace loki {
 
 #ifdef HAVE_HTTP
-void run_service(const boost::property_tree::ptree& config, baldr::GraphReader &graph_reader);
+void run_service(const boost::property_tree::ptree& config, baldr::GraphReader& graph_reader);
 #endif
 
 class loki_worker_t : public service_worker_t {
