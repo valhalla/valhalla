@@ -7,7 +7,6 @@
 
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
-#include "midgard/sequence.h"
 
 #include "baldr/connectivity_map.h"
 #include "filesystem.h"
@@ -23,85 +22,73 @@ constexpr size_t AVERAGE_MM_TILE_SIZE = 1024;         // 1k
 namespace valhalla {
 namespace baldr {
 
-struct GraphReader::tile_extract_t {
-  tile_extract_t(const boost::property_tree::ptree& pt) {
-    // if you really meant to load it
-    if (pt.get_optional<std::string>("tile_extract")) {
-      try {
-        // load the tar
-        archive.reset(new midgard::tar(pt.get<std::string>("tile_extract")));
-        // map files to graph ids
-        for (auto& c : archive->contents) {
-          try {
-            auto id = GraphTile::GetTileId(c.first);
-            tiles[id] = std::make_pair(const_cast<char*>(c.second.first), c.second.second);
-          } catch (...) {
-            // skip files we dont understand
-          }
+GraphReader::tile_extract_t::tile_extract_t(const boost::property_tree::ptree& pt) {
+  // if you really meant to load it
+  if (pt.get_optional<std::string>("tile_extract")) {
+    try {
+      // load the tar
+      archive.reset(new midgard::tar(pt.get<std::string>("tile_extract")));
+      // map files to graph ids
+      for (auto& c : archive->contents) {
+        try {
+          auto id = GraphTile::GetTileId(c.first);
+          tiles[id] = std::make_pair(const_cast<char*>(c.second.first), c.second.second);
+        } catch (...) {
+          // skip files we dont understand
         }
-        // couldn't load it
-        if (tiles.empty()) {
-          LOG_WARN("Tile extract contained no usuable tiles");
-        } // loaded ok but with possibly bad blocks
-        else {
-          LOG_INFO("Tile extract successfully loaded with tile count: " +
-                   std::to_string(tiles.size()));
-          if (archive->corrupt_blocks) {
-            LOG_WARN("Tile extract had " + std::to_string(archive->corrupt_blocks) +
-                     " corrupt blocks");
-          }
-        }
-      } catch (const std::exception& e) {
-        LOG_ERROR(e.what());
-        LOG_WARN("Tile extract could not be loaded");
       }
-    }
-
-    if (pt.get_optional<std::string>("traffic_extract")) {
-      try {
-        // load the tar
-        traffic_archive.reset(new midgard::tar(pt.get<std::string>("traffic_extract")));
-        // map files to graph ids
-        for (auto& c : traffic_archive->contents) {
-          try {
-            auto id = GraphTile::GetTileId(c.first);
-            traffic_tiles[id] = std::make_pair(const_cast<char*>(c.second.first), c.second.second);
-          } catch (...) {
-            // skip files we dont understand
-          }
+      // couldn't load it
+      if (tiles.empty()) {
+        LOG_WARN("Tile extract contained no usuable tiles");
+      } // loaded ok but with possibly bad blocks
+      else {
+        LOG_INFO("Tile extract successfully loaded with tile count: " + std::to_string(tiles.size()));
+        if (archive->corrupt_blocks) {
+          LOG_WARN("Tile extract had " + std::to_string(archive->corrupt_blocks) + " corrupt blocks");
         }
-        // couldn't load it
-        if (traffic_tiles.empty()) {
-          LOG_WARN("Traffic tile extract contained no usuable tiles");
-        } // loaded ok but with possibly bad blocks
-        else {
-          LOG_INFO("Traffic tile extract successfully loaded with tile count: " +
-                   std::to_string(traffic_tiles.size()));
-          if (traffic_archive->corrupt_blocks) {
-            LOG_WARN("Traffic tile extract had " + std::to_string(traffic_archive->corrupt_blocks) +
-                     " corrupt blocks");
-          }
-        }
-      } catch (const std::exception& e) {
-        LOG_WARN(e.what());
-        LOG_WARN("Traffic tile extract could not be loaded");
       }
+    } catch (const std::exception& e) {
+      LOG_ERROR(e.what());
+      LOG_WARN("Tile extract could not be loaded");
     }
   }
-  // TODO: dont remove constness, and actually make graphtile read only?
-  std::unordered_map<uint64_t, std::pair<char*, size_t>> tiles;
-  std::unordered_map<uint64_t, std::pair<char*, size_t>> traffic_tiles;
-  std::shared_ptr<midgard::tar> archive;
-  std::shared_ptr<midgard::tar> traffic_archive;
-};
+
+  if (pt.get_optional<std::string>("traffic_extract")) {
+    try {
+      // load the tar
+      traffic_archive.reset(new midgard::tar(pt.get<std::string>("traffic_extract")));
+      // map files to graph ids
+      for (auto& c : traffic_archive->contents) {
+        try {
+          auto id = GraphTile::GetTileId(c.first);
+          traffic_tiles[id] = std::make_pair(const_cast<char*>(c.second.first), c.second.second);
+        } catch (...) {
+          // skip files we dont understand
+        }
+      }
+      // couldn't load it
+      if (traffic_tiles.empty()) {
+        LOG_WARN("Traffic tile extract contained no usuable tiles");
+      } // loaded ok but with possibly bad blocks
+      else {
+        LOG_INFO("Traffic tile extract successfully loaded with tile count: " +
+                 std::to_string(traffic_tiles.size()));
+        if (traffic_archive->corrupt_blocks) {
+          LOG_WARN("Traffic tile extract had " + std::to_string(traffic_archive->corrupt_blocks) +
+                   " corrupt blocks");
+        }
+      }
+    } catch (const std::exception& e) {
+      LOG_WARN(e.what());
+      LOG_WARN("Traffic tile extract could not be loaded");
+    }
+  }
+}
 
 std::shared_ptr<const GraphReader::tile_extract_t>
-GraphReader::get_extract_instance(const boost::property_tree::ptree& pt, const bool reset_static) {
+GraphReader::get_extract_instance(const boost::property_tree::ptree& pt) {
   static std::shared_ptr<const GraphReader::tile_extract_t> tile_extract(
       new GraphReader::tile_extract_t(pt));
-  if (reset_static) {
-    tile_extract.reset(new GraphReader::tile_extract_t(pt));
-  }
   return tile_extract;
 }
 
@@ -345,8 +332,8 @@ TileCache* TileCacheFactory::createTileCache(const boost::property_tree::ptree& 
 }
 
 // Constructor using separate tile files
-GraphReader::GraphReader(const boost::property_tree::ptree& pt, const bool reset_static)
-    : tile_extract_(get_extract_instance(pt, reset_static)),
+GraphReader::GraphReader(const boost::property_tree::ptree& pt)
+    : tile_extract_(get_extract_instance(pt)),
       tile_dir_(pt.get<std::string>("tile_dir", "")),
       curlers_(std::make_unique<curler_pool_t>(pt.get<size_t>("max_concurrent_reader_users", 1),
                                                pt.get<std::string>("user_agent", ""))),

@@ -87,16 +87,11 @@ TEST(Traffic, BasicUpdates) {
     mtar_close(&tar);
   }
   {
-    // Reset the GraphReader static members and static cache
     map.config.put("mjolnir.traffic_extract", traffic_extract);
-    baldr::GraphReader reader(map.config.get_child("mjolnir"), true);
-    reader.Clear();
-  }
-  {
-    valhalla::tyr::actor_t actor(map.config, true);
+    auto clean_reader = gurka::make_clean_graphreader(map.config.get_child("mjolnir"));
     // Do a route with initial traffic
     {
-      auto result = gurka::route(map, "A", "C", "auto", &actor);
+      auto result = gurka::route(map, "A", "C", "auto", clean_reader);
       gurka::assert::osrm::expect_route(result, {"ABC"});
       gurka::assert::raw::expect_eta(result, 361.5);
     }
@@ -136,7 +131,7 @@ TEST(Traffic, BasicUpdates) {
     // Now do another route with the same (not restarted) actor to see if
     // it's noticed the changes in the live traffic file
     {
-      auto result = gurka::route(map, "A", "C", "auto", &actor);
+      auto result = gurka::route(map, "A", "C", "auto", clean_reader);
       gurka::assert::osrm::expect_route(result, {"ABC"});
       gurka::assert::raw::expect_eta(result, 145.5);
     }
