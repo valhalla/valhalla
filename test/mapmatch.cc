@@ -1257,6 +1257,26 @@ TEST(Mapmatch, test_degenerate_match) {
   }
 }
 
+TEST(Mapmatch, interpolation) {
+  std::vector<std::string> test_cases = {
+      R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
+          {"lat": 52.082829, "lon": 5.087129, "type": "break"},
+          {"lat": 52.082870, "lon": 5.086956, "type": "break"},
+          {"lat": 52.082870, "lon": 5.086960, "type": "break"},
+          {"lat": 52.082855, "lon": 5.087024, "type": "break"}]})",
+  };
+  tyr::actor_t actor(conf, true);
+
+  for (size_t i = 0; i < test_cases.size(); ++i) {
+    auto matched = json_to_pt(actor.trace_route(test_cases[i]));
+    const auto& routes = matched.get_child("matchings");
+    ASSERT_EQ(1, routes.size());
+    for (const auto& route : routes) {
+      const auto& legs = route.second.get_child("legs");
+      ASSERT_EQ(3, legs.size());
+    }
+  }
+}
 } // namespace
 
 int main(int argc, char* argv[]) {

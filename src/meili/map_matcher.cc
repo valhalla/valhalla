@@ -97,6 +97,14 @@ Interpolation InterpolateMeasurement(const MapMatcher& mapmatcher,
       offset = 1.f - offset;
     }
 
+    // clip distance along to the match boundaries
+    if (segment == begin && offset < segment->source) {
+      offset = segment->source;
+    }
+    if (segment == end - 1 && offset > segment->target) {
+      offset = segment->target;
+    }
+
     // Distance from the projected point to the segment begin, or
     // segment begin if we walk reversely
     const auto distance_to_segment_ends =
@@ -143,6 +151,7 @@ std::vector<MatchResult> InterpolateMeasurements(const MapMatcher& mapmatcher,
   // can't interpolate these because they don't happen between two valid states or
   // we weren't able to get a downstream route
   std::vector<MatchResult> results;
+  results.reserve(measurements.size());
   if (!stateid.IsValid() || !next_stateid.IsValid()) {
     for (const auto& measurement : measurements) {
       results.push_back(CreateMatchResult(measurement));
@@ -586,6 +595,7 @@ std::vector<MatchResults> MapMatcher::OfflineMatch(const std::vector<Measurement
   Clear();
 
   std::vector<MatchResults> best_paths;
+  best_paths.reserve(measurements.size());
 
   // Nothing to do
   if (measurements.empty()) {
@@ -599,9 +609,11 @@ std::vector<MatchResults> MapMatcher::OfflineMatch(const std::vector<Measurement
   auto interpolated = AppendMeasurements(measurements);
 
   // For k paths
+  std::vector<StateId> state_ids;
+  state_ids.reserve(container_.size());
   while (best_paths.size() < k && !found_broken_path) {
     // Get the states for the kth best path in reversed order then fix the order
-    std::vector<StateId> state_ids;
+    state_ids.clear();
     double accumulated_cost = 0.f;
     while (state_ids.size() < container_.size()) {
       // Get the time at the last column of states
@@ -653,7 +665,7 @@ std::vector<MatchResults> MapMatcher::OfflineMatch(const std::vector<Measurement
     std::vector<MatchResult> best_path;
     for (StateId::Time time = 0; time < original_state_ids.size(); time++) {
       // Add in this states result
-      best_path.emplace_back(std::move(results[time]));
+      best_path.emplace_back(results[time]);
 
       // See if there were any interpolated points with this state move on if not
       const auto it = interpolated.find(time);
@@ -671,15 +683,6 @@ std::vector<MatchResults> MapMatcher::OfflineMatch(const std::vector<Measurement
       // Copy the interpolated match results into the final set
       std::copy(interpolated_results.cbegin(), interpolated_results.cend(),
                 std::back_inserter(best_path));
-
-      for (size_t i = 1, n = interpolated_results.size(); i < n; ++i) {
-        if (interpolated_results[i].edgeid != interpolated_results[i - 1].edgeid) {
-          throw std::logic_error{"interpolated results don't match edgeid"};
-        } else if (interpolated_results[i].distance_along <=
-                   interpolated_results[i - 1].distance_along) {
-          throw std::logic_error{"interpolated results don't match distance_algon"};
-        }
-      }
     }
 
     // Construct a result
