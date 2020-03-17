@@ -56,7 +56,7 @@ void py_configure(const std::string& config_file) {
 struct TyrActorWrapper : public valhalla::tyr::actor_t {
 
   TyrActorWrapper(boost::property_tree::ptree config)
-      : reader(config), actor_t(config, reader, true) {
+      : reader(config.get_child("mjolnir")), actor_t(config, reader, true) {
   }
 
 protected:
