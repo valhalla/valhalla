@@ -611,7 +611,7 @@ int main(int argc, char* argv[]) {
 
   // Find path locations (loki) for sources and targets
   auto tw0 = std::chrono::high_resolution_clock::now();
-  loki_worker_t lw(pt);
+  loki_worker_t lw(pt, reader);
   auto tw1 = std::chrono::high_resolution_clock::now();
   auto msw = std::chrono::duration_cast<std::chrono::milliseconds>(tw1 - tw0).count();
   LOG_INFO("Location Worker construction took " + std::to_string(msw) + " ms");

@@ -73,7 +73,9 @@ BOOST_PYTHON_MODULE(valhalla) {
   boost::python::class_<valhalla::tyr::actor_t, boost::noncopyable,
                         boost::shared_ptr<valhalla::tyr::actor_t>>("Actor", boost::python::no_init)
       .def("__init__", boost::python::make_constructor(+[]() {
-             return boost::make_shared<valhalla::tyr::actor_t>(configure(), true);
+             auto config = configure();
+             valhalla::baldr::GraphReader reader(config.get_child("mjolnir"));
+             return boost::make_shared<valhalla::tyr::actor_t>(config, reader, true);
            }))
       .def("Route", &valhalla::tyr::actor_t::route, route_overloads())
       .def("Locate", &valhalla::tyr::actor_t::route, locate_overloads())

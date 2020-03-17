@@ -124,7 +124,8 @@ public:
   };
 
   Actor(const Napi::CallbackInfo& info)
-      : actor(get_conf_from_info(info), true), Napi::ObjectWrap<Actor>(info) {
+      : reader(get_conf_from_info(info).get_child("mjolnir")),
+        actor(get_conf_from_info(info), reader, true), Napi::ObjectWrap<Actor>(info) {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
 
@@ -222,6 +223,7 @@ private:
                               -> std::string { return actor.expansion(request); });
   }
 
+  valhalla::baldr::GraphReader reader;
   valhalla::tyr::actor_t actor;
 };
 

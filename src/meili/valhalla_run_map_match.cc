@@ -49,7 +49,8 @@ int main(int argc, char* argv[]) {
     throw std::runtime_error("No costing method found");
   }
 
-  MapMatcherFactory matcher_factory(config);
+  valhalla::baldr::GraphReader reader(config.get_child("mjolnir"));
+  MapMatcherFactory matcher_factory(config, reader);
   auto mapmatcher = matcher_factory.Create(costing);
 
   const float default_gps_accuracy = mapmatcher->config().get<float>("gps_accuracy"),

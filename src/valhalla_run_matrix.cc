@@ -186,7 +186,7 @@ int main(int argc, char* argv[]) {
 
   // Find path locations (loki) for sources and targets
   auto t0 = std::chrono::high_resolution_clock::now();
-  loki_worker_t lw(pt);
+  loki_worker_t lw(pt, reader);
   lw.matrix(request);
   auto t1 = std::chrono::high_resolution_clock::now();
   uint32_t ms = std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count();
