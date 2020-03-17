@@ -112,7 +112,7 @@ std::string to_feature_collection(const std::unordered_map<size_t, polygon_t>& b
 
 namespace valhalla {
 namespace baldr {
-connectivity_map_t::connectivity_map_t(const baldr::GraphReader &reader) {
+connectivity_map_t::connectivity_map_t(const baldr::GraphReader& reader) {
   // See what kind of tiles we are dealing with here by getting a graphreader
   auto tiles = reader.GetTileSet();
   transit_level = TileHierarchy::levels().rbegin()->second.level + 1;
