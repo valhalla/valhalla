@@ -85,6 +85,20 @@ waypoint(const valhalla::Location& location, bool is_tracepoint, bool is_optimiz
   return waypoint;
 }
 
+valhalla::baldr::json::MapPtr waypoint(const valhalla::Location& location,
+                                       const valhalla::TripLeg_Edge& edge,
+                                       bool is_tracepoint,
+                                       bool is_optimized) {
+  valhalla::baldr::json::MapPtr wpt = waypoint(location, is_tracepoint, is_optimized);
+
+  // When we have access to the triplegedge we add more metadata to the waypoint.
+  std::string road_class = to_string(static_cast<valhalla::baldr::RoadClass>(edge.road_class()));
+  if (road_class != "null") {
+    wpt->emplace("road_class", road_class);
+  }
+  return wpt;
+}
+
 // Serialize locations (called waypoints in OSRM). Waypoints are described here:
 //     http://project-osrm.org/docs/v5.5.1/api/#waypoint-object
 json::ArrayPtr waypoints(const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
@@ -106,10 +120,16 @@ json::ArrayPtr waypoints(const valhalla::Trip& trip) {
   const auto& legs = trip.routes(0).legs();
   for (const auto& leg : legs) {
     for (const auto& location : leg.location()) {
-      if (&location == &leg.location(0) && &leg != &*legs.begin()) {
+      const auto& is_first_location = &location == &leg.location(0);
+      if (is_first_location && &leg != &*legs.begin()) {
+        // Skip first waypoint of all but first leg so we don't repeat
         continue;
       }
-      waypoints->emplace_back(waypoint(location, false));
+      const auto& edge =
+          is_first_location
+              ? &leg.node(0).edge()
+              : &leg.node(leg.node_size() - 2).edge();
+      waypoints->emplace_back(waypoint(location, *edge, false, false));
     }
   }
   return waypoints;

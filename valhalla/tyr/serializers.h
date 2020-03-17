@@ -109,6 +109,10 @@ namespace osrm {
  */
 valhalla::baldr::json::MapPtr
 waypoint(const valhalla::Location& location, bool is_tracepoint = false, bool is_optimized = false);
+valhalla::baldr::json::MapPtr waypoint(const valhalla::Location& location,
+                                       const valhalla::TripLeg_Edge& edge,
+                                       bool is_tracepoint = false,
+                                       bool is_optimized = false);
 
 /*
  * Serialize locations into osrm waypoints
@@ -116,7 +120,7 @@ waypoint(const valhalla::Location& location, bool is_tracepoint = false, bool is
 valhalla::baldr::json::ArrayPtr
 waypoints(const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
           bool tracepoints = false);
-valhalla::baldr::json::ArrayPtr waypoints(const valhalla::Trip& locations);
+valhalla::baldr::json::ArrayPtr waypoints(const valhalla::Trip& trip);
 
 } // namespace osrm
 
