@@ -126,9 +126,7 @@ json::ArrayPtr waypoints(const valhalla::Trip& trip) {
         continue;
       }
       const auto& edge =
-          is_first_location
-              ? &leg.node(0).edge()
-              : &leg.node(leg.node_size() - 2).edge();
+          is_first_location ? &leg.node(0).edge() : &leg.node(leg.node_size() - 2).edge();
       waypoints->emplace_back(waypoint(location, *edge, false, false));
     }
   }
