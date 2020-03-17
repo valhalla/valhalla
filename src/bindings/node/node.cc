@@ -30,7 +30,7 @@ boost::property_tree::ptree make_conf(const char* config) {
 class ActorWorker : public Napi::AsyncWorker {
 public:
   ActorWorker(Napi::Function& callback,
-              const std::string request,
+              const std::string& request,
               valhalla::tyr::actor_t& actor,
               const std::function<std::string(valhalla::tyr::actor_t& actor,
                                               const std::string& request)>& func)
