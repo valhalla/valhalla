@@ -139,7 +139,7 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
                              baldr::GraphReader& graph_reader)
     : config(config), reader(graph_reader),
       connectivity_map(config.get<bool>("loki.use_connectivity", true)
-                           ? new connectivity_map_t(config.get_child("mjolnir"))
+                           ? new connectivity_map_t(graph_reader)
                            : nullptr),
       long_request(config.get<float>("loki.logging.long_request")),
       max_contours(config.get<size_t>("service_limits.isochrone.max_contours")),
