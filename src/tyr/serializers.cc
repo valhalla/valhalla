@@ -117,19 +117,27 @@ json::ArrayPtr waypoints(const google::protobuf::RepeatedPtrField<valhalla::Loca
 json::ArrayPtr waypoints(const valhalla::Trip& trip) {
   auto waypoints = json::array({});
   // For multi-route the same waypoints are used for all routes.
-  const auto& legs = trip.routes(0).legs();
-  for (const auto& leg : legs) {
-    for (const auto& location : leg.location()) {
-      const auto& is_first_location = &location == &leg.location(0);
-      if (is_first_location && &leg != &*legs.begin()) {
-        // Skip first waypoint of all but first leg so we don't repeat
+  const auto& route = trip.routes(0);
+  for (int i = 0; i < route.legs_size(); ++i) {
+    const auto& leg = route.legs(i);
+    for (int j = 0; j < leg.location_size(); ++j) {
+      if (i != 0 && j == 0) {
+        // Skip first waypoint of all but first leg so we don't repeat waypoints
         continue;
       }
-      const auto& edge =
-          is_first_location ? &leg.node(0).edge() : &leg.node(leg.node_size() - 2).edge();
-      waypoints->emplace_back(waypoint(location, *edge, false, false));
+      const auto& location = leg.location(j);
+      if (location.type() == valhalla::Location::kBreak ||
+          location.type() == valhalla::Location::kBreakThrough) {
+        // Get first edge of path for first location, last edge of path for last location
+        const auto& edge = (j == 0) ? leg.node(0).edge() : (leg.node().rbegin() + 1)->edge();
+        waypoints->emplace_back(waypoint(location, edge, false, false));
+      } else {
+        // TODO how can we get the edge for a silent via location?
+        waypoints->emplace_back(waypoint(location, false, false));
+      }
     }
   }
+
   return waypoints;
 }
 
