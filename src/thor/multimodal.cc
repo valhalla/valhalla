@@ -280,8 +280,9 @@ bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
 
     // Add transfer time to the local time when entering a stop
     // as a pedestrian. This is a small added cost on top of
-    // any costs along paths and roads
-    if (mode_ == TravelMode::kPedestrian) {
+    // any costs along paths and roads. We only do this once
+    // so if its from a transition we don't need to do it again
+    if (mode_ == TravelMode::kPedestrian && !from_transition) {
       ti.local_time += transfer_cost.secs;
     }
 

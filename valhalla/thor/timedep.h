@@ -55,7 +55,7 @@ protected:
    * @param  pred_idx     Predecessor index into the EdgeLabel list.
    * @param  from_transition True if this method is called from a transition
    *                         edge.
-   * @param  time_info    Information time offset as the route progresses
+   * @param  time_info    Tracks time offset as the route progresses
    * @param  dest         Location information of the destination.
    * @param  best_path    Best path found so far. Includes the index into
    *                      EdgeLabels and the cost.
@@ -150,7 +150,7 @@ protected:
    * @param  opp_pred_edge Opposing predecessor directed edge.
    * @param  from_transition True if this method is called from a transition
    *                         edge.
-   * @param  time_info    Information time offset as the route progresses
+   * @param  time_info    Tracks time offset as the route progresses
    * @param  dest         Location information of the destination.
    * @param  best_path    Best path found so far. Includes the index into
    *                      EdgeLabels and the cost.

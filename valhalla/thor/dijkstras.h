@@ -16,6 +16,7 @@
 #include <valhalla/sif/dynamiccost.h>
 #include <valhalla/sif/edgelabel.h>
 #include <valhalla/thor/edgestatus.h>
+#include <valhalla/thor/pathalgorithm.h>
 
 namespace valhalla {
 namespace thor {
@@ -99,8 +100,6 @@ protected:
   // A child-class must implement this to tell the algorithm how much expansion to expect to do
   virtual void GetExpansionHints(uint32_t& bucket_count, uint32_t& edge_label_reservation) const = 0;
 
-  bool has_date_time_;
-  int start_tz_index_;   // Timezone at the start of the Dijkstras
   sif::TravelMode mode_; // Current travel mode
   uint32_t access_mode_; // Access mode used by the costing method
 
@@ -143,16 +142,11 @@ protected:
    * locations date time string and the edge candidates timezone
    *
    * @param location           which location to use for the date time information
-   * @param node_id            the node from which to get timezone information
    * @param reader             the reader for looking up timezone information
-   * @returns                  a pair with the first being the epoch seconds for the date time at that
-   *                           timezone and the second being the ordinal second from the beginning of
-   *                           the week
+   * @returns                  time info for each location
    */
-  std::pair<uint64_t, uint32_t>
-  SetTime(google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
-          const baldr::GraphId& node_id,
-          baldr::GraphReader& reader);
+  std::vector<TimeInfo> SetTime(google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
+                                baldr::GraphReader& reader);
 
   /**
    * Expand from the node along the forward search path.
@@ -161,16 +155,14 @@ protected:
    * @param pred Edge label of the predecessor edge leading to the node.
    * @param pred_idx Index in the edge label list of the predecessor edge.
    * @param from_transition Boolean indicating if this expansion is from a transition edge.
-   * @param localtime Current local time.  Seconds since epoch.
-   * @param seconds_of_week For time dependent Dijkstrass this allows lookup of predicted traffic.
+   * @param time_info Tracks time offset as the expansion progresses
    */
   void ExpandForward(baldr::GraphReader& graphreader,
                      const baldr::GraphId& node,
                      const sif::EdgeLabel& pred,
                      const uint32_t pred_idx,
                      const bool from_transition,
-                     uint64_t localtime,
-                     int32_t seconds_of_week);
+                     const TimeInfo& time_info);
 
   /**
    * Expand from the node along the reverse search path.
@@ -179,8 +171,7 @@ protected:
    * @param pred Edge label of the predecessor edge leading to the node.
    * @param pred_idx Index in the edge label list of the predecessor edge.
    * @param from_transition Boolean indicating if this expansion is from a transition edge.
-   * @param localtime Current local time.  Seconds since epoch.
-   * @param seconds_of_week For time dependent Dijkstrass this allows lookup of predicted traffic.
+   * @param time_info Tracks time offset as the expansion progresses
    */
   void ExpandReverse(baldr::GraphReader& graphreader,
                      const baldr::GraphId& node,
@@ -188,8 +179,7 @@ protected:
                      const uint32_t pred_idx,
                      const baldr::DirectedEdge* opp_pred_edge,
                      const bool from_transition,
-                     uint64_t localtime,
-                     int32_t seconds_of_week);
+                     const TimeInfo& time_info);
 
   /**
    * Expand from the node using multimodal algorithm.
@@ -201,6 +191,7 @@ protected:
    * @param pc Pedestrian costing.
    * @param tc Transit costing.
    * @param mode_costing Array of all costing models.
+   * @param time_info Tracks time offset as the expansion progresses
    */
   void ExpandForwardMultiModal(baldr::GraphReader& graphreader,
                                const baldr::GraphId& node,
@@ -209,7 +200,8 @@ protected:
                                const bool from_transition,
                                const std::shared_ptr<sif::DynamicCost>& pc,
                                const std::shared_ptr<sif::DynamicCost>& tc,
-                               const std::shared_ptr<sif::DynamicCost>* mode_costing);
+                               const std::shared_ptr<sif::DynamicCost>* mode_costing,
+                               const TimeInfo& time_info);
 
   /**
    * Add edge(s) at each origin location to the adjacency list.

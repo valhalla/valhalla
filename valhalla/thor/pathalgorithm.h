@@ -150,6 +150,9 @@ struct EdgeMetadata {
 
 // A structure for tracking time information as the route progresses
 struct TimeInfo {
+  // whether or not the provided location had valid time information or not
+  bool valid;
+
   // index into the timezone database of the location
   // used to do timezone offset as the route progresses
   int timezone_index;
@@ -165,7 +168,7 @@ struct TimeInfo {
   // whether or not this route is relative to "now"
   // and how far from "now" it is
   bool current;
-  uint32_t seconds_from_now;
+  float seconds_from_now;
 
   // helper function to initialize the object from a location
   static TimeInfo make(valhalla::Location& location, baldr::GraphReader& reader);
@@ -181,6 +184,9 @@ struct TimeInfo {
 
   // offset all the initial time info to reflect the progress along the route to this point
   TimeInfo operator-(Offset offset) const;
+
+  // returns whether or not this time info refers to a location that has time information
+  operator bool() const;
 };
 
 } // namespace thor
