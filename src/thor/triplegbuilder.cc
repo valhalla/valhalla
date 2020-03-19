@@ -490,21 +490,26 @@ void SetTripEdgeRoadClass(TripLeg_Edge* trip_edge,
   // To restore the original road class for motorway_links, we check if any of the adjacent edges is
   // a motorway.
   if (directededge->use() == Use::kRamp) {
-    auto edge_nodes = graphreader.GetDirectedEdgeNodes(graphtile, directededge);
-    for (const auto& edge_node : {edge_nodes.first, edge_nodes.second}) {
+    const DirectedEdge* opposing_edge = graphreader.GetOpposingEdge(directededge, graphtile);
+    for (const auto& edge : {directededge, opposing_edge}) {
+      GraphId endnode = edge->endnode();
+      const GraphTile* tile = edge->leaves_tile() ? graphreader.GetGraphTile(endnode) : graphtile;
+      if (!endnode.Is_Valid() || tile == nullptr) {
+        continue;
+      }
       // check edges leaving node
-      for (const auto& edge : graphtile->GetDirectedEdges(edge_node)) {
+      for (const auto& edge : tile->GetDirectedEdges(endnode)) {
         if (edge.classification() == baldr::RoadClass::kMotorway) {
           trip_edge->set_road_class(TripLeg_RoadClass_kMotorway);
           return;
         }
       }
       // check transition nodes too
-      auto begin_transition_nodes = graphtile->GetNodeTransitions(edge_node);
+      auto begin_transition_nodes = tile->GetNodeTransitions(endnode);
       for (const auto& transition : begin_transition_nodes) {
-        auto tile = graphreader.GetGraphTile(transition.endnode());
+        auto trans_tile = graphreader.GetGraphTile(transition.endnode());
         auto nodeinfo = graphreader.nodeinfo(transition.endnode());
-        for (const auto& edge : tile->GetDirectedEdges(nodeinfo)) {
+        for (const auto& edge : trans_tile->GetDirectedEdges(nodeinfo)) {
           if (edge.classification() == baldr::RoadClass::kMotorway) {
             trip_edge->set_road_class(TripLeg_RoadClass_kMotorway);
             return;
