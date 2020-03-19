@@ -5,7 +5,7 @@ using namespace valhalla;
 
 TEST(Standalone, Maxspeed) {
   const std::string ascii_map = R"(
-      A--B--C--D--E--F
+      A----B----C----D----E----F
   )";
 
   const gurka::ways ways = {
@@ -15,7 +15,7 @@ TEST(Standalone, Maxspeed) {
       {"DE", {{"highway", "motorway"}}},
       {"EF", {{"highway", "motorway"}, {"maxspeed", "none"}}},
   };
-  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 10);
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
   auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_maxspeed");
   auto result = gurka::route(map, "A", "F", "auto");
 
