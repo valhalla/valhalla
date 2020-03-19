@@ -500,7 +500,7 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
       if (maneuver.portions_toll() || curr_edge->toll()) {
         classes.push_back("toll");
       }
-      // TODO We might want to label motorway for motorway_link
+      // TODO We might want to include some reclassified links
       if (curr_edge->road_class() == TripLeg_RoadClass_kMotorway) {
         classes.push_back("motorway");
       }
