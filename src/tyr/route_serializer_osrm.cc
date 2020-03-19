@@ -421,7 +421,6 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
     auto node = etp->GetEnhancedNode(i);
     auto curr_edge = etp->GetCurrEdge(i);
     auto prev_edge = etp->GetPrevEdge(i);
-    auto next_edge = etp->GetNextEdge(i);
 
     // Add the node location (lon, lat). Use the last shape point for
     // the arrive step
