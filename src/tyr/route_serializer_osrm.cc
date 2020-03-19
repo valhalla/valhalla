@@ -421,6 +421,7 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
     auto node = etp->GetEnhancedNode(i);
     auto curr_edge = etp->GetCurrEdge(i);
     auto prev_edge = etp->GetPrevEdge(i);
+    auto next_edge = etp->GetNextEdge(i);
 
     // Add the node location (lon, lat). Use the last shape point for
     // the arrive step
@@ -500,8 +501,11 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
       if (maneuver.portions_toll() || curr_edge->toll()) {
         classes.push_back("toll");
       }
-      // TODO We might want to include some reclassified links
-      if (curr_edge->road_class() == TripLeg_RoadClass_kMotorway) {
+      // Because of ReclassifyLinks we have to also check if the adjacent edge is a motorway when the
+      // current edge is a ramp.
+      if (curr_edge->road_class() == TripLeg_RoadClass_kMotorway ||
+          (curr_edge->IsRampUse() && (next_edge->road_class() == TripLeg_RoadClass_kMotorway ||
+                                      prev_edge->road_class() == TripLeg_RoadClass_kMotorway))) {
         classes.push_back("motorway");
       }
       if (curr_edge->use() == TripLeg::Use::TripLeg_Use_kFerryUse) {
