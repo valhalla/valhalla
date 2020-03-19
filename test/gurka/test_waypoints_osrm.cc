@@ -6,10 +6,13 @@ using namespace valhalla;
 TEST(Standalone, WaypointsOsrmSingleEdge) {
   const std::string ascii_map = R"(
     A----B
+         |
+         C
   )";
 
   const gurka::ways ways = {
       {"AB", {{"highway", "motorway"}}},
+      {"BC", {{"highway", "motorway"}}},
   };
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
   auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_waypoints_osrm_1");
