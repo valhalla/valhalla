@@ -54,6 +54,13 @@ date::local_seconds get_formatted_date(const std::string& date) {
     in >> date::parse("%FT%R", tp);
   else if (date.find('-') != std::string::npos)
     in >> date::parse("%F", tp);
+  // TODO: uncomment this to allow the caller to really understand that their date is messed up
+  /*else
+    in.setstate(std::ios::failbit);
+
+  // we weren't able to use this string as a date
+  if (in.fail())
+    throw std::invalid_argument("Date string is invalid: " + date);*/
 
   return tp;
 }
@@ -68,7 +75,7 @@ date::zoned_seconds get_ldt(const date::local_seconds& d, const date::time_zone*
   return zt;
 }
 
-// Get the number of days that have elapsed from the pivot date for the inputed date.
+// Get the number of days that have elapsed from the pivot date for the input date.
 // date_time is in the format of 2015-05-06T08:00
 uint32_t days_from_pivot_date(const date::local_seconds& date_time) {
   if (date_time <= pivot_date_) {

@@ -3,6 +3,8 @@
 #include "midgard/logging.h"
 #include "sif/edgelabel.h"
 
+#include <ctime>
+
 namespace dt = valhalla::baldr::DateTime;
 
 namespace valhalla {
@@ -27,7 +29,8 @@ TimeInfo TimeInfo::make(valhalla::Location& location, baldr::GraphReader& reader
 
   // Set the origin timezone to be the timezone at the end node
   if (timezone_index == 0) {
-    LOG_WARN("Could not get the timezone at the origin");
+    LOG_ERROR("Could not get a timezone for the location");
+    return {false};
   }
 
   // Set the time for the current time route
@@ -38,12 +41,26 @@ TimeInfo TimeInfo::make(valhalla::Location& location, baldr::GraphReader& reader
   }
 
   // Set route start time (seconds from epoch)
-  auto local_time =
-      dt::seconds_since_epoch(location.date_time(), dt::get_tz_db().from_index(timezone_index));
+  uint64_t local_time = 0;
+  try {
+    local_time =
+        dt::seconds_since_epoch(location.date_time(), dt::get_tz_db().from_index(timezone_index));
+  } catch (...) {
+    LOG_ERROR("Could not get epoch seconds for date_time: " + location.date_time());
+    return {false};
+  }
 
   // Set seconds from beginning of the week
-  auto second_of_week = dt::day_of_week(location.date_time()) * valhalla::midgard::kSecondsPerDay +
-                        dt::seconds_from_midnight(location.date_time());
+  std::tm t = dt::iso_to_tm(location.date_time());
+  if (t.tm_year) {
+    LOG_ERROR("Could not parse date_time: " + location.date_time());
+    return {false};
+  }
+  std::mktime(&t);
+  auto second_of_week = t.tm_wday * valhalla::midgard::kSecondsPerDay +
+                        t.tm_hour * valhalla::midgard::kSecondsPerHour + t.tm_sec;
+
+  // TODO: compute the offset from now for this location whether negative or positive
 
   // construct the info
   return {true, timezone_index, local_time, second_of_week, current};

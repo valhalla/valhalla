@@ -168,7 +168,7 @@ struct TimeInfo {
   // whether or not this route is relative to "now"
   // and how far from "now" it is
   bool current;
-  float seconds_from_now;
+  int64_t seconds_from_now;
 
   // helper function to initialize the object from a location
   static TimeInfo make(valhalla::Location& location, baldr::GraphReader& reader);

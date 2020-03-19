@@ -184,10 +184,6 @@ uint32_t second_of_week(uint32_t epoch_time, const date::time_zone* time_zone);
 static inline std::tm iso_to_tm(const std::string& iso) {
   // Create an invalid tm, then populate it from the ISO string using get_time
   std::tm t = {};
-  t.tm_min = -1;
-  t.tm_hour = -1;
-  t.tm_mday = -1;
-  t.tm_mon = -1;
 
   // Check for invalid string (not the right separators and sizes)
   if (iso.size() != 16 || iso.at(4) != '-' || iso.at(7) != '-' || iso.at(10) != 'T' ||
@@ -199,10 +195,9 @@ static inline std::tm iso_to_tm(const std::string& iso) {
   ss.imbue(std::locale("C"));
   ss >> std::get_time(&t, "%Y-%m-%dT%H:%M");
 
-  // Validate fields. Set tm_year to 0 if any of the year,month,day,hour,minute are invalid.
-  if (t.tm_year > 200 || t.tm_mon < 0 || t.tm_mon > 11 || t.tm_mday < 0 || t.tm_mday > 31 ||
-      t.tm_hour < 0 || t.tm_hour > 23 || t.tm_min < 0 || t.tm_min > 59) {
-    t.tm_year = 0;
+  // If parsing failed zero 0 the struct
+  if (ss.fail()) {
+    return {};
   }
   return t;
 }
