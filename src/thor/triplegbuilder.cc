@@ -481,6 +481,40 @@ void AddTransitNodes(TripLeg_Node* trip_node,
   }
 }
 
+void SetTripEdgeRoadClass(TripLeg_Edge* trip_edge,
+                          const DirectedEdge* directededge,
+                          const GraphTile* graphtile,
+                          GraphReader& graphreader) {
+  trip_edge->set_road_class(GetTripLegRoadClass(directededge->classification()));
+  // If this is a ramp it may have been reclassified in graph enhancer.
+  // To restore the original road class for motorway_links, we check if any of the adjacent edges is
+  // a motorway.
+  if (directededge->use() == Use::kRamp) {
+    auto edge_nodes = graphreader.GetDirectedEdgeNodes(graphtile, directededge);
+    for (const auto& edge_node : {edge_nodes.first, edge_nodes.second}) {
+      // check edges leaving node
+      for (const auto& edge : graphtile->GetDirectedEdges(edge_node)) {
+        if (edge.classification() == baldr::RoadClass::kMotorway) {
+          trip_edge->set_road_class(TripLeg_RoadClass_kMotorway);
+          return;
+        }
+      }
+      // check transition nodes too
+      auto begin_transition_nodes = graphtile->GetNodeTransitions(edge_node);
+      for (const auto& transition : begin_transition_nodes) {
+        auto tile = graphreader.GetGraphTile(transition.endnode());
+        auto nodeinfo = graphreader.nodeinfo(transition.endnode());
+        for (const auto& edge : tile->GetDirectedEdges(nodeinfo)) {
+          if (edge.classification() == baldr::RoadClass::kMotorway) {
+            trip_edge->set_road_class(TripLeg_RoadClass_kMotorway);
+            return;
+          }
+        }
+      }
+    }
+  }
+}
+
 /**
  * Add trip edge. (TODO more comments)
  * @param  controller         Controller to determine which attributes to set.
@@ -512,6 +546,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
                           const bool drive_on_right,
                           TripLeg_Node* trip_node,
                           const GraphTile* graphtile,
+                          GraphReader& graphreader,
                           const uint32_t second_of_week,
                           const float length_percentage,
                           const uint32_t start_node_idx,
@@ -645,7 +680,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
 
   // Set road class if requested
   if (controller.attributes.at(kEdgeRoadClass)) {
-    trip_edge->set_road_class(GetTripLegRoadClass(directededge->classification()));
+    SetTripEdgeRoadClass(trip_edge, directededge, graphtile, graphreader);
   }
 
   // Set length if requested. Convert to km
@@ -1211,12 +1246,12 @@ void TripLegBuilder::Build(
     bool drive_on_right = graphreader.nodeinfo(start_node)->drive_on_right();
 
     // Add trip edge
-    auto trip_edge =
-        AddTripEdge(controller, path_begin->edgeid, path_begin->trip_id, 0, path_begin->mode,
-                    travel_types[static_cast<int>(path_begin->mode)],
-                    mode_costing[static_cast<uint32_t>(path_begin->mode)], edge, drive_on_right,
-                    trip_path.add_node(), tile, origin_second_of_week, std::abs(end_pct - start_pct),
-                    startnode.id(), false, nullptr, path_begin->has_time_restrictions);
+    auto trip_edge = AddTripEdge(controller, path_begin->edgeid, path_begin->trip_id, 0,
+                                 path_begin->mode, travel_types[static_cast<int>(path_begin->mode)],
+                                 mode_costing[static_cast<uint32_t>(path_begin->mode)], edge,
+                                 drive_on_right, trip_path.add_node(), tile, graphreader,
+                                 origin_second_of_week, std::abs(end_pct - start_pct), startnode.id(),
+                                 false, nullptr, path_begin->has_time_restrictions);
 
     // Set begin shape index if requested
     if (controller.attributes.at(kEdgeBeginShapeIndex)) {
@@ -1542,8 +1577,8 @@ void TripLegBuilder::Build(
     float length_pct = (is_first_edge ? 1.f - start_pct : (is_last_edge ? end_pct : 1.f));
     TripLeg_Edge* trip_edge =
         AddTripEdge(controller, edge, trip_id, block_id, mode, travel_type, costing, directededge,
-                    node->drive_on_right(), trip_node, graphtile, second_of_week, length_pct,
-                    startnode.id(), node->named_intersection(), start_tile,
+                    node->drive_on_right(), trip_node, graphtile, graphreader, second_of_week,
+                    length_pct, startnode.id(), node->named_intersection(), start_tile,
                     edge_itr->has_time_restrictions);
 
     // Get the shape and set shape indexes (directed edge forward flag

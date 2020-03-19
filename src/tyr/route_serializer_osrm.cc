@@ -501,12 +501,7 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
       if (maneuver.portions_toll() || curr_edge->toll()) {
         classes.push_back("toll");
       }
-      // Because of ReclassifyLinks we have to also check if the adjacent edge is a motorway when the
-      // current edge is a ramp.
-      if (curr_edge->road_class() == TripLeg_RoadClass_kMotorway ||
-          (curr_edge->IsRampUse() &&
-           ((next_edge && next_edge->road_class() == TripLeg_RoadClass_kMotorway) ||
-            (prev_edge && prev_edge->road_class() == TripLeg_RoadClass_kMotorway)))) {
+      if (curr_edge->road_class() == TripLeg_RoadClass_kMotorway) {
         classes.push_back("motorway");
       }
       if (curr_edge->use() == TripLeg::Use::TripLeg_Use_kFerryUse) {
