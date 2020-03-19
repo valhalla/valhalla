@@ -1097,6 +1097,7 @@ void TripLegBuilder::Build(
   auto* tp_orig = trip_path.mutable_location(0);
   auto* tp_dest = trip_path.mutable_location(trip_path.location_size() - 1);
 
+  // TODO: use TimeInfo
   uint32_t origin_second_of_week = kInvalidSecondsOfWeek;
   if (origin.has_date_time()) {
     origin_second_of_week = DateTime::day_of_week(origin.date_time()) * kSecondsPerDay +

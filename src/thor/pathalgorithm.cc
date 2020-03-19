@@ -30,7 +30,7 @@ TimeInfo TimeInfo::make(valhalla::Location& location, baldr::GraphReader& reader
   // Set the origin timezone to be the timezone at the end node
   if (timezone_index == 0) {
     LOG_ERROR("Could not get a timezone for the location");
-    return {false};
+    // return {false};
   }
 
   // Set the time for the current time route
@@ -47,23 +47,24 @@ TimeInfo TimeInfo::make(valhalla::Location& location, baldr::GraphReader& reader
         dt::seconds_since_epoch(location.date_time(), dt::get_tz_db().from_index(timezone_index));
   } catch (...) {
     LOG_ERROR("Could not get epoch seconds for date_time: " + location.date_time());
-    return {false};
+    // return {false};
   }
 
   // Set seconds from beginning of the week
   std::tm t = dt::iso_to_tm(location.date_time());
-  if (t.tm_year) {
+  if (t.tm_year == 0) {
     LOG_ERROR("Could not parse date_time: " + location.date_time());
-    return {false};
+    // return {false};
   }
   std::mktime(&t);
   auto second_of_week = t.tm_wday * valhalla::midgard::kSecondsPerDay +
                         t.tm_hour * valhalla::midgard::kSecondsPerHour + t.tm_sec;
 
   // TODO: compute the offset from now for this location whether negative or positive
+  int64_t seconds_from_now = 0;
 
   // construct the info
-  return {true, timezone_index, local_time, second_of_week, current};
+  return {true, timezone_index, local_time, second_of_week, current, seconds_from_now};
 }
 
 // offset all the initial time info to reflect the progress along the route to this point
@@ -88,7 +89,9 @@ TimeInfo TimeInfo::operator+(Offset offset) const {
 
   // return the shifted object, notice that seconds from now is only useful for
   // date_time type == current
-  return {valid, offset.timezone_index, lt, sw, current, offset.seconds};
+  return {valid,   offset.timezone_index,
+          lt,      sw,
+          current, seconds_from_now + static_cast<int64_t>(offset.seconds)};
 }
 
 // offset all the initial time info to reflect the progress along the route to this point
@@ -113,7 +116,9 @@ TimeInfo TimeInfo::operator-(Offset offset) const {
 
   // return the shifted object, notice that seconds from now is negative, this could be useful if
   // we had the ability to arrive_by current time but we dont for the moment
-  return {valid, offset.timezone_index, lt, static_cast<uint32_t>(sw), current, -offset.seconds};
+  return {valid,   offset.timezone_index,
+          lt,      static_cast<uint32_t>(sw),
+          current, seconds_from_now - static_cast<int64_t>(offset.seconds)};
 }
 
 TimeInfo::operator bool() const {
