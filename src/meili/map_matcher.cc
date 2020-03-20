@@ -58,12 +58,13 @@ inline MatchResult CreateMatchResult(const Measurement& measurement, const Inter
 
 // Find the interpolation along the route where the transition cost +
 // emission cost is minimal
-Interpolation InterpolateMeasurement(const MapMatcher& mapmatcher,
-                                     const Measurement& measurement,
-                                     std::vector<EdgeSegment>::const_iterator begin,
-                                     std::vector<EdgeSegment>::const_iterator end,
-                                     float match_measurement_distance,
-                                     float match_measurement_time) {
+Interpolation InterpolateMeasurement(
+    const MapMatcher& mapmatcher,
+    const Measurement& measurement,
+    float match_measurement_distance,
+    float match_measurement_time,
+    const std::vector<EdgeSegment>& route,
+    std::unordered_map<const EdgeSegment*, std::pair<float, float>>& offset_boundaries) {
   const baldr::GraphTile* tile(nullptr);
   midgard::projector_t projector(measurement.lnglat());
 
@@ -74,8 +75,9 @@ Interpolation InterpolateMeasurement(const MapMatcher& mapmatcher,
   // Invalid edgeid indicates that no interpolation found
   Interpolation best_interp;
 
-  for (auto segment = begin; segment != end; segment++) {
-    const auto directededge = mapmatcher.graphreader().directededge(segment->edgeid, tile);
+  for (size_t i = 0, n = route.size(); i < n; ++i) {
+    const auto& segment = route[i];
+    const auto directededge = mapmatcher.graphreader().directededge(segment.edgeid, tile);
     if (!directededge) {
       continue;
     }
@@ -97,28 +99,32 @@ Interpolation InterpolateMeasurement(const MapMatcher& mapmatcher,
     }
 
     // clip distance along to the match boundaries
-    if (segment == begin && offset < segment->source) {
-      offset = segment->source;
+    std::pair<float, float>& boundaries = offset_boundaries[&segment];
+    if (offset < boundaries.first) {
+      offset = boundaries.first;
+    } else {
+      boundaries.first = offset;
     }
-    if (segment == end - 1 && offset > segment->target) {
-      offset = segment->target;
+
+    if (offset > boundaries.second) {
+      offset = boundaries.second;
     }
 
     // Distance from the projected point to the segment begin, or
     // segment begin if we walk reversely
     const auto distance_to_segment_ends =
-        std::abs(directededge->length() * (offset - segment->source));
+        std::abs(directededge->length() * (offset - segment.source));
 
     // The absolute route distance from projected point to the
     // beginning segment
     const auto route_distance = segment_begin_route_distance + distance_to_segment_ends;
 
     // Get the amount of time spent on this segment
-    auto edge_percent = segment->target - segment->source;
+    auto edge_percent = segment.target - segment.source;
     auto route_time = mapmatcher.costing()->EdgeCost(directededge, tile).secs * edge_percent;
 
-    Interpolation interp{projected_point, segment->edgeid, sq_distance,
-                         route_distance,  route_time,      offset};
+    Interpolation interp{projected_point, segment.edgeid, sq_distance,
+                         route_distance,  route_time,     offset};
 
     const auto cost =
         interp.sortcost(mapmatcher.emission_cost_model(), mapmatcher.transition_cost_model(),
@@ -160,6 +166,11 @@ std::vector<MatchResult> InterpolateMeasurements(const MapMatcher& mapmatcher,
 
   std::vector<EdgeSegment> route = MergeRoute(mapmatcher.state_container().state(stateid),
                                               mapmatcher.state_container().state(next_stateid));
+  std::unordered_map<const EdgeSegment*, std::pair<float, float>> offset_boundaries;
+  offset_boundaries.reserve(route.size());
+  for (const EdgeSegment& segment : route) {
+    offset_boundaries[&segment] = {segment.source, segment.target};
+  }
 
   // for each point that needs interpolated
   for (const auto& measurement : measurements) {
@@ -167,8 +178,9 @@ std::vector<MatchResult> InterpolateMeasurements(const MapMatcher& mapmatcher,
     const auto match_measurement_distance = GreatCircleDistance(measurement, match_measurement);
     const auto match_measurement_time = ClockDistance(measurement, match_measurement);
     // interpolate this point along the route
-    const auto& interp = InterpolateMeasurement(mapmatcher, measurement, route.begin(), route.end(),
-                                                match_measurement_distance, match_measurement_time);
+
+    const auto& interp = InterpolateMeasurement(mapmatcher, measurement, match_measurement_distance,
+                                                match_measurement_time, route, offset_boundaries);
 
     // if it was able to do the interpolation
     if (interp.edgeid.Is_Valid()) {
