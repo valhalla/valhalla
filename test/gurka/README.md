@@ -1,6 +1,6 @@
 # Valhalla Gurka Tests
 
-Tesst in this directory are "integration" level tests.  They check the full pipeline from
+Test in this directory are "integration" level tests.  They check the full pipeline from
 map parsing through to route/match/etc result generation.
 
 # Test structure

@@ -154,7 +154,8 @@ boost::property_tree::ptree build_config(const std::string& tiledir) {
 
 std::string build_valhalla_route_request(const map& map,
                                          const std::vector<std::string>& waypoints,
-                                         const std::string& costing = "auto") {
+                                         const std::string& costing = "auto",
+                                         const std::string& datetime = "") {
 
   rapidjson::Document doc;
   doc.SetObject();
@@ -167,8 +168,17 @@ std::string build_valhalla_route_request(const map& map,
     p.AddMember("lat", map.nodes.at(waypoint).lat(), allocator);
     locations.PushBack(p, allocator);
   }
+
+  rapidjson::Value dt(rapidjson::kObjectType);
+  if (datetime != "") {
+    dt.AddMember("type", 1, allocator);
+    dt.AddMember("value", datetime, allocator);
+  }
+
   doc.AddMember("locations", locations, allocator);
   doc.AddMember("costing", costing, allocator);
+  if (datetime != "")
+    doc.AddMember("date_time", dt, allocator);
 
   rapidjson::StringBuffer sb;
   rapidjson::Writer<rapidjson::StringBuffer> writer(sb);
@@ -202,6 +212,7 @@ std::string build_valhalla_match_request(const map& map,
   rapidjson::StringBuffer sb;
   rapidjson::Writer<rapidjson::StringBuffer> writer(sb);
   doc.Accept(writer);
+  std::cout << sb.GetString() << std::endl;
   return sb.GetString();
 }
 
@@ -558,8 +569,10 @@ findEdge(const map& map,
  * @param waypoints an array of node names to use as waypoints
  * @param costing the name of the costing model to use
  */
-valhalla::Api
-route(const map& map, const std::vector<std::string>& waypoints, const std::string& costing) {
+valhalla::Api route(const map& map,
+                    const std::vector<std::string>& waypoints,
+                    const std::string& costing,
+                    const std::string& datetime) {
   std::cerr << "[          ] Routing with mjolnir.tile_dir = "
             << map.config.get<std::string>("mjolnir.tile_dir") << " with waypoints ";
   bool first = true;
@@ -570,16 +583,19 @@ route(const map& map, const std::vector<std::string>& waypoints, const std::stri
     first = false;
   };
   std::cerr << " with costing " << costing << std::endl;
-  auto request_json = detail::build_valhalla_route_request(map, waypoints, costing);
+  auto request_json = detail::build_valhalla_route_request(map, waypoints, costing, datetime);
   std::cerr << "[          ] Valhalla request is: " << request_json << std::endl;
 
   valhalla::tyr::actor_t actor(map.config, true);
   return actor.unserialized_route(request_json);
 }
 
-valhalla::Api
-route(const map& map, const std::string& from, const std::string& to, const std::string& costing) {
-  return route(map, {from, to}, costing);
+valhalla::Api route(const map& map,
+                    const std::string& from,
+                    const std::string& to,
+                    const std::string& costing,
+                    const std::string& datetime = "") {
+  return route(map, {from, to}, costing, datetime);
 }
 
 valhalla::Api match(const map& map,

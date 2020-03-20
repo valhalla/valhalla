@@ -462,7 +462,8 @@ public:
               // We are in range at the time we are allowed at this edge
               if (access_type == baldr::AccessType::kTimedAllowed)
                 return true;
-              else return false;
+              else
+                return false;
             }
           }
         }
