@@ -14,15 +14,17 @@
 #include <stdint.h>
 #endif
 
+#ifndef C_ONLY_INTERFACE
 namespace valhalla {
 namespace baldr {
 namespace traffic {
-
-#ifndef C_ONLY_INTERFACE
 using std::uint16_t;
 using std::uint32_t;
 using std::uint64_t;
+#else
+extern "C" {
 #endif
+
 struct Speed {
   uint16_t speed_kmh : 7;        // km/h - so max range is 0-127km/h
   uint16_t congestion_level : 3; // some value from 0 to 7 to report back
@@ -165,7 +167,12 @@ public:
 };
 #endif
 
+#ifndef C_ONLY_INTERFACE
 } // namespace traffic
 } // namespace baldr
 } // namespace valhalla
+#else
+} // extern "C"
+#endif
+
 #endif // VALHALLA_BALDR_TRAFFICTILE_H_
