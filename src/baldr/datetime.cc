@@ -55,6 +55,7 @@ date::local_seconds get_formatted_date(const std::string& date) {
   else if (date.find('-') != std::string::npos)
     in >> date::parse("%F", tp);
   // TODO: uncomment this to allow the caller to really understand that their date is messed up
+  // TODO: for now we cant because this code is used all over the place
   /*else
     in.setstate(std::ios::failbit);
 

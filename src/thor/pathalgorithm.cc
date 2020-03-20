@@ -3,6 +3,7 @@
 #include "midgard/logging.h"
 #include "sif/edgelabel.h"
 
+#include <chrono>
 #include <ctime>
 
 namespace dt = valhalla::baldr::DateTime;
@@ -29,32 +30,35 @@ TimeInfo TimeInfo::make(valhalla::Location& location, baldr::GraphReader& reader
 
   // Set the origin timezone to be the timezone at the end node
   if (timezone_index == 0) {
-    LOG_ERROR("Could not get a timezone for the location");
-    // return {false};
+    LOG_ERROR("No timezone for location using default");
+    timezone_index = 1;
   }
+  const auto* tz = dt::get_tz_db().from_index(timezone_index);
 
   // Set the time for the current time route
   bool current = false;
+  const auto date = date::make_zoned(tz, std::chrono::system_clock::now());
   if (location.date_time() == "current") {
     current = true;
-    location.set_date_time(dt::iso_date_time(dt::get_tz_db().from_index(timezone_index)));
+    std::ostringstream iso_dt;
+    iso_dt << date::format("%FT%R", date);
+    location.set_date_time(iso_dt.str());
   }
 
   // Set route start time (seconds from epoch)
   uint64_t local_time = 0;
   try {
-    local_time =
-        dt::seconds_since_epoch(location.date_time(), dt::get_tz_db().from_index(timezone_index));
+    local_time = dt::seconds_since_epoch(location.date_time(), tz);
   } catch (...) {
     LOG_ERROR("Could not get epoch seconds for date_time: " + location.date_time());
-    // return {false};
+    return {false};
   }
 
   // Set seconds from beginning of the week
   std::tm t = dt::iso_to_tm(location.date_time());
   if (t.tm_year == 0) {
     LOG_ERROR("Could not parse date_time: " + location.date_time());
-    // return {false};
+    return {false};
   }
   std::mktime(&t);
   auto second_of_week = t.tm_wday * valhalla::midgard::kSecondsPerDay +
@@ -96,8 +100,8 @@ TimeInfo TimeInfo::operator+(Offset offset) const {
 
 // offset all the initial time info to reflect the progress along the route to this point
 TimeInfo TimeInfo::operator-(Offset offset) const {
-  if (!valid)
-    return *this;
+  // if (!valid)
+  //  return *this;
 
   // if the timezone changed we need to account for that offset as well
   int tz_diff = 0;
@@ -108,7 +112,8 @@ TimeInfo TimeInfo::operator-(Offset offset) const {
   }
 
   // offset the local time and second of week by the amount traveled to this label
-  uint64_t lt = local_time - static_cast<uint64_t>(offset.seconds) + tz_diff; // dont route in 1970
+  uint64_t lt =
+      local_time - static_cast<uint64_t>(offset.seconds) + tz_diff; // dont route near the epoch
   int64_t sw = static_cast<int64_t>(second_of_week) - static_cast<int64_t>(offset.seconds) + tz_diff;
   if (sw < 0) {
     sw = valhalla::midgard::kSecondsPerWeek + sw;
@@ -119,10 +124,6 @@ TimeInfo TimeInfo::operator-(Offset offset) const {
   return {valid,   offset.timezone_index,
           lt,      static_cast<uint32_t>(sw),
           current, seconds_from_now - static_cast<int64_t>(offset.seconds)};
-}
-
-TimeInfo::operator bool() const {
-  return valid;
 }
 
 } // namespace thor

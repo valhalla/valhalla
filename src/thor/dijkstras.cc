@@ -142,7 +142,7 @@ void Dijkstras::ExpandForward(GraphReader& graphreader,
     // Check if the edge is allowed or if a restriction occurs
     EdgeStatus* todo = nullptr;
     bool has_time_restrictions = false;
-    if (ti) {
+    if (ti.valid) {
       // With date time we check time dependent restrictions and access
       if (!costing_->Allowed(directededge, pred, tile, edgeid, ti.local_time, nodeinfo->timezone(),
                              has_time_restrictions) ||
@@ -159,10 +159,10 @@ void Dijkstras::ExpandForward(GraphReader& graphreader,
 
     // Compute the cost to the end of this edge
     Cost transition_cost = costing_->TransitionCost(directededge, nodeinfo, pred);
-    Cost newcost =
-        pred.cost() +
-        costing_->EdgeCost(directededge, tile, ti ? ti.second_of_week : kConstrainedFlowSecondOfDay) +
-        transition_cost;
+    Cost newcost = pred.cost() +
+                   costing_->EdgeCost(directededge, tile,
+                                      ti.valid ? ti.second_of_week : kConstrainedFlowSecondOfDay) +
+                   transition_cost;
 
     // Check if edge is temporarily labeled and this path has less cost. If
     // less cost the predecessor is updated and the sort cost is decremented
@@ -298,7 +298,7 @@ void Dijkstras::ExpandReverse(GraphReader& graphreader,
     // Check if the edge is allowed or if a restriction occurs
     EdgeStatus* todo = nullptr;
     bool has_time_restrictions = false;
-    if (ti) {
+    if (ti.valid) {
       // With date time we check time dependent restrictions and access
       if (!costing_->AllowedReverse(directededge, pred, opp_edge, t2, opp_edge_id, ti.local_time,
                                     nodeinfo->timezone(), has_time_restrictions) ||
@@ -319,7 +319,7 @@ void Dijkstras::ExpandReverse(GraphReader& graphreader,
                                                            opp_edge, opp_pred_edge);
     Cost newcost =
         pred.cost() +
-        costing_->EdgeCost(opp_edge, t2, ti ? ti.second_of_week : kConstrainedFlowSecondOfDay);
+        costing_->EdgeCost(opp_edge, t2, ti.valid ? ti.second_of_week : kConstrainedFlowSecondOfDay);
     newcost.cost += transition_cost.cost;
 
     // Check if edge is temporarily labeled and this path has less cost. If

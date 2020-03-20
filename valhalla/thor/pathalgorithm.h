@@ -184,9 +184,6 @@ struct TimeInfo {
 
   // offset all the initial time info to reflect the progress along the route to this point
   TimeInfo operator-(Offset offset) const;
-
-  // returns whether or not this time info refers to a location that has time information
-  operator bool() const;
 };
 
 } // namespace thor
