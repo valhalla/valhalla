@@ -123,9 +123,9 @@ int timezone_diff(const uint64_t seconds,
   auto duration = std::chrono::duration_cast<std::chrono::seconds>(origin.get_local_time() -
                                                                    dest.get_local_time());
   if (origin.get_info().offset < dest.get_info().offset) {
-    return abs(duration.count());
+    return std::abs(duration.count());
   } else {
-    return -1 * abs(duration.count());
+    return -1 * std::abs(duration.count());
   }
 }
 
