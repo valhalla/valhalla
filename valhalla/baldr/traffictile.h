@@ -1,22 +1,36 @@
 #ifndef VALHALLA_BALDR_TRAFFICTILE_H_
 #define VALHALLA_BALDR_TRAFFICTILE_H_
 
+// This header supports exporting as a set of C++ minimal structs
+// with namespaces, but with C-99 only types and headers, to make
+// binding generation in other languages simpler.
+// If you do `-DC_ONLY_INTERFACE`, you'll get a header with
+// C99 stdint.h, and POD structs with no constructors
+#ifndef C_ONLY_INTERFACE
 #include <cassert>
 #include <cstdint>
 #include <vector>
-
-#include <iostream>
+#else
+#include <stdint.h>
+#endif
 
 namespace valhalla {
 namespace baldr {
 namespace traffic {
-struct Speed {
-  std::uint16_t speed_kmh : 7;        // km/h - so max range is 0-127km/h
-  std::uint16_t congestion_level : 3; // some value from 0 to 7 to report back
-  std::uint16_t is_scale : 1;         // treat speed as a floating point multiplier to edge speed
-  std::uint16_t age : 4;              //
-  std::uint16_t has_incident : 1;     // TODO: reserved for whether edge has an incident or not
 
+#ifndef C_ONLY_INTERFACE
+using std::uint16_t;
+using std::uint32_t;
+using std::uint64_t;
+#endif
+struct Speed {
+  uint16_t speed_kmh : 7;        // km/h - so max range is 0-127km/h
+  uint16_t congestion_level : 3; // some value from 0 to 7 to report back
+  uint16_t is_scale : 1;         // treat speed as a floating point multiplier to edge speed
+  uint16_t age : 4;              //
+  uint16_t has_incident : 1;     // TODO: reserved for whether edge has an incident or not
+
+#ifndef C_ONLY_INTERFACE
   Speed() : speed_kmh{0}, congestion_level{0}, is_scale{0}, age{0}, has_incident{0} {
   }
   Speed(const Speed& other) = default;
@@ -24,15 +38,17 @@ struct Speed {
       : speed_kmh{other.speed_kmh}, congestion_level{other.congestion_level},
         is_scale{other.is_scale}, age{other.age}, has_incident{other.has_incident} {
   }
+#endif
 };
 
 // single incident record
 struct Incident {
-  std::uint64_t edge_index : 21;
-  std::uint64_t incident_type : 8;
-  std::uint64_t start_location : 10;
-  std::uint64_t length : 10;
-  std::uint64_t spare : 15;
+  uint64_t edge_index : 21;
+  uint64_t incident_type : 8;
+  uint64_t start_location : 10;
+  uint64_t length : 10;
+  uint64_t spare : 15;
+#ifndef C_ONLY_INTERFACE
   Incident() : edge_index{0}, incident_type{0}, start_location{0}, length{0}, spare{0} {
   }
   Incident(const Incident& other) = default;
@@ -41,15 +57,16 @@ struct Incident {
         start_location{other.start_location}, length{other.length}, spare{0} {
   }
   Incident& operator=(const Incident& other) = default;
+#endif
 };
 
 // per-speed-tile header
 struct TileHeader {
-  std::uint64_t tile_id;
-  std::uint32_t directed_edge_count;
-  std::uint32_t incident_buffer_size;
-  std::uint64_t active_incident_buffer : 1;
-  std::uint64_t last_update : 63; // seconds since epoch
+  uint64_t tile_id;
+  uint32_t directed_edge_count;
+  uint32_t incident_buffer_size;
+  uint64_t active_incident_buffer : 1;
+  uint64_t last_update : 63; // seconds since epoch
 };
 
 /**
@@ -67,15 +84,16 @@ struct TileHeader {
  * placed in the buffer, then the begin/end updated to atomicly move readers to
  * a new location.
  */
+#ifndef C_ONLY_INTERFACE
 class Tile {
 public:
   Tile(char* tile_ptr)
       : header{reinterpret_cast<TileHeader*>(tile_ptr)}, speeds{reinterpret_cast<volatile Speed*>(
                                                              tile_ptr + sizeof(TileHeader))},
-        incident_count_0{reinterpret_cast<volatile std::uint32_t*>(
+        incident_count_0{reinterpret_cast<volatile uint32_t*>(
             tile_ptr + sizeof(TileHeader) +
             sizeof(Speed) * (tile_ptr == nullptr ? 0 : header->directed_edge_count))},
-        incident_count_1{reinterpret_cast<volatile std::uint32_t*>(
+        incident_count_1{reinterpret_cast<volatile uint32_t*>(
             tile_ptr + sizeof(TileHeader) +
             sizeof(Speed) * (tile_ptr == nullptr ? 0 : header->directed_edge_count) +
             sizeof(*incident_count_0))},
@@ -93,7 +111,7 @@ public:
   Tile(const Tile& other) = default;
   Tile& operator=(const Tile& other) = default;
 
-  const Speed getTrafficForDirectedEdge(const std::uint32_t directed_edge_offset) const {
+  const Speed getTrafficForDirectedEdge(const uint32_t directed_edge_offset) const {
     if (header == nullptr)
       return {};
     assert(directed_edge_offset < header->directed_edge_count);
@@ -101,7 +119,7 @@ public:
   }
 
   const std::vector<Incident>
-  getIncidentsForDirectedEdge(const std::uint32_t directed_edge_offset) const {
+  getIncidentsForDirectedEdge(const uint32_t directed_edge_offset) const {
     // Sanity check and exit early if false
     if (header == nullptr)
       return {};
@@ -120,10 +138,10 @@ public:
     // Note that equal_range uses a binary search when given a LegacyRandomAccessIterator,
     // which raw pointers satisfy.
     struct Comp {
-      bool operator()(const volatile Incident& incident, std::uint32_t edge_index) const {
+      bool operator()(const volatile Incident& incident, uint32_t edge_index) const {
         return incident.edge_index < edge_index;
       }
-      bool operator()(std::uint32_t edge_index, const volatile Incident& incident) const {
+      bool operator()(uint32_t edge_index, const volatile Incident& incident) const {
         return edge_index < incident.edge_index;
       }
     };
@@ -140,11 +158,12 @@ public:
   // our control (another process accessing a mmap'd file for example)
   volatile TileHeader* header;
   volatile Speed* speeds;
-  volatile std::uint32_t* incident_count_0;
-  volatile std::uint32_t* incident_count_1;
+  volatile uint32_t* incident_count_0;
+  volatile uint32_t* incident_count_1;
   volatile Incident* incidents_0;
   volatile Incident* incidents_1;
 };
+#endif
 
 } // namespace traffic
 } // namespace baldr
