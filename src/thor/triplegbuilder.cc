@@ -497,8 +497,8 @@ void SetTripEdgeRoadClass(TripLeg_Edge* trip_edge,
         continue;
       }
       // check edges leaving node
-      for (const auto& edge : graphtile->GetDirectedEdges(edge->endnode())) {
-        if (edge.classification() == baldr::RoadClass::kMotorway) {
+      for (const auto& adjacent_edge : graphtile->GetDirectedEdges(edge->endnode())) {
+        if (adjacent_edge.classification() == baldr::RoadClass::kMotorway) {
           trip_edge->set_road_class(TripLeg_RoadClass_kMotorway);
           return;
         }
@@ -507,8 +507,8 @@ void SetTripEdgeRoadClass(TripLeg_Edge* trip_edge,
       auto transition_nodes = graphtile->GetNodeTransitions(edge->endnode());
       for (const auto& transition : transition_nodes) {
         auto trans_tile = graphreader.GetGraphTile(transition.endnode());
-        for (const auto& edge : trans_tile->GetDirectedEdges(transition.endnode())) {
-          if (edge.classification() == baldr::RoadClass::kMotorway) {
+        for (const auto& adjacent_edge : trans_tile->GetDirectedEdges(transition.endnode())) {
+          if (adjacent_edge.classification() == baldr::RoadClass::kMotorway) {
             trip_edge->set_road_class(TripLeg_RoadClass_kMotorway);
             return;
           }
