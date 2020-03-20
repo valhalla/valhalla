@@ -75,8 +75,7 @@ Interpolation InterpolateMeasurement(
   // Invalid edgeid indicates that no interpolation found
   Interpolation best_interp;
 
-  for (size_t i = 0, n = route.size(); i < n; ++i) {
-    const auto& segment = route[i];
+  for (const EdgeSegment& segment : route) {
     const auto directededge = mapmatcher.graphreader().directededge(segment.edgeid, tile);
     if (!directededge) {
       continue;
@@ -98,7 +97,10 @@ Interpolation InterpolateMeasurement(
       offset = 1.f - offset;
     }
 
-    // clip distance along to the match boundaries
+    // in order to trim the distance along for the interpolated match results, we are tightening up
+    // the offset boundaries in order to make the distance along respecting the order of the match
+    // result (preventing going backward). In another word, The previous match result's distance along
+    // must be smaller than the current match result if they are on the same edge segment.
     std::pair<float, float>& boundaries = offset_boundaries[&segment];
     if (offset < boundaries.first) {
       offset = boundaries.first;
