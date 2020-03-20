@@ -491,7 +491,7 @@ void SetTripEdgeRoadClass(TripLeg_Edge* trip_edge,
   // a motorway.
   if (directededge->use() == Use::kRamp) {
     const DirectedEdge* opposing_edge = graphreader.GetOpposingEdge(directededge, graphtile);
-    for (const auto& edge : {directededge, opposing_edge}) {
+    for (const auto* edge : {directededge, opposing_edge}) {
       if (!edge || !graphreader.GetGraphTile(edge->endnode(), graphtile)) {
         // If this edge was invalid or we couldn't get the opposing edge's tile, skip
         continue;
