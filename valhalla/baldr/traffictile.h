@@ -18,11 +18,10 @@
 namespace valhalla {
 namespace baldr {
 namespace traffic {
+
 using std::uint16_t;
 using std::uint32_t;
 using std::uint64_t;
-#else
-extern "C" {
 #endif
 
 struct Speed {
@@ -165,14 +164,9 @@ public:
   volatile Incident* incidents_0;
   volatile Incident* incidents_1;
 };
-#endif
 
-#ifndef C_ONLY_INTERFACE
 } // namespace traffic
 } // namespace baldr
 } // namespace valhalla
-#else
-} // extern "C"
 #endif
-
 #endif // VALHALLA_BALDR_TRAFFICTILE_H_
