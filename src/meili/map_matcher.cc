@@ -159,6 +159,7 @@ std::vector<MatchResult> InterpolateMeasurements(const MapMatcher& mapmatcher,
   // can't interpolate these because they don't happen between two valid states or
   // we weren't able to get a downstream route
   std::vector<MatchResult> results;
+  results.reserve(measurements.size());
   if (!stateid.IsValid() || !next_stateid.IsValid()) {
     for (const auto& measurement : measurements) {
       results.push_back(CreateMatchResult(measurement));
