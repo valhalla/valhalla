@@ -7,6 +7,7 @@
 // If you do `-DC_ONLY_INTERFACE`, you'll get a header with
 // C99 stdint.h, and POD structs with no constructors
 #ifndef C_ONLY_INTERFACE
+#include <algorihm>
 #include <cassert>
 #include <cstdint>
 #include <vector>
@@ -119,8 +120,7 @@ public:
     return *(speeds + directed_edge_offset);
   }
 
-  const std::vector<Incident>
-  getIncidentsForDirectedEdge(const uint32_t directed_edge_offset) const {
+  const std::vector<Incident> getIncidentsForDirectedEdge(const uint32_t directed_edge_offset) const {
     // Sanity check and exit early if false
     if (header == nullptr)
       return {};
