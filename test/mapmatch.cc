@@ -1264,7 +1264,12 @@ TEST(Mapmatch, interpolation) {
           {"lat": 52.082870, "lon": 5.086956, "type": "break"},
           {"lat": 52.082870, "lon": 5.086960, "type": "break"},
           {"lat": 52.082855, "lon": 5.087024, "type": "break"}]})",
-  };
+      R"({"trace_options": {"interpolation_distance": 20},
+          "costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
+          {"lat": 52.0749799, "lon": 5.1141067, "type": "break"},
+          {"lat": 52.0750399, "lon": 5.1141172, "type": "break"},
+          {"lat": 52.0750431, "lon": 5.1141172, "type": "break"},
+          {"lat": 52.0750392, "lon": 5.1141197, "type": "break"}]})"};
   tyr::actor_t actor(conf, true);
 
   for (size_t i = 0; i < test_cases.size(); ++i) {
