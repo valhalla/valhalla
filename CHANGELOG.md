@@ -29,6 +29,7 @@
    * FIXED: Update exit logic for non-motorways [#2252](https://github.com/valhalla/valhalla/pull/2252)
    * FIXED: Transition point map-matching. When match results are on a transition point, we search for the sibling nodes at that transition and snap it to the corresponding edges in the route. [#2258](https://github.com/valhalla/valhalla/pull/2258)
    * FIXED: Fixed verbal multi-cue logic [#2270](https://github.com/valhalla/valhalla/pull/2270)
+   * FIXED: Update intersection classes in osrm response to not label all ramps as motorway [#2279](https://github.com/valhalla/valhalla/pull/2279)
 
 * **Enhancement**
    * ADDED: Return the coordinates of the nodes isochrone input locations snapped to [#2111](https://github.com/valhalla/valhalla/pull/2111)
@@ -43,6 +44,7 @@
    * ADDED: Support unlimited speed limits where maxspeed=none. [#2251](https://github.com/valhalla/valhalla/pull/2251)
    * ADDED: Implement improved Reachability check using base class Dijkstra. [#2243](https://github.com/valhalla/valhalla/pull/2243)
    * ADDED: Gurka integration test framework with ascii-art maps [#2244](https://github.com/valhalla/valhalla/pull/2244)
+   * ADDED: Add to the stop impact when transitioning from higher to lower class road and we are not on a turn channel or ramp. Also, penalize lefts when driving on the right and vice versa. [#2282](https://github.com/valhalla/valhalla/pull/2282)
 
 ## Release Date: 2019-11-21 Valhalla 3.0.9
 * **Bug Fix**
