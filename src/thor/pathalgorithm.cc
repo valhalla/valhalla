@@ -30,29 +30,29 @@ TimeInfo TimeInfo::make(valhalla::Location& location, baldr::GraphReader& reader
 
   // Set the origin timezone to be the timezone at the end node
   if (timezone_index == 0) {
-    LOG_ERROR("No timezone for location using default");
+    LOG_WARN("No timezone for location using default");
     timezone_index = 1;
   }
   const auto* tz = dt::get_tz_db().from_index(timezone_index);
 
   // Set the time for the current time route
   bool current = false;
-  const auto date = date::make_zoned(tz, std::chrono::system_clock::now());
+  const auto now_date = date::make_zoned(tz, std::chrono::system_clock::now());
   if (location.date_time() == "current") {
     current = true;
     std::ostringstream iso_dt;
-    iso_dt << date::format("%FT%R", date);
+    iso_dt << date::format("%FT%R", now_date);
     location.set_date_time(iso_dt.str());
   }
 
   // Set route start time (seconds from epoch)
   uint64_t local_time = 0;
-  try {
-    local_time = dt::seconds_since_epoch(location.date_time(), tz);
-  } catch (...) {
+  // try {
+  local_time = dt::seconds_since_epoch(location.date_time(), tz);
+  /*} catch (...) {
     LOG_ERROR("Could not get epoch seconds for date_time: " + location.date_time());
     return {false};
-  }
+  }*/
 
   // Set seconds from beginning of the week
   std::tm t = dt::iso_to_tm(location.date_time());

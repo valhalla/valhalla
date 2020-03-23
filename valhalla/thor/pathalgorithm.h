@@ -184,6 +184,20 @@ struct TimeInfo {
 
   // offset all the initial time info to reflect the progress along the route to this point
   TimeInfo operator-(Offset offset) const;
+
+  // for unit tests
+  bool operator==(const TimeInfo& ti) const {
+    return valid == ti.valid && timezone_index == ti.timezone_index && local_time == ti.local_time &&
+           second_of_week == ti.second_of_week && current == ti.current &&
+           seconds_from_now == ti.seconds_from_now;
+  }
+
+  // for unit tests
+  friend std::ostream& operator<<(std::ostream& os, const TimeInfo& ti) {
+    return os << "{valid: " << ti.valid << ", timezone_index: " << ti.timezone_index
+              << ", local_time: " << ti.local_time << ", second_of_week: " << ti.second_of_week
+              << ", current: " << ti.current << ", seconds_from_now: " << ti.seconds_from_now << "}";
+  }
 };
 
 } // namespace thor
