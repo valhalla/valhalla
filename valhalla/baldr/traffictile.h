@@ -7,7 +7,7 @@
 // If you do `-DC_ONLY_INTERFACE`, you'll get a header with
 // C99 stdint.h, and POD structs with no constructors
 #ifndef C_ONLY_INTERFACE
-#include <algorihm>
+#include <algorithm>
 #include <cassert>
 #include <cstdint>
 #include <vector>
