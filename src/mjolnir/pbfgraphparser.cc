@@ -65,6 +65,8 @@ public:
     infer_internal_intersections_ =
         pt.get<bool>("data_processing.infer_internal_intersections", true);
     infer_turn_channels_ = pt.get<bool>("data_processing.infer_turn_channels", true);
+    use_direction_on_ways_ = pt.get<bool>("data_processing.use_direction_on_ways", false);
+    allow_alt_name_ = pt.get<bool>("data_processing.allow_alt_name", false);
   }
 
   static std::string get_lua(const boost::property_tree::ptree& pt) {
@@ -361,6 +363,7 @@ public:
 
     OSMAccess access{wayid};
     bool has_user_tags = false;
+    std::string ref, int_ref, direction, int_direction;
 
     const auto& surface_exists = results.find("surface");
     bool has_surface_tag = (surface_exists != results.end());
@@ -608,12 +611,9 @@ public:
       } else if (tag.first == "name:en" && !tag.second.empty()) {
         w.set_name_en_index(osmdata_.name_offset_map.index(tag.second));
       }
-      /* Disabling alt_name tag processing. This might need to be re-enabled
-       * for commerical dataset.
-       * TODO: Make this a config option
-       * else if (tag.first == "alt_name" && !tag.second.empty()) {
+      else if (tag.first == "alt_name" && !tag.second.empty() && allow_alt_name_) {
         w.set_alt_name_index(osmdata_.name_offset_map.index(tag.second));
-      } */
+      }
       else if (tag.first == "official_name" && !tag.second.empty()) {
         w.set_official_name_index(osmdata_.name_offset_map.index(tag.second));
       } else if (tag.first == "max_speed") {
@@ -802,10 +802,17 @@ public:
       }
 
       else if (tag.first == "ref" && !tag.second.empty()) {
-        w.set_ref_index(osmdata_.name_offset_map.index(tag.second));
+        if (!use_direction_on_ways_)
+          w.set_ref_index(osmdata_.name_offset_map.index(tag.second));
+        else ref = tag.second;
       } else if (tag.first == "int_ref" && !tag.second.empty()) {
-        w.set_int_ref_index(osmdata_.name_offset_map.index(tag.second));
-
+        if (!use_direction_on_ways_)
+          w.set_int_ref_index(osmdata_.name_offset_map.index(tag.second));
+        else int_ref = tag.second;
+      } else if (tag.first == "direction" && !tag.second.empty() && use_direction_on_ways_) {
+        direction = tag.second;
+      } else if (tag.first == "int_direction" && !tag.second.empty() && use_direction_on_ways_) {
+        int_direction = tag.second;
       } else if (tag.first == "sac_scale") {
         std::string value = tag.second;
         boost::algorithm::to_lower(value);
@@ -1027,6 +1034,45 @@ public:
         w.set_bwd_jct_base_index(osmdata_.name_offset_map.index(tag.second));
       } else if (tag.first == "guidance_view:jct:overlay:backward") {
         w.set_bwd_jct_overlay_index(osmdata_.name_offset_map.index(tag.second));
+      }
+    }
+
+    if (use_direction_on_ways_) {
+      if (!direction.empty()) {
+        if (!ref.empty())
+          w.set_ref_index(osmdata_.name_offset_map.index(ref));
+      } else {
+        if (!ref.empty()) {
+          std::vector<std::string> refs = GetTagTokens(ref);
+          std::vector<std::string> directions = GetTagTokens(direction);
+
+          if (refs.size() == directions.size()) {
+            for (uint32_t i = 0; i < refs.size(); i++) {
+              if (!refs.at(i).empty() && !directions.at(i).empty())
+                w.set_ref_index(osmdata_.name_offset_map.index(refs.at(i) + " " + directions.at(i)));
+            }
+          } else w.set_ref_index(osmdata_.name_offset_map.index(ref));
+        }
+      }
+    }
+
+    if (use_direction_on_ways_) {
+      if (!int_direction.empty()) {
+        if (!int_ref.empty())
+          w.set_int_ref_index(osmdata_.name_offset_map.index(int_ref));
+      } else {
+        if (!int_ref.empty()) {
+          std::vector<std::string> int_refs = GetTagTokens(int_ref);
+          std::vector<std::string> int_directions = GetTagTokens(int_direction);
+
+          if (int_refs.size() == int_directions.size()) {
+            for (uint32_t i = 0; i < int_refs.size(); i++) {
+              if (!int_refs.at(i).empty() && !int_directions.at(i).empty())
+                w.set_int_ref_index(osmdata_.name_offset_map.index(int_refs.at(i) + " " + int_directions.at(i)));
+            }
+          } else w.set_int_ref_index(osmdata_.name_offset_map.index(int_ref));
+
+        }
       }
     }
 
@@ -1618,13 +1664,21 @@ public:
   // Configuration option to include driveways
   bool include_driveways_;
 
-  // Configuration option on whether or not to infer internal intersections during the graph enhancer
+  // Configuration option indicating whether or not to infer internal intersections during the graph enhancer
   // phase or use the internal_intersection key from the pbf
   bool infer_internal_intersections_;
 
-  // Configuration option on whether or not to infer turn channels during the graph
+  // Configuration option indicating whether or not to infer turn channels during the graph
   // enhancer phase or use the turn_channel key from the pbf
   bool infer_turn_channels_;
+
+  // Configuration option indicating whether or not to process the direction key on the ways or utilize the
+  // guidance relation tags during the parsing phase
+  bool use_direction_on_ways_;
+
+  // Configuration option indicating whether or not to process the alt_name key on the ways during the
+  // parsing phase
+  bool allow_alt_name_;
 
   // Road class assignment needs to be set to the highway cutoff for ferries and auto trains.
   RoadClass highway_cutoff_rc_;
