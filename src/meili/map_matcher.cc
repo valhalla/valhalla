@@ -169,16 +169,9 @@ std::vector<MatchResult> InterpolateMeasurements(const MapMatcher& mapmatcher,
   std::vector<EdgeSegment> route = MergeRoute(mapmatcher.state_container().state(stateid),
                                               mapmatcher.state_container().state(next_stateid));
 
-  if (route.empty()) {
-    for (const auto& measurement : measurements) {
-      results.push_back(CreateMatchResult(measurement));
-    }
-    return results;
-  }
-
   // for each point that needs interpolated
   std::vector<EdgeSegment>::const_iterator left_most_segment = route.begin();
-  float left_most_offset = route.begin()->source;
+  float left_most_offset = route.empty() ? 0.f : route.begin()->source;
   midgard::PointLL left_most_projection = first_projection;
 
   for (const auto& measurement : measurements) {
@@ -700,7 +693,7 @@ std::vector<MatchResults> MapMatcher::OfflineMatch(const std::vector<Measurement
 
       midgard::PointLL first_projection = results[time].lnglat;
       midgard::PointLL last_projection = results[time + 1].lnglat;
-      const auto& interpolated_results =
+      const auto interpolated_results =
           InterpolateMeasurements(*this, it->second, this_stateid, next_stateid, first_projection,
                                   last_projection);
 
