@@ -35,6 +35,7 @@ struct Interpolation {
   float route_distance;
   float route_time;
   float edge_distance;
+  std::vector<EdgeSegment>::const_iterator segment;
 
   float sortcost(const EmissionCostModel& emission_model,
                  const TransitionCostModel& transition_model,
@@ -58,13 +59,15 @@ inline MatchResult CreateMatchResult(const Measurement& measurement, const Inter
 
 // Find the interpolation along the route where the transition cost +
 // emission cost is minimal
-Interpolation InterpolateMeasurement(
-    const MapMatcher& mapmatcher,
-    const Measurement& measurement,
-    float match_measurement_distance,
-    float match_measurement_time,
-    const std::vector<EdgeSegment>& route,
-    std::unordered_map<const EdgeSegment*, std::pair<float, float>>& offset_boundaries) {
+Interpolation InterpolateMeasurement(const MapMatcher& mapmatcher,
+                                     const Measurement& measurement,
+                                     std::vector<EdgeSegment>::const_iterator begin,
+                                     float begin_source_offset,
+                                     std::vector<EdgeSegment>::const_iterator end,
+                                     float match_measurement_distance,
+                                     float match_measurement_time,
+                                     const midgard::PointLL& left_most_projected_point,
+                                     const midgard::PointLL& right_most_projected_point) {
   const baldr::GraphTile* tile(nullptr);
   midgard::projector_t projector(measurement.lnglat());
 
@@ -75,8 +78,9 @@ Interpolation InterpolateMeasurement(
   // Invalid edgeid indicates that no interpolation found
   Interpolation best_interp;
 
-  for (const EdgeSegment& segment : route) {
-    const auto directededge = mapmatcher.graphreader().directededge(segment.edgeid, tile);
+  for (auto segment = begin; segment != end; segment++) {
+    // std::cout << mapmatcher.graphreader().encoded_edge_shape(segment->edgeid) << std::endl;
+    const auto directededge = mapmatcher.graphreader().directededge(segment->edgeid, tile);
     if (!directededge) {
       continue;
     }
@@ -97,36 +101,37 @@ Interpolation InterpolateMeasurement(
       offset = 1.f - offset;
     }
 
-    // in order to trim the distance along for the interpolated match results, we are tightening up
-    // the offset boundaries in order to make the distance along respecting the order of the match
-    // result (preventing going backward). In another word, The previous match result's distance along
-    // must be smaller than the current match result if they are on the same edge segment.
-    std::pair<float, float>& boundaries = offset_boundaries[&segment];
-    if (offset < boundaries.first) {
-      offset = boundaries.first;
-    } else {
-      boundaries.first = offset;
-    }
-
-    if (offset > boundaries.second) {
-      offset = boundaries.second;
-    }
+    // clip distance along and projection to the match boundaries
+    //    if (segment == begin && offset < begin_source_offset) {
+    //      offset = begin_source_offset;
+    //      sq_distance = projector.approx.DistanceSquared(left_most_projected_point);
+    //      shape = edgeinfo.lazy_shape();
+    //      std::tie(projected_point, sq_distance, std::ignore, offset) =
+    //          helpers::Project(projector, shape);
+    //    }
+    //    if (segment == end - 1 && offset > segment->target) {
+    //      offset = segment->target;
+    //      sq_distance = projector.approx.DistanceSquared(right_most_projected_point);
+    //      shape = edgeinfo.lazy_shape();
+    //      std::tie(projected_point, sq_distance, std::ignore, offset) =
+    //          helpers::Project(projector, shape);
+    //    }
 
     // Distance from the projected point to the segment begin, or
     // segment begin if we walk reversely
     const auto distance_to_segment_ends =
-        std::abs(directededge->length() * (offset - segment.source));
+        std::abs(directededge->length() * (offset - segment->source));
 
     // The absolute route distance from projected point to the
     // beginning segment
     const auto route_distance = segment_begin_route_distance + distance_to_segment_ends;
 
     // Get the amount of time spent on this segment
-    auto edge_percent = segment.target - segment.source;
+    auto edge_percent = segment->target - segment->source;
     auto route_time = mapmatcher.costing()->EdgeCost(directededge, tile).secs * edge_percent;
 
-    Interpolation interp{projected_point, segment.edgeid, sq_distance,
-                         route_distance,  route_time,     offset};
+    Interpolation interp{projected_point, segment->edgeid, sq_distance, route_distance,
+                         route_time,      offset,          segment};
 
     const auto cost =
         interp.sortcost(mapmatcher.emission_cost_model(), mapmatcher.transition_cost_model(),
@@ -149,7 +154,9 @@ Interpolation InterpolateMeasurement(
 std::vector<MatchResult> InterpolateMeasurements(const MapMatcher& mapmatcher,
                                                  const std::vector<Measurement>& measurements,
                                                  const StateId& stateid,
-                                                 const StateId& next_stateid) {
+                                                 const StateId& next_stateid,
+                                                 const midgard::PointLL& first_projection,
+                                                 const midgard::PointLL& last_projection) {
   // Nothing to do here
   if (measurements.empty()) {
     return {};
@@ -158,7 +165,6 @@ std::vector<MatchResult> InterpolateMeasurements(const MapMatcher& mapmatcher,
   // can't interpolate these because they don't happen between two valid states or
   // we weren't able to get a downstream route
   std::vector<MatchResult> results;
-  results.reserve(measurements.size());
   if (!stateid.IsValid() || !next_stateid.IsValid()) {
     for (const auto& measurement : measurements) {
       results.push_back(CreateMatchResult(measurement));
@@ -168,21 +174,29 @@ std::vector<MatchResult> InterpolateMeasurements(const MapMatcher& mapmatcher,
 
   std::vector<EdgeSegment> route = MergeRoute(mapmatcher.state_container().state(stateid),
                                               mapmatcher.state_container().state(next_stateid));
-  std::unordered_map<const EdgeSegment*, std::pair<float, float>> offset_boundaries;
-  offset_boundaries.reserve(route.size());
-  for (const EdgeSegment& segment : route) {
-    offset_boundaries[&segment] = {segment.source, segment.target};
-  }
 
   // for each point that needs interpolated
+  std::vector<EdgeSegment>::const_iterator left_most_segment = route.begin();
+  float left_most_offset = route.begin()->source;
+  midgard::PointLL left_most_projection = first_projection;
+  midgard::PointLL right_most_projection = last_projection;
+
   for (const auto& measurement : measurements) {
     const auto& match_measurement = mapmatcher.state_container().measurement(stateid.time());
     const auto match_measurement_distance = GreatCircleDistance(measurement, match_measurement);
     const auto match_measurement_time = ClockDistance(measurement, match_measurement);
-    // interpolate this point along the route
 
-    const auto& interp = InterpolateMeasurement(mapmatcher, measurement, match_measurement_distance,
-                                                match_measurement_time, route, offset_boundaries);
+    // interpolate this point along the route
+    const auto interp =
+        InterpolateMeasurement(mapmatcher, measurement, left_most_segment, left_most_offset,
+                               route.end(), match_measurement_distance, match_measurement_time,
+                               left_most_projection, right_most_projection);
+
+    // shift the point at which we are allowed to start interpolating from to the right
+    // so that its on the interpolation point this way the next interpolation happens after
+    left_most_segment = interp.segment;
+    left_most_offset = interp.edge_distance;
+    left_most_projection = interp.projected;
 
     // if it was able to do the interpolation
     if (interp.edgeid.Is_Valid()) {
@@ -608,7 +622,6 @@ std::vector<MatchResults> MapMatcher::OfflineMatch(const std::vector<Measurement
   Clear();
 
   std::vector<MatchResults> best_paths;
-  best_paths.reserve(measurements.size());
 
   // Nothing to do
   if (measurements.empty()) {
@@ -622,11 +635,9 @@ std::vector<MatchResults> MapMatcher::OfflineMatch(const std::vector<Measurement
   auto interpolated = AppendMeasurements(measurements);
 
   // For k paths
-  std::vector<StateId> state_ids;
-  state_ids.reserve(container_.size());
   while (best_paths.size() < k && !found_broken_path) {
     // Get the states for the kth best path in reversed order then fix the order
-    state_ids.clear();
+    std::vector<StateId> state_ids;
     double accumulated_cost = 0.f;
     while (state_ids.size() < container_.size()) {
       // Get the time at the last column of states
@@ -678,7 +689,7 @@ std::vector<MatchResults> MapMatcher::OfflineMatch(const std::vector<Measurement
     std::vector<MatchResult> best_path;
     for (StateId::Time time = 0; time < original_state_ids.size(); time++) {
       // Add in this states result
-      best_path.emplace_back(results[time]);
+      best_path.emplace_back(std::move(results[time]));
 
       // See if there were any interpolated points with this state move on if not
       const auto it = interpolated.find(time);
@@ -690,8 +701,12 @@ std::vector<MatchResults> MapMatcher::OfflineMatch(const std::vector<Measurement
       const auto& this_stateid = original_state_ids[time];
       const auto& next_stateid =
           time + 1 < original_state_ids.size() ? original_state_ids[time + 1] : StateId();
+
+      midgard::PointLL first_projection = results[time].lnglat;
+      midgard::PointLL last_projection = results[time + 1].lnglat;
       const auto& interpolated_results =
-          InterpolateMeasurements(*this, it->second, this_stateid, next_stateid);
+          InterpolateMeasurements(*this, it->second, this_stateid, next_stateid, first_projection,
+                                  last_projection);
 
       // Copy the interpolated match results into the final set
       std::copy(interpolated_results.cbegin(), interpolated_results.cend(),
