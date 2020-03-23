@@ -180,7 +180,6 @@ std::vector<MatchResult> InterpolateMeasurements(const MapMatcher& mapmatcher,
   std::vector<EdgeSegment>::const_iterator left_most_segment = route.begin();
   float left_most_offset = route.begin()->source;
   midgard::PointLL left_most_projection = first_projection;
-  midgard::PointLL right_most_projection = last_projection;
 
   for (const auto& measurement : measurements) {
     const auto& match_measurement = mapmatcher.state_container().measurement(stateid.time());
@@ -191,7 +190,7 @@ std::vector<MatchResult> InterpolateMeasurements(const MapMatcher& mapmatcher,
     const auto interp =
         InterpolateMeasurement(mapmatcher, measurement, left_most_segment, left_most_offset,
                                route.end(), match_measurement_distance, match_measurement_time,
-                               left_most_projection, right_most_projection);
+                               left_most_projection, last_projection);
 
     // shift the point at which we are allowed to start interpolating from to the right
     // so that its on the interpolation point this way the next interpolation happens after
