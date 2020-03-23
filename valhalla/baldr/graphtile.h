@@ -31,8 +31,8 @@
 #include <valhalla/baldr/traffictile.h>
 
 #include <cstdint>
-#include <memory>
 #include <iterator>
+#include <memory>
 
 namespace valhalla {
 namespace baldr {
@@ -487,17 +487,21 @@ public:
    *                       if nullptr is passed in flow_sources does nothing.
    * @return Returns the speed for the edge.
    */
-  uint32_t GetSpeed(const DirectedEdge* de,
+  inline uint32_t GetSpeed(const DirectedEdge* de,
                            uint8_t flow_mask = kConstrainedFlowMask,
                            uint32_t seconds = kInvalidSecondsOfWeek,
-                           uint8_t* flow_sources = nullptr) const; /* {
+                           uint8_t* flow_sources = nullptr) const {
     // if they dont want source info we bind it to a temp and no one will miss it
     uint8_t temp_sources;
     if (!flow_sources)
       flow_sources = &temp_sources;
     *flow_sources = kNoFlowMask;
 
-    auto directed_edge_index = std::distance(const_cast<const DirectedEdge *>(directededges_), de);
+    // TODO(danpat): this needs to consider the time - we should not use live speeds if
+    //               the request is not for "now", or we're some X % along the route
+    // TODO(danpat): for short-ish durations along the route, we should fade live
+    //               speeds into any historic/predictive/average value we'd normally use
+    auto directed_edge_index = std::distance(const_cast<const DirectedEdge*>(directededges_), de);
     auto live_speed = traffic_tile.getTrafficForDirectedEdge(directed_edge_index);
     if (live_speed.speed_kmh != 0) {
       return live_speed.speed_kmh;
@@ -554,7 +558,6 @@ public:
     // Fallback further to specified or derived speed
     return de->speed();
   }
-  */
 
   /**
    * Convenience method to get the turn lanes for an edge given the directed edge index.
