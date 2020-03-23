@@ -1430,9 +1430,9 @@ TEST(Astar, test_complex_restriction_short_path_fake) {
   {
     std::vector<uint32_t> expected;
     auto reader = get_graph_reader(test_dir);
-    auto e1 = gurka::findEdge(reader, node_locations, tile_id, "nk", "k");
-    auto e2 = gurka::findEdge(reader, node_locations, tile_id, "kh", "h");
-    auto e3 = gurka::findEdge(reader, node_locations, tile_id, "hi", "i");
+    auto e1 = gurka::findEdge(*reader, node_locations, tile_id, "nk", "k");
+    auto e2 = gurka::findEdge(*reader, node_locations, tile_id, "kh", "h");
+    auto e3 = gurka::findEdge(*reader, node_locations, tile_id, "hi", "i");
     expected.push_back(std::get<0>(e1).id());
     expected.push_back(std::get<0>(e2).id());
     expected.push_back(std::get<0>(e3).id());
@@ -1454,9 +1454,9 @@ TEST(Astar, test_complex_restriction_short_path_fake) {
   {
     std::vector<uint32_t> expected;
     auto reader = get_graph_reader(test_dir);
-    auto e1 = gurka::findEdge(reader, node_locations, tile_id, "hi", "h");
-    auto e2 = gurka::findEdge(reader, node_locations, tile_id, "kh", "k");
-    auto e3 = gurka::findEdge(reader, node_locations, tile_id, "nk", "n");
+    auto e1 = gurka::findEdge(*reader, node_locations, tile_id, "hi", "h");
+    auto e2 = gurka::findEdge(*reader, node_locations, tile_id, "kh", "k");
+    auto e3 = gurka::findEdge(*reader, node_locations, tile_id, "nk", "n");
     expected.push_back(std::get<0>(e1).id());
     expected.push_back(std::get<0>(e2).id());
     expected.push_back(std::get<0>(e3).id());
@@ -1510,7 +1510,7 @@ TEST(Astar, test_IsBridgingEdgeRestricted) {
   // from 18
   DirectedEdge edge_nk;
   {
-    auto result = gurka::findEdge(reader, node_locations, tile_id, "nk", "k");
+    auto result = gurka::findEdge(*reader, node_locations, tile_id, "nk", "k");
     ASSERT_NE(nullptr, std::get<1>(result));
     edge_nk = *std::get<1>(result);
     edge_nk.complex_restriction(true);
@@ -1519,7 +1519,7 @@ TEST(Astar, test_IsBridgingEdgeRestricted) {
   }
   DirectedEdge edge_kh;
   {
-    auto result = gurka::findEdge(reader, node_locations, tile_id, "kh", "h");
+    auto result = gurka::findEdge(*reader, node_locations, tile_id, "kh", "h");
     ASSERT_NE(nullptr, std::get<1>(result));
     edge_kh = *std::get<1>(result);
     edge_kh.complex_restriction(true);
@@ -1529,7 +1529,7 @@ TEST(Astar, test_IsBridgingEdgeRestricted) {
   }
   // Create our fwd_pred for the bridging check
   DirectedEdge edge_hi;
-  auto edge_hi_result = gurka::findEdge(reader, node_locations, tile_id, "hi", "i");
+  auto edge_hi_result = gurka::findEdge(*reader, node_locations, tile_id, "hi", "i");
   ASSERT_NE(nullptr, std::get<1>(edge_hi_result));
   edge_hi = *std::get<1>(edge_hi_result);
   edge_hi.complex_restriction(true);
@@ -1539,7 +1539,7 @@ TEST(Astar, test_IsBridgingEdgeRestricted) {
 
   DirectedEdge edge_il;
   {
-    auto result = gurka::findEdge(reader, node_locations, tile_id, "il", "i");
+    auto result = gurka::findEdge(*reader, node_locations, tile_id, "il", "i");
     ASSERT_NE(nullptr, std::get<1>(result));
     edge_il = *std::get<1>(result);
     edge_il.complex_restriction(true);
