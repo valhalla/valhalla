@@ -43,10 +43,12 @@ const tz_db_t& get_tz_db();
 
 /**
  * Get a formatted date from a string.
- * @param date in the format of 2015-05-06T08:00
+ * @param date       in the format of 2015-05-06T08:00
+ * @param can_throw  if true and the input is malformed invalid_argument is thrown
+ *                   TODO: remove the option to disallow throwing
  * @return  Returns the formatted date.
  */
-date::local_seconds get_formatted_date(const std::string& date);
+date::local_seconds get_formatted_date(const std::string& date, bool can_throw = false);
 
 /**
  * Get a local_date_time with support for dst.

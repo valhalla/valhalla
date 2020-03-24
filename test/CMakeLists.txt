@@ -33,7 +33,7 @@ foreach(test ${tests})
   add_executable(${test} EXCLUDE_FROM_ALL ${test}.cc )
   set_target_properties(${test} PROPERTIES
     COMPILE_DEFINITIONS VALHALLA_SOURCE_DIR="${VALHALLA_SOURCE_DIR}/")
-  target_link_libraries(${test} valhalla gtest gmock)
+  target_link_libraries(${test} valhalla gtest gmock -lpthread -lm)
   target_include_directories(${test} SYSTEM PRIVATE
       ${VALHALLA_SOURCE_DIR}/third_party/protozero/include
       ${VALHALLA_SOURCE_DIR}/third_party/libosmium/include)

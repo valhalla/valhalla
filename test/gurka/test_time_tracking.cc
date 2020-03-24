@@ -50,9 +50,32 @@ TEST(TimeTracking, make) {
   ASSERT_EQ(location->date_time(), now_str);
 
   // not current time but the same date time just set as a string
+  now_str = dt::iso_date_time(dt::get_tz_db().from_index(1));
   location->set_date_time(now_str);
   ti = thor::TimeInfo::make(*location, reader);
+  lt = dt::seconds_since_epoch(now_str, dt::get_tz_db().from_index(1));
+  t = dt::iso_to_tm(now_str);
+  std::mktime(&t);
+  sec = t.tm_wday * valhalla::midgard::kSecondsPerDay +
+        t.tm_hour * valhalla::midgard::kSecondsPerHour + t.tm_sec;
   ASSERT_EQ(ti, (thor::TimeInfo{true, 1, lt, sec, false, 0}));
+  ASSERT_EQ(location->date_time(), now_str);
+
+  // offset the time from now a bit
+  now_str = dt::iso_date_time(dt::get_tz_db().from_index(1));
+  auto minutes = std::atoi(now_str.substr(now_str.size() - 2, 2).c_str());
+  int offset = 7;
+  if (minutes + offset > 60)
+    offset = -offset;
+  now_str = now_str.substr(0, now_str.size() - 2) + std::to_string(minutes + offset);
+  location->set_date_time(now_str);
+  ti = thor::TimeInfo::make(*location, reader);
+  lt = dt::seconds_since_epoch(now_str, dt::get_tz_db().from_index(1));
+  t = dt::iso_to_tm(now_str);
+  std::mktime(&t);
+  sec = t.tm_wday * valhalla::midgard::kSecondsPerDay +
+        t.tm_hour * valhalla::midgard::kSecondsPerHour + t.tm_sec;
+  ASSERT_EQ(ti, (thor::TimeInfo{true, 1, lt, sec, false, offset * 60}));
   ASSERT_EQ(location->date_time(), now_str);
 
   // messed up date time

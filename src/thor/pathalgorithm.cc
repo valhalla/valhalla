@@ -7,18 +7,19 @@
 #include <ctime>
 
 namespace dt = valhalla::baldr::DateTime;
+namespace sc = std::chrono;
 
 namespace valhalla {
 namespace thor {
 
 // helper function to initialize the object from a location
 TimeInfo TimeInfo::make(valhalla::Location& location, baldr::GraphReader& reader) {
-  // no time to to track
+  // No time to to track
   if (!location.has_date_time()) {
     return {false};
   }
 
-  // get the timezone of the first edge's end node that we can
+  // Get the timezone of the first edge's end node that we can
   int timezone_index = 0;
   for (const auto& pe : location.path_edges()) {
     const baldr::GraphTile* tile = nullptr;
@@ -28,16 +29,19 @@ TimeInfo TimeInfo::make(valhalla::Location& location, baldr::GraphReader& reader
       break;
   }
 
-  // Set the origin timezone to be the timezone at the end node
+  // Set the origin timezone to be the timezone at the end node use this for timezone changes
   if (timezone_index == 0) {
     LOG_WARN("No timezone for location using default");
     timezone_index = 1;
   }
   const auto* tz = dt::get_tz_db().from_index(timezone_index);
 
-  // Set the time for the current time route
+  // Get the current local time and set it if its a current time route
+  // NOTE: we set to minute resolution to match the input format
   bool current = false;
-  const auto now_date = date::make_zoned(tz, std::chrono::system_clock::now());
+  const auto now_date =
+      date::make_zoned(tz, sc::time_point_cast<sc::seconds>(
+                               sc::time_point_cast<sc::minutes>(sc::system_clock::now())));
   if (location.date_time() == "current") {
     current = true;
     std::ostringstream iso_dt;
@@ -45,29 +49,27 @@ TimeInfo TimeInfo::make(valhalla::Location& location, baldr::GraphReader& reader
     location.set_date_time(iso_dt.str());
   }
 
-  // Set route start time (seconds from epoch)
-  uint64_t local_time = 0;
-  // try {
-  local_time = dt::seconds_since_epoch(location.date_time(), tz);
-  /*} catch (...) {
-    LOG_ERROR("Could not get epoch seconds for date_time: " + location.date_time());
-    return {false};
-  }*/
-
-  // Set seconds from beginning of the week
-  std::tm t = dt::iso_to_tm(location.date_time());
-  if (t.tm_year == 0) {
-    LOG_ERROR("Could not parse date_time: " + location.date_time());
+  // Convert the requested time into seconds from epoch
+  date::local_seconds parsed_date;
+  try {
+    parsed_date = dt::get_formatted_date(location.date_time(), true);
+  } catch (...) {
+    LOG_ERROR("Could not parse provided date_time: " + location.date_time());
     return {false};
   }
+  const auto then_date = date::make_zoned(tz, parsed_date);
+  uint64_t local_time = date::to_utc_time(then_date.get_sys_time()).time_since_epoch().count();
+
+  // What second of the week is this (for historical traffic lookup)
+  std::tm t = dt::iso_to_tm(location.date_time());
   std::mktime(&t);
   auto second_of_week = t.tm_wday * valhalla::midgard::kSecondsPerDay +
                         t.tm_hour * valhalla::midgard::kSecondsPerHour + t.tm_sec;
 
-  // TODO: compute the offset from now for this location whether negative or positive
-  int64_t seconds_from_now = 0;
+  // When is this route with respect to now this will let us appropriately use current flow traffic
+  int64_t seconds_from_now = (then_date.get_local_time() - now_date.get_local_time()).count();
 
-  // construct the info
+  // Make a valid object
   return {true, timezone_index, local_time, second_of_week, current, seconds_from_now};
 }
 

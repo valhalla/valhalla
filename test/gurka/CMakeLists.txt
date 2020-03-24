@@ -10,7 +10,7 @@ if(ENABLE_DATA_TOOLS)
     add_executable(${TESTNAME} EXCLUDE_FROM_ALL ${FILENAME})
     set_target_properties(${TESTNAME} PROPERTIES
       COMPILE_DEFINITIONS VALHALLA_SOURCE_DIR="${VALHALLA_SOURCE_DIR}/")
-    target_link_libraries(${TESTNAME} valhalla gtest_main gmock)
+    target_link_libraries(${TESTNAME} valhalla gtest_main gmock -lpthread)
     target_include_directories(${TESTNAME} SYSTEM PRIVATE
       ${VALHALLA_SOURCE_DIR}/third_party/protozero/include
       ${VALHALLA_SOURCE_DIR}/third_party/libosmium/include)

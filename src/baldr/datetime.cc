@@ -46,7 +46,7 @@ const tz_db_t& get_tz_db() {
 }
 
 // get a formatted date.  date in the format of 2016-11-06T01:00 or 2016-11-06
-date::local_seconds get_formatted_date(const std::string& date) {
+date::local_seconds get_formatted_date(const std::string& date, bool can_throw) {
   std::istringstream in{date};
   date::local_seconds tp;
 
@@ -54,14 +54,12 @@ date::local_seconds get_formatted_date(const std::string& date) {
     in >> date::parse("%FT%R", tp);
   else if (date.find('-') != std::string::npos)
     in >> date::parse("%F", tp);
-  // TODO: uncomment this to allow the caller to really understand that their date is messed up
-  // TODO: for now we cant because this code is used all over the place
-  /*else
+  else
     in.setstate(std::ios::failbit);
 
-  // we weren't able to use this string as a date
-  if (in.fail())
-    throw std::invalid_argument("Date string is invalid: " + date);*/
+  // we weren't able to use this string as a date and you'd like to know about it
+  if (can_throw && in.fail())
+    throw std::invalid_argument("Date string is invalid: " + date);
 
   return tp;
 }
