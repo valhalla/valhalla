@@ -1075,6 +1075,35 @@ public:
           w.set_int_ref_index(osmdata_.name_offset_map.index(int_ref));
       }
     }
+    // add int_refs to the end of the refs for now.  makes sure that we don't add dups.
+    if (use_direction_on_ways_ && w.int_ref_index()) {
+      std::string tmp = osmdata_.name_offset_map.name(w.ref_index());
+
+      std::vector<std::string> rs = GetTagTokens(tmp);
+      std::vector<std::string> is = GetTagTokens(osmdata_.name_offset_map.name(w.int_ref_index()));
+      bool bFound = false;
+
+      for (auto& i : is) {
+        for (auto& r : rs) {
+          if (i == r) {
+            bFound = true;
+            break;
+          }
+        }
+        if (!bFound) {
+          if (!tmp.empty()) {
+            tmp += ";";
+          }
+          tmp += i;
+        }
+        bFound = false;
+      }
+      if (!tmp.empty()) {
+        w.set_ref_index(osmdata_.name_offset_map.index(tmp));
+      }
+      // no matter what, clear out the int_ref.
+      w.set_int_ref_index(0);
+    }
 
     // if no surface and tracktype but we have a sac_scale, set surface to path.
     if (!has_surface) {
