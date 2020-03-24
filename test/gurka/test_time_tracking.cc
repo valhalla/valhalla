@@ -46,7 +46,7 @@ TEST(TimeTracking, make) {
   std::mktime(&t);
   auto sec = t.tm_wday * valhalla::midgard::kSecondsPerDay +
              t.tm_hour * valhalla::midgard::kSecondsPerHour + t.tm_sec;
-  ASSERT_EQ(ti, (thor::TimeInfo{true, 1, lt, sec, true, 0}));
+  ASSERT_EQ(ti, (thor::TimeInfo{true, 1, lt, sec, 0}));
   ASSERT_EQ(location->date_time(), now_str);
 
   // not current time but the same date time just set as a string
@@ -58,7 +58,7 @@ TEST(TimeTracking, make) {
   std::mktime(&t);
   sec = t.tm_wday * valhalla::midgard::kSecondsPerDay +
         t.tm_hour * valhalla::midgard::kSecondsPerHour + t.tm_sec;
-  ASSERT_EQ(ti, (thor::TimeInfo{true, 1, lt, sec, false, 0}));
+  ASSERT_EQ(ti, (thor::TimeInfo{true, 1, lt, sec, 0}));
   ASSERT_EQ(location->date_time(), now_str);
 
   // offset the time from now a bit
@@ -75,7 +75,7 @@ TEST(TimeTracking, make) {
   std::mktime(&t);
   sec = t.tm_wday * valhalla::midgard::kSecondsPerDay +
         t.tm_hour * valhalla::midgard::kSecondsPerHour + t.tm_sec;
-  ASSERT_EQ(ti, (thor::TimeInfo{true, 1, lt, sec, false, offset * 60}));
+  ASSERT_EQ(ti, (thor::TimeInfo{true, 1, lt, sec, offset * 60}));
   ASSERT_EQ(location->date_time(), now_str);
 
   // messed up date time
@@ -83,4 +83,33 @@ TEST(TimeTracking, make) {
   ti = thor::TimeInfo::make(*location, reader);
   ASSERT_EQ(ti, thor::TimeInfo{});
   ASSERT_EQ(location->date_time(), "4000BC");
+}
+
+TEST(TimeTracking, increment) {
+  // invalid should stay that way
+  auto ti = thor::TimeInfo{false} + thor::TimeInfo::Offset{10, 1};
+  ASSERT_EQ(ti, (thor::TimeInfo{false}));
+
+  // change in timezone should result in some offset (LA to NY)
+  ti = thor::TimeInfo{true, 94, 123456789} + thor::TimeInfo::Offset{10, 110};
+  ASSERT_EQ(ti, (thor::TimeInfo{true, 110, 123456789 + 10 + 60 * 60 * 3, 10 + 60 * 60 * 3, 10}));
+
+  // wrap around second of week
+  ti = thor::TimeInfo{true, 1, 2, midgard::kSecondsPerWeek - 5} + thor::TimeInfo::Offset{10, 1};
+  ASSERT_EQ(ti, (thor::TimeInfo{true, 1, 12, 5, 10}));
+}
+
+TEST(TimeTracking, decrement) {
+  // invalid should stay that way
+  auto ti = thor::TimeInfo{false} - thor::TimeInfo::Offset{10, 1};
+  ASSERT_EQ(ti, (thor::TimeInfo{false}));
+
+  // change in timezone should result in some offset (NY to LA)
+  ti = thor::TimeInfo{true, 110, 123456789} - thor::TimeInfo::Offset{10, 94};
+  ASSERT_EQ(ti, (thor::TimeInfo{true, 94, 123456789 - 10 - 60 * 60 * 3,
+                                midgard::kSecondsPerWeek - 10 - 60 * 60 * 3, -10}));
+
+  // wrap around second of week
+  ti = thor::TimeInfo{true, 1, 22, 5} - thor::TimeInfo::Offset{10, 1};
+  ASSERT_EQ(ti, (thor::TimeInfo{true, 1, 12, midgard::kSecondsPerWeek - 5, -10}));
 }

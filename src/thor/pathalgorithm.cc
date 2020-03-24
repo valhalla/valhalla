@@ -38,12 +38,10 @@ TimeInfo TimeInfo::make(valhalla::Location& location, baldr::GraphReader& reader
 
   // Get the current local time and set it if its a current time route
   // NOTE: we set to minute resolution to match the input format
-  bool current = false;
   const auto now_date =
       date::make_zoned(tz, sc::time_point_cast<sc::seconds>(
                                sc::time_point_cast<sc::minutes>(sc::system_clock::now())));
   if (location.date_time() == "current") {
-    current = true;
     std::ostringstream iso_dt;
     iso_dt << date::format("%FT%R", now_date);
     location.set_date_time(iso_dt.str());
@@ -70,7 +68,7 @@ TimeInfo TimeInfo::make(valhalla::Location& location, baldr::GraphReader& reader
   int64_t seconds_from_now = (then_date.get_local_time() - now_date.get_local_time()).count();
 
   // Make a valid object
-  return {true, timezone_index, local_time, second_of_week, current, seconds_from_now};
+  return {true, timezone_index, local_time, second_of_week, seconds_from_now};
 }
 
 // offset all the initial time info to reflect the progress along the route to this point
@@ -95,15 +93,14 @@ TimeInfo TimeInfo::operator+(Offset offset) const {
 
   // return the shifted object, notice that seconds from now is only useful for
   // date_time type == current
-  return {valid,   offset.timezone_index,
-          lt,      sw,
-          current, seconds_from_now + static_cast<int64_t>(offset.seconds)};
+  return {valid, offset.timezone_index, lt, sw,
+          seconds_from_now + static_cast<int64_t>(offset.seconds)};
 }
 
 // offset all the initial time info to reflect the progress along the route to this point
 TimeInfo TimeInfo::operator-(Offset offset) const {
-  // if (!valid)
-  //  return *this;
+  if (!valid)
+    return *this;
 
   // if the timezone changed we need to account for that offset as well
   int tz_diff = 0;
@@ -123,9 +120,8 @@ TimeInfo TimeInfo::operator-(Offset offset) const {
 
   // return the shifted object, notice that seconds from now is negative, this could be useful if
   // we had the ability to arrive_by current time but we dont for the moment
-  return {valid,   offset.timezone_index,
-          lt,      static_cast<uint32_t>(sw),
-          current, seconds_from_now - static_cast<int64_t>(offset.seconds)};
+  return {valid, offset.timezone_index, lt, static_cast<uint32_t>(sw),
+          seconds_from_now - static_cast<int64_t>(offset.seconds)};
 }
 
 } // namespace thor

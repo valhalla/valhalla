@@ -165,9 +165,7 @@ struct TimeInfo {
   // used to look up historical traffic as the route progresses
   uint32_t second_of_week;
 
-  // whether or not this route is relative to "now"
-  // and how far from "now" it is
-  bool current;
+  // the distance in seconds from now
   int64_t seconds_from_now;
 
   // helper function to initialize the object from a location
@@ -188,15 +186,14 @@ struct TimeInfo {
   // for unit tests
   bool operator==(const TimeInfo& ti) const {
     return valid == ti.valid && timezone_index == ti.timezone_index && local_time == ti.local_time &&
-           second_of_week == ti.second_of_week && current == ti.current &&
-           seconds_from_now == ti.seconds_from_now;
+           second_of_week == ti.second_of_week && seconds_from_now == ti.seconds_from_now;
   }
 
   // for unit tests
   friend std::ostream& operator<<(std::ostream& os, const TimeInfo& ti) {
     return os << "{valid: " << ti.valid << ", timezone_index: " << ti.timezone_index
               << ", local_time: " << ti.local_time << ", second_of_week: " << ti.second_of_week
-              << ", current: " << ti.current << ", seconds_from_now: " << ti.seconds_from_now << "}";
+              << ", seconds_from_now: " << ti.seconds_from_now << "}";
   }
 };
 
