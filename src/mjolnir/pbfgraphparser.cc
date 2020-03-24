@@ -1038,7 +1038,7 @@ public:
     }
 
     if (use_direction_on_ways_) {
-      if (!direction.empty()) {
+      if (direction.empty()) {
         if (!ref.empty())
           w.set_ref_index(osmdata_.name_offset_map.index(ref));
       } else {
@@ -1048,8 +1048,9 @@ public:
 
           if (refs.size() == directions.size()) {
             for (uint32_t i = 0; i < refs.size(); i++) {
-              if (!refs.at(i).empty() && !directions.at(i).empty())
+              if (!directions.at(i).empty())
                 w.set_ref_index(osmdata_.name_offset_map.index(refs.at(i) + " " + directions.at(i)));
+              else w.set_ref_index(osmdata_.name_offset_map.index(refs.at(i)));
             }
           } else w.set_ref_index(osmdata_.name_offset_map.index(ref));
         }
@@ -1057,7 +1058,7 @@ public:
     }
 
     if (use_direction_on_ways_) {
-      if (!int_direction.empty()) {
+      if (int_direction.empty()) {
         if (!int_ref.empty())
           w.set_int_ref_index(osmdata_.name_offset_map.index(int_ref));
       } else {
@@ -1067,8 +1068,9 @@ public:
 
           if (int_refs.size() == int_directions.size()) {
             for (uint32_t i = 0; i < int_refs.size(); i++) {
-              if (!int_refs.at(i).empty() && !int_directions.at(i).empty())
+              if (!int_directions.at(i).empty())
                 w.set_int_ref_index(osmdata_.name_offset_map.index(int_refs.at(i) + " " + int_directions.at(i)));
+              else w.set_int_ref_index(osmdata_.name_offset_map.index(int_refs.at(i)));
             }
           } else w.set_int_ref_index(osmdata_.name_offset_map.index(int_ref));
 
