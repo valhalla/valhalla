@@ -1037,48 +1037,42 @@ public:
       }
     }
 
-    if (use_direction_on_ways_) {
+    if (use_direction_on_ways_ && !ref.empty()) {
       if (direction.empty()) {
-        if (!ref.empty())
-          w.set_ref_index(osmdata_.name_offset_map.index(ref));
+        w.set_ref_index(osmdata_.name_offset_map.index(ref));
       } else {
-        if (!ref.empty()) {
-          std::vector<std::string> refs = GetTagTokens(ref);
-          std::vector<std::string> directions = GetTagTokens(direction);
+        std::vector<std::string> refs = GetTagTokens(ref);
+        std::vector<std::string> directions = GetTagTokens(direction);
 
-          if (refs.size() == directions.size()) {
-            for (uint32_t i = 0; i < refs.size(); i++) {
-              if (!directions.at(i).empty())
-                w.set_ref_index(osmdata_.name_offset_map.index(refs.at(i) + " " + directions.at(i)));
-              else
-                w.set_ref_index(osmdata_.name_offset_map.index(refs.at(i)));
-            }
-          } else
-            w.set_ref_index(osmdata_.name_offset_map.index(ref));
-        }
+        if (refs.size() == directions.size()) {
+          for (uint32_t i = 0; i < refs.size(); i++) {
+            if (!directions.at(i).empty())
+              w.set_ref_index(osmdata_.name_offset_map.index(refs.at(i) + " " + directions.at(i)));
+            else
+              w.set_ref_index(osmdata_.name_offset_map.index(refs.at(i)));
+          }
+        } else
+          w.set_ref_index(osmdata_.name_offset_map.index(ref));
       }
     }
 
-    if (use_direction_on_ways_) {
+    if (use_direction_on_ways_ && !int_ref.empty()) {
       if (int_direction.empty()) {
-        if (!int_ref.empty())
-          w.set_int_ref_index(osmdata_.name_offset_map.index(int_ref));
+        w.set_int_ref_index(osmdata_.name_offset_map.index(int_ref));
       } else {
-        if (!int_ref.empty()) {
-          std::vector<std::string> int_refs = GetTagTokens(int_ref);
-          std::vector<std::string> int_directions = GetTagTokens(int_direction);
+        std::vector<std::string> int_refs = GetTagTokens(int_ref);
+        std::vector<std::string> int_directions = GetTagTokens(int_direction);
 
-          if (int_refs.size() == int_directions.size()) {
-            for (uint32_t i = 0; i < int_refs.size(); i++) {
-              if (!int_directions.at(i).empty())
-                w.set_int_ref_index(
-                    osmdata_.name_offset_map.index(int_refs.at(i) + " " + int_directions.at(i)));
-              else
-                w.set_int_ref_index(osmdata_.name_offset_map.index(int_refs.at(i)));
-            }
-          } else
-            w.set_int_ref_index(osmdata_.name_offset_map.index(int_ref));
-        }
+        if (int_refs.size() == int_directions.size()) {
+          for (uint32_t i = 0; i < int_refs.size(); i++) {
+            if (!int_directions.at(i).empty())
+              w.set_int_ref_index(
+                  osmdata_.name_offset_map.index(int_refs.at(i) + " " + int_directions.at(i)));
+            else
+              w.set_int_ref_index(osmdata_.name_offset_map.index(int_refs.at(i)));
+          }
+        } else
+          w.set_int_ref_index(osmdata_.name_offset_map.index(int_ref));
       }
     }
 
