@@ -610,11 +610,9 @@ public:
         name = tag.second;
       } else if (tag.first == "name:en" && !tag.second.empty()) {
         w.set_name_en_index(osmdata_.name_offset_map.index(tag.second));
-      }
-      else if (tag.first == "alt_name" && !tag.second.empty() && allow_alt_name_) {
+      } else if (tag.first == "alt_name" && !tag.second.empty() && allow_alt_name_) {
         w.set_alt_name_index(osmdata_.name_offset_map.index(tag.second));
-      }
-      else if (tag.first == "official_name" && !tag.second.empty()) {
+      } else if (tag.first == "official_name" && !tag.second.empty()) {
         w.set_official_name_index(osmdata_.name_offset_map.index(tag.second));
       } else if (tag.first == "max_speed") {
         try {
@@ -804,11 +802,13 @@ public:
       else if (tag.first == "ref" && !tag.second.empty()) {
         if (!use_direction_on_ways_)
           w.set_ref_index(osmdata_.name_offset_map.index(tag.second));
-        else ref = tag.second;
+        else
+          ref = tag.second;
       } else if (tag.first == "int_ref" && !tag.second.empty()) {
         if (!use_direction_on_ways_)
           w.set_int_ref_index(osmdata_.name_offset_map.index(tag.second));
-        else int_ref = tag.second;
+        else
+          int_ref = tag.second;
       } else if (tag.first == "direction" && !tag.second.empty() && use_direction_on_ways_) {
         direction = tag.second;
       } else if (tag.first == "int_direction" && !tag.second.empty() && use_direction_on_ways_) {
@@ -1050,9 +1050,11 @@ public:
             for (uint32_t i = 0; i < refs.size(); i++) {
               if (!directions.at(i).empty())
                 w.set_ref_index(osmdata_.name_offset_map.index(refs.at(i) + " " + directions.at(i)));
-              else w.set_ref_index(osmdata_.name_offset_map.index(refs.at(i)));
+              else
+                w.set_ref_index(osmdata_.name_offset_map.index(refs.at(i)));
             }
-          } else w.set_ref_index(osmdata_.name_offset_map.index(ref));
+          } else
+            w.set_ref_index(osmdata_.name_offset_map.index(ref));
         }
       }
     }
@@ -1069,11 +1071,13 @@ public:
           if (int_refs.size() == int_directions.size()) {
             for (uint32_t i = 0; i < int_refs.size(); i++) {
               if (!int_directions.at(i).empty())
-                w.set_int_ref_index(osmdata_.name_offset_map.index(int_refs.at(i) + " " + int_directions.at(i)));
-              else w.set_int_ref_index(osmdata_.name_offset_map.index(int_refs.at(i)));
+                w.set_int_ref_index(
+                    osmdata_.name_offset_map.index(int_refs.at(i) + " " + int_directions.at(i)));
+              else
+                w.set_int_ref_index(osmdata_.name_offset_map.index(int_refs.at(i)));
             }
-          } else w.set_int_ref_index(osmdata_.name_offset_map.index(int_ref));
-
+          } else
+            w.set_int_ref_index(osmdata_.name_offset_map.index(int_ref));
         }
       }
     }
@@ -1666,16 +1670,16 @@ public:
   // Configuration option to include driveways
   bool include_driveways_;
 
-  // Configuration option indicating whether or not to infer internal intersections during the graph enhancer
-  // phase or use the internal_intersection key from the pbf
+  // Configuration option indicating whether or not to infer internal intersections during the graph
+  // enhancer phase or use the internal_intersection key from the pbf
   bool infer_internal_intersections_;
 
   // Configuration option indicating whether or not to infer turn channels during the graph
   // enhancer phase or use the turn_channel key from the pbf
   bool infer_turn_channels_;
 
-  // Configuration option indicating whether or not to process the direction key on the ways or utilize the
-  // guidance relation tags during the parsing phase
+  // Configuration option indicating whether or not to process the direction key on the ways or
+  // utilize the guidance relation tags during the parsing phase
   bool use_direction_on_ways_;
 
   // Configuration option indicating whether or not to process the alt_name key on the ways during the
