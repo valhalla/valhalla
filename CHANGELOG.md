@@ -47,6 +47,7 @@
    * ADDED: Implement improved Reachability check using base class Dijkstra. [#2243](https://github.com/valhalla/valhalla/pull/2243)
    * ADDED: Gurka integration test framework with ascii-art maps [#2244](https://github.com/valhalla/valhalla/pull/2244)
    * ADDED: Add to the stop impact when transitioning from higher to lower class road and we are not on a turn channel or ramp. Also, penalize lefts when driving on the right and vice versa. [#2282](https://github.com/valhalla/valhalla/pull/2282)
+   * ADDED: Added reclassify_links, use_direction_on_ways, and allow_alt_name as config options.  If `use_direction_on_ways = true` then use `direction` and `int_direction` on the way to update the directional for the `ref` and `int_ref`.  Also, copy int_efs to the refs. [#2285](https://github.com/valhalla/valhalla/pull/2285)
 
 ## Release Date: 2019-11-21 Valhalla 3.0.9
 * **Bug Fix**
