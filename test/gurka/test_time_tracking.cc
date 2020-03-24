@@ -17,7 +17,8 @@ TEST(TimeTracking, make) {
   const std::string ascii_map = R"(A----B)";
   const gurka::ways ways = {{"AB", {{"highway", "trunk"}}}};
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
-  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_time_tracking_make");
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_time_tracking_make",
+                               {{"mjlonir.timezone", "/path/to/timezone.sqlite"}});
 
   // need to access the tiles
   baldr::GraphReader reader(map.config.get_child("mjolnir"));
