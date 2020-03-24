@@ -679,21 +679,6 @@ void expect_route(valhalla::Api& raw_result,
 
   EXPECT_EQ(actual_names, expected_names) << "Actual path didn't match expected path";
 }
-
-void expect_no_route(valhalla::Api& raw_result) {
-
-  raw_result.mutable_options()->set_format(valhalla::Options_Format_osrm);
-  auto json = tyr::serializeDirections(raw_result);
-
-  rapidjson::Document result;
-  result.Parse(json.c_str());
-  if (result.HasParseError()) {
-    FAIL();
-  }
-
-  EXPECT_FALSE(result.HasMember("routes"));
-}
-
 /**
  * Tests if a found path traverses the expected roads in the expected order
  *
