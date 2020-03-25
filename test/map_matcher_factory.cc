@@ -38,7 +38,7 @@ void create_costing_options(Options& options) {
   sif::ParseTaxiCostOptions(doc, "/costing_options/taxi", options.add_costing_options());
   sif::ParseMotorScooterCostOptions(doc, "/costing_options/motor_scooter",
                                     options.add_costing_options());
-  options.add_costing_options();
+  options.add_costing_options(); // multimodal
   sif::ParsePedestrianCostOptions(doc, "/costing_options/pedestrian", options.add_costing_options());
   sif::ParseTransitCostOptions(doc, "/costing_options/transit", options.add_costing_options());
   sif::ParseTruckCostOptions(doc, "/costing_options/truck", options.add_costing_options());
@@ -47,6 +47,7 @@ void create_costing_options(Options& options) {
                                    options.add_costing_options());
   sif::ParseAutoDataFixCostOptions(doc, "/costing_options/auto_data_fix",
                                    options.add_costing_options());
+  sif::ParseNoCostOptions(doc, "/costing_options/none", options.add_costing_options());
 }
 
 TEST(MapMatcherFactory, TestMapMatcherFactory) {

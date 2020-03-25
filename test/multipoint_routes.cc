@@ -31,10 +31,14 @@ boost::property_tree::ptree get_conf() {
       "mjolnir":{"tile_dir":"test/data/utrecht_tiles", "concurrency": 1},
       "loki":{
         "actions":["route"],
-        "logging":{"long_request": 100},
+        "logging":{"long_request": 100,
+        "type": "std_out"
+        },
         "service_defaults":{"minimum_reachability": 50,"radius": 0,"search_cutoff": 35000, "node_snap_tolerance": 5, "street_side_tolerance": 5, "heading_tolerance": 60}
       },
-      "thor":{"logging":{"long_request": 100}},
+      "thor":{"logging":{"long_request": 100,
+        "type": "std_out"
+      }},
       "odin":{"logging":{"long_request": 100}},
       "skadi":{"actons":["height"],"logging":{"long_request": 5}},
       "meili":{"customizable": ["turn_penalty_factor","max_route_distance_factor","max_route_time_factor","search_radius"],
@@ -344,7 +348,6 @@ TEST(MultiPointRoutesBreakThrough, test_mid_break_through_arrive_by) {
 } // namespace
 
 int main(int argc, char* argv[]) {
-  valhalla::midgard::logging::Configure({{"type", ""}});
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

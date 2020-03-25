@@ -39,18 +39,10 @@ uint32_t GetOperatorId(const GraphTile* tile,
 namespace valhalla {
 namespace thor {
 
-constexpr uint32_t kBucketCount = 20000;
-constexpr uint32_t kInitialEdgeLabelCount = 500000;
-
 // Default constructor
 Dijkstras::Dijkstras()
     : has_date_time_(false), start_tz_index_(0), access_mode_(kAutoAccess), mode_(TravelMode::kDrive),
       adjacencylist_(nullptr) {
-}
-
-// Destructor
-Dijkstras::~Dijkstras() {
-  Clear();
 }
 
 // Clear the temporary information generated during path construction.
@@ -66,15 +58,17 @@ void Dijkstras::Clear() {
 // Initialize - create adjacency list, edgestatus support, and reserve
 // edgelabels
 template <typename label_container_t>
-void Dijkstras::Initialize(label_container_t& labels, const uint32_t bucketsize) {
-  labels.reserve(kInitialEdgeLabelCount);
+void Dijkstras::Initialize(label_container_t& labels, const uint32_t bucket_size) {
+  // Set aside some space for edge labels
+  uint32_t edge_label_reservation;
+  uint32_t bucket_count;
+  GetExpansionHints(bucket_count, edge_label_reservation);
+  labels.reserve(edge_label_reservation);
 
   // Set up lambda to get sort costs
   const auto edgecost = [&labels](const uint32_t label) { return labels[label].sortcost(); };
-
-  float range = kBucketCount * bucketsize;
-  adjacencylist_.reset(new DoubleBucketQueue(0.0f, range, bucketsize, edgecost));
-  edgestatus_.clear();
+  float range = bucket_count * bucket_size;
+  adjacencylist_.reset(new DoubleBucketQueue(0.0f, range, bucket_size, edgecost));
 }
 template void
 Dijkstras::Initialize<decltype(Dijkstras::bdedgelabels_)>(decltype(Dijkstras::bdedgelabels_)&,
@@ -98,7 +92,7 @@ Dijkstras::SetTime(google::protobuf::RepeatedPtrField<valhalla::Location>& locat
   // Set the timezone to be the timezone at the end node
   start_tz_index_ = GetTimezone(reader, node_id);
   if (start_tz_index_ == 0)
-    LOG_ERROR("Could not get the timezone at the destination location");
+    LOG_WARN("Could not get the timezone at the destination location");
 
   // Set route start time (seconds from epoch)
   auto start_time = DateTime::seconds_since_epoch(location.date_time(),
@@ -163,7 +157,7 @@ void Dijkstras::ExpandForward(GraphReader& graphreader,
     // Let implementing class we are expanding from here
     EdgeLabel* prev_pred =
         pred.predecessor() == kInvalidLabel ? nullptr : &bdedgelabels_[pred.predecessor()];
-    ExpandingNode(graphreader, pred, tile->get_node_ll(node), prev_pred);
+    ExpandingNode(graphreader, tile, nodeinfo, pred, prev_pred);
   }
 
   // Bail if we cant expand from here
@@ -283,7 +277,7 @@ void Dijkstras::Compute(google::protobuf::RepeatedPtrField<valhalla::Location>& 
     // invalid label indicates there are no edges that can be expanded.
     uint32_t predindex = adjacencylist_->pop();
     if (predindex == kInvalidLabel) {
-      return;
+      break;
     }
 
     // Copy the EdgeLabel for use in costing and settle the edge.
@@ -330,7 +324,7 @@ void Dijkstras::ExpandReverse(GraphReader& graphreader,
     // Let implementing class we are expanding from here
     EdgeLabel* prev_pred =
         pred.predecessor() == kInvalidLabel ? nullptr : &bdedgelabels_[pred.predecessor()];
-    ExpandingNode(graphreader, pred, tile->get_node_ll(node), prev_pred);
+    ExpandingNode(graphreader, tile, nodeinfo, pred, prev_pred);
   }
 
   // Bail if we cant expand from here
@@ -362,25 +356,25 @@ void Dijkstras::ExpandReverse(GraphReader& graphreader,
 
     // Get end node tile, opposing edge Id, and opposing directed edge.
     const GraphTile* t2 = tile;
-    auto oppedge = graphreader.GetOpposingEdgeId(edgeid, t2);
+    auto opp_edge_id = graphreader.GetOpposingEdgeId(edgeid, t2);
     if (t2 == nullptr) {
       continue;
     }
-    const DirectedEdge* opp_edge = t2->directededge(oppedge);
+    const DirectedEdge* opp_edge = t2->directededge(opp_edge_id);
 
     // Check if the edge is allowed or if a restriction occurs
     EdgeStatus* todo = nullptr;
     bool has_time_restrictions = false;
     if (has_date_time_) {
       // With date time we check time dependent restrictions and access
-      if (!costing_->AllowedReverse(directededge, pred, opp_edge, t2, oppedge, localtime,
+      if (!costing_->AllowedReverse(directededge, pred, opp_edge, t2, opp_edge_id, localtime,
                                     nodeinfo->timezone(), has_time_restrictions) ||
           costing_->Restricted(directededge, pred, bdedgelabels_, tile, edgeid, false, todo,
                                localtime, nodeinfo->timezone())) {
         continue;
       }
     } else {
-      if (!costing_->AllowedReverse(directededge, pred, opp_edge, t2, oppedge, 0, 0,
+      if (!costing_->AllowedReverse(directededge, pred, opp_edge, t2, opp_edge_id, 0, 0,
                                     has_time_restrictions) ||
           costing_->Restricted(directededge, pred, bdedgelabels_, tile, edgeid, false)) {
         continue;
@@ -411,8 +405,8 @@ void Dijkstras::ExpandReverse(GraphReader& graphreader,
     // Add edge label, add to the adjacency list and set edge status
     uint32_t idx = bdedgelabels_.size();
     *es = {EdgeSet::kTemporary, idx};
-    bdedgelabels_.emplace_back(pred_idx, edgeid, oppedge, directededge, newcost, newcost.cost, 0.0f,
-                               mode_, transition_cost, false, has_time_restrictions);
+    bdedgelabels_.emplace_back(pred_idx, edgeid, opp_edge_id, directededge, newcost, newcost.cost,
+                               0.0f, mode_, transition_cost, false, has_time_restrictions);
     adjacencylist_->add(idx);
   }
 
@@ -453,7 +447,7 @@ void Dijkstras::ComputeReverse(google::protobuf::RepeatedPtrField<valhalla::Loca
     // invalid label indicates there are no edges that can be expanded.
     uint32_t predindex = adjacencylist_->pop();
     if (predindex == kInvalidLabel) {
-      return;
+      break;
     }
 
     // Copy the EdgeLabel for use in costing and settle the edge.
@@ -504,7 +498,7 @@ void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
     // Let implementing class we are expanding from here
     EdgeLabel* prev_pred =
         pred.predecessor() == kInvalidLabel ? nullptr : &mmedgelabels_[pred.predecessor()];
-    ExpandingNode(graphreader, pred, tile->get_node_ll(node), prev_pred);
+    ExpandingNode(graphreader, tile, nodeinfo, pred, prev_pred);
   }
 
   // Bail if we cant expand from here
@@ -752,7 +746,7 @@ void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
     // Add edge label, add to the adjacency list and set edge status
     uint32_t idx = mmedgelabels_.size();
     *es = {EdgeSet::kTemporary, idx};
-    mmedgelabels_.emplace_back(std::move(edge_label));
+    mmedgelabels_.emplace_back(edge_label);
     adjacencylist_->add(idx);
   }
 
@@ -806,7 +800,7 @@ void Dijkstras::ComputeMultiModal(
         mmedgelabels_.size() == 0 ? 0 : GetTimezone(graphreader, mmedgelabels_[0].endnode());
     if (start_tz_index_ == 0) {
       // TODO - should we throw an exception and return an error
-      LOG_ERROR("Could not get the timezone at the origin location");
+      LOG_WARN("Could not get the timezone at the origin location");
     }
     origin_date_time_ = origin_locations.Get(0).date_time();
 
@@ -826,7 +820,7 @@ void Dijkstras::ComputeMultiModal(
     // invalid label indicates there are no edges that can be expanded.
     uint32_t predindex = adjacencylist_->pop();
     if (predindex == kInvalidLabel) {
-      return;
+      break;
     }
 
     // Copy the EdgeLabel for use in costing and settle the edge.
@@ -880,7 +874,7 @@ void Dijkstras::SetOriginLocations(GraphReader& graphreader,
       if (!opp_edge_id.Is_Valid()) {
         continue;
       }
-      const DirectedEdge* opp_dir_edge = opp_tile->directededge(edgeid);
+      const DirectedEdge* opp_dir_edge = opp_tile->directededge(opp_edge_id);
 
       // Get cost
       Cost cost = costing->EdgeCost(directededge, tile) * (1.0f - edge.percent_along());
@@ -945,7 +939,7 @@ void Dijkstras::SetDestinationLocations(
       if (!opp_edge_id.Is_Valid()) {
         continue;
       }
-      const DirectedEdge* opp_dir_edge = opp_tile->directededge(edgeid);
+      const DirectedEdge* opp_dir_edge = opp_tile->directededge(opp_edge_id);
 
       // Get the cost
       Cost cost = costing->EdgeCost(directededge, tile) * edge.percent_along();
@@ -1032,7 +1026,7 @@ void Dijkstras::SetOriginLocationsMultiModal(
       edge_label.set_origin();
 
       // Add EdgeLabel to the adjacency list
-      mmedgelabels_.push_back(std::move(edge_label));
+      mmedgelabels_.push_back(edge_label);
       adjacencylist_->add(idx);
     }
   }

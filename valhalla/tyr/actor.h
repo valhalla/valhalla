@@ -5,6 +5,8 @@
 #include <memory>
 #include <unordered_map>
 
+#include <valhalla/proto/api.pb.h>
+
 namespace valhalla {
 namespace tyr {
 
@@ -32,6 +34,11 @@ public:
                                 const std::function<void()>& interrupt = []() -> void {});
   std::string expansion(const std::string& request_str,
                         const std::function<void()>& interrupt = []() -> void {});
+
+  valhalla::Api unserialized_route(const std::string& request_str,
+                                   const std::function<void()>& interrupt = []() -> void {});
+  valhalla::Api unserialized_trace_route(const std::string& request_str,
+                                         const std::function<void()>& interrupt = []() -> void {});
 
 protected:
   struct pimpl_t;

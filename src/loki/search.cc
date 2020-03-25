@@ -18,14 +18,6 @@ using namespace valhalla::loki;
 
 namespace {
 
-float PassThroughEdgeFilter(const valhalla::baldr::DirectedEdge* edge) {
-  return !(edge->is_shortcut() || edge->IsTransitLine());
-}
-
-bool PassThroughNodeFilter(const valhalla::baldr::NodeInfo* node) {
-  return false;
-}
-
 template <typename T> inline T square(T v) {
   return v * v;
 }
@@ -206,10 +198,11 @@ struct bin_handler_t {
   valhalla::baldr::GraphReader& reader;
   EdgeFilter edge_filter;
   NodeFilter node_filter;
-  const DynamicCost* costing;
+  std::shared_ptr<DynamicCost> costing;
   unsigned int max_reach_limit;
   std::vector<candidate_t> bin_candidates;
   std::unordered_set<uint64_t> correlated_edges;
+  Reach reach_finder;
 
   // keep track of edges whose reachability we've already computed
   // TODO: dont use pointers as keys, its safe for now but fancy caching one day could be bad
@@ -217,10 +210,9 @@ struct bin_handler_t {
 
   bin_handler_t(const std::vector<valhalla::baldr::Location>& locations,
                 valhalla::baldr::GraphReader& reader,
-                const DynamicCost* costing)
-      : reader(reader), costing(costing),
-        edge_filter(costing ? costing->GetEdgeFilter() : PassThroughEdgeFilter),
-        node_filter(costing ? costing->GetNodeFilter() : PassThroughNodeFilter) {
+                const std::shared_ptr<DynamicCost>& costing)
+      : reader(reader), costing(costing), edge_filter(costing->GetEdgeFilter()),
+        node_filter(costing->GetNodeFilter()) {
     // get the unique set of input locations and the max reachability of them all
     std::unordered_set<Location> uniq_locations(locations.begin(), locations.end());
     pps.reserve(uniq_locations.size());
@@ -271,7 +263,7 @@ struct bin_handler_t {
 
         // do we want this edge
         if (edge_filter(edge) != 0.0f) {
-          auto reach = get_reach(edge);
+          auto reach = get_reach(id, edge);
           PathLocation::PathEdge path_edge{std::move(id),
                                            0.f,
                                            node_ll,
@@ -295,7 +287,7 @@ struct bin_handler_t {
         }
         const auto* other_edge = other_tile->directededge(other_id);
         if (edge_filter(other_edge) != 0.0f) {
-          auto reach = get_reach(other_edge);
+          auto reach = get_reach(other_id, other_edge);
           PathLocation::PathEdge path_edge{std::move(other_id),
                                            1.f,
                                            node_ll,
@@ -354,7 +346,7 @@ struct bin_handler_t {
       // side of street
       auto sq_tolerance = square(double(location.street_side_tolerance_));
       auto side = candidate.get_side(location.latlng_, candidate.sq_distance, sq_tolerance);
-      auto reach = get_reach(candidate.edge);
+      auto reach = get_reach(candidate.edge_id, candidate.edge);
       PathLocation::PathEdge path_edge{candidate.edge_id, length_ratio, candidate.point,
                                        distance,          side,         reach.outbound,
                                        reach.inbound};
@@ -372,7 +364,7 @@ struct bin_handler_t {
       const DirectedEdge* other_edge;
       if (opposing_edge_id.Is_Valid() && (other_edge = other_tile->directededge(opposing_edge_id)) &&
           edge_filter(other_edge) != 0.0f) {
-        auto reach = get_reach(other_edge);
+        auto reach = get_reach(opposing_edge_id, other_edge);
         PathLocation::PathEdge other_path_edge{opposing_edge_id, 1 - length_ratio, candidate.point,
                                                distance,         flip_side(side),  reach.outbound,
                                                reach.inbound};
@@ -387,15 +379,14 @@ struct bin_handler_t {
     }
   }
 
-  directed_reach get_reach(const DirectedEdge* edge) {
+  directed_reach get_reach(const GraphId edge_id, const DirectedEdge* edge) {
     // if its in cache return it
     auto itr = directed_reaches.find(edge);
     if (itr != directed_reaches.cend())
       return itr->second;
 
     // notice we do both directions here because in the end we use this reach for all input locations
-    auto reach =
-        SimpleReach(edge, max_reach_limit, reader, edge_filter, node_filter, kInbound | kOutbound);
+    auto reach = reach_finder(edge, edge_id, max_reach_limit, reader, costing, kInbound | kOutbound);
     directed_reaches[edge] = reach;
     return reach;
   }
@@ -404,7 +395,8 @@ struct bin_handler_t {
   directed_reach check_reachability(std::vector<projector_wrapper>::iterator begin,
                                     std::vector<projector_wrapper>::iterator end,
                                     const GraphTile* tile,
-                                    const DirectedEdge* edge) {
+                                    const DirectedEdge* edge,
+                                    const GraphId edge_id) {
     // no need when set to 0
     if (max_reach_limit == 0)
       return {};
@@ -428,8 +420,7 @@ struct bin_handler_t {
       return {max_reach_limit, max_reach_limit};
 
     // notice we do both directions here because in the end we use this reach for all input locations
-    auto reach =
-        SimpleReach(edge, max_reach_limit, reader, edge_filter, node_filter, kInbound | kOutbound);
+    auto reach = reach_finder(edge, edge_id, max_reach_limit, reader, costing, kInbound | kOutbound);
     directed_reaches[edge] = reach;
 
     // if the inbound reach is not 0 and the outbound reach is not 0 and the opposing edge is not
@@ -448,17 +439,23 @@ struct bin_handler_t {
     // iterate over the edges in the bin
     auto tile = begin->cur_tile;
     auto edges = tile->GetBin(begin->bin_index);
-    for (auto e : edges) {
+    for (auto edge_id : edges) {
       // get the tile and edge
-      if (!reader.GetGraphTile(e, tile)) {
+      if (!reader.GetGraphTile(edge_id, tile)) {
         continue;
       }
 
-      // no thanks on this one or its evil twin
-      const auto* edge = tile->directededge(e);
-      if (edge_filter(edge) == 0.0f && (!(e = reader.GetOpposingEdgeId(e, tile)).Is_Valid() ||
-                                        edge_filter(edge = tile->directededge(e)) == 0.0f)) {
-        continue;
+      // if this edge is filtered
+      const auto* edge = tile->directededge(edge_id);
+      if (edge_filter(edge) == 0.0f) {
+        // then we try its opposing edge
+        edge_id = reader.GetOpposingEdgeId(edge_id, tile);
+        // but if we couldnt get it or its filtered too then we move on
+        if (!edge_id.Is_Valid())
+          continue;
+        edge = tile->directededge(edge_id);
+        if (edge_filter(edge) == 0.0f)
+          continue;
       }
 
       // reset these so we know the best point along the edge
@@ -504,7 +501,7 @@ struct bin_handler_t {
       }
 
       // if we already have a better reachable candidate we can just assume this one is reachable
-      auto reach = check_reachability(begin, end, tile, edge);
+      auto reach = check_reachability(begin, end, tile, edge, edge_id);
 
       // keep the best point along this edge if it makes sense
       c_itr = bin_candidates.begin();
@@ -517,7 +514,7 @@ struct bin_handler_t {
         const DirectedEdge* opp_edge = nullptr;
         if (!reachable && (opp_edge = reader.GetOpposingEdge(edge, opp_tile)) &&
             edge_filter(opp_edge) > 0.f) {
-          auto opp_reach = check_reachability(begin, end, opp_tile, opp_edge);
+          auto opp_reach = check_reachability(begin, end, opp_tile, opp_edge, edge_id);
           if (opp_reach.outbound >= p_itr->location.min_outbound_reach_ &&
               opp_reach.inbound >= p_itr->location.min_inbound_reach_) {
             tile = opp_tile;
@@ -533,7 +530,7 @@ struct bin_handler_t {
         // if its empty append
         if (batch->empty()) {
           c_itr->edge = edge;
-          c_itr->edge_id = e;
+          c_itr->edge_id = edge_id;
           c_itr->edge_info = edge_info;
           c_itr->tile = tile;
           batch->emplace_back(std::move(*c_itr));
@@ -555,7 +552,7 @@ struct bin_handler_t {
         // it has to either be better or in the radius to move on
         if (in_radius || better) {
           c_itr->edge = edge;
-          c_itr->edge_id = e;
+          c_itr->edge_id = edge_id;
           c_itr->edge_info = edge_info;
           c_itr->tile = tile;
           // the last one wasnt in the radius so replace it with this one because its better or is
@@ -724,10 +721,15 @@ namespace loki {
 std::unordered_map<valhalla::baldr::Location, PathLocation>
 Search(const std::vector<valhalla::baldr::Location>& locations,
        GraphReader& reader,
-       const DynamicCost* costing) {
+       const std::shared_ptr<DynamicCost>& costing) {
+  // we cannot continue without costing
+  if (!costing)
+    throw std::runtime_error("No costing was provided for edge candidate search");
+
   // trivially finished already
   if (locations.empty())
     return std::unordered_map<valhalla::baldr::Location, PathLocation>{};
+
   // setup the unique list of locations
   bin_handler_t handler(locations, reader, costing);
   // search over the bins doing multiple locations per bin

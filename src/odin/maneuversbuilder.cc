@@ -999,7 +999,7 @@ void ManeuversBuilder::UpdateManeuver(Maneuver& maneuver, int node_index) {
   // TODO: update GetTime and GetSpeed to double precision
   maneuver.set_basic_time(
       maneuver.basic_time() +
-      GetTime(prev_edge->length(), GetSpeed(maneuver.travel_mode(), prev_edge->speed())));
+      GetTime(prev_edge->length(), GetSpeed(maneuver.travel_mode(), prev_edge->default_speed())));
 
   // Portions Toll
   if (prev_edge->toll()) {

@@ -63,7 +63,6 @@ protected:
                                                     const std::string& costing,
                                                     const Options& options);
   void log_admin(const TripLeg&);
-  sif::cost_ptr_t get_costing(const Costing costing, const Options& options);
   thor::PathAlgorithm* get_path_algorithm(const std::string& routetype,
                                           const Location& origin,
                                           const Location& destination);

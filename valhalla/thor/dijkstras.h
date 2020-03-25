@@ -38,13 +38,13 @@ enum class ExpansionRecommendation {
 class Dijkstras {
 public:
   Dijkstras();
-
-  virtual ~Dijkstras();
+  virtual ~Dijkstras() {
+  }
 
   /**
    * Clear the temporary memory (adjacency list, edgestatus, edgelabels)
    */
-  void Clear();
+  virtual void Clear();
 
   /**
    * Compute the best first graph traversal from a list of origin locations
@@ -53,10 +53,10 @@ public:
    * @param  mode_costing List of costing objects
    * @param  mode         Travel mode
    */
-  void Compute(google::protobuf::RepeatedPtrField<valhalla::Location>& origin_locs,
-               baldr::GraphReader& graphreader,
-               const std::shared_ptr<sif::DynamicCost>* mode_costing,
-               const sif::TravelMode mode);
+  virtual void Compute(google::protobuf::RepeatedPtrField<valhalla::Location>& origin_locs,
+                       baldr::GraphReader& graphreader,
+                       const std::shared_ptr<sif::DynamicCost>* mode_costing,
+                       const sif::TravelMode mode);
 
   /**
    * Compute the best first graph traversal to a list of destination locations
@@ -65,10 +65,10 @@ public:
    * @param  mode_costing List of costing objects
    * @param  mode         Travel mode
    */
-  void ComputeReverse(google::protobuf::RepeatedPtrField<valhalla::Location>& dest_locations,
-                      baldr::GraphReader& graphreader,
-                      const std::shared_ptr<sif::DynamicCost>* mode_costing,
-                      const sif::TravelMode mode);
+  virtual void ComputeReverse(google::protobuf::RepeatedPtrField<valhalla::Location>& dest_locations,
+                              baldr::GraphReader& graphreader,
+                              const std::shared_ptr<sif::DynamicCost>* mode_costing,
+                              const sif::TravelMode mode);
 
   /**
    * Compute the best first graph traversal from a list of origin locations using multimodal
@@ -77,22 +77,27 @@ public:
    * @param  mode_costing List of costing objects
    * @param  mode         Travel mode
    */
-  void ComputeMultiModal(google::protobuf::RepeatedPtrField<valhalla::Location>& origin_locations,
-                         baldr::GraphReader& graphreader,
-                         const std::shared_ptr<sif::DynamicCost>* mode_costing,
-                         const sif::TravelMode mode);
+  virtual void
+  ComputeMultiModal(google::protobuf::RepeatedPtrField<valhalla::Location>& origin_locations,
+                    baldr::GraphReader& graphreader,
+                    const std::shared_ptr<sif::DynamicCost>* mode_costing,
+                    const sif::TravelMode mode);
 
 protected:
   // A child-class must implement this to learn about what nodes were expanded
   virtual void ExpandingNode(baldr::GraphReader& graphreader,
+                             const baldr::GraphTile* tile,
+                             const baldr::NodeInfo* node,
                              const sif::EdgeLabel& current,
-                             const midgard::PointLL& node_ll,
                              const sif::EdgeLabel* previous){};
 
   // A child-class must implement this to decide when to stop the expansion
   virtual ExpansionRecommendation ShouldExpand(baldr::GraphReader& graphreader,
                                                const sif::EdgeLabel& pred,
                                                const InfoRoutingType route_type) = 0;
+
+  // A child-class must implement this to tell the algorithm how much expansion to expect to do
+  virtual void GetExpansionHints(uint32_t& bucket_count, uint32_t& edge_label_reservation) const = 0;
 
   bool has_date_time_;
   int start_tz_index_;   // Timezone at the start of the Dijkstras

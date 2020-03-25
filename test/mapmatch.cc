@@ -1088,7 +1088,7 @@ TEST(Mapmatch, test_discontinuity_duration_trimming) {
   std::vector<std::vector<int>> test_ans_num_legs{{1, 2}, {1, 2}, {1, 2}};
   std::vector<std::vector<float>> test_ans_leg_duration{{26.459, 0.97, 0.454},
                                                         {48.6, 0.64, 0.961},
-                                                        {213.778, 2.431, 1.899}};
+                                                        {220.778, 2.431, 1.899}};
 
   tyr::actor_t actor(conf, true);
   for (size_t i = 0; i < test_cases.size(); ++i) {
@@ -1257,6 +1257,31 @@ TEST(Mapmatch, test_degenerate_match) {
   }
 }
 
+TEST(Mapmatch, interpolation) {
+  std::vector<std::string> test_cases = {
+      R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
+          {"lat": 52.082829, "lon": 5.087129, "type": "break"},
+          {"lat": 52.082870, "lon": 5.086956, "type": "break"},
+          {"lat": 52.082870, "lon": 5.086960, "type": "break"},
+          {"lat": 52.082855, "lon": 5.087024, "type": "break"}]})",
+      R"({"trace_options": {"interpolation_distance": 20},
+          "costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
+          {"lat": 52.0749799, "lon": 5.1141067, "type": "break"},
+          {"lat": 52.0750399, "lon": 5.1141172, "type": "break"},
+          {"lat": 52.0750431, "lon": 5.1141172, "type": "break"},
+          {"lat": 52.0750392, "lon": 5.1141197, "type": "break"}]})"};
+  tyr::actor_t actor(conf, true);
+
+  for (size_t i = 0; i < test_cases.size(); ++i) {
+    auto matched = json_to_pt(actor.trace_route(test_cases[i]));
+    const auto& routes = matched.get_child("matchings");
+    ASSERT_EQ(1, routes.size());
+    for (const auto& route : routes) {
+      const auto& legs = route.second.get_child("legs");
+      ASSERT_EQ(3, legs.size());
+    }
+  }
+}
 } // namespace
 
 int main(int argc, char* argv[]) {
