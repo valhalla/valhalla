@@ -157,7 +157,8 @@
         "<TENTHS_OF_MILE> desetink milje",
         "1 desentinko milje",
         "<FEET> čevljev",
-        "Manj kot 10 čevljev"
+        "Manj kot 10 čevljev",
+        "a quarter mile"
       ],
       "example_phrases": {
         "0": [
@@ -1221,7 +1222,8 @@
         "<TENTHS_OF_MILE> desetink milje",
         "1 desentinko milje",
         "<FEET> čevljev",
-        "Manj kot 10 čevljev"
+        "Manj kot 10 čevljev",
+        "a quarter mile"
       ],
       "example_phrases": {
         "0": [
@@ -1615,7 +1617,8 @@
         "<TENTHS_OF_MILE> desetink milje",
         "1 desentinko milje",
         "<FEET> čevljev",
-        "Manj kot 10 čevljev"
+        "Manj kot 10 čevljev",
+        "a quarter mile"
       ],
       "example_phrases": {
         "0": [
@@ -2083,11 +2086,59 @@
     },
     "verbal_multi_cue": {
       "phrases": {
-        "0": "<CURRENT_VERBAL_CUE> Nato <NEXT_VERBAL_CUE>"
+        "0": "<CURRENT_VERBAL_CUE> Nato <NEXT_VERBAL_CUE>",
+        "1": "<CURRENT_VERBAL_CUE> Then, in <LENGTH>, <NEXT_VERBAL_CUE>"
       },
+      "metric_lengths": [
+        "<KILOMETERS> kilometers",
+        "1 kilometer",
+        "a half kilometer",
+        "<METERS> meters",
+        "less than 10 meters"
+      ],
+      "us_customary_lengths": [
+        "<MILES> miles",
+        "1 mile",
+        "a half mile",
+        "<TENTHS_OF_MILE> tenths of a mile",
+        "1 tenth of a mile",
+        "<FEET> feet",
+        "less than 10 feet",
+        "a quarter mile"
+      ],
       "example_phrases": {
         "0": [
           "Držite se desno, da pridete na East Fayette Street. Nato zavijte desno na North Gay Street."
+        ],
+        "1": [
+          "Bear right onto East Fayette Street. Then, in 500 feet, Turn right onto North Gay Street."
+        ]
+      }
+    },
+    "approach_verbal_alert": {
+      "phrases": {
+        "0": "In <LENGTH>, <CURRENT_VERBAL_CUE>"
+      },
+      "metric_lengths": [
+        "<KILOMETERS> kilometers",
+        "1 kilometer",
+        "a half kilometer",
+        "<METERS> meters",
+        "less than 10 meters"
+      ],
+      "us_customary_lengths": [
+        "<MILES> miles",
+        "1 mile",
+        "a half mile",
+        "<TENTHS_OF_MILE> tenths of a mile",
+        "1 tenth of a mile",
+        "<FEET> feet",
+        "less than 10 feet",
+        "a quarter mile"
+      ],
+      "example_phrases": {
+        "0": [
+          "In a quarter mile, Turn right onto North Gay Street."
         ]
       }
     }

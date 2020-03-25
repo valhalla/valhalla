@@ -21,8 +21,8 @@ const std::vector<std::string> kExpectedMetricLengths = {"<KILOMETERS> kilometer
                                                          "a half kilometer", "<METERS> meters",
                                                          "less than 10 meters"};
 const std::vector<std::string> kExpectedUsCustomaryLengths =
-    {"<MILES> miles",     "1 mile",      "a half mile",      "<TENTHS_OF_MILE> tenths of a mile",
-     "1 tenth of a mile", "<FEET> feet", "less than 10 feet"};
+    {"<MILES> miles",     "1 mile",      "a half mile",       "<TENTHS_OF_MILE> tenths of a mile",
+     "1 tenth of a mile", "<FEET> feet", "less than 10 feet", "a quarter mile"};
 const std::vector<std::string> kExpectedRelativeTwoDirections = {"left", "right"};
 const std::vector<std::string> kExpectedRelativeThreeDirections = {"left", "straight", "right"};
 const std::vector<std::string> kExpectedOrdinalValues = {"1st", "2nd", "3rd", "4th", "5th",
