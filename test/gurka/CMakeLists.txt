@@ -15,6 +15,13 @@ if(ENABLE_DATA_TOOLS)
       ${VALHALLA_SOURCE_DIR}/third_party/protozero/include
       ${VALHALLA_SOURCE_DIR}/third_party/libosmium/include)
 
+    add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/tz.sqlite
+          COMMAND ${CMAKE_COMMAND} -E make_directory test/data/
+          COMMAND ${VALHALLA_SOURCE_DIR}/scripts/valhalla_build_timezones > ${CMAKE_BINARY_DIR}/test/data/tz.sqlite
+          COMMENT "Building tz.sqlite..."
+          WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+    )
+
     add_custom_command(OUTPUT ${TESTNAME}.log
       COMMAND
         LOCPATH=${VALHALLA_SOURCE_DIR}/locales

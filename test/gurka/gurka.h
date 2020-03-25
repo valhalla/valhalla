@@ -69,7 +69,9 @@ using nodelayout = std::unordered_map<std::string, midgard::PointLL>;
 
 namespace detail {
 
-boost::property_tree::ptree build_config(const std::string& tiledir) {
+boost::property_tree::ptree
+build_config(const std::string& tiledir,
+             const std::unordered_map<std::string, std::string>& config_options) {
 
   const std::string default_config = R"(
     {"mjolnir":{"tile_dir":"", "concurrency": 1},
@@ -149,6 +151,9 @@ boost::property_tree::ptree build_config(const std::string& tiledir) {
   boost::property_tree::ptree ptree;
   boost::property_tree::json_parser::read_json(stream, ptree);
   ptree.put("mjolnir.tile_dir", tiledir);
+  for (const auto& kv : config_options) {
+    ptree.put(kv.first, kv.second);
+  }
   return ptree;
 }
 
@@ -464,6 +469,9 @@ inline void build_pbf(const nodelayout& node_locations,
  * @param nodes properties on any of the defined nodes
  * @param relations OSM relations that related nodes and ways together
  * @param workdir where to build the PBF and the tiles
+ * @param config_options optional key value pairs where the key is ptree style dom traversal and
+ *        the value is the value to put into the config. You can do things like
+ *        add timezones database path
  * @return a map object that contains the Valhalla config (to pass to GraphReader) and node layout
  *         (for converting node names to coordinates)
  */
@@ -471,10 +479,11 @@ map buildtiles(const nodelayout layout,
                const ways& ways,
                const nodes& nodes,
                const relations& relations,
-               const std::string& workdir) {
+               const std::string& workdir,
+               const std::unordered_map<std::string, std::string>& config_options = {}) {
 
   map result;
-  result.config = detail::build_config(workdir);
+  result.config = detail::build_config(workdir, config_options);
   result.nodes = layout;
 
   // Sanity check so that we don't blow away / by mistake
