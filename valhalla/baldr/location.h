@@ -34,10 +34,16 @@ public:
   struct SearchFilter {
   public:
     SearchFilter(valhalla::RoadClass min_road_class = valhalla::RoadClass::kServiceOther,
-                 valhalla::RoadClass max_road_class = valhalla::RoadClass::kMotorway);
+                 valhalla::RoadClass max_road_class = valhalla::RoadClass::kMotorway,
+                 bool exclude_tunnel = false,
+                 bool exclude_bridge = false,
+                 bool exclude_ramp = false);
 
     valhalla::RoadClass min_road_class_;
     valhalla::RoadClass max_road_class_;
+    bool exclude_tunnel_;
+    bool exclude_bridge_;
+    bool exclude_ramp_;
 
   protected:
   };

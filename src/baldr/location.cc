@@ -10,8 +10,12 @@ namespace valhalla {
 namespace baldr {
 
 Location::SearchFilter::SearchFilter(valhalla::RoadClass min_road_class,
-                                     valhalla::RoadClass max_road_class)
-    : min_road_class_(min_road_class), max_road_class_(max_road_class) {
+                                     valhalla::RoadClass max_road_class,
+                                     bool exclude_tunnel,
+                                     bool exclude_bridge,
+                                     bool exclude_ramp)
+    : min_road_class_(min_road_class), max_road_class_(max_road_class),
+      exclude_tunnel_(exclude_tunnel), exclude_bridge_(exclude_bridge), exclude_ramp_(exclude_ramp) {
 }
 
 // TODO: get defaults from config singleton

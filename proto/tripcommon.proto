@@ -51,7 +51,7 @@ message Location {
     optional RoadClass max_road_class = 2 [default = kMotorway]; // highest road class to allow in loki results
     optional bool exclude_tunnel  = 3;  // whether to exclude tunnels from loki results (default false)
     optional bool exclude_bridge  = 4;  // whether to exclude bridges from loki results (default false)
-    optional bool exclude_ramp  = 5;    // whether to exclude ramps from loki results (default false)
+    optional bool exclude_ramp  = 5;    // whether to exclude roads with ramp use from loki results (default false)
   }
 
   //inputs

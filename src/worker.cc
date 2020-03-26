@@ -460,18 +460,29 @@ void parse_locations(const rapidjson::Document& doc,
         }
         auto search_filter = rapidjson::get_child_optional(r_loc, "/search_filter");
         if (search_filter) {
+          // search_filter.min_road_class
           auto min_road_class =
               rapidjson::get_optional<std::string>(*search_filter, "/min_road_class");
           valhalla::RoadClass min_rc;
           if (min_road_class && RoadClass_Enum_Parse(*min_road_class, &min_rc)) {
             location->mutable_search_filter()->set_min_road_class(min_rc);
           }
+          // search_filter.max_road_class
           auto max_road_class =
               rapidjson::get_optional<std::string>(*search_filter, "/max_road_class");
           valhalla::RoadClass max_rc;
           if (max_road_class && RoadClass_Enum_Parse(*max_road_class, &max_rc)) {
             location->mutable_search_filter()->set_max_road_class(max_rc);
           }
+          // search_filter.exclude_tunnel
+          location->mutable_search_filter()->set_exclude_tunnel(
+              rapidjson::get_optional<bool>(*search_filter, "/exclude_tunnel").get_value_or(false));
+          // search_filter.exclude_bridge
+          location->mutable_search_filter()->set_exclude_bridge(
+              rapidjson::get_optional<bool>(*search_filter, "/exclude_bridge").get_value_or(false));
+          // search_filter.exclude_ramp
+          location->mutable_search_filter()->set_exclude_ramp(
+              rapidjson::get_optional<bool>(*search_filter, "/exclude_ramp").get_value_or(false));
         }
       } catch (...) { throw valhalla_exception_t{location_parse_error_code}; }
     }

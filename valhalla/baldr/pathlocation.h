@@ -232,6 +232,9 @@ public:
     if (loc.has_search_filter()) {
       l.search_filter_.min_road_class_ = loc.search_filter().min_road_class();
       l.search_filter_.max_road_class_ = loc.search_filter().max_road_class();
+      l.search_filter_.exclude_tunnel_ = loc.search_filter().exclude_tunnel();
+      l.search_filter_.exclude_bridge_ = loc.search_filter().exclude_bridge();
+      l.search_filter_.exclude_ramp_ = loc.search_filter().exclude_ramp();
     }
     return l;
   }

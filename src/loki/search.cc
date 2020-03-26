@@ -1,4 +1,5 @@
 #include "loki/search.h"
+#include "baldr/graphconstants.h"
 #include "baldr/tilehierarchy.h"
 #include "loki/reach.h"
 #include "midgard/distanceapproximator.h"
@@ -23,12 +24,15 @@ template <typename T> inline T square(T v) {
 }
 
 bool search_filter(const DirectedEdge* edge, const Location::SearchFilter& search_filter) {
-  // check if this edge falls in the allowable road class range
+  // check if this edge matches any of the exclusion filters
   uint32_t road_class = static_cast<uint32_t>(edge->classification());
   uint32_t min_road_class = static_cast<uint32_t>(search_filter.min_road_class_);
   uint32_t max_road_class = static_cast<uint32_t>(search_filter.max_road_class_);
 
-  if (road_class > min_road_class || road_class < max_road_class) {
+  if ((road_class > min_road_class || road_class < max_road_class) ||
+      (search_filter.exclude_tunnel_ && edge->tunnel()) ||
+      (search_filter.exclude_bridge_ && edge->bridge()) ||
+      (search_filter.exclude_ramp_ && (edge->use() == Use::kRamp))) {
     return true;
   }
 
