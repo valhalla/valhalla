@@ -1,5 +1,4 @@
 add_subdirectory(${VALHALLA_SOURCE_DIR}/third_party/googletest ${CMAKE_BINARY_DIR}/googletest)
-add_subdirectory(gurka)
 
 ## Lists tests
 set(tests aabb2 access_restriction actor admin attributes_controller complexrestriction countryaccess datetime directededge
@@ -273,3 +272,5 @@ endif()
 
 add_custom_target(check DEPENDS ${test_targets})
 add_custom_target(tests DEPENDS ${tests} ${cost_tests})
+
+add_subdirectory(gurka)
