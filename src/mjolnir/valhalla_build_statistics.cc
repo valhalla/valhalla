@@ -330,7 +330,8 @@ void AddStatistics(statistics& stats,
   }
 
   // Check for exit signage if it is a highway link
-  if (directededge.link() && (rclass == RoadClass::kMotorway || rclass == RoadClass::kTrunk)) {
+  if (directededge.link() && (rclass == valhalla::baldr::RoadClass::kMotorway ||
+                              rclass == valhalla::baldr::RoadClass::kTrunk)) {
     checkExitInfo(tile, graph_reader, node, nodeinfo, directededge, stats);
   }
 

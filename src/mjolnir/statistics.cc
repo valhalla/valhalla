@@ -26,6 +26,7 @@
 #include "midgard/aabb2.h"
 #include "midgard/logging.h"
 
+using namespace valhalla;
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 using namespace valhalla::mjolnir;
@@ -61,145 +62,147 @@ statistics::statistics()
       ctry_fork_count(), tile_areas(), tile_geometries(), iso_codes(), tile_ids() {
 }
 
-void statistics::add_tile_road(const uint64_t& tile_id, const RoadClass& rclass, const float length) {
+void statistics::add_tile_road(const uint64_t& tile_id,
+                               const baldr::RoadClass& rclass,
+                               const float length) {
   tile_ids.insert(tile_id);
   tile_lengths[tile_id][rclass] += length;
 }
 
 void statistics::add_country_road(const std::string& ctry_code,
-                                  const RoadClass& rclass,
+                                  const baldr::RoadClass& rclass,
                                   const float length) {
   iso_codes.insert(ctry_code);
   country_lengths[ctry_code][rclass] += length;
 }
 
 void statistics::add_tile_int_edge(const uint64_t& tile_id,
-                                   const RoadClass& rclass,
+                                   const baldr::RoadClass& rclass,
                                    const size_t& count) {
   tile_int_edges[tile_id][rclass] += count;
 }
 
 void statistics::add_country_int_edge(const std::string& ctry_code,
-                                      const RoadClass& rclass,
+                                      const baldr::RoadClass& rclass,
                                       const size_t& count) {
   country_int_edges[ctry_code][rclass] += count;
 }
 
 void statistics::add_tile_one_way(const uint64_t& tile_id,
-                                  const RoadClass& rclass,
+                                  const baldr::RoadClass& rclass,
                                   const float length) {
   tile_one_way[tile_id][rclass] += length;
 }
 
 void statistics::add_country_one_way(const std::string& ctry_code,
-                                     const RoadClass& rclass,
+                                     const baldr::RoadClass& rclass,
                                      const float length) {
   country_one_way[ctry_code][rclass] += length;
 }
 
 void statistics::add_tile_speed_info(const uint64_t& tile_id,
-                                     const RoadClass& rclass,
+                                     const baldr::RoadClass& rclass,
                                      const float length) {
   tile_speed_info[tile_id][rclass] += length;
 }
 
 void statistics::add_country_speed_info(const std::string& ctry_code,
-                                        const RoadClass& rclass,
+                                        const baldr::RoadClass& rclass,
                                         const float length) {
   country_speed_info[ctry_code][rclass] += length;
 }
 
 void statistics::add_tile_named(const uint64_t& tile_id,
-                                const RoadClass& rclass,
+                                const baldr::RoadClass& rclass,
                                 const float length) {
   tile_named[tile_id][rclass] += length;
 }
 
 void statistics::add_country_named(const std::string& ctry_code,
-                                   const RoadClass& rclass,
+                                   const baldr::RoadClass& rclass,
                                    const float length) {
   country_named[ctry_code][rclass] += length;
 }
 
 void statistics::add_tile_hazmat(const uint64_t& tile_id,
-                                 const RoadClass& rclass,
+                                 const baldr::RoadClass& rclass,
                                  const float length) {
   tile_hazmat[tile_id][rclass] += length;
 }
 
 void statistics::add_country_hazmat(const std::string& ctry_code,
-                                    const RoadClass& rclass,
+                                    const baldr::RoadClass& rclass,
                                     const float length) {
   country_hazmat[ctry_code][rclass] += length;
 }
 
 void statistics::add_tile_truck_route(const uint64_t& tile_id,
-                                      const RoadClass& rclass,
+                                      const baldr::RoadClass& rclass,
                                       const float length) {
   tile_truck_route[tile_id][rclass] += length;
 }
 
 void statistics::add_country_truck_route(const std::string& ctry_code,
-                                         const RoadClass& rclass,
+                                         const baldr::RoadClass& rclass,
                                          const float length) {
   country_truck_route[ctry_code][rclass] += length;
 }
 
 void statistics::add_tile_height(const uint64_t& tile_id,
-                                 const RoadClass& rclass,
+                                 const baldr::RoadClass& rclass,
                                  const size_t& count) {
   tile_height[tile_id][rclass] += count;
 }
 
 void statistics::add_country_height(const std::string& ctry_code,
-                                    const RoadClass& rclass,
+                                    const baldr::RoadClass& rclass,
                                     const size_t& count) {
   country_height[ctry_code][rclass] += count;
 }
 
 void statistics::add_tile_width(const uint64_t& tile_id,
-                                const RoadClass& rclass,
+                                const baldr::RoadClass& rclass,
                                 const size_t& count) {
   tile_width[tile_id][rclass] += count;
 }
 void statistics::add_country_width(const std::string& ctry_code,
-                                   const RoadClass& rclass,
+                                   const baldr::RoadClass& rclass,
                                    const size_t& count) {
   country_width[ctry_code][rclass] += count;
 }
 
 void statistics::add_tile_length(const uint64_t& tile_id,
-                                 const RoadClass& rclass,
+                                 const baldr::RoadClass& rclass,
                                  const size_t& count) {
   tile_length[tile_id][rclass] += count;
 }
 
 void statistics::add_country_length(const std::string& ctry_code,
-                                    const RoadClass& rclass,
+                                    const baldr::RoadClass& rclass,
                                     const size_t& count) {
   country_length[ctry_code][rclass] += count;
 }
 
 void statistics::add_tile_weight(const uint64_t& tile_id,
-                                 const RoadClass& rclass,
+                                 const baldr::RoadClass& rclass,
                                  const size_t& count) {
   tile_weight[tile_id][rclass] += count;
 }
 
 void statistics::add_country_weight(const std::string& ctry_code,
-                                    const RoadClass& rclass,
+                                    const baldr::RoadClass& rclass,
                                     const size_t& count) {
   country_weight[ctry_code][rclass] += count;
 }
 
 void statistics::add_tile_axle_load(const uint64_t& tile_id,
-                                    const RoadClass& rclass,
+                                    const baldr::RoadClass& rclass,
                                     const size_t& count) {
   tile_axle_load[tile_id][rclass] += count;
 }
 
 void statistics::add_country_axle_load(const std::string& ctry_code,
-                                       const RoadClass& rclass,
+                                       const baldr::RoadClass& rclass,
                                        const size_t& count) {
   country_axle_load[ctry_code][rclass] += count;
 }
@@ -240,116 +243,134 @@ const std::unordered_set<std::string>& statistics::get_isos() const {
   return iso_codes;
 }
 
-const std::unordered_map<uint64_t, std::unordered_map<RoadClass, float, statistics::rclassHasher>>&
+const std::unordered_map<uint64_t,
+                         std::unordered_map<baldr::RoadClass, float, statistics::rclassHasher>>&
 statistics::get_tile_lengths() const {
   return tile_lengths;
 }
-const std::unordered_map<std::string, std::unordered_map<RoadClass, float, statistics::rclassHasher>>&
+const std::unordered_map<std::string,
+                         std::unordered_map<baldr::RoadClass, float, statistics::rclassHasher>>&
 statistics::get_country_lengths() const {
   return country_lengths;
 }
 
-const std::unordered_map<uint64_t, std::unordered_map<RoadClass, size_t, statistics::rclassHasher>>&
+const std::unordered_map<uint64_t,
+                         std::unordered_map<baldr::RoadClass, size_t, statistics::rclassHasher>>&
 statistics::get_tile_int_edges() const {
   return tile_int_edges;
 }
 const std::unordered_map<std::string,
-                         std::unordered_map<RoadClass, size_t, statistics::rclassHasher>>&
+                         std::unordered_map<baldr::RoadClass, size_t, statistics::rclassHasher>>&
 statistics::get_country_int_edges() const {
   return country_int_edges;
 }
 
-const std::unordered_map<uint64_t, std::unordered_map<RoadClass, float, statistics::rclassHasher>>&
+const std::unordered_map<uint64_t,
+                         std::unordered_map<baldr::RoadClass, float, statistics::rclassHasher>>&
 statistics::get_tile_one_way() const {
   return tile_one_way;
 }
-const std::unordered_map<std::string, std::unordered_map<RoadClass, float, statistics::rclassHasher>>&
+const std::unordered_map<std::string,
+                         std::unordered_map<baldr::RoadClass, float, statistics::rclassHasher>>&
 statistics::get_country_one_way() const {
   return country_one_way;
 }
 
-const std::unordered_map<uint64_t, std::unordered_map<RoadClass, float, statistics::rclassHasher>>&
+const std::unordered_map<uint64_t,
+                         std::unordered_map<baldr::RoadClass, float, statistics::rclassHasher>>&
 statistics::get_tile_speed_info() const {
   return tile_speed_info;
 }
-const std::unordered_map<std::string, std::unordered_map<RoadClass, float, statistics::rclassHasher>>&
+const std::unordered_map<std::string,
+                         std::unordered_map<baldr::RoadClass, float, statistics::rclassHasher>>&
 statistics::get_country_speed_info() const {
   return country_speed_info;
 }
 
-const std::unordered_map<uint64_t, std::unordered_map<RoadClass, float, statistics::rclassHasher>>&
+const std::unordered_map<uint64_t,
+                         std::unordered_map<baldr::RoadClass, float, statistics::rclassHasher>>&
 statistics::get_tile_named() const {
   return tile_named;
 }
-const std::unordered_map<std::string, std::unordered_map<RoadClass, float, statistics::rclassHasher>>&
+const std::unordered_map<std::string,
+                         std::unordered_map<baldr::RoadClass, float, statistics::rclassHasher>>&
 statistics::get_country_named() const {
   return country_named;
 }
 
-const std::unordered_map<uint64_t, std::unordered_map<RoadClass, float, statistics::rclassHasher>>&
+const std::unordered_map<uint64_t,
+                         std::unordered_map<baldr::RoadClass, float, statistics::rclassHasher>>&
 statistics::get_tile_hazmat() const {
   return tile_hazmat;
 }
-const std::unordered_map<std::string, std::unordered_map<RoadClass, float, statistics::rclassHasher>>&
+const std::unordered_map<std::string,
+                         std::unordered_map<baldr::RoadClass, float, statistics::rclassHasher>>&
 statistics::get_country_hazmat() const {
   return country_hazmat;
 }
 
-const std::unordered_map<uint64_t, std::unordered_map<RoadClass, float, statistics::rclassHasher>>&
+const std::unordered_map<uint64_t,
+                         std::unordered_map<baldr::RoadClass, float, statistics::rclassHasher>>&
 statistics::get_tile_truck_route() const {
   return tile_truck_route;
 }
-const std::unordered_map<std::string, std::unordered_map<RoadClass, float, statistics::rclassHasher>>&
+const std::unordered_map<std::string,
+                         std::unordered_map<baldr::RoadClass, float, statistics::rclassHasher>>&
 statistics::get_country_truck_route() const {
   return country_truck_route;
 }
 
-const std::unordered_map<uint64_t, std::unordered_map<RoadClass, size_t, statistics::rclassHasher>>&
+const std::unordered_map<uint64_t,
+                         std::unordered_map<baldr::RoadClass, size_t, statistics::rclassHasher>>&
 statistics::get_tile_height() const {
   return tile_height;
 }
 const std::unordered_map<std::string,
-                         std::unordered_map<RoadClass, size_t, statistics::rclassHasher>>&
+                         std::unordered_map<baldr::RoadClass, size_t, statistics::rclassHasher>>&
 statistics::get_country_height() const {
   return country_height;
 }
 
-const std::unordered_map<uint64_t, std::unordered_map<RoadClass, size_t, statistics::rclassHasher>>&
+const std::unordered_map<uint64_t,
+                         std::unordered_map<baldr::RoadClass, size_t, statistics::rclassHasher>>&
 statistics::get_tile_width() const {
   return tile_width;
 }
 const std::unordered_map<std::string,
-                         std::unordered_map<RoadClass, size_t, statistics::rclassHasher>>&
+                         std::unordered_map<baldr::RoadClass, size_t, statistics::rclassHasher>>&
 statistics::get_country_width() const {
   return country_width;
 }
 
-const std::unordered_map<uint64_t, std::unordered_map<RoadClass, size_t, statistics::rclassHasher>>&
+const std::unordered_map<uint64_t,
+                         std::unordered_map<baldr::RoadClass, size_t, statistics::rclassHasher>>&
 statistics::get_tile_length() const {
   return tile_length;
 }
 const std::unordered_map<std::string,
-                         std::unordered_map<RoadClass, size_t, statistics::rclassHasher>>&
+                         std::unordered_map<baldr::RoadClass, size_t, statistics::rclassHasher>>&
 statistics::get_country_length() const {
   return country_length;
 }
 
-const std::unordered_map<uint64_t, std::unordered_map<RoadClass, size_t, statistics::rclassHasher>>&
+const std::unordered_map<uint64_t,
+                         std::unordered_map<baldr::RoadClass, size_t, statistics::rclassHasher>>&
 statistics::get_tile_weight() const {
   return tile_weight;
 }
 const std::unordered_map<std::string,
-                         std::unordered_map<RoadClass, size_t, statistics::rclassHasher>>&
+                         std::unordered_map<baldr::RoadClass, size_t, statistics::rclassHasher>>&
 statistics::get_country_weight() const {
   return country_weight;
 }
 
-const std::unordered_map<uint64_t, std::unordered_map<RoadClass, size_t, statistics::rclassHasher>>&
+const std::unordered_map<uint64_t,
+                         std::unordered_map<baldr::RoadClass, size_t, statistics::rclassHasher>>&
 statistics::get_tile_axle_load() const {
   return tile_axle_load;
 }
 const std::unordered_map<std::string,
-                         std::unordered_map<RoadClass, size_t, statistics::rclassHasher>>&
+                         std::unordered_map<baldr::RoadClass, size_t, statistics::rclassHasher>>&
 statistics::get_country_axle_load() const {
   return country_axle_load;
 }
