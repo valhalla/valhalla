@@ -130,6 +130,9 @@ public:
     l->set_street_side_tolerance(pl.street_side_tolerance_);
     l->mutable_search_filter()->set_min_road_class(pl.search_filter_.min_road_class_);
     l->mutable_search_filter()->set_max_road_class(pl.search_filter_.max_road_class_);
+    l->mutable_search_filter()->set_exclude_tunnel(pl.search_filter_.exclude_tunnel_);
+    l->mutable_search_filter()->set_exclude_bridge(pl.search_filter_.exclude_bridge_);
+    l->mutable_search_filter()->set_exclude_ramp(pl.search_filter_.exclude_ramp_);
 
     auto* path_edges = l->mutable_path_edges();
     for (const auto& e : pl.edges) {
