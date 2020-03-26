@@ -9,17 +9,22 @@
 namespace valhalla {
 namespace baldr {
 
+Location::SearchFilter::SearchFilter(unsigned int min_road_class, unsigned int max_road_class)
+    : min_road_class_(min_road_class), max_road_class_(max_road_class) {
+}
+
 // TODO: get defaults from config singleton
 Location::Location(const midgard::PointLL& latlng,
                    const StopType& stoptype,
                    unsigned int min_outbound_reach,
                    unsigned int min_inbound_reach,
                    unsigned long radius,
-                   const PreferredSide& side)
+                   const PreferredSide& side,
+                   const SearchFilter& search_filter)
     : latlng_(latlng), stoptype_(stoptype), min_outbound_reach_(min_outbound_reach),
       min_inbound_reach_(min_inbound_reach), radius_(radius), preferred_side_(side),
       node_snap_tolerance_(5), heading_tolerance_(60), search_cutoff_(35000),
-      street_side_tolerance_(5) {
+      street_side_tolerance_(5), search_filter_(search_filter) {
 }
 
 bool Location::operator==(const Location& o) const {

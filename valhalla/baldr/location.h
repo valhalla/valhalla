@@ -28,6 +28,19 @@ public:
   enum class PreferredSide : uint8_t { EITHER, SAME, OPPOSITE };
 
   /**
+   * Optional filters supplied in the request.
+   */
+  struct SearchFilter {
+  public:
+    SearchFilter(unsigned int min_road_class = 7, unsigned int max_road_class = 0);
+
+    unsigned int min_road_class_;
+    unsigned int max_road_class_;
+
+  protected:
+  };
+
+  /**
    * You have to initialize the location with something
    */
   Location() = delete;
@@ -41,7 +54,8 @@ public:
            unsigned int min_outbound_reach = 0,
            unsigned int min_inbound_reach = 0,
            unsigned long radius = 0,
-           const PreferredSide& side = PreferredSide::EITHER);
+           const PreferredSide& side = PreferredSide::EITHER,
+           const SearchFilter& search_filter = SearchFilter());
 
   /**
    * equality.
@@ -82,6 +96,7 @@ public:
   float heading_tolerance_;
   float search_cutoff_;
   float street_side_tolerance_;
+  SearchFilter search_filter_;
 
 protected:
 };

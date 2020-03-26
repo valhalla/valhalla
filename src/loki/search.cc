@@ -22,6 +22,16 @@ template <typename T> inline T square(T v) {
   return v * v;
 }
 
+bool search_filter(const DirectedEdge* edge, const Location::SearchFilter& search_filter) {
+  // check if this edge falls in the allowable road class range
+  uint32_t road_class = static_cast<uint32_t>(edge->classification());
+  if (road_class > search_filter.min_road_class_ || road_class < search_filter.max_road_class_) {
+    return true;
+  }
+
+  return false;
+}
+
 bool side_filter(const PathLocation::PathEdge& edge, const Location& location, GraphReader& reader) {
   // nothing to filter if you dont want to filter or if there is no side of street
   if (edge.sos == PathLocation::SideOfStreet::NONE ||
@@ -87,6 +97,7 @@ struct candidate_t {
   double sq_distance;
   PointLL point;
   size_t index;
+  bool prefiltered;
 
   GraphId edge_id;
   const DirectedEdge* edge;
@@ -458,11 +469,24 @@ struct bin_handler_t {
           continue;
       }
 
-      // reset these so we know the best point along the edge
+      // initialize candidates vector:
+      // - reset sq_distance to max so we know the best point along the edge
+      // - apply prefilters based on user's SearchFilter request options
       auto c_itr = bin_candidates.begin();
       decltype(begin) p_itr;
+      bool all_prefiltered = true;
       for (p_itr = begin; p_itr != end; ++p_itr, ++c_itr) {
         c_itr->sq_distance = std::numeric_limits<float>::max();
+        c_itr->prefiltered = search_filter(edge, p_itr->location.search_filter_);
+        if (!c_itr->prefiltered) {
+          all_prefiltered = false;
+        }
+        // all_prefiltered = all_prefiltered || !c_itr->prefiltered;
+      }
+
+      // short-circuit if all candidates were prefiltered
+      if (all_prefiltered) {
+        continue;
       }
 
       // TODO: can we speed this up? the majority of edges will be short and far away enough
@@ -488,6 +512,10 @@ struct bin_handler_t {
         // for each input point
         c_itr = bin_candidates.begin();
         for (p_itr = begin; p_itr != end; ++p_itr, ++c_itr) {
+          // skip updating this candidate because it was prefiltered
+          if (c_itr->prefiltered) {
+            break;
+          }
           // how close is the input to this segment
           auto point = p_itr->project(u, v);
           auto sq_distance = p_itr->project.approx.DistanceSquared(point);
@@ -506,6 +534,10 @@ struct bin_handler_t {
       // keep the best point along this edge if it makes sense
       c_itr = bin_candidates.begin();
       for (p_itr = begin; p_itr != end; ++p_itr, ++c_itr) {
+        // skip updating this candidate because it was prefiltered
+        if (c_itr->prefiltered) {
+          continue;
+        }
         // is this edge reachable in the right way
         bool reachable = reach.outbound >= p_itr->location.min_outbound_reach_ &&
                          reach.inbound >= p_itr->location.min_inbound_reach_;

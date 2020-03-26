@@ -458,6 +458,19 @@ void parse_locations(const rapidjson::Document& doc,
         if (street_side_tolerance) {
           location->set_street_side_tolerance(*street_side_tolerance);
         }
+        auto search_filter = rapidjson::get_child_optional(r_loc, "/search_filter");
+        if (search_filter) {
+          auto min_road_class =
+              rapidjson::get_optional<unsigned int>(*search_filter, "/min_road_class");
+          if (min_road_class) {
+            location->mutable_search_filter()->set_min_road_class(*min_road_class);
+          }
+          auto max_road_class =
+              rapidjson::get_optional<unsigned int>(*search_filter, "/max_road_class");
+          if (max_road_class) {
+            location->mutable_search_filter()->set_max_road_class(*max_road_class);
+          }
+        }
       } catch (...) { throw valhalla_exception_t{location_parse_error_code}; }
     }
 
