@@ -40,6 +40,8 @@ public:
    * @param dist          Distance to the destination (meters)
    * @param mode          Mode of travel along this edge.
    * @param path_distance Accumulated path distance
+   * @param transition_cost Transition cost
+   * @param has_time_restrictions Does the edge have time dependent restrictions.
    */
   EdgeLabel(const uint32_t predecessor,
             const baldr::GraphId& edgeid,
@@ -69,6 +71,8 @@ public:
    * @param predecessor Predecessor directed edge in the shortest path.
    * @param cost        True cost (and elapsed time in seconds) to the edge.
    * @param sortcost    Cost for sorting (includes A* heuristic).
+   * @param transition_cost Transition cost
+   * @param has_time_restrictions Does the edge have time dependent restrictions.
    */
   void Update(const uint32_t predecessor,
               const Cost& cost,
@@ -91,6 +95,8 @@ public:
    * @param cost           True cost (and elapsed time in seconds) to the edge.
    * @param sortcost       Cost for sorting (includes A* heuristic).
    * @param path_distance  Accumulated path distance.
+   * @param transition_cost Transition cost
+   * @param has_time_restrictions Does the edge have time dependent restrictions.
    */
   void Update(const uint32_t predecessor,
               const Cost& cost,
@@ -426,6 +432,7 @@ public:
    * @param mode         Mode of travel along this edge.
    * @param tc           Transition cost entering this edge.
    * @param not_thru_pruning  Is not thru pruning enabled.
+   * @param has_time_restrictions Does the edge have time dependent restrictions.
    */
   BDEdgeLabel(const uint32_t predecessor,
               const baldr::GraphId& edgeid,
@@ -464,6 +471,7 @@ public:
    * @param tc            Transition cost entering this edge.
    * @param path_distance Accumulated path distance.
    * @param not_thru_pruning  Is not thru pruning enabled.
+   * @param has_time_restrictions Does the edge have time dependent restrictions.
    */
   BDEdgeLabel(const uint32_t predecessor,
               const baldr::GraphId& edgeid,
@@ -489,7 +497,7 @@ public:
   }
 
   /**
-   * Constructor with values.
+   * Constructor with values. Used in SetOrigin.
    * @param predecessor  Index into the edge label list for the predecessor
    *                     directed edge in the shortest path.
    * @param edgeid       Directed edge Id.
@@ -498,6 +506,7 @@ public:
    * @param sortcost     Cost for sorting (includes A* heuristic).
    * @param dist         Distance to the destination in meters.
    * @param mode         Mode of travel along this edge.
+   * @param has_time_restrictions Does the edge have time dependent restrictions.
    */
   BDEdgeLabel(const uint32_t predecessor,
               const baldr::GraphId& edgeid,
@@ -517,7 +526,7 @@ public:
                   0,
                   Cost{},
                   has_time_restrictions),
-        not_thru_pruning_(false) {
+        not_thru_pruning_(!edge->not_thru()) {
     opp_edgeid_ = {};
   }
 
@@ -528,6 +537,7 @@ public:
    * @param cost        True cost (and elapsed time in seconds) to the edge.
    * @param sortcost    Cost for sorting (includes A* heuristic).
    * @param tc          Transition cost onto the edge.
+   * @param has_time_restrictions Does the edge have time dependent restrictions.
    */
   void Update(const uint32_t predecessor,
               const sif::Cost& cost,
@@ -549,6 +559,7 @@ public:
    * @param sortcost      Cost for sorting (includes A* heuristic).
    * @param tc            Transition cost onto the edge.
    * @param path_distance  Accumulated path distance.
+   * @param has_time_restrictions Does the edge have time dependent restrictions.
    */
   void Update(const uint32_t predecessor,
               const sif::Cost& cost,
@@ -608,6 +619,8 @@ public:
    * @param blockid       Transit trip block Id.
    * @param transit_operator Transit operator - index into an internal map
    * @param has_transit   Does the path to this edge have any transit.
+   * @param transition_cost Transition cost
+   * @param has_time_restrictions Does the edge have time dependent restrictions.
    */
   MMEdgeLabel(const uint32_t predecessor,
               const baldr::GraphId& edgeid,
@@ -649,6 +662,8 @@ public:
    * @param path_distance  Accumulated path distance.
    * @param tripid         Trip Id for a transit edge.
    * @param blockid        Transit trip block Id.
+   * @param transition_cost Transition cost
+   * @param has_time_restrictions Does the edge have time dependent restrictions.
    */
   void Update(const uint32_t predecessor,
               const sif::Cost& cost,
