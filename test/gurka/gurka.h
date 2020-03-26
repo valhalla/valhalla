@@ -604,7 +604,7 @@ valhalla::Api route(const map& map,
                     const std::string& to,
                     const std::string& costing,
                     const std::string& datetime = "") {
-  return route(map, {from, to}, costing, datetime);
+  return route(map, std::vector<std::string>{from, to}, costing, datetime);
 }
 
 valhalla::Api match(const map& map,
