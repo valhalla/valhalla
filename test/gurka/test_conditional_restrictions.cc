@@ -78,8 +78,9 @@ protected:
         {{{gurka::node_member, "A", "from"}, {gurka::node_member, "D", "to"}}}};
 
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
-    map = gurka::buildtiles(layout, ways, {}, relations, "test/data/conditional_restrictions",
-                            {{"mjolnir.timezone", {VALHALLA_SOURCE_DIR "test/data/tz.sqlite"}}});
+    map =
+        gurka::buildtiles(layout, ways, {}, relations, "test/data/conditional_restrictions",
+                          {{"mjolnir.timezone", {VALHALLA_SOURCE_DIR "build/test/data/tz.sqlite"}}});
   }
 };
 

@@ -39,10 +39,12 @@ TEST(TestSuite, TestName) {
 
 }
 ```
+#NOTE: Some tests need the timezone db to be loaded.
+To build timezone db initially, you can do `make check`.
 
-To build it, you can do `make gurka_example`, and `make run-gurka_example`.
-
-You can build and execute gurka tests with `make run-gurka`
+#Building and Running
+After timezone exists in your build/test/data directory, you can run tests individually by running `make run-gurka_example` or by running something like `./test/gurka/gurka_conditional_restrictions --gtest_filter=ConditionalRestrictions.NoRestrictionAuto`.
+You can build and execute all gurka tests with `make run-gurka`.
 
 # How to construct a map
 
