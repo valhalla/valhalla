@@ -29,9 +29,6 @@ jobs:
     steps:
       - setup_remote_docker
       - checkout
-      - restore_cache:
-          keys:
-            - ccache
       - run:
           name: Build Valhalla base Dockerfile
           command: |
@@ -40,10 +37,6 @@ jobs:
           name: Build Valhalla base Dockerfile x86
           command: |
             docker build -f ./docker/Dockerfile-build-x86 --tag valhalla/valhalla:build-x86-latest ./docker
-      - save_cache:
-          key: ccache
-          paths:
-            - ~/.ccache
       - run:
           name: Push Valhalla base image
           command: |
@@ -70,7 +63,8 @@ jobs:
       - run: git submodule sync && git submodule update --init
       - restore_cache:
           keys:
-            - ccache
+            - ccache-release-linux-x86_64-{{ .Branch }}
+            - ccache-release-linux-x86_64
       - run: npm install --ignore-scripts
       - run: mkdir build
       - run: |
@@ -89,7 +83,7 @@ jobs:
             export BUILD_TYPE=Release
             ./scripts/publish.sh
       - save_cache:
-          key: ccache
+          key: ccache-release-linux-x86_64-{{ .Branch }}-{{ epoch }}
           paths:
             - ~/.ccache
 
@@ -111,7 +105,8 @@ jobs:
       - run: git submodule sync && git submodule update --init
       - restore_cache:
           keys:
-            - ccache
+            - ccache-debug-linux-x86_64-{{ .Branch }}
+            - ccache-debug-linux-x86_64
       - run: npm install --ignore-scripts
       - run: mkdir build
       - run: |
@@ -128,7 +123,7 @@ jobs:
             export BUILD_TYPE=Debug
             ./scripts/publish.sh
       - save_cache:
-          key: ccache
+          key: ccache-debug-linux-x86_64-{{ .Branch }}-{{ epoch }}
           paths:
             - ~/.ccache
 
@@ -141,7 +136,8 @@ jobs:
       - run: git submodule sync && git submodule update --init
       - restore_cache:
           keys:
-            - ccache
+            - ccache-debug-linux-x86_64-{{ .Branch }}
+            - ccache-debug-linux-x86_64
       - run: npm install --ignore-scripts
       - run: mkdir build
       - run: |
@@ -158,7 +154,7 @@ jobs:
       - run: make -C build coverage
       - run: /bin/bash <(curl -s https://codecov.io/bash) || echo "Codecov did not collect coverage reports"
       - save_cache:
-          key: ccache
+          key: ccache-debug-linux-x86_64-{{ .Branch }}-{{ epoch }}
           paths:
             - ~/.ccache
 
@@ -171,7 +167,8 @@ jobs:
       - run: git submodule sync && git submodule update --init
       - restore_cache:
           keys:
-            - ccache
+            - ccache-release-linux-x86_64-{{ .Branch }}
+            - ccache-release-linux-x86_64
       - run: npm install --ignore-scripts
       - run: mkdir build
       - run: |
@@ -183,7 +180,7 @@ jobs:
       - run: make -C build install
       - run: make -C build package
       - save_cache:
-          key: ccache
+          key: ccache-release-linux-x86_64-{{ .Branch }}-{{ epoch }}
           paths:
             - ~/.ccache
 
@@ -196,7 +193,8 @@ jobs:
       - run: git submodule sync && git submodule update --init
       - restore_cache:
           keys:
-            - ccache
+            - ccache-release-linux-x86_32-{{ .Branch }}
+            - ccache-release-linux-x86_32
       - run: npm install --ignore-scripts
       - run: mkdir build
       - run: |
@@ -205,7 +203,7 @@ jobs:
       - run: make -C build -j4 tests
       - run: make -C build -j2 check
       - save_cache:
-          key: ccache
+          key: ccache-release-linux-x86_32-{{ .Branch }}-{{ epoch }}
           paths:
             - ~/.ccache
 
@@ -216,9 +214,10 @@ jobs:
       - checkout
       - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
       - run: git submodule sync && git submodule update --init
-      # - restore_cache:
-      #     keys:
-      #       - ccache
+      - restore_cache:
+          keys:
+            - ccache-macos-{{ .Branch }}
+            - ccache-macos
       - run: wget https://raw.githubusercontent.com/valhalla/homebrew-valhalla/master/Formula/prime_server.rb
       - run: brew install --build-from-source ./prime_server.rb
       - run: npm install --ignore-scripts
@@ -228,7 +227,7 @@ jobs:
       - run: make -C build -j4 tests
       - run: make -C build -j2 check
       - save_cache:
-          key: ccache
+          key: ccache-macos-{{ .Branch }}-{{ epoch }}
           paths:
             - ~/.ccache
 
@@ -239,6 +238,10 @@ jobs:
       - checkout
       - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
       - run: git submodule sync && git submodule update --init
+      - restore_cache:
+          keys:
+            - ccache-macos-{{ .Branch }}
+            - ccache-macos
       - run: npm install --ignore-scripts
       - run: mkdir -p build
       - run: cd build && cmake .. -DBUILD_SHARED_LIBS=Off -DENABLE_PYTHON_BINDINGS=Off -DENABLE_DATA_TOOLS=OFF -DENABLE_SERVICES=OFF -DBoost_USE_STATIC_LIBS=ON -DProtobuf_USE_STATIC_LIBS=ON -DLZ4_USE_STATIC_LIBS=ON
@@ -250,6 +253,10 @@ jobs:
             export COMMIT_MESSAGE=$(git log --oneline --format=%B -n 1 ${CIRCLE_SHA1} | head -n 1)
             export BUILD_TYPE=Release
             ./scripts/publish.sh
+      - save_cache:
+          key: ccache-macos-{{ .Branch }}-{{ epoch }}
+          paths:
+            - ~/.ccache
 
   build-debug-binary-osx:
     executor: macos
@@ -258,6 +265,10 @@ jobs:
       - checkout
       - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
       - run: git submodule sync && git submodule update --init
+      - restore_cache:
+          keys:
+            - ccache-debug-macos-{{ .Branch }}
+            - ccache-debug-macos
       - run: npm install --ignore-scripts
       - run: mkdir -p build
       - run: cd build && cmake .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_PYTHON_BINDINGS=Off -DBUILD_SHARED_LIBS=Off -DENABLE_DATA_TOOLS=OFF -DENABLE_SERVICES=OFF -DBoost_USE_STATIC_LIBS=ON -DProtobuf_USE_STATIC_LIBS=ON -DLZ4_USE_STATIC_LIBS=ON
@@ -269,6 +280,10 @@ jobs:
             export COMMIT_MESSAGE=$(git log --oneline --format=%B -n 1 ${CIRCLE_SHA1} | head -n 1)
             export BUILD_TYPE=Debug
             ./scripts/publish.sh
+      - save_cache:
+          key: ccache-debug-macos-{{ .Branch }}-{{ epoch }}
+          paths:
+            - ~/.ccache
 
 workflows:
   version: 2
