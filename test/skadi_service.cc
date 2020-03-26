@@ -1,3 +1,4 @@
+#include "baldr/graphreader.h"
 #include "loki/worker.h"
 #include "pixels.h"
 #include "test.h"
@@ -172,22 +173,8 @@ void create_tile() {
   ASSERT_TRUE(file.good()) << "File stream is not good";
 }
 
-void start_service(zmq::context_t& context) {
-  // server
-  std::thread server(
-      std::bind(&http_server_t::serve,
-                http_server_t(context, "ipc:///tmp/test_skadi_server",
-                              "ipc:///tmp/test_skadi_proxy_upstream", "ipc:///tmp/test_skadi_results",
-                              "ipc:///tmp/test_skadi_interrupt")));
-  server.detach();
+boost::property_tree::ptree make_config() {
 
-  // load balancer
-  std::thread proxy(
-      std::bind(&proxy_t::forward, proxy_t(context, "ipc:///tmp/test_skadi_proxy_upstream",
-                                           "ipc:///tmp/test_skadi_proxy_out")));
-  proxy.detach();
-
-  // service worker
   boost::property_tree::ptree config;
   std::stringstream json;
   json << R"({
@@ -216,15 +203,36 @@ void start_service(zmq::context_t& context) {
       "costing_options": { "auto": {}, "pedestrian": {} }
     })";
   rapidjson::read_json(json, config);
+  return config;
+}
 
-  std::thread worker(valhalla::loki::run_service, config);
+void start_service(zmq::context_t& context,
+                   boost::property_tree::ptree& config,
+                   valhalla::baldr::GraphReader& reader) {
+  // server
+  std::thread server(
+      std::bind(&http_server_t::serve,
+                http_server_t(context, "ipc:///tmp/test_skadi_server",
+                              "ipc:///tmp/test_skadi_proxy_upstream", "ipc:///tmp/test_skadi_results",
+                              "ipc:///tmp/test_skadi_interrupt")));
+  server.detach();
+
+  // load balancer
+  std::thread proxy(
+      std::bind(&proxy_t::forward, proxy_t(context, "ipc:///tmp/test_skadi_proxy_upstream",
+                                           "ipc:///tmp/test_skadi_proxy_out")));
+  proxy.detach();
+
+  std::thread worker(valhalla::loki::run_service, config, std::ref(reader));
   worker.detach();
 }
 
 TEST(SkadiService, test_requests) {
   // start up the service
   zmq::context_t context;
-  start_service(context);
+  auto config = make_config();
+  valhalla::baldr::GraphReader reader(config.get_child("mjolnir"));
+  start_service(context, config, reader);
 
   // client makes requests and gets back responses in a batch fashion
   auto request = requests.cbegin();

@@ -1,5 +1,6 @@
 #include <iostream>
 
+#include "baldr/graphreader.h"
 #include "baldr/rapidjson_utils.h"
 #include <boost/property_tree/ptree.hpp>
 
@@ -17,8 +18,10 @@ int main(int argc, char** argv) {
   boost::property_tree::ptree config;
   rapidjson::read_json(config_file, config);
 
+  valhalla::baldr::GraphReader reader(config.get_child("mjolnir"));
+
   // run the service worker
-  valhalla::loki::run_service(config);
+  valhalla::loki::run_service(config, reader);
 
   return 0;
 }

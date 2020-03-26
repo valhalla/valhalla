@@ -5,6 +5,7 @@
 #include <memory>
 #include <unordered_map>
 
+#include <valhalla/baldr/graphreader.h>
 #include <valhalla/proto/api.pb.h>
 
 namespace valhalla {
@@ -12,7 +13,9 @@ namespace tyr {
 
 class actor_t {
 public:
-  actor_t(const boost::property_tree::ptree& config, bool auto_cleanup = false);
+  actor_t(const boost::property_tree::ptree& config,
+          baldr::GraphReader& reader,
+          bool auto_cleanup = false);
   void cleanup();
   std::string route(const std::string& request_str,
                     const std::function<void()>& interrupt = []() -> void {});

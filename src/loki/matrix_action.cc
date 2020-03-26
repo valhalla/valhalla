@@ -115,7 +115,7 @@ void loki_worker_t::matrix(Api& request) {
   // correlate the various locations to the underlying graph
   std::unordered_map<size_t, size_t> color_counts;
   try {
-    const auto searched = loki::Search(sources_targets, *reader, costing);
+    const auto searched = loki::Search(sources_targets, reader, costing);
     for (size_t i = 0; i < sources_targets.size(); ++i) {
       const auto& l = sources_targets[i];
       const auto& projection = searched.at(l);
@@ -123,7 +123,7 @@ void loki_worker_t::matrix(Api& request) {
                           i < options.sources_size()
                               ? options.mutable_sources(i)
                               : options.mutable_targets(i - options.sources_size()),
-                          *reader);
+                          reader);
       // TODO: get transit level for transit costing
       // TODO: if transit send a non zero radius
       if (!connectivity_map) {

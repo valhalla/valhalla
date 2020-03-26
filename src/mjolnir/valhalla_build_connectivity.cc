@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "baldr/connectivity_map.h"
+#include "baldr/graphreader.h"
 #include "baldr/tilehierarchy.h"
 #include "config.h"
 
@@ -115,7 +116,8 @@ int main(int argc, char** argv) {
   rapidjson::read_json(config_file_path.c_str(), pt);
 
   // Get something we can use to fetch tiles
-  valhalla::baldr::connectivity_map_t connectivity_map(pt.get_child("mjolnir"));
+  valhalla::baldr::GraphReader reader(pt.get_child("mjolnir"));
+  valhalla::baldr::connectivity_map_t connectivity_map(reader);
 
   uint32_t transit_level = TileHierarchy::levels().rbegin()->second.level + 1;
   for (uint32_t level = 0; level <= transit_level; level++) {

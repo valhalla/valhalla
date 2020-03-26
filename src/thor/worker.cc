@@ -55,13 +55,10 @@ namespace valhalla {
 namespace thor {
 
 thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config,
-                             const std::shared_ptr<baldr::GraphReader>& graph_reader)
+                             baldr::GraphReader& graph_reader)
     : mode(valhalla::sif::TravelMode::kPedestrian), matcher_factory(config, graph_reader),
       reader(graph_reader), controller{},
       long_request(config.get<float>("thor.logging.long_request")) {
-  // If we weren't provided with a graph reader make our own
-  if (!reader)
-    reader = matcher_factory.graphreader();
 
   // Register standard edge/node costing methods
   factory.RegisterStandardCostingModels();
@@ -179,7 +176,7 @@ thor_worker_t::work(const std::list<zmq::message_t>& job,
   }
 }
 
-void run_service(const boost::property_tree::ptree& config) {
+void run_service(const boost::property_tree::ptree& config, baldr::GraphReader& graph_reader) {
   // gets requests from thor proxy
   auto upstream_endpoint = config.get<std::string>("thor.service.proxy") + "_out";
   // sends them on to odin
@@ -190,7 +187,7 @@ void run_service(const boost::property_tree::ptree& config) {
 
   // listen for requests
   zmq::context_t context;
-  thor_worker_t thor_worker(config);
+  thor_worker_t thor_worker(config, graph_reader);
   prime_server::worker_t worker(context, upstream_endpoint, downstream_endpoint, loopback_endpoint,
                                 interrupt_endpoint,
                                 std::bind(&thor_worker_t::work, std::ref(thor_worker),
@@ -356,8 +353,8 @@ void thor_worker_t::cleanup() {
   trace.clear();
   isochrone_gen.Clear();
   matcher_factory.ClearFullCache();
-  if (reader->OverCommitted()) {
-    reader->Trim();
+  if (reader.OverCommitted()) {
+    reader.Trim();
   }
 }
 

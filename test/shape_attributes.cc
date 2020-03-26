@@ -61,8 +61,10 @@ const auto conf = json_to_pt(R"({
     }
   })");
 
+valhalla::baldr::GraphReader reader(conf.get_child("mjolnir"));
+
 TEST(ShapeAttributes, test_shape_attributes_included) {
-  tyr::actor_t actor(conf);
+  tyr::actor_t actor(conf, reader);
 
   auto result_json = actor.trace_attributes(
       R"({"shape":[
@@ -121,7 +123,7 @@ TEST(ShapeAttributes, test_shape_attributes_included) {
 }
 
 TEST(ShapeAttributes, test_shape_attributes_no_turncosts) {
-  tyr::actor_t actor(conf);
+  tyr::actor_t actor(conf, reader);
   auto result_json = actor.trace_attributes(
       R"({"shape":[
          {"lat":52.09110,"lon":5.09806},

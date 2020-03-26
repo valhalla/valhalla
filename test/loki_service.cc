@@ -1,6 +1,7 @@
 #include "test.h"
 #include <cstdint>
 
+#include "baldr/graphreader.h"
 #include "baldr/rapidjson_utils.h"
 #include "midgard/logging.h"
 #include <boost/property_tree/ptree.hpp>
@@ -328,18 +329,8 @@ const std::vector<std::pair<uint16_t, std::string>> osrm_responses{
      R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"}};
 
 zmq::context_t context;
-void start_service() {
-  // server
-  std::thread server(
-      std::bind(&http_server_t::serve,
-                http_server_t(context, "ipc:///tmp/test_loki_server", "ipc:///tmp/test_loki_proxy_in",
-                              "ipc:///tmp/test_loki_results", "ipc:///tmp/test_loki_interrupt")));
-  server.detach();
 
-  // load balancer
-  std::thread proxy(std::bind(&proxy_t::forward, proxy_t(context, "ipc:///tmp/test_loki_proxy_in",
-                                                         "ipc:///tmp/test_loki_proxy_out")));
-  proxy.detach();
+boost::property_tree::ptree make_config() {
 
   // make the config file
   boost::property_tree::ptree config;
@@ -369,9 +360,24 @@ void start_service() {
       "costing_directions_options": { "auto": {}, "pedestrian": {} }
     })";
   rapidjson::read_json(json, config);
+  return config;
+}
+
+void start_service(boost::property_tree::ptree& config, valhalla::baldr::GraphReader& reader) {
+  // server
+  std::thread server(
+      std::bind(&http_server_t::serve,
+                http_server_t(context, "ipc:///tmp/test_loki_server", "ipc:///tmp/test_loki_proxy_in",
+                              "ipc:///tmp/test_loki_results", "ipc:///tmp/test_loki_interrupt")));
+  server.detach();
+
+  // load balancer
+  std::thread proxy(std::bind(&proxy_t::forward, proxy_t(context, "ipc:///tmp/test_loki_proxy_in",
+                                                         "ipc:///tmp/test_loki_proxy_out")));
+  proxy.detach();
 
   // service worker
-  std::thread worker(valhalla::loki::run_service, config);
+  std::thread worker(valhalla::loki::run_service, config, std::ref(reader));
   worker.detach();
 }
 
@@ -434,8 +440,14 @@ TEST(LokiService, test_osrm_failure_requests) {
 class LokiServiceEnv : public ::testing::Environment {
 public:
   void SetUp() override {
-    start_service();
+    start_service(config, reader);
   }
+
+  LokiServiceEnv() : config{make_config()}, reader(config) {
+  }
+
+  boost::property_tree::ptree config;
+  valhalla::baldr::GraphReader reader;
 };
 
 // Elevation service

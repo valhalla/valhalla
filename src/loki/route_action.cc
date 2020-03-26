@@ -89,10 +89,10 @@ void loki_worker_t::route(Api& request) {
   std::unordered_map<size_t, size_t> color_counts;
   try {
     auto locations = PathLocation::fromPBF(options.locations(), true);
-    const auto projections = loki::Search(locations, *reader, costing);
+    const auto projections = loki::Search(locations, reader, costing);
     for (size_t i = 0; i < locations.size(); ++i) {
       const auto& correlated = projections.at(locations[i]);
-      PathLocation::toPBF(correlated, options.mutable_locations(i), *reader);
+      PathLocation::toPBF(correlated, options.mutable_locations(i), reader);
       // TODO: get transit level for transit costing
       // TODO: if transit send a non zero radius
       if (!connectivity_map) {

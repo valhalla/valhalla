@@ -63,7 +63,8 @@ boost::property_tree::ptree make_conf() {
 
 TEST(Actor, Basic) {
   auto conf = make_conf();
-  tyr::actor_t actor(conf);
+  baldr::GraphReader reader(conf.get_child("mjolnir"));
+  tyr::actor_t actor(conf, reader);
 
   actor.route(R"({"locations":[{"lat":40.546115,"lon":-76.385076,"type":"break"},
       {"lat":40.544232,"lon":-76.385752,"type":"break"}],"costing":"auto"})");
@@ -100,22 +101,24 @@ class ActorInterrupt : public ::testing::Test {
 protected:
   void SetUp() override {
     conf = make_conf();
+    reader.reset(new baldr::GraphReader(conf.get_child("mjolnir")));
   }
 
   struct test_exception_t {};
 
   boost::property_tree::ptree conf;
+  std::shared_ptr<baldr::GraphReader> reader;
 };
 
 TEST_F(ActorInterrupt, Route) {
-  tyr::actor_t actor(conf);
+  tyr::actor_t actor(conf, *reader);
   std::string request = R"({"locations":[{"lat":40.546115,"lon":-76.385076,"type":"break"},
         {"lat":40.544232,"lon":-76.385752,"type":"break"}],"costing":"auto"})";
   EXPECT_THROW(actor.route(request, []() -> void { throw test_exception_t{}; }), test_exception_t);
 }
 
 TEST_F(ActorInterrupt, TraceAttributes) {
-  tyr::actor_t actor(conf);
+  tyr::actor_t actor(conf, *reader);
   std::string request = R"({"shape":[{"lat":40.546115,"lon":-76.385076},
         {"lat":40.544232,"lon":-76.385752}],"costing":"auto","shape_match":"map_snap"})";
   EXPECT_THROW(actor.trace_attributes(request, []() -> void { throw test_exception_t{}; }),

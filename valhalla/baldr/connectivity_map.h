@@ -17,7 +17,7 @@ public:
    * Constructs the connectivity map
    * @param pt   the ptree sub child labeled mjolnir in the valhalla json config
    */
-  connectivity_map_t(const boost::property_tree::ptree& pt);
+  connectivity_map_t(const GraphReader& reader);
 
   /**
    * Returns the color for the given graphid

@@ -33,8 +33,8 @@ std::string thor_worker_t::isochrones(Api& request) {
   // where there has been a higher cost that might still be marked in the isochrone
   auto grid = (costing == "multimodal" || costing == "transit")
                   ? isochrone_gen.ComputeMultiModal(*options.mutable_locations(),
-                                                    contours.back() + 10, *reader, mode_costing, mode)
-                  : isochrone_gen.Compute(*options.mutable_locations(), contours.back() + 10, *reader,
+                                                    contours.back() + 10, reader, mode_costing, mode)
+                  : isochrone_gen.Compute(*options.mutable_locations(), contours.back() + 10, reader,
                                           mode_costing, mode);
 
   // turn it into geojson

@@ -69,8 +69,8 @@ boost::property_tree::ptree get_conf() {
 
 struct route_tester {
   route_tester()
-      : conf(get_conf()), reader(new GraphReader(conf.get_child("mjolnir"))),
-        loki_worker(conf, reader), thor_worker(conf, reader), odin_worker(conf) {
+      : conf(get_conf()), reader(conf.get_child("mjolnir")), loki_worker(conf, reader),
+        thor_worker(conf, reader), odin_worker(conf) {
   }
   Api test(const std::string& request_json) {
     Api request;
@@ -84,7 +84,7 @@ struct route_tester {
     return request;
   }
   boost::property_tree::ptree conf;
-  std::shared_ptr<GraphReader> reader;
+  GraphReader reader;
   loki_worker_t loki_worker;
   thor_worker_t thor_worker;
   odin_worker_t odin_worker;
@@ -160,7 +160,7 @@ void test_mid_break(const std::string& date_time) {
       << "Should be a destination at the midpoint and reverse the route for the second leg";
 
   check_dates(date_time.find(R"("type":)") != std::string::npos, response.options().locations(),
-              *tester.reader);
+              tester.reader);
 
   mid_break_distance =
       directions.begin()->summary().length() + directions.rbegin()->summary().length();
@@ -202,7 +202,7 @@ void test_mid_through(const std::string& date_time) {
       << "Should continue through the midpoint and around the block";
 
   check_dates(date_time.find(R"("type":)") != std::string::npos, response.options().locations(),
-              *tester.reader);
+              tester.reader);
 
   mid_through_distance = directions.begin()->summary().length();
 }
@@ -248,7 +248,7 @@ void test_mid_via(const std::string& date_time) {
       << "Should be a uturn at the mid point";
 
   check_dates(date_time.find(R"("type":)") != std::string::npos, response.options().locations(),
-              *tester.reader);
+              tester.reader);
 }
 
 void test_mid_break_through(const std::string& date_time) {
@@ -294,7 +294,7 @@ void test_mid_break_through(const std::string& date_time) {
       << "Should be a destination at the midpoint and continue around the block";
 
   check_dates(date_time.find(R"("type":)") != std::string::npos, response.options().locations(),
-              *tester.reader);
+              tester.reader);
 }
 
 TEST(MultiPointRoutesBreak, test_mid_break_no_time) {

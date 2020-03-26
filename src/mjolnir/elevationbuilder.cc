@@ -35,13 +35,11 @@ constexpr double kMinimumInterval = 10.0f;
 /**
  * Adds elevation to a set of tiles. Each thread pulls a tile of the queue
  */
-void add_elevation(const boost::property_tree::ptree& pt,
+void add_elevation(GraphReader& graphreader,
                    std::deque<GraphId>& tilequeue,
                    std::mutex& lock,
                    const std::unique_ptr<const valhalla::skadi::sample>& sample,
                    std::promise<uint32_t>& result) {
-  // Local Graphreader
-  GraphReader graphreader(pt.get_child("mjolnir"));
 
   // We usually end up accessing the same shape twice (once for each direction along an edge).
   // Use a cache to record elevation attributes based on the EdgeInfo offset. This includes
@@ -207,7 +205,7 @@ void ElevationBuilder::Build(const boost::property_tree::ptree& pt) {
   // Spawn the threads
   for (auto& thread : threads) {
     results.emplace_back();
-    thread.reset(new std::thread(add_elevation, std::cref(pt), std::ref(tilequeue), std::ref(lock),
+    thread.reset(new std::thread(add_elevation, std::ref(reader), std::ref(tilequeue), std::ref(lock),
                                  std::cref(sample), std::ref(results.back())));
   }
 

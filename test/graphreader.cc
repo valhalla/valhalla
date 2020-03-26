@@ -114,7 +114,8 @@ TEST(ConnectivityMap, Basic) {
   touch_tile(d1, tile_dir);
 
   // check that it looks right
-  connectivity_map_t conn(pt);
+  GraphReader reader(pt);
+  connectivity_map_t conn(reader);
 
   EXPECT_EQ(conn.get_color({a0, 2, 0}), conn.get_color({a1, 2, 0})) << "a's should be connected";
   EXPECT_EQ(conn.get_color({a0, 2, 0}), conn.get_color({a2, 2, 0})) << "a's should be connected";
