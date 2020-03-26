@@ -115,8 +115,8 @@ TEST_F(RoadClassFilter, MinRoadClass) {
 /*************************************************************/
 TEST(Standalone, TunnelFilter) {
   const std::string ascii_map = R"(
-    B---1-----C
-    |         |
+    B---------C
+    |   1     |
     |        2|
     A         D
          )";
@@ -151,8 +151,8 @@ TEST(Standalone, TunnelFilter) {
 /*************************************************************/
 TEST(Standalone, BridgeFilter) {
   const std::string ascii_map = R"(
-    B---1-----C
-    |         |
+    B---------C
+    |   1     |
     |        2|
     A         D
          )";
