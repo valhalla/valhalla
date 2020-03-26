@@ -216,8 +216,8 @@ jobs:
       - run: git submodule sync && git submodule update --init
       - restore_cache:
           keys:
-            - ccache-macos-{{ .Branch }}
-            - ccache-macos
+            - ccache-release-macos-{{ .Branch }}
+            - ccache-release-macos
       - run: wget https://raw.githubusercontent.com/valhalla/homebrew-valhalla/master/Formula/prime_server.rb
       - run: brew install --build-from-source ./prime_server.rb
       - run: npm install --ignore-scripts
@@ -227,7 +227,7 @@ jobs:
       - run: make -C build -j4 tests
       - run: make -C build -j2 check
       - save_cache:
-          key: ccache-macos-{{ .Branch }}-{{ epoch }}
+          key: ccache-release-macos-{{ .Branch }}-{{ epoch }}
           paths:
             - ~/.ccache
 
@@ -240,8 +240,8 @@ jobs:
       - run: git submodule sync && git submodule update --init
       - restore_cache:
           keys:
-            - ccache-macos-{{ .Branch }}
-            - ccache-macos
+            - ccache-release-macos-{{ .Branch }}
+            - ccache-release-macos
       - run: npm install --ignore-scripts
       - run: mkdir -p build
       - run: cd build && cmake .. -DBUILD_SHARED_LIBS=Off -DENABLE_PYTHON_BINDINGS=Off -DENABLE_DATA_TOOLS=OFF -DENABLE_SERVICES=OFF -DBoost_USE_STATIC_LIBS=ON -DProtobuf_USE_STATIC_LIBS=ON -DLZ4_USE_STATIC_LIBS=ON
@@ -254,7 +254,7 @@ jobs:
             export BUILD_TYPE=Release
             ./scripts/publish.sh
       - save_cache:
-          key: ccache-macos-{{ .Branch }}-{{ epoch }}
+          key: ccache-release-macos-{{ .Branch }}-{{ epoch }}
           paths:
             - ~/.ccache
 
