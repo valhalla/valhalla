@@ -6,6 +6,7 @@
 
 #include <valhalla/baldr/rapidjson_utils.h>
 #include <valhalla/midgard/pointll.h>
+#include <valhalla/proto/tripcommon.pb.h>
 
 namespace valhalla {
 namespace baldr {
@@ -32,10 +33,11 @@ public:
    */
   struct SearchFilter {
   public:
-    SearchFilter(unsigned int min_road_class = 7, unsigned int max_road_class = 0);
+    SearchFilter(valhalla::RoadClass min_road_class = valhalla::RoadClass::kServiceOther,
+                 valhalla::RoadClass max_road_class = valhalla::RoadClass::kMotorway);
 
-    unsigned int min_road_class_;
-    unsigned int max_road_class_;
+    valhalla::RoadClass min_road_class_;
+    valhalla::RoadClass max_road_class_;
 
   protected:
   };

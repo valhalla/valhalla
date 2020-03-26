@@ -47,8 +47,8 @@ message Location {
   }
 
   message SearchFilter {
-    optional uint32 min_road_class = 1 [default = 7]; // lowest road class to allow in loki results [TODO use RoadClass enum?]
-    optional uint32 max_road_class = 2 [default = 0]; // highest road class to allow in loki results [TODO use RoadClass enum?]
+    optional RoadClass min_road_class = 1 [default = kServiceOther]; // lowest road class to allow in loki results
+    optional RoadClass max_road_class = 2 [default = kMotorway]; // highest road class to allow in loki results
     optional bool exclude_tunnel  = 3;  // whether to exclude tunnels from loki results (default false)
     optional bool exclude_bridge  = 4;  // whether to exclude bridges from loki results (default false)
     optional bool exclude_ramp  = 5;    // whether to exclude ramps from loki results (default false)

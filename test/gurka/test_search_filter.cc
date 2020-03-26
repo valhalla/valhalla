@@ -72,26 +72,32 @@ TEST(Standalone, RoadClassFilter) {
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
   auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/search_filter_2");
 
+  // Should snap origin to AB as it's closest
   const std::string& request_1 =
       (boost::format(R"({"locations":[{"lat":%s,"lon":%s},{"lat":%s,"lon":%s}],"costing":"auto"})") %
        std::to_string(map.nodes.at("1").lat()) % std::to_string(map.nodes.at("1").lng()) %
        std::to_string(map.nodes.at("2").lat()) % std::to_string(map.nodes.at("2").lng()))
           .str();
-
   auto result_1 = gurka::route(map, request_1);
-
-  // Should snap to AB as it's closest
   gurka::assert::osrm::expect_route(result_1, {"AB", "BC"});
 
+  // Should snap origin to CD as the search_filter disallows motorways
   const std::string& request_2 =
       (boost::format(
-           R"({"locations":[{"lat":%s,"lon":%s,"search_filter":{"max_road_class":1}},{"lat":%s,"lon":%s}],"costing":"auto"})") %
+           R"({"locations":[{"lat":%s,"lon":%s,"search_filter":{"max_road_class":"primary"}},{"lat":%s,"lon":%s}],"costing":"auto"})") %
        std::to_string(map.nodes.at("1").lat()) % std::to_string(map.nodes.at("1").lng()) %
        std::to_string(map.nodes.at("2").lat()) % std::to_string(map.nodes.at("2").lng()))
           .str();
-
   auto result_2 = gurka::route(map, request_2);
-
-  // Should snap to CD as the search_filter disallows motorways
   gurka::assert::osrm::expect_route(result_2, {"CD", "BC"});
+
+  // Should snap destination to AB as the search_filter disallows primary
+  const std::string& request_3 =
+      (boost::format(
+           R"({"locations":[{"lat":%s,"lon":%s},{"lat":%s,"lon":%s,"search_filter":{"min_road_class":"motorway"}}],"costing":"auto"})") %
+       std::to_string(map.nodes.at("1").lat()) % std::to_string(map.nodes.at("1").lng()) %
+       std::to_string(map.nodes.at("2").lat()) % std::to_string(map.nodes.at("2").lng()))
+          .str();
+  auto result_3 = gurka::route(map, request_3);
+  gurka::assert::osrm::expect_route(result_3, {"AB"});
 }

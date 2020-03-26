@@ -9,7 +9,8 @@
 namespace valhalla {
 namespace baldr {
 
-Location::SearchFilter::SearchFilter(unsigned int min_road_class, unsigned int max_road_class)
+Location::SearchFilter::SearchFilter(valhalla::RoadClass min_road_class,
+                                     valhalla::RoadClass max_road_class)
     : min_road_class_(min_road_class), max_road_class_(max_road_class) {
 }
 

@@ -25,7 +25,10 @@ template <typename T> inline T square(T v) {
 bool search_filter(const DirectedEdge* edge, const Location::SearchFilter& search_filter) {
   // check if this edge falls in the allowable road class range
   uint32_t road_class = static_cast<uint32_t>(edge->classification());
-  if (road_class > search_filter.min_road_class_ || road_class < search_filter.max_road_class_) {
+  uint32_t min_road_class = static_cast<uint32_t>(search_filter.min_road_class_);
+  uint32_t max_road_class = static_cast<uint32_t>(search_filter.max_road_class_);
+
+  if (road_class > min_road_class || road_class < max_road_class) {
     return true;
   }
 

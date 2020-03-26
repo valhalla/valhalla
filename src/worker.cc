@@ -461,14 +461,16 @@ void parse_locations(const rapidjson::Document& doc,
         auto search_filter = rapidjson::get_child_optional(r_loc, "/search_filter");
         if (search_filter) {
           auto min_road_class =
-              rapidjson::get_optional<unsigned int>(*search_filter, "/min_road_class");
-          if (min_road_class) {
-            location->mutable_search_filter()->set_min_road_class(*min_road_class);
+              rapidjson::get_optional<std::string>(*search_filter, "/min_road_class");
+          valhalla::RoadClass min_rc;
+          if (min_road_class && RoadClass_Enum_Parse(*min_road_class, &min_rc)) {
+            location->mutable_search_filter()->set_min_road_class(min_rc);
           }
           auto max_road_class =
-              rapidjson::get_optional<unsigned int>(*search_filter, "/max_road_class");
-          if (max_road_class) {
-            location->mutable_search_filter()->set_max_road_class(*max_road_class);
+              rapidjson::get_optional<std::string>(*search_filter, "/max_road_class");
+          valhalla::RoadClass max_rc;
+          if (max_road_class && RoadClass_Enum_Parse(*max_road_class, &max_rc)) {
+            location->mutable_search_filter()->set_max_road_class(max_rc);
           }
         }
       } catch (...) { throw valhalla_exception_t{location_parse_error_code}; }
@@ -1120,6 +1122,24 @@ bool PreferredSide_Enum_Parse(const std::string& pside, valhalla::Location::Pref
   if (i == types.cend())
     return false;
   *p = i->second;
+  return true;
+}
+
+bool RoadClass_Enum_Parse(const std::string& rc_name, valhalla::RoadClass* rc) {
+  static const std::unordered_map<std::string, valhalla::RoadClass> types{
+      {"motorway", valhalla::RoadClass::kMotorway},
+      {"trunk", valhalla::RoadClass::kTrunk},
+      {"primary", valhalla::RoadClass::kPrimary},
+      {"secondary", valhalla::RoadClass::kSecondary},
+      {"tertiary", valhalla::RoadClass::kTertiary},
+      {"unclassified", valhalla::RoadClass::kUnclassified},
+      {"residential", valhalla::RoadClass::kResidential},
+      {"service_other", valhalla::RoadClass::kServiceOther},
+  };
+  auto i = types.find(rc_name);
+  if (i == types.cend())
+    return false;
+  *rc = i->second;
   return true;
 }
 
