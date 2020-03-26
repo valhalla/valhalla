@@ -91,9 +91,10 @@ bool TimeDepReverse::ExpandReverse(GraphReader& graphreader,
   }
 
   // Update the time information
-  auto ti = from_transition ? time_info
-                            : time_info - TimeInfo::Offset{pred.cost().secs,
-                                                           static_cast<int>(nodeinfo->timezone())};
+  auto offset_time =
+      from_transition
+          ? time_info
+          : time_info - TimeInfo::Offset{pred.cost().secs, static_cast<int>(nodeinfo->timezone())};
 
   // Expand from end node.
   EdgeMetadata meta = EdgeMetadata::make(node, nodeinfo, tile, edgestatus_);
@@ -114,7 +115,7 @@ bool TimeDepReverse::ExpandReverse(GraphReader& graphreader,
     }
 
     found_valid_edge = ExpandReverseInner(graphreader, pred, opp_pred_edge, nodeinfo, pred_idx, meta,
-                                          tile, ti, destination, best_path) ||
+                                          tile, offset_time, destination, best_path) ||
                        found_valid_edge;
   }
 
@@ -125,11 +126,11 @@ bool TimeDepReverse::ExpandReverse(GraphReader& graphreader,
       if (trans->up()) {
         hierarchy_limits_[node.level()].up_transition_count++;
         found_valid_edge = ExpandReverse(graphreader, trans->endnode(), pred, pred_idx, opp_pred_edge,
-                                         true, ti, destination, best_path) ||
+                                         true, offset_time, destination, best_path) ||
                            found_valid_edge;
       } else if (!hierarchy_limits_[trans->endnode().level()].StopExpanding(pred.distance())) {
         found_valid_edge = ExpandReverse(graphreader, trans->endnode(), pred, pred_idx, opp_pred_edge,
-                                         true, ti, destination, best_path) ||
+                                         true, offset_time, destination, best_path) ||
                            found_valid_edge;
       }
     }
@@ -152,9 +153,10 @@ bool TimeDepReverse::ExpandReverse(GraphReader& graphreader,
         found_valid_edge = true;
       } else {
         // We didn't add any shortcut of the uturn, therefore evaluate the regular uturn instead
-        found_valid_edge = ExpandReverseInner(graphreader, pred, opp_pred_edge, nodeinfo, pred_idx,
-                                              uturn_meta, tile, ti, destination, best_path) ||
-                           found_valid_edge;
+        found_valid_edge =
+            ExpandReverseInner(graphreader, pred, opp_pred_edge, nodeinfo, pred_idx, uturn_meta, tile,
+                               offset_time, destination, best_path) ||
+            found_valid_edge;
       }
     }
   }

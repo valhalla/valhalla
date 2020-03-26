@@ -126,9 +126,10 @@ bool BidirectionalAStar::ExpandForward(GraphReader& graphreader,
   }
 
   // Update the time information
-  auto ti = from_transition ? time_info
-                            : time_info + TimeInfo::Offset{pred.cost().secs,
-                                                           static_cast<int>(nodeinfo->timezone())};
+  auto offset_time =
+      from_transition
+          ? time_info
+          : time_info + TimeInfo::Offset{pred.cost().secs, static_cast<int>(nodeinfo->timezone())};
 
   uint32_t shortcuts = 0;
   EdgeMetadata meta = EdgeMetadata::make(node, nodeinfo, tile, edgestatus_forward_);
@@ -150,9 +151,9 @@ bool BidirectionalAStar::ExpandForward(GraphReader& graphreader,
       continue;
     }
 
-    found_valid_edge =
-        ExpandForwardInner(graphreader, pred, nodeinfo, pred_idx, meta, shortcuts, tile, ti) ||
-        found_valid_edge;
+    found_valid_edge = ExpandForwardInner(graphreader, pred, nodeinfo, pred_idx, meta, shortcuts,
+                                          tile, offset_time) ||
+                       found_valid_edge;
   }
 
   // Handle transitions - expand from the end node of each transition
@@ -161,11 +162,13 @@ bool BidirectionalAStar::ExpandForward(GraphReader& graphreader,
     for (uint32_t i = 0; i < nodeinfo->transition_count(); ++i, ++trans) {
       if (trans->up()) {
         hierarchy_limits_forward_[node.level()].up_transition_count++;
-        found_valid_edge = ExpandForward(graphreader, trans->endnode(), pred, pred_idx, true, ti) ||
-                           found_valid_edge;
+        found_valid_edge =
+            ExpandForward(graphreader, trans->endnode(), pred, pred_idx, true, offset_time) ||
+            found_valid_edge;
       } else if (!hierarchy_limits_forward_[trans->endnode().level()].StopExpanding()) {
-        found_valid_edge = ExpandForward(graphreader, trans->endnode(), pred, pred_idx, true, ti) ||
-                           found_valid_edge;
+        found_valid_edge =
+            ExpandForward(graphreader, trans->endnode(), pred, pred_idx, true, offset_time) ||
+            found_valid_edge;
       }
     }
   }
@@ -190,7 +193,7 @@ bool BidirectionalAStar::ExpandForward(GraphReader& graphreader,
       } else {
         // We didn't add any shortcut of the uturn, therefore evaluate the regular uturn instead
         bool uturn_added = ExpandForwardInner(graphreader, pred, nodeinfo, pred_idx, uturn_meta,
-                                              shortcuts, tile, ti);
+                                              shortcuts, tile, offset_time);
         found_valid_edge = found_valid_edge || uturn_added;
       }
     }
@@ -317,9 +320,10 @@ bool BidirectionalAStar::ExpandReverse(GraphReader& graphreader,
   }
 
   // Update the time information
-  auto ti = from_transition ? time_info
-                            : time_info - TimeInfo::Offset{pred.cost().secs,
-                                                           static_cast<int>(nodeinfo->timezone())};
+  auto offset_time =
+      from_transition
+          ? time_info
+          : time_info - TimeInfo::Offset{pred.cost().secs, static_cast<int>(nodeinfo->timezone())};
 
   uint32_t shortcuts = 0;
   EdgeMetadata meta = EdgeMetadata::make(node, nodeinfo, tile, edgestatus_reverse_);
@@ -342,7 +346,7 @@ bool BidirectionalAStar::ExpandReverse(GraphReader& graphreader,
     }
 
     edge_was_added = ExpandReverseInner(graphreader, pred, opp_pred_edge, nodeinfo, pred_idx, meta,
-                                        shortcuts, tile, ti) ||
+                                        shortcuts, tile, offset_time) ||
                      edge_was_added;
   }
 
@@ -352,13 +356,13 @@ bool BidirectionalAStar::ExpandReverse(GraphReader& graphreader,
     for (uint32_t i = 0; i < nodeinfo->transition_count(); ++i, ++trans) {
       if (trans->up()) {
         hierarchy_limits_reverse_[node.level()].up_transition_count++;
-        edge_was_added =
-            ExpandReverse(graphreader, trans->endnode(), pred, pred_idx, opp_pred_edge, true, ti) ||
-            edge_was_added;
+        edge_was_added = ExpandReverse(graphreader, trans->endnode(), pred, pred_idx, opp_pred_edge,
+                                       true, offset_time) ||
+                         edge_was_added;
       } else if (!hierarchy_limits_reverse_[trans->endnode().level()].StopExpanding()) {
-        edge_was_added =
-            ExpandReverse(graphreader, trans->endnode(), pred, pred_idx, opp_pred_edge, true, ti) ||
-            edge_was_added;
+        edge_was_added = ExpandReverse(graphreader, trans->endnode(), pred, pred_idx, opp_pred_edge,
+                                       true, offset_time) ||
+                         edge_was_added;
       }
     }
   }
@@ -383,7 +387,7 @@ bool BidirectionalAStar::ExpandReverse(GraphReader& graphreader,
       } else {
         // We didn't add any shortcut of the uturn, therefore evaluate the regular uturn instead
         edge_was_added = ExpandReverseInner(graphreader, pred, opp_pred_edge, nodeinfo, pred_idx,
-                                            uturn_meta, shortcuts, tile, ti) ||
+                                            uturn_meta, shortcuts, tile, offset_time) ||
                          edge_was_added;
       }
     }
@@ -625,8 +629,6 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
           hierarchy_limits_forward_[fwd_pred.endnode().level()].StopExpanding()) {
         continue;
       }
-
-      // Prepare the time information before expansion
 
       // Expand from the end node in forward direction.
       ExpandForward(graphreader, fwd_pred.endnode(), fwd_pred, forward_pred_idx, false,

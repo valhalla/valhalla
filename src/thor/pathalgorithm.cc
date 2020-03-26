@@ -19,7 +19,7 @@ TimeInfo TimeInfo::make(valhalla::Location& location, baldr::GraphReader& reader
     return {false};
   }
 
-  // Get the timezone of the first edge's end node that we can
+  // Find the first edge whose end node has a valid timezone index and keep it
   int timezone_index = 0;
   for (const auto& pe : location.path_edges()) {
     const baldr::GraphTile* tile = nullptr;

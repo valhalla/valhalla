@@ -53,9 +53,10 @@ bool TimeDepForward::ExpandForward(GraphReader& graphreader,
   }
 
   // Update the time information
-  auto ti = from_transition ? time_info
-                            : time_info + TimeInfo::Offset{pred.cost().secs,
-                                                           static_cast<int>(nodeinfo->timezone())};
+  auto offset_time =
+      from_transition
+          ? time_info
+          : time_info + TimeInfo::Offset{pred.cost().secs, static_cast<int>(nodeinfo->timezone())};
 
   // Expand from start node.
   EdgeMetadata meta = EdgeMetadata::make(node, nodeinfo, tile, edgestatus_);
@@ -76,8 +77,8 @@ bool TimeDepForward::ExpandForward(GraphReader& graphreader,
       continue;
     }
 
-    found_valid_edge = ExpandForwardInner(graphreader, pred, nodeinfo, pred_idx, meta, tile, ti,
-                                          destination, best_path) ||
+    found_valid_edge = ExpandForwardInner(graphreader, pred, nodeinfo, pred_idx, meta, tile,
+                                          offset_time, destination, best_path) ||
                        found_valid_edge;
   }
 
@@ -87,12 +88,12 @@ bool TimeDepForward::ExpandForward(GraphReader& graphreader,
     for (uint32_t i = 0; i < nodeinfo->transition_count(); ++i, ++trans) {
       if (trans->up()) {
         hierarchy_limits_[node.level()].up_transition_count++;
-        found_valid_edge = ExpandForward(graphreader, trans->endnode(), pred, pred_idx, true, ti,
-                                         destination, best_path) ||
+        found_valid_edge = ExpandForward(graphreader, trans->endnode(), pred, pred_idx, true,
+                                         offset_time, destination, best_path) ||
                            found_valid_edge;
       } else if (!hierarchy_limits_[trans->endnode().level()].StopExpanding(pred.distance())) {
-        found_valid_edge = ExpandForward(graphreader, trans->endnode(), pred, pred_idx, true, ti,
-                                         destination, best_path) ||
+        found_valid_edge = ExpandForward(graphreader, trans->endnode(), pred, pred_idx, true,
+                                         offset_time, destination, best_path) ||
                            found_valid_edge;
       }
     }
@@ -116,7 +117,7 @@ bool TimeDepForward::ExpandForward(GraphReader& graphreader,
       } else {
         // We didn't add any shortcut of the uturn, therefore evaluate the regular uturn instead
         found_valid_edge = ExpandForwardInner(graphreader, pred, nodeinfo, pred_idx, uturn_meta, tile,
-                                              ti, destination, best_path) ||
+                                              offset_time, destination, best_path) ||
                            found_valid_edge;
       }
     }
