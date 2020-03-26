@@ -7,6 +7,12 @@
 
 using namespace valhalla;
 
+/*
+ * Tests the timeAllowed and timeDenied conditional restrictions for auto, bicycle and pedestrian
+ * costing. NOTE: To test restrictions, the map must contain more than 1 edge.  If you only have 1
+ * edge, then it will never set the date_time info because its traversing a trivial path (see
+ * https://github.com/valhalla/valhalla/blob/master/src/thor/triplegbuilder.cc#L1216)
+ */
 class ConditionalRestrictions : public ::testing::Test {
 protected:
   static gurka::map map;
@@ -15,17 +21,23 @@ protected:
     constexpr double gridsize = 100;
 
     const std::string ascii_map = R"(
-         A--B
-         |  \
-         D--C)";
+         A----B
+         |    |
+         D    C
+          \  /
+           E    
+    )";
 
     const gurka::ways ways = {
-        {"AD", {{"highway", "service"},{"motorcar", "no"},{"bicycle", "yes"},{"foot", "yes"},
+        {"AD",
+         {{"highway", "service"},
+          {"motorcar", "no"},
+          {"bicycle", "yes"},
+          {"foot", "yes"},
           {"bicycle:conditional",
            "no @ (Mar 00:00-07:00;Mar 17:30-24:00;Apr 00:00-07:00;Apr 19:00-24:00;Aug 00:00-07:00;Aug 19:00-24:00;Sep 00:00-07:00;Sep 18:00-24:00;Oct 00:00-07:00;Oct 17:00-24:00;Jan-Feb 00:00-07:30;Jan-Feb 17:00-24:00;May-Jul 00:00-07:00;May-Jul 20:00-24:00)"},
           {"foot:conditional",
-           "yes @ (Mar 00:00-07:00;Mar 17:30-24:00;Apr 00:00-07:00;Apr 19:00-24:00;Aug 00:00-07:00;Aug 19:00-24:00;Sep 00:00-07:00;Sep 18:00-24:00;Oct 00:00-07:00;Oct 17:00-24:00;Jan-Feb 00:00-07:30;Jan-Feb 17:00-24:00;May-Jul 00:00-07:00;May-Jul 20:00-24:00)"}
-        }},
+           "yes @ (Mar 00:00-07:00;Mar 17:30-24:00;Apr 00:00-07:00;Apr 19:00-24:00;Aug 00:00-07:00;Aug 19:00-24:00;Sep 00:00-07:00;Sep 18:00-24:00;Oct 00:00-07:00;Oct 17:00-24:00;Jan-Feb 00:00-07:30;Jan-Feb 17:00-24:00;May-Jul 00:00-07:00;May-Jul 20:00-24:00)"}}},
         {"AB",
          {{"highway", "service"},
           {"motorcar:conditional",
@@ -33,47 +45,56 @@ protected:
           {"bicycle:conditional",
            "no @ (Mar 00:00-07:00;Mar 17:30-24:00;Apr 00:00-07:00;Apr 19:00-24:00;Aug 00:00-07:00;Aug 19:00-24:00;Sep 00:00-07:00;Sep 18:00-24:00;Oct 00:00-07:00;Oct 17:00-24:00;Jan-Feb 00:00-07:30;Jan-Feb 17:00-24:00;May-Jul 00:00-07:00;May-Jul 20:00-24:00)"},
           {"foot:conditional",
-           "yes @ (Mar 00:00-07:00;Mar 17:30-24:00;Apr 00:00-07:00;Apr 19:00-24:00;Aug 00:00-07:00;Aug 19:00-24:00;Sep 00:00-07:00;Sep 18:00-24:00;Oct 00:00-07:00;Oct 17:00-24:00;Jan-Feb 00:00-07:30;Jan-Feb 17:00-24:00;May-Jul 00:00-07:00;May-Jul 20:00-24:00)"}
-         }},
+           "yes @ (Mar 00:00-07:00;Mar 17:30-24:00;Apr 00:00-07:00;Apr 19:00-24:00;Aug 00:00-07:00;Aug 19:00-24:00;Sep 00:00-07:00;Sep 18:00-24:00;Oct 00:00-07:00;Oct 17:00-24:00;Jan-Feb 00:00-07:30;Jan-Feb 17:00-24:00;May-Jul 00:00-07:00;May-Jul 20:00-24:00)"}}},
         {"BC",
-         {{"highway", "service"},
-          {"motorcar:conditional",
-           "yes @ (Mar 00:00-07:00;Mar 17:30-24:00;Apr 00:00-07:00;Apr 19:00-24:00;Aug 00:00-07:00;Aug 19:00-24:00;Sep 00:00-07:00;Sep 18:00-24:00;Oct 00:00-07:00;Oct 17:00-24:00;Jan-Feb 00:00-07:30;Jan-Feb 17:00-24:00;May-Jul 00:00-07:00;May-Jul 20:00-24:00)"},
-          {"bicycle:conditional",
-           "no @ (Mar 00:00-07:00;Mar 17:30-24:00;Apr 00:00-07:00;Apr 19:00-24:00;Aug 00:00-07:00;Aug 19:00-24:00;Sep 00:00-07:00;Sep 18:00-24:00;Oct 00:00-07:00;Oct 17:00-24:00;Jan-Feb 00:00-07:30;Jan-Feb 17:00-24:00;May-Jul 00:00-07:00;May-Jul 20:00-24:00)"},
-          {"foot:conditional",
-           "yes @ (Mar 00:00-07:00;Mar 17:30-24:00;Apr 00:00-07:00;Apr 19:00-24:00;Aug 00:00-07:00;Aug 19:00-24:00;Sep 00:00-07:00;Sep 18:00-24:00;Oct 00:00-07:00;Oct 17:00-24:00;Jan-Feb 00:00-07:30;Jan-Feb 17:00-24:00;May-Jul 00:00-07:00;May-Jul 20:00-24:00)"}
-         }},
+         {{"highway", "service"}, {"motorcar:conditional", "yes @ (Mar 00:00-07:00;Mar 17:30-24:00;Apr 00:00-07:00;Apr 19:00-24:00;Aug 00:00-07:00;Aug 19:00-24:00;Sep 00:00-07:00;Sep 18:00-24:00;Oct 00:00-07:00;Oct 17:00-24:00;Jan-Feb 00:00-07:30;Jan-Feb 17:00-24:00;May-Jul 00:00-07:00;May-Jul 20:00-24:00)"}, {"bicycle:conditional", "no @ (Mar 00:00-07:00;Mar 17:30-24:00;Apr 00:00-07:00;Apr 19:00-24:00;Aug 00:00-07:00;Aug 19:00-24:00;Sep 00:00-07:00;Sep 18:00-24:00;Oct 00:00-07:00;Oct 17:00-24:00;Jan-Feb 00:00-07:30;Jan-Feb 17:00-24:00;May-Jul 00:00-07:00;May-Jul 20:00-24:00)"}, {"foot:conditional", "yes @ (Mar 00:00-07:00;Mar 17:30-24:00;Apr 00:00-07:00;Apr 19:00-24:00;Aug 00:00-07:00;Aug 19:00-24:00;Sep 00:00-07:00;Sep 18:00-24:00;Oct 00:00-07:00;Oct 17:00-24:00;Jan-Feb 00:00-07:30;Jan-Feb 17:00-24:00;May-Jul 00:00-07:00;May-Jul 20:00-24:00)"}}},
         {"CD",
          {{"highway", "service"},
           {"motorcar:conditional",
            "yes @ (Mar 00:00-07:00;Mar 17:30-24:00;Apr 00:00-07:00;Apr 19:00-24:00;Aug 00:00-07:00;Aug 19:00-24:00;Sep 00:00-07:00;Sep 18:00-24:00;Oct 00:00-07:00;Oct 17:00-24:00;Jan-Feb 00:00-07:30;Jan-Feb 17:00-24:00;May-Jul 00:00-07:00;May-Jul 20:00-24:00)"},
           {"bicycle:conditional",
            "no @ (Mar 00:00-07:00;Mar 17:30-24:00;Apr 00:00-07:00;Apr 19:00-24:00;Aug 00:00-07:00;Aug 19:00-24:00;Sep 00:00-07:00;Sep 18:00-24:00;Oct 00:00-07:00;Oct 17:00-24:00;Jan-Feb 00:00-07:30;Jan-Feb 17:00-24:00;May-Jul 00:00-07:00;May-Jul 20:00-24:00)"},
+          {"foot:conditional", "yes @ (Mar 00:00-07:00;Mar 17:30-24:00;Apr 00:00-07:00;Apr 19:00-24:00;Aug 00:00-07:00;Aug 19:00-24:00;Sep 00:00-07:00;Sep 18:00-24:00;Oct 00:00-07:00;Oct 17:00-24:00;Jan-Feb 00:00-07:30;Jan-Feb 17:00-24:00;May-Jul 00:00-07:00;May-Jul 20:00-24:00)"}}},
+        {"DE",
+         {{"highway", "service"},
+          {"motorcar:conditional",
+           "yes @ (Mar 00:00-07:00;Mar 17:30-24:00;Apr 00:00-07:00;Apr 19:00-24:00;Aug 00:00-07:00;Aug 19:00-24:00;Sep 00:00-07:00;Sep 18:00-24:00;Oct 00:00-07:00;Oct 17:00-24:00;Jan-Feb 00:00-07:30;Jan-Feb 17:00-24:00;May-Jul 00:00-07:00;May-Jul 20:00-24:00)"},
+          {"bicycle:conditional",
+           "no @ (Mar 00:00-07:00;Mar 17:30-24:00;Apr 00:00-07:00;Apr 19:00-24:00;Aug 00:00-07:00;Aug 19:00-24:00;Sep 00:00-07:00;Sep 18:00-24:00;Oct 00:00-07:00;Oct 17:00-24:00;Jan-Feb 00:00-07:30;Jan-Feb 17:00-24:00;May-Jul 00:00-07:00;May-Jul 20:00-24:00)"},
           {"foot:conditional",
-           "yes @ (Mar 00:00-07:00;Mar 17:30-24:00;Apr 00:00-07:00;Apr 19:00-24:00;Aug 00:00-07:00;Aug 19:00-24:00;Sep 00:00-07:00;Sep 18:00-24:00;Oct 00:00-07:00;Oct 17:00-24:00;Jan-Feb 00:00-07:30;Jan-Feb 17:00-24:00;May-Jul 00:00-07:00;May-Jul 20:00-24:00)"}
-         }}};
+           "yes @ (Mar 00:00-07:00;Mar 17:30-24:00;Apr 00:00-07:00;Apr 19:00-24:00;Aug 00:00-07:00;Aug 19:00-24:00;Sep 00:00-07:00;Sep 18:00-24:00;Oct 00:00-07:00;Oct 17:00-24:00;Jan-Feb 00:00-07:30;Jan-Feb 17:00-24:00;May-Jul 00:00-07:00;May-Jul 20:00-24:00)"}}},
+        {"CE",
+         {{"highway", "service"},
+          {"motorcar:conditional",
+           "yes @ (Mar 00:00-07:00;Mar 17:30-24:00;Apr 00:00-07:00;Apr 19:00-24:00;Aug 00:00-07:00;Aug 19:00-24:00;Sep 00:00-07:00;Sep 18:00-24:00;Oct 00:00-07:00;Oct 17:00-24:00;Jan-Feb 00:00-07:30;Jan-Feb 17:00-24:00;May-Jul 00:00-07:00;May-Jul 20:00-24:00)"},
+          {"bicycle:conditional",
+           "no @ (Mar 00:00-07:00;Mar 17:30-24:00;Apr 00:00-07:00;Apr 19:00-24:00;Aug 00:00-07:00;Aug 19:00-24:00;Sep 00:00-07:00;Sep 18:00-24:00;Oct 00:00-07:00;Oct 17:00-24:00;Jan-Feb 00:00-07:30;Jan-Feb 17:00-24:00;May-Jul 00:00-07:00;May-Jul 20:00-24:00)"},
+          {"foot:conditional",
+           "yes @ (Mar 00:00-07:00;Mar 17:30-24:00;Apr 00:00-07:00;Apr 19:00-24:00;Aug 00:00-07:00;Aug 19:00-24:00;Sep 00:00-07:00;Sep 18:00-24:00;Oct 00:00-07:00;Oct 17:00-24:00;Jan-Feb 00:00-07:30;Jan-Feb 17:00-24:00;May-Jul 00:00-07:00;May-Jul 20:00-24:00)"}}},
+
+    };
 
     const gurka::relations relations = {
         {{{gurka::node_member, "A", "from"}, {gurka::node_member, "D", "to"}}}};
 
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
     map = gurka::buildtiles(layout, ways, {}, relations, "test/data/conditional_restrictions",
-        {{"mjolnir.timezone", {VALHALLA_SOURCE_DIR "test/data/tz.sqlite"}}});
+                            {{"mjolnir.timezone", {VALHALLA_SOURCE_DIR "test/data/tz.sqlite"}}});
   }
 };
 
 gurka::map ConditionalRestrictions::map = {};
 
 /*************************************************************/
+
 TEST_F(ConditionalRestrictions, NoRestrictionAutoNoDate) {
-  auto result = gurka::route(map, "A", "D", "auto");
-  gurka::assert::osrm::expect_route(result, {"AB", "BC", "CD"});
+  auto result = gurka::route(map, "A", "E", "auto");
+  gurka::assert::osrm::expect_route(result, {"AB", "BC", "CE"});
 }
 
 TEST_F(ConditionalRestrictions, NoRestrictionAuto) {
-  auto result = gurka::route(map, "A", "D", "auto", "2020-04-15T06:00");
-  gurka::assert::osrm::expect_route(result, {"AB", "BC", "CD"});
+  auto result = gurka::route(map, "A", "E", "auto", "2020-04-15T06:00");
+  gurka::assert::osrm::expect_route(result, {"AB", "BC", "CE"});
 }
 
 TEST_F(ConditionalRestrictions, RestrictionAuto) {
@@ -81,7 +102,7 @@ TEST_F(ConditionalRestrictions, RestrictionAuto) {
   EXPECT_THROW(
       {
         try {
-          auto result = gurka::route(map, "A", "D", "auto", "2020-04-02T12:00");
+          auto result = gurka::route(map, "A", "E", "auto", "2020-04-02T12:00");
         } catch (const std::exception& e) {
           // and this tests that it has the correct message
           EXPECT_STREQ("No path could be found for input", e.what());
@@ -92,14 +113,14 @@ TEST_F(ConditionalRestrictions, RestrictionAuto) {
 }
 
 TEST_F(ConditionalRestrictions, NoRestrictionBikeNoDate) {
-  auto result = gurka::route(map, "A", "D", "bicycle");
-  gurka::assert::osrm::expect_route(result, {"AD"});
+  auto result = gurka::route(map, "A", "E", "bicycle");
+  gurka::assert::osrm::expect_route(result, {"AD", "DE"});
   ;
 }
 
 TEST_F(ConditionalRestrictions, NoRestrictionBike) {
-  auto result = gurka::route(map, "A", "D", "bicycle", "2020-04-02T12:00");
-  gurka::assert::osrm::expect_route(result, {"AD"});
+  auto result = gurka::route(map, "A", "E", "bicycle", "2020-04-02T12:00");
+  gurka::assert::osrm::expect_route(result, {"AD", "DE"});
   ;
 }
 
@@ -108,7 +129,7 @@ TEST_F(ConditionalRestrictions, RestrictionBike) {
   EXPECT_THROW(
       {
         try {
-          auto result = gurka::route(map, "A", "D", "bicycle", "2020-04-02T20:00");
+          auto result = gurka::route(map, "A", "E", "bicycle", "2020-04-02T20:00");
         } catch (const std::exception& e) {
           // and this tests that it has the correct message
           EXPECT_STREQ("No path could be found for input", e.what());
@@ -119,13 +140,13 @@ TEST_F(ConditionalRestrictions, RestrictionBike) {
 }
 
 TEST_F(ConditionalRestrictions, NoRestrictionPedestrianNoDate) {
-  auto result = gurka::route(map, "A", "D", "pedestrian");
-  gurka::assert::osrm::expect_route(result, {"AD"});
+  auto result = gurka::route(map, "A", "E", "pedestrian");
+  gurka::assert::osrm::expect_route(result, {"AD", "DE"});
 }
 
 TEST_F(ConditionalRestrictions, NoRestrictionPedestrian) {
-  auto result = gurka::route(map, "A", "D", "pedestrian", "2020-04-02T20:00");
-  gurka::assert::osrm::expect_route(result, {"AD"});
+  auto result = gurka::route(map, "A", "E", "pedestrian", "2020-04-02T20:00");
+  gurka::assert::osrm::expect_route(result, {"AD", "DE"});
 }
 
 TEST_F(ConditionalRestrictions, RestrictionPedestrian) {
@@ -133,7 +154,7 @@ TEST_F(ConditionalRestrictions, RestrictionPedestrian) {
   EXPECT_THROW(
       {
         try {
-          auto result = gurka::route(map, "A", "D", "pedestrian", "2020-04-02T12:00");
+          auto result = gurka::route(map, "A", "E", "pedestrian", "2020-04-02T12:00");
         } catch (const std::exception& e) {
           // and this tests that it has the correct message
           EXPECT_STREQ("No path could be found for input", e.what());
