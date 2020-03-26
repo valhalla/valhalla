@@ -71,6 +71,10 @@ jobs:
           cd build && cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=Off -DENABLE_PYTHON_BINDINGS=On \
           -DCPACK_GENERATOR=DEB -DCPACK_PACKAGE_VERSION_SUFFIX="-0ubuntu1-$(lsb_release -sc)" -DENABLE_SERVICES=OFF
       - run: make -C build -j4
+      - save_cache:
+          key: ccache-release-linux-x86_64-{{ .Branch }}-{{ epoch }}
+          paths:
+            - ~/.ccache
       - run: make -C build install
       - run: make -C build package
       - run:
@@ -82,10 +86,6 @@ jobs:
             export COMMIT_MESSAGE=$(git log --oneline --format=%B -n 1 ${CIRCLE_SHA1} | head -n 1)
             export BUILD_TYPE=Release
             ./scripts/publish.sh
-      - save_cache:
-          key: ccache-release-linux-x86_64-{{ .Branch }}-{{ epoch }}
-          paths:
-            - ~/.ccache
 
   build-debug-binary-linux:
     docker:
@@ -113,6 +113,10 @@ jobs:
           cd build && cmake .. -DCMAKE_BUILD_TYPE=Debug -DBUILD_SHARED_LIBS=Off -DENABLE_PYTHON_BINDINGS=On \
           -DCPACK_GENERATOR=DEB -DCPACK_PACKAGE_VERSION_SUFFIX="-0ubuntu1-$(lsb_release -sc)" -DENABLE_SERVICES=OFF
       - run: make -C build -j4
+      - save_cache:
+          key: ccache-debug-linux-x86_64-{{ .Branch }}-{{ epoch }}
+          paths:
+            - ~/.ccache
       - run: make -C build install
       - run: make -C build package
       - run:
@@ -122,10 +126,6 @@ jobs:
             export COMMIT_MESSAGE=$(git log --oneline --format=%B -n 1 ${CIRCLE_SHA1} | head -n 1)
             export BUILD_TYPE=Debug
             ./scripts/publish.sh
-      - save_cache:
-          key: ccache-debug-linux-x86_64-{{ .Branch }}-{{ epoch }}
-          paths:
-            - ~/.ccache
 
   lint-build-debug:
     docker:
@@ -146,17 +146,19 @@ jobs:
             && cmake .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_COVERAGE=On -DCPACK_GENERATOR=DEB \
                 -DENABLE_COMPILER_WARNINGS=On -DENABLE_WERROR=Off -DCMAKE_EXPORT_COMPILE_COMMANDS=On
       - run: make -C build -j4
-      - run: scripts/clang-tidy-only-diff.sh 4
       - run: make -C build -j2 tests
       - run: make -C build -j2 check
-      - run: make -C build install
-      - run: make -C build package
-      - run: make -C build coverage
-      - run: /bin/bash <(curl -s https://codecov.io/bash) || echo "Codecov did not collect coverage reports"
+      # Note: we save the cache here before doing linting so that if linting fails, we can rebuild quickly
+      # for follow-up fixes
       - save_cache:
           key: ccache-debug-linux-x86_64-{{ .Branch }}-{{ epoch }}
           paths:
             - ~/.ccache
+      - run: scripts/clang-tidy-only-diff.sh 4
+      - run: make -C build install
+      - run: make -C build package
+      - run: make -C build coverage
+      - run: /bin/bash <(curl -s https://codecov.io/bash) || echo "Codecov did not collect coverage reports"
 
   build-release:
     docker:
@@ -177,12 +179,12 @@ jobs:
       - run: make -C build -j4
       - run: make -C build -j4 tests
       - run: make -C build -j2 check
-      - run: make -C build install
-      - run: make -C build package
       - save_cache:
           key: ccache-release-linux-x86_64-{{ .Branch }}-{{ epoch }}
           paths:
             - ~/.ccache
+      - run: make -C build install
+      - run: make -C build package
 
   build-release-x86:
     docker:
@@ -246,6 +248,10 @@ jobs:
       - run: mkdir -p build
       - run: cd build && cmake .. -DBUILD_SHARED_LIBS=Off -DENABLE_PYTHON_BINDINGS=Off -DENABLE_DATA_TOOLS=OFF -DENABLE_SERVICES=OFF -DBoost_USE_STATIC_LIBS=ON -DProtobuf_USE_STATIC_LIBS=ON -DLZ4_USE_STATIC_LIBS=ON
       - run: make -C build -j4
+      - save_cache:
+          key: ccache-release-macos-{{ .Branch }}-{{ epoch }}
+          paths:
+            - ~/.ccache
       - run:
           command: |
             export PACKAGE_JSON_VERSION=$(node -e "console.log(require('./package.json').version)")
@@ -253,10 +259,6 @@ jobs:
             export COMMIT_MESSAGE=$(git log --oneline --format=%B -n 1 ${CIRCLE_SHA1} | head -n 1)
             export BUILD_TYPE=Release
             ./scripts/publish.sh
-      - save_cache:
-          key: ccache-release-macos-{{ .Branch }}-{{ epoch }}
-          paths:
-            - ~/.ccache
 
   build-debug-binary-osx:
     executor: macos
@@ -273,6 +275,10 @@ jobs:
       - run: mkdir -p build
       - run: cd build && cmake .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_PYTHON_BINDINGS=Off -DBUILD_SHARED_LIBS=Off -DENABLE_DATA_TOOLS=OFF -DENABLE_SERVICES=OFF -DBoost_USE_STATIC_LIBS=ON -DProtobuf_USE_STATIC_LIBS=ON -DLZ4_USE_STATIC_LIBS=ON
       - run: make -C build -j4
+      - save_cache:
+          key: ccache-debug-macos-{{ .Branch }}-{{ epoch }}
+          paths:
+            - ~/.ccache
       - run:
           command: |
             export PACKAGE_JSON_VERSION=$(node -e "console.log(require('./package.json').version)")
@@ -280,10 +286,6 @@ jobs:
             export COMMIT_MESSAGE=$(git log --oneline --format=%B -n 1 ${CIRCLE_SHA1} | head -n 1)
             export BUILD_TYPE=Debug
             ./scripts/publish.sh
-      - save_cache:
-          key: ccache-debug-macos-{{ .Branch }}-{{ epoch }}
-          paths:
-            - ~/.ccache
 
 workflows:
   version: 2
