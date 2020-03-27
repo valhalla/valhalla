@@ -1,10 +1,12 @@
 #include "baldr/graphreader.h"
 #include "baldr/location.h"
+#include "boost/format.hpp"
 #include "gurka.h"
 #include "loki/search.h"
 #include "proto/api.pb.h"
 #include "sif/costfactory.h"
 #include "thor/pathalgorithm.h"
+#include "tyr/actor.h"
 
 #include <gtest/gtest.h>
 
@@ -113,4 +115,92 @@ TEST(TimeTracking, decrement) {
   // wrap around second of week
   ti = thor::TimeInfo{true, 1, 22, 5} - thor::TimeInfo::Offset{10, 1};
   ASSERT_EQ(ti, (thor::TimeInfo{true, 1, 12, midgard::kSecondsPerWeek - 5, -10}));
+}
+
+TEST(TimeTracking, routes) {
+
+  // build a very simple graph
+  const std::string ascii_map = R"(A----B----C----D
+                                                  |
+                                                  |
+                                                  |
+                                   H----G----F----E)";
+  const gurka::ways ways = {
+      {"AB", {{"highway", "motorway"}}}, {"BC", {{"highway", "motorway"}}},
+      {"CD", {{"highway", "motorway"}}}, {"DE", {{"highway", "motorway_link"}}},
+      {"EF", {{"highway", "primary"}}},  {"FG", {{"highway", "primary"}}},
+      {"GH", {{"highway", "primary"}}},
+  };
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_time_tracking_make",
+                               {{"mjlonir.timezone", "/path/to/timezone.sqlite"}});
+
+  // pick out a start and end ll by finding the appropriate edges in the graph
+  baldr::GraphReader reader(map.config.get_child("mjolnir"));
+  auto found = gurka::findEdge(reader, map.nodes, "AB", "B");
+  const baldr::GraphTile* tile = nullptr;
+  auto start = reader.GetEndNode(std::get<3>(found), tile)->latlng(tile->header()->base_ll());
+  auto end = reader.GetEndNode(std::get<1>(found), tile)->latlng(tile->header()->base_ll());
+
+  // route between them with a depart_at
+  auto req =
+      boost::format(
+          R"({"costing":"auto","date_time":{"type":1,"value":"1982-12-08T17:17"},"locations":[{"lon":%1%,"lat":%2%},{"lon":%3%,"lat":%4%}]})") %
+      start.first % start.second % end.first % end.second;
+  valhalla::Api api;
+  tyr::actor_t actor(map.config, reader);
+  actor.route(
+      req.str(), []() -> void {}, &api);
+
+  // check the timings
+  std::vector<double> times;
+  for (const auto& route : api.trip().routes()) {
+    for (const auto& leg : route.legs()) {
+      for (const auto& node : leg.node()) {
+        times.push_back(node.elapsed_time());
+      }
+    }
+  }
+  std::vector<double> expected = {};
+  ASSERT_EQ(times, expected);
+
+  // route between them with a arrive_by
+  req =
+      boost::format(
+          R"({"costing":"auto","date_time":{"type":2,"value":"1982-12-08T17:17"},"locations":[{"lon":%1%,"lat":%2%},{"lon":%3%,"lat":%4%}]})") %
+      start.first % start.second % end.first % end.second;
+  actor.route(
+      req.str(), []() -> void {}, &api);
+
+  // check the timings
+  times.clear();
+  for (const auto& route : api.trip().routes()) {
+    for (const auto& leg : route.legs()) {
+      for (const auto& node : leg.node()) {
+        times.push_back(node.elapsed_time());
+      }
+    }
+  }
+  expected = {};
+  ASSERT_EQ(times, expected);
+
+  // route between them with a current time
+  req =
+      boost::format(
+          R"({"costing":"auto","date_time":{"type":0},"locations":[{"lon":%1%,"lat":%2%},{"lon":%3%,"lat":%4%}]})") %
+      start.first % start.second % end.first % end.second;
+  actor.route(
+      req.str(), []() -> void {}, &api);
+
+  // check the timings
+  times.clear();
+  for (const auto& route : api.trip().routes()) {
+    for (const auto& leg : route.legs()) {
+      for (const auto& node : leg.node()) {
+        times.push_back(node.elapsed_time());
+      }
+    }
+  }
+  expected = {};
+  ASSERT_EQ(times, expected);
 }
