@@ -56,6 +56,15 @@ TEST(Traffic, BasicUpdates) {
     baldr::GraphReader reader(map.config.get_child("mjolnir"));
 
     auto tile_ids = reader.GetTileSet();
+    // Traffic data works like this:
+    //   1. There is a separate .tar file containing tile entries matching the main tiles
+    //   2. Each tile is a fixed-size, with a header, and entries
+    // This loop iterates ofer the routing tiles, and creates blank
+    // traffic tiles with empty records.
+    // Valhalla mmap()'s this file and reads from it during route calculation.
+    // This loop below creates initial .tar file entries .  Lower down, we make changes to
+    // values within the generated traffic tiles and test that routes reflect those changes
+    // as expected.
     for (auto tile_id : tile_ids) {
       auto tile = reader.GetGraphTile(tile_id);
       std::stringstream buffer;
@@ -100,7 +109,9 @@ TEST(Traffic, BasicUpdates) {
       gurka::assert::osrm::expect_route(result, {"AB", "BC"});
       gurka::assert::raw::expect_eta(result, 361.5);
     }
-    // Update the live traffic in-place
+    // Make some updates to the traffic .tar file.
+    // Mostly just updates ever edge in the file to 25km/h, except for one
+    // specific edge (B->D) where we simulate a closure (speed=0, congestion high)
     {
       int fd = open(map.config.get<std::string>("mjolnir.traffic_extract").c_str(), O_RDWR);
       struct stat s;
