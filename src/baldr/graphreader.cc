@@ -34,7 +34,7 @@ GraphReader::tile_extract_t::tile_extract_t(const boost::property_tree::ptree& p
           auto id = GraphTile::GetTileId(c.first);
           tiles[id] = std::make_pair(const_cast<char*>(c.second.first), c.second.second);
         } catch (...) {
-          // skip files we dont understand
+          LOG_WARN("Tile path " + c.first + " not understood as a valhalla routing tile, skipping");
         }
       }
       // couldn't load it
@@ -63,7 +63,7 @@ GraphReader::tile_extract_t::tile_extract_t(const boost::property_tree::ptree& p
           auto id = GraphTile::GetTileId(c.first);
           traffic_tiles[id] = std::make_pair(const_cast<char*>(c.second.first), c.second.second);
         } catch (...) {
-          // skip files we dont understand
+          LOG_WARN("Tile path " + c.first + " not understood as a valhalla traffic tile, skipping");
         }
       }
       // couldn't load it
