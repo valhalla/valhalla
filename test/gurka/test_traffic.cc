@@ -33,11 +33,14 @@ TEST(Traffic, BasicUpdates) {
 
   const std::string ascii_map = R"(
     A----B----C
-         |
-         D)";
+         |    |
+         D----E)";
 
-  const gurka::ways ways = {{"ABC", {{"highway", "primary"}, {"maxspeed", "10"}}},
-                            {"BD", {{"highway", "primary"}, {"maxspeed", "10"}}}};
+  const gurka::ways ways = {{"AB", {{"highway", "primary"}, {"maxspeed", "10"}}},
+                            {"BC", {{"highway", "primary"}, {"maxspeed", "10"}}},
+                            {"BD", {{"highway", "primary"}, {"maxspeed", "10"}}},
+                            {"CE", {{"highway", "primary"}, {"maxspeed", "10"}}},
+                            {"DE", {{"highway", "primary"}, {"maxspeed", "10"}}}};
 
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
   std::string tile_dir = "test/data/traffic_basicupdates";
@@ -51,11 +54,13 @@ TEST(Traffic, BasicUpdates) {
     ASSERT_EQ(tar_open_result, MTAR_ESUCCESS);
 
     baldr::GraphReader reader(map.config.get_child("mjolnir"));
+
     auto tile_ids = reader.GetTileSet();
     for (auto tile_id : tile_ids) {
       auto tile = reader.GetGraphTile(tile_id);
       std::stringstream buffer;
       baldr::traffic::TileHeader header = {};
+      header.tile_id = tile_id;
       std::vector<baldr::traffic::Speed> speeds;
       header.directed_edge_count = tile->header()->directededgecount();
       header.incident_buffer_size =
@@ -91,8 +96,8 @@ TEST(Traffic, BasicUpdates) {
     auto clean_reader = gurka::make_clean_graphreader(map.config.get_child("mjolnir"));
     // Do a route with initial traffic
     {
-      auto result = gurka::route(map, "A", "C", "auto", clean_reader);
-      gurka::assert::osrm::expect_route(result, {"ABC"});
+      auto result = gurka::route(map, "A", "C", "auto", "current", clean_reader);
+      gurka::assert::osrm::expect_route(result, {"AB", "BC"});
       gurka::assert::raw::expect_eta(result, 361.5);
     }
     // Update the live traffic in-place
@@ -120,8 +125,17 @@ TEST(Traffic, BasicUpdates) {
       while ((mtar_read_header(&tar, &tar_header)) != MTAR_ENULLRECORD) {
         baldr::traffic::Tile tile(reinterpret_cast<char*>(tar.stream) + tar.pos +
                                   sizeof(mtar_raw_header_t_));
+
+        baldr::GraphId tile_id(tile.header->tile_id);
+        auto BD = gurka::findEdge(map, tile_id, "BD", "D");
+
         for (int i = 0; i < tile.header->directed_edge_count; i++) {
-          (tile.speeds + i)->speed_kmh = 25;
+          if (std::get<1>(BD) != nullptr && std::get<0>(BD).id() == i) {
+            (tile.speeds + i)->speed_kmh = 0;
+            (tile.speeds + i)->congestion_level = 4;
+          } else {
+            (tile.speeds + i)->speed_kmh = 25;
+          }
         }
         mtar_next(&tar);
       }
@@ -131,9 +145,35 @@ TEST(Traffic, BasicUpdates) {
     // Now do another route with the same (not restarted) actor to see if
     // it's noticed the changes in the live traffic file
     {
-      auto result = gurka::route(map, "A", "C", "auto", clean_reader);
-      gurka::assert::osrm::expect_route(result, {"ABC"});
+      auto result = gurka::route(map, "A", "C", "auto", "current", clean_reader);
+      gurka::assert::osrm::expect_route(result, {"AB", "BC"});
       gurka::assert::raw::expect_eta(result, 145.5);
+    }
+    // And verify that without the "current" timestamp, the live traffic
+    // results aren't used
+    {
+      auto result = gurka::route(map, "A", "C", "auto", "", clean_reader);
+      gurka::assert::osrm::expect_route(result, {"AB", "BC"});
+      gurka::assert::raw::expect_eta(result, 361.5);
+    }
+    // Now do another route with the same (not restarted) actor to see if
+    // it's noticed the changes in the live traffic file
+    {
+      auto result = gurka::route(map, "B", "D", "auto", "current", clean_reader);
+      gurka::assert::osrm::expect_route(result, {"BC", "CE", "DE"});
+      gurka::assert::raw::expect_eta(result, 172.8, 0.01);
+    }
+    {
+      auto result = gurka::route(map, "D", "B", "auto", "current", clean_reader);
+      gurka::assert::osrm::expect_route(result, {"BD"});
+      gurka::assert::raw::expect_eta(result, 28.8, 0.01);
+    }
+    // Now do another route with the same (not restarted) actor to see if
+    // it's noticed the changes in the live traffic file
+    {
+      auto result = gurka::route(map, "B", "D", "auto", "", clean_reader);
+      gurka::assert::osrm::expect_route(result, {"BD"});
+      gurka::assert::raw::expect_eta(result, 72);
     }
   }
 }

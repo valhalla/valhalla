@@ -501,10 +501,15 @@ public:
     //               the request is not for "now", or we're some X % along the route
     // TODO(danpat): for short-ish durations along the route, we should fade live
     //               speeds into any historic/predictive/average value we'd normally use
-    auto directed_edge_index = std::distance(const_cast<const DirectedEdge*>(directededges_), de);
-    auto live_speed = traffic_tile.getTrafficForDirectedEdge(directed_edge_index);
-    if (live_speed.speed_kmh != 0) {
-      return live_speed.speed_kmh;
+    if ((flow_mask & kCurrentFlowMask) && traffic_tile()) {
+      auto directed_edge_index = std::distance(const_cast<const DirectedEdge*>(directededges_), de);
+      auto live_speed = traffic_tile.getTrafficForDirectedEdge(directed_edge_index);
+      // Note: speed 0 is only valid if congestion level is high - otherwise,
+      // it could just be zeroed out memory from initialization
+      if (live_speed.speed_kmh != 0 || live_speed.congestion_level >= 4) {
+        *flow_sources |= kCurrentFlowMask;
+        return live_speed.speed_kmh;
+      }
     }
 
     // use predicted speed if a time was passed in, the predicted speed layer was requested, and if
@@ -576,6 +581,24 @@ public:
    * @return  Returns offset into the text table.
    */
   uint32_t turnlanes_offset(const uint32_t idx) const;
+
+  /**
+   * Convenience method to determine whether an edge is currently closed
+   * due to traffic.  Roads are considered closed when we
+   *   a) have traffic data
+   *   b) the speed is zero
+   *   c) the congestion is high
+   *
+   * If we have 0 speed, it might be that we don't have a record for
+   */
+  inline bool IsClosedDueToTraffic(const DirectedEdge* edge) const {
+    if (!traffic_tile())
+      return false;
+    auto directed_edge_index = std::distance(const_cast<const DirectedEdge*>(directededges_), edge);
+    auto live_speed = traffic_tile.getTrafficForDirectedEdge(directed_edge_index);
+    // TODO(danpat): remove the magic "4" here and define constants for these levels
+    return (live_speed.speed_kmh == 0 && live_speed.congestion_level >= 4);
+  }
 
 protected:
   // Graph tile memory, this must be shared so that we can put it into cache

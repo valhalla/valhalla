@@ -175,7 +175,10 @@ std::string build_valhalla_route_request(const map& map,
   }
 
   rapidjson::Value dt(rapidjson::kObjectType);
-  if (datetime != "") {
+  if (datetime == "current") {
+    dt.AddMember("type", 0, allocator);
+    dt.AddMember("value", "current", allocator);
+  } else if (datetime != "") {
     dt.AddMember("type", 1, allocator);
     dt.AddMember("value", datetime, allocator);
   }

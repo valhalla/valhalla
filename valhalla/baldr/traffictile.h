@@ -153,6 +153,11 @@ public:
     return std::vector<Incident>(range.first, range.second);
   }
 
+  // Returns true if this tile is valid or not
+  bool operator()() const {
+    return header != nullptr;
+  }
+
   // These are all const pointers to data structures - once assigned,
   // the pointer values won't change.  The pointer targets are marked
   // as const volatile because they can be modified by code outside
