@@ -137,15 +137,17 @@ TEST(TimeTracking, routes) {
 
   // pick out a start and end ll by finding the appropriate edges in the graph
   baldr::GraphReader reader(map.config.get_child("mjolnir"));
-  auto found = gurka::findEdge(reader, map.nodes, "AB", "B");
+  auto opp_start_edge = gurka::findEdge(reader, map.nodes, "AB", "B");
   const baldr::GraphTile* tile = nullptr;
-  auto start = reader.GetEndNode(std::get<3>(found), tile)->latlng(tile->header()->base_ll());
-  auto end = reader.GetEndNode(std::get<1>(found), tile)->latlng(tile->header()->base_ll());
+  auto start =
+      reader.GetEndNode(std::get<3>(opp_start_edge), tile)->latlng(tile->header()->base_ll());
+  auto end_edge = gurka::findEdge(reader, map.nodes, "GH", "H");
+  auto end = reader.GetEndNode(std::get<1>(end_edge), tile)->latlng(tile->header()->base_ll());
 
-  // route between them with a depart_at
+  // route between them with a current time
   auto req =
       boost::format(
-          R"({"costing":"auto","date_time":{"type":1,"value":"1982-12-08T17:17"},"locations":[{"lon":%1%,"lat":%2%},{"lon":%3%,"lat":%4%}]})") %
+          R"({"costing":"auto","date_time":{"type":0},"locations":[{"lon":%1%,"lat":%2%},{"lon":%3%,"lat":%4%}]})") %
       start.first % start.second % end.first % end.second;
   valhalla::Api api;
   tyr::actor_t actor(map.config, reader);
@@ -161,8 +163,32 @@ TEST(TimeTracking, routes) {
       }
     }
   }
-  std::vector<double> expected = {};
-  ASSERT_EQ(times, expected);
+  std::vector<double> expected = {0, 17.1429, 34.2857, 176.789, 220.289, 244.289, 268.289};
+  ASSERT_EQ(times.size(), expected.size());
+  ASSERT_TRUE(std::equal(times.begin(), times.end(), expected.begin(), expected.end(),
+                         [](double a, double b) { return std::abs(a - b) < .0001; }));
+
+  // route between them with a depart_at
+  req =
+      boost::format(
+          R"({"costing":"auto","date_time":{"type":1,"value":"1982-12-08T17:17"},"locations":[{"lon":%1%,"lat":%2%},{"lon":%3%,"lat":%4%}]})") %
+      start.first % start.second % end.first % end.second;
+  actor.route(
+      req.str(), []() -> void {}, &api);
+
+  // check the timings
+  times.clear();
+  for (const auto& route : api.trip().routes()) {
+    for (const auto& leg : route.legs()) {
+      for (const auto& node : leg.node()) {
+        times.push_back(node.elapsed_time());
+      }
+    }
+  }
+  expected = {0, 17.1429, 34.2857, 176.789, 220.289, 244.289, 268.289};
+  ASSERT_EQ(times.size(), expected.size());
+  ASSERT_TRUE(std::equal(times.begin(), times.end(), expected.begin(), expected.end(),
+                         [](double a, double b) { return std::abs(a - b) < .0001; }));
 
   // route between them with a arrive_by
   req =
@@ -181,26 +207,9 @@ TEST(TimeTracking, routes) {
       }
     }
   }
-  expected = {};
-  ASSERT_EQ(times, expected);
-
-  // route between them with a current time
-  req =
-      boost::format(
-          R"({"costing":"auto","date_time":{"type":0},"locations":[{"lon":%1%,"lat":%2%},{"lon":%3%,"lat":%4%}]})") %
-      start.first % start.second % end.first % end.second;
-  actor.route(
-      req.str(), []() -> void {}, &api);
-
-  // check the timings
-  times.clear();
-  for (const auto& route : api.trip().routes()) {
-    for (const auto& leg : route.legs()) {
-      for (const auto& node : leg.node()) {
-        times.push_back(node.elapsed_time());
-      }
-    }
-  }
-  expected = {};
-  ASSERT_EQ(times, expected);
+  // TODO: why does arrive by have an extra node in here...
+  expected = {0, 0, 17.1429, 34.2857, 176.789, 220.289, 244.289, 268.289};
+  ASSERT_EQ(times.size(), expected.size());
+  ASSERT_TRUE(std::equal(times.begin(), times.end(), expected.begin(), expected.end(),
+                         [](double a, double b) { return std::abs(a - b) < .0001; }));
 }
