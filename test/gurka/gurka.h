@@ -503,7 +503,6 @@ map buildtiles(const nodelayout layout,
  *
  * @param reader a reader configured to read graph tiles
  * @param nodes a lookup table from node names to coordinates
- * @param tile_id the tile to search
  * @param way_name the way name you want a directed edge for
  * @param end_node the node that should be the target of the directed edge you want
  * @return the directed edge that matches, or nullptr if there was no match
@@ -514,31 +513,32 @@ std::tuple<const baldr::GraphId,
            const baldr::DirectedEdge*>
 findEdge(valhalla::baldr::GraphReader& reader,
          const std::unordered_map<std::string, midgard::PointLL>& nodes,
-         const baldr::GraphId& tile_id,
          const std::string& way_name,
          const std::string& end_node) {
-  auto* tile = reader.GetGraphTile(tile_id);
-
   auto end_node_coordinates = nodes.at(end_node);
 
-  // Iterate over all directed edges to find one with the name we want
-  for (uint32_t i = 0; i < tile->header()->directededgecount(); i++) {
-    const auto* forward_directed_edge = tile->directededge(i);
-    // Now, see if the endnode for this edge is our end_node
-    auto de_endnode = forward_directed_edge->endnode();
-    auto de_endnode_coordinates = tile->get_node_ll(de_endnode);
-    const auto threshold = 0.00001; // Degrees.  About 1m at the equator
-    if (std::abs(de_endnode_coordinates.lng() - end_node_coordinates.lng()) < threshold &&
-        std::abs(de_endnode_coordinates.lat() - end_node_coordinates.lat()) < threshold) {
-      auto names = tile->GetNames(forward_directed_edge->edgeinfo_offset());
-      for (const auto& name : names) {
-        if (name == way_name) {
-          auto forward_edge_id = tile_id;
-          forward_edge_id.set_id(i);
-          auto reverse_edge_id = tile->GetOpposingEdgeId(forward_directed_edge);
-          auto* reverse_directed_edge = tile->directededge(i);
-          return std::make_tuple(forward_edge_id, forward_directed_edge, reverse_edge_id,
-                                 reverse_directed_edge);
+  // Iterate over all the tiles, there wont be many in unit tests..
+  for (auto tile_id : reader.GetTileSet()) {
+    auto* tile = reader.GetGraphTile(tile_id);
+    // Iterate over all directed edges to find one with the name we want
+    for (uint32_t i = 0; i < tile->header()->directededgecount(); i++) {
+      const auto* forward_directed_edge = tile->directededge(i);
+      // Now, see if the endnode for this edge is our end_node
+      auto de_endnode = forward_directed_edge->endnode();
+      auto de_endnode_coordinates = tile->get_node_ll(de_endnode);
+      const auto threshold = 0.00001; // Degrees.  About 1m at the equator
+      if (std::abs(de_endnode_coordinates.lng() - end_node_coordinates.lng()) < threshold &&
+          std::abs(de_endnode_coordinates.lat() - end_node_coordinates.lat()) < threshold) {
+        auto names = tile->GetNames(forward_directed_edge->edgeinfo_offset());
+        for (const auto& name : names) {
+          if (name == way_name) {
+            auto forward_edge_id = tile_id;
+            forward_edge_id.set_id(i);
+            auto reverse_edge_id = tile->GetOpposingEdgeId(forward_directed_edge);
+            auto* reverse_directed_edge = tile->directededge(i);
+            return std::make_tuple(forward_edge_id, forward_directed_edge, reverse_edge_id,
+                                   reverse_directed_edge);
+          }
         }
       }
     }
@@ -571,7 +571,10 @@ route(const map& map, const std::vector<std::string>& waypoints, const std::stri
   std::cerr << "[          ] Valhalla request is: " << request_json << std::endl;
 
   valhalla::tyr::actor_t actor(map.config, true);
-  return actor.unserialized_route(request_json);
+  valhalla::Api api;
+  actor.route(
+      request_json, []() {}, &api);
+  return api;
 }
 
 valhalla::Api
@@ -597,7 +600,10 @@ valhalla::Api match(const map& map,
   std::cerr << "[          ] Valhalla request is: " << request_json << std::endl;
 
   valhalla::tyr::actor_t actor(map.config, true);
-  return actor.unserialized_trace_route(request_json);
+  valhalla::Api api;
+  actor.trace_route(
+      request_json, []() {}, &api);
+  return api;
 }
 
 namespace assert {
