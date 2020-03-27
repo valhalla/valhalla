@@ -591,11 +591,10 @@ public:
    *
    * If we have 0 speed, it might be that we don't have a record for
    */
-  inline bool IsClosedDueToTraffic(const DirectedEdge* edge) const {
+  inline bool IsClosedDueToTraffic(const GraphId& edge_id) const {
     if (!traffic_tile())
       return false;
-    auto directed_edge_index = std::distance(const_cast<const DirectedEdge*>(directededges_), edge);
-    auto live_speed = traffic_tile.getTrafficForDirectedEdge(directed_edge_index);
+    auto live_speed = traffic_tile.getTrafficForDirectedEdge(edge_id.id());
     // TODO(danpat): remove the magic "4" here and define constants for these levels
     return (live_speed.speed_kmh == 0 && live_speed.congestion_level >= 4);
   }
