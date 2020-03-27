@@ -16,6 +16,8 @@ namespace baldr {
  * the route needs to go. A start, middle, destination or via point
  * through which the route must pass
  *
+ * TODO: deprecate this struct in favor of protobuf valhalla::Location.
+ *
  * @author  Kevin Kreiser
  */
 struct Location {
@@ -30,6 +32,9 @@ public:
 
   /**
    * Optional filters supplied in the request.
+   *
+   * NOTE: this struct must be kept in sync with the protobuf defined
+   * valhalla::Location::SearchFilter in tripcommon.proto.
    */
   struct SearchFilter {
   public:
