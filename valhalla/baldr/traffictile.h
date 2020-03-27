@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
+#include <type_traits>
 #include <vector>
 #else
 #include <stdint.h>
@@ -70,6 +71,18 @@ struct TileHeader {
   uint64_t active_incident_buffer : 1;
   uint64_t last_update : 63; // seconds since epoch
 };
+
+#ifndef C_ONLY_INTERFACE
+// Some checks to ensure that the interfaces don't get change accidentally.
+// Modifying the sizes/layouts of these structs is a data-format breaking
+// change and shouldn't be done lightly.
+static_assert(sizeof(Incident) == sizeof(uint64_t),
+              "traffic:Incident type size is different than expected");
+static_assert(sizeof(TileHeader) == sizeof(uint64_t) * 3,
+              "traffic:TileHeader type size different than expected");
+static_assert(sizeof(Speed) == sizeof(uint16_t),
+              "traffic::Speed type size is different than expected");
+#endif // C_ONLY_INTERFACE
 
 /**
  * A tile of live traffic data.  The layout is:
