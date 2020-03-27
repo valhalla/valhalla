@@ -34,7 +34,11 @@ GraphReader::tile_extract_t::tile_extract_t(const boost::property_tree::ptree& p
           auto id = GraphTile::GetTileId(c.first);
           tiles[id] = std::make_pair(const_cast<char*>(c.second.first), c.second.second);
         } catch (...) {
-          LOG_WARN("Tile path " + c.first + " not understood as a valhalla routing tile, skipping");
+          // It's possible to put non-tile files inside the tarfile.  As we're only
+          // parsing the file *name* as a GraphId here, we will just silently skip
+          // any file paths that can't be parsed by GraphId::GetTileId()
+          // If we end up with *no* recognizable tile files in the tarball at all,
+          // checks lower down will warn on that.
         }
       }
       // couldn't load it
@@ -63,7 +67,11 @@ GraphReader::tile_extract_t::tile_extract_t(const boost::property_tree::ptree& p
           auto id = GraphTile::GetTileId(c.first);
           traffic_tiles[id] = std::make_pair(const_cast<char*>(c.second.first), c.second.second);
         } catch (...) {
-          LOG_WARN("Tile path " + c.first + " not understood as a valhalla traffic tile, skipping");
+          // It's possible to put non-tile files inside the tarfile.  As we're only
+          // parsing the file *name* as a GraphId here, we will just silently skip
+          // any file paths that can't be parsed by GraphId::GetTileId()
+          // If we end up with *no* recognizable tile files in the tarball at all,
+          // checks lower down will warn on that.
         }
       }
       // couldn't load it
