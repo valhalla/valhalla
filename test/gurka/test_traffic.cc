@@ -120,7 +120,7 @@ TEST(Traffic, BasicUpdates) {
       tar.seek = [](mtar_t* tar, unsigned pos) -> int { return MTAR_ESUCCESS; };
       tar.close = [](mtar_t* tar) -> int { return MTAR_ESUCCESS; };
 
-      // Read every speed tile, and update it with fixed speed of 10km/h
+      // Read every speed tile, and update it with fixed speed of 25km/h (original speeds are 10km/h)
       mtar_header_t tar_header;
       while ((mtar_read_header(&tar, &tar_header)) != MTAR_ENULLRECORD) {
         baldr::traffic::Tile tile(reinterpret_cast<char*>(tar.stream) + tar.pos +
