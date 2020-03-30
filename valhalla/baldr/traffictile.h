@@ -29,9 +29,8 @@ using std::uint64_t;
 struct Speed {
   uint16_t speed_kmh : 7;        // km/h - so max range is 0-127km/h
   uint16_t congestion_level : 3; // some value from 0 to 7 to report back
-  uint16_t is_scale : 1;         // treat speed as a floating point multiplier to edge speed
-  uint16_t age : 4;              //
-  uint16_t spare : 1;            // TODO: reserved for later use
+  uint16_t age : 4;              // Age in minutes, relative to the timestamp in tile header
+  uint16_t spare : 2;            // TODO: reserved for later use
 #ifndef C_ONLY_INTERFACE
   inline bool valid() const volatile {
     return speed_kmh > 0 || congestion_level >= 1;
