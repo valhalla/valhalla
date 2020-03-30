@@ -538,6 +538,8 @@ bool TransitCost::Allowed(const baldr::DirectedEdge* edge,
                           const uint64_t current_time,
                           const uint32_t tz_index,
                           bool& has_time_restrictions) const {
+  if (tile->IsClosedDueToTraffic(edgeid))
+    return false;
   // TODO - obtain and check the access restrictions.
 
   if (exclude_stops_.size()) {

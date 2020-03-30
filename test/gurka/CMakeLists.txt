@@ -8,11 +8,12 @@ if(ENABLE_DATA_TOOLS)
   foreach(FULLFILENAME IN ITEMS ${TEST_FILES})
     file(RELATIVE_PATH FILENAME "${CMAKE_CURRENT_LIST_DIR}" ${FULLFILENAME})
     string(REGEX REPLACE "test_(.*).cc" "gurka_\\1" TESTNAME ${FILENAME})
-    add_executable(${TESTNAME} EXCLUDE_FROM_ALL ${FILENAME})
+    add_executable(${TESTNAME} EXCLUDE_FROM_ALL ${FILENAME} ${VALHALLA_SOURCE_DIR}/third_party/microtar/src/microtar.c)
     set_target_properties(${TESTNAME} PROPERTIES
       COMPILE_DEFINITIONS VALHALLA_SOURCE_DIR="${VALHALLA_SOURCE_DIR}/")
     target_link_libraries(${TESTNAME} valhalla gtest_main gmock)
     target_include_directories(${TESTNAME} SYSTEM PRIVATE
+      ${VALHALLA_SOURCE_DIR}/third_party/microtar/src
       ${VALHALLA_SOURCE_DIR}/third_party/protozero/include
       ${VALHALLA_SOURCE_DIR}/third_party/libosmium/include)
 

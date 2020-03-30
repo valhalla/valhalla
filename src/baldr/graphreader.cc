@@ -7,7 +7,6 @@
 
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
-#include "midgard/sequence.h"
 
 #include "baldr/connectivity_map.h"
 #include "filesystem.h"
@@ -23,44 +22,76 @@ constexpr size_t AVERAGE_MM_TILE_SIZE = 1024;         // 1k
 namespace valhalla {
 namespace baldr {
 
-struct GraphReader::tile_extract_t {
-  tile_extract_t(const boost::property_tree::ptree& pt) {
-    // if you really meant to load it
-    if (pt.get_optional<std::string>("tile_extract")) {
-      try {
-        // load the tar
-        archive.reset(new midgard::tar(pt.get<std::string>("tile_extract")));
-        // map files to graph ids
-        for (auto& c : archive->contents) {
-          try {
-            auto id = GraphTile::GetTileId(c.first);
-            tiles[id] = std::make_pair(const_cast<char*>(c.second.first), c.second.second);
-          } catch (...) {
-            // skip files we dont understand
-          }
+GraphReader::tile_extract_t::tile_extract_t(const boost::property_tree::ptree& pt) {
+  // if you really meant to load it
+  if (pt.get_optional<std::string>("tile_extract")) {
+    try {
+      // load the tar
+      archive.reset(new midgard::tar(pt.get<std::string>("tile_extract")));
+      // map files to graph ids
+      for (auto& c : archive->contents) {
+        try {
+          auto id = GraphTile::GetTileId(c.first);
+          tiles[id] = std::make_pair(const_cast<char*>(c.second.first), c.second.second);
+        } catch (...) {
+          // It's possible to put non-tile files inside the tarfile.  As we're only
+          // parsing the file *name* as a GraphId here, we will just silently skip
+          // any file paths that can't be parsed by GraphId::GetTileId()
+          // If we end up with *no* recognizable tile files in the tarball at all,
+          // checks lower down will warn on that.
         }
-        // couldn't load it
-        if (tiles.empty()) {
-          LOG_WARN("Tile extract contained no usuable tiles");
-        } // loaded ok but with possibly bad blocks
-        else {
-          LOG_INFO("Tile extract successfully loaded with tile count: " +
-                   std::to_string(tiles.size()));
-          if (archive->corrupt_blocks) {
-            LOG_WARN("Tile extract had " + std::to_string(archive->corrupt_blocks) +
-                     " corrupt blocks");
-          }
-        }
-      } catch (const std::exception& e) {
-        LOG_ERROR(e.what());
-        LOG_WARN("Tile extract could not be loaded");
       }
+      // couldn't load it
+      if (tiles.empty()) {
+        LOG_WARN("Tile extract contained no usuable tiles");
+      } // loaded ok but with possibly bad blocks
+      else {
+        LOG_INFO("Tile extract successfully loaded with tile count: " + std::to_string(tiles.size()));
+        if (archive->corrupt_blocks) {
+          LOG_WARN("Tile extract had " + std::to_string(archive->corrupt_blocks) + " corrupt blocks");
+        }
+      }
+    } catch (const std::exception& e) {
+      LOG_ERROR(e.what());
+      LOG_WARN("Tile extract could not be loaded");
     }
   }
-  // TODO: dont remove constness, and actually make graphtile read only?
-  std::unordered_map<uint64_t, std::pair<char*, size_t>> tiles;
-  std::shared_ptr<midgard::tar> archive;
-};
+
+  if (pt.get_optional<std::string>("traffic_extract")) {
+    try {
+      // load the tar
+      traffic_archive.reset(new midgard::tar(pt.get<std::string>("traffic_extract")));
+      // map files to graph ids
+      for (auto& c : traffic_archive->contents) {
+        try {
+          auto id = GraphTile::GetTileId(c.first);
+          traffic_tiles[id] = std::make_pair(const_cast<char*>(c.second.first), c.second.second);
+        } catch (...) {
+          // It's possible to put non-tile files inside the tarfile.  As we're only
+          // parsing the file *name* as a GraphId here, we will just silently skip
+          // any file paths that can't be parsed by GraphId::GetTileId()
+          // If we end up with *no* recognizable tile files in the tarball at all,
+          // checks lower down will warn on that.
+        }
+      }
+      // couldn't load it
+      if (traffic_tiles.empty()) {
+        LOG_WARN("Traffic tile extract contained no usuable tiles");
+      } // loaded ok but with possibly bad blocks
+      else {
+        LOG_INFO("Traffic tile extract successfully loaded with tile count: " +
+                 std::to_string(traffic_tiles.size()));
+        if (traffic_archive->corrupt_blocks) {
+          LOG_WARN("Traffic tile extract had " + std::to_string(traffic_archive->corrupt_blocks) +
+                   " corrupt blocks");
+        }
+      }
+    } catch (const std::exception& e) {
+      LOG_WARN(e.what());
+      LOG_WARN("Traffic tile extract could not be loaded");
+    }
+  }
+}
 
 std::shared_ptr<const GraphReader::tile_extract_t>
 GraphReader::get_extract_instance(const boost::property_tree::ptree& pt) {
@@ -390,8 +421,12 @@ const GraphTile* GraphReader::GetGraphTile(const GraphId& graphid) {
       return nullptr;
     }
 
+    auto traffic_ptr = tile_extract_->traffic_tiles.find(base);
+
     // This initializes the tile from mmap
-    GraphTile tile(base, t->second.first, t->second.second);
+    GraphTile tile(base, t->second.first, t->second.second,
+                   traffic_ptr != tile_extract_->traffic_tiles.end() ? traffic_ptr->second.first
+                                                                     : nullptr);
     if (!tile.header()) {
       // LOG_DEBUG("Memory map cache miss " + GraphTile::FileSuffix(base));
       return nullptr;
@@ -404,8 +439,11 @@ const GraphTile* GraphReader::GetGraphTile(const GraphId& graphid) {
     return inserted;
   } // Try getting it from flat file
   else {
+    auto traffic_ptr = tile_extract_->traffic_tiles.find(base);
     // Try to get it from disk and if we cant..
-    GraphTile tile(tile_dir_, base);
+    GraphTile tile(tile_dir_, base,
+                   traffic_ptr != tile_extract_->traffic_tiles.end() ? traffic_ptr->second.first
+                                                                     : nullptr);
     if (!tile.header()) {
       {
         std::lock_guard<std::mutex> lock(_404s_lock);
