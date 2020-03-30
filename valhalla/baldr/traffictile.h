@@ -34,11 +34,11 @@ struct Speed {
   uint16_t spare : 2;            // TODO: reserved for later use
 #ifndef C_ONLY_INTERFACE
   inline bool valid() const volatile {
-    return speed_kmh > 0 || congestion_level >= 4;
+    return age != 0;
   }
 
   inline bool closed() const volatile {
-    return speed_kmh == 0 && congestion_level >= 4;
+    return valid() && speed_kmh == 0;
   }
 #endif
 };
@@ -71,7 +71,7 @@ static_assert(sizeof(Speed) == sizeof(uint16_t),
  */
 #ifndef C_ONLY_INTERFACE
 namespace {
-static constexpr volatile Speed INVALID_SPEED{0, 0, 15, 0};
+static constexpr volatile Speed INVALID_SPEED{0, 0, 0, 0};
 }
 class Tile {
 public:

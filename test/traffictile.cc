@@ -19,6 +19,7 @@ TEST(Traffic, TileConstruction) {
 
   testdata.header.directed_edge_count = 3;
   testdata.speed3.speed_kmh = 99;
+  testdata.speed3.age = 1;
 
   traffic::Tile tile(reinterpret_cast<char*>(&testdata));
 
@@ -39,13 +40,13 @@ TEST(Traffic, NullTileConstruction) {
   EXPECT_FALSE(speed.closed());
 }
 
-TEST(Traffic, SpeedValie) {
+TEST(Traffic, SpeedValid) {
   using namespace valhalla::baldr;
   traffic::Speed speed = {};
   EXPECT_FALSE(speed.valid());
 
   speed.speed_kmh = 1;
-  EXPECT_TRUE(speed.valid());
+  EXPECT_FALSE(speed.valid());
   EXPECT_FALSE(speed.closed());
 
   speed.speed_kmh = 0;
@@ -55,6 +56,11 @@ TEST(Traffic, SpeedValie) {
 
   speed.speed_kmh = 0;
   speed.congestion_level = 4;
+  EXPECT_FALSE(speed.valid());
+  EXPECT_FALSE(speed.closed());
+
+  speed.speed_kmh = 0;
+  speed.age = 1;
   EXPECT_TRUE(speed.valid());
   EXPECT_TRUE(speed.closed());
 }

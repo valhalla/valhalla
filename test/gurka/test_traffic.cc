@@ -134,9 +134,9 @@ TEST(Traffic, BasicUpdates) {
         auto BD = gurka::findEdge(map, tile_id, "BD", "D");
 
         for (int i = 0; i < tile.header->directed_edge_count; i++) {
+          (tile.speeds + i)->age = 1;
           if (std::get<1>(BD) != nullptr && std::get<0>(BD).id() == i) {
             (tile.speeds + i)->speed_kmh = 0;
-            (tile.speeds + i)->congestion_level = 4;
           } else {
             (tile.speeds + i)->speed_kmh = 25;
           }
