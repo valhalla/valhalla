@@ -70,7 +70,7 @@ static_assert(sizeof(Speed) == sizeof(uint16_t),
  */
 #ifndef C_ONLY_INTERFACE
 namespace {
-static constexpr volatile Speed INVALID_SPEED{0, 0, 0, 15, 0};
+static constexpr volatile Speed INVALID_SPEED{0, 0, 15, 0};
 }
 class Tile {
 public:

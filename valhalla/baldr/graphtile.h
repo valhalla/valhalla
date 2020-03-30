@@ -503,7 +503,7 @@ public:
     //               speeds into any historic/predictive/average value we'd normally use
     if ((flow_mask & kCurrentFlowMask) && traffic_tile()) {
       auto directed_edge_index = std::distance(const_cast<const DirectedEdge*>(directededges_), de);
-      auto& live_speed = traffic_tile.getTrafficForDirectedEdge(directed_edge_index);
+      auto volatile& live_speed = traffic_tile.getTrafficForDirectedEdge(directed_edge_index);
       // Note: speed 0 is only valid if congestion level is high - otherwise,
       // it could just be zeroed out memory from initialization
       if (live_speed.valid()) {
@@ -594,7 +594,7 @@ public:
   inline bool IsClosedDueToTraffic(const GraphId& edge_id) const {
     if (!traffic_tile())
       return false;
-    auto& live_speed = traffic_tile.getTrafficForDirectedEdge(edge_id.id());
+    auto volatile& live_speed = traffic_tile.getTrafficForDirectedEdge(edge_id.id());
     // TODO(danpat): remove the magic "4" here and define constants for these levels
     return live_speed.closed();
   }
