@@ -33,7 +33,7 @@ struct Speed {
   uint16_t spare : 2;            // TODO: reserved for later use
 #ifndef C_ONLY_INTERFACE
   inline bool valid() const volatile {
-    return speed_kmh > 0 || congestion_level >= 1;
+    return speed_kmh > 0 || congestion_level >= 4;
   }
 
   inline bool closed() const volatile {
