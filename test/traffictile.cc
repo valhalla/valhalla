@@ -19,7 +19,7 @@ TEST(Traffic, TileConstruction) {
 
   testdata.header.directed_edge_count = 3;
   testdata.speed3.speed_kmh = 99;
-  testdata.speed3.age = 1;
+  testdata.speed3.age_bucket = traffic::MAX_SPEED_AGE_BUCKET;
 
   traffic::Tile tile(reinterpret_cast<char*>(&testdata));
 
@@ -60,7 +60,7 @@ TEST(Traffic, SpeedValid) {
   EXPECT_FALSE(speed.closed());
 
   speed.speed_kmh = 0;
-  speed.age = 1;
+  speed.age_bucket = traffic::MAX_SPEED_AGE_BUCKET;
   EXPECT_TRUE(speed.valid());
   EXPECT_TRUE(speed.closed());
 }

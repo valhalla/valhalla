@@ -27,18 +27,54 @@ using std::uint32_t;
 using std::uint64_t;
 #endif
 
+constexpr uint16_t INVALID_SPEED_AGE_BUCKET = 0;
+constexpr uint16_t MAX_SPEED_AGE_BUCKET = 15;
+constexpr uint16_t SPEED_AGE_BUCKET_SIZE = 2; // 2 minutes per bucket
+
+/**
+ * Helper function to return the approximate age in seconds of a record based
+ * on the bucket it belongs to.  Because buckets have a 2 minute resolution,
+ * we round to the median bucket time period valid (e.g. 1 min, 3 min, 5 min)
+ * Non-class method to help with C-bindings interface
+ *
+ * @return Age in seconds of the start of the bucket, or -1 for INVALID_SPEED_AGE_BUCKET (0)
+ */
+inline int valhalla_traffic_age_bucket_to_seconds(const uint16_t age_bucket) {
+  if (age_bucket == INVALID_SPEED_AGE_BUCKET)
+    return -1;
+  return (age_bucket - 1) * SPEED_AGE_BUCKET_SIZE * 60 + (SPEED_AGE_BUCKET_SIZE * 60 / 2);
+}
+
+/**
+ * Helper function to determine which age bucket a seconds value
+ * resides in.
+ */
+inline uint16_t valhalla_traffic_seconds_to_age_bucket(const int seconds) {
+  // Simple integer division, should truncate as we want
+  auto bucket = (seconds / 60) / SPEED_AGE_BUCKET_SIZE;
+  if (bucket > MAX_SPEED_AGE_BUCKET)
+    return INVALID_SPEED_AGE_BUCKET;
+  return bucket + 1; // 0 seconds should go into bucket 1, as bucket 0 is for invalid records
+}
+
 struct Speed {
-  uint16_t speed_kmh : 7;        // km/h - so max range is 0-127km/h
-  uint16_t congestion_level : 3; // some value from 0 to 7 to report back
-  uint16_t age : 4;              // Age in minutes, relative to the timestamp in tile header
-  uint16_t spare : 2;            // TODO: reserved for later use
+  uint16_t speed_kmh : 8;        // km/h - so max range is 0-255km/h
+  uint16_t congestion_level : 3; // some value from 0 to 7 to report back.  0 indicates low congestion
+  uint16_t age_bucket : 4;       // Age bucket for the speed record (see SPEED_AGE_BUCKET_SIZE)
+  uint16_t spare : 1;            // TODO: reserved for later use
 #ifndef C_ONLY_INTERFACE
   inline bool valid() const volatile {
-    return age != 0;
+    return age_bucket != INVALID_SPEED_AGE_BUCKET;
   }
 
   inline bool closed() const volatile {
     return valid() && speed_kmh == 0;
+  }
+
+  // Get age of record in seconds (based on the bucket
+  // it belongs to)
+  inline int age_secs() const volatile {
+    return valhalla_traffic_age_bucket_to_seconds(age_bucket);
   }
 #endif
 };
@@ -71,7 +107,7 @@ static_assert(sizeof(Speed) == sizeof(uint16_t),
  */
 #ifndef C_ONLY_INTERFACE
 namespace {
-static constexpr volatile Speed INVALID_SPEED{0, 0, 0, 0};
+static constexpr volatile Speed INVALID_SPEED{0, 0, INVALID_SPEED_AGE_BUCKET, 0};
 }
 class Tile {
 public:
