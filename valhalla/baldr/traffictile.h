@@ -8,8 +8,9 @@
 // C99 stdint.h, and POD structs with no constructors
 #ifndef C_ONLY_INTERFACE
 #include <algorithm>
-#include <cassert>
 #include <cstdint>
+#include <exception>
+#include <string>
 #include <type_traits>
 #include <vector>
 #else
@@ -82,7 +83,11 @@ public:
   const volatile Speed& getTrafficForDirectedEdge(const uint32_t directed_edge_offset) const {
     if (header == nullptr)
       return INVALID_SPEED;
-    assert(directed_edge_offset < header->directed_edge_count);
+    if (directed_edge_offset >= header->directed_edge_count)
+      throw std::runtime_error("Speed requested for edgeid beyond bounds of tile (offset: " +
+                               std::to_string(directed_edge_offset) +
+                               ", edge count: " + std::to_string(header->directed_edge_count));
+
     return *(speeds + directed_edge_offset);
   }
 
