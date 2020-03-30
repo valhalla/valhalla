@@ -72,9 +72,6 @@ TEST(Traffic, BasicUpdates) {
       header.tile_id = tile_id;
       std::vector<baldr::traffic::Speed> speeds;
       header.directed_edge_count = tile->header()->directededgecount();
-      header.incident_buffer_size =
-          static_cast<std::uint32_t>(std::ceil(header.directed_edge_count * 0.1));
-      header.active_incident_buffer = 0;
       buffer.write(reinterpret_cast<char*>(&header), sizeof(header));
       baldr::traffic::Speed dummy_speed = {}; // Initialize to all zeros
       for (int i = 0; i < header.directed_edge_count; ++i) {
@@ -83,10 +80,6 @@ TEST(Traffic, BasicUpdates) {
       uint32_t dummy_uint32 = 0;
       buffer.write(reinterpret_cast<char*>(&dummy_uint32), sizeof(dummy_uint32));
       buffer.write(reinterpret_cast<char*>(&dummy_uint32), sizeof(dummy_uint32));
-      baldr::traffic::Incident dummy_incident;
-      for (int i = 0; i < header.incident_buffer_size * 2; i++) {
-        buffer.write(reinterpret_cast<char*>(&dummy_incident), sizeof(dummy_incident));
-      }
 
       /* Write strings to files `test1.txt` and `test2.txt` */
       std::string blanktile = buffer.str();
