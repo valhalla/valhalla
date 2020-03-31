@@ -55,7 +55,6 @@ std::string test_iso_date_time(const uint8_t dow_mask,
 
   auto now = date::make_zoned(time_zone, std::chrono::system_clock::now());
   auto date = date::floor<date::days>(now.get_local_time());
-  auto d = date::year_month_day(date);
   auto t = date::make_time(now.get_local_time() - date);      // Yields time_of_day type
   std::chrono::minutes current_tod = t.hours() + t.minutes(); // Yields time_of_day type
   std::chrono::minutes desired_tod;
