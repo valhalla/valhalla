@@ -57,6 +57,7 @@ bool TimeDepForward::ExpandForward(GraphReader& graphreader,
       from_transition
           ? time_info
           : time_info + TimeInfo::Offset{pred.cost().secs, static_cast<int>(nodeinfo->timezone())};
+  std::cout << pred.edgeid() << " | " << offset_time << std::endl;
 
   // Expand from start node.
   EdgeMetadata meta = EdgeMetadata::make(node, nodeinfo, tile, edgestatus_);
@@ -256,6 +257,7 @@ TimeDepForward::GetBestPath(valhalla::Location& origin,
 
   // Get time information for forward
   auto forward_time_info = TimeInfo::make(origin, graphreader);
+  std::cout << forward_time_info << std::endl;
 
   // Initialize the origin and destination locations. Initialize the
   // destination first in case the origin edge includes a destination edge.
