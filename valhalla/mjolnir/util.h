@@ -113,12 +113,15 @@ uint32_t compute_curvature(const std::list<midgard::PointLL>& shape);
  * @param input_files   Tells what osm pbf files to build the tiles from
  * @param start_stage   Starting stage of the pipeline to run
  * @param end_stage     End stage of the pipeline to run
+ * @param release_osmpbf_memory Free PBF parsing libs after use.  Saves RAM, but makes libprotobuf
+ * unusable afterwards.  Set to false if you need to perform protobuf operations after building tiles.
  * @return Returns true if no errors occur, false if an error occurs.
  */
 bool build_tile_set(const boost::property_tree::ptree& config,
                     const std::vector<std::string>& input_files,
                     const BuildStage start_stage = BuildStage::kInitialize,
-                    const BuildStage end_stage = BuildStage::kValidate);
+                    const BuildStage end_stage = BuildStage::kValidate,
+                    const bool release_osmpbf_memory = true);
 
 } // namespace mjolnir
 } // namespace valhalla

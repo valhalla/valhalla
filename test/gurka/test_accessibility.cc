@@ -1,0 +1,70 @@
+#include "gurka.h"
+#include <gtest/gtest.h>
+
+using namespace valhalla;
+
+class Accessibility : public ::testing::Test {
+protected:
+  static gurka::map map;
+
+  static void SetUpTestSuite() {
+    constexpr double gridsize = 100;
+
+    const std::string ascii_map = R"(
+    A----B----C
+    |    .
+    D----E----F
+    |    . \
+    G----H----I)";
+
+    // BE and EH are highway=path, so no cars
+    // EI is a shortcut that's not accessible to bikes
+    const gurka::ways ways = {{"AB", {{"highway", "primary"}}},
+                              {"BC", {{"highway", "primary"}}},
+                              {"DEF", {{"highway", "primary"}}},
+                              {"GHI", {{"highway", "primary"}}},
+                              {"ADG", {{"highway", "motorway"}}},
+                              {"BE", {{"highway", "path"}}},
+                              {"EI", {{"highway", "path"}, {"bicycle", "no"}}},
+                              {"EH", {{"highway", "path"}}}};
+    const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+
+    map = gurka::buildtiles(layout, ways, {}, {}, "test/data/accessibility");
+  }
+};
+
+gurka::map Accessibility::map = {};
+
+/*************************************************************/
+TEST_F(Accessibility, Auto1) {
+  auto result = gurka::route(map, "C", "F", "auto");
+  gurka::assert::osrm::expect_route(result, {"BC", "AB", "ADG", "DEF"});
+}
+TEST_F(Accessibility, Auto2) {
+  auto result = gurka::route(map, "C", "I", "auto");
+  gurka::assert::osrm::expect_route(result, {"BC", "AB", "ADG", "GHI"});
+}
+TEST_F(Accessibility, WalkUsesShortcut1) {
+  auto result = gurka::route(map, "C", "F", "pedestrian");
+  gurka::assert::osrm::expect_route(result, {"BC", "BE", "DEF"});
+}
+TEST_F(Accessibility, WalkUsesBothShortcuts) {
+  auto result = gurka::route(map, "C", "I", "pedestrian");
+  gurka::assert::osrm::expect_route(result, {"BC", "BE", "EI"});
+}
+TEST_F(Accessibility, BikeUsesShortcut) {
+  auto result = gurka::route(map, "C", "F", "bicycle");
+  gurka::assert::osrm::expect_route(result, {"BC", "BE", "DEF"});
+}
+TEST_F(Accessibility, BikeAvoidsSecondShortcut) {
+  auto result = gurka::route(map, "C", "I", "bicycle");
+  gurka::assert::osrm::expect_route(result, {"BC", "BE", "EH", "GHI"});
+}
+TEST_F(Accessibility, WalkAvoidsMotorway) {
+  auto result = gurka::route(map, "A", "G", "pedestrian");
+  gurka::assert::osrm::expect_route(result, {"AB", "BE", "EH", "GHI"});
+}
+TEST_F(Accessibility, AutoUsesMotorway) {
+  auto result = gurka::route(map, "A", "G", "auto");
+  gurka::assert::osrm::expect_route(result, {"ADG"});
+}

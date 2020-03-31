@@ -28,7 +28,10 @@
 #include <valhalla/midgard/logging.h>
 #include <valhalla/midgard/util.h>
 
+#include <valhalla/baldr/traffictile.h>
+
 #include <cstdint>
+#include <iterator>
 #include <memory>
 
 namespace valhalla {
@@ -52,7 +55,7 @@ public:
    * @param  tile_dir   Tile directory.
    * @param  graphid    GraphId (tileid and level)
    */
-  GraphTile(const std::string& tile_dir, const GraphId& graphid);
+  GraphTile(const std::string& tile_dir, const GraphId& graphid, char* traffic_ptr = nullptr);
 
   /**
    * Constructor given the graph Id, pointer to the tile data, and the
@@ -61,7 +64,7 @@ public:
    * @param  ptr      Pointer to the start of the tile's data.
    * @param  size     Size in bytes of the tile data.
    */
-  GraphTile(const GraphId& graphid, char* ptr, size_t size);
+  GraphTile(const GraphId& graphid, char* tile_ptr, size_t size, char* traffic_ptr = nullptr);
 
   /**
    * Construct a tile given a url for the tile using curl
@@ -494,7 +497,18 @@ public:
       flow_sources = &temp_sources;
     *flow_sources = kNoFlowMask;
 
-    // TODO: current with coefficient based on distance in time from start of route
+    // TODO(danpat): this needs to consider the time - we should not use live speeds if
+    //               the request is not for "now", or we're some X % along the route
+    // TODO(danpat): for short-ish durations along the route, we should fade live
+    //               speeds into any historic/predictive/average value we'd normally use
+    if ((flow_mask & kCurrentFlowMask) && traffic_tile()) {
+      auto directed_edge_index = std::distance(const_cast<const DirectedEdge*>(directededges_), de);
+      auto volatile& live_speed = traffic_tile.getTrafficForDirectedEdge(directed_edge_index);
+      if (live_speed.valid()) {
+        *flow_sources |= kCurrentFlowMask;
+        return live_speed.speed_kmh;
+      }
+    }
 
     // use predicted speed if a time was passed in, the predicted speed layer was requested, and if
     // the edge has predicted speed
@@ -565,6 +579,20 @@ public:
    * @return  Returns offset into the text table.
    */
   uint32_t turnlanes_offset(const uint32_t idx) const;
+
+  /**
+   * Convenience method to determine whether an edge is currently closed
+   * due to traffic.  Roads are considered closed when we
+   *   a) have traffic data
+   *   b) the speed is zero
+   *   c) the congestion is high
+   *
+   * If we have 0 speed, it might be that we don't have a record for
+   */
+  inline bool IsClosedDueToTraffic(const GraphId& edge_id) const {
+    auto volatile& live_speed = traffic_tile.getTrafficForDirectedEdge(edge_id.id());
+    return live_speed.closed();
+  }
 
 protected:
   // Graph tile memory, this must be shared so that we can put it into cache
@@ -663,6 +691,9 @@ protected:
 
   // Map of operator one stops in this tile.
   std::unordered_map<std::string, std::list<GraphId>> oper_one_stops;
+
+  // Pointer to live traffic data (can be nullptr if not active)
+  traffic::Tile traffic_tile;
 
   /**
    * Set pointers to internal tile data structures.

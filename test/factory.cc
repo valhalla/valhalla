@@ -26,13 +26,14 @@ void create_costing_options(Options& options) {
   ParseHOVCostOptions(doc, "/costing_options/hov", options.add_costing_options());
   ParseTaxiCostOptions(doc, "/costing_options/taxi", options.add_costing_options());
   ParseMotorScooterCostOptions(doc, "/costing_options/motor_scooter", options.add_costing_options());
-  options.add_costing_options();
+  options.add_costing_options(); // multimodal
   ParsePedestrianCostOptions(doc, "/costing_options/pedestrian", options.add_costing_options());
   ParseTransitCostOptions(doc, "/costing_options/transit", options.add_costing_options());
   ParseTruckCostOptions(doc, "/costing_options/truck", options.add_costing_options());
   ParseMotorcycleCostOptions(doc, "/costing_options/motorcycle", options.add_costing_options());
   ParseAutoShorterCostOptions(doc, "/costing_options/auto_shorter", options.add_costing_options());
   ParseAutoDataFixCostOptions(doc, "/costing_options/auto_data_fix", options.add_costing_options());
+  ParseNoCostOptions(doc, "/costing_options/none", options.add_costing_options());
 }
 
 TEST(Factory, Register) {
@@ -46,6 +47,8 @@ TEST(Factory, Register) {
   factory.Register(Costing::pedestrian, CreatePedestrianCost);
   // TODO: then ask for some odin::Options& options
   auto car = factory.Create(Costing::auto_, options);
+  options.set_costing(Costing::bicycle);
+  auto bike = factory.Create(options);
 }
 
 // TODO: add many more tests!

@@ -28,6 +28,11 @@
    * FIXED: Fixed bug in resample_spherical_polyline where duplicate successive lat,lng locations in the polyline resulting in `nan` for the distance computation which shortcuts further sampling [#2239](https://github.com/valhalla/valhalla/pull/2239)
    * FIXED: Update exit logic for non-motorways [#2252](https://github.com/valhalla/valhalla/pull/2252)
    * FIXED: Transition point map-matching. When match results are on a transition point, we search for the sibling nodes at that transition and snap it to the corresponding edges in the route. [#2258](https://github.com/valhalla/valhalla/pull/2258)
+   * FIXED: Fixed verbal multi-cue logic [#2270](https://github.com/valhalla/valhalla/pull/2270)
+   * FIXED: Fixed Uturn cases when a not_thru edge is connected to the origin edge. [2272](https://github.com/valhalla/valhalla/pull/2272)
+   * FIXED: Update intersection classes in osrm response to not label all ramps as motorway [#2279](https://github.com/valhalla/valhalla/pull/2279)
+   * FIXED: Fixed bug in mapmatcher when interpolation point goes before the first valid match or after the last valid match. Such behavior usually leads to discontinuity in matching. [#2275](https://github.com/valhalla/valhalla/pull/2275)
+   * FIXED: Fixed an issue for time_allowed logic.  Previously we returned false on the first time allowed restriction and did not check them all. Added conditional restriction gurka test and datetime optional argument to gurka header file. [#2286](https://github.com/valhalla/valhalla/pull/2286)
 
 * **Enhancement**
    * ADDED: Return the coordinates of the nodes isochrone input locations snapped to [#2111](https://github.com/valhalla/valhalla/pull/2111)
@@ -40,6 +45,12 @@
    * ADDED: Collect turn cost information as path is formed so that it can be seralized out for trace attributes or osrm flavored intersections. Also add shape_index to osrm intersections. [#2207](https://github.com/valhalla/valhalla/pull/2207)
    * ADDED: Added alley factor to autocost.  Factor is defaulted at 1.0f or do not avoid alleys. [#2246](https://github.com/valhalla/valhalla/pull/2246)
    * ADDED: Support unlimited speed limits where maxspeed=none. [#2251](https://github.com/valhalla/valhalla/pull/2251)
+   * ADDED: Implement improved Reachability check using base class Dijkstra. [#2243](https://github.com/valhalla/valhalla/pull/2243)
+   * ADDED: Gurka integration test framework with ascii-art maps [#2244](https://github.com/valhalla/valhalla/pull/2244)
+   * ADDED: Add to the stop impact when transitioning from higher to lower class road and we are not on a turn channel or ramp. Also, penalize lefts when driving on the right and vice versa. [#2282](https://github.com/valhalla/valhalla/pull/2282)
+   * ADDED: Added reclassify_links, use_direction_on_ways, and allow_alt_name as config options.  If `use_direction_on_ways = true` then use `direction` and `int_direction` on the way to update the directional for the `ref` and `int_ref`.  Also, copy int_efs to the refs. [#2285](https://github.com/valhalla/valhalla/pull/2285)
+   * ADDED: Add support for live traffic. [#2268](https://github.com/valhalla/valhalla/pull/2268)
+   
 
 ## Release Date: 2019-11-21 Valhalla 3.0.9
 * **Bug Fix**

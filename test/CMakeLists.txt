@@ -1,4 +1,5 @@
 add_subdirectory(${VALHALLA_SOURCE_DIR}/third_party/googletest ${CMAKE_BINARY_DIR}/googletest)
+add_subdirectory(gurka)
 
 ## Lists tests
 set(tests aabb2 access_restriction actor admin attributes_controller complexrestriction countryaccess datetime directededge
@@ -9,7 +10,7 @@ set(tests aabb2 access_restriction actor admin attributes_controller complexrest
   polyline2 predictedspeeds queue routing sample sequence sign signs streetname streetnames streetnames_factory
   streetnames_us streetname_us tilehierarchy tiles transitdeparture transitroute transitschedule
   transitstop turn turnlanes util_midgard util_skadi vector2 verbal_text_formatter verbal_text_formatter_us
-  verbal_text_formatter_us_co verbal_text_formatter_us_tx viterbi_search compression filesystem)
+  verbal_text_formatter_us_co verbal_text_formatter_us_tx viterbi_search compression filesystem traffictile)
 
 if(ENABLE_DATA_TOOLS)
   list(APPEND tests astar edgeinfobuilder graphbuilder graphparser graphtilebuilder graphreader isochrone predictive_traffic
@@ -34,6 +35,9 @@ foreach(test ${tests})
   set_target_properties(${test} PROPERTIES
     COMPILE_DEFINITIONS VALHALLA_SOURCE_DIR="${VALHALLA_SOURCE_DIR}/")
   target_link_libraries(${test} valhalla gtest gmock)
+  target_include_directories(${test} SYSTEM PRIVATE
+      ${VALHALLA_SOURCE_DIR}/third_party/protozero/include
+      ${VALHALLA_SOURCE_DIR}/third_party/libosmium/include)
 endforeach()
 
 set(cost_tests autocost bicyclecost motorcyclecost motorscootercost pedestriancost transitcost truckcost)

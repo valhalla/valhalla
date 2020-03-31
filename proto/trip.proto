@@ -219,6 +219,7 @@ message TripLeg {
     repeated TrafficSegment traffic_segment = 41;
     repeated TurnLane turn_lanes = 42;
     optional bool has_time_restrictions = 43;
+    optional float default_speed = 44;       // km/h
   }
 
   message IntersectingEdge {
