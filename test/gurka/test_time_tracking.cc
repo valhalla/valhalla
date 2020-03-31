@@ -40,34 +40,37 @@ TEST(TimeTracking, make) {
   ASSERT_EQ(ti, thor::TimeInfo{});
   ASSERT_FALSE(location->has_date_time());
 
+  // bad timezone defaults to UTC
+  location->set_date_time("2020-04-01T12:34");
+  ti = thor::TimeInfo::make(*location, reader, 7777);
+  // zero out the part we dont care to test
+  ti.local_time = 0;
+  ti.second_of_week = 0;
+  ti.seconds_from_now = 0;
+  ASSERT_EQ(ti, (thor::TimeInfo{1, 291}));
+  ASSERT_EQ(location->date_time(), "2020-04-01T12:34");
+
   // current time (technically we could fail if the minute changes between the next 3 lines)
   location->set_date_time("current");
   ti = thor::TimeInfo::make(*location, reader);
-  auto now_str = dt::iso_date_time(dt::get_tz_db().from_index(1));
-  auto lt = dt::seconds_since_epoch(now_str, dt::get_tz_db().from_index(1));
-  std::tm t = dt::iso_to_tm(now_str);
-  std::mktime(&t);
-  auto sec = t.tm_wday * valhalla::midgard::kSecondsPerDay +
-             t.tm_hour * valhalla::midgard::kSecondsPerHour +
-             t.tm_min * valhalla::midgard::kSecondsPerMinute + t.tm_sec;
-  ASSERT_EQ(ti, (thor::TimeInfo{true, 1, lt, sec, 0}));
+  const auto* tz = dt::get_tz_db().from_index(291);
+  auto now_str = dt::iso_date_time(tz);
+  auto lt = dt::seconds_since_epoch(now_str, tz);
+  auto sec = dt::second_of_week(lt, tz);
+  ASSERT_EQ(ti, (thor::TimeInfo{true, 291, lt, sec, 0}));
   ASSERT_EQ(location->date_time(), now_str);
 
   // not current time but the same date time just set as a string
-  now_str = dt::iso_date_time(dt::get_tz_db().from_index(1));
+  now_str = dt::iso_date_time(tz);
   location->set_date_time(now_str);
   ti = thor::TimeInfo::make(*location, reader);
   lt = dt::seconds_since_epoch(now_str, dt::get_tz_db().from_index(1));
-  t = dt::iso_to_tm(now_str);
-  std::mktime(&t);
-  sec = t.tm_wday * valhalla::midgard::kSecondsPerDay +
-        t.tm_hour * valhalla::midgard::kSecondsPerHour +
-        t.tm_min * valhalla::midgard::kSecondsPerMinute + t.tm_sec;
-  ASSERT_EQ(ti, (thor::TimeInfo{true, 1, lt, sec, 0}));
+  sec = dt::second_of_week(lt, tz);
+  ASSERT_EQ(ti, (thor::TimeInfo{true, 291, lt, sec, 0}));
   ASSERT_EQ(location->date_time(), now_str);
 
   // offset the time from now a bit
-  now_str = dt::iso_date_time(dt::get_tz_db().from_index(1));
+  now_str = dt::iso_date_time(tz);
   auto minutes = std::atoi(now_str.substr(now_str.size() - 2, 2).c_str());
   int offset = 7;
   if (minutes + offset > 60)
@@ -75,13 +78,9 @@ TEST(TimeTracking, make) {
   now_str = now_str.substr(0, now_str.size() - 2) + std::to_string(minutes + offset);
   location->set_date_time(now_str);
   ti = thor::TimeInfo::make(*location, reader);
-  lt = dt::seconds_since_epoch(now_str, dt::get_tz_db().from_index(1));
-  t = dt::iso_to_tm(now_str);
-  std::mktime(&t);
-  sec = t.tm_wday * valhalla::midgard::kSecondsPerDay +
-        t.tm_hour * valhalla::midgard::kSecondsPerHour +
-        t.tm_min * valhalla::midgard::kSecondsPerMinute + t.tm_sec;
-  ASSERT_EQ(ti, (thor::TimeInfo{true, 1, lt, sec, offset * 60}));
+  lt = dt::seconds_since_epoch(now_str, tz);
+  sec = dt::second_of_week(lt, tz);
+  ASSERT_EQ(ti, (thor::TimeInfo{true, 291, lt, sec, offset * 60}));
   ASSERT_EQ(location->date_time(), now_str);
 
   // messed up date time
@@ -92,9 +91,10 @@ TEST(TimeTracking, make) {
 
   // user specified date time
   location->set_date_time("2020-03-31T11:16");
-  ti = thor::TimeInfo::make(*location, reader);
-  ti.seconds_from_now = 0; // skip for now
-  ASSERT_EQ(ti, (thor::TimeInfo{1, 1585667787, 213360}));
+  ti = thor::TimeInfo::make(*location, reader, 110);
+  // zero out the part we dont care to test
+  ti.seconds_from_now = 0;
+  ASSERT_EQ(ti, (thor::TimeInfo{1, 110, 1585667787, 213387}));
   ASSERT_EQ(location->date_time(), "2020-03-31T11:16");
 }
 

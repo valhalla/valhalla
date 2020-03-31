@@ -168,8 +168,21 @@ struct TimeInfo {
   // the distance in seconds from now
   int64_t seconds_from_now;
 
-  // helper function to initialize the object from a location
-  static TimeInfo make(valhalla::Location& location, baldr::GraphReader& reader);
+  /**
+   * Helper function to initialize the object from a location. Uses the graph to
+   * find timezone information about the edge candidates at the location. If the
+   * graph has no timezone information or the location has no edge candidates the
+   * default timezone will be used (if unspecified UTC is used). If no datetime
+   * is provided on the location or an invalid one is provided the TimeInfo will
+   * be invalid.
+   *
+   * @param location                 location for which to initialize the TimeInfo
+   * @param reader                   used to get timezone information from the graph
+   * @param default_timezone_index   used when no timezone information is available
+   * @return the initialized TimeInfo
+   */
+  static TimeInfo
+  make(valhalla::Location& location, baldr::GraphReader& reader, int default_timezone_index = 291);
 
   // a tuple used to offset from a time in the forward or reverse direction
   struct Offset {
@@ -177,10 +190,18 @@ struct TimeInfo {
     int timezone_index;
   };
 
-  // offset all the initial time info to reflect the progress along the route to this point
+  /**
+   * Offset all the initial time info to reflect the progress along the route to this point
+   * @param offset Describes the offset in seconds and the timezone to offset to
+   * @return a new TimeInfo object reflecting the offset
+   */
   TimeInfo operator+(Offset offset) const;
 
-  // offset all the initial time info to reflect the progress along the route to this point
+  /**
+   * Offset all the initial time info to reflect the progress along the route to this point
+   * @param offset Describes the offset in seconds and the timezone to offset to
+   * @return a new TimeInfo object reflecting the offset
+   */
   TimeInfo operator-(Offset offset) const;
 
   // for unit tests

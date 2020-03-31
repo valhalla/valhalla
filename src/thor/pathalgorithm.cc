@@ -13,7 +13,8 @@ namespace valhalla {
 namespace thor {
 
 // helper function to initialize the object from a location
-TimeInfo TimeInfo::make(valhalla::Location& location, baldr::GraphReader& reader) {
+TimeInfo
+TimeInfo::make(valhalla::Location& location, baldr::GraphReader& reader, int default_timezone_index) {
   // No time to to track
   if (!location.has_date_time()) {
     return {false};
@@ -31,8 +32,12 @@ TimeInfo TimeInfo::make(valhalla::Location& location, baldr::GraphReader& reader
 
   // Set the origin timezone to be the timezone at the end node use this for timezone changes
   if (timezone_index == 0) {
+    // Don't use the provided one if its not valid
+    if (!dt::get_tz_db().from_index(default_timezone_index)) {
+      default_timezone_index = 291; // UTC
+    }
     LOG_WARN("No timezone for location using default");
-    timezone_index = 1;
+    timezone_index = default_timezone_index;
   }
   const auto* tz = dt::get_tz_db().from_index(timezone_index);
 
@@ -59,11 +64,7 @@ TimeInfo TimeInfo::make(valhalla::Location& location, baldr::GraphReader& reader
   uint64_t local_time = date::to_utc_time(then_date.get_sys_time()).time_since_epoch().count();
 
   // What second of the week is this (for historical traffic lookup)
-  std::tm t = dt::iso_to_tm(location.date_time());
-  std::mktime(&t);
-  auto second_of_week = t.tm_wday * valhalla::midgard::kSecondsPerDay +
-                        t.tm_hour * valhalla::midgard::kSecondsPerHour +
-                        t.tm_min * valhalla::midgard::kSecondsPerMinute + t.tm_sec;
+  auto second_of_week = dt::second_of_week(local_time, tz);
 
   // When is this route with respect to now this will let us appropriately use current flow traffic
   int64_t seconds_from_now = (then_date.get_local_time() - now_date.get_local_time()).count();
