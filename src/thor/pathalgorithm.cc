@@ -62,7 +62,8 @@ TimeInfo TimeInfo::make(valhalla::Location& location, baldr::GraphReader& reader
   std::tm t = dt::iso_to_tm(location.date_time());
   std::mktime(&t);
   auto second_of_week = t.tm_wday * valhalla::midgard::kSecondsPerDay +
-                        t.tm_hour * valhalla::midgard::kSecondsPerHour + t.tm_sec;
+                        t.tm_hour * valhalla::midgard::kSecondsPerHour +
+                        t.tm_min * valhalla::midgard::kSecondsPerMinute + t.tm_sec;
 
   // When is this route with respect to now this will let us appropriately use current flow traffic
   int64_t seconds_from_now = (then_date.get_local_time() - now_date.get_local_time()).count();

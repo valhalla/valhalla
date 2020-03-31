@@ -48,7 +48,8 @@ TEST(TimeTracking, make) {
   std::tm t = dt::iso_to_tm(now_str);
   std::mktime(&t);
   auto sec = t.tm_wday * valhalla::midgard::kSecondsPerDay +
-             t.tm_hour * valhalla::midgard::kSecondsPerHour + t.tm_sec;
+             t.tm_hour * valhalla::midgard::kSecondsPerHour +
+             t.tm_min * valhalla::midgard::kSecondsPerMinute + t.tm_sec;
   ASSERT_EQ(ti, (thor::TimeInfo{true, 1, lt, sec, 0}));
   ASSERT_EQ(location->date_time(), now_str);
 
@@ -60,7 +61,8 @@ TEST(TimeTracking, make) {
   t = dt::iso_to_tm(now_str);
   std::mktime(&t);
   sec = t.tm_wday * valhalla::midgard::kSecondsPerDay +
-        t.tm_hour * valhalla::midgard::kSecondsPerHour + t.tm_sec;
+        t.tm_hour * valhalla::midgard::kSecondsPerHour +
+        t.tm_min * valhalla::midgard::kSecondsPerMinute + t.tm_sec;
   ASSERT_EQ(ti, (thor::TimeInfo{true, 1, lt, sec, 0}));
   ASSERT_EQ(location->date_time(), now_str);
 
@@ -77,7 +79,8 @@ TEST(TimeTracking, make) {
   t = dt::iso_to_tm(now_str);
   std::mktime(&t);
   sec = t.tm_wday * valhalla::midgard::kSecondsPerDay +
-        t.tm_hour * valhalla::midgard::kSecondsPerHour + t.tm_sec;
+        t.tm_hour * valhalla::midgard::kSecondsPerHour +
+        t.tm_min * valhalla::midgard::kSecondsPerMinute + t.tm_sec;
   ASSERT_EQ(ti, (thor::TimeInfo{true, 1, lt, sec, offset * 60}));
   ASSERT_EQ(location->date_time(), now_str);
 
@@ -86,6 +89,13 @@ TEST(TimeTracking, make) {
   ti = thor::TimeInfo::make(*location, reader);
   ASSERT_EQ(ti, thor::TimeInfo{});
   ASSERT_EQ(location->date_time(), "4000BC");
+
+  // user specified date time
+  location->set_date_time("2020-03-31T11:16");
+  ti = thor::TimeInfo::make(*location, reader);
+  ti.seconds_from_now = 0; // skip for now
+  ASSERT_EQ(ti, (thor::TimeInfo{1, 1585667787, 213360}));
+  ASSERT_EQ(location->date_time(), "2020-03-31T11:16");
 }
 
 TEST(TimeTracking, increment) {
