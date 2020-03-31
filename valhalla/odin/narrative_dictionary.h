@@ -116,6 +116,7 @@ constexpr auto kTenthsOfMileIndex = 3;
 constexpr auto kOneTenthOfMileIndex = 4;
 constexpr auto kFeetIndex = 5;
 constexpr auto kSmallFeetIndex = 6;
+constexpr auto kQuarterMileIndex = 7;
 
 // Phrase tags
 constexpr auto kCardinalDirectionTag = "<CARDINAL_DIRECTION>";

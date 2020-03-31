@@ -8,6 +8,7 @@
 #include <boost/format.hpp>
 
 #include "baldr/verbal_text_formatter.h"
+#include "midgard/constants.h"
 
 #include "odin/enhancedtrippath.h"
 #include "odin/maneuver.h"
@@ -3570,6 +3571,7 @@ NarrativeBuilder::FormUsCustomaryLength(float miles,
   // 4  "1 tenth of a mile"
   // 5  "<FEET> feet" (10-90, 100-500)
   // 6  "less than 10 feet"
+  // 7 "a quarter mile"
 
   std::string length_string;
   length_string.reserve(kLengthStringInitialCapacity);
@@ -3577,36 +3579,42 @@ NarrativeBuilder::FormUsCustomaryLength(float miles,
   // Follow locale rules turning numbers into strings
   std::stringstream distance;
   distance.imbue(dictionary_.GetLocale());
-  // These will determine what we say
-  int tenths = std::round(miles * 10);
+  float feet = std::round(miles * midgard::kFeetPerMile);
+  float rounded = 0.f;
 
-  if (tenths > 10) {
-    // 0  "<MILES> miles"
-    length_string += us_customary_lengths.at(kMilesIndex);
-    distance << std::setiosflags(std::ios::fixed) << std::setprecision(tenths % 10 > 0) << miles;
-  } else if (tenths == 10) {
-    // 1  "1 mile"
-    length_string += us_customary_lengths.at(kOneMileIndex);
-  } else if (tenths == 5) {
-    // 2  "a half mile"
-    length_string += us_customary_lengths.at(kHalfMileIndex);
-  } else if (tenths > 1) {
-    // 3  "<TENTHS_OF_MILE> tenths of a mile" (2-4, 6-9)
-    length_string += us_customary_lengths.at(kTenthsOfMileIndex);
-    distance << tenths;
-  } else if (miles > 0.0973f && tenths == 1) {
-    // 4  "1 tenth of a mile"
-    length_string += us_customary_lengths.at(kOneTenthOfMileIndex);
+  // These will determine what we say
+  if (feet > 1000) {
+    if (miles > 2) {
+      rounded = std::round(miles);
+    } else if (miles >= 0.625) {
+      rounded = std::round(miles * 2) / 2;
+    } else {
+      rounded = std::round(miles * 4) / 4;
+    }
+
+    if (rounded == 0.25f) {
+      // 7 "a quarter mile"
+      length_string += us_customary_lengths.at(kQuarterMileIndex);
+    } else if (rounded == 0.5f) {
+      // 2  "a half mile"
+      length_string += us_customary_lengths.at(kHalfMileIndex);
+    } else if (rounded == 1.f) {
+      // 1  "1 mile"
+      length_string += us_customary_lengths.at(kOneMileIndex);
+    } else {
+      // 0  "<MILES> miles"
+      length_string += us_customary_lengths.at(kMilesIndex);
+      distance << std::setiosflags(std::ios::fixed) << std::setprecision(rounded == 1.5f) << rounded;
+    }
   } else {
-    int feet = std::round(miles * 5280);
     if (feet > 94) {
-      // 5  "<FEET> feet" (100-500)
+      // 5  "<FEET> feet" (100-1000)
       length_string += us_customary_lengths.at(kFeetIndex);
-      distance << ((feet + 50) / 100) * 100;
+      distance << (std::round(feet / 100) * 100);
     } else if (feet > 9) {
       // 5  "<FEET> feet" (10-90)
       length_string += us_customary_lengths.at(kFeetIndex);
-      distance << ((feet + 5) / 10) * 10;
+      distance << (std::round(feet / 10) * 10);
     } else {
       // 6  "less than 10 feet"
       length_string += us_customary_lengths.at(kSmallFeetIndex);

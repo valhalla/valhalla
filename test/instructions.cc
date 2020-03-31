@@ -187,13 +187,13 @@ TEST(Instructions, validate_merge_instructions) {
                     expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
                     "Merge right onto I 695 West/Baltimore Beltway.", "",
                     "Merge right onto Interstate 6 95 West, Baltimore Beltway.",
-                    "Continue for 2 tenths of a mile.");
+                    "Continue for a quarter mile.");
 
   // Test merge left
   test_instructions({VALHALLA_SOURCE_DIR "test/pinpoints/instructions/merge_left.pbf"},
                     expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
                     "Merge left onto US 322 East.", "", "Merge left onto U.S. 3 22 East.",
-                    "Continue for 2 tenths of a mile.");
+                    "Continue for 1,000 feet.");
 }
 
 TEST(Instructions, validate_osrm_merge_maneuver) {

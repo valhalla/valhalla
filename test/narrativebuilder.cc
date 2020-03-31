@@ -2868,7 +2868,7 @@ TEST(NarrativeBuilder, TestBuildStartInstructions_1_miles_en_US) {
   std::list<Maneuver> expected_maneuvers;
   PopulateStartManeuverList_1(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(expected_maneuvers, "Head southwest on 5th Avenue.", "",
-                                  "Head southwest on 5th Avenue for 1 tenth of a mile.", "");
+                                  "Head southwest on 5th Avenue for 700 feet.", "");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -2893,7 +2893,7 @@ TEST(NarrativeBuilder, TestBuildStartInstructions_2_miles_en_US) {
       expected_maneuvers,
       "Head south on North Prince Street/US 222/PA 272. Continue on US 222/PA 272.", "",
       "Head south on North Prince Street, U.S. 2 22.",
-      "Continue on U.S. 2 22, Pennsylvania 2 72 for 3.2 miles.");
+      "Continue on U.S. 2 22, Pennsylvania 2 72 for 3 miles.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -2937,7 +2937,7 @@ TEST(NarrativeBuilder, TestBuildStartInstructions_5_miles_en_US) {
   std::list<Maneuver> expected_maneuvers;
   PopulateStartManeuverList_5(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(expected_maneuvers, "Drive southwest on 5th Avenue.", "",
-                                  "Drive southwest on 5th Avenue for 1 tenth of a mile.", "");
+                                  "Drive southwest on 5th Avenue for 700 feet.", "");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -2962,7 +2962,7 @@ TEST(NarrativeBuilder, TestBuildStartInstructions_6_miles_en_US) {
       expected_maneuvers,
       "Drive south on North Prince Street/US 222/PA 272. Continue on US 222/PA 272.", "",
       "Drive south on North Prince Street, U.S. 2 22.",
-      "Continue on U.S. 2 22, Pennsylvania 2 72 for 3.2 miles.");
+      "Continue on U.S. 2 22, Pennsylvania 2 72 for 3 miles.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -3006,7 +3006,7 @@ TEST(NarrativeBuilder, TestBuildStartInstructions_9_miles_en_US) {
   std::list<Maneuver> expected_maneuvers;
   PopulateStartManeuverList_9(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(expected_maneuvers, "Walk southwest on 5th Avenue.", "",
-                                  "Walk southwest on 5th Avenue for 1 tenth of a mile.", "");
+                                  "Walk southwest on 5th Avenue for 700 feet.", "");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -3053,7 +3053,7 @@ TEST(NarrativeBuilder, TestBuildStartInstructions_10_miles_en_US) {
       expected_maneuvers,
       "Walk south on North Prince Street/US 222/PA 272. Continue on US 222/PA 272.", "",
       "Walk south on North Prince Street, U.S. 2 22.",
-      "Continue on U.S. 2 22, Pennsylvania 2 72 for 3.2 miles.");
+      "Continue on U.S. 2 22, Pennsylvania 2 72 for 3 miles.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -3097,7 +3097,7 @@ TEST(NarrativeBuilder, TestBuildStartInstructions_17_miles_en_US) {
   std::list<Maneuver> expected_maneuvers;
   PopulateStartManeuverList_17(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(expected_maneuvers, "Bike southwest on 5th Avenue.", "",
-                                  "Bike southwest on 5th Avenue for 1 tenth of a mile.", "");
+                                  "Bike southwest on 5th Avenue for 700 feet.", "");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -3119,7 +3119,7 @@ TEST(NarrativeBuilder, TestBuildStartInstructions_17_unnamed_cycleway_miles_en_U
   std::list<Maneuver> expected_maneuvers;
   PopulateStartManeuverList_17_unnamed_cycleway(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(expected_maneuvers, "Bike east on the cycleway.", "",
-                                  "Bike east on the cycleway for 1.7 miles.", "");
+                                  "Bike east on the cycleway for 1.5 miles.", "");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -3142,7 +3142,7 @@ TEST(NarrativeBuilder, TestBuildStartInstructions_17_unnamed_mountain_bike_trail
   PopulateStartManeuverList_17_unnamed_mountain_bike_trail(expected_maneuvers, country_code,
                                                            state_code);
   SetExpectedManeuverInstructions(expected_maneuvers, "Bike west on the mountain bike trail.", "",
-                                  "Bike west on the mountain bike trail for 1 tenth of a mile.", "");
+                                  "Bike west on the mountain bike trail for 700 feet.", "");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -3167,7 +3167,7 @@ TEST(NarrativeBuilder, TestBuildStartInstructions_18_miles_en_US) {
       expected_maneuvers,
       "Bike south on North Prince Street/US 222/PA 272. Continue on US 222/PA 272.", "",
       "Bike south on North Prince Street, U.S. 2 22.",
-      "Continue on U.S. 2 22, Pennsylvania 2 72 for 3.2 miles.");
+      "Continue on U.S. 2 22, Pennsylvania 2 72 for 3 miles.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -3417,10 +3417,9 @@ TEST(NarrativeBuilder, TestBuildBecomesInstructions_0_miles_en_US) {
   SetExpectedPreviousManeuverInstructions(expected_maneuvers, "Bear right onto Vine Street.",
                                           "Bear right onto Vine Street.",
                                           "Bear right onto Vine Street.",
-                                          "Continue for 2 tenths of a mile.");
+                                          "Continue for a quarter mile.");
   SetExpectedManeuverInstructions(expected_maneuvers, "Vine Street becomes Middletown Road.", "",
-                                  "Vine Street becomes Middletown Road.",
-                                  "Continue for 9 tenths of a mile.");
+                                  "Vine Street becomes Middletown Road.", "Continue for 1 mile.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -3475,7 +3474,7 @@ TEST(NarrativeBuilder, TestBuildContinueInstructions_1_miles_en_US) {
   PopulateContinueManeuverList_1(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(expected_maneuvers, "Continue on 10th Avenue.",
                                   "Continue on 10th Avenue.",
-                                  "Continue on 10th Avenue for 3 tenths of a mile.", "");
+                                  "Continue on 10th Avenue for a quarter mile.", "");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -3531,7 +3530,7 @@ TEST(NarrativeBuilder, TestBuildTurnInstructions_1_miles_en_US) {
   PopulateTurnManeuverList_1(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(expected_maneuvers, "Turn left onto Middletown Road.",
                                   "Turn left onto Middletown Road.",
-                                  "Turn left onto Middletown Road.", "Continue for 1.2 miles.");
+                                  "Turn left onto Middletown Road.", "Continue for 1 mile.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
   VerifyToStayOn(maneuvers.back(), false);
@@ -3560,7 +3559,7 @@ TEST(NarrativeBuilder, TestBuildTurnInstructions_1_miles_cs_CZ) {
   PopulateTurnManeuverList_1(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(expected_maneuvers, "Odbočte vlevo na Middletown Road.",
                                   "Odbočte vlevo na Middletown Road.",
-                                  "Odbočte vlevo na Middletown Road.", "Pokračujte 1,2 mil.");
+                                  "Odbočte vlevo na Middletown Road.", "Pokračujte 1 míli.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -3588,7 +3587,7 @@ TEST(NarrativeBuilder, TestBuildTurnInstructions_1_miles_de_DE) {
   PopulateTurnManeuverList_1(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(expected_maneuvers, "Links auf Middletown Road abbiegen.",
                                   "Links auf Middletown Road abbiegen.",
-                                  "Links auf Middletown Road abbiegen.", "1,2 Meilen weiter.");
+                                  "Links auf Middletown Road abbiegen.", "eine Meile weiter.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -3617,7 +3616,7 @@ TEST(NarrativeBuilder, TestBuildTurnInstructions_1_miles_it_IT) {
   SetExpectedManeuverInstructions(expected_maneuvers, "Svolta a sinistra e prendi Middletown Road.",
                                   "Svolta a sinistra e prendi Middletown Road.",
                                   "Svolta a sinistra e prendi Middletown Road.",
-                                  "Continua per 1,2 miglia.");
+                                  "Continua per 1 miglio.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -3737,7 +3736,7 @@ TEST(NarrativeBuilder, TestBuildSharpInstructions_1_miles_en_US) {
   SetExpectedManeuverInstructions(expected_maneuvers, "Make a sharp right onto Flatbush Avenue.",
                                   "Make a sharp right onto Flatbush Avenue.",
                                   "Make a sharp right onto Flatbush Avenue.",
-                                  "Continue for 1 tenth of a mile.");
+                                  "Continue for 600 feet.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -3887,7 +3886,7 @@ TEST(NarrativeBuilder, TestBuildBearInstructions_2_miles_en_US) {
   SetExpectedManeuverInstructions(
       expected_maneuvers, "Bear right onto Belair Road/US 1 Business. Continue on US 1 Business.",
       "Bear right onto Belair Road.", "Bear right onto Belair Road, U.S. 1 Business.",
-      "Continue on U.S. 1 Business for 2.1 miles.");
+      "Continue on U.S. 1 Business for 2 miles.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -3917,10 +3916,10 @@ TEST(NarrativeBuilder, TestBuildBearInstructions_3_miles_en_US) {
       expected_maneuvers,
       "Exit the roundabout onto Catoctin Mountain Highway/US 15. Continue on US 15.", "",
       "Exit the roundabout onto Catoctin Mountain Highway, U.S. 15.",
-      "Continue on U.S. 15 for 11.4 miles.");
+      "Continue on U.S. 15 for 11 miles.");
   SetExpectedManeuverInstructions(expected_maneuvers, "Bear left to stay on US 15 South.",
                                   "Bear left to stay on U.S. 15 South.",
-                                  "Bear left to stay on U.S. 15 South.", "Continue for 2.6 miles.");
+                                  "Bear left to stay on U.S. 15 South.", "Continue for 3 miles.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
   VerifyToStayOn(maneuvers.back(), true);
@@ -3948,7 +3947,7 @@ TEST(NarrativeBuilder, TestBuildUturnInstructions_0_miles_en_US) {
   std::list<Maneuver> expected_maneuvers;
   PopulateUturnManeuverList_0(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(expected_maneuvers, "Make a left U-turn.", "Make a left U-turn.",
-                                  "Make a left U-turn.", "Continue for 4 tenths of a mile.");
+                                  "Make a left U-turn.", "Continue for a quarter mile.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -3977,7 +3976,7 @@ TEST(NarrativeBuilder, TestBuildUturnInstructions_1_miles_en_US) {
   SetExpectedManeuverInstructions(expected_maneuvers, "Make a right U-turn onto Bunker Hill Road.",
                                   "Make a right U-turn onto Bunker Hill Road.",
                                   "Make a right U-turn onto Bunker Hill Road.",
-                                  "Continue for 4 tenths of a mile.");
+                                  "Continue for a quarter mile.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -4006,12 +4005,12 @@ TEST(NarrativeBuilder, TestBuildUturnInstructions_2_miles_en_US) {
   SetExpectedPreviousManeuverInstructions(expected_maneuvers, "Turn right onto Bunker Hill Road.",
                                           "Turn right onto Bunker Hill Road.",
                                           "Turn right onto Bunker Hill Road.",
-                                          "Continue for 2 tenths of a mile.");
+                                          "Continue for 900 feet.");
   SetExpectedManeuverInstructions(expected_maneuvers,
                                   "Make a left U-turn to stay on Bunker Hill Road.",
                                   "Make a left U-turn to stay on Bunker Hill Road.",
                                   "Make a left U-turn to stay on Bunker Hill Road.",
-                                  "Continue for 2 tenths of a mile.");
+                                  "Continue for 900 feet.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
   VerifyToStayOn(maneuvers.back(), true);
@@ -5614,12 +5613,11 @@ TEST(NarrativeBuilder, TestBuildKeepToStayOn_0_miles_en_US) {
   PopulateKeepToStayOnManeuverList_0(expected_maneuvers, country_code, state_code);
   SetExpectedPreviousManeuverInstructions(
       expected_maneuvers, "Merge onto I 95 South/John F. Kennedy Memorial Highway.", "",
-      "Merge onto Interstate 95 South, John F. Kennedy Memorial Highway.",
-      "Continue for 14.7 miles.");
+      "Merge onto Interstate 95 South, John F. Kennedy Memorial Highway.", "Continue for 15 miles.");
   SetExpectedManeuverInstructions(expected_maneuvers, "Keep left to stay on I 95 South.",
                                   "Keep left to stay on Interstate 95 South.",
                                   "Keep left to stay on Interstate 95 South.",
-                                  "Continue for 5.1 miles.");
+                                  "Continue for 5 miles.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
   VerifyToStayOn(maneuvers.back(), true);
@@ -5648,13 +5646,12 @@ TEST(NarrativeBuilder, TestBuildKeepToStayOn_1_miles_en_US) {
   PopulateKeepToStayOnManeuverList_1(expected_maneuvers, country_code, state_code);
   SetExpectedPreviousManeuverInstructions(
       expected_maneuvers, "Merge onto I 95 South/John F. Kennedy Memorial Highway.", "",
-      "Merge onto Interstate 95 South, John F. Kennedy Memorial Highway.",
-      "Continue for 14.7 miles.");
+      "Merge onto Interstate 95 South, John F. Kennedy Memorial Highway.", "Continue for 15 miles.");
   SetExpectedManeuverInstructions(expected_maneuvers,
                                   "Keep left to take exit 62 to stay on I 95 South.",
                                   "Keep left to stay on Interstate 95 South.",
                                   "Keep left to take exit 62 to stay on Interstate 95 South.",
-                                  "Continue for 5.1 miles.");
+                                  "Continue for 5 miles.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
   VerifyToStayOn(maneuvers.back(), true);
@@ -5683,13 +5680,12 @@ TEST(NarrativeBuilder, TestBuildKeepToStayOn_2_miles_en_US) {
   PopulateKeepToStayOnManeuverList_2(expected_maneuvers, country_code, state_code);
   SetExpectedPreviousManeuverInstructions(
       expected_maneuvers, "Merge onto I 95 South/John F. Kennedy Memorial Highway.", "",
-      "Merge onto Interstate 95 South, John F. Kennedy Memorial Highway.",
-      "Continue for 14.7 miles.");
+      "Merge onto Interstate 95 South, John F. Kennedy Memorial Highway.", "Continue for 15 miles.");
   SetExpectedManeuverInstructions(expected_maneuvers,
                                   "Keep left to stay on I 95 South toward Baltimore.",
                                   "Keep left to stay on Interstate 95 South.",
                                   "Keep left to stay on Interstate 95 South toward Baltimore.",
-                                  "Continue for 5.1 miles.");
+                                  "Continue for 5 miles.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
   VerifyToStayOn(maneuvers.back(), true);
@@ -5718,13 +5714,12 @@ TEST(NarrativeBuilder, TestBuildKeepToStayOn_3_miles_en_US) {
   PopulateKeepToStayOnManeuverList_3(expected_maneuvers, country_code, state_code);
   SetExpectedPreviousManeuverInstructions(
       expected_maneuvers, "Merge onto I 95 South/John F. Kennedy Memorial Highway.", "",
-      "Merge onto Interstate 95 South, John F. Kennedy Memorial Highway.",
-      "Continue for 14.7 miles.");
+      "Merge onto Interstate 95 South, John F. Kennedy Memorial Highway.", "Continue for 15 miles.");
   SetExpectedManeuverInstructions(
       expected_maneuvers, "Keep left to take exit 62 to stay on I 95 South toward Baltimore.",
       "Keep left to stay on Interstate 95 South.",
       "Keep left to take exit 62 to stay on Interstate 95 South toward Baltimore.",
-      "Continue for 5.1 miles.");
+      "Continue for 5 miles.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
   VerifyToStayOn(maneuvers.back(), true);
@@ -5756,7 +5751,7 @@ TEST(NarrativeBuilder, TestBuildMerge_0_miles_en_US) {
                                           "Take the Interstate 76 West exit.",
                                           "Take the Interstate 76 West exit toward Pittsburgh.", "");
   SetExpectedManeuverInstructions(expected_maneuvers, "Merge.", "", "Merge.",
-                                  "Continue for 4.7 miles.");
+                                  "Continue for 5 miles.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -5788,7 +5783,7 @@ TEST(NarrativeBuilder, TestBuildMerge_1_1_miles_en_US) {
                                           "Take the Interstate 76 West exit toward Pittsburgh.", "");
   SetExpectedManeuverInstructions(expected_maneuvers, "Merge onto I 76 West/Pennsylvania Turnpike.",
                                   "", "Merge onto Interstate 76 West, Pennsylvania Turnpike.",
-                                  "Continue for 4.7 miles.");
+                                  "Continue for 5 miles.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -5818,11 +5813,11 @@ TEST(NarrativeBuilder, TestBuildMerge_1_2_miles_en_US) {
                                           "Take the I 76 West exit toward Pittsburgh.",
                                           "Take the Interstate 76 West exit.",
                                           "Take the Interstate 76 West exit toward Pittsburgh.",
-                                          "Continue for 1.3 miles.");
+                                          "Continue for 1.5 miles.");
   SetExpectedManeuverInstructions(expected_maneuvers, "Merge onto I 76 West/Pennsylvania Turnpike.",
                                   "Merge onto Interstate 76 West.",
                                   "Merge onto Interstate 76 West, Pennsylvania Turnpike.",
-                                  "Continue for 4.7 miles.");
+                                  "Continue for 5 miles.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -5913,7 +5908,7 @@ TEST(NarrativeBuilder, TestBuildExitRoundabout_0_miles_en_US) {
   std::list<Maneuver> expected_maneuvers;
   PopulateExitRoundaboutManeuverList_0(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(expected_maneuvers, "Exit the roundabout.", "",
-                                  "Exit the roundabout.", "Continue for 6 tenths of a mile.");
+                                  "Exit the roundabout.", "Continue for a half mile.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -5942,7 +5937,7 @@ TEST(NarrativeBuilder, TestBuildExitRoundabout_1_miles_en_US) {
   SetExpectedManeuverInstructions(expected_maneuvers,
                                   "Exit the roundabout onto Philadelphia Road/MD 7.", "",
                                   "Exit the roundabout onto Philadelphia Road, Maryland 7.",
-                                  "Continue for 6 tenths of a mile.");
+                                  "Continue for a half mile.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -5972,7 +5967,7 @@ TEST(NarrativeBuilder, TestBuildExitRoundabout_2_miles_en_US) {
       expected_maneuvers,
       "Exit the roundabout onto Catoctin Mountain Highway/US 15. Continue on US 15.", "",
       "Exit the roundabout onto Catoctin Mountain Highway, U.S. 15.",
-      "Continue on U.S. 15 for 11.4 miles.");
+      "Continue on U.S. 15 for 11 miles.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -5999,7 +5994,7 @@ TEST(NarrativeBuilder, TestBuildEnterFerry_0_miles_en_US) {
   std::list<Maneuver> expected_maneuvers;
   PopulateEnterFerryManeuverList_0(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(expected_maneuvers, "Take the Ferry.", "Take the Ferry.",
-                                  "Take the Ferry.", "Continue for 9 tenths of a mile.");
+                                  "Take the Ferry.", "Continue for 1 mile.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -6027,7 +6022,7 @@ TEST(NarrativeBuilder, TestBuildEnterFerry_1_miles_en_US) {
   PopulateEnterFerryManeuverList_1(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(expected_maneuvers, "Take the Millersburg FERRY.",
                                   "Take the Millersburg FERRY.", "Take the Millersburg FERRY.",
-                                  "Continue for 9 tenths of a mile.");
+                                  "Continue for 1 mile.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -6056,7 +6051,7 @@ TEST(NarrativeBuilder, TestBuildEnterFerry_2_miles_en_US) {
   SetExpectedManeuverInstructions(expected_maneuvers, "Take the Bridgeport - Port Jefferson Ferry.",
                                   "Take the Bridgeport - Port Jefferson Ferry.",
                                   "Take the Bridgeport - Port Jefferson Ferry.",
-                                  "Continue for 17.2 miles.");
+                                  "Continue for 17 miles.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -6111,7 +6106,7 @@ TEST(NarrativeBuilder, TestBuildExitFerry_1_miles_en_US) {
   PopulateExitFerryManeuverList_1(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(expected_maneuvers, "Head west on Ferry Lane.",
                                   "Head west on Ferry Lane.", "Head west on Ferry Lane.",
-                                  "Continue for 4 tenths of a mile.");
+                                  "Continue for a quarter mile.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -6195,7 +6190,7 @@ TEST(NarrativeBuilder, TestBuildExitFerry_5_miles_en_US) {
   PopulateExitFerryManeuverList_5(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(expected_maneuvers, "Drive west on Ferry Lane.",
                                   "Drive west on Ferry Lane.", "Drive west on Ferry Lane.",
-                                  "Continue for 4 tenths of a mile.");
+                                  "Continue for a quarter mile.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -6280,7 +6275,7 @@ TEST(NarrativeBuilder, TestBuildExitFerry_9_miles_en_US) {
   PopulateExitFerryManeuverList_9(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(expected_maneuvers, "Walk west on Ferry Lane.",
                                   "Walk west on Ferry Lane.", "Walk west on Ferry Lane.",
-                                  "Continue for 4 tenths of a mile.");
+                                  "Continue for a quarter mile.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -6364,7 +6359,7 @@ TEST(NarrativeBuilder, TestBuildExitFerry_17_miles_en_US) {
   PopulateExitFerryManeuverList_17(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(expected_maneuvers, "Bike west on Ferry Lane.",
                                   "Bike west on Ferry Lane.", "Bike west on Ferry Lane.",
-                                  "Continue for 4 tenths of a mile.");
+                                  "Continue for a quarter mile.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -7745,20 +7740,40 @@ TEST(NarrativeBuilder, TestFormVerbalPostTransitionInstruction) {
                                          CreateVerbalPostManeuver({{"Main Street", 0}}, 4.828032f),
                                          false, "Continue for 3 miles.");
 
+  // Verify large number
+  TryFormVerbalPostTransitionInstruction(nbt_mi,
+                                         CreateVerbalPostManeuver({{"Main Street", 0}}, 92.21541f),
+                                         false, "Continue for 57 miles.");
+
   // Verify miles round down
   TryFormVerbalPostTransitionInstruction(nbt_mi,
                                          CreateVerbalPostManeuver({{"Main Street", 0}}, 3.604931f),
-                                         false, "Continue for 2.2 miles.");
+                                         false, "Continue for 2 miles.");
 
   // Verify miles round up
   TryFormVerbalPostTransitionInstruction(nbt_mi,
-                                         CreateVerbalPostManeuver({{"Main Street", 0}}, 3.637117f),
-                                         false, "Continue for 2.3 miles.");
+                                         CreateVerbalPostManeuver({{"Main Street", 0}}, 2.848539f),
+                                         false, "Continue for 2 miles.");
 
   // Verify miles street name
   TryFormVerbalPostTransitionInstruction(nbt_mi,
                                          CreateVerbalPostManeuver({{"Main Street", 0}}, 3.637117f),
-                                         true, "Continue on Main Street for 2.3 miles.");
+                                         true, "Continue on Main Street for 2 miles.");
+
+  // Verify 1.5 miles round down
+  TryFormVerbalPostTransitionInstruction(nbt_mi,
+                                         CreateVerbalPostManeuver({{"Main Street", 0}}, 2.73588f),
+                                         false, "Continue for 1.5 miles.");
+
+  // Verify 1.5 miles round up
+  TryFormVerbalPostTransitionInstruction(nbt_mi,
+                                         CreateVerbalPostManeuver({{"Main Street", 0}}, 2.09215f),
+                                         false, "Continue for 1.5 miles.");
+
+  // Verify 1.5 mile street name
+  TryFormVerbalPostTransitionInstruction(nbt_mi,
+                                         CreateVerbalPostManeuver({{"Main Street", 0}}, 2.41402f),
+                                         true, "Continue on Main Street for 1.5 miles.");
 
   // Verify 1 mile round down
   TryFormVerbalPostTransitionInstruction(nbt_mi,
@@ -7777,12 +7792,12 @@ TEST(NarrativeBuilder, TestFormVerbalPostTransitionInstruction) {
 
   // Verify half mile round down
   TryFormVerbalPostTransitionInstruction(nbt_mi,
-                                         CreateVerbalPostManeuver({{"Main Street", 0}}, 0.8368589f),
+                                         CreateVerbalPostManeuver({{"Main Street", 0}}, 0.965606f),
                                          false, "Continue for a half mile.");
 
   // Verify half mile round up
   TryFormVerbalPostTransitionInstruction(nbt_mi,
-                                         CreateVerbalPostManeuver({{"Main Street", 0}}, 0.7724851f),
+                                         CreateVerbalPostManeuver({{"Main Street", 0}}, 0.643738f),
                                          false, "Continue for a half mile.");
 
   // Verify half mile street name
@@ -7790,50 +7805,21 @@ TEST(NarrativeBuilder, TestFormVerbalPostTransitionInstruction) {
                                          CreateVerbalPostManeuver({{"Main Street", 0}}, 0.804672f),
                                          true, "Continue on Main Street for a half mile.");
 
-  // Verify 9 tenths of a mile round down
+  // Verify quarter mile round down
   TryFormVerbalPostTransitionInstruction(nbt_mi,
-                                         CreateVerbalPostManeuver({{"Main Street", 0}}, 1.480596f),
-                                         false, "Continue for 9 tenths of a mile.");
+                                         CreateVerbalPostManeuver({{"Main Street", 0}}, 0.5632704f),
+                                         false, "Continue for a quarter mile.");
 
-  // Verify 9 tenths of a mile round up
+  // Verify quarter mile round up
   TryFormVerbalPostTransitionInstruction(nbt_mi,
-                                         CreateVerbalPostManeuver({{"Main Street", 0}}, 1.416223f),
-                                         false, "Continue for 9 tenths of a mile.");
+                                         CreateVerbalPostManeuver({{"Main Street", 0}},
+                                                                  0.30632398537f),
+                                         false, "Continue for a quarter mile.");
 
-  // Verify 9 tenths of a mile street name
+  // Verify quarter mile street name
   TryFormVerbalPostTransitionInstruction(nbt_mi,
-                                         CreateVerbalPostManeuver({{"Main Street", 0}}, 1.44841f),
-                                         true, "Continue on Main Street for 9 tenths of a mile.");
-
-  // Verify 4 tenths of a mile round down
-  TryFormVerbalPostTransitionInstruction(nbt_mi,
-                                         CreateVerbalPostManeuver({{"Main Street", 0}}, 0.675924f),
-                                         false, "Continue for 4 tenths of a mile.");
-
-  // Verify 4 tenths of a mile round up
-  TryFormVerbalPostTransitionInstruction(nbt_mi,
-                                         CreateVerbalPostManeuver({{"Main Street", 0}}, 0.611551f),
-                                         false, "Continue for 4 tenths of a mile.");
-
-  // Verify 4 tenths of a mile street name
-  TryFormVerbalPostTransitionInstruction(nbt_mi,
-                                         CreateVerbalPostManeuver({{"Main Street", 0}}, 0.643738f),
-                                         true, "Continue on Main Street for 4 tenths of a mile.");
-
-  // Verify 1 tenth of a mile round down
-  TryFormVerbalPostTransitionInstruction(nbt_mi,
-                                         CreateVerbalPostManeuver({{"Main Street", 0}}, 0.193121f),
-                                         false, "Continue for 1 tenth of a mile.");
-
-  // Verify 1 tenth of a mile round up
-  TryFormVerbalPostTransitionInstruction(nbt_mi,
-                                         CreateVerbalPostManeuver({{"Main Street", 0}}, 0.158496f),
-                                         false, "Continue for 1 tenth of a mile.");
-
-  // Verify 1 tenth of a mile street name
-  TryFormVerbalPostTransitionInstruction(nbt_mi,
-                                         CreateVerbalPostManeuver({{"Main Street", 0}}, 0.160934f),
-                                         true, "Continue on Main Street for 1 tenth of a mile.");
+                                         CreateVerbalPostManeuver({{"Main Street", 0}}, 0.402336f),
+                                         true, "Continue on Main Street for a quarter mile.");
 
   // Verify 500 feet round down
   TryFormVerbalPostTransitionInstruction(nbt_mi,
