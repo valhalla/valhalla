@@ -620,8 +620,7 @@ valhalla::Api route(const map& map,
 
   valhalla::tyr::actor_t actor(map.config, *reader, true);
   valhalla::Api api;
-  actor.route(
-      request_json, []() {}, &api);
+  actor.route(request_json, []() {}, &api);
   return api;
 }
 
@@ -653,8 +652,7 @@ valhalla::Api match(const map& map,
 
   valhalla::tyr::actor_t actor(map.config, true);
   valhalla::Api api;
-  actor.trace_route(
-      request_json, []() {}, &api);
+  actor.trace_route(request_json, []() {}, &api);
   return api;
 }
 
