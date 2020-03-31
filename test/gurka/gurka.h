@@ -494,13 +494,8 @@ make_clean_graphreader(const boost::property_tree::ptree& pt) {
  * @param relations OSM relations that related nodes and ways together
  * @param workdir where to build the PBF and the tiles
  * @param config_options optional key value pairs where the key is ptree style dom traversal and
-<<<<<<< HEAD
- *                       the value is the value to put into the config. you can do things like
- *                       add timezones database path or set map matching breakage distance
-=======
  *        the value is the value to put into the config. You can do things like
  *        add timezones database path
->>>>>>> origin/master
  * @return a map object that contains the Valhalla config (to pass to GraphReader) and node layout
  *         (for converting node names to coordinates)
  */
@@ -625,7 +620,8 @@ valhalla::Api route(const map& map,
 
   valhalla::tyr::actor_t actor(map.config, *reader, true);
   valhalla::Api api;
-  actor.route(request_json, []() {}, &api);
+  actor.route(
+      request_json, []() {}, &api);
   return api;
 }
 
@@ -657,7 +653,8 @@ valhalla::Api match(const map& map,
 
   valhalla::tyr::actor_t actor(map.config, true);
   valhalla::Api api;
-  actor.trace_route(request_json, []() {}, &api);
+  actor.trace_route(
+      request_json, []() {}, &api);
   return api;
 }
 
