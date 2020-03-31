@@ -459,6 +459,29 @@ TEST(DateTime, TestIsRestricted) {
   TryIsRestricted(td, "2019-01-06T08:30", false);
   TryIsRestricted(td, "2019-03-02T08:30", true);
   TryIsRestricted(td, "2019-03-03T08:30", false);
+
+  // (Jan 04-Jan 01 Mo-Sa 22:00-24:00)
+  td = TimeDomain(74766824773372);
+  TryIsRestricted(td, "2020-01-03T22:21", false);
+  TryIsRestricted(td, "2020-01-03T21:21", false);
+
+  TryIsRestricted(td, "2020-01-05T22:21", false);
+  TryIsRestricted(td, "2020-01-05T21:21", false);
+
+  TryIsRestricted(td, "2020-01-06T22:21", true);
+  TryIsRestricted(td, "2020-01-06T21:21", false);
+
+  TryIsRestricted(td, "2020-01-01T22:21", true);
+  TryIsRestricted(td, "2020-01-01T21:21", false);
+
+  TryIsRestricted(td, "2020-01-04T22:21", true);
+  TryIsRestricted(td, "2020-01-04T21:21", false);
+
+  TryIsRestricted(td, "2020-03-01T22:21", false);
+  TryIsRestricted(td, "2020-03-01T21:21", false);
+
+  TryIsRestricted(td, "2020-03-02T22:21", true);
+  TryIsRestricted(td, "2020-03-02T21:21", false);
 }
 
 TEST(DateTime, TestTimezoneDiff) {
