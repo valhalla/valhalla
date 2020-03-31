@@ -409,9 +409,6 @@ thor_worker_t::map_match(Api& request) {
       path_map_match(match_results, path_edges, *route.mutable_legs()->Add(), route_discontinuities);
     } // trace_route can return multiple trip paths
     else {
-      //      serilize_pathes(path_edges, match_results, disconnected_edges, route_discontinuities,
-      //      options,
-      //                      request);
       serilize_pathes_new(pathes, match_results, route_discontinuities, options, request);
     }
     // TODO: move this info to the trip leg
@@ -433,7 +430,7 @@ void thor_worker_t::serilize_pathes_new(
         route_discontinuities,
     Options& options,
     Api& request) {
-  std::cout << pathes.size() << std::endl;
+  std::cout << "there are two pathes " << pathes.size() << std::endl;
   // The following logic put break points (matches results) on edge candidates to form legs
   // logic assumes the both match results and edge candidates are topologically sorted in correct
   // order. Only the first location will be populated with corresponding input date_time
@@ -454,16 +451,12 @@ void thor_worker_t::serilize_pathes_new(
     auto last_iter = path.cend() - 1;
 
     int origin_match_idx = origin_iter->second->first_match_idx;
-    int destination_match_idx = origin_match_idx + 1;
+    int dest_match_idx = origin_match_idx + 1;
     int last_match_idx = last_iter->second->last_match_idx;
     int way_point_index = 0;
 
-    const PathInfo* last_leg{nullptr};
-    while (origin_iter < last_iter) {
-      //      for (int dest_match_idx = origin_match_idx + 1; dest_match_idx <= last_match_idx;
-      //           ++dest_match_idx) {
-      int origin_match_idx = origin_iter->second->first_match_idx;
-      int dest_match_idx = origin_match_idx + 1;
+    while (origin_iter <= last_iter && last_iter != path.cend()) {
+
       const meili::MatchResult& origin_match = match_results[origin_match_idx];
       const meili::MatchResult& dest_match = match_results[dest_match_idx];
       if (!dest_match.edgeid.Is_Valid()) {
@@ -489,12 +482,6 @@ void thor_worker_t::serilize_pathes_new(
           std::find_if(origin_iter, last_iter + 1, [&dest_match, dest_match_idx](const auto& ele) {
             return dest_match_idx == ele.second->last_match_idx;
           });
-
-      if (dest_iter == last_iter + 1) {
-        std::cout
-            << "this is not populated correct !!!!!!!!!!!!!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
-            << std::endl;
-      }
 
       // initialize the origin and destination location for route
       Location* origin_location = options.mutable_shape(origin_match_idx);
@@ -522,10 +509,11 @@ void thor_worker_t::serilize_pathes_new(
         edges.push_back(iter->first);
       // mark the beginning and end of the edges on the path for this leg (inclusive)
 
-      std::cout << "build legs on idx :" << origin_match_idx << " and " << dest_match_idx
-                << std::endl;
-      std::cout << "build legs on edges :" << std::distance(path.begin(), origin_iter) << " and "
-                << std::distance(path.begin(), dest_iter) << std::endl;
+      //      std::cout << "build legs on idx :" << origin_match_idx << " and " << dest_match_idx
+      //                << std::endl;
+      //      std::cout << "build legs on edges :" << std::distance(path.begin(), origin_iter) << "
+      //      and "
+      //                << std::distance(path.begin(), dest_iter) << std::endl;
 
       TripLegBuilder::Build(controller, matcher->graphreader(), mode_costing, edges.cbegin(),
                             edges.cend(), *origin_location, *destination_location,
@@ -542,9 +530,9 @@ void thor_worker_t::serilize_pathes_new(
 
       // beginning of next leg will be the end of this leg
       origin_iter = dest_iter + 1;
-      last_leg = &dest_iter->first;
+      origin_match_idx = dest_match_idx;
+      ++dest_match_idx;
     }
-    // }
   }
 }
 

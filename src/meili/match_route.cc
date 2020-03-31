@@ -80,9 +80,11 @@ bool ValidateRoute(baldr::GraphReader& graphreader,
 
   for (auto prev_segment = segment_begin, segment = std::next(segment_begin); segment != segment_end;
        prev_segment = segment, segment++) {
-    std::cout << graphreader.encoded_edge_shape(prev_segment->edgeid) << " " << prev_segment->target
-              << " " << graphreader.encoded_edge_shape(segment->edgeid) << " " << segment->source
-              << std::endl;
+    //    std::cout << graphreader.encoded_edge_shape(prev_segment->edgeid) << " " <<
+    //    prev_segment->target
+    //              << " " << graphreader.encoded_edge_shape(segment->edgeid) << " " <<
+    //              segment->source
+    //              << std::endl;
 
     // Successive segments must be adjacent and no loop absolutely!
     if (prev_segment->edgeid == segment->edgeid) {
@@ -236,7 +238,6 @@ void reorder_segments(const std::vector<MatchResult>& match_results,
   if (segments.empty()) {
     return;
   } else if (match_indices.size() == 2) {
-    std::cout << match_indices.front() << " " << match_indices.back() << std::endl;
     segments.front().first_match_idx = match_indices.front();
     segments.back().last_match_idx = match_indices.back();
     return;
@@ -248,7 +249,6 @@ void reorder_segments(const std::vector<MatchResult>& match_results,
   for (int i = 1, n = static_cast<int>(match_indices.size()); i < n; ++i) {
     int curr_idx = match_indices[i];
     const MatchResult& curr_match = match_results[curr_idx];
-    std::cout << prev_idx << " " << curr_idx << std::endl;
 
     if (prev_match.edgeid != curr_match.edgeid &&
         !reader.AreEdgesConnectedForward(prev_match.edgeid, curr_match.edgeid)) {
@@ -263,9 +263,6 @@ void reorder_segments(const std::vector<MatchResult>& match_results,
                           prev_idx, curr_idx});
     }
 
-    int x = 14;
-    int y = 1;
-    int z = 3;
     prev_match = curr_match;
     prev_idx = curr_idx;
   }
@@ -278,15 +275,6 @@ std::vector<EdgeSegment> ConstructRoute(const MapMatcher& mapmatcher,
     return {};
   }
 
-  std::vector<std::string> coords;
-  for (const auto& res : match_results) {
-    coords.push_back(std::to_string(res.lnglat.lng()) + ",");
-    coords.push_back(std::to_string(res.lnglat.lat()) + ";");
-  }
-  for (const auto& s : coords)
-    std::cout << s;
-  std::cout << std::endl;
-
   std::vector<EdgeSegment> route;
   const baldr::GraphTile* tile = nullptr;
 
@@ -297,10 +285,13 @@ std::vector<EdgeSegment> ConstructRoute(const MapMatcher& mapmatcher,
   int prev_idx = -1;
   for (int curr_idx = 0, n = static_cast<int>(match_results.size()); curr_idx < n; ++curr_idx) {
     const MatchResult& match = match_results[curr_idx];
+
+    if (!match.edgeid.Is_Valid()) {
+      continue;
+    }
+
     if (!match.HasState()) {
-      if (match.edgeid.Is_Valid()) {
-        match_indices.push_back(curr_idx);
-      }
+      match_indices.push_back(curr_idx);
       continue;
     }
 
@@ -312,9 +303,15 @@ std::vector<EdgeSegment> ConstructRoute(const MapMatcher& mapmatcher,
       // then reverse merge the segments together which are on the same edge so we have a
       // minimum number of segments. in this case we could at minimum end up with 1 segment
 
+      //      std::cout << reader.encoded_edge_shape(prev_match->edgeid) << " "
+      //                << reader.encoded_edge_shape(match.edgeid) << std::endl;
+
       segments.clear();
       if (!MergeRoute(segments, prev_state, state) && !route.empty()) {
         route.back().discontinuity = true;
+        prev_idx = curr_idx;
+        prev_match = &match;
+        continue;
       }
 
       match_indices.push_front(prev_idx);
@@ -333,12 +330,12 @@ std::vector<EdgeSegment> ConstructRoute(const MapMatcher& mapmatcher,
       // MergeEdgeSegments(route, segments.begin(), segments.end());
       route.insert(route.end(), segments.cbegin(), segments.cend());
       match_indices.clear();
-      std::cout << " clear containers " << std::endl;
     }
 
     prev_match = &match;
     prev_idx = curr_idx;
   }
+
   return route;
 }
 
