@@ -69,7 +69,9 @@ using nodelayout = std::unordered_map<std::string, midgard::PointLL>;
 
 namespace detail {
 
-boost::property_tree::ptree build_config(const std::string& tiledir) {
+boost::property_tree::ptree
+build_config(const std::string& tiledir,
+             const std::unordered_map<std::string, std::string>& config_options) {
 
   const std::string default_config = R"(
     {"mjolnir":{"tile_dir":"", "concurrency": 1},
@@ -149,12 +151,16 @@ boost::property_tree::ptree build_config(const std::string& tiledir) {
   boost::property_tree::ptree ptree;
   boost::property_tree::json_parser::read_json(stream, ptree);
   ptree.put("mjolnir.tile_dir", tiledir);
+  for (const auto& kv : config_options) {
+    ptree.put(kv.first, kv.second);
+  }
   return ptree;
 }
 
 std::string build_valhalla_route_request(const map& map,
                                          const std::vector<std::string>& waypoints,
-                                         const std::string& costing = "auto") {
+                                         const std::string& costing = "auto",
+                                         const std::string& datetime = "") {
 
   rapidjson::Document doc;
   doc.SetObject();
@@ -167,8 +173,20 @@ std::string build_valhalla_route_request(const map& map,
     p.AddMember("lat", map.nodes.at(waypoint).lat(), allocator);
     locations.PushBack(p, allocator);
   }
+
+  rapidjson::Value dt(rapidjson::kObjectType);
+  if (datetime == "current") {
+    dt.AddMember("type", 0, allocator);
+    dt.AddMember("value", "current", allocator);
+  } else if (datetime != "") {
+    dt.AddMember("type", 1, allocator);
+    dt.AddMember("value", datetime, allocator);
+  }
+
   doc.AddMember("locations", locations, allocator);
   doc.AddMember("costing", costing, allocator);
+  if (datetime != "")
+    doc.AddMember("date_time", dt, allocator);
 
   rapidjson::StringBuffer sb;
   rapidjson::Writer<rapidjson::StringBuffer> writer(sb);
@@ -202,6 +220,7 @@ std::string build_valhalla_match_request(const map& map,
   rapidjson::StringBuffer sb;
   rapidjson::Writer<rapidjson::StringBuffer> writer(sb);
   doc.Accept(writer);
+  std::cout << sb.GetString() << std::endl;
   return sb.GetString();
 }
 
@@ -445,6 +464,27 @@ inline void build_pbf(const nodelayout& node_locations,
 } // namespace detail
 
 /**
+ * Generate a new GraphReader that doesn't re-use a previously
+ * statically initizalized tile_extract member variable.
+ *
+ * Useful if you need to reload a tile extract within the same
+ * process
+ */
+std::shared_ptr<valhalla::baldr::GraphReader>
+make_clean_graphreader(const boost::property_tree::ptree& pt) {
+
+  // Wrapper sub-class to allow replacing the statically initialized
+  // tile_extract member variable
+  struct ResettingGraphReader : valhalla::baldr::GraphReader {
+    ResettingGraphReader(boost::property_tree::ptree pt) : GraphReader(pt) {
+      // Reset the statically initialized tile_extract_ member variable
+      tile_extract_.reset(new valhalla::baldr::GraphReader::tile_extract_t(pt));
+    }
+  };
+  return std::make_shared<ResettingGraphReader>(pt);
+}
+
+/**
  * Given a node layout, set of ways, node properties and relations, generates an OSM PBF file,
  * and builds a set of Valhalla tiles for it.
  *
@@ -453,6 +493,9 @@ inline void build_pbf(const nodelayout& node_locations,
  * @param nodes properties on any of the defined nodes
  * @param relations OSM relations that related nodes and ways together
  * @param workdir where to build the PBF and the tiles
+ * @param config_options optional key value pairs where the key is ptree style dom traversal and
+ *        the value is the value to put into the config. You can do things like
+ *        add timezones database path
  * @return a map object that contains the Valhalla config (to pass to GraphReader) and node layout
  *         (for converting node names to coordinates)
  */
@@ -460,10 +503,11 @@ map buildtiles(const nodelayout layout,
                const ways& ways,
                const nodes& nodes,
                const relations& relations,
-               const std::string& workdir) {
+               const std::string& workdir,
+               const std::unordered_map<std::string, std::string>& config_options = {}) {
 
   map result;
-  result.config = detail::build_config(workdir);
+  result.config = detail::build_config(workdir, config_options);
   result.nodes = layout;
 
   // Sanity check so that we don't blow away / by mistake
@@ -503,12 +547,12 @@ std::tuple<const baldr::GraphId,
            const baldr::DirectedEdge*,
            const baldr::GraphId,
            const baldr::DirectedEdge*>
-findEdge(const std::unique_ptr<valhalla::baldr::GraphReader>& reader,
+findEdge(valhalla::baldr::GraphReader& reader,
          const std::unordered_map<std::string, midgard::PointLL>& nodes,
          const baldr::GraphId& tile_id,
          const std::string& way_name,
          const std::string& end_node) {
-  auto* tile = reader->GetGraphTile(tile_id);
+  auto* tile = reader.GetGraphTile(tile_id);
 
   auto end_node_coordinates = nodes.at(end_node);
 
@@ -546,7 +590,7 @@ findEdge(const map& map,
          const baldr::GraphId& tile_id,
          const std::string& way_name,
          const std::string& end_node) {
-  std::unique_ptr<baldr::GraphReader> reader(new baldr::GraphReader(map.config));
+  baldr::GraphReader reader(map.config.get_child("mjolnir"));
   return findEdge(reader, map.nodes, tile_id, way_name, end_node);
 }
 
@@ -558,8 +602,16 @@ findEdge(const map& map,
  * @param waypoints an array of node names to use as waypoints
  * @param costing the name of the costing model to use
  */
-valhalla::Api
-route(const map& map, const std::vector<std::string>& waypoints, const std::string& costing) {
+valhalla::Api route(const map& map,
+                    const std::vector<std::string>& waypoints,
+                    const std::string& costing,
+                    const std::string& datetime,
+                    std::shared_ptr<valhalla::baldr::GraphReader> reader = {}) {
+  if (!reader)
+    reader.reset(new valhalla::baldr::GraphReader(map.config.get_child("mjolnir")));
+  else
+    std::cerr << "[          ] Using pre-allocated baldr::GraphReader" << std::endl;
+
   std::cerr << "[          ] Routing with mjolnir.tile_dir = "
             << map.config.get<std::string>("mjolnir.tile_dir") << " with waypoints ";
   bool first = true;
@@ -570,16 +622,33 @@ route(const map& map, const std::vector<std::string>& waypoints, const std::stri
     first = false;
   };
   std::cerr << " with costing " << costing << std::endl;
-  auto request_json = detail::build_valhalla_route_request(map, waypoints, costing);
+  auto request_json = detail::build_valhalla_route_request(map, waypoints, costing, datetime);
   std::cerr << "[          ] Valhalla request is: " << request_json << std::endl;
 
-  valhalla::tyr::actor_t actor(map.config, true);
-  return actor.unserialized_route(request_json);
+  loki::loki_worker_t loki_worker(map.config, reader);
+  thor::thor_worker_t thor_worker(map.config, reader);
+  odin::odin_worker_t odin_worker(map.config);
+
+  valhalla::Api request;
+  valhalla::ParseApi(request_json, Options::route, request);
+  loki_worker.route(request);
+  thor_worker.route(request);
+  odin_worker.narrate(request);
+
+  loki_worker.cleanup();
+  thor_worker.cleanup();
+  odin_worker.cleanup();
+
+  return request;
 }
 
-valhalla::Api
-route(const map& map, const std::string& from, const std::string& to, const std::string& costing) {
-  return route(map, {from, to}, costing);
+valhalla::Api route(const map& map,
+                    const std::string& from,
+                    const std::string& to,
+                    const std::string& costing,
+                    const std::string& datetime = "",
+                    std::shared_ptr<valhalla::baldr::GraphReader> reader = {}) {
+  return route(map, {from, to}, costing, datetime, reader);
 }
 
 valhalla::Api match(const map& map,
@@ -770,6 +839,28 @@ void expect_path_length(const valhalla::Api& result,
     EXPECT_FLOAT_EQ(length_km, expected_length_km);
   } else {
     EXPECT_NEAR(length_km, expected_length_km, error_margin);
+  }
+}
+
+void expect_eta(const valhalla::Api& result,
+                const float expected_eta_seconds,
+                const float error_margin = 0) {
+  EXPECT_EQ(result.trip().routes_size(), 1);
+  EXPECT_EQ(result.trip().routes(0).legs_size(), 1);
+
+  const auto& route = result.trip().routes(0);
+
+  double eta_sec = 0;
+  for (int legnum = 0; legnum < route.legs_size(); legnum++) {
+    const auto& leg = route.legs(legnum);
+    const auto& lastnode = leg.node(leg.node_size() - 1);
+    eta_sec += lastnode.elapsed_time();
+  }
+
+  if (error_margin == 0) {
+    EXPECT_FLOAT_EQ(eta_sec, expected_eta_seconds);
+  } else {
+    EXPECT_NEAR(eta_sec, expected_eta_seconds, error_margin);
   }
 }
 
