@@ -34,7 +34,7 @@ TimeInfo::make(valhalla::Location& location, baldr::GraphReader& reader, int def
   if (timezone_index == 0) {
     // Don't use the provided one if its not valid
     if (!dt::get_tz_db().from_index(default_timezone_index)) {
-      default_timezone_index = 291; // UTC
+      default_timezone_index = baldr::DateTime::get_tz_db().to_index("Etc/UTC");
     }
     LOG_WARN("No timezone for location using default");
     timezone_index = default_timezone_index;

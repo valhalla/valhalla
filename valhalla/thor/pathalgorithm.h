@@ -181,8 +181,9 @@ struct TimeInfo {
    * @param default_timezone_index   used when no timezone information is available
    * @return the initialized TimeInfo
    */
-  static TimeInfo
-  make(valhalla::Location& location, baldr::GraphReader& reader, int default_timezone_index = 291);
+  static TimeInfo make(valhalla::Location& location,
+                       baldr::GraphReader& reader,
+                       int default_timezone_index = baldr::DateTime::get_tz_db().to_index("Etc/UTC"));
 
   // a tuple used to offset from a time in the forward or reverse direction
   struct Offset {

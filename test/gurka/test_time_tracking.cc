@@ -14,7 +14,6 @@ using namespace valhalla;
 namespace dt = valhalla::baldr::DateTime;
 
 TEST(TimeTracking, make) {
-
   // build a very simple graph
   const std::string ascii_map = R"(A----B)";
   const gurka::ways ways = {{"AB", {{"highway", "trunk"}}}};
@@ -91,7 +90,7 @@ TEST(TimeTracking, make) {
 
   // user specified date time
   location->set_date_time("2020-03-31T11:16");
-  ti = thor::TimeInfo::make(*location, reader, 110);
+  ti = thor::TimeInfo::make(*location, reader, dt::get_tz_db().to_index("America/New_York"));
   // zero out the part we dont care to test
   ti.seconds_from_now = 0;
   ASSERT_EQ(ti, (thor::TimeInfo{1, 110, 1585667787, 213387}));
