@@ -262,14 +262,16 @@ void parse_primitive_block(char* unpack_buffer,
   }
 }
 
-void parse_header_block(char* unpack_buffer, int32_t sz) {
+void parse_header_block(char* unpack_buffer, int32_t sz, Callback& callback) {
   // turn the blob bytes into a protobuf object
   HeaderBlock header_block;
   if (!header_block.ParseFromArray(unpack_buffer, sz)) {
     throw std::runtime_error("unable to parse header block");
   }
 
-  // TODO: do something with replication information?
+  callback.header_callback(header_block.osmosis_replication_timestamp(),
+                           header_block.osmosis_replication_sequence_number(),
+                           header_block.osmosis_replication_base_url());
 }
 
 } // namespace
@@ -307,7 +309,7 @@ void Parser::parse(std::ifstream& file, const Interest interest, Callback& callb
         parse_primitive_block(unpack_buffer, sz, interest, callback);
         // if its something other than a header
       } else if (header.type() == "OSMHeader") {
-        parse_header_block(unpack_buffer, sz);
+        parse_header_block(unpack_buffer, sz, callback);
       } else {
         LOG_WARN("Unknown blob type: " + header.type());
       }

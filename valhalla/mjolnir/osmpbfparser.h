@@ -75,6 +75,7 @@ struct Callback {
   virtual void
   relation_callback(const uint64_t osmid, const Tags& tags, const std::vector<Member>& members) = 0;
   virtual void changeset_callback(const uint64_t changeset_id) = 0;
+  virtual void header_callback(const uint64_t timestamp, const uint64_t sequence_number, const std::string& base_url) = 0;
 };
 
 // the parser used to get data out of the osmpbf file

@@ -1662,6 +1662,10 @@ public:
     osmdata_.max_changeset_id_ = std::max(osmdata_.max_changeset_id_, changeset_id);
   }
 
+  virtual void header_callback(const uint64_t timestamp, const uint64_t sequence_number, const std::string& base_url) override {
+    std::cout << "header " << timestamp << " " << sequence_number << " " << base_url << std::endl;
+  }
+
   // lets the sequences be set and reset
   void reset(sequence<OSMWay>* ways,
              sequence<OSMWayNode>* way_nodes,
