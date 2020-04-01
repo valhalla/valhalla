@@ -129,6 +129,8 @@ public:
     osm_admin_data_.max_changeset_id_ = std::max(osm_admin_data_.max_changeset_id_, changeset_id);
   }
 
+  virtual void header_callback(const uint64_t timestamp, const uint64_t sequence_number, const std::string& base_url) override {}
+
   // Lua Tag Transformation class
   LuaTagTransform lua_;
 
