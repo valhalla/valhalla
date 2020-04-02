@@ -486,9 +486,8 @@ struct bin_handler_t {
       for (p_itr = begin; p_itr != end; ++p_itr, ++c_itr) {
         c_itr->sq_distance = std::numeric_limits<float>::max();
         c_itr->prefiltered = is_search_filter_triggered(edge, p_itr->location.search_filter_);
-        if (!c_itr->prefiltered) {
-          all_prefiltered = false;
-        }
+        // set to false if even one candidate was not filtered
+        all_prefiltered = all_prefiltered && c_itr->prefiltered;
       }
 
       // short-circuit if all candidates were prefiltered
