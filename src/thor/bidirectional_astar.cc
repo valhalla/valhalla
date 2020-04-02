@@ -127,9 +127,8 @@ bool BidirectionalAStar::ExpandForward(GraphReader& graphreader,
 
   // Update the time information
   auto offset_time =
-      from_transition
-          ? time_info
-          : time_info + TimeInfo::Offset{pred.cost().secs, static_cast<int>(nodeinfo->timezone())};
+      from_transition ? time_info
+                      : time_info.forward(pred.cost().secs, static_cast<int>(nodeinfo->timezone()));
 
   uint32_t shortcuts = 0;
   EdgeMetadata meta = EdgeMetadata::make(node, nodeinfo, tile, edgestatus_forward_);
@@ -321,9 +320,8 @@ bool BidirectionalAStar::ExpandReverse(GraphReader& graphreader,
 
   // Update the time information
   auto offset_time =
-      from_transition
-          ? time_info
-          : time_info - TimeInfo::Offset{pred.cost().secs, static_cast<int>(nodeinfo->timezone())};
+      from_transition ? time_info
+                      : time_info.reverse(pred.cost().secs, static_cast<int>(nodeinfo->timezone()));
 
   uint32_t shortcuts = 0;
   EdgeMetadata meta = EdgeMetadata::make(node, nodeinfo, tile, edgestatus_reverse_);

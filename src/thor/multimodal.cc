@@ -259,9 +259,8 @@ bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
 
   // Update the time information
   auto offset_time =
-      from_transition
-          ? time_info
-          : time_info + TimeInfo::Offset{pred.cost().secs, static_cast<int>(nodeinfo->timezone())};
+      from_transition ? time_info
+                      : time_info.forward(pred.cost().secs, static_cast<int>(nodeinfo->timezone()));
 
   // Set a default transfer penalty at a stop (if not same trip Id and block Id)
   Cost transfer_cost = tc->DefaultTransferCost();

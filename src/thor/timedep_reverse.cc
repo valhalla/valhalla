@@ -92,9 +92,8 @@ bool TimeDepReverse::ExpandReverse(GraphReader& graphreader,
 
   // Update the time information
   auto offset_time =
-      from_transition
-          ? time_info
-          : time_info - TimeInfo::Offset{pred.cost().secs, static_cast<int>(nodeinfo->timezone())};
+      from_transition ? time_info
+                      : time_info.reverse(pred.cost().secs, static_cast<int>(nodeinfo->timezone()));
 
   // Expand from end node.
   EdgeMetadata meta = EdgeMetadata::make(node, nodeinfo, tile, edgestatus_);

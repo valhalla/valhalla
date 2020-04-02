@@ -7,6 +7,7 @@
 #include <utility>
 #include <vector>
 
+#include <valhalla/baldr/datetime.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/proto/api.pb.h>
@@ -151,22 +152,22 @@ struct EdgeMetadata {
 // A structure for tracking time information as the route progresses
 struct TimeInfo {
   // whether or not the provided location had valid time information or not
-  bool valid;
+  uint64_t valid : 1;
 
   // index into the timezone database of the location
   // used to do timezone offset as the route progresses
-  int timezone_index;
+  uint64_t timezone_index : 9;
 
   // seconds from epoch adjusted for timezone at the location
   // used to do local time offset as the route progresses
-  uint64_t local_time;
+  uint64_t local_time : 54;
 
   // the ordinal second from the beginning of the week (starting monday at 00:00)
   // used to look up historical traffic as the route progresses
-  uint32_t second_of_week;
+  uint64_t second_of_week : 20;
 
   // the distance in seconds from now
-  int64_t seconds_from_now;
+  uint64_t seconds_from_now : 44;
 
   /**
    * Helper function to initialize the object from a location. Uses the graph to
@@ -185,25 +186,73 @@ struct TimeInfo {
                        baldr::GraphReader& reader,
                        int default_timezone_index = baldr::DateTime::get_tz_db().to_index("Etc/UTC"));
 
-  // a tuple used to offset from a time in the forward or reverse direction
-  struct Offset {
-    float seconds;
-    int timezone_index;
-  };
+  /**
+   * Offset all the initial time info to reflect the progress along the route to this point
+   * @param seconds_offset  the number of seconds to offset the TimeInfo by
+   * @param next_tz_index   the timezone index at the new location
+   * @return a new TimeInfo object reflecting the offset
+   */
+  inline TimeInfo forward(float seconds_offset, int next_tz_index) const {
+    namespace dt = baldr::DateTime;
+
+    if (!valid)
+      return *this;
+
+    // if the timezone changed we need to account for that offset as well
+    int tz_diff = 0;
+    if (next_tz_index != timezone_index) {
+      tz_diff =
+          dt::timezone_diff(local_time + seconds_offset, dt::get_tz_db().from_index(timezone_index),
+                            dt::get_tz_db().from_index(next_tz_index));
+    }
+
+    // offset the local time and second of week by the amount traveled to this label
+    uint64_t lt = local_time + static_cast<uint64_t>(seconds_offset) + tz_diff;
+    uint32_t sw = second_of_week + static_cast<uint32_t>(seconds_offset) + tz_diff;
+    if (sw > valhalla::midgard::kSecondsPerWeek) {
+      sw -= valhalla::midgard::kSecondsPerWeek;
+    }
+
+    // return the shifted object, notice that seconds from now is only useful for
+    // date_time type == current
+    return {valid, static_cast<uint64_t>(next_tz_index), lt, sw,
+            seconds_from_now + static_cast<int64_t>(seconds_offset)};
+  }
 
   /**
    * Offset all the initial time info to reflect the progress along the route to this point
-   * @param offset Describes the offset in seconds and the timezone to offset to
+   * @param seconds_offset  the number of seconds to offset the TimeInfo by
+   * @param next_tz_index   the timezone index at the new location
    * @return a new TimeInfo object reflecting the offset
    */
-  TimeInfo operator+(Offset offset) const;
+  inline TimeInfo reverse(float seconds_offset, int next_tz_index) const {
+    namespace dt = baldr::DateTime;
 
-  /**
-   * Offset all the initial time info to reflect the progress along the route to this point
-   * @param offset Describes the offset in seconds and the timezone to offset to
-   * @return a new TimeInfo object reflecting the offset
-   */
-  TimeInfo operator-(Offset offset) const;
+    if (!valid)
+      return *this;
+
+    // if the timezone changed we need to account for that offset as well
+    int tz_diff = 0;
+    if (next_tz_index != timezone_index) {
+      tz_diff =
+          dt::timezone_diff(local_time + seconds_offset, dt::get_tz_db().from_index(timezone_index),
+                            dt::get_tz_db().from_index(next_tz_index));
+    }
+
+    // offset the local time and second of week by the amount traveled to this label
+    uint64_t lt =
+        local_time - static_cast<uint64_t>(seconds_offset) + tz_diff; // dont route near the epoch
+    int64_t sw =
+        static_cast<int64_t>(second_of_week) - static_cast<int64_t>(seconds_offset) + tz_diff;
+    if (sw < 0) {
+      sw = valhalla::midgard::kSecondsPerWeek + sw;
+    }
+
+    // return the shifted object, notice that seconds from now is negative, this could be useful if
+    // we had the ability to arrive_by current time but we dont for the moment
+    return {valid, static_cast<uint64_t>(next_tz_index), lt, static_cast<uint32_t>(sw),
+            seconds_from_now - static_cast<int64_t>(seconds_offset)};
+  }
 
   // for unit tests
   bool operator==(const TimeInfo& ti) const {

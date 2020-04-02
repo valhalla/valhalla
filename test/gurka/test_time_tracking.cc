@@ -97,33 +97,35 @@ TEST(TimeTracking, make) {
   ASSERT_EQ(location->date_time(), "2020-03-31T11:16");
 }
 
-TEST(TimeTracking, increment) {
+TEST(TimeTracking, forward) {
   // invalid should stay that way
-  auto ti = thor::TimeInfo{false} + thor::TimeInfo::Offset{10, 1};
+  auto ti = thor::TimeInfo{false}.forward(10, 1);
   ASSERT_EQ(ti, (thor::TimeInfo{false}));
 
   // change in timezone should result in some offset (LA to NY)
-  ti = thor::TimeInfo{true, 94, 123456789} + thor::TimeInfo::Offset{10, 110};
+  ti = thor::TimeInfo{true, 94, 123456789}.forward(10, 110);
   ASSERT_EQ(ti, (thor::TimeInfo{true, 110, 123456789 + 10 + 60 * 60 * 3, 10 + 60 * 60 * 3, 10}));
 
   // wrap around second of week
-  ti = thor::TimeInfo{true, 1, 2, midgard::kSecondsPerWeek - 5} + thor::TimeInfo::Offset{10, 1};
+  ti = thor::TimeInfo{true, 1, 2, midgard::kSecondsPerWeek - 5}.forward(10, 1);
   ASSERT_EQ(ti, (thor::TimeInfo{true, 1, 12, 5, 10}));
 }
 
 TEST(TimeTracking, decrement) {
   // invalid should stay that way
-  auto ti = thor::TimeInfo{false} - thor::TimeInfo::Offset{10, 1};
+  auto ti = thor::TimeInfo{false}.reverse(10, 1);
   ASSERT_EQ(ti, (thor::TimeInfo{false}));
 
   // change in timezone should result in some offset (NY to LA)
-  ti = thor::TimeInfo{true, 110, 123456789} - thor::TimeInfo::Offset{10, 94};
+  ti = thor::TimeInfo{true, 110, 123456789}.reverse(10, 94);
   ASSERT_EQ(ti, (thor::TimeInfo{true, 94, 123456789 - 10 - 60 * 60 * 3,
-                                midgard::kSecondsPerWeek - 10 - 60 * 60 * 3, -10}));
+                                midgard::kSecondsPerWeek - 10 - 60 * 60 * 3,
+                                static_cast<uint64_t>(-10)}));
 
   // wrap around second of week
-  ti = thor::TimeInfo{true, 1, 22, 5} - thor::TimeInfo::Offset{10, 1};
-  ASSERT_EQ(ti, (thor::TimeInfo{true, 1, 12, midgard::kSecondsPerWeek - 5, -10}));
+  ti = thor::TimeInfo{true, 1, 22, 5}.reverse(10, 1);
+  ASSERT_EQ(ti,
+            (thor::TimeInfo{true, 1, 12, midgard::kSecondsPerWeek - 5, static_cast<uint64_t>(-10)}));
 }
 
 TEST(TimeTracking, routes) {
