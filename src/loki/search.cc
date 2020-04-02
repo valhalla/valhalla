@@ -30,6 +30,9 @@ bool is_search_filter_triggered(const DirectedEdge* edge,
   uint32_t min_road_class = static_cast<uint32_t>(search_filter.min_road_class_);
   uint32_t max_road_class = static_cast<uint32_t>(search_filter.max_road_class_);
 
+  // Note that min_ and max_road_class are integers where, by default, max_road_class
+  // is 0 and min_road_class is 7. This filter rejects roads where the functional
+  // road class is outside of the min to max range.
   if ((road_class > min_road_class || road_class < max_road_class) ||
       (search_filter.exclude_tunnel_ && edge->tunnel()) ||
       (search_filter.exclude_bridge_ && edge->bridge()) ||
