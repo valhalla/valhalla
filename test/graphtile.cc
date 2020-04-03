@@ -16,6 +16,9 @@ struct testable_graphtile : public valhalla::baldr::GraphTile {
     header_->set_edge_bin_offsets(offsets);
     edge_bins_ = bins.data();
   }
+  ~testable_graphtile() {
+    delete header_;
+  }
 };
 
 TEST(Graphtile, FileSuffix) {
