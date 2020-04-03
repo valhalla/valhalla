@@ -594,6 +594,10 @@ public:
     return live_speed.closed();
   }
 
+  const traffic::Tile& get_traffic_tile() const {
+    return traffic_tile;
+  }
+
 protected:
   // Graph tile memory, this must be shared so that we can put it into cache
   std::shared_ptr<std::vector<char>> graphtile_;
