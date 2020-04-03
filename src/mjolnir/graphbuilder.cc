@@ -1173,7 +1173,7 @@ void GraphBuilder::Build(const boost::property_tree::ptree& pt,
   }
 
   // Reclassify ferry connection edges - use the highway classification cutoff
-  RoadClass rc = RoadClass::kPrimary;
+  baldr::RoadClass rc = baldr::RoadClass::kPrimary;
   for (auto& level : TileHierarchy::levels()) {
     if (level.second.name == "highway") {
       rc = level.second.importance;
