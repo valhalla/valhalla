@@ -111,9 +111,7 @@ private:
   TransitionCostModel transition_cost_model_;
 };
 
-bool MergeRoute(std::vector<EdgeSegment>& route, const State& source, const State& target);
-
-std::vector<EdgeSegment> MergeRoute(const State& source, const State& target);
+bool MergeRoute(const State& source, const State& target, std::vector<EdgeSegment>& route);
 
 std::vector<EdgeSegment> ConstructRoute(const MapMatcher& mapmatcher,
                                         const std::vector<MatchResult>& match_results,

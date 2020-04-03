@@ -167,8 +167,9 @@ std::vector<MatchResult> InterpolateMeasurements(const MapMatcher& mapmatcher,
     return results;
   }
 
-  std::vector<EdgeSegment> route = MergeRoute(mapmatcher.state_container().state(stateid),
-                                              mapmatcher.state_container().state(next_stateid));
+  std::vector<EdgeSegment> route;
+  MergeRoute(mapmatcher.state_container().state(stateid),
+             mapmatcher.state_container().state(next_stateid), route);
 
   // for each point that needs interpolated
   std::vector<EdgeSegment>::const_iterator left_most_segment = route.begin();
@@ -414,7 +415,7 @@ void MapMatcher::RemoveRedundancies(const std::vector<StateId>& result) {
     for (const auto& right_candidate : container_.column(time + 1)) {
       std::vector<EdgeSegment> edges;
       if (!ts_.IsRemoved(right_candidate.stateid()) &&
-          MergeRoute(edges, left_used_candidate, right_candidate)) {
+          MergeRoute(left_used_candidate, right_candidate, edges)) {
         paths_from_winner.emplace(right_candidate.stateid(), std::move(edges));
       }
     }
@@ -454,7 +455,7 @@ void MapMatcher::RemoveRedundancies(const std::vector<StateId>& result) {
         // If there is no route its not really unique since we dont need discontinuities
         std::vector<EdgeSegment> edges;
         if (ts_.IsRemoved(right_candidate.stateid()) ||
-            !MergeRoute(edges, left_unused_candidate, right_candidate)) {
+            !MergeRoute(left_unused_candidate, right_candidate, edges)) {
           continue;
         }
 

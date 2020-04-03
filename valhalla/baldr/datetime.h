@@ -17,7 +17,6 @@
 #include <valhalla/baldr/graphconstants.h>
 #include <valhalla/baldr/nodeinfo.h>
 #include <valhalla/midgard/constants.h>
-
 #include <valhalla/proto/tripcommon.pb.h>
 
 namespace valhalla {

@@ -198,7 +198,7 @@ bool EdgeSegment::Adjoined(baldr::GraphReader& graphreader, const EdgeSegment& o
   }
 }
 
-bool MergeRoute(std::vector<EdgeSegment>& route, const State& source, const State& target) {
+bool MergeRoute(const State& source, const State& target, std::vector<EdgeSegment>& route) {
   const auto route_rbegin = source.RouteBegin(target), route_rend = source.RouteEnd();
 
   // No route, discontinuity
@@ -211,6 +211,7 @@ bool MergeRoute(std::vector<EdgeSegment>& route, const State& source, const Stat
   auto label = route_rbegin;
 
   // Skip the first dummy edge std::prev(route_rend)
+
   for (; std::next(label) != route_rend; label++) {
     segments.emplace_back(label->edgeid(), label->source(), label->target());
   }
@@ -225,14 +226,9 @@ bool MergeRoute(std::vector<EdgeSegment>& route, const State& source, const Stat
   return true;
 }
 
-std::vector<EdgeSegment> MergeRoute(const State& source, const State& target) {
-  std::vector<EdgeSegment> route;
-  MergeRoute(route, source, target);
-  return route;
-}
-
 void reorder_segments(const std::vector<MatchResult>& match_results,
                       const std::deque<int>& match_indices,
+                      const StateContainer& state_container,
                       baldr::GraphReader& reader,
                       std::vector<EdgeSegment>& segments) {
   if (segments.empty()) {
@@ -252,8 +248,24 @@ void reorder_segments(const std::vector<MatchResult>& match_results,
 
     if (prev_match.edgeid != curr_match.edgeid &&
         !reader.AreEdgesConnectedForward(prev_match.edgeid, curr_match.edgeid)) {
-      continue;
+      throw std::logic_error{"found route not connected"};
     }
+
+    if (state_container.measurement(curr_idx).is_break_point()) {
+      if (prev_match.edgeid != curr_match.edgeid) {
+        segments.push_back({prev_match.edgeid, prev_match.distance_along, 1.f, prev_idx, -1});
+        segments.push_back({curr_match.edgeid, 0.f, curr_match.distance_along, -1, curr_idx});
+      } else {
+        segments.push_back({prev_match.edgeid, prev_match.distance_along, curr_match.distance_along,
+                            prev_idx, curr_idx});
+        segments.push_back({prev_match.edgeid, curr_match.distance_along, -1.f, curr_idx, -1});
+      }
+    } else {
+    }
+
+    // Break  via      via       break
+    // a      c        d         e
+    // ---------->---------->--------->
 
     if (prev_match.edgeid != curr_match.edgeid) {
       segments.push_back({prev_match.edgeid, prev_match.distance_along, 1.f, prev_idx, -1});
@@ -307,7 +319,7 @@ std::vector<EdgeSegment> ConstructRoute(const MapMatcher& mapmatcher,
       //                << reader.encoded_edge_shape(match.edgeid) << std::endl;
 
       segments.clear();
-      if (!MergeRoute(segments, prev_state, state) && !route.empty()) {
+      if (!MergeRoute(prev_state, state, segments) && !route.empty()) {
         route.back().discontinuity = true;
         prev_idx = curr_idx;
         prev_match = &match;
@@ -317,7 +329,7 @@ std::vector<EdgeSegment> ConstructRoute(const MapMatcher& mapmatcher,
       match_indices.push_front(prev_idx);
       match_indices.push_back(curr_idx);
 
-      reorder_segments(match_results, match_indices, reader, segments);
+      reorder_segments(match_results, match_indices, mapmatcher.state_container(), reader, segments);
 
       // TODO remove: the code is pretty mature we dont need this check its wasted cpu
       if (!ValidateRoute(mapmatcher.graphreader(), segments.begin(), segments.end(), tile)) {

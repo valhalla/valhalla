@@ -45,6 +45,12 @@ public:
   virtual prime_server::worker_t::result_t work(const std::list<zmq::message_t>& job,
                                                 void* request_info,
                                                 const std::function<void()>& interrupt) override;
+
+  static std::string offset_date(baldr::GraphReader& reader,
+                                 const std::string& in_dt,
+                                 const baldr::GraphId& in_edge,
+                                 float offset,
+                                 const baldr::GraphId& out_edge);
 #endif
   virtual void cleanup() override;
 
@@ -80,23 +86,19 @@ protected:
   void parse_measurements(const Api& request);
   std::string parse_costing(const Api& request);
   void parse_filter_attributes(const Api& request, bool is_strict_filter = false);
-  static std::string offset_date(baldr::GraphReader& reader,
-                                 const std::string& in_dt,
-                                 const baldr::GraphId& in_edge,
-                                 float offset,
-                                 const baldr::GraphId& out_edge);
 
   void
-  serilize_pathes(const std::vector<PathInfo>& path_edges,
-                  const std::vector<meili::MatchResult>& match_results,
-                  const std::vector<std::pair<baldr::GraphId, baldr::GraphId>>& disconnected_edges,
-                  std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>>&
-                      route_discontinuities,
-                  Options& options,
-                  Api& request);
+  serilize_paths(const std::vector<PathInfo>& path_edges,
+                 const std::vector<meili::MatchResult>& match_results,
+                 const std::vector<std::pair<baldr::GraphId, baldr::GraphId>>& disconnected_edges,
+                 std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>>&
+                     route_discontinuities,
+                 Options& options,
+                 Api& request);
 
-  void serilize_pathes_new(
-      const std::deque<std::vector<std::pair<PathInfo, const meili::EdgeSegment*>>>& pathes,
+  void serilize_paths_new(
+      const std::deque<std::pair<std::vector<PathInfo>, std::vector<const meili::EdgeSegment*>>>&
+          paths,
       const std::vector<meili::MatchResult>& match_results,
       std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>>&
           route_discontinuities,

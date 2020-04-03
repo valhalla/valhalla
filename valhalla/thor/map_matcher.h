@@ -23,7 +23,7 @@ namespace thor {
 
 class MapMatcher {
 public:
-  static std::deque<std::vector<std::pair<PathInfo, const meili::EdgeSegment*>>>
+  static std::deque<std::pair<std::vector<PathInfo>, std::vector<const meili::EdgeSegment*>>>
   FormPath(meili::MapMatcher* matcher,
            const std::vector<meili::MatchResult>& results,
            const std::vector<meili::EdgeSegment>& edge_segments,

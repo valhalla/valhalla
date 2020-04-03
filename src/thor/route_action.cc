@@ -519,7 +519,7 @@ void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
  * @param out_edge the output edgeid (used for timezone lookup)
  * @return out_dt  the time at the out_edge in local time after the offset is applied to the in_dt
  */
-std::string thor_worker_t::offset_date(GraphReader& reader,
+std::string thor_worker_t::offset_date(baldr::GraphReader& reader,
                                        const std::string& in_dt,
                                        const GraphId& in_edge,
                                        float offset,
@@ -534,7 +534,7 @@ std::string thor_worker_t::offset_date(GraphReader& reader,
     in_tz = node->timezone();
 
   // get the timezone of the output location
-  auto out_nodes = reader.GetDirectedEdgeNodes(in_edge, tile);
+  auto out_nodes = reader.GetDirectedEdgeNodes(out_edge, tile);
   uint32_t out_tz = 0;
   if (const auto* node = reader.nodeinfo(out_nodes.first, tile))
     out_tz = node->timezone();

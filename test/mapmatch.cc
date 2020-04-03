@@ -171,118 +171,119 @@ std::string make_test_case(PointLL& start, PointLL& end) {
          std::to_string(end.first) + "}]}";
 }
 
-TEST(Mapmatch, test_matcher) {
-  // generate a bunch of tests
-  tyr::actor_t actor(conf, true);
-  int tested = 0;
-  while (tested < bound) {
-    // get a route shape
-    PointLL start, end;
-    auto test_case = make_test_case(start, end);
-    std::cout << test_case << std::endl;
-    boost::property_tree::ptree route;
-    std::string route_json;
-    try {
-      route_json = actor.route(test_case);
-      route = json_to_pt(route_json);
-    } catch (...) {
-      std::cout << "route failed" << std::endl;
-      continue;
-    }
-    auto encoded_shape = route.get_child("trip.legs").front().second.get<std::string>("shape");
-    auto shape = midgard::decode<std::vector<midgard::PointLL>>(encoded_shape);
-    // skip any routes that have loops in them as edge walk fails in that case...
-    // TODO: fix edge walk
-    std::unordered_set<std::string> names;
-    bool looped = false;
-    const auto& maneuvers = route.get_child("trip.legs").front().second.get_child("maneuvers");
-    for (const auto& maneuver : maneuvers) {
-      if (maneuver.second.find("street_names") == maneuver.second.not_found())
-        continue;
-      for (const auto& name : maneuver.second.get_child("street_names"))
-        looped = looped || !names.insert(name.second.get_value<std::string>()).second;
-    }
-    // get the edges along that route shape
-    boost::property_tree::ptree walked;
-    std::string walked_json;
-
-    try {
-      walked_json = actor.trace_attributes(
-          R"({"date_time":{"type":1,"value":"2019-10-31T18:30"},"costing":"auto","shape_match":"edge_walk","encoded_polyline":")" +
-          json_escape(encoded_shape) + "\"}");
-      walked = json_to_pt(walked_json);
-    } catch (...) {
-      std::cout << test_case << std::endl;
-      std::cout << R"({"costing":"auto","shape_match":"edge_walk","encoded_polyline":")" +
-                       json_escape(encoded_shape) + "\"}"
-                << std::endl;
-      FAIL() << "Edge walk failed with exact shape";
-    }
-
-    // check the shape makes sense
-    auto walked_encoded_shape = walked.get<std::string>("shape");
-    auto walked_shape = midgard::decode<std::vector<midgard::PointLL>>(walked_encoded_shape);
-
-    /*EXPECT_EQ(walked_shape.size() , shape.size())
-      << "Differing shape lengths " + std::to_string(shape.size()) +
-         " != " + std::to_string(walked_shape.size()) + "\n" + encoded_shape +
-         "\n" + walked_encoded_shape;*/
-
-    // build up some gps segments for simulation from the real shape
-    std::vector<uint64_t> walked_edges;
-    std::vector<gps_segment_t> segments;
-    for (const auto& edge : walked.get_child("edges")) {
-      walked_edges.push_back(edge.second.get<uint64_t>("id"));
-      auto b = edge.second.get<size_t>("begin_shape_index");
-      auto e = edge.second.get<size_t>("end_shape_index") + 1;
-
-      segments.emplace_back(
-          gps_segment_t{std::vector<PointLL>(walked_shape.cbegin() + b, walked_shape.cbegin() + e),
-                        static_cast<float>(edge.second.get<float>("speed") * 1e3) / 3600.f});
-    }
-
-    // simulate gps from the route shape
-    std::vector<float> accuracies;
-    auto simulation = simulate_gps(segments, accuracies, 50, 75.f, 1);
-    auto locations = to_locations(simulation, accuracies, 1);
-    // get a trace-attributes from the simulated gps
-    auto matched = json_to_pt(actor.trace_attributes(
-        R"({"costing":"auto","shape_match":"map_snap","shape":)" + locations + "}"));
-
-    std::vector<uint64_t> matched_edges;
-    int idx = 0;
-    for (const auto& edge : matched.get_child("edges"))
-      matched_edges.push_back(edge.second.get<uint64_t>("id"));
-
-    // because of noise we can have off by 1 happen at the beginning or end so we trim to make sure
-    auto walked_it = std::search(walked_edges.begin(), walked_edges.end(), matched_edges.begin() + 1,
-                                 matched_edges.end() - 1);
-    if (walked_it == walked_edges.end()) {
-      if (looped) {
-        std::cout << "route had a possible loop" << std::endl;
-        continue;
-      }
-      auto decoded_match = midgard::decode<std::vector<PointLL>>(matched.get<std::string>("shape"));
-      std::string geojson =
-          R"({"type":"FeatureCollection","features":[{"geometry":{"type":"LineString","coordinates":[)";
-      geojson += print(shape);
-      geojson +=
-          R"(]},"type":"Feature","properties":{"stroke":"#00ff00","stroke-width":2}},{"geometry":{"type":"LineString","coordinates":[)";
-      geojson += print(simulation);
-      geojson +=
-          R"(]},"type":"Feature","properties":{"stroke":"#0000ff","stroke-width":2}},{"geometry":{"type":"LineString","coordinates":[)";
-      geojson += print(decoded_match);
-      geojson +=
-          R"(]},"type":"Feature","properties":{"stroke":"#ff0000","stroke-width":2}},{"geometry":{"type":"MultiPoint","coordinates":[)";
-      geojson += print(std::vector<PointLL>{start, end});
-      geojson += R"(]},"type":"Feature","properties":{}}]})";
-      std::cout << geojson << std::endl;
-      FAIL() << "The match did not match the walk";
-    }
-    std::cout << "Iteration " << tested << " complete" << std::endl;
-    ++tested;
-  }
-}
+// TEST(Mapmatch, test_matcher) {
+//  // generate a bunch of tests
+//  tyr::actor_t actor(conf, true);
+//  int tested = 0;
+//  while (tested < bound) {
+//    // get a route shape
+//    PointLL start, end;
+//    auto test_case = make_test_case(start, end);
+//    std::cout << test_case << std::endl;
+//    boost::property_tree::ptree route;
+//    std::string route_json;
+//    try {
+//      route_json = actor.route(test_case);
+//      route = json_to_pt(route_json);
+//    } catch (...) {
+//      std::cout << "route failed" << std::endl;
+//      continue;
+//    }
+//    auto encoded_shape = route.get_child("trip.legs").front().second.get<std::string>("shape");
+//    auto shape = midgard::decode<std::vector<midgard::PointLL>>(encoded_shape);
+//    // skip any routes that have loops in them as edge walk fails in that case...
+//    // TODO: fix edge walk
+//    std::unordered_set<std::string> names;
+//    bool looped = false;
+//    const auto& maneuvers = route.get_child("trip.legs").front().second.get_child("maneuvers");
+//    for (const auto& maneuver : maneuvers) {
+//      if (maneuver.second.find("street_names") == maneuver.second.not_found())
+//        continue;
+//      for (const auto& name : maneuver.second.get_child("street_names"))
+//        looped = looped || !names.insert(name.second.get_value<std::string>()).second;
+//    }
+//    // get the edges along that route shape
+//    boost::property_tree::ptree walked;
+//    std::string walked_json;
+//
+//    try {
+//      walked_json = actor.trace_attributes(
+//          R"({"date_time":{"type":1,"value":"2019-10-31T18:30"},"costing":"auto","shape_match":"edge_walk","encoded_polyline":")"
+//          + json_escape(encoded_shape) + "\"}");
+//      walked = json_to_pt(walked_json);
+//    } catch (...) {
+//      std::cout << test_case << std::endl;
+//      std::cout << R"({"costing":"auto","shape_match":"edge_walk","encoded_polyline":")" +
+//                       json_escape(encoded_shape) + "\"}"
+//                << std::endl;
+//      FAIL() << "Edge walk failed with exact shape";
+//    }
+//
+//    // check the shape makes sense
+//    auto walked_encoded_shape = walked.get<std::string>("shape");
+//    auto walked_shape = midgard::decode<std::vector<midgard::PointLL>>(walked_encoded_shape);
+//
+//    /*EXPECT_EQ(walked_shape.size() , shape.size())
+//      << "Differing shape lengths " + std::to_string(shape.size()) +
+//         " != " + std::to_string(walked_shape.size()) + "\n" + encoded_shape +
+//         "\n" + walked_encoded_shape;*/
+//
+//    // build up some gps segments for simulation from the real shape
+//    std::vector<uint64_t> walked_edges;
+//    std::vector<gps_segment_t> segments;
+//    for (const auto& edge : walked.get_child("edges")) {
+//      walked_edges.push_back(edge.second.get<uint64_t>("id"));
+//      auto b = edge.second.get<size_t>("begin_shape_index");
+//      auto e = edge.second.get<size_t>("end_shape_index") + 1;
+//
+//      segments.emplace_back(
+//          gps_segment_t{std::vector<PointLL>(walked_shape.cbegin() + b, walked_shape.cbegin() + e),
+//                        static_cast<float>(edge.second.get<float>("speed") * 1e3) / 3600.f});
+//    }
+//
+//    // simulate gps from the route shape
+//    std::vector<float> accuracies;
+//    auto simulation = simulate_gps(segments, accuracies, 50, 75.f, 1);
+//    auto locations = to_locations(simulation, accuracies, 1);
+//    // get a trace-attributes from the simulated gps
+//    auto matched = json_to_pt(actor.trace_attributes(
+//        R"({"costing":"auto","shape_match":"map_snap","shape":)" + locations + "}"));
+//
+//    std::vector<uint64_t> matched_edges;
+//    int idx = 0;
+//    for (const auto& edge : matched.get_child("edges"))
+//      matched_edges.push_back(edge.second.get<uint64_t>("id"));
+//
+//    // because of noise we can have off by 1 happen at the beginning or end so we trim to make sure
+//    auto walked_it = std::search(walked_edges.begin(), walked_edges.end(), matched_edges.begin() +
+//    1,
+//                                 matched_edges.end() - 1);
+//    if (walked_it == walked_edges.end()) {
+//      if (looped) {
+//        std::cout << "route had a possible loop" << std::endl;
+//        continue;
+//      }
+//      auto decoded_match = midgard::decode<std::vector<PointLL>>(matched.get<std::string>("shape"));
+//      std::string geojson =
+//          R"({"type":"FeatureCollection","features":[{"geometry":{"type":"LineString","coordinates":[)";
+//      geojson += print(shape);
+//      geojson +=
+//          R"(]},"type":"Feature","properties":{"stroke":"#00ff00","stroke-width":2}},{"geometry":{"type":"LineString","coordinates":[)";
+//      geojson += print(simulation);
+//      geojson +=
+//          R"(]},"type":"Feature","properties":{"stroke":"#0000ff","stroke-width":2}},{"geometry":{"type":"LineString","coordinates":[)";
+//      geojson += print(decoded_match);
+//      geojson +=
+//          R"(]},"type":"Feature","properties":{"stroke":"#ff0000","stroke-width":2}},{"geometry":{"type":"MultiPoint","coordinates":[)";
+//      geojson += print(std::vector<PointLL>{start, end});
+//      geojson += R"(]},"type":"Feature","properties":{}}]})";
+//      std::cout << geojson << std::endl;
+//      FAIL() << "The match did not match the walk";
+//    }
+//    std::cout << "Iteration " << tested << " complete" << std::endl;
+//    ++tested;
+//  }
+//}
 
 TEST(Mapmatch, test_distance_only) {
   tyr::actor_t actor(conf, true);
@@ -1011,25 +1012,25 @@ TEST(Mapmatch, test_leg_duration_trimming) {
 TEST(Mapmatch, test_discontinuity_on_same_edge) {
   std::vector<std::string> test_cases = {
       R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
-          {"lat": 52.0948884, "lon": 5.1112737, "type": "break"},
-          {"lat": 52.0949312, "lon": 5.1118285, "type": "break"},
-          {"lat": 52.1054861, "lon": 5.1289207, "type": "break"},
-          {"lat": 52.0948920, "lon": 5.1113874, "type": "break"},
-          {"lat": 52.0949182, "lon": 5.1116986, "type": "break"}]})",
+                {"lat": 52.0948884, "lon": 5.1112737, "type": "break"},
+                {"lat": 52.0949312, "lon": 5.1118285, "type": "break"},
+                {"lat": 52.1054861, "lon": 5.1289207, "type": "break"},
+                {"lat": 52.0948920, "lon": 5.1113874, "type": "break"},
+                {"lat": 52.0949182, "lon": 5.1116986, "type": "break"}]})",
       R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
-          {"lat": 52.0962541, "lon": 5.1129487, "type": "break"},
-          {"lat": 52.0959946, "lon": 5.1120336, "type": "break"},
-          {"lat": 52.1054861, "lon": 5.1289207, "type": "break"},
-          {"lat": 52.0961760, "lon": 5.1126547, "type": "break"},
-          {"lat": 52.0960736, "lon": 5.1123291, "type": "break"}]})",
+                {"lat": 52.0962541, "lon": 5.1129487, "type": "break"},
+                {"lat": 52.0959946, "lon": 5.1120336, "type": "break"},
+                {"lat": 52.1054861, "lon": 5.1289207, "type": "break"},
+                {"lat": 52.0961760, "lon": 5.1126547, "type": "break"},
+                {"lat": 52.0960736, "lon": 5.1123291, "type": "break"}]})",
       R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
-          {"lat": 52.0963956, "lon": 5.1133696, "type": "break"},
-          {"lat": 52.0959223, "lon": 5.1118128, "type": "break"},
-          {"lat": 52.1108625, "lon": 5.1325334, "type": "break"},
-          {"lat": 52.0962053, "lon": 5.1128136, "type": "break"},
-          {"lat": 52.0960736, "lon": 5.1123291, "type": "break"},
-          {"lat": 52.0963029, "lon": 5.1131075, "type": "break"},
-          {"lat": 52.0959906, "lon": 5.1120590, "type": "break"}]})",
+                {"lat": 52.0963956, "lon": 5.1133696, "type": "break"},
+                {"lat": 52.0959223, "lon": 5.1118128, "type": "break"},
+                {"lat": 52.1108625, "lon": 5.1325334, "type": "break"},
+                {"lat": 52.0962053, "lon": 5.1128136, "type": "break"},
+                {"lat": 52.0960736, "lon": 5.1123291, "type": "break"},
+                {"lat": 52.0963029, "lon": 5.1131075, "type": "break"},
+                {"lat": 52.0959906, "lon": 5.1120590, "type": "break"}]})",
       R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
           {"lat": 52.0956110, "lon": 5.0978352, "type": "break"},
           {"lat": 52.0956407, "lon": 5.0974388, "type": "break"},
@@ -1040,28 +1041,36 @@ TEST(Mapmatch, test_discontinuity_on_same_edge) {
           {"lat": 52.0956333, "lon": 5.0972287, "type": "break"}]})"};
 
   std::vector<int> test_ans_num_routes{2, 2, 3, 2};
+  // std::vector<int> test_ans_num_routes{2};
   std::vector<std::vector<int>> test_ans_num_legs{{1, 1}, {1, 1}, {1, 1, 1}, {2, 2}};
-  std::vector<std::vector<float>> test_ans_leg_duration{{3.955, 2.226},
-                                                        {7.095, 2.562},
-                                                        {12.214, 3.728, 8.184},
-                                                        {7.456, 2.931, 1.324, 2.37}};
+  // std::vector<std::vector<int>> test_ans_num_legs{{2, 2}};
 
-  tyr::actor_t actor(conf, true);
+  api_tester tester;
   for (size_t i = 0; i < test_cases.size(); ++i) {
-    auto matched = json_to_pt(actor.trace_route(test_cases[i]));
-    const auto& routes = matched.get_child("matchings");
-    EXPECT_EQ(routes.size(), test_ans_num_routes[i]);
+    auto result = tester.match(test_cases[i]);
+    EXPECT_EQ(result.trip().routes_size(), test_ans_num_routes[i]);
     int j = 0, k = 0;
-    for (const auto& route : routes) {
-      const auto& legs = route.second.get_child("legs");
-      ASSERT_EQ(legs.size(), test_ans_num_legs[i][j++])
+    for (const auto& route : result.trip().routes()) {
+      ASSERT_EQ(route.legs_size(), test_ans_num_legs[i][j++])
           << "Expected " + std::to_string(test_ans_num_legs[i][j - 1]) + " legs but got " +
-                 std::to_string(legs.size());
-      for (const auto& leg : legs) {
-        float duration = leg.second.get<float>("duration");
-        ASSERT_NEAR(duration, test_ans_leg_duration[i][k++], .1)
-            << "Expected legs with duration " + std::to_string(test_ans_leg_duration[i][k - 1]) +
-                   " but got " + std::to_string(duration);
+                 std::to_string(route.legs_size());
+
+      for (const auto& leg : route.legs()) {
+        valhalla::Api route_api;
+        auto route_test_case =
+            R"({"costing":"auto","locations":[{"lat":)" + std::to_string(leg.location(0).ll().lat()) +
+            R"(,"lon":)" + std::to_string(leg.location(0).ll().lng()) +
+            R"(,"node_snap_tolerance":0},{"lat":)" + std::to_string(leg.location(1).ll().lat()) +
+            R"(,"lon":)" + std::to_string(leg.location(1).ll().lng()) +
+            R"(,"node_snap_tolerance":0}]})";
+
+        auto single_route_api = tester.route(route_test_case);
+        double route_duration =
+            single_route_api.trip().routes(0).legs(0).node().rbegin()->elapsed_time();
+        double duration = leg.node().rbegin()->elapsed_time();
+        ASSERT_NEAR(duration, route_duration, .1) << "Expected legs with duration " +
+                                                         std::to_string(route_duration) +
+                                                         " but got " + std::to_string(duration);
       }
     }
   }
@@ -1076,17 +1085,17 @@ TEST(Mapmatch, test_discontinuity_duration_trimming) {
           {"lat": 52.1130460, "lon": 5.1444851, "type": "break"},
           {"lat": 52.1130186, "lon": 5.1444687, "type": "break"}]})",
       R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
-          {"lat": 52.1047614, "lon": 5.1245468, "type": "break"},
-          {"lat": 52.1022218, "lon": 5.1299002, "type": "break"},
-          {"lat": 52.1131029, "lon": 5.1440879, "type": "break"},
-          {"lat": 52.1131350, "lon": 5.1440195, "type": "break"},
-          {"lat": 52.1131857, "lon": 5.1439104, "type": "break"}]})",
+                {"lat": 52.1047614, "lon": 5.1245468, "type": "break"},
+                {"lat": 52.1022218, "lon": 5.1299002, "type": "break"},
+                {"lat": 52.1131029, "lon": 5.1440879, "type": "break"},
+                {"lat": 52.1131350, "lon": 5.1440195, "type": "break"},
+                {"lat": 52.1131857, "lon": 5.1439104, "type": "break"}]})",
       R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
-          {"lat": 52.1089306, "lon": 5.1226142, "type": "break"},
-          {"lat": 52.1060622, "lon": 5.1256574, "type": "break"},
-          {"lat": 52.0873837, "lon": 5.1442371, "type": "break"},
-          {"lat": 52.0872970, "lon": 5.1439155, "type": "break"},
-          {"lat": 52.0872151, "lon": 5.1436803, "type": "break"}]})"};
+                {"lat": 52.1089306, "lon": 5.1226142, "type": "break"},
+                {"lat": 52.1060622, "lon": 5.1256574, "type": "break"},
+                {"lat": 52.0873837, "lon": 5.1442371, "type": "break"},
+                {"lat": 52.0872970, "lon": 5.1439155, "type": "break"},
+                {"lat": 52.0872151, "lon": 5.1436803, "type": "break"}]})"};
 
   std::vector<int> test_ans_num_routes{2, 2, 2};
   std::vector<std::vector<int>> test_ans_num_legs{{1, 2}, {1, 2}, {1, 2}};
