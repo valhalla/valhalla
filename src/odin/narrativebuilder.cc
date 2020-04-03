@@ -3513,8 +3513,8 @@ std::string NarrativeBuilder::FormMetricLength(float kilometers,
 
   // 0 "<KILOMETERS> kilometers"
   // 1 "1 kilometer"
-  // 2 "a half kilometer"
-  // 3 "<METERS> meters" (30-400 and 600-900 meters)
+  // DEPRECATED 2 "a half kilometer"
+  // 3 "<METERS> meters" (10-900 meters)
   // 4 "less than 10 meters"
 
   std::string length_string;
@@ -3523,29 +3523,40 @@ std::string NarrativeBuilder::FormMetricLength(float kilometers,
   // Follow locale rules turning numbers into strings
   std::stringstream distance;
   distance.imbue(dictionary_.GetLocale());
-  // These will determine what we say
-  int tenths = std::round(kilometers * 10);
 
-  if (tenths > 10) {
-    // 0 "<KILOMETERS> kilometers"
-    length_string += metric_lengths.at(kKilometersIndex);
-    distance << std::setiosflags(std::ios::fixed) << std::setprecision(tenths % 10 > 0) << kilometers;
-  } else if (tenths == 10) {
-    // 1 "1 kilometer"
-    length_string += metric_lengths.at(kOneKilometerIndex);
-  } else if (tenths == 5) {
-    // 2 "a half kilometer"
-    length_string += metric_lengths.at(kHalfKilometerIndex);
+  float meters = std::round(kilometers * midgard::kMetersPerKm);
+  float rounded = 0.f;
+
+  // These will determine what we say
+  // For distances that will round to 1km or greater
+  if (meters > 949) {
+    if (kilometers > 3) {
+      // Round to integer for distances greater than 3km
+      rounded = std::round(kilometers);
+    } else {
+      // Round to whole or half km for 1km to 3km distances
+      rounded = std::round(kilometers * 2) / 2;
+    }
+
+    if (rounded == 1.f) {
+      // 1  "1 kilometer"
+      length_string += metric_lengths.at(kOneKilometerIndex);
+    } else {
+      // 0 "<KILOMETERS> kilometers"
+      // 1 digit of precision for float and 0 for int
+      length_string += metric_lengths.at(kKilometersIndex);
+      distance << std::setiosflags(std::ios::fixed)
+               << std::setprecision(rounded != static_cast<int>(rounded)) << rounded;
+    }
   } else {
-    int meters = std::round(kilometers * 1000);
     if (meters > 94) {
-      // 3 "<METERS> meters" (100-400 and 600-900 meters)
+      // 3 "<METERS> meters" (100-900 meters)
       length_string += metric_lengths.at(kMetersIndex);
-      distance << ((meters + 50) / 100) * 100;
+      distance << (std::round(meters / 100) * 100);
     } else if (meters > 9) {
       // 3 "<METERS> meters" (10-90 meters)
       length_string += metric_lengths.at(kMetersIndex);
-      distance << ((meters + 5) / 10) * 10;
+      distance << (std::round(meters / 10) * 10);
     } else {
       // 4 "less than 10 meters"
       length_string += metric_lengths.at(kSmallMetersIndex);
@@ -3567,8 +3578,8 @@ NarrativeBuilder::FormUsCustomaryLength(float miles,
   // 0  "<MILES> miles"
   // 1  "1 mile"
   // 2  "a half mile"
-  // 3  "<TENTHS_OF_MILE> tenths of a mile" (2-4, 6-9)
-  // 4  "1 tenth of a mile"
+  // DEPRECATED 3  "<TENTHS_OF_MILE> tenths of a mile" (2-4, 6-9)
+  // DEPRECATED 4  "1 tenth of a mile"
   // 5  "<FEET> feet" (10-90, 100-500)
   // 6  "less than 10 feet"
   // 7 "a quarter mile"

@@ -3236,7 +3236,7 @@ TEST(NarrativeBuilder, TestBuildStartInstructions_2_kilometers_en_US) {
       expected_maneuvers,
       "Head south on North Prince Street/US 222/PA 272. Continue on US 222/PA 272.", "",
       "Head south on North Prince Street, U.S. 2 22.",
-      "Continue on U.S. 2 22, Pennsylvania 2 72 for 5.1 kilometers.");
+      "Continue on U.S. 2 22, Pennsylvania 2 72 for 5 kilometers.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -7585,24 +7585,44 @@ TEST(NarrativeBuilder, TestFormVerbalPostTransitionInstruction) {
                                          false, "Continue for 4 kilometers.");
 
   // Verify kilometers round down
-  TryFormVerbalPostTransitionInstruction(nbt_km,
-                                         CreateVerbalPostManeuver({{"Main Street", 0}}, 3.54056f),
-                                         false, "Continue for 3.5 kilometers.");
+  TryFormVerbalPostTransitionInstruction(nbt_km, CreateVerbalPostManeuver({{"Main Street", 0}}, 3.4f),
+                                         false, "Continue for 3 kilometers.");
 
   // Verify kilometers round up
-  TryFormVerbalPostTransitionInstruction(nbt_km,
-                                         CreateVerbalPostManeuver({{"Main Street", 0}}, 3.86243f),
-                                         false, "Continue for 3.9 kilometers.");
+  TryFormVerbalPostTransitionInstruction(nbt_km, CreateVerbalPostManeuver({{"Main Street", 0}}, 3.6f),
+                                         false, "Continue for 4 kilometers.");
 
   // Verify kilometers street name
-  TryFormVerbalPostTransitionInstruction(nbt_km,
-                                         CreateVerbalPostManeuver({{"Main Street", 0}}, 3.86243f),
-                                         true, "Continue on Main Street for 3.9 kilometers.");
+  TryFormVerbalPostTransitionInstruction(nbt_km, CreateVerbalPostManeuver({{"Main Street", 0}}, 2.8f),
+                                         true, "Continue on Main Street for 3 kilometers.");
+
+  // Verify 2.5 kilometers round down
+  TryFormVerbalPostTransitionInstruction(nbt_km, CreateVerbalPostManeuver({{"Main Street", 0}}, 2.7f),
+                                         false, "Continue for 2.5 kilometers.");
+
+  // Verify 2.5 kilometers round up
+  TryFormVerbalPostTransitionInstruction(nbt_km, CreateVerbalPostManeuver({{"Main Street", 0}}, 2.3f),
+                                         false, "Continue for 2.5 kilometers.");
+
+  // Verify 2 kilometers round down
+  TryFormVerbalPostTransitionInstruction(nbt_km, CreateVerbalPostManeuver({{"Main Street", 0}}, 2.2f),
+                                         false, "Continue for 2 kilometers.");
+
+  // Verify 2 kilometers round up
+  TryFormVerbalPostTransitionInstruction(nbt_km, CreateVerbalPostManeuver({{"Main Street", 0}}, 1.8f),
+                                         false, "Continue for 2 kilometers.");
+
+  // Verify 1.5 kilometers round down
+  TryFormVerbalPostTransitionInstruction(nbt_km, CreateVerbalPostManeuver({{"Main Street", 0}}, 1.7f),
+                                         false, "Continue for 1.5 kilometers.");
+
+  // Verify 1.5 kilometers round up
+  TryFormVerbalPostTransitionInstruction(nbt_km, CreateVerbalPostManeuver({{"Main Street", 0}}, 1.3f),
+                                         false, "Continue for 1.5 kilometers.");
 
   // Verify 1 kilometer round down
-  TryFormVerbalPostTransitionInstruction(nbt_km,
-                                         CreateVerbalPostManeuver({{"Main Street", 0}}, 1.04f), false,
-                                         "Continue for 1 kilometer.");
+  TryFormVerbalPostTransitionInstruction(nbt_km, CreateVerbalPostManeuver({{"Main Street", 0}}, 1.1f),
+                                         false, "Continue for 1 kilometer.");
 
   // Verify 1 kilometer round up
   TryFormVerbalPostTransitionInstruction(nbt_km,
@@ -7612,20 +7632,6 @@ TEST(NarrativeBuilder, TestFormVerbalPostTransitionInstruction) {
   // Verify 1 kilometer street name
   TryFormVerbalPostTransitionInstruction(nbt_km, CreateVerbalPostManeuver({{"Main Street", 0}}, 1.0f),
                                          true, "Continue on Main Street for 1 kilometer.");
-
-  // Verify a half kilometer round down
-  TryFormVerbalPostTransitionInstruction(nbt_km,
-                                         CreateVerbalPostManeuver({{"Main Street", 0}}, 0.54f), false,
-                                         "Continue for a half kilometer.");
-
-  // Verify a half kilometer round up
-  TryFormVerbalPostTransitionInstruction(nbt_km,
-                                         CreateVerbalPostManeuver({{"Main Street", 0}}, 0.45f), false,
-                                         "Continue for a half kilometer.");
-
-  // Verify a half kilometer street name
-  TryFormVerbalPostTransitionInstruction(nbt_km, CreateVerbalPostManeuver({{"Main Street", 0}}, 0.5f),
-                                         true, "Continue on Main Street for a half kilometer.");
 
   // Verify 900 meters round down
   TryFormVerbalPostTransitionInstruction(nbt_km,
