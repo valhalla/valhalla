@@ -30,7 +30,7 @@ protected:
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
     map =
         gurka::buildtiles(layout, ways, {}, {}, "test/data/use_direction_on_ways",
-                          {{"mjolnir.data_processing.use_direction_on_ways", true}});
+                          {{"mjolnir.timezone", {VALHALLA_SOURCE_DIR "build/test/data/tz.sqlite"}}});
   }
 };
 
