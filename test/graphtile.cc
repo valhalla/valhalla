@@ -58,7 +58,7 @@ TEST(Graphtile, Bin) {
   std::vector<uint32_t> offs = {0};
   std::vector<GraphId> bins;
   uint32_t offset = 0;
-  for (size_t i = 0, j; i < kBinCount; ++i) {
+  for (size_t i = 0, j = 0; i < kBinCount; ++i) {
     offset += offsets[i];
     offs.push_back(offset);
     offsets[i] = offset;
