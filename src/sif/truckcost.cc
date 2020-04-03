@@ -500,8 +500,8 @@ Cost TruckCost::TransitionCost(const baldr::DirectedEdge* edge,
   Cost c = base_transition_cost(node, edge, pred, idx);
 
   // Penalty to transition onto low class roads.
-  if (edge->classification() == RoadClass::kResidential ||
-      edge->classification() == RoadClass::kServiceOther) {
+  if (edge->classification() == baldr::RoadClass::kResidential ||
+      edge->classification() == baldr::RoadClass::kServiceOther) {
     c.cost += low_class_penalty_;
   }
 
@@ -550,8 +550,8 @@ Cost TruckCost::TransitionCostReverse(const uint32_t idx,
   Cost c = base_transition_cost(node, edge, pred, idx);
 
   // Penalty to transition onto low class roads.
-  if (edge->classification() == RoadClass::kResidential ||
-      edge->classification() == RoadClass::kServiceOther) {
+  if (edge->classification() == baldr::RoadClass::kResidential ||
+      edge->classification() == baldr::RoadClass::kServiceOther) {
     c.cost += low_class_penalty_;
   }
 

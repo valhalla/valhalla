@@ -142,7 +142,7 @@ public:
     return mutable_edge_->speed();
   }
 
-  ::valhalla::TripLeg_RoadClass road_class() const {
+  ::valhalla::RoadClass road_class() const {
     return mutable_edge_->road_class();
   }
 
@@ -468,7 +468,7 @@ public:
     return mutable_intersecting_edge_->use();
   }
 
-  ::valhalla::TripLeg_RoadClass road_class() const {
+  ::valhalla::RoadClass road_class() const {
     return mutable_intersecting_edge_->road_class();
   }
 
@@ -604,7 +604,7 @@ public:
 
   bool HasForwardTraversableSignificantRoadClassXEdge(uint32_t from_heading,
                                                       const TripLeg_TravelMode travel_mode,
-                                                      TripLeg_RoadClass path_road_class);
+                                                      RoadClass path_road_class);
 
   bool HasWiderForwardTraversableIntersectingEdge(uint32_t from_heading,
                                                   const TripLeg_TravelMode travel_mode);
@@ -618,7 +618,7 @@ public:
                              uint32_t from_heading,
                              const TripLeg_TravelMode travel_mode);
 
-  bool HasSpecifiedRoadClassXEdge(const TripLeg_RoadClass road_class);
+  bool HasSpecifiedRoadClassXEdge(const RoadClass road_class);
 
   uint32_t GetStraightestIntersectingEdgeTurnDegree(uint32_t from_heading);
 

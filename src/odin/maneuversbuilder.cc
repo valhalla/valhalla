@@ -1910,8 +1910,8 @@ bool ManeuversBuilder::IsMergeManeuverType(Maneuver& maneuver,
   // consistent name with intersecting edge
   if (prev_edge && prev_edge->IsRampUse() && !curr_edge->IsRampUse() &&
       (curr_edge->IsHighway() ||
-       (((curr_edge->road_class() == TripLeg_RoadClass_kTrunk) ||
-         (curr_edge->road_class() == TripLeg_RoadClass_kPrimary)) &&
+       (((curr_edge->road_class() == RoadClass::kTrunk) ||
+         (curr_edge->road_class() == RoadClass::kPrimary)) &&
         curr_edge->IsOneway() && curr_edge->IsForward(maneuver.turn_degree()) &&
         node->HasIntersectingEdgeCurrNameConsistency()))) {
     maneuver.set_merge_to_relative_direction(
@@ -1944,8 +1944,8 @@ bool ManeuversBuilder::IsFork(int node_index,
     // and current edge is not a service road class
     // and an intersecting edge is a service road class
     // then not a fork
-    if (node->IsMotorwayJunction() && (curr_edge->road_class() != TripLeg_RoadClass_kServiceOther) &&
-        node->HasSpecifiedRoadClassXEdge(TripLeg_RoadClass_kServiceOther)) {
+    if (node->IsMotorwayJunction() && (curr_edge->road_class() != RoadClass::kServiceOther) &&
+        node->HasSpecifiedRoadClassXEdge(RoadClass::kServiceOther)) {
       return false;
     }
 
