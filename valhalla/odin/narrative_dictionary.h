@@ -111,11 +111,9 @@ constexpr auto kSmallMetersIndex = 3;
 constexpr auto kMilesIndex = 0;
 constexpr auto kOneMileIndex = 1;
 constexpr auto kHalfMileIndex = 2;
-constexpr auto kTenthsOfMileIndex = 3;
-constexpr auto kOneTenthOfMileIndex = 4;
-constexpr auto kFeetIndex = 5;
-constexpr auto kSmallFeetIndex = 6;
-constexpr auto kQuarterMileIndex = 7;
+constexpr auto kQuarterMileIndex = 3;
+constexpr auto kFeetIndex = 4;
+constexpr auto kSmallFeetIndex = 5;
 
 // Phrase tags
 constexpr auto kCardinalDirectionTag = "<CARDINAL_DIRECTION>";

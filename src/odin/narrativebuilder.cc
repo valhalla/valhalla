@@ -3577,11 +3577,9 @@ NarrativeBuilder::FormUsCustomaryLength(float miles,
   // 0  "<MILES> miles"
   // 1  "1 mile"
   // 2  "a half mile"
-  // DEPRECATED 3  "<TENTHS_OF_MILE> tenths of a mile" (2-4, 6-9)
-  // DEPRECATED 4  "1 tenth of a mile"
-  // 5  "<FEET> feet" (10-90, 100-500)
-  // 6  "less than 10 feet"
-  // 7 "a quarter mile"
+  // 3  "a quarter mile"
+  // 4  "<FEET> feet" (10-90, 100-500)
+  // 5  "less than 10 feet"
 
   std::string length_string;
   length_string.reserve(kLengthStringInitialCapacity);
@@ -3603,30 +3601,30 @@ NarrativeBuilder::FormUsCustomaryLength(float miles,
     }
 
     if (rounded == 0.25f) {
-      // 7 "a quarter mile"
+      // "a quarter mile"
       length_string += us_customary_lengths.at(kQuarterMileIndex);
     } else if (rounded == 0.5f) {
-      // 2  "a half mile"
+      // "a half mile"
       length_string += us_customary_lengths.at(kHalfMileIndex);
     } else if (rounded == 1.f) {
-      // 1  "1 mile"
+      // "1 mile"
       length_string += us_customary_lengths.at(kOneMileIndex);
     } else {
-      // 0  "<MILES> miles"
+      // "<MILES> miles"
       length_string += us_customary_lengths.at(kMilesIndex);
       distance << std::setiosflags(std::ios::fixed) << std::setprecision(rounded == 1.5f) << rounded;
     }
   } else {
     if (feet > 94) {
-      // 5  "<FEET> feet" (100-1000)
+      // "<FEET> feet" (100-1000)
       length_string += us_customary_lengths.at(kFeetIndex);
       distance << (std::round(feet / 100) * 100);
     } else if (feet > 9) {
-      // 5  "<FEET> feet" (10-90)
+      // "<FEET> feet" (10-90)
       length_string += us_customary_lengths.at(kFeetIndex);
       distance << (std::round(feet / 10) * 10);
     } else {
-      // 6  "less than 10 feet"
+      // "less than 10 feet"
       length_string += us_customary_lengths.at(kSmallFeetIndex);
     }
   }

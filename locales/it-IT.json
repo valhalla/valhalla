@@ -153,11 +153,9 @@
         "<MILES> miglio",
         "1 miglio",
         "un mezzo miglio",
-        "<TENTHS_OF_MILE> decimi di miglio",
-        "un decimo di miglio",
+        "a quarter mile",
         "<FEET> piedi",
-        "meno di 10 piedi",
-        "a quarter mile"
+        "meno di 10 piedi"
       ],
       "example_phrases": {
         "0": [
@@ -1212,14 +1210,12 @@
         "meno di 10 metri"
       ],
       "us_customary_lengths": [
-        "<MILES> miglia",
+        "<MILES> miglio",
         "1 miglio",
         "un mezzo miglio",
-        "<TENTHS_OF_MILE> decimi di miglio",
-        "1 decimo di un miglio",
+        "a quarter mile",
         "<FEET> piedi",
-        "meno di 10 piedi",
-        "a quarter mile"
+        "meno di 10 piedi"
       ],
       "example_phrases": {
         "0": [
@@ -1606,14 +1602,12 @@
         "meno di 10 metri"
       ],
       "us_customary_lengths": [
-        "<MILES> miglia",
+        "<MILES> miglio",
         "1 miglio",
-        "mezzo miglio",
-        "<TENTHS_OF_MILE> decimi di miglio",
-        "un decimo di miglio",
+        "un mezzo miglio",
+        "a quarter mile",
         "<FEET> piedi",
-        "meno di 10 piedi",
-        "a quarter mile"
+        "meno di 10 piedi"
       ],
       "example_phrases": {
         "0": [
@@ -2085,14 +2079,12 @@
         "less than 10 meters"
       ],
       "us_customary_lengths": [
-        "<MILES> miles",
-        "1 mile",
-        "a half mile",
-        "<TENTHS_OF_MILE> tenths of a mile",
-        "1 tenth of a mile",
-        "<FEET> feet",
-        "less than 10 feet",
-        "a quarter mile"
+        "<MILES> miglio",
+        "1 miglio",
+        "un mezzo miglio",
+        "a quarter mile",
+        "<FEET> piedi",
+        "meno di 10 piedi"
       ],
       "example_phrases": {
         "0": [
@@ -2114,14 +2106,12 @@
         "less than 10 meters"
       ],
       "us_customary_lengths": [
-        "<MILES> miles",
-        "1 mile",
-        "a half mile",
-        "<TENTHS_OF_MILE> tenths of a mile",
-        "1 tenth of a mile",
-        "<FEET> feet",
-        "less than 10 feet",
-        "a quarter mile"
+        "<MILES> miglio",
+        "1 miglio",
+        "un mezzo miglio",
+        "a quarter mile",
+        "<FEET> piedi",
+        "meno di 10 piedi"
       ],
       "example_phrases": {
         "0": [

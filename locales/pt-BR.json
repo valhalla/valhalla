@@ -153,11 +153,9 @@
         "<MILES> milhas",
         "1 milha",
         "meia milha",
-        "<TENTHS_OF_MILE> décimos de milha",
-        "1 décimo de milha",
+        "a quarter mile",
         "<FEET> pés",
-        "menos de 10 pés",
-        "a quarter mile"
+        "menos de 10 pés"
       ],
       "example_phrases": {
         "0": [
@@ -1215,11 +1213,9 @@
         "<MILES> milhas",
         "1 milha",
         "meia milha",
-        "<TENTHS_OF_MILE> décimos de milha",
-        "1 décimo de milha",
+        "a quarter mile",
         "<FEET> pés",
-        "menos que 10 pés",
-        "a quarter mile"
+        "menos de 10 pés"
       ],
       "example_phrases": {
         "0": [
@@ -1609,11 +1605,9 @@
         "<MILES> milhas",
         "1 milha",
         "meia milha",
-        "<TENTHS_OF_MILE> décimos de milha",
-        "1 décimo de milha",
+        "a quarter mile",
         "<FEET> pés",
-        "menos que 10 pés",
-        "a quarter mile"
+        "menos de 10 pés"
       ],
       "example_phrases": {
         "0": [
@@ -2085,14 +2079,12 @@
         "less than 10 meters"
       ],
       "us_customary_lengths": [
-        "<MILES> miles",
-        "1 mile",
-        "a half mile",
-        "<TENTHS_OF_MILE> tenths of a mile",
-        "1 tenth of a mile",
-        "<FEET> feet",
-        "less than 10 feet",
-        "a quarter mile"
+        "<MILES> milhas",
+        "1 milha",
+        "meia milha",
+        "a quarter mile",
+        "<FEET> pés",
+        "menos de 10 pés"
       ],
       "example_phrases": {
         "0": [
@@ -2114,14 +2106,12 @@
         "less than 10 meters"
       ],
       "us_customary_lengths": [
-        "<MILES> miles",
-        "1 mile",
-        "a half mile",
-        "<TENTHS_OF_MILE> tenths of a mile",
-        "1 tenth of a mile",
-        "<FEET> feet",
-        "less than 10 feet",
-        "a quarter mile"
+        "<MILES> milhas",
+        "1 milha",
+        "meia milha",
+        "a quarter mile",
+        "<FEET> pés",
+        "menos de 10 pés"
       ],
       "example_phrases": {
         "0": [

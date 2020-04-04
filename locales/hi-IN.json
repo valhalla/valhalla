@@ -153,11 +153,9 @@
         "<MILES> मील",
         "1 मील",
         "एक आधा मील",
-        "मील का <TENTHS_OF_MILE>/10 हिस्सा",
-        "मील का 1/10 हिस्सा",
+        "a quarter mile",
         "<FEET> फुट",
-        "कम से कम 10 फुट",
-        "a quarter mile"
+        "कम से कम 10 फुट"
       ],
       "example_phrases": {
         "0": [
@@ -1215,11 +1213,9 @@
         "<MILES> मील",
         "1 मील",
         "एक आधा मील",
-        "मील का <TENTHS_OF_MILE>/10 हिस्सा",
-        "मील का 1/10 हिस्सा",
+        "a quarter mile",
         "<FEET> फुट",
-        "कम से कम 10 फुट",
-        "a quarter mile"
+        "कम से कम 10 फुट"
       ],
       "example_phrases": {
         "0": [
@@ -1609,11 +1605,9 @@
         "<MILES> मील",
         "1 मील",
         "एक आधा मील",
-        "मील का <TENTHS_OF_MILE>/10 हिस्सा",
-        "मील का 1/10 हिस्सा",
+        "a quarter mile",
         "<FEET> फुट",
-        "कम से कम 10 फुट",
-        "a quarter mile"
+        "कम से कम 10 फुट"
       ],
       "example_phrases": {
         "0": [
@@ -2085,14 +2079,12 @@
         "less than 10 meters"
       ],
       "us_customary_lengths": [
-        "<MILES> miles",
-        "1 mile",
-        "a half mile",
-        "<TENTHS_OF_MILE> tenths of a mile",
-        "1 tenth of a mile",
-        "<FEET> feet",
-        "less than 10 feet",
-        "a quarter mile"
+        "<MILES> मील",
+        "1 मील",
+        "एक आधा मील",
+        "a quarter mile",
+        "<FEET> फुट",
+        "कम से कम 10 फुट"
       ],
       "example_phrases": {
         "0": [
@@ -2114,14 +2106,12 @@
         "less than 10 meters"
       ],
       "us_customary_lengths": [
-        "<MILES> miles",
-        "1 mile",
-        "a half mile",
-        "<TENTHS_OF_MILE> tenths of a mile",
-        "1 tenth of a mile",
-        "<FEET> feet",
-        "less than 10 feet",
-        "a quarter mile"
+        "<MILES> मील",
+        "1 मील",
+        "एक आधा मील",
+        "a quarter mile",
+        "<FEET> फुट",
+        "कम से कम 10 फुट"
       ],
       "example_phrases": {
         "0": [

@@ -150,14 +150,12 @@
         "weniger als 10 Meter"
       ],
       "us_customary_lengths": [
-        "<MILES> miles",
-        "1 mile",
-        "a half mile",
-        "<TENTHS_OF_MILE> tenths of a mile",
-        "1 tenth of a mile",
-        "<FEET> feet",
-        "less than 10 feet",
-        "a quarter mile"
+        "<MILES> Meilen",
+        "eine Meile",
+        "eine halbe Meile",
+        "a quarter mile",
+        "<FEET> Fuß",
+        "weniger als 10 Fuß"
       ],
       "example_phrases": {
         "0": [
@@ -1215,11 +1213,9 @@
         "<MILES> Meilen",
         "eine Meile",
         "eine halbe Meile",
-        "<TENTHS_OF_MILE> Zehntel der Meile",
-        "ein Zehntel der Meile",
+        "a quarter mile",
         "<FEET> Fuß",
-        "weniger als 10 Fuß",
-        "a quarter mile"
+        "weniger als 10 Fuß"
       ],
       "example_phrases": {
         "0": [
@@ -1606,11 +1602,9 @@
         "<MILES> Meilen",
         "eine Meile",
         "eine halbe Meile",
-        "<TENTHS_OF_MILE> Zehntel der Meile",
-        "ein Zehntel der Meile",
+        "a quarter mile",
         "<FEET> Fuß",
-        "weniger als 10 Fuß",
-        "a quarter mile"
+        "weniger als 10 Fuß"
       ],
       "example_phrases": {
         "0": [
@@ -2082,14 +2076,12 @@
         "less than 10 meters"
       ],
       "us_customary_lengths": [
-        "<MILES> miles",
-        "1 mile",
-        "a half mile",
-        "<TENTHS_OF_MILE> tenths of a mile",
-        "1 tenth of a mile",
-        "<FEET> feet",
-        "less than 10 feet",
-        "a quarter mile"
+        "<MILES> Meilen",
+        "eine Meile",
+        "eine halbe Meile",
+        "a quarter mile",
+        "<FEET> Fuß",
+        "weniger als 10 Fuß"
       ],
       "example_phrases": {
         "0": [
@@ -2111,14 +2103,12 @@
         "less than 10 meters"
       ],
       "us_customary_lengths": [
-        "<MILES> miles",
-        "1 mile",
-        "a half mile",
-        "<TENTHS_OF_MILE> tenths of a mile",
-        "1 tenth of a mile",
-        "<FEET> feet",
-        "less than 10 feet",
-        "a quarter mile"
+        "<MILES> Meilen",
+        "eine Meile",
+        "eine halbe Meile",
+        "a quarter mile",
+        "<FEET> Fuß",
+        "weniger als 10 Fuß"
       ],
       "example_phrases": {
         "0": [

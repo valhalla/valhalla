@@ -153,11 +153,9 @@
         "<MILES> miles",
         "1 mile",
         "un demi mile",
-        "<TENTHS_OF_MILE> dixièmes de mile",
-        "1 dixième de mile",
+        "a quarter mile",
         "<FEET> pieds",
-        "moins de 10 pieds",
-        "a quarter mile"
+        "moins de 10 pieds"
       ],
       "example_phrases": {
         "0": [
@@ -1215,11 +1213,9 @@
         "<MILES> miles",
         "1 mile",
         "un demi mile",
-        "<TENTHS_OF_MILE> dixièmes de mile",
-        "1 dixième de mile",
+        "a quarter mile",
         "<FEET> pieds",
-        "moins de 10 pieds",
-        "a quarter mile"
+        "moins de 10 pieds"
       ],
       "example_phrases": {
         "0": [
@@ -1609,11 +1605,9 @@
         "<MILES> miles",
         "1 mile",
         "un demi mile",
-        "<TENTHS_OF_MILE> dixièmes de mile",
-        "1 dixième de mile",
+        "a quarter mile",
         "<FEET> pieds",
-        "moins de 10 pieds",
-        "a quarter mile"
+        "moins de 10 pieds"
       ],
       "example_phrases": {
         "0": [
@@ -2087,12 +2081,10 @@
       "us_customary_lengths": [
         "<MILES> miles",
         "1 mile",
-        "a half mile",
-        "<TENTHS_OF_MILE> tenths of a mile",
-        "1 tenth of a mile",
-        "<FEET> feet",
-        "less than 10 feet",
-        "a quarter mile"
+        "un demi mile",
+        "a quarter mile",
+        "<FEET> pieds",
+        "moins de 10 pieds"
       ],
       "example_phrases": {
         "0": [
@@ -2116,12 +2108,10 @@
       "us_customary_lengths": [
         "<MILES> miles",
         "1 mile",
-        "a half mile",
-        "<TENTHS_OF_MILE> tenths of a mile",
-        "1 tenth of a mile",
-        "<FEET> feet",
-        "less than 10 feet",
-        "a quarter mile"
+        "un demi mile",
+        "a quarter mile",
+        "<FEET> pieds",
+        "moins de 10 pieds"
       ],
       "example_phrases": {
         "0": [

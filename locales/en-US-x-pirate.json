@@ -153,11 +153,9 @@
         "<MILES> miles",
         "1 mile",
         "a half mile",
-        "<TENTHS_OF_MILE> tenths of a mile",
-        "1 tenth of a mile",
+        "a quarter mile",
         "<FEET> feet",
-        "less than 10 feet",
-        "a quarter mile"
+        "less than 10 feet"
       ],
       "example_phrases": {
         "0": [
@@ -1215,11 +1213,9 @@
         "<MILES> miles",
         "1 mile",
         "a half mile",
-        "<TENTHS_OF_MILE> tenths of a mile",
-        "1 tenth of a mile",
+        "a quarter mile",
         "<FEET> feet",
-        "less than 10 feet",
-        "a quarter mile"
+        "less than 10 feet"
       ],
       "example_phrases": {
         "0": [
@@ -1609,11 +1605,9 @@
         "<MILES> miles",
         "1 mile",
         "a half mile",
-        "<TENTHS_OF_MILE> tenths of a mile",
-        "1 tenth of a mile",
+        "a quarter mile",
         "<FEET> feet",
-        "less than 10 feet",
-        "a quarter mile"
+        "less than 10 feet"
       ],
       "example_phrases": {
         "0": [
@@ -2088,11 +2082,9 @@
         "<MILES> miles",
         "1 mile",
         "a half mile",
-        "<TENTHS_OF_MILE> tenths of a mile",
-        "1 tenth of a mile",
+        "a quarter mile",
         "<FEET> feet",
-        "less than 10 feet",
-        "a quarter mile"
+        "less than 10 feet"
       ],
       "example_phrases": {
         "0": [
@@ -2117,11 +2109,9 @@
         "<MILES> miles",
         "1 mile",
         "a half mile",
-        "<TENTHS_OF_MILE> tenths of a mile",
-        "1 tenth of a mile",
+        "a quarter mile",
         "<FEET> feet",
-        "less than 10 feet",
-        "a quarter mile"
+        "less than 10 feet"
       ],
       "example_phrases": {
         "0": [

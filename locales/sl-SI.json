@@ -153,11 +153,9 @@
         "<MILES> milj",
         "1 miljo",
         "pol milje",
-        "<TENTHS_OF_MILE> desetink milje",
-        "1 desentinko milje",
+        "a quarter mile",
         "<FEET> čevljev",
-        "Manj kot 10 čevljev",
-        "a quarter mile"
+        "Manj kot 10 čevljev"
       ],
       "example_phrases": {
         "0": [
@@ -1217,11 +1215,9 @@
         "<MILES> milj",
         "1 miljo",
         "pol milje",
-        "<TENTHS_OF_MILE> desetink milje",
-        "1 desentinko milje",
+        "a quarter mile",
         "<FEET> čevljev",
-        "Manj kot 10 čevljev",
-        "a quarter mile"
+        "Manj kot 10 čevljev"
       ],
       "example_phrases": {
         "0": [
@@ -1611,11 +1607,9 @@
         "<MILES> milj",
         "1 miljo",
         "pol milje",
-        "<TENTHS_OF_MILE> desetink milje",
-        "1 desentinko milje",
+        "a quarter mile",
         "<FEET> čevljev",
-        "Manj kot 10 čevljev",
-        "a quarter mile"
+        "Manj kot 10 čevljev"
       ],
       "example_phrases": {
         "0": [
@@ -2093,14 +2087,12 @@
         "less than 10 meters"
       ],
       "us_customary_lengths": [
-        "<MILES> miles",
-        "1 mile",
-        "a half mile",
-        "<TENTHS_OF_MILE> tenths of a mile",
-        "1 tenth of a mile",
-        "<FEET> feet",
-        "less than 10 feet",
-        "a quarter mile"
+        "<MILES> milj",
+        "1 miljo",
+        "pol milje",
+        "a quarter mile",
+        "<FEET> čevljev",
+        "Manj kot 10 čevljev"
       ],
       "example_phrases": {
         "0": [
@@ -2122,14 +2114,12 @@
         "less than 10 meters"
       ],
       "us_customary_lengths": [
-        "<MILES> miles",
-        "1 mile",
-        "a half mile",
-        "<TENTHS_OF_MILE> tenths of a mile",
-        "1 tenth of a mile",
-        "<FEET> feet",
-        "less than 10 feet",
-        "a quarter mile"
+        "<MILES> milj",
+        "1 miljo",
+        "pol milje",
+        "a quarter mile",
+        "<FEET> čevljev",
+        "Manj kot 10 čevljev"
       ],
       "example_phrases": {
         "0": [

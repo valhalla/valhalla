@@ -153,11 +153,9 @@
         "<MILES> миль",
         "1 милю",
         "полмили",
-        "<TENTHS_OF_MILE> десятых мили",
-        "1 десятую мили",
+        "a quarter mile",
         "<FEET> футов",
-        "менее 10 футов",
-        "a quarter mile"
+        "менее 10 футов"
       ],
       "example_phrases": {
         "0": [
@@ -1216,11 +1214,9 @@
         "<MILES> миль",
         "1 милю",
         "полмили",
-        "<TENTHS_OF_MILE> десятых мили",
-        "1 десятую мили",
+        "a quarter mile",
         "<FEET> футов",
-        "менее 10 футов",
-        "a quarter mile"
+        "менее 10 футов"
       ],
       "example_phrases": {
         "0": [
@@ -1610,11 +1606,9 @@
         "<MILES> миль",
         "1 милю",
         "полмили",
-        "<TENTHS_OF_MILE> десятых мили",
-        "1 десятую мили",
+        "a quarter mile",
         "<FEET> футов",
-        "менее 10 футов",
-        "a quarter mile"
+        "менее 10 футов"
       ],
       "example_phrases": {
         "0": [
@@ -2089,14 +2083,12 @@
         "less than 10 meters"
       ],
       "us_customary_lengths": [
-        "<MILES> miles",
-        "1 mile",
-        "a half mile",
-        "<TENTHS_OF_MILE> tenths of a mile",
-        "1 tenth of a mile",
-        "<FEET> feet",
-        "less than 10 feet",
-        "a quarter mile"
+        "<MILES> миль",
+        "1 милю",
+        "полмили",
+        "a quarter mile",
+        "<FEET> футов",
+        "менее 10 футов"
       ],
       "example_phrases": {
         "0": [
@@ -2118,14 +2110,12 @@
         "less than 10 meters"
       ],
       "us_customary_lengths": [
-        "<MILES> miles",
-        "1 mile",
-        "a half mile",
-        "<TENTHS_OF_MILE> tenths of a mile",
-        "1 tenth of a mile",
-        "<FEET> feet",
-        "less than 10 feet",
-        "a quarter mile"
+        "<MILES> миль",
+        "1 милю",
+        "полмили",
+        "a quarter mile",
+        "<FEET> футов",
+        "менее 10 футов"
       ],
       "example_phrases": {
         "0": [

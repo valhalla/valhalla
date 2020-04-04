@@ -153,11 +153,9 @@
         "<MILES> miles",
         "1 mile",
         "en halv mile",
-        "<TENTHS_OF_MILE> tiondels mile",
-        "1 tiondels mile",
+        "a quarter mile",
         "<FEET> fot",
-        "mindre än 10 fot",
-        "a quarter mile"
+        "mindre än 10 fot"
       ],
       "example_phrases": {
         "0": [
@@ -1215,11 +1213,9 @@
         "<MILES> miles",
         "1 mile",
         "en halv mile",
-        "<TENTHS_OF_MILE> tiondels mile",
-        "1 tiondels mile",
+        "a quarter mile",
         "<FEET> fot",
-        "mindre än 10 fot",
-        "a quarter mile"
+        "mindre än 10 fot"
       ],
       "example_phrases": {
         "0": [
@@ -1609,11 +1605,9 @@
         "<MILES> miles",
         "1 mile",
         "en halv mile",
-        "<TENTHS_OF_MILE> tiondels mile",
-        "1 tiondels mile",
+        "a quarter mile",
         "<FEET> fot",
-        "mindre än 10 fot",
-        "a quarter mile"
+        "mindre än 10 fot"
       ],
       "example_phrases": {
         "0": [
@@ -2087,12 +2081,10 @@
       "us_customary_lengths": [
         "<MILES> miles",
         "1 mile",
-        "a half mile",
-        "<TENTHS_OF_MILE> tenths of a mile",
-        "1 tenth of a mile",
-        "<FEET> feet",
-        "less than 10 feet",
-        "a quarter mile"
+        "en halv mile",
+        "a quarter mile",
+        "<FEET> fot",
+        "mindre än 10 fot"
       ],
       "example_phrases": {
         "0": [
@@ -2116,12 +2108,10 @@
       "us_customary_lengths": [
         "<MILES> miles",
         "1 mile",
-        "a half mile",
-        "<TENTHS_OF_MILE> tenths of a mile",
-        "1 tenth of a mile",
-        "<FEET> feet",
-        "less than 10 feet",
-        "a quarter mile"
+        "en halv mile",
+        "a quarter mile",
+        "<FEET> fot",
+        "mindre än 10 fot"
       ],
       "example_phrases": {
         "0": [

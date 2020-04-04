@@ -153,11 +153,9 @@
         "<MILES> milles",
         "1 milla",
         "mitja milla",
-        "<TENTHS_OF_MILE> dècima de milla",
-        "1 dècima de milla",
+        "a quarter mile",
         "<FEET> peus",
-        "menys de 10 peus",
-        "a quarter mile"
+        "menys de 10 peus"
       ],
       "example_phrases": {
         "0": [
@@ -1215,11 +1213,9 @@
         "<MILES> milles",
         "1 milla",
         "mitja milla",
-        "<TENTHS_OF_MILE> dècima de milla",
-        "1 dècima de milla",
+        "a quarter mile",
         "<FEET> peus",
-        "menys de 10 peus",
-        "a quarter mile"
+        "menys de 10 peus"
       ],
       "example_phrases": {
         "0": [
@@ -1609,11 +1605,9 @@
         "<MILES> milles",
         "1 milla",
         "mitja milla",
-        "<TENTHS_OF_MILE> dècima de milla",
-        "1 dècima de milla",
+        "a quarter mile",
         "<FEET> peus",
-        "menys de 10 peus",
-        "a quarter mile"
+        "menys de 10 peus"
       ],
       "example_phrases": {
         "0": [
@@ -2085,14 +2079,12 @@
         "less than 10 meters"
       ],
       "us_customary_lengths": [
-        "<MILES> miles",
-        "1 mile",
-        "a half mile",
-        "<TENTHS_OF_MILE> tenths of a mile",
-        "1 tenth of a mile",
-        "<FEET> feet",
-        "less than 10 feet",
-        "a quarter mile"
+        "<MILES> milles",
+        "1 milla",
+        "mitja milla",
+        "a quarter mile",
+        "<FEET> peus",
+        "menys de 10 peus"
       ],
       "example_phrases": {
         "0": [
@@ -2114,14 +2106,12 @@
         "less than 10 meters"
       ],
       "us_customary_lengths": [
-        "<MILES> miles",
-        "1 mile",
-        "a half mile",
-        "<TENTHS_OF_MILE> tenths of a mile",
-        "1 tenth of a mile",
-        "<FEET> feet",
-        "less than 10 feet",
-        "a quarter mile"
+        "<MILES> milles",
+        "1 milla",
+        "mitja milla",
+        "a quarter mile",
+        "<FEET> peus",
+        "menys de 10 peus"
       ],
       "example_phrases": {
         "0": [

@@ -153,11 +153,9 @@
         "<MILES> mil",
         "1 míli",
         "půl míle",
-        "<TENTHS_OF_MILE> desetiny míle",
-        "1 desetinu míle",
+        "a quarter mile",
         "<FEET> stop",
-        "méně než 10 stop",
-        "a quarter mile"
+        "méně než 10 stop"
       ],
       "example_phrases": {
         "0": [
@@ -1216,11 +1214,9 @@
         "<MILES> mil",
         "1 míli",
         "půl míle",
-        "<TENTHS_OF_MILE> desetiny míle",
-        "1 desetinu míle",
+        "a quarter mile",
         "<FEET> stop",
-        "méně než 10 stop",
-        "a quarter mile"
+        "méně než 10 stop"
       ],
       "example_phrases": {
         "0": [
@@ -1607,14 +1603,12 @@
         "Méně než 10 metrů"
       ],
       "us_customary_lengths": [
-        "<MILES> míle",
+        "<MILES> mil",
         "1 míli",
-        "Půl míle",
-        "<TENTHS_OF_MILE> desetin míle",
-        "1 desetinu míle",
+        "půl míle",
+        "a quarter mile",
         "<FEET> stop",
-        "Méně než 10 stop",
-        "a quarter mile"
+        "méně než 10 stop"
       ],
       "example_phrases": {
         "0": [
@@ -2089,14 +2083,12 @@
         "less than 10 meters"
       ],
       "us_customary_lengths": [
-        "<MILES> miles",
-        "1 mile",
-        "a half mile",
-        "<TENTHS_OF_MILE> tenths of a mile",
-        "1 tenth of a mile",
-        "<FEET> feet",
-        "less than 10 feet",
-        "a quarter mile"
+        "<MILES> mil",
+        "1 míli",
+        "půl míle",
+        "a quarter mile",
+        "<FEET> stop",
+        "méně než 10 stop"
       ],
       "example_phrases": {
         "0": [
@@ -2118,14 +2110,12 @@
         "less than 10 meters"
       ],
       "us_customary_lengths": [
-        "<MILES> miles",
-        "1 mile",
-        "a half mile",
-        "<TENTHS_OF_MILE> tenths of a mile",
-        "1 tenth of a mile",
-        "<FEET> feet",
-        "less than 10 feet",
-        "a quarter mile"
+        "<MILES> mil",
+        "1 míli",
+        "půl míle",
+        "a quarter mile",
+        "<FEET> stop",
+        "méně než 10 stop"
       ],
       "example_phrases": {
         "0": [
