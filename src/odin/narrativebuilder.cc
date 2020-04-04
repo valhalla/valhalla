@@ -3513,9 +3513,8 @@ std::string NarrativeBuilder::FormMetricLength(float kilometers,
 
   // 0 "<KILOMETERS> kilometers"
   // 1 "1 kilometer"
-  // DEPRECATED 2 "a half kilometer"
-  // 3 "<METERS> meters" (10-900 meters)
-  // 4 "less than 10 meters"
+  // 2 "<METERS> meters" (10-900 meters)
+  // 3 "less than 10 meters"
 
   std::string length_string;
   length_string.reserve(kLengthStringInitialCapacity);
@@ -3539,26 +3538,26 @@ std::string NarrativeBuilder::FormMetricLength(float kilometers,
     }
 
     if (rounded == 1.f) {
-      // 1  "1 kilometer"
+      // "1 kilometer"
       length_string += metric_lengths.at(kOneKilometerIndex);
     } else {
-      // 0 "<KILOMETERS> kilometers"
-      // 1 digit of precision for float and 0 for int
+      // "<KILOMETERS> kilometers"
       length_string += metric_lengths.at(kKilometersIndex);
+      // 1 digit of precision for float and 0 for int
       distance << std::setiosflags(std::ios::fixed)
                << std::setprecision(rounded != static_cast<int>(rounded)) << rounded;
     }
   } else {
     if (meters > 94) {
-      // 3 "<METERS> meters" (100-900 meters)
+      // "<METERS> meters" (100-900 meters)
       length_string += metric_lengths.at(kMetersIndex);
       distance << (std::round(meters / 100) * 100);
     } else if (meters > 9) {
-      // 3 "<METERS> meters" (10-90 meters)
+      // "<METERS> meters" (10-90 meters)
       length_string += metric_lengths.at(kMetersIndex);
       distance << (std::round(meters / 10) * 10);
     } else {
-      // 4 "less than 10 meters"
+      // "less than 10 meters"
       length_string += metric_lengths.at(kSmallMetersIndex);
     }
   }

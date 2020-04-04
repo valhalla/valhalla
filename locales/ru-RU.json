@@ -146,7 +146,6 @@
       "metric_lengths": [
         "<KILOMETERS> километров",
         "1 километр",
-        "полкилометра",
         "<METERS> метров",
         "менее 10 метров"
       ],
@@ -1210,7 +1209,6 @@
       "metric_lengths": [
         "<KILOMETERS> километров",
         "1 километр",
-        "полкилометра",
         "<METERS> метров",
         "менее 10 метров"
       ],
@@ -1605,7 +1603,6 @@
       "metric_lengths": [
         "<KILOMETERS> километров",
         "1 километр",
-        "полкилометра",
         "<METERS> метров",
         "менее 10 метров"
       ],
@@ -2088,7 +2085,6 @@
       "metric_lengths": [
         "<KILOMETERS> kilometers",
         "1 kilometer",
-        "a half kilometer",
         "<METERS> meters",
         "less than 10 meters"
       ],
@@ -2118,7 +2114,6 @@
       "metric_lengths": [
         "<KILOMETERS> kilometers",
         "1 kilometer",
-        "a half kilometer",
         "<METERS> meters",
         "less than 10 meters"
       ],

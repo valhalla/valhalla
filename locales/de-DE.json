@@ -146,7 +146,6 @@
       "metric_lengths": [
         "<KILOMETERS> Kilometer",
         "einen Kilometer",
-        "einen halben Kilometer",
         "<METERS> Meter",
         "weniger als 10 Meter"
       ],
@@ -1209,7 +1208,6 @@
       "metric_lengths": [
         "<KILOMETERS> Kilometer",
         "einen Kilometer",
-        "einen halben Kilometer",
         "<METERS> Meter",
         "weniger als 10 Meter"
       ],
@@ -1601,7 +1599,6 @@
       "metric_lengths": [
         "<KILOMETERS> Kilometer",
         "einen Kilometer",
-        "einen halben Kilometer",
         "<METERS> Meter",
         "weniger als 10 Meter"
       ],
@@ -2081,7 +2078,6 @@
       "metric_lengths": [
         "<KILOMETERS> kilometers",
         "1 kilometer",
-        "a half kilometer",
         "<METERS> meters",
         "less than 10 meters"
       ],
@@ -2111,7 +2107,6 @@
       "metric_lengths": [
         "<KILOMETERS> kilometers",
         "1 kilometer",
-        "a half kilometer",
         "<METERS> meters",
         "less than 10 meters"
       ],

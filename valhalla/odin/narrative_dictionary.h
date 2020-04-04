@@ -104,9 +104,8 @@ constexpr auto kMountainBikeTrailIndex = 2;
 // Metric length indexes
 constexpr auto kKilometersIndex = 0;
 constexpr auto kOneKilometerIndex = 1;
-constexpr auto kHalfKilometerIndex = 2;
-constexpr auto kMetersIndex = 3;
-constexpr auto kSmallMetersIndex = 4;
+constexpr auto kMetersIndex = 2;
+constexpr auto kSmallMetersIndex = 3;
 
 // US Customary length indexes
 constexpr auto kMilesIndex = 0;

@@ -146,7 +146,6 @@
       "metric_lengths": [
         "<KILOMETERS> किलोमीटर",
         "1 किलोमीटर",
-        "एक आधा किलोमीटर",
         "<METERS> मीटर",
         "कम से कम 10 मीटर"
       ],
@@ -1209,7 +1208,6 @@
       "metric_lengths": [
         "<KILOMETERS> किलोमीटर",
         "1 किलोमीटर",
-        "एक आधा किलोमीटर",
         "<METERS> मीटर",
         "कम से कम 10 मीटर"
       ],
@@ -1604,7 +1602,6 @@
       "metric_lengths": [
         "<KILOMETERS> किलोमीटर",
         "1 किलोमीटर",
-        "एक आधा किलोमीटर",
         "<METERS> मीटर",
         "कम से कम 10 मीटर"
       ],
@@ -2084,7 +2081,6 @@
       "metric_lengths": [
         "<KILOMETERS> kilometers",
         "1 kilometer",
-        "a half kilometer",
         "<METERS> meters",
         "less than 10 meters"
       ],
@@ -2114,7 +2110,6 @@
       "metric_lengths": [
         "<KILOMETERS> kilometers",
         "1 kilometer",
-        "a half kilometer",
         "<METERS> meters",
         "less than 10 meters"
       ],

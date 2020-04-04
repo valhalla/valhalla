@@ -146,7 +146,6 @@
       "metric_lengths": [
         "<KILOMETERS> kilometrů",
         "1 kilometr",
-        "půl kilometru",
         "<METERS> metrů",
         "méně než 10 metrů"
       ],
@@ -1210,7 +1209,6 @@
       "metric_lengths": [
         "<KILOMETERS> kilometrů",
         "1 kilometr",
-        "půl kilometru",
         "<METERS> metrů",
         "méně než 10 metrů"
       ],
@@ -1605,7 +1603,6 @@
       "metric_lengths": [
         "<KILOMETERS> kilometry",
         "1 kilometr",
-        "Půl kilometru",
         "<METERS> metrů",
         "Méně než 10 metrů"
       ],
@@ -2088,7 +2085,6 @@
       "metric_lengths": [
         "<KILOMETERS> kilometers",
         "1 kilometer",
-        "a half kilometer",
         "<METERS> meters",
         "less than 10 meters"
       ],
@@ -2118,7 +2114,6 @@
       "metric_lengths": [
         "<KILOMETERS> kilometers",
         "1 kilometer",
-        "a half kilometer",
         "<METERS> meters",
         "less than 10 meters"
       ],
