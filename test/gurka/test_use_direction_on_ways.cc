@@ -19,12 +19,8 @@ protected:
     )";
 
     const gurka::ways ways = {
-        {"AB",
-         {{"highway", "primary"},
-          {"ref", "US 30;US 222"},
-          {"direction", "East;North"}}},
-        {"BC",
-         {{"highway", "primary"}}},
+        {"AB", {{"highway", "primary"}, {"ref", "US 30;US 222"}, {"direction", "East;North"}}},
+        {"BC", {{"highway", "primary"}}},
     };
 
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
@@ -42,4 +38,3 @@ TEST_F(UseDirectionOnWays, Route) {
   auto result = gurka::route(map, "A", "C", "auto");
   gurka::assert::osrm::expect_route(result, {"WE", "BC"});
 }
-
