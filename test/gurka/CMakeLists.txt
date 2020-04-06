@@ -11,11 +11,12 @@ if(ENABLE_DATA_TOOLS)
     add_executable(${TESTNAME} EXCLUDE_FROM_ALL ${FILENAME} ${VALHALLA_SOURCE_DIR}/third_party/microtar/src/microtar.c)
     set_target_properties(${TESTNAME} PROPERTIES
       COMPILE_DEFINITIONS VALHALLA_SOURCE_DIR="${VALHALLA_SOURCE_DIR}/")
-    target_link_libraries(${TESTNAME} valhalla gtest_main gmock)
+    target_link_libraries(${TESTNAME} valhalla gtest_main gmock pthread)
     target_include_directories(${TESTNAME} SYSTEM PRIVATE
       ${VALHALLA_SOURCE_DIR}/third_party/microtar/src
       ${VALHALLA_SOURCE_DIR}/third_party/protozero/include
       ${VALHALLA_SOURCE_DIR}/third_party/libosmium/include)
+    add_dependencies(${TESTNAME} build_timezones)
 
     ## Test run targets
     add_custom_command(OUTPUT ${TESTNAME}.log
@@ -35,12 +36,6 @@ if(ENABLE_DATA_TOOLS)
     add_dependencies(run-gurka run-${TESTNAME})
   endforeach()
 
-add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/tz.sqlite
-       COMMAND ${CMAKE_COMMAND} -E make_directory test/data/
-       COMMAND ${CMAKE_BINARY_DIR}/valhalla_build_tiles
-       COMMAND ${VALHALLA_SOURCE_DIR}/scripts/valhalla_build_timezones > ${CMAKE_BINARY_DIR}/test/data/tz.sqlite
-       COMMENT "Building tz.sqlite..."
-       WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-       DEPENDS valhalla_build_tiles
-)
+  add_dependencies(tests gurka)
+  add_dependencies(check run-gurka)
 endif()
