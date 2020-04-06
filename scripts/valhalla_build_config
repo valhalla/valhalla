@@ -20,6 +20,7 @@ config = {
     'concurrency': optional(int),
     'tile_dir': '/data/valhalla',
     'tile_extract': '/data/valhalla/tiles.tar',
+    'traffic_extract': '/data/valhalla/traffic.tar',
     'admin': '/data/valhalla/admin.sqlite',
     'timezone': '/data/valhalla/tz_world.sqlite',
     'transit_dir': '/data/valhalla/transit',
@@ -33,11 +34,14 @@ config = {
     'import_bike_share_stations': False,
     'global_synchronized_cache': False,
     'max_concurrent_reader_users' : 1,
+    'reclassify_links': True,
     'data_processing': {
       'infer_internal_intersections': True,
       'infer_turn_channels': True,
       'apply_country_overrides': True,
-      'use_admin_db': True
+      'use_admin_db': True,
+      'use_direction_on_ways': False,
+      'allow_alt_name': False
     },
     'logging': {
       'type': 'std_out',
@@ -261,6 +265,7 @@ help_text = {
     'concurrency': 'How many threads to use in the concurrent parts of tile building',
     'tile_dir': 'Location to read/write tiles to/from',
     'tile_extract': 'Location to read tiles from tar',
+    'traffic_extract': 'Location to read traffic from tar',
     'admin': 'Location of sqlite file holding admin polygons created with valhalla_build_admins',
     'timezone': 'Location of sqlite file holding timezone information created with valhalla_build_timezones',
     'transit_dir': 'Location of intermediate transit tiles created with valhalla_build_transit',
@@ -274,11 +279,14 @@ help_text = {
     'import_bike_share_stations': 'bool indicating whether importing bike share stations(BSS). Set to True when using multimodal - default to False',
     'global_synchronized_cache': 'bool indicating whether global_synchronized_cache is used - default to False',
     'max_concurrent_reader_users' : 'number of threads in the threadpool which can be used to fetch tiles over the network via curl',
+    'reclassify_links' : 'bool indicating whether or not to reclassify links - reclassifies ramps based on the lowest class connecting road',
     'data_processing': {
       'infer_internal_intersections': 'bool indicating whether or not to infer internal intersections during the graph enhancer phase or use the internal_intersection key from the pbf',
       'infer_turn_channels': 'bool indicating whether or not to infer turn channels during the graph enhancer phase or use the turn_channel key from the pbf',
       'apply_country_overrides': 'bool indicating whether or not to apply country overrides during the graph enhancer phase',
-      'use_admin_db': 'bool indicating whether or not to use the administrative database during the graph enhancer phase or use the admin keys from the pbf that are set on the way'
+      'use_admin_db': 'bool indicating whether or not to use the administrative database during the graph enhancer phase or use the admin keys from the pbf that are set on the way',
+      'use_direction_on_ways': 'bool indicating whether or not to process the direction key on the ways or utilize the guidance relation tags during the parsing phase',
+      'allow_alt_name': 'bool indicating whether or not to process the alt_name key on the ways during the parsing phase'
     },
     'logging': {
       'type': 'Type of logger either std_out or file',
