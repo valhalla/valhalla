@@ -29,6 +29,7 @@ bool FilterAction_Enum_Parse(const std::string& action, FilterAction* a);
 const std::string& FilterAction_Enum_Name(const FilterAction action);
 bool DirectionsType_Enum_Parse(const std::string& dtype, DirectionsType* t);
 bool PreferredSide_Enum_Parse(const std::string& pside, valhalla::Location::PreferredSide* p);
+bool RoadClass_Enum_Parse(const std::string& rc_name, valhalla::RoadClass* rc);
 
 const std::unordered_map<unsigned, std::string>
     error_codes{// loki project 1xx
