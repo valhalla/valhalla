@@ -2073,10 +2073,10 @@
         "1": "<CURRENT_VERBAL_CUE> Then, in <LENGTH>, <NEXT_VERBAL_CUE>"
       },
       "metric_lengths": [
-        "<KILOMETERS> kilometers",
-        "1 kilometer",
-        "<METERS> meters",
-        "less than 10 meters"
+        "<KILOMETERS> quilòmetres",
+        "1 quilòmetre",
+        "<METERS> metres",
+        "menys de 10 metres"
       ],
       "us_customary_lengths": [
         "<MILES> milles",
@@ -2100,10 +2100,10 @@
         "0": "In <LENGTH>, <CURRENT_VERBAL_CUE>"
       },
       "metric_lengths": [
-        "<KILOMETERS> kilometers",
-        "1 kilometer",
-        "<METERS> meters",
-        "less than 10 meters"
+        "<KILOMETERS> quilòmetres",
+        "1 quilòmetre",
+        "<METERS> metres",
+        "menys de 10 metres"
       ],
       "us_customary_lengths": [
         "<MILES> milles",

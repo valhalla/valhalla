@@ -2081,10 +2081,10 @@
         "1": "<CURRENT_VERBAL_CUE> Then, in <LENGTH>, <NEXT_VERBAL_CUE>"
       },
       "metric_lengths": [
-        "<KILOMETERS> kilometers",
+        "<KILOMETERS> kilometrov",
         "1 kilometer",
-        "<METERS> meters",
-        "less than 10 meters"
+        "<METERS> metrov",
+        "manj kot 10 metrov"
       ],
       "us_customary_lengths": [
         "<MILES> milj",
@@ -2108,10 +2108,10 @@
         "0": "In <LENGTH>, <CURRENT_VERBAL_CUE>"
       },
       "metric_lengths": [
-        "<KILOMETERS> kilometers",
+        "<KILOMETERS> kilometrov",
         "1 kilometer",
-        "<METERS> meters",
-        "less than 10 meters"
+        "<METERS> metrov",
+        "manj kot 10 metrov"
       ],
       "us_customary_lengths": [
         "<MILES> milj",
