@@ -119,7 +119,7 @@ build_config(const std::string& tiledir,
          "trace_attributes",
          "transit_available"
        ],
-       "logging" : {"long_request" : 100}, 
+       "logging" : {"long_request" : 100},
        "service_defaults" : {
          "minimum_reachability" : 50,
          "radius" : 0,
@@ -631,6 +631,11 @@ valhalla::Api route(const map& map,
                     const std::string& datetime = "",
                     std::shared_ptr<valhalla::baldr::GraphReader> reader = {}) {
   return route(map, {from, to}, costing, datetime, reader);
+}
+
+valhalla::Api route(const map& map, const std::string& request_json) {
+  valhalla::tyr::actor_t actor(map.config, true);
+  return actor.unserialized_route(request_json);
 }
 
 valhalla::Api match(const map& map,

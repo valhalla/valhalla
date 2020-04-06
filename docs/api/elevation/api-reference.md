@@ -10,6 +10,8 @@ View an interactive demo [here](http://valhalla.github.io/demos/elevation).
 
 The elevation service currently has a single action, `/height?`, that can be requested. The `height` provides the elevation at a set of input locations, which are specified as either a `shape` or an `encoded_polyline`. The shape option uses an ordered list of one or more locations within a JSON array, while an encoded polyline stores multiple locations within a single string. If you include a `range` parameter and set it to `true`, both the height and cumulative distance are returned for each point.
 
+The elevation service also supports sampling the input shape or encoded polyline in uniform intervals along the path defined by the successive locations. If you include a `resample_distance` parameter with a distance in meters the elevation service will resample the input polyline at the requested resample_distance and return heights (and cumulative distance if requested) at the resampled locations. The resampled polyline is also returned.
+
 An elevation service request takes the form of `servername/height?json={}`, where the JSON inputs inside the ``{}`` includes location information and the optional range parameter.
 
 There is an option to name your elevation request. You can do this by appending the following to your request `&id=`.  The `id` is returned with the response so a user could match to the corresponding request.
@@ -68,6 +70,14 @@ The `range` is optional and assumed to be `false` if omitted.
 | Range parameters | Description |
 | :--------- | :----------- |
 | `range` | `true` or `false`. Defaults to `false`.|
+
+### Resampling
+
+The `resample_distance` parameter is a numeric value specifying the distance at which the input polyline is sampled in order to provide uniform distances between samples along the polyline.
+
+| Sampling parameter | Description |
+| :--------- | :----------- |
+| `resample_distance` | Numeric value indicating the sampling distance in meters. |
 
 ### Other request options
 

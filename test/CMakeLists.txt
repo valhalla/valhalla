@@ -33,7 +33,7 @@ foreach(test ${tests})
   add_executable(${test} EXCLUDE_FROM_ALL ${test}.cc )
   set_target_properties(${test} PROPERTIES
     COMPILE_DEFINITIONS VALHALLA_SOURCE_DIR="${VALHALLA_SOURCE_DIR}/")
-  target_link_libraries(${test} valhalla gtest gmock -lpthread)
+  target_link_libraries(${test} valhalla gtest gmock pthread)
   target_include_directories(${test} SYSTEM PRIVATE
       ${VALHALLA_SOURCE_DIR}/third_party/protozero/include
       ${VALHALLA_SOURCE_DIR}/third_party/libosmium/include)
@@ -44,7 +44,7 @@ foreach(test ${cost_tests})
   add_executable(${test} EXCLUDE_FROM_ALL ${VALHALLA_SOURCE_DIR}/src/sif/${test}.cc)
   set_target_properties(${test} PROPERTIES
     COMPILE_DEFINITIONS INLINE_TEST)
-  target_link_libraries(${test} valhalla gtest gmock)
+  target_link_libraries(${test} valhalla gtest gmock pthread)
 endforeach()
 
 ## Test-specific data, properties and dependencies

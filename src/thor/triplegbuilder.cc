@@ -145,11 +145,15 @@ void SetBoundingBox(TripLeg& trip_path, std::vector<PointLL>& shape) {
 }
 
 // Associate RoadClass values to TripLeg proto
-constexpr TripLeg_RoadClass kTripLegRoadClass[] =
-    {TripLeg_RoadClass_kMotorway,    TripLeg_RoadClass_kTrunk,       TripLeg_RoadClass_kPrimary,
-     TripLeg_RoadClass_kSecondary,   TripLeg_RoadClass_kTertiary,    TripLeg_RoadClass_kUnclassified,
-     TripLeg_RoadClass_kResidential, TripLeg_RoadClass_kServiceOther};
-TripLeg_RoadClass GetTripLegRoadClass(const RoadClass road_class) {
+constexpr valhalla::RoadClass kTripLegRoadClass[] = {valhalla::RoadClass::kMotorway,
+                                                     valhalla::RoadClass::kTrunk,
+                                                     valhalla::RoadClass::kPrimary,
+                                                     valhalla::RoadClass::kSecondary,
+                                                     valhalla::RoadClass::kTertiary,
+                                                     valhalla::RoadClass::kUnclassified,
+                                                     valhalla::RoadClass::kResidential,
+                                                     valhalla::RoadClass::kServiceOther};
+valhalla::RoadClass GetRoadClass(const baldr::RoadClass road_class) {
   return kTripLegRoadClass[static_cast<int>(road_class)];
 }
 
@@ -485,7 +489,7 @@ void SetTripEdgeRoadClass(TripLeg_Edge* trip_edge,
                           const DirectedEdge* directededge,
                           const GraphTile* graphtile,
                           GraphReader& graphreader) {
-  trip_edge->set_road_class(GetTripLegRoadClass(directededge->classification()));
+  trip_edge->set_road_class(GetRoadClass(directededge->classification()));
   // If this is a ramp it may have been reclassified in graph enhancer.
   // To restore the original road class for motorway_links, we check if any of the adjacent edges is
   // a motorway.
@@ -499,7 +503,7 @@ void SetTripEdgeRoadClass(TripLeg_Edge* trip_edge,
       // check edges leaving node
       for (const auto& adjacent_edge : graphtile->GetDirectedEdges(edge->endnode())) {
         if (adjacent_edge.classification() == baldr::RoadClass::kMotorway) {
-          trip_edge->set_road_class(TripLeg_RoadClass_kMotorway);
+          trip_edge->set_road_class(valhalla::RoadClass::kMotorway);
           return;
         }
       }
@@ -509,7 +513,7 @@ void SetTripEdgeRoadClass(TripLeg_Edge* trip_edge,
         auto trans_tile = graphreader.GetGraphTile(transition.endnode());
         for (const auto& adjacent_edge : trans_tile->GetDirectedEdges(transition.endnode())) {
           if (adjacent_edge.classification() == baldr::RoadClass::kMotorway) {
-            trip_edge->set_road_class(TripLeg_RoadClass_kMotorway);
+            trip_edge->set_road_class(valhalla::RoadClass::kMotorway);
             return;
           }
         }
@@ -1100,7 +1104,7 @@ void AddTripIntersectingEdge(const AttributesController& controller,
 
   // Set the road class for the intersecting edge if requested
   if (controller.attributes.at(kNodeIntersectingEdgeRoadClass)) {
-    itersecting_edge->set_road_class(GetTripLegRoadClass(intersecting_de->classification()));
+    itersecting_edge->set_road_class(GetRoadClass(intersecting_de->classification()));
   }
 }
 

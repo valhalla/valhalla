@@ -24,7 +24,7 @@ TEST(Standalone, IntersectionClassesAtRamp) {
   // assert CE is restored to a motorway_link after reclassifying
   EXPECT_EQ(leg.node(1).edge().name(0).value(), "CE");
   EXPECT_EQ(leg.node(1).edge().use(), TripLeg_Use_kRampUse);
-  EXPECT_EQ(leg.node(1).edge().road_class(), TripLeg_RoadClass_kMotorway);
+  EXPECT_EQ(leg.node(1).edge().road_class(), valhalla::RoadClass::kMotorway);
 
   result.mutable_options()->set_format(valhalla::Options_Format_osrm);
   auto json = tyr::serializeDirections(result);
