@@ -15,7 +15,7 @@ protected:
     constexpr double gridsize = 100;
 
     const std::string ascii_map = R"(
-         A----B----C----D----E
+         A--B--C--D--E
     )";
 
     const gurka::ways ways = {
