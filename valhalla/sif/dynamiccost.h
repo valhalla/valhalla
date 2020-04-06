@@ -19,7 +19,6 @@
 #include <valhalla/sif/hierarchylimits.h>
 
 #include <memory>
-#include <rapidjson/document.h>
 #include <unordered_map>
 
 namespace valhalla {
