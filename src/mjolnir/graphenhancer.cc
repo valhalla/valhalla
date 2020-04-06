@@ -1223,7 +1223,6 @@ uint32_t GetStopImpact(uint32_t from,
 
   // TODO: possibly increase stop impact at large intersections (more edges)
   // or if several are high class
-
   // Reduce stop impact from a turn channel or when only links
   // (ramps and turn channels) are involved. Exception - sharp turns.
   Turn::Type turn_type = Turn::GetType(turn_degree);
@@ -1269,6 +1268,26 @@ uint32_t GetStopImpact(uint32_t from,
     } else if (stop_impact != 0) { // make sure we do not subtract 1 from 0
       stop_impact -= 1;
     }
+  }
+  // add to the stop impact when transitioning from higher to lower class road and we are not on a TC
+  // or ramp penalize lefts when driving on the right.
+  else if (nodeinfo.drive_on_right() &&
+           (turn_type == Turn::Type::kSharpLeft || turn_type == Turn::Type::kLeft) &&
+           from_rc != edges[to].classification() && edges[to].use() != Use::kRamp &&
+           edges[to].use() != Use::kTurnChannel) {
+    if (nodeinfo.traffic_signal()) {
+      stop_impact += 2;
+    } else if (abs(static_cast<int>(from_rc) - static_cast<int>(edges[to].classification())) > 1)
+      stop_impact++;
+    // penalize rights when driving on the left.
+  } else if (!nodeinfo.drive_on_right() &&
+             (turn_type == Turn::Type::kSharpRight || turn_type == Turn::Type::kRight) &&
+             from_rc != edges[to].classification() && edges[to].use() != Use::kRamp &&
+             edges[to].use() != Use::kTurnChannel) {
+    if (nodeinfo.traffic_signal()) {
+      stop_impact += 2;
+    } else if (abs(static_cast<int>(from_rc) - static_cast<int>(edges[to].classification())) > 1)
+      stop_impact++;
   }
   // Clamp to kMaxStopImpact
   return (stop_impact <= kMaxStopImpact) ? stop_impact : kMaxStopImpact;

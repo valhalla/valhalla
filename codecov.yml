@@ -1,6 +1,6 @@
 coverage:
 
   ignore:
-    - rapidjson/.*
+    - third_party/.*
 
 comment: off

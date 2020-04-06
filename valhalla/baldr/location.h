@@ -6,6 +6,7 @@
 
 #include <valhalla/baldr/rapidjson_utils.h>
 #include <valhalla/midgard/pointll.h>
+#include <valhalla/proto/tripcommon.pb.h>
 
 namespace valhalla {
 namespace baldr {
@@ -14,6 +15,8 @@ namespace baldr {
  * Input from the outside world to be used in determining where in the graph
  * the route needs to go. A start, middle, destination or via point
  * through which the route must pass
+ *
+ * TODO: deprecate this struct in favor of protobuf valhalla::Location.
  *
  * @author  Kevin Kreiser
  */
@@ -26,6 +29,29 @@ public:
   enum class StopType : uint8_t { BREAK, THROUGH, VIA, BREAK_THROUGH };
 
   enum class PreferredSide : uint8_t { EITHER, SAME, OPPOSITE };
+
+  /**
+   * Optional filters supplied in the request.
+   *
+   * NOTE: this struct must be kept in sync with the protobuf defined
+   * valhalla::Location::SearchFilter in tripcommon.proto.
+   */
+  struct SearchFilter {
+  public:
+    SearchFilter(valhalla::RoadClass min_road_class = valhalla::RoadClass::kServiceOther,
+                 valhalla::RoadClass max_road_class = valhalla::RoadClass::kMotorway,
+                 bool exclude_tunnel = false,
+                 bool exclude_bridge = false,
+                 bool exclude_ramp = false);
+
+    valhalla::RoadClass min_road_class_;
+    valhalla::RoadClass max_road_class_;
+    bool exclude_tunnel_;
+    bool exclude_bridge_;
+    bool exclude_ramp_;
+
+  protected:
+  };
 
   /**
    * You have to initialize the location with something
@@ -41,7 +67,8 @@ public:
            unsigned int min_outbound_reach = 0,
            unsigned int min_inbound_reach = 0,
            unsigned long radius = 0,
-           const PreferredSide& side = PreferredSide::EITHER);
+           const PreferredSide& side = PreferredSide::EITHER,
+           const SearchFilter& search_filter = SearchFilter());
 
   /**
    * equality.
@@ -82,6 +109,7 @@ public:
   float heading_tolerance_;
   float search_cutoff_;
   float street_side_tolerance_;
+  SearchFilter search_filter_;
 
 protected:
 };
