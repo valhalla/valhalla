@@ -15,7 +15,7 @@ protected:
     constexpr double gridsize = 100;
 
     const std::string ascii_map = R"(
-         A----B----C----D
+         A----B----C----D----E
     )";
 
     const gurka::ways ways = {
@@ -27,6 +27,12 @@ protected:
           {"direction", "South"},
           {"int_ref", "I-80;US 15"},
           {"int_direction", "West;South"}}},
+        {"DE",
+         {{"highway", "primary"},
+          {"ref", "US 119"},
+          {"direction", "South"},
+          {"int_ref", "I-99;US XX;US 119"},
+          {"int_direction", "North;;South"}}},
     };
 
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
@@ -40,8 +46,8 @@ gurka::map UseDirectionOnWays::map = {};
 /*************************************************************/
 
 TEST_F(UseDirectionOnWays, CheckNamesAndRefs) {
-  auto result = gurka::route(map, "A", "D", "auto");
-  gurka::assert::osrm::expect_route(result, {"AB", "BC", "CD"});
+  auto result = gurka::route(map, "A", "E", "auto");
+  gurka::assert::osrm::expect_route(result, {"AB", "BC", "CD", "DE"});
 
   // test direction is used correctly
   EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(0).street_name_size(), 3);
@@ -60,4 +66,11 @@ TEST_F(UseDirectionOnWays, CheckNamesAndRefs) {
   EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(2).street_name(0).value(), "CD");
   EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(2).street_name(1).value(), "US 15 South");
   EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(2).street_name(2).value(), "I-80 West");
+
+  // test empty directionals
+  EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(3).street_name_size(), 4);
+  EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(3).street_name(0).value(), "DE");
+  EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(3).street_name(1).value(), "US 119 South");
+  EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(3).street_name(2).value(), "I-99 North");
+  EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(3).street_name(3).value(), "US XX");
 }
