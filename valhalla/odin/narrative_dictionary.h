@@ -227,6 +227,11 @@ struct VerbalMultiCueSubset : PhraseSet {
   std::vector<std::string> us_customary_lengths;
 };
 
+struct ApproachVerbalAlertSubset : PhraseSet {
+  std::vector<std::string> metric_lengths;
+  std::vector<std::string> us_customary_lengths;
+};
+
 /**
  * A class that stores the localized narrative instructions.
  */
@@ -353,6 +358,9 @@ public:
 
   // Verbal multi-cue
   VerbalMultiCueSubset verbal_multi_cue_subset;
+
+  // Approach verbal alert
+  ApproachVerbalAlertSubset approach_verbal_alert_subset;
 
   // Posix locale
   std::string posix_locale;
@@ -546,6 +554,16 @@ protected:
    */
   void Load(VerbalMultiCueSubset& verbal_multi_cue_handle,
             const boost::property_tree::ptree& verbal_multi_cue_subset_pt);
+
+  /**
+   * Loads the specified 'approach verbal alert' instruction subset with the
+   * localized narrative instructions contained in the specified property tree.
+   *
+   * @param  approach_verbal_alert_handle  The 'approach verbal alert' structure to populate.
+   * @param  approach_verbal_alert_subset_pt  The 'approach verbal alert' property tree.
+   */
+  void Load(ApproachVerbalAlertSubset& approach_verbal_alert_handle,
+            const boost::property_tree::ptree& approach_verbal_alert_subset_pt);
 
   // Locale
   std::locale locale;

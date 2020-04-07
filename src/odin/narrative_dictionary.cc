@@ -325,6 +325,11 @@ void NarrativeDictionary::Load(const boost::property_tree::ptree& narrative_pt) 
   LOG_TRACE("Populate verbal_multi_cue_subset...");
   // Populate verbal_multi_cue_subset
   Load(verbal_multi_cue_subset, narrative_pt.get_child(kVerbalMultiCueKey));
+
+  /////////////////////////////////////////////////////////////////////////////
+  LOG_TRACE("Populate approach_verbal_alert_subset...");
+  // Populate approach_verbal_alert_subset
+  Load(approach_verbal_alert_subset, narrative_pt.get_child(kApproachVerbalAlertKey));
 }
 
 void NarrativeDictionary::Load(PhraseSet& phrase_handle,
@@ -538,6 +543,21 @@ void NarrativeDictionary::Load(VerbalMultiCueSubset& verbal_multi_cue_handle,
   // Populate us_customary_lengths
   verbal_multi_cue_handle.us_customary_lengths =
       as_vector<std::string>(verbal_multi_cue_subset_pt, kUsCustomaryLengthsKey);
+}
+
+void NarrativeDictionary::Load(ApproachVerbalAlertSubset& approach_verbal_alert_handle,
+                               const boost::property_tree::ptree& approach_verbal_alert_subset_pt) {
+
+  // Populate phrases
+  Load(static_cast<PhraseSet&>(approach_verbal_alert_handle), approach_verbal_alert_subset_pt);
+
+  // Populate metric_lengths
+  approach_verbal_alert_handle.metric_lengths =
+      as_vector<std::string>(approach_verbal_alert_subset_pt, kMetricLengthsKey);
+
+  // Populate us_customary_lengths
+  approach_verbal_alert_handle.us_customary_lengths =
+      as_vector<std::string>(approach_verbal_alert_subset_pt, kUsCustomaryLengthsKey);
 }
 
 const std::locale& NarrativeDictionary::GetLocale() const {

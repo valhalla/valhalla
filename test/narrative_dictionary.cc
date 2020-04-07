@@ -1430,6 +1430,22 @@ TEST(NarrativeDictionary, test_en_US_verbal_multi_cue) {
   validate(us_customary_lengths, kExpectedUsCustomaryLengths);
 }
 
+TEST(NarrativeDictionary, test_en_US_approach_verbal_alert) {
+  const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
+
+  // "0": "In <LENGTH>, <CURRENT_VERBAL_CUE>"
+  const auto& phrase_0 = dictionary.approach_verbal_alert_subset.phrases.at("0");
+  validate(phrase_0, "In <LENGTH>, <CURRENT_VERBAL_CUE>");
+
+  // metric_lengths
+  const auto& metric_lengths = dictionary.approach_verbal_alert_subset.metric_lengths;
+  validate(metric_lengths, kExpectedMetricLengths);
+
+  // us_customary_lengths
+  const auto& us_customary_lengths = dictionary.approach_verbal_alert_subset.us_customary_lengths;
+  validate(us_customary_lengths, kExpectedUsCustomaryLengths);
+}
+
 } // namespace
 
 int main(int argc, char* argv[]) {
