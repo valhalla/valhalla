@@ -133,6 +133,7 @@ jobs:
     steps:
       - checkout
       - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
+      - run: node ./scripts/validate_changelog.js
       - run: git submodule sync && git submodule update --init
       - restore_cache:
           keys:
