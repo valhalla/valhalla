@@ -1416,6 +1416,18 @@ TEST(NarrativeDictionary, test_en_US_verbal_multi_cue) {
   // "0": "<CURRENT_VERBAL_CUE> Then <NEXT_VERBAL_CUE>"
   const auto& phrase_0 = dictionary.verbal_multi_cue_subset.phrases.at("0");
   validate(phrase_0, "<CURRENT_VERBAL_CUE> Then <NEXT_VERBAL_CUE>");
+
+  // "1": "<CURRENT_VERBAL_CUE> Then, in <LENGTH>, <NEXT_VERBAL_CUE>"
+  const auto& phrase_1 = dictionary.verbal_multi_cue_subset.phrases.at("1");
+  validate(phrase_1, "<CURRENT_VERBAL_CUE> Then, in <LENGTH>, <NEXT_VERBAL_CUE>");
+
+  // metric_lengths
+  const auto& metric_lengths = dictionary.verbal_multi_cue_subset.metric_lengths;
+  validate(metric_lengths, kExpectedMetricLengths);
+
+  // us_customary_lengths
+  const auto& us_customary_lengths = dictionary.verbal_multi_cue_subset.us_customary_lengths;
+  validate(us_customary_lengths, kExpectedUsCustomaryLengths);
 }
 
 } // namespace

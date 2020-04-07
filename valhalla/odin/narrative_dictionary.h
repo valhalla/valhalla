@@ -74,6 +74,7 @@ constexpr auto kPostTransitConnectionDestinationVerbalKey =
 constexpr auto kPostTransitionVerbalKey = "instructions.post_transition_verbal";
 constexpr auto kPostTransitTransitionVerbalKey = "instructions.post_transition_transit_verbal";
 constexpr auto kVerbalMultiCueKey = "instructions.verbal_multi_cue";
+constexpr auto kApproachVerbalAlertKey = "instructions.approach_verbal_alert";
 constexpr auto kPosixLocaleKey = "posix_locale";
 
 // Variable keys
@@ -221,6 +222,11 @@ struct PostTransitionTransitVerbalSubset : PhraseSet {
   std::unordered_map<std::string, std::string> transit_stop_count_labels;
 };
 
+struct VerbalMultiCueSubset : PhraseSet {
+  std::vector<std::string> metric_lengths;
+  std::vector<std::string> us_customary_lengths;
+};
+
 /**
  * A class that stores the localized narrative instructions.
  */
@@ -345,8 +351,8 @@ public:
   // Post transition transit verbal
   PostTransitionTransitVerbalSubset post_transition_transit_verbal_subset;
 
-  // Verbal miulti-cue
-  PhraseSet verbal_multi_cue_subset;
+  // Verbal multi-cue
+  VerbalMultiCueSubset verbal_multi_cue_subset;
 
   // Posix locale
   std::string posix_locale;
@@ -530,6 +536,16 @@ protected:
    */
   void Load(PostTransitionTransitVerbalSubset& post_transition_transit_verbal_handle,
             const boost::property_tree::ptree& post_transition_transit_verbal_subset_pt);
+
+  /**
+   * Loads the specified 'verbal multi cue' instruction subset with the
+   * localized narrative instructions contained in the specified property tree.
+   *
+   * @param  verbal_multi_cue_handle  The 'verbal multi cue' structure to populate.
+   * @param  verbal_multi_cue_subset_pt  The 'verbal multi cue' property tree.
+   */
+  void Load(VerbalMultiCueSubset& verbal_multi_cue_handle,
+            const boost::property_tree::ptree& verbal_multi_cue_subset_pt);
 
   // Locale
   std::locale locale;

@@ -525,6 +525,21 @@ void NarrativeDictionary::Load(
                                                  kTransitStopCountLabelsKey);
 }
 
+void NarrativeDictionary::Load(VerbalMultiCueSubset& verbal_multi_cue_handle,
+                               const boost::property_tree::ptree& verbal_multi_cue_subset_pt) {
+
+  // Populate phrases
+  Load(static_cast<PhraseSet&>(verbal_multi_cue_handle), verbal_multi_cue_subset_pt);
+
+  // Populate metric_lengths
+  verbal_multi_cue_handle.metric_lengths =
+      as_vector<std::string>(verbal_multi_cue_subset_pt, kMetricLengthsKey);
+
+  // Populate us_customary_lengths
+  verbal_multi_cue_handle.us_customary_lengths =
+      as_vector<std::string>(verbal_multi_cue_subset_pt, kUsCustomaryLengthsKey);
+}
+
 const std::locale& NarrativeDictionary::GetLocale() const {
   return locale;
 }
