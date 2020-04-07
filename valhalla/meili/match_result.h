@@ -27,6 +27,8 @@ struct MatchResult {
   // Sequential state id
   StateId stateid;
 
+  bool is_break_point;
+
   bool HasState() const {
     return stateid.IsValid();
   }

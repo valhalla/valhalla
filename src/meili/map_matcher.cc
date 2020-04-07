@@ -49,12 +49,23 @@ struct Interpolation {
 };
 
 inline MatchResult CreateMatchResult(const Measurement& measurement) {
-  return {measurement.lnglat(), 0.f, baldr::GraphId{}, -1.f, measurement.epoch_time(), StateId()};
+  return {measurement.lnglat(),
+          0.f,
+          baldr::GraphId{},
+          -1.f,
+          measurement.epoch_time(),
+          StateId(),
+          measurement.is_break_point()};
 }
 
 inline MatchResult CreateMatchResult(const Measurement& measurement, const Interpolation& interp) {
-  return {interp.projected,     std::sqrt(interp.sq_distance), interp.edgeid,
-          interp.edge_distance, measurement.epoch_time(),      StateId()};
+  return {interp.projected,
+          std::sqrt(interp.sq_distance),
+          interp.edgeid,
+          interp.edge_distance,
+          measurement.epoch_time(),
+          StateId(),
+          measurement.is_break_point()};
 }
 
 // Find the interpolation along the route where the transition cost +
@@ -258,8 +269,13 @@ MatchResult FindMatchResult(const MapMatcher& mapmatcher,
     // if it matches either end of the path coming into this state or the beginning of the
     // path leaving this state, then we are good to go and have found the match
     if (edge.id == prev_edge || edge.id == next_edge) {
-      return {edge.projected,     std::sqrt(edge.distance), edge.id,
-              edge.percent_along, measurement.epoch_time(), stateid};
+      return {edge.projected,
+              std::sqrt(edge.distance),
+              edge.id,
+              edge.percent_along,
+              measurement.epoch_time(),
+              stateid,
+              measurement.is_break_point()};
     }
 
     // the only matches we can make where the ids arent the same are at intersections
@@ -275,15 +291,15 @@ MatchResult FindMatchResult(const MapMatcher& mapmatcher,
     // if the last edge of the previous route ends at this candidate node
     const auto* prev_de = graph_reader.directededge(prev_edge, tile);
     if (prev_de && prev_de->endnode() == candidate_node) {
-      return {edge.projected, std::sqrt(edge.distance), prev_edge, 1.f, measurement.epoch_time(),
-              stateid};
+      return {edge.projected, std::sqrt(edge.distance),    prev_edge, 1.f, measurement.epoch_time(),
+              stateid,        measurement.is_break_point()};
     }
 
     // if the first edge of the next route starts at this candidate node
     const auto* next_opp_de = graph_reader.GetOpposingEdge(next_edge, tile);
     if (next_opp_de && next_opp_de->endnode() == candidate_node) {
-      return {edge.projected, std::sqrt(edge.distance), next_edge, 0.f, measurement.epoch_time(),
-              stateid};
+      return {edge.projected, std::sqrt(edge.distance),    next_edge, 0.f, measurement.epoch_time(),
+              stateid,        measurement.is_break_point()};
     }
 
     // when the instersection match fails, we do a more labor intensive search at transitions
@@ -314,8 +330,13 @@ MatchResult FindMatchResult(const MapMatcher& mapmatcher,
             break;
           }
 
-          return {edge.projected, std::sqrt(edge.distance), edge_id,
-                  distance_along, measurement.epoch_time(), stateid};
+          return {edge.projected,
+                  std::sqrt(edge.distance),
+                  edge_id,
+                  distance_along,
+                  measurement.epoch_time(),
+                  stateid,
+                  measurement.is_break_point()};
         }
       }
     }

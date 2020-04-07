@@ -1227,6 +1227,7 @@ TEST(Mapmatch, test_intersection_matching) {
                                                                   {3, {61.7, 41.6, 109.4}},
                                                                   {4, {49.3, 61, 52.6, 99}}};
 
+  api_tester tester;
   tyr::actor_t actor(conf, true);
   for (size_t i = 0; i < test_cases.size(); ++i) {
     auto matched = json_to_pt(actor.trace_route(test_cases[i]));

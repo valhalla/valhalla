@@ -226,56 +226,33 @@ bool MergeRoute(const State& source, const State& target, std::vector<EdgeSegmen
   return true;
 }
 
-void reorder_segments(const std::vector<MatchResult>& match_results,
-                      const std::deque<int>& match_indices,
-                      const StateContainer& state_container,
-                      baldr::GraphReader& reader,
-                      std::vector<EdgeSegment>& segments) {
-  if (segments.empty()) {
-    return;
-  } else if (match_indices.size() == 2) {
-    segments.front().first_match_idx = match_indices.front();
-    segments.back().last_match_idx = match_indices.back();
-    return;
-  }
-
-  segments.clear();
-  int prev_idx = match_indices.front();
-  MatchResult prev_match = match_results[prev_idx];
-  for (int i = 1, n = static_cast<int>(match_indices.size()); i < n; ++i) {
-    int curr_idx = match_indices[i];
+void cut_segments(const std::vector<MatchResult>& match_results,
+                  int first_idx,
+                  int last_idx,
+                  const std::vector<EdgeSegment>& segments,
+                  std::vector<EdgeSegment>& new_segments) {
+  auto first_segment = segments.begin();
+  int prev_idx = first_idx;
+  for (int curr_idx = first_idx + 1; curr_idx <= last_idx; ++curr_idx) {
     const MatchResult& curr_match = match_results[curr_idx];
-
-    if (prev_match.edgeid != curr_match.edgeid &&
-        !reader.AreEdgesConnectedForward(prev_match.edgeid, curr_match.edgeid)) {
-      throw std::logic_error{"found route not connected"};
+    const MatchResult& prev_match = match_results[prev_idx];
+    if (!curr_match.is_break_point && curr_idx != last_idx) {
+      continue;
     }
 
-    if (state_container.measurement(curr_idx).is_break_point()) {
-      if (prev_match.edgeid != curr_match.edgeid) {
-        segments.push_back({prev_match.edgeid, prev_match.distance_along, 1.f, prev_idx, -1});
-        segments.push_back({curr_match.edgeid, 0.f, curr_match.distance_along, -1, curr_idx});
-      } else {
-        segments.push_back({prev_match.edgeid, prev_match.distance_along, curr_match.distance_along,
-                            prev_idx, curr_idx});
-        segments.push_back({prev_match.edgeid, curr_match.distance_along, -1.f, curr_idx, -1});
-      }
-    } else {
-    }
+    auto last_segment =
+        std::find_if(first_segment, segments.end(), [&curr_match](const EdgeSegment& segment) {
+          return segment.edgeid == curr_match.edgeid;
+        });
 
-    // Break  via      via       break
-    // a      c        d         e
-    // ---------->---------->--------->
+    size_t old_size = new_segments.size();
+    new_segments.insert(new_segments.cend(), first_segment, last_segment + 1);
+    new_segments[old_size].first_match_idx = prev_idx;
+    new_segments[old_size].source = prev_match.distance_along;
+    new_segments.back().last_match_idx = curr_idx;
+    new_segments.back().target = curr_match.distance_along;
 
-    if (prev_match.edgeid != curr_match.edgeid) {
-      segments.push_back({prev_match.edgeid, prev_match.distance_along, 1.f, prev_idx, -1});
-      segments.push_back({curr_match.edgeid, 0.f, curr_match.distance_along, -1, curr_idx});
-    } else {
-      segments.push_back({prev_match.edgeid, prev_match.distance_along, curr_match.distance_along,
-                          prev_idx, curr_idx});
-    }
-
-    prev_match = curr_match;
+    first_segment = last_segment;
     prev_idx = curr_idx;
   }
 }
@@ -291,19 +268,15 @@ std::vector<EdgeSegment> ConstructRoute(const MapMatcher& mapmatcher,
   const baldr::GraphTile* tile = nullptr;
 
   // Merge segments into route
-  std::deque<int> match_indices;
+  // std::deque<int> match_indices;
   std::vector<EdgeSegment> segments;
+  std::vector<EdgeSegment> new_segments;
   const MatchResult* prev_match{nullptr};
   int prev_idx = -1;
   for (int curr_idx = 0, n = static_cast<int>(match_results.size()); curr_idx < n; ++curr_idx) {
     const MatchResult& match = match_results[curr_idx];
 
-    if (!match.edgeid.Is_Valid()) {
-      continue;
-    }
-
-    if (!match.HasState()) {
-      match_indices.push_back(curr_idx);
+    if (!match.edgeid.Is_Valid() || !match.HasState()) {
       continue;
     }
 
@@ -326,13 +299,35 @@ std::vector<EdgeSegment> ConstructRoute(const MapMatcher& mapmatcher,
         continue;
       }
 
-      match_indices.push_front(prev_idx);
-      match_indices.push_back(curr_idx);
+      new_segments.clear();
+      cut_segments(match_results, prev_idx, curr_idx, segments, new_segments);
 
-      reorder_segments(match_results, match_indices, mapmatcher.state_container(), reader, segments);
+      if (!prev_match->is_break_point && !route.empty() && !route.back().discontinuity) {
+        // have to merge route's last segment and segments' first segment together
+        EdgeSegment& first_half = route.back();
+        EdgeSegment& second_half = new_segments.front();
+
+        // Before merge:               -1          prev_idx      prev_idx, last_match_idx
+        //                first_half    ------------------>      ------------------>  second_half
+        // After merge :               -1                                  last_match_idx
+        //                             ------------------------------------------->  second_half
+        if (first_half.first_match_idx == -1) {
+          second_half.source = 0.f;
+          second_half.first_match_idx = -1;
+        }
+        // Before merge:            first_match_idx, prev_idx   prev_idx,        -1
+        //                first_half    ------------------>      ------------------>  second_half
+        // After merge :             first_match_idx                             -1
+        //                              ------------------------------------------->  second_half
+        if (second_half.last_match_idx == -1) {
+          second_half.target = 1.f;
+          second_half.first_match_idx = route.back().first_match_idx;
+        }
+        route.pop_back();
+      }
 
       // TODO remove: the code is pretty mature we dont need this check its wasted cpu
-      if (!ValidateRoute(mapmatcher.graphreader(), segments.begin(), segments.end(), tile)) {
+      if (!ValidateRoute(mapmatcher.graphreader(), new_segments.begin(), new_segments.end(), tile)) {
         throw std::runtime_error("Found invalid route");
       }
 
@@ -340,8 +335,7 @@ std::vector<EdgeSegment> ConstructRoute(const MapMatcher& mapmatcher,
       // instead of just appending this vector to the end of the route vector because
       // we may merge the last segment of route with the beginning segment of segments
       // MergeEdgeSegments(route, segments.begin(), segments.end());
-      route.insert(route.end(), segments.cbegin(), segments.cend());
-      match_indices.clear();
+      route.insert(route.end(), new_segments.cbegin(), new_segments.cend());
     }
 
     prev_match = &match;

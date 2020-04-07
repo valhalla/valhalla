@@ -433,7 +433,6 @@ void thor_worker_t::serilize_paths_new(
         route_discontinuities,
     Options& options,
     Api& request) {
-  std::cout << "there are two paths " << paths.size() << std::endl;
   // The following logic put break points (matches results) on edge candidates to form legs
   // logic assumes the both match results and edge candidates are topologically sorted in correct
   // order. Only the first location will be populated with corresponding input date_time
