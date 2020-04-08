@@ -56,7 +56,7 @@ bool TimeDepForward::ExpandForward(GraphReader& graphreader,
   auto offset_time =
       from_transition ? time_info
                       : time_info.forward(pred.cost().secs, static_cast<int>(nodeinfo->timezone()));
-  std::cout << pred.edgeid() << " " << offset_time << std::endl;
+  // std::cout << pred.edgeid() << " " << offset_time << std::endl;
 
   // Expand from start node.
   EdgeMetadata meta = EdgeMetadata::make(node, nodeinfo, tile, edgestatus_);
