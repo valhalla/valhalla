@@ -56,6 +56,7 @@ bool TimeDepForward::ExpandForward(GraphReader& graphreader,
   auto offset_time =
       from_transition ? time_info
                       : time_info.forward(pred.cost().secs, static_cast<int>(nodeinfo->timezone()));
+  std::cout << pred.edgeid() << " " << offset_time << std::endl;
 
   // Expand from start node.
   EdgeMetadata meta = EdgeMetadata::make(node, nodeinfo, tile, edgestatus_);
@@ -261,7 +262,8 @@ TimeDepForward::GetBestPath(valhalla::Location& origin,
   uint32_t density = SetDestination(graphreader, destination);
   // Call SetOrigin with kFreeFlowSecondOfDay for now since we don't yet have
   // a timezone for converting a date_time of "current" to seconds_of_week
-  SetOrigin(graphreader, origin, destination, forward_time_info.second_of_week);
+  SetOrigin(graphreader, origin, destination,
+            kInvalidSecondsOfWeek /*forward_time_info.second_of_week*/);
 
   // Update hierarchy limits
   ModifyHierarchyLimits(mindist, density);

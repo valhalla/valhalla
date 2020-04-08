@@ -198,17 +198,19 @@ struct TimeInfo {
     if (!valid)
       return *this;
 
+    // offset the local time and second of week by the amount traveled to this label
+    uint64_t lt = local_time + static_cast<uint64_t>(seconds_offset);
+    uint32_t sw = static_cast<uint32_t>(second_of_week + seconds_offset);
+
     // if the timezone changed we need to account for that offset as well
-    int tz_diff = 0;
     if (next_tz_index != timezone_index) {
-      tz_diff =
-          dt::timezone_diff(local_time + seconds_offset, dt::get_tz_db().from_index(timezone_index),
-                            dt::get_tz_db().from_index(next_tz_index));
+      int tz_diff = dt::timezone_diff(lt, dt::get_tz_db().from_index(timezone_index),
+                                      dt::get_tz_db().from_index(next_tz_index));
+      lt += tz_diff;
+      sw += tz_diff;
     }
 
-    // offset the local time and second of week by the amount traveled to this label
-    uint64_t lt = local_time + static_cast<uint64_t>(seconds_offset) + tz_diff;
-    uint32_t sw = second_of_week + static_cast<uint32_t>(seconds_offset) + tz_diff;
+    // wrap the week second if it went past the end
     if (sw > valhalla::midgard::kSecondsPerWeek) {
       sw -= valhalla::midgard::kSecondsPerWeek;
     }
@@ -231,19 +233,19 @@ struct TimeInfo {
     if (!valid)
       return *this;
 
+    // offset the local time and second of week by the amount traveled to this label
+    uint64_t lt = local_time - static_cast<uint64_t>(seconds_offset); // dont route near the epoch
+    int32_t sw = static_cast<int32_t>(second_of_week) - static_cast<int32_t>(seconds_offset);
+
     // if the timezone changed we need to account for that offset as well
-    int tz_diff = 0;
     if (next_tz_index != timezone_index) {
-      tz_diff =
-          dt::timezone_diff(local_time + seconds_offset, dt::get_tz_db().from_index(timezone_index),
-                            dt::get_tz_db().from_index(next_tz_index));
+      int tz_diff = dt::timezone_diff(lt, dt::get_tz_db().from_index(timezone_index),
+                                      dt::get_tz_db().from_index(next_tz_index));
+      lt += tz_diff;
+      sw += tz_diff;
     }
 
-    // offset the local time and second of week by the amount traveled to this label
-    uint64_t lt =
-        local_time - static_cast<uint64_t>(seconds_offset) + tz_diff; // dont route near the epoch
-    int64_t sw =
-        static_cast<int64_t>(second_of_week) - static_cast<int64_t>(seconds_offset) + tz_diff;
+    // wrap the week second if it went past the beginning
     if (sw < 0) {
       sw = valhalla::midgard::kSecondsPerWeek + sw;
     }

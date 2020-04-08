@@ -5,9 +5,28 @@
 
 #include <chrono>
 #include <ctime>
+#include <valhalla/meili/match_result.h>
 
 namespace dt = valhalla::baldr::DateTime;
 namespace sc = std::chrono;
+
+namespace {
+
+void foo(const std::vector<valhalla::meili::MatchResult>& match_results,
+         int first_index,
+         int last_index,
+         const std::vector<valhalla::meili::EdgeSegment>& segments,
+         std::vector<valhalla::meili::EdgeSegment>& new_segments) {
+
+  // loop over the path
+  const auto& match_result = match_results[first_index];
+  for (const auto& segment : segments) {
+    // this match result occurs on this edge of the path
+    if (segment.edgeid == match_result.edgeid) {}
+  }
+}
+
+} // namespace
 
 namespace valhalla {
 namespace thor {
@@ -65,6 +84,7 @@ TimeInfo::make(valhalla::Location& location, baldr::GraphReader& reader, int def
 
   // What second of the week is this (for historical traffic lookup)
   auto second_of_week = dt::second_of_week(local_time, tz);
+  second_of_week -= 27;
 
   // When is this route with respect to now this will let us appropriately use current flow traffic
   int64_t seconds_from_now = (then_date.get_local_time() - now_date.get_local_time()).count();
