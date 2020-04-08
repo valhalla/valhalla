@@ -1060,7 +1060,7 @@ protected:
   uint64_t restrictions_ : 8;  // Restrictions - mask of local edge indexes at the end node
   uint64_t opp_index_ : 7;     // Opposing directed edge index
   uint64_t forward_ : 1;       // Is the edge info forward or reverse
-  uint32_t leaves_tile_ : 1;   // Does directed edge end in a different tile?
+  uint64_t leaves_tile_ : 1;   // Does directed edge end in a different tile?
   uint64_t ctry_crossing_ : 1; // Does the edge cross into new country
 
   // 2nd 8 byte word
