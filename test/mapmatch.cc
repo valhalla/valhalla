@@ -192,6 +192,7 @@ void compare_results(const valhalla::Api& expected, const valhalla::Api& result)
       auto answer_distance = result.directions().routes(r).legs(l).summary().length();
       ASSERT_NEAR(expected_distance, answer_distance, .1)
           << "Expected leg with length " << expected_distance << " but got " << answer_distance;
+      ++leg_answer;
     }
 
     // move to next result
@@ -1259,31 +1260,33 @@ TEST(Mapmatch, test_loop_matching) {
       R"({"shape":[
             {"lat": 52.0992698, "lon": 5.1071285, "type": "break_through", "node_snap_tolerance": 0},
             {"lat": 52.0990768, "lon": 5.1069392, "type": "break_through", "node_snap_tolerance": 0},
-            {"lat": 52.0995259, "lon": 5.1073563, "type": "break_through", "node_snap_tolerance": 0},
+            {"lat": 52.0995259, "lon": 5.1073563, "type": "break_through", "node_snap_tolerance": 0}], "costing":"auto", "shape_match":"map_snap"})",
+      R"({"shape":[
             {"lat": 52.1183497, "lon": 5.1171364, "type": "break_through", "node_snap_tolerance": 0},
             {"lat": 52.1181338, "lon": 5.1188697, "type": "break_through", "node_snap_tolerance": 0},
             {"lat": 52.1182095, "lon": 5.1170544, "type": "break_through", "node_snap_tolerance": 0}], "costing":"auto", "shape_match":"map_snap"})",
       R"({"shape":[
             {"lat": 52.1181394, "lon": 5.1168568, "type": "break_through", "node_snap_tolerance": 0},
             {"lat": 52.1181338, "lon": 5.1188697, "type": "break_through", "node_snap_tolerance": 0},
-            {"lat": 52.1183749, "lon": 5.1173171, "type": "break_through", "node_snap_tolerance": 0}], "costing":"auto","shape_match":"map_snap"})",
+            {"lat": 52.1183749, "lon": 5.1173171, "type": "break_through", "node_snap_tolerance": 0}], "costing":"auto", "shape_match":"map_snap"})",
       R"({"shape":[
             {"lat": 52.1185567, "lon": 5.1226105, "type": "break_through", "node_snap_tolerance": 0},
             {"lat": 52.1189432, "lon": 5.1244406, "type": "break_through", "node_snap_tolerance": 0},
             {"lat": 52.1183977, "lon": 5.1223398, "type": "break_through", "node_snap_tolerance": 0}], "costing":"auto","shape_match":"map_snap"})",
       R"({"shape":[
-            {"lat": 52.1207253, "lon": 5.1163155, "type": "break_through", "node_snap_tolerance": 0},
+            {"lat": 52.12047, "lon": 5.11584, "type": "break_through", "node_snap_tolerance": 0},
             {"lat": 52.1206812, "lon": 5.1174006, "type": "break_through", "node_snap_tolerance": 0},
-            {"lat": 52.1203074, "lon": 5.1155726, "type": "break_through", "node_snap_tolerance": 0},
+            {"lat": 52.1203074, "lon": 5.1155726, "type": "break_through", "node_snap_tolerance": 0}], "costing":"auto","shape_match":"map_snap"})",
+      R"({"shape":[
             {"lat": 52.1188651, "lon": 5.0993882, "type": "break_through", "node_snap_tolerance": 0},
             {"lat": 52.1189673, "lon": 5.0990478, "type": "break_through", "node_snap_tolerance": 0},
             {"lat": 52.1186596, "lon": 5.0995430, "type": "break_through", "node_snap_tolerance": 0}], "costing":"auto","shape_match":"map_snap"})"};
 
   api_tester tester;
   for (size_t i = 0; i < test_cases.size(); ++i) {
-    auto matched = tester.match(test_cases[i]);
     auto route_case = R"({"locations)" + test_cases[i].substr(7);
     auto routed = tester.route(route_case);
+    auto matched = tester.match(test_cases[i]);
     compare_results(routed, matched);
   }
 }

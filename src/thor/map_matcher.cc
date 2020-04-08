@@ -246,9 +246,10 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
 
     // get the cost of traversing the node, there is no turn cost the first time
     Cost transition_cost{};
-    if (elapsed.secs > 0 && !disconnected) {
+    if (elapsed.secs > 0) {
       transition_cost = costing->TransitionCost(directededge, nodeinfo, pred);
       elapsed += transition_cost;
+      std::cout << "prev edgeid " << pred.edgeid() << " , curr edgeid " << edge_id << std::endl;
     }
 
     // Get time along the edge, handling partial distance along the first and last edge.
@@ -286,6 +287,13 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
     prior_node = directededge->endnode();
     const GraphTile* end_tile = matcher->graphreader().GetGraphTile(prior_node);
     nodeinfo = end_tile->node(prior_node);
+  }
+
+  for (const auto& path : paths) {
+    for (const auto& edge : path.first) {
+      std::cout << edge.edgeid << "  elapsed : " << edge.elapsed_time << ", turn cost "
+                << edge.turn_cost << std::endl;
+    }
   }
 
   return paths;
