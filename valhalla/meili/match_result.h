@@ -77,20 +77,13 @@ struct MatchResults {
     e2 = this->segments.empty() || this->segments.back().target > 0.0f ? edges.cend()
                                                                        : edges.cend() - 1;
   }
+  // equality here means that the sequence of edges within p either contains or is contained in
+  // this's sequence of edges, so we do basically a substring search algorithm
   bool operator==(const MatchResults& p) const {
-    // find the beginning of that path in this one
-    auto f = std::find(e1, e2, *p.e1);
-    // maybe this path starts inside of p
-    if (f == e2) {
-      f = std::find(p.e1, p.e2, *e1);
-      // if this path started inside of p, and whats left of p is smaller than this path, search for
-      // it in this path if whats left of this path is larger than p, search for p within this
-      // larger
-      return f != p.e2 && p.e2 - f < e1 - e2 ? std::equal(f, p.e2, e1) : std::equal(e1, e2, f);
-    }
-    // p started inside of this path, if whats left of this path is smaller than p, search for it in
-    // p if whats left of this path is larger than p, search for p within this larger
-    return e2 - f < p.e1 - p.e2 ? std::equal(f, e2, p.e1) : std::equal(p.e1, p.e2, f);
+    // if p's edge sequence is small enough to fit into this edge sequence and we can find it OR
+    // if this edge sequence is small enough to fit into p's edge seuqence and we can find it
+    return (p.edges.size() <= edges.size() && std::search(e1, e2, p.e1, p.e2) != edges.cend()) ||
+           (edges.size() <= p.edges.size() && std::search(p.e1, p.e2, e1, e2) != p.edges.cend());
   }
 
   MatchResults(const MatchResults&) = delete;

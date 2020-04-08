@@ -458,6 +458,32 @@ void parse_locations(const rapidjson::Document& doc,
         if (street_side_tolerance) {
           location->set_street_side_tolerance(*street_side_tolerance);
         }
+        auto search_filter = rapidjson::get_child_optional(r_loc, "/search_filter");
+        if (search_filter) {
+          // search_filter.min_road_class
+          auto min_road_class =
+              rapidjson::get_optional<std::string>(*search_filter, "/min_road_class");
+          valhalla::RoadClass min_rc;
+          if (min_road_class && RoadClass_Enum_Parse(*min_road_class, &min_rc)) {
+            location->mutable_search_filter()->set_min_road_class(min_rc);
+          }
+          // search_filter.max_road_class
+          auto max_road_class =
+              rapidjson::get_optional<std::string>(*search_filter, "/max_road_class");
+          valhalla::RoadClass max_rc;
+          if (max_road_class && RoadClass_Enum_Parse(*max_road_class, &max_rc)) {
+            location->mutable_search_filter()->set_max_road_class(max_rc);
+          }
+          // search_filter.exclude_tunnel
+          location->mutable_search_filter()->set_exclude_tunnel(
+              rapidjson::get_optional<bool>(*search_filter, "/exclude_tunnel").get_value_or(false));
+          // search_filter.exclude_bridge
+          location->mutable_search_filter()->set_exclude_bridge(
+              rapidjson::get_optional<bool>(*search_filter, "/exclude_bridge").get_value_or(false));
+          // search_filter.exclude_ramp
+          location->mutable_search_filter()->set_exclude_ramp(
+              rapidjson::get_optional<bool>(*search_filter, "/exclude_ramp").get_value_or(false));
+        }
       } catch (...) { throw valhalla_exception_t{location_parse_error_code}; }
     }
 
@@ -1110,6 +1136,24 @@ bool PreferredSide_Enum_Parse(const std::string& pside, valhalla::Location::Pref
   return true;
 }
 
+bool RoadClass_Enum_Parse(const std::string& rc_name, valhalla::RoadClass* rc) {
+  static const std::unordered_map<std::string, valhalla::RoadClass> types{
+      {"motorway", valhalla::RoadClass::kMotorway},
+      {"trunk", valhalla::RoadClass::kTrunk},
+      {"primary", valhalla::RoadClass::kPrimary},
+      {"secondary", valhalla::RoadClass::kSecondary},
+      {"tertiary", valhalla::RoadClass::kTertiary},
+      {"unclassified", valhalla::RoadClass::kUnclassified},
+      {"residential", valhalla::RoadClass::kResidential},
+      {"service_other", valhalla::RoadClass::kServiceOther},
+  };
+  auto i = types.find(rc_name);
+  if (i == types.cend())
+    return false;
+  *rc = i->second;
+  return true;
+}
+
 valhalla_exception_t::valhalla_exception_t(unsigned code, const boost::optional<std::string>& extra)
     : std::runtime_error(""), code(code), extra(extra) {
   auto code_iter = error_codes.find(code);
@@ -1194,10 +1238,6 @@ void ParseApi(const http_request_t& request, valhalla::Api& api) {
 }
 
 const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
-const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
-const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
-const headers_t::value_type XML_MIME{"Content-type", "text/xml;charset=utf-8"};
-const headers_t::value_type GPX_MIME{"Content-type", "application/gpx+xml;charset=utf-8"};
 const headers_t::value_type ATTACHMENT{"Content-Disposition", "attachment; filename=route.gpx"};
 
 worker_t::result_t jsonify_error(const valhalla_exception_t& exception,
@@ -1228,7 +1268,8 @@ worker_t::result_t jsonify_error(const valhalla_exception_t& exception,
 
   worker_t::result_t result{false, std::list<std::string>(), ""};
   http_response_t response(exception.http_code, exception.http_message, body.str(),
-                           headers_t{CORS, request.options().has_jsonp() ? JS_MIME : JSON_MIME});
+                           headers_t{CORS, request.options().has_jsonp() ? worker::JS_MIME
+                                                                         : worker::JSON_MIME});
   response.from_info(request_info);
   result.messages.emplace_back(response.to_string());
 
@@ -1250,7 +1291,8 @@ worker_t::result_t to_response(const baldr::json::ArrayPtr& array,
 
   worker_t::result_t result{false, std::list<std::string>(), ""};
   http_response_t response(200, "OK", stream.str(),
-                           headers_t{CORS, request.options().has_jsonp() ? JS_MIME : JSON_MIME});
+                           headers_t{CORS, request.options().has_jsonp() ? worker::JS_MIME
+                                                                         : worker::JSON_MIME});
   response.from_info(request_info);
   result.messages.emplace_back(response.to_string());
   return result;
@@ -1270,38 +1312,41 @@ to_response(const baldr::json::MapPtr& map, http_request_info_t& request_info, c
 
   worker_t::result_t result{false, std::list<std::string>(), ""};
   http_response_t response(200, "OK", stream.str(),
-                           headers_t{CORS, request.options().has_jsonp() ? JS_MIME : JSON_MIME});
+                           headers_t{CORS, request.options().has_jsonp() ? worker::JS_MIME
+                                                                         : worker::JSON_MIME});
   response.from_info(request_info);
   result.messages.emplace_back(response.to_string());
   return result;
 }
 
-worker_t::result_t
-to_response_json(const std::string& json, http_request_info_t& request_info, const Api& request) {
-  std::ostringstream stream;
-  // jsonp callback if need be
+worker_t::result_t to_response(const std::string& data,
+                               http_request_info_t& request_info,
+                               const Api& request,
+                               const worker::content_type& mime_type,
+                               const bool as_attachment) {
+
+  worker_t::result_t result{false, std::list<std::string>(), ""};
   if (request.options().has_jsonp()) {
+    std::ostringstream stream;
     stream << request.options().jsonp() << '(';
-  }
-  stream << json;
-  if (request.options().has_jsonp()) {
+    stream << data;
     stream << ')';
+
+    headers_t headers{CORS, worker::JS_MIME};
+    if (as_attachment)
+      headers.insert(ATTACHMENT);
+
+    http_response_t response(200, "OK", stream.str(), headers);
+    response.from_info(request_info);
+    result.messages.emplace_back(response.to_string());
+  } else {
+    headers_t headers{CORS, mime_type};
+    if (as_attachment)
+      headers.insert(ATTACHMENT);
+    http_response_t response(200, "OK", data, headers);
+    response.from_info(request_info);
+    result.messages.emplace_back(response.to_string());
   }
-
-  worker_t::result_t result{false, std::list<std::string>(), ""};
-  http_response_t response(200, "OK", stream.str(),
-                           headers_t{CORS, request.options().has_jsonp() ? JS_MIME : JSON_MIME});
-  response.from_info(request_info);
-  result.messages.emplace_back(response.to_string());
-  return result;
-}
-
-worker_t::result_t
-to_response_xml(const std::string& xml, http_request_info_t& request_info, const Api&) {
-  worker_t::result_t result{false, std::list<std::string>(), ""};
-  http_response_t response(200, "OK", xml, headers_t{CORS, GPX_MIME, ATTACHMENT});
-  response.from_info(request_info);
-  result.messages.emplace_back(response.to_string());
   return result;
 }
 

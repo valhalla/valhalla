@@ -33,6 +33,8 @@
    * FIXED: Update intersection classes in osrm response to not label all ramps as motorway [#2279](https://github.com/valhalla/valhalla/pull/2279)
    * FIXED: Fixed bug in mapmatcher when interpolation point goes before the first valid match or after the last valid match. Such behavior usually leads to discontinuity in matching. [#2275](https://github.com/valhalla/valhalla/pull/2275)
    * FIXED: Fixed an issue for time_allowed logic.  Previously we returned false on the first time allowed restriction and did not check them all. Added conditional restriction gurka test and datetime optional argument to gurka header file. [#2286](https://github.com/valhalla/valhalla/pull/2286)
+   * FIXED: Fixed an issue for date ranges.  For example, for the range Jan 04 to Jan 02 we need to test to end of the year and then from the first of the year to the end date.  Also, fixed an emergency tag issue.  We should only set the use to emergency if all other access is off. [2290](https://github.com/valhalla/valhalla/pull/2290)
+   * FIXED: Found a few issues with the initial ref and direction logic for ways.  We were overwriting the refs with directionals to the name_offset_map instead of concatenating them together.  Also, we did not allow for blank entries for GetTagTokens. [2298](https://github.com/valhalla/valhalla/pull/2298)
 
 * **Enhancement**
    * ADDED: Return the coordinates of the nodes isochrone input locations snapped to [#2111](https://github.com/valhalla/valhalla/pull/2111)
@@ -50,7 +52,7 @@
    * ADDED: Add to the stop impact when transitioning from higher to lower class road and we are not on a turn channel or ramp. Also, penalize lefts when driving on the right and vice versa. [#2282](https://github.com/valhalla/valhalla/pull/2282)
    * ADDED: Added reclassify_links, use_direction_on_ways, and allow_alt_name as config options.  If `use_direction_on_ways = true` then use `direction` and `int_direction` on the way to update the directional for the `ref` and `int_ref`.  Also, copy int_efs to the refs. [#2285](https://github.com/valhalla/valhalla/pull/2285)
    * ADDED: Add support for live traffic. [#2268](https://github.com/valhalla/valhalla/pull/2268)
-   
+   * ADDED: Implement per-location search filters for functional road class and forms of way. [#2289](https://github.com/valhalla/valhalla/pull/2289)
 
 ## Release Date: 2019-11-21 Valhalla 3.0.9
 * **Bug Fix**
