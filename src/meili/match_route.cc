@@ -240,10 +240,12 @@ void cut_segments(const std::vector<MatchResult>& match_results,
       continue;
     }
 
-    auto last_segment =
-        std::find_if(first_segment, segments.end(), [&curr_match](const EdgeSegment& segment) {
-          return segment.edgeid == curr_match.edgeid;
-        });
+    bool loop = prev_match.edgeid == curr_match.edgeid &&
+                prev_match.distance_along > curr_match.distance_along;
+    auto last_segment = std::find_if(first_segment + static_cast<size_t>(loop), segments.end(),
+                                     [&curr_match](const EdgeSegment& segment) {
+                                       return (segment.edgeid == curr_match.edgeid);
+                                     });
 
     size_t old_size = new_segments.size();
     new_segments.insert(new_segments.cend(), first_segment, last_segment + 1);
@@ -283,6 +285,7 @@ std::vector<EdgeSegment> ConstructRoute(const MapMatcher& mapmatcher,
     if (prev_match && prev_match->HasState()) {
       const auto &prev_state = mapmatcher.state_container().state(prev_match->stateid),
                  state = mapmatcher.state_container().state(match.stateid);
+      std::cout << "enter a new state:" << std::endl;
 
       // get the route between the two states by walking edge labels backwards
       // then reverse merge the segments together which are on the same edge so we have a
@@ -299,8 +302,16 @@ std::vector<EdgeSegment> ConstructRoute(const MapMatcher& mapmatcher,
         continue;
       }
 
+      for (const auto& edge : segments)
+        std::cout << edge << std::endl;
+
+      std::cout << " before cut " << std::endl;
+
       new_segments.clear();
       cut_segments(match_results, prev_idx, curr_idx, segments, new_segments);
+
+      for (const auto& edge : new_segments)
+        std::cout << edge << std::endl;
 
       if (!prev_match->is_break_point && !route.empty() && !route.back().discontinuity) {
         // have to merge route's last segment and segments' first segment together
@@ -341,6 +352,9 @@ std::vector<EdgeSegment> ConstructRoute(const MapMatcher& mapmatcher,
     prev_match = &match;
     prev_idx = curr_idx;
   }
+
+  //  for (const auto& edge : route)
+  //    std::cout << edge << std::endl;
 
   return route;
 }

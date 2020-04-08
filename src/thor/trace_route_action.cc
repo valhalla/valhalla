@@ -447,10 +447,6 @@ void thor_worker_t::serilize_paths_new(
       way_point_index = 0;
     }
 
-    for (const auto& edge : path.second) {
-      std::cout << edge->edgeid << " " << edge->source << " " << edge->target << std::endl;
-    }
-
     int origin_match_idx = path.second.front()->first_match_idx;
     int dest_match_idx = path.second.back()->last_match_idx;
 

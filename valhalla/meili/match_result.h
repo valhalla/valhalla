@@ -53,6 +53,16 @@ struct EdgeSegment {
   int first_match_idx{-1};
   int last_match_idx{-1};
   bool discontinuity{false};
+
+  // Stream output
+  friend std::ostream& operator<<(std::ostream& os, const EdgeSegment& segment) {
+    os << std::fixed << std::setprecision(3);
+    os << "edgeid: " << segment.edgeid << " source : " << segment.source
+       << ", target : " << segment.target << ", first match idx : " << segment.first_match_idx
+       << ", last match idx : " << segment.last_match_idx
+       << ", discontinuity: " << segment.discontinuity;
+    return os;
+  }
 };
 
 struct MatchResults {
