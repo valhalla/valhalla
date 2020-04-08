@@ -29,7 +29,8 @@ public:
   /**
    * Constructor
    */
-  PathAlgorithm() : interrupt(nullptr), has_ferry_(false), expansion_callback_() {
+  PathAlgorithm()
+      : interrupt(nullptr), has_ferry_(false), expansion_callback_(), use_shortcuts_(true) {
   }
 
   /**
@@ -91,6 +92,15 @@ public:
     expansion_callback_ = expansion_callback;
   }
 
+  /**
+   * Enables or disables the use of shortcuts
+   * @param  use_shortcuts   whether or not to allow shortcuts
+   */
+  void set_use_shortcuts(bool use_shortcuts) {
+    use_shortcuts_ = use_shortcuts;
+    ;
+  }
+
 protected:
   const std::function<void()>* interrupt;
 
@@ -98,6 +108,8 @@ protected:
 
   // for tracking the expansion of the algorithm visually
   expansion_callback_t expansion_callback_;
+
+  bool use_shortcuts_;
 
   /**
    * Check for path completion along the same edge. Edge ID in question

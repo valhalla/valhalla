@@ -134,6 +134,8 @@ bool BidirectionalAStar::ExpandForward(GraphReader& graphreader,
 
   // Expand from end node in forward direction.
   for (uint32_t i = 0; i < nodeinfo->edge_count(); ++i, meta.increment_pointers()) {
+    if (!use_shortcuts_ && meta.edge->is_shortcut())
+      continue;
 
     // Begin by checking if this is the opposing edge to pred.
     // If so, it means we are attempting a u-turn. In that case, lets wait with evaluating
@@ -316,6 +318,8 @@ bool BidirectionalAStar::ExpandReverse(GraphReader& graphreader,
 
   // Expand from end node in reverse direction.
   for (uint32_t i = 0; i < nodeinfo->edge_count(); ++i, meta.increment_pointers()) {
+    if (!use_shortcuts_ && meta.edge->is_shortcut())
+      continue;
 
     // Begin by checking if this is the opposing edge to pred.
     // If so, it means we are attempting a u-turn. In that case, lets wait with evaluating
