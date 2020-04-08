@@ -1238,10 +1238,6 @@ void ParseApi(const http_request_t& request, valhalla::Api& api) {
 }
 
 const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
-const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
-const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
-const headers_t::value_type XML_MIME{"Content-type", "text/xml;charset=utf-8"};
-const headers_t::value_type GPX_MIME{"Content-type", "application/gpx+xml;charset=utf-8"};
 const headers_t::value_type ATTACHMENT{"Content-Disposition", "attachment; filename=route.gpx"};
 
 worker_t::result_t jsonify_error(const valhalla_exception_t& exception,
@@ -1272,7 +1268,8 @@ worker_t::result_t jsonify_error(const valhalla_exception_t& exception,
 
   worker_t::result_t result{false, std::list<std::string>(), ""};
   http_response_t response(exception.http_code, exception.http_message, body.str(),
-                           headers_t{CORS, request.options().has_jsonp() ? JS_MIME : JSON_MIME});
+                           headers_t{CORS, request.options().has_jsonp() ? worker::JS_MIME
+                                                                         : worker::JSON_MIME});
   response.from_info(request_info);
   result.messages.emplace_back(response.to_string());
 
@@ -1294,7 +1291,8 @@ worker_t::result_t to_response(const baldr::json::ArrayPtr& array,
 
   worker_t::result_t result{false, std::list<std::string>(), ""};
   http_response_t response(200, "OK", stream.str(),
-                           headers_t{CORS, request.options().has_jsonp() ? JS_MIME : JSON_MIME});
+                           headers_t{CORS, request.options().has_jsonp() ? worker::JS_MIME
+                                                                         : worker::JSON_MIME});
   response.from_info(request_info);
   result.messages.emplace_back(response.to_string());
   return result;
@@ -1314,38 +1312,41 @@ to_response(const baldr::json::MapPtr& map, http_request_info_t& request_info, c
 
   worker_t::result_t result{false, std::list<std::string>(), ""};
   http_response_t response(200, "OK", stream.str(),
-                           headers_t{CORS, request.options().has_jsonp() ? JS_MIME : JSON_MIME});
+                           headers_t{CORS, request.options().has_jsonp() ? worker::JS_MIME
+                                                                         : worker::JSON_MIME});
   response.from_info(request_info);
   result.messages.emplace_back(response.to_string());
   return result;
 }
 
-worker_t::result_t
-to_response_json(const std::string& json, http_request_info_t& request_info, const Api& request) {
-  std::ostringstream stream;
-  // jsonp callback if need be
+worker_t::result_t to_response(const std::string& data,
+                               http_request_info_t& request_info,
+                               const Api& request,
+                               const worker::content_type& mime_type,
+                               const bool as_attachment) {
+
+  worker_t::result_t result{false, std::list<std::string>(), ""};
   if (request.options().has_jsonp()) {
+    std::ostringstream stream;
     stream << request.options().jsonp() << '(';
-  }
-  stream << json;
-  if (request.options().has_jsonp()) {
+    stream << data;
     stream << ')';
+
+    headers_t headers{CORS, worker::JS_MIME};
+    if (as_attachment)
+      headers.insert(ATTACHMENT);
+
+    http_response_t response(200, "OK", stream.str(), headers);
+    response.from_info(request_info);
+    result.messages.emplace_back(response.to_string());
+  } else {
+    headers_t headers{CORS, mime_type};
+    if (as_attachment)
+      headers.insert(ATTACHMENT);
+    http_response_t response(200, "OK", data, headers);
+    response.from_info(request_info);
+    result.messages.emplace_back(response.to_string());
   }
-
-  worker_t::result_t result{false, std::list<std::string>(), ""};
-  http_response_t response(200, "OK", stream.str(),
-                           headers_t{CORS, request.options().has_jsonp() ? JS_MIME : JSON_MIME});
-  response.from_info(request_info);
-  result.messages.emplace_back(response.to_string());
-  return result;
-}
-
-worker_t::result_t
-to_response_xml(const std::string& xml, http_request_info_t& request_info, const Api&) {
-  worker_t::result_t result{false, std::list<std::string>(), ""};
-  http_response_t response(200, "OK", xml, headers_t{CORS, GPX_MIME, ATTACHMENT});
-  response.from_info(request_info);
-  result.messages.emplace_back(response.to_string());
   return result;
 }
 
