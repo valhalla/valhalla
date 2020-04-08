@@ -148,7 +148,7 @@ jobs:
                 -DENABLE_COMPILER_WARNINGS=On -DENABLE_WERROR=Off -DCMAKE_EXPORT_COMPILE_COMMANDS=On
       - run: make -C build -j4
       - run: make -C build utrecht_tiles
-      - run: make -C build -j4 tests
+      - run: make -C build -j2 tests
       - run: make -C build -j2 check
       # Note: we save the cache here before doing linting so that if linting fails, we can rebuild quickly
       # for follow-up fixes
@@ -180,7 +180,7 @@ jobs:
           -DCPACK_GENERATOR=DEB -DCPACK_PACKAGE_VERSION_SUFFIX="-0ubuntu1-$(lsb_release -sc)"
       - run: make -C build -j4
       - run: make -C build utrecht_tiles
-      - run: make -C build -j4 tests
+      - run: make -C build -j2 tests
       - run: make -C build -j2 check
       - save_cache:
           key: ccache-release-linux-x86_64-{{ .Branch }}-{{ epoch }}
@@ -206,7 +206,7 @@ jobs:
           cd build && cmake .. -DCMAKE_BUILD_TYPE=Release -DENABLE_NODE_BINDINGS=Off
       - run: make -C build -j4
       - run: make -C build utrecht_tiles
-      - run: make -C build -j4 tests
+      - run: make -C build -j2 tests
       - run: make -C build -j2 check
       - save_cache:
           key: ccache-release-linux-x86_32-{{ .Branch }}-{{ epoch }}
@@ -231,7 +231,7 @@ jobs:
       - run: cd build && cmake .. -DENABLE_PYTHON_BINDINGS=Off
       - run: make -C build -j4
       - run: make -C build utrecht_tiles
-      - run: make -C build -j4 tests
+      - run: make -C build -j2 tests
       - run: make -C build -j2 check
       - save_cache:
           key: ccache-release-macos-{{ .Branch }}-{{ epoch }}
