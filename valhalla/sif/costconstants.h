@@ -73,7 +73,8 @@ struct AvoidEdge {
 struct Cost {
   float cost;
   float secs;
-
+  std::vector<double> data;
+  
   /**
    * Default constructor
    */
@@ -85,8 +86,7 @@ struct Cost {
    * @param  c  Cost (units defined by the costing model)
    * @param  s  Time in seconds.
    */
-  Cost(const float c, const float s) : cost(c), secs(s) {
-  }
+  Cost(const float c, const float s) : cost(c), secs(s) {  }
 
   /**
    * Add 2 costs.
@@ -94,7 +94,11 @@ struct Cost {
    * @return  Returns the sum of the costs.
    */
   Cost operator+(const Cost& other) const {
-    return Cost(cost + other.cost, secs + other.secs);
+    Cost c = Cost(cost + other.cost, secs + other.secs);
+    c.data = std::vector<double>(data);
+     for(int i =0;i<data.size();++i)
+       c.data[i] += other.data[i];
+    return c;
   }
 
   /**
@@ -103,7 +107,11 @@ struct Cost {
    * @return  Returns the cost after subtraction.
    */
   Cost operator-(const Cost& other) const {
-    return Cost(cost - other.cost, secs - other.secs);
+    Cost c = Cost(cost - other.cost, secs - other.secs);
+    c.data = std::vector<double>(data);
+    for(int i =0;i<data.size();++i)
+      c.data[i] -= other.data[i];
+    return c;  
   }
 
   /**
@@ -114,6 +122,8 @@ struct Cost {
   Cost& operator+=(const Cost& other) {
     cost += other.cost;
     secs += other.secs;
+    for(int i =0;i<data.size();++i)
+       data[i] += other.data[i];
     return *this;
   }
 
@@ -125,6 +135,8 @@ struct Cost {
   Cost& operator-=(const Cost& other) {
     cost -= other.cost;
     secs -= other.secs;
+    for(int i =0;i<data.size();++i)
+       data[i] -= other.data[i];
     return *this;
   }
 
@@ -136,6 +148,8 @@ struct Cost {
   Cost& operator*=(const float f) {
     cost *= f;
     secs *= f;
+    for(int i =0;i<data.size();++i)
+       data[i] *= f;
     return *this;
   }
 
@@ -146,7 +160,11 @@ struct Cost {
    *          the scaling factor.
    */
   Cost operator*(const float f) const {
-    return Cost(cost * f, secs * f);
+    Cost c = Cost(cost * f, secs * f);
+    c.data = std::vector<double>(data);
+    for(int i =0;i<data.size();++i)
+       c.data[i] *= f;
+    return c;
   }
 
   /**

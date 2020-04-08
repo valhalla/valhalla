@@ -16,6 +16,7 @@
 #include <valhalla/midgard/logging.h>
 #include <valhalla/proto/options.pb.h>
 #include <valhalla/sif/costconstants.h>
+#include <valhalla/sif/costconstraints.h>
 #include <valhalla/sif/edgelabel.h>
 #include <valhalla/sif/hierarchylimits.h>
 #include <valhalla/thor/edgestatus.h>
@@ -103,6 +104,7 @@ public:
     pass_ = pass;
   }
 
+  
   /**
    * Returns the maximum transfer distance between stops that you are willing
    * to travel for this mode.  It is the max distance you are willing to
@@ -191,6 +193,16 @@ public:
    */
   virtual bool Allowed(const baldr::NodeInfo* node) const = 0;
 
+  /**
+  * Checks whether all secondary constraints are satisfied. 
+  * @param  cost  Cost to be evaluated
+  * @return Returns true if constraints are satisfied, false if not.
+  */ 
+  virtual inline bool ConstraintsSatisfied(const Cost& cost) const   
+  { 
+     return constraints_->ConstraintsSatisfied(cost);
+  }
+
   inline virtual bool ModeSpecificAllowed(const baldr::AccessRestriction&) const {
     return true;
   };
@@ -218,6 +230,22 @@ public:
   virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
                         const baldr::GraphTile* tile,
                         const uint32_t seconds) const = 0;
+
+
+  /**
+   * Get the cost to traverse the specified directed edge for a reverse search. Cost includes
+   * the time (seconds) to traverse the edge.
+   * @param   edge    Pointer to a directed edge.
+   * @param   tile    Pointer to the tile which contains the directed edge for speed lookup
+   * @param   seconds Seconds of week for predicted speed or free and constrained speed lookup
+   * @return  Returns the cost and time (seconds).
+   */
+  virtual Cost EdgeCostReverse(const baldr::DirectedEdge* edge,
+                        const baldr::GraphTile* tile,
+                        const uint32_t seconds) const
+  {
+    return EdgeCost(edge, tile, seconds);
+  }
 
   /**
    * Get the cost to traverse the specified directed edge. Cost includes
@@ -657,6 +685,10 @@ public:
   uint8_t flow_mask() const {
     return flow_mask_;
   }
+  std::shared_ptr<CostConstraints> GetConstraints()
+  {
+    return constraints_;
+  }
 
 protected:
   // Algorithm pass
@@ -695,6 +727,9 @@ protected:
 
   // A mask which determines which flow data the costing should use from the tile
   uint8_t flow_mask_;
+
+  // Constraints for Cost Function...
+  std::shared_ptr<CostConstraints> constraints_;
 
   /**
    * Get the base transition costs (and ferry factor) from the costing options.
@@ -737,6 +772,9 @@ protected:
 
     // Set the speed mask to determine which speed data types are allowed
     flow_mask_ = costing_options.flow_mask();
+
+    // load constraints from pbf...
+    constraints_->LoadConstraints(costing_options);
   }
 
   /**

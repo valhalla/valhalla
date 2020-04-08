@@ -19,12 +19,12 @@ namespace sif {
 
 struct CostConstraints
 {
-    std::function<double(uint32_t, const baldr::DirectedEdge* , const baldr::GraphTile* , const uint32_t, const bool)> ComputeConstraintForEdgeF = 0;    
-    std::function<double(uint32_t, const baldr::GraphId id, const uint32_t start, const uint32_t end, const bool)> ComputeConstraintForNodeF = 0;
+    std::function<double(uint32_t, const baldr::DirectedEdge* , const baldr::GraphTile* , const uint32_t, const float, const bool)> ComputeConstraintForEdgeF = 0;    
+    std::function<double(uint32_t, const baldr::GraphId id, const uint32_t start, const float end, const bool)> ComputeConstraintForNodeF = 0;
 
  
-    static std::function<double(uint32_t, const baldr::DirectedEdge* , const baldr::GraphTile* , const uint32_t, const bool)> StaticComputeConstraintForEdgeF;    
-    static std::function<double(uint32_t, const baldr::GraphId& id, const uint32_t start, const uint32_t end, const bool)> StaticComputeConstraintForNodeF;
+    static std::function<double(uint32_t, const baldr::DirectedEdge* , const baldr::GraphTile* , const uint32_t, const float, const bool)> StaticComputeConstraintForEdgeF;    
+    static std::function<double(uint32_t, const baldr::GraphId& id, const uint32_t start, const float end, const bool)> StaticComputeConstraintForNodeF;
     
 
         
@@ -72,13 +72,13 @@ struct CostConstraints
      * @param   is_forward  Boolean indicating whether this is a forward or reverse search
      */ 
     virtual void ComputeConstraintsForEdge(Cost& cost, const baldr::DirectedEdge* edge,
-                        const baldr::GraphTile* tile,
-                        const uint32_t seconds, const bool is_forward) const
+                        const baldr::GraphTile* tile, const uint32_t start,
+                        const float end, const bool is_forward) const
     {   
         auto ComputeConstraintForEdgeF = GetComputeConstraintForEdgeF();
         if(constraints_.size() > 0)        
             for(uint32_t i=0;i<constraints_.size();++i)            
-                cost.data.push_back(ComputeConstraintForEdgeF(i,edge, tile, seconds, is_forward));                        
+                cost.data.push_back(ComputeConstraintForEdgeF(i,edge, tile, start, end, is_forward));                        
     }
 
     /**
@@ -87,7 +87,7 @@ struct CostConstraints
      * @param   node        Node (intersection) where transition occurs.
      * @param   is_forward  Boolean indicating whether this is a forward or reverse search
      */
-    virtual void ComputeConstraintsForNode(Cost& cost, const baldr::GraphId& id, const uint32_t start, const uint32_t end, 
+    virtual void ComputeConstraintsForNode(Cost& cost, const baldr::GraphId& id, const uint32_t start, const float end, 
                               const bool is_forward) const
     {   
         auto ComputeConstraintForNodeF = GetComputeConstraintForNodeF();
@@ -117,20 +117,20 @@ struct CostConstraints
    }
     protected:
      std::vector<CostingConstraint> constraints_;
-     std::function<double(uint32_t, const baldr::DirectedEdge* , const baldr::GraphTile* , const uint32_t, const bool)> GetComputeConstraintForEdgeF() const
+     std::function<double(uint32_t, const baldr::DirectedEdge* , const baldr::GraphTile* , const uint32_t, const float, const bool)> GetComputeConstraintForEdgeF() const
      {
          if(ComputeConstraintForEdgeF != 0)
             return ComputeConstraintForEdgeF;
         return StaticComputeConstraintForEdgeF;
      }
-      std::function<double(uint32_t, const baldr::GraphId& id, const uint32_t start, const uint32_t end, const bool)> GetComputeConstraintForNodeF() const
+      std::function<double(uint32_t, const baldr::GraphId& id, const uint32_t start, const float end, const bool)> GetComputeConstraintForNodeF() const
       {
           if(ComputeConstraintForNodeF != 0)
             return ComputeConstraintForNodeF;
           return StaticComputeConstraintForNodeF;
       }
-     static double EmptyReturnEdge(uint32_t idx, const baldr::DirectedEdge* edge, const baldr::GraphTile* tile, const uint32_t time, const bool is_forward) ;
-     static double EmptyReturnNode(uint32_t idx, const baldr::GraphId& id, const uint32_t start, const uint32_t end, const bool is_forward);
+     static double EmptyReturnEdge(uint32_t idx, const baldr::DirectedEdge* edge, const baldr::GraphTile* tile, const uint32_t start, const float end, const bool is_forward) ;
+     static double EmptyReturnNode(uint32_t idx, const baldr::GraphId& id, const uint32_t start, const float end, const bool is_forward);
 };
 } // namespace sif
 } // namespace valhalla
