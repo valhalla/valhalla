@@ -119,7 +119,7 @@ thor_worker_t::work(const std::list<zmq::message_t>& job,
     // do request specific processing
     switch (options.action()) {
       case Options::sources_to_targets:
-        result = to_response_json(matrix(request), info, request);
+        result = to_response(matrix(request), info, request);
         denominator = options.sources_size() + options.targets_size();
         break;
       case Options::optimized_route: {
@@ -129,7 +129,7 @@ thor_worker_t::work(const std::list<zmq::message_t>& job,
         break;
       }
       case Options::isochrone:
-        result = to_response_json(isochrones(request), info, request);
+        result = to_response(isochrones(request), info, request);
         denominator = options.sources_size() * options.targets_size();
         break;
       case Options::route: {
@@ -145,11 +145,11 @@ thor_worker_t::work(const std::list<zmq::message_t>& job,
         break;
       }
       case Options::trace_attributes:
-        result = to_response_json(trace_attributes(request), info, request);
+        result = to_response(trace_attributes(request), info, request);
         denominator = trace.size() / 1100;
         break;
       case Options::expansion: {
-        result = to_response_json(expansion(request), info, request);
+        result = to_response(expansion(request), info, request);
         denominator = options.locations_size();
         break;
       }

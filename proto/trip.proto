@@ -28,17 +28,6 @@ message TripLeg {
     kBoth = 3;
   }
 
-  enum RoadClass {
-    kMotorway = 0;
-    kTrunk = 1;
-    kPrimary = 2;
-    kSecondary = 3;
-    kTertiary = 4;
-    kUnclassified = 5;
-    kResidential = 6;
-    kServiceOther = 7;
-  }
-
   enum Use {
     kRoadUse = 0;
     kRampUse = 1;              // Link - exits/entrance ramps.

@@ -1340,7 +1340,13 @@ function filter_tags_generic(kv)
     use = 0 --general road, no special use
   end
 
-  if kv["access"] == "emergency" or kv["emergency"] == "yes" then
+  if (kv["access"] == "emergency" or kv["emergency"] == "yes") and
+      kv["auto_forward"] == "false" and kv["auto_backward"] == "false" and
+      kv["truck_forward"] == "false" and kv["truck_backward"] == "false" and
+      kv["bus_forward"] == "false" and kv["bus_backward"] == "false" and
+      kv["bike_forward"] == "false" and kv["bike_backward"] == "false" and
+      kv["moped_forward"] == "false" and kv["moped_backward"] == "false" and
+      kv["motorcycle_forward"] == "false" and kv["motorcycle_backward"] == "false" then
     use = 7
   end
 
