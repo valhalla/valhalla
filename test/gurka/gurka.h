@@ -408,7 +408,7 @@ inline void build_pbf(const nodelayout& node_locations,
       tags.push_back({keyval.first, keyval.second});
     }
     osmium::builder::add_way(buffer, osmium::builder::attr::_id(way_osm_id_map[way.first]),
-                             osmium::builder::attr::_version(1),
+                             osmium::builder::attr::_version(1), osmium::builder::attr::_cid(1001),
                              osmium::builder::attr::_timestamp(std::time(nullptr)),
                              osmium::builder::attr::_nodes(nodeids),
                              osmium::builder::attr::_tags(tags));
