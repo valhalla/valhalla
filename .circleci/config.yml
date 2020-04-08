@@ -147,7 +147,8 @@ jobs:
             && cmake .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_COVERAGE=On -DCPACK_GENERATOR=DEB \
                 -DENABLE_COMPILER_WARNINGS=On -DENABLE_WERROR=Off -DCMAKE_EXPORT_COMPILE_COMMANDS=On
       - run: make -C build -j4
-      - run: make -C build -j2 tests
+      - run: make -C build utrecht_tiles
+      - run: make -C build -j4 tests
       - run: make -C build -j2 check
       # Note: we save the cache here before doing linting so that if linting fails, we can rebuild quickly
       # for follow-up fixes
@@ -178,6 +179,7 @@ jobs:
           cd build && cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=On -DENABLE_PYTHON_BINDINGS=On \
           -DCPACK_GENERATOR=DEB -DCPACK_PACKAGE_VERSION_SUFFIX="-0ubuntu1-$(lsb_release -sc)"
       - run: make -C build -j4
+      - run: make -C build utrecht_tiles
       - run: make -C build -j4 tests
       - run: make -C build -j2 check
       - save_cache:
@@ -203,6 +205,7 @@ jobs:
       - run: |
           cd build && cmake .. -DCMAKE_BUILD_TYPE=Release -DENABLE_NODE_BINDINGS=Off
       - run: make -C build -j4
+      - run: make -C build utrecht_tiles
       - run: make -C build -j4 tests
       - run: make -C build -j2 check
       - save_cache:
@@ -227,6 +230,7 @@ jobs:
       - run: mkdir -p build
       - run: cd build && cmake .. -DENABLE_PYTHON_BINDINGS=Off
       - run: make -C build -j4
+      - run: make -C build utrecht_tiles
       - run: make -C build -j4 tests
       - run: make -C build -j2 check
       - save_cache:
