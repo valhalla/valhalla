@@ -457,6 +457,29 @@ void NarrativeBuilder::Build(const Options& options, std::list<Maneuver>& maneuv
   FormVerbalMultiCue(maneuvers);
 }
 
+std::string NarrativeBuilder::FormVerbalAlertApproachInstruction(float distance,
+                                                                 const std::string& verbal_cue) {
+  std::string instruction;
+  instruction.reserve(kInstructionInitialCapacity);
+  uint8_t phrase_id = 0;
+
+  // Set instruction to the determined tagged phrase
+  instruction = dictionary_.approach_verbal_alert_subset.phrases.at(std::to_string(phrase_id));
+
+  // Replace phrase tags with values
+  boost::replace_all(instruction, kLengthTag,
+                     FormLength(distance, dictionary_.approach_verbal_alert_subset.metric_lengths,
+                                dictionary_.approach_verbal_alert_subset.us_customary_lengths));
+  boost::replace_all(instruction, kCurrentVerbalCueTag, verbal_cue);
+
+  // If enabled, form articulated prepositions
+  if (articulated_preposition_enabled_) {
+    FormArticulatedPrepositions(instruction);
+  }
+
+  return instruction;
+}
+
 std::string NarrativeBuilder::FormStartInstruction(Maneuver& maneuver) {
   // "0": "Head <CARDINAL_DIRECTION>.",
   // "1": "Head <CARDINAL_DIRECTION> on <STREET_NAMES>.",
@@ -3505,6 +3528,17 @@ std::string NarrativeBuilder::FormLength(Maneuver& maneuver,
       return FormUsCustomaryLength(maneuver.length(Options::miles), us_customary_lengths);
     }
     default: { return FormMetricLength(maneuver.length(Options::kilometers), metric_lengths); }
+  }
+}
+
+std::string NarrativeBuilder::FormLength(float distance,
+                                         const std::vector<std::string>& metric_lengths,
+                                         const std::vector<std::string>& us_customary_lengths) {
+  switch (options_.units()) {
+    case Options::miles: {
+      return FormUsCustomaryLength(distance, us_customary_lengths);
+    }
+    default: { return FormMetricLength(distance, metric_lengths); }
   }
 }
 

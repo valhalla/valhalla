@@ -7903,6 +7903,58 @@ TEST(NarrativeBuilder, TestFormVerbalPostTransitionInstruction) {
                                          true, "Continue on Main Street for less than 10 feet.");
 }
 
+void TryFormVerbalAlertApproachInstruction(NarrativeBuilderTest& nbt,
+                                           float distance,
+                                           const std::string& verbal_cue,
+                                           const std::string& expected) {
+  EXPECT_EQ(nbt.FormVerbalAlertApproachInstruction(distance, verbal_cue), expected);
+}
+
+TEST(NarrativeBuilder, TestFormVerbalAlertApproachInstruction) {
+  Options options;
+  options.set_units(Options::kilometers);
+  options.set_language("en-US");
+
+  const NarrativeDictionary& dictionary = GetNarrativeDictionary(options);
+
+  NarrativeBuilderTest nbt_km(options, dictionary);
+
+  TryFormVerbalAlertApproachInstruction(nbt_km, 0.125f, "Turn right onto Main Street.",
+                                        "In 100 meters, Turn right onto Main Street.");
+
+  TryFormVerbalAlertApproachInstruction(nbt_km, 0.4f, "Turn right onto Main Street.",
+                                        "In 400 meters, Turn right onto Main Street.");
+
+  TryFormVerbalAlertApproachInstruction(nbt_km, 0.8f, "Turn right onto Main Street.",
+                                        "In 800 meters, Turn right onto Main Street.");
+
+  TryFormVerbalAlertApproachInstruction(nbt_km, 1.f, "Take exit 1 30.",
+                                        "In 1 kilometer, Take exit 1 30.");
+
+  TryFormVerbalAlertApproachInstruction(nbt_km, 3.f, "Take exit 9 on the left.",
+                                        "In 3 kilometers, Take exit 9 on the left.");
+
+  /////////////////////////////////////////////////////////////////////////////
+
+  options.set_units(Options::miles);
+  NarrativeBuilderTest nbt_mi(options, dictionary);
+
+  TryFormVerbalAlertApproachInstruction(nbt_mi, 0.125f, "Turn right onto Main Street",
+                                        "In 700 feet, Turn right onto Main Street");
+
+  TryFormVerbalAlertApproachInstruction(nbt_mi, 0.25f, "Turn right onto Main Street",
+                                        "In a quarter mile, Turn right onto Main Street");
+
+  TryFormVerbalAlertApproachInstruction(nbt_mi, 0.5f, "Turn right onto Main Street",
+                                        "In a half mile, Turn right onto Main Street");
+
+  TryFormVerbalAlertApproachInstruction(nbt_mi, 1.f, "Take exit 31C on the left.",
+                                        "In 1 mile, Take exit 31C on the left.");
+
+  TryFormVerbalAlertApproachInstruction(nbt_mi, 2.f, "Take exit 3 26.",
+                                        "In 2 miles, Take exit 3 26.");
+}
+
 Maneuver CreateSignManeuver(DirectionsLeg_Maneuver_Type type,
                             Maneuver::RelativeDirection relative_direction,
                             bool drive_on_right,
