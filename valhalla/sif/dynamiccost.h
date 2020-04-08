@@ -728,7 +728,7 @@ protected:
   // A mask which determines which flow data the costing should use from the tile
   uint8_t flow_mask_;
 
-  // Constraints for Cost Function...
+  // Constraints for Cost Function (if any)...
   std::shared_ptr<CostConstraints> constraints_;
 
   /**

@@ -194,7 +194,7 @@ std::string build_valhalla_route_request(const map& map,
   return sb.GetString();
 }
 
-std::string build_valhalla_route_request(const map& map,
+std::string build_valhalla_route_request_with_costing_options(const map& map,
                                          const std::vector<std::string>& waypoints,
                                          const std::string& costing,
                                          const std::string& costing_options) {
@@ -684,7 +684,7 @@ valhalla::Api route(const map& map, const std::string& request_json) {
 }
 
 valhalla::Api
-route(const map& map, const std::vector<std::string>& waypoints, const std::string& costing, const std::string& costing_options) {
+route_with_costing_options(const map& map, const std::vector<std::string>& waypoints, const std::string& costing, const std::string& costing_options) {
   std::cerr << "[          ] Routing with mjolnir.tile_dir = "
             << map.config.get<std::string>("mjolnir.tile_dir") << " with waypoints ";
   bool first = true;
@@ -695,7 +695,7 @@ route(const map& map, const std::vector<std::string>& waypoints, const std::stri
     first = false;
   };
   std::cerr << " with costing " << costing << std::endl;
-  auto request_json = detail::build_valhalla_route_request(map, waypoints, costing, costing_options);
+  auto request_json = detail::build_valhalla_route_request_with_costing_options(map, waypoints, costing, costing_options);
   std::cerr << "[          ] Valhalla request is: " << request_json << std::endl;
 
   valhalla::tyr::actor_t actor(map.config, true);

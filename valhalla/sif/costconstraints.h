@@ -27,7 +27,9 @@ struct CostConstraints
     static std::function<double(uint32_t, const baldr::GraphId& id, const uint32_t start, const float end, const bool)> StaticComputeConstraintForNodeF;
     
 
-        
+    /**
+     * Parses constraints from json
+     */    
     static void ParseConstraints(const rapidjson::Value& value, CostingOptions* pbf_costing_options)
     {
         //auto speed_types = rapidjson::get_child_optional(value, "/speed_types");
@@ -68,7 +70,8 @@ struct CostConstraints
      * @param   cost        Cost where constraint calculations will be stored.
      * @param   edge        Pointer to a directed edge.
      * @param   tile        Pointer to the tile which contains the directed edge for speed lookup
-     * @param   seconds     Seconds of week for predicted speed or free and constrained speed lookup
+     * @param   start       Time arriving at edge (secs)
+     * @param   end         Time leaving edge (secs)
      * @param   is_forward  Boolean indicating whether this is a forward or reverse search
      */ 
     virtual void ComputeConstraintsForEdge(Cost& cost, const baldr::DirectedEdge* edge,
@@ -84,7 +87,9 @@ struct CostConstraints
     /**
      * Compute all secondary constraints for the specified node. 
      * @param   cost        Cost where constraint calculations will be stored
-     * @param   node        Node (intersection) where transition occurs.
+     * @param   id          Node Id
+     * @param   start       Time arriving at node (sec)
+     * @param   end         Time leaving node (float)
      * @param   is_forward  Boolean indicating whether this is a forward or reverse search
      */
     virtual void ComputeConstraintsForNode(Cost& cost, const baldr::GraphId& id, const uint32_t start, const float end, 

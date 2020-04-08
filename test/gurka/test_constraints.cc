@@ -32,7 +32,7 @@ protected:
 
   }
   
-  static double GetConstraint(uint32_t idx, const baldr::DirectedEdge* edge, const baldr::GraphTile* tile, const uint32_t secs, const bool is_forward)
+  static double GetConstraint(uint32_t idx, const baldr::DirectedEdge* edge, const baldr::GraphTile* tile, const uint32_t secs, const float end_time, const bool is_forward)
   {
     if(edge->classification() == baldr::RoadClass::kMotorway)
       return 11;
@@ -50,7 +50,7 @@ gurka::map Constraints::map = {};
 // A simple test to make sure we didn't break routing without constraints...
 TEST_F(Constraints, NoConstraints) 
 { 
-  auto result = gurka::route(map, std::vector<std::string>{"A", "D"}, "auto");
+  auto result = gurka::route(map, "A", "D", "auto");
   gurka::assert::osrm::expect_route(result, {"AB", "BC", "CD"});  
  
 }
@@ -59,9 +59,9 @@ TEST_F(Constraints, NoConstraints)
 TEST_F(Constraints, WithConstraints) 
 {
   sif::CostConstraints::StaticComputeConstraintForEdgeF =  Constraints::GetConstraint;
-  auto result = gurka::route(map, std::vector<std::string>{"A", "D"}, "auto", "{\"auto\":{ \"constraints\":[{\"max_inclusive\":true,\"min_inclusive\":true,\"max_value\":20.0}]}}");
+  auto result = gurka::route_with_costing_options(map, std::vector<std::string>{"A", "D"}, "auto", "{\"auto\":{ \"constraints\":[{\"max_inclusive\":true,\"min_inclusive\":true,\"max_value\":20.0}]}}");
   gurka::assert::osrm::expect_route(result, {"AE", "EF", "FG", "GD"});  
-  result = gurka::route(map, std::vector<std::string>{"A", "D"}, "auto", "{\"auto\":{ \"constraints\":[{\"max_inclusive\":true,\"min_inclusive\":true,\"max_value\":32.0}]}}");
+  result = gurka::route_with_costing_options(map, std::vector<std::string>{"A", "D"}, "auto", "{\"auto\":{ \"constraints\":[{\"max_inclusive\":true,\"min_inclusive\":true,\"max_value\":32.0}]}}");
   gurka::assert::osrm::expect_route(result, {"AB", "BC", "CG", "GD"});  
 }
 
