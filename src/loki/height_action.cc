@@ -15,7 +15,7 @@ void from_ll(valhalla::Location* l, const PointLL& p) {
   l->mutable_ll()->set_lat(p.lat());
   l->mutable_ll()->set_lng(p.lng());
 }
-} // namespace detail
+} // namespace
 
 namespace valhalla {
 namespace loki {

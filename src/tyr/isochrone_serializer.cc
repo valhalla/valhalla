@@ -101,12 +101,12 @@ serializeIsochrones(const Api& request,
               baldr::json::array({fp_t{snapped_current.lng(), 6}, fp_t{snapped_current.lat(), 6}}));
         }
       };
-      features->emplace_back(
-          baldr::json::map({{"type", std::string("Feature")},
-                     {"properties", baldr::json::map({{"type", std::string("snapped")},
-                                               {"location_index", static_cast<uint64_t>(idx)}})},
-                     {"geometry", baldr::json::map({{"type", std::string("MultiPoint")},
-                                             {"coordinates", snapped_points_array}})}}));
+      features->emplace_back(baldr::json::map(
+          {{"type", std::string("Feature")},
+           {"properties", baldr::json::map({{"type", std::string("snapped")},
+                                            {"location_index", static_cast<uint64_t>(idx)}})},
+           {"geometry", baldr::json::map({{"type", std::string("MultiPoint")},
+                                          {"coordinates", snapped_points_array}})}}));
 
       // then each user input point as separate Point feature
       const valhalla::LatLng& input_latlng = location.ll();
@@ -115,8 +115,9 @@ serializeIsochrones(const Api& request,
       features->emplace_back(baldr::json::map(
           {{"type", std::string("Feature")},
            {"properties", baldr::json::map({{"type", std::string("input")},
-                                     {"location_index", static_cast<uint64_t>(idx)}})},
-           {"geometry", baldr::json::map({{"type", std::string("Point")}, {"coordinates", input_array}})}}));
+                                            {"location_index", static_cast<uint64_t>(idx)}})},
+           {"geometry",
+            baldr::json::map({{"type", std::string("Point")}, {"coordinates", input_array}})}}));
       idx++;
     }
   }

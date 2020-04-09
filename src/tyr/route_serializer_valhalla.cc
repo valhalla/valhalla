@@ -559,7 +559,7 @@ legs(const google::protobuf::RepeatedPtrField<valhalla::DirectionsLeg>& directio
   }
   return legs;
 }
-} // namespace valhalla_serializers
+} // namespace
 
 std::string serialize(const Api& api) {
   // build up the json object
@@ -579,4 +579,4 @@ std::string serialize(const Api& api) {
   ss << *json;
   return ss.str();
 }
-} // namespace
+} // namespace valhalla_serializers
