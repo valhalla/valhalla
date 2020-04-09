@@ -3807,9 +3807,9 @@ void NarrativeBuilder::FormVerbalMultiCue(std::list<Maneuver>& maneuvers) {
   for (auto& maneuver : maneuvers) {
     if (prev_maneuver && IsVerbalMultiCuePossible(prev_maneuver, maneuver)) {
       // Set verbal pre transition instruction as a verbal multi-cue
+      prev_maneuver->set_imminent_verbal_multi_cue(true);
       prev_maneuver->set_verbal_pre_transition_instruction(
           FormVerbalMultiCue(prev_maneuver, maneuver));
-      prev_maneuver->set_imminent_verbal_multi_cue(true);
     }
 
     // Update previous maneuver
@@ -3819,6 +3819,7 @@ void NarrativeBuilder::FormVerbalMultiCue(std::list<Maneuver>& maneuvers) {
 
 std::string NarrativeBuilder::FormVerbalMultiCue(Maneuver* maneuver, Maneuver& next_maneuver) {
   // "0": "<CURRENT_VERBAL_CUE> Then <NEXT_VERBAL_CUE>"
+  // "1": "<CURRENT_VERBAL_CUE> Then, in <LENGTH>, <NEXT_VERBAL_CUE>"
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
@@ -3831,12 +3832,19 @@ std::string NarrativeBuilder::FormVerbalMultiCue(Maneuver* maneuver, Maneuver& n
                                     ? next_maneuver.verbal_transition_alert_instruction()
                                     : next_maneuver.verbal_pre_transition_instruction();
 
-  // Set instruction to the verbal multi-cue
-  instruction = dictionary_.verbal_multi_cue_subset.phrases.at("0");
+  // Set instruction to the proper verbal multi-cue
+  uint8_t phrase_id = 0;
+  if (maneuver->distant_verbal_multi_cue()) {
+    phrase_id = 1;
+  }
+  instruction = dictionary_.verbal_multi_cue_subset.phrases.at(std::to_string(phrase_id));
 
   // Replace phrase tags with values
   boost::replace_all(instruction, kCurrentVerbalCueTag, current_verbal_cue);
   boost::replace_all(instruction, kNextVerbalCueTag, next_verbal_cue);
+  boost::replace_all(instruction, kLengthTag,
+                     FormLength(*maneuver, dictionary_.post_transition_verbal_subset.metric_lengths,
+                                dictionary_.post_transition_verbal_subset.us_customary_lengths));
 
   // If enabled, form articulated prepositions
   if (articulated_preposition_enabled_) {

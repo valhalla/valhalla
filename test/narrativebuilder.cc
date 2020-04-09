@@ -57,6 +57,10 @@ public:
     return NarrativeBuilder::FormVerbalPostTransitionInstruction(maneuver, include_street_names,
                                                                  element_max_count, delim);
   }
+
+  std::string FormVerbalMultiCue(Maneuver* maneuver, Maneuver& next_maneuver) {
+    return NarrativeBuilder::FormVerbalMultiCue(maneuver, next_maneuver);
+  }
 };
 
 const NarrativeDictionary& GetNarrativeDictionary(const Options& options) {
@@ -7901,6 +7905,66 @@ TEST(NarrativeBuilder, TestFormVerbalPostTransitionInstruction) {
   TryFormVerbalPostTransitionInstruction(nbt_mi,
                                          CreateVerbalPostManeuver({{"Main Street", 0}}, 0.001524f),
                                          true, "Continue on Main Street for less than 10 feet.");
+}
+
+Maneuver CreateVerbalMultiCueCurrentManeuver(const std::string& verbal_pre_transition_instruction,
+                                             bool is_distant_verbal_multi_cue = false,
+                                             float kilometers = 0.f) {
+  Maneuver maneuver;
+  maneuver.set_verbal_pre_transition_instruction(verbal_pre_transition_instruction);
+  if (is_distant_verbal_multi_cue) {
+    maneuver.set_distant_verbal_multi_cue(true);
+  } else {
+    maneuver.set_imminent_verbal_multi_cue(true);
+  }
+  maneuver.set_length(kilometers);
+
+  return maneuver;
+}
+
+Maneuver CreateVerbalMultiCueNextManeuver(const std::string& verbal_transition_alert_instruction) {
+  Maneuver maneuver;
+  maneuver.set_verbal_transition_alert_instruction(verbal_transition_alert_instruction);
+
+  return maneuver;
+}
+
+void TryFormVerbalMultiCue(NarrativeBuilderTest& nbt,
+                           Maneuver current_maneuver,
+                           Maneuver next_maneuver,
+                           const std::string& expected) {
+  EXPECT_EQ(nbt.FormVerbalMultiCue(&current_maneuver, next_maneuver), expected);
+}
+
+TEST(NarrativeBuilder, TestFormVerbalMultiCue) {
+  Options options;
+  options.set_units(Options::kilometers);
+  options.set_language("en-US");
+
+  const NarrativeDictionary& dictionary = GetNarrativeDictionary(options);
+
+  NarrativeBuilderTest nbt_km(options, dictionary);
+
+  TryFormVerbalMultiCue(nbt_km,
+                        CreateVerbalMultiCueCurrentManeuver("Turn left onto North Plum Street."),
+                        CreateVerbalMultiCueNextManeuver("Turn right onto East Fulton Street."),
+                        "Turn left onto North Plum Street. Then Turn right onto East Fulton Street.");
+
+  TryFormVerbalMultiCue(
+      nbt_km, CreateVerbalMultiCueCurrentManeuver("Turn left onto North Plum Street.", true, 0.16f),
+      CreateVerbalMultiCueNextManeuver("Turn right onto East Fulton Street."),
+      "Turn left onto North Plum Street. Then, in 200 meters, Turn right onto East Fulton Street.");
+
+  /////////////////////////////////////////////////////////////////////////////
+
+  options.set_units(Options::miles);
+
+  NarrativeBuilderTest nbt_mi(options, dictionary);
+
+  TryFormVerbalMultiCue(
+      nbt_mi, CreateVerbalMultiCueCurrentManeuver("Turn left onto North Plum Street.", true, 0.16f),
+      CreateVerbalMultiCueNextManeuver("Turn right onto East Fulton Street."),
+      "Turn left onto North Plum Street. Then, in 500 feet, Turn right onto East Fulton Street.");
 }
 
 void TryFormVerbalAlertApproachInstruction(NarrativeBuilderTest& nbt,
